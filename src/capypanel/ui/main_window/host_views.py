@@ -42,15 +42,6 @@ def pane_title(text: str) -> QLabel:
     return label
 
 
-def group_path(host_list: HostList, group_id: str) -> str:
-    names = []
-    current = host_list.group(group_id)
-    while current is not None:
-        names.append(current.name)
-        current = host_list.group(current.parent) if current.parent else None
-    return " › ".join(reversed(names))
-
-
 class NavigationPane(QWidget):
     """Groups (with "All computers" on top) and tags below them. Picking one filters the table."""
 

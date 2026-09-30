@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-30 17:19-0300\n"
+"POT-Creation-Date: 2026-09-30 17:24-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -327,6 +327,13 @@ msgstr ""
 msgid "Remove hosts"
 msgstr ""
 
+msgid "Remove tag"
+msgstr ""
+
+#, python-brace-format
+msgid "Remove tag {tag}"
+msgstr ""
+
 #, python-brace-format
 msgid "Remove the group “{name}” and the groups inside it?"
 msgstr ""
@@ -351,9 +358,6 @@ msgid "Save my version as a copy…"
 msgstr ""
 
 msgid "Select a host to see its details."
-msgstr ""
-
-msgid "Separate tags with commas"
 msgstr ""
 
 msgid "Settings"
@@ -444,6 +448,9 @@ msgid "This will also remove {n} host."
 msgid_plural "This will also remove {n} hosts."
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "Type a tag and press Enter"
+msgstr ""
 
 msgid "Unexpected error"
 msgstr ""

@@ -29,13 +29,12 @@ from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
 from capypanel.ui import language
-from capypanel.ui.hosts import HostDialog, confirm, list_file_filter
+from capypanel.ui.hosts import HostDialog, confirm, group_path, list_file_filter
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.host_views import (
     DetailsPane,
     HostTable,
     NavigationPane,
-    group_path,
 )
 from capypanel.ui.settings.window import SettingsChoices, SettingsDialog
 from capypanel.ui.themes import engine as themes

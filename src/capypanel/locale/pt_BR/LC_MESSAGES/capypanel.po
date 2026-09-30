@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-30 17:19-0300\n"
+"POT-Creation-Date: 2026-09-30 17:24-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -326,6 +326,13 @@ msgstr "Remover grupo"
 msgid "Remove hosts"
 msgstr "Remover hosts"
 
+msgid "Remove tag"
+msgstr "Remover tag"
+
+#, python-brace-format
+msgid "Remove tag {tag}"
+msgstr "Remover a tag {tag}"
+
 #, python-brace-format
 msgid "Remove the group “{name}” and the groups inside it?"
 msgstr "Remover o grupo “{name}” e os grupos dentro dele?"
@@ -351,9 +358,6 @@ msgstr "Salvar minha versão como cópia…"
 
 msgid "Select a host to see its details."
 msgstr "Selecione um host para ver os detalhes."
-
-msgid "Separate tags with commas"
-msgstr "Separe as tags com vírgulas"
 
 msgid "Settings"
 msgstr "Configurações"
@@ -432,6 +436,9 @@ msgid "This will also remove {n} host."
 msgid_plural "This will also remove {n} hosts."
 msgstr[0] "Isso também removerá {n} host."
 msgstr[1] "Isso também removerá {n} hosts."
+
+msgid "Type a tag and press Enter"
+msgstr "Digite uma tag e pressione Enter"
 
 msgid "Unexpected error"
 msgstr "Erro inesperado"

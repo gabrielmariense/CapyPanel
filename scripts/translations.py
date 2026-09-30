@@ -34,7 +34,17 @@ def main() -> int:
     for code in LANGUAGES:
         if code != DEFAULT_LANGUAGE and not (LOCALE / code).exists():
             pybabel("init", "-i", str(TEMPLATE), "-d", str(LOCALE), "-D", "capypanel", "-l", code)
-    pybabel("update", "-i", str(TEMPLATE), "-d", str(LOCALE), "-D", "capypanel", "--no-wrap")
+    pybabel(
+        "update",
+        "-i",
+        str(TEMPLATE),
+        "-d",
+        str(LOCALE),
+        "-D",
+        "capypanel",
+        "--no-wrap",
+        "--ignore-obsolete",
+    )
     pybabel("compile", "-d", str(LOCALE), "-D", "capypanel", "--statistics")
     return 0
 

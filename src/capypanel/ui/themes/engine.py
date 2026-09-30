@@ -199,6 +199,7 @@ def native_tokens(accent: QColor) -> dict[str, str]:
     tokens = dict(NATIVE_TOKENS[native_scheme()])
     tokens["sel"] = selection_tint(accent, tokens["card"], tokens["text"])
     tokens["hover"] = _mix(QColor(tokens["text"]), QColor(tokens["card"]), 0.06)
+    tokens["accent"] = accent.name()
     return tokens
 
 
@@ -315,6 +316,15 @@ QLineEdit, QPlainTextEdit { background: %(card)s; border: 1px solid %(border)s;
                             selection-background-color: %(accent)s; }
 QLineEdit:focus, QPlainTextEdit:focus { border: 1px solid %(accent)s; }
 QLineEdit:disabled { color: %(text3)s; background: %(raised)s; }
+/* The tag field: a box like a text input, holding chips and a borderless text box. */
+QFrame#tagEdit { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx; }
+QFrame#tagEdit[focused="true"] { border-color: %(accent)s; }
+QLineEdit#tagInput, QLineEdit#tagInput:focus {
+    border: none; background: transparent; padding: 3px 2px; }
+QFrame#tagChip { background: %(sel_solid)s; border: none; border-radius: 9px; }
+QToolButton#tagChipRemove {
+    border: none; background: transparent; padding: 0 3px; color: %(text)s; }
+QToolButton#tagChipRemove:hover { background: %(hover)s; }
 QComboBox { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx;
             padding: 4px 10px; min-height: 22px; }
 QComboBox:hover { border-color: %(text3)s; }
@@ -397,6 +407,12 @@ QTreeView::item:hover, QListView#pageList::item:hover { background: %(hover)s; }
 QTreeView::item:selected, QListView#pageList::item:selected {
     background: %(sel)s; color: %(text)s; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
+QFrame#tagEdit { background: %(card)s; border: 1px solid %(border)s; border-radius: 4px; }
+QFrame#tagEdit[focused="true"] { border-color: %(accent)s; }
+QLineEdit#tagInput { border: none; background: transparent; padding: 3px 2px; }
+QFrame#tagChip { background: %(sel)s; border: none; border-radius: 9px; }
+QToolButton#tagChipRemove {
+    border: none; background: transparent; padding: 0 3px; color: %(text)s; }
 """
 
 
