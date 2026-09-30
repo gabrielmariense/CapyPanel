@@ -112,7 +112,14 @@ def test_default_list_can_only_be_picked_when_it_exists(
     listfile.save(default, HostList(), expected=None)
     second = dialog()
     page = second.host_lists
-    assert page.default_choice.isEnabled() and page.default_state.text() == "Read-only"
+    # Whoever can write the app folder (an admin, or anyone in a team without one) can edit it.
+    assert page.default_choice.isEnabled() and page.default_state.text() == "Read-write"
+    os.chmod(default, stat.S_IREAD)
+    try:
+        third = dialog()
+        assert third.host_lists.default_state.text() == "Read-only"
+    finally:
+        os.chmod(default, stat.S_IWRITE | stat.S_IREAD)
 
 
 def test_save_needs_a_list_that_exists(window: MainWindow, tmp_path: Path) -> None:

@@ -187,7 +187,7 @@ class MainWindow(QMainWindow):
         if kind is ListKind.PERSONAL and not path.exists():
             return self._create_list(path, replace_existing=False)
         try:
-            doc = OpenList.open(path, read_only=kind is ListKind.DEFAULT)
+            doc = OpenList.open(path)
         except FileNotFoundError:
             locations.forget_list(self._prefs, path)
             self._error(_("The list “{path}” doesn't exist anymore.").format(path=path), quiet)

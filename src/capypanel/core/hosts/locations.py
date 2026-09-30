@@ -15,7 +15,7 @@ RECENT_LIMIT = 10
 
 
 class ListKind(StrEnum):
-    DEFAULT = "default"  # in the app folder, read-only, placed by an admin
+    DEFAULT = "default"  # in the app folder, placed by an admin; editable where Windows allows
     PERSONAL = "personal"  # the user's own, in their private CapyPanel folder
     SHARED = "shared"  # any other file the user picked, e.g. on a network share
 
@@ -38,11 +38,12 @@ def list_kind(path: Path, *, default: Path, personal: Path) -> ListKind:
     return ListKind.SHARED
 
 
-def list_access(path: Path, kind: ListKind) -> Access:
-    """What the user can do with a list file. The default list is read-only even if writable."""
+def list_access(path: Path) -> Access:
+    """What the user can do with a list file. Windows permissions decide, for every kind of
+    list: the default list is read-only for users because they can't write the app folder."""
     if not path.is_file():
         return Access.MISSING
-    if kind is ListKind.DEFAULT or not listfile.can_write(path):
+    if not listfile.can_write(path):
         return Access.READ_ONLY
     return Access.READ_WRITE
 

@@ -232,9 +232,9 @@ class HostListsPage(Page):
         grid.addWidget(self.other_state, 6, 1, Qt.AlignmentFlag.AlignRight)
         grid.addLayout(other_row, 7, 0, 1, 2)
         explain = _(
-            "The default list is placed in the app's folder by an administrator and can't be "
-            "edited. The personal list is yours alone. Any other list, for example on a network "
-            "share, can be edited if you have write permission on its folder."
+            "The default list is placed in the app's folder by whoever manages CapyPanel. The "
+            "personal list is yours alone. Any list can be edited by people with write "
+            "permission on its folder; for everyone else it opens read-only."
         )
 
         tools = QGroupBox(_("Make a list"))
@@ -302,17 +302,17 @@ class HostListsPage(Page):
             self.other_choice.setChecked(True)
 
     def _refresh(self) -> None:
-        default = locations.list_access(self._default, ListKind.DEFAULT)
+        default = locations.list_access(self._default)
         self.default_choice.setEnabled(default is not Access.MISSING)
         self.default_state.setText(_state_text(default, _("Not found")))
-        personal = locations.list_access(self._personal, ListKind.PERSONAL)
+        personal = locations.list_access(self._personal)
         self.personal_state.setText(_state_text(personal, _("Created when opened")))
         text = self.other_path.text().strip().strip('"')
         other = Path(text) if text else None
         if other is None:
             self.other_state.setText("")
         else:
-            access = locations.list_access(other, ListKind.SHARED)
+            access = locations.list_access(other)
             self.other_state.setText(_state_text(access, _("File not found")))
         self.changed.emit()
 

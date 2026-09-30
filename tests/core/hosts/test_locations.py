@@ -49,15 +49,14 @@ def test_bad_recent_value_is_ignored() -> None:
     assert locations.recent_lists({"recent_lists": "oops"}) == []
 
 
-def test_list_access(tmp_path: Path) -> None:
+def test_list_access_follows_windows_permissions(tmp_path: Path) -> None:
     path = tmp_path / "hosts.json"
-    assert locations.list_access(path, ListKind.PERSONAL) is Access.MISSING
+    assert locations.list_access(path) is Access.MISSING
     path.write_text("{}")
-    assert locations.list_access(path, ListKind.SHARED) is Access.READ_WRITE
-    assert locations.list_access(path, ListKind.DEFAULT) is Access.READ_ONLY
+    assert locations.list_access(path) is Access.READ_WRITE
     path.chmod(0o444)
     try:
-        assert locations.list_access(path, ListKind.SHARED) is Access.READ_ONLY
+        assert locations.list_access(path) is Access.READ_ONLY
     finally:
         path.chmod(0o666)
 
