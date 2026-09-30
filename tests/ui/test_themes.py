@@ -97,6 +97,18 @@ def test_native_overlay_is_readable_and_visible(scheme: str) -> None:
     assert ratio(c["chrome"], c["bg"]) >= 1.15
 
 
+ACCENTS = ["#0078d4", "#350461", "#ffb900", "#107c10", "#e81123", "#ffffff", "#000000"]
+
+
+@pytest.mark.parametrize("scheme", ["light", "dark"])
+@pytest.mark.parametrize("accent", ACCENTS)
+def test_selection_is_visible_and_readable_with_any_accent(scheme: str, accent: str) -> None:
+    c = themes.NATIVE_TOKENS[scheme]
+    tint = themes.selection_tint(QColor(accent), c["card"], c["text"])
+    assert themes.contrast_ratio(tint, c["card"]) >= 1.35
+    assert themes.contrast_ratio(c["text"], tint) >= 4.5
+
+
 def test_every_theme_applies_in_any_order(qapp: QApplication) -> None:
     order = themes.Registry().all()
     for theme in [*order, *reversed(order)]:  # native <-> custom and custom <-> custom switches

@@ -159,15 +159,20 @@ def apply(theme: Theme) -> None:
     _current, _applied_once = theme, True
     _follow_system_changes()
     if theme.engine == "native":
+        # Windows' default app font is 9 pt; use the same size as the custom themes.
+        readable = QFont(_native_font)
+        readable.setPointSizeF(max(DEFAULT_FONT[1], _native_font.pointSizeF()))
         app.setStyleSheet("")
-        app.setFont(_native_font)
+        app.setFont(readable)
         QGuiApplication.styleHints().setColorScheme(scheme)
         app.setPalette(QPalette())  # an empty palette makes Qt resolve the system one again
         # A fresh style instance re-polishes every widget; switching the scheme alone left some
         # views with the previous theme's colours.
         app.setStyle("windows11")
-        app.setStyleSheet(_NATIVE_QSS % NATIVE_TOKENS[native_scheme()])  # noqa: UP031
-        _refont(app, _native_font.families())
+        app.setStyleSheet(
+            _NATIVE_QSS % native_tokens(app.palette().color(QPalette.ColorRole.Accent))
+        )  # noqa: UP031
+        _refont(app, readable.families())
     else:
         if engine_changed:
             app.setFont(_native_font)
@@ -187,6 +192,34 @@ def apply(theme: Theme) -> None:
     for widget in app.topLevelWidgets():
         if widget.isWindow() and widget.isVisible():
             paint_title_bar(widget)
+
+
+def native_tokens(accent: QColor) -> dict[str, str]:
+    """The structure layer's colours for the resolved dark/light, plus selection and hover."""
+    tokens = dict(NATIVE_TOKENS[native_scheme()])
+    tokens["sel"] = selection_tint(accent, tokens["card"], tokens["text"])
+    tokens["hover"] = _mix(QColor(tokens["text"]), QColor(tokens["card"]), 0.06)
+    return tokens
+
+
+def selection_tint(accent: QColor, card: str, text: str) -> str:
+    """The lightest tint of the user's accent colour that stands out from the pane (1.35:1)
+    while keeping text readable on it (4.5:1). Any accent works, from yellow to purple."""
+    for step in range(10, 70, 2):
+        tint = _mix(accent, QColor(card), step / 100)
+        if contrast_ratio(tint, card) >= 1.35 and contrast_ratio(text, tint) >= 4.5:
+            return tint
+    return _mix(QColor(text), QColor(card), 0.18)  # an accent too close to text: plain grey
+
+
+def _mix(color: QColor, base: QColor, amount: float) -> str:
+    """`amount` of `color` laid over `base`."""
+    channels = (
+        round(base.redF() * 255 + (color.redF() - base.redF()) * 255 * amount),
+        round(base.greenF() * 255 + (color.greenF() - base.greenF()) * 255 * amount),
+        round(base.blueF() * 255 + (color.blueF() - base.blueF()) * 255 * amount),
+    )
+    return QColor(*channels).name()
 
 
 def native_scheme() -> str:
@@ -338,6 +371,9 @@ QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; }
 QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; }
 QTreeView, QFrame#card { background: %(card)s; border: 1px solid %(border)s; }
+QTreeView::item { padding: 4px 2px; }
+QTreeView::item:hover { background: %(hover)s; }
+QTreeView::item:selected { background: %(sel)s; color: %(text)s; }
 QLabel#paneTitle { color: %(text2)s; }
 """
 
