@@ -554,7 +554,7 @@ tests/                    mirrors core/
 | Personal host list | `Documents\CapyPanel\hosts.json` (§5) |
 | Default host list | `<app folder>\data\hosts.json`, read-only (§5) |
 
-- **Portable mode:** if a marker file sits next to the app's executable, everything (settings, logs, lists, the user layer of tools and profiles) stays inside the app's own folder instead. Useful on a USB stick or a shared tools folder.
+- **Portable mode:** if a marker file (`capypanel.portable`) sits next to the app's executable, everything (settings, logs, lists, the user layer of tools and profiles) stays inside the app's own folder instead, in a `userdata` subfolder. Useful on a USB stick or a shared tools folder. Run from source, the "app folder" is the repository root.
 - **The self-updater replaces the app's own files only.** It never touches `<app folder>\data\` (the default host list and the company layer) or, in portable mode, the user's files.
 - `<APP_ID>` is one internal constant. It isn't the visible brand name, so renaming the product never moves user data.
 

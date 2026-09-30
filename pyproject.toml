@@ -1,0 +1,42 @@
+[project]
+name = "capypanel"
+version = "0.1.0.dev0"
+description = "Manage the computers on your network from one window."
+readme = "README.md"
+license = "GPL-3.0-only"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "pyside6>=6.11.2",
+]
+
+[project.gui-scripts]
+capypanel = "capypanel.__main__:main"
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+# E/W/F: errors and pyflakes, I: import order, UP: modern syntax, B: likely bugs,
+# SIM: simplifications, TID: banned imports (see src/capypanel/core/ruff.toml).
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "TID"]
+
+[tool.pyright]
+include = ["src", "tests"]
+typeCheckingMode = "standard"
+pythonVersion = "3.13"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--import-mode=importlib"]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "ruff>=0.16.9",
+]

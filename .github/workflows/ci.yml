@@ -1,0 +1,26 @@
+# Runs on every pull request and every push to main. All steps must pass before merging.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  checks:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0 # this action publishes exact versions only, no "v10" tag
+        with:
+          enable-cache: true
+      - name: Install (exactly the versions in uv.lock)
+        run: uv sync --locked
+      - name: Lint (includes "core never imports the UI")
+        run: uv run ruff check
+      - name: Format
+        run: uv run ruff format --check
+      - name: Type check
+        run: uv run pyright
+      - name: Tests
+        run: uv run pytest
