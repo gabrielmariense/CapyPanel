@@ -120,12 +120,14 @@ def test_closing_saves_layout_and_keeps_other_settings(
     assert isinstance(saved["window_geometry"], str) and isinstance(saved["main_splitter"], str)
 
 
-def test_host_dialog_cleans_values_and_nests_group_names(qapp: QApplication) -> None:
+def test_host_dialog_cleans_values_and_shows_group_paths(qapp: QApplication) -> None:
     hl, hq = HostList().add_group("Headquarters")
     hl, finance = hl.add_group("Finance", parent=hq.id)
-    assert [label for _, label in group_choices(hl)] == ["Headquarters", "    Finance"]
+    # Full paths, not indentation: the closed drop-down then reads left-aligned.
+    assert [label for _, label in group_choices(hl)] == ["Headquarters", "Headquarters › Finance"]
     dialog = HostDialog(None, hl, default_group=finance.id)
+    assert dialog.group.currentText() == "Headquarters › Finance"
     dialog.name.setText("  PC-9 ")
-    dialog.tags.setText("kiosk, , floor-3, kiosk")
+    dialog.tags.add_text("kiosk, , floor-3, kiosk")
     values = dialog.values()
     assert (values.name, values.group, values.tags) == ("PC-9", finance.id, ("kiosk", "floor-3"))

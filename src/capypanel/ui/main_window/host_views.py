@@ -21,9 +21,11 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import _, ngettext
+from capypanel.ui.hosts import group_path
 
 ROLE_KIND = Qt.ItemDataRole.UserRole
 ROLE_ID = Qt.ItemDataRole.UserRole + 1
+GROUP_INDENT = 14  # px per nesting level in the Groups pane
 
 
 @dataclass(frozen=True)
@@ -42,15 +44,6 @@ def pane_title(text: str) -> QLabel:
     return label
 
 
-def group_path(host_list: HostList, group_id: str) -> str:
-    names = []
-    current = host_list.group(group_id)
-    while current is not None:
-        names.append(current.name)
-        current = host_list.group(current.parent) if current.parent else None
-    return " › ".join(reversed(names))
-
-
 class NavigationPane(QWidget):
     """Groups (with "All computers" on top) and tags below them. Picking one filters the table."""
 
@@ -61,13 +54,15 @@ class NavigationPane(QWidget):
         self._filter = Filter("all")
         self.add_group_button = QToolButton()
         self.add_group_button.setText("+")
-        self.add_group_button.setToolTip(_("Add group"))
+        self._groups_title, self._tags_title = pane_title(""), pane_title("")
         header = QHBoxLayout()
-        header.addWidget(pane_title(_("Groups")), 1)
+        header.addWidget(self._groups_title, 1)
         header.addWidget(self.add_group_button)
 
         self.groups = QTreeWidget()
         self.groups.setHeaderHidden(True)
+        # Windows 11 steps each level ~30 px; deep trees then ran off the pane.
+        self.groups.setIndentation(GROUP_INDENT)
         self.groups.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # A tree like the groups (not QListWidget), so both lists have the same row height.
         self.tags = QTreeWidget()
@@ -78,11 +73,18 @@ class NavigationPane(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addLayout(header)
         layout.addWidget(self.groups, 3)
-        layout.addWidget(pane_title(_("Tags")))
+        layout.addWidget(self._tags_title)
         layout.addWidget(self.tags, 1)
 
         self.groups.itemSelectionChanged.connect(self._groups_picked)
         self.tags.itemSelectionChanged.connect(self._tags_picked)
+        self.retranslate()
+
+    def retranslate(self) -> None:
+        """Titles only; the lists' own texts come back with the next show_list()."""
+        self.add_group_button.setToolTip(_("Add group"))
+        self._groups_title.setText(_("Groups"))
+        self._tags_title.setText(_("Tags"))
 
     def current_filter(self) -> Filter:
         return self._filter
@@ -120,6 +122,7 @@ class NavigationPane(QWidget):
             item = QTreeWidgetItem([f"{group.name} ({count})"])
             item.setData(0, ROLE_KIND, "group")
             item.setData(0, ROLE_ID, group.id)
+            item.setToolTip(0, group_path(host_list, group.id))  # full name when cut short
             parent.addChild(item)
             self._add_groups(host_list, group.id, item)
 
@@ -175,7 +178,7 @@ class HostTable(QTreeWidget):
 
     def __init__(self) -> None:
         super().__init__()
-        self.setHeaderLabels([_("Computer"), _("Address"), _("Tags"), _("Notes")])
+        self.retranslate()
         self.setRootIsDecorated(False)
         self.setUniformRowHeights(True)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
@@ -183,6 +186,9 @@ class HostTable(QTreeWidget):
         self.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._sized = False
+
+    def retranslate(self) -> None:
+        self.setHeaderLabels([_("Computer"), _("Address"), _("Tags"), _("Notes")])
 
     def show_hosts(self, hosts: Sequence[Host]) -> None:
         keep = set(self.selected_ids())
@@ -247,23 +253,18 @@ class DetailsPane(QWidget):
         form = QFormLayout(form_page)
         form.setContentsMargins(12, 10, 12, 10)
         form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
-        heading = QLabel(_("Information"))
-        font = heading.font()
+        self._heading = QLabel()
+        font = self._heading.font()
         font.setBold(True)
-        heading.setFont(font)
-        form.addRow(heading)
-        for key, label in (
-            ("name", _("Name")),
-            ("address", _("Address")),
-            ("group", _("Group")),
-            ("tags", _("Tags")),
-            ("notes", _("Notes")),
-        ):
+        self._heading.setFont(font)
+        form.addRow(self._heading)
+        self._labels: dict[str, QLabel] = {}
+        for key in ("name", "address", "group", "tags", "notes"):
             value = QLabel()
             value.setWordWrap(True)
             value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-            self._values[key] = value
-            form.addRow(label, value)
+            self._values[key], self._labels[key] = value, QLabel()
+            form.addRow(self._labels[key], value)
 
         # A card with the lists' background, so the three panes read as a set in every theme.
         card = QFrame()
@@ -277,7 +278,20 @@ class DetailsPane(QWidget):
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(card)
+        self.retranslate()
         self.show_host(None, "", 0)
+
+    def retranslate(self) -> None:
+        """Headings only; the hint comes back with the next show_host()."""
+        self._heading.setText(_("Information"))
+        for key, text in (
+            ("name", _("Name")),
+            ("address", _("Address")),
+            ("group", _("Group")),
+            ("tags", _("Tags")),
+            ("notes", _("Notes")),
+        ):
+            self._labels[key].setText(text)
 
     def show_host(self, host: Host | None, group: str, selected: int) -> None:
         if host is None:

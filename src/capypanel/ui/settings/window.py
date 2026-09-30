@@ -15,11 +15,17 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.core import settings
+from capypanel.core import i18n, settings
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.locations import same_path
 from capypanel.core.i18n import _
-from capypanel.ui.settings.pages import AppearancePage, GeneralPage, HostListsPage, Page
+from capypanel.ui.settings.pages import (
+    AppearancePage,
+    GeneralPage,
+    HostListsPage,
+    LanguagePage,
+    Page,
+)
 from capypanel.ui.themes import engine as themes
 
 
@@ -29,6 +35,7 @@ class SettingsChoices:
     host_list: Path
     rewritten: bool  # the chosen list's file was written from Settings, so reopen it
     theme_id: str
+    language: str
 
 
 class SettingsDialog(QDialog):
@@ -60,10 +67,12 @@ class SettingsDialog(QDialog):
             recent=recent,
         )
         self.appearance = AppearancePage(registry, themes.current().id)
+        self.language = LanguagePage(i18n.language())
         self.pages: dict[str, Page] = {
             "general": self.general,
             "host_lists": self.host_lists,
             "appearance": self.appearance,
+            "language": self.language,
         }
 
         self.page_list = QListWidget()
@@ -111,6 +120,7 @@ class SettingsDialog(QDialog):
             host_list=host_list,
             rewritten=any(same_path(host_list, p) for p in written),
             theme_id=self.appearance.theme_id(),
+            language=self.language.language(),
         )
 
     def showEvent(self, event: QShowEvent) -> None:

@@ -46,12 +46,13 @@ def _answer_save_dialog(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
     monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: (str(path), ""))
 
 
-def test_settings_is_in_the_file_menu_and_has_three_pages(window: MainWindow) -> None:
+def test_settings_is_in_the_file_menu_and_has_four_pages(window: MainWindow) -> None:
     assert window.commands.settings.shortcut().toString() == "Ctrl+,"
     [file_menu] = [a.menu() for a in window.menuBar().actions() if a.text() == "&File"]
     assert isinstance(file_menu, QMenu) and window.commands.settings in file_menu.actions()
     dialog = window.settings_dialog()
-    assert [p.title for p in dialog.pages.values()] == ["General", "Host lists", "Appearance"]
+    titles = [p.title for p in dialog.pages.values()]
+    assert titles == ["General", "Host lists", "Appearance", "Language"]
 
 
 def test_page_list_rows_never_overlap(window: MainWindow) -> None:

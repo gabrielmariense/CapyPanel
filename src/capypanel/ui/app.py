@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 from capypanel import __version__
 from capypanel.core import applog, i18n, migration, settings
 from capypanel.core.i18n import _
+from capypanel.ui import language
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.themes import engine as themes
 
@@ -41,7 +42,7 @@ def run(argv: list[str] | None = None) -> int:
         log.exception("Couldn't copy files from an older version")
 
     prefs = settings.load_settings(paths.settings_file)
-    i18n.set_language(prefs.get("language", i18n.DEFAULT_LANGUAGE))
+    language.apply(prefs.get("language", i18n.DEFAULT_LANGUAGE))  # before any window exists
 
     registry = themes.Registry()
     themes.apply(registry.find(prefs.get("theme")))
