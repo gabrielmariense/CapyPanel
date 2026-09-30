@@ -35,10 +35,14 @@ def test_known_tags_keep_their_spelling_and_duplicates_are_ignored(field: TagEdi
     assert field.tags() == ("kiosk", "floor-3")
 
 
-def test_backspace_on_an_empty_box_removes_the_last_chip(field: TagEdit) -> None:
-    field.add_text("a, b")
+def test_backspace_on_an_empty_box_reopens_the_last_chip_for_editing(field: TagEdit) -> None:
+    field.add_text("a, floor-4")
     QTest.keyClick(field.input, Qt.Key.Key_Backspace)
-    assert field.tags() == ("a",)
+    assert [c.text for c in field._chips] == ["a"] and field.input.text() == "floor-4"
+    QTest.keyClick(field.input, Qt.Key.Key_Backspace)  # now just a letter
+    _type(field, "3")
+    _enter(field)
+    assert field.tags() == ("a", "floor-3")
 
 
 def test_the_x_button_removes_its_chip(field: TagEdit) -> None:

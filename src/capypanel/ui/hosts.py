@@ -231,7 +231,10 @@ class TagEdit(QFrame):
                 self.input.clear()
                 return True  # consumed: an Enter that made a chip doesn't also press OK
             if key == Qt.Key.Key_Backspace and not self.input.text() and self._chips:
-                self._remove(self._chips[-1])
+                # The last chip goes back to being text, so a typo costs one letter, not the tag.
+                last = self._chips[-1]
+                self._remove(last)
+                self.input.setText(last.text)
                 return True
         if event.type() in (QEvent.Type.FocusIn, QEvent.Type.FocusOut):
             self._show_focus(event.type() == QEvent.Type.FocusIn)

@@ -21,9 +21,11 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import _, ngettext
+from capypanel.ui.hosts import group_path
 
 ROLE_KIND = Qt.ItemDataRole.UserRole
 ROLE_ID = Qt.ItemDataRole.UserRole + 1
+GROUP_INDENT = 14  # px per nesting level in the Groups pane
 
 
 @dataclass(frozen=True)
@@ -59,6 +61,8 @@ class NavigationPane(QWidget):
 
         self.groups = QTreeWidget()
         self.groups.setHeaderHidden(True)
+        # Windows 11 steps each level ~30 px; deep trees then ran off the pane.
+        self.groups.setIndentation(GROUP_INDENT)
         self.groups.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # A tree like the groups (not QListWidget), so both lists have the same row height.
         self.tags = QTreeWidget()
@@ -118,6 +122,7 @@ class NavigationPane(QWidget):
             item = QTreeWidgetItem([f"{group.name} ({count})"])
             item.setData(0, ROLE_KIND, "group")
             item.setData(0, ROLE_ID, group.id)
+            item.setToolTip(0, group_path(host_list, group.id))  # full name when cut short
             parent.addChild(item)
             self._add_groups(host_list, group.id, item)
 
