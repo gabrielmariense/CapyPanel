@@ -4,9 +4,11 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
 from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QStackedLayout,
@@ -30,6 +32,16 @@ class Filter:
     value: str | None = None
 
 
+def pane_title(text: str) -> QLabel:
+    label = QLabel(text)
+    label.setObjectName("paneTitle")
+    label.setContentsMargins(4, 4, 4, 2)
+    font = label.font()
+    font.setBold(True)
+    label.setFont(font)
+    return label
+
+
 def group_path(host_list: HostList, group_id: str) -> str:
     names = []
     current = host_list.group(group_id)
@@ -51,7 +63,7 @@ class NavigationPane(QWidget):
         self.add_group_button.setText("+")
         self.add_group_button.setToolTip(_("Add group"))
         header = QHBoxLayout()
-        header.addWidget(QLabel(_("Groups")), 1)
+        header.addWidget(pane_title(_("Groups")), 1)
         header.addWidget(self.add_group_button)
 
         self.groups = QTreeWidget()
@@ -66,7 +78,7 @@ class NavigationPane(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addLayout(header)
         layout.addWidget(self.groups, 3)
-        layout.addWidget(QLabel(_("Tags")))
+        layout.addWidget(pane_title(_("Tags")))
         layout.addWidget(self.tags, 1)
 
         self.groups.itemSelectionChanged.connect(self._groups_picked)
@@ -233,6 +245,8 @@ class DetailsPane(QWidget):
         self._values: dict[str, QLabel] = {}
         form_page = QWidget()
         form = QFormLayout(form_page)
+        form.setContentsMargins(12, 10, 12, 10)
+        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         heading = QLabel(_("Information"))
         font = heading.font()
         font.setBold(True)
@@ -251,9 +265,18 @@ class DetailsPane(QWidget):
             self._values[key] = value
             form.addRow(label, value)
 
-        self._pages = QStackedLayout(self)
+        # A card with the lists' background, so the three panes read as a set in every theme.
+        card = QFrame()
+        card.setObjectName("card")
+        card.setFrameShape(QFrame.Shape.StyledPanel)
+        card.setBackgroundRole(QPalette.ColorRole.Base)
+        card.setAutoFillBackground(True)
+        self._pages = QStackedLayout(card)
         self._pages.addWidget(self._hint)
         self._pages.addWidget(form_page)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(card)
         self.show_host(None, "", 0)
 
     def show_host(self, host: Host | None, group: str, selected: int) -> None:

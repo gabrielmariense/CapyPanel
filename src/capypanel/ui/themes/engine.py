@@ -30,13 +30,13 @@ DEFAULT_FONT: tuple[tuple[str, ...], float] = (("Segoe UI Variable Text", "Segoe
 TOKENS = {
     "dark": {
         "bg": "#0b0f17", "card": "#121826", "raised": "#182033", "border": "#212a3b",
-        "text": "#e7eaf1", "text2": "#aab2c3", "text3": "#6f7a8f",
+        "text": "#e7eaf1", "text2": "#aab2c3", "text3": "#7a8598",
         "hover": "#1494a3b8", "sel_solid": "#1b2a45",
         "accent": "#3b82f6", "accent_hover": "#5b95f7", "danger": "#f87171",
     },
     "light": {
         "bg": "#f4f6fb", "card": "#ffffff", "raised": "#f1f4f9", "border": "#e2e7f0",
-        "text": "#111827", "text2": "#4b5563", "text3": "#8a94a6",
+        "text": "#111827", "text2": "#4b5563", "text3": "#647084",
         "hover": "#0d0f172a", "sel_solid": "#e3ebfc",
         "accent": "#2563eb", "accent_hover": "#3b76ee", "danger": "#dc2626",
     },
@@ -166,6 +166,8 @@ def apply(theme: Theme) -> None:
         font = QFont()
         font.setFamilies(list(theme.font[0]))
         font.setPointSizeF(theme.font[1])
+        # Lining digits: in fonts like Georgia, old-style digits make "PC01" read as "PCo1".
+        font.setFeature(QFont.Tag("lnum"), 1)
         app.setFont(font)
         QGuiApplication.styleHints().setColorScheme(scheme)
         app.setPalette(_palette(theme.colors))
@@ -262,9 +264,12 @@ QTreeView::item, QListView::item { padding: 5px 4px; border: none; }
 QTreeView::item:hover, QListView::item:hover { background: %(hover)s; }
 QTreeView::item:selected, QListView::item:selected { background: %(sel_solid)s; color: %(text)s; }
 QHeaderView { background: %(card)s; border: none; }
-QHeaderView::section { background: %(card)s; color: %(text3)s; border: none;
+QHeaderView::section { background: %(card)s; color: %(text2)s; border: none;
                        border-bottom: 1px solid %(border)s; padding: 8px 6px; font-weight: 600; }
 QHeaderView::section:hover { color: %(text)s; }
+
+QFrame#card { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; }
+QLabel#paneTitle { color: %(text2)s; }
 
 QSplitter::handle { background: %(bg)s; }
 QSplitter::handle:horizontal { width: 8px; }
@@ -300,6 +305,22 @@ def stylesheet(theme: Theme) -> str:
     t: dict[str, object] = {k: _qss_color(v) for k, v in theme.colors.items()}
     t["r"], t["r2"] = theme.radius, max(0, theme.radius - 2)
     return _QSS % t  # noqa: UP031 -- %-format: CSS braces would all need doubling for .format()
+
+
+def contrast_ratio(a: str, b: str) -> float:
+    """WCAG contrast between two colours; normal text needs at least 4.5."""
+
+    def luminance(value: str) -> float:
+        color = QColor(value)
+
+        def linear(c: float) -> float:
+            return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+
+        red, green, blue = (linear(c) for c in (color.redF(), color.greenF(), color.blueF()))
+        return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+
+    light, dark = sorted((luminance(a), luminance(b)), reverse=True)
+    return (light + 0.05) / (dark + 0.05)
 
 
 def _qss_color(value: str) -> str:

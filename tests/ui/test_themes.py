@@ -57,6 +57,15 @@ def test_broken_theme_files_are_rejected_and_skipped(
     assert themes.Registry(tmp_path).shipped == []
 
 
+@pytest.mark.parametrize("theme", [t for t in themes.Registry().all() if t.engine == "custom"])
+def test_text_is_readable_in_every_custom_theme(theme: themes.Theme) -> None:
+    # WCAG AA: at least 4.5:1 for normal text, on both the window and the card backgrounds.
+    for text in ("text", "text2", "text3"):
+        for background in ("bg", "card"):
+            ratio = themes.contrast_ratio(theme.colors[text], theme.colors[background])
+            assert ratio >= 4.5, f"{theme.id}: {text} on {background} is only {ratio:.1f}:1"
+
+
 def test_every_theme_applies_in_any_order(qapp: QApplication) -> None:
     order = themes.Registry().all()
     for theme in [*order, *reversed(order)]:  # native <-> custom and custom <-> custom switches

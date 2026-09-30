@@ -16,6 +16,8 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QSplitter,
+    QVBoxLayout,
+    QWidget,
 )
 
 from capypanel import __version__
@@ -66,8 +68,13 @@ class MainWindow(QMainWindow):
             self._splitter.addWidget(pane)
         self._splitter.setStretchFactor(1, 1)
         self._splitter.setSizes([220, 640, 280])
-        self.setCentralWidget(self._splitter)
+        central = QWidget()
+        margins = QVBoxLayout(central)
+        margins.setContentsMargins(8, 4, 8, 2)
+        margins.addWidget(self._splitter)
+        self.setCentralWidget(central)
         self._list_label = QLabel()
+        self._list_label.setContentsMargins(6, 0, 6, 0)
         self.statusBar().addWidget(self._list_label, 1)
 
         self._build_menus()
