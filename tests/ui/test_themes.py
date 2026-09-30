@@ -3,7 +3,9 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
 from capypanel.core import settings
@@ -136,3 +138,25 @@ def test_picking_a_theme_in_the_menu_applies_and_remembers_it(
     saved = json.loads(paths.settings_file.read_text(encoding="utf-8"))
     assert saved["theme"] == "graphite"
     window.close()
+
+
+def test_clicking_a_row_draws_no_focus_box(qapp: QApplication, tmp_path: Path) -> None:
+    # Windows drew a focus box around the clicked row, which looked broken on the selection tint.
+    # A box edge shows up as a line where nearly the whole row is dark (in Windows light).
+    (tmp_path / settings.PORTABLE_MARKER).touch()
+    window = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1})
+    window.set_theme("windows-light")
+    window.show()
+    window.activateWindow()  # the box only appears in the active window
+    qapp.processEvents()
+    tree = window.nav.groups
+    [item] = tree.findItems("Hosts", Qt.MatchFlag.MatchStartsWith)
+    rect = tree.visualItemRect(item)
+    QTest.mouseClick(tree.viewport(), Qt.MouseButton.LeftButton, pos=rect.center())
+    image = tree.viewport().grab().toImage()
+    window.close()
+    for y in range(rect.top(), rect.bottom() + 1):
+        dark = sum(
+            image.pixelColor(x, y).lightness() < 90 for x in range(rect.left(), rect.right())
+        )
+        assert dark < rect.width() * 0.8, f"a focus box edge was drawn at line {y}"

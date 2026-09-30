@@ -371,6 +371,8 @@ QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; }
 QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; }
 QTreeView, QFrame#card { background: %(card)s; border: 1px solid %(border)s; }
+/* outline: 0 hides Windows' focus box around the current row; the tint already marks it. */
+QTreeView { outline: 0; }
 QTreeView::item { padding: 4px 2px; }
 QTreeView::item:hover { background: %(hover)s; }
 QTreeView::item:selected { background: %(sel)s; color: %(text)s; }
