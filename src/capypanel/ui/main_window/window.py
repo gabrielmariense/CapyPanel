@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import QByteArray, QPoint
-from PySide6.QtGui import QCloseEvent
+from PySide6.QtGui import QActionGroup, QCloseEvent, QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -16,6 +16,8 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QSplitter,
+    QVBoxLayout,
+    QWidget,
 )
 
 from capypanel import __version__
@@ -34,16 +36,25 @@ from capypanel.ui.main_window.host_views import (
     NavigationPane,
     group_path,
 )
+from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
 LIST_FILTER = "Host lists (*.json);;All files (*)"
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, paths: settings.Paths, prefs: dict[str, Any], *, open_last: bool = True):
+    def __init__(
+        self,
+        paths: settings.Paths,
+        prefs: dict[str, Any],
+        *,
+        registry: themes.Registry | None = None,
+        open_last: bool = True,
+    ):
         super().__init__()
         self._paths = paths
         self._prefs = prefs
+        self.registry = registry if registry is not None else themes.Registry()
         self._doc: OpenList | None = None
         self._default_list = locations.default_list_path()
         self._personal_list = locations.personal_list_path(paths)
@@ -57,8 +68,13 @@ class MainWindow(QMainWindow):
             self._splitter.addWidget(pane)
         self._splitter.setStretchFactor(1, 1)
         self._splitter.setSizes([220, 640, 280])
-        self.setCentralWidget(self._splitter)
+        central = QWidget()
+        margins = QVBoxLayout(central)
+        margins.setContentsMargins(8, 4, 8, 2)
+        margins.addWidget(self._splitter)
+        self.setCentralWidget(central)
         self._list_label = QLabel()
+        self._list_label.setContentsMargins(6, 0, 6, 0)
         self.statusBar().addWidget(self._list_label, 1)
 
         self._build_menus()
@@ -86,6 +102,20 @@ class MainWindow(QMainWindow):
 
         view = self.menuBar().addMenu(_("&View"))
         view.addActions([a.show_groups, a.show_details, a.show_status_bar])
+        view.addSeparator()
+        self._theme_menu = view.addMenu(_("&Theme"))
+        self._theme_group = QActionGroup(self)
+        previous_engine = None
+        for theme in self.registry.all():
+            if previous_engine and theme.engine != previous_engine:
+                self._theme_menu.addSeparator()  # native themes, then the app's own looks
+            previous_engine = theme.engine
+            item = self._theme_menu.addAction(theme.title())
+            item.setCheckable(True)
+            item.setData(theme.id)
+            item.setChecked(theme.id == themes.current().id)
+            self._theme_group.addAction(item)
+        self._theme_group.triggered.connect(lambda item: self.set_theme(item.data()))
 
     def _connect(self) -> None:
         a = self.commands
@@ -382,6 +412,21 @@ class MainWindow(QMainWindow):
         except (HostListFileError, OSError) as e:
             self._error(_("Couldn't reload the list: {error}").format(error=e))
         self._refresh()
+
+    # ---- look ----
+
+    def set_theme(self, theme_id: str) -> None:
+        theme = self.registry.find(theme_id)
+        themes.apply(theme)
+        for item in self._theme_group.actions():
+            item.setChecked(item.data() == theme.id)
+        self._prefs["theme"] = theme.id
+        self._save_prefs()
+        log.info("Theme: %s", theme.id)
+
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        themes.paint_title_bar(self)  # the window handle only exists once it's shown
 
     # ---- showing ----
 

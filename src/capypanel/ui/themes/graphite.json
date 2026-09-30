@@ -1,0 +1,19 @@
+{
+  "name": "Graphite",
+  "base": "dark",
+  "colors": {
+    "bg": "#141518",
+    "card": "#282a31",
+    "raised": "#2f3239",
+    "border": "#595e6b",
+    "text": "#e8e9ec",
+    "text2": "#b1b5bd",
+    "text3": "#8f949c",
+    "hover": "#18ffffff",
+    "sel_solid": "#1c4a45",
+    "accent": "#14b8a6",
+    "accent_hover": "#2dd4bf",
+    "chrome": "#26282e"
+  },
+  "radius": 4
+}

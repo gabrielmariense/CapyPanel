@@ -1,0 +1,23 @@
+{
+  "name": "Paper",
+  "base": "light",
+  "colors": {
+    "bg": "#d8c7a6",
+    "card": "#fffdf8",
+    "raised": "#f3ecdf",
+    "border": "#b89f76",
+    "text": "#2b2620",
+    "text2": "#4e463b",
+    "text3": "#4c463c",
+    "hover": "#12604020",
+    "sel_solid": "#f0cfb4",
+    "accent": "#c2410c",
+    "accent_hover": "#dd5a1c",
+    "chrome": "#c9b58f"
+  },
+  "font": {
+    "family": "Georgia",
+    "size": 10.5
+  },
+  "radius": 12
+}
