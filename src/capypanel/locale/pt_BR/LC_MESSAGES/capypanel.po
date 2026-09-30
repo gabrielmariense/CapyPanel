@@ -1,0 +1,493 @@
+# Portuguese (Brazil) translations for CapyPanel.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the CapyPanel project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CapyPanel VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-09-30 16:13-0300\n"
+"PO-Revision-Date: 2026-09-30 16:10-0300\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: pt_BR\n"
+"Language-Team: pt_BR <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "&Address:"
+msgstr "&Endereço:"
+
+msgid "&Browse…"
+msgstr "P&rocurar…"
+
+msgid "&Copy current list to…"
+msgstr "&Copiar lista atual para…"
+
+msgid "&Default list"
+msgstr "Lista pa&drão"
+
+msgid "&Details pane"
+msgstr "Painel de &detalhes"
+
+msgid "&Edit selected…"
+msgstr "&Editar selecionado…"
+
+msgid "&File"
+msgstr "&Arquivo"
+
+msgid "&Group:"
+msgstr "&Grupo:"
+
+msgid "&Groups pane"
+msgstr "Painel de &grupos"
+
+msgid "&Inventory"
+msgstr "&Inventário"
+
+msgid "&Language"
+msgstr "&Idioma"
+
+msgid "&Name:"
+msgstr "&Nome:"
+
+msgid "&New empty list…"
+msgstr "&Nova lista vazia…"
+
+msgid "&New host list…"
+msgstr "&Nova lista de hosts…"
+
+msgid "&Open at start:"
+msgstr "&Abrir ao iniciar:"
+
+msgid "&Open host list…"
+msgstr "&Abrir lista de hosts…"
+
+msgid "&Personal list"
+msgstr "Lista &pessoal"
+
+msgid "&Recent lists"
+msgstr "Listas &recentes"
+
+msgid "&Remove selected"
+msgstr "&Remover selecionado"
+
+msgid "&Settings…"
+msgstr "&Configurações…"
+
+msgid "&Status bar"
+msgstr "Barra de &status"
+
+msgid "&Tags:"
+msgstr "&Tags:"
+
+msgid "&Theme"
+msgstr "&Tema"
+
+msgid "&View"
+msgstr "E&xibir"
+
+msgid "A group entry isn't an object."
+msgstr "Uma entrada de grupo não é um objeto."
+
+msgid "A host entry isn't an object."
+msgstr "Uma entrada de host não é um objeto."
+
+msgid "A name is required."
+msgstr "O nome é obrigatório."
+
+msgid "Add &group…"
+msgstr "Adicionar &grupo…"
+
+msgid "Add &host…"
+msgstr "Adicionar &host…"
+
+msgid "Add group"
+msgstr "Adicionar grupo"
+
+msgid "Add host"
+msgstr "Adicionar host"
+
+msgid "Address"
+msgstr "Endereço"
+
+msgid "All computers"
+msgstr "Todos os computadores"
+
+#, python-brace-format
+msgid "An item has a missing or invalid “{key}”."
+msgstr "Um item está sem “{key}” ou com um valor inválido."
+
+msgid "Appearance"
+msgstr "Aparência"
+
+msgid "CapyPanel"
+msgstr "CapyPanel"
+
+msgid "CapyPanel — dark"
+msgstr "CapyPanel — escuro"
+
+msgid "CapyPanel — light"
+msgstr "CapyPanel — claro"
+
+msgid "Choose a host list"
+msgstr "Escolher uma lista de hosts"
+
+msgid "Computer"
+msgstr "Computador"
+
+#, python-brace-format
+msgid "Copied to “{path}”. Save to open it."
+msgstr "Copiada para “{path}”. Salve para abri-la."
+
+msgid "Copy the current list to"
+msgstr "Copiar a lista atual para"
+
+#, python-brace-format
+msgid "Couldn't create “{path}”: {error}"
+msgstr "Não foi possível criar “{path}”: {error}"
+
+#, python-brace-format
+msgid "Couldn't open “{path}”: {error}"
+msgstr "Não foi possível abrir “{path}”: {error}"
+
+#, python-brace-format
+msgid "Couldn't open “{wanted}”, so “{opened}” was opened instead."
+msgstr "Não foi possível abrir “{wanted}”, então “{opened}” foi aberta no lugar."
+
+#, python-brace-format
+msgid "Couldn't reload the list: {error}"
+msgstr "Não foi possível recarregar a lista: {error}"
+
+#, python-brace-format
+msgid "Couldn't save the copy: {error}"
+msgstr "Não foi possível salvar a cópia: {error}"
+
+#, python-brace-format
+msgid "Couldn't save the list: {error}"
+msgstr "Não foi possível salvar a lista: {error}"
+
+#, python-brace-format
+msgid "Couldn't write “{path}”: {error}"
+msgstr "Não foi possível gravar “{path}”: {error}"
+
+msgid "Created when opened"
+msgstr "Criada ao abrir"
+
+#, python-brace-format
+msgid "Created “{path}”. Save to open it."
+msgstr "“{path}” criada. Salve para abri-la."
+
+msgid "Default"
+msgstr "Padrão"
+
+msgid "E&xit"
+msgstr "&Sair"
+
+msgid "Edit host"
+msgstr "Editar host"
+
+msgid "File not found"
+msgstr "Arquivo não encontrado"
+
+msgid "For example \\\\server\\share\\hosts.json"
+msgstr "Por exemplo \\\\servidor\\compartilhamento\\hosts.json"
+
+msgid "General"
+msgstr "Geral"
+
+msgid "Group"
+msgstr "Grupo"
+
+#, python-brace-format
+msgid "Group “{name}” is inside a group that doesn't exist."
+msgstr "O grupo “{name}” está dentro de um grupo que não existe."
+
+#, python-brace-format
+msgid "Group “{name}” is nested inside itself."
+msgstr "O grupo “{name}” está dentro de si mesmo."
+
+msgid "Groups"
+msgstr "Grupos"
+
+msgid "Host lists"
+msgstr "Listas de hosts"
+
+msgid "Host lists (*.json);;All files (*)"
+msgstr "Listas de hosts (*.json);;Todos os arquivos (*)"
+
+msgid "Host name or IP; empty uses the name"
+msgstr "Nome do host ou IP; vazio usa o nome"
+
+#, python-brace-format
+msgid "Host “{name}” is in a group that doesn't exist."
+msgstr "O host “{name}” está em um grupo que não existe."
+
+msgid "Hosts"
+msgstr "Hosts"
+
+msgid "If that list can't be opened, CapyPanel opens the default list, or else your personal list."
+msgstr "Se essa lista não puder ser aberta, o CapyPanel abre a lista padrão ou, se não houver, a sua lista pessoal."
+
+msgid "Information"
+msgstr "Informações"
+
+#, python-brace-format
+msgid "Its {n} host will be removed too."
+msgid_plural "Its {n} hosts will be removed too."
+msgstr[0] "O host desse grupo também será removido."
+msgstr[1] "Os {n} hosts desse grupo também serão removidos."
+
+msgid "Language"
+msgstr "Idioma"
+
+msgid "Language of the app"
+msgstr "Idioma do aplicativo"
+
+msgid "Languages can also be switched from View > Language."
+msgstr "O idioma também pode ser trocado em Exibir > Idioma."
+
+msgid "Logs"
+msgstr "Logs"
+
+msgid "Make a list"
+msgstr "Criar uma lista"
+
+msgid "My personal list"
+msgstr "Minha lista pessoal"
+
+msgid "N&otes:"
+msgstr "&Observações:"
+
+msgid "Name"
+msgstr "Nome"
+
+#, python-brace-format
+msgid "Name of the new group inside “{group}”:"
+msgstr "Nome do novo grupo dentro de “{group}”:"
+
+msgid "Name of the new group:"
+msgstr "Nome do novo grupo:"
+
+msgid "New empty host list"
+msgstr "Nova lista de hosts vazia"
+
+msgid "New host list"
+msgstr "Nova lista de hosts"
+
+msgid "New name:"
+msgstr "Novo nome:"
+
+msgid "No host list is open."
+msgstr "Nenhuma lista de hosts aberta."
+
+msgid "No recent lists"
+msgstr "Nenhuma lista recente"
+
+msgid "Not found"
+msgstr "Não encontrada"
+
+msgid "Notes"
+msgstr "Observações"
+
+msgid "Open folder"
+msgstr "Abrir pasta"
+
+msgid "Open host list"
+msgstr "Abrir lista de hosts"
+
+msgid "Open this list"
+msgstr "Abrir esta lista"
+
+msgid "Personal"
+msgstr "Pessoal"
+
+msgid "Portable mode: everything stays in the app's own folder."
+msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
+
+msgid "Read-only"
+msgstr "Somente leitura"
+
+msgid "Read-write"
+msgstr "Leitura e gravação"
+
+msgid "Reload the list"
+msgstr "Recarregar a lista"
+
+msgid "Remove"
+msgstr "Remover"
+
+msgid "Remove group"
+msgstr "Remover grupo"
+
+msgid "Remove hosts"
+msgstr "Remover hosts"
+
+#, python-brace-format
+msgid "Remove the group “{name}” and the groups inside it?"
+msgstr "Remover o grupo “{name}” e os grupos dentro dele?"
+
+#, python-brace-format
+msgid "Remove {n} host from the list?"
+msgid_plural "Remove {n} hosts from the list?"
+msgstr[0] "Remover {n} host da lista?"
+msgstr[1] "Remover {n} hosts da lista?"
+
+#, python-brace-format
+msgid "Remove “{name}” from the list?"
+msgstr "Remover “{name}” da lista?"
+
+msgid "Rename group"
+msgstr "Renomear grupo"
+
+msgid "Save a copy"
+msgstr "Salvar uma cópia"
+
+msgid "Save my version as a copy…"
+msgstr "Salvar minha versão como cópia…"
+
+msgid "Select a host to see its details."
+msgstr "Selecione um host para ver os detalhes."
+
+msgid "Separate tags with commas"
+msgstr "Separe as tags com vírgulas"
+
+msgid "Settings"
+msgstr "Configurações"
+
+msgid "Shared"
+msgstr "Compartilhada"
+
+msgid "Shared or &other list"
+msgstr "Lista compartilhada ou &outra"
+
+msgid "Someone else saved changes to this list after you opened it, so your change wasn't saved. You can save your version as a separate copy, or reload the list with their changes."
+msgstr "Outra pessoa salvou alterações nesta lista depois que você a abriu, então a sua alteração não foi salva. Você pode salvar a sua versão como uma cópia separada ou recarregar a lista com as alterações da outra pessoa."
+
+msgid "Something went wrong. The details were saved to the app log."
+msgstr "Algo deu errado. Os detalhes foram salvos no log do aplicativo."
+
+msgid "Starting up"
+msgstr "Ao iniciar"
+
+msgid "Tags"
+msgstr "Tags"
+
+msgid "That group doesn't exist."
+msgstr "Esse grupo não existe."
+
+msgid "That host is no longer in the list."
+msgstr "Esse host não está mais na lista."
+
+msgid "The app switches right away, without restarting."
+msgstr "O aplicativo muda na hora, sem reiniciar."
+
+msgid "The app's own looks, the same on every computer."
+msgstr "Os visuais do próprio aplicativo, iguais em todos os computadores."
+
+msgid "The default list"
+msgstr "A lista padrão"
+
+msgid "The default list is placed in the app's folder by whoever manages CapyPanel. The personal list is yours alone. Any list can be edited by people with write permission on its folder; for everyone else it opens read-only."
+msgstr "A lista padrão é colocada na pasta do aplicativo por quem administra o CapyPanel. A lista pessoal é só sua. Qualquer lista pode ser editada por quem tem permissão de gravação na pasta dela; para os demais, ela abre somente para leitura."
+
+msgid "The file doesn't contain a host list."
+msgstr "O arquivo não contém uma lista de hosts."
+
+msgid "The file has no valid schema version."
+msgstr "O arquivo não tem uma versão de esquema válida."
+
+msgid "The file has two items with the same ID."
+msgstr "O arquivo tem dois itens com o mesmo ID."
+
+msgid "The file was changed by someone else since it was opened."
+msgstr "O arquivo foi alterado por outra pessoa desde que foi aberto."
+
+#, python-brace-format
+msgid "The folder “{folder}” was created by another user, so CapyPanel won't use it. Ask an administrator to delete it; it will be created again."
+msgstr "A pasta “{folder}” foi criada por outro usuário, então o CapyPanel não vai usá-la. Peça a um administrador para excluí-la; ela será criada de novo."
+
+msgid "The last used list"
+msgstr "A última lista usada"
+
+msgid "The list was changed"
+msgstr "A lista foi alterada"
+
+#, python-brace-format
+msgid "The list “{path}” doesn't exist anymore."
+msgstr "A lista “{path}” não existe mais."
+
+msgid "The parent group doesn't exist."
+msgstr "O grupo pai não existe."
+
+msgid "Themes can also be switched from View > Theme."
+msgstr "Os temas também podem ser trocados em Exibir > Tema."
+
+#, python-brace-format
+msgid "This isn't a valid host list file ({error})."
+msgstr "Este não é um arquivo de lista de hosts válido ({error})."
+
+msgid "This list is read-only."
+msgstr "Esta lista é somente leitura."
+
+msgid "This list was saved by a newer version of CapyPanel. Update the app to open it."
+msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o aplicativo para abri-la."
+
+msgid "Unexpected error"
+msgstr "Erro inesperado"
+
+msgid "Where CapyPanel keeps its files"
+msgstr "Onde o CapyPanel guarda os arquivos"
+
+msgid "Windows"
+msgstr "Windows"
+
+msgid "Windows — dark"
+msgstr "Windows — escuro"
+
+msgid "Windows — follow system"
+msgstr "Windows — seguir o sistema"
+
+msgid "Windows — light"
+msgstr "Windows — claro"
+
+msgid "Windows' own look, with your accent colour."
+msgstr "A aparência do próprio Windows, com a sua cor de destaque."
+
+msgid "Your files"
+msgstr "Seus arquivos"
+
+msgid "Your settings, personal list, tools and profiles. Only you and administrators can open this folder. Each user's log is named after their account."
+msgstr "Suas configurações, lista pessoal, ferramentas e perfis. Só você e os administradores podem abrir esta pasta. O log de cada usuário leva o nome da conta dele."
+
+msgid "portable mode"
+msgstr "modo portátil"
+
+msgid "read-only"
+msgstr "somente leitura"
+
+#, python-brace-format
+msgid "{n} host"
+msgid_plural "{n} hosts"
+msgstr[0] "{n} host"
+msgstr[1] "{n} hosts"
+
+#, python-brace-format
+msgid "{n} host selected"
+msgid_plural "{n} hosts selected"
+msgstr[0] "{n} host selecionado"
+msgstr[1] "{n} hosts selecionados"
+
+#, python-brace-format
+msgid "{n} selected"
+msgid_plural "{n} selected"
+msgstr[0] "{n} selecionado"
+msgstr[1] "{n} selecionados"
+
+#, python-brace-format
+msgid "“{key}” should be a list."
+msgstr "“{key}” deveria ser uma lista."
+

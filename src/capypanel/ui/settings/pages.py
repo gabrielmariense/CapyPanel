@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.core import settings
+from capypanel.core import i18n, settings
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.listfile import HostListFileError
@@ -369,6 +369,35 @@ def _state_text(access: Access, missing: str) -> str:
         Access.READ_WRITE: _("Read-write"),
         Access.MISSING: missing,
     }[access]
+
+
+# ---- Language ----
+
+
+class LanguagePage(Page):
+    def __init__(self, current: str) -> None:
+        super().__init__(_("Language"))
+        self._group = QButtonGroup(self)
+        box = QGroupBox(_("Language of the app"))
+        layout = QVBoxLayout(box)
+        # Each language is named in its own language, so anyone can find theirs.
+        for code, name in i18n.LANGUAGES.items():
+            button = QRadioButton(name)
+            button.setProperty("language", code)
+            button.setChecked(code == current)
+            self._group.addButton(button)
+            layout.addWidget(button)
+        layout.addWidget(hint(_("The app switches right away, without restarting.")))
+        self.body.addWidget(box)
+        self.body.addWidget(hint(_("Languages can also be switched from View > Language.")))
+        self.body.addStretch(1)
+
+    def language(self) -> str:
+        button = self._group.checkedButton()
+        return str(button.property("language")) if button else i18n.DEFAULT_LANGUAGE
+
+    def buttons(self) -> list[QRadioButton]:
+        return [b for b in self._group.buttons() if isinstance(b, QRadioButton)]
 
 
 # ---- Appearance ----

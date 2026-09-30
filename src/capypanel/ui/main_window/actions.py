@@ -1,6 +1,6 @@
 """Every main-window command, defined once and reused by menus, right-click menus and shortcuts."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QWidget
@@ -23,24 +23,41 @@ class Actions:
     show_status_bar: QAction
 
 
-def create_actions(parent: QWidget) -> Actions:
-    def action(text: str, shortcut: str | None = None, *, checkable: bool = False) -> QAction:
-        new = QAction(text, parent)
-        if shortcut:
-            new.setShortcut(QKeySequence(shortcut))
-        new.setCheckable(checkable)
-        return new
+SHORTCUTS = {
+    "open_list": "Ctrl+O",
+    "settings": "Ctrl+,",
+    "exit": "Ctrl+Q",
+    "add_host": "Ctrl+N",
+    "add_group": "Ctrl+Shift+N",
+    "edit": "F2",
+    "remove": "Del",
+}
+CHECKABLE = {"show_groups", "show_details", "show_status_bar"}
 
-    return Actions(
-        new_list=action(_("&New host list…")),
-        open_list=action(_("&Open host list…"), "Ctrl+O"),
-        settings=action(_("&Settings…"), "Ctrl+,"),
-        exit=action(_("E&xit"), "Ctrl+Q"),
-        add_host=action(_("Add &host…"), "Ctrl+N"),
-        add_group=action(_("Add &group…"), "Ctrl+Shift+N"),
-        edit=action(_("&Edit selected…"), "F2"),
-        remove=action(_("&Remove selected"), "Del"),
-        show_groups=action(_("&Groups pane"), checkable=True),
-        show_details=action(_("&Details pane"), checkable=True),
-        show_status_bar=action(_("&Status bar"), checkable=True),
-    )
+
+def create_actions(parent: QWidget) -> Actions:
+    made = {}
+    for field in fields(Actions):
+        action = QAction(parent)
+        if field.name in SHORTCUTS:
+            action.setShortcut(QKeySequence(SHORTCUTS[field.name]))
+        action.setCheckable(field.name in CHECKABLE)
+        made[field.name] = action
+    actions = Actions(**made)
+    retranslate_actions(actions)
+    return actions
+
+
+def retranslate_actions(a: Actions) -> None:
+    """Sets every command's text in the current language; runs again when it changes."""
+    a.new_list.setText(_("&New host list…"))
+    a.open_list.setText(_("&Open host list…"))
+    a.settings.setText(_("&Settings…"))
+    a.exit.setText(_("E&xit"))
+    a.add_host.setText(_("Add &host…"))
+    a.add_group.setText(_("Add &group…"))
+    a.edit.setText(_("&Edit selected…"))
+    a.remove.setText(_("&Remove selected"))
+    a.show_groups.setText(_("&Groups pane"))
+    a.show_details.setText(_("&Details pane"))
+    a.show_status_bar.setText(_("&Status bar"))

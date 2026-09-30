@@ -5,7 +5,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import QByteArray, QPoint
+from PySide6.QtCore import QByteArray, QEvent, QPoint
 from PySide6.QtGui import QActionGroup, QCloseEvent, QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
@@ -21,15 +21,16 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel import __version__
-from capypanel.core import settings
+from capypanel.core import i18n, settings
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
+from capypanel.ui import language
 from capypanel.ui.hosts import HostDialog, confirm, list_file_filter
-from capypanel.ui.main_window.actions import create_actions
+from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.host_views import (
     DetailsPane,
     HostTable,
@@ -85,37 +86,62 @@ class MainWindow(QMainWindow):
     # ---- building ----
 
     def _build_menus(self) -> None:
+        """Menus are built without text; retranslate() fills it in, now and on every switch."""
         a = self.commands
-        file_menu = self.menuBar().addMenu(_("&File"))
-        file_menu.addActions([a.new_list, a.open_list])
-        self._recent_menu = file_menu.addMenu(_("&Recent lists"))
+        bar = self.menuBar()
+        self._file_menu = bar.addMenu("")
+        self._file_menu.addActions([a.new_list, a.open_list])
+        self._recent_menu = self._file_menu.addMenu("")
         self._recent_menu.aboutToShow.connect(self._fill_recent_menu)
-        file_menu.addSeparator()
-        file_menu.addAction(a.settings)
-        file_menu.addSeparator()
-        file_menu.addAction(a.exit)
+        self._file_menu.addSeparator()
+        self._file_menu.addAction(a.settings)
+        self._file_menu.addSeparator()
+        self._file_menu.addAction(a.exit)
 
-        inventory = self.menuBar().addMenu(_("&Inventory"))
-        inventory.addActions([a.add_host, a.add_group])
-        inventory.addSeparator()
-        inventory.addActions([a.edit, a.remove])
+        self._inventory_menu = bar.addMenu("")
+        self._inventory_menu.addActions([a.add_host, a.add_group])
+        self._inventory_menu.addSeparator()
+        self._inventory_menu.addActions([a.edit, a.remove])
 
-        view = self.menuBar().addMenu(_("&View"))
-        view.addActions([a.show_groups, a.show_details, a.show_status_bar])
-        view.addSeparator()
-        self._theme_menu = view.addMenu(_("&Theme"))
+        self._view_menu = bar.addMenu("")
+        self._view_menu.addActions([a.show_groups, a.show_details, a.show_status_bar])
+        self._view_menu.addSeparator()
+        self._theme_menu = self._view_menu.addMenu("")
         self._theme_group = QActionGroup(self)
         previous_engine = None
         for theme in self.registry.all():
             if previous_engine and theme.engine != previous_engine:
                 self._theme_menu.addSeparator()  # native themes, then the app's own looks
             previous_engine = theme.engine
-            item = self._theme_menu.addAction(theme.title())
+            item = self._theme_menu.addAction("")
             item.setCheckable(True)
             item.setData(theme.id)
             item.setChecked(theme.id == themes.current().id)
             self._theme_group.addAction(item)
         self._theme_group.triggered.connect(lambda item: self.set_theme(item.data()))
+
+        # Each language is named in its own language, so these texts never change.
+        self._language_menu = self._view_menu.addMenu("")
+        self._language_group = QActionGroup(self)
+        for code, name in i18n.LANGUAGES.items():
+            item = self._language_menu.addAction(name)
+            item.setCheckable(True)
+            item.setData(code)
+            item.setChecked(code == i18n.language())
+            self._language_group.addAction(item)
+        self._language_group.triggered.connect(lambda item: self.set_language(item.data()))
+        self._retranslate_menus()
+
+    def _retranslate_menus(self) -> None:
+        retranslate_actions(self.commands)
+        self._file_menu.setTitle(_("&File"))
+        self._recent_menu.setTitle(_("&Recent lists"))
+        self._inventory_menu.setTitle(_("&Inventory"))
+        self._view_menu.setTitle(_("&View"))
+        self._theme_menu.setTitle(_("&Theme"))
+        self._language_menu.setTitle(_("&Language"))
+        for item in self._theme_group.actions():
+            item.setText(self.registry.find(item.data()).title())
 
     def _connect(self) -> None:
         a = self.commands
@@ -465,6 +491,8 @@ class MainWindow(QMainWindow):
             self.open_list(choices.host_list)
         if choices.theme_id != themes.current().id:
             self.set_theme(choices.theme_id)
+        if choices.language != i18n.language():
+            self.set_language(choices.language)
         self._save_prefs()
 
     # ---- look ----
@@ -477,6 +505,28 @@ class MainWindow(QMainWindow):
         self._prefs["theme"] = theme.id
         self._save_prefs()
         log.info("Theme: %s", theme.id)
+
+    def set_language(self, code: str) -> None:
+        """Switches live: Qt then sends every window a LanguageChange event (see changeEvent)."""
+        code = language.apply(code)
+        for item in self._language_group.actions():
+            item.setChecked(item.data() == code)
+        self._prefs["language"] = code
+        self._save_prefs()
+        log.info("Language: %s", code)
+
+    def changeEvent(self, event: QEvent) -> None:
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.LanguageChange:
+            self.retranslate()
+
+    def retranslate(self) -> None:
+        """Every text this window shows, in the current language."""
+        self._retranslate_menus()
+        self.nav.retranslate()
+        self.table.retranslate()
+        self.details.retranslate()
+        self._refresh()  # rebuilds the lists ("All computers"), details hint and status bar
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
