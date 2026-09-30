@@ -3,7 +3,7 @@
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFormLayout,
@@ -170,9 +170,7 @@ class HostTable(QTreeWidget):
         self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        # Modest starting widths; Notes (the last column) stretches to fill the rest.
-        for column, width in enumerate((170, 120, 150)):
-            self.setColumnWidth(column, width)
+        self._sized = False
 
     def show_hosts(self, hosts: Sequence[Host]) -> None:
         keep = set(self.selected_ids())
@@ -188,7 +186,23 @@ class HostTable(QTreeWidget):
             item.setSelected(host.id in keep)
         self.setSortingEnabled(True)
         self.blockSignals(False)
+        if hosts and not self._sized:
+            self._fit_columns()
         self.itemSelectionChanged.emit()
+
+    def changeEvent(self, event: QEvent) -> None:
+        super().changeEvent(event)
+        # A theme with another font (e.g. Paper's Georgia) makes the old widths cut text off.
+        if event.type() == QEvent.Type.FontChange and self.topLevelItemCount():
+            self._fit_columns()
+
+    def _fit_columns(self) -> None:
+        # Once, on the first real content: fit the first columns (capped) and let Notes stretch
+        # into the rest. Fixed starting widths overflowed narrow windows. Columns stay draggable.
+        self._sized = True
+        for column in range(self.columnCount() - 1):
+            self.resizeColumnToContents(column)
+            self.setColumnWidth(column, min(self.columnWidth(column) + 16, 260))
 
     def selected_ids(self) -> list[str]:
         return [item.data(0, ROLE_ID) for item in self.selectedItems()]

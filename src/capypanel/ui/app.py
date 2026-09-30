@@ -11,6 +11,7 @@ from capypanel import __version__
 from capypanel.core import applog, i18n, settings
 from capypanel.core.i18n import _
 from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +30,9 @@ def run(argv: list[str] | None = None) -> int:
     app.setApplicationVersion(__version__)
     sys.excepthook = _report_unexpected_error
 
-    window = MainWindow(paths, prefs)
+    registry = themes.Registry()
+    themes.apply(registry.find(prefs.get("theme")))
+    window = MainWindow(paths, prefs, registry=registry)
     window.show()
     code = app.exec()
     log.info("CapyPanel exiting (code %s)", code)
