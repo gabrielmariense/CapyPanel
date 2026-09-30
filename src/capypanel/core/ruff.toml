@@ -1,8 +1,9 @@
-# Same lint rules as the project, plus: core/ never imports a UI library (DECISIONS §9).
+# Same lint rules as the project, plus: core/ never imports a UI library, so all logic
+# stays testable without a window and the UI toolkit only touches ui/.
 extend = "../../../pyproject.toml"
 
 [lint.flake8-tidy-imports.banned-api]
-"PySide6".msg = "core/ must not import UI libraries (DECISIONS §9); put this in ui/."
-"shiboken6".msg = "core/ must not import UI libraries (DECISIONS §9); put this in ui/."
-"PyQt6".msg = "core/ must not import UI libraries (DECISIONS §9); put this in ui/."
-"tkinter".msg = "core/ must not import UI libraries (DECISIONS §9); put this in ui/."
+"PySide6".msg = "core/ must not import UI libraries; put this in ui/."
+"shiboken6".msg = "core/ must not import UI libraries; put this in ui/."
+"PyQt6".msg = "core/ must not import UI libraries; put this in ui/."
+"tkinter".msg = "core/ must not import UI libraries; put this in ui/."

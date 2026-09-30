@@ -29,7 +29,10 @@ uv run pyright              # type check
 settings and logs in a `userdata` folder beside it. When you run from source,
 "next to the app" means the repository root.
 
-Design decisions and the rules every feature follows: [`DECISIONS.md`](DECISIONS.md).
+**Layout:**
+- `src/capypanel/core/` is the logic, and never imports a UI library (lint enforces it).
+- `src/capypanel/ui/` is the Qt interface.
+- `tests/` mirrors `src/`.
 
 ## License
 
