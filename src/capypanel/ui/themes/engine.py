@@ -29,17 +29,25 @@ THEMES_DIR = Path(__file__).resolve().parent
 DEFAULT_FONT: tuple[tuple[str, ...], float] = (("Segoe UI Variable Text", "Segoe UI"), 10.0)
 TOKENS = {
     "dark": {
-        "bg": "#0b0f17", "card": "#182033", "raised": "#1f2940", "border": "#425680",
+        "bg": "#0b0f17", "card": "#1d273d", "raised": "#232e46", "border": "#465c88",
         "chrome": "#1d2638", "text": "#e7eaf1", "text2": "#aab2c3", "text3": "#8590a1",
         "hover": "#1494a3b8", "sel_solid": "#28406d",
         "accent": "#3b82f6", "accent_hover": "#5b95f7", "danger": "#f87171",
     },
     "light": {
-        "bg": "#e7ebf2", "card": "#ffffff", "raised": "#f1f4f9", "border": "#a1afc6",
-        "chrome": "#d3dae6", "text": "#111827", "text2": "#4b5563", "text3": "#545e6e",
+        "bg": "#d9dfe9", "card": "#ffffff", "raised": "#f1f4f9", "border": "#a1afc6",
+        "chrome": "#c5cedc", "text": "#111827", "text2": "#4b5563", "text3": "#4d5765",
         "hover": "#0d0f172a", "sel_solid": "#cfdcf7",
         "accent": "#2563eb", "accent_hover": "#3b76ee", "danger": "#dc2626",
     },
+}  # fmt: skip
+# Native themes keep Windows' own widgets; this light layer only adds visible structure
+# (window background, pane borders, header/footer bars), following the resolved dark/light.
+NATIVE_TOKENS = {
+    "light": {"bg": "#e3e3e3", "card": "#ffffff", "chrome": "#d0d0d0", "border": "#aeaeae",
+              "text": "#000000", "text2": "#404040"},
+    "dark": {"bg": "#1b1b1b", "card": "#2d2d2d", "chrome": "#292929", "border": "#616161",
+             "text": "#ffffff", "text2": "#c8c8c8"},
 }  # fmt: skip
 
 
@@ -124,6 +132,7 @@ class Registry:
 
 _current: Theme = DEFAULT_THEME
 _applied_once = False
+_watching_system = False
 _native_font: QFont | None = None
 
 
@@ -148,6 +157,7 @@ def apply(theme: Theme) -> None:
     # is Qt's stylesheet wrapper, whose name is empty, so it never reads as "fusion".
     engine_changed = theme.engine != _current.engine or not _applied_once
     _current, _applied_once = theme, True
+    _follow_system_changes()
     if theme.engine == "native":
         app.setStyleSheet("")
         app.setFont(_native_font)
@@ -156,6 +166,7 @@ def apply(theme: Theme) -> None:
         # A fresh style instance re-polishes every widget; switching the scheme alone left some
         # views with the previous theme's colours.
         app.setStyle("windows11")
+        app.setStyleSheet(_NATIVE_QSS % NATIVE_TOKENS[native_scheme()])  # noqa: UP031
         _refont(app, _native_font.families())
     else:
         if engine_changed:
@@ -176,6 +187,27 @@ def apply(theme: Theme) -> None:
     for widget in app.topLevelWidgets():
         if widget.isWindow() and widget.isVisible():
             paint_title_bar(widget)
+
+
+def native_scheme() -> str:
+    """The dark/light the native theme resolves to ("follow system" asks Windows)."""
+    if _current.scheme != "system":
+        return _current.scheme
+    dark = QGuiApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
+    return "dark" if dark else "light"
+
+
+def _follow_system_changes() -> None:
+    # When Windows switches dark/light, "follow system" re-applies itself with the new scheme.
+    global _watching_system
+    if not _watching_system:
+        _watching_system = True
+        QGuiApplication.styleHints().colorSchemeChanged.connect(_system_scheme_changed)
+
+
+def _system_scheme_changed() -> None:
+    if _current.scheme == "system":
+        apply(_current)
 
 
 def _refont(app: QApplication, families: list[str]) -> None:
@@ -298,6 +330,15 @@ QScrollBar::add-page, QScrollBar::sub-page { background: none; }
 
 QMessageBox { background: %(card)s; }
 QToolTip { background: %(card)s; color: %(text)s; border: 1px solid %(border)s; padding: 4px 8px; }
+"""
+
+_NATIVE_QSS = """
+QMainWindow, QSplitter::handle { background: %(bg)s; }
+QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; }
+QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }
+QStatusBar QLabel { color: %(text2)s; }
+QTreeView, QFrame#card { background: %(card)s; border: 1px solid %(border)s; }
+QLabel#paneTitle { color: %(text2)s; }
 """
 
 

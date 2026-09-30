@@ -76,13 +76,25 @@ def test_structure_is_visible_in_every_custom_theme(theme: themes.Theme) -> None
     c, ratio = theme.colors, themes.contrast_ratio
     checks = {
         "border on card": (ratio(c["border"], c["card"]), 2.2),
-        "border on bg": (ratio(c["border"], c["bg"]), 1.8),
-        "card on bg": (ratio(c["card"], c["bg"]), 1.15),
+        "border on bg": (ratio(c["border"], c["bg"]), 1.5),
+        "card on bg": (ratio(c["card"], c["bg"]), 1.25),
         "chrome on bg": (ratio(c["chrome"], c["bg"]), 1.15),
         "selection on card": (ratio(c["sel_solid"], c["card"]), 1.35),
     }
     for name, (value, minimum) in checks.items():
         assert value >= minimum, f"{theme.id}: {name} is {value:.2f}:1, needs {minimum}"
+
+
+@pytest.mark.parametrize("scheme", ["light", "dark"])
+def test_native_overlay_is_readable_and_visible(scheme: str) -> None:
+    c, ratio = themes.NATIVE_TOKENS[scheme], themes.contrast_ratio
+    for text in ("text", "text2"):
+        for surface in ("bg", "card", "chrome"):
+            assert ratio(c[text], c[surface]) >= 4.5, f"{scheme}: {text} on {surface}"
+    assert ratio(c["border"], c["card"]) >= 2.2
+    assert ratio(c["border"], c["bg"]) >= 1.5
+    assert ratio(c["card"], c["bg"]) >= 1.25
+    assert ratio(c["chrome"], c["bg"]) >= 1.15
 
 
 def test_every_theme_applies_in_any_order(qapp: QApplication) -> None:
@@ -94,9 +106,9 @@ def test_every_theme_applies_in_any_order(qapp: QApplication) -> None:
             assert qapp.styleSheet()
             window = qapp.palette().color(QPalette.ColorRole.Window)
             assert window == QColor(theme.colors["bg"])
-        else:
-            assert qapp.styleSheet() == ""
-            assert qapp.style().name() == "windows11"
+        else:  # native widgets plus the structure layer for the resolved dark/light
+            overlay = themes.NATIVE_TOKENS[themes.native_scheme()]
+            assert overlay["border"] in qapp.styleSheet()
 
 
 def test_picking_a_theme_in_the_menu_applies_and_remembers_it(

@@ -2,18 +2,18 @@
   "name": "Paper",
   "base": "light",
   "colors": {
-    "bg": "#efe7d8",
+    "bg": "#d8c7a6",
     "card": "#fffdf8",
     "raised": "#f3ecdf",
-    "border": "#c0aa85",
+    "border": "#b89f76",
     "text": "#2b2620",
-    "text2": "#5b5245",
-    "text3": "#635b4e",
+    "text2": "#4e463b",
+    "text3": "#4c463c",
     "hover": "#12604020",
     "sel_solid": "#f0cfb4",
     "accent": "#c2410c",
     "accent_hover": "#dd5a1c",
-    "chrome": "#e2d5bd"
+    "chrome": "#c9b58f"
   },
   "font": {
     "family": "Georgia",
