@@ -1,28 +1,14 @@
 from pathlib import Path
 from typing import Any
 
-from capypanel.core import settings
 from capypanel.core.hosts import locations
-from capypanel.core.hosts.locations import ListKind
+from capypanel.core.hosts.locations import Access, ListKind
 
 ENV = {"APPDATA": r"C:\Users\u\AppData\Roaming", "LOCALAPPDATA": r"C:\Users\u\AppData\Local"}
 
 
-def test_personal_list_is_in_documents_or_next_to_the_app_when_portable(tmp_path: Path) -> None:
-    normal = settings.resolve_paths(tmp_path, ENV)
-    docs = Path(r"D:\Docs")
-    assert locations.personal_list_path(normal, docs) == docs / "CapyPanel" / "hosts.json"
-    (tmp_path / settings.PORTABLE_MARKER).touch()
-    portable = settings.resolve_paths(tmp_path, ENV)
-    assert locations.personal_list_path(portable, docs).is_relative_to(tmp_path)
-
-
 def test_default_list_is_in_the_app_data_folder(tmp_path: Path) -> None:
     assert locations.default_list_path(tmp_path) == tmp_path / "data" / "hosts.json"
-
-
-def test_documents_dir_is_a_real_folder() -> None:
-    assert locations.documents_dir().is_dir()
 
 
 def test_list_kind(tmp_path: Path) -> None:
@@ -61,3 +47,31 @@ def test_recent_lists_are_capped_and_can_forget() -> None:
 
 def test_bad_recent_value_is_ignored() -> None:
     assert locations.recent_lists({"recent_lists": "oops"}) == []
+
+
+def test_list_access_follows_windows_permissions(tmp_path: Path) -> None:
+    path = tmp_path / "hosts.json"
+    assert locations.list_access(path) is Access.MISSING
+    path.write_text("{}")
+    assert locations.list_access(path) is Access.READ_WRITE
+    path.chmod(0o444)
+    try:
+        assert locations.list_access(path) is Access.READ_ONLY
+    finally:
+        path.chmod(0o666)
+
+
+def test_startup_order_tries_the_choice_then_default_then_personal() -> None:
+    default, personal = Path(r"C:\app\data\hosts.json"), Path(r"C:\me\hosts.json")
+    shared = Path(r"\\server\it\hosts.json")
+
+    def order(prefs: dict[str, Any]) -> list[Path]:
+        return locations.startup_order(prefs, default=default, personal=personal)
+
+    assert order({}) == [default, personal]  # first start: nothing used yet
+    last = {"recent_lists": [str(shared)]}
+    assert order(last) == [shared, default, personal]
+    assert order({**last, "start_list": "personal"}) == [personal, default]
+    assert order({**last, "start_list": "default"}) == [default, personal]
+    assert order({"start_list": str(shared)}) == [shared, default, personal]
+    assert order({"start_list": 42}) == [default, personal]  # a broken value means "last used"

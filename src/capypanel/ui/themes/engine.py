@@ -319,6 +319,8 @@ QComboBox { background: %(card)s; border: 1px solid %(border)s; border-radius: %
             padding: 4px 10px; min-height: 22px; }
 QComboBox:hover { border-color: %(text3)s; }
 QComboBox::drop-down { border: none; width: 24px; }
+/* Styling the drop-down button removes Fusion's arrow, so draw our own. */
+QComboBox::down-arrow { image: url("%(arrow)s"); width: 10px; height: 6px; }
 QComboBox QAbstractItemView { background: %(card)s; border: 1px solid %(border)s; outline: 0;
                               selection-background-color: %(sel_solid)s;
                               selection-color: %(text)s; }
@@ -334,7 +336,22 @@ QHeaderView::section { background: %(card)s; color: %(text2)s; border: none;
 QHeaderView::section:hover { color: %(text)s; }
 
 QFrame#card { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; }
-QLabel#paneTitle { color: %(text2)s; }
+QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
+QListView#pageList::item { padding: 7px 10px; }
+
+/* Fusion outlines these with a darker shade of the background, invisible in dark themes. */
+QRadioButton::indicator, QCheckBox::indicator {
+    width: 14px; height: 14px; border: 1px solid %(border)s; background: %(card)s; }
+QRadioButton::indicator { border-radius: 8px; }
+QCheckBox::indicator { border-radius: 3px; }
+QRadioButton::indicator:hover, QCheckBox::indicator:hover { border-color: %(accent)s; }
+QRadioButton::indicator:checked { border-color: %(accent)s;
+    background: qradialgradient(cx: 0.5, cy: 0.5, radius: 0.5, fx: 0.5, fy: 0.5,
+                                stop: 0 %(accent)s, stop: 0.45 %(accent)s,
+                                stop: 0.55 %(card)s, stop: 1 %(card)s); }
+QCheckBox::indicator:checked { border-color: %(accent)s; background: %(accent)s;
+                               image: url("%(check)s"); }
+QRadioButton::indicator:disabled, QCheckBox::indicator:disabled { background: %(raised)s; }
 
 QSplitter::handle { background: %(bg)s; }
 QSplitter::handle:horizontal { width: 8px; }
@@ -366,23 +383,28 @@ QToolTip { background: %(card)s; color: %(text)s; border: 1px solid %(border)s; 
 """
 
 _NATIVE_QSS = """
-QMainWindow, QSplitter::handle { background: %(bg)s; }
+QMainWindow, QDialog, QSplitter::handle { background: %(bg)s; }
 QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; }
 QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; }
-QTreeView, QFrame#card { background: %(card)s; border: 1px solid %(border)s; }
+/* Only the settings page list, not every QListView: combo box pop-ups are list views too. */
+QTreeView, QListView#pageList, QFrame#card { background: %(card)s; border: 1px solid %(border)s; }
 /* outline: 0 hides Windows' focus box around the current row; the tint already marks it. */
-QTreeView { outline: 0; }
+QTreeView, QListView#pageList { outline: 0; }
 QTreeView::item { padding: 4px 2px; }
-QTreeView::item:hover { background: %(hover)s; }
-QTreeView::item:selected { background: %(sel)s; color: %(text)s; }
-QLabel#paneTitle { color: %(text2)s; }
+QListView#pageList::item { padding: 4px 8px; }
+QTreeView::item:hover, QListView#pageList::item:hover { background: %(hover)s; }
+QTreeView::item:selected, QListView#pageList::item:selected {
+    background: %(sel)s; color: %(text)s; }
+QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
 """
 
 
 def stylesheet(theme: Theme) -> str:
     t: dict[str, object] = {k: _qss_color(v) for k, v in theme.colors.items()}
     t["r"], t["r2"] = theme.radius, max(0, theme.radius - 2)
+    t["check"] = (THEMES_DIR / "check.svg").as_posix()
+    t["arrow"] = (THEMES_DIR / f"arrow-{theme.scheme}.svg").as_posix()
     return _QSS % t  # noqa: UP031 -- %-format: CSS braces would all need doubling for .format()
 
 

@@ -1,4 +1,5 @@
 import json
+import re
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -160,3 +161,13 @@ def test_clicking_a_row_draws_no_focus_box(qapp: QApplication, tmp_path: Path) -
             image.pixelColor(x, y).lightness() < 90 for x in range(rect.left(), rect.right())
         )
         assert dark < rect.width() * 0.8, f"a focus box edge was drawn at line {y}"
+
+
+@pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
+def test_images_the_stylesheet_uses_ship_with_the_themes(theme: themes.Theme) -> None:
+    # Custom themes draw their own checkbox ticks and drop-down arrows; a missing file
+    # means an empty checked box or a drop-down that doesn't look clickable.
+    sheet = themes.stylesheet(theme)
+    images = re.findall(r'url\("([^"]+)"\)', sheet)
+    assert len(images) == 2
+    assert all(Path(image).is_file() for image in images), images

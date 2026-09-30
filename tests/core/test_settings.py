@@ -1,33 +1,86 @@
+import ctypes
 import json
+import re
+import subprocess
+from ctypes import wintypes
 from pathlib import Path
 
-from capypanel.core import settings
+import pytest
 
-ENV = {"APPDATA": r"C:\Users\u\AppData\Roaming", "LOCALAPPDATA": r"C:\Users\u\AppData\Local"}
+from capypanel.core import settings, winsec
+
+ENV = {"PROGRAMDATA": r"C:\ProgramData"}
 
 
-def test_normal_mode_uses_profile_folders(tmp_path: Path) -> None:
-    paths = settings.resolve_paths(tmp_path, ENV)
-    assert not paths.portable
-    assert paths.settings_dir == Path(ENV["APPDATA"]) / settings.APP_ID
-    assert paths.log_dir == Path(ENV["LOCALAPPDATA"]) / settings.APP_ID
+def test_everything_is_in_one_folder_per_computer(tmp_path: Path) -> None:
+    paths = settings.resolve_paths(tmp_path, ENV, account="ana@CORP")
+    root = Path(r"C:\ProgramData\CapyPanel")
+    assert not paths.portable and paths.root == root
+    assert paths.settings_file == root / "users" / "ana@CORP" / "settings.json"
+    assert paths.personal_list == root / "users" / "ana@CORP" / "hosts.json"
+    assert paths.log_file == root / "logs" / "ana@CORP.log"
 
 
 def test_marker_file_switches_to_portable_mode(tmp_path: Path) -> None:
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    paths = settings.resolve_paths(tmp_path, ENV)
-    assert paths.portable
-    assert paths.settings_dir.is_relative_to(tmp_path)
-    assert paths.log_dir.is_relative_to(tmp_path)
+    paths = settings.resolve_paths(tmp_path, ENV, account="ana@CORP")
+    assert paths.portable and paths.root == tmp_path / "userdata"
+    assert paths.user_dir.is_relative_to(tmp_path) and paths.log_file.is_relative_to(tmp_path)
 
 
-def test_first_run_creates_empty_user_folders(tmp_path: Path) -> None:
-    (tmp_path / settings.PORTABLE_MARKER).touch()
-    paths = settings.resolve_paths(tmp_path, ENV)
+def test_account_names_are_safe_folder_names(tmp_path: Path) -> None:
+    paths = settings.resolve_paths(tmp_path, ENV, account="odd:name?@PC")
+    assert paths.account == "odd_name_@PC"
+
+
+def test_real_account_is_user_at_domain(tmp_path: Path) -> None:
+    user, _at, domain = winsec.account_name().partition("@")
+    assert user and domain
+
+
+def test_first_run_creates_only_a_private_user_folder(tmp_path: Path) -> None:
+    paths = settings.resolve_paths(tmp_path, ENV | {"PROGRAMDATA": str(tmp_path)})
     settings.ensure_dirs(paths)
-    assert paths.user_tools_dir.is_dir() and not any(paths.user_tools_dir.iterdir())
-    assert paths.user_profiles_dir.is_dir() and not any(paths.user_profiles_dir.iterdir())
+    assert paths.user_dir.is_dir() and not any(paths.user_dir.iterdir())
     assert paths.log_dir.is_dir()
+    # icacls /save writes the permissions as SDDL: the same text in any Windows language.
+    saved = tmp_path / "acl.txt"
+    subprocess.run(["icacls", str(paths.user_dir), "/save", str(saved)], check=True)
+    sddl = saved.read_text(encoding="utf-16-le")
+    # "D:P": inheritance blocked, so the Users group's read access doesn't reach the folder.
+    [dacl] = [line for line in sddl.splitlines() if line.startswith("D:")]
+    assert dacl.startswith("D:P")
+    aces = re.findall(r"\(A;OICI;FA;;;([^)]+)\)", dacl)
+    assert dacl.count("(") == len(aces) == 3  # full access for exactly three accounts, nothing else
+    # Windows writes some accounts in short form ("LA" = the built-in Administrator, as on CI).
+    assert {_long_sid(a) for a in aces} == {
+        winsec.SYSTEM,
+        winsec.ADMINISTRATORS,
+        winsec.current_user_sid(),
+    }
+
+
+def _long_sid(text: str) -> str:
+    # "S-1-5-18" for "SY", and so on; long forms come back unchanged.
+    advapi32 = ctypes.WinDLL("advapi32")
+    advapi32.ConvertStringSidToSidW.argtypes = [wintypes.LPCWSTR, ctypes.POINTER(ctypes.c_void_p)]
+    advapi32.ConvertSidToStringSidW.argtypes = [
+        ctypes.c_void_p,
+        ctypes.POINTER(wintypes.LPWSTR),
+    ]
+    sid, out = ctypes.c_void_p(), wintypes.LPWSTR()
+    assert advapi32.ConvertStringSidToSidW(text, ctypes.byref(sid))
+    assert advapi32.ConvertSidToStringSidW(sid, ctypes.byref(out))
+    return out.value or ""
+
+
+def test_a_user_folder_made_by_someone_else_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    paths = settings.resolve_paths(tmp_path, {"PROGRAMDATA": str(tmp_path)}, account="bob@CORP")
+    monkeypatch.setattr(winsec, "owner_sid", lambda _path: "S-1-5-21-1-2-3-1234")
+    with pytest.raises(settings.UserFolderError, match="another user"):
+        settings.ensure_dirs(paths)
 
 
 def test_missing_file_gives_defaults(tmp_path: Path) -> None:

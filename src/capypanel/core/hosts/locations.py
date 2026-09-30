@@ -6,58 +6,28 @@ from pathlib import Path
 from typing import Any
 
 from capypanel.core import settings
+from capypanel.core.hosts import listfile
 
 RECENT_KEY = "recent_lists"
+START_KEY = "start_list"  # "last", "default", "personal", or a list file's path
+START_LAST, START_DEFAULT, START_PERSONAL = "last", "default", "personal"
 RECENT_LIMIT = 10
 
 
 class ListKind(StrEnum):
-    DEFAULT = "default"  # in the app folder, read-only, placed by an admin
-    PERSONAL = "personal"  # the user's own, in Documents
+    DEFAULT = "default"  # in the app folder, placed by an admin; editable where Windows allows
+    PERSONAL = "personal"  # the user's own, in their private CapyPanel folder
     SHARED = "shared"  # any other file the user picked, e.g. on a network share
+
+
+class Access(StrEnum):
+    MISSING = "missing"
+    READ_ONLY = "read-only"
+    READ_WRITE = "read-write"
 
 
 def default_list_path(folder: Path | None = None) -> Path:
     return (folder if folder is not None else settings.app_dir()) / "data" / "hosts.json"
-
-
-def personal_list_path(paths: settings.Paths, documents: Path | None = None) -> Path:
-    if paths.portable:
-        return paths.settings_dir / "hosts.json"
-    return (documents if documents is not None else documents_dir()) / "CapyPanel" / "hosts.json"
-
-
-def documents_dir() -> Path:
-    """The real Documents folder, which may be redirected (OneDrive, a server share)."""
-    import ctypes
-    from ctypes import wintypes
-
-    class GUID(ctypes.Structure):
-        _fields_ = [
-            ("Data1", wintypes.DWORD),
-            ("Data2", wintypes.WORD),
-            ("Data3", wintypes.WORD),
-            ("Data4", ctypes.c_ubyte * 8),
-        ]
-
-    folderid_documents = GUID(
-        0xFDD39AD0,
-        0x238F,
-        0x46AF,
-        (ctypes.c_ubyte * 8)(0xAD, 0xB4, 0x6C, 0x85, 0x48, 0x03, 0x69, 0xC7),
-    )
-    result = ctypes.c_wchar_p()
-    shell32 = ctypes.WinDLL("shell32")
-    ole32 = ctypes.WinDLL("ole32")
-    try:
-        status = shell32.SHGetKnownFolderPath(
-            ctypes.byref(folderid_documents), 0, None, ctypes.byref(result)
-        )
-        if status == 0 and result.value:
-            return Path(result.value)
-    finally:
-        ole32.CoTaskMemFree(result)
-    return Path.home() / "Documents"
 
 
 def list_kind(path: Path, *, default: Path, personal: Path) -> ListKind:
@@ -66,6 +36,35 @@ def list_kind(path: Path, *, default: Path, personal: Path) -> ListKind:
     if same_path(path, personal):
         return ListKind.PERSONAL
     return ListKind.SHARED
+
+
+def list_access(path: Path) -> Access:
+    """What the user can do with a list file. Windows permissions decide, for every kind of
+    list: the default list is read-only for users because they can't write the app folder."""
+    if not path.is_file():
+        return Access.MISSING
+    if not listfile.can_write(path):
+        return Access.READ_ONLY
+    return Access.READ_WRITE
+
+
+def startup_order(prefs: dict[str, Any], *, default: Path, personal: Path) -> list[Path]:
+    """Lists to try at start, best first. The personal list is last: it's created if missing."""
+    choice = prefs.get(START_KEY, START_LAST)
+    if choice == START_DEFAULT:
+        first: Path | None = default
+    elif choice == START_PERSONAL:
+        first = personal
+    elif isinstance(choice, str) and choice and choice != START_LAST:
+        first = Path(choice)
+    else:
+        recent = recent_lists(prefs)
+        first = recent[0] if recent else None
+    order: list[Path] = []
+    for path in (first, default, personal):
+        if path is not None and not any(same_path(path, p) for p in order):
+            order.append(path)
+    return order
 
 
 def recent_lists(prefs: dict[str, Any]) -> list[Path]:

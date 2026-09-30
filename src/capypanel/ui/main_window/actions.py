@@ -12,6 +12,7 @@ from capypanel.core.i18n import _
 class Actions:
     new_list: QAction
     open_list: QAction
+    settings: QAction
     exit: QAction
     add_host: QAction
     add_group: QAction
@@ -33,6 +34,7 @@ def create_actions(parent: QWidget) -> Actions:
     return Actions(
         new_list=action(_("&New host list…")),
         open_list=action(_("&Open host list…"), "Ctrl+O"),
+        settings=action(_("&Settings…"), "Ctrl+,"),
         exit=action(_("E&xit"), "Ctrl+Q"),
         add_host=action(_("Add &host…"), "Ctrl+N"),
         add_group=action(_("Add &group…"), "Ctrl+Shift+N"),

@@ -1,6 +1,11 @@
-"""Where the app keeps its files, portable mode, and the settings file."""
+"""Where the app keeps its files, portable mode, and the settings file.
+
+Everything lives in one folder per computer, C:\\ProgramData\\CapyPanel (or <app>\\userdata when
+portable): users\\<user@DOMAIN>\\ holds each user's settings, personal list, tools and profiles,
+private to that user and administrators; logs\\<user@DOMAIN>.log holds one log per user."""
 
 import json
+import logging
 import os
 import sys
 from collections.abc import Mapping
@@ -8,9 +13,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from capypanel.core import winsec
+from capypanel.core.i18n import _
+
+log = logging.getLogger(__name__)
+
 APP_ID = "CapyPanel"  # internal folder name; stays the same if the product is renamed
 PORTABLE_MARKER = "capypanel.portable"
 SETTINGS_SCHEMA = 1
+_NOT_IN_FILE_NAMES = '<>:"/\\|?*'
+
+
+class UserFolderError(Exception):
+    """The user's folder belongs to someone else, so it isn't safe to use."""
 
 
 def app_dir() -> Path:
@@ -22,46 +37,74 @@ def app_dir() -> Path:
 
 @dataclass(frozen=True)
 class Paths:
-    settings_dir: Path
-    log_dir: Path
+    root: Path  # ProgramData\CapyPanel, or <app>\userdata when portable
+    account: str  # "user@DOMAIN": names this user's folder and log file
     portable: bool
 
     @property
+    def user_dir(self) -> Path:
+        return self.root / "users" / self.account
+
+    @property
+    def log_dir(self) -> Path:
+        return self.root / "logs"
+
+    @property
+    def log_file(self) -> Path:
+        return self.log_dir / f"{self.account}.log"
+
+    @property
     def settings_file(self) -> Path:
-        return self.settings_dir / "settings.json"
+        return self.user_dir / "settings.json"
+
+    @property
+    def personal_list(self) -> Path:
+        return self.user_dir / "hosts.json"
 
     @property
     def user_tools_dir(self) -> Path:
-        return self.settings_dir / "tools"
+        return self.user_dir / "tools"
 
     @property
     def user_profiles_dir(self) -> Path:
-        return self.settings_dir / "profiles"
+        return self.user_dir / "profiles"
 
 
-def resolve_paths(folder: Path | None = None, env: Mapping[str, str] | None = None) -> Paths:
-    """Normal mode uses the Windows profile folders; a marker next to the app means portable."""
+def resolve_paths(
+    folder: Path | None = None,
+    env: Mapping[str, str] | None = None,
+    account: str | None = None,
+) -> Paths:
+    """ProgramData normally; a marker file next to the app means portable (in the app folder)."""
     folder = folder if folder is not None else app_dir()
+    name = account if account is not None else winsec.account_name()
+    name = "".join("_" if c in _NOT_IN_FILE_NAMES else c for c in name)
     if (folder / PORTABLE_MARKER).exists():
-        data = folder / "userdata"
-        return Paths(settings_dir=data, log_dir=data / "logs", portable=True)
+        return Paths(root=folder / "userdata", account=name, portable=True)
     env = os.environ if env is None else env
-    return Paths(
-        settings_dir=Path(env["APPDATA"]) / APP_ID,
-        log_dir=Path(env["LOCALAPPDATA"]) / APP_ID,
-        portable=False,
-    )
+    return Paths(root=Path(env["PROGRAMDATA"]) / APP_ID, account=name, portable=False)
 
 
 def ensure_dirs(paths: Paths) -> None:
-    """Create the app's own folders. The user layer starts empty: presets are never copied."""
-    for folder in (
-        paths.settings_dir,
-        paths.log_dir,
-        paths.user_tools_dir,
-        paths.user_profiles_dir,
-    ):
-        folder.mkdir(parents=True, exist_ok=True)
+    """Create the user's folder, private to them. Subfolders (tools, profiles) are created
+    only when something is first saved there. Raises UserFolderError if someone else made
+    the folder first."""
+    paths.log_dir.mkdir(parents=True, exist_ok=True)
+    paths.user_dir.mkdir(parents=True, exist_ok=True)
+    me = winsec.current_user_sid()
+    owner = winsec.owner_sid(paths.user_dir)
+    # Anyone can create folders in ProgramData, so another user could have made "ours" first.
+    if owner is not None and owner not in (me, winsec.ADMINISTRATORS, winsec.SYSTEM):
+        raise UserFolderError(
+            _(
+                "The folder “{folder}” was created by another user, so CapyPanel won't use it. "
+                "Ask an administrator to delete it; it will be created again."
+            ).format(folder=paths.user_dir)
+        )
+    try:
+        winsec.make_private(paths.user_dir, me)  # every start: repairs changed permissions
+    except OSError as e:
+        log.warning("Couldn't make %s private: %s", paths.user_dir, e)
 
 
 def load_settings(path: Path) -> dict[str, Any]:
