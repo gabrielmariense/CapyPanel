@@ -29,15 +29,15 @@ THEMES_DIR = Path(__file__).resolve().parent
 DEFAULT_FONT: tuple[tuple[str, ...], float] = (("Segoe UI Variable Text", "Segoe UI"), 10.0)
 TOKENS = {
     "dark": {
-        "bg": "#0b0f17", "card": "#121826", "raised": "#182033", "border": "#212a3b",
-        "text": "#e7eaf1", "text2": "#aab2c3", "text3": "#7a8598",
-        "hover": "#1494a3b8", "sel_solid": "#1b2a45",
+        "bg": "#0b0f17", "card": "#182033", "raised": "#1f2940", "border": "#425680",
+        "chrome": "#1d2638", "text": "#e7eaf1", "text2": "#aab2c3", "text3": "#8590a1",
+        "hover": "#1494a3b8", "sel_solid": "#28406d",
         "accent": "#3b82f6", "accent_hover": "#5b95f7", "danger": "#f87171",
     },
     "light": {
-        "bg": "#f4f6fb", "card": "#ffffff", "raised": "#f1f4f9", "border": "#e2e7f0",
-        "text": "#111827", "text2": "#4b5563", "text3": "#647084",
-        "hover": "#0d0f172a", "sel_solid": "#e3ebfc",
+        "bg": "#e7ebf2", "card": "#ffffff", "raised": "#f1f4f9", "border": "#a1afc6",
+        "chrome": "#d3dae6", "text": "#111827", "text2": "#4b5563", "text3": "#545e6e",
+        "hover": "#0d0f172a", "sel_solid": "#cfdcf7",
         "accent": "#2563eb", "accent_hover": "#3b76ee", "danger": "#dc2626",
     },
 }  # fmt: skip
@@ -231,7 +231,7 @@ def _palette(t: dict[str, str]) -> QPalette:
 # the view spaces them, which made rows overlap in the spike's settings window.
 _QSS = """
 QMainWindow, QDialog { background: %(bg)s; }
-QMenuBar { background: %(bg)s; padding: 4px 8px 0 8px; }
+QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; padding: 4px 8px 2px 8px; }
 QMenuBar::item { padding: 4px 10px; border-radius: 6px; color: %(text2)s; background: transparent; }
 QMenuBar::item:selected { background: %(hover)s; color: %(text)s; }
 QMenu { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; padding: 5px; }
@@ -283,8 +283,8 @@ QGroupBox { border: 1px solid %(border)s; border-radius: %(r)spx; margin-top: 16
             padding: 14px 12px 10px 12px; background: %(card)s; }
 QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 4px; color: %(text2)s; }
 
-QStatusBar { background: %(bg)s; color: %(text3)s; }
-QStatusBar QLabel { color: %(text3)s; padding: 2px 8px; }
+QStatusBar { background: %(chrome)s; color: %(text2)s; border-top: 1px solid %(border)s; }
+QStatusBar QLabel { color: %(text2)s; padding: 2px 8px; }
 QStatusBar::item { border: none; }
 
 QScrollBar:vertical { background: transparent; width: 12px; margin: 2px; }

@@ -57,13 +57,32 @@ def test_broken_theme_files_are_rejected_and_skipped(
     assert themes.Registry(tmp_path).shipped == []
 
 
-@pytest.mark.parametrize("theme", [t for t in themes.Registry().all() if t.engine == "custom"])
+CUSTOM = [t for t in themes.Registry().all() if t.engine == "custom"]
+
+
+@pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_text_is_readable_in_every_custom_theme(theme: themes.Theme) -> None:
-    # WCAG AA: at least 4.5:1 for normal text, on both the window and the card backgrounds.
-    for text in ("text", "text2", "text3"):
-        for background in ("bg", "card"):
-            ratio = themes.contrast_ratio(theme.colors[text], theme.colors[background])
-            assert ratio >= 4.5, f"{theme.id}: {text} on {background} is only {ratio:.1f}:1"
+    # WCAG AA: at least 4.5:1 for normal text, on every surface it's drawn on.
+    # Selected rows always use the main text colour.
+    pairs = [(t, s) for t in ("text", "text2", "text3") for s in ("bg", "card", "chrome")]
+    for text, surface in [*pairs, ("text", "sel_solid")]:
+        ratio = themes.contrast_ratio(theme.colors[text], theme.colors[surface])
+        assert ratio >= 4.5, f"{theme.id}: {text} on {surface} is only {ratio:.1f}:1"
+
+
+@pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
+def test_structure_is_visible_in_every_custom_theme(theme: themes.Theme) -> None:
+    # Borders, panes, header/footer and the selected row must stand out from what's around them.
+    c, ratio = theme.colors, themes.contrast_ratio
+    checks = {
+        "border on card": (ratio(c["border"], c["card"]), 2.2),
+        "border on bg": (ratio(c["border"], c["bg"]), 1.8),
+        "card on bg": (ratio(c["card"], c["bg"]), 1.15),
+        "chrome on bg": (ratio(c["chrome"], c["bg"]), 1.15),
+        "selection on card": (ratio(c["sel_solid"], c["card"]), 1.35),
+    }
+    for name, (value, minimum) in checks.items():
+        assert value >= minimum, f"{theme.id}: {name} is {value:.2f}:1, needs {minimum}"
 
 
 def test_every_theme_applies_in_any_order(qapp: QApplication) -> None:

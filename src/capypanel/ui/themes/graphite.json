@@ -2,17 +2,18 @@
   "name": "Graphite",
   "base": "dark",
   "colors": {
-    "bg": "#16171b",
-    "card": "#1e2025",
-    "raised": "#25282e",
-    "border": "#30333b",
+    "bg": "#141518",
+    "card": "#212329",
+    "raised": "#2a2d33",
+    "border": "#535864",
     "text": "#e8e9ec",
     "text2": "#b1b5bd",
-    "text3": "#848993",
+    "text3": "#8c919a",
     "hover": "#18ffffff",
-    "sel_solid": "#153734",
+    "sel_solid": "#1c4a45",
     "accent": "#14b8a6",
-    "accent_hover": "#2dd4bf"
+    "accent_hover": "#2dd4bf",
+    "chrome": "#26282e"
   },
   "radius": 4
 }
