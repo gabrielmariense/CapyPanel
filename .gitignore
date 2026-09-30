@@ -17,9 +17,10 @@ htmlcov/
 build/
 dist/
 
-# Logs and local runtime data
+# Logs and local runtime data (portable mode run from source keeps its data in the repo root)
 *.log
-portable.marker
+capypanel.portable
+userdata/
 
 # Editors and OS
 .vscode/
