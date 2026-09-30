@@ -95,7 +95,7 @@ def test_default_list_can_only_be_picked_when_it_exists(
         return SettingsDialog(
             None,
             paths=paths,
-            open_last_list=True,
+            start_list="last",
             default_list=default,
             personal_list=tmp_path / "me.json",
             document=None,
@@ -140,7 +140,7 @@ def test_cancel_changes_nothing(window: MainWindow, office: Path) -> None:
     dialog = window.settings_dialog()
     dialog.host_lists.other_path.setText(str(office))
     dialog.host_lists.other_choice.setChecked(True)
-    dialog.general.open_last.setChecked(False)
+    dialog.general.start_list.setCurrentIndex(dialog.general.start_list.count() - 1)
     dialog.reject()
     assert window.document is not None and window.document.path == before
     assert window._prefs == prefs
@@ -187,14 +187,42 @@ def test_new_empty_list_over_the_open_one_reopens_it(
     assert not window.document.hosts.hosts
 
 
-def test_turning_off_open_last_starts_with_no_list(
-    window: MainWindow, paths: settings.Paths
+def test_start_list_choice_is_opened_next_time(
+    window: MainWindow, paths: settings.Paths, office: Path
 ) -> None:
+    window.open_list(office)  # the last used list...
     dialog = window.settings_dialog()
-    dialog.general.open_last.setChecked(False)
+    general = dialog.general.start_list
+    assert general.currentData() == "last"
+    assert [general.itemData(i) for i in range(general.count())] == [
+        "last",
+        "personal",
+        str(office),
+    ]
+    general.setCurrentIndex(general.findData("personal"))
     window.apply_settings(dialog.choices())
     again = MainWindow(paths, settings.load_settings(paths.settings_file))
-    assert again.document is None
+    assert again.document is not None and again.document.path == window._personal_list
+    again.close()
+
+
+def test_a_missing_start_list_falls_back_and_says_so(
+    window: MainWindow, paths: settings.Paths, office: Path
+) -> None:
+    prefs = {"schema": 1, "start_list": str(office.with_name("gone.json"))}
+    again = MainWindow(paths, prefs)
+    assert again.document is not None and again.document.path == window._personal_list
+    assert "gone.json" in again.statusBar().currentMessage()
+    again.close()
+
+
+def test_last_used_list_is_reopened(
+    window: MainWindow, paths: settings.Paths, office: Path
+) -> None:
+    window.open_list(office)
+    again = MainWindow(paths, settings.load_settings(paths.settings_file))
+    assert again.document is not None and again.document.path == office
+    assert not again.statusBar().currentMessage()
     again.close()
 
 

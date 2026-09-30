@@ -40,7 +40,6 @@ from capypanel.ui.settings.window import SettingsChoices, SettingsDialog
 from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
-OPEN_LAST_KEY = "open_last_list"
 
 
 class MainWindow(QMainWindow):
@@ -50,7 +49,6 @@ class MainWindow(QMainWindow):
         prefs: dict[str, Any],
         *,
         registry: themes.Registry | None = None,
-        open_last: bool = True,
     ):
         super().__init__()
         self._paths = paths
@@ -81,8 +79,7 @@ class MainWindow(QMainWindow):
         self._build_menus()
         self._connect()
         self._restore_layout()
-        if open_last and self._prefs.get(OPEN_LAST_KEY, True) is not False:
-            self._open_startup_list()
+        self._open_startup_list()
         self._refresh()
 
     # ---- building ----
@@ -168,10 +165,22 @@ class MainWindow(QMainWindow):
         return self._doc
 
     def _open_startup_list(self) -> None:
-        recent = locations.recent_lists(self._prefs)
-        if recent and recent[0].exists() and self.open_list(recent[0], quiet=True):
-            return
-        self.open_list(self._personal_list)
+        """The chosen list (normally the last used), else the default, else the personal one."""
+        prefs = self._prefs
+        order = locations.startup_order(
+            prefs, default=self._default_list, personal=self._personal_list
+        )
+        # On a first start there's nothing to miss; otherwise say when the expected list failed.
+        expected = prefs.get(locations.START_KEY, locations.START_LAST) != locations.START_LAST
+        expected = expected or bool(locations.recent_lists(prefs))
+        for index, path in enumerate(order):
+            if not path.exists() and self._kind(path) is not ListKind.PERSONAL:
+                continue  # a missing list isn't an error at start: try the next one
+            if self.open_list(path, quiet=True):
+                if index and expected:
+                    note = _("Couldn't open “{wanted}”, so “{opened}” was opened instead.")
+                    self._error(note.format(wanted=order[0], opened=path), quiet=True)
+                return
 
     def open_list(self, path: Path, *, quiet: bool = False) -> bool:
         kind = self._kind(path)
@@ -437,7 +446,7 @@ class MainWindow(QMainWindow):
         return SettingsDialog(
             self,
             paths=self._paths,
-            open_last_list=self._prefs.get(OPEN_LAST_KEY, True) is not False,
+            start_list=self._prefs.get(locations.START_KEY, locations.START_LAST),
             default_list=self._default_list,
             personal_list=self._personal_list,
             document=self._doc,
@@ -446,7 +455,7 @@ class MainWindow(QMainWindow):
         )
 
     def apply_settings(self, choices: SettingsChoices) -> None:
-        self._prefs[OPEN_LAST_KEY] = choices.open_last_list
+        self._prefs[locations.START_KEY] = choices.start_list
         current = self._doc.path if self._doc else None
         if (
             current is None

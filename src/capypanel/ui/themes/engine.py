@@ -319,6 +319,8 @@ QComboBox { background: %(card)s; border: 1px solid %(border)s; border-radius: %
             padding: 4px 10px; min-height: 22px; }
 QComboBox:hover { border-color: %(text3)s; }
 QComboBox::drop-down { border: none; width: 24px; }
+/* Styling the drop-down button removes Fusion's arrow, so draw our own. */
+QComboBox::down-arrow { image: url("%(arrow)s"); width: 10px; height: 6px; }
 QComboBox QAbstractItemView { background: %(card)s; border: 1px solid %(border)s; outline: 0;
                               selection-background-color: %(sel_solid)s;
                               selection-color: %(text)s; }
@@ -402,6 +404,7 @@ def stylesheet(theme: Theme) -> str:
     t: dict[str, object] = {k: _qss_color(v) for k, v in theme.colors.items()}
     t["r"], t["r2"] = theme.radius, max(0, theme.radius - 2)
     t["check"] = (THEMES_DIR / "check.svg").as_posix()
+    t["arrow"] = (THEMES_DIR / f"arrow-{theme.scheme}.svg").as_posix()
     return _QSS % t  # noqa: UP031 -- %-format: CSS braces would all need doubling for .format()
 
 

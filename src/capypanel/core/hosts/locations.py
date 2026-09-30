@@ -9,6 +9,8 @@ from capypanel.core import settings
 from capypanel.core.hosts import listfile
 
 RECENT_KEY = "recent_lists"
+START_KEY = "start_list"  # "last", "default", "personal", or a list file's path
+START_LAST, START_DEFAULT, START_PERSONAL = "last", "default", "personal"
 RECENT_LIMIT = 10
 
 
@@ -82,6 +84,25 @@ def list_access(path: Path, kind: ListKind) -> Access:
     if kind is ListKind.DEFAULT or not listfile.can_write(path):
         return Access.READ_ONLY
     return Access.READ_WRITE
+
+
+def startup_order(prefs: dict[str, Any], *, default: Path, personal: Path) -> list[Path]:
+    """Lists to try at start, best first. The personal list is last: it's created if missing."""
+    choice = prefs.get(START_KEY, START_LAST)
+    if choice == START_DEFAULT:
+        first: Path | None = default
+    elif choice == START_PERSONAL:
+        first = personal
+    elif isinstance(choice, str) and choice and choice != START_LAST:
+        first = Path(choice)
+    else:
+        recent = recent_lists(prefs)
+        first = recent[0] if recent else None
+    order: list[Path] = []
+    for path in (first, default, personal):
+        if path is not None and not any(same_path(path, p) for p in order):
+            order.append(path)
+    return order
 
 
 def recent_lists(prefs: dict[str, Any]) -> list[Path]:

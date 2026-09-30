@@ -25,7 +25,7 @@ from capypanel.ui.themes import engine as themes
 
 @dataclass(frozen=True)
 class SettingsChoices:
-    open_last_list: bool
+    start_list: str  # see locations.START_KEY
     host_list: Path
     rewritten: bool  # the chosen list's file was written from Settings, so reopen it
     theme_id: str
@@ -37,7 +37,7 @@ class SettingsDialog(QDialog):
         parent: QWidget | None,
         *,
         paths: settings.Paths,
-        open_last_list: bool,
+        start_list: object,
         default_list: Path,
         personal_list: Path,
         document: OpenList | None,
@@ -46,7 +46,13 @@ class SettingsDialog(QDialog):
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Settings"))
-        self.general = GeneralPage(paths, open_last_list=open_last_list)
+        self.general = GeneralPage(
+            paths,
+            start_list=start_list,
+            default_list=default_list,
+            personal_list=personal_list,
+            recent=recent,
+        )
         self.host_lists = HostListsPage(
             default_list=default_list,
             personal_list=personal_list,
@@ -101,7 +107,7 @@ class SettingsDialog(QDialog):
         assert host_list is not None, "Save is disabled until a list is chosen"
         written = self.host_lists.written
         return SettingsChoices(
-            open_last_list=self.general.open_last.isChecked(),
+            start_list=self.general.start_choice(),
             host_list=host_list,
             rewritten=any(same_path(host_list, p) for p in written),
             theme_id=self.appearance.theme_id(),

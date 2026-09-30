@@ -8,7 +8,7 @@ from PySide6.QtCore import QRectF, Qt, QUrl, Signal
 from PySide6.QtGui import QColor, QDesktopServices, QIcon, QPainter, QPixmap, QResizeEvent
 from PySide6.QtWidgets import (
     QButtonGroup,
-    QCheckBox,
+    QComboBox,
     QFileDialog,
     QGridLayout,
     QGroupBox,
@@ -98,14 +98,61 @@ def _open_folder(folder: Path) -> None:
 
 
 class GeneralPage(Page):
-    def __init__(self, paths: settings.Paths, *, open_last_list: bool) -> None:
+    def __init__(
+        self,
+        paths: settings.Paths,
+        *,
+        start_list: object,
+        default_list: Path,
+        personal_list: Path,
+        recent: list[Path],
+    ) -> None:
         super().__init__(_("General"))
         start = QGroupBox(_("Starting up"))
-        self.open_last = QCheckBox(_("&Start with the last opened host list"))
-        self.open_last.setChecked(open_last_list)
+        self.start_list = QComboBox()
+        self.start_list.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+        )
+        self.start_list.setMinimumContentsLength(24)
+        self.start_list.addItem(_("The last used list"), locations.START_LAST)
+        if default_list.is_file() or start_list == locations.START_DEFAULT:
+            self.start_list.addItem(_("The default list"), locations.START_DEFAULT)
+        self.start_list.addItem(_("My personal list"), locations.START_PERSONAL)
+        others = [
+            p
+            for p in recent
+            if locations.list_kind(p, default=default_list, personal=personal_list)
+            is ListKind.SHARED
+        ]
+        if (
+            isinstance(start_list, str)
+            and start_list
+            not in (locations.START_LAST, locations.START_DEFAULT, locations.START_PERSONAL)
+            and not any(locations.same_path(Path(start_list), p) for p in others)
+        ):
+            others.insert(0, Path(start_list))
+        for path in others:
+            self.start_list.addItem(str(path), str(path))
+            self.start_list.setItemData(
+                self.start_list.count() - 1, str(path), Qt.ItemDataRole.ToolTipRole
+            )
+        index = self.start_list.findData(start_list)
+        self.start_list.setCurrentIndex(max(index, 0))
+        label = QLabel(_("&Open at start:"))
+        label.setBuddy(self.start_list)
+        row = QHBoxLayout()
+        row.addWidget(label)
+        row.addWidget(self.start_list, 1)
         start_layout = QVBoxLayout(start)
-        start_layout.addWidget(self.open_last)
-        start_layout.addWidget(hint(_("When this is off, CapyPanel starts with no list open.")))
+        start_layout.addLayout(row)
+        start_layout.addWidget(
+            hint(
+                _(
+                    "If that list can't be opened, CapyPanel opens the default list, "
+                    "or else your personal list."
+                )
+            )
+        )
 
         files = QGroupBox(_("Where CapyPanel keeps its files"))
         grid = QGridLayout(files)
@@ -125,6 +172,9 @@ class GeneralPage(Page):
         self.body.addWidget(start)
         self.body.addWidget(files)
         self.body.addStretch(1)
+
+    def start_choice(self) -> str:
+        return str(self.start_list.currentData())
 
 
 # ---- Host lists ----

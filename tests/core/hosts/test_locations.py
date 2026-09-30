@@ -74,3 +74,19 @@ def test_list_access(tmp_path: Path) -> None:
         assert locations.list_access(path, ListKind.SHARED) is Access.READ_ONLY
     finally:
         path.chmod(0o666)
+
+
+def test_startup_order_tries_the_choice_then_default_then_personal() -> None:
+    default, personal = Path(r"C:\app\data\hosts.json"), Path(r"C:\me\hosts.json")
+    shared = Path(r"\\server\it\hosts.json")
+
+    def order(prefs: dict[str, Any]) -> list[Path]:
+        return locations.startup_order(prefs, default=default, personal=personal)
+
+    assert order({}) == [default, personal]  # first start: nothing used yet
+    last = {"recent_lists": [str(shared)]}
+    assert order(last) == [shared, default, personal]
+    assert order({**last, "start_list": "personal"}) == [personal, default]
+    assert order({**last, "start_list": "default"}) == [default, personal]
+    assert order({"start_list": str(shared)}) == [shared, default, personal]
+    assert order({"start_list": 42}) == [default, personal]  # a broken value means "last used"
