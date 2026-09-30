@@ -1,4 +1,4 @@
-"""Where the app keeps its files, portable mode, and the settings file (DECISIONS §9)."""
+"""Where the app keeps its files, portable mode, and the settings file."""
 
 import json
 import os

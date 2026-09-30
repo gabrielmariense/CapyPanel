@@ -1,4 +1,4 @@
-"""Reading and writing host list files: JSON with a schema version (DECISIONS §5)."""
+"""Reading and writing host list files: JSON with a schema version."""
 
 import hashlib
 import json

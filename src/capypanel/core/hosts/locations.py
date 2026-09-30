@@ -1,4 +1,4 @@
-"""Where host lists live (default, personal, shared) and the recent-lists menu (DECISIONS §5)."""
+"""Where host lists live (default, personal, shared) and the recent-lists menu."""
 
 import os
 from enum import StrEnum
