@@ -35,11 +35,10 @@ def test_real_account_is_user_at_domain(tmp_path: Path) -> None:
     assert user and domain
 
 
-def test_first_run_creates_empty_private_user_folders(tmp_path: Path) -> None:
+def test_first_run_creates_only_a_private_user_folder(tmp_path: Path) -> None:
     paths = settings.resolve_paths(tmp_path, ENV | {"PROGRAMDATA": str(tmp_path)})
     settings.ensure_dirs(paths)
-    assert paths.user_tools_dir.is_dir() and not any(paths.user_tools_dir.iterdir())
-    assert paths.user_profiles_dir.is_dir() and not any(paths.user_profiles_dir.iterdir())
+    assert paths.user_dir.is_dir() and not any(paths.user_dir.iterdir())
     assert paths.log_dir.is_dir()
     # icacls /save writes the permissions as SDDL: the same text in any Windows language.
     saved = tmp_path / "acl.txt"

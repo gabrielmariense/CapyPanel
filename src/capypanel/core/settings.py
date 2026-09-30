@@ -86,8 +86,9 @@ def resolve_paths(
 
 
 def ensure_dirs(paths: Paths) -> None:
-    """Create the user's folder, private to them. The user layer starts empty: presets are
-    never copied. Raises UserFolderError if someone else made the folder first."""
+    """Create the user's folder, private to them. Subfolders (tools, profiles) are created
+    only when something is first saved there. Raises UserFolderError if someone else made
+    the folder first."""
     paths.log_dir.mkdir(parents=True, exist_ok=True)
     paths.user_dir.mkdir(parents=True, exist_ok=True)
     me = winsec.current_user_sid()
@@ -104,8 +105,6 @@ def ensure_dirs(paths: Paths) -> None:
         winsec.make_private(paths.user_dir, me)  # every start: repairs changed permissions
     except OSError as e:
         log.warning("Couldn't make %s private: %s", paths.user_dir, e)
-    for folder in (paths.user_tools_dir, paths.user_profiles_dir):
-        folder.mkdir(exist_ok=True)
 
 
 def load_settings(path: Path) -> dict[str, Any]:
