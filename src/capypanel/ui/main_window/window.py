@@ -28,7 +28,7 @@ from capypanel.core.hosts.listfile import HostListChangedError, HostListFileErro
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
-from capypanel.ui.hosts import HostDialog, confirm
+from capypanel.ui.hosts import HostDialog, confirm, list_file_filter
 from capypanel.ui.main_window.actions import create_actions
 from capypanel.ui.main_window.host_views import (
     DetailsPane,
@@ -36,10 +36,11 @@ from capypanel.ui.main_window.host_views import (
     NavigationPane,
     group_path,
 )
+from capypanel.ui.settings.window import SettingsChoices, SettingsDialog
 from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
-LIST_FILTER = "Host lists (*.json);;All files (*)"
+OPEN_LAST_KEY = "open_last_list"
 
 
 class MainWindow(QMainWindow):
@@ -80,7 +81,7 @@ class MainWindow(QMainWindow):
         self._build_menus()
         self._connect()
         self._restore_layout()
-        if open_last:
+        if open_last and self._prefs.get(OPEN_LAST_KEY, True) is not False:
             self._open_startup_list()
         self._refresh()
 
@@ -92,6 +93,8 @@ class MainWindow(QMainWindow):
         file_menu.addActions([a.new_list, a.open_list])
         self._recent_menu = file_menu.addMenu(_("&Recent lists"))
         self._recent_menu.aboutToShow.connect(self._fill_recent_menu)
+        file_menu.addSeparator()
+        file_menu.addAction(a.settings)
         file_menu.addSeparator()
         file_menu.addAction(a.exit)
 
@@ -121,6 +124,7 @@ class MainWindow(QMainWindow):
         a = self.commands
         a.new_list.triggered.connect(self.new_list)
         a.open_list.triggered.connect(self._ask_open_list)
+        a.settings.triggered.connect(lambda: self.open_settings())
         a.exit.triggered.connect(self.close)
         a.add_host.triggered.connect(self.add_host)
         a.add_group.triggered.connect(self.add_group)
@@ -167,13 +171,12 @@ class MainWindow(QMainWindow):
         recent = locations.recent_lists(self._prefs)
         if recent and recent[0].exists() and self.open_list(recent[0], quiet=True):
             return
-        if self._personal_list.exists():
-            self.open_list(self._personal_list)
-        else:
-            self._create_list(self._personal_list, replace_existing=False)
+        self.open_list(self._personal_list)
 
     def open_list(self, path: Path, *, quiet: bool = False) -> bool:
         kind = self._kind(path)
+        if kind is ListKind.PERSONAL and not path.exists():
+            return self._create_list(path, replace_existing=False)
         try:
             doc = OpenList.open(path, read_only=kind is ListKind.DEFAULT)
         except FileNotFoundError:
@@ -188,7 +191,7 @@ class MainWindow(QMainWindow):
 
     def new_list(self) -> None:
         name, _filter = QFileDialog.getSaveFileName(
-            self, _("New host list"), str(self._personal_list.parent), LIST_FILTER
+            self, _("New host list"), str(self._personal_list.parent), list_file_filter()
         )
         if name:
             path = Path(name)
@@ -198,18 +201,19 @@ class MainWindow(QMainWindow):
     def _ask_open_list(self) -> None:
         start = self._doc.path.parent if self._doc else self._personal_list.parent
         name, _filter = QFileDialog.getOpenFileName(
-            self, _("Open host list"), str(start), LIST_FILTER
+            self, _("Open host list"), str(start), list_file_filter()
         )
         if name:
             self.open_list(Path(name))
 
-    def _create_list(self, path: Path, *, replace_existing: bool) -> None:
+    def _create_list(self, path: Path, *, replace_existing: bool) -> bool:
         try:
             doc = OpenList.create(path, replace_existing=replace_existing)
         except (HostListFileError, OSError) as e:
             self._error(_("Couldn't create “{path}”: {error}").format(path=path, error=e))
-            return
+            return False
         self._use(doc)
+        return True
 
     def _use(self, doc: OpenList) -> None:
         self._doc = doc
@@ -398,7 +402,7 @@ class MainWindow(QMainWindow):
                 self,
                 _("Save a copy"),
                 str(doc.path.with_name(doc.path.stem + " (copy).json")),
-                LIST_FILTER,
+                list_file_filter(),
             )
             if name:
                 path = Path(name)
@@ -412,6 +416,47 @@ class MainWindow(QMainWindow):
         except (HostListFileError, OSError) as e:
             self._error(_("Couldn't reload the list: {error}").format(error=e))
         self._refresh()
+
+    # ---- settings ----
+
+    def open_settings(self, page: str | None = None) -> None:
+        dialog = self.settings_dialog()
+        geometry = self._prefs.get("settings_geometry")
+        if isinstance(geometry, str):
+            dialog.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
+        if page:
+            dialog.show_page(page)
+        accepted = dialog.exec() == QDialog.DialogCode.Accepted
+        self._prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
+        if accepted:
+            self.apply_settings(dialog.choices())
+        else:
+            self._save_prefs()
+
+    def settings_dialog(self) -> SettingsDialog:
+        return SettingsDialog(
+            self,
+            paths=self._paths,
+            open_last_list=self._prefs.get(OPEN_LAST_KEY, True) is not False,
+            default_list=self._default_list,
+            personal_list=self._personal_list,
+            document=self._doc,
+            recent=locations.recent_lists(self._prefs),
+            registry=self.registry,
+        )
+
+    def apply_settings(self, choices: SettingsChoices) -> None:
+        self._prefs[OPEN_LAST_KEY] = choices.open_last_list
+        current = self._doc.path if self._doc else None
+        if (
+            current is None
+            or choices.rewritten
+            or not locations.same_path(choices.host_list, current)
+        ):
+            self.open_list(choices.host_list)
+        if choices.theme_id != themes.current().id:
+            self.set_theme(choices.theme_id)
+        self._save_prefs()
 
     # ---- look ----
 

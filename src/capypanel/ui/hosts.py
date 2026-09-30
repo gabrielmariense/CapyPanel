@@ -27,6 +27,11 @@ class HostValues:
     notes: str
 
 
+def list_file_filter() -> str:
+    """The file-type filter for choosing host list files in file dialogs."""
+    return _("Host lists (*.json);;All files (*)")
+
+
 def group_choices(host_list: HostList) -> list[tuple[str, str]]:
     """(id, label) for every group, depth-first, indented to show nesting."""
     choices: list[tuple[str, str]] = []

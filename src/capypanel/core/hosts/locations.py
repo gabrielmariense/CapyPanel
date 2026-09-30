@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from capypanel.core import settings
+from capypanel.core.hosts import listfile
 
 RECENT_KEY = "recent_lists"
 RECENT_LIMIT = 10
@@ -15,6 +16,12 @@ class ListKind(StrEnum):
     DEFAULT = "default"  # in the app folder, read-only, placed by an admin
     PERSONAL = "personal"  # the user's own, in Documents
     SHARED = "shared"  # any other file the user picked, e.g. on a network share
+
+
+class Access(StrEnum):
+    MISSING = "missing"
+    READ_ONLY = "read-only"
+    READ_WRITE = "read-write"
 
 
 def default_list_path(folder: Path | None = None) -> Path:
@@ -66,6 +73,15 @@ def list_kind(path: Path, *, default: Path, personal: Path) -> ListKind:
     if same_path(path, personal):
         return ListKind.PERSONAL
     return ListKind.SHARED
+
+
+def list_access(path: Path, kind: ListKind) -> Access:
+    """What the user can do with a list file. The default list is read-only even if writable."""
+    if not path.is_file():
+        return Access.MISSING
+    if kind is ListKind.DEFAULT or not listfile.can_write(path):
+        return Access.READ_ONLY
+    return Access.READ_WRITE
 
 
 def recent_lists(prefs: dict[str, Any]) -> list[Path]:

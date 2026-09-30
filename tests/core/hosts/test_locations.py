@@ -3,7 +3,7 @@ from typing import Any
 
 from capypanel.core import settings
 from capypanel.core.hosts import locations
-from capypanel.core.hosts.locations import ListKind
+from capypanel.core.hosts.locations import Access, ListKind
 
 ENV = {"APPDATA": r"C:\Users\u\AppData\Roaming", "LOCALAPPDATA": r"C:\Users\u\AppData\Local"}
 
@@ -61,3 +61,16 @@ def test_recent_lists_are_capped_and_can_forget() -> None:
 
 def test_bad_recent_value_is_ignored() -> None:
     assert locations.recent_lists({"recent_lists": "oops"}) == []
+
+
+def test_list_access(tmp_path: Path) -> None:
+    path = tmp_path / "hosts.json"
+    assert locations.list_access(path, ListKind.PERSONAL) is Access.MISSING
+    path.write_text("{}")
+    assert locations.list_access(path, ListKind.SHARED) is Access.READ_WRITE
+    assert locations.list_access(path, ListKind.DEFAULT) is Access.READ_ONLY
+    path.chmod(0o444)
+    try:
+        assert locations.list_access(path, ListKind.SHARED) is Access.READ_ONLY
+    finally:
+        path.chmod(0o666)

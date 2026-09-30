@@ -160,3 +160,10 @@ def test_clicking_a_row_draws_no_focus_box(qapp: QApplication, tmp_path: Path) -
             image.pixelColor(x, y).lightness() < 90 for x in range(rect.left(), rect.right())
         )
         assert dark < rect.width() * 0.8, f"a focus box edge was drawn at line {y}"
+
+
+def test_checkbox_tick_image_ships_with_the_themes() -> None:
+    # Custom themes draw their own checkboxes; without this file a checked box looks empty.
+    tick = themes.THEMES_DIR / "check.svg"
+    assert tick.is_file()
+    assert f'url("{tick.as_posix()}")' in themes.stylesheet(CUSTOM[0])
