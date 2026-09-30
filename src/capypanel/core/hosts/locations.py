@@ -16,7 +16,7 @@ RECENT_LIMIT = 10
 
 class ListKind(StrEnum):
     DEFAULT = "default"  # in the app folder, read-only, placed by an admin
-    PERSONAL = "personal"  # the user's own, in Documents
+    PERSONAL = "personal"  # the user's own, in their private CapyPanel folder
     SHARED = "shared"  # any other file the user picked, e.g. on a network share
 
 
@@ -28,45 +28,6 @@ class Access(StrEnum):
 
 def default_list_path(folder: Path | None = None) -> Path:
     return (folder if folder is not None else settings.app_dir()) / "data" / "hosts.json"
-
-
-def personal_list_path(paths: settings.Paths, documents: Path | None = None) -> Path:
-    if paths.portable:
-        return paths.settings_dir / "hosts.json"
-    return (documents if documents is not None else documents_dir()) / "CapyPanel" / "hosts.json"
-
-
-def documents_dir() -> Path:
-    """The real Documents folder, which may be redirected (OneDrive, a server share)."""
-    import ctypes
-    from ctypes import wintypes
-
-    class GUID(ctypes.Structure):
-        _fields_ = [
-            ("Data1", wintypes.DWORD),
-            ("Data2", wintypes.WORD),
-            ("Data3", wintypes.WORD),
-            ("Data4", ctypes.c_ubyte * 8),
-        ]
-
-    folderid_documents = GUID(
-        0xFDD39AD0,
-        0x238F,
-        0x46AF,
-        (ctypes.c_ubyte * 8)(0xAD, 0xB4, 0x6C, 0x85, 0x48, 0x03, 0x69, 0xC7),
-    )
-    result = ctypes.c_wchar_p()
-    shell32 = ctypes.WinDLL("shell32")
-    ole32 = ctypes.WinDLL("ole32")
-    try:
-        status = shell32.SHGetKnownFolderPath(
-            ctypes.byref(folderid_documents), 0, None, ctypes.byref(result)
-        )
-        if status == 0 and result.value:
-            return Path(result.value)
-    finally:
-        ole32.CoTaskMemFree(result)
-    return Path.home() / "Documents"
 
 
 def list_kind(path: Path, *, default: Path, personal: Path) -> ListKind:

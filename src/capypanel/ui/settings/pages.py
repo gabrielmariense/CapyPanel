@@ -158,16 +158,20 @@ class GeneralPage(Page):
         grid = QGridLayout(files)
         grid.setColumnStretch(1, 1)
         for row, (label, folder) in enumerate(
-            ((_("Settings"), paths.settings_dir), (_("Logs"), paths.log_dir))
+            ((_("Your files"), paths.user_dir), (_("Logs"), paths.log_dir))
         ):
             button = QPushButton(_("Open folder"))
             button.clicked.connect(lambda _checked=False, f=folder: _open_folder(f))
             grid.addWidget(QLabel(label), row, 0)
             grid.addWidget(PathLabel(folder), row, 1)
             grid.addWidget(button, row, 2)
+        note = _(
+            "Your settings, personal list, tools and profiles. Only you and administrators "
+            "can open this folder. Each user's log is named after their account."
+        )
         if paths.portable:
-            note = _("Portable mode: settings, logs and the personal list stay in the app folder.")
-            grid.addWidget(hint(note), 2, 0, 1, 3)
+            note += " " + _("Portable mode: everything stays in the app's own folder.")
+        grid.addWidget(hint(note), 2, 0, 1, 3)
 
         self.body.addWidget(start)
         self.body.addWidget(files)

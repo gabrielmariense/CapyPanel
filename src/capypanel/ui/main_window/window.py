@@ -56,7 +56,7 @@ class MainWindow(QMainWindow):
         self.registry = registry if registry is not None else themes.Registry()
         self._doc: OpenList | None = None
         self._default_list = locations.default_list_path()
-        self._personal_list = locations.personal_list_path(paths)
+        self._personal_list = paths.personal_list
 
         self.commands = create_actions(self)
         self.nav = NavigationPane()

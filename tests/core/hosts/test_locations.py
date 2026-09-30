@@ -1,28 +1,14 @@
 from pathlib import Path
 from typing import Any
 
-from capypanel.core import settings
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.locations import Access, ListKind
 
 ENV = {"APPDATA": r"C:\Users\u\AppData\Roaming", "LOCALAPPDATA": r"C:\Users\u\AppData\Local"}
 
 
-def test_personal_list_is_in_documents_or_next_to_the_app_when_portable(tmp_path: Path) -> None:
-    normal = settings.resolve_paths(tmp_path, ENV)
-    docs = Path(r"D:\Docs")
-    assert locations.personal_list_path(normal, docs) == docs / "CapyPanel" / "hosts.json"
-    (tmp_path / settings.PORTABLE_MARKER).touch()
-    portable = settings.resolve_paths(tmp_path, ENV)
-    assert locations.personal_list_path(portable, docs).is_relative_to(tmp_path)
-
-
 def test_default_list_is_in_the_app_data_folder(tmp_path: Path) -> None:
     assert locations.default_list_path(tmp_path) == tmp_path / "data" / "hosts.json"
-
-
-def test_documents_dir_is_a_real_folder() -> None:
-    assert locations.documents_dir().is_dir()
 
 
 def test_list_kind(tmp_path: Path) -> None:
