@@ -61,9 +61,9 @@ def documents_dir() -> Path:
 
 
 def list_kind(path: Path, *, default: Path, personal: Path) -> ListKind:
-    if _same(path, default):
+    if same_path(path, default):
         return ListKind.DEFAULT
-    if _same(path, personal):
+    if same_path(path, personal):
         return ListKind.PERSONAL
     return ListKind.SHARED
 
@@ -77,13 +77,14 @@ def recent_lists(prefs: dict[str, Any]) -> list[Path]:
 
 def remember_list(prefs: dict[str, Any], path: Path) -> None:
     """Puts `path` first in the recent lists (the first one is reopened at start)."""
-    others = [p for p in recent_lists(prefs) if not _same(p, path)]
+    others = [p for p in recent_lists(prefs) if not same_path(p, path)]
     prefs[RECENT_KEY] = [str(path), *map(str, others)][:RECENT_LIMIT]
 
 
 def forget_list(prefs: dict[str, Any], path: Path) -> None:
-    prefs[RECENT_KEY] = [str(p) for p in recent_lists(prefs) if not _same(p, path)]
+    prefs[RECENT_KEY] = [str(p) for p in recent_lists(prefs) if not same_path(p, path)]
 
 
-def _same(a: Path, b: Path) -> bool:
+def same_path(a: Path, b: Path) -> bool:
+    """Whether two paths point to the same file (Windows paths ignore case)."""
     return os.path.normcase(os.path.abspath(a)) == os.path.normcase(os.path.abspath(b))
