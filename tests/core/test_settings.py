@@ -1,5 +1,8 @@
+import ctypes
 import json
+import re
 import subprocess
+from ctypes import wintypes
 from pathlib import Path
 
 import pytest
@@ -44,12 +47,31 @@ def test_first_run_creates_only_a_private_user_folder(tmp_path: Path) -> None:
     saved = tmp_path / "acl.txt"
     subprocess.run(["icacls", str(paths.user_dir), "/save", str(saved)], check=True)
     sddl = saved.read_text(encoding="utf-16-le")
-    me = winsec.current_user_sid()
     # "D:P": inheritance blocked, so the Users group's read access doesn't reach the folder.
     [dacl] = [line for line in sddl.splitlines() if line.startswith("D:")]
     assert dacl.startswith("D:P")
-    assert dacl.endswith(f"(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{me})")
-    assert dacl.count("(") == 3
+    aces = re.findall(r"\(A;OICI;FA;;;([^)]+)\)", dacl)
+    assert dacl.count("(") == len(aces) == 3  # full access for exactly three accounts, nothing else
+    # Windows writes some accounts in short form ("LA" = the built-in Administrator, as on CI).
+    assert {_long_sid(a) for a in aces} == {
+        winsec.SYSTEM,
+        winsec.ADMINISTRATORS,
+        winsec.current_user_sid(),
+    }
+
+
+def _long_sid(text: str) -> str:
+    # "S-1-5-18" for "SY", and so on; long forms come back unchanged.
+    advapi32 = ctypes.WinDLL("advapi32")
+    advapi32.ConvertStringSidToSidW.argtypes = [wintypes.LPCWSTR, ctypes.POINTER(ctypes.c_void_p)]
+    advapi32.ConvertSidToStringSidW.argtypes = [
+        ctypes.c_void_p,
+        ctypes.POINTER(wintypes.LPWSTR),
+    ]
+    sid, out = ctypes.c_void_p(), wintypes.LPWSTR()
+    assert advapi32.ConvertStringSidToSidW(text, ctypes.byref(sid))
+    assert advapi32.ConvertSidToStringSidW(sid, ctypes.byref(out))
+    return out.value or ""
 
 
 def test_a_user_folder_made_by_someone_else_is_refused(
