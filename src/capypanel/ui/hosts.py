@@ -57,7 +57,7 @@ class HostDialog(QDialog):
         self.setWindowTitle(_("Edit host") if host else _("Add host"))
         self.name = QLineEdit(host.name if host else "")
         self.address = QLineEdit(host.address if host else "")
-        self.address.setPlaceholderText(_("Host name or IP; empty uses the name"))
+        self.address.setPlaceholderText(_("Hostname or IP address; leave blank to use the name"))
         self.group = QComboBox()
         for group_id, label in group_choices(host_list):
             self.group.addItem(label, group_id)

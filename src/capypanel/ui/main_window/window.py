@@ -393,7 +393,7 @@ class MainWindow(QMainWindow):
         text = _("Remove the group “{name}” and the groups inside it?").format(name=group.name)
         if count:
             text += " " + ngettext(
-                "Its {n} host will be removed too.", "Its {n} hosts will be removed too.", count
+                "This will also remove {n} host.", "This will also remove {n} hosts.", count
             ).format(n=count)
         if confirm(self, _("Remove group"), text, _("Remove")):
             self._commit(doc.hosts.remove_group(group_id))
@@ -420,11 +420,11 @@ class MainWindow(QMainWindow):
             return
         box = QMessageBox(
             QMessageBox.Icon.Warning,
-            _("The list was changed"),
+            _("The list has changed"),
             _(
-                "Someone else saved changes to this list after you opened it, so your change "
-                "wasn't saved. You can save your version as a separate copy, or reload the list "
-                "with their changes."
+                "Someone else saved changes to this list after you opened it. Your change wasn't "
+                "saved. You can save your version as a separate copy or reload the list with "
+                "their changes."
             ),
             parent=self,
         )

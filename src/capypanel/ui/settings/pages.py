@@ -108,7 +108,7 @@ class GeneralPage(Page):
         recent: list[Path],
     ) -> None:
         super().__init__(_("General"))
-        start = QGroupBox(_("Starting up"))
+        start = QGroupBox(_("Startup"))
         self.start_list = QComboBox()
         self.start_list.setSizeAdjustPolicy(
             QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
@@ -138,7 +138,7 @@ class GeneralPage(Page):
             )
         index = self.start_list.findData(start_list)
         self.start_list.setCurrentIndex(max(index, 0))
-        label = QLabel(_("&Open at start:"))
+        label = QLabel(_("&Open on startup:"))
         label.setBuddy(self.start_list)
         row = QHBoxLayout()
         row.addWidget(label)
@@ -148,8 +148,8 @@ class GeneralPage(Page):
         start_layout.addWidget(
             hint(
                 _(
-                    "If that list can't be opened, CapyPanel opens the default list, "
-                    "or else your personal list."
+                    "If that list can't be opened, CapyPanel tries the default list. If that "
+                    "also fails, it opens your personal list."
                 )
             )
         )
@@ -237,7 +237,7 @@ class HostListsPage(Page):
             "permission on its folder; for everyone else it opens read-only."
         )
 
-        tools = QGroupBox(_("Make a list"))
+        tools = QGroupBox(_("Create a list"))
         self.copy_button = QPushButton(_("&Copy current list to…"))
         self.copy_button.setEnabled(document is not None)
         self.new_button = QPushButton(_("&New empty list…"))
@@ -339,7 +339,9 @@ class HostListsPage(Page):
         if path is not None and self._write(
             path, lambda: OpenList.save_as(path, doc.hosts, replace_existing=path.exists())
         ):
-            self.note.setText(_("Copied to “{path}”. Save to open it.").format(path=path))
+            self.note.setText(
+                _("List copied to “{path}”. Click Save to open it.").format(path=path)
+            )
             self.note.show()
 
     def _new_empty(self) -> None:
@@ -347,7 +349,9 @@ class HostListsPage(Page):
         if path is not None and self._write(
             path, lambda: OpenList.create(path, replace_existing=path.exists())
         ):
-            self.note.setText(_("Created “{path}”. Save to open it.").format(path=path))
+            self.note.setText(
+                _("List created at “{path}”. Click Save to open it.").format(path=path)
+            )
             self.note.show()
 
     def _write(self, path: Path, write: Callable[[], object]) -> bool:
@@ -378,7 +382,7 @@ class LanguagePage(Page):
     def __init__(self, current: str) -> None:
         super().__init__(_("Language"))
         self._group = QButtonGroup(self)
-        box = QGroupBox(_("Language of the app"))
+        box = QGroupBox(_("App language"))
         layout = QVBoxLayout(box)
         # Each language is named in its own language, so anyone can find theirs.
         for code, name in i18n.LANGUAGES.items():
@@ -387,9 +391,9 @@ class LanguagePage(Page):
             button.setChecked(code == current)
             self._group.addButton(button)
             layout.addWidget(button)
-        layout.addWidget(hint(_("The app switches right away, without restarting.")))
+        layout.addWidget(hint(_("Changes take effect immediately, without restarting the app.")))
         self.body.addWidget(box)
-        self.body.addWidget(hint(_("Languages can also be switched from View > Language.")))
+        self.body.addWidget(hint(_("You can also change the language under View > Language.")))
         self.body.addStretch(1)
 
     def language(self) -> str:
@@ -409,10 +413,10 @@ class AppearancePage(Page):
         self._group = QButtonGroup(self)
         native = QGroupBox(_("Windows"))
         native_layout = QVBoxLayout(native)
-        native_layout.addWidget(hint(_("Windows' own look, with your accent colour.")))
+        native_layout.addWidget(hint(_("Native Windows styling, with your accent color.")))
         custom = QGroupBox(_("CapyPanel"))
         custom_layout = QVBoxLayout(custom)
-        custom_layout.addWidget(hint(_("The app's own looks, the same on every computer.")))
+        custom_layout.addWidget(hint(_("CapyPanel's own appearance, the same on every computer.")))
         for theme in registry.all():
             button = QRadioButton(theme.title())
             button.setIcon(theme_swatch(theme))
@@ -423,7 +427,7 @@ class AppearancePage(Page):
             (native_layout if theme.engine == "native" else custom_layout).addWidget(button)
         self.body.addWidget(native)
         self.body.addWidget(custom)
-        self.body.addWidget(hint(_("Themes can also be switched from View > Theme.")))
+        self.body.addWidget(hint(_("You can also change the theme under View > Theme.")))
         self.body.addStretch(1)
 
     def theme_id(self) -> str:

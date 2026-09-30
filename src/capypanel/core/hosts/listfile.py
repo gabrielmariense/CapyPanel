@@ -69,7 +69,7 @@ def save(path: Path, host_list: HostList, *, expected: FileStamp | None) -> File
     the caller's choice, e.g. offer to save a copy.
     """
     if stamp_of(path) != expected:
-        raise HostListChangedError(_("The file was changed by someone else since it was opened."))
+        raise HostListChangedError(_("Someone else has changed the file since you opened it."))
     raw = (json.dumps(to_data(host_list), indent=2, ensure_ascii=False) + "\n").encode("utf-8")
     path.parent.mkdir(parents=True, exist_ok=True)
     # A unique temp name, so two people saving the same shared list never share a temp file.
@@ -180,7 +180,7 @@ def validate(host_list: HostList) -> None:
 def _items(data: Mapping[str, Any], key: str) -> list[Any]:
     value = data.get(key, [])
     if not isinstance(value, list):
-        raise HostListFormatError(_("“{key}” should be a list.").format(key=key))
+        raise HostListFormatError(_("“{key}” must be a list.").format(key=key))
     return value
 
 
@@ -193,7 +193,11 @@ def _text(item: Mapping[str, Any], key: str, *, required: bool = False) -> str:
     if value is None and not required:
         return ""
     if not isinstance(value, str) or (required and not value):
-        raise HostListFormatError(_("An item has a missing or invalid “{key}”.").format(key=key))
+        raise HostListFormatError(
+            _("An item is missing the “{key}” field or has an invalid value for it.").format(
+                key=key
+            )
+        )
     return value
 
 
@@ -203,7 +207,9 @@ def _group(item: object) -> Group:
     parent = item.get("parent")
     if parent is not None and not isinstance(parent, str):
         raise HostListFormatError(
-            _("An item has a missing or invalid “{key}”.").format(key="parent")
+            _("An item is missing the “{key}” field or has an invalid value for it.").format(
+                key="parent"
+            )
         )
     return Group(
         id=_text(item, "id", required=True),
@@ -218,7 +224,11 @@ def _host(item: object) -> Host:
         raise HostListFormatError(_("A host entry isn't an object."))
     tags = item.get("tags", [])
     if not isinstance(tags, list) or not all(isinstance(t, str) for t in tags):
-        raise HostListFormatError(_("An item has a missing or invalid “{key}”.").format(key="tags"))
+        raise HostListFormatError(
+            _("An item is missing the “{key}” field or has an invalid value for it.").format(
+                key="tags"
+            )
+        )
     return Host(
         id=_text(item, "id", required=True),
         name=_text(item, "name"),

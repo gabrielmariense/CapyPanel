@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-30 16:13-0300\n"
+"POT-Creation-Date: 2026-09-30 17:19-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -59,10 +59,10 @@ msgstr ""
 msgid "&New host list…"
 msgstr ""
 
-msgid "&Open at start:"
+msgid "&Open host list…"
 msgstr ""
 
-msgid "&Open host list…"
+msgid "&Open on startup:"
 msgstr ""
 
 msgid "&Personal list"
@@ -117,7 +117,10 @@ msgid "All computers"
 msgstr ""
 
 #, python-brace-format
-msgid "An item has a missing or invalid “{key}”."
+msgid "An item is missing the “{key}” field or has an invalid value for it."
+msgstr ""
+
+msgid "App language"
 msgstr ""
 
 msgid "Appearance"
@@ -132,14 +135,16 @@ msgstr ""
 msgid "CapyPanel — light"
 msgstr ""
 
+msgid "CapyPanel's own appearance, the same on every computer."
+msgstr ""
+
+msgid "Changes take effect immediately, without restarting the app."
+msgstr ""
+
 msgid "Choose a host list"
 msgstr ""
 
 msgid "Computer"
-msgstr ""
-
-#, python-brace-format
-msgid "Copied to “{path}”. Save to open it."
 msgstr ""
 
 msgid "Copy the current list to"
@@ -173,11 +178,10 @@ msgstr ""
 msgid "Couldn't write “{path}”: {error}"
 msgstr ""
 
-msgid "Created when opened"
+msgid "Create a list"
 msgstr ""
 
-#, python-brace-format
-msgid "Created “{path}”. Save to open it."
+msgid "Created when opened"
 msgstr ""
 
 msgid "Default"
@@ -218,43 +222,36 @@ msgstr ""
 msgid "Host lists (*.json);;All files (*)"
 msgstr ""
 
-msgid "Host name or IP; empty uses the name"
-msgstr ""
-
 #, python-brace-format
 msgid "Host “{name}” is in a group that doesn't exist."
+msgstr ""
+
+msgid "Hostname or IP address; leave blank to use the name"
 msgstr ""
 
 msgid "Hosts"
 msgstr ""
 
 msgid ""
-"If that list can't be opened, CapyPanel opens the default list, or else "
-"your personal list."
+"If that list can't be opened, CapyPanel tries the default list. If that "
+"also fails, it opens your personal list."
 msgstr ""
 
 msgid "Information"
 msgstr ""
 
-#, python-brace-format
-msgid "Its {n} host will be removed too."
-msgid_plural "Its {n} hosts will be removed too."
-msgstr[0] ""
-msgstr[1] ""
-
 msgid "Language"
 msgstr ""
 
-msgid "Language of the app"
+#, python-brace-format
+msgid "List copied to “{path}”. Click Save to open it."
 msgstr ""
 
-msgid "Languages can also be switched from View > Language."
+#, python-brace-format
+msgid "List created at “{path}”. Click Save to open it."
 msgstr ""
 
 msgid "Logs"
-msgstr ""
-
-msgid "Make a list"
 msgstr ""
 
 msgid "My personal list"
@@ -271,6 +268,9 @@ msgid "Name of the new group inside “{group}”:"
 msgstr ""
 
 msgid "Name of the new group:"
+msgstr ""
+
+msgid "Native Windows styling, with your accent color."
 msgstr ""
 
 msgid "New empty host list"
@@ -365,16 +365,19 @@ msgstr ""
 msgid "Shared or &other list"
 msgstr ""
 
+msgid "Someone else has changed the file since you opened it."
+msgstr ""
+
 msgid ""
-"Someone else saved changes to this list after you opened it, so your "
-"change wasn't saved. You can save your version as a separate copy, or "
-"reload the list with their changes."
+"Someone else saved changes to this list after you opened it. Your change "
+"wasn't saved. You can save your version as a separate copy or reload the "
+"list with their changes."
 msgstr ""
 
 msgid "Something went wrong. The details were saved to the app log."
 msgstr ""
 
-msgid "Starting up"
+msgid "Startup"
 msgstr ""
 
 msgid "Tags"
@@ -384,12 +387,6 @@ msgid "That group doesn't exist."
 msgstr ""
 
 msgid "That host is no longer in the list."
-msgstr ""
-
-msgid "The app switches right away, without restarting."
-msgstr ""
-
-msgid "The app's own looks, the same on every computer."
 msgstr ""
 
 msgid "The default list"
@@ -411,9 +408,6 @@ msgstr ""
 msgid "The file has two items with the same ID."
 msgstr ""
 
-msgid "The file was changed by someone else since it was opened."
-msgstr ""
-
 #, python-brace-format
 msgid ""
 "The folder “{folder}” was created by another user, so CapyPanel won't use"
@@ -423,7 +417,7 @@ msgstr ""
 msgid "The last used list"
 msgstr ""
 
-msgid "The list was changed"
+msgid "The list has changed"
 msgstr ""
 
 #, python-brace-format
@@ -431,9 +425,6 @@ msgid "The list “{path}” doesn't exist anymore."
 msgstr ""
 
 msgid "The parent group doesn't exist."
-msgstr ""
-
-msgid "Themes can also be switched from View > Theme."
 msgstr ""
 
 #, python-brace-format
@@ -448,6 +439,12 @@ msgid ""
 "open it."
 msgstr ""
 
+#, python-brace-format
+msgid "This will also remove {n} host."
+msgid_plural "This will also remove {n} hosts."
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "Unexpected error"
 msgstr ""
 
@@ -460,13 +457,16 @@ msgstr ""
 msgid "Windows — dark"
 msgstr ""
 
-msgid "Windows — follow system"
+msgid "Windows — follow system theme"
 msgstr ""
 
 msgid "Windows — light"
 msgstr ""
 
-msgid "Windows' own look, with your accent colour."
+msgid "You can also change the language under View > Language."
+msgstr ""
+
+msgid "You can also change the theme under View > Theme."
 msgstr ""
 
 msgid "Your files"
@@ -503,6 +503,6 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
-msgid "“{key}” should be a list."
+msgid "“{key}” must be a list."
 msgstr ""
 

@@ -67,7 +67,7 @@ class Theme:
 
 
 BUILTIN = (
-    Theme("windows-system", "native", "system", N_("Windows — follow system")),
+    Theme("windows-system", "native", "system", N_("Windows — follow system theme")),
     Theme("windows-dark", "native", "dark", N_("Windows — dark")),
     Theme("windows-light", "native", "light", N_("Windows — light")),
     Theme("capypanel-dark", "custom", "dark", N_("CapyPanel — dark"), colors=TOKENS["dark"]),

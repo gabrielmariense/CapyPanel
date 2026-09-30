@@ -67,3 +67,10 @@ def test_compiled_catalog_matches_the_source(code: str) -> None:
             assert compiled.ngettext(ids[0], ids[1], 2) == strings[1], FIX
         else:
             assert compiled.gettext(ids[0]) == strings[0], FIX
+
+
+def test_portuguese_zero_is_plural() -> None:
+    # "0 selecionados", not "0 selecionado": only exactly one is singular (maintainer's call).
+    compiled = gettext.translation(i18n.DOMAIN, i18n.LOCALE_DIR, ["pt_BR"])
+    assert compiled.ngettext("{n} selected", "{n} selected", 0) == "{n} selecionados"
+    assert compiled.ngettext("{n} selected", "{n} selected", 1) == "{n} selecionado"
