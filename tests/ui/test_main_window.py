@@ -51,7 +51,12 @@ def test_first_start_creates_the_personal_list_with_a_hosts_group(window: MainWi
     assert doc is not None and doc.path.name == "hosts.json" and doc.path.exists()
     assert [g.name for g in doc.hosts.groups] == ["Hosts"]
     assert window.windowTitle().startswith("hosts.json")
-    assert [a.text() for a in window.menuBar().actions()] == ["&File", "&Inventory", "&View"]
+    assert [a.text() for a in window.menuBar().actions()] == [
+        "&File",
+        "&Inventory",
+        "&Connect",
+        "&View",
+    ]
     assert window.commands.add_host.isEnabled()
 
 

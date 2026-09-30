@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "id": "ultravnc",
+  "name": "UltraVNC Viewer",
+  "kind": "vnc",
+  "port": 5900,
+  "credentials": "arguments",
+  "arguments": [
+    ["{address}::{port}"],
+    ["-user", "{user}"],
+    ["-password", "{password}"]
+  ],
+  "detect": {
+    "installed_as": ["UltraVNC"],
+    "exe": "vncviewer.exe",
+    "paths": [
+      "%ProgramFiles%\\uvnc bvba\\UltraVNC\\vncviewer.exe",
+      "%ProgramFiles(x86)%\\uvnc bvba\\UltraVNC\\vncviewer.exe",
+      "%ProgramFiles%\\UltraVNC\\vncviewer.exe",
+      "%ProgramFiles(x86)%\\UltraVNC\\vncviewer.exe"
+    ]
+  }
+}

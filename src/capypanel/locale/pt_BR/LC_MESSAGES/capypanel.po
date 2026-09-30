@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-30 17:24-0300\n"
+"POT-Creation-Date: 2026-09-30 18:10-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -24,6 +24,9 @@ msgstr "&Endereço:"
 msgid "&Browse…"
 msgstr "P&rocurar…"
 
+msgid "&Connect"
+msgstr "&Conectar"
+
 msgid "&Copy current list to…"
 msgstr "&Copiar lista atual para…"
 
@@ -39,6 +42,9 @@ msgstr "&Editar selecionado…"
 msgid "&File"
 msgstr "&Arquivo"
 
+msgid "&Forget typed passwords"
+msgstr "Esquecer as &senhas digitadas"
+
 msgid "&Group:"
 msgstr "&Grupo:"
 
@@ -50,6 +56,12 @@ msgstr "&Inventário"
 
 msgid "&Language"
 msgstr "&Idioma"
+
+msgid "&Locate…"
+msgstr "&Localizar…"
+
+msgid "&Manual connection…"
+msgstr "Conexão &manual…"
 
 msgid "&Name:"
 msgstr "&Nome:"
@@ -65,6 +77,9 @@ msgstr "&Abrir lista de hosts…"
 
 msgid "&Open on startup:"
 msgstr "&Abrir ao iniciar:"
+
+msgid "&Password:"
+msgstr "&Senha:"
 
 msgid "&Personal list"
 msgstr "Lista &pessoal"
@@ -87,6 +102,9 @@ msgstr "&Tags:"
 msgid "&Theme"
 msgstr "&Tema"
 
+msgid "&User:"
+msgstr "&Usuário:"
+
 msgid "&View"
 msgstr "E&xibir"
 
@@ -98,6 +116,12 @@ msgstr "Uma entrada de host não é um objeto."
 
 msgid "A name is required."
 msgstr "O nome é obrigatório."
+
+msgid "A tool definition must be a JSON object."
+msgstr "Uma definição de ferramenta deve ser um objeto JSON."
+
+msgid "A tool gets the password in its arguments only with the “arguments” method."
+msgstr "Uma ferramenta só recebe a senha nos argumentos com o método “arguments”."
 
 msgid "Add &group…"
 msgstr "Adicionar &grupo…"
@@ -127,6 +151,10 @@ msgstr "Idioma do aplicativo"
 msgid "Appearance"
 msgstr "Aparência"
 
+#, python-brace-format
+msgid "Broken placeholder in “{arg}”."
+msgstr "Marcador malformado em “{arg}”."
+
 msgid "CapyPanel"
 msgstr "CapyPanel"
 
@@ -148,6 +176,16 @@ msgstr "Escolher uma lista de hosts"
 msgid "Computer"
 msgstr "Computador"
 
+#, python-brace-format
+msgid "Connecting to {target}."
+msgstr "Conectando a {target}."
+
+msgid "Copy &address"
+msgstr "Copiar &endereço"
+
+msgid "Copy &name"
+msgstr "Copiar &nome"
+
 msgid "Copy the current list to"
 msgstr "Copiar a lista atual para"
 
@@ -164,6 +202,10 @@ msgid "Couldn't open “{wanted}”, so “{opened}” was opened instead."
 msgstr "Não foi possível abrir “{wanted}”. A lista “{opened}” foi aberta no lugar."
 
 #, python-brace-format
+msgid "Couldn't read “{file}”: {error}"
+msgstr "Não foi possível ler “{file}”: {error}"
+
+#, python-brace-format
 msgid "Couldn't reload the list: {error}"
 msgstr "Não foi possível recarregar a lista: {error}"
 
@@ -174,6 +216,10 @@ msgstr "Não foi possível salvar a cópia: {error}"
 #, python-brace-format
 msgid "Couldn't save the list: {error}"
 msgstr "Não foi possível salvar a lista: {error}"
+
+#, python-brace-format
+msgid "Couldn't start {tool} for {target}: {error}"
+msgstr "Não foi possível iniciar o {tool} para {target}: {error}"
 
 #, python-brace-format
 msgid "Couldn't write “{path}”: {error}"
@@ -190,6 +236,9 @@ msgstr "Padrão"
 
 msgid "E&xit"
 msgstr "&Sair"
+
+msgid "Each argument group must be a list of texts."
+msgstr "Cada grupo de argumentos deve ser uma lista de textos."
 
 msgid "Edit host"
 msgstr "Editar host"
@@ -227,6 +276,9 @@ msgstr "Listas de hosts (*.json);;Todos os arquivos (*)"
 msgid "Host “{name}” is in a group that doesn't exist."
 msgstr "O host “{name}” está em um grupo que não existe."
 
+msgid "Hostname or IP address"
+msgstr "Nome do host ou endereço IP"
+
 msgid "Hostname or IP address; leave blank to use the name"
 msgstr "Nome do host ou endereço IP; deixe em branco para usar o nome"
 
@@ -238,6 +290,9 @@ msgstr "Se essa lista não puder ser aberta, o CapyPanel tenta a lista padrão. 
 
 msgid "Information"
 msgstr "Informações"
+
+msgid "Kept in memory until CapyPanel closes, never saved. It's passed to the viewer on its command line, which administrators of this PC can see."
+msgstr "Fica na memória até o CapyPanel fechar e nunca é salva. Ela é passada ao visualizador pela linha de comando, que os administradores deste PC podem ver."
 
 msgid "Language"
 msgstr "Idioma"
@@ -252,6 +307,12 @@ msgstr "Lista criada em “{path}”. Clique em Salvar para abri-la."
 
 msgid "Logs"
 msgstr "Logs"
+
+msgid "Manual connection"
+msgstr "Conexão manual"
+
+msgid "Many connections"
+msgstr "Muitas conexões"
 
 msgid "My personal list"
 msgstr "Minha lista pessoal"
@@ -281,6 +342,9 @@ msgstr "Nova lista de hosts"
 msgid "New name:"
 msgstr "Novo nome:"
 
+msgid "No VNC tool is set up."
+msgstr "Nenhuma ferramenta de VNC está configurada."
+
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
 
@@ -293,6 +357,9 @@ msgstr "Não encontrada"
 msgid "Notes"
 msgstr "Observações"
 
+msgid "Only if the server asks for a Windows account"
+msgstr "Só se o servidor pedir uma conta do Windows"
+
 msgid "Open folder"
 msgstr "Abrir pasta"
 
@@ -302,11 +369,33 @@ msgstr "Abrir lista de hosts"
 msgid "Open this list"
 msgstr "Abrir esta lista"
 
+#, python-brace-format
+msgid "Open {n} remote screen at once?"
+msgid_plural "Open {n} remote screens at once?"
+msgstr[0] "Abrir {n} tela remota de uma vez?"
+msgstr[1] "Abrir {n} telas remotas de uma vez?"
+
+#, python-brace-format
+msgid "Opened {tool} for {n} host."
+msgid_plural "Opened {tool} for {n} hosts."
+msgstr[0] "{tool} aberto para {n} host."
+msgstr[1] "{tool} aberto para {n} hosts."
+
+msgid "P&ort:"
+msgstr "P&orta:"
+
+#, python-brace-format
+msgid "Password for {tool}"
+msgstr "Senha do {tool}"
+
 msgid "Personal"
 msgstr "Pessoal"
 
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
+
+msgid "Programs (*.exe)"
+msgstr "Programas (*.exe)"
 
 msgid "Read-only"
 msgstr "Somente leitura"
@@ -316,6 +405,9 @@ msgstr "Leitura e gravação"
 
 msgid "Reload the list"
 msgstr "Recarregar a lista"
+
+msgid "Remote screen (&VNC)"
+msgstr "Tela remota (&VNC)"
 
 msgid "Remove"
 msgstr "Remover"
@@ -421,6 +513,21 @@ msgstr "A lista “{path}” não existe mais."
 msgid "The parent group doesn't exist."
 msgstr "O grupo pai não existe."
 
+msgid "The tool needs a “name”."
+msgstr "A ferramenta precisa de um “name”."
+
+msgid "The tool needs “arguments”: a list of groups."
+msgstr "A ferramenta precisa de “arguments”: uma lista de grupos."
+
+msgid "The tool's “id” must be lowercase letters, digits, - or _."
+msgstr "O “id” da ferramenta deve ter só letras minúsculas, dígitos, - ou _."
+
+msgid "The “executable” must be a path."
+msgstr "O “executable” deve ser um caminho."
+
+msgid "The “port” must be a number from 1 to 65535."
+msgstr "A “port” deve ser um número de 1 a 65535."
+
 #, python-brace-format
 msgid "This isn't a valid host list file ({error})."
 msgstr "Este não é um arquivo de lista de hosts válido ({error})."
@@ -431,6 +538,9 @@ msgstr "Esta lista está em modo somente leitura."
 msgid "This list was saved by a newer version of CapyPanel. Update the app to open it."
 msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o aplicativo para abri-la."
 
+msgid "This tool definition needs a newer version of CapyPanel."
+msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyPanel."
+
 #, python-brace-format
 msgid "This will also remove {n} host."
 msgid_plural "This will also remove {n} hosts."
@@ -440,11 +550,30 @@ msgstr[1] "Isso também removerá {n} hosts."
 msgid "Type a tag and press Enter"
 msgstr "Digite uma tag e pressione Enter"
 
+msgid "Typed passwords forgotten."
+msgstr "As senhas digitadas foram esquecidas."
+
 msgid "Unexpected error"
 msgstr "Erro inesperado"
 
+#, python-brace-format
+msgid "Unknown credential method “{method}”."
+msgstr "Método de credencial desconhecido: “{method}”."
+
+#, python-brace-format
+msgid "Unknown placeholder “{{{name}}}” in the arguments."
+msgstr "Marcador desconhecido “{{{name}}}” nos argumentos."
+
+#, python-brace-format
+msgid "Unknown tool kind “{kind}”."
+msgstr "Tipo de ferramenta desconhecido: “{kind}”."
+
 msgid "Where CapyPanel keeps its files"
 msgstr "Onde o CapyPanel guarda os arquivos"
+
+#, python-brace-format
+msgid "Where is {tool}?"
+msgstr "Onde está o {tool}?"
 
 msgid "Windows"
 msgstr "Windows"
@@ -476,6 +605,9 @@ msgstr "modo portátil"
 msgid "read-only"
 msgstr "somente leitura"
 
+msgid "the selected hosts"
+msgstr "os hosts selecionados"
+
 #, python-brace-format
 msgid "{n} host"
 msgid_plural "{n} hosts"
@@ -493,6 +625,20 @@ msgid "{n} selected"
 msgid_plural "{n} selected"
 msgstr[0] "{n} selecionado"
 msgstr[1] "{n} selecionados"
+
+#, python-brace-format
+msgid "{tool} not found"
+msgstr "{tool} não encontrado"
+
+#, python-brace-format
+msgid "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. The path is saved for your account."
+msgstr "O {tool} não foi encontrado neste PC. Instale-o ou mostre ao CapyPanel onde ele está. O caminho fica salvo para a sua conta."
+
+msgid "“detect” has a value of the wrong type."
+msgstr "“detect” tem um valor do tipo errado."
+
+msgid "“detect” must be an object."
+msgstr "“detect” deve ser um objeto."
 
 #, python-brace-format
 msgid "“{key}” must be a list."

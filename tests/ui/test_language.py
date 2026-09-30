@@ -37,14 +37,19 @@ def _switch(win: MainWindow, code: str) -> None:
 
 def test_switching_language_updates_the_open_window_live(window: MainWindow) -> None:
     _switch(window, "pt_BR")
-    assert [m.title() for m in _menus(window)] == ["&Arquivo", "&Inventário", "E&xibir"]
+    assert [m.title() for m in _menus(window)] == [
+        "&Arquivo",
+        "&Inventário",
+        "&Conectar",
+        "E&xibir",
+    ]
     assert window.commands.add_host.text() == "Adicionar &host…"
     assert window.table.headerItem().text(0) == "Computador"
     [everything] = window.nav.groups.findItems("Todos", Qt.MatchFlag.MatchStartsWith)
     assert everything.text(0) == "Todos os computadores (1)"
     assert "1 host" in window._list_label.text()
     _switch(window, "en")
-    assert [m.title() for m in _menus(window)] == ["&File", "&Inventory", "&View"]
+    assert [m.title() for m in _menus(window)] == ["&File", "&Inventory", "&Connect", "&View"]
     assert window.table.headerItem().text(0) == "Computer"
 
 
