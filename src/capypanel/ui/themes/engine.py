@@ -311,10 +311,10 @@ QToolButton { padding: 2px 8px; border-radius: %(r2)spx; color: %(text2)s; backg
               border: none; }
 QToolButton:hover { background: %(hover)s; color: %(text)s; }
 
-QLineEdit, QPlainTextEdit { background: %(card)s; border: 1px solid %(border)s;
+QLineEdit, QPlainTextEdit, QSpinBox { background: %(card)s; border: 1px solid %(border)s;
                             border-radius: %(r2)spx; padding: 5px 7px;
                             selection-background-color: %(accent)s; }
-QLineEdit:focus, QPlainTextEdit:focus { border: 1px solid %(accent)s; }
+QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus { border: 1px solid %(accent)s; }
 QLineEdit:disabled { color: %(text3)s; background: %(raised)s; }
 /* The tag field: a box like a text input, holding chips and a borderless text box. */
 QFrame#tagEdit { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx; }

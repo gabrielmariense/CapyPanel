@@ -18,6 +18,11 @@ class Actions:
     add_group: QAction
     edit: QAction
     remove: QAction
+    connect_vnc: QAction
+    manual_connect: QAction
+    copy_address: QAction
+    copy_name: QAction
+    forget_passwords: QAction
     show_groups: QAction
     show_details: QAction
     show_status_bar: QAction
@@ -31,6 +36,9 @@ SHORTCUTS = {
     "add_group": "Ctrl+Shift+N",
     "edit": "F2",
     "remove": "Del",
+    "connect_vnc": "Return",  # only while the host table has focus (see MainWindow)
+    "manual_connect": "Ctrl+M",
+    "copy_address": "Ctrl+Shift+C",
 }
 CHECKABLE = {"show_groups", "show_details", "show_status_bar"}
 
@@ -58,6 +66,11 @@ def retranslate_actions(a: Actions) -> None:
     a.add_group.setText(_("Add &group…"))
     a.edit.setText(_("&Edit selected…"))
     a.remove.setText(_("&Remove selected"))
+    a.connect_vnc.setText(_("Remote screen (&VNC)"))
+    a.manual_connect.setText(_("&Manual connection…"))
+    a.copy_address.setText(_("Copy &address"))
+    a.copy_name.setText(_("Copy &name"))
+    a.forget_passwords.setText(_("&Forget typed passwords"))
     a.show_groups.setText(_("&Groups pane"))
     a.show_details.setText(_("&Details pane"))
     a.show_status_bar.setText(_("&Status bar"))

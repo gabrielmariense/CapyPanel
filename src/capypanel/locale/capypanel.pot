@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-30 17:24-0300\n"
+"POT-Creation-Date: 2026-09-30 18:10-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,6 +21,9 @@ msgid "&Address:"
 msgstr ""
 
 msgid "&Browse…"
+msgstr ""
+
+msgid "&Connect"
 msgstr ""
 
 msgid "&Copy current list to…"
@@ -38,6 +41,9 @@ msgstr ""
 msgid "&File"
 msgstr ""
 
+msgid "&Forget typed passwords"
+msgstr ""
+
 msgid "&Group:"
 msgstr ""
 
@@ -48,6 +54,12 @@ msgid "&Inventory"
 msgstr ""
 
 msgid "&Language"
+msgstr ""
+
+msgid "&Locate…"
+msgstr ""
+
+msgid "&Manual connection…"
 msgstr ""
 
 msgid "&Name:"
@@ -63,6 +75,9 @@ msgid "&Open host list…"
 msgstr ""
 
 msgid "&Open on startup:"
+msgstr ""
+
+msgid "&Password:"
 msgstr ""
 
 msgid "&Personal list"
@@ -86,6 +101,9 @@ msgstr ""
 msgid "&Theme"
 msgstr ""
 
+msgid "&User:"
+msgstr ""
+
 msgid "&View"
 msgstr ""
 
@@ -96,6 +114,14 @@ msgid "A host entry isn't an object."
 msgstr ""
 
 msgid "A name is required."
+msgstr ""
+
+msgid "A tool definition must be a JSON object."
+msgstr ""
+
+msgid ""
+"A tool gets the password in its arguments only with the “arguments” "
+"method."
 msgstr ""
 
 msgid "Add &group…"
@@ -126,6 +152,10 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
+#, python-brace-format
+msgid "Broken placeholder in “{arg}”."
+msgstr ""
+
 msgid "CapyPanel"
 msgstr ""
 
@@ -147,6 +177,16 @@ msgstr ""
 msgid "Computer"
 msgstr ""
 
+#, python-brace-format
+msgid "Connecting to {target}."
+msgstr ""
+
+msgid "Copy &address"
+msgstr ""
+
+msgid "Copy &name"
+msgstr ""
+
 msgid "Copy the current list to"
 msgstr ""
 
@@ -163,6 +203,10 @@ msgid "Couldn't open “{wanted}”, so “{opened}” was opened instead."
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't read “{file}”: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't reload the list: {error}"
 msgstr ""
 
@@ -172,6 +216,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't save the list: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't start {tool} for {target}: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -188,6 +236,9 @@ msgid "Default"
 msgstr ""
 
 msgid "E&xit"
+msgstr ""
+
+msgid "Each argument group must be a list of texts."
 msgstr ""
 
 msgid "Edit host"
@@ -226,6 +277,9 @@ msgstr ""
 msgid "Host “{name}” is in a group that doesn't exist."
 msgstr ""
 
+msgid "Hostname or IP address"
+msgstr ""
+
 msgid "Hostname or IP address; leave blank to use the name"
 msgstr ""
 
@@ -240,6 +294,11 @@ msgstr ""
 msgid "Information"
 msgstr ""
 
+msgid ""
+"Kept in memory until CapyPanel closes, never saved. It's passed to the "
+"viewer on its command line, which administrators of this PC can see."
+msgstr ""
+
 msgid "Language"
 msgstr ""
 
@@ -252,6 +311,12 @@ msgid "List created at “{path}”. Click Save to open it."
 msgstr ""
 
 msgid "Logs"
+msgstr ""
+
+msgid "Manual connection"
+msgstr ""
+
+msgid "Many connections"
 msgstr ""
 
 msgid "My personal list"
@@ -282,6 +347,9 @@ msgstr ""
 msgid "New name:"
 msgstr ""
 
+msgid "No VNC tool is set up."
+msgstr ""
+
 msgid "No host list is open."
 msgstr ""
 
@@ -294,6 +362,9 @@ msgstr ""
 msgid "Notes"
 msgstr ""
 
+msgid "Only if the server asks for a Windows account"
+msgstr ""
+
 msgid "Open folder"
 msgstr ""
 
@@ -303,10 +374,32 @@ msgstr ""
 msgid "Open this list"
 msgstr ""
 
+#, python-brace-format
+msgid "Open {n} remote screen at once?"
+msgid_plural "Open {n} remote screens at once?"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Opened {tool} for {n} host."
+msgid_plural "Opened {tool} for {n} hosts."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "P&ort:"
+msgstr ""
+
+#, python-brace-format
+msgid "Password for {tool}"
+msgstr ""
+
 msgid "Personal"
 msgstr ""
 
 msgid "Portable mode: everything stays in the app's own folder."
+msgstr ""
+
+msgid "Programs (*.exe)"
 msgstr ""
 
 msgid "Read-only"
@@ -316,6 +409,9 @@ msgid "Read-write"
 msgstr ""
 
 msgid "Reload the list"
+msgstr ""
+
+msgid "Remote screen (&VNC)"
 msgstr ""
 
 msgid "Remove"
@@ -431,6 +527,21 @@ msgstr ""
 msgid "The parent group doesn't exist."
 msgstr ""
 
+msgid "The tool needs a “name”."
+msgstr ""
+
+msgid "The tool needs “arguments”: a list of groups."
+msgstr ""
+
+msgid "The tool's “id” must be lowercase letters, digits, - or _."
+msgstr ""
+
+msgid "The “executable” must be a path."
+msgstr ""
+
+msgid "The “port” must be a number from 1 to 65535."
+msgstr ""
+
 #, python-brace-format
 msgid "This isn't a valid host list file ({error})."
 msgstr ""
@@ -443,6 +554,9 @@ msgid ""
 "open it."
 msgstr ""
 
+msgid "This tool definition needs a newer version of CapyPanel."
+msgstr ""
+
 #, python-brace-format
 msgid "This will also remove {n} host."
 msgid_plural "This will also remove {n} hosts."
@@ -452,10 +566,29 @@ msgstr[1] ""
 msgid "Type a tag and press Enter"
 msgstr ""
 
+msgid "Typed passwords forgotten."
+msgstr ""
+
 msgid "Unexpected error"
 msgstr ""
 
+#, python-brace-format
+msgid "Unknown credential method “{method}”."
+msgstr ""
+
+#, python-brace-format
+msgid "Unknown placeholder “{{{name}}}” in the arguments."
+msgstr ""
+
+#, python-brace-format
+msgid "Unknown tool kind “{kind}”."
+msgstr ""
+
 msgid "Where CapyPanel keeps its files"
+msgstr ""
+
+#, python-brace-format
+msgid "Where is {tool}?"
 msgstr ""
 
 msgid "Windows"
@@ -491,6 +624,9 @@ msgstr ""
 msgid "read-only"
 msgstr ""
 
+msgid "the selected hosts"
+msgstr ""
+
 #, python-brace-format
 msgid "{n} host"
 msgid_plural "{n} hosts"
@@ -508,6 +644,22 @@ msgid "{n} selected"
 msgid_plural "{n} selected"
 msgstr[0] ""
 msgstr[1] ""
+
+#, python-brace-format
+msgid "{tool} not found"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"{tool} wasn't found on this PC. Install it, or show CapyPanel where it "
+"is. The path is saved for your account."
+msgstr ""
+
+msgid "“detect” has a value of the wrong type."
+msgstr ""
+
+msgid "“detect” must be an object."
+msgstr ""
 
 #, python-brace-format
 msgid "“{key}” must be a list."

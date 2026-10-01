@@ -1,12 +1,13 @@
 """The main window: panes, menus, and opening and editing host lists."""
 
 import logging
+from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import QByteArray, QEvent, QPoint
-from PySide6.QtGui import QActionGroup, QCloseEvent, QShowEvent
+from PySide6.QtCore import QByteArray, QEvent, QPoint, Qt
+from PySide6.QtGui import QActionGroup, QCloseEvent, QGuiApplication, QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -28,7 +29,10 @@ from capypanel.core.hosts.listfile import HostListChangedError, HostListFileErro
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
+from capypanel.core.tools.catalog import Catalog
+from capypanel.core.tools.connect import SessionCredentials, Target
 from capypanel.ui import language
+from capypanel.ui.connect import Connector, ManualConnectDialog
 from capypanel.ui.hosts import HostDialog, confirm, group_path, list_file_filter
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.host_views import (
@@ -57,6 +61,9 @@ class MainWindow(QMainWindow):
         self._doc: OpenList | None = None
         self._default_list = locations.default_list_path()
         self._personal_list = paths.personal_list
+        self.connector = Connector(
+            self, Catalog.for_paths(paths), SessionCredentials(), self._prefs
+        )
 
         self.commands = create_actions(self)
         self.nav = NavigationPane()
@@ -102,6 +109,15 @@ class MainWindow(QMainWindow):
         self._inventory_menu.addSeparator()
         self._inventory_menu.addActions([a.edit, a.remove])
 
+        self._connect_menu = bar.addMenu("")
+        self._connect_menu.addAction(a.connect_vnc)
+        self._connect_menu.addAction(a.manual_connect)
+        self._connect_menu.addSeparator()
+        self._connect_menu.addActions([a.copy_address, a.copy_name])
+        self._connect_menu.addSeparator()
+        self._connect_menu.addAction(a.forget_passwords)
+        self._connect_menu.aboutToShow.connect(self._update_state)
+
         self._view_menu = bar.addMenu("")
         self._view_menu.addActions([a.show_groups, a.show_details, a.show_status_bar])
         self._view_menu.addSeparator()
@@ -136,6 +152,7 @@ class MainWindow(QMainWindow):
         self._file_menu.setTitle(_("&File"))
         self._recent_menu.setTitle(_("&Recent lists"))
         self._inventory_menu.setTitle(_("&Inventory"))
+        self._connect_menu.setTitle(_("&Connect"))
         self._view_menu.setTitle(_("&View"))
         self._theme_menu.setTitle(_("&Theme"))
         self._language_menu.setTitle(_("&Language"))
@@ -160,6 +177,15 @@ class MainWindow(QMainWindow):
         self.nav.groups.customContextMenuRequested.connect(self._group_menu)
         self.table.itemSelectionChanged.connect(self._selection_changed)
         self.table.customContextMenuRequested.connect(self._host_menu)
+        # Enter connects only from the host table, so it never fires while typing elsewhere.
+        a.connect_vnc.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        self.table.addAction(a.connect_vnc)
+        self.table.itemDoubleClicked.connect(lambda *_args: self.connect_selected())
+        a.connect_vnc.triggered.connect(self.connect_selected)
+        a.manual_connect.triggered.connect(self.manual_connect)
+        a.copy_address.triggered.connect(lambda: self._copy(lambda h: h.target))
+        a.copy_name.triggered.connect(lambda: self._copy(lambda h: h.name))
+        a.forget_passwords.triggered.connect(self.forget_passwords)
 
     def _restore_layout(self) -> None:
         geometry = self._prefs.get("window_geometry")
@@ -451,6 +477,40 @@ class MainWindow(QMainWindow):
             self._error(_("Couldn't reload the list: {error}").format(error=e))
         self._refresh()
 
+    # ---- connecting ----
+
+    def connect_selected(self) -> None:
+        hosts = self._selected_hosts()
+        if not hosts:
+            return
+        started = self.connector.connect([(h.name, Target(h.target)) for h in hosts])
+        if started:
+            tool = self.connector.vnc_tool()
+            name = tool.tool.name if tool else "VNC"
+            self.statusBar().showMessage(
+                ngettext(
+                    "Opened {tool} for {n} host.", "Opened {tool} for {n} hosts.", started
+                ).format(tool=name, n=started),
+                5000,
+            )
+
+    def manual_connect(self) -> None:
+        tool = self.connector.vnc_tool()
+        dialog = ManualConnectDialog(self, tool.tool.port if tool else None)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            target = dialog.target()
+            self.connector.connect([(target.address, target)])
+
+    def forget_passwords(self) -> None:
+        self.connector.credentials.forget()
+        self.statusBar().showMessage(_("Typed passwords forgotten."), 5000)
+        self._update_state()
+
+    def _copy(self, value: Callable[[Host], str]) -> None:
+        hosts = self._selected_hosts()
+        if hosts:
+            QGuiApplication.clipboard().setText("\n".join(value(h) for h in hosts))
+
     # ---- settings ----
 
     def open_settings(self, page: str | None = None) -> None:
@@ -575,6 +635,9 @@ class MainWindow(QMainWindow):
         self.nav.add_group_button.setEnabled(writable)
         a.edit.setEnabled(writable and (selected == 1 or group_picked))
         a.remove.setEnabled(writable and (selected > 0 or group_picked))
+        for action in (a.connect_vnc, a.copy_address, a.copy_name):
+            action.setEnabled(selected > 0)  # read-only lists can still connect
+        a.forget_passwords.setEnabled(bool(self.connector.credentials))
         if doc is None:
             self.setWindowTitle(f"CapyPanel {__version__}")
             self._list_label.setText(_("No host list is open."))
@@ -595,8 +658,14 @@ class MainWindow(QMainWindow):
     # ---- right-click menus ----
 
     def _host_menu(self, position: QPoint) -> None:
+        a = self.commands
         menu = QMenu(self)
-        menu.addActions([self.commands.edit, self.commands.remove])
+        menu.addAction(a.connect_vnc)
+        menu.setDefaultAction(a.connect_vnc)  # bold: what double-click and Enter do
+        menu.addSeparator()
+        menu.addActions([a.copy_address, a.copy_name])
+        menu.addSeparator()
+        menu.addActions([a.edit, a.remove])
         menu.exec(self.table.viewport().mapToGlobal(position))
 
     def _group_menu(self, position: QPoint) -> None:
