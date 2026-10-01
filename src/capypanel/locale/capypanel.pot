@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-30 18:10-0300\n"
+"POT-Creation-Date: 2026-10-01 15:45-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,6 +33,9 @@ msgid "&Default list"
 msgstr ""
 
 msgid "&Details pane"
+msgstr ""
+
+msgid "&Edit host…"
 msgstr ""
 
 msgid "&Edit selected…"
@@ -107,6 +110,9 @@ msgstr ""
 msgid "&View"
 msgstr ""
 
+msgid "A connection profile must be a JSON object."
+msgstr ""
+
 msgid "A group entry isn't an object."
 msgstr ""
 
@@ -117,11 +123,6 @@ msgid "A name is required."
 msgstr ""
 
 msgid "A tool definition must be a JSON object."
-msgstr ""
-
-msgid ""
-"A tool gets the password in its arguments only with the “arguments” "
-"method."
 msgstr ""
 
 msgid "Add &group…"
@@ -181,6 +182,15 @@ msgstr ""
 msgid "Connecting to {target}."
 msgstr ""
 
+msgid "Connection"
+msgstr ""
+
+msgid "Connection &profile"
+msgstr ""
+
+msgid "Connection &profile:"
+msgstr ""
+
 msgid "Copy &address"
 msgstr ""
 
@@ -235,6 +245,10 @@ msgstr ""
 msgid "Default"
 msgstr ""
 
+#, python-brace-format
+msgid "Default: {profile}"
+msgstr ""
+
 msgid "E&xit"
 msgstr ""
 
@@ -248,6 +262,16 @@ msgid "File not found"
 msgstr ""
 
 msgid "For example \\\\server\\share\\hosts.json"
+msgstr ""
+
+msgid "From each host's group"
+msgstr ""
+
+msgid "From group"
+msgstr ""
+
+#, python-brace-format
+msgid "From group “{group}”: {profile}"
 msgstr ""
 
 msgid "General"
@@ -294,9 +318,17 @@ msgstr ""
 msgid "Information"
 msgstr ""
 
+msgid "It's handed to the viewer privately, never on its command line."
+msgstr ""
+
 msgid ""
-"Kept in memory until CapyPanel closes, never saved. It's passed to the "
-"viewer on its command line, which administrators of this PC can see."
+"It's passed to the viewer on its command line, which administrators of "
+"this PC can see."
+msgstr ""
+
+msgid ""
+"Kept in memory until CapyPanel closes, never saved, and used only for "
+"hosts with this connection profile."
 msgstr ""
 
 msgid "Language"
@@ -347,7 +379,7 @@ msgstr ""
 msgid "New name:"
 msgstr ""
 
-msgid "No VNC tool is set up."
+msgid "No address"
 msgstr ""
 
 msgid "No host list is open."
@@ -359,10 +391,13 @@ msgstr ""
 msgid "Not found"
 msgstr ""
 
-msgid "Notes"
-msgstr ""
+#, python-brace-format
+msgid "Not opened: {names}"
+msgid_plural "Not opened ({n}): {names}"
+msgstr[0] ""
+msgstr[1] ""
 
-msgid "Only if the server asks for a Windows account"
+msgid "Notes"
 msgstr ""
 
 msgid "Open folder"
@@ -381,8 +416,8 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
-msgid "Opened {tool} for {n} host."
-msgid_plural "Opened {tool} for {n} hosts."
+msgid "Opened {n} remote screen."
+msgid_plural "Opened {n} remote screens."
 msgstr[0] ""
 msgstr[1] ""
 
@@ -390,7 +425,7 @@ msgid "P&ort:"
 msgstr ""
 
 #, python-brace-format
-msgid "Password for {tool}"
+msgid "Password for {profile}"
 msgstr ""
 
 msgid "Personal"
@@ -489,6 +524,20 @@ msgstr ""
 msgid "That host is no longer in the list."
 msgstr ""
 
+#, python-brace-format
+msgid "The arguments use an option that “options” doesn't list: “{option}”."
+msgstr ""
+
+#, python-brace-format
+msgid "The connection profile “{profile}” isn't available on this PC."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"The connection profile “{profile}” needs the tool “{tool}”, which isn't "
+"available on this PC."
+msgstr ""
+
 msgid "The default list"
 msgstr ""
 
@@ -527,6 +576,20 @@ msgstr ""
 msgid "The parent group doesn't exist."
 msgstr ""
 
+#, python-brace-format
+msgid "The placeholder “{{{name}}}” goes with the “{method}” credential method."
+msgstr ""
+
+msgid "The profile's “name” must be a text."
+msgstr ""
+
+msgid "The profile's “options” must be a list of option ids."
+msgstr ""
+
+#, python-brace-format
+msgid "The profile's “{key}” must be lowercase letters, digits, - or _."
+msgstr ""
+
 msgid "The tool needs a “name”."
 msgstr ""
 
@@ -540,6 +603,9 @@ msgid "The “executable” must be a path."
 msgstr ""
 
 msgid "The “port” must be a number from 1 to 65535."
+msgstr ""
+
+msgid "This connection profile needs a newer version of CapyPanel."
 msgstr ""
 
 #, python-brace-format
@@ -574,6 +640,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Unknown credential method “{method}”."
+msgstr ""
+
+#, python-brace-format
+msgid "Unknown login “{login}”."
 msgstr ""
 
 #, python-brace-format
@@ -618,6 +688,12 @@ msgid ""
 " account."
 msgstr ""
 
+msgid "no password"
+msgstr ""
+
+msgid "password only"
+msgstr ""
+
 msgid "portable mode"
 msgstr ""
 
@@ -627,9 +703,18 @@ msgstr ""
 msgid "the selected hosts"
 msgstr ""
 
+msgid "user and password"
+msgstr ""
+
 #, python-brace-format
 msgid "{n} host"
 msgid_plural "{n} hosts"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} host has no address and was skipped: {names}"
+msgid_plural "{n} hosts have no address and were skipped: {names}"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -644,6 +729,30 @@ msgid "{n} selected"
 msgid_plural "{n} selected"
 msgstr[0] ""
 msgstr[1] ""
+
+#, python-brace-format
+msgid "{profile} (default)"
+msgstr ""
+
+#, python-brace-format
+msgid "{profile} (from group “{group}”)"
+msgstr ""
+
+#, python-brace-format
+msgid "{profile} (not available on this PC)"
+msgstr ""
+
+#, python-brace-format
+msgid "{tool} can't be given a password."
+msgstr ""
+
+#, python-brace-format
+msgid "{tool} can't be given a user name."
+msgstr ""
+
+#, python-brace-format
+msgid "{tool} has no option “{option}”."
+msgstr ""
 
 #, python-brace-format
 msgid "{tool} not found"
@@ -661,7 +770,16 @@ msgstr ""
 msgid "“detect” must be an object."
 msgstr ""
 
+msgid "“options” must map option ids to the names shown."
+msgstr ""
+
 #, python-brace-format
 msgid "“{key}” must be a list."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"“{name}” has no address, and its name can't be used as one: a computer "
+"name has no spaces or symbols other than - and _."
 msgstr ""
 

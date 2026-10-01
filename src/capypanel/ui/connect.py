@@ -1,11 +1,13 @@
-"""Connecting: the password prompt, manual connection, and starting the remote tool."""
+"""Connecting: the password prompt, manual connection, and starting the right tool for each
+host's connection profile."""
 
 import logging
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
 from PySide6.QtWidgets import (
+    QComboBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
@@ -18,37 +20,62 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from capypanel.core.hosts.model import Group
 from capypanel.core.i18n import _, ngettext
-from capypanel.core.tools import detect
-from capypanel.core.tools.catalog import Catalog, Entry
+from capypanel.core.tools import detect, profiles
+from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import Credential, SessionCredentials, Target, launch
 from capypanel.core.tools.definitions import ToolDefinition
+from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 
 log = logging.getLogger(__name__)
-VNC_TOOL_KEY = "vnc_tool"
-DEFAULT_VNC_TOOL = "ultravnc"
+DEFAULT_PROFILE_KEY = "default_profile"
+DEFAULT_PROFILE = "ultravnc-password"  # UltraVNC's own out-of-the-box setup
 MANY_CONNECTIONS = 5  # more than this at once asks first
 
 
+@dataclass(frozen=True)
+class Request:
+    label: str  # how the host is named in messages
+    target: Target
+    profile: str = ""  # "" = the default profile
+
+
+@dataclass(frozen=True)
+class Ready:
+    profile: ConnectionProfile
+    tool: ToolDefinition
+
+
 class CredentialDialog(QDialog):
-    def __init__(self, parent: QWidget | None, tool: ToolDefinition, target: str) -> None:
+    def __init__(
+        self, parent: QWidget | None, ready: Ready, target: str, *, on_command_line: bool
+    ) -> None:
         super().__init__(parent)
-        self.setWindowTitle(_("Password for {tool}").format(tool=tool.name))
+        self.setWindowTitle(_("Password for {profile}").format(
+            profile=profiles.label(ready.profile, ready.tool)
+        ))  # fmt: skip
         intro = QLabel(_("Connecting to {target}.").format(target=target))
+        intro.setWordWrap(True)
+        self.wants_user = ready.profile.login == "account"
         self.user = QLineEdit()
-        self.user.setPlaceholderText(_("Only if the server asks for a Windows account"))
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
         form = QFormLayout()
-        if tool.wants_user:
+        if self.wants_user:
             form.addRow(_("&User:"), self.user)
         form.addRow(_("&Password:"), self.password)
-        note = QLabel(
-            _(
-                "Kept in memory until CapyPanel closes, never saved. It's passed to the viewer "
-                "on its command line, which administrators of this PC can see."
-            )
+        remembered = _(
+            "Kept in memory until CapyPanel closes, never saved, and used only for hosts with "
+            "this connection profile."
         )
+        how = (
+            _("It's passed to the viewer on its command line, which administrators of this PC "
+              "can see.")
+            if on_command_line
+            else _("It's handed to the viewer privately, never on its command line.")
+        )  # fmt: skip
+        note = QLabel(f"{remembered} {how}")
         note.setObjectName("hint")
         note.setWordWrap(True)
         self.buttons = QDialogButtonBox(
@@ -61,34 +88,44 @@ class CredentialDialog(QDialog):
         layout.addLayout(form)
         layout.addWidget(note)
         layout.addWidget(self.buttons)
+        self.user.textChanged.connect(self._update_ok)
         self.password.textChanged.connect(self._update_ok)
         self._update_ok()
-        self.resize(420, self.sizeHint().height())
+        self.resize(440, self.sizeHint().height())
 
     def _update_ok(self) -> None:
         ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)
-        ok.setEnabled(bool(self.password.text()))
+        has_user = bool(self.user.text().strip()) or not self.wants_user
+        ok.setEnabled(has_user and bool(self.password.text()))
 
     def credential(self) -> Credential:
-        return Credential(self.user.text().strip(), self.password.text())
+        user = self.user.text().strip() if self.wants_user else ""
+        return Credential(user, self.password.text())
 
 
 class ManualConnectDialog(QDialog):
     """Connect to an address typed on the spot, without adding it to the list."""
 
-    def __init__(self, parent: QWidget | None, default_port: int | None) -> None:
+    def __init__(
+        self, parent: QWidget | None, choices: list[tuple[str, str]], default_profile: str
+    ) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Manual connection"))
         self.address = QLineEdit()
         self.address.setPlaceholderText(_("Hostname or IP address"))
         self.port = QSpinBox()
-        self.port.setRange(1, 65535)
+        self.port.setRange(0, 65535)
+        self.port.setSpecialValueText(_("Default"))  # shown for 0: the profile's own port
         # A port is typed, not clicked up one by one; arrow keys and the wheel still work.
         self.port.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
-        self.port.setValue(default_port or 5900)
+        self.profile = QComboBox()
+        for profile_id, text in choices:
+            self.profile.addItem(text, profile_id)
+        self.profile.setCurrentIndex(max(self.profile.findData(default_profile), 0))
         form = QFormLayout()
         form.addRow(_("&Address:"), self.address)
         form.addRow(_("P&ort:"), self.port)
+        form.addRow(_("Connection &profile:"), self.profile)
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -100,75 +137,144 @@ class ManualConnectDialog(QDialog):
         layout.addWidget(self.buttons)
         self.address.textChanged.connect(self._update_ok)
         self._update_ok()
-        self.resize(380, self.sizeHint().height())
+        self.resize(460, self.sizeHint().height())
 
     def _update_ok(self) -> None:
         ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)
-        ok.setEnabled(bool(self.address.text().strip()))
+        ok.setEnabled(bool(self.address.text().strip()) and self.profile.count() > 0)
 
-    def target(self) -> Target:
-        return Target(self.address.text().strip(), self.port.value())
+    def request(self) -> Request:
+        address = self.address.text().strip()
+        port = self.port.value() or None
+        return Request(address, Target(address, port), self.profile.currentData() or "")
 
 
 class Connector:
-    """Starts the VNC tool for one or more targets, asking for what's missing on the way."""
+    """Starts the right tool for each host's connection profile, asking for what's missing."""
 
     def __init__(
         self,
         parent: QWidget,
-        catalog: Catalog,
+        catalogs: Catalogs,
         credentials: SessionCredentials,
         prefs: dict[str, Any],
     ) -> None:
         self._parent = parent
-        self.catalog = catalog
+        self.catalogs = catalogs
         self.credentials = credentials
         self._prefs = prefs
 
-    def vnc_tool(self) -> Entry | None:
-        wanted = self._prefs.get(VNC_TOOL_KEY, DEFAULT_VNC_TOOL)
-        entry = self.catalog.find(wanted) if isinstance(wanted, str) else None
-        if entry is None or entry.tool.kind != "vnc":
-            available = self.catalog.of_kind("vnc")
-            entry = available[0] if available else None
-        return entry
+    # ---- profiles ----
 
-    def connect(self, targets: list[tuple[str, Target]]) -> int:
-        """(label, target) pairs; returns how many connections were started."""
-        entry = self.vnc_tool()
+    def default_profile(self) -> str:
+        wanted = self._prefs.get(DEFAULT_PROFILE_KEY)
+        return wanted if isinstance(wanted, str) and wanted else DEFAULT_PROFILE
+
+    def label(self, profile_id: str) -> str:
+        """The profile's name; for an id this PC doesn't have, the id and a note saying so."""
+        entry = self.catalogs.profiles.find(profile_id or self.default_profile())
         if entry is None:
-            self._error(_("No VNC tool is set up."))
+            return _("{profile} (not available on this PC)").format(profile=profile_id)
+        tool = self.catalogs.tools.find(entry.item.tool)
+        return profiles.label(entry.item, tool.item if tool else None)
+
+    def choices(self) -> list[tuple[str, str]]:
+        """(id, name) of every profile whose tool exists, by name."""
+        found = [
+            (e.item.id, self.label(e.item.id))
+            for e in self.catalogs.profiles.all()
+            if self.catalogs.tools.find(e.item.tool) is not None
+        ]
+        return sorted(found, key=lambda choice: choice[1].casefold())
+
+    def inherited_label(self, profile_id: str, source: Group | None) -> str:
+        """What "follow the group" means right now, e.g. "From group “Pis”: RealVNC …"."""
+        if source is not None:
+            return _("From group “{group}”: {profile}").format(
+                group=source.name, profile=self.label(profile_id)
+            )
+        return _("Default: {profile}").format(profile=self.label(self.default_profile()))
+
+    def resolve(self, profile_id: str) -> Ready:
+        """The profile and its tool, or ProfileError saying why it can't be used here."""
+        profile_id = profile_id or self.default_profile()
+        entry = self.catalogs.profiles.find(profile_id)
+        if entry is None:
+            raise ProfileError(
+                _("The connection profile “{profile}” isn't available on this PC.").format(
+                    profile=profile_id
+                )
+            )
+        tool = self.catalogs.tools.find(entry.item.tool)
+        if tool is None:
+            raise ProfileError(
+                _("The connection profile “{profile}” needs the tool “{tool}”, which isn't "
+                  "available on this PC.").format(profile=profile_id, tool=entry.item.tool)
+            )  # fmt: skip
+        profiles.check_fits(entry.item, tool.item)
+        return Ready(entry.item, tool.item)
+
+    # ---- connecting ----
+
+    def connect(self, requests: list[Request]) -> int:
+        """Returns how many connections were started."""
+        if len(requests) > MANY_CONNECTIONS and not self._confirm_many(len(requests)):
             return 0
-        if len(targets) > MANY_CONNECTIONS and not self._confirm_many(len(targets)):
+        by_profile: dict[str, list[Request]] = {}
+        for request in requests:
+            by_profile.setdefault(request.profile or self.default_profile(), []).append(request)
+        started = 0
+        for profile_id, group in by_profile.items():
+            started += self._connect_profile(profile_id, group)
+        return started
+
+    def _connect_profile(self, profile_id: str, requests: list[Request]) -> int:
+        try:
+            ready = self.resolve(profile_id)
+        except ProfileError as e:
+            self._error(f"{e}\n\n{self._names(requests)}")
             return 0
-        tool = entry.tool
+        tool, profile = ready.tool, ready.profile
         executable = detect.find_executable(tool) or self._locate(tool)
         if executable is None:
             return 0
         credential = None
-        if tool.credentials != "none":
-            credential = self.credentials.get(tool.id)
+        if profile.login != "none":
+            credential = self.credentials.get(profile.id)
             if credential is None:
-                label = targets[0][0] if len(targets) == 1 else _("the selected hosts")
-                dialog = CredentialDialog(self._parent, tool, label)
+                label = requests[0].label if len(requests) == 1 else _("the selected hosts")
+                dialog = CredentialDialog(
+                    self._parent, ready, label, on_command_line=tool.credentials == "arguments"
+                )
                 if dialog.exec() != QDialog.DialogCode.Accepted:
                     return 0
                 credential = dialog.credential()
-                self.credentials.remember(tool.id, credential)
+                self.credentials.remember(profile.id, credential)
         started = 0
-        for label, target in targets:
+        for request in requests:
+            target = request.target
+            if target.port is None and profile.port is not None:
+                target = replace(target, port=profile.port)
             try:
-                launch(tool, executable, target, credential)
+                launch(tool, executable, target, credential, profile.options)
                 started += 1
             except OSError as e:
-                log.warning("Couldn't start %s for %s: %s", tool.id, label, e)
+                log.warning("Couldn't start %s for %s: %s", tool.id, request.label, e)
                 self._error(
                     _("Couldn't start {tool} for {target}: {error}").format(
-                        tool=tool.name, target=label, error=e
+                        tool=tool.name, target=request.label, error=e
                     )
                 )
                 break
         return started
+
+    def _names(self, requests: list[Request]) -> str:
+        names = ", ".join(r.label for r in requests[:5])
+        if len(requests) > 5:
+            names += " …"
+        return ngettext("Not opened: {names}", "Not opened ({n}): {names}", len(requests)).format(
+            n=len(requests), names=names
+        )
 
     def _locate(self, tool: ToolDefinition) -> Path | None:
         box = QMessageBox(
@@ -194,7 +300,7 @@ class Connector:
         )
         if not name:
             return None
-        self.catalog.save_user_copy(replace(tool, executable=name))
+        self.catalogs.tools.save_user_copy(replace(tool, executable=name))
         log.info("%s set to %s", tool.id, name)
         return Path(name)
 

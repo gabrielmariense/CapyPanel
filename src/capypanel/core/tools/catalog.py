@@ -1,17 +1,21 @@
-"""The tools this user can use, from three layers: their own (user), the company's (placed next
-to the app by whoever manages it) and the shipped presets. A higher layer wins for the same id."""
+"""Tool definitions and connection profiles this user can use, each from three layers: their own
+(user), the company's (placed next to the app by whoever manages it) and the shipped presets.
+A higher layer wins for the same id."""
 
 import json
 import logging
 import os
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+from typing import Any, Protocol
 
 from capypanel.core import settings
-from capypanel.core.tools import definitions
+from capypanel.core.tools import definitions, profiles
 from capypanel.core.tools.definitions import ToolDefinition, ToolDefinitionError
+from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 
 log = logging.getLogger(__name__)
 SHIPPED_DIR = Path(__file__).resolve().parent / "presets"
@@ -23,9 +27,14 @@ class Layer(StrEnum):
     SHIPPED = "shipped"
 
 
+class _Identified(Protocol):
+    @property
+    def id(self) -> str: ...
+
+
 @dataclass(frozen=True)
-class Entry:
-    tool: ToolDefinition
+class Entry[T]:
+    item: T
     layer: Layer
     path: Path
 
@@ -36,57 +45,91 @@ class Problem:
     reason: str
 
 
-class Catalog:
-    def __init__(self, user_dir: Path, company_dir: Path, shipped_dir: Path = SHIPPED_DIR) -> None:
+class Catalog[T: _Identified]:
+    def __init__(
+        self,
+        user_dir: Path,
+        company_dir: Path,
+        shipped_dir: Path,
+        *,
+        load: Callable[[Path], T],
+        to_data: Callable[[T], dict[str, Any]],
+        errors: tuple[type[Exception], ...],
+    ) -> None:
         self.dirs = {Layer.USER: user_dir, Layer.COMPANY: company_dir, Layer.SHIPPED: shipped_dir}
+        self._load, self._to_data, self._errors = load, to_data, errors
         self.problems: list[Problem] = []
-        self._entries: dict[str, Entry] = {}
+        self._entries: dict[str, Entry[T]] = {}
         self.reload()
-
-    @classmethod
-    def for_paths(cls, paths: settings.Paths) -> "Catalog":
-        return cls(paths.user_tools_dir, settings.app_dir() / "data" / "tools")
 
     def reload(self) -> None:
         self.problems = []
-        entries: dict[str, Entry] = {}
+        entries: dict[str, Entry[T]] = {}
         # Lowest layer first, so a higher layer's file replaces it.
         for layer in (Layer.SHIPPED, Layer.COMPANY, Layer.USER):
             folder = self.dirs[layer]
             for path in sorted(folder.glob("*.json")) if folder.is_dir() else []:
                 try:
-                    tool = definitions.load(path)
-                except ToolDefinitionError as e:
+                    item = self._load(path)
+                except self._errors as e:
                     self.problems.append(Problem(path, str(e)))
-                    log.warning("Tool definition %s skipped: %s", path, e)
+                    log.warning("%s skipped: %s", path, e)
                     continue
-                entries[tool.id] = Entry(tool, layer, path)
+                entries[item.id] = Entry(item, layer, path)
         self._entries = entries
 
-    def all(self) -> list[Entry]:
-        return sorted(self._entries.values(), key=lambda e: e.tool.name.casefold())
+    def all(self) -> list[Entry[T]]:
+        return sorted(self._entries.values(), key=lambda e: e.item.id)
 
-    def find(self, tool_id: str) -> Entry | None:
-        return self._entries.get(tool_id)
+    def find(self, item_id: str) -> Entry[T] | None:
+        return self._entries.get(item_id)
 
-    def of_kind(self, kind: str) -> list[Entry]:
-        return [e for e in self.all() if e.tool.kind == kind]
-
-    def save_user_copy(self, tool: ToolDefinition) -> Entry:
+    def save_user_copy(self, item: T) -> Entry[T]:
         """Saves the user's own version; the company or shipped original is never changed."""
         folder = self.dirs[Layer.USER]
         folder.mkdir(parents=True, exist_ok=True)  # created on first use, not at start
-        path = folder / f"{tool.id}.json"
-        tmp = folder / f".{tool.id}.{uuid.uuid4().hex[:8]}.tmp"
-        tmp.write_text(json.dumps(definitions.to_data(tool), indent=2, ensure_ascii=False), "utf-8")
+        path = folder / f"{item.id}.json"
+        tmp = folder / f".{item.id}.{uuid.uuid4().hex[:8]}.tmp"
+        tmp.write_text(json.dumps(self._to_data(item), indent=2, ensure_ascii=False), "utf-8")
         os.replace(tmp, path)
         self.reload()
-        entry = self._entries[tool.id]
-        return entry
+        return self._entries[item.id]
 
-    def reset(self, tool_id: str) -> None:
+    def reset(self, item_id: str) -> None:
         """Deletes the user's version, so the company or shipped one shows through again."""
-        entry = self.find(tool_id)
+        entry = self.find(item_id)
         if entry is not None and entry.layer is Layer.USER:
             entry.path.unlink(missing_ok=True)
             self.reload()
+
+
+def tools(user_dir: Path, company_dir: Path, shipped_dir: Path) -> Catalog[ToolDefinition]:
+    return Catalog(
+        user_dir, company_dir, shipped_dir,
+        load=definitions.load, to_data=definitions.to_data, errors=(ToolDefinitionError,),
+    )  # fmt: skip
+
+
+def profiles_catalog(
+    user_dir: Path, company_dir: Path, shipped_dir: Path
+) -> Catalog[ConnectionProfile]:
+    return Catalog(
+        user_dir, company_dir, shipped_dir,
+        load=profiles.load, to_data=profiles.to_data, errors=(ProfileError,),
+    )  # fmt: skip
+
+
+@dataclass(frozen=True)
+class Catalogs:
+    tools: Catalog[ToolDefinition]
+    profiles: Catalog[ConnectionProfile]
+
+    @classmethod
+    def for_paths(cls, paths: settings.Paths) -> "Catalogs":
+        company = settings.app_dir() / "data"
+        return cls(
+            tools(paths.user_tools_dir, company / "tools", SHIPPED_DIR / "tools"),
+            profiles_catalog(
+                paths.user_profiles_dir, company / "profiles", SHIPPED_DIR / "profiles"
+            ),
+        )

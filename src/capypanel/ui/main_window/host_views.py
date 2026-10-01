@@ -259,7 +259,7 @@ class DetailsPane(QWidget):
         self._heading.setFont(font)
         form.addRow(self._heading)
         self._labels: dict[str, QLabel] = {}
-        for key in ("name", "address", "group", "tags", "notes"):
+        for key in ("name", "address", "group", "connection", "tags", "notes"):
             value = QLabel()
             value.setWordWrap(True)
             value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
@@ -288,12 +288,13 @@ class DetailsPane(QWidget):
             ("name", _("Name")),
             ("address", _("Address")),
             ("group", _("Group")),
+            ("connection", _("Connection")),
             ("tags", _("Tags")),
             ("notes", _("Notes")),
         ):
             self._labels[key].setText(text)
 
-    def show_host(self, host: Host | None, group: str, selected: int) -> None:
+    def show_host(self, host: Host | None, group: str, selected: int, connection: str = "") -> None:
         if host is None:
             if selected > 1:
                 self._hint.setText(
@@ -307,6 +308,7 @@ class DetailsPane(QWidget):
             "name": host.name,
             "address": host.address or "—",
             "group": group,
+            "connection": connection or "—",
             "tags": ", ".join(host.tags) or "—",
             "notes": host.notes or "—",
         }

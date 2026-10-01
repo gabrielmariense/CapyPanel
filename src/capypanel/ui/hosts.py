@@ -1,7 +1,7 @@
 """Dialogs for hosts and groups: add/edit host (with its tag field), and confirming removals."""
 
-from collections.abc import Iterable
-from dataclasses import dataclass
+from collections.abc import Callable, Iterable
+from dataclasses import dataclass, field
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent
@@ -37,6 +37,16 @@ class HostValues:
     group: str
     tags: tuple[str, ...]
     notes: str
+    profile: str = ""  # "" = the group's
+
+
+@dataclass(frozen=True)
+class ProfilePicker:
+    """What the host dialog needs to offer connection profiles."""
+
+    choices: list[tuple[str, str]] = field(default_factory=list)  # (id, name)
+    inherited: Callable[[str], str] = lambda group_id: _("From group")  # text for "follow it"
+    label: Callable[[str], str] = lambda profile_id: profile_id  # name of any id, even unknown
 
 
 def list_file_filter() -> str:
@@ -74,6 +84,7 @@ class HostDialog(QDialog):
         host_list: HostList,
         host: Host | None = None,
         default_group: str | None = None,
+        profiles: ProfilePicker | None = None,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Edit host") if host else _("Add host"))
@@ -90,6 +101,17 @@ class HostDialog(QDialog):
         self.tags.set_tags(host.tags if host else ())
         self.notes = QPlainTextEdit(host.notes if host else "")
         self.notes.setTabChangesFocus(True)
+        self._profiles = profiles or ProfilePicker()
+        self.profile = QComboBox()
+        self.profile.addItem("", "")  # "follow the group": its text follows the chosen group
+        for profile_id, text in self._profiles.choices:
+            self.profile.addItem(text, profile_id)
+        current = host.profile if host else ""
+        if current and self.profile.findData(current) < 0:  # kept, even if this PC lacks it
+            self.profile.addItem(self._profiles.label(current), current)
+        self.profile.setCurrentIndex(self.profile.findData(current))
+        self.group.currentIndexChanged.connect(self._update_inherited)
+        self._update_inherited()
 
         form = QFormLayout()
         form.addRow(_("&Name:"), self.name)
@@ -98,6 +120,7 @@ class HostDialog(QDialog):
         tags_label = QLabel(_("&Tags:"))
         tags_label.setBuddy(self.tags.input)  # Alt+T goes to the text box inside the field
         form.addRow(tags_label, self.tags)
+        form.addRow(_("Connection &profile:"), self.profile)
         form.addRow(_("N&otes:"), self.notes)
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -116,6 +139,9 @@ class HostDialog(QDialog):
         ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)
         ok.setEnabled(bool(self.name.text().strip()) and self.group.count() > 0)
 
+    def _update_inherited(self) -> None:
+        self.profile.setItemText(0, self._profiles.inherited(self.group.currentData() or ""))
+
     def values(self) -> HostValues:
         return HostValues(
             name=self.name.text().strip(),
@@ -123,6 +149,7 @@ class HostDialog(QDialog):
             group=self.group.currentData(),
             tags=self.tags.tags(),
             notes=self.notes.toPlainText().strip(),
+            profile=self.profile.currentData() or "",
         )
 
 

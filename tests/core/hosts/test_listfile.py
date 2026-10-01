@@ -135,3 +135,17 @@ def test_can_write(tmp_path: Path) -> None:
     finally:
         os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
     assert not listfile.can_write(tmp_path / "missing-folder" / "hosts.json")
+
+
+def test_profiles_are_kept_and_written_only_when_set(tmp_path: Path) -> None:
+    hl, group = HostList().add_group("Pis")
+    hl = hl.set_group_profile(group.id, "realvnc-account")
+    hl, pi = hl.add_host("PI-1", group.id, profile="realvnc-password")
+    hl, plain = hl.add_host("PI-2", group.id)
+    path = tmp_path / "list.json"
+    listfile.save(path, hl, expected=None)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert data["groups"][0]["profile"] == "realvnc-account"
+    hosts = {h["name"]: h for h in data["hosts"]}
+    assert hosts["PI-1"]["profile"] == "realvnc-password" and "profile" not in hosts["PI-2"]
+    assert listfile.load(path).hosts == hl

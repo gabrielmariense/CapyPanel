@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-30 18:10-0300\n"
+"POT-Creation-Date: 2026-10-01 15:45-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -35,6 +35,9 @@ msgstr "Lista pa&drão"
 
 msgid "&Details pane"
 msgstr "Painel de &detalhes"
+
+msgid "&Edit host…"
+msgstr "&Editar host…"
 
 msgid "&Edit selected…"
 msgstr "&Editar selecionado…"
@@ -108,6 +111,9 @@ msgstr "&Usuário:"
 msgid "&View"
 msgstr "E&xibir"
 
+msgid "A connection profile must be a JSON object."
+msgstr "Um perfil de conexão deve ser um objeto JSON."
+
 msgid "A group entry isn't an object."
 msgstr "Uma entrada de grupo não é um objeto."
 
@@ -119,9 +125,6 @@ msgstr "O nome é obrigatório."
 
 msgid "A tool definition must be a JSON object."
 msgstr "Uma definição de ferramenta deve ser um objeto JSON."
-
-msgid "A tool gets the password in its arguments only with the “arguments” method."
-msgstr "Uma ferramenta só recebe a senha nos argumentos com o método “arguments”."
 
 msgid "Add &group…"
 msgstr "Adicionar &grupo…"
@@ -180,6 +183,15 @@ msgstr "Computador"
 msgid "Connecting to {target}."
 msgstr "Conectando a {target}."
 
+msgid "Connection"
+msgstr "Conexão"
+
+msgid "Connection &profile"
+msgstr "&Perfil de conexão"
+
+msgid "Connection &profile:"
+msgstr "&Perfil de conexão:"
+
 msgid "Copy &address"
 msgstr "Copiar &endereço"
 
@@ -234,6 +246,10 @@ msgstr "Criada ao abrir"
 msgid "Default"
 msgstr "Padrão"
 
+#, python-brace-format
+msgid "Default: {profile}"
+msgstr "Padrão: {profile}"
+
 msgid "E&xit"
 msgstr "&Sair"
 
@@ -248,6 +264,16 @@ msgstr "Arquivo não encontrado"
 
 msgid "For example \\\\server\\share\\hosts.json"
 msgstr "Por exemplo \\\\servidor\\compartilhamento\\hosts.json"
+
+msgid "From each host's group"
+msgstr "Do grupo de cada host"
+
+msgid "From group"
+msgstr "Do grupo"
+
+#, python-brace-format
+msgid "From group “{group}”: {profile}"
+msgstr "Do grupo “{group}”: {profile}"
 
 msgid "General"
 msgstr "Geral"
@@ -291,8 +317,14 @@ msgstr "Se essa lista não puder ser aberta, o CapyPanel tenta a lista padrão. 
 msgid "Information"
 msgstr "Informações"
 
-msgid "Kept in memory until CapyPanel closes, never saved. It's passed to the viewer on its command line, which administrators of this PC can see."
-msgstr "Fica na memória até o CapyPanel fechar e nunca é salva. Ela é passada ao visualizador pela linha de comando, que os administradores deste PC podem ver."
+msgid "It's handed to the viewer privately, never on its command line."
+msgstr "Ela é entregue ao visualizador de forma privada, nunca na linha de comando."
+
+msgid "It's passed to the viewer on its command line, which administrators of this PC can see."
+msgstr "Ela é passada ao visualizador na linha de comando, que os administradores deste PC podem ver."
+
+msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
+msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
 
 msgid "Language"
 msgstr "Idioma"
@@ -342,8 +374,8 @@ msgstr "Nova lista de hosts"
 msgid "New name:"
 msgstr "Novo nome:"
 
-msgid "No VNC tool is set up."
-msgstr "Nenhuma ferramenta de VNC está configurada."
+msgid "No address"
+msgstr "Sem endereço"
 
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
@@ -354,11 +386,14 @@ msgstr "Nenhuma lista recente"
 msgid "Not found"
 msgstr "Não encontrada"
 
+#, python-brace-format
+msgid "Not opened: {names}"
+msgid_plural "Not opened ({n}): {names}"
+msgstr[0] "Não aberto: {names}"
+msgstr[1] "Não abertos ({n}): {names}"
+
 msgid "Notes"
 msgstr "Observações"
-
-msgid "Only if the server asks for a Windows account"
-msgstr "Só se o servidor pedir uma conta do Windows"
 
 msgid "Open folder"
 msgstr "Abrir pasta"
@@ -376,17 +411,17 @@ msgstr[0] "Abrir {n} tela remota de uma vez?"
 msgstr[1] "Abrir {n} telas remotas de uma vez?"
 
 #, python-brace-format
-msgid "Opened {tool} for {n} host."
-msgid_plural "Opened {tool} for {n} hosts."
-msgstr[0] "{tool} aberto para {n} host."
-msgstr[1] "{tool} aberto para {n} hosts."
+msgid "Opened {n} remote screen."
+msgid_plural "Opened {n} remote screens."
+msgstr[0] "{n} tela remota aberta."
+msgstr[1] "{n} telas remotas abertas."
 
 msgid "P&ort:"
 msgstr "P&orta:"
 
 #, python-brace-format
-msgid "Password for {tool}"
-msgstr "Senha do {tool}"
+msgid "Password for {profile}"
+msgstr "Senha para {profile}"
 
 msgid "Personal"
 msgstr "Pessoal"
@@ -481,6 +516,18 @@ msgstr "Esse grupo não existe."
 msgid "That host is no longer in the list."
 msgstr "Esse host não está mais na lista."
 
+#, python-brace-format
+msgid "The arguments use an option that “options” doesn't list: “{option}”."
+msgstr "Os argumentos usam uma opção que não está em “options”: “{option}”."
+
+#, python-brace-format
+msgid "The connection profile “{profile}” isn't available on this PC."
+msgstr "O perfil de conexão “{profile}” não está disponível neste PC."
+
+#, python-brace-format
+msgid "The connection profile “{profile}” needs the tool “{tool}”, which isn't available on this PC."
+msgstr "O perfil de conexão “{profile}” precisa da ferramenta “{tool}”, que não está disponível neste PC."
+
 msgid "The default list"
 msgstr "A lista padrão"
 
@@ -513,6 +560,20 @@ msgstr "A lista “{path}” não existe mais."
 msgid "The parent group doesn't exist."
 msgstr "O grupo pai não existe."
 
+#, python-brace-format
+msgid "The placeholder “{{{name}}}” goes with the “{method}” credential method."
+msgstr "O marcador “{{{name}}}” é usado com o método de credencial “{method}”."
+
+msgid "The profile's “name” must be a text."
+msgstr "O “name” do perfil deve ser um texto."
+
+msgid "The profile's “options” must be a list of option ids."
+msgstr "As “options” do perfil devem ser uma lista de ids de opções."
+
+#, python-brace-format
+msgid "The profile's “{key}” must be lowercase letters, digits, - or _."
+msgstr "O “{key}” do perfil deve ter só letras minúsculas, dígitos, - ou _."
+
 msgid "The tool needs a “name”."
 msgstr "A ferramenta precisa de um “name”."
 
@@ -527,6 +588,9 @@ msgstr "O “executable” deve ser um caminho."
 
 msgid "The “port” must be a number from 1 to 65535."
 msgstr "A “port” deve ser um número de 1 a 65535."
+
+msgid "This connection profile needs a newer version of CapyPanel."
+msgstr "Este perfil de conexão precisa de uma versão mais nova do CapyPanel."
 
 #, python-brace-format
 msgid "This isn't a valid host list file ({error})."
@@ -559,6 +623,10 @@ msgstr "Erro inesperado"
 #, python-brace-format
 msgid "Unknown credential method “{method}”."
 msgstr "Método de credencial desconhecido: “{method}”."
+
+#, python-brace-format
+msgid "Unknown login “{login}”."
+msgstr "Login desconhecido: “{login}”."
 
 #, python-brace-format
 msgid "Unknown placeholder “{{{name}}}” in the arguments."
@@ -599,6 +667,12 @@ msgstr "Seus arquivos"
 msgid "Your settings, personal list, tools and profiles. Only you and administrators can open this folder. Each user's log is named after their account."
 msgstr "Suas configurações, lista pessoal, ferramentas e perfis. Só você e os administradores podem abrir esta pasta. O log de cada usuário leva o nome da conta dele."
 
+msgid "no password"
+msgstr "sem senha"
+
+msgid "password only"
+msgstr "só senha"
+
 msgid "portable mode"
 msgstr "modo portátil"
 
@@ -608,11 +682,20 @@ msgstr "somente leitura"
 msgid "the selected hosts"
 msgstr "os hosts selecionados"
 
+msgid "user and password"
+msgstr "usuário e senha"
+
 #, python-brace-format
 msgid "{n} host"
 msgid_plural "{n} hosts"
 msgstr[0] "{n} host"
 msgstr[1] "{n} hosts"
+
+#, python-brace-format
+msgid "{n} host has no address and was skipped: {names}"
+msgid_plural "{n} hosts have no address and were skipped: {names}"
+msgstr[0] "{n} host não tem endereço e foi ignorado: {names}"
+msgstr[1] "{n} hosts não têm endereço e foram ignorados: {names}"
 
 #, python-brace-format
 msgid "{n} host selected"
@@ -625,6 +708,30 @@ msgid "{n} selected"
 msgid_plural "{n} selected"
 msgstr[0] "{n} selecionado"
 msgstr[1] "{n} selecionados"
+
+#, python-brace-format
+msgid "{profile} (default)"
+msgstr "{profile} (padrão)"
+
+#, python-brace-format
+msgid "{profile} (from group “{group}”)"
+msgstr "{profile} (do grupo “{group}”)"
+
+#, python-brace-format
+msgid "{profile} (not available on this PC)"
+msgstr "{profile} (não disponível neste PC)"
+
+#, python-brace-format
+msgid "{tool} can't be given a password."
+msgstr "O {tool} não aceita receber uma senha."
+
+#, python-brace-format
+msgid "{tool} can't be given a user name."
+msgstr "O {tool} não aceita receber um nome de usuário."
+
+#, python-brace-format
+msgid "{tool} has no option “{option}”."
+msgstr "O {tool} não tem a opção “{option}”."
 
 #, python-brace-format
 msgid "{tool} not found"
@@ -640,7 +747,14 @@ msgstr "“detect” tem um valor do tipo errado."
 msgid "“detect” must be an object."
 msgstr "“detect” deve ser um objeto."
 
+msgid "“options” must map option ids to the names shown."
+msgstr "“options” deve associar ids de opções aos nomes exibidos."
+
 #, python-brace-format
 msgid "“{key}” must be a list."
 msgstr "“{key}” deve ser uma lista."
+
+#, python-brace-format
+msgid "“{name}” has no address, and its name can't be used as one: a computer name has no spaces or symbols other than - and _."
+msgstr "“{name}” não tem endereço, e o nome não pode ser usado como um: um nome de computador não tem espaços nem símbolos além de - e _."
 
