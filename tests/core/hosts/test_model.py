@@ -85,3 +85,29 @@ def test_tag_counts() -> None:
 
 def test_clean_tags_keeps_typed_order() -> None:
     assert clean_tags(["b", "a", " b ", ""]) == ("b", "a")
+
+
+def test_a_host_follows_the_nearest_group_with_a_profile() -> None:
+    hl, hq, finance = _office()
+    hl, pc = hl.add_host("PC1", finance)
+    assert hl.profile_of(pc) == ("", None)  # nothing set anywhere: the app's default
+    hl = hl.set_group_profile(hq, "ultravnc-account")
+    profile, source = hl.profile_of(pc)
+    assert profile == "ultravnc-account" and source is not None and source.id == hq
+    hl = hl.set_group_profile(finance, "realvnc-account")
+    assert hl.profile_of(pc)[0] == "realvnc-account"  # the nearer group wins
+    hl = hl.set_hosts_profile([pc.id], "ultravnc-password")
+    pc = hl.host(pc.id)
+    assert pc is not None and hl.profile_of(pc) == ("ultravnc-password", None)
+    hl = hl.set_hosts_profile([pc.id], "")  # back to following its group
+    assert hl.profile_of(hl.host(pc.id) or pc)[0] == "realvnc-account"
+
+
+def test_a_name_stands_in_for_the_address_only_when_it_is_a_computer_name() -> None:
+    hl, _, finance = _office()
+    hl, by_name = hl.add_host("FIN-PC04", finance)
+    hl, label = hl.add_host("Ward 2A - Desk", finance)
+    hl, with_ip = hl.add_host("Ward 2A - Desk", finance, address="10.0.0.9")
+    assert by_name.connect_address == "FIN-PC04"
+    assert label.connect_address == ""
+    assert with_ip.connect_address == "10.0.0.9"

@@ -1,0 +1,6 @@
+{
+  "schema": 1,
+  "id": "ultravnc-account",
+  "tool": "ultravnc",
+  "login": "account"
+}

@@ -1,0 +1,6 @@
+{
+  "schema": 1,
+  "id": "realvnc-account",
+  "tool": "realvnc",
+  "login": "account"
+}

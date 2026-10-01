@@ -1,5 +1,6 @@
 """Hosts, groups and the list that holds them. Records are immutable: edits return a new list."""
 
+import re
 import uuid
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field, replace
@@ -12,11 +13,20 @@ class HostListRuleError(ValueError):
     """An edit that would break a rule of the list (e.g. a host in a group that doesn't exist)."""
 
 
+# A computer name or IP address: letters, digits, "-" and "_", in parts joined by dots.
+_HOSTNAME = re.compile(r"^[A-Za-z0-9_]([A-Za-z0-9_-]{0,62})(\.[A-Za-z0-9_]([A-Za-z0-9_-]{0,62}))*$")
+
+
+def is_hostname(text: str) -> bool:
+    return len(text) <= 253 and bool(_HOSTNAME.match(text))
+
+
 @dataclass(frozen=True)
 class Group:
     id: str
     name: str
     parent: str | None = None  # None = top level
+    profile: str = ""  # connection profile id for the hosts inside; "" = from the parent
     extra: Mapping[str, Any] = field(default_factory=dict)  # keys this version doesn't know
 
 
@@ -28,12 +38,20 @@ class Host:
     address: str = ""
     tags: tuple[str, ...] = ()
     notes: str = ""
+    profile: str = ""  # connection profile id; "" = the group's
     extra: Mapping[str, Any] = field(default_factory=dict)
 
     @property
     def target(self) -> str:
         """What to connect to: the address, or the name when no address was typed."""
         return self.address or self.name
+
+    @property
+    def connect_address(self) -> str:
+        """The address, or the name when it's a valid computer name; "" when neither works."""
+        if self.address:
+            return self.address
+        return self.name if is_hostname(self.name) else ""
 
 
 def clean_tags(tags: Iterable[str]) -> tuple[str, ...]:
@@ -78,6 +96,24 @@ class HostList:
         ids = self.subtree(group_id) if nested else {group_id}
         return tuple(h for h in self.hosts if h.group in ids)
 
+    def profile_of(self, host: Host) -> tuple[str, Group | None]:
+        """The host's connection profile id and the group it comes from (None: the host's own).
+        ("", None) when neither the host nor any group around it sets one."""
+        if host.profile:
+            return host.profile, None
+        return self.group_profile(host.group)
+
+    def group_profile(self, group_id: str | None) -> tuple[str, Group | None]:
+        """The profile a group gives its hosts: its own, else the nearest parent's."""
+        seen: set[str] = set()
+        group = self.group(group_id) if group_id else None
+        while group is not None and group.id not in seen:
+            if group.profile:
+                return group.profile, group
+            seen.add(group.id)
+            group = self.group(group.parent) if group.parent else None
+        return "", None
+
     def all_tags(self) -> dict[str, int]:
         """Every tag in use, with how many hosts carry it."""
         counts: dict[str, int] = {}
@@ -107,6 +143,17 @@ class HostList:
         groups = tuple(replace(g, name=name) if g.id == group_id else g for g in self.groups)
         return replace(self, groups=groups)
 
+    def set_group_profile(self, group_id: str, profile: str) -> "HostList":
+        self._require_group(group_id)
+        groups = tuple(replace(g, profile=profile) if g.id == group_id else g for g in self.groups)
+        return replace(self, groups=groups)
+
+    def set_hosts_profile(self, host_ids: Iterable[str], profile: str) -> "HostList":
+        """Sets several hosts at once; "" makes them follow their group again."""
+        wanted = set(host_ids)
+        hosts = tuple(replace(h, profile=profile) if h.id in wanted else h for h in self.hosts)
+        return replace(self, hosts=hosts)
+
     def remove_group(self, group_id: str) -> "HostList":
         """Removes the group, the groups nested in it, and their hosts."""
         self._require_group(group_id)
@@ -125,6 +172,7 @@ class HostList:
         address: str = "",
         tags: Iterable[str] = (),
         notes: str = "",
+        profile: str = "",
     ) -> tuple["HostList", Host]:
         self._require_group(group)
         host = Host(
@@ -134,6 +182,7 @@ class HostList:
             address=address.strip(),
             tags=clean_tags(tags),
             notes=notes,
+            profile=profile,
         )
         return replace(self, hosts=(*self.hosts, host)), host
 

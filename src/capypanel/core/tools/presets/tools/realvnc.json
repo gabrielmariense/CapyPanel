@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "realvnc",
+  "name": "RealVNC Viewer",
+  "kind": "vnc",
+  "port": 5900,
+  "credentials": "vnc_password_file",
+  "arguments": [
+    ["{address}::{port}"],
+    ["-UserName={user}"],
+    ["-PasswordFile={password_file}"]
+  ],
+  "detect": {
+    "installed_as": ["VNC Viewer", "RealVNC Viewer"],
+    "exe": "vncviewer.exe",
+    "paths": [
+      "%ProgramFiles%\\RealVNC\\VNC Viewer\\vncviewer.exe",
+      "%ProgramFiles(x86)%\\RealVNC\\VNC Viewer\\vncviewer.exe"
+    ]
+  }
+}

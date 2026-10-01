@@ -5,8 +5,12 @@
   "kind": "vnc",
   "port": 5900,
   "credentials": "arguments",
+  "options": {
+    "securevnc": "SecureVNC plugin"
+  },
   "arguments": [
     ["{address}::{port}"],
+    {"option": "securevnc", "arguments": ["-dsmplugin", "SecureVNCPlugin64.dsm"]},
     ["-user", "{user}"],
     ["-password", "{password}"]
   ],

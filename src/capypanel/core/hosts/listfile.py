@@ -98,15 +98,16 @@ def can_write(path: Path) -> bool:
 # ---- JSON <-> records ----
 
 _LIST_KEYS = ("schema", "groups", "hosts")
-_GROUP_KEYS = ("id", "name", "parent")
-_HOST_KEYS = ("id", "name", "address", "group", "tags", "notes")
+_GROUP_KEYS = ("id", "name", "parent", "profile")
+_HOST_KEYS = ("id", "name", "address", "group", "tags", "notes", "profile")
 
 
 def to_data(host_list: HostList) -> dict[str, Any]:
     return {
         "schema": SCHEMA,
         "groups": [
-            {"id": g.id, "name": g.name, "parent": g.parent, **g.extra} for g in host_list.groups
+            {"id": g.id, "name": g.name, "parent": g.parent, **_profile(g.profile), **g.extra}
+            for g in host_list.groups
         ],
         "hosts": [
             {
@@ -116,12 +117,18 @@ def to_data(host_list: HostList) -> dict[str, Any]:
                 "group": h.group,
                 "tags": list(h.tags),
                 "notes": h.notes,
+                **_profile(h.profile),
                 **h.extra,
             }
             for h in host_list.hosts
         ],
         **host_list.extra,
     }
+
+
+def _profile(profile: str) -> dict[str, str]:
+    # Written only when set: lists without profiles stay exactly as older versions wrote them.
+    return {"profile": profile} if profile else {}
 
 
 def from_data(data: object) -> HostList:
@@ -215,6 +222,7 @@ def _group(item: object) -> Group:
         id=_text(item, "id", required=True),
         name=_text(item, "name"),
         parent=parent,
+        profile=_text(item, "profile"),
         extra=_extra(item, _GROUP_KEYS),
     )
 
@@ -236,5 +244,6 @@ def _host(item: object) -> Host:
         address=_text(item, "address"),
         tags=tuple(tags),
         notes=_text(item, "notes"),
+        profile=_text(item, "profile"),
         extra=_extra(item, _HOST_KEYS),
     )

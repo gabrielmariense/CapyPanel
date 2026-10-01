@@ -29,11 +29,17 @@ from capypanel.core.hosts.listfile import HostListChangedError, HostListFileErro
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
-from capypanel.core.tools.catalog import Catalog
+from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import SessionCredentials, Target
 from capypanel.ui import language
-from capypanel.ui.connect import Connector, ManualConnectDialog
-from capypanel.ui.hosts import HostDialog, confirm, group_path, list_file_filter
+from capypanel.ui.connect import Connector, ManualConnectDialog, Request
+from capypanel.ui.hosts import (
+    HostDialog,
+    ProfilePicker,
+    confirm,
+    group_path,
+    list_file_filter,
+)
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.host_views import (
     DetailsPane,
@@ -62,7 +68,7 @@ class MainWindow(QMainWindow):
         self._default_list = locations.default_list_path()
         self._personal_list = paths.personal_list
         self.connector = Connector(
-            self, Catalog.for_paths(paths), SessionCredentials(), self._prefs
+            self, Catalogs.for_paths(paths), SessionCredentials(), self._prefs
         )
 
         self.commands = create_actions(self)
@@ -302,7 +308,12 @@ class MainWindow(QMainWindow):
         if doc is None:
             return
         base = doc.hosts if doc.hosts.groups else starter_list()
-        dialog = HostDialog(self, base, default_group=self.nav.selected_group_id())
+        dialog = HostDialog(
+            self,
+            base,
+            default_group=self.nav.selected_group_id(),
+            profiles=self._profile_picker(base),
+        )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         values = dialog.values()
@@ -313,6 +324,7 @@ class MainWindow(QMainWindow):
                 address=values.address,
                 tags=values.tags,
                 notes=values.notes,
+                profile=values.profile,
             )
         except HostListRuleError as e:
             self._error(str(e))
@@ -324,7 +336,7 @@ class MainWindow(QMainWindow):
         doc = self._writable()
         if doc is None:
             return
-        dialog = HostDialog(self, doc.hosts, host)
+        dialog = HostDialog(self, doc.hosts, host, profiles=self._profile_picker(doc.hosts))
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         values = dialog.values()
@@ -335,6 +347,7 @@ class MainWindow(QMainWindow):
             group=values.group,
             tags=values.tags,
             notes=values.notes,
+            profile=values.profile,
         )
         try:
             new = doc.hosts.update_host(edited)
@@ -481,25 +494,109 @@ class MainWindow(QMainWindow):
 
     def connect_selected(self) -> None:
         hosts = self._selected_hosts()
-        if not hosts:
+        if not hosts or self._doc is None:
             return
-        started = self.connector.connect([(h.name, Target(h.target)) for h in hosts])
+        # A name like "Ward 2A - Desk" isn't a computer name, so it can't stand in for an address.
+        missing = [h for h in hosts if not h.connect_address]
+        if len(hosts) == 1 and missing:
+            self._ask_for_address(missing[0])
+            return
+        host_list = self._doc.hosts
+        requests = [
+            Request(h.name, Target(h.connect_address), host_list.profile_of(h)[0])
+            for h in hosts
+            if h.connect_address
+        ]
+        started = self.connector.connect(requests) if requests else 0
         if started:
-            tool = self.connector.vnc_tool()
-            name = tool.tool.name if tool else "VNC"
             self.statusBar().showMessage(
-                ngettext(
-                    "Opened {tool} for {n} host.", "Opened {tool} for {n} hosts.", started
-                ).format(tool=name, n=started),
+                ngettext("Opened {n} remote screen.", "Opened {n} remote screens.", started).format(
+                    n=started
+                ),
                 5000,
             )
+        if missing:
+            names = ", ".join(h.name for h in missing[:5]) + (" …" if len(missing) > 5 else "")
+            self._error(
+                ngettext(
+                    "{n} host has no address and was skipped: {names}",
+                    "{n} hosts have no address and were skipped: {names}",
+                    len(missing),
+                ).format(n=len(missing), names=names)
+            )
+
+    def _ask_for_address(self, host: Host) -> None:
+        box = QMessageBox(
+            QMessageBox.Icon.Warning,
+            _("No address"),
+            _(
+                "“{name}” has no address, and its name can't be used as one: a computer name "
+                "has no spaces or symbols other than - and _."
+            ).format(name=host.name),
+            parent=self,
+        )
+        edit = box.addButton(_("&Edit host…"), QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(QMessageBox.StandardButton.Cancel)
+        box.setDefaultButton(edit)
+        edit.setEnabled(self._writable() is not None)
+        box.exec()
+        if box.clickedButton() is edit:
+            self.edit_host(host)
 
     def manual_connect(self) -> None:
-        tool = self.connector.vnc_tool()
-        dialog = ManualConnectDialog(self, tool.tool.port if tool else None)
+        connector = self.connector
+        dialog = ManualConnectDialog(self, connector.choices(), connector.default_profile())
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            target = dialog.target()
-            self.connector.connect([(target.address, target)])
+            connector.connect([dialog.request()])
+
+    # ---- connection profiles ----
+
+    def _profile_picker(self, host_list: HostList) -> ProfilePicker:
+        connector = self.connector
+        return ProfilePicker(
+            choices=connector.choices(),
+            inherited=lambda group_id: connector.inherited_label(
+                *host_list.group_profile(group_id or None)
+            ),
+            label=connector.label,
+        )
+
+    def _connection_text(self, host_list: HostList, host: Host) -> str:
+        profile_id, source = host_list.profile_of(host)
+        name = self.connector.label(profile_id)
+        if host.profile:
+            return name
+        if source is not None:
+            return _("{profile} (from group “{group}”)").format(profile=name, group=source.name)
+        return _("{profile} (default)").format(profile=name)
+
+    def _add_profile_menu(
+        self, menu: QMenu, current: set[str], follow_text: str, apply: Callable[[str], None]
+    ) -> None:
+        """A "Connection profile" submenu: follow the group, or one of the profiles."""
+        submenu = menu.addMenu(_("Connection &profile"))
+        submenu.setEnabled(self._writable() is not None)
+        exclusive = QActionGroup(submenu)
+        for profile_id, text in [("", follow_text), *self.connector.choices()]:
+            item = submenu.addAction(text.replace("&", "&&"))
+            item.setCheckable(True)
+            item.setChecked(current == {profile_id})  # several hosts that differ: none checked
+            exclusive.addAction(item)
+            item.triggered.connect(lambda _checked=False, p=profile_id: apply(p))
+            if not profile_id:
+                submenu.addSeparator()
+
+    def set_hosts_profile(self, host_ids: list[str], profile: str) -> None:
+        doc = self._writable()
+        if doc is not None:
+            self._commit(doc.hosts.set_hosts_profile(host_ids, profile))
+            self._selection_changed()
+
+    def set_group_profile(self, group_id: str, profile: str) -> None:
+        doc = self._writable()
+        if doc is not None and doc.hosts.group(group_id) is not None:
+            self._commit(doc.hosts.set_group_profile(group_id, profile))
+            self._selection_changed()
 
     def forget_passwords(self) -> None:
         self.connector.credentials.forget()
@@ -619,7 +716,13 @@ class MainWindow(QMainWindow):
     def _selection_changed(self) -> None:
         hosts = self._selected_hosts()
         if len(hosts) == 1 and self._doc is not None:
-            self.details.show_host(hosts[0], group_path(self._doc.hosts, hosts[0].group), 1)
+            host_list, host = self._doc.hosts, hosts[0]
+            self.details.show_host(
+                host,
+                group_path(host_list, host.group),
+                1,
+                self._connection_text(host_list, host),
+            )
         else:
             self.details.show_host(None, "", len(hosts))
         self._update_state()
@@ -664,6 +767,19 @@ class MainWindow(QMainWindow):
         menu.setDefaultAction(a.connect_vnc)  # bold: what double-click and Enter do
         menu.addSeparator()
         menu.addActions([a.copy_address, a.copy_name])
+        hosts = self._selected_hosts()
+        if hosts and self._doc is not None:
+            menu.addSeparator()
+            groups = {h.group for h in hosts}
+            follow = (
+                self.connector.inherited_label(*self._doc.hosts.group_profile(groups.pop()))
+                if len(groups) == 1
+                else _("From each host's group")
+            )
+            ids = [h.id for h in hosts]
+            self._add_profile_menu(
+                menu, {h.profile for h in hosts}, follow, lambda p: self.set_hosts_profile(ids, p)
+            )
         menu.addSeparator()
         menu.addActions([a.edit, a.remove])
         menu.exec(self.table.viewport().mapToGlobal(position))
@@ -671,7 +787,15 @@ class MainWindow(QMainWindow):
     def _group_menu(self, position: QPoint) -> None:
         menu = QMenu(self)
         menu.addAction(self.commands.add_group)
-        if self.nav.selected_group_id():
+        group_id = self.nav.selected_group_id()
+        group = self._doc.hosts.group(group_id) if self._doc and group_id else None
+        if group is not None and self._doc is not None:
+            menu.addSeparator()
+            follow = self.connector.inherited_label(*self._doc.hosts.group_profile(group.parent))
+            self._add_profile_menu(
+                menu, {group.profile}, follow, lambda p: self.set_group_profile(group.id, p)
+            )
+            menu.addSeparator()
             menu.addActions([self.commands.edit, self.commands.remove])
         menu.exec(self.nav.groups.viewport().mapToGlobal(position))
 

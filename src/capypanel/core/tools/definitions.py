@@ -2,16 +2,20 @@
 
     {"schema": 1, "id": "ultravnc", "name": "UltraVNC Viewer", "kind": "vnc", "port": 5900,
      "credentials": "arguments",
-     "arguments": [["{address}::{port}"], ["-user", "{user}"], ["-password", "{password}"]],
+     "options": {"securevnc": "SecureVNC plugin"},
+     "arguments": [["{address}::{port}"],
+                   {"option": "securevnc", "arguments": ["-dsmplugin", "SecureVNCPlugin64.dsm"]},
+                   ["-user", "{user}"], ["-password", "{password}"]],
      "detect": {"installed_as": ["UltraVNC"], "exe": "vncviewer.exe", "paths": ["..."]}}
 
 `arguments` is a list of groups. A group is left out when any placeholder in it is empty, so
-one template serves servers that want a user name and servers that don't."""
+one template serves servers that want a user name and servers that don't. A group tied to an
+option is used only when the connection profile switches that option on."""
 
 import json
 import re
 import string
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -20,9 +24,12 @@ from capypanel.core.i18n import _
 
 SCHEMA = 1
 KINDS = ("vnc",)  # grows with the features: rdp, ssh…
-PLACEHOLDERS = ("address", "port", "user", "password")
-CREDENTIALS = ("none", "arguments")  # how the tool gets the password; more methods later
+PLACEHOLDERS = ("address", "port", "user", "password", "password_file")
 SECRET = "password"
+PASSWORD_FILE = "password_file"
+# How the tool gets the password: none, on its command line, or as a VNC password file that
+# is really a private pipe (nothing on disk; see pipe.py). Each needs its own placeholder.
+CREDENTIALS = {"none": None, "arguments": SECRET, "vnc_password_file": PASSWORD_FILE}
 _ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 
 
@@ -38,30 +45,51 @@ class Detect:
 
 
 @dataclass(frozen=True)
+class ArgumentGroup:
+    arguments: tuple[str, ...]
+    option: str | None = None  # used only when a profile turns this option on
+
+
+@dataclass(frozen=True)
 class ToolDefinition:
     id: str
     name: str
     kind: str
-    arguments: tuple[tuple[str, ...], ...]
+    arguments: tuple[ArgumentGroup, ...]
     credentials: str = "none"
     port: int | None = None
+    options: Mapping[str, str] = field(default_factory=dict)  # option id -> name shown
     executable: str = ""  # set by the user; empty means "find it"
     detect: Detect = field(default_factory=Detect)
     extra: Mapping[str, Any] = field(default_factory=dict)  # keys from newer versions, kept
 
     @property
     def wants_user(self) -> bool:
-        return any("{user}" in arg for group in self.arguments for arg in group)
+        return self._uses("user")
+
+    @property
+    def wants_password(self) -> bool:
+        return self.credentials != "none"
+
+    def _uses(self, name: str) -> bool:
+        return any(name in _names(arg) for group in self.arguments for arg in group.arguments)
 
 
-def command_line(tool: ToolDefinition, executable: Path, values: Mapping[str, str]) -> list[str]:
+def command_line(
+    tool: ToolDefinition,
+    executable: Path,
+    values: Mapping[str, str],
+    options: Collection[str] = (),
+) -> list[str]:
     """The exact argument list for one launch. Never a shell string: an address can't turn
-    into a command. Groups with an empty placeholder are dropped."""
+    into a command. Groups with an empty placeholder or an option that's off are dropped."""
     argv = [str(executable)]
     for group in tool.arguments:
-        needed = {name for arg in group for name in _names(arg)}
+        if group.option is not None and group.option not in options:
+            continue
+        needed = {name for arg in group.arguments for name in _names(arg)}
         if all(values.get(name) for name in needed):
-            argv.extend(arg.format_map(values) for arg in group)
+            argv.extend(arg.format_map(values) for arg in group.arguments)
     return argv
 
 
@@ -78,7 +106,10 @@ def redacted(argv: Sequence[str], secrets: Sequence[str]) -> list[str]:
 
 # ---- JSON <-> records ----
 
-_KEYS = ("schema", "id", "name", "kind", "arguments", "credentials", "port", "executable", "detect")
+_KEYS = (
+    "schema", "id", "name", "kind", "arguments", "credentials", "port", "options", "executable",
+    "detect",
+)  # fmt: skip
 
 
 def load(path: Path) -> ToolDefinition:
@@ -103,17 +134,21 @@ def from_data(data: object) -> ToolDefinition:
         raise ToolDefinitionError(_("The tool needs a “name”."))
     if kind not in KINDS:
         raise ToolDefinitionError(_("Unknown tool kind “{kind}”.").format(kind=kind))
-    arguments = _arguments(data.get("arguments"))
+    options = _options(data.get("options", {}))
+    arguments = _arguments(data.get("arguments"), options)
     credentials = data.get("credentials", "none")
     if credentials not in CREDENTIALS:
         raise ToolDefinitionError(
             _("Unknown credential method “{method}”.").format(method=credentials)
         )
-    uses_password = any("{password}" in arg for group in arguments for arg in group)
-    if (credentials == "arguments") != uses_password:
-        raise ToolDefinitionError(
-            _("A tool gets the password in its arguments only with the “arguments” method.")
-        )
+    used = {n for g in arguments for arg in g.arguments for n in _names(arg)}
+    for method, placeholder in CREDENTIALS.items():
+        if placeholder and (placeholder in used) != (credentials == method):
+            raise ToolDefinitionError(
+                _(
+                    "The placeholder “{{{name}}}” goes with the “{method}” credential method."
+                ).format(name=placeholder, method=method)
+            )
     port = data.get("port")
     if port is not None and (not isinstance(port, int) or not 1 <= port <= 65535):
         raise ToolDefinitionError(_("The “port” must be a number from 1 to 65535."))
@@ -127,6 +162,7 @@ def from_data(data: object) -> ToolDefinition:
         arguments=arguments,
         credentials=credentials,
         port=port,
+        options=options,
         executable=executable,
         detect=_detect(data.get("detect", {})),
         extra={k: v for k, v in data.items() if k not in _KEYS},
@@ -139,11 +175,17 @@ def to_data(tool: ToolDefinition) -> dict[str, Any]:
         "id": tool.id,
         "name": tool.name,
         "kind": tool.kind,
-        "arguments": [list(group) for group in tool.arguments],
+        "arguments": [
+            list(g.arguments) if g.option is None
+            else {"option": g.option, "arguments": list(g.arguments)}
+            for g in tool.arguments
+        ],
         "credentials": tool.credentials,
-    }
+    }  # fmt: skip
     if tool.port is not None:
         data["port"] = tool.port
+    if tool.options:
+        data["options"] = dict(tool.options)
     if tool.executable:
         data["executable"] = tool.executable
     d = tool.detect
@@ -156,20 +198,38 @@ def to_data(tool: ToolDefinition) -> dict[str, Any]:
     return {**tool.extra, **data}
 
 
-def _arguments(value: object) -> tuple[tuple[str, ...], ...]:
+def _options(value: object) -> dict[str, str]:
+    if not isinstance(value, dict) or not all(
+        isinstance(k, str) and _ID.match(k) and isinstance(v, str) and v.strip()
+        for k, v in value.items()
+    ):
+        raise ToolDefinitionError(_("“options” must map option ids to the names shown."))
+    return {k: v.strip() for k, v in value.items()}
+
+
+def _arguments(value: object, options: Mapping[str, str]) -> tuple[ArgumentGroup, ...]:
     if not isinstance(value, list) or not value:
         raise ToolDefinitionError(_("The tool needs “arguments”: a list of groups."))
     groups = []
-    for group in value:
-        if not isinstance(group, list) or not group or not all(isinstance(a, str) for a in group):
+    for item in value:
+        option = None
+        if isinstance(item, dict):
+            option, item = item.get("option"), item.get("arguments")
+            if option not in options:
+                raise ToolDefinitionError(
+                    _(
+                        "The arguments use an option that “options” doesn't list: “{option}”."
+                    ).format(option=option)
+                )
+        if not isinstance(item, list) or not item or not all(isinstance(a, str) for a in item):
             raise ToolDefinitionError(_("Each argument group must be a list of texts."))
-        for arg in group:
+        for arg in item:
             for name in _names(arg):
                 if name not in PLACEHOLDERS:
                     raise ToolDefinitionError(
                         _("Unknown placeholder “{{{name}}}” in the arguments.").format(name=name)
                     )
-        groups.append(tuple(group))
+        groups.append(ArgumentGroup(tuple(item), option))
     return tuple(groups)
 
 

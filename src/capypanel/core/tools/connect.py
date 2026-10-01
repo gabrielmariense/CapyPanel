@@ -2,10 +2,19 @@
 
 import logging
 import subprocess
+from collections.abc import Collection
 from dataclasses import dataclass
 from pathlib import Path
 
-from capypanel.core.tools.definitions import SECRET, ToolDefinition, command_line, redacted
+from capypanel.core.tools import vncpass
+from capypanel.core.tools.definitions import (
+    PASSWORD_FILE,
+    SECRET,
+    ToolDefinition,
+    command_line,
+    redacted,
+)
+from capypanel.core.tools.pipe import SecretPipe
 
 log = logging.getLogger(__name__)
 
@@ -17,25 +26,26 @@ class Credential:
 
 
 class SessionCredentials:
-    """Passwords typed while the app runs, per tool. Never written anywhere: gone on exit."""
+    """Passwords typed while the app runs, one per connection profile. Never written anywhere:
+    gone on exit. Per profile, so the Windows-account password never reaches the Pis."""
 
     def __init__(self) -> None:
-        self._by_tool: dict[str, Credential] = {}
+        self._by_profile: dict[str, Credential] = {}
 
-    def get(self, tool_id: str) -> Credential | None:
-        return self._by_tool.get(tool_id)
+    def get(self, profile_id: str) -> Credential | None:
+        return self._by_profile.get(profile_id)
 
-    def remember(self, tool_id: str, credential: Credential) -> None:
-        self._by_tool[tool_id] = credential
+    def remember(self, profile_id: str, credential: Credential) -> None:
+        self._by_profile[profile_id] = credential
 
-    def forget(self, tool_id: str | None = None) -> None:
-        if tool_id is None:
-            self._by_tool.clear()
+    def forget(self, profile_id: str | None = None) -> None:
+        if profile_id is None:
+            self._by_profile.clear()
         else:
-            self._by_tool.pop(tool_id, None)
+            self._by_profile.pop(profile_id, None)
 
     def __bool__(self) -> bool:
-        return bool(self._by_tool)
+        return bool(self._by_profile)
 
 
 @dataclass(frozen=True)
@@ -49,6 +59,7 @@ def launch(
     executable: Path,
     target: Target,
     credential: Credential | None = None,
+    options: Collection[str] = (),
 ) -> subprocess.Popen[bytes]:
     """Starts the tool and returns at once; the tool runs on its own. Raises OSError."""
     port = target.port if target.port is not None else tool.port
@@ -58,13 +69,25 @@ def launch(
         "user": credential.user if credential else "",
         SECRET: credential.password if credential else "",
     }
-    argv = command_line(tool, executable, values)
+    pipe = None
+    if tool.credentials == "vnc_password_file" and values[SECRET]:
+        pipe = SecretPipe()  # made before the program starts, so it's there when it looks
+        values[PASSWORD_FILE] = pipe.path
+    argv = command_line(tool, executable, values, options)
     log.info("Starting %s: %s", tool.id, redacted(argv, [values[SECRET]]))
-    return subprocess.Popen(
-        argv,
-        cwd=executable.parent,  # some tools look for their DLLs and settings next to them
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        close_fds=True,
-    )
+    try:
+        process = subprocess.Popen(
+            argv,
+            cwd=executable.parent,  # some tools look for their DLLs and settings next to them
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            close_fds=True,
+        )
+    except OSError:
+        if pipe is not None:
+            pipe.close()
+        raise
+    if pipe is not None:
+        pipe.serve(vncpass.obfuscate(values[SECRET]))
+    return process
