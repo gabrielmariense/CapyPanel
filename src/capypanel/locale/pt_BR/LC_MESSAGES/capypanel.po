@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-01 16:47-0300\n"
+"POT-Creation-Date: 2026-10-01 17:12-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -686,10 +686,10 @@ msgid "user and password"
 msgstr "usuário e senha"
 
 #, python-brace-format
-msgid "{names} asks for a VNC password, not a user and password, so CapyPanel didn't send it your password. Check its connection profile."
-msgid_plural "{names} ask for a VNC password, not a user and password, so CapyPanel didn't send them your password. Check their connection profile."
-msgstr[0] "{names} pede uma senha VNC, não usuário e senha, então o CapyPanel não enviou a sua senha. Confira o perfil de conexão dele."
-msgstr[1] "{names} pedem uma senha VNC, não usuário e senha, então o CapyPanel não enviou a sua senha. Confira o perfil de conexão deles."
+msgid "{names} doesn't take a user and password (it may want a VNC password, or be another kind of VNC server), so CapyPanel didn't send your password. Check its connection profile."
+msgid_plural "{names} don't take a user and password (they may want a VNC password, or be another kind of VNC server), so CapyPanel didn't send your password. Check their connection profile."
+msgstr[0] "{names} não aceita usuário e senha (pode pedir uma senha VNC ou ser outro tipo de servidor VNC), então o CapyPanel não enviou a sua senha. Confira o perfil de conexão dele."
+msgstr[1] "{names} não aceitam usuário e senha (podem pedir uma senha VNC ou ser outro tipo de servidor VNC), então o CapyPanel não enviou a sua senha. Confira o perfil de conexão deles."
 
 #, python-brace-format
 msgid "{n} host"

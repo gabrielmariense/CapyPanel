@@ -2,6 +2,7 @@
 host's connection profile."""
 
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -283,20 +284,24 @@ class Connector:
         return started
 
     def _only_account_servers(self, ready: Ready, requests: list[Request]) -> list[Request]:
-        """Drops the hosts whose server only asks for a VNC password. Sending it the account's
-        password would hand its first 8 characters to a login that can be cracked offline."""
+        """Drops the hosts whose server offers no user-and-password login (e.g. it only wants a
+        VNC password, which would get the first 8 characters through a login cracked offline)."""
         tool, profile = ready.tool, ready.profile
 
         def offers_account(request: Request) -> bool:
             port = request.target.port or profile.port or tool.port or DEFAULT_PORT
+            began = time.perf_counter()
             try:
                 offered = rfb.security_types(request.target.address, port)
             except rfb.ProbeError as e:
-                log.info("Login check for %s skipped: %s", request.label, e)
+                log.info("Login check for %s: couldn't ask (%s); opening anyway", request.label, e)
                 return True  # can't tell: the viewer will say what's wrong
             fits = not offered or any(t in tool.account_types for t in offered)
-            if not fits:
-                log.warning("%s offers login types %s, none for an account", request.label, offered)
+            log.info(
+                "Login check for %s: login types %s in %d ms, %s",
+                request.label, list(offered), (time.perf_counter() - began) * 1000,
+                "fits" if fits else "refused",
+            )  # fmt: skip
             return fits
 
         QGuiApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
@@ -309,10 +314,12 @@ class Connector:
         if refused:
             self._error(
                 ngettext(
-                    "{names} asks for a VNC password, not a user and password, so CapyPanel didn't "
-                    "send it your password. Check its connection profile.",
-                    "{names} ask for a VNC password, not a user and password, so CapyPanel didn't "
-                    "send them your password. Check their connection profile.",
+                    "{names} doesn't take a user and password (it may want a VNC password, or be "
+                    "another kind of VNC server), so CapyPanel didn't send your password. Check "
+                    "its connection profile.",
+                    "{names} don't take a user and password (they may want a VNC password, or be "
+                    "another kind of VNC server), so CapyPanel didn't send your password. Check "
+                    "their connection profile.",
                     len(refused),
                 ).format(names=", ".join(r.label for r in refused))
             )

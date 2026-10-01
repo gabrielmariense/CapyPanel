@@ -262,7 +262,7 @@ def test_a_windows_password_is_never_sent_to_a_server_that_wants_a_vnc_password(
     window.connect_selected()
     assert sorted(probed) == [("10.0.0.1", 5900), ("PC-B", 5900)]
     assert [call[1] for call in launched] == ["PC-B"]  # only the one that asks for an account
-    assert "PC-A" in shown[0] and "VNC password" in shown[0]
+    assert "PC-A" in shown[0] and "user and password" in shown[0]
     _select(window, "PC-A")
     launched.clear()
     asked.clear()
