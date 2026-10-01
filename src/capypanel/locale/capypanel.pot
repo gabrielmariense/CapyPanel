@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-01 15:45-0300\n"
+"POT-Creation-Date: 2026-10-01 16:47-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -707,6 +707,16 @@ msgid "user and password"
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"{names} asks for a VNC password, not a user and password, so CapyPanel "
+"didn't send it your password. Check its connection profile."
+msgid_plural ""
+"{names} ask for a VNC password, not a user and password, so CapyPanel "
+"didn't send them your password. Check their connection profile."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} host"
 msgid_plural "{n} hosts"
 msgstr[0] ""
@@ -764,10 +774,16 @@ msgid ""
 "is. The path is saved for your account."
 msgstr ""
 
+msgid "“account_types” must be a list of numbers from 1 to 255."
+msgstr ""
+
 msgid "“detect” has a value of the wrong type."
 msgstr ""
 
 msgid "“detect” must be an object."
+msgstr ""
+
+msgid "“max_password” must map logins to a length."
 msgstr ""
 
 msgid "“options” must map option ids to the names shown."

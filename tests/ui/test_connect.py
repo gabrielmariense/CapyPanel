@@ -31,6 +31,8 @@ def launched(monkeypatch: pytest.MonkeyPatch) -> list[Launch]:
 
     monkeypatch.setattr(connect_ui, "launch", fake_launch)
     monkeypatch.setattr(connect_ui.detect, "find_executable", lambda tool: Path("viewer.exe"))
+    # Every server asks for an account unless a test says otherwise; nothing touches the network.
+    monkeypatch.setattr(connect_ui.rfb, "security_types", lambda *a, **k: (17, 117, 113))
     return calls
 
 
@@ -239,3 +241,65 @@ def test_connect_commands_follow_the_selection(window: MainWindow) -> None:
     # Enter connects only from the host table, never while typing somewhere else.
     assert a.connect_vnc.shortcutContext() == Qt.ShortcutContext.WidgetWithChildrenShortcut
     assert a.connect_vnc in window.table.actions()
+
+
+def test_a_windows_password_is_never_sent_to_a_server_that_wants_a_vnc_password(
+    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    offered = {"10.0.0.1": (17, 117, 2), "PC-B": (17, 117, 113)}
+    probed: list[tuple[str, int]] = []
+
+    def fake_probe(address: str, port: int, timeout: float = 3.0) -> tuple[int, ...]:
+        probed.append((address, port))
+        return offered[address]
+
+    monkeypatch.setattr(connect_ui.rfb, "security_types", fake_probe)
+    shown: list[str] = []
+    monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: shown.append(text))
+    asked: list[str] = []
+    _answer_with(monkeypatch, "ana", "domain-pass", asked)
+    _select(window, "PC-A", "PC-B")
+    window.connect_selected()
+    assert sorted(probed) == [("10.0.0.1", 5900), ("PC-B", 5900)]
+    assert [call[1] for call in launched] == ["PC-B"]  # only the one that asks for an account
+    assert "PC-A" in shown[0] and "VNC password" in shown[0]
+    _select(window, "PC-A")
+    launched.clear()
+    asked.clear()
+    window.connect_selected()
+    assert launched == [] and asked == []  # refused before even asking for a password
+
+
+def test_when_the_server_cannot_be_asked_the_viewer_still_opens(
+    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def unreachable(*_args: object, **_kwargs: object) -> tuple[int, ...]:
+        raise connect_ui.rfb.ProbeError("timed out")
+
+    monkeypatch.setattr(connect_ui.rfb, "security_types", unreachable)
+    window.connector.credentials.remember("ultravnc-account-securevnc", Credential("ana", "x"))
+    _select(window, "PC-A")
+    window.connect_selected()
+    assert [call[1] for call in launched] == ["10.0.0.1"]  # the viewer reports what's wrong
+
+
+def test_password_only_profiles_never_check_and_vnc_passwords_stop_at_8(
+    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def must_not_probe(*_args: object, **_kwargs: object) -> tuple[int, ...]:
+        raise AssertionError("password-only profiles connect without a check")
+
+    monkeypatch.setattr(connect_ui.rfb, "security_types", must_not_probe)
+    window.connector.credentials.remember("ultravnc-password", Credential("", "x"))
+    assert window.connector.connect([Request("PC-Z", connect_ui.Target("PC-Z"))]) == 1
+    vnc = CredentialDialog(
+        None, window.connector.resolve("ultravnc-password"), "PC-Z", on_command_line=True
+    )
+    vnc.password.setText("123456789012")
+    assert vnc.password.text() == "12345678"
+    account = CredentialDialog(
+        None, window.connector.resolve("ultravnc-account"), "PC-Z", on_command_line=True
+    )
+    account.password.setText("x" * 10_000)
+    account.user.setText("u" * 10_000)
+    assert len(account.password.text()) == 256 and len(account.user.text()) == 256

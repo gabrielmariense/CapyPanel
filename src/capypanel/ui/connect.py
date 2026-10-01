@@ -2,10 +2,13 @@
 host's connection profile."""
 
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -22,7 +25,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import Group
 from capypanel.core.i18n import _, ngettext
-from capypanel.core.tools import detect, profiles
+from capypanel.core.tools import detect, profiles, rfb
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import Credential, SessionCredentials, Target, launch
 from capypanel.core.tools.definitions import ToolDefinition
@@ -32,6 +35,9 @@ log = logging.getLogger(__name__)
 DEFAULT_PROFILE_KEY = "default_profile"
 DEFAULT_PROFILE = "ultravnc-password"  # UltraVNC's own out-of-the-box setup
 MANY_CONNECTIONS = 5  # more than this at once asks first
+MAX_TEXT = 256  # longest user name or password accepted, unless the tool allows less
+DEFAULT_PORT = 5900
+MAX_ADDRESS = 253  # the longest DNS name
 
 
 @dataclass(frozen=True)
@@ -59,8 +65,11 @@ class CredentialDialog(QDialog):
         intro.setWordWrap(True)
         self.wants_user = ready.profile.login == "account"
         self.user = QLineEdit()
+        self.user.setMaxLength(MAX_TEXT)
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
+        # Classic VNC passwords stop at 8 characters: the box does too, so nothing is cut silently.
+        self.password.setMaxLength(ready.tool.max_password.get(ready.profile.login, MAX_TEXT))
         form = QFormLayout()
         if self.wants_user:
             form.addRow(_("&User:"), self.user)
@@ -113,6 +122,7 @@ class ManualConnectDialog(QDialog):
         self.setWindowTitle(_("Manual connection"))
         self.address = QLineEdit()
         self.address.setPlaceholderText(_("Hostname or IP address"))
+        self.address.setMaxLength(MAX_ADDRESS)
         self.port = QSpinBox()
         self.port.setRange(0, 65535)
         self.port.setSpecialValueText(_("Default"))  # shown for 0: the profile's own port
@@ -238,6 +248,10 @@ class Connector:
         executable = detect.find_executable(tool) or self._locate(tool)
         if executable is None:
             return 0
+        if profile.login == "account" and tool.account_types:
+            requests = self._only_account_servers(ready, requests)
+            if not requests:
+                return 0
         credential = None
         if profile.login != "none":
             credential = self.credentials.get(profile.id)
@@ -267,6 +281,42 @@ class Connector:
                 )
                 break
         return started
+
+    def _only_account_servers(self, ready: Ready, requests: list[Request]) -> list[Request]:
+        """Drops the hosts whose server only asks for a VNC password. Sending it the account's
+        password would hand its first 8 characters to a login that can be cracked offline."""
+        tool, profile = ready.tool, ready.profile
+
+        def offers_account(request: Request) -> bool:
+            port = request.target.port or profile.port or tool.port or DEFAULT_PORT
+            try:
+                offered = rfb.security_types(request.target.address, port)
+            except rfb.ProbeError as e:
+                log.info("Login check for %s skipped: %s", request.label, e)
+                return True  # can't tell: the viewer will say what's wrong
+            fits = not offered or any(t in tool.account_types for t in offered)
+            if not fits:
+                log.warning("%s offers login types %s, none for an account", request.label, offered)
+            return fits
+
+        QGuiApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            with ThreadPoolExecutor(max_workers=8) as pool:
+                fits = list(pool.map(offers_account, requests))
+        finally:
+            QGuiApplication.restoreOverrideCursor()
+        refused = [r for r, ok in zip(requests, fits, strict=True) if not ok]
+        if refused:
+            self._error(
+                ngettext(
+                    "{names} asks for a VNC password, not a user and password, so CapyPanel didn't "
+                    "send it your password. Check its connection profile.",
+                    "{names} ask for a VNC password, not a user and password, so CapyPanel didn't "
+                    "send them your password. Check their connection profile.",
+                    len(refused),
+                ).format(names=", ".join(r.label for r in refused))
+            )
+        return [r for r, ok in zip(requests, fits, strict=True) if ok]
 
     def _names(self, requests: list[Request]) -> str:
         names = ", ".join(r.label for r in requests[:5])

@@ -29,6 +29,10 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.model import Host, HostList, clean_tags
 from capypanel.core.i18n import _
 
+MAX_NAME = 255  # longest host name typed
+MAX_ADDRESS = 253  # the longest DNS name
+MAX_TAG = 64
+
 
 @dataclass(frozen=True)
 class HostValues:
@@ -89,7 +93,9 @@ class HostDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(_("Edit host") if host else _("Add host"))
         self.name = QLineEdit(host.name if host else "")
+        self.name.setMaxLength(MAX_NAME)
         self.address = QLineEdit(host.address if host else "")
+        self.address.setMaxLength(MAX_ADDRESS)
         self.address.setPlaceholderText(_("Hostname or IP address; leave blank to use the name"))
         self.group = QComboBox()
         for group_id, label in group_choices(host_list):
@@ -183,6 +189,7 @@ class TagEdit(QFrame):
         self.input = QLineEdit()
         self.input.setObjectName("tagInput")
         self.input.setFrame(False)
+        self.input.setMaxLength(MAX_TAG)
         self.input.setMinimumWidth(90)
         completer = QCompleter(sorted(self._known.values(), key=str.casefold), self)
         completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
