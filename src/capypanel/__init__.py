@@ -27,5 +27,5 @@ def _commit() -> str:
     return ""
 
 
-# What the title bar and the log show: "0.1.0.dev10", plus "(3b4c3e0)" when run from source.
+# What the title bar and the log show: "0.8.1", plus "(3b4c3e0)" when run from source.
 BUILD = f"{__version__} ({_commit()})" if _commit() else __version__
