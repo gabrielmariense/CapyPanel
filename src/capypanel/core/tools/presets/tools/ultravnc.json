@@ -10,7 +10,12 @@
   },
   "account_types": [113, 114, 115, 118],
   "max_password": {"password": 8},
+  "settings_file": {
+    "extension": ".vnc",
+    "remove": ["host", "port", "password", "UseDSMPlugin", "DSMPlugin"]
+  },
   "arguments": [
+    ["-config", "{settings_file}"],
     ["{address}::{port}"],
     {"option": "securevnc", "arguments": ["-dsmplugin", "SecureVNCPlugin64.dsm"]},
     ["-user", "{user}"],

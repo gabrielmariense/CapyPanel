@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.i18n import _, ngettext
-from capypanel.core.tools import detect
+from capypanel.core.tools import detect, viewer_settings
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profile_store import make_id
@@ -49,6 +49,7 @@ class ConnectionChanges:
     deleted: tuple[str, ...] = ()
     default: str = ""
     tool_paths: dict[str, str] = field(default_factory=dict)  # tool id -> .exe; "" = automatic
+    settings: dict[str, bytes] = field(default_factory=dict)  # profile id -> new settings file
 
 
 def apply(catalogs: Catalogs, changes: ConnectionChanges) -> None:
@@ -57,7 +58,7 @@ def apply(catalogs: Catalogs, changes: ConnectionChanges) -> None:
     for profile_id in changes.deleted:
         store.delete(profile_id)
     for profile in changes.saved:
-        store.save(profile)
+        store.save(profile, changes.settings.get(profile.id))
     if changes.default and changes.default != store.default_id():
         store.set_default(changes.default)
     for tool_id, executable in changes.tool_paths.items():
@@ -71,7 +72,8 @@ def apply(catalogs: Catalogs, changes: ConnectionChanges) -> None:
 
 
 class ProfileDialog(QDialog):
-    """Add, edit or duplicate a profile: name, tool, login, the tool's options, port."""
+    """Add, edit or duplicate a profile: name, tool, login, the tool's options, port, and the
+    viewer settings file for tools that read one."""
 
     def __init__(
         self,
@@ -102,6 +104,23 @@ class ProfileDialog(QDialog):
         self.port.setRange(0, 65535)
         self.port.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
         self.port.setValue((profile.port or 0) if profile else 0)
+        self._first_tool = profile.tool if profile else ""
+        self._has_settings = bool(profile and profile.settings_file)
+        self.new_settings: bytes | None = None  # a file chosen here, already cleaned
+        self.settings_state = QLabel()
+        self.choose_settings = QPushButton(_("C&hoose file…"))
+        self.default_settings = QPushButton(_("Use &defaults"))
+        self.choose_settings.clicked.connect(self._choose_settings)
+        self.default_settings.clicked.connect(self._use_default_settings)
+        settings_row = QHBoxLayout()
+        settings_row.setContentsMargins(0, 0, 0, 0)
+        settings_row.addWidget(self.settings_state, 1)
+        settings_row.addWidget(self.choose_settings)
+        settings_row.addWidget(self.default_settings)
+        self._settings_box = QWidget()
+        self._settings_box.setLayout(settings_row)
+        self._settings_label = QLabel(_("Viewer settings:"))
+        self.settings_hint = hint()
 
         form = QFormLayout()
         form.addRow(_("&Name:"), self.name)
@@ -110,6 +129,8 @@ class ProfileDialog(QDialog):
         self._options_label = QLabel(_("Options:"))
         form.addRow(self._options_label, self._options_box)
         form.addRow(_("P&ort:"), self.port)
+        form.addRow(self._settings_label, self._settings_box)
+        form.addRow("", self.settings_hint)
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -154,6 +175,56 @@ class ProfileDialog(QDialog):
         self.port.setSpecialValueText(
             _("Default ({port})").format(port=tool.port) if tool.port else _("Default")
         )
+        if tool.id != self._first_tool:  # another viewer's file wouldn't fit this one
+            self._first_tool, self._has_settings, self.new_settings = tool.id, False, None
+        reads = tool.settings_file is not None
+        for widget in (self._settings_label, self._settings_box, self.settings_hint):
+            widget.setVisible(reads)
+        if tool.settings_file is not None:
+            self.settings_hint.setText(
+                _(
+                    "Optional: a {extension} file saved from {tool}, for every option it has. "
+                    "CapyPanel removes the address, port, password and encryption plugin from "
+                    "it: this profile decides those."
+                ).format(extension=tool.settings_file.extension, tool=tool.name)
+            )
+        self._show_settings(None)
+
+    def _show_settings(self, chosen: str | None) -> None:
+        if chosen:
+            text = _("From “{file}”").format(file=chosen)
+        elif self._has_settings:
+            text = _("Its own settings file")
+        else:
+            text = _("The viewer's defaults")
+        self.settings_state.setText(text)
+        self.default_settings.setEnabled(self._has_settings)
+
+    def _choose_settings(self) -> None:
+        tool = self._current_tool()
+        if tool is None or tool.settings_file is None:
+            return
+        extension = tool.settings_file.extension
+        name, _filter = QFileDialog.getOpenFileName(
+            self,
+            _("Choose a {tool} settings file").format(tool=tool.name),
+            str(Path.home()),
+            _("Viewer settings (*{extension})").format(extension=extension),
+        )
+        if not name:
+            return
+        try:
+            content = viewer_settings.read(Path(name), tool.settings_file.remove)
+        except (OSError, viewer_settings.SettingsFileError) as e:
+            message = _("Couldn't use “{file}”: {error}").format(file=Path(name).name, error=e)
+            QMessageBox.warning(self, "CapyPanel", message)
+            return
+        self._has_settings, self.new_settings = True, content
+        self._show_settings(Path(name).name)
+
+    def _use_default_settings(self) -> None:
+        self._has_settings, self.new_settings = False, None
+        self._show_settings(None)
 
     def _update_ok(self) -> None:
         ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)
@@ -167,7 +238,14 @@ class ProfileDialog(QDialog):
             login=self.login.currentData(),
             options=tuple(o for o, box in self.option_boxes.items() if box.isChecked()),
             port=self.port.value() or None,
+            settings_file=self._settings_file(profile_id),
         )
+
+    def _settings_file(self, profile_id: str) -> str:
+        tool = self._current_tool()
+        if not self._has_settings or tool is None or tool.settings_file is None:
+            return ""
+        return f"{profile_id}{tool.settings_file.extension}"
 
 
 class ConnectionsPage(Page):
@@ -181,6 +259,7 @@ class ConnectionsPage(Page):
         self._changed: set[str] = set()
         self._deleted: set[str] = set()
         self._tool_paths: dict[str, str] = {}
+        self._settings: dict[str, bytes] = {}  # settings files chosen here, written on Save
 
         profiles_box = QGroupBox(_("Connection profiles"))
         folder = PathLabel(self.store.folder)
@@ -266,7 +345,8 @@ class ConnectionsPage(Page):
     def add(self) -> None:
         dialog = self._dialog(_("New connection profile"), None)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            self._keep(dialog.profile(make_id(dialog.name.text().strip(), self._profiles)))
+            new_id = make_id(dialog.name.text().strip(), self._profiles)
+            self._keep(dialog.profile(new_id), dialog.new_settings)
 
     def edit(self) -> None:
         profile = self._selected()
@@ -274,7 +354,8 @@ class ConnectionsPage(Page):
             return
         dialog = self._dialog(_("Edit connection profile"), profile)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            self._keep(replace(dialog.profile(profile.id), extra=profile.extra))
+            edited = replace(dialog.profile(profile.id), extra=profile.extra)
+            self._keep(edited, dialog.new_settings)
 
     def duplicate(self) -> None:
         profile = self._selected()
@@ -283,7 +364,13 @@ class ConnectionsPage(Page):
         copy = replace(profile, name=_("{profile} (copy)").format(profile=profile.name))
         dialog = self._dialog(_("Duplicate connection profile"), copy)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            self._keep(dialog.profile(make_id(dialog.name.text().strip(), self._profiles)))
+            new = dialog.profile(make_id(dialog.name.text().strip(), self._profiles))
+            content = dialog.new_settings
+            if content is None and new.settings_file:
+                content = self._settings_content(profile)  # the copy gets its own file
+                if content is None:
+                    new = replace(new, settings_file="")
+            self._keep(new, content)
 
     def delete(self) -> None:
         profile = self._selected()
@@ -303,6 +390,7 @@ class ConnectionsPage(Page):
         if not confirm(self, _("Delete connection profile"), text, _("Delete")):
             return
         del self._profiles[profile.id]
+        self._settings.pop(profile.id, None)
         self._changed.discard(profile.id)
         if self.store.find(profile.id) is not None:
             self._deleted.add(profile.id)
@@ -317,7 +405,20 @@ class ConnectionsPage(Page):
             sum(g.profile == profile_id for g in hosts.groups),
         )
 
-    def _keep(self, profile: ConnectionProfile) -> None:
+    def _settings_content(self, profile: ConnectionProfile) -> bytes | None:
+        if profile.id in self._settings:
+            return self._settings[profile.id]
+        path = self.store.settings_path(profile)
+        try:
+            return path.read_bytes() if path is not None else None
+        except OSError:
+            return None
+
+    def _keep(self, profile: ConnectionProfile, settings: bytes | None = None) -> None:
+        if settings is not None:
+            self._settings[profile.id] = settings
+        elif not profile.settings_file:
+            self._settings.pop(profile.id, None)
         self._profiles[profile.id] = profile
         self._changed.add(profile.id)
         self._deleted.discard(profile.id)
@@ -332,6 +433,7 @@ class ConnectionsPage(Page):
             deleted=tuple(sorted(self._deleted)),
             default=self.default_choice(),
             tool_paths=dict(self._tool_paths),
+            settings={pid: c for pid, c in self._settings.items() if pid in self._changed},
         )
 
     def showEvent(self, event: QShowEvent) -> None:

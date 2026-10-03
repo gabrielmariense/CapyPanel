@@ -10,7 +10,10 @@
 
 `arguments` is a list of groups. A group is left out when any placeholder in it is empty, so
 one template serves servers that want a user name and servers that don't. A group tied to an
-option is used only when the connection profile switches that option on."""
+option is used only when the connection profile switches that option on.
+
+A tool that reads a settings file (UltraVNC's -config) names it with "settings_file": its
+extension and the settings CapyPanel sets itself, removed from the file (see viewer_settings)."""
 
 import json
 import re
@@ -24,13 +27,15 @@ from capypanel.core.i18n import _
 
 SCHEMA = 1
 KINDS = ("vnc",)  # grows with the features: rdp, ssh…
-PLACEHOLDERS = ("address", "port", "user", "password", "password_file")
+PLACEHOLDERS = ("address", "port", "user", "password", "password_file", "settings_file")
 SECRET = "password"
 PASSWORD_FILE = "password_file"
+SETTINGS_FILE = "settings_file"
 # How the tool gets the password: none, on its command line, or as a VNC password file that
 # is really a private pipe (nothing on disk; see pipe.py). Each needs its own placeholder.
 CREDENTIALS = {"none": None, "arguments": SECRET, "vnc_password_file": PASSWORD_FILE}
 _ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
+_EXTENSION = re.compile(r"^\.[a-z0-9]{1,8}$")
 
 
 class ToolDefinitionError(ValueError):
@@ -42,6 +47,12 @@ class Detect:
     installed_as: tuple[str, ...] = ()  # names in Windows' list of installed programs
     exe: str = ""  # file name inside the install folder
     paths: tuple[str, ...] = ()  # usual full paths; %ProgramFiles% and the like are expanded
+
+
+@dataclass(frozen=True)
+class SettingsFile:
+    extension: str  # ".vnc"
+    remove: tuple[str, ...] = ()  # settings CapyPanel sets itself, taken out of the file
 
 
 @dataclass(frozen=True)
@@ -64,6 +75,7 @@ class ToolDefinition:
     # a server that only wants a VNC password.
     account_types: tuple[int, ...] = ()
     max_password: Mapping[str, int] = field(default_factory=dict)  # login -> longest password
+    settings_file: SettingsFile | None = None  # the tool reads a settings file a profile can carry
     executable: str = ""  # set by the user; empty means "find it"
     detect: Detect = field(default_factory=Detect)
     extra: Mapping[str, Any] = field(default_factory=dict)  # keys from newer versions, kept
@@ -113,7 +125,7 @@ def redacted(argv: Sequence[str], secrets: Sequence[str]) -> list[str]:
 
 _KEYS = (
     "schema", "id", "name", "kind", "arguments", "credentials", "port", "options", "executable",
-    "detect", "account_types", "max_password",
+    "detect", "account_types", "max_password", "settings_file",
 )  # fmt: skip
 
 
@@ -154,6 +166,11 @@ def from_data(data: object) -> ToolDefinition:
                     "The placeholder “{{{name}}}” goes with the “{method}” credential method."
                 ).format(name=placeholder, method=method)
             )
+    settings_file = _settings_file(data.get("settings_file"))
+    if (SETTINGS_FILE in used) != (settings_file is not None):
+        raise ToolDefinitionError(
+            _("The placeholder “{{{name}}}” goes with “settings_file”.").format(name=SETTINGS_FILE)
+        )
     port = data.get("port")
     if port is not None and (not isinstance(port, int) or not 1 <= port <= 65535):
         raise ToolDefinitionError(_("The “port” must be a number from 1 to 65535."))
@@ -172,6 +189,7 @@ def from_data(data: object) -> ToolDefinition:
         detect=_detect(data.get("detect", {})),
         account_types=_account_types(data.get("account_types", [])),
         max_password=_max_password(data.get("max_password", {})),
+        settings_file=settings_file,
         extra={k: v for k, v in data.items() if k not in _KEYS},
     )
 
@@ -197,6 +215,11 @@ def to_data(tool: ToolDefinition) -> dict[str, Any]:
         data["account_types"] = list(tool.account_types)
     if tool.max_password:
         data["max_password"] = dict(tool.max_password)
+    if tool.settings_file is not None:
+        data["settings_file"] = {
+            "extension": tool.settings_file.extension,
+            "remove": list(tool.settings_file.remove),
+        }
     if tool.executable:
         data["executable"] = tool.executable
     d = tool.detect
@@ -215,6 +238,23 @@ def _account_types(value: object) -> tuple[int, ...]:
     ):
         raise ToolDefinitionError(_("“account_types” must be a list of numbers from 1 to 255."))
     return tuple(value)
+
+
+def _settings_file(value: object) -> SettingsFile | None:
+    if value is None:
+        return None
+    extension = value.get("extension") if isinstance(value, dict) else None
+    remove = value.get("remove", []) if isinstance(value, dict) else None
+    if not (
+        isinstance(extension, str)
+        and _EXTENSION.match(extension)
+        and isinstance(remove, list)
+        and all(isinstance(k, str) and k.strip() for k in remove)
+    ):
+        raise ToolDefinitionError(
+            _("“settings_file” needs an “extension” such as “.vnc” and a list to “remove”.")
+        )
+    return SettingsFile(extension, tuple(k.strip() for k in remove))
 
 
 def _max_password(value: object) -> dict[str, int]:

@@ -102,3 +102,24 @@ def test_the_folder_is_read_only_for_other_users_once_made(tmp_path: Path) -> No
     ).stdout
     # Users may read (RX), and nothing is inherited, so ProgramData's "users can add files" is gone.
     assert "(OI)(CI)(RX)" in acl and "(I)" not in acl
+
+
+def test_a_settings_file_is_kept_beside_its_profile_and_goes_with_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = ProfileStore(tmp_path / "profiles")
+    clinics = ConnectionProfile("clinics", "ultravnc", name="Clinics", settings_file="clinics.vnc")
+    store.save(clinics, b"[options]\r\nviewonly=1\r\n")
+    path = store.folder / "clinics.vnc"
+    assert store.settings_path(clinics) == path
+    assert path.read_bytes() == b"[options]\r\nviewonly=1\r\n"
+    store.save(clinics)  # no new content: the file stays
+    assert path.exists()
+    monkeypatch.setattr(winsec, "made_by_trusted", lambda p: p != path)
+    assert store.settings_path(clinics) is None  # another user's file isn't used
+    monkeypatch.undo()
+    store.save(ConnectionProfile("clinics", "ultravnc", name="Clinics"))  # back to defaults
+    assert not path.exists()
+    store.save(clinics, b"[options]\r\na=1\r\n")
+    store.delete("clinics")
+    assert not path.exists()

@@ -174,3 +174,70 @@ def test_tool_paths_chosen_here_also_wait_for_save(
     connections.apply(catalogs, page.changes())
     back = catalogs.tools.find("realvnc")
     assert back is not None and not back.item.executable
+
+
+def _choose_settings_file(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *_args, **_kw: (str(path), ""))
+
+
+def test_a_settings_file_chosen_for_a_profile_is_cleaned_and_copied_on_save(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    template = tmp_path / "saved from viewer.vnc"
+    template.write_bytes(b"[connection]\r\nhost=10.0.0.9\r\n[options]\r\nviewonly=1\r\n")
+    _choose_settings_file(monkeypatch, template)
+    page = ConnectionsPage(catalogs, None)
+
+    def fill(dialog: ProfileDialog) -> None:
+        dialog.name.setText("View only")
+        assert dialog.settings_state.text() == "The viewer's defaults"
+        dialog.choose_settings.click()
+        assert dialog.settings_state.text() == "From “saved from viewer.vnc”"
+
+    _answer(monkeypatch, fill)
+    page.add()
+    assert not catalogs.profiles.folder.exists()  # nothing written before Save
+    connections.apply(catalogs, page.changes())
+    profile = catalogs.profiles.find("view-only")
+    assert profile is not None and profile.settings_file == "view-only.vnc"
+    copied = catalogs.profiles.folder / "view-only.vnc"
+    assert copied.read_bytes() == b"[connection]\r\n[options]\r\nviewonly=1\r\n"
+
+    # A duplicate gets its own copy; going back to defaults removes the file.
+    page = ConnectionsPage(catalogs, None)
+    _select(page, "view-only")
+    _answer(monkeypatch, lambda dialog: dialog.name.setText("View only 2"))
+    page.duplicate()
+    _select(page, "view-only")
+    _answer(monkeypatch, lambda dialog: dialog.default_settings.click())
+    page.edit()
+    connections.apply(catalogs, page.changes())
+    assert not copied.exists()
+    assert (catalogs.profiles.folder / "view-only-2.vnc").read_bytes() == (
+        b"[connection]\r\n[options]\r\nviewonly=1\r\n"
+    )
+
+
+def test_only_tools_that_read_a_settings_file_offer_one(catalogs: Catalogs) -> None:
+    tools = [e.item for e in catalogs.tools.all()]
+    dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
+    assert dialog.choose_settings.isVisibleTo(dialog)
+    dialog.tool.setCurrentIndex(dialog.tool.findData("realvnc"))
+    assert not dialog.choose_settings.isVisibleTo(dialog)
+
+
+def test_a_file_that_isnt_viewer_settings_is_refused(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    junk = tmp_path / "notes.vnc"
+    junk.write_text("just some notes", encoding="utf-8")
+    _choose_settings_file(monkeypatch, junk)
+    warnings: list[str] = []
+    monkeypatch.setattr(
+        connections.QMessageBox, "warning", lambda _parent, _title, text: warnings.append(text)
+    )
+    tools = [e.item for e in catalogs.tools.all()]
+    dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
+    dialog.choose_settings.click()
+    assert warnings and dialog.new_settings is None
+    assert dialog.settings_state.text() == "The viewer's defaults"

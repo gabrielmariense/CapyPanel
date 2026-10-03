@@ -88,6 +88,16 @@ class ProfileStore:
         first = self.all()
         return first[0].id if first else ""
 
+    def settings_path(self, profile: ConnectionProfile) -> Path | None:
+        """The profile's viewer settings file, when it has one this PC can trust."""
+        if not profile.settings_file:
+            return None
+        path = self.folder / profile.settings_file
+        if not path.is_file() or not winsec.made_by_trusted(path):
+            log.warning("Settings file %s missing or made by another user: not used", path)
+            return None
+        return path
+
     def can_edit(self) -> bool:
         """Whether Windows lets this user create and change files in the profiles folder."""
         folder = self.folder
@@ -105,10 +115,16 @@ class ProfileStore:
     def new_id(self, name: str) -> str:
         return make_id(name, self._profiles)
 
-    def save(self, profile: ConnectionProfile) -> None:
-        """Writes a profile, new or changed. Raises OSError."""
+    def save(self, profile: ConnectionProfile, settings: bytes | None = None) -> None:
+        """Writes a profile, new or changed, and `settings` as its new settings file (already
+        cleaned). A settings file the profile no longer names is deleted. Raises OSError."""
+        old = self.find(profile.id)
         self._seed()
+        if settings is not None and profile.settings_file:
+            self._write_bytes(self.folder / profile.settings_file, settings)
         self._write(self.folder / f"{profile.id}.json", profiles.to_data(profile))
+        if old is not None and old.settings_file not in ("", profile.settings_file):
+            (self.folder / old.settings_file).unlink(missing_ok=True)
         log.info("Connection profile saved: %s (%s)", profile.id, profile.name)
         self.reload()
 
@@ -118,6 +134,8 @@ class ProfileStore:
             raise ProfileError(_("That profile doesn't exist."))
         self._seed()
         (self.folder / f"{profile_id}.json").unlink(missing_ok=True)
+        if profile.settings_file:
+            (self.folder / profile.settings_file).unlink(missing_ok=True)
         log.info("Connection profile deleted: %s (%s)", profile_id, profile.name)
         self.reload()  # if it was the default, default_id() picks another
 
@@ -141,9 +159,12 @@ class ProfileStore:
             self._write(self.folder / f"{profile.id}.json", profiles.to_data(profile))
 
     def _write(self, path: Path, data: dict[str, Any]) -> None:
+        self._write_bytes(path, (json.dumps(data, indent=2, ensure_ascii=False) + "\n").encode())
+
+    def _write_bytes(self, path: Path, content: bytes) -> None:
         tmp = path.with_name(f".{path.name}.{uuid.uuid4().hex[:8]}.tmp")
         try:
-            tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", "utf-8")
+            tmp.write_bytes(content)
             os.replace(tmp, path)
         finally:
             tmp.unlink(missing_ok=True)

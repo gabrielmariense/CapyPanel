@@ -6,7 +6,8 @@ changing a profile changes every host that uses it. One JSON file per profile:
 
 `login` says what the prompt asks for: "account" (user and password), "password" or "none".
 A typed password is remembered per profile, so one profile's password never reaches another's
-hosts. Every profile has a name, chosen by whoever made it."""
+hosts. Every profile has a name, chosen by whoever made it. "settings_file" names the viewer
+settings file kept beside it ("clinics.vnc"), for tools that read one."""
 
 import json
 import re
@@ -21,7 +22,8 @@ from capypanel.core.tools.definitions import ToolDefinition
 SCHEMA = 1
 LOGINS = ("account", "password", "none")
 _ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
-_KEYS = ("schema", "id", "name", "tool", "login", "options", "port")
+_KEYS = ("schema", "id", "name", "tool", "login", "options", "port", "settings_file")
+_FILE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}\.[a-z0-9]{1,8}$")  # a name, never a path
 
 
 class ProfileError(ValueError):
@@ -36,6 +38,7 @@ class ConnectionProfile:
     options: tuple[str, ...] = ()
     port: int | None = None  # None: the tool's port
     name: str = ""
+    settings_file: str = ""  # beside the profile; "" = the viewer's own defaults
     extra: Mapping[str, Any] = field(default_factory=dict)
 
 
@@ -65,6 +68,8 @@ def check_fits(profile: ConnectionProfile, tool: ToolDefinition) -> None:
         raise ProfileError(_("{tool} can't be given a password.").format(tool=tool.name))
     if profile.login == "account" and not tool.wants_user:
         raise ProfileError(_("{tool} can't be given a user name.").format(tool=tool.name))
+    if profile.settings_file and tool.settings_file is None:
+        raise ProfileError(_("{tool} can't be given a settings file.").format(tool=tool.name))
 
 
 # ---- JSON <-> records ----
@@ -105,6 +110,9 @@ def from_data(data: object) -> ConnectionProfile:
     name = data.get("name")
     if not isinstance(name, str) or not name.strip():
         raise ProfileError(_("The profile needs a “name”."))
+    settings_file = data.get("settings_file", "")
+    if not isinstance(settings_file, str) or (settings_file and not _FILE.match(settings_file)):
+        raise ProfileError(_("The “settings_file” must be a file name in the profiles folder."))
     assert isinstance(profile_id, str) and isinstance(tool, str)
     return ConnectionProfile(
         id=profile_id,
@@ -113,6 +121,7 @@ def from_data(data: object) -> ConnectionProfile:
         options=tuple(options),
         port=port,
         name=name.strip(),
+        settings_file=settings_file,
         extra={k: v for k, v in data.items() if k not in _KEYS},
     )
 
@@ -129,4 +138,6 @@ def to_data(profile: ConnectionProfile) -> dict[str, Any]:
         data["options"] = list(profile.options)
     if profile.port is not None:
         data["port"] = profile.port
+    if profile.settings_file:
+        data["settings_file"] = profile.settings_file
     return {**profile.extra, **data}

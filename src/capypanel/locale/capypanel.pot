@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 14:04-0300\n"
+"POT-Creation-Date: 2026-10-03 14:10-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -175,6 +175,9 @@ msgstr ""
 msgid "Broken placeholder in “{arg}”."
 msgstr ""
 
+msgid "C&hoose file…"
+msgstr ""
+
 msgid "CapyPanel"
 msgstr ""
 
@@ -191,6 +194,10 @@ msgid "Changes take effect immediately, without restarting the app."
 msgstr ""
 
 msgid "Choose a host list"
+msgstr ""
+
+#, python-brace-format
+msgid "Choose a {tool} settings file"
 msgstr ""
 
 msgid "Computer"
@@ -264,6 +271,10 @@ msgid "Couldn't start {tool} for {target}: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't use “{file}”: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't write “{path}”: {error}"
 msgstr ""
 
@@ -331,6 +342,10 @@ msgstr ""
 msgid "From group “{group}”: {profile}"
 msgstr ""
 
+#, python-brace-format
+msgid "From “{file}”"
+msgstr ""
+
 msgid "General"
 msgstr ""
 
@@ -390,6 +405,9 @@ msgstr ""
 msgid ""
 "It's passed to the viewer on its command line, which administrators of "
 "this PC can see."
+msgstr ""
+
+msgid "Its own settings file"
 msgstr ""
 
 msgid ""
@@ -498,6 +516,13 @@ msgid "Opened {n} remote screen."
 msgid_plural "Opened {n} remote screens."
 msgstr[0] ""
 msgstr[1] ""
+
+#, python-brace-format
+msgid ""
+"Optional: a {extension} file saved from {tool}, for every option it has. "
+"CapyPanel removes the address, port, password and encryption plugin from "
+"it: this profile decides those."
+msgstr ""
 
 msgid "Options:"
 msgstr ""
@@ -662,10 +687,16 @@ msgstr ""
 msgid "The file doesn't contain a host list."
 msgstr ""
 
+msgid "The file has no settings."
+msgstr ""
+
 msgid "The file has no valid schema version."
 msgstr ""
 
 msgid "The file has two items with the same ID."
+msgstr ""
+
+msgid "The file is too big to be viewer settings."
 msgstr ""
 
 #, python-brace-format
@@ -691,6 +722,10 @@ msgstr ""
 msgid "The placeholder “{{{name}}}” goes with the “{method}” credential method."
 msgstr ""
 
+#, python-brace-format
+msgid "The placeholder “{{{name}}}” goes with “settings_file”."
+msgstr ""
+
 msgid "The profile needs a “name”."
 msgstr ""
 
@@ -710,16 +745,29 @@ msgstr ""
 msgid "The tool's “id” must be lowercase letters, digits, - or _."
 msgstr ""
 
+msgid "The viewer's defaults"
+msgstr ""
+
 msgid "The “executable” must be a path."
 msgstr ""
 
 msgid "The “port” must be a number from 1 to 65535."
 msgstr ""
 
+msgid "The “settings_file” must be a file name in the profiles folder."
+msgstr ""
+
 msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr ""
 
 msgid "This connection profile needs a newer version of CapyPanel."
+msgstr ""
+
+#, python-brace-format
+msgid "This doesn't look like a viewer settings file: “{line}”."
+msgstr ""
+
+msgid "This isn't a text file."
 msgstr ""
 
 #, python-brace-format
@@ -766,6 +814,16 @@ msgstr ""
 
 #, python-brace-format
 msgid "Unknown tool kind “{kind}”."
+msgstr ""
+
+msgid "Use &defaults"
+msgstr ""
+
+#, python-brace-format
+msgid "Viewer settings (*{extension})"
+msgstr ""
+
+msgid "Viewer settings:"
 msgstr ""
 
 msgid "Where CapyPanel keeps its files"
@@ -881,6 +939,10 @@ msgid "{tool} can't be given a password."
 msgstr ""
 
 #, python-brace-format
+msgid "{tool} can't be given a settings file."
+msgstr ""
+
+#, python-brace-format
 msgid "{tool} can't be given a user name."
 msgstr ""
 
@@ -912,6 +974,11 @@ msgid "“max_password” must map logins to a length."
 msgstr ""
 
 msgid "“options” must map option ids to the names shown."
+msgstr ""
+
+msgid ""
+"“settings_file” needs an “extension” such as “.vnc” and a list to "
+"“remove”."
 msgstr ""
 
 #, python-brace-format

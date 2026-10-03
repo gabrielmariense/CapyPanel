@@ -1,5 +1,6 @@
 import json
 from collections.abc import Iterator
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -26,8 +27,9 @@ def launched(monkeypatch: pytest.MonkeyPatch) -> list[Launch]:
     calls: list[Launch] = []
 
     def fake_launch(
-        tool: Any, exe: Path, target: Any, credential: Any = None, options: Any = ()
-    ) -> None:
+        tool: Any, exe: Path, target: Any, credential: Any = None, options: Any = (),
+        settings: Any = None,
+    ) -> None:  # fmt: skip
         calls.append((tool.id, target.address, target.port, credential, tuple(options)))
 
     monkeypatch.setattr(connect_ui, "launch", fake_launch)
@@ -400,3 +402,18 @@ def test_a_profile_this_pc_lacks_falls_back_to_the_group_s(
     window.connector.credentials.remember("offices", Credential("ana", "x"))
     window.connect_selected()
     assert launched[0][0] == "ultravnc" and launched[0][4] == ("securevnc",)
+
+
+def test_a_profile_with_a_settings_file_hands_it_to_the_viewer(
+    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    store = window.connector.catalogs.profiles
+    offices = store.find("offices")
+    assert offices is not None
+    store.save(replace(offices, settings_file="offices.vnc"), b"[options]\r\nviewonly=1\r\n")
+    given: list[Path | None] = []
+    monkeypatch.setattr(connect_ui, "launch", lambda *args: given.append(args[5]))
+    _answer_with(monkeypatch, "ana", "pw", [])
+    _select(window, "PC-A")
+    window.connect_selected()
+    assert given == [store.folder / "offices.vnc"]

@@ -6,10 +6,11 @@ from collections.abc import Collection
 from dataclasses import dataclass
 from pathlib import Path
 
-from capypanel.core.tools import vncpass
+from capypanel.core.tools import viewer_settings, vncpass
 from capypanel.core.tools.definitions import (
     PASSWORD_FILE,
     SECRET,
+    SETTINGS_FILE,
     ToolDefinition,
     command_line,
     redacted,
@@ -60,8 +61,10 @@ def launch(
     target: Target,
     credential: Credential | None = None,
     options: Collection[str] = (),
+    settings: Path | None = None,
 ) -> subprocess.Popen[bytes]:
-    """Starts the tool and returns at once; the tool runs on its own. Raises OSError."""
+    """Starts the tool and returns at once; the tool runs on its own. `settings` is the profile's
+    viewer settings file. Raises OSError, SettingsFileError."""
     port = target.port if target.port is not None else tool.port
     values = {
         "address": target.address,
@@ -69,6 +72,11 @@ def launch(
         "user": credential.user if credential else "",
         SECRET: credential.password if credential else "",
     }
+    if settings is not None and tool.settings_file is not None:
+        # Cleaned again: someone may have edited the shared file by hand since it was chosen.
+        content = viewer_settings.read(settings, tool.settings_file.remove)
+        copy = viewer_settings.temp_copy(content, tool.settings_file.extension)
+        values[SETTINGS_FILE] = str(copy)
     pipe = None
     if tool.credentials == "vnc_password_file" and values[SECRET]:
         pipe = SecretPipe()  # made before the program starts, so it's there when it looks
