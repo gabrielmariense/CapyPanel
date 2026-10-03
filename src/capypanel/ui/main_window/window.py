@@ -31,6 +31,7 @@ from capypanel.core.hosts.model import Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import SessionCredentials, Target
+from capypanel.core.tools.profiles import ProfileError
 from capypanel.ui import language
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
 from capypanel.ui.hosts import (
@@ -122,6 +123,8 @@ class MainWindow(QMainWindow):
         self._connect_menu.addActions([a.copy_address, a.copy_name])
         self._connect_menu.addSeparator()
         self._connect_menu.addAction(a.forget_passwords)
+        self._connect_menu.addSeparator()
+        self._connect_menu.addAction(a.connection_profiles)
         self._connect_menu.aboutToShow.connect(self._update_state)
 
         self._view_menu = bar.addMenu("")
@@ -192,6 +195,7 @@ class MainWindow(QMainWindow):
         a.copy_address.triggered.connect(lambda: self._copy(lambda h: h.target))
         a.copy_name.triggered.connect(lambda: self._copy(lambda h: h.name))
         a.forget_passwords.triggered.connect(self.forget_passwords)
+        a.connection_profiles.triggered.connect(lambda: self.open_settings("connections"))
 
     def _restore_layout(self) -> None:
         geometry = self._prefs.get("window_geometry")
@@ -623,6 +627,7 @@ class MainWindow(QMainWindow):
             self.apply_settings(dialog.choices())
         else:
             self._save_prefs()
+        self._selection_changed()  # profiles may have changed, saved as they were edited
 
     def settings_dialog(self) -> SettingsDialog:
         return SettingsDialog(
@@ -634,6 +639,7 @@ class MainWindow(QMainWindow):
             document=self._doc,
             recent=locations.recent_lists(self._prefs),
             registry=self.registry,
+            catalogs=self.connector.catalogs,
         )
 
     def apply_settings(self, choices: SettingsChoices) -> None:
@@ -649,6 +655,12 @@ class MainWindow(QMainWindow):
             self.set_theme(choices.theme_id)
         if choices.language != i18n.language():
             self.set_language(choices.language)
+        store = self.connector.catalogs.profiles
+        if choices.default_profile != store.default_id() and store.can_edit():
+            try:
+                store.set_default(choices.default_profile)
+            except (ProfileError, OSError) as e:
+                self._error(_("Couldn't save the default profile: {error}").format(error=e))
         self._save_prefs()
 
     # ---- look ----

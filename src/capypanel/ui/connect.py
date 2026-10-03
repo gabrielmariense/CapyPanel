@@ -33,8 +33,6 @@ from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 
 log = logging.getLogger(__name__)
-DEFAULT_PROFILE_KEY = "default_profile"
-DEFAULT_PROFILE = "ultravnc-password"  # UltraVNC's own out-of-the-box setup
 MANY_CONNECTIONS = 5  # more than this at once asks first
 MAX_TEXT = 256  # longest user name or password accepted, unless the tool allows less
 DEFAULT_PORT = 5900
@@ -59,9 +57,7 @@ class CredentialDialog(QDialog):
         self, parent: QWidget | None, ready: Ready, target: str, *, on_command_line: bool
     ) -> None:
         super().__init__(parent)
-        self.setWindowTitle(_("Password for {profile}").format(
-            profile=profiles.label(ready.profile, ready.tool)
-        ))  # fmt: skip
+        self.setWindowTitle(_("Password for {profile}").format(profile=ready.profile.name))
         intro = QLabel(_("Connecting to {target}.").format(target=target))
         intro.setWordWrap(True)
         self.wants_user = ready.profile.login == "account"
@@ -178,25 +174,22 @@ class Connector:
     # ---- profiles ----
 
     def default_profile(self) -> str:
-        wanted = self._prefs.get(DEFAULT_PROFILE_KEY)
-        return wanted if isinstance(wanted, str) and wanted else DEFAULT_PROFILE
+        return self.catalogs.profiles.default_id()
 
     def label(self, profile_id: str) -> str:
         """The profile's name; for an id this PC doesn't have, the id and a note saying so."""
-        entry = self.catalogs.profiles.find(profile_id or self.default_profile())
-        if entry is None:
+        stored = self.catalogs.profiles.find(profile_id or self.default_profile())
+        if stored is None:
             return _("{profile} (not available on this PC)").format(profile=profile_id)
-        tool = self.catalogs.tools.find(entry.item.tool)
-        return profiles.label(entry.item, tool.item if tool else None)
+        return stored.profile.name
 
     def choices(self) -> list[tuple[str, str]]:
-        """(id, name) of every profile whose tool exists, by name."""
-        found = [
-            (e.item.id, self.label(e.item.id))
-            for e in self.catalogs.profiles.all()
-            if self.catalogs.tools.find(e.item.tool) is not None
+        """(id, name) of every profile whose tool CapyPanel knows: built-ins, then shared."""
+        return [
+            (s.profile.id, s.profile.name)
+            for s in self.catalogs.profiles.all()
+            if self.catalogs.tools.find(s.profile.tool) is not None
         ]
-        return sorted(found, key=lambda choice: choice[1].casefold())
 
     def inherited_label(self, profile_id: str, source: Group | None) -> str:
         """What "follow the group" means right now, e.g. "From group “Pis”: RealVNC …"."""
@@ -209,21 +202,22 @@ class Connector:
     def resolve(self, profile_id: str) -> Ready:
         """The profile and its tool, or ProfileError saying why it can't be used here."""
         profile_id = profile_id or self.default_profile()
-        entry = self.catalogs.profiles.find(profile_id)
-        if entry is None:
+        stored = self.catalogs.profiles.find(profile_id)
+        if stored is None:
             raise ProfileError(
                 _("The connection profile “{profile}” isn't available on this PC.").format(
                     profile=profile_id
                 )
             )
-        tool = self.catalogs.tools.find(entry.item.tool)
+        profile = stored.profile
+        tool = self.catalogs.tools.find(profile.tool)
         if tool is None:
             raise ProfileError(
                 _("The connection profile “{profile}” needs the tool “{tool}”, which isn't "
-                  "available on this PC.").format(profile=profile_id, tool=entry.item.tool)
+                  "available on this PC.").format(profile=profile.name, tool=profile.tool)
             )  # fmt: skip
-        profiles.check_fits(entry.item, tool.item)
-        return Ready(entry.item, tool.item)
+        profiles.check_fits(profile, tool.item)
+        return Ready(profile, tool.item)
 
     # ---- connecting ----
 

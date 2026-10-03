@@ -23,6 +23,7 @@ class Actions:
     copy_address: QAction
     copy_name: QAction
     forget_passwords: QAction
+    connection_profiles: QAction
     show_groups: QAction
     show_details: QAction
     show_status_bar: QAction
@@ -71,6 +72,7 @@ def retranslate_actions(a: Actions) -> None:
     a.copy_address.setText(_("Copy &address"))
     a.copy_name.setText(_("Copy &name"))
     a.forget_passwords.setText(_("&Forget typed passwords"))
+    a.connection_profiles.setText(_("Connection &profiles…"))
     a.show_groups.setText(_("&Groups pane"))
     a.show_details.setText(_("&Details pane"))
     a.show_status_bar.setText(_("&Status bar"))

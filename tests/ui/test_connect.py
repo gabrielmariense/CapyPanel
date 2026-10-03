@@ -1,3 +1,4 @@
+import json
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -36,13 +37,30 @@ def launched(monkeypatch: pytest.MonkeyPatch) -> list[Launch]:
     return calls
 
 
+SHARED_PROFILES = (
+    ("offices", "Offices (SecureVNC)", "ultravnc", "account", ["securevnc"]),
+    ("vnc-password", "VNC password", "ultravnc", "password", []),
+    ("pis", "Pis", "realvnc", "account", []),
+    ("pis-password", "Pis (password)", "realvnc", "password", []),
+)
+
+
 @pytest.fixture
-def window(qapp: QApplication, tmp_path: Path) -> Iterator[MainWindow]:
+def window(
+    qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[MainWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
+    monkeypatch.setattr(settings, "app_dir", lambda: tmp_path)  # its data folder: profiles
+    folder = tmp_path / "data" / "profiles"
+    folder.mkdir(parents=True)
+    for pid, name, tool, login, options in SHARED_PROFILES:
+        data = {"schema": 1, "id": pid, "name": name, "tool": tool, "login": login,
+                "options": options}  # fmt: skip
+        (folder / f"{pid}.json").write_text(json.dumps(data), encoding="utf-8")
     hl, offices = HostList().add_group("Offices")
     hl, pis = hl.add_group("Pis")
-    hl = hl.set_group_profile(offices.id, "ultravnc-account-securevnc")
-    hl = hl.set_group_profile(pis.id, "realvnc-account")
+    hl = hl.set_group_profile(offices.id, "offices")
+    hl = hl.set_group_profile(pis.id, "pis")
     hl, _a = hl.add_host("PC-A", offices.id, address="10.0.0.1")
     hl, _b = hl.add_host("PC-B", offices.id)
     hl, _p = hl.add_host("PI-1", pis.id, address="10.0.1.1")
@@ -98,8 +116,8 @@ def test_each_profile_asks_once_and_keeps_its_own_password(
 def test_hosts_with_different_profiles_open_together(
     window: MainWindow, launched: list[Launch]
 ) -> None:
-    window.connector.credentials.remember("ultravnc-account-securevnc", Credential("ana", "x"))
-    window.connector.credentials.remember("realvnc-account", Credential("pi", "y"))
+    window.connector.credentials.remember("offices", Credential("ana", "x"))
+    window.connector.credentials.remember("pis", Credential("pi", "y"))
     _select(window, "PC-A", "PI-1")
     window.connect_selected()
     assert sorted(call[0] for call in launched) == ["realvnc", "ultravnc"]
@@ -114,7 +132,7 @@ def test_a_host_without_a_usable_address_is_not_sent_to_the_viewer(
     window.connect_selected()
     assert launched == [] and "Ward 2A - Desk" in shown[0]
     monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: shown.append(text))
-    window.connector.credentials.remember("realvnc-account", Credential("pi", "y"))
+    window.connector.credentials.remember("pis", Credential("pi", "y"))
     _select(window, "Ward 2A - Desk", "PI-1")
     window.connect_selected()
     assert [call[1] for call in launched] == ["10.0.1.1"]  # the other one still opens
@@ -143,7 +161,7 @@ def test_a_profile_this_pc_lacks_is_reported(
 def test_many_hosts_at_once_are_confirmed_first(
     window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    window.connector.credentials.remember("ultravnc-password", Credential("", "x"))
+    window.connector.credentials.remember("ultravnc", Credential("ana", "x"))
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.No)
     requests = [Request(f"PC-{n}", connect_ui.Target(f"PC-{n}")) for n in range(6)]
     assert window.connector.connect(requests) == 0 and launched == []
@@ -153,15 +171,13 @@ def test_many_hosts_at_once_are_confirmed_first(
 def test_password_prompt_asks_for_a_user_only_for_account_profiles(window: MainWindow) -> None:
     connector = window.connector
     password_only = CredentialDialog(
-        None, connector.resolve("ultravnc-password"), "PC-A", on_command_line=True
+        None, connector.resolve("vnc-password"), "PC-A", on_command_line=True
     )
     assert not password_only.wants_user
     ok = password_only.buttons.button(QDialogButtonBox.StandardButton.Ok)
     password_only.password.setText("x")
     assert ok.isEnabled()
-    account = CredentialDialog(
-        None, connector.resolve("realvnc-account"), "PI-1", on_command_line=False
-    )
+    account = CredentialDialog(None, connector.resolve("pis"), "PI-1", on_command_line=False)
     ok = account.buttons.button(QDialogButtonBox.StandardButton.Ok)
     account.password.setText("x")
     assert not ok.isEnabled()  # the user is needed too
@@ -176,12 +192,12 @@ def test_the_host_dialog_offers_following_the_group_or_a_profile(window: MainWin
     picker = window._profile_picker(doc.hosts)  # pyright: ignore[reportPrivateUsage]
     dialog = HostDialog(None, doc.hosts, host, profiles=picker)
     assert dialog.profile.currentData() == ""  # follows its group
-    assert "Pis" in dialog.profile.itemText(0) and "RealVNC" in dialog.profile.itemText(0)
+    assert dialog.profile.itemText(0) == "From group “Pis”: Pis"
     offices = dialog.group.findText("Offices")
     dialog.group.setCurrentIndex(offices)
     assert "SecureVNC" in dialog.profile.itemText(0)  # follows the newly chosen group
-    dialog.profile.setCurrentIndex(dialog.profile.findData("realvnc-password"))
-    assert dialog.values().profile == "realvnc-password"
+    dialog.profile.setCurrentIndex(dialog.profile.findData("pis-password"))
+    assert dialog.values().profile == "pis-password"
 
 
 def test_the_profile_menu_sets_several_hosts_at_once(window: MainWindow) -> None:
@@ -196,29 +212,27 @@ def test_the_profile_menu_sets_several_hosts_at_once(window: MainWindow) -> None
     assert isinstance(submenu, QMenu)
     items = {a.text(): a for a in submenu.actions() if not a.isSeparator()}
     assert items["follow"].isChecked()  # neither host has its own profile
-    pick = next(a for text, a in items.items() if text.startswith("RealVNC Viewer — password"))
+    pick = next(a for text, a in items.items() if text == "Pis (password)")
     pick.trigger()
     doc = window.document
     assert doc is not None
-    assert {h.profile for h in doc.hosts.hosts if h.name in ("PC-A", "PC-B")} == {
-        "realvnc-password"
-    }
+    assert {h.profile for h in doc.hosts.hosts if h.name in ("PC-A", "PC-B")} == {"pis-password"}
 
 
 def test_details_say_where_the_profile_comes_from(window: MainWindow) -> None:
     _select(window, "PI-1")
     shown = window.details.shown_value("connection")
-    assert "RealVNC Viewer — user and password" in shown and "Pis" in shown
+    assert shown == "Pis (from group “Pis”)"
 
 
 def test_manual_connection_uses_the_chosen_profile(
     window: MainWindow, launched: list[Launch]
 ) -> None:
-    dialog = ManualConnectDialog(None, window.connector.choices(), "realvnc-password")
+    dialog = ManualConnectDialog(None, window.connector.choices(), "pis-password")
     dialog.address.setText(" 10.9.9.9 ")
     assert dialog.port.text() == "Default"
     request = dialog.request()
-    assert request == Request("10.9.9.9", connect_ui.Target("10.9.9.9", None), "realvnc-password")
+    assert request == Request("10.9.9.9", connect_ui.Target("10.9.9.9", None), "pis-password")
     dialog.port.setValue(5901)
     assert dialog.request().target.port == 5901
 
@@ -277,7 +291,7 @@ def test_when_the_server_cannot_be_asked_the_viewer_still_opens(
         raise connect_ui.rfb.ProbeError("timed out")
 
     monkeypatch.setattr(connect_ui.rfb, "security_types", unreachable)
-    window.connector.credentials.remember("ultravnc-account-securevnc", Credential("ana", "x"))
+    window.connector.credentials.remember("offices", Credential("ana", "x"))
     _select(window, "PC-A")
     window.connect_selected()
     assert [call[1] for call in launched] == ["10.0.0.1"]  # the viewer reports what's wrong
@@ -290,16 +304,45 @@ def test_password_only_profiles_never_check_and_vnc_passwords_stop_at_8(
         raise AssertionError("password-only profiles connect without a check")
 
     monkeypatch.setattr(connect_ui.rfb, "security_types", must_not_probe)
-    window.connector.credentials.remember("ultravnc-password", Credential("", "x"))
-    assert window.connector.connect([Request("PC-Z", connect_ui.Target("PC-Z"))]) == 1
+    window.connector.credentials.remember("vnc-password", Credential("", "x"))
+    target = connect_ui.Target("PC-Z")
+    assert window.connector.connect([Request("PC-Z", target, "vnc-password")]) == 1
     vnc = CredentialDialog(
-        None, window.connector.resolve("ultravnc-password"), "PC-Z", on_command_line=True
+        None, window.connector.resolve("vnc-password"), "PC-Z", on_command_line=True
     )
     vnc.password.setText("123456789012")
     assert vnc.password.text() == "12345678"
     account = CredentialDialog(
-        None, window.connector.resolve("ultravnc-account"), "PC-Z", on_command_line=True
+        None, window.connector.resolve("ultravnc"), "PC-Z", on_command_line=True
     )
     account.password.setText("x" * 10_000)
     account.user.setText("u" * 10_000)
     assert len(account.password.text()) == 256 and len(account.user.text()) == 256
+
+
+def test_a_profile_from_version_0_8_still_connects(
+    window: MainWindow, launched: list[Launch]
+) -> None:
+    window.connector.credentials.remember("ultravnc-account-securevnc", Credential("ana", "x"))
+    old = Request("PC-OLD", connect_ui.Target("10.0.0.7"), "ultravnc-account-securevnc")
+    assert window.connector.connect([old]) == 1
+    assert launched == [("ultravnc", "10.0.0.7", None, Credential("ana", "x"), ("securevnc",))]
+    assert "ultravnc-account-securevnc" not in dict(window.connector.choices())
+
+
+def test_hosts_with_no_profile_anywhere_use_the_shared_default(
+    window: MainWindow, launched: list[Launch]
+) -> None:
+    window.connector.catalogs.profiles.set_default("pis-password")
+    window.connector.credentials.remember("pis-password", Credential("", "x"))
+    assert window.connector.connect([Request("PI-9", connect_ui.Target("10.0.1.9"))]) == 1
+    assert launched[0][0] == "realvnc"
+
+
+def test_the_default_profile_chosen_in_settings_is_saved_for_everyone(window: MainWindow) -> None:
+    dialog = window.settings_dialog()
+    page = dialog.connections
+    page.default.setCurrentIndex(page.default.findData("pis"))
+    window.apply_settings(dialog.choices())
+    assert window.connector.catalogs.profiles.default_id() == "pis"
+    assert window.connector.default_profile() == "pis"

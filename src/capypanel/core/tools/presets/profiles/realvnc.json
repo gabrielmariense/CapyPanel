@@ -1,6 +1,7 @@
 {
   "schema": 1,
-  "id": "realvnc-account",
+  "id": "realvnc",
+  "name": "RealVNC",
   "tool": "realvnc",
   "login": "account"
 }

@@ -15,6 +15,16 @@ Shows the default, personal and any other list, whether each exists, and whether
 From here you can open a list, **copy the current list** somewhere new, or create a **new empty
 list**.
 
+## Connections
+
+- **Connection profiles:** add, edit, duplicate and delete the shared profiles, and choose the
+  default one. See [Connecting](connecting.md#built-in-and-shared-profiles).
+- **Remote tools on this PC:** where each viewer was found, or "Not found". **Locate…** picks
+  its `.exe` by hand (for a portable copy, say), saved for your account only; **Automatic** goes
+  back to finding it by itself.
+
+Profile changes are saved as you make them; the default profile is saved with Save.
+
 ## Appearance
 
 | Theme | Look |
@@ -39,6 +49,7 @@ CapyPanel keeps everything for all users of a PC in one place, with one private 
 | Your settings, personal list and your own tool paths | `C:\ProgramData\CapyPanel\users\<you@DOMAIN>\` |
 | Logs, one file per user | `C:\ProgramData\CapyPanel\logs\` |
 | Default host list | `data\hosts.json` next to the app |
+| Shared connection profiles, and the default one | `data\profiles\` and `data\connections.json` next to the app |
 | Built-in viewer definitions and connection profiles | Inside the app |
 
 - **Your folder is private:** only you, administrators and Windows itself can open it.

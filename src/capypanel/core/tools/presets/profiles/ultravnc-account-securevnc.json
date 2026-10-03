@@ -1,9 +1,0 @@
-{
-  "schema": 1,
-  "id": "ultravnc-account-securevnc",
-  "tool": "ultravnc",
-  "login": "account",
-  "options": [
-    "securevnc"
-  ]
-}

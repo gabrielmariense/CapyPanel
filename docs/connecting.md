@@ -25,6 +25,23 @@ A **connection profile** says which one a host uses:
 - the **login**: user and password, or password only;
 - **options** the viewer offers, such as UltraVNC's **SecureVNC plugin**.
 
+### Built-in and shared profiles
+
+- **Built-in:** one per viewer, **UltraVNC** and **RealVNC**, both with "user and password".
+  They can't be changed or deleted, only duplicated.
+- **Shared:** the ones you create in **Settings > Connections** (also **Connect > Connection
+  profiles…**): a name, the viewer, the login (only the ones that viewer supports), the viewer's
+  options (such as SecureVNC) and a port, blank for the viewer's own.
+- Shared profiles are kept together in `data\profiles\` next to the app, beside the default
+  list, so everyone who uses that copy of CapyPanel sees the same ones and they're easy to check.
+  As for the default list, **Windows permissions decide who can change them**; everyone else
+  sees them read-only.
+- **The default profile**, used by hosts whose groups set none, is chosen in the same place and
+  is the same for everyone. It starts as the built-in UltraVNC.
+- Deleting a profile asks first, and says how many hosts and groups in the open list use it.
+  Those then follow their group's profile, or the default.
+- Lists made with version 0.8 may name its six built-in profiles; those keep working.
+
 ### Choosing a profile
 
 - **On a group:** right-click the group > **Connection profile**. Every host inside follows it,
@@ -35,7 +52,7 @@ A **connection profile** says which one a host uses:
   profile anywhere use the default.
 
 The **Information** pane shows each host's profile and where it comes from, e.g.
-"RealVNC Viewer — user and password (from group “Raspberries”)".
+"Raspberry Pis (from group “Raspberries”)".
 
 A list stores only the profile's ID. Opening a list that names a profile your PC doesn't have
 shows "not available on this PC" instead of guessing.

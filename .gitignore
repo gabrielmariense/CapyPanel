@@ -21,6 +21,7 @@ dist/
 *.log
 capypanel.portable
 userdata/
+/data/
 
 # Editors and OS
 .vscode/

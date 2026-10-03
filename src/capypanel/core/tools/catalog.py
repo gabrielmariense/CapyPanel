@@ -1,6 +1,6 @@
-"""Tool definitions and connection profiles this user can use, each from three layers: their own
-(user), the company's (placed next to the app by whoever manages it) and the shipped presets.
-A higher layer wins for the same id."""
+"""Tool definitions this user can use, from three layers: their own (user), the company's
+(placed next to the app by whoever manages it) and the shipped presets. A higher layer wins for
+the same id. Connection profiles live elsewhere: see profile_store."""
 
 import json
 import logging
@@ -13,9 +13,9 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from capypanel.core import settings
-from capypanel.core.tools import definitions, profiles
+from capypanel.core.tools import definitions
 from capypanel.core.tools.definitions import ToolDefinition, ToolDefinitionError
-from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
+from capypanel.core.tools.profile_store import ProfileStore
 
 log = logging.getLogger(__name__)
 SHIPPED_DIR = Path(__file__).resolve().parent / "presets"
@@ -110,26 +110,15 @@ def tools(user_dir: Path, company_dir: Path, shipped_dir: Path) -> Catalog[ToolD
     )  # fmt: skip
 
 
-def profiles_catalog(
-    user_dir: Path, company_dir: Path, shipped_dir: Path
-) -> Catalog[ConnectionProfile]:
-    return Catalog(
-        user_dir, company_dir, shipped_dir,
-        load=profiles.load, to_data=profiles.to_data, errors=(ProfileError,),
-    )  # fmt: skip
-
-
 @dataclass(frozen=True)
 class Catalogs:
     tools: Catalog[ToolDefinition]
-    profiles: Catalog[ConnectionProfile]
+    profiles: ProfileStore
 
     @classmethod
     def for_paths(cls, paths: settings.Paths) -> "Catalogs":
-        company = settings.app_dir() / "data"
+        data = settings.app_dir() / "data"  # next to the default list
         return cls(
-            tools(paths.user_tools_dir, company / "tools", SHIPPED_DIR / "tools"),
-            profiles_catalog(
-                paths.user_profiles_dir, company / "profiles", SHIPPED_DIR / "profiles"
-            ),
+            tools(paths.user_tools_dir, data / "tools", SHIPPED_DIR / "tools"),
+            ProfileStore(data),
         )

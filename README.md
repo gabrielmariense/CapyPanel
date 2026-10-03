@@ -17,7 +17,7 @@ and open a remote screen on any of them with the tools you already use.
 
 Built for any organization: nothing is tied to one company's network, tools or language.
 
-> **Status:** early development (version 0.8.1), working toward the first public alpha. It
+> **Status:** early development (version 0.9.0), working toward the first public alpha. It
 > runs from source today; there's no installer yet.
 
 ## Documentation
