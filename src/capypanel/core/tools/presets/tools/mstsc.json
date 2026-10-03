@@ -6,7 +6,10 @@
   "port": 3389,
   "credentials": "none",
   "options": {
-    "admin": {"en": "Administrative session", "pt_BR": "Sessão administrativa"},
+    "admin": {
+      "en": "Administrative session (servers only)",
+      "pt_BR": "Sessão administrativa (só servidores)"
+    },
     "fullscreen": {"en": "Full screen", "pt_BR": "Tela cheia"},
     "multimon": {"en": "Use all my monitors", "pt_BR": "Usar todos os meus monitores"}
   },

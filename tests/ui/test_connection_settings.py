@@ -301,7 +301,7 @@ def test_rdp_options_show_in_the_app_s_language(catalogs: Catalogs) -> None:
         dialog = ProfileDialog(None, "Novo", tools, {"mstsc"})
         dialog.tool.setCurrentIndex(dialog.tool.findData("mstsc"))
         assert [b.text() for b in dialog.option_boxes.values()] == [
-            "Sessão administrativa", "Tela cheia", "Usar todos os meus monitores"
+            "Sessão administrativa (só servidores)", "Tela cheia", "Usar todos os meus monitores"
         ]  # fmt: skip
         dialog.tool.setCurrentIndex(dialog.tool.findData("ultravnc"))
         assert [b.text() for b in dialog.option_boxes.values()] == ["SecureVNC plugin"]
