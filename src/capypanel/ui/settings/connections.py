@@ -185,11 +185,11 @@ class ConnectionsPage(Page):
         profiles_box = QGroupBox(_("Connection profiles"))
         folder = PathLabel(self.store.folder)
         access = (
-            _("Shared by everyone who uses CapyPanel from this folder. You can change them.")
+            _("Shared by everyone on this PC. You can change them.")
             if self.can_edit
             else _(
-                "Shared by everyone who uses CapyPanel from this folder. Read-only: only people "
-                "Windows lets write this folder can change them."
+                "Shared by everyone on this PC. Read-only: only people Windows lets write this "
+                "folder can change them."
             )
         )
         self.list = QListWidget()
@@ -289,8 +289,8 @@ class ConnectionsPage(Page):
         profile = self._selected()
         if profile is None or not self.can_edit:
             return
-        text = _("Delete the connection profile “{profile}”? Everyone who uses this folder "
-                 "loses it.").format(profile=profile.name)  # fmt: skip
+        text = _("Delete the connection profile “{profile}”? Everyone on this PC loses "
+                 "it.").format(profile=profile.name)  # fmt: skip
         hosts, groups = self._uses(profile.id)
         if hosts or groups:
             text += "\n\n" + _(

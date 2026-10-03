@@ -1,5 +1,5 @@
 """Tool definitions this user can use, from three layers: their own (user), the company's
-(placed next to the app by whoever manages it) and the shipped presets. A higher layer wins for
+(placed in ProgramData by an administrator) and the shipped presets. A higher layer wins for
 the same id. Connection profiles live elsewhere: see profile_store."""
 
 import json
@@ -12,7 +12,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol
 
-from capypanel.core import settings
+from capypanel.core import settings, winsec
 from capypanel.core.tools import definitions
 from capypanel.core.tools.definitions import ToolDefinition, ToolDefinitionError
 from capypanel.core.tools.profile_store import ProfileStore
@@ -69,6 +69,12 @@ class Catalog[T: _Identified]:
         for layer in (Layer.SHIPPED, Layer.COMPANY, Layer.USER):
             folder = self.dirs[layer]
             for path in sorted(folder.glob("*.json")) if folder.is_dir() else []:
+                if layer is Layer.COMPANY and not winsec.made_by_trusted(path):
+                    # A tool names a program to run: another user's file must not choose it.
+                    reason = "made by another user, so it isn't used"
+                    self.problems.append(Problem(path, reason))
+                    log.warning("%s skipped: %s", path, reason)
+                    continue
                 try:
                     item = self._load(path)
                 except self._errors as e:
@@ -117,8 +123,7 @@ class Catalogs:
 
     @classmethod
     def for_paths(cls, paths: settings.Paths) -> "Catalogs":
-        data = settings.app_dir() / "data"  # next to the default list
         return cls(
-            tools(paths.user_tools_dir, data / "tools", SHIPPED_DIR / "tools"),
-            ProfileStore(data),
+            tools(paths.user_tools_dir, paths.company_tools_dir, SHIPPED_DIR / "tools"),
+            ProfileStore(paths.profiles_dir),
         )

@@ -1,7 +1,7 @@
-"""Connection profiles live together in <app>\\data\\profiles, next to the default list: the same
-for everyone using that copy of the app. Windows permissions on the folder decide who can change
-them, as for the default list. The app ships starter profiles (one per tool) that fill the folder
-the first time it's written; after that they're ordinary profiles, deleted or changed at will."""
+"""Connection profiles live together in C:\\ProgramData\\CapyPanel\\profiles, next to the default
+list: the same for everyone on the PC. Windows permissions on the folder decide who can change
+them, and a file another standard user made is ignored. The app ships starter profiles (one per
+tool) that fill the folder the first time it's written; after that they're ordinary profiles."""
 
 import json
 import logging
@@ -14,6 +14,7 @@ from collections.abc import Collection
 from pathlib import Path
 from typing import Any
 
+from capypanel.core import winsec
 from capypanel.core.i18n import _
 from capypanel.core.tools import profiles
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
@@ -34,8 +35,8 @@ def make_id(name: str, taken: Collection[str]) -> str:
 
 
 class ProfileStore:
-    def __init__(self, data_dir: Path, starters_dir: Path = STARTERS_DIR) -> None:
-        self.folder = data_dir / "profiles"
+    def __init__(self, folder: Path, starters_dir: Path = STARTERS_DIR) -> None:
+        self.folder = folder
         self._starters = starters_dir
         self.problems: list[tuple[Path, str]] = []
         self._profiles: dict[str, ConnectionProfile] = {}
@@ -49,6 +50,11 @@ class ProfileStore:
         for path in sorted(source.glob("*.json")):
             if path.name.startswith("_"):
                 continue  # the default-profile file, not a profile
+            if source is self.folder and not winsec.made_by_trusted(path):
+                reason = "made by another user, so it isn't used"
+                self.problems.append((path, reason))
+                log.warning("Connection profile %s skipped: %s", path, reason)
+                continue
             try:
                 profile = profiles.load(path)
             except ProfileError as e:
@@ -67,9 +73,11 @@ class ProfileStore:
 
     def default_id(self) -> str:
         """The chosen default, else the first profile by name; "" when there are none."""
+        path = self.folder / DEFAULT_FILE
         try:
-            data = json.loads((self.folder / DEFAULT_FILE).read_text(encoding="utf-8-sig"))
-            wanted = data.get("default_profile") if isinstance(data, dict) else None
+            data = json.loads(path.read_text(encoding="utf-8-sig"))
+            trusted = winsec.made_by_trusted(path)
+            wanted = data.get("default_profile") if isinstance(data, dict) and trusted else None
         except (OSError, ValueError):
             wanted = None
         if isinstance(wanted, str) and wanted in self._profiles:
@@ -125,6 +133,10 @@ class ProfileStore:
         if self.folder.is_dir():
             return
         self.folder.mkdir(parents=True)
+        try:  # read-only for everyone else; ProgramData would let any user add files
+            winsec.make_shared(self.folder, winsec.current_user_sid())
+        except OSError as e:
+            log.warning("Couldn't set permissions on %s: %s", self.folder, e)
         for profile in self._profiles.values():
             self._write(self.folder / f"{profile.id}.json", profiles.to_data(profile))
 

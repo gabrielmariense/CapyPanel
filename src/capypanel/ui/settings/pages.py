@@ -115,8 +115,7 @@ class GeneralPage(Page):
         )
         self.start_list.setMinimumContentsLength(24)
         self.start_list.addItem(_("The last used list"), locations.START_LAST)
-        if default_list.is_file() or start_list == locations.START_DEFAULT:
-            self.start_list.addItem(_("The default list"), locations.START_DEFAULT)
+        self.start_list.addItem(_("The default list"), locations.START_DEFAULT)
         self.start_list.addItem(_("My personal list"), locations.START_PERSONAL)
         others = [
             p
@@ -157,21 +156,26 @@ class GeneralPage(Page):
         files = QGroupBox(_("Where CapyPanel keeps its files"))
         grid = QGridLayout(files)
         grid.setColumnStretch(1, 1)
-        for row, (label, folder) in enumerate(
-            ((_("Your files"), paths.user_dir), (_("Logs"), paths.log_dir))
-        ):
+        folders = (
+            (_("Shared files"), paths.root),
+            (_("Your files"), paths.user_dir),
+            (_("Logs"), paths.log_dir),
+        )
+        for row, (label, folder) in enumerate(folders):
             button = QPushButton(_("Open folder"))
             button.clicked.connect(lambda _checked=False, f=folder: _open_folder(f))
             grid.addWidget(QLabel(label), row, 0)
             grid.addWidget(PathLabel(folder), row, 1)
             grid.addWidget(button, row, 2)
         note = _(
-            "Your settings, personal list and your own tool paths. Only you and administrators "
-            "can open this folder. Each user's log is named after their account."
+            "Shared by everyone on this PC: the default list, connection profiles and the "
+            "company's tool definitions. Your files are your settings, personal list and your "
+            "own tool paths; only you and administrators can open them. Each user's log is "
+            "named after their account."
         )
         if paths.portable:
             note += " " + _("Portable mode: everything stays in the app's own folder.")
-        grid.addWidget(hint(note), 2, 0, 1, 3)
+        grid.addWidget(hint(note), len(folders), 0, 1, 3)
 
         self.body.addWidget(start)
         self.body.addWidget(files)
@@ -232,9 +236,9 @@ class HostListsPage(Page):
         grid.addWidget(self.other_state, 6, 1, Qt.AlignmentFlag.AlignRight)
         grid.addLayout(other_row, 7, 0, 1, 2)
         explain = _(
-            "The default list is placed in the app's folder by whoever manages CapyPanel. The "
-            "personal list is yours alone. Any list can be edited by people with write "
-            "permission on its folder; for everyone else it opens read-only."
+            "The default list is shared by everyone on this PC; it's used only if an "
+            "administrator or you made it. The personal list is yours alone. Any list can be "
+            "edited by people with write permission on it; for everyone else it opens read-only."
         )
 
         tools = QGroupBox(_("Create a list"))
@@ -285,8 +289,8 @@ class HostListsPage(Page):
         path = self.chosen()
         if path is None:
             return False
-        # The personal list is created when it's missing; other lists must exist.
-        return self._kind(path) is ListKind.PERSONAL or path.is_file()
+        # The default and personal lists are created when missing; other lists must exist.
+        return self._kind(path) is not ListKind.SHARED or path.is_file()
 
     def _kind(self, path: Path) -> ListKind:
         return locations.list_kind(path, default=self._default, personal=self._personal)
@@ -302,9 +306,9 @@ class HostListsPage(Page):
             self.other_choice.setChecked(True)
 
     def _refresh(self) -> None:
-        default = locations.list_access(self._default)
-        self.default_choice.setEnabled(default is not Access.MISSING)
-        self.default_state.setText(_state_text(default, _("Not found")))
+        default = locations.list_access(self._default, shared=True)
+        self.default_choice.setEnabled(default is not Access.UNTRUSTED)
+        self.default_state.setText(_state_text(default, _("Created when opened")))
         personal = locations.list_access(self._personal)
         self.personal_state.setText(_state_text(personal, _("Created when opened")))
         text = self.other_path.text().strip().strip('"')
@@ -372,6 +376,7 @@ def _state_text(access: Access, missing: str) -> str:
         Access.READ_ONLY: _("Read-only"),
         Access.READ_WRITE: _("Read-write"),
         Access.MISSING: missing,
+        Access.UNTRUSTED: _("Made by another user: not used"),
     }[access]
 
 

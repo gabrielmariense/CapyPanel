@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 12:52-0300\n"
+"POT-Creation-Date: 2026-10-03 14:04-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -295,8 +295,8 @@ msgid "Delete connection profile"
 msgstr "Excluir perfil de conexão"
 
 #, python-brace-format
-msgid "Delete the connection profile “{profile}”? Everyone who uses this folder loses it."
-msgstr "Excluir o perfil de conexão “{profile}”? Todos que usam esta pasta deixam de tê-lo."
+msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
+msgstr "Excluir o perfil de conexão “{profile}”? Todos neste PC deixam de tê-lo."
 
 msgid "Duplicate connection profile"
 msgstr "Duplicar perfil de conexão"
@@ -407,6 +407,9 @@ msgstr "Localizar…"
 msgid "Logs"
 msgstr "Logs"
 
+msgid "Made by another user: not used"
+msgstr "Criada por outro usuário: não é usada"
+
 msgid "Manual connection"
 msgstr "Conexão manual"
 
@@ -452,9 +455,6 @@ msgstr "Nenhuma lista de hosts está aberta."
 
 msgid "No recent lists"
 msgstr "Nenhuma lista recente"
-
-msgid "Not found"
-msgstr "Não encontrada"
 
 msgid "Not found: install it, or select its .exe."
 msgstr "Não encontrado: instale ou selecione o .exe."
@@ -574,11 +574,17 @@ msgstr "Configurações"
 msgid "Shared"
 msgstr "Compartilhada"
 
-msgid "Shared by everyone who uses CapyPanel from this folder. Read-only: only people Windows lets write this folder can change them."
-msgstr "Compartilhados por todos que usam o CapyPanel desta pasta. Somente leitura: só quem o Windows deixa gravar nesta pasta pode alterá-los."
+msgid "Shared by everyone on this PC. Read-only: only people Windows lets write this folder can change them."
+msgstr "Compartilhados por todos neste PC. Somente leitura: só quem o Windows deixa gravar nesta pasta pode alterá-los."
 
-msgid "Shared by everyone who uses CapyPanel from this folder. You can change them."
-msgstr "Compartilhados por todos que usam o CapyPanel desta pasta. Você pode alterá-los."
+msgid "Shared by everyone on this PC. You can change them."
+msgstr "Compartilhados por todos neste PC. Você pode alterá-los."
+
+msgid "Shared by everyone on this PC: the default list, connection profiles and the company's tool definitions. Your files are your settings, personal list and your own tool paths; only you and administrators can open them. Each user's log is named after their account."
+msgstr "Compartilhados por todos neste PC: a lista padrão, os perfis de conexão e as definições de ferramentas da empresa. Seus arquivos são suas configurações, sua lista pessoal e os caminhos das suas ferramentas; só você e os administradores podem abri-los. O log de cada usuário leva o nome da conta dele."
+
+msgid "Shared files"
+msgstr "Arquivos compartilhados"
 
 msgid "Shared or &other list"
 msgstr "Lista compartilhada ou &outra"
@@ -622,8 +628,12 @@ msgstr "O perfil de conexão “{profile}” precisa da ferramenta “{tool}”,
 msgid "The default list"
 msgstr "A lista padrão"
 
-msgid "The default list is placed in the app's folder by whoever manages CapyPanel. The personal list is yours alone. Any list can be edited by people with write permission on its folder; for everyone else it opens read-only."
-msgstr "A lista padrão é colocada na pasta do aplicativo por quem administra o CapyPanel. A lista pessoal é só sua. Qualquer lista pode ser editada por quem tem permissão de gravação na pasta dela; para os demais, ela abre somente para leitura."
+msgid "The default list is shared by everyone on this PC; it's used only if an administrator or you made it. The personal list is yours alone. Any list can be edited by people with write permission on it; for everyone else it opens read-only."
+msgstr "A lista padrão é compartilhada por todos neste PC; ela só é usada se foi criada por um administrador ou por você. A lista pessoal é só sua. Qualquer lista pode ser editada por quem tem permissão de gravação nela; para os demais, ela abre somente para leitura."
+
+#, python-brace-format
+msgid "The default list was made by another user, so CapyPanel won't open it. An administrator can replace or delete “{path}”."
+msgstr "A lista padrão foi criada por outro usuário, então o CapyPanel não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
 
 msgid "The file doesn't contain a host list."
 msgstr "O arquivo não contém uma lista de hosts."
@@ -757,9 +767,6 @@ msgstr "Você também pode trocar o tema em Exibir > Tema."
 
 msgid "Your files"
 msgstr "Seus arquivos"
-
-msgid "Your settings, personal list and your own tool paths. Only you and administrators can open this folder. Each user's log is named after their account."
-msgstr "Suas configurações, lista pessoal e seus caminhos de ferramentas. Só você e os administradores podem abrir esta pasta. O log de cada usuário leva o nome da conta dele."
 
 msgid "no password"
 msgstr "sem senha"

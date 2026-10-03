@@ -17,7 +17,6 @@ from capypanel.ui.settings.connections import ConnectionsPage, ProfileDialog
 @pytest.fixture
 def catalogs(qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Catalogs:
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    monkeypatch.setattr(settings, "app_dir", lambda: tmp_path)
     found = {"ultravnc": Path(r"C:\Tools\vncviewer.exe")}  # RealVNC isn't installed here
     monkeypatch.setattr(connections.detect, "find_executable", lambda t: found.get(t.id))
     return Catalogs.for_paths(settings.resolve_paths(tmp_path))

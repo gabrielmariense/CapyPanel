@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 12:52-0300\n"
+"POT-Creation-Date: 2026-10-03 14:04-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -294,9 +294,7 @@ msgid "Delete connection profile"
 msgstr ""
 
 #, python-brace-format
-msgid ""
-"Delete the connection profile “{profile}”? Everyone who uses this folder "
-"loses it."
+msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
 msgstr ""
 
 msgid "Duplicate connection profile"
@@ -416,6 +414,9 @@ msgstr ""
 msgid "Logs"
 msgstr ""
 
+msgid "Made by another user: not used"
+msgstr ""
+
 msgid "Manual connection"
 msgstr ""
 
@@ -460,9 +461,6 @@ msgid "No host list is open."
 msgstr ""
 
 msgid "No recent lists"
-msgstr ""
-
-msgid "Not found"
 msgstr ""
 
 msgid "Not found: install it, or select its .exe."
@@ -584,13 +582,21 @@ msgid "Shared"
 msgstr ""
 
 msgid ""
-"Shared by everyone who uses CapyPanel from this folder. Read-only: only "
-"people Windows lets write this folder can change them."
+"Shared by everyone on this PC. Read-only: only people Windows lets write "
+"this folder can change them."
+msgstr ""
+
+msgid "Shared by everyone on this PC. You can change them."
 msgstr ""
 
 msgid ""
-"Shared by everyone who uses CapyPanel from this folder. You can change "
-"them."
+"Shared by everyone on this PC: the default list, connection profiles and "
+"the company's tool definitions. Your files are your settings, personal "
+"list and your own tool paths; only you and administrators can open them. "
+"Each user's log is named after their account."
+msgstr ""
+
+msgid "Shared files"
 msgstr ""
 
 msgid "Shared or &other list"
@@ -641,10 +647,16 @@ msgid "The default list"
 msgstr ""
 
 msgid ""
-"The default list is placed in the app's folder by whoever manages "
-"CapyPanel. The personal list is yours alone. Any list can be edited by "
-"people with write permission on its folder; for everyone else it opens "
-"read-only."
+"The default list is shared by everyone on this PC; it's used only if an "
+"administrator or you made it. The personal list is yours alone. Any list "
+"can be edited by people with write permission on it; for everyone else it"
+" opens read-only."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"The default list was made by another user, so CapyPanel won't open it. An"
+" administrator can replace or delete “{path}”."
 msgstr ""
 
 msgid "The file doesn't contain a host list."
@@ -782,12 +794,6 @@ msgid "You can also change the theme under View > Theme."
 msgstr ""
 
 msgid "Your files"
-msgstr ""
-
-msgid ""
-"Your settings, personal list and your own tool paths. Only you and "
-"administrators can open this folder. Each user's log is named after their"
-" account."
 msgstr ""
 
 msgid "no password"

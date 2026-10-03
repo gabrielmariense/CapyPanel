@@ -1,14 +1,24 @@
 from pathlib import Path
 from typing import Any
 
+import pytest
+
+from capypanel.core import winsec
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.locations import Access, ListKind
 
 ENV = {"APPDATA": r"C:\Users\u\AppData\Roaming", "LOCALAPPDATA": r"C:\Users\u\AppData\Local"}
 
 
-def test_default_list_is_in_the_app_data_folder(tmp_path: Path) -> None:
-    assert locations.default_list_path(tmp_path) == tmp_path / "data" / "hosts.json"
+def test_a_shared_list_made_by_another_user_is_untrusted(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "hosts.json"
+    path.write_text("{}", encoding="utf-8")
+    assert locations.list_access(path, shared=True) is Access.READ_WRITE
+    monkeypatch.setattr(winsec, "made_by_trusted", lambda _path: False)
+    assert locations.list_access(path, shared=True) is Access.UNTRUSTED
+    assert locations.list_access(path) is Access.READ_WRITE  # a list the user picked
 
 
 def test_list_kind(tmp_path: Path) -> None:

@@ -51,8 +51,8 @@ def window(
     qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> Iterator[MainWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    monkeypatch.setattr(settings, "app_dir", lambda: tmp_path)  # its data folder: profiles
-    folder = tmp_path / "data" / "profiles"
+    paths = settings.resolve_paths(tmp_path)
+    folder = paths.profiles_dir
     folder.mkdir(parents=True)
     for pid, name, tool, login, options in SHARED_PROFILES:
         data = {"schema": 1, "id": pid, "name": name, "tool": tool, "login": login,
@@ -68,7 +68,7 @@ def window(
     hl, _w = hl.add_host("Ward 2A - Desk", pis.id)
     path = tmp_path / "office.json"
     listfile.save(path, hl, expected=None)
-    win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1, "recent_lists": [str(path)]})
+    win = MainWindow(paths, {"schema": 1, "recent_lists": [str(path)]})
     yield win
     win.close()
 

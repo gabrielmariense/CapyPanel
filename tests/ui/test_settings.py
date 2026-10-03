@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from PySide6.QtWidgets import QApplication, QDialogButtonBox, QFileDialog, QMenu
 
-from capypanel.core import settings
+from capypanel.core import settings, winsec
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
 from capypanel.core.tools.catalog import Catalogs
@@ -79,7 +79,8 @@ def test_host_lists_page_shows_the_open_list_and_what_can_be_done_with_it(
     page = window.settings_dialog().host_lists
     assert page.other_choice.isChecked() and Path(page.other_path.text()) == office
     assert page.other_state.text() == "Read-write"
-    assert page.personal_state.text() == "Read-write"  # the first start created it
+    assert page.default_state.text() == "Read-write"  # the first start created it
+    assert page.personal_state.text() == "Created when opened"
     os.chmod(office, stat.S_IREAD)
     try:
         page = window.settings_dialog().host_lists
@@ -88,10 +89,10 @@ def test_host_lists_page_shows_the_open_list_and_what_can_be_done_with_it(
         os.chmod(office, stat.S_IWRITE | stat.S_IREAD)
 
 
-def test_default_list_can_only_be_picked_when_it_exists(
-    qapp: QApplication, paths: settings.Paths, tmp_path: Path
+def test_default_list_is_created_when_opened_unless_another_user_made_it(
+    qapp: QApplication, paths: settings.Paths, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    default = tmp_path / "data" / "hosts.json"
+    default = paths.default_list
 
     def dialog() -> SettingsDialog:
         return SettingsDialog(
@@ -108,14 +109,14 @@ def test_default_list_can_only_be_picked_when_it_exists(
 
     first = dialog()
     page = first.host_lists
-    assert not page.default_choice.isEnabled() and page.default_state.text() == "Not found"
+    assert page.default_choice.isEnabled() and page.default_state.text() == "Created when opened"
     assert page.personal_choice.isChecked()
     assert page.personal_state.text() == "Created when opened"
-    default.parent.mkdir()
+    default.parent.mkdir(parents=True, exist_ok=True)
     listfile.save(default, HostList(), expected=None)
     second = dialog()
     page = second.host_lists
-    # Whoever can write the app folder (an admin, or anyone in a team without one) can edit it.
+    # Whoever Windows lets write it (an admin, or anyone in a team without one) can edit it.
     assert page.default_choice.isEnabled() and page.default_state.text() == "Read-write"
     os.chmod(default, stat.S_IREAD)
     try:
@@ -123,6 +124,31 @@ def test_default_list_can_only_be_picked_when_it_exists(
         assert third.host_lists.default_state.text() == "Read-only"
     finally:
         os.chmod(default, stat.S_IWRITE | stat.S_IREAD)
+    monkeypatch.setattr(winsec, "made_by_trusted", lambda _path: False)
+    fourth = dialog()
+    page = fourth.host_lists
+    assert not page.default_choice.isEnabled()
+    assert page.default_state.text() == "Made by another user: not used"
+
+
+def test_first_start_creates_and_opens_the_default_list(
+    window: MainWindow, paths: settings.Paths
+) -> None:
+    assert window.document is not None and window.document.path == paths.default_list
+    assert [g.name for g in window.document.hosts.groups] == ["Hosts"]
+    assert not paths.personal_list.exists()  # made only when someone chooses it
+
+
+def test_a_default_list_another_user_made_is_not_opened(
+    qapp: QApplication, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    paths.default_list.parent.mkdir(parents=True, exist_ok=True)
+    listfile.save(paths.default_list, HostList(), expected=None)
+    monkeypatch.setattr(winsec, "made_by_trusted", lambda _path: False)
+    win = MainWindow(paths, {"schema": 1})
+    assert win.document is not None and win.document.path == paths.personal_list
+    assert "another user" in win.statusBar().currentMessage()
+    win.close()
 
 
 def test_save_needs_a_list_that_exists(window: MainWindow, tmp_path: Path) -> None:
@@ -159,7 +185,7 @@ def test_cancel_changes_nothing(window: MainWindow, office: Path) -> None:
 def test_missing_personal_list_is_created_when_chosen(window: MainWindow, office: Path) -> None:
     window.open_list(office)
     personal = window._personal_list
-    personal.unlink()
+    assert not personal.exists()
     dialog = window.settings_dialog()
     dialog.host_lists.personal_choice.setChecked(True)
     window.apply_settings(dialog.choices())
@@ -206,6 +232,7 @@ def test_start_list_choice_is_opened_next_time(
     assert general.currentData() == "last"
     assert [general.itemData(i) for i in range(general.count())] == [
         "last",
+        "default",
         "personal",
         str(office),
     ]
@@ -221,7 +248,7 @@ def test_a_missing_start_list_falls_back_and_says_so(
 ) -> None:
     prefs = {"schema": 1, "start_list": str(office.with_name("gone.json"))}
     again = MainWindow(paths, prefs)
-    assert again.document is not None and again.document.path == window._personal_list
+    assert again.document is not None and again.document.path == paths.default_list
     assert "gone.json" in again.statusBar().currentMessage()
     again.close()
 

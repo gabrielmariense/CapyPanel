@@ -3,6 +3,9 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
+import pytest
+
+from capypanel.core import winsec
 from capypanel.core.tools import catalog
 from capypanel.core.tools.catalog import Layer
 
@@ -52,3 +55,16 @@ def test_editing_saves_a_user_copy_and_reset_brings_back_the_original(tmp_path: 
     tools.reset("viewer")
     back = tools.find("viewer")
     assert back is not None and back.layer is Layer.SHIPPED and not back.item.executable
+
+
+def test_a_company_tool_another_user_made_is_ignored(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write(tmp_path / "shipped", "viewer", "Shipped viewer")
+    _write(tmp_path / "company", "viewer", "Planted viewer", executable=r"C:\evil.exe")
+    planted = tmp_path / "company" / "viewer.json"
+    monkeypatch.setattr(winsec, "made_by_trusted", lambda path: path != planted)
+    tools = _tools(tmp_path)
+    entry = tools.find("viewer")
+    assert entry is not None and entry.layer is Layer.SHIPPED  # never runs the planted program
+    assert [p.path for p in tools.problems] == [planted]
