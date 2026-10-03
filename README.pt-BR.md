@@ -6,27 +6,34 @@
   <a href="README.pt-BR.md"><img src="https://flagcdn.com/40x30/br.png" width="40" height="30" alt="Português (Brasil)" title="Português (Brasil)"></a>
 </p>
 
-Um app de desktop para Windows feito para equipes de TI: mantenha os computadores da sua rede em
-uma lista organizada e abra a tela remota de qualquer um deles com as ferramentas que você já usa.
-
-- **Listas de hosts** com grupos aninhados, tags e observações. Uma lista é um arquivo JSON
-  simples: tenha uma pessoal, compartilhe uma numa pasta de rede ou publique uma lista padrão
-  para todos no PC.
-- **Tela remota (VNC)** pelo UltraVNC Viewer ou pelo RealVNC Viewer, aberta com um clique duplo
-  ou Enter, para um host ou vários de uma vez.
-- **Perfis de conexão** dizem como cada host é acessado: qual visualizador, qual login (usuário e
-  senha, ou só senha) e opções como o plugin SecureVNC do UltraVNC. Defina um num grupo e todos
-  os hosts dentro dele o seguem.
-- **As senhas ficam na memória**, uma por perfil, até o CapyPanel fechar; nunca são salvas. Antes
-  de enviar uma senha do Windows, o CapyPanel confere se o servidor pede uma.
-- **Inglês e português (Brasil)**, trocados na hora. **Sete temas**, do Windows nativo ao visual
-  próprio do CapyPanel.
+O CapyPanel reúne numa só janela todos os computadores que você administra. É um app de desktop
+para Windows feito para equipes de TI: organize seus hosts em listas e abra a tela remota de
+qualquer um deles com o visualizador VNC que você já usa.
 
 Feito para qualquer organização: nada fica preso à rede, às ferramentas ou ao idioma de uma
 empresa.
 
 > **Situação: alfa (0.10.0).** Já dá para usar, e cresce uma funcionalidade por vez. Roda a partir
 > do código-fonte; ainda não há instalador.
+
+## Funcionalidades
+
+### Lançadas
+
+- Tela remota (UltraVNC, RealVNC)
+- Perfis de conexão
+- Listas de hosts compartilhadas
+
+### Em desenvolvimento
+
+- Área de Trabalho Remota (RDP)
+- Usuários conectados
+
+### Planejadas
+
+- SSH
+- Busca e status
+- Ações nos hosts
 
 ## Documentação
 
