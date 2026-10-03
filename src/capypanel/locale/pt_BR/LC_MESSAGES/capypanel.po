@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-01 15:45-0300\n"
+"POT-Creation-Date: 2026-10-01 17:12-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -686,6 +686,12 @@ msgid "user and password"
 msgstr "usuário e senha"
 
 #, python-brace-format
+msgid "{names} doesn't take a user and password (it may want a VNC password, or be another kind of VNC server), so CapyPanel didn't send your password. Check its connection profile."
+msgid_plural "{names} don't take a user and password (they may want a VNC password, or be another kind of VNC server), so CapyPanel didn't send your password. Check their connection profile."
+msgstr[0] "{names} não aceita usuário e senha (pode pedir uma senha VNC ou ser outro tipo de servidor VNC), então o CapyPanel não enviou a sua senha. Confira o perfil de conexão dele."
+msgstr[1] "{names} não aceitam usuário e senha (podem pedir uma senha VNC ou ser outro tipo de servidor VNC), então o CapyPanel não enviou a sua senha. Confira o perfil de conexão deles."
+
+#, python-brace-format
 msgid "{n} host"
 msgid_plural "{n} hosts"
 msgstr[0] "{n} host"
@@ -741,11 +747,17 @@ msgstr "{tool} não encontrado"
 msgid "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. The path is saved for your account."
 msgstr "O {tool} não foi encontrado neste PC. Instale-o ou mostre ao CapyPanel onde ele está. O caminho fica salvo para a sua conta."
 
+msgid "“account_types” must be a list of numbers from 1 to 255."
+msgstr "“account_types” deve ser uma lista de números de 1 a 255."
+
 msgid "“detect” has a value of the wrong type."
 msgstr "“detect” tem um valor do tipo errado."
 
 msgid "“detect” must be an object."
 msgstr "“detect” deve ser um objeto."
+
+msgid "“max_password” must map logins to a length."
+msgstr "“max_password” deve associar logins a um tamanho."
 
 msgid "“options” must map option ids to the names shown."
 msgstr "“options” deve associar ids de opções aos nomes exibidos."

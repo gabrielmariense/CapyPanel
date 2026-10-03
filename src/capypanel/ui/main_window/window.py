@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel import __version__
+from capypanel import BUILD
 from capypanel.core import i18n, settings
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList, starter_list
@@ -742,10 +742,10 @@ class MainWindow(QMainWindow):
             action.setEnabled(selected > 0)  # read-only lists can still connect
         a.forget_passwords.setEnabled(bool(self.connector.credentials))
         if doc is None:
-            self.setWindowTitle(f"CapyPanel {__version__}")
+            self.setWindowTitle(f"CapyPanel {BUILD}")
             self._list_label.setText(_("No host list is open."))
             return
-        self.setWindowTitle(f"{doc.path.name} — CapyPanel {__version__}")
+        self.setWindowTitle(f"{doc.path.name} — CapyPanel {BUILD}")
         total = len(doc.hosts.hosts)
         parts = [
             f"{self._kind_label(self._kind(doc.path))} — {doc.path}",

@@ -7,7 +7,7 @@ from types import TracebackType
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-from capypanel import __version__
+from capypanel import BUILD, __version__
 from capypanel.core import applog, i18n, migration, settings
 from capypanel.core.i18n import _
 from capypanel.ui import language
@@ -26,9 +26,7 @@ def run(argv: list[str] | None = None) -> int:
     # Logging first, so a problem with the user's folder is logged and shown, not lost.
     paths = settings.resolve_paths()
     applog.setup_logging(paths.log_file)
-    log.info(
-        "CapyPanel %s starting for %s (portable=%s)", __version__, paths.account, paths.portable
-    )
+    log.info("CapyPanel %s starting for %s (portable=%s)", BUILD, paths.account, paths.portable)
     try:
         settings.ensure_dirs(paths)
     except settings.UserFolderError as e:

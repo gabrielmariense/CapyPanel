@@ -59,6 +59,11 @@ class ToolDefinition:
     credentials: str = "none"
     port: int | None = None
     options: Mapping[str, str] = field(default_factory=dict)  # option id -> name shown
+    # VNC login types (RFB security types) that ask for a user and password. When set, an
+    # account profile first checks the server offers one, so a Windows password never goes to
+    # a server that only wants a VNC password.
+    account_types: tuple[int, ...] = ()
+    max_password: Mapping[str, int] = field(default_factory=dict)  # login -> longest password
     executable: str = ""  # set by the user; empty means "find it"
     detect: Detect = field(default_factory=Detect)
     extra: Mapping[str, Any] = field(default_factory=dict)  # keys from newer versions, kept
@@ -108,7 +113,7 @@ def redacted(argv: Sequence[str], secrets: Sequence[str]) -> list[str]:
 
 _KEYS = (
     "schema", "id", "name", "kind", "arguments", "credentials", "port", "options", "executable",
-    "detect",
+    "detect", "account_types", "max_password",
 )  # fmt: skip
 
 
@@ -165,6 +170,8 @@ def from_data(data: object) -> ToolDefinition:
         options=options,
         executable=executable,
         detect=_detect(data.get("detect", {})),
+        account_types=_account_types(data.get("account_types", [])),
+        max_password=_max_password(data.get("max_password", {})),
         extra={k: v for k, v in data.items() if k not in _KEYS},
     )
 
@@ -186,6 +193,10 @@ def to_data(tool: ToolDefinition) -> dict[str, Any]:
         data["port"] = tool.port
     if tool.options:
         data["options"] = dict(tool.options)
+    if tool.account_types:
+        data["account_types"] = list(tool.account_types)
+    if tool.max_password:
+        data["max_password"] = dict(tool.max_password)
     if tool.executable:
         data["executable"] = tool.executable
     d = tool.detect
@@ -196,6 +207,23 @@ def to_data(tool: ToolDefinition) -> dict[str, Any]:
             "paths": list(d.paths),
         }
     return {**tool.extra, **data}
+
+
+def _account_types(value: object) -> tuple[int, ...]:
+    if not isinstance(value, list) or not all(
+        isinstance(t, int) and not isinstance(t, bool) and 0 < t < 256 for t in value
+    ):
+        raise ToolDefinitionError(_("“account_types” must be a list of numbers from 1 to 255."))
+    return tuple(value)
+
+
+def _max_password(value: object) -> dict[str, int]:
+    if not isinstance(value, dict) or not all(
+        isinstance(k, str) and isinstance(v, int) and not isinstance(v, bool) and v > 0
+        for k, v in value.items()
+    ):
+        raise ToolDefinitionError(_("“max_password” must map logins to a length."))
+    return dict(value)
 
 
 def _options(value: object) -> dict[str, str]:

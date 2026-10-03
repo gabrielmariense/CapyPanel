@@ -102,3 +102,12 @@ def test_a_password_file_tool_needs_its_placeholder() -> None:
 def test_broken_definitions_say_why(changes: dict[str, Any], reason: str) -> None:
     with pytest.raises(ToolDefinitionError, match=reason):
         definitions.from_data(_data(**changes))
+
+
+def test_account_login_types_and_password_limits_are_read() -> None:
+    tool = definitions.from_data(_data(account_types=[113, 118], max_password={"password": 8}))
+    assert tool.account_types == (113, 118) and tool.max_password == {"password": 8}
+    assert definitions.from_data(definitions.to_data(tool)) == tool
+    for broken in ({"account_types": [0]}, {"account_types": "113"}, {"max_password": {"x": 0}}):
+        with pytest.raises(ToolDefinitionError):
+            definitions.from_data(_data(**broken))

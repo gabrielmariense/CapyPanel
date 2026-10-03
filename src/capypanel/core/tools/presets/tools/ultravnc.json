@@ -8,6 +8,8 @@
   "options": {
     "securevnc": "SecureVNC plugin"
   },
+  "account_types": [113, 114, 115, 118],
+  "max_password": {"password": 8},
   "arguments": [
     ["{address}::{port}"],
     {"option": "securevnc", "arguments": ["-dsmplugin", "SecureVNCPlugin64.dsm"]},
