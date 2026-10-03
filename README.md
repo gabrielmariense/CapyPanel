@@ -1,12 +1,15 @@
-<p align="right">
+<h1 align="center">CapyPanel</h1>
+
+<p align="center">
   <a href="README.md"><img src="https://flagcdn.com/40x30/us.png" width="40" height="30" alt="English" title="English"></a>
+  &nbsp;
   <a href="README.pt-BR.md"><img src="https://flagcdn.com/40x30/br.png" width="40" height="30" alt="Português (Brasil)" title="Português (Brasil)"></a>
 </p>
 
-# CapyPanel
-
-A Windows desktop app for IT staff: keep the computers on your network in one organized list,
-and open a remote screen on any of them with the tools you already use.
+<p align="center">
+  A Windows app for IT teams: the computers on your network in one organized list,<br>
+  and a remote screen on any of them with the tools you already use.
+</p>
 
 - **Host lists** with nested groups, tags and notes. A list is a plain JSON file: keep a personal
   one, share one on a network folder, or publish a default list for everyone on the PC.
@@ -22,7 +25,7 @@ and open a remote screen on any of them with the tools you already use.
 
 Built for any organization: nothing is tied to one company's network, tools or language.
 
-> **Status: alpha (0.9.0).** Usable today, and growing one feature at a time. It runs from
+> **Status: alpha (0.10.0).** Usable today, and growing one feature at a time. It runs from
 > source; there's no installer yet.
 
 ## Documentation

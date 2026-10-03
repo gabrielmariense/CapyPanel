@@ -1,12 +1,15 @@
-<p align="right">
+<h1 align="center">CapyPanel</h1>
+
+<p align="center">
   <a href="README.md"><img src="https://flagcdn.com/40x30/us.png" width="40" height="30" alt="English" title="English"></a>
+  &nbsp;
   <a href="README.pt-BR.md"><img src="https://flagcdn.com/40x30/br.png" width="40" height="30" alt="Português (Brasil)" title="Português (Brasil)"></a>
 </p>
 
-# CapyPanel
-
-Um app de desktop para Windows feito para equipes de TI: mantenha os computadores da sua rede em
-uma lista organizada e abra a tela remota de qualquer um deles com as ferramentas que você já usa.
+<p align="center">
+  Um app para Windows feito para equipes de TI: os computadores da sua rede numa lista organizada,<br>
+  e a tela remota de qualquer um deles com as ferramentas que você já usa.
+</p>
 
 - **Listas de hosts** com grupos aninhados, tags e observações. Uma lista é um arquivo JSON
   simples: tenha uma pessoal, compartilhe uma numa pasta de rede ou publique uma lista padrão
@@ -24,7 +27,7 @@ uma lista organizada e abra a tela remota de qualquer um deles com as ferramenta
 Feito para qualquer organização: nada fica preso à rede, às ferramentas ou ao idioma de uma
 empresa.
 
-> **Situação: alfa (0.9.0).** Já dá para usar, e cresce uma funcionalidade por vez. Roda a partir
+> **Situação: alfa (0.10.0).** Já dá para usar, e cresce uma funcionalidade por vez. Roda a partir
 > do código-fonte; ainda não há instalador.
 
 ## Documentação

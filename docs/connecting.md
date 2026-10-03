@@ -32,10 +32,10 @@ A **connection profile** says which one a host uses:
   supports), the viewer's options (such as SecureVNC) and a port, blank for the viewer's own.
 - CapyPanel starts with one profile per viewer, **UltraVNC** and **RealVNC**, both with "user
   and password". They're ordinary profiles: change or delete them like any other.
-- All profiles are kept together in `data\profiles\` next to the app, beside the default list,
-  so everyone who uses that copy of CapyPanel sees the same ones and they're easy to check. As
-  for the default list, **Windows permissions decide who can change them**; everyone else sees
-  them read-only.
+- All profiles are kept together in `C:\ProgramData\CapyPanel\profiles\`, beside the default
+  list, so everyone on the PC sees the same ones and they're easy to check. **Windows
+  permissions decide who can change them**: the folder is read-only for other users once
+  CapyPanel makes it. A profile file made by another user (not an administrator) is ignored.
 - **The default profile**, used by hosts whose groups set none, is chosen on the same page and
   saved in the same folder, so it's the same for everyone.
 - Deleting a profile asks first, and says how many hosts and groups in the open list use it.
@@ -43,6 +43,21 @@ A **connection profile** says which one a host uses:
 - A profile can name a viewer that isn't installed on this PC (it's marked so), for example to
   prepare profiles before installing the viewers. CapyPanel asks for the viewer only when you
   connect.
+
+### Viewer settings files
+
+By default a profile uses the viewer's own settings, plus the options on the profile. For
+everything else the viewer offers (quality, scaling, view-only, full screen and so on), an
+**UltraVNC** profile can carry a settings file:
+
+1. In UltraVNC Viewer, set the options you want and save the connection as a `.vnc` file.
+2. In the profile editor, **Viewer settings > Choose file…** and pick it. **Use defaults** goes
+   back to the viewer's own settings.
+
+When you click Save, CapyPanel copies the file beside the profile (`profiles\<id>.vnc`) after
+removing the host, port, password and encryption plugin: the profile decides those, so the file
+never holds a secret or an address. When you connect, the viewer gets a temporary copy, deleted a
+minute later, and the shared file is never changed.
 
 ### Choosing a profile
 
@@ -56,8 +71,9 @@ A **connection profile** says which one a host uses:
 The **Information** pane shows each host's profile and where it comes from, e.g.
 "Raspberry Pis (from group “Raspberries”)".
 
-A list stores only the profile's ID. Opening a list that names a profile your PC doesn't have
-shows "not available on this PC" instead of guessing.
+A list stores only the profile's ID. When a host or group names a profile your PC doesn't
+have, it follows its group's profile (or the default) instead, and its right-click menu shows the
+missing one as "not available on this PC".
 
 ## Passwords
 

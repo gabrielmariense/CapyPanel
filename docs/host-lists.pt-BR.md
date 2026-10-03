@@ -16,12 +16,17 @@ por vez e salva cada edição nela na hora.
 
 | Tipo | Onde fica | Quem pode alterar |
 |---|---|---|
-| **Padrão** | `data\hosts.json` ao lado do app | Quem o Windows deixa gravar nessa pasta, normalmente os administradores. Os demais a abrem somente leitura |
+| **Padrão** | `C:\ProgramData\CapyPanel\hosts.json`, compartilhada por todos no PC | Quem o Windows deixa gravar nela: quem a criou e os administradores. Os demais a abrem somente leitura. Criada vazia quando não existe |
 | **Pessoal** | Sua própria pasta do CapyPanel (veja [Configurações e arquivos](settings-and-files.pt-BR.md)) | Só você. Criada na primeira vez que for necessária |
 | **Compartilhada** | Onde você escolher, por exemplo uma pasta de rede | Quem o Windows deixa gravar o arquivo |
 
 As permissões do Windows decidem se uma lista abre somente leitura, para todos os tipos. Uma lista
 somente leitura ainda pode ser navegada e usada para conectar; só a edição fica desligada.
+
+Qualquer usuário pode criar arquivos no ProgramData, então **uma lista padrão criada por outro
+usuário (que não seja administrador) não é aberta**: ela poderia mandar a sua senha para o
+computador errado. As Configurações a mostram como "Criada por outro usuário: não é usada", e um
+administrador pode substituí-la ou excluí-la.
 
 **Arquivo > Listas recentes** mostra as listas que você abriu, cada uma com seu tipo e caminho.
 

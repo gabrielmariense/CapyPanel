@@ -15,12 +15,16 @@ time and saves every edit to it right away.
 
 | Kind | Where it lives | Who can change it |
 |---|---|---|
-| **Default** | `data\hosts.json` next to the app | Whoever Windows lets write that folder, normally administrators. Everyone else opens it read-only |
+| **Default** | `C:\ProgramData\CapyPanel\hosts.json`, shared by everyone on the PC | Whoever Windows lets write it: whoever created it, and administrators. Everyone else opens it read-only. Created empty when it's missing |
 | **Personal** | Your own CapyPanel folder (see [Settings and files](settings-and-files.md)) | Only you. Created the first time it's needed |
 | **Shared** | Anywhere you choose, e.g. a network folder | Whoever Windows lets write the file |
 
 Windows permissions decide whether a list opens read-only, for every kind. A read-only list can
 still be browsed and connected to; only editing is off.
+
+Any user can add files to ProgramData, so **a default list made by another user (not an
+administrator) isn't opened**: it could send your password to the wrong computer. Settings shows
+it as "Made by another user: not used", and an administrator can replace or delete it.
 
 **File > Recent lists** shows the lists you've opened, each with its kind and path.
 

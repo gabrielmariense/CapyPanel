@@ -43,18 +43,23 @@ English or Português (Brasil). The switch is immediate, without a restart. Also
 
 ## Where CapyPanel keeps its files
 
-CapyPanel keeps everything for all users of a PC in one place, with one private folder per user:
+CapyPanel keeps everything for all users of a PC in one folder, `C:\ProgramData\CapyPanel`,
+with one private folder per user:
 
 | What | Where |
 |---|---|
-| Your settings, personal list and your own tool paths | `C:\ProgramData\CapyPanel\users\<you@DOMAIN>\` |
-| Logs, one file per user | `C:\ProgramData\CapyPanel\logs\` |
-| Default host list | `data\hosts.json` next to the app |
-| Connection profiles, and which one is the default | `data\profiles\` next to the app |
-| Viewer definitions, and the starter profiles | Inside the app |
+| Default host list, shared by everyone on the PC | `hosts.json` |
+| Connection profiles, their settings files, and which one is the default | `profiles\` |
+| Viewer definitions added by your company | `tools\` |
+| Your settings, personal list and your own tool paths | `users\<you@DOMAIN>\` |
+| Logs, one file per user | `logs\` |
+| Built-in viewer definitions, and the starter profiles | Inside the app |
 
 - **Your folder is private:** only you, administrators and Windows itself can open it.
   CapyPanel refuses to use a folder someone else created first in your name.
+- **Shared files must come from someone trusted.** Any user can add files to ProgramData, so
+  CapyPanel ignores a shared file (default list, profile, company viewer definition) made by
+  another user who isn't an administrator, and logs it.
 - **Logs never contain passwords.** They record which viewer started for which address, and the
   result of each login check.
 
