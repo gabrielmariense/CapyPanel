@@ -43,9 +43,13 @@ def test_an_old_3_3_server_names_its_one_type() -> None:
     assert rfb.security_types("127.0.0.1", port, timeout=2) == (2,)
 
 
-def test_a_server_that_refuses_offers_nothing() -> None:
-    port, _received, _server = _fake(b"RFB 003.008\n", bytes([0]))
-    assert rfb.security_types("127.0.0.1", port, timeout=2) == ()
+def test_a_server_that_refuses_says_why() -> None:
+    reason = b"Too many authentication failures"
+    port, _received, _server = _fake(
+        b"RFB 003.008\n", bytes([0]) + len(reason).to_bytes(4, "big") + reason
+    )
+    with pytest.raises(rfb.ProbeError, match="refused: Too many authentication failures"):
+        rfb.security_types("127.0.0.1", port, timeout=2)
 
 
 @pytest.mark.parametrize("greeting", [b"SSH-2.0-OpenS", b"RFB 3.8\n"])

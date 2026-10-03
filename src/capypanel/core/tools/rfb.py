@@ -27,16 +27,27 @@ def security_types(address: str, port: int, timeout: float = 3.0) -> tuple[int, 
             if (major, minor) >= (3, 7):
                 sock.sendall(b"RFB 003.008\n" if (major, minor) >= (3, 8) else b"RFB 003.007\n")
                 count = _read(sock, 1)[0]
-                if count == 0:  # the server refused before offering anything
-                    return ()
+                if count == 0:  # turned away before offering anything (e.g. too many failures)
+                    raise ProbeError(f"the server refused: {_reason(sock)}")
                 return tuple(_read(sock, count))
             sock.sendall(b"RFB 003.003\n")  # 3.3: the server picks a single type itself
             (chosen,) = struct.unpack(">I", _read(sock, 4))
-            return (chosen,) if chosen else ()
+            if chosen == 0:
+                raise ProbeError(f"the server refused: {_reason(sock)}")
+            return (chosen,)
     except (OSError, IndexError) as e:
         if isinstance(e, ProbeError):
             raise
         raise ProbeError(str(e)) from e
+
+
+def _reason(sock: socket.socket) -> str:
+    """The server's explanation after a refusal, cut to a sane length; "" if it gave none."""
+    try:
+        (size,) = struct.unpack(">I", _read(sock, 4))
+        return _read(sock, min(size, 1024)).decode("utf-8", "replace").strip()
+    except OSError:
+        return ""
 
 
 def _read(sock: socket.socket, size: int) -> bytes:

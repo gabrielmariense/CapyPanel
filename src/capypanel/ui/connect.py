@@ -296,7 +296,7 @@ class Connector:
             except rfb.ProbeError as e:
                 log.info("Login check for %s: couldn't ask (%s); opening anyway", request.label, e)
                 return True  # can't tell: the viewer will say what's wrong
-            fits = not offered or any(t in tool.account_types for t in offered)
+            fits = any(t in tool.account_types for t in offered)
             log.info(
                 "Login check for %s: login types %s in %d ms, %s",
                 request.label, list(offered), (time.perf_counter() - began) * 1000,
