@@ -27,7 +27,7 @@ from typing import Any
 from capypanel.core.i18n import _
 
 SCHEMA = 1
-KINDS = ("vnc",)  # grows with the features: rdp, ssh…
+KINDS = ("vnc", "rdp")  # grows with the features: ssh…
 PLACEHOLDERS = ("address", "port", "user", "password", "password_file", "settings_file")
 SECRET = "password"
 PASSWORD_FILE = "password_file"

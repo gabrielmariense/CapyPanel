@@ -153,7 +153,10 @@ class ProfileDialog(QDialog):
         wanted_login = profile.login if profile else self.login.currentData()
         self.login.clear()
         for login in logins_of(tool):
-            self.login.addItem(login_label(login).capitalize(), login)
+            text = login_label(login).capitalize()
+            if not tool.wants_password:  # e.g. Remote Desktop: it asks for the password itself
+                text = _("Asked by {tool}").format(tool=tool.name)
+            self.login.addItem(text, login)
         self.login.setCurrentIndex(max(self.login.findData(wanted_login), 0))
         self.login.setEnabled(self.login.count() > 1)
         ticked = set(profile.options) if profile else set()

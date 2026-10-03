@@ -15,17 +15,17 @@ def _profile(pid: str, name: str) -> ConnectionProfile:
 
 def test_the_starters_show_until_the_folder_exists_then_become_files(tmp_path: Path) -> None:
     store = ProfileStore(tmp_path / "profiles")
-    assert [p.name for p in store.all()] == ["RealVNC", "UltraVNC"]
+    assert [p.name for p in store.all()] == ["RealVNC", "Remote Desktop", "UltraVNC"]
     assert not (tmp_path / "profiles").exists()  # nothing written just by looking
     store.save(_profile("clinics", "Clinics"))
     files = sorted(p.name for p in (tmp_path / "profiles").glob("*.json"))
-    assert files == ["clinics.json", "realvnc.json", "ultravnc.json"]
+    assert files == ["clinics.json", "realvnc.json", "remote-desktop.json", "ultravnc.json"]
 
 
 def test_starters_are_ordinary_profiles_that_can_be_deleted(tmp_path: Path) -> None:
     store = ProfileStore(tmp_path / "profiles")
-    store.delete("realvnc")
-    store.delete("ultravnc")
+    for starter in ("realvnc", "remote-desktop", "ultravnc"):
+        store.delete(starter)
     assert store.all() == [] and store.default_id() == ""
     assert ProfileStore(tmp_path / "profiles").all() == []  # deleted for good, not shipped back
     with pytest.raises(ProfileError):

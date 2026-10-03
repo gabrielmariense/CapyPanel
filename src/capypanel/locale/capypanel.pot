@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 16:43-0300\n"
+"POT-Creation-Date: 2026-10-03 17:06-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -84,6 +84,9 @@ msgid "&New empty list…"
 msgstr ""
 
 msgid "&New host list…"
+msgstr ""
+
+msgid "&Open connection"
 msgstr ""
 
 msgid "&Open host list…"
@@ -166,6 +169,10 @@ msgid "App language"
 msgstr ""
 
 msgid "Appearance"
+msgstr ""
+
+#, python-brace-format
+msgid "Asked by {tool}"
 msgstr ""
 
 #, python-brace-format
@@ -553,9 +560,6 @@ msgid "Read-write"
 msgstr ""
 
 msgid "Reload the list"
-msgstr ""
-
-msgid "Remote screen (&VNC)"
 msgstr ""
 
 msgid "Remote tools"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 16:43-0300\n"
+"POT-Creation-Date: 2026-10-03 17:06-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -86,6 +86,9 @@ msgstr "&Nova lista vazia…"
 
 msgid "&New host list…"
 msgstr "&Nova lista de hosts…"
+
+msgid "&Open connection"
+msgstr "&Abrir conexão"
 
 msgid "&Open host list…"
 msgstr "&Abrir lista de hosts…"
@@ -168,6 +171,10 @@ msgstr "Idioma do aplicativo"
 
 msgid "Appearance"
 msgstr "Aparência"
+
+#, python-brace-format
+msgid "Asked by {tool}"
+msgstr "Pedido pelo {tool}"
 
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
@@ -544,9 +551,6 @@ msgstr "Leitura e gravação"
 
 msgid "Reload the list"
 msgstr "Recarregar a lista"
-
-msgid "Remote screen (&VNC)"
-msgstr "Tela remota (&VNC)"
 
 msgid "Remote tools"
 msgstr "Ferramentas remotas"

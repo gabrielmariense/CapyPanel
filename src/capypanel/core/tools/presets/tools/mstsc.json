@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "id": "mstsc",
+  "name": "Remote Desktop Connection",
+  "kind": "rdp",
+  "port": 3389,
+  "credentials": "none",
+  "options": {
+    "admin": "Administrative session",
+    "fullscreen": "Full screen",
+    "multimon": "Use all my monitors"
+  },
+  "arguments": [
+    ["/v:{address}:{port}"],
+    {"option": "admin", "arguments": ["/admin"]},
+    {"option": "fullscreen", "arguments": ["/f"]},
+    {"option": "multimon", "arguments": ["/multimon"]}
+  ],
+  "detect": {
+    "exe": "mstsc.exe",
+    "paths": ["%SystemRoot%\\System32\\mstsc.exe"]
+  }
+}

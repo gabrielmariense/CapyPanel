@@ -12,7 +12,8 @@ from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu, QMessageBox
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.core.tools.connect import Credential
+from capypanel.core.tools.connect import Credential, Target
+from capypanel.core.tools.profiles import ConnectionProfile
 from capypanel.ui import connect as connect_ui
 from capypanel.ui.connect import CredentialDialog, ManualConnectDialog, Request
 from capypanel.ui.hosts import HostDialog
@@ -251,13 +252,13 @@ def test_copy_address_and_name(window: MainWindow) -> None:
 def test_connect_commands_follow_the_selection(window: MainWindow) -> None:
     a = window.commands
     _select(window)
-    assert not a.connect_vnc.isEnabled() and not a.copy_address.isEnabled()
+    assert not a.connect_host.isEnabled() and not a.copy_address.isEnabled()
     assert a.manual_connect.isEnabled()
     _select(window, "PC-A")
-    assert a.connect_vnc.isEnabled() and a.copy_name.isEnabled()
+    assert a.connect_host.isEnabled() and a.copy_name.isEnabled()
     # Enter connects only from the host table, never while typing somewhere else.
-    assert a.connect_vnc.shortcutContext() == Qt.ShortcutContext.WidgetWithChildrenShortcut
-    assert a.connect_vnc in window.table.actions()
+    assert a.connect_host.shortcutContext() == Qt.ShortcutContext.WidgetWithChildrenShortcut
+    assert a.connect_host in window.table.actions()
 
 
 def test_a_windows_password_is_never_sent_to_a_server_that_wants_a_vnc_password(
@@ -417,3 +418,14 @@ def test_a_profile_with_a_settings_file_hands_it_to_the_viewer(
     _select(window, "PC-A")
     window.connect_selected()
     assert given == [store.folder / "offices.vnc"]
+
+
+def test_remote_desktop_opens_without_asking_for_a_password(
+    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = window.connector.catalogs.profiles
+    store.save(ConnectionProfile("desk", "mstsc", "none", ("admin",), name="Desk"))
+    monkeypatch.setattr(CredentialDialog, "exec", lambda _self: pytest.fail("asked for a password"))
+    started = window.connector.connect([Request("PC-A", Target("10.0.0.1"), "desk")])
+    assert started == 1
+    assert launched == [("mstsc", "10.0.0.1", None, None, ("admin",))]

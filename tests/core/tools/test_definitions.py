@@ -128,3 +128,18 @@ def test_a_settings_file_goes_with_its_placeholder() -> None:
     ):
         with pytest.raises(definitions.ToolDefinitionError):
             definitions.from_data({**base, **broken})
+
+
+def test_remote_desktop_opens_mstsc_with_the_profile_s_options() -> None:
+    tool = definitions.load(SHIPPED_DIR / "tools" / "mstsc.json")
+    assert tool.kind == "rdp" and not tool.wants_password  # mstsc asks for the password itself
+    values = {"address": "pc1", "port": "3389"}
+    exe = Path(r"C:\Windows\System32\mstsc.exe")
+    assert command_line(tool, exe, values) == [str(exe), "/v:pc1:3389"]
+    assert command_line(tool, exe, values, ("admin", "fullscreen", "multimon")) == [
+        str(exe),
+        "/v:pc1:3389",
+        "/admin",
+        "/f",
+        "/multimon",
+    ]
