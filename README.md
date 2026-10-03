@@ -12,7 +12,7 @@ viewer you already use.
 
 Built for any organization: nothing is tied to one company's network, tools or language.
 
-> **Status: alpha (0.10.0).** Usable today, and growing one feature at a time. It runs from
+> **Status: alpha (0.10.1).** Usable today, and growing one feature at a time. It runs from
 > source; there's no installer yet.
 
 ## Features
