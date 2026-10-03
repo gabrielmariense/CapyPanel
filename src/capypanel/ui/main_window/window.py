@@ -34,6 +34,7 @@ from capypanel.core.tools.connect import SessionCredentials, Target
 from capypanel.core.tools.profiles import ProfileError
 from capypanel.ui import language
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
+from capypanel.ui.host_lists import HostListsDialog
 from capypanel.ui.hosts import (
     HostDialog,
     ProfilePicker,
@@ -107,28 +108,19 @@ class MainWindow(QMainWindow):
         bar = self.menuBar()
         self._file_menu = bar.addMenu("")
         self._file_menu.addActions([a.new_list, a.open_list])
-        self._recent_menu = self._file_menu.addMenu("")
-        self._recent_menu.aboutToShow.connect(self._fill_recent_menu)
         self._file_menu.addSeparator()
         self._file_menu.addAction(a.settings)
         self._file_menu.addSeparator()
         self._file_menu.addAction(a.exit)
 
         self._inventory_menu = bar.addMenu("")
+        # What acts on a host or group (edit, remove, copy, open) is in its right-click menu.
         self._inventory_menu.addActions([a.add_host, a.add_group])
-        self._inventory_menu.addSeparator()
-        self._inventory_menu.addActions([a.edit, a.remove])
 
         self._connect_menu = bar.addMenu("")
-        self._connect_menu.addAction(a.connect_host)
-        self._connect_menu.addAction(a.manual_connect)
-        self._connect_menu.addSeparator()
-        self._connect_menu.addActions([a.copy_address, a.copy_name])
+        self._connect_menu.addActions([a.manual_connect, a.connection_profiles])
         self._connect_menu.addSeparator()
         self._connect_menu.addAction(a.forget_passwords)
-        self._connect_menu.addSeparator()
-        self._connect_menu.addAction(a.connection_profiles)
-        self._connect_menu.aboutToShow.connect(self._update_state)
 
         self._view_menu = bar.addMenu("")
         self._view_menu.addActions([a.show_groups, a.show_details, a.show_status_bar])
@@ -162,7 +154,6 @@ class MainWindow(QMainWindow):
     def _retranslate_menus(self) -> None:
         retranslate_actions(self.commands)
         self._file_menu.setTitle(_("&File"))
-        self._recent_menu.setTitle(_("&Recent lists"))
         self._inventory_menu.setTitle(_("&Inventory"))
         self._connect_menu.setTitle(_("&Connect"))
         self._view_menu.setTitle(_("&View"))
@@ -174,13 +165,15 @@ class MainWindow(QMainWindow):
     def _connect(self) -> None:
         a = self.commands
         a.new_list.triggered.connect(self.new_list)
-        a.open_list.triggered.connect(self._ask_open_list)
+        a.open_list.triggered.connect(self.manage_lists)
         a.settings.triggered.connect(lambda: self.open_settings())
         a.exit.triggered.connect(self.close)
         a.add_host.triggered.connect(self.add_host)
         a.add_group.triggered.connect(self.add_group)
         a.edit.triggered.connect(self.edit_selected)
         a.remove.triggered.connect(self.remove_selected)
+        # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C) live here.
+        self.addActions([a.edit, a.remove, a.copy_address])
         a.show_groups.toggled.connect(self.nav.setVisible)
         a.show_details.toggled.connect(self.details.setVisible)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
@@ -278,13 +271,24 @@ class MainWindow(QMainWindow):
             # The file dialog already asked before choosing an existing file.
             self._create_list(path, replace_existing=path.exists())
 
-    def _ask_open_list(self) -> None:
-        start = self._doc.path.parent if self._doc else self._personal_list.parent
-        name, _filter = QFileDialog.getOpenFileName(
-            self, _("Open host list"), str(start), list_file_filter()
+    def manage_lists(self) -> None:
+        """File > Host lists…: every list this user works with; open one from there."""
+        dialog = HostListsDialog(
+            self,
+            default_list=self._default_list,
+            personal_list=self._personal_list,
+            added=locations.added_lists(self._prefs),
+            document=self._doc,
         )
-        if name:
-            self.open_list(Path(name))
+        opened = dialog.exec() == QDialog.DialogCode.Accepted
+        locations.set_added_lists(self._prefs, dialog.view.added)  # added or forgotten there
+        self._save_prefs()
+        path = dialog.view.selected()
+        if opened and path is not None:
+            current = self._doc.path if self._doc else None
+            rewritten = any(locations.same_path(path, p) for p in dialog.view.written)
+            if current is None or rewritten or not locations.same_path(path, current):
+                self.open_list(path)
 
     def _create_list(self, path: Path, *, replace_existing: bool, quiet: bool = False) -> bool:
         try:
@@ -298,22 +302,12 @@ class MainWindow(QMainWindow):
     def _use(self, doc: OpenList) -> None:
         self._doc = doc
         locations.remember_list(self._prefs, doc.path)
+        if self._kind(doc.path) is ListKind.SHARED:  # it shows in File > Host lists… from now on
+            added = locations.added_lists(self._prefs)
+            locations.set_added_lists(self._prefs, [*added, doc.path])
         self._save_prefs()
         log.info("Opened host list %s (read-only=%s)", doc.path, doc.read_only)
         self._refresh()
-
-    def _fill_recent_menu(self) -> None:
-        self._recent_menu.clear()
-        recent = locations.recent_lists(self._prefs)
-        if not recent:
-            self._recent_menu.addAction(_("No recent lists")).setEnabled(False)
-            return
-        for path in recent:
-            text = f"{self._kind_label(self._kind(path))} — {path}".replace("&", "&&")
-            item = self._recent_menu.addAction(text)
-            item.setCheckable(True)
-            item.setChecked(self._doc is not None and locations.same_path(path, self._doc.path))
-            item.triggered.connect(lambda _checked=False, p=path: self.open_list(p))
 
     # ---- editing ----
 
@@ -659,13 +653,14 @@ class MainWindow(QMainWindow):
             default_list=self._default_list,
             personal_list=self._personal_list,
             document=self._doc,
-            recent=locations.recent_lists(self._prefs),
+            added=locations.added_lists(self._prefs),
             registry=self.registry,
             catalogs=self.connector.catalogs,
         )
 
     def apply_settings(self, choices: SettingsChoices) -> None:
         self._prefs[locations.START_KEY] = choices.start_list
+        locations.set_added_lists(self._prefs, choices.added_lists)
         current = self._doc.path if self._doc else None
         if (
             current is None

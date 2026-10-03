@@ -38,6 +38,7 @@ class SettingsChoices:
     theme_id: str
     language: str
     connections: ConnectionChanges
+    added_lists: list[Path]  # the lists in Host lists, besides the default and personal
 
 
 class SettingsDialog(QDialog):
@@ -50,7 +51,7 @@ class SettingsDialog(QDialog):
         default_list: Path,
         personal_list: Path,
         document: OpenList | None,
-        recent: list[Path],
+        added: list[Path],
         registry: themes.Registry,
         catalogs: Catalogs,
     ) -> None:
@@ -61,14 +62,14 @@ class SettingsDialog(QDialog):
             start_list=start_list,
             default_list=default_list,
             personal_list=personal_list,
-            recent=recent,
+            added=added,
             language=i18n.language(),
         )
         self.host_lists = HostListsPage(
             default_list=default_list,
             personal_list=personal_list,
             document=document,
-            recent=recent,
+            added=added,
         )
         self.connections = ConnectionsPage(catalogs, document)
         self.appearance = AppearancePage(registry, themes.current().id)
@@ -125,6 +126,7 @@ class SettingsDialog(QDialog):
             rewritten=any(same_path(host_list, p) for p in written),
             theme_id=self.appearance.theme_id(),
             language=self.general.language_choice(),
+            added_lists=self.host_lists.added(),
             connections=self.connections.changes(),
         )
 
