@@ -340,8 +340,8 @@ class Connector:
             _("{tool} not found").format(tool=tool.name),
             _(
                 "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. "
-                "The path is saved for your account; you can also change it later in "
-                "Settings > Connections."
+                "The path is saved for everyone on this PC; you can also change it later in "
+                "Settings > Connections > Remote tools."
             ).format(tool=tool.name),
             parent=self._parent,
         )
