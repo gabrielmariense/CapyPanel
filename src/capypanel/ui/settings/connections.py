@@ -202,10 +202,8 @@ class ConnectionsPage(Page):
         current_default = self.default.currentData() or self.store.default_id()
         self.list.clear()
         self.default.clear()
-        for stored in self.store.all():
-            profile = stored.profile
-            text = profile.name if stored.editable else _("{profile} · built-in")
-            item = QListWidgetItem(text.format(profile=profile.name))
+        for profile in self.store.all():
+            item = QListWidgetItem(profile.name)
             item.setData(Qt.ItemDataRole.UserRole, profile.id)
             self.list.addItem(item)
             if profile.id == select:
@@ -220,12 +218,10 @@ class ConnectionsPage(Page):
         return items[0].data(Qt.ItemDataRole.UserRole) if items else None
 
     def _update_buttons(self) -> None:
-        selected = self._selected()
-        stored = self.store.find(selected) if selected else None
+        picked = self.can_edit and self._selected() is not None
         self.add_button.setEnabled(self.can_edit)
-        self.duplicate_button.setEnabled(self.can_edit and stored is not None)
-        self.edit_button.setEnabled(self.can_edit and stored is not None and stored.editable)
-        self.delete_button.setEnabled(self.can_edit and stored is not None and stored.editable)
+        for button in (self.edit_button, self.duplicate_button, self.delete_button):
+            button.setEnabled(picked)
 
     def _dialog(self, title: str, profile: ConnectionProfile | None) -> ProfileDialog:
         tools = [e.item for e in self.catalogs.tools.all()]
@@ -240,21 +236,19 @@ class ConnectionsPage(Page):
 
     def edit(self) -> None:
         selected = self._selected()
-        stored = self.store.find(selected) if selected else None
-        if stored is None or not stored.editable or not self.can_edit:
+        profile = self.store.find(selected) if selected else None
+        if profile is None or not self.can_edit:
             return
-        dialog = self._dialog(_("Edit connection profile"), stored.profile)
+        dialog = self._dialog(_("Edit connection profile"), profile)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            self._save(replace(dialog.profile(stored.profile.id), extra=stored.profile.extra))
+            self._save(replace(dialog.profile(profile.id), extra=profile.extra))
 
     def duplicate(self) -> None:
         selected = self._selected()
-        stored = self.store.find(selected) if selected else None
-        if stored is None:
+        profile = self.store.find(selected) if selected else None
+        if profile is None:
             return
-        copy = replace(
-            stored.profile, name=_("{profile} (copy)").format(profile=stored.profile.name)
-        )
+        copy = replace(profile, name=_("{profile} (copy)").format(profile=profile.name))
         dialog = self._dialog(_("Duplicate connection profile"), copy)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             name = dialog.name.text().strip()
@@ -262,10 +256,9 @@ class ConnectionsPage(Page):
 
     def delete(self) -> None:
         selected = self._selected()
-        stored = self.store.find(selected) if selected else None
-        if stored is None or not stored.editable:
+        profile = self.store.find(selected) if selected else None
+        if profile is None:
             return
-        profile = stored.profile
         text = _("Delete the connection profile “{profile}”? Everyone who uses this folder "
                  "loses it.").format(profile=profile.name)  # fmt: skip
         hosts, groups = self._uses(profile.id)

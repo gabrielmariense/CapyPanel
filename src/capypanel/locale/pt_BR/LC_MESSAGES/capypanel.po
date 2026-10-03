@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 11:13-0300\n"
+"POT-Creation-Date: 2026-10-03 12:09-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -175,12 +175,6 @@ msgstr "Automático"
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
 msgstr "Marcador malformado em “{arg}”."
-
-msgid "Built-in profiles can't be changed, only duplicated."
-msgstr "Perfis nativos não podem ser alterados, só duplicados."
-
-msgid "Built-in profiles can't be deleted."
-msgstr "Perfis nativos não podem ser excluídos."
 
 msgid "CapyPanel"
 msgstr "CapyPanel"
@@ -691,6 +685,9 @@ msgstr "O “executable” deve ser um caminho."
 msgid "The “port” must be a number from 1 to 65535."
 msgstr "A “port” deve ser um número de 1 a 65535."
 
+msgid "There are no connection profiles. Create one in Settings > Connections."
+msgstr "Não há perfis de conexão. Crie um em Configurações > Conexões."
+
 msgid "This connection profile needs a newer version of CapyPanel."
 msgstr "Este perfil de conexão precisa de uma versão mais nova do CapyPanel."
 
@@ -737,9 +734,6 @@ msgstr "Marcador desconhecido “{{{name}}}” nos argumentos."
 #, python-brace-format
 msgid "Unknown tool kind “{kind}”."
 msgstr "Tipo de ferramenta desconhecido: “{kind}”."
-
-msgid "Uses a built-in id."
-msgstr "Usa o id de um perfil nativo."
 
 msgid "Where CapyPanel keeps its files"
 msgstr "Onde o CapyPanel guarda os arquivos"
@@ -843,10 +837,6 @@ msgid "{profile} (not available on this PC)"
 msgstr "{profile} (não disponível neste PC)"
 
 #, python-brace-format
-msgid "{profile} · built-in"
-msgstr "{profile} · nativo"
-
-#, python-brace-format
 msgid "{tool} (not installed on this PC)"
 msgstr "{tool} (não instalado neste PC)"
 
@@ -867,8 +857,8 @@ msgid "{tool} not found"
 msgstr "{tool} não encontrado"
 
 #, python-brace-format
-msgid "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. The path is saved for your account."
-msgstr "O {tool} não foi encontrado neste PC. Instale-o ou mostre ao CapyPanel onde ele está. O caminho fica salvo para a sua conta."
+msgid "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. The path is saved for your account; you can also change it later in Settings > Connections."
+msgstr "O {tool} não foi encontrado neste PC. Instale-o ou mostre ao CapyPanel onde ele está. O caminho fica salvo para a sua conta; você também pode alterá-lo depois em Configurações > Conexões."
 
 msgid "“account_types” must be a list of numbers from 1 to 255."
 msgstr "“account_types” deve ser uma lista de números de 1 a 255."

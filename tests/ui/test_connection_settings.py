@@ -49,8 +49,7 @@ def test_add_a_shared_profile(catalogs: Catalogs, monkeypatch: pytest.MonkeyPatc
     _answer(monkeypatch, fill)
     page.add()
     stored = catalogs.profiles.find("clinics-securevnc")
-    assert stored is not None and stored.editable
-    assert stored.profile == ConnectionProfile(
+    assert stored == ConnectionProfile(
         "clinics-securevnc", "ultravnc", "account", ("securevnc",), name="Clinics (SecureVNC)"
     )
     assert (catalogs.profiles.folder / "clinics-securevnc.json").is_file()
@@ -76,17 +75,21 @@ def test_the_editor_offers_only_what_the_chosen_tool_supports(catalogs: Catalogs
     assert ok.isEnabled()
 
 
-def test_built_ins_can_only_be_duplicated(
+def test_starter_profiles_can_be_duplicated_edited_and_deleted(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     page = ConnectionsPage(catalogs, None)
     _select(page, "ultravnc")
-    assert page.duplicate_button.isEnabled()
-    assert not page.edit_button.isEnabled() and not page.delete_button.isEnabled()
+    buttons = (page.edit_button, page.duplicate_button, page.delete_button)
+    assert all(b.isEnabled() for b in buttons)
     _answer(monkeypatch, lambda dialog: None)  # keep the suggested name
     page.duplicate()
     copy = catalogs.profiles.find("ultravnc-copy")
-    assert copy is not None and copy.profile.name == "UltraVNC (copy)" and copy.editable
+    assert copy is not None and copy.name == "UltraVNC (copy)"
+    monkeypatch.setattr(connections, "confirm", lambda *_args: True)
+    _select(page, "ultravnc")
+    page.delete()
+    assert catalogs.profiles.find("ultravnc") is None
 
 
 def test_deleting_says_how_many_hosts_use_it(

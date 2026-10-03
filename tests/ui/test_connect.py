@@ -38,6 +38,7 @@ def launched(monkeypatch: pytest.MonkeyPatch) -> list[Launch]:
 
 
 SHARED_PROFILES = (
+    ("ultravnc", "UltraVNC", "ultravnc", "account", []),
     ("offices", "Offices (SecureVNC)", "ultravnc", "account", ["securevnc"]),
     ("vnc-password", "VNC password", "ultravnc", "password", []),
     ("pis", "Pis", "realvnc", "account", []),
@@ -318,16 +319,6 @@ def test_password_only_profiles_never_check_and_vnc_passwords_stop_at_8(
     account.password.setText("x" * 10_000)
     account.user.setText("u" * 10_000)
     assert len(account.password.text()) == 256 and len(account.user.text()) == 256
-
-
-def test_a_profile_from_version_0_8_still_connects(
-    window: MainWindow, launched: list[Launch]
-) -> None:
-    window.connector.credentials.remember("ultravnc-account-securevnc", Credential("ana", "x"))
-    old = Request("PC-OLD", connect_ui.Target("10.0.0.7"), "ultravnc-account-securevnc")
-    assert window.connector.connect([old]) == 1
-    assert launched == [("ultravnc", "10.0.0.7", None, Credential("ana", "x"), ("securevnc",))]
-    assert "ultravnc-account-securevnc" not in dict(window.connector.choices())
 
 
 def test_hosts_with_no_profile_anywhere_use_the_shared_default(

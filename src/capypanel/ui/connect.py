@@ -178,17 +178,17 @@ class Connector:
 
     def label(self, profile_id: str) -> str:
         """The profile's name; for an id this PC doesn't have, the id and a note saying so."""
-        stored = self.catalogs.profiles.find(profile_id or self.default_profile())
-        if stored is None:
+        profile = self.catalogs.profiles.find(profile_id or self.default_profile())
+        if profile is None:
             return _("{profile} (not available on this PC)").format(profile=profile_id)
-        return stored.profile.name
+        return profile.name
 
     def choices(self) -> list[tuple[str, str]]:
-        """(id, name) of every profile whose tool CapyPanel knows: built-ins, then shared."""
+        """(id, name) of every profile whose tool CapyPanel knows, by name."""
         return [
-            (s.profile.id, s.profile.name)
-            for s in self.catalogs.profiles.all()
-            if self.catalogs.tools.find(s.profile.tool) is not None
+            (p.id, p.name)
+            for p in self.catalogs.profiles.all()
+            if self.catalogs.tools.find(p.tool) is not None
         ]
 
     def inherited_label(self, profile_id: str, source: Group | None) -> str:
@@ -202,14 +202,17 @@ class Connector:
     def resolve(self, profile_id: str) -> Ready:
         """The profile and its tool, or ProfileError saying why it can't be used here."""
         profile_id = profile_id or self.default_profile()
-        stored = self.catalogs.profiles.find(profile_id)
-        if stored is None:
+        if not profile_id:
+            raise ProfileError(
+                _("There are no connection profiles. Create one in Settings > Connections.")
+            )
+        profile = self.catalogs.profiles.find(profile_id)
+        if profile is None:
             raise ProfileError(
                 _("The connection profile “{profile}” isn't available on this PC.").format(
                     profile=profile_id
                 )
             )
-        profile = stored.profile
         tool = self.catalogs.tools.find(profile.tool)
         if tool is None:
             raise ProfileError(
@@ -333,7 +336,8 @@ class Connector:
             _("{tool} not found").format(tool=tool.name),
             _(
                 "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. "
-                "The path is saved for your account."
+                "The path is saved for your account; you can also change it later in "
+                "Settings > Connections."
             ).format(tool=tool.name),
             parent=self._parent,
         )

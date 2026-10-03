@@ -3,7 +3,7 @@ from typing import Any
 import pytest
 
 from capypanel.core.tools import definitions, profiles
-from capypanel.core.tools.profile_store import SHIPPED_DIR as PROFILES_DIR
+from capypanel.core.tools.profile_store import STARTERS_DIR as PROFILES_DIR
 from capypanel.core.tools.profiles import ProfileError
 
 TOOLS_DIR = PROFILES_DIR.parent / "tools"
@@ -13,7 +13,7 @@ def _tool(tool_id: str) -> definitions.ToolDefinition:
     return definitions.load(TOOLS_DIR / f"{tool_id}.json")
 
 
-def test_one_built_in_profile_per_tool_and_each_fits_its_tool() -> None:
+def test_one_starter_profile_per_tool_and_each_fits_its_tool() -> None:
     paths = sorted(PROFILES_DIR.glob("*.json"))
     assert {p.stem for p in paths} == {p.stem for p in TOOLS_DIR.glob("*.json")}
     for path in paths:
