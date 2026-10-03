@@ -1,3 +1,8 @@
+<p align="right">
+  <a href="README.md"><img src="https://flagcdn.com/24x18/us.png" width="24" height="18" alt="English" title="English"></a>
+  <a href="README.pt-BR.md"><img src="https://flagcdn.com/24x18/br.png" width="24" height="18" alt="Português (Brasil)" title="Português (Brasil)"></a>
+</p>
+
 # CapyPanel
 
 A Windows desktop app for IT staff: keep the computers on your network in one organized list,
@@ -10,15 +15,15 @@ and open a remote screen on any of them with the tools you already use.
 - **Connection profiles** say how each host is reached: which viewer, which login (user and
   password, or password only), and options such as UltraVNC's SecureVNC plugin. Set one on a
   group and every host inside follows it.
-- **Passwords stay in memory**, one per profile, until CapyPanel closes. They're never saved, and
-  never sent to a server that asks for a different kind of login.
+- **Passwords stay in memory**, one per profile, until CapyPanel closes; they're never saved.
+  Before sending a Windows password, CapyPanel checks the server asks for one.
 - **English and Portuguese (Brazil)**, switched live. **Seven themes**, from native Windows to
   CapyPanel's own look.
 
 Built for any organization: nothing is tied to one company's network, tools or language.
 
-> **Status:** early development (version 0.9.0), working toward the first public alpha. It
-> runs from source today; there's no installer yet.
+> **Status: alpha (0.9.0).** Usable today, and growing one feature at a time. It runs from
+> source; there's no installer yet.
 
 ## Documentation
 
