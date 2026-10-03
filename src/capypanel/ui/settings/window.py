@@ -19,6 +19,8 @@ from capypanel.core import i18n, settings
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.locations import same_path
 from capypanel.core.i18n import _
+from capypanel.core.tools.catalog import Catalogs
+from capypanel.ui.settings.connections import ConnectionsPage
 from capypanel.ui.settings.pages import (
     AppearancePage,
     GeneralPage,
@@ -36,6 +38,7 @@ class SettingsChoices:
     rewritten: bool  # the chosen list's file was written from Settings, so reopen it
     theme_id: str
     language: str
+    default_profile: str
 
 
 class SettingsDialog(QDialog):
@@ -50,6 +53,7 @@ class SettingsDialog(QDialog):
         document: OpenList | None,
         recent: list[Path],
         registry: themes.Registry,
+        catalogs: Catalogs,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Settings"))
@@ -66,11 +70,13 @@ class SettingsDialog(QDialog):
             document=document,
             recent=recent,
         )
+        self.connections = ConnectionsPage(catalogs, document)
         self.appearance = AppearancePage(registry, themes.current().id)
         self.language = LanguagePage(i18n.language())
         self.pages: dict[str, Page] = {
             "general": self.general,
             "host_lists": self.host_lists,
+            "connections": self.connections,
             "appearance": self.appearance,
             "language": self.language,
         }
@@ -121,6 +127,7 @@ class SettingsDialog(QDialog):
             rewritten=any(same_path(host_list, p) for p in written),
             theme_id=self.appearance.theme_id(),
             language=self.language.language(),
+            default_profile=self.connections.default_choice(),
         )
 
     def showEvent(self, event: QShowEvent) -> None:

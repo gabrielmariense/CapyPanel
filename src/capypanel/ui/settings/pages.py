@@ -166,7 +166,7 @@ class GeneralPage(Page):
             grid.addWidget(PathLabel(folder), row, 1)
             grid.addWidget(button, row, 2)
         note = _(
-            "Your settings, personal list, tools and profiles. Only you and administrators "
+            "Your settings, personal list and your own tool paths. Only you and administrators "
             "can open this folder. Each user's log is named after their account."
         )
         if paths.portable:

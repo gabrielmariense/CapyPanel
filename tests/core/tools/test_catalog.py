@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from capypanel.core.tools import catalog
-from capypanel.core.tools.catalog import SHIPPED_DIR, Layer
+from capypanel.core.tools.catalog import Layer
 
 
 def _write(folder: Path, tool_id: str, name: str, **extra: Any) -> None:
@@ -52,14 +52,3 @@ def test_editing_saves_a_user_copy_and_reset_brings_back_the_original(tmp_path: 
     tools.reset("viewer")
     back = tools.find("viewer")
     assert back is not None and back.layer is Layer.SHIPPED and not back.item.executable
-
-
-def test_profiles_load_from_their_own_layers(tmp_path: Path) -> None:
-    company = tmp_path / "company"
-    company.mkdir()
-    data = {"schema": 1, "id": "pis", "tool": "realvnc", "login": "account", "name": "Our Pis"}
-    (company / "pis.json").write_text(json.dumps(data), encoding="utf-8")
-    profiles = catalog.profiles_catalog(tmp_path / "user", company, SHIPPED_DIR / "profiles")
-    pis = profiles.find("pis")
-    assert pis is not None and pis.layer is Layer.COMPANY and pis.item.name == "Our Pis"
-    assert profiles.find("ultravnc-password") is not None  # shipped ones are still there

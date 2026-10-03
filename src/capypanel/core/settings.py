@@ -1,7 +1,7 @@
 """Where the app keeps its files, portable mode, and the settings file.
 
 Everything lives in one folder per computer, C:\\ProgramData\\CapyPanel (or <app>\\userdata when
-portable): users\\<user@DOMAIN>\\ holds each user's settings, personal list, tools and profiles,
+portable): users\\<user@DOMAIN>\\ holds each user's settings, personal list and own tool paths,
 private to that user and administrators; logs\\<user@DOMAIN>.log holds one log per user."""
 
 import json
@@ -65,10 +65,6 @@ class Paths:
     def user_tools_dir(self) -> Path:
         return self.user_dir / "tools"
 
-    @property
-    def user_profiles_dir(self) -> Path:
-        return self.user_dir / "profiles"
-
 
 def resolve_paths(
     folder: Path | None = None,
@@ -86,7 +82,7 @@ def resolve_paths(
 
 
 def ensure_dirs(paths: Paths) -> None:
-    """Create the user's folder, private to them. Subfolders (tools, profiles) are created
+    """Create the user's folder, private to them. Its tools subfolder is created
     only when something is first saved there. Raises UserFolderError if someone else made
     the folder first."""
     paths.log_dir.mkdir(parents=True, exist_ok=True)

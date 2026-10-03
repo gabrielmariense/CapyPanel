@@ -13,7 +13,7 @@ uv run capypanel
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
 The version shows in the title bar, followed by the commit when you run from source, e.g.
-`CapyPanel 0.8.1 (f0a637f)`. Quote it when you report a problem.
+`CapyPanel 0.9.0 (abc1234)`. Quote it when you report a problem.
 
 To open remote screens you also need a VNC viewer: [UltraVNC](https://uvnc.com) or
 [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/). See

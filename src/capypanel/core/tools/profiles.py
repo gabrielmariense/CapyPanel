@@ -1,12 +1,12 @@
 """A connection profile: one way to reach a kind of host. Hosts and groups refer to it by id, so
 changing a profile changes every host that uses it. One JSON file per profile:
 
-    {"schema": 1, "id": "ultravnc-account-securevnc", "tool": "ultravnc",
-     "login": "account", "options": ["securevnc"]}
+    {"schema": 1, "id": "clinics", "name": "Clinics (MS-Logon + SecureVNC)",
+     "tool": "ultravnc", "login": "account", "options": ["securevnc"]}
 
 `login` says what the prompt asks for: "account" (user and password), "password" or "none".
 A typed password is remembered per profile, so one profile's password never reaches another's
-hosts. `name` is optional: without it the name is built from the tool, login and options."""
+hosts. Every profile has a name, chosen by whoever made it."""
 
 import json
 import re
@@ -47,16 +47,11 @@ def login_label(login: str) -> str:
     }.get(login, login)
 
 
-def label(profile: ConnectionProfile, tool: ToolDefinition | None) -> str:
-    """The name shown: the profile's own, else e.g. "UltraVNC Viewer — password only"."""
-    if profile.name:
-        return profile.name
-    if tool is None:
-        return profile.id
-    text = f"{tool.name} — {login_label(profile.login)}"
-    for option in profile.options:
-        text += f" + {tool.options.get(option, option)}"
-    return text
+def logins_of(tool: ToolDefinition) -> tuple[str, ...]:
+    """The logins a tool supports, in the order the editor offers them."""
+    if not tool.wants_password:
+        return ("none",)
+    return ("account", "password") if tool.wants_user else ("password",)
 
 
 def check_fits(profile: ConnectionProfile, tool: ToolDefinition) -> None:
@@ -107,9 +102,9 @@ def from_data(data: object) -> ConnectionProfile:
     port = data.get("port")
     if port is not None and (not isinstance(port, int) or not 1 <= port <= 65535):
         raise ProfileError(_("The “port” must be a number from 1 to 65535."))
-    name = data.get("name", "")
-    if not isinstance(name, str):
-        raise ProfileError(_("The profile's “name” must be a text."))
+    name = data.get("name")
+    if not isinstance(name, str) or not name.strip():
+        raise ProfileError(_("The profile needs a “name”."))
     assert isinstance(profile_id, str) and isinstance(tool, str)
     return ConnectionProfile(
         id=profile_id,
@@ -126,11 +121,10 @@ def to_data(profile: ConnectionProfile) -> dict[str, Any]:
     data: dict[str, Any] = {
         "schema": SCHEMA,
         "id": profile.id,
+        "name": profile.name,
         "tool": profile.tool,
         "login": profile.login,
     }
-    if profile.name:
-        data["name"] = profile.name
     if profile.options:
         data["options"] = list(profile.options)
     if profile.port is not None:

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-01 17:12-0300\n"
+"POT-Creation-Date: 2026-10-03 12:09-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,6 +18,9 @@ msgstr ""
 "Generated-By: Babel 2.18.0\n"
 
 msgid "&Address:"
+msgstr ""
+
+msgid "&Add…"
 msgstr ""
 
 msgid "&Browse…"
@@ -32,6 +35,9 @@ msgstr ""
 msgid "&Default list"
 msgstr ""
 
+msgid "&Delete…"
+msgstr ""
+
 msgid "&Details pane"
 msgstr ""
 
@@ -39,6 +45,9 @@ msgid "&Edit host…"
 msgstr ""
 
 msgid "&Edit selected…"
+msgstr ""
+
+msgid "&Edit…"
 msgstr ""
 
 msgid "&File"
@@ -60,6 +69,9 @@ msgid "&Language"
 msgstr ""
 
 msgid "&Locate…"
+msgstr ""
+
+msgid "&Login:"
 msgstr ""
 
 msgid "&Manual connection…"
@@ -102,6 +114,9 @@ msgid "&Tags:"
 msgstr ""
 
 msgid "&Theme"
+msgstr ""
+
+msgid "&Tool:"
 msgstr ""
 
 msgid "&User:"
@@ -153,6 +168,9 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
+msgid "Automatic"
+msgstr ""
+
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
 msgstr ""
@@ -191,6 +209,15 @@ msgstr ""
 msgid "Connection &profile:"
 msgstr ""
 
+msgid "Connection &profiles…"
+msgstr ""
+
+msgid "Connection profiles"
+msgstr ""
+
+msgid "Connections"
+msgstr ""
+
 msgid "Copy &address"
 msgstr ""
 
@@ -202,6 +229,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't create “{path}”: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't delete the profile: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -225,7 +256,15 @@ msgid "Couldn't save the copy: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't save the default profile: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't save the list: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't save the profile: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -242,17 +281,42 @@ msgstr ""
 msgid "Created when opened"
 msgstr ""
 
+msgid "D&uplicate…"
+msgstr ""
+
 msgid "Default"
+msgstr ""
+
+#, python-brace-format
+msgid "Default ({port})"
 msgstr ""
 
 #, python-brace-format
 msgid "Default: {profile}"
 msgstr ""
 
+msgid "Delete"
+msgstr ""
+
+msgid "Delete connection profile"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Delete the connection profile “{profile}”? Everyone who uses this folder "
+"loses it."
+msgstr ""
+
+msgid "Duplicate connection profile"
+msgstr ""
+
 msgid "E&xit"
 msgstr ""
 
 msgid "Each argument group must be a list of texts."
+msgstr ""
+
+msgid "Edit connection profile"
 msgstr ""
 
 msgid "Edit host"
@@ -262,6 +326,9 @@ msgid "File not found"
 msgstr ""
 
 msgid "For example \\\\server\\share\\hosts.json"
+msgstr ""
+
+msgid "Forget the chosen path and find the tool by itself again"
 msgstr ""
 
 msgid "From each host's group"
@@ -310,9 +377,18 @@ msgstr ""
 msgid "Hosts"
 msgstr ""
 
+msgid "Hosts with no profile &use:"
+msgstr ""
+
 msgid ""
 "If that list can't be opened, CapyPanel tries the default list. If that "
 "also fails, it opens your personal list."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"In the open list it's set on {hosts} and {groups}. They'll use their "
+"group's profile, or the default, instead."
 msgstr ""
 
 msgid "Information"
@@ -340,6 +416,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "List created at “{path}”. Click Save to open it."
+msgstr ""
+
+msgid "Locate…"
 msgstr ""
 
 msgid "Logs"
@@ -370,6 +449,9 @@ msgstr ""
 msgid "Native Windows styling, with your accent color."
 msgstr ""
 
+msgid "New connection profile"
+msgstr ""
+
 msgid "New empty host list"
 msgstr ""
 
@@ -389,6 +471,9 @@ msgid "No recent lists"
 msgstr ""
 
 msgid "Not found"
+msgstr ""
+
+msgid "Not found: install it, or select its .exe."
 msgstr ""
 
 #, python-brace-format
@@ -421,6 +506,9 @@ msgid_plural "Opened {n} remote screens."
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "Options:"
+msgstr ""
+
 msgid "P&ort:"
 msgstr ""
 
@@ -447,6 +535,9 @@ msgid "Reload the list"
 msgstr ""
 
 msgid "Remote screen (&VNC)"
+msgstr ""
+
+msgid "Remote tools on this PC"
 msgstr ""
 
 msgid "Remove"
@@ -497,6 +588,16 @@ msgstr ""
 msgid "Shared"
 msgstr ""
 
+msgid ""
+"Shared by everyone who uses CapyPanel from this folder. Read-only: only "
+"people Windows lets write this folder can change them."
+msgstr ""
+
+msgid ""
+"Shared by everyone who uses CapyPanel from this folder. You can change "
+"them."
+msgstr ""
+
 msgid "Shared or &other list"
 msgstr ""
 
@@ -522,6 +623,9 @@ msgid "That group doesn't exist."
 msgstr ""
 
 msgid "That host is no longer in the list."
+msgstr ""
+
+msgid "That profile doesn't exist."
 msgstr ""
 
 #, python-brace-format
@@ -580,7 +684,7 @@ msgstr ""
 msgid "The placeholder “{{{name}}}” goes with the “{method}” credential method."
 msgstr ""
 
-msgid "The profile's “name” must be a text."
+msgid "The profile needs a “name”."
 msgstr ""
 
 msgid "The profile's “options” must be a list of option ids."
@@ -603,6 +707,9 @@ msgid "The “executable” must be a path."
 msgstr ""
 
 msgid "The “port” must be a number from 1 to 65535."
+msgstr ""
+
+msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr ""
 
 msgid "This connection profile needs a newer version of CapyPanel."
@@ -683,7 +790,7 @@ msgid "Your files"
 msgstr ""
 
 msgid ""
-"Your settings, personal list, tools and profiles. Only you and "
+"Your settings, personal list and your own tool paths. Only you and "
 "administrators can open this folder. Each user's log is named after their"
 " account."
 msgstr ""
@@ -719,6 +826,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} group"
+msgid_plural "{n} groups"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} host"
 msgid_plural "{n} hosts"
 msgstr[0] ""
@@ -743,6 +856,10 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{profile} (copy)"
+msgstr ""
+
+#, python-brace-format
 msgid "{profile} (default)"
 msgstr ""
 
@@ -752,6 +869,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{profile} (not available on this PC)"
+msgstr ""
+
+#, python-brace-format
+msgid "{tool} (not installed on this PC)"
 msgstr ""
 
 #, python-brace-format
@@ -773,7 +894,8 @@ msgstr ""
 #, python-brace-format
 msgid ""
 "{tool} wasn't found on this PC. Install it, or show CapyPanel where it "
-"is. The path is saved for your account."
+"is. The path is saved for your account; you can also change it later in "
+"Settings > Connections."
 msgstr ""
 
 msgid "“account_types” must be a list of numbers from 1 to 255."
