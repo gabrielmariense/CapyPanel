@@ -78,7 +78,7 @@ def _rows(view: HostListsView) -> list[tuple[str, str, bool]]:
     for i in range(view.tree.topLevelItemCount()):
         item = view.tree.topLevelItem(i)
         assert item is not None
-        rows.append((item.text(0), item.text(2), item.font(0).bold()))
+        rows.append((item.text(0), item.text(1), item.font(0).bold()))
     return rows
 
 
@@ -294,3 +294,38 @@ def test_appearance_applies_the_chosen_theme(window: MainWindow) -> None:
     window.apply_settings(dialog.choices())
     assert themes.current().id == "paper"
     assert settings.load_settings(window._paths.settings_file)["theme"] == "paper"
+
+
+def test_the_path_is_in_the_tooltip_and_same_names_show_their_folder(
+    window: MainWindow, tmp_path: Path
+) -> None:
+    a, b = tmp_path / "north" / "hosts.json", tmp_path / "south" / "hosts.json"
+    window._prefs["host_lists"] = [str(a), str(b)]
+    view = window.settings_dialog().host_lists.view
+    assert [r[0] for r in _rows(view)][2:] == ["hosts.json (north)", "hosts.json (south)"]
+    item = view.tree.topLevelItem(2)
+    assert item is not None and item.toolTip(0) == str(a) == item.toolTip(1)
+
+
+@pytest.mark.parametrize("answer", ["stay", "discard", "save"])
+def test_leaving_connections_with_changes_asks_first(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch, answer: str
+) -> None:
+    dialog = window.settings_dialog()
+    monkeypatch.setattr(type(dialog), "_ask_unsaved", lambda _self: answer)
+    connections_row = list(dialog.pages).index("connections")
+    dialog.page_list.setCurrentRow(connections_row)
+    page = dialog.connections
+    page.default.setCurrentIndex(page.default.findData("realvnc"))  # an unsaved change
+    assert page.has_changes()
+    dialog.page_list.setCurrentRow(0)  # try to go to General
+    store = page.store
+    if answer == "stay":
+        assert dialog.stack.currentWidget() is page and page.has_changes()
+        assert dialog.page_list.currentRow() == connections_row
+    elif answer == "discard":
+        assert dialog.stack.currentIndex() == 0 and not page.has_changes()
+        assert store.default_id() == "ultravnc"  # nothing written
+    else:
+        assert dialog.stack.currentIndex() == 0 and not page.has_changes()
+        assert store.default_id() == "realvnc"  # written now, not only on Save

@@ -61,13 +61,11 @@ class HostListsView(QWidget):
 
         self.tree = QTreeWidget()
         self.tree.setRootIsDecorated(False)
-        self.tree.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # keeps the folder's end
-        self.tree.setHeaderLabels([_("List"), _("Folder"), _("Access")])
+        self.tree.setHeaderLabels([_("List"), _("Access")])  # the full path is the tooltip
         header = self.tree.header()
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         self.add_button = QPushButton(_("&Add existing…"))
         self.new_button = QPushButton(_("&New…"))
         self.copy_button = QPushButton(_("&Copy current list to…"))
@@ -124,22 +122,27 @@ class HostListsView(QWidget):
     def _fill(self, select: Path | None) -> None:
         self.tree.clear()
         current = self._document.path if self._document else None
+        names = [p.name.casefold() for p in self.added]
         for path in (self._default, self._personal, *self.added):
             kind = self._kind(path)
             name = {
                 ListKind.DEFAULT: _("Default list"),
                 ListKind.PERSONAL: _("Personal list"),
             }.get(kind, path.name)
+            if kind is ListKind.SHARED and names.count(path.name.casefold()) > 1:
+                name = f"{path.name} ({path.parent.name})"  # two "hosts.json": which is which
             access = locations.list_access(path, shared=kind is ListKind.DEFAULT)
-            item = QTreeWidgetItem([name, str(path.parent), access_text(access, kind)])
+            item = QTreeWidgetItem([name, access_text(access, kind)])
             item.setData(0, ROLE_PATH, str(path))
-            item.setToolTip(1, str(path))
-            if current is not None and locations.same_path(path, current):
+            is_open = current is not None and locations.same_path(path, current)
+            tip = _("{path} (open now)").format(path=path) if is_open else str(path)
+            for column in range(2):
+                item.setToolTip(column, tip)
+            if is_open:
                 font = item.font(0)
                 font.setBold(True)
-                for column in range(3):
+                for column in range(2):
                     item.setFont(column, font)
-                item.setToolTip(0, _("Open now"))
             self.tree.addTopLevelItem(item)
         if select is not None:
             self.select(select)

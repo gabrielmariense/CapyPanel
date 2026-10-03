@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 18:17-0300\n"
+"POT-Creation-Date: 2026-10-03 18:39-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -38,6 +38,9 @@ msgstr ""
 msgid "&Details pane"
 msgstr ""
 
+msgid "&Discard changes"
+msgstr ""
+
 msgid "&Edit host…"
 msgstr ""
 
@@ -63,6 +66,9 @@ msgid "&Host lists…"
 msgstr ""
 
 msgid "&Inventory"
+msgstr ""
+
+msgid "&Keep editing"
 msgstr ""
 
 msgid "&Language"
@@ -105,6 +111,9 @@ msgid "&Remove from the list"
 msgstr ""
 
 msgid "&Remove selected"
+msgstr ""
+
+msgid "&Save changes"
 msgstr ""
 
 msgid "&Settings…"
@@ -336,9 +345,6 @@ msgstr ""
 msgid "Find automatically"
 msgstr ""
 
-msgid "Folder"
-msgstr ""
-
 msgid "Forgets it here; the file itself is never deleted"
 msgstr ""
 
@@ -498,9 +504,6 @@ msgstr ""
 msgid "Open folder"
 msgstr ""
 
-msgid "Open now"
-msgstr ""
-
 #, python-brace-format
 msgid "Open {n} remote screen at once?"
 msgid_plural "Open {n} remote screens at once?"
@@ -652,6 +655,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
+msgstr ""
+
+msgid "The changes on the Connections page aren't saved yet."
 msgstr ""
 
 #, python-brace-format
@@ -815,6 +821,9 @@ msgstr ""
 msgid "Unknown tool kind “{kind}”."
 msgstr ""
 
+msgid "Unsaved changes"
+msgstr ""
+
 msgid "Use &defaults"
 msgstr ""
 
@@ -917,6 +926,10 @@ msgid "{n} selected"
 msgid_plural "{n} selected"
 msgstr[0] ""
 msgstr[1] ""
+
+#, python-brace-format
+msgid "{path} (open now)"
+msgstr ""
 
 #, python-brace-format
 msgid "{profile} (copy)"

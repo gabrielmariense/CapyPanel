@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 18:17-0300\n"
+"POT-Creation-Date: 2026-10-03 18:39-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -39,6 +39,9 @@ msgstr "E&xcluir…"
 msgid "&Details pane"
 msgstr "Painel de &detalhes"
 
+msgid "&Discard changes"
+msgstr "&Descartar alterações"
+
 msgid "&Edit host…"
 msgstr "&Editar host…"
 
@@ -65,6 +68,9 @@ msgstr "&Listas de hosts…"
 
 msgid "&Inventory"
 msgstr "&Inventário"
+
+msgid "&Keep editing"
+msgstr "&Continuar editando"
 
 msgid "&Language"
 msgstr "&Idioma"
@@ -107,6 +113,9 @@ msgstr "Re&mover da lista"
 
 msgid "&Remove selected"
 msgstr "&Remover selecionado"
+
+msgid "&Save changes"
+msgstr "&Salvar alterações"
 
 msgid "&Settings…"
 msgstr "&Configurações…"
@@ -337,9 +346,6 @@ msgstr "Arquivo não encontrado"
 msgid "Find automatically"
 msgstr "Encontrar automaticamente"
 
-msgid "Folder"
-msgstr "Pasta"
-
 msgid "Forgets it here; the file itself is never deleted"
 msgstr "Esquece a lista aqui; o arquivo em si nunca é excluído"
 
@@ -491,9 +497,6 @@ msgstr "Abrir &Configurações"
 msgid "Open folder"
 msgstr "Abrir pasta"
 
-msgid "Open now"
-msgstr "Aberta agora"
-
 #, python-brace-format
 msgid "Open {n} remote screen at once?"
 msgid_plural "Open {n} remote screens at once?"
@@ -634,6 +637,9 @@ msgstr "Esse perfil não existe."
 #, python-brace-format
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
 msgstr "Os argumentos usam uma opção que não está em “options”: “{option}”."
+
+msgid "The changes on the Connections page aren't saved yet."
+msgstr "As alterações na página Conexões ainda não foram salvas."
 
 #, python-brace-format
 msgid "The connection profile “{profile}” isn't available on this PC."
@@ -784,6 +790,9 @@ msgstr "Marcador desconhecido “{{{name}}}” nos argumentos."
 msgid "Unknown tool kind “{kind}”."
 msgstr "Tipo de ferramenta desconhecido: “{kind}”."
 
+msgid "Unsaved changes"
+msgstr "Alterações não salvas"
+
 msgid "Use &defaults"
 msgstr "Usar &padrões"
 
@@ -878,6 +887,10 @@ msgid "{n} selected"
 msgid_plural "{n} selected"
 msgstr[0] "{n} selecionado"
 msgstr[1] "{n} selecionados"
+
+#, python-brace-format
+msgid "{path} (open now)"
+msgstr "{path} (aberta agora)"
 
 #, python-brace-format
 msgid "{profile} (copy)"
