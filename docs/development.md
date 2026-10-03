@@ -38,6 +38,16 @@ uv run python scripts/translations.py
 Then translate the new entries in each `.po` file under `src/capypanel/locale/` and run the
 script again to compile them. The tests fail until every text is translated and compiled.
 
+## Documentation website
+
+The pages in `docs/` are also published as a website with
+[MkDocs Material](https://squidfunk.github.io/mkdocs-material/), each time they change on
+`main`. To preview it while writing:
+
+```
+uv run --only-group docs mkdocs serve
+```
+
 ## Versions
 
 Versions are `0.MINOR.PATCH` until 1.0: a merged feature bumps MINOR, a fix-only change bumps

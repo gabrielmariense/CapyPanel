@@ -1,0 +1,46 @@
+# The documentation website, built from docs/ with MkDocs Material and published to GitHub Pages.
+site_name: CapyPanel
+site_description: Manage the computers on your network from one window.
+site_url: https://gabrielmariense.github.io/CapyPanel/
+repo_url: https://github.com/gabrielmariense/CapyPanel
+repo_name: gabrielmariense/CapyPanel
+edit_uri: edit/main/docs/
+
+nav:
+  - Home: README.md
+  - Getting started: getting-started.md
+  - Host lists: host-lists.md
+  - Connecting: connecting.md
+  - Settings and files: settings-and-files.md
+  - Development: development.md
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.footer
+    - search.highlight
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+
+validation:
+  links:
+    anchors: warn

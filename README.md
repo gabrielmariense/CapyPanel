@@ -22,6 +22,8 @@ Built for any organization: nothing is tied to one company's network, tools or l
 
 ## Documentation
 
+Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrielmariense.github.io/CapyPanel/)**.
+
 - [Getting started](docs/getting-started.md): run CapyPanel and add your first hosts
 - [Host lists](docs/host-lists.md): groups, tags, and default, personal and shared lists
 - [Connecting](docs/connecting.md): VNC viewers, connection profiles and passwords
