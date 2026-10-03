@@ -1,11 +1,12 @@
 """Settings > Connections: the shared connection profiles (add, edit, duplicate, delete, the
-default one) and where each remote tool was found on this PC. Profile and tool changes are
-saved when made; only the default profile waits for Save, like every other setting."""
+default one) and where each remote tool was found on this PC. Like every other setting, nothing
+is written until Save; Cancel drops every change made here."""
 
-from dataclasses import replace
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -32,11 +33,41 @@ from capypanel.core.i18n import _, ngettext
 from capypanel.core.tools import detect
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.definitions import ToolDefinition
-from capypanel.core.tools.profiles import ConnectionProfile, ProfileError, login_label, logins_of
+from capypanel.core.tools.profile_store import make_id
+from capypanel.core.tools.profiles import ConnectionProfile, login_label, logins_of
 from capypanel.ui.hosts import confirm
 from capypanel.ui.settings.pages import Page, PathLabel, hint
 
 MAX_PROFILE_NAME = 64
+
+
+@dataclass(frozen=True)
+class ConnectionChanges:
+    """What Save writes: profiles added or changed, profiles deleted, the default, tool paths."""
+
+    saved: tuple[ConnectionProfile, ...] = ()
+    deleted: tuple[str, ...] = ()
+    default: str = ""
+    tool_paths: dict[str, str] = field(default_factory=dict)  # tool id -> .exe; "" = automatic
+
+
+def apply(catalogs: Catalogs, changes: ConnectionChanges) -> None:
+    """Writes what was changed on the page, once Save is clicked. Raises ProfileError, OSError."""
+    store = catalogs.profiles
+    for profile_id in changes.deleted:
+        store.delete(profile_id)
+    for profile in changes.saved:
+        store.save(profile)
+    if changes.default and changes.default != store.default_id():
+        store.set_default(changes.default)
+    for tool_id, executable in changes.tool_paths.items():
+        entry = catalogs.tools.find(tool_id)
+        if entry is None:
+            continue
+        if executable:
+            catalogs.tools.save_user_copy(replace(entry.item, executable=executable))
+        else:
+            catalogs.tools.reset(tool_id)
 
 
 class ProfileDialog(QDialog):
@@ -146,6 +177,10 @@ class ConnectionsPage(Page):
         self.store = catalogs.profiles
         self.document = document
         self.can_edit = self.store.can_edit()
+        self._profiles = {p.id: p for p in self.store.all()}
+        self._changed: set[str] = set()
+        self._deleted: set[str] = set()
+        self._tool_paths: dict[str, str] = {}
 
         profiles_box = QGroupBox(_("Connection profiles"))
         folder = PathLabel(self.store.folder)
@@ -196,13 +231,13 @@ class ConnectionsPage(Page):
         self.default.setCurrentIndex(max(self.default.findData(self.store.default_id()), 0))
         self._fill_tools()
 
-    # ---- profiles ----
+    # ---- profiles (a working copy until Save) ----
 
     def _fill_profiles(self, select: str | None) -> None:
         current_default = self.default.currentData() or self.store.default_id()
         self.list.clear()
         self.default.clear()
-        for profile in self.store.all():
+        for profile in sorted(self._profiles.values(), key=lambda p: p.name.casefold()):
             item = QListWidgetItem(profile.name)
             item.setData(Qt.ItemDataRole.UserRole, profile.id)
             self.list.addItem(item)
@@ -213,9 +248,9 @@ class ConnectionsPage(Page):
         self.default.setCurrentIndex(max(self.default.findData(current_default), 0))
         self._update_buttons()
 
-    def _selected(self) -> str | None:
+    def _selected(self) -> ConnectionProfile | None:
         items = self.list.selectedItems()
-        return items[0].data(Qt.ItemDataRole.UserRole) if items else None
+        return self._profiles.get(items[0].data(Qt.ItemDataRole.UserRole)) if items else None
 
     def _update_buttons(self) -> None:
         picked = self.can_edit and self._selected() is not None
@@ -224,40 +259,35 @@ class ConnectionsPage(Page):
             button.setEnabled(picked)
 
     def _dialog(self, title: str, profile: ConnectionProfile | None) -> ProfileDialog:
-        tools = [e.item for e in self.catalogs.tools.all()]
+        tools = [self._tool_view(e.item) for e in self.catalogs.tools.all()]
         installed = {t.id for t in tools if detect.find_executable(t) is not None}
         return ProfileDialog(self, title, tools, installed, profile)
 
     def add(self) -> None:
         dialog = self._dialog(_("New connection profile"), None)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            name = dialog.name.text().strip()
-            self._save(dialog.profile(self.store.new_id(name)))
+            self._keep(dialog.profile(make_id(dialog.name.text().strip(), self._profiles)))
 
     def edit(self) -> None:
-        selected = self._selected()
-        profile = self.store.find(selected) if selected else None
+        profile = self._selected()
         if profile is None or not self.can_edit:
             return
         dialog = self._dialog(_("Edit connection profile"), profile)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            self._save(replace(dialog.profile(profile.id), extra=profile.extra))
+            self._keep(replace(dialog.profile(profile.id), extra=profile.extra))
 
     def duplicate(self) -> None:
-        selected = self._selected()
-        profile = self.store.find(selected) if selected else None
-        if profile is None:
+        profile = self._selected()
+        if profile is None or not self.can_edit:
             return
         copy = replace(profile, name=_("{profile} (copy)").format(profile=profile.name))
         dialog = self._dialog(_("Duplicate connection profile"), copy)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            name = dialog.name.text().strip()
-            self._save(dialog.profile(self.store.new_id(name)))
+            self._keep(dialog.profile(make_id(dialog.name.text().strip(), self._profiles)))
 
     def delete(self) -> None:
-        selected = self._selected()
-        profile = self.store.find(selected) if selected else None
-        if profile is None:
+        profile = self._selected()
+        if profile is None or not self.can_edit:
             return
         text = _("Delete the connection profile “{profile}”? Everyone who uses this folder "
                  "loses it.").format(profile=profile.name)  # fmt: skip
@@ -272,10 +302,10 @@ class ConnectionsPage(Page):
             )
         if not confirm(self, _("Delete connection profile"), text, _("Delete")):
             return
-        try:
-            self.store.delete(profile.id)
-        except (ProfileError, OSError) as e:
-            self._error(_("Couldn't delete the profile: {error}").format(error=e))
+        del self._profiles[profile.id]
+        self._changed.discard(profile.id)
+        if self.store.find(profile.id) is not None:
+            self._deleted.add(profile.id)
         self._fill_profiles(select=None)
 
     def _uses(self, profile_id: str) -> tuple[int, int]:
@@ -287,18 +317,35 @@ class ConnectionsPage(Page):
             sum(g.profile == profile_id for g in hosts.groups),
         )
 
-    def _save(self, profile: ConnectionProfile) -> None:
-        try:
-            self.store.save(profile)
-        except (ProfileError, OSError) as e:
-            self._error(_("Couldn't save the profile: {error}").format(error=e))
-            return
+    def _keep(self, profile: ConnectionProfile) -> None:
+        self._profiles[profile.id] = profile
+        self._changed.add(profile.id)
+        self._deleted.discard(profile.id)
         self._fill_profiles(select=profile.id)
 
     def default_choice(self) -> str:
-        return self.default.currentData() or self.store.default_id()
+        return self.default.currentData() or ""
 
-    # ---- tools ----
+    def changes(self) -> ConnectionChanges:
+        return ConnectionChanges(
+            saved=tuple(self._profiles[pid] for pid in sorted(self._changed)),
+            deleted=tuple(sorted(self._deleted)),
+            default=self.default_choice(),
+            tool_paths=dict(self._tool_paths),
+        )
+
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        # Same fix as the Settings page list: place the rows again once the theme's padding
+        # has reached the list, or they draw on top of each other.
+        self.list.doItemsLayout()
+
+    # ---- tools (paths chosen here are also kept until Save) ----
+
+    def _tool_view(self, tool: ToolDefinition) -> ToolDefinition:
+        if tool.id in self._tool_paths:
+            return replace(tool, executable=self._tool_paths[tool.id])
+        return tool
 
     def _fill_tools(self) -> None:
         while self._tools_grid.count():
@@ -307,7 +354,7 @@ class ConnectionsPage(Page):
             if widget is not None:
                 widget.deleteLater()
         for row, entry in enumerate(self.catalogs.tools.all()):
-            tool = entry.item
+            tool = self._tool_view(entry.item)
             found = detect.find_executable(tool)
             status = (
                 PathLabel(found) if found else hint(_("Not found: install it, or select its .exe."))
@@ -331,11 +378,11 @@ class ConnectionsPage(Page):
             _("Programs (*.exe)"),
         )
         if name:
-            self.catalogs.tools.save_user_copy(replace(tool, executable=name))
+            self._tool_paths[tool.id] = name
             self._fill_tools()
 
     def automatic(self, tool: ToolDefinition) -> None:
-        self.catalogs.tools.reset(tool.id)
+        self._tool_paths[tool.id] = ""
         self._fill_tools()
 
     def _error(self, message: str) -> None:

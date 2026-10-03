@@ -23,7 +23,8 @@ list**.
   its `.exe` by hand (for a portable copy, say), saved for your account only; **Automatic** goes
   back to finding it by itself.
 
-Profile changes are saved as you make them; the default profile is saved with Save.
+As everywhere in Settings, nothing on this page is written until you click Save; Cancel drops
+every change.
 
 ## Appearance
 

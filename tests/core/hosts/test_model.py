@@ -111,3 +111,14 @@ def test_a_name_stands_in_for_the_address_only_when_it_is_a_computer_name() -> N
     assert by_name.connect_address == "FIN-PC04"
     assert label.connect_address == ""
     assert with_ip.connect_address == "10.0.0.9"
+
+
+def test_a_profile_that_does_not_exist_is_skipped_for_the_group_s() -> None:
+    hl, hq, finance = _office()
+    hl = hl.set_group_profile(hq, "known")
+    hl = hl.set_group_profile(finance, "gone")
+    hl, pc = hl.add_host("PC1", finance, profile="also-gone")
+    exists = {"known"}.__contains__
+    profile, source = hl.profile_of(pc, exists)
+    assert profile == "known" and source is not None and source.id == hq
+    assert hl.profile_of(pc) == ("also-gone", None)  # without the check: the host's own

@@ -20,7 +20,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.locations import same_path
 from capypanel.core.i18n import _
 from capypanel.core.tools.catalog import Catalogs
-from capypanel.ui.settings.connections import ConnectionsPage
+from capypanel.ui.settings.connections import ConnectionChanges, ConnectionsPage
 from capypanel.ui.settings.pages import (
     AppearancePage,
     GeneralPage,
@@ -38,7 +38,7 @@ class SettingsChoices:
     rewritten: bool  # the chosen list's file was written from Settings, so reopen it
     theme_id: str
     language: str
-    default_profile: str
+    connections: ConnectionChanges
 
 
 class SettingsDialog(QDialog):
@@ -127,7 +127,7 @@ class SettingsDialog(QDialog):
             rewritten=any(same_path(host_list, p) for p in written),
             theme_id=self.appearance.theme_id(),
             language=self.language.language(),
-            default_profile=self.connections.default_choice(),
+            connections=self.connections.changes(),
         )
 
     def showEvent(self, event: QShowEvent) -> None:

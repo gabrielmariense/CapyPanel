@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 12:09-0300\n"
+"POT-Creation-Date: 2026-10-03 12:52-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -233,10 +233,6 @@ msgid "Couldn't create “{path}”: {error}"
 msgstr "Não foi possível criar “{path}”: {error}"
 
 #, python-brace-format
-msgid "Couldn't delete the profile: {error}"
-msgstr "Não foi possível excluir o perfil: {error}"
-
-#, python-brace-format
 msgid "Couldn't open “{path}”: {error}"
 msgstr "Não foi possível abrir “{path}”: {error}"
 
@@ -253,20 +249,16 @@ msgid "Couldn't reload the list: {error}"
 msgstr "Não foi possível recarregar a lista: {error}"
 
 #, python-brace-format
+msgid "Couldn't save the connection profiles: {error}"
+msgstr "Não foi possível salvar os perfis de conexão: {error}"
+
+#, python-brace-format
 msgid "Couldn't save the copy: {error}"
 msgstr "Não foi possível salvar a cópia: {error}"
 
 #, python-brace-format
-msgid "Couldn't save the default profile: {error}"
-msgstr "Não foi possível salvar o perfil padrão: {error}"
-
-#, python-brace-format
 msgid "Couldn't save the list: {error}"
 msgstr "Não foi possível salvar a lista: {error}"
-
-#, python-brace-format
-msgid "Couldn't save the profile: {error}"
-msgstr "Não foi possível salvar o perfil: {error}"
 
 #, python-brace-format
 msgid "Couldn't start {tool} for {target}: {error}"
@@ -475,6 +467,9 @@ msgstr[1] "Não abertos ({n}): {names}"
 
 msgid "Notes"
 msgstr "Observações"
+
+msgid "Open &Settings"
+msgstr "Abrir &Configurações"
 
 msgid "Open folder"
 msgstr "Abrir pasta"

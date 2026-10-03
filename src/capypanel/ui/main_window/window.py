@@ -47,6 +47,8 @@ from capypanel.ui.main_window.host_views import (
     HostTable,
     NavigationPane,
 )
+from capypanel.ui.settings import connections
+from capypanel.ui.settings.connections import ConnectionChanges
 from capypanel.ui.settings.window import SettingsChoices, SettingsDialog
 from capypanel.ui.themes import engine as themes
 
@@ -71,6 +73,7 @@ class MainWindow(QMainWindow):
         self.connector = Connector(
             self, Catalogs.for_paths(paths), SessionCredentials(), self._prefs
         )
+        self.connector.open_settings = lambda: self.open_settings("connections")
 
         self.commands = create_actions(self)
         self.nav = NavigationPane()
@@ -507,7 +510,9 @@ class MainWindow(QMainWindow):
             return
         host_list = self._doc.hosts
         requests = [
-            Request(h.name, Target(h.connect_address), host_list.profile_of(h)[0])
+            Request(
+                h.name, Target(h.connect_address), host_list.profile_of(h, self._profile_exists)[0]
+            )
             for h in hosts
             if h.connect_address
         ]
@@ -560,15 +565,19 @@ class MainWindow(QMainWindow):
         return ProfilePicker(
             choices=connector.choices(),
             inherited=lambda group_id: connector.inherited_label(
-                *host_list.group_profile(group_id or None)
+                *host_list.group_profile(group_id or None, self._profile_exists)
             ),
             label=connector.label,
         )
 
+    def _profile_exists(self, profile_id: str) -> bool:
+        """A profile this PC has: a host or group naming another one follows its group instead."""
+        return self.connector.catalogs.profiles.find(profile_id) is not None
+
     def _connection_text(self, host_list: HostList, host: Host) -> str:
-        profile_id, source = host_list.profile_of(host)
+        profile_id, source = host_list.profile_of(host, self._profile_exists)
         name = self.connector.label(profile_id)
-        if host.profile:
+        if profile_id and source is None:  # the host's own
             return name
         if source is not None:
             return _("{profile} (from group “{group}”)").format(profile=name, group=source.name)
@@ -581,7 +590,13 @@ class MainWindow(QMainWindow):
         submenu = menu.addMenu(_("Connection &profile"))
         submenu.setEnabled(self._writable() is not None)
         exclusive = QActionGroup(submenu)
-        for profile_id, text in [("", follow_text), *self.connector.choices()]:
+        choices = [("", follow_text), *self.connector.choices()]
+        if len(current) == 1 and next(iter(current)) not in dict(choices):
+            # Its own profile isn't on this PC: show it, checked, so it's clear why the group's
+            # profile doesn't apply.
+            own = next(iter(current))
+            choices.insert(1, (own, self.connector.label(own)))
+        for profile_id, text in choices:
             item = submenu.addAction(text.replace("&", "&&"))
             item.setCheckable(True)
             item.setChecked(current == {profile_id})  # several hosts that differ: none checked
@@ -627,7 +642,7 @@ class MainWindow(QMainWindow):
             self.apply_settings(dialog.choices())
         else:
             self._save_prefs()
-        self._selection_changed()  # profiles may have changed, saved as they were edited
+        self._selection_changed()  # Save may have changed profiles
 
     def settings_dialog(self) -> SettingsDialog:
         return SettingsDialog(
@@ -655,13 +670,14 @@ class MainWindow(QMainWindow):
             self.set_theme(choices.theme_id)
         if choices.language != i18n.language():
             self.set_language(choices.language)
-        store = self.connector.catalogs.profiles
-        if choices.default_profile != store.default_id() and store.can_edit():
-            try:
-                store.set_default(choices.default_profile)
-            except (ProfileError, OSError) as e:
-                self._error(_("Couldn't save the default profile: {error}").format(error=e))
+        self._apply_connections(choices.connections)
         self._save_prefs()
+
+    def _apply_connections(self, changes: ConnectionChanges) -> None:
+        try:
+            connections.apply(self.connector.catalogs, changes)
+        except (ProfileError, OSError) as e:
+            self._error(_("Couldn't save the connection profiles: {error}").format(error=e))
 
     # ---- look ----
 
@@ -784,7 +800,9 @@ class MainWindow(QMainWindow):
             menu.addSeparator()
             groups = {h.group for h in hosts}
             follow = (
-                self.connector.inherited_label(*self._doc.hosts.group_profile(groups.pop()))
+                self.connector.inherited_label(
+                    *self._doc.hosts.group_profile(groups.pop(), self._profile_exists)
+                )
                 if len(groups) == 1
                 else _("From each host's group")
             )
@@ -803,7 +821,9 @@ class MainWindow(QMainWindow):
         group = self._doc.hosts.group(group_id) if self._doc and group_id else None
         if group is not None and self._doc is not None:
             menu.addSeparator()
-            follow = self.connector.inherited_label(*self._doc.hosts.group_profile(group.parent))
+            follow = self.connector.inherited_label(
+                *self._doc.hosts.group_profile(group.parent, self._profile_exists)
+            )
             self._add_profile_menu(
                 menu, {group.profile}, follow, lambda p: self.set_group_profile(group.id, p)
             )

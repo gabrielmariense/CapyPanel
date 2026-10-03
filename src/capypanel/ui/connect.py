@@ -3,6 +3,7 @@ host's connection profile."""
 
 import logging
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -170,6 +171,7 @@ class Connector:
         self.catalogs = catalogs
         self.credentials = credentials
         self._prefs = prefs
+        self.open_settings: Callable[[], None] | None = None  # Settings > Connections
 
     # ---- profiles ----
 
@@ -342,9 +344,15 @@ class Connector:
             parent=self._parent,
         )
         locate = box.addButton(_("&Locate…"), QMessageBox.ButtonRole.AcceptRole)
+        settings = None
+        if self.open_settings is not None:
+            settings = box.addButton(_("Open &Settings"), QMessageBox.ButtonRole.ActionRole)
         box.addButton(QMessageBox.StandardButton.Cancel)
         box.setDefaultButton(locate)
         box.exec()
+        if settings is not None and box.clickedButton() is settings and self.open_settings:
+            self.open_settings()
+            return None
         if box.clickedButton() is not locate:
             return None
         name, _filter = QFileDialog.getOpenFileName(
