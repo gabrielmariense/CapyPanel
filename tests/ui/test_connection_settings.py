@@ -2,6 +2,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QDialogButtonBox, QFileDialog
 
 from capypanel.core import settings
@@ -33,12 +34,18 @@ def _answer(monkeypatch: pytest.MonkeyPatch, fill: Callable[[ProfileDialog], Non
 def _select(page: ConnectionsPage, profile_id: str) -> None:
     for row in range(page.list.count()):
         item = page.list.item(row)
-        if item is not None and item.data(256) == profile_id:  # Qt.ItemDataRole.UserRole
+        if item is not None and item.data(Qt.ItemDataRole.UserRole) == profile_id:
             page.list.setCurrentItem(item)
             item.setSelected(True)
 
 
-def test_add_a_shared_profile(catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch) -> None:
+def _names(page: ConnectionsPage) -> list[str]:
+    return [item.text() for row in range(page.list.count()) if (item := page.list.item(row))]
+
+
+def test_a_new_profile_is_written_only_on_save(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
     page = ConnectionsPage(catalogs, None)
 
     def fill(dialog: ProfileDialog) -> None:
@@ -48,18 +55,30 @@ def test_add_a_shared_profile(catalogs: Catalogs, monkeypatch: pytest.MonkeyPatc
 
     _answer(monkeypatch, fill)
     page.add()
-    stored = catalogs.profiles.find("clinics-securevnc")
-    assert stored == ConnectionProfile(
+    assert "Clinics (SecureVNC)" in _names(page)
+    assert catalogs.profiles.find("clinics-securevnc") is None  # nothing written yet
+    connections.apply(catalogs, page.changes())  # what Save does
+    assert catalogs.profiles.find("clinics-securevnc") == ConnectionProfile(
         "clinics-securevnc", "ultravnc", "account", ("securevnc",), name="Clinics (SecureVNC)"
     )
-    assert (catalogs.profiles.folder / "clinics-securevnc.json").is_file()
-    assert "Clinics (SecureVNC)" in [page.list.item(r).text() for r in range(page.list.count())]
+
+
+def test_cancel_drops_every_change(catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch) -> None:
+    page = ConnectionsPage(catalogs, None)
+    monkeypatch.setattr(connections, "confirm", lambda *_args: True)
+    _select(page, "ultravnc")
+    page.delete()
+    assert "UltraVNC" not in _names(page)
+    # Cancel: the dialog closes without apply(); the store and folder are untouched.
+    assert catalogs.profiles.find("ultravnc") is not None
+    assert not catalogs.profiles.folder.exists()
+    assert "UltraVNC" in _names(ConnectionsPage(catalogs, None))
 
 
 def test_the_editor_offers_only_what_the_chosen_tool_supports(catalogs: Catalogs) -> None:
     tools = [e.item for e in catalogs.tools.all()]
     dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
-    dialog.tool.setCurrentIndex(dialog.tool.findData("ultravnc"))
+    assert dialog.tool.currentData() == "ultravnc"  # starts on a tool this PC has
     assert list(dialog.option_boxes) == ["securevnc"]
     assert [dialog.login.itemData(i) for i in range(dialog.login.count())] == [
         "account", "password",
@@ -84,11 +103,12 @@ def test_starter_profiles_can_be_duplicated_edited_and_deleted(
     assert all(b.isEnabled() for b in buttons)
     _answer(monkeypatch, lambda dialog: None)  # keep the suggested name
     page.duplicate()
-    copy = catalogs.profiles.find("ultravnc-copy")
-    assert copy is not None and copy.name == "UltraVNC (copy)"
     monkeypatch.setattr(connections, "confirm", lambda *_args: True)
     _select(page, "ultravnc")
     page.delete()
+    connections.apply(catalogs, page.changes())
+    copy = catalogs.profiles.find("ultravnc-copy")
+    assert copy is not None and copy.name == "UltraVNC (copy)"
     assert catalogs.profiles.find("ultravnc") is None
 
 
@@ -109,10 +129,10 @@ def test_deleting_says_how_many_hosts_use_it(
     _select(page, "pis")
     page.delete()
     assert "2 hosts and 1 group" in asked[0]
-    assert catalogs.profiles.find("pis") is not None  # cancelled: still there
+    assert "Pis" in _names(page)  # answered no: still there
     monkeypatch.setattr(connections, "confirm", lambda *_args: True)
     page.delete()
-    assert catalogs.profiles.find("pis") is None
+    assert page.changes().deleted == ("pis",)
 
 
 def test_a_folder_the_user_cannot_write_is_read_only(
@@ -129,11 +149,12 @@ def test_the_default_profile_waits_for_save(catalogs: Catalogs) -> None:
     page = ConnectionsPage(catalogs, None)
     assert page.default_choice() == "ultravnc"
     page.default.setCurrentIndex(page.default.findData("realvnc"))
-    assert page.default_choice() == "realvnc"
     assert catalogs.profiles.default_id() == "ultravnc"  # nothing written until Save
+    connections.apply(catalogs, page.changes())
+    assert catalogs.profiles.default_id() == "realvnc"
 
 
-def test_tools_show_where_they_were_found_and_can_be_located(
+def test_tool_paths_chosen_here_also_wait_for_save(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     page = ConnectionsPage(catalogs, None)
@@ -145,8 +166,12 @@ def test_tools_show_where_they_were_found_and_can_be_located(
     realvnc = catalogs.tools.find("realvnc")
     assert realvnc is not None
     page.locate(realvnc.item)
+    assert page.changes().tool_paths == {"realvnc": r"D:\Portable\vncviewer.exe"}
+    connections.apply(catalogs, page.changes())
     located = catalogs.tools.find("realvnc")
     assert located is not None and located.item.executable == r"D:\Portable\vncviewer.exe"
+    page = ConnectionsPage(catalogs, None)
     page.automatic(located.item)
+    connections.apply(catalogs, page.changes())
     back = catalogs.tools.find("realvnc")
     assert back is not None and not back.item.executable

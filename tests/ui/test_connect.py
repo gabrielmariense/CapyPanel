@@ -337,3 +337,52 @@ def test_the_default_profile_chosen_in_settings_is_saved_for_everyone(window: Ma
     window.apply_settings(dialog.choices())
     assert window.connector.catalogs.profiles.default_id() == "pis"
     assert window.connector.default_profile() == "pis"
+
+
+def test_profile_rows_never_overlap(window: MainWindow) -> None:
+    # Like the page list once did: rows kept positions from before the theme's padding arrived.
+    window.show()
+    for theme in ("paper", "capypanel-dark"):
+        window.set_theme(theme)
+        dialog = window.settings_dialog()
+        dialog.show_page("connections")
+        dialog.show()
+        QApplication.processEvents()
+        rows = dialog.connections.list
+        first, second = rows.visualItemRect(rows.item(0)), rows.visualItemRect(rows.item(1))
+        assert second.top() >= first.bottom(), theme
+        dialog.close()
+
+
+def test_a_missing_viewer_offers_to_open_settings(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    opened: list[str] = []
+    monkeypatch.setattr(window, "open_settings", lambda page=None: opened.append(page or ""))
+    monkeypatch.setattr(connect_ui.detect, "find_executable", lambda tool: None)
+
+    def click_settings(box: QMessageBox) -> int:
+        button = next(b for b in box.buttons() if b.text() == "Open &Settings")
+        button.click()
+        return 0
+
+    monkeypatch.setattr(QMessageBox, "exec", click_settings)
+    window.connector.credentials.remember("offices", Credential("ana", "x"))
+    _select(window, "PC-A")
+    window.connect_selected()
+    assert opened == ["connections"]
+
+
+def test_a_host_s_own_unavailable_profile_shows_checked_in_the_menu(window: MainWindow) -> None:
+    doc = window.document
+    assert doc is not None
+    host = next(h for h in doc.hosts.hosts if h.name == "PC-A")
+    window.set_hosts_profile([host.id], "gone-elsewhere")
+    menu = QMenu()
+    window._add_profile_menu(  # pyright: ignore[reportPrivateUsage]
+        menu, {"gone-elsewhere"}, "follow", lambda p: None
+    )
+    submenu = menu.actions()[0].menu()
+    assert isinstance(submenu, QMenu)
+    checked = [a.text() for a in submenu.actions() if a.isChecked()]
+    assert checked == ["gone-elsewhere (not available on this PC)"]

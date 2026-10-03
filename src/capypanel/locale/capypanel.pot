@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 12:09-0300\n"
+"POT-Creation-Date: 2026-10-03 12:52-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -232,10 +232,6 @@ msgid "Couldn't create “{path}”: {error}"
 msgstr ""
 
 #, python-brace-format
-msgid "Couldn't delete the profile: {error}"
-msgstr ""
-
-#, python-brace-format
 msgid "Couldn't open “{path}”: {error}"
 msgstr ""
 
@@ -252,19 +248,15 @@ msgid "Couldn't reload the list: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't save the connection profiles: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't save the copy: {error}"
 msgstr ""
 
 #, python-brace-format
-msgid "Couldn't save the default profile: {error}"
-msgstr ""
-
-#, python-brace-format
 msgid "Couldn't save the list: {error}"
-msgstr ""
-
-#, python-brace-format
-msgid "Couldn't save the profile: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -483,6 +475,9 @@ msgstr[0] ""
 msgstr[1] ""
 
 msgid "Notes"
+msgstr ""
+
+msgid "Open &Settings"
 msgstr ""
 
 msgid "Open folder"

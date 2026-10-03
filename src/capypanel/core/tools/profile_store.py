@@ -10,6 +10,7 @@ import re
 import tempfile
 import unicodedata
 import uuid
+from collections.abc import Collection
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,16 @@ from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 log = logging.getLogger(__name__)
 STARTERS_DIR = Path(__file__).resolve().parent / "presets" / "profiles"
 DEFAULT_FILE = "_default.json"  # in the profiles folder; "_" can't start a profile id
+
+
+def make_id(name: str, taken: Collection[str]) -> str:
+    """An id made from the name ("Clínicas (SecureVNC)" -> "clinicas-securevnc"), not taken."""
+    plain = unicodedata.normalize("NFKD", name.casefold()).encode("ascii", "ignore").decode()
+    base = re.sub(r"[^a-z0-9]+", "-", plain).strip("-")[:48] or "profile"
+    candidate, number = base, 2
+    while candidate in taken:
+        candidate, number = f"{base}-{number}", number + 1
+    return candidate
 
 
 class ProfileStore:
@@ -84,13 +95,7 @@ class ProfileStore:
     # ---- changing ----
 
     def new_id(self, name: str) -> str:
-        """An id made from the name ("Clínicas (SecureVNC)" -> "clinicas-securevnc"), unused."""
-        plain = unicodedata.normalize("NFKD", name.casefold()).encode("ascii", "ignore").decode()
-        base = re.sub(r"[^a-z0-9]+", "-", plain).strip("-")[:48] or "profile"
-        candidate, number = base, 2
-        while self.find(candidate) is not None:
-            candidate, number = f"{base}-{number}", number + 1
-        return candidate
+        return make_id(name, self._profiles)
 
     def save(self, profile: ConnectionProfile) -> None:
         """Writes a profile, new or changed. Raises OSError."""
