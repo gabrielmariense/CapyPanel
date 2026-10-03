@@ -17,7 +17,6 @@ nav:
 theme:
   name: material
   features:
-    - navigation.instant
     - navigation.footer
     - search.highlight
     - content.code.copy
@@ -34,6 +33,28 @@ theme:
       toggle:
         icon: material/weather-sunny
         name: Light mode
+
+# English pages are name.md, their Portuguese versions name.pt-BR.md beside them.
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: en
+          name: English
+          default: true
+          build: true
+        - locale: pt-BR
+          name: Português (Brasil)
+          build: true
+          site_description: Gerencie os computadores da sua rede em uma só janela.
+          nav_translations:
+            Home: Início
+            Getting started: Primeiros passos
+            Host lists: Listas de hosts
+            Connecting: Conectando
+            Settings and files: Configurações e arquivos
+            Development: Desenvolvimento
 
 markdown_extensions:
   - admonition

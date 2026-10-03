@@ -23,7 +23,7 @@ pass them.
 |---|---|
 | `src/capypanel/core/` | The logic. It never imports a UI library (lint enforces it) |
 | `src/capypanel/ui/` | The Qt (PySide6) interface |
-| `src/capypanel/core/tools/presets/` | Built-in viewer definitions and connection profiles (JSON) |
+| `src/capypanel/core/tools/presets/` | Viewer definitions and the starter profiles (JSON) |
 | `src/capypanel/locale/` | Translations |
 | `tests/` | Mirrors `src/` |
 
@@ -42,7 +42,8 @@ script again to compile them. The tests fail until every text is translated and 
 
 The pages in `docs/` are also published as a website with
 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/), each time they change on
-`main`. To preview it while writing:
+`main`. Each English page (`name.md`) has its Portuguese version beside it
+(`name.pt-BR.md`); change both together. To preview the site while writing:
 
 ```
 uv run --only-group docs mkdocs serve
