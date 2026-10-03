@@ -510,7 +510,9 @@ class MainWindow(QMainWindow):
             return
         host_list = self._doc.hosts
         requests = [
-            Request(h.name, Target(h.connect_address), host_list.profile_of(h)[0])
+            Request(
+                h.name, Target(h.connect_address), host_list.profile_of(h, self._profile_exists)[0]
+            )
             for h in hosts
             if h.connect_address
         ]
@@ -563,15 +565,19 @@ class MainWindow(QMainWindow):
         return ProfilePicker(
             choices=connector.choices(),
             inherited=lambda group_id: connector.inherited_label(
-                *host_list.group_profile(group_id or None)
+                *host_list.group_profile(group_id or None, self._profile_exists)
             ),
             label=connector.label,
         )
 
+    def _profile_exists(self, profile_id: str) -> bool:
+        """A profile this PC has: a host or group naming another one follows its group instead."""
+        return self.connector.catalogs.profiles.find(profile_id) is not None
+
     def _connection_text(self, host_list: HostList, host: Host) -> str:
-        profile_id, source = host_list.profile_of(host)
+        profile_id, source = host_list.profile_of(host, self._profile_exists)
         name = self.connector.label(profile_id)
-        if host.profile:
+        if profile_id and source is None:  # the host's own
             return name
         if source is not None:
             return _("{profile} (from group “{group}”)").format(profile=name, group=source.name)
@@ -794,7 +800,9 @@ class MainWindow(QMainWindow):
             menu.addSeparator()
             groups = {h.group for h in hosts}
             follow = (
-                self.connector.inherited_label(*self._doc.hosts.group_profile(groups.pop()))
+                self.connector.inherited_label(
+                    *self._doc.hosts.group_profile(groups.pop(), self._profile_exists)
+                )
                 if len(groups) == 1
                 else _("From each host's group")
             )
@@ -813,7 +821,9 @@ class MainWindow(QMainWindow):
         group = self._doc.hosts.group(group_id) if self._doc and group_id else None
         if group is not None and self._doc is not None:
             menu.addSeparator()
-            follow = self.connector.inherited_label(*self._doc.hosts.group_profile(group.parent))
+            follow = self.connector.inherited_label(
+                *self._doc.hosts.group_profile(group.parent, self._profile_exists)
+            )
             self._add_profile_menu(
                 menu, {group.profile}, follow, lambda p: self.set_group_profile(group.id, p)
             )

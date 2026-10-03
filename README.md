@@ -1,6 +1,6 @@
 <p align="right">
-  <a href="README.md"><img src="https://flagcdn.com/24x18/us.png" width="24" height="18" alt="English" title="English"></a>
-  <a href="README.pt-BR.md"><img src="https://flagcdn.com/24x18/br.png" width="24" height="18" alt="Português (Brasil)" title="Português (Brasil)"></a>
+  <a href="README.md"><img src="https://flagcdn.com/40x30/us.png" width="40" height="30" alt="English" title="English"></a>
+  <a href="README.pt-BR.md"><img src="https://flagcdn.com/40x30/br.png" width="40" height="30" alt="Português (Brasil)" title="Português (Brasil)"></a>
 </p>
 
 # CapyPanel

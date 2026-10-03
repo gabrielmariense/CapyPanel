@@ -2,7 +2,7 @@
 
 import re
 import uuid
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from typing import Any
 
@@ -96,19 +96,24 @@ class HostList:
         ids = self.subtree(group_id) if nested else {group_id}
         return tuple(h for h in self.hosts if h.group in ids)
 
-    def profile_of(self, host: Host) -> tuple[str, Group | None]:
+    def profile_of(
+        self, host: Host, exists: Callable[[str], bool] = lambda _id: True
+    ) -> tuple[str, Group | None]:
         """The host's connection profile id and the group it comes from (None: the host's own).
-        ("", None) when neither the host nor any group around it sets one."""
-        if host.profile:
+        A profile that doesn't `exist` is skipped, so the nearest group's applies instead.
+        ("", None) when neither the host nor any group around it sets one that exists."""
+        if host.profile and exists(host.profile):
             return host.profile, None
-        return self.group_profile(host.group)
+        return self.group_profile(host.group, exists)
 
-    def group_profile(self, group_id: str | None) -> tuple[str, Group | None]:
+    def group_profile(
+        self, group_id: str | None, exists: Callable[[str], bool] = lambda _id: True
+    ) -> tuple[str, Group | None]:
         """The profile a group gives its hosts: its own, else the nearest parent's."""
         seen: set[str] = set()
         group = self.group(group_id) if group_id else None
         while group is not None and group.id not in seen:
-            if group.profile:
+            if group.profile and exists(group.profile):
                 return group.profile, group
             seen.add(group.id)
             group = self.group(group.parent) if group.parent else None

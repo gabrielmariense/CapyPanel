@@ -386,3 +386,17 @@ def test_a_host_s_own_unavailable_profile_shows_checked_in_the_menu(window: Main
     assert isinstance(submenu, QMenu)
     checked = [a.text() for a in submenu.actions() if a.isChecked()]
     assert checked == ["gone-elsewhere (not available on this PC)"]
+
+
+def test_a_profile_this_pc_lacks_falls_back_to_the_group_s(
+    window: MainWindow, launched: list[Launch]
+) -> None:
+    doc = window.document
+    assert doc is not None
+    host = next(h for h in doc.hosts.hosts if h.name == "PC-A")
+    window.set_hosts_profile([host.id], "gone-elsewhere")
+    _select(window, "PC-A")
+    assert window.details.shown_value("connection") == "Offices (SecureVNC) (from group “Offices”)"
+    window.connector.credentials.remember("offices", Credential("ana", "x"))
+    window.connect_selected()
+    assert launched[0][0] == "ultravnc" and launched[0][4] == ("securevnc",)
