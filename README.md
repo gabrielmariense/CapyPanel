@@ -6,10 +6,8 @@
   <a href="README.pt-BR.md"><img src="https://flagcdn.com/40x30/br.png" width="40" height="30" alt="Português (Brasil)" title="Português (Brasil)"></a>
 </p>
 
-<p align="center">
-  A Windows app for IT teams: the computers on your network in one organized list,<br>
-  and a remote screen on any of them with the tools you already use.
-</p>
+A Windows desktop app for IT staff: keep the computers on your network in one organized list,
+and open a remote screen on any of them with the tools you already use.
 
 - **Host lists** with nested groups, tags and notes. A list is a plain JSON file: keep a personal
   one, share one on a network folder, or publish a default list for everyone on the PC.

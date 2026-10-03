@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 14:10-0300\n"
+"POT-Creation-Date: 2026-10-03 14:56-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -168,9 +168,6 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
-msgid "Automatic"
-msgstr ""
-
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
 msgstr ""
@@ -198,6 +195,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Choose a {tool} settings file"
+msgstr ""
+
+msgid "Choose another…"
 msgstr ""
 
 msgid "Computer"
@@ -308,6 +308,9 @@ msgstr ""
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
 msgstr ""
 
+msgid "Download"
+msgstr ""
+
 msgid "Duplicate connection profile"
 msgstr ""
 
@@ -326,10 +329,10 @@ msgstr ""
 msgid "File not found"
 msgstr ""
 
-msgid "For example \\\\server\\share\\hosts.json"
+msgid "Find automatically"
 msgstr ""
 
-msgid "Forget the chosen path and find the tool by itself again"
+msgid "For example \\\\server\\share\\hosts.json"
 msgstr ""
 
 msgid "From each host's group"
@@ -397,6 +400,9 @@ msgid ""
 msgstr ""
 
 msgid "Information"
+msgstr ""
+
+msgid "Install it, or locate its .exe."
 msgstr ""
 
 msgid "It's handed to the viewer privately, never on its command line."
@@ -481,9 +487,6 @@ msgstr ""
 msgid "No recent lists"
 msgstr ""
 
-msgid "Not found: install it, or select its .exe."
-msgstr ""
-
 #, python-brace-format
 msgid "Not opened: {names}"
 msgid_plural "Not opened ({n}): {names}"
@@ -519,9 +522,9 @@ msgstr[1] ""
 
 #, python-brace-format
 msgid ""
-"Optional: a {extension} file saved from {tool}, for every option it has. "
-"CapyPanel removes the address, port, password and encryption plugin from "
-"it: this profile decides those."
+"Optional: a {extension} file saved from {tool}. It's used exactly as "
+"saved, including its encryption plugin; only the host is emptied, since "
+"the address comes from the host you open."
 msgstr ""
 
 msgid "Options:"
@@ -555,7 +558,7 @@ msgstr ""
 msgid "Remote screen (&VNC)"
 msgstr ""
 
-msgid "Remote tools on this PC"
+msgid "Remote tools"
 msgstr ""
 
 msgid "Remove"
@@ -600,6 +603,9 @@ msgstr ""
 msgid "Select a host to see its details."
 msgstr ""
 
+msgid "Set in the settings file"
+msgstr ""
+
 msgid "Settings"
 msgstr ""
 
@@ -615,10 +621,10 @@ msgid "Shared by everyone on this PC. You can change them."
 msgstr ""
 
 msgid ""
-"Shared by everyone on this PC: the default list, connection profiles and "
-"the company's tool definitions. Your files are your settings, personal "
-"list and your own tool paths; only you and administrators can open them. "
-"Each user's log is named after their account."
+"Shared by everyone on this PC: the default list, connection profiles, the"
+" company's tool definitions and where each tool is installed. Your files "
+"are your settings and personal list; only you and administrators can open"
+" them. Each user's log is named after their account."
 msgstr ""
 
 msgid "Shared files"
@@ -757,6 +763,9 @@ msgstr ""
 msgid "The “settings_file” must be a file name in the profiles folder."
 msgstr ""
 
+msgid "The “website” must be an https:// address."
+msgstr ""
+
 msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr ""
 
@@ -827,6 +836,14 @@ msgid "Viewer settings:"
 msgstr ""
 
 msgid "Where CapyPanel keeps its files"
+msgstr ""
+
+msgid "Where each tool is installed, set once for everyone on this PC."
+msgstr ""
+
+msgid ""
+"Where each tool is installed, set once for everyone on this PC. Read-"
+"only: only people Windows lets write the tools folder can change it."
 msgstr ""
 
 #, python-brace-format
@@ -976,9 +993,7 @@ msgstr ""
 msgid "“options” must map option ids to the names shown."
 msgstr ""
 
-msgid ""
-"“settings_file” needs an “extension” such as “.vnc” and a list to "
-"“remove”."
+msgid "“settings_file” needs an “extension” such as “.vnc” and a list to “clear”."
 msgstr ""
 
 #, python-brace-format
@@ -989,5 +1004,14 @@ msgstr ""
 msgid ""
 "“{name}” has no address, and its name can't be used as one: a computer "
 "name has no spaces or symbols other than - and _."
+msgstr ""
+
+msgid "✓ Found"
+msgstr ""
+
+msgid "✓ Your choice"
+msgstr ""
+
+msgid "✗ Not found"
 msgstr ""
 

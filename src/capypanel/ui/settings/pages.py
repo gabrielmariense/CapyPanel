@@ -168,10 +168,10 @@ class GeneralPage(Page):
             grid.addWidget(PathLabel(folder), row, 1)
             grid.addWidget(button, row, 2)
         note = _(
-            "Shared by everyone on this PC: the default list, connection profiles and the "
-            "company's tool definitions. Your files are your settings, personal list and your "
-            "own tool paths; only you and administrators can open them. Each user's log is "
-            "named after their account."
+            "Shared by everyone on this PC: the default list, connection profiles, the "
+            "company's tool definitions and where each tool is installed. Your files are your "
+            "settings and personal list; only you and administrators can open them. Each "
+            "user's log is named after their account."
         )
         if paths.portable:
             note += " " + _("Portable mode: everything stays in the app's own folder.")

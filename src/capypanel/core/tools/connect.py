@@ -74,7 +74,7 @@ def launch(
     }
     if settings is not None and tool.settings_file is not None:
         # Cleaned again: someone may have edited the shared file by hand since it was chosen.
-        content = viewer_settings.read(settings, tool.settings_file.remove)
+        content = viewer_settings.read(settings, tool.settings_file.clear)
         copy = viewer_settings.temp_copy(content, tool.settings_file.extension)
         values[SETTINGS_FILE] = str(copy)
     pipe = None

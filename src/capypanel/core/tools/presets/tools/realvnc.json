@@ -5,6 +5,7 @@
   "kind": "vnc",
   "port": 5900,
   "credentials": "vnc_password_file",
+  "website": "https://www.realvnc.com/en/connect/download/viewer/",
   "arguments": [
     ["{address}::{port}"],
     ["-UserName={user}"],

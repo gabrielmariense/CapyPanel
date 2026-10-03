@@ -1,13 +1,11 @@
 import json
-from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from capypanel.core import winsec
-from capypanel.core.tools import catalog
-from capypanel.core.tools.catalog import Layer
+from capypanel.core.tools.catalog import PATHS_FILE, Layer, ToolCatalog
 
 
 def _write(folder: Path, tool_id: str, name: str, **extra: Any) -> None:
@@ -19,11 +17,11 @@ def _write(folder: Path, tool_id: str, name: str, **extra: Any) -> None:
     (folder / f"{tool_id}.json").write_text(json.dumps(data), encoding="utf-8")
 
 
-def _tools(tmp_path: Path) -> catalog.Catalog[Any]:
-    return catalog.tools(tmp_path / "user", tmp_path / "company", tmp_path / "shipped")
+def _tools(tmp_path: Path) -> ToolCatalog:
+    return ToolCatalog(tmp_path / "company", tmp_path / "shipped")
 
 
-def test_a_higher_layer_wins_for_the_same_tool(tmp_path: Path) -> None:
+def test_the_company_s_definition_wins_for_the_same_tool(tmp_path: Path) -> None:
     _write(tmp_path / "shipped", "viewer", "Shipped viewer")
     _write(tmp_path / "shipped", "other", "Other")
     _write(tmp_path / "company", "viewer", "Company viewer")
@@ -42,29 +40,35 @@ def test_a_broken_file_is_reported_and_the_rest_still_load(tmp_path: Path) -> No
     assert [p.path.name for p in tools.problems] == ["bad.json"]
 
 
-def test_editing_saves_a_user_copy_and_reset_brings_back_the_original(tmp_path: Path) -> None:
+def test_a_path_is_set_once_for_everyone_and_definitions_keep_their_updates(
+    tmp_path: Path,
+) -> None:
     _write(tmp_path / "shipped", "viewer", "Viewer")
     tools = _tools(tmp_path)
-    assert not (tmp_path / "user").exists()  # the user folder appears only when first used
-    original = tools.find("viewer")
-    assert original is not None
-    edited = tools.save_user_copy(replace(original.item, executable=r"D:\Apps\viewer.exe"))
-    assert edited.layer is Layer.USER and edited.item.executable == r"D:\Apps\viewer.exe"
-    shipped_file = json.loads((tmp_path / "shipped" / "viewer.json").read_text(encoding="utf-8"))
-    assert "executable" not in shipped_file  # the original is never touched
-    tools.reset("viewer")
-    back = tools.find("viewer")
-    assert back is not None and back.layer is Layer.SHIPPED and not back.item.executable
+    tools.set_paths({"viewer": r"D:\Apps\viewer.exe"})
+    assert (tmp_path / "company" / PATHS_FILE).is_file()  # the PC's folder, not the user's
+    # Later the shipped definition changes: the chosen path stays, and the change arrives.
+    _write(tmp_path / "shipped", "viewer", "Viewer 2")
+    again = _tools(tmp_path)
+    entry = again.find("viewer")
+    assert entry is not None and entry.item.name == "Viewer 2"
+    assert entry.item.executable == r"D:\Apps\viewer.exe"
+    again.set_paths({"viewer": ""})  # find it by itself again
+    back = _tools(tmp_path).find("viewer")
+    assert back is not None and not back.item.executable
 
 
-def test_a_company_tool_another_user_made_is_ignored(
+def test_a_company_tool_or_path_another_user_made_is_ignored(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _write(tmp_path / "shipped", "viewer", "Shipped viewer")
     _write(tmp_path / "company", "viewer", "Planted viewer", executable=r"C:\evil.exe")
     planted = tmp_path / "company" / "viewer.json"
-    monkeypatch.setattr(winsec, "made_by_trusted", lambda path: path != planted)
+    paths = tmp_path / "company" / PATHS_FILE
+    paths.write_text(json.dumps({"schema": 1, "paths": {"viewer": r"C:\evil.exe"}}), "utf-8")
+    monkeypatch.setattr(winsec, "made_by_trusted", lambda path: path not in (planted, paths))
     tools = _tools(tmp_path)
     entry = tools.find("viewer")
     assert entry is not None and entry.layer is Layer.SHIPPED  # never runs the planted program
-    assert [p.path for p in tools.problems] == [planted]
+    assert not entry.item.executable
+    assert {p.path for p in tools.problems} == {planted, paths}

@@ -58,9 +58,10 @@ assim por diante), um perfil do **UltraVNC** pode levar um arquivo de configura�
    **Usar padrões** volta às configurações do próprio visualizador.
 
 Quando você clica em Salvar, o CapyPanel copia o arquivo para junto do perfil
-(`profiles\<id>.vnc`), depois de remover o host, a porta, a senha e o plugin de criptografia:
-quem decide esses é o perfil, então o arquivo nunca guarda um segredo nem um endereço. Ao
-conectar, o visualizador recebe uma cópia temporária, apagada um minuto depois, e o arquivo
+(`profiles\<id>.vnc`). Ele é usado **exatamente como foi salvo**, inclusive o plugin de
+criptografia; só o `host` é esvaziado, já que o endereço vem do host que você abre. Enquanto um
+perfil tem arquivo, as opções dele (como o SecureVNC) ficam desligadas: quem decide é o arquivo.
+Ao conectar, o visualizador recebe uma cópia temporária, apagada um minuto depois, e o arquivo
 compartilhado nunca é alterado.
 
 ### Escolher um perfil

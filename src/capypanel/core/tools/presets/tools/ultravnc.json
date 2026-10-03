@@ -10,10 +10,8 @@
   },
   "account_types": [113, 114, 115, 118],
   "max_password": {"password": 8},
-  "settings_file": {
-    "extension": ".vnc",
-    "remove": ["host", "port", "password", "UseDSMPlugin", "DSMPlugin"]
-  },
+  "website": "https://uvnc.com/downloads/ultravnc.html",
+  "settings_file": {"extension": ".vnc", "clear": ["host"]},
   "arguments": [
     ["-config", "{settings_file}"],
     ["{address}::{port}"],

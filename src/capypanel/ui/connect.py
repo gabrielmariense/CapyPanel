@@ -365,8 +365,10 @@ class Connector:
         )
         if not name:
             return None
-        self.catalogs.tools.save_user_copy(replace(tool, executable=name))
-        log.info("%s set to %s", tool.id, name)
+        try:
+            self.catalogs.tools.set_paths({tool.id: name})  # for everyone on this PC
+        except OSError as e:
+            log.warning("Couldn't save the path of %s: %s", tool.id, e)  # still used this time
         return Path(name)
 
     def _confirm_many(self, count: int) -> bool:

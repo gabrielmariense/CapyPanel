@@ -5,8 +5,8 @@ is written until Save; Cancel drops every change made here."""
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QShowEvent
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QDesktopServices, QShowEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -61,14 +61,8 @@ def apply(catalogs: Catalogs, changes: ConnectionChanges) -> None:
         store.save(profile, changes.settings.get(profile.id))
     if changes.default and changes.default != store.default_id():
         store.set_default(changes.default)
-    for tool_id, executable in changes.tool_paths.items():
-        entry = catalogs.tools.find(tool_id)
-        if entry is None:
-            continue
-        if executable:
-            catalogs.tools.save_user_copy(replace(entry.item, executable=executable))
-        else:
-            catalogs.tools.reset(tool_id)
+    if changes.tool_paths:
+        catalogs.tools.set_paths(changes.tool_paths)
 
 
 class ProfileDialog(QDialog):
@@ -185,9 +179,9 @@ class ProfileDialog(QDialog):
         if tool.settings_file is not None:
             self.settings_hint.setText(
                 _(
-                    "Optional: a {extension} file saved from {tool}, for every option it has. "
-                    "CapyPanel removes the address, port, password and encryption plugin from "
-                    "it: this profile decides those."
+                    "Optional: a {extension} file saved from {tool}. It's used exactly as saved, "
+                    "including its encryption plugin; only the host is emptied, since the address "
+                    "comes from the host you open."
                 ).format(extension=tool.settings_file.extension, tool=tool.name)
             )
         self._show_settings(None)
@@ -201,6 +195,12 @@ class ProfileDialog(QDialog):
             text = _("The viewer's defaults")
         self.settings_state.setText(text)
         self.default_settings.setEnabled(self._has_settings)
+        # With a settings file, the file decides: the options here would change it.
+        for box in self.option_boxes.values():
+            if self._has_settings:
+                box.setChecked(False)
+            box.setEnabled(not self._has_settings)
+            box.setToolTip(_("Set in the settings file") if self._has_settings else "")
 
     def _choose_settings(self) -> None:
         tool = self._current_tool()
@@ -216,7 +216,7 @@ class ProfileDialog(QDialog):
         if not name:
             return
         try:
-            content = viewer_settings.read(Path(name), tool.settings_file.remove)
+            content = viewer_settings.read(Path(name), tool.settings_file.clear)
         except (OSError, viewer_settings.SettingsFileError) as e:
             message = _("Couldn't use “{file}”: {error}").format(file=Path(name).name, error=e)
             QMessageBox.warning(self, "CapyPanel", message)
@@ -257,6 +257,7 @@ class ConnectionsPage(Page):
         self.store = catalogs.profiles
         self.document = document
         self.can_edit = self.store.can_edit()
+        self.can_edit_tools = catalogs.tools.can_edit()
         self._profiles = {p.id: p for p in self.store.all()}
         self._changed: set[str] = set()
         self._deleted: set[str] = set()
@@ -302,9 +303,21 @@ class ConnectionsPage(Page):
         inner.addLayout(row)
         inner.addLayout(default_row)
 
-        tools_box = QGroupBox(_("Remote tools on this PC"))
-        self._tools_grid = QGridLayout(tools_box)
-        self._tools_grid.setColumnStretch(1, 1)
+        tools_box = QGroupBox(_("Remote tools"))
+        tools_layout = QVBoxLayout(tools_box)
+        tools_layout.addWidget(
+            hint(
+                _("Where each tool is installed, set once for everyone on this PC.")
+                if self.can_edit_tools
+                else _(
+                    "Where each tool is installed, set once for everyone on this PC. Read-only: "
+                    "only people Windows lets write the tools folder can change it."
+                )
+            )
+        )
+        self._tools_grid = QGridLayout()
+        self._tools_grid.setColumnStretch(2, 1)
+        tools_layout.addLayout(self._tools_grid)
 
         self.body.addWidget(profiles_box, 1)
         self.body.addWidget(tools_box)
@@ -457,22 +470,47 @@ class ConnectionsPage(Page):
             widget = item.widget() if item else None
             if widget is not None:
                 widget.deleteLater()
+        self.tool_status: dict[str, QLabel] = {}
+        self.tool_buttons: dict[str, dict[str, QPushButton]] = {}
         for row, entry in enumerate(self.catalogs.tools.all()):
             tool = self._tool_view(entry.item)
             found = detect.find_executable(tool)
-            status = (
-                PathLabel(found) if found else hint(_("Not found: install it, or select its .exe."))
-            )
-            locate = QPushButton(_("Locate…"))
-            locate.clicked.connect(lambda _c=False, t=tool: self.locate(t))
-            automatic = QPushButton(_("Automatic"))
-            automatic.setToolTip(_("Forget the chosen path and find the tool by itself again"))
-            automatic.setEnabled(bool(tool.executable))
-            automatic.clicked.connect(lambda _c=False, t=tool: self.automatic(t))
+            if found is None:
+                status = QLabel(_("✗ Not found"))
+                status.setToolTip(_("Install it, or locate its .exe."))
+            else:
+                status = QLabel(_("✓ Your choice") if tool.executable else _("✓ Found"))
+                status.setToolTip(str(found))  # the full path, without filling the page
+            # Only the actions that make sense in this state.
+            actions = {"locate": _("Choose another…") if found else _("Locate…")}
+            if tool.executable:
+                actions["automatic"] = _("Find automatically")
+            if found is None and tool.website:
+                actions["download"] = _("Download")
+            buttons_row = QHBoxLayout()
+            buttons_row.setContentsMargins(0, 0, 0, 0)
+            buttons: dict[str, QPushButton] = {}
+            for action, text in actions.items():
+                button = QPushButton(text)
+                button.clicked.connect(lambda _c=False, t=tool, a=action: self._tool_action(t, a))
+                button.setEnabled(action == "download" or self.can_edit_tools)
+                buttons_row.addWidget(button)
+                buttons[action] = button
+            buttons_row.addStretch(1)
+            buttons_box = QWidget()
+            buttons_box.setLayout(buttons_row)
             self._tools_grid.addWidget(QLabel(tool.name), row, 0)
             self._tools_grid.addWidget(status, row, 1)
-            self._tools_grid.addWidget(locate, row, 2)
-            self._tools_grid.addWidget(automatic, row, 3)
+            self._tools_grid.addWidget(buttons_box, row, 2)
+            self.tool_status[tool.id], self.tool_buttons[tool.id] = status, buttons
+
+    def _tool_action(self, tool: ToolDefinition, action: str) -> None:
+        if action == "locate":
+            self.locate(tool)
+        elif action == "automatic":
+            self.automatic(tool)
+        else:
+            QDesktopServices.openUrl(QUrl(tool.website))  # the browser downloads; we never do
 
     def locate(self, tool: ToolDefinition) -> None:
         name, _filter = QFileDialog.getOpenFileName(

@@ -6,10 +6,8 @@
   <a href="README.pt-BR.md"><img src="https://flagcdn.com/40x30/br.png" width="40" height="30" alt="Português (Brasil)" title="Português (Brasil)"></a>
 </p>
 
-<p align="center">
-  Um app para Windows feito para equipes de TI: os computadores da sua rede numa lista organizada,<br>
-  e a tela remota de qualquer um deles com as ferramentas que você já usa.
-</p>
+Um app de desktop para Windows feito para equipes de TI: mantenha os computadores da sua rede em
+uma lista organizada e abra a tela remota de qualquer um deles com as ferramentas que você já usa.
 
 - **Listas de hosts** com grupos aninhados, tags e observações. Uma lista é um arquivo JSON
   simples: tenha uma pessoal, compartilhe uma numa pasta de rede ou publique uma lista padrão

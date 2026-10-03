@@ -54,10 +54,11 @@ everything else the viewer offers (quality, scaling, view-only, full screen and 
 2. In the profile editor, **Viewer settings > Choose file…** and pick it. **Use defaults** goes
    back to the viewer's own settings.
 
-When you click Save, CapyPanel copies the file beside the profile (`profiles\<id>.vnc`) after
-removing the host, port, password and encryption plugin: the profile decides those, so the file
-never holds a secret or an address. When you connect, the viewer gets a temporary copy, deleted a
-minute later, and the shared file is never changed.
+When you click Save, CapyPanel copies the file beside the profile (`profiles\<id>.vnc`). It's
+used **exactly as saved**, encryption plugin included; only the `host` is emptied, since the
+address comes from the host you open. While a profile has a file, its options (such as SecureVNC)
+are off: the file decides. When you connect, the viewer gets a temporary copy, deleted a minute
+later, and the shared file is never changed.
 
 ### Choosing a profile
 

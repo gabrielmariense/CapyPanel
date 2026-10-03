@@ -10,11 +10,12 @@ from capypanel.core.tools import definitions, viewer_settings
 from capypanel.core.tools.connect import Credential, Target, launch
 from capypanel.core.tools.viewer_settings import SettingsFileError
 
-REMOVE = ("host", "port", "password", "UseDSMPlugin", "DSMPlugin")
+CLEAR = ("host",)
+# The shape of a .vnc saved from UltraVNC Viewer (shortened).
 ULTRAVNC = (
-    "[connection]\r\nhost=10.0.0.9\r\nport=5900\r\nproxyhost=\r\npassword=deadbeef\r\n"
-    "[options]\r\nuse_encoding_1=0\r\nUseDSMPlugin=1\r\nDSMPlugin=SecureVNCPlugin64.dsm\r\n"
-    "viewonly=1\r\nfullscreen=0\r\n"
+    "[connection]\r\nhost=10.0.0.9\r\nport=5900\r\nproxyhost=\r\nproxyport=0\r\n"
+    "[options]\r\nuse_encoding_1=0\r\nviewonly=1\r\nfullscreen=0\r\nUseDSMPlugin=1\r\n"
+    "DSMPlugin=SecureVNCPlugin64.dsm\r\nquality=8\r\n"
 )
 
 # Stands in for UltraVNC: records the arguments and the -config file's content as it starts.
@@ -29,23 +30,20 @@ open(sys.argv[1], "w", encoding="utf-8").write(json.dumps({"args": args, "config
 """
 
 
-def test_the_settings_capypanel_sets_are_removed_and_the_rest_kept_as_is() -> None:
-    cleaned = viewer_settings.clean(ULTRAVNC.encode("cp1252"), REMOVE).decode("cp1252")
-    assert cleaned == (
-        "[connection]\r\nproxyhost=\r\n"
-        "[options]\r\nuse_encoding_1=0\r\nviewonly=1\r\nfullscreen=0\r\n"
-    )
+def test_only_the_host_is_emptied_and_the_rest_kept_exactly_as_saved() -> None:
+    cleaned = viewer_settings.clean(ULTRAVNC.encode("cp1252"), CLEAR).decode("cp1252")
+    assert cleaned == ULTRAVNC.replace("host=10.0.0.9", "host=")  # port, plugin and all stay
 
 
 def test_any_code_page_and_utf16_survive_unchanged() -> None:
     accented = "[options]\r\nhost=x\r\nTitle=Clínica Ação\r\n"
-    assert viewer_settings.clean(accented.encode("cp1252"), REMOVE) == (
-        "[options]\r\nTitle=Clínica Ação\r\n".encode("cp1252")
+    assert viewer_settings.clean(accented.encode("cp1252"), CLEAR) == (
+        "[options]\r\nhost=\r\nTitle=Clínica Ação\r\n".encode("cp1252")
     )
     utf16 = accented.encode("utf-16")
-    cleaned = viewer_settings.clean(utf16, REMOVE)
+    cleaned = viewer_settings.clean(utf16, CLEAR)
     assert cleaned.startswith(codecs.BOM_UTF16_LE)
-    assert cleaned.decode("utf-16") == "[options]\r\nTitle=Clínica Ação\r\n"
+    assert cleaned.decode("utf-16") == "[options]\r\nhost=\r\nTitle=Clínica Ação\r\n"
 
 
 @pytest.mark.parametrize(
@@ -54,14 +52,14 @@ def test_any_code_page_and_utf16_survive_unchanged() -> None:
 )
 def test_something_else_is_refused(raw: bytes) -> None:
     with pytest.raises(SettingsFileError):
-        viewer_settings.clean(raw, REMOVE)
+        viewer_settings.clean(raw, CLEAR)
 
 
 def test_a_huge_file_is_refused(tmp_path: Path) -> None:
     big = tmp_path / "big.vnc"
     big.write_bytes(b"[options]\r\n" + b"a=1\r\n" * 60_000)
     with pytest.raises(SettingsFileError):
-        viewer_settings.read(big, REMOVE)
+        viewer_settings.read(big, CLEAR)
 
 
 def test_the_temporary_copy_is_deleted_soon(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -82,7 +80,7 @@ def test_the_viewer_gets_a_cleaned_copy_never_the_shared_file(tmp_path: Path) ->
         {
             "schema": 1, "id": "recorder", "name": "Recorder", "kind": "vnc", "port": 5900,
             "credentials": "arguments",
-            "settings_file": {"extension": ".vnc", "remove": list(REMOVE)},
+            "settings_file": {"extension": ".vnc", "clear": list(CLEAR)},
             "arguments": [[str(script), str(out)], ["-config", "{settings_file}"],
                           ["{address}::{port}"], ["-password", "{password}"]],
         }
@@ -95,7 +93,7 @@ def test_the_viewer_gets_a_cleaned_copy_never_the_shared_file(tmp_path: Path) ->
     config = received["args"][1]
     assert received["args"] == ["-config", config, "pc1::5900", "-password", "pw"]
     assert Path(config) != shared and Path(config).suffix == ".vnc"
-    assert "viewonly=1" in received["config"] and "10.0.0.9" not in received["config"]
+    assert received["config"] == ULTRAVNC.replace("host=10.0.0.9", "host=")
     assert shared.read_bytes() == ULTRAVNC.encode("cp1252")  # the shared file is untouched
     # Without a settings file the group is left out: the viewer uses its own defaults.
     launch(tool, Path(sys.executable), Target("pc1"), Credential("", "pw")).wait(30)

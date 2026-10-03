@@ -34,6 +34,18 @@ def make_id(name: str, taken: Collection[str]) -> str:
     return candidate
 
 
+def can_create_files(folder: Path) -> bool:
+    """Whether Windows lets this user create files in `folder`, or where it would be made."""
+    while not folder.exists() and folder.parent != folder:
+        folder = folder.parent  # the folder is made on the first save
+    try:
+        with tempfile.NamedTemporaryFile(dir=folder, prefix=".capypanel-", suffix=".tmp"):
+            pass
+    except OSError:
+        return False
+    return True
+
+
 class ProfileStore:
     def __init__(self, folder: Path, starters_dir: Path = STARTERS_DIR) -> None:
         self.folder = folder
@@ -100,15 +112,7 @@ class ProfileStore:
 
     def can_edit(self) -> bool:
         """Whether Windows lets this user create and change files in the profiles folder."""
-        folder = self.folder
-        while not folder.exists() and folder.parent != folder:
-            folder = folder.parent  # the folder is made on the first save
-        try:
-            with tempfile.NamedTemporaryFile(dir=folder, prefix=".capypanel-", suffix=".tmp"):
-                pass
-        except OSError:
-            return False
-        return True
+        return can_create_files(self.folder)
 
     # ---- changing ----
 

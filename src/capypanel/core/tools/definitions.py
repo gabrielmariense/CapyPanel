@@ -12,8 +12,9 @@
 one template serves servers that want a user name and servers that don't. A group tied to an
 option is used only when the connection profile switches that option on.
 
-A tool that reads a settings file (UltraVNC's -config) names it with "settings_file": its
-extension and the settings CapyPanel sets itself, removed from the file (see viewer_settings)."""
+A tool that reads a settings file (UltraVNC's -config) describes it with "settings_file": its
+extension and the settings that name a computer, emptied ("clear"); see viewer_settings.
+"website" is where the tool can be downloaded."""
 
 import json
 import re
@@ -52,7 +53,7 @@ class Detect:
 @dataclass(frozen=True)
 class SettingsFile:
     extension: str  # ".vnc"
-    remove: tuple[str, ...] = ()  # settings CapyPanel sets itself, taken out of the file
+    clear: tuple[str, ...] = ()  # emptied: they name the computer the file was saved for
 
 
 @dataclass(frozen=True)
@@ -76,6 +77,7 @@ class ToolDefinition:
     account_types: tuple[int, ...] = ()
     max_password: Mapping[str, int] = field(default_factory=dict)  # login -> longest password
     settings_file: SettingsFile | None = None  # the tool reads a settings file a profile can carry
+    website: str = ""  # where to download it
     executable: str = ""  # set by the user; empty means "find it"
     detect: Detect = field(default_factory=Detect)
     extra: Mapping[str, Any] = field(default_factory=dict)  # keys from newer versions, kept
@@ -125,7 +127,7 @@ def redacted(argv: Sequence[str], secrets: Sequence[str]) -> list[str]:
 
 _KEYS = (
     "schema", "id", "name", "kind", "arguments", "credentials", "port", "options", "executable",
-    "detect", "account_types", "max_password", "settings_file",
+    "detect", "account_types", "max_password", "settings_file", "website",
 )  # fmt: skip
 
 
@@ -177,6 +179,9 @@ def from_data(data: object) -> ToolDefinition:
     executable = data.get("executable", "")
     if not isinstance(executable, str):
         raise ToolDefinitionError(_("The “executable” must be a path."))
+    website = data.get("website", "")
+    if not isinstance(website, str) or (website and not website.startswith("https://")):
+        raise ToolDefinitionError(_("The “website” must be an https:// address."))
     return ToolDefinition(
         id=tool_id,
         name=name.strip(),
@@ -190,6 +195,7 @@ def from_data(data: object) -> ToolDefinition:
         account_types=_account_types(data.get("account_types", [])),
         max_password=_max_password(data.get("max_password", {})),
         settings_file=settings_file,
+        website=website,
         extra={k: v for k, v in data.items() if k not in _KEYS},
     )
 
@@ -216,10 +222,10 @@ def to_data(tool: ToolDefinition) -> dict[str, Any]:
     if tool.max_password:
         data["max_password"] = dict(tool.max_password)
     if tool.settings_file is not None:
-        data["settings_file"] = {
-            "extension": tool.settings_file.extension,
-            "remove": list(tool.settings_file.remove),
-        }
+        sf = tool.settings_file
+        data["settings_file"] = {"extension": sf.extension, "clear": list(sf.clear)}
+    if tool.website:
+        data["website"] = tool.website
     if tool.executable:
         data["executable"] = tool.executable
     d = tool.detect
@@ -244,17 +250,17 @@ def _settings_file(value: object) -> SettingsFile | None:
     if value is None:
         return None
     extension = value.get("extension") if isinstance(value, dict) else None
-    remove = value.get("remove", []) if isinstance(value, dict) else None
+    clear = value.get("clear", []) if isinstance(value, dict) else None
     if not (
         isinstance(extension, str)
         and _EXTENSION.match(extension)
-        and isinstance(remove, list)
-        and all(isinstance(k, str) and k.strip() for k in remove)
+        and isinstance(clear, list)
+        and all(isinstance(k, str) and k.strip() for k in clear)
     ):
         raise ToolDefinitionError(
-            _("“settings_file” needs an “extension” such as “.vnc” and a list to “remove”.")
+            _("“settings_file” needs an “extension” such as “.vnc” and a list to “clear”.")
         )
-    return SettingsFile(extension, tuple(k.strip() for k in remove))
+    return SettingsFile(extension, tuple(k.strip() for k in clear))
 
 
 def _max_password(value: object) -> dict[str, int]:

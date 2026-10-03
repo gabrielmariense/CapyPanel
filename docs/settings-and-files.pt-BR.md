@@ -20,9 +20,12 @@ lista vazia**.
 
 - **Perfis de conexão:** adicione, edite, duplique e exclua perfis, e escolha o padrão. Veja
   [Conectando](connecting.pt-BR.md#gerenciar-perfis).
-- **Ferramentas remotas neste PC:** onde cada visualizador foi encontrado, ou "Não encontrado".
-  **Localizar…** escolhe o `.exe` manualmente (de uma cópia portátil, por exemplo), salvo só para
-  a sua conta; **Automático** volta a encontrá-lo sozinho.
+- **Ferramentas remotas:** onde cada visualizador está instalado, definido uma vez para todos no
+  PC. Cada um mostra **✓ Encontrado** (sozinho), **✓ Sua escolha** ou **✗ Não encontrado**, só
+  com os botões que fazem sentido: **Escolher outro…** ou **Localizar…** para escolher o `.exe`
+  (de uma cópia portátil, por exemplo), **Encontrar automaticamente** para esquecer essa escolha e
+  **Baixar** para abrir o site do visualizador quando ele não está instalado. Como nos perfis, só
+  quem o Windows deixa gravar na pasta pode alterá-los.
 
 Como em todas as Configurações, nada nesta página é gravado até você clicar em Salvar; Cancelar
 descarta todas as alterações.
@@ -50,8 +53,8 @@ com uma pasta privada por usuário:
 |---|---|
 | Lista de hosts padrão, compartilhada por todos no PC | `hosts.json` |
 | Perfis de conexão, seus arquivos de configurações, e qual é o padrão | `profiles\` |
-| Definições de visualizadores adicionadas pela sua empresa | `tools\` |
-| Suas configurações, lista pessoal e seus caminhos de ferramentas | `users\<você@DOMÍNIO>\` |
+| Definições de visualizadores adicionadas pela sua empresa, e onde cada visualizador está instalado | `tools\` |
+| Suas configurações e sua lista pessoal | `users\<você@DOMÍNIO>\` |
 | Logs, um arquivo por usuário | `logs\` |
 | Definições de visualizadores embutidas e os perfis iniciais | Dentro do app |
 

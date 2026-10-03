@@ -116,7 +116,7 @@ def test_account_login_types_and_password_limits_are_read() -> None:
 def test_a_settings_file_goes_with_its_placeholder() -> None:
     base = {"schema": 1, "id": "v", "name": "V", "kind": "vnc"}
     tool = definitions.from_data({
-        **base, "settings_file": {"extension": ".vnc", "remove": ["host"]},
+        **base, "settings_file": {"extension": ".vnc", "clear": ["host"]},
         "arguments": [["-config", "{settings_file}"], ["{address}"]],
     })  # fmt: skip
     assert tool.settings_file == definitions.SettingsFile(".vnc", ("host",))

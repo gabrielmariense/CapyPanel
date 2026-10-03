@@ -2,8 +2,9 @@
 
 Everything lives in one folder per computer, C:\\ProgramData\\CapyPanel (or <app>\\userdata when
 portable). Shared by everyone on the PC: hosts.json (the default list), profiles\\ and tools\\ (the
-company's tool definitions). users\\<user@DOMAIN>\\ holds each user's settings, personal list and
-own tool paths, private to that user and administrators; logs\\<user@DOMAIN>.log, one per user."""
+company's tool definitions and where each tool is installed). users\\<user@DOMAIN>\\ holds each
+user's settings and personal list, private to that user and administrators;
+logs\\<user@DOMAIN>.log, one per user."""
 
 import json
 import logging
@@ -73,10 +74,6 @@ class Paths:
     @property
     def personal_list(self) -> Path:
         return self.user_dir / "hosts.json"
-
-    @property
-    def user_tools_dir(self) -> Path:
-        return self.user_dir / "tools"
 
 
 def resolve_paths(
