@@ -1,43 +1,48 @@
 # CapyPanel
 
-A desktop app for IT staff to manage the computers on their network from one window:
+A Windows desktop app for IT staff: keep the computers on your network in one organized list,
+and open a remote screen on any of them with the tools you already use.
 
-- keep an organized list of hosts, in groups and with tags;
-- open remote connections through the tools you already have (VNC, RDP, later SSH);
-- see who is logged on;
-- later, act on many hosts at once.
+- **Host lists** with nested groups, tags and notes. A list is a plain JSON file: keep a personal
+  one, share one on a network folder, or publish a default list for everyone on the PC.
+- **Remote screen (VNC)** through UltraVNC Viewer or RealVNC Viewer, opened with a double-click or
+  Enter, for one host or many at once.
+- **Connection profiles** say how each host is reached: which viewer, which login (user and
+  password, or password only), and options such as UltraVNC's SecureVNC plugin. Set one on a
+  group and every host inside follows it.
+- **Passwords stay in memory**, one per profile, until CapyPanel closes. They're never saved, and
+  never sent to a server that asks for a different kind of login.
+- **English and Portuguese (Brazil)**, switched live. **Seven themes**, from native Windows to
+  CapyPanel's own look.
 
-Built for any organization: nothing is tied to one company's network or language.
+Built for any organization: nothing is tied to one company's network, tools or language.
 
-> **Status:** in development. The first alpha (0.1) is being built one feature at
-> a time. Not ready for use yet.
+> **Status:** early development (version 0.8.1), working toward the first public alpha. It
+> runs from source today; there's no installer yet.
 
-## For developers
+## Documentation
 
-You need Windows 10 22H2 or 11 and [uv](https://docs.astral.sh/uv/). uv installs Python 3.13 and everything else.
+- [Getting started](docs/getting-started.md): run CapyPanel and add your first hosts
+- [Host lists](docs/host-lists.md): groups, tags, and default, personal and shared lists
+- [Connecting](docs/connecting.md): VNC viewers, connection profiles and passwords
+- [Settings and files](docs/settings-and-files.md): what each setting does, and where CapyPanel
+  keeps its files
+- [Development](docs/development.md): building, testing and translating
+
+## Quick start (from source)
+
+You need Windows 10 22H2 or 11 and [uv](https://docs.astral.sh/uv/), which installs Python and
+everything else:
 
 ```
-uv sync                     # install exactly the versions in uv.lock
-uv run capypanel            # start the app
-uv run pytest               # tests
-uv run ruff check           # lint
-uv run ruff format          # format
-uv run pyright              # type check
-uv run python scripts/translations.py   # after changing any text: update and compile translations
+git clone https://github.com/gabrielmariense/CapyPanel.git
+cd CapyPanel
+uv run capypanel
 ```
 
-**Translations** live in `src/capypanel/locale/` (gettext). After changing a text, run the
-script above, translate the new entries in each `.po` file, then run it again. The tests fail
-until every text is translated and compiled.
-
-**Portable mode:** an empty `capypanel.portable` file next to the app keeps
-everything (settings, lists, logs) in a `userdata` folder beside it. When you run from source,
-"next to the app" means the repository root.
-
-**Layout:**
-- `src/capypanel/core/` is the logic, and never imports a UI library (lint enforces it).
-- `src/capypanel/ui/` is the Qt interface.
-- `tests/` mirrors `src/`.
+To open remote screens, install [UltraVNC](https://uvnc.com) or
+[RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/). CapyPanel launches them;
+it never ships or downloads them.
 
 ## License
 
