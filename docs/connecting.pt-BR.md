@@ -13,8 +13,9 @@ distribui, empacota ou baixa.
 O CapyPanel encontra sozinho um visualizador instalado: onde o Windows registrou a instalação
 (qualquer pasta), as pastas de Arquivos de Programas de costume, depois o seu PATH. Uma cópia
 portátil descompactada em outro lugar não é encontrada automaticamente; quando falta um
-visualizador, o CapyPanel pede para instalá-lo ou localizar o `.exe`, e lembra o caminho para a
-sua conta.
+visualizador, o CapyPanel pede para instalá-lo ou localizar o `.exe`. O caminho é salvo uma vez
+para todos no PC, como em **Configurações > Conexões > Ferramentas remotas** (veja
+[Configurações e arquivos](settings-and-files.pt-BR.md#conexoes)).
 
 ## Perfis de conexão
 

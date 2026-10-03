@@ -13,7 +13,8 @@ or downloads them.
 CapyPanel finds an installed viewer by itself: where Windows recorded the install (any folder),
 the usual Program Files folders, then your PATH. A portable copy unzipped somewhere else isn't
 found automatically; when a viewer is missing, CapyPanel asks you to install it or to locate its
-`.exe`, and remembers the path for your account.
+`.exe`. The path is saved once for everyone on the PC, like in **Settings > Connections > Remote
+tools** (see [Settings and files](settings-and-files.md#connections)).
 
 ## Connection profiles
 

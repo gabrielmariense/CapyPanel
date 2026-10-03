@@ -1,5 +1,30 @@
 # Documentação do CapyPanel
 
+O CapyPanel reúne numa só janela todos os computadores que você administra. É um app de desktop
+para Windows feito para equipes de TI: organize seus hosts em listas e abra a tela remota de
+qualquer um deles com o visualizador VNC que você já usa.
+
+## Funcionalidades
+
+### Lançadas
+
+- Tela remota (UltraVNC, RealVNC)
+- Perfis de conexão
+- Listas de hosts compartilhadas
+
+### Em desenvolvimento
+
+- Área de Trabalho Remota (RDP)
+- Usuários conectados
+
+### Planejadas
+
+- SSH
+- Busca e status
+- Ações nos hosts
+
+## Páginas
+
 Para quem usa o CapyPanel e para quem o configura para uma equipe.
 
 | Página | O que ela cobre |
@@ -10,5 +35,5 @@ Para quem usa o CapyPanel e para quem o configura para uma equipe.
 | [Configurações e arquivos](settings-and-files.pt-BR.md) | Cada configuração e onde o CapyPanel guarda os arquivos |
 | [Desenvolvimento](development.pt-BR.md) | Compilar, testar e traduzir o CapyPanel |
 
-Estas páginas descrevem a versão atual (0.9.0). O CapyPanel está em alfa, então elas crescem a
+Estas páginas descrevem a versão atual (0.10.1). O CapyPanel está em alfa, então elas crescem a
 cada funcionalidade.

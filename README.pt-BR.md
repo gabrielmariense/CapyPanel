@@ -13,7 +13,7 @@ qualquer um deles com o visualizador VNC que você já usa.
 Feito para qualquer organização: nada fica preso à rede, às ferramentas ou ao idioma de uma
 empresa.
 
-> **Situação: alfa (0.10.0).** Já dá para usar, e cresce uma funcionalidade por vez. Roda a partir
+> **Situação: alfa (0.10.1).** Já dá para usar, e cresce uma funcionalidade por vez. Roda a partir
 > do código-fonte; ainda não há instalador.
 
 ## Funcionalidades

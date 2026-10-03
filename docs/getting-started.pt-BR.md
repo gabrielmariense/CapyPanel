@@ -13,7 +13,7 @@ uv run capypanel
 
 A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes
 abrem na hora. A versão aparece na barra de título, seguida do commit quando você roda pelo
-código-fonte, por exemplo `CapyPanel 0.9.0 (abc1234)`. Informe-a ao relatar um problema.
+código-fonte, por exemplo `CapyPanel 0.10.1 (abc1234)`. Informe-a ao relatar um problema.
 
 Para abrir telas remotas você também precisa de um visualizador VNC: o
 [UltraVNC](https://uvnc.com) ou o
