@@ -22,6 +22,7 @@ from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 log = logging.getLogger(__name__)
 STARTERS_DIR = Path(__file__).resolve().parent / "presets" / "profiles"
 DEFAULT_FILE = "_default.json"  # in the profiles folder; "_" can't start a profile id
+STARTERS_FILE = "_starters.json"  # starters already added once, so a deleted one stays deleted
 
 
 def make_id(name: str, taken: Collection[str]) -> str:
@@ -55,10 +56,16 @@ class ProfileStore:
         self.reload()
 
     def reload(self) -> None:
-        """The folder's profiles; the starters until the folder exists."""
+        """The folder's profiles; the starters until the folder exists. A tool's starter that
+        was never added (a tool new in this version) joins the folder once."""
         self.problems = []
         source = self.folder if self.folder.is_dir() else self._starters
         self._profiles = {}
+        self._load_from(source)
+        if source is self.folder:
+            self._add_new_starters()
+
+    def _load_from(self, source: Path) -> None:
         for path in sorted(source.glob("*.json")):
             if path.name.startswith("_"):
                 continue  # the default-profile file, not a profile
@@ -161,6 +168,42 @@ class ProfileStore:
             log.warning("Couldn't set permissions on %s: %s", self.folder, e)
         for profile in self._profiles.values():
             self._write(self.folder / f"{profile.id}.json", profiles.to_data(profile))
+        self._write(self.folder / STARTERS_FILE, {"schema": 1, "added": self._starter_ids()})
+
+    def _starter_ids(self) -> list[str]:
+        return sorted(p.stem for p in self._starters.glob("*.json"))
+
+    def _add_new_starters(self) -> None:
+        """Every tool gets its starter once, even in a folder made before the tool existed."""
+        path = self.folder / STARTERS_FILE
+        try:
+            data = json.loads(path.read_text(encoding="utf-8-sig"))
+            listed = data.get("added") if isinstance(data, dict) else None
+            trusted = isinstance(listed, list) and winsec.made_by_trusted(path)
+            added = {str(pid) for pid in listed} if trusted and isinstance(listed, list) else set()
+        except (OSError, ValueError):
+            added = set()
+        new = [pid for pid in self._starter_ids() if pid not in added]
+        if not new:
+            return
+        for pid in new:
+            if pid in self._profiles:
+                continue  # a profile already uses that id
+            try:
+                starter = profiles.load(self._starters / f"{pid}.json")
+            except ProfileError as e:
+                log.warning("Starter profile %s skipped: %s", pid, e)
+                continue
+            self._profiles[pid] = starter
+            try:
+                self._write(self.folder / f"{pid}.json", profiles.to_data(starter))
+                log.info("Starter connection profile added: %s", pid)
+            except OSError:
+                return  # read-only here: shown, not written, and offered again next time
+        try:
+            self._write(path, {"schema": 1, "added": sorted(added | set(new))})
+        except OSError as e:
+            log.warning("Couldn't write %s: %s", path, e)
 
     def _write(self, path: Path, data: dict[str, Any]) -> None:
         self._write_bytes(path, (json.dumps(data, indent=2, ensure_ascii=False) + "\n").encode())

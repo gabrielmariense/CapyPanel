@@ -13,9 +13,10 @@ uv run capypanel
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
 The version shows in the title bar, followed by the commit when you run from source, e.g.
-`CapyPanel 0.10.1 (abc1234)`. Quote it when you report a problem.
+`CapyPanel 0.11.0 (abc1234)`. Quote it when you report a problem.
 
-To open remote screens you also need a VNC viewer: [UltraVNC](https://uvnc.com) or
+Remote Desktop works out of the box, with the client built into Windows. For VNC you also need a
+viewer: [UltraVNC](https://uvnc.com) or
 [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/). See
 [Connecting](connecting.md).
 
@@ -41,7 +42,11 @@ Each pane can be hidden from the **View** menu.
    - **Tags:** type a tag and press Enter; Backspace on an empty box brings the last tag back for
      editing.
    - **Connection profile:** how to reach the host. "From group" follows the group's profile.
-3. Double-click the host, or select it and press Enter, to open its remote screen.
+3. Double-click the host, or select it and press Enter, to open a connection to it with its
+   profile (**Connect > Open connection**).
+
+Right-clicking empty space also works: **Add group…** in the groups pane, **Add host…** and
+**Add group…** in the host list.
 
 Edits are saved to the list file at once; there's no Save button.
 
@@ -49,7 +54,7 @@ Edits are saved to the list file at once; there's no Save button.
 
 | Shortcut | Action |
 |---|---|
-| Enter (in the host list) | Open the selected hosts' remote screens |
+| Enter (in the host list) | Open a connection to the selected hosts |
 | Ctrl+M | Manual connection to an address that isn't in the list |
 | Ctrl+Shift+C | Copy the selected hosts' addresses |
 | Ctrl+N / Ctrl+Shift+N | Add host / Add group |

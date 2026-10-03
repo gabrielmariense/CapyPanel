@@ -18,7 +18,7 @@ class Actions:
     add_group: QAction
     edit: QAction
     remove: QAction
-    connect_vnc: QAction
+    connect_host: QAction
     manual_connect: QAction
     copy_address: QAction
     copy_name: QAction
@@ -37,7 +37,7 @@ SHORTCUTS = {
     "add_group": "Ctrl+Shift+N",
     "edit": "F2",
     "remove": "Del",
-    "connect_vnc": "Return",  # only while the host table has focus (see MainWindow)
+    "connect_host": "Return",  # only while the host table has focus (see MainWindow)
     "manual_connect": "Ctrl+M",
     "copy_address": "Ctrl+Shift+C",
 }
@@ -67,7 +67,7 @@ def retranslate_actions(a: Actions) -> None:
     a.add_group.setText(_("Add &group…"))
     a.edit.setText(_("&Edit selected…"))
     a.remove.setText(_("&Remove selected"))
-    a.connect_vnc.setText(_("Remote screen (&VNC)"))
+    a.connect_host.setText(_("&Open connection"))
     a.manual_connect.setText(_("&Manual connection…"))
     a.copy_address.setText(_("Copy &address"))
     a.copy_name.setText(_("Copy &name"))

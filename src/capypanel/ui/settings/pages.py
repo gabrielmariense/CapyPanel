@@ -106,8 +106,20 @@ class GeneralPage(Page):
         default_list: Path,
         personal_list: Path,
         recent: list[Path],
+        language: str,
     ) -> None:
         super().__init__(_("General"))
+        # Each language is named in its own language, so anyone can find theirs.
+        self.language = QComboBox()
+        for code, name in i18n.LANGUAGES.items():
+            self.language.addItem(name, code)
+        self.language.setCurrentIndex(max(self.language.findData(language), 0))
+        language_label = QLabel(_("&Language:"))
+        language_label.setBuddy(self.language)
+        language_row = QHBoxLayout()
+        language_row.addWidget(language_label)
+        language_row.addWidget(self.language)
+        language_row.addStretch(1)
         start = QGroupBox(_("Startup"))
         self.start_list = QComboBox()
         self.start_list.setSizeAdjustPolicy(
@@ -177,12 +189,16 @@ class GeneralPage(Page):
             note += " " + _("Portable mode: everything stays in the app's own folder.")
         grid.addWidget(hint(note), len(folders), 0, 1, 3)
 
+        self.body.addLayout(language_row)
         self.body.addWidget(start)
         self.body.addWidget(files)
         self.body.addStretch(1)
 
     def start_choice(self) -> str:
         return str(self.start_list.currentData())
+
+    def language_choice(self) -> str:
+        return str(self.language.currentData() or i18n.DEFAULT_LANGUAGE)
 
 
 # ---- Host lists ----
@@ -378,35 +394,6 @@ def _state_text(access: Access, missing: str) -> str:
         Access.MISSING: missing,
         Access.UNTRUSTED: _("Made by another user: not used"),
     }[access]
-
-
-# ---- Language ----
-
-
-class LanguagePage(Page):
-    def __init__(self, current: str) -> None:
-        super().__init__(_("Language"))
-        self._group = QButtonGroup(self)
-        box = QGroupBox(_("App language"))
-        layout = QVBoxLayout(box)
-        # Each language is named in its own language, so anyone can find theirs.
-        for code, name in i18n.LANGUAGES.items():
-            button = QRadioButton(name)
-            button.setProperty("language", code)
-            button.setChecked(code == current)
-            self._group.addButton(button)
-            layout.addWidget(button)
-        layout.addWidget(hint(_("Changes take effect immediately, without restarting the app.")))
-        self.body.addWidget(box)
-        self.body.addWidget(hint(_("You can also change the language under View > Language.")))
-        self.body.addStretch(1)
-
-    def language(self) -> str:
-        button = self._group.checkedButton()
-        return str(button.property("language")) if button else i18n.DEFAULT_LANGUAGE
-
-    def buttons(self) -> list[QRadioButton]:
-        return [b for b in self._group.buttons() if isinstance(b, QRadioButton)]
 
 
 # ---- Appearance ----

@@ -53,7 +53,7 @@ def test_settings_is_in_the_file_menu_and_has_five_pages(window: MainWindow) -> 
     assert isinstance(file_menu, QMenu) and window.commands.settings in file_menu.actions()
     dialog = window.settings_dialog()
     titles = [p.title for p in dialog.pages.values()]
-    assert titles == ["General", "Host lists", "Connections", "Appearance", "Language"]
+    assert titles == ["General", "Host lists", "Connections", "Appearance"]
 
 
 def test_page_list_rows_never_overlap(window: MainWindow) -> None:

@@ -8,6 +8,9 @@
                    ["-user", "{user}"], ["-password", "{password}"]],
      "detect": {"installed_as": ["UltraVNC"], "exe": "vncviewer.exe", "paths": ["..."]}}
 
+An option's name is a text, or one per language ({"en": "Full screen", "pt_BR": "Tela
+cheia"}) when it isn't a product name.
+
 `arguments` is a list of groups. A group is left out when any placeholder in it is empty, so
 one template serves servers that want a user name and servers that don't. A group tied to an
 option is used only when the connection profile switches that option on.
@@ -27,7 +30,7 @@ from typing import Any
 from capypanel.core.i18n import _
 
 SCHEMA = 1
-KINDS = ("vnc",)  # grows with the features: rdp, ssh…
+KINDS = ("vnc", "rdp")  # grows with the features: ssh…
 PLACEHOLDERS = ("address", "port", "user", "password", "password_file", "settings_file")
 SECRET = "password"
 PASSWORD_FILE = "password_file"
@@ -70,7 +73,8 @@ class ToolDefinition:
     arguments: tuple[ArgumentGroup, ...]
     credentials: str = "none"
     port: int | None = None
-    options: Mapping[str, str] = field(default_factory=dict)  # option id -> name shown
+    options: Mapping[str, str] = field(default_factory=dict)  # option id -> name in English
+    option_names: Mapping[str, Mapping[str, str]] = field(default_factory=dict)  # by language
     # VNC login types (RFB security types) that ask for a user and password. When set, an
     # account profile first checks the server offers one, so a Windows password never goes to
     # a server that only wants a VNC password.
@@ -81,6 +85,11 @@ class ToolDefinition:
     executable: str = ""  # set by the user; empty means "find it"
     detect: Detect = field(default_factory=Detect)
     extra: Mapping[str, Any] = field(default_factory=dict)  # keys from newer versions, kept
+
+    def option_name(self, option_id: str, language: str) -> str:
+        """The option's name in `language` when the tool has one, else its English name."""
+        names = self.option_names.get(option_id, {})
+        return names.get(language) or self.options.get(option_id, option_id)
 
     @property
     def wants_user(self) -> bool:
@@ -153,7 +162,7 @@ def from_data(data: object) -> ToolDefinition:
         raise ToolDefinitionError(_("The tool needs a “name”."))
     if kind not in KINDS:
         raise ToolDefinitionError(_("Unknown tool kind “{kind}”.").format(kind=kind))
-    options = _options(data.get("options", {}))
+    options, option_names = _options(data.get("options", {}))
     arguments = _arguments(data.get("arguments"), options)
     credentials = data.get("credentials", "none")
     if credentials not in CREDENTIALS:
@@ -190,6 +199,7 @@ def from_data(data: object) -> ToolDefinition:
         credentials=credentials,
         port=port,
         options=options,
+        option_names=option_names,
         executable=executable,
         detect=_detect(data.get("detect", {})),
         account_types=_account_types(data.get("account_types", [])),
@@ -216,7 +226,10 @@ def to_data(tool: ToolDefinition) -> dict[str, Any]:
     if tool.port is not None:
         data["port"] = tool.port
     if tool.options:
-        data["options"] = dict(tool.options)
+        data["options"] = {
+            k: dict(tool.option_names[k]) if k in tool.option_names else v
+            for k, v in tool.options.items()
+        }
     if tool.account_types:
         data["account_types"] = list(tool.account_types)
     if tool.max_password:
@@ -272,13 +285,31 @@ def _max_password(value: object) -> dict[str, int]:
     return dict(value)
 
 
-def _options(value: object) -> dict[str, str]:
+def _options(value: object) -> tuple[dict[str, str], dict[str, dict[str, str]]]:
+    """English names, and the per-language names of options that have them."""
+
+    def is_name(v: object) -> bool:
+        return isinstance(v, str) and bool(v.strip())
+
+    def ok(v: object) -> bool:
+        if isinstance(v, dict):
+            return is_name(v.get("en")) and all(is_name(n) for n in v.values())
+        return is_name(v)
+
     if not isinstance(value, dict) or not all(
-        isinstance(k, str) and _ID.match(k) and isinstance(v, str) and v.strip()
-        for k, v in value.items()
+        isinstance(k, str) and _ID.match(k) and ok(v) for k, v in value.items()
     ):
-        raise ToolDefinitionError(_("“options” must map option ids to the names shown."))
-    return {k: v.strip() for k, v in value.items()}
+        raise ToolDefinitionError(
+            _("“options” must map option ids to a name, or to names by language with “en”.")
+        )
+    english, translated = {}, {}
+    for k, v in value.items():
+        if isinstance(v, dict):
+            translated[k] = {str(lang): str(n).strip() for lang, n in v.items()}
+            english[k] = translated[k]["en"]
+        else:
+            english[k] = v.strip()
+    return english, translated
 
 
 def _arguments(value: object, options: Mapping[str, str]) -> tuple[ArgumentGroup, ...]:

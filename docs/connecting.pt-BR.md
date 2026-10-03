@@ -1,16 +1,18 @@
 # Conectando
 
-O CapyPanel abre telas remotas por visualizadores VNC que você mesmo instala. Ele nunca os
-distribui, empacota ou baixa.
+O CapyPanel abre telas remotas por visualizadores VNC que você mesmo instala, e pelo cliente de
+Área de Trabalho Remota do próprio Windows. Ele nunca os distribui, empacota ou baixa.
 
-## Visualizadores suportados
+## Ferramentas suportadas
 
-| Visualizador | Como o CapyPanel entrega a senha |
+| Ferramenta | Como o CapyPanel entrega a senha |
 |---|---|
 | **UltraVNC Viewer** | Na linha de comando (o único jeito que o UltraVNC aceita). Administradores do seu PC podem ver linhas de comando; o log nunca mostra a senha |
 | **RealVNC Viewer** | Por um pipe privado que só a sua conta do Windows pode abrir, lido uma vez. Nada é gravado em disco nem vai para a linha de comando |
+| **Remote Desktop Connection** | Não entrega: o próprio cliente de Área de Trabalho Remota pede a senha |
 
-O CapyPanel encontra sozinho um visualizador instalado: onde o Windows registrou a instalação
+O Remote Desktop Connection vem com o Windows, então o CapyPanel o encontra na `System32`. Um
+visualizador VNC instalado ele também encontra sozinho: onde o Windows registrou a instalação
 (qualquer pasta), as pastas de Arquivos de Programas de costume, depois o seu PATH. Uma cópia
 portátil descompactada em outro lugar não é encontrada automaticamente; quando falta um
 visualizador, o CapyPanel pede para instalá-lo ou localizar o `.exe`. O caminho é salvo uma vez
@@ -21,20 +23,22 @@ para todos no PC, como em **Configurações > Conexões > Ferramentas remotas** 
 
 Uma rede costuma misturar várias configurações: servidores VNC que pedem uma conta do Windows (o
 MS-Logon do UltraVNC), servidores que pedem só uma senha VNC, plugins de criptografia, RealVNC em
-Raspberry Pis. Um **perfil de conexão** diz qual delas um host usa:
+Raspberry Pis, Área de Trabalho Remota. Um **perfil de conexão** diz qual delas um host usa:
 
-- o **visualizador**;
-- o **login**: usuário e senha, ou só senha;
-- **opções** que o visualizador oferece, como o **plugin SecureVNC** do UltraVNC.
+- a **ferramenta**: um visualizador VNC ou o Remote Desktop Connection;
+- o **login**: usuário e senha, ou só senha. Na Área de Trabalho Remota é "Pedido pelo Remote
+  Desktop Connection";
+- **opções** que a ferramenta oferece, como o **plugin SecureVNC** do UltraVNC.
 
 ### Gerenciar perfis
 
 - Os perfis são gerenciados em **Configurações > Conexões** (também em **Conectar > Perfis de
-  conexão…**): adicionar, editar, duplicar, excluir. Cada um tem um nome, um visualizador, um
-  login (só os que esse visualizador suporta), as opções do visualizador (como o SecureVNC) e uma
-  porta, em branco para a do próprio visualizador.
-- O CapyPanel começa com um perfil por visualizador, **UltraVNC** e **RealVNC**, ambos com
-  "usuário e senha". São perfis comuns: altere ou exclua como qualquer outro.
+  conexão…**): adicionar, editar, duplicar, excluir. Cada um tem um nome, uma ferramenta, um
+  login (só os que essa ferramenta suporta), as opções da ferramenta (como o SecureVNC) e uma
+  porta, em branco para a da própria ferramenta.
+- Cada ferramenta vem com um perfil inicial: **UltraVNC** e **RealVNC**, ambos com "usuário e
+  senha", e **Remote Desktop**. Um perfil inicial é adicionado uma vez, também num PC que já tinha
+  perfis; são perfis comuns, e um que você exclui continua excluído.
 - Todos os perfis ficam juntos em `C:\ProgramData\CapyPanel\profiles\`, junto da lista padrão,
   para que todos no PC vejam os mesmos e seja fácil conferi-los. **As permissões do Windows
   decidem quem pode alterá-los**: depois que o CapyPanel cria a pasta, ela fica somente leitura
@@ -81,10 +85,21 @@ Uma lista guarda só o ID do perfil. Quando um host ou grupo cita um perfil que 
 ele segue o perfil do grupo (ou o padrão), e o menu do botão direito mostra o que falta como "não
 disponível neste PC".
 
+## Área de Trabalho Remota
+
+Um perfil de Área de Trabalho Remota abre o host no cliente de Área de Trabalho Remota do Windows
+(`mstsc`), na porta 3389, a menos que o host ou o perfil defina outra. As opções dele são caixas
+de seleção no perfil: **Sessão administrativa (só servidores)**, que só faz diferença em
+servidores de Serviços de Área de Trabalho Remota, **Tela cheia** e **Usar todos os meus
+monitores**. Não há arquivo de configurações para a Área de Trabalho Remota.
+
+O CapyPanel nunca lida com a senha da Área de Trabalho Remota: o cliente a pede, e a verificação
+de login abaixo não se aplica.
+
 ## Senhas
 
-- O CapyPanel pede a senha de um perfil na primeira vez que você conecta com ele e **a lembra na
-  memória, por perfil**, até fechar. Hosts com outro perfil nunca a recebem.
+- No VNC, o CapyPanel pede a senha de um perfil na primeira vez que você conecta com ele e **a
+  lembra na memória, por perfil**, até fechar. Hosts com outro perfil nunca a recebem.
 - As senhas **nunca são salvas** em disco.
 - **Conectar > Esquecer as senhas digitadas** as apaga, por exemplo depois de um erro de
   digitação: o CapyPanel não consegue saber quando um visualizador recusa uma senha.

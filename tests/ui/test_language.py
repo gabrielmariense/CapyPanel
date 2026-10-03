@@ -67,11 +67,11 @@ def test_language_is_remembered(window: MainWindow) -> None:
     assert checked == ["pt_BR"]
 
 
-def test_settings_language_page_switches_on_save(window: MainWindow) -> None:
+def test_the_language_dropdown_in_general_switches_on_save(window: MainWindow) -> None:
     dialog = window.settings_dialog()
-    assert list(dialog.pages)[-1] == "language"
-    [portuguese] = [b for b in dialog.language.buttons() if b.property("language") == "pt_BR"]
-    portuguese.setChecked(True)
+    assert "language" not in dialog.pages  # just a dropdown on General now
+    combo = dialog.general.language
+    combo.setCurrentIndex(combo.findData("pt_BR"))
     window.apply_settings(dialog.choices())
     QApplication.processEvents()
     assert i18n.language() == "pt_BR" and _menus(window)[0].title() == "&Arquivo"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 16:43-0300\n"
+"POT-Creation-Date: 2026-10-03 17:35-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -68,6 +68,9 @@ msgstr ""
 msgid "&Language"
 msgstr ""
 
+msgid "&Language:"
+msgstr ""
+
 msgid "&Locate…"
 msgstr ""
 
@@ -84,6 +87,9 @@ msgid "&New empty list…"
 msgstr ""
 
 msgid "&New host list…"
+msgstr ""
+
+msgid "&Open connection"
 msgstr ""
 
 msgid "&Open host list…"
@@ -162,10 +168,11 @@ msgstr ""
 msgid "An item is missing the “{key}” field or has an invalid value for it."
 msgstr ""
 
-msgid "App language"
+msgid "Appearance"
 msgstr ""
 
-msgid "Appearance"
+#, python-brace-format
+msgid "Asked by {tool}"
 msgstr ""
 
 #, python-brace-format
@@ -187,7 +194,7 @@ msgstr ""
 msgid "CapyPanel's own appearance, the same on every computer."
 msgstr ""
 
-msgid "Changes take effect immediately, without restarting the app."
+msgid "Change path…"
 msgstr ""
 
 msgid "Choose a host list"
@@ -195,9 +202,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Choose a {tool} settings file"
-msgstr ""
-
-msgid "Choose another…"
 msgstr ""
 
 msgid "Computer"
@@ -421,9 +425,6 @@ msgid ""
 "hosts with this connection profile."
 msgstr ""
 
-msgid "Language"
-msgstr ""
-
 #, python-brace-format
 msgid "List copied to “{path}”. Click Save to open it."
 msgstr ""
@@ -553,9 +554,6 @@ msgid "Read-write"
 msgstr ""
 
 msgid "Reload the list"
-msgstr ""
-
-msgid "Remote screen (&VNC)"
 msgstr ""
 
 msgid "Remote tools"
@@ -862,9 +860,6 @@ msgstr ""
 msgid "Windows — light"
 msgstr ""
 
-msgid "You can also change the language under View > Language."
-msgstr ""
-
 msgid "You can also change the theme under View > Theme."
 msgstr ""
 
@@ -990,7 +985,9 @@ msgstr ""
 msgid "“max_password” must map logins to a length."
 msgstr ""
 
-msgid "“options” must map option ids to the names shown."
+msgid ""
+"“options” must map option ids to a name, or to names by language with "
+"“en”."
 msgstr ""
 
 msgid "“settings_file” needs an “extension” such as “.vnc” and a list to “clear”."

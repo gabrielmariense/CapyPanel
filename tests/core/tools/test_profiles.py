@@ -14,10 +14,9 @@ def _tool(tool_id: str) -> definitions.ToolDefinition:
 
 
 def test_one_starter_profile_per_tool_and_each_fits_its_tool() -> None:
-    paths = sorted(PROFILES_DIR.glob("*.json"))
-    assert {p.stem for p in paths} == {p.stem for p in TOOLS_DIR.glob("*.json")}
-    for path in paths:
-        profile = profiles.load(path)
+    starters = [profiles.load(path) for path in sorted(PROFILES_DIR.glob("*.json"))]
+    assert sorted(p.tool for p in starters) == sorted(p.stem for p in TOOLS_DIR.glob("*.json"))
+    for path, profile in zip(sorted(PROFILES_DIR.glob("*.json")), starters, strict=True):
         assert path.stem == profile.id and profile.name
         profiles.check_fits(profile, _tool(profile.tool))
 

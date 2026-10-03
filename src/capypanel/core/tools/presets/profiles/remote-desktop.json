@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "id": "remote-desktop",
+  "name": "Remote Desktop",
+  "tool": "mstsc",
+  "login": "none"
+}

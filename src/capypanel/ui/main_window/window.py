@@ -120,7 +120,7 @@ class MainWindow(QMainWindow):
         self._inventory_menu.addActions([a.edit, a.remove])
 
         self._connect_menu = bar.addMenu("")
-        self._connect_menu.addAction(a.connect_vnc)
+        self._connect_menu.addAction(a.connect_host)
         self._connect_menu.addAction(a.manual_connect)
         self._connect_menu.addSeparator()
         self._connect_menu.addActions([a.copy_address, a.copy_name])
@@ -190,10 +190,10 @@ class MainWindow(QMainWindow):
         self.table.itemSelectionChanged.connect(self._selection_changed)
         self.table.customContextMenuRequested.connect(self._host_menu)
         # Enter connects only from the host table, so it never fires while typing elsewhere.
-        a.connect_vnc.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
-        self.table.addAction(a.connect_vnc)
+        a.connect_host.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        self.table.addAction(a.connect_host)
         self.table.itemDoubleClicked.connect(lambda *_args: self.connect_selected())
-        a.connect_vnc.triggered.connect(self.connect_selected)
+        a.connect_host.triggered.connect(self.connect_selected)
         a.manual_connect.triggered.connect(self.manual_connect)
         a.copy_address.triggered.connect(lambda: self._copy(lambda h: h.target))
         a.copy_name.triggered.connect(lambda: self._copy(lambda h: h.name))
@@ -773,7 +773,7 @@ class MainWindow(QMainWindow):
         self.nav.add_group_button.setEnabled(writable)
         a.edit.setEnabled(writable and (selected == 1 or group_picked))
         a.remove.setEnabled(writable and (selected > 0 or group_picked))
-        for action in (a.connect_vnc, a.copy_address, a.copy_name):
+        for action in (a.connect_host, a.copy_address, a.copy_name):
             action.setEnabled(selected > 0)  # read-only lists can still connect
         a.forget_passwords.setEnabled(bool(self.connector.credentials))
         if doc is None:
@@ -798,8 +798,13 @@ class MainWindow(QMainWindow):
     def _host_menu(self, position: QPoint) -> None:
         a = self.commands
         menu = QMenu(self)
-        menu.addAction(a.connect_vnc)
-        menu.setDefaultAction(a.connect_vnc)  # bold: what double-click and Enter do
+        if self.table.itemAt(position) is None:  # empty space: what can be added here
+            self.table.clearSelection()
+            menu.addActions([a.add_host, a.add_group])
+            menu.exec(self.table.viewport().mapToGlobal(position))
+            return
+        menu.addAction(a.connect_host)
+        menu.setDefaultAction(a.connect_host)  # bold: what double-click and Enter do
         menu.addSeparator()
         menu.addActions([a.copy_address, a.copy_name])
         hosts = self._selected_hosts()
@@ -824,7 +829,10 @@ class MainWindow(QMainWindow):
     def _group_menu(self, position: QPoint) -> None:
         menu = QMenu(self)
         menu.addAction(self.commands.add_group)
-        group_id = self.nav.selected_group_id()
+        # Only the group under the mouse: empty space never acts on the one picked before.
+        group_id = self.nav.group_at(position)
+        if group_id is not None:
+            self.nav.select_group(group_id)
         group = self._doc.hosts.group(group_id) if self._doc and group_id else None
         if group is not None and self._doc is not None:
             menu.addSeparator()

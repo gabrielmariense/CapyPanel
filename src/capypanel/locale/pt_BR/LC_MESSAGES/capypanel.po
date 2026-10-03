@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 16:43-0300\n"
+"POT-Creation-Date: 2026-10-03 17:35-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -69,6 +69,9 @@ msgstr "&Inventário"
 msgid "&Language"
 msgstr "&Idioma"
 
+msgid "&Language:"
+msgstr "&Idioma:"
+
 msgid "&Locate…"
 msgstr "&Localizar…"
 
@@ -86,6 +89,9 @@ msgstr "&Nova lista vazia…"
 
 msgid "&New host list…"
 msgstr "&Nova lista de hosts…"
+
+msgid "&Open connection"
+msgstr "&Abrir conexão"
 
 msgid "&Open host list…"
 msgstr "&Abrir lista de hosts…"
@@ -163,11 +169,12 @@ msgstr "Todos os computadores"
 msgid "An item is missing the “{key}” field or has an invalid value for it."
 msgstr "Um item não contém o campo “{key}” ou tem um valor inválido nesse campo."
 
-msgid "App language"
-msgstr "Idioma do aplicativo"
-
 msgid "Appearance"
 msgstr "Aparência"
+
+#, python-brace-format
+msgid "Asked by {tool}"
+msgstr "Pedido pelo {tool}"
 
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
@@ -188,8 +195,8 @@ msgstr "CapyPanel — claro"
 msgid "CapyPanel's own appearance, the same on every computer."
 msgstr "A aparência do próprio CapyPanel, igual em todos os computadores."
 
-msgid "Changes take effect immediately, without restarting the app."
-msgstr "A alteração é aplicada imediatamente, sem reiniciar o aplicativo."
+msgid "Change path…"
+msgstr "Alterar caminho…"
 
 msgid "Choose a host list"
 msgstr "Escolher uma lista de hosts"
@@ -197,9 +204,6 @@ msgstr "Escolher uma lista de hosts"
 #, python-brace-format
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
-
-msgid "Choose another…"
-msgstr "Escolher outro…"
 
 msgid "Computer"
 msgstr "Computador"
@@ -414,9 +418,6 @@ msgstr "Arquivo de configurações próprio"
 msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
 
-msgid "Language"
-msgstr "Idioma"
-
 #, python-brace-format
 msgid "List copied to “{path}”. Click Save to open it."
 msgstr "Lista copiada para “{path}”. Clique em Salvar para abri-la."
@@ -544,9 +545,6 @@ msgstr "Leitura e gravação"
 
 msgid "Reload the list"
 msgstr "Recarregar a lista"
-
-msgid "Remote screen (&VNC)"
-msgstr "Tela remota (&VNC)"
 
 msgid "Remote tools"
 msgstr "Ferramentas remotas"
@@ -829,9 +827,6 @@ msgstr "Windows — seguir o tema do sistema"
 msgid "Windows — light"
 msgstr "Windows — claro"
 
-msgid "You can also change the language under View > Language."
-msgstr "Você também pode trocar o idioma em Exibir > Idioma."
-
 msgid "You can also change the theme under View > Theme."
 msgstr "Você também pode trocar o tema em Exibir > Tema."
 
@@ -948,8 +943,8 @@ msgstr "“detect” deve ser um objeto."
 msgid "“max_password” must map logins to a length."
 msgstr "“max_password” deve associar logins a um tamanho."
 
-msgid "“options” must map option ids to the names shown."
-msgstr "“options” deve associar ids de opções aos nomes exibidos."
+msgid "“options” must map option ids to a name, or to names by language with “en”."
+msgstr "“options” deve associar ids de opções a um nome, ou a nomes por idioma com “en”."
 
 msgid "“settings_file” needs an “extension” such as “.vnc” and a list to “clear”."
 msgstr "“settings_file” precisa de uma “extension”, como “.vnc”, e de uma lista em “clear”."
