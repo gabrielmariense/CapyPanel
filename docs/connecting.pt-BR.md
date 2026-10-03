@@ -34,10 +34,11 @@ Raspberry Pis. Um **perfil de conexão** diz qual delas um host usa:
   porta, em branco para a do próprio visualizador.
 - O CapyPanel começa com um perfil por visualizador, **UltraVNC** e **RealVNC**, ambos com
   "usuário e senha". São perfis comuns: altere ou exclua como qualquer outro.
-- Todos os perfis ficam juntos em `data\profiles\` ao lado do app, junto da lista padrão, para
-  que todos que usam essa cópia do CapyPanel vejam os mesmos e seja fácil conferi-los. Como na
-  lista padrão, **as permissões do Windows decidem quem pode alterá-los**; os demais os veem
-  somente leitura.
+- Todos os perfis ficam juntos em `C:\ProgramData\CapyPanel\profiles\`, junto da lista padrão,
+  para que todos no PC vejam os mesmos e seja fácil conferi-los. **As permissões do Windows
+  decidem quem pode alterá-los**: depois que o CapyPanel cria a pasta, ela fica somente leitura
+  para os outros usuários. Um arquivo de perfil criado por outro usuário (que não seja
+  administrador) é ignorado.
 - **O perfil padrão**, usado pelos hosts cujos grupos não definem nenhum, é escolhido na mesma
   página e salvo na mesma pasta, então é o mesmo para todos.
 - Excluir um perfil pergunta antes e diz quantos hosts e grupos da lista aberta o usam. Eles
@@ -45,6 +46,23 @@ Raspberry Pis. Um **perfil de conexão** diz qual delas um host usa:
 - Um perfil pode indicar um visualizador que não está instalado neste PC (ele aparece marcado),
   por exemplo para preparar os perfis antes de instalar os visualizadores. O CapyPanel pede o
   visualizador só na hora de conectar.
+
+### Arquivos de configurações do visualizador
+
+Por padrão, um perfil usa as configurações do próprio visualizador, mais as opções do perfil.
+Para todo o resto que o visualizador oferece (qualidade, escala, só visualização, tela cheia e
+assim por diante), um perfil do **UltraVNC** pode levar um arquivo de configurações:
+
+1. No UltraVNC Viewer, ajuste as opções que quiser e salve a conexão como um arquivo `.vnc`.
+2. No editor de perfil, **Configurações do visualizador > Escolher arquivo…** e selecione-o.
+   **Usar padrões** volta às configurações do próprio visualizador.
+
+Quando você clica em Salvar, o CapyPanel copia o arquivo para junto do perfil
+(`profiles\<id>.vnc`). Ele é usado **exatamente como foi salvo**, inclusive o plugin de
+criptografia; só o `host` é esvaziado, já que o endereço vem do host que você abre. Enquanto um
+perfil tem arquivo, as opções dele (como o SecureVNC) ficam desligadas: quem decide é o arquivo.
+Ao conectar, o visualizador recebe uma cópia temporária, apagada um minuto depois, e o arquivo
+compartilhado nunca é alterado.
 
 ### Escolher um perfil
 
@@ -58,8 +76,9 @@ Raspberry Pis. Um **perfil de conexão** diz qual delas um host usa:
 O painel **Informações** mostra o perfil de cada host e de onde ele vem, por exemplo
 "Raspberry Pis (do grupo “Raspberries”)".
 
-Uma lista guarda só o ID do perfil. Abrir uma lista que cita um perfil que o seu PC não tem mostra
-"não disponível neste PC" em vez de adivinhar.
+Uma lista guarda só o ID do perfil. Quando um host ou grupo cita um perfil que o seu PC não tem,
+ele segue o perfil do grupo (ou o padrão), e o menu do botão direito mostra o que falta como "não
+disponível neste PC".
 
 ## Senhas
 

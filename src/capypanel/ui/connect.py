@@ -32,6 +32,7 @@ from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import Credential, SessionCredentials, Target, launch
 from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
+from capypanel.core.tools.viewer_settings import SettingsFileError
 
 log = logging.getLogger(__name__)
 MANY_CONNECTIONS = 5  # more than this at once asks first
@@ -264,15 +265,16 @@ class Connector:
                     return 0
                 credential = dialog.credential()
                 self.credentials.remember(profile.id, credential)
+        settings = self.catalogs.profiles.settings_path(profile)
         started = 0
         for request in requests:
             target = request.target
             if target.port is None and profile.port is not None:
                 target = replace(target, port=profile.port)
             try:
-                launch(tool, executable, target, credential, profile.options)
+                launch(tool, executable, target, credential, profile.options, settings)
                 started += 1
-            except OSError as e:
+            except (OSError, SettingsFileError) as e:
                 log.warning("Couldn't start %s for %s: %s", tool.id, request.label, e)
                 self._error(
                     _("Couldn't start {tool} for {target}: {error}").format(
@@ -363,8 +365,10 @@ class Connector:
         )
         if not name:
             return None
-        self.catalogs.tools.save_user_copy(replace(tool, executable=name))
-        log.info("%s set to %s", tool.id, name)
+        try:
+            self.catalogs.tools.set_paths({tool.id: name})  # for everyone on this PC
+        except OSError as e:
+            log.warning("Couldn't save the path of %s: %s", tool.id, e)  # still used this time
         return Path(name)
 
     def _confirm_many(self, count: int) -> bool:

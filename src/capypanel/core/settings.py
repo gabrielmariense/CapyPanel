@@ -1,8 +1,10 @@
 """Where the app keeps its files, portable mode, and the settings file.
 
 Everything lives in one folder per computer, C:\\ProgramData\\CapyPanel (or <app>\\userdata when
-portable): users\\<user@DOMAIN>\\ holds each user's settings, personal list and own tool paths,
-private to that user and administrators; logs\\<user@DOMAIN>.log holds one log per user."""
+portable). Shared by everyone on the PC: hosts.json (the default list), profiles\\ and tools\\ (the
+company's tool definitions and where each tool is installed). users\\<user@DOMAIN>\\ holds each
+user's settings and personal list, private to that user and administrators;
+logs\\<user@DOMAIN>.log, one per user."""
 
 import json
 import logging
@@ -42,6 +44,18 @@ class Paths:
     portable: bool
 
     @property
+    def default_list(self) -> Path:
+        return self.root / "hosts.json"
+
+    @property
+    def profiles_dir(self) -> Path:
+        return self.root / "profiles"
+
+    @property
+    def company_tools_dir(self) -> Path:
+        return self.root / "tools"
+
+    @property
     def user_dir(self) -> Path:
         return self.root / "users" / self.account
 
@@ -60,10 +74,6 @@ class Paths:
     @property
     def personal_list(self) -> Path:
         return self.user_dir / "hosts.json"
-
-    @property
-    def user_tools_dir(self) -> Path:
-        return self.user_dir / "tools"
 
 
 def resolve_paths(

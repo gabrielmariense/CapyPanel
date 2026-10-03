@@ -19,9 +19,11 @@ list**.
 
 - **Connection profiles:** add, edit, duplicate and delete the profiles, and choose the
   default one. See [Connecting](connecting.md#managing-profiles).
-- **Remote tools on this PC:** where each viewer was found, or "Not found". **Locate…** picks
-  its `.exe` by hand (for a portable copy, say), saved for your account only; **Automatic** goes
-  back to finding it by itself.
+- **Remote tools:** where each viewer is installed, set once for everyone on the PC. Each shows
+  **✓ Found** (by itself), **✓ Your choice** or **✗ Not found**, with only the buttons that fit:
+  **Choose another…** or **Locate…** to pick its `.exe` (a portable copy, say), **Find
+  automatically** to forget that choice, and **Download** to open the viewer's website when it's
+  missing. Like profiles, only people Windows lets write the folder can change them.
 
 As everywhere in Settings, nothing on this page is written until you click Save; Cancel drops
 every change.
@@ -43,18 +45,23 @@ English or Português (Brasil). The switch is immediate, without a restart. Also
 
 ## Where CapyPanel keeps its files
 
-CapyPanel keeps everything for all users of a PC in one place, with one private folder per user:
+CapyPanel keeps everything for all users of a PC in one folder, `C:\ProgramData\CapyPanel`,
+with one private folder per user:
 
 | What | Where |
 |---|---|
-| Your settings, personal list and your own tool paths | `C:\ProgramData\CapyPanel\users\<you@DOMAIN>\` |
-| Logs, one file per user | `C:\ProgramData\CapyPanel\logs\` |
-| Default host list | `data\hosts.json` next to the app |
-| Connection profiles, and which one is the default | `data\profiles\` next to the app |
-| Viewer definitions, and the starter profiles | Inside the app |
+| Default host list, shared by everyone on the PC | `hosts.json` |
+| Connection profiles, their settings files, and which one is the default | `profiles\` |
+| Viewer definitions added by your company, and where each viewer is installed | `tools\` |
+| Your settings and personal list | `users\<you@DOMAIN>\` |
+| Logs, one file per user | `logs\` |
+| Built-in viewer definitions, and the starter profiles | Inside the app |
 
 - **Your folder is private:** only you, administrators and Windows itself can open it.
   CapyPanel refuses to use a folder someone else created first in your name.
+- **Shared files must come from someone trusted.** Any user can add files to ProgramData, so
+  CapyPanel ignores a shared file (default list, profile, company viewer definition) made by
+  another user who isn't an administrator, and logs it.
 - **Logs never contain passwords.** They record which viewer started for which address, and the
   result of each login check.
 

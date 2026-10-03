@@ -111,3 +111,20 @@ def test_account_login_types_and_password_limits_are_read() -> None:
     for broken in ({"account_types": [0]}, {"account_types": "113"}, {"max_password": {"x": 0}}):
         with pytest.raises(ToolDefinitionError):
             definitions.from_data(_data(**broken))
+
+
+def test_a_settings_file_goes_with_its_placeholder() -> None:
+    base = {"schema": 1, "id": "v", "name": "V", "kind": "vnc"}
+    tool = definitions.from_data({
+        **base, "settings_file": {"extension": ".vnc", "clear": ["host"]},
+        "arguments": [["-config", "{settings_file}"], ["{address}"]],
+    })  # fmt: skip
+    assert tool.settings_file == definitions.SettingsFile(".vnc", ("host",))
+    assert definitions.from_data(definitions.to_data(tool)) == tool
+    for broken in (
+        {"arguments": [["-config", "{settings_file}"], ["{address}"]]},
+        {"settings_file": {"extension": ".vnc"}, "arguments": [["{address}"]]},
+        {"settings_file": {"extension": "vnc"}, "arguments": [["-config", "{settings_file}"]]},
+    ):
+        with pytest.raises(definitions.ToolDefinitionError):
+            definitions.from_data({**base, **broken})

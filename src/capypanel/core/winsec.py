@@ -1,5 +1,5 @@
-"""Windows accounts and folder permissions: who the user is, who owns a folder, and making a
-folder private to its user. Reads the real logon token, never environment variables."""
+"""Windows accounts and folder permissions: who the user is, who owns a file, making a folder
+private to its user or shared read-only. Reads the real logon token, never environment variables."""
 
 import ctypes
 from ctypes import wintypes
@@ -7,6 +7,9 @@ from pathlib import Path
 
 SYSTEM = "S-1-5-18"
 ADMINISTRATORS = "S-1-5-32-544"
+USERS = "S-1-5-32-545"
+TRUSTED_INSTALLER = "S-1-5-80-956008885-3425870976-2464631459-2860876520"
+_READ_EXECUTE = "0x1200a9"
 _NAME_SAM_COMPATIBLE = 2  # "DOMAIN\user", or "PC\user" for a local account
 _SE_FILE_OBJECT = 1
 _OWNER_INFO = 0x1
@@ -93,10 +96,28 @@ def owner_sid(path: Path) -> str | None:
         _kernel32.LocalFree(descriptor)
 
 
+def made_by_trusted(path: Path) -> bool:
+    """Whether a shared file was made by an administrator, the system or this user. In
+    ProgramData any user can add files, so another user's file could lead CapyPanel elsewhere."""
+    owner = owner_sid(path)
+    trusted = (SYSTEM, ADMINISTRATORS, TRUSTED_INSTALLER, current_user_sid())
+    return owner is None or owner in trusted
+
+
 def make_private(folder: Path, user_sid: str) -> None:
     """Only this user, Administrators and the system can open the folder or anything in it.
     Raises OSError where permissions can't be set (e.g. a FAT USB stick)."""
-    sddl = f"D:P(A;OICI;FA;;;{SYSTEM})(A;OICI;FA;;;{ADMINISTRATORS})(A;OICI;FA;;;{user_sid})"
+    _set_dacl(folder, f"(A;OICI;FA;;;{user_sid})")
+
+
+def make_shared(folder: Path, user_sid: str) -> None:
+    """Everyone can read the folder; only its creator, Administrators and the system can change
+    it. Without this, ProgramData lets any user add files to it. Raises OSError."""
+    _set_dacl(folder, f"(A;OICI;FA;;;{user_sid})(A;OICI;{_READ_EXECUTE};;;{USERS})")
+
+
+def _set_dacl(folder: Path, aces: str) -> None:
+    sddl = f"D:P(A;OICI;FA;;;{SYSTEM})(A;OICI;FA;;;{ADMINISTRATORS}){aces}"
     descriptor = ctypes.c_void_p()
     if not _advapi32.ConvertStringSecurityDescriptorToSecurityDescriptorW(
         sddl, 1, ctypes.byref(descriptor), None

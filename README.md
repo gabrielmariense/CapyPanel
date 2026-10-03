@@ -1,29 +1,38 @@
-<p align="right">
+<h1 align="center">CapyPanel</h1>
+
+<p align="center">
   <a href="README.md"><img src="https://flagcdn.com/40x30/us.png" width="40" height="30" alt="English" title="English"></a>
+  &nbsp;
   <a href="README.pt-BR.md"><img src="https://flagcdn.com/40x30/br.png" width="40" height="30" alt="Português (Brasil)" title="Português (Brasil)"></a>
 </p>
 
-# CapyPanel
-
-A Windows desktop app for IT staff: keep the computers on your network in one organized list,
-and open a remote screen on any of them with the tools you already use.
-
-- **Host lists** with nested groups, tags and notes. A list is a plain JSON file: keep a personal
-  one, share one on a network folder, or publish a default list for everyone on the PC.
-- **Remote screen (VNC)** through UltraVNC Viewer or RealVNC Viewer, opened with a double-click or
-  Enter, for one host or many at once.
-- **Connection profiles** say how each host is reached: which viewer, which login (user and
-  password, or password only), and options such as UltraVNC's SecureVNC plugin. Set one on a
-  group and every host inside follows it.
-- **Passwords stay in memory**, one per profile, until CapyPanel closes; they're never saved.
-  Before sending a Windows password, CapyPanel checks the server asks for one.
-- **English and Portuguese (Brazil)**, switched live. **Seven themes**, from native Windows to
-  CapyPanel's own look.
+CapyPanel puts every computer you look after in one window. It's a Windows desktop app for IT
+staff: keep your hosts in organized lists, and open a remote screen on any of them with the VNC
+viewer you already use.
 
 Built for any organization: nothing is tied to one company's network, tools or language.
 
-> **Status: alpha (0.9.0).** Usable today, and growing one feature at a time. It runs from
+> **Status: alpha (0.10.0).** Usable today, and growing one feature at a time. It runs from
 > source; there's no installer yet.
+
+## Features
+
+### Released
+
+- Remote screen (UltraVNC, RealVNC)
+- Connection profiles
+- Shared host lists
+
+### In development
+
+- Remote Desktop (RDP)
+- Logged-on users
+
+### Planned
+
+- SSH
+- Search and status
+- Actions on hosts
 
 ## Documentation
 

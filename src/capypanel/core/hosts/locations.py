@@ -5,7 +5,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from capypanel.core import settings
+from capypanel.core import winsec
 from capypanel.core.hosts import listfile
 
 RECENT_KEY = "recent_lists"
@@ -15,7 +15,7 @@ RECENT_LIMIT = 10
 
 
 class ListKind(StrEnum):
-    DEFAULT = "default"  # in the app folder, placed by an admin; editable where Windows allows
+    DEFAULT = "default"  # shared by everyone on the PC; editable where Windows allows
     PERSONAL = "personal"  # the user's own, in their private CapyPanel folder
     SHARED = "shared"  # any other file the user picked, e.g. on a network share
 
@@ -24,10 +24,7 @@ class Access(StrEnum):
     MISSING = "missing"
     READ_ONLY = "read-only"
     READ_WRITE = "read-write"
-
-
-def default_list_path(folder: Path | None = None) -> Path:
-    return (folder if folder is not None else settings.app_dir()) / "data" / "hosts.json"
+    UNTRUSTED = "untrusted"  # a shared file another standard user made: not used
 
 
 def list_kind(path: Path, *, default: Path, personal: Path) -> ListKind:
@@ -38,11 +35,13 @@ def list_kind(path: Path, *, default: Path, personal: Path) -> ListKind:
     return ListKind.SHARED
 
 
-def list_access(path: Path) -> Access:
+def list_access(path: Path, *, shared: bool = False) -> Access:
     """What the user can do with a list file. Windows permissions decide, for every kind of
-    list: the default list is read-only for users because they can't write the app folder."""
+    list. A `shared` one (the default list) must also be made by an administrator or this user."""
     if not path.is_file():
         return Access.MISSING
+    if shared and not winsec.made_by_trusted(path):
+        return Access.UNTRUSTED
     if not listfile.can_write(path):
         return Access.READ_ONLY
     return Access.READ_WRITE

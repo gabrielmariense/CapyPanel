@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel import BUILD
-from capypanel.core import i18n, settings
+from capypanel.core import i18n, settings, winsec
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
@@ -68,7 +68,7 @@ class MainWindow(QMainWindow):
         self._prefs = prefs
         self.registry = registry if registry is not None else themes.Registry()
         self._doc: OpenList | None = None
-        self._default_list = locations.default_list_path()
+        self._default_list = paths.default_list
         self._personal_list = paths.personal_list
         self.connector = Connector(
             self, Catalogs.for_paths(paths), SessionCredentials(), self._prefs
@@ -238,7 +238,7 @@ class MainWindow(QMainWindow):
         expected = prefs.get(locations.START_KEY, locations.START_LAST) != locations.START_LAST
         expected = expected or bool(locations.recent_lists(prefs))
         for index, path in enumerate(order):
-            if not path.exists() and self._kind(path) is not ListKind.PERSONAL:
+            if not path.exists() and self._kind(path) is ListKind.SHARED:
                 continue  # a missing list isn't an error at start: try the next one
             if self.open_list(path, quiet=True):
                 if index and expected:
@@ -248,8 +248,15 @@ class MainWindow(QMainWindow):
 
     def open_list(self, path: Path, *, quiet: bool = False) -> bool:
         kind = self._kind(path)
-        if kind is ListKind.PERSONAL and not path.exists():
-            return self._create_list(path, replace_existing=False)
+        if kind is not ListKind.SHARED and not path.exists():
+            return self._create_list(path, replace_existing=False, quiet=quiet)
+        if kind is ListKind.DEFAULT and not winsec.made_by_trusted(path):
+            note = _(
+                "The default list was made by another user, so CapyPanel won't open it. An "
+                "administrator can replace or delete “{path}”."
+            )
+            self._error(note.format(path=path), quiet)
+            return False
         try:
             doc = OpenList.open(path)
         except FileNotFoundError:
@@ -279,11 +286,11 @@ class MainWindow(QMainWindow):
         if name:
             self.open_list(Path(name))
 
-    def _create_list(self, path: Path, *, replace_existing: bool) -> bool:
+    def _create_list(self, path: Path, *, replace_existing: bool, quiet: bool = False) -> bool:
         try:
             doc = OpenList.create(path, replace_existing=replace_existing)
         except (HostListFileError, OSError) as e:
-            self._error(_("Couldn't create “{path}”: {error}").format(path=path, error=e))
+            self._error(_("Couldn't create “{path}”: {error}").format(path=path, error=e), quiet)
             return False
         self._use(doc)
         return True

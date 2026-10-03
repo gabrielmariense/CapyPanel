@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 12:52-0300\n"
+"POT-Creation-Date: 2026-10-03 14:56-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -169,12 +169,12 @@ msgstr "Idioma do aplicativo"
 msgid "Appearance"
 msgstr "Aparência"
 
-msgid "Automatic"
-msgstr "Automático"
-
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
 msgstr "Marcador malformado em “{arg}”."
+
+msgid "C&hoose file…"
+msgstr "Escol&her arquivo…"
 
 msgid "CapyPanel"
 msgstr "CapyPanel"
@@ -193,6 +193,13 @@ msgstr "A alteração é aplicada imediatamente, sem reiniciar o aplicativo."
 
 msgid "Choose a host list"
 msgstr "Escolher uma lista de hosts"
+
+#, python-brace-format
+msgid "Choose a {tool} settings file"
+msgstr "Escolha um arquivo de configurações do {tool}"
+
+msgid "Choose another…"
+msgstr "Escolher outro…"
 
 msgid "Computer"
 msgstr "Computador"
@@ -265,6 +272,10 @@ msgid "Couldn't start {tool} for {target}: {error}"
 msgstr "Não foi possível iniciar o {tool} para {target}: {error}"
 
 #, python-brace-format
+msgid "Couldn't use “{file}”: {error}"
+msgstr "Não foi possível usar “{file}”: {error}"
+
+#, python-brace-format
 msgid "Couldn't write “{path}”: {error}"
 msgstr "Não foi possível gravar “{path}”: {error}"
 
@@ -295,8 +306,11 @@ msgid "Delete connection profile"
 msgstr "Excluir perfil de conexão"
 
 #, python-brace-format
-msgid "Delete the connection profile “{profile}”? Everyone who uses this folder loses it."
-msgstr "Excluir o perfil de conexão “{profile}”? Todos que usam esta pasta deixam de tê-lo."
+msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
+msgstr "Excluir o perfil de conexão “{profile}”? Todos neste PC deixam de tê-lo."
+
+msgid "Download"
+msgstr "Baixar"
 
 msgid "Duplicate connection profile"
 msgstr "Duplicar perfil de conexão"
@@ -316,11 +330,11 @@ msgstr "Editar host"
 msgid "File not found"
 msgstr "Arquivo não encontrado"
 
+msgid "Find automatically"
+msgstr "Encontrar automaticamente"
+
 msgid "For example \\\\server\\share\\hosts.json"
 msgstr "Por exemplo \\\\servidor\\compartilhamento\\hosts.json"
-
-msgid "Forget the chosen path and find the tool by itself again"
-msgstr "Esquecer o caminho escolhido e voltar a encontrar a ferramenta sozinho"
 
 msgid "From each host's group"
 msgstr "Do grupo de cada host"
@@ -331,6 +345,10 @@ msgstr "Do grupo"
 #, python-brace-format
 msgid "From group “{group}”: {profile}"
 msgstr "Do grupo “{group}”: {profile}"
+
+#, python-brace-format
+msgid "From “{file}”"
+msgstr "De “{file}”"
 
 msgid "General"
 msgstr "Geral"
@@ -381,11 +399,17 @@ msgstr "Na lista aberta ele está definido em {hosts} e {groups}. Eles passarão
 msgid "Information"
 msgstr "Informações"
 
+msgid "Install it, or locate its .exe."
+msgstr "Instale-o ou localize o .exe dele."
+
 msgid "It's handed to the viewer privately, never on its command line."
 msgstr "Ela é entregue ao visualizador de forma privada, nunca na linha de comando."
 
 msgid "It's passed to the viewer on its command line, which administrators of this PC can see."
 msgstr "Ela é passada ao visualizador na linha de comando, que os administradores deste PC podem ver."
+
+msgid "Its own settings file"
+msgstr "Arquivo de configurações próprio"
 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
@@ -406,6 +430,9 @@ msgstr "Localizar…"
 
 msgid "Logs"
 msgstr "Logs"
+
+msgid "Made by another user: not used"
+msgstr "Criada por outro usuário: não é usada"
 
 msgid "Manual connection"
 msgstr "Conexão manual"
@@ -453,12 +480,6 @@ msgstr "Nenhuma lista de hosts está aberta."
 msgid "No recent lists"
 msgstr "Nenhuma lista recente"
 
-msgid "Not found"
-msgstr "Não encontrada"
-
-msgid "Not found: install it, or select its .exe."
-msgstr "Não encontrado: instale ou selecione o .exe."
-
 #, python-brace-format
 msgid "Not opened: {names}"
 msgid_plural "Not opened ({n}): {names}"
@@ -492,6 +513,10 @@ msgid_plural "Opened {n} remote screens."
 msgstr[0] "{n} tela remota aberta."
 msgstr[1] "{n} telas remotas abertas."
 
+#, python-brace-format
+msgid "Optional: a {extension} file saved from {tool}. It's used exactly as saved, including its encryption plugin; only the host is emptied, since the address comes from the host you open."
+msgstr "Opcional: um arquivo {extension} salvo no {tool}. Ele é usado exatamente como foi salvo, inclusive o plugin de criptografia; só o host é esvaziado, já que o endereço vem do host que você abre."
+
 msgid "Options:"
 msgstr "Opções:"
 
@@ -523,8 +548,8 @@ msgstr "Recarregar a lista"
 msgid "Remote screen (&VNC)"
 msgstr "Tela remota (&VNC)"
 
-msgid "Remote tools on this PC"
-msgstr "Ferramentas remotas neste PC"
+msgid "Remote tools"
+msgstr "Ferramentas remotas"
 
 msgid "Remove"
 msgstr "Remover"
@@ -568,17 +593,26 @@ msgstr "Salvar minha versão como cópia…"
 msgid "Select a host to see its details."
 msgstr "Selecione um host para ver os detalhes."
 
+msgid "Set in the settings file"
+msgstr "Definido no arquivo de configurações"
+
 msgid "Settings"
 msgstr "Configurações"
 
 msgid "Shared"
 msgstr "Compartilhada"
 
-msgid "Shared by everyone who uses CapyPanel from this folder. Read-only: only people Windows lets write this folder can change them."
-msgstr "Compartilhados por todos que usam o CapyPanel desta pasta. Somente leitura: só quem o Windows deixa gravar nesta pasta pode alterá-los."
+msgid "Shared by everyone on this PC. Read-only: only people Windows lets write this folder can change them."
+msgstr "Compartilhados por todos neste PC. Somente leitura: só quem o Windows deixa gravar nesta pasta pode alterá-los."
 
-msgid "Shared by everyone who uses CapyPanel from this folder. You can change them."
-msgstr "Compartilhados por todos que usam o CapyPanel desta pasta. Você pode alterá-los."
+msgid "Shared by everyone on this PC. You can change them."
+msgstr "Compartilhados por todos neste PC. Você pode alterá-los."
+
+msgid "Shared by everyone on this PC: the default list, connection profiles, the company's tool definitions and where each tool is installed. Your files are your settings and personal list; only you and administrators can open them. Each user's log is named after their account."
+msgstr "Compartilhados por todos neste PC: a lista padrão, os perfis de conexão, as definições de ferramentas da empresa e onde cada ferramenta está instalada. Seus arquivos são suas configurações e sua lista pessoal; só você e os administradores podem abri-los. O log de cada usuário leva o nome da conta dele."
+
+msgid "Shared files"
+msgstr "Arquivos compartilhados"
 
 msgid "Shared or &other list"
 msgstr "Lista compartilhada ou &outra"
@@ -622,17 +656,27 @@ msgstr "O perfil de conexão “{profile}” precisa da ferramenta “{tool}”,
 msgid "The default list"
 msgstr "A lista padrão"
 
-msgid "The default list is placed in the app's folder by whoever manages CapyPanel. The personal list is yours alone. Any list can be edited by people with write permission on its folder; for everyone else it opens read-only."
-msgstr "A lista padrão é colocada na pasta do aplicativo por quem administra o CapyPanel. A lista pessoal é só sua. Qualquer lista pode ser editada por quem tem permissão de gravação na pasta dela; para os demais, ela abre somente para leitura."
+msgid "The default list is shared by everyone on this PC; it's used only if an administrator or you made it. The personal list is yours alone. Any list can be edited by people with write permission on it; for everyone else it opens read-only."
+msgstr "A lista padrão é compartilhada por todos neste PC; ela só é usada se foi criada por um administrador ou por você. A lista pessoal é só sua. Qualquer lista pode ser editada por quem tem permissão de gravação nela; para os demais, ela abre somente para leitura."
+
+#, python-brace-format
+msgid "The default list was made by another user, so CapyPanel won't open it. An administrator can replace or delete “{path}”."
+msgstr "A lista padrão foi criada por outro usuário, então o CapyPanel não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
 
 msgid "The file doesn't contain a host list."
 msgstr "O arquivo não contém uma lista de hosts."
+
+msgid "The file has no settings."
+msgstr "O arquivo não tem nenhuma configuração."
 
 msgid "The file has no valid schema version."
 msgstr "O arquivo não tem uma versão de esquema válida."
 
 msgid "The file has two items with the same ID."
 msgstr "O arquivo tem dois itens com o mesmo ID."
+
+msgid "The file is too big to be viewer settings."
+msgstr "O arquivo é grande demais para ser de configurações do visualizador."
 
 #, python-brace-format
 msgid "The folder “{folder}” was created by another user, so CapyPanel won't use it. Ask an administrator to delete it; it will be created again."
@@ -655,6 +699,10 @@ msgstr "O grupo pai não existe."
 msgid "The placeholder “{{{name}}}” goes with the “{method}” credential method."
 msgstr "O marcador “{{{name}}}” é usado com o método de credencial “{method}”."
 
+#, python-brace-format
+msgid "The placeholder “{{{name}}}” goes with “settings_file”."
+msgstr "O marcador “{{{name}}}” é usado com “settings_file”."
+
 msgid "The profile needs a “name”."
 msgstr "O perfil precisa de um “name”."
 
@@ -674,17 +722,33 @@ msgstr "A ferramenta precisa de “arguments”: uma lista de grupos."
 msgid "The tool's “id” must be lowercase letters, digits, - or _."
 msgstr "O “id” da ferramenta deve ter só letras minúsculas, dígitos, - ou _."
 
+msgid "The viewer's defaults"
+msgstr "Padrões do visualizador"
+
 msgid "The “executable” must be a path."
 msgstr "O “executable” deve ser um caminho."
 
 msgid "The “port” must be a number from 1 to 65535."
 msgstr "A “port” deve ser um número de 1 a 65535."
 
+msgid "The “settings_file” must be a file name in the profiles folder."
+msgstr "O “settings_file” deve ser o nome de um arquivo na pasta de perfis."
+
+msgid "The “website” must be an https:// address."
+msgstr "O “website” deve ser um endereço https://."
+
 msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr "Não há perfis de conexão. Crie um em Configurações > Conexões."
 
 msgid "This connection profile needs a newer version of CapyPanel."
 msgstr "Este perfil de conexão precisa de uma versão mais nova do CapyPanel."
+
+#, python-brace-format
+msgid "This doesn't look like a viewer settings file: “{line}”."
+msgstr "Isto não parece um arquivo de configurações do visualizador: “{line}”."
+
+msgid "This isn't a text file."
+msgstr "Este não é um arquivo de texto."
 
 #, python-brace-format
 msgid "This isn't a valid host list file ({error})."
@@ -730,8 +794,24 @@ msgstr "Marcador desconhecido “{{{name}}}” nos argumentos."
 msgid "Unknown tool kind “{kind}”."
 msgstr "Tipo de ferramenta desconhecido: “{kind}”."
 
+msgid "Use &defaults"
+msgstr "Usar &padrões"
+
+#, python-brace-format
+msgid "Viewer settings (*{extension})"
+msgstr "Configurações do visualizador (*{extension})"
+
+msgid "Viewer settings:"
+msgstr "Configurações do visualizador:"
+
 msgid "Where CapyPanel keeps its files"
 msgstr "Onde o CapyPanel guarda os arquivos"
+
+msgid "Where each tool is installed, set once for everyone on this PC."
+msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste PC."
+
+msgid "Where each tool is installed, set once for everyone on this PC. Read-only: only people Windows lets write the tools folder can change it."
+msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste PC. Somente leitura: só quem o Windows deixa gravar na pasta de ferramentas pode alterar."
 
 #, python-brace-format
 msgid "Where is {tool}?"
@@ -757,9 +837,6 @@ msgstr "Você também pode trocar o tema em Exibir > Tema."
 
 msgid "Your files"
 msgstr "Seus arquivos"
-
-msgid "Your settings, personal list and your own tool paths. Only you and administrators can open this folder. Each user's log is named after their account."
-msgstr "Suas configurações, lista pessoal e seus caminhos de ferramentas. Só você e os administradores podem abrir esta pasta. O log de cada usuário leva o nome da conta dele."
 
 msgid "no password"
 msgstr "sem senha"
@@ -840,6 +917,10 @@ msgid "{tool} can't be given a password."
 msgstr "O {tool} não aceita receber uma senha."
 
 #, python-brace-format
+msgid "{tool} can't be given a settings file."
+msgstr "O {tool} não aceita receber um arquivo de configurações."
+
+#, python-brace-format
 msgid "{tool} can't be given a user name."
 msgstr "O {tool} não aceita receber um nome de usuário."
 
@@ -870,6 +951,9 @@ msgstr "“max_password” deve associar logins a um tamanho."
 msgid "“options” must map option ids to the names shown."
 msgstr "“options” deve associar ids de opções aos nomes exibidos."
 
+msgid "“settings_file” needs an “extension” such as “.vnc” and a list to “clear”."
+msgstr "“settings_file” precisa de uma “extension”, como “.vnc”, e de uma lista em “clear”."
+
 #, python-brace-format
 msgid "“{key}” must be a list."
 msgstr "“{key}” deve ser uma lista."
@@ -877,4 +961,13 @@ msgstr "“{key}” deve ser uma lista."
 #, python-brace-format
 msgid "“{name}” has no address, and its name can't be used as one: a computer name has no spaces or symbols other than - and _."
 msgstr "“{name}” não tem endereço, e o nome não pode ser usado como um: um nome de computador não tem espaços nem símbolos além de - e _."
+
+msgid "✓ Found"
+msgstr "✓ Encontrado"
+
+msgid "✓ Your choice"
+msgstr "✓ Sua escolha"
+
+msgid "✗ Not found"
+msgstr "✗ Não encontrado"
 

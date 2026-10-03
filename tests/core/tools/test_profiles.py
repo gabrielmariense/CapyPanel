@@ -66,3 +66,13 @@ def test_unknown_keys_survive_a_round_trip() -> None:
 def test_broken_profiles_say_why(changes: dict[str, Any], reason: str) -> None:
     with pytest.raises(ProfileError, match=reason):
         profiles.from_data({"schema": 1, "id": "x", "name": "X", "tool": "ultravnc", **changes})
+
+
+def test_the_settings_file_is_a_name_beside_the_profile_never_a_path() -> None:
+    base = {"schema": 1, "id": "clinics", "name": "Clinics", "tool": "ultravnc"}
+    profile = profiles.from_data({**base, "settings_file": "clinics.vnc"})
+    assert profile.settings_file == "clinics.vnc"
+    assert profiles.from_data(profiles.to_data(profile)) == profile
+    for bad in (r"..\..\evil.vnc", "C:/x.vnc", "sub/x.vnc", "noextension", 5):
+        with pytest.raises(ProfileError):
+            profiles.from_data({**base, "settings_file": bad})
