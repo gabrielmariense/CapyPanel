@@ -13,10 +13,10 @@ uv run capypanel
 
 A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes
 abrem na hora. A versão aparece na barra de título, seguida do commit quando você roda pelo
-código-fonte, por exemplo `CapyPanel 0.10.1 (abc1234)`. Informe-a ao relatar um problema.
+código-fonte, por exemplo `CapyPanel 0.11.0 (abc1234)`. Informe-a ao relatar um problema.
 
-Para abrir telas remotas você também precisa de um visualizador VNC: o
-[UltraVNC](https://uvnc.com) ou o
+A Área de Trabalho Remota funciona de cara, com o cliente que já vem no Windows. Para o VNC você
+também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
 [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/). Veja
 [Conectando](connecting.pt-BR.md).
 
@@ -42,7 +42,11 @@ Cada painel pode ser escondido pelo menu **Exibir**.
    - **Tags:** digite uma tag e pressione Enter; Backspace numa caixa vazia traz a última tag de
      volta para edição.
    - **Perfil de conexão:** como acessar o host. "Do grupo" segue o perfil do grupo.
-3. Dê um clique duplo no host, ou selecione-o e pressione Enter, para abrir a tela remota.
+3. Dê um clique duplo no host, ou selecione-o e pressione Enter, para abrir uma conexão com ele
+   pelo perfil dele (**Conectar > Abrir conexão**).
+
+O botão direito num espaço vazio também funciona: **Adicionar grupo…** no painel de grupos,
+**Adicionar host…** e **Adicionar grupo…** na lista de hosts.
 
 As edições são salvas no arquivo da lista na hora; não há botão Salvar.
 
@@ -50,7 +54,7 @@ As edições são salvas no arquivo da lista na hora; não há botão Salvar.
 
 | Atalho | Ação |
 |---|---|
-| Enter (na lista de hosts) | Abrir a tela remota dos hosts selecionados |
+| Enter (na lista de hosts) | Abrir uma conexão com os hosts selecionados |
 | Ctrl+M | Conexão manual a um endereço que não está na lista |
 | Ctrl+Shift+C | Copiar os endereços dos hosts selecionados |
 | Ctrl+N / Ctrl+Shift+N | Adicionar host / Adicionar grupo |

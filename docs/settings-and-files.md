@@ -6,6 +6,8 @@ Open Settings with **File > Settings…** (Ctrl+,). Changes apply when you click
 
 - **Open on startup:** which host list opens when CapyPanel starts (see
   [Host lists](host-lists.md#which-list-opens-at-start)).
+- **Language:** English or Português (Brasil), switched without a restart. Also under
+  **View > Language**.
 - **Where CapyPanel keeps its files:** your own folder and the logs folder, each with an
   **Open folder** button.
 
@@ -19,11 +21,12 @@ list**.
 
 - **Connection profiles:** add, edit, duplicate and delete the profiles, and choose the
   default one. See [Connecting](connecting.md#managing-profiles).
-- **Remote tools:** where each viewer is installed, set once for everyone on the PC. Each shows
+- **Remote tools:** where each tool is installed, set once for everyone on the PC. Each shows
   **✓ Found** (by itself), **✓ Your choice** or **✗ Not found**, with only the buttons that fit:
-  **Choose another…** or **Locate…** to pick its `.exe` (a portable copy, say), **Find
+  **Change path…** or **Locate…** to pick its `.exe` (a portable copy, say), **Find
   automatically** to forget that choice, and **Download** to open the viewer's website when it's
-  missing. Like profiles, only people Windows lets write the folder can change them.
+  missing. Remote Desktop Connection is built into Windows, so it normally shows **✓ Found** and
+  has no Download. Like profiles, only people Windows lets write the folder can change them.
 
 As everywhere in Settings, nothing on this page is written until you click Save; Cancel drops
 every change.
@@ -37,11 +40,6 @@ every change.
 | Graphite, Paper | Two more of CapyPanel's own looks |
 
 Also under **View > Theme**. Themes only change the look, never what the app does.
-
-## Language
-
-English or Português (Brasil). The switch is immediate, without a restart. Also under
-**View > Language**.
 
 ## Where CapyPanel keeps its files
 

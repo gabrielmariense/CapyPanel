@@ -8,25 +8,21 @@
 
 O CapyPanel reúne numa só janela todos os computadores que você administra. É um app de desktop
 para Windows feito para equipes de TI: organize seus hosts em listas e abra a tela remota de
-qualquer um deles com o visualizador VNC que você já usa.
+qualquer um deles pela Área de Trabalho Remota ou pelo visualizador VNC que você já usa.
 
-Feito para qualquer organização: nada fica preso à rede, às ferramentas ou ao idioma de uma
-empresa.
-
-> **Situação: alfa (0.10.1).** Já dá para usar, e cresce uma funcionalidade por vez. Roda a partir
-> do código-fonte; ainda não há instalador.
+> **Situação: beta (0.11.0).** Roda a partir do código-fonte; ainda não há instalador.
 
 ## Funcionalidades
 
 ### Lançadas
 
 - Tela remota (UltraVNC, RealVNC)
+- Área de Trabalho Remota (RDP)
 - Perfis de conexão
 - Listas de hosts compartilhadas
 
 ### Em desenvolvimento
 
-- Área de Trabalho Remota (RDP)
 - Usuários conectados
 
 ### Planejadas
@@ -43,7 +39,8 @@ Também online, com busca: **[gabrielmariense.github.io/CapyPanel/pt-BR](https:/
   hosts
 - [Listas de hosts](docs/host-lists.pt-BR.md): grupos, tags e as listas padrão, pessoal e
   compartilhadas
-- [Conectando](docs/connecting.pt-BR.md): visualizadores VNC, perfis de conexão e senhas
+- [Conectando](docs/connecting.pt-BR.md): visualizadores VNC, Área de Trabalho Remota, perfis de
+  conexão e senhas
 - [Configurações e arquivos](docs/settings-and-files.pt-BR.md): o que cada configuração faz e
   onde o CapyPanel guarda os arquivos
 - [Desenvolvimento](docs/development.pt-BR.md): compilar, testar e traduzir
@@ -59,9 +56,9 @@ cd CapyPanel
 uv run capypanel
 ```
 
-Para abrir telas remotas, instale o [UltraVNC](https://uvnc.com) ou o
-[RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/). O CapyPanel os abre; nunca
-os distribui nem baixa.
+A Área de Trabalho Remota usa o cliente que já vem no Windows. Para o VNC, instale o
+[UltraVNC](https://uvnc.com) ou o
+[RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/).
 
 ## Licença
 

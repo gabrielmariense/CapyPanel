@@ -7,6 +7,7 @@ clica em Salvar.
 
 - **Abrir ao iniciar:** qual lista de hosts abre quando o CapyPanel inicia (veja
   [Listas de hosts](host-lists.pt-BR.md#qual-lista-abre-ao-iniciar)).
+- **Idioma:** English ou Português (Brasil), trocado sem reiniciar. Também em **Exibir > Idioma**.
 - **Onde o CapyPanel guarda os arquivos:** sua própria pasta e a pasta de logs, cada uma com um
   botão **Abrir pasta**.
 
@@ -20,12 +21,13 @@ lista vazia**.
 
 - **Perfis de conexão:** adicione, edite, duplique e exclua perfis, e escolha o padrão. Veja
   [Conectando](connecting.pt-BR.md#gerenciar-perfis).
-- **Ferramentas remotas:** onde cada visualizador está instalado, definido uma vez para todos no
+- **Ferramentas remotas:** onde cada ferramenta está instalada, definido uma vez para todos no
   PC. Cada um mostra **✓ Encontrado** (sozinho), **✓ Sua escolha** ou **✗ Não encontrado**, só
-  com os botões que fazem sentido: **Escolher outro…** ou **Localizar…** para escolher o `.exe`
+  com os botões que fazem sentido: **Alterar caminho…** ou **Localizar…** para escolher o `.exe`
   (de uma cópia portátil, por exemplo), **Encontrar automaticamente** para esquecer essa escolha e
-  **Baixar** para abrir o site do visualizador quando ele não está instalado. Como nos perfis, só
-  quem o Windows deixa gravar na pasta pode alterá-los.
+  **Baixar** para abrir o site do visualizador quando ele não está instalado. O Remote Desktop
+  Connection vem com o Windows, então normalmente mostra **✓ Encontrado** e não tem Baixar. Como
+  nos perfis, só quem o Windows deixa gravar na pasta pode alterá-los.
 
 Como em todas as Configurações, nada nesta página é gravado até você clicar em Salvar; Cancelar
 descarta todas as alterações.
@@ -39,10 +41,6 @@ descarta todas as alterações.
 | Graphite, Paper | Mais dois visuais próprios do CapyPanel |
 
 Também em **Exibir > Tema**. Os temas só mudam o visual, nunca o que o app faz.
-
-## Idioma
-
-English ou Português (Brasil). A troca é imediata, sem reiniciar. Também em **Exibir > Idioma**.
 
 ## Onde o CapyPanel guarda os arquivos
 

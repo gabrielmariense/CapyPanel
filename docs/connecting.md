@@ -1,38 +1,42 @@
 # Connecting
 
-CapyPanel opens remote screens through VNC viewers you install yourself. It never ships, bundles
-or downloads them.
+CapyPanel opens remote screens through VNC viewers you install yourself, and through Windows' own
+Remote Desktop client. It never ships, bundles or downloads them.
 
-## Supported viewers
+## Supported tools
 
-| Viewer | How CapyPanel gives it the password |
+| Tool | How CapyPanel gives it the password |
 |---|---|
 | **UltraVNC Viewer** | On its command line (the only way UltraVNC accepts one). Administrators of your PC can see command lines; the log never shows the password |
 | **RealVNC Viewer** | Through a private pipe that only your Windows account can open, read once. Nothing is written to disk or put on the command line |
+| **Remote Desktop Connection** | It doesn't: the Remote Desktop client asks for the password itself |
 
-CapyPanel finds an installed viewer by itself: where Windows recorded the install (any folder),
-the usual Program Files folders, then your PATH. A portable copy unzipped somewhere else isn't
-found automatically; when a viewer is missing, CapyPanel asks you to install it or to locate its
+Remote Desktop Connection is built into Windows, so CapyPanel finds it in `System32`. It finds
+an installed VNC viewer by itself too: where Windows recorded the install (any folder), the usual
+Program Files folders, then your PATH. A portable copy unzipped somewhere else isn't found
+automatically; when a viewer is missing, CapyPanel asks you to install it or to locate its
 `.exe`. The path is saved once for everyone on the PC, like in **Settings > Connections > Remote
 tools** (see [Settings and files](settings-and-files.md#connections)).
 
 ## Connection profiles
 
 A network often mixes several setups: VNC servers that ask for a Windows account (UltraVNC's
-MS-Logon), servers that ask only for a VNC password, encryption plugins, RealVNC on Raspberry Pis.
-A **connection profile** says which one a host uses:
+MS-Logon), servers that ask only for a VNC password, encryption plugins, RealVNC on Raspberry Pis,
+Remote Desktop. A **connection profile** says which one a host uses:
 
-- the **viewer**;
-- the **login**: user and password, or password only;
-- **options** the viewer offers, such as UltraVNC's **SecureVNC plugin**.
+- the **tool**: a VNC viewer or Remote Desktop Connection;
+- the **login**: user and password, or password only. For Remote Desktop it's "Asked by Remote
+  Desktop Connection";
+- **options** the tool offers, such as UltraVNC's **SecureVNC plugin**.
 
 ### Managing profiles
 
 - Profiles are managed in **Settings > Connections** (also **Connect > Connection profiles…**):
-  add, edit, duplicate, delete. Each has a name, a viewer, a login (only the ones that viewer
-  supports), the viewer's options (such as SecureVNC) and a port, blank for the viewer's own.
-- CapyPanel starts with one profile per viewer, **UltraVNC** and **RealVNC**, both with "user
-  and password". They're ordinary profiles: change or delete them like any other.
+  add, edit, duplicate, delete. Each has a name, a tool, a login (only the ones that tool
+  supports), the tool's options (such as SecureVNC) and a port, blank for the tool's own.
+- Each tool comes with a starter profile: **UltraVNC** and **RealVNC**, both with "user and
+  password", and **Remote Desktop**. A starter is added once, also on a PC that already had
+  profiles; they're ordinary profiles, and one you delete stays deleted.
 - All profiles are kept together in `C:\ProgramData\CapyPanel\profiles\`, beside the default
   list, so everyone on the PC sees the same ones and they're easy to check. **Windows
   permissions decide who can change them**: the folder is read-only for other users once
@@ -77,10 +81,21 @@ A list stores only the profile's ID. When a host or group names a profile your P
 have, it follows its group's profile (or the default) instead, and its right-click menu shows the
 missing one as "not available on this PC".
 
+## Remote Desktop
+
+A Remote Desktop profile opens the host in Windows' Remote Desktop client (`mstsc`), on port 3389
+unless the host or profile sets another. Its options are checkboxes on the profile:
+**Administrative session (servers only)**, which matters only on Remote Desktop Services servers,
+**Full screen** and **Use all my monitors**. There's no settings file for Remote Desktop.
+
+CapyPanel never handles a Remote Desktop password: the client asks for it, and the login check
+below doesn't apply.
+
 ## Passwords
 
-- CapyPanel asks for a profile's password the first time you connect with it, and **remembers it
-  in memory, per profile**, until it closes. Hosts with another profile never receive it.
+- For VNC, CapyPanel asks for a profile's password the first time you connect with it, and
+  **remembers it in memory, per profile**, until it closes. Hosts with another profile never
+  receive it.
 - Passwords are **never saved** to disk.
 - **Connect > Forget typed passwords** clears them, e.g. after a typo: CapyPanel can't tell
   when a viewer rejects a password.

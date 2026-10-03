@@ -7,25 +7,22 @@
 </p>
 
 CapyPanel puts every computer you look after in one window. It's a Windows desktop app for IT
-staff: keep your hosts in organized lists, and open a remote screen on any of them with the VNC
-viewer you already use.
+staff: keep your hosts in organized lists, and open a remote screen on any of them through Remote
+Desktop or the VNC viewer you already use.
 
-Built for any organization: nothing is tied to one company's network, tools or language.
-
-> **Status: alpha (0.10.1).** Usable today, and growing one feature at a time. It runs from
-> source; there's no installer yet.
+> **Status: beta (0.11.0).** It runs from source; there's no installer yet.
 
 ## Features
 
 ### Released
 
 - Remote screen (UltraVNC, RealVNC)
+- Remote Desktop (RDP)
 - Connection profiles
 - Shared host lists
 
 ### In development
 
-- Remote Desktop (RDP)
 - Logged-on users
 
 ### Planned
@@ -40,7 +37,7 @@ Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrie
 
 - [Getting started](docs/getting-started.md): run CapyPanel and add your first hosts
 - [Host lists](docs/host-lists.md): groups, tags, and default, personal and shared lists
-- [Connecting](docs/connecting.md): VNC viewers, connection profiles and passwords
+- [Connecting](docs/connecting.md): VNC viewers, Remote Desktop, connection profiles and passwords
 - [Settings and files](docs/settings-and-files.md): what each setting does, and where CapyPanel
   keeps its files
 - [Development](docs/development.md): building, testing and translating
@@ -56,9 +53,8 @@ cd CapyPanel
 uv run capypanel
 ```
 
-To open remote screens, install [UltraVNC](https://uvnc.com) or
-[RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/). CapyPanel launches them;
-it never ships or downloads them.
+Remote Desktop uses the client built into Windows. For VNC, install [UltraVNC](https://uvnc.com)
+or [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/).
 
 ## License
 
