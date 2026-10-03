@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from capypanel.core import i18n
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.tools import detect, viewer_settings
@@ -164,8 +165,8 @@ class ProfileDialog(QDialog):
             self._options.removeWidget(box)
             box.deleteLater()
         self.option_boxes = {}
-        for option_id, name in tool.options.items():
-            box = QCheckBox(name)
+        for option_id in tool.options:
+            box = QCheckBox(tool.option_name(option_id, i18n.language()))
             box.setChecked(option_id in ticked)
             self._options.addWidget(box)
             self.option_boxes[option_id] = box
@@ -485,7 +486,7 @@ class ConnectionsPage(Page):
                 status = QLabel(_("✓ Your choice") if tool.executable else _("✓ Found"))
                 status.setToolTip(str(found))  # the full path, without filling the page
             # Only the actions that make sense in this state.
-            actions = {"locate": _("Choose another…") if found else _("Locate…")}
+            actions = {"locate": _("Change path…") if found else _("Locate…")}
             if tool.executable:
                 actions["automatic"] = _("Find automatically")
             if found is None and tool.website:

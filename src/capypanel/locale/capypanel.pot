@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 17:06-0300\n"
+"POT-Creation-Date: 2026-10-03 17:35-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -66,6 +66,9 @@ msgid "&Inventory"
 msgstr ""
 
 msgid "&Language"
+msgstr ""
+
+msgid "&Language:"
 msgstr ""
 
 msgid "&Locate…"
@@ -165,9 +168,6 @@ msgstr ""
 msgid "An item is missing the “{key}” field or has an invalid value for it."
 msgstr ""
 
-msgid "App language"
-msgstr ""
-
 msgid "Appearance"
 msgstr ""
 
@@ -194,7 +194,7 @@ msgstr ""
 msgid "CapyPanel's own appearance, the same on every computer."
 msgstr ""
 
-msgid "Changes take effect immediately, without restarting the app."
+msgid "Change path…"
 msgstr ""
 
 msgid "Choose a host list"
@@ -202,9 +202,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Choose a {tool} settings file"
-msgstr ""
-
-msgid "Choose another…"
 msgstr ""
 
 msgid "Computer"
@@ -426,9 +423,6 @@ msgstr ""
 msgid ""
 "Kept in memory until CapyPanel closes, never saved, and used only for "
 "hosts with this connection profile."
-msgstr ""
-
-msgid "Language"
 msgstr ""
 
 #, python-brace-format
@@ -866,9 +860,6 @@ msgstr ""
 msgid "Windows — light"
 msgstr ""
 
-msgid "You can also change the language under View > Language."
-msgstr ""
-
 msgid "You can also change the theme under View > Theme."
 msgstr ""
 
@@ -994,7 +985,9 @@ msgstr ""
 msgid "“max_password” must map logins to a length."
 msgstr ""
 
-msgid "“options” must map option ids to the names shown."
+msgid ""
+"“options” must map option ids to a name, or to names by language with "
+"“en”."
 msgstr ""
 
 msgid "“settings_file” needs an “extension” such as “.vnc” and a list to “clear”."

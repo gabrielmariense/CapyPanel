@@ -6,9 +6,9 @@
   "port": 3389,
   "credentials": "none",
   "options": {
-    "admin": "Administrative session",
-    "fullscreen": "Full screen",
-    "multimon": "Use all my monitors"
+    "admin": {"en": "Administrative session", "pt_BR": "Sessão administrativa"},
+    "fullscreen": {"en": "Full screen", "pt_BR": "Tela cheia"},
+    "multimon": {"en": "Use all my monitors", "pt_BR": "Usar todos os meus monitores"}
   },
   "arguments": [
     ["/v:{address}:{port}"],

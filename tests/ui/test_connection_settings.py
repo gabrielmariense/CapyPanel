@@ -6,7 +6,7 @@ import pytest
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtWidgets import QApplication, QDialogButtonBox, QFileDialog
 
-from capypanel.core import settings
+from capypanel.core import i18n, settings
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.model import HostList
 from capypanel.core.tools.catalog import Catalogs
@@ -270,7 +270,7 @@ def test_remote_tools_show_a_state_and_only_the_actions_that_fit(
     assert page.tool_status["ultravnc"].text() == "✓ Found"
     assert page.tool_status["ultravnc"].toolTip() == r"C:\Tools\vncviewer.exe"  # not on the page
     assert list(page.tool_buttons["ultravnc"]) == ["locate"]
-    assert page.tool_buttons["ultravnc"]["locate"].text() == "Choose another…"
+    assert page.tool_buttons["ultravnc"]["locate"].text() == "Change path…"
     assert page.tool_status["realvnc"].text() == "✗ Not found"
     assert list(page.tool_buttons["realvnc"]) == ["locate", "download"]
     opened: list[QUrl] = []
@@ -292,3 +292,18 @@ def test_remote_tools_show_a_state_and_only_the_actions_that_fit(
     connections.apply(catalogs, page.changes())
     entry = catalogs.tools.find("realvnc")
     assert entry is not None and entry.item.executable == r"D:\Apps\vncviewer.exe"
+
+
+def test_rdp_options_show_in_the_app_s_language(catalogs: Catalogs) -> None:
+    tools = [e.item for e in catalogs.tools.all()]
+    i18n.set_language("pt_BR")
+    try:
+        dialog = ProfileDialog(None, "Novo", tools, {"mstsc"})
+        dialog.tool.setCurrentIndex(dialog.tool.findData("mstsc"))
+        assert [b.text() for b in dialog.option_boxes.values()] == [
+            "Sessão administrativa", "Tela cheia", "Usar todos os meus monitores"
+        ]  # fmt: skip
+        dialog.tool.setCurrentIndex(dialog.tool.findData("ultravnc"))
+        assert [b.text() for b in dialog.option_boxes.values()] == ["SecureVNC plugin"]
+    finally:
+        i18n.set_language("en")

@@ -19,7 +19,9 @@ def test_the_starters_show_until_the_folder_exists_then_become_files(tmp_path: P
     assert not (tmp_path / "profiles").exists()  # nothing written just by looking
     store.save(_profile("clinics", "Clinics"))
     files = sorted(p.name for p in (tmp_path / "profiles").glob("*.json"))
-    assert files == ["clinics.json", "realvnc.json", "remote-desktop.json", "ultravnc.json"]
+    assert files == [
+        "_starters.json", "clinics.json", "realvnc.json", "remote-desktop.json", "ultravnc.json"
+    ]  # fmt: skip
 
 
 def test_starters_are_ordinary_profiles_that_can_be_deleted(tmp_path: Path) -> None:
@@ -123,3 +125,19 @@ def test_a_settings_file_is_kept_beside_its_profile_and_goes_with_it(
     store.save(clinics, b"[options]\r\na=1\r\n")
     store.delete("clinics")
     assert not path.exists()
+
+
+def test_a_new_tool_s_starter_joins_an_existing_folder_once(tmp_path: Path) -> None:
+    starters = tmp_path / "starters"
+    starters.mkdir()
+    for pid, tool in (("ultravnc", "ultravnc"), ("remote-desktop", "mstsc")):
+        data = {"schema": 1, "id": pid, "name": pid.title(), "tool": tool, "login": "none"}
+        (starters / f"{pid}.json").write_text(json.dumps(data), encoding="utf-8")
+    folder = tmp_path / "profiles"
+    folder.mkdir()  # a folder from an older version: only the UltraVNC starter, no record
+    (folder / "ultravnc.json").write_bytes((starters / "ultravnc.json").read_bytes())
+    store = ProfileStore(folder, starters)
+    assert {p.id for p in store.all()} == {"ultravnc", "remote-desktop"}
+    assert (folder / "remote-desktop.json").is_file()  # written, so it can be edited
+    store.delete("remote-desktop")
+    assert "remote-desktop" not in {p.id for p in ProfileStore(folder, starters).all()}

@@ -3,7 +3,7 @@
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
-from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtCore import QEvent, QPoint, Qt, Signal
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -91,6 +91,14 @@ class NavigationPane(QWidget):
 
     def selected_group_id(self) -> str | None:
         return self._filter.value if self._filter.kind == "group" else None
+
+    def group_at(self, position: QPoint) -> str | None:
+        """The group under a point of the groups list; None on empty space or "All computers"."""
+        item = self.groups.itemAt(position)
+        return item.data(0, ROLE_ID) if item and item.data(0, ROLE_KIND) == "group" else None
+
+    def select_group(self, group_id: str) -> None:
+        self._filter = self._select(Filter("group", group_id))
 
     def show_list(self, host_list: HostList | None) -> None:
         """Rebuilds both lists from the host list, keeping the current pick when it still exists."""

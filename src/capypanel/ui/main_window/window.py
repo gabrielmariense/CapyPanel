@@ -798,6 +798,11 @@ class MainWindow(QMainWindow):
     def _host_menu(self, position: QPoint) -> None:
         a = self.commands
         menu = QMenu(self)
+        if self.table.itemAt(position) is None:  # empty space: what can be added here
+            self.table.clearSelection()
+            menu.addActions([a.add_host, a.add_group])
+            menu.exec(self.table.viewport().mapToGlobal(position))
+            return
         menu.addAction(a.connect_host)
         menu.setDefaultAction(a.connect_host)  # bold: what double-click and Enter do
         menu.addSeparator()
@@ -824,7 +829,10 @@ class MainWindow(QMainWindow):
     def _group_menu(self, position: QPoint) -> None:
         menu = QMenu(self)
         menu.addAction(self.commands.add_group)
-        group_id = self.nav.selected_group_id()
+        # Only the group under the mouse: empty space never acts on the one picked before.
+        group_id = self.nav.group_at(position)
+        if group_id is not None:
+            self.nav.select_group(group_id)
         group = self._doc.hosts.group(group_id) if self._doc and group_id else None
         if group is not None and self._doc is not None:
             menu.addSeparator()

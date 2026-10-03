@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu, QMessageBox
 
@@ -17,6 +17,7 @@ from capypanel.core.tools.profiles import ConnectionProfile
 from capypanel.ui import connect as connect_ui
 from capypanel.ui.connect import CredentialDialog, ManualConnectDialog, Request
 from capypanel.ui.hosts import HostDialog
+from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.window import MainWindow
 
 Launch = tuple[str, str, int | None, Credential | None, tuple[str, ...]]
@@ -429,3 +430,49 @@ def test_remote_desktop_opens_without_asking_for_a_password(
     started = window.connector.connect([Request("PC-A", Target("10.0.0.1"), "desk")])
     assert started == 1
     assert launched == [("mstsc", "10.0.0.1", None, None, ("admin",))]
+
+
+def _menu_on(monkeypatch: pytest.MonkeyPatch, show: Any) -> list[str]:
+    """The texts of the menu `show` opens, without opening it."""
+    seen: list[str] = []
+
+    class Recorded(QMenu):
+        def exec(self, *_args: Any) -> None:  # type: ignore[override]
+            seen.extend(a.text() for a in self.actions() if a.text())
+
+    monkeypatch.setattr(window_module, "QMenu", Recorded)
+    show()
+    return seen
+
+
+def _items(tree: Any) -> list[Any]:
+    found, stack = [], [tree.invisibleRootItem()]
+    while stack:
+        item = stack.pop()
+        for i in range(item.childCount()):
+            found.append(item.child(i))
+            stack.append(item.child(i))
+    return found
+
+
+def test_right_click_acts_on_what_is_under_the_mouse(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window.show()
+    QApplication.processEvents()
+    groups = window.nav.groups
+    offices = next(i for i in _items(groups) if i.text(0).startswith("Offices"))
+    pis = next(i for i in _items(groups) if i.text(0).startswith("Pis"))
+    groups.setCurrentItem(pis)  # picked earlier
+    empty = groups.viewport().rect().bottomLeft() + QPoint(5, -5)
+    assert _menu_on(monkeypatch, lambda: window._group_menu(empty)) == ["Add &group…"]
+    texts = _menu_on(
+        monkeypatch, lambda: window._group_menu(groups.visualItemRect(offices).center())
+    )
+    assert "&Edit selected…" in texts  # the group under the mouse, which is now picked
+    assert window.nav.selected_group_id() == offices.data(0, Qt.ItemDataRole.UserRole + 1)
+    table_empty = window.table.viewport().rect().bottomLeft() + QPoint(5, -5)
+    assert _menu_on(monkeypatch, lambda: window._host_menu(table_empty)) == [
+        "Add &host…", "Add &group…"
+    ]  # fmt: skip
+    window.close()

@@ -25,7 +25,6 @@ from capypanel.ui.settings.pages import (
     AppearancePage,
     GeneralPage,
     HostListsPage,
-    LanguagePage,
     Page,
 )
 from capypanel.ui.themes import engine as themes
@@ -63,6 +62,7 @@ class SettingsDialog(QDialog):
             default_list=default_list,
             personal_list=personal_list,
             recent=recent,
+            language=i18n.language(),
         )
         self.host_lists = HostListsPage(
             default_list=default_list,
@@ -72,13 +72,11 @@ class SettingsDialog(QDialog):
         )
         self.connections = ConnectionsPage(catalogs, document)
         self.appearance = AppearancePage(registry, themes.current().id)
-        self.language = LanguagePage(i18n.language())
         self.pages: dict[str, Page] = {
             "general": self.general,
             "host_lists": self.host_lists,
             "connections": self.connections,
             "appearance": self.appearance,
-            "language": self.language,
         }
 
         self.page_list = QListWidget()
@@ -126,7 +124,7 @@ class SettingsDialog(QDialog):
             host_list=host_list,
             rewritten=any(same_path(host_list, p) for p in written),
             theme_id=self.appearance.theme_id(),
-            language=self.language.language(),
+            language=self.general.language_choice(),
             connections=self.connections.changes(),
         )
 
