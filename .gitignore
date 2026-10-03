@@ -32,3 +32,6 @@ desktop.ini
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# The documentation website, built by mkdocs
+/site/
