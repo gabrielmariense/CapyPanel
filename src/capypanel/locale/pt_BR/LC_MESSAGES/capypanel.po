@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 17:35-0300\n"
+"POT-Creation-Date: 2026-10-03 21:05-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -18,14 +18,14 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+msgid "&Add existing…"
+msgstr "&Adicionar existente…"
+
 msgid "&Address:"
 msgstr "&Endereço:"
 
 msgid "&Add…"
 msgstr "&Adicionar…"
-
-msgid "&Browse…"
-msgstr "P&rocurar…"
 
 msgid "&Connect"
 msgstr "&Conectar"
@@ -33,14 +33,14 @@ msgstr "&Conectar"
 msgid "&Copy current list to…"
 msgstr "&Copiar lista atual para…"
 
-msgid "&Default list"
-msgstr "Lista pa&drão"
-
 msgid "&Delete…"
 msgstr "E&xcluir…"
 
 msgid "&Details pane"
 msgstr "Painel de &detalhes"
+
+msgid "&Discard changes"
+msgstr "&Descartar alterações"
 
 msgid "&Edit host…"
 msgstr "&Editar host…"
@@ -63,8 +63,14 @@ msgstr "&Grupo:"
 msgid "&Groups pane"
 msgstr "Painel de &grupos"
 
+msgid "&Host lists…"
+msgstr "&Listas de hosts…"
+
 msgid "&Inventory"
 msgstr "&Inventário"
+
+msgid "&Keep editing"
+msgstr "&Continuar editando"
 
 msgid "&Language"
 msgstr "&Idioma"
@@ -84,17 +90,17 @@ msgstr "Conexão &manual…"
 msgid "&Name:"
 msgstr "&Nome:"
 
-msgid "&New empty list…"
-msgstr "&Nova lista vazia…"
-
 msgid "&New host list…"
 msgstr "&Nova lista de hosts…"
 
+msgid "&New…"
+msgstr "&Nova…"
+
+msgid "&Open"
+msgstr "Abri&r"
+
 msgid "&Open connection"
 msgstr "&Abrir conexão"
-
-msgid "&Open host list…"
-msgstr "&Abrir lista de hosts…"
 
 msgid "&Open on startup:"
 msgstr "&Abrir ao iniciar:"
@@ -102,14 +108,14 @@ msgstr "&Abrir ao iniciar:"
 msgid "&Password:"
 msgstr "&Senha:"
 
-msgid "&Personal list"
-msgstr "Lista &pessoal"
-
-msgid "&Recent lists"
-msgstr "Listas &recentes"
+msgid "&Remove from the list"
+msgstr "Re&mover da lista"
 
 msgid "&Remove selected"
 msgstr "&Remover selecionado"
+
+msgid "&Save changes"
+msgstr "&Salvar alterações"
 
 msgid "&Settings…"
 msgstr "&Configurações…"
@@ -147,17 +153,26 @@ msgstr "O nome é obrigatório."
 msgid "A tool definition must be a JSON object."
 msgstr "Uma definição de ferramenta deve ser um objeto JSON."
 
+msgid "Access"
+msgstr "Acesso"
+
 msgid "Add &group…"
 msgstr "Adicionar &grupo…"
 
 msgid "Add &host…"
 msgstr "Adicionar &host…"
 
+msgid "Add a host list"
+msgstr "Adicionar uma lista de hosts"
+
 msgid "Add group"
 msgstr "Adicionar grupo"
 
 msgid "Add host"
 msgstr "Adicionar host"
+
+msgid "Added"
+msgstr "Adicionada"
 
 msgid "Address"
 msgstr "Endereço"
@@ -197,9 +212,6 @@ msgstr "A aparência do próprio CapyPanel, igual em todos os computadores."
 
 msgid "Change path…"
 msgstr "Alterar caminho…"
-
-msgid "Choose a host list"
-msgstr "Escolher uma lista de hosts"
 
 #, python-brace-format
 msgid "Choose a {tool} settings file"
@@ -283,9 +295,6 @@ msgstr "Não foi possível usar “{file}”: {error}"
 msgid "Couldn't write “{path}”: {error}"
 msgstr "Não foi possível gravar “{path}”: {error}"
 
-msgid "Create a list"
-msgstr "Criar uma lista"
-
 msgid "Created when opened"
 msgstr "Criada ao abrir"
 
@@ -298,6 +307,9 @@ msgstr "Padrão"
 #, python-brace-format
 msgid "Default ({port})"
 msgstr "Padrão ({port})"
+
+msgid "Default list: shared by everyone on this PC."
+msgstr "Lista padrão: compartilhada por todos neste PC."
 
 #, python-brace-format
 msgid "Default: {profile}"
@@ -337,8 +349,8 @@ msgstr "Arquivo não encontrado"
 msgid "Find automatically"
 msgstr "Encontrar automaticamente"
 
-msgid "For example \\\\server\\share\\hosts.json"
-msgstr "Por exemplo \\\\servidor\\compartilhamento\\hosts.json"
+msgid "Forgets it here; the file itself is never deleted"
+msgstr "Esquece a lista aqui; o arquivo em si nunca é excluído"
 
 msgid "From each host's group"
 msgstr "Do grupo de cada host"
@@ -393,6 +405,9 @@ msgstr "Hosts"
 msgid "Hosts with no profile &use:"
 msgstr "Hosts sem perfil &usam:"
 
+msgid "Hover over a list to see where it is."
+msgstr "Passe o mouse sobre uma lista para ver onde ela está."
+
 msgid "If that list can't be opened, CapyPanel tries the default list. If that also fails, it opens your personal list."
 msgstr "Se essa lista não puder ser aberta, o CapyPanel tenta a lista padrão. Se isso também falhar, ele abre a sua lista pessoal."
 
@@ -418,13 +433,11 @@ msgstr "Arquivo de configurações próprio"
 msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
 
-#, python-brace-format
-msgid "List copied to “{path}”. Click Save to open it."
-msgstr "Lista copiada para “{path}”. Clique em Salvar para abri-la."
+msgid "Kind"
+msgstr "Tipo"
 
-#, python-brace-format
-msgid "List created at “{path}”. Click Save to open it."
-msgstr "Lista criada em “{path}”. Clique em Salvar para abri-la."
+msgid "List"
+msgstr "Lista"
 
 msgid "Locate…"
 msgstr "Localizar…"
@@ -478,9 +491,6 @@ msgstr "Sem endereço"
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
 
-msgid "No recent lists"
-msgstr "Nenhuma lista recente"
-
 #, python-brace-format
 msgid "Not opened: {names}"
 msgid_plural "Not opened ({n}): {names}"
@@ -495,12 +505,6 @@ msgstr "Abrir &Configurações"
 
 msgid "Open folder"
 msgstr "Abrir pasta"
-
-msgid "Open host list"
-msgstr "Abrir lista de hosts"
-
-msgid "Open this list"
-msgstr "Abrir esta lista"
 
 #, python-brace-format
 msgid "Open {n} remote screen at once?"
@@ -530,6 +534,9 @@ msgstr "Senha para {profile}"
 
 msgid "Personal"
 msgstr "Pessoal"
+
+msgid "Personal list: only yours."
+msgstr "Lista pessoal: só sua."
 
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
@@ -579,6 +586,9 @@ msgstr[1] "Remover {n} hosts da lista?"
 msgid "Remove “{name}” from the list?"
 msgstr "Remover “{name}” da lista?"
 
+msgid "Removing a list from here never deletes its file."
+msgstr "Remover uma lista daqui nunca exclui o arquivo dela."
+
 msgid "Rename group"
 msgstr "Renomear grupo"
 
@@ -612,9 +622,6 @@ msgstr "Compartilhados por todos neste PC: a lista padrão, os perfis de conexã
 msgid "Shared files"
 msgstr "Arquivos compartilhados"
 
-msgid "Shared or &other list"
-msgstr "Lista compartilhada ou &outra"
-
 msgid "Someone else has changed the file since you opened it."
 msgstr "Outra pessoa alterou o arquivo desde que você o abriu."
 
@@ -643,6 +650,9 @@ msgstr "Esse perfil não existe."
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
 msgstr "Os argumentos usam uma opção que não está em “options”: “{option}”."
 
+msgid "The changes on the Connections page aren't saved yet."
+msgstr "As alterações na página Conexões ainda não foram salvas."
+
 #, python-brace-format
 msgid "The connection profile “{profile}” isn't available on this PC."
 msgstr "O perfil de conexão “{profile}” não está disponível neste PC."
@@ -653,9 +663,6 @@ msgstr "O perfil de conexão “{profile}” precisa da ferramenta “{tool}”,
 
 msgid "The default list"
 msgstr "A lista padrão"
-
-msgid "The default list is shared by everyone on this PC; it's used only if an administrator or you made it. The personal list is yours alone. Any list can be edited by people with write permission on it; for everyone else it opens read-only."
-msgstr "A lista padrão é compartilhada por todos neste PC; ela só é usada se foi criada por um administrador ou por você. A lista pessoal é só sua. Qualquer lista pode ser editada por quem tem permissão de gravação nela; para os demais, ela abre somente para leitura."
 
 #, python-brace-format
 msgid "The default list was made by another user, so CapyPanel won't open it. An administrator can replace or delete “{path}”."
@@ -792,6 +799,9 @@ msgstr "Marcador desconhecido “{{{name}}}” nos argumentos."
 msgid "Unknown tool kind “{kind}”."
 msgstr "Tipo de ferramenta desconhecido: “{kind}”."
 
+msgid "Unsaved changes"
+msgstr "Alterações não salvas"
+
 msgid "Use &defaults"
 msgstr "Usar &padrões"
 
@@ -886,6 +896,10 @@ msgid "{n} selected"
 msgid_plural "{n} selected"
 msgstr[0] "{n} selecionado"
 msgstr[1] "{n} selecionados"
+
+#, python-brace-format
+msgid "{path} (open now)"
+msgstr "{path} (aberta agora)"
 
 #, python-brace-format
 msgid "{profile} (copy)"

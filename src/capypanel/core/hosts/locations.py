@@ -8,7 +8,8 @@ from typing import Any
 from capypanel.core import winsec
 from capypanel.core.hosts import listfile
 
-RECENT_KEY = "recent_lists"
+RECENT_KEY = "recent_lists"  # most recent first; the first is reopened at start
+LISTS_KEY = "host_lists"  # the lists the user added, besides the default and personal ones
 START_KEY = "start_list"  # "last", "default", "personal", or a list file's path
 START_LAST, START_DEFAULT, START_PERSONAL = "last", "default", "personal"
 RECENT_LIMIT = 10
@@ -77,6 +78,23 @@ def remember_list(prefs: dict[str, Any], path: Path) -> None:
     """Puts `path` first in the recent lists (the first one is reopened at start)."""
     others = [p for p in recent_lists(prefs) if not same_path(p, path)]
     prefs[RECENT_KEY] = [str(path), *map(str, others)][:RECENT_LIMIT]
+
+
+def added_lists(prefs: dict[str, Any]) -> list[Path]:
+    value = prefs.get(LISTS_KEY)
+    if value is None:
+        value = prefs.get(RECENT_KEY)  # before the Host lists window, the recent ones
+    if not isinstance(value, list):
+        return []
+    return [Path(p) for p in value if isinstance(p, str) and p]
+
+
+def set_added_lists(prefs: dict[str, Any], paths: list[Path]) -> None:
+    unique: list[Path] = []
+    for path in paths:
+        if not any(same_path(path, p) for p in unique):
+            unique.append(path)
+    prefs[LISTS_KEY] = [str(p) for p in unique]
 
 
 def forget_list(prefs: dict[str, Any], path: Path) -> None:

@@ -81,7 +81,7 @@ def test_the_language_dropdown_in_general_switches_on_save(window: MainWindow) -
 def test_access_keys_are_unique_in_every_menu(window: MainWindow, code: str) -> None:
     # Two items with the same underlined letter make Alt+letter ambiguous.
     _switch(window, code)
-    for menu in [*_menus(window), window._recent_menu, window._theme_menu]:
+    for menu in [*_menus(window), window._theme_menu]:
         texts = [a.text() for a in menu.actions() if "&" in a.text()]
         keys = [t[t.index("&") + 1].lower() for t in texts]
         assert len(keys) == len(set(keys)), f"{menu.title()}: {texts}"

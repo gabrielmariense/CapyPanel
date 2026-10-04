@@ -446,6 +446,19 @@ class ConnectionsPage(Page):
     def default_choice(self) -> str:
         return self.default.currentData() or ""
 
+    def has_changes(self) -> bool:
+        edited = self._changed or self._deleted or self._tool_paths or self._settings
+        return bool(edited) or self.default_choice() != self.store.default_id()
+
+    def reset(self) -> None:
+        """Back to what's saved: after the changes were saved or dropped."""
+        self._profiles = {p.id: p for p in self.store.all()}
+        for pending in (self._changed, self._deleted, self._tool_paths, self._settings):
+            pending.clear()
+        self._fill_profiles(select=None)
+        self.default.setCurrentIndex(max(self.default.findData(self.store.default_id()), 0))
+        self._fill_tools()
+
     def changes(self) -> ConnectionChanges:
         return ConnectionChanges(
             saved=tuple(self._profiles[pid] for pid in sorted(self._changed)),
