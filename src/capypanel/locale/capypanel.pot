@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 22:44-0300\n"
+"POT-Creation-Date: 2026-10-04 12:25-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -911,6 +911,10 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{name} (in use)"
+msgstr ""
+
+#, python-brace-format
 msgid "{n} group"
 msgid_plural "{n} groups"
 msgstr[0] ""
@@ -941,7 +945,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
-msgid "{path} (open now)"
+msgid "{path} (in use)"
 msgstr ""
 
 #, python-brace-format

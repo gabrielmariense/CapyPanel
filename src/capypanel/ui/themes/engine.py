@@ -346,6 +346,10 @@ QHeaderView::section { background: %(card)s; color: %(text2)s; border: none;
 /* Tables marked "grid" get lines between rows and columns, like a spreadsheet. */
 QTreeView#grid::item { border-right: 2px solid %(border)s; border-bottom: 2px solid %(border)s; }
 QTreeView#grid QHeaderView::section { border-right: 2px solid %(border)s; }
+/* No line after the last column, as there's none before the first. */
+QTreeView#grid::item:last, QTreeView#grid::item:only-one,
+QTreeView#grid QHeaderView::section:last,
+QTreeView#grid QHeaderView::section:only-one { border-right: none; }
 QHeaderView::section:hover { color: %(text)s; }
 
 QFrame#card { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; }
@@ -412,6 +416,10 @@ QTreeView::item:selected, QListView#pageList::item:selected {
 /* Tables marked "grid" get lines between rows and columns, like a spreadsheet. */
 QTreeView#grid::item { border-right: 2px solid %(border)s; border-bottom: 2px solid %(border)s; }
 QTreeView#grid QHeaderView::section { border-right: 2px solid %(border)s; }
+/* No line after the last column, as there's none before the first. */
+QTreeView#grid::item:last, QTreeView#grid::item:only-one,
+QTreeView#grid QHeaderView::section:last,
+QTreeView#grid QHeaderView::section:only-one { border-right: none; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
 QFrame#tagEdit { background: %(card)s; border: 1px solid %(border)s; border-radius: 4px; }
 QFrame#tagEdit[focused="true"] { border-color: %(accent)s; }

@@ -104,7 +104,7 @@ def test_host_lists_shows_every_list_with_the_open_one_in_bold(
         ("Added", "Read-write", True),
     ]
     names = [view.tree.topLevelItem(i).text(0) for i in range(3)]  # type: ignore[union-attr]
-    assert names == ["hosts.json", "hosts.json", "office.json"]
+    assert names == ["hosts.json", "hosts.json", "office.json (in use)"]
     os.chmod(office, stat.S_IREAD)
     try:
         assert _rows(window.settings_dialog().host_lists.view)[2][1] == "Read-only"

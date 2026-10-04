@@ -43,7 +43,7 @@ def access_text(access: Access, kind: ListKind) -> str:
 
 
 class HostListsView(QWidget):
-    """The lists, with the one open now in bold, and buttons to add, create or forget lists.
+    """The lists, with the one in use in bold and marked, and buttons to add, create or forget.
     Adding or forgetting only changes this view's copy; its owner decides when to keep it."""
 
     changed = Signal()
@@ -161,10 +161,12 @@ class HostListsView(QWidget):
                 ListKind.SHARED: _("Added"),
             }[kind]
             access = locations.list_access(path, shared=kind is ListKind.DEFAULT)
+            is_open = current is not None and locations.same_path(path, current)
+            if is_open:
+                name = _("{name} (in use)").format(name=name)
             item = QTreeWidgetItem([name, kind_text, access_text(access, kind)])
             item.setData(0, ROLE_PATH, str(path))
-            is_open = current is not None and locations.same_path(path, current)
-            tip = _("{path} (open now)").format(path=path) if is_open else str(path)
+            tip = _("{path} (in use)").format(path=path) if is_open else str(path)
             for column in range(3):
                 item.setToolTip(column, tip)
             if is_open:

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 22:44-0300\n"
+"POT-Creation-Date: 2026-10-04 12:25-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -880,6 +880,10 @@ msgstr[0] "{names} não aceita usuário e senha (pode pedir uma senha VNC ou ser
 msgstr[1] "{names} não aceitam usuário e senha (podem pedir uma senha VNC ou ser outro tipo de servidor VNC), então o CapyPanel não enviou a sua senha. Confira o perfil de conexão deles."
 
 #, python-brace-format
+msgid "{name} (in use)"
+msgstr "{name} (em uso)"
+
+#, python-brace-format
 msgid "{n} group"
 msgid_plural "{n} groups"
 msgstr[0] "{n} grupo"
@@ -910,8 +914,8 @@ msgstr[0] "{n} selecionado"
 msgstr[1] "{n} selecionados"
 
 #, python-brace-format
-msgid "{path} (open now)"
-msgstr "{path} (aberta agora)"
+msgid "{path} (in use)"
+msgstr "{path} (em uso)"
 
 #, python-brace-format
 msgid "{profile} (copy)"
