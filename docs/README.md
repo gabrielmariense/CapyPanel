@@ -35,5 +35,5 @@ For people who use CapyPanel, and for people who set it up for a team.
 | [Settings and files](settings-and-files.md) | Every setting, and where CapyPanel keeps its files |
 | [Development](development.md) | Building, testing and translating CapyPanel |
 
-These pages describe the current version (0.11.0). CapyPanel is in beta, so they grow with each
+These pages describe the current version (0.12.1). CapyPanel is in beta, so they grow with each
 feature.

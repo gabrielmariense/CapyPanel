@@ -17,21 +17,35 @@ time and saves every edit to it right away.
 |---|---|---|
 | **Default** | `C:\ProgramData\CapyPanel\hosts.json`, shared by everyone on the PC | Whoever Windows lets write it: whoever created it, and administrators. Everyone else opens it read-only. Created empty when it's missing |
 | **Personal** | Your own CapyPanel folder (see [Settings and files](settings-and-files.md)) | Only you. Created the first time it's needed |
-| **Shared** | Anywhere you choose, e.g. a network folder | Whoever Windows lets write the file |
+| **Added** | Anywhere you choose, e.g. a shared network folder | Whoever Windows lets write the file |
 
 Windows permissions decide whether a list opens read-only, for every kind. A read-only list can
 still be browsed and connected to; only editing is off.
 
 Any user can add files to ProgramData, so **a default list made by another user (not an
-administrator) isn't opened**: it could send your password to the wrong computer. Settings shows
-it as "Made by another user: not used", and an administrator can replace or delete it.
+administrator) isn't opened**: it could send your password to the wrong computer. The Host lists
+window shows it as "Made by another user: not used", and an administrator can replace or delete
+it.
 
-**File > Recent lists** shows the lists you've opened, each with its kind and path.
+## The Host lists window
+
+**File > Host lists…** (Ctrl+O) shows every list you've opened or added, with its kind and
+whether you can edit it. The list in use is bold and marked "(in use)"; hover over a list to see
+where it is. Double-click a list, or select it and click **Open**, to switch to it.
+
+- **Add existing…** adds a list file from anywhere, such as a network folder.
+- **New…** creates an empty list.
+- **Copy current list to…** saves a copy of the open list somewhere else.
+- **Remove from the list** only forgets a list here; it never deletes the file. The default and
+  personal lists can't be removed.
+
+The window remembers the lists in your settings, not in the list files. **Settings > Host lists**
+shows the same table.
 
 ## Which list opens at start
 
 Choose it under **Settings > General > Open on startup**: the last used list (the default
-choice), the default list, your personal list, or any list you've opened. If that list is
+choice), the default list, your personal list, or any list you've added. If that list is
 missing, CapyPanel opens the next one it can (default, then personal) and says so.
 
 ## Shared lists and editing at the same time

@@ -13,7 +13,7 @@ uv run capypanel
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
 The version shows in the title bar, followed by the commit when you run from source, e.g.
-`CapyPanel 0.11.0 (abc1234)`. Quote it when you report a problem.
+`CapyPanel 0.12.1 (abc1234)`. Quote it when you report a problem.
 
 Remote Desktop works out of the box, with the client built into Windows. For VNC you also need a
 viewer: [UltraVNC](https://uvnc.com) or
@@ -29,7 +29,8 @@ viewer: [UltraVNC](https://uvnc.com) or
 | **Information** (right) | The selected host's details, including its connection profile and where it comes from |
 | **Status bar** | Which list is open, where it is, how many hosts it has and how many are selected |
 
-Each pane can be hidden from the **View** menu.
+Each pane can be hidden from the **View** menu. To switch to another list, use **File > Host
+lists…** (see [Host lists](host-lists.md#the-host-lists-window)).
 
 ## Add your first hosts
 
@@ -43,10 +44,11 @@ Each pane can be hidden from the **View** menu.
      editing.
    - **Connection profile:** how to reach the host. "From group" follows the group's profile.
 3. Double-click the host, or select it and press Enter, to open a connection to it with its
-   profile (**Connect > Open connection**).
+   profile.
 
-Right-clicking empty space also works: **Add group…** in the groups pane, **Add host…** and
-**Add group…** in the host list.
+Right-click a host to open, edit or remove it, or to copy its address or name. Right-clicking
+empty space offers **Add group…** in the groups pane, and **Add host…** and **Add group…** in the
+host list.
 
 Edits are saved to the list file at once; there's no Save button.
 
@@ -59,6 +61,6 @@ Edits are saved to the list file at once; there's no Save button.
 | Ctrl+Shift+C | Copy the selected hosts' addresses |
 | Ctrl+N / Ctrl+Shift+N | Add host / Add group |
 | F2 / Del | Edit / remove the selection |
-| Ctrl+O | Open a host list |
+| Ctrl+O | Host lists window |
 | Ctrl+, | Settings |
 | Ctrl+Q | Exit |

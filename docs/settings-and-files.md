@@ -1,21 +1,22 @@
 # Settings and files
 
-Open Settings with **File > Settings…** (Ctrl+,). Changes apply when you click Save.
+Open Settings with **File > Settings…** (Ctrl+,). **OK** saves and closes, **Save** saves and
+keeps Settings open, and **Cancel** closes and drops anything not saved.
 
 ## General
 
 - **Open on startup:** which host list opens when CapyPanel starts (see
   [Host lists](host-lists.md#which-list-opens-at-start)).
 - **Language:** English or Português (Brasil), switched without a restart. Also under
-  **View > Language**.
-- **Where CapyPanel keeps its files:** your own folder and the logs folder, each with an
-  **Open folder** button.
+  **View > Language**. The Settings window itself changes language the next time you open it.
+- **Where CapyPanel keeps its files:** the shared files, your own files and the logs, each with
+  an **Open folder** button.
 
 ## Host lists
 
-Shows the default, personal and any other list, whether each exists, and whether you can edit it.
-From here you can open a list, **copy the current list** somewhere new, or create a **new empty
-list**.
+The same table and buttons as **File > Host lists…** (see
+[Host lists](host-lists.md#the-host-lists-window)). The list you pick opens when you click OK or
+Save.
 
 ## Connections
 
@@ -28,8 +29,9 @@ list**.
   missing. Remote Desktop Connection is built into Windows, so it normally shows **✓ Found** and
   has no Download. Like profiles, only people Windows lets write the folder can change them.
 
-As everywhere in Settings, nothing on this page is written until you click Save; Cancel drops
-every change.
+As everywhere in Settings, nothing on this page is written until you click OK or Save. Leaving
+the page with unsaved changes asks first: **Save changes**, **Discard changes** or **Keep
+editing**.
 
 ## Appearance
 

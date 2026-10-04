@@ -1,21 +1,22 @@
 # Configurações e arquivos
 
-Abra as Configurações em **Arquivo > Configurações…** (Ctrl+,). As alterações valem quando você
-clica em Salvar.
+Abra as Configurações em **Arquivo > Configurações…** (Ctrl+,). **OK** salva e fecha, **Salvar**
+salva e mantém as Configurações abertas, e **Cancelar** fecha e descarta o que não foi salvo.
 
 ## Geral
 
 - **Abrir ao iniciar:** qual lista de hosts abre quando o CapyPanel inicia (veja
   [Listas de hosts](host-lists.pt-BR.md#qual-lista-abre-ao-iniciar)).
 - **Idioma:** English ou Português (Brasil), trocado sem reiniciar. Também em **Exibir > Idioma**.
-- **Onde o CapyPanel guarda os arquivos:** sua própria pasta e a pasta de logs, cada uma com um
-  botão **Abrir pasta**.
+  A própria janela de Configurações muda de idioma na próxima vez que você abri-la.
+- **Onde o CapyPanel guarda os arquivos:** os arquivos compartilhados, os seus arquivos e os logs,
+  cada um com um botão **Abrir pasta**.
 
 ## Listas de hosts
 
-Mostra a lista padrão, a pessoal e qualquer outra, se cada uma existe e se você pode editá-la.
-Daqui você pode abrir uma lista, **copiar a lista atual** para outro lugar ou criar uma **nova
-lista vazia**.
+A mesma tabela e os mesmos botões de **Arquivo > Listas de hosts…** (veja
+[Listas de hosts](host-lists.pt-BR.md#a-janela-listas-de-hosts)). A lista que você escolher abre
+quando você clica em OK ou Salvar.
 
 ## Conexões
 
@@ -29,8 +30,9 @@ lista vazia**.
   Connection vem com o Windows, então normalmente mostra **✓ Encontrado** e não tem Baixar. Como
   nos perfis, só quem o Windows deixa gravar na pasta pode alterá-los.
 
-Como em todas as Configurações, nada nesta página é gravado até você clicar em Salvar; Cancelar
-descarta todas as alterações.
+Como em todas as Configurações, nada nesta página é gravado até você clicar em OK ou Salvar. Sair
+da página com alterações não salvas pergunta antes: **Salvar alterações**, **Descartar
+alterações** ou **Continuar editando**.
 
 ## Aparência
 
