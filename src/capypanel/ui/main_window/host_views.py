@@ -186,6 +186,7 @@ class HostTable(QTreeWidget):
 
     def __init__(self) -> None:
         super().__init__()
+        self.setObjectName("grid")  # lines between rows and columns
         self.retranslate()
         self.setRootIsDecorated(False)
         self.setUniformRowHeights(True)
