@@ -13,7 +13,7 @@ uv run capypanel
 
 A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes
 abrem na hora. A versão aparece na barra de título, seguida do commit quando você roda pelo
-código-fonte, por exemplo `CapyPanel 0.11.0 (abc1234)`. Informe-a ao relatar um problema.
+código-fonte, por exemplo `CapyPanel 0.12.1 (abc1234)`. Informe-a ao relatar um problema.
 
 A Área de Trabalho Remota funciona de cara, com o cliente que já vem no Windows. Para o VNC você
 também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
@@ -29,7 +29,8 @@ também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
 | **Informações** (direita) | Os detalhes do host selecionado, incluindo o perfil de conexão e de onde ele vem |
 | **Barra de status** | Qual lista está aberta, onde ela está, quantos hosts tem e quantos estão selecionados |
 
-Cada painel pode ser escondido pelo menu **Exibir**.
+Cada painel pode ser escondido pelo menu **Exibir**. Para trocar de lista, use **Arquivo > Listas
+de hosts…** (veja [Listas de hosts](host-lists.pt-BR.md#a-janela-listas-de-hosts)).
 
 ## Adicione seus primeiros hosts
 
@@ -43,10 +44,11 @@ Cada painel pode ser escondido pelo menu **Exibir**.
      volta para edição.
    - **Perfil de conexão:** como acessar o host. "Do grupo" segue o perfil do grupo.
 3. Dê um clique duplo no host, ou selecione-o e pressione Enter, para abrir uma conexão com ele
-   pelo perfil dele (**Conectar > Abrir conexão**).
+   pelo perfil dele.
 
-O botão direito num espaço vazio também funciona: **Adicionar grupo…** no painel de grupos,
-**Adicionar host…** e **Adicionar grupo…** na lista de hosts.
+Clique com o botão direito num host para abri-lo, editá-lo ou removê-lo, ou para copiar o
+endereço ou o nome. O botão direito num espaço vazio oferece **Adicionar grupo…** no painel de
+grupos, e **Adicionar host…** e **Adicionar grupo…** na lista de hosts.
 
 As edições são salvas no arquivo da lista na hora; não há botão Salvar.
 
@@ -59,6 +61,6 @@ As edições são salvas no arquivo da lista na hora; não há botão Salvar.
 | Ctrl+Shift+C | Copiar os endereços dos hosts selecionados |
 | Ctrl+N / Ctrl+Shift+N | Adicionar host / Adicionar grupo |
 | F2 / Del | Editar / remover a seleção |
-| Ctrl+O | Abrir uma lista de hosts |
+| Ctrl+O | Janela Listas de hosts |
 | Ctrl+, | Configurações |
 | Ctrl+Q | Sair |
