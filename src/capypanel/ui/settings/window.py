@@ -1,10 +1,12 @@
-"""The Settings window: a list of pages on the left, Cancel / Save at the bottom.
-Nothing applies until Save; the main window then applies the returned choices. Leaving the
-Connections page with changes asks to save or drop them first."""
+"""The Settings window: a list of pages on the left, OK / Save / Cancel at the bottom.
+Nothing applies until OK or Save (which keeps the window open); the main window applies the
+choices handed over by `saved`. Leaving the Connections page with changes asks to save or
+drop them first."""
 
 from dataclasses import dataclass
 from pathlib import Path
 
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
@@ -45,6 +47,8 @@ class SettingsChoices:
 
 
 class SettingsDialog(QDialog):
+    saved = Signal(object)  # SettingsChoices, on OK and on Save
+
     def __init__(
         self,
         parent: QWidget | None,
@@ -101,10 +105,13 @@ class SettingsDialog(QDialog):
         self.page_list.setCurrentRow(0)
 
         self.buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
-        self.buttons.accepted.connect(self.accept)
+        self.save_button = self.buttons.addButton(_("&Save"), QDialogButtonBox.ButtonRole.ApplyRole)
+        self.save_button.setToolTip(_("Save the changes and keep Settings open"))
+        self.buttons.accepted.connect(self._ok)
         self.buttons.rejected.connect(self.reject)
+        self.save_button.clicked.connect(self._save)
         columns = QHBoxLayout()
         columns.setSpacing(16)
         columns.addWidget(self.page_list)
@@ -182,5 +189,19 @@ class SettingsDialog(QDialog):
         themes.paint_title_bar(self)
 
     def _update_save(self) -> None:
-        save = self.buttons.button(QDialogButtonBox.StandardButton.Save)
-        save.setEnabled(all(page.is_valid() for page in self.pages.values()))
+        valid = all(page.is_valid() for page in self.pages.values())
+        self.buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(valid)
+        self.save_button.setEnabled(valid)
+
+    def _ok(self) -> None:
+        self.saved.emit(self.choices())
+        self.accept()
+
+    def _save(self) -> None:
+        self.saved.emit(self.choices())
+
+    def after_save(self, document: OpenList | None) -> None:
+        """The window stays open after Save: its pages now show what's saved."""
+        self.connections.reset()
+        self.host_lists.view.saved(document)
+        self._update_save()

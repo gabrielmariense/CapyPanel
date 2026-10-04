@@ -4,7 +4,14 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QFileDialog, QMenu
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QDialogButtonBox,
+    QFileDialog,
+    QHeaderView,
+    QMenu,
+)
 
 from capypanel.core import settings, winsec
 from capypanel.core.hosts import listfile
@@ -40,7 +47,7 @@ def window(qapp: QApplication, paths: settings.Paths) -> Iterator[MainWindow]:
 
 
 def _save_enabled(dialog: SettingsDialog) -> bool:
-    return dialog.buttons.button(QDialogButtonBox.StandardButton.Save).isEnabled()
+    return dialog.buttons.button(QDialogButtonBox.StandardButton.Ok).isEnabled()
 
 
 def _answer_save_dialog(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
@@ -332,3 +339,22 @@ def test_leaving_connections_with_changes_asks_first(
     else:
         assert dialog.stack.currentIndex() == 0 and not page.has_changes()
         assert store.default_id() == "realvnc"  # written now, not only on Save
+
+
+def test_save_applies_and_keeps_settings_open(window: MainWindow) -> None:
+    dialog = window.settings_dialog()
+    dialog.saved.connect(lambda choices: window._settings_saved(dialog, choices))
+    page = dialog.connections
+    page.default.setCurrentIndex(page.default.findData("realvnc"))
+    dialog.save_button.click()
+    assert page.store.default_id() == "realvnc"  # applied now
+    assert not page.has_changes() and dialog.result() == 0  # still open, nothing pending
+    texts = [b.text() for b in dialog.buttons.buttons()]
+    assert {"OK", "&Save", "Cancel"} <= set(texts)
+
+
+def test_list_tables_have_grid_lines_and_resizable_columns(window: MainWindow) -> None:
+    view = window.settings_dialog().host_lists.view
+    assert view.tree.objectName() == window.table.objectName() == "grid"
+    header = view.tree.header()
+    assert all(header.sectionResizeMode(c) == QHeaderView.ResizeMode.Interactive for c in range(3))

@@ -5,15 +5,16 @@ from collections.abc import Callable
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFileDialog,
     QHBoxLayout,
     QHeaderView,
-    QLabel,
     QMessageBox,
     QPushButton,
+    QSizePolicy,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -26,6 +27,7 @@ from capypanel.core.hosts.listfile import HostListFileError
 from capypanel.core.hosts.locations import Access, ListKind
 from capypanel.core.i18n import _
 from capypanel.ui.hosts import list_file_filter
+from capypanel.ui.notes import notes
 
 ROLE_PATH = Qt.ItemDataRole.UserRole
 
@@ -61,50 +63,38 @@ class HostListsView(QWidget):
         self.written: list[Path] = []  # files created here, so opening them reloads them
 
         self.tree = QTreeWidget()
+        self.tree.setObjectName("grid")  # lines between rows and columns
         self.tree.setRootIsDecorated(False)
         self.tree.setHeaderLabels([_("List"), _("Kind"), _("Access")])  # the path: tooltip
         header = self.tree.header()
-        header.setStretchLastSection(False)
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        for column in (1, 2):
-            header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)  # drag to resize
+        header.setStretchLastSection(True)
+        self.tree.setColumnWidth(0, 240)
+        self.tree.setColumnWidth(1, 110)
         self.add_button = QPushButton(_("&Add existing…"))
         self.new_button = QPushButton(_("&New…"))
         self.copy_button = QPushButton(_("&Copy current list to…"))
         self.copy_button.setEnabled(document is not None)
         self.remove_button = QPushButton(_("&Remove from the list"))
         self.remove_button.setToolTip(_("Forgets it here; the file itself is never deleted"))
-        # A column beside the list, as on the Connections page: never cut, whatever the width.
-        buttons = QVBoxLayout()
+        # One row under the list; the buttons share the width and grow with the window.
+        buttons = QHBoxLayout()
         for button in (self.add_button, self.new_button, self.copy_button, self.remove_button):
             button.setAutoDefault(False)  # Enter opens the list, never adds one
-        for button in (self.add_button, self.new_button, self.copy_button):
+            button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             buttons.addWidget(button)
-        buttons.addStretch(1)
-        buttons.addWidget(self.remove_button)
-        row = QHBoxLayout()
-        row.addWidget(self.tree, 1)
-        row.addLayout(buttons)
-        notes = QLabel(
-            "\n".join(
-                "• " + line
-                for line in (
-                    _("Default list: shared by everyone on this PC."),
-                    _("Personal list: only yours."),
-                    _("Hover over a list to see where it is."),
-                    _("Removing a list from here never deletes its file."),
-                )
-            )
-        )
-        notes.setObjectName("hint")
-        notes.setWordWrap(True)
-        font = notes.font()
-        font.setPointSizeF(font.pointSizeF() * 0.9)
-        notes.setFont(font)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addLayout(row, 1)
-        layout.addWidget(notes)
+        layout.addWidget(self.tree, 1)
+        layout.addLayout(buttons)
+        layout.addWidget(
+            notes(
+                _("Default list: shared by everyone on this PC."),
+                _("Personal list: only yours."),
+                _("Hover over a list to see where it is."),
+                _("Removing a list from here never deletes its file."),
+            )
+        )
 
         self.add_button.clicked.connect(self._add_existing)
         self.new_button.clicked.connect(self._new)
@@ -135,6 +125,21 @@ class HostListsView(QWidget):
             if item is not None and locations.same_path(Path(item.data(0, ROLE_PATH)), path):
                 self.tree.setCurrentItem(item)
                 return
+
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        # Rows placed before the theme's padding arrived would stay cramped: place them again.
+        self.tree.doItemsLayout()
+        # The theme gives buttons a small fixed minimum; the text's own width must win.
+        for button in (self.add_button, self.new_button, self.copy_button, self.remove_button):
+            button.setMinimumWidth(button.sizeHint().width())
+
+    def saved(self, document: OpenList | None) -> None:
+        """After a Save that keeps the window open: the open list may have changed."""
+        selected = self.selected()
+        self._document = document
+        self.written.clear()
+        self._fill(selected)
 
     # ---- building ----
 

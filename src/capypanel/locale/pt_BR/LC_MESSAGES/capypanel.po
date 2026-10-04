@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 21:05-0300\n"
+"POT-Creation-Date: 2026-10-03 22:44-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -113,6 +113,9 @@ msgstr "Re&mover da lista"
 
 msgid "&Remove selected"
 msgstr "&Remover selecionado"
+
+msgid "&Save"
+msgstr "&Salvar"
 
 msgid "&Save changes"
 msgstr "&Salvar alterações"
@@ -408,8 +411,8 @@ msgstr "Hosts sem perfil &usam:"
 msgid "Hover over a list to see where it is."
 msgstr "Passe o mouse sobre uma lista para ver onde ela está."
 
-msgid "If that list can't be opened, CapyPanel tries the default list. If that also fails, it opens your personal list."
-msgstr "Se essa lista não puder ser aberta, o CapyPanel tenta a lista padrão. Se isso também falhar, ele abre a sua lista pessoal."
+msgid "If that list can't be opened: the default list, then your personal list."
+msgstr "Se essa lista não abrir: a lista padrão, depois a sua lista pessoal."
 
 #, python-brace-format
 msgid "In the open list it's set on {hosts} and {groups}. They'll use their group's profile, or the default, instead."
@@ -444,6 +447,9 @@ msgstr "Localizar…"
 
 msgid "Logs"
 msgstr "Logs"
+
+msgid "Logs: one per user, named after the account."
+msgstr "Logs: um por usuário, com o nome da conta."
 
 msgid "Made by another user: not used"
 msgstr "Criada por outro usuário: não é usada"
@@ -598,6 +604,9 @@ msgstr "Salvar uma cópia"
 msgid "Save my version as a copy…"
 msgstr "Salvar minha versão como cópia…"
 
+msgid "Save the changes and keep Settings open"
+msgstr "Salva as alterações e mantém as Configurações abertas"
+
 msgid "Select a host to see its details."
 msgstr "Selecione um host para ver os detalhes."
 
@@ -616,11 +625,11 @@ msgstr "Compartilhados por todos neste PC. Somente leitura: só quem o Windows d
 msgid "Shared by everyone on this PC. You can change them."
 msgstr "Compartilhados por todos neste PC. Você pode alterá-los."
 
-msgid "Shared by everyone on this PC: the default list, connection profiles, the company's tool definitions and where each tool is installed. Your files are your settings and personal list; only you and administrators can open them. Each user's log is named after their account."
-msgstr "Compartilhados por todos neste PC: a lista padrão, os perfis de conexão, as definições de ferramentas da empresa e onde cada ferramenta está instalada. Seus arquivos são suas configurações e sua lista pessoal; só você e os administradores podem abri-los. O log de cada usuário leva o nome da conta dele."
-
 msgid "Shared files"
 msgstr "Arquivos compartilhados"
+
+msgid "Shared files: the default list, connection profiles and tools, for everyone."
+msgstr "Arquivos compartilhados: a lista padrão, os perfis de conexão e as ferramentas, para todos."
 
 msgid "Someone else has changed the file since you opened it."
 msgstr "Outra pessoa alterou o arquivo desde que você o abriu."
@@ -842,6 +851,9 @@ msgstr "Você também pode trocar o tema em Exibir > Tema."
 
 msgid "Your files"
 msgstr "Seus arquivos"
+
+msgid "Your files: your settings and personal list, private to you and admins."
+msgstr "Seus arquivos: suas configurações e sua lista pessoal, só para você e os administradores."
 
 msgid "no password"
 msgstr "sem senha"

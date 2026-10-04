@@ -637,13 +637,16 @@ class MainWindow(QMainWindow):
             dialog.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
         if page:
             dialog.show_page(page)
-        accepted = dialog.exec() == QDialog.DialogCode.Accepted
+        dialog.saved.connect(lambda choices: self._settings_saved(dialog, choices))
+        dialog.exec()
         self._prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
-        if accepted:
-            self.apply_settings(dialog.choices())
-        else:
-            self._save_prefs()
-        self._selection_changed()  # Save may have changed profiles
+        self._save_prefs()
+
+    def _settings_saved(self, dialog: SettingsDialog, choices: SettingsChoices) -> None:
+        """OK or Save in Settings: apply now; after Save the window stays open."""
+        self.apply_settings(choices)
+        self._selection_changed()  # profiles may have changed
+        dialog.after_save(self._doc)
 
     def settings_dialog(self) -> SettingsDialog:
         return SettingsDialog(

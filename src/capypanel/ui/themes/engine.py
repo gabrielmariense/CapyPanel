@@ -343,6 +343,9 @@ QTreeView::item:selected, QListView::item:selected { background: %(sel_solid)s; 
 QHeaderView { background: %(card)s; border: none; }
 QHeaderView::section { background: %(card)s; color: %(text2)s; border: none;
                        border-bottom: 1px solid %(border)s; padding: 8px 6px; font-weight: 600; }
+/* Tables marked "grid" get lines between rows and columns, like a spreadsheet. */
+QTreeView#grid::item { border-right: 1px solid %(border)s; border-bottom: 1px solid %(border)s; }
+QTreeView#grid QHeaderView::section { border-right: 1px solid %(border)s; }
 QHeaderView::section:hover { color: %(text)s; }
 
 QFrame#card { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; }
@@ -406,6 +409,9 @@ QListView#pageList::item { padding: 4px 8px; }
 QTreeView::item:hover, QListView#pageList::item:hover { background: %(hover)s; }
 QTreeView::item:selected, QListView#pageList::item:selected {
     background: %(sel)s; color: %(text)s; }
+/* Tables marked "grid" get lines between rows and columns, like a spreadsheet. */
+QTreeView#grid::item { border-right: 1px solid %(border)s; border-bottom: 1px solid %(border)s; }
+QTreeView#grid QHeaderView::section { border-right: 1px solid %(border)s; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
 QFrame#tagEdit { background: %(card)s; border: 1px solid %(border)s; border-radius: 4px; }
 QFrame#tagEdit[focused="true"] { border-color: %(accent)s; }

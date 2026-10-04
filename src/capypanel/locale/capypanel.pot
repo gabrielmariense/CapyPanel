@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 21:05-0300\n"
+"POT-Creation-Date: 2026-10-03 22:44-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -111,6 +111,9 @@ msgid "&Remove from the list"
 msgstr ""
 
 msgid "&Remove selected"
+msgstr ""
+
+msgid "&Save"
 msgstr ""
 
 msgid "&Save changes"
@@ -407,9 +410,7 @@ msgstr ""
 msgid "Hover over a list to see where it is."
 msgstr ""
 
-msgid ""
-"If that list can't be opened, CapyPanel tries the default list. If that "
-"also fails, it opens your personal list."
+msgid "If that list can't be opened: the default list, then your personal list."
 msgstr ""
 
 #, python-brace-format
@@ -450,6 +451,9 @@ msgid "Locate…"
 msgstr ""
 
 msgid "Logs"
+msgstr ""
+
+msgid "Logs: one per user, named after the account."
 msgstr ""
 
 msgid "Made by another user: not used"
@@ -608,6 +612,9 @@ msgstr ""
 msgid "Save my version as a copy…"
 msgstr ""
 
+msgid "Save the changes and keep Settings open"
+msgstr ""
+
 msgid "Select a host to see its details."
 msgstr ""
 
@@ -628,14 +635,12 @@ msgstr ""
 msgid "Shared by everyone on this PC. You can change them."
 msgstr ""
 
-msgid ""
-"Shared by everyone on this PC: the default list, connection profiles, the"
-" company's tool definitions and where each tool is installed. Your files "
-"are your settings and personal list; only you and administrators can open"
-" them. Each user's log is named after their account."
+msgid "Shared files"
 msgstr ""
 
-msgid "Shared files"
+msgid ""
+"Shared files: the default list, connection profiles and tools, for "
+"everyone."
 msgstr ""
 
 msgid "Someone else has changed the file since you opened it."
@@ -870,6 +875,9 @@ msgid "You can also change the theme under View > Theme."
 msgstr ""
 
 msgid "Your files"
+msgstr ""
+
+msgid "Your files: your settings and personal list, private to you and admins."
 msgstr ""
 
 msgid "no password"

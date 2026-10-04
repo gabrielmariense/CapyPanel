@@ -24,6 +24,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.i18n import _
 from capypanel.ui.host_lists import HostListsView
+from capypanel.ui.notes import notes
 from capypanel.ui.themes import engine as themes
 
 
@@ -152,12 +153,7 @@ class GeneralPage(Page):
         start_layout = QVBoxLayout(start)
         start_layout.addLayout(row)
         start_layout.addWidget(
-            hint(
-                _(
-                    "If that list can't be opened, CapyPanel tries the default list. If that "
-                    "also fails, it opens your personal list."
-                )
-            )
+            notes(_("If that list can't be opened: the default list, then your personal list."))
         )
 
         files = QGroupBox(_("Where CapyPanel keeps its files"))
@@ -174,15 +170,14 @@ class GeneralPage(Page):
             grid.addWidget(QLabel(label), row, 0)
             grid.addWidget(PathLabel(folder), row, 1)
             grid.addWidget(button, row, 2)
-        note = _(
-            "Shared by everyone on this PC: the default list, connection profiles, the "
-            "company's tool definitions and where each tool is installed. Your files are your "
-            "settings and personal list; only you and administrators can open them. Each "
-            "user's log is named after their account."
-        )
+        lines = [
+            _("Shared files: the default list, connection profiles and tools, for everyone."),
+            _("Your files: your settings and personal list, private to you and admins."),
+            _("Logs: one per user, named after the account."),
+        ]
         if paths.portable:
-            note += " " + _("Portable mode: everything stays in the app's own folder.")
-        grid.addWidget(hint(note), len(folders), 0, 1, 3)
+            lines.append(_("Portable mode: everything stays in the app's own folder."))
+        grid.addWidget(notes(*lines), len(folders), 0, 1, 3)
 
         self.body.addLayout(language_row)
         self.body.addWidget(start)
