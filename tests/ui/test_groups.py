@@ -97,6 +97,8 @@ def test_manage_groups_moves_sorts_and_applies_on_ok(
     assert _names(root) == ["Zebra wing", "alpha wing"]
     dialog.sort_button.click()
     assert _names(root) == ["alpha wing", "Zebra wing"]  # A–Z ignores upper and lower case
+    alpha = root.child(0)
+    assert alpha is not None and alpha.isExpanded()  # its subgroups stay in view
     zebra = root.child(1)
     assert zebra is not None
     dialog.tree.setCurrentItem(zebra)

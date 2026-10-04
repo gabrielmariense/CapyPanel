@@ -196,16 +196,25 @@ class ManageGroupsDialog(QDialog):
         self._update()
 
     def _sort(self) -> None:
+        root = self.tree.invisibleRootItem()
+        # Read before sorting: a group taken out of the tree forgets that it was open.
+        expanded: set[str] = set()
+        for index in range(root.childCount()):
+            child = root.child(index)
+            if child is not None:
+                expanded |= _expanded_ids(child)
+
         def sort(parent: QTreeWidgetItem) -> None:
             children = [parent.takeChild(0) for _i in range(parent.childCount())]
-            children = sorted((c for c in children if c), key=lambda c: c.text(0).casefold())
-            for child in children:
-                expanded = _expanded_ids(child)
+            for child in sorted((c for c in children if c), key=lambda c: c.text(0).casefold()):
                 parent.addChild(child)
-                _expand(child, expanded)
                 sort(child)
 
-        sort(self.tree.invisibleRootItem())
+        sort(root)
+        for index in range(root.childCount()):
+            child = root.child(index)
+            if child is not None:
+                _expand(child, expanded)
         self._update()
 
 
