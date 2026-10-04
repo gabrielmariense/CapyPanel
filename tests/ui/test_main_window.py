@@ -49,7 +49,7 @@ def _table_names(win: MainWindow) -> set[str]:
 def test_first_start_creates_the_personal_list_with_a_hosts_group(window: MainWindow) -> None:
     doc = window.document
     assert doc is not None and doc.path.name == "hosts.json" and doc.path.exists()
-    assert [g.name for g in doc.hosts.groups] == ["Hosts"]
+    assert [g.name for g in doc.hosts.groups] == ["Default group"]
     assert window.windowTitle().startswith("hosts.json")
     assert [a.text() for a in window.menuBar().actions()] == [
         "&File",

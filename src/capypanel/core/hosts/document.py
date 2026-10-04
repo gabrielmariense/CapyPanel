@@ -14,7 +14,7 @@ class ReadOnlyListError(listfile.HostListFileError):
 
 def starter_list() -> HostList:
     """A new list starts with one group, so there's always somewhere to add the first host."""
-    host_list, _group = HostList().add_group(_("Hosts"))
+    host_list, _group = HostList().add_group(_("Default group"))
     return host_list
 
 

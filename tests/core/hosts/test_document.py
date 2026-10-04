@@ -10,7 +10,7 @@ from capypanel.core.hosts.listfile import HostListChangedError
 
 def test_new_list_starts_with_one_group(tmp_path: Path) -> None:
     doc = OpenList.create(tmp_path / "hosts.json")
-    assert [g.name for g in doc.hosts.groups] == ["Hosts"]
+    assert [g.name for g in doc.hosts.groups] == ["Default group"]
     assert listfile.load(doc.path).hosts == doc.hosts
 
 

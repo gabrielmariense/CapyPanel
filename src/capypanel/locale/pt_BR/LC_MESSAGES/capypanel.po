@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-04 15:37-0300\n"
+"POT-Creation-Date: 2026-10-04 16:58-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -320,6 +320,9 @@ msgstr "Padrão"
 msgid "Default ({port})"
 msgstr "Padrão ({port})"
 
+msgid "Default group"
+msgstr "Grupo padrão"
+
 msgid "Default list: shared by everyone on this PC."
 msgstr "Lista padrão: compartilhada por todos neste PC."
 
@@ -413,9 +416,6 @@ msgstr "Nome do host ou endereço IP"
 
 msgid "Hostname or IP address; leave blank to use the name"
 msgstr "Nome do host ou endereço IP; deixe em branco para usar o nome"
-
-msgid "Hosts"
-msgstr "Hosts"
 
 msgid "Hosts with no profile &use:"
 msgstr "Hosts sem perfil &usam:"
