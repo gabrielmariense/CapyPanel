@@ -11,6 +11,22 @@ time and saves every edit to it right away.
   that carries it. Tags you've used before are suggested as you type, with their spelling kept.
 - **Notes** hold anything else worth knowing about a host.
 
+A new list starts with one group, **Default group**.
+
+## Arranging groups and hosts
+
+Groups keep the order you give them. In the Groups pane:
+
+- drag a group up or down to move it, or drop it onto another group to put it inside;
+- drag selected hosts from the host table onto a group to move them there.
+
+Every change is saved right away. On a read-only list, dragging is off.
+
+**Inventory > Manage groups…** shows the whole tree in a window, with **Move up**, **Move down**
+and **Sort A–Z**, a one-time sort you can rearrange after. Dragging works there too, and nothing
+changes until you click **OK**. Lists made before version 0.13.0 show their groups in the order
+they were created; Sort A–Z puts them in order once.
+
 ## Three kinds of list
 
 | Kind | Where it lives | Who can change it |

@@ -13,7 +13,7 @@ uv run capypanel
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
 The version shows in the title bar, followed by the commit when you run from source, e.g.
-`CapyPanel 0.12.1 (abc1234)`. Quote it when you report a problem.
+`CapyPanel 0.13.0 (abc1234)`. Quote it when you report a problem.
 
 Remote Desktop works out of the box, with the client built into Windows. For VNC you also need a
 viewer: [UltraVNC](https://uvnc.com) or
@@ -24,7 +24,7 @@ viewer: [UltraVNC](https://uvnc.com) or
 
 | Part | What it shows |
 |---|---|
-| **Groups** (left) | "All computers", then your groups and the groups inside them. Below them, your tags |
+| **Groups** (left) | "All computers" pinned on top, with how many hosts the list has. Then your groups and the groups inside them, and below them your tags |
 | **Hosts** (middle) | The hosts in the selected group or tag |
 | **Information** (right) | The selected host's details, including its connection profile and where it comes from |
 | **Status bar** | Which list is open, where it is, how many hosts it has and how many are selected |
@@ -34,8 +34,8 @@ lists…** (see [Host lists](host-lists.md#the-host-lists-window)).
 
 ## Add your first hosts
 
-1. **Inventory > Add group…** (Ctrl+Shift+N) creates a group. With a group selected, the new one
-   goes inside it.
+1. A new list starts with one group, **Default group**. **Inventory > Add group…**
+   (Ctrl+Shift+N) creates another; with a group selected, the new one goes inside it.
 2. **Inventory > Add host…** (Ctrl+N) adds a host to the selected group:
    - **Name:** how the host shows in the list.
    - **Address:** a computer name or IP address. Leave it blank if the name *is* the computer name
@@ -48,7 +48,8 @@ lists…** (see [Host lists](host-lists.md#the-host-lists-window)).
 
 Right-click a host to open, edit or remove it, or to copy its address or name. Right-clicking
 empty space offers **Add group…** in the groups pane, and **Add host…** and **Add group…** in the
-host list.
+host list. To move hosts to another group, drag them onto it (see
+[Host lists](host-lists.md#arranging-groups-and-hosts)).
 
 Edits are saved to the list file at once; there's no Save button.
 
