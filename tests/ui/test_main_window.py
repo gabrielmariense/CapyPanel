@@ -76,8 +76,8 @@ def test_picking_a_group_or_tag_filters_the_table(window: MainWindow, office: Pa
     [kiosk] = window.nav.tags.findItems("kiosk", Qt.MatchFlag.MatchStartsWith)
     window.nav.tags.setCurrentItem(kiosk)
     assert _table_names(window) == {"HQ-01", "FIN-02"}
-    [everything] = tree.findItems("All computers", Qt.MatchFlag.MatchStartsWith)
-    tree.setCurrentItem(everything)
+    [everything] = window.nav.everything.findItems("All computers", Qt.MatchFlag.MatchStartsWith)
+    window.nav.everything.setCurrentItem(everything)  # pinned above the groups tree
     assert len(_table_names(window)) == 3
 
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-04 12:25-0300\n"
+"POT-Creation-Date: 2026-10-04 15:37-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -84,6 +84,9 @@ msgstr "&Localizar…"
 msgid "&Login:"
 msgstr "&Login:"
 
+msgid "&Manage groups…"
+msgstr "Ge&renciar grupos…"
+
 msgid "&Manual connection…"
 msgstr "Conexão &manual…"
 
@@ -123,6 +126,9 @@ msgstr "&Salvar alterações"
 msgid "&Settings…"
 msgstr "&Configurações…"
 
+msgid "&Sort A–Z"
+msgstr "&Ordenar de A a Z"
+
 msgid "&Status bar"
 msgstr "Barra de &status"
 
@@ -143,6 +149,9 @@ msgstr "E&xibir"
 
 msgid "A connection profile must be a JSON object."
 msgstr "Um perfil de conexão deve ser um objeto JSON."
+
+msgid "A group can't be moved inside itself."
+msgstr "Um grupo não pode ser movido para dentro dele mesmo."
 
 msgid "A group entry isn't an object."
 msgstr "Uma entrada de grupo não é um objeto."
@@ -331,6 +340,9 @@ msgstr "Excluir o perfil de conexão “{profile}”? Todos neste PC deixam de t
 msgid "Download"
 msgstr "Baixar"
 
+msgid "Drag a group to move it, or drop it onto another group to put it inside."
+msgstr "Arraste um grupo para movê-lo, ou solte-o sobre outro grupo para colocá-lo dentro dele."
+
 msgid "Duplicate connection profile"
 msgstr "Duplicar perfil de conexão"
 
@@ -454,11 +466,20 @@ msgstr "Logs: um por usuário, com o nome da conta."
 msgid "Made by another user: not used"
 msgstr "Criada por outro usuário: não é usada"
 
+msgid "Manage groups"
+msgstr "Gerenciar grupos"
+
 msgid "Manual connection"
 msgstr "Conexão manual"
 
 msgid "Many connections"
 msgstr "Muitas conexões"
+
+msgid "Move &down"
+msgstr "Mover para &baixo"
+
+msgid "Move &up"
+msgstr "Mover para &cima"
 
 msgid "My personal list"
 msgstr "Minha lista pessoal"
@@ -505,6 +526,9 @@ msgstr[1] "Não abertos ({n}): {names}"
 
 msgid "Notes"
 msgstr "Observações"
+
+msgid "Nothing changes until you click OK."
+msgstr "Nada muda até você clicar em OK."
 
 msgid "Open &Settings"
 msgstr "Abrir &Configurações"
@@ -640,6 +664,9 @@ msgstr "Outra pessoa salvou alterações nesta lista depois que você a abriu. A
 msgid "Something went wrong. The details were saved to the app log."
 msgstr "Algo deu errado. Os detalhes foram salvos no log do aplicativo."
 
+msgid "Sorts every level by name, once; you can rearrange after"
+msgstr "Ordena todos os níveis pelo nome, uma vez; depois você pode reorganizar"
+
 msgid "Startup"
 msgstr "Ao iniciar"
 
@@ -695,6 +722,9 @@ msgstr "O arquivo é grande demais para ser de configurações do visualizador."
 #, python-brace-format
 msgid "The folder “{folder}” was created by another user, so CapyPanel won't use it. Ask an administrator to delete it; it will be created again."
 msgstr "A pasta “{folder}” foi criada por outro usuário, então o CapyPanel não vai usá-la. Peça a um administrador para excluí-la; ela será criada de novo."
+
+msgid "The groups changed meanwhile; try again."
+msgstr "Os grupos mudaram enquanto isso; tente de novo."
 
 msgid "The last used list"
 msgstr "A última lista usada"

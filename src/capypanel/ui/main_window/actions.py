@@ -16,6 +16,7 @@ class Actions:
     exit: QAction
     add_host: QAction
     add_group: QAction
+    manage_groups: QAction
     edit: QAction
     remove: QAction
     connect_host: QAction
@@ -65,6 +66,7 @@ def retranslate_actions(a: Actions) -> None:
     a.exit.setText(_("E&xit"))
     a.add_host.setText(_("Add &host…"))
     a.add_group.setText(_("Add &group…"))
+    a.manage_groups.setText(_("&Manage groups…"))
     a.edit.setText(_("&Edit selected…"))
     a.remove.setText(_("&Remove selected"))
     a.connect_host.setText(_("&Open connection"))

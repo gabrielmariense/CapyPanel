@@ -2,7 +2,7 @@
 
 import re
 import uuid
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Any
 
@@ -157,6 +157,29 @@ class HostList:
         """Sets several hosts at once; "" makes them follow their group again."""
         wanted = set(host_ids)
         hosts = tuple(replace(h, profile=profile) if h.id in wanted else h for h in self.hosts)
+        return replace(self, hosts=hosts)
+
+    def arrange_groups(self, order: Sequence[tuple[str, str | None]]) -> "HostList":
+        """Every group's new parent, in the new order (siblings show in this order). Used by
+        drag and drop, Manage groups and Sort A–Z. A group can't end up inside itself."""
+        if sorted(gid for gid, _p in order) != sorted(g.id for g in self.groups):
+            raise HostListRuleError(_("The groups changed meanwhile; try again."))
+        parents = dict(order)
+        for group_id in parents:
+            seen, current = {group_id}, parents[group_id]
+            while current is not None:
+                if current in seen or current not in parents:
+                    raise HostListRuleError(_("A group can't be moved inside itself."))
+                seen.add(current)
+                current = parents[current]
+        by_id = {g.id: g for g in self.groups}
+        groups = tuple(replace(by_id[gid], parent=parent) for gid, parent in order)
+        return replace(self, groups=groups)
+
+    def move_hosts(self, host_ids: Iterable[str], group_id: str) -> "HostList":
+        self._require_group(group_id)
+        wanted = set(host_ids)
+        hosts = tuple(replace(h, group=group_id) if h.id in wanted else h for h in self.hosts)
         return replace(self, hosts=hosts)
 
     def remove_group(self, group_id: str) -> "HostList":
