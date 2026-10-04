@@ -34,6 +34,7 @@ from capypanel.core.tools.connect import SessionCredentials, Target
 from capypanel.core.tools.profiles import ProfileError
 from capypanel.ui import language
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
+from capypanel.ui.groups import ManageGroupsDialog
 from capypanel.ui.host_lists import HostListsDialog
 from capypanel.ui.hosts import (
     HostDialog,
@@ -116,6 +117,8 @@ class MainWindow(QMainWindow):
         self._inventory_menu = bar.addMenu("")
         # What acts on a host or group (edit, remove, copy, open) is in its right-click menu.
         self._inventory_menu.addActions([a.add_host, a.add_group])
+        self._inventory_menu.addSeparator()
+        self._inventory_menu.addAction(a.manage_groups)
 
         self._connect_menu = bar.addMenu("")
         self._connect_menu.addActions([a.manual_connect, a.connection_profiles])
@@ -170,6 +173,7 @@ class MainWindow(QMainWindow):
         a.exit.triggered.connect(self.close)
         a.add_host.triggered.connect(self.add_host)
         a.add_group.triggered.connect(self.add_group)
+        a.manage_groups.triggered.connect(self.manage_groups)
         a.edit.triggered.connect(self.edit_selected)
         a.remove.triggered.connect(self.remove_selected)
         # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C) live here.
@@ -180,6 +184,8 @@ class MainWindow(QMainWindow):
         self.nav.add_group_button.clicked.connect(self.add_group)
         self.nav.filter_changed.connect(self._show_hosts)
         self.nav.groups.customContextMenuRequested.connect(self._group_menu)
+        self.nav.groups.rearranged.connect(self._groups_dragged)
+        self.nav.groups.hosts_dropped.connect(self.move_hosts)
         self.table.itemSelectionChanged.connect(self._selection_changed)
         self.table.customContextMenuRequested.connect(self._host_menu)
         # Enter connects only from the host table, so it never fires while typing elsewhere.
@@ -612,6 +618,37 @@ class MainWindow(QMainWindow):
             self._commit(doc.hosts.set_hosts_profile(host_ids, profile))
             self._selection_changed()
 
+    def manage_groups(self) -> None:
+        """Inventory > Manage groups…: reorder and nest every group at once."""
+        doc = self._writable()
+        if doc is None:
+            return
+        dialog = ManageGroupsDialog(self, doc.hosts)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self._arrange(dialog.order())
+
+    def _groups_dragged(self) -> None:
+        self._arrange(self.nav.groups.order())
+
+    def _arrange(self, order: list[tuple[str, str | None]]) -> None:
+        doc = self._writable()
+        if doc is None:
+            return
+        try:
+            new = doc.hosts.arrange_groups(order)
+        except HostListRuleError as e:
+            self._error(str(e))
+            self._refresh()  # puts the tree back as it was
+            return
+        self._commit(new)
+
+    def move_hosts(self, host_ids: list[str], group_id: str) -> None:
+        """Hosts dragged from the table onto a group."""
+        doc = self._writable()
+        if doc is None or doc.hosts.group(group_id) is None:
+            return
+        self._commit(doc.hosts.move_hosts(host_ids, group_id))
+
     def set_group_profile(self, group_id: str, profile: str) -> None:
         doc = self._writable()
         if doc is not None and doc.hosts.group(group_id) is not None:
@@ -725,6 +762,9 @@ class MainWindow(QMainWindow):
 
     def _refresh(self) -> None:
         self.nav.show_list(self._doc.hosts if self._doc else None)
+        editable = self._writable() is not None  # read-only lists can't be rearranged
+        self.nav.groups.set_editable(editable)
+        self.table.set_editable(editable)
         self._show_hosts()
 
     def _show_hosts(self) -> None:

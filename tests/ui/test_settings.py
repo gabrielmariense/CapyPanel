@@ -127,7 +127,7 @@ def test_first_start_creates_and_opens_the_default_list(
     window: MainWindow, paths: settings.Paths
 ) -> None:
     assert window.document is not None and window.document.path == paths.default_list
-    assert [g.name for g in window.document.hosts.groups] == ["Hosts"]
+    assert [g.name for g in window.document.hosts.groups] == ["Default group"]
     assert not paths.personal_list.exists()  # made only when someone chooses it
 
 
@@ -192,7 +192,7 @@ def test_missing_personal_list_is_created_when_chosen(window: MainWindow) -> Non
     dialog.host_lists.view.select(personal)
     window.apply_settings(dialog.choices())
     assert personal.exists() and window.document is not None
-    assert [g.name for g in window.document.hosts.groups] == ["Hosts"]
+    assert [g.name for g in window.document.hosts.groups] == ["Default group"]
 
 
 def test_copy_current_list_writes_it_and_save_opens_the_copy(
@@ -220,7 +220,7 @@ def test_new_empty_list_over_the_open_one_reopens_it(
     assert choices.rewritten
     window.apply_settings(choices)
     assert window.document is not None
-    assert [g.name for g in window.document.hosts.groups] == ["Hosts"]
+    assert [g.name for g in window.document.hosts.groups] == ["Default group"]
     assert not window.document.hosts.hosts
 
 
@@ -247,7 +247,7 @@ def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
         if isinstance(m := a.menu(), QMenu)
     }
     assert menus["&File"][:2] == ["&New host list…", "&Host lists…"]
-    assert menus["&Inventory"] == ["Add &host…", "Add &group…"]
+    assert menus["&Inventory"] == ["Add &host…", "Add &group…", "&Manage groups…"]
     assert menus["&Connect"] == [
         "&Manual connection…", "Connection &profiles…", "&Forget typed passwords"
     ]  # fmt: skip

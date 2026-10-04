@@ -12,6 +12,24 @@ por vez e salva cada edição nela na hora.
   grafia mantida.
 - **Observações** guardam o que mais valer a pena saber sobre um host.
 
+Uma lista nova começa com um grupo, **Grupo padrão**.
+
+## Organizar grupos e hosts
+
+Os grupos mantêm a ordem que você der a eles. No painel de grupos:
+
+- arraste um grupo para cima ou para baixo para movê-lo, ou solte-o sobre outro grupo para
+  colocá-lo dentro dele;
+- arraste os hosts selecionados da tabela de hosts para um grupo para movê-los para lá.
+
+Toda mudança é salva na hora. Numa lista somente leitura, arrastar fica desligado.
+
+**Inventário > Gerenciar grupos…** mostra a árvore inteira numa janela, com **Mover para cima**,
+**Mover para baixo** e **Ordenar de A a Z**, uma ordenação única que você pode reorganizar depois.
+Arrastar também funciona lá, e nada muda até você clicar em **OK**. Listas criadas antes da versão
+0.13.0 mostram os grupos na ordem em que foram criados; Ordenar de A a Z os coloca em ordem uma
+vez.
+
 ## Três tipos de lista
 
 | Tipo | Onde fica | Quem pode alterar |

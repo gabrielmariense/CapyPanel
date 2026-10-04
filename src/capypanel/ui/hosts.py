@@ -73,7 +73,7 @@ def group_choices(host_list: HostList) -> list[tuple[str, str]]:
     choices: list[tuple[str, str]] = []
 
     def visit(parent: str | None) -> None:
-        for group in sorted(host_list.children(parent), key=lambda g: g.name.casefold()):
+        for group in host_list.children(parent):  # the list's own order
             choices.append((group.id, group_path(host_list, group.id)))
             visit(group.id)
 

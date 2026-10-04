@@ -122,3 +122,25 @@ def test_a_profile_that_does_not_exist_is_skipped_for_the_group_s() -> None:
     profile, source = hl.profile_of(pc, exists)
     assert profile == "known" and source is not None and source.id == hq
     assert hl.profile_of(pc) == ("also-gone", None)  # without the check: the host's own
+
+
+def test_groups_can_be_reordered_and_nested_but_never_inside_themselves() -> None:
+    hl, a = HostList().add_group("A")
+    hl, b = hl.add_group("B")
+    hl, c = hl.add_group("C", parent=a.id)
+    moved = hl.arrange_groups([(b.id, None), (a.id, b.id), (c.id, a.id)])
+    assert [g.id for g in moved.groups] == [b.id, a.id, c.id]
+    assert moved.group(a.id).parent == b.id  # type: ignore[union-attr]
+    with pytest.raises(HostListRuleError):
+        hl.arrange_groups([(a.id, c.id), (b.id, None), (c.id, a.id)])  # A inside its own child
+    with pytest.raises(HostListRuleError):
+        hl.arrange_groups([(a.id, None), (b.id, None)])  # a group went missing meanwhile
+
+
+def test_hosts_move_to_another_group() -> None:
+    hl, a = HostList().add_group("A")
+    hl, b = hl.add_group("B")
+    hl, h = hl.add_host("PC-1", a.id)
+    assert hl.move_hosts([h.id], b.id).host(h.id).group == b.id  # type: ignore[union-attr]
+    with pytest.raises(HostListRuleError):
+        hl.move_hosts([h.id], "nope")

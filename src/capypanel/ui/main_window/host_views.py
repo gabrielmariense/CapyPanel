@@ -3,8 +3,8 @@
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
-from PySide6.QtCore import QEvent, QPoint, Qt, Signal
-from PySide6.QtGui import QPalette
+from PySide6.QtCore import QEvent, QMimeData, QPoint, Qt, Signal
+from PySide6.QtGui import QPalette, QShowEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFormLayout,
@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QStackedLayout,
+    QStyle,
     QToolButton,
     QTreeWidget,
     QTreeWidgetItem,
@@ -21,11 +22,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import _, ngettext
-from capypanel.ui.hosts import group_path
-
-ROLE_KIND = Qt.ItemDataRole.UserRole
-ROLE_ID = Qt.ItemDataRole.UserRole + 1
-GROUP_INDENT = 14  # px per nesting level in the Groups pane
+from capypanel.ui.groups import HOSTS_MIME, ROLE_ID, ROLE_KIND, GroupTree, hosts_mime
 
 
 @dataclass(frozen=True)
@@ -45,7 +42,8 @@ def pane_title(text: str) -> QLabel:
 
 
 class NavigationPane(QWidget):
-    """Groups (with "All computers" on top) and tags below them. Picking one filters the table."""
+    """ "All computers" pinned on top, the groups below it (in the list's own order, rearranged
+    by dragging), and the tags. Picking one filters the table."""
 
     filter_changed = Signal()
 
@@ -59,10 +57,19 @@ class NavigationPane(QWidget):
         header.addWidget(self._groups_title, 1)
         header.addWidget(self.add_group_button)
 
-        self.groups = QTreeWidget()
-        self.groups.setHeaderHidden(True)
-        # Windows 11 steps each level ~30 px; deep trees then ran off the pane.
-        self.groups.setIndentation(GROUP_INDENT)
+        # Its own small list above the tree: it never scrolls away under a long tree.
+        self.everything = QTreeWidget()
+        self.everything.setHeaderHidden(True)
+        self.everything.setRootIsDecorated(False)
+        self.everything.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.everything.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._everything_item = QTreeWidgetItem([""])
+        self._everything_item.setData(0, ROLE_KIND, "all")
+        self._everything_item.setIcon(
+            0, self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)
+        )
+        self.everything.addTopLevelItem(self._everything_item)
+        self.groups = GroupTree()
         self.groups.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # A tree like the groups (not QListWidget), so both lists have the same row height.
         self.tags = QTreeWidget()
@@ -72,10 +79,12 @@ class NavigationPane(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addLayout(header)
+        layout.addWidget(self.everything)
         layout.addWidget(self.groups, 3)
         layout.addWidget(self._tags_title)
         layout.addWidget(self.tags, 1)
 
+        self.everything.itemSelectionChanged.connect(self._everything_picked)
         self.groups.itemSelectionChanged.connect(self._groups_picked)
         self.tags.itemSelectionChanged.connect(self._tags_picked)
         self.retranslate()
@@ -93,46 +102,48 @@ class NavigationPane(QWidget):
         return self._filter.value if self._filter.kind == "group" else None
 
     def group_at(self, position: QPoint) -> str | None:
-        """The group under a point of the groups list; None on empty space or "All computers"."""
+        """The group under a point of the groups tree; None on empty space."""
         item = self.groups.itemAt(position)
-        return item.data(0, ROLE_ID) if item and item.data(0, ROLE_KIND) == "group" else None
+        return item.data(0, ROLE_ID) if item else None
 
     def select_group(self, group_id: str) -> None:
         self._filter = self._select(Filter("group", group_id))
 
     def show_list(self, host_list: HostList | None) -> None:
-        """Rebuilds both lists from the host list, keeping the current pick when it still exists."""
+        """Rebuilds the lists from the host list, keeping the current pick when it still exists."""
         wanted = self._filter
-        self.groups.blockSignals(True)
-        self.tags.blockSignals(True)
+        for tree in (self.everything, self.groups, self.tags):
+            tree.blockSignals(True)
         self.groups.clear()
         self.tags.clear()
+        self.everything.setVisible(host_list is not None)
         if host_list is not None:
-            everything = QTreeWidgetItem([f"{_('All computers')} ({len(host_list.hosts)})"])
-            everything.setData(0, ROLE_KIND, "all")
-            self.groups.addTopLevelItem(everything)
-            self._add_groups(host_list, None, self.groups.invisibleRootItem())
-            self.groups.expandAll()
+            self._everything_item.setText(0, f"{_('All computers')} ({len(host_list.hosts)})")
+            self.groups.fill(host_list)
             for tag, count in sorted(host_list.all_tags().items(), key=lambda t: t[0].casefold()):
                 item = QTreeWidgetItem([f"{tag} ({count})"])
                 item.setData(0, ROLE_KIND, "tag")
                 item.setData(0, ROLE_ID, tag)
                 self.tags.addTopLevelItem(item)
         self._filter = self._select(wanted) if host_list is not None else Filter("all")
-        self.groups.blockSignals(False)
-        self.tags.blockSignals(False)
+        for tree in (self.everything, self.groups, self.tags):
+            tree.blockSignals(False)
 
-    def _add_groups(
-        self, host_list: HostList, parent_id: str | None, parent: QTreeWidgetItem
-    ) -> None:
-        for group in sorted(host_list.children(parent_id), key=lambda g: g.name.casefold()):
-            count = len(host_list.hosts_in(group.id))
-            item = QTreeWidgetItem([f"{group.name} ({count})"])
-            item.setData(0, ROLE_KIND, "group")
-            item.setData(0, ROLE_ID, group.id)
-            item.setToolTip(0, group_path(host_list, group.id))  # full name when cut short
-            parent.addChild(item)
-            self._add_groups(host_list, group.id, item)
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        self._fit_everything()
+
+    def changeEvent(self, event: QEvent) -> None:
+        super().changeEvent(event)
+        if event.type() in (QEvent.Type.StyleChange, QEvent.Type.FontChange):
+            self._fit_everything()
+
+    def _fit_everything(self) -> None:
+        """Exactly one row tall, whatever padding the theme gives rows and frames."""
+        self.everything.doItemsLayout()
+        row = self.everything.visualItemRect(self._everything_item).height()
+        frame = self.everything.height() - self.everything.viewport().height()
+        self.everything.setFixedHeight(max(row, self.everything.sizeHintForRow(0)) + frame)
 
     def _select(self, wanted: Filter) -> Filter:
         if wanted.kind == "tag":
@@ -145,30 +156,37 @@ class NavigationPane(QWidget):
                 if item.data(0, ROLE_ID) == wanted.value:
                     self.groups.setCurrentItem(item)
                     return wanted
-        top = self.groups.topLevelItem(0)
-        if top is not None:
-            self.groups.setCurrentItem(top)
+        self.everything.setCurrentItem(self._everything_item)
+        self._everything_item.setSelected(True)
+        self._clear(self.groups, self.tags)
         return Filter("all")
+
+    def _clear(self, *trees: QTreeWidget) -> None:
+        for tree in trees:
+            tree.blockSignals(True)
+            tree.clearSelection()
+            tree.blockSignals(False)
+
+    def _everything_picked(self) -> None:
+        if not self.everything.selectedItems():
+            return
+        self._clear(self.groups, self.tags)
+        self._filter = Filter("all")
+        self.filter_changed.emit()
 
     def _groups_picked(self) -> None:
         items = self.groups.selectedItems()
         if not items:
             return
-        self.tags.blockSignals(True)
-        self.tags.clearSelection()
-        self.tags.blockSignals(False)
-        item = items[0]
-        kind = item.data(0, ROLE_KIND)
-        self._filter = Filter("group", item.data(0, ROLE_ID)) if kind == "group" else Filter("all")
+        self._clear(self.everything, self.tags)
+        self._filter = Filter("group", items[0].data(0, ROLE_ID))
         self.filter_changed.emit()
 
     def _tags_picked(self) -> None:
         items = self.tags.selectedItems()
         if not items:
             return
-        self.groups.blockSignals(True)
-        self.groups.clearSelection()
-        self.groups.blockSignals(False)
+        self._clear(self.everything, self.groups)
         self._filter = Filter("tag", items[0].data(0, ROLE_ID))
         self.filter_changed.emit()
 
@@ -194,7 +212,18 @@ class HostTable(QTreeWidget):
         self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        # Selected hosts can be dragged onto a group in the Groups pane, to move them there.
+        self.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
         self._sized = False
+
+    def set_editable(self, editable: bool) -> None:
+        self.setDragEnabled(editable)
+
+    def mimeTypes(self) -> list[str]:
+        return [HOSTS_MIME]
+
+    def mimeData(self, items: Sequence[QTreeWidgetItem]) -> QMimeData:
+        return hosts_mime([item.data(0, ROLE_ID) for item in items])
 
     def retranslate(self) -> None:
         self.setHeaderLabels([_("Computer"), _("Address"), _("Tags"), _("Notes")])

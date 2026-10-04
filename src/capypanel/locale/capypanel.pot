@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-04 12:25-0300\n"
+"POT-Creation-Date: 2026-10-04 16:58-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -83,6 +83,9 @@ msgstr ""
 msgid "&Login:"
 msgstr ""
 
+msgid "&Manage groups…"
+msgstr ""
+
 msgid "&Manual connection…"
 msgstr ""
 
@@ -122,6 +125,9 @@ msgstr ""
 msgid "&Settings…"
 msgstr ""
 
+msgid "&Sort A–Z"
+msgstr ""
+
 msgid "&Status bar"
 msgstr ""
 
@@ -141,6 +147,9 @@ msgid "&View"
 msgstr ""
 
 msgid "A connection profile must be a JSON object."
+msgstr ""
+
+msgid "A group can't be moved inside itself."
 msgstr ""
 
 msgid "A group entry isn't an object."
@@ -310,6 +319,9 @@ msgstr ""
 msgid "Default ({port})"
 msgstr ""
 
+msgid "Default group"
+msgstr ""
+
 msgid "Default list: shared by everyone on this PC."
 msgstr ""
 
@@ -328,6 +340,9 @@ msgid "Delete the connection profile “{profile}”? Everyone on this PC loses 
 msgstr ""
 
 msgid "Download"
+msgstr ""
+
+msgid "Drag a group to move it, or drop it onto another group to put it inside."
 msgstr ""
 
 msgid "Duplicate connection profile"
@@ -401,9 +416,6 @@ msgstr ""
 msgid "Hostname or IP address; leave blank to use the name"
 msgstr ""
 
-msgid "Hosts"
-msgstr ""
-
 msgid "Hosts with no profile &use:"
 msgstr ""
 
@@ -459,10 +471,19 @@ msgstr ""
 msgid "Made by another user: not used"
 msgstr ""
 
+msgid "Manage groups"
+msgstr ""
+
 msgid "Manual connection"
 msgstr ""
 
 msgid "Many connections"
+msgstr ""
+
+msgid "Move &down"
+msgstr ""
+
+msgid "Move &up"
 msgstr ""
 
 msgid "My personal list"
@@ -509,6 +530,9 @@ msgstr[0] ""
 msgstr[1] ""
 
 msgid "Notes"
+msgstr ""
+
+msgid "Nothing changes until you click OK."
 msgstr ""
 
 msgid "Open &Settings"
@@ -655,6 +679,9 @@ msgstr ""
 msgid "Something went wrong. The details were saved to the app log."
 msgstr ""
 
+msgid "Sorts every level by name, once; you can rearrange after"
+msgstr ""
+
 msgid "Startup"
 msgstr ""
 
@@ -715,6 +742,9 @@ msgstr ""
 msgid ""
 "The folder “{folder}” was created by another user, so CapyPanel won't use"
 " it. Ask an administrator to delete it; it will be created again."
+msgstr ""
+
+msgid "The groups changed meanwhile; try again."
 msgstr ""
 
 msgid "The last used list"
