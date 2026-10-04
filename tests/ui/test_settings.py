@@ -349,8 +349,11 @@ def test_save_applies_and_keeps_settings_open(window: MainWindow) -> None:
     dialog.save_button.click()
     assert page.store.default_id() == "realvnc"  # applied now
     assert not page.has_changes() and dialog.result() == 0  # still open, nothing pending
-    texts = [b.text() for b in dialog.buttons.buttons()]
-    assert {"OK", "&Save", "Cancel"} <= set(texts)
+    dialog.show()
+    QApplication.processEvents()
+    order = [b.text() for b in sorted(dialog.buttons.buttons(), key=lambda b: b.x())]
+    assert order == ["OK", "&Save", "Cancel"]  # Cancel on the far right, as Windows does
+    dialog.close()
 
 
 def test_list_tables_have_grid_lines_and_resizable_columns(window: MainWindow) -> None:

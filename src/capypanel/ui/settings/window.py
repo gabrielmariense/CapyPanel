@@ -107,7 +107,10 @@ class SettingsDialog(QDialog):
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
-        self.save_button = self.buttons.addButton(_("&Save"), QDialogButtonBox.ButtonRole.ApplyRole)
+        # ActionRole puts Save between OK and Cancel; Cancel stays on the far right.
+        self.save_button = self.buttons.addButton(
+            _("&Save"), QDialogButtonBox.ButtonRole.ActionRole
+        )
         self.save_button.setToolTip(_("Save the changes and keep Settings open"))
         self.buttons.accepted.connect(self._ok)
         self.buttons.rejected.connect(self.reject)
