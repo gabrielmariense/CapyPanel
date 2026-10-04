@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
     QHeaderView,
+    QLabel,
     QMessageBox,
     QPushButton,
     QTreeWidget,
@@ -61,28 +62,49 @@ class HostListsView(QWidget):
 
         self.tree = QTreeWidget()
         self.tree.setRootIsDecorated(False)
-        self.tree.setHeaderLabels([_("List"), _("Access")])  # the full path is the tooltip
+        self.tree.setHeaderLabels([_("List"), _("Kind"), _("Access")])  # the path: tooltip
         header = self.tree.header()
         header.setStretchLastSection(False)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        for column in (1, 2):
+            header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
         self.add_button = QPushButton(_("&Add existing…"))
         self.new_button = QPushButton(_("&New…"))
         self.copy_button = QPushButton(_("&Copy current list to…"))
         self.copy_button.setEnabled(document is not None)
         self.remove_button = QPushButton(_("&Remove from the list"))
         self.remove_button.setToolTip(_("Forgets it here; the file itself is never deleted"))
-        buttons = QHBoxLayout()
+        # A column beside the list, as on the Connections page: never cut, whatever the width.
+        buttons = QVBoxLayout()
         for button in (self.add_button, self.new_button, self.copy_button, self.remove_button):
             button.setAutoDefault(False)  # Enter opens the list, never adds one
         for button in (self.add_button, self.new_button, self.copy_button):
             buttons.addWidget(button)
         buttons.addStretch(1)
         buttons.addWidget(self.remove_button)
+        row = QHBoxLayout()
+        row.addWidget(self.tree, 1)
+        row.addLayout(buttons)
+        notes = QLabel(
+            "\n".join(
+                "• " + line
+                for line in (
+                    _("Default list: shared by everyone on this PC."),
+                    _("Personal list: only yours."),
+                    _("Hover over a list to see where it is."),
+                    _("Removing a list from here never deletes its file."),
+                )
+            )
+        )
+        notes.setObjectName("hint")
+        notes.setWordWrap(True)
+        font = notes.font()
+        font.setPointSizeF(font.pointSizeF() * 0.9)
+        notes.setFont(font)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.tree, 1)
-        layout.addLayout(buttons)
+        layout.addLayout(row, 1)
+        layout.addWidget(notes)
 
         self.add_button.clicked.connect(self._add_existing)
         self.new_button.clicked.connect(self._new)
@@ -125,23 +147,25 @@ class HostListsView(QWidget):
         names = [p.name.casefold() for p in self.added]
         for path in (self._default, self._personal, *self.added):
             kind = self._kind(path)
-            name = {
-                ListKind.DEFAULT: _("Default list"),
-                ListKind.PERSONAL: _("Personal list"),
-            }.get(kind, path.name)
-            if kind is ListKind.SHARED and names.count(path.name.casefold()) > 1:
+            name = path.name
+            if kind is ListKind.SHARED and names.count(name.casefold()) > 1:
                 name = f"{path.name} ({path.parent.name})"  # two "hosts.json": which is which
+            kind_text = {
+                ListKind.DEFAULT: _("Default"),
+                ListKind.PERSONAL: _("Personal"),
+                ListKind.SHARED: _("Added"),
+            }[kind]
             access = locations.list_access(path, shared=kind is ListKind.DEFAULT)
-            item = QTreeWidgetItem([name, access_text(access, kind)])
+            item = QTreeWidgetItem([name, kind_text, access_text(access, kind)])
             item.setData(0, ROLE_PATH, str(path))
             is_open = current is not None and locations.same_path(path, current)
             tip = _("{path} (open now)").format(path=path) if is_open else str(path)
-            for column in range(2):
+            for column in range(3):
                 item.setToolTip(column, tip)
             if is_open:
                 font = item.font(0)
                 font.setBold(True)
-                for column in range(2):
+                for column in range(3):
                     item.setFont(column, font)
             self.tree.addTopLevelItem(item)
         if select is not None:
@@ -243,7 +267,7 @@ class HostListsDialog(QDialog):
         self.view.changed.connect(self._update)
         self.view.activated.connect(lambda: self.open_button.isEnabled() and self.accept())
         self._update()
-        self.resize(720, 360)
+        self.resize(640, 380)
 
     def _update(self) -> None:
         self.open_button.setEnabled(self.view.can_open(self.view.selected()))

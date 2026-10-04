@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-03 18:39-0300\n"
+"POT-Creation-Date: 2026-10-03 21:05-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -171,6 +171,9 @@ msgstr "Adicionar grupo"
 msgid "Add host"
 msgstr "Adicionar host"
 
+msgid "Added"
+msgstr "Adicionada"
+
 msgid "Address"
 msgstr "Endereço"
 
@@ -305,8 +308,8 @@ msgstr "Padrão"
 msgid "Default ({port})"
 msgstr "Padrão ({port})"
 
-msgid "Default list"
-msgstr "Lista padrão"
+msgid "Default list: shared by everyone on this PC."
+msgstr "Lista padrão: compartilhada por todos neste PC."
 
 #, python-brace-format
 msgid "Default: {profile}"
@@ -402,6 +405,9 @@ msgstr "Hosts"
 msgid "Hosts with no profile &use:"
 msgstr "Hosts sem perfil &usam:"
 
+msgid "Hover over a list to see where it is."
+msgstr "Passe o mouse sobre uma lista para ver onde ela está."
+
 msgid "If that list can't be opened, CapyPanel tries the default list. If that also fails, it opens your personal list."
 msgstr "Se essa lista não puder ser aberta, o CapyPanel tenta a lista padrão. Se isso também falhar, ele abre a sua lista pessoal."
 
@@ -426,6 +432,9 @@ msgstr "Arquivo de configurações próprio"
 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
+
+msgid "Kind"
+msgstr "Tipo"
 
 msgid "List"
 msgstr "Lista"
@@ -526,8 +535,8 @@ msgstr "Senha para {profile}"
 msgid "Personal"
 msgstr "Pessoal"
 
-msgid "Personal list"
-msgstr "Lista pessoal"
+msgid "Personal list: only yours."
+msgstr "Lista pessoal: só sua."
 
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
@@ -576,6 +585,9 @@ msgstr[1] "Remover {n} hosts da lista?"
 #, python-brace-format
 msgid "Remove “{name}” from the list?"
 msgstr "Remover “{name}” da lista?"
+
+msgid "Removing a list from here never deletes its file."
+msgstr "Remover uma lista daqui nunca exclui o arquivo dela."
 
 msgid "Rename group"
 msgstr "Renomear grupo"
@@ -651,9 +663,6 @@ msgstr "O perfil de conexão “{profile}” precisa da ferramenta “{tool}”,
 
 msgid "The default list"
 msgstr "A lista padrão"
-
-msgid "The default list is shared by everyone on this PC; it's used only if an administrator or you made it. The personal list is yours alone. Any list can be edited by people with write permission on it; for everyone else it opens read-only. Removing a list here never deletes its file."
-msgstr "A lista padrão é compartilhada por todos neste PC; ela só é usada se foi criada por um administrador ou por você. A lista pessoal é só sua. Qualquer lista pode ser editada por quem tem permissão de gravação nela; para os demais, ela abre somente para leitura. Remover uma lista aqui nunca exclui o arquivo."
 
 #, python-brace-format
 msgid "The default list was made by another user, so CapyPanel won't open it. An administrator can replace or delete “{path}”."

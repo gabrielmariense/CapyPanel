@@ -73,12 +73,12 @@ def test_page_list_rows_never_overlap(window: MainWindow) -> None:
 
 
 def _rows(view: HostListsView) -> list[tuple[str, str, bool]]:
-    """Each row: its name, its access, and whether it's the list open now (bold)."""
+    """Each row: its kind, its access, and whether it's the list open now (bold)."""
     rows = []
     for i in range(view.tree.topLevelItemCount()):
         item = view.tree.topLevelItem(i)
         assert item is not None
-        rows.append((item.text(0), item.text(1), item.font(0).bold()))
+        rows.append((item.text(1), item.text(2), item.font(0).bold()))
     return rows
 
 
@@ -92,10 +92,12 @@ def test_host_lists_shows_every_list_with_the_open_one_in_bold(
     window.open_list(office)  # an opened list is added to Host lists from now on
     view = window.settings_dialog().host_lists.view
     assert _rows(view) == [
-        ("Default list", "Read-write", False),  # the first start created it
-        ("Personal list", "Created when opened", False),
-        ("office.json", "Read-write", True),
+        ("Default", "Read-write", False),  # the first start created it
+        ("Personal", "Created when opened", False),
+        ("Added", "Read-write", True),
     ]
+    names = [view.tree.topLevelItem(i).text(0) for i in range(3)]  # type: ignore[union-attr]
+    assert names == ["hosts.json", "hosts.json", "office.json"]
     os.chmod(office, stat.S_IREAD)
     try:
         assert _rows(window.settings_dialog().host_lists.view)[2][1] == "Read-only"
@@ -169,7 +171,7 @@ def test_removing_a_list_forgets_it_but_never_deletes_the_file(
     view.select(office)
     assert view.remove_button.isEnabled()
     view.remove_button.click()
-    assert [r[0] for r in _rows(view)] == ["Default list", "Personal list"]
+    assert [r[0] for r in _rows(view)] == ["Default", "Personal"]
     view.select(window._default_list)
     assert not view.remove_button.isEnabled()  # the default and personal lists always stay
     window.apply_settings(dialog.choices())
@@ -302,7 +304,8 @@ def test_the_path_is_in_the_tooltip_and_same_names_show_their_folder(
     a, b = tmp_path / "north" / "hosts.json", tmp_path / "south" / "hosts.json"
     window._prefs["host_lists"] = [str(a), str(b)]
     view = window.settings_dialog().host_lists.view
-    assert [r[0] for r in _rows(view)][2:] == ["hosts.json (north)", "hosts.json (south)"]
+    names = [view.tree.topLevelItem(i).text(0) for i in range(4)]  # type: ignore[union-attr]
+    assert names[2:] == ["hosts.json (north)", "hosts.json (south)"]
     item = view.tree.topLevelItem(2)
     assert item is not None and item.toolTip(0) == str(a) == item.toolTip(1)
 

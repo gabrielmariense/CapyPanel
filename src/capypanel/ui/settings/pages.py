@@ -215,16 +215,6 @@ class HostListsPage(Page):
             default_list=default_list, personal_list=personal_list, added=added, document=document
         )
         self.body.addWidget(self.view, 1)
-        self.body.addWidget(
-            hint(
-                _(
-                    "The default list is shared by everyone on this PC; it's used only if an "
-                    "administrator or you made it. The personal list is yours alone. Any list "
-                    "can be edited by people with write permission on it; for everyone else it "
-                    "opens read-only. Removing a list here never deletes its file."
-                )
-            )
-        )
         self.view.changed.connect(self.changed.emit)
 
     @property
