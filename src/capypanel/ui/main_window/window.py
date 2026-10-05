@@ -60,7 +60,7 @@ from capypanel.ui.main_window.host_views import (
     HostTable,
     NavigationPane,
 )
-from capypanel.ui.main_window.toolbar import WHERE_GROUP, MainToolBar, RefreshPanel
+from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
 from capypanel.ui.settings import connections
 from capypanel.ui.settings.connections import ConnectionChanges
 from capypanel.ui.settings.window import SettingsChoices, SettingsDialog
@@ -234,6 +234,7 @@ class MainWindow(QMainWindow):
             lambda: self.check_hosts(self._selected_hosts(), status=False, users=True)
         )
         self.toolbar.refresh_panel_requested.connect(self._show_refresh_panel)
+        self.toolbar.refresh_requested.connect(self._refresh_shown)
         self.refresh_panel.run_clicked.connect(self._run_refresh_panel)
         self.toolbar.connect_menu.aboutToShow.connect(self._fill_connect_menu)
         self.nav.add_group_button.clicked.connect(self.add_group)
@@ -890,6 +891,9 @@ class MainWindow(QMainWindow):
             action.setEnabled(selected > 0)  # read-only lists can still connect
         for action in (a.check_status, a.check_users):
             action.setEnabled(selected > 0 and self._run is None)  # one Refresh at a time
+        shown = self.table.topLevelItemCount() > 0
+        for action in (self.toolbar.refresh_status, self.toolbar.refresh_users):
+            action.setEnabled(shown and self._run is None)
         a.forget_passwords.setEnabled(bool(self.connector.credentials) or bool(self._account))
         if doc is None:
             self.setWindowTitle(f"CapyPanel {BUILD}")
@@ -1077,16 +1081,15 @@ class MainWindow(QMainWindow):
         panel.move(where)
         panel.show()
 
+    def _refresh_shown(self, status: bool, users: bool) -> None:
+        """Refresh: every host the table shows (the group or tag picked on the left)."""
+        self.check_hosts(self._visible_hosts(), status=status, users=users)
+
     def _run_refresh_panel(self) -> None:
         choices = self.refresh_panel.choices()
         self._prefs["refresh"] = choices
         self._save_prefs()
-        hosts = self._visible_hosts() if choices["where"] == WHERE_GROUP else None
-        self.check_hosts(
-            hosts if hosts is not None else self._selected_hosts(),
-            status=choices["status"],
-            users=choices["users"],
-        )
+        self.check_hosts(self._visible_hosts(), status=choices["status"], users=choices["users"])
 
     def _fill_connect_menu(self) -> None:
         """The toolbar's Connect arrow: connect the selection once with another profile."""

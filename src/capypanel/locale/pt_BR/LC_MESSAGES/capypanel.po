@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 17:59-0300\n"
+"POT-Creation-Date: 2026-10-05 18:06-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -159,9 +159,6 @@ msgstr "&Usuário:"
 msgid "&View"
 msgstr "E&xibir"
 
-msgid "&Whole group"
-msgstr "&Grupo inteiro"
-
 msgid "A connection profile must be a JSON object."
 msgstr "Um perfil de conexão deve ser um objeto JSON."
 
@@ -253,8 +250,11 @@ msgstr "Alterar caminho…"
 msgid "Check"
 msgstr "Verificar"
 
-msgid "Check the selected hosts; right-click to choose what to check and where"
-msgstr "Verifica os hosts selecionados; clique com o botão direito para escolher o que verificar e onde"
+msgid "Check every host shown"
+msgstr "Verificar todos os hosts exibidos"
+
+msgid "Check every host shown; right-click to run several checks at once"
+msgstr "Verifica todos os hosts exibidos; clique com o botão direito para fazer várias verificações de uma vez"
 
 #, python-brace-format
 msgid "Checked {n} host."
@@ -718,9 +718,6 @@ msgstr "Remover uma lista daqui nunca exclui o arquivo dela."
 msgid "Rename group"
 msgstr "Renomear grupo"
 
-msgid "S&elected hosts"
-msgstr "Hosts selecio&nados"
-
 msgid "Save a copy"
 msgstr "Salvar uma cópia"
 
@@ -992,9 +989,6 @@ msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste 
 #, python-brace-format
 msgid "Where is {tool}?"
 msgstr "Onde está o {tool}?"
-
-msgid "Which hosts"
-msgstr "Quais hosts"
 
 msgid "Windows"
 msgstr "Windows"

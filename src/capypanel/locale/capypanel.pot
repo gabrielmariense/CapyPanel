@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 17:59-0300\n"
+"POT-Creation-Date: 2026-10-05 18:06-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -158,9 +158,6 @@ msgstr ""
 msgid "&View"
 msgstr ""
 
-msgid "&Whole group"
-msgstr ""
-
 msgid "A connection profile must be a JSON object."
 msgstr ""
 
@@ -252,7 +249,10 @@ msgstr ""
 msgid "Check"
 msgstr ""
 
-msgid "Check the selected hosts; right-click to choose what to check and where"
+msgid "Check every host shown"
+msgstr ""
+
+msgid "Check every host shown; right-click to run several checks at once"
 msgstr ""
 
 #, python-brace-format
@@ -733,9 +733,6 @@ msgstr ""
 msgid "Rename group"
 msgstr ""
 
-msgid "S&elected hosts"
-msgstr ""
-
 msgid "Save a copy"
 msgstr ""
 
@@ -1027,9 +1024,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Where is {tool}?"
-msgstr ""
-
-msgid "Which hosts"
 msgstr ""
 
 msgid "Windows"

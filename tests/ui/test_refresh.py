@@ -98,20 +98,33 @@ def test_status_only_doesnt_read_users(window: MainWindow, answers: dict[str, An
     assert _cells(window, "PC-1") == ("Online", "")
 
 
-def test_the_panel_checks_the_whole_group_and_remembers_its_choices(
-    window: MainWindow, answers: dict[str, Any]
-) -> None:
+def _pick_group(window: MainWindow, name: str) -> None:
     assert window.document is not None
-    group = next(g for g in window.document.hosts.groups if g.name == "Desks")
+    group = next(g for g in window.document.hosts.groups if g.name == name)
     window.nav.select_group(group.id)
     window._show_hosts()
-    panel = window.refresh_panel
-    panel.users_box.setChecked(False)
-    panel.group_radio.setChecked(True)
-    panel.run_button.click()
+
+
+def test_refresh_checks_every_host_shown_even_with_nothing_selected(
+    window: MainWindow, answers: dict[str, Any]
+) -> None:
+    _pick_group(window, "Desks")
+    assert window.table.selected_ids() == []
+    window.toolbar.refresh_status.trigger()
     _wait(window)
     assert sorted(a for a, *_ in answers["seen"]) == ["10.0.0.2", "10.0.0.3"]
-    assert window._prefs["refresh"] == {"status": True, "users": False, "where": "group"}
+
+
+def test_the_panel_runs_several_checks_and_remembers_its_ticks(
+    window: MainWindow, answers: dict[str, Any]
+) -> None:
+    _pick_group(window, "Office")  # the group and the one inside it
+    panel = window.refresh_panel
+    panel.users_box.setChecked(False)
+    panel.run_button.click()
+    _wait(window)
+    assert sorted(a for a, *_ in answers["seen"]) == ["10.0.0.1", "10.0.0.2", "10.0.0.3"]
+    assert window._prefs["refresh"] == {"status": True, "users": False}
 
 
 def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(

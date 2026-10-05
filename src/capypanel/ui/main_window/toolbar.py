@@ -1,8 +1,7 @@
 """The toolbar: buttons in captioned groups (set here, not by users) and Refresh on the right,
-lined up with the end of the host table. Left-click on Refresh picks one check for the
-selected hosts; right-click opens a panel that remembers what to check and where."""
-
-from typing import Any
+lined up with the end of the host table. Refresh always checks every host the table shows (the
+group picked on the left); one host is checked from its own right-click menu. Left-click picks
+one check; right-click opens a panel to run several at once."""
 
 from PySide6.QtCore import QEvent, QPoint, Qt, Signal
 from PySide6.QtGui import QFont, QPalette, QShowEvent
@@ -13,7 +12,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QMenu,
     QPushButton,
-    QRadioButton,
     QSizePolicy,
     QSpacerItem,
     QToolBar,
@@ -27,12 +25,10 @@ from capypanel.ui.icons import glyph_icon
 from capypanel.ui.main_window.actions import Actions
 from capypanel.ui.themes import engine as themes
 
-WHERE_SELECTED, WHERE_GROUP = "selected", "group"
-
 
 class RefreshPanel(QFrame):
-    """Right-click on Refresh: what to check and on which hosts, then Run. It stays open while
-    boxes are ticked; the choices are kept for next time."""
+    """Right-click on Refresh: tick what to check on the hosts shown, then Run. It stays open
+    while boxes are ticked; the ticks are kept for next time."""
 
     run_clicked = Signal()
 
@@ -42,17 +38,13 @@ class RefreshPanel(QFrame):
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setBackgroundRole(QPalette.ColorRole.Base)
         self.setAutoFillBackground(True)
-        self._check_title, self._where_title = _section(""), _section("")
+        self._check_title = _section("")
         self.status_box, self.users_box = QCheckBox(), QCheckBox()
-        self.selected_radio, self.group_radio = QRadioButton(), QRadioButton()
         self.run_button = QPushButton()
         self.run_button.setDefault(True)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 10, 12, 12)
-        for widget in (
-            self._check_title, self.status_box, self.users_box,
-            self._where_title, self.selected_radio, self.group_radio,
-        ):  # fmt: skip
+        for widget in (self._check_title, self.status_box, self.users_box):
             layout.addWidget(widget)
         row = QHBoxLayout()
         row.addStretch(1)
@@ -65,27 +57,18 @@ class RefreshPanel(QFrame):
         self.retranslate()
 
     def retranslate(self) -> None:
-        self._check_title.setText(_("Check"))
-        self._where_title.setText(_("Which hosts"))
+        self._check_title.setText(_("Check every host shown"))
         self.status_box.setText(_("&Status"))
         self.users_box.setText(_("&Logged-on users"))
-        self.selected_radio.setText(_("S&elected hosts"))
-        self.group_radio.setText(_("&Whole group"))
         self.run_button.setText(_("&Run"))
 
-    def choices(self) -> dict[str, Any]:
-        return {
-            "status": self.status_box.isChecked(),
-            "users": self.users_box.isChecked(),
-            "where": WHERE_GROUP if self.group_radio.isChecked() else WHERE_SELECTED,
-        }
+    def choices(self) -> dict[str, bool]:
+        return {"status": self.status_box.isChecked(), "users": self.users_box.isChecked()}
 
     def set_choices(self, saved: object) -> None:
         saved = saved if isinstance(saved, dict) else {}
         self.status_box.setChecked(saved.get("status", True) is not False)
         self.users_box.setChecked(saved.get("users", True) is not False)
-        group = saved.get("where") == WHERE_GROUP
-        (self.group_radio if group else self.selected_radio).setChecked(True)
         self._update()
 
     def _update(self) -> None:
@@ -98,6 +81,7 @@ class RefreshPanel(QFrame):
 
 class MainToolBar(QToolBar):
     refresh_panel_requested = Signal(QPoint)
+    refresh_requested = Signal(bool, bool)  # status, users: on every host shown
 
     def __init__(self, commands: Actions) -> None:
         super().__init__()
@@ -128,7 +112,10 @@ class MainToolBar(QToolBar):
         self.refresh_button = _button()
         self.refresh_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self.refresh_menu = QMenu(self.refresh_button)
-        self.refresh_menu.addActions([commands.check_status, commands.check_users])
+        self.refresh_status = self.refresh_menu.addAction("")
+        self.refresh_users = self.refresh_menu.addAction("")
+        self.refresh_status.triggered.connect(lambda: self.refresh_requested.emit(True, False))
+        self.refresh_users.triggered.connect(lambda: self.refresh_requested.emit(False, True))
         self.refresh_button.setMenu(self.refresh_menu)
         self.refresh_button.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.refresh_button.customContextMenuRequested.connect(
@@ -156,8 +143,10 @@ class MainToolBar(QToolBar):
         )
         self.refresh_button.setText(gap + _("Refresh"))
         self.refresh_button.setToolTip(
-            _("Check the selected hosts; right-click to choose what to check and where")
+            _("Check every host shown; right-click to run several checks at once")
         )
+        self.refresh_status.setText(_("&Status"))
+        self.refresh_users.setText(_("&Logged-on users"))
 
     def align_end(self, right: int) -> None:
         """Puts Refresh's right edge at `right`, in this toolbar's coordinates."""
