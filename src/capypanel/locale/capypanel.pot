@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 18:06-0300\n"
+"POT-Creation-Date: 2026-10-05 19:02-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,9 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
+
+msgid " min"
+msgstr ""
 
 msgid "&Add existing…"
 msgstr ""
@@ -253,6 +256,16 @@ msgid "Check every host shown"
 msgstr ""
 
 msgid "Check every host shown; right-click to run several checks at once"
+msgstr ""
+
+msgid "Check logged-on users"
+msgstr ""
+
+msgid "Check the &status of the hosts shown every"
+msgstr ""
+
+#, python-brace-format
+msgid "Check who is logged on to {n} hosts?"
 msgstr ""
 
 #, python-brace-format
@@ -626,10 +639,16 @@ msgstr ""
 msgid "Nothing changes until you click OK."
 msgstr ""
 
+msgid "Off by default; Refresh in the toolbar always works."
+msgstr ""
+
 msgid "Offline"
 msgstr ""
 
 msgid "Online"
+msgstr ""
+
+msgid "Only ping and ports, never logged-on users, so no account is used."
 msgstr ""
 
 msgid "Open &Settings"

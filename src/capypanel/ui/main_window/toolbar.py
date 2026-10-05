@@ -192,6 +192,8 @@ class MainToolBar(QToolBar):
         caption.setFont(font)
         column.addLayout(row)
         column.addWidget(caption)
+        # A caption names a group of buttons; over one button it would only repeat its name.
+        caption.setVisible(len(buttons) > 1)
         self._captions.append((caption, key))
         return group
 

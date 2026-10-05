@@ -67,6 +67,7 @@ from capypanel.ui.settings.window import SettingsChoices, SettingsDialog
 from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
+MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks first
 
 
 class MainWindow(QMainWindow):
@@ -133,6 +134,9 @@ class MainWindow(QMainWindow):
         self._build_menus()
         self._connect()
         self._restore_layout()
+        self._auto_timer = QTimer(self)  # Settings > General: Status by itself, if switched on
+        self._auto_timer.timeout.connect(self._auto_status_check)
+        self._apply_auto_status()
         self._open_startup_list()
         self._refresh()
 
@@ -768,6 +772,7 @@ class MainWindow(QMainWindow):
             added=locations.added_lists(self._prefs),
             registry=self.registry,
             catalogs=self.connector.catalogs,
+            auto_status=self._auto_status(),
         )
 
     def apply_settings(self, choices: SettingsChoices) -> None:
@@ -785,6 +790,9 @@ class MainWindow(QMainWindow):
         if choices.language != i18n.language():
             self.set_language(choices.language)
         self._apply_connections(choices.connections)
+        on, minutes = choices.auto_status
+        self._prefs["auto_status"] = {"on": on, "minutes": minutes}
+        self._apply_auto_status()
         self._save_prefs()
 
     def _apply_connections(self, changes: ConnectionChanges) -> None:
@@ -926,9 +934,40 @@ class MainWindow(QMainWindow):
                 skipped,
             )
             self.statusBar().showMessage(note.format(n=skipped), 10_000)
+        if (
+            users
+            and len(targets) > MANY_USER_CHECKS
+            and not confirm(
+                self,
+                _("Check logged-on users"),
+                _("Check who is logged on to {n} hosts?").format(n=len(targets)),
+                _("Check"),
+            )
+        ):
+            return
         if targets:
             wanted = Checks(status, users, self._ports(), self._account if users else None)
             self._start(targets, wanted)
+
+    def _auto_status(self) -> tuple[bool, int]:
+        saved = self._prefs.get("auto_status")
+        saved = saved if isinstance(saved, dict) else {}
+        minutes = saved.get("minutes", 5)
+        minutes = minutes if isinstance(minutes, int) and 1 <= minutes <= 120 else 5
+        return saved.get("on") is True, minutes
+
+    def _apply_auto_status(self) -> None:
+        on, minutes = self._auto_status()
+        if on:
+            self._auto_timer.start(minutes * 60_000)
+        else:
+            self._auto_timer.stop()
+
+    def _auto_status_check(self) -> None:
+        """Status only (ping and ports) on the hosts shown; skipped while a Refresh runs."""
+        hosts = self._visible_hosts()
+        if self._run is None and hosts:
+            self.check_hosts(hosts, status=True, users=False)
 
     def _start(self, targets: list[tuple[str, str]], wanted: Checks) -> None:
         run = CheckRun(targets, wanted)

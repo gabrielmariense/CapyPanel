@@ -203,3 +203,35 @@ def test_refresh_lines_up_with_the_end_of_the_host_table(window: MainWindow) -> 
     button = window.toolbar.refresh_button
     end = button.mapTo(window, QPoint(button.width(), 0)).x()
     assert abs(end - window.table.mapTo(window, QPoint(window.table.width(), 0)).x()) <= 1
+
+
+def test_a_large_users_check_asks_first(
+    window: MainWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(window_module, "MANY_USER_CHECKS", 1)
+    asked: list[str] = []
+    monkeypatch.setattr(
+        window_module, "confirm", lambda _p, _t, text, _a: asked.append(text) or False
+    )
+    _pick_group(window, "Office")
+    window.toolbar.refresh_users.trigger()
+    _wait(window)
+    assert asked == ["Check who is logged on to 3 hosts?"] and answers["seen"] == []
+    window.toolbar.refresh_status.trigger()  # Status never asks
+    _wait(window)
+    assert len(answers["seen"]) == 3 and len(asked) == 1
+
+
+def test_automatic_status_is_off_by_default_and_checks_only_status(
+    window: MainWindow, answers: dict[str, Any]
+) -> None:
+    assert not window._auto_timer.isActive()
+    dialog = window.settings_dialog()
+    dialog.general.auto_status.setChecked(True)
+    dialog.general.auto_minutes.setValue(3)
+    window.apply_settings(dialog.choices())
+    assert window._auto_timer.isActive() and window._auto_timer.interval() == 3 * 60_000
+    assert window._prefs["auto_status"] == {"on": True, "minutes": 3}
+    window._auto_status_check()  # what the timer does
+    _wait(window)
+    assert answers["seen"] and all(s and not u for _a, s, u, _acc in answers["seen"])

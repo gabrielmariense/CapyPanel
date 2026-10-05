@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 18:06-0300\n"
+"POT-Creation-Date: 2026-10-05 19:02-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -17,6 +17,9 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
+
+msgid " min"
+msgstr " min"
 
 msgid "&Add existing…"
 msgstr "&Adicionar existente…"
@@ -255,6 +258,16 @@ msgstr "Verificar todos os hosts exibidos"
 
 msgid "Check every host shown; right-click to run several checks at once"
 msgstr "Verifica todos os hosts exibidos; clique com o botão direito para fazer várias verificações de uma vez"
+
+msgid "Check logged-on users"
+msgstr "Verificar usuários logados"
+
+msgid "Check the &status of the hosts shown every"
+msgstr "Verificar o &status dos hosts exibidos a cada"
+
+#, python-brace-format
+msgid "Check who is logged on to {n} hosts?"
+msgstr "Verificar quem está logado em {n} hosts?"
 
 #, python-brace-format
 msgid "Checked {n} host."
@@ -614,11 +627,17 @@ msgstr "Nada respondeu, nem o ping nem as portas usuais: o computador está desl
 msgid "Nothing changes until you click OK."
 msgstr "Nada muda até você clicar em OK."
 
+msgid "Off by default; Refresh in the toolbar always works."
+msgstr "Desligado por padrão; o Atualizar da barra de ferramentas sempre funciona."
+
 msgid "Offline"
 msgstr "Offline"
 
 msgid "Online"
 msgstr "Online"
+
+msgid "Only ping and ports, never logged-on users, so no account is used."
+msgstr "Só ping e portas, nunca usuários logados, então nenhuma conta é usada."
 
 msgid "Open &Settings"
 msgstr "Abrir &Configurações"
