@@ -310,7 +310,9 @@ QMenu::indicator { left: 9px; }
 QToolButton { padding: 2px 8px; border-radius: %(r2)spx; color: %(text2)s; background: transparent;
               border: none; }
 QToolButton:hover { background: %(hover)s; color: %(text)s; }
-QToolBar { background: %(bg)s; border: none; padding: 6px 8px 4px 8px; spacing: 6px; }
+/* A line under the toolbar: without it, it merges into the panes below. */
+QToolBar { background: %(bg)s; border: none; border-bottom: 1px solid %(border)s;
+           padding: 6px 8px 4px 8px; spacing: 6px; }
 QToolBar QToolButton { padding: 6px 10px; }
 /* Styling a tool button drops Fusion's menu arrow, so draw our own. */
 QToolBar QToolButton[popupMode="1"] { padding-right: 24px; }
@@ -414,6 +416,7 @@ QToolTip { background: %(card)s; color: %(text)s; border: 1px solid %(border)s; 
 _NATIVE_QSS = """
 QMainWindow, QDialog, QSplitter::handle { background: %(bg)s; }
 QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; }
+QToolBar#main { border: none; border-bottom: 1px solid %(border)s; }
 QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; }
 /* Only the settings page list, not every QListView: combo box pop-ups are list views too. */
