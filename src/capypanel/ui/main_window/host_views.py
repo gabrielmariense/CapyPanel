@@ -1,10 +1,10 @@
 """The three panes of the main window: groups and tags, the host table, and host details."""
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
 from PySide6.QtCore import QEvent, QMimeData, QPoint, Qt, Signal
-from PySide6.QtGui import QPalette, QShowEvent
+from PySide6.QtGui import QIcon, QPalette, QShowEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFormLayout,
@@ -23,6 +23,8 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import _, ngettext
 from capypanel.ui.groups import HOSTS_MIME, ROLE_ID, ROLE_KIND, GroupTree, hosts_mime
+
+ROLE_QUIET = Qt.ItemDataRole.UserRole + 2  # a Status or User cell to show greyed
 
 
 @dataclass(frozen=True)
@@ -200,11 +202,15 @@ def _walk(root: QTreeWidgetItem) -> Iterable[QTreeWidgetItem]:
 
 
 class HostTable(QTreeWidget):
-    """The host list as a table. A QTreeView-based widget: it selects whole rows in Windows 11."""
+    """The host list as a table. A QTreeView-based widget: it selects whole rows in Windows 11.
+    Status and User come from Refresh; they're kept in memory, never in the list file."""
+
+    STATUS, USER = 1, 2
 
     def __init__(self) -> None:
         super().__init__()
         self.setObjectName("grid")  # lines between rows and columns
+        self._rows: dict[str, QTreeWidgetItem] = {}
         self.retranslate()
         self.setRootIsDecorated(False)
         self.setUniformRowHeights(True)
@@ -226,19 +232,24 @@ class HostTable(QTreeWidget):
         return hosts_mime([item.data(0, ROLE_ID) for item in items])
 
     def retranslate(self) -> None:
-        self.setHeaderLabels([_("Computer"), _("Address"), _("Tags"), _("Notes")])
+        self.setHeaderLabels(
+            [_("Computer"), _("Status"), _("User"), _("Address"), _("Tags"), _("Notes")]
+        )
 
-    def show_hosts(self, hosts: Sequence[Host]) -> None:
+    def show_hosts(self, hosts: Sequence[Host], cells: Mapping[str, "Cells"]) -> None:
         keep = set(self.selected_ids())
         self.blockSignals(True)
         self.setSortingEnabled(False)
         self.clear()
+        self._rows = {}
         for host in hosts:
             item = QTreeWidgetItem(
-                [host.name, host.address, ", ".join(host.tags), _one_line(host.notes)]
+                [host.name, "", "", host.address, ", ".join(host.tags), _one_line(host.notes)]
             )
             item.setData(0, ROLE_ID, host.id)
             self.addTopLevelItem(item)
+            self._rows[host.id] = item
+            self._fill(item, cells.get(host.id))
             item.setSelected(host.id in keep)
         self.setSortingEnabled(True)
         self.blockSignals(False)
@@ -251,6 +262,9 @@ class HostTable(QTreeWidget):
         # A theme with another font (e.g. Paper's Georgia) makes the old widths cut text off.
         if event.type() == QEvent.Type.FontChange and self.topLevelItemCount():
             self._fit_columns()
+        if event.type() == QEvent.Type.PaletteChange:  # the quiet colour of the new theme
+            for item in self._rows.values():
+                self._tint(item)
 
     def _fit_columns(self) -> None:
         # Once, on the first real content: fit the first columns (capped) and let Notes stretch
@@ -259,6 +273,31 @@ class HostTable(QTreeWidget):
         for column in range(self.columnCount() - 1):
             self.resizeColumnToContents(column)
             self.setColumnWidth(column, min(self.columnWidth(column) + 16, 260))
+
+    def show_cells(self, host_id: str, cells: "Cells") -> None:
+        """New Refresh results for one host, without rebuilding the table."""
+        item = self._rows.get(host_id)
+        if item is not None:
+            self._fill(item, cells)
+
+    def _fill(self, item: QTreeWidgetItem, cells: "Cells | None") -> None:
+        cells = cells or Cells()
+        for column, (text, tip, icon, quiet) in (
+            (self.STATUS, cells.status),
+            (self.USER, cells.user),
+        ):
+            item.setText(column, text)
+            item.setToolTip(column, tip)
+            item.setIcon(column, icon if icon is not None else QIcon())
+            item.setData(column, ROLE_QUIET, quiet)
+        self._tint(item)
+
+    def _tint(self, item: QTreeWidgetItem) -> None:
+        """Errors and "not checked" read quieter than real results, in the current theme."""
+        muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
+        for column in (self.STATUS, self.USER):
+            quiet = bool(item.data(column, ROLE_QUIET))
+            item.setData(column, Qt.ItemDataRole.ForegroundRole, muted if quiet else None)
 
     def selected_ids(self) -> list[str]:
         return [item.data(0, ROLE_ID) for item in self.selectedItems()]
@@ -271,6 +310,14 @@ class HostTable(QTreeWidget):
             if item is not None and item.data(0, ROLE_ID) in wanted:
                 item.setSelected(True)
                 self.scrollToItem(item)
+
+
+@dataclass(frozen=True)
+class Cells:
+    """What the Status and User columns show for one host: text, tooltip, icon, quiet."""
+
+    status: tuple[str, str, QIcon | None, bool] = ("", "", None, False)
+    user: tuple[str, str, QIcon | None, bool] = ("", "", None, False)
 
 
 def _one_line(text: str) -> str:
@@ -297,7 +344,7 @@ class DetailsPane(QWidget):
         self._heading.setFont(font)
         form.addRow(self._heading)
         self._labels: dict[str, QLabel] = {}
-        for key in ("name", "address", "group", "connection", "tags", "notes"):
+        for key in ("name", "address", "group", "connection", "status", "users", "tags", "notes"):
             value = QLabel()
             value.setWordWrap(True)
             value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
@@ -327,12 +374,22 @@ class DetailsPane(QWidget):
             ("address", _("Address")),
             ("group", _("Group")),
             ("connection", _("Connection")),
+            ("status", _("Status")),
+            ("users", _("Logged on")),
             ("tags", _("Tags")),
             ("notes", _("Notes")),
         ):
             self._labels[key].setText(text)
 
-    def show_host(self, host: Host | None, group: str, selected: int, connection: str = "") -> None:
+    def show_host(
+        self,
+        host: Host | None,
+        group: str,
+        selected: int,
+        connection: str = "",
+        status: str = "",
+        users: str = "",
+    ) -> None:
         if host is None:
             if selected > 1:
                 self._hint.setText(
@@ -347,6 +404,9 @@ class DetailsPane(QWidget):
             "address": host.address or "—",
             "group": group,
             "connection": connection or "—",
+            # Not checked yet: say how, rather than a bare dash.
+            "status": status or _("Not checked: use Refresh"),
+            "users": users or _("Not checked: use Refresh"),
             "tags": ", ".join(host.tags) or "—",
             "notes": host.notes or "—",
         }

@@ -23,8 +23,11 @@ class Actions:
     manual_connect: QAction
     copy_address: QAction
     copy_name: QAction
+    check_status: QAction
+    check_users: QAction
     forget_passwords: QAction
     connection_profiles: QAction
+    show_toolbar: QAction
     show_groups: QAction
     show_details: QAction
     show_status_bar: QAction
@@ -42,7 +45,7 @@ SHORTCUTS = {
     "manual_connect": "Ctrl+M",
     "copy_address": "Ctrl+Shift+C",
 }
-CHECKABLE = {"show_groups", "show_details", "show_status_bar"}
+CHECKABLE = {"show_toolbar", "show_groups", "show_details", "show_status_bar"}
 
 
 def create_actions(parent: QWidget) -> Actions:
@@ -69,12 +72,16 @@ def retranslate_actions(a: Actions) -> None:
     a.manage_groups.setText(_("&Manage groups…"))
     a.edit.setText(_("&Edit selected…"))
     a.remove.setText(_("&Remove selected"))
-    a.connect_host.setText(_("&Open connection"))
+    a.connect_host.setText(_("&Connect"))
     a.manual_connect.setText(_("&Manual connection…"))
-    a.copy_address.setText(_("Copy &address"))
-    a.copy_name.setText(_("Copy &name"))
+    # Under a "Copy" heading in the right-click menu, so the item names stay short.
+    a.copy_address.setText(_("&Address"))
+    a.copy_name.setText(_("&Name"))
+    a.check_status.setText(_("&Status"))
+    a.check_users.setText(_("&Logged-on users"))
     a.forget_passwords.setText(_("&Forget typed passwords"))
     a.connection_profiles.setText(_("Connection &profiles…"))
+    a.show_toolbar.setText(_("T&oolbar"))
     a.show_groups.setText(_("&Groups pane"))
     a.show_details.setText(_("&Details pane"))
     a.show_status_bar.setText(_("&Status bar"))

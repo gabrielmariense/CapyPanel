@@ -310,6 +310,18 @@ QMenu::indicator { left: 9px; }
 QToolButton { padding: 2px 8px; border-radius: %(r2)spx; color: %(text2)s; background: transparent;
               border: none; }
 QToolButton:hover { background: %(hover)s; color: %(text)s; }
+QToolBar { background: %(bg)s; border: none; padding: 6px 8px 4px 8px; spacing: 6px; }
+QToolBar QToolButton { padding: 6px 10px; }
+/* Styling a tool button drops Fusion's menu arrow, so draw our own. */
+QToolBar QToolButton[popupMode="1"] { padding-right: 24px; }
+QToolBar QToolButton[popupMode="2"] { padding-right: 24px; }
+QToolButton::menu-button { border: none; width: 18px; }
+QToolButton::menu-arrow, QToolButton::menu-indicator {
+    image: url("%(arrow)s"); width: 10px; height: 6px; }
+QToolButton::menu-indicator { subcontrol-position: right center; right: 8px; }
+QLabel#toolCaption { color: %(text3)s; }
+/* Headings inside menus and the Refresh panel. */
+QLabel#menuSection { color: %(text3)s; padding: 6px 12px 2px 12px; font-weight: 600; }
 
 QLineEdit, QPlainTextEdit, QSpinBox { background: %(card)s; border: 1px solid %(border)s;
                             border-radius: %(r2)spx; padding: 5px 7px;
@@ -420,7 +432,8 @@ QTreeView#grid QHeaderView::section { border-right: 2px solid %(border)s; }
 QTreeView#grid::item:last, QTreeView#grid::item:only-one,
 QTreeView#grid QHeaderView::section:last,
 QTreeView#grid QHeaderView::section:only-one { border-right: none; }
-QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
+QLabel#paneTitle, QLabel#hint, QLabel#toolCaption { color: %(text2)s; }
+QLabel#menuSection { color: %(text2)s; padding: 6px 12px 2px 12px; font-weight: 600; }
 QFrame#tagEdit { background: %(card)s; border: 1px solid %(border)s; border-radius: 4px; }
 QFrame#tagEdit[focused="true"] { border-color: %(accent)s; }
 QLineEdit#tagInput { border: none; background: transparent; padding: 3px 2px; }

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-04 16:58-0300\n"
+"POT-Creation-Date: 2026-10-05 00:03-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -20,6 +20,9 @@ msgstr ""
 
 msgid "&Add existing…"
 msgstr "&Adicionar existente…"
+
+msgid "&Address"
+msgstr "En&dereço"
 
 msgid "&Address:"
 msgstr "&Endereço:"
@@ -81,6 +84,9 @@ msgstr "&Idioma:"
 msgid "&Locate…"
 msgstr "&Localizar…"
 
+msgid "&Logged-on users"
+msgstr "Usuários &logados"
+
 msgid "&Login:"
 msgstr "&Login:"
 
@@ -89,6 +95,9 @@ msgstr "Ge&renciar grupos…"
 
 msgid "&Manual connection…"
 msgstr "Conexão &manual…"
+
+msgid "&Name"
+msgstr "&Nome"
 
 msgid "&Name:"
 msgstr "&Nome:"
@@ -102,9 +111,6 @@ msgstr "&Nova…"
 msgid "&Open"
 msgstr "Abri&r"
 
-msgid "&Open connection"
-msgstr "&Abrir conexão"
-
 msgid "&Open on startup:"
 msgstr "&Abrir ao iniciar:"
 
@@ -117,6 +123,9 @@ msgstr "Re&mover da lista"
 msgid "&Remove selected"
 msgstr "&Remover selecionado"
 
+msgid "&Run"
+msgstr "&Executar"
+
 msgid "&Save"
 msgstr "&Salvar"
 
@@ -128,6 +137,9 @@ msgstr "&Configurações…"
 
 msgid "&Sort A–Z"
 msgstr "&Ordenar de A a Z"
+
+msgid "&Status"
+msgstr "&Status"
 
 msgid "&Status bar"
 msgstr "Barra de &status"
@@ -146,6 +158,9 @@ msgstr "&Usuário:"
 
 msgid "&View"
 msgstr "E&xibir"
+
+msgid "&Whole group"
+msgstr "&Grupo inteiro"
 
 msgid "A connection profile must be a JSON object."
 msgstr "Um perfil de conexão deve ser um objeto JSON."
@@ -167,6 +182,12 @@ msgstr "Uma definição de ferramenta deve ser um objeto JSON."
 
 msgid "Access"
 msgstr "Acesso"
+
+msgid "Account for logged-on users"
+msgstr "Conta para usuários logados"
+
+msgid "Account rejected"
+msgstr "Conta recusada"
 
 msgid "Add &group…"
 msgstr "Adicionar &grupo…"
@@ -200,6 +221,10 @@ msgid "Appearance"
 msgstr "Aparência"
 
 #, python-brace-format
+msgid "As of {when}"
+msgstr "Atualizado em {when}"
+
+#, python-brace-format
 msgid "Asked by {tool}"
 msgstr "Pedido pelo {tool}"
 
@@ -225,12 +250,41 @@ msgstr "A aparência do próprio CapyPanel, igual em todos os computadores."
 msgid "Change path…"
 msgstr "Alterar caminho…"
 
+msgid "Check"
+msgstr "Verificar"
+
+msgid "Check the selected hosts; right-click to choose what to check and where"
+msgstr "Verifica os hosts selecionados; clique com o botão direito para escolher o que verificar e onde"
+
+#, python-brace-format
+msgid "Checked {n} host."
+msgid_plural "Checked {n} hosts."
+msgstr[0] "{n} host verificado."
+msgstr[1] "{n} hosts verificados."
+
+#, python-brace-format
+msgid "Checked {when}."
+msgstr "Verificado em {when}."
+
+#, python-brace-format
+msgid "Checking {done} of {total}…"
+msgstr "Verificando {done} de {total}…"
+
 #, python-brace-format
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
 
 msgid "Computer"
 msgstr "Computador"
+
+msgid "Connect"
+msgstr "Conectar"
+
+msgid "Connect once with"
+msgstr "Conectar uma vez com"
+
+msgid "Connect to the selected hosts; the arrow connects once with another profile"
+msgstr "Conecta aos hosts selecionados; a seta conecta uma vez com outro perfil"
 
 #, python-brace-format
 msgid "Connecting to {target}."
@@ -254,11 +308,8 @@ msgstr "Perfis de conexão"
 msgid "Connections"
 msgstr "Conexões"
 
-msgid "Copy &address"
-msgstr "Copiar &endereço"
-
-msgid "Copy &name"
-msgstr "Copiar &nome"
+msgid "Copy"
+msgstr "Copiar"
 
 msgid "Copy the current list to"
 msgstr "Copiar a lista atual para"
@@ -274,6 +325,9 @@ msgstr "Não foi possível abrir “{path}”: {error}"
 #, python-brace-format
 msgid "Couldn't open “{wanted}”, so “{opened}” was opened instead."
 msgstr "Não foi possível abrir “{wanted}”. A lista “{opened}” foi aberta no lugar."
+
+msgid "Couldn't read"
+msgstr "Não foi possível ler"
 
 #, python-brace-format
 msgid "Couldn't read “{file}”: {error}"
@@ -312,6 +366,9 @@ msgstr "Criada ao abrir"
 
 msgid "D&uplicate…"
 msgstr "D&uplicar…"
+
+msgid "DOMAIN\\user"
+msgstr "DOMÍNIO\\usuário"
 
 msgid "Default"
 msgstr "Padrão"
@@ -448,6 +505,9 @@ msgstr "Arquivo de configurações próprio"
 msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
 
+msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on. If a computer rejects it, CapyPanel stops and asks again instead of trying it on the others, so the account isn't locked."
+msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado. Se um computador recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta não ser bloqueada."
+
 msgid "Kind"
 msgstr "Tipo"
 
@@ -456,6 +516,9 @@ msgstr "Lista"
 
 msgid "Locate…"
 msgstr "Localizar…"
+
+msgid "Logged on"
+msgstr "Logados"
 
 msgid "Logs"
 msgstr "Logs"
@@ -490,6 +553,9 @@ msgstr "&Observações:"
 msgid "Name"
 msgstr "Nome"
 
+msgid "Name not found"
+msgstr "Nome não encontrado"
+
 #, python-brace-format
 msgid "Name of the new group inside “{group}”:"
 msgstr "Nome do novo grupo dentro de “{group}”:"
@@ -518,6 +584,18 @@ msgstr "Sem endereço"
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
 
+msgid "Nobody"
+msgstr "Ninguém"
+
+msgid "Not an admin there"
+msgstr "Não é administrador lá"
+
+msgid "Not checked yet: use Refresh"
+msgstr "Ainda não verificado: use Atualizar"
+
+msgid "Not checked: use Refresh"
+msgstr "Não verificado: use Atualizar"
+
 #, python-brace-format
 msgid "Not opened: {names}"
 msgid_plural "Not opened ({n}): {names}"
@@ -527,8 +605,17 @@ msgstr[1] "Não abertos ({n}): {names}"
 msgid "Notes"
 msgstr "Observações"
 
+msgid "Nothing answered, neither ping nor the usual ports: the computer is off, not on the network, or a firewall blocks everything."
+msgstr "Nada respondeu, nem o ping nem as portas usuais: o computador está desligado, fora da rede ou um firewall bloqueia tudo."
+
 msgid "Nothing changes until you click OK."
 msgstr "Nada muda até você clicar em OK."
+
+msgid "Offline"
+msgstr "Offline"
+
+msgid "Online"
+msgstr "Online"
 
 msgid "Open &Settings"
 msgstr "Abrir &Configurações"
@@ -580,8 +667,14 @@ msgstr "Somente leitura"
 msgid "Read-write"
 msgstr "Leitura e gravação"
 
+msgid "Refresh"
+msgstr "Atualizar"
+
 msgid "Reload the list"
 msgstr "Recarregar a lista"
+
+msgid "Remote Desktop"
+msgstr "Área de Trabalho Remota"
 
 msgid "Remote tools"
 msgstr "Ferramentas remotas"
@@ -621,6 +714,9 @@ msgstr "Remover uma lista daqui nunca exclui o arquivo dela."
 
 msgid "Rename group"
 msgstr "Renomear grupo"
+
+msgid "S&elected hosts"
+msgstr "Hosts selecio&nados"
 
 msgid "Save a copy"
 msgstr "Salvar uma cópia"
@@ -670,6 +766,21 @@ msgstr "Ordena todos os níveis pelo nome, uma vez; depois você pode reorganiza
 msgid "Startup"
 msgstr "Ao iniciar"
 
+msgid "Status"
+msgstr "Status"
+
+msgid "Stop"
+msgstr "Parar"
+
+#, python-brace-format
+msgid "Stopped: {n} host wasn't checked."
+msgid_plural "Stopped: {n} hosts weren't checked."
+msgstr[0] "Parado: {n} host não foi verificado."
+msgstr[1] "Parado: {n} hosts não foram verificados."
+
+msgid "T&oolbar"
+msgstr "&Barra de ferramentas"
+
 msgid "Tags"
 msgstr "Tags"
 
@@ -682,12 +793,18 @@ msgstr "Esse host não está mais na lista."
 msgid "That profile doesn't exist."
 msgstr "Esse perfil não existe."
 
+msgid "The account was accepted, but only administrators of that computer can see who is logged on."
+msgstr "A conta foi aceita, mas só administradores daquele computador podem ver quem está logado."
+
 #, python-brace-format
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
 msgstr "Os argumentos usam uma opção que não está em “options”: “{option}”."
 
 msgid "The changes on the Connections page aren't saved yet."
 msgstr "As alterações na página Conexões ainda não foram salvas."
+
+msgid "The computer didn't accept the account: a wrong password, a locked account, or an account it doesn't trust."
+msgstr "O computador não aceitou a conta: senha errada, conta bloqueada ou uma conta em que ele não confia."
 
 #, python-brace-format
 msgid "The connection profile “{profile}” isn't available on this PC."
@@ -735,6 +852,9 @@ msgstr "A lista foi alterada"
 #, python-brace-format
 msgid "The list “{path}” doesn't exist anymore."
 msgstr "A lista “{path}” não existe mais."
+
+msgid "The name couldn't be found on the network."
+msgstr "O nome não foi encontrado na rede."
 
 msgid "The parent group doesn't exist."
 msgstr "O grupo pai não existe."
@@ -838,11 +958,17 @@ msgstr "Marcador desconhecido “{{{name}}}” nos argumentos."
 msgid "Unknown tool kind “{kind}”."
 msgstr "Tipo de ferramenta desconhecido: “{kind}”."
 
+msgid "Unreachable"
+msgstr "Inacessível"
+
 msgid "Unsaved changes"
 msgstr "Alterações não salvas"
 
 msgid "Use &defaults"
 msgstr "Usar &padrões"
+
+msgid "User"
+msgstr "Usuário"
 
 #, python-brace-format
 msgid "Viewer settings (*{extension})"
@@ -864,8 +990,18 @@ msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste 
 msgid "Where is {tool}?"
 msgstr "Onde está o {tool}?"
 
+msgid "Which hosts"
+msgstr "Quais hosts"
+
 msgid "Windows"
 msgstr "Windows"
+
+#, python-brace-format
+msgid "Windows error {code}."
+msgstr "Erro do Windows {code}."
+
+msgid "Windows file sharing (port 445) didn't answer: the computer is off, not on the network, a firewall blocks file sharing, or it isn't Windows."
+msgstr "O compartilhamento de arquivos do Windows (porta 445) não respondeu: o computador está desligado, fora da rede, um firewall bloqueia o compartilhamento ou não é Windows."
 
 msgid "Windows — dark"
 msgstr "Windows — escuro"
@@ -885,6 +1021,22 @@ msgstr "Seus arquivos"
 msgid "Your files: your settings and personal list, private to you and admins."
 msgstr "Seus arquivos: suas configurações e sua lista pessoal, só para você e os administradores."
 
+msgid "active"
+msgstr "ativa"
+
+msgid "at the computer"
+msgstr "no computador"
+
+msgid "disconnected"
+msgstr "desconectada"
+
+#, python-brace-format
+msgid "from {computer}"
+msgstr "de {computer}"
+
+msgid "idle"
+msgstr "ociosa"
+
 msgid "no password"
 msgstr "sem senha"
 
@@ -896,6 +1048,10 @@ msgstr "modo portátil"
 
 msgid "read-only"
 msgstr "somente leitura"
+
+#, python-brace-format
+msgid "since {when}"
+msgstr "desde {when}"
 
 msgid "the selected hosts"
 msgstr "os hosts selecionados"
@@ -914,6 +1070,18 @@ msgid "{name} (in use)"
 msgstr "{name} (em uso)"
 
 #, python-brace-format
+msgid "{n} computer didn't let your Windows login see who is logged on. Use another account, such as an administrator of those computers?"
+msgid_plural "{n} computers didn't let your Windows login see who is logged on. Use another account, such as an administrator of those computers?"
+msgstr[0] "{n} computador não deixou seu login do Windows ver quem está logado. Usar outra conta, como um administrador desses computadores?"
+msgstr[1] "{n} computadores não deixaram seu login do Windows ver quem está logado. Usar outra conta, como um administrador desses computadores?"
+
+#, python-brace-format
+msgid "{n} computer didn't let “{user}” see who is logged on. Use another account?"
+msgid_plural "{n} computers didn't let “{user}” see who is logged on. Use another account?"
+msgstr[0] "{n} computador não deixou “{user}” ver quem está logado. Usar outra conta?"
+msgstr[1] "{n} computadores não deixaram “{user}” ver quem está logado. Usar outra conta?"
+
+#, python-brace-format
 msgid "{n} group"
 msgid_plural "{n} groups"
 msgstr[0] "{n} grupo"
@@ -924,6 +1092,12 @@ msgid "{n} host"
 msgid_plural "{n} hosts"
 msgstr[0] "{n} host"
 msgstr[1] "{n} hosts"
+
+#, python-brace-format
+msgid "{n} host has no address and was skipped."
+msgid_plural "{n} hosts have no address and were skipped."
+msgstr[0] "{n} host não tem endereço e foi ignorado."
+msgstr[1] "{n} hosts não têm endereço e foram ignorados."
 
 #, python-brace-format
 msgid "{n} host has no address and was skipped: {names}"
@@ -991,6 +1165,10 @@ msgstr "{tool} não encontrado"
 msgid "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. The path is saved for everyone on this PC; you can also change it later in Settings > Connections > Remote tools."
 msgstr "O {tool} não foi encontrado neste PC. Instale-o ou mostre ao CapyPanel onde ele está. O caminho fica salvo para todos neste PC; você também pode alterá-lo depois em Configurações > Conexões > Ferramentas remotas."
 
+#, python-brace-format
+msgid "{user} (disconnected)"
+msgstr "{user} (desconectado)"
+
 msgid "“account_types” must be a list of numbers from 1 to 255."
 msgstr "“account_types” deve ser uma lista de números de 1 a 255."
 
@@ -1008,6 +1186,10 @@ msgstr "“options” deve associar ids de opções a um nome, ou a nomes por id
 
 msgid "“settings_file” needs an “extension” such as “.vnc” and a list to “clear”."
 msgstr "“settings_file” precisa de uma “extension”, como “.vnc”, e de uma lista em “clear”."
+
+#, python-brace-format
+msgid "“{host}” rejected the account “{user}”, so CapyPanel stopped before trying it on other computers. Type the password again, or use another account."
+msgstr "“{host}” recusou a conta “{user}”, então o CapyPanel parou antes de tentá-la em outros computadores. Digite a senha de novo ou use outra conta."
 
 #, python-brace-format
 msgid "“{key}” must be a list."
