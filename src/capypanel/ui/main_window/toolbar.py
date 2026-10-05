@@ -144,10 +144,12 @@ class MainToolBar(QToolBar):
         self.retranslate()
 
     def retranslate(self) -> None:
+        custom = themes.current().engine == "custom"
         texts = {"connect": _("Connect")}
         for label, key in self._captions:
-            label.setText(texts[key])
-        gap = " " if themes.current().engine == "custom" else ""  # QSS drops the icon gap
+            # Capitals in the CapyPanel looks, in the text itself: a theme switch resets fonts.
+            label.setText(texts[key].upper() if custom else texts[key])
+        gap = " " if custom else ""  # QSS drops the icon gap
         self.connect_button.setText(gap + _("Connect"))
         self.connect_button.setToolTip(
             _("Connect to the selected hosts; the arrow connects once with another profile")
@@ -178,18 +180,10 @@ class MainToolBar(QToolBar):
             self.restyle()
 
     def restyle(self) -> None:
-        """Icons in the theme's text colour; captions in capitals in the CapyPanel themes."""
+        """Icons in the theme's text colour, and captions for the theme (see retranslate)."""
         color = self.palette().color(QPalette.ColorRole.ButtonText)
         self.connect_button.setIcon(glyph_icon("connect", color))
         self.refresh_button.setIcon(glyph_icon("refresh", color))
-        custom = themes.current().engine == "custom"
-        for label, _key in self._captions:
-            font = QFont(label.font())
-            font.setCapitalization(
-                QFont.Capitalization.AllUppercase if custom else QFont.Capitalization.MixedCase
-            )
-            font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 0.8 if custom else 0)
-            label.setFont(font)
         self.retranslate()
 
     def _group(self, key: str, buttons: list[QToolButton]) -> QWidget:

@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QMenu,
     QStackedLayout,
     QStyle,
     QToolButton,
@@ -206,12 +207,18 @@ class HostTable(QTreeWidget):
     Status and User come from Refresh; they're kept in memory, never in the list file."""
 
     STATUS, USER = 1, 2
+    COLUMNS = ("computer", "status", "user", "address", "tags", "notes")  # saved by these keys
+    columns_changed = Signal()  # a column was shown or hidden
 
     def __init__(self) -> None:
         super().__init__()
         self.setObjectName("grid")  # lines between rows and columns
         self._rows: dict[str, QTreeWidgetItem] = {}
         self.retranslate()
+        header = self.header()
+        header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        header.customContextMenuRequested.connect(self._columns_menu)
+        header.sectionResized.connect(self._keep_title_visible)
         self.setRootIsDecorated(False)
         self.setUniformRowHeights(True)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
@@ -266,13 +273,49 @@ class HostTable(QTreeWidget):
             for item in self._rows.values():
                 self._tint(item)
 
+    def hidden_columns(self) -> list[str]:
+        return [key for i, key in enumerate(self.COLUMNS) if self.isColumnHidden(i)]
+
+    def set_hidden_columns(self, keys: object) -> None:
+        hidden = set(keys) if isinstance(keys, list) else set()
+        for index, key in enumerate(self.COLUMNS):
+            self.setColumnHidden(index, index > 0 and key in hidden)  # Computer always shows
+
+    def _columns_menu(self, position: QPoint) -> None:
+        """Right-click on the column titles: tick the columns to show."""
+        menu = QMenu(self)
+        header = self.headerItem()
+        for index in range(1, len(self.COLUMNS)):
+            item = menu.addAction(header.text(index))
+            item.setCheckable(True)
+            item.setChecked(not self.isColumnHidden(index))
+            item.toggled.connect(lambda shown, i=index: self._show_column(i, shown))
+        menu.exec(self.header().viewport().mapToGlobal(position))
+
+    def _show_column(self, index: int, shown: bool) -> None:
+        self.setColumnHidden(index, not shown)
+        if shown:
+            self._keep_title_visible(index, 0, self.columnWidth(index))
+        self.columns_changed.emit()
+
+    def minimum_width(self, index: int) -> int:
+        """A column is never narrower than its title (plus room for the sort arrow)."""
+        title = self.headerItem().text(index)
+        return self.header().fontMetrics().horizontalAdvance(title) + 34
+
+    def _keep_title_visible(self, index: int, _old: int, new: int) -> None:
+        wanted = self.minimum_width(index)
+        if 0 < new < wanted and not self.isColumnHidden(index):
+            self.header().resizeSection(index, wanted)
+
     def _fit_columns(self) -> None:
         # Once, on the first real content: fit the first columns (capped) and let Notes stretch
         # into the rest. Fixed starting widths overflowed narrow windows. Columns stay draggable.
         self._sized = True
         for column in range(self.columnCount() - 1):
             self.resizeColumnToContents(column)
-            self.setColumnWidth(column, min(self.columnWidth(column) + 16, 260))
+            fitted = min(self.columnWidth(column) + 16, 260)
+            self.setColumnWidth(column, max(fitted, self.minimum_width(column)))
 
     def show_cells(self, host_id: str, cells: "Cells") -> None:
         """New Refresh results for one host, without rebuilding the table."""

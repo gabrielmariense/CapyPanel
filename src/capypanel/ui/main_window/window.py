@@ -240,6 +240,7 @@ class MainWindow(QMainWindow):
         self.nav.groups.hosts_dropped.connect(self.move_hosts)
         self.table.itemSelectionChanged.connect(self._selection_changed)
         self.table.customContextMenuRequested.connect(self._host_menu)
+        self.table.columns_changed.connect(self._save_columns)
         # Enter connects only from the host table, so it never fires while typing elsewhere.
         a.connect_host.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.table.addAction(a.connect_host)
@@ -271,6 +272,7 @@ class MainWindow(QMainWindow):
         ):
             action.setChecked(bool(view.get(key, True)))
         self.toolbar.setVisible(self.commands.show_toolbar.isChecked())
+        self.table.set_hidden_columns(self._prefs.get("hidden_columns"))
         self.nav.setVisible(self.commands.show_groups.isChecked())
         self.details.setVisible(self.commands.show_details.isChecked())
         self.statusBar().setVisible(self.commands.show_status_bar.isChecked())
@@ -1087,6 +1089,10 @@ class MainWindow(QMainWindow):
             item = menu.addAction(name.replace("&", "&&"))
             item.setEnabled(bool(self.table.selected_ids()))
             item.triggered.connect(lambda _c=False, p=profile_id: self.connect_selected(p))
+
+    def _save_columns(self) -> None:
+        self._prefs["hidden_columns"] = self.table.hidden_columns()
+        self._save_prefs()
 
     def _align_refresh_later(self) -> None:
         QTimer.singleShot(0, self._align_refresh)  # once the panes have their new sizes

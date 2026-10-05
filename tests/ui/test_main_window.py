@@ -136,3 +136,20 @@ def test_host_dialog_cleans_values_and_shows_group_paths(qapp: QApplication) -> 
     dialog.tags.add_text("kiosk, , floor-3, kiosk")
     values = dialog.values()
     assert (values.name, values.group, values.tags) == ("PC-9", finance.id, ("kiosk", "floor-3"))
+
+
+def test_columns_keep_their_title_visible_and_can_be_hidden(
+    window: MainWindow, office: Path
+) -> None:
+    window.open_list(office)
+    table = window.table
+    table.header().resizeSection(table.USER, 5)  # dragged almost shut
+    assert table.columnWidth(table.USER) >= table.minimum_width(table.USER) > 5
+    table._show_column(table.USER, False)
+    assert table.isColumnHidden(table.USER)
+    assert window._prefs["hidden_columns"] == ["user"]
+    reopened = MainWindow(window._paths, dict(window._prefs))
+    assert reopened.table.isColumnHidden(reopened.table.USER)
+    reopened.table.set_hidden_columns(["computer"])
+    assert not reopened.table.isColumnHidden(0)  # the host name always shows
+    reopened.close()
