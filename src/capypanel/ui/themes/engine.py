@@ -317,7 +317,11 @@ QToolBar QToolButton { padding: 6px 10px; }
 /* Styling a tool button drops Fusion's menu arrow, so draw our own. */
 QToolBar QToolButton[popupMode="1"] { padding-right: 24px; }
 QToolBar QToolButton[popupMode="2"] { padding-right: 24px; }
-QToolButton::menu-button { border: none; width: 18px; }
+/* The arrow of a split button (Connect) is a part of its own: a divider and its own hover. */
+QToolButton::menu-button { border: none; border-left: 1px solid %(border)s; width: 18px;
+                           margin: 5px 0; border-top-right-radius: %(r2)spx;
+                           border-bottom-right-radius: %(r2)spx; }
+QToolButton::menu-button:hover { background: %(hover)s; }
 QToolButton::menu-arrow, QToolButton::menu-indicator {
     image: url("%(arrow)s"); width: 10px; height: 6px; }
 QToolButton::menu-indicator { subcontrol-position: right center; right: 8px; }

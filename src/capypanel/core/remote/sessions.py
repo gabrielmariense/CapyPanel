@@ -8,6 +8,7 @@ Windows doesn't check that password here; each target does, so callers must stop
 rejection instead of trying the same password on every host (account lockout)."""
 
 import ctypes
+import logging
 import socket
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -16,6 +17,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 
+log = logging.getLogger(__name__)
 REACH_PORT = 445  # the session API's RPC runs over SMB named pipes
 REACH_TIMEOUT = 2.0  # seconds: an offline PC otherwise holds the call for ~20 s
 
@@ -163,23 +165,27 @@ def _enumerate(host: str | None) -> list[Session]:
         if not _wts.WTSEnumerateSessionsW(server, 0, 1, ctypes.byref(listing), ctypes.byref(count)):
             raise SessionsError(reason_of(err := ctypes.get_last_error()), err)
         try:
-            found = []
+            found, seen = [], []
             for index in range(count.value):
                 info = listing[index]
                 user = _text(server, info.SessionId, _USER_NAME)
+                station = info.pWinStationName or _text(server, info.SessionId, _STATION_NAME)
+                state = _STATES.get(info.State, "unknown")
+                seen.append(f"{info.SessionId}:{station or '-'}:{state}:{'user' if user else '-'}")
                 if not user:
                     continue
-                station = info.pWinStationName or _text(server, info.SessionId, _STATION_NAME)
                 found.append(
                     Session(
                         user=user,
                         domain=_text(server, info.SessionId, _DOMAIN_NAME),
                         kind=session_kind(station or ""),
-                        state=_STATES.get(info.State, "unknown"),
+                        state=state,
                         logon_time=_logon_time(server, info.SessionId),
                         client=_text(server, info.SessionId, _CLIENT_NAME),
                     )
                 )
+            # Every session Windows listed (no names), to explain a user that didn't show up.
+            log.info("Sessions on %s: %s", host or "this PC", " ".join(seen))
             return found
         finally:
             _wts.WTSFreeMemory(listing)

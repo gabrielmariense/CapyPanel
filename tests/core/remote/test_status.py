@@ -37,4 +37,16 @@ def test_silence_is_offline_within_the_timeouts() -> None:
 
 
 def test_a_name_that_doesnt_resolve_says_so() -> None:
-    assert status.check("no-such-host.invalid", [445]) is Status.UNKNOWN_NAME
+    assert status.check("no-such-host.invalid", [445]) is Status.NOT_FOUND
+
+
+def test_every_address_of_a_name_is_tried(monkeypatch: pytest.MonkeyPatch) -> None:
+    # A PC on cable and Wi-Fi: the first address is dead, the second one answers.
+    monkeypatch.setattr(status, "_ping", lambda _ip: False)
+    with socket.socket() as server:
+        server.bind(("127.0.0.1", 0))
+        server.listen()
+        port = server.getsockname()[1]
+        both = [(socket.AF_INET, "192.0.2.1"), (socket.AF_INET, "127.0.0.1")]
+        monkeypatch.setattr(status, "_resolve", lambda _host: both)
+        assert status.check("desk-pc", [port]) is Status.ONLINE

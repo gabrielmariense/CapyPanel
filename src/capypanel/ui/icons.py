@@ -3,8 +3,8 @@
 from PySide6.QtCore import QRect, Qt
 from PySide6.QtGui import QColor, QFont, QGuiApplication, QIcon, QPainter, QPixmap
 
-GLYPHS = {"connect": "", "refresh": ""}  # Segoe Fluent Icons / MDL2 Assets
-STATUS_COLORS = {"online": "#3fae4a", "offline": "#8a8a8a", "unknown-name": "#d29922"}
+GLYPHS = {"connect": "\ue7f4", "refresh": "\ue72c"}  # Segoe Fluent Icons / MDL2 Assets
+STATUS_COLORS = {"online": "#3fae4a", "offline": "#8a8a8a", "not-found": "#d29922"}
 
 
 def _pixmap(px: int) -> QPixmap:

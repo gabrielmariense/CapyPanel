@@ -140,7 +140,7 @@ def status_text(status: Status) -> str:
     return {
         Status.ONLINE: _("Online"),
         Status.OFFLINE: _("Offline"),
-        Status.UNKNOWN_NAME: _("Name not found"),
+        Status.NOT_FOUND: _("Host not found"),
     }[status]
 
 
@@ -152,7 +152,7 @@ def status_tip(status: Status, when: datetime) -> str:
             "Nothing answered, neither ping nor the usual ports: the computer is off, not on "
             "the network, or a firewall blocks everything."
         ),
-        Status.UNKNOWN_NAME: _("The name couldn't be found on the network."),
+        Status.NOT_FOUND: _("No computer by that name or address was found on the network."),
     }[status]
     return f"{checked} {why}".strip()
 

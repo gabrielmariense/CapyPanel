@@ -153,3 +153,23 @@ def test_columns_keep_their_title_visible_and_can_be_hidden(
     reopened.table.set_hidden_columns(["computer"])
     assert not reopened.table.isColumnHidden(0)  # the host name always shows
     reopened.close()
+
+
+def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: MainWindow, office: Path) -> None:
+    window.open_list(office)
+    tag = window.nav.tags.topLevelItem(0)
+    assert tag is not None
+    window.nav.tags.setCurrentItem(tag)  # filtering by a tag
+    window.commands.show_tags.setChecked(False)
+    assert window.nav.tags.isHidden() and window.nav.current_filter().kind == "all"
+    window.close()
+    assert window._prefs["view"]["tags"] is False
+
+
+def test_the_groups_pane_fits_all_computers(window: MainWindow, office: Path) -> None:
+    window.open_list(office)
+    window.show()
+    QApplication.processEvents()
+    everything = window.nav.everything
+    assert everything.minimumWidth() >= everything.sizeHintForColumn(0)
+    assert not window._splitter.childrenCollapsible()

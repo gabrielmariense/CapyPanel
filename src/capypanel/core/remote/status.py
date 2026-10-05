@@ -1,8 +1,10 @@
 """Is a computer up? A ping and the ports CapyPanel connects to, all at the same time: many
 Windows PCs block ping, and a port that answers, even with a refusal, proves the PC is on.
-No account is used and nothing runs on the target."""
+Every address the name has is tried (a PC on cable and Wi-Fi has two). No account is used and
+nothing runs on the target."""
 
 import ctypes
+import logging
 import selectors
 import socket
 import threading
@@ -11,57 +13,73 @@ from collections.abc import Iterable
 from ctypes import wintypes
 from enum import StrEnum
 
+log = logging.getLogger(__name__)
 TIMEOUT = 2.0  # seconds for the whole check; Windows retries a refused port for about 1 s
 PING_TIMEOUT = 1.0
 BASE_PORTS = (445, 22)  # Windows file sharing and SSH, besides each tool's own port
 _REFUSED = (10061, 111)  # WSAECONNREFUSED, ECONNREFUSED: something answered
-_SLICE = 0.1  # how often the ports wait checks whether the ping already answered
+_SLICE = 0.1  # how often the ports wait checks whether a ping already answered
 
 
 class Status(StrEnum):
     ONLINE = "online"
     OFFLINE = "offline"  # nothing answered in time
-    UNKNOWN_NAME = "unknown-name"  # the name couldn't be resolved to an address
+    NOT_FOUND = "not-found"  # the name or address couldn't be resolved
 
 
 def check(host: str, ports: Iterable[int]) -> Status:
     try:
-        family, ip = _resolve(host)
+        addresses = _resolve(host)
     except OSError:
-        return Status.UNKNOWN_NAME
-    pinged = threading.Event()
-    if family == socket.AF_INET:
-        threading.Thread(target=lambda: _ping(ip) and pinged.set(), daemon=True).start()
-    up = _any_port_answers(family, ip, sorted(set(ports)), pinged)
-    return Status.ONLINE if up else Status.OFFLINE
+        return Status.NOT_FOUND
+    pinged: list[str] = []  # the address that answered a ping, once one does
+    answered = threading.Event()
+
+    def ping(ip: str) -> None:
+        if _ping(ip):
+            pinged.append(ip)
+            answered.set()
+
+    for family, ip in addresses:
+        if family == socket.AF_INET:
+            threading.Thread(target=ping, args=(ip,), daemon=True).start()
+    via = _any_port_answers(addresses, sorted(set(ports)), answered)
+    if via is None and answered.is_set():
+        via = f"ping {pinged[0]}"
+    log.info("Status of %s: %s", host, f"online ({via})" if via else "offline")
+    return Status.ONLINE if via else Status.OFFLINE
 
 
-def _resolve(host: str) -> tuple[int, str]:
-    """IPv4 first: the ping speaks only IPv4."""
+def _resolve(host: str) -> list[tuple[int, str]]:
     found = socket.getaddrinfo(host, None, type=socket.SOCK_STREAM)
-    found.sort(key=lambda entry: entry[0] != socket.AF_INET)
-    family, _type, _proto, _name, sockaddr = found[0]
-    return family, str(sockaddr[0])
+    unique: dict[tuple[int, str], None] = {}
+    for family, _type, _proto, _name, sockaddr in found:
+        unique[(family, str(sockaddr[0]))] = None
+    return list(unique)
 
 
-def _any_port_answers(family: int, ip: str, ports: list[int], pinged: threading.Event) -> bool:
-    """True as soon as a port connects or refuses, or the ping answers; False after TIMEOUT."""
+def _any_port_answers(
+    addresses: list[tuple[int, str]], ports: list[int], pinged: threading.Event
+) -> str | None:
+    """What answered first ("address:port"), or None after TIMEOUT. A ping answering ends the
+    wait too (the caller names it)."""
     deadline = time.monotonic() + TIMEOUT
     selector = selectors.DefaultSelector()
-    sockets = []
+    sockets: list[socket.socket] = []
     try:
-        for port in ports:
-            sock = socket.socket(family, socket.SOCK_STREAM)
-            sock.setblocking(False)
-            sockets.append(sock)
-            code = sock.connect_ex((ip, port))
-            if code == 0 or code in _REFUSED:
-                return True
-            selector.register(sock, selectors.EVENT_WRITE)
+        for family, ip in addresses:
+            for port in ports:
+                sock = socket.socket(family, socket.SOCK_STREAM)
+                sock.setblocking(False)
+                sockets.append(sock)
+                code = sock.connect_ex((ip, port))
+                if code == 0 or code in _REFUSED:
+                    return f"{ip}:{port}"
+                selector.register(sock, selectors.EVENT_WRITE, f"{ip}:{port}")
         while (left := deadline - time.monotonic()) > 0:
             if pinged.is_set():
-                return True
-            if not selector.get_map():  # every port gave up: only the ping can still answer
+                return None
+            if not selector.get_map():  # every port gave up: only a ping can still answer
                 pinged.wait(min(left, _SLICE))
                 continue
             # A finished connect, accepted or refused, shows as writable (or as an error).
@@ -70,9 +88,9 @@ def _any_port_answers(family: int, ip: str, ports: list[int], pinged: threading.
                 assert isinstance(sock, socket.socket)
                 code = sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
                 if code == 0 or code in _REFUSED:
-                    return True
+                    return str(key.data)
                 selector.unregister(sock)
-        return pinged.is_set()
+        return None
     finally:
         selector.close()
         for sock in sockets:

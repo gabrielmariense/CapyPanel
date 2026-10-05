@@ -98,6 +98,14 @@ class NavigationPane(QWidget):
         self._groups_title.setText(_("Groups"))
         self._tags_title.setText(_("Tags"))
 
+    def set_tags_visible(self, visible: bool) -> None:
+        """View > Tags pane. Hiding it while a tag is picked goes back to all computers."""
+        self._tags_title.setVisible(visible)
+        self.tags.setVisible(visible)
+        if not visible and self._filter.kind == "tag":
+            self._filter = self._select(Filter("all"))
+            self.filter_changed.emit()
+
     def current_filter(self) -> Filter:
         return self._filter
 
@@ -131,6 +139,7 @@ class NavigationPane(QWidget):
         self._filter = self._select(wanted) if host_list is not None else Filter("all")
         for tree in (self.everything, self.groups, self.tags):
             tree.blockSignals(False)
+        self._fit_everything()  # the count may have grown a digit
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
@@ -142,11 +151,15 @@ class NavigationPane(QWidget):
             self._fit_everything()
 
     def _fit_everything(self) -> None:
-        """Exactly one row tall, whatever padding the theme gives rows and frames."""
+        """Exactly one row tall, whatever padding the theme gives rows and frames, and never
+        narrower than "All computers (N)": the pane can't be dragged past it. Group names
+        don't count, so a long one can't make the pane huge (they show a tooltip)."""
         self.everything.doItemsLayout()
         row = self.everything.visualItemRect(self._everything_item).height()
         frame = self.everything.height() - self.everything.viewport().height()
         self.everything.setFixedHeight(max(row, self.everything.sizeHintForRow(0)) + frame)
+        sides = self.everything.width() - self.everything.viewport().width()
+        self.everything.setMinimumWidth(self.everything.sizeHintForColumn(0) + sides + 12)
 
     def _select(self, wanted: Filter) -> Filter:
         if wanted.kind == "tag":

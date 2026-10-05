@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 00:03-0300\n"
+"POT-Creation-Date: 2026-10-05 17:59-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -465,6 +465,9 @@ msgstr ""
 msgid "Host lists (*.json);;All files (*)"
 msgstr ""
 
+msgid "Host not found"
+msgstr ""
+
 #, python-brace-format
 msgid "Host “{name}” is in a group that doesn't exist."
 msgstr ""
@@ -563,9 +566,6 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
-msgid "Name not found"
-msgstr ""
-
 #, python-brace-format
 msgid "Name of the new group inside “{group}”:"
 msgstr ""
@@ -589,6 +589,9 @@ msgid "New name:"
 msgstr ""
 
 msgid "No address"
+msgstr ""
+
+msgid "No computer by that name or address was found on the network."
 msgstr ""
 
 msgid "No host list is open."
@@ -800,6 +803,9 @@ msgid_plural "Stopped: {n} hosts weren't checked."
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "T&ags pane"
+msgstr ""
+
 msgid "T&oolbar"
 msgstr ""
 
@@ -883,9 +889,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "The list “{path}” doesn't exist anymore."
-msgstr ""
-
-msgid "The name couldn't be found on the network."
 msgstr ""
 
 msgid "The parent group doesn't exist."

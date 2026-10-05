@@ -29,6 +29,7 @@ class Actions:
     connection_profiles: QAction
     show_toolbar: QAction
     show_groups: QAction
+    show_tags: QAction
     show_details: QAction
     show_status_bar: QAction
 
@@ -45,7 +46,7 @@ SHORTCUTS = {
     "manual_connect": "Ctrl+M",
     "copy_address": "Ctrl+Shift+C",
 }
-CHECKABLE = {"show_toolbar", "show_groups", "show_details", "show_status_bar"}
+CHECKABLE = {"show_toolbar", "show_groups", "show_tags", "show_details", "show_status_bar"}
 
 
 def create_actions(parent: QWidget) -> Actions:
@@ -83,5 +84,6 @@ def retranslate_actions(a: Actions) -> None:
     a.connection_profiles.setText(_("Connection &profiles…"))
     a.show_toolbar.setText(_("T&oolbar"))
     a.show_groups.setText(_("&Groups pane"))
+    a.show_tags.setText(_("T&ags pane"))
     a.show_details.setText(_("&Details pane"))
     a.show_status_bar.setText(_("&Status bar"))

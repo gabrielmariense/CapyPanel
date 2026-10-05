@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 00:03-0300\n"
+"POT-Creation-Date: 2026-10-05 17:59-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -464,6 +464,9 @@ msgstr "Listas de hosts"
 msgid "Host lists (*.json);;All files (*)"
 msgstr "Listas de hosts (*.json);;Todos os arquivos (*)"
 
+msgid "Host not found"
+msgstr "Host não encontrado"
+
 #, python-brace-format
 msgid "Host “{name}” is in a group that doesn't exist."
 msgstr "O host “{name}” está em um grupo que não existe."
@@ -553,9 +556,6 @@ msgstr "&Observações:"
 msgid "Name"
 msgstr "Nome"
 
-msgid "Name not found"
-msgstr "Nome não encontrado"
-
 #, python-brace-format
 msgid "Name of the new group inside “{group}”:"
 msgstr "Nome do novo grupo dentro de “{group}”:"
@@ -580,6 +580,9 @@ msgstr "Novo nome:"
 
 msgid "No address"
 msgstr "Sem endereço"
+
+msgid "No computer by that name or address was found on the network."
+msgstr "Nenhum computador com esse nome ou endereço foi encontrado na rede."
 
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
@@ -778,6 +781,9 @@ msgid_plural "Stopped: {n} hosts weren't checked."
 msgstr[0] "Parado: {n} host não foi verificado."
 msgstr[1] "Parado: {n} hosts não foram verificados."
 
+msgid "T&ags pane"
+msgstr "Painel de t&ags"
+
 msgid "T&oolbar"
 msgstr "&Barra de ferramentas"
 
@@ -852,9 +858,6 @@ msgstr "A lista foi alterada"
 #, python-brace-format
 msgid "The list “{path}” doesn't exist anymore."
 msgstr "A lista “{path}” não existe mais."
-
-msgid "The name couldn't be found on the network."
-msgstr "O nome não foi encontrado na rede."
 
 msgid "The parent group doesn't exist."
 msgstr "O grupo pai não existe."

@@ -112,6 +112,8 @@ class MainWindow(QMainWindow):
         for pane in (self.nav, self.table, self.details):
             self._splitter.addWidget(pane)
         self._splitter.setStretchFactor(1, 1)
+        # Dragged all the way, a pane would vanish; View hides panes on purpose instead.
+        self._splitter.setChildrenCollapsible(False)
         self._splitter.setSizes([220, 640, 280])
         central = QWidget()
         margins = QVBoxLayout(central)
@@ -160,7 +162,7 @@ class MainWindow(QMainWindow):
 
         self._view_menu = bar.addMenu("")
         self._view_menu.addActions(
-            [a.show_toolbar, a.show_groups, a.show_details, a.show_status_bar]
+            [a.show_toolbar, a.show_groups, a.show_tags, a.show_details, a.show_status_bar]
         )
         self._view_menu.addSeparator()
         self._theme_menu = self._view_menu.addMenu("")
@@ -218,6 +220,7 @@ class MainWindow(QMainWindow):
         self.addActions([a.edit, a.remove, a.copy_address])
         a.show_toolbar.toggled.connect(self.toolbar.setVisible)
         a.show_groups.toggled.connect(self.nav.setVisible)
+        a.show_tags.toggled.connect(self.nav.set_tags_visible)
         a.show_details.toggled.connect(self.details.setVisible)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
         # Refresh follows the end of the host table, wherever the panes are.
@@ -267,10 +270,12 @@ class MainWindow(QMainWindow):
         for key, action in (
             ("toolbar", self.commands.show_toolbar),
             ("groups", self.commands.show_groups),
+            ("tags", self.commands.show_tags),
             ("details", self.commands.show_details),
             ("status_bar", self.commands.show_status_bar),
         ):
             action.setChecked(bool(view.get(key, True)))
+        self.nav.set_tags_visible(self.commands.show_tags.isChecked())
         self.toolbar.setVisible(self.commands.show_toolbar.isChecked())
         self.table.set_hidden_columns(self._prefs.get("hidden_columns"))
         self.nav.setVisible(self.commands.show_groups.isChecked())
@@ -427,6 +432,9 @@ class MainWindow(QMainWindow):
         except HostListRuleError as e:
             self._error(str(e))
             return
+        if edited.connect_address != host.connect_address:  # results were for the old address
+            self._status_found.pop(host.id, None)
+            self._users_found.pop(host.id, None)
         self._commit(new)
 
     def add_group(self) -> None:
@@ -1211,6 +1219,7 @@ class MainWindow(QMainWindow):
         self._prefs["view"] = {
             "toolbar": self.commands.show_toolbar.isChecked(),
             "groups": self.commands.show_groups.isChecked(),
+            "tags": self.commands.show_tags.isChecked(),
             "details": self.commands.show_details.isChecked(),
             "status_bar": self.commands.show_status_bar.isChecked(),
         }
