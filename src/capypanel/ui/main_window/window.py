@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
     QToolButton,
     QVBoxLayout,
     QWidget,
-    QWidgetAction,
 )
 
 from capypanel import BUILD
@@ -35,7 +34,7 @@ from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote import checks
 from capypanel.core.remote.checks import Checks, Found
 from capypanel.core.remote.sessions import Account, Reason, Session, SessionsError
-from capypanel.core.remote.status import Status
+from capypanel.core.remote.status import Answer, Status
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import SessionCredentials, Target
 from capypanel.core.tools.profiles import ProfileError
@@ -61,6 +60,7 @@ from capypanel.ui.main_window.host_views import (
     NavigationPane,
 )
 from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
+from capypanel.ui.menus import StayOpenMenu, section
 from capypanel.ui.settings import connections
 from capypanel.ui.settings.connections import ConnectionChanges
 from capypanel.ui.settings.window import SettingsChoices, SettingsDialog
@@ -91,7 +91,7 @@ class MainWindow(QMainWindow):
         self.connector.open_settings = lambda: self.open_settings("connections")
 
         # Refresh results, by host id: in memory only, since the list file is shared.
-        self._status_found: dict[str, tuple[Status, datetime]] = {}
+        self._status_found: dict[str, tuple[Status, datetime, Answer | None]] = {}
         self._users_found: dict[
             str, tuple[tuple[Session, ...] | None, SessionsError | None, datetime]
         ] = {}
@@ -118,7 +118,7 @@ class MainWindow(QMainWindow):
         self._splitter.setSizes([220, 640, 280])
         central = QWidget()
         margins = QVBoxLayout(central)
-        margins.setContentsMargins(8, 4, 8, 2)
+        margins.setContentsMargins(8, 4, 8, 4)  # the same gap above and below the panes
         margins.addWidget(self._splitter)
         self.setCentralWidget(central)
         self._list_label = QLabel()
@@ -164,10 +164,13 @@ class MainWindow(QMainWindow):
         self._connect_menu.addSeparator()
         self._connect_menu.addAction(a.forget_passwords)
 
-        self._view_menu = bar.addMenu("")
-        self._view_menu.addActions(
-            [a.show_toolbar, a.show_groups, a.show_tags, a.show_details, a.show_status_bar]
-        )
+        # It stays open while parts are ticked, so several can be shown or hidden in one go.
+        self._view_menu = StayOpenMenu(self)
+        bar.addMenu(self._view_menu)
+        self._bars_heading = section(self._view_menu, "")
+        self._view_menu.addActions([a.show_toolbar, a.show_status_bar])
+        self._panes_heading = section(self._view_menu, "")
+        self._view_menu.addActions([a.show_groups, a.show_tags, a.show_details])
         self._view_menu.addSeparator()
         self._theme_menu = self._view_menu.addMenu("")
         self._theme_group = QActionGroup(self)
@@ -204,6 +207,8 @@ class MainWindow(QMainWindow):
         self._inventory_menu.setTitle(_("&Inventory"))
         self._connect_menu.setTitle(_("&Connect"))
         self._view_menu.setTitle(_("&View"))
+        self._bars_heading.setText(_("Bars"))
+        self._panes_heading.setText(_("Panes"))
         self._theme_menu.setTitle(_("&Theme"))
         self._language_menu.setTitle(_("&Language"))
         for item in self._theme_group.actions():
@@ -833,7 +838,7 @@ class MainWindow(QMainWindow):
         self.nav.retranslate()
         self.table.retranslate()
         self.details.retranslate()
-        self._refresh()  # rebuilds the lists ("All computers"), details hint and status bar
+        self._refresh()  # rebuilds the lists ("All hosts"), details hint and status bar
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
@@ -996,7 +1001,7 @@ class MainWindow(QMainWindow):
         run.done += 1
         self._reported.add(host_id)
         if found.status is not None:
-            self._status_found[host_id] = (found.status, found.when)
+            self._status_found[host_id] = (found.status, found.when, found.answered)
         if run.wanted.users and (found.sessions is not None or found.users_error is not None):
             self._users_found[host_id] = (found.sessions, found.users_error, found.when)
             error = found.users_error
@@ -1083,10 +1088,10 @@ class MainWindow(QMainWindow):
         unchecked = ("", _("Not checked yet: use Refresh"), None, True)
         status_cell: tuple[str, str, Any, bool] = unchecked
         if status is not None:
-            state, when = status
+            state, when, answered = status
             status_cell = (
                 check_texts.status_text(state),
-                check_texts.status_tip(state, when),
+                check_texts.status_tip(state, when, answered),
                 dot_icon(STATUS_COLORS[state]),
                 state is not Status.ONLINE,
             )
@@ -1134,7 +1139,7 @@ class MainWindow(QMainWindow):
         """The toolbar's Connect arrow: connect the selection once with another profile."""
         menu = self.toolbar.connect_menu
         menu.clear()
-        _section(menu, _("Connect once with"))
+        section(menu, _("Connect once with"))
         for profile_id, name in self.connector.choices():
             item = menu.addAction(name.replace("&", "&&"))
             item.setEnabled(bool(self.table.selected_ids()))
@@ -1166,7 +1171,7 @@ class MainWindow(QMainWindow):
             menu.addActions([a.add_host, a.add_group])
             menu.exec(self.table.viewport().mapToGlobal(position))
             return
-        _section(menu, _("Connect"))
+        section(menu, _("Connect"))
         menu.addAction(a.connect_host)
         menu.setDefaultAction(a.connect_host)  # bold: what double-click and Enter do
         hosts = self._selected_hosts()
@@ -1183,9 +1188,9 @@ class MainWindow(QMainWindow):
             self._add_profile_menu(
                 menu, {h.profile for h in hosts}, follow, lambda p: self.set_hosts_profile(ids, p)
             )
-        _section(menu, _("Check"))
+        section(menu, _("Check"))
         menu.addActions([a.check_status, a.check_users])
-        _section(menu, _("Copy"))
+        section(menu, _("Copy"))
         menu.addActions([a.copy_address, a.copy_name])
         menu.addSeparator()
         menu.addActions([a.edit, a.remove])
@@ -1200,7 +1205,7 @@ class MainWindow(QMainWindow):
             self.nav.select_group(group_id)
         group = self._doc.hosts.group(group_id) if self._doc and group_id else None
         if group is not None and self._doc is not None:
-            _section(menu, _("Connect"))
+            section(menu, _("Connect"))
             follow = self.connector.inherited_label(
                 *self._doc.hosts.group_profile(group.parent, self._profile_exists)
             )
@@ -1209,7 +1214,7 @@ class MainWindow(QMainWindow):
             )
             # The group's hosts, including those in the groups inside it.
             hosts = list(self._doc.hosts.hosts_in(group.id))
-            _section(menu, _("Check"))
+            section(menu, _("Check"))
             for text, status, users in (
                 (_("&Status"), True, False),
                 (_("&Logged-on users"), False, True),
@@ -1267,16 +1272,3 @@ class MainWindow(QMainWindow):
         }
         self._save_prefs()
         super().closeEvent(event)
-
-
-def _section(menu: QMenu, title: str) -> None:
-    """A small heading over a part of a menu. Windows' own menu style hides QMenu.addSection()
-    titles, so it's a label, styled by the themes."""
-    label = QLabel(title)
-    label.setObjectName("menuSection")
-    heading = QWidgetAction(menu)
-    heading.setDefaultWidget(label)
-    heading.setEnabled(False)
-    if menu.actions():
-        menu.addSeparator()
-    menu.addAction(heading)

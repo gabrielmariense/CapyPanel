@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 from capypanel.core.remote import sessions, status
 from capypanel.core.remote.sessions import Account, Reason, Session, SessionsError
-from capypanel.core.remote.status import BASE_PORTS, Status
+from capypanel.core.remote.status import BASE_PORTS, Answer, Status
 
 
 @dataclass(frozen=True)
@@ -24,21 +24,22 @@ class Found:
     status: Status | None = None
     sessions: tuple[Session, ...] | None = None
     users_error: SessionsError | None = None
+    answered: Answer | None = None  # the address (and port) that proved the status
     when: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 def run(address: str, checks: Checks) -> Found:
-    state = status.check(address, checks.ports) if checks.status else None
+    state, answered = status.probe(address, checks.ports) if checks.status else (None, None)
     if not checks.users:
-        return Found(state)
+        return Found(state, answered=answered)
     if state is not None and state is not Status.ONLINE:
         # Nothing answered: reading users would only wait for the same silence.
         return Found(state, users_error=SessionsError(Reason.UNREACHABLE))
     try:
         found = tuple(sessions.read_sessions(address, checks.account))
     except SessionsError as e:
-        return Found(state, users_error=e)
-    return Found(Status.ONLINE, found)  # it answered, so it's up
+        return Found(state, users_error=e, answered=answered)
+    return Found(Status.ONLINE, found, answered=answered)  # it answered, so it's up
 
 
 def account_rejected(found: Found | None, _error: Exception | None = None) -> bool:

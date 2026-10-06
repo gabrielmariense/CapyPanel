@@ -22,7 +22,7 @@ from capypanel.core.remote import checks
 from capypanel.core.remote.batch import Batch
 from capypanel.core.remote.checks import Checks, Found
 from capypanel.core.remote.sessions import Account, Reason, Session, SessionsError
-from capypanel.core.remote.status import Status
+from capypanel.core.remote.status import Answer, Status
 
 MAX_TEXT = 256
 
@@ -144,8 +144,16 @@ def status_text(status: Status) -> str:
     }[status]
 
 
-def status_tip(status: Status, when: datetime) -> str:
+def status_tip(status: Status, when: datetime, answered: Answer | None = None) -> str:
     checked = _("Checked {when}.").format(when=when_text(when))
+    if answered is not None:  # e.g. only the Wi-Fi address answers: the cable is out
+        address, port = answered
+        how = (
+            _("Answered a ping at {address}.")
+            if port is None
+            else _("Answered at {address}, port {port}.")
+        )
+        checked += "\n" + how.format(address=address, port=port)
     why = {
         Status.ONLINE: "",
         Status.OFFLINE: _(

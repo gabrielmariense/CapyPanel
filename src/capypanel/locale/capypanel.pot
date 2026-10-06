@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 19:02-0300\n"
+"POT-Creation-Date: 2026-10-05 23:34-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -209,11 +209,19 @@ msgstr ""
 msgid "Address"
 msgstr ""
 
-msgid "All computers"
+msgid "All hosts"
 msgstr ""
 
 #, python-brace-format
 msgid "An item is missing the “{key}” field or has an invalid value for it."
+msgstr ""
+
+#, python-brace-format
+msgid "Answered a ping at {address}."
+msgstr ""
+
+#, python-brace-format
+msgid "Answered at {address}, port {port}."
 msgstr ""
 
 msgid "Appearance"
@@ -225,6 +233,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Asked by {tool}"
+msgstr ""
+
+msgid "Bars"
 msgstr ""
 
 #, python-brace-format
@@ -680,6 +691,9 @@ msgid "Options:"
 msgstr ""
 
 msgid "P&ort:"
+msgstr ""
+
+msgid "Panes"
 msgstr ""
 
 #, python-brace-format

@@ -27,11 +27,19 @@ class Status(StrEnum):
     NOT_FOUND = "not-found"  # the name or address couldn't be resolved
 
 
+Answer = tuple[str, int | None]  # the address that answered, and its port (None: a ping)
+
+
 def check(host: str, ports: Iterable[int]) -> Status:
+    return probe(host, ports)[0]
+
+
+def probe(host: str, ports: Iterable[int]) -> tuple[Status, Answer | None]:
+    """The status, and what answered: shows a PC reached only over its Wi-Fi, say."""
     try:
         addresses = _resolve(host)
     except OSError:
-        return Status.NOT_FOUND
+        return Status.NOT_FOUND, None
     pinged: list[str] = []  # the address that answered a ping, once one does
     answered = threading.Event()
 
@@ -45,9 +53,10 @@ def check(host: str, ports: Iterable[int]) -> Status:
             threading.Thread(target=ping, args=(ip,), daemon=True).start()
     via = _any_port_answers(addresses, sorted(set(ports)), answered)
     if via is None and answered.is_set():
-        via = f"ping {pinged[0]}"
-    log.info("Status of %s: %s", host, f"online ({via})" if via else "offline")
-    return Status.ONLINE if via else Status.OFFLINE
+        via = (pinged[0], None)
+    seen = f"online ({via[0]}, {via[1] or 'ping'})" if via else "offline"
+    log.info("Status of %s: %s", host, seen)
+    return (Status.ONLINE, via) if via else (Status.OFFLINE, None)
 
 
 def _resolve(host: str) -> list[tuple[int, str]]:
@@ -60,9 +69,9 @@ def _resolve(host: str) -> list[tuple[int, str]]:
 
 def _any_port_answers(
     addresses: list[tuple[int, str]], ports: list[int], pinged: threading.Event
-) -> str | None:
-    """What answered first ("address:port"), or None after TIMEOUT. A ping answering ends the
-    wait too (the caller names it)."""
+) -> Answer | None:
+    """What answered first, or None after TIMEOUT. A ping answering ends the wait too (the
+    caller names it)."""
     deadline = time.monotonic() + TIMEOUT
     selector = selectors.DefaultSelector()
     sockets: list[socket.socket] = []
@@ -74,8 +83,8 @@ def _any_port_answers(
                 sockets.append(sock)
                 code = sock.connect_ex((ip, port))
                 if code == 0 or code in _REFUSED:
-                    return f"{ip}:{port}"
-                selector.register(sock, selectors.EVENT_WRITE, f"{ip}:{port}")
+                    return ip, port
+                selector.register(sock, selectors.EVENT_WRITE, (ip, port))
         while (left := deadline - time.monotonic()) > 0:
             if pinged.is_set():
                 return None
@@ -88,7 +97,7 @@ def _any_port_answers(
                 assert isinstance(sock, socket.socket)
                 code = sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
                 if code == 0 or code in _REFUSED:
-                    return str(key.data)
+                    return key.data
                 selector.unregister(sock)
         return None
     finally:

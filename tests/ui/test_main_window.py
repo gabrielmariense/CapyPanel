@@ -76,7 +76,7 @@ def test_picking_a_group_or_tag_filters_the_table(window: MainWindow, office: Pa
     [kiosk] = window.nav.tags.findItems("kiosk", Qt.MatchFlag.MatchStartsWith)
     window.nav.tags.setCurrentItem(kiosk)
     assert _table_names(window) == {"HQ-01", "FIN-02"}
-    [everything] = window.nav.everything.findItems("All computers", Qt.MatchFlag.MatchStartsWith)
+    [everything] = window.nav.everything.findItems("All hosts", Qt.MatchFlag.MatchStartsWith)
     window.nav.everything.setCurrentItem(everything)  # pinned above the groups tree
     assert len(_table_names(window)) == 3
 
@@ -173,3 +173,17 @@ def test_the_groups_pane_fits_all_computers(window: MainWindow, office: Path) ->
     everything = window.nav.everything
     assert everything.minimumWidth() >= everything.sizeHintForColumn(0)
     assert not window._splitter.childrenCollapsible()
+
+
+def test_the_view_menu_stays_open_while_ticking(window: MainWindow) -> None:
+    from PySide6.QtCore import QEvent
+    from PySide6.QtGui import QKeyEvent
+
+    menu = window._view_menu
+    menu.popup(window.mapToGlobal(window.rect().center()))
+    menu.setActiveAction(window.commands.show_tags)
+    QApplication.sendEvent(
+        menu, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Return, Qt.KeyboardModifier.NoModifier)
+    )
+    assert not window.commands.show_tags.isChecked() and menu.isVisible()
+    menu.close()

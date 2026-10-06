@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 19:02-0300\n"
+"POT-Creation-Date: 2026-10-05 23:34-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -210,12 +210,20 @@ msgstr "Adicionada"
 msgid "Address"
 msgstr "Endereço"
 
-msgid "All computers"
-msgstr "Todos os computadores"
+msgid "All hosts"
+msgstr "Todos os hosts"
 
 #, python-brace-format
 msgid "An item is missing the “{key}” field or has an invalid value for it."
 msgstr "Um item não contém o campo “{key}” ou tem um valor inválido nesse campo."
+
+#, python-brace-format
+msgid "Answered a ping at {address}."
+msgstr "Respondeu a um ping em {address}."
+
+#, python-brace-format
+msgid "Answered at {address}, port {port}."
+msgstr "Respondeu em {address}, porta {port}."
 
 msgid "Appearance"
 msgstr "Aparência"
@@ -227,6 +235,9 @@ msgstr "Atualizado em {when}"
 #, python-brace-format
 msgid "Asked by {tool}"
 msgstr "Pedido pelo {tool}"
+
+msgid "Bars"
+msgstr "Barras"
 
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
@@ -666,6 +677,9 @@ msgstr "Opções:"
 
 msgid "P&ort:"
 msgstr "P&orta:"
+
+msgid "Panes"
+msgstr "Painéis"
 
 #, python-brace-format
 msgid "Password for {profile}"

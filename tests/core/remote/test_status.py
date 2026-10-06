@@ -17,7 +17,7 @@ def test_a_port_that_answers_proves_the_pc_is_on(monkeypatch: pytest.MonkeyPatch
         server.bind(("127.0.0.1", 0))
         server.listen()
         port = server.getsockname()[1]
-        assert status.check("127.0.0.1", [port]) is Status.ONLINE
+        assert status.probe("127.0.0.1", [port]) == (Status.ONLINE, ("127.0.0.1", port))
 
 
 def test_a_refused_port_still_proves_the_pc_is_on(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -78,11 +78,14 @@ def test_checking_selected_hosts_fills_the_status_and_user_columns(
     window: MainWindow, answers: dict[str, Any]
 ) -> None:
     answers["10.0.0.2"] = Found(Status.OFFLINE, users_error=SessionsError(Reason.UNREACHABLE))
+    answers["10.0.0.1"] = Found(Status.ONLINE, (DESK,), answered=("10.0.0.1", 445))
     window.table.select_ids(_ids(window, "PC-1", "PC-2", "Desk 4"))
     window.commands.check_users.trigger()
     _wait(window)
     assert _cells(window, "PC-1") == ("Online", "CORP\\ana")
     assert _cells(window, "PC-2") == ("Offline", "Unreachable")
+    first = window.table._rows[_ids(window, "PC-1")[0]]
+    assert "Answered at 10.0.0.1, port 445." in first.toolTip(window.table.STATUS)
     assert _cells(window, "PC-3") == ("", "")  # not selected: not checked
     assert {a for a, *_ in answers["seen"]} == {"10.0.0.1", "10.0.0.2"}  # no address: skipped
     window.table.select_ids(_ids(window, "PC-1"))

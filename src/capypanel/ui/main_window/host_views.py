@@ -45,7 +45,7 @@ def pane_title(text: str) -> QLabel:
 
 
 class NavigationPane(QWidget):
-    """ "All computers" pinned on top, the groups below it (in the list's own order, rearranged
+    """ "All hosts" pinned on top, the groups below it (in the list's own order, rearranged
     by dragging), and the tags. Picking one filters the table."""
 
     filter_changed = Signal()
@@ -129,7 +129,7 @@ class NavigationPane(QWidget):
         self.tags.clear()
         self.everything.setVisible(host_list is not None)
         if host_list is not None:
-            self._everything_item.setText(0, f"{_('All computers')} ({len(host_list.hosts)})")
+            self._everything_item.setText(0, f"{_('All hosts')} ({len(host_list.hosts)})")
             self.groups.fill(host_list)
             for tag, count in sorted(host_list.all_tags().items(), key=lambda t: t[0].casefold()):
                 item = QTreeWidgetItem([f"{tag} ({count})"])
@@ -152,7 +152,7 @@ class NavigationPane(QWidget):
 
     def _fit_everything(self) -> None:
         """Exactly one row tall, whatever padding the theme gives rows and frames, and never
-        narrower than "All computers (N)": the pane can't be dragged past it. Group names
+        narrower than "All hosts (N)": the pane can't be dragged past it. Group names
         don't count, so a long one can't make the pane huge (they show a tooltip)."""
         self.everything.doItemsLayout()
         row = self.everything.visualItemRect(self._everything_item).height()
