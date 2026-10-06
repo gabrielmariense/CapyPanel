@@ -10,7 +10,7 @@ O CapyPanel reúne numa só janela todos os computadores que você administra. �
 para Windows feito para equipes de TI: organize seus hosts em listas e abra a tela remota de
 qualquer um deles pela Área de Trabalho Remota ou pelo visualizador VNC que você já usa.
 
-> **Situação: beta (0.13.0).** Roda a partir do código-fonte; ainda não há instalador.
+> **Situação: beta (0.14.0).** Roda a partir do código-fonte; ainda não há instalador.
 
 ## Funcionalidades
 
@@ -20,15 +20,16 @@ qualquer um deles pela Área de Trabalho Remota ou pelo visualizador VNC que voc
 - Área de Trabalho Remota (RDP)
 - Perfis de conexão
 - Listas de hosts compartilhadas
+- Status dos hosts
+- Usuários logados
 
 ### Em desenvolvimento
 
-- Usuários conectados
+- Busca
 
 ### Planejadas
 
 - SSH
-- Busca e status
 - Ações nos hosts
 
 ## Documentação
@@ -41,6 +42,7 @@ Também online, com busca: **[gabrielmariense.github.io/CapyPanel/pt-BR](https:/
   compartilhadas
 - [Conectando](docs/connecting.pt-BR.md): visualizadores VNC, Área de Trabalho Remota, perfis de
   conexão e senhas
+- [Verificando hosts](docs/checking.pt-BR.md): status e usuários logados
 - [Configurações e arquivos](docs/settings-and-files.pt-BR.md): o que cada configuração faz e
   onde o CapyPanel guarda os arquivos
 - [Desenvolvimento](docs/development.pt-BR.md): compilar, testar e traduzir

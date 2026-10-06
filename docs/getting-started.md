@@ -13,7 +13,7 @@ uv run capypanel
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
 The version shows in the title bar, followed by the commit when you run from source, e.g.
-`CapyPanel 0.13.0 (abc1234)`. Quote it when you report a problem.
+`CapyPanel 0.14.0 (abc1234)`. Quote it when you report a problem.
 
 Remote Desktop works out of the box, with the client built into Windows. For VNC you also need a
 viewer: [UltraVNC](https://uvnc.com) or
@@ -24,13 +24,15 @@ viewer: [UltraVNC](https://uvnc.com) or
 
 | Part | What it shows |
 |---|---|
-| **Groups** (left) | "All computers" pinned on top, with how many hosts the list has. Then your groups and the groups inside them, and below them your tags |
-| **Hosts** (middle) | The hosts in the selected group or tag |
+| **Toolbar** (top) | **Connect**, and **Refresh** to check the hosts shown (see [Checking hosts](checking.md)) |
+| **Groups** (left) | "All hosts" pinned on top, with how many hosts the list has. Then **Groups**, with a **+** button to add one, and **Tags** |
+| **Hosts** (middle) | The hosts in the selected group or tag, with their **Status** and **User** |
 | **Information** (right) | The selected host's details, including its connection profile and where it comes from |
 | **Status bar** | Which list is open, where it is, how many hosts it has and how many are selected |
 
-Each pane can be hidden from the **View** menu. To switch to another list, use **File > Host
-lists…** (see [Host lists](host-lists.md#the-host-lists-window)).
+The toolbar, the status bar and each pane can be hidden from the **View** menu. Right-click the
+host table's column titles to choose which columns show. To switch to another list, use
+**File > Host lists…** (see [Host lists](host-lists.md#the-host-lists-window)).
 
 ## Add your first hosts
 
@@ -43,12 +45,12 @@ lists…** (see [Host lists](host-lists.md#the-host-lists-window)).
    - **Tags:** type a tag and press Enter; Backspace on an empty box brings the last tag back for
      editing.
    - **Connection profile:** how to reach the host. "From group" follows the group's profile.
-3. Double-click the host, or select it and press Enter, to open a connection to it with its
-   profile.
+3. Double-click the host, select it and press Enter, or click **Connect** in the toolbar, to open
+   a connection to it with its profile.
 
-Right-click a host to open, edit or remove it, or to copy its address or name. Right-clicking
-empty space offers **Add group…** in the groups pane, and **Add host…** and **Add group…** in the
-host list. To move hosts to another group, drag them onto it (see
+Right-click a host to connect, check it, copy its address or name, or edit or remove it.
+Right-clicking empty space offers **Add group…** in the groups pane, and **Add host…** and
+**Add group…** in the host list. To move hosts to another group, drag them onto it (see
 [Host lists](host-lists.md#arranging-groups-and-hosts)).
 
 Edits are saved to the list file at once; there's no Save button.
