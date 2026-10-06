@@ -45,8 +45,9 @@ def pane_title(text: str) -> QLabel:
 
 
 class NavigationPane(QWidget):
-    """ "All hosts" pinned on top, the groups below it (in the list's own order, rearranged
-    by dragging), and the tags. Picking one filters the table."""
+    """One card, like the other panes: "All hosts" pinned on top, then the groups (in the
+    list's own order, rearranged by dragging) and the tags, each under a small heading and
+    split by thin lines. Picking one filters the table."""
 
     filter_changed = Signal()
 
@@ -79,13 +80,26 @@ class NavigationPane(QWidget):
         self.tags.setHeaderHidden(True)
         self.tags.setRootIsDecorated(False)
 
+        # The lists drop their own frames ("flat"): the card around them is the only box.
+        for tree in (self.everything, self.groups, self.tags):
+            tree.setObjectName("flat")
+        self._tags_line = _divider()
+        card = QFrame()
+        card.setObjectName("card")
+        card.setFrameShape(QFrame.Shape.StyledPanel)
+        inside = QVBoxLayout(card)
+        inside.setContentsMargins(4, 4, 4, 4)
+        inside.setSpacing(2)
+        inside.addWidget(self.everything)
+        inside.addWidget(_divider())
+        inside.addLayout(header)
+        inside.addWidget(self.groups, 3)
+        inside.addWidget(self._tags_line)
+        inside.addWidget(self._tags_title)
+        inside.addWidget(self.tags, 1)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addLayout(header)
-        layout.addWidget(self.everything)
-        layout.addWidget(self.groups, 3)
-        layout.addWidget(self._tags_title)
-        layout.addWidget(self.tags, 1)
+        layout.addWidget(card)
 
         self.everything.itemSelectionChanged.connect(self._everything_picked)
         self.groups.itemSelectionChanged.connect(self._groups_picked)
@@ -99,9 +113,9 @@ class NavigationPane(QWidget):
         self._tags_title.setText(_("Tags"))
 
     def set_tags_visible(self, visible: bool) -> None:
-        """View > Tags pane. Hiding it while a tag is picked goes back to all computers."""
-        self._tags_title.setVisible(visible)
-        self.tags.setVisible(visible)
+        """View > Tags pane. Hiding it while a tag is picked goes back to All hosts."""
+        for widget in (self._tags_line, self._tags_title, self.tags):
+            widget.setVisible(visible)
         if not visible and self._filter.kind == "tag":
             self._filter = self._select(Filter("all"))
             self.filter_changed.emit()
@@ -205,6 +219,13 @@ class NavigationPane(QWidget):
         self._clear(self.everything, self.groups)
         self._filter = Filter("tag", items[0].data(0, ROLE_ID))
         self.filter_changed.emit()
+
+
+def _divider() -> QFrame:
+    line = QFrame()
+    line.setObjectName("divider")
+    line.setFixedHeight(1)
+    return line
 
 
 def _walk(root: QTreeWidgetItem) -> Iterable[QTreeWidgetItem]:
