@@ -168,6 +168,6 @@ def test_images_the_stylesheet_uses_ship_with_the_themes(theme: themes.Theme) ->
     # Custom themes draw their own checkbox ticks and drop-down arrows; a missing file
     # means an empty checked box or a drop-down that doesn't look clickable.
     sheet = themes.stylesheet(theme)
-    images = re.findall(r'url\("([^"]+)"\)', sheet)
-    assert len(images) == 2
+    images = set(re.findall(r'url\("([^"]+)"\)', sheet))
+    assert len(images) == 2  # the tick, and the arrow of drop-downs and toolbar buttons
     assert all(Path(image).is_file() for image in images), images

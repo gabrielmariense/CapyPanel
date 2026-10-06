@@ -48,7 +48,7 @@ def test_groups_keep_the_list_s_order_and_all_computers_is_pinned_above(
     root = window.nav.groups.invisibleRootItem()
     assert _names(root) == ["Zebra wing (1)", "alpha wing (1)"]  # not sorted A–Z
     everything = window.nav.everything.topLevelItem(0)
-    assert everything is not None and everything.text(0) == "All computers (2)"
+    assert everything is not None and everything.text(0) == "All hosts (2)"
     assert window.nav.current_filter().kind == "all"
     window.nav.select_group(_id(window, "Lab"))
     assert not everything.isSelected()  # one pick at a time across both lists

@@ -11,6 +11,7 @@ nav:
   - Getting started: getting-started.md
   - Host lists: host-lists.md
   - Connecting: connecting.md
+  - Checking hosts: checking.md
   - Settings and files: settings-and-files.md
   - Development: development.md
 
@@ -53,6 +54,7 @@ plugins:
             Getting started: Primeiros passos
             Host lists: Listas de hosts
             Connecting: Conectando
+            Checking hosts: Verificando hosts
             Settings and files: Configurações e arquivos
             Development: Desenvolvimento
 

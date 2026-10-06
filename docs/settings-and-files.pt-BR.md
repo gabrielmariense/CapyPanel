@@ -9,6 +9,8 @@ salva e mantém as Configurações abertas, e **Cancelar** fecha e descarta o qu
   [Listas de hosts](host-lists.pt-BR.md#qual-lista-abre-ao-iniciar)).
 - **Idioma:** English ou Português (Brasil), trocado sem reiniciar. Também em **Exibir > Idioma**.
   A própria janela de Configurações muda de idioma na próxima vez que você abri-la.
+- **Atualizar:** verificar o status dos hosts exibidos a cada alguns minutos. Vem desligado;
+  veja [Verificando hosts](checking.pt-BR.md#status-automatico).
 - **Onde o CapyPanel guarda os arquivos:** os arquivos compartilhados, os seus arquivos e os logs,
   cada um com um botão **Abrir pasta**.
 

@@ -44,6 +44,7 @@ class SettingsChoices:
     language: str
     connections: ConnectionChanges
     added_lists: list[Path]  # the lists in Host lists, besides the default and personal
+    auto_status: tuple[bool, int] = (False, 5)  # check Status by itself, every N minutes
 
 
 class SettingsDialog(QDialog):
@@ -61,6 +62,7 @@ class SettingsDialog(QDialog):
         added: list[Path],
         registry: themes.Registry,
         catalogs: Catalogs,
+        auto_status: tuple[bool, int] = (False, 5),
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Settings"))
@@ -71,6 +73,7 @@ class SettingsDialog(QDialog):
             personal_list=personal_list,
             added=added,
             language=i18n.language(),
+            auto_status=auto_status,
         )
         self.host_lists = HostListsPage(
             default_list=default_list,
@@ -182,6 +185,7 @@ class SettingsDialog(QDialog):
             language=self.general.language_choice(),
             added_lists=self.host_lists.added(),
             connections=self.connections.changes(),
+            auto_status=self.general.auto_status_choice(),
         )
 
     def showEvent(self, event: QShowEvent) -> None:

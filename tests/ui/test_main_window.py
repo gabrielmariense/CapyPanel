@@ -76,7 +76,7 @@ def test_picking_a_group_or_tag_filters_the_table(window: MainWindow, office: Pa
     [kiosk] = window.nav.tags.findItems("kiosk", Qt.MatchFlag.MatchStartsWith)
     window.nav.tags.setCurrentItem(kiosk)
     assert _table_names(window) == {"HQ-01", "FIN-02"}
-    [everything] = window.nav.everything.findItems("All computers", Qt.MatchFlag.MatchStartsWith)
+    [everything] = window.nav.everything.findItems("All hosts", Qt.MatchFlag.MatchStartsWith)
     window.nav.everything.setCurrentItem(everything)  # pinned above the groups tree
     assert len(_table_names(window)) == 3
 
@@ -136,3 +136,54 @@ def test_host_dialog_cleans_values_and_shows_group_paths(qapp: QApplication) -> 
     dialog.tags.add_text("kiosk, , floor-3, kiosk")
     values = dialog.values()
     assert (values.name, values.group, values.tags) == ("PC-9", finance.id, ("kiosk", "floor-3"))
+
+
+def test_columns_keep_their_title_visible_and_can_be_hidden(
+    window: MainWindow, office: Path
+) -> None:
+    window.open_list(office)
+    table = window.table
+    table.header().resizeSection(table.USER, 5)  # dragged almost shut
+    assert table.columnWidth(table.USER) >= table.minimum_width(table.USER) > 5
+    table._show_column(table.USER, False)
+    assert table.isColumnHidden(table.USER)
+    assert window._prefs["hidden_columns"] == ["user"]
+    reopened = MainWindow(window._paths, dict(window._prefs))
+    assert reopened.table.isColumnHidden(reopened.table.USER)
+    reopened.table.set_hidden_columns(["computer"])
+    assert not reopened.table.isColumnHidden(0)  # the host name always shows
+    reopened.close()
+
+
+def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: MainWindow, office: Path) -> None:
+    window.open_list(office)
+    tag = window.nav.tags.topLevelItem(0)
+    assert tag is not None
+    window.nav.tags.setCurrentItem(tag)  # filtering by a tag
+    window.commands.show_tags.setChecked(False)
+    assert window.nav.tags.isHidden() and window.nav.current_filter().kind == "all"
+    window.close()
+    assert window._prefs["view"]["tags"] is False
+
+
+def test_the_groups_pane_fits_all_computers(window: MainWindow, office: Path) -> None:
+    window.open_list(office)
+    window.show()
+    QApplication.processEvents()
+    everything = window.nav.everything
+    assert everything.minimumWidth() >= everything.sizeHintForColumn(0)
+    assert not window._splitter.childrenCollapsible()
+
+
+def test_the_view_menu_stays_open_while_ticking(window: MainWindow) -> None:
+    from PySide6.QtCore import QEvent
+    from PySide6.QtGui import QKeyEvent
+
+    menu = window._view_menu
+    menu.popup(window.mapToGlobal(window.rect().center()))
+    menu.setActiveAction(window.commands.show_tags)
+    QApplication.sendEvent(
+        menu, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Return, Qt.KeyboardModifier.NoModifier)
+    )
+    assert not window.commands.show_tags.isChecked() and menu.isVisible()
+    menu.close()

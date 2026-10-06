@@ -310,6 +310,24 @@ QMenu::indicator { left: 9px; }
 QToolButton { padding: 2px 8px; border-radius: %(r2)spx; color: %(text2)s; background: transparent;
               border: none; }
 QToolButton:hover { background: %(hover)s; color: %(text)s; }
+/* A line under the toolbar, like the menu bar's: without it, it merges into the panes below. */
+QToolBar { background: %(bg)s; border: none; border-bottom: 1px solid %(border)s;
+           padding: 6px 8px 4px 8px; spacing: 6px; }
+QToolBar QToolButton { padding: 6px 10px; }
+/* Styling a tool button drops Fusion's menu arrow, so draw our own. */
+QToolBar QToolButton[popupMode="1"] { padding-right: 24px; }
+QToolBar QToolButton[popupMode="2"] { padding-right: 24px; }
+/* The arrow of a split button (Connect) is a part of its own: a divider and its own hover. */
+QToolButton::menu-button { border: none; border-left: 1px solid %(border)s; width: 18px;
+                           margin: 5px 0; border-top-right-radius: %(r2)spx;
+                           border-bottom-right-radius: %(r2)spx; }
+QToolButton::menu-button:hover { background: %(hover)s; }
+QToolButton::menu-arrow, QToolButton::menu-indicator {
+    image: url("%(arrow)s"); width: 10px; height: 6px; }
+QToolButton::menu-indicator { subcontrol-position: right center; right: 8px; }
+QLabel#toolCaption { color: %(text3)s; }
+/* Headings inside menus and the Refresh panel. */
+QLabel#menuSection { color: %(text3)s; padding: 6px 12px 2px 12px; font-weight: 600; }
 
 QLineEdit, QPlainTextEdit, QSpinBox { background: %(card)s; border: 1px solid %(border)s;
                             border-radius: %(r2)spx; padding: 5px 7px;
@@ -353,6 +371,9 @@ QTreeView#grid QHeaderView::section:only-one { border-right: none; }
 QHeaderView::section:hover { color: %(text)s; }
 
 QFrame#card { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; }
+/* Lists inside a card (the groups pane): the card is their only frame. */
+QTreeView#flat { border: none; background: transparent; padding: 0 2px; }
+QFrame#divider { background: %(border)s; border: none; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
 QListView#pageList::item { padding: 7px 10px; }
 
@@ -402,6 +423,7 @@ QToolTip { background: %(card)s; color: %(text)s; border: 1px solid %(border)s; 
 _NATIVE_QSS = """
 QMainWindow, QDialog, QSplitter::handle { background: %(bg)s; }
 QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; }
+QToolBar#main { border: none; border-bottom: 1px solid %(border)s; }
 QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; }
 /* Only the settings page list, not every QListView: combo box pop-ups are list views too. */
@@ -420,7 +442,10 @@ QTreeView#grid QHeaderView::section { border-right: 2px solid %(border)s; }
 QTreeView#grid::item:last, QTreeView#grid::item:only-one,
 QTreeView#grid QHeaderView::section:last,
 QTreeView#grid QHeaderView::section:only-one { border-right: none; }
-QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
+QLabel#paneTitle, QLabel#hint, QLabel#toolCaption { color: %(text2)s; }
+QTreeView#flat { border: none; background: transparent; }
+QFrame#divider { background: %(border)s; border: none; }
+QLabel#menuSection { color: %(text2)s; padding: 6px 12px 2px 12px; font-weight: 600; }
 QFrame#tagEdit { background: %(card)s; border: 1px solid %(border)s; border-radius: 4px; }
 QFrame#tagEdit[focused="true"] { border-color: %(accent)s; }
 QLineEdit#tagInput { border: none; background: transparent; padding: 3px 2px; }

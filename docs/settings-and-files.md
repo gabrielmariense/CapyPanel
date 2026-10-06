@@ -9,6 +9,8 @@ keeps Settings open, and **Cancel** closes and drops anything not saved.
   [Host lists](host-lists.md#which-list-opens-at-start)).
 - **Language:** English or Português (Brasil), switched without a restart. Also under
   **View > Language**. The Settings window itself changes language the next time you open it.
+- **Refresh:** check the status of the hosts shown every few minutes. Off by default; see
+  [Checking hosts](checking.md#automatic-status).
 - **Where CapyPanel keeps its files:** the shared files, your own files and the logs, each with
   an **Open folder** button.
 

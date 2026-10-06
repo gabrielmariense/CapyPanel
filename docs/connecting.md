@@ -73,6 +73,8 @@ later, and the shared file is never changed.
   **Connection profile**.
 - **"From group"** means the host follows the nearest group that sets a profile. Hosts with no
   profile anywhere use the default.
+- **Just once:** the arrow on the toolbar's **Connect** button > **Connect once with** connects
+  the selected hosts with another profile, without changing them.
 
 The **Information** pane shows each host's profile and where it comes from, e.g.
 "Raspberry Pis (from group “Raspberries”)".

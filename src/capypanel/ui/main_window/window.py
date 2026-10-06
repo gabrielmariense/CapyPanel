@@ -1,13 +1,14 @@
 """The main window: panes, menus, and opening and editing host lists."""
 
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import replace
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import QByteArray, QEvent, QPoint, Qt
-from PySide6.QtGui import QActionGroup, QCloseEvent, QGuiApplication, QShowEvent
+from PySide6.QtCore import QByteArray, QEvent, QPoint, Qt, QTimer
+from PySide6.QtGui import QActionGroup, QCloseEvent, QGuiApplication, QResizeEvent, QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -17,6 +18,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QSplitter,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -29,10 +31,16 @@ from capypanel.core.hosts.listfile import HostListChangedError, HostListFileErro
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
+from capypanel.core.remote import checks
+from capypanel.core.remote.checks import Checks, Found
+from capypanel.core.remote.sessions import Account, Reason, Session, SessionsError
+from capypanel.core.remote.status import Answer, Status
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import SessionCredentials, Target
 from capypanel.core.tools.profiles import ProfileError
+from capypanel.ui import checks as check_texts
 from capypanel.ui import language
+from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
 from capypanel.ui.groups import ManageGroupsDialog
 from capypanel.ui.host_lists import HostListsDialog
@@ -43,18 +51,23 @@ from capypanel.ui.hosts import (
     group_path,
     list_file_filter,
 )
+from capypanel.ui.icons import STATUS_COLORS, dot_icon
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.host_views import (
+    Cells,
     DetailsPane,
     HostTable,
     NavigationPane,
 )
+from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
+from capypanel.ui.menus import StayOpenMenu, section
 from capypanel.ui.settings import connections
 from capypanel.ui.settings.connections import ConnectionChanges
 from capypanel.ui.settings.window import SettingsChoices, SettingsDialog
 from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
+MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks first
 
 
 class MainWindow(QMainWindow):
@@ -77,7 +90,22 @@ class MainWindow(QMainWindow):
         )
         self.connector.open_settings = lambda: self.open_settings("connections")
 
+        # Refresh results, by host id: in memory only, since the list file is shared.
+        self._status_found: dict[str, tuple[Status, datetime, Answer | None]] = {}
+        self._users_found: dict[
+            str, tuple[tuple[Session, ...] | None, SessionsError | None, datetime]
+        ] = {}
+        self._run: CheckRun | None = None
+        self._account: Account | None = None  # typed for logged-on users; memory only
+        self._refused: list[str] = []  # hosts this run that didn't let the account read users
+        self._reported: set[str] = set()
+        self._targets: list[tuple[str, str]] = []
+
         self.commands = create_actions(self)
+        self.toolbar = MainToolBar(self.commands)
+        self.addToolBar(self.toolbar)
+        self.refresh_panel = RefreshPanel(self)
+        self.refresh_panel.set_choices(self._prefs.get("refresh"))
         self.nav = NavigationPane()
         self.table = HostTable()
         self.details = DetailsPane()
@@ -85,19 +113,30 @@ class MainWindow(QMainWindow):
         for pane in (self.nav, self.table, self.details):
             self._splitter.addWidget(pane)
         self._splitter.setStretchFactor(1, 1)
+        # Dragged all the way, a pane would vanish; View hides panes on purpose instead.
+        self._splitter.setChildrenCollapsible(False)
         self._splitter.setSizes([220, 640, 280])
         central = QWidget()
         margins = QVBoxLayout(central)
-        margins.setContentsMargins(8, 4, 8, 2)
+        margins.setContentsMargins(8, 4, 8, 4)  # the same gap above and below the panes
         margins.addWidget(self._splitter)
         self.setCentralWidget(central)
         self._list_label = QLabel()
         self._list_label.setContentsMargins(6, 0, 6, 0)
         self.statusBar().addWidget(self._list_label, 1)
+        self._progress = QLabel()
+        self._stop_button = QToolButton()
+        self._stop_button.clicked.connect(self.stop_checks)
+        for widget in (self._progress, self._stop_button):
+            widget.hide()
+            self.statusBar().addPermanentWidget(widget)
 
         self._build_menus()
         self._connect()
         self._restore_layout()
+        self._auto_timer = QTimer(self)  # Settings > General: Status by itself, if switched on
+        self._auto_timer.timeout.connect(self._auto_status_check)
+        self._apply_auto_status()
         self._open_startup_list()
         self._refresh()
 
@@ -125,8 +164,13 @@ class MainWindow(QMainWindow):
         self._connect_menu.addSeparator()
         self._connect_menu.addAction(a.forget_passwords)
 
-        self._view_menu = bar.addMenu("")
-        self._view_menu.addActions([a.show_groups, a.show_details, a.show_status_bar])
+        # It stays open while parts are ticked, so several can be shown or hidden in one go.
+        self._view_menu = StayOpenMenu(self)
+        bar.addMenu(self._view_menu)
+        self._bars_heading = section(self._view_menu, "")
+        self._view_menu.addActions([a.show_toolbar, a.show_status_bar])
+        self._panes_heading = section(self._view_menu, "")
+        self._view_menu.addActions([a.show_groups, a.show_tags, a.show_details])
         self._view_menu.addSeparator()
         self._theme_menu = self._view_menu.addMenu("")
         self._theme_group = QActionGroup(self)
@@ -156,10 +200,15 @@ class MainWindow(QMainWindow):
 
     def _retranslate_menus(self) -> None:
         retranslate_actions(self.commands)
+        self.toolbar.retranslate()
+        self.refresh_panel.retranslate()
+        self._stop_button.setText(_("Stop"))
         self._file_menu.setTitle(_("&File"))
         self._inventory_menu.setTitle(_("&Inventory"))
         self._connect_menu.setTitle(_("&Connect"))
         self._view_menu.setTitle(_("&View"))
+        self._bars_heading.setText(_("Bars"))
+        self._panes_heading.setText(_("Panes"))
         self._theme_menu.setTitle(_("&Theme"))
         self._language_menu.setTitle(_("&Language"))
         for item in self._theme_group.actions():
@@ -178,9 +227,25 @@ class MainWindow(QMainWindow):
         a.remove.triggered.connect(self.remove_selected)
         # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C) live here.
         self.addActions([a.edit, a.remove, a.copy_address])
+        a.show_toolbar.toggled.connect(self.toolbar.setVisible)
         a.show_groups.toggled.connect(self.nav.setVisible)
+        a.show_tags.toggled.connect(self.nav.set_tags_visible)
         a.show_details.toggled.connect(self.details.setVisible)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
+        # Refresh follows the end of the host table, wherever the panes are.
+        for toggled in (a.show_groups.toggled, a.show_details.toggled, a.show_toolbar.toggled):
+            toggled.connect(self._align_refresh_later)
+        self._splitter.splitterMoved.connect(self._align_refresh_later)
+        a.check_status.triggered.connect(
+            lambda: self.check_hosts(self._selected_hosts(), status=True, users=False)
+        )
+        a.check_users.triggered.connect(
+            lambda: self.check_hosts(self._selected_hosts(), status=False, users=True)
+        )
+        self.toolbar.refresh_panel_requested.connect(self._show_refresh_panel)
+        self.toolbar.refresh_requested.connect(self._refresh_shown)
+        self.refresh_panel.run_clicked.connect(self._run_refresh_panel)
+        self.toolbar.connect_menu.aboutToShow.connect(self._fill_connect_menu)
         self.nav.add_group_button.clicked.connect(self.add_group)
         self.nav.filter_changed.connect(self._show_hosts)
         self.nav.groups.customContextMenuRequested.connect(self._group_menu)
@@ -188,6 +253,7 @@ class MainWindow(QMainWindow):
         self.nav.groups.hosts_dropped.connect(self.move_hosts)
         self.table.itemSelectionChanged.connect(self._selection_changed)
         self.table.customContextMenuRequested.connect(self._host_menu)
+        self.table.columns_changed.connect(self._save_columns)
         # Enter connects only from the host table, so it never fires while typing elsewhere.
         a.connect_host.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.table.addAction(a.connect_host)
@@ -212,11 +278,16 @@ class MainWindow(QMainWindow):
         view = self._prefs.get("view")
         view = view if isinstance(view, dict) else {}
         for key, action in (
+            ("toolbar", self.commands.show_toolbar),
             ("groups", self.commands.show_groups),
+            ("tags", self.commands.show_tags),
             ("details", self.commands.show_details),
             ("status_bar", self.commands.show_status_bar),
         ):
             action.setChecked(bool(view.get(key, True)))
+        self.nav.set_tags_visible(self.commands.show_tags.isChecked())
+        self.toolbar.setVisible(self.commands.show_toolbar.isChecked())
+        self.table.set_hidden_columns(self._prefs.get("hidden_columns"))
         self.nav.setVisible(self.commands.show_groups.isChecked())
         self.details.setVisible(self.commands.show_details.isChecked())
         self.statusBar().setVisible(self.commands.show_status_bar.isChecked())
@@ -306,6 +377,9 @@ class MainWindow(QMainWindow):
         return True
 
     def _use(self, doc: OpenList) -> None:
+        if self._doc is None or not locations.same_path(self._doc.path, doc.path):
+            self._status_found.clear()  # another list's hosts: old results don't apply
+            self._users_found.clear()
         self._doc = doc
         locations.remember_list(self._prefs, doc.path)
         if self._kind(doc.path) is ListKind.SHARED:  # it shows in File > Host lists… from now on
@@ -368,6 +442,9 @@ class MainWindow(QMainWindow):
         except HostListRuleError as e:
             self._error(str(e))
             return
+        if edited.connect_address != host.connect_address:  # results were for the old address
+            self._status_found.pop(host.id, None)
+            self._users_found.pop(host.id, None)
         self._commit(new)
 
     def add_group(self) -> None:
@@ -506,7 +583,8 @@ class MainWindow(QMainWindow):
 
     # ---- connecting ----
 
-    def connect_selected(self) -> None:
+    def connect_selected(self, profile: str | None = None) -> None:
+        """With the hosts' own profiles, or once with `profile` (the toolbar's Connect arrow)."""
         hosts = self._selected_hosts()
         if not hosts or self._doc is None:
             return
@@ -518,7 +596,9 @@ class MainWindow(QMainWindow):
         host_list = self._doc.hosts
         requests = [
             Request(
-                h.name, Target(h.connect_address), host_list.profile_of(h, self._profile_exists)[0]
+                h.name,
+                Target(h.connect_address),
+                profile or host_list.profile_of(h, self._profile_exists)[0],
             )
             for h in hosts
             if h.connect_address
@@ -657,6 +737,7 @@ class MainWindow(QMainWindow):
 
     def forget_passwords(self) -> None:
         self.connector.credentials.forget()
+        self._account = None
         self.statusBar().showMessage(_("Typed passwords forgotten."), 5000)
         self._update_state()
 
@@ -696,6 +777,7 @@ class MainWindow(QMainWindow):
             added=locations.added_lists(self._prefs),
             registry=self.registry,
             catalogs=self.connector.catalogs,
+            auto_status=self._auto_status(),
         )
 
     def apply_settings(self, choices: SettingsChoices) -> None:
@@ -713,6 +795,9 @@ class MainWindow(QMainWindow):
         if choices.language != i18n.language():
             self.set_language(choices.language)
         self._apply_connections(choices.connections)
+        on, minutes = choices.auto_status
+        self._prefs["auto_status"] = {"on": on, "minutes": minutes}
+        self._apply_auto_status()
         self._save_prefs()
 
     def _apply_connections(self, changes: ConnectionChanges) -> None:
@@ -726,6 +811,7 @@ class MainWindow(QMainWindow):
     def set_theme(self, theme_id: str) -> None:
         theme = self.registry.find(theme_id)
         themes.apply(theme)
+        self.toolbar.restyle()  # icon colour and caption capitals follow the theme
         for item in self._theme_group.actions():
             item.setChecked(item.data() == theme.id)
         self._prefs["theme"] = theme.id
@@ -752,11 +838,12 @@ class MainWindow(QMainWindow):
         self.nav.retranslate()
         self.table.retranslate()
         self.details.retranslate()
-        self._refresh()  # rebuilds the lists ("All computers"), details hint and status bar
+        self._refresh()  # rebuilds the lists ("All hosts"), details hint and status bar
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         themes.paint_title_bar(self)  # the window handle only exists once it's shown
+        self._align_refresh_later()
 
     # ---- showing ----
 
@@ -768,7 +855,8 @@ class MainWindow(QMainWindow):
         self._show_hosts()
 
     def _show_hosts(self) -> None:
-        self.table.show_hosts(self._visible_hosts())
+        hosts = self._visible_hosts()
+        self.table.show_hosts(hosts, {h.id: self._cells(h.id) for h in hosts})
 
     def _visible_hosts(self) -> tuple[Host, ...]:
         if self._doc is None:
@@ -795,6 +883,7 @@ class MainWindow(QMainWindow):
                 group_path(host_list, host.group),
                 1,
                 self._connection_text(host_list, host),
+                *self._details_found(host.id),
             )
         else:
             self.details.show_host(None, "", len(hosts))
@@ -813,7 +902,12 @@ class MainWindow(QMainWindow):
         a.remove.setEnabled(writable and (selected > 0 or group_picked))
         for action in (a.connect_host, a.copy_address, a.copy_name):
             action.setEnabled(selected > 0)  # read-only lists can still connect
-        a.forget_passwords.setEnabled(bool(self.connector.credentials))
+        for action in (a.check_status, a.check_users):
+            action.setEnabled(selected > 0 and self._run is None)  # one Refresh at a time
+        shown = self.table.topLevelItemCount() > 0
+        for action in (self.toolbar.refresh_status, self.toolbar.refresh_users):
+            action.setEnabled(shown and self._run is None)
+        a.forget_passwords.setEnabled(bool(self.connector.credentials) or bool(self._account))
         if doc is None:
             self.setWindowTitle(f"CapyPanel {BUILD}")
             self._list_label.setText(_("No host list is open."))
@@ -831,6 +925,242 @@ class MainWindow(QMainWindow):
             parts.append(_("portable mode"))
         self._list_label.setText(" · ".join(parts))
 
+    # ---- Refresh: status and logged-on users ----
+
+    def check_hosts(self, hosts: Sequence[Host], *, status: bool, users: bool) -> None:
+        if self._run is not None or not (status or users):
+            return
+        targets = [(h.id, h.connect_address) for h in hosts if h.connect_address]
+        skipped = len(hosts) - len(targets)
+        if skipped:
+            note = ngettext(
+                "{n} host has no address and was skipped.",
+                "{n} hosts have no address and were skipped.",
+                skipped,
+            )
+            self.statusBar().showMessage(note.format(n=skipped), 10_000)
+        if (
+            users
+            and len(targets) > MANY_USER_CHECKS
+            and not confirm(
+                self,
+                _("Check logged-on users"),
+                _("Check who is logged on to {n} hosts?").format(n=len(targets)),
+                _("Check"),
+            )
+        ):
+            return
+        if targets:
+            wanted = Checks(status, users, self._ports(), self._account if users else None)
+            self._start(targets, wanted)
+
+    def _auto_status(self) -> tuple[bool, int]:
+        saved = self._prefs.get("auto_status")
+        saved = saved if isinstance(saved, dict) else {}
+        minutes = saved.get("minutes", 5)
+        minutes = minutes if isinstance(minutes, int) and 1 <= minutes <= 120 else 5
+        return saved.get("on") is True, minutes
+
+    def _apply_auto_status(self) -> None:
+        on, minutes = self._auto_status()
+        if on:
+            self._auto_timer.start(minutes * 60_000)
+        else:
+            self._auto_timer.stop()
+
+    def _auto_status_check(self) -> None:
+        """Status only (ping and ports) on the hosts shown; skipped while a Refresh runs."""
+        hosts = self._visible_hosts()
+        if self._run is None and hosts:
+            self.check_hosts(hosts, status=True, users=False)
+
+    def _start(self, targets: list[tuple[str, str]], wanted: Checks) -> None:
+        run = CheckRun(targets, wanted)
+        run.found.connect(self._found)
+        run.finished.connect(self._run_finished)
+        self._run, self._refused, self._reported = run, [], set()
+        self._targets = targets
+        self._show_progress()
+        self._stop_button.setEnabled(True)
+        self._update_state()
+        log.info(
+            "Refresh: %d hosts (status=%s, users=%s, account=%s)",
+            len(targets), wanted.status, wanted.users, "typed" if wanted.account else "Windows",
+        )  # fmt: skip
+        run.start()
+
+    def stop_checks(self) -> None:
+        if self._run is not None:
+            self._run.stop()
+            self._stop_button.setEnabled(False)  # hosts already being read still finish
+
+    def _found(self, host_id: str, found: Found) -> None:
+        run = self._run
+        if run is None:
+            return
+        run.done += 1
+        self._reported.add(host_id)
+        if found.status is not None:
+            self._status_found[host_id] = (found.status, found.when, found.answered)
+        if run.wanted.users and (found.sessions is not None or found.users_error is not None):
+            self._users_found[host_id] = (found.sessions, found.users_error, found.when)
+            error = found.users_error
+            if error is not None and error.reason in (Reason.NOT_ADMIN, Reason.REJECTED):
+                self._refused.append(host_id)
+        self.table.show_cells(host_id, self._cells(host_id))
+        if self.table.selected_ids() == [host_id]:
+            self._selection_changed()
+        self._show_progress()
+
+    def _show_progress(self) -> None:
+        run = self._run
+        if run is not None:
+            self._progress.setText(
+                _("Checking {done} of {total}…").format(done=run.done, total=run.total)
+            )
+        self._progress.setVisible(run is not None)
+        self._stop_button.setVisible(run is not None)
+
+    def _run_finished(self) -> None:
+        run = self._run
+        if run is None:
+            return
+        self._run = None
+        self._show_progress()
+        self._update_state()
+        if run.stopped and run.done < run.total:
+            left = run.total - run.done
+            note = ngettext(
+                "Stopped: {n} host wasn't checked.", "Stopped: {n} hosts weren't checked.", left
+            )
+            self.statusBar().showMessage(note.format(n=left), 10_000)
+        else:
+            self.statusBar().showMessage(
+                ngettext("Checked {n} host.", "Checked {n} hosts.", run.done).format(n=run.done),
+                5000,
+            )
+        if run.wanted.users and (self._refused or run.halted):
+            self._ask_account(run)
+
+    def _ask_account(self, run: CheckRun) -> None:
+        """A host didn't let the account read who is logged on: offer another, once per run."""
+        account = run.wanted.account
+        first = self._name_of(self._refused[-1]) if self._refused else ""
+        if run.halted and account is not None:
+            text = _(
+                "“{host}” rejected the account “{user}”, so CapyPanel stopped before trying it "
+                "on other computers. Type the password again, or use another account."
+            ).format(host=first, user=account.user)
+        elif account is None:
+            text = ngettext(
+                "{n} computer didn't let your Windows login see who is logged on. Use another "
+                "account, such as an administrator of those computers?",
+                "{n} computers didn't let your Windows login see who is logged on. Use another "
+                "account, such as an administrator of those computers?",
+                len(self._refused),
+            ).format(n=len(self._refused))
+        else:
+            text = ngettext(
+                "{n} computer didn't let “{user}” see who is logged on. Use another account?",
+                "{n} computers didn't let “{user}” see who is logged on. Use another account?",
+                len(self._refused),
+            ).format(n=len(self._refused), user=account.user)
+        dialog = AccountDialog(self, text, account.user if account else "")
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._account = dialog.account()
+        # Again: the hosts that refused, and those a rejection kept from being tried.
+        again = [t for t in self._targets if t[0] in self._refused or t[0] not in self._reported]
+        if again:
+            self._start(again, Checks(False, True, run.wanted.ports, self._account))
+
+    def _name_of(self, host_id: str) -> str:
+        host = self._doc.hosts.host(host_id) if self._doc else None
+        return host.name if host else host_id
+
+    def _ports(self) -> tuple[int, ...]:
+        """The ports CapyPanel's tools connect to: one answering proves the computer is on."""
+        return checks.tool_ports(e.item.port for e in self.connector.catalogs.tools.all())
+
+    def _cells(self, host_id: str) -> Cells:
+        status = self._status_found.get(host_id)
+        users = self._users_found.get(host_id)
+        unchecked = ("", _("Not checked yet: use Refresh"), None, True)
+        status_cell: tuple[str, str, Any, bool] = unchecked
+        if status is not None:
+            state, when, answered = status
+            status_cell = (
+                check_texts.status_text(state),
+                check_texts.status_tip(state, when, answered),
+                dot_icon(STATUS_COLORS[state]),
+                state is not Status.ONLINE,
+            )
+        user_cell: tuple[str, str, Any, bool] = unchecked
+        if users is not None:
+            found, error, when = users
+            text, tip = check_texts.users_text(found, error), check_texts.users_tip(error, when)
+            if found:
+                tip = f"{text}\n{tip}"  # every name, when the column is too narrow
+            user_cell = (text, tip, None, error is not None or not found)
+        return Cells(status_cell, user_cell)
+
+    def _details_found(self, host_id: str) -> tuple[str, str]:
+        """The Status and Logged on lines of the details pane."""
+        status, users = "", ""
+        if (found := self._status_found.get(host_id)) is not None:
+            status = f"{check_texts.status_text(found[0])} ({check_texts.when_text(found[1])})"
+        if (read := self._users_found.get(host_id)) is not None:
+            sessions, error, when = read
+            if error is None and sessions:
+                users = check_texts.session_lines(sessions)
+            else:
+                users = check_texts.users_text(sessions, error)
+            users += "\n" + _("As of {when}").format(when=check_texts.when_text(when))
+        return status, users
+
+    def _show_refresh_panel(self, where: QPoint) -> None:
+        panel = self.refresh_panel
+        panel.run_button.setEnabled(self._run is None)
+        panel.adjustSize()
+        panel.move(where)
+        panel.show()
+
+    def _refresh_shown(self, status: bool, users: bool) -> None:
+        """Refresh: every host the table shows (the group or tag picked on the left)."""
+        self.check_hosts(self._visible_hosts(), status=status, users=users)
+
+    def _run_refresh_panel(self) -> None:
+        choices = self.refresh_panel.choices()
+        self._prefs["refresh"] = choices
+        self._save_prefs()
+        self.check_hosts(self._visible_hosts(), status=choices["status"], users=choices["users"])
+
+    def _fill_connect_menu(self) -> None:
+        """The toolbar's Connect arrow: connect the selection once with another profile."""
+        menu = self.toolbar.connect_menu
+        menu.clear()
+        section(menu, _("Connect once with"))
+        for profile_id, name in self.connector.choices():
+            item = menu.addAction(name.replace("&", "&&"))
+            item.setEnabled(bool(self.table.selected_ids()))
+            item.triggered.connect(lambda _c=False, p=profile_id: self.connect_selected(p))
+
+    def _save_columns(self) -> None:
+        self._prefs["hidden_columns"] = self.table.hidden_columns()
+        self._save_prefs()
+
+    def _align_refresh_later(self) -> None:
+        QTimer.singleShot(0, self._align_refresh)  # once the panes have their new sizes
+
+    def _align_refresh(self) -> None:
+        if self.toolbar.isVisible():
+            right = self.table.mapTo(self, QPoint(self.table.width(), 0)).x()
+            self.toolbar.align_end(right - self.toolbar.x())
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._align_refresh_later()
+
     # ---- right-click menus ----
 
     def _host_menu(self, position: QPoint) -> None:
@@ -841,13 +1171,11 @@ class MainWindow(QMainWindow):
             menu.addActions([a.add_host, a.add_group])
             menu.exec(self.table.viewport().mapToGlobal(position))
             return
+        section(menu, _("Connect"))
         menu.addAction(a.connect_host)
         menu.setDefaultAction(a.connect_host)  # bold: what double-click and Enter do
-        menu.addSeparator()
-        menu.addActions([a.copy_address, a.copy_name])
         hosts = self._selected_hosts()
         if hosts and self._doc is not None:
-            menu.addSeparator()
             groups = {h.group for h in hosts}
             follow = (
                 self.connector.inherited_label(
@@ -860,6 +1188,10 @@ class MainWindow(QMainWindow):
             self._add_profile_menu(
                 menu, {h.profile for h in hosts}, follow, lambda p: self.set_hosts_profile(ids, p)
             )
+        section(menu, _("Check"))
+        menu.addActions([a.check_status, a.check_users])
+        section(menu, _("Copy"))
+        menu.addActions([a.copy_address, a.copy_name])
         menu.addSeparator()
         menu.addActions([a.edit, a.remove])
         menu.exec(self.table.viewport().mapToGlobal(position))
@@ -873,13 +1205,25 @@ class MainWindow(QMainWindow):
             self.nav.select_group(group_id)
         group = self._doc.hosts.group(group_id) if self._doc and group_id else None
         if group is not None and self._doc is not None:
-            menu.addSeparator()
+            section(menu, _("Connect"))
             follow = self.connector.inherited_label(
                 *self._doc.hosts.group_profile(group.parent, self._profile_exists)
             )
             self._add_profile_menu(
                 menu, {group.profile}, follow, lambda p: self.set_group_profile(group.id, p)
             )
+            # The group's hosts, including those in the groups inside it.
+            hosts = list(self._doc.hosts.hosts_in(group.id))
+            section(menu, _("Check"))
+            for text, status, users in (
+                (_("&Status"), True, False),
+                (_("&Logged-on users"), False, True),
+            ):
+                item = menu.addAction(text)
+                item.setEnabled(bool(hosts) and self._run is None)
+                item.triggered.connect(
+                    lambda _c=False, s=status, u=users: self.check_hosts(hosts, status=s, users=u)
+                )
             menu.addSeparator()
             menu.addActions([self.commands.edit, self.commands.remove])
         menu.exec(self.nav.groups.viewport().mapToGlobal(position))
@@ -916,8 +1260,13 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event: QCloseEvent) -> None:
         self._prefs["window_geometry"] = self.saveGeometry().toBase64().toStdString()
         self._prefs["main_splitter"] = self._splitter.saveState().toBase64().toStdString()
+        if self._run is not None:
+            self._run.stop()  # hosts already being read finish in the background
+        self._prefs["refresh"] = self.refresh_panel.choices()
         self._prefs["view"] = {
+            "toolbar": self.commands.show_toolbar.isChecked(),
             "groups": self.commands.show_groups.isChecked(),
+            "tags": self.commands.show_tags.isChecked(),
             "details": self.commands.show_details.isChecked(),
             "status_bar": self.commands.show_status_bar.isChecked(),
         }

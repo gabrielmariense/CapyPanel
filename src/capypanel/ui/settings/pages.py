@@ -7,6 +7,7 @@ from PySide6.QtCore import QRectF, Qt, QUrl, Signal
 from PySide6.QtGui import QColor, QDesktopServices, QIcon, QPainter, QPixmap, QResizeEvent
 from PySide6.QtWidgets import (
     QButtonGroup,
+    QCheckBox,
     QComboBox,
     QGridLayout,
     QGroupBox,
@@ -14,6 +15,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QRadioButton,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
@@ -103,6 +105,7 @@ class GeneralPage(Page):
         personal_list: Path,
         added: list[Path],
         language: str,
+        auto_status: tuple[bool, int] = (False, 5),
     ) -> None:
         super().__init__(_("General"))
         # Each language is named in its own language, so anyone can find theirs.
@@ -179,8 +182,31 @@ class GeneralPage(Page):
             lines.append(_("Portable mode: everything stays in the app's own folder."))
         grid.addWidget(notes(*lines), len(folders), 0, 1, 3)
 
+        refresh = QGroupBox(_("Refresh"))
+        self.auto_status = QCheckBox(_("Check the &status of the hosts shown every"))
+        self.auto_status.setChecked(auto_status[0])
+        self.auto_minutes = QSpinBox()
+        self.auto_minutes.setRange(1, 120)
+        self.auto_minutes.setValue(auto_status[1])
+        self.auto_minutes.setSuffix(_(" min"))
+        self.auto_minutes.setEnabled(auto_status[0])
+        self.auto_status.toggled.connect(self.auto_minutes.setEnabled)
+        auto_row = QHBoxLayout()
+        auto_row.addWidget(self.auto_status)
+        auto_row.addWidget(self.auto_minutes)
+        auto_row.addStretch(1)
+        refresh_layout = QVBoxLayout(refresh)
+        refresh_layout.addLayout(auto_row)
+        refresh_layout.addWidget(
+            notes(
+                _("Only ping and ports, never logged-on users, so no account is used."),
+                _("Off by default; Refresh in the toolbar always works."),
+            )
+        )
+
         self.body.addLayout(language_row)
         self.body.addWidget(start)
+        self.body.addWidget(refresh)
         self.body.addWidget(files)
         self.body.addStretch(1)
 
@@ -189,6 +215,9 @@ class GeneralPage(Page):
 
     def language_choice(self) -> str:
         return str(self.language.currentData() or i18n.DEFAULT_LANGUAGE)
+
+    def auto_status_choice(self) -> tuple[bool, int]:
+        return self.auto_status.isChecked(), self.auto_minutes.value()
 
 
 # ---- Host lists ----

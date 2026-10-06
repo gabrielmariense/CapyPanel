@@ -77,6 +77,8 @@ compartilhado nunca é alterado.
   mais hosts > **Perfil de conexão**.
 - **"Do grupo"** significa que o host segue o grupo mais próximo que define um perfil. Hosts sem
   perfil em lugar nenhum usam o padrão.
+- **Só uma vez:** a seta do botão **Conectar** da barra de ferramentas > **Conectar uma vez com**
+  conecta os hosts selecionados com outro perfil, sem alterá-los.
 
 O painel **Informações** mostra o perfil de cada host e de onde ele vem, por exemplo
 "Raspberry Pis (do grupo “Raspberries”)".

@@ -12,15 +12,16 @@ qualquer um deles pela Área de Trabalho Remota ou pelo visualizador VNC que voc
 - Área de Trabalho Remota (RDP)
 - Perfis de conexão
 - Listas de hosts compartilhadas
+- Status dos hosts
+- Usuários logados
 
 ### Em desenvolvimento
 
-- Usuários conectados
+- Busca
 
 ### Planejadas
 
 - SSH
-- Busca e status
 - Ações nos hosts
 
 ## Páginas
@@ -32,8 +33,9 @@ Para quem usa o CapyPanel e para quem o configura para uma equipe.
 | [Primeiros passos](getting-started.pt-BR.md) | Rodar o CapyPanel, a janela principal, adicionar hosts |
 | [Listas de hosts](host-lists.pt-BR.md) | Grupos, tags e as listas padrão, pessoal e compartilhadas |
 | [Conectando](connecting.pt-BR.md) | Visualizadores VNC, Área de Trabalho Remota, perfis de conexão, senhas e a verificação de login |
+| [Verificando hosts](checking.pt-BR.md) | Status, usuários logados e a conta usada para lê-los |
 | [Configurações e arquivos](settings-and-files.pt-BR.md) | Cada configuração e onde o CapyPanel guarda os arquivos |
 | [Desenvolvimento](development.pt-BR.md) | Compilar, testar e traduzir o CapyPanel |
 
-Estas páginas descrevem a versão atual (0.13.0). O CapyPanel está em beta, então elas crescem a
+Estas páginas descrevem a versão atual (0.14.0). O CapyPanel está em beta, então elas crescem a
 cada funcionalidade.

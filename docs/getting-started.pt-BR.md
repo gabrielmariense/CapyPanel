@@ -13,7 +13,7 @@ uv run capypanel
 
 A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes
 abrem na hora. A versão aparece na barra de título, seguida do commit quando você roda pelo
-código-fonte, por exemplo `CapyPanel 0.13.0 (abc1234)`. Informe-a ao relatar um problema.
+código-fonte, por exemplo `CapyPanel 0.14.0 (abc1234)`. Informe-a ao relatar um problema.
 
 A Área de Trabalho Remota funciona de cara, com o cliente que já vem no Windows. Para o VNC você
 também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
@@ -24,13 +24,16 @@ também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
 
 | Parte | O que mostra |
 |---|---|
-| **Grupos** (esquerda) | "Todos os computadores" fixo no topo, com quantos hosts a lista tem. Depois seus grupos e os grupos dentro deles, e abaixo suas tags |
-| **Hosts** (meio) | Os hosts do grupo ou da tag selecionada |
+| **Barra de ferramentas** (topo) | **Conectar**, e **Atualizar** para verificar os hosts exibidos (veja [Verificando hosts](checking.pt-BR.md)) |
+| **Grupos** (esquerda) | "Todos os hosts" fixo no topo, com quantos hosts a lista tem. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags** |
+| **Hosts** (meio) | Os hosts do grupo ou da tag selecionada, com **Status** e **Usuário** |
 | **Informações** (direita) | Os detalhes do host selecionado, incluindo o perfil de conexão e de onde ele vem |
 | **Barra de status** | Qual lista está aberta, onde ela está, quantos hosts tem e quantos estão selecionados |
 
-Cada painel pode ser escondido pelo menu **Exibir**. Para trocar de lista, use **Arquivo > Listas
-de hosts…** (veja [Listas de hosts](host-lists.pt-BR.md#a-janela-listas-de-hosts)).
+A barra de ferramentas, a barra de status e cada painel podem ser escondidos pelo menu
+**Exibir**. Clique com o botão direito nos títulos das colunas da tabela de hosts para escolher
+quais aparecem. Para trocar de lista, use **Arquivo > Listas de hosts…** (veja
+[Listas de hosts](host-lists.pt-BR.md#a-janela-listas-de-hosts)).
 
 ## Adicione seus primeiros hosts
 
@@ -43,11 +46,11 @@ de hosts…** (veja [Listas de hosts](host-lists.pt-BR.md#a-janela-listas-de-hos
    - **Tags:** digite uma tag e pressione Enter; Backspace numa caixa vazia traz a última tag de
      volta para edição.
    - **Perfil de conexão:** como acessar o host. "Do grupo" segue o perfil do grupo.
-3. Dê um clique duplo no host, ou selecione-o e pressione Enter, para abrir uma conexão com ele
-   pelo perfil dele.
+3. Dê um clique duplo no host, selecione-o e pressione Enter, ou clique em **Conectar** na barra
+   de ferramentas, para abrir uma conexão com ele pelo perfil dele.
 
-Clique com o botão direito num host para abri-lo, editá-lo ou removê-lo, ou para copiar o
-endereço ou o nome. O botão direito num espaço vazio oferece **Adicionar grupo…** no painel de
+Clique com o botão direito num host para conectar, verificá-lo, copiar o endereço ou o nome, ou
+editá-lo ou removê-lo. O botão direito num espaço vazio oferece **Adicionar grupo…** no painel de
 grupos, e **Adicionar host…** e **Adicionar grupo…** na lista de hosts. Para mover hosts para
 outro grupo, arraste-os até ele (veja [Listas de hosts](host-lists.pt-BR.md#organizar-grupos-e-hosts)).
 

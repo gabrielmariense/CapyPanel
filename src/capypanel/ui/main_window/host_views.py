@@ -1,16 +1,17 @@
 """The three panes of the main window: groups and tags, the host table, and host details."""
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
 from PySide6.QtCore import QEvent, QMimeData, QPoint, Qt, Signal
-from PySide6.QtGui import QPalette, QShowEvent
+from PySide6.QtGui import QIcon, QPalette, QShowEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFormLayout,
     QFrame,
     QHBoxLayout,
     QLabel,
+    QMenu,
     QStackedLayout,
     QStyle,
     QToolButton,
@@ -23,6 +24,8 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import _, ngettext
 from capypanel.ui.groups import HOSTS_MIME, ROLE_ID, ROLE_KIND, GroupTree, hosts_mime
+
+ROLE_QUIET = Qt.ItemDataRole.UserRole + 2  # a Status or User cell to show greyed
 
 
 @dataclass(frozen=True)
@@ -42,8 +45,9 @@ def pane_title(text: str) -> QLabel:
 
 
 class NavigationPane(QWidget):
-    """ "All computers" pinned on top, the groups below it (in the list's own order, rearranged
-    by dragging), and the tags. Picking one filters the table."""
+    """One card, like the other panes: "All hosts" pinned on top, then the groups (in the
+    list's own order, rearranged by dragging) and the tags, each under a small heading and
+    split by thin lines. Picking one filters the table."""
 
     filter_changed = Signal()
 
@@ -76,13 +80,26 @@ class NavigationPane(QWidget):
         self.tags.setHeaderHidden(True)
         self.tags.setRootIsDecorated(False)
 
+        # The lists drop their own frames ("flat"): the card around them is the only box.
+        for tree in (self.everything, self.groups, self.tags):
+            tree.setObjectName("flat")
+        self._tags_line = _divider()
+        card = QFrame()
+        card.setObjectName("card")
+        card.setFrameShape(QFrame.Shape.StyledPanel)
+        inside = QVBoxLayout(card)
+        inside.setContentsMargins(4, 4, 4, 4)
+        inside.setSpacing(2)
+        inside.addWidget(self.everything)
+        inside.addWidget(_divider())
+        inside.addLayout(header)
+        inside.addWidget(self.groups, 3)
+        inside.addWidget(self._tags_line)
+        inside.addWidget(self._tags_title)
+        inside.addWidget(self.tags, 1)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addLayout(header)
-        layout.addWidget(self.everything)
-        layout.addWidget(self.groups, 3)
-        layout.addWidget(self._tags_title)
-        layout.addWidget(self.tags, 1)
+        layout.addWidget(card)
 
         self.everything.itemSelectionChanged.connect(self._everything_picked)
         self.groups.itemSelectionChanged.connect(self._groups_picked)
@@ -94,6 +111,14 @@ class NavigationPane(QWidget):
         self.add_group_button.setToolTip(_("Add group"))
         self._groups_title.setText(_("Groups"))
         self._tags_title.setText(_("Tags"))
+
+    def set_tags_visible(self, visible: bool) -> None:
+        """View > Tags pane. Hiding it while a tag is picked goes back to All hosts."""
+        for widget in (self._tags_line, self._tags_title, self.tags):
+            widget.setVisible(visible)
+        if not visible and self._filter.kind == "tag":
+            self._filter = self._select(Filter("all"))
+            self.filter_changed.emit()
 
     def current_filter(self) -> Filter:
         return self._filter
@@ -118,7 +143,7 @@ class NavigationPane(QWidget):
         self.tags.clear()
         self.everything.setVisible(host_list is not None)
         if host_list is not None:
-            self._everything_item.setText(0, f"{_('All computers')} ({len(host_list.hosts)})")
+            self._everything_item.setText(0, f"{_('All hosts')} ({len(host_list.hosts)})")
             self.groups.fill(host_list)
             for tag, count in sorted(host_list.all_tags().items(), key=lambda t: t[0].casefold()):
                 item = QTreeWidgetItem([f"{tag} ({count})"])
@@ -128,6 +153,7 @@ class NavigationPane(QWidget):
         self._filter = self._select(wanted) if host_list is not None else Filter("all")
         for tree in (self.everything, self.groups, self.tags):
             tree.blockSignals(False)
+        self._fit_everything()  # the count may have grown a digit
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
@@ -139,11 +165,15 @@ class NavigationPane(QWidget):
             self._fit_everything()
 
     def _fit_everything(self) -> None:
-        """Exactly one row tall, whatever padding the theme gives rows and frames."""
+        """Exactly one row tall, whatever padding the theme gives rows and frames, and never
+        narrower than "All hosts (N)": the pane can't be dragged past it. Group names
+        don't count, so a long one can't make the pane huge (they show a tooltip)."""
         self.everything.doItemsLayout()
         row = self.everything.visualItemRect(self._everything_item).height()
         frame = self.everything.height() - self.everything.viewport().height()
         self.everything.setFixedHeight(max(row, self.everything.sizeHintForRow(0)) + frame)
+        sides = self.everything.width() - self.everything.viewport().width()
+        self.everything.setMinimumWidth(self.everything.sizeHintForColumn(0) + sides + 12)
 
     def _select(self, wanted: Filter) -> Filter:
         if wanted.kind == "tag":
@@ -191,6 +221,13 @@ class NavigationPane(QWidget):
         self.filter_changed.emit()
 
 
+def _divider() -> QFrame:
+    line = QFrame()
+    line.setObjectName("divider")
+    line.setFixedHeight(1)
+    return line
+
+
 def _walk(root: QTreeWidgetItem) -> Iterable[QTreeWidgetItem]:
     for index in range(root.childCount()):
         child = root.child(index)
@@ -200,12 +237,22 @@ def _walk(root: QTreeWidgetItem) -> Iterable[QTreeWidgetItem]:
 
 
 class HostTable(QTreeWidget):
-    """The host list as a table. A QTreeView-based widget: it selects whole rows in Windows 11."""
+    """The host list as a table. A QTreeView-based widget: it selects whole rows in Windows 11.
+    Status and User come from Refresh; they're kept in memory, never in the list file."""
+
+    STATUS, USER = 1, 2
+    COLUMNS = ("computer", "status", "user", "address", "tags", "notes")  # saved by these keys
+    columns_changed = Signal()  # a column was shown or hidden
 
     def __init__(self) -> None:
         super().__init__()
         self.setObjectName("grid")  # lines between rows and columns
+        self._rows: dict[str, QTreeWidgetItem] = {}
         self.retranslate()
+        header = self.header()
+        header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        header.customContextMenuRequested.connect(self._columns_menu)
+        header.sectionResized.connect(self._keep_title_visible)
         self.setRootIsDecorated(False)
         self.setUniformRowHeights(True)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
@@ -226,19 +273,24 @@ class HostTable(QTreeWidget):
         return hosts_mime([item.data(0, ROLE_ID) for item in items])
 
     def retranslate(self) -> None:
-        self.setHeaderLabels([_("Computer"), _("Address"), _("Tags"), _("Notes")])
+        self.setHeaderLabels(
+            [_("Computer"), _("Status"), _("User"), _("Address"), _("Tags"), _("Notes")]
+        )
 
-    def show_hosts(self, hosts: Sequence[Host]) -> None:
+    def show_hosts(self, hosts: Sequence[Host], cells: Mapping[str, "Cells"]) -> None:
         keep = set(self.selected_ids())
         self.blockSignals(True)
         self.setSortingEnabled(False)
         self.clear()
+        self._rows = {}
         for host in hosts:
             item = QTreeWidgetItem(
-                [host.name, host.address, ", ".join(host.tags), _one_line(host.notes)]
+                [host.name, "", "", host.address, ", ".join(host.tags), _one_line(host.notes)]
             )
             item.setData(0, ROLE_ID, host.id)
             self.addTopLevelItem(item)
+            self._rows[host.id] = item
+            self._fill(item, cells.get(host.id))
             item.setSelected(host.id in keep)
         self.setSortingEnabled(True)
         self.blockSignals(False)
@@ -251,6 +303,44 @@ class HostTable(QTreeWidget):
         # A theme with another font (e.g. Paper's Georgia) makes the old widths cut text off.
         if event.type() == QEvent.Type.FontChange and self.topLevelItemCount():
             self._fit_columns()
+        if event.type() == QEvent.Type.PaletteChange:  # the quiet colour of the new theme
+            for item in self._rows.values():
+                self._tint(item)
+
+    def hidden_columns(self) -> list[str]:
+        return [key for i, key in enumerate(self.COLUMNS) if self.isColumnHidden(i)]
+
+    def set_hidden_columns(self, keys: object) -> None:
+        hidden = set(keys) if isinstance(keys, list) else set()
+        for index, key in enumerate(self.COLUMNS):
+            self.setColumnHidden(index, index > 0 and key in hidden)  # Computer always shows
+
+    def _columns_menu(self, position: QPoint) -> None:
+        """Right-click on the column titles: tick the columns to show."""
+        menu = QMenu(self)
+        header = self.headerItem()
+        for index in range(1, len(self.COLUMNS)):
+            item = menu.addAction(header.text(index))
+            item.setCheckable(True)
+            item.setChecked(not self.isColumnHidden(index))
+            item.toggled.connect(lambda shown, i=index: self._show_column(i, shown))
+        menu.exec(self.header().viewport().mapToGlobal(position))
+
+    def _show_column(self, index: int, shown: bool) -> None:
+        self.setColumnHidden(index, not shown)
+        if shown:
+            self._keep_title_visible(index, 0, self.columnWidth(index))
+        self.columns_changed.emit()
+
+    def minimum_width(self, index: int) -> int:
+        """A column is never narrower than its title (plus room for the sort arrow)."""
+        title = self.headerItem().text(index)
+        return self.header().fontMetrics().horizontalAdvance(title) + 34
+
+    def _keep_title_visible(self, index: int, _old: int, new: int) -> None:
+        wanted = self.minimum_width(index)
+        if 0 < new < wanted and not self.isColumnHidden(index):
+            self.header().resizeSection(index, wanted)
 
     def _fit_columns(self) -> None:
         # Once, on the first real content: fit the first columns (capped) and let Notes stretch
@@ -258,7 +348,33 @@ class HostTable(QTreeWidget):
         self._sized = True
         for column in range(self.columnCount() - 1):
             self.resizeColumnToContents(column)
-            self.setColumnWidth(column, min(self.columnWidth(column) + 16, 260))
+            fitted = min(self.columnWidth(column) + 16, 260)
+            self.setColumnWidth(column, max(fitted, self.minimum_width(column)))
+
+    def show_cells(self, host_id: str, cells: "Cells") -> None:
+        """New Refresh results for one host, without rebuilding the table."""
+        item = self._rows.get(host_id)
+        if item is not None:
+            self._fill(item, cells)
+
+    def _fill(self, item: QTreeWidgetItem, cells: "Cells | None") -> None:
+        cells = cells or Cells()
+        for column, (text, tip, icon, quiet) in (
+            (self.STATUS, cells.status),
+            (self.USER, cells.user),
+        ):
+            item.setText(column, text)
+            item.setToolTip(column, tip)
+            item.setIcon(column, icon if icon is not None else QIcon())
+            item.setData(column, ROLE_QUIET, quiet)
+        self._tint(item)
+
+    def _tint(self, item: QTreeWidgetItem) -> None:
+        """Errors and "not checked" read quieter than real results, in the current theme."""
+        muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
+        for column in (self.STATUS, self.USER):
+            quiet = bool(item.data(column, ROLE_QUIET))
+            item.setData(column, Qt.ItemDataRole.ForegroundRole, muted if quiet else None)
 
     def selected_ids(self) -> list[str]:
         return [item.data(0, ROLE_ID) for item in self.selectedItems()]
@@ -271,6 +387,14 @@ class HostTable(QTreeWidget):
             if item is not None and item.data(0, ROLE_ID) in wanted:
                 item.setSelected(True)
                 self.scrollToItem(item)
+
+
+@dataclass(frozen=True)
+class Cells:
+    """What the Status and User columns show for one host: text, tooltip, icon, quiet."""
+
+    status: tuple[str, str, QIcon | None, bool] = ("", "", None, False)
+    user: tuple[str, str, QIcon | None, bool] = ("", "", None, False)
 
 
 def _one_line(text: str) -> str:
@@ -297,7 +421,7 @@ class DetailsPane(QWidget):
         self._heading.setFont(font)
         form.addRow(self._heading)
         self._labels: dict[str, QLabel] = {}
-        for key in ("name", "address", "group", "connection", "tags", "notes"):
+        for key in ("name", "address", "group", "connection", "status", "users", "tags", "notes"):
             value = QLabel()
             value.setWordWrap(True)
             value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
@@ -327,12 +451,22 @@ class DetailsPane(QWidget):
             ("address", _("Address")),
             ("group", _("Group")),
             ("connection", _("Connection")),
+            ("status", _("Status")),
+            ("users", _("Logged on")),
             ("tags", _("Tags")),
             ("notes", _("Notes")),
         ):
             self._labels[key].setText(text)
 
-    def show_host(self, host: Host | None, group: str, selected: int, connection: str = "") -> None:
+    def show_host(
+        self,
+        host: Host | None,
+        group: str,
+        selected: int,
+        connection: str = "",
+        status: str = "",
+        users: str = "",
+    ) -> None:
         if host is None:
             if selected > 1:
                 self._hint.setText(
@@ -347,6 +481,9 @@ class DetailsPane(QWidget):
             "address": host.address or "—",
             "group": group,
             "connection": connection or "—",
+            # Not checked yet: say how, rather than a bare dash.
+            "status": status or _("Not checked: use Refresh"),
+            "users": users or _("Not checked: use Refresh"),
             "tags": ", ".join(host.tags) or "—",
             "notes": host.notes or "—",
         }
