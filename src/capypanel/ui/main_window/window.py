@@ -8,7 +8,15 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import QByteArray, QEvent, QPoint, Qt, QTimer
-from PySide6.QtGui import QActionGroup, QCloseEvent, QGuiApplication, QResizeEvent, QShowEvent
+from PySide6.QtGui import (
+    QActionGroup,
+    QCloseEvent,
+    QGuiApplication,
+    QKeySequence,
+    QResizeEvent,
+    QShortcut,
+    QShowEvent,
+)
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -19,6 +27,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QSplitter,
     QToolButton,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -42,7 +51,7 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui import language
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
-from capypanel.ui.groups import ManageGroupsDialog
+from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog
 from capypanel.ui.host_lists import HostListsDialog
 from capypanel.ui.hosts import (
     HostDialog,
@@ -58,6 +67,7 @@ from capypanel.ui.main_window.host_views import (
     DetailsPane,
     HostTable,
     NavigationPane,
+    SearchBox,
 )
 from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
 from capypanel.ui.menus import StayOpenMenu, section
@@ -108,9 +118,18 @@ class MainWindow(QMainWindow):
         self.refresh_panel.set_choices(self._prefs.get("refresh"))
         self.nav = NavigationPane()
         self.table = HostTable()
+        self.search = SearchBox()
+        self._search_timer = QTimer(self)  # waits for a pause in typing, then filters
+        self._search_timer.setSingleShot(True)
+        self._search_timer.setInterval(150)
+        hosts_pane = QWidget()
+        column = QVBoxLayout(hosts_pane)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.addWidget(self.search)
+        column.addWidget(self.table)
         self.details = DetailsPane()
         self._splitter = QSplitter()
-        for pane in (self.nav, self.table, self.details):
+        for pane in (self.nav, hosts_pane, self.details):
             self._splitter.addWidget(pane)
         self._splitter.setStretchFactor(1, 1)
         # Dragged all the way, a pane would vanish; View hides panes on purpose instead.
@@ -203,6 +222,7 @@ class MainWindow(QMainWindow):
         self.toolbar.retranslate()
         self.refresh_panel.retranslate()
         self._stop_button.setText(_("Stop"))
+        self.search.retranslate()
         self._file_menu.setTitle(_("&File"))
         self._inventory_menu.setTitle(_("&Inventory"))
         self._connect_menu.setTitle(_("&Connect"))
@@ -247,7 +267,10 @@ class MainWindow(QMainWindow):
         self.refresh_panel.run_clicked.connect(self._run_refresh_panel)
         self.toolbar.connect_menu.aboutToShow.connect(self._fill_connect_menu)
         self.nav.add_group_button.clicked.connect(self.add_group)
-        self.nav.filter_changed.connect(self._show_hosts)
+        self.nav.filter_changed.connect(self._filter_picked)
+        self.search.textChanged.connect(self._search_timer.start)
+        self._search_timer.timeout.connect(self._show_hosts)
+        QShortcut(QKeySequence.StandardKey.Find, self, self._focus_search)
         self.nav.groups.customContextMenuRequested.connect(self._group_menu)
         self.nav.groups.rearranged.connect(self._groups_dragged)
         self.nav.groups.hosts_dropped.connect(self.move_hosts)
@@ -257,7 +280,7 @@ class MainWindow(QMainWindow):
         # Enter connects only from the host table, so it never fires while typing elsewhere.
         a.connect_host.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.table.addAction(a.connect_host)
-        self.table.itemDoubleClicked.connect(lambda *_args: self.connect_selected())
+        self.table.itemDoubleClicked.connect(self._double_clicked)
         a.connect_host.triggered.connect(self.connect_selected)
         a.manual_connect.triggered.connect(self.manual_connect)
         a.copy_address.triggered.connect(lambda: self._copy(lambda h: h.target))
@@ -380,6 +403,7 @@ class MainWindow(QMainWindow):
         if self._doc is None or not locations.same_path(self._doc.path, doc.path):
             self._status_found.clear()  # another list's hosts: old results don't apply
             self._users_found.clear()
+            self._clear_search()
         self._doc = doc
         locations.remember_list(self._prefs, doc.path)
         if self._kind(doc.path) is ListKind.SHARED:  # it shows in File > Host lists… from now on
@@ -855,18 +879,70 @@ class MainWindow(QMainWindow):
         self._show_hosts()
 
     def _show_hosts(self) -> None:
+        self._search_timer.stop()
+        needle = self._needle()
         hosts = self._visible_hosts()
-        self.table.show_hosts(hosts, {h.id: self._cells(h.id) for h in hosts})
+        groups = {}
+        if needle and self._doc is not None:  # results come from every group: say which
+            groups = {h.id: group_path(self._doc.hosts, h.group) for h in hosts}
+        self.nav.set_searching(bool(needle))
+        self.table.show_hosts(hosts, {h.id: self._cells(h.id) for h in hosts}, groups)
+        self.table.set_search(needle)  # after the rows, so Group fits their paths
 
     def _visible_hosts(self) -> tuple[Host, ...]:
+        """The hosts the table shows: the search's results, or the group or tag picked."""
         if self._doc is None:
             return ()
         hosts, current = self._doc.hosts, self.nav.current_filter()
+        if needle := self._needle():
+            return tuple(h for h in hosts.hosts if self._matches(h, needle))
         if current.kind == "group" and current.value:
             return hosts.hosts_in(current.value)
         if current.kind == "tag":
             return tuple(h for h in hosts.hosts if current.value in h.tags)
         return hosts.hosts
+
+    # ---- searching ----
+
+    def _needle(self) -> str:
+        return self.search.text().strip().casefold()
+
+    def _matches(self, host: Host, needle: str) -> bool:
+        """Name, address, or a user from the last logged-on users check (memory only)."""
+        if needle in host.name.casefold() or needle in host.address.casefold():
+            return True
+        sessions = (self._users_found.get(host.id) or ((), None, None))[0] or ()
+        return any(needle in s.user.casefold() for s in sessions)
+
+    def _focus_search(self) -> None:
+        self.search.setFocus(Qt.FocusReason.ShortcutFocusReason)
+        self.search.selectAll()
+
+    def _clear_search(self) -> None:
+        self.search.blockSignals(True)  # the caller shows the hosts once, right after
+        self.search.clear()
+        self.search.blockSignals(False)
+
+    def _filter_picked(self) -> None:
+        """Picking a group or tag on the left ends a search: it means browsing again."""
+        self._clear_search()
+        self._show_hosts()
+
+    def _double_clicked(self, item: QTreeWidgetItem) -> None:
+        """Connects; on a search result, opens the host's group and ends the search instead."""
+        if self._needle():
+            self.show_in_group(item.data(0, ROLE_ID))
+        else:
+            self.connect_selected()
+
+    def show_in_group(self, host_id: str) -> None:
+        host = self._doc.hosts.host(host_id) if self._doc else None
+        if host is None:
+            return
+        self._clear_search()
+        self.nav.select_group(host.group)
+        self._show_hosts()
+        self.table.select_ids([host.id])
 
     def _selected_hosts(self) -> list[Host]:
         if self._doc is None:
@@ -919,6 +995,9 @@ class MainWindow(QMainWindow):
             ngettext("{n} host", "{n} hosts", total).format(n=total),
             ngettext("{n} selected", "{n} selected", selected).format(n=selected),
         ]
+        if self._needle():
+            found = self.table.topLevelItemCount()
+            parts.insert(2, ngettext("{n} found", "{n} found", found).format(n=found))
         if doc.read_only:
             parts.append(_("read-only"))
         if self._paths.portable:
@@ -1126,7 +1205,7 @@ class MainWindow(QMainWindow):
         panel.show()
 
     def _refresh_shown(self, status: bool, users: bool) -> None:
-        """Refresh: every host the table shows (the group or tag picked on the left)."""
+        """Refresh: every host the table shows (the search's results, or the group or tag)."""
         self.check_hosts(self._visible_hosts(), status=status, users=users)
 
     def _run_refresh_panel(self) -> None:

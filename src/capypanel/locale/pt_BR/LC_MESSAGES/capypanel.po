@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 23:34-0300\n"
+"POT-Creation-Date: 2026-10-07 13:17-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -760,6 +760,12 @@ msgstr "Salvar minha versão como cópia…"
 msgid "Save the changes and keep Settings open"
 msgstr "Salva as alterações e mantém as Configurações abertas"
 
+msgid "Search by name, address or user"
+msgstr "Pesquisar por nome, endereço ou usuário"
+
+msgid "Searches every host in the list (Ctrl+F)"
+msgstr "Pesquisa em todos os hosts da lista (Ctrl+F)"
+
 msgid "Select a host to see its details."
 msgstr "Selecione um host para ver os detalhes."
 
@@ -1110,6 +1116,12 @@ msgid "{n} computer didn't let “{user}” see who is logged on. Use another ac
 msgid_plural "{n} computers didn't let “{user}” see who is logged on. Use another account?"
 msgstr[0] "{n} computador não deixou “{user}” ver quem está logado. Usar outra conta?"
 msgstr[1] "{n} computadores não deixaram “{user}” ver quem está logado. Usar outra conta?"
+
+#, python-brace-format
+msgid "{n} found"
+msgid_plural "{n} found"
+msgstr[0] "{n} encontrado"
+msgstr[1] "{n} encontrados"
 
 #, python-brace-format
 msgid "{n} group"

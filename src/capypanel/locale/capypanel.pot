@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 23:34-0300\n"
+"POT-Creation-Date: 2026-10-07 13:17-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -775,6 +775,12 @@ msgstr ""
 msgid "Save the changes and keep Settings open"
 msgstr ""
 
+msgid "Search by name, address or user"
+msgstr ""
+
+msgid "Searches every host in the list (Ctrl+F)"
+msgstr ""
+
 msgid "Select a host to see its details."
 msgstr ""
 
@@ -1160,6 +1166,12 @@ msgid ""
 msgid_plural ""
 "{n} computers didn't let “{user}” see who is logged on. Use another "
 "account?"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} found"
+msgid_plural "{n} found"
 msgstr[0] ""
 msgstr[1] ""
 
