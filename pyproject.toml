@@ -1,6 +1,6 @@
 [project]
 name = "capypanel"
-version = "0.14.0"
+version = "0.15.0"
 description = "Manage the computers on your network from one window."
 readme = "README.md"
 license = "GPL-3.0-only"
