@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-07 18:56-0300\n"
+"POT-Creation-Date: 2026-10-07 19:06-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -775,7 +775,16 @@ msgstr ""
 msgid "Save the changes and keep Settings open"
 msgstr ""
 
-msgid "Search by name, address or user"
+msgid "Search name"
+msgstr ""
+
+msgid "Search name, address"
+msgstr ""
+
+msgid "Search name, address, user"
+msgstr ""
+
+msgid "Search name, user"
 msgstr ""
 
 msgid "Searches every host in the list (Ctrl+F)"
@@ -810,6 +819,9 @@ msgid ""
 msgstr ""
 
 msgid "Show do&main"
+msgstr ""
+
+msgid "Show in &group"
 msgstr ""
 
 msgid "Someone else has changed the file since you opened it."
@@ -1208,6 +1220,36 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} host selected"
 msgid_plural "{n} hosts selected"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} host shown"
+msgid_plural "{n} hosts shown"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} not checked"
+msgid_plural "{n} not checked"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} not found"
+msgid_plural "{n} not found"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} offline"
+msgid_plural "{n} offline"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} online"
+msgid_plural "{n} online"
 msgstr[0] ""
 msgstr[1] ""
 

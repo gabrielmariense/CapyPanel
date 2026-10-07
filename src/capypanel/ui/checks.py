@@ -173,14 +173,22 @@ def show_domains(shown: bool) -> None:
     _show_domains = shown
 
 
-def user_name(session: Session) -> str:
-    """How a logged-on user reads everywhere: "DOMAIN\\name", or "name" with domains off."""
-    if session.domain and _show_domains:
+def user_name(session: Session, *, full: bool = False) -> str:
+    """How a logged-on user reads everywhere: "DOMAIN\\name", or "name" with domains off.
+    full: always with the domain, for tooltips (a local "admin" isn't the domain's)."""
+    if session.domain and (_show_domains or full):
         return f"{session.domain}\\{session.user}"
     return session.user
 
 
-def users_text(sessions: Sequence[Session] | None, error: SessionsError | None) -> str:
+def by_state(sessions: Sequence[Session]) -> list[Session]:
+    """Active sessions first: who is really at the computer, then disconnected ones."""
+    return sorted(sessions, key=lambda s: s.state != "active")
+
+
+def users_text(
+    sessions: Sequence[Session] | None, error: SessionsError | None, *, full: bool = False
+) -> str:
     if error is not None:
         return {
             Reason.UNREACHABLE: _("Unreachable"),
@@ -191,8 +199,8 @@ def users_text(sessions: Sequence[Session] | None, error: SessionsError | None) 
     if not sessions:
         return _("Nobody")
     names = []
-    for session in sessions:
-        name = user_name(session)
+    for session in by_state(sessions):
+        name = user_name(session, full=full)
         if session.state == "disconnected":
             name = _("{user} (disconnected)").format(user=name)
         if name not in names:
@@ -222,17 +230,17 @@ def users_tip(error: SessionsError | None, when: datetime) -> str:
     return f"{checked} {why}"
 
 
-def session_lines(sessions: Sequence[Session]) -> str:
-    """One line per session, for the details pane."""
+def session_lines(sessions: Sequence[Session], *, full: bool = False) -> str:
+    """One line per session, active ones first, for the details pane."""
     kinds = {"console": _("at the computer"), "rdp": _("Remote Desktop")}
     states = {"active": _("active"), "disconnected": _("disconnected"), "idle": _("idle")}
     lines = []
-    for session in sessions:
+    for session in by_state(sessions):
         parts = [kinds.get(session.kind, ""), states.get(session.state, session.state)]
         if session.logon_time is not None:
             parts.append(_("since {when}").format(when=when_text(session.logon_time)))
         if session.client:
             parts.append(_("from {computer}").format(computer=session.client))
         details = ", ".join(p for p in parts if p)
-        lines.append(f"{user_name(session)} — {details}")
+        lines.append(f"{user_name(session, full=full)} — {details}")
     return "\n".join(lines)

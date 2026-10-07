@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-07 18:56-0300\n"
+"POT-Creation-Date: 2026-10-07 19:06-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -760,8 +760,17 @@ msgstr "Salvar minha versão como cópia…"
 msgid "Save the changes and keep Settings open"
 msgstr "Salva as alterações e mantém as Configurações abertas"
 
-msgid "Search by name, address or user"
-msgstr "Pesquisar por nome, endereço ou usuário"
+msgid "Search name"
+msgstr "Pesquisar nome"
+
+msgid "Search name, address"
+msgstr "Pesquisar nome, endereço"
+
+msgid "Search name, address, user"
+msgstr "Pesquisar nome, endereço, usuário"
+
+msgid "Search name, user"
+msgstr "Pesquisar nome, usuário"
 
 msgid "Searches every host in the list (Ctrl+F)"
 msgstr "Pesquisa em todos os hosts da lista (Ctrl+F)"
@@ -792,6 +801,9 @@ msgstr "Arquivos compartilhados: a lista padrão, os perfis de conexão e as fer
 
 msgid "Show do&main"
 msgstr "Mostrar do&mínio"
+
+msgid "Show in &group"
+msgstr "Mostrar no &grupo"
 
 msgid "Someone else has changed the file since you opened it."
 msgstr "Outra pessoa alterou o arquivo desde que você o abriu."
@@ -1158,6 +1170,36 @@ msgid "{n} host selected"
 msgid_plural "{n} hosts selected"
 msgstr[0] "{n} host selecionado"
 msgstr[1] "{n} hosts selecionados"
+
+#, python-brace-format
+msgid "{n} host shown"
+msgid_plural "{n} hosts shown"
+msgstr[0] "{n} host exibido"
+msgstr[1] "{n} hosts exibidos"
+
+#, python-brace-format
+msgid "{n} not checked"
+msgid_plural "{n} not checked"
+msgstr[0] "{n} não verificado"
+msgstr[1] "{n} não verificados"
+
+#, python-brace-format
+msgid "{n} not found"
+msgid_plural "{n} not found"
+msgstr[0] "{n} não encontrado"
+msgstr[1] "{n} não encontrados"
+
+#, python-brace-format
+msgid "{n} offline"
+msgid_plural "{n} offline"
+msgstr[0] "{n} offline"
+msgstr[1] "{n} offline"
+
+#, python-brace-format
+msgid "{n} online"
+msgid_plural "{n} online"
+msgstr[0] "{n} online"
+msgstr[1] "{n} online"
 
 #, python-brace-format
 msgid "{n} selected"

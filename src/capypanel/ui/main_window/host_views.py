@@ -67,6 +67,7 @@ class NavigationPane(QWidget):
     def __init__(self) -> None:
         super().__init__()
         self._filter = Filter("all")
+        self.searching = False  # nothing shows as picked while a search runs
         self.add_group_button = QToolButton()
         self.add_group_button.setText("+")
         self._groups_title, self._tags_title = pane_title(""), pane_title("")
@@ -138,6 +139,7 @@ class NavigationPane(QWidget):
 
     def set_searching(self, searching: bool) -> None:
         """A search looks through every host, so nothing shows as picked meanwhile."""
+        self.searching = searching
         for tree in (self.everything, self.groups, self.tags):
             tree.blockSignals(True)
         if searching:
@@ -261,22 +263,41 @@ def _walk(root: QTreeWidgetItem) -> Iterable[QTreeWidgetItem]:
 
 
 class SearchBox(QLineEdit):
-    """Above the host table: finds hosts by name, address or logged-on user. Esc clears it."""
+    """Above the host table: finds hosts by name, address or logged-on user. Esc clears it;
+    Down or Enter moves to the results (never connects, so a typo can't reach a wrong PC)."""
+
+    to_results = Signal()
 
     def __init__(self) -> None:
         super().__init__()
         self.setClearButtonEnabled(True)
         self._icon = self.addAction(QIcon(), QLineEdit.ActionPosition.LeadingPosition)
+        self._columns = (True, True)  # address, user: searched only while their columns show
         self._paint_icon()
         self.retranslate()
 
+    def set_columns(self, address: bool, user: bool) -> None:
+        self._columns = (address, user)
+        self.retranslate()
+
     def retranslate(self) -> None:
-        self.setPlaceholderText(_("Search by name, address or user"))
+        """The placeholder says exactly what's searched."""
+        self.setPlaceholderText(
+            {
+                (True, True): _("Search name, address, user"),
+                (True, False): _("Search name, address"),
+                (False, True): _("Search name, user"),
+                (False, False): _("Search name"),
+            }[self._columns]
+        )
         self.setToolTip(_("Searches every host in the list (Ctrl+F)"))
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Escape and self.text():
             self.clear()
+            return
+        if event.key() in (Qt.Key.Key_Down, Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            self.to_results.emit()
             return
         super().keyPressEvent(event)
 
@@ -593,14 +614,18 @@ class DetailsPane(QWidget):
         connection: str = "",
         status: str = "",
         users: str = "",
+        users_tip: str = "",
+        summary: str = "",
     ) -> None:
+        """summary: what the table shows (online, offline…), above the hint when none is picked."""
         if host is None:
             if selected > 1:
                 self._hint.setText(
                     ngettext("{n} host selected", "{n} hosts selected", selected).format(n=selected)
                 )
             else:
-                self._hint.setText(_("Select a host to see its details."))
+                hint = _("Select a host to see its details.")
+                self._hint.setText(f"{summary}\n\n{hint}" if summary else hint)
             self._pages.setCurrentIndex(0)
             return
         values = {
@@ -616,6 +641,7 @@ class DetailsPane(QWidget):
         }
         for key, text in values.items():
             self._values[key].setText(text)
+        self._values["users"].setToolTip(users_tip)  # full DOMAIN\names when they're hidden
         self._pages.setCurrentIndex(1)
 
     def shown_value(self, key: str) -> str:

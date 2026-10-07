@@ -98,7 +98,7 @@ def test_picking_a_group_ends_the_search(window: MainWindow) -> None:
     assert len(_rows(window)) == 4
 
 
-def test_double_click_on_a_result_opens_its_group(
+def test_double_click_connects_and_show_in_group_opens_the_group(
     window: MainWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     connected: list[bool] = []
@@ -107,12 +107,42 @@ def test_double_click_on_a_result_opens_its_group(
     item = window.table.topLevelItem(0)
     assert item is not None
     window.table.itemDoubleClicked.emit(item, 0)
+    assert connected == [True]  # also during a search, like Enter
+    assert window.search.text() == "triage-02"
+    window.table.select_ids([_id(window, "TRIAGE-02")])
+    window.commands.show_in_group.trigger()
     assert window.search.text() == ""
     assert window.nav.groups.selectedItems()[0].text(0).startswith("Triage")
     assert window.table.selected_ids() == [_id(window, "TRIAGE-02")]
-    assert connected == []
-    window.table.itemDoubleClicked.emit(window.table.topLevelItem(0), 0)
-    assert connected == [True]  # no search: double-click connects, as before
+
+
+def test_clearing_the_search_shows_the_selected_host_in_its_group(window: MainWindow) -> None:
+    _search(window, "triage")
+    window.table.select_ids([_id(window, "TRIAGE-01")])
+    window.search.clear()
+    window._search_edited()  # what the typing pause does
+    assert window.nav.groups.selectedItems()[0].text(0).startswith("Triage")
+    assert window.table.selected_ids() == [_id(window, "TRIAGE-01")]
+    _search(window, "lab")
+    window.table.clearSelection()
+    window.search.clear()
+    window._search_edited()
+    assert _rows(window) == ["TRIAGE-01", "TRIAGE-02"]  # nothing selected: back where it was
+
+
+def test_down_in_the_search_box_moves_to_the_first_result(window: MainWindow) -> None:
+    _search(window, "triage")
+    down = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Down, Qt.KeyboardModifier.NoModifier)
+    window.search.keyPressEvent(down)
+    assert window.table.selected_ids() == [_id(window, "TRIAGE-01")]
+
+
+def test_the_placeholder_names_what_is_searched(window: MainWindow) -> None:
+    table = window.table
+    assert window.search.placeholderText() == "Search name, address, user"
+    table._show_column(table.USER, False)
+    assert window.search.placeholderText() == "Search name, address"
+    table._show_column(table.USER, True)
 
 
 def test_refresh_checks_only_the_search_results(
@@ -166,3 +196,27 @@ def test_hiding_domains_changes_the_users_shown_and_searched(window: MainWindow)
         assert _rows(window, window.table.USER) == ["ana"]
     finally:
         window.commands.show_domains.setChecked(True)  # module-wide: leave it as found
+
+
+def test_tooltips_keep_the_domain_and_active_users_come_first(window: MainWindow) -> None:
+    away = Session("bob", "CORP", "rdp", "disconnected", None)
+    here = Session("ana", "CORP", "console", "active", None)
+    host = _id(window, "LAB-01")
+    window._users_found[host] = ((away, here), None, datetime.now())
+    window.commands.show_domains.setChecked(False)
+    try:
+        item = window.table.topLevelItem(0)
+        assert item is not None
+        assert item.text(window.table.USER) == "ana, bob (disconnected)"
+        assert item.toolTip(window.table.USER).startswith("CORP\\ana, CORP\\bob")
+    finally:
+        window.commands.show_domains.setChecked(True)
+
+
+def test_online_count_and_summary(window: MainWindow) -> None:
+    window._status_found[_id(window, "LAB-01")] = (Status.ONLINE, datetime.now(), None)
+    window._show_hosts()
+    assert "1 online" in window._list_label.text()
+    window.table.clearSelection()
+    hint = window.details._hint.text()
+    assert hint.startswith("1 host shown\n1 online")

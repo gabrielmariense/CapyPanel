@@ -23,6 +23,7 @@ class Actions:
     manual_connect: QAction
     copy_address: QAction
     copy_name: QAction
+    show_in_group: QAction
     check_status: QAction
     check_users: QAction
     forget_passwords: QAction
@@ -46,6 +47,7 @@ SHORTCUTS = {
     "connect_host": "Return",  # only while the host table has focus (see MainWindow)
     "manual_connect": "Ctrl+M",
     "copy_address": "Ctrl+Shift+C",
+    "show_in_group": "Ctrl+G",
 }
 CHECKABLE = {
     "show_toolbar", "show_groups", "show_tags", "show_details", "show_status_bar", "show_domains"
@@ -81,6 +83,7 @@ def retranslate_actions(a: Actions) -> None:
     # Under a "Copy" heading in the right-click menu, so the item names stay short.
     a.copy_address.setText(_("&Address"))
     a.copy_name.setText(_("&Name"))
+    a.show_in_group.setText(_("Show in &group"))
     a.check_status.setText(_("&Status"))
     a.check_users.setText(_("&Logged-on users"))
     a.forget_passwords.setText(_("&Forget typed passwords"))
