@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-07 13:17-0300\n"
+"POT-Creation-Date: 2026-10-07 18:56-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -790,6 +790,9 @@ msgstr "Arquivos compartilhados"
 msgid "Shared files: the default list, connection profiles and tools, for everyone."
 msgstr "Arquivos compartilhados: a lista padrão, os perfis de conexão e as ferramentas, para todos."
 
+msgid "Show do&main"
+msgstr "Mostrar do&mínio"
+
 msgid "Someone else has changed the file since you opened it."
 msgstr "Outra pessoa alterou o arquivo desde que você o abriu."
 
@@ -1008,6 +1011,9 @@ msgstr "Usar &padrões"
 
 msgid "User"
 msgstr "Usuário"
+
+msgid "Users"
+msgstr "Usuários"
 
 #, python-brace-format
 msgid "Viewer settings (*{extension})"

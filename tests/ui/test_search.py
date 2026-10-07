@@ -139,3 +139,30 @@ def test_escape_clears_the_search(window: MainWindow) -> None:
     escape = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
     window.search.keyPressEvent(escape)
     assert window.search.text() == ""
+
+
+def test_search_covers_only_the_columns_shown(window: MainWindow) -> None:
+    table = window.table
+    _search(window, "10.0.4.4")
+    assert _rows(window) == ["RECEP-04"]
+    table._show_column(table.ADDRESS, False)  # what View's column chooser does
+    assert _rows(window) == []  # re-run at once: nothing shown matches any more
+    _search(window, "recep")
+    assert _rows(window) == ["RECEP-04"]  # the name always counts
+
+
+def test_hiding_domains_changes_the_users_shown_and_searched(window: MainWindow) -> None:
+    desk = Session("ana", "CORP", "console", "active", None)
+    host = _id(window, "LAB-01")
+    window._users_found[host] = ((desk,), None, datetime.now())
+    window._show_hosts()
+    assert _rows(window, window.table.USER) == ["CORP\\ana"]
+    _search(window, "corp")
+    assert _rows(window) == ["LAB-01"]
+    window.commands.show_domains.setChecked(False)
+    try:
+        assert _rows(window) == []  # the domain isn't shown, so it isn't searched
+        _search(window, "")
+        assert _rows(window, window.table.USER) == ["ana"]
+    finally:
+        window.commands.show_domains.setChecked(True)  # module-wide: leave it as found

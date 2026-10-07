@@ -190,6 +190,8 @@ class MainWindow(QMainWindow):
         self._view_menu.addActions([a.show_toolbar, a.show_status_bar])
         self._panes_heading = section(self._view_menu, "")
         self._view_menu.addActions([a.show_groups, a.show_tags, a.show_details])
+        self._users_heading = section(self._view_menu, "")
+        self._view_menu.addAction(a.show_domains)
         self._view_menu.addSeparator()
         self._theme_menu = self._view_menu.addMenu("")
         self._theme_group = QActionGroup(self)
@@ -229,6 +231,7 @@ class MainWindow(QMainWindow):
         self._view_menu.setTitle(_("&View"))
         self._bars_heading.setText(_("Bars"))
         self._panes_heading.setText(_("Panes"))
+        self._users_heading.setText(_("Users"))
         self._theme_menu.setTitle(_("&Theme"))
         self._language_menu.setTitle(_("&Language"))
         for item in self._theme_group.actions():
@@ -252,6 +255,7 @@ class MainWindow(QMainWindow):
         a.show_tags.toggled.connect(self.nav.set_tags_visible)
         a.show_details.toggled.connect(self.details.setVisible)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
+        a.show_domains.toggled.connect(self._show_domains)
         # Refresh follows the end of the host table, wherever the panes are.
         for toggled in (a.show_groups.toggled, a.show_details.toggled, a.show_toolbar.toggled):
             toggled.connect(self._align_refresh_later)
@@ -277,6 +281,7 @@ class MainWindow(QMainWindow):
         self.table.itemSelectionChanged.connect(self._selection_changed)
         self.table.customContextMenuRequested.connect(self._host_menu)
         self.table.columns_changed.connect(self._save_columns)
+        self.table.columns_changed.connect(self._show_hosts)  # a search covers only what's shown
         # Enter connects only from the host table, so it never fires while typing elsewhere.
         a.connect_host.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.table.addAction(a.connect_host)
@@ -306,8 +311,10 @@ class MainWindow(QMainWindow):
             ("tags", self.commands.show_tags),
             ("details", self.commands.show_details),
             ("status_bar", self.commands.show_status_bar),
+            ("domains", self.commands.show_domains),
         ):
             action.setChecked(bool(view.get(key, True)))
+        check_texts.show_domains(self.commands.show_domains.isChecked())
         self.nav.set_tags_visible(self.commands.show_tags.isChecked())
         self.toolbar.setVisible(self.commands.show_toolbar.isChecked())
         self.table.set_hidden_columns(self._prefs.get("hidden_columns"))
@@ -908,11 +915,21 @@ class MainWindow(QMainWindow):
         return self.search.text().strip().casefold()
 
     def _matches(self, host: Host, needle: str) -> bool:
-        """Name, address, or a user from the last logged-on users check (memory only)."""
-        if needle in host.name.casefold() or needle in host.address.casefold():
+        """The name, plus the address and users when their columns show: only what can be
+        seen. Users come from the last logged-on users check (memory only)."""
+        table = self.table
+        if needle in host.name.casefold():
             return True
+        if not table.isColumnHidden(table.ADDRESS) and needle in host.address.casefold():
+            return True
+        if table.isColumnHidden(table.USER):
+            return False
         sessions = (self._users_found.get(host.id) or ((), None, None))[0] or ()
-        return any(needle in s.user.casefold() for s in sessions)
+        return any(needle in check_texts.user_name(s).casefold() for s in sessions)
+
+    def _show_domains(self, shown: bool) -> None:
+        check_texts.show_domains(shown)
+        self._show_hosts()  # the User column, the search and the details pane
 
     def _focus_search(self) -> None:
         self.search.setFocus(Qt.FocusReason.ShortcutFocusReason)
@@ -1348,6 +1365,7 @@ class MainWindow(QMainWindow):
             "tags": self.commands.show_tags.isChecked(),
             "details": self.commands.show_details.isChecked(),
             "status_bar": self.commands.show_status_bar.isChecked(),
+            "domains": self.commands.show_domains.isChecked(),
         }
         self._save_prefs()
         super().closeEvent(event)

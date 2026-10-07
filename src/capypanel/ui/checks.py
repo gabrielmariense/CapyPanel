@@ -165,8 +165,19 @@ def status_tip(status: Status, when: datetime, answered: Answer | None = None) -
     return f"{checked} {why}".strip()
 
 
+_show_domains = True  # View > Users > Show domain
+
+
+def show_domains(shown: bool) -> None:
+    global _show_domains
+    _show_domains = shown
+
+
 def user_name(session: Session) -> str:
-    return f"{session.domain}\\{session.user}" if session.domain else session.user
+    """How a logged-on user reads everywhere: "DOMAIN\\name", or "name" with domains off."""
+    if session.domain and _show_domains:
+        return f"{session.domain}\\{session.user}"
+    return session.user
 
 
 def users_text(sessions: Sequence[Session] | None, error: SessionsError | None) -> str:

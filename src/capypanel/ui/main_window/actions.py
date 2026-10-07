@@ -32,6 +32,7 @@ class Actions:
     show_tags: QAction
     show_details: QAction
     show_status_bar: QAction
+    show_domains: QAction
 
 
 SHORTCUTS = {
@@ -46,7 +47,9 @@ SHORTCUTS = {
     "manual_connect": "Ctrl+M",
     "copy_address": "Ctrl+Shift+C",
 }
-CHECKABLE = {"show_toolbar", "show_groups", "show_tags", "show_details", "show_status_bar"}
+CHECKABLE = {
+    "show_toolbar", "show_groups", "show_tags", "show_details", "show_status_bar", "show_domains"
+}  # fmt: skip
 
 
 def create_actions(parent: QWidget) -> Actions:
@@ -87,3 +90,4 @@ def retranslate_actions(a: Actions) -> None:
     a.show_tags.setText(_("T&ags pane"))
     a.show_details.setText(_("&Details pane"))
     a.show_status_bar.setText(_("&Status bar"))
+    a.show_domains.setText(_("Show do&main"))  # under a "Users" heading
