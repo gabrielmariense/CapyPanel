@@ -2,6 +2,8 @@
 private to its user or shared read-only. Reads the real logon token, never environment variables."""
 
 import ctypes
+from collections.abc import Iterator
+from contextlib import contextmanager
 from ctypes import wintypes
 from pathlib import Path
 
@@ -116,14 +118,23 @@ def make_shared(folder: Path, user_sid: str) -> None:
     _set_dacl(folder, f"(A;OICI;FA;;;{user_sid})(A;OICI;{_READ_EXECUTE};;;{USERS})")
 
 
-def _set_dacl(folder: Path, aces: str) -> None:
-    sddl = f"D:P(A;OICI;FA;;;{SYSTEM})(A;OICI;FA;;;{ADMINISTRATORS}){aces}"
+@contextmanager
+def security_descriptor(sddl: str) -> Iterator[ctypes.c_void_p]:
+    """Windows permissions written as SDDL text, as the structure the API takes; freed after."""
     descriptor = ctypes.c_void_p()
     if not _advapi32.ConvertStringSecurityDescriptorToSecurityDescriptorW(
         sddl, 1, ctypes.byref(descriptor), None
     ):
         raise ctypes.WinError(ctypes.get_last_error())
     try:
+        yield descriptor
+    finally:
+        _kernel32.LocalFree(descriptor)
+
+
+def _set_dacl(folder: Path, aces: str) -> None:
+    sddl = f"D:P(A;OICI;FA;;;{SYSTEM})(A;OICI;FA;;;{ADMINISTRATORS}){aces}"
+    with security_descriptor(sddl) as descriptor:
         present, defaulted = wintypes.BOOL(), wintypes.BOOL()
         dacl = ctypes.c_void_p()
         if not _advapi32.GetSecurityDescriptorDacl(
@@ -135,8 +146,6 @@ def _set_dacl(folder: Path, aces: str) -> None:
         )
         if status != 0:
             raise ctypes.WinError(status)
-    finally:
-        _kernel32.LocalFree(descriptor)
 
 
 def _sid_string(sid: int | None) -> str:

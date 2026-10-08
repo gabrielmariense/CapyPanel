@@ -102,6 +102,19 @@ def test_status_only_doesnt_read_users(window: MainWindow, answers: dict[str, An
     assert _cells(window, "PC-1") == ("Online", "")
 
 
+def test_a_removed_host_no_longer_counts_as_online(
+    window: MainWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window.table.select_ids(_ids(window, "PC-1", "PC-2"))
+    window.commands.check_status.trigger()
+    _wait(window)
+    assert "2 online" in window._list_label.text()
+    monkeypatch.setattr(window_module, "confirm", lambda *_args: True)
+    assert window.document is not None
+    window.remove_hosts([h for h in window.document.hosts.hosts if h.name == "PC-1"])
+    assert "1 online" in window._list_label.text()
+
+
 def _pick_group(window: MainWindow, name: str) -> None:
     assert window.document is not None
     group = next(g for g in window.document.hosts.groups if g.name == name)

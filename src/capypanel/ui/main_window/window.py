@@ -9,6 +9,7 @@ from typing import Any
 
 from PySide6.QtCore import QByteArray, QEvent, QPoint, Qt, QTimer
 from PySide6.QtGui import (
+    QAction,
     QActionGroup,
     QCloseEvent,
     QGuiApplication,
@@ -307,14 +308,7 @@ class MainWindow(QMainWindow):
             self._splitter.restoreState(QByteArray.fromBase64(splitter.encode()))
         view = self._prefs.get("view")
         view = view if isinstance(view, dict) else {}
-        for key, action in (
-            ("toolbar", self.commands.show_toolbar),
-            ("groups", self.commands.show_groups),
-            ("tags", self.commands.show_tags),
-            ("details", self.commands.show_details),
-            ("status_bar", self.commands.show_status_bar),
-            ("domains", self.commands.show_domains),
-        ):
+        for key, action in self._view_choices().items():
             action.setChecked(bool(view.get(key, True)))
         check_texts.show_domains(self.commands.show_domains.isChecked())
         self.nav.set_tags_visible(self.commands.show_tags.isChecked())
@@ -324,6 +318,18 @@ class MainWindow(QMainWindow):
         self.nav.setVisible(self.commands.show_groups.isChecked())
         self.details.setVisible(self.commands.show_details.isChecked())
         self.statusBar().setVisible(self.commands.show_status_bar.isChecked())
+
+    def _view_choices(self) -> dict[str, QAction]:
+        """View menu ticks, by the key they're saved under."""
+        a = self.commands
+        return {
+            "toolbar": a.show_toolbar,
+            "groups": a.show_groups,
+            "tags": a.show_tags,
+            "details": a.show_details,
+            "status_bar": a.show_status_bar,
+            "domains": a.show_domains,
+        }
 
     # ---- opening lists ----
 
@@ -1101,7 +1107,9 @@ class MainWindow(QMainWindow):
             ngettext("{n} host", "{n} hosts", total).format(n=total),
             ngettext("{n} selected", "{n} selected", selected).format(n=selected),
         ]
-        online = sum(1 for f in self._status_found.values() if f[0] is Status.ONLINE)
+        # Hosts still in the list: a removed host's result stays in memory.
+        found = (self._status_found.get(h.id) for h in doc.hosts.hosts)
+        online = sum(1 for f in found if f is not None and f[0] is Status.ONLINE)
         if self._status_found:  # once anything was checked; results are this list's only
             parts.insert(2, ngettext("{n} online", "{n} online", online).format(n=online))
         if self._needle():
@@ -1458,13 +1466,6 @@ class MainWindow(QMainWindow):
         if self._run is not None:
             self._run.stop()  # hosts already being read finish in the background
         self._prefs["refresh"] = self.refresh_panel.choices()
-        self._prefs["view"] = {
-            "toolbar": self.commands.show_toolbar.isChecked(),
-            "groups": self.commands.show_groups.isChecked(),
-            "tags": self.commands.show_tags.isChecked(),
-            "details": self.commands.show_details.isChecked(),
-            "status_bar": self.commands.show_status_bar.isChecked(),
-            "domains": self.commands.show_domains.isChecked(),
-        }
+        self._prefs["view"] = {k: a.isChecked() for k, a in self._view_choices().items()}
         self._save_prefs()
         super().closeEvent(event)

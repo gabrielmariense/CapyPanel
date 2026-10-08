@@ -26,11 +26,10 @@ from PySide6.QtWidgets import (
     QWidgetItem,
 )
 
-from capypanel.core.hosts.model import Host, HostList, clean_tags
+from capypanel.core.hosts.model import MAX_ADDRESS, Host, HostList, clean_tags
 from capypanel.core.i18n import _
 
 MAX_NAME = 255  # longest host name typed
-MAX_ADDRESS = 253  # the longest DNS name
 MAX_TAG = 64
 
 

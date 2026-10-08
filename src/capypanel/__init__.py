@@ -28,4 +28,5 @@ def _commit() -> str:
 
 
 # What the title bar and the log show: "0.8.1", plus "(3b4c3e0)" when run from source.
-BUILD = f"{__version__} ({_commit()})" if _commit() else __version__
+_COMMIT = _commit()
+BUILD = f"{__version__} ({_COMMIT})" if _COMMIT else __version__

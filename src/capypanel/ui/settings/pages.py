@@ -26,7 +26,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.i18n import _
 from capypanel.ui.host_lists import HostListsView
-from capypanel.ui.notes import notes
+from capypanel.ui.notes import hint, notes
 from capypanel.ui.themes import engine as themes
 
 
@@ -50,13 +50,6 @@ class Page(QWidget):
 
     def is_valid(self) -> bool:
         return True
-
-
-def hint(text: str = "") -> QLabel:
-    label = QLabel(text)
-    label.setObjectName("hint")
-    label.setWordWrap(True)
-    return label
 
 
 class PathLabel(QLabel):

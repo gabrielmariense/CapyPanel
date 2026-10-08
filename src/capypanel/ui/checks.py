@@ -23,6 +23,7 @@ from capypanel.core.remote.batch import Batch
 from capypanel.core.remote.checks import Checks, Found
 from capypanel.core.remote.sessions import Account, Reason, Session, SessionsError
 from capypanel.core.remote.status import Answer, Status
+from capypanel.ui.notes import hint
 
 MAX_TEXT = 256
 
@@ -95,15 +96,13 @@ class AccountDialog(QDialog):
         form = QFormLayout()
         form.addRow(_("&User:"), self.user)
         form.addRow(_("&Password:"), self.password)
-        note = QLabel(
+        note = hint(
             _(
                 "Kept in memory until CapyPanel closes, never saved, and used only to read who "
                 "is logged on. If a computer rejects it, CapyPanel stops and asks again instead "
                 "of trying it on the others, so the account isn't locked."
             )
         )
-        note.setObjectName("hint")
-        note.setWordWrap(True)
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )

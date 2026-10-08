@@ -29,7 +29,6 @@ class _SecurityAttributes(ctypes.Structure):
 
 
 _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-_advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)
 _P = ctypes.POINTER
 _kernel32.CreateNamedPipeW.argtypes = [
     wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.DWORD, wintypes.DWORD,
@@ -44,10 +43,6 @@ _kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
 _kernel32.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, ctypes.c_void_p,
                                   wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]  # fmt: skip
 _kernel32.CreateFileW.restype = wintypes.HANDLE
-_kernel32.LocalFree.argtypes = [ctypes.c_void_p]
-_advapi32.ConvertStringSecurityDescriptorToSecurityDescriptorW.argtypes = [
-    wintypes.LPCWSTR, wintypes.DWORD, _P(ctypes.c_void_p), _P(wintypes.ULONG)
-]  # fmt: skip
 
 
 class SecretPipe:
@@ -56,19 +51,12 @@ class SecretPipe:
     def __init__(self) -> None:
         self.path = rf"\\.\pipe\capypanel-{secrets.token_hex(16)}"
         sddl = f"D:P(A;;GA;;;{winsec.current_user_sid()})"  # this account only
-        descriptor = ctypes.c_void_p()
-        if not _advapi32.ConvertStringSecurityDescriptorToSecurityDescriptorW(
-            sddl, 1, ctypes.byref(descriptor), None
-        ):
-            raise ctypes.WinError(ctypes.get_last_error())
-        try:
+        with winsec.security_descriptor(sddl) as descriptor:
             attributes = _SecurityAttributes(ctypes.sizeof(_SecurityAttributes), descriptor, False)
             handle = _kernel32.CreateNamedPipeW(
                 self.path, _PIPE_ACCESS_OUTBOUND | _FIRST_PIPE_INSTANCE,
                 _PIPE_REJECT_REMOTE_CLIENTS, 1, 4096, 4096, 0, ctypes.byref(attributes),
             )  # fmt: skip
-        finally:
-            _kernel32.LocalFree(descriptor)
         if handle in (None, _INVALID_HANDLE):
             raise ctypes.WinError(ctypes.get_last_error())
         self._handle = handle

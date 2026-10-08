@@ -50,9 +50,11 @@ def installed_folders(names: tuple[str, ...]) -> Iterator[Path]:
             yield Path(location)
         elif uninstaller:
             # No install location recorded: the uninstaller usually sits in the install folder.
-            yield Path(
-                uninstaller.strip().split('"')[1] if uninstaller.startswith('"') else uninstaller
-            ).parent
+            # A command like "MsiExec.exe /X{…}" names no folder: it would mean the current one.
+            command = uninstaller.strip()
+            folder = Path(command.split('"')[1] if command.startswith('"') else command).parent
+            if folder.is_absolute():
+                yield folder
 
 
 def _installed_programs() -> Iterator[tuple[str, str, str]]:

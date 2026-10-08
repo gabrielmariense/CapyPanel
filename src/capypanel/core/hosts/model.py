@@ -13,12 +13,13 @@ class HostListRuleError(ValueError):
     """An edit that would break a rule of the list (e.g. a host in a group that doesn't exist)."""
 
 
+MAX_ADDRESS = 253  # the longest DNS name
 # A computer name or IP address: letters, digits, "-" and "_", in parts joined by dots.
 _HOSTNAME = re.compile(r"^[A-Za-z0-9_]([A-Za-z0-9_-]{0,62})(\.[A-Za-z0-9_]([A-Za-z0-9_-]{0,62}))*$")
 
 
 def is_hostname(text: str) -> bool:
-    return len(text) <= 253 and bool(_HOSTNAME.match(text))
+    return len(text) <= MAX_ADDRESS and bool(_HOSTNAME.match(text))
 
 
 @dataclass(frozen=True)

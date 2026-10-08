@@ -36,8 +36,10 @@ from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profile_store import make_id
 from capypanel.core.tools.profiles import ConnectionProfile, login_label, logins_of
+from capypanel.ui.connect import ask_for_program
 from capypanel.ui.hosts import confirm
-from capypanel.ui.settings.pages import Page, PathLabel, hint
+from capypanel.ui.notes import hint
+from capypanel.ui.settings.pages import Page, PathLabel
 
 MAX_PROFILE_NAME = 64
 
@@ -524,12 +526,7 @@ class ConnectionsPage(Page):
             QDesktopServices.openUrl(QUrl(tool.website))  # the browser downloads; we never do
 
     def locate(self, tool: ToolDefinition) -> None:
-        name, _filter = QFileDialog.getOpenFileName(
-            self,
-            _("Where is {tool}?").format(tool=tool.name),
-            str(Path.home()),
-            _("Programs (*.exe)"),
-        )
+        name = ask_for_program(self, tool)
         if name:
             self._tool_paths[tool.id] = name
             self._fill_tools()
