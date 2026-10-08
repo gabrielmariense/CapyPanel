@@ -3,7 +3,7 @@ lined up with the end of the host table. Refresh always checks every host the ta
 group picked on the left); one host is checked from its own right-click menu. Left-click picks
 one check; right-click opens a panel to run several at once."""
 
-from PySide6.QtCore import QEvent, QPoint, Qt, Signal
+from PySide6.QtCore import QEvent, QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QPalette, QShowEvent
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -14,6 +14,8 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QSpacerItem,
+    QStyle,
+    QStyleOptionToolButton,
     QToolBar,
     QToolButton,
     QVBoxLayout,
@@ -21,7 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.i18n import _
-from capypanel.ui.icons import glyph_icon
+from capypanel.ui.icons import tabler_icon
 from capypanel.ui.main_window.actions import Actions
 
 
@@ -88,6 +90,7 @@ class MainToolBar(QToolBar):
         self.setMovable(False)
         self.setFloatable(False)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)  # no hide-me menu
+        self.setIconSize(QSize(16, 16))  # T1: icons at the text's height, not 24 px
         self._commands = commands
 
         # Connect: the host's own profile; the arrow connects once with another profile.
@@ -169,30 +172,53 @@ class MainToolBar(QToolBar):
 
     def restyle(self) -> None:
         """Icons in the theme's text colour."""
-        color = self.palette().color(QPalette.ColorRole.ButtonText)
-        self.connect_button.setIcon(glyph_icon("connect", color))
-        self.refresh_button.setIcon(glyph_icon("refresh", color))
+        color = self.connect_button.palette().color(QPalette.ColorRole.ButtonText)  # its text's
+        self.connect_button.setIcon(tabler_icon("plug-connected", color))
+        self.refresh_button.setIcon(tabler_icon("refresh", color))
         self.retranslate()
 
     def _group(self, buttons: list[QToolButton]) -> QWidget:
         """Buttons that belong together; a thin line sets each group apart from the one before."""
         group = QWidget()
         row = QHBoxLayout(group)
-        row.setContentsMargins(0, 0, 6, 0)
-        row.setSpacing(6)
-        if self._groups:
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(6)  # between buttons
+        if self._groups:  # T1: 10 px on each side of the line
+            row.addSpacing(4)
             divider = QFrame()
             divider.setObjectName("toolDivider")
             divider.setFixedWidth(1)
             row.addWidget(divider)
+            row.setContentsMargins(4, 0, 0, 0)
         self._groups += 1
         for button in buttons:
             row.addWidget(button)
         return group
 
 
+class ToolButton(QToolButton):
+    """Sized to exactly what it draws: icon, text and the theme's padding. Qt's own size also
+    reserves an icon gap and margins the theme doesn't draw, which left buttons ~12 px wider."""
+
+    def sizeHint(self) -> QSize:
+        option = QStyleOptionToolButton()
+        self.initStyleOption(option)
+        metrics = self.fontMetrics()
+        icon = option.iconSize if not self.icon().isNull() else QSize(0, 0)
+        content = QSize(
+            icon.width() + 4 + metrics.horizontalAdvance(self.text()),  # Qt draws a 4 px gap
+            max(icon.height(), metrics.height()),
+        )
+        return self.style().sizeFromContents(
+            QStyle.ContentsType.CT_ToolButton, option, content, self
+        )
+
+    def minimumSizeHint(self) -> QSize:
+        return self.sizeHint()
+
+
 def _button() -> QToolButton:
-    button = QToolButton()
+    button = ToolButton()
     button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
     button.setAutoRaise(True)
     return button

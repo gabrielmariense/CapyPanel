@@ -36,7 +36,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import _, ngettext
 from capypanel.ui.groups import HOSTS_MIME, ROLE_ID, ROLE_KIND, GroupTree, hosts_mime
-from capypanel.ui.icons import glyph_icon
+from capypanel.ui.icons import tabler_icon
 
 ROLE_QUIET = Qt.ItemDataRole.UserRole + 2  # a Status or User cell to show greyed
 
@@ -307,7 +307,7 @@ class SearchBox(QLineEdit):
 
     def _paint_icon(self) -> None:
         self._icon.setIcon(
-            glyph_icon("search", self.palette().color(QPalette.ColorRole.PlaceholderText))
+            tabler_icon("search", self.palette().color(QPalette.ColorRole.PlaceholderText))
         )
 
 

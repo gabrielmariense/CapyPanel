@@ -313,24 +313,25 @@ QToolButton { padding: 2px 8px; border-radius: %(r2)spx; color: %(text2)s; backg
 QToolButton:hover { background: %(hover)s; color: %(text)s; }
 /* A line under the toolbar, like the menu bar's: without it, it merges into the panes below. */
 QToolBar { background: %(bg)s; border: none; border-bottom: 1px solid %(border)s;
-           padding: 6px 8px 4px 8px; spacing: 6px; }
-/* Toolbar buttons are outlined (design T1); thin lines divide the groups. */
-QToolBar QToolButton { padding: 6px 10px; border: 1px solid %(border)s; background: %(raised)s;
-                       color: %(text)s; }
-QToolBar QToolButton:hover { background: %(hover)s; }
+           padding: 6px 8px; spacing: 6px; }
+/* Toolbar buttons follow design T1: outlined, about 28 px tall, 16 px Tabler icons. Thin lines
+   divide the groups. Styling a tool button drops Fusion's menu arrow, so draw our own. */
+QToolBar QToolButton { padding: 3px 9px; border: 1px solid %(border)s; background: %(raised)s;
+                       color: %(text2)s; }
+QToolBar QToolButton:hover { background: %(hover)s; color: %(text)s; }
 QToolBar QToolButton:disabled { color: %(text3)s; }
 QFrame#toolDivider { background: %(border)s; border: none; }
-/* Styling a tool button drops Fusion's menu arrow, so draw our own. */
-QToolBar QToolButton[popupMode="1"] { padding-right: 24px; }
+QToolBar QToolButton[popupMode="1"] { padding-right: 29px; }
 QToolBar QToolButton[popupMode="2"] { padding-right: 24px; }
-/* The arrow of a split button (Connect) is a part of its own: a divider and its own hover. */
-QToolButton::menu-button { border: none; border-left: 1px solid %(border)s; width: 18px;
-                           margin: 5px 0; border-top-right-radius: %(r2)spx;
+/* The arrow of a split button (Connect): a short divider, then the arrow, with its own hover. */
+QToolButton::menu-button { border: none; border-left: 1px solid %(border)s; width: 24px;
+                           margin: 7px 0; border-top-right-radius: %(r2)spx;
                            border-bottom-right-radius: %(r2)spx; }
 QToolButton::menu-button:hover { background: %(hover)s; }
 QToolButton::menu-arrow, QToolButton::menu-indicator {
     image: url("%(arrow)s"); width: 10px; height: 6px; }
-QToolButton::menu-indicator { subcontrol-position: right center; right: 8px; }
+QToolButton::menu-indicator { subcontrol-position: right center; right: 9px; }
+QToolButton::menu-arrow { subcontrol-origin: padding; subcontrol-position: center; }
 /* Headings inside menus and the Refresh panel. */
 QLabel#menuSection { color: %(text3)s; padding: 6px 12px 2px 12px; font-weight: 600; }
 
@@ -450,19 +451,20 @@ QTreeView#grid::item:last, QTreeView#grid::item:only-one,
 QTreeView#grid QHeaderView::section:last,
 QTreeView#grid QHeaderView::section:only-one { border-right: none; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
-/* Toolbar buttons are outlined (design T1); thin lines divide the groups. Styling them drops
-   the style's own menu arrow, so the theme's arrow is drawn instead. */
-QToolBar#main QToolButton { color: %(text)s; background: %(card)s; border: 1px solid %(border)s;
-                            border-radius: 4px; padding: 5px 10px; }
-QToolBar#main QToolButton:hover { background: %(hover)s; }
-QToolBar#main QToolButton:disabled { color: %(text2)s; }
-QToolBar#main QToolButton[popupMode="1"], QToolBar#main QToolButton[popupMode="2"] {
-    padding-right: 24px; }
+/* Toolbar buttons follow design T1 (see the CapyPanel stylesheet). Styling them drops the
+   style's own menu arrow, so the theme's arrow is drawn instead. */
+QToolBar#main QToolButton { color: %(text2)s; background: %(card)s; border: 1px solid %(border)s;
+                            border-radius: 6px; padding: 3px 9px; }
+QToolBar#main QToolButton:hover { background: %(hover)s; color: %(text)s; }
+QToolBar#main QToolButton[popupMode="1"] { padding-right: 29px; }
+QToolBar#main QToolButton[popupMode="2"] { padding-right: 24px; }
 QToolBar#main QToolButton::menu-button { border: none; border-left: 1px solid %(border)s;
-                                         width: 18px; margin: 5px 0; }
+                                         width: 24px; margin: 7px 0; }
 QToolBar#main QToolButton::menu-arrow, QToolBar#main QToolButton::menu-indicator {
     image: url("%(arrow)s"); width: 10px; height: 6px; }
-QToolBar#main QToolButton::menu-indicator { subcontrol-position: right center; right: 8px; }
+QToolBar#main QToolButton::menu-indicator { subcontrol-position: right center; right: 9px; }
+QToolBar#main QToolButton::menu-arrow { subcontrol-origin: padding;
+                                        subcontrol-position: center; }
 QFrame#toolDivider { background: %(border)s; border: none; }
 QTreeView#flat { border: none; background: transparent; }
 QLineEdit#paneSearch { background: %(card)s; border: 1px solid %(border)s; padding: 5px 6px; }
