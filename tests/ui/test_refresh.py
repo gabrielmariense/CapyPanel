@@ -196,7 +196,7 @@ def test_host_menu_has_sections_with_short_names(
     ]  # fmt: skip
 
 
-def test_refresh_lines_up_with_the_end_of_the_host_table(window: MainWindow) -> None:
+def test_the_toolbar_lines_up_with_the_panes(window: MainWindow) -> None:
     window.resize(1200, 600)
     window.show()
     for _ in range(5):
@@ -208,6 +208,8 @@ def test_refresh_lines_up_with_the_end_of_the_host_table(window: MainWindow) -> 
     assert abs(end - window.table.mapTo(window, QPoint(window.table.width(), 0)).x()) <= 1
     search, nav = window.search, window.nav  # the search box's top meets the panes'
     assert search.mapTo(window, QPoint(0, 0)).y() == nav.mapTo(window, QPoint(0, 0)).y()
+    connect = window.toolbar.connect_button  # and Connect starts where the panes do
+    assert abs(connect.mapTo(window, QPoint(0, 0)).x() - nav.mapTo(window, QPoint(0, 0)).x()) <= 1
 
 
 def test_a_large_users_check_asks_first(

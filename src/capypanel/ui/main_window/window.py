@@ -1347,8 +1347,9 @@ class MainWindow(QMainWindow):
 
     def _align_refresh(self) -> None:
         if self.toolbar.isVisible():
+            left = self._splitter.mapTo(self, QPoint(0, 0)).x()
             right = self.table.mapTo(self, QPoint(self.table.width(), 0)).x()
-            self.toolbar.align_end(right - self.toolbar.x())
+            self.toolbar.align(left - self.toolbar.x(), right - self.toolbar.x())
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)

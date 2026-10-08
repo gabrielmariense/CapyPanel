@@ -200,6 +200,7 @@ def native_tokens(accent: QColor) -> dict[str, str]:
     tokens["sel"] = selection_tint(accent, tokens["card"], tokens["text"])
     tokens["hover"] = _mix(QColor(tokens["text"]), QColor(tokens["card"]), 0.06)
     tokens["accent"] = accent.name()
+    tokens["arrow"] = (THEMES_DIR / f"arrow-{native_scheme()}.svg").as_posix()
     return tokens
 
 
@@ -313,7 +314,12 @@ QToolButton:hover { background: %(hover)s; color: %(text)s; }
 /* A line under the toolbar, like the menu bar's: without it, it merges into the panes below. */
 QToolBar { background: %(bg)s; border: none; border-bottom: 1px solid %(border)s;
            padding: 6px 8px 4px 8px; spacing: 6px; }
-QToolBar QToolButton { padding: 6px 10px; }
+/* Toolbar buttons are outlined (design T1); thin lines divide the groups. */
+QToolBar QToolButton { padding: 6px 10px; border: 1px solid %(border)s; background: %(raised)s;
+                       color: %(text)s; }
+QToolBar QToolButton:hover { background: %(hover)s; }
+QToolBar QToolButton:disabled { color: %(text3)s; }
+QFrame#toolDivider { background: %(border)s; border: none; }
 /* Styling a tool button drops Fusion's menu arrow, so draw our own. */
 QToolBar QToolButton[popupMode="1"] { padding-right: 24px; }
 QToolBar QToolButton[popupMode="2"] { padding-right: 24px; }
@@ -325,7 +331,6 @@ QToolButton::menu-button:hover { background: %(hover)s; }
 QToolButton::menu-arrow, QToolButton::menu-indicator {
     image: url("%(arrow)s"); width: 10px; height: 6px; }
 QToolButton::menu-indicator { subcontrol-position: right center; right: 8px; }
-QLabel#toolCaption { color: %(text3)s; }
 /* Headings inside menus and the Refresh panel. */
 QLabel#menuSection { color: %(text3)s; padding: 6px 12px 2px 12px; font-weight: 600; }
 
@@ -444,7 +449,21 @@ QTreeView#grid QHeaderView::section { border-right: 2px solid %(border)s; }
 QTreeView#grid::item:last, QTreeView#grid::item:only-one,
 QTreeView#grid QHeaderView::section:last,
 QTreeView#grid QHeaderView::section:only-one { border-right: none; }
-QLabel#paneTitle, QLabel#hint, QLabel#toolCaption { color: %(text2)s; }
+QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
+/* Toolbar buttons are outlined (design T1); thin lines divide the groups. Styling them drops
+   the style's own menu arrow, so the theme's arrow is drawn instead. */
+QToolBar#main QToolButton { color: %(text)s; background: %(card)s; border: 1px solid %(border)s;
+                            border-radius: 4px; padding: 5px 10px; }
+QToolBar#main QToolButton:hover { background: %(hover)s; }
+QToolBar#main QToolButton:disabled { color: %(text2)s; }
+QToolBar#main QToolButton[popupMode="1"], QToolBar#main QToolButton[popupMode="2"] {
+    padding-right: 24px; }
+QToolBar#main QToolButton::menu-button { border: none; border-left: 1px solid %(border)s;
+                                         width: 18px; margin: 5px 0; }
+QToolBar#main QToolButton::menu-arrow, QToolBar#main QToolButton::menu-indicator {
+    image: url("%(arrow)s"); width: 10px; height: 6px; }
+QToolBar#main QToolButton::menu-indicator { subcontrol-position: right center; right: 8px; }
+QFrame#toolDivider { background: %(border)s; border: none; }
 QTreeView#flat { border: none; background: transparent; }
 QLineEdit#paneSearch { background: %(card)s; border: 1px solid %(border)s; padding: 5px 6px; }
 QFrame#divider { background: %(border)s; border: none; }

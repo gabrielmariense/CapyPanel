@@ -1,10 +1,10 @@
-"""The toolbar: buttons in captioned groups (set here, not by users) and Refresh on the right,
+"""The toolbar: outlined buttons in groups split by thin lines (set here, not by users) and Refresh,
 lined up with the end of the host table. Refresh always checks every host the table shows (the
 group picked on the left); one host is checked from its own right-click menu. Left-click picks
 one check; right-click opens a panel to run several at once."""
 
 from PySide6.QtCore import QEvent, QPoint, Qt, Signal
-from PySide6.QtGui import QFont, QPalette, QShowEvent
+from PySide6.QtGui import QPalette, QShowEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QFrame,
@@ -23,7 +23,6 @@ from PySide6.QtWidgets import (
 from capypanel.core.i18n import _
 from capypanel.ui.icons import glyph_icon
 from capypanel.ui.main_window.actions import Actions
-from capypanel.ui.themes import engine as themes
 
 
 class RefreshPanel(QFrame):
@@ -90,7 +89,6 @@ class MainToolBar(QToolBar):
         self.setFloatable(False)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)  # no hide-me menu
         self._commands = commands
-        self._captions: list[tuple[QLabel, str]] = []
 
         # Connect: the host's own profile; the arrow connects once with another profile.
         self.connect_button = _button()
@@ -107,7 +105,8 @@ class MainToolBar(QToolBar):
         self._row = QHBoxLayout(row)
         self._row.setContentsMargins(0, 0, 0, 0)
         self._row.setSpacing(0)
-        self._row.addWidget(self._group("connect", [self.connect_button]))
+        self._groups = 0
+        self._row.addWidget(self._group([self.connect_button]))
         self._row.addStretch(1)
         self.refresh_button = _button()
         self.refresh_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
@@ -131,12 +130,7 @@ class MainToolBar(QToolBar):
         self.retranslate()
 
     def retranslate(self) -> None:
-        custom = themes.current().engine == "custom"
-        texts = {"connect": _("Connect")}
-        for label, key in self._captions:
-            # Capitals in the CapyPanel looks, in the text itself: a theme switch resets fonts.
-            label.setText(texts[key].upper() if custom else texts[key])
-        gap = " " if custom else ""  # QSS drops the icon gap
+        gap = " "  # the stylesheet drops the gap between icon and text
         self.connect_button.setText(gap + _("Connect"))
         self.connect_button.setToolTip(
             _("Connect to the selected hosts; the arrow connects once with another profile")
@@ -148,11 +142,16 @@ class MainToolBar(QToolBar):
         self.refresh_status.setText(_("&Status"))
         self.refresh_users.setText(_("&Logged-on users"))
 
-    def align_end(self, right: int) -> None:
-        """Puts Refresh's right edge at `right`, in this toolbar's coordinates."""
+    def align(self, left: int, right: int) -> None:
+        """Lines the buttons up with the panes, in this toolbar's coordinates: the first group
+        starts at `left` and Refresh ends at `right`. Measured, so it holds in every theme."""
         row = self.refresh_button.parentWidget()
         if row is None:
             return
+        start = row.mapTo(self, QPoint(0, 0)).x()  # the margins move what's inside, not the row
+        margins = self._row.contentsMargins()
+        if margins.left() != max(0, left - start):
+            self._row.setContentsMargins(max(0, left - start), 0, 0, 0)
         end = row.mapTo(self, QPoint(row.width(), 0)).x()  # doesn't move with the spacer
         width = max(0, end - right)
         if width != self._after_refresh.sizeHint().width():
@@ -169,32 +168,26 @@ class MainToolBar(QToolBar):
             self.restyle()
 
     def restyle(self) -> None:
-        """Icons in the theme's text colour, and captions for the theme (see retranslate)."""
+        """Icons in the theme's text colour."""
         color = self.palette().color(QPalette.ColorRole.ButtonText)
         self.connect_button.setIcon(glyph_icon("connect", color))
         self.refresh_button.setIcon(glyph_icon("refresh", color))
         self.retranslate()
 
-    def _group(self, key: str, buttons: list[QToolButton]) -> QWidget:
+    def _group(self, buttons: list[QToolButton]) -> QWidget:
+        """Buttons that belong together; a thin line sets each group apart from the one before."""
         group = QWidget()
-        column = QVBoxLayout(group)
-        column.setContentsMargins(6, 0, 6, 0)
-        column.setSpacing(0)
-        row = QHBoxLayout()
-        row.setSpacing(2)
+        row = QHBoxLayout(group)
+        row.setContentsMargins(0, 0, 6, 0)
+        row.setSpacing(6)
+        if self._groups:
+            divider = QFrame()
+            divider.setObjectName("toolDivider")
+            divider.setFixedWidth(1)
+            row.addWidget(divider)
+        self._groups += 1
         for button in buttons:
             row.addWidget(button)
-        caption = QLabel()
-        caption.setObjectName("toolCaption")
-        caption.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        font = QFont(caption.font())
-        font.setPointSizeF(font.pointSizeF() * 0.85)
-        caption.setFont(font)
-        column.addLayout(row)
-        column.addWidget(caption)
-        # A caption names a group of buttons; over one button it would only repeat its name.
-        caption.setVisible(len(buttons) > 1)
-        self._captions.append((caption, key))
         return group
 
 
