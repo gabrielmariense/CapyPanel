@@ -10,7 +10,7 @@ O CapyPanel reúne numa só janela todos os computadores que você administra. �
 para Windows feito para equipes de TI: organize seus hosts em listas e abra a tela remota de
 qualquer um deles pela Área de Trabalho Remota ou pelo visualizador VNC que você já usa.
 
-> **Situação: beta (0.15.0).** Roda a partir do código-fonte; ainda não há instalador.
+> **Situação: beta (0.16.0).** Roda a partir do código-fonte; ainda não há instalador.
 
 ## Funcionalidades
 
@@ -23,10 +23,11 @@ qualquer um deles pela Área de Trabalho Remota ou pelo visualizador VNC que voc
 - Status dos hosts
 - Usuários logados
 - Pesquisa
+- Barra de ferramentas redesenhada
 
 ### Em desenvolvimento
 
-- Barra de ferramentas redesenhada
+- Mover grupos
 
 ### Planejadas
 
@@ -67,3 +68,6 @@ A Área de Trabalho Remota usa o cliente que já vem no Windows. Para o VNC, ins
 ## Licença
 
 [GPL-3.0](LICENSE).
+
+Ícones: [Tabler Icons](https://tabler.io/icons) (MIT), aviso em
+`src/capypanel/ui/tabler/LICENSE`.
