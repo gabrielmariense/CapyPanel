@@ -205,7 +205,8 @@ def test_refresh_lines_up_with_the_end_of_the_host_table(window: MainWindow) -> 
     QApplication.processEvents()
     button = window.toolbar.refresh_button
     end = button.mapTo(window, QPoint(button.width(), 0)).x()
-    assert abs(end - window.table.mapTo(window, QPoint(window.table.width(), 0)).x()) <= 1
+    pane = window._hosts_pane  # the card around the search box and the table
+    assert abs(end - pane.mapTo(window, QPoint(pane.width(), 0)).x()) <= 1
 
 
 def test_a_large_users_check_asks_first(

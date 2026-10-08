@@ -64,6 +64,7 @@ from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.host_views import (
     Cells,
     DetailsPane,
+    HostsPane,
     HostTable,
     NavigationPane,
     SearchBox,
@@ -121,14 +122,11 @@ class MainWindow(QMainWindow):
         self._search_timer = QTimer(self)  # waits for a pause in typing, then filters
         self._search_timer.setSingleShot(True)
         self._search_timer.setInterval(150)
-        hosts_pane = QWidget()
-        column = QVBoxLayout(hosts_pane)
-        column.setContentsMargins(0, 0, 0, 0)
-        column.addWidget(self.search)
-        column.addWidget(self.table)
+        self._hosts_pane = HostsPane(self.search, self.table)
+        self.nav.row_height_changed.connect(self.search.setFixedHeight)
         self.details = DetailsPane()
         self._splitter = QSplitter()
-        for pane in (self.nav, hosts_pane, self.details):
+        for pane in (self.nav, self._hosts_pane, self.details):
             self._splitter.addWidget(pane)
         self._splitter.setStretchFactor(1, 1)
         # Dragged all the way, a pane would vanish; View hides panes on purpose instead.
@@ -272,9 +270,11 @@ class MainWindow(QMainWindow):
         self.nav.add_group_button.clicked.connect(self.add_group)
         self.nav.filter_changed.connect(self._filter_picked)
         self.search.textChanged.connect(self._search_timer.start)
-        self._search_timer.timeout.connect(self._search_edited)
+        self._search_timer.timeout.connect(self._show_hosts)
         self.search.to_results.connect(self._to_results)
         QShortcut(QKeySequence.StandardKey.Find, self, self._focus_search)
+        # Esc ends a search wherever the focus is, not only in the box.
+        QShortcut(QKeySequence(Qt.Key.Key_Escape), self, self._end_search)
         self.nav.groups.customContextMenuRequested.connect(self._group_menu)
         self.nav.groups.rearranged.connect(self._groups_dragged)
         self.nav.groups.hosts_dropped.connect(self.move_hosts)
@@ -947,13 +947,10 @@ class MainWindow(QMainWindow):
         self._clear_search()
         self._show_hosts()
 
-    def _search_edited(self) -> None:
-        """Clearing a search with one host selected shows that host inside its group."""
-        selected = self.table.selected_ids()
-        if not self._needle() and self.nav.searching and len(selected) == 1:
-            self.show_in_group(selected[0])
-        else:
-            self._show_hosts()
+    def _end_search(self) -> None:
+        if self.search.text():
+            self._clear_search()
+            self._show_hosts()  # back to the group or tag picked before, selection kept
 
     def _columns_shown(self) -> None:
         table = self.table
@@ -1302,7 +1299,8 @@ class MainWindow(QMainWindow):
 
     def _align_refresh(self) -> None:
         if self.toolbar.isVisible():
-            right = self.table.mapTo(self, QPoint(self.table.width(), 0)).x()
+            pane = self._hosts_pane  # the card's edge, where the table ends
+            right = pane.mapTo(self, QPoint(pane.width(), 0)).x()
             self.toolbar.align_end(right - self.toolbar.x())
 
     def resizeEvent(self, event: QResizeEvent) -> None:

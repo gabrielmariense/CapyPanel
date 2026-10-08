@@ -116,18 +116,12 @@ def test_double_click_connects_and_show_in_group_opens_the_group(
     assert window.table.selected_ids() == [_id(window, "TRIAGE-02")]
 
 
-def test_clearing_the_search_shows_the_selected_host_in_its_group(window: MainWindow) -> None:
+def test_clearing_the_search_goes_back_to_the_group_picked_before(window: MainWindow) -> None:
     _search(window, "triage")
     window.table.select_ids([_id(window, "TRIAGE-01")])
     window.search.clear()
-    window._search_edited()  # what the typing pause does
-    assert window.nav.groups.selectedItems()[0].text(0).startswith("Triage")
-    assert window.table.selected_ids() == [_id(window, "TRIAGE-01")]
-    _search(window, "lab")
-    window.table.clearSelection()
-    window.search.clear()
-    window._search_edited()
-    assert _rows(window) == ["TRIAGE-01", "TRIAGE-02"]  # nothing selected: back where it was
+    window._show_hosts()  # what the typing pause does
+    assert _rows(window) == ["LAB-01"]  # Labs, as before the search; no jump to Triage
 
 
 def test_down_in_the_search_box_moves_to_the_first_result(window: MainWindow) -> None:
@@ -164,11 +158,16 @@ def test_refresh_checks_only_the_search_results(
     assert sorted(seen) == ["10.0.4.21", "10.0.4.22"]
 
 
-def test_escape_clears_the_search(window: MainWindow) -> None:
+def test_escape_clears_the_search_wherever_the_focus_is(window: MainWindow) -> None:
     window.search.setText("triage")
     escape = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
     window.search.keyPressEvent(escape)
     assert window.search.text() == ""
+    _search(window, "triage")
+    window.table.setFocus()
+    window._end_search()  # the window's Esc shortcut
+    assert window.search.text() == ""
+    assert _rows(window) == ["LAB-01"]
 
 
 def test_search_covers_only_the_columns_shown(window: MainWindow) -> None:
