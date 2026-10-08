@@ -891,7 +891,8 @@ class MainWindow(QMainWindow):
     def set_theme(self, theme_id: str) -> None:
         theme = self.registry.find(theme_id)
         themes.apply(theme)
-        self.toolbar.restyle()  # icon colour and caption capitals follow the theme
+        self.toolbar.restyle()  # icon colour follows the theme
+        self._align_refresh_later()  # each theme pads the toolbar differently
         for item in self._theme_group.actions():
             item.setChecked(item.data() == theme.id)
         self._prefs["theme"] = theme.id
@@ -1347,8 +1348,9 @@ class MainWindow(QMainWindow):
 
     def _align_refresh(self) -> None:
         if self.toolbar.isVisible():
+            left = self._splitter.mapTo(self, QPoint(0, 0)).x()
             right = self.table.mapTo(self, QPoint(self.table.width(), 0)).x()
-            self.toolbar.align_end(right - self.toolbar.x())
+            self.toolbar.align(left - self.toolbar.x(), right - self.toolbar.x())
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)

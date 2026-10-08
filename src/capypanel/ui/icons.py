@@ -1,10 +1,13 @@
-"""Icons drawn from Windows' own icon font, and the status dots."""
+"""Icons from Tabler Icons (MIT, see tabler/LICENSE), drawn in the theme's colour, and the
+status dots."""
 
-from PySide6.QtCore import QRect, Qt
-from PySide6.QtGui import QColor, QFont, QGuiApplication, QIcon, QPainter, QPixmap
+from pathlib import Path
 
-# Segoe Fluent Icons / MDL2 Assets
-GLYPHS = {"connect": "\ue7f4", "refresh": "\ue72c", "search": "\ue721"}
+from PySide6.QtCore import QByteArray, QRectF, Qt
+from PySide6.QtGui import QColor, QGuiApplication, QIcon, QPainter, QPixmap
+from PySide6.QtSvg import QSvgRenderer
+
+TABLER_DIR = Path(__file__).resolve().parent / "tabler"
 STATUS_COLORS = {"online": "#3fae4a", "offline": "#8a8a8a", "not-found": "#d29922"}
 
 
@@ -17,15 +20,14 @@ def _pixmap(px: int) -> QPixmap:
     return pixmap
 
 
-def glyph_icon(name: str, color: QColor, px: int = 16) -> QIcon:
+def tabler_icon(name: str, color: QColor, px: int = 16) -> QIcon:
+    """A Tabler outline icon (tabler/<name>.svg): its strokes use currentColor."""
+    svg = (TABLER_DIR / f"{name}.svg").read_text(encoding="utf-8")
+    renderer = QSvgRenderer(QByteArray(svg.replace("currentColor", color.name()).encode()))
     pixmap = _pixmap(px)
     painter = QPainter(pixmap)
-    font = QFont()
-    font.setFamilies(["Segoe Fluent Icons", "Segoe MDL2 Assets"])  # Windows 11, Windows 10
-    font.setPixelSize(px)
-    painter.setFont(font)
-    painter.setPen(color)
-    painter.drawText(QRect(0, 0, px, px), Qt.AlignmentFlag.AlignCenter, GLYPHS[name])
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    renderer.render(painter, QRectF(0, 0, px, px))
     painter.end()
     return QIcon(pixmap)
 

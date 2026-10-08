@@ -1,10 +1,10 @@
-"""The toolbar: buttons in captioned groups (set here, not by users) and Refresh on the right,
+"""The toolbar: outlined buttons in groups split by thin lines (set here, not by users) and Refresh,
 lined up with the end of the host table. Refresh always checks every host the table shows (the
 group picked on the left); one host is checked from its own right-click menu. Left-click picks
 one check; right-click opens a panel to run several at once."""
 
-from PySide6.QtCore import QEvent, QPoint, Qt, Signal
-from PySide6.QtGui import QFont, QPalette, QShowEvent
+from PySide6.QtCore import QEvent, QMargins, QPoint, QSize, Qt, Signal
+from PySide6.QtGui import QPalette, QShowEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QFrame,
@@ -14,6 +14,8 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QSpacerItem,
+    QStyle,
+    QStyleOptionToolButton,
     QToolBar,
     QToolButton,
     QVBoxLayout,
@@ -21,9 +23,10 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.i18n import _
-from capypanel.ui.icons import glyph_icon
+from capypanel.ui.icons import tabler_icon
 from capypanel.ui.main_window.actions import Actions
-from capypanel.ui.themes import engine as themes
+
+BAR_GAP = 6  # space above and below the toolbar's buttons (design T1)
 
 
 class RefreshPanel(QFrame):
@@ -89,8 +92,8 @@ class MainToolBar(QToolBar):
         self.setMovable(False)
         self.setFloatable(False)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)  # no hide-me menu
+        self.setIconSize(QSize(16, 16))  # T1: icons at the text's height, not 24 px
         self._commands = commands
-        self._captions: list[tuple[QLabel, str]] = []
 
         # Connect: the host's own profile; the arrow connects once with another profile.
         self.connect_button = _button()
@@ -105,9 +108,10 @@ class MainToolBar(QToolBar):
         row = QWidget()
         row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self._row = QHBoxLayout(row)
-        self._row.setContentsMargins(0, 0, 0, 0)
+        self._row.setContentsMargins(0, 0, 0, 0)  # set by align(), once the theme is known
         self._row.setSpacing(0)
-        self._row.addWidget(self._group("connect", [self.connect_button]))
+        self._groups = 0
+        self._row.addWidget(self._group([self.connect_button]))
         self._row.addStretch(1)
         self.refresh_button = _button()
         self.refresh_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
@@ -131,12 +135,7 @@ class MainToolBar(QToolBar):
         self.retranslate()
 
     def retranslate(self) -> None:
-        custom = themes.current().engine == "custom"
-        texts = {"connect": _("Connect")}
-        for label, key in self._captions:
-            # Capitals in the CapyPanel looks, in the text itself: a theme switch resets fonts.
-            label.setText(texts[key].upper() if custom else texts[key])
-        gap = " " if custom else ""  # QSS drops the icon gap
+        gap = " "  # the stylesheet drops the gap between icon and text
         self.connect_button.setText(gap + _("Connect"))
         self.connect_button.setToolTip(
             _("Connect to the selected hosts; the arrow connects once with another profile")
@@ -148,11 +147,21 @@ class MainToolBar(QToolBar):
         self.refresh_status.setText(_("&Status"))
         self.refresh_users.setText(_("&Logged-on users"))
 
-    def align_end(self, right: int) -> None:
-        """Puts Refresh's right edge at `right`, in this toolbar's coordinates."""
+    def align(self, left: int, right: int) -> None:
+        """Lines the buttons up with the panes, in this toolbar's coordinates: the first group
+        starts at `left` and Refresh ends at `right`. Measured, so it holds in every theme."""
         row = self.refresh_button.parentWidget()
         if row is None:
             return
+        start = row.mapTo(self, QPoint(0, 0)).x()  # the margins move what's inside, not the row
+        # T1's 6 px above and below the buttons, less the margin the theme's style already adds
+        # (it differs per theme, and the Windows style ignores padding).
+        layout = self.layout()
+        style_margin = layout.contentsMargins().top() if layout is not None else 0
+        wanted = QMargins(max(0, left - start), max(0, BAR_GAP - style_margin), 0, 0)
+        wanted.setBottom(wanted.top())
+        if self._row.contentsMargins() != wanted:
+            self._row.setContentsMargins(wanted)
         end = row.mapTo(self, QPoint(row.width(), 0)).x()  # doesn't move with the spacer
         width = max(0, end - right)
         if width != self._after_refresh.sizeHint().width():
@@ -169,37 +178,54 @@ class MainToolBar(QToolBar):
             self.restyle()
 
     def restyle(self) -> None:
-        """Icons in the theme's text colour, and captions for the theme (see retranslate)."""
-        color = self.palette().color(QPalette.ColorRole.ButtonText)
-        self.connect_button.setIcon(glyph_icon("connect", color))
-        self.refresh_button.setIcon(glyph_icon("refresh", color))
+        """Icons in the theme's text colour."""
+        color = self.connect_button.palette().color(QPalette.ColorRole.ButtonText)  # its text's
+        self.connect_button.setIcon(tabler_icon("plug-connected", color))
+        self.refresh_button.setIcon(tabler_icon("refresh", color))
         self.retranslate()
 
-    def _group(self, key: str, buttons: list[QToolButton]) -> QWidget:
+    def _group(self, buttons: list[QToolButton]) -> QWidget:
+        """Buttons that belong together; a thin line sets each group apart from the one before."""
         group = QWidget()
-        column = QVBoxLayout(group)
-        column.setContentsMargins(6, 0, 6, 0)
-        column.setSpacing(0)
-        row = QHBoxLayout()
-        row.setSpacing(2)
+        row = QHBoxLayout(group)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(6)  # between buttons
+        if self._groups:  # T1: 10 px on each side of the line
+            row.addSpacing(4)
+            divider = QFrame()
+            divider.setObjectName("toolDivider")
+            divider.setFixedWidth(1)
+            row.addWidget(divider)
+            row.setContentsMargins(4, 0, 0, 0)
+        self._groups += 1
         for button in buttons:
             row.addWidget(button)
-        caption = QLabel()
-        caption.setObjectName("toolCaption")
-        caption.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        font = QFont(caption.font())
-        font.setPointSizeF(font.pointSizeF() * 0.85)
-        caption.setFont(font)
-        column.addLayout(row)
-        column.addWidget(caption)
-        # A caption names a group of buttons; over one button it would only repeat its name.
-        caption.setVisible(len(buttons) > 1)
-        self._captions.append((caption, key))
         return group
 
 
+class ToolButton(QToolButton):
+    """Sized to exactly what it draws: icon, text and the theme's padding. Qt's own size also
+    reserves an icon gap and margins the theme doesn't draw, which left buttons ~12 px wider."""
+
+    def sizeHint(self) -> QSize:
+        option = QStyleOptionToolButton()
+        self.initStyleOption(option)
+        metrics = self.fontMetrics()
+        icon = option.iconSize if not self.icon().isNull() else QSize(0, 0)
+        content = QSize(
+            icon.width() + 4 + metrics.horizontalAdvance(self.text()),  # Qt draws a 4 px gap
+            max(icon.height(), metrics.height()),
+        )
+        return self.style().sizeFromContents(
+            QStyle.ContentsType.CT_ToolButton, option, content, self
+        )
+
+    def minimumSizeHint(self) -> QSize:
+        return self.sizeHint()
+
+
 def _button() -> QToolButton:
-    button = QToolButton()
+    button = ToolButton()
     button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
     button.setAutoRaise(True)
     return button
