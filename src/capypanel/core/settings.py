@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from capypanel.core import winsec
+from capypanel.core import files, winsec
 from capypanel.core.i18n import _
 
 log = logging.getLogger(__name__)
@@ -120,8 +120,7 @@ def load_settings(path: Path) -> dict[str, Any]:
     except FileNotFoundError:
         return {"schema": SETTINGS_SCHEMA}
     except ValueError:
-        path.replace(path.with_name(path.name + ".broken"))
-        return {"schema": SETTINGS_SCHEMA}
+        data = None
     if not isinstance(data, dict):
         path.replace(path.with_name(path.name + ".broken"))
         return {"schema": SETTINGS_SCHEMA}
@@ -129,8 +128,5 @@ def load_settings(path: Path) -> dict[str, Any]:
 
 
 def save_settings(path: Path, data: Mapping[str, Any]) -> None:
-    """Write to a temp file, then swap it in, so a crash never leaves a half-written file."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-    os.replace(tmp, path)
+    files.write_json(path, dict(data))

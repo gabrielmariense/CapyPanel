@@ -17,9 +17,9 @@ import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QColor, QFont, QGuiApplication, QPalette
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtWidgets import QApplication, QListView, QTreeView, QWidget
 
 from capypanel.core.i18n import N_, _
 
@@ -134,6 +134,7 @@ _current: Theme = DEFAULT_THEME
 _applied_once = False
 _watching_system = False
 _native_font: QFont | None = None
+_rows_placer: QObject | None = None
 
 
 def current() -> Theme:
@@ -158,6 +159,7 @@ def apply(theme: Theme) -> None:
     engine_changed = theme.engine != _current.engine or not _applied_once
     _current, _applied_once = theme, True
     _follow_system_changes()
+    _place_rows_when_shown(app)
     if theme.engine == "native":
         # Windows' default app font is 9 pt; use the same size as the custom themes.
         readable = QFont(_native_font)
@@ -245,6 +247,23 @@ def _system_scheme_changed() -> None:
         apply(_current)
 
 
+class _PlaceRowsOnShow(QObject):
+    """Lists and trees can place their rows before the theme's row padding reaches them, then
+    keep those places: rows drew on top of each other. Each one places them again when shown."""
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.Show and isinstance(watched, (QListView, QTreeView)):
+            watched.doItemsLayout()
+        return False
+
+
+def _place_rows_when_shown(app: QApplication) -> None:
+    global _rows_placer
+    if _rows_placer is None:
+        _rows_placer = _PlaceRowsOnShow(app)
+        app.installEventFilter(_rows_placer)
+
+
 def _refont(app: QApplication, families: list[str]) -> None:
     """Widgets given an explicit font (a bold heading) keep their old family; move them over."""
     for widget in app.allWidgets():
@@ -314,7 +333,7 @@ QToolButton:hover { background: %(hover)s; color: %(text)s; }
 /* A line under the toolbar, like the menu bar's: without it, it merges into the panes below. */
 QToolBar { background: %(bg)s; border: none; border-bottom: 1px solid %(border)s;
            padding: 0; spacing: 6px; }
-/* Toolbar buttons follow design T1: outlined, about 28 px tall, 16 px Tabler icons. Thin lines
+/* Toolbar buttons: outlined, about 28 px tall, 16 px Tabler icons. Thin lines
    divide the groups. Styling a tool button drops Fusion's menu arrow, so draw our own. */
 QToolBar QToolButton { padding: 3px 9px; border: 1px solid %(border)s; background: %(raised)s;
                        color: %(text2)s; }
@@ -340,6 +359,15 @@ QLineEdit, QPlainTextEdit, QSpinBox { background: %(card)s; border: 1px solid %(
                             selection-background-color: %(accent)s; }
 QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus { border: 1px solid %(accent)s; }
 QLineEdit:disabled { color: %(text3)s; background: %(raised)s; }
+/* Styling a spin box drops Fusion's arrows, leaving empty squares: draw our own. */
+QSpinBox::up-button, QSpinBox::down-button { subcontrol-origin: border; width: 20px;
+    border: none; border-left: 1px solid %(border)s; background: transparent; }
+QSpinBox::up-button { subcontrol-position: top right; border-top-right-radius: %(r2)spx; }
+QSpinBox::down-button { subcontrol-position: bottom right;
+                        border-bottom-right-radius: %(r2)spx; }
+QSpinBox::up-button:hover, QSpinBox::down-button:hover { background: %(hover)s; }
+QSpinBox::up-arrow { image: url("%(arrow_up)s"); width: 10px; height: 6px; }
+QSpinBox::down-arrow { image: url("%(arrow)s"); width: 10px; height: 6px; }
 /* The tag field: a box like a text input, holding chips and a borderless text box. */
 QFrame#tagEdit { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx; }
 QFrame#tagEdit[focused="true"] { border-color: %(accent)s; }
@@ -451,7 +479,7 @@ QTreeView#grid::item:last, QTreeView#grid::item:only-one,
 QTreeView#grid QHeaderView::section:last,
 QTreeView#grid QHeaderView::section:only-one { border-right: none; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
-/* Toolbar buttons follow design T1 (see the CapyPanel stylesheet), square like the panes here.
+/* Toolbar buttons like the CapyPanel stylesheet's, square like the panes here.
    Styling them drops the style's own menu arrow, so the theme's arrow is drawn instead. */
 QToolBar#main QToolButton { color: %(text2)s; background: %(card)s; border: 1px solid %(border)s;
                             border-radius: 0; padding: 3px 9px; }
@@ -484,6 +512,7 @@ def stylesheet(theme: Theme) -> str:
     t["r"], t["r2"] = theme.radius, max(0, theme.radius - 2)
     t["check"] = (THEMES_DIR / "check.svg").as_posix()
     t["arrow"] = (THEMES_DIR / f"arrow-{theme.scheme}.svg").as_posix()
+    t["arrow_up"] = (THEMES_DIR / f"arrow-up-{theme.scheme}.svg").as_posix()
     return _QSS % t  # noqa: UP031 -- %-format: CSS braces would all need doubling for .format()
 
 

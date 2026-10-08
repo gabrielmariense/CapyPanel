@@ -37,6 +37,7 @@ from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import _, ngettext
 from capypanel.ui.groups import HOSTS_MIME, ROLE_ID, ROLE_KIND, GroupTree, hosts_mime
 from capypanel.ui.icons import tabler_icon
+from capypanel.ui.menus import popup
 
 ROLE_QUIET = Qt.ItemDataRole.UserRole + 2  # a Status or User cell to show greyed
 
@@ -362,9 +363,7 @@ class HostTable(QTreeWidget):
         self._marker.needle = needle
         if needle and self.isColumnHidden(self.GROUP):
             self.setColumnHidden(self.GROUP, False)
-            self.resizeColumnToContents(self.GROUP)
-            fitted = min(self.columnWidth(self.GROUP) + 16, 260)
-            self.setColumnWidth(self.GROUP, max(fitted, self.minimum_width(self.GROUP)))
+            self._fit_column(self.GROUP)
         self.setColumnHidden(self.GROUP, not needle)
         self.viewport().update()
 
@@ -432,7 +431,7 @@ class HostTable(QTreeWidget):
             item.setCheckable(True)
             item.setChecked(not self.isColumnHidden(index))
             item.toggled.connect(lambda shown, i=index: self._show_column(i, shown))
-        menu.exec(self.header().viewport().mapToGlobal(position))
+        popup(menu, self.header().viewport().mapToGlobal(position))
 
     def _show_column(self, index: int, shown: bool) -> None:
         self.setColumnHidden(index, not shown)
@@ -455,11 +454,14 @@ class HostTable(QTreeWidget):
         # into the rest. Fixed starting widths overflowed narrow windows. Columns stay draggable.
         self._sized = True
         for column in range(self.columnCount()):
-            if column == self.NOTES:
-                continue
-            self.resizeColumnToContents(column)
-            fitted = min(self.columnWidth(column) + 16, 260)
-            self.setColumnWidth(column, max(fitted, self.minimum_width(column)))
+            if column != self.NOTES:
+                self._fit_column(column)
+
+    def _fit_column(self, column: int) -> None:
+        """As wide as its content, up to 260 px, and never narrower than its title."""
+        self.resizeColumnToContents(column)
+        fitted = min(self.columnWidth(column) + 16, 260)
+        self.setColumnWidth(column, max(fitted, self.minimum_width(column)))
 
     def show_cells(self, host_id: str, cells: "Cells") -> None:
         """New Refresh results for one host, without rebuilding the table."""

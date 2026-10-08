@@ -3,7 +3,7 @@ Groups show in the list's own order (not sorted), so a team can arrange them as 
 "Sort A–Z" is a one-time button."""
 
 from PySide6.QtCore import QMimeData, Qt, Signal
-from PySide6.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent, QShowEvent
+from PySide6.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
@@ -46,11 +46,6 @@ class GroupTree(QTreeWidget):
         self.setIndentation(GROUP_INDENT)
         self.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.set_editable(True)
-
-    def showEvent(self, event: QShowEvent) -> None:
-        super().showEvent(event)
-        # Rows placed before the theme's padding arrived would stay cramped: place them again.
-        self.doItemsLayout()
 
     def set_editable(self, editable: bool) -> None:
         """Read-only lists can't be rearranged."""

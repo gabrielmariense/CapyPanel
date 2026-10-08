@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from capypanel.core import winsec
-from capypanel.core.tools.profile_store import ProfileStore
+from capypanel.core.tools.profile_store import ProfileStore, make_id
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 
 
@@ -48,10 +48,10 @@ def test_the_default_lives_in_the_profiles_folder(tmp_path: Path) -> None:
 
 
 def test_ids_come_from_the_name_and_never_clash(tmp_path: Path) -> None:
-    store = ProfileStore(tmp_path / "profiles")
-    assert store.new_id("Clínicas (SecureVNC)") == "clinicas-securevnc"
-    assert store.new_id("UltraVNC") == "ultravnc-2"  # the starter's id is taken
-    assert store.new_id("!!!") == "profile"
+    taken = {p.id for p in ProfileStore(tmp_path / "profiles").all()}
+    assert make_id("Clínicas (SecureVNC)", taken) == "clinicas-securevnc"
+    assert make_id("UltraVNC", taken) == "ultravnc-2"  # the starter's id is taken
+    assert make_id("!!!", taken) == "profile"
 
 
 def test_a_broken_file_is_reported_and_the_rest_still_load(tmp_path: Path) -> None:

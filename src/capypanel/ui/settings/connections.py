@@ -6,7 +6,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QUrl
-from PySide6.QtGui import QDesktopServices, QShowEvent
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -36,8 +36,10 @@ from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profile_store import make_id
 from capypanel.core.tools.profiles import ConnectionProfile, login_label, logins_of
+from capypanel.ui.connect import ask_for_program
 from capypanel.ui.hosts import confirm
-from capypanel.ui.settings.pages import Page, PathLabel, hint
+from capypanel.ui.notes import hint
+from capypanel.ui.settings.pages import Page, PathLabel
 
 MAX_PROFILE_NAME = 64
 
@@ -468,12 +470,6 @@ class ConnectionsPage(Page):
             settings={pid: c for pid, c in self._settings.items() if pid in self._changed},
         )
 
-    def showEvent(self, event: QShowEvent) -> None:
-        super().showEvent(event)
-        # Same fix as the Settings page list: place the rows again once the theme's padding
-        # has reached the list, or they draw on top of each other.
-        self.list.doItemsLayout()
-
     # ---- tools (paths chosen here are also kept until Save) ----
 
     def _tool_view(self, tool: ToolDefinition) -> ToolDefinition:
@@ -530,12 +526,7 @@ class ConnectionsPage(Page):
             QDesktopServices.openUrl(QUrl(tool.website))  # the browser downloads; we never do
 
     def locate(self, tool: ToolDefinition) -> None:
-        name, _filter = QFileDialog.getOpenFileName(
-            self,
-            _("Where is {tool}?").format(tool=tool.name),
-            str(Path.home()),
-            _("Programs (*.exe)"),
-        )
+        name = ask_for_program(self, tool)
         if name:
             self._tool_paths[tool.id] = name
             self._fill_tools()
@@ -543,6 +534,3 @@ class ConnectionsPage(Page):
     def automatic(self, tool: ToolDefinition) -> None:
         self._tool_paths[tool.id] = ""
         self._fill_tools()
-
-    def _error(self, message: str) -> None:
-        QMessageBox.warning(self, "CapyPanel", message)

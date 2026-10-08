@@ -7,7 +7,16 @@ import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QListWidget,
+    QMessageBox,
+    QSpinBox,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+)
 
 from capypanel.core import settings
 from capypanel.ui.main_window.window import MainWindow
@@ -166,11 +175,11 @@ def test_clicking_a_row_draws_no_focus_box(qapp: QApplication, tmp_path: Path) -
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_images_the_stylesheet_uses_ship_with_the_themes(theme: themes.Theme) -> None:
-    # Custom themes draw their own checkbox ticks and drop-down arrows; a missing file
-    # means an empty checked box or a drop-down that doesn't look clickable.
+    # Custom themes draw their own checkbox ticks and arrows; a missing file means an empty
+    # checked box, or a drop-down or number box that doesn't look clickable.
     sheet = themes.stylesheet(theme)
     images = set(re.findall(r'url\("([^"]+)"\)', sheet))
-    assert len(images) == 2  # the tick, and the arrow of drop-downs and toolbar buttons
+    assert len(images) == 3  # the tick, the down arrow, and number boxes' up arrow
     assert all(Path(image).is_file() for image in images), images
 
 
@@ -187,3 +196,49 @@ def test_dialog_buttons_never_cut_their_text(qapp: QApplication, theme: themes.T
     for button in buttons:
         assert button.width() > button.fontMetrics().horizontalAdvance(button.text())
     box.close()
+
+
+def test_rows_placed_before_the_theme_arrived_never_overlap(qapp: QApplication) -> None:
+    # Choosing a row before the list is shown places the rows without the theme's padding.
+    themes.apply(themes.Registry().find("capypanel-dark"))
+    dialog = QDialog()
+    flat, tree = QListWidget(), QTreeWidget()
+    flat.addItems(["General", "Host lists", "Connections"])
+    flat.setCurrentRow(0)
+    items = [QTreeWidgetItem([name]) for name in ("Offices", "Clinics", "Labs")]
+    tree.addTopLevelItems(items)
+    tree.setCurrentItem(items[0])
+    layout = QVBoxLayout(dialog)
+    layout.addWidget(flat)
+    layout.addWidget(tree)
+    dialog.show()
+    qapp.processEvents()
+    rows = [flat.visualItemRect(flat.item(i)) for i in range(3)]
+    rows += [tree.visualItemRect(item) for item in items]
+    dialog.close()
+    for above, below in [
+        *zip(rows[:2], rows[1:3], strict=True),
+        *zip(rows[3:5], rows[4:], strict=True),
+    ]:
+        assert below.top() > above.bottom(), f"rows overlap: {above} and {below}"
+    assert all(r.height() > flat.fontMetrics().height() for r in rows)
+
+
+@pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
+def test_number_boxes_show_their_arrows(qapp: QApplication, theme: themes.Theme) -> None:
+    # Styling a spin box drops Fusion's arrows: the buttons were empty squares.
+    themes.apply(theme)
+    box = QSpinBox()
+    box.resize(120, 32)
+    box.show()
+    qapp.processEvents()
+    image = box.grab().toImage()
+    box.close()
+    width, height = image.width(), image.height()
+    for top, bottom in ((4, height // 2 - 3), (height // 2 + 3, height - 4)):  # up, then down
+        colors = {
+            image.pixelColor(x, y).lightness()
+            for x in range(width - 15, width - 4)
+            for y in range(top, bottom)
+        }
+        assert max(colors) - min(colors) > 40, "an arrow button is empty"

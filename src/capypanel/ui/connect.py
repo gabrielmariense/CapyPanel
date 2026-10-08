@@ -7,7 +7,6 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QGuiApplication
@@ -25,7 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.core.hosts.model import Group
+from capypanel.core.hosts.model import MAX_ADDRESS, Group
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.tools import detect, profiles, rfb
 from capypanel.core.tools.catalog import Catalogs
@@ -33,12 +32,12 @@ from capypanel.core.tools.connect import Credential, SessionCredentials, Target,
 from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 from capypanel.core.tools.viewer_settings import SettingsFileError
+from capypanel.ui.notes import hint
 
 log = logging.getLogger(__name__)
 MANY_CONNECTIONS = 5  # more than this at once asks first
 MAX_TEXT = 256  # longest user name or password accepted, unless the tool allows less
 DEFAULT_PORT = 5900
-MAX_ADDRESS = 253  # the longest DNS name
 
 
 @dataclass(frozen=True)
@@ -83,9 +82,7 @@ class CredentialDialog(QDialog):
             if on_command_line
             else _("It's handed to the viewer privately, never on its command line.")
         )  # fmt: skip
-        note = QLabel(f"{remembered} {how}")
-        note.setObjectName("hint")
-        note.setWordWrap(True)
+        note = hint(f"{remembered} {how}")
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -158,6 +155,17 @@ class ManualConnectDialog(QDialog):
         return Request(address, Target(address, port), self.profile.currentData() or "")
 
 
+def ask_for_program(parent: QWidget, tool: ToolDefinition) -> str:
+    """The .exe the user picks for a tool; "" if they cancel."""
+    name, _filter = QFileDialog.getOpenFileName(
+        parent,
+        _("Where is {tool}?").format(tool=tool.name),
+        str(Path.home()),
+        _("Programs (*.exe)"),
+    )
+    return name
+
+
 class Connector:
     """Starts the right tool for each host's connection profile, asking for what's missing."""
 
@@ -166,12 +174,10 @@ class Connector:
         parent: QWidget,
         catalogs: Catalogs,
         credentials: SessionCredentials,
-        prefs: dict[str, Any],
     ) -> None:
         self._parent = parent
         self.catalogs = catalogs
         self.credentials = credentials
-        self._prefs = prefs
         self.open_settings: Callable[[], None] | None = None  # Settings > Connections
 
     # ---- profiles ----
@@ -357,12 +363,7 @@ class Connector:
             return None
         if box.clickedButton() is not locate:
             return None
-        name, _filter = QFileDialog.getOpenFileName(
-            self._parent,
-            _("Where is {tool}?").format(tool=tool.name),
-            str(Path.home()),
-            _("Programs (*.exe)"),
-        )
+        name = ask_for_program(self._parent, tool)
         if not name:
             return None
         try:

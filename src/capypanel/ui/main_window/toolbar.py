@@ -26,7 +26,7 @@ from capypanel.core.i18n import _
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.main_window.actions import Actions
 
-BAR_GAP = 6  # space above and below the toolbar's buttons (design T1)
+BAR_GAP = 6  # space above and below the toolbar's buttons
 
 
 class RefreshPanel(QFrame):
@@ -92,8 +92,7 @@ class MainToolBar(QToolBar):
         self.setMovable(False)
         self.setFloatable(False)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)  # no hide-me menu
-        self.setIconSize(QSize(16, 16))  # T1: icons at the text's height, not 24 px
-        self._commands = commands
+        self.setIconSize(QSize(16, 16))  # icons at the text's height, not 24 px
 
         # Connect: the host's own profile; the arrow connects once with another profile.
         self.connect_button = _button()
@@ -154,7 +153,7 @@ class MainToolBar(QToolBar):
         if row is None:
             return
         start = row.mapTo(self, QPoint(0, 0)).x()  # the margins move what's inside, not the row
-        # T1's 6 px above and below the buttons, less the margin the theme's style already adds
+        # 6 px above and below the buttons, less the margin the theme's style already adds
         # (it differs per theme, and the Windows style ignores padding).
         layout = self.layout()
         style_margin = layout.contentsMargins().top() if layout is not None else 0
@@ -190,7 +189,7 @@ class MainToolBar(QToolBar):
         row = QHBoxLayout(group)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(6)  # between buttons
-        if self._groups:  # T1: 10 px on each side of the line
+        if self._groups:  # 10 px on each side of the line
             row.addSpacing(4)
             divider = QFrame()
             divider.setObjectName("toolDivider")

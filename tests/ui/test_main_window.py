@@ -5,14 +5,15 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
+from PySide6.QtWidgets import QApplication, QMenu
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.locations import recent_lists
 from capypanel.core.hosts.model import HostList
 from capypanel.ui.hosts import HostDialog, group_choices
+from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.window import MainWindow
 
 
@@ -187,3 +188,20 @@ def test_the_view_menu_stays_open_while_ticking(window: MainWindow) -> None:
     )
     assert not window.commands.show_tags.isChecked() and menu.isVisible()
     menu.close()
+
+
+def test_right_click_menus_dont_pile_up(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A menu is made per click; each one used to stay until the app closed.
+    class Shown(QMenu):
+        def exec(self, *_args: object) -> None:  # type: ignore[override]
+            return None
+
+    monkeypatch.setattr(window_module, "QMenu", Shown)
+    before = len(window.findChildren(QMenu))
+    for _ in range(3):
+        window._host_menu(QPoint(5, 5))
+        window._group_menu(QPoint(5, 5))
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    assert len(window.findChildren(QMenu)) == before

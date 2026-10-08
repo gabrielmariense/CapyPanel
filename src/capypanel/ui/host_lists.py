@@ -5,7 +5,6 @@ from collections.abc import Callable
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -125,11 +124,6 @@ class HostListsView(QWidget):
             if item is not None and locations.same_path(Path(item.data(0, ROLE_PATH)), path):
                 self.tree.setCurrentItem(item)
                 return
-
-    def showEvent(self, event: QShowEvent) -> None:
-        super().showEvent(event)
-        # Rows placed before the theme's padding arrived would stay cramped: place them again.
-        self.tree.doItemsLayout()
 
     def saved(self, document: OpenList | None) -> None:
         """After a Save that keeps the window open: the open list may have changed."""

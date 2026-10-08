@@ -5,17 +5,16 @@ elsewhere: see profile_store."""
 
 import json
 import logging
-import os
-import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from enum import StrEnum
 from pathlib import Path
 
-from capypanel.core import settings, winsec
+from capypanel.core import files, settings, winsec
+from capypanel.core.files import can_create_files
 from capypanel.core.tools import definitions
 from capypanel.core.tools.definitions import ToolDefinition, ToolDefinitionError
-from capypanel.core.tools.profile_store import ProfileStore, can_create_files
+from capypanel.core.tools.profile_store import ProfileStore
 
 log = logging.getLogger(__name__)
 SHIPPED_DIR = Path(__file__).resolve().parent / "presets"
@@ -106,19 +105,8 @@ class ToolCatalog:
             else:
                 chosen.pop(tool_id, None)
         if not self.folder.is_dir():
-            self.folder.mkdir(parents=True)
-            try:  # read-only for everyone else; ProgramData would let any user add files
-                winsec.make_shared(self.folder, winsec.current_user_sid())
-            except OSError as e:
-                log.warning("Couldn't set permissions on %s: %s", self.folder, e)
-        path = self.folder / PATHS_FILE
-        tmp = path.with_name(f".{path.name}.{uuid.uuid4().hex[:8]}.tmp")
-        try:
-            data = {"schema": 1, "paths": chosen}
-            tmp.write_bytes((json.dumps(data, indent=2, ensure_ascii=False) + "\n").encode())
-            os.replace(tmp, path)
-        finally:
-            tmp.unlink(missing_ok=True)
+            files.make_shared_folder(self.folder)
+        files.write_json(self.folder / PATHS_FILE, {"schema": 1, "paths": chosen})
         log.info("Tool paths for this PC: %s", chosen)
         self.reload()
 
