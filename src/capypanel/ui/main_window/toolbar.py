@@ -3,7 +3,7 @@ lined up with the end of the host table. Refresh always checks every host the ta
 group picked on the left); one host is checked from its own right-click menu. Left-click picks
 one check; right-click opens a panel to run several at once."""
 
-from PySide6.QtCore import QEvent, QPoint, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QMargins, QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QPalette, QShowEvent
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -108,8 +108,7 @@ class MainToolBar(QToolBar):
         row = QWidget()
         row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self._row = QHBoxLayout(row)
-        # T1's 6 px above and below the buttons, set here: the Windows style ignores padding.
-        self._row.setContentsMargins(0, BAR_GAP, 0, BAR_GAP)
+        self._row.setContentsMargins(0, 0, 0, 0)  # set by align(), once the theme is known
         self._row.setSpacing(0)
         self._groups = 0
         self._row.addWidget(self._group([self.connect_button]))
@@ -155,9 +154,14 @@ class MainToolBar(QToolBar):
         if row is None:
             return
         start = row.mapTo(self, QPoint(0, 0)).x()  # the margins move what's inside, not the row
-        margins = self._row.contentsMargins()
-        if margins.left() != max(0, left - start):
-            self._row.setContentsMargins(max(0, left - start), BAR_GAP, 0, BAR_GAP)
+        # T1's 6 px above and below the buttons, less the margin the theme's style already adds
+        # (it differs per theme, and the Windows style ignores padding).
+        layout = self.layout()
+        style_margin = layout.contentsMargins().top() if layout is not None else 0
+        wanted = QMargins(max(0, left - start), max(0, BAR_GAP - style_margin), 0, 0)
+        wanted.setBottom(wanted.top())
+        if self._row.contentsMargins() != wanted:
+            self._row.setContentsMargins(wanted)
         end = row.mapTo(self, QPoint(row.width(), 0)).x()  # doesn't move with the spacer
         width = max(0, end - right)
         if width != self._after_refresh.sizeHint().width():

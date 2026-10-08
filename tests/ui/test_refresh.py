@@ -217,7 +217,7 @@ def test_the_toolbar_stays_lined_up_after_a_theme_switch(window: MainWindow) -> 
     # Each theme pads the toolbar differently; the Windows style ignores padding altogether.
     window.resize(1200, 600)
     window.show()
-    for theme in ("capypanel-dark", "windows-dark"):
+    for theme in ("capypanel-dark", "windows-dark", "paper"):
         window.set_theme(theme)
         for _ in range(10):
             QApplication.processEvents()
@@ -225,7 +225,8 @@ def test_the_toolbar_stays_lined_up_after_a_theme_switch(window: MainWindow) -> 
         assert (
             abs(connect.mapTo(window, QPoint(0, 0)).x() - nav.mapTo(window, QPoint(0, 0)).x()) <= 1
         )
-        assert connect.mapTo(window.toolbar, QPoint(0, 0)).y() >= 6  # room above the buttons
+        above = connect.mapTo(window.toolbar, QPoint(0, 0)).y()  # T1: 6 px above and below
+        assert above == 6 and window.toolbar.height() - above - connect.height() == 6
     window.set_theme(themes.DEFAULT_THEME.id)  # as the other tests expect
 
 
