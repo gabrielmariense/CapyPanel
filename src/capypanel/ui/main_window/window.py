@@ -69,7 +69,7 @@ from capypanel.ui.main_window.host_views import (
     SearchBox,
 )
 from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
-from capypanel.ui.menus import StayOpenMenu, section
+from capypanel.ui.menus import StayOpenMenu, popup, section
 from capypanel.ui.settings import connections
 from capypanel.ui.settings.connections import ConnectionChanges
 from capypanel.ui.settings.window import SettingsChoices, SettingsDialog
@@ -94,9 +94,7 @@ class MainWindow(QMainWindow):
         self._doc: OpenList | None = None
         self._default_list = paths.default_list
         self._personal_list = paths.personal_list
-        self.connector = Connector(
-            self, Catalogs.for_paths(paths), SessionCredentials(), self._prefs
-        )
+        self.connector = Connector(self, Catalogs.for_paths(paths), SessionCredentials())
         self.connector.open_settings = lambda: self.open_settings("connections")
 
         # Refresh results, by host id: in memory only, since the list file is shared.
@@ -1364,7 +1362,7 @@ class MainWindow(QMainWindow):
         if self.table.itemAt(position) is None:  # empty space: what can be added here
             self.table.clearSelection()
             menu.addActions([a.add_host, a.add_group])
-            menu.exec(self.table.viewport().mapToGlobal(position))
+            popup(menu, self.table.viewport().mapToGlobal(position))
             return
         section(menu, _("Connect"))
         menu.addAction(a.connect_host)
@@ -1391,7 +1389,7 @@ class MainWindow(QMainWindow):
         menu.addAction(a.show_in_group)
         menu.addSeparator()
         menu.addActions([a.edit, a.remove])
-        menu.exec(self.table.viewport().mapToGlobal(position))
+        popup(menu, self.table.viewport().mapToGlobal(position))
 
     def _group_menu(self, position: QPoint) -> None:
         menu = QMenu(self)
@@ -1423,7 +1421,7 @@ class MainWindow(QMainWindow):
                 )
             menu.addSeparator()
             menu.addActions([self.commands.edit, self.commands.remove])
-        menu.exec(self.nav.groups.viewport().mapToGlobal(position))
+        popup(menu, self.nav.groups.viewport().mapToGlobal(position))
 
     # ---- helpers ----
 

@@ -7,7 +7,15 @@ import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QListWidget,
+    QMessageBox,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+)
 
 from capypanel.core import settings
 from capypanel.ui.main_window.window import MainWindow
@@ -187,3 +195,29 @@ def test_dialog_buttons_never_cut_their_text(qapp: QApplication, theme: themes.T
     for button in buttons:
         assert button.width() > button.fontMetrics().horizontalAdvance(button.text())
     box.close()
+
+
+def test_rows_placed_before_the_theme_arrived_never_overlap(qapp: QApplication) -> None:
+    # Choosing a row before the list is shown places the rows without the theme's padding.
+    themes.apply(themes.Registry().find("capypanel-dark"))
+    dialog = QDialog()
+    flat, tree = QListWidget(), QTreeWidget()
+    flat.addItems(["General", "Host lists", "Connections"])
+    flat.setCurrentRow(0)
+    items = [QTreeWidgetItem([name]) for name in ("Offices", "Clinics", "Labs")]
+    tree.addTopLevelItems(items)
+    tree.setCurrentItem(items[0])
+    layout = QVBoxLayout(dialog)
+    layout.addWidget(flat)
+    layout.addWidget(tree)
+    dialog.show()
+    qapp.processEvents()
+    rows = [flat.visualItemRect(flat.item(i)) for i in range(3)]
+    rows += [tree.visualItemRect(item) for item in items]
+    dialog.close()
+    for above, below in [
+        *zip(rows[:2], rows[1:3], strict=True),
+        *zip(rows[3:5], rows[4:], strict=True),
+    ]:
+        assert below.top() > above.bottom(), f"rows overlap: {above} and {below}"
+    assert all(r.height() > flat.fontMetrics().height() for r in rows)

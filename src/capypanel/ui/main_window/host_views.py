@@ -37,6 +37,7 @@ from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import _, ngettext
 from capypanel.ui.groups import HOSTS_MIME, ROLE_ID, ROLE_KIND, GroupTree, hosts_mime
 from capypanel.ui.icons import tabler_icon
+from capypanel.ui.menus import popup
 
 ROLE_QUIET = Qt.ItemDataRole.UserRole + 2  # a Status or User cell to show greyed
 
@@ -432,7 +433,7 @@ class HostTable(QTreeWidget):
             item.setCheckable(True)
             item.setChecked(not self.isColumnHidden(index))
             item.toggled.connect(lambda shown, i=index: self._show_column(i, shown))
-        menu.exec(self.header().viewport().mapToGlobal(position))
+        popup(menu, self.header().viewport().mapToGlobal(position))
 
     def _show_column(self, index: int, shown: bool) -> None:
         self.setColumnHidden(index, not shown)

@@ -5,16 +5,14 @@ tool) that fill the folder the first time it's written; after that they're ordin
 
 import json
 import logging
-import os
 import re
-import tempfile
 import unicodedata
-import uuid
 from collections.abc import Collection
 from pathlib import Path
 from typing import Any
 
-from capypanel.core import winsec
+from capypanel.core import files, winsec
+from capypanel.core.files import can_create_files
 from capypanel.core.i18n import _
 from capypanel.core.tools import profiles
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
@@ -33,18 +31,6 @@ def make_id(name: str, taken: Collection[str]) -> str:
     while candidate in taken:
         candidate, number = f"{base}-{number}", number + 1
     return candidate
-
-
-def can_create_files(folder: Path) -> bool:
-    """Whether Windows lets this user create files in `folder`, or where it would be made."""
-    while not folder.exists() and folder.parent != folder:
-        folder = folder.parent  # the folder is made on the first save
-    try:
-        with tempfile.NamedTemporaryFile(dir=folder, prefix=".capypanel-", suffix=".tmp"):
-            pass
-    except OSError:
-        return False
-    return True
 
 
 class ProfileStore:
@@ -123,16 +109,13 @@ class ProfileStore:
 
     # ---- changing ----
 
-    def new_id(self, name: str) -> str:
-        return make_id(name, self._profiles)
-
     def save(self, profile: ConnectionProfile, settings: bytes | None = None) -> None:
         """Writes a profile, new or changed, and `settings` as its new settings file (already
         cleaned). A settings file the profile no longer names is deleted. Raises OSError."""
         old = self.find(profile.id)
         self._seed()
         if settings is not None and profile.settings_file:
-            self._write_bytes(self.folder / profile.settings_file, settings)
+            files.write_atomic(self.folder / profile.settings_file, settings)
         self._write(self.folder / f"{profile.id}.json", profiles.to_data(profile))
         if old is not None and old.settings_file not in ("", profile.settings_file):
             (self.folder / old.settings_file).unlink(missing_ok=True)
@@ -161,11 +144,7 @@ class ProfileStore:
         """Before the first change, the starters become real files, so they can be removed."""
         if self.folder.is_dir():
             return
-        self.folder.mkdir(parents=True)
-        try:  # read-only for everyone else; ProgramData would let any user add files
-            winsec.make_shared(self.folder, winsec.current_user_sid())
-        except OSError as e:
-            log.warning("Couldn't set permissions on %s: %s", self.folder, e)
+        files.make_shared_folder(self.folder)
         for profile in self._profiles.values():
             self._write(self.folder / f"{profile.id}.json", profiles.to_data(profile))
         self._write(self.folder / STARTERS_FILE, {"schema": 1, "added": self._starter_ids()})
@@ -206,12 +185,4 @@ class ProfileStore:
             log.warning("Couldn't write %s: %s", path, e)
 
     def _write(self, path: Path, data: dict[str, Any]) -> None:
-        self._write_bytes(path, (json.dumps(data, indent=2, ensure_ascii=False) + "\n").encode())
-
-    def _write_bytes(self, path: Path, content: bytes) -> None:
-        tmp = path.with_name(f".{path.name}.{uuid.uuid4().hex[:8]}.tmp")
-        try:
-            tmp.write_bytes(content)
-            os.replace(tmp, path)
-        finally:
-            tmp.unlink(missing_ok=True)
+        files.write_json(path, data)

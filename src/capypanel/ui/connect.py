@@ -7,7 +7,6 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QGuiApplication
@@ -166,12 +165,10 @@ class Connector:
         parent: QWidget,
         catalogs: Catalogs,
         credentials: SessionCredentials,
-        prefs: dict[str, Any],
     ) -> None:
         self._parent = parent
         self.catalogs = catalogs
         self.credentials = credentials
-        self._prefs = prefs
         self.open_settings: Callable[[], None] | None = None  # Settings > Connections
 
     # ---- profiles ----

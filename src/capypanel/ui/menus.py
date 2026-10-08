@@ -1,6 +1,7 @@
-"""Menu helpers: section headings, and a menu that stays open while its boxes are ticked."""
+"""Menu helpers: section headings, right-click menus, and a menu that stays open while its boxes
+are ticked."""
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QKeyEvent, QMouseEvent
 from PySide6.QtWidgets import QLabel, QMenu, QWidgetAction
 
@@ -17,6 +18,13 @@ def section(menu: QMenu, title: str) -> QLabel:
         menu.addSeparator()
     menu.addAction(heading)
     return label
+
+
+def popup(menu: QMenu, where: QPoint) -> None:
+    """Shows a right-click menu, then frees it: one is made per click, and each would otherwise
+    stay until CapyPanel closes."""
+    menu.exec(where)
+    menu.deleteLater()
 
 
 class StayOpenMenu(QMenu):

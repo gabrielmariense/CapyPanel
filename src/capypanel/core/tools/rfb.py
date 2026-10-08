@@ -7,7 +7,6 @@ import socket
 import struct
 
 _VERSION = re.compile(rb"^RFB (\d{3})\.(\d{3})\n$")
-VNC_PASSWORD = 2  # classic VNC authentication: only the first 8 password characters count
 
 
 class ProbeError(OSError):

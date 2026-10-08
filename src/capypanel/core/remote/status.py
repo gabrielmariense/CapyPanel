@@ -30,10 +30,6 @@ class Status(StrEnum):
 Answer = tuple[str, int | None]  # the address that answered, and its port (None: a ping)
 
 
-def check(host: str, ports: Iterable[int]) -> Status:
-    return probe(host, ports)[0]
-
-
 def probe(host: str, ports: Iterable[int]) -> tuple[Status, Answer | None]:
     """The status, and what answered: shows a PC reached only over its Wi-Fi, say."""
     try:

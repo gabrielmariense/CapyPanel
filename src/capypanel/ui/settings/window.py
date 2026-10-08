@@ -190,9 +190,6 @@ class SettingsDialog(QDialog):
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
-        # The list places its rows before the theme's row padding reaches it, then never
-        # moves them: rows drew on top of each other. Placing them again once shown fixes it.
-        self.page_list.doItemsLayout()
         themes.paint_title_bar(self)
 
     def _update_save(self) -> None:

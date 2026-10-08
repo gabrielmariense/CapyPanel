@@ -2,14 +2,12 @@
 
 import hashlib
 import json
-import os
-import tempfile
-import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from capypanel.core import files
 from capypanel.core.hosts.model import Group, Host, HostList
 from capypanel.core.i18n import _
 
@@ -65,28 +63,22 @@ def load(path: Path) -> LoadedList:
 def save(path: Path, host_list: HostList, *, expected: FileStamp | None) -> FileStamp:
     """Save atomically, only if the file is still what was loaded (`expected`; None = new file).
 
-    The check never silently overwrites someone else's changes (rule 3). What to do instead is
+    The check never silently overwrites someone else's changes. What to do instead is
     the caller's choice, e.g. offer to save a copy.
     """
     if stamp_of(path) != expected:
         raise HostListChangedError(_("Someone else has changed the file since you opened it."))
     raw = (json.dumps(to_data(host_list), indent=2, ensure_ascii=False) + "\n").encode("utf-8")
     path.parent.mkdir(parents=True, exist_ok=True)
-    # A unique temp name, so two people saving the same shared list never share a temp file.
-    tmp = path.with_name(f".{path.name}.{uuid.uuid4().hex[:8]}.tmp")
-    try:
-        tmp.write_bytes(raw)
-        os.replace(tmp, path)
-    finally:
-        tmp.unlink(missing_ok=True)
+    files.write_atomic(path, raw)
     return FileStamp(hashlib.sha256(raw).hexdigest())
 
 
 def can_write(path: Path) -> bool:
     """Whether saving would work: the folder takes new files (saves swap one in), not read-only."""
+    if not path.parent.is_dir() or not files.can_create_files(path.parent):
+        return False
     try:
-        with tempfile.NamedTemporaryFile(dir=path.parent, prefix=".capypanel-", suffix=".tmp"):
-            pass
         if path.exists():
             with path.open("r+b"):
                 pass

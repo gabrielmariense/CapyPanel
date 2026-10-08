@@ -6,7 +6,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QUrl
-from PySide6.QtGui import QDesktopServices, QShowEvent
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -468,12 +468,6 @@ class ConnectionsPage(Page):
             settings={pid: c for pid, c in self._settings.items() if pid in self._changed},
         )
 
-    def showEvent(self, event: QShowEvent) -> None:
-        super().showEvent(event)
-        # Same fix as the Settings page list: place the rows again once the theme's padding
-        # has reached the list, or they draw on top of each other.
-        self.list.doItemsLayout()
-
     # ---- tools (paths chosen here are also kept until Save) ----
 
     def _tool_view(self, tool: ToolDefinition) -> ToolDefinition:
@@ -543,6 +537,3 @@ class ConnectionsPage(Page):
     def automatic(self, tool: ToolDefinition) -> None:
         self._tool_paths[tool.id] = ""
         self._fill_tools()
-
-    def _error(self, message: str) -> None:
-        QMessageBox.warning(self, "CapyPanel", message)

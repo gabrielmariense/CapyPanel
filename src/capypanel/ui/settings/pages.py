@@ -76,9 +76,6 @@ class PathLabel(QLabel):
         self.setToolTip(self._full)
         self._elide()
 
-    def full_text(self) -> str:
-        return self._full
-
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self._elide()
