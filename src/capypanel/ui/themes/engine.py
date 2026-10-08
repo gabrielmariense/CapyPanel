@@ -359,6 +359,15 @@ QLineEdit, QPlainTextEdit, QSpinBox { background: %(card)s; border: 1px solid %(
                             selection-background-color: %(accent)s; }
 QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus { border: 1px solid %(accent)s; }
 QLineEdit:disabled { color: %(text3)s; background: %(raised)s; }
+/* Styling a spin box drops Fusion's arrows, leaving empty squares: draw our own. */
+QSpinBox::up-button, QSpinBox::down-button { subcontrol-origin: border; width: 20px;
+    border: none; border-left: 1px solid %(border)s; background: transparent; }
+QSpinBox::up-button { subcontrol-position: top right; border-top-right-radius: %(r2)spx; }
+QSpinBox::down-button { subcontrol-position: bottom right;
+                        border-bottom-right-radius: %(r2)spx; }
+QSpinBox::up-button:hover, QSpinBox::down-button:hover { background: %(hover)s; }
+QSpinBox::up-arrow { image: url("%(arrow_up)s"); width: 10px; height: 6px; }
+QSpinBox::down-arrow { image: url("%(arrow)s"); width: 10px; height: 6px; }
 /* The tag field: a box like a text input, holding chips and a borderless text box. */
 QFrame#tagEdit { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx; }
 QFrame#tagEdit[focused="true"] { border-color: %(accent)s; }
@@ -503,6 +512,7 @@ def stylesheet(theme: Theme) -> str:
     t["r"], t["r2"] = theme.radius, max(0, theme.radius - 2)
     t["check"] = (THEMES_DIR / "check.svg").as_posix()
     t["arrow"] = (THEMES_DIR / f"arrow-{theme.scheme}.svg").as_posix()
+    t["arrow_up"] = (THEMES_DIR / f"arrow-up-{theme.scheme}.svg").as_posix()
     return _QSS % t  # noqa: UP031 -- %-format: CSS braces would all need doubling for .format()
 
 

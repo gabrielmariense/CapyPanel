@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QListWidget,
     QMessageBox,
+    QSpinBox,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -174,11 +175,11 @@ def test_clicking_a_row_draws_no_focus_box(qapp: QApplication, tmp_path: Path) -
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_images_the_stylesheet_uses_ship_with_the_themes(theme: themes.Theme) -> None:
-    # Custom themes draw their own checkbox ticks and drop-down arrows; a missing file
-    # means an empty checked box or a drop-down that doesn't look clickable.
+    # Custom themes draw their own checkbox ticks and arrows; a missing file means an empty
+    # checked box, or a drop-down or number box that doesn't look clickable.
     sheet = themes.stylesheet(theme)
     images = set(re.findall(r'url\("([^"]+)"\)', sheet))
-    assert len(images) == 2  # the tick, and the arrow of drop-downs and toolbar buttons
+    assert len(images) == 3  # the tick, the down arrow, and number boxes' up arrow
     assert all(Path(image).is_file() for image in images), images
 
 
@@ -221,3 +222,23 @@ def test_rows_placed_before_the_theme_arrived_never_overlap(qapp: QApplication) 
     ]:
         assert below.top() > above.bottom(), f"rows overlap: {above} and {below}"
     assert all(r.height() > flat.fontMetrics().height() for r in rows)
+
+
+@pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
+def test_number_boxes_show_their_arrows(qapp: QApplication, theme: themes.Theme) -> None:
+    # Styling a spin box drops Fusion's arrows: the buttons were empty squares.
+    themes.apply(theme)
+    box = QSpinBox()
+    box.resize(120, 32)
+    box.show()
+    qapp.processEvents()
+    image = box.grab().toImage()
+    box.close()
+    width, height = image.width(), image.height()
+    for top, bottom in ((4, height // 2 - 3), (height // 2 + 3, height - 4)):  # up, then down
+        colors = {
+            image.pixelColor(x, y).lightness()
+            for x in range(width - 15, width - 4)
+            for y in range(top, bottom)
+        }
+        assert max(colors) - min(colors) > 40, "an arrow button is empty"
