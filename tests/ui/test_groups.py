@@ -2,12 +2,14 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from PySide6.QtCore import QPointF, Qt
+from PySide6.QtGui import QDropEvent
 from PySide6.QtWidgets import QAbstractItemView, QApplication, QDialog, QTreeWidgetItem
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog
+from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog, MoveGroupDialog
 from capypanel.ui.main_window.window import MainWindow
 
 
@@ -152,3 +154,99 @@ def test_removing_a_group_can_remove_everything(
     assert doc is not None
     assert [g.name for g in doc.hosts.groups] == ["Zebra wing"]
     assert [h.name for h in doc.hosts.hosts] == ["Z-01"]
+
+
+def _pick(dialog: MoveGroupDialog, name: str) -> None:
+    root = dialog.tree.invisibleRootItem()
+    stack = [root.child(i) for i in range(root.childCount())]
+    while stack:
+        item = stack.pop()
+        if item is None:
+            continue
+        if item.text(0) == name:
+            dialog.tree.setCurrentItem(item)
+            return
+        stack += [item.child(i) for i in range(item.childCount())]
+    raise AssertionError(name)
+
+
+def test_move_to_offers_the_top_level_first_and_never_the_group_itself(
+    window: MainWindow,
+) -> None:
+    doc = window.document
+    assert doc is not None
+    dialog = MoveGroupDialog(None, doc.hosts, _id(window, "alpha wing"))
+    root = dialog.tree.invisibleRootItem()
+    assert _names(root) == ["Top level", "Zebra wing"]  # not alpha wing, nor its Lab
+    ok = dialog.box.buttons()[0]
+    assert dialog.chosen() is None and not ok.isEnabled()  # it's already at the top level
+    _pick(dialog, "Zebra wing")
+    assert dialog.chosen() == _id(window, "Zebra wing") and ok.isEnabled()
+
+
+def test_right_click_move_to_puts_the_group_inside_another(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def choose(dialog: MoveGroupDialog) -> int:
+        _pick(dialog, "Zebra wing")
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(MoveGroupDialog, "exec", choose)
+    window.choose_where_to_move(_id(window, "Lab"))
+    doc = window.document
+    assert doc is not None
+    assert doc.hosts.group(_id(window, "Lab")).parent == _id(window, "Zebra wing")  # type: ignore[union-attr]
+    assert listfile.load(doc.path).hosts == doc.hosts  # saved
+    assert window.nav.selected_group_id() == _id(window, "Lab")  # still picked, in its new place
+
+
+def test_a_group_dropped_on_the_groups_heading_goes_to_the_top_level(window: MainWindow) -> None:
+    window.nav.groups_heading.group_dropped.emit(_id(window, "Lab"))
+    doc = window.document
+    assert doc is not None
+    assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Lab"]
+
+
+def test_manage_groups_move_to_changes_only_its_working_copy(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    doc = window.document
+    assert doc is not None
+    dialog = ManageGroupsDialog(None, doc.hosts)
+    root = dialog.tree.invisibleRootItem()
+    alpha = root.child(1)
+    assert alpha is not None
+    lab = alpha.child(0)
+    assert lab is not None
+    dialog.tree.setCurrentItem(lab)
+
+    def choose(picker: MoveGroupDialog) -> int:
+        _pick(picker, "Top level")
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(MoveGroupDialog, "exec", choose)
+    dialog.move_button.click()
+    assert _names(root) == ["Zebra wing", "alpha wing", "Lab"]
+    assert dict(dialog.order())[_id(window, "Lab")] is None
+    saved = doc.hosts.group(_id(window, "Lab"))
+    assert saved is not None and saved.parent is not None  # nothing saved before OK
+
+
+def test_the_tree_s_drag_data_drops_on_the_heading(window: MainWindow) -> None:
+    tree = window.nav.groups
+    alpha = tree.invisibleRootItem().child(1)
+    lab = alpha.child(0) if alpha is not None else None
+    assert lab is not None
+    data = tree.mimeData([lab])  # what dragging "Lab" carries
+    drop = QDropEvent(
+        QPointF(5, 5),
+        Qt.DropAction.MoveAction | Qt.DropAction.CopyAction,  # what the tree offers
+        data,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    window.nav.groups_heading.dropEvent(drop)
+    doc = window.document
+    assert doc is not None
+    assert doc.hosts.group(_id(window, "Lab")).parent is None  # type: ignore[union-attr]
+    assert drop.dropAction() == Qt.DropAction.CopyAction  # the tree doesn't drop its own row

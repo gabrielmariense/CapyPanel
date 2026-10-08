@@ -177,6 +177,21 @@ class HostList:
         groups = tuple(replace(by_id[gid], parent=parent) for gid, parent in order)
         return replace(self, groups=groups)
 
+    def move_group(self, group_id: str, parent: str | None) -> "HostList":
+        """Puts the group, with everything inside it, into `parent` (None: the top level),
+        after the groups already there."""
+        group = self.group(group_id)
+        if group is None:
+            raise HostListRuleError(_("That group doesn't exist."))
+        if parent is not None:
+            self._require_group(parent)
+            if parent in self.subtree(group_id):
+                raise HostListRuleError(_("A group can't be moved inside itself."))
+        if group.parent == parent:
+            return self
+        others = tuple(g for g in self.groups if g.id != group_id)
+        return replace(self, groups=(*others, replace(group, parent=parent)))
+
     def move_hosts(self, host_ids: Iterable[str], group_id: str) -> "HostList":
         self._require_group(group_id)
         wanted = set(host_ids)

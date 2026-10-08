@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-08 13:28-0300\n"
+"POT-Creation-Date: 2026-10-08 19:00-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -99,6 +99,12 @@ msgid "&Manage groups…"
 msgstr ""
 
 msgid "&Manual connection…"
+msgstr ""
+
+msgid "&Move"
+msgstr ""
+
+msgid "&Move to…"
 msgstr ""
 
 msgid "&Name"
@@ -431,6 +437,9 @@ msgstr ""
 msgid "Drag a group to move it, or drop it onto another group to put it inside."
 msgstr ""
 
+msgid "Drop a group here to move it to the top level"
+msgstr ""
+
 msgid "Duplicate connection profile"
 msgstr ""
 
@@ -586,6 +595,9 @@ msgstr ""
 msgid "Move &down"
 msgstr ""
 
+msgid "Move &to…"
+msgstr ""
+
 msgid "Move &up"
 msgstr ""
 
@@ -597,6 +609,14 @@ msgid "Move them to the top level"
 msgstr ""
 
 msgid "Move this group's hosts to another group first."
+msgstr ""
+
+#, python-brace-format
+msgid "Move “{group}”"
+msgstr ""
+
+#, python-brace-format
+msgid "Move “{group}”, with everything inside it, to:"
 msgstr ""
 
 msgid "My personal list"
@@ -1034,6 +1054,9 @@ msgid ""
 msgstr ""
 
 msgid "This tool definition needs a newer version of CapyPanel."
+msgstr ""
+
+msgid "Top level"
 msgstr ""
 
 msgid "Type a tag and press Enter"

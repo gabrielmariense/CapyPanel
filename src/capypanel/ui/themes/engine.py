@@ -411,6 +411,9 @@ QTreeView#flat { border: none; background: transparent; padding: 0 2px; }
 QLineEdit#paneSearch { border-radius: %(r)spx; padding: 6px 8px; }
 QFrame#divider { background: %(border)s; border: none; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
+/* The Groups heading while a group is dragged over it: dropping moves it to the top. */
+QLabel#paneTitle[dropTarget="true"] { color: %(accent)s; background: %(sel_solid)s;
+                                     border-radius: %(r2)spx; }
 QListView#pageList::item { padding: 7px 10px; }
 
 /* Fusion outlines these with a darker shade of the background, invisible in dark themes. */
@@ -479,6 +482,7 @@ QTreeView#grid::item:last, QTreeView#grid::item:only-one,
 QTreeView#grid QHeaderView::section:last,
 QTreeView#grid QHeaderView::section:only-one { border-right: none; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
+QLabel#paneTitle[dropTarget="true"] { color: %(accent)s; background: %(sel)s; }
 /* Toolbar buttons like the CapyPanel stylesheet's, square like the panes here.
    Styling them drops the style's own menu arrow, so the theme's arrow is drawn instead. */
 QToolBar#main QToolButton { color: %(text2)s; background: %(card)s; border: 1px solid %(border)s;

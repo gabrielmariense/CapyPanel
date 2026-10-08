@@ -1,14 +1,18 @@
-"""The groups as a tree that can be rearranged by dragging, and Inventory > Manage groups….
+"""The groups as a tree that can be rearranged by dragging, "Move to…", and Inventory > Manage
+groups….
 Groups show in the list's own order (not sorted), so a team can arrange them as it likes;
 "Sort A–Z" is a one-time button."""
 
+from collections.abc import Sequence
+
 from PySide6.QtCore import QMimeData, Qt, Signal
-from PySide6.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
+from PySide6.QtGui import QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
     QDialogButtonBox,
     QHBoxLayout,
+    QLabel,
     QPushButton,
     QTreeWidget,
     QTreeWidgetItem,
@@ -25,6 +29,7 @@ ROLE_KIND = Qt.ItemDataRole.UserRole
 ROLE_ID = Qt.ItemDataRole.UserRole + 1
 GROUP_INDENT = 14  # px per nesting level; Windows 11's ~30 px ran deep trees off the pane
 HOSTS_MIME = "application/x-capypanel-hosts"  # host ids dragged from the host table
+GROUPS_MIME = "application/x-capypanel-groups"  # group ids dragged within the groups tree
 
 
 def hosts_mime(host_ids: list[str]) -> QMimeData:
@@ -53,6 +58,12 @@ class GroupTree(QTreeWidget):
         self.setDragDropMode(mode if editable else QAbstractItemView.DragDropMode.NoDragDrop)
         self.setAcceptDrops(editable)
         self.setDropIndicatorShown(editable)
+
+    def mimeData(self, items: Sequence[QTreeWidgetItem]) -> QMimeData:
+        # The tree's own data, plus the group ids, so the Groups heading can take the drop.
+        data = super().mimeData(items)
+        data.setData(GROUPS_MIME, "\n".join(i.data(0, ROLE_ID) for i in items).encode())
+        return data
 
     def fill(self, host_list: HostList, counts: bool = True) -> None:
         self.clear()
@@ -119,20 +130,120 @@ class GroupTree(QTreeWidget):
         self.rearranged.emit()
 
 
+class GroupsHeading(QLabel):
+    """The "Groups" title above the tree. A group dropped on it moves to the top level."""
+
+    group_dropped = Signal(str)  # group id
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        if event.mimeData().hasFormat(GROUPS_MIME):
+            event.setDropAction(Qt.DropAction.CopyAction)  # the tree keeps its rows
+            event.accept()
+            self._show_target(True)
+
+    def dragLeaveEvent(self, event: QDragLeaveEvent) -> None:
+        self._show_target(False)
+
+    def dropEvent(self, event: QDropEvent) -> None:
+        self._show_target(False)
+        ids = bytes(event.mimeData().data(GROUPS_MIME).data()).decode().split("\n")
+        event.setDropAction(Qt.DropAction.CopyAction)
+        event.accept()
+        for group_id in (i for i in ids if i):
+            self.group_dropped.emit(group_id)
+
+    def _show_target(self, shown: bool) -> None:
+        # Stylesheets read the property: the heading lights up while a group is over it.
+        self.setProperty("dropTarget", shown)
+        self.style().unpolish(self)
+        self.style().polish(self)
+
+
+class MoveGroupDialog(QDialog):
+    """Move to…: "Top level" first, then every group this one can go into."""
+
+    def __init__(self, parent: QWidget | None, host_list: HostList, group_id: str) -> None:
+        super().__init__(parent)
+        group = host_list.group(group_id)
+        name = group.name if group else ""
+        self._current = group.parent if group else None
+        self.setWindowTitle(_("Move “{group}”").format(group=name))
+        self.tree = QTreeWidget()
+        self.tree.setHeaderHidden(True)
+        self.tree.setIndentation(GROUP_INDENT)
+        top = QTreeWidgetItem([_("Top level")])
+        top.setData(0, ROLE_ID, None)
+        self.tree.addTopLevelItem(top)
+        inside = host_list.subtree(group_id)  # it can't go into itself or its own groups
+
+        def add(parent_id: str | None, parent: QTreeWidgetItem) -> None:
+            for child in host_list.children(parent_id):
+                if child.id in inside:
+                    continue
+                item = QTreeWidgetItem([child.name])
+                item.setData(0, ROLE_ID, child.id)
+                item.setToolTip(0, group_path(host_list, child.id))
+                parent.addChild(item)
+                add(child.id, item)
+
+        add(None, self.tree.invisibleRootItem())
+        self.tree.expandAll()
+        for item in _all_items(self.tree.invisibleRootItem()):
+            if item.data(0, ROLE_ID) == self._current:
+                self.tree.setCurrentItem(item)
+        self.box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        self.box.button(QDialogButtonBox.StandardButton.Ok).setText(_("&Move"))
+        self.box.accepted.connect(self.accept)
+        self.box.rejected.connect(self.reject)
+        layout = QVBoxLayout(self)
+        layout.addWidget(
+            QLabel(_("Move “{group}”, with everything inside it, to:").format(group=name))
+        )
+        layout.addWidget(self.tree, 1)
+        layout.addWidget(self.box)
+        self.tree.itemSelectionChanged.connect(self._update)
+        self.tree.itemDoubleClicked.connect(lambda *_args: self._accept_if_new())
+        self._update()
+        self.resize(380, 420)
+
+    def chosen(self) -> str | None:
+        """The new parent group's id; None for the top level."""
+        item = self.tree.currentItem()
+        return item.data(0, ROLE_ID) if item is not None else self._current
+
+    def _is_new(self) -> bool:
+        return self.tree.currentItem() is not None and self.chosen() != self._current
+
+    def _update(self) -> None:
+        self.box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(self._is_new())
+
+    def _accept_if_new(self) -> None:
+        if self._is_new():
+            self.accept()
+
+
 class ManageGroupsDialog(QDialog):
     """Inventory > Manage groups…: reorder and nest every group at once, then OK."""
 
     def __init__(self, parent: QWidget | None, host_list: HostList) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Manage groups"))
+        self._hosts = host_list
         self.tree = GroupTree()
         self.tree.fill(host_list, counts=False)
         self.up_button = QPushButton(_("Move &up"))
         self.down_button = QPushButton(_("Move &down"))
+        self.move_button = QPushButton(_("Move &to…"))
         self.sort_button = QPushButton(_("&Sort A–Z"))
         self.sort_button.setToolTip(_("Sorts every level by name, once; you can rearrange after"))
         buttons = QVBoxLayout()
-        for button in (self.up_button, self.down_button, self.sort_button):
+        for button in (self.up_button, self.down_button, self.move_button, self.sort_button):
             button.setAutoDefault(False)
             buttons.addWidget(button)
         buttons.addStretch(1)
@@ -155,6 +266,7 @@ class ManageGroupsDialog(QDialog):
         layout.addWidget(self.box)
         self.up_button.clicked.connect(lambda: self._move(-1))
         self.down_button.clicked.connect(lambda: self._move(1))
+        self.move_button.clicked.connect(self._move_to)
         self.sort_button.clicked.connect(self._sort)
         self.tree.itemSelectionChanged.connect(self._update)
         self._update()
@@ -168,6 +280,7 @@ class ManageGroupsDialog(QDialog):
         siblings = self._siblings(item)
         index = siblings.indexOfChild(item) if item is not None and siblings else -1
         self.up_button.setEnabled(index > 0)
+        self.move_button.setEnabled(item is not None)
         self.down_button.setEnabled(0 <= index < (siblings.childCount() - 1 if siblings else 0))
 
     def _siblings(self, item: QTreeWidgetItem | None) -> QTreeWidgetItem | None:
@@ -186,6 +299,31 @@ class ManageGroupsDialog(QDialog):
         expanded = _expanded_ids(item)
         siblings.takeChild(index)
         siblings.insertChild(index + step, item)
+        _expand(item, expanded)
+        self.tree.setCurrentItem(item)
+        self._update()
+
+    def _move_to(self) -> None:
+        item = self.tree.currentItem()
+        if item is None:
+            return
+        # The picker shows the groups as arranged here so far, not as saved.
+        arranged = self._hosts.arrange_groups(self.tree.order())
+        picker = MoveGroupDialog(self, arranged, item.data(0, ROLE_ID))
+        if picker.exec() != QDialog.DialogCode.Accepted:
+            return
+        expanded = _expanded_ids(item)
+        old_parent = self._siblings(item)
+        if old_parent is None:
+            return
+        old_parent.removeChild(item)
+        new_id = picker.chosen()
+        target = self.tree.invisibleRootItem()
+        for candidate in _all_items(target):
+            if new_id is not None and candidate.data(0, ROLE_ID) == new_id:
+                target = candidate
+        target.addChild(item)
+        target.setExpanded(True)
         _expand(item, expanded)
         self.tree.setCurrentItem(item)
         self._update()
@@ -211,6 +349,16 @@ class ManageGroupsDialog(QDialog):
             if child is not None:
                 _expand(child, expanded)
         self._update()
+
+
+def _all_items(root: QTreeWidgetItem) -> list[QTreeWidgetItem]:
+    found = []
+    for index in range(root.childCount()):
+        child = root.child(index)
+        if child is not None:
+            found.append(child)
+            found += _all_items(child)
+    return found
 
 
 def _expanded_ids(item: QTreeWidgetItem) -> set[str]:

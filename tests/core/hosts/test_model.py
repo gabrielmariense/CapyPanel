@@ -137,6 +137,25 @@ def test_groups_can_be_reordered_and_nested_but_never_inside_themselves() -> Non
         hl.arrange_groups([(a.id, None), (b.id, None)])  # a group went missing meanwhile
 
 
+def test_a_group_moves_with_everything_inside_it() -> None:
+    hl, hq, finance = _office()
+    hl, branch = hl.add_group("Branch")
+    hl, host = hl.add_host("FIN-01", finance)
+    moved = hl.move_group(finance, branch.id)
+    assert moved.group(finance).parent == branch.id  # type: ignore[union-attr]
+    # Its hosts stay inside it.
+    assert moved.host(host.id).group == finance  # type: ignore[union-attr]
+    top = moved.move_group(finance, None)
+    assert [g.name for g in top.children(None)] == ["Headquarters", "Branch", "Finance"]  # last
+    assert hl.move_group(finance, hq) is hl  # already there: nothing changes
+    with pytest.raises(HostListRuleError):
+        hl.move_group(hq, finance)  # into its own subgroup
+    with pytest.raises(HostListRuleError):
+        hl.move_group(hq, hq)
+    with pytest.raises(HostListRuleError):
+        hl.move_group(hq, "nope")
+
+
 def test_hosts_move_to_another_group() -> None:
     hl, a = HostList().add_group("A")
     hl, b = hl.add_group("B")

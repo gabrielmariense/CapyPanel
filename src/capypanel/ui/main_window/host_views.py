@@ -35,7 +35,14 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import _, ngettext
-from capypanel.ui.groups import HOSTS_MIME, ROLE_ID, ROLE_KIND, GroupTree, hosts_mime
+from capypanel.ui.groups import (
+    HOSTS_MIME,
+    ROLE_ID,
+    ROLE_KIND,
+    GroupsHeading,
+    GroupTree,
+    hosts_mime,
+)
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.menus import popup
 
@@ -48,8 +55,10 @@ class Filter:
     value: str | None = None
 
 
-def pane_title(text: str) -> QLabel:
-    label = QLabel(text)
+def pane_title(text: str, label: QLabel | None = None) -> QLabel:
+    """A pane's small bold heading: a new label, or `label` styled as one."""
+    label = label if label is not None else QLabel()
+    label.setText(text)
     label.setObjectName("paneTitle")
     label.setContentsMargins(4, 4, 4, 2)
     font = label.font()
@@ -70,9 +79,11 @@ class NavigationPane(QWidget):
         self._filter = Filter("all")
         self.add_group_button = QToolButton()
         self.add_group_button.setText("+")
-        self._groups_title, self._tags_title = pane_title(""), pane_title("")
+        self.groups_heading = GroupsHeading()  # drop a group here: it goes to the top level
+        pane_title("", self.groups_heading)
+        self._tags_title = pane_title("")
         header = QHBoxLayout()
-        header.addWidget(self._groups_title, 1)
+        header.addWidget(self.groups_heading, 1)
         header.addWidget(self.add_group_button)
 
         # Its own small list above the tree: it never scrolls away under a long tree.
@@ -123,7 +134,8 @@ class NavigationPane(QWidget):
     def retranslate(self) -> None:
         """Titles only; the lists' own texts come back with the next show_list()."""
         self.add_group_button.setToolTip(_("Add group"))
-        self._groups_title.setText(_("Groups"))
+        self.groups_heading.setText(_("Groups"))
+        self.groups_heading.setToolTip(_("Drop a group here to move it to the top level"))
         self._tags_title.setText(_("Tags"))
 
     def set_tags_visible(self, visible: bool) -> None:
