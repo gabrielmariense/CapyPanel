@@ -451,10 +451,10 @@ QTreeView#grid::item:last, QTreeView#grid::item:only-one,
 QTreeView#grid QHeaderView::section:last,
 QTreeView#grid QHeaderView::section:only-one { border-right: none; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
-/* Toolbar buttons follow design T1 (see the CapyPanel stylesheet). Styling them drops the
-   style's own menu arrow, so the theme's arrow is drawn instead. */
+/* Toolbar buttons follow design T1 (see the CapyPanel stylesheet), square like the panes here.
+   Styling them drops the style's own menu arrow, so the theme's arrow is drawn instead. */
 QToolBar#main QToolButton { color: %(text2)s; background: %(card)s; border: 1px solid %(border)s;
-                            border-radius: 6px; padding: 3px 9px; }
+                            border-radius: 0; padding: 3px 9px; }
 QToolBar#main QToolButton:hover { background: %(hover)s; color: %(text)s; }
 QToolBar#main QToolButton[popupMode="1"] { padding-right: 29px; }
 QToolBar#main QToolButton[popupMode="2"] { padding-right: 24px; }
