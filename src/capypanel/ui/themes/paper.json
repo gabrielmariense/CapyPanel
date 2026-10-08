@@ -14,10 +14,5 @@
     "accent": "#c2410c",
     "accent_hover": "#dd5a1c",
     "chrome": "#c9b58f"
-  },
-  "font": {
-    "family": "Georgia",
-    "size": 10.5
-  },
-  "radius": 12
+  }
 }
