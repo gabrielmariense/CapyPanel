@@ -554,14 +554,58 @@ class MainWindow(QMainWindow):
         group = doc.hosts.group(group_id) if doc else None
         if doc is None or group is None:
             return
-        count = len(doc.hosts.hosts_in(group_id))
-        text = _("Remove the group “{name}” and the groups inside it?").format(name=group.name)
-        if count:
-            text += " " + ngettext(
-                "This will also remove {n} host.", "This will also remove {n} hosts.", count
-            ).format(n=count)
-        if confirm(self, _("Remove group"), text, _("Remove")):
-            self._commit(doc.hosts.remove_group(group_id))
+        hosts = len(doc.hosts.hosts_in(group_id))
+        groups = len(doc.hosts.subtree(group_id)) - 1
+        if not hosts and not groups:
+            text = _("Remove the empty group “{name}”?").format(name=group.name)
+            if confirm(self, _("Remove group"), text, _("Remove")):
+                self._commit(doc.hosts.remove_group(group_id))
+            return
+        choice = self._ask_how_to_remove(group_id, groups, hosts)
+        if choice is not None:
+            self._commit(doc.hosts.remove_group(group_id, keep_contents=choice == "keep"))
+
+    def _ask_how_to_remove(self, group_id: str, groups: int, hosts: int) -> str | None:
+        """Keep what's inside (moved up a level, the default) or remove everything.
+        Returns "keep", "all", or None for Cancel."""
+        assert self._doc is not None
+        host_list = self._doc.hosts
+        group = host_list.group(group_id)
+        assert group is not None
+        parent = host_list.group(group.parent) if group.parent else None
+        inside = [
+            ngettext("{n} group", "{n} groups", groups).format(n=groups) if groups else "",
+            ngettext("{n} host", "{n} hosts", hosts).format(n=hosts) if hosts else "",
+        ]
+        box = QMessageBox(
+            QMessageBox.Icon.Question,
+            _("Remove group"),
+            _("“{name}” holds {inside}. What should happen to them?").format(
+                name=group.name, inside=_(" and ").join(i for i in inside if i)
+            ),
+            parent=self,
+        )
+        where = _("Move them into “{name}”").format(name=parent.name) if parent else ""
+        keep = box.addButton(
+            where or _("Move them to the top level"), QMessageBox.ButtonRole.AcceptRole
+        )
+        everything = box.addButton(_("Remove everything"), QMessageBox.ButtonRole.DestructiveRole)
+        cancel = box.addButton(QMessageBox.StandardButton.Cancel)
+        if host_list.can_keep_contents(group_id):
+            box.setDefaultButton(keep)
+        else:
+            keep.setEnabled(False)
+            box.setDefaultButton(cancel)
+            box.setInformativeText(
+                _(
+                    "Its hosts can't move up: every host needs a group, and this one is at the "
+                    "top level. Move them to another group first to keep them."
+                )
+            )
+        box.setEscapeButton(cancel)
+        box.exec()
+        clicked = box.clickedButton()
+        return "keep" if clicked is keep else "all" if clicked is everything else None
 
     def _commit(self, new: HostList) -> bool:
         """Save an edit. If someone else changed the file meanwhile, ask what to do with ours."""

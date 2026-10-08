@@ -182,9 +182,33 @@ class HostList:
         hosts = tuple(replace(h, group=group_id) if h.id in wanted else h for h in self.hosts)
         return replace(self, hosts=hosts)
 
-    def remove_group(self, group_id: str) -> "HostList":
-        """Removes the group, the groups nested in it, and their hosts."""
+    def can_keep_contents(self, group_id: str) -> bool:
+        """Whether removing the group can move what's inside it up a level. Hosts always need
+        a group, so a top-level group's own hosts have nowhere to go."""
+        group = self.group(group_id)
+        return group is not None and (
+            group.parent is not None or not any(h.group == group_id for h in self.hosts)
+        )
+
+    def remove_group(self, group_id: str, *, keep_contents: bool = False) -> "HostList":
+        """Removes the group. keep_contents moves its hosts and groups up a level, into its
+        parent; otherwise the groups nested in it and their hosts go with it."""
         self._require_group(group_id)
+        if keep_contents:
+            if not self.can_keep_contents(group_id):
+                raise HostListRuleError(_("Move this group's hosts to another group first."))
+            group = self.group(group_id)
+            parent = group.parent if group else None
+            groups = tuple(
+                replace(g, parent=parent) if g.parent == group_id else g
+                for g in self.groups
+                if g.id != group_id
+            )
+            hosts = tuple(
+                replace(h, group=parent) if h.group == group_id and parent else h
+                for h in self.hosts
+            )
+            return replace(self, groups=groups, hosts=hosts)
         gone = self.subtree(group_id)
         return replace(
             self,

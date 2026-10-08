@@ -123,3 +123,32 @@ def test_manage_groups_moves_sorts_and_applies_on_ok(
     item = window.nav.groups.invisibleRootItem().child(0)
     assert item is not None and item.data(0, ROLE_ID) == _id(window, "alpha wing")
     assert item.child(0) is not None and item.isExpanded()
+
+
+def test_removing_a_group_can_keep_what_is_inside(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    asked: list[tuple[int, int]] = []
+
+    def keep(_group_id: str, groups: int, hosts: int) -> str:
+        asked.append((groups, hosts))
+        return "keep"
+
+    monkeypatch.setattr(window, "_ask_how_to_remove", keep)
+    window.remove_group(_id(window, "alpha wing"))
+    doc = window.document
+    assert doc is not None
+    assert asked == [(1, 1)]  # Lab, and L-01 inside it
+    assert {g.name: g.parent for g in doc.hosts.groups} == {"Zebra wing": None, "Lab": None}
+    assert {h.name for h in doc.hosts.hosts} == {"Z-01", "L-01"}
+
+
+def test_removing_a_group_can_remove_everything(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(window, "_ask_how_to_remove", lambda *_args: "all")
+    window.remove_group(_id(window, "alpha wing"))
+    doc = window.document
+    assert doc is not None
+    assert [g.name for g in doc.hosts.groups] == ["Zebra wing"]
+    assert [h.name for h in doc.hosts.hosts] == ["Z-01"]

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-07 19:06-0300\n"
+"POT-Creation-Date: 2026-10-07 22:38-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -17,6 +17,9 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
+
+msgid " and "
+msgstr " e "
 
 msgid " min"
 msgstr " min"
@@ -526,6 +529,9 @@ msgstr "Ela é entregue ao visualizador de forma privada, nunca na linha de coma
 msgid "It's passed to the viewer on its command line, which administrators of this PC can see."
 msgstr "Ela é passada ao visualizador na linha de comando, que os administradores deste PC podem ver."
 
+msgid "Its hosts can't move up: every host needs a group, and this one is at the top level. Move them to another group first to keep them."
+msgstr "Os hosts dele não podem subir: todo host precisa de um grupo, e este está no nível mais alto. Mova-os para outro grupo antes para mantê-los."
+
 msgid "Its own settings file"
 msgstr "Arquivo de configurações próprio"
 
@@ -570,6 +576,16 @@ msgstr "Mover para &baixo"
 
 msgid "Move &up"
 msgstr "Mover para &cima"
+
+#, python-brace-format
+msgid "Move them into “{name}”"
+msgstr "Mover para “{name}”"
+
+msgid "Move them to the top level"
+msgstr "Mover para o nível mais alto"
+
+msgid "Move this group's hosts to another group first."
+msgstr "Mova os hosts deste grupo para outro grupo antes."
 
 msgid "My personal list"
 msgstr "Minha lista pessoal"
@@ -718,6 +734,9 @@ msgstr "Ferramentas remotas"
 msgid "Remove"
 msgstr "Remover"
 
+msgid "Remove everything"
+msgstr "Remover tudo"
+
 msgid "Remove group"
 msgstr "Remover grupo"
 
@@ -732,8 +751,8 @@ msgid "Remove tag {tag}"
 msgstr "Remover a tag {tag}"
 
 #, python-brace-format
-msgid "Remove the group “{name}” and the groups inside it?"
-msgstr "Remover o grupo “{name}” e os grupos dentro dele?"
+msgid "Remove the empty group “{name}”?"
+msgstr "Remover o grupo vazio “{name}”?"
 
 #, python-brace-format
 msgid "Remove {n} host from the list?"
@@ -980,12 +999,6 @@ msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o 
 
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyPanel."
-
-#, python-brace-format
-msgid "This will also remove {n} host."
-msgid_plural "This will also remove {n} hosts."
-msgstr[0] "Isso também removerá {n} host."
-msgstr[1] "Isso também removerá {n} hosts."
 
 msgid "Type a tag and press Enter"
 msgstr "Digite uma tag e pressione Enter"
@@ -1288,6 +1301,10 @@ msgstr "“{key}” deve ser uma lista."
 #, python-brace-format
 msgid "“{name}” has no address, and its name can't be used as one: a computer name has no spaces or symbols other than - and _."
 msgstr "“{name}” não tem endereço, e o nome não pode ser usado como um: um nome de computador não tem espaços nem símbolos além de - e _."
+
+#, python-brace-format
+msgid "“{name}” holds {inside}. What should happen to them?"
+msgstr "“{name}” contém {inside}. O que fazer com eles?"
 
 msgid "✓ Found"
 msgstr "✓ Encontrado"
