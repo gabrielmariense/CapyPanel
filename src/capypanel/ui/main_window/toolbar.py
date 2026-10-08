@@ -26,6 +26,8 @@ from capypanel.core.i18n import _
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.main_window.actions import Actions
 
+BAR_GAP = 6  # space above and below the toolbar's buttons (design T1)
+
 
 class RefreshPanel(QFrame):
     """Right-click on Refresh: tick what to check on the hosts shown, then Run. It stays open
@@ -106,7 +108,8 @@ class MainToolBar(QToolBar):
         row = QWidget()
         row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self._row = QHBoxLayout(row)
-        self._row.setContentsMargins(0, 0, 0, 0)
+        # T1's 6 px above and below the buttons, set here: the Windows style ignores padding.
+        self._row.setContentsMargins(0, BAR_GAP, 0, BAR_GAP)
         self._row.setSpacing(0)
         self._groups = 0
         self._row.addWidget(self._group([self.connect_button]))
@@ -154,7 +157,7 @@ class MainToolBar(QToolBar):
         start = row.mapTo(self, QPoint(0, 0)).x()  # the margins move what's inside, not the row
         margins = self._row.contentsMargins()
         if margins.left() != max(0, left - start):
-            self._row.setContentsMargins(max(0, left - start), 0, 0, 0)
+            self._row.setContentsMargins(max(0, left - start), BAR_GAP, 0, BAR_GAP)
         end = row.mapTo(self, QPoint(row.width(), 0)).x()  # doesn't move with the spacer
         width = max(0, end - right)
         if width != self._after_refresh.sizeHint().width():

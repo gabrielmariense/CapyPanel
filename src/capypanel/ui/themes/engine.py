@@ -313,7 +313,7 @@ QToolButton { padding: 2px 8px; border-radius: %(r2)spx; color: %(text2)s; backg
 QToolButton:hover { background: %(hover)s; color: %(text)s; }
 /* A line under the toolbar, like the menu bar's: without it, it merges into the panes below. */
 QToolBar { background: %(bg)s; border: none; border-bottom: 1px solid %(border)s;
-           padding: 6px 8px; spacing: 6px; }
+           padding: 0 8px; spacing: 6px; }
 /* Toolbar buttons follow design T1: outlined, about 28 px tall, 16 px Tabler icons. Thin lines
    divide the groups. Styling a tool button drops Fusion's menu arrow, so draw our own. */
 QToolBar QToolButton { padding: 3px 9px; border: 1px solid %(border)s; background: %(raised)s;

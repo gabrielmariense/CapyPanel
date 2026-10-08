@@ -16,6 +16,7 @@ from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_ui
 from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.themes import engine as themes
 
 DESK = Session("ana", "CORP", "console", "active", None)
 
@@ -210,6 +211,22 @@ def test_the_toolbar_lines_up_with_the_panes(window: MainWindow) -> None:
     assert search.mapTo(window, QPoint(0, 0)).y() == nav.mapTo(window, QPoint(0, 0)).y()
     connect = window.toolbar.connect_button  # and Connect starts where the panes do
     assert abs(connect.mapTo(window, QPoint(0, 0)).x() - nav.mapTo(window, QPoint(0, 0)).x()) <= 1
+
+
+def test_the_toolbar_stays_lined_up_after_a_theme_switch(window: MainWindow) -> None:
+    # Each theme pads the toolbar differently; the Windows style ignores padding altogether.
+    window.resize(1200, 600)
+    window.show()
+    for theme in ("capypanel-dark", "windows-dark"):
+        window.set_theme(theme)
+        for _ in range(10):
+            QApplication.processEvents()
+        connect, nav = window.toolbar.connect_button, window.nav
+        assert (
+            abs(connect.mapTo(window, QPoint(0, 0)).x() - nav.mapTo(window, QPoint(0, 0)).x()) <= 1
+        )
+        assert connect.mapTo(window.toolbar, QPoint(0, 0)).y() >= 6  # room above the buttons
+    window.set_theme(themes.DEFAULT_THEME.id)  # as the other tests expect
 
 
 def test_a_large_users_check_asks_first(

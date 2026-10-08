@@ -891,7 +891,8 @@ class MainWindow(QMainWindow):
     def set_theme(self, theme_id: str) -> None:
         theme = self.registry.find(theme_id)
         themes.apply(theme)
-        self.toolbar.restyle()  # icon colour and caption capitals follow the theme
+        self.toolbar.restyle()  # icon colour follows the theme
+        self._align_refresh_later()  # each theme pads the toolbar differently
         for item in self._theme_group.actions():
             item.setChecked(item.data() == theme.id)
         self._prefs["theme"] = theme.id
