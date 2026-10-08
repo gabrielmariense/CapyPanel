@@ -55,6 +55,8 @@ def test_an_uninstall_command_without_a_folder_never_means_the_current_one(
     # Installers made with MSI record "MsiExec.exe /X{…}": no folder at all.
     _exe(tmp_path)
     monkeypatch.chdir(tmp_path)  # a viewer.exe planted where CapyPanel was started
+    # Windows lets PATH lookups try the current folder first unless this is set.
+    monkeypatch.delenv("NoDefaultCurrentDirectoryInExePath", raising=False)
     _programs(monkeypatch, [("Viewer", "", "MsiExec.exe /X{12345678-1234-1234-1234-123456789012}")])
     tool = _tool(detect=Detect(installed_as=("Viewer",), exe="viewer.exe"))
     assert list(detect.installed_folders(("Viewer",))) == []

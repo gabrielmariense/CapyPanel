@@ -32,8 +32,9 @@ def candidates(tool: ToolDefinition) -> Iterator[Path]:
         if "%" not in expanded:  # a variable this PC doesn't have, e.g. %ProgramFiles(x86)%
             yield Path(expanded)
     if d.exe:
+        # Windows can make which() look in the current folder first: a relative answer.
         found = shutil.which(d.exe)
-        if found:
+        if found and Path(found).is_absolute():
             yield Path(found)
 
 
