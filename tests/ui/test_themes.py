@@ -17,7 +17,8 @@ from capypanel.ui.themes import engine as themes
 @pytest.fixture(autouse=True)
 def back_to_default(qapp: QApplication) -> Iterator[None]:
     yield
-    themes.apply(themes.DEFAULT_THEME)
+    if themes.current() is not themes.DEFAULT_THEME:  # a theme switch restyles every window
+        themes.apply(themes.DEFAULT_THEME)
 
 
 def test_all_shipped_themes_load() -> None:

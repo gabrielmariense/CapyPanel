@@ -43,7 +43,8 @@ def window(qapp: QApplication, paths: settings.Paths) -> Iterator[MainWindow]:
     win = MainWindow(paths, {"schema": 1})
     yield win
     win.close()
-    themes.apply(themes.DEFAULT_THEME)
+    if themes.current() is not themes.DEFAULT_THEME:  # a theme switch restyles every window
+        themes.apply(themes.DEFAULT_THEME)
 
 
 def _save_enabled(dialog: SettingsDialog) -> bool:

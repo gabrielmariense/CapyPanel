@@ -1298,7 +1298,8 @@ class MainWindow(QMainWindow):
         self._save_prefs()
 
     def _align_refresh_later(self) -> None:
-        QTimer.singleShot(0, self._align_refresh)  # once the panes have their new sizes
+        # Tied to this window, so a call still pending when it closes is dropped, not run.
+        QTimer.singleShot(0, self, self._align_refresh)  # once the panes have their new sizes
 
     def _align_refresh(self) -> None:
         if self.toolbar.isVisible():
