@@ -43,7 +43,8 @@ editing**.
 | CapyPanel — dark / light | CapyPanel's own look, the same on every computer |
 | Graphite, Paper | Two more of CapyPanel's own looks |
 
-Also under **View > Theme**. Themes only change the look, never what the app does.
+Also under **View > Theme**. Themes change colors only — the font, its size and the rounded
+corners are the same in every one — and never change what the app does.
 
 ## Where CapyPanel keeps its files
 

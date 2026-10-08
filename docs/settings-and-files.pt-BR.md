@@ -44,7 +44,8 @@ alterações** ou **Continuar editando**.
 | CapyPanel — escuro / claro | O visual próprio do CapyPanel, igual em todo computador |
 | Graphite, Paper | Mais dois visuais próprios do CapyPanel |
 
-Também em **Exibir > Tema**. Os temas só mudam o visual, nunca o que o app faz.
+Também em **Exibir > Tema**. Os temas mudam só as cores — a fonte, o tamanho dela e os cantos
+arredondados são os mesmos em todos — e nunca mudam o que o app faz.
 
 ## Onde o CapyPanel guarda os arquivos
 

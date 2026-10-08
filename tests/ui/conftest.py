@@ -14,3 +14,9 @@ def qapp() -> Iterator[QApplication]:
     app = QApplication.instance() or QApplication([])
     assert isinstance(app, QApplication)
     yield app
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Theme tests first. A theme switch restyles every window still alive, and closed windows
+    from earlier tests pile up, so the theme tests took minutes at the end of the run."""
+    items.sort(key=lambda item: "test_themes.py" not in item.nodeid)  # keeps the rest in order

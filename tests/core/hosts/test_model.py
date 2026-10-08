@@ -144,3 +144,24 @@ def test_hosts_move_to_another_group() -> None:
     assert hl.move_hosts([h.id], b.id).host(h.id).group == b.id  # type: ignore[union-attr]
     with pytest.raises(HostListRuleError):
         hl.move_hosts([h.id], "nope")
+
+
+def test_removing_a_group_can_keep_its_contents_one_level_up() -> None:
+    hl, hq, finance = _office()
+    hl, desks = hl.add_group("Desks", parent=finance)
+    hl, pc = hl.add_host("FIN-1", finance)
+    hl = hl.remove_group(finance, keep_contents=True)
+    assert hl.group(finance) is None
+    assert hl.group(desks.id).parent == hq  # type: ignore[union-attr]
+    assert hl.host(pc.id).group == hq  # type: ignore[union-attr]
+
+
+def test_a_top_level_group_keeps_its_contents_only_without_hosts_of_its_own() -> None:
+    hl, hq, finance = _office()
+    assert hl.can_keep_contents(hq)
+    hl2 = hl.remove_group(hq, keep_contents=True)
+    assert hl2.group(finance).parent is None  # type: ignore[union-attr]
+    hl, _ = hl.add_host("HQ-1", hq)
+    assert not hl.can_keep_contents(hq)  # hosts always need a group
+    with pytest.raises(HostListRuleError):
+        hl.remove_group(hq, keep_contents=True)

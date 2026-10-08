@@ -14,10 +14,11 @@ Desktop or the VNC viewer you already use.
 - Shared host lists
 - Host status
 - Logged-on users
+- Search
 
 ### In development
 
-- Search
+- Toolbar redesign
 
 ### Planned
 
@@ -34,8 +35,9 @@ For people who use CapyPanel, and for people who set it up for a team.
 | [Host lists](host-lists.md) | Groups, tags, and the default, personal and shared lists |
 | [Connecting](connecting.md) | VNC viewers, Remote Desktop, connection profiles, passwords and the login check |
 | [Checking hosts](checking.md) | Status, logged-on users and the account used to read them |
+| [Searching hosts](searching.md) | The search box, what it covers and how a search ends |
 | [Settings and files](settings-and-files.md) | Every setting, and where CapyPanel keeps its files |
 | [Development](development.md) | Building, testing and translating CapyPanel |
 
-These pages describe the current version (0.14.0). CapyPanel is in beta, so they grow with each
+These pages describe the current version (0.15.0). CapyPanel is in beta, so they grow with each
 feature.

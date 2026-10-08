@@ -8,7 +8,15 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import QByteArray, QEvent, QPoint, Qt, QTimer
-from PySide6.QtGui import QActionGroup, QCloseEvent, QGuiApplication, QResizeEvent, QShowEvent
+from PySide6.QtGui import (
+    QActionGroup,
+    QCloseEvent,
+    QGuiApplication,
+    QKeySequence,
+    QResizeEvent,
+    QShortcut,
+    QShowEvent,
+)
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -42,7 +50,7 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui import language
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
-from capypanel.ui.groups import ManageGroupsDialog
+from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog
 from capypanel.ui.host_lists import HostListsDialog
 from capypanel.ui.hosts import (
     HostDialog,
@@ -58,6 +66,7 @@ from capypanel.ui.main_window.host_views import (
     DetailsPane,
     HostTable,
     NavigationPane,
+    SearchBox,
 )
 from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
 from capypanel.ui.menus import StayOpenMenu, section
@@ -102,15 +111,25 @@ class MainWindow(QMainWindow):
         self._targets: list[tuple[str, str]] = []
 
         self.commands = create_actions(self)
+        self.search = SearchBox()
         self.toolbar = MainToolBar(self.commands)
         self.addToolBar(self.toolbar)
         self.refresh_panel = RefreshPanel(self)
         self.refresh_panel.set_choices(self._prefs.get("refresh"))
         self.nav = NavigationPane()
         self.table = HostTable()
+        self._search_timer = QTimer(self)  # waits for a pause in typing, then filters
+        self._search_timer.setSingleShot(True)
+        self._search_timer.setInterval(150)
         self.details = DetailsPane()
         self._splitter = QSplitter()
-        for pane in (self.nav, self.table, self.details):
+        # The search box is a box of its own above the table, styled like the panes.
+        hosts_pane = QWidget()
+        column = QVBoxLayout(hosts_pane)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.addWidget(self.search)
+        column.addWidget(self.table)
+        for pane in (self.nav, hosts_pane, self.details):
             self._splitter.addWidget(pane)
         self._splitter.setStretchFactor(1, 1)
         # Dragged all the way, a pane would vanish; View hides panes on purpose instead.
@@ -171,6 +190,8 @@ class MainWindow(QMainWindow):
         self._view_menu.addActions([a.show_toolbar, a.show_status_bar])
         self._panes_heading = section(self._view_menu, "")
         self._view_menu.addActions([a.show_groups, a.show_tags, a.show_details])
+        self._users_heading = section(self._view_menu, "")
+        self._view_menu.addAction(a.show_domains)
         self._view_menu.addSeparator()
         self._theme_menu = self._view_menu.addMenu("")
         self._theme_group = QActionGroup(self)
@@ -203,12 +224,14 @@ class MainWindow(QMainWindow):
         self.toolbar.retranslate()
         self.refresh_panel.retranslate()
         self._stop_button.setText(_("Stop"))
+        self.search.retranslate()
         self._file_menu.setTitle(_("&File"))
         self._inventory_menu.setTitle(_("&Inventory"))
         self._connect_menu.setTitle(_("&Connect"))
         self._view_menu.setTitle(_("&View"))
         self._bars_heading.setText(_("Bars"))
         self._panes_heading.setText(_("Panes"))
+        self._users_heading.setText(_("Users"))
         self._theme_menu.setTitle(_("&Theme"))
         self._language_menu.setTitle(_("&Language"))
         for item in self._theme_group.actions():
@@ -226,12 +249,13 @@ class MainWindow(QMainWindow):
         a.edit.triggered.connect(self.edit_selected)
         a.remove.triggered.connect(self.remove_selected)
         # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C) live here.
-        self.addActions([a.edit, a.remove, a.copy_address])
+        self.addActions([a.edit, a.remove, a.copy_address, a.show_in_group])
         a.show_toolbar.toggled.connect(self.toolbar.setVisible)
         a.show_groups.toggled.connect(self.nav.setVisible)
         a.show_tags.toggled.connect(self.nav.set_tags_visible)
         a.show_details.toggled.connect(self.details.setVisible)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
+        a.show_domains.toggled.connect(self._show_domains)
         # Refresh follows the end of the host table, wherever the panes are.
         for toggled in (a.show_groups.toggled, a.show_details.toggled, a.show_toolbar.toggled):
             toggled.connect(self._align_refresh_later)
@@ -247,17 +271,25 @@ class MainWindow(QMainWindow):
         self.refresh_panel.run_clicked.connect(self._run_refresh_panel)
         self.toolbar.connect_menu.aboutToShow.connect(self._fill_connect_menu)
         self.nav.add_group_button.clicked.connect(self.add_group)
-        self.nav.filter_changed.connect(self._show_hosts)
+        self.nav.filter_changed.connect(self._filter_picked)
+        self.search.textChanged.connect(self._search_timer.start)
+        self._search_timer.timeout.connect(self._show_hosts)
+        self.search.to_results.connect(self._to_results)
+        QShortcut(QKeySequence.StandardKey.Find, self, self._focus_search)
+        # Esc ends a search wherever the focus is, not only in the box.
+        QShortcut(QKeySequence(Qt.Key.Key_Escape), self, self._end_search)
         self.nav.groups.customContextMenuRequested.connect(self._group_menu)
         self.nav.groups.rearranged.connect(self._groups_dragged)
         self.nav.groups.hosts_dropped.connect(self.move_hosts)
         self.table.itemSelectionChanged.connect(self._selection_changed)
         self.table.customContextMenuRequested.connect(self._host_menu)
         self.table.columns_changed.connect(self._save_columns)
+        self.table.columns_changed.connect(self._columns_shown)  # a search covers only those
         # Enter connects only from the host table, so it never fires while typing elsewhere.
         a.connect_host.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.table.addAction(a.connect_host)
         self.table.itemDoubleClicked.connect(lambda *_args: self.connect_selected())
+        a.show_in_group.triggered.connect(self._show_selected_in_group)
         a.connect_host.triggered.connect(self.connect_selected)
         a.manual_connect.triggered.connect(self.manual_connect)
         a.copy_address.triggered.connect(lambda: self._copy(lambda h: h.target))
@@ -283,11 +315,14 @@ class MainWindow(QMainWindow):
             ("tags", self.commands.show_tags),
             ("details", self.commands.show_details),
             ("status_bar", self.commands.show_status_bar),
+            ("domains", self.commands.show_domains),
         ):
             action.setChecked(bool(view.get(key, True)))
+        check_texts.show_domains(self.commands.show_domains.isChecked())
         self.nav.set_tags_visible(self.commands.show_tags.isChecked())
         self.toolbar.setVisible(self.commands.show_toolbar.isChecked())
         self.table.set_hidden_columns(self._prefs.get("hidden_columns"))
+        self._columns_shown()
         self.nav.setVisible(self.commands.show_groups.isChecked())
         self.details.setVisible(self.commands.show_details.isChecked())
         self.statusBar().setVisible(self.commands.show_status_bar.isChecked())
@@ -380,6 +415,7 @@ class MainWindow(QMainWindow):
         if self._doc is None or not locations.same_path(self._doc.path, doc.path):
             self._status_found.clear()  # another list's hosts: old results don't apply
             self._users_found.clear()
+            self._clear_search()
         self._doc = doc
         locations.remember_list(self._prefs, doc.path)
         if self._kind(doc.path) is ListKind.SHARED:  # it shows in File > Host lists… from now on
@@ -518,14 +554,58 @@ class MainWindow(QMainWindow):
         group = doc.hosts.group(group_id) if doc else None
         if doc is None or group is None:
             return
-        count = len(doc.hosts.hosts_in(group_id))
-        text = _("Remove the group “{name}” and the groups inside it?").format(name=group.name)
-        if count:
-            text += " " + ngettext(
-                "This will also remove {n} host.", "This will also remove {n} hosts.", count
-            ).format(n=count)
-        if confirm(self, _("Remove group"), text, _("Remove")):
-            self._commit(doc.hosts.remove_group(group_id))
+        hosts = len(doc.hosts.hosts_in(group_id))
+        groups = len(doc.hosts.subtree(group_id)) - 1
+        if not hosts and not groups:
+            text = _("Remove the empty group “{name}”?").format(name=group.name)
+            if confirm(self, _("Remove group"), text, _("Remove")):
+                self._commit(doc.hosts.remove_group(group_id))
+            return
+        choice = self._ask_how_to_remove(group_id, groups, hosts)
+        if choice is not None:
+            self._commit(doc.hosts.remove_group(group_id, keep_contents=choice == "keep"))
+
+    def _ask_how_to_remove(self, group_id: str, groups: int, hosts: int) -> str | None:
+        """Keep what's inside (moved up a level, the default) or remove everything.
+        Returns "keep", "all", or None for Cancel."""
+        assert self._doc is not None
+        host_list = self._doc.hosts
+        group = host_list.group(group_id)
+        assert group is not None
+        parent = host_list.group(group.parent) if group.parent else None
+        inside = [
+            ngettext("{n} group", "{n} groups", groups).format(n=groups) if groups else "",
+            ngettext("{n} host", "{n} hosts", hosts).format(n=hosts) if hosts else "",
+        ]
+        box = QMessageBox(
+            QMessageBox.Icon.Question,
+            _("Remove group"),
+            _("“{name}” holds {inside}. What should happen to them?").format(
+                name=group.name, inside=_(" and ").join(i for i in inside if i)
+            ),
+            parent=self,
+        )
+        where = _("Move them into “{name}”").format(name=parent.name) if parent else ""
+        keep = box.addButton(
+            where or _("Move them to the top level"), QMessageBox.ButtonRole.AcceptRole
+        )
+        everything = box.addButton(_("Remove everything"), QMessageBox.ButtonRole.DestructiveRole)
+        cancel = box.addButton(QMessageBox.StandardButton.Cancel)
+        if host_list.can_keep_contents(group_id):
+            box.setDefaultButton(keep)
+        else:
+            keep.setEnabled(False)
+            box.setDefaultButton(cancel)
+            box.setInformativeText(
+                _(
+                    "Its hosts can't move up: every host needs a group, and this one is at the "
+                    "top level. Move them to another group first to keep them."
+                )
+            )
+        box.setEscapeButton(cancel)
+        box.exec()
+        clicked = box.clickedButton()
+        return "keep" if clicked is keep else "all" if clicked is everything else None
 
     def _commit(self, new: HostList) -> bool:
         """Save an edit. If someone else changed the file meanwhile, ask what to do with ours."""
@@ -855,18 +935,98 @@ class MainWindow(QMainWindow):
         self._show_hosts()
 
     def _show_hosts(self) -> None:
+        self._search_timer.stop()
+        needle = self._needle()
         hosts = self._visible_hosts()
-        self.table.show_hosts(hosts, {h.id: self._cells(h.id) for h in hosts})
+        groups = {}
+        if needle and self._doc is not None:  # results come from every group: say which
+            groups = {h.id: group_path(self._doc.hosts, h.group) for h in hosts}
+        self.nav.set_searching(bool(needle))
+        self.table.show_hosts(hosts, {h.id: self._cells(h.id) for h in hosts}, groups)
+        self.table.set_search(needle)  # after the rows, so Group fits their paths
 
     def _visible_hosts(self) -> tuple[Host, ...]:
+        """The hosts the table shows: the search's results, or the group or tag picked."""
         if self._doc is None:
             return ()
         hosts, current = self._doc.hosts, self.nav.current_filter()
+        if needle := self._needle():
+            return tuple(h for h in hosts.hosts if self._matches(h, needle))
         if current.kind == "group" and current.value:
             return hosts.hosts_in(current.value)
         if current.kind == "tag":
             return tuple(h for h in hosts.hosts if current.value in h.tags)
         return hosts.hosts
+
+    # ---- searching ----
+
+    def _needle(self) -> str:
+        return self.search.text().strip().casefold()
+
+    def _matches(self, host: Host, needle: str) -> bool:
+        """The name, plus the address and users when their columns show: only what can be
+        seen. Users come from the last logged-on users check (memory only)."""
+        table = self.table
+        if needle in host.name.casefold():
+            return True
+        if not table.isColumnHidden(table.ADDRESS) and needle in host.address.casefold():
+            return True
+        if table.isColumnHidden(table.USER):
+            return False
+        sessions = (self._users_found.get(host.id) or ((), None, None))[0] or ()
+        return any(needle in check_texts.user_name(s).casefold() for s in sessions)
+
+    def _show_domains(self, shown: bool) -> None:
+        check_texts.show_domains(shown)
+        self._show_hosts()  # the User column, the search and the details pane
+
+    def _focus_search(self) -> None:
+        self.search.setFocus(Qt.FocusReason.ShortcutFocusReason)
+        self.search.selectAll()
+
+    def _clear_search(self) -> None:
+        self.search.blockSignals(True)  # the caller shows the hosts once, right after
+        self.search.clear()
+        self.search.blockSignals(False)
+
+    def _filter_picked(self) -> None:
+        """Picking a group or tag on the left ends a search: it means browsing again."""
+        self._clear_search()
+        self._show_hosts()
+
+    def _end_search(self) -> None:
+        if self.search.text():
+            self._clear_search()
+            self._show_hosts()  # back to the group or tag picked before, selection kept
+
+    def _columns_shown(self) -> None:
+        table = self.table
+        shown = (not table.isColumnHidden(table.ADDRESS), not table.isColumnHidden(table.USER))
+        self.search.set_columns(*shown)
+        if self._needle():
+            self._show_hosts()
+
+    def _to_results(self) -> None:
+        """Down or Enter in the search box: the first result gets the focus, never a connection."""
+        first = self.table.topLevelItem(0)
+        if first is not None:
+            self.table.setCurrentItem(first)
+            self.table.setFocus(Qt.FocusReason.TabFocusReason)
+
+    def _show_selected_in_group(self) -> None:
+        selected = self.table.selected_ids()
+        if len(selected) == 1:
+            self.show_in_group(selected[0])
+
+    def show_in_group(self, host_id: str) -> None:
+        """Right-click > Show in group (Ctrl+G): the host inside its group, any search ended."""
+        host = self._doc.hosts.host(host_id) if self._doc else None
+        if host is None:
+            return
+        self._clear_search()
+        self.nav.select_group(host.group)
+        self._show_hosts()
+        self.table.select_ids([host.id])
 
     def _selected_hosts(self) -> list[Host]:
         if self._doc is None:
@@ -886,8 +1046,30 @@ class MainWindow(QMainWindow):
                 *self._details_found(host.id),
             )
         else:
-            self.details.show_host(None, "", len(hosts))
+            self.details.show_host(None, "", len(hosts), summary=self._summary())
         self._update_state()
+
+    def _summary(self) -> str:
+        """With nothing selected, the details pane sums up the hosts shown."""
+        items = (self.table.topLevelItem(i) for i in range(self.table.topLevelItemCount()))
+        shown = [item.data(0, ROLE_ID) for item in items if item is not None]
+        if not shown:
+            return ""
+        counts: dict[Status | None, int] = {}
+        for host_id in shown:
+            state = found[0] if (found := self._status_found.get(host_id)) else None
+            counts[state] = counts.get(state, 0) + 1
+        lines = [ngettext("{n} host shown", "{n} hosts shown", len(shown)).format(n=len(shown))]
+        texts: tuple[tuple[Status | None, Callable[[int], str]], ...] = (
+            (Status.ONLINE, lambda n: ngettext("{n} online", "{n} online", n)),
+            (Status.OFFLINE, lambda n: ngettext("{n} offline", "{n} offline", n)),
+            (Status.NOT_FOUND, lambda n: ngettext("{n} not found", "{n} not found", n)),
+            (None, lambda n: ngettext("{n} not checked", "{n} not checked", n)),
+        )  # literal texts, so the translation script finds them
+        for state, text in texts:
+            if n := counts.get(state, 0):
+                lines.append(text(n).format(n=n))
+        return "\n".join(lines)
 
     def _update_state(self) -> None:
         doc = self._doc
@@ -902,6 +1084,7 @@ class MainWindow(QMainWindow):
         a.remove.setEnabled(writable and (selected > 0 or group_picked))
         for action in (a.connect_host, a.copy_address, a.copy_name):
             action.setEnabled(selected > 0)  # read-only lists can still connect
+        a.show_in_group.setEnabled(selected == 1)
         for action in (a.check_status, a.check_users):
             action.setEnabled(selected > 0 and self._run is None)  # one Refresh at a time
         shown = self.table.topLevelItemCount() > 0
@@ -919,6 +1102,12 @@ class MainWindow(QMainWindow):
             ngettext("{n} host", "{n} hosts", total).format(n=total),
             ngettext("{n} selected", "{n} selected", selected).format(n=selected),
         ]
+        online = sum(1 for f in self._status_found.values() if f[0] is Status.ONLINE)
+        if self._status_found:  # once anything was checked; results are this list's only
+            parts.insert(2, ngettext("{n} online", "{n} online", online).format(n=online))
+        if self._needle():
+            found = self.table.topLevelItemCount()
+            parts.insert(-1, ngettext("{n} found", "{n} found", found).format(n=found))
         if doc.read_only:
             parts.append(_("read-only"))
         if self._paths.portable:
@@ -1008,8 +1197,10 @@ class MainWindow(QMainWindow):
             if error is not None and error.reason in (Reason.NOT_ADMIN, Reason.REJECTED):
                 self._refused.append(host_id)
         self.table.show_cells(host_id, self._cells(host_id))
-        if self.table.selected_ids() == [host_id]:
+        if self.table.selected_ids() in ([host_id], []):  # its details, or the summary
             self._selection_changed()
+        else:
+            self._update_state()  # the online count
         self._show_progress()
 
     def _show_progress(self) -> None:
@@ -1099,24 +1290,25 @@ class MainWindow(QMainWindow):
         if users is not None:
             found, error, when = users
             text, tip = check_texts.users_text(found, error), check_texts.users_tip(error, when)
-            if found:
-                tip = f"{text}\n{tip}"  # every name, when the column is too narrow
+            if found:  # every name, when the column is too narrow; always with the domain
+                tip = f"{check_texts.users_text(found, error, full=True)}\n{tip}"
             user_cell = (text, tip, None, error is not None or not found)
         return Cells(status_cell, user_cell)
 
-    def _details_found(self, host_id: str) -> tuple[str, str]:
-        """The Status and Logged on lines of the details pane."""
-        status, users = "", ""
+    def _details_found(self, host_id: str) -> tuple[str, str, str]:
+        """The Status and Logged on lines of the details pane, and Logged on's tooltip."""
+        status, users, users_tip = "", "", ""
         if (found := self._status_found.get(host_id)) is not None:
             status = f"{check_texts.status_text(found[0])} ({check_texts.when_text(found[1])})"
         if (read := self._users_found.get(host_id)) is not None:
             sessions, error, when = read
             if error is None and sessions:
                 users = check_texts.session_lines(sessions)
+                users_tip = check_texts.session_lines(sessions, full=True)
             else:
                 users = check_texts.users_text(sessions, error)
             users += "\n" + _("As of {when}").format(when=check_texts.when_text(when))
-        return status, users
+        return status, users, users_tip
 
     def _show_refresh_panel(self, where: QPoint) -> None:
         panel = self.refresh_panel
@@ -1126,7 +1318,7 @@ class MainWindow(QMainWindow):
         panel.show()
 
     def _refresh_shown(self, status: bool, users: bool) -> None:
-        """Refresh: every host the table shows (the group or tag picked on the left)."""
+        """Refresh: every host the table shows (the search's results, or the group or tag)."""
         self.check_hosts(self._visible_hosts(), status=status, users=users)
 
     def _run_refresh_panel(self) -> None:
@@ -1150,7 +1342,8 @@ class MainWindow(QMainWindow):
         self._save_prefs()
 
     def _align_refresh_later(self) -> None:
-        QTimer.singleShot(0, self._align_refresh)  # once the panes have their new sizes
+        # Tied to this window, so a call still pending when it closes is dropped, not run.
+        QTimer.singleShot(0, self, self._align_refresh)  # once the panes have their new sizes
 
     def _align_refresh(self) -> None:
         if self.toolbar.isVisible():
@@ -1192,6 +1385,8 @@ class MainWindow(QMainWindow):
         menu.addActions([a.check_status, a.check_users])
         section(menu, _("Copy"))
         menu.addActions([a.copy_address, a.copy_name])
+        menu.addSeparator()
+        menu.addAction(a.show_in_group)
         menu.addSeparator()
         menu.addActions([a.edit, a.remove])
         menu.exec(self.table.viewport().mapToGlobal(position))
@@ -1269,6 +1464,7 @@ class MainWindow(QMainWindow):
             "tags": self.commands.show_tags.isChecked(),
             "details": self.commands.show_details.isChecked(),
             "status_bar": self.commands.show_status_bar.isChecked(),
+            "domains": self.commands.show_domains.isChecked(),
         }
         self._save_prefs()
         super().closeEvent(event)

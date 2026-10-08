@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 23:34-0300\n"
+"POT-Creation-Date: 2026-10-07 22:38-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -17,6 +17,9 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
+
+msgid " and "
+msgstr " e "
 
 msgid " min"
 msgstr " min"
@@ -526,6 +529,9 @@ msgstr "Ela é entregue ao visualizador de forma privada, nunca na linha de coma
 msgid "It's passed to the viewer on its command line, which administrators of this PC can see."
 msgstr "Ela é passada ao visualizador na linha de comando, que os administradores deste PC podem ver."
 
+msgid "Its hosts can't move up: every host needs a group, and this one is at the top level. Move them to another group first to keep them."
+msgstr "Os hosts dele não podem subir: todo host precisa de um grupo, e este está no nível mais alto. Mova-os para outro grupo antes para mantê-los."
+
 msgid "Its own settings file"
 msgstr "Arquivo de configurações próprio"
 
@@ -570,6 +576,16 @@ msgstr "Mover para &baixo"
 
 msgid "Move &up"
 msgstr "Mover para &cima"
+
+#, python-brace-format
+msgid "Move them into “{name}”"
+msgstr "Mover para “{name}”"
+
+msgid "Move them to the top level"
+msgstr "Mover para o nível mais alto"
+
+msgid "Move this group's hosts to another group first."
+msgstr "Mova os hosts deste grupo para outro grupo antes."
 
 msgid "My personal list"
 msgstr "Minha lista pessoal"
@@ -718,6 +734,9 @@ msgstr "Ferramentas remotas"
 msgid "Remove"
 msgstr "Remover"
 
+msgid "Remove everything"
+msgstr "Remover tudo"
+
 msgid "Remove group"
 msgstr "Remover grupo"
 
@@ -732,8 +751,8 @@ msgid "Remove tag {tag}"
 msgstr "Remover a tag {tag}"
 
 #, python-brace-format
-msgid "Remove the group “{name}” and the groups inside it?"
-msgstr "Remover o grupo “{name}” e os grupos dentro dele?"
+msgid "Remove the empty group “{name}”?"
+msgstr "Remover o grupo vazio “{name}”?"
 
 #, python-brace-format
 msgid "Remove {n} host from the list?"
@@ -760,6 +779,21 @@ msgstr "Salvar minha versão como cópia…"
 msgid "Save the changes and keep Settings open"
 msgstr "Salva as alterações e mantém as Configurações abertas"
 
+msgid "Search name"
+msgstr "Pesquisar nome"
+
+msgid "Search name, address"
+msgstr "Pesquisar nome, endereço"
+
+msgid "Search name, address, user"
+msgstr "Pesquisar nome, endereço, usuário"
+
+msgid "Search name, user"
+msgstr "Pesquisar nome, usuário"
+
+msgid "Searches every host in the list (Ctrl+F)"
+msgstr "Pesquisa em todos os hosts da lista (Ctrl+F)"
+
 msgid "Select a host to see its details."
 msgstr "Selecione um host para ver os detalhes."
 
@@ -783,6 +817,12 @@ msgstr "Arquivos compartilhados"
 
 msgid "Shared files: the default list, connection profiles and tools, for everyone."
 msgstr "Arquivos compartilhados: a lista padrão, os perfis de conexão e as ferramentas, para todos."
+
+msgid "Show do&main"
+msgstr "Mostrar do&mínio"
+
+msgid "Show in &group"
+msgstr "Mostrar no &grupo"
 
 msgid "Someone else has changed the file since you opened it."
 msgstr "Outra pessoa alterou o arquivo desde que você o abriu."
@@ -960,12 +1000,6 @@ msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o 
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyPanel."
 
-#, python-brace-format
-msgid "This will also remove {n} host."
-msgid_plural "This will also remove {n} hosts."
-msgstr[0] "Isso também removerá {n} host."
-msgstr[1] "Isso também removerá {n} hosts."
-
 msgid "Type a tag and press Enter"
 msgstr "Digite uma tag e pressione Enter"
 
@@ -1002,6 +1036,9 @@ msgstr "Usar &padrões"
 
 msgid "User"
 msgstr "Usuário"
+
+msgid "Users"
+msgstr "Usuários"
 
 #, python-brace-format
 msgid "Viewer settings (*{extension})"
@@ -1112,6 +1149,12 @@ msgstr[0] "{n} computador não deixou “{user}” ver quem está logado. Usar o
 msgstr[1] "{n} computadores não deixaram “{user}” ver quem está logado. Usar outra conta?"
 
 #, python-brace-format
+msgid "{n} found"
+msgid_plural "{n} found"
+msgstr[0] "{n} encontrado"
+msgstr[1] "{n} encontrados"
+
+#, python-brace-format
 msgid "{n} group"
 msgid_plural "{n} groups"
 msgstr[0] "{n} grupo"
@@ -1140,6 +1183,36 @@ msgid "{n} host selected"
 msgid_plural "{n} hosts selected"
 msgstr[0] "{n} host selecionado"
 msgstr[1] "{n} hosts selecionados"
+
+#, python-brace-format
+msgid "{n} host shown"
+msgid_plural "{n} hosts shown"
+msgstr[0] "{n} host exibido"
+msgstr[1] "{n} hosts exibidos"
+
+#, python-brace-format
+msgid "{n} not checked"
+msgid_plural "{n} not checked"
+msgstr[0] "{n} não verificado"
+msgstr[1] "{n} não verificados"
+
+#, python-brace-format
+msgid "{n} not found"
+msgid_plural "{n} not found"
+msgstr[0] "{n} não encontrado"
+msgstr[1] "{n} não encontrados"
+
+#, python-brace-format
+msgid "{n} offline"
+msgid_plural "{n} offline"
+msgstr[0] "{n} offline"
+msgstr[1] "{n} offline"
+
+#, python-brace-format
+msgid "{n} online"
+msgid_plural "{n} online"
+msgstr[0] "{n} online"
+msgstr[1] "{n} online"
 
 #, python-brace-format
 msgid "{n} selected"
@@ -1228,6 +1301,10 @@ msgstr "“{key}” deve ser uma lista."
 #, python-brace-format
 msgid "“{name}” has no address, and its name can't be used as one: a computer name has no spaces or symbols other than - and _."
 msgstr "“{name}” não tem endereço, e o nome não pode ser usado como um: um nome de computador não tem espaços nem símbolos além de - e _."
+
+#, python-brace-format
+msgid "“{name}” holds {inside}. What should happen to them?"
+msgstr "“{name}” contém {inside}. O que fazer com eles?"
 
 msgid "✓ Found"
 msgstr "✓ Encontrado"

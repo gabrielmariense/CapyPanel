@@ -7,7 +7,7 @@ import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from capypanel.core import settings
 from capypanel.ui.main_window.window import MainWindow
@@ -17,7 +17,8 @@ from capypanel.ui.themes import engine as themes
 @pytest.fixture(autouse=True)
 def back_to_default(qapp: QApplication) -> Iterator[None]:
     yield
-    themes.apply(themes.DEFAULT_THEME)
+    if themes.current() is not themes.DEFAULT_THEME:  # a theme switch restyles every window
+        themes.apply(themes.DEFAULT_THEME)
 
 
 def test_all_shipped_themes_load() -> None:
@@ -171,3 +172,18 @@ def test_images_the_stylesheet_uses_ship_with_the_themes(theme: themes.Theme) ->
     images = set(re.findall(r'url\("([^"]+)"\)', sheet))
     assert len(images) == 2  # the tick, and the arrow of drop-downs and toolbar buttons
     assert all(Path(image).is_file() for image in images), images
+
+
+@pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
+def test_dialog_buttons_never_cut_their_text(qapp: QApplication, theme: themes.Theme) -> None:
+    # A fixed minimum width in the stylesheet let message boxes squeeze long button labels.
+    themes.apply(theme)
+    box = QMessageBox(QMessageBox.Icon.Question, "Remove group", "What should happen to them?")
+    buttons = [box.addButton(text, QMessageBox.ButtonRole.AcceptRole) for text in (
+        "Move them into “Campainhas”", "Remove everything", "Cancel"
+    )]  # fmt: skip
+    box.show()
+    qapp.processEvents()
+    for button in buttons:
+        assert button.width() > button.fontMetrics().horizontalAdvance(button.text())
+    box.close()

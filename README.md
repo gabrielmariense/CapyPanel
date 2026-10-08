@@ -10,7 +10,7 @@ CapyPanel puts every computer you look after in one window. It's a Windows deskt
 staff: keep your hosts in organized lists, and open a remote screen on any of them through Remote
 Desktop or the VNC viewer you already use.
 
-> **Status: beta (0.14.0).** It runs from source; there's no installer yet.
+> **Status: beta (0.15.0).** It runs from source; there's no installer yet.
 
 ## Features
 
@@ -22,10 +22,11 @@ Desktop or the VNC viewer you already use.
 - Shared host lists
 - Host status
 - Logged-on users
+- Search
 
 ### In development
 
-- Search
+- Toolbar redesign
 
 ### Planned
 
@@ -40,6 +41,7 @@ Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrie
 - [Host lists](docs/host-lists.md): groups, tags, and default, personal and shared lists
 - [Connecting](docs/connecting.md): VNC viewers, Remote Desktop, connection profiles and passwords
 - [Checking hosts](docs/checking.md): status and logged-on users
+- [Searching hosts](docs/searching.md): finding a host anywhere in the list
 - [Settings and files](docs/settings-and-files.md): what each setting does, and where CapyPanel
   keeps its files
 - [Development](docs/development.md): building, testing and translating

@@ -3,7 +3,8 @@
 from PySide6.QtCore import QRect, Qt
 from PySide6.QtGui import QColor, QFont, QGuiApplication, QIcon, QPainter, QPixmap
 
-GLYPHS = {"connect": "\ue7f4", "refresh": "\ue72c"}  # Segoe Fluent Icons / MDL2 Assets
+# Segoe Fluent Icons / MDL2 Assets
+GLYPHS = {"connect": "\ue7f4", "refresh": "\ue72c", "search": "\ue721"}
 STATUS_COLORS = {"online": "#3fae4a", "offline": "#8a8a8a", "not-found": "#d29922"}
 
 

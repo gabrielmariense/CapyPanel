@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-05 23:34-0300\n"
+"POT-Creation-Date: 2026-10-07 22:38-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,9 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
+
+msgid " and "
+msgstr ""
 
 msgid " min"
 msgstr ""
@@ -531,6 +534,11 @@ msgid ""
 "this PC can see."
 msgstr ""
 
+msgid ""
+"Its hosts can't move up: every host needs a group, and this one is at the"
+" top level. Move them to another group first to keep them."
+msgstr ""
+
 msgid "Its own settings file"
 msgstr ""
 
@@ -579,6 +587,16 @@ msgid "Move &down"
 msgstr ""
 
 msgid "Move &up"
+msgstr ""
+
+#, python-brace-format
+msgid "Move them into “{name}”"
+msgstr ""
+
+msgid "Move them to the top level"
+msgstr ""
+
+msgid "Move this group's hosts to another group first."
 msgstr ""
 
 msgid "My personal list"
@@ -733,6 +751,9 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
+msgid "Remove everything"
+msgstr ""
+
 msgid "Remove group"
 msgstr ""
 
@@ -747,7 +768,7 @@ msgid "Remove tag {tag}"
 msgstr ""
 
 #, python-brace-format
-msgid "Remove the group “{name}” and the groups inside it?"
+msgid "Remove the empty group “{name}”?"
 msgstr ""
 
 #, python-brace-format
@@ -773,6 +794,21 @@ msgid "Save my version as a copy…"
 msgstr ""
 
 msgid "Save the changes and keep Settings open"
+msgstr ""
+
+msgid "Search name"
+msgstr ""
+
+msgid "Search name, address"
+msgstr ""
+
+msgid "Search name, address, user"
+msgstr ""
+
+msgid "Search name, user"
+msgstr ""
+
+msgid "Searches every host in the list (Ctrl+F)"
 msgstr ""
 
 msgid "Select a host to see its details."
@@ -801,6 +837,12 @@ msgstr ""
 msgid ""
 "Shared files: the default list, connection profiles and tools, for "
 "everyone."
+msgstr ""
+
+msgid "Show do&main"
+msgstr ""
+
+msgid "Show in &group"
 msgstr ""
 
 msgid "Someone else has changed the file since you opened it."
@@ -994,12 +1036,6 @@ msgstr ""
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr ""
 
-#, python-brace-format
-msgid "This will also remove {n} host."
-msgid_plural "This will also remove {n} hosts."
-msgstr[0] ""
-msgstr[1] ""
-
 msgid "Type a tag and press Enter"
 msgstr ""
 
@@ -1035,6 +1071,9 @@ msgid "Use &defaults"
 msgstr ""
 
 msgid "User"
+msgstr ""
+
+msgid "Users"
 msgstr ""
 
 #, python-brace-format
@@ -1164,6 +1203,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} found"
+msgid_plural "{n} found"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} group"
 msgid_plural "{n} groups"
 msgstr[0] ""
@@ -1190,6 +1235,36 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} host selected"
 msgid_plural "{n} hosts selected"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} host shown"
+msgid_plural "{n} hosts shown"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} not checked"
+msgid_plural "{n} not checked"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} not found"
+msgid_plural "{n} not found"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} offline"
+msgid_plural "{n} offline"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} online"
+msgid_plural "{n} online"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -1289,6 +1364,10 @@ msgstr ""
 msgid ""
 "“{name}” has no address, and its name can't be used as one: a computer "
 "name has no spaces or symbols other than - and _."
+msgstr ""
+
+#, python-brace-format
+msgid "“{name}” holds {inside}. What should happen to them?"
 msgstr ""
 
 msgid "✓ Found"

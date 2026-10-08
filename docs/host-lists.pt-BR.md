@@ -5,8 +5,7 @@ por vez e salva cada edição nela na hora.
 
 ## Grupos e tags
 
-- **Grupos** se aninham o quanto você quiser ("Matriz › Financeiro › 3º andar"). Remover um
-  grupo remove os grupos e hosts dentro dele, depois de perguntar.
+- **Grupos** se aninham o quanto você quiser ("Matriz › Financeiro › 3º andar").
 - **Tags** atravessam os grupos ("quiosque", "3-andar"). Clique numa tag no painel da esquerda
   para ver todos os hosts que a têm. Tags que você já usou são sugeridas enquanto digita, com a
   grafia mantida.
@@ -29,6 +28,21 @@ Toda mudança é salva na hora. Numa lista somente leitura, arrastar fica deslig
 Arrastar também funciona lá, e nada muda até você clicar em **OK**. Listas criadas antes da versão
 0.13.0 mostram os grupos na ordem em que foram criados; Ordenar de A a Z os coloca em ordem uma
 vez.
+
+## Remover um grupo
+
+Clique com o botão direito num grupo > **Remover**, ou pressione Del com um grupo escolhido. Um
+grupo vazio só pede confirmação. Um grupo com grupos ou hosts dentro pergunta o que fazer com
+eles:
+
+- **Mover para "3º andar"** — o grupo acima dele — ou **Mover para o nível mais alto**. Essa é a
+  opção padrão: os hosts dele vão para esse grupo, os grupos dele sobem um nível e nada é
+  excluído.
+- **Remover tudo:** o grupo, todos os grupos dentro dele e todos os hosts deles.
+
+Um grupo no nível mais alto não consegue subir os próprios hosts, porque todo host precisa de um
+grupo e "Todos os hosts" é a lista inteira, não um grupo. Nesse caso a opção de mover fica
+desligada, com um aviso explicando; mova esses hosts para outro grupo antes para mantê-los.
 
 ## Três tipos de lista
 

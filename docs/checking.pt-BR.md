@@ -8,8 +8,8 @@ endereço de um host apaga os resultados dele.
 ## Atualizar
 
 **Atualizar**, à direita da barra de ferramentas, verifica todos os hosts que a tabela mostra: o
-grupo escolhido à esquerda com seus subgrupos, uma tag ou Todos os hosts. Não é preciso selecionar
-nada.
+grupo escolhido à esquerda com seus subgrupos, uma tag, Todos os hosts ou os resultados de uma
+pesquisa. Não é preciso selecionar nada.
 
 - Clique nele e escolha **Status** ou **Usuários logados**.
 - Clique com o botão direito para marcar os dois e clique em **Executar**. O CapyPanel lembra o
@@ -49,7 +49,11 @@ então nenhuma conta é usada. Vem desligado: nada é verificado sozinho a menos
 A coluna **Usuário** mostra quem está logado, como `DOMÍNIO\usuário`, com "(desconectado)" para
 uma sessão desconectada, ou **Ninguém**. O painel Informações lista cada sessão: o usuário, se
 está no computador ou na Área de Trabalho Remota, ativa ou desconectada, desde quando e de qual
-PC.
+PC. As sessões ativas vêm primeiro, depois as desconectadas.
+
+**Exibir > Usuários > Mostrar domínio** vem ligado e é lembrado. Desligue para ver só `usuário` na
+coluna, no painel Informações e nas pesquisas; ao passar o mouse, o `DOMÍNIO\usuário` completo
+continua aparecendo, então um "admin" local não passa pelo do domínio.
 
 O CapyPanel lê isso pelo próprio serviço de sessões remotas do Windows: nada é instalado nos
 hosts, e funciona qualquer que seja o idioma deles. É preciso uma conta de administrador em cada

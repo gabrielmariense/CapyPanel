@@ -12,6 +12,7 @@ nav:
   - Host lists: host-lists.md
   - Connecting: connecting.md
   - Checking hosts: checking.md
+  - Searching hosts: searching.md
   - Settings and files: settings-and-files.md
   - Development: development.md
 
@@ -55,6 +56,7 @@ plugins:
             Host lists: Listas de hosts
             Connecting: Conectando
             Checking hosts: Verificando hosts
+            Searching hosts: Pesquisando hosts
             Settings and files: Configurações e arquivos
             Development: Desenvolvimento
 
