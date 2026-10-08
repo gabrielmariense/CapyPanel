@@ -5,8 +5,7 @@ time and saves every edit to it right away.
 
 ## Groups and tags
 
-- **Groups** nest as deep as you like ("Headquarters › Finance › Floor 3"). Removing a group
-  removes the groups and hosts inside it, after asking.
+- **Groups** nest as deep as you like ("Headquarters › Finance › Floor 3").
 - **Tags** cut across groups ("kiosk", "floor-3"). Click a tag in the left pane to see every host
   that carries it. Tags you've used before are suggested as you type, with their spelling kept.
 - **Notes** hold anything else worth knowing about a host.
@@ -26,6 +25,20 @@ Every change is saved right away. On a read-only list, dragging is off.
 and **Sort A–Z**, a one-time sort you can rearrange after. Dragging works there too, and nothing
 changes until you click **OK**. Lists made before version 0.13.0 show their groups in the order
 they were created; Sort A–Z puts them in order once.
+
+## Removing a group
+
+Right-click a group > **Remove**, or press Del with a group picked. An empty group only asks to
+confirm. A group with groups or hosts in it asks what should happen to them:
+
+- **Move them into "Floor 3"** — the group above it, or **Move them to the top level**. This is
+  the default: its hosts go into that group, its own groups move up one level, and nothing is
+  deleted.
+- **Remove everything:** the group, every group inside it and all their hosts.
+
+A top-level group can't send its own hosts up, because every host needs a group and "All hosts" is
+the whole list rather than a group. The move is off in that case, with a note saying so; move
+those hosts into another group first to keep them.
 
 ## Three kinds of list
 

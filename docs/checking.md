@@ -8,7 +8,8 @@ clears its results.
 ## Refresh
 
 **Refresh**, on the right of the toolbar, checks every host the table shows: the group picked on
-the left with its subgroups, a tag, or All hosts. Nothing needs to be selected.
+the left with its subgroups, a tag, All hosts, or the results of a search. Nothing needs to be
+selected.
 
 - Click it and choose **Status** or **Logged-on users**.
 - Right-click it to tick both and click **Run**. CapyPanel remembers the ticks.
@@ -46,7 +47,11 @@ is used. It's off by default: nothing is checked by itself unless you turn it on
 The **User** column shows who is logged on, as `DOMAIN\user`, with "(disconnected)" for a
 disconnected session, or **Nobody**. The Information pane lists each session: the user, whether
 they're at the computer or on Remote Desktop, active or disconnected, since when, and from which
-PC.
+PC. Active sessions come first, then disconnected ones.
+
+**View > Users > Show domain** is on and remembered. Turn it off to see just `user` in the
+column, the Information pane and searches; what you hover over still shows the whole
+`DOMAIN\user`, so a local "admin" can't pass for the domain's.
 
 CapyPanel reads this through Windows' own remote session service: nothing is installed on the
 hosts, and it works whatever their language. It needs an administrator account on each host.

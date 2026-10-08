@@ -14,10 +14,11 @@ qualquer um deles pela Área de Trabalho Remota ou pelo visualizador VNC que voc
 - Listas de hosts compartilhadas
 - Status dos hosts
 - Usuários logados
+- Pesquisa
 
 ### Em desenvolvimento
 
-- Busca
+- Barra de ferramentas redesenhada
 
 ### Planejadas
 
@@ -34,8 +35,9 @@ Para quem usa o CapyPanel e para quem o configura para uma equipe.
 | [Listas de hosts](host-lists.pt-BR.md) | Grupos, tags e as listas padrão, pessoal e compartilhadas |
 | [Conectando](connecting.pt-BR.md) | Visualizadores VNC, Área de Trabalho Remota, perfis de conexão, senhas e a verificação de login |
 | [Verificando hosts](checking.pt-BR.md) | Status, usuários logados e a conta usada para lê-los |
+| [Pesquisando hosts](searching.pt-BR.md) | A caixa de pesquisa, o que ela abrange e como encerrar uma pesquisa |
 | [Configurações e arquivos](settings-and-files.pt-BR.md) | Cada configuração e onde o CapyPanel guarda os arquivos |
 | [Desenvolvimento](development.pt-BR.md) | Compilar, testar e traduzir o CapyPanel |
 
-Estas páginas descrevem a versão atual (0.14.0). O CapyPanel está em beta, então elas crescem a
+Estas páginas descrevem a versão atual (0.15.0). O CapyPanel está em beta, então elas crescem a
 cada funcionalidade.
