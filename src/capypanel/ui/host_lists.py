@@ -130,9 +130,6 @@ class HostListsView(QWidget):
         super().showEvent(event)
         # Rows placed before the theme's padding arrived would stay cramped: place them again.
         self.tree.doItemsLayout()
-        # The theme gives buttons a small fixed minimum; the text's own width must win.
-        for button in (self.add_button, self.new_button, self.copy_button, self.remove_button):
-            button.setMinimumWidth(button.sizeHint().width())
 
     def saved(self, document: OpenList | None) -> None:
         """After a Save that keeps the window open: the open list may have changed."""

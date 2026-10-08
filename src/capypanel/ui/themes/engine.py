@@ -396,7 +396,7 @@ QRadioButton::indicator:disabled, QCheckBox::indicator:disabled { background: %(
 QSplitter::handle { background: %(bg)s; }
 QSplitter::handle:horizontal { width: 8px; }
 QPushButton { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx;
-              padding: 6px 14px; min-width: 64px; }
+              padding: 6px 20px; }
 QPushButton:hover { background: %(raised)s; }
 QPushButton:disabled { color: %(text3)s; }
 QPushButton:default { background: %(accent)s; border-color: %(accent)s; color: #ffffff; }
