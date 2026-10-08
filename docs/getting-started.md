@@ -13,7 +13,7 @@ uv run capypanel
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
 The version shows in the title bar, followed by the commit when you run from source, e.g.
-`CapyPanel 0.16.0 (abc1234)`. Quote it when you report a problem.
+`CapyPanel 0.16.1 (abc1234)`. Quote it when you report a problem.
 
 Remote Desktop works out of the box, with the client built into Windows. For VNC you also need a
 viewer: [UltraVNC](https://uvnc.com) or
@@ -31,9 +31,10 @@ viewer: [UltraVNC](https://uvnc.com) or
 | **Information** (right) | The selected host's details, including its connection profile and where it comes from. With nothing selected, how many hosts are shown, and how many of them are online, offline, not found or not checked |
 | **Status bar** | Which list is open, where it is, how many hosts it has, how many are online once anything has been checked, and how many are selected |
 
-The toolbar, the status bar and each pane can be hidden from the **View** menu. Right-click the
-host table's column titles to choose which columns show. To switch to another list, use
-**File > Host lists…** (see [Host lists](host-lists.md#the-host-lists-window)).
+The toolbar, the status bar and the panes around the host table can be hidden from the **View**
+menu. Right-click the host table's column titles to choose which columns show. To switch to
+another list, use **File > Host lists…** (see
+[Host lists](host-lists.md#the-host-lists-window)).
 
 ## Add your first hosts
 
