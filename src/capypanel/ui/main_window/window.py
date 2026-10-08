@@ -112,7 +112,7 @@ class MainWindow(QMainWindow):
 
         self.commands = create_actions(self)
         self.search = SearchBox()
-        self.toolbar = MainToolBar(self.commands, self.search)
+        self.toolbar = MainToolBar(self.commands)
         self.addToolBar(self.toolbar)
         self.refresh_panel = RefreshPanel(self)
         self.refresh_panel.set_choices(self._prefs.get("refresh"))
@@ -123,7 +123,13 @@ class MainWindow(QMainWindow):
         self._search_timer.setInterval(150)
         self.details = DetailsPane()
         self._splitter = QSplitter()
-        for pane in (self.nav, self.table, self.details):
+        # The search box is a box of its own above the table, styled like the panes.
+        hosts_pane = QWidget()
+        column = QVBoxLayout(hosts_pane)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.addWidget(self.search)
+        column.addWidget(self.table)
+        for pane in (self.nav, hosts_pane, self.details):
             self._splitter.addWidget(pane)
         self._splitter.setStretchFactor(1, 1)
         # Dragged all the way, a pane would vanish; View hides panes on purpose instead.
@@ -1297,8 +1303,7 @@ class MainWindow(QMainWindow):
     def _align_refresh(self) -> None:
         if self.toolbar.isVisible():
             right = self.table.mapTo(self, QPoint(self.table.width(), 0)).x()
-            gap = self._splitter.handleWidth()  # the search box starts where the details pane does
-            self.toolbar.align_end(right - self.toolbar.x(), gap)
+            self.toolbar.align_end(right - self.toolbar.x())
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)

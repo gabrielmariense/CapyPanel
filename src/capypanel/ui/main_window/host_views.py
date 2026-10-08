@@ -261,13 +261,14 @@ def _walk(root: QTreeWidgetItem) -> Iterable[QTreeWidgetItem]:
 
 
 class SearchBox(QLineEdit):
-    """At the toolbar's right end: finds hosts by name, address or logged-on user. Esc clears it;
+    """Above the host table: finds hosts by name, address or logged-on user. Esc clears it;
     Down or Enter moves to the results (never connects, so a typo can't reach a wrong PC)."""
 
     to_results = Signal()
 
     def __init__(self) -> None:
         super().__init__()
+        self.setObjectName("paneSearch")  # the panes' corners and border, so its edges match
         self.setClearButtonEnabled(True)
         self._icon = self.addAction(QIcon(), QLineEdit.ActionPosition.LeadingPosition)
         self._columns = (True, True)  # address, user: searched only while their columns show

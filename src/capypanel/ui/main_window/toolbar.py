@@ -1,7 +1,7 @@
-"""The toolbar: buttons in captioned groups (set here, not by users), Refresh lined up with the
-end of the host table, and the search box over the details pane. Refresh always checks every
-host the table shows; one host is checked from its own right-click menu. Left-click picks one
-check; right-click opens a panel to run several at once."""
+"""The toolbar: buttons in captioned groups (set here, not by users) and Refresh on the right,
+lined up with the end of the host table. Refresh always checks every host the table shows (the
+group picked on the left); one host is checked from its own right-click menu. Left-click picks
+one check; right-click opens a panel to run several at once."""
 
 from PySide6.QtCore import QEvent, QPoint, Qt, Signal
 from PySide6.QtGui import QFont, QPalette, QShowEvent
@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QPushButton,
     QSizePolicy,
+    QSpacerItem,
     QToolBar,
     QToolButton,
     QVBoxLayout,
@@ -23,8 +24,6 @@ from capypanel.core.i18n import _
 from capypanel.ui.icons import glyph_icon
 from capypanel.ui.main_window.actions import Actions
 from capypanel.ui.themes import engine as themes
-
-SEARCH_WIDTH = 240  # the search box's width when the details pane leaves no room
 
 
 class RefreshPanel(QFrame):
@@ -84,7 +83,7 @@ class MainToolBar(QToolBar):
     refresh_panel_requested = Signal(QPoint)
     refresh_requested = Signal(bool, bool)  # status, users: on every host shown
 
-    def __init__(self, commands: Actions, search: QWidget) -> None:
+    def __init__(self, commands: Actions) -> None:
         super().__init__()
         self.setObjectName("main")
         self.setMovable(False)
@@ -125,13 +124,9 @@ class MainToolBar(QToolBar):
             )
         )
         self._row.addWidget(self.refresh_button)
-        # The search box, over the details pane: it keeps Refresh at the end of the host table.
-        self._search_slot = QWidget()
-        self._slot = QHBoxLayout(self._search_slot)
-        self._slot.setContentsMargins(0, 0, 0, 0)
-        self._slot.addWidget(search)
-        self._search_slot.setFixedWidth(SEARCH_WIDTH)
-        self._row.addWidget(self._search_slot)
+        # Keeps Refresh at the end of the host table rather than the window's edge.
+        self._after_refresh = QSpacerItem(0, 0, QSizePolicy.Policy.Fixed)
+        self._row.addSpacerItem(self._after_refresh)
         self.addWidget(row)
         self.retranslate()
 
@@ -153,18 +148,16 @@ class MainToolBar(QToolBar):
         self.refresh_status.setText(_("&Status"))
         self.refresh_users.setText(_("&Logged-on users"))
 
-    def align_end(self, right: int, gap: int) -> None:
-        """Puts Refresh's right edge at `right` (in this toolbar's coordinates) and the search
-        box over the details pane, `gap` further on. With the details pane hidden, there's no
-        room: the search box keeps its own width and Refresh moves left of it."""
+    def align_end(self, right: int) -> None:
+        """Puts Refresh's right edge at `right`, in this toolbar's coordinates."""
         row = self.refresh_button.parentWidget()
         if row is None:
             return
-        end = row.mapTo(self, QPoint(row.width(), 0)).x()  # doesn't move with the slot
-        width = end - right
-        fits = width - gap >= SEARCH_WIDTH
-        self._slot.setContentsMargins(gap if fits else 8, 0, 0, 0)
-        self._search_slot.setFixedWidth(width if fits else SEARCH_WIDTH + 8)
+        end = row.mapTo(self, QPoint(row.width(), 0)).x()  # doesn't move with the spacer
+        width = max(0, end - right)
+        if width != self._after_refresh.sizeHint().width():
+            self._after_refresh.changeSize(width, 0, QSizePolicy.Policy.Fixed)
+            self._row.invalidate()
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)

@@ -373,6 +373,8 @@ QHeaderView::section:hover { color: %(text)s; }
 QFrame#card { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; }
 /* Lists inside a card (the groups pane): the card is their only frame. */
 QTreeView#flat { border: none; background: transparent; padding: 0 2px; }
+/* The search box above the host table: a small pane, with the panes' corners. */
+QLineEdit#paneSearch { border-radius: %(r)spx; padding: 6px 8px; }
 QFrame#divider { background: %(border)s; border: none; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
 QListView#pageList::item { padding: 7px 10px; }
@@ -444,6 +446,7 @@ QTreeView#grid QHeaderView::section:last,
 QTreeView#grid QHeaderView::section:only-one { border-right: none; }
 QLabel#paneTitle, QLabel#hint, QLabel#toolCaption { color: %(text2)s; }
 QTreeView#flat { border: none; background: transparent; }
+QLineEdit#paneSearch { background: %(card)s; border: 1px solid %(border)s; padding: 5px 6px; }
 QFrame#divider { background: %(border)s; border: none; }
 QLabel#menuSection { color: %(text2)s; padding: 6px 12px 2px 12px; font-weight: 600; }
 QFrame#tagEdit { background: %(card)s; border: 1px solid %(border)s; border-radius: 4px; }

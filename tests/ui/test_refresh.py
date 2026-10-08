@@ -206,10 +206,8 @@ def test_refresh_lines_up_with_the_end_of_the_host_table(window: MainWindow) -> 
     button = window.toolbar.refresh_button
     end = button.mapTo(window, QPoint(button.width(), 0)).x()
     assert abs(end - window.table.mapTo(window, QPoint(window.table.width(), 0)).x()) <= 1
-    search, details = window.search, window.details  # the search box spans the details pane
-    assert (
-        abs(search.mapTo(window, QPoint(0, 0)).x() - details.mapTo(window, QPoint(0, 0)).x()) <= 1
-    )
+    search, nav = window.search, window.nav  # the search box's top meets the panes'
+    assert search.mapTo(window, QPoint(0, 0)).y() == nav.mapTo(window, QPoint(0, 0)).y()
 
 
 def test_a_large_users_check_asks_first(
