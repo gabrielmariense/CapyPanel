@@ -63,7 +63,6 @@ class NavigationPane(QWidget):
     split by thin lines. Picking one filters the table."""
 
     filter_changed = Signal()
-    row_height_changed = Signal(int)  # "All hosts"; the search box matches it, so lines align
 
     def __init__(self) -> None:
         super().__init__()
@@ -197,7 +196,6 @@ class NavigationPane(QWidget):
         row = self.everything.visualItemRect(self._everything_item).height()
         frame = self.everything.height() - self.everything.viewport().height()
         self.everything.setFixedHeight(max(row, self.everything.sizeHintForRow(0)) + frame)
-        self.row_height_changed.emit(self.everything.height())
         sides = self.everything.width() - self.everything.viewport().width()
         self.everything.setMinimumWidth(self.everything.sizeHintForColumn(0) + sides + 12)
 
@@ -247,26 +245,6 @@ class NavigationPane(QWidget):
         self.filter_changed.emit()
 
 
-class HostsPane(QWidget):
-    """The search box and the host table in one card, like the other panes, so all three
-    line up: the search row matches "All hosts" and the lines under them meet."""
-
-    def __init__(self, search: QLineEdit, table: QTreeWidget) -> None:
-        super().__init__()
-        card = QFrame()
-        card.setObjectName("card")
-        card.setFrameShape(QFrame.Shape.StyledPanel)
-        inside = QVBoxLayout(card)
-        inside.setContentsMargins(4, 4, 4, 4)  # the same as the groups pane
-        inside.setSpacing(2)
-        inside.addWidget(search)
-        inside.addWidget(_divider())
-        inside.addWidget(table)
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(card)
-
-
 def _divider() -> QFrame:
     line = QFrame()
     line.setObjectName("divider")
@@ -283,14 +261,13 @@ def _walk(root: QTreeWidgetItem) -> Iterable[QTreeWidgetItem]:
 
 
 class SearchBox(QLineEdit):
-    """Above the host table: finds hosts by name, address or logged-on user. Esc clears it;
+    """At the toolbar's right end: finds hosts by name, address or logged-on user. Esc clears it;
     Down or Enter moves to the results (never connects, so a typo can't reach a wrong PC)."""
 
     to_results = Signal()
 
     def __init__(self) -> None:
         super().__init__()
-        self.setObjectName("cardSearch")  # no frame of its own: it sits inside the table's card
         self.setClearButtonEnabled(True)
         self._icon = self.addAction(QIcon(), QLineEdit.ActionPosition.LeadingPosition)
         self._columns = (True, True)  # address, user: searched only while their columns show

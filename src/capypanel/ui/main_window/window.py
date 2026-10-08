@@ -64,7 +64,6 @@ from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.host_views import (
     Cells,
     DetailsPane,
-    HostsPane,
     HostTable,
     NavigationPane,
     SearchBox,
@@ -112,21 +111,19 @@ class MainWindow(QMainWindow):
         self._targets: list[tuple[str, str]] = []
 
         self.commands = create_actions(self)
-        self.toolbar = MainToolBar(self.commands)
+        self.search = SearchBox()
+        self.toolbar = MainToolBar(self.commands, self.search)
         self.addToolBar(self.toolbar)
         self.refresh_panel = RefreshPanel(self)
         self.refresh_panel.set_choices(self._prefs.get("refresh"))
         self.nav = NavigationPane()
         self.table = HostTable()
-        self.search = SearchBox()
         self._search_timer = QTimer(self)  # waits for a pause in typing, then filters
         self._search_timer.setSingleShot(True)
         self._search_timer.setInterval(150)
-        self._hosts_pane = HostsPane(self.search, self.table)
-        self.nav.row_height_changed.connect(self.search.setFixedHeight)
         self.details = DetailsPane()
         self._splitter = QSplitter()
-        for pane in (self.nav, self._hosts_pane, self.details):
+        for pane in (self.nav, self.table, self.details):
             self._splitter.addWidget(pane)
         self._splitter.setStretchFactor(1, 1)
         # Dragged all the way, a pane would vanish; View hides panes on purpose instead.
@@ -1299,9 +1296,9 @@ class MainWindow(QMainWindow):
 
     def _align_refresh(self) -> None:
         if self.toolbar.isVisible():
-            pane = self._hosts_pane  # the card's edge, where the table ends
-            right = pane.mapTo(self, QPoint(pane.width(), 0)).x()
-            self.toolbar.align_end(right - self.toolbar.x())
+            right = self.table.mapTo(self, QPoint(self.table.width(), 0)).x()
+            gap = self._splitter.handleWidth()  # the search box starts where the details pane does
+            self.toolbar.align_end(right - self.toolbar.x(), gap)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
