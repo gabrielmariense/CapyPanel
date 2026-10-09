@@ -269,7 +269,7 @@ class MainWindow(QMainWindow):
         self.toolbar.refresh_requested.connect(self._refresh_shown)
         self.refresh_panel.run_clicked.connect(self._run_refresh_panel)
         self.toolbar.connect_menu.aboutToShow.connect(self._fill_connect_menu)
-        self.nav.add_group_button.clicked.connect(self.add_group)
+        self.nav.add_group_button.clicked.connect(self.add_top_group)  # on the Groups heading row
         self.nav.filter_changed.connect(self._filter_picked)
         self.search.textChanged.connect(self._search_timer.start)
         self._search_timer.timeout.connect(self._show_hosts)
@@ -494,7 +494,7 @@ class MainWindow(QMainWindow):
         self._add_group(self.nav.selected_group_id())
 
     def add_top_group(self) -> None:
-        """Right-click the Groups heading or the empty space under the groups."""
+        """The + by the Groups heading, its right-click menu, and the empty space below."""
         self._add_group(None)
 
     def _add_group(self, parent: str | None) -> None:

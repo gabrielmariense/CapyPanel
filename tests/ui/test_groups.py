@@ -175,8 +175,9 @@ def test_move_to_offers_the_top_level_first_and_never_the_group_itself(
     menu = QMenu()
     fill_move_menu(menu, doc.hosts, _id(window, "alpha wing"), chosen.append)
     assert _texts(menu) == ["Top level", "Zebra wing"]  # not alpha wing, nor its Lab
-    assert not any(a.isCheckable() for a in menu.actions())  # no blank tick column
-    assert not menu.actions()[0].isEnabled()  # where it is now
+    assert menu.actions()[0].isChecked()  # where it is now
+    _choose(menu, "Top level")
+    assert chosen == []  # already there
     _choose(menu, "Zebra wing")
     assert chosen == [_id(window, "Zebra wing")]
     menu = QMenu()
@@ -282,3 +283,14 @@ def test_the_tree_s_drag_data_drops_on_the_heading(window: MainWindow) -> None:
     assert doc is not None
     assert doc.hosts.group(_id(window, "Lab")).parent is None  # type: ignore[union-attr]
     assert drop.dropAction() == Qt.DropAction.CopyAction  # the tree doesn't drop its own row
+
+
+def test_the_plus_by_the_heading_adds_at_the_top_level(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(window_module.QInputDialog, "getText", lambda *_a, **_k: ("Annex", True))
+    window.nav.select_group(_id(window, "Lab"))
+    window.nav.add_group_button.click()
+    doc = window.document
+    assert doc is not None
+    assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Annex"]

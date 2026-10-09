@@ -324,6 +324,8 @@ QMenu { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)s
 QMenu::item { padding: 6px 28px 6px 30px; border-radius: 6px; }
 QMenu::item:selected { background: %(hover)s; }
 QMenu::item:disabled { color: %(text3)s; }
+/* Qt adds a tick's width before the text of tick items: take it back, the tick sits in the pad. */
+QMenu::item:checked, QMenu::item:unchecked { padding-left: 16px; }
 QMenu::separator { height: 1px; background: %(border)s; margin: 5px 6px; }
 QMenu::indicator { left: 9px; }
 
