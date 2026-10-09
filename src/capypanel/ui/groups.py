@@ -41,6 +41,7 @@ from capypanel.core.i18n import _
 from capypanel.ui.hosts import group_path
 from capypanel.ui.menus import popup
 from capypanel.ui.notes import notes
+from capypanel.ui.themes import engine as themes
 
 ROLE_KIND = Qt.ItemDataRole.UserRole
 ROLE_ID = Qt.ItemDataRole.UserRole + 1
@@ -219,7 +220,7 @@ class TreeMenu(QMenu):
             # drawn again over it, keeping its text crisp.
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(_tint(self.palette()))
+            painter.setBrush(themes.menu_mark())
             rect = self.actionGeometry(self.marked)
             painter.drawRoundedRect(rect.adjusted(1, 0, -1, 0), 6, 6)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
@@ -269,18 +270,6 @@ class TreeMenu(QMenu):
                 (x for x in columns if any(blank.pixel(x, y) != text.pixel(x, y) for y in rows)), 0
             )
         return self.actionGeometry(action).left() + self._text_left
-
-
-def _tint(palette: QPalette) -> QColor:
-    """The highlight colour, see-through, just strong enough to stand out from the menu: a
-    faint tint vanished on dark menus."""
-    tint = QColor(palette.color(QPalette.ColorRole.Highlight))
-    background = palette.color(QPalette.ColorRole.Window)
-    gap = abs(tint.lightness() - background.lightness())
-    # Mixed in at `alpha`, the tint moves the background's lightness by gap * alpha / 255.
-    alpha = next((a for a in range(45, 160, 5) if gap * a / 255 >= 14), 160)
-    tint.setAlpha(alpha)
-    return tint
 
 
 def fill_move_menu(

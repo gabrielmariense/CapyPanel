@@ -216,6 +216,29 @@ def selection_tint(accent: QColor, card: str, text: str) -> str:
     return _mix(QColor(text), QColor(card), 0.18)  # an accent too close to text: plain grey
 
 
+def mark_tint(accent: QColor, card: str, text: str) -> str:
+    """A tint of the accent that marks one row of a menu: as plain as Graphite's teal (1.6:1
+    against the menu), text still readable on it (4.5:1). A dark accent on a dark menu, like a
+    deep purple, can't get there, so it's lifted toward the text colour first."""
+    for lift in (0.0, 0.2, 0.4, 0.6):
+        base = QColor(_mix(QColor(text), accent, lift))
+        for step in range(10, 92, 2):
+            tint = _mix(base, QColor(card), step / 100)
+            if contrast_ratio(tint, card) >= 1.6 and contrast_ratio(text, tint) >= 4.5:
+                return tint
+    return _mix(QColor(text), QColor(card), 0.25)
+
+
+def menu_mark() -> QColor:
+    """The current theme's colour for a row marked in a menu ("Move to"'s current place)."""
+    if _current.engine == "native":
+        tokens = NATIVE_TOKENS[native_scheme()]
+        accent = QApplication.palette().color(QPalette.ColorRole.Accent)
+        return QColor(mark_tint(accent, tokens["card"], tokens["text"]))
+    colors = _current.colors
+    return QColor(mark_tint(QColor(colors["accent"]), colors["card"], colors["text"]))
+
+
 def _mix(color: QColor, base: QColor, amount: float) -> str:
     """`amount` of `color` laid over `base`."""
     channels = (

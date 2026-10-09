@@ -123,6 +123,15 @@ def test_selection_is_visible_and_readable_with_any_accent(scheme: str, accent: 
     assert themes.contrast_ratio(c["text"], tint) >= 4.5
 
 
+@pytest.mark.parametrize("scheme", ["light", "dark"])
+@pytest.mark.parametrize("accent", [*ACCENTS, "#5e08a9"])  # a deep purple, on a dark menu too
+def test_a_marked_menu_row_stands_out_with_any_accent(scheme: str, accent: str) -> None:
+    c = themes.NATIVE_TOKENS[scheme]
+    tint = themes.mark_tint(QColor(accent), c["card"], c["text"])
+    assert themes.contrast_ratio(tint, c["card"]) >= 1.6
+    assert themes.contrast_ratio(c["text"], tint) >= 4.5
+
+
 def test_every_theme_applies_in_any_order(qapp: QApplication) -> None:
     order = themes.Registry().all()
     for theme in [*order, *reversed(order)]:  # native <-> custom and custom <-> custom switches
