@@ -1,18 +1,25 @@
-"""The groups as a tree that can be rearranged by dragging, "Move to…", and Inventory > Manage
+"""The groups as a tree that can be rearranged by dragging, "Move to", and Inventory > Manage
 groups….
 Groups show in the list's own order (not sorted), so a team can arrange them as it likes;
 "Sort A–Z" is a one-time button."""
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from PySide6.QtCore import QMimeData, Qt, Signal
-from PySide6.QtGui import QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent
+from PySide6.QtGui import (
+    QActionGroup,
+    QDragEnterEvent,
+    QDragLeaveEvent,
+    QDragMoveEvent,
+    QDropEvent,
+)
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
     QDialogButtonBox,
     QHBoxLayout,
     QLabel,
+    QMenu,
     QPushButton,
     QTreeWidget,
     QTreeWidgetItem,
@@ -23,6 +30,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.model import HostList
 from capypanel.core.i18n import _
 from capypanel.ui.hosts import group_path
+from capypanel.ui.menus import popup
 from capypanel.ui.notes import notes
 
 ROLE_KIND = Qt.ItemDataRole.UserRole
@@ -30,6 +38,7 @@ ROLE_ID = Qt.ItemDataRole.UserRole + 1
 GROUP_INDENT = 14  # px per nesting level; Windows 11's ~30 px ran deep trees off the pane
 HOSTS_MIME = "application/x-capypanel-hosts"  # host ids dragged from the host table
 GROUPS_MIME = "application/x-capypanel-groups"  # group ids dragged within the groups tree
+MENU_INDENT = "\u2003\u2003"  # per nesting level in "Move to": menus have no tree lines
 
 
 def hosts_mime(host_ids: list[str]) -> QMimeData:
@@ -163,69 +172,34 @@ class GroupsHeading(QLabel):
         self.style().polish(self)
 
 
-class MoveGroupDialog(QDialog):
-    """Move to…: "Top level" first, then every group this one can go into."""
+def fill_move_menu(
+    menu: QMenu, host_list: HostList, group_id: str, apply: Callable[[str | None], None]
+) -> None:
+    """Move to: "Top level", then every group this one can go into, indented as in the tree.
+    Where it is now is ticked. `apply` gets the new parent's id, or None for the top level."""
+    group = host_list.group(group_id)
+    current = group.parent if group else None
+    inside = host_list.subtree(group_id)  # it can't go into itself or its own groups
+    exclusive = QActionGroup(menu)
 
-    def __init__(self, parent: QWidget | None, host_list: HostList, group_id: str) -> None:
-        super().__init__(parent)
-        group = host_list.group(group_id)
-        name = group.name if group else ""
-        self._current = group.parent if group else None
-        self.setWindowTitle(_("Move “{group}”").format(group=name))
-        self.tree = QTreeWidget()
-        self.tree.setHeaderHidden(True)
-        self.tree.setIndentation(GROUP_INDENT)
-        top = QTreeWidgetItem([_("Top level")])
-        top.setData(0, ROLE_ID, None)
-        self.tree.addTopLevelItem(top)
-        inside = host_list.subtree(group_id)  # it can't go into itself or its own groups
+    def add(text: str, target: str | None) -> None:
+        item = menu.addAction(text.replace("&", "&&"))
+        item.setCheckable(True)
+        item.setChecked(target == current)
+        exclusive.addAction(item)
+        if target != current:
+            item.triggered.connect(lambda _checked=False: apply(target))
 
-        def add(parent_id: str | None, parent: QTreeWidgetItem) -> None:
-            for child in host_list.children(parent_id):
-                if child.id in inside:
-                    continue
-                item = QTreeWidgetItem([child.name])
-                item.setData(0, ROLE_ID, child.id)
-                item.setToolTip(0, group_path(host_list, child.id))
-                parent.addChild(item)
-                add(child.id, item)
+    def walk(parent_id: str | None, depth: int) -> None:
+        for child in host_list.children(parent_id):
+            if child.id not in inside:
+                add(MENU_INDENT * depth + child.name, child.id)
+                walk(child.id, depth + 1)
 
-        add(None, self.tree.invisibleRootItem())
-        self.tree.expandAll()
-        for item in _all_items(self.tree.invisibleRootItem()):
-            if item.data(0, ROLE_ID) == self._current:
-                self.tree.setCurrentItem(item)
-        self.box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self.box.button(QDialogButtonBox.StandardButton.Ok).setText(_("&Move"))
-        self.box.accepted.connect(self.accept)
-        self.box.rejected.connect(self.reject)
-        layout = QVBoxLayout(self)
-        layout.addWidget(
-            QLabel(_("Move “{group}”, with everything inside it, to:").format(group=name))
-        )
-        layout.addWidget(self.tree, 1)
-        layout.addWidget(self.box)
-        self.tree.itemSelectionChanged.connect(self._update)
-        self.tree.itemDoubleClicked.connect(lambda *_args: self._accept_if_new())
-        self._update()
-        self.resize(380, 420)
-
-    def chosen(self) -> str | None:
-        """The new parent group's id; None for the top level."""
-        item = self.tree.currentItem()
-        return item.data(0, ROLE_ID) if item is not None else self._current
-
-    def _is_new(self) -> bool:
-        return self.tree.currentItem() is not None and self.chosen() != self._current
-
-    def _update(self) -> None:
-        self.box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(self._is_new())
-
-    def _accept_if_new(self) -> None:
-        if self._is_new():
-            self.accept()
+    add(_("Top level"), None)
+    if host_list.groups:
+        menu.addSeparator()
+    walk(None, 0)
 
 
 class ManageGroupsDialog(QDialog):
@@ -239,7 +213,7 @@ class ManageGroupsDialog(QDialog):
         self.tree.fill(host_list, counts=False)
         self.up_button = QPushButton(_("Move &up"))
         self.down_button = QPushButton(_("Move &down"))
-        self.move_button = QPushButton(_("Move &to…"))
+        self.move_button = QPushButton(_("Move &to"))
         self.sort_button = QPushButton(_("&Sort A–Z"))
         self.sort_button.setToolTip(_("Sorts every level by name, once; you can rearrange after"))
         buttons = QVBoxLayout()
@@ -266,7 +240,7 @@ class ManageGroupsDialog(QDialog):
         layout.addWidget(self.box)
         self.up_button.clicked.connect(lambda: self._move(-1))
         self.down_button.clicked.connect(lambda: self._move(1))
-        self.move_button.clicked.connect(self._move_to)
+        self.move_button.clicked.connect(self._show_move_menu)
         self.sort_button.clicked.connect(self._sort)
         self.tree.itemSelectionChanged.connect(self._update)
         self._update()
@@ -303,21 +277,25 @@ class ManageGroupsDialog(QDialog):
         self.tree.setCurrentItem(item)
         self._update()
 
-    def _move_to(self) -> None:
+    def move_menu(self) -> QMenu:
+        """The "Move to" menu for the picked group, from the groups as arranged here so far."""
+        menu = QMenu(self)
         item = self.tree.currentItem()
-        if item is None:
-            return
-        # The picker shows the groups as arranged here so far, not as saved.
-        arranged = self._hosts.arrange_groups(self.tree.order())
-        picker = MoveGroupDialog(self, arranged, item.data(0, ROLE_ID))
-        if picker.exec() != QDialog.DialogCode.Accepted:
+        if item is not None:
+            arranged = self._hosts.arrange_groups(self.tree.order())
+            fill_move_menu(menu, arranged, item.data(0, ROLE_ID), self._move_to)
+        return menu
+
+    def _show_move_menu(self) -> None:
+        popup(self.move_menu(), self.move_button.mapToGlobal(self.move_button.rect().bottomLeft()))
+
+    def _move_to(self, new_id: str | None) -> None:
+        item = self.tree.currentItem()
+        old_parent = self._siblings(item)
+        if item is None or old_parent is None:
             return
         expanded = _expanded_ids(item)
-        old_parent = self._siblings(item)
-        if old_parent is None:
-            return
         old_parent.removeChild(item)
-        new_id = picker.chosen()
         target = self.tree.invisibleRootItem()
         for candidate in _all_items(target):
             if new_id is not None and candidate.data(0, ROLE_ID) == new_id:

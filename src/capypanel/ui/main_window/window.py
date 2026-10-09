@@ -51,7 +51,7 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui import language
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
-from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog, MoveGroupDialog
+from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog, fill_move_menu
 from capypanel.ui.host_lists import HostListsDialog
 from capypanel.ui.hosts import (
     HostDialog,
@@ -281,6 +281,7 @@ class MainWindow(QMainWindow):
         self.nav.groups.rearranged.connect(self._groups_dragged)
         self.nav.groups.hosts_dropped.connect(self.move_hosts)
         self.nav.groups_heading.group_dropped.connect(lambda g: self.move_group(g, None))
+        self.nav.groups_heading.customContextMenuRequested.connect(self._heading_menu)
         self.table.itemSelectionChanged.connect(self._selection_changed)
         self.table.customContextMenuRequested.connect(self._host_menu)
         self.table.columns_changed.connect(self._save_columns)
@@ -806,15 +807,6 @@ class MainWindow(QMainWindow):
             self._refresh()  # puts the tree back as it was
             return
         self._commit(new)
-
-    def choose_where_to_move(self, group_id: str) -> None:
-        """Right-click a group > Move to…."""
-        doc = self._writable()
-        if doc is None or doc.hosts.group(group_id) is None:
-            return
-        picker = MoveGroupDialog(self, doc.hosts, group_id)
-        if picker.exec() == QDialog.DialogCode.Accepted:
-            self.move_group(group_id, picker.chosen())
 
     def move_group(self, group_id: str, parent: str | None) -> None:
         """Into `parent`, or the top level (None), with everything inside it."""
@@ -1423,6 +1415,11 @@ class MainWindow(QMainWindow):
         menu.addActions([a.edit, a.remove])
         popup(menu, self.table.viewport().mapToGlobal(position))
 
+    def _heading_menu(self, position: QPoint) -> None:
+        menu = QMenu(self)
+        menu.addActions([self.commands.add_group, self.commands.manage_groups])
+        popup(menu, self.nav.groups_heading.mapToGlobal(position))
+
     def _group_menu(self, position: QPoint) -> None:
         menu = QMenu(self)
         menu.addAction(self.commands.add_group)
@@ -1452,10 +1449,12 @@ class MainWindow(QMainWindow):
                     lambda _c=False, s=status, u=users: self.check_hosts(hosts, status=s, users=u)
                 )
             menu.addSeparator()
-            move = menu.addAction(_("&Move to…"))
+            move = menu.addMenu(_("&Move to"))
             move.setEnabled(self._writable() is not None)
-            move.triggered.connect(lambda: self.choose_where_to_move(group.id))
+            fill_move_menu(move, self._doc.hosts, group.id, lambda p: self.move_group(group.id, p))
             menu.addActions([self.commands.edit, self.commands.remove])
+        else:
+            menu.addAction(self.commands.manage_groups)
         popup(menu, self.nav.groups.viewport().mapToGlobal(position))
 
     # ---- helpers ----

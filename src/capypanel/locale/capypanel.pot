@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-08 19:00-0300\n"
+"POT-Creation-Date: 2026-10-09 15:30-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -101,10 +101,7 @@ msgstr ""
 msgid "&Manual connection…"
 msgstr ""
 
-msgid "&Move"
-msgstr ""
-
-msgid "&Move to…"
+msgid "&Move to"
 msgstr ""
 
 msgid "&Name"
@@ -595,7 +592,7 @@ msgstr ""
 msgid "Move &down"
 msgstr ""
 
-msgid "Move &to…"
+msgid "Move &to"
 msgstr ""
 
 msgid "Move &up"
@@ -609,14 +606,6 @@ msgid "Move them to the top level"
 msgstr ""
 
 msgid "Move this group's hosts to another group first."
-msgstr ""
-
-#, python-brace-format
-msgid "Move “{group}”"
-msgstr ""
-
-#, python-brace-format
-msgid "Move “{group}”, with everything inside it, to:"
 msgstr ""
 
 msgid "My personal list"

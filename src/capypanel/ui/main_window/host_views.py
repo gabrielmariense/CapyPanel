@@ -81,6 +81,7 @@ class NavigationPane(QWidget):
         self.add_group_button.setText("+")
         self.groups_heading = GroupsHeading()  # drop a group here: it goes to the top level
         pane_title("", self.groups_heading)
+        self.groups_heading.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._tags_title = pane_title("")
         header = QHBoxLayout()
         header.addWidget(self.groups_heading, 1)

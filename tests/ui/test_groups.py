@@ -1,15 +1,17 @@
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
-from PySide6.QtCore import QPointF, Qt
+from PySide6.QtCore import QPoint, QPointF, Qt
 from PySide6.QtGui import QDropEvent
-from PySide6.QtWidgets import QAbstractItemView, QApplication, QDialog, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QApplication, QDialog, QMenu, QTreeWidgetItem
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog, MoveGroupDialog
+from capypanel.ui.groups import MENU_INDENT, ROLE_ID, ManageGroupsDialog, fill_move_menu
+from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.window import MainWindow
 
 
@@ -156,18 +158,12 @@ def test_removing_a_group_can_remove_everything(
     assert [h.name for h in doc.hosts.hosts] == ["Z-01"]
 
 
-def _pick(dialog: MoveGroupDialog, name: str) -> None:
-    root = dialog.tree.invisibleRootItem()
-    stack = [root.child(i) for i in range(root.childCount())]
-    while stack:
-        item = stack.pop()
-        if item is None:
-            continue
-        if item.text(0) == name:
-            dialog.tree.setCurrentItem(item)
-            return
-        stack += [item.child(i) for i in range(item.childCount())]
-    raise AssertionError(name)
+def _texts(menu: QMenu) -> list[str]:
+    return [a.text() for a in menu.actions() if a.text()]
+
+
+def _choose(menu: QMenu, text: str) -> None:
+    next(a for a in menu.actions() if a.text() == text).trigger()
 
 
 def test_move_to_offers_the_top_level_first_and_never_the_group_itself(
@@ -175,29 +171,57 @@ def test_move_to_offers_the_top_level_first_and_never_the_group_itself(
 ) -> None:
     doc = window.document
     assert doc is not None
-    dialog = MoveGroupDialog(None, doc.hosts, _id(window, "alpha wing"))
-    root = dialog.tree.invisibleRootItem()
-    assert _names(root) == ["Top level", "Zebra wing"]  # not alpha wing, nor its Lab
-    ok = dialog.box.buttons()[0]
-    assert dialog.chosen() is None and not ok.isEnabled()  # it's already at the top level
-    _pick(dialog, "Zebra wing")
-    assert dialog.chosen() == _id(window, "Zebra wing") and ok.isEnabled()
+    chosen: list[str | None] = []
+    menu = QMenu()
+    fill_move_menu(menu, doc.hosts, _id(window, "alpha wing"), chosen.append)
+    assert _texts(menu) == ["Top level", "Zebra wing"]  # not alpha wing, nor its Lab
+    assert menu.actions()[0].isChecked()  # where it is now
+    _choose(menu, "Top level")
+    assert chosen == []  # already there
+    _choose(menu, "Zebra wing")
+    assert chosen == [_id(window, "Zebra wing")]
+    menu = QMenu()
+    fill_move_menu(menu, doc.hosts, _id(window, "Zebra wing"), chosen.append)
+    assert _texts(menu) == ["Top level", "alpha wing", MENU_INDENT + "Lab"]  # nesting shows
 
 
 def test_right_click_move_to_puts_the_group_inside_another(
     window: MainWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def choose(dialog: MoveGroupDialog) -> int:
-        _pick(dialog, "Zebra wing")
-        return QDialog.DialogCode.Accepted
+    class Choosing(QMenu):
+        def exec(self, *_args: Any) -> None:  # type: ignore[override]
+            move = next(a for a in self.actions() if a.text() == "&Move to").menu()
+            assert isinstance(move, QMenu)
+            _choose(move, "Zebra wing")
 
-    monkeypatch.setattr(MoveGroupDialog, "exec", choose)
-    window.choose_where_to_move(_id(window, "Lab"))
+    window.show()
+    QApplication.processEvents()
+    tree = window.nav.groups
+    alpha = tree.invisibleRootItem().child(1)
+    lab = alpha.child(0) if alpha is not None else None
+    assert lab is not None
+    monkeypatch.setattr(window_module, "QMenu", Choosing)
+    window._group_menu(tree.visualItemRect(lab).center())
     doc = window.document
     assert doc is not None
     assert doc.hosts.group(_id(window, "Lab")).parent == _id(window, "Zebra wing")  # type: ignore[union-attr]
     assert listfile.load(doc.path).hosts == doc.hosts  # saved
     assert window.nav.selected_group_id() == _id(window, "Lab")  # still picked, in its new place
+    window.close()
+
+
+def test_right_clicking_the_groups_heading_offers_new_and_manage(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[str] = []
+
+    class Recorded(QMenu):
+        def exec(self, *_args: Any) -> None:  # type: ignore[override]
+            seen.extend(_texts(self))
+
+    monkeypatch.setattr(window_module, "QMenu", Recorded)
+    window.nav.groups_heading.customContextMenuRequested.emit(QPoint(5, 5))
+    assert seen == ["Add &group…", "&Manage groups…"]
 
 
 def test_a_group_dropped_on_the_groups_heading_goes_to_the_top_level(window: MainWindow) -> None:
@@ -207,9 +231,7 @@ def test_a_group_dropped_on_the_groups_heading_goes_to_the_top_level(window: Mai
     assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Lab"]
 
 
-def test_manage_groups_move_to_changes_only_its_working_copy(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_manage_groups_move_to_changes_only_its_working_copy(window: MainWindow) -> None:
     doc = window.document
     assert doc is not None
     dialog = ManageGroupsDialog(None, doc.hosts)
@@ -220,12 +242,7 @@ def test_manage_groups_move_to_changes_only_its_working_copy(
     assert lab is not None
     dialog.tree.setCurrentItem(lab)
 
-    def choose(picker: MoveGroupDialog) -> int:
-        _pick(picker, "Top level")
-        return QDialog.DialogCode.Accepted
-
-    monkeypatch.setattr(MoveGroupDialog, "exec", choose)
-    dialog.move_button.click()
+    _choose(dialog.move_menu(), "Top level")
     assert _names(root) == ["Zebra wing", "alpha wing", "Lab"]
     assert dict(dialog.order())[_id(window, "Lab")] is None
     saved = doc.hosts.group(_id(window, "Lab"))
