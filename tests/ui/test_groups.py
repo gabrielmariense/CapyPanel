@@ -321,3 +321,15 @@ def test_the_plus_by_the_heading_adds_at_the_top_level(
     doc = window.document
     assert doc is not None
     assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Annex"]
+
+
+def test_a_group_closed_by_hand_stays_closed_after_a_change(window: MainWindow) -> None:
+    alpha = window.nav.groups.invisibleRootItem().child(1)
+    assert alpha is not None
+    alpha.setExpanded(False)
+    doc = window.document
+    assert doc is not None
+    z01 = next(h.id for h in doc.hosts.hosts if h.name == "Z-01")
+    window.move_hosts([z01], _id(window, "Lab"))  # any change rebuilds the tree
+    alpha = window.nav.groups.invisibleRootItem().child(1)
+    assert alpha is not None and alpha.childCount() and not alpha.isExpanded()

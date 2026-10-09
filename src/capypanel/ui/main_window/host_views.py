@@ -177,10 +177,11 @@ class NavigationPane(QWidget):
         wanted = self._filter
         for tree in (self.everything, self.groups, self.tags):
             tree.blockSignals(True)
-        self.groups.clear()
         self.tags.clear()
         self.everything.setVisible(host_list is not None)
-        if host_list is not None:
+        if host_list is None:
+            self.groups.clear()
+        else:
             self._everything_item.setText(0, f"{_('All hosts')} ({len(host_list.hosts)})")
             self.groups.fill(host_list)
             for tag, count in sorted(host_list.all_tags().items(), key=lambda t: t[0].casefold()):

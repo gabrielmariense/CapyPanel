@@ -84,9 +84,18 @@ class GroupTree(QTreeWidget):
         return data
 
     def fill(self, host_list: HostList, counts: bool = True) -> None:
+        # Groups closed by hand stay closed when the tree is rebuilt after a change.
+        closed = {
+            i.data(0, ROLE_ID)
+            for i in _all_items(self.invisibleRootItem())
+            if i.childCount() and not i.isExpanded()
+        }
         self.clear()
         self._add(host_list, None, self.invisibleRootItem(), counts)
         self.expandAll()
+        for item in _all_items(self.invisibleRootItem()):
+            if item.data(0, ROLE_ID) in closed:
+                item.setExpanded(False)
 
     def _add(
         self, host_list: HostList, parent_id: str | None, parent: QTreeWidgetItem, counts: bool
