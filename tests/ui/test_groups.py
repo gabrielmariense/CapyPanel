@@ -175,9 +175,8 @@ def test_move_to_offers_the_top_level_first_and_never_the_group_itself(
     menu = QMenu()
     fill_move_menu(menu, doc.hosts, _id(window, "alpha wing"), chosen.append)
     assert _texts(menu) == ["Top level", "Zebra wing"]  # not alpha wing, nor its Lab
-    assert menu.actions()[0].isChecked()  # where it is now
-    _choose(menu, "Top level")
-    assert chosen == []  # already there
+    assert not any(a.isCheckable() for a in menu.actions())  # no blank tick column
+    assert not menu.actions()[0].isEnabled()  # where it is now
     _choose(menu, "Zebra wing")
     assert chosen == [_id(window, "Zebra wing")]
     menu = QMenu()
@@ -222,6 +221,22 @@ def test_right_clicking_the_groups_heading_offers_new_and_manage(
     monkeypatch.setattr(window_module, "QMenu", Recorded)
     window.nav.groups_heading.customContextMenuRequested.emit(QPoint(5, 5))
     assert seen == ["Add &group…", "&Manage groups…"]
+
+
+def test_add_group_from_the_heading_goes_to_the_top_level_even_with_a_group_picked(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class Adding(QMenu):
+        def exec(self, *_args: Any) -> None:  # type: ignore[override]
+            _choose(self, "Add &group…")
+
+    monkeypatch.setattr(window_module, "QMenu", Adding)
+    monkeypatch.setattr(window_module.QInputDialog, "getText", lambda *_a, **_k: ("Annex", True))
+    window.nav.select_group(_id(window, "Lab"))
+    window.nav.groups_heading.customContextMenuRequested.emit(QPoint(5, 5))
+    doc = window.document
+    assert doc is not None
+    assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Annex"]
 
 
 def test_a_group_dropped_on_the_groups_heading_goes_to_the_top_level(window: MainWindow) -> None:

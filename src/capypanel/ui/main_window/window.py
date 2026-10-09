@@ -490,10 +490,17 @@ class MainWindow(QMainWindow):
         self._commit(new)
 
     def add_group(self) -> None:
+        """Inside the picked group, or at the top level when none is."""
+        self._add_group(self.nav.selected_group_id())
+
+    def add_top_group(self) -> None:
+        """Right-click the Groups heading or the empty space under the groups."""
+        self._add_group(None)
+
+    def _add_group(self, parent: str | None) -> None:
         doc = self._writable()
         if doc is None:
             return
-        parent = self.nav.selected_group_id()
         where = group_path(doc.hosts, parent) if parent else ""
         prompt = (
             _("Name of the new group inside “{group}”:").format(group=where)
@@ -1417,17 +1424,28 @@ class MainWindow(QMainWindow):
 
     def _heading_menu(self, position: QPoint) -> None:
         menu = QMenu(self)
-        menu.addActions([self.commands.add_group, self.commands.manage_groups])
+        self._add_top_group_item(menu)
+        menu.addAction(self.commands.manage_groups)
         popup(menu, self.nav.groups_heading.mapToGlobal(position))
+
+    def _add_top_group_item(self, menu: QMenu) -> None:
+        # Not the Add group command: that one adds inside the picked group.
+        item = menu.addAction(self.commands.add_group.text())
+        item.setEnabled(self._writable() is not None)
+        item.triggered.connect(self.add_top_group)
 
     def _group_menu(self, position: QPoint) -> None:
         menu = QMenu(self)
-        menu.addAction(self.commands.add_group)
         # Only the group under the mouse: empty space never acts on the one picked before.
         group_id = self.nav.group_at(position)
-        if group_id is not None:
-            self.nav.select_group(group_id)
-        group = self._doc.hosts.group(group_id) if self._doc and group_id else None
+        if group_id is None:
+            self._add_top_group_item(menu)
+            menu.addAction(self.commands.manage_groups)
+            popup(menu, self.nav.groups.viewport().mapToGlobal(position))
+            return
+        self.nav.select_group(group_id)
+        menu.addAction(self.commands.add_group)  # inside the group under the mouse
+        group = self._doc.hosts.group(group_id) if self._doc else None
         if group is not None and self._doc is not None:
             section(menu, _("Connect"))
             follow = self.connector.inherited_label(
@@ -1453,8 +1471,6 @@ class MainWindow(QMainWindow):
             move.setEnabled(self._writable() is not None)
             fill_move_menu(move, self._doc.hosts, group.id, lambda p: self.move_group(group.id, p))
             menu.addActions([self.commands.edit, self.commands.remove])
-        else:
-            menu.addAction(self.commands.manage_groups)
         popup(menu, self.nav.groups.viewport().mapToGlobal(position))
 
     # ---- helpers ----

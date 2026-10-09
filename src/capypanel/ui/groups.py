@@ -6,13 +6,7 @@ Groups show in the list's own order (not sorted), so a team can arrange them as 
 from collections.abc import Callable, Sequence
 
 from PySide6.QtCore import QMimeData, Qt, Signal
-from PySide6.QtGui import (
-    QActionGroup,
-    QDragEnterEvent,
-    QDragLeaveEvent,
-    QDragMoveEvent,
-    QDropEvent,
-)
+from PySide6.QtGui import QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
@@ -176,19 +170,16 @@ def fill_move_menu(
     menu: QMenu, host_list: HostList, group_id: str, apply: Callable[[str | None], None]
 ) -> None:
     """Move to: "Top level", then every group this one can go into, indented as in the tree.
-    Where it is now is ticked. `apply` gets the new parent's id, or None for the top level."""
+    Where it is now is greyed out; a tick would add a blank column to the left of every item.
+    `apply` gets the new parent's id, or None for the top level."""
     group = host_list.group(group_id)
     current = group.parent if group else None
     inside = host_list.subtree(group_id)  # it can't go into itself or its own groups
-    exclusive = QActionGroup(menu)
 
     def add(text: str, target: str | None) -> None:
         item = menu.addAction(text.replace("&", "&&"))
-        item.setCheckable(True)
-        item.setChecked(target == current)
-        exclusive.addAction(item)
-        if target != current:
-            item.triggered.connect(lambda _checked=False: apply(target))
+        item.setEnabled(target != current)
+        item.triggered.connect(lambda _checked=False: apply(target))
 
     def walk(parent_id: str | None, depth: int) -> None:
         for child in host_list.children(parent_id):
