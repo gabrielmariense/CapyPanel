@@ -379,6 +379,7 @@ class HostTable(QTreeWidget):
             self.setColumnHidden(self.GROUP, False)
             self._fit_column(self.GROUP)
         self.setColumnHidden(self.GROUP, not needle)
+        self._loosen_last_column()
         self.viewport().update()
 
     def show_hosts(
@@ -435,6 +436,7 @@ class HostTable(QTreeWidget):
         hidden = set(keys) if isinstance(keys, list) else set()
         for index, key in enumerate(self.COLUMNS[: self.GROUP]):  # Group follows the search
             self.setColumnHidden(index, index > 0 and key in hidden)  # Computer always shows
+        self._loosen_last_column()
 
     def _columns_menu(self, position: QPoint) -> None:
         """Right-click on the column titles: tick the columns to show."""
@@ -451,6 +453,7 @@ class HostTable(QTreeWidget):
         self.setColumnHidden(index, not shown)
         if shown:
             self._keep_title_visible(index, 0, self.columnWidth(index))
+        self._loosen_last_column()
         self.columns_changed.emit()
 
     def minimum_width(self, index: int) -> int:
@@ -470,6 +473,22 @@ class HostTable(QTreeWidget):
         for column in range(self.columnCount()):
             if column != self.NOTES:
                 self._fit_column(column)
+        self._loosen_last_column()
+
+    def _loosen_last_column(self) -> None:
+        """The last column shown stretches into the free space, but Qt never shrinks it below
+        the width it had when it started stretching: one long address kept the table wide and
+        brought the scroll bar early. It starts from its title's width instead."""
+        header = self.header()
+        shown = [
+            header.logicalIndex(v) for v in range(header.count())
+            if not header.isSectionHidden(header.logicalIndex(v))
+        ]  # fmt: skip
+        if not shown:
+            return
+        header.setStretchLastSection(False)
+        header.resizeSection(shown[-1], self.minimum_width(shown[-1]))
+        header.setStretchLastSection(True)
 
     def _fit_column(self, column: int) -> None:
         """As wide as its content, up to 260 px, and never narrower than its title."""

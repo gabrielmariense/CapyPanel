@@ -14,6 +14,7 @@ from capypanel.core.hosts.locations import recent_lists
 from capypanel.core.hosts.model import HostList
 from capypanel.ui.hosts import HostDialog, group_choices
 from capypanel.ui.main_window import window as window_module
+from capypanel.ui.main_window.host_views import HostTable
 from capypanel.ui.main_window.window import MainWindow
 
 
@@ -154,6 +155,26 @@ def test_columns_keep_their_title_visible_and_can_be_hidden(
     reopened.table.set_hidden_columns(["computer"])
     assert not reopened.table.isColumnHidden(0)  # the host name always shows
     reopened.close()
+
+
+def test_one_long_address_doesnt_keep_the_table_wide(qapp: QApplication) -> None:
+    hl, ward = HostList().add_group("Ward")
+    for i in range(5):
+        address = "a-very-long-name.branch.example.internal" if i == 0 else f"PC-{i:04}"
+        hl, _ = hl.add_host(f"PC {i}", ward.id, address=address)
+    table = HostTable()
+    table.set_hidden_columns(["tags", "notes"])  # Address is the last column shown
+    table.show_hosts(hl.hosts, {})
+    table.resize(900, 300)
+    table.show()
+    qapp.processEvents()
+    # Narrowed to just past the first columns plus Address's title.
+    before = sum(table.columnWidth(c) for c in (0, table.STATUS, table.USER))
+    table.resize(before + table.minimum_width(table.ADDRESS) + 40, 300)
+    qapp.processEvents()
+    # Address shrinks toward its title like the columns before it, so no scroll bar yet.
+    assert not table.horizontalScrollBar().isVisible()
+    table.close()
 
 
 def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: MainWindow, office: Path) -> None:
