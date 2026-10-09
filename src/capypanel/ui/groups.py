@@ -198,6 +198,7 @@ class TreeMenu(QMenu):
         super().__init__(title, parent)
         self._branches: dict[QAction, tuple[bool, ...]] = {}
         self._text_left: int | None = None
+        self.marked: QAction | None = None  # tinted, so it stands out in a long menu
 
     def add_row(self, text: str, branches: tuple[bool, ...] = ()) -> QAction:
         """`branches`: one per level below the top, whether the group there is its parent's last
@@ -212,12 +213,23 @@ class TreeMenu(QMenu):
 
     def paintEvent(self, event: QPaintEvent) -> None:
         super().paintEvent(event)
-        if not self._branches:
-            return
+        painter = QPainter(self)
+        if self.marked is not None:
+            # The menu paints its own background, so the tint goes on top and the item is
+            # drawn again over it, keeping its text crisp.
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(_tint(self.palette()))
+            rect = self.actionGeometry(self.marked)
+            painter.drawRoundedRect(rect.adjusted(1, 0, -1, 0), 6, 6)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+            option = QStyleOptionMenuItem()
+            self.initStyleOption(option, self.marked)
+            option.rect = rect
+            self.style().drawControl(QStyle.ControlElement.CE_MenuItem, option, painter, self)
         step = self.fontMetrics().horizontalAdvance(TREE_INDENT)
         color = QColor(self.palette().color(QPalette.ColorRole.Text))
         color.setAlpha(90)
-        painter = QPainter(self)
         painter.setPen(QPen(color, 1))
         for action, branches in self._branches.items():
             rect = self.actionGeometry(action)
@@ -259,11 +271,23 @@ class TreeMenu(QMenu):
         return self.actionGeometry(action).left() + self._text_left
 
 
+def _tint(palette: QPalette) -> QColor:
+    """The highlight colour, see-through, just strong enough to stand out from the menu: a
+    faint tint vanished on dark menus."""
+    tint = QColor(palette.color(QPalette.ColorRole.Highlight))
+    background = palette.color(QPalette.ColorRole.Window)
+    gap = abs(tint.lightness() - background.lightness())
+    # Mixed in at `alpha`, the tint moves the background's lightness by gap * alpha / 255.
+    alpha = next((a for a in range(45, 160, 5) if gap * a / 255 >= 14), 160)
+    tint.setAlpha(alpha)
+    return tint
+
+
 def fill_move_menu(
     menu: TreeMenu, host_list: HostList, group_id: str, apply: Callable[[str | None], None]
 ) -> None:
     """Move to: "Top level", then every group this one can go into, as a tree. Where it is now
-    is ticked. `apply` gets the new parent's id, or None for the top level."""
+    is ticked and tinted. `apply` gets the new parent's id, or None for the top level."""
     group = host_list.group(group_id)
     current = group.parent if group else None
     inside = host_list.subtree(group_id)  # it can't go into itself or its own groups
@@ -273,6 +297,8 @@ def fill_move_menu(
         item = menu.add_row(text, branches)
         item.setCheckable(True)
         item.setChecked(target == current)
+        if target == current:
+            menu.marked = item
         exclusive.addAction(item)
         if target != current:
             item.triggered.connect(lambda _checked=False: apply(target))

@@ -182,6 +182,7 @@ def test_move_to_offers_the_top_level_first_and_never_the_group_itself(
     fill_move_menu(menu, doc.hosts, _id(window, "alpha wing"), chosen.append)
     assert _texts(menu) == ["Top level", "Zebra wing"]  # not alpha wing, nor its Lab
     assert menu.actions()[0].isChecked()  # where it is now
+    assert menu.marked is menu.actions()[0]  # tinted too, easy to spot in a long menu
     _choose(menu, "Top level")
     assert chosen == []  # already there
     _choose(menu, "Zebra wing")
