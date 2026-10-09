@@ -5,13 +5,20 @@ Groups show in the list's own order (not sorted), so a team can arrange them as 
 
 from collections.abc import Callable, Sequence
 
-from PySide6.QtCore import QMimeData, Qt, Signal
+from PySide6.QtCore import QMimeData, QPoint, QRect, Qt, Signal
 from PySide6.QtGui import (
+    QAction,
     QActionGroup,
+    QColor,
     QDragEnterEvent,
     QDragLeaveEvent,
     QDragMoveEvent,
     QDropEvent,
+    QImage,
+    QPainter,
+    QPaintEvent,
+    QPalette,
+    QPen,
 )
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -21,6 +28,8 @@ from PySide6.QtWidgets import (
     QLabel,
     QMenu,
     QPushButton,
+    QStyle,
+    QStyleOptionMenuItem,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -38,7 +47,7 @@ ROLE_ID = Qt.ItemDataRole.UserRole + 1
 GROUP_INDENT = 14  # px per nesting level; Windows 11's ~30 px ran deep trees off the pane
 HOSTS_MIME = "application/x-capypanel-hosts"  # host ids dragged from the host table
 GROUPS_MIME = "application/x-capypanel-groups"  # group ids dragged within the groups tree
-MENU_INDENT = "\u2003\u2003"  # per nesting level in "Move to": menus have no tree lines
+TREE_INDENT = "\u2003\u2009"  # per level in a TreeMenu, room for its lines (~16 px)
 
 
 def hosts_mime(host_ids: list[str]) -> QMimeData:
@@ -172,34 +181,105 @@ class GroupsHeading(QLabel):
         self.style().polish(self)
 
 
+class TreeMenu(QMenu):
+    """A menu indented like a tree, with the tree's lines drawn into the indent. The items stay
+    plain menu items, so hover, ticks and the keyboard work as in any menu."""
+
+    def __init__(self, title: str = "", parent: QWidget | None = None) -> None:
+        super().__init__(title, parent)
+        self._branches: dict[QAction, tuple[bool, ...]] = {}
+        self._text_left: int | None = None
+
+    def add_row(self, text: str, branches: tuple[bool, ...] = ()) -> QAction:
+        """`branches`: one per level below the top, whether the group there is its parent's last
+        (its line stops)."""
+        action = self.addAction(TREE_INDENT * len(branches) + text.replace("&", "&&"))
+        if branches:
+            self._branches[action] = branches
+        return action
+
+    def branches(self, action: QAction) -> tuple[bool, ...]:
+        return self._branches.get(action, ())
+
+    def paintEvent(self, event: QPaintEvent) -> None:
+        super().paintEvent(event)
+        if not self._branches:
+            return
+        step = self.fontMetrics().horizontalAdvance(TREE_INDENT)
+        color = QColor(self.palette().color(QPalette.ColorRole.Text))
+        color.setAlpha(90)
+        painter = QPainter(self)
+        painter.setPen(QPen(color, 1))
+        for action, branches in self._branches.items():
+            rect = self.actionGeometry(action)
+            left, mid = self._find_text_left(action), rect.center().y()
+            for level, last in enumerate(branches):
+                x = left + level * step + 4
+                if level < len(branches) - 1:  # a group further up: its line runs on past us
+                    if not last:
+                        painter.drawLine(x, rect.top(), x, rect.bottom())
+                else:  # this item's own branch
+                    painter.drawLine(x, rect.top(), x, mid if last else rect.bottom())
+                    painter.drawLine(x, mid, x + step - 6, mid)
+        painter.end()
+
+    def _find_text_left(self, action: QAction) -> int:
+        """Where the style starts an item's text (each theme pads menus its own way): the item
+        is drawn with and without a block of text, and the first column that differs is it."""
+        if self._text_left is None:
+            option = QStyleOptionMenuItem()
+            self.initStyleOption(option, action)
+            size = self.actionGeometry(action).size()
+            option.rect = QRect(QPoint(0, 0), size)
+            option.state &= ~QStyle.StateFlag.State_Selected
+            images = []
+            for text in ("", "\u2588"):
+                option.text = text
+                image = QImage(size, QImage.Format.Format_ARGB32)
+                image.fill(0)
+                painter = QPainter(image)
+                self.style().drawControl(QStyle.ControlElement.CE_MenuItem, option, painter, self)
+                painter.end()
+                images.append(image)
+            blank, text = images
+            columns = range(size.width())
+            rows = range(size.height())
+            self._text_left = next(
+                (x for x in columns if any(blank.pixel(x, y) != text.pixel(x, y) for y in rows)), 0
+            )
+        return self.actionGeometry(action).left() + self._text_left
+
+
 def fill_move_menu(
-    menu: QMenu, host_list: HostList, group_id: str, apply: Callable[[str | None], None]
+    menu: TreeMenu, host_list: HostList, group_id: str, apply: Callable[[str | None], None]
 ) -> None:
-    """Move to: "Top level", then every group this one can go into, indented as in the tree.
-    Where it is now is ticked. `apply` gets the new parent's id, or None for the top level."""
+    """Move to: "Top level", then every group this one can go into, as a tree. Where it is now
+    is ticked. `apply` gets the new parent's id, or None for the top level."""
     group = host_list.group(group_id)
     current = group.parent if group else None
     inside = host_list.subtree(group_id)  # it can't go into itself or its own groups
     exclusive = QActionGroup(menu)
 
-    def add(text: str, target: str | None) -> None:
-        item = menu.addAction(text.replace("&", "&&"))
+    def add(text: str, target: str | None, branches: tuple[bool, ...] = ()) -> None:
+        item = menu.add_row(text, branches)
         item.setCheckable(True)
         item.setChecked(target == current)
         exclusive.addAction(item)
         if target != current:
             item.triggered.connect(lambda _checked=False: apply(target))
 
-    def walk(parent_id: str | None, depth: int) -> None:
-        for child in host_list.children(parent_id):
-            if child.id not in inside:
-                add(MENU_INDENT * depth + child.name, child.id)
-                walk(child.id, depth + 1)
+    def walk(parent_id: str | None, branches: tuple[bool, ...]) -> None:
+        children = [c for c in host_list.children(parent_id) if c.id not in inside]
+        for index, child in enumerate(children):
+            # Top-level groups have no line; each level below adds one.
+            mine = (*branches, index == len(children) - 1) if parent_id else ()
+            add(child.name, child.id, mine)
+            walk(child.id, mine)
 
     add(_("Top level"), None)
     if host_list.groups:
         menu.addSeparator()
-    walk(None, 0)
+    walk(None, ())
 
 
 class ManageGroupsDialog(QDialog):
@@ -277,9 +357,9 @@ class ManageGroupsDialog(QDialog):
         self.tree.setCurrentItem(item)
         self._update()
 
-    def move_menu(self) -> QMenu:
+    def move_menu(self) -> TreeMenu:
         """The "Move to" menu for the picked group, from the groups as arranged here so far."""
-        menu = QMenu(self)
+        menu = TreeMenu("", self)
         item = self.tree.currentItem()
         if item is not None:
             arranged = self._hosts.arrange_groups(self.tree.order())

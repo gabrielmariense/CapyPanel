@@ -10,7 +10,13 @@ from PySide6.QtWidgets import QAbstractItemView, QApplication, QDialog, QMenu, Q
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.ui.groups import MENU_INDENT, ROLE_ID, ManageGroupsDialog, fill_move_menu
+from capypanel.ui.groups import (
+    ROLE_ID,
+    TREE_INDENT,
+    ManageGroupsDialog,
+    TreeMenu,
+    fill_move_menu,
+)
 from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.window import MainWindow
 
@@ -172,7 +178,7 @@ def test_move_to_offers_the_top_level_first_and_never_the_group_itself(
     doc = window.document
     assert doc is not None
     chosen: list[str | None] = []
-    menu = QMenu()
+    menu = TreeMenu()
     fill_move_menu(menu, doc.hosts, _id(window, "alpha wing"), chosen.append)
     assert _texts(menu) == ["Top level", "Zebra wing"]  # not alpha wing, nor its Lab
     assert menu.actions()[0].isChecked()  # where it is now
@@ -180,9 +186,30 @@ def test_move_to_offers_the_top_level_first_and_never_the_group_itself(
     assert chosen == []  # already there
     _choose(menu, "Zebra wing")
     assert chosen == [_id(window, "Zebra wing")]
-    menu = QMenu()
+    menu = TreeMenu()
     fill_move_menu(menu, doc.hosts, _id(window, "Zebra wing"), chosen.append)
-    assert _texts(menu) == ["Top level", "alpha wing", MENU_INDENT + "Lab"]  # nesting shows
+    assert _texts(menu) == ["Top level", "alpha wing", TREE_INDENT + "Lab"]  # nesting shows
+
+
+def test_move_to_draws_the_tree_s_lines(qapp: QApplication) -> None:
+    hl, hq = HostList().add_group("Headquarters")
+    hl, finance = hl.add_group("Finance", parent=hq.id)
+    hl, _ = hl.add_group("Payroll", parent=finance.id)
+    hl, _ = hl.add_group("Reports", parent=hq.id)
+    hl, annex = hl.add_group("Annex")
+    menu = TreeMenu()
+    fill_move_menu(menu, hl, annex.id, lambda _p: None)
+    rows = {a.text().strip(): menu.branches(a) for a in menu.actions() if a.text()}
+    # Finance's line carries on past Payroll down to Reports, the last one under Headquarters.
+    assert rows == {
+        "Top level": (),
+        "Headquarters": (),
+        "Finance": (False,),
+        "Payroll": (False, True),
+        "Reports": (True,),
+    }
+    menu.adjustSize()
+    assert not menu.grab().isNull()  # draws its lines in any theme without failing
 
 
 def test_right_click_move_to_puts_the_group_inside_another(

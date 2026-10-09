@@ -51,7 +51,7 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui import language
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
-from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog, fill_move_menu
+from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog, TreeMenu, fill_move_menu
 from capypanel.ui.host_lists import HostListsDialog
 from capypanel.ui.hosts import (
     HostDialog,
@@ -1467,7 +1467,8 @@ class MainWindow(QMainWindow):
                     lambda _c=False, s=status, u=users: self.check_hosts(hosts, status=s, users=u)
                 )
             menu.addSeparator()
-            move = menu.addMenu(_("&Move to"))
+            move = TreeMenu(_("&Move to"), menu)
+            menu.addMenu(move)
             move.setEnabled(self._writable() is not None)
             fill_move_menu(move, self._doc.hosts, group.id, lambda p: self.move_group(group.id, p))
             menu.addActions([self.commands.edit, self.commands.remove])
