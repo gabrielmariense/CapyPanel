@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QDialog,
     QListWidget,
+    QMenu,
     QMessageBox,
     QSpinBox,
     QTreeWidget,
@@ -222,6 +223,21 @@ def test_rows_placed_before_the_theme_arrived_never_overlap(qapp: QApplication) 
     ]:
         assert below.top() > above.bottom(), f"rows overlap: {above} and {below}"
     assert all(r.height() > flat.fontMetrics().height() for r in rows)
+
+
+def test_menus_with_ticks_line_up_with_other_menus(qapp: QApplication) -> None:
+    # Qt adds a tick's width before every item of a menu with ticks, submenu titles included.
+    themes.apply(themes.Registry().find("paper"))
+    plain, ticks, mixed = QMenu(), QMenu(), QMenu()
+    plain.addAction("Status bar")
+    ticks.addAction("Status bar").setCheckable(True)
+    # Unmarked it was 18 px wider; Qt sizes it 4 px wider than it draws the text.
+    assert ticks.sizeHint().width() - plain.sizeHint().width() == 4
+    mixed.addMenu("Language")  # a submenu title beside a ticked item: marked too
+    tick = mixed.addAction("Status bar")
+    assert mixed.property("ticks") is not True
+    tick.setCheckable(True)
+    assert mixed.property("ticks") is True
 
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
