@@ -111,7 +111,17 @@ def test_native_overlay_is_readable_and_visible(scheme: str) -> None:
     assert ratio(c["chrome"], c["bg"]) >= 1.15
 
 
-ACCENTS = ["#0078d4", "#350461", "#ffb900", "#107c10", "#e81123", "#ffffff", "#000000"]
+# Every accent colour Windows offers in Settings > Personalization > Colors, plus extremes and a
+# deep custom purple: anything made from the accent must work with all of them.
+WINDOWS_ACCENTS = [
+    "#ffb900", "#ff8c00", "#f7630c", "#ca5010", "#da3b01", "#ef6950", "#d13438", "#ff4343",
+    "#e74856", "#e81123", "#ea005e", "#c30052", "#e3008c", "#bf0077", "#c239b3", "#9a0089",
+    "#0078d7", "#0063b1", "#8e8cd8", "#6b69d6", "#8764b8", "#744da9", "#b146c2", "#881798",
+    "#0099bc", "#2d7d9a", "#00b7c3", "#038387", "#00b294", "#018574", "#00cc6a", "#10893e",
+    "#7a7574", "#5d5a58", "#68768a", "#515c6b", "#567c73", "#486860", "#498205", "#107c10",
+    "#767676", "#4c4a48", "#69797e", "#4a5459", "#647c64", "#525e54", "#847545", "#7e735f",
+]  # fmt: skip
+ACCENTS = [*WINDOWS_ACCENTS, "#0078d4", "#350461", "#5e08a9", "#ffffff", "#000000"]
 
 
 @pytest.mark.parametrize("scheme", ["light", "dark"])
@@ -124,12 +134,41 @@ def test_selection_is_visible_and_readable_with_any_accent(scheme: str, accent: 
 
 
 @pytest.mark.parametrize("scheme", ["light", "dark"])
-@pytest.mark.parametrize("accent", [*ACCENTS, "#5e08a9"])  # a deep purple, on a dark menu too
+@pytest.mark.parametrize("accent", ACCENTS)
 def test_a_marked_menu_row_stands_out_with_any_accent(scheme: str, accent: str) -> None:
     c = themes.NATIVE_TOKENS[scheme]
     tint = themes.mark_tint(QColor(accent), c["card"], c["text"])
     assert themes.contrast_ratio(tint, c["card"]) >= 1.6
     assert themes.contrast_ratio(c["text"], tint) >= 4.5
+
+
+@pytest.mark.parametrize("scheme", ["light", "dark"])
+@pytest.mark.parametrize("accent", ACCENTS)
+def test_accent_headings_are_readable_with_any_accent(scheme: str, accent: str) -> None:
+    c = themes.NATIVE_TOKENS[scheme]
+    heading = themes.readable_on(QColor(accent), c["card"], c["text"])
+    assert themes.contrast_ratio(heading, c["card"]) >= 4.5
+
+
+@pytest.mark.parametrize("scheme", ["light", "dark"])
+@pytest.mark.parametrize("accent", ACCENTS)
+def test_the_groups_heading_reads_while_a_group_is_dragged_on_it(scheme: str, accent: str) -> None:
+    c = themes.NATIVE_TOKENS[scheme]
+    sel = themes.selection_tint(QColor(accent), c["card"], c["text"])
+    drop = themes.readable_on(QColor(accent), sel, c["text"])
+    assert themes.contrast_ratio(drop, sel) >= 4.5
+
+
+@pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
+def test_accent_text_and_buttons_read_in_every_custom_theme(theme: themes.Theme) -> None:
+    colors = theme.colors
+    accent = QColor(colors["accent"])
+    heading = themes.readable_on(accent, colors["card"], colors["text"])
+    assert themes.contrast_ratio(heading, colors["card"]) >= 4.5
+    drop = themes.readable_on(accent, colors["sel_solid"], colors["text"])
+    assert themes.contrast_ratio(drop, colors["sel_solid"]) >= 4.5
+    for fill in (accent, QColor(colors["accent_hover"])):  # the OK button, and hovered
+        assert themes.contrast_ratio("#ffffff", themes.button_fill(fill)) >= 4.5
 
 
 def test_every_theme_applies_in_any_order(qapp: QApplication) -> None:

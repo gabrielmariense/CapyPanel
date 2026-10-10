@@ -203,6 +203,7 @@ def native_tokens(accent: QColor) -> dict[str, str]:
     tokens["hover"] = _mix(QColor(tokens["text"]), QColor(tokens["card"]), 0.06)
     tokens["accent"] = accent.name()
     tokens["accent_text"] = readable_on(accent, tokens["card"], tokens["text"])
+    tokens["accent_drop"] = readable_on(accent, tokens["sel"], tokens["text"])
     tokens["arrow"] = (THEMES_DIR / f"arrow-{native_scheme()}.svg").as_posix()
     return tokens
 
@@ -225,6 +226,16 @@ def readable_on(accent: QColor, card: str, text: str) -> str:
         if contrast_ratio(tint, card) >= 4.5:
             return tint
     return text
+
+
+def button_fill(accent: QColor) -> str:
+    """The default button's colour: the accent, darkened as far as white text needs (4.5:1).
+    Graphite's light teal left its OK button's text hard to read."""
+    for step in range(0, 101, 5):
+        fill = _mix(QColor("#000000"), accent, step / 100)
+        if contrast_ratio("#ffffff", fill) >= 4.5:
+            return fill
+    return "#000000"
 
 
 def mark_tint(accent: QColor, card: str, text: str) -> str:
@@ -471,7 +482,7 @@ QLabel#stateBadge[active="true"] { color: #3fae4a; border-color: #3fae4a; }
 QFrame#notesBox { border: 1px solid %(border)s; border-radius: 6px; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
 /* The Groups heading while a group is dragged over it: dropping moves it to the top. */
-QLabel#paneTitle[dropTarget="true"] { color: %(accent)s; background: %(sel_solid)s;
+QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel_solid)s;
                                      border-radius: %(r2)spx; }
 QListView#pageList::item { padding: 7px 10px; }
 
@@ -495,8 +506,8 @@ QPushButton { background: %(card)s; border: 1px solid %(border)s; border-radius:
               padding: 6px 20px; }
 QPushButton:hover { background: %(raised)s; }
 QPushButton:disabled { color: %(text3)s; }
-QPushButton:default { background: %(accent)s; border-color: %(accent)s; color: #ffffff; }
-QPushButton:default:hover { background: %(accent_hover)s; }
+QPushButton:default { background: %(button)s; border-color: %(button)s; color: #ffffff; }
+QPushButton:default:hover { background: %(button_hover)s; }
 QGroupBox { border: 1px solid %(border)s; border-radius: %(r)spx; margin-top: 16px;
             padding: 14px 12px 10px 12px; background: %(card)s; }
 QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 4px; color: %(text2)s; }
@@ -551,7 +562,7 @@ QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8p
 QLabel#stateBadge[active="true"] { color: #3fae4a; border-color: #3fae4a; }
 QFrame#notesBox { border: 1px solid %(border)s; border-radius: 6px; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
-QLabel#paneTitle[dropTarget="true"] { color: %(accent)s; background: %(sel)s; }
+QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel)s; }
 /* Toolbar buttons like the CapyPanel stylesheet's, square like the panes here.
    Styling them drops the style's own menu arrow, so the theme's arrow is drawn instead. */
 QToolBar#main QToolButton { color: %(text2)s; background: %(card)s; border: 1px solid %(border)s;
@@ -584,7 +595,11 @@ def stylesheet(theme: Theme) -> str:
     t: dict[str, object] = {k: _qss_color(v) for k, v in theme.colors.items()}
     t["r"], t["r2"] = theme.radius, max(0, theme.radius - 2)
     colors = theme.colors
-    t["accent_text"] = readable_on(QColor(colors["accent"]), colors["card"], colors["text"])
+    accent = QColor(colors["accent"])
+    t["accent_text"] = readable_on(accent, colors["card"], colors["text"])
+    t["accent_drop"] = readable_on(accent, colors["sel_solid"], colors["text"])
+    t["button"] = button_fill(accent)
+    t["button_hover"] = button_fill(QColor(colors["accent_hover"]))
     t["check"] = (THEMES_DIR / "check.svg").as_posix()
     t["arrow"] = (THEMES_DIR / f"arrow-{theme.scheme}.svg").as_posix()
     t["arrow_up"] = (THEMES_DIR / f"arrow-up-{theme.scheme}.svg").as_posix()
