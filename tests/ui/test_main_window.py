@@ -157,23 +157,26 @@ def test_columns_keep_their_title_visible_and_can_be_hidden(
     reopened.close()
 
 
-def test_one_long_address_doesnt_keep_the_table_wide(qapp: QApplication) -> None:
+def test_the_last_column_fits_the_rows_shown_now(qapp: QApplication) -> None:
     hl, ward = HostList().add_group("Ward")
-    for i in range(5):
-        address = "a-very-long-name.branch.example.internal" if i == 0 else f"PC-{i:04}"
-        hl, _ = hl.add_host(f"PC {i}", ward.id, address=address)
+    hl, _ = hl.add_host("PC 0", ward.id, address="a-very-long-name.branch.example.internal")
+    for i in range(1, 5):
+        hl, _ = hl.add_host(f"PC {i}", ward.id, address=f"PC-544-{i:07}")
     table = HostTable()
     table.set_hidden_columns(["tags", "notes"])  # Address is the last column shown
-    table.show_hosts(hl.hosts, {})
+    table.show_hosts(hl.hosts, {})  # the first list: columns fitted to its long address
+    table.show_hosts(hl.hosts[1:], {})  # another list, short addresses only
     table.resize(900, 300)
     table.show()
     qapp.processEvents()
-    # Narrowed to just past the first columns plus Address's title.
     before = sum(table.columnWidth(c) for c in (0, table.STATUS, table.USER))
-    table.resize(before + table.minimum_width(table.ADDRESS) + 40, 300)
+    fits = table.sizeHintForColumn(table.ADDRESS) + 16
+    table.resize(before + fits + 30, 300)  # the short addresses still fit: no scroll bar
     qapp.processEvents()
-    # Address shrinks toward its title like the columns before it, so no scroll bar yet.
     assert not table.horizontalScrollBar().isVisible()
+    table.resize(before + fits - 30, 300)  # they'd be cut: the scroll bar shows instead
+    qapp.processEvents()
+    assert table.horizontalScrollBar().isVisible()
     table.close()
 
 

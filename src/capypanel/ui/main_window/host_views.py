@@ -416,6 +416,8 @@ class HostTable(QTreeWidget):
         self.blockSignals(False)
         if hosts and not self._sized:
             self._fit_columns()
+        else:
+            self._loosen_last_column()  # its content changed
         self.itemSelectionChanged.emit()
 
     def changeEvent(self, event: QEvent) -> None:
@@ -476,9 +478,9 @@ class HostTable(QTreeWidget):
         self._loosen_last_column()
 
     def _loosen_last_column(self) -> None:
-        """The last column shown stretches into the free space, but Qt never shrinks it below
-        the width it had when it started stretching: one long address kept the table wide and
-        brought the scroll bar early. It starts from its title's width instead."""
+        """The last column shown stretches into the free space, and Qt never shrinks it below
+        the width it had when it started stretching. That starting width is set to fit the rows
+        shown now: the widths fitted for the first list opened kept a later list wide."""
         header = self.header()
         shown = [
             header.logicalIndex(v) for v in range(header.count())
@@ -487,14 +489,16 @@ class HostTable(QTreeWidget):
         if not shown:
             return
         header.setStretchLastSection(False)
-        header.resizeSection(shown[-1], self.minimum_width(shown[-1]))
+        header.resizeSection(shown[-1], self._fitted_width(shown[-1]))
         header.setStretchLastSection(True)
 
     def _fit_column(self, column: int) -> None:
+        self.setColumnWidth(column, self._fitted_width(column))
+
+    def _fitted_width(self, column: int) -> int:
         """As wide as its content, up to 260 px, and never narrower than its title."""
-        self.resizeColumnToContents(column)
-        fitted = min(self.columnWidth(column) + 16, 260)
-        self.setColumnWidth(column, max(fitted, self.minimum_width(column)))
+        content = max(self.sizeHintForColumn(column), self.header().sectionSizeHint(column))
+        return max(min(content + 16, 260), self.minimum_width(column))
 
     def show_cells(self, host_id: str, cells: "Cells") -> None:
         """New Refresh results for one host, without rebuilding the table."""
