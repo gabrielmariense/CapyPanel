@@ -83,6 +83,8 @@ def test_a_click_copies_a_value_and_the_window_is_told(qapp: QApplication) -> No
     pane.show_host(_details(tags=("kiosk", "2nd floor")), 1)
     _click(pane._values["tags"][1])
     assert QGuiApplication.clipboard().text() == "2nd floor" and told == ["2nd floor"]
+    _click(pane._values["name"][0])  # the heading too
+    assert QGuiApplication.clipboard().text() == "Reception 01"
 
 
 def test_notes_wrap_and_mark_the_search(qapp: QApplication) -> None:

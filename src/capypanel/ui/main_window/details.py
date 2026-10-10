@@ -173,8 +173,7 @@ class DetailsPane(QWidget):
         status = details.status[0] if details.status else None
         color = STATUS_COLORS.get(str(status), STATUS_COLORS["offline"])
         dot.setStyleSheet(f"color: {color};")
-        name = QLabel(breakable(details.host.name))
-        name.setWordWrap(True)
+        name = self._value("name", details.host.name)
         font = QFont(name.font())
         font.setBold(True)
         font.setPointSizeF(font.pointSizeF() * 1.25)
