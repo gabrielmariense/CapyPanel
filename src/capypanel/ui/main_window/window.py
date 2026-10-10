@@ -422,6 +422,7 @@ class MainWindow(QMainWindow):
             self._status_found.clear()  # another list's hosts: old results don't apply
             self._users_found.clear()
             self._clear_search()
+            self.table.refit_columns()  # widths dragged for the old list's names don't apply
         self._doc = doc
         locations.remember_list(self._prefs, doc.path)
         if self._kind(doc.path) is ListKind.SHARED:  # it shows in File > Host lists… from now on

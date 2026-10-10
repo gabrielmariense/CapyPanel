@@ -169,12 +169,13 @@ def test_the_last_column_fits_the_rows_shown_now(qapp: QApplication) -> None:
     table.resize(900, 300)
     table.show()
     qapp.processEvents()
-    before = sum(table.columnWidth(c) for c in (0, table.STATUS, table.USER))
-    fits = table.sizeHintForColumn(table.ADDRESS) + 16
-    table.resize(before + fits + 30, 300)  # the short addresses still fit: no scroll bar
+    frame = table.width() - table.viewport().width()  # each theme frames the table its own way
+    fits = frame + sum(table.columnWidth(c) for c in (0, table.STATUS, table.USER))
+    fits += table.sizeHintForColumn(table.ADDRESS)
+    table.resize(fits + 2, 300)  # the short addresses still fit: no scroll bar
     qapp.processEvents()
     assert not table.horizontalScrollBar().isVisible()
-    table.resize(before + fits - 30, 300)  # they'd be cut: the scroll bar shows instead
+    table.resize(fits - 4, 300)  # a letter would be cut: the scroll bar shows instead
     qapp.processEvents()
     assert table.horizontalScrollBar().isVisible()
     table.close()
@@ -229,3 +230,13 @@ def test_right_click_menus_dont_pile_up(
         window._group_menu(QPoint(5, 5))
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
     assert len(window.findChildren(QMenu)) == before
+
+
+def test_opening_another_list_fits_the_columns_again(window: MainWindow, office: Path) -> None:
+    window.open_list(office)
+    table = window.table
+    table.header().resizeSection(0, 400)  # dragged wide for this list
+    other = office.with_name("other.json")
+    other.write_bytes(office.read_bytes())
+    window.open_list(other)
+    assert table.columnWidth(0) < 400

@@ -468,6 +468,10 @@ class HostTable(QTreeWidget):
         if 0 < new < wanted and not self.isColumnHidden(index):
             self.header().resizeSection(index, wanted)
 
+    def refit_columns(self) -> None:
+        """Fit the columns again to the next hosts shown (another list opens)."""
+        self._sized = False
+
     def _fit_columns(self) -> None:
         # Once, on the first real content: fit the first columns (capped) and let Notes stretch
         # into the rest. Fixed starting widths overflowed narrow windows. Columns stay draggable.
@@ -489,16 +493,17 @@ class HostTable(QTreeWidget):
         if not shown:
             return
         header.setStretchLastSection(False)
-        header.resizeSection(shown[-1], self._fitted_width(shown[-1]))
+        # Exactly its widest text: the scroll bar comes in just as a letter would be cut.
+        header.resizeSection(shown[-1], self._fitted_width(shown[-1], spare=0))
         header.setStretchLastSection(True)
 
     def _fit_column(self, column: int) -> None:
         self.setColumnWidth(column, self._fitted_width(column))
 
-    def _fitted_width(self, column: int) -> int:
-        """As wide as its content, up to 260 px, and never narrower than its title."""
+    def _fitted_width(self, column: int, spare: int = 16) -> int:
+        """As wide as its content plus `spare`, up to 260 px, never narrower than its title."""
         content = max(self.sizeHintForColumn(column), self.header().sectionSizeHint(column))
-        return max(min(content + 16, 260), self.minimum_width(column))
+        return max(min(content + spare, 260), self.minimum_width(column))
 
     def show_cells(self, host_id: str, cells: "Cells") -> None:
         """New Refresh results for one host, without rebuilding the table."""
