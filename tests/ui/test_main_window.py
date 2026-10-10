@@ -200,13 +200,28 @@ def test_columns_give_back_their_room_before_the_scroll_bar_shows(qapp: QApplica
     table.close()
 
 
-def test_columns_follow_the_rows_shown_now(qapp: QApplication) -> None:
+def test_columns_fit_the_whole_list_and_only_grow(qapp: QApplication) -> None:
     hosts = _hosts(("PC 0", "a-very-long-name.branch.example.internal"), ("PC 1", "10.0.0.1"))
     table = _table(qapp, hosts)
-    long = table.columnWidth(table.ADDRESS)
-    table.show_hosts(hosts[1:], {})  # a group, or another list, with short addresses only
-    _fit_view(qapp, table, sum(table._content.values()) + 2)
-    assert table.columnWidth(table.ADDRESS) < long
+    long = table._content[table.ADDRESS]
+    table.show_hosts(hosts[1:], {})  # a group with short addresses only: nothing jumps
+    assert table._content[table.ADDRESS] == long
+    table.refit_columns()  # another list opens
+    table.show_hosts(hosts[1:], {})
+    assert table._content[table.ADDRESS] < long
+    table.close()
+
+
+def test_long_free_text_stops_at_the_cap_and_the_rest_always_fits(qapp: QApplication) -> None:
+    address = "a." * 200 + "example.internal"  # far wider than any cap
+    hl, ward = HostList().add_group("Ward")
+    hl, _ = hl.add_host("PC 0", ward.id, address=address, notes="word " * 200)
+    table = HostTable()  # Notes shown too
+    table.show_hosts(hl.hosts, {})
+    assert table._content[table.NOTES] == table.CAP
+    assert table._content[table.ADDRESS] > table.CAP  # an address always shows in full
+    item = table.topLevelItem(0)
+    assert item is not None and item.toolTip(table.NOTES) == hl.hosts[0].notes  # past the "…"
     table.close()
 
 

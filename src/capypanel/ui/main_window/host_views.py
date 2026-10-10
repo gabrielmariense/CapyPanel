@@ -341,7 +341,9 @@ class HostTable(QTreeWidget):
     """The host list as a table. A QTreeView-based widget: it selects whole rows in Windows 11.
     Status and User come from Refresh; they're kept in memory, never in the list file."""
 
-    STATUS, USER, ADDRESS, NOTES, GROUP = 1, 2, 3, 5, 6
+    STATUS, USER, ADDRESS, TAGS, NOTES, GROUP = 1, 2, 3, 4, 5, 6
+    # Long free text (many sessions, a note) stops here with "…"; the rest always fits.
+    CAPPED, CAP = {USER, TAGS, NOTES}, 300
     # Saved by these keys. Group shows only during a search, right after Computer.
     COLUMNS = ("computer", "status", "user", "address", "tags", "notes", "group")
     columns_changed = Signal()  # a column was shown or hidden
@@ -427,6 +429,8 @@ class HostTable(QTreeWidget):
                 ]  # fmt: skip
             )
             item.setData(0, ROLE_ID, host.id)
+            item.setToolTip(self.TAGS, ", ".join(host.tags))  # in full, past the "…"
+            item.setToolTip(self.NOTES, host.notes)
             self.addTopLevelItem(item)
             self._rows[host.id] = item
             self._fill(item, cells.get(host.id))
@@ -439,7 +443,8 @@ class HostTable(QTreeWidget):
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
         # A theme with another font (e.g. Paper's Georgia) makes the old widths cut text off.
-        if event.type() == QEvent.Type.FontChange:
+        if event.type() == QEvent.Type.FontChange:  # every width changes with the font
+            self._content.clear()
             self._measure_columns()
         if event.type() == QEvent.Type.PaletteChange:  # the quiet colour of the new theme
             for item in self._rows.values():
@@ -487,7 +492,8 @@ class HostTable(QTreeWidget):
         return width + 6
 
     def refit_columns(self) -> None:
-        """Another list opens: widths dragged by hand for the old one's names don't apply."""
+        """Another list opens: fit its hosts, not the old list's, and forget dragged widths."""
+        self._content.clear()
         self._dragged.clear()
 
     def _dragged_by_hand(self, index: int, _old: int, new: int) -> None:
@@ -500,13 +506,17 @@ class HostTable(QTreeWidget):
         self._arrange_columns()
 
     def _measure_columns(self) -> None:
-        """Each column's widest text (up to 260 px, never narrower than its title), kept so
-        resizing the window doesn't measure every row again."""
-        self._content = {
-            column: max(min(self.sizeHintForColumn(column), 260), self.minimum_width(column))
-            for column in range(self.columnCount())
-            if not self.isColumnHidden(column)
-        }
+        """Each column's widest text in the list, never narrower than its title, kept so resizing
+        the window doesn't measure every row again."""
+        for column in range(self.columnCount()):
+            if self.isColumnHidden(column):
+                continue
+            width = self.sizeHintForColumn(column)
+            if column in self.CAPPED:
+                width = min(width, self.CAP)
+            # Grows only: the list's widest text stays fitted while a group shows fewer hosts.
+            width = max(width, self.minimum_width(column), self._content.get(column, 0))
+            self._content[column] = width
         self._arrange_columns()
 
     def _arrange_columns(self) -> None:
@@ -525,7 +535,7 @@ class HostTable(QTreeWidget):
             content = self._content.get(column, self.minimum_width(column))
             dragged = self._dragged.get(column)
             floor[column] = dragged if dragged is not None else content
-            wanted[column] = dragged if dragged is not None else min(content + 16, 260)
+            wanted[column] = dragged if dragged is not None else content + 16
             wanted[column] = max(wanted[column], floor[column])
         room = self.viewport().width()
         widths = dict(wanted)
