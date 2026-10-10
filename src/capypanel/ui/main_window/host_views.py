@@ -369,6 +369,7 @@ class HostTable(QTreeWidget):
         self.setColumnHidden(self.GROUP, True)
         header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         header.customContextMenuRequested.connect(self._columns_menu)
+        header.sortIndicatorChanged.connect(lambda *_: self._measure_columns())  # arrow moved
         header.sectionResized.connect(self._dragged_by_hand)
         self.setRootIsDecorated(False)
         self.setUniformRowHeights(True)
@@ -472,9 +473,18 @@ class HostTable(QTreeWidget):
         self.columns_changed.emit()
 
     def minimum_width(self, index: int) -> int:
-        """A column is never narrower than its title (plus room for the sort arrow)."""
-        title = self.headerItem().text(index)
-        return self.header().fontMetrics().horizontalAdvance(title) + 34
+        """A column is never narrower than its title. Qt keeps room for the sort arrow in every
+        title; only the sorted column shows it, so the others leave it out."""
+        header = self.header()
+        if index == header.sortIndicatorSection():
+            width = header.sectionSizeHint(index)
+        else:
+            header.setSortIndicatorShown(False)
+            width = header.sectionSizeHint(index)
+            header.setSortIndicatorShown(True)
+        # Windows' own header draws a little wider than Qt measures (the column line, bolder
+        # text): a few pixels more keep the last letter.
+        return width + 6
 
     def refit_columns(self) -> None:
         """Another list opens: widths dragged by hand for the old one's names don't apply."""
@@ -493,13 +503,7 @@ class HostTable(QTreeWidget):
         """Each column's widest text (up to 260 px, never narrower than its title), kept so
         resizing the window doesn't measure every row again."""
         self._content = {
-            column: max(
-                min(
-                    max(self.sizeHintForColumn(column), self.header().sectionSizeHint(column)),
-                    260,
-                ),
-                self.minimum_width(column),
-            )
+            column: max(min(self.sizeHintForColumn(column), 260), self.minimum_width(column))
             for column in range(self.columnCount())
             if not self.isColumnHidden(column)
         }

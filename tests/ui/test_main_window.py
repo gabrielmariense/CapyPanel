@@ -276,3 +276,12 @@ def test_right_click_menus_dont_pile_up(
         window._group_menu(QPoint(5, 5))
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
     assert len(window.findChildren(QMenu)) == before
+
+
+def test_only_the_sorted_column_keeps_room_for_the_sort_arrow(qapp: QApplication) -> None:
+    table = _table(qapp, _hosts(("PC 1", "10.0.0.1")))
+    unsorted = table.minimum_width(table.STATUS)
+    table.sortByColumn(table.STATUS, Qt.SortOrder.AscendingOrder)
+    assert table.minimum_width(table.STATUS) > unsorted  # the arrow shows there now
+    assert table._content[table.STATUS] == table.minimum_width(table.STATUS)  # measured again
+    table.close()
