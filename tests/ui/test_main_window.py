@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QApplication, QMenu
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.locations import recent_lists
-from capypanel.core.hosts.model import HostList
+from capypanel.core.hosts.model import Host, HostList
 from capypanel.ui.hosts import HostDialog, group_choices
 from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.host_views import HostTable
@@ -140,12 +140,19 @@ def test_host_dialog_cleans_values_and_shows_group_paths(qapp: QApplication) -> 
     assert (values.name, values.group, values.tags) == ("PC-9", finance.id, ("kiosk", "floor-3"))
 
 
+def _drag(monkeypatch: pytest.MonkeyPatch, table: HostTable, column: int, width: int) -> None:
+    """A column's edge dragged with the mouse (a plain resize isn't a drag)."""
+    monkeypatch.setattr(QApplication, "mouseButtons", lambda: Qt.MouseButton.LeftButton)
+    table.header().resizeSection(column, width)
+    monkeypatch.undo()
+
+
 def test_columns_keep_their_title_visible_and_can_be_hidden(
-    window: MainWindow, office: Path
+    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.open_list(office)
     table = window.table
-    table.header().resizeSection(table.USER, 5)  # dragged almost shut
+    _drag(monkeypatch, table, table.USER, 5)  # almost shut
     assert table.columnWidth(table.USER) >= table.minimum_width(table.USER) > 5
     table._show_column(table.USER, False)
     assert table.isColumnHidden(table.USER)
@@ -157,28 +164,67 @@ def test_columns_keep_their_title_visible_and_can_be_hidden(
     reopened.close()
 
 
-def test_the_last_column_fits_the_rows_shown_now(qapp: QApplication) -> None:
+def _hosts(*names_and_addresses: tuple[str, str]) -> tuple[Host, ...]:
     hl, ward = HostList().add_group("Ward")
-    hl, _ = hl.add_host("PC 0", ward.id, address="a-very-long-name.branch.example.internal")
-    for i in range(1, 5):
-        hl, _ = hl.add_host(f"PC {i}", ward.id, address=f"PC-544-{i:07}")
+    for name, address in names_and_addresses:
+        hl, _ = hl.add_host(name, ward.id, address=address)
+    return hl.hosts
+
+
+def _table(qapp: QApplication, hosts: tuple[Host, ...]) -> HostTable:
     table = HostTable()
-    table.set_hidden_columns(["tags", "notes"])  # Address is the last column shown
-    table.show_hosts(hl.hosts, {})  # the first list: columns fitted to its long address
-    table.show_hosts(hl.hosts[1:], {})  # another list, short addresses only
-    table.resize(900, 300)
+    table.set_hidden_columns(["tags", "notes"])
+    table.show_hosts(hosts, {})
+    table.resize(1200, 300)
     table.show()
     qapp.processEvents()
-    frame = table.width() - table.viewport().width()  # each theme frames the table its own way
-    fits = frame + sum(table.columnWidth(c) for c in (0, table.STATUS, table.USER))
-    fits += table.sizeHintForColumn(table.ADDRESS)
-    table.resize(fits + 2, 300)  # the short addresses still fit: no scroll bar
+    return table
+
+
+def _fit_view(qapp: QApplication, table: HostTable, view: int) -> None:
+    """Resized so its rows have `view` px (each theme frames the table its own way)."""
+    table.resize(view + table.width() - table.viewport().width(), 300)
     qapp.processEvents()
-    assert not table.horizontalScrollBar().isVisible()
-    table.resize(fits - 4, 300)  # a letter would be cut: the scroll bar shows instead
-    qapp.processEvents()
+
+
+def test_columns_give_back_their_room_before_the_scroll_bar_shows(qapp: QApplication) -> None:
+    names = ((f"Geriatrics - Corridor {i:02}", f"PC-544-{i:07}") for i in range(5))
+    table = _table(qapp, _hosts(*names))
+    shown = (0, table.STATUS, table.USER, table.ADDRESS)
+    content = {c: table._content[c] for c in shown}  # each one's widest text, or its title
+    _fit_view(qapp, table, sum(content.values()) + 2)
+    assert not table.horizontalScrollBar().isVisible()  # every column shrank, nothing is cut
+    assert all(table.columnWidth(c) >= content[c] for c in shown)
+    _fit_view(qapp, table, sum(content.values()) - 4)  # something would be cut: scroll instead
     assert table.horizontalScrollBar().isVisible()
     table.close()
+
+
+def test_columns_follow_the_rows_shown_now(qapp: QApplication) -> None:
+    hosts = _hosts(("PC 0", "a-very-long-name.branch.example.internal"), ("PC 1", "10.0.0.1"))
+    table = _table(qapp, hosts)
+    long = table.columnWidth(table.ADDRESS)
+    table.show_hosts(hosts[1:], {})  # a group, or another list, with short addresses only
+    _fit_view(qapp, table, sum(table._content.values()) + 2)
+    assert table.columnWidth(table.ADDRESS) < long
+    table.close()
+
+
+def test_a_dragged_width_stays_until_another_list_opens(
+    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window.open_list(office)
+    table = window.table
+    _drag(monkeypatch, table, 0, 400)
+    window.resize(window.width() - 50, window.height())  # the window changes, the drag stays
+    qapp = QApplication.instance()
+    assert qapp is not None
+    qapp.processEvents()
+    assert table.columnWidth(0) == 400
+    other = office.with_name("other.json")
+    other.write_bytes(office.read_bytes())
+    window.open_list(other)
+    assert table.columnWidth(0) < 400
 
 
 def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: MainWindow, office: Path) -> None:
@@ -230,13 +276,3 @@ def test_right_click_menus_dont_pile_up(
         window._group_menu(QPoint(5, 5))
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
     assert len(window.findChildren(QMenu)) == before
-
-
-def test_opening_another_list_fits_the_columns_again(window: MainWindow, office: Path) -> None:
-    window.open_list(office)
-    table = window.table
-    table.header().resizeSection(0, 400)  # dragged wide for this list
-    other = office.with_name("other.json")
-    other.write_bytes(office.read_bytes())
-    window.open_list(other)
-    assert table.columnWidth(0) < 400
