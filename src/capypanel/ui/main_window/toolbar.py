@@ -60,7 +60,7 @@ class RefreshPanel(QFrame):
         self.retranslate()
 
     def retranslate(self) -> None:
-        self._check_title.setText(_("Check every host shown"))
+        self._check_title.setText(_("Refresh every host shown"))
         self.status_box.setText(_("&Status"))
         self.users_box.setText(_("&Logged-on users"))
         self.run_button.setText(_("&Run"))
@@ -141,7 +141,7 @@ class MainToolBar(QToolBar):
         )
         self.refresh_button.setText(gap + _("Refresh"))
         self.refresh_button.setToolTip(
-            _("Check every host shown; right-click to run several checks at once")
+            _("Refresh every host shown; right-click to choose what it refreshes")
         )
         self.refresh_status.setText(_("&Status"))
         self.refresh_users.setText(_("&Logged-on users"))

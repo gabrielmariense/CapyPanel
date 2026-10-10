@@ -382,7 +382,7 @@ class HostTable(QTreeWidget):
         return hosts_mime([item.data(0, ROLE_ID) for item in items])
 
     def retranslate(self) -> None:
-        self.setHeaderLabels([_("Computer"), _("Status"), _("User"), _("Address"), _("Tags")])
+        self.setHeaderLabels([_("Name"), _("Status"), _("User"), _("Address"), _("Tags")])
 
     def set_search(self, needle: str) -> None:
         """Marks the searched text, and shows where each host lives while searching."""

@@ -199,12 +199,12 @@ def users_text(
     if error is not None:
         return {
             Reason.UNREACHABLE: _("Unreachable"),
-            Reason.NOT_ADMIN: _("Not an admin there"),
+            Reason.NOT_ADMIN: _("No admin rights"),
             Reason.REJECTED: _("Account rejected"),
             Reason.OTHER: _("Couldn't read"),
         }[error.reason]
     if not sessions:
-        return _("Nobody")
+        return _("No one")
     names = []
     for session in by_state(sessions):
         name = user_name(session, full=full)

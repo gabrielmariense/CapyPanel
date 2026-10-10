@@ -35,9 +35,9 @@ def access_text(access: Access, kind: ListKind) -> str:
     missing = _("Created when opened") if kind is not ListKind.SHARED else _("File not found")
     return {
         Access.READ_ONLY: _("Read-only"),
-        Access.READ_WRITE: _("Read-write"),
+        Access.READ_WRITE: _("Read/write"),
         Access.MISSING: missing,
-        Access.UNTRUSTED: _("Made by another user: not used"),
+        Access.UNTRUSTED: _("Not used: made by another user"),
     }[access]
 
 
@@ -64,7 +64,7 @@ class HostListsView(QWidget):
         self.tree = QTreeWidget()
         self.tree.setObjectName("grid")  # lines between rows and columns
         self.tree.setRootIsDecorated(False)
-        self.tree.setHeaderLabels([_("List"), _("Kind"), _("Access")])  # the path: tooltip
+        self.tree.setHeaderLabels([_("List"), _("Type"), _("Access")])  # the path: tooltip
         header = self.tree.header()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)  # drag to resize
         header.setStretchLastSection(True)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 18:18-0300\n"
+"POT-Creation-Date: 2026-10-10 19:25-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -39,6 +39,9 @@ msgid "&Connect"
 msgstr ""
 
 msgid "&Copy current list to…"
+msgstr ""
+
+msgid "&Credentials:"
 msgstr ""
 
 msgid "&Delete…"
@@ -95,9 +98,6 @@ msgstr ""
 msgid "&Logged-on users"
 msgstr ""
 
-msgid "&Login:"
-msgstr ""
-
 msgid "&Manage groups…"
 msgstr ""
 
@@ -126,6 +126,9 @@ msgid "&Open on startup:"
 msgstr ""
 
 msgid "&Password:"
+msgstr ""
+
+msgid "&Refresh the status of the hosts shown every"
 msgstr ""
 
 msgid "&Remove from the list"
@@ -271,21 +274,6 @@ msgstr ""
 msgid "Change path…"
 msgstr ""
 
-msgid "Check"
-msgstr ""
-
-msgid "Check every host shown"
-msgstr ""
-
-msgid "Check every host shown; right-click to run several checks at once"
-msgstr ""
-
-msgid "Check logged-on users"
-msgstr ""
-
-msgid "Check the &status of the hosts shown every"
-msgstr ""
-
 #, python-brace-format
 msgid "Check who is logged on to {n} hosts?"
 msgstr ""
@@ -309,9 +297,6 @@ msgid "Choose a {tool} settings file"
 msgstr ""
 
 msgid "Click to copy"
-msgstr ""
-
-msgid "Computer"
 msgstr ""
 
 msgid "Connect"
@@ -577,9 +562,6 @@ msgid ""
 "again instead of trying it on the others, so the account isn't locked."
 msgstr ""
 
-msgid "Kind"
-msgstr ""
-
 msgid "List"
 msgstr ""
 
@@ -603,16 +585,10 @@ msgstr ""
 msgid "Logs: one per user, named after the account."
 msgstr ""
 
-msgid "Made by another user: not used"
-msgstr ""
-
 msgid "Manage groups"
 msgstr ""
 
 msgid "Manual connection"
-msgstr ""
-
-msgid "Many connections"
 msgstr ""
 
 msgid "Move &down"
@@ -640,6 +616,9 @@ msgstr ""
 msgid "N&otes:"
 msgstr ""
 
+msgid "Name"
+msgstr ""
+
 #, python-brace-format
 msgid "Name of the new group inside “{group}”:"
 msgstr ""
@@ -665,25 +644,22 @@ msgstr ""
 msgid "No address"
 msgstr ""
 
+msgid "No admin rights"
+msgstr ""
+
 msgid "No computer by that name or address was found on the network."
 msgstr ""
 
 msgid "No host list is open."
 msgstr ""
 
+msgid "No one"
+msgstr ""
+
 msgid "No one logged on"
 msgstr ""
 
-msgid "Nobody"
-msgstr ""
-
-msgid "Not an admin there"
-msgstr ""
-
 msgid "Not checked"
-msgstr ""
-
-msgid "Not checked yet: use Refresh"
 msgstr ""
 
 msgid "Not checked: use Refresh"
@@ -694,6 +670,9 @@ msgid "Not opened: {names}"
 msgid_plural "Not opened ({n}): {names}"
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "Not used: made by another user"
+msgstr ""
 
 msgid "Notes"
 msgstr ""
@@ -722,6 +701,9 @@ msgid "Open &Settings"
 msgstr ""
 
 msgid "Open folder"
+msgstr ""
+
+msgid "Open many remote screens?"
 msgstr ""
 
 #, python-brace-format
@@ -774,10 +756,19 @@ msgstr ""
 msgid "Read-only"
 msgstr ""
 
-msgid "Read-write"
+msgid "Read/write"
 msgstr ""
 
 msgid "Refresh"
+msgstr ""
+
+msgid "Refresh every host shown"
+msgstr ""
+
+msgid "Refresh every host shown; right-click to choose what it refreshes"
+msgstr ""
+
+msgid "Refresh logged-on users"
 msgstr ""
 
 msgid "Reload the list"
@@ -890,7 +881,7 @@ msgstr ""
 msgid "Something went wrong. The details were saved to the app log."
 msgstr ""
 
-msgid "Sorts every level by name, once; you can rearrange after"
+msgid "Sorts every level by name, once; you can rearrange them after"
 msgstr ""
 
 msgid "Startup"
@@ -1072,6 +1063,9 @@ msgstr ""
 msgid "Top level"
 msgstr ""
 
+msgid "Type"
+msgstr ""
+
 msgid "Type a tag and press Enter"
 msgstr ""
 
@@ -1086,7 +1080,7 @@ msgid "Unknown credential method “{method}”."
 msgstr ""
 
 #, python-brace-format
-msgid "Unknown login “{login}”."
+msgid "Unknown credential type “{login}”."
 msgstr ""
 
 #, python-brace-format
@@ -1235,10 +1229,10 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
-"{n} computer didn't let your Windows login see who is logged on. Use "
+"{n} computer didn't let your Windows account see who is logged on. Use "
 "another account, such as an administrator of those computers?"
 msgid_plural ""
-"{n} computers didn't let your Windows login see who is logged on. Use "
+"{n} computers didn't let your Windows account see who is logged on. Use "
 "another account, such as an administrator of those computers?"
 msgstr[0] ""
 msgstr[1] ""

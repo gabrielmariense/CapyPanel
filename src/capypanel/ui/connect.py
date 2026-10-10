@@ -375,7 +375,7 @@ class Connector:
     def _confirm_many(self, count: int) -> bool:
         answer = QMessageBox.question(
             self._parent,
-            _("Many connections"),
+            _("Open many remote screens?"),
             ngettext(
                 "Open {n} remote screen at once?", "Open {n} remote screens at once?", count
             ).format(n=count),

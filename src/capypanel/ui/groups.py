@@ -319,7 +319,9 @@ class ManageGroupsDialog(QDialog):
         self.down_button = QPushButton(_("Move &down"))
         self.move_button = QPushButton(_("Move &to"))
         self.sort_button = QPushButton(_("&Sort A–Z"))
-        self.sort_button.setToolTip(_("Sorts every level by name, once; you can rearrange after"))
+        self.sort_button.setToolTip(
+            _("Sorts every level by name, once; you can rearrange them after")
+        )
         buttons = QVBoxLayout()
         for button in (self.up_button, self.down_button, self.move_button, self.sort_button):
             button.setAutoDefault(False)

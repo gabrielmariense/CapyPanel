@@ -100,7 +100,7 @@ def from_data(data: object) -> ConnectionProfile:
             )
     login = data.get("login", "password")
     if login not in LOGINS:
-        raise ProfileError(_("Unknown login “{login}”.").format(login=login))
+        raise ProfileError(_("Unknown credential type “{login}”.").format(login=login))
     options = data.get("options", [])
     if not isinstance(options, list) or not all(isinstance(o, str) for o in options):
         raise ProfileError(_("The profile's “options” must be a list of option ids."))

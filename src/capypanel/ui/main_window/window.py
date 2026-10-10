@@ -1199,9 +1199,9 @@ class MainWindow(QMainWindow):
             and len(targets) > MANY_USER_CHECKS
             and not confirm(
                 self,
-                _("Check logged-on users"),
+                _("Refresh logged-on users"),
                 _("Check who is logged on to {n} hosts?").format(n=len(targets)),
-                _("Check"),
+                _("Refresh"),
             )
         ):
             return
@@ -1310,9 +1310,9 @@ class MainWindow(QMainWindow):
             ).format(host=first, user=account.user)
         elif account is None:
             text = ngettext(
-                "{n} computer didn't let your Windows login see who is logged on. Use another "
+                "{n} computer didn't let your Windows account see who is logged on. Use another "
                 "account, such as an administrator of those computers?",
-                "{n} computers didn't let your Windows login see who is logged on. Use another "
+                "{n} computers didn't let your Windows account see who is logged on. Use another "
                 "account, such as an administrator of those computers?",
                 len(self._refused),
             ).format(n=len(self._refused))
@@ -1342,7 +1342,7 @@ class MainWindow(QMainWindow):
     def _cells(self, host_id: str) -> Cells:
         status = self._status_found.get(host_id)
         users = self._users_found.get(host_id)
-        unchecked = ("", _("Not checked yet: use Refresh"), None, True)
+        unchecked = ("", _("Not checked: use Refresh"), None, True)
         status_cell: tuple[str, str, Any, bool] = unchecked
         if status is not None:
             state, when, answered = status
@@ -1433,7 +1433,7 @@ class MainWindow(QMainWindow):
             self._add_profile_menu(
                 menu, {h.profile for h in hosts}, follow, lambda p: self.set_hosts_profile(ids, p)
             )
-        section(menu, _("Check"))
+        section(menu, _("Refresh"))
         menu.addActions([a.check_status, a.check_users])
         section(menu, _("Copy"))
         menu.addActions([a.copy_address, a.copy_name])
@@ -1477,7 +1477,7 @@ class MainWindow(QMainWindow):
             )
             # The group's hosts, including those in the groups inside it.
             hosts = list(self._doc.hosts.hosts_in(group.id))
-            section(menu, _("Check"))
+            section(menu, _("Refresh"))
             for text, status, users in (
                 (_("&Status"), True, False),
                 (_("&Logged-on users"), False, True),
