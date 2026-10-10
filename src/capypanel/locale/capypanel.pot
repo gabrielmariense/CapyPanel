@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 19:25-0300\n"
+"POT-Creation-Date: 2026-10-10 20:18-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -228,6 +228,9 @@ msgid "Address"
 msgstr ""
 
 msgid "All hosts"
+msgstr ""
+
+msgid "Already in the list"
 msgstr ""
 
 #, python-brace-format
@@ -644,6 +647,9 @@ msgstr ""
 msgid "No address"
 msgstr ""
 
+msgid "No address, and the name isn't a computer name"
+msgstr ""
+
 msgid "No admin rights"
 msgstr ""
 
@@ -653,10 +659,16 @@ msgstr ""
 msgid "No host list is open."
 msgstr ""
 
+msgid "No name"
+msgstr ""
+
 msgid "No one"
 msgstr ""
 
 msgid "No one logged on"
+msgstr ""
+
+msgid "Not a computer name or IP address"
 msgstr ""
 
 msgid "Not checked"
@@ -817,6 +829,9 @@ msgid "Removing a list from here never deletes its file."
 msgstr ""
 
 msgid "Rename group"
+msgstr ""
+
+msgid "Repeated in this import"
 msgstr ""
 
 msgid "Save a copy"

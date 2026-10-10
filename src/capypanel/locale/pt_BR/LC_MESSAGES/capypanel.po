@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 19:25-0300\n"
+"POT-Creation-Date: 2026-10-10 20:18-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -230,6 +230,9 @@ msgstr "Endereço"
 
 msgid "All hosts"
 msgstr "Todos os hosts"
+
+msgid "Already in the list"
+msgstr "Já está na lista"
 
 #, python-brace-format
 msgid "An item is missing the “{key}” field or has an invalid value for it."
@@ -632,6 +635,9 @@ msgstr "Novo nome:"
 msgid "No address"
 msgstr "Sem endereço"
 
+msgid "No address, and the name isn't a computer name"
+msgstr "Sem endereço, e o nome não é um nome de computador"
+
 msgid "No admin rights"
 msgstr "Sem direitos de administrador"
 
@@ -641,11 +647,17 @@ msgstr "Nenhum computador com esse nome ou endereço foi encontrado na rede."
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
 
+msgid "No name"
+msgstr "Sem nome"
+
 msgid "No one"
 msgstr "Ninguém"
 
 msgid "No one logged on"
 msgstr "Ninguém logado"
+
+msgid "Not a computer name or IP address"
+msgstr "Não é um nome de computador nem um endereço IP"
 
 msgid "Not checked"
 msgstr "Não verificado"
@@ -801,6 +813,9 @@ msgstr "Remover uma lista daqui nunca exclui o arquivo dela."
 
 msgid "Rename group"
 msgstr "Renomear grupo"
+
+msgid "Repeated in this import"
+msgstr "Repetido nesta importação"
 
 msgid "Save a copy"
 msgstr "Salvar uma cópia"
