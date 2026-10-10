@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 20:33-0300\n"
+"POT-Creation-Date: 2026-10-10 20:42-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,6 +25,15 @@ msgstr ""
 
 msgid "&Add existing…"
 msgstr ""
+
+msgid "&Add hosts"
+msgstr ""
+
+#, python-brace-format
+msgid "&Add {n} host"
+msgid_plural "&Add {n} hosts"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "&Address"
 msgstr ""
@@ -53,6 +62,9 @@ msgstr ""
 msgid "&Discard changes"
 msgstr ""
 
+msgid "&Edit cell"
+msgstr ""
+
 msgid "&Edit host…"
 msgstr ""
 
@@ -71,6 +83,9 @@ msgstr ""
 msgid "&Forget typed passwords"
 msgstr ""
 
+msgid "&Formats…"
+msgstr ""
+
 msgid "&Group:"
 msgstr ""
 
@@ -78,6 +93,9 @@ msgid "&Groups pane"
 msgstr ""
 
 msgid "&Host lists…"
+msgstr ""
+
+msgid "&Import hosts…"
 msgstr ""
 
 msgid "&Inventory"
@@ -90,6 +108,9 @@ msgid "&Language"
 msgstr ""
 
 msgid "&Language:"
+msgstr ""
+
+msgid "&Leave out of the import"
 msgstr ""
 
 msgid "&Locate…"
@@ -120,6 +141,9 @@ msgid "&New…"
 msgstr ""
 
 msgid "&Open"
+msgstr ""
+
+msgid "&Open a CSV file…"
 msgstr ""
 
 msgid "&Open on startup:"
@@ -188,7 +212,17 @@ msgstr ""
 msgid "A host entry isn't an object."
 msgstr ""
 
+msgid ""
+"A name and an address on each line, with a comma between them, or a tab, "
+"as Excel copies two columns. The address can be left out only when the "
+"name is the computer's name on the network, like PC-0142: CapyPanel then "
+"connects by that name."
+msgstr ""
+
 msgid "A name is required."
+msgstr ""
+
+msgid "A new group: the import creates it"
 msgstr ""
 
 msgid "A tool definition must be a JSON object."
@@ -212,6 +246,9 @@ msgstr ""
 msgid "Add &host…"
 msgstr ""
 
+msgid "Add a &row below"
+msgstr ""
+
 msgid "Add a host list"
 msgstr ""
 
@@ -223,6 +260,12 @@ msgstr ""
 
 msgid "Added"
 msgstr ""
+
+#, python-brace-format
+msgid "Added {n} host."
+msgid_plural "Added {n} hosts."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Address"
 msgstr ""
@@ -260,6 +303,12 @@ msgid "Broken placeholder in “{arg}”."
 msgstr ""
 
 msgid "C&hoose file…"
+msgstr ""
+
+msgid "CSV files (*.csv *.txt);;All files (*)"
+msgstr ""
+
+msgid "CSV with headers"
 msgstr ""
 
 msgid "CapyPanel"
@@ -441,6 +490,11 @@ msgstr ""
 msgid "Disconnected"
 msgstr ""
 
+msgid ""
+"Double-click a cell, or press F2, to change it; the list above follows. "
+"Right-click for more."
+msgstr ""
+
 msgid "Download"
 msgstr ""
 
@@ -465,13 +519,30 @@ msgstr ""
 msgid "Edit host"
 msgstr ""
 
+msgid "Edit the list here"
+msgstr ""
+
+msgid ""
+"Editing in the table rewrites the list above as CSV with a header row "
+"(name, address, group, tags, notes), so the two always match. Continue?"
+msgstr ""
+
 msgid "File not found"
 msgstr ""
 
 msgid "Find automatically"
 msgstr ""
 
+msgid ""
+"For example:\n"
+"name,address\n"
+"PC-0142,10.0.0.42"
+msgstr ""
+
 msgid "Forgets it here; the file itself is never deleted"
+msgstr ""
+
+msgid "Formats CapyPanel can import"
 msgstr ""
 
 msgid "From each host's group"
@@ -524,6 +595,9 @@ msgstr ""
 msgid "Hostname or IP address; leave blank to use the name"
 msgstr ""
 
+msgid "Hosts with no group &go to:"
+msgstr ""
+
 msgid "Hosts with no profile &use:"
 msgstr ""
 
@@ -534,6 +608,13 @@ msgid "Idle"
 msgstr ""
 
 msgid "If that list can't be opened: the default list, then your personal list."
+msgstr ""
+
+#, python-brace-format
+msgid "Ignored columns: {names}."
+msgstr ""
+
+msgid "Import hosts"
 msgstr ""
 
 #, python-brace-format
@@ -629,6 +710,9 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
+msgid "Name and address"
+msgstr ""
+
 #, python-brace-format
 msgid "Name of the new group inside “{group}”:"
 msgstr ""
@@ -644,6 +728,12 @@ msgstr ""
 
 msgid "New empty host list"
 msgstr ""
+
+#, python-brace-format
+msgid "New group: {names}."
+msgid_plural "New groups: {names}."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "New host list"
 msgstr ""
@@ -701,6 +791,9 @@ msgid ""
 "not on the network, or a firewall blocks everything."
 msgstr ""
 
+msgid "Nothing changes until you click Add."
+msgstr ""
+
 msgid "Nothing changes until you click OK."
 msgstr ""
 
@@ -717,6 +810,9 @@ msgid "Only ping and ports, never logged-on users, so no account is used."
 msgstr ""
 
 msgid "Open &Settings"
+msgstr ""
+
+msgid "Open a CSV file"
 msgstr ""
 
 msgid "Open folder"
@@ -757,6 +853,9 @@ msgstr ""
 msgid "Password for {profile}"
 msgstr ""
 
+msgid "Paste a list below, or"
+msgstr ""
+
 msgid "Personal"
 msgstr ""
 
@@ -770,6 +869,9 @@ msgid "Profile"
 msgstr ""
 
 msgid "Programs (*.exe)"
+msgstr ""
+
+msgid "Put in &group"
 msgstr ""
 
 msgid "Read-only"
@@ -860,7 +962,19 @@ msgstr ""
 msgid "Select a host to see its details."
 msgstr ""
 
+#, python-brace-format
+msgid "Selected row ({n})"
+msgid_plural "Selected rows ({n})"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Set &tags…"
+msgstr ""
+
 msgid "Set in the settings file"
+msgstr ""
+
+msgid "Set tags"
 msgstr ""
 
 msgid "Settings"
@@ -927,7 +1041,13 @@ msgstr ""
 msgid "T&oolbar"
 msgstr ""
 
+msgid "Table"
+msgstr ""
+
 msgid "Tags"
+msgstr ""
+
+msgid "Tags for the selected rows, separated by ;"
 msgstr ""
 
 msgid "That group doesn't exist."
@@ -988,6 +1108,14 @@ msgid "The file has two items with the same ID."
 msgstr ""
 
 msgid "The file is too big to be viewer settings."
+msgstr ""
+
+msgid ""
+"The first line must name the columns: name, address, group, tags and "
+"notes, in any order, in English or Portuguese; other columns are ignored."
+" A group is a path with / between its levels; tags are separated by ;. A "
+"CSV file always needs this header row. CSV export writes this format, so "
+"an exported list can be imported back."
 msgstr ""
 
 #, python-brace-format
@@ -1135,6 +1263,9 @@ msgstr ""
 msgid "Viewer settings:"
 msgstr ""
 
+msgid "Warning"
+msgstr ""
+
 msgid "Where CapyPanel keeps its files"
 msgstr ""
 
@@ -1250,6 +1381,12 @@ msgid "{name} (in use)"
 msgstr ""
 
 #, python-brace-format
+msgid "{n} can't be added."
+msgid_plural "{n} can't be added."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid ""
 "{n} computer didn't let your Windows account see who is logged on. Use "
 "another account, such as an administrator of those computers?"
@@ -1312,6 +1449,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} host will be added."
+msgid_plural "{n} hosts will be added."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} not checked"
 msgid_plural "{n} not checked"
 msgstr[0] ""
@@ -1338,6 +1481,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} selected"
 msgid_plural "{n} selected"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} skipped."
+msgid_plural "{n} skipped."
 msgstr[0] ""
 msgstr[1] ""
 

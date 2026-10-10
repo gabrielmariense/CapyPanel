@@ -61,6 +61,7 @@ from capypanel.ui.hosts import (
     list_file_filter,
 )
 from capypanel.ui.icons import STATUS_COLORS, dot_icon
+from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.details import DetailsPane, HostDetails
 from capypanel.ui.main_window.host_views import (
@@ -180,6 +181,8 @@ class MainWindow(QMainWindow):
         self._inventory_menu.addActions([a.add_host, a.add_group])
         self._inventory_menu.addSeparator()
         self._inventory_menu.addAction(a.manage_groups)
+        self._inventory_menu.addSeparator()
+        self._inventory_menu.addAction(a.import_hosts)
 
         self._connect_menu = bar.addMenu("")
         self._connect_menu.addActions([a.manual_connect, a.connection_profiles])
@@ -251,6 +254,7 @@ class MainWindow(QMainWindow):
         a.add_host.triggered.connect(self.add_host)
         a.add_group.triggered.connect(self.add_group)
         a.manage_groups.triggered.connect(self.manage_groups)
+        a.import_hosts.triggered.connect(self.import_hosts)
         a.edit.triggered.connect(self.edit_selected)
         a.remove.triggered.connect(self.remove_selected)
         # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C) live here.
@@ -823,6 +827,20 @@ class MainWindow(QMainWindow):
             self._commit(doc.hosts.set_hosts_profile(host_ids, profile))
             self._selection_changed()
 
+    def import_hosts(self) -> None:
+        """Inventory > Import hosts…: many hosts at once; nothing is saved until Add."""
+        doc = self._writable()
+        if doc is None:
+            return
+        first = doc.hosts.children(None)
+        group = self.nav.selected_group_id() or (first[0].id if first else "")
+        dialog = ImportDialog(self, doc.hosts, group)
+        new = dialog.imported_list() if dialog.exec() == QDialog.DialogCode.Accepted else None
+        if new is not None and self._commit(new):
+            added = dialog.added()
+            note = ngettext("Added {n} host.", "Added {n} hosts.", added).format(n=added)
+            self.statusBar().showMessage(note, 10_000)
+
     def manage_groups(self) -> None:
         """Inventory > Manage groups…: reorder and nest every group at once."""
         doc = self._writable()
@@ -1143,6 +1161,7 @@ class MainWindow(QMainWindow):
         a = self.commands
         a.add_host.setEnabled(writable)
         a.add_group.setEnabled(writable)
+        a.import_hosts.setEnabled(writable)
         self.nav.add_group_button.setEnabled(writable)
         a.edit.setEnabled(writable and (selected == 1 or group_picked))
         a.remove.setEnabled(writable and (selected > 0 or group_picked))

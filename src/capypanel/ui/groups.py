@@ -3,7 +3,7 @@ groups….
 Groups show in the list's own order (not sorted), so a team can arrange them as it likes;
 "Sort A–Z" is a one-time button."""
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 
 from PySide6.QtCore import QMimeData, QPoint, QRect, Qt, Signal
 from PySide6.QtGui import (
@@ -279,31 +279,53 @@ def fill_move_menu(
     is ticked and tinted. `apply` gets the new parent's id, or None for the top level."""
     group = host_list.group(group_id)
     current = group.parent if group else None
-    inside = host_list.subtree(group_id)  # it can't go into itself or its own groups
     exclusive = QActionGroup(menu)
+    top = menu.add_row(_("Top level"))
+    _tick(menu, exclusive, top, current is None)
+    if current is not None:
+        top.triggered.connect(lambda _checked=False: apply(None))
+    if host_list.groups:
+        menu.addSeparator()
+    # It can't go into itself or its own groups.
+    fill_group_menu(menu, host_list, apply, current=current, skip=host_list.subtree(group_id))
+    for item in menu.actions():
+        if item.isCheckable():
+            exclusive.addAction(item)
 
-    def add(text: str, target: str | None, branches: tuple[bool, ...] = ()) -> None:
-        item = menu.add_row(text, branches)
-        item.setCheckable(True)
-        item.setChecked(target == current)
-        if target == current:
-            menu.marked = item
-        exclusive.addAction(item)
-        if target != current:
-            item.triggered.connect(lambda _checked=False: apply(target))
+
+def fill_group_menu(
+    menu: TreeMenu,
+    host_list: HostList,
+    apply: Callable[[str], None],
+    *,
+    current: str | None = None,
+    skip: Iterable[str] = (),
+) -> None:
+    """Every group as a tree (groups in `skip` left out); `current` is ticked and tinted, and
+    picking it does nothing. `apply` gets the picked group's id."""
+    left_out = set(skip)
 
     def walk(parent_id: str | None, branches: tuple[bool, ...]) -> None:
-        children = [c for c in host_list.children(parent_id) if c.id not in inside]
+        children = [c for c in host_list.children(parent_id) if c.id not in left_out]
         for index, child in enumerate(children):
             # Top-level groups have no line; each level below adds one.
             mine = (*branches, index == len(children) - 1) if parent_id else ()
-            add(child.name, child.id, mine)
+            item = menu.add_row(child.name, mine)
+            _tick(menu, None, item, child.id == current)
+            if child.id != current:
+                item.triggered.connect(lambda _checked=False, g=child.id: apply(g))
             walk(child.id, mine)
 
-    add(_("Top level"), None)
-    if host_list.groups:
-        menu.addSeparator()
     walk(None, ())
+
+
+def _tick(menu: TreeMenu, exclusive: QActionGroup | None, item: QAction, ticked: bool) -> None:
+    item.setCheckable(True)
+    item.setChecked(ticked)
+    if ticked:
+        menu.marked = item
+    if exclusive is not None:
+        exclusive.addAction(item)
 
 
 class ManageGroupsDialog(QDialog):

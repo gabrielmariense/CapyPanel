@@ -508,6 +508,9 @@ QPushButton:hover { background: %(raised)s; }
 QPushButton:disabled { color: %(text3)s; }
 QPushButton:default { background: %(button)s; border-color: %(button)s; color: #ffffff; }
 QPushButton:default:hover { background: %(button_hover)s; }
+QPushButton:default:disabled { background: %(raised)s; border-color: %(border)s; color: %(text3)s; }
+/* A button that stays down while its page shows (Import > Formats…). */
+QPushButton:checked { background: %(sel_solid)s; border-color: %(accent)s; color: %(text)s; }
 QGroupBox { border: 1px solid %(border)s; border-radius: %(r)spx; margin-top: 16px;
             padding: 14px 12px 10px 12px; background: %(card)s; }
 QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 4px; color: %(text2)s; }
