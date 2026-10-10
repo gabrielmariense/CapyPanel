@@ -80,8 +80,7 @@ compartilhado nunca é alterado.
 - **Só uma vez:** a seta do botão **Conectar** da barra de ferramentas > **Conectar uma vez com**
   conecta os hosts selecionados com outro perfil, sem alterá-los.
 
-O painel **Informações** mostra o perfil de cada host e de onde ele vem, por exemplo
-"Raspberry Pis (do grupo “Raspberries”)".
+O painel **Detalhes** diz qual perfil cada host acaba usando, em **Conexão**.
 
 Uma lista guarda só o ID do perfil. Quando um host ou grupo cita um perfil que o seu PC não tem,
 ele segue o perfil do grupo (ou o padrão), e o menu do botão direito mostra o que falta como "não

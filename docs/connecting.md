@@ -76,8 +76,7 @@ later, and the shared file is never changed.
 - **Just once:** the arrow on the toolbar's **Connect** button > **Connect once with** connects
   the selected hosts with another profile, without changing them.
 
-The **Information** pane shows each host's profile and where it comes from, e.g.
-"Raspberry Pis (from group “Raspberries”)".
+The **Details** pane names the profile each host ends up using, under **Connection**.
 
 A list stores only the profile's ID. When a host or group names a profile your PC doesn't
 have, it follows its group's profile (or the default) instead, and its right-click menu shows the

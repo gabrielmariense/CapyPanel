@@ -8,7 +8,8 @@ time and saves every edit to it right away.
 - **Groups** nest as deep as you like ("Headquarters › Finance › Floor 3").
 - **Tags** cut across groups ("kiosk", "floor-3"). Click a tag in the left pane to see every host
   that carries it. Tags you've used before are suggested as you type, with their spelling kept.
-- **Notes** hold anything else worth knowing about a host.
+- **Notes** hold anything else worth knowing about a host. They show in the Details pane, and
+  searching always covers them.
 
 A new list starts with one group, **Default group**.
 
@@ -17,14 +18,21 @@ A new list starts with one group, **Default group**.
 Groups keep the order you give them. In the Groups pane:
 
 - drag a group up or down to move it, or drop it onto another group to put it inside;
+- drag a group onto the **Groups** heading, which lights up as you reach it, to move it to the
+  top level;
 - drag selected hosts from the host table onto a group to move them there.
+
+Right-click a group > **Move to** lists **Top level** and every group this one can go into, drawn
+as a tree; the group itself and its own subgroups aren't offered, and where it is now is ticked. A
+group you collapsed stays collapsed as you work, and moving a group into a collapsed one opens the
+way to it, so what you moved stays in sight.
 
 Every change is saved right away. On a read-only list, dragging is off.
 
-**Inventory > Manage groups…** shows the whole tree in a window, with **Move up**, **Move down**
-and **Sort A–Z**, a one-time sort you can rearrange after. Dragging works there too, and nothing
-changes until you click **OK**. Lists made before version 0.13.0 show their groups in the order
-they were created; Sort A–Z puts them in order once.
+**Inventory > Manage groups…** shows the whole tree in a window, with **Move to**, **Move up**,
+**Move down** and **Sort A–Z**, a one-time sort you can rearrange after. Dragging works there too,
+and nothing changes until you click **OK**. Lists made before version 0.13.0 show their groups in
+the order they were created; Sort A–Z puts them in order once.
 
 ## Removing a group
 
@@ -40,9 +48,9 @@ A top-level group can't send its own hosts up, because every host needs a group 
 the whole list rather than a group. The move is off in that case, with a note saying so; move
 those hosts into another group first to keep them.
 
-## Three kinds of list
+## Three types of list
 
-| Kind | Where it lives | Who can change it |
+| Type | Where it lives | Who can change it |
 |---|---|---|
 | **Default** | `C:\ProgramData\CapyPanel\hosts.json`, shared by everyone on the PC | Whoever Windows lets write it: whoever created it, and administrators. Everyone else opens it read-only. Created empty when it's missing |
 | **Personal** | Your own CapyPanel folder (see [Settings and files](settings-and-files.md)) | Only you. Created the first time it's needed |
@@ -53,12 +61,12 @@ still be browsed and connected to; only editing is off.
 
 Any user can add files to ProgramData, so **a default list made by another user (not an
 administrator) isn't opened**: it could send your password to the wrong computer. The Host lists
-window shows it as "Made by another user: not used", and an administrator can replace or delete
+window shows it as "Not used: made by another user", and an administrator can replace or delete
 it.
 
 ## The Host lists window
 
-**File > Host lists…** (Ctrl+O) shows every list you've opened or added, with its kind and
+**File > Host lists…** (Ctrl+O) shows every list you've opened or added, with its type and
 whether you can edit it. The list in use is bold and marked "(in use)"; hover over a list to see
 where it is. Double-click a list, or select it and click **Open**, to switch to it.
 

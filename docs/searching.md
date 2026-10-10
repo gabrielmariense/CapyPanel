@@ -6,20 +6,22 @@ the box.
 
 ## What it searches
 
-Only what you can see: the computer name always, the address while the **Address** column is
-shown, and logged-on users while the **User** column is shown. The box says which, for example
-"Search name, address, user". Showing or hiding a column searches again. Tags and notes aren't
-searched.
+The box lists exactly what it covers, "Search name, address, user, tags, notes" when every column
+is shown:
 
-Users come from the last **Logged-on users** check (see [Checking hosts](checking.md)), so a host
-that hasn't been checked isn't found by who is on it.
+- the computer **name**, always;
+- the **address**, the logged-on **users** and the **tags**, each one while its column is shown;
+- the **notes**, always, even though they have no column of their own.
+
+Hiding or showing a column searches again. Users come from the last **Logged-on users** check (see
+[Checking hosts](checking.md)), so a host that hasn't been checked isn't found by who is on it.
 
 ## While you search
 
-- The results come from the whole list, so a **Group** column appears after **Computer**, with
-  each host's full group path ("Headquarters › Finance"). It isn't in the column chooser.
-- What you typed is marked like a highlighter in the Computer, User and Address columns.
-- Nothing is picked in the left pane.
+- What you typed is marked like a highlighter wherever it matched: in the table's columns, and in
+  the notes in the Details pane.
+- The results come from the whole list, so nothing is picked in the left pane. The Details pane
+  tells you which group the selected host is in.
 - The status bar adds **N found**.
 - **Refresh** checks only the results, and automatic status only the hosts shown.
 

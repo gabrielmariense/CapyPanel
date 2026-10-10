@@ -16,10 +16,11 @@ qualquer um deles pela Área de Trabalho Remota ou pelo visualizador VNC que voc
 - Usuários logados
 - Pesquisa
 - Barra de ferramentas redesenhada
+- Mover grupos
 
 ### Em desenvolvimento
 
-- Mover grupos
+- Importação em massa
 
 ### Planejadas
 
@@ -40,5 +41,5 @@ Para quem usa o CapyPanel e para quem o configura para uma equipe.
 | [Configurações e arquivos](settings-and-files.pt-BR.md) | Cada configuração e onde o CapyPanel guarda os arquivos |
 | [Desenvolvimento](development.pt-BR.md) | Compilar, testar e traduzir o CapyPanel |
 
-Estas páginas descrevem a versão atual (0.16.1). O CapyPanel está em beta, então elas crescem a
+Estas páginas descrevem a versão atual (0.17.0). O CapyPanel está em beta, então elas crescem a
 cada funcionalidade.

@@ -10,7 +10,7 @@ CapyPanel puts every computer you look after in one window. It's a Windows deskt
 staff: keep your hosts in organized lists, and open a remote screen on any of them through Remote
 Desktop or the VNC viewer you already use.
 
-> **Status: beta (0.16.1).** It runs from source; there's no installer yet.
+> **Status: beta (0.17.0).** It runs from source; there's no installer yet.
 
 ## Features
 
@@ -24,10 +24,11 @@ Desktop or the VNC viewer you already use.
 - Logged-on users
 - Search
 - Toolbar redesign
+- Moving groups
 
 ### In development
 
-- Moving groups
+- Bulk import
 
 ### Planned
 

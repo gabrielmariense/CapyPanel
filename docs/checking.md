@@ -1,7 +1,7 @@
 # Checking hosts
 
 CapyPanel can check whether hosts are on and who is logged on to them. The results show in the
-host table's **Status** and **User** columns and in the **Information** pane. They're kept in
+host table's **Status** and **User** columns and in the **Details** pane. They're kept in
 memory only: never in the list file, and gone when CapyPanel closes. Editing a host's address
 clears its results.
 
@@ -14,7 +14,7 @@ selected.
 - Click it and choose **Status** or **Logged-on users**.
 - Right-click it to tick both and click **Run**. CapyPanel remembers the ticks.
 
-To check only some hosts, select them and right-click > **Check**. Right-clicking a group checks
+To check only some hosts, select them and right-click > **Refresh**. Right-clicking a group checks
 its hosts, subgroups included.
 
 CapyPanel checks 8 hosts at a time; the status bar shows the progress and a **Stop** button.
@@ -32,7 +32,8 @@ isn't a computer name, is skipped with a note in the status bar.
 The ports are 445 (Windows file sharing), 22 (SSH) and each tool's own port, such as 5900 for VNC
 and 3389 for Remote Desktop. A refused connection counts as an answer. Every address the name has
 is tried, cable and Wi-Fi alike. Hover over a status to see when it was checked and which address
-answered: a PC that answers only on its Wi-Fi address may have its cable out.
+answered: a PC that answers only on its Wi-Fi address may have its cable out. The Details pane
+says it under the host's name, as "Online · checked 10:41", or "Not checked: use Refresh".
 
 Status uses no account and needs no administrator rights.
 
@@ -45,12 +46,17 @@ is used. It's off by default: nothing is checked by itself unless you turn it on
 ## Logged-on users
 
 The **User** column shows who is logged on, as `DOMAIN\user`, with "(disconnected)" for a
-disconnected session, or **Nobody**. The Information pane lists each session: the user, whether
-they're at the computer or on Remote Desktop, active or disconnected, since when, and from which
-PC. Active sessions come first, then disconnected ones.
+disconnected session, or **No one**.
+
+The Details pane lists each session under **Logged on**, with the time of the check, as in
+"Logged on (3) · 10:40". Every row names the user, a badge saying **Active** or **Disconnected**,
+and under it whether they're at the computer (**Console**) or on **Remote Desktop**, which PC they
+came from, and since when. Active sessions come first. Before any check the section says
+**Not checked**; with nobody logged on, **No one logged on**; and when a check failed, the reason
+below, with the full explanation in its tooltip.
 
 **View > Users > Show domain** is on and remembered. Turn it off to see just `user` in the
-column, the Information pane and searches; what you hover over still shows the whole
+column, the Details pane and searches; what you hover over still shows the whole
 `DOMAIN\user`, so a local "admin" can't pass for the domain's.
 
 CapyPanel reads this through Windows' own remote session service: nothing is installed on the
@@ -59,7 +65,7 @@ hosts, and it works whatever their language. It needs an administrator account o
 | Shown | Meaning |
 |---|---|
 | **Unreachable** | Port 445 (Windows file sharing) didn't answer: the PC is off, off the network, blocks file sharing, or isn't Windows |
-| **Not an admin there** | The account isn't an administrator on that host |
+| **No admin rights** | The account isn't an administrator on that host |
 | **Account rejected** | The host refused the account |
 | **Couldn't read** | The host answered, but the sessions couldn't be read |
 
@@ -68,7 +74,7 @@ Task Manager's Users tab. That's how Windows reports it.
 
 ### Which account is used
 
-By default, your own Windows login. If hosts answer **Not an admin there** or **Account
+By default, your own Windows account. If hosts answer **No admin rights** or **Account
 rejected**, CapyPanel asks for another account (`DOMAIN\user` and password) and retries only those
 hosts. That account:
 
