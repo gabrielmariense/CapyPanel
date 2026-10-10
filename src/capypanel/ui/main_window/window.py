@@ -62,9 +62,9 @@ from capypanel.ui.hosts import (
 )
 from capypanel.ui.icons import STATUS_COLORS, dot_icon
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
+from capypanel.ui.main_window.details import DetailsPane, HostDetails
 from capypanel.ui.main_window.host_views import (
     Cells,
-    DetailsPane,
     HostTable,
     NavigationPane,
     SearchBox,
@@ -121,6 +121,9 @@ class MainWindow(QMainWindow):
         self._search_timer.setSingleShot(True)
         self._search_timer.setInterval(150)
         self.details = DetailsPane()
+        self.details.copied.connect(
+            lambda text: self.statusBar().showMessage(_("Copied: {text}").format(text=text), 5000)
+        )
         self._splitter = QSplitter()
         # The search box is a box of its own above the table, styled like the panes.
         self._hosts_pane = QWidget()
@@ -792,15 +795,6 @@ class MainWindow(QMainWindow):
         """A profile this PC has: a host or group naming another one follows its group instead."""
         return self.connector.catalogs.profiles.find(profile_id) is not None
 
-    def _connection_text(self, host_list: HostList, host: Host) -> str:
-        profile_id, source = host_list.profile_of(host, self._profile_exists)
-        name = self.connector.label(profile_id)
-        if profile_id and source is None:  # the host's own
-            return name
-        if source is not None:
-            return _("{profile} (from group “{group}”)").format(profile=name, group=source.name)
-        return _("{profile} (default)").format(profile=name)
-
     def _add_profile_menu(
         self, menu: QMenu, current: set[str], follow_text: str, apply: Callable[[str], None]
     ) -> None:
@@ -1109,15 +1103,17 @@ class MainWindow(QMainWindow):
         hosts = self._selected_hosts()
         if len(hosts) == 1 and self._doc is not None:
             host_list, host = self._doc.hosts, hosts[0]
-            self.details.show_host(
+            status = self._status_found.get(host.id)
+            details = HostDetails(
                 host,
                 group_path(host_list, host.group),
-                1,
-                self._connection_text(host_list, host),
-                *self._details_found(host.id),
+                self.connector.label(host_list.profile_of(host, self._profile_exists)[0]),
+                status=(status[0], status[1]) if status else None,
+                users=self._users_found.get(host.id),
             )
+            self.details.show_host(details, 1, needle=self._needle())
         else:
-            self.details.show_host(None, "", len(hosts), summary=self._summary())
+            self.details.show_host(None, len(hosts), summary=self._summary())
         self._update_state()
 
     def _summary(self) -> str:
@@ -1367,21 +1363,6 @@ class MainWindow(QMainWindow):
                 tip = f"{check_texts.users_text(found, error, full=True)}\n{tip}"
             user_cell = (text, tip, None, error is not None or not found)
         return Cells(status_cell, user_cell)
-
-    def _details_found(self, host_id: str) -> tuple[str, str, str]:
-        """The Status and Logged on lines of the details pane, and Logged on's tooltip."""
-        status, users, users_tip = "", "", ""
-        if (found := self._status_found.get(host_id)) is not None:
-            status = f"{check_texts.status_text(found[0])} ({check_texts.when_text(found[1])})"
-        if (read := self._users_found.get(host_id)) is not None:
-            sessions, error, when = read
-            if error is None and sessions:
-                users = check_texts.session_lines(sessions)
-                users_tip = check_texts.session_lines(sessions, full=True)
-            else:
-                users = check_texts.users_text(sessions, error)
-            users += "\n" + _("As of {when}").format(when=check_texts.when_text(when))
-        return status, users, users_tip
 
     def _show_refresh_panel(self, where: QPoint) -> None:
         panel = self.refresh_panel

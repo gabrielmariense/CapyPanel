@@ -26,13 +26,11 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
-    QFormLayout,
     QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QMenu,
-    QStackedLayout,
     QStyle,
     QStyledItemDelegate,
     QStyleOptionViewItem,
@@ -44,7 +42,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.hosts.model import Host, HostList
-from capypanel.core.i18n import _, ngettext
+from capypanel.core.i18n import _
 from capypanel.ui.groups import (
     HOSTS_MIME,
     ROLE_ID,
@@ -661,102 +659,3 @@ class MatchMarker(QStyledItemDelegate):
         width = metrics.horizontalAdvance(text[start : start + len(self.needle)])
         mark = QRect(left, area.top() + 2, width, area.height() - 4).intersected(area)
         painter.fillRect(mark, self.COLOR)
-
-
-class DetailsPane(QWidget):
-    """Details of the selected host, or a hint when none or several are selected."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._hint = QLabel()
-        self._hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._hint.setWordWrap(True)
-
-        self._values: dict[str, QLabel] = {}
-        form_page = QWidget()
-        form = QFormLayout(form_page)
-        form.setContentsMargins(12, 10, 12, 10)
-        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
-        self._heading = QLabel()
-        font = self._heading.font()
-        font.setBold(True)
-        self._heading.setFont(font)
-        form.addRow(self._heading)
-        self._labels: dict[str, QLabel] = {}
-        for key in ("name", "address", "group", "connection", "status", "users", "tags", "notes"):
-            value = QLabel()
-            value.setWordWrap(True)
-            value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-            self._values[key], self._labels[key] = value, QLabel()
-            form.addRow(self._labels[key], value)
-
-        # A card with the lists' background, so the three panes read as a set in every theme.
-        card = QFrame()
-        card.setObjectName("card")
-        card.setFrameShape(QFrame.Shape.StyledPanel)
-        card.setBackgroundRole(QPalette.ColorRole.Base)
-        card.setAutoFillBackground(True)
-        self._pages = QStackedLayout(card)
-        self._pages.addWidget(self._hint)
-        self._pages.addWidget(form_page)
-        outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, 0, 0, 0)
-        outer.addWidget(card)
-        self.retranslate()
-        self.show_host(None, "", 0)
-
-    def retranslate(self) -> None:
-        """Headings only; the hint comes back with the next show_host()."""
-        self._heading.setText(_("Information"))
-        for key, text in (
-            ("name", _("Name")),
-            ("address", _("Address")),
-            ("group", _("Group")),
-            ("connection", _("Connection")),
-            ("status", _("Status")),
-            ("users", _("Logged on")),
-            ("tags", _("Tags")),
-            ("notes", _("Notes")),
-        ):
-            self._labels[key].setText(text)
-
-    def show_host(
-        self,
-        host: Host | None,
-        group: str,
-        selected: int,
-        connection: str = "",
-        status: str = "",
-        users: str = "",
-        users_tip: str = "",
-        summary: str = "",
-    ) -> None:
-        """summary: what the table shows (online, offline…), above the hint when none is picked."""
-        if host is None:
-            if selected > 1:
-                self._hint.setText(
-                    ngettext("{n} host selected", "{n} hosts selected", selected).format(n=selected)
-                )
-            else:
-                hint = _("Select a host to see its details.")
-                self._hint.setText(f"{summary}\n\n{hint}" if summary else hint)
-            self._pages.setCurrentIndex(0)
-            return
-        values = {
-            "name": host.name,
-            "address": host.address or "—",
-            "group": group,
-            "connection": connection or "—",
-            # Not checked yet: say how, rather than a bare dash.
-            "status": status or _("Not checked: use Refresh"),
-            "users": users or _("Not checked: use Refresh"),
-            "tags": ", ".join(host.tags) or "—",
-            "notes": host.notes or "—",
-        }
-        for key, text in values.items():
-            self._values[key].setText(text)
-        self._values["users"].setToolTip(users_tip)  # full DOMAIN\names when they're hidden
-        self._pages.setCurrentIndex(1)
-
-    def shown_value(self, key: str) -> str:
-        return self._values[key].text()

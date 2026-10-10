@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 16:29-0300\n"
+"POT-Creation-Date: 2026-10-10 17:21-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -200,6 +200,9 @@ msgstr ""
 msgid "Account rejected"
 msgstr ""
 
+msgid "Active"
+msgstr ""
+
 msgid "Add &group…"
 msgstr ""
 
@@ -237,10 +240,6 @@ msgid "Answered at {address}, port {port}."
 msgstr ""
 
 msgid "Appearance"
-msgstr ""
-
-#, python-brace-format
-msgid "As of {when}"
 msgstr ""
 
 #, python-brace-format
@@ -309,6 +308,9 @@ msgstr ""
 msgid "Choose a {tool} settings file"
 msgstr ""
 
+msgid "Click to copy"
+msgstr ""
+
 msgid "Computer"
 msgstr ""
 
@@ -343,6 +345,13 @@ msgid "Connection profiles"
 msgstr ""
 
 msgid "Connections"
+msgstr ""
+
+msgid "Console"
+msgstr ""
+
+#, python-brace-format
+msgid "Copied: {text}"
 msgstr ""
 
 msgid "Copy"
@@ -434,6 +443,9 @@ msgstr ""
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
 msgstr ""
 
+msgid "Disconnected"
+msgstr ""
+
 msgid "Download"
 msgstr ""
 
@@ -523,6 +535,9 @@ msgstr ""
 msgid "Hover over a list to see where it is."
 msgstr ""
 
+msgid "Idle"
+msgstr ""
+
 msgid "If that list can't be opened: the default list, then your personal list."
 msgstr ""
 
@@ -530,9 +545,6 @@ msgstr ""
 msgid ""
 "In the open list it's set on {hosts} and {groups}. They'll use their "
 "group's profile, or the default, instead."
-msgstr ""
-
-msgid "Information"
 msgstr ""
 
 msgid "Install it, or locate its .exe."
@@ -575,6 +587,14 @@ msgid "Locate…"
 msgstr ""
 
 msgid "Logged on"
+msgstr ""
+
+#, python-brace-format
+msgid "Logged on ({n}) · {when}"
+msgstr ""
+
+#, python-brace-format
+msgid "Logged on · {when}"
 msgstr ""
 
 msgid "Logs"
@@ -620,9 +640,6 @@ msgstr ""
 msgid "N&otes:"
 msgstr ""
 
-msgid "Name"
-msgstr ""
-
 #, python-brace-format
 msgid "Name of the new group inside “{group}”:"
 msgstr ""
@@ -654,10 +671,16 @@ msgstr ""
 msgid "No host list is open."
 msgstr ""
 
+msgid "No one logged on"
+msgstr ""
+
 msgid "Nobody"
 msgstr ""
 
 msgid "Not an admin there"
+msgstr ""
+
+msgid "Not checked"
 msgstr ""
 
 msgid "Not checked yet: use Refresh"
@@ -740,6 +763,9 @@ msgid "Personal list: only yours."
 msgstr ""
 
 msgid "Portable mode: everything stays in the app's own folder."
+msgstr ""
+
+msgid "Profile"
 msgstr ""
 
 msgid "Programs (*.exe)"
@@ -1308,15 +1334,11 @@ msgid "{profile} (copy)"
 msgstr ""
 
 #, python-brace-format
-msgid "{profile} (default)"
-msgstr ""
-
-#, python-brace-format
-msgid "{profile} (from group “{group}”)"
-msgstr ""
-
-#, python-brace-format
 msgid "{profile} (not available on this PC)"
+msgstr ""
+
+#, python-brace-format
+msgid "{status} · checked {when}"
 msgstr ""
 
 #, python-brace-format

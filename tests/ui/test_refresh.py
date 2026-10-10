@@ -90,7 +90,7 @@ def test_checking_selected_hosts_fills_the_status_and_user_columns(
     assert _cells(window, "PC-3") == ("", "")  # not selected: not checked
     assert {a for a, *_ in answers["seen"]} == {"10.0.0.1", "10.0.0.2"}  # no address: skipped
     window.table.select_ids(_ids(window, "PC-1"))
-    assert window.details.shown_value("users").startswith("CORP\\ana — at the computer, active")
+    assert window.details.shown_value("users") == "CORP\\ana"
 
 
 def test_status_only_doesnt_read_users(window: MainWindow, answers: dict[str, Any]) -> None:

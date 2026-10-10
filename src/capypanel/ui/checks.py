@@ -135,6 +135,14 @@ def when_text(when: datetime) -> str:
     return QLocale(i18n.language()).toString(moment, QLocale.FormatType.ShortFormat)
 
 
+def clock_text(when: datetime) -> str:
+    """Just the time for today ("10:41"); the date too for an older result."""
+    moment = QDateTime.fromSecsSinceEpoch(int(when.timestamp()), QTimeZone.systemTimeZone())
+    if moment.date() == QDateTime.currentDateTime().date():
+        return QLocale(i18n.language()).toString(moment.time(), QLocale.FormatType.ShortFormat)
+    return when_text(when)
+
+
 def status_text(status: Status) -> str:
     return {
         Status.ONLINE: _("Online"),

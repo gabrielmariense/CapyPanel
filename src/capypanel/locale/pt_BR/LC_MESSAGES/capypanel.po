@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 16:29-0300\n"
+"POT-Creation-Date: 2026-10-10 17:21-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -201,6 +201,9 @@ msgstr "Conta para usuários logados"
 msgid "Account rejected"
 msgstr "Conta recusada"
 
+msgid "Active"
+msgstr "Ativo"
+
 msgid "Add &group…"
 msgstr "Adicionar &grupo…"
 
@@ -239,10 +242,6 @@ msgstr "Respondeu em {address}, porta {port}."
 
 msgid "Appearance"
 msgstr "Aparência"
-
-#, python-brace-format
-msgid "As of {when}"
-msgstr "Atualizado em {when}"
 
 #, python-brace-format
 msgid "Asked by {tool}"
@@ -310,6 +309,9 @@ msgstr "Verificando {done} de {total}…"
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
 
+msgid "Click to copy"
+msgstr "Clique para copiar"
+
 msgid "Computer"
 msgstr "Computador"
 
@@ -343,6 +345,13 @@ msgstr "Perfis de conexão"
 
 msgid "Connections"
 msgstr "Conexões"
+
+msgid "Console"
+msgstr "Console"
+
+#, python-brace-format
+msgid "Copied: {text}"
+msgstr "Copiado: {text}"
 
 msgid "Copy"
 msgstr "Copiar"
@@ -433,6 +442,9 @@ msgstr "Excluir perfil de conexão"
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
 msgstr "Excluir o perfil de conexão “{profile}”? Todos neste PC deixam de tê-lo."
 
+msgid "Disconnected"
+msgstr "Desconectado"
+
 msgid "Download"
 msgstr "Baixar"
 
@@ -522,15 +534,15 @@ msgstr "Hosts sem perfil &usam:"
 msgid "Hover over a list to see where it is."
 msgstr "Passe o mouse sobre uma lista para ver onde ela está."
 
+msgid "Idle"
+msgstr "Ocioso"
+
 msgid "If that list can't be opened: the default list, then your personal list."
 msgstr "Se essa lista não abrir: a lista padrão, depois a sua lista pessoal."
 
 #, python-brace-format
 msgid "In the open list it's set on {hosts} and {groups}. They'll use their group's profile, or the default, instead."
 msgstr "Na lista aberta ele está definido em {hosts} e {groups}. Eles passarão a usar o perfil do grupo, ou o padrão."
-
-msgid "Information"
-msgstr "Informações"
 
 msgid "Install it, or locate its .exe."
 msgstr "Instale-o ou localize o .exe dele."
@@ -564,6 +576,14 @@ msgstr "Localizar…"
 
 msgid "Logged on"
 msgstr "Logados"
+
+#, python-brace-format
+msgid "Logged on ({n}) · {when}"
+msgstr "Logados ({n}) · {when}"
+
+#, python-brace-format
+msgid "Logged on · {when}"
+msgstr "Logados · {when}"
 
 msgid "Logs"
 msgstr "Logs"
@@ -608,9 +628,6 @@ msgstr "Minha lista pessoal"
 msgid "N&otes:"
 msgstr "&Observações:"
 
-msgid "Name"
-msgstr "Nome"
-
 #, python-brace-format
 msgid "Name of the new group inside “{group}”:"
 msgstr "Nome do novo grupo dentro de “{group}”:"
@@ -642,11 +659,17 @@ msgstr "Nenhum computador com esse nome ou endereço foi encontrado na rede."
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
 
+msgid "No one logged on"
+msgstr "Ninguém logado"
+
 msgid "Nobody"
 msgstr "Ninguém"
 
 msgid "Not an admin there"
 msgstr "Não é administrador lá"
+
+msgid "Not checked"
+msgstr "Não verificado"
 
 msgid "Not checked yet: use Refresh"
 msgstr "Ainda não verificado: use Atualizar"
@@ -724,6 +747,9 @@ msgstr "Lista pessoal: só sua."
 
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
+
+msgid "Profile"
+msgstr "Perfil"
 
 msgid "Programs (*.exe)"
 msgstr "Programas (*.exe)"
@@ -1254,16 +1280,12 @@ msgid "{profile} (copy)"
 msgstr "{profile} (cópia)"
 
 #, python-brace-format
-msgid "{profile} (default)"
-msgstr "{profile} (padrão)"
-
-#, python-brace-format
-msgid "{profile} (from group “{group}”)"
-msgstr "{profile} (do grupo “{group}”)"
-
-#, python-brace-format
 msgid "{profile} (not available on this PC)"
 msgstr "{profile} (não disponível neste PC)"
+
+#, python-brace-format
+msgid "{status} · checked {when}"
+msgstr "{status} · verificado em {when}"
 
 #, python-brace-format
 msgid "{tool} (not installed on this PC)"

@@ -202,6 +202,7 @@ def native_tokens(accent: QColor) -> dict[str, str]:
     tokens["sel"] = selection_tint(accent, tokens["card"], tokens["text"])
     tokens["hover"] = _mix(QColor(tokens["text"]), QColor(tokens["card"]), 0.06)
     tokens["accent"] = accent.name()
+    tokens["accent_text"] = readable_on(accent, tokens["card"], tokens["text"])
     tokens["arrow"] = (THEMES_DIR / f"arrow-{native_scheme()}.svg").as_posix()
     return tokens
 
@@ -214,6 +215,16 @@ def selection_tint(accent: QColor, card: str, text: str) -> str:
         if contrast_ratio(tint, card) >= 1.35 and contrast_ratio(text, tint) >= 4.5:
             return tint
     return _mix(QColor(text), QColor(card), 0.18)  # an accent too close to text: plain grey
+
+
+def readable_on(accent: QColor, card: str, text: str) -> str:
+    """The accent as text on the pane (4.5:1), moved toward the text colour as far as needed: a
+    deep purple accent was unreadable as a heading on a dark pane."""
+    for step in range(0, 101, 5):
+        tint = _mix(QColor(text), accent, step / 100)
+        if contrast_ratio(tint, card) >= 4.5:
+            return tint
+    return text
 
 
 def mark_tint(accent: QColor, card: str, text: str) -> str:
@@ -448,6 +459,16 @@ QTreeView#flat { border: none; background: transparent; padding: 0 2px; }
 /* The search box above the host table: a small pane, with the panes' corners. */
 QLineEdit#paneSearch { border-radius: %(r)spx; padding: 6px 8px; }
 QFrame#divider { background: %(border)s; border: none; }
+/* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
+QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
+QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
+QLabel#copyValue { padding: 2px 4px; border-radius: 4px; }
+QLabel#copyValue:hover { background: %(hover)s; }
+QLabel#tagValue { background: %(sel_solid)s; border-radius: 9px; padding: 2px 9px; }
+QLabel#tagValue:hover { background: %(hover)s; }
+QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8px; padding: 0 6px; }
+QLabel#stateBadge[active="true"] { color: #3fae4a; border-color: #3fae4a; }
+QFrame#notesBox { border: 1px solid %(border)s; border-radius: 6px; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
 /* The Groups heading while a group is dragged over it: dropping moves it to the top. */
 QLabel#paneTitle[dropTarget="true"] { color: %(accent)s; background: %(sel_solid)s;
@@ -519,6 +540,16 @@ QTreeView#grid QHeaderView::section { border-right: 2px solid %(border)s; }
 QTreeView#grid::item:last, QTreeView#grid::item:only-one,
 QTreeView#grid QHeaderView::section:last,
 QTreeView#grid QHeaderView::section:only-one { border-right: none; }
+/* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
+QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
+QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
+QLabel#copyValue { padding: 2px 4px; border-radius: 4px; }
+QLabel#copyValue:hover { background: %(hover)s; }
+QLabel#tagValue { background: %(sel)s; border-radius: 9px; padding: 2px 9px; }
+QLabel#tagValue:hover { background: %(hover)s; }
+QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8px; padding: 0 6px; }
+QLabel#stateBadge[active="true"] { color: #3fae4a; border-color: #3fae4a; }
+QFrame#notesBox { border: 1px solid %(border)s; border-radius: 6px; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
 QLabel#paneTitle[dropTarget="true"] { color: %(accent)s; background: %(sel)s; }
 /* Toolbar buttons like the CapyPanel stylesheet's, square like the panes here.
@@ -552,6 +583,8 @@ QToolButton#tagChipRemove {
 def stylesheet(theme: Theme) -> str:
     t: dict[str, object] = {k: _qss_color(v) for k, v in theme.colors.items()}
     t["r"], t["r2"] = theme.radius, max(0, theme.radius - 2)
+    colors = theme.colors
+    t["accent_text"] = readable_on(QColor(colors["accent"]), colors["card"], colors["text"])
     t["check"] = (THEMES_DIR / "check.svg").as_posix()
     t["arrow"] = (THEMES_DIR / f"arrow-{theme.scheme}.svg").as_posix()
     t["arrow_up"] = (THEMES_DIR / f"arrow-up-{theme.scheme}.svg").as_posix()
