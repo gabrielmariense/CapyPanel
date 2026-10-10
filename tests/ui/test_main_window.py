@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
-from PySide6.QtWidgets import QApplication, QMenu
+from PySide6.QtWidgets import QApplication, QMenu, QSplitter, QWidget
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -300,3 +300,15 @@ def test_only_the_sorted_column_keeps_room_for_the_sort_arrow(qapp: QApplication
     assert table.minimum_width(table.STATUS) > unsorted  # the arrow shows there now
     assert table._content[table.STATUS] == table.minimum_width(table.STATUS)  # measured again
     table.close()
+
+
+def test_an_old_saved_layout_cant_drag_a_pane_out_of_sight(
+    qapp: QApplication, paths: settings.Paths
+) -> None:
+    old = QSplitter()  # saved before 0.14.0, when panes could still collapse
+    for _ in range(3):
+        old.addWidget(QWidget())
+    state = old.saveState().toBase64().toStdString()
+    window = MainWindow(paths, {"schema": 1, "main_splitter": state})
+    assert not window._splitter.childrenCollapsible()
+    window.close()

@@ -308,6 +308,8 @@ class MainWindow(QMainWindow):
         splitter = self._prefs.get("main_splitter")
         if isinstance(splitter, str):
             self._splitter.restoreState(QByteArray.fromBase64(splitter.encode()))
+            # Restoring turns collapsing back on: a pane dragged to the edge vanished.
+            self._splitter.setChildrenCollapsible(False)
         view = self._prefs.get("view")
         view = view if isinstance(view, dict) else {}
         for key, action in self._view_choices().items():
