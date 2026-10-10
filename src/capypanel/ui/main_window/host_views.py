@@ -296,24 +296,25 @@ class SearchBox(QLineEdit):
         self.setObjectName("paneSearch")  # the panes' corners and border, so its edges match
         self.setClearButtonEnabled(True)
         self._icon = self.addAction(QIcon(), QLineEdit.ActionPosition.LeadingPosition)
-        self._columns = (True, True)  # address, user: searched only while their columns show
+        # Address, user, tags: searched only while their columns show. Notes always are.
+        self._columns = (True, True, True)
         self._paint_icon()
         self.retranslate()
 
-    def set_columns(self, address: bool, user: bool) -> None:
-        self._columns = (address, user)
+    def set_columns(self, address: bool, user: bool, tags: bool) -> None:
+        self._columns = (address, user, tags)
         self.retranslate()
 
     def retranslate(self) -> None:
         """The placeholder says exactly what's searched."""
-        self.setPlaceholderText(
-            {
-                (True, True): _("Search name, address, user"),
-                (True, False): _("Search name, address"),
-                (False, True): _("Search name, user"),
-                (False, False): _("Search name"),
-            }[self._columns]
-        )
+        address, user, tags = self._columns
+        # Each a lower-case word in the list "Search name, address, user, tags, notes".
+        fields = [_("name")]
+        fields += [_("address")] if address else []
+        fields += [_("user")] if user else []
+        fields += [_("tags")] if tags else []
+        fields.append(_("notes"))  # no column, so always searched
+        self.setPlaceholderText(_("Search {fields}").format(fields=", ".join(fields)))
         self.setToolTip(_("Searches every host in the list (Ctrl+F)"))
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
@@ -353,7 +354,8 @@ class HostTable(QTreeWidget):
         self._widths: dict[str, int] = {}
         self._group_width = 0  # the search's Group column: fitted each time, never saved
         self._sizing = False  # the table is resizing a column, not the user
-        self._marker = MatchMarker(self, columns={0, self.USER, self.ADDRESS})  # what's searched
+        # What's searched and shown: notes are searched too, but have no column.
+        self._marker = MatchMarker(self, columns={0, self.USER, self.ADDRESS, self.TAGS})
         self.setItemDelegate(self._marker)
         self.retranslate()
         header = self.header()

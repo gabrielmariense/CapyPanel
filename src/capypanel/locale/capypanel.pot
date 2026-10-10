@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 16:26-0300\n"
+"POT-Creation-Date: 2026-10-10 16:29-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -811,16 +811,8 @@ msgstr ""
 msgid "Save the changes and keep Settings open"
 msgstr ""
 
-msgid "Search name"
-msgstr ""
-
-msgid "Search name, address"
-msgstr ""
-
-msgid "Search name, address, user"
-msgstr ""
-
-msgid "Search name, user"
+#, python-brace-format
+msgid "Search {fields}"
 msgstr ""
 
 msgid "Searches every host in the list (Ctrl+F)"
@@ -1149,6 +1141,9 @@ msgstr ""
 msgid "active"
 msgstr ""
 
+msgid "address"
+msgstr ""
+
 msgid "at the computer"
 msgstr ""
 
@@ -1162,7 +1157,13 @@ msgstr ""
 msgid "idle"
 msgstr ""
 
+msgid "name"
+msgstr ""
+
 msgid "no password"
+msgstr ""
+
+msgid "notes"
 msgstr ""
 
 msgid "password only"
@@ -1178,7 +1179,13 @@ msgstr ""
 msgid "since {when}"
 msgstr ""
 
+msgid "tags"
+msgstr ""
+
 msgid "the selected hosts"
+msgstr ""
+
+msgid "user"
 msgstr ""
 
 msgid "user and password"

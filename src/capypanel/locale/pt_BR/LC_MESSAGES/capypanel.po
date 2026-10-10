@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 16:26-0300\n"
+"POT-Creation-Date: 2026-10-10 16:29-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -794,17 +794,9 @@ msgstr "Salvar minha versão como cópia…"
 msgid "Save the changes and keep Settings open"
 msgstr "Salva as alterações e mantém as Configurações abertas"
 
-msgid "Search name"
-msgstr "Pesquisar nome"
-
-msgid "Search name, address"
-msgstr "Pesquisar nome, endereço"
-
-msgid "Search name, address, user"
-msgstr "Pesquisar nome, endereço, usuário"
-
-msgid "Search name, user"
-msgstr "Pesquisar nome, usuário"
+#, python-brace-format
+msgid "Search {fields}"
+msgstr "Pesquisar {fields}"
 
 msgid "Searches every host in the list (Ctrl+F)"
 msgstr "Pesquisa em todos os hosts da lista (Ctrl+F)"
@@ -1109,6 +1101,9 @@ msgstr "Seus arquivos: suas configurações e sua lista pessoal, só para você 
 msgid "active"
 msgstr "ativa"
 
+msgid "address"
+msgstr "endereço"
+
 msgid "at the computer"
 msgstr "no computador"
 
@@ -1122,8 +1117,14 @@ msgstr "de {computer}"
 msgid "idle"
 msgstr "ociosa"
 
+msgid "name"
+msgstr "nome"
+
 msgid "no password"
 msgstr "sem senha"
+
+msgid "notes"
+msgstr "notas"
 
 msgid "password only"
 msgstr "só senha"
@@ -1138,8 +1139,14 @@ msgstr "somente leitura"
 msgid "since {when}"
 msgstr "desde {when}"
 
+msgid "tags"
+msgstr "tags"
+
 msgid "the selected hosts"
 msgstr "os hosts selecionados"
+
+msgid "user"
+msgstr "usuário"
 
 msgid "user and password"
 msgstr "usuário e senha"

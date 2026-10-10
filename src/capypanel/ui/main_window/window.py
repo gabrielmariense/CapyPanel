@@ -1031,12 +1031,15 @@ class MainWindow(QMainWindow):
         return self.search.text().strip().casefold()
 
     def _matches(self, host: Host, needle: str) -> bool:
-        """The name, plus the address and users when their columns show: only what can be
-        seen. Users come from the last logged-on users check (memory only)."""
+        """The name, plus the address, users and tags when their columns show: only what can be
+        seen. Notes are the exception: they have no column, so they're always searched. Users
+        come from the last logged-on users check (memory only)."""
         table = self.table
-        if needle in host.name.casefold():
+        if needle in host.name.casefold() or needle in host.notes.casefold():
             return True
         if not table.isColumnHidden(table.ADDRESS) and needle in host.address.casefold():
+            return True
+        if not table.isColumnHidden(table.TAGS) and any(needle in t.casefold() for t in host.tags):
             return True
         if table.isColumnHidden(table.USER):
             return False
@@ -1068,8 +1071,9 @@ class MainWindow(QMainWindow):
 
     def _columns_shown(self) -> None:
         table = self.table
-        shown = (not table.isColumnHidden(table.ADDRESS), not table.isColumnHidden(table.USER))
-        self.search.set_columns(*shown)
+        self.search.set_columns(
+            *(not table.isColumnHidden(c) for c in (table.ADDRESS, table.USER, table.TAGS))
+        )
         if self._needle():
             self._show_hosts()
 
