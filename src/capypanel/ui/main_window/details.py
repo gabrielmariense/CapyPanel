@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont, QGuiApplication, QMouseEvent, QPalette
+from PySide6.QtGui import QFont, QFontMetrics, QGuiApplication, QMouseEvent, QPalette
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -24,7 +24,7 @@ from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.sessions import Session, SessionsError
 from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_texts
-from capypanel.ui.icons import STATUS_COLORS
+from capypanel.ui.icons import STATUS_COLORS, dot_icon
 
 LONG_WORD = 24  # longer runs of letters may break anywhere, so they never widen the pane
 MARK = "rgba(255, 196, 0, 0.38)"  # the search's mark, as in the host table
@@ -168,16 +168,22 @@ class DetailsPane(QWidget):
 
     def _heading(self, layout: QVBoxLayout, details: HostDetails) -> None:
         row = QHBoxLayout()
-        row.setSpacing(6)
-        dot = QLabel("●")
-        status = details.status[0] if details.status else None
-        color = STATUS_COLORS.get(str(status), STATUS_COLORS["offline"])
-        dot.setStyleSheet(f"color: {color};")
+        row.setSpacing(4)
         name = self._value("name", details.host.name)
         font = QFont(name.font())
         font.setBold(True)
         font.setPointSizeF(font.pointSizeF() * 1.25)
         name.setFont(font)
+        status = details.status[0] if details.status else None
+        color = STATUS_COLORS.get(str(status), STATUS_COLORS["offline"])
+        line = QFontMetrics(font).height()
+        size = round(line * 0.5)
+        dot = QLabel()
+        dot.setPixmap(dot_icon(color, size).pixmap(size, size))
+        # As tall as the name's first line (and its copy box's padding): centred on it, even
+        # when a long name wraps.
+        dot.setFixedHeight(line + 4)
+        dot.setAlignment(Qt.AlignmentFlag.AlignCenter)
         row.addWidget(dot, 0, Qt.AlignmentFlag.AlignTop)
         row.addWidget(name, 1)
         layout.addLayout(row)
