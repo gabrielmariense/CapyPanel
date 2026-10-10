@@ -187,59 +187,95 @@ def _fit_view(qapp: QApplication, table: HostTable, view: int) -> None:
     qapp.processEvents()
 
 
-def test_columns_give_back_their_room_before_the_scroll_bar_shows(qapp: QApplication) -> None:
-    names = ((f"Geriatrics - Corridor {i:02}", f"PC-544-{i:07}") for i in range(5))
-    table = _table(qapp, _hosts(*names))
-    shown = (0, table.STATUS, table.USER, table.ADDRESS)
-    content = {c: table._content[c] for c in shown}  # each one's widest text, or its title
-    _fit_view(qapp, table, sum(content.values()) + 2)
-    assert not table.horizontalScrollBar().isVisible()  # every column shrank, nothing is cut
-    assert all(table.columnWidth(c) >= content[c] for c in shown)
-    _fit_view(qapp, table, sum(content.values()) - 4)  # something would be cut: scroll instead
-    assert table.horizontalScrollBar().isVisible()
+def test_the_first_start_fits_every_column_to_its_full_text(qapp: QApplication) -> None:
+    long = "a." * 150 + "example.internal"  # far wider than the old 260 px cap
+    table = _table(qapp, _hosts(("Reception 01", long)))
+    assert table.columnWidth(table.ADDRESS) >= table.sizeHintForColumn(table.ADDRESS)
+    # Status and User are empty before a check: a starting width with room for one.
+    assert table.columnWidth(table.USER) > table.minimum_width(table.USER)
     table.close()
 
 
-def test_columns_fit_the_whole_list_and_only_grow(qapp: QApplication) -> None:
-    hosts = _hosts(("PC 0", "a-very-long-name.branch.example.internal"), ("PC 1", "10.0.0.1"))
-    table = _table(qapp, hosts)
-    long = table._content[table.ADDRESS]
-    table.show_hosts(hosts[1:], {})  # a group with short addresses only: nothing jumps
-    assert table._content[table.ADDRESS] == long
-    table.refit_columns()  # another list opens
-    table.show_hosts(hosts[1:], {})
-    assert table._content[table.ADDRESS] < long
-    table.close()
-
-
-def test_long_free_text_stops_at_the_cap_and_the_rest_always_fits(qapp: QApplication) -> None:
-    address = "a." * 200 + "example.internal"  # far wider than any cap
-    hl, ward = HostList().add_group("Ward")
-    hl, _ = hl.add_host("PC 0", ward.id, address=address, notes="word " * 200)
-    table = HostTable()  # Notes shown too
-    table.show_hosts(hl.hosts, {})
-    assert table._content[table.NOTES] == table.CAP
-    assert table._content[table.ADDRESS] > table.CAP  # an address always shows in full
-    item = table.topLevelItem(0)
-    assert item is not None and item.toolTip(table.NOTES) == hl.hosts[0].notes  # past the "…"
-    table.close()
-
-
-def test_a_dragged_width_stays_until_another_list_opens(
+def test_column_widths_belong_to_the_user(
     window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.open_list(office)
     table = window.table
-    _drag(monkeypatch, table, 0, 400)
-    window.resize(window.width() - 50, window.height())  # the window changes, the drag stays
-    qapp = QApplication.instance()
-    assert qapp is not None
-    qapp.processEvents()
-    assert table.columnWidth(0) == 400
+    _drag(monkeypatch, table, 0, 300)
     other = office.with_name("other.json")
     other.write_bytes(office.read_bytes())
-    window.open_list(other)
-    assert table.columnWidth(0) < 400
+    window.open_list(other)  # another list: same widths, one set for all lists
+    window.nav.select_group(next(g.id for g in window.document.hosts.groups))  # type: ignore[union-attr]
+    assert table.columnWidth(0) == 300
+    window.close()  # saved across restarts
+    reopened = MainWindow(window._paths, dict(window._prefs))
+    assert reopened.table.widths()["computer"] == 300
+    reopened.close()
+
+
+def test_fit_columns_to_content_fits_the_full_text_again(
+    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window.open_list(office)
+    table = window.table
+    _drag(monkeypatch, table, table.ADDRESS, 300)
+    table.fit_columns()
+    assert table.widths()["address"] == max(
+        table.sizeHintForColumn(table.ADDRESS), table.minimum_width(table.ADDRESS)
+    )
+
+
+def test_reset_layout_brings_back_panes_columns_and_default_widths(
+    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window.open_list(office)
+    window.show()
+    QApplication.processEvents()
+    a = window.commands
+    a.show_details.setChecked(False)
+    a.show_status_bar.setChecked(False)
+    window.table._show_column(window.table.TAGS, False)
+    _drag(monkeypatch, window.table, 0, 400)
+    size = window.size()
+    a.show_domains.setChecked(False)
+    a.reset_layout.trigger()
+    QApplication.processEvents()
+    assert a.show_details.isChecked() and window.details.isVisible()
+    assert a.show_status_bar.isChecked()
+    assert not window.table.isColumnHidden(window.table.TAGS)
+    assert window.table.columnWidth(0) < 400  # fitted again
+    assert window.size() == size and not a.show_domains.isChecked()  # left alone
+    groups, _table_pane, details = window._splitter.sizes()
+    assert abs(details - round(340 * window._scale())) <= 2
+    window.close()
+
+
+def test_panes_cant_be_dragged_too_narrow_to_read(window: MainWindow) -> None:
+    scale = window._scale()
+    assert window.details.minimumWidth() == round(260 * scale)
+    assert window.nav.minimumWidth() == round(180 * scale)
+
+
+def test_settings_from_before_the_notes_column_went_load_cleanly(
+    qapp: QApplication, paths: settings.Paths
+) -> None:
+    prefs = {"schema": 1, "hidden_columns": ["notes", "tags"], "column_widths": {"notes": 90}}
+    window = MainWindow(paths, prefs)
+    assert window.table.isColumnHidden(window.table.TAGS)
+    assert "notes" not in window.table.widths()
+    window.close()
+
+
+def test_the_last_column_fills_a_wide_window_and_a_narrow_one_scrolls(
+    qapp: QApplication,
+) -> None:
+    table = _table(qapp, _hosts(("Reception 01", "PC-0142.corp.example.net")))
+    _fit_view(qapp, table, 1400)
+    shown = [c for c in range(table.columnCount()) if not table.isColumnHidden(c)]
+    assert sum(table.columnWidth(c) for c in shown) == table.viewport().width()  # no gap
+    _fit_view(qapp, table, 200)
+    assert table.horizontalScrollBar().isVisible()
+    table.close()
 
 
 def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: MainWindow, office: Path) -> None:
@@ -298,7 +334,6 @@ def test_only_the_sorted_column_keeps_room_for_the_sort_arrow(qapp: QApplication
     unsorted = table.minimum_width(table.STATUS)
     table.sortByColumn(table.STATUS, Qt.SortOrder.AscendingOrder)
     assert table.minimum_width(table.STATUS) > unsorted  # the arrow shows there now
-    assert table._content[table.STATUS] == table.minimum_width(table.STATUS)  # measured again
     table.close()
 
 

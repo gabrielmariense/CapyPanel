@@ -123,17 +123,18 @@ class MainWindow(QMainWindow):
         self.details = DetailsPane()
         self._splitter = QSplitter()
         # The search box is a box of its own above the table, styled like the panes.
-        hosts_pane = QWidget()
-        column = QVBoxLayout(hosts_pane)
+        self._hosts_pane = QWidget()
+        column = QVBoxLayout(self._hosts_pane)
         column.setContentsMargins(0, 0, 0, 0)
         column.addWidget(self.search)
         column.addWidget(self.table)
-        for pane in (self.nav, hosts_pane, self.details):
+        for pane in (self.nav, self._hosts_pane, self.details):
             self._splitter.addWidget(pane)
         self._splitter.setStretchFactor(1, 1)
         # Dragged all the way, a pane would vanish; View hides panes on purpose instead.
         self._splitter.setChildrenCollapsible(False)
-        self._splitter.setSizes([220, 640, 280])
+        self._size_panes()
+        self._default_pane_sizes(1100)
         central = QWidget()
         margins = QVBoxLayout(central)
         margins.setContentsMargins(8, 4, 8, 4)  # the same gap above and below the panes
@@ -216,6 +217,8 @@ class MainWindow(QMainWindow):
             item.setChecked(code == i18n.language())
             self._language_group.addAction(item)
         self._language_group.triggered.connect(lambda item: self.set_language(item.data()))
+        self._view_menu.addSeparator()
+        self._view_menu.addAction(a.reset_layout)
         self._retranslate_menus()
 
     def _retranslate_menus(self) -> None:
@@ -255,6 +258,7 @@ class MainWindow(QMainWindow):
         a.show_details.toggled.connect(self.details.setVisible)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
         a.show_domains.toggled.connect(self._show_domains)
+        a.reset_layout.triggered.connect(self.reset_layout)
         # Refresh follows the end of the host table, wherever the panes are.
         for toggled in (a.show_groups.toggled, a.show_details.toggled, a.show_toolbar.toggled):
             toggled.connect(self._align_refresh_later)
@@ -317,11 +321,43 @@ class MainWindow(QMainWindow):
         check_texts.show_domains(self.commands.show_domains.isChecked())
         self.nav.set_tags_visible(self.commands.show_tags.isChecked())
         self.toolbar.setVisible(self.commands.show_toolbar.isChecked())
+        self.table.set_widths(self._prefs.get("column_widths"))
         self.table.set_hidden_columns(self._prefs.get("hidden_columns"))
         self._columns_shown()
         self.nav.setVisible(self.commands.show_groups.isChecked())
         self.details.setVisible(self.commands.show_details.isChecked())
         self.statusBar().setVisible(self.commands.show_status_bar.isChecked())
+
+    # Pane widths at a normal font size; a bigger font scales them up.
+    PANES_DEFAULT = (220, 340)  # Groups, Details
+    PANES_MINIMUM = (180, 300, 260)  # Groups, the table, Details
+
+    def _scale(self) -> float:
+        return max(1.0, self.fontMetrics().height() / 16)
+
+    def _size_panes(self) -> None:
+        """Minimum widths, so no pane can be dragged too narrow to read."""
+        for pane, width in zip(
+            (self.nav, self._hosts_pane, self.details), self.PANES_MINIMUM, strict=True
+        ):
+            pane.setMinimumWidth(round(width * self._scale()))
+
+    def _default_pane_sizes(self, total: int) -> None:
+        groups, details = (round(w * self._scale()) for w in self.PANES_DEFAULT)
+        self._splitter.setSizes([groups, max(total - groups - details, 1), details])
+
+    def reset_layout(self) -> None:
+        """View > Reset layout: default pane sizes, columns and hidden parts shown again. The
+        window's size, the theme and every other setting stay as they are."""
+        a = self.commands
+        for action in (a.show_toolbar, a.show_status_bar, a.show_groups, a.show_tags):
+            action.setChecked(True)
+        a.show_details.setChecked(True)
+        self.table.reset_columns()
+        self._columns_shown()
+        self._save_columns()
+        self._default_pane_sizes(sum(self._splitter.sizes()))
+        self._align_refresh_later()
 
     def _view_choices(self) -> dict[str, QAction]:
         """View menu ticks, by the key they're saved under."""
@@ -424,7 +460,6 @@ class MainWindow(QMainWindow):
             self._status_found.clear()  # another list's hosts: old results don't apply
             self._users_found.clear()
             self._clear_search()
-            self.table.refit_columns()  # widths dragged for the old list's names don't apply
         self._doc = doc
         locations.remember_list(self._prefs, doc.path)
         if self._kind(doc.path) is ListKind.SHARED:  # it shows in File > Host lists… from now on
@@ -922,6 +957,7 @@ class MainWindow(QMainWindow):
         theme = self.registry.find(theme_id)
         themes.apply(theme)
         self.toolbar.restyle()  # icon colour follows the theme
+        self._size_panes()  # the theme's font may be bigger
         self._align_refresh_later()  # each theme pads the toolbar differently
         for item in self._theme_group.actions():
             item.setChecked(item.data() == theme.id)
@@ -1513,5 +1549,6 @@ class MainWindow(QMainWindow):
             self._run.stop()  # hosts already being read finish in the background
         self._prefs["refresh"] = self.refresh_panel.choices()
         self._prefs["view"] = {k: a.isChecked() for k, a in self._view_choices().items()}
+        self._prefs["column_widths"] = self.table.widths()
         self._save_prefs()
         super().closeEvent(event)

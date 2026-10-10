@@ -11,7 +11,6 @@ from PySide6.QtCore import (
     QPoint,
     QRect,
     Qt,
-    QTimer,
     Signal,
 )
 from PySide6.QtGui import (
@@ -341,38 +340,33 @@ class HostTable(QTreeWidget):
     """The host list as a table. A QTreeView-based widget: it selects whole rows in Windows 11.
     Status and User come from Refresh; they're kept in memory, never in the list file."""
 
-    STATUS, USER, ADDRESS, TAGS, NOTES, GROUP = 1, 2, 3, 4, 5, 6
-    # Long free text (many sessions, a note) stops here with "…"; the rest always fits.
-    CAPPED, CAP = {USER, TAGS, NOTES}, 300
+    STATUS, USER, ADDRESS, TAGS, GROUP = 1, 2, 3, 4, 5
     # Saved by these keys. Group shows only during a search, right after Computer.
-    COLUMNS = ("computer", "status", "user", "address", "tags", "notes", "group")
+    COLUMNS = ("computer", "status", "user", "address", "tags", "group")
     columns_changed = Signal()  # a column was shown or hidden
 
     def __init__(self) -> None:
         super().__init__()
         self.setObjectName("grid")  # lines between rows and columns
         self._rows: dict[str, QTreeWidgetItem] = {}
-        self._content: dict[int, int] = {}  # each column's widest text
-        self._dragged: dict[int, int] = {}  # widths set by hand
-        self._arranging = False
-        # Refresh fills Status and User one host at a time: measure once they've settled.
-        self._measure_timer = QTimer(self)
-        self._measure_timer.setSingleShot(True)
-        self._measure_timer.setInterval(150)
-        self._measure_timer.timeout.connect(self._measure_columns)
+        # The user's column widths, by key: saved, shared by every list, changed only by them.
+        self._widths: dict[str, int] = {}
+        self._group_width = 0  # the search's Group column: fitted each time, never saved
+        self._sizing = False  # the table is resizing a column, not the user
         self._marker = MatchMarker(self, columns={0, self.USER, self.ADDRESS})  # what's searched
         self.setItemDelegate(self._marker)
         self.retranslate()
         header = self.header()
-        # _arrange_columns gives out the space. Off before any column hides: a column hidden
+        # _fill_last_column stretches the last one. Off before any column hides: a column hidden
         # while it's on kept counting 100 px, and the scroll bar showed with nothing to scroll.
         header.setStretchLastSection(False)
         header.moveSection(self.GROUP, 1)
         self.setColumnHidden(self.GROUP, True)
         header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         header.customContextMenuRequested.connect(self._columns_menu)
-        header.sortIndicatorChanged.connect(lambda *_: self._measure_columns())  # arrow moved
-        header.sectionResized.connect(self._dragged_by_hand)
+        header.sectionResized.connect(self._resized)
+        # Double-clicking a column's edge fits it (Qt's own); keep that width as the user's.
+        header.sectionHandleDoubleClicked.connect(self._keep_width)
         self.setRootIsDecorated(False)
         self.setUniformRowHeights(True)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
@@ -393,14 +387,14 @@ class HostTable(QTreeWidget):
 
     def retranslate(self) -> None:
         self.setHeaderLabels(
-            [_("Computer"), _("Status"), _("User"), _("Address"), _("Tags"), _("Notes"), _("Group")]
+            [_("Computer"), _("Status"), _("User"), _("Address"), _("Tags"), _("Group")]
         )
 
     def set_search(self, needle: str) -> None:
         """Marks the searched text, and shows where each host lives while searching."""
         self._marker.needle = needle
         self.setColumnHidden(self.GROUP, not needle)
-        self._measure_columns()
+        self._place_columns()
         self.viewport().update()
 
     def show_hosts(
@@ -424,28 +418,21 @@ class HostTable(QTreeWidget):
                     "",
                     host.address,
                     ", ".join(host.tags),
-                    _one_line(host.notes),
                     groups.get(host.id, ""),
                 ]  # fmt: skip
             )
             item.setData(0, ROLE_ID, host.id)
-            item.setToolTip(self.TAGS, ", ".join(host.tags))  # in full, past the "…"
-            item.setToolTip(self.NOTES, host.notes)
             self.addTopLevelItem(item)
             self._rows[host.id] = item
             self._fill(item, cells.get(host.id))
             item.setSelected(host.id in keep)
         self.setSortingEnabled(True)
         self.blockSignals(False)
-        self._measure_columns()
+        self._place_columns()
         self.itemSelectionChanged.emit()
 
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
-        # A theme with another font (e.g. Paper's Georgia) makes the old widths cut text off.
-        if event.type() == QEvent.Type.FontChange:  # every width changes with the font
-            self._content.clear()
-            self._measure_columns()
         if event.type() == QEvent.Type.PaletteChange:  # the quiet colour of the new theme
             for item in self._rows.values():
                 self._tint(item)
@@ -459,7 +446,7 @@ class HostTable(QTreeWidget):
         hidden = set(keys) if isinstance(keys, list) else set()
         for index, key in enumerate(self.COLUMNS[: self.GROUP]):  # Group follows the search
             self.setColumnHidden(index, index > 0 and key in hidden)  # Computer always shows
-        self._measure_columns()
+        self._place_columns()
 
     def _columns_menu(self, position: QPoint) -> None:
         """Right-click on the column titles: tick the columns to show."""
@@ -470,11 +457,13 @@ class HostTable(QTreeWidget):
             item.setCheckable(True)
             item.setChecked(not self.isColumnHidden(index))
             item.toggled.connect(lambda shown, i=index: self._show_column(i, shown))
+        menu.addSeparator()
+        menu.addAction(_("&Fit columns to content"), self.fit_columns)
         popup(menu, self.header().viewport().mapToGlobal(position))
 
     def _show_column(self, index: int, shown: bool) -> None:
         self.setColumnHidden(index, not shown)
-        self._measure_columns()
+        self._place_columns()  # one shown for the first time is fitted, once
         self.columns_changed.emit()
 
     def minimum_width(self, index: int) -> int:
@@ -491,85 +480,109 @@ class HostTable(QTreeWidget):
         # text): a few pixels more keep the last letter.
         return width + 6
 
-    def refit_columns(self) -> None:
-        """Another list opens: fit its hosts, not the old list's, and forget dragged widths."""
-        self._content.clear()
-        self._dragged.clear()
+    # ---- column widths: the user's ----
 
-    def _dragged_by_hand(self, index: int, _old: int, new: int) -> None:
-        """A column dragged by hand keeps that width, never narrower than its title."""
-        # Only a drag: showing a column or arranging them resizes too.
-        dragging = QApplication.mouseButtons() & Qt.MouseButton.LeftButton
-        if self._arranging or not dragging or self.isColumnHidden(index):
-            return
-        self._dragged[index] = max(new, self.minimum_width(index))
-        self._arrange_columns()
+    def widths(self) -> dict[str, int]:
+        return dict(self._widths)
 
-    def _measure_columns(self) -> None:
-        """Each column's widest text in the list, never narrower than its title, kept so resizing
-        the window doesn't measure every row again."""
-        for column in range(self.columnCount()):
-            if self.isColumnHidden(column):
-                continue
-            width = self.sizeHintForColumn(column)
-            if column in self.CAPPED:
-                width = min(width, self.CAP)
-            # Grows only: the list's widest text stays fitted while a group shows fewer hosts.
-            width = max(width, self.minimum_width(column), self._content.get(column, 0))
-            self._content[column] = width
-        self._arrange_columns()
+    def set_widths(self, saved: object) -> None:
+        """Widths saved by an earlier run; anything unknown (an old "notes" column) is skipped."""
+        known = set(self.COLUMNS) - {"group"}
+        self._widths = {
+            k: v for k, v in (saved.items() if isinstance(saved, dict) else ())
+            if k in known and isinstance(v, int) and v > 0
+        }  # fmt: skip
+        self._place_columns()
 
-    def _arrange_columns(self) -> None:
-        """Columns get their content plus some room, and the last one the space left. When the
-        table is too narrow, they give back that room, then shrink down to their content; only
-        then does the scroll bar appear. Widths dragged by hand stay as they are."""
+    def fit_columns(self) -> None:
+        """Column titles' menu > Fit columns to content: every column shown, to its full text."""
+        for column in self._shown():
+            if column != self.GROUP:
+                self._widths[self.COLUMNS[column]] = self._content_width(column)
+        self._place_columns()
+
+    def reset_columns(self) -> None:
+        """View > Reset layout: every column shown again, fitted as on the first start."""
+        self._widths.clear()
+        self.set_hidden_columns([])
+
+    def _place_columns(self) -> None:
+        """Sizes each column shown: the user's width; a column with none yet (the first start,
+        or switched on for the first time) is fitted once, and keeps that width from then on."""
         header = self.header()
-        shown = [
+        self._sizing = True
+        for column in self._shown():
+            if column == self.GROUP:
+                self._group_width = self._content_width(column)
+                header.resizeSection(column, self._group_width)
+                continue
+            key = self.COLUMNS[column]
+            if key not in self._widths and (self.topLevelItemCount() or column in self._EMPTY):
+                self._widths[key] = self._first_width(column)
+            header.resizeSection(column, self._widths.get(key, self.minimum_width(column)))
+        self._sizing = False
+        self._fill_last_column()
+
+    # Empty until a check: a fixed starting width, wide enough for what a check brings.
+    _EMPTY = {1: 16, 2: 24}  # Status, User: room for that many average characters
+
+    def _first_width(self, column: int) -> int:
+        width = self._content_width(column)
+        if column in self._EMPTY:
+            width = max(width, self.fontMetrics().averageCharWidth() * self._EMPTY[column] + 16)
+        return width
+
+    def _content_width(self, column: int) -> int:
+        """Its widest text, in full, and never narrower than its title."""
+        return max(self.sizeHintForColumn(column), self.minimum_width(column))
+
+    def _shown(self) -> list[int]:
+        header = self.header()
+        return [
             header.logicalIndex(v) for v in range(header.count())
             if not header.isSectionHidden(header.logicalIndex(v))
         ]  # fmt: skip
+
+    def _fill_last_column(self) -> None:
+        """The last column stretches into the room left on a wide window, so no gap shows on
+        the right; on a narrow one it keeps its width and the scroll bar appears."""
+        shown = self._shown()
         if not shown:
             return
-        floor, wanted = {}, {}
-        for column in shown:
-            content = self._content.get(column, self.minimum_width(column))
-            dragged = self._dragged.get(column)
-            floor[column] = dragged if dragged is not None else content
-            wanted[column] = dragged if dragged is not None else content + 16
-            wanted[column] = max(wanted[column], floor[column])
-        room = self.viewport().width()
-        widths = dict(wanted)
-        need = sum(wanted.values()) - room
-        if need <= 0:
-            widths[shown[-1]] -= need  # the last column takes the space left
-        else:
-            # Each gives back in proportion to its spare room, but never below its floor.
-            spare = {c: wanted[c] - floor[c] for c in shown}
-            total = sum(spare.values())
-            for column in shown:
-                give = spare[column] if total <= need else spare[column] * need // total
-                widths[column] = wanted[column] - give
-            over = sum(widths.values()) - room  # a pixel or two left by rounding
-            for column in shown:
-                take = max(0, min(over, widths[column] - floor[column]))
-                widths[column] -= take
-                over -= take
-        self._arranging = True
-        for column in shown:
-            if header.sectionSize(column) != widths[column]:
-                header.resizeSection(column, widths[column])
-        self._arranging = False
+        last, header = shown[-1], self.header()
+        others = sum(header.sectionSize(c) for c in shown[:-1])
+        own = self._widths.get(self.COLUMNS[last], self.minimum_width(last))
+        self._sizing = True
+        header.resizeSection(last, max(own, self.viewport().width() - others))
+        self._sizing = False
+
+    def _resized(self, index: int, _old: int, new: int) -> None:
+        """A column dragged by the user keeps that width, never narrower than its title."""
+        dragging = QApplication.mouseButtons() & Qt.MouseButton.LeftButton
+        if self._sizing or not dragging or self.isColumnHidden(index) or index == self.GROUP:
+            return
+        wanted = max(new, self.minimum_width(index))
+        self._widths[self.COLUMNS[index]] = wanted
+        if wanted != new:
+            self._sizing = True
+            self.header().resizeSection(index, wanted)
+            self._sizing = False
+        self._fill_last_column()
+
+    def _keep_width(self, index: int) -> None:
+        if index != self.GROUP and not self.isColumnHidden(index):
+            self._widths[self.COLUMNS[index]] = self.header().sectionSize(index)
+            self._fill_last_column()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
-        self._arrange_columns()
+        self._fill_last_column()
 
     def show_cells(self, host_id: str, cells: "Cells") -> None:
         """New Refresh results for one host, without rebuilding the table."""
         item = self._rows.get(host_id)
         if item is not None:
-            self._fill(item, cells)
-            self._measure_timer.start()  # Status and User may need more room
+            self._fill(item, cells)  # columns keep their widths: a Refresh never resizes them
 
     def _fill(self, item: QTreeWidgetItem, cells: "Cells | None") -> None:
         cells = cells or Cells()
@@ -646,10 +659,6 @@ class MatchMarker(QStyledItemDelegate):
         width = metrics.horizontalAdvance(text[start : start + len(self.needle)])
         mark = QRect(left, area.top() + 2, width, area.height() - 4).intersected(area)
         painter.fillRect(mark, self.COLOR)
-
-
-def _one_line(text: str) -> str:
-    return " ".join(text.split())
 
 
 class DetailsPane(QWidget):

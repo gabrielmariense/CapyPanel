@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-09 15:30-0300\n"
+"POT-Creation-Date: 2026-10-10 16:26-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -60,6 +60,9 @@ msgid "&Edit…"
 msgstr ""
 
 msgid "&File"
+msgstr ""
+
+msgid "&Fit columns to content"
 msgstr ""
 
 msgid "&Forget typed passwords"
@@ -129,6 +132,9 @@ msgid "&Remove from the list"
 msgstr ""
 
 msgid "&Remove selected"
+msgstr ""
+
+msgid "&Reset layout"
 msgstr ""
 
 msgid "&Run"
