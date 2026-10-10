@@ -79,8 +79,8 @@ def test_an_export_imports_back_into_the_same_groups() -> None:
     hl = hl.rename_group(slash, "Front desk / lobby")  # a "/" in a group's own name
     hl, _ = hl.add_host("FD-01", slash, address="10.0.0.2", tags=["kiosk", "2nd floor"])
     text = export(hl, hl.hosts)
-    assert text.splitlines()[0] == "name,address,group,tags"
-    assert "FD-01,10.0.0.2,Headquarters/Front desk / lobby,kiosk;2nd floor" in text
+    assert text.splitlines()[0] == "name,address,group,tags,notes"
+    assert "FD-01,10.0.0.2,Headquarters/Front desk / lobby,kiosk;2nd floor," in text
     # Into the list it came from, emptied: every host lands back in its own group.
     emptied = hl.remove_hosts(h.id for h in hl.hosts)
     back = plan(emptied, parse(text).rows, branch)
@@ -90,6 +90,23 @@ def test_an_export_imports_back_into_the_same_groups() -> None:
 
 
 def test_table_edits_are_written_back_as_csv() -> None:
-    rows = [ImportRow("Lab 07", "10.20.30.47", "Branch office", ("a", "b"))]
-    assert to_csv(rows) == "name,address,group,tags\nLab 07,10.20.30.47,Branch office,a;b\n"
+    rows = [ImportRow("Lab 07", "10.20.30.47", "Branch office", ("a", "b"), "USB printer")]
+    assert to_csv(rows) == (
+        "name,address,group,tags,notes\nLab 07,10.20.30.47,Branch office,a;b,USB printer\n"
+    )
     assert parse(to_csv(rows)).rows == tuple(rows)
+
+
+def test_a_list_that_cant_be_read_says_why_instead_of_guessing() -> None:
+    assert parse("PC-1,10.0.0.1,Lab,kiosk").problem  # 4 columns, no header: what are they?
+    assert parse("PC-1,10.0.0.1", file=True).problem  # a CSV file needs its header row
+    assert not parse("PC-1,10.0.0.1").problem  # pasted name and address: fine
+    assert parse("PC-1,10.0.0.1,Lab").rows == ()
+
+
+def test_notes_come_in_from_a_notes_column() -> None:
+    rows = parse("Nome,Observações\nPC-1,USB printer\n").rows
+    assert rows[0].notes == "USB printer"
+    hl, branch = _office()
+    added = plan(hl, rows, branch).result.hosts[-1]
+    assert added.name == "PC-1" and added.notes == "USB printer"

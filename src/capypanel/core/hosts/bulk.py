@@ -1,10 +1,12 @@
 """Many hosts at once: reading a pasted list or a CSV file, planning what an import would do
 (nothing changes until it's applied), and writing hosts out as CSV.
 
-A list is either a header row naming its columns (name, address, group, tags, in any order, in
-English or Portuguese; other columns are ignored), or lines of "name" and "name, address" without
-one. Columns are split by a tab (as Excel copies), a semicolon (Excel's CSV in pt-BR) or a comma.
-A group is a path, its levels joined by "/"; tags are joined by ";" (or "," in a ";" list)."""
+A list is either a header row naming its columns (name, address, group, tags, notes, in any order,
+in English or Portuguese; other columns are ignored), or lines of "name, address" without one,
+where the address may be left out when the name is the computer's name on the network. A CSV file
+must have the header row. Columns are split by a tab (as Excel copies), a semicolon (Excel's CSV
+in pt-BR) or a comma. A group is a path, its levels joined by "/"; tags are joined by ";" (or ","
+in a ";" list)."""
 
 import csv
 import io
@@ -22,6 +24,7 @@ _HEADERS = {
     "address": {"address", "endereco", "ip", "ip address", "endereco ip", "dns"},
     "group": {"group", "grupo", "group path"},
     "tags": {"tags", "tag", "etiquetas", "marcadores"},
+    "notes": {"notes", "note", "notas", "nota", "observacoes", "observacao"},
 }
 
 
@@ -31,12 +34,14 @@ class ImportRow:
     address: str = ""
     group: str = ""  # a path as typed; "" = the group picked for the import
     tags: tuple[str, ...] = ()
+    notes: str = ""
 
 
 @dataclass(frozen=True)
 class Parsed:
     rows: tuple[ImportRow, ...]
     ignored: tuple[str, ...] = ()  # header columns CapyPanel doesn't use
+    problem: str = ""  # why the list can't be read as it is; then there are no rows
 
 
 class Verdict(StrEnum):
@@ -67,7 +72,9 @@ class Plan:
 # ---- reading ----
 
 
-def parse(text: str) -> Parsed:
+def parse(text: str, *, file: bool = False) -> Parsed:
+    """file: read from a CSV file, which must start with a header row. Pasted text may also be
+    plain "name, address" lines."""
     lines = [line for line in text.splitlines() if line.strip()]
     if not lines:
         return Parsed(())
@@ -75,7 +82,21 @@ def parse(text: str) -> Parsed:
     if header is not None:
         delimiter, columns = header
         return _read(lines[1:], delimiter, columns)
-    return _read(lines, _delimiter(lines[0]), ["name", "address"])
+    if file:
+        return Parsed((), problem=_no_header())
+    delimiter = _delimiter(lines[0])
+    if any(len(_split(line, delimiter)) > 2 for line in lines):
+        # Without a header, a third column could be anything: say so rather than guess.
+        return Parsed((), problem=_no_header())
+    return _read(lines, delimiter, ["name", "address"])
+
+
+def _no_header() -> str:
+    return _(
+        "CapyPanel can't tell what these columns are. The first line must be a header naming "
+        "them: name, address, group, tags, notes (in any order). Without one, each line can only "
+        "be a name and an address. See Formats… for examples."
+    )
 
 
 def _fold(text: str) -> str:
@@ -119,6 +140,7 @@ def _read(lines: Sequence[str], delimiter: str, columns: list[str]) -> Parsed:
                 address=cells.get("address", ""),
                 group=cells.get("group", "").strip(PATH + " "),
                 tags=tuple(t for t in tags if t),
+                notes=cells.get("notes", ""),
             )
         )
     return Parsed(tuple(rows), ignored)
@@ -152,7 +174,9 @@ def plan(host_list: HostList, rows: Iterable[ImportRow], default_group: str) -> 
         result, group_id, made = _group(result, path)
         new_groups += [p for p in made if p not in new_groups]
         try:
-            result, _host = result.add_host(name, group_id, address=address, tags=row.tags)
+            result, _host = result.add_host(
+                name, group_id, address=address, tags=row.tags, notes=row.notes
+            )
         except HostListRuleError as e:
             items.append(Planned(row, Verdict.BAD, str(e), path))
             continue
@@ -168,8 +192,8 @@ def _problem(name: str, address: str) -> str:
     if address and not is_hostname(address):
         return _("Not a computer name or IP address")
     if not address and not is_hostname(name):
-        # With no address, CapyPanel connects by the name, so it must be one.
-        return _("No address, and the name isn't a computer name")
+        # With no address, CapyPanel connects by the name, so it must be the computer's own.
+        return _("No address: the name must then be the computer's name on the network")
     return ""
 
 
@@ -220,14 +244,15 @@ def to_csv(rows: Iterable[ImportRow]) -> str:
     """Rows as CSV with a header row: what the import window shows once its table is edited."""
     out = io.StringIO()
     writer = csv.writer(out, lineterminator="\n")
-    writer.writerow(["name", "address", "group", "tags"])
+    writer.writerow(["name", "address", "group", "tags", "notes"])
     for row in rows:
-        writer.writerow([row.name, row.address, row.group, ";".join(row.tags)])
+        writer.writerow([row.name, row.address, row.group, ";".join(row.tags), row.notes])
     return out.getvalue()
 
 
 def export(host_list: HostList, hosts: Iterable[Host]) -> str:
-    """Hosts as CSV that imports back: name, address, group path and tags."""
+    """Hosts as CSV that imports back: name, address, group path, tags and notes."""
     return to_csv(
-        ImportRow(h.name, h.address, PATH.join(_names(host_list, h.group)), h.tags) for h in hosts
+        ImportRow(h.name, h.address, PATH.join(_names(host_list, h.group)), h.tags, h.notes)
+        for h in hosts
     )
