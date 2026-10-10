@@ -13,7 +13,7 @@ uv run capypanel
 
 A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes
 abrem na hora. A versão aparece na barra de título, seguida do commit quando você roda pelo
-código-fonte, por exemplo `CapyPanel 0.16.1 (abc1234)`. Informe-a ao relatar um problema.
+código-fonte, por exemplo `CapyPanel 0.17.0 (abc1234)`. Informe-a ao relatar um problema.
 
 A Área de Trabalho Remota funciona de cara, com o cliente que já vem no Windows. Para o VNC você
 também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
@@ -28,18 +28,27 @@ também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
 | **Grupos** (esquerda) | "Todos os hosts" fixo no topo, com quantos hosts a lista tem. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags** |
 | **Pesquisa** (acima dos hosts) | Encontra um host em qualquer lugar da lista, seja o que for que esteja escolhido à esquerda (veja [Pesquisando hosts](searching.pt-BR.md)) |
 | **Hosts** (meio) | Os hosts do grupo ou da tag selecionada, com **Status** e **Usuário** |
-| **Informações** (direita) | Os detalhes do host selecionado, incluindo o perfil de conexão e de onde ele vem. Sem nada selecionado, quantos hosts estão exibidos e quantos deles estão online, offline, não encontrados ou não verificados |
+| **Detalhes** (direita) | O host selecionado: o nome e o status dele, depois **Conexão** (endereço, grupo, perfil), quem está **logado**, as **tags** e as **notas**. Clique em qualquer valor para copiá-lo. Sem nada selecionado, quantos hosts estão exibidos e quantos deles estão online, offline, não encontrados ou não verificados |
 | **Barra de status** | Qual lista está aberta, onde ela está, quantos hosts tem, quantos estão online depois que algo foi verificado e quantos estão selecionados |
 
 A barra de ferramentas, a barra de status e os painéis em volta da tabela de hosts podem ser
-escondidos pelo menu **Exibir**. Clique com o botão direito nos títulos das colunas da tabela de
-hosts para escolher quais aparecem. Para trocar de lista, use **Arquivo > Listas de hosts…** (veja
+escondidos pelo menu **Exibir**, e os painéis podem ser arrastados para ficar mais largos ou mais
+estreitos. Para trocar de lista, use **Arquivo > Listas de hosts…** (veja
 [Listas de hosts](host-lists.pt-BR.md#a-janela-listas-de-hosts)).
+
+A janela é sua para organizar. Clique com o botão direito nos títulos das colunas da tabela de
+hosts para escolher quais aparecem, ou em **Ajustar colunas ao conteúdo**, no fim desse menu, para
+ajustar todas ao texto delas; um clique duplo na borda de uma coluna ajusta só ela. As larguras
+são salvas para a próxima vez, e nada as redimensiona por trás — nem uma atualização, nem trocar
+de lista. **Exibir > Redefinir layout** devolve os painéis, as colunas e o que você escondeu ao
+estado inicial, e não mexe nas suas configurações.
 
 ## Adicione seus primeiros hosts
 
 1. Uma lista nova começa com um grupo, **Grupo padrão**. **Inventário > Adicionar grupo…**
-   (Ctrl+Shift+N) cria outro; com um grupo selecionado, o novo fica dentro dele.
+   (Ctrl+Shift+N) cria outro; com um grupo selecionado, o novo fica dentro dele. Já o **+** ao
+   lado do título **Grupos**, e o botão direito no título ou num espaço vazio, adicionam um no
+   nível superior.
 2. **Inventário > Adicionar host…** (Ctrl+N) adiciona um host ao grupo selecionado:
    - **Nome:** como o host aparece na lista.
    - **Endereço:** um nome de computador ou endereço IP. Deixe em branco se o nome *for* o nome

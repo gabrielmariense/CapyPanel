@@ -13,16 +13,24 @@ from PySide6.QtCore import (
     Qt,
     Signal,
 )
-from PySide6.QtGui import QColor, QFontMetrics, QIcon, QKeyEvent, QPainter, QPalette, QShowEvent
+from PySide6.QtGui import (
+    QColor,
+    QFontMetrics,
+    QIcon,
+    QKeyEvent,
+    QPainter,
+    QPalette,
+    QResizeEvent,
+    QShowEvent,
+)
 from PySide6.QtWidgets import (
     QAbstractItemView,
-    QFormLayout,
+    QApplication,
     QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QMenu,
-    QStackedLayout,
     QStyle,
     QStyledItemDelegate,
     QStyleOptionViewItem,
@@ -34,8 +42,15 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.hosts.model import Host, HostList
-from capypanel.core.i18n import _, ngettext
-from capypanel.ui.groups import HOSTS_MIME, ROLE_ID, ROLE_KIND, GroupTree, hosts_mime
+from capypanel.core.i18n import _
+from capypanel.ui.groups import (
+    HOSTS_MIME,
+    ROLE_ID,
+    ROLE_KIND,
+    GroupsHeading,
+    GroupTree,
+    hosts_mime,
+)
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.menus import popup
 
@@ -48,8 +63,10 @@ class Filter:
     value: str | None = None
 
 
-def pane_title(text: str) -> QLabel:
-    label = QLabel(text)
+def pane_title(text: str, label: QLabel | None = None) -> QLabel:
+    """A pane's small bold heading: a new label, or `label` styled as one."""
+    label = label if label is not None else QLabel()
+    label.setText(text)
     label.setObjectName("paneTitle")
     label.setContentsMargins(4, 4, 4, 2)
     font = label.font()
@@ -70,9 +87,12 @@ class NavigationPane(QWidget):
         self._filter = Filter("all")
         self.add_group_button = QToolButton()
         self.add_group_button.setText("+")
-        self._groups_title, self._tags_title = pane_title(""), pane_title("")
+        self.groups_heading = GroupsHeading()  # drop a group here: it goes to the top level
+        pane_title("", self.groups_heading)
+        self.groups_heading.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._tags_title = pane_title("")
         header = QHBoxLayout()
-        header.addWidget(self._groups_title, 1)
+        header.addWidget(self.groups_heading, 1)
         header.addWidget(self.add_group_button)
 
         # Its own small list above the tree: it never scrolls away under a long tree.
@@ -123,7 +143,8 @@ class NavigationPane(QWidget):
     def retranslate(self) -> None:
         """Titles only; the lists' own texts come back with the next show_list()."""
         self.add_group_button.setToolTip(_("Add group"))
-        self._groups_title.setText(_("Groups"))
+        self.groups_heading.setText(_("Groups"))
+        self.groups_heading.setToolTip(_("Drop a group here to move it to the top level"))
         self._tags_title.setText(_("Tags"))
 
     def set_tags_visible(self, visible: bool) -> None:
@@ -164,10 +185,11 @@ class NavigationPane(QWidget):
         wanted = self._filter
         for tree in (self.everything, self.groups, self.tags):
             tree.blockSignals(True)
-        self.groups.clear()
         self.tags.clear()
         self.everything.setVisible(host_list is not None)
-        if host_list is not None:
+        if host_list is None:
+            self.groups.clear()
+        else:
             self._everything_item.setText(0, f"{_('All hosts')} ({len(host_list.hosts)})")
             self.groups.fill(host_list)
             for tag, count in sorted(host_list.all_tags().items(), key=lambda t: t[0].casefold()):
@@ -272,24 +294,25 @@ class SearchBox(QLineEdit):
         self.setObjectName("paneSearch")  # the panes' corners and border, so its edges match
         self.setClearButtonEnabled(True)
         self._icon = self.addAction(QIcon(), QLineEdit.ActionPosition.LeadingPosition)
-        self._columns = (True, True)  # address, user: searched only while their columns show
+        # Address, user, tags: searched only while their columns show. Notes always are.
+        self._columns = (True, True, True)
         self._paint_icon()
         self.retranslate()
 
-    def set_columns(self, address: bool, user: bool) -> None:
-        self._columns = (address, user)
+    def set_columns(self, address: bool, user: bool, tags: bool) -> None:
+        self._columns = (address, user, tags)
         self.retranslate()
 
     def retranslate(self) -> None:
         """The placeholder says exactly what's searched."""
-        self.setPlaceholderText(
-            {
-                (True, True): _("Search name, address, user"),
-                (True, False): _("Search name, address"),
-                (False, True): _("Search name, user"),
-                (False, False): _("Search name"),
-            }[self._columns]
-        )
+        address, user, tags = self._columns
+        # Each a lower-case word in the list "Search name, address, user, tags, notes".
+        fields = [_("name")]
+        fields += [_("address")] if address else []
+        fields += [_("user")] if user else []
+        fields += [_("tags")] if tags else []
+        fields.append(_("notes"))  # no column, so always searched
+        self.setPlaceholderText(_("Search {fields}").format(fields=", ".join(fields)))
         self.setToolTip(_("Searches every host in the list (Ctrl+F)"))
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
@@ -316,24 +339,30 @@ class HostTable(QTreeWidget):
     """The host list as a table. A QTreeView-based widget: it selects whole rows in Windows 11.
     Status and User come from Refresh; they're kept in memory, never in the list file."""
 
-    STATUS, USER, ADDRESS, NOTES, GROUP = 1, 2, 3, 5, 6
-    # Saved by these keys. Group shows only during a search, right after Computer.
-    COLUMNS = ("computer", "status", "user", "address", "tags", "notes", "group")
+    STATUS, USER, ADDRESS, TAGS = 1, 2, 3, 4
+    COLUMNS = ("computer", "status", "user", "address", "tags")  # saved by these keys
     columns_changed = Signal()  # a column was shown or hidden
 
     def __init__(self) -> None:
         super().__init__()
         self.setObjectName("grid")  # lines between rows and columns
         self._rows: dict[str, QTreeWidgetItem] = {}
-        self._marker = MatchMarker(self, columns={0, self.USER, self.ADDRESS})  # what's searched
+        # The user's column widths, by key: saved, shared by every list, changed only by them.
+        self._widths: dict[str, int] = {}
+        self._sizing = False  # the table is resizing a column, not the user
+        # What's searched and shown: notes are searched too, but have no column.
+        self._marker = MatchMarker(self, columns={0, self.USER, self.ADDRESS, self.TAGS})
         self.setItemDelegate(self._marker)
         self.retranslate()
         header = self.header()
-        header.moveSection(self.GROUP, 1)
-        self.setColumnHidden(self.GROUP, True)
+        # _fill_last_column stretches the last one. Off before any column hides: a column hidden
+        # while it's on kept counting 100 px, and the scroll bar showed with nothing to scroll.
+        header.setStretchLastSection(False)
         header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         header.customContextMenuRequested.connect(self._columns_menu)
-        header.sectionResized.connect(self._keep_title_visible)
+        header.sectionResized.connect(self._resized)
+        # Double-clicking a column's edge fits it (Qt's own); keep that width as the user's.
+        header.sectionHandleDoubleClicked.connect(self._keep_width)
         self.setRootIsDecorated(False)
         self.setUniformRowHeights(True)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
@@ -342,7 +371,6 @@ class HostTable(QTreeWidget):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # Selected hosts can be dragged onto a group in the Groups pane, to move them there.
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
-        self._sized = False
 
     def set_editable(self, editable: bool) -> None:
         self.setDragEnabled(editable)
@@ -354,27 +382,18 @@ class HostTable(QTreeWidget):
         return hosts_mime([item.data(0, ROLE_ID) for item in items])
 
     def retranslate(self) -> None:
-        self.setHeaderLabels(
-            [_("Computer"), _("Status"), _("User"), _("Address"), _("Tags"), _("Notes"), _("Group")]
-        )
+        self.setHeaderLabels([_("Name"), _("Status"), _("User"), _("Address"), _("Tags")])
 
     def set_search(self, needle: str) -> None:
         """Marks the searched text, and shows where each host lives while searching."""
         self._marker.needle = needle
-        if needle and self.isColumnHidden(self.GROUP):
-            self.setColumnHidden(self.GROUP, False)
-            self._fit_column(self.GROUP)
-        self.setColumnHidden(self.GROUP, not needle)
         self.viewport().update()
 
     def show_hosts(
         self,
         hosts: Sequence[Host],
         cells: Mapping[str, "Cells"],
-        groups: Mapping[str, str] | None = None,
     ) -> None:
-        """groups: each host's group path, for the Group column."""
-        groups = groups or {}
         keep = set(self.selected_ids())
         self.blockSignals(True)
         self.setSortingEnabled(False)
@@ -388,8 +407,6 @@ class HostTable(QTreeWidget):
                     "",
                     host.address,
                     ", ".join(host.tags),
-                    _one_line(host.notes),
-                    groups.get(host.id, ""),
                 ]  # fmt: skip
             )
             item.setData(0, ROLE_ID, host.id)
@@ -399,75 +416,154 @@ class HostTable(QTreeWidget):
             item.setSelected(host.id in keep)
         self.setSortingEnabled(True)
         self.blockSignals(False)
-        if hosts and not self._sized:
-            self._fit_columns()
+        self._place_columns()
         self.itemSelectionChanged.emit()
 
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
-        # A theme with another font (e.g. Paper's Georgia) makes the old widths cut text off.
-        if event.type() == QEvent.Type.FontChange and self.topLevelItemCount():
-            self._fit_columns()
         if event.type() == QEvent.Type.PaletteChange:  # the quiet colour of the new theme
             for item in self._rows.values():
                 self._tint(item)
 
     def hidden_columns(self) -> list[str]:
-        return [
-            key for i, key in enumerate(self.COLUMNS) if i != self.GROUP and self.isColumnHidden(i)
-        ]
+        return [key for i, key in enumerate(self.COLUMNS) if self.isColumnHidden(i)]
 
     def set_hidden_columns(self, keys: object) -> None:
         hidden = set(keys) if isinstance(keys, list) else set()
-        for index, key in enumerate(self.COLUMNS[: self.GROUP]):  # Group follows the search
+        for index, key in enumerate(self.COLUMNS):
             self.setColumnHidden(index, index > 0 and key in hidden)  # Computer always shows
+        self._place_columns()
 
     def _columns_menu(self, position: QPoint) -> None:
         """Right-click on the column titles: tick the columns to show."""
         menu = QMenu(self)
         header = self.headerItem()
-        for index in range(1, self.GROUP):
+        for index in range(1, len(self.COLUMNS)):
             item = menu.addAction(header.text(index))
             item.setCheckable(True)
             item.setChecked(not self.isColumnHidden(index))
             item.toggled.connect(lambda shown, i=index: self._show_column(i, shown))
+        menu.addSeparator()
+        menu.addAction(_("&Fit columns to content"), self.fit_columns)
         popup(menu, self.header().viewport().mapToGlobal(position))
 
     def _show_column(self, index: int, shown: bool) -> None:
         self.setColumnHidden(index, not shown)
-        if shown:
-            self._keep_title_visible(index, 0, self.columnWidth(index))
+        self._place_columns()  # one shown for the first time is fitted, once
         self.columns_changed.emit()
 
     def minimum_width(self, index: int) -> int:
-        """A column is never narrower than its title (plus room for the sort arrow)."""
-        title = self.headerItem().text(index)
-        return self.header().fontMetrics().horizontalAdvance(title) + 34
+        """A column is never narrower than its title. Qt keeps room for the sort arrow in every
+        title; only the sorted column shows it, so the others leave it out."""
+        header = self.header()
+        if index == header.sortIndicatorSection():
+            width = header.sectionSizeHint(index)
+        else:
+            header.setSortIndicatorShown(False)
+            width = header.sectionSizeHint(index)
+            header.setSortIndicatorShown(True)
+        # Windows' own header draws a little wider than Qt measures (the column line, bolder
+        # text): a few pixels more keep the last letter.
+        return width + 6
 
-    def _keep_title_visible(self, index: int, _old: int, new: int) -> None:
-        wanted = self.minimum_width(index)
-        if 0 < new < wanted and not self.isColumnHidden(index):
+    # ---- column widths: the user's ----
+
+    def widths(self) -> dict[str, int]:
+        return dict(self._widths)
+
+    def set_widths(self, saved: object) -> None:
+        """Widths saved by an earlier run; anything unknown (an old "notes" column) is skipped."""
+        known = set(self.COLUMNS)
+        self._widths = {
+            k: v for k, v in (saved.items() if isinstance(saved, dict) else ())
+            if k in known and isinstance(v, int) and v > 0
+        }  # fmt: skip
+        self._place_columns()
+
+    def fit_columns(self) -> None:
+        """Column titles' menu > Fit columns to content: every column shown, to its full text."""
+        for column in self._shown():
+            self._widths[self.COLUMNS[column]] = self._content_width(column)
+        self._place_columns()
+
+    def reset_columns(self) -> None:
+        """View > Reset layout: every column shown again, fitted as on the first start."""
+        self._widths.clear()
+        self.set_hidden_columns([])
+
+    def _place_columns(self) -> None:
+        """Sizes each column shown: the user's width; a column with none yet (the first start,
+        or switched on for the first time) is fitted once, and keeps that width from then on."""
+        header = self.header()
+        self._sizing = True
+        for column in self._shown():
+            key = self.COLUMNS[column]
+            if key not in self._widths and (self.topLevelItemCount() or column in self._EMPTY):
+                self._widths[key] = self._first_width(column)
+            header.resizeSection(column, self._widths.get(key, self.minimum_width(column)))
+        self._sizing = False
+        self._fill_last_column()
+
+    # Empty until a check: a fixed starting width, wide enough for what a check brings.
+    _EMPTY = {1: 16, 2: 24}  # Status, User: room for that many average characters
+
+    def _first_width(self, column: int) -> int:
+        width = self._content_width(column)
+        if column in self._EMPTY:
+            width = max(width, self.fontMetrics().averageCharWidth() * self._EMPTY[column] + 16)
+        return width
+
+    def _content_width(self, column: int) -> int:
+        """Its widest text, in full, and never narrower than its title."""
+        return max(self.sizeHintForColumn(column), self.minimum_width(column))
+
+    def _shown(self) -> list[int]:
+        header = self.header()
+        return [
+            header.logicalIndex(v) for v in range(header.count())
+            if not header.isSectionHidden(header.logicalIndex(v))
+        ]  # fmt: skip
+
+    def _fill_last_column(self) -> None:
+        """The last column stretches into the room left on a wide window, so no gap shows on
+        the right; on a narrow one it keeps its width and the scroll bar appears."""
+        shown = self._shown()
+        if not shown:
+            return
+        last, header = shown[-1], self.header()
+        others = sum(header.sectionSize(c) for c in shown[:-1])
+        own = self._widths.get(self.COLUMNS[last], self.minimum_width(last))
+        self._sizing = True
+        header.resizeSection(last, max(own, self.viewport().width() - others))
+        self._sizing = False
+
+    def _resized(self, index: int, _old: int, new: int) -> None:
+        """A column dragged by the user keeps that width, never narrower than its title."""
+        dragging = QApplication.mouseButtons() & Qt.MouseButton.LeftButton
+        if self._sizing or not dragging or self.isColumnHidden(index):
+            return
+        wanted = max(new, self.minimum_width(index))
+        self._widths[self.COLUMNS[index]] = wanted
+        if wanted != new:
+            self._sizing = True
             self.header().resizeSection(index, wanted)
+            self._sizing = False
+        self._fill_last_column()
 
-    def _fit_columns(self) -> None:
-        # Once, on the first real content: fit the first columns (capped) and let Notes stretch
-        # into the rest. Fixed starting widths overflowed narrow windows. Columns stay draggable.
-        self._sized = True
-        for column in range(self.columnCount()):
-            if column != self.NOTES:
-                self._fit_column(column)
+    def _keep_width(self, index: int) -> None:
+        if not self.isColumnHidden(index):
+            self._widths[self.COLUMNS[index]] = self.header().sectionSize(index)
+            self._fill_last_column()
 
-    def _fit_column(self, column: int) -> None:
-        """As wide as its content, up to 260 px, and never narrower than its title."""
-        self.resizeColumnToContents(column)
-        fitted = min(self.columnWidth(column) + 16, 260)
-        self.setColumnWidth(column, max(fitted, self.minimum_width(column)))
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._fill_last_column()
 
     def show_cells(self, host_id: str, cells: "Cells") -> None:
         """New Refresh results for one host, without rebuilding the table."""
         item = self._rows.get(host_id)
         if item is not None:
-            self._fill(item, cells)
+            self._fill(item, cells)  # columns keep their widths: a Refresh never resizes them
 
     def _fill(self, item: QTreeWidgetItem, cells: "Cells | None") -> None:
         cells = cells or Cells()
@@ -544,106 +640,3 @@ class MatchMarker(QStyledItemDelegate):
         width = metrics.horizontalAdvance(text[start : start + len(self.needle)])
         mark = QRect(left, area.top() + 2, width, area.height() - 4).intersected(area)
         painter.fillRect(mark, self.COLOR)
-
-
-def _one_line(text: str) -> str:
-    return " ".join(text.split())
-
-
-class DetailsPane(QWidget):
-    """Details of the selected host, or a hint when none or several are selected."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._hint = QLabel()
-        self._hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._hint.setWordWrap(True)
-
-        self._values: dict[str, QLabel] = {}
-        form_page = QWidget()
-        form = QFormLayout(form_page)
-        form.setContentsMargins(12, 10, 12, 10)
-        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
-        self._heading = QLabel()
-        font = self._heading.font()
-        font.setBold(True)
-        self._heading.setFont(font)
-        form.addRow(self._heading)
-        self._labels: dict[str, QLabel] = {}
-        for key in ("name", "address", "group", "connection", "status", "users", "tags", "notes"):
-            value = QLabel()
-            value.setWordWrap(True)
-            value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-            self._values[key], self._labels[key] = value, QLabel()
-            form.addRow(self._labels[key], value)
-
-        # A card with the lists' background, so the three panes read as a set in every theme.
-        card = QFrame()
-        card.setObjectName("card")
-        card.setFrameShape(QFrame.Shape.StyledPanel)
-        card.setBackgroundRole(QPalette.ColorRole.Base)
-        card.setAutoFillBackground(True)
-        self._pages = QStackedLayout(card)
-        self._pages.addWidget(self._hint)
-        self._pages.addWidget(form_page)
-        outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, 0, 0, 0)
-        outer.addWidget(card)
-        self.retranslate()
-        self.show_host(None, "", 0)
-
-    def retranslate(self) -> None:
-        """Headings only; the hint comes back with the next show_host()."""
-        self._heading.setText(_("Information"))
-        for key, text in (
-            ("name", _("Name")),
-            ("address", _("Address")),
-            ("group", _("Group")),
-            ("connection", _("Connection")),
-            ("status", _("Status")),
-            ("users", _("Logged on")),
-            ("tags", _("Tags")),
-            ("notes", _("Notes")),
-        ):
-            self._labels[key].setText(text)
-
-    def show_host(
-        self,
-        host: Host | None,
-        group: str,
-        selected: int,
-        connection: str = "",
-        status: str = "",
-        users: str = "",
-        users_tip: str = "",
-        summary: str = "",
-    ) -> None:
-        """summary: what the table shows (online, offline…), above the hint when none is picked."""
-        if host is None:
-            if selected > 1:
-                self._hint.setText(
-                    ngettext("{n} host selected", "{n} hosts selected", selected).format(n=selected)
-                )
-            else:
-                hint = _("Select a host to see its details.")
-                self._hint.setText(f"{summary}\n\n{hint}" if summary else hint)
-            self._pages.setCurrentIndex(0)
-            return
-        values = {
-            "name": host.name,
-            "address": host.address or "—",
-            "group": group,
-            "connection": connection or "—",
-            # Not checked yet: say how, rather than a bare dash.
-            "status": status or _("Not checked: use Refresh"),
-            "users": users or _("Not checked: use Refresh"),
-            "tags": ", ".join(host.tags) or "—",
-            "notes": host.notes or "—",
-        }
-        for key, text in values.items():
-            self._values[key].setText(text)
-        self._values["users"].setToolTip(users_tip)  # full DOMAIN\names when they're hidden
-        self._pages.setCurrentIndex(1)
-
-    def shown_value(self, key: str) -> str:
-        return self._values[key].text()

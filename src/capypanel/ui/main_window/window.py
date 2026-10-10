@@ -51,7 +51,7 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui import language
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
-from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog
+from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog, TreeMenu, fill_move_menu
 from capypanel.ui.host_lists import HostListsDialog
 from capypanel.ui.hosts import (
     HostDialog,
@@ -62,9 +62,9 @@ from capypanel.ui.hosts import (
 )
 from capypanel.ui.icons import STATUS_COLORS, dot_icon
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
+from capypanel.ui.main_window.details import DetailsPane, HostDetails
 from capypanel.ui.main_window.host_views import (
     Cells,
-    DetailsPane,
     HostTable,
     NavigationPane,
     SearchBox,
@@ -121,19 +121,23 @@ class MainWindow(QMainWindow):
         self._search_timer.setSingleShot(True)
         self._search_timer.setInterval(150)
         self.details = DetailsPane()
+        self.details.copied.connect(
+            lambda text: self.statusBar().showMessage(_("Copied: {text}").format(text=text), 5000)
+        )
         self._splitter = QSplitter()
         # The search box is a box of its own above the table, styled like the panes.
-        hosts_pane = QWidget()
-        column = QVBoxLayout(hosts_pane)
+        self._hosts_pane = QWidget()
+        column = QVBoxLayout(self._hosts_pane)
         column.setContentsMargins(0, 0, 0, 0)
         column.addWidget(self.search)
         column.addWidget(self.table)
-        for pane in (self.nav, hosts_pane, self.details):
+        for pane in (self.nav, self._hosts_pane, self.details):
             self._splitter.addWidget(pane)
         self._splitter.setStretchFactor(1, 1)
         # Dragged all the way, a pane would vanish; View hides panes on purpose instead.
         self._splitter.setChildrenCollapsible(False)
-        self._splitter.setSizes([220, 640, 280])
+        self._size_panes()
+        self._default_pane_sizes(1100)
         central = QWidget()
         margins = QVBoxLayout(central)
         margins.setContentsMargins(8, 4, 8, 4)  # the same gap above and below the panes
@@ -216,6 +220,8 @@ class MainWindow(QMainWindow):
             item.setChecked(code == i18n.language())
             self._language_group.addAction(item)
         self._language_group.triggered.connect(lambda item: self.set_language(item.data()))
+        self._view_menu.addSeparator()
+        self._view_menu.addAction(a.reset_layout)
         self._retranslate_menus()
 
     def _retranslate_menus(self) -> None:
@@ -255,6 +261,7 @@ class MainWindow(QMainWindow):
         a.show_details.toggled.connect(self.details.setVisible)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
         a.show_domains.toggled.connect(self._show_domains)
+        a.reset_layout.triggered.connect(self.reset_layout)
         # Refresh follows the end of the host table, wherever the panes are.
         for toggled in (a.show_groups.toggled, a.show_details.toggled, a.show_toolbar.toggled):
             toggled.connect(self._align_refresh_later)
@@ -269,7 +276,7 @@ class MainWindow(QMainWindow):
         self.toolbar.refresh_requested.connect(self._refresh_shown)
         self.refresh_panel.run_clicked.connect(self._run_refresh_panel)
         self.toolbar.connect_menu.aboutToShow.connect(self._fill_connect_menu)
-        self.nav.add_group_button.clicked.connect(self.add_group)
+        self.nav.add_group_button.clicked.connect(self.add_top_group)  # on the Groups heading row
         self.nav.filter_changed.connect(self._filter_picked)
         self.search.textChanged.connect(self._search_timer.start)
         self._search_timer.timeout.connect(self._show_hosts)
@@ -280,6 +287,8 @@ class MainWindow(QMainWindow):
         self.nav.groups.customContextMenuRequested.connect(self._group_menu)
         self.nav.groups.rearranged.connect(self._groups_dragged)
         self.nav.groups.hosts_dropped.connect(self.move_hosts)
+        self.nav.groups_heading.group_dropped.connect(lambda g: self.move_group(g, None))
+        self.nav.groups_heading.customContextMenuRequested.connect(self._heading_menu)
         self.table.itemSelectionChanged.connect(self._selection_changed)
         self.table.customContextMenuRequested.connect(self._host_menu)
         self.table.columns_changed.connect(self._save_columns)
@@ -306,6 +315,8 @@ class MainWindow(QMainWindow):
         splitter = self._prefs.get("main_splitter")
         if isinstance(splitter, str):
             self._splitter.restoreState(QByteArray.fromBase64(splitter.encode()))
+            # Restoring turns collapsing back on: a pane dragged to the edge vanished.
+            self._splitter.setChildrenCollapsible(False)
         view = self._prefs.get("view")
         view = view if isinstance(view, dict) else {}
         for key, action in self._view_choices().items():
@@ -313,11 +324,43 @@ class MainWindow(QMainWindow):
         check_texts.show_domains(self.commands.show_domains.isChecked())
         self.nav.set_tags_visible(self.commands.show_tags.isChecked())
         self.toolbar.setVisible(self.commands.show_toolbar.isChecked())
+        self.table.set_widths(self._prefs.get("column_widths"))
         self.table.set_hidden_columns(self._prefs.get("hidden_columns"))
         self._columns_shown()
         self.nav.setVisible(self.commands.show_groups.isChecked())
         self.details.setVisible(self.commands.show_details.isChecked())
         self.statusBar().setVisible(self.commands.show_status_bar.isChecked())
+
+    # Pane widths at a normal font size; a bigger font scales them up.
+    PANES_DEFAULT = (220, 340)  # Groups, Details
+    PANES_MINIMUM = (180, 300, 260)  # Groups, the table, Details
+
+    def _scale(self) -> float:
+        return max(1.0, self.fontMetrics().height() / 16)
+
+    def _size_panes(self) -> None:
+        """Minimum widths, so no pane can be dragged too narrow to read."""
+        for pane, width in zip(
+            (self.nav, self._hosts_pane, self.details), self.PANES_MINIMUM, strict=True
+        ):
+            pane.setMinimumWidth(round(width * self._scale()))
+
+    def _default_pane_sizes(self, total: int) -> None:
+        groups, details = (round(w * self._scale()) for w in self.PANES_DEFAULT)
+        self._splitter.setSizes([groups, max(total - groups - details, 1), details])
+
+    def reset_layout(self) -> None:
+        """View > Reset layout: default pane sizes, columns and hidden parts shown again. The
+        window's size, the theme and every other setting stay as they are."""
+        a = self.commands
+        for action in (a.show_toolbar, a.show_status_bar, a.show_groups, a.show_tags):
+            action.setChecked(True)
+        a.show_details.setChecked(True)
+        self.table.reset_columns()
+        self._columns_shown()
+        self._save_columns()
+        self._default_pane_sizes(sum(self._splitter.sizes()))
+        self._align_refresh_later()
 
     def _view_choices(self) -> dict[str, QAction]:
         """View menu ticks, by the key they're saved under."""
@@ -488,10 +531,17 @@ class MainWindow(QMainWindow):
         self._commit(new)
 
     def add_group(self) -> None:
+        """Inside the picked group, or at the top level when none is."""
+        self._add_group(self.nav.selected_group_id())
+
+    def add_top_group(self) -> None:
+        """The + by the Groups heading, its right-click menu, and the empty space below."""
+        self._add_group(None)
+
+    def _add_group(self, parent: str | None) -> None:
         doc = self._writable()
         if doc is None:
             return
-        parent = self.nav.selected_group_id()
         where = group_path(doc.hosts, parent) if parent else ""
         prompt = (
             _("Name of the new group inside “{group}”:").format(group=where)
@@ -745,15 +795,6 @@ class MainWindow(QMainWindow):
         """A profile this PC has: a host or group naming another one follows its group instead."""
         return self.connector.catalogs.profiles.find(profile_id) is not None
 
-    def _connection_text(self, host_list: HostList, host: Host) -> str:
-        profile_id, source = host_list.profile_of(host, self._profile_exists)
-        name = self.connector.label(profile_id)
-        if profile_id and source is None:  # the host's own
-            return name
-        if source is not None:
-            return _("{profile} (from group “{group}”)").format(profile=name, group=source.name)
-        return _("{profile} (default)").format(profile=name)
-
     def _add_profile_menu(
         self, menu: QMenu, current: set[str], follow_text: str, apply: Callable[[str], None]
     ) -> None:
@@ -805,6 +846,20 @@ class MainWindow(QMainWindow):
             self._refresh()  # puts the tree back as it was
             return
         self._commit(new)
+
+    def move_group(self, group_id: str, parent: str | None) -> None:
+        """Into `parent`, or the top level (None), with everything inside it."""
+        doc = self._writable()
+        if doc is None:
+            return
+        try:
+            new = doc.hosts.move_group(group_id, parent)
+        except HostListRuleError as e:
+            self._error(str(e))
+            return
+        if new is not doc.hosts and self._commit(new):
+            self.nav.select_group(group_id)
+            self._show_hosts()
 
     def move_hosts(self, host_ids: list[str], group_id: str) -> None:
         """Hosts dragged from the table onto a group."""
@@ -896,6 +951,7 @@ class MainWindow(QMainWindow):
         theme = self.registry.find(theme_id)
         themes.apply(theme)
         self.toolbar.restyle()  # icon colour follows the theme
+        self._size_panes()  # the theme's font may be bigger
         self._align_refresh_later()  # each theme pads the toolbar differently
         for item in self._theme_group.actions():
             item.setChecked(item.data() == theme.id)
@@ -943,12 +999,9 @@ class MainWindow(QMainWindow):
         self._search_timer.stop()
         needle = self._needle()
         hosts = self._visible_hosts()
-        groups = {}
-        if needle and self._doc is not None:  # results come from every group: say which
-            groups = {h.id: group_path(self._doc.hosts, h.group) for h in hosts}
         self.nav.set_searching(bool(needle))
-        self.table.show_hosts(hosts, {h.id: self._cells(h.id) for h in hosts}, groups)
-        self.table.set_search(needle)  # after the rows, so Group fits their paths
+        self.table.show_hosts(hosts, {h.id: self._cells(h.id) for h in hosts})
+        self.table.set_search(needle)
 
     def _visible_hosts(self) -> tuple[Host, ...]:
         """The hosts the table shows: the search's results, or the group or tag picked."""
@@ -969,12 +1022,15 @@ class MainWindow(QMainWindow):
         return self.search.text().strip().casefold()
 
     def _matches(self, host: Host, needle: str) -> bool:
-        """The name, plus the address and users when their columns show: only what can be
-        seen. Users come from the last logged-on users check (memory only)."""
+        """The name, plus the address, users and tags when their columns show: only what can be
+        seen. Notes are the exception: they have no column, so they're always searched. Users
+        come from the last logged-on users check (memory only)."""
         table = self.table
-        if needle in host.name.casefold():
+        if needle in host.name.casefold() or needle in host.notes.casefold():
             return True
         if not table.isColumnHidden(table.ADDRESS) and needle in host.address.casefold():
+            return True
+        if not table.isColumnHidden(table.TAGS) and any(needle in t.casefold() for t in host.tags):
             return True
         if table.isColumnHidden(table.USER):
             return False
@@ -1006,8 +1062,9 @@ class MainWindow(QMainWindow):
 
     def _columns_shown(self) -> None:
         table = self.table
-        shown = (not table.isColumnHidden(table.ADDRESS), not table.isColumnHidden(table.USER))
-        self.search.set_columns(*shown)
+        self.search.set_columns(
+            *(not table.isColumnHidden(c) for c in (table.ADDRESS, table.USER, table.TAGS))
+        )
         if self._needle():
             self._show_hosts()
 
@@ -1043,15 +1100,17 @@ class MainWindow(QMainWindow):
         hosts = self._selected_hosts()
         if len(hosts) == 1 and self._doc is not None:
             host_list, host = self._doc.hosts, hosts[0]
-            self.details.show_host(
+            status = self._status_found.get(host.id)
+            details = HostDetails(
                 host,
                 group_path(host_list, host.group),
-                1,
-                self._connection_text(host_list, host),
-                *self._details_found(host.id),
+                self.connector.label(host_list.profile_of(host, self._profile_exists)[0]),
+                status=(status[0], status[1]) if status else None,
+                users=self._users_found.get(host.id),
             )
+            self.details.show_host(details, 1, needle=self._needle())
         else:
-            self.details.show_host(None, "", len(hosts), summary=self._summary())
+            self.details.show_host(None, len(hosts), summary=self._summary())
         self._update_state()
 
     def _summary(self) -> str:
@@ -1140,9 +1199,9 @@ class MainWindow(QMainWindow):
             and len(targets) > MANY_USER_CHECKS
             and not confirm(
                 self,
-                _("Check logged-on users"),
+                _("Refresh logged-on users"),
                 _("Check who is logged on to {n} hosts?").format(n=len(targets)),
-                _("Check"),
+                _("Refresh"),
             )
         ):
             return
@@ -1251,9 +1310,9 @@ class MainWindow(QMainWindow):
             ).format(host=first, user=account.user)
         elif account is None:
             text = ngettext(
-                "{n} computer didn't let your Windows login see who is logged on. Use another "
+                "{n} computer didn't let your Windows account see who is logged on. Use another "
                 "account, such as an administrator of those computers?",
-                "{n} computers didn't let your Windows login see who is logged on. Use another "
+                "{n} computers didn't let your Windows account see who is logged on. Use another "
                 "account, such as an administrator of those computers?",
                 len(self._refused),
             ).format(n=len(self._refused))
@@ -1283,7 +1342,7 @@ class MainWindow(QMainWindow):
     def _cells(self, host_id: str) -> Cells:
         status = self._status_found.get(host_id)
         users = self._users_found.get(host_id)
-        unchecked = ("", _("Not checked yet: use Refresh"), None, True)
+        unchecked = ("", _("Not checked: use Refresh"), None, True)
         status_cell: tuple[str, str, Any, bool] = unchecked
         if status is not None:
             state, when, answered = status
@@ -1301,21 +1360,6 @@ class MainWindow(QMainWindow):
                 tip = f"{check_texts.users_text(found, error, full=True)}\n{tip}"
             user_cell = (text, tip, None, error is not None or not found)
         return Cells(status_cell, user_cell)
-
-    def _details_found(self, host_id: str) -> tuple[str, str, str]:
-        """The Status and Logged on lines of the details pane, and Logged on's tooltip."""
-        status, users, users_tip = "", "", ""
-        if (found := self._status_found.get(host_id)) is not None:
-            status = f"{check_texts.status_text(found[0])} ({check_texts.when_text(found[1])})"
-        if (read := self._users_found.get(host_id)) is not None:
-            sessions, error, when = read
-            if error is None and sessions:
-                users = check_texts.session_lines(sessions)
-                users_tip = check_texts.session_lines(sessions, full=True)
-            else:
-                users = check_texts.users_text(sessions, error)
-            users += "\n" + _("As of {when}").format(when=check_texts.when_text(when))
-        return status, users, users_tip
 
     def _show_refresh_panel(self, where: QPoint) -> None:
         panel = self.refresh_panel
@@ -1389,7 +1433,7 @@ class MainWindow(QMainWindow):
             self._add_profile_menu(
                 menu, {h.profile for h in hosts}, follow, lambda p: self.set_hosts_profile(ids, p)
             )
-        section(menu, _("Check"))
+        section(menu, _("Refresh"))
         menu.addActions([a.check_status, a.check_users])
         section(menu, _("Copy"))
         menu.addActions([a.copy_address, a.copy_name])
@@ -1399,14 +1443,30 @@ class MainWindow(QMainWindow):
         menu.addActions([a.edit, a.remove])
         popup(menu, self.table.viewport().mapToGlobal(position))
 
+    def _heading_menu(self, position: QPoint) -> None:
+        menu = QMenu(self)
+        self._add_top_group_item(menu)
+        menu.addAction(self.commands.manage_groups)
+        popup(menu, self.nav.groups_heading.mapToGlobal(position))
+
+    def _add_top_group_item(self, menu: QMenu) -> None:
+        # Not the Add group command: that one adds inside the picked group.
+        item = menu.addAction(self.commands.add_group.text())
+        item.setEnabled(self._writable() is not None)
+        item.triggered.connect(self.add_top_group)
+
     def _group_menu(self, position: QPoint) -> None:
         menu = QMenu(self)
-        menu.addAction(self.commands.add_group)
         # Only the group under the mouse: empty space never acts on the one picked before.
         group_id = self.nav.group_at(position)
-        if group_id is not None:
-            self.nav.select_group(group_id)
-        group = self._doc.hosts.group(group_id) if self._doc and group_id else None
+        if group_id is None:
+            self._add_top_group_item(menu)
+            menu.addAction(self.commands.manage_groups)
+            popup(menu, self.nav.groups.viewport().mapToGlobal(position))
+            return
+        self.nav.select_group(group_id)
+        menu.addAction(self.commands.add_group)  # inside the group under the mouse
+        group = self._doc.hosts.group(group_id) if self._doc else None
         if group is not None and self._doc is not None:
             section(menu, _("Connect"))
             follow = self.connector.inherited_label(
@@ -1417,7 +1477,7 @@ class MainWindow(QMainWindow):
             )
             # The group's hosts, including those in the groups inside it.
             hosts = list(self._doc.hosts.hosts_in(group.id))
-            section(menu, _("Check"))
+            section(menu, _("Refresh"))
             for text, status, users in (
                 (_("&Status"), True, False),
                 (_("&Logged-on users"), False, True),
@@ -1428,6 +1488,10 @@ class MainWindow(QMainWindow):
                     lambda _c=False, s=status, u=users: self.check_hosts(hosts, status=s, users=u)
                 )
             menu.addSeparator()
+            move = TreeMenu(_("&Move to"), menu)
+            menu.addMenu(move)
+            move.setEnabled(self._writable() is not None)
+            fill_move_menu(move, self._doc.hosts, group.id, lambda p: self.move_group(group.id, p))
             menu.addActions([self.commands.edit, self.commands.remove])
         popup(menu, self.nav.groups.viewport().mapToGlobal(position))
 
@@ -1467,5 +1531,6 @@ class MainWindow(QMainWindow):
             self._run.stop()  # hosts already being read finish in the background
         self._prefs["refresh"] = self.refresh_panel.choices()
         self._prefs["view"] = {k: a.isChecked() for k, a in self._view_choices().items()}
+        self._prefs["column_widths"] = self.table.widths()
         self._save_prefs()
         super().closeEvent(event)

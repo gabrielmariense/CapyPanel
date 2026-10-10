@@ -9,7 +9,8 @@ por vez e salva cada edição nela na hora.
 - **Tags** atravessam os grupos ("quiosque", "3-andar"). Clique numa tag no painel da esquerda
   para ver todos os hosts que a têm. Tags que você já usou são sugeridas enquanto digita, com a
   grafia mantida.
-- **Observações** guardam o que mais valer a pena saber sobre um host.
+- **Notas** guardam o que mais valer a pena saber sobre um host. Elas aparecem no painel de
+  detalhes, e a pesquisa sempre as cobre.
 
 Uma lista nova começa com um grupo, **Grupo padrão**.
 
@@ -19,15 +20,23 @@ Os grupos mantêm a ordem que você der a eles. No painel de grupos:
 
 - arraste um grupo para cima ou para baixo para movê-lo, ou solte-o sobre outro grupo para
   colocá-lo dentro dele;
+- arraste um grupo até o título **Grupos**, que se ilumina quando você chega nele, para movê-lo
+  para o nível superior;
 - arraste os hosts selecionados da tabela de hosts para um grupo para movê-los para lá.
+
+Clique com o botão direito num grupo > **Mover para** lista **Nível superior** e todos os grupos
+em que esse pode entrar, desenhados como uma árvore; o próprio grupo e os subgrupos dele não
+aparecem, e o lugar atual fica marcado. Um grupo que você recolheu continua recolhido enquanto
+você trabalha, e mover um grupo para dentro de um recolhido abre o caminho até ele, para o que você
+moveu continuar visível.
 
 Toda mudança é salva na hora. Numa lista somente leitura, arrastar fica desligado.
 
-**Inventário > Gerenciar grupos…** mostra a árvore inteira numa janela, com **Mover para cima**,
-**Mover para baixo** e **Ordenar de A a Z**, uma ordenação única que você pode reorganizar depois.
-Arrastar também funciona lá, e nada muda até você clicar em **OK**. Listas criadas antes da versão
-0.13.0 mostram os grupos na ordem em que foram criados; Ordenar de A a Z os coloca em ordem uma
-vez.
+**Inventário > Gerenciar grupos…** mostra a árvore inteira numa janela, com **Mover para**,
+**Mover para cima**, **Mover para baixo** e **Classificar de A a Z**, uma ordenação única que
+você pode reorganizar depois. Arrastar também funciona lá, e nada muda até você clicar em **OK**.
+Listas criadas antes da versão 0.13.0 mostram os grupos na ordem em que foram criados;
+Classificar de A a Z os coloca em ordem uma vez.
 
 ## Remover um grupo
 
@@ -35,12 +44,12 @@ Clique com o botão direito num grupo > **Remover**, ou pressione Del com um gru
 grupo vazio só pede confirmação. Um grupo com grupos ou hosts dentro pergunta o que fazer com
 eles:
 
-- **Mover para "3º andar"** — o grupo acima dele — ou **Mover para o nível mais alto**. Essa é a
+- **Mover para "3º andar"** — o grupo acima dele — ou **Mover para o nível superior**. Essa é a
   opção padrão: os hosts dele vão para esse grupo, os grupos dele sobem um nível e nada é
   excluído.
 - **Remover tudo:** o grupo, todos os grupos dentro dele e todos os hosts deles.
 
-Um grupo no nível mais alto não consegue subir os próprios hosts, porque todo host precisa de um
+Um grupo no nível superior não consegue subir os próprios hosts, porque todo host precisa de um
 grupo e "Todos os hosts" é a lista inteira, não um grupo. Nesse caso a opção de mover fica
 desligada, com um aviso explicando; mova esses hosts para outro grupo antes para mantê-los.
 
@@ -57,7 +66,7 @@ somente leitura ainda pode ser navegada e usada para conectar; só a edição fi
 
 Qualquer usuário pode criar arquivos no ProgramData, então **uma lista padrão criada por outro
 usuário (que não seja administrador) não é aberta**: ela poderia mandar a sua senha para o
-computador errado. A janela Listas de hosts a mostra como "Criada por outro usuário: não é usada",
+computador errado. A janela Listas de hosts a mostra como "Não usada: criada por outro usuário",
 e um administrador pode substituí-la ou excluí-la.
 
 ## A janela Listas de hosts

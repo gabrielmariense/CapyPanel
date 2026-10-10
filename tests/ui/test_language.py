@@ -44,13 +44,13 @@ def test_switching_language_updates_the_open_window_live(window: MainWindow) -> 
         "E&xibir",
     ]
     assert window.commands.add_host.text() == "Adicionar &host…"
-    assert window.table.headerItem().text(0) == "Computador"
+    assert window.table.headerItem().text(0) == "Nome"
     [everything] = window.nav.everything.findItems("Todos", Qt.MatchFlag.MatchStartsWith)
     assert everything.text(0) == "Todos os hosts (1)"
     assert "1 host" in window._list_label.text()
     _switch(window, "en")
     assert [m.title() for m in _menus(window)] == ["&File", "&Inventory", "&Connect", "&View"]
-    assert window.table.headerItem().text(0) == "Computer"
+    assert window.table.headerItem().text(0) == "Name"
 
 
 def test_qt_own_buttons_are_translated_too(window: MainWindow) -> None:

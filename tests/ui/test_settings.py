@@ -100,9 +100,9 @@ def test_host_lists_shows_every_list_with_the_open_one_in_bold(
     window.open_list(office)  # an opened list is added to Host lists from now on
     view = window.settings_dialog().host_lists.view
     assert _rows(view) == [
-        ("Default", "Read-write", False),  # the first start created it
+        ("Default", "Read/write", False),  # the first start created it
         ("Personal", "Created when opened", False),
-        ("Added", "Read-write", True),
+        ("Added", "Read/write", True),
     ]
     names = [view.tree.topLevelItem(i).text(0) for i in range(3)]  # type: ignore[union-attr]
     assert names == ["hosts.json", "hosts.json", "office.json (in use)"]
@@ -119,7 +119,7 @@ def test_a_default_list_another_user_made_cant_be_picked(
     monkeypatch.setattr(winsec, "made_by_trusted", lambda _path: False)
     dialog = window.settings_dialog()
     view = dialog.host_lists.view
-    assert _rows(view)[0][1] == "Made by another user: not used"
+    assert _rows(view)[0][1] == "Not used: made by another user"
     view.select(window._default_list)
     assert not _save_enabled(dialog)
 

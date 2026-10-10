@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-08 13:28-0300\n"
+"POT-Creation-Date: 2026-10-10 19:25-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -42,6 +42,9 @@ msgstr "&Conectar"
 msgid "&Copy current list to…"
 msgstr "&Copiar lista atual para…"
 
+msgid "&Credentials:"
+msgstr "&Credenciais:"
+
 msgid "&Delete…"
 msgstr "E&xcluir…"
 
@@ -62,6 +65,9 @@ msgstr "&Editar…"
 
 msgid "&File"
 msgstr "&Arquivo"
+
+msgid "&Fit columns to content"
+msgstr "&Ajustar colunas ao conteúdo"
 
 msgid "&Forget typed passwords"
 msgstr "Esquecer as &senhas digitadas"
@@ -93,14 +99,14 @@ msgstr "&Localizar…"
 msgid "&Logged-on users"
 msgstr "Usuários &logados"
 
-msgid "&Login:"
-msgstr "&Login:"
-
 msgid "&Manage groups…"
 msgstr "Ge&renciar grupos…"
 
 msgid "&Manual connection…"
 msgstr "Conexão &manual…"
+
+msgid "&Move to"
+msgstr "&Mover para"
 
 msgid "&Name"
 msgstr "&Nome"
@@ -123,11 +129,17 @@ msgstr "&Abrir ao iniciar:"
 msgid "&Password:"
 msgstr "&Senha:"
 
+msgid "&Refresh the status of the hosts shown every"
+msgstr "&Atualizar o status dos hosts exibidos a cada"
+
 msgid "&Remove from the list"
 msgstr "Re&mover da lista"
 
 msgid "&Remove selected"
 msgstr "&Remover selecionado"
+
+msgid "&Reset layout"
+msgstr "&Redefinir layout"
 
 msgid "&Run"
 msgstr "&Executar"
@@ -142,7 +154,7 @@ msgid "&Settings…"
 msgstr "&Configurações…"
 
 msgid "&Sort A–Z"
-msgstr "&Ordenar de A a Z"
+msgstr "&Classificar de A a Z"
 
 msgid "&Status"
 msgstr "&Status"
@@ -192,6 +204,9 @@ msgstr "Conta para usuários logados"
 msgid "Account rejected"
 msgstr "Conta recusada"
 
+msgid "Active"
+msgstr "Ativo"
+
 msgid "Add &group…"
 msgstr "Adicionar &grupo…"
 
@@ -232,19 +247,15 @@ msgid "Appearance"
 msgstr "Aparência"
 
 #, python-brace-format
-msgid "As of {when}"
-msgstr "Atualizado em {when}"
-
-#, python-brace-format
 msgid "Asked by {tool}"
-msgstr "Pedido pelo {tool}"
+msgstr "O próprio {tool} pede"
 
 msgid "Bars"
 msgstr "Barras"
 
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
-msgstr "Marcador malformado em “{arg}”."
+msgstr "Espaço reservado malformado em “{arg}”."
 
 msgid "C&hoose file…"
 msgstr "Escol&her arquivo…"
@@ -263,21 +274,6 @@ msgstr "A aparência do próprio CapyPanel, igual em todos os computadores."
 
 msgid "Change path…"
 msgstr "Alterar caminho…"
-
-msgid "Check"
-msgstr "Verificar"
-
-msgid "Check every host shown"
-msgstr "Verificar todos os hosts exibidos"
-
-msgid "Check every host shown; right-click to run several checks at once"
-msgstr "Verifica todos os hosts exibidos; clique com o botão direito para fazer várias verificações de uma vez"
-
-msgid "Check logged-on users"
-msgstr "Verificar usuários logados"
-
-msgid "Check the &status of the hosts shown every"
-msgstr "Verificar o &status dos hosts exibidos a cada"
 
 #, python-brace-format
 msgid "Check who is logged on to {n} hosts?"
@@ -301,8 +297,8 @@ msgstr "Verificando {done} de {total}…"
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
 
-msgid "Computer"
-msgstr "Computador"
+msgid "Click to copy"
+msgstr "Clique para copiar"
 
 msgid "Connect"
 msgstr "Conectar"
@@ -334,6 +330,13 @@ msgstr "Perfis de conexão"
 
 msgid "Connections"
 msgstr "Conexões"
+
+msgid "Console"
+msgstr "Console"
+
+#, python-brace-format
+msgid "Copied: {text}"
+msgstr "Copiado: {text}"
 
 msgid "Copy"
 msgstr "Copiar"
@@ -424,11 +427,17 @@ msgstr "Excluir perfil de conexão"
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
 msgstr "Excluir o perfil de conexão “{profile}”? Todos neste PC deixam de tê-lo."
 
+msgid "Disconnected"
+msgstr "Desconectado"
+
 msgid "Download"
 msgstr "Baixar"
 
 msgid "Drag a group to move it, or drop it onto another group to put it inside."
 msgstr "Arraste um grupo para movê-lo, ou solte-o sobre outro grupo para colocá-lo dentro dele."
+
+msgid "Drop a group here to move it to the top level"
+msgstr "Solte um grupo aqui para movê-lo para o nível superior"
 
 msgid "Duplicate connection profile"
 msgstr "Duplicar perfil de conexão"
@@ -510,15 +519,15 @@ msgstr "Hosts sem perfil &usam:"
 msgid "Hover over a list to see where it is."
 msgstr "Passe o mouse sobre uma lista para ver onde ela está."
 
+msgid "Idle"
+msgstr "Inativo"
+
 msgid "If that list can't be opened: the default list, then your personal list."
 msgstr "Se essa lista não abrir: a lista padrão, depois a sua lista pessoal."
 
 #, python-brace-format
 msgid "In the open list it's set on {hosts} and {groups}. They'll use their group's profile, or the default, instead."
 msgstr "Na lista aberta ele está definido em {hosts} e {groups}. Eles passarão a usar o perfil do grupo, ou o padrão."
-
-msgid "Information"
-msgstr "Informações"
 
 msgid "Install it, or locate its .exe."
 msgstr "Instale-o ou localize o .exe dele."
@@ -541,9 +550,6 @@ msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on. If a computer rejects it, CapyPanel stops and asks again instead of trying it on the others, so the account isn't locked."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado. Se um computador recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta não ser bloqueada."
 
-msgid "Kind"
-msgstr "Tipo"
-
 msgid "List"
 msgstr "Lista"
 
@@ -553,14 +559,19 @@ msgstr "Localizar…"
 msgid "Logged on"
 msgstr "Logados"
 
+#, python-brace-format
+msgid "Logged on ({n}) · {when}"
+msgstr "Logados ({n}) · {when}"
+
+#, python-brace-format
+msgid "Logged on · {when}"
+msgstr "Logados · {when}"
+
 msgid "Logs"
 msgstr "Logs"
 
 msgid "Logs: one per user, named after the account."
 msgstr "Logs: um por usuário, com o nome da conta."
-
-msgid "Made by another user: not used"
-msgstr "Criada por outro usuário: não é usada"
 
 msgid "Manage groups"
 msgstr "Gerenciar grupos"
@@ -568,11 +579,11 @@ msgstr "Gerenciar grupos"
 msgid "Manual connection"
 msgstr "Conexão manual"
 
-msgid "Many connections"
-msgstr "Muitas conexões"
-
 msgid "Move &down"
 msgstr "Mover para &baixo"
+
+msgid "Move &to"
+msgstr "Mover &para"
 
 msgid "Move &up"
 msgstr "Mover para &cima"
@@ -582,7 +593,7 @@ msgid "Move them into “{name}”"
 msgstr "Mover para “{name}”"
 
 msgid "Move them to the top level"
-msgstr "Mover para o nível mais alto"
+msgstr "Mover para o nível superior"
 
 msgid "Move this group's hosts to another group first."
 msgstr "Mova os hosts deste grupo para outro grupo antes."
@@ -591,7 +602,7 @@ msgid "My personal list"
 msgstr "Minha lista pessoal"
 
 msgid "N&otes:"
-msgstr "&Observações:"
+msgstr "N&otas:"
 
 msgid "Name"
 msgstr "Nome"
@@ -621,20 +632,23 @@ msgstr "Novo nome:"
 msgid "No address"
 msgstr "Sem endereço"
 
+msgid "No admin rights"
+msgstr "Sem direitos de administrador"
+
 msgid "No computer by that name or address was found on the network."
 msgstr "Nenhum computador com esse nome ou endereço foi encontrado na rede."
 
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
 
-msgid "Nobody"
+msgid "No one"
 msgstr "Ninguém"
 
-msgid "Not an admin there"
-msgstr "Não é administrador lá"
+msgid "No one logged on"
+msgstr "Ninguém logado"
 
-msgid "Not checked yet: use Refresh"
-msgstr "Ainda não verificado: use Atualizar"
+msgid "Not checked"
+msgstr "Não verificado"
 
 msgid "Not checked: use Refresh"
 msgstr "Não verificado: use Atualizar"
@@ -645,8 +659,11 @@ msgid_plural "Not opened ({n}): {names}"
 msgstr[0] "Não aberto: {names}"
 msgstr[1] "Não abertos ({n}): {names}"
 
+msgid "Not used: made by another user"
+msgstr "Não usada: criada por outro usuário"
+
 msgid "Notes"
-msgstr "Observações"
+msgstr "Notas"
 
 msgid "Nothing answered, neither ping nor the usual ports: the computer is off, not on the network, or a firewall blocks everything."
 msgstr "Nada respondeu, nem o ping nem as portas usuais: o computador está desligado, fora da rede ou um firewall bloqueia tudo."
@@ -671,6 +688,9 @@ msgstr "Abrir &Configurações"
 
 msgid "Open folder"
 msgstr "Abrir pasta"
+
+msgid "Open many remote screens?"
+msgstr "Abrir muitas telas remotas?"
 
 #, python-brace-format
 msgid "Open {n} remote screen at once?"
@@ -710,17 +730,29 @@ msgstr "Lista pessoal: só sua."
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
 
+msgid "Profile"
+msgstr "Perfil"
+
 msgid "Programs (*.exe)"
 msgstr "Programas (*.exe)"
 
 msgid "Read-only"
 msgstr "Somente leitura"
 
-msgid "Read-write"
-msgstr "Leitura e gravação"
+msgid "Read/write"
+msgstr "Leitura/gravação"
 
 msgid "Refresh"
 msgstr "Atualizar"
+
+msgid "Refresh every host shown"
+msgstr "Atualizar todos os hosts exibidos"
+
+msgid "Refresh every host shown; right-click to choose what it refreshes"
+msgstr "Atualiza todos os hosts exibidos; clique com o botão direito para escolher o que atualizar"
+
+msgid "Refresh logged-on users"
+msgstr "Atualizar usuários logados"
 
 msgid "Reload the list"
 msgstr "Recarregar a lista"
@@ -779,17 +811,9 @@ msgstr "Salvar minha versão como cópia…"
 msgid "Save the changes and keep Settings open"
 msgstr "Salva as alterações e mantém as Configurações abertas"
 
-msgid "Search name"
-msgstr "Pesquisar nome"
-
-msgid "Search name, address"
-msgstr "Pesquisar nome, endereço"
-
-msgid "Search name, address, user"
-msgstr "Pesquisar nome, endereço, usuário"
-
-msgid "Search name, user"
-msgstr "Pesquisar nome, usuário"
+#, python-brace-format
+msgid "Search {fields}"
+msgstr "Pesquisar {fields}"
 
 msgid "Searches every host in the list (Ctrl+F)"
 msgstr "Pesquisa em todos os hosts da lista (Ctrl+F)"
@@ -833,11 +857,11 @@ msgstr "Outra pessoa salvou alterações nesta lista depois que você a abriu. A
 msgid "Something went wrong. The details were saved to the app log."
 msgstr "Algo deu errado. Os detalhes foram salvos no log do aplicativo."
 
-msgid "Sorts every level by name, once; you can rearrange after"
-msgstr "Ordena todos os níveis pelo nome, uma vez; depois você pode reorganizar"
+msgid "Sorts every level by name, once; you can rearrange them after"
+msgstr "Classifica todos os níveis pelo nome, uma vez; depois você pode reorganizá-los"
 
 msgid "Startup"
-msgstr "Ao iniciar"
+msgstr "Inicialização"
 
 msgid "Status"
 msgstr "Status"
@@ -934,11 +958,11 @@ msgstr "O grupo pai não existe."
 
 #, python-brace-format
 msgid "The placeholder “{{{name}}}” goes with the “{method}” credential method."
-msgstr "O marcador “{{{name}}}” é usado com o método de credencial “{method}”."
+msgstr "O espaço reservado “{{{name}}}” é usado com o método de credencial “{method}”."
 
 #, python-brace-format
 msgid "The placeholder “{{{name}}}” goes with “settings_file”."
-msgstr "O marcador “{{{name}}}” é usado com “settings_file”."
+msgstr "O espaço reservado “{{{name}}}” é usado com “settings_file”."
 
 msgid "The profile needs a “name”."
 msgstr "O perfil precisa de um “name”."
@@ -1000,6 +1024,12 @@ msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o 
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyPanel."
 
+msgid "Top level"
+msgstr "Nível superior"
+
+msgid "Type"
+msgstr "Tipo"
+
 msgid "Type a tag and press Enter"
 msgstr "Digite uma tag e pressione Enter"
 
@@ -1014,12 +1044,12 @@ msgid "Unknown credential method “{method}”."
 msgstr "Método de credencial desconhecido: “{method}”."
 
 #, python-brace-format
-msgid "Unknown login “{login}”."
-msgstr "Login desconhecido: “{login}”."
+msgid "Unknown credential type “{login}”."
+msgstr "Credencial desconhecida: “{login}”."
 
 #, python-brace-format
 msgid "Unknown placeholder “{{{name}}}” in the arguments."
-msgstr "Marcador desconhecido “{{{name}}}” nos argumentos."
+msgstr "Espaço reservado desconhecido “{{{name}}}” nos argumentos."
 
 #, python-brace-format
 msgid "Unknown tool kind “{kind}”."
@@ -1091,6 +1121,9 @@ msgstr "Seus arquivos: suas configurações e sua lista pessoal, só para você 
 msgid "active"
 msgstr "ativa"
 
+msgid "address"
+msgstr "endereço"
+
 msgid "at the computer"
 msgstr "no computador"
 
@@ -1102,10 +1135,16 @@ msgid "from {computer}"
 msgstr "de {computer}"
 
 msgid "idle"
-msgstr "ociosa"
+msgstr "inativa"
+
+msgid "name"
+msgstr "nome"
 
 msgid "no password"
 msgstr "sem senha"
+
+msgid "notes"
+msgstr "notas"
 
 msgid "password only"
 msgstr "só senha"
@@ -1120,8 +1159,14 @@ msgstr "somente leitura"
 msgid "since {when}"
 msgstr "desde {when}"
 
+msgid "tags"
+msgstr "tags"
+
 msgid "the selected hosts"
 msgstr "os hosts selecionados"
+
+msgid "user"
+msgstr "usuário"
 
 msgid "user and password"
 msgstr "usuário e senha"
@@ -1137,10 +1182,10 @@ msgid "{name} (in use)"
 msgstr "{name} (em uso)"
 
 #, python-brace-format
-msgid "{n} computer didn't let your Windows login see who is logged on. Use another account, such as an administrator of those computers?"
-msgid_plural "{n} computers didn't let your Windows login see who is logged on. Use another account, such as an administrator of those computers?"
-msgstr[0] "{n} computador não deixou seu login do Windows ver quem está logado. Usar outra conta, como um administrador desses computadores?"
-msgstr[1] "{n} computadores não deixaram seu login do Windows ver quem está logado. Usar outra conta, como um administrador desses computadores?"
+msgid "{n} computer didn't let your Windows account see who is logged on. Use another account, such as an administrator of those computers?"
+msgid_plural "{n} computers didn't let your Windows account see who is logged on. Use another account, such as an administrator of those computers?"
+msgstr[0] "{n} computador não deixou sua conta do Windows ver quem está logado. Usar outra conta, como um administrador desses computadores?"
+msgstr[1] "{n} computadores não deixaram sua conta do Windows ver quem está logado. Usar outra conta, como um administrador desses computadores?"
 
 #, python-brace-format
 msgid "{n} computer didn't let “{user}” see who is logged on. Use another account?"
@@ -1151,8 +1196,8 @@ msgstr[1] "{n} computadores não deixaram “{user}” ver quem está logado. Us
 #, python-brace-format
 msgid "{n} found"
 msgid_plural "{n} found"
-msgstr[0] "{n} encontrado"
-msgstr[1] "{n} encontrados"
+msgstr[0] "{n} resultado"
+msgstr[1] "{n} resultados"
 
 #, python-brace-format
 msgid "{n} group"
@@ -1229,16 +1274,12 @@ msgid "{profile} (copy)"
 msgstr "{profile} (cópia)"
 
 #, python-brace-format
-msgid "{profile} (default)"
-msgstr "{profile} (padrão)"
-
-#, python-brace-format
-msgid "{profile} (from group “{group}”)"
-msgstr "{profile} (do grupo “{group}”)"
-
-#, python-brace-format
 msgid "{profile} (not available on this PC)"
 msgstr "{profile} (não disponível neste PC)"
+
+#, python-brace-format
+msgid "{status} · checked {when}"
+msgstr "{status} · verificado em {when}"
 
 #, python-brace-format
 msgid "{tool} (not installed on this PC)"

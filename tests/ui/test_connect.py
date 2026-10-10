@@ -224,10 +224,9 @@ def test_the_profile_menu_sets_several_hosts_at_once(window: MainWindow) -> None
     assert {h.profile for h in doc.hosts.hosts if h.name in ("PC-A", "PC-B")} == {"pis-password"}
 
 
-def test_details_say_where_the_profile_comes_from(window: MainWindow) -> None:
+def test_details_show_the_profile_s_name(window: MainWindow) -> None:
     _select(window, "PI-1")
-    shown = window.details.shown_value("connection")
-    assert shown == "Pis (from group “Pis”)"
+    assert window.details.shown_value("profile") == "Pis"  # the group's, named plainly
 
 
 def test_manual_connection_uses_the_chosen_profile(
@@ -400,7 +399,7 @@ def test_a_profile_this_pc_lacks_falls_back_to_the_group_s(
     host = next(h for h in doc.hosts.hosts if h.name == "PC-A")
     window.set_hosts_profile([host.id], "gone-elsewhere")
     _select(window, "PC-A")
-    assert window.details.shown_value("connection") == "Offices (SecureVNC) (from group “Offices”)"
+    assert window.details.shown_value("profile") == "Offices (SecureVNC)"
     window.connector.credentials.remember("offices", Credential("ana", "x"))
     window.connect_selected()
     assert launched[0][0] == "ultravnc" and launched[0][4] == ("securevnc",)
@@ -465,7 +464,9 @@ def test_right_click_acts_on_what_is_under_the_mouse(
     pis = next(i for i in _items(groups) if i.text(0).startswith("Pis"))
     groups.setCurrentItem(pis)  # picked earlier
     empty = groups.viewport().rect().bottomLeft() + QPoint(5, -5)
-    assert _menu_on(monkeypatch, lambda: window._group_menu(empty)) == ["Add &group…"]
+    assert _menu_on(monkeypatch, lambda: window._group_menu(empty)) == [
+        "Add &group…", "&Manage groups…"
+    ]  # fmt: skip
     texts = _menu_on(
         monkeypatch, lambda: window._group_menu(groups.visualItemRect(offices).center())
     )

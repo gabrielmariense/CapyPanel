@@ -1,13 +1,23 @@
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
-from PySide6.QtWidgets import QAbstractItemView, QApplication, QDialog, QTreeWidgetItem
+from PySide6.QtCore import QPoint, QPointF, Qt
+from PySide6.QtGui import QDropEvent
+from PySide6.QtWidgets import QAbstractItemView, QApplication, QDialog, QMenu, QTreeWidgetItem
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog
+from capypanel.ui.groups import (
+    ROLE_ID,
+    TREE_INDENT,
+    ManageGroupsDialog,
+    TreeMenu,
+    fill_move_menu,
+)
+from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.window import MainWindow
 
 
@@ -152,3 +162,175 @@ def test_removing_a_group_can_remove_everything(
     assert doc is not None
     assert [g.name for g in doc.hosts.groups] == ["Zebra wing"]
     assert [h.name for h in doc.hosts.hosts] == ["Z-01"]
+
+
+def _texts(menu: QMenu) -> list[str]:
+    return [a.text() for a in menu.actions() if a.text()]
+
+
+def _choose(menu: QMenu, text: str) -> None:
+    next(a for a in menu.actions() if a.text() == text).trigger()
+
+
+def test_move_to_offers_the_top_level_first_and_never_the_group_itself(
+    window: MainWindow,
+) -> None:
+    doc = window.document
+    assert doc is not None
+    chosen: list[str | None] = []
+    menu = TreeMenu()
+    fill_move_menu(menu, doc.hosts, _id(window, "alpha wing"), chosen.append)
+    assert _texts(menu) == ["Top level", "Zebra wing"]  # not alpha wing, nor its Lab
+    assert menu.actions()[0].isChecked()  # where it is now
+    assert menu.marked is menu.actions()[0]  # tinted too, easy to spot in a long menu
+    _choose(menu, "Top level")
+    assert chosen == []  # already there
+    _choose(menu, "Zebra wing")
+    assert chosen == [_id(window, "Zebra wing")]
+    menu = TreeMenu()
+    fill_move_menu(menu, doc.hosts, _id(window, "Zebra wing"), chosen.append)
+    assert _texts(menu) == ["Top level", "alpha wing", TREE_INDENT + "Lab"]  # nesting shows
+
+
+def test_move_to_draws_the_tree_s_lines(qapp: QApplication) -> None:
+    hl, hq = HostList().add_group("Headquarters")
+    hl, finance = hl.add_group("Finance", parent=hq.id)
+    hl, _ = hl.add_group("Payroll", parent=finance.id)
+    hl, _ = hl.add_group("Reports", parent=hq.id)
+    hl, annex = hl.add_group("Annex")
+    menu = TreeMenu()
+    fill_move_menu(menu, hl, annex.id, lambda _p: None)
+    rows = {a.text().strip(): menu.branches(a) for a in menu.actions() if a.text()}
+    # Finance's line carries on past Payroll down to Reports, the last one under Headquarters.
+    assert rows == {
+        "Top level": (),
+        "Headquarters": (),
+        "Finance": (False,),
+        "Payroll": (False, True),
+        "Reports": (True,),
+    }
+    menu.adjustSize()
+    assert not menu.grab().isNull()  # draws its lines in any theme without failing
+
+
+def test_right_click_move_to_puts_the_group_inside_another(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class Choosing(QMenu):
+        def exec(self, *_args: Any) -> None:  # type: ignore[override]
+            move = next(a for a in self.actions() if a.text() == "&Move to").menu()
+            assert isinstance(move, QMenu)
+            _choose(move, "Zebra wing")
+
+    window.show()
+    QApplication.processEvents()
+    tree = window.nav.groups
+    alpha = tree.invisibleRootItem().child(1)
+    lab = alpha.child(0) if alpha is not None else None
+    assert lab is not None
+    monkeypatch.setattr(window_module, "QMenu", Choosing)
+    window._group_menu(tree.visualItemRect(lab).center())
+    doc = window.document
+    assert doc is not None
+    assert doc.hosts.group(_id(window, "Lab")).parent == _id(window, "Zebra wing")  # type: ignore[union-attr]
+    assert listfile.load(doc.path).hosts == doc.hosts  # saved
+    assert window.nav.selected_group_id() == _id(window, "Lab")  # still picked, in its new place
+    window.close()
+
+
+def test_right_clicking_the_groups_heading_offers_new_and_manage(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[str] = []
+
+    class Recorded(QMenu):
+        def exec(self, *_args: Any) -> None:  # type: ignore[override]
+            seen.extend(_texts(self))
+
+    monkeypatch.setattr(window_module, "QMenu", Recorded)
+    window.nav.groups_heading.customContextMenuRequested.emit(QPoint(5, 5))
+    assert seen == ["Add &group…", "&Manage groups…"]
+
+
+def test_add_group_from_the_heading_goes_to_the_top_level_even_with_a_group_picked(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class Adding(QMenu):
+        def exec(self, *_args: Any) -> None:  # type: ignore[override]
+            _choose(self, "Add &group…")
+
+    monkeypatch.setattr(window_module, "QMenu", Adding)
+    monkeypatch.setattr(window_module.QInputDialog, "getText", lambda *_a, **_k: ("Annex", True))
+    window.nav.select_group(_id(window, "Lab"))
+    window.nav.groups_heading.customContextMenuRequested.emit(QPoint(5, 5))
+    doc = window.document
+    assert doc is not None
+    assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Annex"]
+
+
+def test_a_group_dropped_on_the_groups_heading_goes_to_the_top_level(window: MainWindow) -> None:
+    window.nav.groups_heading.group_dropped.emit(_id(window, "Lab"))
+    doc = window.document
+    assert doc is not None
+    assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Lab"]
+
+
+def test_manage_groups_move_to_changes_only_its_working_copy(window: MainWindow) -> None:
+    doc = window.document
+    assert doc is not None
+    dialog = ManageGroupsDialog(None, doc.hosts)
+    root = dialog.tree.invisibleRootItem()
+    alpha = root.child(1)
+    assert alpha is not None
+    lab = alpha.child(0)
+    assert lab is not None
+    dialog.tree.setCurrentItem(lab)
+
+    _choose(dialog.move_menu(), "Top level")
+    assert _names(root) == ["Zebra wing", "alpha wing", "Lab"]
+    assert dict(dialog.order())[_id(window, "Lab")] is None
+    saved = doc.hosts.group(_id(window, "Lab"))
+    assert saved is not None and saved.parent is not None  # nothing saved before OK
+
+
+def test_the_tree_s_drag_data_drops_on_the_heading(window: MainWindow) -> None:
+    tree = window.nav.groups
+    alpha = tree.invisibleRootItem().child(1)
+    lab = alpha.child(0) if alpha is not None else None
+    assert lab is not None
+    data = tree.mimeData([lab])  # what dragging "Lab" carries
+    drop = QDropEvent(
+        QPointF(5, 5),
+        Qt.DropAction.MoveAction | Qt.DropAction.CopyAction,  # what the tree offers
+        data,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    window.nav.groups_heading.dropEvent(drop)
+    doc = window.document
+    assert doc is not None
+    assert doc.hosts.group(_id(window, "Lab")).parent is None  # type: ignore[union-attr]
+    assert drop.dropAction() == Qt.DropAction.CopyAction  # the tree doesn't drop its own row
+
+
+def test_the_plus_by_the_heading_adds_at_the_top_level(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(window_module.QInputDialog, "getText", lambda *_a, **_k: ("Annex", True))
+    window.nav.select_group(_id(window, "Lab"))
+    window.nav.add_group_button.click()
+    doc = window.document
+    assert doc is not None
+    assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Annex"]
+
+
+def test_a_group_closed_by_hand_stays_closed_after_a_change(window: MainWindow) -> None:
+    alpha = window.nav.groups.invisibleRootItem().child(1)
+    assert alpha is not None
+    alpha.setExpanded(False)
+    doc = window.document
+    assert doc is not None
+    z01 = next(h.id for h in doc.hosts.hosts if h.name == "Z-01")
+    window.move_hosts([z01], _id(window, "Lab"))  # any change rebuilds the tree
+    alpha = window.nav.groups.invisibleRootItem().child(1)
+    assert alpha is not None and alpha.childCount() and not alpha.isExpanded()

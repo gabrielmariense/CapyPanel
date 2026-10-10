@@ -56,7 +56,7 @@ def test_unknown_keys_survive_a_round_trip() -> None:
         ({"id": "No Spaces"}, "id"),
         ({"tool": ""}, "tool"),
         ({"name": " "}, "name"),
-        ({"login": "fingerprint"}, "login"),
+        ({"login": "fingerprint"}, "credential type"),
         ({"options": "securevnc"}, "options"),
         ({"port": 0}, "port"),
         ({"schema": 2}, "newer version"),

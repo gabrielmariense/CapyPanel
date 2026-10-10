@@ -46,6 +46,11 @@ editing**.
 Also under **View > Theme**. Themes change colors only — the font, its size and the rounded
 corners are the same in every one — and never change what the app does.
 
+The Windows themes follow your Windows accent color (**Settings > Personalization > Colors**), and
+everything built from it stays readable whichever one you pick: section headings, the default
+button, highlights, and the Groups heading when you drag a group onto it. CapyPanel's own looks
+keep their own accents instead, the same on every computer.
+
 ## Where CapyPanel keeps its files
 
 CapyPanel keeps everything for all users of a PC in one folder, `C:\ProgramData\CapyPanel`,

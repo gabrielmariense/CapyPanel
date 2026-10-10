@@ -173,7 +173,7 @@ class GeneralPage(Page):
         grid.addWidget(notes(*lines), len(folders), 0, 1, 3)
 
         refresh = QGroupBox(_("Refresh"))
-        self.auto_status = QCheckBox(_("Check the &status of the hosts shown every"))
+        self.auto_status = QCheckBox(_("&Refresh the status of the hosts shown every"))
         self.auto_status.setChecked(auto_status[0])
         self.auto_minutes = QSpinBox()
         self.auto_minutes.setRange(1, 120)

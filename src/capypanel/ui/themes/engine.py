@@ -19,7 +19,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QColor, QFont, QGuiApplication, QPalette
-from PySide6.QtWidgets import QApplication, QListView, QTreeView, QWidget
+from PySide6.QtWidgets import QApplication, QListView, QMenu, QTreeView, QWidget
 
 from capypanel.core.i18n import N_, _
 
@@ -134,7 +134,7 @@ _current: Theme = DEFAULT_THEME
 _applied_once = False
 _watching_system = False
 _native_font: QFont | None = None
-_rows_placer: QObject | None = None
+_watcher: QObject | None = None
 
 
 def current() -> Theme:
@@ -159,7 +159,7 @@ def apply(theme: Theme) -> None:
     engine_changed = theme.engine != _current.engine or not _applied_once
     _current, _applied_once = theme, True
     _follow_system_changes()
-    _place_rows_when_shown(app)
+    _watch_widgets(app)
     if theme.engine == "native":
         # Windows' default app font is 9 pt; use the same size as the custom themes.
         readable = QFont(_native_font)
@@ -202,6 +202,8 @@ def native_tokens(accent: QColor) -> dict[str, str]:
     tokens["sel"] = selection_tint(accent, tokens["card"], tokens["text"])
     tokens["hover"] = _mix(QColor(tokens["text"]), QColor(tokens["card"]), 0.06)
     tokens["accent"] = accent.name()
+    tokens["accent_text"] = readable_on(accent, tokens["card"], tokens["text"])
+    tokens["accent_drop"] = readable_on(accent, tokens["sel"], tokens["text"])
     tokens["arrow"] = (THEMES_DIR / f"arrow-{native_scheme()}.svg").as_posix()
     return tokens
 
@@ -214,6 +216,49 @@ def selection_tint(accent: QColor, card: str, text: str) -> str:
         if contrast_ratio(tint, card) >= 1.35 and contrast_ratio(text, tint) >= 4.5:
             return tint
     return _mix(QColor(text), QColor(card), 0.18)  # an accent too close to text: plain grey
+
+
+def readable_on(accent: QColor, card: str, text: str) -> str:
+    """The accent as text on the pane (4.5:1), moved toward the text colour as far as needed: a
+    deep purple accent was unreadable as a heading on a dark pane."""
+    for step in range(0, 101, 5):
+        tint = _mix(QColor(text), accent, step / 100)
+        if contrast_ratio(tint, card) >= 4.5:
+            return tint
+    return text
+
+
+def button_fill(accent: QColor) -> str:
+    """The default button's colour: the accent, darkened as far as white text needs (4.5:1).
+    Graphite's light teal left its OK button's text hard to read."""
+    for step in range(0, 101, 5):
+        fill = _mix(QColor("#000000"), accent, step / 100)
+        if contrast_ratio("#ffffff", fill) >= 4.5:
+            return fill
+    return "#000000"
+
+
+def mark_tint(accent: QColor, card: str, text: str) -> str:
+    """A tint of the accent that marks one row of a menu: as plain as Graphite's teal (1.6:1
+    against the menu), text still readable on it (4.5:1). A dark accent on a dark menu, like a
+    deep purple, can't get there, so it's lifted toward the text colour first."""
+    for lift in (0.0, 0.2, 0.4, 0.6):
+        base = QColor(_mix(QColor(text), accent, lift))
+        for step in range(10, 92, 2):
+            tint = _mix(base, QColor(card), step / 100)
+            if contrast_ratio(tint, card) >= 1.6 and contrast_ratio(text, tint) >= 4.5:
+                return tint
+    return _mix(QColor(text), QColor(card), 0.25)
+
+
+def menu_mark() -> QColor:
+    """The current theme's colour for a row marked in a menu ("Move to"'s current place)."""
+    if _current.engine == "native":
+        tokens = NATIVE_TOKENS[native_scheme()]
+        accent = QApplication.palette().color(QPalette.ColorRole.Accent)
+        return QColor(mark_tint(accent, tokens["card"], tokens["text"]))
+    colors = _current.colors
+    return QColor(mark_tint(QColor(colors["accent"]), colors["card"], colors["text"]))
 
 
 def _mix(color: QColor, base: QColor, amount: float) -> str:
@@ -247,21 +292,33 @@ def _system_scheme_changed() -> None:
         apply(_current)
 
 
-class _PlaceRowsOnShow(QObject):
-    """Lists and trees can place their rows before the theme's row padding reaches them, then
-    keep those places: rows drew on top of each other. Each one places them again when shown."""
+_ACTION_EVENTS = (QEvent.Type.ActionAdded, QEvent.Type.ActionChanged, QEvent.Type.ActionRemoved)
+
+
+class _Watcher(QObject):
+    """Fixes the themes need on every widget, wherever it's made:
+    - lists and trees can place their rows before the theme's row padding reaches them, then
+      keep those places (rows drew on top of each other): each one places them again when shown;
+    - menus with ticks are marked, so the stylesheet can line their text up with other menus."""
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.Show and isinstance(watched, (QListView, QTreeView)):
+        kind = event.type()
+        if kind == QEvent.Type.Show and isinstance(watched, (QListView, QTreeView)):
             watched.doItemsLayout()
+        elif kind in _ACTION_EVENTS and isinstance(watched, QMenu):
+            ticks = any(a.isCheckable() for a in watched.actions())
+            if bool(watched.property("ticks")) != ticks:
+                watched.setProperty("ticks", ticks)
+                watched.style().unpolish(watched)
+                watched.style().polish(watched)
         return False
 
 
-def _place_rows_when_shown(app: QApplication) -> None:
-    global _rows_placer
-    if _rows_placer is None:
-        _rows_placer = _PlaceRowsOnShow(app)
-        app.installEventFilter(_rows_placer)
+def _watch_widgets(app: QApplication) -> None:
+    global _watcher
+    if _watcher is None:
+        _watcher = _Watcher(app)
+        app.installEventFilter(_watcher)
 
 
 def _refont(app: QApplication, families: list[str]) -> None:
@@ -324,6 +381,9 @@ QMenu { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)s
 QMenu::item { padding: 6px 28px 6px 30px; border-radius: 6px; }
 QMenu::item:selected { background: %(hover)s; }
 QMenu::item:disabled { color: %(text3)s; }
+/* In a menu with ticks Qt adds a tick's width before every item's text: take it back, so the
+   tick sits in the pad and the text lines up with other menus. */
+QMenu[ticks="true"]::item { padding-left: 16px; }
 QMenu::separator { height: 1px; background: %(border)s; margin: 5px 6px; }
 QMenu::indicator { left: 9px; }
 
@@ -410,7 +470,20 @@ QTreeView#flat { border: none; background: transparent; padding: 0 2px; }
 /* The search box above the host table: a small pane, with the panes' corners. */
 QLineEdit#paneSearch { border-radius: %(r)spx; padding: 6px 8px; }
 QFrame#divider { background: %(border)s; border: none; }
+/* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
+QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
+QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
+QLabel#copyValue { padding: 2px 4px; border-radius: 4px; }
+QLabel#copyValue:hover { background: %(hover)s; }
+QLabel#tagValue { background: %(sel_solid)s; border-radius: 9px; padding: 2px 9px; }
+QLabel#tagValue:hover { background: %(hover)s; }
+QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8px; padding: 0 6px; }
+QLabel#stateBadge[active="true"] { color: #3fae4a; border-color: #3fae4a; }
+QFrame#notesBox { border: 1px solid %(border)s; border-radius: 6px; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
+/* The Groups heading while a group is dragged over it: dropping moves it to the top. */
+QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel_solid)s;
+                                     border-radius: %(r2)spx; }
 QListView#pageList::item { padding: 7px 10px; }
 
 /* Fusion outlines these with a darker shade of the background, invisible in dark themes. */
@@ -433,8 +506,8 @@ QPushButton { background: %(card)s; border: 1px solid %(border)s; border-radius:
               padding: 6px 20px; }
 QPushButton:hover { background: %(raised)s; }
 QPushButton:disabled { color: %(text3)s; }
-QPushButton:default { background: %(accent)s; border-color: %(accent)s; color: #ffffff; }
-QPushButton:default:hover { background: %(accent_hover)s; }
+QPushButton:default { background: %(button)s; border-color: %(button)s; color: #ffffff; }
+QPushButton:default:hover { background: %(button_hover)s; }
 QGroupBox { border: 1px solid %(border)s; border-radius: %(r)spx; margin-top: 16px;
             padding: 14px 12px 10px 12px; background: %(card)s; }
 QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 4px; color: %(text2)s; }
@@ -478,7 +551,18 @@ QTreeView#grid QHeaderView::section { border-right: 2px solid %(border)s; }
 QTreeView#grid::item:last, QTreeView#grid::item:only-one,
 QTreeView#grid QHeaderView::section:last,
 QTreeView#grid QHeaderView::section:only-one { border-right: none; }
+/* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
+QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
+QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
+QLabel#copyValue { padding: 2px 4px; border-radius: 4px; }
+QLabel#copyValue:hover { background: %(hover)s; }
+QLabel#tagValue { background: %(sel)s; border-radius: 9px; padding: 2px 9px; }
+QLabel#tagValue:hover { background: %(hover)s; }
+QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8px; padding: 0 6px; }
+QLabel#stateBadge[active="true"] { color: #3fae4a; border-color: #3fae4a; }
+QFrame#notesBox { border: 1px solid %(border)s; border-radius: 6px; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
+QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel)s; }
 /* Toolbar buttons like the CapyPanel stylesheet's, square like the panes here.
    Styling them drops the style's own menu arrow, so the theme's arrow is drawn instead. */
 QToolBar#main QToolButton { color: %(text2)s; background: %(card)s; border: 1px solid %(border)s;
@@ -510,6 +594,12 @@ QToolButton#tagChipRemove {
 def stylesheet(theme: Theme) -> str:
     t: dict[str, object] = {k: _qss_color(v) for k, v in theme.colors.items()}
     t["r"], t["r2"] = theme.radius, max(0, theme.radius - 2)
+    colors = theme.colors
+    accent = QColor(colors["accent"])
+    t["accent_text"] = readable_on(accent, colors["card"], colors["text"])
+    t["accent_drop"] = readable_on(accent, colors["sel_solid"], colors["text"])
+    t["button"] = button_fill(accent)
+    t["button_hover"] = button_fill(QColor(colors["accent_hover"]))
     t["check"] = (THEMES_DIR / "check.svg").as_posix()
     t["arrow"] = (THEMES_DIR / f"arrow-{theme.scheme}.svg").as_posix()
     t["arrow_up"] = (THEMES_DIR / f"arrow-up-{theme.scheme}.svg").as_posix()

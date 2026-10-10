@@ -13,7 +13,7 @@ uv run capypanel
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
 The version shows in the title bar, followed by the commit when you run from source, e.g.
-`CapyPanel 0.16.1 (abc1234)`. Quote it when you report a problem.
+`CapyPanel 0.17.0 (abc1234)`. Quote it when you report a problem.
 
 Remote Desktop works out of the box, with the client built into Windows. For VNC you also need a
 viewer: [UltraVNC](https://uvnc.com) or
@@ -28,18 +28,25 @@ viewer: [UltraVNC](https://uvnc.com) or
 | **Groups** (left) | "All hosts" pinned on top, with how many hosts the list has. Then **Groups**, with a **+** button to add one, and **Tags** |
 | **Search** (above the hosts) | Finds a host anywhere in the list, whatever is picked on the left (see [Searching hosts](searching.md)) |
 | **Hosts** (middle) | The hosts in the selected group or tag, with their **Status** and **User** |
-| **Information** (right) | The selected host's details, including its connection profile and where it comes from. With nothing selected, how many hosts are shown, and how many of them are online, offline, not found or not checked |
+| **Details** (right) | The selected host: its name and status, then **Connection** (address, group, profile), who's **logged on**, its **tags** and its **notes**. Click any value to copy it. With nothing selected, how many hosts are shown, and how many of them are online, offline, not found or not checked |
 | **Status bar** | Which list is open, where it is, how many hosts it has, how many are online once anything has been checked, and how many are selected |
 
 The toolbar, the status bar and the panes around the host table can be hidden from the **View**
-menu. Right-click the host table's column titles to choose which columns show. To switch to
-another list, use **File > Host lists…** (see
-[Host lists](host-lists.md#the-host-lists-window)).
+menu, and the panes can be dragged wider or narrower. To switch to another list, use
+**File > Host lists…** (see [Host lists](host-lists.md#the-host-lists-window)).
+
+The window is yours to arrange. Right-click the host table's column titles to choose which columns
+show, or **Fit columns to content** at the bottom of that menu to fit them all to their text;
+double-clicking a column's edge fits that one. Widths are saved for next time, and nothing resizes
+them behind your back — not a Refresh, not switching lists. **View > Reset layout** puts the
+panes, the columns and anything you hid back to the start, and leaves your settings alone.
 
 ## Add your first hosts
 
 1. A new list starts with one group, **Default group**. **Inventory > Add group…**
-   (Ctrl+Shift+N) creates another; with a group selected, the new one goes inside it.
+   (Ctrl+Shift+N) creates another; with a group selected, the new one goes inside it. The **+**
+   beside the **Groups** heading, and a right-click on the heading or on empty space, add one at
+   the top level instead.
 2. **Inventory > Add host…** (Ctrl+N) adds a host to the selected group:
    - **Name:** how the host shows in the list.
    - **Address:** a computer name or IP address. Leave it blank if the name *is* the computer name
@@ -50,7 +57,7 @@ another list, use **File > Host lists…** (see
 3. Double-click the host, select it and press Enter, or click **Connect** in the toolbar, to open
    a connection to it with its profile.
 
-Right-click a host to connect, check it, show it in its group, copy its address or name, or edit
+Right-click a host to connect, refresh it, show it in its group, copy its address or name, or edit
 or remove it.
 Right-clicking empty space offers **Add group…** in the groups pane, and **Add host…** and
 **Add group…** in the host list. To move hosts to another group, drag them onto it (see

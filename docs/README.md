@@ -16,10 +16,11 @@ Desktop or the VNC viewer you already use.
 - Logged-on users
 - Search
 - Toolbar redesign
+- Moving groups
 
 ### In development
 
-- Moving groups
+- Bulk import
 
 ### Planned
 
@@ -40,5 +41,5 @@ For people who use CapyPanel, and for people who set it up for a team.
 | [Settings and files](settings-and-files.md) | Every setting, and where CapyPanel keeps its files |
 | [Development](development.md) | Building, testing and translating CapyPanel |
 
-These pages describe the current version (0.16.1). CapyPanel is in beta, so they grow with each
+These pages describe the current version (0.17.0). CapyPanel is in beta, so they grow with each
 feature.

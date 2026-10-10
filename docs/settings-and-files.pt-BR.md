@@ -47,6 +47,11 @@ alterações** ou **Continuar editando**.
 Também em **Exibir > Tema**. Os temas mudam só as cores — a fonte, o tamanho dela e os cantos
 arredondados são os mesmos em todos — e nunca mudam o que o app faz.
 
+Os temas do Windows seguem a cor de destaque do seu Windows (**Configurações > Personalização >
+Cores**), e tudo o que vem dela continua legível com qualquer uma que você escolher: os títulos
+das seções, o botão padrão, os destaques e o título Grupos quando você arrasta um grupo até ele. Os
+visuais próprios do CapyPanel mantêm os destaques deles, iguais em todo computador.
+
 ## Onde o CapyPanel guarda os arquivos
 
 O CapyPanel guarda tudo de todos os usuários de um PC numa só pasta, `C:\ProgramData\CapyPanel`,

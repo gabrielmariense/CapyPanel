@@ -124,7 +124,7 @@ class ProfileDialog(QDialog):
         form = QFormLayout()
         form.addRow(_("&Name:"), self.name)
         form.addRow(_("&Tool:"), self.tool)
-        form.addRow(_("&Login:"), self.login)
+        form.addRow(_("&Credentials:"), self.login)
         self._options_label = QLabel(_("Options:"))
         form.addRow(self._options_label, self._options_box)
         form.addRow(_("P&ort:"), self.port)

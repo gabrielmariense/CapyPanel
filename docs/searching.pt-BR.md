@@ -6,23 +6,25 @@ importam. **Ctrl+F** leva até a caixa.
 
 ## O que ela pesquisa
 
-Só o que dá para ver: o nome do computador sempre, o endereço enquanto a coluna **Endereço**
-estiver visível, e os usuários logados enquanto a coluna **Usuário** estiver visível. A caixa diz
-quais, por exemplo "Pesquisar nome, endereço, usuário". Mostrar ou esconder uma coluna refaz a
-pesquisa. Tags e observações não são pesquisadas.
+A caixa lista exatamente o que ela cobre, "Pesquisar nome, endereço, usuário, tags, notas"
+quando todas as colunas estão visíveis:
 
-Os usuários vêm da última verificação de **Usuários logados** (veja
-[Verificando hosts](checking.pt-BR.md)), então um host que não foi verificado não é encontrado por
-quem está nele.
+- o **nome** do computador, sempre;
+- o **endereço**, os **usuários** logados e as **tags**, cada um enquanto a coluna dele estiver
+  visível;
+- as **notas**, sempre, mesmo sem ter uma coluna própria.
+
+Esconder ou mostrar uma coluna refaz a pesquisa. Os usuários vêm da última verificação de
+**Usuários logados** (veja [Verificando hosts](checking.pt-BR.md)), então um host que não foi
+verificado não é encontrado por quem está nele.
 
 ## Enquanto você pesquisa
 
-- Os resultados vêm da lista inteira, então uma coluna **Grupo** aparece depois de **Computador**,
-  com o caminho completo do grupo de cada host ("Matriz › Financeiro"). Ela não fica no menu de
-  colunas.
-- O que você digitou fica marcado como num marca-texto nas colunas Computador, Usuário e Endereço.
-- Nada fica escolhido no painel da esquerda.
-- A barra de status acrescenta **N encontrados**.
+- O que você digitou fica marcado como num marca-texto onde houver correspondência: nas colunas da
+  tabela e nas notas, no painel de detalhes.
+- Os resultados vêm da lista inteira, então nada fica escolhido no painel da esquerda. O painel de
+  detalhes diz em que grupo está o host selecionado.
+- A barra de status acrescenta **N resultados**.
 - **Atualizar** verifica só os resultados, e o status automático, só os hosts exibidos.
 
 ## Seguir para os resultados e encerrar a pesquisa
