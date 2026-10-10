@@ -71,17 +71,12 @@ def test_search_finds_logged_on_users_from_the_last_check(window: MainWindow) ->
     assert _rows(window) == ["RECEP-04", "TRIAGE-01", "TRIAGE-02"]
 
 
-def test_the_group_column_shows_only_while_searching(window: MainWindow) -> None:
+def test_a_result_s_group_shows_in_the_details_pane(window: MainWindow) -> None:
+    _search(window, "triage")
     table = window.table
-    assert table.isColumnHidden(table.GROUP)
-    _search(window, "0")
-    assert not table.isColumnHidden(table.GROUP)
-    assert "Emergency › Triage" in _rows(window, table.GROUP)
-    assert table.header().visualIndex(table.GROUP) == 1  # right after Computer
-    assert "group" not in table.hidden_columns()  # never saved as a column choice
-    _search(window, "")
-    assert table.isColumnHidden(table.GROUP)
-    assert _rows(window) == ["LAB-01"]
+    assert table.columnCount() == len(table.COLUMNS)  # no Group column: deep paths read badly
+    window.table.select_ids([_id(window, "TRIAGE-01")])
+    assert window.details.shown_value("group") == "Emergency › Triage"
 
 
 def test_the_status_bar_counts_what_was_found(window: MainWindow) -> None:

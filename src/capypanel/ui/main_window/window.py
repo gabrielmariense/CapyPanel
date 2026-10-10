@@ -999,12 +999,9 @@ class MainWindow(QMainWindow):
         self._search_timer.stop()
         needle = self._needle()
         hosts = self._visible_hosts()
-        groups = {}
-        if needle and self._doc is not None:  # results come from every group: say which
-            groups = {h.id: group_path(self._doc.hosts, h.group) for h in hosts}
         self.nav.set_searching(bool(needle))
-        self.table.show_hosts(hosts, {h.id: self._cells(h.id) for h in hosts}, groups)
-        self.table.set_search(needle)  # after the rows, so Group fits their paths
+        self.table.show_hosts(hosts, {h.id: self._cells(h.id) for h in hosts})
+        self.table.set_search(needle)
 
     def _visible_hosts(self) -> tuple[Host, ...]:
         """The hosts the table shows: the search's results, or the group or tag picked."""

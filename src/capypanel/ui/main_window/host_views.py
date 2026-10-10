@@ -339,9 +339,8 @@ class HostTable(QTreeWidget):
     """The host list as a table. A QTreeView-based widget: it selects whole rows in Windows 11.
     Status and User come from Refresh; they're kept in memory, never in the list file."""
 
-    STATUS, USER, ADDRESS, TAGS, GROUP = 1, 2, 3, 4, 5
-    # Saved by these keys. Group shows only during a search, right after Computer.
-    COLUMNS = ("computer", "status", "user", "address", "tags", "group")
+    STATUS, USER, ADDRESS, TAGS = 1, 2, 3, 4
+    COLUMNS = ("computer", "status", "user", "address", "tags")  # saved by these keys
     columns_changed = Signal()  # a column was shown or hidden
 
     def __init__(self) -> None:
@@ -350,7 +349,6 @@ class HostTable(QTreeWidget):
         self._rows: dict[str, QTreeWidgetItem] = {}
         # The user's column widths, by key: saved, shared by every list, changed only by them.
         self._widths: dict[str, int] = {}
-        self._group_width = 0  # the search's Group column: fitted each time, never saved
         self._sizing = False  # the table is resizing a column, not the user
         # What's searched and shown: notes are searched too, but have no column.
         self._marker = MatchMarker(self, columns={0, self.USER, self.ADDRESS, self.TAGS})
@@ -360,8 +358,6 @@ class HostTable(QTreeWidget):
         # _fill_last_column stretches the last one. Off before any column hides: a column hidden
         # while it's on kept counting 100 px, and the scroll bar showed with nothing to scroll.
         header.setStretchLastSection(False)
-        header.moveSection(self.GROUP, 1)
-        self.setColumnHidden(self.GROUP, True)
         header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         header.customContextMenuRequested.connect(self._columns_menu)
         header.sectionResized.connect(self._resized)
@@ -386,25 +382,18 @@ class HostTable(QTreeWidget):
         return hosts_mime([item.data(0, ROLE_ID) for item in items])
 
     def retranslate(self) -> None:
-        self.setHeaderLabels(
-            [_("Computer"), _("Status"), _("User"), _("Address"), _("Tags"), _("Group")]
-        )
+        self.setHeaderLabels([_("Computer"), _("Status"), _("User"), _("Address"), _("Tags")])
 
     def set_search(self, needle: str) -> None:
         """Marks the searched text, and shows where each host lives while searching."""
         self._marker.needle = needle
-        self.setColumnHidden(self.GROUP, not needle)
-        self._place_columns()
         self.viewport().update()
 
     def show_hosts(
         self,
         hosts: Sequence[Host],
         cells: Mapping[str, "Cells"],
-        groups: Mapping[str, str] | None = None,
     ) -> None:
-        """groups: each host's group path, for the Group column."""
-        groups = groups or {}
         keep = set(self.selected_ids())
         self.blockSignals(True)
         self.setSortingEnabled(False)
@@ -418,7 +407,6 @@ class HostTable(QTreeWidget):
                     "",
                     host.address,
                     ", ".join(host.tags),
-                    groups.get(host.id, ""),
                 ]  # fmt: skip
             )
             item.setData(0, ROLE_ID, host.id)
@@ -438,13 +426,11 @@ class HostTable(QTreeWidget):
                 self._tint(item)
 
     def hidden_columns(self) -> list[str]:
-        return [
-            key for i, key in enumerate(self.COLUMNS) if i != self.GROUP and self.isColumnHidden(i)
-        ]
+        return [key for i, key in enumerate(self.COLUMNS) if self.isColumnHidden(i)]
 
     def set_hidden_columns(self, keys: object) -> None:
         hidden = set(keys) if isinstance(keys, list) else set()
-        for index, key in enumerate(self.COLUMNS[: self.GROUP]):  # Group follows the search
+        for index, key in enumerate(self.COLUMNS):
             self.setColumnHidden(index, index > 0 and key in hidden)  # Computer always shows
         self._place_columns()
 
@@ -452,7 +438,7 @@ class HostTable(QTreeWidget):
         """Right-click on the column titles: tick the columns to show."""
         menu = QMenu(self)
         header = self.headerItem()
-        for index in range(1, self.GROUP):
+        for index in range(1, len(self.COLUMNS)):
             item = menu.addAction(header.text(index))
             item.setCheckable(True)
             item.setChecked(not self.isColumnHidden(index))
@@ -487,7 +473,7 @@ class HostTable(QTreeWidget):
 
     def set_widths(self, saved: object) -> None:
         """Widths saved by an earlier run; anything unknown (an old "notes" column) is skipped."""
-        known = set(self.COLUMNS) - {"group"}
+        known = set(self.COLUMNS)
         self._widths = {
             k: v for k, v in (saved.items() if isinstance(saved, dict) else ())
             if k in known and isinstance(v, int) and v > 0
@@ -497,8 +483,7 @@ class HostTable(QTreeWidget):
     def fit_columns(self) -> None:
         """Column titles' menu > Fit columns to content: every column shown, to its full text."""
         for column in self._shown():
-            if column != self.GROUP:
-                self._widths[self.COLUMNS[column]] = self._content_width(column)
+            self._widths[self.COLUMNS[column]] = self._content_width(column)
         self._place_columns()
 
     def reset_columns(self) -> None:
@@ -512,10 +497,6 @@ class HostTable(QTreeWidget):
         header = self.header()
         self._sizing = True
         for column in self._shown():
-            if column == self.GROUP:
-                self._group_width = self._content_width(column)
-                header.resizeSection(column, self._group_width)
-                continue
             key = self.COLUMNS[column]
             if key not in self._widths and (self.topLevelItemCount() or column in self._EMPTY):
                 self._widths[key] = self._first_width(column)
@@ -559,7 +540,7 @@ class HostTable(QTreeWidget):
     def _resized(self, index: int, _old: int, new: int) -> None:
         """A column dragged by the user keeps that width, never narrower than its title."""
         dragging = QApplication.mouseButtons() & Qt.MouseButton.LeftButton
-        if self._sizing or not dragging or self.isColumnHidden(index) or index == self.GROUP:
+        if self._sizing or not dragging or self.isColumnHidden(index):
             return
         wanted = max(new, self.minimum_width(index))
         self._widths[self.COLUMNS[index]] = wanted
@@ -570,7 +551,7 @@ class HostTable(QTreeWidget):
         self._fill_last_column()
 
     def _keep_width(self, index: int) -> None:
-        if index != self.GROUP and not self.isColumnHidden(index):
+        if not self.isColumnHidden(index):
             self._widths[self.COLUMNS[index]] = self.header().sectionSize(index)
             self._fill_last_column()
 
