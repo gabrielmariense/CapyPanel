@@ -28,6 +28,7 @@ class Actions:
     show_in_group: QAction
     check_status: QAction
     check_users: QAction
+    refresh_shown: QAction
     forget_passwords: QAction
     connection_profiles: QAction
     show_toolbar: QAction
@@ -51,6 +52,7 @@ SHORTCUTS = {
     "manual_connect": "Ctrl+M",
     "copy_address": "Ctrl+Shift+C",
     "show_in_group": "Ctrl+G",
+    "refresh_shown": "F5",  # what Refresh's right-click panel has ticked
 }
 CHECKABLE = {
     "show_toolbar", "show_groups", "show_tags", "show_details", "show_status_bar", "show_domains"
@@ -89,6 +91,7 @@ def retranslate_actions(a: Actions) -> None:
     a.copy_address.setText(_("&Address"))
     a.copy_name.setText(_("&Name"))
     a.show_in_group.setText(_("Show in &group"))
+    a.refresh_shown.setText(_("Refresh"))
     a.check_status.setText(_("&Status"))
     a.check_users.setText(_("&Logged-on users"))
     a.forget_passwords.setText(_("&Forget typed passwords"))

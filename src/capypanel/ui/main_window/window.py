@@ -267,8 +267,9 @@ class MainWindow(QMainWindow):
         a.export_hosts.triggered.connect(self.export_hosts)
         a.edit.triggered.connect(self.edit_selected)
         a.remove.triggered.connect(self.remove_selected)
-        # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C) live here.
-        self.addActions([a.edit, a.remove, a.copy_address, a.show_in_group])
+        # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C, F5) live here.
+        self.addActions([a.edit, a.remove, a.copy_address, a.show_in_group, a.refresh_shown])
+        a.refresh_shown.triggered.connect(self._run_refresh_panel)  # F5
         a.show_toolbar.toggled.connect(self.toolbar.setVisible)
         a.show_groups.toggled.connect(self.nav.setVisible)
         a.show_tags.toggled.connect(self.nav.set_tags_visible)

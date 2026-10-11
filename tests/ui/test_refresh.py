@@ -144,6 +144,17 @@ def test_the_panel_runs_several_checks_and_remembers_its_ticks(
     assert window._prefs["refresh"] == {"status": True, "users": False}
 
 
+def test_f5_runs_what_the_panel_has_ticked(window: MainWindow, answers: dict[str, Any]) -> None:
+    _pick_group(window, "Desks")
+    window.refresh_panel.users_box.setChecked(False)
+    f5 = window.commands.refresh_shown
+    assert f5.shortcut().toString() == "F5" and f5 in window.actions()
+    f5.trigger()
+    _wait(window)
+    assert sorted(a for a, *_ in answers["seen"]) == ["10.0.0.2", "10.0.0.3"]
+    assert {users for _a, _s, users, _acc in answers["seen"]} == {False}  # only what's ticked
+
+
 def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
     window: MainWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:

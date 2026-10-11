@@ -141,7 +141,7 @@ class MainToolBar(QToolBar):
         )
         self.refresh_button.setText(gap + _("Refresh"))
         self.refresh_button.setToolTip(
-            _("Refresh every host shown; right-click to choose what it refreshes")
+            _("Refresh every host shown. Right-click to choose what Run and F5 check")
         )
         self.refresh_status.setText(_("&Status"))
         self.refresh_users.setText(_("&Logged-on users"))
