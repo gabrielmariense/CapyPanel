@@ -408,12 +408,11 @@ class ImportDialog(QDialog):
 
 def needs_header_text() -> str:
     """What a list without a header row needs, one point a line."""
+    header = "<b>" + html.escape(_("name, address, group, tags, notes")) + "</b>"
     lines = [
-        "<b>" + html.escape(_("CapyPanel can't tell what these columns are.")) + "</b>",
-        html.escape(_("The first line must be a header that names them, in any order:")),
-        "<b>" + html.escape(_("name, address, group, tags, notes")) + "</b>",
-        html.escape(_("Without a header, each line can only have a name and an address.")),
-        html.escape(_("See Formats… for examples.")),
+        "<b>" + html.escape(_("This list needs a header row.")) + "</b>",
+        html.escape(_("Start it with {header}, in any order.")).replace("{header}", header),
+        html.escape(_("Or give just a name and an address on each line.")),
     ]
     return "<br><br>".join(lines)
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 21:01-0300\n"
+"POT-Creation-Date: 2026-10-10 21:46-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -310,9 +310,6 @@ msgstr "CSV com cabeçalho"
 
 msgid "CapyPanel"
 msgstr "CapyPanel"
-
-msgid "CapyPanel can't tell what these columns are."
-msgstr "O CapyPanel não sabe o que são estas colunas."
 
 msgid "CapyPanel — dark"
 msgstr "CapyPanel — escuro"
@@ -823,6 +820,9 @@ msgstr "Opcional: um arquivo {extension} salvo no {tool}. Ele é usado exatament
 msgid "Options:"
 msgstr "Opções:"
 
+msgid "Or give just a name and an address on each line."
+msgstr "Ou coloque só um nome e um endereço em cada linha."
+
 msgid "P&ort:"
 msgstr "P&orta:"
 
@@ -939,9 +939,6 @@ msgstr "Pesquisar {fields}"
 msgid "Searches every host in the list (Ctrl+F)"
 msgstr "Pesquisa em todos os hosts da lista (Ctrl+F)"
 
-msgid "See Formats… for examples."
-msgstr "Veja exemplos em Formatos…"
-
 msgid "Select a host to see its details."
 msgstr "Selecione um host para ver os detalhes."
 
@@ -995,6 +992,10 @@ msgstr "Algo deu errado. Os detalhes foram salvos no log do aplicativo."
 
 msgid "Sorts every level by name, once; you can rearrange them after"
 msgstr "Classifica todos os níveis pelo nome, uma vez; depois você pode reorganizá-los"
+
+#, python-brace-format
+msgid "Start it with {header}, in any order."
+msgstr "Comece com {header}, em qualquer ordem."
 
 msgid "Startup"
 msgstr "Inicialização"
@@ -1077,9 +1078,6 @@ msgstr "O arquivo tem dois itens com o mesmo ID."
 
 msgid "The file is too big to be viewer settings."
 msgstr "O arquivo é grande demais para ser de configurações do visualizador."
-
-msgid "The first line must be a header that names them, in any order:"
-msgstr "A primeira linha precisa ser um cabeçalho com os nomes delas, em qualquer ordem:"
 
 msgid "The first line must name the columns: name, address, group, tags and notes, in any order, in English or Portuguese; other columns are ignored. A group is a path with / between its levels; tags are separated by ;. A CSV file always needs this header row. CSV export writes this format, so an exported list can be imported back."
 msgstr "A primeira linha precisa dar nome às colunas: nome, endereço, grupo, tags e notas, em qualquer ordem, em português ou inglês; outras colunas são ignoradas. Um grupo é um caminho com / entre os níveis; as tags são separadas por ;. Um arquivo CSV sempre precisa dessa linha de cabeçalho. A exportação para CSV grava este formato, então uma lista exportada pode ser importada de volta."
@@ -1165,6 +1163,9 @@ msgstr "Este não é um arquivo de lista de hosts válido ({error})."
 
 msgid "This list is read-only."
 msgstr "Esta lista está em modo somente leitura."
+
+msgid "This list needs a header row."
+msgstr "Esta lista precisa de uma linha de cabeçalho."
 
 msgid "This list was saved by a newer version of CapyPanel. Update the app to open it."
 msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o aplicativo para abri-la."
@@ -1259,9 +1260,6 @@ msgstr "Windows — seguir o tema do sistema"
 
 msgid "Windows — light"
 msgstr "Windows — claro"
-
-msgid "Without a header, each line can only have a name and an address."
-msgstr "Sem cabeçalho, cada linha só pode ter um nome e um endereço."
 
 msgid "You can also change the theme under View > Theme."
 msgstr "Você também pode trocar o tema em Exibir > Tema."

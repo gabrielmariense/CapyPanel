@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 21:01-0300\n"
+"POT-Creation-Date: 2026-10-10 21:46-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -311,9 +311,6 @@ msgid "CSV with headers"
 msgstr ""
 
 msgid "CapyPanel"
-msgstr ""
-
-msgid "CapyPanel can't tell what these columns are."
 msgstr ""
 
 msgid "CapyPanel — dark"
@@ -848,6 +845,9 @@ msgstr ""
 msgid "Options:"
 msgstr ""
 
+msgid "Or give just a name and an address on each line."
+msgstr ""
+
 msgid "P&ort:"
 msgstr ""
 
@@ -964,9 +964,6 @@ msgstr ""
 msgid "Searches every host in the list (Ctrl+F)"
 msgstr ""
 
-msgid "See Formats… for examples."
-msgstr ""
-
 msgid "Select a host to see its details."
 msgstr ""
 
@@ -1026,6 +1023,10 @@ msgid "Something went wrong. The details were saved to the app log."
 msgstr ""
 
 msgid "Sorts every level by name, once; you can rearrange them after"
+msgstr ""
+
+#, python-brace-format
+msgid "Start it with {header}, in any order."
 msgstr ""
 
 msgid "Startup"
@@ -1118,9 +1119,6 @@ msgstr ""
 msgid "The file is too big to be viewer settings."
 msgstr ""
 
-msgid "The first line must be a header that names them, in any order:"
-msgstr ""
-
 msgid ""
 "The first line must name the columns: name, address, group, tags and "
 "notes, in any order, in English or Portuguese; other columns are ignored."
@@ -1211,6 +1209,9 @@ msgid "This isn't a valid host list file ({error})."
 msgstr ""
 
 msgid "This list is read-only."
+msgstr ""
+
+msgid "This list needs a header row."
 msgstr ""
 
 msgid ""
@@ -1311,9 +1312,6 @@ msgid "Windows — follow system theme"
 msgstr ""
 
 msgid "Windows — light"
-msgstr ""
-
-msgid "Without a header, each line can only have a name and an address."
 msgstr ""
 
 msgid "You can also change the theme under View > Theme."
