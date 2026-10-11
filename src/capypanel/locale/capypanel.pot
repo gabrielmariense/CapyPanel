@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 20:42-0300\n"
+"POT-Creation-Date: 2026-10-10 21:01-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -214,9 +214,8 @@ msgstr ""
 
 msgid ""
 "A name and an address on each line, with a comma between them, or a tab, "
-"as Excel copies two columns. The address can be left out only when the "
-"name is the computer's name on the network, like PC-0142: CapyPanel then "
-"connects by that name."
+"as Excel copies two columns. The name can be anything you like; the "
+"address is the computer's network name or IP address."
 msgstr ""
 
 msgid "A name is required."
@@ -314,11 +313,7 @@ msgstr ""
 msgid "CapyPanel"
 msgstr ""
 
-msgid ""
-"CapyPanel can't tell what these columns are. The first line must be a "
-"header naming them: name, address, group, tags, notes (in any order). "
-"Without one, each line can only be a name and an address. See Formats… "
-"for examples."
+msgid "CapyPanel can't tell what these columns are."
 msgstr ""
 
 msgid "CapyPanel — dark"
@@ -595,6 +590,9 @@ msgstr ""
 msgid "Hostname or IP address; leave blank to use the name"
 msgstr ""
 
+msgid "Hostnames"
+msgstr ""
+
 msgid "Hosts with no group &go to:"
 msgstr ""
 
@@ -803,6 +801,13 @@ msgstr ""
 msgid "Offline"
 msgstr ""
 
+msgid ""
+"One computer per line, by the name it has on the network (its hostname), "
+"like PC-0142. CapyPanel connects to each by that name, so it must be the "
+"computer's real name, not a description like “Reception desk”: that needs"
+" an address next to it (see Name and address)."
+msgstr ""
+
 msgid "Online"
 msgstr ""
 
@@ -959,6 +964,9 @@ msgstr ""
 msgid "Searches every host in the list (Ctrl+F)"
 msgstr ""
 
+msgid "See Formats… for examples."
+msgstr ""
+
 msgid "Select a host to see its details."
 msgstr ""
 
@@ -1108,6 +1116,9 @@ msgid "The file has two items with the same ID."
 msgstr ""
 
 msgid "The file is too big to be viewer settings."
+msgstr ""
+
+msgid "The first line must be a header that names them, in any order:"
 msgstr ""
 
 msgid ""
@@ -1302,6 +1313,9 @@ msgstr ""
 msgid "Windows — light"
 msgstr ""
 
+msgid "Without a header, each line can only have a name and an address."
+msgstr ""
+
 msgid "You can also change the theme under View > Theme."
 msgstr ""
 
@@ -1331,6 +1345,9 @@ msgid "idle"
 msgstr ""
 
 msgid "name"
+msgstr ""
+
+msgid "name, address, group, tags, notes"
 msgstr ""
 
 msgid "no password"

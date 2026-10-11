@@ -142,7 +142,8 @@ def test_rows_can_be_left_out_or_added_below(
 def test_a_list_it_cant_read_is_explained_and_adds_nothing(window: MainWindow) -> None:
     dialog = _dialog(window)
     dialog.set_text("PC-1,10.0.0.1,Lab,kiosk")
-    assert "header" in dialog.problem.text() and not dialog.problem.isHidden()
+    assert "<b>name, address, group, tags, notes</b>" in dialog.problem.text()
+    assert not dialog.problem.isHidden()
     assert _add_button(dialog) == ""  # greyed out
     dialog.set_text("PC-1,10.0.0.1", from_file=True)  # a CSV file needs its header
     assert "header" in dialog.problem.text()

@@ -1,6 +1,7 @@
 """Inventory > Import hosts…: paste a list or open a CSV file, check and edit the preview, then
 add. Nothing changes in the host list until "Add N hosts" is clicked."""
 
+import html
 from dataclasses import replace
 from pathlib import Path
 
@@ -134,6 +135,7 @@ class ImportDialog(QDialog):
         self.table.customContextMenuRequested.connect(self._row_menu)
         self.problem = QLabel()
         self.problem.setWordWrap(True)
+        self.problem.setTextFormat(Qt.TextFormat.RichText)
         self.problem.setAlignment(Qt.AlignmentFlag.AlignCenter)
         holder = QWidget()
         self._views = QStackedLayout(holder)
@@ -194,12 +196,12 @@ class ImportDialog(QDialog):
         parsed = parse(self.text.toPlainText(), file=self._from_file)
         self._rows = list(parsed.rows)
         self._ignored = parsed.ignored
-        if parsed.problem:
-            self.problem.setText(parsed.problem)
+        if parsed.needs_header:
+            self.problem.setText(needs_header_text())
             self._views.setCurrentIndex(1)
         else:
             self._views.setCurrentIndex(0)
-        self.hint.setVisible(not parsed.problem)  # nothing to edit
+        self.hint.setVisible(not parsed.needs_header)  # nothing to edit
         self._replan()
 
     def _replan(self) -> None:
@@ -404,6 +406,18 @@ class ImportDialog(QDialog):
         super().keyPressEvent(event)
 
 
+def needs_header_text() -> str:
+    """What a list without a header row needs, one point a line."""
+    lines = [
+        "<b>" + html.escape(_("CapyPanel can't tell what these columns are.")) + "</b>",
+        html.escape(_("The first line must be a header that names them, in any order:")),
+        "<b>" + html.escape(_("name, address, group, tags, notes")) + "</b>",
+        html.escape(_("Without a header, each line can only have a name and an address.")),
+        html.escape(_("See Formats… for examples.")),
+    ]
+    return "<br><br>".join(lines)
+
+
 def read_text(path: Path) -> str:
     """A CSV file's text: UTF-8 (with or without a BOM), or Windows' own encoding, which Excel
     still uses for CSV in many languages."""
@@ -447,24 +461,41 @@ class FormatsDialog(QDialog):
         self.setMinimumWidth(640)
 
     def _formats(self) -> list[tuple[str, QWidget]]:
+        csv_example = (
+            "name,address,group,tags,notes\n"
+            "Reception 01,PC-0142,Headquarters/Front desk,kiosk;2nd floor,USB printer\n"
+            "Lab 07,10.20.30.47,Branch office,,"
+        )
+        csv_rows = [
+            ["Reception 01", "PC-0142", "Headquarters/Front desk", "kiosk;2nd floor"]
+            + ["USB printer"],
+            ["Lab 07", "10.20.30.47", "Branch office", "", ""],
+        ]
         return [
+            (
+                _("Hostnames"),
+                self._page(
+                    _(
+                        "One computer per line, by the name it has on the network (its "
+                        "hostname), like PC-0142. CapyPanel connects to each by that name, so it "
+                        "must be the computer's real name, not a description like “Reception "
+                        "desk”: that needs an address next to it (see Name and address)."
+                    ),
+                    "PC-0142\nPC-0143\nLAB-07",
+                ),
+            ),
             (
                 _("Name and address"),
                 self._page(
                     _(
                         "A name and an address on each line, with a comma between them, or a "
-                        "tab, as Excel copies two columns. The address can be left out only when "
-                        "the name is the computer's name on the network, like PC-0142: "
-                        "CapyPanel then connects by that name."
+                        "tab, as Excel copies two columns. The name can be anything you like; "
+                        "the address is the computer's network name or IP address."
                     ),
-                    "Reception 01,PC-0142.corp.example.net\nLab 07,10.20.30.47\nPC-0143",
+                    "Reception 01,PC-0142.corp.example.net\nLab 07,10.20.30.47",
                     [_("Name"), _("Address")],
-                    [
-                        ["Reception 01", "PC-0142.corp.example.net"],
-                        ["Lab 07", "10.20.30.47"],
-                        ["PC-0143", ""],
-                    ],
-                ),  # fmt: skip
+                    [["Reception 01", "PC-0142.corp.example.net"], ["Lab 07", "10.20.30.47"]],
+                ),
             ),
             (
                 _("CSV with headers"),
@@ -476,25 +507,21 @@ class FormatsDialog(QDialog):
                         "separated by ;. A CSV file always needs this header row. CSV export "
                         "writes this format, so an exported list can be imported back."
                     ),
-                    "name,address,group,tags,notes\n"
-                    "Reception 01,PC-0142,Headquarters/Front desk,kiosk;2nd floor,USB printer\n"
-                    "Lab 07,10.20.30.47,Branch office,,",
+                    csv_example,
                     ["name", "address", "group", "tags", "notes"],
-                    [
-                        [
-                            "Reception 01",
-                            "PC-0142",
-                            "Headquarters/Front desk",
-                            "kiosk;2nd floor",
-                            "USB printer",
-                        ],
-                        ["Lab 07", "10.20.30.47", "Branch office", "", ""],
-                    ],
-                ),  # fmt: skip
+                    csv_rows,
+                ),
             ),
         ]
 
-    def _page(self, about: str, typed: str, header: list[str], rows: list[list[str]]) -> QWidget:
+    def _page(
+        self,
+        about: str,
+        typed: str,
+        header: list[str] | None = None,
+        rows: list[list[str]] | None = None,
+    ) -> QWidget:
+        """A format: what it is, as a list, and (when it has columns) as a table."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 6, 0, 0)
@@ -508,22 +535,23 @@ class FormatsDialog(QDialog):
         listed.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         listed.setFixedHeight(listed.fontMetrics().lineSpacing() * (typed.count("\n") + 1) + 26)
         layout.addWidget(listed)
-        layout.addWidget(self._heading(_("Table")))
-        table = QTreeWidget()
-        table.setObjectName("grid")
-        table.setRootIsDecorated(False)
-        table.setHeaderLabels(header)
-        for row in rows:
-            table.addTopLevelItem(QTreeWidgetItem(row))
-        for column in range(len(header)):
-            table.resizeColumnToContents(column)
-        table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        table.setFixedHeight(
-            table.header().sizeHint().height()
-            + sum(table.sizeHintForRow(i) for i in range(len(rows)))
-            + 8
-        )
-        layout.addWidget(table)
+        if header and rows:
+            layout.addWidget(self._heading(_("Table")))
+            table = QTreeWidget()
+            table.setObjectName("grid")
+            table.setRootIsDecorated(False)
+            table.setHeaderLabels(header)
+            for row in rows:
+                table.addTopLevelItem(QTreeWidgetItem(row))
+            for column in range(len(header)):
+                table.resizeColumnToContents(column)
+            table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            table.setFixedHeight(
+                table.header().sizeHint().height()
+                + sum(table.sizeHintForRow(i) for i in range(len(rows)))
+                + 8
+            )
+            layout.addWidget(table)
         layout.addStretch(1)
         return page
 

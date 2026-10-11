@@ -41,7 +41,9 @@ class ImportRow:
 class Parsed:
     rows: tuple[ImportRow, ...]
     ignored: tuple[str, ...] = ()  # header columns CapyPanel doesn't use
-    problem: str = ""  # why the list can't be read as it is; then there are no rows
+    # Columns it can't name: more than a name and an address, or a file, with no header row.
+    # Then there are no rows.
+    needs_header: bool = False
 
 
 class Verdict(StrEnum):
@@ -83,20 +85,12 @@ def parse(text: str, *, file: bool = False) -> Parsed:
         delimiter, columns = header
         return _read(lines[1:], delimiter, columns)
     if file:
-        return Parsed((), problem=_no_header())
+        return Parsed((), needs_header=True)
     delimiter = _delimiter(lines[0])
     if any(len(_split(line, delimiter)) > 2 for line in lines):
         # Without a header, a third column could be anything: say so rather than guess.
-        return Parsed((), problem=_no_header())
+        return Parsed((), needs_header=True)
     return _read(lines, delimiter, ["name", "address"])
-
-
-def _no_header() -> str:
-    return _(
-        "CapyPanel can't tell what these columns are. The first line must be a header naming "
-        "them: name, address, group, tags, notes (in any order). Without one, each line can only "
-        "be a name and an address. See Formats… for examples."
-    )
 
 
 def _fold(text: str) -> str:

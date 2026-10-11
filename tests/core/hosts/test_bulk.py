@@ -98,9 +98,9 @@ def test_table_edits_are_written_back_as_csv() -> None:
 
 
 def test_a_list_that_cant_be_read_says_why_instead_of_guessing() -> None:
-    assert parse("PC-1,10.0.0.1,Lab,kiosk").problem  # 4 columns, no header: what are they?
-    assert parse("PC-1,10.0.0.1", file=True).problem  # a CSV file needs its header row
-    assert not parse("PC-1,10.0.0.1").problem  # pasted name and address: fine
+    assert parse("PC-1,10.0.0.1,Lab,kiosk").needs_header  # 4 columns, no header: what are they?
+    assert parse("PC-1,10.0.0.1", file=True).needs_header  # a CSV file needs its header row
+    assert not parse("PC-1,10.0.0.1").needs_header  # pasted name and address: fine
     assert parse("PC-1,10.0.0.1,Lab").rows == ()
 
 

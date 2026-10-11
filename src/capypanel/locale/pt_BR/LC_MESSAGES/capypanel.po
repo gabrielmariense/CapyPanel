@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 20:42-0300\n"
+"POT-Creation-Date: 2026-10-10 21:01-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -213,8 +213,8 @@ msgstr "Uma entrada de grupo não é um objeto."
 msgid "A host entry isn't an object."
 msgstr "Uma entrada de host não é um objeto."
 
-msgid "A name and an address on each line, with a comma between them, or a tab, as Excel copies two columns. The address can be left out only when the name is the computer's name on the network, like PC-0142: CapyPanel then connects by that name."
-msgstr "Um nome e um endereço em cada linha, separados por vírgula, ou por tabulação, como o Excel copia duas colunas. O endereço só pode ficar de fora quando o nome é o nome do computador na rede, como PC-0142: o CapyPanel então conecta por esse nome."
+msgid "A name and an address on each line, with a comma between them, or a tab, as Excel copies two columns. The name can be anything you like; the address is the computer's network name or IP address."
+msgstr "Um nome e um endereço em cada linha, separados por vírgula, ou por tabulação, como o Excel copia duas colunas. O nome pode ser o que você quiser; o endereço é o nome do computador na rede ou o endereço IP."
 
 msgid "A name is required."
 msgstr "O nome é obrigatório."
@@ -311,8 +311,8 @@ msgstr "CSV com cabeçalho"
 msgid "CapyPanel"
 msgstr "CapyPanel"
 
-msgid "CapyPanel can't tell what these columns are. The first line must be a header naming them: name, address, group, tags, notes (in any order). Without one, each line can only be a name and an address. See Formats… for examples."
-msgstr "O CapyPanel não sabe o que são estas colunas. A primeira linha precisa ser um cabeçalho com os nomes delas: nome, endereço, grupo, tags, notas (em qualquer ordem). Sem ele, cada linha só pode ter um nome e um endereço. Veja exemplos em Formatos…"
+msgid "CapyPanel can't tell what these columns are."
+msgstr "O CapyPanel não sabe o que são estas colunas."
 
 msgid "CapyPanel — dark"
 msgstr "CapyPanel — escuro"
@@ -585,6 +585,9 @@ msgstr "Nome do host ou endereço IP"
 msgid "Hostname or IP address; leave blank to use the name"
 msgstr "Nome do host ou endereço IP; deixe em branco para usar o nome"
 
+msgid "Hostnames"
+msgstr "Nomes de host"
+
 msgid "Hosts with no group &go to:"
 msgstr "Hosts sem grupo &vão para:"
 
@@ -780,6 +783,9 @@ msgstr "Desligado por padrão; o Atualizar da barra de ferramentas sempre funcio
 msgid "Offline"
 msgstr "Offline"
 
+msgid "One computer per line, by the name it has on the network (its hostname), like PC-0142. CapyPanel connects to each by that name, so it must be the computer's real name, not a description like “Reception desk”: that needs an address next to it (see Name and address)."
+msgstr "Um computador por linha, pelo nome que ele tem na rede (o nome de host), como PC-0142. O CapyPanel conecta a cada um por esse nome, então ele precisa ser o nome real do computador, e não uma descrição como “Recepção”: isso precisa de um endereço ao lado (veja Nome e endereço)."
+
 msgid "Online"
 msgstr "Online"
 
@@ -933,6 +939,9 @@ msgstr "Pesquisar {fields}"
 msgid "Searches every host in the list (Ctrl+F)"
 msgstr "Pesquisa em todos os hosts da lista (Ctrl+F)"
 
+msgid "See Formats… for examples."
+msgstr "Veja exemplos em Formatos…"
+
 msgid "Select a host to see its details."
 msgstr "Selecione um host para ver os detalhes."
 
@@ -1068,6 +1077,9 @@ msgstr "O arquivo tem dois itens com o mesmo ID."
 
 msgid "The file is too big to be viewer settings."
 msgstr "O arquivo é grande demais para ser de configurações do visualizador."
+
+msgid "The first line must be a header that names them, in any order:"
+msgstr "A primeira linha precisa ser um cabeçalho com os nomes delas, em qualquer ordem:"
 
 msgid "The first line must name the columns: name, address, group, tags and notes, in any order, in English or Portuguese; other columns are ignored. A group is a path with / between its levels; tags are separated by ;. A CSV file always needs this header row. CSV export writes this format, so an exported list can be imported back."
 msgstr "A primeira linha precisa dar nome às colunas: nome, endereço, grupo, tags e notas, em qualquer ordem, em português ou inglês; outras colunas são ignoradas. Um grupo é um caminho com / entre os níveis; as tags são separadas por ;. Um arquivo CSV sempre precisa dessa linha de cabeçalho. A exportação para CSV grava este formato, então uma lista exportada pode ser importada de volta."
@@ -1248,6 +1260,9 @@ msgstr "Windows — seguir o tema do sistema"
 msgid "Windows — light"
 msgstr "Windows — claro"
 
+msgid "Without a header, each line can only have a name and an address."
+msgstr "Sem cabeçalho, cada linha só pode ter um nome e um endereço."
+
 msgid "You can also change the theme under View > Theme."
 msgstr "Você também pode trocar o tema em Exibir > Tema."
 
@@ -1278,6 +1293,9 @@ msgstr "inativa"
 
 msgid "name"
 msgstr "nome"
+
+msgid "name, address, group, tags, notes"
+msgstr "nome, endereço, grupo, tags, notas"
 
 msgid "no password"
 msgstr "sem senha"
