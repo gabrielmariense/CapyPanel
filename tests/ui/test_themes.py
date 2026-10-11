@@ -306,3 +306,12 @@ def test_number_boxes_show_their_arrows(qapp: QApplication, theme: themes.Theme)
             for y in range(top, bottom)
         }
         assert max(colors) - min(colors) > 40, "an arrow button is empty"
+
+
+def test_dropdowns_open_at_once_in_every_theme(qapp: QApplication) -> None:
+    # Windows' "slide open" made a long dropdown list roll open in visible steps.
+    QApplication.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, True)  # as on a PC with it on
+    for theme in themes.Registry().all():
+        themes.apply(theme)
+        assert not QApplication.isEffectEnabled(Qt.UIEffect.UI_AnimateCombo)
+    themes.apply(themes.DEFAULT_THEME)

@@ -158,6 +158,9 @@ def apply(theme: Theme) -> None:
     # is Qt's stylesheet wrapper, whose name is empty, so it never reads as "fusion".
     engine_changed = theme.engine != _current.engine or not _applied_once
     _current, _applied_once = theme, True
+    # Qt copies Windows' "slide open" for dropdowns, and a long list rolled open in visible
+    # steps (it flashed): lists open at once instead.
+    QApplication.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, False)
     _follow_system_changes()
     _watch_widgets(app)
     if theme.engine == "native":
