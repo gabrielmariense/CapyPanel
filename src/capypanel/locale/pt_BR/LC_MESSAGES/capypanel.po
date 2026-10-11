@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 19:28-0300\n"
+"POT-Creation-Date: 2026-10-11 19:33-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -239,6 +239,9 @@ msgstr "&Usuário:"
 
 msgid "&View"
 msgstr "E&xibir"
+
+msgid "A chosen group"
+msgstr "Um grupo escolhido"
 
 msgid "A connection profile must be a JSON object."
 msgstr "Um perfil de conexão deve ser um objeto JSON."
@@ -616,6 +619,9 @@ msgstr ""
 "nome,endereço\n"
 "PC-0142,10.0.0.42"
 
+msgid "For the list open now; each list keeps its own. A group's right-click menu can choose it too."
+msgstr "Para a lista aberta agora; cada lista guarda a sua. O menu de botão direito de um grupo também pode escolher."
+
 msgid "Forgets it here; the file itself is never deleted"
 msgstr "Esquece a lista aqui; o arquivo em si nunca é excluído"
 
@@ -905,6 +911,9 @@ msgstr "Abrir pasta de &logs"
 msgid "Open a CSV file"
 msgstr "Abrir um arquivo CSV"
 
+msgid "Open a host list to choose what it shows first."
+msgstr "Abra uma lista de hosts para escolher o que ela mostra primeiro."
+
 msgid "Open f&older"
 msgstr "Abrir &pasta"
 
@@ -1115,11 +1124,17 @@ msgstr "Arquivos compartilhados"
 msgid "Shared files: the default list, connection profiles and tools, for everyone."
 msgstr "Arquivos compartilhados: a lista padrão, os perfis de conexão e as ferramentas, para todos."
 
+msgid "Show &first:"
+msgstr "Mostrar &primeiro:"
+
 msgid "Show do&main"
 msgstr "Mostrar do&mínio"
 
 msgid "Show in &group"
 msgstr "Mostrar no &grupo"
+
+msgid "Show this group &first"
+msgstr "Mostrar este grupo &primeiro"
 
 msgid "Some changes aren't saved yet."
 msgstr "Algumas alterações ainda não foram salvas."
@@ -1258,6 +1273,9 @@ msgstr "O texto da licença está faltando nesta cópia: {file}"
 msgid "The list has changed"
 msgstr "A lista foi alterada"
 
+msgid "The list opens on this group"
+msgstr "A lista abre neste grupo"
+
 #, python-brace-format
 msgid "The list “{path}” doesn't exist anymore."
 msgstr "A lista “{path}” não existe mais."
@@ -1394,6 +1412,9 @@ msgstr "Aviso"
 
 msgid "Where CapyPanel keeps its files"
 msgstr "Onde o CapyPanel guarda os arquivos"
+
+msgid "Where I left off"
+msgstr "Onde parei"
 
 msgid "Where each tool is installed, set once for everyone on this PC."
 msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste PC."

@@ -96,7 +96,11 @@ class GeneralPage(Page):
         added: list[Path],
         language: str,
         auto_status: tuple[bool, int] = (False, 5),
+        start_view: tuple[str, str] | None = None,
+        groups: list[tuple[str, str]] | None = None,
     ) -> None:
+        """start_view: the open list's (show, group); None when no list is open. groups: that
+        list's groups, (id, path), "No group" first."""
         super().__init__(_("General"))
         # Each language is named in its own language, so anyone can find theirs.
         self.language = QComboBox()
@@ -148,6 +152,39 @@ class GeneralPage(Page):
         start_layout.addWidget(
             notes(_("If that list can't be opened: the default list, then your personal list."))
         )
+        # What the open list shows first; each list keeps its own choice.
+        self.show_first = QComboBox()
+        self.show_first.addItem(_("All hosts"), locations.SHOW_ALL)
+        self.show_first.addItem(_("Where I left off"), locations.SHOW_LAST)
+        self.show_first.addItem(_("A chosen group"), locations.SHOW_GROUP)
+        self.first_group = QComboBox()
+        self.first_group.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+        )
+        self.first_group.setMinimumContentsLength(16)
+        for group_id, label in groups or []:
+            self.first_group.addItem(label, group_id)
+        show, group = start_view or (locations.SHOW_ALL, "")
+        self.show_first.setCurrentIndex(max(self.show_first.findData(show), 0))
+        self.first_group.setCurrentIndex(max(self.first_group.findData(group), 0))
+        self.show_first.setEnabled(start_view is not None)
+        self.show_first.currentIndexChanged.connect(self._show_first_changed)
+        self._show_first_changed()
+        first_label = QLabel(_("Show &first:"))
+        first_label.setBuddy(self.show_first)
+        first_row = QHBoxLayout()
+        first_row.addWidget(first_label)
+        first_row.addWidget(self.show_first)
+        first_row.addWidget(self.first_group, 1)
+        start_layout.addLayout(first_row)
+        start_layout.addWidget(
+            notes(
+                _("For the list open now; each list keeps its own. A group's right-click menu "
+                  "can choose it too.")
+                if start_view is not None
+                else _("Open a host list to choose what it shows first.")
+            )
+        )  # fmt: skip
 
         files = QGroupBox(_("Where CapyPanel keeps its files"))
         grid = QGridLayout(files)
@@ -202,6 +239,19 @@ class GeneralPage(Page):
 
     def start_choice(self) -> str:
         return str(self.start_list.currentData())
+
+    def _show_first_changed(self) -> None:
+        chosen = self.show_first.currentData() == locations.SHOW_GROUP
+        self.first_group.setVisible(chosen)
+        self.first_group.setEnabled(chosen and self.show_first.isEnabled())
+
+    def show_first_choice(self) -> tuple[str, str] | None:
+        """(show, group) for the open list; None when no list is open."""
+        if not self.show_first.isEnabled():
+            return None
+        show = str(self.show_first.currentData())
+        group = self.first_group.currentData() if show == locations.SHOW_GROUP else ""
+        return show, str(group or "")
 
     def language_choice(self) -> str:
         return str(self.language.currentData() or i18n.DEFAULT_LANGUAGE)

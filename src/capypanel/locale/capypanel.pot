@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 19:28-0300\n"
+"POT-Creation-Date: 2026-10-11 19:33-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -237,6 +237,9 @@ msgid "&User:"
 msgstr ""
 
 msgid "&View"
+msgstr ""
+
+msgid "A chosen group"
 msgstr ""
 
 msgid "A connection profile must be a JSON object."
@@ -620,6 +623,11 @@ msgid ""
 "PC-0142,10.0.0.42"
 msgstr ""
 
+msgid ""
+"For the list open now; each list keeps its own. A group's right-click "
+"menu can choose it too."
+msgstr ""
+
 msgid "Forgets it here; the file itself is never deleted"
 msgstr ""
 
@@ -922,6 +930,9 @@ msgstr ""
 msgid "Open a CSV file"
 msgstr ""
 
+msgid "Open a host list to choose what it shows first."
+msgstr ""
+
 msgid "Open f&older"
 msgstr ""
 
@@ -1139,10 +1150,16 @@ msgid ""
 "everyone."
 msgstr ""
 
+msgid "Show &first:"
+msgstr ""
+
 msgid "Show do&main"
 msgstr ""
 
 msgid "Show in &group"
+msgstr ""
+
+msgid "Show this group &first"
 msgstr ""
 
 msgid "Some changes aren't saved yet."
@@ -1297,6 +1314,9 @@ msgstr ""
 msgid "The list has changed"
 msgstr ""
 
+msgid "The list opens on this group"
+msgstr ""
+
 #, python-brace-format
 msgid "The list “{path}” doesn't exist anymore."
 msgstr ""
@@ -1434,6 +1454,9 @@ msgid "Warning"
 msgstr ""
 
 msgid "Where CapyPanel keeps its files"
+msgstr ""
+
+msgid "Where I left off"
 msgstr ""
 
 msgid "Where each tool is installed, set once for everyone on this PC."

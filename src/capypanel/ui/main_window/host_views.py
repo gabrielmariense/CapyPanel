@@ -179,6 +179,10 @@ class NavigationPane(QWidget):
         item = self.groups.itemAt(position)
         return item.data(0, ROLE_ID) if item else None
 
+    def show_view(self, kind: str, value: str) -> None:
+        """A view as saved ("group", "tag", "nogroup" or "all"); All hosts when it's gone."""
+        self._filter = self._select(Filter(kind, value or None))
+
     def select_group(self, group_id: str) -> None:
         """A group, or NO_GROUP for the hosts in none."""
         wanted = Filter("nogroup") if group_id == NO_GROUP else Filter("group", group_id)

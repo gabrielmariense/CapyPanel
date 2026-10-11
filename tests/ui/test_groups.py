@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core import settings
-from capypanel.core.hosts import listfile
+from capypanel.core.hosts import listfile, locations
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.ui.groups import (
     HOSTS_MIME,
@@ -478,3 +478,53 @@ def test_manage_groups_draws_tree_lines(window: MainWindow) -> None:
     QApplication.processEvents()
     assert not dialog.tree.viewport().grab().isNull()  # draws in any theme without failing
     dialog.close()
+
+
+def _reopened(window: MainWindow, tmp_path: Path) -> MainWindow:
+    """The app started again, with the settings the first window saved as it closed."""
+    window.close()
+    again = MainWindow(settings.resolve_paths(tmp_path), window._prefs)
+    return again
+
+
+def test_a_list_opens_on_all_hosts_where_it_was_left_or_its_chosen_group(
+    window: MainWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    lab = _id(window, "Lab")
+    window.nav.select_group(lab)
+    again = _reopened(window, tmp_path)
+    assert again.nav.current_filter().kind == "all"  # the default: All hosts
+    path = again.document.path  # type: ignore[union-attr]
+    locations.set_list_view(again._prefs, path, locations.ListView(show=locations.SHOW_LAST))
+    again.nav.select_group(lab)
+    third = _reopened(again, tmp_path)
+    assert third.nav.selected_group_id() == lab  # where it was left
+    assert [third.table.topLevelItem(0).text(0)] == ["L-01"]  # type: ignore[union-attr]
+
+    class Ticking(QMenu):
+        def exec(self, *_args: Any) -> None:  # type: ignore[override]
+            _choose(self, "Show this group &first")
+
+    monkeypatch.setattr(window_module, "QMenu", Ticking)
+    zebra = _id(third, "Zebra wing")
+    third.show()
+    QApplication.processEvents()
+    item = next(i for i in _walk_items(third.nav.groups) if i.data(0, ROLE_ID) == zebra)
+    third._group_menu(third.nav.groups.visualItemRect(item).center())
+    third.nav.select_group(lab)  # left on Lab, but Zebra wing is the chosen one
+    fourth = _reopened(third, tmp_path)
+    assert fourth.nav.selected_group_id() == zebra
+    fourth.close()
+
+
+def test_settings_chooses_what_the_open_list_shows_first(window: MainWindow) -> None:
+    dialog = window.settings_dialog()
+    page = dialog.general
+    assert not page.first_group.isVisibleTo(page)  # only with "A chosen group"
+    page.show_first.setCurrentIndex(page.show_first.findData(locations.SHOW_GROUP))
+    page.first_group.setCurrentIndex(page.first_group.findData(_id(window, "alpha wing")))
+    window.apply_settings(dialog.choices())
+    doc = window.document
+    assert doc is not None
+    view = locations.list_view(window._prefs, doc.path)
+    assert (view.show, view.group) == (locations.SHOW_GROUP, _id(window, "alpha wing"))

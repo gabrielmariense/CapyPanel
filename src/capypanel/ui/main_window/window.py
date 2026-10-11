@@ -64,6 +64,7 @@ from capypanel.ui.hosts import (
     HostDialog,
     ProfilePicker,
     confirm,
+    group_choices,
     group_path,
     list_file_filter,
 )
@@ -490,7 +491,9 @@ class MainWindow(QMainWindow):
         return True
 
     def _use(self, doc: OpenList) -> None:
-        if self._doc is None or not locations.same_path(self._doc.path, doc.path):
+        switched = self._doc is None or not locations.same_path(self._doc.path, doc.path)
+        if switched:
+            self._remember_view()  # where the list being left was
             self._status_found.clear()  # another list's hosts: old results don't apply
             self._users_found.clear()
             self._clear_search()
@@ -502,6 +505,42 @@ class MainWindow(QMainWindow):
         self._save_prefs()
         log.info("Opened host list %s (read-only=%s)", doc.path, doc.read_only)
         self._refresh()
+        if switched:
+            self._show_first(doc)
+
+    # ---- what a list shows first ----
+
+    def _show_first(self, doc: OpenList) -> None:
+        """All hosts, where this list was left, or its chosen group (Settings > General)."""
+        view = locations.list_view(self._prefs, doc.path)
+        if view.show == locations.SHOW_GROUP:
+            self.nav.select_group(view.group)
+        elif view.show == locations.SHOW_LAST:
+            self.nav.show_view(*view.last)
+        else:
+            self.nav.show_view("all", "")
+        self._show_hosts()
+        self._selection_changed()
+
+    def _remember_view(self) -> None:
+        if self._doc is None:
+            return
+        shown = self.nav.current_filter()
+        view = locations.list_view(self._prefs, self._doc.path)
+        last = (shown.kind, shown.value or "")
+        locations.set_list_view(self._prefs, self._doc.path, replace(view, last=last))
+
+    def set_first_group(self, group_id: str, first: bool) -> None:
+        """Right-click a group > Show this group first: ticked, the list opens on it."""
+        if self._doc is None:
+            return
+        view = locations.list_view(self._prefs, self._doc.path)
+        if first:
+            view = replace(view, show=locations.SHOW_GROUP, group=group_id)
+        elif view.show == locations.SHOW_GROUP and view.group == group_id:
+            view = replace(view, show=locations.SHOW_ALL)
+        locations.set_list_view(self._prefs, self._doc.path, view)
+        self._save_prefs()
 
     # ---- editing ----
 
@@ -1066,10 +1105,24 @@ class MainWindow(QMainWindow):
             registry=self.registry,
             catalogs=self.connector.catalogs,
             auto_status=self._auto_status(),
+            start_view=self._start_view(),
+            groups=group_choices(self._doc.hosts) if self._doc else None,
         )
+
+    def _start_view(self) -> tuple[str, str] | None:
+        if self._doc is None:
+            return None
+        view = locations.list_view(self._prefs, self._doc.path)
+        return view.show, view.group
 
     def apply_settings(self, choices: SettingsChoices) -> None:
         self._prefs[locations.START_KEY] = choices.start_list
+        if choices.start_view is not None and self._doc is not None:  # for the list open now
+            show, group = choices.start_view
+            view = locations.list_view(self._prefs, self._doc.path)
+            locations.set_list_view(
+                self._prefs, self._doc.path, replace(view, show=show, group=group)
+            )
         locations.set_added_lists(self._prefs, choices.added_lists)
         current = self._doc.path if self._doc else None
         if (
@@ -1659,6 +1712,12 @@ class MainWindow(QMainWindow):
                     lambda _c=False, s=status, u=users: self.check_hosts(hosts, status=s, users=u)
                 )
             menu.addSeparator()
+            view = locations.list_view(self._prefs, self._doc.path)
+            first = menu.addAction(_("Show this group &first"))
+            first.setToolTip(_("The list opens on this group"))
+            first.setCheckable(True)
+            first.setChecked(view.show == locations.SHOW_GROUP and view.group == group.id)
+            first.toggled.connect(lambda on: self.set_first_group(group.id, on))
             move = TreeMenu(_("&Move to"), menu)
             menu.addMenu(move)
             move.setEnabled(self._writable() is not None)
@@ -1703,5 +1762,6 @@ class MainWindow(QMainWindow):
         self._prefs["refresh"] = self.refresh_panel.choices()
         self._prefs["view"] = {k: a.isChecked() for k, a in self._view_choices().items()}
         self._prefs["column_widths"] = self.table.widths()
+        self._remember_view()
         self._save_prefs()
         super().closeEvent(event)

@@ -50,6 +50,7 @@ class SettingsChoices:
     connections: ConnectionChanges
     added_lists: list[Path]  # the lists in Host lists, besides the default and personal
     auto_status: tuple[bool, int] = (False, 5)  # check Status by itself, every N minutes
+    start_view: tuple[str, str] | None = None  # the open list's (show, group) first
 
 
 class SettingsDialog(QDialog):
@@ -69,8 +70,11 @@ class SettingsDialog(QDialog):
         registry: themes.Registry,
         catalogs: Catalogs,
         auto_status: tuple[bool, int] = (False, 5),
+        start_view: tuple[str, str] | None = None,
+        groups: list[tuple[str, str]] | None = None,
     ) -> None:
         super().__init__(parent)
+        self._groups = groups
         self._paths = paths
         self._default_list = default_list
         self._personal_list = personal_list
@@ -83,7 +87,7 @@ class SettingsDialog(QDialog):
         self._old: list[QWidget] = []
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(12, 12, 12, 12)
-        self._build(start_list, added, auto_status, themes.current().id)
+        self._build(start_list, added, auto_status, themes.current().id, start_view=start_view)
         self.resize(780, 540)
         self._saved_state = self._state()
         self._update_save()
@@ -96,6 +100,7 @@ class SettingsDialog(QDialog):
         theme_id: str,
         chosen: Path | None = None,
         written: tuple[Path, ...] = (),
+        start_view: tuple[str, str] | None = None,
     ) -> None:
         """The pages and buttons, in the current language, showing the values given."""
         self._building = True  # pages report changes while they're filled
@@ -108,6 +113,8 @@ class SettingsDialog(QDialog):
             added=added,
             language=i18n.language(),
             auto_status=auto_status,
+            start_view=start_view,
+            groups=self._groups,
         )
         self.host_lists = HostListsPage(
             default_list=self._default_list,
@@ -189,10 +196,11 @@ class SettingsDialog(QDialog):
             self.appearance.theme_id(),
         )
         written = tuple(self.host_lists.written)
+        start_view = self.general.show_first_choice()
         old.hide()
         self._layout.removeWidget(old)
         self._old.append(old)
-        self._build(*values, chosen=chosen, written=written)
+        self._build(*values, chosen=chosen, written=written, start_view=start_view)
         self.show_page(page)
         self._update_save()
         self.general.language.setFocus()
@@ -259,6 +267,7 @@ class SettingsDialog(QDialog):
             added_lists=self.host_lists.added(),
             connections=self.connections.changes(),
             auto_status=self.general.auto_status_choice(),
+            start_view=self.general.show_first_choice(),
         )
 
     def showEvent(self, event: QShowEvent) -> None:
@@ -291,7 +300,7 @@ class SettingsDialog(QDialog):
         c = self.choices()
         return (
             c.start_list, c.host_list, c.theme_id, tuple(c.added_lists), c.auto_status,
-            self.connections.has_changes(),
+            c.start_view, self.connections.has_changes(),
         )  # fmt: skip
 
     def is_valid(self) -> bool:
