@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 21:53-0300\n"
+"POT-Creation-Date: 2026-10-10 22:50-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -215,6 +215,10 @@ msgstr ""
 msgid "A host entry isn't an object."
 msgstr ""
 
+#, python-brace-format
+msgid "A host with this name is already in the list, {place}"
+msgstr ""
+
 msgid ""
 "A name and an address on each line, with a comma between them, or a tab, "
 "as Excel copies two columns. The name can be anything you like; the "
@@ -275,7 +279,8 @@ msgstr ""
 msgid "All hosts"
 msgstr ""
 
-msgid "Already in the list"
+#, python-brace-format
+msgid "Already in the list, {place}"
 msgstr ""
 
 #, python-brace-format
@@ -591,9 +596,6 @@ msgid "Hostname or IP address; leave blank to use the name"
 msgstr ""
 
 msgid "Hostnames"
-msgstr ""
-
-msgid "Hosts moved to the top level have no group."
 msgstr ""
 
 msgid "Hosts with no group &go to:"
@@ -939,7 +941,16 @@ msgstr ""
 msgid "Rename group"
 msgstr ""
 
-msgid "Repeated in this import"
+#, python-brace-format
+msgid "Same address as row {n}"
+msgstr ""
+
+#, python-brace-format
+msgid "Same as row {n}"
+msgstr ""
+
+#, python-brace-format
+msgid "Same name as row {n}"
 msgstr ""
 
 msgid "Save a copy"
@@ -956,6 +967,9 @@ msgid "Search {fields}"
 msgstr ""
 
 msgid "Searches every host in the list (Ctrl+F)"
+msgstr ""
+
+msgid "See examples in Formats…"
 msgstr ""
 
 msgid "Select a host to see its details."
@@ -1308,6 +1322,9 @@ msgstr ""
 msgid "Windows — light"
 msgstr ""
 
+msgid "With No group, the groups inside it move to the top level."
+msgstr ""
+
 msgid "You can also change the theme under View > Theme."
 msgstr ""
 
@@ -1334,6 +1351,10 @@ msgid "from {computer}"
 msgstr ""
 
 msgid "idle"
+msgstr ""
+
+#, python-brace-format
+msgid "in “{group}”"
 msgstr ""
 
 msgid "name"
@@ -1371,6 +1392,9 @@ msgid "user"
 msgstr ""
 
 msgid "user and password"
+msgstr ""
+
+msgid "with no group"
 msgstr ""
 
 #, python-brace-format
@@ -1585,6 +1609,10 @@ msgstr ""
 msgid ""
 "“{name}” has no address, and its name can't be used as one: a computer "
 "name has no spaces or symbols other than - and _."
+msgstr ""
+
+#, python-brace-format
+msgid "“{name}” has this address, {place}"
 msgstr ""
 
 #, python-brace-format

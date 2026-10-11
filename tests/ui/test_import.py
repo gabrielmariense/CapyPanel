@@ -2,6 +2,8 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QMessageBox
 
 from capypanel.core import settings
@@ -64,7 +66,8 @@ def test_the_preview_says_what_each_row_will_do(window: MainWindow) -> None:
     dialog = _dialog(window)
     table = dialog.table
     warnings = [table.topLevelItem(i).text(WARNING) for i in range(4)]  # type: ignore[union-attr]
-    assert warnings == ["", "", "Repeated in this import", "Already in the list"]
+    assert warnings == ["", "", "Same as row 2", "Already in the list, in “Headquarters”"]
+    assert [table.topLevelItem(i).text(0) for i in range(4)] == ["1", "2", "3", "4"]  # type: ignore[union-attr]
     assert _add_button(dialog) == "&Add 2 hosts"
     assert "New group: Headquarters › Finance." in dialog.summary.text()
     first = table.topLevelItem(0)
@@ -110,7 +113,16 @@ def test_editing_the_table_asks_once_then_rewrites_the_list(
 
     monkeypatch.setattr(import_hosts.QMessageBox, "question", yes)
     dialog = _dialog(window)
-    assert dialog.table._may_edit() and dialog.table._may_edit()
+    dialog.show()
+    QTest.qWaitForWindowExposed(dialog)
+    row = dialog.table.visualItemRect(dialog.table.topLevelItem(0)).center()  # type: ignore[arg-type]
+    for x in range(5, 200, 20):  # the pointer passing over doesn't ask
+        QTest.mouseMove(dialog.table.viewport(), QPoint(x, row.y()))
+    qapp.processEvents()
+    assert asked == []
+    QTest.mouseClick(dialog.table.viewport(), Qt.MouseButton.LeftButton, pos=row)
+    assert len(asked) == 1  # the first click asks
+    assert dialog.table._may_edit()
     assert len(asked) == 1  # once per import
     duplicate = dialog.table.topLevelItem(2)
     assert duplicate is not None

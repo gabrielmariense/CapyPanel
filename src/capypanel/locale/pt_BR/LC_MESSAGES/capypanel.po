@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 21:53-0300\n"
+"POT-Creation-Date: 2026-10-10 22:50-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -216,6 +216,10 @@ msgstr "Uma entrada de grupo não é um objeto."
 msgid "A host entry isn't an object."
 msgstr "Uma entrada de host não é um objeto."
 
+#, python-brace-format
+msgid "A host with this name is already in the list, {place}"
+msgstr "Um host com este nome já está na lista, {place}"
+
 msgid "A name and an address on each line, with a comma between them, or a tab, as Excel copies two columns. The name can be anything you like; the address is the computer's network name or IP address."
 msgstr "Um nome e um endereço em cada linha, separados por vírgula, ou por tabulação, como o Excel copia duas colunas. O nome pode ser o que você quiser; o endereço é o nome do computador na rede ou o endereço IP."
 
@@ -273,8 +277,9 @@ msgstr "Endereço"
 msgid "All hosts"
 msgstr "Todos os hosts"
 
-msgid "Already in the list"
-msgstr "Já está na lista"
+#, python-brace-format
+msgid "Already in the list, {place}"
+msgstr "Já está na lista, {place}"
 
 #, python-brace-format
 msgid "An item is missing the “{key}” field or has an invalid value for it."
@@ -587,9 +592,6 @@ msgstr "Nome do host ou endereço IP; deixe em branco para usar o nome"
 
 msgid "Hostnames"
 msgstr "Nomes de host"
-
-msgid "Hosts moved to the top level have no group."
-msgstr "Hosts movidos para o nível superior ficam sem grupo."
 
 msgid "Hosts with no group &go to:"
 msgstr "Hosts sem grupo &vão para:"
@@ -916,8 +918,17 @@ msgstr "Remover uma lista daqui nunca exclui o arquivo dela."
 msgid "Rename group"
 msgstr "Renomear grupo"
 
-msgid "Repeated in this import"
-msgstr "Repetido nesta importação"
+#, python-brace-format
+msgid "Same address as row {n}"
+msgstr "Mesmo endereço da linha {n}"
+
+#, python-brace-format
+msgid "Same as row {n}"
+msgstr "Igual à linha {n}"
+
+#, python-brace-format
+msgid "Same name as row {n}"
+msgstr "Mesmo nome da linha {n}"
 
 msgid "Save a copy"
 msgstr "Salvar uma cópia"
@@ -934,6 +945,9 @@ msgstr "Pesquisar {fields}"
 
 msgid "Searches every host in the list (Ctrl+F)"
 msgstr "Pesquisa em todos os hosts da lista (Ctrl+F)"
+
+msgid "See examples in Formats…"
+msgstr "Veja exemplos em Formatos…"
 
 msgid "Select a host to see its details."
 msgstr "Selecione um host para ver os detalhes."
@@ -1257,6 +1271,9 @@ msgstr "Windows — seguir o tema do sistema"
 msgid "Windows — light"
 msgstr "Windows — claro"
 
+msgid "With No group, the groups inside it move to the top level."
+msgstr "Com Sem grupo, os grupos dentro dele vão para o nível superior."
+
 msgid "You can also change the theme under View > Theme."
 msgstr "Você também pode trocar o tema em Exibir > Tema."
 
@@ -1284,6 +1301,10 @@ msgstr "de {computer}"
 
 msgid "idle"
 msgstr "inativa"
+
+#, python-brace-format
+msgid "in “{group}”"
+msgstr "em “{group}”"
 
 msgid "name"
 msgstr "nome"
@@ -1321,6 +1342,9 @@ msgstr "usuário"
 
 msgid "user and password"
 msgstr "usuário e senha"
+
+msgid "with no group"
+msgstr "sem grupo"
 
 #, python-brace-format
 msgid "{names} doesn't take a user and password (it may want a VNC password, or be another kind of VNC server), so CapyPanel didn't send your password. Check its connection profile."
@@ -1511,6 +1535,10 @@ msgstr "“{key}” deve ser uma lista."
 #, python-brace-format
 msgid "“{name}” has no address, and its name can't be used as one: a computer name has no spaces or symbols other than - and _."
 msgstr "“{name}” não tem endereço, e o nome não pode ser usado como um: um nome de computador não tem espaços nem símbolos além de - e _."
+
+#, python-brace-format
+msgid "“{name}” has this address, {place}"
+msgstr "“{name}” tem este endereço, {place}"
 
 #, python-brace-format
 msgid "“{name}” holds {inside}. What should happen to them?"

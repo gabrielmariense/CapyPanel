@@ -56,7 +56,7 @@ class Verdict(StrEnum):
 class Planned:
     row: ImportRow
     verdict: Verdict
-    reason: str  # empty for ADD
+    reason: str  # empty for ADD; for SKIP it names the host or row it repeats
     group: tuple[str, ...]  # where it goes, as group names from the top
 
 
@@ -148,11 +148,14 @@ def plan(host_list: HostList, rows: Iterable[ImportRow], default_group: str) -> 
     """What the import would do, row by row, and the list it would make. Nothing is changed:
     the caller saves `result` only when the user confirms."""
     result, items, new_groups = host_list, [], []
-    names = {h.name.casefold() for h in host_list.hosts}
-    targets = {h.target.casefold() for h in host_list.hosts}
-    seen_names: set[str] = set()
-    seen_targets: set[str] = set()
-    for row in rows:
+    names: dict[str, Host] = {}
+    targets: dict[str, Host] = {}
+    for host in host_list.hosts:
+        names.setdefault(host.name.casefold(), host)
+        targets.setdefault(host.target.casefold(), host)
+    seen_names: dict[str, int] = {}  # row numbers, from 1
+    seen_targets: dict[str, int] = {}
+    for number, row in enumerate(rows, 1):
         name, address = row.name.strip(), row.address.strip()
         target = (address or name).casefold()
         path = _path(result, row.group) or _names(host_list, default_group)
@@ -160,11 +163,10 @@ def plan(host_list: HostList, rows: Iterable[ImportRow], default_group: str) -> 
         if problem:
             items.append(Planned(row, Verdict.BAD, problem, path))
             continue
-        if name.casefold() in names or target in targets:
-            items.append(Planned(row, Verdict.SKIP, _("Already in the list"), path))
-            continue
-        if name.casefold() in seen_names or target in seen_targets:
-            items.append(Planned(row, Verdict.SKIP, _("Repeated in this import"), path))
+        known = _in_list(host_list, names.get(name.casefold()), targets.get(target))
+        repeated = _repeated(seen_names.get(name.casefold()), seen_targets.get(target))
+        if known or repeated:
+            items.append(Planned(row, Verdict.SKIP, known or repeated, path))
             continue
         result, group_id, made = _group(result, path) if path else (result, NO_GROUP, [])
         new_groups += [p for p in made if p not in new_groups]
@@ -175,10 +177,47 @@ def plan(host_list: HostList, rows: Iterable[ImportRow], default_group: str) -> 
         except HostListRuleError as e:
             items.append(Planned(row, Verdict.BAD, str(e), path))
             continue
-        seen_names.add(name.casefold())
-        seen_targets.add(target)
+        seen_names[name.casefold()] = number
+        seen_targets[target] = number
         items.append(Planned(row, Verdict.ADD, "", path))
     return Plan(tuple(items), tuple(new_groups), result)
+
+
+def _in_list(host_list: HostList, same_name: Host | None, same_address: Host | None) -> str:
+    """Which hosts already in the list a row matches, and where they are."""
+
+    def where(host: Host) -> str:
+        path = " › ".join(_names(host_list, host.group))
+        return _("in “{group}”").format(group=path) if path else _("with no group")
+
+    if same_name is not None and same_name is same_address:
+        return _("Already in the list, {place}").format(place=where(same_name))
+    found = []
+    if same_name is not None:
+        found.append(
+            _("A host with this name is already in the list, {place}").format(
+                place=where(same_name)
+            )
+        )
+    if same_address is not None:
+        found.append(
+            _("“{name}” has this address, {place}").format(
+                name=same_address.name, place=where(same_address)
+            )
+        )
+    return "; ".join(found)
+
+
+def _repeated(same_name: int | None, same_address: int | None) -> str:
+    """The earlier rows of this import a row repeats."""
+    if same_name is not None and same_name == same_address:
+        return _("Same as row {n}").format(n=same_name)
+    found = []
+    if same_name is not None:
+        found.append(_("Same name as row {n}").format(n=same_name))
+    if same_address is not None:
+        found.append(_("Same address as row {n}").format(n=same_address))
+    return "; ".join(found)
 
 
 def _problem(name: str, address: str) -> str:

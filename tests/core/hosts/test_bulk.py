@@ -57,8 +57,10 @@ def test_the_plan_adds_skips_and_flags_without_changing_the_list() -> None:
         Verdict.ADD, Verdict.ADD, Verdict.SKIP, Verdict.SKIP, Verdict.SKIP,
         Verdict.BAD, Verdict.BAD, Verdict.BAD, Verdict.ADD,
     ]  # fmt: skip
-    assert p.items[2].reason == "Repeated in this import"
-    assert p.items[3].reason == p.items[4].reason == "Already in the list"
+    # A skipped row says which host or row it repeats, so the right one can be kept.
+    assert p.items[2].reason == "Same as row 2"
+    assert p.items[3].reason == "“HQ-01” has this address, in “Headquarters”"
+    assert p.items[4].reason == "A host with this name is already in the list, in “Headquarters”"
     assert p.items[5].reason == "No name"
     assert p.adding == 3
     assert p.new_groups == (("Headquarters", "Finance"),)  # Front desk was there already

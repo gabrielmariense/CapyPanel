@@ -6,7 +6,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from PySide6.QtCore import QPoint, Qt, QTimer
-from PySide6.QtGui import QColor, QFont, QKeyEvent, QPalette
+from PySide6.QtGui import QColor, QFont, QKeyEvent, QMouseEvent, QPalette
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QButtonGroup,
@@ -46,13 +46,14 @@ COLORS = {Verdict.ADD: STATUS_COLORS["online"], Verdict.SKIP: "#d29922", Verdict
 
 
 class PreviewTable(QTreeWidget):
-    """The rows as they'll be imported. The first edit asks once: editing rewrites the pasted
-    list as CSV, so the two always say the same thing."""
+    """The rows as they'll be imported. The first click in it asks once whether to edit here:
+    editing rewrites the pasted list as CSV, so the two always say the same thing."""
 
     def __init__(self, dialog: "ImportDialog") -> None:
         super().__init__()
         self._dialog = dialog
         self.unlocked = False
+        self.asked = False
         self.setObjectName("grid")
         self.setRootIsDecorated(False)
         self.setUniformRowHeights(True)
@@ -65,12 +66,28 @@ class PreviewTable(QTreeWidget):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
     def edit(self, *args: object) -> bool:  # type: ignore[override]
-        if len(args) == 3 and not self._may_edit():
-            return False
+        if len(args) == 3:
+            index, trigger = args[0], args[1]
+            # Qt also calls this when the pointer passes over or a click selects: only an edit
+            # that would really start counts.
+            starts = trigger == self.EditTrigger.AllEditTriggers or bool(
+                trigger & self.editTriggers()  # type: ignore[operator]
+            )
+            if starts and (
+                index.column() not in EDITABLE  # type: ignore[attr-defined]
+                or not self._may_edit()
+            ):
+                return False
         return super().edit(*args)  # type: ignore[arg-type]
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if not self.asked:
+            self._may_edit()  # on the first click, never when the pointer just passes over
+        super().mousePressEvent(event)
 
     def _may_edit(self) -> bool:
         if not self.unlocked:
+            self.asked = True
             answer = QMessageBox.question(
                 self,
                 _("Edit the list here"),
@@ -137,6 +154,7 @@ class ImportDialog(QDialog):
         self.problem.setWordWrap(True)
         self.problem.setTextFormat(Qt.TextFormat.RichText)
         self.problem.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.problem.linkActivated.connect(lambda _link: FormatsDialog(self).exec())
         holder = QWidget()
         self._views = QStackedLayout(holder)
         self._views.addWidget(self.table)
@@ -160,7 +178,7 @@ class ImportDialog(QDialog):
         layout.addWidget(self.summary)
         layout.addWidget(self.box)
         self._parse()
-        self.resize(900, 640)
+        self.resize(1100, 640)  # room for warnings, which name the host they repeat
 
     # ---- what the window holds ----
 
@@ -219,11 +237,11 @@ class ImportDialog(QDialog):
         items = self._plan.items if self._plan else ()
         new_groups = set(self._plan.new_groups) if self._plan else set()
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
-        for planned in items:
+        for number, planned in enumerate(items, 1):
             r = planned.row
             item = QTreeWidgetItem(
                 [
-                    "",
+                    str(number),  # "Same as row 2" points here
                     r.name,
                     r.address,
                     " › ".join(planned.group) or _("No group"),
@@ -412,6 +430,7 @@ def needs_header_text() -> str:
         "<b>" + html.escape(_("This list needs a header row.")) + "</b>",
         html.escape(_("Start it with {header}, in any order.")).replace("{header}", header),
         html.escape(_("Or give just a name and an address on each line.")),
+        '<a href="formats">' + html.escape(_("See examples in Formats…")) + "</a>",
     ]
     return "<br><br>".join(lines)
 
@@ -480,6 +499,8 @@ class FormatsDialog(QDialog):
                         "desk”: that needs an address next to it (see Name and address)."
                     ),
                     "PC-0142\nPC-0143\nLAB-07",
+                    [_("Name")],
+                    [["PC-0142"], ["PC-0143"], ["LAB-07"]],
                 ),
             ),
             (
@@ -490,9 +511,13 @@ class FormatsDialog(QDialog):
                         "tab, as Excel copies two columns. The name can be anything you like; "
                         "the address is the computer's network name or IP address."
                     ),
-                    "Reception 01,PC-0142.corp.example.net\nLab 07,10.20.30.47",
+                    "Reception 01,PC-0142.corp.example.net\nLab 07,10.20.30.47\nPrint room,PR-03",
                     [_("Name"), _("Address")],
-                    [["Reception 01", "PC-0142.corp.example.net"], ["Lab 07", "10.20.30.47"]],
+                    [
+                        ["Reception 01", "PC-0142.corp.example.net"],
+                        ["Lab 07", "10.20.30.47"],
+                        ["Print room", "PR-03"],
+                    ],
                 ),
             ),
             (
