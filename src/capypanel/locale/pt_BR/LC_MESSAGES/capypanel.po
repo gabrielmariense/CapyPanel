@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 18:32-0300\n"
+"POT-Creation-Date: 2026-10-11 18:37-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -23,6 +23,9 @@ msgstr " e "
 
 msgid " min"
 msgstr " min"
+
+msgid "&About CapyPanel"
+msgstr "&Sobre o CapyPanel"
 
 msgid "&Add existing…"
 msgstr "&Adicionar existente…"
@@ -69,6 +72,9 @@ msgstr "Painel de &detalhes"
 msgid "&Discard changes"
 msgstr "&Descartar alterações"
 
+msgid "&Documentation"
+msgstr "&Documentação"
+
 msgid "&Edit cell"
 msgstr "&Editar célula"
 
@@ -104,6 +110,9 @@ msgstr "&Grupo:"
 
 msgid "&Groups pane"
 msgstr "Painel de &grupos"
+
+msgid "&Help"
+msgstr "Aj&uda"
 
 msgid "&Host lists…"
 msgstr "&Listas de hosts…"
@@ -186,6 +195,9 @@ msgstr "Re&mover da lista"
 msgid "&Remove selected"
 msgstr "&Remover selecionado"
 
+msgid "&Report a problem"
+msgstr "&Relatar um problema"
+
 msgid "&Reset layout"
 msgstr "&Redefinir layout"
 
@@ -252,6 +264,9 @@ msgstr "Um grupo novo: a importação o cria"
 
 msgid "A tool definition must be a JSON object."
 msgstr "Uma definição de ferramenta deve ser um objeto JSON."
+
+msgid "About CapyPanel"
+msgstr "Sobre o CapyPanel"
 
 msgid "Access"
 msgstr "Acesso"
@@ -330,6 +345,9 @@ msgstr "Barras"
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
 msgstr "Espaço reservado malformado em “{arg}”."
+
+msgid "Built with Python and Qt for Python (LGPL-3.0). Icons: Tabler Icons (MIT)."
+msgstr "Feito com Python e Qt for Python (LGPL-3.0). Ícones: Tabler Icons (MIT)."
 
 msgid "C&hoose file…"
 msgstr "Escol&her arquivo…"
@@ -493,6 +511,9 @@ msgstr "Não foi possível usar “{file}”: {error}"
 msgid "Couldn't write “{path}”: {error}"
 msgstr "Não foi possível gravar “{path}”: {error}"
 
+msgid "Created by"
+msgstr "Criado por"
+
 msgid "Created when opened"
 msgstr "Criada ao abrir"
 
@@ -612,6 +633,9 @@ msgstr "De “{file}”"
 msgid "Full backup"
 msgstr "Backup completo"
 
+msgid "GNU General Public License, version 3"
+msgstr "Licença Pública Geral GNU, versão 3"
+
 msgid "General"
 msgstr "Geral"
 
@@ -704,6 +728,9 @@ msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada 
 msgid "Last check"
 msgstr "Última verificação"
 
+msgid "License"
+msgstr "Licença"
+
 msgid "List"
 msgstr "Lista"
 
@@ -732,6 +759,9 @@ msgstr "Logs: um por usuário, com o nome da conta."
 
 msgid "Manage groups"
 msgstr "Gerenciar grupos"
+
+msgid "Manage the computers on your network from one window."
+msgstr "Gerencie os computadores da sua rede em uma só janela."
 
 msgid "Manual connection"
 msgstr "Conexão manual"
@@ -862,6 +892,9 @@ msgstr "Abrir &Configurações"
 
 msgid "Open &file"
 msgstr "Abrir &arquivo"
+
+msgid "Open &log folder"
+msgstr "Abrir pasta de &logs"
 
 msgid "Open a CSV file"
 msgstr "Abrir um arquivo CSV"
@@ -1097,6 +1130,9 @@ msgstr "Algo deu errado. Os detalhes foram salvos no log do aplicativo."
 msgid "Sorts every level by name, once; you can rearrange them after"
 msgstr "Classifica todos os níveis pelo nome, uma vez; depois você pode reorganizá-los"
 
+msgid "Source code"
+msgstr "Código-fonte"
+
 #, python-brace-format
 msgid "Start it with {header}, in any order."
 msgstr "Comece com {header}, em qualquer ordem."
@@ -1152,6 +1188,9 @@ msgstr "Esse perfil não existe."
 
 msgid "The account was accepted, but only administrators of that computer can see who is logged on."
 msgstr "A conta foi aceita, mas só administradores daquele computador podem ver quem está logado."
+
+msgid "The app's logs, to attach to a problem report"
+msgstr "Os logs do app, para anexar a um relato de problema"
 
 #, python-brace-format
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
@@ -1334,6 +1373,10 @@ msgid "Users"
 msgstr "Usuários"
 
 #, python-brace-format
+msgid "Version {version}"
+msgstr "Versão {version}"
+
+#, python-brace-format
 msgid "Viewer settings (*{extension})"
 msgstr "Configurações do visualizador (*{extension})"
 
@@ -1342,6 +1385,9 @@ msgstr "Configurações do visualizador:"
 
 msgid "Warning"
 msgstr "Aviso"
+
+msgid "Website"
+msgstr "Site"
 
 msgid "Where CapyPanel keeps its files"
 msgstr "Onde o CapyPanel guarda os arquivos"

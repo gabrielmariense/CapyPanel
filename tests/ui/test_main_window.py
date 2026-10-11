@@ -58,6 +58,7 @@ def test_first_start_creates_the_personal_list_with_a_hosts_group(window: MainWi
         "&Inventory",
         "&Connect",
         "&View",
+        "&Help",
     ]
     assert window.commands.add_host.isEnabled()
 

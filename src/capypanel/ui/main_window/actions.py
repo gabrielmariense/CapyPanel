@@ -38,6 +38,9 @@ class Actions:
     show_status_bar: QAction
     show_domains: QAction
     reset_layout: QAction
+    documentation: QAction
+    report_problem: QAction
+    about: QAction
 
 
 SHORTCUTS = {
@@ -92,6 +95,9 @@ def retranslate_actions(a: Actions) -> None:
     a.copy_name.setText(_("&Name"))
     a.show_in_group.setText(_("Show in &group"))
     a.refresh_shown.setText(_("Refresh"))
+    a.documentation.setText(_("&Documentation"))
+    a.report_problem.setText(_("&Report a problem"))
+    a.about.setText(_("&About CapyPanel"))
     a.check_status.setText(_("&Status"))
     a.check_users.setText(_("&Logged-on users"))
     a.forget_passwords.setText(_("&Forget typed passwords"))

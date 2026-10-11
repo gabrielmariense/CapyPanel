@@ -42,6 +42,7 @@ def test_switching_language_updates_the_open_window_live(window: MainWindow) -> 
         "&Inventário",
         "&Conectar",
         "E&xibir",
+        "Aj&uda",
     ]
     assert window.commands.add_host.text() == "Adicionar &host…"
     assert window.table.headerItem().text(0) == "Nome"
@@ -49,7 +50,9 @@ def test_switching_language_updates_the_open_window_live(window: MainWindow) -> 
     assert everything.text(0) == "Todos os hosts (1)"
     assert "1 host" in window._list_label.text()
     _switch(window, "en")
-    assert [m.title() for m in _menus(window)] == ["&File", "&Inventory", "&Connect", "&View"]
+    assert [m.title() for m in _menus(window)] == [
+        "&File", "&Inventory", "&Connect", "&View", "&Help"
+    ]  # fmt: skip
     assert window.table.headerItem().text(0) == "Name"
 
 

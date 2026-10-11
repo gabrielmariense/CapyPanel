@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 18:32-0300\n"
+"POT-Creation-Date: 2026-10-11 18:37-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,6 +21,9 @@ msgid " and "
 msgstr ""
 
 msgid " min"
+msgstr ""
+
+msgid "&About CapyPanel"
 msgstr ""
 
 msgid "&Add existing…"
@@ -68,6 +71,9 @@ msgstr ""
 msgid "&Discard changes"
 msgstr ""
 
+msgid "&Documentation"
+msgstr ""
+
 msgid "&Edit cell"
 msgstr ""
 
@@ -102,6 +108,9 @@ msgid "&Group:"
 msgstr ""
 
 msgid "&Groups pane"
+msgstr ""
+
+msgid "&Help"
 msgstr ""
 
 msgid "&Host lists…"
@@ -185,6 +194,9 @@ msgstr ""
 msgid "&Remove selected"
 msgstr ""
 
+msgid "&Report a problem"
+msgstr ""
+
 msgid "&Reset layout"
 msgstr ""
 
@@ -250,6 +262,9 @@ msgid "A new group: the import creates it"
 msgstr ""
 
 msgid "A tool definition must be a JSON object."
+msgstr ""
+
+msgid "About CapyPanel"
 msgstr ""
 
 msgid "Access"
@@ -330,6 +345,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
+msgstr ""
+
+msgid "Built with Python and Qt for Python (LGPL-3.0). Icons: Tabler Icons (MIT)."
 msgstr ""
 
 msgid "C&hoose file…"
@@ -496,6 +514,9 @@ msgstr ""
 msgid "Couldn't write “{path}”: {error}"
 msgstr ""
 
+msgid "Created by"
+msgstr ""
+
 msgid "Created when opened"
 msgstr ""
 
@@ -616,6 +637,9 @@ msgstr ""
 msgid "Full backup"
 msgstr ""
 
+msgid "GNU General Public License, version 3"
+msgstr ""
+
 msgid "General"
 msgstr ""
 
@@ -717,6 +741,9 @@ msgstr ""
 msgid "Last check"
 msgstr ""
 
+msgid "License"
+msgstr ""
+
 msgid "List"
 msgstr ""
 
@@ -744,6 +771,9 @@ msgid "Logs: one per user, named after the account."
 msgstr ""
 
 msgid "Manage groups"
+msgstr ""
+
+msgid "Manage the computers on your network from one window."
 msgstr ""
 
 msgid "Manual connection"
@@ -878,6 +908,9 @@ msgid "Open &Settings"
 msgstr ""
 
 msgid "Open &file"
+msgstr ""
+
+msgid "Open &log folder"
 msgstr ""
 
 msgid "Open a CSV file"
@@ -1124,6 +1157,9 @@ msgstr ""
 msgid "Sorts every level by name, once; you can rearrange them after"
 msgstr ""
 
+msgid "Source code"
+msgstr ""
+
 #, python-brace-format
 msgid "Start it with {header}, in any order."
 msgstr ""
@@ -1180,6 +1216,9 @@ msgstr ""
 msgid ""
 "The account was accepted, but only administrators of that computer can "
 "see who is logged on."
+msgstr ""
+
+msgid "The app's logs, to attach to a problem report"
 msgstr ""
 
 #, python-brace-format
@@ -1375,6 +1414,10 @@ msgid "Users"
 msgstr ""
 
 #, python-brace-format
+msgid "Version {version}"
+msgstr ""
+
+#, python-brace-format
 msgid "Viewer settings (*{extension})"
 msgstr ""
 
@@ -1382,6 +1425,9 @@ msgid "Viewer settings:"
 msgstr ""
 
 msgid "Warning"
+msgstr ""
+
+msgid "Website"
 msgstr ""
 
 msgid "Where CapyPanel keeps its files"

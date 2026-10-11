@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 from capypanel import BUILD, __version__
 from capypanel.core import applog, i18n, migration, settings
 from capypanel.core.i18n import _
-from capypanel.ui import language
+from capypanel.ui import branding, language
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.themes import engine as themes
 
@@ -18,8 +18,10 @@ log = logging.getLogger(__name__)
 
 
 def run(argv: list[str] | None = None) -> int:
+    branding.use_own_taskbar_icon()  # before any window exists
     app = QApplication(sys.argv if argv is None else argv)
     app.setApplicationName("CapyPanel")
+    app.setWindowIcon(branding.app_icon())
     app.setApplicationVersion(__version__)
     sys.excepthook = _report_unexpected_error
 

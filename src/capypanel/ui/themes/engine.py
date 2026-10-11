@@ -174,9 +174,12 @@ def apply(theme: Theme) -> None:
         # A fresh style instance re-polishes every widget; switching the scheme alone left some
         # views with the previous theme's colours.
         app.setStyle("windows11")
-        app.setStyleSheet(
-            _NATIVE_QSS % native_tokens(app.palette().color(QPalette.ColorRole.Accent))
-        )  # noqa: UP031
+        tokens = native_tokens(app.palette().color(QPalette.ColorRole.Accent))
+        app.setStyleSheet(_NATIVE_QSS % tokens)  # noqa: UP031
+        # Windows' link colour is the accent as is: a deep accent was hard to read on dark.
+        links = QPalette()
+        links.setColor(QPalette.ColorRole.Link, QColor(tokens["accent_text"]))
+        app.setPalette(links)  # only Link is set; every other colour stays the system's
         _refont(app, readable.families())
     else:
         if engine_changed:
@@ -360,7 +363,6 @@ def _palette(t: dict[str, str]) -> QPalette:
         (role.ButtonText, "text"),
         (role.Highlight, "accent"),
         (role.Accent, "accent"),
-        (role.Link, "accent"),
         (role.PlaceholderText, "text3"),
         (role.Mid, "border"),
         (role.ToolTipBase, "card"),
@@ -368,6 +370,8 @@ def _palette(t: dict[str, str]) -> QPalette:
     ):
         palette.setColor(color_role, QColor(t[key]))
     palette.setColor(role.HighlightedText, QColor("#ffffff"))
+    # Links in text, e.g. the About window's: the accent, made readable on cards.
+    palette.setColor(role.Link, QColor(readable_on(QColor(t["accent"]), t["card"], t["text"])))
     for color_role in (role.ButtonText, role.WindowText, role.Text):
         palette.setColor(QPalette.ColorGroup.Disabled, color_role, QColor(t["text3"]))
     return palette

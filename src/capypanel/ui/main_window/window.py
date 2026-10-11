@@ -47,8 +47,8 @@ from capypanel.core.remote.status import Answer, Status
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import SessionCredentials, Target
 from capypanel.core.tools.profiles import ProfileError
+from capypanel.ui import about, language
 from capypanel.ui import checks as check_texts
-from capypanel.ui import language
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
 from capypanel.ui.export_hosts import ExportDialog, Source
@@ -234,6 +234,11 @@ class MainWindow(QMainWindow):
         self._language_group.triggered.connect(lambda item: self.set_language(item.data()))
         self._view_menu.addSeparator()
         self._view_menu.addAction(a.reset_layout)
+
+        self._help_menu = bar.addMenu("")
+        self._help_menu.addActions([a.documentation, a.report_problem])
+        self._help_menu.addSeparator()
+        self._help_menu.addAction(a.about)
         self._retranslate_menus()
 
     def _retranslate_menus(self) -> None:
@@ -246,6 +251,7 @@ class MainWindow(QMainWindow):
         self._inventory_menu.setTitle(_("&Inventory"))
         self._connect_menu.setTitle(_("&Connect"))
         self._view_menu.setTitle(_("&View"))
+        self._help_menu.setTitle(_("&Help"))
         self._bars_heading.setText(_("Bars"))
         self._panes_heading.setText(_("Panes"))
         self._users_heading.setText(_("Users"))
@@ -270,6 +276,9 @@ class MainWindow(QMainWindow):
         # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C, F5) live here.
         self.addActions([a.edit, a.remove, a.copy_address, a.show_in_group, a.refresh_shown])
         a.refresh_shown.triggered.connect(self._run_refresh_panel)  # F5
+        a.documentation.triggered.connect(lambda: about.open_url(about.docs_url()))
+        a.report_problem.triggered.connect(lambda: about.open_url(about.report_url()))
+        a.about.triggered.connect(lambda: about.AboutDialog(self, self._paths.log_dir).exec())
         a.show_toolbar.toggled.connect(self.toolbar.setVisible)
         a.show_groups.toggled.connect(self.nav.setVisible)
         a.show_tags.toggled.connect(self.nav.set_tags_visible)
