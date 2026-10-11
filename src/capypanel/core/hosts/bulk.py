@@ -9,6 +9,7 @@ in pt-BR) or a comma. A group is a path, its levels joined by "/"; tags are join
 in a ";" list)."""
 
 import csv
+import ctypes
 import io
 import unicodedata
 from collections.abc import Iterable, Sequence
@@ -19,6 +20,7 @@ from capypanel.core.hosts.model import NO_GROUP, Host, HostList, HostListRuleErr
 from capypanel.core.i18n import _
 
 PATH = "/"  # between a group path's levels
+LOCALE_SLIST = 0x0C  # GetLocaleInfoEx: the list separator
 _HEADERS = {
     "name": {"name", "nome", "host", "hostname", "computer", "computador"},
     "address": {"address", "endereco", "ip", "ip address", "endereco ip", "dns"},
@@ -274,19 +276,37 @@ def _group(
 # ---- writing ----
 
 
-def to_csv(rows: Iterable[ImportRow]) -> str:
-    """Rows as CSV with a header row: what the import window shows once its table is edited."""
+def to_csv(rows: Iterable[ImportRow], delimiter: str = ",") -> str:
+    """Rows as CSV with a header row: what the import window shows once its table is edited.
+    With ";" between columns, tags are joined by "," (the import reads both ways)."""
     out = io.StringIO()
-    writer = csv.writer(out, lineterminator="\n")
+    writer = csv.writer(out, delimiter=delimiter, lineterminator="\n")
     writer.writerow(["name", "address", "group", "tags", "notes"])
+    between_tags = "," if delimiter == ";" else ";"
     for row in rows:
-        writer.writerow([row.name, row.address, row.group, ";".join(row.tags), row.notes])
+        writer.writerow([row.name, row.address, row.group, between_tags.join(row.tags), row.notes])
     return out.getvalue()
 
 
-def export(host_list: HostList, hosts: Iterable[Host]) -> str:
+def export(host_list: HostList, hosts: Iterable[Host], delimiter: str = ",") -> str:
     """Hosts as CSV that imports back: name, address, group path, tags and notes."""
     return to_csv(
-        ImportRow(h.name, h.address, PATH.join(_names(host_list, h.group)), h.tags, h.notes)
-        for h in hosts
+        (
+            ImportRow(h.name, h.address, PATH.join(_names(host_list, h.group)), h.tags, h.notes)
+            for h in hosts
+        ),
+        delimiter,
     )
+
+
+def list_separator() -> str:
+    """Windows' list separator (Region settings): what Excel splits a CSV file on when it's
+    opened, e.g. "," in English and ";" in Portuguese. "," when it can't be read."""
+    try:
+        text = ctypes.create_unicode_buffer(8)
+        found = ctypes.windll.kernel32.GetLocaleInfoEx(None, LOCALE_SLIST, text, len(text))
+        if found and text.value in (",", ";", "\t"):
+            return text.value
+    except (AttributeError, OSError):  # not Windows
+        pass
+    return ","

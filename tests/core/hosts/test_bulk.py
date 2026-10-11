@@ -1,4 +1,12 @@
-from capypanel.core.hosts.bulk import ImportRow, Verdict, export, parse, plan, to_csv
+from capypanel.core.hosts.bulk import (
+    ImportRow,
+    Verdict,
+    export,
+    list_separator,
+    parse,
+    plan,
+    to_csv,
+)
 from capypanel.core.hosts.model import NO_GROUP, HostList
 
 
@@ -119,3 +127,15 @@ def test_notes_come_in_from_a_notes_column() -> None:
     hl, branch = _office()
     added = plan(hl, rows, branch).result.hosts[-1]
     assert added.name == "PC-1" and added.notes == "USB printer"
+
+
+def test_an_export_split_by_semicolons_imports_back_too() -> None:
+    # Excel in Portuguese (and other languages) splits columns on ";": tags then use ",".
+    rows = [ImportRow("Lab 07", "10.20.30.47", "Branch office", ("a", "b"), "USB; printer")]
+    text = to_csv(rows, ";")
+    assert text.splitlines()[1] == 'Lab 07;10.20.30.47;Branch office;a,b;"USB; printer"'
+    assert parse(text).rows == tuple(rows)
+
+
+def test_the_list_separator_is_one_excel_splits_on() -> None:
+    assert list_separator() in (",", ";", "\t")

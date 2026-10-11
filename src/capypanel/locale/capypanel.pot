@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 23:43-0300\n"
+"POT-Creation-Date: 2026-10-11 00:18-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -72,6 +72,9 @@ msgid "&Edit selected…"
 msgstr ""
 
 msgid "&Edit…"
+msgstr ""
+
+msgid "&Export hosts…"
 msgstr ""
 
 msgid "&File"
@@ -314,6 +317,9 @@ msgstr ""
 msgid "CSV files (*.csv *.txt);;All files (*)"
 msgstr ""
 
+msgid "CSV files (*.csv)"
+msgstr ""
+
 msgid "CSV with headers"
 msgstr ""
 
@@ -442,6 +448,10 @@ msgid "Couldn't save the list: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't save “{path}”: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't start {tool} for {target}: {error}"
 msgstr ""
 
@@ -528,6 +538,18 @@ msgid ""
 "Editing in the table rewrites the list above as CSV with a header row "
 "(name, address, group, tags, notes), so the two always match. Continue?"
 msgstr ""
+
+msgid "Export hosts"
+msgstr ""
+
+msgid "Export the hosts shown, or the whole list?"
+msgstr ""
+
+#, python-brace-format
+msgid "Exported {n} host to {file}."
+msgid_plural "Exported {n} hosts to {file}."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "File not found"
 msgstr ""
@@ -1076,6 +1098,12 @@ msgstr ""
 msgid "That profile doesn't exist."
 msgstr ""
 
+#, python-brace-format
+msgid "The &whole list ({n} host)"
+msgid_plural "The &whole list ({n} hosts)"
+msgstr[0] ""
+msgstr[1] ""
+
 msgid ""
 "The account was accepted, but only administrators of that computer can "
 "see who is logged on."
@@ -1183,6 +1211,12 @@ msgstr ""
 
 msgid "The viewer's defaults"
 msgstr ""
+
+#, python-brace-format
+msgid "The {n} host &shown"
+msgid_plural "The {n} hosts &shown"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "The “executable” must be a path."
 msgstr ""

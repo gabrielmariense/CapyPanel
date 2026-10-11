@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 23:43-0300\n"
+"POT-Creation-Date: 2026-10-11 00:18-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -74,6 +74,9 @@ msgstr "&Editar selecionado…"
 
 msgid "&Edit…"
 msgstr "&Editar…"
+
+msgid "&Export hosts…"
+msgstr "&Exportar hosts…"
 
 msgid "&File"
 msgstr "&Arquivo"
@@ -313,6 +316,9 @@ msgstr "Escol&her arquivo…"
 msgid "CSV files (*.csv *.txt);;All files (*)"
 msgstr "Arquivos CSV (*.csv *.txt);;Todos os arquivos (*)"
 
+msgid "CSV files (*.csv)"
+msgstr "Arquivos CSV (*.csv)"
+
 msgid "CSV with headers"
 msgstr "CSV com cabeçalho"
 
@@ -439,6 +445,10 @@ msgid "Couldn't save the list: {error}"
 msgstr "Não foi possível salvar a lista: {error}"
 
 #, python-brace-format
+msgid "Couldn't save “{path}”: {error}"
+msgstr "Não foi possível salvar “{path}”: {error}"
+
+#, python-brace-format
 msgid "Couldn't start {tool} for {target}: {error}"
 msgstr "Não foi possível iniciar o {tool} para {target}: {error}"
 
@@ -521,6 +531,18 @@ msgstr "Editar a lista aqui"
 
 msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, tags, notes), so the two always match. Continue?"
 msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes), para que as duas sempre coincidam. Continuar?"
+
+msgid "Export hosts"
+msgstr "Exportar hosts"
+
+msgid "Export the hosts shown, or the whole list?"
+msgstr "Exportar os hosts exibidos ou a lista inteira?"
+
+#, python-brace-format
+msgid "Exported {n} host to {file}."
+msgid_plural "Exported {n} hosts to {file}."
+msgstr[0] "{n} host exportado para {file}."
+msgstr[1] "{n} hosts exportados para {file}."
 
 msgid "File not found"
 msgstr "Arquivo não encontrado"
@@ -1049,6 +1071,12 @@ msgstr "Esse host não está mais na lista."
 msgid "That profile doesn't exist."
 msgstr "Esse perfil não existe."
 
+#, python-brace-format
+msgid "The &whole list ({n} host)"
+msgid_plural "The &whole list ({n} hosts)"
+msgstr[0] "A lista &inteira ({n} host)"
+msgstr[1] "A lista &inteira ({n} hosts)"
+
 msgid "The account was accepted, but only administrators of that computer can see who is logged on."
 msgstr "A conta foi aceita, mas só administradores daquele computador podem ver quem está logado."
 
@@ -1144,6 +1172,12 @@ msgstr "O “id” da ferramenta deve ter só letras minúsculas, dígitos, - ou
 
 msgid "The viewer's defaults"
 msgstr "Padrões do visualizador"
+
+#, python-brace-format
+msgid "The {n} host &shown"
+msgid_plural "The {n} hosts &shown"
+msgstr[0] "O {n} host &exibido"
+msgstr[1] "Os {n} hosts &exibidos"
 
 msgid "The “executable” must be a path."
 msgstr "O “executable” deve ser um caminho."

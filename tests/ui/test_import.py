@@ -8,7 +8,8 @@ from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QMessageB
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
-from capypanel.core.hosts.model import HostList
+from capypanel.core.hosts.bulk import parse
+from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.ui import import_hosts
 from capypanel.ui.import_hosts import (
     NAME,
@@ -18,6 +19,7 @@ from capypanel.ui.import_hosts import (
     ImportDialog,
     read_text,
 )
+from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.window import MainWindow
 
 PASTED = (
@@ -176,3 +178,36 @@ def test_formats_shows_one_format_at_a_time(qapp: QApplication) -> None:
     assert second is not None
     second.click()
     assert dialog._pages.currentIndex() == 1
+
+
+def test_export_writes_the_hosts_shown_or_the_whole_list(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    doc = window.document
+    assert doc is not None
+    hl, _pc = doc.hosts.add_host("LOOSE-1", NO_GROUP, notes="spare")
+    window._commit(hl)
+    target = tmp_path / "out" / "hosts.csv"
+    target.parent.mkdir()
+    asked: list[str] = []
+    monkeypatch.setattr(
+        window_module.QFileDialog, "getSaveFileName", lambda *_a, **_k: (str(target), "")
+    )
+
+    def pick(box: QMessageBox) -> int:
+        asked.append(box.text())
+        next(b for b in box.buttons() if b.text().startswith("The 1 host")).click()
+        return 0
+
+    monkeypatch.setattr(window_module.QMessageBox, "exec", pick)
+    assert window.commands.export_hosts.isEnabled()
+    window.commands.export_hosts.trigger()  # All hosts shown: no question
+    data = target.read_bytes()
+    assert asked == [] and data.startswith(b"\xef\xbb\xbf")  # a BOM, for Excel's accents
+    text = read_text(target)
+    assert {r.name for r in parse(text).rows} == {"HQ-01", "LOOSE-1"}  # imports back
+    window.nav.select_group(NO_GROUP)  # now fewer are shown: which ones?
+    window.commands.export_hosts.trigger()
+    assert asked == ["Export the hosts shown, or the whole list?"]
+    assert [r.name for r in parse(read_text(target)).rows] == ["LOOSE-1"]
+    assert window.statusBar().currentMessage() == "Exported 1 host to hosts.csv."

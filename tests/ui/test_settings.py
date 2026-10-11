@@ -255,7 +255,8 @@ def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
     }
     assert menus["&File"][:2] == ["&New host list…", "&Host lists…"]
     assert menus["&Inventory"] == [
-        "Add &host…", "Add &group…", "&Manage groups…", "&Import hosts…"
+        "Add &host…", "Add &group…", "&Manage groups…", "&Import hosts…",
+        "&Export hosts…"
     ]  # fmt: skip
     assert menus["&Connect"] == [
         "&Manual connection…", "Connection &profiles…", "&Forget typed passwords"

@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import QByteArray, QEvent, QPoint, Qt, QTimer
+from PySide6.QtCore import QByteArray, QEvent, QPoint, QStandardPaths, Qt, QTimer
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
@@ -35,6 +35,7 @@ from PySide6.QtWidgets import (
 from capypanel import BUILD
 from capypanel.core import i18n, settings, winsec
 from capypanel.core.hosts import locations
+from capypanel.core.hosts.bulk import export, list_separator
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
 from capypanel.core.hosts.locations import ListKind
@@ -188,7 +189,7 @@ class MainWindow(QMainWindow):
         self._inventory_menu.addSeparator()
         self._inventory_menu.addAction(a.manage_groups)
         self._inventory_menu.addSeparator()
-        self._inventory_menu.addAction(a.import_hosts)
+        self._inventory_menu.addActions([a.import_hosts, a.export_hosts])
 
         self._connect_menu = bar.addMenu("")
         self._connect_menu.addActions([a.manual_connect, a.connection_profiles])
@@ -261,6 +262,7 @@ class MainWindow(QMainWindow):
         a.add_group.triggered.connect(self.add_group)
         a.manage_groups.triggered.connect(self.manage_groups)
         a.import_hosts.triggered.connect(self.import_hosts)
+        a.export_hosts.triggered.connect(self.export_hosts)
         a.edit.triggered.connect(self.edit_selected)
         a.remove.triggered.connect(self.remove_selected)
         # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C) live here.
@@ -864,6 +866,73 @@ class MainWindow(QMainWindow):
             note = ngettext("Added {n} host.", "Added {n} hosts.", added).format(n=added)
             self.statusBar().showMessage(note, 10_000)
 
+    def export_hosts(self) -> None:
+        """Inventory > Export hosts…: the hosts shown, or the whole list, as a CSV file that
+        imports back. Columns are split the way this PC's Excel expects, so it opens there too."""
+        doc = self._doc
+        if doc is None or not doc.hosts.hosts:
+            return
+        hosts = self._hosts_to_export(doc.hosts)
+        if hosts is None:
+            return
+        folder = self._prefs.get("export_folder")
+        if not isinstance(folder, str) or not Path(folder).is_dir():
+            documents = QStandardPaths.StandardLocation.DocumentsLocation
+            folder = QStandardPaths.writableLocation(documents)
+        name, _filter = QFileDialog.getSaveFileName(
+            self,
+            _("Export hosts"),
+            str(Path(folder) / f"{doc.path.stem}.csv"),
+            _("CSV files (*.csv)"),
+        )
+        if not name:
+            return
+        path = Path(name)
+        text = export(doc.hosts, hosts, list_separator())
+        try:
+            # With a BOM, Excel reads the accents right; the import skips it.
+            path.write_text(text, encoding="utf-8-sig")
+        except OSError as e:
+            self._error(_("Couldn't save “{path}”: {error}").format(path=path, error=e))
+            return
+        self._prefs["export_folder"] = str(path.parent)
+        self._save_prefs()
+        note = ngettext(
+            "Exported {n} host to {file}.", "Exported {n} hosts to {file}.", len(hosts)
+        ).format(n=len(hosts), file=path.name)
+        self.statusBar().showMessage(note, 10_000)
+
+    def _hosts_to_export(self, host_list: HostList) -> tuple[Host, ...] | None:
+        """The whole list, or (when a group, tag or search shows fewer) the hosts shown, if
+        picked. None for Cancel."""
+        shown, every = self._visible_hosts(), host_list.hosts
+        if len(shown) == len(every):
+            return every
+        box = QMessageBox(
+            QMessageBox.Icon.Question,
+            _("Export hosts"),
+            _("Export the hosts shown, or the whole list?"),
+            parent=self,
+        )
+        shown_button = box.addButton(
+            ngettext("The {n} host &shown", "The {n} hosts &shown", len(shown)).format(
+                n=len(shown)
+            ),
+            QMessageBox.ButtonRole.AcceptRole,
+        )
+        shown_button.setEnabled(bool(shown))
+        every_button = box.addButton(
+            ngettext("The &whole list ({n} host)", "The &whole list ({n} hosts)", len(every))
+            .format(n=len(every)),
+            QMessageBox.ButtonRole.AcceptRole,
+        )  # fmt: skip
+        cancel = box.addButton(QMessageBox.StandardButton.Cancel)
+        box.setEscapeButton(cancel)
+        box.setDefaultButton(shown_button if shown else every_button)
+        box.exec()
+        clicked = box.clickedButton()
+        return shown if clicked is shown_button else every if clicked is every_button else None
+
     def manage_groups(self) -> None:
         """Inventory > Manage groups…: reorder and nest every group at once."""
         doc = self._writable()
@@ -1189,6 +1258,7 @@ class MainWindow(QMainWindow):
         a.add_host.setEnabled(writable)
         a.add_group.setEnabled(writable)
         a.import_hosts.setEnabled(writable)
+        a.export_hosts.setEnabled(doc is not None and bool(doc.hosts.hosts))  # read-only too
         self.nav.add_group_button.setEnabled(writable)
         a.edit.setEnabled(writable and (selected == 1 or group_picked))
         a.remove.setEnabled(writable and (selected > 0 or group_picked))
