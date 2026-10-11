@@ -42,6 +42,7 @@ def test_the_website_opens_in_the_app_s_language(qapp: QApplication) -> None:
     language.apply("pt_BR")
     try:
         assert about.docs_url().endswith("/CapyPanel/pt-BR/")
+        assert about.source_url().endswith("/README.pt-BR.md")  # GitHub shows the English one
     finally:
         language.apply(i18n.DEFAULT_LANGUAGE)
 

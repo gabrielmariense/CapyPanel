@@ -35,6 +35,11 @@ def docs_url() -> str:
     return DOCS_URL + ("pt-BR/" if i18n.language() == "pt_BR" else "")
 
 
+def source_url() -> str:
+    """The repository; in Portuguese, its Portuguese README (GitHub always shows the English)."""
+    return f"{REPO_URL}/blob/main/README.pt-BR.md" if i18n.language() == "pt_BR" else REPO_URL
+
+
 def report_url() -> str:
     """A new GitHub issue with the versions already filled in, under the space for the report."""
     body = (
@@ -86,7 +91,7 @@ class AboutDialog(QDialog):
         rows = (
             (_("Created by"), CREATOR),
             (_("Website"), _link(docs_url(), DOCS_URL.removeprefix("https://").rstrip("/"))),
-            (_("Source code"), _link(REPO_URL, REPO_URL.removeprefix("https://"))),
+            (_("Source code"), _link(source_url(), REPO_URL.removeprefix("https://"))),
             (_("License"), _link(LICENSE_URL, _("GNU General Public License, version 3"))),
         )
         for row, (label, value) in enumerate(rows):
