@@ -206,7 +206,8 @@ def test_host_menu_has_sections_with_short_names(
     window._host_menu(window.table.visualItemRect(first).center())
     assert seen == [
         "&Connect", "Connection &profile", "&Status", "&Logged-on users",
-        "&Address", "&Name", "Show in &group", "&Edit selected…", "&Remove selected",
+        "&Address", "&Name", "&Move to", "Show in &group", "&Edit selected…",
+        "&Remove selected",
     ]  # fmt: skip
 
 

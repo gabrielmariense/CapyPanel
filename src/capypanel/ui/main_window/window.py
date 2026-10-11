@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import QByteArray, QEvent, QPoint, Qt, QTimer
+from PySide6.QtCore import QByteArray, QEvent, QPoint, QStandardPaths, Qt, QTimer
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
@@ -35,10 +35,11 @@ from PySide6.QtWidgets import (
 from capypanel import BUILD
 from capypanel.core import i18n, settings, winsec
 from capypanel.core.hosts import locations
+from capypanel.core.hosts.bulk import export, list_separator
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
 from capypanel.core.hosts.locations import ListKind
-from capypanel.core.hosts.model import Host, HostList, HostListRuleError
+from capypanel.core.hosts.model import NO_GROUP, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote import checks
 from capypanel.core.remote.checks import Checks, Found
@@ -51,7 +52,13 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui import language
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
-from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog, TreeMenu, fill_move_menu
+from capypanel.ui.groups import (
+    ROLE_ID,
+    ManageGroupsDialog,
+    TreeMenu,
+    fill_host_move_menu,
+    fill_move_menu,
+)
 from capypanel.ui.host_lists import HostListsDialog
 from capypanel.ui.hosts import (
     HostDialog,
@@ -61,6 +68,7 @@ from capypanel.ui.hosts import (
     list_file_filter,
 )
 from capypanel.ui.icons import STATUS_COLORS, dot_icon
+from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.details import DetailsPane, HostDetails
 from capypanel.ui.main_window.host_views import (
@@ -180,6 +188,8 @@ class MainWindow(QMainWindow):
         self._inventory_menu.addActions([a.add_host, a.add_group])
         self._inventory_menu.addSeparator()
         self._inventory_menu.addAction(a.manage_groups)
+        self._inventory_menu.addSeparator()
+        self._inventory_menu.addActions([a.import_hosts, a.export_hosts])
 
         self._connect_menu = bar.addMenu("")
         self._connect_menu.addActions([a.manual_connect, a.connection_profiles])
@@ -251,6 +261,8 @@ class MainWindow(QMainWindow):
         a.add_host.triggered.connect(self.add_host)
         a.add_group.triggered.connect(self.add_group)
         a.manage_groups.triggered.connect(self.manage_groups)
+        a.import_hosts.triggered.connect(self.import_hosts)
+        a.export_hosts.triggered.connect(self.export_hosts)
         a.edit.triggered.connect(self.edit_selected)
         a.remove.triggered.connect(self.remove_selected)
         # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C) live here.
@@ -287,6 +299,7 @@ class MainWindow(QMainWindow):
         self.nav.groups.customContextMenuRequested.connect(self._group_menu)
         self.nav.groups.rearranged.connect(self._groups_dragged)
         self.nav.groups.hosts_dropped.connect(self.move_hosts)
+        self.nav.everything.hosts_dropped.connect(self.move_hosts)  # onto "No group"
         self.nav.groups_heading.group_dropped.connect(lambda g: self.move_group(g, None))
         self.nav.groups_heading.customContextMenuRequested.connect(self._heading_menu)
         self.table.itemSelectionChanged.connect(self._selection_changed)
@@ -616,17 +629,26 @@ class MainWindow(QMainWindow):
                 self._commit(doc.hosts.remove_group(group_id))
             return
         choice = self._ask_how_to_remove(group_id, groups, hosts)
-        if choice is not None:
-            self._commit(doc.hosts.remove_group(group_id, keep_contents=choice == "keep"))
+        if choice is None:
+            return
+        how, into = choice
+        try:
+            new = doc.hosts.remove_group(group_id, keep_contents=how == "move", into=into)
+        except HostListRuleError as e:
+            self._error(str(e))
+            return
+        self._commit(new)
 
-    def _ask_how_to_remove(self, group_id: str, groups: int, hosts: int) -> str | None:
-        """Keep what's inside (moved up a level, the default) or remove everything.
-        Returns "keep", "all", or None for Cancel."""
+    def _ask_how_to_remove(
+        self, group_id: str, groups: int, hosts: int
+    ) -> tuple[str, str | None] | None:
+        """Move what's inside somewhere (its parent is ticked) or remove everything.
+        Returns ("move", group id, or NO_GROUP for the top level), ("all", None), or None for
+        Cancel."""
         assert self._doc is not None
         host_list = self._doc.hosts
         group = host_list.group(group_id)
         assert group is not None
-        parent = host_list.group(group.parent) if group.parent else None
         inside = [
             ngettext("{n} group", "{n} groups", groups).format(n=groups) if groups else "",
             ngettext("{n} host", "{n} hosts", hosts).format(n=hosts) if hosts else "",
@@ -639,27 +661,35 @@ class MainWindow(QMainWindow):
             ),
             parent=self,
         )
-        where = _("Move them into “{name}”").format(name=parent.name) if parent else ""
-        keep = box.addButton(
-            where or _("Move them to the top level"), QMessageBox.ButtonRole.AcceptRole
+        if groups:
+            box.setInformativeText(
+                _("With No group, the groups inside it go directly under Groups.")
+            )
+        chosen: list[tuple[str, str | None]] = []
+        move = box.addButton(_("&Move them to"), QMessageBox.ButtonRole.ActionRole)
+        menu = TreeMenu("", move)
+        # The same menu as moving hosts, without what's being removed.
+        fill_host_move_menu(
+            menu,
+            host_list,
+            lambda target: chosen.append(("move", target)),
+            skip=host_list.subtree(group_id),
         )
+        parent = group.parent or NO_GROUP  # where things go when a group goes
+        for item in menu.actions():
+            if item.data() == parent:
+                item.setChecked(True)
+                menu.marked = item
+        menu.triggered.connect(lambda _item: box.done(0))
+        move.setMenu(menu)
         everything = box.addButton(_("Remove everything"), QMessageBox.ButtonRole.DestructiveRole)
         cancel = box.addButton(QMessageBox.StandardButton.Cancel)
-        if host_list.can_keep_contents(group_id):
-            box.setDefaultButton(keep)
-        else:
-            keep.setEnabled(False)
-            box.setDefaultButton(cancel)
-            box.setInformativeText(
-                _(
-                    "Its hosts can't move up: every host needs a group, and this one is at the "
-                    "top level. Move them to another group first to keep them."
-                )
-            )
+        box.setDefaultButton(cancel)
         box.setEscapeButton(cancel)
         box.exec()
-        clicked = box.clickedButton()
-        return "keep" if clicked is keep else "all" if clicked is everything else None
+        if chosen:
+            return chosen[0]
+        return ("all", None) if box.clickedButton() is everything else None
 
     def _commit(self, new: HostList) -> bool:
         """Save an edit. If someone else changed the file meanwhile, ask what to do with ours."""
@@ -823,6 +853,86 @@ class MainWindow(QMainWindow):
             self._commit(doc.hosts.set_hosts_profile(host_ids, profile))
             self._selection_changed()
 
+    def import_hosts(self) -> None:
+        """Inventory > Import hosts…: many hosts at once; nothing is saved until Add."""
+        doc = self._writable()
+        if doc is None:
+            return
+        # Hosts without a group of their own get none, unless a group is picked.
+        dialog = ImportDialog(self, doc.hosts, self.nav.selected_group_id() or NO_GROUP)
+        new = dialog.imported_list() if dialog.exec() == QDialog.DialogCode.Accepted else None
+        if new is not None and self._commit(new):
+            added = dialog.added()
+            note = ngettext("Added {n} host.", "Added {n} hosts.", added).format(n=added)
+            self.statusBar().showMessage(note, 10_000)
+
+    def export_hosts(self) -> None:
+        """Inventory > Export hosts…: the hosts shown, or the whole list, as a CSV file that
+        imports back. Columns are split the way this PC's Excel expects, so it opens there too."""
+        doc = self._doc
+        if doc is None or not doc.hosts.hosts:
+            return
+        hosts = self._hosts_to_export(doc.hosts)
+        if hosts is None:
+            return
+        folder = self._prefs.get("export_folder")
+        if not isinstance(folder, str) or not Path(folder).is_dir():
+            documents = QStandardPaths.StandardLocation.DocumentsLocation
+            folder = QStandardPaths.writableLocation(documents)
+        name, _filter = QFileDialog.getSaveFileName(
+            self,
+            _("Export hosts"),
+            str(Path(folder) / f"{doc.path.stem}.csv"),
+            _("CSV files (*.csv)"),
+        )
+        if not name:
+            return
+        path = Path(name)
+        text = export(doc.hosts, hosts, list_separator())
+        try:
+            # With a BOM, Excel reads the accents right; the import skips it.
+            path.write_text(text, encoding="utf-8-sig")
+        except OSError as e:
+            self._error(_("Couldn't save “{path}”: {error}").format(path=path, error=e))
+            return
+        self._prefs["export_folder"] = str(path.parent)
+        self._save_prefs()
+        note = ngettext(
+            "Exported {n} host to {file}.", "Exported {n} hosts to {file}.", len(hosts)
+        ).format(n=len(hosts), file=path.name)
+        self.statusBar().showMessage(note, 10_000)
+
+    def _hosts_to_export(self, host_list: HostList) -> tuple[Host, ...] | None:
+        """The whole list, or (when a group, tag or search shows fewer) the hosts shown, if
+        picked. None for Cancel."""
+        shown, every = self._visible_hosts(), host_list.hosts
+        if len(shown) == len(every):
+            return every
+        box = QMessageBox(
+            QMessageBox.Icon.Question,
+            _("Export hosts"),
+            _("Export the hosts shown, or the whole list?"),
+            parent=self,
+        )
+        shown_button = box.addButton(
+            ngettext("The {n} host &shown", "The {n} hosts &shown", len(shown)).format(
+                n=len(shown)
+            ),
+            QMessageBox.ButtonRole.AcceptRole,
+        )
+        shown_button.setEnabled(bool(shown))
+        every_button = box.addButton(
+            ngettext("The &whole list ({n} host)", "The &whole list ({n} hosts)", len(every))
+            .format(n=len(every)),
+            QMessageBox.ButtonRole.AcceptRole,
+        )  # fmt: skip
+        cancel = box.addButton(QMessageBox.StandardButton.Cancel)
+        box.setEscapeButton(cancel)
+        box.setDefaultButton(shown_button if shown else every_button)
+        box.exec()
+        clicked = box.clickedButton()
+        return shown if clicked is shown_button else every if clicked is every_button else None
+
     def manage_groups(self) -> None:
         """Inventory > Manage groups…: reorder and nest every group at once."""
         doc = self._writable()
@@ -862,9 +972,10 @@ class MainWindow(QMainWindow):
             self._show_hosts()
 
     def move_hosts(self, host_ids: list[str], group_id: str) -> None:
-        """Hosts dragged from the table onto a group."""
+        """Hosts dragged onto a group, or moved with right-click > Move to (NO_GROUP: out of
+        every group)."""
         doc = self._writable()
-        if doc is None or doc.hosts.group(group_id) is None:
+        if doc is None or (group_id != NO_GROUP and doc.hosts.group(group_id) is None):
             return
         self._commit(doc.hosts.move_hosts(host_ids, group_id))
 
@@ -895,12 +1006,13 @@ class MainWindow(QMainWindow):
         if page:
             dialog.show_page(page)
         dialog.saved.connect(lambda choices: self._settings_saved(dialog, choices))
+        dialog.language_picked.connect(self.set_language)  # at once, like View > Language
         dialog.exec()
         self._prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
         self._save_prefs()
 
     def _settings_saved(self, dialog: SettingsDialog, choices: SettingsChoices) -> None:
-        """OK or Save in Settings: apply now; after Save the window stays open."""
+        """Save in Settings: apply now; the window stays open."""
         self.apply_settings(choices)
         self._selection_changed()  # profiles may have changed
         dialog.after_save(self._doc)
@@ -1012,6 +1124,8 @@ class MainWindow(QMainWindow):
             return tuple(h for h in hosts.hosts if self._matches(h, needle))
         if current.kind == "group" and current.value:
             return hosts.hosts_in(current.value)
+        if current.kind == "nogroup":
+            return tuple(h for h in hosts.hosts if h.group == NO_GROUP)
         if current.kind == "tag":
             return tuple(h for h in hosts.hosts if current.value in h.tags)
         return hosts.hosts
@@ -1143,6 +1257,8 @@ class MainWindow(QMainWindow):
         a = self.commands
         a.add_host.setEnabled(writable)
         a.add_group.setEnabled(writable)
+        a.import_hosts.setEnabled(writable)
+        a.export_hosts.setEnabled(doc is not None and bool(doc.hosts.hosts))  # read-only too
         self.nav.add_group_button.setEnabled(writable)
         a.edit.setEnabled(writable and (selected == 1 or group_picked))
         a.remove.setEnabled(writable and (selected > 0 or group_picked))
@@ -1438,10 +1554,25 @@ class MainWindow(QMainWindow):
         section(menu, _("Copy"))
         menu.addActions([a.copy_address, a.copy_name])
         menu.addSeparator()
+        if hosts and self._doc is not None:
+            self._add_hosts_move_menu(menu, hosts)
         menu.addAction(a.show_in_group)
         menu.addSeparator()
         menu.addActions([a.edit, a.remove])
         popup(menu, self.table.viewport().mapToGlobal(position))
+
+    def _add_hosts_move_menu(self, menu: QMenu, hosts: list[Host]) -> None:
+        """Move to: "No group", then the groups as a tree; where they all are is ticked."""
+        assert self._doc is not None
+        move = TreeMenu(_("&Move to"), menu)
+        menu.addMenu(move)
+        move.setEnabled(self._writable() is not None)
+        ids = [h.id for h in hosts]
+        places = {h.group for h in hosts}
+        current = places.pop() if len(places) == 1 else None
+        fill_host_move_menu(
+            move, self._doc.hosts, lambda g: self.move_hosts(ids, g), current=current
+        )
 
     def _heading_menu(self, position: QPoint) -> None:
         menu = QMenu(self)

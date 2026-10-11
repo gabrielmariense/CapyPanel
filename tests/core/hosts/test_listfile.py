@@ -12,7 +12,7 @@ from capypanel.core.hosts.listfile import (
     HostListFormatError,
     HostListTooNewError,
 )
-from capypanel.core.hosts.model import HostList
+from capypanel.core.hosts.model import NO_GROUP, HostList
 
 EXAMPLE: dict[str, Any] = {
     "schema": 1,
@@ -149,3 +149,14 @@ def test_profiles_are_kept_and_written_only_when_set(tmp_path: Path) -> None:
     hosts = {h["name"]: h for h in data["hosts"]}
     assert hosts["PI-1"]["profile"] == "realvnc-password" and "profile" not in hosts["PI-2"]
     assert listfile.load(path).hosts == hl
+
+
+def test_hosts_with_no_group_are_saved_and_loaded(tmp_path: Path) -> None:
+    hl, free = HostList().add_host("FREE-1", NO_GROUP)
+    path = tmp_path / "loose.json"
+    listfile.save(path, hl, expected=None)
+    assert listfile.load(path).hosts.host(free.id).group == NO_GROUP  # type: ignore[union-attr]
+    data = json.loads(path.read_text(encoding="utf-8"))
+    del data["hosts"][0]["group"]  # written by hand, without the field: no group too
+    path.write_text(json.dumps(data), encoding="utf-8")
+    assert listfile.load(path).hosts.hosts[0].group == NO_GROUP

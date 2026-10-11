@@ -41,7 +41,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.core.hosts.model import Host, HostList
+from capypanel.core.hosts.model import NO_GROUP, Host, HostList
 from capypanel.core.i18n import _
 from capypanel.ui.groups import (
     HOSTS_MIME,
@@ -49,6 +49,7 @@ from capypanel.ui.groups import (
     ROLE_KIND,
     GroupsHeading,
     GroupTree,
+    HostDropTree,
     hosts_mime,
 )
 from capypanel.ui.icons import tabler_icon
@@ -59,7 +60,7 @@ ROLE_QUIET = Qt.ItemDataRole.UserRole + 2  # a Status or User cell to show greye
 
 @dataclass(frozen=True)
 class Filter:
-    kind: str  # "all", "group" or "tag"
+    kind: str  # "all", "nogroup", "group" or "tag"
     value: str | None = None
 
 
@@ -95,18 +96,19 @@ class NavigationPane(QWidget):
         header.addWidget(self.groups_heading, 1)
         header.addWidget(self.add_group_button)
 
-        # Its own small list above the tree: it never scrolls away under a long tree.
-        self.everything = QTreeWidget()
-        self.everything.setHeaderHidden(True)
-        self.everything.setRootIsDecorated(False)
-        self.everything.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.everything.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # Its own small list above the tree: it never scrolls away under a long tree. "No group"
+        # is always there, so hosts can be dragged onto it even before any host is in it.
+        self.everything = PinnedList()
         self._everything_item = QTreeWidgetItem([""])
         self._everything_item.setData(0, ROLE_KIND, "all")
         self._everything_item.setIcon(
             0, self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)
         )
         self.everything.addTopLevelItem(self._everything_item)
+        self._no_group_item = QTreeWidgetItem([""])
+        self._no_group_item.setData(0, ROLE_KIND, "nogroup")
+        self._no_group_item.setIcon(0, self.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.everything.addTopLevelItem(self._no_group_item)
         self.groups = GroupTree()
         self.groups.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # A tree like the groups (not QListWidget), so both lists have the same row height.
@@ -144,7 +146,7 @@ class NavigationPane(QWidget):
         """Titles only; the lists' own texts come back with the next show_list()."""
         self.add_group_button.setToolTip(_("Add group"))
         self.groups_heading.setText(_("Groups"))
-        self.groups_heading.setToolTip(_("Drop a group here to move it to the top level"))
+        self.groups_heading.setToolTip(_("Drop a group here to put it directly under Groups"))
         self._tags_title.setText(_("Tags"))
 
     def set_tags_visible(self, visible: bool) -> None:
@@ -178,7 +180,9 @@ class NavigationPane(QWidget):
         return item.data(0, ROLE_ID) if item else None
 
     def select_group(self, group_id: str) -> None:
-        self._filter = self._select(Filter("group", group_id))
+        """A group, or NO_GROUP for the hosts in none."""
+        wanted = Filter("nogroup") if group_id == NO_GROUP else Filter("group", group_id)
+        self._filter = self._select(wanted)
 
     def show_list(self, host_list: HostList | None) -> None:
         """Rebuilds the lists from the host list, keeping the current pick when it still exists."""
@@ -191,6 +195,8 @@ class NavigationPane(QWidget):
             self.groups.clear()
         else:
             self._everything_item.setText(0, f"{_('All hosts')} ({len(host_list.hosts)})")
+            loose = sum(1 for h in host_list.hosts if h.group == NO_GROUP)
+            self._no_group_item.setText(0, f"{_('No group')} ({loose})")
             self.groups.fill(host_list)
             for tag, count in sorted(host_list.all_tags().items(), key=lambda t: t[0].casefold()):
                 item = QTreeWidgetItem([f"{tag} ({count})"])
@@ -212,13 +218,14 @@ class NavigationPane(QWidget):
             self._fit_everything()
 
     def _fit_everything(self) -> None:
-        """Exactly one row tall, whatever padding the theme gives rows and frames, and never
-        narrower than "All hosts (N)": the pane can't be dragged past it. Group names
-        don't count, so a long one can't make the pane huge (they show a tooltip)."""
+        """Exactly as tall as its two rows, whatever padding the theme gives rows and frames, and
+        never narrower than "All hosts (N)": the pane can't be dragged past it. Group names don't
+        count, so a long one can't make the pane huge (they show a tooltip)."""
         self.everything.doItemsLayout()
         row = self.everything.visualItemRect(self._everything_item).height()
         frame = self.everything.height() - self.everything.viewport().height()
-        self.everything.setFixedHeight(max(row, self.everything.sizeHintForRow(0)) + frame)
+        height = max(row, self.everything.sizeHintForRow(0)) * 2
+        self.everything.setFixedHeight(height + frame)
         sides = self.everything.width() - self.everything.viewport().width()
         self.everything.setMinimumWidth(self.everything.sizeHintForColumn(0) + sides + 12)
 
@@ -233,6 +240,11 @@ class NavigationPane(QWidget):
                 if item.data(0, ROLE_ID) == wanted.value:
                     self.groups.setCurrentItem(item)
                     return wanted
+        if wanted.kind == "nogroup":
+            self.everything.setCurrentItem(self._no_group_item)
+            self._no_group_item.setSelected(True)
+            self._clear(self.groups, self.tags)
+            return wanted
         self.everything.setCurrentItem(self._everything_item)
         self._everything_item.setSelected(True)
         self._clear(self.groups, self.tags)
@@ -245,10 +257,11 @@ class NavigationPane(QWidget):
             tree.blockSignals(False)
 
     def _everything_picked(self) -> None:
-        if not self.everything.selectedItems():
+        items = self.everything.selectedItems()
+        if not items:
             return
         self._clear(self.groups, self.tags)
-        self._filter = Filter("all")
+        self._filter = Filter(items[0].data(0, ROLE_KIND))  # "all" or "nogroup"
         self.filter_changed.emit()
 
     def _groups_picked(self) -> None:
@@ -266,6 +279,23 @@ class NavigationPane(QWidget):
         self._clear(self.everything, self.groups)
         self._filter = Filter("tag", items[0].data(0, ROLE_ID))
         self.filter_changed.emit()
+
+
+class PinnedList(HostDropTree):
+    """ "All hosts" and "No group". Hosts dragged from the table onto "No group" leave their
+    group (`hosts_dropped` with NO_GROUP)."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setHeaderHidden(True)
+        self.setRootIsDecorated(False)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setAcceptDrops(True)
+        self.setDragDropMode(QAbstractItemView.DragDropMode.DropOnly)
+
+    def drop_group(self, item: QTreeWidgetItem) -> str | None:
+        return NO_GROUP if item.data(0, ROLE_KIND) == "nogroup" else None
 
 
 def _divider() -> QFrame:

@@ -7,10 +7,10 @@ import pytest
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
-    QDialogButtonBox,
     QFileDialog,
     QHeaderView,
     QMenu,
+    QPushButton,
 )
 
 from capypanel.core import settings, winsec
@@ -18,8 +18,14 @@ from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
 from capypanel.ui.host_lists import HostListsDialog, HostListsView
 from capypanel.ui.main_window.window import MainWindow
-from capypanel.ui.settings.window import SettingsDialog
+from capypanel.ui.settings.window import PAGE_TITLES, SettingsDialog
 from capypanel.ui.themes import engine as themes
+
+
+@pytest.fixture(autouse=True)
+def drop_unsaved(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Closing Settings with changes asks first; in tests, the answer is Discard."""
+    monkeypatch.setattr(SettingsDialog, "_ask_unsaved", lambda *_a, **_k: "discard")
 
 
 @pytest.fixture
@@ -48,7 +54,7 @@ def window(qapp: QApplication, paths: settings.Paths) -> Iterator[MainWindow]:
 
 
 def _save_enabled(dialog: SettingsDialog) -> bool:
-    return dialog.buttons.button(QDialogButtonBox.StandardButton.Ok).isEnabled()
+    return dialog.is_valid()  # a list that can't be opened can't be saved
 
 
 def _answer_save_dialog(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
@@ -248,7 +254,10 @@ def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
         if isinstance(m := a.menu(), QMenu)
     }
     assert menus["&File"][:2] == ["&New host list…", "&Host lists…"]
-    assert menus["&Inventory"] == ["Add &host…", "Add &group…", "&Manage groups…"]
+    assert menus["&Inventory"] == [
+        "Add &host…", "Add &group…", "&Manage groups…", "&Import hosts…",
+        "&Export hosts…"
+    ]  # fmt: skip
     assert menus["&Connect"] == [
         "&Manual connection…", "Connection &profiles…", "&Forget typed passwords"
     ]  # fmt: skip
@@ -323,7 +332,7 @@ def test_leaving_connections_with_changes_asks_first(
     window: MainWindow, monkeypatch: pytest.MonkeyPatch, answer: str
 ) -> None:
     dialog = window.settings_dialog()
-    monkeypatch.setattr(type(dialog), "_ask_unsaved", lambda _self: answer)
+    monkeypatch.setattr(type(dialog), "_ask_unsaved", lambda *_a, **_k: answer)
     connections_row = list(dialog.pages).index("connections")
     dialog.page_list.setCurrentRow(connections_row)
     page = dialog.connections
@@ -347,14 +356,71 @@ def test_save_applies_and_keeps_settings_open(window: MainWindow) -> None:
     dialog.saved.connect(lambda choices: window._settings_saved(dialog, choices))
     page = dialog.connections
     page.default.setCurrentIndex(page.default.findData("realvnc"))
+    dialog._update_save()  # what a click or key in the window does
     dialog.save_button.click()
     assert page.store.default_id() == "realvnc"  # applied now
     assert not page.has_changes() and dialog.result() == 0  # still open, nothing pending
     dialog.show()
     QApplication.processEvents()
     order = [b.text() for b in sorted(dialog.buttons.buttons(), key=lambda b: b.x())]
-    assert order == ["OK", "&Save", "Cancel"]  # Cancel on the far right, as Windows does
+    assert order == ["&Save", "Close"]  # no OK: Save, then Close on the far right
+    assert not dialog.save_button.isEnabled()  # just saved: nothing to save
+    assert not any(b.isDefault() or b.autoDefault() for b in dialog.findChildren(QPushButton))
+    page.default.setCurrentIndex(page.default.findData("ultravnc"))  # a change
+    dialog._update_save()
+    assert dialog.save_button.isEnabled() and dialog.unsaved()
     dialog.close()
+
+
+def test_close_asks_before_dropping_changes(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    dialog = window.settings_dialog()
+    dialog.saved.connect(lambda choices: window._settings_saved(dialog, choices))
+    asked: list[str] = []
+
+    def answer(_self: SettingsDialog, text: str, **_k: object) -> str:
+        asked.append(text)
+        return "stay" if len(asked) == 1 else "save"
+
+    monkeypatch.setattr(SettingsDialog, "_ask_unsaved", answer)
+    dialog.show()
+    dialog.close_button.click()
+    assert asked == [] and not dialog.isVisible()  # nothing changed: just closes
+    dialog.show()
+    dialog.general.auto_status.setChecked(True)
+    dialog.close_button.click()
+    assert asked == ["Some changes aren't saved yet."] and dialog.isVisible()  # Keep editing
+    dialog.close_button.click()  # then Save changes
+    assert not dialog.isVisible() and window._auto_status()[0]
+
+
+def test_picking_a_language_switches_at_once_keeping_unsaved_choices(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[tuple[str, str, bool, bool]] = []
+
+    def run(dialog: SettingsDialog) -> int:
+        dialog.show_page("general")
+        dialog.general.auto_status.setChecked(True)  # not saved
+        dialog.general.language.setCurrentIndex(dialog.general.language.findData("pt_BR"))
+        QApplication.processEvents()  # the window follows once the dropdown has closed
+        seen.append(
+            (
+                dialog.windowTitle(),
+                dialog.current_page(),
+                dialog.general.auto_status.isChecked(),
+                dialog.unsaved(),
+            )
+        )
+        return 0
+
+    monkeypatch.setattr(SettingsDialog, "exec", run)
+    window.open_settings()
+    # Switched without Save: the app and Settings are in Portuguese; the unsaved tick stays.
+    assert seen == [("Configurações", "general", True, True)]
+    assert window.menuBar().actions()[0].text() == "&Arquivo"
+    window.set_language("en")
 
 
 def test_list_tables_have_grid_lines_and_resizable_columns(window: MainWindow) -> None:
@@ -362,3 +428,14 @@ def test_list_tables_have_grid_lines_and_resizable_columns(window: MainWindow) -
     assert view.tree.objectName() == window.table.objectName() == "grid"
     header = view.tree.header()
     assert all(header.sectionResizeMode(c) == QHeaderView.ResizeMode.Interactive for c in range(3))
+
+
+def test_the_page_list_keeps_its_width_in_every_language(window: MainWindow) -> None:
+    dialog = window.settings_dialog()
+    assert [p.title for p in dialog.pages.values()] == list(PAGE_TITLES)  # sized from these
+    width = dialog.page_list.width()
+    dialog.language_picked.connect(window.set_language)
+    dialog.general.language.setCurrentIndex(dialog.general.language.findData("pt_BR"))
+    QApplication.processEvents()
+    assert dialog.page_list.width() == width and dialog.general.title == "Geral"
+    window.set_language("en")
