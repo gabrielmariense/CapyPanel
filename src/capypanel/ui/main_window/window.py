@@ -930,31 +930,23 @@ class MainWindow(QMainWindow):
     # ---- settings ----
 
     def open_settings(self, page: str | None = None) -> None:
-        while True:
-            dialog = self.settings_dialog()
-            geometry = self._prefs.get("settings_geometry")
-            if isinstance(geometry, str):
-                dialog.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
-            if page:
-                dialog.show_page(page)
-            dialog.saved.connect(lambda choices, d=dialog: self._settings_saved(d, choices))
-            dialog.exec()
-            self._prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
-            self._save_prefs()
-            if not dialog.reopen:
-                return
-            page = dialog.current_page()  # back where it was, in the new language
+        dialog = self.settings_dialog()
+        geometry = self._prefs.get("settings_geometry")
+        if isinstance(geometry, str):
+            dialog.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
+        if page:
+            dialog.show_page(page)
+        dialog.saved.connect(lambda choices: self._settings_saved(dialog, choices))
+        dialog.language_picked.connect(self.set_language)  # at once, like View > Language
+        dialog.exec()
+        self._prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
+        self._save_prefs()
 
     def _settings_saved(self, dialog: SettingsDialog, choices: SettingsChoices) -> None:
-        """OK or Save in Settings: apply now; after Save the window stays open, and opens
-        again in the new language when that changed."""
-        before = i18n.language()
+        """Save in Settings: apply now; the window stays open."""
         self.apply_settings(choices)
         self._selection_changed()  # profiles may have changed
         dialog.after_save(self._doc)
-        if i18n.language() != before and not dialog.closing:
-            dialog.reopen = True
-            dialog.reject()  # everything is saved: nothing is lost
 
     def settings_dialog(self) -> SettingsDialog:
         return SettingsDialog(

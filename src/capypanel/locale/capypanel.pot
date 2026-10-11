@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 23:26-0300\n"
+"POT-Creation-Date: 2026-10-10 23:43-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -315,9 +315,6 @@ msgid "CSV files (*.csv *.txt);;All files (*)"
 msgstr ""
 
 msgid "CSV with headers"
-msgstr ""
-
-msgid "Cancel"
 msgstr ""
 
 msgid "CapyPanel"
@@ -962,9 +959,6 @@ msgstr ""
 msgid "Save my version as a copy…"
 msgstr ""
 
-msgid "Save the changes and keep Settings open"
-msgstr ""
-
 #, python-brace-format
 msgid "Search {fields}"
 msgstr ""
@@ -1019,6 +1013,9 @@ msgid "Show do&main"
 msgstr ""
 
 msgid "Show in &group"
+msgstr ""
+
+msgid "Some changes aren't saved yet."
 msgstr ""
 
 msgid "Someone else has changed the file since you opened it."
