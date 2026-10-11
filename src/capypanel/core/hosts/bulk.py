@@ -276,27 +276,42 @@ def _group(
 # ---- writing ----
 
 
+def write_csv(header: Sequence[str], rows: Iterable[Sequence[str]], delimiter: str = ",") -> str:
+    out = io.StringIO()
+    writer = csv.writer(out, delimiter=delimiter, lineterminator="\n")
+    writer.writerow(header)
+    writer.writerows(rows)
+    return out.getvalue()
+
+
 def to_csv(rows: Iterable[ImportRow], delimiter: str = ",") -> str:
     """Rows as CSV with a header row: what the import window shows once its table is edited.
     With ";" between columns, tags are joined by "," (the import reads both ways)."""
-    out = io.StringIO()
-    writer = csv.writer(out, delimiter=delimiter, lineterminator="\n")
-    writer.writerow(["name", "address", "group", "tags", "notes"])
     between_tags = "," if delimiter == ";" else ";"
-    for row in rows:
-        writer.writerow([row.name, row.address, row.group, between_tags.join(row.tags), row.notes])
-    return out.getvalue()
+    return write_csv(
+        ["name", "address", "group", "tags", "notes"],
+        ([r.name, r.address, r.group, between_tags.join(r.tags), r.notes] for r in rows),
+        delimiter,
+    )
+
+
+def host_fields(host_list: HostList, host: Host, between_tags: str = ";") -> dict[str, str]:
+    """A host's columns as Import hosts reads them back: its group as a path, tags joined."""
+    return {
+        "name": host.name,
+        "address": host.address,
+        "group": PATH.join(_names(host_list, host.group)),
+        "tags": between_tags.join(host.tags),
+        "notes": host.notes,
+    }
 
 
 def export(host_list: HostList, hosts: Iterable[Host], delimiter: str = ",") -> str:
     """Hosts as CSV that imports back: name, address, group path, tags and notes."""
-    return to_csv(
-        (
-            ImportRow(h.name, h.address, PATH.join(_names(host_list, h.group)), h.tags, h.notes)
-            for h in hosts
-        ),
-        delimiter,
-    )
+    between_tags = "," if delimiter == ";" else ";"
+    fields = [host_fields(host_list, h, between_tags) for h in hosts]
+    keys = ["name", "address", "group", "tags", "notes"]
+    return write_csv(keys, ([f[k] for k in keys] for f in fields), delimiter)
 
 
 def list_separator() -> str:

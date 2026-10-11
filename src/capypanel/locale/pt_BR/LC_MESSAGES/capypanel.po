@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 00:18-0300\n"
+"POT-Creation-Date: 2026-10-11 01:52-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -48,11 +48,17 @@ msgstr "&Adicionar…"
 msgid "&Connect"
 msgstr "&Conectar"
 
+msgid "&Copy"
+msgstr "&Copiar"
+
 msgid "&Copy current list to…"
 msgstr "&Copiar lista atual para…"
 
 msgid "&Credentials:"
 msgstr "&Credenciais:"
+
+msgid "&Delete"
+msgstr "E&xcluir"
 
 msgid "&Delete…"
 msgstr "E&xcluir…"
@@ -78,6 +84,9 @@ msgstr "&Editar…"
 msgid "&Export hosts…"
 msgstr "&Exportar hosts…"
 
+msgid "&Export…"
+msgstr "&Exportar…"
+
 msgid "&File"
 msgstr "&Arquivo"
 
@@ -98,6 +107,9 @@ msgstr "Painel de &grupos"
 
 msgid "&Host lists…"
 msgstr "&Listas de hosts…"
+
+msgid "&Hosts:"
+msgstr "&Hosts:"
 
 msgid "&Import hosts…"
 msgstr "&Importar hosts…"
@@ -159,6 +171,12 @@ msgstr "&Abrir ao iniciar:"
 msgid "&Password:"
 msgstr "&Senha:"
 
+msgid "&Preset:"
+msgstr "&Predefinição:"
+
+msgid "&Refresh"
+msgstr "&Atualizar"
+
 msgid "&Refresh the status of the hosts shown every"
 msgstr "&Atualizar o status dos hosts exibidos a cada"
 
@@ -176,6 +194,9 @@ msgstr "&Executar"
 
 msgid "&Save"
 msgstr "&Salvar"
+
+msgid "&Save as preset…"
+msgstr "&Salvar como predefinição…"
 
 msgid "&Save changes"
 msgstr "&Salvar alterações"
@@ -355,6 +376,9 @@ msgstr "Verificado em {when}."
 msgid "Checking {done} of {total}…"
 msgstr "Verificando {done} de {total}…"
 
+msgid "Checks these hosts again now"
+msgstr "Verifica estes hosts de novo agora"
+
 #, python-brace-format
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
@@ -400,8 +424,17 @@ msgid "Console"
 msgstr "Console"
 
 #, python-brace-format
+msgid "Copied {n} host from {source}."
+msgid_plural "Copied {n} hosts from {source}."
+msgstr[0] "{n} host copiado de {source}."
+msgstr[1] "{n} hosts copiados de {source}."
+
+#, python-brace-format
 msgid "Copied: {text}"
 msgstr "Copiado: {text}"
+
+msgid "Copies every row, to paste into Excel"
+msgstr "Copia todas as linhas, para colar no Excel"
 
 msgid "Copy"
 msgstr "Copiar"
@@ -462,6 +495,9 @@ msgstr "Não foi possível gravar “{path}”: {error}"
 
 msgid "Created when opened"
 msgstr "Criada ao abrir"
+
+msgid "Custom"
+msgstr "Personalizado"
 
 msgid "D&uplicate…"
 msgstr "D&uplicar…"
@@ -532,17 +568,11 @@ msgstr "Editar a lista aqui"
 msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, tags, notes), so the two always match. Continue?"
 msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes), para que as duas sempre coincidam. Continuar?"
 
+msgid "Every host field, in the format Import hosts can read back."
+msgstr "Todos os campos do host, no formato que Importar hosts lê de volta."
+
 msgid "Export hosts"
 msgstr "Exportar hosts"
-
-msgid "Export the hosts shown, or the whole list?"
-msgstr "Exportar os hosts exibidos ou a lista inteira?"
-
-#, python-brace-format
-msgid "Exported {n} host to {file}."
-msgid_plural "Exported {n} hosts to {file}."
-msgstr[0] "{n} host exportado para {file}."
-msgstr[1] "{n} hosts exportados para {file}."
 
 msgid "File not found"
 msgstr "Arquivo não encontrado"
@@ -579,6 +609,9 @@ msgstr "Do grupo “{group}”: {profile}"
 msgid "From “{file}”"
 msgstr "De “{file}”"
 
+msgid "Full backup"
+msgstr "Backup completo"
+
 msgid "General"
 msgstr "Geral"
 
@@ -595,6 +628,9 @@ msgstr "O grupo “{name}” está dentro de si mesmo."
 
 msgid "Groups"
 msgstr "Grupos"
+
+msgid "Host"
+msgstr "Host"
 
 msgid "Host lists"
 msgstr "Listas de hosts"
@@ -644,6 +680,9 @@ msgstr "Importar hosts"
 msgid "In the open list it's set on {hosts} and {groups}. They'll use their group's profile, or the default, instead."
 msgstr "Na lista aberta ele está definido em {hosts} e {groups}. Eles passarão a usar o perfil do grupo, ou o padrão."
 
+msgid "Includes who was logged on to each PC. Keep the file private."
+msgstr "Inclui quem estava logado em cada PC. Mantenha o arquivo privado."
+
 msgid "Install it, or locate its .exe."
 msgstr "Instale-o ou localize o .exe dele."
 
@@ -662,6 +701,9 @@ msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on. If a computer rejects it, CapyPanel stops and asks again instead of trying it on the others, so the account isn't locked."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado. Se um computador recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta não ser bloqueada."
 
+msgid "Last check"
+msgstr "Última verificação"
+
 msgid "List"
 msgstr "Lista"
 
@@ -678,6 +720,9 @@ msgstr "Logados ({n}) · {when}"
 #, python-brace-format
 msgid "Logged on · {when}"
 msgstr "Logados · {when}"
+
+msgid "Logged-on users"
+msgstr "Usuários logados"
 
 msgid "Logs"
 msgstr "Logs"
@@ -815,8 +860,14 @@ msgstr "Só ping e portas, nunca usuários logados, então nenhuma conta é usad
 msgid "Open &Settings"
 msgstr "Abrir &Configurações"
 
+msgid "Open &file"
+msgstr "Abrir &arquivo"
+
 msgid "Open a CSV file"
 msgstr "Abrir um arquivo CSV"
+
+msgid "Open f&older"
+msgstr "Abrir &pasta"
 
 msgid "Open folder"
 msgstr "Abrir pasta"
@@ -867,6 +918,12 @@ msgstr "Lista pessoal: só sua."
 
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
+
+msgid "Preset name:"
+msgstr "Nome da predefinição:"
+
+msgid "Preview"
+msgstr "Prévia"
 
 msgid "Profile"
 msgstr "Perfil"
@@ -943,6 +1000,9 @@ msgstr "Remover uma lista daqui nunca exclui o arquivo dela."
 msgid "Rename group"
 msgstr "Renomear grupo"
 
+msgid "S&top"
+msgstr "Pa&rar"
+
 #, python-brace-format
 msgid "Same address as row {n}"
 msgstr "Mesmo endereço da linha {n}"
@@ -958,8 +1018,14 @@ msgstr "Mesmo nome da linha {n}"
 msgid "Save a copy"
 msgstr "Salvar uma cópia"
 
+msgid "Save as preset"
+msgstr "Salvar como predefinição"
+
 msgid "Save my version as a copy…"
 msgstr "Salvar minha versão como cópia…"
+
+msgid "Search results"
+msgstr "Resultados da pesquisa"
 
 #, python-brace-format
 msgid "Search {fields}"
@@ -973,6 +1039,9 @@ msgstr "Veja exemplos em Formatos…"
 
 msgid "Select a host to see its details."
 msgstr "Selecione um host para ver os detalhes."
+
+msgid "Selected hosts"
+msgstr "Hosts selecionados"
 
 #, python-brace-format
 msgid "Selected row ({n})"
@@ -1056,8 +1125,15 @@ msgstr "&Barra de ferramentas"
 msgid "Table"
 msgstr "Tabela"
 
+#, python-brace-format
+msgid "Tag: {tag}"
+msgstr "Tag: {tag}"
+
 msgid "Tags"
 msgstr "Tags"
+
+msgid "Tags and notes"
+msgstr "Tags e notas"
 
 msgid "Tags for the selected rows, separated by ;"
 msgstr "Tags das linhas selecionadas, separadas por ;"
@@ -1068,14 +1144,11 @@ msgstr "Esse grupo não existe."
 msgid "That host is no longer in the list."
 msgstr "Esse host não está mais na lista."
 
+msgid "That name is taken."
+msgstr "Esse nome já está em uso."
+
 msgid "That profile doesn't exist."
 msgstr "Esse perfil não existe."
-
-#, python-brace-format
-msgid "The &whole list ({n} host)"
-msgid_plural "The &whole list ({n} hosts)"
-msgstr[0] "A lista &inteira ({n} host)"
-msgstr[1] "A lista &inteira ({n} hosts)"
 
 msgid "The account was accepted, but only administrators of that computer can see who is logged on."
 msgstr "A conta foi aceita, mas só administradores daquele computador podem ver quem está logado."
@@ -1173,12 +1246,6 @@ msgstr "O “id” da ferramenta deve ter só letras minúsculas, dígitos, - ou
 msgid "The viewer's defaults"
 msgstr "Padrões do visualizador"
 
-#, python-brace-format
-msgid "The {n} host &shown"
-msgid_plural "The {n} hosts &shown"
-msgstr[0] "O {n} host &exibido"
-msgstr[1] "Os {n} hosts &exibidos"
-
 msgid "The “executable” must be a path."
 msgstr "O “executable” deve ser um caminho."
 
@@ -1219,6 +1286,9 @@ msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o 
 
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyPanel."
+
+msgid "Tick Status or Logged-on users to check them"
+msgstr "Marque Status ou Usuários logados para verificá-los"
 
 msgid "Type"
 msgstr "Tipo"
@@ -1365,8 +1435,15 @@ msgstr "somente leitura"
 msgid "since {when}"
 msgstr "desde {when}"
 
+#, python-brace-format
+msgid "tag “{tag}”"
+msgstr "a tag “{tag}”"
+
 msgid "tags"
 msgstr "tags"
+
+msgid "the search results"
+msgstr "os resultados da pesquisa"
 
 msgid "the selected hosts"
 msgstr "os hosts selecionados"
@@ -1389,6 +1466,12 @@ msgstr[1] "{names} não aceitam usuário e senha (podem pedir uma senha VNC ou s
 #, python-brace-format
 msgid "{name} (in use)"
 msgstr "{name} (em uso)"
+
+#, python-brace-format
+msgid "{name} ({n} host)"
+msgid_plural "{name} ({n} hosts)"
+msgstr[0] "{name} ({n} host)"
+msgstr[1] "{name} ({n} hosts)"
 
 #, python-brace-format
 msgid "{n} can't be added."
@@ -1425,6 +1508,12 @@ msgid "{n} host"
 msgid_plural "{n} hosts"
 msgstr[0] "{n} host"
 msgstr[1] "{n} hosts"
+
+#, python-brace-format
+msgid "{n} host exported from {source}."
+msgid_plural "{n} hosts exported from {source}."
+msgstr[0] "{n} host exportado de {source}."
+msgstr[1] "{n} hosts exportados de {source}."
 
 #, python-brace-format
 msgid "{n} host has no address and was skipped."
@@ -1467,6 +1556,12 @@ msgid "{n} not found"
 msgid_plural "{n} not found"
 msgstr[0] "{n} não encontrado"
 msgstr[1] "{n} não encontrados"
+
+#, python-brace-format
+msgid "{n} of these hosts wasn't checked yet."
+msgid_plural "{n} of these hosts weren't checked yet."
+msgstr[0] "{n} destes hosts ainda não foi verificado."
+msgstr[1] "{n} destes hosts ainda não foram verificados."
 
 #, python-brace-format
 msgid "{n} offline"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 00:18-0300\n"
+"POT-Creation-Date: 2026-10-11 01:52-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -47,10 +47,16 @@ msgstr ""
 msgid "&Connect"
 msgstr ""
 
+msgid "&Copy"
+msgstr ""
+
 msgid "&Copy current list to…"
 msgstr ""
 
 msgid "&Credentials:"
+msgstr ""
+
+msgid "&Delete"
 msgstr ""
 
 msgid "&Delete…"
@@ -77,6 +83,9 @@ msgstr ""
 msgid "&Export hosts…"
 msgstr ""
 
+msgid "&Export…"
+msgstr ""
+
 msgid "&File"
 msgstr ""
 
@@ -96,6 +105,9 @@ msgid "&Groups pane"
 msgstr ""
 
 msgid "&Host lists…"
+msgstr ""
+
+msgid "&Hosts:"
 msgstr ""
 
 msgid "&Import hosts…"
@@ -158,6 +170,12 @@ msgstr ""
 msgid "&Password:"
 msgstr ""
 
+msgid "&Preset:"
+msgstr ""
+
+msgid "&Refresh"
+msgstr ""
+
 msgid "&Refresh the status of the hosts shown every"
 msgstr ""
 
@@ -174,6 +192,9 @@ msgid "&Run"
 msgstr ""
 
 msgid "&Save"
+msgstr ""
+
+msgid "&Save as preset…"
 msgstr ""
 
 msgid "&Save changes"
@@ -356,6 +377,9 @@ msgstr ""
 msgid "Checking {done} of {total}…"
 msgstr ""
 
+msgid "Checks these hosts again now"
+msgstr ""
+
 #, python-brace-format
 msgid "Choose a {tool} settings file"
 msgstr ""
@@ -403,7 +427,16 @@ msgid "Console"
 msgstr ""
 
 #, python-brace-format
+msgid "Copied {n} host from {source}."
+msgid_plural "Copied {n} hosts from {source}."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "Copied: {text}"
+msgstr ""
+
+msgid "Copies every row, to paste into Excel"
 msgstr ""
 
 msgid "Copy"
@@ -464,6 +497,9 @@ msgid "Couldn't write “{path}”: {error}"
 msgstr ""
 
 msgid "Created when opened"
+msgstr ""
+
+msgid "Custom"
 msgstr ""
 
 msgid "D&uplicate…"
@@ -539,17 +575,11 @@ msgid ""
 "(name, address, group, tags, notes), so the two always match. Continue?"
 msgstr ""
 
+msgid "Every host field, in the format Import hosts can read back."
+msgstr ""
+
 msgid "Export hosts"
 msgstr ""
-
-msgid "Export the hosts shown, or the whole list?"
-msgstr ""
-
-#, python-brace-format
-msgid "Exported {n} host to {file}."
-msgid_plural "Exported {n} hosts to {file}."
-msgstr[0] ""
-msgstr[1] ""
 
 msgid "File not found"
 msgstr ""
@@ -583,6 +613,9 @@ msgstr ""
 msgid "From “{file}”"
 msgstr ""
 
+msgid "Full backup"
+msgstr ""
+
 msgid "General"
 msgstr ""
 
@@ -598,6 +631,9 @@ msgid "Group “{name}” is nested inside itself."
 msgstr ""
 
 msgid "Groups"
+msgstr ""
+
+msgid "Host"
 msgstr ""
 
 msgid "Host lists"
@@ -650,6 +686,9 @@ msgid ""
 "group's profile, or the default, instead."
 msgstr ""
 
+msgid "Includes who was logged on to each PC. Keep the file private."
+msgstr ""
+
 msgid "Install it, or locate its .exe."
 msgstr ""
 
@@ -675,6 +714,9 @@ msgid ""
 "again instead of trying it on the others, so the account isn't locked."
 msgstr ""
 
+msgid "Last check"
+msgstr ""
+
 msgid "List"
 msgstr ""
 
@@ -690,6 +732,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Logged on · {when}"
+msgstr ""
+
+msgid "Logged-on users"
 msgstr ""
 
 msgid "Logs"
@@ -832,7 +877,13 @@ msgstr ""
 msgid "Open &Settings"
 msgstr ""
 
+msgid "Open &file"
+msgstr ""
+
 msgid "Open a CSV file"
+msgstr ""
+
+msgid "Open f&older"
 msgstr ""
 
 msgid "Open folder"
@@ -886,6 +937,12 @@ msgid "Personal list: only yours."
 msgstr ""
 
 msgid "Portable mode: everything stays in the app's own folder."
+msgstr ""
+
+msgid "Preset name:"
+msgstr ""
+
+msgid "Preview"
 msgstr ""
 
 msgid "Profile"
@@ -963,6 +1020,9 @@ msgstr ""
 msgid "Rename group"
 msgstr ""
 
+msgid "S&top"
+msgstr ""
+
 #, python-brace-format
 msgid "Same address as row {n}"
 msgstr ""
@@ -978,7 +1038,13 @@ msgstr ""
 msgid "Save a copy"
 msgstr ""
 
+msgid "Save as preset"
+msgstr ""
+
 msgid "Save my version as a copy…"
+msgstr ""
+
+msgid "Search results"
 msgstr ""
 
 #, python-brace-format
@@ -992,6 +1058,9 @@ msgid "See examples in Formats…"
 msgstr ""
 
 msgid "Select a host to see its details."
+msgstr ""
+
+msgid "Selected hosts"
 msgstr ""
 
 #, python-brace-format
@@ -1083,7 +1152,14 @@ msgstr ""
 msgid "Table"
 msgstr ""
 
+#, python-brace-format
+msgid "Tag: {tag}"
+msgstr ""
+
 msgid "Tags"
+msgstr ""
+
+msgid "Tags and notes"
 msgstr ""
 
 msgid "Tags for the selected rows, separated by ;"
@@ -1095,14 +1171,11 @@ msgstr ""
 msgid "That host is no longer in the list."
 msgstr ""
 
-msgid "That profile doesn't exist."
+msgid "That name is taken."
 msgstr ""
 
-#, python-brace-format
-msgid "The &whole list ({n} host)"
-msgid_plural "The &whole list ({n} hosts)"
-msgstr[0] ""
-msgstr[1] ""
+msgid "That profile doesn't exist."
+msgstr ""
 
 msgid ""
 "The account was accepted, but only administrators of that computer can "
@@ -1212,12 +1285,6 @@ msgstr ""
 msgid "The viewer's defaults"
 msgstr ""
 
-#, python-brace-format
-msgid "The {n} host &shown"
-msgid_plural "The {n} hosts &shown"
-msgstr[0] ""
-msgstr[1] ""
-
 msgid "The “executable” must be a path."
 msgstr ""
 
@@ -1259,6 +1326,9 @@ msgid ""
 msgstr ""
 
 msgid "This tool definition needs a newer version of CapyPanel."
+msgstr ""
+
+msgid "Tick Status or Logged-on users to check them"
 msgstr ""
 
 msgid "Type"
@@ -1410,7 +1480,14 @@ msgstr ""
 msgid "since {when}"
 msgstr ""
 
+#, python-brace-format
+msgid "tag “{tag}”"
+msgstr ""
+
 msgid "tags"
+msgstr ""
+
+msgid "the search results"
 msgstr ""
 
 msgid "the selected hosts"
@@ -1440,6 +1517,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{name} (in use)"
 msgstr ""
+
+#, python-brace-format
+msgid "{name} ({n} host)"
+msgid_plural "{name} ({n} hosts)"
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-brace-format
 msgid "{n} can't be added."
@@ -1486,6 +1569,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} host exported from {source}."
+msgid_plural "{n} hosts exported from {source}."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} host has no address and was skipped."
 msgid_plural "{n} hosts have no address and were skipped."
 msgstr[0] ""
@@ -1524,6 +1613,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} not found"
 msgid_plural "{n} not found"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} of these hosts wasn't checked yet."
+msgid_plural "{n} of these hosts weren't checked yet."
 msgstr[0] ""
 msgstr[1] ""
 

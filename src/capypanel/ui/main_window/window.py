@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import QByteArray, QEvent, QPoint, QStandardPaths, Qt, QTimer
+from PySide6.QtCore import QByteArray, QEvent, QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
@@ -35,7 +35,6 @@ from PySide6.QtWidgets import (
 from capypanel import BUILD
 from capypanel.core import i18n, settings, winsec
 from capypanel.core.hosts import locations
-from capypanel.core.hosts.bulk import export, list_separator
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
 from capypanel.core.hosts.locations import ListKind
@@ -52,6 +51,7 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui import language
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
+from capypanel.ui.export_hosts import ExportDialog, Source
 from capypanel.ui.groups import (
     ROLE_ID,
     ManageGroupsDialog,
@@ -89,6 +89,8 @@ MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks fi
 
 
 class MainWindow(QMainWindow):
+    checks_changed = Signal()  # a Refresh started, found something, or ended
+
     def __init__(
         self,
         paths: settings.Paths,
@@ -867,71 +869,90 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(note, 10_000)
 
     def export_hosts(self) -> None:
-        """Inventory > Export hosts…: the hosts shown, or the whole list, as a CSV file that
-        imports back. Columns are split the way this PC's Excel expects, so it opens there too."""
+        """Inventory > Export hosts…: pick hosts and columns, then save a CSV file or copy the
+        rows. Works on read-only lists too: it changes nothing."""
         doc = self._doc
         if doc is None or not doc.hosts.hosts:
             return
-        hosts = self._hosts_to_export(doc.hosts)
-        if hosts is None:
-            return
-        folder = self._prefs.get("export_folder")
-        if not isinstance(folder, str) or not Path(folder).is_dir():
-            documents = QStandardPaths.StandardLocation.DocumentsLocation
-            folder = QStandardPaths.writableLocation(documents)
-        name, _filter = QFileDialog.getSaveFileName(
-            self,
-            _("Export hosts"),
-            str(Path(folder) / f"{doc.path.stem}.csv"),
-            _("CSV files (*.csv)"),
-        )
-        if not name:
-            return
-        path = Path(name)
-        text = export(doc.hosts, hosts, list_separator())
-        try:
-            # With a BOM, Excel reads the accents right; the import skips it.
-            path.write_text(text, encoding="utf-8-sig")
-        except OSError as e:
-            self._error(_("Couldn't save “{path}”: {error}").format(path=path, error=e))
-            return
-        self._prefs["export_folder"] = str(path.parent)
-        self._save_prefs()
-        note = ngettext(
-            "Exported {n} host to {file}.", "Exported {n} hosts to {file}.", len(hosts)
-        ).format(n=len(hosts), file=path.name)
-        self.statusBar().showMessage(note, 10_000)
+        sources, current = self._export_sources(doc.hosts)
 
-    def _hosts_to_export(self, host_list: HostList) -> tuple[Host, ...] | None:
-        """The whole list, or (when a group, tag or search shows fewer) the hosts shown, if
-        picked. None for Cancel."""
-        shown, every = self._visible_hosts(), host_list.hosts
-        if len(shown) == len(every):
-            return every
-        box = QMessageBox(
-            QMessageBox.Icon.Question,
-            _("Export hosts"),
-            _("Export the hosts shown, or the whole list?"),
-            parent=self,
-        )
-        shown_button = box.addButton(
-            ngettext("The {n} host &shown", "The {n} hosts &shown", len(shown)).format(
-                n=len(shown)
+        def results(host_id: str) -> tuple[str, str]:
+            cells = self._cells(host_id)
+            return cells.status[0], cells.user[0]
+
+        def progress() -> tuple[int, int] | None:
+            return (self._run.done, self._run.total) if self._run is not None else None
+
+        dialog = ExportDialog(
+            self,
+            doc.hosts,
+            sources,
+            current,
+            list_name=doc.path.stem,
+            prefs=self._prefs,
+            save_prefs=self._save_prefs,
+            results=results,
+            refresh=lambda hosts, status, users: self.check_hosts(
+                hosts, status=status, users=users
             ),
-            QMessageBox.ButtonRole.AcceptRole,
+            stop=self.stop_checks,
+            progress=progress,
         )
-        shown_button.setEnabled(bool(shown))
-        every_button = box.addButton(
-            ngettext("The &whole list ({n} host)", "The &whole list ({n} hosts)", len(every))
-            .format(n=len(every)),
-            QMessageBox.ButtonRole.AcceptRole,
-        )  # fmt: skip
-        cancel = box.addButton(QMessageBox.StandardButton.Cancel)
-        box.setEscapeButton(cancel)
-        box.setDefaultButton(shown_button if shown else every_button)
-        box.exec()
-        clicked = box.clickedButton()
-        return shown if clicked is shown_button else every if clicked is every_button else None
+        self.checks_changed.connect(dialog.checks_changed)
+        try:
+            dialog.exec()
+        finally:
+            self.checks_changed.disconnect(dialog.checks_changed)
+        if dialog.outcome:
+            self.statusBar().showMessage(dialog.outcome, 10_000)
+
+    def _export_sources(self, host_list: HostList) -> tuple[list[Source], int]:
+        """What can be exported, and which one is shown now: the search's results, the hosts
+        picked, everything, no group, each group (with its subgroups) and each tag."""
+
+        def counted(name: str, n: int) -> str:
+            return ngettext("{name} ({n} host)", "{name} ({n} hosts)", n).format(name=name, n=n)
+
+        sources: list[Source] = []
+        current = self.nav.current_filter()
+        start = 0
+        if self._needle():
+            found = self._visible_hosts()
+            sources.append(Source(counted(_("Search results"), len(found)),
+                                  _("the search results"), found))  # fmt: skip
+        selected = self._selected_hosts()
+        if len(selected) > 1:
+            picked = tuple(selected)
+            sources.append(Source(counted(_("Selected hosts"), len(picked)),
+                                  _("the selected hosts"), picked))  # fmt: skip
+        every = host_list.hosts
+        sources.append(Source(counted(_("All hosts"), len(every)), _("All hosts"), every))
+        if not self._needle() and current.kind == "all":
+            start = len(sources) - 1
+        loose = tuple(h for h in every if h.group == NO_GROUP)
+        sources.append(Source(counted(_("No group"), len(loose)), _("No group"), loose))
+        if not self._needle() and current.kind == "nogroup":
+            start = len(sources) - 1
+
+        def visit(parent: str | None, depth: int) -> None:
+            nonlocal start
+            for group in host_list.children(parent):
+                hosts = host_list.hosts_in(group.id)
+                sources.append(Source(counted(group.name, len(hosts)), group.name, hosts, depth))
+                if not self._needle() and current.kind == "group" and current.value == group.id:
+                    start = len(sources) - 1
+                visit(group.id, depth + 1)
+
+        visit(None, 0)
+        for tag in sorted(host_list.all_tags(), key=str.casefold):
+            hosts = tuple(h for h in every if tag in h.tags)
+            name = _("tag “{tag}”").format(tag=tag)
+            sources.append(
+                Source(counted(_("Tag: {tag}").format(tag=tag), len(hosts)), name, hosts)
+            )
+            if not self._needle() and current.kind == "tag" and current.value == tag:
+                start = len(sources) - 1
+        return sources, start
 
     def manage_groups(self) -> None:
         """Inventory > Manage groups…: reorder and nest every group at once."""
@@ -1354,6 +1375,7 @@ class MainWindow(QMainWindow):
         self._show_progress()
         self._stop_button.setEnabled(True)
         self._update_state()
+        self.checks_changed.emit()
         log.info(
             "Refresh: %d hosts (status=%s, users=%s, account=%s)",
             len(targets), wanted.status, wanted.users, "typed" if wanted.account else "Windows",
@@ -1384,6 +1406,7 @@ class MainWindow(QMainWindow):
         else:
             self._update_state()  # the online count
         self._show_progress()
+        self.checks_changed.emit()
 
     def _show_progress(self) -> None:
         run = self._run
@@ -1401,6 +1424,7 @@ class MainWindow(QMainWindow):
         self._run = None
         self._show_progress()
         self._update_state()
+        self.checks_changed.emit()
         if run.stopped and run.done < run.total:
             left = run.total - run.done
             note = ngettext(
