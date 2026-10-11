@@ -225,7 +225,33 @@ class GroupTree(HostDropTree):
         walk(self.top(), None)
         return found
 
+    def _onto_empty_space(self, event: QDragMoveEvent | QDropEvent) -> bool:
+        """A group dragged below the last row, under a "Groups" root: it goes in no group."""
+        return (
+            self._root is not None
+            and event.mimeData().hasFormat(GROUPS_MIME)
+            and self.itemAt(event.position().toPoint()) is None
+        )
+
+    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
+        if self._onto_empty_space(event):
+            event.acceptProposedAction()
+            return
+        super().dragMoveEvent(event)
+
     def dropEvent(self, event: QDropEvent) -> None:
+        if self._onto_empty_space(event) and self._root is not None:
+            ids = bytes(event.mimeData().data(GROUPS_MIME).data()).decode().split("\n")
+            for item in [i for i in _all_items(self._root) if i.data(0, ROLE_ID) in ids]:
+                open_ids = _expanded_ids(item)
+                (item.parent() or self.invisibleRootItem()).removeChild(item)
+                self._root.addChild(item)  # last, directly under Groups
+                _expand(item, open_ids)
+                self.setCurrentItem(item)
+            event.setDropAction(Qt.DropAction.CopyAction)  # moved here: Qt must not delete it
+            event.accept()
+            self.rearranged.emit()
+            return
         hosts = event.mimeData().hasFormat(HOSTS_MIME)
         super().dropEvent(event)
         if not hosts:  # a group dragged within the tree

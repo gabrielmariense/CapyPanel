@@ -448,3 +448,22 @@ def _walk_items(tree: QTreeWidget) -> list[QTreeWidgetItem]:
 
     walk(tree.invisibleRootItem())
     return found
+
+
+def test_a_group_dropped_below_the_last_row_goes_under_groups(window: MainWindow) -> None:
+    doc = window.document
+    assert doc is not None
+    dialog = ManageGroupsDialog(None, doc.hosts)
+    dialog.resize(460, 480)
+    dialog.show()
+    QApplication.processEvents()
+    tree = dialog.tree
+    lab = next(i for i in _walk_items(tree) if i.data(0, ROLE_ID) == _id(window, "Lab"))
+    data = tree.mimeData([lab])
+    below = QPointF(20, tree.viewport().height() - 5)  # empty space under the rows
+    drop = QDropEvent(below, Qt.DropAction.MoveAction, data, Qt.MouseButton.LeftButton,
+                      Qt.KeyboardModifier.NoModifier)  # fmt: skip
+    tree.dropEvent(drop)
+    assert _names(tree.top()) == ["Zebra wing", "alpha wing", "Lab"]  # last, in no group
+    assert dict(dialog.order())[_id(window, "Lab")] is None
+    dialog.close()
