@@ -467,3 +467,14 @@ def test_a_group_dropped_below_the_last_row_goes_under_groups(window: MainWindow
     assert tree.itemAt(onto.position().toPoint()) is tree.top()
     assert onto.mimeData() is drop.mimeData()
     dialog.close()
+
+
+def test_manage_groups_draws_tree_lines(window: MainWindow) -> None:
+    doc = window.document
+    assert doc is not None
+    dialog = ManageGroupsDialog(None, doc.hosts)
+    assert dialog.tree.tree_lines and not window.nav.groups.tree_lines  # only in this window
+    dialog.show()
+    QApplication.processEvents()
+    assert not dialog.tree.viewport().grab().isNull()  # draws in any theme without failing
+    dialog.close()

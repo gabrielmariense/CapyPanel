@@ -5,7 +5,16 @@ Groups show in the list's own order (not sorted), so a team can arrange them as 
 
 from collections.abc import Callable, Iterable, Sequence
 
-from PySide6.QtCore import QMimeData, QPoint, QPointF, QRect, Qt, Signal
+from PySide6.QtCore import (
+    QMimeData,
+    QModelIndex,
+    QPersistentModelIndex,
+    QPoint,
+    QPointF,
+    QRect,
+    Qt,
+    Signal,
+)
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
@@ -149,7 +158,49 @@ class GroupTree(HostDropTree):
         self.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.set_editable(True)
         self._root: QTreeWidgetItem | None = None  # "Groups", when every group hangs under it
+        self.tree_lines = False  # lines joining each group to its parent, as in Move to
         self.itemCollapsed.connect(self._keep_root_open)
+
+    def drawBranches(
+        self, painter: QPainter, rect: QRect, index: QModelIndex | QPersistentModelIndex
+    ) -> None:
+        """The style's arrows, plus the Move to menus' tree lines when `tree_lines` is on."""
+        super().drawBranches(painter, rect, index)
+        item = self.itemFromIndex(index) if isinstance(index, QModelIndex) else None
+        if not self.tree_lines or item is None:
+            return
+        lasts: list[bool] = []  # from the top level down to this item: last among its siblings?
+        node: QTreeWidgetItem | None = item
+        while node is not None:
+            siblings = node.parent() or self.invisibleRootItem()
+            lasts.insert(0, siblings.indexOfChild(node) == siblings.childCount() - 1)
+            node = node.parent()
+        depth = len(lasts) - 1
+        step = self.indentation()
+        left = rect.right() + 1 - (depth + 1) * step  # where the level-0 column starts
+
+        def middle(level: int) -> int:
+            return left + level * step + step // 2
+
+        arrow = max(4, step // 3)  # room left around the style's arrow
+        top, mid, bottom = rect.top(), rect.center().y(), rect.bottom() + 1
+        color = QColor(self.palette().color(QPalette.ColorRole.Text))
+        color.setAlpha(90)
+        painter.save()
+        painter.setPen(QPen(color, 1))
+        if item.childCount() and item.isExpanded():  # down from its arrow to its first group
+            painter.drawLine(middle(depth), mid + arrow, middle(depth), bottom)
+        if depth == 0:  # top-level rows hang from nothing
+            painter.restore()
+            return
+        for level in range(1, depth):  # ancestors' lines running on past this row
+            if not lasts[level]:
+                painter.drawLine(middle(level - 1), top, middle(level - 1), bottom)
+        x = middle(depth - 1)
+        painter.drawLine(x, top, x, mid if lasts[depth] else bottom)  # this row's own branch
+        end = middle(depth) - arrow if item.childCount() else left + (depth + 1) * step - 3
+        painter.drawLine(x, mid, end, mid)
+        painter.restore()
 
     def top(self) -> QTreeWidgetItem:
         """What the top-level groups hang from: the "Groups" row, or the tree itself."""
@@ -480,6 +531,8 @@ class ManageGroupsDialog(QDialog):
         self._hosts = host_list
         self.tree = GroupTree()
         self.tree.fill(host_list, counts=False, rooted=True)  # drop on "Groups": in no group
+        self.tree.tree_lines = True  # where each group sits, at a glance
+        self.tree.setIndentation(GROUP_INDENT + 8)  # room for the lines beside the arrows
         self.up_button = QPushButton(_("Move &up"))
         self.down_button = QPushButton(_("Move &down"))
         self.move_button = QPushButton(_("Move &to"))
