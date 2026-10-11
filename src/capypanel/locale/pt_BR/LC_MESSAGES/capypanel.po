@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 22:50-0300\n"
+"POT-Creation-Date: 2026-10-10 23:04-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -220,9 +220,6 @@ msgstr "Uma entrada de host não é um objeto."
 msgid "A host with this name is already in the list, {place}"
 msgstr "Um host com este nome já está na lista, {place}"
 
-msgid "A name and an address on each line, with a comma between them, or a tab, as Excel copies two columns. The name can be anything you like; the address is the computer's network name or IP address."
-msgstr "Um nome e um endereço em cada linha, separados por vírgula, ou por tabulação, como o Excel copia duas colunas. O nome pode ser o que você quiser; o endereço é o nome do computador na rede ou o endereço IP."
-
 msgid "A name is required."
 msgstr "O nome é obrigatório."
 
@@ -292,6 +289,9 @@ msgstr "Respondeu a um ping em {address}."
 #, python-brace-format
 msgid "Answered at {address}, port {port}."
 msgstr "Respondeu em {address}, porta {port}."
+
+msgid "Any name you like, then the computer's network name or IP address. Separate them with a comma, or copy two columns from Excel."
+msgstr "Um nome à sua escolha, depois o nome do computador na rede ou o endereço IP. Separe com vírgula, ou copie duas colunas do Excel."
 
 msgid "Appearance"
 msgstr "Aparência"
@@ -778,8 +778,8 @@ msgstr "Desligado por padrão; o Atualizar da barra de ferramentas sempre funcio
 msgid "Offline"
 msgstr "Offline"
 
-msgid "One computer per line, by the name it has on the network (its hostname), like PC-0142. CapyPanel connects to each by that name, so it must be the computer's real name, not a description like “Reception desk”: that needs an address next to it (see Name and address)."
-msgstr "Um computador por linha, pelo nome que ele tem na rede (o nome de host), como PC-0142. O CapyPanel conecta a cada um por esse nome, então ele precisa ser o nome real do computador, e não uma descrição como “Recepção”: isso precisa de um endereço ao lado (veja Nome e endereço)."
+msgid "One computer per line, by its name on the network. To show another name, use Name and address."
+msgstr "Um computador por linha, pelo nome dele na rede. Para mostrar outro nome, use Nome e endereço."
 
 msgid "Online"
 msgstr "Online"
@@ -1089,8 +1089,8 @@ msgstr "O arquivo tem dois itens com o mesmo ID."
 msgid "The file is too big to be viewer settings."
 msgstr "O arquivo é grande demais para ser de configurações do visualizador."
 
-msgid "The first line must name the columns: name, address, group, tags and notes, in any order, in English or Portuguese; other columns are ignored. A group is a path with / between its levels; tags are separated by ;. A CSV file always needs this header row. CSV export writes this format, so an exported list can be imported back."
-msgstr "A primeira linha precisa dar nome às colunas: nome, endereço, grupo, tags e notas, em qualquer ordem, em português ou inglês; outras colunas são ignoradas. Um grupo é um caminho com / entre os níveis; as tags são separadas por ;. Um arquivo CSV sempre precisa dessa linha de cabeçalho. A exportação para CSV grava este formato, então uma lista exportada pode ser importada de volta."
+msgid "The first line names the columns, in any order. Subgroups are separated by /, tags by ;. Exported lists use this format."
+msgstr "A primeira linha dá nome às colunas, em qualquer ordem, em português ou inglês. Subgrupos são separados por /, tags por ;. Listas exportadas usam este formato."
 
 #, python-brace-format
 msgid "The folder “{folder}” was created by another user, so CapyPanel won't use it. Ask an administrator to delete it; it will be created again."

@@ -493,10 +493,8 @@ class FormatsDialog(QDialog):
                 _("Hostnames"),
                 self._page(
                     _(
-                        "One computer per line, by the name it has on the network (its "
-                        "hostname), like PC-0142. CapyPanel connects to each by that name, so it "
-                        "must be the computer's real name, not a description like “Reception "
-                        "desk”: that needs an address next to it (see Name and address)."
+                        "One computer per line, by its name on the network. To show another "
+                        "name, use Name and address."
                     ),
                     "PC-0142\nPC-0143\nLAB-07",
                     [_("Name")],
@@ -507,9 +505,8 @@ class FormatsDialog(QDialog):
                 _("Name and address"),
                 self._page(
                     _(
-                        "A name and an address on each line, with a comma between them, or a "
-                        "tab, as Excel copies two columns. The name can be anything you like; "
-                        "the address is the computer's network name or IP address."
+                        "Any name you like, then the computer's network name or IP address. "
+                        "Separate them with a comma, or copy two columns from Excel."
                     ),
                     "Reception 01,PC-0142.corp.example.net\nLab 07,10.20.30.47\nPrint room,PR-03",
                     [_("Name"), _("Address")],
@@ -524,11 +521,8 @@ class FormatsDialog(QDialog):
                 _("CSV with headers"),
                 self._page(
                     _(
-                        "The first line must name the columns: name, address, group, tags and "
-                        "notes, in any order, in English or Portuguese; other columns are "
-                        "ignored. A group is a path with / between its levels; tags are "
-                        "separated by ;. A CSV file always needs this header row. CSV export "
-                        "writes this format, so an exported list can be imported back."
+                        "The first line names the columns, in any order. Subgroups are "
+                        "separated by /, tags by ;. Exported lists use this format."
                     ),
                     csv_example,
                     ["name", "address", "group", "tags", "notes"],
