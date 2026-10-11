@@ -36,6 +36,9 @@ from capypanel.ui.settings.pages import (
 )
 from capypanel.ui.themes import engine as themes
 
+# The pages' titles, as the pages set them; the page list is sized for the longest in any language.
+PAGE_TITLES = ("General", "Host lists", "Connections", "Appearance")
+
 
 @dataclass(frozen=True)
 class SettingsChoices:
@@ -134,9 +137,13 @@ class SettingsDialog(QDialog):
             self.page_list.addItem(page.title)
             self.stack.addWidget(page)
             page.changed.connect(self._update_save)
-        # Wide enough for the longest page name, so the list never cuts or overlaps it.
+        # Wide enough for the longest page name in any language, so the list never cuts it and
+        # keeps its width when the language changes.
+        metrics = self.page_list.fontMetrics()
         longest = max(
-            self.page_list.fontMetrics().horizontalAdvance(p.title) for p in self.pages.values()
+            metrics.horizontalAdvance(title)
+            for message in PAGE_TITLES
+            for title in i18n.in_every_language(message)
         )
         self.page_list.setFixedWidth(longest + 64)
         self.page_list.currentRowChanged.connect(self._page_picked)

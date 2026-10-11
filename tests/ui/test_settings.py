@@ -18,7 +18,7 @@ from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
 from capypanel.ui.host_lists import HostListsDialog, HostListsView
 from capypanel.ui.main_window.window import MainWindow
-from capypanel.ui.settings.window import SettingsDialog
+from capypanel.ui.settings.window import PAGE_TITLES, SettingsDialog
 from capypanel.ui.themes import engine as themes
 
 
@@ -427,3 +427,14 @@ def test_list_tables_have_grid_lines_and_resizable_columns(window: MainWindow) -
     assert view.tree.objectName() == window.table.objectName() == "grid"
     header = view.tree.header()
     assert all(header.sectionResizeMode(c) == QHeaderView.ResizeMode.Interactive for c in range(3))
+
+
+def test_the_page_list_keeps_its_width_in_every_language(window: MainWindow) -> None:
+    dialog = window.settings_dialog()
+    assert [p.title for p in dialog.pages.values()] == list(PAGE_TITLES)  # sized from these
+    width = dialog.page_list.width()
+    dialog.language_picked.connect(window.set_language)
+    dialog.general.language.setCurrentIndex(dialog.general.language.findData("pt_BR"))
+    QApplication.processEvents()
+    assert dialog.page_list.width() == width and dialog.general.title == "Geral"
+    window.set_language("en")
