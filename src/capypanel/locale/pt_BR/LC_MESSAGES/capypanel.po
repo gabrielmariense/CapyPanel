@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 19:20-0300\n"
+"POT-Creation-Date: 2026-10-11 19:28-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -734,6 +734,9 @@ msgstr "Última verificação"
 msgid "License"
 msgstr "Licença"
 
+msgid "Licenses"
+msgstr "Licenças"
+
 msgid "List"
 msgstr "Lista"
 
@@ -1307,9 +1310,6 @@ msgstr "O “website” deve ser um endereço https://."
 msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr "Não há perfis de conexão. Crie um em Configurações > Conexões."
 
-msgid "Third-party licenses"
-msgstr "Licenças de terceiros"
-
 msgid "This connection profile needs a newer version of CapyPanel."
 msgstr "Este perfil de conexão precisa de uma versão mais nova do CapyPanel."
 
@@ -1448,8 +1448,8 @@ msgstr "no computador"
 msgid "disconnected"
 msgstr "desconectada"
 
-msgid "free to use, change and share"
-msgstr "livre para usar, alterar e compartilhar"
+msgid "free to use, change and share, with no warranty"
+msgstr "livre para usar, alterar e compartilhar, sem garantia"
 
 #, python-brace-format
 msgid "from {computer}"

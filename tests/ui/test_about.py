@@ -54,22 +54,22 @@ def test_about_names_the_creator_the_version_and_the_license(qapp: QApplication)
     texts = [label.text() for label in dialog.findChildren(QLabel)]
     assert dialog.version.text() == __version__ and dialog.version.copy_text() == BUILD
     assert 'Gabriel "GMErebos" Mariense · © 2026' in texts  # name and © in one place only
-    assert any("GPL-3.0" in t and "free to use, change and share" in t for t in texts)
+    assert any("GPL-3.0" in t and "with no warranty" in t for t in texts)  # GPL's notices
     assert any(t.endswith("portable mode") for t in texts)  # only what applies
     assert not any("Python and Qt for Python" in t for t in texts)  # in Third-party licenses
     assert not any(b.isDefault() or b.autoDefault() for b in dialog.findChildren(QPushButton))
 
 
-def test_third_party_licenses_show_each_part_with_its_text(qapp: QApplication) -> None:
+def test_licenses_show_capypanel_then_each_part_with_its_text(qapp: QApplication) -> None:
     dialog = LicensesDialog(None)
     names = [dialog.parts.item(i).text() for i in range(dialog.parts.count())]
-    assert [n.split()[0] for n in names] == ["Qt", "Python", "Tabler"]
-    dialog.parts.setCurrentRow(2)
+    assert [n.split()[0] for n in names] == ["CapyPanel", "Qt", "Python", "Tabler"]
+    assert "NO WARRANTY" in dialog.text.toPlainText()  # CapyPanel's own first
+    dialog.parts.setCurrentRow(3)
     assert "Paweł Kuna" in dialog.text.toPlainText() and "MIT License" in dialog.text.toPlainText()
     for _name, _notice, files in COMPONENTS:
         for file in files:
-            if file != "lgpl-3.0.txt":  # still to be added from gnu.org
-                assert (LICENSES_DIR / file).is_file(), file
+            assert (LICENSES_DIR / file).is_file(), file  # shipped, readable offline
 
 
 def test_a_problem_report_carries_no_user_or_computer_name(qapp: QApplication) -> None:

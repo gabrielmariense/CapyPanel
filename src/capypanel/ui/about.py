@@ -37,7 +37,6 @@ YEAR = 2026
 MASCOT_BY = ""  # the mascot's artist, once credited here: the row shows only then
 REPO_URL = "https://github.com/gabrielmariense/CapyPanel"
 DOCS_URL = "https://gabrielmariense.github.io/CapyPanel/"
-LICENSE_URL = f"{REPO_URL}/blob/main/LICENSE"
 LICENSES_DIR = Path(__file__).resolve().parent.parent / "licenses"
 
 
@@ -120,9 +119,13 @@ class AboutDialog(QDialog):
             (_("Created by"), f"{CREATOR} · © {YEAR}"),
             (_("Documentation"), _link(docs_url(), DOCS_URL.removeprefix("https://").rstrip("/"))),
             (_("Source code"), _link(source_url(), REPO_URL.removeprefix("https://"))),
+            # The GPL's "appropriate legal notices": the © above, no warranty, and every
+            # license one click away (CapyPanel's first, then what it's built with).
             (
                 _("License"),
-                _link(LICENSE_URL, "GPL-3.0") + " — " + _("free to use, change and share"),
+                _link("licenses", "GPL-3.0")
+                + " — "
+                + _("free to use, change and share, with no warranty"),
             ),
         ]
         if MASCOT_BY:
@@ -131,8 +134,8 @@ class AboutDialog(QDialog):
             title_label = hint(label)
             title_label.setWordWrap(False)
             text = QLabel(value)
-            text.setOpenExternalLinks(True)
             text.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+            text.linkActivated.connect(self._open_link)
             grid.addWidget(title_label, row, 0)
             grid.addWidget(text, row, 1)
         grid.setColumnStretch(1, 1)
@@ -153,23 +156,19 @@ class AboutDialog(QDialog):
         buttons.addStretch(1)
         buttons.addWidget(close)
 
-        licenses = QLabel(f'<a href="licenses">{_("Third-party licenses")}</a>')
-        licenses.linkActivated.connect(lambda _link: LicensesDialog(self).exec())
-        smaller = licenses.font()
-        smaller.setPointSizeF(smaller.pointSizeF() * 0.9)
-        licenses.setFont(smaller)
         build = [f"commit {_COMMIT}"] if _COMMIT else []  # only what applies
         if portable:
             build.append(_("portable mode"))
         built = hint(" · ".join(build))
         built.setWordWrap(False)
         foot = QHBoxLayout()
-        foot.addWidget(licenses)
         foot.addStretch(1)
         foot.addWidget(built)
         rule = QFrame()  # the thin line that divides the panes
         rule.setObjectName("divider")
         rule.setFixedHeight(1)
+        for part in (rule, built):
+            part.setVisible(bool(build))  # an installed copy has nothing to add down here
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 12)
@@ -184,18 +183,31 @@ class AboutDialog(QDialog):
             button.setDefault(False)
         self.setFixedWidth(560)
 
+    def _open_link(self, url: str) -> None:
+        if url == "licenses":
+            LicensesDialog(self).exec()
+        else:
+            open_url(url)
 
-# ---- Third-party licenses ----
 
-# What ships inside CapyPanel, each with its copyright and the license text that comes with it.
+# ---- Licenses ----
+
+# CapyPanel, then what ships inside it, each with its copyright and the license text it comes with.
 COMPONENTS = (
+    (
+        f"CapyPanel {__version__}",
+        f"Copyright (C) {YEAR} Gabriel Tobias Mariense (GMErebos).\n"
+        "CapyPanel is free software: you can share and change it under the GNU General Public "
+        "License, version 3. It comes with NO WARRANTY, to the extent permitted by law.",
+        ("gpl-3.0.txt",),
+    ),
     (
         f"Qt {qVersion()} · Qt for Python {pyside_version}",
         "Copyright (C) The Qt Company Ltd. and other contributors.\n"
         "Used under the GNU Lesser General Public License, version 3, which builds on the GNU "
-        "General Public License, version 3 (both texts below). You can replace these "
+        "General Public License, version 3 (its text is under CapyPanel). You can replace these "
         "libraries with your own build of the same version.",
-        ("lgpl-3.0.txt", "gpl-3.0.txt"),
+        ("lgpl-3.0.txt",),
     ),
     (
         f"Python {platform.python_version()}",
@@ -207,11 +219,11 @@ COMPONENTS = (
 
 
 class LicensesDialog(QDialog):
-    """Every third-party part CapyPanel ships, with its copyright and full license text."""
+    """CapyPanel's license, then every part it ships, each with its copyright and full text."""
 
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
-        self.setWindowTitle(_("Third-party licenses"))
+        self.setWindowTitle(_("Licenses"))
         self.parts = QListWidget()
         for name, _notice, _files in COMPONENTS:
             self.parts.addItem(name)

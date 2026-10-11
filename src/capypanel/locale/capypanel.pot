@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 19:20-0300\n"
+"POT-Creation-Date: 2026-10-11 19:28-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -747,6 +747,9 @@ msgstr ""
 msgid "License"
 msgstr ""
 
+msgid "Licenses"
+msgstr ""
+
 msgid "List"
 msgstr ""
 
@@ -1346,9 +1349,6 @@ msgstr ""
 msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr ""
 
-msgid "Third-party licenses"
-msgstr ""
-
 msgid "This connection profile needs a newer version of CapyPanel."
 msgstr ""
 
@@ -1493,7 +1493,7 @@ msgstr ""
 msgid "disconnected"
 msgstr ""
 
-msgid "free to use, change and share"
+msgid "free to use, change and share, with no warranty"
 msgstr ""
 
 #, python-brace-format
