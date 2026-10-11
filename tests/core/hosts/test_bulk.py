@@ -1,5 +1,5 @@
 from capypanel.core.hosts.bulk import ImportRow, Verdict, export, parse, plan, to_csv
-from capypanel.core.hosts.model import HostList
+from capypanel.core.hosts.model import NO_GROUP, HostList
 
 
 def _office() -> tuple[HostList, str]:
@@ -65,6 +65,13 @@ def test_the_plan_adds_skips_and_flags_without_changing_the_list() -> None:
     assert p.items[8].group == ("Branch office",)  # no group: the one picked
     assert len(hl.hosts) == 1  # planning changes nothing
     assert {h.name for h in p.result.hosts} == {"HQ-01", "Reception 01", "Finance 01", "LAB-09"}
+
+
+def test_rows_without_a_group_can_be_left_with_none() -> None:
+    hl, _branch = _office()
+    p = plan(hl, [ImportRow("PC-1")], NO_GROUP)
+    assert p.items[0].group == () and p.result.hosts[-1].group == NO_GROUP
+    assert p.new_groups == ()
 
 
 def test_group_names_match_without_regard_to_case() -> None:

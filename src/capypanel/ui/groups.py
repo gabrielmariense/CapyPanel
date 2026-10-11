@@ -311,6 +311,7 @@ def fill_group_menu(
             # Top-level groups have no line; each level below adds one.
             mine = (*branches, index == len(children) - 1) if parent_id else ()
             item = menu.add_row(child.name, mine)
+            item.setData(child.id)
             _tick(menu, None, item, child.id == current)
             if child.id != current:
                 item.triggered.connect(lambda _checked=False, g=child.id: apply(g))

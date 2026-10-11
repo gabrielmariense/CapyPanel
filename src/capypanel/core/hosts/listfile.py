@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from capypanel.core import files
-from capypanel.core.hosts.model import Group, Host, HostList
+from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList
 from capypanel.core.i18n import _
 
 SCHEMA = 1
@@ -170,7 +170,7 @@ def validate(host_list: HostList) -> None:
             seen.add(current)
             current = parents[current]
     for host in host_list.hosts:
-        if host.group not in group_ids:
+        if host.group != NO_GROUP and host.group not in group_ids:
             raise HostListFormatError(
                 _("Host “{name}” is in a group that doesn't exist.").format(name=host.name)
             )
@@ -232,7 +232,7 @@ def _host(item: object) -> Host:
     return Host(
         id=_text(item, "id", required=True),
         name=_text(item, "name"),
-        group=_text(item, "group", required=True),
+        group=_text(item, "group"),  # "" or missing: no group
         address=_text(item, "address"),
         tags=tuple(tags),
         notes=_text(item, "notes"),

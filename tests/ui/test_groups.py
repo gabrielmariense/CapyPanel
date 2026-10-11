@@ -5,11 +5,18 @@ from typing import Any
 import pytest
 from PySide6.QtCore import QPoint, QPointF, Qt
 from PySide6.QtGui import QDropEvent
-from PySide6.QtWidgets import QAbstractItemView, QApplication, QDialog, QMenu, QTreeWidgetItem
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QApplication,
+    QDialog,
+    QMenu,
+    QMessageBox,
+    QTreeWidgetItem,
+)
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
-from capypanel.core.hosts.model import HostList
+from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.ui.groups import (
     ROLE_ID,
     TREE_INDENT,
@@ -140,9 +147,9 @@ def test_removing_a_group_can_keep_what_is_inside(
 ) -> None:
     asked: list[tuple[int, int]] = []
 
-    def keep(_group_id: str, groups: int, hosts: int) -> str:
+    def keep(_group_id: str, groups: int, hosts: int) -> tuple[str, str | None]:
         asked.append((groups, hosts))
-        return "keep"
+        return ("move", None)  # the top level: its parent
 
     monkeypatch.setattr(window, "_ask_how_to_remove", keep)
     window.remove_group(_id(window, "alpha wing"))
@@ -156,7 +163,7 @@ def test_removing_a_group_can_keep_what_is_inside(
 def test_removing_a_group_can_remove_everything(
     window: MainWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(window, "_ask_how_to_remove", lambda *_args: "all")
+    monkeypatch.setattr(window, "_ask_how_to_remove", lambda *_args: ("all", None))
     window.remove_group(_id(window, "alpha wing"))
     doc = window.document
     assert doc is not None
@@ -334,3 +341,67 @@ def test_a_group_closed_by_hand_stays_closed_after_a_change(window: MainWindow) 
     window.move_hosts([z01], _id(window, "Lab"))  # any change rebuilds the tree
     alpha = window.nav.groups.invisibleRootItem().child(1)
     assert alpha is not None and alpha.childCount() and not alpha.isExpanded()
+
+
+def test_hosts_with_no_group_show_under_no_group(window: MainWindow) -> None:
+    nav = window.nav
+    assert nav._no_group_item.isHidden()  # every host has a group
+    doc = window.document
+    assert doc is not None
+    z01 = next(h.id for h in doc.hosts.hosts if h.name == "Z-01")
+    window.nav.everything.hosts_dropped.emit([z01], NO_GROUP)  # dragged onto "No group"
+    doc = window.document
+    assert doc is not None and doc.hosts.host(z01).group == NO_GROUP  # type: ignore[union-attr]
+    assert not nav._no_group_item.isHidden()
+    assert nav._no_group_item.text(0) == "No group (1)"
+    window.show_in_group(z01)
+    assert nav.current_filter().kind == "nogroup"
+    assert [window.table.topLevelItem(0).text(0)] == ["Z-01"]  # type: ignore[union-attr]
+    assert window.details.shown_value("group") == "No group"
+
+
+def test_hosts_right_click_move_to_any_group_or_none(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class Choosing(QMenu):
+        def exec(self, *_args: Any) -> None:  # type: ignore[override]
+            move = next(a for a in self.actions() if a.text() == "&Move to").menu()
+            assert isinstance(move, QMenu)
+            texts = [a.text().strip() for a in move.actions() if a.text()]
+            assert texts == ["No group", "Zebra wing", "alpha wing", "Lab"]
+            _choose(move, "No group")
+
+    window.show()
+    QApplication.processEvents()
+    doc = window.document
+    assert doc is not None
+    l01 = next(h.id for h in doc.hosts.hosts if h.name == "L-01")
+    window.show_in_group(l01)
+    item = window.table.topLevelItem(0)
+    assert item is not None
+    monkeypatch.setattr(window_module, "QMenu", Choosing)
+    window._host_menu(window.table.visualItemRect(item).center())
+    doc = window.document
+    assert doc is not None and doc.hosts.host(l01).group == NO_GROUP  # type: ignore[union-attr]
+    window.close()
+
+
+def test_removing_a_group_offers_where_its_contents_go(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def pick_zebra(box: QMessageBox) -> int:
+        move = next(b for b in box.buttons() if b.text() == "&Move them to")
+        menu = move.menu()  # type: ignore[attr-defined]
+        assert isinstance(menu, QMenu)
+        texts = [a.text().strip() for a in menu.actions() if a.text()]
+        assert texts == ["Top level", "Zebra wing"]  # not alpha wing itself, nor its Lab
+        assert menu.actions()[0].isChecked()  # its parent: the top level
+        _choose(menu, "Zebra wing")
+        return 0
+
+    monkeypatch.setattr(window_module.QMessageBox, "exec", pick_zebra)
+    window.remove_group(_id(window, "alpha wing"))
+    doc = window.document
+    assert doc is not None
+    lab = doc.hosts.group(_id(window, "Lab"))
+    assert lab is not None and lab.parent == _id(window, "Zebra wing")

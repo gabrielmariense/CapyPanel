@@ -14,6 +14,7 @@ class HostListRuleError(ValueError):
 
 
 MAX_ADDRESS = 253  # the longest DNS name
+NO_GROUP = ""  # a host's group when it has none: shown under "No group", above the groups
 # A computer name or IP address: letters, digits, "-" and "_", in parts joined by dots.
 _HOSTNAME = re.compile(r"^[A-Za-z0-9_]([A-Za-z0-9_-]{0,62})(\.[A-Za-z0-9_]([A-Za-z0-9_-]{0,62}))*$")
 
@@ -193,35 +194,33 @@ class HostList:
         return replace(self, groups=(*others, replace(group, parent=parent)))
 
     def move_hosts(self, host_ids: Iterable[str], group_id: str) -> "HostList":
-        self._require_group(group_id)
+        """Into the group, or out of every group (NO_GROUP)."""
+        self._require_group_or_none(group_id)
         wanted = set(host_ids)
         hosts = tuple(replace(h, group=group_id) if h.id in wanted else h for h in self.hosts)
         return replace(self, hosts=hosts)
 
-    def can_keep_contents(self, group_id: str) -> bool:
-        """Whether removing the group can move what's inside it up a level. Hosts always need
-        a group, so a top-level group's own hosts have nowhere to go."""
-        group = self.group(group_id)
-        return group is not None and (
-            group.parent is not None or not any(h.group == group_id for h in self.hosts)
-        )
-
-    def remove_group(self, group_id: str, *, keep_contents: bool = False) -> "HostList":
-        """Removes the group. keep_contents moves its hosts and groups up a level, into its
-        parent; otherwise the groups nested in it and their hosts go with it."""
+    def remove_group(
+        self, group_id: str, *, keep_contents: bool = False, into: str | None = None
+    ) -> "HostList":
+        """Removes the group. keep_contents moves what's inside it: its groups and hosts go
+        `into` that group, or with into=None up a level, into its parent (a top-level group's
+        hosts then have no group). Otherwise the groups nested in it and their hosts go too."""
         self._require_group(group_id)
         if keep_contents:
-            if not self.can_keep_contents(group_id):
-                raise HostListRuleError(_("Move this group's hosts to another group first."))
             group = self.group(group_id)
-            parent = group.parent if group else None
+            target = into if into is not None else (group.parent if group else None)
+            if target is not None:
+                self._require_group(target)
+                if target in self.subtree(group_id):
+                    raise HostListRuleError(_("A group can't be moved inside itself."))
             groups = tuple(
-                replace(g, parent=parent) if g.parent == group_id else g
+                replace(g, parent=target) if g.parent == group_id else g
                 for g in self.groups
                 if g.id != group_id
             )
             hosts = tuple(
-                replace(h, group=parent) if h.group == group_id and parent else h
+                replace(h, group=target or NO_GROUP) if h.group == group_id else h
                 for h in self.hosts
             )
             return replace(self, groups=groups, hosts=hosts)
@@ -242,7 +241,8 @@ class HostList:
         notes: str = "",
         profile: str = "",
     ) -> tuple["HostList", Host]:
-        self._require_group(group)
+        """group: its id, or NO_GROUP."""
+        self._require_group_or_none(group)
         host = Host(
             id=self.new_id("h"),
             name=_required_name(name),
@@ -258,7 +258,7 @@ class HostList:
         """Replaces the host with the same ID; typed fields are cleaned the same way as on add."""
         if self.host(host.id) is None:
             raise HostListRuleError(_("That host is no longer in the list."))
-        self._require_group(host.group)
+        self._require_group_or_none(host.group)
         host = replace(
             host,
             name=_required_name(host.name),
@@ -274,6 +274,10 @@ class HostList:
     def _require_group(self, group_id: str) -> None:
         if self.group(group_id) is None:
             raise HostListRuleError(_("That group doesn't exist."))
+
+    def _require_group_or_none(self, group_id: str) -> None:
+        if group_id != NO_GROUP:
+            self._require_group(group_id)
 
 
 def _required_name(name: str) -> str:

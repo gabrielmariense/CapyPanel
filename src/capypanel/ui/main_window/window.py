@@ -38,7 +38,7 @@ from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
 from capypanel.core.hosts.locations import ListKind
-from capypanel.core.hosts.model import Host, HostList, HostListRuleError
+from capypanel.core.hosts.model import NO_GROUP, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote import checks
 from capypanel.core.remote.checks import Checks, Found
@@ -51,7 +51,13 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui import language
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
-from capypanel.ui.groups import ROLE_ID, ManageGroupsDialog, TreeMenu, fill_move_menu
+from capypanel.ui.groups import (
+    ROLE_ID,
+    ManageGroupsDialog,
+    TreeMenu,
+    fill_group_menu,
+    fill_move_menu,
+)
 from capypanel.ui.host_lists import HostListsDialog
 from capypanel.ui.hosts import (
     HostDialog,
@@ -291,6 +297,7 @@ class MainWindow(QMainWindow):
         self.nav.groups.customContextMenuRequested.connect(self._group_menu)
         self.nav.groups.rearranged.connect(self._groups_dragged)
         self.nav.groups.hosts_dropped.connect(self.move_hosts)
+        self.nav.everything.hosts_dropped.connect(self.move_hosts)  # onto "No group"
         self.nav.groups_heading.group_dropped.connect(lambda g: self.move_group(g, None))
         self.nav.groups_heading.customContextMenuRequested.connect(self._heading_menu)
         self.table.itemSelectionChanged.connect(self._selection_changed)
@@ -620,17 +627,26 @@ class MainWindow(QMainWindow):
                 self._commit(doc.hosts.remove_group(group_id))
             return
         choice = self._ask_how_to_remove(group_id, groups, hosts)
-        if choice is not None:
-            self._commit(doc.hosts.remove_group(group_id, keep_contents=choice == "keep"))
+        if choice is None:
+            return
+        how, into = choice
+        try:
+            new = doc.hosts.remove_group(group_id, keep_contents=how == "move", into=into)
+        except HostListRuleError as e:
+            self._error(str(e))
+            return
+        self._commit(new)
 
-    def _ask_how_to_remove(self, group_id: str, groups: int, hosts: int) -> str | None:
-        """Keep what's inside (moved up a level, the default) or remove everything.
-        Returns "keep", "all", or None for Cancel."""
+    def _ask_how_to_remove(
+        self, group_id: str, groups: int, hosts: int
+    ) -> tuple[str, str | None] | None:
+        """Move what's inside somewhere (its parent is ticked) or remove everything.
+        Returns ("move", group id, or None for the top level), ("all", None), or None for
+        Cancel."""
         assert self._doc is not None
         host_list = self._doc.hosts
         group = host_list.group(group_id)
         assert group is not None
-        parent = host_list.group(group.parent) if group.parent else None
         inside = [
             ngettext("{n} group", "{n} groups", groups).format(n=groups) if groups else "",
             ngettext("{n} host", "{n} hosts", hosts).format(n=hosts) if hosts else "",
@@ -643,27 +659,34 @@ class MainWindow(QMainWindow):
             ),
             parent=self,
         )
-        where = _("Move them into “{name}”").format(name=parent.name) if parent else ""
-        keep = box.addButton(
-            where or _("Move them to the top level"), QMessageBox.ButtonRole.AcceptRole
+        box.setInformativeText(_("Hosts moved to the top level have no group."))
+        chosen: list[tuple[str, str | None]] = []
+        move = box.addButton(_("&Move them to"), QMessageBox.ButtonRole.ActionRole)
+        menu = TreeMenu("", move)
+        top = menu.add_row(_("Top level"))
+        top.triggered.connect(lambda: chosen.append(("move", None)))
+        menu.addSeparator()
+        fill_group_menu(
+            menu,
+            host_list,
+            lambda target: chosen.append(("move", target)),
+            skip=host_list.subtree(group_id),  # not into itself
         )
+        for item in menu.actions():  # its parent: where things go when a group goes
+            if item.data() == group.parent or (item is top and group.parent is None):
+                item.setCheckable(True)
+                item.setChecked(True)
+                menu.marked = item
+        menu.triggered.connect(lambda _item: box.done(0))
+        move.setMenu(menu)
         everything = box.addButton(_("Remove everything"), QMessageBox.ButtonRole.DestructiveRole)
         cancel = box.addButton(QMessageBox.StandardButton.Cancel)
-        if host_list.can_keep_contents(group_id):
-            box.setDefaultButton(keep)
-        else:
-            keep.setEnabled(False)
-            box.setDefaultButton(cancel)
-            box.setInformativeText(
-                _(
-                    "Its hosts can't move up: every host needs a group, and this one is at the "
-                    "top level. Move them to another group first to keep them."
-                )
-            )
+        box.setDefaultButton(cancel)
         box.setEscapeButton(cancel)
         box.exec()
-        clicked = box.clickedButton()
-        return "keep" if clicked is keep else "all" if clicked is everything else None
+        if chosen:
+            return chosen[0]
+        return ("all", None) if box.clickedButton() is everything else None
 
     def _commit(self, new: HostList) -> bool:
         """Save an edit. If someone else changed the file meanwhile, ask what to do with ours."""
@@ -832,9 +855,8 @@ class MainWindow(QMainWindow):
         doc = self._writable()
         if doc is None:
             return
-        first = doc.hosts.children(None)
-        group = self.nav.selected_group_id() or (first[0].id if first else "")
-        dialog = ImportDialog(self, doc.hosts, group)
+        # Hosts without a group of their own get none, unless a group is picked.
+        dialog = ImportDialog(self, doc.hosts, self.nav.selected_group_id() or NO_GROUP)
         new = dialog.imported_list() if dialog.exec() == QDialog.DialogCode.Accepted else None
         if new is not None and self._commit(new):
             added = dialog.added()
@@ -880,9 +902,10 @@ class MainWindow(QMainWindow):
             self._show_hosts()
 
     def move_hosts(self, host_ids: list[str], group_id: str) -> None:
-        """Hosts dragged from the table onto a group."""
+        """Hosts dragged onto a group, or moved with right-click > Move to (NO_GROUP: out of
+        every group)."""
         doc = self._writable()
-        if doc is None or doc.hosts.group(group_id) is None:
+        if doc is None or (group_id != NO_GROUP and doc.hosts.group(group_id) is None):
             return
         self._commit(doc.hosts.move_hosts(host_ids, group_id))
 
@@ -1030,6 +1053,8 @@ class MainWindow(QMainWindow):
             return tuple(h for h in hosts.hosts if self._matches(h, needle))
         if current.kind == "group" and current.value:
             return hosts.hosts_in(current.value)
+        if current.kind == "nogroup":
+            return tuple(h for h in hosts.hosts if h.group == NO_GROUP)
         if current.kind == "tag":
             return tuple(h for h in hosts.hosts if current.value in h.tags)
         return hosts.hosts
@@ -1457,10 +1482,34 @@ class MainWindow(QMainWindow):
         section(menu, _("Copy"))
         menu.addActions([a.copy_address, a.copy_name])
         menu.addSeparator()
+        if hosts and self._doc is not None:
+            self._add_hosts_move_menu(menu, hosts)
         menu.addAction(a.show_in_group)
         menu.addSeparator()
         menu.addActions([a.edit, a.remove])
         popup(menu, self.table.viewport().mapToGlobal(position))
+
+    def _add_hosts_move_menu(self, menu: QMenu, hosts: list[Host]) -> None:
+        """Move to: "No group", then the groups as a tree; where they all are is ticked."""
+        assert self._doc is not None
+        move = TreeMenu(_("&Move to"), menu)
+        menu.addMenu(move)
+        move.setEnabled(self._writable() is not None)
+        ids = [h.id for h in hosts]
+        places = {h.group for h in hosts}
+        current = places.pop() if len(places) == 1 else None
+        loose = move.add_row(_("No group"))
+        loose.setCheckable(True)
+        loose.setChecked(current == NO_GROUP)
+        if current == NO_GROUP:
+            move.marked = loose
+        else:
+            loose.triggered.connect(lambda: self.move_hosts(ids, NO_GROUP))
+        if self._doc.hosts.groups:
+            move.addSeparator()
+        fill_group_menu(
+            move, self._doc.hosts, lambda g: self.move_hosts(ids, g), current=current or None
+        )
 
     def _heading_menu(self, position: QPoint) -> None:
         menu = QMenu(self)

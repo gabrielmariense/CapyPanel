@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
     QWidgetItem,
 )
 
-from capypanel.core.hosts.model import MAX_ADDRESS, Host, HostList, clean_tags
+from capypanel.core.hosts.model import MAX_ADDRESS, NO_GROUP, Host, HostList, clean_tags
 from capypanel.core.i18n import _
 
 MAX_NAME = 255  # longest host name typed
@@ -58,7 +58,10 @@ def list_file_filter() -> str:
 
 
 def group_path(host_list: HostList, group_id: str) -> str:
-    """ "Headquarters › Finance": where a group sits, readable without indentation."""
+    """ "Headquarters › Finance": where a group sits, readable without indentation. A host
+    with no group reads "No group"."""
+    if group_id == NO_GROUP:
+        return _("No group")
     names = []
     current = host_list.group(group_id)
     while current is not None:
@@ -68,8 +71,9 @@ def group_path(host_list: HostList, group_id: str) -> str:
 
 
 def group_choices(host_list: HostList) -> list[tuple[str, str]]:
-    """(id, path) for every group, depth-first, so each group follows the one it's inside."""
-    choices: list[tuple[str, str]] = []
+    """(id, path) for every group, depth-first, so each group follows the one it's inside;
+    "No group" first."""
+    choices: list[tuple[str, str]] = [(NO_GROUP, _("No group"))]
 
     def visit(parent: str | None) -> None:
         for group in host_list.children(parent):  # the list's own order

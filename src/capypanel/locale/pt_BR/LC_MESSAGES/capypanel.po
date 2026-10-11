@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 21:46-0300\n"
+"POT-Creation-Date: 2026-10-10 21:53-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -125,6 +125,9 @@ msgstr "Ge&renciar grupos…"
 
 msgid "&Manual connection…"
 msgstr "Conexão &manual…"
+
+msgid "&Move them to"
+msgstr "&Mover para"
 
 msgid "&Move to"
 msgstr "&Mover para"
@@ -585,6 +588,9 @@ msgstr "Nome do host ou endereço IP; deixe em branco para usar o nome"
 msgid "Hostnames"
 msgstr "Nomes de host"
 
+msgid "Hosts moved to the top level have no group."
+msgstr "Hosts movidos para o nível superior ficam sem grupo."
+
 msgid "Hosts with no group &go to:"
 msgstr "Hosts sem grupo &vão para:"
 
@@ -619,9 +625,6 @@ msgstr "Ela é entregue ao visualizador de forma privada, nunca na linha de coma
 
 msgid "It's passed to the viewer on its command line, which administrators of this PC can see."
 msgstr "Ela é passada ao visualizador na linha de comando, que os administradores deste PC podem ver."
-
-msgid "Its hosts can't move up: every host needs a group, and this one is at the top level. Move them to another group first to keep them."
-msgstr "Os hosts dele não podem subir: todo host precisa de um grupo, e este está no nível mais alto. Mova-os para outro grupo antes para mantê-los."
 
 msgid "Its own settings file"
 msgstr "Arquivo de configurações próprio"
@@ -669,16 +672,6 @@ msgstr "Mover &para"
 
 msgid "Move &up"
 msgstr "Mover para &cima"
-
-#, python-brace-format
-msgid "Move them into “{name}”"
-msgstr "Mover para “{name}”"
-
-msgid "Move them to the top level"
-msgstr "Mover para o nível superior"
-
-msgid "Move this group's hosts to another group first."
-msgstr "Mova os hosts deste grupo para outro grupo antes."
 
 msgid "My personal list"
 msgstr "Minha lista pessoal"
@@ -731,6 +724,9 @@ msgstr "Sem direitos de administrador"
 
 msgid "No computer by that name or address was found on the network."
 msgstr "Nenhum computador com esse nome ou endereço foi encontrado na rede."
+
+msgid "No group"
+msgstr "Sem grupo"
 
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."

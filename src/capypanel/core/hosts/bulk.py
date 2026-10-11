@@ -15,7 +15,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
-from capypanel.core.hosts.model import Host, HostList, HostListRuleError, is_hostname
+from capypanel.core.hosts.model import NO_GROUP, Host, HostList, HostListRuleError, is_hostname
 from capypanel.core.i18n import _
 
 PATH = "/"  # between a group path's levels
@@ -144,6 +144,7 @@ def _read(lines: Sequence[str], delimiter: str, columns: list[str]) -> Parsed:
 
 
 def plan(host_list: HostList, rows: Iterable[ImportRow], default_group: str) -> Plan:
+    # default_group: where rows without a group go; NO_GROUP leaves them out of every group.
     """What the import would do, row by row, and the list it would make. Nothing is changed:
     the caller saves `result` only when the user confirms."""
     result, items, new_groups = host_list, [], []
@@ -165,7 +166,7 @@ def plan(host_list: HostList, rows: Iterable[ImportRow], default_group: str) -> 
         if name.casefold() in seen_names or target in seen_targets:
             items.append(Planned(row, Verdict.SKIP, _("Repeated in this import"), path))
             continue
-        result, group_id, made = _group(result, path)
+        result, group_id, made = _group(result, path) if path else (result, NO_GROUP, [])
         new_groups += [p for p in made if p not in new_groups]
         try:
             result, _host = result.add_host(

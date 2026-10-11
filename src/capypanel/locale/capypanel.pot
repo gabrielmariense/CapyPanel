@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 21:46-0300\n"
+"POT-Creation-Date: 2026-10-10 21:53-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -123,6 +123,9 @@ msgid "&Manage groups…"
 msgstr ""
 
 msgid "&Manual connection…"
+msgstr ""
+
+msgid "&Move them to"
 msgstr ""
 
 msgid "&Move to"
@@ -590,6 +593,9 @@ msgstr ""
 msgid "Hostnames"
 msgstr ""
 
+msgid "Hosts moved to the top level have no group."
+msgstr ""
+
 msgid "Hosts with no group &go to:"
 msgstr ""
 
@@ -627,11 +633,6 @@ msgstr ""
 msgid ""
 "It's passed to the viewer on its command line, which administrators of "
 "this PC can see."
-msgstr ""
-
-msgid ""
-"Its hosts can't move up: every host needs a group, and this one is at the"
-" top level. Move them to another group first to keep them."
 msgstr ""
 
 msgid "Its own settings file"
@@ -686,16 +687,6 @@ msgstr ""
 msgid "Move &up"
 msgstr ""
 
-#, python-brace-format
-msgid "Move them into “{name}”"
-msgstr ""
-
-msgid "Move them to the top level"
-msgstr ""
-
-msgid "Move this group's hosts to another group first."
-msgstr ""
-
 msgid "My personal list"
 msgstr ""
 
@@ -746,6 +737,9 @@ msgid "No admin rights"
 msgstr ""
 
 msgid "No computer by that name or address was found on the network."
+msgstr ""
+
+msgid "No group"
 msgstr ""
 
 msgid "No host list is open."

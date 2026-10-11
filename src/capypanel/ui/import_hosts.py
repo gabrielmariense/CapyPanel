@@ -30,10 +30,10 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.hosts.bulk import ImportRow, Plan, Verdict, parse, plan, to_csv
-from capypanel.core.hosts.model import HostList
+from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.i18n import _, ngettext
 from capypanel.ui.groups import TreeMenu, fill_group_menu
-from capypanel.ui.hosts import group_path
+from capypanel.ui.hosts import group_choices, group_path
 from capypanel.ui.icons import STATUS_COLORS, dot_icon
 from capypanel.ui.menus import popup, section
 from capypanel.ui.themes import engine as themes
@@ -115,8 +115,8 @@ class ImportDialog(QDialog):
         self._parse_timer.timeout.connect(self._parse)
 
         self.group = QComboBox()
-        for group in sorted(host_list.groups, key=lambda g: group_path(host_list, g.id)):
-            self.group.addItem(group_path(host_list, group.id), group.id)
+        for choice_id, label in group_choices(host_list):  # "No group" first
+            self.group.addItem(label, choice_id)
         self.group.setCurrentIndex(max(self.group.findData(group_id), 0))
         self.group.currentIndexChanged.connect(self._replan)
         form = QFormLayout()
@@ -205,8 +205,7 @@ class ImportDialog(QDialog):
         self._replan()
 
     def _replan(self) -> None:
-        group = self.group.currentData()
-        self._plan = plan(self._hosts, self._rows, group) if group else None
+        self._plan = plan(self._hosts, self._rows, self.group.currentData() or NO_GROUP)
         self._fill()
         self._summarize()
 
@@ -227,7 +226,7 @@ class ImportDialog(QDialog):
                     "",
                     r.name,
                     r.address,
-                    " › ".join(planned.group),
+                    " › ".join(planned.group) or _("No group"),
                     "; ".join(r.tags),
                     " ".join(r.notes.split()),
                     planned.reason,

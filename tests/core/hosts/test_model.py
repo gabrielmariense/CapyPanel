@@ -2,7 +2,7 @@ from dataclasses import replace
 
 import pytest
 
-from capypanel.core.hosts.model import HostList, HostListRuleError, clean_tags
+from capypanel.core.hosts.model import NO_GROUP, HostList, HostListRuleError, clean_tags
 
 
 def _office() -> tuple[HostList, str, str]:
@@ -175,12 +175,23 @@ def test_removing_a_group_can_keep_its_contents_one_level_up() -> None:
     assert hl.host(pc.id).group == hq  # type: ignore[union-attr]
 
 
-def test_a_top_level_group_keeps_its_contents_only_without_hosts_of_its_own() -> None:
+def test_a_top_level_group_s_hosts_are_left_with_no_group() -> None:
     hl, hq, finance = _office()
-    assert hl.can_keep_contents(hq)
+    hl, pc = hl.add_host("HQ-1", hq)
     hl2 = hl.remove_group(hq, keep_contents=True)
     assert hl2.group(finance).parent is None  # type: ignore[union-attr]
-    hl, _ = hl.add_host("HQ-1", hq)
-    assert not hl.can_keep_contents(hq)  # hosts always need a group
-    with pytest.raises(HostListRuleError):
-        hl.remove_group(hq, keep_contents=True)
+    assert hl2.host(pc.id).group == NO_GROUP  # type: ignore[union-attr]
+
+
+def test_what_a_removed_group_holds_can_go_into_another_group() -> None:
+    hl, hq, finance = _office()
+    hl, lab = hl.add_group("Lab")
+    hl, pc = hl.add_host("FIN-1", finance)
+    moved = hl.remove_group(hq, keep_contents=True, into=lab.id)
+    assert moved.group(finance).parent == lab.id  # type: ignore[union-attr]
+    with pytest.raises(HostListRuleError):  # not into what's being removed
+        hl.remove_group(hq, keep_contents=True, into=finance)
+    loose = hl.move_hosts([pc.id], NO_GROUP)
+    assert loose.host(pc.id).group == NO_GROUP  # type: ignore[union-attr]
+    hl, free = hl.add_host("FREE-1", NO_GROUP)  # added with no group at all
+    assert free.group == NO_GROUP
