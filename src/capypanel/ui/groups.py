@@ -148,6 +148,16 @@ class GroupTree(HostDropTree):
         self.setIndentation(GROUP_INDENT)
         self.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.set_editable(True)
+        self._root: QTreeWidgetItem | None = None  # "Groups", when every group hangs under it
+        self.itemCollapsed.connect(self._keep_root_open)
+
+    def top(self) -> QTreeWidgetItem:
+        """What the top-level groups hang from: the "Groups" row, or the tree itself."""
+        return self._root or self.invisibleRootItem()
+
+    def _keep_root_open(self, item: QTreeWidgetItem) -> None:
+        if item is self._root:
+            item.setExpanded(True)
 
     def set_editable(self, editable: bool) -> None:
         """Read-only lists can't be rearranged."""
@@ -162,7 +172,9 @@ class GroupTree(HostDropTree):
         data.setData(GROUPS_MIME, "\n".join(i.data(0, ROLE_ID) for i in items).encode())
         return data
 
-    def fill(self, host_list: HostList, counts: bool = True) -> None:
+    def fill(self, host_list: HostList, counts: bool = True, rooted: bool = False) -> None:
+        """rooted: every group hangs under a "Groups" row, and a group dropped onto it goes in
+        no other group."""
         # Groups closed by hand stay closed when the tree is rebuilt after a change.
         closed = {
             i.data(0, ROLE_ID)
@@ -170,7 +182,16 @@ class GroupTree(HostDropTree):
             if i.childCount() and not i.isExpanded()
         }
         self.clear()
-        self._add(host_list, None, self.invisibleRootItem(), counts)
+        self._root = None
+        if rooted:
+            self._root = QTreeWidgetItem([_("Groups")])
+            self._root.setData(0, ROLE_KIND, "root")
+            # Groups can be dropped onto it, never next to it: it stays the only top row.
+            self._root.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsDropEnabled)
+            self.addTopLevelItem(self._root)
+            top = self.invisibleRootItem()
+            top.setFlags(top.flags() & ~Qt.ItemFlag.ItemIsDropEnabled)
+        self._add(host_list, None, self.top(), counts)
         self.expandAll()
         for item in _all_items(self.invisibleRootItem()):
             if item.data(0, ROLE_ID) in closed:
@@ -201,7 +222,7 @@ class GroupTree(HostDropTree):
                     found.append((child.data(0, ROLE_ID), parent))
                     walk(child, child.data(0, ROLE_ID))
 
-        walk(self.invisibleRootItem(), None)
+        walk(self.top(), None)
         return found
 
     def dropEvent(self, event: QDropEvent) -> None:
@@ -417,7 +438,7 @@ class ManageGroupsDialog(QDialog):
         self.setWindowTitle(_("Manage groups"))
         self._hosts = host_list
         self.tree = GroupTree()
-        self.tree.fill(host_list, counts=False)
+        self.tree.fill(host_list, counts=False, rooted=True)  # drop on "Groups": in no group
         self.up_button = QPushButton(_("Move &up"))
         self.down_button = QPushButton(_("Move &down"))
         self.move_button = QPushButton(_("Move &to"))
@@ -463,11 +484,11 @@ class ManageGroupsDialog(QDialog):
         siblings = self._siblings(item)
         index = siblings.indexOfChild(item) if item is not None and siblings else -1
         self.up_button.setEnabled(index > 0)
-        self.move_button.setEnabled(item is not None)
+        self.move_button.setEnabled(siblings is not None)
         self.down_button.setEnabled(0 <= index < (siblings.childCount() - 1 if siblings else 0))
 
     def _siblings(self, item: QTreeWidgetItem | None) -> QTreeWidgetItem | None:
-        if item is None:
+        if item is None or item is self.tree.top():
             return None
         return item.parent() or self.tree.invisibleRootItem()
 
@@ -505,7 +526,7 @@ class ManageGroupsDialog(QDialog):
             return
         expanded = _expanded_ids(item)
         old_parent.removeChild(item)
-        target = self.tree.invisibleRootItem()
+        target = self.tree.top()
         for candidate in _all_items(target):
             if new_id is not None and candidate.data(0, ROLE_ID) == new_id:
                 target = candidate
@@ -516,7 +537,7 @@ class ManageGroupsDialog(QDialog):
         self._update()
 
     def _sort(self) -> None:
-        root = self.tree.invisibleRootItem()
+        root = self.tree.top()
         # Read before sorting: a group taken out of the tree forgets that it was open.
         expanded: set[str] = set()
         for index in range(root.childCount()):

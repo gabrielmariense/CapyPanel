@@ -112,7 +112,9 @@ def test_manage_groups_moves_sorts_and_applies_on_ok(
     doc = window.document
     assert doc is not None
     dialog = ManageGroupsDialog(None, doc.hosts)
-    root = dialog.tree.invisibleRootItem()
+    tops = dialog.tree.invisibleRootItem()
+    assert _names(tops) == ["Groups"]  # everything hangs from it; drop a group on it to un-nest
+    root = dialog.tree.top()
     assert _names(root) == ["Zebra wing", "alpha wing"]
     dialog.sort_button.click()
     assert _names(root) == ["alpha wing", "Zebra wing"]  # A–Z ignores upper and lower case
@@ -126,7 +128,7 @@ def test_manage_groups_moves_sorts_and_applies_on_ok(
     assert _names(root) == ["Zebra wing", "alpha wing"]
 
     def use(d: ManageGroupsDialog) -> int:
-        alpha = d.tree.invisibleRootItem().child(1)
+        alpha = d.tree.top().child(1)
         assert alpha is not None
         d.tree.setCurrentItem(alpha)
         d.up_button.click()  # alpha wing first
@@ -290,7 +292,7 @@ def test_manage_groups_move_to_changes_only_its_working_copy(window: MainWindow)
     doc = window.document
     assert doc is not None
     dialog = ManageGroupsDialog(None, doc.hosts)
-    root = dialog.tree.invisibleRootItem()
+    root = dialog.tree.top()
     alpha = root.child(1)
     assert alpha is not None
     lab = alpha.child(0)
