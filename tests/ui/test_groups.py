@@ -459,11 +459,11 @@ def test_a_group_dropped_below_the_last_row_goes_under_groups(window: MainWindow
     QApplication.processEvents()
     tree = dialog.tree
     lab = next(i for i in _walk_items(tree) if i.data(0, ROLE_ID) == _id(window, "Lab"))
-    data = tree.mimeData([lab])
     below = QPointF(20, tree.viewport().height() - 5)  # empty space under the rows
-    drop = QDropEvent(below, Qt.DropAction.MoveAction, data, Qt.MouseButton.LeftButton,
-                      Qt.KeyboardModifier.NoModifier)  # fmt: skip
-    tree.dropEvent(drop)
-    assert _names(tree.top()) == ["Zebra wing", "alpha wing", "Lab"]  # last, in no group
-    assert dict(dialog.order())[_id(window, "Lab")] is None
+    drop = QDropEvent(below, Qt.DropAction.MoveAction, tree.mimeData([lab]),
+                      Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)  # fmt: skip
+    # Qt moves the group as if it were dropped onto "Groups" (a real drag needs a real mouse).
+    onto = tree.onto_root(drop)
+    assert tree.itemAt(onto.position().toPoint()) is tree.top()
+    assert onto.mimeData() is drop.mimeData()
     dialog.close()

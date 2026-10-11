@@ -5,7 +5,7 @@ Groups show in the list's own order (not sorted), so a team can arrange them as 
 
 from collections.abc import Callable, Iterable, Sequence
 
-from PySide6.QtCore import QMimeData, QPoint, QRect, Qt, Signal
+from PySide6.QtCore import QMimeData, QPoint, QPointF, QRect, Qt, Signal
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
@@ -239,17 +239,32 @@ class GroupTree(HostDropTree):
             return
         super().dragMoveEvent(event)
 
+    def onto_root(self, event: QDropEvent) -> QDropEvent:
+        """The same drop, as if onto the "Groups" row, so Qt moves the group itself. Moving
+        it by hand made Qt delete the dragged row once the drag ended."""
+        assert self._root is not None
+        self.scrollToItem(self._root)  # the row must be in view for the drop to land on it
+        point = QPointF(self.visualItemRect(self._root).center())
+        moved = QDropEvent(
+            point, event.possibleActions(), event.mimeData(), event.buttons(), event.modifiers()
+        )
+        moved.setDropAction(event.dropAction())
+        return moved
+
     def dropEvent(self, event: QDropEvent) -> None:
-        if self._onto_empty_space(event) and self._root is not None:
+        if self._onto_empty_space(event):
             ids = bytes(event.mimeData().data(GROUPS_MIME).data()).decode().split("\n")
-            for item in [i for i in _all_items(self._root) if i.data(0, ROLE_ID) in ids]:
-                open_ids = _expanded_ids(item)
-                (item.parent() or self.invisibleRootItem()).removeChild(item)
-                self._root.addChild(item)  # last, directly under Groups
-                _expand(item, open_ids)
-                self.setCurrentItem(item)
-            event.setDropAction(Qt.DropAction.CopyAction)  # moved here: Qt must not delete it
-            event.accept()
+            dragged = [i for i in _all_items(self.top()) if i.data(0, ROLE_ID) in ids]
+            open_ids = set().union(*(_expanded_ids(i) for i in dragged))
+            scrolled = self.verticalScrollBar().value()
+            moved = self.onto_root(event)
+            super().dropEvent(moved)  # appended last under Groups
+            event.setDropAction(moved.dropAction())
+            event.setAccepted(moved.isAccepted())
+            for item in _all_items(self.top()):
+                if item.data(0, ROLE_ID) in ids:
+                    _expand(item, open_ids)
+            self.verticalScrollBar().setValue(scrolled)
             self.rearranged.emit()
             return
         hosts = event.mimeData().hasFormat(HOSTS_MIME)
