@@ -1,19 +1,21 @@
 """The Settings window: a list of pages on the left, OK / Save / Cancel at the bottom.
 Nothing applies until OK or Save (which keeps the window open); the main window applies the
-choices handed over by `saved`. Leaving the Connections page with changes asks to save or
-drop them first."""
+choices handed over by `saved`. Cancel reads "Close" while nothing is left unsaved. Leaving the
+Connections page with changes asks to save or drop them first."""
 
 from dataclasses import dataclass
 from pathlib import Path
 
-from PySide6.QtCore import Signal
-from PySide6.QtGui import QShowEvent
+from PySide6.QtCore import QEvent, QObject, QTimer, Signal
+from PySide6.QtGui import QHideEvent, QShowEvent
 from PySide6.QtWidgets import (
+    QApplication,
     QDialog,
     QDialogButtonBox,
     QHBoxLayout,
     QListWidget,
     QMessageBox,
+    QPushButton,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -66,6 +68,10 @@ class SettingsDialog(QDialog):
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Settings"))
+        self.closing = False  # OK was clicked: the window goes once its choices are applied
+        self.reopen = False  # the language changed on Save: open again, in the new language
+        self.cancel_button: QPushButton | None = None  # reads "Close" while nothing is unsaved
+        self._saved_state: tuple[object, ...] | None = None
         self.general = GeneralPage(
             paths,
             start_list=start_list,
@@ -115,6 +121,14 @@ class SettingsDialog(QDialog):
             _("&Save"), QDialogButtonBox.ButtonRole.ActionRole
         )
         self.save_button.setToolTip(_("Save the changes and keep Settings open"))
+        # Enter means OK wherever the focus is; the other buttons never take its place.
+        ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)
+        cancel = self.buttons.button(QDialogButtonBox.StandardButton.Cancel)
+        assert ok is not None and cancel is not None
+        self.cancel_button = cancel
+        ok.setDefault(True)
+        for button in (self.save_button, cancel):
+            button.setAutoDefault(False)
         self.buttons.accepted.connect(self._ok)
         self.buttons.rejected.connect(self.reject)
         self.save_button.clicked.connect(self._save)
@@ -128,6 +142,7 @@ class SettingsDialog(QDialog):
         layout.addWidget(self.buttons)
         self.resize(780, 540)
         self._update_save()
+        self._mark_saved()
 
     def _page_picked(self, row: int) -> None:
         """Leaving Connections with changes asks first: save them, drop them, or stay."""
@@ -144,6 +159,7 @@ class SettingsDialog(QDialog):
             if answer == "discard":
                 self.connections.reset()
         self.stack.setCurrentIndex(row)
+        self._update_close()
 
     def _ask_unsaved(self) -> str:
         box = QMessageBox(
@@ -188,16 +204,62 @@ class SettingsDialog(QDialog):
             auto_status=self.general.auto_status_choice(),
         )
 
+    def current_page(self) -> str:
+        return list(self.pages)[self.stack.currentIndex()]
+
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         themes.paint_title_bar(self)
+        ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)
+        for button in self.findChildren(QPushButton):  # pages' buttons too, e.g. Open folder
+            if button is not ok:
+                button.setAutoDefault(False)  # or the focused one would take Enter from OK
+        app = QApplication.instance()
+        if app is not None:
+            app.installEventFilter(self)  # any click or key in here may change something
+
+    def hideEvent(self, event: QHideEvent) -> None:
+        app = QApplication.instance()
+        if app is not None:
+            app.removeEventFilter(self)
+        super().hideEvent(event)
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        kind = event.type()
+        if kind in (QEvent.Type.MouseButtonRelease, QEvent.Type.KeyRelease) and (
+            isinstance(watched, QWidget) and self.isAncestorOf(watched)
+        ):
+            QTimer.singleShot(0, self, self._update_close)  # once the widget has changed
+        return False
+
+    def _state(self) -> tuple[object, ...] | None:
+        """What Save would write, to tell whether anything is left unsaved."""
+        if not all(page.is_valid() for page in self.pages.values()):
+            return None
+        c = self.choices()
+        return (
+            c.start_list, c.host_list, c.theme_id, c.language, tuple(c.added_lists),
+            c.auto_status, self.connections.has_changes(),
+        )  # fmt: skip
+
+    def _mark_saved(self) -> None:
+        self._saved_state = self._state()
+        self._update_close()
+
+    def _update_close(self) -> None:
+        if self.cancel_button is None:  # still being built
+            return
+        unsaved = self._state() != self._saved_state
+        self.cancel_button.setText(_("Cancel") if unsaved else _("Close"))
 
     def _update_save(self) -> None:
         valid = all(page.is_valid() for page in self.pages.values())
         self.buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(valid)
         self.save_button.setEnabled(valid)
+        self._update_close()
 
     def _ok(self) -> None:
+        self.closing = True
         self.saved.emit(self.choices())
         self.accept()
 
@@ -209,3 +271,4 @@ class SettingsDialog(QDialog):
         self.connections.reset()
         self.host_lists.view.saved(document)
         self._update_save()
+        self._mark_saved()

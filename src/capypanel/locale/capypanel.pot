@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 23:04-0300\n"
+"POT-Creation-Date: 2026-10-10 23:26-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -317,6 +317,9 @@ msgstr ""
 msgid "CSV with headers"
 msgstr ""
 
+msgid "Cancel"
+msgstr ""
+
 msgid "CapyPanel"
 msgstr ""
 
@@ -355,6 +358,9 @@ msgid "Choose a {tool} settings file"
 msgstr ""
 
 msgid "Click to copy"
+msgstr ""
+
+msgid "Close"
 msgstr ""
 
 msgid "Connect"
@@ -500,7 +506,7 @@ msgstr ""
 msgid "Drag a group to move it, or drop it onto another group to put it inside."
 msgstr ""
 
-msgid "Drop a group here to move it to the top level"
+msgid "Drop a group here to put it directly under Groups"
 msgstr ""
 
 msgid "Duplicate connection profile"
@@ -1224,9 +1230,6 @@ msgstr ""
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr ""
 
-msgid "Top level"
-msgstr ""
-
 msgid "Type"
 msgstr ""
 
@@ -1316,7 +1319,7 @@ msgstr ""
 msgid "Windows — light"
 msgstr ""
 
-msgid "With No group, the groups inside it move to the top level."
+msgid "With No group, the groups inside it go directly under Groups."
 msgstr ""
 
 msgid "You can also change the theme under View > Theme."

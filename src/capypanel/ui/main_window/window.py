@@ -660,7 +660,9 @@ class MainWindow(QMainWindow):
             parent=self,
         )
         if groups:
-            box.setInformativeText(_("With No group, the groups inside it move to the top level."))
+            box.setInformativeText(
+                _("With No group, the groups inside it go directly under Groups.")
+            )
         chosen: list[tuple[str, str | None]] = []
         move = box.addButton(_("&Move them to"), QMessageBox.ButtonRole.ActionRole)
         menu = TreeMenu("", move)
@@ -928,22 +930,31 @@ class MainWindow(QMainWindow):
     # ---- settings ----
 
     def open_settings(self, page: str | None = None) -> None:
-        dialog = self.settings_dialog()
-        geometry = self._prefs.get("settings_geometry")
-        if isinstance(geometry, str):
-            dialog.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
-        if page:
-            dialog.show_page(page)
-        dialog.saved.connect(lambda choices: self._settings_saved(dialog, choices))
-        dialog.exec()
-        self._prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
-        self._save_prefs()
+        while True:
+            dialog = self.settings_dialog()
+            geometry = self._prefs.get("settings_geometry")
+            if isinstance(geometry, str):
+                dialog.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
+            if page:
+                dialog.show_page(page)
+            dialog.saved.connect(lambda choices, d=dialog: self._settings_saved(d, choices))
+            dialog.exec()
+            self._prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
+            self._save_prefs()
+            if not dialog.reopen:
+                return
+            page = dialog.current_page()  # back where it was, in the new language
 
     def _settings_saved(self, dialog: SettingsDialog, choices: SettingsChoices) -> None:
-        """OK or Save in Settings: apply now; after Save the window stays open."""
+        """OK or Save in Settings: apply now; after Save the window stays open, and opens
+        again in the new language when that changed."""
+        before = i18n.language()
         self.apply_settings(choices)
         self._selection_changed()  # profiles may have changed
         dialog.after_save(self._doc)
+        if i18n.language() != before and not dialog.closing:
+            dialog.reopen = True
+            dialog.reject()  # everything is saved: nothing is lost
 
     def settings_dialog(self) -> SettingsDialog:
         return SettingsDialog(

@@ -355,8 +355,34 @@ def test_save_applies_and_keeps_settings_open(window: MainWindow) -> None:
     dialog.show()
     QApplication.processEvents()
     order = [b.text() for b in sorted(dialog.buttons.buttons(), key=lambda b: b.x())]
-    assert order == ["OK", "&Save", "Cancel"]  # Cancel on the far right, as Windows does
+    # Nothing is left unsaved, so Cancel says what it does: Close (on the far right).
+    assert order == ["OK", "&Save", "Close"]
+    page.default.setCurrentIndex(page.default.findData("ultravnc"))  # a change: Cancel again
+    dialog._update_close()
+    assert dialog.cancel_button is not None and dialog.cancel_button.text() == "Cancel"
+    ok = dialog.buttons.button(QDialogButtonBox.StandardButton.Ok)
+    assert ok is not None and ok.isDefault() and not dialog.save_button.autoDefault()
     dialog.close()
+
+
+def test_saving_another_language_opens_settings_again_in_it(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    opened: list[tuple[str, str]] = []
+
+    def run(dialog: SettingsDialog) -> int:
+        opened.append((dialog.windowTitle(), dialog.current_page()))
+        if len(opened) == 1:
+            dialog.general.language.setCurrentIndex(dialog.general.language.findData("pt_BR"))
+            dialog.show_page("appearance")
+            dialog.save_button.click()
+        return 0
+
+    monkeypatch.setattr(SettingsDialog, "exec", run)
+    window.open_settings()
+    # Open again on the same page, now in Portuguese.
+    assert opened == [("Settings", "general"), ("Configurações", "appearance")]
+    window.set_language("en")
 
 
 def test_list_tables_have_grid_lines_and_resizable_columns(window: MainWindow) -> None:

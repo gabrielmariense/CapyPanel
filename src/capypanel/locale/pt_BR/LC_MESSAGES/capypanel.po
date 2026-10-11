@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 23:04-0300\n"
+"POT-Creation-Date: 2026-10-10 23:26-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -316,6 +316,9 @@ msgstr "Arquivos CSV (*.csv *.txt);;Todos os arquivos (*)"
 msgid "CSV with headers"
 msgstr "CSV com cabeçalho"
 
+msgid "Cancel"
+msgstr "Cancelar"
+
 msgid "CapyPanel"
 msgstr "CapyPanel"
 
@@ -355,6 +358,9 @@ msgstr "Escolha um arquivo de configurações do {tool}"
 
 msgid "Click to copy"
 msgstr "Clique para copiar"
+
+msgid "Close"
+msgstr "Fechar"
 
 msgid "Connect"
 msgstr "Conectar"
@@ -495,8 +501,8 @@ msgstr "Baixar"
 msgid "Drag a group to move it, or drop it onto another group to put it inside."
 msgstr "Arraste um grupo para movê-lo, ou solte-o sobre outro grupo para colocá-lo dentro dele."
 
-msgid "Drop a group here to move it to the top level"
-msgstr "Solte um grupo aqui para movê-lo para o nível superior"
+msgid "Drop a group here to put it directly under Groups"
+msgstr "Solte um grupo aqui para colocá-lo direto em Grupos"
 
 msgid "Duplicate connection profile"
 msgstr "Duplicar perfil de conexão"
@@ -1183,9 +1189,6 @@ msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o 
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyPanel."
 
-msgid "Top level"
-msgstr "Nível superior"
-
 msgid "Type"
 msgstr "Tipo"
 
@@ -1271,8 +1274,8 @@ msgstr "Windows — seguir o tema do sistema"
 msgid "Windows — light"
 msgstr "Windows — claro"
 
-msgid "With No group, the groups inside it move to the top level."
-msgstr "Com Sem grupo, os grupos dentro dele vão para o nível superior."
+msgid "With No group, the groups inside it go directly under Groups."
+msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
 
 msgid "You can also change the theme under View > Theme."
 msgstr "Você também pode trocar o tema em Exibir > Tema."
