@@ -178,10 +178,10 @@ def _texts(menu: QMenu) -> list[str]:
 
 
 def _choose(menu: QMenu, text: str) -> None:
-    next(a for a in menu.actions() if a.text() == text).trigger()
+    next(a for a in menu.actions() if a.text().strip() == text).trigger()  # past the indent
 
 
-def test_move_to_offers_the_top_level_first_and_never_the_group_itself(
+def test_move_to_offers_groups_itself_first_and_never_the_group_itself(
     window: MainWindow,
 ) -> None:
     doc = window.document
@@ -189,16 +189,17 @@ def test_move_to_offers_the_top_level_first_and_never_the_group_itself(
     chosen: list[str | None] = []
     menu = TreeMenu()
     fill_move_menu(menu, doc.hosts, _id(window, "alpha wing"), chosen.append)
-    assert _texts(menu) == ["Top level", "Zebra wing"]  # not alpha wing, nor its Lab
+    # "Groups": directly under the pane's heading, in no other group.
+    assert _texts(menu) == ["Groups", TREE_INDENT + "Zebra wing"]  # not alpha wing, nor its Lab
     assert menu.actions()[0].isChecked()  # where it is now
     assert menu.marked is menu.actions()[0]  # tinted too, easy to spot in a long menu
-    _choose(menu, "Top level")
+    _choose(menu, "Groups")
     assert chosen == []  # already there
     _choose(menu, "Zebra wing")
     assert chosen == [_id(window, "Zebra wing")]
     menu = TreeMenu()
     fill_move_menu(menu, doc.hosts, _id(window, "Zebra wing"), chosen.append)
-    assert _texts(menu) == ["Top level", "alpha wing", TREE_INDENT + "Lab"]  # nesting shows
+    assert _texts(menu) == ["Groups", TREE_INDENT + "alpha wing", TREE_INDENT * 2 + "Lab"]
 
 
 def test_move_to_draws_the_tree_s_lines(qapp: QApplication) -> None:
@@ -210,13 +211,14 @@ def test_move_to_draws_the_tree_s_lines(qapp: QApplication) -> None:
     menu = TreeMenu()
     fill_move_menu(menu, hl, annex.id, lambda _p: None)
     rows = {a.text().strip(): menu.branches(a) for a in menu.actions() if a.text()}
-    # Finance's line carries on past Payroll down to Reports, the last one under Headquarters.
+    # Everything hangs from "Groups". Finance's line carries on past Payroll down to Reports,
+    # the last one under Headquarters.
     assert rows == {
-        "Top level": (),
-        "Headquarters": (),
-        "Finance": (False,),
-        "Payroll": (False, True),
-        "Reports": (True,),
+        "Groups": (),
+        "Headquarters": (True,),
+        "Finance": (True, False),
+        "Payroll": (True, False, True),
+        "Reports": (True, True),
     }
     menu.adjustSize()
     assert not menu.grab().isNull()  # draws its lines in any theme without failing
@@ -295,7 +297,7 @@ def test_manage_groups_move_to_changes_only_its_working_copy(window: MainWindow)
     assert lab is not None
     dialog.tree.setCurrentItem(lab)
 
-    _choose(dialog.move_menu(), "Top level")
+    _choose(dialog.move_menu(), "Groups")
     assert _names(root) == ["Zebra wing", "alpha wing", "Lab"]
     assert dict(dialog.order())[_id(window, "Lab")] is None
     saved = doc.hosts.group(_id(window, "Lab"))

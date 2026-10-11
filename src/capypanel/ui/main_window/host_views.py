@@ -146,7 +146,7 @@ class NavigationPane(QWidget):
         """Titles only; the lists' own texts come back with the next show_list()."""
         self.add_group_button.setToolTip(_("Add group"))
         self.groups_heading.setText(_("Groups"))
-        self.groups_heading.setToolTip(_("Drop a group here to move it to the top level"))
+        self.groups_heading.setToolTip(_("Drop a group here to put it directly under Groups"))
         self._tags_title.setText(_("Tags"))
 
     def set_tags_visible(self, visible: bool) -> None:

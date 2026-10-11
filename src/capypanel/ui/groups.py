@@ -212,7 +212,8 @@ class GroupTree(HostDropTree):
 
 
 class GroupsHeading(QLabel):
-    """The "Groups" title above the tree. A group dropped on it moves to the top level."""
+    """The "Groups" title above the tree. A group dropped on it goes directly under Groups,
+    inside no other group."""
 
     group_dropped = Signal(str)  # group id
 
@@ -328,19 +329,20 @@ class TreeMenu(QMenu):
 def fill_move_menu(
     menu: TreeMenu, host_list: HostList, group_id: str, apply: Callable[[str | None], None]
 ) -> None:
-    """Move to: "Top level", then every group this one can go into, as a tree. Where it is now
-    is ticked and tinted. `apply` gets the new parent's id, or None for the top level."""
+    """Move to: "Groups" (the pane's heading, i.e. not inside another group), with every group
+    this one can go into hanging under it as a tree. Where it is now is ticked and tinted.
+    `apply` gets the new parent's id, or None for directly under Groups."""
     group = host_list.group(group_id)
     current = group.parent if group else None
     exclusive = QActionGroup(menu)
-    top = menu.add_row(_("Top level"))
+    top = menu.add_row(_("Groups"))
     _tick(menu, exclusive, top, current is None)
     if current is not None:
         top.triggered.connect(lambda _checked=False: apply(None))
-    if host_list.groups:
-        menu.addSeparator()
     # It can't go into itself or its own groups.
-    fill_group_menu(menu, host_list, apply, current=current, skip=host_list.subtree(group_id))
+    fill_group_menu(
+        menu, host_list, apply, current=current, skip=host_list.subtree(group_id), rooted=True
+    )
     for item in menu.actions():
         if item.isCheckable():
             exclusive.addAction(item)
@@ -375,16 +377,19 @@ def fill_group_menu(
     *,
     current: str | None = None,
     skip: Iterable[str] = (),
+    rooted: bool = False,
 ) -> None:
     """Every group as a tree (groups in `skip` left out); `current` is ticked and tinted, and
-    picking it does nothing. `apply` gets the picked group's id."""
+    picking it does nothing. `apply` gets the picked group's id. `rooted`: the top-level groups
+    hang from the row above too (a "Groups" root)."""
     left_out = set(skip)
 
     def walk(parent_id: str | None, branches: tuple[bool, ...]) -> None:
         children = [c for c in host_list.children(parent_id) if c.id not in left_out]
         for index, child in enumerate(children):
-            # Top-level groups have no line; each level below adds one.
-            mine = (*branches, index == len(children) - 1) if parent_id else ()
+            # Top-level groups have no line (unless rooted); each level below adds one.
+            last = index == len(children) - 1
+            mine = (*branches, last) if parent_id or rooted else ()
             item = menu.add_row(child.name, mine)
             item.setData(child.id)
             _tick(menu, None, item, child.id == current)
