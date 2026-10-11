@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 18:37-0300\n"
+"POT-Creation-Date: 2026-10-11 19:20-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -347,9 +347,6 @@ msgstr ""
 msgid "Broken placeholder in “{arg}”."
 msgstr ""
 
-msgid "Built with Python and Qt for Python (LGPL-3.0). Icons: Tabler Icons (MIT)."
-msgstr ""
-
 msgid "C&hoose file…"
 msgstr ""
 
@@ -442,6 +439,9 @@ msgid "Connections"
 msgstr ""
 
 msgid "Console"
+msgstr ""
+
+msgid "Copied"
 msgstr ""
 
 #, python-brace-format
@@ -559,6 +559,9 @@ msgstr ""
 msgid "Disconnected"
 msgstr ""
 
+msgid "Documentation"
+msgstr ""
+
 msgid ""
 "Double-click a cell, or press F2, to change it; the list above follows. "
 "Right-click for more."
@@ -594,6 +597,9 @@ msgstr ""
 msgid ""
 "Editing in the table rewrites the list above as CSV with a header row "
 "(name, address, group, tags, notes), so the two always match. Continue?"
+msgstr ""
+
+msgid "Every computer you look after, in one window."
 msgstr ""
 
 msgid "Every host field, in the format Import hosts can read back."
@@ -635,9 +641,6 @@ msgid "From “{file}”"
 msgstr ""
 
 msgid "Full backup"
-msgstr ""
-
-msgid "GNU General Public License, version 3"
 msgstr ""
 
 msgid "General"
@@ -773,10 +776,10 @@ msgstr ""
 msgid "Manage groups"
 msgstr ""
 
-msgid "Manage the computers on your network from one window."
+msgid "Manual connection"
 msgstr ""
 
-msgid "Manual connection"
+msgid "Mascot"
 msgstr ""
 
 msgid "Move &down"
@@ -1284,6 +1287,10 @@ msgstr ""
 msgid "The last used list"
 msgstr ""
 
+#, python-brace-format
+msgid "The license text is missing from this copy: {file}"
+msgstr ""
+
 msgid "The list has changed"
 msgstr ""
 
@@ -1337,6 +1344,9 @@ msgid "The “website” must be an https:// address."
 msgstr ""
 
 msgid "There are no connection profiles. Create one in Settings > Connections."
+msgstr ""
+
+msgid "Third-party licenses"
 msgstr ""
 
 msgid "This connection profile needs a newer version of CapyPanel."
@@ -1414,10 +1424,6 @@ msgid "Users"
 msgstr ""
 
 #, python-brace-format
-msgid "Version {version}"
-msgstr ""
-
-#, python-brace-format
 msgid "Viewer settings (*{extension})"
 msgstr ""
 
@@ -1425,9 +1431,6 @@ msgid "Viewer settings:"
 msgstr ""
 
 msgid "Warning"
-msgstr ""
-
-msgid "Website"
 msgstr ""
 
 msgid "Where CapyPanel keeps its files"
@@ -1488,6 +1491,9 @@ msgid "at the computer"
 msgstr ""
 
 msgid "disconnected"
+msgstr ""
+
+msgid "free to use, change and share"
 msgstr ""
 
 #, python-brace-format

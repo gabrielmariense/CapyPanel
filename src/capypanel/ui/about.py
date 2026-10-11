@@ -1,11 +1,14 @@
-"""Help > About CapyPanel, and the Help menu's links: the website and reporting a problem."""
+"""Help > About CapyPanel, the third-party licenses, and the Help menu's links: the website and
+reporting a problem."""
 
 import platform
+import sys
 from pathlib import Path
 from urllib.parse import quote
 
+from PySide6 import __version__ as pyside_version
 from PySide6.QtCore import Qt, QUrl, qVersion
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QCursor, QDesktopServices, QFont
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -13,21 +16,29 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QListWidget,
+    QPlainTextEdit,
     QPushButton,
+    QToolTip,
     QVBoxLayout,
     QWidget,
 )
 
-from capypanel import BUILD
+from capypanel import _COMMIT, BUILD, __version__
 from capypanel.core import i18n
 from capypanel.core.i18n import _
 from capypanel.ui import branding
+from capypanel.ui.main_window.details import CopyValue
 from capypanel.ui.notes import hint
+from capypanel.ui.themes import engine as themes
 
-CREATOR = "Gabriel Tobias Mariense (GMErebos)"
+CREATOR = 'Gabriel "GMErebos" Mariense'
+YEAR = 2026
+MASCOT_BY = ""  # the mascot's artist, once credited here: the row shows only then
 REPO_URL = "https://github.com/gabrielmariense/CapyPanel"
 DOCS_URL = "https://gabrielmariense.github.io/CapyPanel/"
 LICENSE_URL = f"{REPO_URL}/blob/main/LICENSE"
+LICENSES_DIR = Path(__file__).resolve().parent.parent / "licenses"
 
 
 def docs_url() -> str:
@@ -40,13 +51,22 @@ def source_url() -> str:
     return f"{REPO_URL}/blob/main/README.pt-BR.md" if i18n.language() == "pt_BR" else REPO_URL
 
 
-def report_url() -> str:
-    """A new GitHub issue with the versions already filled in, under the space for the report."""
+def install_kind(portable: bool) -> str:
+    """How this copy runs: "installed", "portable" or "source" (a checkout, run with uv)."""
+    if portable:
+        return "portable"
+    return "installed" if getattr(sys, "frozen", False) else "source"
+
+
+def report_url(portable: bool) -> str:
+    """A new GitHub issue that starts with what helps to reproduce a problem: versions, theme,
+    language and how the app runs. Never a user, domain, computer name or path."""
     body = (
-        "\n\n---\n"
-        f"CapyPanel {BUILD}\n"
+        f"CapyPanel {BUILD} · {install_kind(portable)}\n"
         f"Windows {platform.version()}\n"
-        f"Qt {qVersion()}, Python {platform.python_version()}\n"
+        f"Theme: {themes.current().id} · Language: {i18n.language()}\n"
+        f"Qt {qVersion()} · Python {platform.python_version()}\n"
+        "\n---\n\n"
     )
     return f"{REPO_URL}/issues/new?body={quote(body)}"
 
@@ -56,25 +76,33 @@ def open_url(url: str) -> None:
 
 
 class AboutDialog(QDialog):
-    def __init__(self, parent: QWidget | None, log_dir: Path) -> None:
+    def __init__(self, parent: QWidget | None, log_dir: Path, *, portable: bool) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("About CapyPanel"))
         picture = QLabel()
-        picture.setPixmap(branding.mascot(120, self.devicePixelRatioF()))
+        picture.setPixmap(branding.mascot(112, self.devicePixelRatioF()))
         name = QLabel("CapyPanel")
         font = name.font()
         font.setPointSizeF(font.pointSizeF() * 1.8)
         font.setBold(True)
         name.setFont(font)
-        version = QLabel(_("Version {version}").format(version=BUILD))
-        version.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        about = QLabel(_("Manage the computers on your network from one window."))
+        # The version beside the name, quiet; a click copies it with its commit, for a report.
+        self.version = CopyValue(BUILD, __version__)
+        self.version.setObjectName("hint")
+        self.version.setWordWrap(False)
+        self.version.copied.connect(lambda _text: QToolTip.showText(QCursor.pos(), _("Copied")))
+        self.version.setContentsMargins(0, 0, 0, 3)  # on the name's baseline, not below it
+        title = QHBoxLayout()
+        title.setSpacing(10)
+        title.addWidget(name)
+        title.addWidget(self.version, 0, Qt.AlignmentFlag.AlignBottom)
+        title.addStretch(1)
+        about = QLabel(_("Every computer you look after, in one window."))
         about.setWordWrap(True)
         heading = QVBoxLayout()
         heading.addStretch(1)
-        heading.addWidget(name)
-        heading.addWidget(version)
-        heading.addSpacing(8)
+        heading.addLayout(title)
+        heading.addSpacing(4)
         heading.addWidget(about)
         heading.addStretch(1)
         top = QHBoxLayout()
@@ -87,52 +115,137 @@ class AboutDialog(QDialog):
         grid = QGridLayout(card)
         grid.setContentsMargins(14, 12, 14, 12)
         grid.setHorizontalSpacing(18)
-        grid.setVerticalSpacing(10)
-        rows = (
-            (_("Created by"), CREATOR),
-            (_("Website"), _link(docs_url(), DOCS_URL.removeprefix("https://").rstrip("/"))),
+        grid.setVerticalSpacing(9)
+        rows = [
+            (_("Created by"), f"{CREATOR} · © {YEAR}"),
+            (_("Documentation"), _link(docs_url(), DOCS_URL.removeprefix("https://").rstrip("/"))),
             (_("Source code"), _link(source_url(), REPO_URL.removeprefix("https://"))),
-            (_("License"), _link(LICENSE_URL, _("GNU General Public License, version 3"))),
-        )
+            (
+                _("License"),
+                _link(LICENSE_URL, "GPL-3.0") + " — " + _("free to use, change and share"),
+            ),
+        ]
+        if MASCOT_BY:
+            rows.insert(1, (_("Mascot"), MASCOT_BY))
         for row, (label, value) in enumerate(rows):
-            title = hint(label)
-            title.setWordWrap(False)
+            title_label = hint(label)
+            title_label.setWordWrap(False)
             text = QLabel(value)
             text.setOpenExternalLinks(True)
             text.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
-            grid.addWidget(title, row, 0)
+            grid.addWidget(title_label, row, 0)
             grid.addWidget(text, row, 1)
         grid.setColumnStretch(1, 1)
-        credits = hint(
-            _("Built with Python and Qt for Python (LGPL-3.0). Icons: Tabler Icons (MIT).")
-        )
 
-        buttons = QDialogButtonBox()
-        role = QDialogButtonBox.ButtonRole
-        self.report_button = buttons.addButton(_("&Report a problem"), role.ActionRole)
-        self.logs_button = buttons.addButton(_("Open &log folder"), role.ActionRole)
+        # Tools on the left, Close on its own at the right; no blue button: nothing to confirm.
+        self.report_button = QPushButton(_("&Report a problem"))
+        self.logs_button = QPushButton(_("Open &log folder"))
         self.logs_button.setToolTip(_("The app's logs, to attach to a problem report"))
-        buttons.addButton(QDialogButtonBox.StandardButton.Close)
-        buttons.rejected.connect(self.reject)
-        self.report_button.clicked.connect(lambda: open_url(report_url()))
+        close = QPushButton(_("Close"))
+        self.report_button.clicked.connect(lambda: open_url(report_url(portable)))
         self.logs_button.clicked.connect(
             lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(log_dir)))
         )
-        copyright_line = hint("© 2026 Gabriel Tobias Mariense")
-        copyright_line.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        close.clicked.connect(self.reject)
+        buttons = QHBoxLayout()
+        buttons.addWidget(self.report_button)
+        buttons.addWidget(self.logs_button)
+        buttons.addStretch(1)
+        buttons.addWidget(close)
+
+        licenses = QLabel(f'<a href="licenses">{_("Third-party licenses")}</a>')
+        licenses.linkActivated.connect(lambda _link: LicensesDialog(self).exec())
+        smaller = licenses.font()
+        smaller.setPointSizeF(smaller.pointSizeF() * 0.9)
+        licenses.setFont(smaller)
+        build = [f"commit {_COMMIT}"] if _COMMIT else []  # only what applies
+        if portable:
+            build.append(_("portable mode"))
+        built = hint(" · ".join(build))
+        built.setWordWrap(False)
+        foot = QHBoxLayout()
+        foot.addWidget(licenses)
+        foot.addStretch(1)
+        foot.addWidget(built)
+        rule = QFrame()  # the thin line that divides the panes
+        rule.setObjectName("divider")
+        rule.setFixedHeight(1)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 14)
+        layout.setContentsMargins(20, 20, 20, 12)
         layout.setSpacing(14)
         layout.addLayout(top)
         layout.addWidget(card)
-        layout.addWidget(credits)
-        layout.addWidget(buttons)
-        layout.addWidget(copyright_line)
-        for button in self.findChildren(QPushButton):  # no blue button: nothing to confirm
+        layout.addLayout(buttons)
+        layout.addWidget(rule)
+        layout.addLayout(foot)
+        for button in self.findChildren(QPushButton):
             button.setAutoDefault(False)
             button.setDefault(False)
         self.setFixedWidth(560)
+
+
+# ---- Third-party licenses ----
+
+# What ships inside CapyPanel, each with its copyright and the license text that comes with it.
+COMPONENTS = (
+    (
+        f"Qt {qVersion()} · Qt for Python {pyside_version}",
+        "Copyright (C) The Qt Company Ltd. and other contributors.\n"
+        "Used under the GNU Lesser General Public License, version 3, which builds on the GNU "
+        "General Public License, version 3 (both texts below). You can replace these "
+        "libraries with your own build of the same version.",
+        ("lgpl-3.0.txt", "gpl-3.0.txt"),
+    ),
+    (
+        f"Python {platform.python_version()}",
+        "Copyright (c) 2001-2024 Python Software Foundation; All Rights Reserved.",
+        ("python.txt",),
+    ),
+    ("Tabler Icons", "Copyright (c) 2020-2026 Paweł Kuna. MIT License.", ("tabler-icons.txt",)),
+)
+
+
+class LicensesDialog(QDialog):
+    """Every third-party part CapyPanel ships, with its copyright and full license text."""
+
+    def __init__(self, parent: QWidget | None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle(_("Third-party licenses"))
+        self.parts = QListWidget()
+        for name, _notice, _files in COMPONENTS:
+            self.parts.addItem(name)
+        self.parts.setFixedWidth(240)
+        self.text = QPlainTextEdit()
+        self.text.setReadOnly(True)
+        self.text.setFont(QFont("Consolas"))
+        self.parts.currentRowChanged.connect(self._show)
+        box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        box.rejected.connect(self.reject)
+        for button in box.findChildren(QPushButton):
+            button.setAutoDefault(False)  # no blue button, as in About
+        columns = QHBoxLayout()
+        columns.addWidget(self.parts)
+        columns.addWidget(self.text, 1)
+        layout = QVBoxLayout(self)
+        layout.addLayout(columns, 1)
+        layout.addWidget(box)
+        self.parts.setCurrentRow(0)
+        self.resize(820, 560)
+
+    def _show(self, row: int) -> None:
+        if not 0 <= row < len(COMPONENTS):
+            return
+        name, notice, files = COMPONENTS[row]
+        parts = [name, notice]
+        for file in files:
+            path = LICENSES_DIR / file
+            try:
+                parts.append(path.read_text(encoding="utf-8"))
+            except OSError:
+                missing = _("The license text is missing from this copy: {file}")
+                parts.append(missing.format(file=file))
+        self.text.setPlainText("\n\n".join(parts))
 
 
 def _link(url: str, text: str) -> str:

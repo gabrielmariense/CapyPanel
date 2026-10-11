@@ -1,3 +1,5 @@
+import getpass
+import platform
 from collections.abc import Iterator
 from pathlib import Path
 from urllib.parse import unquote
@@ -5,10 +7,10 @@ from urllib.parse import unquote
 import pytest
 from PySide6.QtWidgets import QApplication, QLabel, QMenu, QPushButton
 
-from capypanel import BUILD
+from capypanel import BUILD, __version__
 from capypanel.core import i18n, settings
 from capypanel.ui import about, branding, language
-from capypanel.ui.about import AboutDialog
+from capypanel.ui.about import COMPONENTS, LICENSES_DIR, AboutDialog, LicensesDialog
 from capypanel.ui.main_window.window import MainWindow
 
 
@@ -48,12 +50,32 @@ def test_the_website_opens_in_the_app_s_language(qapp: QApplication) -> None:
 
 
 def test_about_names_the_creator_the_version_and_the_license(qapp: QApplication) -> None:
-    dialog = AboutDialog(None, Path("."))
+    dialog = AboutDialog(None, Path("."), portable=True)
     texts = [label.text() for label in dialog.findChildren(QLabel)]
-    assert f"Version {BUILD}" in texts
-    assert "Gabriel Tobias Mariense (GMErebos)" in texts
-    assert any("GNU General Public License, version 3" in t for t in texts)
+    assert dialog.version.text() == __version__ and dialog.version.copy_text() == BUILD
+    assert 'Gabriel "GMErebos" Mariense · © 2026' in texts  # name and © in one place only
+    assert any("GPL-3.0" in t and "free to use, change and share" in t for t in texts)
+    assert any(t.endswith("portable mode") for t in texts)  # only what applies
+    assert not any("Python and Qt for Python" in t for t in texts)  # in Third-party licenses
     assert not any(b.isDefault() or b.autoDefault() for b in dialog.findChildren(QPushButton))
+
+
+def test_third_party_licenses_show_each_part_with_its_text(qapp: QApplication) -> None:
+    dialog = LicensesDialog(None)
+    names = [dialog.parts.item(i).text() for i in range(dialog.parts.count())]
+    assert [n.split()[0] for n in names] == ["Qt", "Python", "Tabler"]
+    dialog.parts.setCurrentRow(2)
+    assert "Paweł Kuna" in dialog.text.toPlainText() and "MIT License" in dialog.text.toPlainText()
+    for _name, _notice, files in COMPONENTS:
+        for file in files:
+            if file != "lgpl-3.0.txt":  # still to be added from gnu.org
+                assert (LICENSES_DIR / file).is_file(), file
+
+
+def test_a_problem_report_carries_no_user_or_computer_name(qapp: QApplication) -> None:
+    body = unquote(about.report_url(portable=False).split("?body=", 1)[1])  # not the URL
+    assert "Theme: " in body and "Language: en" in body and "· source" in body
+    assert getpass.getuser() not in body and platform.node() not in body
 
 
 def test_the_app_icon_and_mascot_load(qapp: QApplication) -> None:

@@ -277,8 +277,14 @@ class MainWindow(QMainWindow):
         self.addActions([a.edit, a.remove, a.copy_address, a.show_in_group, a.refresh_shown])
         a.refresh_shown.triggered.connect(self._run_refresh_panel)  # F5
         a.documentation.triggered.connect(lambda: about.open_url(about.docs_url()))
-        a.report_problem.triggered.connect(lambda: about.open_url(about.report_url()))
-        a.about.triggered.connect(lambda: about.AboutDialog(self, self._paths.log_dir).exec())
+        a.report_problem.triggered.connect(
+            lambda: about.open_url(about.report_url(self._paths.portable))
+        )
+        a.about.triggered.connect(
+            lambda: about.AboutDialog(
+                self, self._paths.log_dir, portable=self._paths.portable
+            ).exec()
+        )
         a.show_toolbar.toggled.connect(self.toolbar.setVisible)
         a.show_groups.toggled.connect(self.nav.setVisible)
         a.show_tags.toggled.connect(self.nav.set_tags_visible)
