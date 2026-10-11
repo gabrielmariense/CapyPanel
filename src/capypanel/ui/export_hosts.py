@@ -57,6 +57,7 @@ CHECKED = ("status", "users")  # from the last Refresh, kept in memory only
 FULL_BACKUP = ("name", "address", "group", "tags", "notes")  # what Import hosts reads back
 PRESETS_KEY, LAST_KEY, FOLDER_KEY = "export_presets", "export_columns", "export_folder"
 DEPTH = Qt.ItemDataRole.UserRole + 1
+WIDEST = 240  # px: the preview's widest column
 
 
 @dataclass(frozen=True)
@@ -101,6 +102,7 @@ class ExportDialog(QDialog):
 
         self.source = QComboBox()
         self.source.setItemDelegate(_Indented(self.source))
+        self.source.setMaxVisibleItems(15)  # a long list of groups scrolls
         for source in self._sources:
             self.source.addItem(source.label)
             self.source.setItemData(self.source.count() - 1, source.depth, DEPTH)
@@ -123,15 +125,16 @@ class ExportDialog(QDialog):
         sections: list[QGroupBox] = []
         for title, keys in SECTIONS:
             group = QGroupBox(_(title))
-            inside = QVBoxLayout(group)
+            # Host and Tags and notes are one row each; Last check stacks its parts.
+            inside = QVBoxLayout(group) if "status" in keys else QHBoxLayout(group)
             for key in keys:
                 box = QCheckBox(_(TITLES[key]))
                 self.boxes[key] = box
                 inside.addWidget(box)
             sections.append(group)
         host_box, notes_box, check_box = sections
-        notes_box.layout().addStretch(1)  # type: ignore[union-attr]
-        host_box.layout().addStretch(1)  # type: ignore[union-attr]
+        for box in (host_box, notes_box):
+            box.layout().addStretch(1)  # type: ignore[union-attr]
         privacy = hint(_("Includes who was logged on to each PC. Keep the file private."))
         self.unchecked = hint()
         self.refresh_button = QPushButton(_("&Refresh"))
@@ -146,15 +149,18 @@ class ExportDialog(QDialog):
         check_layout.insertWidget(check_layout.indexOf(self.boxes["users"]) + 1, privacy)
         check_layout.addWidget(self.unchecked)
         check_layout.addLayout(run_row)
+        left = QVBoxLayout()
+        left.addWidget(host_box)
+        left.addWidget(notes_box)
         columns = QHBoxLayout()
-        columns.addWidget(host_box)
-        columns.addWidget(notes_box)
-        columns.addWidget(check_box, 2)
+        columns.addLayout(left, 1)
+        columns.addWidget(check_box, 1)
 
         self.preview = QTreeWidget()
         self.preview.setObjectName("grid")
         self.preview.setRootIsDecorated(False)
         self.preview.setUniformRowHeights(True)
+        self.preview.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # keeps a path's both ends
         preview_title = QLabel(_("Preview"))
         preview_title.setObjectName("detailsSection")
 
@@ -333,9 +339,13 @@ class ExportDialog(QDialog):
         self.preview.setHeaderLabels(self.header() or [""])
         for row in self.rows():
             item = QTreeWidgetItem([" ".join(cell.split()) for cell in row])  # one line each
+            for column, cell in enumerate(row):
+                item.setToolTip(column, cell)  # in full, when the column cuts it
             self.preview.addTopLevelItem(item)
         for column in range(self.preview.columnCount()):
             self.preview.resizeColumnToContents(column)
+            # A long group path or note is cut in the middle, so the other columns stay in view.
+            self.preview.setColumnWidth(column, min(self.preview.columnWidth(column), WIDEST))
 
     def checks_changed(self) -> None:
         """The main window's Refresh moved on: new results, or it started or ended."""

@@ -437,8 +437,10 @@ QFrame#tagChip { background: %(sel_solid)s; border: none; border-radius: 9px; }
 QToolButton#tagChipRemove {
     border: none; background: transparent; padding: 0 3px; color: %(text)s; }
 QToolButton#tagChipRemove:hover { background: %(hover)s; }
+/* combobox-popup 0: the list opens below, at most maxVisibleItems tall with a scroll bar,
+   instead of Fusion's list over the box that grows as tall as the screen. */
 QComboBox { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx;
-            padding: 4px 10px; min-height: 22px; }
+            padding: 4px 10px; min-height: 22px; combobox-popup: 0; }
 QComboBox:hover { border-color: %(text3)s; }
 QComboBox::drop-down { border: none; width: 24px; }
 /* Styling the drop-down button removes Fusion's arrow, so draw our own. */
