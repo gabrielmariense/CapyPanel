@@ -3,14 +3,15 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from PySide6.QtCore import QPoint, QPointF, Qt
-from PySide6.QtGui import QDropEvent
+from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt
+from PySide6.QtGui import QDragLeaveEvent, QDragMoveEvent, QDropEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
     QDialog,
     QMenu,
     QMessageBox,
+    QTreeWidget,
     QTreeWidgetItem,
 )
 
@@ -18,6 +19,7 @@ from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.ui.groups import (
+    HOSTS_MIME,
     ROLE_ID,
     TREE_INDENT,
     ManageGroupsDialog,
@@ -345,14 +347,14 @@ def test_a_group_closed_by_hand_stays_closed_after_a_change(window: MainWindow) 
 
 def test_hosts_with_no_group_show_under_no_group(window: MainWindow) -> None:
     nav = window.nav
-    assert nav._no_group_item.isHidden()  # every host has a group
+    # Always there, so the first host can be dragged onto it too.
+    assert not nav._no_group_item.isHidden() and nav._no_group_item.text(0) == "No group (0)"
     doc = window.document
     assert doc is not None
     z01 = next(h.id for h in doc.hosts.hosts if h.name == "Z-01")
     window.nav.everything.hosts_dropped.emit([z01], NO_GROUP)  # dragged onto "No group"
     doc = window.document
     assert doc is not None and doc.hosts.host(z01).group == NO_GROUP  # type: ignore[union-attr]
-    assert not nav._no_group_item.isHidden()
     assert nav._no_group_item.text(0) == "No group (1)"
     window.show_in_group(z01)
     assert nav.current_filter().kind == "nogroup"
@@ -394,7 +396,8 @@ def test_removing_a_group_offers_where_its_contents_go(
         menu = move.menu()  # type: ignore[attr-defined]
         assert isinstance(menu, QMenu)
         texts = [a.text().strip() for a in menu.actions() if a.text()]
-        assert texts == ["Top level", "Zebra wing"]  # not alpha wing itself, nor its Lab
+        # The hosts' own Move to, without alpha wing itself and its Lab.
+        assert texts == ["No group", "Zebra wing"]
         assert menu.actions()[0].isChecked()  # its parent: the top level
         _choose(menu, "Zebra wing")
         return 0
@@ -405,3 +408,39 @@ def test_removing_a_group_offers_where_its_contents_go(
     assert doc is not None
     lab = doc.hosts.group(_id(window, "Lab"))
     assert lab is not None and lab.parent == _id(window, "Zebra wing")
+
+
+def test_hosts_dragged_over_a_group_light_it_without_leaving_where_they_are(
+    window: MainWindow,
+) -> None:
+    window.show()
+    QApplication.processEvents()
+    tree = window.nav.groups
+    zebra = next(i for i in _walk_items(tree) if i.data(0, ROLE_ID) == _id(window, "Zebra wing"))
+    data = QMimeData()
+    data.setData(HOSTS_MIME, b"some-host")
+    point = QPointF(tree.visualItemRect(zebra).center())
+    actions = Qt.DropAction.MoveAction
+    tree.dragMoveEvent(
+        QDragMoveEvent(point.toPoint(), actions, data, Qt.MouseButton.LeftButton,
+                       Qt.KeyboardModifier.NoModifier)
+    )  # fmt: skip
+    assert zebra.isSelected()  # shows where they'd go
+    assert window.nav.current_filter().kind == "all"  # but the table still shows all hosts
+    tree.dragLeaveEvent(QDragLeaveEvent())
+    assert not zebra.isSelected() and window.nav.current_filter().kind == "all"
+    window.close()
+
+
+def _walk_items(tree: QTreeWidget) -> list[QTreeWidgetItem]:
+    found: list[QTreeWidgetItem] = []
+
+    def walk(item: QTreeWidgetItem) -> None:
+        for index in range(item.childCount()):
+            child = item.child(index)
+            if child is not None:
+                found.append(child)
+                walk(child)
+
+    walk(tree.invisibleRootItem())
+    return found

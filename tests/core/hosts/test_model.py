@@ -191,6 +191,9 @@ def test_what_a_removed_group_holds_can_go_into_another_group() -> None:
     assert moved.group(finance).parent == lab.id  # type: ignore[union-attr]
     with pytest.raises(HostListRuleError):  # not into what's being removed
         hl.remove_group(hq, keep_contents=True, into=finance)
+    # NO_GROUP: to the top level, even from inside another group; its hosts then have none.
+    top = hl.remove_group(finance, keep_contents=True, into=NO_GROUP)
+    assert top.host(pc.id).group == NO_GROUP  # type: ignore[union-attr]
     loose = hl.move_hosts([pc.id], NO_GROUP)
     assert loose.host(pc.id).group == NO_GROUP  # type: ignore[union-attr]
     hl, free = hl.add_host("FREE-1", NO_GROUP)  # added with no group at all

@@ -55,7 +55,7 @@ from capypanel.ui.groups import (
     ROLE_ID,
     ManageGroupsDialog,
     TreeMenu,
-    fill_group_menu,
+    fill_host_move_menu,
     fill_move_menu,
 )
 from capypanel.ui.host_lists import HostListsDialog
@@ -641,7 +641,7 @@ class MainWindow(QMainWindow):
         self, group_id: str, groups: int, hosts: int
     ) -> tuple[str, str | None] | None:
         """Move what's inside somewhere (its parent is ticked) or remove everything.
-        Returns ("move", group id, or None for the top level), ("all", None), or None for
+        Returns ("move", group id, or NO_GROUP for the top level), ("all", None), or None for
         Cancel."""
         assert self._doc is not None
         host_list = self._doc.hosts
@@ -659,22 +659,21 @@ class MainWindow(QMainWindow):
             ),
             parent=self,
         )
-        box.setInformativeText(_("Hosts moved to the top level have no group."))
+        if groups:
+            box.setInformativeText(_("With No group, the groups inside it move to the top level."))
         chosen: list[tuple[str, str | None]] = []
         move = box.addButton(_("&Move them to"), QMessageBox.ButtonRole.ActionRole)
         menu = TreeMenu("", move)
-        top = menu.add_row(_("Top level"))
-        top.triggered.connect(lambda: chosen.append(("move", None)))
-        menu.addSeparator()
-        fill_group_menu(
+        # The same menu as moving hosts, without what's being removed.
+        fill_host_move_menu(
             menu,
             host_list,
             lambda target: chosen.append(("move", target)),
-            skip=host_list.subtree(group_id),  # not into itself
+            skip=host_list.subtree(group_id),
         )
-        for item in menu.actions():  # its parent: where things go when a group goes
-            if item.data() == group.parent or (item is top and group.parent is None):
-                item.setCheckable(True)
+        parent = group.parent or NO_GROUP  # where things go when a group goes
+        for item in menu.actions():
+            if item.data() == parent:
                 item.setChecked(True)
                 menu.marked = item
         menu.triggered.connect(lambda _item: box.done(0))
@@ -1498,17 +1497,8 @@ class MainWindow(QMainWindow):
         ids = [h.id for h in hosts]
         places = {h.group for h in hosts}
         current = places.pop() if len(places) == 1 else None
-        loose = move.add_row(_("No group"))
-        loose.setCheckable(True)
-        loose.setChecked(current == NO_GROUP)
-        if current == NO_GROUP:
-            move.marked = loose
-        else:
-            loose.triggered.connect(lambda: self.move_hosts(ids, NO_GROUP))
-        if self._doc.hosts.groups:
-            move.addSeparator()
-        fill_group_menu(
-            move, self._doc.hosts, lambda g: self.move_hosts(ids, g), current=current or None
+        fill_host_move_menu(
+            move, self._doc.hosts, lambda g: self.move_hosts(ids, g), current=current
         )
 
     def _heading_menu(self, position: QPoint) -> None:

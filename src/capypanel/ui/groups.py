@@ -36,7 +36,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.core.hosts.model import HostList
+from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.i18n import _
 from capypanel.ui.hosts import group_path
 from capypanel.ui.menus import popup
@@ -57,12 +57,90 @@ def hosts_mime(host_ids: list[str]) -> QMimeData:
     return data
 
 
-class GroupTree(QTreeWidget):
+def dropped_hosts(event: QDropEvent) -> list[str]:
+    text = bytes(event.mimeData().data(HOSTS_MIME).data()).decode()
+    return [i for i in text.split("\n") if i]
+
+
+class HostDropTree(QTreeWidget):
+    """A list hosts can be dropped onto. The row under them shows as picked while they're
+    over it, without being picked: the table keeps showing where they came from."""
+
+    hosts_dropped = Signal(list, str)  # host ids, group id (or NO_GROUP)
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._picked_before: list[QTreeWidgetItem] | None = None
+
+    def drop_group(self, item: QTreeWidgetItem) -> str | None:
+        """The group hosts dropped on this row go to; None when they can't go there."""
+        return item.data(0, ROLE_ID)
+
+    def _host_target(self, event: QDragMoveEvent | QDropEvent) -> QTreeWidgetItem | None:
+        item = self.itemAt(event.position().toPoint())
+        if item is None or not self.acceptDrops() or self.drop_group(item) is None:
+            return None
+        return item
+
+    def _mark(self, item: QTreeWidgetItem | None) -> None:
+        if item is None:
+            self._unmark()
+            return
+        if self._picked_before is None:
+            self._picked_before = self.selectedItems()
+        self.blockSignals(True)  # picking it would show its hosts
+        self.setCurrentItem(item)
+        self.blockSignals(False)
+
+    def _unmark(self) -> None:
+        if self._picked_before is None:
+            return
+        self.blockSignals(True)
+        self.clearSelection()
+        for item in self._picked_before:
+            item.setSelected(True)
+        self.blockSignals(False)
+        self._picked_before = None
+
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        if event.mimeData().hasFormat(HOSTS_MIME) and self.acceptDrops():
+            event.acceptProposedAction()
+        else:
+            super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
+        if event.mimeData().hasFormat(HOSTS_MIME):
+            item = self._host_target(event)
+            self._mark(item)  # shows where the hosts will go
+            if item is not None:
+                event.acceptProposedAction()
+            else:
+                event.ignore()
+        else:
+            super().dragMoveEvent(event)
+
+    def dragLeaveEvent(self, event: QDragLeaveEvent) -> None:
+        self._unmark()
+        super().dragLeaveEvent(event)
+
+    def dropEvent(self, event: QDropEvent) -> None:
+        if event.mimeData().hasFormat(HOSTS_MIME):
+            item = self._host_target(event)
+            self._unmark()  # before the move rebuilds the list
+            ids = dropped_hosts(event)
+            group_id = self.drop_group(item) if item is not None else None
+            if group_id is not None and ids:
+                event.acceptProposedAction()
+                self.hosts_dropped.emit(ids, group_id)
+            return
+        super().dropEvent(event)
+
+
+class GroupTree(HostDropTree):
     """The groups, in the list's order. Dragging a group reorders or nests it (`rearranged`);
     hosts dropped from the host table onto a group move there (`hosts_dropped`)."""
 
     rearranged = Signal()
-    hosts_dropped = Signal(list, str)  # host ids, group id
 
     def __init__(self) -> None:
         super().__init__()
@@ -126,36 +204,11 @@ class GroupTree(QTreeWidget):
         walk(self.invisibleRootItem(), None)
         return found
 
-    # ---- dropping hosts from the table ----
-
-    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
-        if event.mimeData().hasFormat(HOSTS_MIME) and self.acceptDrops():
-            event.acceptProposedAction()
-        else:
-            super().dragEnterEvent(event)
-
-    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
-        if event.mimeData().hasFormat(HOSTS_MIME):
-            item = self.itemAt(event.position().toPoint())
-            if item is not None and self.acceptDrops():
-                self.setCurrentItem(item)  # shows where the hosts will go
-                event.acceptProposedAction()
-            else:
-                event.ignore()
-        else:
-            super().dragMoveEvent(event)
-
     def dropEvent(self, event: QDropEvent) -> None:
-        if event.mimeData().hasFormat(HOSTS_MIME):
-            item = self.itemAt(event.position().toPoint())
-            text = bytes(event.mimeData().data(HOSTS_MIME).data()).decode()
-            ids = [i for i in text.split("\n") if i]
-            if item is not None and ids:
-                event.acceptProposedAction()
-                self.hosts_dropped.emit(ids, item.data(0, ROLE_ID))
-            return
+        hosts = event.mimeData().hasFormat(HOSTS_MIME)
         super().dropEvent(event)
-        self.rearranged.emit()
+        if not hosts:  # a group dragged within the tree
+            self.rearranged.emit()
 
 
 class GroupsHeading(QLabel):
@@ -291,6 +344,28 @@ def fill_move_menu(
     for item in menu.actions():
         if item.isCheckable():
             exclusive.addAction(item)
+
+
+def fill_host_move_menu(
+    menu: TreeMenu,
+    host_list: HostList,
+    apply: Callable[[str], None],
+    *,
+    current: str | None = None,
+    skip: Iterable[str] = (),
+) -> None:
+    """Where hosts can go: "No group" first, then the groups as a tree. `apply` gets the
+    group's id, or NO_GROUP; `current` (a group or NO_GROUP) is ticked, and picking it does
+    nothing."""
+    left_out = set(skip)
+    loose = menu.add_row(_("No group"))
+    loose.setData(NO_GROUP)
+    _tick(menu, None, loose, current == NO_GROUP)
+    if current != NO_GROUP:
+        loose.triggered.connect(lambda _checked=False: apply(NO_GROUP))
+    if any(g.id not in left_out for g in host_list.groups):
+        menu.addSeparator()
+    fill_group_menu(menu, host_list, apply, current=current or None, skip=left_out)
 
 
 def fill_group_menu(

@@ -15,9 +15,6 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import (
     QColor,
-    QDragEnterEvent,
-    QDragMoveEvent,
-    QDropEvent,
     QFontMetrics,
     QIcon,
     QKeyEvent,
@@ -52,6 +49,7 @@ from capypanel.ui.groups import (
     ROLE_KIND,
     GroupsHeading,
     GroupTree,
+    HostDropTree,
     hosts_mime,
 )
 from capypanel.ui.icons import tabler_icon
@@ -99,7 +97,7 @@ class NavigationPane(QWidget):
         header.addWidget(self.add_group_button)
 
         # Its own small list above the tree: it never scrolls away under a long tree. "No group"
-        # joins "All hosts" there while some host has no group.
+        # is always there, so hosts can be dragged onto it even before any host is in it.
         self.everything = PinnedList()
         self._everything_item = QTreeWidgetItem([""])
         self._everything_item.setData(0, ROLE_KIND, "all")
@@ -199,7 +197,6 @@ class NavigationPane(QWidget):
             self._everything_item.setText(0, f"{_('All hosts')} ({len(host_list.hosts)})")
             loose = sum(1 for h in host_list.hosts if h.group == NO_GROUP)
             self._no_group_item.setText(0, f"{_('No group')} ({loose})")
-            self._no_group_item.setHidden(not loose)  # only while some host has no group
             self.groups.fill(host_list)
             for tag, count in sorted(host_list.all_tags().items(), key=lambda t: t[0].casefold()):
                 item = QTreeWidgetItem([f"{tag} ({count})"])
@@ -221,15 +218,13 @@ class NavigationPane(QWidget):
             self._fit_everything()
 
     def _fit_everything(self) -> None:
-        """Exactly as tall as its rows (one, or two with "No group"), whatever padding the
-        theme gives rows and frames, and never narrower than "All hosts (N)": the pane can't be
-        dragged past it. Group names don't count, so a long one can't make the pane huge (they
-        show a tooltip)."""
+        """Exactly as tall as its two rows, whatever padding the theme gives rows and frames, and
+        never narrower than "All hosts (N)": the pane can't be dragged past it. Group names don't
+        count, so a long one can't make the pane huge (they show a tooltip)."""
         self.everything.doItemsLayout()
         row = self.everything.visualItemRect(self._everything_item).height()
         frame = self.everything.height() - self.everything.viewport().height()
-        rows = 1 if self._no_group_item.isHidden() else 2
-        height = max(row, self.everything.sizeHintForRow(0)) * rows
+        height = max(row, self.everything.sizeHintForRow(0)) * 2
         self.everything.setFixedHeight(height + frame)
         sides = self.everything.width() - self.everything.viewport().width()
         self.everything.setMinimumWidth(self.everything.sizeHintForColumn(0) + sides + 12)
@@ -245,7 +240,7 @@ class NavigationPane(QWidget):
                 if item.data(0, ROLE_ID) == wanted.value:
                     self.groups.setCurrentItem(item)
                     return wanted
-        if wanted.kind == "nogroup" and not self._no_group_item.isHidden():
+        if wanted.kind == "nogroup":
             self.everything.setCurrentItem(self._no_group_item)
             self._no_group_item.setSelected(True)
             self._clear(self.groups, self.tags)
@@ -286,11 +281,9 @@ class NavigationPane(QWidget):
         self.filter_changed.emit()
 
 
-class PinnedList(QTreeWidget):
+class PinnedList(HostDropTree):
     """ "All hosts" and "No group". Hosts dragged from the table onto "No group" leave their
     group (`hosts_dropped` with NO_GROUP)."""
-
-    hosts_dropped = Signal(list, str)  # host ids, NO_GROUP
 
     def __init__(self) -> None:
         super().__init__()
@@ -301,29 +294,8 @@ class PinnedList(QTreeWidget):
         self.setAcceptDrops(True)
         self.setDragDropMode(QAbstractItemView.DragDropMode.DropOnly)
 
-    def _target(self, event: QDragMoveEvent | QDropEvent) -> bool:
-        item = self.itemAt(event.position().toPoint())
-        return (
-            event.mimeData().hasFormat(HOSTS_MIME)
-            and item is not None
-            and item.data(0, ROLE_KIND) == "nogroup"
-        )
-
-    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
-        if event.mimeData().hasFormat(HOSTS_MIME):
-            event.acceptProposedAction()
-
-    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
-        if self._target(event):
-            event.acceptProposedAction()
-        else:
-            event.ignore()
-
-    def dropEvent(self, event: QDropEvent) -> None:
-        if self._target(event):
-            text = bytes(event.mimeData().data(HOSTS_MIME).data()).decode()
-            event.acceptProposedAction()
-            self.hosts_dropped.emit([i for i in text.split("\n") if i], NO_GROUP)
+    def drop_group(self, item: QTreeWidgetItem) -> str | None:
+        return NO_GROUP if item.data(0, ROLE_KIND) == "nogroup" else None
 
 
 def _divider() -> QFrame:

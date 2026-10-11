@@ -204,12 +204,14 @@ class HostList:
         self, group_id: str, *, keep_contents: bool = False, into: str | None = None
     ) -> "HostList":
         """Removes the group. keep_contents moves what's inside it: its groups and hosts go
-        `into` that group, or with into=None up a level, into its parent (a top-level group's
-        hosts then have no group). Otherwise the groups nested in it and their hosts go too."""
+        `into` that group, or with into=None up a level, into its parent. into=NO_GROUP sends
+        them to the top level, where its hosts have no group. Otherwise the groups nested in it
+        and their hosts go too."""
         self._require_group(group_id)
         if keep_contents:
             group = self.group(group_id)
             target = into if into is not None else (group.parent if group else None)
+            target = target or None  # NO_GROUP: the top level
             if target is not None:
                 self._require_group(target)
                 if target in self.subtree(group_id):
