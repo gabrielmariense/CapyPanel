@@ -58,6 +58,9 @@ def test_about_names_the_creator_the_version_and_the_license(qapp: QApplication)
     assert any(t.endswith("portable mode") for t in texts)  # only what applies
     assert not any("Python and Qt for Python" in t for t in texts)  # in Third-party licenses
     assert not any(b.isDefault() or b.autoDefault() for b in dialog.findChildren(QPushButton))
+    # Every license is behind its own button, not behind a link that reads "GPL-3.0".
+    assert dialog.licenses_button.text() == "L&icenses"
+    assert not any('href="licenses"' in t for t in texts)
 
 
 def test_licenses_show_capypanel_then_each_part_with_its_text(qapp: QApplication) -> None:

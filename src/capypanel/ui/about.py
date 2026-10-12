@@ -120,12 +120,10 @@ class AboutDialog(QDialog):
             (_("Documentation"), _link(docs_url(), DOCS_URL.removeprefix("https://").rstrip("/"))),
             (_("Source code"), _link(source_url(), REPO_URL.removeprefix("https://"))),
             # The GPL's "appropriate legal notices": the © above, no warranty, and every
-            # license one click away (CapyPanel's first, then what it's built with).
+            # license one click away under the Licenses button.
             (
                 _("License"),
-                _link("licenses", "GPL-3.0")
-                + " — "
-                + _("free to use, change and share, with no warranty"),
+                "GPL-3.0 — " + _("free to use, change and share, with no warranty"),
             ),
         ]
         if MASCOT_BY:
@@ -144,6 +142,9 @@ class AboutDialog(QDialog):
         self.report_button = QPushButton(_("&Report a problem"))
         self.logs_button = QPushButton(_("Open &log folder"))
         self.logs_button.setToolTip(_("The app's logs, to attach to a problem report"))
+        self.licenses_button = QPushButton(_("L&icenses"))
+        self.licenses_button.setToolTip(_("CapyPanel's license and those of what it's built with"))
+        self.licenses_button.clicked.connect(lambda: LicensesDialog(self).exec())
         close = QPushButton(_("Close"))
         self.report_button.clicked.connect(lambda: open_url(report_url(portable)))
         self.logs_button.clicked.connect(
@@ -153,6 +154,7 @@ class AboutDialog(QDialog):
         buttons = QHBoxLayout()
         buttons.addWidget(self.report_button)
         buttons.addWidget(self.logs_button)
+        buttons.addWidget(self.licenses_button)
         buttons.addStretch(1)
         buttons.addWidget(close)
 
@@ -184,10 +186,7 @@ class AboutDialog(QDialog):
         self.setFixedWidth(560)
 
     def _open_link(self, url: str) -> None:
-        if url == "licenses":
-            LicensesDialog(self).exec()
-        else:
-            open_url(url)
+        open_url(url)
 
 
 # ---- Licenses ----

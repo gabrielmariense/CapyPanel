@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 19:33-0300\n"
+"POT-Creation-Date: 2026-10-11 22:28-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -369,6 +369,9 @@ msgstr "CapyPanel — escuro"
 
 msgid "CapyPanel — light"
 msgstr "CapyPanel — claro"
+
+msgid "CapyPanel's license and those of what it's built with"
+msgstr "A licença do CapyPanel e as do que ele usa"
 
 msgid "CapyPanel's own appearance, the same on every computer."
 msgstr "A aparência do próprio CapyPanel, igual em todos os computadores."
@@ -733,6 +736,9 @@ msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada 
 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on. If a computer rejects it, CapyPanel stops and asks again instead of trying it on the others, so the account isn't locked."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado. Se um computador recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta não ser bloqueada."
+
+msgid "L&icenses"
+msgstr "L&icenças"
 
 msgid "Last check"
 msgstr "Última verificação"
