@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-14 17:33-0300\n"
+"POT-Creation-Date: 2026-10-14 17:48-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -268,6 +268,9 @@ msgstr "Um grupo novo: a importação o cria"
 msgid "A tool definition must be a JSON object."
 msgstr "Uma definição de ferramenta deve ser um objeto JSON."
 
+msgid "About"
+msgstr "Sobre"
+
 msgid "About CapyPanel"
 msgstr "Sobre o CapyPanel"
 
@@ -349,6 +352,9 @@ msgstr "Barras"
 msgid "Broken placeholder in “{arg}”."
 msgstr "Espaço reservado malformado em “{arg}”."
 
+msgid "Built with"
+msgstr "Feito com"
+
 msgid "C&hoose file…"
 msgstr "Escol&her arquivo…"
 
@@ -364,14 +370,14 @@ msgstr "CSV com cabeçalho"
 msgid "CapyPanel"
 msgstr "CapyPanel"
 
+msgid "CapyPanel and what it's built with:"
+msgstr "O CapyPanel e o que ele usa:"
+
 msgid "CapyPanel — dark"
 msgstr "CapyPanel — escuro"
 
 msgid "CapyPanel — light"
 msgstr "CapyPanel — claro"
-
-msgid "CapyPanel's license and those of what it's built with"
-msgstr "A licença do CapyPanel e as do que ele usa"
 
 msgid "CapyPanel's own appearance, the same on every computer."
 msgstr "A aparência do próprio CapyPanel, igual em todos os computadores."
@@ -523,6 +529,9 @@ msgstr "Criado por"
 msgid "Created when opened"
 msgstr "Criada ao abrir"
 
+msgid "Credits"
+msgstr "Créditos"
+
 msgid "Custom"
 msgstr "Personalizado"
 
@@ -630,6 +639,10 @@ msgstr "Esquece a lista aqui; o arquivo em si nunca é excluído"
 
 msgid "Formats CapyPanel can import"
 msgstr "Formatos que o CapyPanel importa"
+
+#, python-brace-format
+msgid "Free software under the GPL-3.0, with no warranty: see {licenses}."
+msgstr "Software livre sob a GPL-3.0, sem garantia: veja {licenses}."
 
 msgid "From each host's group"
 msgstr "Do grupo de cada host"
@@ -741,14 +754,8 @@ msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on. If a computer rejects it, CapyPanel stops and asks again instead of trying it on the others, so the account isn't locked."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado. Se um computador recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta não ser bloqueada."
 
-msgid "L&icenses"
-msgstr "L&icenças"
-
 msgid "Last check"
 msgstr "Última verificação"
-
-msgid "License"
-msgstr "Licença"
 
 msgid "Licenses"
 msgstr "Licenças"
@@ -932,6 +939,9 @@ msgstr "Abrir pasta"
 
 msgid "Open many remote screens?"
 msgstr "Abrir muitas telas remotas?"
+
+msgid "Open the licenses folder"
+msgstr "Abrir a pasta de licenças"
 
 #, python-brace-format
 msgid "Open {n} remote screen at once?"
@@ -1276,10 +1286,6 @@ msgstr "Os grupos mudaram enquanto isso; tente de novo."
 msgid "The last used list"
 msgstr "A última lista usada"
 
-#, python-brace-format
-msgid "The license text is missing from this copy: {file}"
-msgstr "O texto da licença está faltando nesta cópia: {file}"
-
 msgid "The list has changed"
 msgstr "A lista foi alterada"
 
@@ -1478,9 +1484,6 @@ msgstr "no computador"
 
 msgid "disconnected"
 msgstr "desconectada"
-
-msgid "free to use, change and share, with no warranty"
-msgstr "livre para usar, alterar e compartilhar, sem garantia"
 
 #, python-brace-format
 msgid "from {computer}"

@@ -3,22 +3,22 @@ reporting a problem."""
 
 import platform
 import sys
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import quote
 
 from PySide6 import __version__ as pyside_version
 from PySide6.QtCore import Qt, QUrl, qVersion
-from PySide6.QtGui import QCursor, QDesktopServices, QFont
+from PySide6.QtGui import QCursor, QDesktopServices
 from PySide6.QtWidgets import (
     QDialog,
-    QDialogButtonBox,
     QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
-    QListWidget,
-    QPlainTextEdit,
     QPushButton,
+    QTabWidget,
     QToolTip,
     QVBoxLayout,
     QWidget,
@@ -75,11 +75,13 @@ def open_url(url: str) -> None:
 
 
 class AboutDialog(QDialog):
+    """The mascot, name and version on top; About, Credits and Licenses as tabs below."""
+
     def __init__(self, parent: QWidget | None, log_dir: Path, *, portable: bool) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("About CapyPanel"))
         picture = QLabel()
-        picture.setPixmap(branding.mascot(112, self.devicePixelRatioF()))
+        picture.setPixmap(branding.mascot(104, self.devicePixelRatioF()))
         name = QLabel("CapyPanel")
         font = name.font()
         font.setPointSizeF(font.pointSizeF() * 1.8)
@@ -109,42 +111,15 @@ class AboutDialog(QDialog):
         top.addWidget(picture)
         top.addLayout(heading, 1)
 
-        card = QFrame()
-        card.setObjectName("card")
-        grid = QGridLayout(card)
-        grid.setContentsMargins(14, 12, 14, 12)
-        grid.setHorizontalSpacing(18)
-        grid.setVerticalSpacing(9)
-        rows = [
-            (_("Created by"), f"{CREATOR} · © {YEAR}"),
-            (_("Documentation"), _link(docs_url(), DOCS_URL.removeprefix("https://").rstrip("/"))),
-            (_("Source code"), _link(source_url(), REPO_URL.removeprefix("https://"))),
-            # The GPL's "appropriate legal notices": the © above, no warranty, and every
-            # license one click away under the Licenses button.
-            (
-                _("License"),
-                "GPL-3.0 — " + _("free to use, change and share, with no warranty"),
-            ),
-        ]
-        if MASCOT_BY:
-            rows.insert(1, (_("Mascot"), MASCOT_BY))
-        for row, (label, value) in enumerate(rows):
-            title_label = hint(label)
-            title_label.setWordWrap(False)
-            text = QLabel(value)
-            text.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
-            text.linkActivated.connect(self._open_link)
-            grid.addWidget(title_label, row, 0)
-            grid.addWidget(text, row, 1)
-        grid.setColumnStretch(1, 1)
+        self.tabs = QTabWidget()
+        self.tabs.addTab(self._about_tab(), _("About"))
+        self.tabs.addTab(self._credits_tab(), _("Credits"))
+        self.tabs.addTab(self._licenses_tab(), _("Licenses"))
 
         # Tools on the left, Close on its own at the right; no blue button: nothing to confirm.
         self.report_button = QPushButton(_("&Report a problem"))
         self.logs_button = QPushButton(_("Open &log folder"))
         self.logs_button.setToolTip(_("The app's logs, to attach to a problem report"))
-        self.licenses_button = QPushButton(_("L&icenses"))
-        self.licenses_button.setToolTip(_("CapyPanel's license and those of what it's built with"))
-        self.licenses_button.clicked.connect(lambda: LicensesDialog(self).exec())
         close = QPushButton(_("Close"))
         self.report_button.clicked.connect(lambda: open_url(report_url(portable)))
         self.logs_button.clicked.connect(
@@ -154,7 +129,6 @@ class AboutDialog(QDialog):
         buttons = QHBoxLayout()
         buttons.addWidget(self.report_button)
         buttons.addWidget(self.logs_button)
-        buttons.addWidget(self.licenses_button)
         buttons.addStretch(1)
         buttons.addWidget(close)
 
@@ -163,100 +137,153 @@ class AboutDialog(QDialog):
             build.append(_("portable mode"))
         built = hint(" · ".join(build))
         built.setWordWrap(False)
+        built.setVisible(bool(build))  # an installed copy has nothing to add down here
         foot = QHBoxLayout()
         foot.addStretch(1)
         foot.addWidget(built)
-        rule = QFrame()  # the thin line that divides the panes
-        rule.setObjectName("divider")
-        rule.setFixedHeight(1)
-        for part in (rule, built):
-            part.setVisible(bool(build))  # an installed copy has nothing to add down here
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 12)
         layout.setSpacing(14)
         layout.addLayout(top)
-        layout.addWidget(card)
+        layout.addWidget(self.tabs, 1)
         layout.addLayout(buttons)
-        layout.addWidget(rule)
         layout.addLayout(foot)
         for button in self.findChildren(QPushButton):
             button.setAutoDefault(False)
             button.setDefault(False)
-        self.setFixedWidth(560)
+        self.setFixedWidth(600)
+
+    def _about_tab(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.addWidget(
+            _card(
+                [
+                    (_("Created by"), f"{CREATOR} · © {YEAR}"),
+                    (
+                        _("Documentation"),
+                        _link(docs_url(), DOCS_URL.removeprefix("https://").rstrip("/")),
+                    ),
+                    (_("Source code"), _link(source_url(), REPO_URL.removeprefix("https://"))),
+                ],
+                self._open_link,
+            )
+        )
+        # The GPL's "appropriate legal notices": the © above, no warranty, and the license a
+        # click away.
+        notice = QLabel(
+            _("Free software under the GPL-3.0, with no warranty: see {licenses}.").format(
+                licenses=_link("#licenses", _("Licenses"))
+            )
+        )
+        notice.setWordWrap(True)
+        notice.linkActivated.connect(self._open_link)
+        layout.addWidget(notice)
+        layout.addStretch(1)
+        return page
+
+    def _credits_tab(self) -> QWidget:
+        rows = [(_("Created by"), CREATOR)]
+        if MASCOT_BY:
+            rows.append((_("Mascot"), MASCOT_BY))
+        rows.append((_("Built with"), "Python · Qt for Python · Tabler Icons"))
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.addWidget(_card(rows, self._open_link))
+        layout.addStretch(1)
+        return page
+
+    def _licenses_tab(self) -> QWidget:
+        """Like qBittorrent's "Software used": each part, its version and a link to its license.
+        The links open the texts that ship with CapyPanel, so they work offline."""
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.addWidget(QLabel(_("CapyPanel and what it's built with:")))
+        rows = []
+        for part in COMPONENTS:
+            name = f"{part.name}<br><small>{part.notice}</small>"
+            license_link = _link(QUrl.fromLocalFile(str(LICENSES_DIR / part.file)).toString(),
+                                 part.license)  # fmt: skip
+            rows.append((name, f"{part.version} · {license_link}"))
+        self.licenses = _card(rows, self._open_link, rich_titles=True)
+        layout.addWidget(self.licenses)
+        folder = QLabel(
+            _link(QUrl.fromLocalFile(str(LICENSES_DIR)).toString(), _("Open the licenses folder"))
+        )
+        folder.linkActivated.connect(self._open_link)
+        layout.addWidget(folder)
+        layout.addStretch(1)
+        return page
 
     def _open_link(self, url: str) -> None:
-        open_url(url)
+        if url == "#licenses":
+            self.tabs.setCurrentIndex(2)
+        elif url.startswith("file:"):
+            QDesktopServices.openUrl(QUrl(url))  # the copy shipped with the app
+        else:
+            open_url(url)
 
 
 # ---- Licenses ----
 
-# CapyPanel, then what ships inside it, each with its copyright and the license text it comes with.
+
+@dataclass(frozen=True)
+class Component:
+    name: str
+    version: str
+    notice: str  # its copyright line
+    license: str
+    file: str  # the license text, shipped in capypanel/licenses
+
+
+# CapyPanel, then what ships inside it. LGPL-3.0 builds on the GPL-3.0: both texts ship.
 COMPONENTS = (
-    (
-        f"CapyPanel {__version__}",
-        f"Copyright (C) {YEAR} Gabriel Tobias Mariense (GMErebos).\n"
-        "CapyPanel is free software: you can share and change it under the GNU General Public "
-        "License, version 3. It comes with NO WARRANTY, to the extent permitted by law.",
-        ("gpl-3.0.txt",),
+    Component(
+        "CapyPanel",
+        __version__,
+        f"© {YEAR} Gabriel Tobias Mariense",
+        "GPL-3.0",
+        "gpl-3.0.txt",
     ),
-    (
-        f"Qt {qVersion()} · Qt for Python {pyside_version}",
-        "Copyright (C) The Qt Company Ltd. and other contributors.\n"
-        "Used under the GNU Lesser General Public License, version 3, which builds on the GNU "
-        "General Public License, version 3 (its text is under CapyPanel). You can replace these "
-        "libraries with your own build of the same version.",
-        ("lgpl-3.0.txt",),
+    Component(
+        "Qt · Qt for Python",
+        f"{qVersion()} · {pyside_version}",
+        "© The Qt Company Ltd. and other contributors",
+        "LGPL-3.0",
+        "lgpl-3.0.txt",
     ),
-    (
-        f"Python {platform.python_version()}",
-        "Copyright (c) 2001-2024 Python Software Foundation; All Rights Reserved.",
-        ("python.txt",),
+    Component(
+        "Python",
+        platform.python_version(),
+        "© 2001-2024 Python Software Foundation",
+        "PSF License",
+        "python.txt",
     ),
-    ("Tabler Icons", "Copyright (c) 2020-2026 Paweł Kuna. MIT License.", ("tabler-icons.txt",)),
+    Component("Tabler Icons", "", "© 2020-2026 Paweł Kuna", "MIT", "tabler-icons.txt"),
 )
 
 
-class LicensesDialog(QDialog):
-    """CapyPanel's license, then every part it ships, each with its copyright and full text."""
-
-    def __init__(self, parent: QWidget | None) -> None:
-        super().__init__(parent)
-        self.setWindowTitle(_("Licenses"))
-        self.parts = QListWidget()
-        for name, _notice, _files in COMPONENTS:
-            self.parts.addItem(name)
-        self.parts.setFixedWidth(240)
-        self.text = QPlainTextEdit()
-        self.text.setReadOnly(True)
-        self.text.setFont(QFont("Consolas"))
-        self.parts.currentRowChanged.connect(self._show)
-        box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
-        box.rejected.connect(self.reject)
-        for button in box.findChildren(QPushButton):
-            button.setAutoDefault(False)  # no blue button, as in About
-        columns = QHBoxLayout()
-        columns.addWidget(self.parts)
-        columns.addWidget(self.text, 1)
-        layout = QVBoxLayout(self)
-        layout.addLayout(columns, 1)
-        layout.addWidget(box)
-        self.parts.setCurrentRow(0)
-        self.resize(820, 560)
-
-    def _show(self, row: int) -> None:
-        if not 0 <= row < len(COMPONENTS):
-            return
-        name, notice, files = COMPONENTS[row]
-        parts = [name, notice]
-        for file in files:
-            path = LICENSES_DIR / file
-            try:
-                parts.append(path.read_text(encoding="utf-8"))
-            except OSError:
-                missing = _("The license text is missing from this copy: {file}")
-                parts.append(missing.format(file=file))
-        self.text.setPlainText("\n\n".join(parts))
+def _card(
+    rows: list[tuple[str, str]], on_link: Callable[[str], None], *, rich_titles: bool = False
+) -> QFrame:
+    """Label and value rows in a card, links in the values."""
+    card = QFrame()
+    card.setObjectName("card")
+    grid = QGridLayout(card)
+    grid.setContentsMargins(14, 12, 14, 12)
+    grid.setHorizontalSpacing(18)
+    grid.setVerticalSpacing(9)
+    for row, (label, value) in enumerate(rows):
+        title = QLabel(label) if rich_titles else hint(label)
+        title.setWordWrap(False)
+        text = QLabel(value.removeprefix(" · "))
+        text.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        text.linkActivated.connect(on_link)
+        grid.addWidget(title, row, 0)
+        grid.addWidget(text, row, 1)
+    grid.setColumnStretch(1, 1)
+    return card
 
 
 def _link(url: str, text: str) -> str:

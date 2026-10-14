@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-14 17:33-0300\n"
+"POT-Creation-Date: 2026-10-14 17:48-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -267,6 +267,9 @@ msgstr ""
 msgid "A tool definition must be a JSON object."
 msgstr ""
 
+msgid "About"
+msgstr ""
+
 msgid "About CapyPanel"
 msgstr ""
 
@@ -350,6 +353,9 @@ msgstr ""
 msgid "Broken placeholder in “{arg}”."
 msgstr ""
 
+msgid "Built with"
+msgstr ""
+
 msgid "C&hoose file…"
 msgstr ""
 
@@ -365,13 +371,13 @@ msgstr ""
 msgid "CapyPanel"
 msgstr ""
 
+msgid "CapyPanel and what it's built with:"
+msgstr ""
+
 msgid "CapyPanel — dark"
 msgstr ""
 
 msgid "CapyPanel — light"
-msgstr ""
-
-msgid "CapyPanel's license and those of what it's built with"
 msgstr ""
 
 msgid "CapyPanel's own appearance, the same on every computer."
@@ -526,6 +532,9 @@ msgstr ""
 msgid "Created when opened"
 msgstr ""
 
+msgid "Credits"
+msgstr ""
+
 msgid "Custom"
 msgstr ""
 
@@ -635,6 +644,10 @@ msgid "Forgets it here; the file itself is never deleted"
 msgstr ""
 
 msgid "Formats CapyPanel can import"
+msgstr ""
+
+#, python-brace-format
+msgid "Free software under the GPL-3.0, with no warranty: see {licenses}."
 msgstr ""
 
 msgid "From each host's group"
@@ -756,13 +769,7 @@ msgid ""
 "again instead of trying it on the others, so the account isn't locked."
 msgstr ""
 
-msgid "L&icenses"
-msgstr ""
-
 msgid "Last check"
-msgstr ""
-
-msgid "License"
 msgstr ""
 
 msgid "Licenses"
@@ -950,6 +957,9 @@ msgid "Open folder"
 msgstr ""
 
 msgid "Open many remote screens?"
+msgstr ""
+
+msgid "Open the licenses folder"
 msgstr ""
 
 #, python-brace-format
@@ -1317,10 +1327,6 @@ msgstr ""
 msgid "The last used list"
 msgstr ""
 
-#, python-brace-format
-msgid "The license text is missing from this copy: {file}"
-msgstr ""
-
 msgid "The list has changed"
 msgstr ""
 
@@ -1524,9 +1530,6 @@ msgid "at the computer"
 msgstr ""
 
 msgid "disconnected"
-msgstr ""
-
-msgid "free to use, change and share, with no warranty"
 msgstr ""
 
 #, python-brace-format

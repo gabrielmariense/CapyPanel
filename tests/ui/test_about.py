@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QApplication, QLabel, QMenu, QPushButton
 from capypanel import BUILD, __version__
 from capypanel.core import i18n, settings
 from capypanel.ui import about, branding, language
-from capypanel.ui.about import COMPONENTS, LICENSES_DIR, AboutDialog, LicensesDialog
+from capypanel.ui.about import COMPONENTS, LICENSES_DIR, AboutDialog
 from capypanel.ui.main_window.window import MainWindow
 
 
@@ -51,28 +51,27 @@ def test_the_website_opens_in_the_app_s_language(qapp: QApplication) -> None:
 
 def test_about_names_the_creator_the_version_and_the_license(qapp: QApplication) -> None:
     dialog = AboutDialog(None, Path("."), portable=True)
+    tabs = [dialog.tabs.tabText(i) for i in range(dialog.tabs.count())]
+    assert tabs == ["About", "Credits", "Licenses"]
     texts = [label.text() for label in dialog.findChildren(QLabel)]
     assert dialog.version.text() == __version__ and dialog.version.copy_text() == BUILD
     assert 'Gabriel "GMErebos" Mariense · © 2026' in texts  # name and © in one place only
-    assert any("GPL-3.0" in t and "with no warranty" in t for t in texts)  # GPL's notices
+    notice = next(t for t in texts if "with no warranty" in t)  # the GPL's notices
+    assert "GPL-3.0" in notice and 'href="#licenses"' in notice
     assert any(t.endswith("portable mode") for t in texts)  # only what applies
-    assert not any("Python and Qt for Python" in t for t in texts)  # in Third-party licenses
     assert not any(b.isDefault() or b.autoDefault() for b in dialog.findChildren(QPushButton))
-    # Every license is behind its own button, not behind a link that reads "GPL-3.0".
-    assert dialog.licenses_button.text() == "L&icenses"
-    assert not any('href="licenses"' in t for t in texts)
+    dialog._open_link("#licenses")  # "see Licenses" opens the tab
+    assert dialog.tabs.currentIndex() == 2
 
 
-def test_licenses_show_capypanel_then_each_part_with_its_text(qapp: QApplication) -> None:
-    dialog = LicensesDialog(None)
-    names = [dialog.parts.item(i).text() for i in range(dialog.parts.count())]
-    assert [n.split()[0] for n in names] == ["CapyPanel", "Qt", "Python", "Tabler"]
-    assert "NO WARRANTY" in dialog.text.toPlainText()  # CapyPanel's own first
-    dialog.parts.setCurrentRow(3)
-    assert "Paweł Kuna" in dialog.text.toPlainText() and "MIT License" in dialog.text.toPlainText()
-    for _name, _notice, files in COMPONENTS:
-        for file in files:
-            assert (LICENSES_DIR / file).is_file(), file  # shipped, readable offline
+def test_licenses_list_each_part_with_a_link_to_its_shipped_text(qapp: QApplication) -> None:
+    dialog = AboutDialog(None, Path("."), portable=False)
+    texts = [label.text() for label in dialog.licenses.findChildren(QLabel)]
+    assert [c.name for c in COMPONENTS][:1] == ["CapyPanel"]  # its own license first
+    for part in COMPONENTS:
+        assert (LICENSES_DIR / part.file).is_file(), part.file  # shipped, readable offline
+        assert any(part.file in t and part.license in t for t in texts)  # linked by name
+    assert any("The Qt Company" in t for t in texts)  # the library's copyright, as LGPL asks
 
 
 def test_a_problem_report_carries_no_user_or_computer_name(qapp: QApplication) -> None:
