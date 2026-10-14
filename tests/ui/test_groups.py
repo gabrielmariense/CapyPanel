@@ -520,9 +520,20 @@ def test_a_list_opens_on_all_hosts_where_it_was_left_or_its_chosen_group(
 def test_settings_chooses_what_the_open_list_shows_first(window: MainWindow) -> None:
     dialog = window.settings_dialog()
     page = dialog.general
-    assert not page.first_group.isVisibleTo(page)  # only with "A chosen group"
-    page.show_first.setCurrentIndex(page.show_first.findData(locations.SHOW_GROUP))
-    page.first_group.setCurrentIndex(page.first_group.findData(_id(window, "alpha wing")))
+    assert page.show_first.text() == "All hosts"
+    menu = page.show_first.menu()
+    assert menu is not None
+    menu.aboutToShow.emit()  # filled as it opens
+    texts = [a.text() for a in menu.actions() if a.text()]
+    assert texts == ["All hosts", "Where I left off", "A chosen &group"]
+    chosen = menu.actions()[2].menu()
+    assert isinstance(chosen, QMenu)
+    # The groups as a tree, "No group" first, as in Move to.
+    assert [a.text().strip() for a in chosen.actions() if a.text()] == [
+        "No group", "Zebra wing", "alpha wing", "Lab"
+    ]  # fmt: skip
+    _choose(chosen, "alpha wing")
+    assert page.show_first.text() == "Group: alpha wing"
     window.apply_settings(dialog.choices())
     doc = window.document
     assert doc is not None

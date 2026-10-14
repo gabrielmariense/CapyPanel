@@ -64,7 +64,6 @@ from capypanel.ui.hosts import (
     HostDialog,
     ProfilePicker,
     confirm,
-    group_choices,
     group_path,
     list_file_filter,
 )
@@ -1106,7 +1105,7 @@ class MainWindow(QMainWindow):
             catalogs=self.connector.catalogs,
             auto_status=self._auto_status(),
             start_view=self._start_view(),
-            groups=group_choices(self._doc.hosts) if self._doc else None,
+            host_list=self._doc.hosts if self._doc else None,
         )
 
     def _start_view(self) -> tuple[str, str] | None:

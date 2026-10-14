@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 from capypanel.core import i18n, settings
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.locations import same_path
+from capypanel.core.hosts.model import HostList
 from capypanel.core.i18n import _
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.profiles import ProfileError
@@ -71,10 +72,10 @@ class SettingsDialog(QDialog):
         catalogs: Catalogs,
         auto_status: tuple[bool, int] = (False, 5),
         start_view: tuple[str, str] | None = None,
-        groups: list[tuple[str, str]] | None = None,
+        host_list: HostList | None = None,
     ) -> None:
         super().__init__(parent)
-        self._groups = groups
+        self._host_list = host_list
         self._paths = paths
         self._default_list = default_list
         self._personal_list = personal_list
@@ -114,7 +115,7 @@ class SettingsDialog(QDialog):
             language=i18n.language(),
             auto_status=auto_status,
             start_view=start_view,
-            groups=self._groups,
+            host_list=self._host_list,
         )
         self.host_lists = HostListsPage(
             default_list=self._default_list,

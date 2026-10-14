@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 22:28-0300\n"
+"POT-Creation-Date: 2026-10-14 17:33-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -240,8 +240,8 @@ msgstr "&Usuário:"
 msgid "&View"
 msgstr "E&xibir"
 
-msgid "A chosen group"
-msgstr "Um grupo escolhido"
+msgid "A chosen &group"
+msgstr "Um &grupo escolhido"
 
 msgid "A connection profile must be a JSON object."
 msgstr "Um perfil de conexão deve ser um objeto JSON."
@@ -661,6 +661,10 @@ msgstr "O grupo “{name}” está dentro de um grupo que não existe."
 #, python-brace-format
 msgid "Group “{name}” is nested inside itself."
 msgstr "O grupo “{name}” está dentro de si mesmo."
+
+#, python-brace-format
+msgid "Group: {name}"
+msgstr "Grupo: {name}"
 
 msgid "Groups"
 msgstr "Grupos"
