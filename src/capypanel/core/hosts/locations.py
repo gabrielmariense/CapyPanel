@@ -93,10 +93,15 @@ def added_lists(prefs: dict[str, Any]) -> list[Path]:
 
 
 def set_added_lists(prefs: dict[str, Any], paths: list[Path]) -> None:
+    """The lists the user keeps. One taken out is forgotten from the recent ones too, or the
+    last one used would reopen at the next start and come back."""
     unique: list[Path] = []
     for path in paths:
         if not any(same_path(path, p) for p in unique):
             unique.append(path)
+    for gone in added_lists(prefs):
+        if not any(same_path(gone, p) for p in unique):
+            forget_list(prefs, gone)
     prefs[LISTS_KEY] = [str(p) for p in unique]
 
 

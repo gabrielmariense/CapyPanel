@@ -85,3 +85,14 @@ def test_startup_order_tries_the_choice_then_default_then_personal() -> None:
     assert order({**last, "start_list": "default"}) == [default, personal]
     assert order({"start_list": str(shared)}) == [shared, default, personal]
     assert order({"start_list": 42}) == [default, personal]  # a broken value means "last used"
+
+
+def test_a_list_taken_out_is_forgotten_and_does_not_reopen() -> None:
+    a, b = Path("C:/share/a.json"), Path("C:/share/b.json")
+    prefs: dict[str, Any] = {}
+    locations.set_added_lists(prefs, [a, b])
+    locations.remember_list(prefs, b)
+    locations.remember_list(prefs, a)  # a was open last: it would reopen at start
+    locations.set_added_lists(prefs, [b])  # taken out in File > Host lists
+    assert locations.recent_lists(prefs) == [b]
+    assert locations.added_lists(prefs) == [b]
