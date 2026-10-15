@@ -300,9 +300,11 @@ class ConnectionsPage(Page):
         folder_row = QHBoxLayout()
         folder_row.addWidget(folder, 1)
         folder_row.addWidget(self.open_folder)
-        # Until a change is saved, the profiles shown are the built-in ones: no folder yet.
+        # The folder is made at start; where this user couldn't, the app's own copies are shown.
         self.builtin_note = hint(
             _("These are the built-in profiles: the folder is created when you save a change.")
+            if self.can_edit
+            else _("These are the built-in profiles: the folder isn't there yet.")
         )
         self._show_folder_state()
         access = (

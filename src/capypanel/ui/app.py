@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 from capypanel import BUILD, __version__
 from capypanel.core import applog, i18n, migration, settings
 from capypanel.core.i18n import _
+from capypanel.core.tools.profile_store import ProfileStore
 from capypanel.ui import branding, language
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.themes import engine as themes
@@ -40,6 +41,10 @@ def run(argv: list[str] | None = None) -> int:
             log.info("Copied from an older version: %s", copied)
     except OSError:
         log.exception("Couldn't copy files from an older version")
+    try:
+        ProfileStore(paths.profiles_dir).place_starters()
+    except OSError:
+        log.exception("Couldn't place the connection profiles in %s", paths.profiles_dir)
 
     prefs = settings.load_settings(paths.settings_file)
     language.apply(prefs.get("language", i18n.DEFAULT_LANGUAGE))  # before any window exists

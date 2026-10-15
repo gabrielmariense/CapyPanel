@@ -24,6 +24,16 @@ def test_the_starters_show_until_the_folder_exists_then_become_files(tmp_path: P
     ]  # fmt: skip
 
 
+def test_at_start_the_shipped_profiles_are_placed_in_the_folder(tmp_path: Path) -> None:
+    store = ProfileStore(tmp_path / "profiles")
+    store.place_starters()
+    files = sorted(p.name for p in (tmp_path / "profiles").glob("*.json"))
+    assert files == ["_starters.json", "realvnc.json", "remote-desktop.json", "ultravnc.json"]
+    store.delete("realvnc")
+    store.place_starters()  # only once: a profile deleted later stays deleted
+    assert [p.name for p in store.all()] == ["Remote Desktop", "UltraVNC"]
+
+
 def test_starters_are_ordinary_profiles_that_can_be_deleted(tmp_path: Path) -> None:
     store = ProfileStore(tmp_path / "profiles")
     for starter in ("realvnc", "remote-desktop", "ultravnc"):

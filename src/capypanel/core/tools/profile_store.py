@@ -142,6 +142,16 @@ class ProfileStore:
         self._write(self.folder / DEFAULT_FILE, {"schema": 1, "default_profile": profile_id})
         log.info("Default connection profile: %s", profile_id)
 
+    def place_starters(self) -> None:
+        """At start: the shipped profiles go into the folder, so they sit with the rest of
+        CapyPanel's files from the first run. Skipped where this user can't create the folder:
+        the app's own copies are used then. Raises OSError."""
+        if self.folder.is_dir() or not self.can_edit():
+            return
+        self._seed()
+        self.reload()
+        log.info("Connection profiles placed in %s", self.folder)
+
     def _seed(self) -> None:
         """Before the first change, the starters become real files, so they can be removed."""
         if self.folder.is_dir():
