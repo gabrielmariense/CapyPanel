@@ -55,7 +55,7 @@ def test_about_names_the_creator_the_version_and_the_license(qapp: QApplication)
     assert tabs == ["About", "Credits", "Licenses"]
     texts = [label.text() for label in dialog.findChildren(QLabel)]
     assert dialog.version.text() == __version__ and dialog.version.copy_text() == BUILD
-    assert 'Gabriel "GMErebos" Mariense · © 2026' in texts  # name and © in one place only
+    assert '© 2026 Gabriel "GMErebos" Mariense' in texts
     notice = next(t for t in texts if "with no warranty" in t)  # the GPL's notices
     assert "GPL-3.0" in notice and 'href="#licenses"' in notice
     assert any(t.endswith("portable mode") for t in texts)  # only what applies

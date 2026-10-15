@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-14 17:48-0300\n"
+"POT-Creation-Date: 2026-10-14 22:24-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -353,7 +353,7 @@ msgstr ""
 msgid "Broken placeholder in “{arg}”."
 msgstr ""
 
-msgid "Built with"
+msgid "Build:"
 msgstr ""
 
 msgid "C&hoose file…"
@@ -371,7 +371,7 @@ msgstr ""
 msgid "CapyPanel"
 msgstr ""
 
-msgid "CapyPanel and what it's built with:"
+msgid "CapyPanel is built with the following software:"
 msgstr ""
 
 msgid "CapyPanel — dark"
@@ -409,6 +409,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Choose a {tool} settings file"
+msgstr ""
+
+#, python-brace-format
+msgid "Click a license to read it. They all ship with CapyPanel, in its {folder}."
 msgstr ""
 
 msgid "Click to copy"
@@ -526,7 +530,7 @@ msgstr ""
 msgid "Couldn't write “{path}”: {error}"
 msgstr ""
 
-msgid "Created by"
+msgid "Created by:"
 msgstr ""
 
 msgid "Created when opened"
@@ -574,7 +578,7 @@ msgstr ""
 msgid "Disconnected"
 msgstr ""
 
-msgid "Documentation"
+msgid "Documentation:"
 msgstr ""
 
 msgid ""
@@ -722,6 +726,9 @@ msgstr ""
 msgid "Hover over a list to see where it is."
 msgstr ""
 
+msgid "Icons:"
+msgstr ""
+
 msgid "Idle"
 msgstr ""
 
@@ -807,7 +814,7 @@ msgstr ""
 msgid "Manual connection"
 msgstr ""
 
-msgid "Mascot"
+msgid "Mascot:"
 msgstr ""
 
 msgid "Move &down"
@@ -957,9 +964,6 @@ msgid "Open folder"
 msgstr ""
 
 msgid "Open many remote screens?"
-msgstr ""
-
-msgid "Open the licenses folder"
 msgstr ""
 
 #, python-brace-format
@@ -1200,7 +1204,7 @@ msgstr ""
 msgid "Sorts every level by name, once; you can rearrange them after"
 msgstr ""
 
-msgid "Source code"
+msgid "Source code:"
 msgstr ""
 
 #, python-brace-format
@@ -1541,6 +1545,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "in “{group}”"
+msgstr ""
+
+msgid "licenses folder"
 msgstr ""
 
 msgid "name"

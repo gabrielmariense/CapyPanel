@@ -29,7 +29,6 @@ from capypanel.core import i18n
 from capypanel.core.i18n import _
 from capypanel.ui import branding
 from capypanel.ui.main_window.details import CopyValue
-from capypanel.ui.notes import hint
 from capypanel.ui.themes import engine as themes
 
 CREATOR = 'Gabriel "GMErebos" Mariense'
@@ -75,41 +74,32 @@ def open_url(url: str) -> None:
 
 
 class AboutDialog(QDialog):
-    """The mascot, name and version on top; About, Credits and Licenses as tabs below."""
+    """The icon, name and version on top; About, Credits and Licenses as tabs below. Plain text
+    in the tabs, in one font and colour, as in most apps' About windows."""
 
     def __init__(self, parent: QWidget | None, log_dir: Path, *, portable: bool) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("About CapyPanel"))
-        picture = QLabel()
-        picture.setPixmap(branding.mascot(104, self.devicePixelRatioF()))
+        self._portable = portable
+        icon = QLabel()
+        icon.setPixmap(branding.app_icon().pixmap(40, 40))
         name = QLabel("CapyPanel")
         font = name.font()
-        font.setPointSizeF(font.pointSizeF() * 1.8)
+        font.setPointSizeF(font.pointSizeF() * 1.6)
         font.setBold(True)
         name.setFont(font)
-        # The version beside the name, quiet; a click copies it with its commit, for a report.
+        # The version beside the name, in its font; a click copies it with its commit.
         self.version = CopyValue(BUILD, __version__)
-        self.version.setObjectName("hint")
+        self.version.setFont(font)
         self.version.setWordWrap(False)
         self.version.copied.connect(lambda _text: QToolTip.showText(QCursor.pos(), _("Copied")))
-        self.version.setContentsMargins(0, 0, 0, 3)  # on the name's baseline, not below it
-        title = QHBoxLayout()
-        title.setSpacing(10)
-        title.addWidget(name)
-        title.addWidget(self.version, 0, Qt.AlignmentFlag.AlignBottom)
-        title.addStretch(1)
-        about = QLabel(_("Every computer you look after, in one window."))
-        about.setWordWrap(True)
-        heading = QVBoxLayout()
-        heading.addStretch(1)
-        heading.addLayout(title)
-        heading.addSpacing(4)
-        heading.addWidget(about)
-        heading.addStretch(1)
         top = QHBoxLayout()
-        top.setSpacing(16)
-        top.addWidget(picture)
-        top.addLayout(heading, 1)
+        top.setSpacing(10)
+        top.addWidget(icon)
+        top.addWidget(name)
+        top.addSpacing(-8)  # the version's hover padding is gap enough
+        top.addWidget(self.version)
+        top.addStretch(1)
 
         self.tabs = QTabWidget()
         self.tabs.addTab(self._about_tab(), _("About"))
@@ -132,87 +122,96 @@ class AboutDialog(QDialog):
         buttons.addStretch(1)
         buttons.addWidget(close)
 
-        build = [f"commit {_COMMIT}"] if _COMMIT else []  # only what applies
-        if portable:
-            build.append(_("portable mode"))
-        built = hint(" · ".join(build))
-        built.setWordWrap(False)
-        built.setVisible(bool(build))  # an installed copy has nothing to add down here
-        foot = QHBoxLayout()
-        foot.addStretch(1)
-        foot.addWidget(built)
-
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 12)
-        layout.setSpacing(14)
+        layout.setContentsMargins(16, 14, 16, 16)
+        layout.setSpacing(12)
         layout.addLayout(top)
         layout.addWidget(self.tabs, 1)
         layout.addLayout(buttons)
-        layout.addLayout(foot)
         for button in self.findChildren(QPushButton):
             button.setAutoDefault(False)
             button.setDefault(False)
-        self.setFixedWidth(600)
+        self.setFixedWidth(660)
 
     def _about_tab(self) -> QWidget:
-        page = QWidget()
-        layout = QVBoxLayout(page)
-        layout.addWidget(
-            _card(
-                [
-                    (_("Created by"), f"{CREATOR} · © {YEAR}"),
-                    (
-                        _("Documentation"),
-                        _link(docs_url(), DOCS_URL.removeprefix("https://").rstrip("/")),
-                    ),
-                    (_("Source code"), _link(source_url(), REPO_URL.removeprefix("https://"))),
-                ],
+        """The mascot on the left; what CapyPanel is, its notices and links on the right."""
+        picture = QLabel()
+        picture.setPixmap(branding.mascot(112, self.devicePixelRatioF()))
+        picture.setAlignment(Qt.AlignmentFlag.AlignTop)
+        text = QVBoxLayout()
+        text.setSpacing(12)
+        text.addWidget(_text(_("Every computer you look after, in one window.")))
+        # The GPL's "appropriate legal notices": the ©, no warranty, and the license a click away.
+        text.addWidget(_text(f"© {YEAR} {CREATOR}"))
+        text.addWidget(
+            _text(
+                _("Free software under the GPL-3.0, with no warranty: see {licenses}.").format(
+                    licenses=_link("#licenses", _("Licenses"))
+                ),
                 self._open_link,
             )
         )
-        # The GPL's "appropriate legal notices": the © above, no warranty, and the license a
-        # click away.
-        notice = QLabel(
-            _("Free software under the GPL-3.0, with no warranty: see {licenses}.").format(
-                licenses=_link("#licenses", _("Licenses"))
-            )
-        )
-        notice.setWordWrap(True)
-        notice.linkActivated.connect(self._open_link)
-        layout.addWidget(notice)
-        layout.addStretch(1)
+        rows = [
+            (_("Documentation:"), _link(docs_url(), DOCS_URL.removeprefix("https://").rstrip("/"))),
+            (_("Source code:"), _link(source_url(), REPO_URL.removeprefix("https://"))),
+        ]
+        build = [f"commit {_COMMIT}"] if _COMMIT else []  # only what applies
+        if self._portable:
+            build.append(_("portable mode"))
+        if build:
+            rows.append((_("Build:"), " · ".join(build)))
+        text.addLayout(_rows(rows, self._open_link))
+        text.addStretch(1)
+        page = QWidget()
+        layout = QHBoxLayout(page)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(20)
+        layout.addWidget(picture, 0, Qt.AlignmentFlag.AlignTop)
+        layout.addLayout(text, 1)
         return page
 
     def _credits_tab(self) -> QWidget:
-        rows = [(_("Created by"), CREATOR)]
+        rows = [(_("Created by:"), CREATOR)]
         if MASCOT_BY:
-            rows.append((_("Mascot"), MASCOT_BY))
-        rows.append((_("Built with"), "Python · Qt for Python · Tabler Icons"))
+            rows.append((_("Mascot:"), MASCOT_BY))
+        rows.append((_("Icons:"), f"{_link(TABLER_URL, 'Tabler Icons')} · © Paweł Kuna"))
         page = QWidget()
         layout = QVBoxLayout(page)
-        layout.addWidget(_card(rows, self._open_link))
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.addLayout(_rows(rows, self._open_link))
         layout.addStretch(1)
         return page
 
     def _licenses_tab(self) -> QWidget:
-        """Like qBittorrent's "Software used": each part, its version and a link to its license.
-        The links open the texts that ship with CapyPanel, so they work offline."""
+        """Like qBittorrent's "Software used": each part on one line, its license a link to the
+        copy that ships with CapyPanel, so it opens offline."""
         page = QWidget()
         layout = QVBoxLayout(page)
-        layout.addWidget(QLabel(_("CapyPanel and what it's built with:")))
-        rows = []
-        for part in COMPONENTS:
-            name = f"{part.name}<br><small>{part.notice}</small>"
-            license_link = _link(QUrl.fromLocalFile(str(LICENSES_DIR / part.file)).toString(),
-                                 part.license)  # fmt: skip
-            rows.append((name, f"{part.version} · {license_link}"))
-        self.licenses = _card(rows, self._open_link, rich_titles=True)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(10)
+        layout.addWidget(_text(_("CapyPanel is built with the following software:")))
+        layout.addWidget(_divider())
+        self.licenses = QWidget()
+        grid = QGridLayout(self.licenses)
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setHorizontalSpacing(20)
+        grid.setVerticalSpacing(8)
+        for row, part in enumerate(COMPONENTS):
+            url = QUrl.fromLocalFile(str(LICENSES_DIR / part.file)).toString()
+            cells = (part.name, part.version, _link(url, part.license), part.notice)
+            for column, cell in enumerate(cells):
+                grid.addWidget(_text(cell, self._open_link, wrap=False), row, column)
+        grid.setColumnStretch(3, 1)
         layout.addWidget(self.licenses)
-        folder = QLabel(
-            _link(QUrl.fromLocalFile(str(LICENSES_DIR)).toString(), _("Open the licenses folder"))
-        )
-        folder.linkActivated.connect(self._open_link)
-        layout.addWidget(folder)
+        layout.addWidget(_divider())
+        layout.addWidget(
+            _text(
+                _("Click a license to read it. They all ship with CapyPanel, in its {folder}.")
+                .format(folder=_link(QUrl.fromLocalFile(str(LICENSES_DIR)).toString(),
+                                     _("licenses folder"))),
+                self._open_link,
+            )
+        )  # fmt: skip
         layout.addStretch(1)
         return page
 
@@ -237,6 +236,7 @@ class Component:
     file: str  # the license text, shipped in capypanel/licenses
 
 
+TABLER_URL = "https://tabler.io/icons"
 # CapyPanel, then what ships inside it. LGPL-3.0 builds on the GPL-3.0: both texts ship.
 COMPONENTS = (
     Component(
@@ -247,8 +247,15 @@ COMPONENTS = (
         "gpl-3.0.txt",
     ),
     Component(
-        "Qt · Qt for Python",
-        f"{qVersion()} · {pyside_version}",
+        "Qt",
+        qVersion(),
+        "© The Qt Company Ltd. and other contributors",
+        "LGPL-3.0",
+        "lgpl-3.0.txt",
+    ),
+    Component(
+        "Qt for Python",
+        pyside_version,
         "© The Qt Company Ltd. and other contributors",
         "LGPL-3.0",
         "lgpl-3.0.txt",
@@ -264,26 +271,36 @@ COMPONENTS = (
 )
 
 
-def _card(
-    rows: list[tuple[str, str]], on_link: Callable[[str], None], *, rich_titles: bool = False
-) -> QFrame:
-    """Label and value rows in a card, links in the values."""
-    card = QFrame()
-    card.setObjectName("card")
-    grid = QGridLayout(card)
-    grid.setContentsMargins(14, 12, 14, 12)
-    grid.setHorizontalSpacing(18)
-    grid.setVerticalSpacing(9)
+def _text(text: str, on_link: Callable[[str], None] | None = None, *, wrap: bool = True) -> QLabel:
+    """Plain text in the window's font and colour; links open through `on_link`."""
+    label = QLabel(text)
+    label.setWordWrap(wrap)
+    if on_link is not None:
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        label.linkActivated.connect(on_link)
+    return label
+
+
+def _rows(rows: list[tuple[str, str]], on_link: Callable[[str], None]) -> QGridLayout:
+    """Label: value rows, the labels lined up on the right as in a form."""
+    grid = QGridLayout()
+    grid.setContentsMargins(0, 0, 0, 0)
+    grid.setHorizontalSpacing(12)
+    grid.setVerticalSpacing(8)
     for row, (label, value) in enumerate(rows):
-        title = QLabel(label) if rich_titles else hint(label)
-        title.setWordWrap(False)
-        text = QLabel(value.removeprefix(" · "))
-        text.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
-        text.linkActivated.connect(on_link)
+        title = _text(label, wrap=False)
+        title.setAlignment(Qt.AlignmentFlag.AlignRight)
         grid.addWidget(title, row, 0)
-        grid.addWidget(text, row, 1)
+        grid.addWidget(_text(value, on_link), row, 1)
     grid.setColumnStretch(1, 1)
-    return card
+    return grid
+
+
+def _divider() -> QFrame:
+    line = QFrame()
+    line.setObjectName("divider")
+    line.setFixedHeight(1)
+    return line
 
 
 def _link(url: str, text: str) -> str:

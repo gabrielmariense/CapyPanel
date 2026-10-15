@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-14 17:48-0300\n"
+"POT-Creation-Date: 2026-10-14 22:24-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -352,8 +352,8 @@ msgstr "Barras"
 msgid "Broken placeholder in “{arg}”."
 msgstr "Espaço reservado malformado em “{arg}”."
 
-msgid "Built with"
-msgstr "Feito com"
+msgid "Build:"
+msgstr "Build:"
 
 msgid "C&hoose file…"
 msgstr "Escol&her arquivo…"
@@ -370,8 +370,8 @@ msgstr "CSV com cabeçalho"
 msgid "CapyPanel"
 msgstr "CapyPanel"
 
-msgid "CapyPanel and what it's built with:"
-msgstr "O CapyPanel e o que ele usa:"
+msgid "CapyPanel is built with the following software:"
+msgstr "O CapyPanel é feito com os seguintes softwares:"
 
 msgid "CapyPanel — dark"
 msgstr "CapyPanel — escuro"
@@ -409,6 +409,10 @@ msgstr "Verifica estes hosts de novo agora"
 #, python-brace-format
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
+
+#, python-brace-format
+msgid "Click a license to read it. They all ship with CapyPanel, in its {folder}."
+msgstr "Clique numa licença para lê-la. Todas vêm com o CapyPanel, na {folder}."
 
 msgid "Click to copy"
 msgstr "Clique para copiar"
@@ -523,8 +527,8 @@ msgstr "Não foi possível usar “{file}”: {error}"
 msgid "Couldn't write “{path}”: {error}"
 msgstr "Não foi possível gravar “{path}”: {error}"
 
-msgid "Created by"
-msgstr "Criado por"
+msgid "Created by:"
+msgstr "Criado por:"
 
 msgid "Created when opened"
 msgstr "Criada ao abrir"
@@ -571,8 +575,8 @@ msgstr "Excluir o perfil de conexão “{profile}”? Todos neste PC deixam de t
 msgid "Disconnected"
 msgstr "Desconectado"
 
-msgid "Documentation"
-msgstr "Documentação"
+msgid "Documentation:"
+msgstr "Documentação:"
 
 msgid "Double-click a cell, or press F2, to change it; the list above follows. Right-click for more."
 msgstr "Clique duas vezes numa célula, ou pressione F2, para alterá-la; a lista acima acompanha. Clique com o botão direito para mais opções."
@@ -716,6 +720,9 @@ msgstr "Hosts sem perfil &usam:"
 msgid "Hover over a list to see where it is."
 msgstr "Passe o mouse sobre uma lista para ver onde ela está."
 
+msgid "Icons:"
+msgstr "Ícones:"
+
 msgid "Idle"
 msgstr "Inativo"
 
@@ -792,8 +799,8 @@ msgstr "Gerenciar grupos"
 msgid "Manual connection"
 msgstr "Conexão manual"
 
-msgid "Mascot"
-msgstr "Mascote"
+msgid "Mascot:"
+msgstr "Mascote:"
 
 msgid "Move &down"
 msgstr "Mover para &baixo"
@@ -939,9 +946,6 @@ msgstr "Abrir pasta"
 
 msgid "Open many remote screens?"
 msgstr "Abrir muitas telas remotas?"
-
-msgid "Open the licenses folder"
-msgstr "Abrir a pasta de licenças"
 
 #, python-brace-format
 msgid "Open {n} remote screen at once?"
@@ -1171,8 +1175,8 @@ msgstr "Algo deu errado. Os detalhes foram salvos no log do aplicativo."
 msgid "Sorts every level by name, once; you can rearrange them after"
 msgstr "Classifica todos os níveis pelo nome, uma vez; depois você pode reorganizá-los"
 
-msgid "Source code"
-msgstr "Código-fonte"
+msgid "Source code:"
+msgstr "Código-fonte:"
 
 #, python-brace-format
 msgid "Start it with {header}, in any order."
@@ -1495,6 +1499,9 @@ msgstr "inativa"
 #, python-brace-format
 msgid "in “{group}”"
 msgstr "em “{group}”"
+
+msgid "licenses folder"
+msgstr "pasta de licenças"
 
 msgid "name"
 msgstr "nome"
