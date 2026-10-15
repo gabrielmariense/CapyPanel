@@ -33,6 +33,9 @@ def make_id(name: str, taken: Collection[str]) -> str:
     return candidate
 
 
+UNTRUSTED = "made by another user, so it isn't used"  # a skipped file's reason
+
+
 class ProfileStore:
     def __init__(self, folder: Path, starters_dir: Path = STARTERS_DIR) -> None:
         self.folder = folder
@@ -56,9 +59,8 @@ class ProfileStore:
             if path.name.startswith("_"):
                 continue  # the default-profile file, not a profile
             if source is self.folder and not winsec.made_by_trusted(path):
-                reason = "made by another user, so it isn't used"
-                self.problems.append((path, reason))
-                log.warning("Connection profile %s skipped: %s", path, reason)
+                self.problems.append((path, UNTRUSTED))
+                log.warning("Connection profile %s skipped: %s", path, UNTRUSTED)
                 continue
             try:
                 profile = profiles.load(path)

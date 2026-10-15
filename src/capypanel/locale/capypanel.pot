@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-14 22:24-0300\n"
+"POT-Creation-Date: 2026-10-14 23:53-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1533,6 +1533,9 @@ msgstr ""
 msgid "at the computer"
 msgstr ""
 
+msgid "can't be read"
+msgstr ""
+
 msgid "disconnected"
 msgstr ""
 
@@ -1548,6 +1551,9 @@ msgid "in “{group}”"
 msgstr ""
 
 msgid "licenses folder"
+msgstr ""
+
+msgid "made by another user"
 msgstr ""
 
 msgid "name"
@@ -1642,6 +1648,12 @@ msgid ""
 msgid_plural ""
 "{n} computers didn't let “{user}” see who is logged on. Use another "
 "account?"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} file skipped: {files}"
+msgid_plural "{n} files skipped: {files}"
 msgstr[0] ""
 msgstr[1] ""
 

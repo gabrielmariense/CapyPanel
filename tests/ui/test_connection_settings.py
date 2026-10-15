@@ -6,7 +6,7 @@ import pytest
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtWidgets import QApplication, QDialogButtonBox, QFileDialog
 
-from capypanel.core import i18n, settings
+from capypanel.core import i18n, settings, winsec
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.model import HostList
 from capypanel.core.tools.catalog import Catalogs
@@ -307,3 +307,21 @@ def test_rdp_options_show_in_the_app_s_language(catalogs: Catalogs) -> None:
         assert [b.text() for b in dialog.option_boxes.values()] == ["SecureVNC plugin"]
     finally:
         i18n.set_language("en")
+
+
+def test_files_that_arent_used_are_named_with_the_reason(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    folder = catalogs.profiles.folder
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "broken.json").write_text("{", encoding="utf-8")
+    (folder / "planted.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(winsec, "made_by_trusted", lambda path: path.name != "planted.json")
+    catalogs.profiles.reload()
+    page = ConnectionsPage(catalogs, None)
+    assert not page.profiles_skipped.isHidden()
+    assert page.profiles_skipped.text() == (
+        "2 files skipped: broken.json (can't be read), planted.json (made by another user)"
+    )
+    assert str(folder / "planted.json") in page.profiles_skipped.toolTip()  # where, for a fix
+    assert page.tools_skipped.isHidden()  # nothing skipped there

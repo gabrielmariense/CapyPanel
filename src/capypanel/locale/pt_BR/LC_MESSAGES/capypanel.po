@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-14 22:24-0300\n"
+"POT-Creation-Date: 2026-10-14 23:53-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1486,6 +1486,9 @@ msgstr "endereço"
 msgid "at the computer"
 msgstr "no computador"
 
+msgid "can't be read"
+msgstr "não pode ser lido"
+
 msgid "disconnected"
 msgstr "desconectada"
 
@@ -1502,6 +1505,9 @@ msgstr "em “{group}”"
 
 msgid "licenses folder"
 msgstr "pasta de licenças"
+
+msgid "made by another user"
+msgstr "feito por outro usuário"
 
 msgid "name"
 msgstr "nome"
@@ -1583,6 +1589,12 @@ msgid "{n} computer didn't let “{user}” see who is logged on. Use another ac
 msgid_plural "{n} computers didn't let “{user}” see who is logged on. Use another account?"
 msgstr[0] "{n} computador não deixou “{user}” ver quem está logado. Usar outra conta?"
 msgstr[1] "{n} computadores não deixaram “{user}” ver quem está logado. Usar outra conta?"
+
+#, python-brace-format
+msgid "{n} file skipped: {files}"
+msgid_plural "{n} files skipped: {files}"
+msgstr[0] "{n} arquivo ignorado: {files}"
+msgstr[1] "{n} arquivos ignorados: {files}"
 
 #, python-brace-format
 msgid "{n} found"
