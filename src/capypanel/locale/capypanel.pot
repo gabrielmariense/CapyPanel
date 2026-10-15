@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-15 09:31-0300\n"
+"POT-Creation-Date: 2026-10-15 15:11-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -37,9 +37,6 @@ msgid "&Add {n} host"
 msgid_plural "&Add {n} hosts"
 msgstr[0] ""
 msgstr[1] ""
-
-msgid "&Address"
-msgstr ""
 
 msgid "&Address:"
 msgstr ""
@@ -153,9 +150,6 @@ msgid "&Move them to"
 msgstr ""
 
 msgid "&Move to"
-msgstr ""
-
-msgid "&Name"
 msgstr ""
 
 msgid "&Name:"
@@ -421,6 +415,13 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
+msgid "Co&py address"
+msgstr ""
+
+#, python-brace-format
+msgid "Co&py {column}"
+msgstr ""
+
 msgid "Connect"
 msgstr ""
 
@@ -471,9 +472,6 @@ msgid "Copied: {text}"
 msgstr ""
 
 msgid "Copies every row, to paste into Excel"
-msgstr ""
-
-msgid "Copy"
 msgstr ""
 
 msgid "Copy the current list to"
@@ -655,9 +653,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Free software under the GPL-3.0, with no warranty: see {licenses}."
-msgstr ""
-
-msgid "From each host's group"
 msgstr ""
 
 msgid "From group"
@@ -1181,9 +1176,6 @@ msgid "Show &first:"
 msgstr ""
 
 msgid "Show do&main"
-msgstr ""
-
-msgid "Show in &group"
 msgstr ""
 
 msgid "Show this group &first"

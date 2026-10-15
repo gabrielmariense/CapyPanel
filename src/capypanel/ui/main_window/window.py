@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
         a.edit.triggered.connect(self.edit_selected)
         a.remove.triggered.connect(self.remove_selected)
         # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C, F5) live here.
-        self.addActions([a.edit, a.remove, a.copy_address, a.show_in_group, a.refresh_shown])
+        self.addActions([a.edit, a.remove, a.copy_address, a.refresh_shown])
         a.refresh_shown.triggered.connect(self._run_refresh_panel)  # F5
         a.documentation.triggered.connect(lambda: about.open_url(about.docs_url()))
         a.report_problem.triggered.connect(
@@ -328,11 +328,9 @@ class MainWindow(QMainWindow):
         a.connect_host.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.table.addAction(a.connect_host)
         self.table.itemDoubleClicked.connect(lambda *_args: self.connect_selected())
-        a.show_in_group.triggered.connect(self._show_selected_in_group)
         a.connect_host.triggered.connect(self.connect_selected)
         a.manual_connect.triggered.connect(self.manual_connect)
         a.copy_address.triggered.connect(lambda: self._copy(lambda h: h.target))
-        a.copy_name.triggered.connect(lambda: self._copy(lambda h: h.name))
         a.forget_passwords.triggered.connect(self.forget_passwords)
         a.connection_profiles.triggered.connect(lambda: self.open_settings("connections"))
 
@@ -903,12 +901,6 @@ class MainWindow(QMainWindow):
             if not profile_id:
                 submenu.addSeparator()
 
-    def set_hosts_profile(self, host_ids: list[str], profile: str) -> None:
-        doc = self._writable()
-        if doc is not None:
-            self._commit(doc.hosts.set_hosts_profile(host_ids, profile))
-            self._selection_changed()
-
     def import_hosts(self) -> None:
         """Inventory > Import hosts…: many hosts at once; nothing is saved until Add."""
         doc = self._writable()
@@ -1278,21 +1270,6 @@ class MainWindow(QMainWindow):
             self.table.setCurrentItem(first)
             self.table.setFocus(Qt.FocusReason.TabFocusReason)
 
-    def _show_selected_in_group(self) -> None:
-        selected = self.table.selected_ids()
-        if len(selected) == 1:
-            self.show_in_group(selected[0])
-
-    def show_in_group(self, host_id: str) -> None:
-        """Right-click > Show in group (Ctrl+G): the host inside its group, any search ended."""
-        host = self._doc.hosts.host(host_id) if self._doc else None
-        if host is None:
-            return
-        self._clear_search()
-        self.nav.select_group(host.group)
-        self._show_hosts()
-        self.table.select_ids([host.id])
-
     def _selected_hosts(self) -> list[Host]:
         if self._doc is None:
             return []
@@ -1351,9 +1328,8 @@ class MainWindow(QMainWindow):
         self.nav.add_group_button.setEnabled(writable)
         a.edit.setEnabled(writable and (selected == 1 or group_picked))
         a.remove.setEnabled(writable and (selected > 0 or group_picked))
-        for action in (a.connect_host, a.copy_address, a.copy_name):
+        for action in (a.connect_host, a.copy_address):
             action.setEnabled(selected > 0)  # read-only lists can still connect
-        a.show_in_group.setEnabled(selected == 1)
         for action in (a.check_status, a.check_users):
             action.setEnabled(selected > 0 and self._run is None)  # one Refresh at a time
         shown = self.table.topLevelItemCount() > 0
@@ -1624,34 +1600,35 @@ class MainWindow(QMainWindow):
             menu.addActions([a.add_host, a.add_group])
             popup(menu, self.table.viewport().mapToGlobal(position))
             return
-        section(menu, _("Connect"))
+        # Use first, then copy, then organize; removing comes last, on its own.
         menu.addAction(a.connect_host)
         menu.setDefaultAction(a.connect_host)  # bold: what double-click and Enter do
-        hosts = self._selected_hosts()
-        if hosts and self._doc is not None:
-            groups = {h.group for h in hosts}
-            follow = (
-                self.connector.inherited_label(
-                    *self._doc.hosts.group_profile(groups.pop(), self._profile_exists)
-                )
-                if len(groups) == 1
-                else _("From each host's group")
-            )
-            ids = [h.id for h in hosts]
-            self._add_profile_menu(
-                menu, {h.profile for h in hosts}, follow, lambda p: self.set_hosts_profile(ids, p)
-            )
         section(menu, _("Refresh"))
         menu.addActions([a.check_status, a.check_users])
-        section(menu, _("Copy"))
-        menu.addActions([a.copy_address, a.copy_name])
         menu.addSeparator()
+        menu.addAction(self._copy_cell_action(menu, self.table.columnAt(position.x())))
+        menu.addSeparator()
+        menu.addAction(a.edit)
+        hosts = self._selected_hosts()
         if hosts and self._doc is not None:
             self._add_hosts_move_menu(menu, hosts)
-        menu.addAction(a.show_in_group)
         menu.addSeparator()
-        menu.addActions([a.edit, a.remove])
+        menu.addAction(a.remove)
         popup(menu, self.table.viewport().mapToGlobal(position))
+
+    def _copy_cell_action(self, menu: QMenu, column: int) -> QAction:
+        """One Copy item, for the column clicked: one line per selected host. The address is
+        the Copy address command, so its shortcut shows."""
+        column = max(column, 0)
+        if HostTable.COLUMNS[column] == "address":
+            return self.commands.copy_address
+        title = self.table.headerItem().text(column)
+        item = QAction(_("Co&py {column}").format(column=title.lower()), menu)
+        rows = sorted(self.table.selectedItems(), key=self.table.indexOfTopLevelItem)
+        item.triggered.connect(
+            lambda: QGuiApplication.clipboard().setText("\n".join(r.text(column) for r in rows))
+        )
+        return item
 
     def _add_hosts_move_menu(self, menu: QMenu, hosts: list[Host]) -> None:
         """Move to: "No group", then the groups as a tree; where they all are is ticked."""

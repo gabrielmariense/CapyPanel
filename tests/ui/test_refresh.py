@@ -214,10 +214,10 @@ def test_host_menu_has_sections_with_short_names(
     window.table.select_ids(_ids(window, "PC-1"))
     first = window.table.topLevelItem(0)
     assert first is not None
-    window._host_menu(window.table.visualItemRect(first).center())
+    row = window.table.visualItemRect(first)
+    window._host_menu(QPoint(row.left() + 10, row.center().y()))  # on the name
     assert seen == [
-        "&Connect", "Connection &profile", "&Status", "&Logged-on users",
-        "&Address", "&Name", "&Move to", "Show in &group", "&Edit selected…",
+        "&Connect", "&Status", "&Logged-on users", "Co&py name", "&Edit selected…", "&Move to",
         "&Remove selected",
     ]  # fmt: skip
 

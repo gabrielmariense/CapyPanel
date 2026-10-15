@@ -94,7 +94,7 @@ def test_picking_a_group_ends_the_search(window: MainWindow) -> None:
     assert len(_rows(window)) == 4
 
 
-def test_double_click_connects_and_show_in_group_opens_the_group(
+def test_double_click_connects_during_a_search(
     window: MainWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     connected: list[bool] = []
@@ -105,11 +105,6 @@ def test_double_click_connects_and_show_in_group_opens_the_group(
     window.table.itemDoubleClicked.emit(item, 0)
     assert connected == [True]  # also during a search, like Enter
     assert window.search.text() == "triage-02"
-    window.table.select_ids([_id(window, "TRIAGE-02")])
-    window.commands.show_in_group.trigger()
-    assert window.search.text() == ""
-    assert window.nav.groups.selectedItems()[0].text(0).startswith("Triage")
-    assert window.table.selected_ids() == [_id(window, "TRIAGE-02")]
 
 
 def test_clearing_the_search_goes_back_to_the_group_picked_before(window: MainWindow) -> None:

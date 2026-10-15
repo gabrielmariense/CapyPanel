@@ -360,7 +360,8 @@ def test_hosts_with_no_group_show_under_no_group(window: MainWindow) -> None:
     doc = window.document
     assert doc is not None and doc.hosts.host(z01).group == NO_GROUP  # type: ignore[union-attr]
     assert nav._no_group_item.text(0) == "No group (1)"
-    window.show_in_group(z01)
+    window.nav.select_group(NO_GROUP)
+    window.table.select_ids([z01])
     assert nav.current_filter().kind == "nogroup"
     assert [window.table.topLevelItem(0).text(0)] == ["Z-01"]  # type: ignore[union-attr]
     assert window.details.shown_value("group") == "No group"
@@ -382,7 +383,8 @@ def test_hosts_right_click_move_to_any_group_or_none(
     doc = window.document
     assert doc is not None
     l01 = next(h.id for h in doc.hosts.hosts if h.name == "L-01")
-    window.show_in_group(l01)
+    window.nav.select_group(doc.hosts.host(l01).group)  # type: ignore[union-attr]
+    window.table.select_ids([l01])
     item = window.table.topLevelItem(0)
     assert item is not None
     monkeypatch.setattr(window_module, "QMenu", Choosing)

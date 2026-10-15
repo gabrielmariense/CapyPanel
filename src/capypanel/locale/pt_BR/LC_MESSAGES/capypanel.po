@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-15 09:31-0300\n"
+"POT-Creation-Date: 2026-10-15 15:11-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -38,9 +38,6 @@ msgid "&Add {n} host"
 msgid_plural "&Add {n} hosts"
 msgstr[0] "&Adicionar {n} host"
 msgstr[1] "&Adicionar {n} hosts"
-
-msgid "&Address"
-msgstr "En&dereço"
 
 msgid "&Address:"
 msgstr "&Endereço:"
@@ -155,9 +152,6 @@ msgstr "&Mover para"
 
 msgid "&Move to"
 msgstr "&Mover para"
-
-msgid "&Name"
-msgstr "&Nome"
 
 msgid "&Name:"
 msgstr "&Nome:"
@@ -420,6 +414,13 @@ msgstr "Clique para copiar"
 msgid "Close"
 msgstr "Fechar"
 
+msgid "Co&py address"
+msgstr "Co&piar endereço"
+
+#, python-brace-format
+msgid "Co&py {column}"
+msgstr "Co&piar {column}"
+
 msgid "Connect"
 msgstr "Conectar"
 
@@ -469,9 +470,6 @@ msgstr "Copiado: {text}"
 
 msgid "Copies every row, to paste into Excel"
 msgstr "Copia todas as linhas, para colar no Excel"
-
-msgid "Copy"
-msgstr "Copiar"
 
 msgid "Copy the current list to"
 msgstr "Copiar a lista atual para"
@@ -650,9 +648,6 @@ msgstr "Formatos que o CapyPanel importa"
 #, python-brace-format
 msgid "Free software under the GPL-3.0, with no warranty: see {licenses}."
 msgstr "Software livre sob a GPL-3.0, sem garantia: veja {licenses}."
-
-msgid "From each host's group"
-msgstr "Do grupo de cada host"
 
 msgid "From group"
 msgstr "Do grupo"
@@ -1156,9 +1151,6 @@ msgstr "Mostrar &primeiro:"
 
 msgid "Show do&main"
 msgstr "Mostrar do&mínio"
-
-msgid "Show in &group"
-msgstr "Mostrar no &grupo"
 
 msgid "Show this group &first"
 msgstr "Mostrar este grupo &primeiro"
