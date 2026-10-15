@@ -72,6 +72,10 @@ def test_licenses_list_each_part_with_a_link_to_its_shipped_text(qapp: QApplicat
         assert (LICENSES_DIR / part.file).is_file(), part.file  # shipped, readable offline
         assert any(part.file in t and part.license in t for t in texts)  # linked by name
     assert any("The Qt Company" in t for t in texts)  # the library's copyright, as LGPL asks
+    dialog._open_link("license:lgpl-3.0.txt")  # read in the app, not in Notepad
+    assert dialog.reader.isVisible() and dialog.reader.windowTitle() == "Qt · LGPL-3.0"
+    assert "GNU LESSER GENERAL PUBLIC LICENSE" in dialog.reader.text.toPlainText()
+    dialog.reader.close()
 
 
 def test_a_problem_report_carries_no_user_or_computer_name(qapp: QApplication) -> None:

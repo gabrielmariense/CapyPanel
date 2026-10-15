@@ -10,13 +10,14 @@ from urllib.parse import quote
 
 from PySide6 import __version__ as pyside_version
 from PySide6.QtCore import Qt, QUrl, qVersion
-from PySide6.QtGui import QCursor, QDesktopServices
+from PySide6.QtGui import QCursor, QDesktopServices, QFontDatabase, QShowEvent, QTextCursor
 from PySide6.QtWidgets import (
     QDialog,
     QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QPlainTextEdit,
     QPushButton,
     QTabWidget,
     QToolTip,
@@ -101,6 +102,7 @@ class AboutDialog(QDialog):
         top.addWidget(self.version)
         top.addStretch(1)
 
+        self.reader = LicenseReader(self)  # one, reused: windows here are never deleted
         self.tabs = QTabWidget()
         self.tabs.addTab(self._about_tab(), _("About"))
         self.tabs.addTab(self._credits_tab(), _("Credits"))
@@ -183,8 +185,8 @@ class AboutDialog(QDialog):
         return page
 
     def _licenses_tab(self) -> QWidget:
-        """Like qBittorrent's "Software used": each part on one line, its license a link to the
-        copy that ships with CapyPanel, so it opens offline."""
+        """Like qBittorrent's "Software used": each part on one line, its license a link that
+        opens the copy shipped with CapyPanel in a window here, so it reads offline."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(16, 16, 16, 16)
@@ -197,8 +199,8 @@ class AboutDialog(QDialog):
         grid.setHorizontalSpacing(20)
         grid.setVerticalSpacing(8)
         for row, part in enumerate(COMPONENTS):
-            url = QUrl.fromLocalFile(str(LICENSES_DIR / part.file)).toString()
-            cells = (part.name, part.version, _link(url, part.license), part.notice)
+            cells = (part.name, part.version, _link(f"license:{part.file}", part.license),
+                     part.notice)  # fmt: skip
             for column, cell in enumerate(cells):
                 grid.addWidget(_text(cell, self._open_link, wrap=False), row, column)
         grid.setColumnStretch(3, 1)
@@ -218,13 +220,49 @@ class AboutDialog(QDialog):
     def _open_link(self, url: str) -> None:
         if url == "#licenses":
             self.tabs.setCurrentIndex(2)
+        elif url.startswith("license:"):
+            part = next(c for c in COMPONENTS if c.file == url.removeprefix("license:"))
+            self.reader.show_license(part)
         elif url.startswith("file:"):
-            QDesktopServices.openUrl(QUrl(url))  # the copy shipped with the app
+            QDesktopServices.openUrl(QUrl(url))  # the licenses folder
         else:
             open_url(url)
 
 
 # ---- Licenses ----
+
+
+class LicenseReader(QDialog):
+    """A license's text, read inside the app rather than in Notepad."""
+
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.text = QPlainTextEdit()
+        self.text.setReadOnly(True)
+        # Fixed width: the texts line up their lists and tables with spaces.
+        self.text.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
+        close = QPushButton(_("Close"))
+        close.setAutoDefault(False)
+        close.clicked.connect(self.close)
+        buttons = QHBoxLayout()
+        buttons.addStretch(1)
+        buttons.addWidget(close)
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.text, 1)
+        layout.addLayout(buttons)
+        self.resize(620, 640)
+
+    def show_license(self, part: "Component") -> None:
+        self.setWindowTitle(f"{part.name} · {part.license}")
+        self.text.setPlainText((LICENSES_DIR / part.file).read_text(encoding="utf-8"))
+        self.text.moveCursor(QTextCursor.MoveOperation.Start)
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        themes.paint_title_bar(self)
 
 
 @dataclass(frozen=True)
@@ -282,14 +320,13 @@ def _text(text: str, on_link: Callable[[str], None] | None = None, *, wrap: bool
 
 
 def _rows(rows: list[tuple[str, str]], on_link: Callable[[str], None]) -> QGridLayout:
-    """Label: value rows, the labels lined up on the right as in a form."""
+    """Label: value rows, labels and values each lined up on the left."""
     grid = QGridLayout()
     grid.setContentsMargins(0, 0, 0, 0)
     grid.setHorizontalSpacing(12)
     grid.setVerticalSpacing(8)
     for row, (label, value) in enumerate(rows):
         title = _text(label, wrap=False)
-        title.setAlignment(Qt.AlignmentFlag.AlignRight)
         grid.addWidget(title, row, 0)
         grid.addWidget(_text(value, on_link), row, 1)
     grid.setColumnStretch(1, 1)
