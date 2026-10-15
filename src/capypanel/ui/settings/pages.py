@@ -63,7 +63,6 @@ class PathLabel(QLabel):
         super().__init__()
         self.setObjectName("hint")
         self.setMinimumWidth(80)
-        self.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self._full = ""
         if path is not None:
             self.set_path(path)
@@ -82,7 +81,7 @@ class PathLabel(QLabel):
         self.setText(self.fontMetrics().elidedText(self._full, Qt.TextElideMode.ElideMiddle, width))
 
 
-def _open_folder(folder: Path) -> None:
+def open_folder(folder: Path) -> None:
     QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 
 
@@ -212,7 +211,7 @@ class GeneralPage(Page):
         )
         for row, (label, folder) in enumerate(folders):
             button = QPushButton(_("Open folder"))
-            button.clicked.connect(lambda _checked=False, f=folder: _open_folder(f))
+            button.clicked.connect(lambda _checked=False, f=folder: open_folder(f))
             grid.addWidget(QLabel(label), row, 0)
             grid.addWidget(PathLabel(folder), row, 1)
             grid.addWidget(button, row, 2)

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-14 23:53-0300\n"
+"POT-Creation-Date: 2026-10-15 00:06-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -532,6 +532,9 @@ msgstr "Criado por:"
 
 msgid "Created when opened"
 msgstr "Criada ao abrir"
+
+msgid "Created when you save a change"
+msgstr "Criada quando você salvar uma alteração"
 
 msgid "Credits"
 msgstr "Créditos"
@@ -1347,6 +1350,9 @@ msgstr "O “website” deve ser um endereço https://."
 
 msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr "Não há perfis de conexão. Crie um em Configurações > Conexões."
+
+msgid "These are the built-in profiles: the folder is created when you save a change."
+msgstr "Estes são os perfis que vêm com o app: a pasta é criada quando você salvar uma alteração."
 
 msgid "This connection profile needs a newer version of CapyPanel."
 msgstr "Este perfil de conexão precisa de uma versão mais nova do CapyPanel."

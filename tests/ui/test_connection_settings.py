@@ -325,3 +325,14 @@ def test_files_that_arent_used_are_named_with_the_reason(
     )
     assert str(folder / "planted.json") in page.profiles_skipped.toolTip()  # where, for a fix
     assert page.tools_skipped.isHidden()  # nothing skipped there
+
+
+def test_open_folder_waits_for_the_folder_while_the_profiles_are_built_in(
+    catalogs: Catalogs,
+) -> None:
+    page = ConnectionsPage(catalogs, None)
+    assert not catalogs.profiles.folder.exists()  # the built-in profiles are shown
+    assert not page.open_folder.isEnabled() and not page.builtin_note.isHidden()
+    catalogs.profiles.folder.mkdir(parents=True)  # what saving a change does
+    page.reset()
+    assert page.open_folder.isEnabled() and page.builtin_note.isHidden()

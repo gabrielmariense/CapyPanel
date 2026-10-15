@@ -39,7 +39,7 @@ from capypanel.core.tools.profiles import ConnectionProfile, login_label, logins
 from capypanel.ui.connect import ask_for_program
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import hint
-from capypanel.ui.settings.pages import Page, PathLabel
+from capypanel.ui.settings.pages import Page, PathLabel, open_folder
 
 MAX_PROFILE_NAME = 64
 
@@ -295,6 +295,16 @@ class ConnectionsPage(Page):
 
         profiles_box = QGroupBox(_("Connection profiles"))
         folder = PathLabel(self.store.folder)
+        self.open_folder = QPushButton(_("Open folder"))
+        self.open_folder.clicked.connect(lambda: open_folder(self.store.folder))
+        folder_row = QHBoxLayout()
+        folder_row.addWidget(folder, 1)
+        folder_row.addWidget(self.open_folder)
+        # Until a change is saved, the profiles shown are the built-in ones: no folder yet.
+        self.builtin_note = hint(
+            _("These are the built-in profiles: the folder is created when you save a change.")
+        )
+        self._show_folder_state()
         access = (
             _("Shared by everyone on this PC. You can change them.")
             if self.can_edit
@@ -327,7 +337,8 @@ class ConnectionsPage(Page):
         default_row = QFormLayout()
         default_row.addRow(_("Hosts with no profile &use:"), self.default)
         inner = QVBoxLayout(profiles_box)
-        inner.addWidget(folder)
+        inner.addLayout(folder_row)
+        inner.addWidget(self.builtin_note)
         inner.addWidget(hint(access))
         self.profiles_skipped = skipped_note(self.store.problems)
         inner.addWidget(self.profiles_skipped)
@@ -487,6 +498,13 @@ class ConnectionsPage(Page):
         self._fill_profiles(select=None)
         self.default.setCurrentIndex(max(self.default.findData(self.store.default_id()), 0))
         self._fill_tools()
+        self._show_folder_state()
+
+    def _show_folder_state(self) -> None:
+        exists = self.store.folder.is_dir()
+        self.open_folder.setEnabled(exists)
+        self.open_folder.setToolTip("" if exists else _("Created when you save a change"))
+        self.builtin_note.setVisible(not exists)
 
     def changes(self) -> ConnectionChanges:
         return ConnectionChanges(
