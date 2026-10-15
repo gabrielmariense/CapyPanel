@@ -86,6 +86,29 @@ def _open_folder(folder: Path) -> None:
     QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 
 
+class MenuCombo(QComboBox):
+    """A dropdown that opens a menu instead of a list, so it can hold submenus, and still looks
+    and sizes like the other dropdowns. Its one item is the text shown."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._menu = QMenu(self)
+
+    def menu(self) -> QMenu:
+        return self._menu
+
+    def text(self) -> str:
+        return self.currentText()
+
+    def setText(self, text: str) -> None:
+        self.clear()
+        self.addItem(text)
+
+    def showPopup(self) -> None:
+        self._menu.setMinimumWidth(self.width())
+        self._menu.popup(self.mapToGlobal(self.rect().bottomLeft()))
+
+
 # ---- General ----
 
 
@@ -148,39 +171,35 @@ class GeneralPage(Page):
         self.start_list.setCurrentIndex(max(index, 0))
         label = QLabel(_("&Open on startup:"))
         label.setBuddy(self.start_list)
-        row = QHBoxLayout()
-        row.addWidget(label)
-        row.addWidget(self.start_list, 1)
-        start_layout = QVBoxLayout(start)
-        start_layout.addLayout(row)
+        # Labels in one column, the dropdowns lined up beside them at the same width.
+        start_layout = QGridLayout(start)
+        start_layout.setColumnStretch(1, 1)
+        start_layout.addWidget(label, 0, 0)
+        start_layout.addWidget(self.start_list, 0, 1)
         start_layout.addWidget(
-            notes(_("If that list can't be opened: the default list, then your personal list."))
-        )
+            notes(_("If that list can't be opened: the default list, then your personal list.")),
+            1, 0, 1, 2,
+        )  # fmt: skip
         # What the open list shows first; each list keeps its own choice. One button: its menu
         # has All hosts, Where I left off, and "A chosen group" with the groups as a tree.
         self._host_list = host_list
         self._first = start_view or (locations.SHOW_ALL, "")
-        self.show_first = QPushButton()
-        self.show_first.setAutoDefault(False)
+        self.show_first = MenuCombo()
         self.show_first.setEnabled(start_view is not None)
-        self._first_menu = QMenu(self.show_first)
-        self._first_menu.aboutToShow.connect(self._fill_first_menu)
-        self.show_first.setMenu(self._first_menu)
+        self.show_first.menu().aboutToShow.connect(self._fill_first_menu)
         self._show_first_text()
         first_label = QLabel(_("Show &first:"))
         first_label.setBuddy(self.show_first)
-        first_row = QHBoxLayout()
-        first_row.addWidget(first_label)
-        first_row.addWidget(self.show_first)
-        first_row.addStretch(1)
-        start_layout.addLayout(first_row)
+        start_layout.addWidget(first_label, 2, 0)
+        start_layout.addWidget(self.show_first, 2, 1)
         start_layout.addWidget(
             notes(
                 _("For the list open now; each list keeps its own. A group's right-click menu "
                   "can choose it too.")
                 if start_view is not None
                 else _("Open a host list to choose what it shows first.")
-            )
+            ),
+            3, 0, 1, 2,
         )  # fmt: skip
 
         files = QGroupBox(_("Where CapyPanel keeps its files"))
@@ -238,7 +257,7 @@ class GeneralPage(Page):
         return str(self.start_list.currentData())
 
     def _fill_first_menu(self) -> None:
-        menu = self._first_menu
+        menu = self.show_first.menu()
         menu.clear()
         show, group = self._first
         for text, value in (
