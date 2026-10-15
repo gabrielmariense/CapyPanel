@@ -6,6 +6,7 @@ import pytest
 # Run Qt without a screen, so UI tests work in CI.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtCore import QCoreApplication, QEvent, Qt  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
 
@@ -14,6 +15,15 @@ def qapp() -> Iterator[QApplication]:
     app = QApplication.instance() or QApplication([])
     assert isinstance(app, QApplication)
     yield app
+    # Windows the tests left go while Qt is still up: freed by Python after the app, they can
+    # crash the process at exit. Pop-ups (a completer's list) belong to their widget: skipped.
+    popup = Qt.WindowType.Popup
+    for widget in app.topLevelWidgets():
+        if widget.windowFlags() & popup != popup:
+            widget.close()
+            widget.deleteLater()
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    app.processEvents()
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
