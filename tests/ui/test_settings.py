@@ -18,6 +18,7 @@ from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
 from capypanel.ui.host_lists import HostListsDialog, HostListsView
 from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.menus import label
 from capypanel.ui.settings.window import PAGE_TITLES, SettingsDialog
 from capypanel.ui.themes import engine as themes
 
@@ -249,7 +250,7 @@ def test_file_host_lists_opens_a_list_and_remembers_what_was_added(
 
 def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
     menus = {
-        m.title(): [a.text() for a in m.actions() if a.text()]
+        m.title(): [label(a) for a in m.actions() if a.text()]
         for a in window.menuBar().actions()
         if isinstance(m := a.menu(), QMenu)
     }

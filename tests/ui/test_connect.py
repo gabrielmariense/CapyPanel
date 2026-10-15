@@ -20,6 +20,7 @@ from capypanel.ui.hosts import HostDialog
 from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.host_views import HostTable
 from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.menus import label
 
 Launch = tuple[str, str, int | None, Credential | None, tuple[str, ...]]
 
@@ -379,7 +380,7 @@ def test_a_host_s_own_unavailable_profile_shows_checked_in_the_menu(window: Main
     )
     submenu = menu.actions()[0].menu()
     assert isinstance(submenu, QMenu)
-    checked = [a.text() for a in submenu.actions() if a.isChecked()]
+    checked = [label(a) for a in submenu.actions() if a.isChecked()]
     assert checked == ["gone-elsewhere (not available on this PC)"]
 
 
@@ -426,7 +427,7 @@ def _menu_on(monkeypatch: pytest.MonkeyPatch, show: Any) -> list[str]:
 
     class Recorded(QMenu):
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
-            seen.extend(a.text() for a in self.actions() if a.text())
+            seen.extend(label(a) for a in self.actions() if a.text())
 
     monkeypatch.setattr(window_module, "QMenu", Recorded)
     show()

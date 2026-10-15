@@ -16,6 +16,7 @@ from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_ui
 from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.menus import label
 from capypanel.ui.themes import engine as themes
 
 DESK = Session("ana", "CORP", "console", "active", None)
@@ -206,7 +207,7 @@ def test_host_menu_has_sections_with_short_names(
 
     class Recorded(window_module.QMenu):  # type: ignore[misc]
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
-            seen.extend(a.text() for a in self.actions() if a.text())
+            seen.extend(label(a) for a in self.actions() if a.text())
 
     monkeypatch.setattr(window_module, "QMenu", Recorded)
     window.show()

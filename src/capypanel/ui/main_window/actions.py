@@ -87,7 +87,6 @@ def retranslate_actions(a: Actions) -> None:
     a.remove.setText(_("&Remove selected"))
     a.connect_host.setText(_("&Connect"))
     a.manual_connect.setText(_("&Manual connection…"))
-    # Under a "Copy" heading in the right-click menu, so the item names stay short.
     a.copy_address.setText(_("Co&py address"))
     a.refresh_shown.setText(_("Refresh"))
     a.documentation.setText(_("&Documentation"))

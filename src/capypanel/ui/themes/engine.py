@@ -18,10 +18,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QObject, Qt
-from PySide6.QtGui import QColor, QFont, QGuiApplication, QPalette
+from PySide6.QtGui import QActionEvent, QColor, QFont, QGuiApplication, QPalette
 from PySide6.QtWidgets import QApplication, QListView, QMenu, QTreeView, QWidget
 
 from capypanel.core.i18n import N_, _
+from capypanel.ui import menus
 
 log = logging.getLogger(__name__)
 
@@ -305,13 +306,20 @@ class _Watcher(QObject):
     """Fixes the themes need on every widget, wherever it's made:
     - lists and trees can place their rows before the theme's row padding reaches them, then
       keep those places (rows drew on top of each other): each one places them again when shown;
-    - menus with ticks are marked, so the stylesheet can line their text up with other menus."""
+    - menus with ticks are marked, so the stylesheet can line their text up with other menus;
+    - menus draw shortcuts dimmed at their right edge (menus.ShortcutLayer)."""
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         kind = event.type()
         if kind == QEvent.Type.Show and isinstance(watched, (QListView, QTreeView)):
             watched.doItemsLayout()
+        elif kind == QEvent.Type.Show and isinstance(watched, QMenu):
+            menus.ShortcutLayer.attach(watched)
         elif kind in _ACTION_EVENTS and isinstance(watched, QMenu):
+            if kind != QEvent.Type.ActionRemoved and isinstance(event, QActionEvent):
+                action = event.action()
+                if action is not None:
+                    menus.keep_room_for_shortcut(watched, action)
             ticks = any(a.isCheckable() for a in watched.actions())
             if bool(watched.property("ticks")) != ticks:
                 watched.setProperty("ticks", ticks)

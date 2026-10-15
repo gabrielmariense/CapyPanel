@@ -28,6 +28,7 @@ from capypanel.ui.groups import (
 )
 from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.menus import label
 
 
 @pytest.fixture
@@ -176,7 +177,7 @@ def test_removing_a_group_can_remove_everything(
 
 
 def _texts(menu: QMenu) -> list[str]:
-    return [a.text() for a in menu.actions() if a.text()]
+    return [label(a) for a in menu.actions() if a.text()]
 
 
 def _choose(menu: QMenu, text: str) -> None:
@@ -526,7 +527,7 @@ def test_settings_chooses_what_the_open_list_shows_first(window: MainWindow) -> 
     menu = page.show_first.menu()
     assert menu is not None
     menu.aboutToShow.emit()  # filled as it opens
-    texts = [a.text() for a in menu.actions() if a.text()]
+    texts = [label(a) for a in menu.actions() if a.text()]
     assert texts == ["All hosts", "Where I left off", "A chosen &group"]
     chosen = menu.actions()[2].menu()
     assert isinstance(chosen, QMenu)

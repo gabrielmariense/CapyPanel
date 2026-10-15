@@ -10,6 +10,7 @@ from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
 from capypanel.ui import language
 from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.menus import label
 
 
 @pytest.fixture
@@ -44,7 +45,7 @@ def test_switching_language_updates_the_open_window_live(window: MainWindow) -> 
         "E&xibir",
         "Aj&uda",
     ]
-    assert window.commands.add_host.text() == "Adicionar &host…"
+    assert label(window.commands.add_host) == "Adicionar &host…"
     assert window.table.headerItem().text(0) == "Nome"
     [everything] = window.nav.everything.findItems("Todos", Qt.MatchFlag.MatchStartsWith)
     assert everything.text(0) == "Todos os hosts (1)"
@@ -85,7 +86,7 @@ def test_access_keys_are_unique_in_every_menu(window: MainWindow, code: str) -> 
     # Two items with the same underlined letter make Alt+letter ambiguous.
     _switch(window, code)
     for menu in [*_menus(window), window._theme_menu]:
-        texts = [a.text() for a in menu.actions() if "&" in a.text()]
+        texts = [label(a) for a in menu.actions() if "&" in a.text()]
         keys = [t[t.index("&") + 1].lower() for t in texts]
         assert len(keys) == len(set(keys)), f"{menu.title()}: {texts}"
     bar = [m.title() for m in _menus(window)]
