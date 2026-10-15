@@ -1600,7 +1600,7 @@ class MainWindow(QMainWindow):
             menu.addActions([a.add_host, a.add_group])
             popup(menu, self.table.viewport().mapToGlobal(position))
             return
-        # Use first, then copy, then organize; removing comes last, on its own.
+        # Use first, then copy, then managing the host: edit, move, remove.
         menu.addAction(a.connect_host)
         menu.setDefaultAction(a.connect_host)  # bold: what double-click and Enter do
         section(menu, _("Refresh"))
@@ -1612,7 +1612,6 @@ class MainWindow(QMainWindow):
         hosts = self._selected_hosts()
         if hosts and self._doc is not None:
             self._add_hosts_move_menu(menu, hosts)
-        menu.addSeparator()
         menu.addAction(a.remove)
         popup(menu, self.table.viewport().mapToGlobal(position))
 
