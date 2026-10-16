@@ -23,17 +23,18 @@ verificado não é encontrado por quem está nele.
 - O que você digitou fica marcado como num marca-texto onde houver correspondência: nas colunas da
   tabela e nas notas, no painel de detalhes.
 - Os resultados vêm da lista inteira, então nada fica escolhido no painel da esquerda. O painel de
-  detalhes diz em que grupo está o host selecionado.
+  detalhes diz em que grupo está o host selecionado, e o CapyPanel nunca salta para lá por conta
+  própria.
 - A barra de status acrescenta **N resultados**.
 - **Atualizar** verifica só os resultados, e o status automático, só os hosts exibidos.
+- **Inventário > Exportar hosts…** oferece os resultados como o que exportar, contados, enquanto a
+  pesquisa está ativa (veja [Importando e exportando hosts](importing.pt-BR.md)).
 
 ## Seguir para os resultados e encerrar a pesquisa
 
 - **Seta para baixo** ou **Enter** na caixa leva ao primeiro resultado. Nenhum dos dois conecta,
   então um erro de digitação não chega ao PC errado. Na tabela, o clique duplo e o Enter conectam
   como sempre.
-- Clique com o botão direito num host > **Mostrar no grupo** (Ctrl+G) abre o grupo em que ele
-  está, encerra a pesquisa e mantém o host selecionado.
 - **Esc** encerra a pesquisa de onde você estiver, e o **×** na caixa a limpa. Das duas formas
   você volta para o grupo ou a tag que estava escolhido antes.
 - Escolher um grupo ou uma tag à esquerda encerra a pesquisa, e trocar de lista de hosts também.

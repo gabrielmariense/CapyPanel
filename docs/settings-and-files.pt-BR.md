@@ -1,29 +1,40 @@
 # Configurações e arquivos
 
-Abra as Configurações em **Arquivo > Configurações…** (Ctrl+,). **OK** salva e fecha, **Salvar**
-salva e mantém as Configurações abertas, e **Cancelar** fecha e descarta o que não foi salvo.
+Abra as Configurações em **Arquivo > Configurações…** (Ctrl+,). A janela tem dois botões:
+**Salvar**, que salva e a deixa aberta, e **Fechar**. O Fechar pergunta antes quando algo não está
+salvo, e nenhum dos dois é o botão padrão, então o Enter nunca salva nem fecha sem querer.
 
 ## Geral
 
 - **Abrir ao iniciar:** qual lista de hosts abre quando o CapyPanel inicia (veja
   [Listas de hosts](host-lists.pt-BR.md#qual-lista-abre-ao-iniciar)).
-- **Idioma:** English ou Português (Brasil), trocado sem reiniciar. Também em **Exibir > Idioma**.
-  A própria janela de Configurações muda de idioma na próxima vez que você abri-la.
+- **Idioma:** English ou Português (Brasil). Ele muda assim que você escolhe — a janela de
+  Configurações inclusive — sem reiniciar e sem nada para salvar. Também em **Exibir > Idioma**.
 - **Atualizar:** verificar o status dos hosts exibidos a cada alguns minutos. Vem desligado;
   veja [Verificando hosts](checking.pt-BR.md#status-automatico).
+- **Mostrar primeiro:** o que a lista aberta mostra quando ela abre — Todos os hosts, onde você
+  parou ou um grupo. Cada lista guarda a própria escolha (veja
+  [Listas de hosts](host-lists.pt-BR.md#o-que-uma-lista-mostra-primeiro)).
 - **Onde o CapyPanel guarda os arquivos:** os arquivos compartilhados, os seus arquivos e os logs,
-  cada um com um botão **Abrir pasta**.
+  cada um com um botão **Abrir pasta**. Os caminhos estão ali para ler, não para selecionar; passe
+  o mouse num deles para vê-lo inteiro.
 
 ## Listas de hosts
 
 A mesma tabela e os mesmos botões de **Arquivo > Listas de hosts…** (veja
 [Listas de hosts](host-lists.pt-BR.md#a-janela-listas-de-hosts)). A lista que você escolher abre
-quando você clica em OK ou Salvar.
+quando você clica em Salvar.
 
 ## Conexões
 
-- **Perfis de conexão:** adicione, edite, duplique e exclua perfis, e escolha o padrão. Veja
-  [Conectando](connecting.pt-BR.md#gerenciar-perfis).
+- **Perfis de conexão:** adicione, edite, duplique e exclua perfis, e escolha o padrão, com um
+  botão **Abrir pasta** para a pasta em que eles ficam. Veja
+  [Conectando](connecting.pt-BR.md#gerenciar-perfis). O CapyPanel enche essa pasta no primeiro
+  início com os perfis que vêm com ele — RealVNC, Remote Desktop e UltraVNC — e um arquivo de
+  configurações, `_profiles.json`, que registra o perfil padrão e quais perfis de fábrica já foram
+  adicionados, para que um que você exclua não volte. Onde o Windows não deixa você criar a pasta,
+  a página mostra os perfis de fábrica e diz "Estes são os perfis que vêm com o app: a pasta ainda
+  não existe."
 - **Ferramentas remotas:** onde cada ferramenta está instalada, definido uma vez para todos no
   PC. Cada um mostra **✓ Encontrado** (sozinho), **✓ Sua escolha** ou **✗ Não encontrado**, só
   com os botões que fazem sentido: **Alterar caminho…** ou **Localizar…** para escolher o `.exe`
@@ -32,9 +43,14 @@ quando você clica em OK ou Salvar.
   Connection vem com o Windows, então normalmente mostra **✓ Encontrado** e não tem Baixar. Como
   nos perfis, só quem o Windows deixa gravar na pasta pode alterá-los.
 
-Como em todas as Configurações, nada nesta página é gravado até você clicar em OK ou Salvar. Sair
-da página com alterações não salvas pergunta antes: **Salvar alterações**, **Descartar
-alterações** ou **Continuar editando**.
+Embaixo de cada pasta desta página — a dos perfis e a das ferramentas remotas — uma linha diz
+quais arquivos o CapyPanel não está usando e por quê, como "2 arquivos ignorados: broken.json (não
+pode ser lido), clinicas.json (feito por outro usuário)". Passe o mouse nela para ver os caminhos
+inteiros e os erros; ela fica escondida quando todos os arquivos estão em uso.
+
+Como em todas as Configurações, nada nesta página é gravado até você clicar em Salvar. Sair da
+página, ou fechar as Configurações, com alterações não salvas pergunta antes: **Salvar
+alterações**, **Descartar alterações** ou **Continuar editando**.
 
 ## Aparência
 

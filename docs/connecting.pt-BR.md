@@ -41,7 +41,7 @@ Raspberry Pis, Área de Trabalho Remota. Um **perfil de conexão** diz qual dela
   perfis; são perfis comuns, e um que você exclui continua excluído.
 - Todos os perfis ficam juntos em `C:\ProgramData\CapyPanel\profiles\`, junto da lista padrão,
   para que todos no PC vejam os mesmos e seja fácil conferi-los. **As permissões do Windows
-  decidem quem pode alterá-los**: depois que o CapyPanel cria a pasta, ela fica somente leitura
+  decidem quem pode alterá-los**: o CapyPanel cria a pasta no primeiro início, somente leitura
   para os outros usuários. Um arquivo de perfil criado por outro usuário (que não seja
   administrador) é ignorado.
 - **O perfil padrão**, usado pelos hosts cujos grupos não definem nenhum, é escolhido na mesma
@@ -73,18 +73,20 @@ compartilhado nunca é alterado.
 
 - **Num grupo:** clique com o botão direito no grupo > **Perfil de conexão**. Todos os hosts
   dentro dele o seguem, inclusive os de grupos aninhados, a menos que definam o próprio.
-- **Em hosts:** no campo **Perfil de conexão** do host, ou clique com o botão direito em um ou
-  mais hosts > **Perfil de conexão**.
+- **Em hosts:** no campo **Perfil de conexão** do próprio host, em **Editar selecionado…** (F2).
+  Uma edição pode cobrir vários hosts de uma vez.
 - **"Do grupo"** significa que o host segue o grupo mais próximo que define um perfil. Hosts sem
   perfil em lugar nenhum usam o padrão.
-- **Só uma vez:** a seta do botão **Conectar** da barra de ferramentas > **Conectar uma vez com**
-  conecta os hosts selecionados com outro perfil, sem alterá-los.
+- **Só uma vez:** a seta do botão **Conectar** da barra de ferramentas lista **Conectar com
+  RealVNC**, **Conectar com Remote Desktop** e assim por diante, um por perfil: os hosts
+  selecionados abrem com aquele perfil desta vez, sem serem alterados.
 
 O painel **Detalhes** diz qual perfil cada host acaba usando, em **Conexão**.
 
 Uma lista guarda só o ID do perfil. Quando um host ou grupo cita um perfil que o seu PC não tem,
-ele segue o perfil do grupo (ou o padrão), e o menu do botão direito mostra o que falta como "não
-disponível neste PC".
+ele segue o perfil do grupo (ou o padrão), e o que falta é marcado como "não disponível neste PC"
+onde quer que apareça: no campo **Perfil de conexão** do host e no menu **Perfil de conexão** de
+um grupo.
 
 ## Área de Trabalho Remota
 

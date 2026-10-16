@@ -39,8 +39,8 @@ Remote Desktop. A **connection profile** says which one a host uses:
   profiles; they're ordinary profiles, and one you delete stays deleted.
 - All profiles are kept together in `C:\ProgramData\CapyPanel\profiles\`, beside the default
   list, so everyone on the PC sees the same ones and they're easy to check. **Windows
-  permissions decide who can change them**: the folder is read-only for other users once
-  CapyPanel makes it. A profile file made by another user (not an administrator) is ignored.
+  permissions decide who can change them**: CapyPanel creates the folder at its first start,
+  read-only for other users. A profile file made by another user (not an administrator) is ignored.
 - **The default profile**, used by hosts whose groups set none, is chosen on the same page and
   saved in the same folder, so it's the same for everyone.
 - Deleting a profile asks first, and says how many hosts and groups in the open list use it.
@@ -69,18 +69,20 @@ later, and the shared file is never changed.
 
 - **On a group:** right-click the group > **Connection profile**. Every host inside follows it,
   including hosts in groups nested inside, unless they set their own.
-- **On hosts:** in the host's **Connection profile** field, or right-click one or more hosts >
-  **Connection profile**.
+- **On hosts:** in the host's own **Connection profile** field, in **Edit selected…** (F2). One
+  edit can cover several hosts at once.
 - **"From group"** means the host follows the nearest group that sets a profile. Hosts with no
   profile anywhere use the default.
-- **Just once:** the arrow on the toolbar's **Connect** button > **Connect once with** connects
-  the selected hosts with another profile, without changing them.
+- **Just once:** the arrow on the toolbar's **Connect** button lists **Connect with RealVNC**,
+  **Connect with Remote Desktop** and so on, one per profile: the selected hosts open with that
+  profile this time, without changing them.
 
 The **Details** pane names the profile each host ends up using, under **Connection**.
 
 A list stores only the profile's ID. When a host or group names a profile your PC doesn't
-have, it follows its group's profile (or the default) instead, and its right-click menu shows the
-missing one as "not available on this PC".
+have, it follows its group's profile (or the default) instead, and the missing one is marked
+"not available on this PC" wherever it's offered: the host's **Connection profile** field, and a
+group's **Connection profile** menu.
 
 ## Remote Desktop
 

@@ -3,20 +3,25 @@
 O CapyPanel pode verificar se os hosts estão ligados e quem está logado neles. Os resultados
 aparecem nas colunas **Status** e **Usuário** da tabela de hosts e no painel **Detalhes**. Eles
 ficam só na memória: nunca no arquivo da lista, e somem quando o CapyPanel fecha. Editar o
-endereço de um host apaga os resultados dele.
+endereço de um host apaga os resultados dele. Para guardá-los, **Inventário > Exportar hosts…**
+grava a última verificação num CSV e oferece verificar os hosts antes (veja [Importando e
+exportando hosts](importing.pt-BR.md)).
 
 ## Atualizar
 
 **Atualizar**, à direita da barra de ferramentas, verifica todos os hosts que a tabela mostra: o
-grupo escolhido à esquerda com seus subgrupos, uma tag, Todos os hosts ou os resultados de uma
-pesquisa. Não é preciso selecionar nada.
+grupo escolhido à esquerda com seus subgrupos, uma tag, Todos os hosts, Sem grupo ou os
+resultados de uma pesquisa. Não é preciso selecionar nada.
 
 - Clique nele e escolha **Status** ou **Usuários logados**.
 - Clique com o botão direito para marcar os dois e clique em **Executar**. O CapyPanel lembra o
-  que você marcou.
+  que você marcou, e a dica dele diz o que é.
+- **F5** faz o mesmo que esse **Executar**, nos hosts exibidos, sem abrir o painel. Ele é ignorado
+  enquanto uma verificação já está rodando.
 
-Para verificar só alguns hosts, selecione-os e use o botão direito > **Atualizar**. O botão
-direito num grupo verifica os hosts dele, incluindo os subgrupos.
+Para verificar só alguns hosts, selecione-os e use o botão direito > **Atualizar status** ou
+**Atualizar usuários logados**. O menu de botão direito de um grupo tem os mesmos dois itens, para
+os hosts dele e os dos grupos de dentro.
 
 O CapyPanel verifica 8 hosts por vez; a barra de status mostra o andamento e um botão **Parar**.
 Verificar quem está logado em mais de 50 hosts pergunta antes. Um host sem endereço, cujo nome não
@@ -57,9 +62,9 @@ Remota**, de qual PC ela veio e desde quando. As sessões ativas vêm primeiro. 
 verificação, a seção diz **Não verificado**; sem ninguém logado, **Ninguém logado**; e quando a
 verificação falha, o motivo aparece abaixo, com a explicação completa na dica do mouse.
 
-**Exibir > Usuários > Mostrar domínio** vem ligado e é lembrado. Desligue para ver só `usuário` na
-coluna, no painel de detalhes e nas pesquisas; ao passar o mouse, o `DOMÍNIO\usuário` completo
-continua aparecendo, então um "admin" local não passa pelo do domínio.
+**Exibir > Mostrar domínio dos usuários** vem ligado e é lembrado. Desligue para ver só
+`usuário` na coluna, no painel de detalhes e nas pesquisas; ao passar o mouse, o
+`DOMÍNIO\usuário` completo continua aparecendo, então um "admin" local não passa pelo do domínio.
 
 O CapyPanel lê isso pelo próprio serviço de sessões remotas do Windows: nada é instalado nos
 hosts, e funciona qualquer que seja o idioma deles. É preciso uma conta de administrador em cada

@@ -1,4 +1,9 @@
-<h1 align="center">CapyPanel</h1>
+<h1 align="center">
+  <img src="docs/images/capypanel-icon.png" width="96" height="96" alt=""><br>
+  CapyPanel
+</h1>
+
+<p align="center">Todos os computadores sob seus cuidados, em uma só janela.</p>
 
 <p align="center">
   <a href="README.md"><img src="https://flagcdn.com/40x30/us.png" width="40" height="30" alt="English" title="English"></a>
@@ -6,34 +11,26 @@
   <a href="README.pt-BR.md"><img src="https://flagcdn.com/40x30/br.png" width="40" height="30" alt="Português (Brasil)" title="Português (Brasil)"></a>
 </p>
 
-O CapyPanel reúne numa só janela todos os computadores que você administra. É um app de desktop
-para Windows feito para equipes de TI: organize seus hosts em listas e abra a tela remota de
-qualquer um deles pela Área de Trabalho Remota ou pelo visualizador VNC que você já usa.
+O CapyPanel é um app de desktop para Windows feito para equipes de TI: organize em listas os
+computadores que você administra, veja quais estão ligados e quem está logado neles, e abra a tela
+remota de qualquer um pela Área de Trabalho Remota ou pelo visualizador VNC que você já usa.
 
-> **Situação: beta (0.17.0).** Roda a partir do código-fonte; ainda não há instalador.
+> **Situação: beta (0.18.0).** Roda a partir do código-fonte; ainda não há instalador.
 
-## Funcionalidades
+![A janela principal do CapyPanel: grupos à esquerda, hosts no meio, detalhes à direita](docs/images/main-window-dark.png)
 
-### Lançadas
+## O que ele faz
 
-- Tela remota (UltraVNC, RealVNC)
-- Área de Trabalho Remota (RDP)
+- Conexão remota
+  - UltraVNC
+  - RealVNC
+  - Área de Trabalho Remota (RDP)
 - Perfis de conexão
 - Listas de hosts compartilhadas
 - Status dos hosts
 - Usuários logados
 - Pesquisa
-- Barra de ferramentas redesenhada
-- Mover grupos
-
-### Em desenvolvimento
-
-- Importação em massa
-
-### Planejadas
-
-- SSH
-- Ações nos hosts
+- Importação e exportação
 
 ## Documentação
 
@@ -43,6 +40,8 @@ Também online, com busca: **[gabrielmariense.github.io/CapyPanel/pt-BR](https:/
   hosts
 - [Listas de hosts](docs/host-lists.pt-BR.md): grupos, tags e as listas padrão, pessoal e
   compartilhadas
+- [Importando e exportando hosts](docs/importing.pt-BR.md): muitos hosts de uma vez, entrando e
+  saindo em CSV
 - [Conectando](docs/connecting.pt-BR.md): visualizadores VNC, Área de Trabalho Remota, perfis de
   conexão e senhas
 - [Verificando hosts](docs/checking.pt-BR.md): status e usuários logados

@@ -1,6 +1,6 @@
 # The documentation website, built from docs/ with MkDocs Material and published to GitHub Pages.
 site_name: CapyPanel
-site_description: Manage the computers on your network from one window.
+site_description: Every computer you look after, in one window.
 site_url: https://gabrielmariense.github.io/CapyPanel/
 repo_url: https://github.com/gabrielmariense/CapyPanel
 repo_name: gabrielmariense/CapyPanel
@@ -10,6 +10,7 @@ nav:
   - Home: README.md
   - Getting started: getting-started.md
   - Host lists: host-lists.md
+  - Importing and exporting: importing.md
   - Connecting: connecting.md
   - Checking hosts: checking.md
   - Searching hosts: searching.md
@@ -49,11 +50,12 @@ plugins:
         - locale: pt-BR
           name: Português (Brasil)
           build: true
-          site_description: Gerencie os computadores da sua rede em uma só janela.
+          site_description: Todos os computadores sob seus cuidados, em uma só janela.
           nav_translations:
             Home: Início
             Getting started: Primeiros passos
             Host lists: Listas de hosts
+            Importing and exporting: Importando e exportando
             Connecting: Conectando
             Checking hosts: Verificando hosts
             Searching hosts: Pesquisando hosts
