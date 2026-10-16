@@ -17,7 +17,7 @@ remota de qualquer um pela Área de Trabalho Remota ou pelo visualizador VNC que
 
 > **Situação: beta (0.18.0).** Roda a partir do código-fonte; ainda não há instalador.
 
-![A janela principal do CapyPanel: grupos à esquerda, hosts no meio, detalhes à direita](docs/images/main-window-dark.png)
+![A janela principal do CapyPanel: grupos à esquerda, hosts no meio, detalhes à direita](docs/images/main-window-dark-pt-BR.png)
 
 ## O que ele faz
 
