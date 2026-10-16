@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 17:42-0300\n"
+"POT-Creation-Date: 2026-10-16 17:46-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -610,17 +610,14 @@ msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabe�
 msgid "Every computer you look after, in one window."
 msgstr "Todos os computadores sob seus cuidados, em uma só janela."
 
-msgid "Every host field, in the format Import hosts can read back."
-msgstr "Todos os campos do host, no formato que Importar hosts lê de volta."
-
-msgid "Export hosts"
-msgstr "Exportar hosts"
-
 msgid "File not found"
 msgstr "Arquivo não encontrado"
 
 msgid "Find automatically"
 msgstr "Encontrar automaticamente"
+
+msgid "For Import"
+msgstr "Para importar"
 
 msgid ""
 "For example:\n"
@@ -654,9 +651,6 @@ msgstr "Do grupo “{group}”: {profile}"
 #, python-brace-format
 msgid "From “{file}”"
 msgstr "De “{file}”"
-
-msgid "Full backup"
-msgstr "Backup completo"
 
 msgid "General"
 msgstr "Geral"
@@ -1077,6 +1071,12 @@ msgstr "Renomear grupo"
 msgid "Report"
 msgstr "Relatório"
 
+#, python-brace-format
+msgid "Report saved: {n} host from {source}."
+msgid_plural "Report saved: {n} hosts from {source}."
+msgstr[0] "Relatório salvo: {n} host de {source}."
+msgstr[1] "Relatório salvo: {n} hosts de {source}."
+
 msgid "S&top"
 msgstr "Pa&rar"
 
@@ -1288,6 +1288,9 @@ msgstr "A pasta “{folder}” foi criada por outro usuário, então o CapyPanel
 
 msgid "The groups changed meanwhile; try again."
 msgstr "Os grupos mudaram enquanto isso; tente de novo."
+
+msgid "The hosts' own fields, which Import hosts reads back: to move hosts to a list."
+msgstr "Os campos dos próprios hosts, que Importar hosts lê de volta: para levar hosts a uma lista."
 
 msgid "The last used list"
 msgstr "A última lista usada"
@@ -1618,12 +1621,6 @@ msgid "{n} host"
 msgid_plural "{n} hosts"
 msgstr[0] "{n} host"
 msgstr[1] "{n} hosts"
-
-#, python-brace-format
-msgid "{n} host exported from {source}."
-msgid_plural "{n} hosts exported from {source}."
-msgstr[0] "{n} host exportado de {source}."
-msgstr[1] "{n} hosts exportados de {source}."
 
 #, python-brace-format
 msgid "{n} host has no address and was skipped."

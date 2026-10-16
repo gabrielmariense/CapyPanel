@@ -900,7 +900,7 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(note, 10_000)
 
     def export_hosts(self) -> None:
-        """Inventory > Export hosts…: pick hosts and columns, then save a CSV file or copy the
+        """The toolbar's Report: pick hosts and columns, then save a CSV file or copy the
         rows. Works on read-only lists too: it changes nothing."""
         doc = self._doc
         if doc is None or not doc.hosts.hosts:

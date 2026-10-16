@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 17:42-0300\n"
+"POT-Creation-Date: 2026-10-16 17:46-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -617,16 +617,13 @@ msgstr ""
 msgid "Every computer you look after, in one window."
 msgstr ""
 
-msgid "Every host field, in the format Import hosts can read back."
-msgstr ""
-
-msgid "Export hosts"
-msgstr ""
-
 msgid "File not found"
 msgstr ""
 
 msgid "Find automatically"
+msgstr ""
+
+msgid "For Import"
 msgstr ""
 
 msgid ""
@@ -659,9 +656,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "From “{file}”"
-msgstr ""
-
-msgid "Full backup"
 msgstr ""
 
 msgid "General"
@@ -1099,6 +1093,12 @@ msgstr ""
 msgid "Report"
 msgstr ""
 
+#, python-brace-format
+msgid "Report saved: {n} host from {source}."
+msgid_plural "Report saved: {n} hosts from {source}."
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "S&top"
 msgstr ""
 
@@ -1328,6 +1328,11 @@ msgid ""
 msgstr ""
 
 msgid "The groups changed meanwhile; try again."
+msgstr ""
+
+msgid ""
+"The hosts' own fields, which Import hosts reads back: to move hosts to a "
+"list."
 msgstr ""
 
 msgid "The last used list"
@@ -1679,12 +1684,6 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} host"
 msgid_plural "{n} hosts"
-msgstr[0] ""
-msgstr[1] ""
-
-#, python-brace-format
-msgid "{n} host exported from {source}."
-msgid_plural "{n} hosts exported from {source}."
 msgstr[0] ""
 msgstr[1] ""
 

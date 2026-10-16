@@ -9,7 +9,7 @@ from capypanel.core.hosts import listfile
 from capypanel.core.hosts.bulk import parse
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.ui import export_hosts
-from capypanel.ui.export_hosts import FULL_BACKUP, ExportDialog
+from capypanel.ui.export_hosts import FOR_IMPORT, ExportDialog
 from capypanel.ui.import_hosts import read_text
 from capypanel.ui.main_window.window import MainWindow
 
@@ -32,7 +32,7 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[MainWindow]:
 def _run(
     window: MainWindow, monkeypatch: pytest.MonkeyPatch, use: Callable[[ExportDialog], None]
 ) -> None:
-    """Opens Inventory > Export hosts… and does `use` with the window instead of a person."""
+    """Opens the toolbar's Report and does `use` with the window instead of a person."""
 
     def run(dialog: ExportDialog) -> int:
         use(dialog)
@@ -55,7 +55,7 @@ def test_it_opens_on_what_is_shown_with_every_row_in_the_preview(
             "Front desk (0 hosts)", "Tag: 2nd floor (1 host)", "Tag: kiosk (1 host)",
         ]  # fmt: skip
         seen.append(d.source.currentText())
-        assert d.columns() == list(FULL_BACKUP) and d.preset.currentText() == "Full backup"
+        assert d.columns() == list(FOR_IMPORT) and d.preset.currentText() == "For Import"
         d.source.setCurrentIndex(0)
         assert d.preview.topLevelItemCount() == 2  # every row, not a sample
         assert d.rows()[0] == ["HQ-01", "10.0.0.1", "Headquarters", "kiosk;2nd floor", ""]
@@ -136,8 +136,8 @@ def test_export_saves_csv_that_imports_back_and_says_where(
     assert {r.name for r in rows} == {"HQ-01", "LOOSE-1"}
     hq = next(r for r in rows if r.name == "HQ-01")
     assert hq.group == "Headquarters" and hq.tags == ("kiosk", "2nd floor")
-    assert told == ["2 hosts exported from All hosts."]
-    assert window.statusBar().currentMessage() == "2 hosts exported from All hosts."
+    assert told == ["Report saved: 2 hosts from All hosts."]
+    assert window.statusBar().currentMessage() == "Report saved: 2 hosts from All hosts."
 
 
 def test_copy_puts_every_row_on_the_clipboard_for_excel(
