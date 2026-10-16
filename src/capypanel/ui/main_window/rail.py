@@ -2,7 +2,7 @@
 
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import QToolButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QButtonGroup, QToolButton, QVBoxLayout, QWidget
 
 from capypanel.core.i18n import _
 from capypanel.ui.icons import tabler_icon
@@ -23,6 +23,10 @@ class ToolRail(QWidget):
         self.setFixedWidth(RAIL_WIDTH)
         self.hosts_button = _button(checkable=True)
         self.hosts_button.setChecked(True)  # the only tool for now
+        # One tool is always shown: clicking it again keeps it picked.
+        self._tools = QButtonGroup(self)
+        self._tools.setExclusive(True)
+        self._tools.addButton(self.hosts_button)
         self.settings_button = _button(checkable=False)
         self.settings_button.clicked.connect(self.settings_requested)
         layout = QVBoxLayout(self)
