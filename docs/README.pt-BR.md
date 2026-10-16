@@ -5,7 +5,7 @@ Windows feito para equipes de TI: organize em listas os computadores que você a
 quais estão ligados e quem está logado neles, e abra a tela remota de qualquer um pela Área de
 Trabalho Remota ou pelo visualizador VNC que você já usa.
 
-![A janela principal do CapyPanel: grupos à esquerda, hosts no meio, detalhes à direita](images/main-window-dark.png)
+![A janela principal do CapyPanel: grupos à esquerda, hosts no meio, detalhes à direita](images/main-window-dark-pt-BR.png)
 
 ## O que ele faz
 
