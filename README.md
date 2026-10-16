@@ -1,4 +1,9 @@
-<h1 align="center">CapyPanel</h1>
+<h1 align="center">
+  <img src="docs/images/capypanel-icon.png" width="96" height="96" alt=""><br>
+  CapyPanel
+</h1>
+
+<p align="center">Every computer you look after, in one window.</p>
 
 <p align="center">
   <a href="README.md"><img src="https://flagcdn.com/40x30/us.png" width="40" height="30" alt="English" title="English"></a>
@@ -6,34 +11,26 @@
   <a href="README.pt-BR.md"><img src="https://flagcdn.com/40x30/br.png" width="40" height="30" alt="Português (Brasil)" title="Português (Brasil)"></a>
 </p>
 
-CapyPanel puts every computer you look after in one window. It's a Windows desktop app for IT
-staff: keep your hosts in organized lists, and open a remote screen on any of them through Remote
-Desktop or the VNC viewer you already use.
+CapyPanel is a Windows desktop app for IT staff: keep the computers you look after in organized
+lists, see which ones are on and who is logged on to them, and open a remote screen on any of
+them through Remote Desktop or the VNC viewer you already use.
 
-> **Status: beta (0.17.0).** It runs from source; there's no installer yet.
+> **Status: beta (0.18.0).** It runs from source; there's no installer yet.
 
-## Features
+![The CapyPanel main window: groups on the left, hosts in the middle, details on the right](docs/images/main-window-dark.png)
 
-### Released
+## What it does
 
-- Remote screen (UltraVNC, RealVNC)
-- Remote Desktop (RDP)
+- Remote connection
+  - UltraVNC
+  - RealVNC
+  - Remote Desktop (RDP)
 - Connection profiles
 - Shared host lists
 - Host status
 - Logged-on users
 - Search
-- Toolbar redesign
-- Moving groups
-
-### In development
-
-- Bulk import
-
-### Planned
-
-- SSH
-- Actions on hosts
+- Import and export
 
 ## Documentation
 
@@ -41,6 +38,7 @@ Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrie
 
 - [Getting started](docs/getting-started.md): run CapyPanel and add your first hosts
 - [Host lists](docs/host-lists.md): groups, tags, and default, personal and shared lists
+- [Importing and exporting hosts](docs/importing.md): many hosts at once, in and out as CSV
 - [Connecting](docs/connecting.md): VNC viewers, Remote Desktop, connection profiles and passwords
 - [Checking hosts](docs/checking.md): status and logged-on users
 - [Searching hosts](docs/searching.md): finding a host anywhere in the list

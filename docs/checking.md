@@ -3,19 +3,24 @@
 CapyPanel can check whether hosts are on and who is logged on to them. The results show in the
 host table's **Status** and **User** columns and in the **Details** pane. They're kept in
 memory only: never in the list file, and gone when CapyPanel closes. Editing a host's address
-clears its results.
+clears its results. To keep them, **Inventory > Export hosts…** writes the last check into a CSV,
+and offers to check the hosts first (see [Importing and exporting hosts](importing.md)).
 
 ## Refresh
 
 **Refresh**, on the right of the toolbar, checks every host the table shows: the group picked on
-the left with its subgroups, a tag, All hosts, or the results of a search. Nothing needs to be
+the left with its subgroups, a tag, All hosts, No group, or the results of a search. Nothing needs to be
 selected.
 
 - Click it and choose **Status** or **Logged-on users**.
-- Right-click it to tick both and click **Run**. CapyPanel remembers the ticks.
+- Right-click it to tick both and click **Run**. CapyPanel remembers the ticks, and its tooltip
+  says what they are.
+- **F5** does the same as that **Run**, on the hosts shown, without opening the panel. It's
+  ignored while a check is already running.
 
-To check only some hosts, select them and right-click > **Refresh**. Right-clicking a group checks
-its hosts, subgroups included.
+To check only some hosts, select them and right-click > **Refresh status** or **Refresh logged-on
+users**. A group's right-click menu has the same two items, for its hosts and those in the groups
+inside it.
 
 CapyPanel checks 8 hosts at a time; the status bar shows the progress and a **Stop** button.
 Checking who is logged on to more than 50 hosts asks first. A host without an address, whose name
@@ -55,7 +60,7 @@ came from, and since when. Active sessions come first. Before any check the sect
 **Not checked**; with nobody logged on, **No one logged on**; and when a check failed, the reason
 below, with the full explanation in its tooltip.
 
-**View > Users > Show domain** is on and remembered. Turn it off to see just `user` in the
+**View > Show users' domain** is on and remembered. Turn it off to see just `user` in the
 column, the Details pane and searches; what you hover over still shows the whole
 `DOMAIN\user`, so a local "admin" can't pass for the domain's.
 

@@ -13,7 +13,7 @@ uv run capypanel
 
 A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes
 abrem na hora. A versão aparece na barra de título, seguida do commit quando você roda pelo
-código-fonte, por exemplo `CapyPanel 0.17.0 (abc1234)`. Informe-a ao relatar um problema.
+código-fonte, por exemplo `CapyPanel 0.18.0 (abc1234)`. Informe-a ao relatar um problema.
 
 A Área de Trabalho Remota funciona de cara, com o cliente que já vem no Windows. Para o VNC você
 também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
@@ -25,7 +25,7 @@ também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
 | Parte | O que mostra |
 |---|---|
 | **Barra de ferramentas** (topo) | **Conectar**, e **Atualizar** para verificar os hosts exibidos (veja [Verificando hosts](checking.pt-BR.md)) |
-| **Grupos** (esquerda) | "Todos os hosts" fixo no topo, com quantos hosts a lista tem. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags** |
+| **Grupos** (esquerda) | "Todos os hosts" fixo no topo, com quantos hosts a lista tem, e "Sem grupo" embaixo dele, com quantos não estão em nenhum. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags** |
 | **Pesquisa** (acima dos hosts) | Encontra um host em qualquer lugar da lista, seja o que for que esteja escolhido à esquerda (veja [Pesquisando hosts](searching.pt-BR.md)) |
 | **Hosts** (meio) | Os hosts do grupo ou da tag selecionada, com **Status** e **Usuário** |
 | **Detalhes** (direita) | O host selecionado: o nome e o status dele, depois **Conexão** (endereço, grupo, perfil), quem está **logado**, as **tags** e as **notas**. Clique em qualquer valor para copiá-lo. Sem nada selecionado, quantos hosts estão exibidos e quantos deles estão online, offline, não encontrados ou não verificados |
@@ -53,21 +53,45 @@ estado inicial, e não mexe nas suas configurações.
    - **Nome:** como o host aparece na lista.
    - **Endereço:** um nome de computador ou endereço IP. Deixe em branco se o nome *for* o nome
      do computador (por exemplo `PC-1234`).
+   - **Grupo:** para onde ele vai. **Sem grupo** também é uma opção, para um host que ainda não
+     pertence a lugar nenhum.
    - **Tags:** digite uma tag e pressione Enter; Backspace numa caixa vazia traz a última tag de
      volta para edição.
    - **Perfil de conexão:** como acessar o host. "Do grupo" segue o perfil do grupo.
 3. Dê um clique duplo no host, selecione-o e pressione Enter, ou clique em **Conectar** na barra
    de ferramentas, para abrir uma conexão com ele pelo perfil dele.
 
-Clique com o botão direito num host para conectar, verificá-lo, mostrá-lo no grupo dele, copiar o
-endereço ou o nome, ou editá-lo ou removê-lo. O botão direito num espaço vazio oferece
-**Adicionar grupo…** no painel de grupos, e **Adicionar host…** e **Adicionar grupo…** na lista de
-hosts. Para mover hosts para outro grupo, arraste-os até ele (veja
-[Listas de hosts](host-lists.pt-BR.md#organizar-grupos-e-hosts)). Remover um grupo pergunta o que
-fazer com os grupos e hosts dentro dele (veja
+Clique com o botão direito num host para conectar, para atualizar o status ou os usuários logados
+dele, para copiar a coluna em que você clicou, ou para editá-lo, movê-lo ou removê-lo. O botão
+direito num espaço vazio oferece **Adicionar grupo…** no painel de grupos, e **Adicionar host…** e
+**Adicionar grupo…** na lista de hosts. Para mover hosts para outro grupo, arraste-os até ele
+(veja [Listas de hosts](host-lists.pt-BR.md#organizar-grupos-e-hosts)). Remover um grupo pergunta
+o que fazer com os grupos e hosts dentro dele (veja
 [Listas de hosts](host-lists.pt-BR.md#remover-um-grupo)).
 
-As edições são salvas no arquivo da lista na hora; não há botão Salvar.
+As edições são salvas no arquivo da lista na hora; não há botão Salvar. Para adicionar muitos
+hosts de uma vez, de uma planilha ou de outro inventário, veja
+[Importando e exportando hosts](importing.pt-BR.md).
+
+## Ajuda e como relatar um problema
+
+O menu **Ajuda** tem três itens:
+
+- **Documentação** abre este site, em português quando o app está em português.
+- **Relatar um problema** abre uma issue nova no GitHub já com os dados que importam: a versão,
+  como o CapyPanel está rodando, o Windows, o tema, o idioma, o Qt e o Python. Nunca inclui nome
+  de usuário, computador, domínio nem caminho de arquivo.
+- **Sobre o CapyPanel** mostra o ícone do app, o nome e a versão — clique na versão para copiá-la
+  com o commit — acima de três abas:
+
+| Aba | O que tem |
+|---|---|
+| **Sobre** | O que o CapyPanel é, os direitos autorais, que é software livre sob a GPL-3.0 sem garantia, links para a documentação e para o código-fonte, e uma linha **Build** com o commit e o modo portátil quando se aplicam |
+| **Créditos** | Quem fez o CapyPanel e os ícones que ele usa |
+| **Licenças** | Cada parte com que ele é feito — CapyPanel (GPL-3.0), Qt e Qt for Python (LGPL-3.0), Python (PSF License), Tabler Icons (MIT) — com a versão e os direitos autorais. Clique numa licença para lê-la numa janela aqui; todas vêm com o CapyPanel, e um link abre a pasta que as guarda |
+
+**Relatar um problema** e **Abrir pasta de logs** também estão nessa janela, para um relato sair
+com os logs anexados.
 
 ## Atalhos de teclado
 
@@ -75,7 +99,7 @@ As edições são salvas no arquivo da lista na hora; não há botão Salvar.
 |---|---|
 | Enter (na lista de hosts) | Abrir uma conexão com os hosts selecionados |
 | Ctrl+F / Esc | Pesquisar na lista inteira / encerrar a pesquisa |
-| Ctrl+G | Mostrar o host selecionado no grupo dele |
+| F5 | Atualizar os hosts exibidos, verificando o que está marcado no painel do botão Atualizar |
 | Ctrl+M | Conexão manual a um endereço que não está na lista |
 | Ctrl+Shift+C | Copiar os endereços dos hosts selecionados |
 | Ctrl+N / Ctrl+Shift+N | Adicionar host / Adicionar grupo |

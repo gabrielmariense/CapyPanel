@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QMenu,
     QPushButton,
     QRadioButton,
     QSpinBox,
@@ -24,8 +25,11 @@ from capypanel.core import i18n, settings
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.locations import ListKind
+from capypanel.core.hosts.model import HostList
 from capypanel.core.i18n import _
+from capypanel.ui.groups import TreeMenu, fill_host_move_menu
 from capypanel.ui.host_lists import HostListsView
+from capypanel.ui.hosts import group_path
 from capypanel.ui.notes import hint, notes
 from capypanel.ui.themes import engine as themes
 
@@ -59,7 +63,6 @@ class PathLabel(QLabel):
         super().__init__()
         self.setObjectName("hint")
         self.setMinimumWidth(80)
-        self.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self._full = ""
         if path is not None:
             self.set_path(path)
@@ -78,8 +81,31 @@ class PathLabel(QLabel):
         self.setText(self.fontMetrics().elidedText(self._full, Qt.TextElideMode.ElideMiddle, width))
 
 
-def _open_folder(folder: Path) -> None:
+def open_folder(folder: Path) -> None:
     QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
+
+
+class MenuCombo(QComboBox):
+    """A dropdown that opens a menu instead of a list, so it can hold submenus, and still looks
+    and sizes like the other dropdowns. Its one item is the text shown."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._menu = QMenu(self)
+
+    def menu(self) -> QMenu:
+        return self._menu
+
+    def text(self) -> str:
+        return self.currentText()
+
+    def setText(self, text: str) -> None:
+        self.clear()
+        self.addItem(text)
+
+    def showPopup(self) -> None:
+        self._menu.setMinimumWidth(self.width())
+        self._menu.popup(self.mapToGlobal(self.rect().bottomLeft()))
 
 
 # ---- General ----
@@ -96,7 +122,11 @@ class GeneralPage(Page):
         added: list[Path],
         language: str,
         auto_status: tuple[bool, int] = (False, 5),
+        start_view: tuple[str, str] | None = None,
+        host_list: HostList | None = None,
     ) -> None:
+        """start_view: the open list's (show, group); None when no list is open. host_list: that
+        list, for its groups."""
         super().__init__(_("General"))
         # Each language is named in its own language, so anyone can find theirs.
         self.language = QComboBox()
@@ -140,14 +170,36 @@ class GeneralPage(Page):
         self.start_list.setCurrentIndex(max(index, 0))
         label = QLabel(_("&Open on startup:"))
         label.setBuddy(self.start_list)
-        row = QHBoxLayout()
-        row.addWidget(label)
-        row.addWidget(self.start_list, 1)
-        start_layout = QVBoxLayout(start)
-        start_layout.addLayout(row)
+        # Labels in one column, the dropdowns lined up beside them at the same width.
+        start_layout = QGridLayout(start)
+        start_layout.setColumnStretch(1, 1)
+        start_layout.addWidget(label, 0, 0)
+        start_layout.addWidget(self.start_list, 0, 1)
         start_layout.addWidget(
-            notes(_("If that list can't be opened: the default list, then your personal list."))
-        )
+            notes(_("If that list can't be opened: the default list, then your personal list.")),
+            1, 0, 1, 2,
+        )  # fmt: skip
+        # What the open list shows first; each list keeps its own choice. One button: its menu
+        # has All hosts, Where I left off, and "A chosen group" with the groups as a tree.
+        self._host_list = host_list
+        self._first = start_view or (locations.SHOW_ALL, "")
+        self.show_first = MenuCombo()
+        self.show_first.setEnabled(start_view is not None)
+        self.show_first.menu().aboutToShow.connect(self._fill_first_menu)
+        self._show_first_text()
+        first_label = QLabel(_("Show &first:"))
+        first_label.setBuddy(self.show_first)
+        start_layout.addWidget(first_label, 2, 0)
+        start_layout.addWidget(self.show_first, 2, 1)
+        start_layout.addWidget(
+            notes(
+                _("For the list open now; each list keeps its own. A group's right-click menu "
+                  "can choose it too.")
+                if start_view is not None
+                else _("Open a host list to choose what it shows first.")
+            ),
+            3, 0, 1, 2,
+        )  # fmt: skip
 
         files = QGroupBox(_("Where CapyPanel keeps its files"))
         grid = QGridLayout(files)
@@ -159,7 +211,7 @@ class GeneralPage(Page):
         )
         for row, (label, folder) in enumerate(folders):
             button = QPushButton(_("Open folder"))
-            button.clicked.connect(lambda _checked=False, f=folder: _open_folder(f))
+            button.clicked.connect(lambda _checked=False, f=folder: open_folder(f))
             grid.addWidget(QLabel(label), row, 0)
             grid.addWidget(PathLabel(folder), row, 1)
             grid.addWidget(button, row, 2)
@@ -202,6 +254,46 @@ class GeneralPage(Page):
 
     def start_choice(self) -> str:
         return str(self.start_list.currentData())
+
+    def _fill_first_menu(self) -> None:
+        menu = self.show_first.menu()
+        menu.clear()
+        show, group = self._first
+        for text, value in (
+            (_("All hosts"), locations.SHOW_ALL),
+            (_("Where I left off"), locations.SHOW_LAST),
+        ):
+            item = menu.addAction(text)
+            item.setCheckable(True)
+            item.setChecked(show == value)
+            item.triggered.connect(lambda _c=False, v=value: self.pick_first(v))
+        chosen = TreeMenu(_("A chosen &group"), menu)
+        menu.addMenu(chosen)
+        if self._host_list is not None:
+            current = group if show == locations.SHOW_GROUP else None
+            fill_host_move_menu(
+                chosen,
+                self._host_list,
+                lambda g: self.pick_first(locations.SHOW_GROUP, g),
+                current=current,
+            )
+
+    def pick_first(self, show: str, group: str = "") -> None:
+        self._first = (show, group)
+        self._show_first_text()
+
+    def _show_first_text(self) -> None:
+        show, group = self._first
+        if show == locations.SHOW_GROUP:
+            name = group_path(self._host_list, group) if self._host_list is not None else group
+            self.show_first.setText(_("Group: {name}").format(name=name))
+        else:
+            labels = {locations.SHOW_LAST: _("Where I left off")}
+            self.show_first.setText(labels.get(show, _("All hosts")))
+
+    def show_first_choice(self) -> tuple[str, str] | None:
+        """(show, group) for the open list; None when no list is open."""
+        return self._first if self.show_first.isEnabled() else None
 
     def language_choice(self) -> str:
         return str(self.language.currentData() or i18n.DEFAULT_LANGUAGE)

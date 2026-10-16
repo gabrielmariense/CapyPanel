@@ -17,15 +17,16 @@ class Actions:
     add_host: QAction
     add_group: QAction
     manage_groups: QAction
+    import_hosts: QAction
+    export_hosts: QAction
     edit: QAction
     remove: QAction
     connect_host: QAction
     manual_connect: QAction
     copy_address: QAction
-    copy_name: QAction
-    show_in_group: QAction
     check_status: QAction
     check_users: QAction
+    refresh_shown: QAction
     forget_passwords: QAction
     connection_profiles: QAction
     show_toolbar: QAction
@@ -35,6 +36,9 @@ class Actions:
     show_status_bar: QAction
     show_domains: QAction
     reset_layout: QAction
+    documentation: QAction
+    report_problem: QAction
+    about: QAction
 
 
 SHORTCUTS = {
@@ -48,7 +52,7 @@ SHORTCUTS = {
     "connect_host": "Return",  # only while the host table has focus (see MainWindow)
     "manual_connect": "Ctrl+M",
     "copy_address": "Ctrl+Shift+C",
-    "show_in_group": "Ctrl+G",
+    "refresh_shown": "F5",  # what Refresh's right-click panel has ticked
 }
 CHECKABLE = {
     "show_toolbar", "show_groups", "show_tags", "show_details", "show_status_bar", "show_domains"
@@ -77,16 +81,19 @@ def retranslate_actions(a: Actions) -> None:
     a.add_host.setText(_("Add &host…"))
     a.add_group.setText(_("Add &group…"))
     a.manage_groups.setText(_("&Manage groups…"))
+    a.import_hosts.setText(_("&Import hosts…"))
+    a.export_hosts.setText(_("&Export hosts…"))
     a.edit.setText(_("&Edit selected…"))
     a.remove.setText(_("&Remove selected"))
     a.connect_host.setText(_("&Connect"))
     a.manual_connect.setText(_("&Manual connection…"))
-    # Under a "Copy" heading in the right-click menu, so the item names stay short.
-    a.copy_address.setText(_("&Address"))
-    a.copy_name.setText(_("&Name"))
-    a.show_in_group.setText(_("Show in &group"))
-    a.check_status.setText(_("&Status"))
-    a.check_users.setText(_("&Logged-on users"))
+    a.copy_address.setText(_("Co&py address"))
+    a.refresh_shown.setText(_("Refresh"))
+    a.documentation.setText(_("&Documentation"))
+    a.report_problem.setText(_("&Report a problem"))
+    a.about.setText(_("&About CapyPanel"))
+    a.check_status.setText(_("Refresh &status"))
+    a.check_users.setText(_("Refresh &logged-on users"))
     a.forget_passwords.setText(_("&Forget typed passwords"))
     a.connection_profiles.setText(_("Connection &profiles…"))
     a.show_toolbar.setText(_("T&oolbar"))
@@ -94,5 +101,5 @@ def retranslate_actions(a: Actions) -> None:
     a.show_tags.setText(_("T&ags pane"))
     a.show_details.setText(_("&Details pane"))
     a.show_status_bar.setText(_("&Status bar"))
-    a.show_domains.setText(_("Show do&main"))  # under a "Users" heading
+    a.show_domains.setText(_("Show users' do&main"))
     a.reset_layout.setText(_("&Reset layout"))

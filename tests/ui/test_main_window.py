@@ -58,6 +58,7 @@ def test_first_start_creates_the_personal_list_with_a_hosts_group(window: MainWi
         "&Inventory",
         "&Connect",
         "&View",
+        "&Help",
     ]
     assert window.commands.add_host.isEnabled()
 
@@ -131,7 +132,9 @@ def test_host_dialog_cleans_values_and_shows_group_paths(qapp: QApplication) -> 
     hl, hq = HostList().add_group("Headquarters")
     hl, finance = hl.add_group("Finance", parent=hq.id)
     # Full paths, not indentation: the closed drop-down then reads left-aligned.
-    assert [label for _, label in group_choices(hl)] == ["Headquarters", "Headquarters › Finance"]
+    assert [label for _, label in group_choices(hl)] == [
+        "No group", "Headquarters", "Headquarters › Finance"
+    ]  # fmt: skip
     dialog = HostDialog(None, hl, default_group=finance.id)
     assert dialog.group.currentText() == "Headquarters › Finance"
     dialog.name.setText("  PC-9 ")

@@ -1,6 +1,7 @@
 """Where host lists live (default, personal, shared) and the recent-lists menu."""
 
 import os
+from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,8 @@ LISTS_KEY = "host_lists"  # the lists the user added, besides the default and pe
 START_KEY = "start_list"  # "last", "default", "personal", or a list file's path
 START_LAST, START_DEFAULT, START_PERSONAL = "last", "default", "personal"
 RECENT_LIMIT = 10
+VIEWS_KEY = "list_views"  # per list file: what it shows first, and where it was left
+SHOW_ALL, SHOW_LAST, SHOW_GROUP = "all", "last", "group"
 
 
 class ListKind(StrEnum):
@@ -90,15 +93,54 @@ def added_lists(prefs: dict[str, Any]) -> list[Path]:
 
 
 def set_added_lists(prefs: dict[str, Any], paths: list[Path]) -> None:
+    """The lists the user keeps. One taken out is forgotten from the recent ones too, or the
+    last one used would reopen at the next start and come back."""
     unique: list[Path] = []
     for path in paths:
         if not any(same_path(path, p) for p in unique):
             unique.append(path)
+    for gone in added_lists(prefs):
+        if not any(same_path(gone, p) for p in unique):
+            forget_list(prefs, gone)
     prefs[LISTS_KEY] = [str(p) for p in unique]
 
 
 def forget_list(prefs: dict[str, Any], path: Path) -> None:
     prefs[RECENT_KEY] = [str(p) for p in recent_lists(prefs) if not same_path(p, path)]
+
+
+@dataclass(frozen=True)
+class ListView:
+    """What a list shows when it's opened: All hosts, where it was left, or a chosen group."""
+
+    show: str = SHOW_ALL
+    group: str = ""  # with SHOW_GROUP: the group's id ("" = No group)
+    last: tuple[str, str] = ("all", "")  # where it was left: the filter's kind and value
+
+
+def list_view(prefs: dict[str, Any], path: Path) -> ListView:
+    saved = prefs.get(VIEWS_KEY)
+    entry = saved.get(_view_key(path)) if isinstance(saved, dict) else None
+    if not isinstance(entry, dict):
+        return ListView()
+    show = entry.get("show")
+    group, last = entry.get("group"), entry.get("last")
+    return ListView(
+        show if show in (SHOW_ALL, SHOW_LAST, SHOW_GROUP) else SHOW_ALL,
+        group if isinstance(group, str) else "",
+        (str(last[0]), str(last[1])) if isinstance(last, list) and len(last) == 2 else ("all", ""),
+    )
+
+
+def set_list_view(prefs: dict[str, Any], path: Path, view: ListView) -> None:
+    saved = prefs.get(VIEWS_KEY)
+    views = dict(saved) if isinstance(saved, dict) else {}
+    views[_view_key(path)] = {"show": view.show, "group": view.group, "last": list(view.last)}
+    prefs[VIEWS_KEY] = views
+
+
+def _view_key(path: Path) -> str:
+    return os.path.normcase(os.path.abspath(path))
 
 
 def same_path(a: Path, b: Path) -> bool:

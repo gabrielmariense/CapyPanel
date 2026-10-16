@@ -20,8 +20,18 @@ def test_the_starters_show_until_the_folder_exists_then_become_files(tmp_path: P
     store.save(_profile("clinics", "Clinics"))
     files = sorted(p.name for p in (tmp_path / "profiles").glob("*.json"))
     assert files == [
-        "_starters.json", "clinics.json", "realvnc.json", "remote-desktop.json", "ultravnc.json"
+        "_profiles.json", "clinics.json", "realvnc.json", "remote-desktop.json", "ultravnc.json"
     ]  # fmt: skip
+
+
+def test_at_start_the_shipped_profiles_are_placed_in_the_folder(tmp_path: Path) -> None:
+    store = ProfileStore(tmp_path / "profiles")
+    store.place_starters()
+    files = sorted(p.name for p in (tmp_path / "profiles").glob("*.json"))
+    assert files == ["_profiles.json", "realvnc.json", "remote-desktop.json", "ultravnc.json"]
+    store.delete("realvnc")
+    store.place_starters()  # only once: a profile deleted later stays deleted
+    assert [p.name for p in store.all()] == ["Remote Desktop", "UltraVNC"]
 
 
 def test_starters_are_ordinary_profiles_that_can_be_deleted(tmp_path: Path) -> None:
@@ -39,10 +49,11 @@ def test_the_default_lives_in_the_profiles_folder(tmp_path: Path) -> None:
     assert store.default_id() == "ultravnc"  # the starter default
     store.save(_profile("clinics", "Clinics"))
     store.set_default("clinics")
-    saved = json.loads((tmp_path / "profiles" / "_default.json").read_text(encoding="utf-8"))
+    saved = json.loads((tmp_path / "profiles" / "_profiles.json").read_text(encoding="utf-8"))
     assert saved["default_profile"] == "clinics"
+    assert saved["starters_added"] == ["realvnc", "remote-desktop", "ultravnc"]  # one file
     assert ProfileStore(tmp_path / "profiles").default_id() == "clinics"  # everyone on the PC
-    assert "_default" not in {p.id for p in store.all()}  # not mistaken for a profile
+    assert "_profiles" not in {p.id for p in store.all()}  # not mistaken for a profile
     store.delete("clinics")
     assert store.default_id() == "ultravnc"  # deleting the default falls back
 
@@ -84,7 +95,7 @@ def test_files_another_user_made_are_ignored(
     store = ProfileStore(tmp_path / "profiles")
     store.save(_profile("clinics", "Clinics"))
     store.set_default("clinics")
-    planted = {store.folder / "planted.json", store.folder / "_default.json"}
+    planted = {store.folder / "planted.json", store.folder / "_profiles.json"}
     (store.folder / "planted.json").write_text(
         json.dumps({"schema": 1, "id": "planted", "name": "Planted", "tool": "ultravnc"}),
         encoding="utf-8",

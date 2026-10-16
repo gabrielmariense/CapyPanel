@@ -1,7 +1,8 @@
 # Host lists
 
 A host list is one JSON file holding groups, hosts and their tags. CapyPanel shows one list at a
-time and saves every edit to it right away.
+time and saves every edit to it right away. To put many hosts in at once, or to take them out as
+a CSV file, see [Importing and exporting hosts](importing.md).
 
 ## Groups and tags
 
@@ -10,6 +11,9 @@ time and saves every edit to it right away.
   that carries it. Tags you've used before are suggested as you type, with their spelling kept.
 - **Notes** hold anything else worth knowing about a host. They show in the Details pane, and
   searching always covers them.
+- **No group** is where a host sits when you haven't put it in one. "No group (4)" shows under
+  "All hosts" in the left pane, with however many hosts have no group, and hosts dragged onto it
+  leave the group they were in.
 
 A new list starts with one group, **Default group**.
 
@@ -22,31 +26,33 @@ Groups keep the order you give them. In the Groups pane:
   top level;
 - drag selected hosts from the host table onto a group to move them there.
 
-Right-click a group > **Move to** lists **Top level** and every group this one can go into, drawn
-as a tree; the group itself and its own subgroups aren't offered, and where it is now is ticked. A
-group you collapsed stays collapsed as you work, and moving a group into a collapsed one opens the
-way to it, so what you moved stays in sight.
+Right-click a group > **Move to** lists **Groups** — the top of the pane, inside nothing — and
+every group this one can go into, drawn as a tree; the group itself and its own subgroups aren't
+offered, and where it is now is ticked. For hosts, right-click them > **Move to** lists **No
+group** first, then the same tree. A group you collapsed stays collapsed as you work, and moving a
+group into a collapsed one opens the way to it, so what you moved stays in sight.
 
 Every change is saved right away. On a read-only list, dragging is off.
 
-**Inventory > Manage groups…** shows the whole tree in a window, with **Move to**, **Move up**,
-**Move down** and **Sort A–Z**, a one-time sort you can rearrange after. Dragging works there too,
-and nothing changes until you click **OK**. Lists made before version 0.13.0 show their groups in
-the order they were created; Sort A–Z puts them in order once.
+**Inventory > Manage groups…** shows the whole tree in a window, under a **Groups** root with
+tree lines, with **Move to**, **Move up**, **Move down** and **Sort A–Z**, a one-time sort you can
+rearrange after. Dragging works there too: drop a group onto **Groups**, or below the last row, to
+take it out of every group. Nothing changes until you click **OK**. Lists made before version
+0.13.0 show their groups in the order they were created; Sort A–Z puts them in order once.
 
 ## Removing a group
 
-Right-click a group > **Remove**, or press Del with a group picked. An empty group only asks to
-confirm. A group with groups or hosts in it asks what should happen to them:
+Right-click a group > **Remove selected**, or press Del with a group picked. An empty group only
+asks to confirm. A group with anything in it asks what should happen first — "“Floor 3” holds 2
+groups and 7 hosts. What should happen to them?" — and offers two ways out:
 
-- **Move them into "Floor 3"** — the group above it, or **Move them to the top level**. This is
-  the default: its hosts go into that group, its own groups move up one level, and nothing is
-  deleted.
+- **Move them to ▸** picks where they go, from the same tree as moving hosts: **No group**, or any
+  group that isn't being removed. The group above this one is ticked, so the usual answer is one
+  click. Nothing is deleted; the groups inside move along with their hosts, and with **No group**
+  they end up directly under **Groups**.
 - **Remove everything:** the group, every group inside it and all their hosts.
 
-A top-level group can't send its own hosts up, because every host needs a group and "All hosts" is
-the whole list rather than a group. The move is off in that case, with a note saying so; move
-those hosts into another group first to keep them.
+Cancel is the default button, so Enter or Esc leaves the list as it is.
 
 ## Three types of list
 
@@ -73,8 +79,9 @@ where it is. Double-click a list, or select it and click **Open**, to switch to 
 - **Add existing…** adds a list file from anywhere, such as a network folder.
 - **New…** creates an empty list.
 - **Copy current list to…** saves a copy of the open list somewhere else.
-- **Remove from the list** only forgets a list here; it never deletes the file. The default and
-  personal lists can't be removed.
+- **Remove from the list** only forgets a list here; it never deletes the file. CapyPanel stops
+  offering it and no longer reopens it at the next start, even if it was the last one you used.
+  Add it again whenever you like. The default and personal lists can't be removed.
 
 The window remembers the lists in your settings, not in the list files. **Settings > Host lists**
 shows the same table.
@@ -84,6 +91,18 @@ shows the same table.
 Choose it under **Settings > General > Open on startup**: the last used list (the default
 choice), the default list, your personal list, or any list you've added. If that list is
 missing, CapyPanel opens the next one it can (default, then personal) and says so.
+
+## What a list shows first
+
+Each list keeps its own answer, in **Settings > General > Startup > Show first**:
+
+- **All hosts**, the whole list;
+- **Where I left off**, the group, tag or view you had open when you closed it;
+- **A chosen group ▸**, picked from the tree, or No group.
+
+The setting is for the list open now, and the note under it says so. With no list open it reads
+"Open a host list to choose what it shows first." A group's right-click menu sets the same thing:
+**Show this group first** is a tick, and clicking it again clears it.
 
 ## Shared lists and editing at the same time
 

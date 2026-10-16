@@ -18,10 +18,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QObject, Qt
-from PySide6.QtGui import QColor, QFont, QGuiApplication, QPalette
+from PySide6.QtGui import QActionEvent, QColor, QFont, QGuiApplication, QPalette
 from PySide6.QtWidgets import QApplication, QListView, QMenu, QTreeView, QWidget
 
 from capypanel.core.i18n import N_, _
+from capypanel.ui import menus
 
 log = logging.getLogger(__name__)
 
@@ -158,6 +159,9 @@ def apply(theme: Theme) -> None:
     # is Qt's stylesheet wrapper, whose name is empty, so it never reads as "fusion".
     engine_changed = theme.engine != _current.engine or not _applied_once
     _current, _applied_once = theme, True
+    # Qt copies Windows' "slide open" for dropdowns, and a long list rolled open in visible
+    # steps (it flashed): lists open at once instead.
+    QApplication.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, False)
     _follow_system_changes()
     _watch_widgets(app)
     if theme.engine == "native":
@@ -171,9 +175,12 @@ def apply(theme: Theme) -> None:
         # A fresh style instance re-polishes every widget; switching the scheme alone left some
         # views with the previous theme's colours.
         app.setStyle("windows11")
-        app.setStyleSheet(
-            _NATIVE_QSS % native_tokens(app.palette().color(QPalette.ColorRole.Accent))
-        )  # noqa: UP031
+        tokens = native_tokens(app.palette().color(QPalette.ColorRole.Accent))
+        app.setStyleSheet(_NATIVE_QSS % tokens)  # noqa: UP031
+        # Windows' link colour is the accent as is: a deep accent was hard to read on dark.
+        links = QPalette()
+        links.setColor(QPalette.ColorRole.Link, QColor(tokens["accent_text"]))
+        app.setPalette(links)  # only Link is set; every other colour stays the system's
         _refont(app, readable.families())
     else:
         if engine_changed:
@@ -299,13 +306,20 @@ class _Watcher(QObject):
     """Fixes the themes need on every widget, wherever it's made:
     - lists and trees can place their rows before the theme's row padding reaches them, then
       keep those places (rows drew on top of each other): each one places them again when shown;
-    - menus with ticks are marked, so the stylesheet can line their text up with other menus."""
+    - menus with ticks are marked, so the stylesheet can line their text up with other menus;
+    - menus draw shortcuts dimmed at their right edge (menus.ShortcutLayer)."""
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         kind = event.type()
         if kind == QEvent.Type.Show and isinstance(watched, (QListView, QTreeView)):
             watched.doItemsLayout()
+        elif kind == QEvent.Type.Show and isinstance(watched, QMenu):
+            menus.ShortcutLayer.attach(watched)
         elif kind in _ACTION_EVENTS and isinstance(watched, QMenu):
+            if kind != QEvent.Type.ActionRemoved and isinstance(event, QActionEvent):
+                action = event.action()
+                if action is not None:
+                    menus.keep_room_for_shortcut(watched, action)
             ticks = any(a.isCheckable() for a in watched.actions())
             if bool(watched.property("ticks")) != ticks:
                 watched.setProperty("ticks", ticks)
@@ -357,7 +371,6 @@ def _palette(t: dict[str, str]) -> QPalette:
         (role.ButtonText, "text"),
         (role.Highlight, "accent"),
         (role.Accent, "accent"),
-        (role.Link, "accent"),
         (role.PlaceholderText, "text3"),
         (role.Mid, "border"),
         (role.ToolTipBase, "card"),
@@ -365,6 +378,8 @@ def _palette(t: dict[str, str]) -> QPalette:
     ):
         palette.setColor(color_role, QColor(t[key]))
     palette.setColor(role.HighlightedText, QColor("#ffffff"))
+    # Links in text, e.g. the About window's: the accent, made readable on cards.
+    palette.setColor(role.Link, QColor(readable_on(QColor(t["accent"]), t["card"], t["text"])))
     for color_role in (role.ButtonText, role.WindowText, role.Text):
         palette.setColor(QPalette.ColorGroup.Disabled, color_role, QColor(t["text3"]))
     return palette
@@ -437,8 +452,10 @@ QFrame#tagChip { background: %(sel_solid)s; border: none; border-radius: 9px; }
 QToolButton#tagChipRemove {
     border: none; background: transparent; padding: 0 3px; color: %(text)s; }
 QToolButton#tagChipRemove:hover { background: %(hover)s; }
+/* combobox-popup 0: the list opens below, at most maxVisibleItems tall with a scroll bar,
+   instead of Fusion's list over the box that grows as tall as the screen. */
 QComboBox { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx;
-            padding: 4px 10px; min-height: 22px; }
+            padding: 4px 10px; min-height: 22px; combobox-popup: 0; }
 QComboBox:hover { border-color: %(text3)s; }
 QComboBox::drop-down { border: none; width: 24px; }
 /* Styling the drop-down button removes Fusion's arrow, so draw our own. */
@@ -508,6 +525,9 @@ QPushButton:hover { background: %(raised)s; }
 QPushButton:disabled { color: %(text3)s; }
 QPushButton:default { background: %(button)s; border-color: %(button)s; color: #ffffff; }
 QPushButton:default:hover { background: %(button_hover)s; }
+QPushButton:default:disabled { background: %(raised)s; border-color: %(border)s; color: %(text3)s; }
+/* A button that stays down while its page shows (Import > Formats…). */
+QPushButton:checked { background: %(sel_solid)s; border-color: %(accent)s; color: %(text)s; }
 QGroupBox { border: 1px solid %(border)s; border-radius: %(r)spx; margin-top: 16px;
             padding: 14px 12px 10px 12px; background: %(card)s; }
 QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 4px; color: %(text2)s; }

@@ -18,7 +18,9 @@ from capypanel.ui import connect as connect_ui
 from capypanel.ui.connect import CredentialDialog, ManualConnectDialog, Request
 from capypanel.ui.hosts import HostDialog
 from capypanel.ui.main_window import window as window_module
+from capypanel.ui.main_window.host_views import HostTable
 from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.menus import label
 
 Launch = tuple[str, str, int | None, Credential | None, tuple[str, ...]]
 
@@ -205,23 +207,11 @@ def test_the_host_dialog_offers_following_the_group_or_a_profile(window: MainWin
     assert dialog.values().profile == "pis-password"
 
 
-def test_the_profile_menu_sets_several_hosts_at_once(window: MainWindow) -> None:
-    _select(window, "PC-A", "PC-B")
-    menu = QMenu()
-    hosts = window._selected_hosts()  # pyright: ignore[reportPrivateUsage]
-    ids = [h.id for h in hosts]
-    window._add_profile_menu(  # pyright: ignore[reportPrivateUsage]
-        menu, {h.profile for h in hosts}, "follow", lambda p: window.set_hosts_profile(ids, p)
-    )
-    submenu = menu.actions()[0].menu()
-    assert isinstance(submenu, QMenu)
-    items = {a.text(): a for a in submenu.actions() if not a.isSeparator()}
-    assert items["follow"].isChecked()  # neither host has its own profile
-    pick = next(a for text, a in items.items() if text == "Pis (password)")
-    pick.trigger()
+def _set_profile(window: MainWindow, name: str, profile: str) -> None:
     doc = window.document
     assert doc is not None
-    assert {h.profile for h in doc.hosts.hosts if h.name in ("PC-A", "PC-B")} == {"pis-password"}
+    host = next(h for h in doc.hosts.hosts if h.name == name)
+    window._commit(doc.hosts.set_hosts_profile([host.id], profile))  # pyright: ignore[reportPrivateUsage]
 
 
 def test_details_show_the_profile_s_name(window: MainWindow) -> None:
@@ -241,11 +231,17 @@ def test_manual_connection_uses_the_chosen_profile(
     assert dialog.request().target.port == 5901
 
 
-def test_copy_address_and_name(window: MainWindow) -> None:
+def test_one_copy_item_for_the_column_clicked(window: MainWindow) -> None:
     _select(window, "PC-A", "PC-B")
-    window.commands.copy_address.trigger()
+    window.commands.copy_address.trigger()  # Ctrl+Shift+C
     assert sorted(QGuiApplication.clipboard().text().split("\n")) == ["10.0.0.1", "PC-B"]
-    window.commands.copy_name.trigger()
+    menu = QMenu()
+    address = HostTable.COLUMNS.index("address")
+    copy = window._copy_cell_action  # pyright: ignore[reportPrivateUsage]
+    assert copy(menu, address) is window.commands.copy_address  # its shortcut shows
+    name = copy(menu, 0)
+    assert name.text() == "Co&py name"
+    name.trigger()
     assert sorted(QGuiApplication.clipboard().text().split("\n")) == ["PC-A", "PC-B"]
 
 
@@ -255,7 +251,7 @@ def test_connect_commands_follow_the_selection(window: MainWindow) -> None:
     assert not a.connect_host.isEnabled() and not a.copy_address.isEnabled()
     assert a.manual_connect.isEnabled()
     _select(window, "PC-A")
-    assert a.connect_host.isEnabled() and a.copy_name.isEnabled()
+    assert a.connect_host.isEnabled() and a.copy_address.isEnabled()
     # Enter connects only from the host table, never while typing somewhere else.
     assert a.connect_host.shortcutContext() == Qt.ShortcutContext.WidgetWithChildrenShortcut
     assert a.connect_host in window.table.actions()
@@ -377,27 +373,21 @@ def test_a_missing_viewer_offers_to_open_settings(
 
 
 def test_a_host_s_own_unavailable_profile_shows_checked_in_the_menu(window: MainWindow) -> None:
-    doc = window.document
-    assert doc is not None
-    host = next(h for h in doc.hosts.hosts if h.name == "PC-A")
-    window.set_hosts_profile([host.id], "gone-elsewhere")
+    _set_profile(window, "PC-A", "gone-elsewhere")
     menu = QMenu()
     window._add_profile_menu(  # pyright: ignore[reportPrivateUsage]
         menu, {"gone-elsewhere"}, "follow", lambda p: None
     )
     submenu = menu.actions()[0].menu()
     assert isinstance(submenu, QMenu)
-    checked = [a.text() for a in submenu.actions() if a.isChecked()]
+    checked = [label(a) for a in submenu.actions() if a.isChecked()]
     assert checked == ["gone-elsewhere (not available on this PC)"]
 
 
 def test_a_profile_this_pc_lacks_falls_back_to_the_group_s(
     window: MainWindow, launched: list[Launch]
 ) -> None:
-    doc = window.document
-    assert doc is not None
-    host = next(h for h in doc.hosts.hosts if h.name == "PC-A")
-    window.set_hosts_profile([host.id], "gone-elsewhere")
+    _set_profile(window, "PC-A", "gone-elsewhere")
     _select(window, "PC-A")
     assert window.details.shown_value("profile") == "Offices (SecureVNC)"
     window.connector.credentials.remember("offices", Credential("ana", "x"))
@@ -437,7 +427,7 @@ def _menu_on(monkeypatch: pytest.MonkeyPatch, show: Any) -> list[str]:
 
     class Recorded(QMenu):
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
-            seen.extend(a.text() for a in self.actions() if a.text())
+            seen.extend(label(a) for a in self.actions() if a.text())
 
     monkeypatch.setattr(window_module, "QMenu", Recorded)
     show()

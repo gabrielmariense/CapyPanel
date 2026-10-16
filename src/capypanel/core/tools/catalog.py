@@ -14,7 +14,7 @@ from capypanel.core import files, settings, winsec
 from capypanel.core.files import can_create_files
 from capypanel.core.tools import definitions
 from capypanel.core.tools.definitions import ToolDefinition, ToolDefinitionError
-from capypanel.core.tools.profile_store import ProfileStore
+from capypanel.core.tools.profile_store import UNTRUSTED, ProfileStore
 
 log = logging.getLogger(__name__)
 SHIPPED_DIR = Path(__file__).resolve().parent / "presets"
@@ -114,9 +114,9 @@ class ToolCatalog:
         # A tool names a program to run: another user's file must not choose it.
         if winsec.made_by_trusted(path):
             return True
-        reason = "made by another user, so it isn't used"
-        self.problems.append(Problem(path, reason))
-        log.warning("%s skipped: %s", path, reason)
+        if not any(p.path == path for p in self.problems):  # paths() runs more than once
+            self.problems.append(Problem(path, UNTRUSTED))
+            log.warning("%s skipped: %s", path, UNTRUSTED)
         return False
 
 

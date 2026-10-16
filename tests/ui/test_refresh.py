@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 from PySide6.QtCore import QPoint
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtWidgets import QApplication, QDialog, QWidgetAction
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -16,6 +16,7 @@ from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_ui
 from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.menus import label
 from capypanel.ui.themes import engine as themes
 
 DESK = Session("ana", "CORP", "console", "active", None)
@@ -144,6 +145,17 @@ def test_the_panel_runs_several_checks_and_remembers_its_ticks(
     assert window._prefs["refresh"] == {"status": True, "users": False}
 
 
+def test_f5_runs_what_the_panel_has_ticked(window: MainWindow, answers: dict[str, Any]) -> None:
+    _pick_group(window, "Desks")
+    window.refresh_panel.users_box.setChecked(False)
+    f5 = window.commands.refresh_shown
+    assert f5.shortcut().toString() == "F5" and f5 in window.actions()
+    f5.trigger()
+    _wait(window)
+    assert sorted(a for a, *_ in answers["seen"]) == ["10.0.0.2", "10.0.0.3"]
+    assert {users for _a, _s, users, _acc in answers["seen"]} == {False}  # only what's ticked
+
+
 def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
     window: MainWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -188,14 +200,15 @@ def test_a_rejected_typed_account_is_never_tried_on_the_other_hosts(
     assert len(answers["seen"]) == 1  # one host refused it; the batch stopped
 
 
-def test_host_menu_has_sections_with_short_names(
+def test_host_menu_items_read_on_their_own_with_no_headings(
     window: MainWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     seen: list[str] = []
 
     class Recorded(window_module.QMenu):  # type: ignore[misc]
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
-            seen.extend(a.text() for a in self.actions() if a.text())
+            seen.extend(label(a) for a in self.actions() if a.text())
+            assert not any(isinstance(a, QWidgetAction) for a in self.actions())  # no headings
 
     monkeypatch.setattr(window_module, "QMenu", Recorded)
     window.show()
@@ -203,10 +216,11 @@ def test_host_menu_has_sections_with_short_names(
     window.table.select_ids(_ids(window, "PC-1"))
     first = window.table.topLevelItem(0)
     assert first is not None
-    window._host_menu(window.table.visualItemRect(first).center())
+    row = window.table.visualItemRect(first)
+    window._host_menu(QPoint(row.left() + 10, row.center().y()))  # on the name
     assert seen == [
-        "&Connect", "Connection &profile", "&Status", "&Logged-on users",
-        "&Address", "&Name", "Show in &group", "&Edit selected…", "&Remove selected",
+        "&Connect", "Refresh &status", "Refresh &logged-on users", "Co&py name",
+        "&Edit selected…", "&Move to", "&Remove selected",
     ]  # fmt: skip
 
 

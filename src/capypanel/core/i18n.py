@@ -36,6 +36,14 @@ def ngettext(singular: str, plural: str, n: int) -> str:
     return _current.ngettext(singular, plural, n)
 
 
+def in_every_language(message: str) -> list[str]:
+    """The message in each language, e.g. to size something so it never changes on a switch."""
+    return [
+        gettext.translation(DOMAIN, LOCALE_DIR, [code], fallback=True).gettext(message)
+        for code in LANGUAGES
+    ]
+
+
 def N_(message: str) -> str:
     """Mark a string for extraction without translating it yet."""
     return message

@@ -19,8 +19,9 @@ from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 
 log = logging.getLogger(__name__)
 STARTERS_DIR = Path(__file__).resolve().parent / "presets" / "profiles"
-DEFAULT_FILE = "_default.json"  # in the profiles folder; "_" can't start a profile id
-STARTERS_FILE = "_starters.json"  # starters already added once, so a deleted one stays deleted
+# The folder's own settings: the default profile, and the shipped profiles already added once
+# (so a deleted one stays deleted). "_" can't start a profile id.
+SETTINGS_FILE = "_profiles.json"
 
 
 def make_id(name: str, taken: Collection[str]) -> str:
@@ -31,6 +32,9 @@ def make_id(name: str, taken: Collection[str]) -> str:
     while candidate in taken:
         candidate, number = f"{base}-{number}", number + 1
     return candidate
+
+
+UNTRUSTED = "made by another user, so it isn't used"  # a skipped file's reason
 
 
 class ProfileStore:
@@ -56,9 +60,8 @@ class ProfileStore:
             if path.name.startswith("_"):
                 continue  # the default-profile file, not a profile
             if source is self.folder and not winsec.made_by_trusted(path):
-                reason = "made by another user, so it isn't used"
-                self.problems.append((path, reason))
-                log.warning("Connection profile %s skipped: %s", path, reason)
+                self.problems.append((path, UNTRUSTED))
+                log.warning("Connection profile %s skipped: %s", path, UNTRUSTED)
                 continue
             try:
                 profile = profiles.load(path)
@@ -78,13 +81,7 @@ class ProfileStore:
 
     def default_id(self) -> str:
         """The chosen default, else the first profile by name; "" when there are none."""
-        path = self.folder / DEFAULT_FILE
-        try:
-            data = json.loads(path.read_text(encoding="utf-8-sig"))
-            trusted = winsec.made_by_trusted(path)
-            wanted = data.get("default_profile") if isinstance(data, dict) and trusted else None
-        except (OSError, ValueError):
-            wanted = None
+        wanted = self._settings().get("default_profile")
         if isinstance(wanted, str) and wanted in self._profiles:
             return wanted
         starter = "ultravnc"  # the starter default, while it exists
@@ -137,8 +134,18 @@ class ProfileStore:
         if self.find(profile_id) is None:
             raise ProfileError(_("That profile doesn't exist."))
         self._seed()
-        self._write(self.folder / DEFAULT_FILE, {"schema": 1, "default_profile": profile_id})
+        self._update_settings(default_profile=profile_id)
         log.info("Default connection profile: %s", profile_id)
+
+    def place_starters(self) -> None:
+        """At start: the shipped profiles go into the folder, so they sit with the rest of
+        CapyPanel's files from the first run. Skipped where this user can't create the folder:
+        the app's own copies are used then. Raises OSError."""
+        if self.folder.is_dir() or not self.can_edit():
+            return
+        self._seed()
+        self.reload()
+        log.info("Connection profiles placed in %s", self.folder)
 
     def _seed(self) -> None:
         """Before the first change, the starters become real files, so they can be removed."""
@@ -147,21 +154,15 @@ class ProfileStore:
         files.make_shared_folder(self.folder)
         for profile in self._profiles.values():
             self._write(self.folder / f"{profile.id}.json", profiles.to_data(profile))
-        self._write(self.folder / STARTERS_FILE, {"schema": 1, "added": self._starter_ids()})
+        self._update_settings(starters_added=self._starter_ids())
 
     def _starter_ids(self) -> list[str]:
         return sorted(p.stem for p in self._starters.glob("*.json"))
 
     def _add_new_starters(self) -> None:
         """Every tool gets its starter once, even in a folder made before the tool existed."""
-        path = self.folder / STARTERS_FILE
-        try:
-            data = json.loads(path.read_text(encoding="utf-8-sig"))
-            listed = data.get("added") if isinstance(data, dict) else None
-            trusted = isinstance(listed, list) and winsec.made_by_trusted(path)
-            added = {str(pid) for pid in listed} if trusted and isinstance(listed, list) else set()
-        except (OSError, ValueError):
-            added = set()
+        listed = self._settings().get("starters_added")
+        added = {str(pid) for pid in listed} if isinstance(listed, list) else set()
         new = [pid for pid in self._starter_ids() if pid not in added]
         if not new:
             return
@@ -180,9 +181,21 @@ class ProfileStore:
             except OSError:
                 return  # read-only here: shown, not written, and offered again next time
         try:
-            self._write(path, {"schema": 1, "added": sorted(added | set(new))})
+            self._update_settings(starters_added=sorted(added | set(new)))
         except OSError as e:
-            log.warning("Couldn't write %s: %s", path, e)
+            log.warning("Couldn't write %s: %s", self.folder / SETTINGS_FILE, e)
+
+    def _settings(self) -> dict[str, Any]:
+        """The folder's settings file; empty when missing, broken or made by another user."""
+        path = self.folder / SETTINGS_FILE
+        try:
+            data = json.loads(path.read_text(encoding="utf-8-sig"))
+        except (OSError, ValueError):
+            return {}
+        return data if isinstance(data, dict) and winsec.made_by_trusted(path) else {}
+
+    def _update_settings(self, **changes: object) -> None:
+        self._write(self.folder / SETTINGS_FILE, {**self._settings(), "schema": 1, **changes})
 
     def _write(self, path: Path, data: dict[str, Any]) -> None:
         files.write_json(path, data)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 19:25-0300\n"
+"POT-Creation-Date: 2026-10-16 00:58-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,11 +23,20 @@ msgstr ""
 msgid " min"
 msgstr ""
 
+msgid "&About CapyPanel"
+msgstr ""
+
 msgid "&Add existing…"
 msgstr ""
 
-msgid "&Address"
+msgid "&Add hosts"
 msgstr ""
+
+#, python-brace-format
+msgid "&Add {n} host"
+msgid_plural "&Add {n} hosts"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "&Address:"
 msgstr ""
@@ -38,10 +47,16 @@ msgstr ""
 msgid "&Connect"
 msgstr ""
 
+msgid "&Copy"
+msgstr ""
+
 msgid "&Copy current list to…"
 msgstr ""
 
 msgid "&Credentials:"
+msgstr ""
+
+msgid "&Delete"
 msgstr ""
 
 msgid "&Delete…"
@@ -53,6 +68,12 @@ msgstr ""
 msgid "&Discard changes"
 msgstr ""
 
+msgid "&Documentation"
+msgstr ""
+
+msgid "&Edit cell"
+msgstr ""
+
 msgid "&Edit host…"
 msgstr ""
 
@@ -60,6 +81,12 @@ msgid "&Edit selected…"
 msgstr ""
 
 msgid "&Edit…"
+msgstr ""
+
+msgid "&Export hosts…"
+msgstr ""
+
+msgid "&Export…"
 msgstr ""
 
 msgid "&File"
@@ -71,13 +98,25 @@ msgstr ""
 msgid "&Forget typed passwords"
 msgstr ""
 
+msgid "&Formats…"
+msgstr ""
+
 msgid "&Group:"
 msgstr ""
 
 msgid "&Groups pane"
 msgstr ""
 
+msgid "&Help"
+msgstr ""
+
 msgid "&Host lists…"
+msgstr ""
+
+msgid "&Hosts:"
+msgstr ""
+
+msgid "&Import hosts…"
 msgstr ""
 
 msgid "&Inventory"
@@ -92,6 +131,9 @@ msgstr ""
 msgid "&Language:"
 msgstr ""
 
+msgid "&Leave out of the import"
+msgstr ""
+
 msgid "&Locate…"
 msgstr ""
 
@@ -104,10 +146,10 @@ msgstr ""
 msgid "&Manual connection…"
 msgstr ""
 
-msgid "&Move to"
+msgid "&Move them to"
 msgstr ""
 
-msgid "&Name"
+msgid "&Move to"
 msgstr ""
 
 msgid "&Name:"
@@ -122,10 +164,19 @@ msgstr ""
 msgid "&Open"
 msgstr ""
 
+msgid "&Open a CSV file…"
+msgstr ""
+
 msgid "&Open on startup:"
 msgstr ""
 
 msgid "&Password:"
+msgstr ""
+
+msgid "&Preset:"
+msgstr ""
+
+msgid "&Refresh"
 msgstr ""
 
 msgid "&Refresh the status of the hosts shown every"
@@ -137,6 +188,9 @@ msgstr ""
 msgid "&Remove selected"
 msgstr ""
 
+msgid "&Report a problem"
+msgstr ""
+
 msgid "&Reset layout"
 msgstr ""
 
@@ -144,6 +198,9 @@ msgid "&Run"
 msgstr ""
 
 msgid "&Save"
+msgstr ""
+
+msgid "&Save as preset…"
 msgstr ""
 
 msgid "&Save changes"
@@ -176,6 +233,9 @@ msgstr ""
 msgid "&View"
 msgstr ""
 
+msgid "A chosen &group"
+msgstr ""
+
 msgid "A connection profile must be a JSON object."
 msgstr ""
 
@@ -188,10 +248,23 @@ msgstr ""
 msgid "A host entry isn't an object."
 msgstr ""
 
+#, python-brace-format
+msgid "A host with this name is already in the list, {place}"
+msgstr ""
+
 msgid "A name is required."
 msgstr ""
 
+msgid "A new group: the import creates it"
+msgstr ""
+
 msgid "A tool definition must be a JSON object."
+msgstr ""
+
+msgid "About"
+msgstr ""
+
+msgid "About CapyPanel"
 msgstr ""
 
 msgid "Access"
@@ -212,6 +285,9 @@ msgstr ""
 msgid "Add &host…"
 msgstr ""
 
+msgid "Add a &row below"
+msgstr ""
+
 msgid "Add a host list"
 msgstr ""
 
@@ -224,10 +300,20 @@ msgstr ""
 msgid "Added"
 msgstr ""
 
+#, python-brace-format
+msgid "Added {n} host."
+msgid_plural "Added {n} hosts."
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "Address"
 msgstr ""
 
 msgid "All hosts"
+msgstr ""
+
+#, python-brace-format
+msgid "Already in the list, {place}"
 msgstr ""
 
 #, python-brace-format
@@ -242,6 +328,11 @@ msgstr ""
 msgid "Answered at {address}, port {port}."
 msgstr ""
 
+msgid ""
+"Any name you like, then the computer's network name or IP address. "
+"Separate them with a comma, or copy two columns from Excel."
+msgstr ""
+
 msgid "Appearance"
 msgstr ""
 
@@ -249,17 +340,29 @@ msgstr ""
 msgid "Asked by {tool}"
 msgstr ""
 
-msgid "Bars"
-msgstr ""
-
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
+msgstr ""
+
+msgid "Build:"
 msgstr ""
 
 msgid "C&hoose file…"
 msgstr ""
 
+msgid "CSV files (*.csv *.txt);;All files (*)"
+msgstr ""
+
+msgid "CSV files (*.csv)"
+msgstr ""
+
+msgid "CSV with headers"
+msgstr ""
+
 msgid "CapyPanel"
+msgstr ""
+
+msgid "CapyPanel is built with the following software:"
 msgstr ""
 
 msgid "CapyPanel — dark"
@@ -292,22 +395,40 @@ msgstr ""
 msgid "Checking {done} of {total}…"
 msgstr ""
 
+msgid "Checks these hosts again now"
+msgstr ""
+
 #, python-brace-format
 msgid "Choose a {tool} settings file"
+msgstr ""
+
+#, python-brace-format
+msgid "Click a license to read it. They all ship with CapyPanel, in its {folder}."
 msgstr ""
 
 msgid "Click to copy"
 msgstr ""
 
-msgid "Connect"
+msgid "Close"
 msgstr ""
 
-msgid "Connect once with"
+msgid "Co&py address"
+msgstr ""
+
+#, python-brace-format
+msgid "Co&py {column}"
+msgstr ""
+
+msgid "Connect"
 msgstr ""
 
 msgid ""
 "Connect to the selected hosts; the arrow connects once with another "
 "profile"
+msgstr ""
+
+#, python-brace-format
+msgid "Connect with {profile}"
 msgstr ""
 
 #, python-brace-format
@@ -335,11 +456,20 @@ msgstr ""
 msgid "Console"
 msgstr ""
 
+msgid "Copied"
+msgstr ""
+
+#, python-brace-format
+msgid "Copied {n} host from {source}."
+msgid_plural "Copied {n} hosts from {source}."
+msgstr[0] ""
+msgstr[1] ""
+
 #, python-brace-format
 msgid "Copied: {text}"
 msgstr ""
 
-msgid "Copy"
+msgid "Copies every row, to paste into Excel"
 msgstr ""
 
 msgid "Copy the current list to"
@@ -381,6 +511,10 @@ msgid "Couldn't save the list: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't save “{path}”: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't start {tool} for {target}: {error}"
 msgstr ""
 
@@ -392,7 +526,19 @@ msgstr ""
 msgid "Couldn't write “{path}”: {error}"
 msgstr ""
 
+msgid "Created by:"
+msgstr ""
+
 msgid "Created when opened"
+msgstr ""
+
+msgid "Created when you save a change"
+msgstr ""
+
+msgid "Credits"
+msgstr ""
+
+msgid "Custom"
 msgstr ""
 
 msgid "D&uplicate…"
@@ -431,13 +577,21 @@ msgstr ""
 msgid "Disconnected"
 msgstr ""
 
+msgid "Documentation:"
+msgstr ""
+
+msgid ""
+"Double-click a cell, or press F2, to change it; the list above follows. "
+"Right-click for more."
+msgstr ""
+
 msgid "Download"
 msgstr ""
 
 msgid "Drag a group to move it, or drop it onto another group to put it inside."
 msgstr ""
 
-msgid "Drop a group here to move it to the top level"
+msgid "Drop a group here to put it directly under Groups"
 msgstr ""
 
 msgid "Duplicate connection profile"
@@ -455,16 +609,48 @@ msgstr ""
 msgid "Edit host"
 msgstr ""
 
+msgid "Edit the list here"
+msgstr ""
+
+msgid ""
+"Editing in the table rewrites the list above as CSV with a header row "
+"(name, address, group, tags, notes), so the two always match. Continue?"
+msgstr ""
+
+msgid "Every computer you look after, in one window."
+msgstr ""
+
+msgid "Every host field, in the format Import hosts can read back."
+msgstr ""
+
+msgid "Export hosts"
+msgstr ""
+
 msgid "File not found"
 msgstr ""
 
 msgid "Find automatically"
 msgstr ""
 
+msgid ""
+"For example:\n"
+"name,address\n"
+"PC-0142,10.0.0.42"
+msgstr ""
+
+msgid ""
+"For the list open now; each list keeps its own. A group's right-click "
+"menu can choose it too."
+msgstr ""
+
 msgid "Forgets it here; the file itself is never deleted"
 msgstr ""
 
-msgid "From each host's group"
+msgid "Formats CapyPanel can import"
+msgstr ""
+
+#, python-brace-format
+msgid "Free software under the GPL-3.0, with no warranty: see {licenses}."
 msgstr ""
 
 msgid "From group"
@@ -476,6 +662,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "From “{file}”"
+msgstr ""
+
+msgid "Full backup"
 msgstr ""
 
 msgid "General"
@@ -492,7 +681,14 @@ msgstr ""
 msgid "Group “{name}” is nested inside itself."
 msgstr ""
 
+#, python-brace-format
+msgid "Group: {name}"
+msgstr ""
+
 msgid "Groups"
+msgstr ""
+
+msgid "Host"
 msgstr ""
 
 msgid "Host lists"
@@ -514,10 +710,19 @@ msgstr ""
 msgid "Hostname or IP address; leave blank to use the name"
 msgstr ""
 
+msgid "Hostnames"
+msgstr ""
+
+msgid "Hosts with no group &go to:"
+msgstr ""
+
 msgid "Hosts with no profile &use:"
 msgstr ""
 
 msgid "Hover over a list to see where it is."
+msgstr ""
+
+msgid "Icons:"
 msgstr ""
 
 msgid "Idle"
@@ -527,9 +732,19 @@ msgid "If that list can't be opened: the default list, then your personal list."
 msgstr ""
 
 #, python-brace-format
+msgid "Ignored columns: {names}."
+msgstr ""
+
+msgid "Import hosts"
+msgstr ""
+
+#, python-brace-format
 msgid ""
 "In the open list it's set on {hosts} and {groups}. They'll use their "
 "group's profile, or the default, instead."
+msgstr ""
+
+msgid "Includes who was logged on to each PC. Keep the file private."
 msgstr ""
 
 msgid "Install it, or locate its .exe."
@@ -541,11 +756,6 @@ msgstr ""
 msgid ""
 "It's passed to the viewer on its command line, which administrators of "
 "this PC can see."
-msgstr ""
-
-msgid ""
-"Its hosts can't move up: every host needs a group, and this one is at the"
-" top level. Move them to another group first to keep them."
 msgstr ""
 
 msgid "Its own settings file"
@@ -560,6 +770,12 @@ msgid ""
 "Kept in memory until CapyPanel closes, never saved, and used only to read"
 " who is logged on. If a computer rejects it, CapyPanel stops and asks "
 "again instead of trying it on the others, so the account isn't locked."
+msgstr ""
+
+msgid "Last check"
+msgstr ""
+
+msgid "Licenses"
 msgstr ""
 
 msgid "List"
@@ -579,6 +795,9 @@ msgstr ""
 msgid "Logged on · {when}"
 msgstr ""
 
+msgid "Logged-on users"
+msgstr ""
+
 msgid "Logs"
 msgstr ""
 
@@ -591,6 +810,9 @@ msgstr ""
 msgid "Manual connection"
 msgstr ""
 
+msgid "Mascot:"
+msgstr ""
+
 msgid "Move &down"
 msgstr ""
 
@@ -600,16 +822,6 @@ msgstr ""
 msgid "Move &up"
 msgstr ""
 
-#, python-brace-format
-msgid "Move them into “{name}”"
-msgstr ""
-
-msgid "Move them to the top level"
-msgstr ""
-
-msgid "Move this group's hosts to another group first."
-msgstr ""
-
 msgid "My personal list"
 msgstr ""
 
@@ -617,6 +829,9 @@ msgid "N&otes:"
 msgstr ""
 
 msgid "Name"
+msgstr ""
+
+msgid "Name and address"
 msgstr ""
 
 #, python-brace-format
@@ -635,6 +850,12 @@ msgstr ""
 msgid "New empty host list"
 msgstr ""
 
+#, python-brace-format
+msgid "New group: {names}."
+msgid_plural "New groups: {names}."
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "New host list"
 msgstr ""
 
@@ -644,19 +865,31 @@ msgstr ""
 msgid "No address"
 msgstr ""
 
+msgid "No address: the name must then be the computer's name on the network"
+msgstr ""
+
 msgid "No admin rights"
 msgstr ""
 
 msgid "No computer by that name or address was found on the network."
 msgstr ""
 
+msgid "No group"
+msgstr ""
+
 msgid "No host list is open."
+msgstr ""
+
+msgid "No name"
 msgstr ""
 
 msgid "No one"
 msgstr ""
 
 msgid "No one logged on"
+msgstr ""
+
+msgid "Not a computer name or IP address"
 msgstr ""
 
 msgid "Not checked"
@@ -682,6 +915,9 @@ msgid ""
 "not on the network, or a firewall blocks everything."
 msgstr ""
 
+msgid "Nothing changes until you click Add."
+msgstr ""
+
 msgid "Nothing changes until you click OK."
 msgstr ""
 
@@ -691,6 +927,11 @@ msgstr ""
 msgid "Offline"
 msgstr ""
 
+msgid ""
+"One computer per line, by its name on the network. To show another name, "
+"use Name and address."
+msgstr ""
+
 msgid "Online"
 msgstr ""
 
@@ -698,6 +939,21 @@ msgid "Only ping and ports, never logged-on users, so no account is used."
 msgstr ""
 
 msgid "Open &Settings"
+msgstr ""
+
+msgid "Open &file"
+msgstr ""
+
+msgid "Open &log folder"
+msgstr ""
+
+msgid "Open a CSV file"
+msgstr ""
+
+msgid "Open a host list to choose what it shows first."
+msgstr ""
+
+msgid "Open f&older"
 msgstr ""
 
 msgid "Open folder"
@@ -728,14 +984,17 @@ msgstr ""
 msgid "Options:"
 msgstr ""
 
-msgid "P&ort:"
+msgid "Or give just a name and an address on each line."
 msgstr ""
 
-msgid "Panes"
+msgid "P&ort:"
 msgstr ""
 
 #, python-brace-format
 msgid "Password for {profile}"
+msgstr ""
+
+msgid "Paste a list below, or"
 msgstr ""
 
 msgid "Personal"
@@ -747,10 +1006,19 @@ msgstr ""
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr ""
 
+msgid "Preset name:"
+msgstr ""
+
+msgid "Preview"
+msgstr ""
+
 msgid "Profile"
 msgstr ""
 
 msgid "Programs (*.exe)"
+msgstr ""
+
+msgid "Put in &group"
 msgstr ""
 
 msgid "Read-only"
@@ -762,10 +1030,16 @@ msgstr ""
 msgid "Refresh"
 msgstr ""
 
+msgid "Refresh &logged-on users"
+msgstr ""
+
+msgid "Refresh &status"
+msgstr ""
+
 msgid "Refresh every host shown"
 msgstr ""
 
-msgid "Refresh every host shown; right-click to choose what it refreshes"
+msgid "Refresh every host shown. Right-click to choose what Run and F5 check"
 msgstr ""
 
 msgid "Refresh logged-on users"
@@ -819,13 +1093,31 @@ msgstr ""
 msgid "Rename group"
 msgstr ""
 
+msgid "S&top"
+msgstr ""
+
+#, python-brace-format
+msgid "Same address as row {n}"
+msgstr ""
+
+#, python-brace-format
+msgid "Same as row {n}"
+msgstr ""
+
+#, python-brace-format
+msgid "Same name as row {n}"
+msgstr ""
+
 msgid "Save a copy"
+msgstr ""
+
+msgid "Save as preset"
 msgstr ""
 
 msgid "Save my version as a copy…"
 msgstr ""
 
-msgid "Save the changes and keep Settings open"
+msgid "Search results"
 msgstr ""
 
 #, python-brace-format
@@ -835,10 +1127,22 @@ msgstr ""
 msgid "Searches every host in the list (Ctrl+F)"
 msgstr ""
 
+msgid "See examples in Formats…"
+msgstr ""
+
 msgid "Select a host to see its details."
 msgstr ""
 
+msgid "Selected hosts"
+msgstr ""
+
+msgid "Set &tags…"
+msgstr ""
+
 msgid "Set in the settings file"
+msgstr ""
+
+msgid "Set tags"
 msgstr ""
 
 msgid "Settings"
@@ -863,10 +1167,16 @@ msgid ""
 "everyone."
 msgstr ""
 
-msgid "Show do&main"
+msgid "Show &first:"
 msgstr ""
 
-msgid "Show in &group"
+msgid "Show this group &first"
+msgstr ""
+
+msgid "Show users' do&main"
+msgstr ""
+
+msgid "Some changes aren't saved yet."
 msgstr ""
 
 msgid "Someone else has changed the file since you opened it."
@@ -882,6 +1192,13 @@ msgid "Something went wrong. The details were saved to the app log."
 msgstr ""
 
 msgid "Sorts every level by name, once; you can rearrange them after"
+msgstr ""
+
+msgid "Source code:"
+msgstr ""
+
+#, python-brace-format
+msgid "Start it with {header}, in any order."
 msgstr ""
 
 msgid "Startup"
@@ -905,7 +1222,20 @@ msgstr ""
 msgid "T&oolbar"
 msgstr ""
 
+msgid "Table"
+msgstr ""
+
+#, python-brace-format
+msgid "Tag: {tag}"
+msgstr ""
+
 msgid "Tags"
+msgstr ""
+
+msgid "Tags and notes"
+msgstr ""
+
+msgid "Tags for the selected rows, separated by ;"
 msgstr ""
 
 msgid "That group doesn't exist."
@@ -914,12 +1244,18 @@ msgstr ""
 msgid "That host is no longer in the list."
 msgstr ""
 
+msgid "That name is taken."
+msgstr ""
+
 msgid "That profile doesn't exist."
 msgstr ""
 
 msgid ""
 "The account was accepted, but only administrators of that computer can "
 "see who is logged on."
+msgstr ""
+
+msgid "The app's logs, to attach to a problem report"
 msgstr ""
 
 #, python-brace-format
@@ -968,6 +1304,11 @@ msgstr ""
 msgid "The file is too big to be viewer settings."
 msgstr ""
 
+msgid ""
+"The first line names the columns, in any order. Subgroups are separated "
+"by /, tags by ;. Exported lists use this format."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "The folder “{folder}” was created by another user, so CapyPanel won't use"
@@ -981,6 +1322,9 @@ msgid "The last used list"
 msgstr ""
 
 msgid "The list has changed"
+msgstr ""
+
+msgid "The list opens on this group"
 msgstr ""
 
 #, python-brace-format
@@ -1035,6 +1379,14 @@ msgstr ""
 msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr ""
 
+msgid ""
+"These are the built-in profiles: the folder is created when you save a "
+"change."
+msgstr ""
+
+msgid "These are the built-in profiles: the folder isn't there yet."
+msgstr ""
+
 msgid "This connection profile needs a newer version of CapyPanel."
 msgstr ""
 
@@ -1052,6 +1404,9 @@ msgstr ""
 msgid "This list is read-only."
 msgstr ""
 
+msgid "This list needs a header row."
+msgstr ""
+
 msgid ""
 "This list was saved by a newer version of CapyPanel. Update the app to "
 "open it."
@@ -1060,7 +1415,7 @@ msgstr ""
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr ""
 
-msgid "Top level"
+msgid "Tick Status or Logged-on users to check them"
 msgstr ""
 
 msgid "Type"
@@ -1103,9 +1458,6 @@ msgstr ""
 msgid "User"
 msgstr ""
 
-msgid "Users"
-msgstr ""
-
 #, python-brace-format
 msgid "Viewer settings (*{extension})"
 msgstr ""
@@ -1113,7 +1465,13 @@ msgstr ""
 msgid "Viewer settings:"
 msgstr ""
 
+msgid "Warning"
+msgstr ""
+
 msgid "Where CapyPanel keeps its files"
+msgstr ""
+
+msgid "Where I left off"
 msgstr ""
 
 msgid "Where each tool is installed, set once for everyone on this PC."
@@ -1149,6 +1507,9 @@ msgstr ""
 msgid "Windows — light"
 msgstr ""
 
+msgid "With No group, the groups inside it go directly under Groups."
+msgstr ""
+
 msgid "You can also change the theme under View > Theme."
 msgstr ""
 
@@ -1167,6 +1528,9 @@ msgstr ""
 msgid "at the computer"
 msgstr ""
 
+msgid "can't be read"
+msgstr ""
+
 msgid "disconnected"
 msgstr ""
 
@@ -1177,7 +1541,20 @@ msgstr ""
 msgid "idle"
 msgstr ""
 
+#, python-brace-format
+msgid "in “{group}”"
+msgstr ""
+
+msgid "licenses folder"
+msgstr ""
+
+msgid "made by another user"
+msgstr ""
+
 msgid "name"
+msgstr ""
+
+msgid "name, address, group, tags, notes"
 msgstr ""
 
 msgid "no password"
@@ -1199,7 +1576,14 @@ msgstr ""
 msgid "since {when}"
 msgstr ""
 
+#, python-brace-format
+msgid "tag “{tag}”"
+msgstr ""
+
 msgid "tags"
+msgstr ""
+
+msgid "the search results"
 msgstr ""
 
 msgid "the selected hosts"
@@ -1209,6 +1593,9 @@ msgid "user"
 msgstr ""
 
 msgid "user and password"
+msgstr ""
+
+msgid "with no group"
 msgstr ""
 
 #, python-brace-format
@@ -1226,6 +1613,18 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{name} (in use)"
 msgstr ""
+
+#, python-brace-format
+msgid "{name} ({n} host)"
+msgid_plural "{name} ({n} hosts)"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} can't be added."
+msgid_plural "{n} can't be added."
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-brace-format
 msgid ""
@@ -1248,6 +1647,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} file skipped: {files}"
+msgid_plural "{n} files skipped: {files}"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} found"
 msgid_plural "{n} found"
 msgstr[0] ""
@@ -1262,6 +1667,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} host"
 msgid_plural "{n} hosts"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} host exported from {source}."
+msgid_plural "{n} hosts exported from {source}."
 msgstr[0] ""
 msgstr[1] ""
 
@@ -1290,6 +1701,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} host will be added."
+msgid_plural "{n} hosts will be added."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} not checked"
 msgid_plural "{n} not checked"
 msgstr[0] ""
@@ -1298,6 +1715,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} not found"
 msgid_plural "{n} not found"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} of these hosts wasn't checked yet."
+msgid_plural "{n} of these hosts weren't checked yet."
 msgstr[0] ""
 msgstr[1] ""
 
@@ -1316,6 +1739,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} selected"
 msgid_plural "{n} selected"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} skipped."
+msgid_plural "{n} skipped."
 msgstr[0] ""
 msgstr[1] ""
 
@@ -1405,6 +1834,10 @@ msgstr ""
 msgid ""
 "“{name}” has no address, and its name can't be used as one: a computer "
 "name has no spaces or symbols other than - and _."
+msgstr ""
+
+#, python-brace-format
+msgid "“{name}” has this address, {place}"
 msgstr ""
 
 #, python-brace-format

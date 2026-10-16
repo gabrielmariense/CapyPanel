@@ -34,12 +34,12 @@ from capypanel.core.i18n import _, ngettext
 from capypanel.core.tools import detect, viewer_settings
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.definitions import ToolDefinition
-from capypanel.core.tools.profile_store import make_id
+from capypanel.core.tools.profile_store import UNTRUSTED, make_id
 from capypanel.core.tools.profiles import ConnectionProfile, login_label, logins_of
 from capypanel.ui.connect import ask_for_program
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import hint
-from capypanel.ui.settings.pages import Page, PathLabel
+from capypanel.ui.settings.pages import Page, PathLabel, open_folder
 
 MAX_PROFILE_NAME = 64
 
@@ -256,6 +256,29 @@ class ProfileDialog(QDialog):
         return f"{profile_id}{tool.settings_file.extension}"
 
 
+def skipped_note(problems: list[tuple[Path, str]]) -> QLabel:
+    """The files in a folder that aren't used, and why: hidden when there are none. The full
+    paths and errors are in its tooltip and the log."""
+    seen: dict[Path, str] = {}
+    for path, reason in problems:
+        seen.setdefault(path, reason)
+    names = [
+        "{name} ({why})".format(
+            name=path.name,
+            why=_("made by another user") if reason == UNTRUSTED else _("can't be read"),
+        )
+        for path, reason in seen.items()
+    ]
+    label = hint(
+        ngettext("{n} file skipped: {files}", "{n} files skipped: {files}", len(names)).format(
+            n=len(names), files=", ".join(names)
+        )
+    )
+    label.setToolTip("\n".join(f"{path}: {reason}" for path, reason in seen.items()))
+    label.setVisible(bool(names))
+    return label
+
+
 class ConnectionsPage(Page):
     def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
         super().__init__(_("Connections"))
@@ -272,6 +295,18 @@ class ConnectionsPage(Page):
 
         profiles_box = QGroupBox(_("Connection profiles"))
         folder = PathLabel(self.store.folder)
+        self.open_folder = QPushButton(_("Open folder"))
+        self.open_folder.clicked.connect(lambda: open_folder(self.store.folder))
+        folder_row = QHBoxLayout()
+        folder_row.addWidget(folder, 1)
+        folder_row.addWidget(self.open_folder)
+        # The folder is made at start; where this user couldn't, the app's own copies are shown.
+        self.builtin_note = hint(
+            _("These are the built-in profiles: the folder is created when you save a change.")
+            if self.can_edit
+            else _("These are the built-in profiles: the folder isn't there yet.")
+        )
+        self._show_folder_state()
         access = (
             _("Shared by everyone on this PC. You can change them.")
             if self.can_edit
@@ -304,8 +339,11 @@ class ConnectionsPage(Page):
         default_row = QFormLayout()
         default_row.addRow(_("Hosts with no profile &use:"), self.default)
         inner = QVBoxLayout(profiles_box)
-        inner.addWidget(folder)
+        inner.addLayout(folder_row)
+        inner.addWidget(self.builtin_note)
         inner.addWidget(hint(access))
+        self.profiles_skipped = skipped_note(self.store.problems)
+        inner.addWidget(self.profiles_skipped)
         inner.addLayout(row)
         inner.addLayout(default_row)
 
@@ -321,6 +359,8 @@ class ConnectionsPage(Page):
                 )
             )
         )
+        self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])
+        tools_layout.addWidget(self.tools_skipped)
         self._tools_grid = QGridLayout()
         self._tools_grid.setColumnStretch(2, 1)
         tools_layout.addLayout(self._tools_grid)
@@ -460,6 +500,13 @@ class ConnectionsPage(Page):
         self._fill_profiles(select=None)
         self.default.setCurrentIndex(max(self.default.findData(self.store.default_id()), 0))
         self._fill_tools()
+        self._show_folder_state()
+
+    def _show_folder_state(self) -> None:
+        exists = self.store.folder.is_dir()
+        self.open_folder.setEnabled(exists)
+        self.open_folder.setToolTip("" if exists else _("Created when you save a change"))
+        self.builtin_note.setVisible(not exists)
 
     def changes(self) -> ConnectionChanges:
         return ConnectionChanges(

@@ -1,31 +1,24 @@
 # Documentação do CapyPanel
 
-O CapyPanel reúne numa só janela todos os computadores que você administra. É um app de desktop
-para Windows feito para equipes de TI: organize seus hosts em listas e abra a tela remota de
-qualquer um deles pela Área de Trabalho Remota ou pelo visualizador VNC que você já usa.
+Todos os computadores sob seus cuidados, em uma só janela. O CapyPanel é um app de desktop para
+Windows feito para equipes de TI: organize em listas os computadores que você administra, veja
+quais estão ligados e quem está logado neles, e abra a tela remota de qualquer um pela Área de
+Trabalho Remota ou pelo visualizador VNC que você já usa.
 
-## Funcionalidades
+![A janela principal do CapyPanel: grupos à esquerda, hosts no meio, detalhes à direita](images/main-window-dark.png)
 
-### Lançadas
+## O que ele faz
 
-- Tela remota (UltraVNC, RealVNC)
-- Área de Trabalho Remota (RDP)
+- Conexão remota
+  - UltraVNC
+  - RealVNC
+  - Área de Trabalho Remota (RDP)
 - Perfis de conexão
 - Listas de hosts compartilhadas
 - Status dos hosts
 - Usuários logados
 - Pesquisa
-- Barra de ferramentas redesenhada
-- Mover grupos
-
-### Em desenvolvimento
-
-- Importação em massa
-
-### Planejadas
-
-- SSH
-- Ações nos hosts
+- Importação e exportação
 
 ## Páginas
 
@@ -35,11 +28,12 @@ Para quem usa o CapyPanel e para quem o configura para uma equipe.
 |---|---|
 | [Primeiros passos](getting-started.pt-BR.md) | Rodar o CapyPanel, a janela principal, adicionar hosts |
 | [Listas de hosts](host-lists.pt-BR.md) | Grupos, tags e as listas padrão, pessoal e compartilhadas |
+| [Importando e exportando hosts](importing.pt-BR.md) | Muitos hosts de uma vez, entrando e saindo em CSV |
 | [Conectando](connecting.pt-BR.md) | Visualizadores VNC, Área de Trabalho Remota, perfis de conexão, senhas e a verificação de login |
 | [Verificando hosts](checking.pt-BR.md) | Status, usuários logados e a conta usada para lê-los |
 | [Pesquisando hosts](searching.pt-BR.md) | A caixa de pesquisa, o que ela abrange e como encerrar uma pesquisa |
 | [Configurações e arquivos](settings-and-files.pt-BR.md) | Cada configuração e onde o CapyPanel guarda os arquivos |
 | [Desenvolvimento](development.pt-BR.md) | Compilar, testar e traduzir o CapyPanel |
 
-Estas páginas descrevem a versão atual (0.17.0). O CapyPanel está em beta, então elas crescem a
+Estas páginas descrevem a versão atual (0.18.0). O CapyPanel está em beta, então elas crescem a
 cada funcionalidade.

@@ -1,7 +1,8 @@
 # Listas de hosts
 
 Uma lista de hosts é um arquivo JSON com grupos, hosts e suas tags. O CapyPanel mostra uma lista
-por vez e salva cada edição nela na hora.
+por vez e salva cada edição nela na hora. Para colocar muitos hosts de uma vez, ou para tirá-los
+num arquivo CSV, veja [Importando e exportando hosts](importing.pt-BR.md).
 
 ## Grupos e tags
 
@@ -11,6 +12,9 @@ por vez e salva cada edição nela na hora.
   grafia mantida.
 - **Notas** guardam o que mais valer a pena saber sobre um host. Elas aparecem no painel de
   detalhes, e a pesquisa sempre as cobre.
+- **Sem grupo** é onde um host fica quando você não o colocou em nenhum. "Sem grupo (4)" aparece
+  embaixo de "Todos os hosts" no painel da esquerda, com quantos hosts estão sem grupo, e os hosts
+  arrastados para lá saem do grupo em que estavam.
 
 Uma lista nova começa com um grupo, **Grupo padrão**.
 
@@ -24,34 +28,37 @@ Os grupos mantêm a ordem que você der a eles. No painel de grupos:
   para o nível superior;
 - arraste os hosts selecionados da tabela de hosts para um grupo para movê-los para lá.
 
-Clique com o botão direito num grupo > **Mover para** lista **Nível superior** e todos os grupos
-em que esse pode entrar, desenhados como uma árvore; o próprio grupo e os subgrupos dele não
-aparecem, e o lugar atual fica marcado. Um grupo que você recolheu continua recolhido enquanto
+Clique com o botão direito num grupo > **Mover para** lista **Grupos** — o topo do painel, dentro
+de nada — e todos os grupos em que esse pode entrar, desenhados como uma árvore; o próprio grupo e
+os subgrupos dele não aparecem, e o lugar atual fica marcado. Para hosts, clique com o botão
+direito neles > **Mover para** lista **Sem grupo** primeiro, e depois a mesma árvore. Um grupo que
+você recolheu continua recolhido enquanto
 você trabalha, e mover um grupo para dentro de um recolhido abre o caminho até ele, para o que você
 moveu continuar visível.
 
 Toda mudança é salva na hora. Numa lista somente leitura, arrastar fica desligado.
 
-**Inventário > Gerenciar grupos…** mostra a árvore inteira numa janela, com **Mover para**,
-**Mover para cima**, **Mover para baixo** e **Classificar de A a Z**, uma ordenação única que
-você pode reorganizar depois. Arrastar também funciona lá, e nada muda até você clicar em **OK**.
+**Inventário > Gerenciar grupos…** mostra a árvore inteira numa janela, sob uma raiz **Grupos**
+com linhas de árvore, com **Mover para**, **Mover para cima**, **Mover para baixo** e
+**Classificar de A a Z**, uma ordenação única que você pode reorganizar depois. Arrastar também
+funciona lá: solte um grupo sobre **Grupos**, ou abaixo da última linha, para tirá-lo de todos os
+grupos. Nada muda até você clicar em **OK**.
 Listas criadas antes da versão 0.13.0 mostram os grupos na ordem em que foram criados;
 Classificar de A a Z os coloca em ordem uma vez.
 
 ## Remover um grupo
 
-Clique com o botão direito num grupo > **Remover**, ou pressione Del com um grupo escolhido. Um
-grupo vazio só pede confirmação. Um grupo com grupos ou hosts dentro pergunta o que fazer com
-eles:
+Clique com o botão direito num grupo > **Remover selecionado**, ou pressione Del com um grupo
+escolhido. Um grupo vazio só pede confirmação. Um grupo com algo dentro pergunta antes o que fazer
+— "“3º andar” contém 2 grupos e 7 hosts. O que fazer com eles?" — e oferece duas saídas:
 
-- **Mover para "3º andar"** — o grupo acima dele — ou **Mover para o nível superior**. Essa é a
-  opção padrão: os hosts dele vão para esse grupo, os grupos dele sobem um nível e nada é
-  excluído.
+- **Mover para ▸** escolhe para onde eles vão, na mesma árvore de mover hosts: **Sem grupo** ou
+  qualquer grupo que não esteja sendo removido. O grupo acima deste fica marcado, então a resposta
+  de sempre é um clique. Nada é excluído; os grupos de dentro vão junto com os hosts deles, e com
+  **Sem grupo** eles acabam direto embaixo de **Grupos**.
 - **Remover tudo:** o grupo, todos os grupos dentro dele e todos os hosts deles.
 
-Um grupo no nível superior não consegue subir os próprios hosts, porque todo host precisa de um
-grupo e "Todos os hosts" é a lista inteira, não um grupo. Nesse caso a opção de mover fica
-desligada, com um aviso explicando; mova esses hosts para outro grupo antes para mantê-los.
+Cancelar é o botão padrão, então Enter ou Esc deixa a lista como está.
 
 ## Três tipos de lista
 
@@ -79,8 +86,9 @@ sobre uma lista para ver onde ela está. Dê um clique duplo numa lista, ou sele
 - **Adicionar existente…** adiciona um arquivo de lista de qualquer lugar, como uma pasta de rede.
 - **Nova…** cria uma lista vazia.
 - **Copiar lista atual para…** salva uma cópia da lista aberta em outro lugar.
-- **Remover da lista** só esquece a lista aqui; nunca exclui o arquivo. A lista padrão e a pessoal
-  não podem ser removidas.
+- **Remover da lista** só esquece a lista aqui; nunca exclui o arquivo. O CapyPanel para de
+  oferecê-la e não a abre mais ao iniciar, mesmo que tenha sido a última que você usou. Adicione-a
+  de novo quando quiser. A lista padrão e a pessoal não podem ser removidas.
 
 A janela guarda as listas nas suas configurações, não nos arquivos de lista. **Configurações >
 Listas de hosts** mostra a mesma tabela.
@@ -90,6 +98,20 @@ Listas de hosts** mostra a mesma tabela.
 Escolha em **Configurações > Geral > Abrir ao iniciar**: a última lista usada (a escolha padrão),
 a lista padrão, sua lista pessoal ou qualquer lista que você adicionou. Se essa lista não existir,
 o CapyPanel abre a próxima que conseguir (a padrão, depois a pessoal) e avisa.
+
+## O que uma lista mostra primeiro
+
+Cada lista guarda a própria resposta, em **Configurações > Geral > Inicialização > Mostrar
+primeiro**:
+
+- **Todos os hosts**, a lista inteira;
+- **Onde parei**, o grupo, a tag ou a visão que estava aberta quando você fechou;
+- **Um grupo escolhido ▸**, escolhido na árvore, ou Sem grupo.
+
+A configuração é para a lista aberta agora, e o aviso embaixo dela diz isso. Sem nenhuma lista
+aberta ela lê "Abra uma lista de hosts para escolher o que ela mostra primeiro." O menu de botão
+direito de um grupo define a mesma coisa: **Mostrar este grupo primeiro** é uma marcação, e clicar
+de novo a tira.
 
 ## Listas compartilhadas e edição ao mesmo tempo
 
