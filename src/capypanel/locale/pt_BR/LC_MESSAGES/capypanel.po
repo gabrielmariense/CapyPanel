@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 00:58-0300\n"
+"POT-Creation-Date: 2026-10-16 14:32-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -707,6 +707,9 @@ msgstr "Nome do host ou endereço IP; deixe em branco para usar o nome"
 msgid "Hostnames"
 msgstr "Nomes de host"
 
+msgid "Hosts"
+msgstr "Hosts"
+
 msgid "Hosts with no group &go to:"
 msgstr "Hosts sem grupo &vão para:"
 
@@ -1125,6 +1128,9 @@ msgstr "Definir tags"
 
 msgid "Settings"
 msgstr "Configurações"
+
+msgid "Settings (Ctrl+,)"
+msgstr "Configurações (Ctrl+,)"
 
 msgid "Shared"
 msgstr "Compartilhada"

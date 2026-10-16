@@ -21,6 +21,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
+    QHBoxLayout,
     QInputDialog,
     QLabel,
     QMainWindow,
@@ -77,6 +78,7 @@ from capypanel.ui.main_window.host_views import (
     NavigationPane,
     SearchBox,
 )
+from capypanel.ui.main_window.rail import ToolRail
 from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
 from capypanel.ui.menus import StayOpenMenu, popup
 from capypanel.ui.settings import connections
@@ -121,8 +123,9 @@ class MainWindow(QMainWindow):
 
         self.commands = create_actions(self)
         self.search = SearchBox()
-        self.toolbar = MainToolBar(self.commands)
-        self.addToolBar(self.toolbar)
+        self.toolbar = MainToolBar(self.commands)  # the Hosts tool's own, beside the rail
+        self.rail = ToolRail()
+        self.rail.settings_requested.connect(lambda: self.open_settings())
         self.refresh_panel = RefreshPanel(self)
         self.refresh_panel.set_choices(self._prefs.get("refresh"))
         self.nav = NavigationPane()
@@ -148,10 +151,23 @@ class MainWindow(QMainWindow):
         self._splitter.setChildrenCollapsible(False)
         self._size_panes()
         self._default_pane_sizes(1100)
-        central = QWidget()
-        margins = QVBoxLayout(central)
+        panes = QWidget()
+        margins = QVBoxLayout(panes)
         margins.setContentsMargins(8, 4, 8, 4)  # the same gap above and below the panes
         margins.addWidget(self._splitter)
+        # The rail runs down the left edge; the tool, its toolbar on top, fills the rest.
+        tool = QWidget()
+        column = QVBoxLayout(tool)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(0)
+        column.addWidget(self.toolbar)
+        column.addWidget(panes, 1)
+        central = QWidget()
+        row = QHBoxLayout(central)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        row.addWidget(self.rail)
+        row.addWidget(tool, 1)
         self.setCentralWidget(central)
         self._list_label = QLabel()
         self._list_label.setContentsMargins(6, 0, 6, 0)
@@ -243,6 +259,7 @@ class MainWindow(QMainWindow):
     def _retranslate_menus(self) -> None:
         retranslate_actions(self.commands)
         self.toolbar.retranslate()
+        self.rail.retranslate()
         self.refresh_panel.retranslate()
         self._stop_button.setText(_("Stop"))
         self.search.retranslate()
@@ -1581,7 +1598,8 @@ class MainWindow(QMainWindow):
         if self.toolbar.isVisible():
             left = self._splitter.mapTo(self, QPoint(0, 0)).x()
             right = self.table.mapTo(self, QPoint(self.table.width(), 0)).x()
-            self.toolbar.align(left - self.toolbar.x(), right - self.toolbar.x())
+            start = self.toolbar.mapTo(self, QPoint(0, 0)).x()
+            self.toolbar.align(left - start, right - start)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
