@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 14:32-0300\n"
+"POT-Creation-Date: 2026-10-16 17:42-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -83,9 +83,6 @@ msgstr ""
 msgid "&Edit…"
 msgstr ""
 
-msgid "&Export hosts…"
-msgstr ""
-
 msgid "&Export…"
 msgstr ""
 
@@ -113,19 +110,16 @@ msgstr ""
 msgid "&Host lists…"
 msgstr ""
 
+msgid "&Hosts"
+msgstr ""
+
 msgid "&Hosts:"
 msgstr ""
 
 msgid "&Import hosts…"
 msgstr ""
 
-msgid "&Inventory"
-msgstr ""
-
 msgid "&Keep editing"
-msgstr ""
-
-msgid "&Language"
 msgstr ""
 
 msgid "&Language:"
@@ -191,6 +185,9 @@ msgstr ""
 msgid "&Report a problem"
 msgstr ""
 
+msgid "&Report…"
+msgstr ""
+
 msgid "&Reset layout"
 msgstr ""
 
@@ -219,9 +216,6 @@ msgid "&Status bar"
 msgstr ""
 
 msgid "&Tags:"
-msgstr ""
-
-msgid "&Theme"
 msgstr ""
 
 msgid "&Tool:"
@@ -295,6 +289,9 @@ msgid "Add group"
 msgstr ""
 
 msgid "Add host"
+msgstr ""
+
+msgid "Add hosts and groups, or import a list of hosts"
 msgstr ""
 
 msgid "Added"
@@ -713,7 +710,7 @@ msgstr ""
 msgid "Hostnames"
 msgstr ""
 
-msgid "Hosts"
+msgid "Hosts (Ctrl+1)"
 msgstr ""
 
 msgid "Hosts with no group &go to:"
@@ -751,6 +748,9 @@ msgid "Includes who was logged on to each PC. Keep the file private."
 msgstr ""
 
 msgid "Install it, or locate its .exe."
+msgstr ""
+
+msgid "Inventory"
 msgstr ""
 
 msgid "It's handed to the viewer privately, never on its command line."
@@ -1096,6 +1096,9 @@ msgstr ""
 msgid "Rename group"
 msgstr ""
 
+msgid "Report"
+msgstr ""
+
 msgid "S&top"
 msgstr ""
 
@@ -1118,6 +1121,9 @@ msgid "Save as preset"
 msgstr ""
 
 msgid "Save my version as a copy…"
+msgstr ""
+
+msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr ""
 
 msgid "Search results"

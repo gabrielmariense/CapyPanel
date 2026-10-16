@@ -25,7 +25,7 @@ def test_the_rail_runs_down_the_left_edge_beside_the_tool_s_toolbar(
     rail, toolbar = window.rail, window.toolbar
     assert rail.x() == 0 and rail.height() > toolbar.height()  # from the menu bar down
     assert toolbar.mapTo(window, toolbar.rect().topLeft()).x() == rail.width()  # beside it
-    assert rail.hosts_button.isChecked() and rail.hosts_button.toolTip() == "Hosts"
+    assert rail.hosts_button.isChecked() and rail.hosts_button.toolTip() == "Hosts (Ctrl+1)"
     rail.hosts_button.click()  # the tool shown, clicked again, stays picked
     assert rail.hosts_button.isChecked()
     opened: list[object] = []

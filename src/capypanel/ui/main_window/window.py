@@ -201,52 +201,24 @@ class MainWindow(QMainWindow):
         self._file_menu.addSeparator()
         self._file_menu.addAction(a.exit)
 
-        self._inventory_menu = bar.addMenu("")
-        # What acts on a host or group (edit, remove, copy, open) is in its right-click menu.
-        self._inventory_menu.addActions([a.add_host, a.add_group])
-        self._inventory_menu.addSeparator()
-        self._inventory_menu.addAction(a.manage_groups)
-        self._inventory_menu.addSeparator()
-        self._inventory_menu.addActions([a.import_hosts, a.export_hosts])
-
-        self._connect_menu = bar.addMenu("")
-        self._connect_menu.addActions([a.manual_connect, a.connection_profiles])
-        self._connect_menu.addSeparator()
-        self._connect_menu.addAction(a.forget_passwords)
+        # The tool's own commands live in its toolbar: the menu bar is the same for every tool.
+        inventory = self.toolbar.inventory_menu
+        inventory.addActions([a.add_host, a.add_group, a.manage_groups])
+        inventory.addSeparator()
+        inventory.addAction(a.import_hosts)
 
         # It stays open while parts are ticked, so several can be shown or hidden in one go.
+        # The tools first, then the shown tool's panes; theme and language are in Settings.
         self._view_menu = StayOpenMenu(self)
         bar.addMenu(self._view_menu)
-        self._view_menu.addActions([a.show_toolbar, a.show_status_bar])
+        a.show_hosts.setChecked(True)  # the only tool for now
+        self._view_menu.addAction(a.show_hosts)
         self._view_menu.addSeparator()
         self._view_menu.addActions([a.show_groups, a.show_tags, a.show_details])
         self._view_menu.addSeparator()
         self._view_menu.addAction(a.show_domains)
         self._view_menu.addSeparator()
-        self._theme_menu = self._view_menu.addMenu("")
-        self._theme_group = QActionGroup(self)
-        previous_engine = None
-        for theme in self.registry.all():
-            if previous_engine and theme.engine != previous_engine:
-                self._theme_menu.addSeparator()  # native themes, then the app's own looks
-            previous_engine = theme.engine
-            item = self._theme_menu.addAction("")
-            item.setCheckable(True)
-            item.setData(theme.id)
-            item.setChecked(theme.id == themes.current().id)
-            self._theme_group.addAction(item)
-        self._theme_group.triggered.connect(lambda item: self.set_theme(item.data()))
-
-        # Each language is named in its own language, so these texts never change.
-        self._language_menu = self._view_menu.addMenu("")
-        self._language_group = QActionGroup(self)
-        for code, name in i18n.LANGUAGES.items():
-            item = self._language_menu.addAction(name)
-            item.setCheckable(True)
-            item.setData(code)
-            item.setChecked(code == i18n.language())
-            self._language_group.addAction(item)
-        self._language_group.triggered.connect(lambda item: self.set_language(item.data()))
+        self._view_menu.addActions([a.show_toolbar, a.show_status_bar])
         self._view_menu.addSeparator()
         self._view_menu.addAction(a.reset_layout)
 
@@ -264,14 +236,8 @@ class MainWindow(QMainWindow):
         self._stop_button.setText(_("Stop"))
         self.search.retranslate()
         self._file_menu.setTitle(_("&File"))
-        self._inventory_menu.setTitle(_("&Inventory"))
-        self._connect_menu.setTitle(_("&Connect"))
         self._view_menu.setTitle(_("&View"))
         self._help_menu.setTitle(_("&Help"))
-        self._theme_menu.setTitle(_("&Theme"))
-        self._language_menu.setTitle(_("&Language"))
-        for item in self._theme_group.actions():
-            item.setText(self.registry.find(item.data()).title())
 
     def _connect(self) -> None:
         a = self.commands
@@ -286,8 +252,14 @@ class MainWindow(QMainWindow):
         a.export_hosts.triggered.connect(self.export_hosts)
         a.edit.triggered.connect(self.edit_selected)
         a.remove.triggered.connect(self.remove_selected)
-        # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C, F5) live here.
-        self.addActions([a.edit, a.remove, a.copy_address, a.refresh_shown])
+        # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C, F5, Ctrl+N,
+        # Ctrl+Shift+N, Ctrl+M) live here: toolbar menus only take keys while they're open.
+        self.addActions([
+            a.edit, a.remove, a.copy_address, a.refresh_shown, a.add_host, a.add_group,
+            a.manual_connect,
+        ])  # fmt: skip
+        a.show_hosts.triggered.connect(lambda: self._show_tool("hosts"))
+        self.rail.hosts_button.clicked.connect(lambda: self._show_tool("hosts"))
         a.refresh_shown.triggered.connect(self._run_refresh_panel)  # F5
         a.documentation.triggered.connect(lambda: about.open_url(about.docs_url()))
         a.report_problem.triggered.connect(
@@ -1159,8 +1131,6 @@ class MainWindow(QMainWindow):
         self.toolbar.restyle()  # icon colour follows the theme
         self._size_panes()  # the theme's font may be bigger
         self._align_refresh_later()  # each theme pads the toolbar differently
-        for item in self._theme_group.actions():
-            item.setChecked(item.data() == theme.id)
         self._prefs["theme"] = theme.id
         self._save_prefs()
         log.info("Theme: %s", theme.id)
@@ -1168,8 +1138,6 @@ class MainWindow(QMainWindow):
     def set_language(self, code: str) -> None:
         """Switches live: Qt then sends every window a LanguageChange event (see changeEvent)."""
         code = language.apply(code)
-        for item in self._language_group.actions():
-            item.setChecked(item.data() == code)
         self._prefs["language"] = code
         self._save_prefs()
         log.info("Language: %s", code)
@@ -1575,8 +1543,15 @@ class MainWindow(QMainWindow):
         self._save_prefs()
         self.check_hosts(self._visible_hosts(), status=choices["status"], users=choices["users"])
 
+    def _show_tool(self, tool: str) -> None:
+        """The rail and View > tools agree on the tool shown (Hosts is the only one for now)."""
+        self.commands.show_hosts.setChecked(tool == "hosts")
+        self.rail.hosts_button.setChecked(tool == "hosts")
+
     def _fill_connect_menu(self) -> None:
-        """The toolbar's Connect arrow: connect the selection once with another profile."""
+        """The toolbar's Connect arrow: connect the selection once with another profile, then
+        the connection commands that aren't about the selection."""
+        a = self.commands
         menu = self.toolbar.connect_menu
         menu.clear()
         for profile_id, name in self.connector.choices():
@@ -1585,6 +1560,8 @@ class MainWindow(QMainWindow):
             )
             item.setEnabled(bool(self.table.selected_ids()))
             item.triggered.connect(lambda _c=False, p=profile_id: self.connect_selected(p))
+        menu.addSeparator()
+        menu.addActions([a.manual_connect, a.connection_profiles, a.forget_passwords])
 
     def _save_columns(self) -> None:
         self._prefs["hidden_columns"] = self.table.hidden_columns()
@@ -1597,9 +1574,8 @@ class MainWindow(QMainWindow):
     def _align_refresh(self) -> None:
         if self.toolbar.isVisible():
             left = self._splitter.mapTo(self, QPoint(0, 0)).x()
-            right = self.table.mapTo(self, QPoint(self.table.width(), 0)).x()
             start = self.toolbar.mapTo(self, QPoint(0, 0)).x()
-            self.toolbar.align(left - start, right - start)
+            self.toolbar.align(left - start)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)

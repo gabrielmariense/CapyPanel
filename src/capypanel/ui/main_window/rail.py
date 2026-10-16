@@ -39,7 +39,7 @@ class ToolRail(QWidget):
         self.restyle()
 
     def retranslate(self) -> None:
-        self.hosts_button.setToolTip(_("Hosts"))
+        self.hosts_button.setToolTip(_("Hosts (Ctrl+1)"))
         self.settings_button.setToolTip(_("Settings (Ctrl+,)"))
 
     def restyle(self) -> None:

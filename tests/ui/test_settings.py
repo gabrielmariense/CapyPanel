@@ -254,17 +254,22 @@ def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
         for a in window.menuBar().actions()
         if isinstance(m := a.menu(), QMenu)
     }
+    assert list(menus) == ["&File", "&View", "&Help"]  # the same for every tool
     assert menus["&File"][:2] == ["&New host list…", "&Host lists…"]
-    assert menus["&Inventory"] == [
-        "Add &host…", "Add &group…", "&Manage groups…", "&Import hosts…",
-        "&Export hosts…"
+    assert menus["&View"] == [
+        "&Hosts", "&Groups pane", "T&ags pane", "&Details pane", "Show users' do&main",
+        "T&oolbar", "&Status bar", "&Reset layout",
     ]  # fmt: skip
-    assert menus["&Connect"] == [
-        "&Manual connection…", "Connection &profiles…", "&Forget typed passwords"
-    ]  # fmt: skip
-    # Edit, Remove and Copy address are only in right-click menus, yet keep their shortcuts.
+    # The tool's own commands are in its toolbar.
+    inventory = [label(a) for a in window.toolbar.inventory_menu.actions() if a.text()]
+    assert inventory == ["Add &host…", "Add &group…", "&Manage groups…", "&Import hosts…"]
+    window._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
+    connect = [label(a) for a in window.toolbar.connect_menu.actions() if a.text()][-3:]
+    assert connect == ["&Manual connection…", "Connection &profiles…", "&Forget typed passwords"]
+    # Commands outside the menu bar keep their shortcuts.
     a = window.commands
-    assert {a.edit, a.remove, a.copy_address} <= set(window.actions())
+    shortcuts = {a.edit, a.remove, a.copy_address, a.add_host, a.add_group, a.manual_connect}
+    assert shortcuts <= set(window.actions())
 
 
 def test_start_list_choice_is_opened_next_time(

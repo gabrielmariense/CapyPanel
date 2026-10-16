@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 14:32-0300\n"
+"POT-Creation-Date: 2026-10-16 17:42-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -84,9 +84,6 @@ msgstr "&Editar selecionado…"
 msgid "&Edit…"
 msgstr "&Editar…"
 
-msgid "&Export hosts…"
-msgstr "&Exportar hosts…"
-
 msgid "&Export…"
 msgstr "&Exportar…"
 
@@ -114,20 +111,17 @@ msgstr "Aj&uda"
 msgid "&Host lists…"
 msgstr "&Listas de hosts…"
 
+msgid "&Hosts"
+msgstr "&Hosts"
+
 msgid "&Hosts:"
 msgstr "&Hosts:"
 
 msgid "&Import hosts…"
 msgstr "&Importar hosts…"
 
-msgid "&Inventory"
-msgstr "&Inventário"
-
 msgid "&Keep editing"
 msgstr "&Continuar editando"
-
-msgid "&Language"
-msgstr "&Idioma"
 
 msgid "&Language:"
 msgstr "&Idioma:"
@@ -192,6 +186,9 @@ msgstr "&Remover selecionado"
 msgid "&Report a problem"
 msgstr "&Relatar um problema"
 
+msgid "&Report…"
+msgstr "&Relatório…"
+
 msgid "&Reset layout"
 msgstr "&Redefinir layout"
 
@@ -221,9 +218,6 @@ msgstr "Barra de &status"
 
 msgid "&Tags:"
 msgstr "&Tags:"
-
-msgid "&Theme"
-msgstr "&Tema"
 
 msgid "&Tool:"
 msgstr "&Ferramenta:"
@@ -297,6 +291,9 @@ msgstr "Adicionar grupo"
 
 msgid "Add host"
 msgstr "Adicionar host"
+
+msgid "Add hosts and groups, or import a list of hosts"
+msgstr "Adicione hosts e grupos, ou importe uma lista de hosts"
 
 msgid "Added"
 msgstr "Adicionada"
@@ -707,8 +704,8 @@ msgstr "Nome do host ou endereço IP; deixe em branco para usar o nome"
 msgid "Hostnames"
 msgstr "Nomes de host"
 
-msgid "Hosts"
-msgstr "Hosts"
+msgid "Hosts (Ctrl+1)"
+msgstr "Hosts (Ctrl+1)"
 
 msgid "Hosts with no group &go to:"
 msgstr "Hosts sem grupo &vão para:"
@@ -744,6 +741,9 @@ msgstr "Inclui quem estava logado em cada PC. Mantenha o arquivo privado."
 
 msgid "Install it, or locate its .exe."
 msgstr "Instale-o ou localize o .exe dele."
+
+msgid "Inventory"
+msgstr "Inventário"
 
 msgid "It's handed to the viewer privately, never on its command line."
 msgstr "Ela é entregue ao visualizador de forma privada, nunca na linha de comando."
@@ -1074,6 +1074,9 @@ msgstr "Remover uma lista daqui nunca exclui o arquivo dela."
 msgid "Rename group"
 msgstr "Renomear grupo"
 
+msgid "Report"
+msgstr "Relatório"
+
 msgid "S&top"
 msgstr "Pa&rar"
 
@@ -1097,6 +1100,9 @@ msgstr "Salvar como predefinição"
 
 msgid "Save my version as a copy…"
 msgstr "Salvar minha versão como cópia…"
+
+msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
+msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arquivo CSV"
 
 msgid "Search results"
 msgstr "Resultados da pesquisa"

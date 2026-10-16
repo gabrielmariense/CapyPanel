@@ -185,16 +185,12 @@ def test_every_theme_applies_in_any_order(qapp: QApplication) -> None:
             assert overlay["border"] in qapp.styleSheet()
 
 
-def test_picking_a_theme_in_the_menu_applies_and_remembers_it(
-    qapp: QApplication, tmp_path: Path
-) -> None:
+def test_picking_a_theme_applies_and_remembers_it(qapp: QApplication, tmp_path: Path) -> None:
     (tmp_path / settings.PORTABLE_MARKER).touch()
     paths = settings.resolve_paths(tmp_path)
     window = MainWindow(paths, {"schema": 1})
     window.set_theme("graphite")
     assert themes.current().id == "graphite"
-    checked = [a.data() for a in window._theme_group.actions() if a.isChecked()]
-    assert checked == ["graphite"]
     saved = json.loads(paths.settings_file.read_text(encoding="utf-8"))
     assert saved["theme"] == "graphite"
     window.close()

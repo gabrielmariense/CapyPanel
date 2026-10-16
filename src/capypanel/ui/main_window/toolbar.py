@@ -1,7 +1,7 @@
-"""The toolbar: outlined buttons in groups split by thin lines (set here, not by users) and Refresh,
-lined up with the end of the host table. Refresh always checks every host the table shows (the
-group picked on the left); one host is checked from its own right-click menu. Left-click picks
-one check; right-click opens a panel to run several at once."""
+"""The Hosts toolbar: outlined buttons in groups split by thin lines (set here, not by users):
+Connect and Refresh, Inventory, Report. Refresh always checks every host the table shows (the group
+picked on the left); one host is checked from its own right-click menu. Left-click picks one check;
+right-click opens a panel to run several at once."""
 
 from PySide6.QtCore import QEvent, QMargins, QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QPalette, QShowEvent
@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QMenu,
     QPushButton,
     QSizePolicy,
-    QSpacerItem,
     QStyle,
     QStyleOptionToolButton,
     QToolBar,
@@ -102,16 +101,13 @@ class MainToolBar(QToolBar):
         self.connect_button.clicked.connect(commands.connect_host.trigger)
         commands.connect_host.enabledChanged.connect(self.connect_button.setEnabled)
 
-        # One row in a plain layout: QToolBar's own layout moves fixed-size spacers into its
-        # overflow menu, so Refresh couldn't be lined up with the host table.
+        # One row in a plain layout, its left edge lined up with the panes by align().
         row = QWidget()
         row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self._row = QHBoxLayout(row)
         self._row.setContentsMargins(0, 0, 0, 0)  # set by align(), once the theme is known
         self._row.setSpacing(0)
         self._groups = 0
-        self._row.addWidget(self._group([self.connect_button]))
-        self._row.addStretch(1)
         self.refresh_button = _button()
         self.refresh_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self.refresh_menu = QMenu(self.refresh_button)
@@ -126,10 +122,17 @@ class MainToolBar(QToolBar):
                 self.refresh_button.mapToGlobal(QPoint(0, self.refresh_button.height()))
             )
         )
-        self._row.addWidget(self.refresh_button)
-        # Keeps Refresh at the end of the host table rather than the window's edge.
-        self._after_refresh = QSpacerItem(0, 0, QSizePolicy.Policy.Fixed)
-        self._row.addSpacerItem(self._after_refresh)
+        # Inventory: adding hosts and groups, and importing them; its menu is filled by the window.
+        self.inventory_button = _button()
+        self.inventory_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.inventory_menu = QMenu(self.inventory_button)
+        self.inventory_button.setMenu(self.inventory_menu)
+        self.report_button = _button()
+        self.report_button.clicked.connect(commands.export_hosts.trigger)
+        self._row.addWidget(self._group([self.connect_button, self.refresh_button]))
+        self._row.addWidget(self._group([self.inventory_button]))
+        self._row.addWidget(self._group([self.report_button]))
+        self._row.addStretch(1)
         self.addWidget(row)
         self.retranslate()
 
@@ -145,11 +148,17 @@ class MainToolBar(QToolBar):
         )
         self.refresh_status.setText(_("&Status"))
         self.refresh_users.setText(_("&Logged-on users"))
+        self.inventory_button.setText(gap + _("Inventory"))
+        self.inventory_button.setToolTip(_("Add hosts and groups, or import a list of hosts"))
+        self.report_button.setText(gap + _("Report"))
+        self.report_button.setToolTip(
+            _("Save the hosts you pick, with the columns you pick, as a CSV file")
+        )
 
-    def align(self, left: int, right: int) -> None:
-        """Lines the buttons up with the panes, in this toolbar's coordinates: the first group
-        starts at `left` and Refresh ends at `right`. Measured, so it holds in every theme."""
-        row = self.refresh_button.parentWidget()
+    def align(self, left: int) -> None:
+        """Lines the first button up with the panes: it starts at `left`, in this toolbar's
+        coordinates. Measured, so it holds in every theme."""
+        row = self._row.parentWidget()  # the row of groups, not a group
         if row is None:
             return
         start = row.mapTo(self, QPoint(0, 0)).x()  # the margins move what's inside, not the row
@@ -161,11 +170,6 @@ class MainToolBar(QToolBar):
         wanted.setBottom(wanted.top())
         if self._row.contentsMargins() != wanted:
             self._row.setContentsMargins(wanted)
-        end = row.mapTo(self, QPoint(row.width(), 0)).x()  # doesn't move with the spacer
-        width = max(0, end - right)
-        if width != self._after_refresh.sizeHint().width():
-            self._after_refresh.changeSize(width, 0, QSizePolicy.Policy.Fixed)
-            self._row.invalidate()
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
@@ -181,6 +185,8 @@ class MainToolBar(QToolBar):
         color = self.connect_button.palette().color(QPalette.ColorRole.ButtonText)  # its text's
         self.connect_button.setIcon(tabler_icon("plug-connected", color))
         self.refresh_button.setIcon(tabler_icon("refresh", color))
+        self.inventory_button.setIcon(tabler_icon("plus", color))
+        self.report_button.setIcon(tabler_icon("report-analytics", color))
         self.retranslate()
 
     def _group(self, buttons: list[QToolButton]) -> QWidget:

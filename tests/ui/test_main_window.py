@@ -55,8 +55,6 @@ def test_first_start_creates_the_personal_list_with_a_hosts_group(window: MainWi
     assert window.windowTitle().startswith("hosts.json")
     assert [a.text() for a in window.menuBar().actions()] == [
         "&File",
-        "&Inventory",
-        "&Connect",
         "&View",
         "&Help",
     ]

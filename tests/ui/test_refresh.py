@@ -231,9 +231,13 @@ def test_the_toolbar_lines_up_with_the_panes(window: MainWindow) -> None:
         QApplication.processEvents()
     window._align_refresh()
     QApplication.processEvents()
-    button = window.toolbar.refresh_button
-    end = button.mapTo(window, QPoint(button.width(), 0)).x()
-    assert abs(end - window.table.mapTo(window, QPoint(window.table.width(), 0)).x()) <= 1
+    bar = window.toolbar  # Connect, Refresh | Inventory | Report, from the left
+    order = [bar.connect_button, bar.refresh_button, bar.inventory_button, bar.report_button]
+    lefts = [b.mapTo(window, QPoint(0, 0)).x() for b in order]
+    assert (
+        lefts == sorted(lefts)
+        and bar.refresh_button.parentWidget() is bar.connect_button.parentWidget()
+    )
     search, nav = window.search, window.nav  # the search box's top meets the panes'
     assert search.mapTo(window, QPoint(0, 0)).y() == nav.mapTo(window, QPoint(0, 0)).y()
     connect = window.toolbar.connect_button  # and Connect starts where the panes do
