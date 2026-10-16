@@ -35,7 +35,7 @@ from capypanel.core.i18n import _, ngettext
 from capypanel.ui.groups import TreeMenu, fill_group_menu
 from capypanel.ui.hosts import group_choices, group_path
 from capypanel.ui.icons import STATUS_COLORS, dot_icon
-from capypanel.ui.menus import popup, section
+from capypanel.ui.menus import popup
 from capypanel.ui.themes import engine as themes
 
 # The preview's columns. The dot says what happens to the row; Warning says why.
@@ -362,8 +362,7 @@ class ImportDialog(QDialog):
             if not clicked.isSelected():
                 self.table.setCurrentItem(clicked)
             rows = self._selected_rows()
-            section(menu, ngettext("Selected row ({n})", "Selected rows ({n})", len(rows))
-                    .format(n=len(rows)))  # fmt: skip
+            menu.addSeparator()
             groups = TreeMenu(_("Put in &group"), menu)
             menu.addMenu(groups)
             fill_group_menu(groups, self._hosts, lambda g: self._put_in(rows, g))

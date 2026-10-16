@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-15 15:11-0300\n"
+"POT-Creation-Date: 2026-10-16 00:58-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -339,9 +339,6 @@ msgstr "Aparência"
 msgid "Asked by {tool}"
 msgstr "O próprio {tool} pede"
 
-msgid "Bars"
-msgstr "Barras"
-
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
 msgstr "Espaço reservado malformado em “{arg}”."
@@ -424,11 +421,12 @@ msgstr "Co&piar {column}"
 msgid "Connect"
 msgstr "Conectar"
 
-msgid "Connect once with"
-msgstr "Conectar uma vez com"
-
 msgid "Connect to the selected hosts; the arrow connects once with another profile"
 msgstr "Conecta aos hosts selecionados; a seta conecta uma vez com outro perfil"
+
+#, python-brace-format
+msgid "Connect with {profile}"
+msgstr "Conectar com {profile}"
 
 #, python-brace-format
 msgid "Connecting to {target}."
@@ -970,9 +968,6 @@ msgstr "Ou coloque só um nome e um endereço em cada linha."
 msgid "P&ort:"
 msgstr "P&orta:"
 
-msgid "Panes"
-msgstr "Painéis"
-
 #, python-brace-format
 msgid "Password for {profile}"
 msgstr "Senha para {profile}"
@@ -1012,6 +1007,12 @@ msgstr "Leitura/gravação"
 
 msgid "Refresh"
 msgstr "Atualizar"
+
+msgid "Refresh &logged-on users"
+msgstr "Atualizar usuários &logados"
+
+msgid "Refresh &status"
+msgstr "Atualizar &status"
 
 msgid "Refresh every host shown"
 msgstr "Atualizar todos os hosts exibidos"
@@ -1113,12 +1114,6 @@ msgstr "Selecione um host para ver os detalhes."
 msgid "Selected hosts"
 msgstr "Hosts selecionados"
 
-#, python-brace-format
-msgid "Selected row ({n})"
-msgid_plural "Selected rows ({n})"
-msgstr[0] "Linha selecionada ({n})"
-msgstr[1] "Linhas selecionadas ({n})"
-
 msgid "Set &tags…"
 msgstr "Definir &tags…"
 
@@ -1149,11 +1144,11 @@ msgstr "Arquivos compartilhados: a lista padrão, os perfis de conexão e as fer
 msgid "Show &first:"
 msgstr "Mostrar &primeiro:"
 
-msgid "Show do&main"
-msgstr "Mostrar do&mínio"
-
 msgid "Show this group &first"
 msgstr "Mostrar este grupo &primeiro"
+
+msgid "Show users' do&main"
+msgstr "Mostrar do&mínio dos usuários"
 
 msgid "Some changes aren't saved yet."
 msgstr "Algumas alterações ainda não foram salvas."
@@ -1417,9 +1412,6 @@ msgstr "Usar &padrões"
 
 msgid "User"
 msgstr "Usuário"
-
-msgid "Users"
-msgstr "Usuários"
 
 #, python-brace-format
 msgid "Viewer settings (*{extension})"

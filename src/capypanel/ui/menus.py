@@ -1,4 +1,4 @@
-"""Menu helpers: section headings, right-click menus, a menu that stays open while its boxes
+"""Menu helpers: right-click menus, a menu that stays open while its boxes
 are ticked, and shortcuts drawn dimmed at a menu's right edge."""
 
 import math
@@ -14,24 +14,10 @@ from PySide6.QtGui import (
     QPaintEvent,
     QPalette,
 )
-from PySide6.QtWidgets import QLabel, QMenu, QWidget, QWidgetAction
+from PySide6.QtWidgets import QMenu, QWidget
 
 SHORTCUT_GAP = 4  # spaces kept between an item's text and its shortcut
 SHORTCUT_RIGHT = 12  # px from the menu item's right edge, in line with a submenu's arrow
-
-
-def section(menu: QMenu, title: str) -> QLabel:
-    """A small heading over a part of a menu. Windows' own menu style hides QMenu.addSection()
-    titles, so it's a label, styled by the themes. Returns it, to retranslate later."""
-    label = QLabel(title)
-    label.setObjectName("menuSection")
-    heading = QWidgetAction(menu)
-    heading.setDefaultWidget(label)
-    heading.setEnabled(False)
-    if menu.actions():
-        menu.addSeparator()
-    menu.addAction(heading)
-    return label
 
 
 def popup(menu: QMenu, where: QPoint) -> None:

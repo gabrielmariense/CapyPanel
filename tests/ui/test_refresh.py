@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 from PySide6.QtCore import QPoint
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtWidgets import QApplication, QDialog, QWidgetAction
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -200,7 +200,7 @@ def test_a_rejected_typed_account_is_never_tried_on_the_other_hosts(
     assert len(answers["seen"]) == 1  # one host refused it; the batch stopped
 
 
-def test_host_menu_has_sections_with_short_names(
+def test_host_menu_items_read_on_their_own_with_no_headings(
     window: MainWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     seen: list[str] = []
@@ -208,6 +208,7 @@ def test_host_menu_has_sections_with_short_names(
     class Recorded(window_module.QMenu):  # type: ignore[misc]
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
             seen.extend(label(a) for a in self.actions() if a.text())
+            assert not any(isinstance(a, QWidgetAction) for a in self.actions())  # no headings
 
     monkeypatch.setattr(window_module, "QMenu", Recorded)
     window.show()
@@ -218,8 +219,8 @@ def test_host_menu_has_sections_with_short_names(
     row = window.table.visualItemRect(first)
     window._host_menu(QPoint(row.left() + 10, row.center().y()))  # on the name
     assert seen == [
-        "&Connect", "&Status", "&Logged-on users", "Co&py name", "&Edit selected…", "&Move to",
-        "&Remove selected",
+        "&Connect", "Refresh &status", "Refresh &logged-on users", "Co&py name",
+        "&Edit selected…", "&Move to", "&Remove selected",
     ]  # fmt: skip
 
 

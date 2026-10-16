@@ -78,7 +78,7 @@ from capypanel.ui.main_window.host_views import (
     SearchBox,
 )
 from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
-from capypanel.ui.menus import StayOpenMenu, popup, section
+from capypanel.ui.menus import StayOpenMenu, popup
 from capypanel.ui.settings import connections
 from capypanel.ui.settings.connections import ConnectionChanges
 from capypanel.ui.settings.window import SettingsChoices, SettingsDialog
@@ -201,11 +201,10 @@ class MainWindow(QMainWindow):
         # It stays open while parts are ticked, so several can be shown or hidden in one go.
         self._view_menu = StayOpenMenu(self)
         bar.addMenu(self._view_menu)
-        self._bars_heading = section(self._view_menu, "")
         self._view_menu.addActions([a.show_toolbar, a.show_status_bar])
-        self._panes_heading = section(self._view_menu, "")
+        self._view_menu.addSeparator()
         self._view_menu.addActions([a.show_groups, a.show_tags, a.show_details])
-        self._users_heading = section(self._view_menu, "")
+        self._view_menu.addSeparator()
         self._view_menu.addAction(a.show_domains)
         self._view_menu.addSeparator()
         self._theme_menu = self._view_menu.addMenu("")
@@ -252,9 +251,6 @@ class MainWindow(QMainWindow):
         self._connect_menu.setTitle(_("&Connect"))
         self._view_menu.setTitle(_("&View"))
         self._help_menu.setTitle(_("&Help"))
-        self._bars_heading.setText(_("Bars"))
-        self._panes_heading.setText(_("Panes"))
-        self._users_heading.setText(_("Users"))
         self._theme_menu.setTitle(_("&Theme"))
         self._language_menu.setTitle(_("&Language"))
         for item in self._theme_group.actions():
@@ -1566,9 +1562,10 @@ class MainWindow(QMainWindow):
         """The toolbar's Connect arrow: connect the selection once with another profile."""
         menu = self.toolbar.connect_menu
         menu.clear()
-        section(menu, _("Connect once with"))
         for profile_id, name in self.connector.choices():
-            item = menu.addAction(name.replace("&", "&&"))
+            item = menu.addAction(
+                _("Connect with {profile}").format(profile=name.replace("&", "&&"))
+            )
             item.setEnabled(bool(self.table.selected_ids()))
             item.triggered.connect(lambda _c=False, p=profile_id: self.connect_selected(p))
 
@@ -1603,7 +1600,7 @@ class MainWindow(QMainWindow):
         # Use first, then copy, then managing the host: edit, move, remove.
         menu.addAction(a.connect_host)
         menu.setDefaultAction(a.connect_host)  # bold: what double-click and Enter do
-        section(menu, _("Refresh"))
+        menu.addSeparator()
         menu.addActions([a.check_status, a.check_users])
         menu.addSeparator()
         menu.addAction(self._copy_cell_action(menu, self.table.columnAt(position.x())))
@@ -1667,7 +1664,7 @@ class MainWindow(QMainWindow):
         menu.addAction(self.commands.add_group)  # inside the group under the mouse
         group = self._doc.hosts.group(group_id) if self._doc else None
         if group is not None and self._doc is not None:
-            section(menu, _("Connect"))
+            menu.addSeparator()
             follow = self.connector.inherited_label(
                 *self._doc.hosts.group_profile(group.parent, self._profile_exists)
             )
@@ -1676,10 +1673,10 @@ class MainWindow(QMainWindow):
             )
             # The group's hosts, including those in the groups inside it.
             hosts = list(self._doc.hosts.hosts_in(group.id))
-            section(menu, _("Refresh"))
+            menu.addSeparator()
             for text, status, users in (
-                (_("&Status"), True, False),
-                (_("&Logged-on users"), False, True),
+                (_("Refresh &status"), True, False),
+                (_("Refresh &logged-on users"), False, True),
             ):
                 item = menu.addAction(text)
                 item.setEnabled(bool(hosts) and self._run is None)
@@ -1693,11 +1690,13 @@ class MainWindow(QMainWindow):
             first.setCheckable(True)
             first.setChecked(view.show == locations.SHOW_GROUP and view.group == group.id)
             first.toggled.connect(lambda on: self.set_first_group(group.id, on))
+            menu.addSeparator()  # managing it, in the host menu's order: edit, move, remove
+            menu.addAction(self.commands.edit)
             move = TreeMenu(_("&Move to"), menu)
             menu.addMenu(move)
             move.setEnabled(self._writable() is not None)
             fill_move_menu(move, self._doc.hosts, group.id, lambda p: self.move_group(group.id, p))
-            menu.addActions([self.commands.edit, self.commands.remove])
+            menu.addAction(self.commands.remove)
         popup(menu, self.nav.groups.viewport().mapToGlobal(position))
 
     # ---- helpers ----

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-15 15:11-0300\n"
+"POT-Creation-Date: 2026-10-16 00:58-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -340,9 +340,6 @@ msgstr ""
 msgid "Asked by {tool}"
 msgstr ""
 
-msgid "Bars"
-msgstr ""
-
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
 msgstr ""
@@ -425,12 +422,13 @@ msgstr ""
 msgid "Connect"
 msgstr ""
 
-msgid "Connect once with"
-msgstr ""
-
 msgid ""
 "Connect to the selected hosts; the arrow connects once with another "
 "profile"
+msgstr ""
+
+#, python-brace-format
+msgid "Connect with {profile}"
 msgstr ""
 
 #, python-brace-format
@@ -992,9 +990,6 @@ msgstr ""
 msgid "P&ort:"
 msgstr ""
 
-msgid "Panes"
-msgstr ""
-
 #, python-brace-format
 msgid "Password for {profile}"
 msgstr ""
@@ -1033,6 +1028,12 @@ msgid "Read/write"
 msgstr ""
 
 msgid "Refresh"
+msgstr ""
+
+msgid "Refresh &logged-on users"
+msgstr ""
+
+msgid "Refresh &status"
 msgstr ""
 
 msgid "Refresh every host shown"
@@ -1135,12 +1136,6 @@ msgstr ""
 msgid "Selected hosts"
 msgstr ""
 
-#, python-brace-format
-msgid "Selected row ({n})"
-msgid_plural "Selected rows ({n})"
-msgstr[0] ""
-msgstr[1] ""
-
 msgid "Set &tags…"
 msgstr ""
 
@@ -1175,10 +1170,10 @@ msgstr ""
 msgid "Show &first:"
 msgstr ""
 
-msgid "Show do&main"
+msgid "Show this group &first"
 msgstr ""
 
-msgid "Show this group &first"
+msgid "Show users' do&main"
 msgstr ""
 
 msgid "Some changes aren't saved yet."
@@ -1461,9 +1456,6 @@ msgid "Use &defaults"
 msgstr ""
 
 msgid "User"
-msgstr ""
-
-msgid "Users"
 msgstr ""
 
 #, python-brace-format

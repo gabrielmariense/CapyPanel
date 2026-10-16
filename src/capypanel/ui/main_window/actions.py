@@ -92,8 +92,8 @@ def retranslate_actions(a: Actions) -> None:
     a.documentation.setText(_("&Documentation"))
     a.report_problem.setText(_("&Report a problem"))
     a.about.setText(_("&About CapyPanel"))
-    a.check_status.setText(_("&Status"))
-    a.check_users.setText(_("&Logged-on users"))
+    a.check_status.setText(_("Refresh &status"))
+    a.check_users.setText(_("Refresh &logged-on users"))
     a.forget_passwords.setText(_("&Forget typed passwords"))
     a.connection_profiles.setText(_("Connection &profiles…"))
     a.show_toolbar.setText(_("T&oolbar"))
@@ -101,5 +101,5 @@ def retranslate_actions(a: Actions) -> None:
     a.show_tags.setText(_("T&ags pane"))
     a.show_details.setText(_("&Details pane"))
     a.show_status_bar.setText(_("&Status bar"))
-    a.show_domains.setText(_("Show do&main"))  # under a "Users" heading
+    a.show_domains.setText(_("Show users' do&main"))
     a.reset_layout.setText(_("&Reset layout"))
