@@ -316,6 +316,7 @@ class ConnectionsPage(Page):
             )
         )
         self.list = QListWidget()
+        self.list.setMaximumHeight(150)  # a few profiles; it scrolls when there are more
         self.list.itemSelectionChanged.connect(self._update_buttons)
         self.list.itemDoubleClicked.connect(lambda _item: self.edit())
         self.add_button = QPushButton(_("&Add…"))
@@ -365,8 +366,9 @@ class ConnectionsPage(Page):
         self._tools_grid.setColumnStretch(2, 1)
         tools_layout.addLayout(self._tools_grid)
 
-        self.body.addWidget(profiles_box, 1)
+        self.body.addWidget(profiles_box)
         self.body.addWidget(tools_box)
+        self.body.addStretch(1)
         self._fill_profiles(select=None)
         self.default.setCurrentIndex(max(self.default.findData(self.store.default_id()), 0))
         self._fill_tools()

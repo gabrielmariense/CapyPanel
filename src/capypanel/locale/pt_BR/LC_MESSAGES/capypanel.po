@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 15:43-0300\n"
+"POT-Creation-Date: 2026-10-17 17:05-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -119,9 +119,6 @@ msgstr "&Importar hosts…"
 
 msgid "&Keep editing"
 msgstr "&Continuar editando"
-
-msgid "&Language:"
-msgstr "&Idioma:"
 
 msgid "&Leave out of the import"
 msgstr "&Deixar fora da importação"
@@ -329,9 +326,6 @@ msgstr "Respondeu em {address}, porta {port}."
 msgid "Any name you like, then the computer's network name or IP address. Separate them with a comma, or copy two columns from Excel."
 msgstr "Um nome à sua escolha, depois o nome do computador na rede ou o endereço IP. Separe com vírgula, ou copie duas colunas do Excel."
 
-msgid "Appearance"
-msgstr "Aparência"
-
 #, python-brace-format
 msgid "Asked by {tool}"
 msgstr "O próprio {tool} pede"
@@ -355,20 +349,17 @@ msgstr "Arquivos CSV (*.csv)"
 msgid "CSV with headers"
 msgstr "CSV com cabeçalho"
 
-msgid "CapyPanel"
-msgstr "CapyPanel"
-
 msgid "CapyPanel is built with the following software:"
 msgstr "O CapyPanel é feito com os seguintes softwares:"
+
+msgid "CapyPanel themes look the same on every computer."
+msgstr "Os temas do CapyPanel ficam iguais em todos os computadores."
 
 msgid "CapyPanel — dark"
 msgstr "CapyPanel — escuro"
 
 msgid "CapyPanel — light"
 msgstr "CapyPanel — claro"
-
-msgid "CapyPanel's own appearance, the same on every computer."
-msgstr "A aparência do próprio CapyPanel, igual em todos os computadores."
 
 msgid "Change path…"
 msgstr "Alterar caminho…"
@@ -616,6 +607,9 @@ msgstr "Todos os computadores sob seus cuidados, em uma só janela."
 msgid "File not found"
 msgstr "Arquivo não encontrado"
 
+msgid "Files"
+msgstr "Arquivos"
+
 msgid "Find automatically"
 msgstr "Encontrar automaticamente"
 
@@ -757,6 +751,9 @@ msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on. If a computer rejects it, CapyPanel stops and asks again instead of trying it on the others, so the account isn't locked."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado. Se um computador recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta não ser bloqueada."
 
+msgid "Language"
+msgstr "Idioma"
+
 msgid "Last check"
 msgstr "Última verificação"
 
@@ -765,6 +762,9 @@ msgstr "Licenças"
 
 msgid "List"
 msgstr "Lista"
+
+msgid "Lists"
+msgstr "Listas"
 
 msgid "Lists folder"
 msgstr "Pasta de listas"
@@ -831,9 +831,6 @@ msgstr "Nome do novo grupo dentro de “{group}”:"
 
 msgid "Name of the new group:"
 msgstr "Nome do novo grupo:"
-
-msgid "Native Windows styling, with your accent color."
-msgstr "A aparência do próprio Windows, com a sua cor de destaque."
 
 msgid "New connection profile"
 msgstr "Novo perfil de conexão"
@@ -1168,8 +1165,14 @@ msgstr "Compartilhados por todos neste PC. Você pode alterá-los."
 msgid "Shared files"
 msgstr "Arquivos compartilhados"
 
-msgid "Shared files: the default list, connection profiles and tools, for everyone."
-msgstr "Arquivos compartilhados: a lista padrão, os perfis de conexão e as ferramentas, para todos."
+msgid "Shared files: connection profiles and tools, for everyone."
+msgstr "Arquivos compartilhados: os perfis de conexão e as ferramentas, para todos."
+
+msgid "Shared lists"
+msgstr "Listas compartilhadas"
+
+msgid "Shared lists: the default list, and every list saved there, for everyone."
+msgstr "Listas compartilhadas: a lista padrão e toda lista salva ali, para todos."
 
 msgid "Show &first:"
 msgstr "Mostrar &primeiro:"
@@ -1368,6 +1371,9 @@ msgstr "O “settings_file” deve ser o nome de um arquivo na pasta de perfis."
 msgid "The “website” must be an https:// address."
 msgstr "O “website” deve ser um endereço https://."
 
+msgid "Theme"
+msgstr "Tema"
+
 msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr "Não há perfis de conexão. Crie um em Configurações > Conexões."
 
@@ -1472,15 +1478,15 @@ msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste 
 msgid "Where is {tool}?"
 msgstr "Onde está o {tool}?"
 
-msgid "Windows"
-msgstr "Windows"
-
 #, python-brace-format
 msgid "Windows error {code}."
 msgstr "Erro do Windows {code}."
 
 msgid "Windows file sharing (port 445) didn't answer: the computer is off, not on the network, a firewall blocks file sharing, or it isn't Windows."
 msgstr "O compartilhamento de arquivos do Windows (porta 445) não respondeu: o computador está desligado, fora da rede, um firewall bloqueia o compartilhamento ou não é Windows."
+
+msgid "Windows themes use Windows' own look, with your accent color."
+msgstr "Os temas do Windows usam a aparência do próprio Windows, com a sua cor de destaque."
 
 msgid "Windows — dark"
 msgstr "Windows — escuro"
@@ -1494,14 +1500,17 @@ msgstr "Windows — claro"
 msgid "With No group, the groups inside it go directly under Groups."
 msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
 
-msgid "You can also change the theme under View > Theme."
-msgstr "Você também pode trocar o tema em Exibir > Tema."
-
 msgid "Your files"
 msgstr "Seus arquivos"
 
-msgid "Your files: your settings and personal list, private to you and admins."
-msgstr "Seus arquivos: suas configurações e sua lista pessoal, só para você e os administradores."
+msgid "Your files: your settings, private to you and admins."
+msgstr "Seus arquivos: suas configurações, só para você e os administradores."
+
+msgid "Your lists"
+msgstr "Suas listas"
+
+msgid "Your lists: your personal list, and every list saved there, only for you."
+msgstr "Suas listas: sua lista pessoal e toda lista salva ali, só para você."
 
 msgid "active"
 msgstr "ativa"

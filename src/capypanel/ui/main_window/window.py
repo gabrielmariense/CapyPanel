@@ -1117,7 +1117,8 @@ class MainWindow(QMainWindow):
         if page:
             dialog.show_page(page)
         dialog.saved.connect(lambda choices: self._settings_saved(dialog, choices))
-        dialog.language_picked.connect(self.set_language)  # at once, like View > Language
+        dialog.language_picked.connect(self.set_language)  # at once, no Save needed
+        dialog.theme_picked.connect(self.set_theme)
         dialog.exec()
         self._prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
         self._save_prefs()

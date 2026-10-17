@@ -6,16 +6,19 @@ the Connections page, ask first when something isn't saved."""
 from dataclasses import dataclass
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QObject, QTimer, Signal
+from PySide6.QtCore import QEvent, QObject, Qt, QTimer, Signal
 from PySide6.QtGui import QHideEvent, QShowEvent
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
     QDialogButtonBox,
+    QFrame,
     QHBoxLayout,
     QListWidget,
+    QListWidgetItem,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -30,15 +33,18 @@ from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.profiles import ProfileError
 from capypanel.ui.settings.connections import ConnectionChanges, ConnectionsPage, apply
 from capypanel.ui.settings.pages import (
-    AppearancePage,
+    FilesPage,
     GeneralPage,
     HostListsPage,
+    HostsPage,
     Page,
 )
 from capypanel.ui.themes import engine as themes
 
-# The pages' titles, as the pages set them; the page list is sized for the longest in any language.
-PAGE_TITLES = ("General", "Host lists", "Connections", "Appearance")
+# The pages' titles, as the pages set them, and the groups' labels: the page list is sized for the
+# longest in any language. The app's pages first, then each tool's.
+PAGE_TITLES = ("General", "Files", "General", "Host lists", "Connections")
+GROUPS = (("CapyPanel", ("general", "files")), ("Hosts", ("hosts", "host_lists", "connections")))
 
 
 @dataclass(frozen=True)
@@ -57,6 +63,7 @@ class SettingsChoices:
 class SettingsDialog(QDialog):
     saved = Signal(object)  # SettingsChoices, on Save
     language_picked = Signal(str)  # applied at once, not on Save
+    theme_picked = Signal(str)  # the same
 
     def __init__(
         self,
@@ -109,12 +116,14 @@ class SettingsDialog(QDialog):
         self._building = True  # pages report changes while they're filled
         self.setWindowTitle(_("Settings"))
         self.general = GeneralPage(
-            self._paths,
+            language=i18n.language(), registry=self._registry, theme_id=theme_id
+        )
+        self.files = FilesPage(self._paths)
+        self.hosts = HostsPage(
             start_list=start_list,
             default_list=self._default_list,
             personal_list=self._personal_list,
             added=added,
-            language=i18n.language(),
             auto_status=auto_status,
             start_view=start_view,
             host_list=self._host_list,
@@ -130,35 +139,50 @@ class SettingsDialog(QDialog):
             self.host_lists.view.select(chosen)
         self.host_lists.view.written.extend(written)
         self.connections = ConnectionsPage(self._catalogs, self._document)
-        self.appearance = AppearancePage(self._registry, theme_id)
         self.pages: dict[str, Page] = {
             "general": self.general,
+            "files": self.files,
+            "hosts": self.hosts,
             "host_lists": self.host_lists,
             "connections": self.connections,
-            "appearance": self.appearance,
         }
         self.general.language.currentIndexChanged.connect(self._language_changed)
+        self.general.theme.currentIndexChanged.connect(
+            lambda: self.theme_picked.emit(self.general.theme_id())
+        )
 
         self.page_list = QListWidget()
         self.page_list.setObjectName("pageList")
         # No setUniformItemSizes: it caches a row height measured before the theme reaches the
         # list, and the rows then overlap (13 px rows for 27 px of text).
         self.stack = QStackedWidget()
+        # Each group: its label (not a page), then its pages. _rows maps rows to page ids.
+        self._rows: list[str | None] = []
+        for group, ids in GROUPS:
+            label = QListWidgetItem(_(group))
+            label.setFlags(Qt.ItemFlag.NoItemFlags)
+            font = label.font()
+            font.setBold(True)
+            label.setFont(font)
+            self.page_list.addItem(label)
+            self._rows.append(None)
+            for page_id in ids:
+                self.page_list.addItem("   " + self.pages[page_id].title)
+                self._rows.append(page_id)
         for page in self.pages.values():
-            self.page_list.addItem(page.title)
-            self.stack.addWidget(page)
+            self.stack.addWidget(_scrolling(page))  # long pages scroll
             page.changed.connect(self._update_save)
         # Wide enough for the longest page name in any language, so the list never cuts it and
         # keeps its width when the language changes.
         metrics = self.page_list.fontMetrics()
         longest = max(
-            metrics.horizontalAdvance(title)
-            for message in PAGE_TITLES
+            metrics.horizontalAdvance("   " + title)
+            for message in (*PAGE_TITLES, *(group for group, _ids in GROUPS))
             for title in i18n.in_every_language(message)
         )
         self.page_list.setFixedWidth(longest + 64)
         self.page_list.currentRowChanged.connect(self._page_picked)
-        self.page_list.setCurrentRow(0)
+        self.page_list.setCurrentRow(self.row_of("general"))
 
         # Save keeps the window open; Close asks first when something isn't saved. Neither is
         # a default button: Enter never saves or closes by surprise.
@@ -194,13 +218,13 @@ class SettingsDialog(QDialog):
         chosen = self.host_lists.chosen()
         old = self._content
         values = (
-            self.general.start_choice(),
+            self.hosts.start_choice(),
             self.host_lists.added(),
-            self.general.auto_status_choice(),
-            self.appearance.theme_id(),
+            self.hosts.auto_status_choice(),
+            self.general.theme_id(),
         )
         written = tuple(self.host_lists.written)
-        start_view = self.general.show_first_choice()
+        start_view = self.hosts.show_first_choice()
         old.hide()
         self._layout.removeWidget(old)
         self._old.append(old)
@@ -216,19 +240,22 @@ class SettingsDialog(QDialog):
 
     def _page_picked(self, row: int) -> None:
         """Leaving Connections with changes asks first: save them, drop them, or stay."""
-        here = list(self.pages).index("connections")
-        if self.stack.currentIndex() == here and row != here and self.connections.has_changes():
+        page_id = self._rows[row] if 0 <= row < len(self._rows) else None
+        if page_id is None:
+            return  # a group's label, never picked
+        leaving = self.current_page() == "connections" and page_id != "connections"
+        if leaving and self.connections.has_changes():
             answer = self._ask_unsaved(_("The changes on the Connections page aren't saved yet."))
             if answer == "save" and not self._save_connections():
                 answer = "stay"
             if answer == "stay":
                 self.page_list.blockSignals(True)
-                self.page_list.setCurrentRow(here)
+                self.page_list.setCurrentRow(self.row_of("connections"))
                 self.page_list.blockSignals(False)
                 return
             if answer == "discard":
                 self.connections.reset()
-        self.stack.setCurrentIndex(row)
+        self.stack.setCurrentIndex(list(self.pages).index(page_id))
         self._update_save()
 
     def _ask_unsaved(self, text: str, *, can_save: bool = True) -> str:
@@ -253,7 +280,10 @@ class SettingsDialog(QDialog):
         return True
 
     def show_page(self, page_id: str) -> None:
-        self.page_list.setCurrentRow(list(self.pages).index(page_id))
+        self.page_list.setCurrentRow(self.row_of(page_id))
+
+    def row_of(self, page_id: str) -> int:
+        return self._rows.index(page_id)
 
     def current_page(self) -> str:
         return list(self.pages)[self.stack.currentIndex()]
@@ -263,15 +293,15 @@ class SettingsDialog(QDialog):
         assert host_list is not None, "Save is disabled until a list is chosen"
         written = self.host_lists.written
         return SettingsChoices(
-            start_list=self.general.start_choice(),
+            start_list=self.hosts.start_choice(),
             host_list=host_list,
             rewritten=any(same_path(host_list, p) for p in written),
-            theme_id=self.appearance.theme_id(),
+            theme_id=self.general.theme_id(),
             language=self.general.language_choice(),
             added_lists=self.host_lists.added(),
             connections=self.connections.changes(),
-            auto_status=self.general.auto_status_choice(),
-            start_view=self.general.show_first_choice(),
+            auto_status=self.hosts.auto_status_choice(),
+            start_view=self.hosts.show_first_choice(),
         )
 
     def showEvent(self, event: QShowEvent) -> None:
@@ -297,13 +327,13 @@ class SettingsDialog(QDialog):
         return False
 
     def _state(self) -> tuple[object, ...] | None:
-        """What Save would write (the language is applied at once, so not here), to tell
+        """What Save would write (language and theme apply at once, so not here), to tell
         whether anything is left unsaved. None while a page can't be saved."""
         if not self.is_valid():
             return None
         c = self.choices()
         return (
-            c.start_list, c.host_list, c.theme_id, tuple(c.added_lists), c.auto_status,
+            c.start_list, c.host_list, tuple(c.added_lists), c.auto_status,
             c.start_view, self.connections.has_changes(),
         )  # fmt: skip
 
@@ -341,3 +371,13 @@ class SettingsDialog(QDialog):
         self.host_lists.view.saved(document)
         self._saved_state = self._state()
         self._update_save()
+
+
+def _scrolling(page: Page) -> QScrollArea:
+    """A page that scrolls when it's taller than the window, with no frame of its own."""
+    area = QScrollArea()
+    area.setWidgetResizable(True)
+    area.setFrameShape(QFrame.Shape.NoFrame)
+    area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    area.setWidget(page)
+    return area

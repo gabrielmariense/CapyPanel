@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 15:43-0300\n"
+"POT-Creation-Date: 2026-10-17 17:05-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -117,9 +117,6 @@ msgid "&Import hosts…"
 msgstr ""
 
 msgid "&Keep editing"
-msgstr ""
-
-msgid "&Language:"
 msgstr ""
 
 msgid "&Leave out of the import"
@@ -330,9 +327,6 @@ msgid ""
 "Separate them with a comma, or copy two columns from Excel."
 msgstr ""
 
-msgid "Appearance"
-msgstr ""
-
 #, python-brace-format
 msgid "Asked by {tool}"
 msgstr ""
@@ -356,19 +350,16 @@ msgstr ""
 msgid "CSV with headers"
 msgstr ""
 
-msgid "CapyPanel"
+msgid "CapyPanel is built with the following software:"
 msgstr ""
 
-msgid "CapyPanel is built with the following software:"
+msgid "CapyPanel themes look the same on every computer."
 msgstr ""
 
 msgid "CapyPanel — dark"
 msgstr ""
 
 msgid "CapyPanel — light"
-msgstr ""
-
-msgid "CapyPanel's own appearance, the same on every computer."
 msgstr ""
 
 msgid "Change path…"
@@ -623,6 +614,9 @@ msgstr ""
 msgid "File not found"
 msgstr ""
 
+msgid "Files"
+msgstr ""
+
 msgid "Find automatically"
 msgstr ""
 
@@ -772,6 +766,9 @@ msgid ""
 "again instead of trying it on the others, so the account isn't locked."
 msgstr ""
 
+msgid "Language"
+msgstr ""
+
 msgid "Last check"
 msgstr ""
 
@@ -779,6 +776,9 @@ msgid "Licenses"
 msgstr ""
 
 msgid "List"
+msgstr ""
+
+msgid "Lists"
 msgstr ""
 
 msgid "Lists folder"
@@ -845,9 +845,6 @@ msgid "Name of the new group inside “{group}”:"
 msgstr ""
 
 msgid "Name of the new group:"
-msgstr ""
-
-msgid "Native Windows styling, with your accent color."
 msgstr ""
 
 msgid "New connection profile"
@@ -1192,9 +1189,13 @@ msgstr ""
 msgid "Shared files"
 msgstr ""
 
-msgid ""
-"Shared files: the default list, connection profiles and tools, for "
-"everyone."
+msgid "Shared files: connection profiles and tools, for everyone."
+msgstr ""
+
+msgid "Shared lists"
+msgstr ""
+
+msgid "Shared lists: the default list, and every list saved there, for everyone."
 msgstr ""
 
 msgid "Show &first:"
@@ -1411,6 +1412,9 @@ msgstr ""
 msgid "The “website” must be an https:// address."
 msgstr ""
 
+msgid "Theme"
+msgstr ""
+
 msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr ""
 
@@ -1521,9 +1525,6 @@ msgstr ""
 msgid "Where is {tool}?"
 msgstr ""
 
-msgid "Windows"
-msgstr ""
-
 #, python-brace-format
 msgid "Windows error {code}."
 msgstr ""
@@ -1531,6 +1532,9 @@ msgstr ""
 msgid ""
 "Windows file sharing (port 445) didn't answer: the computer is off, not "
 "on the network, a firewall blocks file sharing, or it isn't Windows."
+msgstr ""
+
+msgid "Windows themes use Windows' own look, with your accent color."
 msgstr ""
 
 msgid "Windows — dark"
@@ -1545,13 +1549,16 @@ msgstr ""
 msgid "With No group, the groups inside it go directly under Groups."
 msgstr ""
 
-msgid "You can also change the theme under View > Theme."
-msgstr ""
-
 msgid "Your files"
 msgstr ""
 
-msgid "Your files: your settings and personal list, private to you and admins."
+msgid "Your files: your settings, private to you and admins."
+msgstr ""
+
+msgid "Your lists"
+msgstr ""
+
+msgid "Your lists: your personal list, and every list saved there, only for you."
 msgstr ""
 
 msgid "active"
