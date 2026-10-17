@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
-    QMenu,
     QPushButton,
     QRadioButton,
     QSpinBox,
@@ -30,6 +29,7 @@ from capypanel.core.i18n import _
 from capypanel.ui.groups import TreeMenu, fill_host_move_menu
 from capypanel.ui.host_lists import HostListsView
 from capypanel.ui.hosts import group_path
+from capypanel.ui.menus import MenuCombo
 from capypanel.ui.notes import hint, notes
 from capypanel.ui.themes import engine as themes
 
@@ -83,29 +83,6 @@ class PathLabel(QLabel):
 
 def open_folder(folder: Path) -> None:
     QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
-
-
-class MenuCombo(QComboBox):
-    """A dropdown that opens a menu instead of a list, so it can hold submenus, and still looks
-    and sizes like the other dropdowns. Its one item is the text shown."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._menu = QMenu(self)
-
-    def menu(self) -> QMenu:
-        return self._menu
-
-    def text(self) -> str:
-        return self.currentText()
-
-    def setText(self, text: str) -> None:
-        self.clear()
-        self.addItem(text)
-
-    def showPopup(self) -> None:
-        self._menu.setMinimumWidth(self.width())
-        self._menu.popup(self.mapToGlobal(self.rect().bottomLeft()))
 
 
 # ---- General ----
@@ -306,7 +283,7 @@ class GeneralPage(Page):
 
 
 class HostListsPage(Page):
-    """The same lists as File > Host lists…; the one picked here opens on Save."""
+    """The same lists as the list dropdown; the one picked here opens on Save."""
 
     def __init__(
         self,
@@ -315,10 +292,15 @@ class HostListsPage(Page):
         personal_list: Path,
         document: OpenList | None,
         added: list[Path],
+        found: list[Path] | None = None,
     ) -> None:
         super().__init__(_("Host lists"))
         self.view = HostListsView(
-            default_list=default_list, personal_list=personal_list, added=added, document=document
+            default_list=default_list,
+            personal_list=personal_list,
+            added=added,
+            document=document,
+            found=found,
         )
         self.body.addWidget(self.view, 1)
         self.view.changed.connect(self.changed.emit)

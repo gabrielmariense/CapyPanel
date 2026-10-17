@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 17:46-0300\n"
+"POT-Creation-Date: 2026-10-17 02:38-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -108,9 +108,6 @@ msgstr "Painel de &grupos"
 msgid "&Help"
 msgstr "Aj&uda"
 
-msgid "&Host lists…"
-msgstr "&Listas de hosts…"
-
 msgid "&Hosts"
 msgstr "&Hosts"
 
@@ -138,6 +135,9 @@ msgstr "Usuários &logados"
 msgid "&Manage groups…"
 msgstr "Ge&renciar grupos…"
 
+msgid "&Manage host lists…"
+msgstr "&Gerenciar listas de hosts…"
+
 msgid "&Manual connection…"
 msgstr "Conexão &manual…"
 
@@ -150,17 +150,17 @@ msgstr "&Mover para"
 msgid "&Name:"
 msgstr "&Nome:"
 
-msgid "&New host list…"
-msgstr "&Nova lista de hosts…"
+msgid "&New list…"
+msgstr "&Nova lista…"
 
 msgid "&New…"
 msgstr "&Nova…"
 
-msgid "&Open"
-msgstr "Abri&r"
-
 msgid "&Open a CSV file…"
 msgstr "A&brir um arquivo CSV…"
+
+msgid "&Open list…"
+msgstr "&Abrir lista…"
 
 msgid "&Open on startup:"
 msgstr "&Abrir ao iniciar:"
@@ -551,6 +551,9 @@ msgstr "Padrão ({port})"
 msgid "Default group"
 msgstr "Grupo padrão"
 
+msgid "Default list"
+msgstr "Lista padrão"
+
 msgid "Default list: shared by everyone on this PC."
 msgstr "Lista padrão: compartilhada por todos neste PC."
 
@@ -763,6 +766,12 @@ msgstr "Licenças"
 msgid "List"
 msgstr "Lista"
 
+msgid "Lists folder"
+msgstr "Pasta de listas"
+
+msgid "Lists saved in a lists folder show up by themselves."
+msgstr "Listas salvas numa pasta de listas aparecem sozinhas."
+
 msgid "Locate…"
 msgstr "Localizar…"
 
@@ -862,6 +871,9 @@ msgstr "Sem grupo"
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
 
+msgid "No list open"
+msgstr "Nenhuma lista aberta"
+
 msgid "No name"
 msgstr "Sem nome"
 
@@ -928,6 +940,9 @@ msgstr "Abrir pasta de &logs"
 msgid "Open a CSV file"
 msgstr "Abrir um arquivo CSV"
 
+msgid "Open a host list"
+msgstr "Abrir uma lista de hosts"
+
 msgid "Open a host list to choose what it shows first."
 msgstr "Abra uma lista de hosts para escolher o que ela mostra primeiro."
 
@@ -974,6 +989,9 @@ msgstr "Cole uma lista abaixo, ou"
 
 msgid "Personal"
 msgstr "Pessoal"
+
+msgid "Personal list"
+msgstr "Lista pessoal"
 
 msgid "Personal list: only yours."
 msgstr "Lista pessoal: só sua."

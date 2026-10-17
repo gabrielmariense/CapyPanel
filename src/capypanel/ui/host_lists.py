@@ -6,8 +6,6 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
     QFileDialog,
     QHBoxLayout,
     QHeaderView,
@@ -55,10 +53,17 @@ class HostListsView(QWidget):
         personal_list: Path,
         added: list[Path],
         document: OpenList | None,
+        found: list[Path] | None = None,
     ) -> None:
+        """found: the lists in the lists folders; they show up by themselves and can't be
+        removed here."""
         super().__init__()
         self._default, self._personal, self._document = default_list, personal_list, document
-        self.added = [p for p in added if self._kind(p) is ListKind.SHARED]
+        self._found = found or []
+        self.added = [
+            p for p in added
+            if self._kind(p) is ListKind.SHARED and not self._in_folder(p)
+        ]  # fmt: skip
         self.written: list[Path] = []  # files created here, so opening them reloads them
 
         self.tree = QTreeWidget()
@@ -90,6 +95,7 @@ class HostListsView(QWidget):
             notes(
                 _("Default list: shared by everyone on this PC."),
                 _("Personal list: only yours."),
+                _("Lists saved in a lists folder show up by themselves."),
                 _("Hover over a list to see where it is."),
                 _("Removing a list from here never deletes its file."),
             )
@@ -140,16 +146,14 @@ class HostListsView(QWidget):
     def _fill(self, select: Path | None) -> None:
         self.tree.clear()
         current = self._document.path if self._document else None
-        names = [p.name.casefold() for p in self.added]
-        for path in (self._default, self._personal, *self.added):
+        paths = [self._default, self._personal, *self._found, *self.added]
+        names = locations.list_names(paths, default=self._default, personal=self._personal)
+        for path, name in zip(paths, names, strict=True):
             kind = self._kind(path)
-            name = path.name
-            if kind is ListKind.SHARED and names.count(name.casefold()) > 1:
-                name = f"{path.name} ({path.parent.name})"  # two "hosts.json": which is which
             kind_text = {
                 ListKind.DEFAULT: _("Default"),
                 ListKind.PERSONAL: _("Personal"),
-                ListKind.SHARED: _("Added"),
+                ListKind.SHARED: _("Lists folder") if self._in_folder(path) else _("Added"),
             }[kind]
             access = locations.list_access(path, shared=kind is ListKind.DEFAULT)
             is_open = current is not None and locations.same_path(path, current)
@@ -170,9 +174,13 @@ class HostListsView(QWidget):
             self.select(select)
         self._selection_changed()
 
+    def _in_folder(self, path: Path) -> bool:
+        return any(locations.same_path(path, p) for p in self._found)
+
     def _selection_changed(self) -> None:
         path = self.selected()
-        self.remove_button.setEnabled(path is not None and self._kind(path) is ListKind.SHARED)
+        removable = path is not None and self._kind(path) is ListKind.SHARED
+        self.remove_button.setEnabled(removable and path is not None and not self._in_folder(path))
         self.changed.emit()
 
     # ---- changing ----
@@ -216,7 +224,7 @@ class HostListsView(QWidget):
         if path is None or self._kind(path) is not ListKind.SHARED:
             return
         self.added = [p for p in self.added if not locations.same_path(p, path)]
-        self._fill(self._personal)
+        self._fill(self._default)  # the one opened on Save, if the removed list was open
 
     def _ask_path(self, title: str) -> Path | None:
         start = self._document.path.parent if self._document else self._personal.parent
@@ -233,39 +241,3 @@ class HostListsView(QWidget):
             return False
         self.written.append(path)
         return True
-
-
-class HostListsDialog(QDialog):
-    """File > Host lists…: see every list and open one, without going into Settings."""
-
-    def __init__(
-        self,
-        parent: QWidget | None,
-        *,
-        default_list: Path,
-        personal_list: Path,
-        added: list[Path],
-        document: OpenList | None,
-    ) -> None:
-        super().__init__(parent)
-        self.setWindowTitle(_("Host lists"))
-        self.view = HostListsView(
-            default_list=default_list, personal_list=personal_list, added=added, document=document
-        )
-        self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
-        self.open_button = self.buttons.addButton(
-            _("&Open"), QDialogButtonBox.ButtonRole.AcceptRole
-        )
-        self.open_button.setDefault(True)
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.view, 1)
-        layout.addWidget(self.buttons)
-        self.view.changed.connect(self._update)
-        self.view.activated.connect(lambda: self.open_button.isEnabled() and self.accept())
-        self._update()
-        self.resize(640, 380)
-
-    def _update(self) -> None:
-        self.open_button.setEnabled(self.view.can_open(self.view.selected()))

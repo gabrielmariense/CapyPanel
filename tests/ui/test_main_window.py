@@ -52,7 +52,7 @@ def test_first_start_creates_the_personal_list_with_a_hosts_group(window: MainWi
     doc = window.document
     assert doc is not None and doc.path.name == "hosts.json" and doc.path.exists()
     assert [g.name for g in doc.hosts.groups] == ["Default group"]
-    assert window.windowTitle().startswith("hosts.json")
+    assert window.windowTitle().startswith("Default list —")
     assert [a.text() for a in window.menuBar().actions()] == [
         "&File",
         "&View",

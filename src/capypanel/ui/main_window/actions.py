@@ -77,8 +77,8 @@ def create_actions(parent: QWidget) -> Actions:
 
 def retranslate_actions(a: Actions) -> None:
     """Sets every command's text in the current language; runs again when it changes."""
-    a.new_list.setText(_("&New host list…"))
-    a.open_list.setText(_("&Host lists…"))
+    a.new_list.setText(_("&New list…"))
+    a.open_list.setText(_("&Open list…"))
     a.settings.setText(_("&Settings…"))
     a.exit.setText(_("E&xit"))
     a.add_host.setText(_("Add &host…"))

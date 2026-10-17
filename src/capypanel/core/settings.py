@@ -75,6 +75,16 @@ class Paths:
     def personal_list(self) -> Path:
         return self.user_dir / "hosts.json"
 
+    @property
+    def shared_lists_dir(self) -> Path:
+        """Lists saved here show up for everyone on the PC, with no adding."""
+        return self.root / "lists"
+
+    @property
+    def user_lists_dir(self) -> Path:
+        """This user's own lists folder: lists saved here show up for them only."""
+        return self.user_dir / "lists"
+
 
 def resolve_paths(
     folder: Path | None = None,

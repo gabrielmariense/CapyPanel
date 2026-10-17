@@ -69,6 +69,7 @@ class SettingsDialog(QDialog):
         document: OpenList | None,
         added: list[Path],
         registry: themes.Registry,
+        found: list[Path] | None = None,
         catalogs: Catalogs,
         auto_status: tuple[bool, int] = (False, 5),
         start_view: tuple[str, str] | None = None,
@@ -80,6 +81,7 @@ class SettingsDialog(QDialog):
         self._default_list = default_list
         self._personal_list = personal_list
         self._document = document
+        self._found = found or []
         self._registry = registry
         self._catalogs = catalogs
         self._saved_state: tuple[object, ...] | None = None
@@ -122,6 +124,7 @@ class SettingsDialog(QDialog):
             personal_list=self._personal_list,
             document=self._document,
             added=added,
+            found=self._found,
         )
         if chosen is not None:
             self.host_lists.view.select(chosen)

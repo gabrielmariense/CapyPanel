@@ -60,7 +60,6 @@ from capypanel.ui.groups import (
     fill_host_move_menu,
     fill_move_menu,
 )
-from capypanel.ui.host_lists import HostListsDialog
 from capypanel.ui.hosts import (
     HostDialog,
     ProfilePicker,
@@ -80,7 +79,7 @@ from capypanel.ui.main_window.host_views import (
 )
 from capypanel.ui.main_window.rail import ToolRail
 from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
-from capypanel.ui.menus import StayOpenMenu, popup
+from capypanel.ui.menus import MenuCombo, StayOpenMenu, popup
 from capypanel.ui.settings import connections
 from capypanel.ui.settings.connections import ConnectionChanges
 from capypanel.ui.settings.window import SettingsChoices, SettingsDialog
@@ -129,6 +128,14 @@ class MainWindow(QMainWindow):
         self.refresh_panel = RefreshPanel(self)
         self.refresh_panel.set_choices(self._prefs.get("refresh"))
         self.nav = NavigationPane()
+        # The list dropdown, on top of the left pane: switch lists, make or open one.
+        self.list_picker = MenuCombo()
+        self.list_picker.setObjectName("listPicker")
+        self.list_picker.menu().setToolTipsVisible(True)  # each list's path
+        self.list_picker.menu().aboutToShow.connect(self._fill_list_menu)
+        nav_layout = self.nav.layout()
+        assert isinstance(nav_layout, QVBoxLayout)
+        nav_layout.insertWidget(0, self.list_picker)
         self.table = HostTable()
         self._search_timer = QTimer(self)  # waits for a pause in typing, then filters
         self._search_timer.setSingleShot(True)
@@ -195,8 +202,7 @@ class MainWindow(QMainWindow):
         a = self.commands
         bar = self.menuBar()
         self._file_menu = bar.addMenu("")
-        self._file_menu.addActions([a.new_list, a.open_list])
-        self._file_menu.addSeparator()
+        # Lists are the Hosts tool's: they're in its list dropdown, not here.
         self._file_menu.addAction(a.settings)
         self._file_menu.addSeparator()
         self._file_menu.addAction(a.exit)
@@ -242,7 +248,7 @@ class MainWindow(QMainWindow):
     def _connect(self) -> None:
         a = self.commands
         a.new_list.triggered.connect(self.new_list)
-        a.open_list.triggered.connect(self.manage_lists)
+        a.open_list.triggered.connect(self.open_list_file)
         a.settings.triggered.connect(lambda: self.open_settings())
         a.exit.triggered.connect(self.close)
         a.add_host.triggered.connect(self.add_host)
@@ -256,7 +262,7 @@ class MainWindow(QMainWindow):
         # Ctrl+Shift+N, Ctrl+M) live here: toolbar menus only take keys while they're open.
         self.addActions([
             a.edit, a.remove, a.copy_address, a.refresh_shown, a.add_host, a.add_group,
-            a.manual_connect,
+            a.manual_connect, a.open_list,
         ])  # fmt: skip
         a.show_hosts.triggered.connect(lambda: self._show_tool("hosts"))
         self.rail.hosts_button.clicked.connect(lambda: self._show_tool("hosts"))
@@ -444,24 +450,71 @@ class MainWindow(QMainWindow):
             # The file dialog already asked before choosing an existing file.
             self._create_list(path, replace_existing=path.exists())
 
-    def manage_lists(self) -> None:
-        """File > Host lists…: every list this user works with; open one from there."""
-        dialog = HostListsDialog(
-            self,
-            default_list=self._default_list,
-            personal_list=self._personal_list,
-            added=locations.added_lists(self._prefs),
-            document=self._doc,
+    def open_list_file(self) -> None:
+        """The list dropdown's Open list… (Ctrl+O): any list file, which then stays in the
+        dropdown."""
+        shared = self._paths.shared_lists_dir
+        start = shared if shared.is_dir() else self._personal_list.parent
+        name, _filter = QFileDialog.getOpenFileName(
+            self, _("Open a host list"), str(start), list_file_filter()
         )
-        opened = dialog.exec() == QDialog.DialogCode.Accepted
-        locations.set_added_lists(self._prefs, dialog.view.added)  # added or forgotten there
-        self._save_prefs()
-        path = dialog.view.selected()
-        if opened and path is not None:
-            current = self._doc.path if self._doc else None
-            rewritten = any(locations.same_path(path, p) for p in dialog.view.written)
-            if current is None or rewritten or not locations.same_path(path, current):
-                self.open_list(path)
+        if name:
+            self.open_list(Path(name))
+
+    # ---- the list dropdown ----
+
+    def _found_lists(self) -> list[Path]:
+        return locations.found_lists(self._paths.shared_lists_dir, self._paths.user_lists_dir)
+
+    def _available_lists(self) -> list[Path]:
+        return locations.available_lists(
+            self._prefs,
+            default=self._default_list,
+            personal=self._personal_list,
+            found=self._found_lists(),
+        )
+
+    def _list_name(self, path: Path) -> str:
+        lists = self._available_lists()
+        if not any(locations.same_path(path, p) for p in lists):
+            lists.append(path)
+        names = locations.list_names(
+            lists, default=self._default_list, personal=self._personal_list
+        )
+        return next(n for p, n in zip(lists, names, strict=True) if locations.same_path(p, path))
+
+    def _names(self, lists: list[Path]) -> list[str]:
+        return locations.list_names(lists, default=self._default_list, personal=self._personal_list)
+
+    def _fill_list_menu(self) -> None:
+        """Every list, the open one ticked (its path in the tooltip), then making or opening
+        one, and managing them in Settings."""
+        a = self.commands
+        menu = self.list_picker.menu()
+        menu.clear()
+        lists = self._available_lists()
+        names = locations.list_names(
+            lists, default=self._default_list, personal=self._personal_list
+        )
+        current = self._doc.path if self._doc else None
+        picks = QActionGroup(menu)
+        for path, name in zip(lists, names, strict=True):
+            item = menu.addAction(name.replace("&", "&&"))
+            item.setCheckable(True)
+            item.setChecked(current is not None and locations.same_path(path, current))
+            item.setToolTip(str(path))
+            picks.addAction(item)
+            item.triggered.connect(lambda _c=False, p=path: self._pick_list(p))
+        menu.addSeparator()
+        menu.addActions([a.new_list, a.open_list])
+        menu.addSeparator()
+        manage = menu.addAction(_("&Manage host lists…"))
+        manage.triggered.connect(lambda: self.open_settings("host_lists"))
+
+    def _pick_list(self, path: Path) -> None:
+        current = self._doc.path if self._doc else None
+        if current is None or not locations.same_path(path, current):
+            self.open_list(path)
 
     def _create_list(self, path: Path, *, replace_existing: bool, quiet: bool = False) -> bool:
         try:
@@ -481,8 +534,12 @@ class MainWindow(QMainWindow):
             self._clear_search()
         self._doc = doc
         locations.remember_list(self._prefs, doc.path)
-        if self._kind(doc.path) is ListKind.SHARED:  # it shows in File > Host lists… from now on
-            added = locations.added_lists(self._prefs)
+        in_folder = any(locations.same_path(doc.path, p) for p in self._found_lists())
+        if self._kind(doc.path) is ListKind.SHARED and not in_folder:  # in the dropdown now
+            # Only lists from elsewhere: before any was added, this falls back to the recent ones.
+            added = [
+                p for p in locations.added_lists(self._prefs) if self._kind(p) is ListKind.SHARED
+            ]
             locations.set_added_lists(self._prefs, [*added, doc.path])
         self._save_prefs()
         log.info("Opened host list %s (read-only=%s)", doc.path, doc.read_only)
@@ -1078,6 +1135,7 @@ class MainWindow(QMainWindow):
             personal_list=self._personal_list,
             document=self._doc,
             added=locations.added_lists(self._prefs),
+            found=self._found_lists(),
             registry=self.registry,
             catalogs=self.connector.catalogs,
             auto_status=self._auto_status(),
@@ -1320,8 +1378,12 @@ class MainWindow(QMainWindow):
         if doc is None:
             self.setWindowTitle(f"CapyPanel {BUILD}")
             self._list_label.setText(_("No host list is open."))
+            self.list_picker.setText(_("No list open"))
             return
-        self.setWindowTitle(f"{doc.path.name} — CapyPanel {BUILD}")
+        name = self._list_name(doc.path)
+        self.setWindowTitle(f"{name} — CapyPanel {BUILD}")
+        self.list_picker.setText(name)
+        self.list_picker.setToolTip(str(doc.path))
         total = len(doc.hosts.hosts)
         parts = [
             f"{self._kind_label(self._kind(doc.path))} — {doc.path}",

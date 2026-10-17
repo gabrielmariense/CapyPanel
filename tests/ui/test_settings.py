@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 from PySide6.QtWidgets import (
     QApplication,
-    QDialog,
     QFileDialog,
     QHeaderView,
     QMenu,
@@ -16,7 +15,7 @@ from PySide6.QtWidgets import (
 from capypanel.core import settings, winsec
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.ui.host_lists import HostListsDialog, HostListsView
+from capypanel.ui.host_lists import HostListsView
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
 from capypanel.ui.settings.window import PAGE_TITLES, SettingsDialog
@@ -112,7 +111,7 @@ def test_host_lists_shows_every_list_with_the_open_one_in_bold(
         ("Added", "Read/write", True),
     ]
     names = [view.tree.topLevelItem(i).text(0) for i in range(3)]  # type: ignore[union-attr]
-    assert names == ["hosts.json", "hosts.json", "office.json (in use)"]
+    assert names == ["Default list", "Personal list", "office (in use)"]
     os.chmod(office, stat.S_IREAD)
     try:
         assert _rows(window.settings_dialog().host_lists.view)[2][1] == "Read-only"
@@ -232,20 +231,18 @@ def test_new_empty_list_over_the_open_one_reopens_it(
     assert not window.document.hosts.hosts
 
 
-def test_file_host_lists_opens_a_list_and_remembers_what_was_added(
+def test_open_list_from_the_dropdown_opens_a_list_and_keeps_it_there(
     window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _answer_open_dialog(monkeypatch, office)
-
-    def use(dialog: HostListsDialog) -> int:
-        dialog.view.add_button.click()  # selects the added list
-        assert dialog.open_button.isEnabled()
-        return QDialog.DialogCode.Accepted
-
-    monkeypatch.setattr(HostListsDialog, "exec", use)
-    window.commands.open_list.trigger()  # File > Host lists… (Ctrl+O)
+    window.commands.open_list.trigger()  # the list dropdown's Open list… (Ctrl+O)
     assert window.document is not None and window.document.path == office
     assert window._prefs["host_lists"] == [str(office)]
+    window.list_picker.menu().aboutToShow.emit()  # filled as it opens
+    texts = [label(a) for a in window.list_picker.menu().actions() if a.text()]
+    assert texts[:3] == ["Default list", "Personal list", "office"]  # by file name
+    assert texts[3:] == ["&New list…", "&Open list…", "&Manage host lists…"]
+    assert window.list_picker.text() == "office" and window.windowTitle().startswith("office —")
 
 
 def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
@@ -255,7 +252,7 @@ def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
         if isinstance(m := a.menu(), QMenu)
     }
     assert list(menus) == ["&File", "&View", "&Help"]  # the same for every tool
-    assert menus["&File"][:2] == ["&New host list…", "&Host lists…"]
+    assert menus["&File"] == ["&Settings…", "E&xit"]  # lists are in the list dropdown
     assert menus["&View"] == [
         "&Hosts", "&Groups pane", "T&ags pane", "&Details pane", "Show users' do&main",
         "T&oolbar", "&Status bar", "&Reset layout",
@@ -328,7 +325,7 @@ def test_the_path_is_in_the_tooltip_and_same_names_show_their_folder(
     window._prefs["host_lists"] = [str(a), str(b)]
     view = window.settings_dialog().host_lists.view
     names = [view.tree.topLevelItem(i).text(0) for i in range(4)]  # type: ignore[union-attr]
-    assert names[2:] == ["hosts.json (north)", "hosts.json (south)"]
+    assert names[2:] == ["hosts (north)", "hosts (south)"]
     item = view.tree.topLevelItem(2)
     assert item is not None and item.toolTip(0) == str(a) == item.toolTip(1)
 
@@ -445,3 +442,16 @@ def test_the_page_list_keeps_its_width_in_every_language(window: MainWindow) -> 
     QApplication.processEvents()
     assert dialog.page_list.width() == width and dialog.general.title == "Geral"
     window.set_language("en")
+
+
+def test_removing_the_open_list_switches_to_the_default_list(
+    window: MainWindow, office: Path, paths: settings.Paths
+) -> None:
+    window.open_list(office)
+    dialog = window.settings_dialog()
+    view = dialog.host_lists.view
+    view.select(office)
+    view.remove_button.click()
+    assert dialog.host_lists.chosen() == paths.default_list
+    window.apply_settings(dialog.choices())
+    assert window.document is not None and window.document.path == paths.default_list

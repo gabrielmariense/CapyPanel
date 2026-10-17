@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 17:46-0300\n"
+"POT-Creation-Date: 2026-10-17 02:38-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -107,9 +107,6 @@ msgstr ""
 msgid "&Help"
 msgstr ""
 
-msgid "&Host lists…"
-msgstr ""
-
 msgid "&Hosts"
 msgstr ""
 
@@ -137,6 +134,9 @@ msgstr ""
 msgid "&Manage groups…"
 msgstr ""
 
+msgid "&Manage host lists…"
+msgstr ""
+
 msgid "&Manual connection…"
 msgstr ""
 
@@ -149,16 +149,16 @@ msgstr ""
 msgid "&Name:"
 msgstr ""
 
-msgid "&New host list…"
+msgid "&New list…"
 msgstr ""
 
 msgid "&New…"
 msgstr ""
 
-msgid "&Open"
+msgid "&Open a CSV file…"
 msgstr ""
 
-msgid "&Open a CSV file…"
+msgid "&Open list…"
 msgstr ""
 
 msgid "&Open on startup:"
@@ -554,6 +554,9 @@ msgstr ""
 msgid "Default group"
 msgstr ""
 
+msgid "Default list"
+msgstr ""
+
 msgid "Default list: shared by everyone on this PC."
 msgstr ""
 
@@ -778,6 +781,12 @@ msgstr ""
 msgid "List"
 msgstr ""
 
+msgid "Lists folder"
+msgstr ""
+
+msgid "Lists saved in a lists folder show up by themselves."
+msgstr ""
+
 msgid "Locate…"
 msgstr ""
 
@@ -877,6 +886,9 @@ msgstr ""
 msgid "No host list is open."
 msgstr ""
 
+msgid "No list open"
+msgstr ""
+
 msgid "No name"
 msgstr ""
 
@@ -947,6 +959,9 @@ msgstr ""
 msgid "Open a CSV file"
 msgstr ""
 
+msgid "Open a host list"
+msgstr ""
+
 msgid "Open a host list to choose what it shows first."
 msgstr ""
 
@@ -995,6 +1010,9 @@ msgid "Paste a list below, or"
 msgstr ""
 
 msgid "Personal"
+msgstr ""
+
+msgid "Personal list"
 msgstr ""
 
 msgid "Personal list: only yours."
