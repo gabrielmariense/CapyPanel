@@ -1615,11 +1615,13 @@ class MainWindow(QMainWindow):
         self.rail.hosts_button.setChecked(tool == "hosts")
 
     def _fill_connect_menu(self) -> None:
-        """The toolbar's Connect arrow: connect the selection once with another profile, then
-        the connection commands that aren't about the selection."""
+        """The toolbar's Connect: connect the selection, or once with another profile, then the
+        connection commands that aren't about the selection."""
         a = self.commands
         menu = self.toolbar.connect_menu
         menu.clear()
+        menu.addAction(a.connect_host)  # each host's own profile, as Enter does
+        menu.setDefaultAction(a.connect_host)
         for profile_id, name in self.connector.choices():
             item = menu.addAction(
                 _("Connect with {profile}").format(profile=name.replace("&", "&&"))

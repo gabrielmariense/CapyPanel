@@ -93,15 +93,12 @@ class MainToolBar(QToolBar):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)  # no hide-me menu
         self.setIconSize(QSize(16, 16))  # icons at the text's height, not 24 px
 
-        # Connect: the host's own profile; the arrow connects once with another profile.
+        # Connect: a dropdown like the others, never greyed out. Its menu connects the selected
+        # hosts (also Enter or a double-click), once with another profile, or by address.
         self.connect_button = _button()
-        self.connect_button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
+        self.connect_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         self.connect_menu = QMenu(self.connect_button)
         self.connect_button.setMenu(self.connect_menu)
-        # Always clickable: its arrow holds Manual connection and the profiles, which need no
-        # host. With no host selected, a click opens that menu instead of connecting.
-        self._connect_host = commands.connect_host
-        self.connect_button.clicked.connect(self._connect_clicked)
 
         # One row in a plain layout, its left edge lined up with the panes by align().
         row = QWidget()
@@ -138,17 +135,11 @@ class MainToolBar(QToolBar):
         self.addWidget(row)
         self.retranslate()
 
-    def _connect_clicked(self) -> None:
-        if self._connect_host.isEnabled():
-            self._connect_host.trigger()
-        else:
-            self.connect_button.showMenu()
-
     def retranslate(self) -> None:
         gap = " "  # the stylesheet drops the gap between icon and text
         self.connect_button.setText(gap + _("Connect"))
         self.connect_button.setToolTip(
-            _("Connect to the selected hosts; the arrow connects once with another profile")
+            _("Connect to the selected hosts, once with another profile, or by address")
         )
         self.refresh_button.setText(gap + _("Refresh"))
         self.refresh_button.setToolTip(

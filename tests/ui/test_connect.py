@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QGuiApplication
-from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu, QMessageBox
+from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu, QMessageBox, QToolButton
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -469,13 +469,11 @@ def test_right_click_acts_on_what_is_under_the_mouse(
     window.close()
 
 
-def test_connect_works_with_no_host_selected_by_opening_its_menu(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_connect_is_a_dropdown_that_works_with_no_host_selected(window: MainWindow) -> None:
     _select(window)  # nothing selected
     button = window.toolbar.connect_button
     assert button.isEnabled()  # its menu has Manual connection, which needs no host
-    shown: list[bool] = []
-    monkeypatch.setattr(button, "showMenu", lambda: shown.append(True))
-    button.click()
-    assert shown == [True]
+    assert button.popupMode() == QToolButton.ToolButtonPopupMode.InstantPopup  # like the others
+    window._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
+    first = window.toolbar.connect_menu.actions()[0]
+    assert first is window.commands.connect_host and not first.isEnabled()
