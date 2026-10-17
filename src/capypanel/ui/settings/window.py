@@ -9,17 +9,22 @@ from pathlib import Path
 from PySide6.QtCore import QEvent, QObject, Qt, QTimer, Signal
 from PySide6.QtGui import QHideEvent, QShowEvent
 from PySide6.QtWidgets import (
+    QAbstractButton,
     QApplication,
+    QComboBox,
     QDialog,
     QDialogButtonBox,
     QFrame,
     QHBoxLayout,
+    QLabel,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QMessageBox,
     QPushButton,
     QScrollArea,
     QStackedWidget,
+    QTreeWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -195,7 +200,16 @@ class SettingsDialog(QDialog):
         content = QWidget()
         columns = QHBoxLayout()
         columns.setSpacing(16)
-        columns.addWidget(self.page_list)
+        # A search above the pages: only the pages that mention what's typed stay listed.
+        self.search = QLineEdit()
+        self.search.setPlaceholderText(_("Search settings"))
+        self.search.setClearButtonEnabled(True)
+        self.search.setFixedWidth(self.page_list.width())
+        self.search.textChanged.connect(self._filter_pages)
+        side = QVBoxLayout()
+        side.addWidget(self.search)
+        side.addWidget(self.page_list, 1)
+        columns.addLayout(side)
         columns.addWidget(self.stack, 1)
         inside = QVBoxLayout(content)
         inside.setContentsMargins(0, 0, 0, 0)
@@ -278,6 +292,26 @@ class SettingsDialog(QDialog):
             return False
         self.connections.reset()
         return True
+
+    def _filter_pages(self, text: str) -> None:
+        """Hides the pages whose words don't include `text`, and a group's label with no page
+        left; the page shown moves to the first one still listed."""
+        wanted = text.strip().casefold()
+        shown: list[str] = []
+        for row, page_id in enumerate(self._rows):
+            if page_id is None:
+                continue
+            match = not wanted or wanted in _words(self.pages[page_id])
+            self.page_list.setRowHidden(row, not match)
+            if match:
+                shown.append(page_id)
+        for row, page_id in enumerate(self._rows):  # a group's label: hidden with its pages
+            if page_id is None:
+                after = self._rows[row + 1 :]
+                end = after.index(None) if None in after else len(after)
+                self.page_list.setRowHidden(row, not any(p in shown for p in after[:end]))
+        if shown and self.current_page() not in shown:
+            self.show_page(shown[0])
 
     def show_page(self, page_id: str) -> None:
         self.page_list.setCurrentRow(self.row_of(page_id))
@@ -381,3 +415,21 @@ def _scrolling(page: Page) -> QScrollArea:
     area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     area.setWidget(page)
     return area
+
+
+def _words(page: Page) -> str:
+    """Everything a page says, lower case, to search: its title, headings, labels, buttons,
+    ticks, dropdown items and table rows."""
+    texts = [page.title]
+    texts += [w.text() for w in page.findChildren(QLabel)]
+    texts += [w.text() for w in page.findChildren(QAbstractButton)]
+    for combo in page.findChildren(QComboBox):
+        texts += [combo.itemText(i) for i in range(combo.count())]
+    for table in page.findChildren(QTreeWidget):
+        header = table.headerItem()
+        texts += [header.text(c) for c in range(header.columnCount())]
+        for i in range(table.topLevelItemCount()):
+            item = table.topLevelItem(i)
+            if item is not None:
+                texts += [item.text(c) for c in range(item.columnCount())]
+    return " ".join(texts).replace("&", "").casefold()

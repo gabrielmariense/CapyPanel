@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 20:46-0300\n"
+"POT-Creation-Date: 2026-10-17 20:49-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1130,6 +1130,9 @@ msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr ""
 
 msgid "Search results"
+msgstr ""
+
+msgid "Search settings"
 msgstr ""
 
 #, python-brace-format

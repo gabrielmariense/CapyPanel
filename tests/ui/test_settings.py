@@ -464,3 +464,22 @@ def test_removing_the_open_list_switches_to_the_default_list(
     assert dialog.host_lists.chosen() == paths.default_list
     window.apply_settings(dialog.choices())
     assert window.document is not None and window.document.path == paths.default_list
+
+
+def test_the_search_keeps_only_the_pages_that_mention_it(window: MainWindow) -> None:
+    dialog = window.settings_dialog()
+
+    def listed() -> list[str]:
+        rows = range(dialog.page_list.count())
+        return [
+            dialog.page_list.item(r).text().strip()  # type: ignore[union-attr]
+            for r in rows
+            if not dialog.page_list.isRowHidden(r)
+        ]
+
+    dialog.search.setText("theme")
+    assert listed() == ["CapyPanel", "General"] and dialog.current_page() == "general"
+    dialog.search.setText("UltraVNC")  # a profile's name, inside the Connections table
+    assert listed() == ["Hosts", "Connections"] and dialog.current_page() == "connections"
+    dialog.search.clear()
+    assert len(listed()) == dialog.page_list.count()  # everything back
