@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QMessageBox,
     QPushButton,
-    QSizePolicy,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -73,24 +72,26 @@ class HostListsView(QWidget):
         header = self.tree.header()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)  # drag to resize
         header.setStretchLastSection(True)
-        self.tree.setColumnWidth(0, 240)
-        self.tree.setColumnWidth(1, 110)
+        self.tree.setColumnWidth(0, 170)
+        self.tree.setColumnWidth(1, 105)
         self.add_button = QPushButton(_("&Add existing…"))
         self.new_button = QPushButton(_("&New…"))
         self.copy_button = QPushButton(_("&Copy current list to…"))
         self.copy_button.setEnabled(document is not None)
         self.remove_button = QPushButton(_("&Remove from the list"))
         self.remove_button.setToolTip(_("Forgets it here; the file itself is never deleted"))
-        # One row under the list; the buttons share the width and grow with the window.
-        buttons = QHBoxLayout()
+        # A column beside the list, as on the Connections page.
+        buttons = QVBoxLayout()
         for button in (self.add_button, self.new_button, self.copy_button, self.remove_button):
             button.setAutoDefault(False)  # Enter opens the list, never adds one
-            button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             buttons.addWidget(button)
+        buttons.addStretch(1)
+        row = QHBoxLayout()
+        row.addWidget(self.tree, 1)
+        row.addLayout(buttons)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.tree, 1)
-        layout.addLayout(buttons)
+        layout.addLayout(row, 1)
         layout.addWidget(
             notes(
                 _("Default list: shared by everyone on this PC."),

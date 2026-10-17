@@ -8,8 +8,8 @@ from PySide6.QtGui import QDesktopServices, QResizeEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QFrame,
     QGridLayout,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -33,25 +33,39 @@ from capypanel.ui.themes import engine as themes
 
 
 class Page(QWidget):
-    """A settings page: a title, then its content. `changed` fires when validity may change."""
+    """A settings page: its sections, one under the other. Its title shows in the page list
+    only. `changed` fires when validity may change."""
 
     changed = Signal()
 
     def __init__(self, title: str) -> None:
         super().__init__()
         self.title = title
-        heading = QLabel(title)
-        heading.setObjectName("pageTitle")
-        font = heading.font()
-        font.setPointSizeF(font.pointSizeF() * 1.3)
-        font.setBold(True)
-        heading.setFont(font)
         self.body = QVBoxLayout(self)
         self.body.setContentsMargins(0, 0, 0, 0)
-        self.body.addWidget(heading)
+        self.body.setSpacing(18)  # between sections
 
     def is_valid(self) -> bool:
         return True
+
+
+class Section(QWidget):
+    """A part of a page: a heading in the accent colour over a thin line, as in the Details
+    pane, then its content in `inner`. No frame around it."""
+
+    def __init__(self, title: str) -> None:
+        super().__init__()
+        heading = QLabel(title)
+        heading.setObjectName("detailsSection")
+        rule = QFrame()
+        rule.setObjectName("detailsRule")
+        self.inner = QWidget()
+        column = QVBoxLayout(self)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(6)
+        column.addWidget(heading)
+        column.addWidget(rule)
+        column.addWidget(self.inner, 1)
 
 
 class PathLabel(QLabel):
@@ -96,8 +110,9 @@ class GeneralPage(Page):
         for code, name in i18n.LANGUAGES.items():
             self.language.addItem(name, code)
         self.language.setCurrentIndex(max(self.language.findData(language), 0))
-        language_box = QGroupBox(_("Language"))
-        language_row = QHBoxLayout(language_box)
+        language_box = Section(_("Language"))
+        language_row = QHBoxLayout(language_box.inner)
+        language_row.setContentsMargins(0, 2, 0, 0)
         language_row.addWidget(self.language)
         language_row.addStretch(1)
         # The Windows themes, then the app's own. The window shows the theme picked: no preview.
@@ -109,8 +124,9 @@ class GeneralPage(Page):
             previous = theme.engine
             self.theme.addItem(theme.title(), theme.id)
         self.theme.setCurrentIndex(max(self.theme.findData(theme_id), 0))
-        theme_box = QGroupBox(_("Theme"))
-        theme_layout = QVBoxLayout(theme_box)
+        theme_box = Section(_("Theme"))
+        theme_layout = QVBoxLayout(theme_box.inner)
+        theme_layout.setContentsMargins(0, 2, 0, 0)
         theme_row = QHBoxLayout()
         theme_row.addWidget(self.theme)
         theme_row.addStretch(1)
@@ -137,8 +153,9 @@ class FilesPage(Page):
 
     def __init__(self, paths: settings.Paths) -> None:
         super().__init__(_("Files"))
-        files = QGroupBox(_("Where CapyPanel keeps its files"))
-        grid = QGridLayout(files)
+        files = Section(_("Where CapyPanel keeps its files"))
+        grid = QGridLayout(files.inner)
+        grid.setContentsMargins(0, 2, 0, 0)
         grid.setColumnStretch(1, 1)
         folders = (
             (_("Shared files"), paths.root),
@@ -187,7 +204,7 @@ class HostsPage(Page):
         """start_view: the open list's (show, group); None when no list is open. host_list: that
         list, for its groups."""
         super().__init__(_("General"))
-        start = QGroupBox(_("Startup"))
+        start = Section(_("Startup"))
         self.start_list = QComboBox()
         self.start_list.setSizeAdjustPolicy(
             QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
@@ -219,7 +236,8 @@ class HostsPage(Page):
         label = QLabel(_("&Open on startup:"))
         label.setBuddy(self.start_list)
         # Labels in one column, the dropdowns lined up beside them at the same width.
-        start_layout = QGridLayout(start)
+        start_layout = QGridLayout(start.inner)
+        start_layout.setContentsMargins(0, 2, 0, 0)
         start_layout.setColumnStretch(1, 1)
         start_layout.addWidget(label, 0, 0)
         start_layout.addWidget(self.start_list, 0, 1)
@@ -249,7 +267,7 @@ class HostsPage(Page):
             3, 0, 1, 2,
         )  # fmt: skip
 
-        refresh = QGroupBox(_("Refresh"))
+        refresh = Section(_("Refresh"))
         self.auto_status = QCheckBox(_("&Refresh the status of the hosts shown every"))
         self.auto_status.setChecked(auto_status[0])
         self.auto_minutes = QSpinBox()
@@ -262,7 +280,8 @@ class HostsPage(Page):
         auto_row.addWidget(self.auto_status)
         auto_row.addWidget(self.auto_minutes)
         auto_row.addStretch(1)
-        refresh_layout = QVBoxLayout(refresh)
+        refresh_layout = QVBoxLayout(refresh.inner)
+        refresh_layout.setContentsMargins(0, 2, 0, 0)
         refresh_layout.addLayout(auto_row)
         refresh_layout.addWidget(
             notes(
@@ -345,8 +364,10 @@ class HostListsPage(Page):
             document=document,
             found=found,
         )
-        box = QGroupBox(_("Lists"))  # in a box, like every other page's content
-        QVBoxLayout(box).addWidget(self.view)
+        box = Section(_("Lists"))
+        lists = QVBoxLayout(box.inner)
+        lists.setContentsMargins(0, 2, 0, 0)
+        lists.addWidget(self.view)
         self.body.addWidget(box, 1)
         self.view.changed.connect(self.changed.emit)
 
