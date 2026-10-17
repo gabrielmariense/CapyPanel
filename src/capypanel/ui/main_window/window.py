@@ -34,7 +34,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel import BUILD
-from capypanel.core import i18n, settings, winsec
+from capypanel.core import files, i18n, settings, winsec
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
@@ -518,6 +518,8 @@ class MainWindow(QMainWindow):
 
     def _create_list(self, path: Path, *, replace_existing: bool, quiet: bool = False) -> bool:
         try:
+            if self._kind(path) is ListKind.DEFAULT and not path.parent.exists():
+                files.make_shared_folder(path.parent)  # read by all, changed only by admins
             doc = OpenList.create(path, replace_existing=replace_existing)
         except (HostListFileError, OSError) as e:
             self._error(_("Couldn't create “{path}”: {error}").format(path=path, error=e), quiet)

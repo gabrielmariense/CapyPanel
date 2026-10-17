@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from ctypes import wintypes
 from pathlib import Path
 
-from capypanel.core import settings
+from capypanel.core import files, settings
 from capypanel.core.hosts import locations
 
 
@@ -30,10 +30,14 @@ def migrate(
     paths: settings.Paths, env: Mapping[str, str] | None = None, documents: Path | None = None
 ) -> list[str]:
     """Copies old files the new folder doesn't have yet; returns what was copied, for the log."""
+    copied = _lists_into_folders(paths)
     old_settings, old_list = old_files(paths, env, documents)
-    copied = []
-    for old, new in ((old_settings, paths.settings_file), (old_list, paths.personal_list)):
+    moves = [(old_settings, paths.settings_file)]
+    if not paths.portable:  # there, the old place is the default list's before 0.19
+        moves.append((old_list, paths.personal_list))
+    for old, new in moves:
         if old.is_file() and not new.exists():
+            new.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(old, new)
             copied.append(f"{old} -> {new}")
     if copied and paths.settings_file.exists():
@@ -49,6 +53,50 @@ def migrate(
             prefs[locations.START_KEY] = locations.START_PERSONAL
         settings.save_settings(paths.settings_file, prefs)
     return copied
+
+
+def _lists_into_folders(paths: settings.Paths) -> list[str]:
+    """Before 0.19 the default and personal lists were hosts.json files beside the lists
+    folders; they're copied in once, and the settings that name them follow."""
+    pairs = [
+        (paths.root / "hosts.json", paths.default_list),
+        (paths.user_dir / "hosts.json", paths.personal_list),
+    ]
+    copied = []
+    for old, new in pairs:
+        if old.is_file() and not new.exists():
+            if new == paths.default_list and not new.parent.exists():
+                files.make_shared_folder(new.parent)  # everyone reads it, only admins change it
+            new.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(old, new)
+            copied.append(f"{old} -> {new}")
+    if copied and paths.settings_file.exists():
+        prefs = settings.load_settings(paths.settings_file)
+        for old, new in pairs:
+            _repoint(prefs, old, new)
+        settings.save_settings(paths.settings_file, prefs)
+    return copied
+
+
+def _repoint(prefs: dict[str, object], old: Path, new: Path) -> None:
+    """Recent and added lists, the start choice and what each list shows first: from `old`
+    to `new`."""
+    for key in (locations.RECENT_KEY, locations.LISTS_KEY):
+        value = prefs.get(key)
+        if isinstance(value, list):
+            prefs[key] = [
+                str(new) if isinstance(p, str) and locations.same_path(Path(p), old) else p
+                for p in value
+            ]
+    start = prefs.get(locations.START_KEY)
+    if isinstance(start, str) and start and locations.same_path(Path(start), old):
+        prefs[locations.START_KEY] = str(new)
+    views = prefs.get(locations.VIEWS_KEY)
+    if isinstance(views, dict):
+        prefs[locations.VIEWS_KEY] = {
+            (os.path.normcase(os.path.abspath(new)) if locations.same_path(Path(k), old) else k): v
+            for k, v in views.items()
+        }
 
 
 def documents_dir() -> Path:

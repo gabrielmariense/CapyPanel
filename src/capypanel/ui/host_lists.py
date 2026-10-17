@@ -146,7 +146,10 @@ class HostListsView(QWidget):
     def _fill(self, select: Path | None) -> None:
         self.tree.clear()
         current = self._document.path if self._document else None
-        paths = [self._default, self._personal, *self._found, *self.added]
+        paths: list[Path] = []
+        for path in (self._default, self._personal, *self._found, *self.added):
+            if not any(locations.same_path(path, p) for p in paths):  # each once
+                paths.append(path)
         names = locations.list_names(paths, default=self._default, personal=self._personal)
         for path, name in zip(paths, names, strict=True):
             kind = self._kind(path)
