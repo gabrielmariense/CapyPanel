@@ -1,6 +1,6 @@
 """The one table design for lists in windows like Settings: lines between rows and columns as
-in the host table, a header, a few rows before it scrolls, and its actions in a column of
-buttons beside it."""
+in the host table, a header, a few rows before it scrolls, the full width of the page, and its
+actions in a row of buttons under it."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -15,8 +15,7 @@ from PySide6.QtWidgets import (
 
 MOST_ROWS = 6  # taller lists scroll
 FEWEST_ROWS = 3  # a short list still looks like a list
-WIDEST = 230  # a column fits its text up to this; the last one takes what's left
-BUTTONS_WIDTH = 150  # every table's button column: tables on a page line up
+WIDEST = 260  # a column fits its text up to this; the last one takes what's left
 
 
 def grid_table(headers: list[str]) -> QTreeWidget:
@@ -52,17 +51,16 @@ def fit_rows(table: QTreeWidget) -> None:
 
 
 def with_buttons(table: QTreeWidget, buttons: list[QPushButton]) -> QWidget:
-    """The table, its buttons in a column on its right, top-aligned."""
-    column = QVBoxLayout()
-    column.setContentsMargins(0, 0, 0, 0)
+    """The table at full width, its buttons in a row under it, from the left."""
+    row = QHBoxLayout()
+    row.setContentsMargins(0, 0, 0, 0)
     for button in buttons:
         button.setAutoDefault(False)  # Enter never runs one by surprise
-        button.setMinimumWidth(BUTTONS_WIDTH)
-        column.addWidget(button)
-    column.addStretch(1)
+        row.addWidget(button)
+    row.addStretch(1)
     box = QWidget()
-    row = QHBoxLayout(box)
-    row.setContentsMargins(0, 0, 0, 0)
-    row.addWidget(table, 1, Qt.AlignmentFlag.AlignTop)
-    row.addLayout(column)
+    column = QVBoxLayout(box)
+    column.setContentsMargins(0, 0, 0, 0)
+    column.addWidget(table)
+    column.addLayout(row)
     return box
