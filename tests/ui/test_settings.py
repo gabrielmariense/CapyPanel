@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
     QHeaderView,
+    QLabel,
     QMenu,
     QPushButton,
 )
@@ -466,7 +467,7 @@ def test_removing_the_open_list_switches_to_the_default_list(
     assert window.document is not None and window.document.path == paths.default_list
 
 
-def test_the_search_keeps_only_the_pages_that_mention_it(window: MainWindow) -> None:
+def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow) -> None:
     dialog = window.settings_dialog()
 
     def listed() -> list[str]:
@@ -477,9 +478,21 @@ def test_the_search_keeps_only_the_pages_that_mention_it(window: MainWindow) -> 
             if not dialog.page_list.isRowHidden(r)
         ]
 
+    def results() -> list[str]:
+        return [
+            w.text()
+            for w in dialog._results.findChildren(QLabel)  # pyright: ignore[reportPrivateUsage]
+            if w.objectName() in ("hint", "detailsSection") and w.isVisibleTo(dialog._results)  # pyright: ignore[reportPrivateUsage]
+        ]
+
+    dialog.search.setText("th")  # too short: the pages as they were
+    assert len(listed()) == dialog.page_list.count() and dialog.current_page() == "general"
     dialog.search.setText("theme")
-    assert listed() == ["CapyPanel", "General"] and dialog.current_page() == "general"
-    dialog.search.setText("UltraVNC")  # a profile's name, inside the Connections table
-    assert listed() == ["Hosts", "Connections"] and dialog.current_page() == "connections"
-    dialog.search.clear()
-    assert len(listed()) == dialog.page_list.count()  # everything back
+    assert dialog.current_page() == "search" and listed() == ["CapyPanel", "General"]
+    assert results()[:2] == ["CapyPanel › General", "Theme"]  # the section, under its page
+    dialog.search.setText("folder")  # in Files, a Host lists note, Connections. buttons
+    assert listed() == ["CapyPanel", "Files", "Hosts", "Host lists", "Connections"]
+    dialog.show_page("files")  # picking a page ends the search: everything goes home
+    assert dialog.search.text() == "" and dialog.current_page() == "files"
+    assert dialog.files.findChildren(QLabel)  # its section is back on its page
+    assert len(listed()) == dialog.page_list.count()

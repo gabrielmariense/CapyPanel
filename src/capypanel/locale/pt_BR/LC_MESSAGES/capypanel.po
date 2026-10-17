@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 20:49-0300\n"
+"POT-Creation-Date: 2026-10-17 20:56-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -876,6 +876,10 @@ msgstr "Ninguém"
 msgid "No one logged on"
 msgstr "Ninguém logado"
 
+#, python-brace-format
+msgid "No settings mention “{text}”."
+msgstr "Nenhuma configuração menciona “{text}”."
+
 msgid "Not a computer name or IP address"
 msgstr "Não é um nome de computador nem um endereço IP"
 
@@ -1108,6 +1112,9 @@ msgstr "Salvar minha versão como cópia…"
 
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arquivo CSV"
+
+msgid "Search"
+msgstr "Pesquisa"
 
 msgid "Search results"
 msgstr "Resultados da pesquisa"

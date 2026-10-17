@@ -36,6 +36,7 @@ from capypanel.core.hosts.model import HostList
 from capypanel.core.i18n import _
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.profiles import ProfileError
+from capypanel.ui.notes import hint
 from capypanel.ui.settings.connections import ConnectionChanges, ConnectionsPage, apply
 from capypanel.ui.settings.pages import (
     FilesPage,
@@ -43,6 +44,7 @@ from capypanel.ui.settings.pages import (
     HostListsPage,
     HostsPage,
     Page,
+    Section,
 )
 from capypanel.ui.themes import engine as themes
 
@@ -50,6 +52,7 @@ from capypanel.ui.themes import engine as themes
 # longest in any language. The app's pages first, then each tool's.
 PAGE_TITLES = ("General", "Files", "General", "Host lists", "Connections")
 GROUPS = (("CapyPanel", ("general", "files")), ("Hosts", ("hosts", "host_lists", "connections")))
+SEARCH_FROM = 3  # letters typed before the search shows its results
 
 
 @dataclass(frozen=True)
@@ -177,6 +180,11 @@ class SettingsDialog(QDialog):
         for page in self.pages.values():
             self.stack.addWidget(_scrolling(page))  # long pages scroll
             page.changed.connect(self._update_save)
+        # Search results: the matching sections of every page, lent here while searching.
+        self._results = Page(_("Search"))
+        self.stack.addWidget(_scrolling(self._results))
+        self._lent: list[tuple[QVBoxLayout, int, QWidget]] = []  # where each came from
+        self._result_labels: list[QLabel] = []
         # Wide enough for the longest page name in any language, so the list never cuts it and
         # keeps its width when the language changes.
         metrics = self.page_list.fontMetrics()
@@ -228,7 +236,7 @@ class SettingsDialog(QDialog):
 
     def _rebuild(self) -> None:
         """The same window in the new language, keeping what was picked but not saved."""
-        page = self.current_page()
+        page = self._shown_page()  # not "search": the rebuilt window opens without one
         chosen = self.host_lists.chosen()
         old = self._content
         values = (
@@ -257,6 +265,11 @@ class SettingsDialog(QDialog):
         page_id = self._rows[row] if 0 <= row < len(self._rows) else None
         if page_id is None:
             return  # a group's label, never picked
+        if self._lent:  # picking a page ends the search: its sections go home first
+            self.search.blockSignals(True)
+            self.search.clear()
+            self.search.blockSignals(False)
+            self._end_search()
         leaving = self.current_page() == "connections" and page_id != "connections"
         if leaving and self.connections.has_changes():
             answer = self._ask_unsaved(_("The changes on the Connections page aren't saved yet."))
@@ -294,24 +307,76 @@ class SettingsDialog(QDialog):
         return True
 
     def _filter_pages(self, text: str) -> None:
-        """Hides the pages whose words don't include `text`, and a group's label with no page
-        left; the page shown moves to the first one still listed."""
+        """From SEARCH_FROM letters on: every section that mentions `text`, from every page,
+        on one results page, each under its page's name, to change right there. The page list
+        keeps only the pages with a match. Fewer letters: back to the pages as they were."""
+        page = self._shown_page()
+        self._end_search()
         wanted = text.strip().casefold()
+        if len(wanted) < SEARCH_FROM:
+            self.stack.setCurrentIndex(list(self.pages).index(page))
+            return
+        group_of = {pid: group for group, ids in GROUPS for pid in ids}
         shown: list[str] = []
-        for row, page_id in enumerate(self._rows):
-            if page_id is None:
+        layout = self._results.body
+        for page_id, source in self.pages.items():
+            title_match = wanted in source.title.casefold()
+            parts = (source.body.itemAt(i) for i in range(source.body.count()))
+            sections = [
+                w for part in parts
+                if part is not None and isinstance(w := part.widget(), Section)
+                and (title_match or wanted in _words(w))
+            ]  # fmt: skip
+            if not sections:
                 continue
-            match = not wanted or wanted in _words(self.pages[page_id])
-            self.page_list.setRowHidden(row, not match)
-            if match:
-                shown.append(page_id)
+            shown.append(page_id)
+            where = hint(f"{_(group_of[page_id])} › {source.title}")
+            self._result_labels.append(where)
+            layout.addWidget(where)
+            for section in sections:
+                self._lent.append((source.body, source.body.indexOf(section), section))
+                source.body.removeWidget(section)
+                layout.addWidget(section)
+        if not shown:
+            nothing = hint(_("No settings mention “{text}”.").format(text=text.strip()))
+            self._result_labels.append(nothing)
+            layout.addWidget(nothing)
+        layout.addStretch(1)
+        for row, page_id in enumerate(self._rows):
+            if page_id is not None:
+                self.page_list.setRowHidden(row, page_id not in shown)
         for row, page_id in enumerate(self._rows):  # a group's label: hidden with its pages
             if page_id is None:
                 after = self._rows[row + 1 :]
                 end = after.index(None) if None in after else len(after)
                 self.page_list.setRowHidden(row, not any(p in shown for p in after[:end]))
-        if shown and self.current_page() not in shown:
-            self.show_page(shown[0])
+        self.page_list.blockSignals(True)
+        self.page_list.clearSelection()
+        self.page_list.blockSignals(False)
+        self._before_search = page
+        self.stack.setCurrentIndex(len(self.pages))
+
+    def _end_search(self) -> None:
+        """Sends the lent sections back to their pages, where they were, and lists every page."""
+        layout = self._results.body
+        for home, index, section in reversed(self._lent):
+            layout.removeWidget(section)
+            home.insertWidget(index, section)
+        self._lent.clear()
+        for label in self._result_labels:
+            label.hide()
+            label.deleteLater()  # a plain label: safe to delete, unlike lists and trees
+        self._result_labels.clear()
+        while layout.count() > 0:  # the stretch under the results
+            layout.takeAt(0)
+        for row in range(self.page_list.count()):
+            self.page_list.setRowHidden(row, False)
+
+    def _shown_page(self) -> str:
+        """The page shown, or the one shown before the search."""
+        if self.stack.currentIndex() < len(self.pages):
+            return list(self.pages)[self.stack.currentIndex()]
+        return getattr(self, "_before_search", "general")
 
     def show_page(self, page_id: str) -> None:
         self.page_list.setCurrentRow(self.row_of(page_id))
@@ -320,7 +385,9 @@ class SettingsDialog(QDialog):
         return self._rows.index(page_id)
 
     def current_page(self) -> str:
-        return list(self.pages)[self.stack.currentIndex()]
+        """The page shown; "search" while the search's results are."""
+        index = self.stack.currentIndex()
+        return list(self.pages)[index] if index < len(self.pages) else "search"
 
     def choices(self) -> SettingsChoices:
         host_list = self.host_lists.chosen()
@@ -417,10 +484,10 @@ def _scrolling(page: Page) -> QScrollArea:
     return area
 
 
-def _words(page: Page) -> str:
-    """Everything a page says, lower case, to search: its title, headings, labels, buttons,
+def _words(page: QWidget) -> str:
+    """Everything a page or section says, lower case, to search: its headings, labels, buttons,
     ticks, dropdown items and table rows."""
-    texts = [page.title]
+    texts = [page.title] if isinstance(page, Page) else []
     texts += [w.text() for w in page.findChildren(QLabel)]
     texts += [w.text() for w in page.findChildren(QAbstractButton)]
     for combo in page.findChildren(QComboBox):
