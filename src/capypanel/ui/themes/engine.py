@@ -133,6 +133,7 @@ class Registry:
 
 _current: Theme = DEFAULT_THEME
 _applied_once = False
+_generation = 0  # counts theme switches: a window open across one is never deleted
 _watching_system = False
 _native_font: QFont | None = None
 _watcher: QObject | None = None
@@ -142,12 +143,17 @@ def current() -> Theme:
     return _current
 
 
+def generation() -> int:
+    return _generation
+
+
 def apply(theme: Theme) -> None:
     """Switches the whole app's look, live. The comments mark workarounds found in the UI spike."""
-    global _current, _applied_once, _native_font
+    global _current, _applied_once, _native_font, _generation
     app = QApplication.instance()
     if not isinstance(app, QApplication):
         return
+    _generation += 1
     if _native_font is None:
         _native_font = QFont(app.font())
     scheme = {

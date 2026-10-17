@@ -52,6 +52,7 @@ from capypanel.ui import about, language
 from capypanel.ui import checks as check_texts
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
+from capypanel.ui.dialogs import run_modal
 from capypanel.ui.export_hosts import ExportDialog, Source
 from capypanel.ui.groups import (
     ROLE_ID,
@@ -272,9 +273,9 @@ class MainWindow(QMainWindow):
             lambda: about.open_url(about.report_url(self._paths.portable))
         )
         a.about.triggered.connect(
-            lambda: about.AboutDialog(
-                self, self._paths.log_dir, portable=self._paths.portable
-            ).exec()
+            lambda: run_modal(
+                about.AboutDialog(self, self._paths.log_dir, portable=self._paths.portable)
+            )
         )
         a.show_toolbar.toggled.connect(self.toolbar.setVisible)
         a.show_groups.toggled.connect(self.nav.setVisible)
@@ -596,7 +597,7 @@ class MainWindow(QMainWindow):
             default_group=self.nav.selected_group_id(),
             profiles=self._profile_picker(base),
         )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return
         values = dialog.values()
         try:
@@ -619,7 +620,7 @@ class MainWindow(QMainWindow):
         if doc is None:
             return
         dialog = HostDialog(self, doc.hosts, host, profiles=self._profile_picker(doc.hosts))
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return
         values = dialog.values()
         edited = replace(
@@ -784,7 +785,7 @@ class MainWindow(QMainWindow):
         cancel = box.addButton(QMessageBox.StandardButton.Cancel)
         box.setDefaultButton(cancel)
         box.setEscapeButton(cancel)
-        box.exec()
+        run_modal(box)
         if chosen:
             return chosen[0]
         return ("all", None) if box.clickedButton() is everything else None
@@ -822,7 +823,7 @@ class MainWindow(QMainWindow):
         copy = box.addButton(_("Save my version as a copy…"), QMessageBox.ButtonRole.AcceptRole)
         box.addButton(_("Reload the list"), QMessageBox.ButtonRole.RejectRole)
         box.setDefaultButton(copy)
-        box.exec()
+        run_modal(box)
         if box.clickedButton() is copy:
             name, _filter = QFileDialog.getSaveFileName(
                 self,
@@ -897,14 +898,14 @@ class MainWindow(QMainWindow):
         box.addButton(QMessageBox.StandardButton.Cancel)
         box.setDefaultButton(edit)
         edit.setEnabled(self._writable() is not None)
-        box.exec()
+        run_modal(box)
         if box.clickedButton() is edit:
             self.edit_host(host)
 
     def manual_connect(self) -> None:
         connector = self.connector
         dialog = ManualConnectDialog(self, connector.choices(), connector.default_profile())
-        if dialog.exec() == QDialog.DialogCode.Accepted:
+        if run_modal(dialog) == QDialog.DialogCode.Accepted:
             connector.connect([dialog.request()])
 
     # ---- connection profiles ----
@@ -952,7 +953,7 @@ class MainWindow(QMainWindow):
             return
         # Hosts without a group of their own get none, unless a group is picked.
         dialog = ImportDialog(self, doc.hosts, self.nav.selected_group_id() or NO_GROUP)
-        new = dialog.imported_list() if dialog.exec() == QDialog.DialogCode.Accepted else None
+        new = dialog.imported_list() if run_modal(dialog) == QDialog.DialogCode.Accepted else None
         if new is not None and self._commit(new):
             added = dialog.added()
             note = ngettext("Added {n} host.", "Added {n} hosts.", added).format(n=added)
@@ -990,7 +991,7 @@ class MainWindow(QMainWindow):
         )
         self.checks_changed.connect(dialog.checks_changed)
         try:
-            dialog.exec()
+            run_modal(dialog)
         finally:
             self.checks_changed.disconnect(dialog.checks_changed)
         if dialog.outcome:
@@ -1050,7 +1051,7 @@ class MainWindow(QMainWindow):
         if doc is None:
             return
         dialog = ManageGroupsDialog(self, doc.hosts)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
+        if run_modal(dialog) == QDialog.DialogCode.Accepted:
             self._arrange(dialog.order())
 
     def _groups_dragged(self) -> None:
@@ -1119,7 +1120,7 @@ class MainWindow(QMainWindow):
         dialog.saved.connect(lambda choices: self._settings_saved(dialog, choices))
         dialog.language_picked.connect(self.set_language)  # at once, no Save needed
         dialog.theme_picked.connect(self.set_theme)
-        dialog.exec()
+        run_modal(dialog)
         self._prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
         self._save_prefs()
 
@@ -1553,7 +1554,7 @@ class MainWindow(QMainWindow):
                 len(self._refused),
             ).format(n=len(self._refused), user=account.user)
         dialog = AccountDialog(self, text, account.user if account else "")
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return
         self._account = dialog.account()
         # Again: the hosts that refused, and those a rejection kept from being tried.
