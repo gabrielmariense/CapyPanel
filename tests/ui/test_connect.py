@@ -467,3 +467,15 @@ def test_right_click_acts_on_what_is_under_the_mouse(
         "Add &host…", "Add &group…"
     ]  # fmt: skip
     window.close()
+
+
+def test_connect_works_with_no_host_selected_by_opening_its_menu(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _select(window)  # nothing selected
+    button = window.toolbar.connect_button
+    assert button.isEnabled()  # its menu has Manual connection, which needs no host
+    shown: list[bool] = []
+    monkeypatch.setattr(button, "showMenu", lambda: shown.append(True))
+    button.click()
+    assert shown == [True]

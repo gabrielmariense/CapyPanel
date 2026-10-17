@@ -98,8 +98,10 @@ class MainToolBar(QToolBar):
         self.connect_button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.connect_menu = QMenu(self.connect_button)
         self.connect_button.setMenu(self.connect_menu)
-        self.connect_button.clicked.connect(commands.connect_host.trigger)
-        commands.connect_host.enabledChanged.connect(self.connect_button.setEnabled)
+        # Always clickable: its arrow holds Manual connection and the profiles, which need no
+        # host. With no host selected, a click opens that menu instead of connecting.
+        self._connect_host = commands.connect_host
+        self.connect_button.clicked.connect(self._connect_clicked)
 
         # One row in a plain layout, its left edge lined up with the panes by align().
         row = QWidget()
@@ -135,6 +137,12 @@ class MainToolBar(QToolBar):
         self._row.addStretch(1)
         self.addWidget(row)
         self.retranslate()
+
+    def _connect_clicked(self) -> None:
+        if self._connect_host.isEnabled():
+            self._connect_host.trigger()
+        else:
+            self.connect_button.showMenu()
 
     def retranslate(self) -> None:
         gap = " "  # the stylesheet drops the gap between icon and text
