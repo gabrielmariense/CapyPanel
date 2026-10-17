@@ -2,7 +2,7 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
-from PySide6.QtWidgets import QApplication, QFileDialog
+from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QFileDialog
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -148,3 +148,25 @@ def test_copy_puts_every_row_on_the_clipboard_for_excel(
     assert lines[0] == "Name\tAddress\tGroup\tTags\tNotes"  # tabs: Excel splits them
     assert len(lines) == 3
     assert window.statusBar().currentMessage() == "Copied 2 hosts from All hosts."
+
+
+def test_choices_are_kept_at_once_and_copy_keeps_the_window_open(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def pick(d: ExportDialog) -> None:
+        close = d.buttons.button(QDialogButtonBox.StandardButton.Close)
+        assert close is not None  # nothing to cancel: choices are kept as they're made
+        d.source.setCurrentIndex(d.source.findText("Headquarters (1 host)"))
+        for key, box in d.boxes.items():
+            box.setChecked(key == "name")
+        d.copy_button.click()
+        assert d.result() != QDialog.DialogCode.Accepted  # still open after Copy
+
+    _run(window, monkeypatch, pick)
+    seen: list[object] = []
+
+    def reopen(d: ExportDialog) -> None:  # closed without saving a file
+        seen.extend([d.source.currentText(), d.columns()])
+
+    _run(window, monkeypatch, reopen)
+    assert seen == ["Headquarters (1 host)", ["name"]]

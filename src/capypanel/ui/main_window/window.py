@@ -1009,18 +1009,22 @@ class MainWindow(QMainWindow):
         if self._needle():
             found = self._visible_hosts()
             sources.append(Source(counted(_("Search results"), len(found)),
-                                  _("the search results"), found))  # fmt: skip
+                                  _("the search results"), found, key="search"))  # fmt: skip
         selected = self._selected_hosts()
         if len(selected) > 1:
             picked = tuple(selected)
             sources.append(Source(counted(_("Selected hosts"), len(picked)),
-                                  _("the selected hosts"), picked))  # fmt: skip
+                                  _("the selected hosts"), picked, key="selected"))  # fmt: skip
         every = host_list.hosts
-        sources.append(Source(counted(_("All hosts"), len(every)), _("All hosts"), every))
+        sources.append(
+            Source(counted(_("All hosts"), len(every)), _("All hosts"), every, key="all")
+        )
         if not self._needle() and current.kind == "all":
             start = len(sources) - 1
         loose = tuple(h for h in every if h.group == NO_GROUP)
-        sources.append(Source(counted(_("No group"), len(loose)), _("No group"), loose))
+        sources.append(
+            Source(counted(_("No group"), len(loose)), _("No group"), loose, key="nogroup")
+        )
         if not self._needle() and current.kind == "nogroup":
             start = len(sources) - 1
 
@@ -1028,7 +1032,8 @@ class MainWindow(QMainWindow):
             nonlocal start
             for group in host_list.children(parent):
                 hosts = host_list.hosts_in(group.id)
-                sources.append(Source(counted(group.name, len(hosts)), group.name, hosts, depth))
+                sources.append(Source(counted(group.name, len(hosts)), group.name, hosts, depth,
+                                      key=f"group:{group.id}"))  # fmt: skip
                 if not self._needle() and current.kind == "group" and current.value == group.id:
                     start = len(sources) - 1
                 visit(group.id, depth + 1)
@@ -1038,7 +1043,12 @@ class MainWindow(QMainWindow):
             hosts = tuple(h for h in every if tag in h.tags)
             name = _("tag “{tag}”").format(tag=tag)
             sources.append(
-                Source(counted(_("Tag: {tag}").format(tag=tag), len(hosts)), name, hosts)
+                Source(
+                    counted(_("Tag: {tag}").format(tag=tag), len(hosts)),
+                    name,
+                    hosts,
+                    key=f"tag:{tag}",
+                )  # fmt: skip
             )
             if not self._needle() and current.kind == "tag" and current.value == tag:
                 start = len(sources) - 1

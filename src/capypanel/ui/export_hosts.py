@@ -8,7 +8,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from PySide6.QtCore import QModelIndex, QStandardPaths, Qt, QUrl
+from PySide6.QtCore import QModelIndex, QPoint, QStandardPaths, Qt, QUrl
 from PySide6.QtGui import QDesktopServices, QGuiApplication, QShowEvent
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QStyledItemDelegate,
     QStyleOptionViewItem,
+    QToolTip,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -56,6 +57,7 @@ SECTIONS = (
 CHECKED = ("status", "users")  # from the last Refresh, kept in memory only
 FOR_IMPORT = ("name", "address", "group", "tags", "notes")  # what Import hosts reads back
 PRESETS_KEY, LAST_KEY, FOLDER_KEY = "export_presets", "export_columns", "export_folder"
+SOURCE_KEY = "export_source"  # the hosts picked last, kept as soon as they're picked
 DEPTH = Qt.ItemDataRole.UserRole + 1
 WIDEST = 240  # px: the preview's widest column
 
@@ -69,6 +71,7 @@ class Source:
     name: str
     hosts: tuple[Host, ...]
     depth: int = 0  # a group's level: indented under its parent in the open list only
+    key: str = ""  # what it is ("all", "group:<id>"…): the last one picked opens next time
 
 
 class ExportDialog(QDialog):
@@ -106,6 +109,11 @@ class ExportDialog(QDialog):
         for source in self._sources:
             self.source.addItem(source.label)
             self.source.setItemData(self.source.count() - 1, source.depth, DEPTH)
+        # The hosts picked last time, if they're still there; else what the window shows.
+        keys = [s.key for s in self._sources]
+        last_source = prefs.get(SOURCE_KEY)
+        if isinstance(last_source, str) and last_source and last_source in keys:
+            current = keys.index(last_source)
         self.source.setCurrentIndex(current)
         self.preset = QComboBox()
         self.preset.setPlaceholderText(_("Custom"))  # ticks that match no preset
@@ -170,7 +178,8 @@ class ExportDialog(QDialog):
         self.export_button = self.buttons.addButton(_("&Export…"), role.ActionRole)
         self.copy_button = self.buttons.addButton(_("&Copy"), role.ActionRole)
         self.copy_button.setToolTip(_("Copies every row, to paste into Excel"))
-        self.buttons.addButton(QDialogButtonBox.StandardButton.Cancel)
+        # Close: nothing to cancel, every choice here is kept as soon as it's made.
+        self.buttons.addButton(QDialogButtonBox.StandardButton.Close)
         self.buttons.rejected.connect(self.reject)
         self._no_default_buttons()
 
@@ -185,6 +194,7 @@ class ExportDialog(QDialog):
         last = prefs.get(LAST_KEY)
         self._tick(_known(last) if isinstance(last, list) else FOR_IMPORT)
         self.source.currentIndexChanged.connect(self._update)
+        self.source.currentIndexChanged.connect(self._remember)
         self.preset.activated.connect(self._preset_picked)
         self.save_preset.clicked.connect(self._save_as_preset)
         self.delete_preset.clicked.connect(self._delete_preset)
@@ -297,6 +307,7 @@ class ExportDialog(QDialog):
     def _ticks_changed(self) -> None:
         self._match_preset()
         self._update()
+        self._remember()
 
     def _update(self) -> None:
         """The preview, the "not checked" count and which buttons work."""
@@ -361,19 +372,22 @@ class ExportDialog(QDialog):
     # ---- saving or copying ----
 
     def _remember(self) -> None:
+        """The columns and the hosts picked, kept at once: closing never loses them."""
         self._prefs[LAST_KEY] = self.columns()
+        self._prefs[SOURCE_KEY] = self._sources[self.source.currentIndex()].key
         self._save_prefs()
 
     def _copy(self) -> None:
         text = write_csv(self.header(), self.rows(), "\t")  # tabs: Excel pastes them as columns
         QGuiApplication.clipboard().setText(text)
-        self._remember()
         source = self._sources[self.source.currentIndex()]
         n = len(source.hosts)
         self.outcome = ngettext(
             "Copied {n} host from {source}.", "Copied {n} hosts from {source}.", n
         ).format(n=n, source=source.name)
-        self.accept()
+        # The window stays open, to copy other hosts or save a file next.
+        button = self.copy_button
+        QToolTip.showText(button.mapToGlobal(QPoint(0, button.height())), self.outcome, button)
 
     def _export(self) -> None:
         source = self._sources[self.source.currentIndex()]
