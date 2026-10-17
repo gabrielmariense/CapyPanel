@@ -36,6 +36,7 @@ class Actions:
     show_status_bar: QAction
     show_domains: QAction
     reset_layout: QAction
+    show_hosts: QAction
     documentation: QAction
     report_problem: QAction
     about: QAction
@@ -53,9 +54,11 @@ SHORTCUTS = {
     "manual_connect": "Ctrl+M",
     "copy_address": "Ctrl+Shift+C",
     "refresh_shown": "F5",  # what Refresh's right-click panel has ticked
+    "show_hosts": "Ctrl+1",  # the tools, in View and on the rail
 }
 CHECKABLE = {
-    "show_toolbar", "show_groups", "show_tags", "show_details", "show_status_bar", "show_domains"
+    "show_toolbar", "show_groups", "show_tags", "show_details", "show_status_bar", "show_domains",
+    "show_hosts",
 }  # fmt: skip
 
 
@@ -74,15 +77,15 @@ def create_actions(parent: QWidget) -> Actions:
 
 def retranslate_actions(a: Actions) -> None:
     """Sets every command's text in the current language; runs again when it changes."""
-    a.new_list.setText(_("&New host list…"))
-    a.open_list.setText(_("&Host lists…"))
+    a.new_list.setText(_("&New list…"))
+    a.open_list.setText(_("&Open list…"))
     a.settings.setText(_("&Settings…"))
     a.exit.setText(_("E&xit"))
     a.add_host.setText(_("Add &host…"))
     a.add_group.setText(_("Add &group…"))
     a.manage_groups.setText(_("&Manage groups…"))
     a.import_hosts.setText(_("&Import hosts…"))
-    a.export_hosts.setText(_("&Export hosts…"))
+    a.export_hosts.setText(_("&Report…"))
     a.edit.setText(_("&Edit selected…"))
     a.remove.setText(_("&Remove selected"))
     a.connect_host.setText(_("&Connect"))
@@ -103,3 +106,4 @@ def retranslate_actions(a: Actions) -> None:
     a.show_status_bar.setText(_("&Status bar"))
     a.show_domains.setText(_("Show users' do&main"))
     a.reset_layout.setText(_("&Reset layout"))
+    a.show_hosts.setText(_("&Hosts"))

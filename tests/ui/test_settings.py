@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 from PySide6.QtWidgets import (
     QApplication,
-    QDialog,
     QFileDialog,
     QHeaderView,
     QMenu,
@@ -16,7 +15,7 @@ from PySide6.QtWidgets import (
 from capypanel.core import settings, winsec
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.ui.host_lists import HostListsDialog, HostListsView
+from capypanel.ui.host_lists import HostListsView
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
 from capypanel.ui.settings.window import PAGE_TITLES, SettingsDialog
@@ -62,13 +61,22 @@ def _answer_save_dialog(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
     monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: (str(path), ""))
 
 
-def test_settings_is_in_the_file_menu_and_has_five_pages(window: MainWindow) -> None:
+def test_settings_has_the_app_s_pages_then_the_hosts_tool_s(window: MainWindow) -> None:
     assert window.commands.settings.shortcut().toString() == "Ctrl+,"
     [file_menu] = [a.menu() for a in window.menuBar().actions() if a.text() == "&File"]
     assert isinstance(file_menu, QMenu) and window.commands.settings in file_menu.actions()
     dialog = window.settings_dialog()
-    titles = [p.title for p in dialog.pages.values()]
-    assert titles == ["General", "Host lists", "Connections", "Appearance"]
+    rows = [dialog.page_list.item(i).text().strip() for i in range(dialog.page_list.count())]
+    assert rows == [
+        "CapyPanel",
+        "General",
+        "Files",
+        "Hosts",
+        "General",
+        "Host lists",
+        "Connections",
+    ]
+    assert dialog.current_page() == "general"
 
 
 def test_page_list_rows_never_overlap(window: MainWindow) -> None:
@@ -112,7 +120,7 @@ def test_host_lists_shows_every_list_with_the_open_one_in_bold(
         ("Added", "Read/write", True),
     ]
     names = [view.tree.topLevelItem(i).text(0) for i in range(3)]  # type: ignore[union-attr]
-    assert names == ["hosts.json", "hosts.json", "office.json (in use)"]
+    assert names == ["Default list", "Personal list", "office (in use)"]
     os.chmod(office, stat.S_IREAD)
     try:
         assert _rows(window.settings_dialog().host_lists.view)[2][1] == "Read-only"
@@ -232,20 +240,18 @@ def test_new_empty_list_over_the_open_one_reopens_it(
     assert not window.document.hosts.hosts
 
 
-def test_file_host_lists_opens_a_list_and_remembers_what_was_added(
+def test_open_list_from_the_dropdown_opens_a_list_and_keeps_it_there(
     window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _answer_open_dialog(monkeypatch, office)
-
-    def use(dialog: HostListsDialog) -> int:
-        dialog.view.add_button.click()  # selects the added list
-        assert dialog.open_button.isEnabled()
-        return QDialog.DialogCode.Accepted
-
-    monkeypatch.setattr(HostListsDialog, "exec", use)
-    window.commands.open_list.trigger()  # File > Host lists… (Ctrl+O)
+    window.commands.open_list.trigger()  # the list dropdown's Open list… (Ctrl+O)
     assert window.document is not None and window.document.path == office
     assert window._prefs["host_lists"] == [str(office)]
+    window.list_picker.menu().aboutToShow.emit()  # filled as it opens
+    texts = [label(a) for a in window.list_picker.menu().actions() if a.text()]
+    assert texts[:3] == ["Default list", "Personal list", "office"]  # by file name
+    assert texts[3:] == ["&New list…", "&Open list…", "&Manage host lists…"]
+    assert window.list_picker.text() == "office" and window.windowTitle().startswith("office —")
 
 
 def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
@@ -254,17 +260,22 @@ def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
         for a in window.menuBar().actions()
         if isinstance(m := a.menu(), QMenu)
     }
-    assert menus["&File"][:2] == ["&New host list…", "&Host lists…"]
-    assert menus["&Inventory"] == [
-        "Add &host…", "Add &group…", "&Manage groups…", "&Import hosts…",
-        "&Export hosts…"
+    assert list(menus) == ["&File", "&View", "&Help"]  # the same for every tool
+    assert menus["&File"] == ["&Settings…", "E&xit"]  # lists are in the list dropdown
+    assert menus["&View"] == [
+        "&Hosts", "&Groups pane", "T&ags pane", "&Details pane", "Show users' do&main",
+        "T&oolbar", "&Status bar", "&Reset layout",
     ]  # fmt: skip
-    assert menus["&Connect"] == [
-        "&Manual connection…", "Connection &profiles…", "&Forget typed passwords"
-    ]  # fmt: skip
-    # Edit, Remove and Copy address are only in right-click menus, yet keep their shortcuts.
+    # The tool's own commands are in its toolbar.
+    inventory = [label(a) for a in window.toolbar.inventory_menu.actions() if a.text()]
+    assert inventory == ["Add &host…", "Add &group…", "&Manage groups…", "&Import hosts…"]
+    window._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
+    connect = [label(a) for a in window.toolbar.connect_menu.actions() if a.text()][-3:]
+    assert connect == ["&Manual connection…", "Connection &profiles…", "&Forget typed passwords"]
+    # Commands outside the menu bar keep their shortcuts.
     a = window.commands
-    assert {a.edit, a.remove, a.copy_address} <= set(window.actions())
+    shortcuts = {a.edit, a.remove, a.copy_address, a.add_host, a.add_group, a.manual_connect}
+    assert shortcuts <= set(window.actions())
 
 
 def test_start_list_choice_is_opened_next_time(
@@ -272,7 +283,7 @@ def test_start_list_choice_is_opened_next_time(
 ) -> None:
     window.open_list(office)  # the last used list...
     dialog = window.settings_dialog()
-    general = dialog.general.start_list
+    general = dialog.hosts.start_list
     assert general.currentData() == "last"
     assert [general.itemData(i) for i in range(general.count())] == [
         "last",
@@ -307,12 +318,12 @@ def test_last_used_list_is_reopened(
     again.close()
 
 
-def test_appearance_applies_the_chosen_theme(window: MainWindow) -> None:
+def test_picking_a_theme_applies_it_at_once(window: MainWindow) -> None:
     dialog = window.settings_dialog()
-    [paper] = [b for b in dialog.appearance.buttons() if b.property("theme_id") == "paper"]
-    paper.setChecked(True)
-    window.apply_settings(dialog.choices())
-    assert themes.current().id == "paper"
+    dialog.theme_picked.connect(window.set_theme)
+    combo = dialog.general.theme
+    combo.setCurrentIndex(combo.findData("paper"))  # no Save: the window shows it already
+    assert themes.current().id == "paper" and not dialog.unsaved()
     assert settings.load_settings(window._paths.settings_file)["theme"] == "paper"
 
 
@@ -323,7 +334,7 @@ def test_the_path_is_in_the_tooltip_and_same_names_show_their_folder(
     window._prefs["host_lists"] = [str(a), str(b)]
     view = window.settings_dialog().host_lists.view
     names = [view.tree.topLevelItem(i).text(0) for i in range(4)]  # type: ignore[union-attr]
-    assert names[2:] == ["hosts.json (north)", "hosts.json (south)"]
+    assert names[2:] == ["hosts (north)", "hosts (south)"]
     item = view.tree.topLevelItem(2)
     assert item is not None and item.toolTip(0) == str(a) == item.toolTip(1)
 
@@ -334,15 +345,15 @@ def test_leaving_connections_with_changes_asks_first(
 ) -> None:
     dialog = window.settings_dialog()
     monkeypatch.setattr(type(dialog), "_ask_unsaved", lambda *_a, **_k: answer)
-    connections_row = list(dialog.pages).index("connections")
+    connections_row = dialog.row_of("connections")
     dialog.page_list.setCurrentRow(connections_row)
     page = dialog.connections
     page.default.setCurrentIndex(page.default.findData("realvnc"))  # an unsaved change
     assert page.has_changes()
-    dialog.page_list.setCurrentRow(0)  # try to go to General
+    dialog.page_list.setCurrentRow(dialog.row_of("general"))  # try to go to General
     store = page.store
     if answer == "stay":
-        assert dialog.stack.currentWidget() is page and page.has_changes()
+        assert dialog.current_page() == "connections" and page.has_changes()
         assert dialog.page_list.currentRow() == connections_row
     elif answer == "discard":
         assert dialog.stack.currentIndex() == 0 and not page.has_changes()
@@ -389,7 +400,7 @@ def test_close_asks_before_dropping_changes(
     dialog.close_button.click()
     assert asked == [] and not dialog.isVisible()  # nothing changed: just closes
     dialog.show()
-    dialog.general.auto_status.setChecked(True)
+    dialog.hosts.auto_status.setChecked(True)
     dialog.close_button.click()
     assert asked == ["Some changes aren't saved yet."] and dialog.isVisible()  # Keep editing
     dialog.close_button.click()  # then Save changes
@@ -403,14 +414,14 @@ def test_picking_a_language_switches_at_once_keeping_unsaved_choices(
 
     def run(dialog: SettingsDialog) -> int:
         dialog.show_page("general")
-        dialog.general.auto_status.setChecked(True)  # not saved
+        dialog.hosts.auto_status.setChecked(True)  # not saved
         dialog.general.language.setCurrentIndex(dialog.general.language.findData("pt_BR"))
         QApplication.processEvents()  # the window follows once the dropdown has closed
         seen.append(
             (
                 dialog.windowTitle(),
                 dialog.current_page(),
-                dialog.general.auto_status.isChecked(),
+                dialog.hosts.auto_status.isChecked(),
                 dialog.unsaved(),
             )
         )
@@ -440,3 +451,16 @@ def test_the_page_list_keeps_its_width_in_every_language(window: MainWindow) -> 
     QApplication.processEvents()
     assert dialog.page_list.width() == width and dialog.general.title == "Geral"
     window.set_language("en")
+
+
+def test_removing_the_open_list_switches_to_the_default_list(
+    window: MainWindow, office: Path, paths: settings.Paths
+) -> None:
+    window.open_list(office)
+    dialog = window.settings_dialog()
+    view = dialog.host_lists.view
+    view.select(office)
+    view.remove_button.click()
+    assert dialog.host_lists.chosen() == paths.default_list
+    window.apply_settings(dialog.choices())
+    assert window.document is not None and window.document.path == paths.default_list

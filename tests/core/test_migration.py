@@ -56,3 +56,22 @@ def test_portable_mode_copies_from_the_old_userdata_layout(tmp_path: Path) -> No
 
 def test_documents_dir_is_a_real_folder() -> None:
     assert migration.documents_dir().is_dir()
+
+
+def test_lists_from_before_0_19_are_copied_into_the_lists_folders(tmp_path: Path) -> None:
+    paths, env, documents = _setup(tmp_path)
+    old_default, old_personal = paths.root / "hosts.json", paths.user_dir / "hosts.json"
+    listfile.save(old_default, HostList().add_group("Shared hosts")[0], expected=None)
+    listfile.save(old_personal, HostList().add_group("My hosts")[0], expected=None)
+    settings.save_settings(
+        paths.settings_file,
+        {"schema": 1, "recent_lists": [str(old_personal)], "start_list": str(old_default)},
+    )
+    copied = migration.migrate(paths, env, documents)
+    assert len(copied) == 2 and old_default.exists() and old_personal.exists()  # copies
+    assert [g.name for g in listfile.load(paths.default_list).hosts.groups] == ["Shared hosts"]
+    assert [g.name for g in listfile.load(paths.personal_list).hosts.groups] == ["My hosts"]
+    prefs = settings.load_settings(paths.settings_file)
+    assert prefs["recent_lists"] == [str(paths.personal_list)]
+    assert prefs["start_list"] == str(paths.default_list)
+    assert migration.migrate(paths, env, documents) == []  # once

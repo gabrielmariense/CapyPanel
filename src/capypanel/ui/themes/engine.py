@@ -133,6 +133,7 @@ class Registry:
 
 _current: Theme = DEFAULT_THEME
 _applied_once = False
+_generation = 0  # counts theme switches: a window open across one is never deleted
 _watching_system = False
 _native_font: QFont | None = None
 _watcher: QObject | None = None
@@ -142,12 +143,17 @@ def current() -> Theme:
     return _current
 
 
+def generation() -> int:
+    return _generation
+
+
 def apply(theme: Theme) -> None:
     """Switches the whole app's look, live. The comments mark workarounds found in the UI spike."""
-    global _current, _applied_once, _native_font
+    global _current, _applied_once, _native_font, _generation
     app = QApplication.instance()
     if not isinstance(app, QApplication):
         return
+    _generation += 1
     if _native_font is None:
         _native_font = QFont(app.font())
     scheme = {
@@ -415,6 +421,12 @@ QToolBar QToolButton { padding: 3px 9px; border: 1px solid %(border)s; backgroun
 QToolBar QToolButton:hover { background: %(hover)s; color: %(text)s; }
 QToolBar QToolButton:disabled { color: %(text3)s; }
 QFrame#toolDivider { background: %(border)s; border: none; }
+/* The tool rail: its own strip on the left edge; the tool shown sits on a rounded tint. */
+QWidget#toolRail { background: %(chrome)s; border-right: 1px solid %(border)s; }
+QWidget#toolRail QToolButton { border: none; background: transparent; border-radius: 8px;
+                               padding: 0; }
+QWidget#toolRail QToolButton:hover { background: %(hover)s; }
+QWidget#toolRail QToolButton:checked { background: %(sel_solid)s; }
 QToolBar QToolButton[popupMode="1"] { padding-right: 29px; }
 QToolBar QToolButton[popupMode="2"] { padding-right: 24px; }
 /* The arrow of a split button (Connect): a short divider, then the arrow, with its own hover. */
@@ -598,6 +610,12 @@ QToolBar#main QToolButton::menu-indicator { subcontrol-position: right center; r
 QToolBar#main QToolButton::menu-arrow { subcontrol-origin: padding;
                                         subcontrol-position: center; }
 QFrame#toolDivider { background: %(border)s; border: none; }
+/* The tool rail: its own strip on the left edge; the tool shown sits on a rounded tint. */
+QWidget#toolRail { background: %(chrome)s; border-right: 1px solid %(border)s; }
+QWidget#toolRail QToolButton { border: none; background: transparent; border-radius: 8px;
+                               padding: 0; }
+QWidget#toolRail QToolButton:hover { background: %(hover)s; }
+QWidget#toolRail QToolButton:checked { background: %(sel)s; }
 QTreeView#flat { border: none; background: transparent; }
 QLineEdit#paneSearch { background: %(card)s; border: 1px solid %(border)s; padding: 5px 6px; }
 QFrame#divider { background: %(border)s; border: none; }

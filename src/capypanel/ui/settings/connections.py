@@ -15,7 +15,6 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QFormLayout,
     QGridLayout,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -39,7 +38,7 @@ from capypanel.core.tools.profiles import ConnectionProfile, login_label, logins
 from capypanel.ui.connect import ask_for_program
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import hint
-from capypanel.ui.settings.pages import Page, PathLabel, open_folder
+from capypanel.ui.settings.pages import Page, PathLabel, Section, open_folder
 
 MAX_PROFILE_NAME = 64
 
@@ -293,7 +292,7 @@ class ConnectionsPage(Page):
         self._tool_paths: dict[str, str] = {}
         self._settings: dict[str, bytes] = {}  # settings files chosen here, written on Save
 
-        profiles_box = QGroupBox(_("Connection profiles"))
+        profiles_box = Section(_("Connection profiles"))
         folder = PathLabel(self.store.folder)
         self.open_folder = QPushButton(_("Open folder"))
         self.open_folder.clicked.connect(lambda: open_folder(self.store.folder))
@@ -316,6 +315,7 @@ class ConnectionsPage(Page):
             )
         )
         self.list = QListWidget()
+        self.list.setMaximumHeight(150)  # a few profiles; it scrolls when there are more
         self.list.itemSelectionChanged.connect(self._update_buttons)
         self.list.itemDoubleClicked.connect(lambda _item: self.edit())
         self.add_button = QPushButton(_("&Add…"))
@@ -338,7 +338,8 @@ class ConnectionsPage(Page):
         self.default.setEnabled(self.can_edit)
         default_row = QFormLayout()
         default_row.addRow(_("Hosts with no profile &use:"), self.default)
-        inner = QVBoxLayout(profiles_box)
+        inner = QVBoxLayout(profiles_box.inner)
+        inner.setContentsMargins(0, 2, 0, 0)
         inner.addLayout(folder_row)
         inner.addWidget(self.builtin_note)
         inner.addWidget(hint(access))
@@ -347,8 +348,9 @@ class ConnectionsPage(Page):
         inner.addLayout(row)
         inner.addLayout(default_row)
 
-        tools_box = QGroupBox(_("Remote tools"))
-        tools_layout = QVBoxLayout(tools_box)
+        tools_box = Section(_("Remote tools"))
+        tools_layout = QVBoxLayout(tools_box.inner)
+        tools_layout.setContentsMargins(0, 2, 0, 0)
         tools_layout.addWidget(
             hint(
                 _("Where each tool is installed, set once for everyone on this PC.")
@@ -365,8 +367,9 @@ class ConnectionsPage(Page):
         self._tools_grid.setColumnStretch(2, 1)
         tools_layout.addLayout(self._tools_grid)
 
-        self.body.addWidget(profiles_box, 1)
+        self.body.addWidget(profiles_box)
         self.body.addWidget(tools_box)
+        self.body.addStretch(1)
         self._fill_profiles(select=None)
         self.default.setCurrentIndex(max(self.default.findData(self.store.default_id()), 0))
         self._fill_tools()

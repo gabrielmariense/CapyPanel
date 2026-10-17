@@ -3,19 +3,16 @@ nothing here changes the app, except the host-list buttons that write a file whe
 
 from pathlib import Path
 
-from PySide6.QtCore import QRectF, Qt, QUrl, Signal
-from PySide6.QtGui import QColor, QDesktopServices, QIcon, QPainter, QPixmap, QResizeEvent
+from PySide6.QtCore import Qt, QUrl, Signal
+from PySide6.QtGui import QDesktopServices, QResizeEvent
 from PySide6.QtWidgets import (
-    QButtonGroup,
     QCheckBox,
     QComboBox,
+    QFrame,
     QGridLayout,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
-    QMenu,
     QPushButton,
-    QRadioButton,
     QSpinBox,
     QVBoxLayout,
     QWidget,
@@ -30,30 +27,45 @@ from capypanel.core.i18n import _
 from capypanel.ui.groups import TreeMenu, fill_host_move_menu
 from capypanel.ui.host_lists import HostListsView
 from capypanel.ui.hosts import group_path
-from capypanel.ui.notes import hint, notes
+from capypanel.ui.menus import MenuCombo
+from capypanel.ui.notes import notes
 from capypanel.ui.themes import engine as themes
 
 
 class Page(QWidget):
-    """A settings page: a title, then its content. `changed` fires when validity may change."""
+    """A settings page: its sections, one under the other. Its title shows in the page list
+    only. `changed` fires when validity may change."""
 
     changed = Signal()
 
     def __init__(self, title: str) -> None:
         super().__init__()
         self.title = title
-        heading = QLabel(title)
-        heading.setObjectName("pageTitle")
-        font = heading.font()
-        font.setPointSizeF(font.pointSizeF() * 1.3)
-        font.setBold(True)
-        heading.setFont(font)
         self.body = QVBoxLayout(self)
         self.body.setContentsMargins(0, 0, 0, 0)
-        self.body.addWidget(heading)
+        self.body.setSpacing(18)  # between sections
 
     def is_valid(self) -> bool:
         return True
+
+
+class Section(QWidget):
+    """A part of a page: a heading in the accent colour over a thin line, as in the Details
+    pane, then its content in `inner`. No frame around it."""
+
+    def __init__(self, title: str) -> None:
+        super().__init__()
+        heading = QLabel(title)
+        heading.setObjectName("detailsSection")
+        rule = QFrame()
+        rule.setObjectName("detailsRule")
+        self.inner = QWidget()
+        column = QVBoxLayout(self)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(6)
+        column.addWidget(heading)
+        column.addWidget(rule)
+        column.addWidget(self.inner, 1)
 
 
 class PathLabel(QLabel):
@@ -85,42 +97,106 @@ def open_folder(folder: Path) -> None:
     QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 
 
-class MenuCombo(QComboBox):
-    """A dropdown that opens a menu instead of a list, so it can hold submenus, and still looks
-    and sizes like the other dropdowns. Its one item is the text shown."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._menu = QMenu(self)
-
-    def menu(self) -> QMenu:
-        return self._menu
-
-    def text(self) -> str:
-        return self.currentText()
-
-    def setText(self, text: str) -> None:
-        self.clear()
-        self.addItem(text)
-
-    def showPopup(self) -> None:
-        self._menu.setMinimumWidth(self.width())
-        self._menu.popup(self.mapToGlobal(self.rect().bottomLeft()))
-
-
-# ---- General ----
+# ---- CapyPanel: General and Files ----
 
 
 class GeneralPage(Page):
+    """The app's language and theme. Both apply as soon as they're picked, with no Save."""
+
+    def __init__(self, *, language: str, registry: themes.Registry, theme_id: str) -> None:
+        super().__init__(_("General"))
+        # Each language is named in its own language, so anyone can find theirs.
+        self.language = QComboBox()
+        for code, name in i18n.LANGUAGES.items():
+            self.language.addItem(name, code)
+        self.language.setCurrentIndex(max(self.language.findData(language), 0))
+        language_box = Section(_("Language"))
+        language_row = QHBoxLayout(language_box.inner)
+        language_row.setContentsMargins(0, 2, 0, 0)
+        language_row.addWidget(self.language)
+        language_row.addStretch(1)
+        # The Windows themes, then the app's own. The window shows the theme picked: no preview.
+        self.theme = QComboBox()
+        previous = None
+        for theme in registry.all():
+            if previous and theme.engine != previous:
+                self.theme.insertSeparator(self.theme.count())
+            previous = theme.engine
+            self.theme.addItem(theme.title(), theme.id)
+        self.theme.setCurrentIndex(max(self.theme.findData(theme_id), 0))
+        theme_box = Section(_("Theme"))
+        theme_layout = QVBoxLayout(theme_box.inner)
+        theme_layout.setContentsMargins(0, 2, 0, 0)
+        theme_row = QHBoxLayout()
+        theme_row.addWidget(self.theme)
+        theme_row.addStretch(1)
+        theme_layout.addLayout(theme_row)
+        theme_layout.addWidget(
+            notes(
+                _("Windows themes use Windows' own look, with your accent color."),
+                _("CapyPanel themes look the same on every computer."),
+            )
+        )
+        self.body.addWidget(language_box)
+        self.body.addWidget(theme_box)
+        self.body.addStretch(1)
+
+    def language_choice(self) -> str:
+        return str(self.language.currentData() or i18n.DEFAULT_LANGUAGE)
+
+    def theme_id(self) -> str:
+        return str(self.theme.currentData() or themes.DEFAULT_THEME.id)
+
+
+class FilesPage(Page):
+    """Where CapyPanel keeps everything, each folder a click away."""
+
+    def __init__(self, paths: settings.Paths) -> None:
+        super().__init__(_("Files"))
+        files = Section(_("Where CapyPanel keeps its files"))
+        grid = QGridLayout(files.inner)
+        grid.setContentsMargins(0, 2, 0, 0)
+        grid.setColumnStretch(1, 1)
+        folders = (
+            (_("Shared files"), paths.root),
+            (_("Shared lists"), paths.shared_lists_dir),
+            (_("Your files"), paths.user_dir),
+            (_("Your lists"), paths.user_lists_dir),
+            (_("Logs"), paths.log_dir),
+        )
+        for row, (label, folder) in enumerate(folders):
+            button = QPushButton(_("Open folder"))
+            button.clicked.connect(lambda _checked=False, f=folder: open_folder(f))
+            grid.addWidget(QLabel(label), row, 0)
+            grid.addWidget(PathLabel(folder), row, 1)
+            grid.addWidget(button, row, 2)
+        lines = [
+            _("Shared files: connection profiles and tools, for everyone."),
+            _("Shared lists: the default list, and every list saved there, for everyone."),
+            _("Your files: your settings, private to you and admins."),
+            _("Your lists: your personal list, and every list saved there, only for you."),
+            _("Logs: one per user, named after the account."),
+        ]
+        if paths.portable:
+            lines.append(_("Portable mode: everything stays in the app's own folder."))
+        grid.addWidget(notes(*lines), len(folders), 0, 1, 3)
+        self.body.addWidget(files)
+        self.body.addStretch(1)
+
+
+# ---- Hosts: General ----
+
+
+class HostsPage(Page):
+    """The Hosts tool's own settings: which list opens, what it shows first, and Refresh."""
+
     def __init__(
         self,
-        paths: settings.Paths,
         *,
         start_list: object,
         default_list: Path,
         personal_list: Path,
         added: list[Path],
-        language: str,
         auto_status: tuple[bool, int] = (False, 5),
         start_view: tuple[str, str] | None = None,
         host_list: HostList | None = None,
@@ -128,18 +204,7 @@ class GeneralPage(Page):
         """start_view: the open list's (show, group); None when no list is open. host_list: that
         list, for its groups."""
         super().__init__(_("General"))
-        # Each language is named in its own language, so anyone can find theirs.
-        self.language = QComboBox()
-        for code, name in i18n.LANGUAGES.items():
-            self.language.addItem(name, code)
-        self.language.setCurrentIndex(max(self.language.findData(language), 0))
-        language_label = QLabel(_("&Language:"))
-        language_label.setBuddy(self.language)
-        language_row = QHBoxLayout()
-        language_row.addWidget(language_label)
-        language_row.addWidget(self.language)
-        language_row.addStretch(1)
-        start = QGroupBox(_("Startup"))
+        start = Section(_("Startup"))
         self.start_list = QComboBox()
         self.start_list.setSizeAdjustPolicy(
             QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
@@ -171,7 +236,8 @@ class GeneralPage(Page):
         label = QLabel(_("&Open on startup:"))
         label.setBuddy(self.start_list)
         # Labels in one column, the dropdowns lined up beside them at the same width.
-        start_layout = QGridLayout(start)
+        start_layout = QGridLayout(start.inner)
+        start_layout.setContentsMargins(0, 2, 0, 0)
         start_layout.setColumnStretch(1, 1)
         start_layout.addWidget(label, 0, 0)
         start_layout.addWidget(self.start_list, 0, 1)
@@ -201,30 +267,7 @@ class GeneralPage(Page):
             3, 0, 1, 2,
         )  # fmt: skip
 
-        files = QGroupBox(_("Where CapyPanel keeps its files"))
-        grid = QGridLayout(files)
-        grid.setColumnStretch(1, 1)
-        folders = (
-            (_("Shared files"), paths.root),
-            (_("Your files"), paths.user_dir),
-            (_("Logs"), paths.log_dir),
-        )
-        for row, (label, folder) in enumerate(folders):
-            button = QPushButton(_("Open folder"))
-            button.clicked.connect(lambda _checked=False, f=folder: open_folder(f))
-            grid.addWidget(QLabel(label), row, 0)
-            grid.addWidget(PathLabel(folder), row, 1)
-            grid.addWidget(button, row, 2)
-        lines = [
-            _("Shared files: the default list, connection profiles and tools, for everyone."),
-            _("Your files: your settings and personal list, private to you and admins."),
-            _("Logs: one per user, named after the account."),
-        ]
-        if paths.portable:
-            lines.append(_("Portable mode: everything stays in the app's own folder."))
-        grid.addWidget(notes(*lines), len(folders), 0, 1, 3)
-
-        refresh = QGroupBox(_("Refresh"))
+        refresh = Section(_("Refresh"))
         self.auto_status = QCheckBox(_("&Refresh the status of the hosts shown every"))
         self.auto_status.setChecked(auto_status[0])
         self.auto_minutes = QSpinBox()
@@ -237,7 +280,8 @@ class GeneralPage(Page):
         auto_row.addWidget(self.auto_status)
         auto_row.addWidget(self.auto_minutes)
         auto_row.addStretch(1)
-        refresh_layout = QVBoxLayout(refresh)
+        refresh_layout = QVBoxLayout(refresh.inner)
+        refresh_layout.setContentsMargins(0, 2, 0, 0)
         refresh_layout.addLayout(auto_row)
         refresh_layout.addWidget(
             notes(
@@ -246,10 +290,8 @@ class GeneralPage(Page):
             )
         )
 
-        self.body.addLayout(language_row)
         self.body.addWidget(start)
         self.body.addWidget(refresh)
-        self.body.addWidget(files)
         self.body.addStretch(1)
 
     def start_choice(self) -> str:
@@ -295,9 +337,6 @@ class GeneralPage(Page):
         """(show, group) for the open list; None when no list is open."""
         return self._first if self.show_first.isEnabled() else None
 
-    def language_choice(self) -> str:
-        return str(self.language.currentData() or i18n.DEFAULT_LANGUAGE)
-
     def auto_status_choice(self) -> tuple[bool, int]:
         return self.auto_status.isChecked(), self.auto_minutes.value()
 
@@ -306,7 +345,7 @@ class GeneralPage(Page):
 
 
 class HostListsPage(Page):
-    """The same lists as File > Host lists…; the one picked here opens on Save."""
+    """The same lists as the list dropdown; the one picked here opens on Save."""
 
     def __init__(
         self,
@@ -315,12 +354,21 @@ class HostListsPage(Page):
         personal_list: Path,
         document: OpenList | None,
         added: list[Path],
+        found: list[Path] | None = None,
     ) -> None:
         super().__init__(_("Host lists"))
         self.view = HostListsView(
-            default_list=default_list, personal_list=personal_list, added=added, document=document
+            default_list=default_list,
+            personal_list=personal_list,
+            added=added,
+            document=document,
+            found=found,
         )
-        self.body.addWidget(self.view, 1)
+        box = Section(_("Lists"))
+        lists = QVBoxLayout(box.inner)
+        lists.setContentsMargins(0, 2, 0, 0)
+        lists.addWidget(self.view)
+        self.body.addWidget(box, 1)
         self.view.changed.connect(self.changed.emit)
 
     @property
@@ -335,93 +383,3 @@ class HostListsPage(Page):
 
     def is_valid(self) -> bool:
         return self.view.can_open(self.chosen())
-
-
-# ---- Appearance ----
-
-
-class AppearancePage(Page):
-    def __init__(self, registry: themes.Registry, current_id: str) -> None:
-        super().__init__(_("Appearance"))
-        self._group = QButtonGroup(self)
-        native = QGroupBox(_("Windows"))
-        native_layout = QVBoxLayout(native)
-        native_layout.addWidget(hint(_("Native Windows styling, with your accent color.")))
-        custom = QGroupBox(_("CapyPanel"))
-        custom_layout = QVBoxLayout(custom)
-        custom_layout.addWidget(hint(_("CapyPanel's own appearance, the same on every computer.")))
-        for theme in registry.all():
-            button = QRadioButton(theme.title())
-            button.setIcon(theme_swatch(theme))
-            button.setIconSize(SWATCH.size().toSize())
-            button.setProperty("theme_id", theme.id)
-            button.setChecked(theme.id == current_id)
-            self._group.addButton(button)
-            (native_layout if theme.engine == "native" else custom_layout).addWidget(button)
-        self.body.addWidget(native)
-        self.body.addWidget(custom)
-        self.body.addWidget(hint(_("You can also change the theme under View > Theme.")))
-        self.body.addStretch(1)
-
-    def theme_id(self) -> str:
-        button = self._group.checkedButton()
-        return str(button.property("theme_id")) if button else themes.DEFAULT_THEME.id
-
-    def buttons(self) -> list[QRadioButton]:
-        return [b for b in self._group.buttons() if isinstance(b, QRadioButton)]
-
-
-SWATCH = QRectF(0, 0, 44, 30)
-WINDOWS_BLUE = QColor("#0078d4")  # a stand-in: the real accent is only known once applied
-
-
-def theme_swatch(theme: themes.Theme) -> QIcon:
-    """A tiny picture of the theme: background, header bar, a pane with a selected row."""
-    pixmap = QPixmap(SWATCH.size().toSize())
-    pixmap.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    if theme.scheme == "system":  # follow system: half light, half dark
-        half = SWATCH.width() / 2
-        _paint_scheme(painter, _swatch_colors(theme, "light"), QRectF(0, 0, half, SWATCH.height()))
-        _paint_scheme(
-            painter, _swatch_colors(theme, "dark"), QRectF(half, 0, half, SWATCH.height())
-        )
-    else:
-        _paint_scheme(painter, _swatch_colors(theme, theme.scheme), SWATCH)
-    painter.setPen(QColor(128, 128, 128))
-    painter.setBrush(Qt.BrushStyle.NoBrush)
-    painter.drawRoundedRect(SWATCH.adjusted(0.5, 0.5, -0.5, -0.5), 4, 4)
-    painter.end()
-    return QIcon(pixmap)
-
-
-def _swatch_colors(theme: themes.Theme, scheme: str) -> dict[str, str]:
-    if theme.engine == "custom":
-        c = theme.colors
-        return {"bg": c["bg"], "chrome": c["chrome"], "card": c["card"], "border": c["border"],
-                "sel": c["sel_solid"], "text": c["text2"]}  # fmt: skip
-    t = themes.NATIVE_TOKENS[scheme]
-    sel = themes.selection_tint(WINDOWS_BLUE, t["card"], t["text"])
-    return {"bg": t["bg"], "chrome": t["chrome"], "card": t["card"], "border": t["border"],
-            "sel": sel, "text": t["text2"]}  # fmt: skip
-
-
-def _paint_scheme(painter: QPainter, c: dict[str, str], area: QRectF) -> None:
-    painter.save()
-    painter.setClipRect(area)
-    painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(QColor(c["bg"]))
-    painter.drawRoundedRect(SWATCH, 4, 4)
-    painter.setBrush(QColor(c["chrome"]))
-    painter.drawRect(QRectF(0, 0, SWATCH.width(), 7))
-    pane = QRectF(5, 10, SWATCH.width() - 10, SWATCH.height() - 14)
-    painter.setPen(QColor(c["border"]))
-    painter.setBrush(QColor(c["card"]))
-    painter.drawRect(pane)
-    painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(QColor(c["sel"]))
-    painter.drawRect(QRectF(pane.left() + 1, pane.top() + 3, pane.width() - 2, 5))
-    painter.setBrush(QColor(c["text"]))
-    painter.drawRect(QRectF(pane.left() + 4, pane.top() + 11, pane.width() * 0.5, 2))
-    painter.restore()

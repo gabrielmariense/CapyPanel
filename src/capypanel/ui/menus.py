@@ -14,7 +14,7 @@ from PySide6.QtGui import (
     QPaintEvent,
     QPalette,
 )
-from PySide6.QtWidgets import QMenu, QWidget
+from PySide6.QtWidgets import QComboBox, QMenu, QWidget
 
 SHORTCUT_GAP = 4  # spaces kept between an item's text and its shortcut
 SHORTCUT_RIGHT = 12  # px from the menu item's right edge, in line with a submenu's arrow
@@ -93,6 +93,29 @@ class ShortcutLayer(QWidget):
                 area = QRect(box.left(), box.top(), box.width() - SHORTCUT_RIGHT, box.height())
                 align = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
                 painter.drawText(area, align, keys)
+
+
+class MenuCombo(QComboBox):
+    """A dropdown that opens a menu instead of a list, so it can hold submenus and commands, and
+    still looks and sizes like the other dropdowns. Its one item is the text shown."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._menu = QMenu(self)
+
+    def menu(self) -> QMenu:
+        return self._menu
+
+    def text(self) -> str:
+        return self.currentText()
+
+    def setText(self, text: str) -> None:
+        self.clear()
+        self.addItem(text)
+
+    def showPopup(self) -> None:
+        self._menu.setMinimumWidth(self.width())
+        self._menu.popup(self.mapToGlobal(self.rect().bottomLeft()))
 
 
 class StayOpenMenu(QMenu):

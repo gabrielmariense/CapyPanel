@@ -1,4 +1,4 @@
-"""Inventory > Export hosts…: pick the hosts and the columns, see every row, then save a CSV
+"""The toolbar's Report: pick the hosts and the columns, see every row, then save a CSV
 file or copy the rows for Excel. Status and logged-on users come from the last Refresh, which
 can be run again from here."""
 
@@ -8,7 +8,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from PySide6.QtCore import QModelIndex, QStandardPaths, Qt, QUrl
+from PySide6.QtCore import QModelIndex, QPoint, QStandardPaths, Qt, QUrl
 from PySide6.QtGui import QDesktopServices, QGuiApplication, QShowEvent
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QStyledItemDelegate,
     QStyleOptionViewItem,
+    QToolTip,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -54,7 +55,7 @@ SECTIONS = (
     (N_("Last check"), ("status", "users")),
 )
 CHECKED = ("status", "users")  # from the last Refresh, kept in memory only
-FULL_BACKUP = ("name", "address", "group", "tags", "notes")  # what Import hosts reads back
+FOR_IMPORT = ("name", "address", "group", "tags", "notes")  # what Import hosts reads back
 PRESETS_KEY, LAST_KEY, FOLDER_KEY = "export_presets", "export_columns", "export_folder"
 DEPTH = Qt.ItemDataRole.UserRole + 1
 WIDEST = 240  # px: the preview's widest column
@@ -90,7 +91,7 @@ class ExportDialog(QDialog):
         """results: a host's status and users texts ("" when not checked). refresh and stop
         run the main window's Refresh; progress is (done, total) while one runs."""
         super().__init__(parent)
-        self.setWindowTitle(_("Export hosts"))
+        self.setWindowTitle(_("Report"))
         self._hosts = host_list
         self._sources = list(sources)
         self._list_name = list_name
@@ -106,7 +107,7 @@ class ExportDialog(QDialog):
         for source in self._sources:
             self.source.addItem(source.label)
             self.source.setItemData(self.source.count() - 1, source.depth, DEPTH)
-        self.source.setCurrentIndex(current)
+        self.source.setCurrentIndex(current)  # what the window shows now
         self.preset = QComboBox()
         self.preset.setPlaceholderText(_("Custom"))  # ticks that match no preset
         self.save_preset = QPushButton(_("&Save as preset…"))
@@ -170,7 +171,8 @@ class ExportDialog(QDialog):
         self.export_button = self.buttons.addButton(_("&Export…"), role.ActionRole)
         self.copy_button = self.buttons.addButton(_("&Copy"), role.ActionRole)
         self.copy_button.setToolTip(_("Copies every row, to paste into Excel"))
-        self.buttons.addButton(QDialogButtonBox.StandardButton.Cancel)
+        # Close: nothing to cancel, every choice here is kept as soon as it's made.
+        self.buttons.addButton(QDialogButtonBox.StandardButton.Close)
         self.buttons.rejected.connect(self.reject)
         self._no_default_buttons()
 
@@ -183,7 +185,7 @@ class ExportDialog(QDialog):
 
         self._fill_presets()
         last = prefs.get(LAST_KEY)
-        self._tick(_known(last) if isinstance(last, list) else FULL_BACKUP)
+        self._tick(_known(last) if isinstance(last, list) else FOR_IMPORT)
         self.source.currentIndexChanged.connect(self._update)
         self.preset.activated.connect(self._preset_picked)
         self.save_preset.clicked.connect(self._save_as_preset)
@@ -232,7 +234,7 @@ class ExportDialog(QDialog):
             box.setChecked(key in columns)
             box.blockSignals(False)
 
-    # ---- presets: "Full backup", then the user's own ----
+    # ---- presets: "For Import", then the user's own ----
 
     def _presets(self) -> dict[str, list[str]]:
         saved = self._prefs.get(PRESETS_KEY)
@@ -243,10 +245,10 @@ class ExportDialog(QDialog):
     def _fill_presets(self) -> None:
         self.preset.blockSignals(True)
         self.preset.clear()
-        self.preset.addItem(_("Full backup"), list(FULL_BACKUP))
+        self.preset.addItem(_("For Import"), list(FOR_IMPORT))
         self.preset.setItemData(
             0,
-            _("Every host field, in the format Import hosts can read back."),
+            _("The hosts' own fields, which Import hosts reads back: to move hosts to a list."),
             Qt.ItemDataRole.ToolTipRole,
         )
         for name, columns in sorted(self._presets().items(), key=lambda p: p[0].casefold()):
@@ -271,7 +273,7 @@ class ExportDialog(QDialog):
         name = name.strip()
         if not ok or not name:
             return
-        if name.casefold() == _("Full backup").casefold():
+        if name.casefold() == _("For Import").casefold():
             QMessageBox.warning(self, _("Save as preset"), _("That name is taken."))
             return
         presets = self._presets()
@@ -297,6 +299,7 @@ class ExportDialog(QDialog):
     def _ticks_changed(self) -> None:
         self._match_preset()
         self._update()
+        self._remember()
 
     def _update(self) -> None:
         """The preview, the "not checked" count and which buttons work."""
@@ -361,19 +364,22 @@ class ExportDialog(QDialog):
     # ---- saving or copying ----
 
     def _remember(self) -> None:
+        """The columns, kept at once: closing never loses them. The hosts follow what the main
+        window shows each time."""
         self._prefs[LAST_KEY] = self.columns()
         self._save_prefs()
 
     def _copy(self) -> None:
         text = write_csv(self.header(), self.rows(), "\t")  # tabs: Excel pastes them as columns
         QGuiApplication.clipboard().setText(text)
-        self._remember()
         source = self._sources[self.source.currentIndex()]
         n = len(source.hosts)
         self.outcome = ngettext(
             "Copied {n} host from {source}.", "Copied {n} hosts from {source}.", n
         ).format(n=n, source=source.name)
-        self.accept()
+        # The window stays open, to copy other hosts or save a file next.
+        button = self.copy_button
+        QToolTip.showText(button.mapToGlobal(QPoint(0, button.height())), self.outcome, button)
 
     def _export(self) -> None:
         source = self._sources[self.source.currentIndex()]
@@ -385,7 +391,7 @@ class ExportDialog(QDialog):
         name = self._list_name if whole else f"{self._list_name} - {source.name}"
         name, _filter = QFileDialog.getSaveFileName(
             self,
-            _("Export hosts"),
+            _("Report"),
             str(Path(folder) / f"{_file_safe(name)}.csv"),
             _("CSV files (*.csv)"),
         )
@@ -400,7 +406,7 @@ class ExportDialog(QDialog):
         except OSError as e:
             QMessageBox.warning(
                 self,
-                _("Export hosts"),
+                _("Report"),
                 _("Couldn't save “{path}”: {error}").format(path=path, error=e),
             )
             return
@@ -408,16 +414,16 @@ class ExportDialog(QDialog):
         self._remember()
         n = len(source.hosts)
         self.outcome = ngettext(
-            "{n} host exported from {source}.", "{n} hosts exported from {source}.", n
+            "Report saved: {n} host from {source}.", "Report saved: {n} hosts from {source}.", n
         ).format(n=n, source=source.name)
         self.accept()
         exported_message(self.parentWidget(), self.outcome, path)
 
 
 def exported_message(parent: QWidget | None, text: str, path: Path) -> None:
-    """ "2 hosts exported from Front desk.", with the file, and buttons to open it or its
+    """ "Report saved: 2 hosts from Front desk.", with the file, and buttons to open it or its
     folder."""
-    box = QMessageBox(QMessageBox.Icon.Information, _("Export hosts"), text, parent=parent)
+    box = QMessageBox(QMessageBox.Icon.Information, _("Report"), text, parent=parent)
     box.setInformativeText(str(path))
     for label in box.findChildren(QLabel, "qt_msgbox_informativelabel"):
         label.setWordWrap(False)  # a path breaks badly: the box widens instead
