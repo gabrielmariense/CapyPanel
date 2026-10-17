@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 20:32-0300\n"
+"POT-Creation-Date: 2026-10-17 20:46-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -542,12 +542,6 @@ msgstr ""
 msgid "Default group"
 msgstr ""
 
-msgid "Default list"
-msgstr ""
-
-msgid "Default list: shared by everyone on this PC."
-msgstr ""
-
 #, python-brace-format
 msgid "Default: {profile}"
 msgstr ""
@@ -560,6 +554,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
+msgstr ""
+
+msgid "Detect"
 msgstr ""
 
 msgid "Disconnected"
@@ -614,7 +611,10 @@ msgstr ""
 msgid "Files"
 msgstr ""
 
-msgid "Find automatically"
+msgid "Find it by itself again, not at the path you chose"
+msgstr ""
+
+msgid "Folder"
 msgstr ""
 
 msgid "For Import"
@@ -776,9 +776,6 @@ msgid "List"
 msgstr ""
 
 msgid "Lists"
-msgstr ""
-
-msgid "Lists folder"
 msgstr ""
 
 msgid "Lists saved in a lists folder show up by themselves."
@@ -1006,12 +1003,6 @@ msgstr ""
 msgid "Personal"
 msgstr ""
 
-msgid "Personal list"
-msgstr ""
-
-msgid "Personal list: only yours."
-msgstr ""
-
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr ""
 
@@ -1202,6 +1193,9 @@ msgid "Show this group &first"
 msgstr ""
 
 msgid "Show users' do&main"
+msgstr ""
+
+msgid "Signs in with"
 msgstr ""
 
 msgid "Some changes aren't saved yet."
@@ -1454,6 +1448,9 @@ msgstr ""
 msgid "Tick Status or Logged-on users to check them"
 msgstr ""
 
+msgid "Tool"
+msgstr ""
+
 msgid "Type"
 msgstr ""
 
@@ -1502,6 +1499,9 @@ msgid "Viewer settings:"
 msgstr ""
 
 msgid "Warning"
+msgstr ""
+
+msgid "Where"
 msgstr ""
 
 msgid "Where CapyPanel keeps its files"
@@ -1556,6 +1556,9 @@ msgid "Your lists"
 msgstr ""
 
 msgid "Your lists: your personal list, and every list saved there, only for you."
+msgstr ""
+
+msgid "Yours"
 msgstr ""
 
 msgid "active"

@@ -350,7 +350,9 @@ def test_profile_rows_never_overlap(window: MainWindow) -> None:
         dialog.show()
         QApplication.processEvents()
         rows = dialog.connections.list
-        first, second = rows.visualItemRect(rows.item(0)), rows.visualItemRect(rows.item(1))
+        top, below = rows.topLevelItem(0), rows.topLevelItem(1)
+        assert top is not None and below is not None
+        first, second = rows.visualItemRect(top), rows.visualItemRect(below)
         assert second.top() >= first.bottom(), theme
         dialog.close()
 

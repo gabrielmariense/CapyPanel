@@ -32,15 +32,25 @@ def _answer(monkeypatch: pytest.MonkeyPatch, fill: Callable[[ProfileDialog], Non
 
 
 def _select(page: ConnectionsPage, profile_id: str) -> None:
-    for row in range(page.list.count()):
-        item = page.list.item(row)
-        if item is not None and item.data(Qt.ItemDataRole.UserRole) == profile_id:
+    for row in range(page.list.topLevelItemCount()):
+        item = page.list.topLevelItem(row)
+        if item is not None and item.data(0, Qt.ItemDataRole.UserRole) == profile_id:
             page.list.setCurrentItem(item)
             item.setSelected(True)
 
 
 def _names(page: ConnectionsPage) -> list[str]:
-    return [item.text() for row in range(page.list.count()) if (item := page.list.item(row))]
+    rows = range(page.list.topLevelItemCount())
+    return [item.text(0) for row in rows if (item := page.list.topLevelItem(row))]
+
+
+def _tool_row(page: ConnectionsPage, tool_id: str) -> tuple[str, str]:
+    """The tool's status and the tooltip on it."""
+    for row in range(page.tools.topLevelItemCount()):
+        item = page.tools.topLevelItem(row)
+        if item is not None and item.data(0, Qt.ItemDataRole.UserRole) == tool_id:
+            return item.text(1), item.toolTip(1)
+    raise AssertionError(tool_id)
 
 
 def test_a_new_profile_is_written_only_on_save(
@@ -158,8 +168,7 @@ def test_tool_paths_chosen_here_also_wait_for_save(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     page = ConnectionsPage(catalogs, None)
-    texts = [w.text() for w in page.findChildren(connections.QLabel)]
-    assert any("Not found" in t for t in texts)  # RealVNC
+    assert _tool_row(page, "realvnc")[0] == "✗ Not found"
     monkeypatch.setattr(
         QFileDialog, "getOpenFileName", lambda *_a, **_k: (r"D:\Portable\vncviewer.exe", "")
     )
@@ -267,15 +276,18 @@ def test_remote_tools_show_a_state_and_only_the_actions_that_fit(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     page = ConnectionsPage(catalogs, None)  # UltraVNC found by itself, RealVNC missing
-    assert page.tool_status["ultravnc"].text() == "✓ Found"
-    assert page.tool_status["ultravnc"].toolTip() == r"C:\Tools\vncviewer.exe"  # not on the page
-    assert list(page.tool_buttons["ultravnc"]) == ["locate"]
-    assert page.tool_buttons["ultravnc"]["locate"].text() == "Change path…"
-    assert page.tool_status["realvnc"].text() == "✗ Not found"
-    assert list(page.tool_buttons["realvnc"]) == ["locate", "download"]
+    assert _tool_row(page, "ultravnc") == ("✓ Found", r"C:\Tools\vncviewer.exe")
+    page.select_tool("ultravnc")  # the buttons act on the tool picked
+    assert page.tool_actions("ultravnc") == ["locate"]
+    assert page.locate_button.text() == "Change path…" and page.locate_button.isEnabled()
+    assert not page.automatic_button.isEnabled() and not page.download_button.isEnabled()
+    assert _tool_row(page, "realvnc")[0] == "✗ Not found"
+    page.select_tool("realvnc")
+    assert page.tool_actions("realvnc") == ["locate", "download"]
+    assert page.locate_button.text() == "Locate…" and page.download_button.isEnabled()
     opened: list[QUrl] = []
     monkeypatch.setattr(connections.QDesktopServices, "openUrl", lambda url: opened.append(url))
-    page.tool_buttons["realvnc"]["download"].click()
+    page.download_button.click()
     assert [u.toString() for u in opened] == ["https://www.realvnc.com/en/connect/download/viewer/"]
 
     def chosen_only(tool: Any) -> Path | None:
@@ -285,9 +297,10 @@ def test_remote_tools_show_a_state_and_only_the_actions_that_fit(
     monkeypatch.setattr(
         QFileDialog, "getOpenFileName", lambda *_a, **_k: (r"D:\Apps\vncviewer.exe", "")
     )
-    page.tool_buttons["realvnc"]["locate"].click()
-    assert page.tool_status["realvnc"].text() == "✓ Your choice"
-    assert list(page.tool_buttons["realvnc"]) == ["locate", "automatic"]
+    page.locate_button.click()
+    assert _tool_row(page, "realvnc")[0] == "✓ Your choice"
+    assert page.tool_actions("realvnc") == ["locate", "automatic"]
+    assert page.automatic_button.isEnabled()  # still on RealVNC after the table refilled
     assert not (catalogs.tools.folder / "_paths.json").exists()  # only on Save
     connections.apply(catalogs, page.changes())
     entry = catalogs.tools.find("realvnc")
@@ -321,8 +334,8 @@ def test_files_that_arent_used_are_named_with_the_reason(
     page = ConnectionsPage(catalogs, None)
     assert not page.profiles_skipped.isHidden()
     assert page.profiles_skipped.text() == (
-        "2 files skipped: broken.json (can't be read), planted.json (made by another user)"
-    )
+        "• 2 files skipped: broken.json (can't be read), planted.json (made by another user)"
+    )  # a note, like the others
     assert str(folder / "planted.json") in page.profiles_skipped.toolTip()  # where, for a fix
     assert page.tools_skipped.isHidden()  # nothing skipped there
 

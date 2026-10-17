@@ -14,15 +14,13 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QFormLayout,
-    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QListWidget,
-    QListWidgetItem,
     QMessageBox,
     QPushButton,
     QSpinBox,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -37,8 +35,9 @@ from capypanel.core.tools.profile_store import UNTRUSTED, make_id
 from capypanel.core.tools.profiles import ConnectionProfile, login_label, logins_of
 from capypanel.ui.connect import ask_for_program
 from capypanel.ui.hosts import confirm
-from capypanel.ui.notes import hint
-from capypanel.ui.settings.pages import Page, PathLabel, Section, open_folder
+from capypanel.ui.notes import hint, notes
+from capypanel.ui.settings.pages import Page, Section, open_folder
+from capypanel.ui.tables import fit_rows, grid_table, with_buttons
 
 MAX_PROFILE_NAME = 64
 
@@ -268,7 +267,7 @@ def skipped_note(problems: list[tuple[Path, str]]) -> QLabel:
         )
         for path, reason in seen.items()
     ]
-    label = hint(
+    label = notes(  # a note like the page's others
         ngettext("{n} file skipped: {files}", "{n} files skipped: {files}", len(names)).format(
             n=len(names), files=", ".join(names)
         )
@@ -293,14 +292,10 @@ class ConnectionsPage(Page):
         self._settings: dict[str, bytes] = {}  # settings files chosen here, written on Save
 
         profiles_box = Section(_("Connection profiles"))
-        folder = PathLabel(self.store.folder)
         self.open_folder = QPushButton(_("Open folder"))
         self.open_folder.clicked.connect(lambda: open_folder(self.store.folder))
-        folder_row = QHBoxLayout()
-        folder_row.addWidget(folder, 1)
-        folder_row.addWidget(self.open_folder)
         # The folder is made at start; where this user couldn't, the app's own copies are shown.
-        self.builtin_note = hint(
+        self.builtin_note = notes(
             _("These are the built-in profiles: the folder is created when you save a change.")
             if self.can_edit
             else _("These are the built-in profiles: the folder isn't there yet.")
@@ -314,10 +309,11 @@ class ConnectionsPage(Page):
                 "folder can change them."
             )
         )
-        self.list = QListWidget()
-        self.list.setMaximumHeight(150)  # a few profiles; it scrolls when there are more
+        self.list = grid_table([_("Profile"), _("Tool"), _("Signs in with")])
+        self.list.setColumnWidth(0, 190)
+        self.list.setColumnWidth(1, 150)
         self.list.itemSelectionChanged.connect(self._update_buttons)
-        self.list.itemDoubleClicked.connect(lambda _item: self.edit())
+        self.list.itemDoubleClicked.connect(lambda *_a: self.edit())
         self.add_button = QPushButton(_("&Add…"))
         self.edit_button = QPushButton(_("&Edit…"))
         self.duplicate_button = QPushButton(_("D&uplicate…"))
@@ -326,33 +322,46 @@ class ConnectionsPage(Page):
         self.edit_button.clicked.connect(self.edit)
         self.duplicate_button.clicked.connect(self.duplicate)
         self.delete_button.clicked.connect(self.delete)
-        buttons = QVBoxLayout()
-        for button in (self.add_button, self.edit_button, self.duplicate_button,
-                       self.delete_button):  # fmt: skip
-            buttons.addWidget(button)
-        buttons.addStretch(1)
-        row = QHBoxLayout()
-        row.addWidget(self.list, 1)
-        row.addLayout(buttons)
+        profile_buttons = [
+            self.add_button, self.edit_button, self.duplicate_button, self.delete_button,
+            self.open_folder,
+        ]  # fmt: skip
         self.default = QComboBox()
         self.default.setEnabled(self.can_edit)
         default_row = QFormLayout()
         default_row.addRow(_("Hosts with no profile &use:"), self.default)
         inner = QVBoxLayout(profiles_box.inner)
         inner.setContentsMargins(0, 2, 0, 0)
-        inner.addLayout(folder_row)
-        inner.addWidget(self.builtin_note)
-        inner.addWidget(hint(access))
-        self.profiles_skipped = skipped_note(self.store.problems)
-        inner.addWidget(self.profiles_skipped)
-        inner.addLayout(row)
+        inner.addWidget(with_buttons(self.list, profile_buttons))
         inner.addLayout(default_row)
+        self.profiles_skipped = skipped_note(self.store.problems)
+        inner.addWidget(notes(access))
+        inner.addWidget(self.builtin_note)
+        inner.addWidget(self.profiles_skipped)
 
         tools_box = Section(_("Remote tools"))
         tools_layout = QVBoxLayout(tools_box.inner)
         tools_layout.setContentsMargins(0, 2, 0, 0)
+        # The same table as the profiles: the buttons act on the tool picked.
+        self.tools = grid_table([_("Tool"), _("Status"), _("Where")])
+        self.tools.setColumnWidth(0, 190)
+        self.tools.setColumnWidth(1, 150)
+        self.tools.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # a path keeps both ends
+        self.tools.itemSelectionChanged.connect(self._update_tool_buttons)
+        self.locate_button = QPushButton(_("Change path…"))
+        self.automatic_button = QPushButton(_("Detect"))
+        self.automatic_button.setToolTip(_("Find it by itself again, not at the path you chose"))
+        self.download_button = QPushButton(_("Download"))
+        for button, action in (
+            (self.locate_button, "locate"),
+            (self.automatic_button, "automatic"),
+            (self.download_button, "download"),
+        ):
+            button.clicked.connect(lambda _c=False, a=action: self._picked_tool_action(a))
+        tool_buttons = [self.locate_button, self.automatic_button, self.download_button]
+        tools_layout.addWidget(with_buttons(self.tools, tool_buttons))
         tools_layout.addWidget(
-            hint(
+            notes(
                 _("Where each tool is installed, set once for everyone on this PC.")
                 if self.can_edit_tools
                 else _(
@@ -363,9 +372,6 @@ class ConnectionsPage(Page):
         )
         self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])
         tools_layout.addWidget(self.tools_skipped)
-        self._tools_grid = QGridLayout()
-        self._tools_grid.setColumnStretch(2, 1)
-        tools_layout.addLayout(self._tools_grid)
 
         self.body.addWidget(profiles_box)
         self.body.addWidget(tools_box)
@@ -381,19 +387,24 @@ class ConnectionsPage(Page):
         self.list.clear()
         self.default.clear()
         for profile in sorted(self._profiles.values(), key=lambda p: p.name.casefold()):
-            item = QListWidgetItem(profile.name)
-            item.setData(Qt.ItemDataRole.UserRole, profile.id)
-            self.list.addItem(item)
+            entry = self.catalogs.tools.find(profile.tool)
+            tool = entry.item.name if entry else profile.tool
+            item = QTreeWidgetItem([profile.name, tool, login_label(profile.login)])
+            item.setData(0, Qt.ItemDataRole.UserRole, profile.id)
+            for column in range(3):
+                item.setToolTip(column, item.text(column))  # whole, if the column cuts it
+            self.list.addTopLevelItem(item)
             if profile.id == select:
                 item.setSelected(True)
                 self.list.setCurrentItem(item)
             self.default.addItem(profile.name, profile.id)
         self.default.setCurrentIndex(max(self.default.findData(current_default), 0))
+        fit_rows(self.list)
         self._update_buttons()
 
     def _selected(self) -> ConnectionProfile | None:
         items = self.list.selectedItems()
-        return self._profiles.get(items[0].data(Qt.ItemDataRole.UserRole)) if items else None
+        return self._profiles.get(items[0].data(0, Qt.ItemDataRole.UserRole)) if items else None
 
     def _update_buttons(self) -> None:
         picked = self.can_edit and self._selected() is not None
@@ -528,44 +539,69 @@ class ConnectionsPage(Page):
         return tool
 
     def _fill_tools(self) -> None:
-        while self._tools_grid.count():
-            item = self._tools_grid.takeAt(0)
-            widget = item.widget() if item else None
-            if widget is not None:
-                widget.deleteLater()
-        self.tool_status: dict[str, QLabel] = {}
-        self.tool_buttons: dict[str, dict[str, QPushButton]] = {}
-        for row, entry in enumerate(self.catalogs.tools.all()):
+        picked = self._picked_tool()
+        self.tools.clear()
+        for entry in self.catalogs.tools.all():
             tool = self._tool_view(entry.item)
             found = detect.find_executable(tool)
             if found is None:
-                status = QLabel(_("✗ Not found"))
-                status.setToolTip(_("Install it, or locate its .exe."))
+                status, where = _("✗ Not found"), "—"
+                tip = _("Install it, or locate its .exe.")
             else:
-                status = QLabel(_("✓ Your choice") if tool.executable else _("✓ Found"))
-                status.setToolTip(str(found))  # the full path, without filling the page
-            # Only the actions that make sense in this state.
-            actions = {"locate": _("Change path…") if found else _("Locate…")}
-            if tool.executable:
-                actions["automatic"] = _("Find automatically")
-            if found is None and tool.website:
-                actions["download"] = _("Download")
-            buttons_row = QHBoxLayout()
-            buttons_row.setContentsMargins(0, 0, 0, 0)
-            buttons: dict[str, QPushButton] = {}
-            for action, text in actions.items():
-                button = QPushButton(text)
-                button.clicked.connect(lambda _c=False, t=tool, a=action: self._tool_action(t, a))
-                button.setEnabled(action == "download" or self.can_edit_tools)
-                buttons_row.addWidget(button)
-                buttons[action] = button
-            buttons_row.addStretch(1)
-            buttons_box = QWidget()
-            buttons_box.setLayout(buttons_row)
-            self._tools_grid.addWidget(QLabel(tool.name), row, 0)
-            self._tools_grid.addWidget(status, row, 1)
-            self._tools_grid.addWidget(buttons_box, row, 2)
-            self.tool_status[tool.id], self.tool_buttons[tool.id] = status, buttons
+                status = _("✓ Your choice") if tool.executable else _("✓ Found")
+                where = tip = str(found)
+            item = QTreeWidgetItem([tool.name, status, where])
+            item.setData(0, Qt.ItemDataRole.UserRole, tool.id)
+            for column in (1, 2):
+                item.setToolTip(column, tip)
+            self.tools.addTopLevelItem(item)
+            if picked is not None and picked.id == tool.id:
+                self.tools.setCurrentItem(item)
+        first = self.tools.topLevelItem(0)
+        if self.tools.currentItem() is None and first is not None:
+            self.tools.setCurrentItem(first)
+        fit_rows(self.tools)
+        self._update_tool_buttons()
+
+    def _picked_tool(self) -> ToolDefinition | None:
+        item = self.tools.currentItem() if hasattr(self, "tools") else None
+        entry = self.catalogs.tools.find(item.data(0, Qt.ItemDataRole.UserRole)) if item else None
+        return self._tool_view(entry.item) if entry else None
+
+    def tool_actions(self, tool_id: str) -> list[str]:
+        """What the buttons can do for a tool, in this state: locate, automatic, download."""
+        entry = self.catalogs.tools.find(tool_id)
+        if entry is None:
+            return []
+        tool = self._tool_view(entry.item)
+        found = detect.find_executable(tool)
+        actions = ["locate"]
+        if tool.executable:
+            actions.append("automatic")
+        if found is None and tool.website:
+            actions.append("download")
+        return actions
+
+    def select_tool(self, tool_id: str) -> None:
+        for index in range(self.tools.topLevelItemCount()):
+            item = self.tools.topLevelItem(index)
+            if item is not None and item.data(0, Qt.ItemDataRole.UserRole) == tool_id:
+                self.tools.setCurrentItem(item)
+
+    def _update_tool_buttons(self) -> None:
+        """Only the actions that make sense for the tool picked, in its state."""
+        tool = self._picked_tool()
+        actions = self.tool_actions(tool.id) if tool else []
+        found = tool is not None and detect.find_executable(tool) is not None
+        self.locate_button.setText(_("Change path…") if found else _("Locate…"))
+        self.locate_button.setEnabled("locate" in actions and self.can_edit_tools)
+        self.automatic_button.setEnabled("automatic" in actions and self.can_edit_tools)
+        self.download_button.setEnabled("download" in actions)
+
+    def _picked_tool_action(self, action: str) -> None:
+        tool = self._picked_tool()
+        if tool is not None:
+            self._tool_action(tool, action)
 
     def _tool_action(self, tool: ToolDefinition, action: str) -> None:
         if action == "locate":

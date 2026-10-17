@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 20:32-0300\n"
+"POT-Creation-Date: 2026-10-17 20:46-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -541,12 +541,6 @@ msgstr "Padrão ({port})"
 msgid "Default group"
 msgstr "Grupo padrão"
 
-msgid "Default list"
-msgstr "Lista padrão"
-
-msgid "Default list: shared by everyone on this PC."
-msgstr "Lista padrão: compartilhada por todos neste PC."
-
 #, python-brace-format
 msgid "Default: {profile}"
 msgstr "Padrão: {profile}"
@@ -560,6 +554,9 @@ msgstr "Excluir perfil de conexão"
 #, python-brace-format
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
 msgstr "Excluir o perfil de conexão “{profile}”? Todos neste PC deixam de tê-lo."
+
+msgid "Detect"
+msgstr "Detectar"
 
 msgid "Disconnected"
 msgstr "Desconectado"
@@ -609,8 +606,11 @@ msgstr "Arquivo não encontrado"
 msgid "Files"
 msgstr "Arquivos"
 
-msgid "Find automatically"
-msgstr "Encontrar automaticamente"
+msgid "Find it by itself again, not at the path you chose"
+msgstr "Encontrar sozinho de novo, não no caminho que você escolheu"
+
+msgid "Folder"
+msgstr "Pasta"
 
 msgid "For Import"
 msgstr "Para importar"
@@ -764,9 +764,6 @@ msgstr "Lista"
 
 msgid "Lists"
 msgstr "Listas"
-
-msgid "Lists folder"
-msgstr "Pasta de listas"
 
 msgid "Lists saved in a lists folder show up by themselves."
 msgstr "Listas salvas numa pasta de listas aparecem sozinhas."
@@ -986,12 +983,6 @@ msgstr "Cole uma lista abaixo, ou"
 msgid "Personal"
 msgstr "Pessoal"
 
-msgid "Personal list"
-msgstr "Lista pessoal"
-
-msgid "Personal list: only yours."
-msgstr "Lista pessoal: só sua."
-
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
 
@@ -1181,6 +1172,9 @@ msgstr "Mostrar este grupo &primeiro"
 
 msgid "Show users' do&main"
 msgstr "Mostrar do&mínio dos usuários"
+
+msgid "Signs in with"
+msgstr "Entra com"
 
 msgid "Some changes aren't saved yet."
 msgstr "Algumas alterações ainda não foram salvas."
@@ -1411,6 +1405,9 @@ msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyP
 msgid "Tick Status or Logged-on users to check them"
 msgstr "Marque Status ou Usuários logados para verificá-los"
 
+msgid "Tool"
+msgstr "Ferramenta"
+
 msgid "Type"
 msgstr "Tipo"
 
@@ -1461,6 +1458,9 @@ msgstr "Configurações do visualizador:"
 msgid "Warning"
 msgstr "Aviso"
 
+msgid "Where"
+msgstr "Onde"
+
 msgid "Where CapyPanel keeps its files"
 msgstr "Onde o CapyPanel guarda os arquivos"
 
@@ -1510,6 +1510,9 @@ msgstr "Suas listas"
 
 msgid "Your lists: your personal list, and every list saved there, only for you."
 msgstr "Suas listas: sua lista pessoal e toda lista salva ali, só para você."
+
+msgid "Yours"
+msgstr "Sua"
 
 msgid "active"
 msgstr "ativa"

@@ -101,16 +101,16 @@ def available_lists(
 
 
 def list_names(paths: list[Path], *, default: Path, personal: Path) -> list[str]:
-    """How lists are named everywhere: "Default list", "Personal list", any other by its file
-    name. Two files with the same name get their folder's name too."""
+    """How lists are named everywhere: "Default", "Personal", any other by its file name.
+    Two files with the same name get their folder's name too."""
     stems = [p.stem.casefold() for p in paths]
     names = []
     for path in paths:
         kind = list_kind(path, default=default, personal=personal)
         if kind is ListKind.DEFAULT:
-            names.append(_("Default list"))
+            names.append(_("Default"))
         elif kind is ListKind.PERSONAL:
-            names.append(_("Personal list"))
+            names.append(_("Personal"))
         elif stems.count(path.stem.casefold()) > 1:
             names.append(f"{path.stem} ({path.parent.name})")
         else:

@@ -115,12 +115,12 @@ def test_host_lists_shows_every_list_with_the_open_one_in_bold(
     window.open_list(office)  # an opened list is added to Host lists from now on
     view = window.settings_dialog().host_lists.view
     assert _rows(view) == [
-        ("Default", "Read/write", False),  # the first start created it
-        ("Personal", "Created when opened", False),
+        ("Shared", "Read/write", False),  # the default list: the first start created it
+        ("Yours", "Created when opened", False),  # the personal list
         ("Added", "Read/write", True),
     ]
     names = [view.tree.topLevelItem(i).text(0) for i in range(3)]  # type: ignore[union-attr]
-    assert names == ["Default list", "Personal list", "office (in use)"]
+    assert names == ["Default", "Personal", "office (in use)"]
     os.chmod(office, stat.S_IREAD)
     try:
         assert _rows(window.settings_dialog().host_lists.view)[2][1] == "Read-only"
@@ -194,7 +194,7 @@ def test_removing_a_list_forgets_it_but_never_deletes_the_file(
     view.select(office)
     assert view.remove_button.isEnabled()
     view.remove_button.click()
-    assert [r[0] for r in _rows(view)] == ["Default", "Personal"]
+    assert [r[0] for r in _rows(view)] == ["Shared", "Yours"]  # the default and personal lists
     view.select(window._default_list)
     assert not view.remove_button.isEnabled()  # the default and personal lists always stay
     window.apply_settings(dialog.choices())
@@ -249,7 +249,7 @@ def test_open_list_from_the_dropdown_opens_a_list_and_keeps_it_there(
     assert window._prefs["host_lists"] == [str(office)]
     window.list_picker.menu().aboutToShow.emit()  # filled as it opens
     texts = [label(a) for a in window.list_picker.menu().actions() if a.text()]
-    assert texts[:3] == ["Default list", "Personal list", "office"]  # by file name
+    assert texts[:3] == ["Default", "Personal", "office"]  # by file name
     assert texts[3:] == ["&New list…", "&Open list…", "&Manage host lists…"]
     assert window.list_picker.text() == "office" and window.windowTitle().startswith("office —")
 

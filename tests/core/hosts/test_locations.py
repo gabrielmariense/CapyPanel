@@ -118,5 +118,5 @@ def test_lists_in_the_lists_folders_show_up_by_themselves(
     assert lists == [default, personal, *found, added]  # each once
     names = locations.list_names(lists, default=default, personal=personal)
     assert names == [
-        "Default list", "Personal list", "branch (lists)", "Wards", "my-lab", "branch (share)"
+        "Default", "Personal", "branch (lists)", "Wards", "my-lab", "branch (share)"
     ]  # fmt: skip

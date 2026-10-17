@@ -7,11 +7,8 @@ from pathlib import Path
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QFileDialog,
-    QHBoxLayout,
-    QHeaderView,
     QMessageBox,
     QPushButton,
-    QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -24,6 +21,7 @@ from capypanel.core.hosts.locations import Access, ListKind
 from capypanel.core.i18n import _
 from capypanel.ui.hosts import list_file_filter
 from capypanel.ui.notes import notes
+from capypanel.ui.tables import fit_rows, grid_table, with_buttons
 
 ROLE_PATH = Qt.ItemDataRole.UserRole
 
@@ -65,13 +63,7 @@ class HostListsView(QWidget):
         ]  # fmt: skip
         self.written: list[Path] = []  # files created here, so opening them reloads them
 
-        self.tree = QTreeWidget()
-        self.tree.setObjectName("grid")  # lines between rows and columns
-        self.tree.setRootIsDecorated(False)
-        self.tree.setHeaderLabels([_("List"), _("Type"), _("Access")])  # the path: tooltip
-        header = self.tree.header()
-        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)  # drag to resize
-        header.setStretchLastSection(True)
+        self.tree = grid_table([_("List"), _("Type"), _("Access")])  # the path: tooltip
         self.tree.setColumnWidth(0, 170)
         self.tree.setColumnWidth(1, 105)
         self.add_button = QPushButton(_("&Add existing…"))
@@ -80,22 +72,12 @@ class HostListsView(QWidget):
         self.copy_button.setEnabled(document is not None)
         self.remove_button = QPushButton(_("&Remove from the list"))
         self.remove_button.setToolTip(_("Forgets it here; the file itself is never deleted"))
-        # A column beside the list, as on the Connections page.
-        buttons = QVBoxLayout()
-        for button in (self.add_button, self.new_button, self.copy_button, self.remove_button):
-            button.setAutoDefault(False)  # Enter opens the list, never adds one
-            buttons.addWidget(button)
-        buttons.addStretch(1)
-        row = QHBoxLayout()
-        row.addWidget(self.tree, 1)
-        row.addLayout(buttons)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addLayout(row, 1)
+        buttons = [self.add_button, self.new_button, self.copy_button, self.remove_button]
+        layout.addWidget(with_buttons(self.tree, buttons))
         layout.addWidget(
             notes(
-                _("Default list: shared by everyone on this PC."),
-                _("Personal list: only yours."),
                 _("Lists saved in a lists folder show up by themselves."),
                 _("Hover over a list to see where it is."),
                 _("Removing a list from here never deletes its file."),
@@ -154,11 +136,7 @@ class HostListsView(QWidget):
         names = locations.list_names(paths, default=self._default, personal=self._personal)
         for path, name in zip(paths, names, strict=True):
             kind = self._kind(path)
-            kind_text = {
-                ListKind.DEFAULT: _("Default"),
-                ListKind.PERSONAL: _("Personal"),
-                ListKind.SHARED: _("Lists folder") if self._in_folder(path) else _("Added"),
-            }[kind]
+            kind_text = self._type_text(path, kind)
             access = locations.list_access(path, shared=kind is ListKind.DEFAULT)
             is_open = current is not None and locations.same_path(path, current)
             if is_open:
@@ -174,9 +152,21 @@ class HostListsView(QWidget):
                 for column in range(3):
                     item.setFont(column, font)
             self.tree.addTopLevelItem(item)
+        fit_rows(self.tree)
         if select is not None:
             self.select(select)
         self._selection_changed()
+
+    def _type_text(self, path: Path, kind: ListKind) -> str:
+        """Who it's for: shared with everyone on the PC, yours alone, or added from elsewhere."""
+        if kind is ListKind.PERSONAL:
+            return _("Yours")
+        if kind is ListKind.DEFAULT:
+            return _("Shared")
+        if self._in_folder(path):
+            mine = locations.same_path(path.parent, self._personal.parent)
+            return _("Yours") if mine else _("Shared")
+        return _("Added")
 
     def _in_folder(self, path: Path) -> bool:
         return any(locations.same_path(path, p) for p in self._found)

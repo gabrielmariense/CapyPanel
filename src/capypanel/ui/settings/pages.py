@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QSpinBox,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -29,6 +30,7 @@ from capypanel.ui.host_lists import HostListsView
 from capypanel.ui.hosts import group_path
 from capypanel.ui.menus import MenuCombo
 from capypanel.ui.notes import notes
+from capypanel.ui.tables import fit_rows, grid_table, with_buttons
 from capypanel.ui.themes import engine as themes
 
 
@@ -154,9 +156,6 @@ class FilesPage(Page):
     def __init__(self, paths: settings.Paths) -> None:
         super().__init__(_("Files"))
         files = Section(_("Where CapyPanel keeps its files"))
-        grid = QGridLayout(files.inner)
-        grid.setContentsMargins(0, 2, 0, 0)
-        grid.setColumnStretch(1, 1)
         folders = (
             (_("Shared files"), paths.root),
             (_("Shared lists"), paths.shared_lists_dir),
@@ -164,12 +163,25 @@ class FilesPage(Page):
             (_("Your lists"), paths.user_lists_dir),
             (_("Logs"), paths.log_dir),
         )
-        for row, (label, folder) in enumerate(folders):
-            button = QPushButton(_("Open folder"))
-            button.clicked.connect(lambda _checked=False, f=folder: open_folder(f))
-            grid.addWidget(QLabel(label), row, 0)
-            grid.addWidget(PathLabel(folder), row, 1)
-            grid.addWidget(button, row, 2)
+        # The one table design, its button beside it; a double-click opens the folder too.
+        self.folders = grid_table([_("Folder"), _("Where")])
+        self.folders.setColumnWidth(0, 170)
+        self.folders.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # a path keeps both ends
+        for label, folder in folders:
+            item = QTreeWidgetItem([label, str(folder)])
+            item.setToolTip(1, str(folder))
+            item.setData(0, Qt.ItemDataRole.UserRole, str(folder))
+            self.folders.addTopLevelItem(item)
+        first = self.folders.topLevelItem(0)
+        if first is not None:
+            self.folders.setCurrentItem(first)
+        fit_rows(self.folders)
+        self.open_button = QPushButton(_("Open folder"))
+        self.open_button.clicked.connect(self._open_picked)
+        self.folders.itemDoubleClicked.connect(lambda *_a: self._open_picked())
+        grid = QVBoxLayout(files.inner)
+        grid.setContentsMargins(0, 2, 0, 0)
+        grid.addWidget(with_buttons(self.folders, [self.open_button]))
         lines = [
             _("Shared files: connection profiles and tools, for everyone."),
             _("Shared lists: the default list, and every list saved there, for everyone."),
@@ -179,9 +191,14 @@ class FilesPage(Page):
         ]
         if paths.portable:
             lines.append(_("Portable mode: everything stays in the app's own folder."))
-        grid.addWidget(notes(*lines), len(folders), 0, 1, 3)
+        grid.addWidget(notes(*lines))
         self.body.addWidget(files)
         self.body.addStretch(1)
+
+    def _open_picked(self) -> None:
+        item = self.folders.currentItem()
+        if item is not None:
+            open_folder(Path(item.data(0, Qt.ItemDataRole.UserRole)))
 
 
 # ---- Hosts: General ----
@@ -368,7 +385,8 @@ class HostListsPage(Page):
         lists = QVBoxLayout(box.inner)
         lists.setContentsMargins(0, 2, 0, 0)
         lists.addWidget(self.view)
-        self.body.addWidget(box, 1)
+        self.body.addWidget(box)
+        self.body.addStretch(1)
         self.view.changed.connect(self.changed.emit)
 
     @property
