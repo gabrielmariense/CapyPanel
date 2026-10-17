@@ -57,7 +57,6 @@ SECTIONS = (
 CHECKED = ("status", "users")  # from the last Refresh, kept in memory only
 FOR_IMPORT = ("name", "address", "group", "tags", "notes")  # what Import hosts reads back
 PRESETS_KEY, LAST_KEY, FOLDER_KEY = "export_presets", "export_columns", "export_folder"
-SOURCE_KEY = "export_source"  # the hosts picked last, kept as soon as they're picked
 DEPTH = Qt.ItemDataRole.UserRole + 1
 WIDEST = 240  # px: the preview's widest column
 
@@ -71,7 +70,6 @@ class Source:
     name: str
     hosts: tuple[Host, ...]
     depth: int = 0  # a group's level: indented under its parent in the open list only
-    key: str = ""  # what it is ("all", "group:<id>"…): the last one picked opens next time
 
 
 class ExportDialog(QDialog):
@@ -109,12 +107,7 @@ class ExportDialog(QDialog):
         for source in self._sources:
             self.source.addItem(source.label)
             self.source.setItemData(self.source.count() - 1, source.depth, DEPTH)
-        # The hosts picked last time, if they're still there; else what the window shows.
-        keys = [s.key for s in self._sources]
-        last_source = prefs.get(SOURCE_KEY)
-        if isinstance(last_source, str) and last_source and last_source in keys:
-            current = keys.index(last_source)
-        self.source.setCurrentIndex(current)
+        self.source.setCurrentIndex(current)  # what the window shows now
         self.preset = QComboBox()
         self.preset.setPlaceholderText(_("Custom"))  # ticks that match no preset
         self.save_preset = QPushButton(_("&Save as preset…"))
@@ -194,7 +187,6 @@ class ExportDialog(QDialog):
         last = prefs.get(LAST_KEY)
         self._tick(_known(last) if isinstance(last, list) else FOR_IMPORT)
         self.source.currentIndexChanged.connect(self._update)
-        self.source.currentIndexChanged.connect(self._remember)
         self.preset.activated.connect(self._preset_picked)
         self.save_preset.clicked.connect(self._save_as_preset)
         self.delete_preset.clicked.connect(self._delete_preset)
@@ -372,9 +364,9 @@ class ExportDialog(QDialog):
     # ---- saving or copying ----
 
     def _remember(self) -> None:
-        """The columns and the hosts picked, kept at once: closing never loses them."""
+        """The columns, kept at once: closing never loses them. The hosts follow what the main
+        window shows each time."""
         self._prefs[LAST_KEY] = self.columns()
-        self._prefs[SOURCE_KEY] = self._sources[self.source.currentIndex()].key
         self._save_prefs()
 
     def _copy(self) -> None:

@@ -169,4 +169,4 @@ def test_choices_are_kept_at_once_and_copy_keeps_the_window_open(
         seen.extend([d.source.currentText(), d.columns()])
 
     _run(window, monkeypatch, reopen)
-    assert seen == ["Headquarters (1 host)", ["name"]]
+    assert seen == ["All hosts (2 hosts)", ["name"]]  # the hosts shown; the columns kept
