@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 18:02-0300\n"
+"POT-Creation-Date: 2026-10-17 20:32-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -37,6 +37,9 @@ msgid "&Add {n} host"
 msgid_plural "&Add {n} hosts"
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "&Address"
+msgstr ""
 
 msgid "&Address:"
 msgstr ""
@@ -400,19 +403,13 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-msgid "Co&py address"
-msgstr ""
-
-#, python-brace-format
-msgid "Co&py {column}"
+msgid "Co&py"
 msgstr ""
 
 msgid "Connect"
 msgstr ""
 
-msgid ""
-"Connect to the selected hosts; the arrow connects once with another "
-"profile"
+msgid "Connect to the selected hosts, once with another profile, or by address"
 msgstr ""
 
 #, python-brace-format

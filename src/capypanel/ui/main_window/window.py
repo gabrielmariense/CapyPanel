@@ -1665,7 +1665,7 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         menu.addActions([a.check_status, a.check_users])
         menu.addSeparator()
-        menu.addAction(self._copy_cell_action(menu, self.table.columnAt(position.x())))
+        self._add_copy_menu(menu)
         menu.addSeparator()
         menu.addAction(a.edit)
         hosts = self._selected_hosts()
@@ -1674,19 +1674,23 @@ class MainWindow(QMainWindow):
         menu.addAction(a.remove)
         popup(menu, self.table.viewport().mapToGlobal(position))
 
-    def _copy_cell_action(self, menu: QMenu, column: int) -> QAction:
-        """One Copy item, for the column clicked: one line per selected host. The address is
-        the Copy address command, so its shortcut shows."""
-        column = max(column, 0)
-        if HostTable.COLUMNS[column] == "address":
-            return self.commands.copy_address
-        title = self.table.headerItem().text(column)
-        item = QAction(_("Co&py {column}").format(column=title.lower()), menu)
+    def _add_copy_menu(self, menu: QMenu) -> None:
+        """Copy ▸ every column the table shows, one line per selected host. Wherever the menu
+        was opened (also from the keyboard), the same items. Address keeps Ctrl+Shift+C."""
+        copy = menu.addMenu(_("Co&py"))
         rows = sorted(self.table.selectedItems(), key=self.table.indexOfTopLevelItem)
-        item.triggered.connect(
-            lambda: QGuiApplication.clipboard().setText("\n".join(r.text(column) for r in rows))
-        )
-        return item
+        for column, key in enumerate(HostTable.COLUMNS):
+            if self.table.isColumnHidden(column):
+                continue
+            if key == "address":
+                copy.addAction(self.commands.copy_address)
+                continue
+            item = copy.addAction(self.table.headerItem().text(column))
+            item.triggered.connect(
+                lambda _c=False, n=column: QGuiApplication.clipboard().setText(
+                    "\n".join(r.text(n) for r in rows)
+                )
+            )
 
     def _add_hosts_move_menu(self, menu: QMenu, hosts: list[Host]) -> None:
         """Move to: "No group", then the groups as a tree; where they all are is ticked."""

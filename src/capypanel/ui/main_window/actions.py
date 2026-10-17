@@ -90,7 +90,7 @@ def retranslate_actions(a: Actions) -> None:
     a.remove.setText(_("&Remove selected"))
     a.connect_host.setText(_("&Connect"))
     a.manual_connect.setText(_("&Manual connection…"))
-    a.copy_address.setText(_("Co&py address"))
+    a.copy_address.setText(_("&Address"))  # in the host menu's Copy submenu
     a.refresh_shown.setText(_("Refresh"))
     a.documentation.setText(_("&Documentation"))
     a.report_problem.setText(_("&Report a problem"))

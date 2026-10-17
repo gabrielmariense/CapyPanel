@@ -231,17 +231,19 @@ def test_manual_connection_uses_the_chosen_profile(
     assert dialog.request().target.port == 5901
 
 
-def test_one_copy_item_for_the_column_clicked(window: MainWindow) -> None:
+def test_copy_lists_every_column_shown_wherever_the_menu_opens(window: MainWindow) -> None:
     _select(window, "PC-A", "PC-B")
     window.commands.copy_address.trigger()  # Ctrl+Shift+C
     assert sorted(QGuiApplication.clipboard().text().split("\n")) == ["10.0.0.1", "PC-B"]
+    window.table.setColumnHidden(HostTable.COLUMNS.index("tags"), True)
     menu = QMenu()
-    address = HostTable.COLUMNS.index("address")
-    copy = window._copy_cell_action  # pyright: ignore[reportPrivateUsage]
-    assert copy(menu, address) is window.commands.copy_address  # its shortcut shows
-    name = copy(menu, 0)
-    assert name.text() == "Co&py name"
-    name.trigger()
+    window._add_copy_menu(menu)  # pyright: ignore[reportPrivateUsage]
+    copy = menu.actions()[0].menu()
+    assert isinstance(copy, QMenu)
+    items = [label(a) for a in copy.actions()]
+    assert items == ["Name", "Status", "User", "&Address"]  # Tags is hidden: not offered
+    assert copy.actions()[3] is window.commands.copy_address  # its shortcut shows
+    copy.actions()[0].trigger()
     assert sorted(QGuiApplication.clipboard().text().split("\n")) == ["PC-A", "PC-B"]
 
 
