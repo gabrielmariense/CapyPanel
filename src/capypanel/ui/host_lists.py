@@ -8,7 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from PySide6.QtCore import QFile, Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QDesktopServices, QFont, QFontMetrics
 from PySide6.QtWidgets import (
     QFileDialog,
     QMenu,
@@ -31,6 +31,7 @@ from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with
 
 ROLE_PATH = Qt.ItemDataRole.UserRole
 REMOVE, DELETE = "remove", "delete"
+PATH_WIDTH = 380  # a path in a question box: longer ones are cut in the middle
 log = logging.getLogger(__name__)
 
 
@@ -53,9 +54,16 @@ def ask_remove(parent: QWidget, path: Path) -> str | None:
         _("Remove “{name}” from your lists, or delete its file too?").format(name=path.stem),
         parent=parent,
     )
-    # The path on a line of its own: a sentence would break it in the middle.
+    # The path on one line of its own, cut in the middle when long, so the window looks the
+    # same whatever the path; the whole path is in the tooltip.
+    bold = QFont(box.font())
+    bold.setBold(True)
+    shown = QFontMetrics(bold).elidedText(str(path), Qt.TextElideMode.ElideMiddle, PATH_WIDTH)
     gone = _("Deleting moves it to the Recycle Bin, for everyone who uses it:")
-    box.setInformativeText(f"{gone}<br><b>{html.escape(str(path))}</b>")
+    box.setInformativeText(
+        f'{html.escape(gone)}<p style="white-space: pre; margin: 0"><b>{html.escape(shown)}</b></p>'
+    )
+    box.setToolTip(str(path))
     delete = box.addButton(_("&Delete the file"), QMessageBox.ButtonRole.DestructiveRole)
     remove = box.addButton(_("&Remove from my lists"), QMessageBox.ButtonRole.AcceptRole)
     cancel = box.addButton(QMessageBox.StandardButton.Cancel)
