@@ -75,12 +75,12 @@ def test_settings_has_the_app_s_pages_then_the_hosts_tool_s(window: MainWindow) 
         "CapyPanel",
         "General",
         "Files",
-        "About",
         "Hosts",
         "General",
         "Host lists",
         "Connections",
     ]
+    assert [dialog.pinned_list.item(0).text().strip()] == ["About"]  # type: ignore[union-attr]
     assert dialog.current_page() == "general"
 
 
@@ -358,7 +358,9 @@ def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow)
     marks = dialog._marks  # pyright: ignore[reportPrivateUsage]
     assert [w.objectName() for w in marks.marked_labels()][:1] == ["sectionTitle"]
     dialog.search.setText("folder")  # in Files, a Host lists note, Connections. buttons
-    assert listed() == ["CapyPanel", "Files", "About", "Hosts", "Host lists", "Connections"]
+    assert listed() == ["CapyPanel", "Files", "Hosts", "Host lists", "Connections"]
+    assert not dialog.pinned_list.isRowHidden(0)  # About, with its Open folder buttons
+    assert "CapyPanel › About" in results()  # its sections, under its name
     dialog.search.setText("syst")  # "follow system theme"; not a tool path's "System32"
     assert listed() == ["CapyPanel", "General"]
     dialog.show_page("files")  # picking a page ends the search: everything goes home
@@ -630,3 +632,15 @@ def test_a_list_that_can_t_be_deleted_is_only_removed(
     view.select(office.with_name("gone.json"))  # no file to delete
     view.remove_button.click()
     assert len(_rows(view)) == 2
+
+
+def test_about_is_pinned_at_the_bottom_and_one_page_is_picked_at_a_time(
+    window: MainWindow,
+) -> None:
+    dialog = window.settings_dialog()
+    dialog.pinned_list.setCurrentRow(0)  # About, at the very bottom
+    assert dialog.current_page() == "about" and dialog.page_list.currentRow() == -1
+    dialog.show_page("hosts")
+    assert dialog.current_page() == "hosts" and dialog.pinned_list.currentRow() == -1
+    dialog.show_page("about")
+    assert dialog.current_page() == "about" and dialog.pinned_list.currentRow() == 0

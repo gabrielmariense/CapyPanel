@@ -46,9 +46,10 @@ from capypanel.ui.themes import engine as themes
 # longest in any language. The app's pages first, then each tool's.
 PAGE_TITLES = ("General", "Files", "About", "General", "Host lists", "Connections")
 GROUPS = (
-    ("CapyPanel", ("general", "files", "about")),
+    ("CapyPanel", ("general", "files")),
     ("Hosts", ("hosts", "host_lists", "connections")),
 )
+PINNED = ("about",)  # pages kept at the very bottom of the page list, apart from the groups
 SEARCH_FROM = 3  # letters typed before the search shows its results
 ROOM = 60  # spare width past the widest page: a button row never ends just short of its table
 
@@ -191,6 +192,15 @@ class SettingsDialog(QDialog):
         )
         self.page_list.setFixedWidth(longest + 64)
         self.page_list.currentRowChanged.connect(self._page_picked)
+        # About stays at the very bottom, whatever pages the tools add above it.
+        self.pinned_list = QListWidget()
+        self.pinned_list.setObjectName("pageList")
+        for page_id in PINNED:
+            self.pinned_list.addItem("   " + self.pages[page_id].title)
+        self.pinned_list.setFixedWidth(self.page_list.width())
+        self.pinned_list.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._fit_pinned()
+        self.pinned_list.currentRowChanged.connect(self._pinned_picked)
         self.page_list.setCurrentRow(self.row_of("general"))
 
         # Only Close: every choice is applied already. Not a default button, so Enter in a
@@ -211,6 +221,7 @@ class SettingsDialog(QDialog):
         side = QVBoxLayout()
         side.addWidget(self.search)
         side.addWidget(self.page_list, 1)
+        side.addWidget(self.pinned_list)
         columns.addLayout(side)
         divider = QFrame()  # a thin line between the page list and the pages
         divider.setObjectName("pagesDivider")
@@ -256,12 +267,34 @@ class SettingsDialog(QDialog):
         page_id = self._rows[row] if 0 <= row < len(self._rows) else None
         if page_id is None:
             return  # a group's label, never picked
+        self._unpick(self.pinned_list)
+        self._show(page_id)
+
+    def _pinned_picked(self, row: int) -> None:
+        if 0 <= row < len(PINNED):
+            self._unpick(self.page_list)
+            self._show(PINNED[row])
+
+    def _show(self, page_id: str) -> None:
         if self._lent:  # picking a page ends the search: its sections go home first
             self.search.blockSignals(True)
             self.search.clear()
             self.search.blockSignals(False)
             self._end_search()
         self.stack.setCurrentIndex(list(self.pages).index(page_id))
+
+    @staticmethod
+    def _unpick(pages: QListWidget) -> None:
+        """One page is picked across both lists: the other list shows none."""
+        pages.blockSignals(True)
+        pages.setCurrentRow(-1)
+        pages.blockSignals(False)
+
+    def _fit_pinned(self) -> None:
+        """Just tall enough for its rows, measured once the theme's padding is in."""
+        rows = sum(self.pinned_list.sizeHintForRow(r) for r in range(self.pinned_list.count()))
+        frame = 2 * self.pinned_list.frameWidth()
+        self.pinned_list.setFixedHeight(rows + frame + 2)
 
     # ---- applying at once ----
 
@@ -307,6 +340,7 @@ class SettingsDialog(QDialog):
             self.stack.setCurrentIndex(list(self.pages).index(page))
             return
         group_of = {pid: group for group, ids in GROUPS for pid in ids}
+        group_of.update(dict.fromkeys(PINNED, "CapyPanel"))  # About is the app's own
         shown: list[str] = []
         layout = self._results.body
         for page_id, source in self.pages.items():
@@ -342,9 +376,10 @@ class SettingsDialog(QDialog):
                 after = self._rows[row + 1 :]
                 end = after.index(None) if None in after else len(after)
                 self.page_list.setRowHidden(row, not any(p in shown for p in after[:end]))
-        self.page_list.blockSignals(True)
-        self.page_list.clearSelection()
-        self.page_list.blockSignals(False)
+        for row, page_id in enumerate(PINNED):
+            self.pinned_list.setRowHidden(row, page_id not in shown)
+        for pages in (self.page_list, self.pinned_list):
+            self._unpick(pages)
         self._before_search = page
         self.stack.setCurrentIndex(len(self.pages))
 
@@ -362,8 +397,9 @@ class SettingsDialog(QDialog):
         self._result_labels.clear()
         while layout.count() > 0:  # the stretch under the results
             layout.takeAt(0)
-        for row in range(self.page_list.count()):
-            self.page_list.setRowHidden(row, False)
+        for pages in (self.page_list, self.pinned_list):
+            for row in range(pages.count()):
+                pages.setRowHidden(row, False)
 
     def _shown_page(self) -> str:
         """The page shown, or the one shown before the search."""
@@ -372,7 +408,10 @@ class SettingsDialog(QDialog):
         return getattr(self, "_before_search", "general")
 
     def show_page(self, page_id: str) -> None:
-        self.page_list.setCurrentRow(self.row_of(page_id))
+        if page_id in PINNED:
+            self.pinned_list.setCurrentRow(PINNED.index(page_id))
+        else:
+            self.page_list.setCurrentRow(self.row_of(page_id))
 
     def row_of(self, page_id: str) -> int:
         return self._rows.index(page_id)
@@ -384,6 +423,7 @@ class SettingsDialog(QDialog):
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
+        self._fit_pinned()  # the theme's row padding is known now
         self._make_room()
         themes.paint_title_bar(self)
         self._no_default_buttons()
