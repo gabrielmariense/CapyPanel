@@ -120,7 +120,7 @@ class NavigationPane(QWidget):
         for tree in (self.everything, self.groups, self.tags):
             tree.setObjectName("flat")
         self._tags_line = _divider()
-        card = QFrame()
+        card = self._card = QFrame()
         card.setObjectName("card")
         card.setFrameShape(QFrame.Shape.StyledPanel)
         inside = QVBoxLayout(card)
@@ -141,6 +141,20 @@ class NavigationPane(QWidget):
         self.groups.itemSelectionChanged.connect(self._groups_picked)
         self.tags.itemSelectionChanged.connect(self._tags_picked)
         self.retranslate()
+
+    def natural_width(self) -> int:
+        """As wide as its widest group or tag in full, and anything above the card (the list
+        dropdown), with the card's margins."""
+        lists = [_tree_width(t) for t in (self.everything, self.groups, self.tags) if t.isVisible()]
+        heading = self.groups_heading.sizeHint().width() + self.add_group_button.sizeHint().width()
+        card = max([heading, *lists]) + 8 + 2 * self._card.frameWidth()  # 4 px margins
+        layout = self.layout()
+        above = [
+            w.sizeHint().width()
+            for i in range(layout.count() if layout else 0)
+            if (w := layout.itemAt(i).widget()) is not None and w is not self._card  # type: ignore[union-attr]
+        ]
+        return max([card, *above])
 
     def retranslate(self) -> None:
         """Titles only; the lists' own texts come back with the next show_list()."""
@@ -367,6 +381,13 @@ class SearchBox(QLineEdit):
         self._icon.setIcon(
             tabler_icon("search", self.palette().color(QPalette.ColorRole.PlaceholderText))
         )
+
+
+def _tree_width(tree: QTreeWidget) -> int:
+    """A list's widest row in full, with its frame and, when shown, its scroll bar."""
+    bar = tree.verticalScrollBar()
+    extra = bar.sizeHint().width() if bar.isVisible() else 0
+    return tree.sizeHintForColumn(0) + 2 * tree.frameWidth() + extra
 
 
 class HostTable(QTreeWidget):

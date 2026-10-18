@@ -372,17 +372,21 @@ class MainWindow(QMainWindow):
         self._splitter.setSizes([groups, max(total - groups - details, 1), details])
 
     def _fit_pane(self, edge: int) -> None:
-        """A double-click on the host table's right edge: the table as wide as its columns,
-        the pane on its right taking the rest."""
-        if self._splitter.widget(edge - 1) is not self._hosts_pane:
+        """A double-click on the Groups or Hosts panel's right edge: that panel as wide as its
+        content, the panel on its right taking the rest, never below its minimum width."""
+        left, right = self._splitter.widget(edge - 1), self._splitter.widget(edge)
+        if left is None or right is None:
+            return
+        if left is self.nav:
+            natural = self.nav.natural_width()
+        elif left is self._hosts_pane:
+            natural = self.table.natural_width()
+        else:
             return
         sizes = self._splitter.sizes()
-        wanted = max(self.table.natural_width(), self._hosts_pane.minimumWidth())
-        right = sizes[edge] + sizes[edge - 1] - wanted
-        if right < self.details.minimumWidth():  # no room: as wide as the Details pane allows
-            wanted -= self.details.minimumWidth() - right
-            right = self.details.minimumWidth()
-        sizes[edge - 1], sizes[edge] = wanted, right
+        total = sizes[edge - 1] + sizes[edge]
+        wanted = min(max(natural, left.minimumWidth()), total - right.minimumWidth())
+        sizes[edge - 1], sizes[edge] = wanted, total - wanted
         self._splitter.setSizes(sizes)
         self._align_refresh_later()
 

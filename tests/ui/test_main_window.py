@@ -366,3 +366,19 @@ def test_double_clicking_the_host_table_s_right_edge_fits_it_to_its_columns(
     assert after[edge - 1] == max(window.table.natural_width(), window._hosts_pane.minimumWidth())  # pyright: ignore[reportPrivateUsage]
     assert sum(after) == sum(before) and after[0] == before[0]  # only those two panes change
     window.close()
+
+
+def test_double_clicking_the_groups_panel_s_right_edge_fits_it_to_its_groups(
+    window: MainWindow, office: Path
+) -> None:
+    window.open_list(office)
+    window.resize(1600, 700)
+    window.show()
+    QApplication.processEvents()
+    splitter = window._splitter  # pyright: ignore[reportPrivateUsage]
+    before = splitter.sizes()
+    QTest.mouseDClick(splitter.handle(1), Qt.MouseButton.LeftButton)
+    after = splitter.sizes()
+    assert after[0] == max(window.nav.natural_width(), window.nav.minimumWidth())
+    assert after[0] + after[1] == before[0] + before[1] and after[2] == before[2]
+    window.close()
