@@ -346,7 +346,7 @@ def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow)
         return [
             re.sub("<[^>]+>", "", w.text())  # the search's marks are rich text
             for w in dialog._results.findChildren(QLabel)  # pyright: ignore[reportPrivateUsage]
-            if w.objectName() in ("hint", "detailsSection") and w.isVisibleTo(dialog._results)  # pyright: ignore[reportPrivateUsage]
+            if w.objectName() in ("hint", "sectionTitle") and w.isVisibleTo(dialog._results)  # pyright: ignore[reportPrivateUsage]
         ]
 
     dialog.search.setText("th")  # too short: the pages as they were
@@ -355,7 +355,7 @@ def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow)
     assert dialog.current_page() == "search" and listed() == ["CapyPanel", "General"]
     assert results()[:2] == ["CapyPanel › General", "Language and theme"]  # under its page
     marks = dialog._marks  # pyright: ignore[reportPrivateUsage]
-    assert [w.objectName() for w in marks.marked_labels()][:1] == ["detailsSection"]
+    assert [w.objectName() for w in marks.marked_labels()][:1] == ["sectionTitle"]
     dialog.search.setText("folder")  # in Files, a Host lists note, Connections. buttons
     assert listed() == ["CapyPanel", "Files", "Hosts", "Host lists", "Connections"]
     dialog.search.setText("syst")  # "follow system theme"; not a tool path's "System32"

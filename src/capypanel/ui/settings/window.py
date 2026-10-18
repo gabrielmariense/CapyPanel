@@ -106,7 +106,7 @@ class SettingsDialog(QDialog):
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(12, 12, 12, 12)
         self._build(themes.current().id)
-        self.resize(860, 640)  # one-line descriptions on one line; Connections without scrolling
+        self.resize(860, 700)  # one-line descriptions on one line; Connections without scrolling
 
     def _build(self, theme_id: str) -> None:
         """The pages and buttons, in the current language, showing what's set."""
@@ -207,6 +207,10 @@ class SettingsDialog(QDialog):
         side.addWidget(self.search)
         side.addWidget(self.page_list, 1)
         columns.addLayout(side)
+        divider = QFrame()  # a thin line between the page list and the pages
+        divider.setObjectName("pagesDivider")
+        divider.setFixedWidth(1)
+        columns.addWidget(divider)
         columns.addWidget(self.stack, 1)
         inside = QVBoxLayout(content)
         inside.setContentsMargins(0, 0, 0, 0)

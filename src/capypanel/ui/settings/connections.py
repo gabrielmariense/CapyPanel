@@ -323,9 +323,7 @@ class ProfilesSection(SharedSection):
         self.default = QComboBox()
         self.default.setEnabled(self.can_edit)
         self.default.currentIndexChanged.connect(lambda _i: self._default_picked())
-        inner = QVBoxLayout(self.inner)
-        inner.setContentsMargins(0, 2, 0, 0)
-        inner.setSpacing(6)
+        inner = self.content
         inner.addWidget(with_buttons(self.list, profile_buttons))
         self.profiles_skipped = skipped_note(self.store.problems)
         inner.addWidget(notes(access))
@@ -490,9 +488,7 @@ class ToolsSection(SharedSection):
     def __init__(self, catalogs: Catalogs) -> None:
         super().__init__(_("Remote tools"), catalogs)
         self.can_edit_tools = catalogs.tools.can_edit()
-        tools_layout = QVBoxLayout(self.inner)
-        tools_layout.setContentsMargins(0, 2, 0, 0)
-        tools_layout.setSpacing(6)
+        tools_layout = self.content
         # The same table as the profiles: the buttons act on the tool picked.
         self.tools = grid_table([_("Tool"), _("Status"), _("Where")])
         self.tools.setColumnWidth(0, 190)

@@ -46,25 +46,27 @@ class Page(QWidget):
         self.title = title
         self.body = QVBoxLayout(self)
         self.body.setContentsMargins(0, 0, 0, 0)
-        self.body.setSpacing(18)  # between sections
+        self.body.setSpacing(22)  # between sections
 
 
 class Section(QWidget):
-    """A part of a page: a heading in the accent colour over a thin line, as in the Details
-    pane, then its content in `inner`. No frame around it."""
+    """A part of a page: its title, then its settings on a soft rounded card. Lay them out in
+    `content`."""
 
     def __init__(self, title: str) -> None:
         super().__init__()
         heading = QLabel(title)
-        heading.setObjectName("detailsSection")
-        rule = QFrame()
-        rule.setObjectName("detailsRule")
+        heading.setObjectName("sectionTitle")
         self.inner = QWidget()
+        self.inner.setObjectName("sectionCard")
+        self.inner.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)  # draws the card
+        self.content = QVBoxLayout(self.inner)
+        self.content.setContentsMargins(14, 10, 14, 12)
+        self.content.setSpacing(6)
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
-        column.setSpacing(6)
+        column.setSpacing(8)
         column.addWidget(heading)
-        column.addWidget(rule)
         column.addWidget(self.inner, 1)
 
 
@@ -100,13 +102,6 @@ def add_rows(layout: QVBoxLayout, *rows: SettingRow) -> None:
             line.setObjectName("rowLine")
             layout.addWidget(line)
         layout.addWidget(row)
-
-
-def _section_layout(section: "Section") -> QVBoxLayout:
-    layout = QVBoxLayout(section.inner)
-    layout.setContentsMargins(0, 2, 0, 0)
-    layout.setSpacing(6)
-    return layout
 
 
 class PathLabel(QLabel):
@@ -162,7 +157,7 @@ class GeneralPage(Page):
         self.theme.setCurrentIndex(max(self.theme.findData(theme_id), 0))
         section = Section(_("Language and theme"))
         add_rows(
-            _section_layout(section),
+            section.content,
             SettingRow(_("&Language"), _("The app's language. Changes at once."), self.language),
             SettingRow(
                 _("&Theme"),
@@ -216,7 +211,7 @@ class FilesPage(Page):
         self.open_button.clicked.connect(self._open_picked)
         self.folders.itemDoubleClicked.connect(lambda *_a: self._open_picked())
         row_menu(self.folders, lambda menu: add_action(menu, _("Open &folder"), self._open_picked))
-        layout = _section_layout(section)
+        layout = section.content
         layout.addWidget(with_buttons(self.folders, [self.open_button]))
         lines = [_("Hover a folder to see what it holds.")]
         if paths.portable:
@@ -292,7 +287,7 @@ class HostsPage(Page):
         self._first_row = SettingRow(_("Show &first"), "", self.show_first)
         self._show_first_note(start_view is not None)
         add_rows(
-            _section_layout(start),
+            start.content,
             SettingRow(
                 _("&Open on startup"),
                 _("If that list can't be opened: the default list, then your personal list."),
@@ -309,7 +304,7 @@ class HostsPage(Page):
         self._fill_every(self._shown_minutes)
         self.auto_every.activated.connect(self._every_picked)
         add_rows(
-            _section_layout(refresh),
+            refresh.content,
             SettingRow(
                 _("Refresh status &by itself"),
                 _("Only ping and ports, never logged-on users, so no account is needed. "
@@ -476,9 +471,7 @@ class HostListsPage(Page):
             hidden=hidden,
         )
         box = Section(_("Host lists"))
-        lists = QVBoxLayout(box.inner)
-        lists.setContentsMargins(0, 2, 0, 0)
-        lists.addWidget(self.view)
+        box.content.addWidget(self.view)
         self.body.addWidget(box)
         self.body.addStretch(1)
         self.view.changed.connect(self.changed.emit)

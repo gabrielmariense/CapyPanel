@@ -14,6 +14,7 @@ Shipped theme files (this folder, *.json) override some tokens of a base:
 import ctypes
 import json
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -217,6 +218,7 @@ def native_tokens(accent: QColor) -> dict[str, str]:
     tokens["accent"] = accent.name()
     tokens["accent_text"] = readable_on(accent, tokens["card"], tokens["text"])
     tokens["accent_drop"] = readable_on(accent, tokens["sel"], tokens["text"])
+    tokens.update(_card_tokens(tokens))
     tokens["arrow"] = (THEMES_DIR / f"arrow-{native_scheme()}.svg").as_posix()
     return tokens
 
@@ -272,6 +274,17 @@ def menu_mark() -> QColor:
         return QColor(mark_tint(accent, tokens["card"], tokens["text"]))
     colors = _current.colors
     return QColor(mark_tint(QColor(colors["accent"]), colors["card"], colors["text"]))
+
+
+def _card_tokens(colors: Mapping[str, str]) -> dict[str, str]:
+    """Settings' cards: between the window and a pane, a faint edge, and the line beside the
+    page list. Worked out from each theme's own colours."""
+    bg = QColor(colors["bg"])
+    return {
+        "section": _mix(QColor(colors["card"]), bg, 0.6),
+        "section_edge": _mix(QColor(colors["border"]), bg, 0.3),
+        "pages_line": _mix(QColor(colors["border"]), bg, 0.5),
+    }
 
 
 def _mix(color: QColor, base: QColor, amount: float) -> str:
@@ -502,6 +515,12 @@ QFrame#divider { background: %(border)s; border: none; }
 /* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
 QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
 QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
+/* Settings: each section's settings on a soft card under a larger title; a line beside the
+   page list. */
+QLabel#sectionTitle { color: %(accent_text)s; font-weight: bold; font-size: 12pt; }
+QWidget#sectionCard { background: %(section)s; border: 1px solid %(section_edge)s;
+                      border-radius: 10px; }
+QFrame#pagesDivider { background: %(pages_line)s; border: none; }
 QLabel#copyValue { padding: 2px 4px; border-radius: 4px; }
 QLabel#copyValue:hover { background: %(hover)s; }
 QLabel#tagValue { background: %(sel_solid)s; border-radius: 9px; padding: 2px 9px; }
@@ -598,6 +617,12 @@ QTreeView#grid QHeaderView::section:only-one { border-right: none; }
 /* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
 QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
 QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
+/* Settings: each section's settings on a soft card under a larger title; a line beside the
+   page list. */
+QLabel#sectionTitle { color: %(accent_text)s; font-weight: bold; font-size: 12pt; }
+QWidget#sectionCard { background: %(section)s; border: 1px solid %(section_edge)s;
+                      border-radius: 10px; }
+QFrame#pagesDivider { background: %(pages_line)s; border: none; }
 QLabel#copyValue { padding: 2px 4px; border-radius: 4px; }
 QLabel#copyValue:hover { background: %(hover)s; }
 QLabel#tagValue { background: %(sel)s; border-radius: 9px; padding: 2px 9px; }
@@ -648,6 +673,7 @@ def stylesheet(theme: Theme) -> str:
     accent = QColor(colors["accent"])
     t["accent_text"] = readable_on(accent, colors["card"], colors["text"])
     t["accent_drop"] = readable_on(accent, colors["sel_solid"], colors["text"])
+    t.update(_card_tokens(colors))
     t["button"] = button_fill(accent)
     t["button_hover"] = button_fill(QColor(colors["accent_hover"]))
     t["check"] = (THEMES_DIR / "check.svg").as_posix()
