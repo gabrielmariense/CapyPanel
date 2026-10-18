@@ -1,4 +1,5 @@
 import os
+import re
 import stat
 from collections.abc import Iterator
 from pathlib import Path
@@ -481,7 +482,7 @@ def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow)
 
     def results() -> list[str]:
         return [
-            w.text()
+            re.sub("<[^>]+>", "", w.text())  # the search's marks are rich text
             for w in dialog._results.findChildren(QLabel)  # pyright: ignore[reportPrivateUsage]
             if w.objectName() in ("hint", "detailsSection") and w.isVisibleTo(dialog._results)  # pyright: ignore[reportPrivateUsage]
         ]
@@ -491,28 +492,16 @@ def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow)
     dialog.search.setText("theme")
     assert dialog.current_page() == "search" and listed() == ["CapyPanel", "General"]
     assert results()[:2] == ["CapyPanel › General", "Theme"]  # the section, under its page
+    marks = dialog._marks  # pyright: ignore[reportPrivateUsage]
+    assert [w.objectName() for w in marks.marked_labels()][:1] == ["detailsSection"]
     dialog.search.setText("folder")  # in Files, a Host lists note, Connections. buttons
     assert listed() == ["CapyPanel", "Files", "Hosts", "Host lists", "Connections"]
+    dialog.search.setText("syst")  # "follow system theme"; not a tool path's "System32"
+    assert listed() == ["CapyPanel", "General"]
     dialog.show_page("files")  # picking a page ends the search: everything goes home
     assert dialog.search.text() == "" and dialog.current_page() == "files"
     assert dialog.files.findChildren(QLabel)  # its section is back on its page
     assert len(listed()) == dialog.page_list.count()
-
-
-def test_list_tables_show_six_rows_at_most_and_pages_never_get_cut(
-    window: MainWindow, paths: settings.Paths
-) -> None:
-    for name in "abcdefg":
-        listfile.save(paths.shared_lists_dir / f"{name}.json", HostList(), expected=None)
-    dialog = window.settings_dialog()
-    dialog.show()
-    dialog.show_page("host_lists")
-    QApplication.processEvents()
-    tree = dialog.host_lists.view.tree
-    assert tree.viewport().height() == 6 * tree.sizeHintForRow(0)  # no 7th row peeking in
-    page = dialog.host_lists
-    assert page.width() >= page.minimumSizeHint().width()  # the window widened instead
-    dialog.close()
 
 
 def test_a_list_in_a_lists_folder_can_be_removed_and_added_back(
@@ -545,3 +534,28 @@ def test_open_folder_opens_the_picked_list_s_folder(
     view.select(office)
     view.open_folder.click()
     assert [Path(p) for p in opened] == [office.parent]
+
+
+def test_list_tables_show_six_rows_at_most_and_pages_never_get_cut(
+    window: MainWindow, paths: settings.Paths
+) -> None:
+    for name in "abcdefg":
+        listfile.save(paths.shared_lists_dir / f"{name}.json", HostList(), expected=None)
+    dialog = window.settings_dialog()
+    dialog.show()
+    dialog.show_page("host_lists")
+    QApplication.processEvents()
+    tree = dialog.host_lists.view.tree
+    assert tree.viewport().height() == 6 * tree.sizeHintForRow(0)  # no 7th row peeking in
+    page = dialog.host_lists
+    assert page.width() >= page.minimumSizeHint().width()  # the window widened instead
+    dialog.close()
+
+
+def test_search_marks_go_away_with_the_search(window: MainWindow) -> None:
+    dialog = window.settings_dialog()
+    dialog.search.setText("theme")
+    [heading, *_notes] = dialog._marks.marked_labels()  # pyright: ignore[reportPrivateUsage]
+    assert "<span" in heading.text()
+    dialog.search.clear()
+    assert heading.text() == "Theme" and not dialog._marks.marked_labels()  # pyright: ignore[reportPrivateUsage]

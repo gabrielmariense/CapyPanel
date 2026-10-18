@@ -9,9 +9,7 @@ from pathlib import Path
 from PySide6.QtCore import QEvent, QObject, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QHideEvent, QShowEvent
 from PySide6.QtWidgets import (
-    QAbstractButton,
     QApplication,
-    QComboBox,
     QDialog,
     QDialogButtonBox,
     QFrame,
@@ -24,7 +22,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QStackedWidget,
-    QTreeWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -37,6 +34,7 @@ from capypanel.core.i18n import _
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.profiles import ProfileError
 from capypanel.ui.notes import hint
+from capypanel.ui.settings import search
 from capypanel.ui.settings.connections import ConnectionChanges, ConnectionsPage, apply
 from capypanel.ui.settings.pages import (
     FilesPage,
@@ -62,9 +60,9 @@ class SettingsChoices:
     rewritten: bool  # the chosen list's file was written from Settings, so reopen it
     theme_id: str
     language: str
-    hidden_lists: list[Path]  # lists in a lists folder removed from Host lists
     connections: ConnectionChanges
     added_lists: list[Path]  # the lists in Host lists, besides the default and personal
+    hidden_lists: list[Path]  # lists in a lists folder removed from Host lists
     auto_status: tuple[bool, int] = (False, 5)  # check Status by itself, every N minutes
     start_view: tuple[str, str] | None = None  # the open list's (show, group) first
 
@@ -84,9 +82,9 @@ class SettingsDialog(QDialog):
         personal_list: Path,
         document: OpenList | None,
         added: list[Path],
-        hidden: list[Path] | None = None,
         registry: themes.Registry,
         found: list[Path] | None = None,
+        hidden: list[Path] | None = None,
         catalogs: Catalogs,
         auto_status: tuple[bool, int] = (False, 5),
         start_view: tuple[str, str] | None = None,
@@ -97,9 +95,9 @@ class SettingsDialog(QDialog):
         self._paths = paths
         self._default_list = default_list
         self._personal_list = personal_list
-        self._hidden = hidden or []
         self._document = document
         self._found = found or []
+        self._hidden = hidden or []
         self._registry = registry
         self._catalogs = catalogs
         self._saved_state: tuple[object, ...] | None = None
@@ -143,9 +141,9 @@ class SettingsDialog(QDialog):
             default_list=self._default_list,
             personal_list=self._personal_list,
             document=self._document,
-            hidden=self._hidden,
             added=added,
             found=self._found,
+            hidden=self._hidden,
         )
         if chosen is not None:
             self.host_lists.view.select(chosen)
@@ -189,6 +187,7 @@ class SettingsDialog(QDialog):
         self.stack.addWidget(_scrolling(self._results))
         self._lent: list[tuple[QVBoxLayout, int, QWidget]] = []  # where each came from
         self._result_labels: list[QLabel] = []
+        self._marks = search.SearchMarks(self._results)
         # Wide enough for the longest page name in any language, so the list never cuts it and
         # keeps its width when the language changes.
         metrics = self.page_list.fontMetrics()
@@ -250,8 +249,8 @@ class SettingsDialog(QDialog):
             self.general.theme_id(),
         )
         written = tuple(self.host_lists.written)
-        self._hidden = self.host_lists.hidden()
         start_view = self.hosts.show_first_choice()
+        self._hidden = self.host_lists.hidden()
         old.hide()
         self._layout.removeWidget(old)
         self._old.append(old)
@@ -312,9 +311,10 @@ class SettingsDialog(QDialog):
         return True
 
     def _filter_pages(self, text: str) -> None:
-        """From SEARCH_FROM letters on: every section that mentions `text`, from every page,
-        on one results page, each under its page's name, to change right there. The page list
-        keeps only the pages with a match. Fewer letters: back to the pages as they were."""
+        """From SEARCH_FROM letters on: every section that mentions `text` at the start of a
+        word, from every page, on one results page, each under its page's name, to change right
+        there, with each match marked. The page list keeps only the pages with a match. Fewer
+        letters: back to the pages as they were."""
         page = self._shown_page()
         self._end_search()
         wanted = text.strip().casefold()
@@ -325,12 +325,12 @@ class SettingsDialog(QDialog):
         shown: list[str] = []
         layout = self._results.body
         for page_id, source in self.pages.items():
-            title_match = wanted in source.title.casefold()
+            title_match = bool(search.spans(source.title, wanted))
             parts = (source.body.itemAt(i) for i in range(source.body.count()))
             sections = [
                 w for part in parts
                 if part is not None and isinstance(w := part.widget(), Section)
-                and (title_match or wanted in _words(w))
+                and (title_match or search.mentions(w, wanted))
             ]  # fmt: skip
             if not sections:
                 continue
@@ -347,6 +347,8 @@ class SettingsDialog(QDialog):
             self._result_labels.append(nothing)
             layout.addWidget(nothing)
         layout.addStretch(1)
+        lent = [section for _home, _index, section in self._lent]
+        self._marks.mark([*self._result_labels[: len(shown)], *lent], wanted)
         for row, page_id in enumerate(self._rows):
             if page_id is not None:
                 self.page_list.setRowHidden(row, page_id not in shown)
@@ -363,6 +365,7 @@ class SettingsDialog(QDialog):
 
     def _end_search(self) -> None:
         """Sends the lent sections back to their pages, where they were, and lists every page."""
+        self._marks.clear()
         layout = self._results.body
         for home, index, section in reversed(self._lent):
             layout.removeWidget(section)
@@ -405,10 +408,10 @@ class SettingsDialog(QDialog):
             theme_id=self.general.theme_id(),
             language=self.general.language_choice(),
             added_lists=self.host_lists.added(),
+            hidden_lists=self.host_lists.hidden(),
             connections=self.connections.changes(),
             auto_status=self.hosts.auto_status_choice(),
             start_view=self.hosts.show_first_choice(),
-            hidden_lists=self.host_lists.hidden(),
         )
 
     def showEvent(self, event: QShowEvent) -> None:
@@ -480,15 +483,6 @@ class SettingsDialog(QDialog):
         self._update_save()
 
 
-def _scrolling(page: Page) -> QScrollArea:
-    """A page that scrolls when it's taller than the window, with no frame of its own."""
-    area = _PageArea()
-    area.setWidgetResizable(True)
-    area.setFrameShape(QFrame.Shape.NoFrame)
-    area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    area.setWidget(page)
-    return area
-
 class _PageArea(QScrollArea):
     """Never narrower than its page: the window widens instead of cutting off a button row."""
 
@@ -501,20 +495,11 @@ class _PageArea(QScrollArea):
         return QSize(max(hint.width(), page.minimumSizeHint().width() + bar), hint.height())
 
 
-
-def _words(page: QWidget) -> str:
-    """Everything a page or section says, lower case, to search: its headings, labels, buttons,
-    ticks, dropdown items and table rows."""
-    texts = [page.title] if isinstance(page, Page) else []
-    texts += [w.text() for w in page.findChildren(QLabel)]
-    texts += [w.text() for w in page.findChildren(QAbstractButton)]
-    for combo in page.findChildren(QComboBox):
-        texts += [combo.itemText(i) for i in range(combo.count())]
-    for table in page.findChildren(QTreeWidget):
-        header = table.headerItem()
-        texts += [header.text(c) for c in range(header.columnCount())]
-        for i in range(table.topLevelItemCount()):
-            item = table.topLevelItem(i)
-            if item is not None:
-                texts += [item.text(c) for c in range(item.columnCount())]
-    return " ".join(texts).replace("&", "").casefold()
+def _scrolling(page: Page) -> QScrollArea:
+    """A page that scrolls when it's taller than the window, with no frame of its own."""
+    area = _PageArea()
+    area.setWidgetResizable(True)
+    area.setFrameShape(QFrame.Shape.NoFrame)
+    area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    area.setWidget(page)
+    return area
