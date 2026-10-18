@@ -68,7 +68,8 @@ def test_settings_has_the_app_s_pages_then_the_hosts_tool_s(window: MainWindow) 
         "Hosts",
         "General",
         "Host lists",
-        "Connections",
+        "Connection profiles",
+        "Remote tools",
     ]
     assert dialog.current_page() == "general"
 
@@ -346,7 +347,7 @@ def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow)
     marks = dialog._marks  # pyright: ignore[reportPrivateUsage]
     assert [w.objectName() for w in marks.marked_labels()][:1] == ["detailsSection"]
     dialog.search.setText("folder")  # in Files, a Host lists note, Connections. buttons
-    assert listed() == ["CapyPanel", "Files", "Hosts", "Host lists", "Connections"]
+    assert listed() == ["CapyPanel", "Files", "Hosts", "Host lists", "Connection profiles"]
     dialog.search.setText("syst")  # "follow system theme"; not a tool path's "System32"
     assert listed() == ["CapyPanel", "General"]
     dialog.show_page("files")  # picking a page ends the search: everything goes home
@@ -457,7 +458,7 @@ def test_every_choice_applies_at_once_and_only_close_is_left(window: MainWindow)
     dialog = window.settings_dialog()
     dialog.hosts.auto_status.setChecked(True)
     assert window._auto_status()[0]  # kept and running, with no Save
-    page = dialog.connections
+    page = dialog.profiles
     page.default.setCurrentIndex(page.default.findData("realvnc"))
     assert page.store.default_id() == "realvnc"  # written for everyone at once
     dialog.show()

@@ -257,14 +257,36 @@ def skipped_note(problems: list[tuple[Path, str]]) -> QLabel:
     return label
 
 
-class ConnectionsPage(Page):
-    def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
-        super().__init__(_("Connections"))
+class SharedPage(Page):
+    """A page whose changes go to files shared by everyone on this PC, written at once."""
+
+    def __init__(self, title: str, catalogs: Catalogs) -> None:
+        super().__init__(title)
         self.catalogs = catalogs
+
+    def _write(self, change: Callable[[], object], failed: str) -> bool:
+        """Runs a change to the shared files; says what went wrong when it can't."""
+        try:
+            change()
+        except (ProfileError, OSError) as e:
+            QMessageBox.warning(self, "CapyPanel", failed.format(error=e))
+            return False
+        self._written()
+        self.changed.emit()
+        return True
+
+    def _written(self) -> None:
+        """After a change was written."""
+
+
+class ProfilesPage(SharedPage):
+    """Settings > Connection profiles: the profiles everyone on this PC connects with."""
+
+    def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
+        super().__init__(_("Connection profiles"), catalogs)
         self.store = catalogs.profiles
         self.document = document
         self.can_edit = self.store.can_edit()
-        self.can_edit_tools = catalogs.tools.can_edit()
 
         profiles_box = Section(_("Connection profiles"))
         self.open_folder = QPushButton(_("Open folder"))
@@ -316,59 +338,15 @@ class ConnectionsPage(Page):
         inner.addWidget(self.builtin_note)
         inner.addWidget(self.profiles_skipped)
 
-        tools_box = Section(_("Remote tools"))
-        tools_layout = QVBoxLayout(tools_box.inner)
-        tools_layout.setContentsMargins(0, 2, 0, 0)
-        # The same table as the profiles: the buttons act on the tool picked.
-        self.tools = grid_table([_("Tool"), _("Status"), _("Where")])
-        self.tools.setColumnWidth(0, 190)
-        self.tools.setColumnWidth(1, 150)
-        self.tools.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # a path keeps both ends
-        self.tools.itemSelectionChanged.connect(self._update_tool_buttons)
-        self.locate_button = QPushButton(_("Change path…"))
-        self.automatic_button = QPushButton(_("Detect"))
-        self.automatic_button.setToolTip(_("Find it by itself again, not at the path you chose"))
-        self.download_button = QPushButton(_("Download"))
-        for button, action in (
-            (self.locate_button, "locate"),
-            (self.automatic_button, "automatic"),
-            (self.download_button, "download"),
-        ):
-            button.clicked.connect(lambda _c=False, a=action: self._picked_tool_action(a))
-        tool_buttons = [self.locate_button, self.automatic_button, self.download_button]
-        tools_layout.addWidget(with_buttons(self.tools, tool_buttons))
-        tools_layout.addWidget(
-            notes(
-                _("Where each tool is installed, set once for everyone on this PC.")
-                if self.can_edit_tools
-                else _(
-                    "Where each tool is installed, set once for everyone on this PC. Read-only: "
-                    "only people Windows lets write the tools folder can change it."
-                )
-            )
-        )
-        self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])
-        tools_layout.addWidget(self.tools_skipped)
-
         self.body.addWidget(profiles_box)
-        self.body.addWidget(tools_box)
         self.body.addStretch(1)
         self._fill_profiles(select=None)
-        self._fill_tools()
 
-    # ---- profiles: each change is written at once ----
-
-    def _write(self, change: Callable[[], object]) -> bool:
-        """Runs a change to the shared files; says what went wrong when it can't."""
-        try:
-            change()
-        except (ProfileError, OSError) as e:
-            message = _("Couldn't save the connection profiles: {error}").format(error=e)
-            QMessageBox.warning(self, "CapyPanel", message)
-            return False
+    def _written(self) -> None:
         self._show_folder_state()  # the first change makes the folder
-        self.changed.emit()
-        return True
+
+    def _save_failed(self) -> str:
+        return _("Couldn't save the connection profiles: {error}")
 
     def _fill_profiles(self, select: str | None) -> None:
         self.list.clear()
@@ -465,7 +443,7 @@ class ConnectionsPage(Page):
             )
         if not confirm(self, _("Delete connection profile"), text, _("Delete")):
             return
-        self._write(lambda: self.store.delete(profile.id))
+        self._write(lambda: self.store.delete(profile.id), self._save_failed())
         self._fill_profiles(select=None)
 
     def _uses(self, profile_id: str) -> tuple[int, int]:
@@ -485,13 +463,13 @@ class ConnectionsPage(Page):
             return None
 
     def _save(self, profile: ConnectionProfile, settings: bytes | None = None) -> None:
-        self._write(lambda: self.store.save(profile, settings))
+        self._write(lambda: self.store.save(profile, settings), self._save_failed())
         self._fill_profiles(select=profile.id)
 
     def _default_picked(self) -> None:
         chosen = self.default_choice()
         if chosen and chosen != self.store.default_id():
-            self._write(lambda: self.store.set_default(chosen))
+            self._write(lambda: self.store.set_default(chosen), self._save_failed())
 
     def default_choice(self) -> str:
         return self.default.currentData() or ""
@@ -501,6 +479,51 @@ class ConnectionsPage(Page):
         self.open_folder.setEnabled(exists)
         self.open_folder.setToolTip("" if exists else _("Created when you change a profile"))
         self.builtin_note.setVisible(not exists)
+
+
+class ToolsPage(SharedPage):
+    """Settings > Remote tools: where each tool is on this PC, set once for everyone."""
+
+    def __init__(self, catalogs: Catalogs) -> None:
+        super().__init__(_("Remote tools"), catalogs)
+        self.can_edit_tools = catalogs.tools.can_edit()
+        tools_box = Section(_("Remote tools"))
+        tools_layout = QVBoxLayout(tools_box.inner)
+        tools_layout.setContentsMargins(0, 2, 0, 0)
+        # The same table as the profiles: the buttons act on the tool picked.
+        self.tools = grid_table([_("Tool"), _("Status"), _("Where")])
+        self.tools.setColumnWidth(0, 190)
+        self.tools.setColumnWidth(1, 150)
+        self.tools.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # a path keeps both ends
+        self.tools.itemSelectionChanged.connect(self._update_tool_buttons)
+        self.locate_button = QPushButton(_("Change path…"))
+        self.automatic_button = QPushButton(_("Detect"))
+        self.automatic_button.setToolTip(_("Find it by itself again, not at the path you chose"))
+        self.download_button = QPushButton(_("Download"))
+        for button, action in (
+            (self.locate_button, "locate"),
+            (self.automatic_button, "automatic"),
+            (self.download_button, "download"),
+        ):
+            button.clicked.connect(lambda _c=False, a=action: self._picked_tool_action(a))
+        tool_buttons = [self.locate_button, self.automatic_button, self.download_button]
+        tools_layout.addWidget(with_buttons(self.tools, tool_buttons))
+        tools_layout.addWidget(
+            notes(
+                _("Where each tool is installed, set once for everyone on this PC.")
+                if self.can_edit_tools
+                else _(
+                    "Where each tool is installed, set once for everyone on this PC. Read-only: "
+                    "only people Windows lets write the tools folder can change it."
+                )
+            )
+        )
+        self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])
+        tools_layout.addWidget(self.tools_skipped)
+
+        self.body.addWidget(tools_box)
+        self.body.addStretch(1)
+        self._fill_tools()
 
     # ---- tools: a path chosen here is written at once ----
 
@@ -586,5 +609,8 @@ class ConnectionsPage(Page):
         self._set_path(tool, "")
 
     def _set_path(self, tool: ToolDefinition, executable: str) -> None:
-        self._write(lambda: self.catalogs.tools.set_paths({tool.id: executable}))
+        self._write(
+            lambda: self.catalogs.tools.set_paths({tool.id: executable}),
+            _("Couldn't save where the tools are: {error}"),
+        )
         self._fill_tools()

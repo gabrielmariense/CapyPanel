@@ -333,7 +333,7 @@ def test_hosts_with_no_profile_anywhere_use_the_shared_default(
 
 def test_the_default_profile_chosen_in_settings_is_saved_for_everyone(window: MainWindow) -> None:
     dialog = window.settings_dialog()
-    page = dialog.connections
+    page = dialog.profiles
     page.default.setCurrentIndex(page.default.findData("pis"))
     assert window.connector.catalogs.profiles.default_id() == "pis"
     assert window.connector.default_profile() == "pis"
@@ -345,10 +345,10 @@ def test_profile_rows_never_overlap(window: MainWindow) -> None:
     for theme in ("paper", "capypanel-dark"):
         window.set_theme(theme)
         dialog = window.settings_dialog()
-        dialog.show_page("connections")
+        dialog.show_page("profiles")
         dialog.show()
         QApplication.processEvents()
-        rows = dialog.connections.list
+        rows = dialog.profiles.list
         top, below = rows.topLevelItem(0), rows.topLevelItem(1)
         assert top is not None and below is not None
         first, second = rows.visualItemRect(top), rows.visualItemRect(below)
@@ -372,7 +372,7 @@ def test_a_missing_viewer_offers_to_open_settings(
     window.connector.credentials.remember("offices", Credential("ana", "x"))
     _select(window, "PC-A")
     window.connect_selected()
-    assert opened == ["connections"]
+    assert opened == ["tools"]  # where the tool's path is set
 
 
 def test_a_host_s_own_unavailable_profile_shows_checked_in_the_menu(window: MainWindow) -> None:
