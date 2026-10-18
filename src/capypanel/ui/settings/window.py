@@ -30,7 +30,7 @@ from capypanel.core.i18n import _
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.ui.notes import hint
 from capypanel.ui.settings import search
-from capypanel.ui.settings.connections import ProfilesPage, ToolsPage
+from capypanel.ui.settings.connections import ConnectionsPage
 from capypanel.ui.settings.pages import (
     FilesPage,
     GeneralPage,
@@ -43,10 +43,10 @@ from capypanel.ui.themes import engine as themes
 
 # The pages' titles, as the pages set them, and the groups' labels: the page list is sized for the
 # longest in any language. The app's pages first, then each tool's.
-PAGE_TITLES = ("General", "Files", "General", "Host lists", "Connection profiles", "Remote tools")
+PAGE_TITLES = ("General", "Files", "General", "Host lists", "Connections")
 GROUPS = (
     ("CapyPanel", ("general", "files")),
-    ("Hosts", ("hosts", "host_lists", "profiles", "tools")),
+    ("Hosts", ("hosts", "host_lists", "connections")),
 )
 SEARCH_FROM = 3  # letters typed before the search shows its results
 ROOM = 60  # spare width past the widest page: a button row never ends just short of its table
@@ -106,7 +106,7 @@ class SettingsDialog(QDialog):
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(12, 12, 12, 12)
         self._build(themes.current().id)
-        self.resize(860, 560)  # wide enough that one-line descriptions stay on one line
+        self.resize(860, 640)  # one-line descriptions on one line; Connections without scrolling
 
     def _build(self, theme_id: str) -> None:
         """The pages and buttons, in the current language, showing what's set."""
@@ -133,15 +133,13 @@ class SettingsDialog(QDialog):
             found=self._found,
             hidden=self._hidden,
         )
-        self.profiles = ProfilesPage(self._catalogs, self._document)
-        self.tools = ToolsPage(self._catalogs)
+        self.connections = ConnectionsPage(self._catalogs, self._document)
         self.pages: dict[str, Page] = {
             "general": self.general,
             "files": self.files,
             "hosts": self.hosts,
             "host_lists": self.host_lists,
-            "profiles": self.profiles,
-            "tools": self.tools,
+            "connections": self.connections,
         }
         self.general.language.currentIndexChanged.connect(self._language_changed)
         self.general.theme.currentIndexChanged.connect(
@@ -150,8 +148,7 @@ class SettingsDialog(QDialog):
         for page in (self.hosts, self.host_lists):
             page.changed.connect(self._prefs_changed)
         self.host_lists.view.open_requested.connect(self.open_requested.emit)
-        for page in (self.profiles, self.tools):
-            page.changed.connect(self.profiles_changed.emit)
+        self.connections.changed.connect(self.profiles_changed.emit)
 
         self.page_list = QListWidget()
         self.page_list.setObjectName("pageList")
@@ -287,7 +284,7 @@ class SettingsDialog(QDialog):
         self._document, self._start_view, self._host_list = document, start_view, host_list
         self.host_lists.view.list_opened(document)
         self.hosts.list_opened(start_view, host_list)
-        self.profiles.document = document
+        self.connections.profiles.document = document
 
     def _filter_pages(self, text: str) -> None:
         """From SEARCH_FROM letters on: every section that mentions `text` at the start of a

@@ -12,7 +12,7 @@ from capypanel.core.hosts.model import HostList
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.profiles import ConnectionProfile
 from capypanel.ui.settings import connections
-from capypanel.ui.settings.connections import ProfileDialog, ProfilesPage, ToolsPage
+from capypanel.ui.settings.connections import ProfileDialog, ProfilesSection, ToolsSection
 
 
 @pytest.fixture
@@ -31,7 +31,7 @@ def _answer(monkeypatch: pytest.MonkeyPatch, fill: Callable[[ProfileDialog], Non
     monkeypatch.setattr(ProfileDialog, "exec", run)
 
 
-def _select(page: ProfilesPage, profile_id: str) -> None:
+def _select(page: ProfilesSection, profile_id: str) -> None:
     for row in range(page.list.topLevelItemCount()):
         item = page.list.topLevelItem(row)
         if item is not None and item.data(0, Qt.ItemDataRole.UserRole) == profile_id:
@@ -39,12 +39,12 @@ def _select(page: ProfilesPage, profile_id: str) -> None:
             item.setSelected(True)
 
 
-def _names(page: ProfilesPage) -> list[str]:
+def _names(page: ProfilesSection) -> list[str]:
     rows = range(page.list.topLevelItemCount())
     return [item.text(0) for row in rows if (item := page.list.topLevelItem(row))]
 
 
-def _tool_row(page: ToolsPage, tool_id: str) -> tuple[str, str]:
+def _tool_row(page: ToolsSection, tool_id: str) -> tuple[str, str]:
     """The tool's status and the tooltip on it."""
     for row in range(page.tools.topLevelItemCount()):
         item = page.tools.topLevelItem(row)
@@ -89,7 +89,7 @@ def test_the_editor_offers_only_what_the_chosen_tool_supports(catalogs: Catalogs
 def test_starter_profiles_can_be_duplicated_edited_and_deleted(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    page = ProfilesPage(catalogs, None)
+    page = ProfilesSection(catalogs, None)
     _select(page, "ultravnc")
     assert page.edit_button.isEnabled() and page.delete_button.isEnabled()
     assert _menu(page.fill_row_menu) == ["&Edit…", "D&uplicate…", "&Delete…"]  # right-click
@@ -112,7 +112,7 @@ def test_deleting_says_how_many_hosts_use_it(
     hl, _a = hl.add_host("PI-1", group.id, profile="pis")
     hl, _b = hl.add_host("PI-2", group.id, profile="pis")
     document = OpenList.save_as(tmp_path / "list.json", hl)
-    page = ProfilesPage(catalogs, document)
+    page = ProfilesSection(catalogs, document)
     asked: list[str] = []
     monkeypatch.setattr(
         connections, "confirm", lambda _parent, _title, text, _action: asked.append(text) or False
@@ -130,7 +130,7 @@ def test_a_folder_the_user_cannot_write_is_read_only(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(catalogs.profiles, "can_edit", lambda: False)
-    page = ProfilesPage(catalogs, None)
+    page = ProfilesSection(catalogs, None)
     _select(page, "ultravnc")
     buttons = (page.add_button, page.edit_button, page.delete_button)
     assert not any(b.isEnabled() for b in buttons) and not page.default.isEnabled()
@@ -188,7 +188,7 @@ def test_with_a_settings_file_the_file_decides_not_the_options(
 def test_remote_tools_show_a_state_and_only_the_actions_that_fit(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    page = ToolsPage(catalogs)  # UltraVNC found by itself, RealVNC missing
+    page = ToolsSection(catalogs)  # UltraVNC found by itself, RealVNC missing
     assert _tool_row(page, "ultravnc") == ("✓ Found", r"C:\Tools\vncviewer.exe")
     page.select_tool("ultravnc")  # the buttons act on the tool picked
     assert page.tool_actions("ultravnc") == ["locate"]
@@ -248,18 +248,18 @@ def test_files_that_arent_used_are_named_with_the_reason(
     (folder / "planted.json").write_text("{}", encoding="utf-8")
     monkeypatch.setattr(winsec, "made_by_trusted", lambda path: path.name != "planted.json")
     catalogs.profiles.reload()
-    page = ProfilesPage(catalogs, None)
+    page = ProfilesSection(catalogs, None)
     assert not page.profiles_skipped.isHidden()
     assert page.profiles_skipped.text() == (
         "2 files skipped: broken.json (can't be read), planted.json (made by another user)"
     )  # a note, like the others
     assert str(folder / "planted.json") in page.profiles_skipped.toolTip()  # where, for a fix
-    assert ToolsPage(catalogs).tools_skipped.isHidden()  # nothing skipped there
+    assert ToolsSection(catalogs).tools_skipped.isHidden()  # nothing skipped there
 
 
 def test_remote_desktop_says_it_asks_for_the_password_itself(catalogs: Catalogs) -> None:
     # "no password" read as if none were needed; Remote Desktop's own window asks for it.
-    page = ProfilesPage(catalogs, None)
+    page = ProfilesSection(catalogs, None)
     rows = range(page.list.topLevelItemCount())
     [rdp] = [i for r in rows if (i := page.list.topLevelItem(r)) and i.text(0) == "Remote Desktop"]
     assert rdp.text(2) == "asked by Remote Desktop Connection itself"
@@ -273,7 +273,7 @@ def test_remote_desktop_says_it_asks_for_the_password_itself(catalogs: Catalogs)
 def test_a_new_profile_is_written_at_once(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    page = ProfilesPage(catalogs, None)
+    page = ProfilesSection(catalogs, None)
     told: list[bool] = []
     page.changed.connect(lambda: told.append(True))
 
@@ -293,7 +293,7 @@ def test_a_new_profile_is_written_at_once(
 def test_saying_no_to_delete_keeps_the_profile(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    page = ProfilesPage(catalogs, None)
+    page = ProfilesSection(catalogs, None)
     monkeypatch.setattr(connections, "confirm", lambda *_args: False)
     _select(page, "ultravnc")
     page.delete()
@@ -301,7 +301,7 @@ def test_saying_no_to_delete_keeps_the_profile(
 
 
 def test_the_default_profile_is_written_at_once(catalogs: Catalogs) -> None:
-    page = ProfilesPage(catalogs, None)
+    page = ProfilesSection(catalogs, None)
     assert page.default_choice() == "ultravnc"
     page.default.setCurrentIndex(page.default.findData("realvnc"))
     assert catalogs.profiles.default_id() == "realvnc"
@@ -310,7 +310,7 @@ def test_the_default_profile_is_written_at_once(catalogs: Catalogs) -> None:
 def test_tool_paths_chosen_here_are_written_at_once(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    page = ToolsPage(catalogs)
+    page = ToolsSection(catalogs)
     assert _tool_row(page, "realvnc")[0] == "✗ Not found"
     monkeypatch.setattr(
         QFileDialog, "getOpenFileName", lambda *_a, **_k: (r"D:\Portable\vncviewer.exe", "")
@@ -331,7 +331,7 @@ def test_a_settings_file_chosen_for_a_profile_is_cleaned_and_copied(
     template = tmp_path / "saved from viewer.vnc"
     template.write_bytes(b"[connection]\r\nhost=10.0.0.9\r\n[options]\r\nviewonly=1\r\n")
     _choose_settings_file(monkeypatch, template)
-    page = ProfilesPage(catalogs, None)
+    page = ProfilesSection(catalogs, None)
 
     def fill(dialog: ProfileDialog) -> None:
         dialog.name.setText("View only")
@@ -360,7 +360,7 @@ def test_a_settings_file_chosen_for_a_profile_is_cleaned_and_copied(
 
 
 def test_the_built_in_note_shows_until_a_profile_changes(catalogs: Catalogs) -> None:
-    page = ProfilesPage(catalogs, None)
+    page = ProfilesSection(catalogs, None)
     assert not catalogs.profiles.folder.exists()  # the built-in profiles are shown
     assert not page.builtin_note.isHidden()
     page.default.setCurrentIndex(page.default.findData("realvnc"))  # a change makes the folder
@@ -370,7 +370,7 @@ def test_the_built_in_note_shows_until_a_profile_changes(catalogs: Catalogs) -> 
 def test_a_double_click_on_a_tool_changes_its_path(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    page = ToolsPage(catalogs)
+    page = ToolsSection(catalogs)
     monkeypatch.setattr(
         QFileDialog, "getOpenFileName", lambda *_a, **_k: (r"D:\Portable\vncviewer.exe", "")
     )

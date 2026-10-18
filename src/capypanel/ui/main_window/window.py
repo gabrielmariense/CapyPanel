@@ -105,7 +105,7 @@ class MainWindow(QMainWindow):
         self._default_list = paths.default_list
         self._personal_list = paths.personal_list
         self.connector = Connector(self, Catalogs.for_paths(paths), SessionCredentials())
-        self.connector.open_settings = lambda: self.open_settings("tools")
+        self.connector.open_settings = lambda: self.open_settings("connections")
 
         # Refresh results, by host id: in memory only, since the list file is shared.
         self._status_found: dict[str, tuple[Status, datetime, Answer | None]] = {}
@@ -322,7 +322,7 @@ class MainWindow(QMainWindow):
         a.manual_connect.triggered.connect(self.manual_connect)
         a.copy_address.triggered.connect(lambda: self._copy(lambda h: h.target))
         a.forget_passwords.triggered.connect(self.forget_passwords)
-        a.connection_profiles.triggered.connect(lambda: self.open_settings("profiles"))
+        a.connection_profiles.triggered.connect(lambda: self.open_settings("connections"))
 
     def _restore_layout(self) -> None:
         geometry = self._prefs.get("window_geometry")

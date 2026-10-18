@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 02:19-0300\n"
+"POT-Creation-Date: 2026-10-18 13:29-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -429,6 +429,9 @@ msgid "Connection profiles"
 msgstr ""
 
 msgid "Connection profiles and remote tools, for everyone on this PC."
+msgstr ""
+
+msgid "Connections"
 msgstr ""
 
 msgid "Console"
@@ -1825,7 +1828,7 @@ msgstr ""
 msgid ""
 "{tool} wasn't found on this PC. Install it, or show CapyPanel where it "
 "is. The path is saved for everyone on this PC; you can also change it "
-"later in Settings > Hosts > Remote tools."
+"later in Settings > Hosts > Connections."
 msgstr ""
 
 #, python-brace-format

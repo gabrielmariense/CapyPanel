@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 02:19-0300\n"
+"POT-Creation-Date: 2026-10-18 13:29-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -427,6 +427,9 @@ msgstr "Perfis de conexão"
 
 msgid "Connection profiles and remote tools, for everyone on this PC."
 msgstr "Perfis de conexão e ferramentas remotas, para todos neste PC."
+
+msgid "Connections"
+msgstr "Conexões"
 
 msgid "Console"
 msgstr "Console"
@@ -1755,8 +1758,8 @@ msgid "{tool} not found"
 msgstr "{tool} não encontrado"
 
 #, python-brace-format
-msgid "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. The path is saved for everyone on this PC; you can also change it later in Settings > Hosts > Remote tools."
-msgstr "O {tool} não foi encontrado neste PC. Instale-o ou mostre ao CapyPanel onde ele está. O caminho é salvo para todos neste PC; você também pode alterá-lo depois em Configurações > Hosts > Ferramentas remotas."
+msgid "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. The path is saved for everyone on this PC; you can also change it later in Settings > Hosts > Connections."
+msgstr "O {tool} não foi encontrado neste PC. Instale-o ou mostre ao CapyPanel onde ele está. O caminho é salvo para todos neste PC; você também pode alterá-lo depois em Configurações > Hosts > Conexões."
 
 #, python-brace-format
 msgid "{user} (disconnected)"

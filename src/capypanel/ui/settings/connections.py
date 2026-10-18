@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QUrl
+from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -258,8 +258,11 @@ def skipped_note(problems: list[tuple[Path, str]]) -> QLabel:
     return label
 
 
-class SharedPage(Page):
-    """A page whose changes go to files shared by everyone on this PC, written at once."""
+class SharedSection(Section):
+    """A part of Connections whose changes go to files shared by everyone on this PC, written
+    at once; `changed` fires after each."""
+
+    changed = Signal()
 
     def __init__(self, title: str, catalogs: Catalogs) -> None:
         super().__init__(title)
@@ -280,8 +283,8 @@ class SharedPage(Page):
         """After a change was written."""
 
 
-class ProfilesPage(SharedPage):
-    """Settings > Connection profiles: the profiles everyone on this PC connects with."""
+class ProfilesSection(SharedSection):
+    """The connection profiles everyone on this PC connects with."""
 
     def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
         super().__init__(_("Connection profiles"), catalogs)
@@ -289,7 +292,6 @@ class ProfilesPage(SharedPage):
         self.document = document
         self.can_edit = self.store.can_edit()
 
-        profiles_box = Section(_("Connection profiles"))
         # The folder is made at start; where this user couldn't, the app's own copies are shown.
         self.builtin_note = notes(
             _("These are the built-in profiles: the folder is created when you change one.")
@@ -321,7 +323,7 @@ class ProfilesPage(SharedPage):
         self.default = QComboBox()
         self.default.setEnabled(self.can_edit)
         self.default.currentIndexChanged.connect(lambda _i: self._default_picked())
-        inner = QVBoxLayout(profiles_box.inner)
+        inner = QVBoxLayout(self.inner)
         inner.setContentsMargins(0, 2, 0, 0)
         inner.setSpacing(6)
         inner.addWidget(with_buttons(self.list, profile_buttons))
@@ -337,8 +339,6 @@ class ProfilesPage(SharedPage):
             )
         )
 
-        self.body.addWidget(profiles_box)
-        self.body.addStretch(1)
         self._fill_profiles(select=None)
 
     def _written(self) -> None:
@@ -484,14 +484,13 @@ class ProfilesPage(SharedPage):
         self.builtin_note.setVisible(not self.store.folder.is_dir())
 
 
-class ToolsPage(SharedPage):
-    """Settings > Remote tools: where each tool is on this PC, set once for everyone."""
+class ToolsSection(SharedSection):
+    """Where each remote tool is on this PC, set once for everyone."""
 
     def __init__(self, catalogs: Catalogs) -> None:
         super().__init__(_("Remote tools"), catalogs)
         self.can_edit_tools = catalogs.tools.can_edit()
-        tools_box = Section(_("Remote tools"))
-        tools_layout = QVBoxLayout(tools_box.inner)
+        tools_layout = QVBoxLayout(self.inner)
         tools_layout.setContentsMargins(0, 2, 0, 0)
         tools_layout.setSpacing(6)
         # The same table as the profiles: the buttons act on the tool picked.
@@ -521,8 +520,6 @@ class ToolsPage(SharedPage):
         self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])
         tools_layout.addWidget(self.tools_skipped)
 
-        self.body.addWidget(tools_box)
-        self.body.addStretch(1)
         self._fill_tools()
 
     # ---- tools: a path chosen here is written at once ----
@@ -635,3 +632,16 @@ class ToolsPage(SharedPage):
             _("Couldn't save where the tools are: {error}"),
         )
         self._fill_tools()
+
+
+class ConnectionsPage(Page):
+    """Settings > Connections: the profiles, and where the tools they open are."""
+
+    def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
+        super().__init__(_("Connections"))
+        self.profiles = ProfilesSection(catalogs, document)
+        self.tools = ToolsSection(catalogs)
+        for section in (self.profiles, self.tools):
+            self.body.addWidget(section)
+            section.changed.connect(self.changed.emit)
+        self.body.addStretch(1)

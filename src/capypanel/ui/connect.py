@@ -347,7 +347,7 @@ class Connector:
             _(
                 "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. "
                 "The path is saved for everyone on this PC; you can also change it later in "
-                "Settings > Hosts > Remote tools."
+                "Settings > Hosts > Connections."
             ).format(tool=tool.name),
             parent=self._parent,
         )
