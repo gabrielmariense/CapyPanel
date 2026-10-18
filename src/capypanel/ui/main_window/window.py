@@ -33,7 +33,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel import BUILD
-from capypanel.core import files, i18n, settings, winsec
+from capypanel.core import files, settings, winsec
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
@@ -46,7 +46,6 @@ from capypanel.core.remote.sessions import Account, Reason, Session, SessionsErr
 from capypanel.core.remote.status import Answer, Status
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import SessionCredentials, Target
-from capypanel.core.tools.profiles import ProfileError
 from capypanel.ui import about, language
 from capypanel.ui import checks as check_texts
 from capypanel.ui.checks import AccountDialog, CheckRun
@@ -81,9 +80,7 @@ from capypanel.ui.main_window.panes import PaneSplitter
 from capypanel.ui.main_window.rail import ToolRail
 from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
 from capypanel.ui.menus import MenuCombo, StayOpenMenu, popup
-from capypanel.ui.settings import connections
-from capypanel.ui.settings.connections import ConnectionChanges
-from capypanel.ui.settings.window import SettingsChoices, SettingsDialog
+from capypanel.ui.settings.window import SettingsDialog, SettingsPrefs
 from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
@@ -1144,21 +1141,18 @@ class MainWindow(QMainWindow):
             dialog.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
         if page:
             dialog.show_page(page)
-        dialog.saved.connect(lambda choices: self._settings_saved(dialog, choices))
-        dialog.language_picked.connect(self.set_language)  # at once, no Save needed
-        dialog.theme_picked.connect(self.set_theme)
         run_modal(dialog)
         self._prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
         self._save_prefs()
 
-    def _settings_saved(self, dialog: SettingsDialog, choices: SettingsChoices) -> None:
-        """Save in Settings: apply now; the window stays open."""
-        self.apply_settings(choices)
-        self._selection_changed()  # profiles may have changed
-        dialog.after_save(self._doc)
+    def _open_from_settings(self, dialog: SettingsDialog, path: Path) -> None:
+        """A list opened from Settings > Host lists: Settings then shows it as the open one."""
+        self.open_list(path)
+        dialog.list_opened(self._doc, self._start_view(), self._doc.hosts if self._doc else None)
 
     def settings_dialog(self) -> SettingsDialog:
-        return SettingsDialog(
+        """Settings, wired up: every choice applies as it's made, with no Save."""
+        dialog = SettingsDialog(
             self,
             paths=self._paths,
             start_list=self._prefs.get(locations.START_KEY, locations.START_LAST),
@@ -1174,6 +1168,12 @@ class MainWindow(QMainWindow):
             start_view=self._start_view(),
             host_list=self._doc.hosts if self._doc else None,
         )
+        dialog.language_picked.connect(self.set_language)
+        dialog.theme_picked.connect(self.set_theme)
+        dialog.prefs_changed.connect(self.apply_prefs)
+        dialog.open_requested.connect(lambda path: self._open_from_settings(dialog, path))
+        dialog.profiles_changed.connect(self._selection_changed)  # Connect's menu follows
+        return dialog
 
     def _start_view(self) -> tuple[str, str] | None:
         if self._doc is None:
@@ -1181,38 +1181,22 @@ class MainWindow(QMainWindow):
         view = locations.list_view(self._prefs, self._doc.path)
         return view.show, view.group
 
-    def apply_settings(self, choices: SettingsChoices) -> None:
-        self._prefs[locations.START_KEY] = choices.start_list
-        if choices.start_view is not None and self._doc is not None:  # for the list open now
-            show, group = choices.start_view
+    def apply_prefs(self, prefs: SettingsPrefs) -> None:
+        """A choice made in Settings, kept and applied at once."""
+        self._prefs[locations.START_KEY] = prefs.start_list
+        if prefs.start_view is not None and self._doc is not None:  # for the list open now
+            show, group = prefs.start_view
             view = locations.list_view(self._prefs, self._doc.path)
             locations.set_list_view(
                 self._prefs, self._doc.path, replace(view, show=show, group=group)
             )
-        locations.set_added_lists(self._prefs, choices.added_lists)
-        locations.set_hidden_lists(self._prefs, choices.hidden_lists)
-        current = self._doc.path if self._doc else None
-        if (
-            current is None
-            or choices.rewritten
-            or not locations.same_path(choices.host_list, current)
-        ):
-            self.open_list(choices.host_list)
-        if choices.theme_id != themes.current().id:
-            self.set_theme(choices.theme_id)
-        if choices.language != i18n.language():
-            self.set_language(choices.language)
-        self._apply_connections(choices.connections)
-        on, minutes = choices.auto_status
+        locations.set_added_lists(self._prefs, prefs.added_lists)
+        locations.set_hidden_lists(self._prefs, prefs.hidden_lists)
+        on, minutes = prefs.auto_status
         self._prefs["auto_status"] = {"on": on, "minutes": minutes}
         self._apply_auto_status()
         self._save_prefs()
-
-    def _apply_connections(self, changes: ConnectionChanges) -> None:
-        try:
-            connections.apply(self.connector.catalogs, changes)
-        except (ProfileError, OSError) as e:
-            self._error(_("Couldn't save the connection profiles: {error}").format(error=e))
+        self._update_state()  # the list's name may change with the lists kept
 
     # ---- look ----
 

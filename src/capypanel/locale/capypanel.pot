@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 01:35-0300\n"
+"POT-Creation-Date: 2026-10-18 01:59-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -65,9 +65,6 @@ msgstr ""
 msgid "&Details pane"
 msgstr ""
 
-msgid "&Discard changes"
-msgstr ""
-
 msgid "&Documentation"
 msgstr ""
 
@@ -114,9 +111,6 @@ msgid "&Hosts:"
 msgstr ""
 
 msgid "&Import hosts…"
-msgstr ""
-
-msgid "&Keep editing"
 msgstr ""
 
 msgid "&Leave out of the import"
@@ -191,13 +185,7 @@ msgstr ""
 msgid "&Run"
 msgstr ""
 
-msgid "&Save"
-msgstr ""
-
 msgid "&Save as preset…"
-msgstr ""
-
-msgid "&Save changes"
 msgstr ""
 
 msgid "&Settings…"
@@ -516,7 +504,7 @@ msgstr ""
 msgid "Created when opened"
 msgstr ""
 
-msgid "Created when you save a change"
+msgid "Created when you change a profile"
 msgstr ""
 
 msgid "Credits"
@@ -1216,9 +1204,6 @@ msgstr ""
 msgid "Signs in with"
 msgstr ""
 
-msgid "Some changes aren't saved yet."
-msgstr ""
-
 msgid "Someone else has changed the file since you opened it."
 msgstr ""
 
@@ -1300,9 +1285,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
-msgstr ""
-
-msgid "The changes on the Connections page aren't saved yet."
 msgstr ""
 
 msgid ""
@@ -1428,8 +1410,8 @@ msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr ""
 
 msgid ""
-"These are the built-in profiles: the folder is created when you save a "
-"change."
+"These are the built-in profiles: the folder is created when you change "
+"one."
 msgstr ""
 
 msgid "These are the built-in profiles: the folder isn't there yet."
@@ -1498,9 +1480,6 @@ msgid "Unknown tool kind “{kind}”."
 msgstr ""
 
 msgid "Unreachable"
-msgstr ""
-
-msgid "Unsaved changes"
 msgstr ""
 
 msgid "Use &defaults"
@@ -1886,6 +1865,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "“{key}” must be a list."
+msgstr ""
+
+#, python-brace-format
+msgid "“{name}” can't be opened: {why}"
 msgstr ""
 
 #, python-brace-format

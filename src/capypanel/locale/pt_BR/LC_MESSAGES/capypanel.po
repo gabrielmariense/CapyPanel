@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 01:35-0300\n"
+"POT-Creation-Date: 2026-10-18 01:59-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -66,9 +66,6 @@ msgstr "E&xcluir…"
 msgid "&Details pane"
 msgstr "Painel de &detalhes"
 
-msgid "&Discard changes"
-msgstr "&Descartar alterações"
-
 msgid "&Documentation"
 msgstr "&Documentação"
 
@@ -116,9 +113,6 @@ msgstr "&Hosts:"
 
 msgid "&Import hosts…"
 msgstr "&Importar hosts…"
-
-msgid "&Keep editing"
-msgstr "&Continuar editando"
 
 msgid "&Leave out of the import"
 msgstr "&Deixar fora da importação"
@@ -192,14 +186,8 @@ msgstr "&Redefinir layout"
 msgid "&Run"
 msgstr "&Executar"
 
-msgid "&Save"
-msgstr "&Salvar"
-
 msgid "&Save as preset…"
 msgstr "&Salvar como predefinição…"
-
-msgid "&Save changes"
-msgstr "&Salvar alterações"
 
 msgid "&Settings…"
 msgstr "&Configurações…"
@@ -513,8 +501,8 @@ msgstr "Criado por:"
 msgid "Created when opened"
 msgstr "Criada ao abrir"
 
-msgid "Created when you save a change"
-msgstr "Criada quando você salvar uma alteração"
+msgid "Created when you change a profile"
+msgstr "Criada quando você altera um perfil"
 
 msgid "Credits"
 msgstr "Créditos"
@@ -1192,9 +1180,6 @@ msgstr "Mostrar do&mínio dos usuários"
 msgid "Signs in with"
 msgstr "Entra com"
 
-msgid "Some changes aren't saved yet."
-msgstr "Algumas alterações ainda não foram salvas."
-
 msgid "Someone else has changed the file since you opened it."
 msgstr "Outra pessoa alterou o arquivo desde que você o abriu."
 
@@ -1272,9 +1257,6 @@ msgstr "Os logs do app, para anexar a um relato de problema"
 #, python-brace-format
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
 msgstr "Os argumentos usam uma opção que não está em “options”: “{option}”."
-
-msgid "The changes on the Connections page aren't saved yet."
-msgstr "As alterações na página Conexões ainda não foram salvas."
 
 msgid "The computer didn't accept the account: a wrong password, a locked account, or an account it doesn't trust."
 msgstr "O computador não aceitou a conta: senha errada, conta bloqueada ou uma conta em que ele não confia."
@@ -1386,8 +1368,8 @@ msgstr "Tema"
 msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr "Não há perfis de conexão. Crie um em Configurações > Conexões."
 
-msgid "These are the built-in profiles: the folder is created when you save a change."
-msgstr "Estes são os perfis que vêm com o app: a pasta é criada quando você salvar uma alteração."
+msgid "These are the built-in profiles: the folder is created when you change one."
+msgstr "Estes são os perfis que vêm com o app: a pasta é criada quando você altera um."
 
 msgid "These are the built-in profiles: the folder isn't there yet."
 msgstr "Estes são os perfis que vêm com o app: a pasta ainda não existe."
@@ -1454,9 +1436,6 @@ msgstr "Tipo de ferramenta desconhecido: “{kind}”."
 
 msgid "Unreachable"
 msgstr "Inacessível"
-
-msgid "Unsaved changes"
-msgstr "Alterações não salvas"
 
 msgid "Use &defaults"
 msgstr "Usar &padrões"
@@ -1816,6 +1795,10 @@ msgstr "“{host}” recusou a conta “{user}”, então o CapyPanel parou ante
 #, python-brace-format
 msgid "“{key}” must be a list."
 msgstr "“{key}” deve ser uma lista."
+
+#, python-brace-format
+msgid "“{name}” can't be opened: {why}"
+msgstr "Não dá para abrir “{name}”: {why}"
 
 #, python-brace-format
 msgid "“{name}” has no address, and its name can't be used as one: a computer name has no spaces or symbols other than - and _."

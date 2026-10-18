@@ -335,7 +335,6 @@ def test_the_default_profile_chosen_in_settings_is_saved_for_everyone(window: Ma
     dialog = window.settings_dialog()
     page = dialog.connections
     page.default.setCurrentIndex(page.default.findData("pis"))
-    window.apply_settings(dialog.choices())
     assert window.connector.catalogs.profiles.default_id() == "pis"
     assert window.connector.default_profile() == "pis"
 

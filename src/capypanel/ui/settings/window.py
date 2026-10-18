@@ -1,15 +1,13 @@
-"""The Settings window: a list of pages on the left, Save and Close at the bottom.
-Nothing applies until Save, except the language, which switches as soon as it's picked (the
-window follows). The main window applies the choices handed over by `saved`. Close, and leaving
-the Connections page, ask first when something isn't saved."""
+"""The Settings window: a search and a list of pages on the left, Close at the bottom. Every
+choice applies as soon as it's made, with no Save: the main window applies what the signals hand
+over, and profiles and tool paths are written by their page at once."""
 
 from dataclasses import dataclass
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QObject, QSize, Qt, QTimer, Signal
-from PySide6.QtGui import QHideEvent, QShowEvent
+from PySide6.QtCore import QSize, Qt, QTimer, Signal
+from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
-    QApplication,
     QDialog,
     QDialogButtonBox,
     QFrame,
@@ -18,7 +16,6 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QListWidgetItem,
-    QMessageBox,
     QPushButton,
     QScrollArea,
     QStackedWidget,
@@ -28,14 +25,12 @@ from PySide6.QtWidgets import (
 
 from capypanel.core import i18n, settings
 from capypanel.core.hosts.document import OpenList
-from capypanel.core.hosts.locations import same_path
 from capypanel.core.hosts.model import HostList
 from capypanel.core.i18n import _
 from capypanel.core.tools.catalog import Catalogs
-from capypanel.core.tools.profiles import ProfileError
 from capypanel.ui.notes import hint
 from capypanel.ui.settings import search
-from capypanel.ui.settings.connections import ConnectionChanges, ConnectionsPage, apply
+from capypanel.ui.settings.connections import ConnectionsPage
 from capypanel.ui.settings.pages import (
     FilesPage,
     GeneralPage,
@@ -55,13 +50,10 @@ ROOM = 60  # spare width past the widest page: a button row never ends just shor
 
 
 @dataclass(frozen=True)
-class SettingsChoices:
+class SettingsPrefs:
+    """The choices the main window keeps in its settings file, handed over on every change."""
+
     start_list: str  # see locations.START_KEY
-    host_list: Path
-    rewritten: bool  # the chosen list's file was written from Settings, so reopen it
-    theme_id: str
-    language: str
-    connections: ConnectionChanges
     added_lists: list[Path]  # the lists in Host lists, besides the default and personal
     hidden_lists: list[Path]  # lists in a lists folder removed from Host lists
     auto_status: tuple[bool, int] = (False, 5)  # check Status by itself, every N minutes
@@ -69,9 +61,11 @@ class SettingsChoices:
 
 
 class SettingsDialog(QDialog):
-    saved = Signal(object)  # SettingsChoices, on Save
-    language_picked = Signal(str)  # applied at once, not on Save
-    theme_picked = Signal(str)  # the same
+    language_picked = Signal(str)
+    theme_picked = Signal(str)
+    prefs_changed = Signal(object)  # SettingsPrefs
+    open_requested = Signal(object)  # a list's Path, to open now
+    profiles_changed = Signal()  # profiles or tool paths were written
 
     def __init__(
         self,
@@ -98,31 +92,21 @@ class SettingsDialog(QDialog):
         self._personal_list = personal_list
         self._document = document
         self._found = found or []
-        self._hidden = hidden or []
         self._registry = registry
         self._catalogs = catalogs
-        self._saved_state: tuple[object, ...] | None = None
+        # What's set now: a language switch rebuilds the window with these.
+        self._start_list, self._added, self._hidden = start_list, added, hidden or []
+        self._auto_status, self._start_view = auto_status, start_view
         # Contents replaced on a language switch stay alive, hidden: deleting a window part
         # holding a list can crash Qt after a theme switch (see DECISIONS, code cleanup).
         self._old: list[QWidget] = []
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(12, 12, 12, 12)
-        self._build(start_list, added, auto_status, themes.current().id, start_view=start_view)
+        self._build(themes.current().id)
         self.resize(780, 540)
-        self._saved_state = self._state()
-        self._update_save()
 
-    def _build(
-        self,
-        start_list: object,
-        added: list[Path],
-        auto_status: tuple[bool, int],
-        theme_id: str,
-        chosen: Path | None = None,
-        written: tuple[Path, ...] = (),
-        start_view: tuple[str, str] | None = None,
-    ) -> None:
-        """The pages and buttons, in the current language, showing the values given."""
+    def _build(self, theme_id: str) -> None:
+        """The pages and buttons, in the current language, showing what's set."""
         self._building = True  # pages report changes while they're filled
         self.setWindowTitle(_("Settings"))
         self.general = GeneralPage(
@@ -130,25 +114,22 @@ class SettingsDialog(QDialog):
         )
         self.files = FilesPage(self._paths)
         self.hosts = HostsPage(
-            start_list=start_list,
+            start_list=self._start_list,
             default_list=self._default_list,
             personal_list=self._personal_list,
-            added=added,
-            auto_status=auto_status,
-            start_view=start_view,
+            added=self._added,
+            auto_status=self._auto_status,
+            start_view=self._start_view,
             host_list=self._host_list,
         )
         self.host_lists = HostListsPage(
             default_list=self._default_list,
             personal_list=self._personal_list,
             document=self._document,
-            added=added,
+            added=self._added,
             found=self._found,
             hidden=self._hidden,
         )
-        if chosen is not None:
-            self.host_lists.view.select(chosen)
-        self.host_lists.view.written.extend(written)
         self.connections = ConnectionsPage(self._catalogs, self._document)
         self.pages: dict[str, Page] = {
             "general": self.general,
@@ -161,6 +142,10 @@ class SettingsDialog(QDialog):
         self.general.theme.currentIndexChanged.connect(
             lambda: self.theme_picked.emit(self.general.theme_id())
         )
+        for page in (self.hosts, self.host_lists):
+            page.changed.connect(self._prefs_changed)
+        self.host_lists.view.open_requested.connect(self.open_requested.emit)
+        self.connections.changed.connect(self.profiles_changed.emit)
 
         self.page_list = QListWidget()
         self.page_list.setObjectName("pageList")
@@ -182,7 +167,6 @@ class SettingsDialog(QDialog):
                 self._rows.append(page_id)
         for page in self.pages.values():
             self.stack.addWidget(_scrolling(page))  # long pages scroll
-            page.changed.connect(self._update_save)
         # Search results: the matching sections of every page, lent here while searching.
         self._results = Page(_("Search"))
         self.stack.addWidget(_scrolling(self._results))
@@ -201,14 +185,12 @@ class SettingsDialog(QDialog):
         self.page_list.currentRowChanged.connect(self._page_picked)
         self.page_list.setCurrentRow(self.row_of("general"))
 
-        # Save keeps the window open; Close asks first when something isn't saved. Neither is
-        # a default button: Enter never saves or closes by surprise.
+        # Only Close: every choice is applied already. Not a default button, so Enter in a
+        # field never closes the window by surprise.
         self.buttons = QDialogButtonBox()
-        role = QDialogButtonBox.ButtonRole
-        self.save_button = self.buttons.addButton(_("&Save"), role.ActionRole)
-        self.close_button = self.buttons.addButton(_("Close"), role.RejectRole)
+        role = QDialogButtonBox.ButtonRole.RejectRole
+        self.close_button = self.buttons.addButton(_("Close"), role)
         self.buttons.rejected.connect(self.reject)
-        self.save_button.clicked.connect(self._save)
         content = QWidget()
         columns = QHBoxLayout()
         columns.setSpacing(16)
@@ -239,26 +221,18 @@ class SettingsDialog(QDialog):
             QTimer.singleShot(0, self, self._rebuild)  # after the dropdown has closed
 
     def _rebuild(self) -> None:
-        """The same window in the new language, keeping what was picked but not saved."""
+        """The same window in the new language, on the same page."""
         page = self._shown_page()  # not "search": the rebuilt window opens without one
         chosen = self.host_lists.chosen()
         old = self._content
-        values = (
-            self.hosts.start_choice(),
-            self.host_lists.added(),
-            self.hosts.auto_status_choice(),
-            self.general.theme_id(),
-        )
-        written = tuple(self.host_lists.written)
-        start_view = self.hosts.show_first_choice()
-        self._hidden = self.host_lists.hidden()
         old.hide()
         self._layout.removeWidget(old)
         self._old.append(old)
-        self._build(*values, chosen=chosen, written=written, start_view=start_view)
+        self._build(self.general.theme_id())
+        if chosen is not None:
+            self.host_lists.view.select(chosen)
         self.show_page(page)
         self._make_room()
-        self._update_save()
         self.general.language.setFocus()
 
     def _no_default_buttons(self) -> None:
@@ -267,7 +241,6 @@ class SettingsDialog(QDialog):
             button.setDefault(False)
 
     def _page_picked(self, row: int) -> None:
-        """Leaving Connections with changes asks first: save them, drop them, or stay."""
         page_id = self._rows[row] if 0 <= row < len(self._rows) else None
         if page_id is None:
             return  # a group's label, never picked
@@ -276,41 +249,39 @@ class SettingsDialog(QDialog):
             self.search.clear()
             self.search.blockSignals(False)
             self._end_search()
-        leaving = self.current_page() == "connections" and page_id != "connections"
-        if leaving and self.connections.has_changes():
-            answer = self._ask_unsaved(_("The changes on the Connections page aren't saved yet."))
-            if answer == "save" and not self._save_connections():
-                answer = "stay"
-            if answer == "stay":
-                self.page_list.blockSignals(True)
-                self.page_list.setCurrentRow(self.row_of("connections"))
-                self.page_list.blockSignals(False)
-                return
-            if answer == "discard":
-                self.connections.reset()
         self.stack.setCurrentIndex(list(self.pages).index(page_id))
-        self._update_save()
 
-    def _ask_unsaved(self, text: str, *, can_save: bool = True) -> str:
-        box = QMessageBox(QMessageBox.Icon.Warning, _("Unsaved changes"), text, parent=self)
-        save = box.addButton(_("&Save changes"), QMessageBox.ButtonRole.AcceptRole)
-        save.setEnabled(can_save)
-        discard = box.addButton(_("&Discard changes"), QMessageBox.ButtonRole.DestructiveRole)
-        stay = box.addButton(_("&Keep editing"), QMessageBox.ButtonRole.RejectRole)
-        box.setDefaultButton(stay)
-        box.exec()
-        clicked = box.clickedButton()
-        return "save" if clicked is save else "discard" if clicked is discard else "stay"
+    # ---- applying at once ----
 
-    def _save_connections(self) -> bool:
-        try:
-            apply(self.connections.catalogs, self.connections.changes())
-        except (ProfileError, OSError) as e:
-            message = _("Couldn't save the connection profiles: {error}").format(error=e)
-            QMessageBox.warning(self, "CapyPanel", message)
-            return False
-        self.connections.reset()
-        return True
+    def prefs(self) -> SettingsPrefs:
+        return SettingsPrefs(
+            start_list=self.hosts.start_choice(),
+            added_lists=self.host_lists.added(),
+            hidden_lists=self.host_lists.hidden(),
+            auto_status=self.hosts.auto_status_choice(),
+            start_view=self.hosts.show_first_choice(),
+        )
+
+    def _prefs_changed(self) -> None:
+        if self._building:
+            return
+        prefs = self.prefs()
+        self._start_list, self._added = prefs.start_list, prefs.added_lists
+        self._hidden, self._auto_status = prefs.hidden_lists, prefs.auto_status
+        self._start_view = prefs.start_view
+        self.prefs_changed.emit(prefs)
+
+    def list_opened(
+        self,
+        document: OpenList | None,
+        start_view: tuple[str, str] | None,
+        host_list: HostList | None,
+    ) -> None:
+        """The main window opened a list: Host lists marks it, Show first is now about it."""
+        self._document, self._start_view, self._host_list = document, start_view, host_list
+        self.host_lists.view.list_opened(document)
+        self.hosts.list_opened(start_view, host_list)
+        self.connections.document = document
 
     def _filter_pages(self, text: str) -> None:
         """From SEARCH_FROM letters on: every section that mentions `text` at the start of a
@@ -399,97 +370,17 @@ class SettingsDialog(QDialog):
         index = self.stack.currentIndex()
         return list(self.pages)[index] if index < len(self.pages) else "search"
 
-    def choices(self) -> SettingsChoices:
-        host_list = self.host_lists.chosen()
-        assert host_list is not None, "Save is disabled until a list is chosen"
-        written = self.host_lists.written
-        return SettingsChoices(
-            start_list=self.hosts.start_choice(),
-            host_list=host_list,
-            rewritten=any(same_path(host_list, p) for p in written),
-            theme_id=self.general.theme_id(),
-            language=self.general.language_choice(),
-            added_lists=self.host_lists.added(),
-            hidden_lists=self.host_lists.hidden(),
-            connections=self.connections.changes(),
-            auto_status=self.hosts.auto_status_choice(),
-            start_view=self.hosts.show_first_choice(),
-        )
-
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         self._make_room()
         themes.paint_title_bar(self)
         self._no_default_buttons()
-        app = QApplication.instance()
-        if app is not None:
-            app.installEventFilter(self)  # any click or key in here may change something
 
     def _make_room(self) -> None:
         """At least ROOM wider than the widest page needs, in this language."""
         width = self.minimumSizeHint().width() + ROOM
         if self.width() < width:
             self.resize(width, self.height())
-
-    def hideEvent(self, event: QHideEvent) -> None:
-        app = QApplication.instance()
-        if app is not None:
-            app.removeEventFilter(self)
-        super().hideEvent(event)
-
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        kind = event.type()
-        if kind in (QEvent.Type.MouseButtonRelease, QEvent.Type.KeyRelease) and (
-            isinstance(watched, QWidget) and self.isAncestorOf(watched)
-        ):
-            QTimer.singleShot(0, self, self._update_save)  # once the widget has changed
-        return False
-
-    def _state(self) -> tuple[object, ...] | None:
-        """What Save would write (language and theme apply at once, so not here), to tell
-        whether anything is left unsaved. None while a page can't be saved."""
-        if not self.is_valid():
-            return None
-        c = self.choices()
-        return (
-            c.start_list, c.host_list, tuple(c.added_lists), tuple(c.hidden_lists), c.auto_status,
-            c.start_view, self.connections.has_changes(),
-        )  # fmt: skip
-
-    def is_valid(self) -> bool:
-        return all(page.is_valid() for page in self.pages.values())
-
-    def unsaved(self) -> bool:
-        return self._state() != self._saved_state
-
-    def _update_save(self) -> None:
-        """Save is on only while there's something valid to save."""
-        if self._building:
-            return
-        self.save_button.setEnabled(self.is_valid() and self.unsaved())
-
-    def reject(self) -> None:
-        """Close, Esc or the window's X: asks first when something isn't saved."""
-        if self.unsaved():
-            answer = self._ask_unsaved(
-                _("Some changes aren't saved yet."), can_save=self.is_valid()
-            )
-            if answer == "stay":
-                return
-            if answer == "save":
-                self._save()
-        super().reject()
-
-    def _save(self) -> None:
-        self.saved.emit(self.choices())
-
-    def after_save(self, document: OpenList | None) -> None:
-        """The window stays open after Save: its pages now show what's saved."""
-        self._document = document
-        self.connections.reset()
-        self.host_lists.view.saved(document)
-        self._saved_state = self._state()
-        self._update_save()
 
 
 class _PageArea(QScrollArea):

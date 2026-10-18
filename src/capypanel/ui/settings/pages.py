@@ -1,5 +1,5 @@
-"""The Settings pages. Each one shows the current values and reports the user's choices;
-nothing here changes the app, except the host-list buttons that write a file when clicked."""
+"""The Settings pages. Each one shows the current values and reports each choice as it's
+made (`changed`); the Settings window hands it on, to apply at once."""
 
 from pathlib import Path
 
@@ -36,7 +36,7 @@ from capypanel.ui.themes import engine as themes
 
 class Page(QWidget):
     """A settings page: its sections, one under the other. Its title shows in the page list
-    only. `changed` fires when validity may change."""
+    only. `changed` fires on every choice made on it."""
 
     changed = Signal()
 
@@ -46,9 +46,6 @@ class Page(QWidget):
         self.body = QVBoxLayout(self)
         self.body.setContentsMargins(0, 0, 0, 0)
         self.body.setSpacing(18)  # between sections
-
-    def is_valid(self) -> bool:
-        return True
 
 
 class Section(QWidget):
@@ -250,6 +247,7 @@ class HostsPage(Page):
             )
         index = self.start_list.findData(start_list)
         self.start_list.setCurrentIndex(max(index, 0))
+        self.start_list.currentIndexChanged.connect(lambda _i: self.changed.emit())
         label = QLabel(_("&Open on startup:"))
         label.setBuddy(self.start_list)
         # Labels in one column, the dropdowns lined up beside them at the same width: as wide
@@ -275,15 +273,9 @@ class HostsPage(Page):
         first_label.setBuddy(self.show_first)
         start_layout.addWidget(first_label, 2, 0)
         start_layout.addWidget(self.show_first, 2, 1)
-        start_layout.addWidget(
-            notes(
-                _("For the list open now; each list keeps its own. A group's right-click menu "
-                  "can choose it too.")
-                if start_view is not None
-                else _("Open a host list to choose what it shows first.")
-            ),
-            3, 0, 1, 3,
-        )  # fmt: skip
+        self._first_note = notes("")
+        self._show_first_note(start_view is not None)
+        start_layout.addWidget(self._first_note, 3, 0, 1, 3)
 
         refresh = Section(_("Refresh"))
         self.auto_status = QCheckBox(_("&Refresh the status of the hosts shown every"))
@@ -294,6 +286,8 @@ class HostsPage(Page):
         self.auto_minutes.setSuffix(_(" min"))
         self.auto_minutes.setEnabled(auto_status[0])
         self.auto_status.toggled.connect(self.auto_minutes.setEnabled)
+        self.auto_status.toggled.connect(lambda _on: self.changed.emit())
+        self.auto_minutes.valueChanged.connect(lambda _v: self.changed.emit())
         auto_row = QHBoxLayout()
         auto_row.addWidget(self.auto_status)
         auto_row.addWidget(self.auto_minutes)
@@ -341,6 +335,25 @@ class HostsPage(Page):
     def pick_first(self, show: str, group: str = "") -> None:
         self._first = (show, group)
         self._show_first_text()
+        self.changed.emit()
+
+    def list_opened(self, start_view: tuple[str, str] | None, host_list: HostList | None) -> None:
+        """Another list is open: Show first is now about it."""
+        self._host_list, self._first = host_list, start_view or (locations.SHOW_ALL, "")
+        self.show_first.setEnabled(start_view is not None)
+        self._show_first_text()
+        self._show_first_note(start_view is not None)
+
+    def _show_first_note(self, open_list: bool) -> None:
+        self._first_note.setText(
+            "• "
+            + (
+                _("For the list open now; each list keeps its own. A group's right-click menu "
+                  "can choose it too.")
+                if open_list
+                else _("Open a host list to choose what it shows first.")
+            )
+        )  # fmt: skip
 
     def _show_first_text(self) -> None:
         show, group = self._first
@@ -363,7 +376,7 @@ class HostsPage(Page):
 
 
 class HostListsPage(Page):
-    """The same lists as the list dropdown; the one picked here opens on Save."""
+    """The same lists as the list dropdown; a double-click opens one."""
 
     def __init__(
         self,
@@ -392,10 +405,6 @@ class HostListsPage(Page):
         self.body.addStretch(1)
         self.view.changed.connect(self.changed.emit)
 
-    @property
-    def written(self) -> list[Path]:
-        return self.view.written
-
     def chosen(self) -> Path | None:
         return self.view.selected()
 
@@ -404,6 +413,3 @@ class HostListsPage(Page):
 
     def hidden(self) -> list[Path]:
         return list(self.view.hidden)
-
-    def is_valid(self) -> bool:
-        return self.view.can_open(self.chosen())

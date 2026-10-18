@@ -39,10 +39,11 @@ def access_text(access: Access, kind: ListKind) -> str:
 
 class HostListsView(QWidget):
     """The lists, with the one in use in bold and marked, and buttons to add, create or forget.
-    Adding or forgetting only changes this view's copy; its owner decides when to keep it."""
+    `changed` fires when the lists change; `open_requested` asks to open one now: a double-click,
+    a new list, or the default list when the open one is removed."""
 
     changed = Signal()
-    activated = Signal()  # a double-click: open it
+    open_requested = Signal(object)  # a list's Path
 
     def __init__(
         self,
@@ -64,7 +65,6 @@ class HostListsView(QWidget):
             p for p in added
             if self._kind(p) is ListKind.SHARED and not self._in_folder(p)
         ]  # fmt: skip
-        self.written: list[Path] = []  # files created here, so opening them reloads them
 
         self.tree = grid_table([_("List"), _("Type"), _("Access")])  # the path: tooltip
         self.tree.setColumnWidth(0, 170)
@@ -99,7 +99,7 @@ class HostListsView(QWidget):
         self.remove_button.clicked.connect(self._remove)
         self.open_folder.clicked.connect(self._open_folder)
         self.tree.itemSelectionChanged.connect(self._selection_changed)
-        self.tree.itemDoubleClicked.connect(lambda *_a: self.activated.emit())
+        self.tree.itemDoubleClicked.connect(lambda *_a: self.open_picked())
         self._fill(document.path if document else personal_list)
 
     # ---- reading ----
@@ -124,12 +124,25 @@ class HostListsView(QWidget):
                 self.tree.setCurrentItem(item)
                 return
 
-    def saved(self, document: OpenList | None) -> None:
-        """After a Save that keeps the window open: the open list may have changed."""
+    def list_opened(self, document: OpenList | None) -> None:
+        """The main window opened a list: it's the one marked in use now."""
         selected = self.selected()
         self._document = document
-        self.written.clear()
+        self.copy_button.setEnabled(document is not None)
         self._fill(selected)
+
+    def open_picked(self) -> None:
+        path = self.selected()
+        if path is None:
+            return
+        if not self.can_open(path):
+            message = _("“{name}” can't be opened: {why}").format(
+                name=path.name,
+                why=self.tree.currentItem().text(2).lower(),  # type: ignore[union-attr]
+            )
+            QMessageBox.warning(self, "CapyPanel", message)
+            return
+        self.open_requested.emit(path)
 
     # ---- building ----
 
@@ -190,7 +203,6 @@ class HostListsView(QWidget):
         path = self.selected()
         self.remove_button.setEnabled(path is not None and self._kind(path) is ListKind.SHARED)
         self.open_folder.setEnabled(path is not None and path.parent.is_dir())
-        self.changed.emit()
 
     # ---- changing ----
 
@@ -202,6 +214,7 @@ class HostListsView(QWidget):
         ):
             self.added.append(path)
         self._fill(path)
+        self.changed.emit()
 
     def _add_existing(self) -> None:
         start = str((self.selected() or self._personal).parent)
@@ -217,6 +230,7 @@ class HostListsView(QWidget):
             path, lambda: OpenList.create(path, replace_existing=path.exists())
         ):
             self._keep(path)
+            self.open_requested.emit(path)  # made to be used: it opens now
 
     def _copy_current(self) -> None:
         doc = self._document
@@ -237,7 +251,11 @@ class HostListsView(QWidget):
         if self._in_folder(path):  # it would show up again by itself: hidden instead
             self.hidden.append(path)
         self.added = [p for p in self.added if not locations.same_path(p, path)]
-        self._fill(self._default)  # the one opened on Save, if the removed list was open
+        was_open = self._document is not None and locations.same_path(path, self._document.path)
+        self._fill(self._default)
+        self.changed.emit()
+        if was_open:  # the default list takes its place
+            self.open_requested.emit(self._default)
 
     def _open_folder(self) -> None:
         path = self.selected()
@@ -257,5 +275,4 @@ class HostListsView(QWidget):
             message = _("Couldn't write “{path}”: {error}").format(path=path, error=e)
             QMessageBox.warning(self, "CapyPanel", message)
             return False
-        self.written.append(path)
         return True

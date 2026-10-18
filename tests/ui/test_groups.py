@@ -537,7 +537,6 @@ def test_settings_chooses_what_the_open_list_shows_first(window: MainWindow) -> 
     ]  # fmt: skip
     _choose(chosen, "alpha wing")
     assert page.show_first.text() == "Group: alpha wing"
-    window.apply_settings(dialog.choices())
     doc = window.document
     assert doc is not None
     view = locations.list_view(window._prefs, doc.path)

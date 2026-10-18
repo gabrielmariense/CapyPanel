@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QMenu,
+    QMessageBox,
     QPushButton,
 )
 
@@ -23,12 +24,6 @@ from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
 from capypanel.ui.settings.window import PAGE_TITLES, ROOM, SettingsDialog
 from capypanel.ui.themes import engine as themes
-
-
-@pytest.fixture(autouse=True)
-def drop_unsaved(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Closing Settings with changes asks first; in tests, the answer is Discard."""
-    monkeypatch.setattr(SettingsDialog, "_ask_unsaved", lambda *_a, **_k: "discard")
 
 
 @pytest.fixture
@@ -54,10 +49,6 @@ def window(qapp: QApplication, paths: settings.Paths) -> Iterator[MainWindow]:
     win.close()
     if themes.current() is not themes.DEFAULT_THEME:  # a theme switch restyles every window
         themes.apply(themes.DEFAULT_THEME)
-
-
-def _save_enabled(dialog: SettingsDialog) -> bool:
-    return dialog.is_valid()  # a list that can't be opened can't be saved
 
 
 def _answer_save_dialog(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
@@ -135,11 +126,15 @@ def test_a_default_list_another_user_made_cant_be_picked(
     window: MainWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(winsec, "made_by_trusted", lambda _path: False)
+    warned: list[str] = []
+    monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: warned.append(text))
     dialog = window.settings_dialog()
     view = dialog.host_lists.view
     assert _rows(view)[0][1] == "Not used: made by another user"
     view.select(window._default_list)
-    assert not _save_enabled(dialog)
+    before = window.document
+    view.open_picked()  # a double-click
+    assert window.document is before and len(warned) == 1
 
 
 def test_first_start_creates_and_opens_the_default_list(
@@ -162,32 +157,6 @@ def test_a_default_list_another_user_made_is_not_opened(
     win.close()
 
 
-def test_save_needs_a_list_that_exists(window: MainWindow, tmp_path: Path) -> None:
-    window._prefs["host_lists"] = [str(tmp_path / "nowhere.json")]
-    dialog = window.settings_dialog()
-    view = dialog.host_lists.view
-    view.select(tmp_path / "nowhere.json")
-    assert _rows(view)[2][1] == "File not found" and not _save_enabled(dialog)
-    view.select(window._personal_list)  # created when it's opened
-    assert _save_enabled(dialog)
-
-
-def test_an_added_list_opens_on_save_and_cancel_changes_nothing(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _answer_open_dialog(monkeypatch, office)
-    before, prefs = window.document, dict(window._prefs)
-    dialog = window.settings_dialog()
-    dialog.host_lists.view.add_button.click()
-    dialog.reject()
-    assert window.document is before and window._prefs == prefs
-    dialog = window.settings_dialog()
-    dialog.host_lists.view.add_button.click()
-    window.apply_settings(dialog.choices())
-    assert window.document is not None and window.document.path == office
-    assert window._prefs["host_lists"] == [str(office)]
-
-
 def test_removing_a_list_forgets_it_but_never_deletes_the_file(
     window: MainWindow, office: Path
 ) -> None:
@@ -200,32 +169,17 @@ def test_removing_a_list_forgets_it_but_never_deletes_the_file(
     assert [r[0] for r in _rows(view)] == ["Shared", "Yours"]  # the default and personal lists
     view.select(window._default_list)
     assert not view.remove_button.isEnabled()  # the default and personal lists always stay
-    window.apply_settings(dialog.choices())
     assert window._prefs["host_lists"] == [] and office.is_file()
 
 
 def test_missing_personal_list_is_created_when_chosen(window: MainWindow) -> None:
     personal = window._personal_list
     assert not personal.exists()
-    dialog = window.settings_dialog()
-    dialog.host_lists.view.select(personal)
-    window.apply_settings(dialog.choices())
+    view = window.settings_dialog().host_lists.view
+    view.select(personal)
+    view.open_picked()
     assert personal.exists() and window.document is not None
     assert [g.name for g in window.document.hosts.groups] == ["Default group"]
-
-
-def test_copy_current_list_writes_it_and_save_opens_the_copy(
-    window: MainWindow, office: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    window.open_list(office)
-    copy = tmp_path / "copy.json"
-    _answer_save_dialog(monkeypatch, copy)
-    dialog = window.settings_dialog()
-    dialog.host_lists.view.copy_button.click()
-    assert listfile.load(copy).hosts == listfile.load(office).hosts
-    assert dialog.host_lists.chosen() == copy
-    window.apply_settings(dialog.choices())
-    assert window.document is not None and window.document.path == copy
 
 
 def test_new_empty_list_over_the_open_one_reopens_it(
@@ -234,11 +188,8 @@ def test_new_empty_list_over_the_open_one_reopens_it(
     window.open_list(office)
     _answer_save_dialog(monkeypatch, office)  # the user confirmed replacing it
     dialog = window.settings_dialog()
-    dialog.host_lists.view.new_button.click()
-    choices = dialog.choices()
-    assert choices.rewritten
-    window.apply_settings(choices)
-    assert window.document is not None
+    dialog.host_lists.view.new_button.click()  # a new list opens at once
+    assert window.document is not None and window.document.path == office
     assert [g.name for g in window.document.hosts.groups] == ["Default group"]
     assert not window.document.hosts.hosts
 
@@ -294,8 +245,7 @@ def test_start_list_choice_is_opened_next_time(
         "personal",
         str(office),
     ]
-    general.setCurrentIndex(general.findData("personal"))
-    window.apply_settings(dialog.choices())
+    general.setCurrentIndex(general.findData("personal"))  # kept at once, with no Save
     again = MainWindow(paths, settings.load_settings(paths.settings_file))
     assert again.document is not None and again.document.path == window._personal_list
     again.close()
@@ -323,10 +273,9 @@ def test_last_used_list_is_reopened(
 
 def test_picking_a_theme_applies_it_at_once(window: MainWindow) -> None:
     dialog = window.settings_dialog()
-    dialog.theme_picked.connect(window.set_theme)
     combo = dialog.general.theme
-    combo.setCurrentIndex(combo.findData("paper"))  # no Save: the window shows it already
-    assert themes.current().id == "paper" and not dialog.unsaved()
+    combo.setCurrentIndex(combo.findData("paper"))  # the window shows it already
+    assert themes.current().id == "paper"
     assert settings.load_settings(window._paths.settings_file)["theme"] == "paper"
 
 
@@ -342,102 +291,6 @@ def test_the_path_is_in_the_tooltip_and_same_names_show_their_folder(
     assert item is not None and item.toolTip(0) == str(a) == item.toolTip(1)
 
 
-@pytest.mark.parametrize("answer", ["stay", "discard", "save"])
-def test_leaving_connections_with_changes_asks_first(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch, answer: str
-) -> None:
-    dialog = window.settings_dialog()
-    monkeypatch.setattr(type(dialog), "_ask_unsaved", lambda *_a, **_k: answer)
-    connections_row = dialog.row_of("connections")
-    dialog.page_list.setCurrentRow(connections_row)
-    page = dialog.connections
-    page.default.setCurrentIndex(page.default.findData("realvnc"))  # an unsaved change
-    assert page.has_changes()
-    dialog.page_list.setCurrentRow(dialog.row_of("general"))  # try to go to General
-    store = page.store
-    if answer == "stay":
-        assert dialog.current_page() == "connections" and page.has_changes()
-        assert dialog.page_list.currentRow() == connections_row
-    elif answer == "discard":
-        assert dialog.stack.currentIndex() == 0 and not page.has_changes()
-        assert store.default_id() == "ultravnc"  # nothing written
-    else:
-        assert dialog.stack.currentIndex() == 0 and not page.has_changes()
-        assert store.default_id() == "realvnc"  # written now, not only on Save
-
-
-def test_save_applies_and_keeps_settings_open(window: MainWindow) -> None:
-    dialog = window.settings_dialog()
-    dialog.saved.connect(lambda choices: window._settings_saved(dialog, choices))
-    page = dialog.connections
-    page.default.setCurrentIndex(page.default.findData("realvnc"))
-    dialog._update_save()  # what a click or key in the window does
-    dialog.save_button.click()
-    assert page.store.default_id() == "realvnc"  # applied now
-    assert not page.has_changes() and dialog.result() == 0  # still open, nothing pending
-    dialog.show()
-    QApplication.processEvents()
-    order = [b.text() for b in sorted(dialog.buttons.buttons(), key=lambda b: b.x())]
-    assert order == ["&Save", "Close"]  # no OK: Save, then Close on the far right
-    assert not dialog.save_button.isEnabled()  # just saved: nothing to save
-    assert not any(b.isDefault() or b.autoDefault() for b in dialog.findChildren(QPushButton))
-    page.default.setCurrentIndex(page.default.findData("ultravnc"))  # a change
-    dialog._update_save()
-    assert dialog.save_button.isEnabled() and dialog.unsaved()
-    dialog.close()
-
-
-def test_close_asks_before_dropping_changes(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    dialog = window.settings_dialog()
-    dialog.saved.connect(lambda choices: window._settings_saved(dialog, choices))
-    asked: list[str] = []
-
-    def answer(_self: SettingsDialog, text: str, **_k: object) -> str:
-        asked.append(text)
-        return "stay" if len(asked) == 1 else "save"
-
-    monkeypatch.setattr(SettingsDialog, "_ask_unsaved", answer)
-    dialog.show()
-    dialog.close_button.click()
-    assert asked == [] and not dialog.isVisible()  # nothing changed: just closes
-    dialog.show()
-    dialog.hosts.auto_status.setChecked(True)
-    dialog.close_button.click()
-    assert asked == ["Some changes aren't saved yet."] and dialog.isVisible()  # Keep editing
-    dialog.close_button.click()  # then Save changes
-    assert not dialog.isVisible() and window._auto_status()[0]
-
-
-def test_picking_a_language_switches_at_once_keeping_unsaved_choices(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    seen: list[tuple[str, str, bool, bool]] = []
-
-    def run(dialog: SettingsDialog) -> int:
-        dialog.show_page("general")
-        dialog.hosts.auto_status.setChecked(True)  # not saved
-        dialog.general.language.setCurrentIndex(dialog.general.language.findData("pt_BR"))
-        QApplication.processEvents()  # the window follows once the dropdown has closed
-        seen.append(
-            (
-                dialog.windowTitle(),
-                dialog.current_page(),
-                dialog.hosts.auto_status.isChecked(),
-                dialog.unsaved(),
-            )
-        )
-        return 0
-
-    monkeypatch.setattr(SettingsDialog, "exec", run)
-    window.open_settings()
-    # Switched without Save: the app and Settings are in Portuguese; the unsaved tick stays.
-    assert seen == [("Configurações", "general", True, True)]
-    assert window.menuBar().actions()[0].text() == "&Arquivo"
-    window.set_language("en")
-
-
 def test_list_tables_have_grid_lines_and_resizable_columns(window: MainWindow) -> None:
     view = window.settings_dialog().host_lists.view
     assert view.tree.objectName() == window.table.objectName() == "grid"
@@ -449,7 +302,6 @@ def test_the_page_list_keeps_its_width_in_every_language(window: MainWindow) -> 
     dialog = window.settings_dialog()
     assert [p.title for p in dialog.pages.values()] == list(PAGE_TITLES)  # sized from these
     width = dialog.page_list.width()
-    dialog.language_picked.connect(window.set_language)
     dialog.general.language.setCurrentIndex(dialog.general.language.findData("pt_BR"))
     QApplication.processEvents()
     assert dialog.page_list.width() == width and dialog.general.title == "Geral"
@@ -463,10 +315,9 @@ def test_removing_the_open_list_switches_to_the_default_list(
     dialog = window.settings_dialog()
     view = dialog.host_lists.view
     view.select(office)
-    view.remove_button.click()
-    assert dialog.host_lists.chosen() == paths.default_list
-    window.apply_settings(dialog.choices())
+    view.remove_button.click()  # the default list opens in its place, at once
     assert window.document is not None and window.document.path == paths.default_list
+    assert _rows(view)[0][2]  # marked in use
 
 
 def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow) -> None:
@@ -515,7 +366,6 @@ def test_a_list_in_a_lists_folder_can_be_removed_and_added_back(
     assert view.remove_button.isEnabled()
     view.remove_button.click()
     assert len(_rows(view)) == 2 and branch.is_file()  # hidden here, the file stays
-    window.apply_settings(dialog.choices())
     window.list_picker.menu().aboutToShow.emit()
     assert "branch" not in [label(a) for a in window.list_picker.menu().actions()]
     view = window.settings_dialog().host_lists.view
@@ -559,3 +409,83 @@ def test_search_marks_go_away_with_the_search(window: MainWindow) -> None:
     assert "<span" in heading.text()
     dialog.search.clear()
     assert heading.text() == "Theme" and not dialog._marks.marked_labels()  # pyright: ignore[reportPrivateUsage]
+
+
+def test_a_list_that_doesn_t_exist_can_t_be_opened(
+    window: MainWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    warned: list[str] = []
+    monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: warned.append(text))
+    window._prefs["host_lists"] = [str(tmp_path / "nowhere.json")]
+    view = window.settings_dialog().host_lists.view
+    view.select(tmp_path / "nowhere.json")
+    assert _rows(view)[2][1] == "File not found"
+    view.open_picked()
+    assert warned and window.document is not None
+    assert window.document.path != tmp_path / "nowhere.json"
+
+
+def test_an_added_list_is_kept_at_once_and_opens_on_a_double_click(
+    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _answer_open_dialog(monkeypatch, office)
+    before = window.document
+    dialog = window.settings_dialog()
+    view = dialog.host_lists.view
+    view.add_button.click()
+    assert window._prefs["host_lists"] == [str(office)]  # kept, with no Save
+    assert window.document is before  # adding a list doesn't open it
+    view.open_picked()  # a double-click opens it
+    assert window.document is not None and window.document.path == office
+    assert _rows(view)[2][2]  # marked as the one in use now
+
+
+def test_save_a_copy_writes_it_and_keeps_the_list_in_use(
+    window: MainWindow, office: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window.open_list(office)
+    copy = tmp_path / "copy.json"
+    _answer_save_dialog(monkeypatch, copy)
+    view = window.settings_dialog().host_lists.view
+    view.copy_button.click()
+    assert listfile.load(copy).hosts == listfile.load(office).hosts
+    assert view.selected() == copy and str(copy) in window._prefs["host_lists"]
+    assert window.document is not None and window.document.path == office
+
+
+def test_every_choice_applies_at_once_and_only_close_is_left(window: MainWindow) -> None:
+    dialog = window.settings_dialog()
+    dialog.hosts.auto_status.setChecked(True)
+    assert window._auto_status()[0]  # kept and running, with no Save
+    page = dialog.connections
+    page.default.setCurrentIndex(page.default.findData("realvnc"))
+    assert page.store.default_id() == "realvnc"  # written for everyone at once
+    dialog.show()
+    QApplication.processEvents()
+    assert [b.text() for b in dialog.buttons.buttons()] == ["Close"]
+    assert not any(b.isDefault() or b.autoDefault() for b in dialog.findChildren(QPushButton))
+    dialog.close_button.click()  # nothing to ask: it just closes
+    assert not dialog.isVisible()
+
+
+def test_picking_a_language_switches_at_once_and_keeps_the_page(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[tuple[str, str, bool]] = []
+
+    def run(dialog: SettingsDialog) -> int:
+        dialog.show_page("general")
+        dialog.hosts.auto_status.setChecked(True)
+        dialog.general.language.setCurrentIndex(dialog.general.language.findData("pt_BR"))
+        QApplication.processEvents()  # the window follows once the dropdown has closed
+        seen.append(
+            (dialog.windowTitle(), dialog.current_page(), dialog.hosts.auto_status.isChecked())
+        )
+        return 0
+
+    monkeypatch.setattr(SettingsDialog, "exec", run)
+    window.open_settings()
+    # The app and Settings are in Portuguese; the tick, applied already, still shows.
+    assert seen == [("Configurações", "general", True)]
+    assert window.menuBar().actions()[0].text() == "&Arquivo"
+    window.set_language("en")
