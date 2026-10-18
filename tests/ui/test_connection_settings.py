@@ -349,3 +349,16 @@ def test_open_folder_waits_for_the_folder_while_the_profiles_are_built_in(
     catalogs.profiles.folder.mkdir(parents=True)  # what saving a change does
     page.reset()
     assert page.open_folder.isEnabled() and page.builtin_note.isHidden()
+
+
+def test_remote_desktop_says_it_asks_for_the_password_itself(catalogs: Catalogs) -> None:
+    # "no password" read as if none were needed; Remote Desktop's own window asks for it.
+    page = ConnectionsPage(catalogs, None)
+    rows = range(page.list.topLevelItemCount())
+    [rdp] = [i for r in rows if (i := page.list.topLevelItem(r)) and i.text(0) == "Remote Desktop"]
+    assert rdp.text(2) == "asked by Remote Desktop Connection itself"
+    assert "asks for the user and password itself" in rdp.toolTip(2)
+    tools = [e.item for e in catalogs.tools.all()]
+    dialog = ProfileDialog(None, "New", tools, {"rdp"})
+    dialog.tool.setCurrentIndex(dialog.tool.findData("rdp"))
+    assert dialog.login.currentText() == "Asked by Remote Desktop Connection itself"

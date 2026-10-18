@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 00:33-0300\n"
+"POT-Creation-Date: 2026-10-18 01:35-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -328,10 +328,6 @@ msgid ""
 msgstr ""
 
 #, python-brace-format
-msgid "Asked by {tool}"
-msgstr ""
-
-#, python-brace-format
 msgid "Broken placeholder in “{arg}”."
 msgstr ""
 
@@ -348,6 +344,12 @@ msgid "CSV files (*.csv)"
 msgstr ""
 
 msgid "CSV with headers"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"CapyPanel asks for nothing: {tool} asks for the user and password itself "
+"when it connects."
 msgstr ""
 
 msgid "CapyPanel is built with the following software:"
@@ -1583,6 +1585,13 @@ msgstr ""
 msgid "address"
 msgstr ""
 
+msgid "asked by the tool"
+msgstr ""
+
+#, python-brace-format
+msgid "asked by {tool} itself"
+msgstr ""
+
 msgid "at the computer"
 msgstr ""
 
@@ -1613,9 +1622,6 @@ msgid "name"
 msgstr ""
 
 msgid "name, address, group, tags, notes"
-msgstr ""
-
-msgid "no password"
 msgstr ""
 
 msgid "notes"

@@ -42,12 +42,12 @@ class ConnectionProfile:
     extra: Mapping[str, Any] = field(default_factory=dict)
 
 
-def login_label(login: str) -> str:
-    return {
-        "account": _("user and password"),
-        "password": _("password only"),
-        "none": _("no password"),
-    }.get(login, login)
+def login_label(login: str, tool: str = "") -> str:
+    """How a profile signs in. "none": CapyPanel asks nothing, the tool asks for it itself
+    (Remote Desktop's own window): never "no password", which reads as none being needed."""
+    if login == "none":
+        return _("asked by {tool} itself").format(tool=tool) if tool else _("asked by the tool")
+    return {"account": _("user and password"), "password": _("password only")}.get(login, login)
 
 
 def logins_of(tool: ToolDefinition) -> tuple[str, ...]:

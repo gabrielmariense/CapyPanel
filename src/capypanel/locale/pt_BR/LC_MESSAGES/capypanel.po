@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 00:33-0300\n"
+"POT-Creation-Date: 2026-10-18 01:35-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -327,10 +327,6 @@ msgid "Any name you like, then the computer's network name or IP address. Separa
 msgstr "Um nome à sua escolha, depois o nome do computador na rede ou o endereço IP. Separe com vírgula, ou copie duas colunas do Excel."
 
 #, python-brace-format
-msgid "Asked by {tool}"
-msgstr "O próprio {tool} pede"
-
-#, python-brace-format
 msgid "Broken placeholder in “{arg}”."
 msgstr "Espaço reservado malformado em “{arg}”."
 
@@ -348,6 +344,10 @@ msgstr "Arquivos CSV (*.csv)"
 
 msgid "CSV with headers"
 msgstr "CSV com cabeçalho"
+
+#, python-brace-format
+msgid "CapyPanel asks for nothing: {tool} asks for the user and password itself when it connects."
+msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha ao conectar."
 
 msgid "CapyPanel is built with the following software:"
 msgstr "O CapyPanel é feito com os seguintes softwares:"
@@ -1536,6 +1536,13 @@ msgstr "ativa"
 msgid "address"
 msgstr "endereço"
 
+msgid "asked by the tool"
+msgstr "a própria ferramenta pede"
+
+#, python-brace-format
+msgid "asked by {tool} itself"
+msgstr "o próprio {tool} pede"
+
 msgid "at the computer"
 msgstr "no computador"
 
@@ -1567,9 +1574,6 @@ msgstr "nome"
 
 msgid "name, address, group, tags, notes"
 msgstr "nome, endereço, grupo, tags, notas"
-
-msgid "no password"
-msgstr "sem senha"
 
 msgid "notes"
 msgstr "notas"

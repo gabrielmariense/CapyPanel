@@ -154,10 +154,8 @@ class ProfileDialog(QDialog):
         wanted_login = profile.login if profile else self.login.currentData()
         self.login.clear()
         for login in logins_of(tool):
-            text = login_label(login).capitalize()
-            if not tool.wants_password:  # e.g. Remote Desktop: it asks for the password itself
-                text = _("Asked by {tool}").format(tool=tool.name)
-            self.login.addItem(text, login)
+            text = login_label(login, tool.name)
+            self.login.addItem(text[:1].upper() + text[1:], login)  # keeps the tool's capitals
         self.login.setCurrentIndex(max(self.login.findData(wanted_login), 0))
         self.login.setEnabled(self.login.count() > 1)
         ticked = set(profile.options) if profile else set()
@@ -390,10 +388,18 @@ class ConnectionsPage(Page):
         for profile in sorted(self._profiles.values(), key=lambda p: p.name.casefold()):
             entry = self.catalogs.tools.find(profile.tool)
             tool = entry.item.name if entry else profile.tool
-            item = QTreeWidgetItem([profile.name, tool, login_label(profile.login)])
+            item = QTreeWidgetItem([profile.name, tool, login_label(profile.login, tool)])
             item.setData(0, Qt.ItemDataRole.UserRole, profile.id)
             for column in range(3):
                 item.setToolTip(column, item.text(column))  # whole, if the column cuts it
+            if profile.login == "none":
+                item.setToolTip(
+                    2,
+                    _(
+                        "CapyPanel asks for nothing: {tool} asks for the user and "
+                        "password itself when it connects."
+                    ).format(tool=tool),
+                )
             self.list.addTopLevelItem(item)
             if profile.id == select:
                 item.setSelected(True)
