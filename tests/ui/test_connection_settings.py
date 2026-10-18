@@ -365,3 +365,16 @@ def test_the_built_in_note_shows_until_a_profile_changes(catalogs: Catalogs) -> 
     assert not page.builtin_note.isHidden()
     page.default.setCurrentIndex(page.default.findData("realvnc"))  # a change makes the folder
     assert page.builtin_note.isHidden()
+
+
+def test_a_double_click_on_a_tool_changes_its_path(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    page = ToolsPage(catalogs)
+    monkeypatch.setattr(
+        QFileDialog, "getOpenFileName", lambda *_a, **_k: (r"D:\Portablencviewer.exe", "")
+    )
+    page.select_tool("realvnc")
+    page.tools.itemDoubleClicked.emit(page.tools.currentItem(), 0)
+    entry = catalogs.tools.find("realvnc")
+    assert entry is not None and entry.item.executable == r"D:\Portablencviewer.exe"

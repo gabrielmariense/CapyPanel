@@ -500,6 +500,7 @@ class ToolsPage(SharedPage):
         self.tools.setColumnWidth(1, 150)
         self.tools.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # a path keeps both ends
         self.tools.itemSelectionChanged.connect(self._update_tool_buttons)
+        self.tools.itemDoubleClicked.connect(lambda *_a: self._double_clicked())
         self.locate_button = QPushButton(_("Change path…"))
         self.download_button = QPushButton(_("Download"))
         for button, action in ((self.locate_button, "locate"), (self.download_button, "download")):
@@ -601,6 +602,11 @@ class ToolsPage(SharedPage):
             )
         if "download" in actions:
             add_action(menu, _("Download"), lambda: self._picked_tool_action("download"))
+
+    def _double_clicked(self) -> None:
+        """Like a double-click on a profile edits it: the tool's path is changed."""
+        if self.locate_button.isEnabled():
+            self._picked_tool_action("locate")
 
     def _picked_tool_action(self, action: str) -> None:
         tool = self._picked_tool()
