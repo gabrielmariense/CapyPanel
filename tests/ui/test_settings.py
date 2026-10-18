@@ -343,7 +343,7 @@ def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow)
     assert len(listed()) == dialog.page_list.count() and dialog.current_page() == "general"
     dialog.search.setText("theme")
     assert dialog.current_page() == "search" and listed() == ["CapyPanel", "General"]
-    assert results()[:2] == ["CapyPanel › General", "Theme"]  # the section, under its page
+    assert results()[:2] == ["CapyPanel › General", "Language and theme"]  # under its page
     marks = dialog._marks  # pyright: ignore[reportPrivateUsage]
     assert [w.objectName() for w in marks.marked_labels()][:1] == ["detailsSection"]
     dialog.search.setText("folder")  # in Files, a Host lists note, Connections. buttons
@@ -409,7 +409,7 @@ def test_search_marks_go_away_with_the_search(window: MainWindow) -> None:
     [heading, *_notes] = dialog._marks.marked_labels()  # pyright: ignore[reportPrivateUsage]
     assert "<span" in heading.text()
     dialog.search.clear()
-    assert heading.text() == "Theme" and not dialog._marks.marked_labels()  # pyright: ignore[reportPrivateUsage]
+    assert heading.text() == "Language and theme" and not dialog._marks.marked_labels()  # pyright: ignore[reportPrivateUsage]
 
 
 def test_a_list_that_doesn_t_exist_can_t_be_opened(

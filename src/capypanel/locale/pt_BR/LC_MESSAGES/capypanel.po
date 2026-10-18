@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 02:02-0300\n"
+"POT-Creation-Date: 2026-10-18 02:08-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -114,6 +114,9 @@ msgstr "&Hosts:"
 msgid "&Import hosts…"
 msgstr "&Importar hosts…"
 
+msgid "&Language"
+msgstr "&Idioma"
+
 msgid "&Leave out of the import"
 msgstr "&Deixar fora da importação"
 
@@ -153,8 +156,8 @@ msgstr "A&brir um arquivo CSV…"
 msgid "&Open list…"
 msgstr "&Abrir lista…"
 
-msgid "&Open on startup:"
-msgstr "&Abrir ao iniciar:"
+msgid "&Open on startup"
+msgstr "&Abrir ao iniciar"
 
 msgid "&Password:"
 msgstr "&Senha:"
@@ -164,9 +167,6 @@ msgstr "&Predefinição:"
 
 msgid "&Refresh"
 msgstr "&Atualizar"
-
-msgid "&Refresh the status of the hosts shown every"
-msgstr "&Atualizar o status dos hosts exibidos a cada"
 
 msgid "&Remove"
 msgstr "&Remover"
@@ -204,6 +204,9 @@ msgstr "Barra de &status"
 msgid "&Tags:"
 msgstr "&Tags:"
 
+msgid "&Theme"
+msgstr "&Tema"
+
 msgid "&Tool:"
 msgstr "&Ferramenta:"
 
@@ -212,6 +215,9 @@ msgstr "&Usuário:"
 
 msgid "&View"
 msgstr "E&xibir"
+
+msgid "&every"
+msgstr "a &cada"
 
 msgid "A chosen &group"
 msgstr "Um &grupo escolhido"
@@ -340,9 +346,6 @@ msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha 
 msgid "CapyPanel is built with the following software:"
 msgstr "O CapyPanel é feito com os seguintes softwares:"
 
-msgid "CapyPanel themes look the same on every computer."
-msgstr "Os temas do CapyPanel ficam iguais em todos os computadores."
-
 msgid "CapyPanel — dark"
 msgstr "CapyPanel — escuro"
 
@@ -418,6 +421,9 @@ msgstr "&Perfis de conexão…"
 
 msgid "Connection profiles"
 msgstr "Perfis de conexão"
+
+msgid "Connection profiles and remote tools, for everyone on this PC."
+msgstr "Perfis de conexão e ferramentas remotas, para todos neste PC."
 
 msgid "Console"
 msgstr "Console"
@@ -598,6 +604,9 @@ msgstr "Encontrar sozinho de novo, não no caminho que você escolheu"
 msgid "Folder"
 msgstr "Pasta"
 
+msgid "Folders"
+msgstr "Pastas"
+
 msgid "For Import"
 msgstr "Para importar"
 
@@ -610,8 +619,8 @@ msgstr ""
 "nome,endereço\n"
 "PC-0142,10.0.0.42"
 
-msgid "For the list open now; each list keeps its own. A group's right-click menu can choose it too."
-msgstr "Para a lista aberta agora; cada lista guarda a sua. O menu de botão direito de um grupo também pode escolher."
+msgid "For the list open now; each list keeps its own."
+msgstr "Para a lista aberta agora; cada lista guarda a sua."
 
 msgid "Forgets it here; the file itself is never deleted"
 msgstr "Esquece a lista aqui; o arquivo em si nunca é excluído"
@@ -686,11 +695,11 @@ msgstr "Hosts (Ctrl+1)"
 msgid "Hosts with no group &go to:"
 msgstr "Hosts sem grupo &vão para:"
 
-msgid "Hosts with no profile &use:"
-msgstr "Hosts sem perfil &usam:"
+msgid "Hosts with no profile &use"
+msgstr "Hosts sem perfil &usam"
 
-msgid "Hover over a list to see where it is."
-msgstr "Passe o mouse sobre uma lista para ver onde ela está."
+msgid "Hover a folder to see what it holds."
+msgstr "Passe o mouse sobre uma pasta para ver o que ela guarda."
 
 msgid "Icons:"
 msgstr "Ícones:"
@@ -736,8 +745,8 @@ msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on. If a computer rejects it, CapyPanel stops and asks again instead of trying it on the others, so the account isn't locked."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado. Se um computador recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta não ser bloqueada."
 
-msgid "Language"
-msgstr "Idioma"
+msgid "Language and theme"
+msgstr "Idioma e tema"
 
 msgid "Last check"
 msgstr "Última verificação"
@@ -748,11 +757,8 @@ msgstr "Licenças"
 msgid "List"
 msgstr "Lista"
 
-msgid "Lists"
-msgstr "Listas"
-
-msgid "Lists saved in a lists folder show up by themselves."
-msgstr "Listas salvas numa pasta de listas aparecem sozinhas."
+msgid "Lists saved in a lists folder show up here by themselves; removing one never deletes its file."
+msgstr "Listas salvas numa pasta de listas aparecem aqui sozinhas; remover uma nunca exclui o arquivo."
 
 msgid "Locate…"
 msgstr "Localizar…"
@@ -773,9 +779,6 @@ msgstr "Usuários logados"
 
 msgid "Logs"
 msgstr "Logs"
-
-msgid "Logs: one per user, named after the account."
-msgstr "Logs: um por usuário, com o nome da conta."
 
 msgid "Manage groups"
 msgstr "Gerenciar grupos"
@@ -896,20 +899,20 @@ msgstr "Nada muda até você clicar em Adicionar."
 msgid "Nothing changes until you click OK."
 msgstr "Nada muda até você clicar em OK."
 
-msgid "Off by default; Refresh in the toolbar always works."
-msgstr "Desligado por padrão; o Atualizar da barra de ferramentas sempre funciona."
-
 msgid "Offline"
 msgstr "Offline"
 
 msgid "One computer per line, by its name on the network. To show another name, use Name and address."
 msgstr "Um computador por linha, pelo nome dele na rede. Para mostrar outro nome, use Nome e endereço."
 
+msgid "One per user, named after the account."
+msgstr "Um por usuário, com o nome da conta."
+
 msgid "Online"
 msgstr "Online"
 
-msgid "Only ping and ports, never logged-on users, so no account is used."
-msgstr "Só ping e portas, nunca usuários logados, então nenhuma conta é usada."
+msgid "Only ping and ports, never logged-on users, so no account is needed. Refresh in the toolbar always works."
+msgstr "Só ping e portas, nunca usuários logados, então nenhuma conta é usada. O Atualizar da barra de ferramentas sempre funciona."
 
 msgid "Open &Settings"
 msgstr "Abrir &Configurações"
@@ -1018,6 +1021,9 @@ msgstr "Atualiza todos os hosts exibidos. Clique com o botão direito para escol
 msgid "Refresh logged-on users"
 msgstr "Atualizar usuários logados"
 
+msgid "Refresh status by itself"
+msgstr "Atualizar o status sozinho"
+
 msgid "Reload the list"
 msgstr "Recarregar a lista"
 
@@ -1059,9 +1065,6 @@ msgstr[1] "Remover {n} hosts da lista?"
 #, python-brace-format
 msgid "Remove “{name}” from the list?"
 msgstr "Remover “{name}” da lista?"
-
-msgid "Removing a list from here never deletes its file."
-msgstr "Remover uma lista daqui nunca exclui o arquivo dela."
 
 msgid "Rename group"
 msgstr "Renomear grupo"
@@ -1151,26 +1154,20 @@ msgstr "Configurações (Ctrl+,)"
 msgid "Shared"
 msgstr "Compartilhada"
 
+msgid "Shared by everyone on this PC."
+msgstr "Compartilhados por todos neste PC."
+
 msgid "Shared by everyone on this PC. Read-only: only people Windows lets write this folder can change them."
 msgstr "Compartilhados por todos neste PC. Somente leitura: só quem o Windows deixa gravar nesta pasta pode alterá-los."
-
-msgid "Shared by everyone on this PC. You can change them."
-msgstr "Compartilhados por todos neste PC. Você pode alterá-los."
 
 msgid "Shared files"
 msgstr "Arquivos compartilhados"
 
-msgid "Shared files: connection profiles and tools, for everyone."
-msgstr "Arquivos compartilhados: os perfis de conexão e as ferramentas, para todos."
-
 msgid "Shared lists"
 msgstr "Listas compartilhadas"
 
-msgid "Shared lists: the default list, and every list saved there, for everyone."
-msgstr "Listas compartilhadas: a lista padrão e toda lista salva ali, para todos."
-
-msgid "Show &first:"
-msgstr "Mostrar &primeiro:"
+msgid "Show &first"
+msgstr "Mostrar &primeiro"
 
 msgid "Show this group &first"
 msgstr "Mostrar este grupo &primeiro"
@@ -1252,6 +1249,9 @@ msgstr "Esse perfil não existe."
 msgid "The account was accepted, but only administrators of that computer can see who is logged on."
 msgstr "A conta foi aceita, mas só administradores daquele computador podem ver quem está logado."
 
+msgid "The app's language. Changes at once."
+msgstr "O idioma do aplicativo. Muda na hora."
+
 msgid "The app's logs, to attach to a problem report"
 msgstr "Os logs do app, para anexar a um relato de problema"
 
@@ -1276,6 +1276,9 @@ msgstr "A lista padrão"
 #, python-brace-format
 msgid "The default list was made by another user, so CapyPanel won't open it. An administrator can replace or delete “{path}”."
 msgstr "A lista padrão foi criada por outro usuário, então o CapyPanel não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
+
+msgid "The default list, and every list saved there, for everyone on this PC."
+msgstr "A lista padrão e toda lista salva ali, para todos neste PC."
 
 msgid "The file doesn't contain a host list."
 msgstr "O arquivo não contém uma lista de hosts."
@@ -1329,6 +1332,9 @@ msgstr "O espaço reservado “{{{name}}}” é usado com o método de credencia
 msgid "The placeholder “{{{name}}}” goes with “settings_file”."
 msgstr "O espaço reservado “{{{name}}}” é usado com “settings_file”."
 
+msgid "The profile a host connects with when it has none of its own."
+msgstr "O perfil com que um host conecta quando não tem um próprio."
+
 msgid "The profile needs a “name”."
 msgstr "O perfil precisa de um “name”."
 
@@ -1362,9 +1368,6 @@ msgstr "O “settings_file” deve ser o nome de um arquivo na pasta de perfis."
 
 msgid "The “website” must be an https:// address."
 msgstr "O “website” deve ser um endereço https://."
-
-msgid "Theme"
-msgstr "Tema"
 
 msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr "Não há perfis de conexão. Crie um em Configurações > Conexões."
@@ -1457,9 +1460,6 @@ msgstr "Aviso"
 msgid "Where"
 msgstr "Onde"
 
-msgid "Where CapyPanel keeps its files"
-msgstr "Onde o CapyPanel guarda os arquivos"
-
 msgid "Where I left off"
 msgstr "Onde parei"
 
@@ -1480,8 +1480,8 @@ msgstr "Erro do Windows {code}."
 msgid "Windows file sharing (port 445) didn't answer: the computer is off, not on the network, a firewall blocks file sharing, or it isn't Windows."
 msgstr "O compartilhamento de arquivos do Windows (porta 445) não respondeu: o computador está desligado, fora da rede, um firewall bloqueia o compartilhamento ou não é Windows."
 
-msgid "Windows themes use Windows' own look, with your accent color."
-msgstr "Os temas do Windows usam a aparência do próprio Windows, com a sua cor de destaque."
+msgid "Windows themes follow Windows' look and accent; CapyPanel themes look the same everywhere."
+msgstr "Os temas do Windows seguem a aparência e a cor do Windows; os do CapyPanel são iguais em todo lugar."
 
 msgid "Windows — dark"
 msgstr "Windows — escuro"
@@ -1498,14 +1498,14 @@ msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
 msgid "Your files"
 msgstr "Seus arquivos"
 
-msgid "Your files: your settings, private to you and admins."
-msgstr "Seus arquivos: suas configurações, só para você e os administradores."
-
 msgid "Your lists"
 msgstr "Suas listas"
 
-msgid "Your lists: your personal list, and every list saved there, only for you."
-msgstr "Suas listas: sua lista pessoal e toda lista salva ali, só para você."
+msgid "Your personal list, and every list saved there, only for you."
+msgstr "Sua lista pessoal e toda lista salva ali, só para você."
+
+msgid "Your settings, private to you and administrators."
+msgstr "Suas configurações, só para você e os administradores."
 
 msgid "Yours"
 msgstr "Sua"

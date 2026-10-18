@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QFrame,
-    QGridLayout,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -67,6 +66,47 @@ class Section(QWidget):
         column.addWidget(self.inner, 1)
 
 
+class SettingRow(QWidget):
+    """A setting: its name over a one-line description, its control at the right end. Every
+    row's control has the same width, so controls line up on both edges down the page."""
+
+    CONTROL_WIDTH = 240
+
+    def __init__(self, name: str, description: str, control: QWidget) -> None:
+        super().__init__()
+        self.name = QLabel(name)
+        self.name.setObjectName("rowName")
+        self.name.setBuddy(control)
+        self.description = notes(description)  # the size of the notes under tables
+        words = QVBoxLayout()
+        words.setSpacing(2)
+        words.addWidget(self.name)
+        words.addWidget(self.description)
+        control.setFixedWidth(self.CONTROL_WIDTH)
+        line = QHBoxLayout(self)
+        line.setContentsMargins(0, 4, 0, 4)
+        line.setSpacing(16)
+        line.addLayout(words, 1)
+        line.addWidget(control, 0, Qt.AlignmentFlag.AlignVCenter)
+
+
+def add_rows(layout: QVBoxLayout, *rows: SettingRow) -> None:
+    """Rows one under the other, a faint line between two."""
+    for index, row in enumerate(rows):
+        if index:
+            line = QFrame()
+            line.setObjectName("rowLine")
+            layout.addWidget(line)
+        layout.addWidget(row)
+
+
+def _section_layout(section: "Section") -> QVBoxLayout:
+    layout = QVBoxLayout(section.inner)
+    layout.setContentsMargins(0, 2, 0, 0)
+    layout.setSpacing(6)
+    return layout
+
+
 class PathLabel(QLabel):
     """A file path cut in the middle ("C:\\Users\\…\\hosts.json") when it doesn't fit."""
 
@@ -100,7 +140,7 @@ def open_folder(folder: Path) -> None:
 
 
 class GeneralPage(Page):
-    """The app's language and theme. Both apply as soon as they're picked, with no Save."""
+    """The app's language and theme. Both apply as soon as they're picked."""
 
     def __init__(self, *, language: str, registry: themes.Registry, theme_id: str) -> None:
         super().__init__(_("General"))
@@ -109,11 +149,6 @@ class GeneralPage(Page):
         for code, name in i18n.LANGUAGES.items():
             self.language.addItem(name, code)
         self.language.setCurrentIndex(max(self.language.findData(language), 0))
-        language_box = Section(_("Language"))
-        language_row = QHBoxLayout(language_box.inner)
-        language_row.setContentsMargins(0, 2, 0, 0)
-        language_row.addWidget(self.language)
-        language_row.addStretch(1)
         # The Windows themes, then the app's own. The window shows the theme picked: no preview.
         self.theme = QComboBox()
         previous = None
@@ -123,21 +158,18 @@ class GeneralPage(Page):
             previous = theme.engine
             self.theme.addItem(theme.title(), theme.id)
         self.theme.setCurrentIndex(max(self.theme.findData(theme_id), 0))
-        theme_box = Section(_("Theme"))
-        theme_layout = QVBoxLayout(theme_box.inner)
-        theme_layout.setContentsMargins(0, 2, 0, 0)
-        theme_row = QHBoxLayout()
-        theme_row.addWidget(self.theme)
-        theme_row.addStretch(1)
-        theme_layout.addLayout(theme_row)
-        theme_layout.addWidget(
-            notes(
-                _("Windows themes use Windows' own look, with your accent color."),
-                _("CapyPanel themes look the same on every computer."),
-            )
-        )
-        self.body.addWidget(language_box)
-        self.body.addWidget(theme_box)
+        section = Section(_("Language and theme"))
+        add_rows(
+            _section_layout(section),
+            SettingRow(_("&Language"), _("The app's language. Changes at once."), self.language),
+            SettingRow(
+                _("&Theme"),
+                _("Windows themes follow Windows' look and accent; CapyPanel themes look the "
+                  "same everywhere."),
+                self.theme,
+            ),
+        )  # fmt: skip
+        self.body.addWidget(section)
         self.body.addStretch(1)
 
     def language_choice(self) -> str:
@@ -152,20 +184,25 @@ class FilesPage(Page):
 
     def __init__(self, paths: settings.Paths) -> None:
         super().__init__(_("Files"))
-        files = Section(_("Where CapyPanel keeps its files"))
+        section = Section(_("Folders"))
         folders = (
-            (_("Shared files"), paths.root),
-            (_("Shared lists"), paths.shared_lists_dir),
-            (_("Your files"), paths.user_dir),
-            (_("Your lists"), paths.user_lists_dir),
-            (_("Logs"), paths.log_dir),
-        )
-        # The one table design, its button beside it; a double-click opens the folder too.
+            (_("Shared files"), paths.root,
+             _("Connection profiles and remote tools, for everyone on this PC.")),
+            (_("Shared lists"), paths.shared_lists_dir,
+             _("The default list, and every list saved there, for everyone on this PC.")),
+            (_("Your files"), paths.user_dir,
+             _("Your settings, private to you and administrators.")),
+            (_("Your lists"), paths.user_lists_dir,
+             _("Your personal list, and every list saved there, only for you.")),
+            (_("Logs"), paths.log_dir, _("One per user, named after the account.")),
+        )  # fmt: skip
+        # The one table design; a double-click opens the folder too.
         self.folders = grid_table([_("Folder"), _("Where")])
         self.folders.setColumnWidth(0, 170)
         self.folders.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # a path keeps both ends
-        for label, folder in folders:
+        for label, folder, holds in folders:
             item = QTreeWidgetItem([label, str(folder)])
+            item.setToolTip(0, holds)  # what it holds: hover the folder's name
             item.setToolTip(1, str(folder))
             item.setData(0, Qt.ItemDataRole.UserRole, str(folder))
             self.folders.addTopLevelItem(item)
@@ -176,20 +213,13 @@ class FilesPage(Page):
         self.open_button = QPushButton(_("Open folder"))
         self.open_button.clicked.connect(self._open_picked)
         self.folders.itemDoubleClicked.connect(lambda *_a: self._open_picked())
-        grid = QVBoxLayout(files.inner)
-        grid.setContentsMargins(0, 2, 0, 0)
-        grid.addWidget(with_buttons(self.folders, [self.open_button]))
-        lines = [
-            _("Shared files: connection profiles and tools, for everyone."),
-            _("Shared lists: the default list, and every list saved there, for everyone."),
-            _("Your files: your settings, private to you and admins."),
-            _("Your lists: your personal list, and every list saved there, only for you."),
-            _("Logs: one per user, named after the account."),
-        ]
+        layout = _section_layout(section)
+        layout.addWidget(with_buttons(self.folders, [self.open_button]))
+        lines = [_("Hover a folder to see what it holds.")]
         if paths.portable:
             lines.append(_("Portable mode: everything stays in the app's own folder."))
-        grid.addWidget(notes(*lines))
-        self.body.addWidget(files)
+        layout.addWidget(notes(*lines))
+        self.body.addWidget(section)
         self.body.addStretch(1)
 
     def _open_picked(self) -> None:
@@ -248,19 +278,6 @@ class HostsPage(Page):
         index = self.start_list.findData(start_list)
         self.start_list.setCurrentIndex(max(index, 0))
         self.start_list.currentIndexChanged.connect(lambda _i: self.changed.emit())
-        label = QLabel(_("&Open on startup:"))
-        label.setBuddy(self.start_list)
-        # Labels in one column, the dropdowns lined up beside them at the same width: as wide
-        # as their items, like every dropdown in Settings, not stretched across the page.
-        start_layout = QGridLayout(start.inner)
-        start_layout.setContentsMargins(0, 2, 0, 0)
-        start_layout.setColumnStretch(2, 1)
-        start_layout.addWidget(label, 0, 0)
-        start_layout.addWidget(self.start_list, 0, 1)
-        start_layout.addWidget(
-            notes(_("If that list can't be opened: the default list, then your personal list.")),
-            1, 0, 1, 3,
-        )  # fmt: skip
         # What the open list shows first; each list keeps its own choice. One button: its menu
         # has All hosts, Where I left off, and "A chosen group" with the groups as a tree.
         self._host_list = host_list
@@ -269,16 +286,21 @@ class HostsPage(Page):
         self.show_first.setEnabled(start_view is not None)
         self.show_first.menu().aboutToShow.connect(self._fill_first_menu)
         self._show_first_text()
-        first_label = QLabel(_("Show &first:"))
-        first_label.setBuddy(self.show_first)
-        start_layout.addWidget(first_label, 2, 0)
-        start_layout.addWidget(self.show_first, 2, 1)
-        self._first_note = notes("")
+        self._first_row = SettingRow(_("Show &first"), "", self.show_first)
         self._show_first_note(start_view is not None)
-        start_layout.addWidget(self._first_note, 3, 0, 1, 3)
+        add_rows(
+            _section_layout(start),
+            SettingRow(
+                _("&Open on startup"),
+                _("If that list can't be opened: the default list, then your personal list."),
+                self.start_list,
+            ),
+            self._first_row,
+        )
 
         refresh = Section(_("Refresh"))
-        self.auto_status = QCheckBox(_("&Refresh the status of the hosts shown every"))
+        # The tick and how often, together at the row's right end.
+        self.auto_status = QCheckBox(_("&every"))
         self.auto_status.setChecked(auto_status[0])
         self.auto_minutes = QSpinBox()
         self.auto_minutes.setRange(1, 120)
@@ -288,19 +310,19 @@ class HostsPage(Page):
         self.auto_status.toggled.connect(self.auto_minutes.setEnabled)
         self.auto_status.toggled.connect(lambda _on: self.changed.emit())
         self.auto_minutes.valueChanged.connect(lambda _v: self.changed.emit())
-        auto_row = QHBoxLayout()
-        auto_row.addWidget(self.auto_status)
-        auto_row.addWidget(self.auto_minutes)
-        auto_row.addStretch(1)
-        refresh_layout = QVBoxLayout(refresh.inner)
-        refresh_layout.setContentsMargins(0, 2, 0, 0)
-        refresh_layout.addLayout(auto_row)
-        refresh_layout.addWidget(
-            notes(
-                _("Only ping and ports, never logged-on users, so no account is used."),
-                _("Off by default; Refresh in the toolbar always works."),
-            )
-        )
+        every = QWidget()
+        controls = QHBoxLayout(every)
+        controls.setContentsMargins(0, 0, 0, 0)
+        controls.addWidget(self.auto_status)
+        controls.addWidget(self.auto_minutes, 1)
+        auto_row = SettingRow(
+            _("Refresh status by itself"),
+            _("Only ping and ports, never logged-on users, so no account is needed. Refresh in "
+              "the toolbar always works."),
+            every,
+        )  # fmt: skip
+        auto_row.name.setBuddy(self.auto_status)
+        add_rows(_section_layout(refresh), auto_row)
 
         self.body.addWidget(start)
         self.body.addWidget(refresh)
@@ -345,15 +367,11 @@ class HostsPage(Page):
         self._show_first_note(start_view is not None)
 
     def _show_first_note(self, open_list: bool) -> None:
-        self._first_note.setText(
-            "• "
-            + (
-                _("For the list open now; each list keeps its own. A group's right-click menu "
-                  "can choose it too.")
-                if open_list
-                else _("Open a host list to choose what it shows first.")
-            )
-        )  # fmt: skip
+        self._first_row.description.setText(
+            _("For the list open now; each list keeps its own.")
+            if open_list
+            else _("Open a host list to choose what it shows first.")
+        )
 
     def _show_first_text(self) -> None:
         show, group = self._first
@@ -397,7 +415,7 @@ class HostListsPage(Page):
             found=found,
             hidden=hidden,
         )
-        box = Section(_("Lists"))
+        box = Section(_("Host lists"))
         lists = QVBoxLayout(box.inner)
         lists.setContentsMargins(0, 2, 0, 0)
         lists.addWidget(self.view)

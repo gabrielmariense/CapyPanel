@@ -230,7 +230,7 @@ def test_files_that_arent_used_are_named_with_the_reason(
     page = ProfilesPage(catalogs, None)
     assert not page.profiles_skipped.isHidden()
     assert page.profiles_skipped.text() == (
-        "• 2 files skipped: broken.json (can't be read), planted.json (made by another user)"
+        "2 files skipped: broken.json (can't be read), planted.json (made by another user)"
     )  # a note, like the others
     assert str(folder / "planted.json") in page.profiles_skipped.toolTip()  # where, for a fix
     assert ToolsPage(catalogs).tools_skipped.isHidden()  # nothing skipped there

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 02:02-0300\n"
+"POT-Creation-Date: 2026-10-18 02:08-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -113,6 +113,9 @@ msgstr ""
 msgid "&Import hosts…"
 msgstr ""
 
+msgid "&Language"
+msgstr ""
+
 msgid "&Leave out of the import"
 msgstr ""
 
@@ -152,7 +155,7 @@ msgstr ""
 msgid "&Open list…"
 msgstr ""
 
-msgid "&Open on startup:"
+msgid "&Open on startup"
 msgstr ""
 
 msgid "&Password:"
@@ -162,9 +165,6 @@ msgid "&Preset:"
 msgstr ""
 
 msgid "&Refresh"
-msgstr ""
-
-msgid "&Refresh the status of the hosts shown every"
 msgstr ""
 
 msgid "&Remove"
@@ -203,6 +203,9 @@ msgstr ""
 msgid "&Tags:"
 msgstr ""
 
+msgid "&Theme"
+msgstr ""
+
 msgid "&Tool:"
 msgstr ""
 
@@ -210,6 +213,9 @@ msgid "&User:"
 msgstr ""
 
 msgid "&View"
+msgstr ""
+
+msgid "&every"
 msgstr ""
 
 msgid "A chosen &group"
@@ -343,9 +349,6 @@ msgstr ""
 msgid "CapyPanel is built with the following software:"
 msgstr ""
 
-msgid "CapyPanel themes look the same on every computer."
-msgstr ""
-
 msgid "CapyPanel — dark"
 msgstr ""
 
@@ -420,6 +423,9 @@ msgid "Connection &profiles…"
 msgstr ""
 
 msgid "Connection profiles"
+msgstr ""
+
+msgid "Connection profiles and remote tools, for everyone on this PC."
 msgstr ""
 
 msgid "Console"
@@ -605,6 +611,9 @@ msgstr ""
 msgid "Folder"
 msgstr ""
 
+msgid "Folders"
+msgstr ""
+
 msgid "For Import"
 msgstr ""
 
@@ -614,9 +623,7 @@ msgid ""
 "PC-0142,10.0.0.42"
 msgstr ""
 
-msgid ""
-"For the list open now; each list keeps its own. A group's right-click "
-"menu can choose it too."
+msgid "For the list open now; each list keeps its own."
 msgstr ""
 
 msgid "Forgets it here; the file itself is never deleted"
@@ -692,10 +699,10 @@ msgstr ""
 msgid "Hosts with no group &go to:"
 msgstr ""
 
-msgid "Hosts with no profile &use:"
+msgid "Hosts with no profile &use"
 msgstr ""
 
-msgid "Hover over a list to see where it is."
+msgid "Hover a folder to see what it holds."
 msgstr ""
 
 msgid "Icons:"
@@ -751,7 +758,7 @@ msgid ""
 "again instead of trying it on the others, so the account isn't locked."
 msgstr ""
 
-msgid "Language"
+msgid "Language and theme"
 msgstr ""
 
 msgid "Last check"
@@ -763,10 +770,9 @@ msgstr ""
 msgid "List"
 msgstr ""
 
-msgid "Lists"
-msgstr ""
-
-msgid "Lists saved in a lists folder show up by themselves."
+msgid ""
+"Lists saved in a lists folder show up here by themselves; removing one "
+"never deletes its file."
 msgstr ""
 
 msgid "Locate…"
@@ -787,9 +793,6 @@ msgid "Logged-on users"
 msgstr ""
 
 msgid "Logs"
-msgstr ""
-
-msgid "Logs: one per user, named after the account."
 msgstr ""
 
 msgid "Manage groups"
@@ -913,9 +916,6 @@ msgstr ""
 msgid "Nothing changes until you click OK."
 msgstr ""
 
-msgid "Off by default; Refresh in the toolbar always works."
-msgstr ""
-
 msgid "Offline"
 msgstr ""
 
@@ -924,10 +924,15 @@ msgid ""
 "use Name and address."
 msgstr ""
 
+msgid "One per user, named after the account."
+msgstr ""
+
 msgid "Online"
 msgstr ""
 
-msgid "Only ping and ports, never logged-on users, so no account is used."
+msgid ""
+"Only ping and ports, never logged-on users, so no account is needed. "
+"Refresh in the toolbar always works."
 msgstr ""
 
 msgid "Open &Settings"
@@ -1040,6 +1045,9 @@ msgstr ""
 msgid "Refresh logged-on users"
 msgstr ""
 
+msgid "Refresh status by itself"
+msgstr ""
+
 msgid "Reload the list"
 msgstr ""
 
@@ -1080,9 +1088,6 @@ msgstr[1] ""
 
 #, python-brace-format
 msgid "Remove “{name}” from the list?"
-msgstr ""
-
-msgid "Removing a list from here never deletes its file."
 msgstr ""
 
 msgid "Rename group"
@@ -1173,27 +1178,21 @@ msgstr ""
 msgid "Shared"
 msgstr ""
 
+msgid "Shared by everyone on this PC."
+msgstr ""
+
 msgid ""
 "Shared by everyone on this PC. Read-only: only people Windows lets write "
 "this folder can change them."
 msgstr ""
 
-msgid "Shared by everyone on this PC. You can change them."
-msgstr ""
-
 msgid "Shared files"
-msgstr ""
-
-msgid "Shared files: connection profiles and tools, for everyone."
 msgstr ""
 
 msgid "Shared lists"
 msgstr ""
 
-msgid "Shared lists: the default list, and every list saved there, for everyone."
-msgstr ""
-
-msgid "Show &first:"
+msgid "Show &first"
 msgstr ""
 
 msgid "Show this group &first"
@@ -1281,6 +1280,9 @@ msgid ""
 "see who is logged on."
 msgstr ""
 
+msgid "The app's language. Changes at once."
+msgstr ""
+
 msgid "The app's logs, to attach to a problem report"
 msgstr ""
 
@@ -1310,6 +1312,9 @@ msgstr ""
 msgid ""
 "The default list was made by another user, so CapyPanel won't open it. An"
 " administrator can replace or delete “{path}”."
+msgstr ""
+
+msgid "The default list, and every list saved there, for everyone on this PC."
 msgstr ""
 
 msgid "The file doesn't contain a host list."
@@ -1370,6 +1375,9 @@ msgstr ""
 msgid "The placeholder “{{{name}}}” goes with “settings_file”."
 msgstr ""
 
+msgid "The profile a host connects with when it has none of its own."
+msgstr ""
+
 msgid "The profile needs a “name”."
 msgstr ""
 
@@ -1402,9 +1410,6 @@ msgid "The “settings_file” must be a file name in the profiles folder."
 msgstr ""
 
 msgid "The “website” must be an https:// address."
-msgstr ""
-
-msgid "Theme"
 msgstr ""
 
 msgid "There are no connection profiles. Create one in Settings > Connections."
@@ -1502,9 +1507,6 @@ msgstr ""
 msgid "Where"
 msgstr ""
 
-msgid "Where CapyPanel keeps its files"
-msgstr ""
-
 msgid "Where I left off"
 msgstr ""
 
@@ -1529,7 +1531,9 @@ msgid ""
 "on the network, a firewall blocks file sharing, or it isn't Windows."
 msgstr ""
 
-msgid "Windows themes use Windows' own look, with your accent color."
+msgid ""
+"Windows themes follow Windows' look and accent; CapyPanel themes look the"
+" same everywhere."
 msgstr ""
 
 msgid "Windows — dark"
@@ -1547,13 +1551,13 @@ msgstr ""
 msgid "Your files"
 msgstr ""
 
-msgid "Your files: your settings, private to you and admins."
-msgstr ""
-
 msgid "Your lists"
 msgstr ""
 
-msgid "Your lists: your personal list, and every list saved there, only for you."
+msgid "Your personal list, and every list saved there, only for you."
+msgstr ""
+
+msgid "Your settings, private to you and administrators."
 msgstr ""
 
 msgid "Yours"

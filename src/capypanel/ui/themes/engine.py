@@ -513,7 +513,13 @@ QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
 /* The Groups heading while a group is dragged over it: dropping moves it to the top. */
 QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel_solid)s;
                                      border-radius: %(r2)spx; }
-QListView#pageList::item { padding: 7px 10px; }
+/* Settings' page list sits straight on the window; the page shown is on a rounded tint, as on
+   the rail. */
+QListView#pageList { background: transparent; border: none; padding: 0; }
+QListView#pageList::item { padding: 7px 10px; border-radius: %(r2)spx; }
+/* A setting's row: its name over a one-line description; a faint line between two rows. */
+QLabel#rowName { font-weight: 600; }
+QFrame#rowLine { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
 
 /* Fusion outlines these with a darker shade of the background, invisible in dark themes. */
 QRadioButton::indicator, QCheckBox::indicator {
@@ -568,11 +574,16 @@ QToolBar#main { border: none; border-bottom: 1px solid %(border)s; }
 QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; }
 /* Only the settings page list, not every QListView: combo box pop-ups are list views too. */
-QTreeView, QListView#pageList, QFrame#card { background: %(card)s; border: 1px solid %(border)s; }
+QTreeView, QFrame#card { background: %(card)s; border: 1px solid %(border)s; }
 /* outline: 0 hides Windows' focus box around the current row; the tint already marks it. */
 QTreeView, QListView#pageList { outline: 0; }
 QTreeView::item { padding: 4px 2px; }
-QListView#pageList::item { padding: 4px 8px; }
+/* Settings' page list sits straight on the window; the page shown is on a rounded tint. */
+QListView#pageList { background: transparent; border: none; }
+QListView#pageList::item { padding: 6px 8px; border-radius: 6px; }
+/* A setting's row: its name over a one-line description; a faint line between two rows. */
+QLabel#rowName { font-weight: 600; }
+QFrame#rowLine { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
 QTreeView::item:hover, QListView#pageList::item:hover { background: %(hover)s; }
 QTreeView::item:selected, QListView#pageList::item:selected {
     background: %(sel)s; color: %(text)s; }

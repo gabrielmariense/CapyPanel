@@ -1,5 +1,6 @@
-"""The host lists a user works with: the default list, their personal list and every list they
-added (e.g. on a network share). The same view sits in File > Host lists… and in Settings."""
+"""The host lists a user works with: the default list, their personal list, the lists in the
+lists folders and every list they added (e.g. on a network share). Shown in Settings > Host
+lists."""
 
 from collections.abc import Callable
 from pathlib import Path
@@ -87,11 +88,10 @@ class HostListsView(QWidget):
         layout.addWidget(with_buttons(self.tree, buttons))
         layout.addWidget(
             notes(
-                _("Lists saved in a lists folder show up by themselves."),
-                _("Hover over a list to see where it is."),
-                _("Removing a list from here never deletes its file."),
+                _("Lists saved in a lists folder show up here by themselves; removing one never "
+                  "deletes its file.")
             )
-        )
+        )  # fmt: skip
 
         self.add_button.clicked.connect(self._add_existing)
         self.new_button.clicked.connect(self._new)

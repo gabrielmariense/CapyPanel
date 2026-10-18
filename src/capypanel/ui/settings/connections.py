@@ -42,7 +42,7 @@ from capypanel.core.tools.profiles import (
 from capypanel.ui.connect import ask_for_program
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import hint, notes
-from capypanel.ui.settings.pages import Page, Section, open_folder
+from capypanel.ui.settings.pages import Page, Section, SettingRow, open_folder
 from capypanel.ui.tables import fit_rows, grid_table, with_buttons
 
 MAX_PROFILE_NAME = 64
@@ -299,7 +299,7 @@ class ProfilesPage(SharedPage):
         )
         self._show_folder_state()
         access = (
-            _("Shared by everyone on this PC. You can change them.")
+            _("Shared by everyone on this PC.")
             if self.can_edit
             else _(
                 "Shared by everyone on this PC. Read-only: only people Windows lets write this "
@@ -326,17 +326,21 @@ class ProfilesPage(SharedPage):
         self.default = QComboBox()
         self.default.setEnabled(self.can_edit)
         self.default.currentIndexChanged.connect(lambda _i: self._default_picked())
-        default_row = QFormLayout()
-        default_row.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.FieldsStayAtSizeHint)
-        default_row.addRow(_("Hosts with no profile &use:"), self.default)
         inner = QVBoxLayout(profiles_box.inner)
         inner.setContentsMargins(0, 2, 0, 0)
+        inner.setSpacing(6)
         inner.addWidget(with_buttons(self.list, profile_buttons))
-        inner.addLayout(default_row)
         self.profiles_skipped = skipped_note(self.store.problems)
         inner.addWidget(notes(access))
         inner.addWidget(self.builtin_note)
         inner.addWidget(self.profiles_skipped)
+        inner.addWidget(
+            SettingRow(
+                _("Hosts with no profile &use"),
+                _("The profile a host connects with when it has none of its own."),
+                self.default,
+            )
+        )
 
         self.body.addWidget(profiles_box)
         self.body.addStretch(1)
@@ -490,6 +494,7 @@ class ToolsPage(SharedPage):
         tools_box = Section(_("Remote tools"))
         tools_layout = QVBoxLayout(tools_box.inner)
         tools_layout.setContentsMargins(0, 2, 0, 0)
+        tools_layout.setSpacing(6)
         # The same table as the profiles: the buttons act on the tool picked.
         self.tools = grid_table([_("Tool"), _("Status"), _("Where")])
         self.tools.setColumnWidth(0, 190)
