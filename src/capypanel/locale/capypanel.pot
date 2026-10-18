@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 13:55-0300\n"
+"POT-Creation-Date: 2026-10-18 14:00-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -60,6 +60,9 @@ msgid "&Credentials:"
 msgstr ""
 
 msgid "&Delete"
+msgstr ""
+
+msgid "&Delete the file"
 msgstr ""
 
 msgid "&Delete…"
@@ -174,6 +177,9 @@ msgid "&Refresh"
 msgstr ""
 
 msgid "&Remove"
+msgstr ""
+
+msgid "&Remove from my lists"
 msgstr ""
 
 msgid "&Remove selected"
@@ -462,6 +468,10 @@ msgid "Couldn't create “{path}”: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't move “{path}” to the Recycle Bin."
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't open “{path}”: {error}"
 msgstr ""
 
@@ -557,6 +567,9 @@ msgstr ""
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
 msgstr ""
 
+msgid "Deleting moves it to the Recycle Bin, for everyone who uses it:"
+msgstr ""
+
 msgid "Disconnected"
 msgstr ""
 
@@ -640,9 +653,6 @@ msgid "For the list open now; each list keeps its own."
 msgstr ""
 
 msgid "For:"
-msgstr ""
-
-msgid "Forgets it here; the file itself is never deleted"
 msgstr ""
 
 msgid "Formats CapyPanel can import"
@@ -787,8 +797,8 @@ msgid "List"
 msgstr ""
 
 msgid ""
-"Lists saved in a lists folder show up here by themselves; removing one "
-"never deletes its file."
+"Lists saved in a lists folder show up here by themselves; Remove asks "
+"whether to delete the file too."
 msgstr ""
 
 msgid "Logged on"
@@ -1085,6 +1095,9 @@ msgstr ""
 msgid "Remove group"
 msgstr ""
 
+msgid "Remove host list"
+msgstr ""
+
 msgid "Remove hosts"
 msgstr ""
 
@@ -1107,6 +1120,10 @@ msgstr[1] ""
 
 #, python-brace-format
 msgid "Remove “{name}” from the list?"
+msgstr ""
+
+#, python-brace-format
+msgid "Remove “{name}” from your lists, or delete its file too?"
 msgstr ""
 
 msgid "Rename group"
@@ -1294,6 +1311,9 @@ msgid "Tags and notes"
 msgstr ""
 
 msgid "Tags for the selected rows, separated by ;"
+msgstr ""
+
+msgid "Takes it out of your lists, or deletes its file too"
 msgstr ""
 
 msgid "That group doesn't exist."

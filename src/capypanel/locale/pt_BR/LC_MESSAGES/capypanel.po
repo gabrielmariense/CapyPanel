@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 13:55-0300\n"
+"POT-Creation-Date: 2026-10-18 14:00-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -62,6 +62,9 @@ msgstr "&Credenciais:"
 
 msgid "&Delete"
 msgstr "E&xcluir"
+
+msgid "&Delete the file"
+msgstr "&Excluir o arquivo"
 
 msgid "&Delete…"
 msgstr "E&xcluir…"
@@ -176,6 +179,9 @@ msgstr "&Atualizar"
 
 msgid "&Remove"
 msgstr "&Remover"
+
+msgid "&Remove from my lists"
+msgstr "&Remover das minhas listas"
 
 msgid "&Remove selected"
 msgstr "&Remover selecionado"
@@ -459,6 +465,10 @@ msgid "Couldn't create “{path}”: {error}"
 msgstr "Não foi possível criar “{path}”: {error}"
 
 #, python-brace-format
+msgid "Couldn't move “{path}” to the Recycle Bin."
+msgstr "Não foi possível mover “{path}” para a Lixeira."
+
+#, python-brace-format
 msgid "Couldn't open “{path}”: {error}"
 msgstr "Não foi possível abrir “{path}”: {error}"
 
@@ -554,6 +564,9 @@ msgstr "Excluir perfil de conexão"
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
 msgstr "Excluir o perfil de conexão “{profile}”? Todos neste PC deixam de tê-lo."
 
+msgid "Deleting moves it to the Recycle Bin, for everyone who uses it:"
+msgstr "Excluir move o arquivo para a Lixeira, para todos que o usam:"
+
 msgid "Disconnected"
 msgstr "Desconectado"
 
@@ -637,9 +650,6 @@ msgstr "Para a lista aberta agora; cada lista guarda a sua."
 
 msgid "For:"
 msgstr "Para:"
-
-msgid "Forgets it here; the file itself is never deleted"
-msgstr "Esquece a lista aqui; o arquivo em si nunca é excluído"
 
 msgid "Formats CapyPanel can import"
 msgstr "Formatos que o CapyPanel importa"
@@ -773,8 +783,8 @@ msgstr "Licenças"
 msgid "List"
 msgstr "Lista"
 
-msgid "Lists saved in a lists folder show up here by themselves; removing one never deletes its file."
-msgstr "Listas salvas numa pasta de listas aparecem aqui sozinhas; remover uma nunca exclui o arquivo."
+msgid "Lists saved in a lists folder show up here by themselves; Remove asks whether to delete the file too."
+msgstr "Listas salvas numa pasta de listas aparecem aqui sozinhas; Remover pergunta se o arquivo também deve ser excluído."
 
 msgid "Logged on"
 msgstr "Logados"
@@ -1061,6 +1071,9 @@ msgstr "Remover tudo"
 msgid "Remove group"
 msgstr "Remover grupo"
 
+msgid "Remove host list"
+msgstr "Remover lista de hosts"
+
 msgid "Remove hosts"
 msgstr "Remover hosts"
 
@@ -1084,6 +1097,10 @@ msgstr[1] "Remover {n} hosts da lista?"
 #, python-brace-format
 msgid "Remove “{name}” from the list?"
 msgstr "Remover “{name}” da lista?"
+
+#, python-brace-format
+msgid "Remove “{name}” from your lists, or delete its file too?"
+msgstr "Remover “{name}” das suas listas ou excluir também o arquivo?"
 
 msgid "Rename group"
 msgstr "Renomear grupo"
@@ -1264,6 +1281,9 @@ msgstr "Tags e notas"
 
 msgid "Tags for the selected rows, separated by ;"
 msgstr "Tags das linhas selecionadas, separadas por ;"
+
+msgid "Takes it out of your lists, or deletes its file too"
+msgstr "Tira das suas listas, ou exclui também o arquivo"
 
 msgid "That group doesn't exist."
 msgstr "Esse grupo não existe."

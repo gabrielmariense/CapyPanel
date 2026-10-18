@@ -30,6 +30,12 @@ from capypanel.ui.settings.window import PAGE_TITLES, ROOM, SettingsDialog
 from capypanel.ui.themes import engine as themes
 
 
+@pytest.fixture(autouse=True)
+def remove_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Remove asks whether to delete the file too; in tests, the answer is "remove only"."""
+    monkeypatch.setattr(host_lists, "ask_remove", lambda *_a: host_lists.REMOVE)
+
+
 @pytest.fixture
 def paths(tmp_path: Path) -> settings.Paths:
     (tmp_path / settings.PORTABLE_MARKER).touch()
@@ -592,3 +598,34 @@ def test_new_list_from_the_dropdown_makes_a_shared_list(
     window.commands.new_list.trigger()
     assert shared.is_file() and window.document is not None and window.document.path == shared
     assert not window._prefs.get("host_lists")  # in a lists folder: it shows up by itself
+
+
+def test_remove_can_also_move_the_file_to_the_recycle_bin(
+    window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    branch = paths.shared_lists_dir / "branch.json"
+    listfile.save(branch, HostList(), expected=None)
+    window.open_list(branch)
+    trashed: list[str] = []
+    monkeypatch.setattr(host_lists.QFile, "moveToTrash", lambda path: trashed.append(path) or True)
+    view = window.settings_dialog().host_lists.view
+    view.select(branch)
+    monkeypatch.setattr(host_lists, "ask_remove", lambda *_a: None)  # Cancel
+    view.remove_button.click()
+    assert trashed == [] and len(_rows(view)) == 3
+    monkeypatch.setattr(host_lists, "ask_remove", lambda *_a: host_lists.DELETE)
+    view.remove_button.click()
+    assert [Path(t) for t in trashed] == [branch]
+    assert len(_rows(view)) == 2 and view.hidden == []  # gone, not just hidden
+    assert window.document is not None and window.document.path == paths.default_list
+
+
+def test_a_list_that_can_t_be_deleted_is_only_removed(
+    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window._prefs["host_lists"] = [str(office.with_name("gone.json"))]
+    monkeypatch.setattr(host_lists, "ask_remove", lambda *_a: pytest.fail("asked"))
+    view = window.settings_dialog().host_lists.view
+    view.select(office.with_name("gone.json"))  # no file to delete
+    view.remove_button.click()
+    assert len(_rows(view)) == 2

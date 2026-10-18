@@ -2,10 +2,12 @@
 lists folders and every list they added (e.g. on a network share). Shown in Settings > Host
 lists."""
 
+import html
+import logging
 from collections.abc import Callable
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QUrl, Signal
+from PySide6.QtCore import QFile, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -28,6 +30,8 @@ from capypanel.ui.notes import notes
 from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 
 ROLE_PATH = Qt.ItemDataRole.UserRole
+REMOVE, DELETE = "remove", "delete"
+log = logging.getLogger(__name__)
 
 
 def access_text(access: Access, kind: ListKind) -> str:
@@ -38,6 +42,28 @@ def access_text(access: Access, kind: ListKind) -> str:
         Access.MISSING: missing,
         Access.UNTRUSTED: _("Not used: made by another user"),
     }[access]
+
+
+def ask_remove(parent: QWidget, path: Path) -> str | None:
+    """Remove from the lists only, or delete the file too; None when cancelled. Cancel is the
+    default, so Enter never deletes."""
+    box = QMessageBox(
+        QMessageBox.Icon.Question,
+        _("Remove host list"),
+        _("Remove “{name}” from your lists, or delete its file too?").format(name=path.stem),
+        parent=parent,
+    )
+    # The path on a line of its own: a sentence would break it in the middle.
+    gone = _("Deleting moves it to the Recycle Bin, for everyone who uses it:")
+    box.setInformativeText(f"{gone}<br><b>{html.escape(str(path))}</b>")
+    delete = box.addButton(_("&Delete the file"), QMessageBox.ButtonRole.DestructiveRole)
+    remove = box.addButton(_("&Remove from my lists"), QMessageBox.ButtonRole.AcceptRole)
+    cancel = box.addButton(QMessageBox.StandardButton.Cancel)
+    box.setDefaultButton(cancel)
+    box.setEscapeButton(cancel)
+    box.exec()
+    clicked = box.clickedButton()
+    return DELETE if clicked is delete else REMOVE if clicked is remove else None
 
 
 class HostListsView(QWidget):
@@ -75,7 +101,7 @@ class HostListsView(QWidget):
         self.new_button = QPushButton(_("&New…"))
         self.add_button = QPushButton(_("&Add existing…"))
         self.remove_button = QPushButton(_("&Remove"))
-        self.remove_button.setToolTip(_("Forgets it here; the file itself is never deleted"))
+        self.remove_button.setToolTip(_("Takes it out of your lists, or deletes its file too"))
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         buttons = [self.new_button, self.add_button, self.remove_button]
@@ -83,8 +109,8 @@ class HostListsView(QWidget):
         row_menu(self.tree, self.fill_row_menu)  # Open, Save a copy and Open folder too
         layout.addWidget(
             notes(
-                _("Lists saved in a lists folder show up here by themselves; removing one never "
-                  "deletes its file.")
+                _("Lists saved in a lists folder show up here by themselves; Remove asks "
+                  "whether to delete the file too.")
             )
         )  # fmt: skip
 
@@ -264,10 +290,23 @@ class HostListsView(QWidget):
             self._keep(path)
 
     def _remove(self) -> None:
+        """Out of the user's lists, and, when they say so, its file into the Recycle Bin, so
+        lists folders don't fill up with lists nobody uses."""
         path = self.selected()
         if path is None or self._kind(path) is not ListKind.SHARED:
             return
-        if self._in_folder(path):  # it would show up again by itself: hidden instead
+        answer = ask_remove(self, path) if self._can_delete(path) else REMOVE
+        if answer is None:
+            return
+        if answer == DELETE:
+            if not QFile.moveToTrash(str(path)):
+                message = _("Couldn't move “{path}” to the Recycle Bin.").format(path=path)
+                QMessageBox.warning(self, "CapyPanel", message)
+                return
+            log.info("Host list moved to the Recycle Bin: %s", path)
+            self._all_found = [p for p in self._all_found if not locations.same_path(p, path)]
+            self.hidden = [p for p in self.hidden if not locations.same_path(p, path)]
+        elif self._in_folder(path):  # it would show up again by itself: hidden instead
             self.hidden.append(path)
         self.added = [p for p in self.added if not locations.same_path(p, path)]
         was_open = self._document is not None and locations.same_path(path, self._document.path)
@@ -275,6 +314,9 @@ class HostListsView(QWidget):
         self.changed.emit()
         if was_open:  # the default list takes its place
             self.open_requested.emit(self._default)
+
+    def _can_delete(self, path: Path) -> bool:
+        return locations.list_access(path) is Access.READ_WRITE
 
     def open_picked_folder(self) -> None:
         path = self.selected()
