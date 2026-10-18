@@ -51,6 +51,7 @@ from capypanel.ui.themes import engine as themes
 PAGE_TITLES = ("General", "Files", "General", "Host lists", "Connections")
 GROUPS = (("CapyPanel", ("general", "files")), ("Hosts", ("hosts", "host_lists", "connections")))
 SEARCH_FROM = 3  # letters typed before the search shows its results
+ROOM = 60  # spare width past the widest page: a button row never ends just short of its table
 
 
 @dataclass(frozen=True)
@@ -256,6 +257,7 @@ class SettingsDialog(QDialog):
         self._old.append(old)
         self._build(*values, chosen=chosen, written=written, start_view=start_view)
         self.show_page(page)
+        self._make_room()
         self._update_save()
         self.general.language.setFocus()
 
@@ -416,11 +418,18 @@ class SettingsDialog(QDialog):
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
+        self._make_room()
         themes.paint_title_bar(self)
         self._no_default_buttons()
         app = QApplication.instance()
         if app is not None:
             app.installEventFilter(self)  # any click or key in here may change something
+
+    def _make_room(self) -> None:
+        """At least ROOM wider than the widest page needs, in this language."""
+        width = self.minimumSizeHint().width() + ROOM
+        if self.width() < width:
+            self.resize(width, self.height())
 
     def hideEvent(self, event: QHideEvent) -> None:
         app = QApplication.instance()

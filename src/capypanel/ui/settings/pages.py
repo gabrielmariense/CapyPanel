@@ -252,15 +252,16 @@ class HostsPage(Page):
         self.start_list.setCurrentIndex(max(index, 0))
         label = QLabel(_("&Open on startup:"))
         label.setBuddy(self.start_list)
-        # Labels in one column, the dropdowns lined up beside them at the same width.
+        # Labels in one column, the dropdowns lined up beside them at the same width: as wide
+        # as their items, like every dropdown in Settings, not stretched across the page.
         start_layout = QGridLayout(start.inner)
         start_layout.setContentsMargins(0, 2, 0, 0)
-        start_layout.setColumnStretch(1, 1)
+        start_layout.setColumnStretch(2, 1)
         start_layout.addWidget(label, 0, 0)
         start_layout.addWidget(self.start_list, 0, 1)
         start_layout.addWidget(
             notes(_("If that list can't be opened: the default list, then your personal list.")),
-            1, 0, 1, 2,
+            1, 0, 1, 3,
         )  # fmt: skip
         # What the open list shows first; each list keeps its own choice. One button: its menu
         # has All hosts, Where I left off, and "A chosen group" with the groups as a tree.
@@ -281,7 +282,7 @@ class HostsPage(Page):
                 if start_view is not None
                 else _("Open a host list to choose what it shows first.")
             ),
-            3, 0, 1, 2,
+            3, 0, 1, 3,
         )  # fmt: skip
 
         refresh = Section(_("Refresh"))

@@ -329,6 +329,7 @@ class ConnectionsPage(Page):
         self.default = QComboBox()
         self.default.setEnabled(self.can_edit)
         default_row = QFormLayout()
+        default_row.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.FieldsStayAtSizeHint)
         default_row.addRow(_("Hosts with no profile &use:"), self.default)
         inner = QVBoxLayout(profiles_box.inner)
         inner.setContentsMargins(0, 2, 0, 0)

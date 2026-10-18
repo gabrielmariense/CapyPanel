@@ -21,7 +21,7 @@ from capypanel.core.hosts.model import HostList
 from capypanel.ui.host_lists import HostListsView
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
-from capypanel.ui.settings.window import PAGE_TITLES, SettingsDialog
+from capypanel.ui.settings.window import PAGE_TITLES, ROOM, SettingsDialog
 from capypanel.ui.themes import engine as themes
 
 
@@ -548,7 +548,7 @@ def test_list_tables_show_six_rows_at_most_and_pages_never_get_cut(
     tree = dialog.host_lists.view.tree
     assert tree.viewport().height() == 6 * tree.sizeHintForRow(0)  # no 7th row peeking in
     page = dialog.host_lists
-    assert page.width() >= page.minimumSizeHint().width()  # the window widened instead
+    assert page.width() >= page.minimumSizeHint().width() + ROOM  # widened, with room to spare
     dialog.close()
 
 
