@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QFileDialog,
+    QMenu,
     QMessageBox,
     QPushButton,
     QTreeWidgetItem,
@@ -23,7 +24,7 @@ from capypanel.core.hosts.locations import Access, ListKind
 from capypanel.core.i18n import _
 from capypanel.ui.hosts import list_file_filter
 from capypanel.ui.notes import notes
-from capypanel.ui.tables import fit_rows, grid_table, with_buttons
+from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 
 ROLE_PATH = Qt.ItemDataRole.UserRole
 
@@ -70,22 +71,15 @@ class HostListsView(QWidget):
         self.tree = grid_table([_("List"), _("Type"), _("Access")])  # the path: tooltip
         self.tree.setColumnWidth(0, 170)
         self.tree.setColumnWidth(1, 105)
-        self.add_button = QPushButton(_("&Add existing…"))
         self.new_button = QPushButton(_("&New…"))
-        self.copy_button = QPushButton(_("Save a &copy…"))
-        self.copy_button.setToolTip(_("Saves a copy of the list in use as a new file"))
-        self.copy_button.setEnabled(document is not None)
+        self.add_button = QPushButton(_("&Add existing…"))
         self.remove_button = QPushButton(_("&Remove"))
         self.remove_button.setToolTip(_("Forgets it here; the file itself is never deleted"))
-        self.open_folder = QPushButton(_("Open folder"))
-        self.open_folder.setToolTip(_("Opens the folder the list is in"))
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        buttons = [
-            self.add_button, self.new_button, self.copy_button, self.remove_button,
-            self.open_folder,
-        ]  # fmt: skip
+        buttons = [self.new_button, self.add_button, self.remove_button]
         layout.addWidget(with_buttons(self.tree, buttons))
+        row_menu(self.tree, self.fill_row_menu)  # Open, Save a copy and Open folder too
         layout.addWidget(
             notes(
                 _("Lists saved in a lists folder show up here by themselves; removing one never "
@@ -95,9 +89,7 @@ class HostListsView(QWidget):
 
         self.add_button.clicked.connect(self._add_existing)
         self.new_button.clicked.connect(self._new)
-        self.copy_button.clicked.connect(self._copy_current)
         self.remove_button.clicked.connect(self._remove)
-        self.open_folder.clicked.connect(self._open_folder)
         self.tree.itemSelectionChanged.connect(self._selection_changed)
         self.tree.itemDoubleClicked.connect(lambda *_a: self.open_picked())
         self._fill(document.path if document else personal_list)
@@ -128,7 +120,6 @@ class HostListsView(QWidget):
         """The main window opened a list: it's the one marked in use now."""
         selected = self.selected()
         self._document = document
-        self.copy_button.setEnabled(document is not None)
         self._fill(selected)
 
     def open_picked(self) -> None:
@@ -201,8 +192,24 @@ class HostListsView(QWidget):
 
     def _selection_changed(self) -> None:
         path = self.selected()
-        self.remove_button.setEnabled(path is not None and self._kind(path) is ListKind.SHARED)
-        self.open_folder.setEnabled(path is not None and path.parent.is_dir())
+        self.remove_button.setEnabled(self._removable(path))
+
+    def _removable(self, path: Path | None) -> bool:
+        return path is not None and self._kind(path) is ListKind.SHARED
+
+    def fill_row_menu(self, menu: QMenu) -> None:
+        path = self.selected()
+        readable = path is not None and path.is_file() and self.can_open(path)
+        add_action(menu, _("&Open"), self.open_picked, self.can_open(path))
+        add_action(menu, _("Save a &copy…"), self.copy_picked, readable)
+        add_action(
+            menu,
+            _("Open &folder"),
+            self.open_picked_folder,
+            path is not None and path.parent.is_dir(),
+        )
+        menu.addSeparator()
+        add_action(menu, _("&Remove"), self._remove, self._removable(path))
 
     # ---- changing ----
 
@@ -232,15 +239,25 @@ class HostListsView(QWidget):
             self._keep(path)
             self.open_requested.emit(path)  # made to be used: it opens now
 
-    def _copy_current(self) -> None:
+    def copy_picked(self) -> None:
+        """A copy of the list picked, as a new file kept in the lists."""
+        source = self.selected()
+        if source is None:
+            return
         doc = self._document
-        path = self._ask_path(_("Copy the current list to")) if doc else None
-        if (
-            doc is not None
-            and path is not None
-            and self._write(
-                path, lambda: OpenList.save_as(path, doc.hosts, replace_existing=path.exists())
+        try:
+            hosts = (
+                doc.hosts
+                if doc is not None and locations.same_path(source, doc.path)
+                else OpenList.open(source).hosts
             )
+        except (HostListFileError, OSError) as e:
+            message = _("Couldn't open “{path}”: {error}").format(path=source, error=e)
+            QMessageBox.warning(self, "CapyPanel", message)
+            return
+        path = self._ask_path(_("Save a copy of the list"))
+        if path is not None and self._write(
+            path, lambda: OpenList.save_as(path, hosts, replace_existing=path.exists())
         ):
             self._keep(path)
 
@@ -257,7 +274,7 @@ class HostListsView(QWidget):
         if was_open:  # the default list takes its place
             self.open_requested.emit(self._default)
 
-    def _open_folder(self) -> None:
+    def open_picked_folder(self) -> None:
         path = self.selected()
         if path is not None:
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(path.parent)))

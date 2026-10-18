@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMenu,
     QMessageBox,
     QPushButton,
     QSpinBox,
@@ -42,8 +43,8 @@ from capypanel.core.tools.profiles import (
 from capypanel.ui.connect import ask_for_program
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import hint, notes
-from capypanel.ui.settings.pages import Page, Section, SettingRow, open_folder
-from capypanel.ui.tables import fit_rows, grid_table, with_buttons
+from capypanel.ui.settings.pages import Page, Section, SettingRow
+from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 
 MAX_PROFILE_NAME = 64
 
@@ -289,8 +290,6 @@ class ProfilesPage(SharedPage):
         self.can_edit = self.store.can_edit()
 
         profiles_box = Section(_("Connection profiles"))
-        self.open_folder = QPushButton(_("Open folder"))
-        self.open_folder.clicked.connect(lambda: open_folder(self.store.folder))
         # The folder is made at start; where this user couldn't, the app's own copies are shown.
         self.builtin_note = notes(
             _("These are the built-in profiles: the folder is created when you change one.")
@@ -313,16 +312,12 @@ class ProfilesPage(SharedPage):
         self.list.itemDoubleClicked.connect(lambda *_a: self.edit())
         self.add_button = QPushButton(_("&Add…"))
         self.edit_button = QPushButton(_("&Edit…"))
-        self.duplicate_button = QPushButton(_("D&uplicate…"))
         self.delete_button = QPushButton(_("&Delete…"))
         self.add_button.clicked.connect(self.add)
         self.edit_button.clicked.connect(self.edit)
-        self.duplicate_button.clicked.connect(self.duplicate)
         self.delete_button.clicked.connect(self.delete)
-        profile_buttons = [
-            self.add_button, self.edit_button, self.duplicate_button, self.delete_button,
-            self.open_folder,
-        ]  # fmt: skip
+        profile_buttons = [self.add_button, self.edit_button, self.delete_button]
+        row_menu(self.list, self.fill_row_menu)  # Duplicate too
         self.default = QComboBox()
         self.default.setEnabled(self.can_edit)
         self.default.currentIndexChanged.connect(lambda _i: self._default_picked())
@@ -389,8 +384,15 @@ class ProfilesPage(SharedPage):
     def _update_buttons(self) -> None:
         picked = self.can_edit and self._selected() is not None
         self.add_button.setEnabled(self.can_edit)
-        for button in (self.edit_button, self.duplicate_button, self.delete_button):
+        for button in (self.edit_button, self.delete_button):
             button.setEnabled(picked)
+
+    def fill_row_menu(self, menu: QMenu) -> None:
+        picked = self.can_edit and self._selected() is not None
+        add_action(menu, _("&Edit…"), self.edit, picked)
+        add_action(menu, _("D&uplicate…"), self.duplicate, picked)
+        menu.addSeparator()
+        add_action(menu, _("&Delete…"), self.delete, picked)
 
     def _dialog(self, title: str, profile: ConnectionProfile | None) -> ProfileDialog:
         tools = [e.item for e in self.catalogs.tools.all()]
@@ -479,10 +481,7 @@ class ProfilesPage(SharedPage):
         return self.default.currentData() or ""
 
     def _show_folder_state(self) -> None:
-        exists = self.store.folder.is_dir()
-        self.open_folder.setEnabled(exists)
-        self.open_folder.setToolTip("" if exists else _("Created when you change a profile"))
-        self.builtin_note.setVisible(not exists)
+        self.builtin_note.setVisible(not self.store.folder.is_dir())
 
 
 class ToolsPage(SharedPage):
@@ -502,16 +501,11 @@ class ToolsPage(SharedPage):
         self.tools.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # a path keeps both ends
         self.tools.itemSelectionChanged.connect(self._update_tool_buttons)
         self.locate_button = QPushButton(_("Change path…"))
-        self.automatic_button = QPushButton(_("Detect"))
-        self.automatic_button.setToolTip(_("Find it by itself again, not at the path you chose"))
         self.download_button = QPushButton(_("Download"))
-        for button, action in (
-            (self.locate_button, "locate"),
-            (self.automatic_button, "automatic"),
-            (self.download_button, "download"),
-        ):
+        for button, action in ((self.locate_button, "locate"), (self.download_button, "download")):
             button.clicked.connect(lambda _c=False, a=action: self._picked_tool_action(a))
-        tool_buttons = [self.locate_button, self.automatic_button, self.download_button]
+        tool_buttons = [self.locate_button, self.download_button]
+        row_menu(self.tools, self.fill_row_menu)  # Use the automatic path too
         tools_layout.addWidget(with_buttons(self.tools, tool_buttons))
         tools_layout.addWidget(
             notes(
@@ -586,11 +580,27 @@ class ToolsPage(SharedPage):
         """Only the actions that make sense for the tool picked, in its state."""
         tool = self._picked_tool()
         actions = self.tool_actions(tool.id) if tool else []
-        found = tool is not None and detect.find_executable(tool) is not None
-        self.locate_button.setText(_("Change path…") if found else _("Locate…"))
         self.locate_button.setEnabled("locate" in actions and self.can_edit_tools)
-        self.automatic_button.setEnabled("automatic" in actions and self.can_edit_tools)
         self.download_button.setEnabled("download" in actions)
+
+    def fill_row_menu(self, menu: QMenu) -> None:
+        tool = self._picked_tool()
+        actions = self.tool_actions(tool.id) if tool else []
+        add_action(
+            menu,
+            _("Change path…"),
+            lambda: self._picked_tool_action("locate"),
+            "locate" in actions and self.can_edit_tools,
+        )
+        if "automatic" in actions:  # only once a path was chosen
+            add_action(
+                menu,
+                _("Use the &automatic path"),
+                lambda: self._picked_tool_action("automatic"),
+                self.can_edit_tools,
+            )
+        if "download" in actions:
+            add_action(menu, _("Download"), lambda: self._picked_tool_action("download"))
 
     def _picked_tool_action(self, action: str) -> None:
         tool = self._picked_tool()

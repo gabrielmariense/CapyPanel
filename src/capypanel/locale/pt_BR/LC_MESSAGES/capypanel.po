@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 02:08-0300\n"
+"POT-Creation-Date: 2026-10-18 02:19-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -149,6 +149,9 @@ msgstr "&Nova lista…"
 
 msgid "&New…"
 msgstr "&Nova…"
+
+msgid "&Open"
+msgstr "&Abrir"
 
 msgid "&Open a CSV file…"
 msgstr "A&brir um arquivo CSV…"
@@ -444,9 +447,6 @@ msgstr "Copiado: {text}"
 msgid "Copies every row, to paste into Excel"
 msgstr "Copia todas as linhas, para colar no Excel"
 
-msgid "Copy the current list to"
-msgstr "Copiar a lista atual para"
-
 #, python-brace-format
 msgid "Couldn't create “{path}”: {error}"
 msgstr "Não foi possível criar “{path}”: {error}"
@@ -508,9 +508,6 @@ msgstr "Criado por:"
 msgid "Created when opened"
 msgstr "Criada ao abrir"
 
-msgid "Created when you change a profile"
-msgstr "Criada quando você altera um perfil"
-
 msgid "Credits"
 msgstr "Créditos"
 
@@ -546,9 +543,6 @@ msgstr "Excluir perfil de conexão"
 #, python-brace-format
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
 msgstr "Excluir o perfil de conexão “{profile}”? Todos neste PC deixam de tê-lo."
-
-msgid "Detect"
-msgstr "Detectar"
 
 msgid "Disconnected"
 msgstr "Desconectado"
@@ -597,9 +591,6 @@ msgstr "Arquivo não encontrado"
 
 msgid "Files"
 msgstr "Arquivos"
-
-msgid "Find it by itself again, not at the path you chose"
-msgstr "Encontrar sozinho de novo, não no caminho que você escolheu"
 
 msgid "Folder"
 msgstr "Pasta"
@@ -760,9 +751,6 @@ msgstr "Lista"
 msgid "Lists saved in a lists folder show up here by themselves; removing one never deletes its file."
 msgstr "Listas salvas numa pasta de listas aparecem aqui sozinhas; remover uma nunca exclui o arquivo."
 
-msgid "Locate…"
-msgstr "Localizar…"
-
 msgid "Logged on"
 msgstr "Logados"
 
@@ -920,6 +908,9 @@ msgstr "Abrir &Configurações"
 msgid "Open &file"
 msgstr "Abrir &arquivo"
 
+msgid "Open &folder"
+msgstr "Abrir &pasta"
+
 msgid "Open &log folder"
 msgstr "Abrir pasta de &logs"
 
@@ -952,9 +943,6 @@ msgid "Opened {n} remote screen."
 msgid_plural "Opened {n} remote screens."
 msgstr[0] "{n} tela remota aberta."
 msgstr[1] "{n} telas remotas abertas."
-
-msgid "Opens the folder the list is in"
-msgstr "Abre a pasta onde a lista está"
 
 #, python-brace-format
 msgid "Optional: a {extension} file saved from {tool}. It's used exactly as saved, including its encryption plugin; only the host is emptied, since the address comes from the host you open."
@@ -1099,6 +1087,9 @@ msgstr "Salvar uma &cópia…"
 msgid "Save a copy"
 msgstr "Salvar uma cópia"
 
+msgid "Save a copy of the list"
+msgstr "Salvar uma cópia da lista"
+
 msgid "Save as preset"
 msgstr "Salvar como predefinição"
 
@@ -1107,9 +1098,6 @@ msgstr "Salvar minha versão como cópia…"
 
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arquivo CSV"
-
-msgid "Saves a copy of the list in use as a new file"
-msgstr "Salva uma cópia da lista em uso como um novo arquivo"
 
 msgid "Search"
 msgstr "Pesquisa"
@@ -1443,6 +1431,9 @@ msgstr "Inacessível"
 
 msgid "Use &defaults"
 msgstr "Usar &padrões"
+
+msgid "Use the &automatic path"
+msgstr "Usar o caminho &automático"
 
 msgid "User"
 msgstr "Usuário"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 02:08-0300\n"
+"POT-Creation-Date: 2026-10-18 02:19-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -147,6 +147,9 @@ msgid "&New list…"
 msgstr ""
 
 msgid "&New…"
+msgstr ""
+
+msgid "&Open"
 msgstr ""
 
 msgid "&Open a CSV file…"
@@ -447,9 +450,6 @@ msgstr ""
 msgid "Copies every row, to paste into Excel"
 msgstr ""
 
-msgid "Copy the current list to"
-msgstr ""
-
 #, python-brace-format
 msgid "Couldn't create “{path}”: {error}"
 msgstr ""
@@ -511,9 +511,6 @@ msgstr ""
 msgid "Created when opened"
 msgstr ""
 
-msgid "Created when you change a profile"
-msgstr ""
-
 msgid "Credits"
 msgstr ""
 
@@ -548,9 +545,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
-msgstr ""
-
-msgid "Detect"
 msgstr ""
 
 msgid "Disconnected"
@@ -603,9 +597,6 @@ msgid "File not found"
 msgstr ""
 
 msgid "Files"
-msgstr ""
-
-msgid "Find it by itself again, not at the path you chose"
 msgstr ""
 
 msgid "Folder"
@@ -775,9 +766,6 @@ msgid ""
 "never deletes its file."
 msgstr ""
 
-msgid "Locate…"
-msgstr ""
-
 msgid "Logged on"
 msgstr ""
 
@@ -941,6 +929,9 @@ msgstr ""
 msgid "Open &file"
 msgstr ""
 
+msgid "Open &folder"
+msgstr ""
+
 msgid "Open &log folder"
 msgstr ""
 
@@ -973,9 +964,6 @@ msgid "Opened {n} remote screen."
 msgid_plural "Opened {n} remote screens."
 msgstr[0] ""
 msgstr[1] ""
-
-msgid "Opens the folder the list is in"
-msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -1123,6 +1111,9 @@ msgstr ""
 msgid "Save a copy"
 msgstr ""
 
+msgid "Save a copy of the list"
+msgstr ""
+
 msgid "Save as preset"
 msgstr ""
 
@@ -1130,9 +1121,6 @@ msgid "Save my version as a copy…"
 msgstr ""
 
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
-msgstr ""
-
-msgid "Saves a copy of the list in use as a new file"
 msgstr ""
 
 msgid "Search"
@@ -1489,6 +1477,9 @@ msgid "Unreachable"
 msgstr ""
 
 msgid "Use &defaults"
+msgstr ""
+
+msgid "Use the &automatic path"
 msgstr ""
 
 msgid "User"

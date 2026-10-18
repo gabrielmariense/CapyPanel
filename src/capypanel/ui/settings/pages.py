@@ -29,7 +29,7 @@ from capypanel.ui.host_lists import HostListsView
 from capypanel.ui.hosts import group_path
 from capypanel.ui.menus import MenuCombo
 from capypanel.ui.notes import notes
-from capypanel.ui.tables import fit_rows, grid_table, with_buttons
+from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 from capypanel.ui.themes import engine as themes
 
 
@@ -213,6 +213,7 @@ class FilesPage(Page):
         self.open_button = QPushButton(_("Open folder"))
         self.open_button.clicked.connect(self._open_picked)
         self.folders.itemDoubleClicked.connect(lambda *_a: self._open_picked())
+        row_menu(self.folders, lambda menu: add_action(menu, _("Open &folder"), self._open_picked))
         layout = _section_layout(section)
         layout.addWidget(with_buttons(self.folders, [self.open_button]))
         lines = [_("Hover a folder to see what it holds.")]

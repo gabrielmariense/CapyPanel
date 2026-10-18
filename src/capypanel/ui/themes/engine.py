@@ -540,7 +540,8 @@ QSplitter::handle:horizontal { width: 8px; }
 QPushButton { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx;
               padding: 6px 20px; }
 QPushButton:hover { background: %(raised)s; }
-QPushButton:disabled { color: %(text3)s; }
+/* Greyed: faint text on no fill, clearly unlike a button that works. */
+QPushButton:disabled { color: %(text3)s; background: transparent; }
 QPushButton:default { background: %(button)s; border-color: %(button)s; color: #ffffff; }
 QPushButton:default:hover { background: %(button_hover)s; }
 QPushButton:default:disabled { background: %(raised)s; border-color: %(border)s; color: %(text3)s; }

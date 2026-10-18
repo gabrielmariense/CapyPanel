@@ -106,7 +106,7 @@ class SettingsDialog(QDialog):
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(12, 12, 12, 12)
         self._build(themes.current().id)
-        self.resize(780, 540)
+        self.resize(860, 560)  # wide enough that one-line descriptions stay on one line
 
     def _build(self, theme_id: str) -> None:
         """The pages and buttons, in the current language, showing what's set."""

@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 from capypanel.core import settings, winsec
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
+from capypanel.ui import tables
 from capypanel.ui.host_lists import HostListsView
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
@@ -383,7 +384,13 @@ def test_open_folder_opens_the_picked_list_s_folder(
     window.open_list(office)
     view = window.settings_dialog().host_lists.view
     view.select(office)
-    view.open_folder.click()
+    menu = QMenu()
+    view.fill_row_menu(menu)  # what a right-click on the row opens
+    assert [label(a) for a in menu.actions() if a.text()] == [
+        "&Open", "Save a &copy…", "Open &folder", "&Remove"
+    ]  # fmt: skip
+    [folder] = [a for a in menu.actions() if a.text() == "Open &folder"]
+    folder.trigger()
     assert [Path(p) for p in opened] == [office.parent]
 
 
@@ -448,7 +455,8 @@ def test_save_a_copy_writes_it_and_keeps_the_list_in_use(
     copy = tmp_path / "copy.json"
     _answer_save_dialog(monkeypatch, copy)
     view = window.settings_dialog().host_lists.view
-    view.copy_button.click()
+    view.select(office)
+    view.copy_picked()  # the row's right-click: Save a copy…
     assert listfile.load(copy).hosts == listfile.load(office).hosts
     assert view.selected() == copy and str(copy) in window._prefs["host_lists"]
     assert window.document is not None and window.document.path == office
@@ -490,3 +498,38 @@ def test_picking_a_language_switches_at_once_and_keeps_the_page(
     assert seen == [("Configurações", "general", True)]
     assert window.menuBar().actions()[0].text() == "&Arquivo"
     window.set_language("en")
+
+
+def test_the_settings_buttons_are_only_the_main_actions(window: MainWindow) -> None:
+    dialog = window.settings_dialog()
+    for page_id, wanted in (
+        ("files", ["Open folder"]),
+        ("host_lists", ["&New…", "&Add existing…", "&Remove"]),
+        ("profiles", ["&Add…", "&Edit…", "&Delete…"]),
+        ("tools", ["Change path…", "Download"]),
+    ):
+        page = dialog.pages[page_id]
+        assert [b.text() for b in page.findChildren(QPushButton)] == wanted, page_id
+
+
+def test_a_right_click_picks_the_row_and_opens_its_menu(
+    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    shown: list[list[str]] = []
+    monkeypatch.setattr(
+        tables,
+        "popup",
+        lambda menu, _at: shown.append([label(a) for a in menu.actions() if a.text()]),
+    )
+    window.open_list(office)
+    dialog = window.settings_dialog()
+    dialog.show()
+    dialog.show_page("host_lists")
+    QApplication.processEvents()
+    tree = dialog.host_lists.view.tree
+    office_row = tree.topLevelItem(2)
+    assert office_row is not None
+    tree.customContextMenuRequested.emit(tree.visualItemRect(office_row).center())
+    assert tree.currentItem() is office_row  # picked by the right-click
+    assert shown == [["&Open", "Save a &copy…", "Open &folder", "&Remove"]]
+    dialog.close()

@@ -1,17 +1,22 @@
 """The one table design for lists in windows like Settings: lines between rows and columns as
-in the host table, a header, a few rows before it scrolls, the full width of the page, and its
-actions in a row of buttons under it."""
+in the host table, a header, a few rows before it scrolls, the full width of the page, its main
+actions in a row of buttons under it, and every action of a row on its right-click."""
 
-from PySide6.QtCore import Qt
+from collections.abc import Callable
+
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
     QHeaderView,
+    QMenu,
     QPushButton,
     QTreeWidget,
     QVBoxLayout,
     QWidget,
 )
+
+from capypanel.ui.menus import popup
 
 MOST_ROWS = 6  # taller lists scroll
 FEWEST_ROWS = 3  # a short list still looks like a list
@@ -47,6 +52,30 @@ def fit_rows(table: QTreeWidget) -> None:
         row = table.fontMetrics().height() + 16  # the stylesheet pads each row
     # The header, exactly `rows` rows (a 7th never peeks in), and the frame.
     table.setFixedHeight(table.header().sizeHint().height() + rows * row + 2 * table.frameWidth())
+
+
+def row_menu(table: QTreeWidget, fill: Callable[[QMenu], None]) -> None:
+    """A right-click on a row picks it and opens its menu, which `fill` builds. The menu key
+    opens it for the row picked."""
+
+    def show(point: QPoint) -> None:
+        item = table.itemAt(point) or table.currentItem()
+        if item is None:
+            return
+        table.setCurrentItem(item)
+        menu = QMenu(table)
+        fill(menu)
+        at = table.visualItemRect(item).bottomLeft() if table.itemAt(point) is None else point
+        popup(menu, table.viewport().mapToGlobal(at))  # freed once closed
+
+    table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+    table.customContextMenuRequested.connect(show)
+
+
+def add_action(menu: QMenu, text: str, run: Callable[[], object], enabled: bool = True) -> None:
+    action = menu.addAction(text)
+    action.setEnabled(enabled)
+    action.triggered.connect(lambda _c=False: run())
 
 
 def with_buttons(table: QTreeWidget, buttons: list[QPushButton]) -> QWidget:

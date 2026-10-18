@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 from PySide6.QtCore import Qt, QUrl
-from PySide6.QtWidgets import QApplication, QDialogButtonBox, QFileDialog
+from PySide6.QtWidgets import QApplication, QDialogButtonBox, QFileDialog, QMenu
 
 from capypanel.core import i18n, settings, winsec
 from capypanel.core.hosts.document import OpenList
@@ -53,6 +53,20 @@ def _tool_row(page: ToolsPage, tool_id: str) -> tuple[str, str]:
     raise AssertionError(tool_id)
 
 
+def _menu(fill: Callable[[QMenu], None], *, enabled_only: bool = False) -> list[str]:
+    """What a row's right-click menu holds, as `fill` builds it."""
+    menu = QMenu()
+    fill(menu)
+    return [a.text() for a in menu.actions() if a.text() and (a.isEnabled() or not enabled_only)]
+
+
+def _trigger(fill: Callable[[QMenu], None], text: str) -> None:
+    menu = QMenu()
+    fill(menu)
+    [action] = [a for a in menu.actions() if a.text() == text]
+    action.trigger()
+
+
 def test_the_editor_offers_only_what_the_chosen_tool_supports(catalogs: Catalogs) -> None:
     tools = [e.item for e in catalogs.tools.all()]
     dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
@@ -77,10 +91,10 @@ def test_starter_profiles_can_be_duplicated_edited_and_deleted(
 ) -> None:
     page = ProfilesPage(catalogs, None)
     _select(page, "ultravnc")
-    buttons = (page.edit_button, page.duplicate_button, page.delete_button)
-    assert all(b.isEnabled() for b in buttons)
+    assert page.edit_button.isEnabled() and page.delete_button.isEnabled()
+    assert _menu(page.fill_row_menu) == ["&Edit…", "D&uplicate…", "&Delete…"]  # right-click
     _answer(monkeypatch, lambda dialog: None)  # keep the suggested name
-    page.duplicate()
+    _trigger(page.fill_row_menu, "D&uplicate…")
     monkeypatch.setattr(connections, "confirm", lambda *_args: True)
     _select(page, "ultravnc")
     page.delete()
@@ -118,8 +132,9 @@ def test_a_folder_the_user_cannot_write_is_read_only(
     monkeypatch.setattr(catalogs.profiles, "can_edit", lambda: False)
     page = ProfilesPage(catalogs, None)
     _select(page, "ultravnc")
-    buttons = (page.add_button, page.edit_button, page.duplicate_button, page.delete_button)
+    buttons = (page.add_button, page.edit_button, page.delete_button)
     assert not any(b.isEnabled() for b in buttons) and not page.default.isEnabled()
+    assert not any(_menu(page.fill_row_menu, enabled_only=True))
 
 
 def _choose_settings_file(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
@@ -177,12 +192,14 @@ def test_remote_tools_show_a_state_and_only_the_actions_that_fit(
     assert _tool_row(page, "ultravnc") == ("✓ Found", r"C:\Tools\vncviewer.exe")
     page.select_tool("ultravnc")  # the buttons act on the tool picked
     assert page.tool_actions("ultravnc") == ["locate"]
-    assert page.locate_button.text() == "Change path…" and page.locate_button.isEnabled()
-    assert not page.automatic_button.isEnabled() and not page.download_button.isEnabled()
+    assert page.locate_button.isEnabled() and not page.download_button.isEnabled()
+    assert _menu(page.fill_row_menu) == ["Change path…"]
     assert _tool_row(page, "realvnc")[0] == "✗ Not found"
     page.select_tool("realvnc")
     assert page.tool_actions("realvnc") == ["locate", "download"]
-    assert page.locate_button.text() == "Locate…" and page.download_button.isEnabled()
+    assert page.locate_button.text() == "Change path…"  # one name, found or not
+    assert page.download_button.isEnabled()
+    assert _menu(page.fill_row_menu) == ["Change path…", "Download"]
     opened: list[QUrl] = []
     monkeypatch.setattr(connections.QDesktopServices, "openUrl", lambda url: opened.append(url))
     page.download_button.click()
@@ -198,9 +215,13 @@ def test_remote_tools_show_a_state_and_only_the_actions_that_fit(
     page.locate_button.click()
     assert _tool_row(page, "realvnc")[0] == "✓ Your choice"
     assert page.tool_actions("realvnc") == ["locate", "automatic"]
-    assert page.automatic_button.isEnabled()  # still on RealVNC after the table refilled
+    # Still on RealVNC after the table refilled; the chosen path can be dropped again.
+    assert _menu(page.fill_row_menu) == ["Change path…", "Use the &automatic path"]
     entry = catalogs.tools.find("realvnc")
     assert entry is not None and entry.item.executable == r"D:\Apps\vncviewer.exe"
+    _trigger(page.fill_row_menu, "Use the &automatic path")
+    entry = catalogs.tools.find("realvnc")
+    assert entry is not None and not entry.item.executable
 
 
 def test_rdp_options_show_in_the_app_s_language(catalogs: Catalogs) -> None:
@@ -234,16 +255,6 @@ def test_files_that_arent_used_are_named_with_the_reason(
     )  # a note, like the others
     assert str(folder / "planted.json") in page.profiles_skipped.toolTip()  # where, for a fix
     assert ToolsPage(catalogs).tools_skipped.isHidden()  # nothing skipped there
-
-
-def test_open_folder_waits_for_the_folder_while_the_profiles_are_built_in(
-    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    page = ProfilesPage(catalogs, None)
-    assert not catalogs.profiles.folder.exists()  # the built-in profiles are shown
-    assert not page.open_folder.isEnabled() and not page.builtin_note.isHidden()
-    page.default.setCurrentIndex(page.default.findData("realvnc"))  # a change makes the folder
-    assert page.open_folder.isEnabled() and page.builtin_note.isHidden()
 
 
 def test_remote_desktop_says_it_asks_for_the_password_itself(catalogs: Catalogs) -> None:
@@ -346,3 +357,11 @@ def test_a_settings_file_chosen_for_a_profile_is_cleaned_and_copied(
     assert (catalogs.profiles.folder / "view-only-2.vnc").read_bytes() == (
         b"[connection]\r\nhost=\r\n[options]\r\nviewonly=1\r\n"
     )
+
+
+def test_the_built_in_note_shows_until_a_profile_changes(catalogs: Catalogs) -> None:
+    page = ProfilesPage(catalogs, None)
+    assert not catalogs.profiles.folder.exists()  # the built-in profiles are shown
+    assert not page.builtin_note.isHidden()
+    page.default.setCurrentIndex(page.default.findData("realvnc"))  # a change makes the folder
+    assert page.builtin_note.isHidden()
