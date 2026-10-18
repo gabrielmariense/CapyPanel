@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 13:32-0300\n"
+"POT-Creation-Date: 2026-10-18 13:55-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -51,6 +51,9 @@ msgid "&Connect"
 msgstr ""
 
 msgid "&Copy"
+msgstr ""
+
+msgid "&Create"
 msgstr ""
 
 msgid "&Credentials:"
@@ -235,6 +238,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "A host with this name is already in the list, {place}"
+msgstr ""
+
+#, python-brace-format
+msgid "A list named “{name}” is already there. Replace it with an empty one?"
 msgstr ""
 
 msgid "A name is required."
@@ -605,6 +612,9 @@ msgid_plural "Every {n} minutes"
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "Everyone on this PC (shared)"
+msgstr ""
+
 msgid "File not found"
 msgstr ""
 
@@ -627,6 +637,9 @@ msgid ""
 msgstr ""
 
 msgid "For the list open now; each list keeps its own."
+msgstr ""
+
+msgid "For:"
 msgstr ""
 
 msgid "Forgets it here; the file itself is never deleted"
@@ -835,9 +848,6 @@ msgstr ""
 msgid "New connection profile"
 msgstr ""
 
-msgid "New empty host list"
-msgstr ""
-
 #, python-brace-format
 msgid "New group: {names}."
 msgid_plural "New groups: {names}."
@@ -931,6 +941,9 @@ msgid "One per user, named after the account."
 msgstr ""
 
 msgid "Online"
+msgstr ""
+
+msgid "Only me (personal)"
 msgstr ""
 
 msgid ""
@@ -1099,6 +1112,9 @@ msgstr ""
 msgid "Rename group"
 msgstr ""
 
+msgid "Replace"
+msgstr ""
+
 msgid "Report"
 msgstr ""
 
@@ -1184,6 +1200,9 @@ msgstr ""
 msgid "Shared"
 msgstr ""
 
+msgid "Shared and personal lists show up in the list dropdown by themselves."
+msgstr ""
+
 msgid "Shared by everyone on this PC."
 msgstr ""
 
@@ -1196,6 +1215,11 @@ msgid "Shared files"
 msgstr ""
 
 msgid "Shared lists"
+msgstr ""
+
+msgid ""
+"Shared lists are in the shared lists folder and show up for everyone; "
+"only people Windows lets write that folder can add one."
 msgstr ""
 
 msgid "Show &first"
@@ -1220,6 +1244,9 @@ msgid ""
 msgstr ""
 
 msgid "Something went wrong. The details were saved to the app log."
+msgstr ""
+
+msgid "Somewhere else, e.g. a network share…"
 msgstr ""
 
 msgid "Sorts every level by name, once; you can rearrange them after"
@@ -1592,6 +1619,9 @@ msgid "can't be read"
 msgstr ""
 
 msgid "disconnected"
+msgstr ""
+
+msgid "e.g. Branch offices"
 msgstr ""
 
 #, python-brace-format

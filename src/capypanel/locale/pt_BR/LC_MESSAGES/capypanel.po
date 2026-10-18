@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 13:32-0300\n"
+"POT-Creation-Date: 2026-10-18 13:55-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -53,6 +53,9 @@ msgstr "&Conectar"
 
 msgid "&Copy"
 msgstr "&Copiar"
+
+msgid "&Create"
+msgstr "&Criar"
 
 msgid "&Credentials:"
 msgstr "&Credenciais:"
@@ -237,6 +240,10 @@ msgstr "Uma entrada de host não é um objeto."
 #, python-brace-format
 msgid "A host with this name is already in the list, {place}"
 msgstr "Um host com este nome já está na lista, {place}"
+
+#, python-brace-format
+msgid "A list named “{name}” is already there. Replace it with an empty one?"
+msgstr "Já existe uma lista chamada “{name}” ali. Substituí-la por uma vazia?"
 
 msgid "A name is required."
 msgstr "O nome é obrigatório."
@@ -598,6 +605,9 @@ msgid_plural "Every {n} minutes"
 msgstr[0] "A cada minuto"
 msgstr[1] "A cada {n} minutos"
 
+msgid "Everyone on this PC (shared)"
+msgstr "Todos neste PC (compartilhada)"
+
 msgid "File not found"
 msgstr "Arquivo não encontrado"
 
@@ -624,6 +634,9 @@ msgstr ""
 
 msgid "For the list open now; each list keeps its own."
 msgstr "Para a lista aberta agora; cada lista guarda a sua."
+
+msgid "For:"
+msgstr "Para:"
 
 msgid "Forgets it here; the file itself is never deleted"
 msgstr "Esquece a lista aqui; o arquivo em si nunca é excluído"
@@ -820,9 +833,6 @@ msgstr "Nome do novo grupo:"
 msgid "New connection profile"
 msgstr "Novo perfil de conexão"
 
-msgid "New empty host list"
-msgstr "Nova lista de hosts vazia"
-
 #, python-brace-format
 msgid "New group: {names}."
 msgid_plural "New groups: {names}."
@@ -913,6 +923,9 @@ msgstr "Um por usuário, com o nome da conta."
 
 msgid "Online"
 msgstr "Online"
+
+msgid "Only me (personal)"
+msgstr "Só eu (pessoal)"
 
 msgid "Only ping and ports, never logged-on users, so no account is needed. Refresh in the toolbar always works."
 msgstr "Só ping e portas, nunca usuários logados, então nenhuma conta é usada. O Atualizar da barra de ferramentas sempre funciona."
@@ -1075,6 +1088,9 @@ msgstr "Remover “{name}” da lista?"
 msgid "Rename group"
 msgstr "Renomear grupo"
 
+msgid "Replace"
+msgstr "Substituir"
+
 msgid "Report"
 msgstr "Relatório"
 
@@ -1160,6 +1176,9 @@ msgstr "Configurações (Ctrl+,)"
 msgid "Shared"
 msgstr "Compartilhada"
 
+msgid "Shared and personal lists show up in the list dropdown by themselves."
+msgstr "Listas compartilhadas e pessoais aparecem sozinhas no menu de listas."
+
 msgid "Shared by everyone on this PC."
 msgstr "Compartilhados por todos neste PC."
 
@@ -1171,6 +1190,9 @@ msgstr "Arquivos compartilhados"
 
 msgid "Shared lists"
 msgstr "Listas compartilhadas"
+
+msgid "Shared lists are in the shared lists folder and show up for everyone; only people Windows lets write that folder can add one."
+msgstr "Listas compartilhadas ficam na pasta de listas compartilhadas e aparecem para todos; só quem o Windows deixa gravar nessa pasta pode criar uma."
 
 msgid "Show &first"
 msgstr "Mostrar &primeiro"
@@ -1192,6 +1214,9 @@ msgstr "Outra pessoa salvou alterações nesta lista depois que você a abriu. A
 
 msgid "Something went wrong. The details were saved to the app log."
 msgstr "Algo deu errado. Os detalhes foram salvos no log do aplicativo."
+
+msgid "Somewhere else, e.g. a network share…"
+msgstr "Outro lugar, como uma pasta de rede…"
 
 msgid "Sorts every level by name, once; you can rearrange them after"
 msgstr "Classifica todos os níveis pelo nome, uma vez; depois você pode reorganizá-los"
@@ -1540,6 +1565,9 @@ msgstr "não pode ser lido"
 
 msgid "disconnected"
 msgstr "desconectada"
+
+msgid "e.g. Branch offices"
+msgstr "ex.: Filiais"
 
 #, python-brace-format
 msgid "from {computer}"

@@ -80,6 +80,7 @@ from capypanel.ui.main_window.panes import PaneSplitter
 from capypanel.ui.main_window.rail import ToolRail
 from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
 from capypanel.ui.menus import MenuCombo, StayOpenMenu, popup
+from capypanel.ui.new_list import ask_new_list
 from capypanel.ui.settings.window import SettingsDialog, SettingsPrefs
 from capypanel.ui.themes import engine as themes
 
@@ -460,12 +461,11 @@ class MainWindow(QMainWindow):
         return True
 
     def new_list(self) -> None:
-        name, _filter = QFileDialog.getSaveFileName(
-            self, _("New host list"), str(self._personal_list.parent), list_file_filter()
+        """The list dropdown's New list…: shared, personal or elsewhere, as in Settings."""
+        path = ask_new_list(
+            self, shared_dir=self._paths.shared_lists_dir, user_dir=self._paths.user_lists_dir
         )
-        if name:
-            path = Path(name)
-            # The file dialog already asked before choosing an existing file.
+        if path is not None:  # replacing an existing file was asked already
             self._create_list(path, replace_existing=path.exists())
 
     def open_list_file(self) -> None:

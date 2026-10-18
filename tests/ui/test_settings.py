@@ -19,10 +19,12 @@ from PySide6.QtWidgets import (
 from capypanel.core import settings, winsec
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.ui import tables
+from capypanel.ui import host_lists, new_list, tables
 from capypanel.ui.host_lists import HostListsView
+from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
+from capypanel.ui.new_list import NewListDialog
 from capypanel.ui.settings import pages
 from capypanel.ui.settings.window import PAGE_TITLES, ROOM, SettingsDialog
 from capypanel.ui.themes import engine as themes
@@ -188,7 +190,8 @@ def test_new_empty_list_over_the_open_one_reopens_it(
     window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.open_list(office)
-    _answer_save_dialog(monkeypatch, office)  # the user confirmed replacing it
+    # The new list window, answered: replace the open list (the user confirmed it).
+    monkeypatch.setattr(host_lists, "ask_new_list", lambda *_a, **_k: office)
     dialog = window.settings_dialog()
     dialog.host_lists.view.new_button.click()  # a new list opens at once
     assert window.document is not None and window.document.path == office
@@ -553,3 +556,39 @@ def test_refresh_by_itself_is_one_dropdown_with_a_custom_interval(
     assert every.currentText() == "Every 7 minutes"
     every.activated.emit(every.findData(0))  # Off
     assert window._auto_status() == (False, 7)  # the last interval is kept for next time
+
+
+def test_a_new_list_can_be_shared_or_personal(
+    window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    dialog = NewListDialog(None, shared_dir=paths.shared_lists_dir, user_dir=paths.user_lists_dir)
+    assert not dialog.create_button.isEnabled()  # a name first
+    dialog.name.setText("Branch offices")
+    assert dialog.create_button.isEnabled() and dialog.kind() == "shared"
+    assert dialog.path() == paths.shared_lists_dir / "Branch offices.json"
+    dialog.personal.setChecked(True)
+    assert dialog.path() == paths.user_lists_dir / "Branch offices.json"
+    dialog.name.setText("a/b")  # not a file name
+    assert not dialog.create_button.isEnabled()
+    dialog.elsewhere.setChecked(True)  # the file dialog asks for the name instead
+    assert dialog.create_button.isEnabled() and not dialog.name.isEnabled()
+    dialog.deleteLater()
+
+
+def test_only_people_who_can_write_the_shared_folder_get_a_shared_list(
+    window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(new_list, "can_create_files", lambda folder: False)
+    dialog = NewListDialog(None, shared_dir=paths.shared_lists_dir, user_dir=paths.user_lists_dir)
+    assert not dialog.shared.isEnabled() and dialog.kind() == "personal"
+    dialog.deleteLater()
+
+
+def test_new_list_from_the_dropdown_makes_a_shared_list(
+    window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    shared = paths.shared_lists_dir / "Clinics.json"
+    monkeypatch.setattr(window_module, "ask_new_list", lambda *_a, **_k: shared)
+    window.commands.new_list.trigger()
+    assert shared.is_file() and window.document is not None and window.document.path == shared
+    assert not window._prefs.get("host_lists")  # in a lists folder: it shows up by itself

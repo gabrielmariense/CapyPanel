@@ -23,6 +23,7 @@ from capypanel.core.hosts.listfile import HostListFileError
 from capypanel.core.hosts.locations import Access, ListKind
 from capypanel.core.i18n import _
 from capypanel.ui.hosts import list_file_filter
+from capypanel.ui.new_list import ask_new_list
 from capypanel.ui.notes import notes
 from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 
@@ -232,7 +233,8 @@ class HostListsView(QWidget):
             self._keep(Path(name))
 
     def _new(self) -> None:
-        path = self._ask_path(_("New empty host list"))
+        # The default list is in the shared lists folder, the personal one in the user's.
+        path = ask_new_list(self, shared_dir=self._default.parent, user_dir=self._personal.parent)
         if path is not None and self._write(
             path, lambda: OpenList.create(path, replace_existing=path.exists())
         ):
