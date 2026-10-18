@@ -224,8 +224,6 @@ class MainWindow(QMainWindow):
         self._view_menu.addAction(a.show_domains)
         self._view_menu.addSeparator()
         self._view_menu.addActions([a.show_toolbar, a.show_status_bar])
-        self._view_menu.addSeparator()
-        self._view_menu.addAction(a.reset_layout)
 
         self._help_menu = bar.addMenu("")
         self._help_menu.addActions([a.documentation, a.report_problem])
@@ -270,18 +268,13 @@ class MainWindow(QMainWindow):
         a.report_problem.triggered.connect(
             lambda: about.open_url(about.report_url(self._paths.portable))
         )
-        a.about.triggered.connect(
-            lambda: run_modal(
-                about.AboutDialog(self, self._paths.log_dir, portable=self._paths.portable)
-            )
-        )
+        a.about.triggered.connect(lambda: self.open_settings("about"))  # About is a page there
         a.show_toolbar.toggled.connect(self.toolbar.setVisible)
         a.show_groups.toggled.connect(self.nav.setVisible)
         a.show_tags.toggled.connect(self.nav.set_tags_visible)
         a.show_details.toggled.connect(self.details.setVisible)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
         a.show_domains.toggled.connect(self._show_domains)
-        a.reset_layout.triggered.connect(self.reset_layout)
         # Refresh follows the end of the host table, wherever the panes are.
         for toggled in (a.show_groups.toggled, a.show_details.toggled, a.show_toolbar.toggled):
             toggled.connect(self._align_refresh_later)
@@ -389,8 +382,8 @@ class MainWindow(QMainWindow):
         self._align_refresh_later()
 
     def reset_layout(self) -> None:
-        """View > Reset layout: default pane sizes, columns and hidden parts shown again. The
-        window's size, the theme and every other setting stay as they are."""
+        """Settings > Hosts > General > Window layout: default pane sizes, columns and hidden
+        parts shown again. The window's size, the theme and every other setting stay."""
         a = self.commands
         for action in (a.show_toolbar, a.show_status_bar, a.show_groups, a.show_tags):
             action.setChecked(True)
@@ -1173,6 +1166,7 @@ class MainWindow(QMainWindow):
         dialog.prefs_changed.connect(self.apply_prefs)
         dialog.open_requested.connect(lambda path: self._open_from_settings(dialog, path))
         dialog.profiles_changed.connect(self._selection_changed)  # Connect's menu follows
+        dialog.layout_reset_requested.connect(self.reset_layout)
         return dialog
 
     def _start_view(self) -> tuple[str, str] | None:

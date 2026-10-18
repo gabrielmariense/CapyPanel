@@ -17,6 +17,7 @@ from capypanel.ui.hosts import HostDialog, group_choices
 from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.host_views import HostTable
 from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.settings import pages
 
 
 @pytest.fixture
@@ -240,7 +241,9 @@ def test_reset_layout_brings_back_panes_columns_and_default_widths(
     _drag(monkeypatch, window.table, 0, 400)
     size = window.size()
     a.show_domains.setChecked(False)
-    a.reset_layout.trigger()
+    # Settings > Hosts > General > Window layout: Reset…, then Reset in its question.
+    monkeypatch.setattr(pages, "confirm", lambda *_a: True)
+    window.settings_dialog().hosts.reset_button.click()
     QApplication.processEvents()
     assert a.show_details.isChecked() and window.details.isVisible()
     assert a.show_status_bar.isChecked()

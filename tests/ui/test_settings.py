@@ -75,6 +75,7 @@ def test_settings_has_the_app_s_pages_then_the_hosts_tool_s(window: MainWindow) 
         "CapyPanel",
         "General",
         "Files",
+        "About",
         "Hosts",
         "General",
         "Host lists",
@@ -229,7 +230,7 @@ def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
     assert menus["&File"] == ["&Settings…", "E&xit"]  # lists are in the list dropdown
     assert menus["&View"] == [
         "&Hosts", "&Groups pane", "T&ags pane", "&Details pane", "Show users' do&main",
-        "T&oolbar", "&Status bar", "&Reset layout",
+        "T&oolbar", "&Status bar",
     ]  # fmt: skip
     # The tool's own commands are in its toolbar.
     inventory = [label(a) for a in window.toolbar.inventory_menu.actions() if a.text()]
@@ -357,7 +358,7 @@ def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow)
     marks = dialog._marks  # pyright: ignore[reportPrivateUsage]
     assert [w.objectName() for w in marks.marked_labels()][:1] == ["sectionTitle"]
     dialog.search.setText("folder")  # in Files, a Host lists note, Connections. buttons
-    assert listed() == ["CapyPanel", "Files", "Hosts", "Host lists", "Connections"]
+    assert listed() == ["CapyPanel", "Files", "About", "Hosts", "Host lists", "Connections"]
     dialog.search.setText("syst")  # "follow system theme"; not a tool path's "System32"
     assert listed() == ["CapyPanel", "General"]
     dialog.show_page("files")  # picking a page ends the search: everything goes home

@@ -35,7 +35,6 @@ class Actions:
     show_details: QAction
     show_status_bar: QAction
     show_domains: QAction
-    reset_layout: QAction
     show_hosts: QAction
     documentation: QAction
     report_problem: QAction
@@ -105,5 +104,4 @@ def retranslate_actions(a: Actions) -> None:
     a.show_details.setText(_("&Details pane"))
     a.show_status_bar.setText(_("&Status bar"))
     a.show_domains.setText(_("Show users' do&main"))
-    a.reset_layout.setText(_("&Reset layout"))
     a.show_hosts.setText(_("&Hosts"))

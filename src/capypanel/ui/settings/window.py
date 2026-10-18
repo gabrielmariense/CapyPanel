@@ -28,6 +28,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.model import HostList
 from capypanel.core.i18n import _
 from capypanel.core.tools.catalog import Catalogs
+from capypanel.ui.about import AboutPage
 from capypanel.ui.notes import hint
 from capypanel.ui.settings import search
 from capypanel.ui.settings.connections import ConnectionsPage
@@ -43,9 +44,9 @@ from capypanel.ui.themes import engine as themes
 
 # The pages' titles, as the pages set them, and the groups' labels: the page list is sized for the
 # longest in any language. The app's pages first, then each tool's.
-PAGE_TITLES = ("General", "Files", "General", "Host lists", "Connections")
+PAGE_TITLES = ("General", "Files", "About", "General", "Host lists", "Connections")
 GROUPS = (
-    ("CapyPanel", ("general", "files")),
+    ("CapyPanel", ("general", "files", "about")),
     ("Hosts", ("hosts", "host_lists", "connections")),
 )
 SEARCH_FROM = 3  # letters typed before the search shows its results
@@ -69,6 +70,7 @@ class SettingsDialog(QDialog):
     prefs_changed = Signal(object)  # SettingsPrefs
     open_requested = Signal(object)  # a list's Path, to open now
     profiles_changed = Signal()  # profiles or tool paths were written
+    layout_reset_requested = Signal()  # Window layout: Reset…, confirmed
 
     def __init__(
         self,
@@ -106,7 +108,7 @@ class SettingsDialog(QDialog):
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(12, 12, 12, 12)
         self._build(themes.current().id)
-        self.resize(860, 700)  # one-line descriptions on one line; Connections without scrolling
+        self.resize(860, 700)  # fixed: taller pages scroll, the window never grows for them
 
     def _build(self, theme_id: str) -> None:
         """The pages and buttons, in the current language, showing what's set."""
@@ -116,6 +118,7 @@ class SettingsDialog(QDialog):
             language=i18n.language(), registry=self._registry, theme_id=theme_id
         )
         self.files = FilesPage(self._paths)
+        self.about = AboutPage(self._paths.log_dir, portable=self._paths.portable)
         self.hosts = HostsPage(
             start_list=self._start_list,
             default_list=self._default_list,
@@ -137,6 +140,7 @@ class SettingsDialog(QDialog):
         self.pages: dict[str, Page] = {
             "general": self.general,
             "files": self.files,
+            "about": self.about,
             "hosts": self.hosts,
             "host_lists": self.host_lists,
             "connections": self.connections,
@@ -149,6 +153,7 @@ class SettingsDialog(QDialog):
             page.changed.connect(self._prefs_changed)
         self.host_lists.view.open_requested.connect(self.open_requested.emit)
         self.connections.changed.connect(self.profiles_changed.emit)
+        self.hosts.layout_reset.connect(self.layout_reset_requested.emit)
 
         self.page_list = QListWidget()
         self.page_list.setObjectName("pageList")

@@ -1,5 +1,5 @@
-"""Help > About CapyPanel, the third-party licenses, and the Help menu's links: the website and
-reporting a problem."""
+"""Settings > About (Help > About CapyPanel opens it), the third-party licenses, and the Help
+menu's links: the website and reporting a problem."""
 
 import platform
 import sys
@@ -19,8 +19,9 @@ from PySide6.QtWidgets import (
     QLabel,
     QPlainTextEdit,
     QPushButton,
-    QTabWidget,
+    QScrollArea,
     QToolTip,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -30,6 +31,8 @@ from capypanel.core import i18n
 from capypanel.core.i18n import _
 from capypanel.ui import branding
 from capypanel.ui.main_window.details import CopyValue
+from capypanel.ui.settings.pages import Page, Section
+from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 from capypanel.ui.themes import engine as themes
 
 CREATOR = 'Gabriel "GMErebos" Mariense'
@@ -74,19 +77,28 @@ def open_url(url: str) -> None:
     QDesktopServices.openUrl(QUrl(url))
 
 
-class AboutDialog(QDialog):
-    """The icon, name and version on top; About, Credits and Licenses as tabs below. Plain text
-    in the tabs, in one font and colour, as in most apps' About windows."""
+class AboutPage(Page):
+    """Settings > CapyPanel > About: the app (icon, name, version, what it is, its notices and
+    links), Credits, and Licenses as the one table design. Help > About opens it."""
 
-    def __init__(self, parent: QWidget | None, log_dir: Path, *, portable: bool) -> None:
-        super().__init__(parent)
-        self.setWindowTitle(_("About CapyPanel"))
+    def __init__(self, log_dir: Path, *, portable: bool) -> None:
+        super().__init__(_("About"))
         self._portable = portable
+        self.reader = LicenseReader(self)  # one, reused
+        self.body.addWidget(self._app_section(log_dir))
+        self.body.addWidget(self._credits_section())
+        self.licenses_section = self._licenses_section()
+        self.body.addWidget(self.licenses_section)
+        self.body.addStretch(1)
+
+    def _app_section(self, log_dir: Path) -> Section:
+        """The mascot on the left; name and version, what CapyPanel is, its notices and links
+        on the right; the tools for a problem report under them."""
         icon = QLabel()
-        icon.setPixmap(branding.app_icon().pixmap(40, 40))
+        icon.setPixmap(branding.app_icon().pixmap(32, 32))
         name = QLabel("CapyPanel")
         font = name.font()
-        font.setPointSizeF(font.pointSizeF() * 1.6)
+        font.setPointSizeF(font.pointSizeF() * 1.4)
         font.setBold(True)
         name.setFont(font)
         # The version beside the name, in its font; a click copies it with its commit.
@@ -101,47 +113,9 @@ class AboutDialog(QDialog):
         top.addSpacing(-8)  # the version's hover padding is gap enough
         top.addWidget(self.version)
         top.addStretch(1)
-
-        self.reader = LicenseReader(self)  # one, reused: windows here are never deleted
-        self.tabs = QTabWidget()
-        self.tabs.addTab(self._about_tab(), _("About"))
-        self.tabs.addTab(self._credits_tab(), _("Credits"))
-        self.tabs.addTab(self._licenses_tab(), _("Licenses"))
-
-        # Tools on the left, Close on its own at the right; no blue button: nothing to confirm.
-        self.report_button = QPushButton(_("&Report a problem"))
-        self.logs_button = QPushButton(_("Open &log folder"))
-        self.logs_button.setToolTip(_("The app's logs, to attach to a problem report"))
-        close = QPushButton(_("Close"))
-        self.report_button.clicked.connect(lambda: open_url(report_url(portable)))
-        self.logs_button.clicked.connect(
-            lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(log_dir)))
-        )
-        close.clicked.connect(self.reject)
-        buttons = QHBoxLayout()
-        buttons.addWidget(self.report_button)
-        buttons.addWidget(self.logs_button)
-        buttons.addStretch(1)
-        buttons.addWidget(close)
-
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 14, 16, 16)
-        layout.setSpacing(12)
-        layout.addLayout(top)
-        layout.addWidget(self.tabs, 1)
-        layout.addLayout(buttons)
-        for button in self.findChildren(QPushButton):
-            button.setAutoDefault(False)
-            button.setDefault(False)
-        self.setFixedWidth(660)
-
-    def _about_tab(self) -> QWidget:
-        """The mascot on the left; what CapyPanel is, its notices and links on the right."""
-        picture = QLabel()
-        picture.setPixmap(branding.mascot(112, self.devicePixelRatioF()))
-        picture.setAlignment(Qt.AlignmentFlag.AlignTop)
         text = QVBoxLayout()
-        text.setSpacing(12)
+        text.setSpacing(10)
+        text.addLayout(top)
         text.addWidget(_text(_("Every computer you look after, in one window.")))
         # The GPL's "appropriate legal notices": the ©, no warranty, and the license a click away.
         text.addWidget(_text(f"© {YEAR} {CREATOR}"))
@@ -163,68 +137,80 @@ class AboutDialog(QDialog):
         if build:
             rows.append((_("Build:"), " · ".join(build)))
         text.addLayout(_rows(rows, self._open_link))
-        text.addStretch(1)
-        page = QWidget()
-        layout = QHBoxLayout(page)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(20)
-        layout.addWidget(picture, 0, Qt.AlignmentFlag.AlignTop)
-        layout.addLayout(text, 1)
-        return page
+        self.report_button = QPushButton(_("&Report a problem"))
+        self.logs_button = QPushButton(_("Open &log folder"))
+        self.logs_button.setToolTip(_("The app's logs, to attach to a problem report"))
+        self.report_button.clicked.connect(lambda: open_url(report_url(self._portable)))
+        self.logs_button.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(log_dir)))
+        )
+        buttons = QHBoxLayout()
+        buttons.addWidget(self.report_button)
+        buttons.addWidget(self.logs_button)
+        buttons.addStretch(1)
+        text.addLayout(buttons)
+        picture = QLabel()
+        picture.setPixmap(branding.mascot(96, self.devicePixelRatioF()))
+        picture.setAlignment(Qt.AlignmentFlag.AlignTop)
+        row = QHBoxLayout()
+        row.setSpacing(18)
+        row.addWidget(picture, 0, Qt.AlignmentFlag.AlignTop)
+        row.addLayout(text, 1)
+        section = Section("CapyPanel")
+        section.content.addLayout(row)
+        return section
 
-    def _credits_tab(self) -> QWidget:
+    def _credits_section(self) -> Section:
         rows = [(_("Created by:"), CREATOR)]
         if MASCOT_BY:
             rows.append((_("Mascot:"), MASCOT_BY))
         rows.append((_("Icons:"), f"{_link(TABLER_URL, 'Tabler Icons')} · © Paweł Kuna"))
-        page = QWidget()
-        layout = QVBoxLayout(page)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.addLayout(_rows(rows, self._open_link))
-        layout.addStretch(1)
-        return page
+        section = Section(_("Credits"))
+        section.content.addLayout(_rows(rows, self._open_link))
+        return section
 
-    def _licenses_tab(self) -> QWidget:
-        """Like qBittorrent's "Software used": each part on one line, its license a link that
-        opens the copy shipped with CapyPanel in a window here, so it reads offline."""
-        page = QWidget()
-        layout = QVBoxLayout(page)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(10)
-        layout.addWidget(_text(_("CapyPanel is built with the following software:")))
-        layout.addWidget(_divider())
-        self.licenses = QWidget()
-        grid = QGridLayout(self.licenses)
-        grid.setContentsMargins(0, 0, 0, 0)
-        grid.setHorizontalSpacing(20)
-        grid.setVerticalSpacing(8)
-        for row, part in enumerate(COMPONENTS):
-            cells = (part.name, part.version, _link(f"license:{part.file}", part.license),
-                     part.notice)  # fmt: skip
-            for column, cell in enumerate(cells):
-                grid.addWidget(_text(cell, self._open_link, wrap=False), row, column)
-        grid.setColumnStretch(3, 1)
-        layout.addWidget(self.licenses)
-        layout.addWidget(_divider())
-        layout.addWidget(
-            _text(
-                _("Click a license to read it. They all ship with CapyPanel, in its {folder}.")
-                .format(folder=_link(QUrl.fromLocalFile(str(LICENSES_DIR)).toString(),
-                                     _("licenses folder"))),
-                self._open_link,
-            )
-        )  # fmt: skip
-        layout.addStretch(1)
-        return page
+    def _licenses_section(self) -> Section:
+        """The software CapyPanel is built with, in the one table design: Read license opens
+        the copy shipped with CapyPanel in a window here, so it reads offline."""
+        self.licenses = grid_table([_("Software"), _("Version"), _("License"), _("Notice")])
+        for part in COMPONENTS:
+            item = QTreeWidgetItem([part.name, part.version, part.license, part.notice])
+            item.setData(0, Qt.ItemDataRole.UserRole, part.file)
+            item.setToolTip(3, part.notice)
+            self.licenses.addTopLevelItem(item)
+        first = self.licenses.topLevelItem(0)
+        if first is not None:
+            self.licenses.setCurrentItem(first)
+        fit_rows(self.licenses)
+        self.read_button = QPushButton(_("Read license"))
+        self.folder_button = QPushButton(_("Open folder"))
+        self.folder_button.setToolTip(_("The licenses folder, shipped with CapyPanel"))
+        self.read_button.clicked.connect(self.read_picked)
+        self.folder_button.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(LICENSES_DIR)))
+        )
+        self.licenses.itemDoubleClicked.connect(lambda *_a: self.read_picked())
+        row_menu(self.licenses, lambda menu: add_action(menu, _("Read license"), self.read_picked))
+        section = Section(_("Licenses"))
+        section.content.addWidget(_text(_("CapyPanel is built with the following software:")))
+        section.content.addWidget(
+            with_buttons(self.licenses, [self.read_button, self.folder_button])
+        )
+        return section
+
+    def read_picked(self) -> None:
+        item = self.licenses.currentItem()
+        if item is not None:
+            file = item.data(0, Qt.ItemDataRole.UserRole)
+            self.reader.show_license(next(c for c in COMPONENTS if c.file == file))
 
     def _open_link(self, url: str) -> None:
-        if url == "#licenses":
-            self.tabs.setCurrentIndex(2)
-        elif url.startswith("license:"):
-            part = next(c for c in COMPONENTS if c.file == url.removeprefix("license:"))
-            self.reader.show_license(part)
-        elif url.startswith("file:"):
-            QDesktopServices.openUrl(QUrl(url))  # the licenses folder
+        if url == "#licenses":  # "see Licenses": scroll down to it
+            area = self.parentWidget()
+            while area is not None and not isinstance(area, QScrollArea):
+                area = area.parentWidget()
+            if area is not None:
+                area.ensureWidgetVisible(self.licenses_section)
         else:
             open_url(url)
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 14:00-0300\n"
+"POT-Creation-Date: 2026-10-18 17:17-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -192,8 +192,8 @@ msgstr "&Relatar um problema"
 msgid "&Report…"
 msgstr "&Relatório…"
 
-msgid "&Reset layout"
-msgstr "&Redefinir layout"
+msgid "&Reset…"
+msgstr "&Redefinir…"
 
 msgid "&Run"
 msgstr "&Executar"
@@ -262,9 +262,6 @@ msgstr "Uma definição de ferramenta deve ser um objeto JSON."
 
 msgid "About"
 msgstr "Sobre"
-
-msgid "About CapyPanel"
-msgstr "Sobre o CapyPanel"
 
 msgid "Access"
 msgstr "Acesso"
@@ -392,10 +389,6 @@ msgstr "Verifica estes hosts de novo agora"
 #, python-brace-format
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
-
-#, python-brace-format
-msgid "Click a license to read it. They all ship with CapyPanel, in its {folder}."
-msgstr "Clique numa licença para lê-la. Todas vêm com o CapyPanel, na {folder}."
 
 msgid "Click to copy"
 msgstr "Clique para copiar"
@@ -777,6 +770,12 @@ msgstr "Idioma e tema"
 msgid "Last check"
 msgstr "Última verificação"
 
+msgid "Layout"
+msgstr "Layout"
+
+msgid "License"
+msgstr "Licença"
+
 msgid "Licenses"
 msgstr "Licenças"
 
@@ -919,6 +918,9 @@ msgstr "Nada muda até você clicar em Adicionar."
 msgid "Nothing changes until you click OK."
 msgstr "Nada muda até você clicar em OK."
 
+msgid "Notice"
+msgstr "Aviso"
+
 msgid "Off"
 msgstr "Desligado"
 
@@ -995,6 +997,12 @@ msgstr "Ou coloque só um nome e um endereço em cada linha."
 msgid "P&ort:"
 msgstr "P&orta:"
 
+msgid "Panel sizes, columns and the panels shown go back to how they first were."
+msgstr "Os tamanhos dos painéis, as colunas e os painéis mostrados voltam a ser como no início."
+
+msgid "Panel sizes, columns and the panels shown, back to how they first were."
+msgstr "Tamanhos dos painéis, colunas e painéis mostrados, de volta a como eram no início."
+
 #, python-brace-format
 msgid "Password for {profile}"
 msgstr "Senha para {profile}"
@@ -1022,6 +1030,9 @@ msgstr "Programas (*.exe)"
 
 msgid "Put in &group"
 msgstr "Colocar no &grupo"
+
+msgid "Read license"
+msgstr "Ler licença"
 
 msgid "Read-only"
 msgstr "Somente leitura"
@@ -1116,6 +1127,12 @@ msgid "Report saved: {n} host from {source}."
 msgid_plural "Report saved: {n} hosts from {source}."
 msgstr[0] "Relatório salvo: {n} host de {source}."
 msgstr[1] "Relatório salvo: {n} hosts de {source}."
+
+msgid "Reset"
+msgstr "Redefinir"
+
+msgid "Reset window layout"
+msgstr "Redefinir o layout da janela"
 
 msgid "S&top"
 msgstr "Pa&rar"
@@ -1222,6 +1239,9 @@ msgstr "Mostrar do&mínio dos usuários"
 
 msgid "Signs in with"
 msgstr "Entra com"
+
+msgid "Software"
+msgstr "Software"
 
 msgid "Someone else has changed the file since you opened it."
 msgstr "Outra pessoa alterou o arquivo desde que você o abriu."
@@ -1362,6 +1382,9 @@ msgstr "Os campos dos próprios hosts, que Importar hosts lê de volta: para lev
 msgid "The last used list"
 msgstr "A última lista usada"
 
+msgid "The licenses folder, shipped with CapyPanel"
+msgstr "A pasta de licenças, que vem com o CapyPanel"
+
 msgid "The list has changed"
 msgstr "A lista foi alterada"
 
@@ -1501,6 +1524,9 @@ msgstr "Usar o caminho &automático"
 msgid "User"
 msgstr "Usuário"
 
+msgid "Version"
+msgstr "Versão"
+
 #, python-brace-format
 msgid "Viewer settings (*{extension})"
 msgstr "Configurações do visualizador (*{extension})"
@@ -1526,6 +1552,9 @@ msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste 
 #, python-brace-format
 msgid "Where is {tool}?"
 msgstr "Onde está o {tool}?"
+
+msgid "Window layout"
+msgstr "Layout da janela"
 
 #, python-brace-format
 msgid "Windows error {code}."
@@ -1599,9 +1628,6 @@ msgstr "inativa"
 #, python-brace-format
 msgid "in “{group}”"
 msgstr "em “{group}”"
-
-msgid "licenses folder"
-msgstr "pasta de licenças"
 
 msgid "made by another user"
 msgstr "feito por outro usuário"

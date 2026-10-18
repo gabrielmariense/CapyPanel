@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 14:00-0300\n"
+"POT-Creation-Date: 2026-10-18 17:17-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -191,7 +191,7 @@ msgstr ""
 msgid "&Report…"
 msgstr ""
 
-msgid "&Reset layout"
+msgid "&Reset…"
 msgstr ""
 
 msgid "&Run"
@@ -260,9 +260,6 @@ msgid "A tool definition must be a JSON object."
 msgstr ""
 
 msgid "About"
-msgstr ""
-
-msgid "About CapyPanel"
 msgstr ""
 
 msgid "Access"
@@ -394,10 +391,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Choose a {tool} settings file"
-msgstr ""
-
-#, python-brace-format
-msgid "Click a license to read it. They all ship with CapyPanel, in its {folder}."
 msgstr ""
 
 msgid "Click to copy"
@@ -790,6 +783,12 @@ msgstr ""
 msgid "Last check"
 msgstr ""
 
+msgid "Layout"
+msgstr ""
+
+msgid "License"
+msgstr ""
+
 msgid "Licenses"
 msgstr ""
 
@@ -936,6 +935,9 @@ msgstr ""
 msgid "Nothing changes until you click OK."
 msgstr ""
 
+msgid "Notice"
+msgstr ""
+
 msgid "Off"
 msgstr ""
 
@@ -1019,6 +1021,12 @@ msgstr ""
 msgid "P&ort:"
 msgstr ""
 
+msgid "Panel sizes, columns and the panels shown go back to how they first were."
+msgstr ""
+
+msgid "Panel sizes, columns and the panels shown, back to how they first were."
+msgstr ""
+
 #, python-brace-format
 msgid "Password for {profile}"
 msgstr ""
@@ -1045,6 +1053,9 @@ msgid "Programs (*.exe)"
 msgstr ""
 
 msgid "Put in &group"
+msgstr ""
+
+msgid "Read license"
 msgstr ""
 
 msgid "Read-only"
@@ -1140,6 +1151,12 @@ msgid "Report saved: {n} host from {source}."
 msgid_plural "Report saved: {n} hosts from {source}."
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "Reset"
+msgstr ""
+
+msgid "Reset window layout"
+msgstr ""
 
 msgid "S&top"
 msgstr ""
@@ -1249,6 +1266,9 @@ msgid "Show users' do&main"
 msgstr ""
 
 msgid "Signs in with"
+msgstr ""
+
+msgid "Software"
 msgstr ""
 
 msgid "Someone else has changed the file since you opened it."
@@ -1407,6 +1427,9 @@ msgstr ""
 msgid "The last used list"
 msgstr ""
 
+msgid "The licenses folder, shipped with CapyPanel"
+msgstr ""
+
 msgid "The list has changed"
 msgstr ""
 
@@ -1550,6 +1573,9 @@ msgstr ""
 msgid "User"
 msgstr ""
 
+msgid "Version"
+msgstr ""
+
 #, python-brace-format
 msgid "Viewer settings (*{extension})"
 msgstr ""
@@ -1576,6 +1602,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Where is {tool}?"
+msgstr ""
+
+msgid "Window layout"
 msgstr ""
 
 #, python-brace-format
@@ -1653,9 +1682,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "in “{group}”"
-msgstr ""
-
-msgid "licenses folder"
 msgstr ""
 
 msgid "made by another user"
