@@ -372,9 +372,9 @@ def test_a_double_click_on_a_tool_changes_its_path(
 ) -> None:
     page = ToolsPage(catalogs)
     monkeypatch.setattr(
-        QFileDialog, "getOpenFileName", lambda *_a, **_k: (r"D:\Portablencviewer.exe", "")
+        QFileDialog, "getOpenFileName", lambda *_a, **_k: (r"D:\Portable\vncviewer.exe", "")
     )
     page.select_tool("realvnc")
     page.tools.itemDoubleClicked.emit(page.tools.currentItem(), 0)
     entry = catalogs.tools.find("realvnc")
-    assert entry is not None and entry.item.executable == r"D:\Portablencviewer.exe"
+    assert entry is not None and entry.item.executable == r"D:\Portable\vncviewer.exe"
