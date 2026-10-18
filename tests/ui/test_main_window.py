@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QMenu, QSplitter, QWidget
 
 from capypanel.core import settings
@@ -347,4 +348,21 @@ def test_an_old_saved_layout_cant_drag_a_pane_out_of_sight(
     state = old.saveState().toBase64().toStdString()
     window = MainWindow(paths, {"schema": 1, "main_splitter": state})
     assert not window._splitter.childrenCollapsible()
+    window.close()
+
+
+def test_double_clicking_the_host_table_s_right_edge_fits_it_to_its_columns(
+    window: MainWindow, office: Path
+) -> None:
+    window.open_list(office)
+    window.resize(1600, 700)
+    window.show()
+    QApplication.processEvents()
+    splitter = window._splitter  # pyright: ignore[reportPrivateUsage]
+    edge = splitter.indexOf(window.details)
+    before = splitter.sizes()
+    QTest.mouseDClick(splitter.handle(edge), Qt.MouseButton.LeftButton)
+    after = splitter.sizes()
+    assert after[edge - 1] == max(window.table.natural_width(), window._hosts_pane.minimumWidth())  # pyright: ignore[reportPrivateUsage]
+    assert sum(after) == sum(before) and after[0] == before[0]  # only those two panes change
     window.close()

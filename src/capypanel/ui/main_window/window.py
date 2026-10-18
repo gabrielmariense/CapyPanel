@@ -27,7 +27,6 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMenu,
     QMessageBox,
-    QSplitter,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -78,6 +77,7 @@ from capypanel.ui.main_window.host_views import (
     NavigationPane,
     SearchBox,
 )
+from capypanel.ui.main_window.panes import PaneSplitter
 from capypanel.ui.main_window.rail import ToolRail
 from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
 from capypanel.ui.menus import MenuCombo, StayOpenMenu, popup
@@ -145,7 +145,7 @@ class MainWindow(QMainWindow):
         self.details.copied.connect(
             lambda text: self.statusBar().showMessage(_("Copied: {text}").format(text=text), 5000)
         )
-        self._splitter = QSplitter()
+        self._splitter = PaneSplitter()
         # The search box is a box of its own above the table, styled like the panes.
         self._hosts_pane = QWidget()
         column = QVBoxLayout(self._hosts_pane)
@@ -288,6 +288,7 @@ class MainWindow(QMainWindow):
         for toggled in (a.show_groups.toggled, a.show_details.toggled, a.show_toolbar.toggled):
             toggled.connect(self._align_refresh_later)
         self._splitter.splitterMoved.connect(self._align_refresh_later)
+        self._splitter.edge_double_clicked.connect(self._fit_pane)
         a.check_status.triggered.connect(
             lambda: self.check_hosts(self._selected_hosts(), status=True, users=False)
         )
@@ -369,6 +370,21 @@ class MainWindow(QMainWindow):
     def _default_pane_sizes(self, total: int) -> None:
         groups, details = (round(w * self._scale()) for w in self.PANES_DEFAULT)
         self._splitter.setSizes([groups, max(total - groups - details, 1), details])
+
+    def _fit_pane(self, edge: int) -> None:
+        """A double-click on the host table's right edge: the table as wide as its columns,
+        the pane on its right taking the rest."""
+        if self._splitter.widget(edge - 1) is not self._hosts_pane:
+            return
+        sizes = self._splitter.sizes()
+        wanted = max(self.table.natural_width(), self._hosts_pane.minimumWidth())
+        right = sizes[edge] + sizes[edge - 1] - wanted
+        if right < self.details.minimumWidth():  # no room: as wide as the Details pane allows
+            wanted -= self.details.minimumWidth() - right
+            right = self.details.minimumWidth()
+        sizes[edge - 1], sizes[edge] = wanted, right
+        self._splitter.setSizes(sizes)
+        self._align_refresh_later()
 
     def reset_layout(self) -> None:
         """View > Reset layout: default pane sizes, columns and hidden parts shown again. The
@@ -1170,6 +1186,7 @@ class MainWindow(QMainWindow):
                 self._prefs, self._doc.path, replace(view, show=show, group=group)
             )
         locations.set_added_lists(self._prefs, choices.added_lists)
+        locations.set_hidden_lists(self._prefs, choices.hidden_lists)
         current = self._doc.path if self._doc else None
         if (
             current is None
@@ -1186,7 +1203,6 @@ class MainWindow(QMainWindow):
         self._prefs["auto_status"] = {"on": on, "minutes": minutes}
         self._apply_auto_status()
         self._save_prefs()
-        locations.set_hidden_lists(self._prefs, choices.hidden_lists)
 
     def _apply_connections(self, changes: ConnectionChanges) -> None:
         try:

@@ -584,6 +584,16 @@ class HostTable(QTreeWidget):
             self._sizing = False
         self._fill_last_column()
 
+    def natural_width(self) -> int:
+        """As wide as its columns, the last at its own width (not stretched to fill), with the
+        frame and the scroll bar."""
+        shown, header = self._shown(), self.header()
+        width = sum(header.sectionSize(c) for c in shown[:-1])
+        if shown:
+            width += self._widths.get(self.COLUMNS[shown[-1]], self.minimum_width(shown[-1]))
+        bar = self.verticalScrollBar()
+        return width + 2 * self.frameWidth() + (bar.sizeHint().width() if bar.isVisible() else 0)
+
     def _keep_width(self, index: int) -> None:
         if not self.isColumnHidden(index):
             self._widths[self.COLUMNS[index]] = self.header().sectionSize(index)
