@@ -4,7 +4,8 @@ added (e.g. on a network share). The same view sits in File > Host lists… and 
 from collections.abc import Callable
 from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QUrl, Signal
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QFileDialog,
     QMessageBox,
@@ -51,12 +52,14 @@ class HostListsView(QWidget):
         added: list[Path],
         document: OpenList | None,
         found: list[Path] | None = None,
+        hidden: list[Path] | None = None,
     ) -> None:
-        """found: the lists in the lists folders; they show up by themselves and can't be
-        removed here."""
+        """found: the lists in the lists folders, shown with no adding, except the `hidden` ones
+        the user removed here."""
         super().__init__()
         self._default, self._personal, self._document = default_list, personal_list, document
-        self._found = found or []
+        self._all_found = found or []
+        self.hidden = [p for p in hidden or [] if self._in_folder(p)]
         self.added = [
             p for p in added
             if self._kind(p) is ListKind.SHARED and not self._in_folder(p)
@@ -68,13 +71,19 @@ class HostListsView(QWidget):
         self.tree.setColumnWidth(1, 105)
         self.add_button = QPushButton(_("&Add existing…"))
         self.new_button = QPushButton(_("&New…"))
-        self.copy_button = QPushButton(_("&Copy current list to…"))
+        self.copy_button = QPushButton(_("Save a &copy…"))
+        self.copy_button.setToolTip(_("Saves a copy of the list in use as a new file"))
         self.copy_button.setEnabled(document is not None)
-        self.remove_button = QPushButton(_("&Remove from the list"))
+        self.remove_button = QPushButton(_("&Remove"))
         self.remove_button.setToolTip(_("Forgets it here; the file itself is never deleted"))
+        self.open_folder = QPushButton(_("Open folder"))
+        self.open_folder.setToolTip(_("Opens the folder the list is in"))
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        buttons = [self.add_button, self.new_button, self.copy_button, self.remove_button]
+        buttons = [
+            self.add_button, self.new_button, self.copy_button, self.remove_button,
+            self.open_folder,
+        ]  # fmt: skip
         layout.addWidget(with_buttons(self.tree, buttons))
         layout.addWidget(
             notes(
@@ -88,6 +97,7 @@ class HostListsView(QWidget):
         self.new_button.clicked.connect(self._new)
         self.copy_button.clicked.connect(self._copy_current)
         self.remove_button.clicked.connect(self._remove)
+        self.open_folder.clicked.connect(self._open_folder)
         self.tree.itemSelectionChanged.connect(self._selection_changed)
         self.tree.itemDoubleClicked.connect(lambda *_a: self.activated.emit())
         self._fill(document.path if document else personal_list)
@@ -130,7 +140,7 @@ class HostListsView(QWidget):
         self.tree.clear()
         current = self._document.path if self._document else None
         paths: list[Path] = []
-        for path in (self._default, self._personal, *self._found, *self.added):
+        for path in (self._default, self._personal, *self._found(), *self.added):
             if not any(locations.same_path(path, p) for p in paths):  # each once
                 paths.append(path)
         names = locations.list_names(paths, default=self._default, personal=self._personal)
@@ -168,19 +178,26 @@ class HostListsView(QWidget):
             return _("Yours") if mine else _("Shared")
         return _("Added")
 
+    def _found(self) -> list[Path]:
+        return [
+            p for p in self._all_found if not any(locations.same_path(p, h) for h in self.hidden)
+        ]
+
     def _in_folder(self, path: Path) -> bool:
-        return any(locations.same_path(path, p) for p in self._found)
+        return any(locations.same_path(path, p) for p in self._all_found)
 
     def _selection_changed(self) -> None:
         path = self.selected()
-        removable = path is not None and self._kind(path) is ListKind.SHARED
-        self.remove_button.setEnabled(removable and path is not None and not self._in_folder(path))
+        self.remove_button.setEnabled(path is not None and self._kind(path) is ListKind.SHARED)
+        self.open_folder.setEnabled(path is not None and path.parent.is_dir())
         self.changed.emit()
 
     # ---- changing ----
 
     def _keep(self, path: Path) -> None:
-        if self._kind(path) is ListKind.SHARED and not any(
+        if self._in_folder(path):  # one removed before comes back
+            self.hidden = [p for p in self.hidden if not locations.same_path(p, path)]
+        elif self._kind(path) is ListKind.SHARED and not any(
             locations.same_path(path, p) for p in self.added
         ):
             self.added.append(path)
@@ -217,8 +234,15 @@ class HostListsView(QWidget):
         path = self.selected()
         if path is None or self._kind(path) is not ListKind.SHARED:
             return
+        if self._in_folder(path):  # it would show up again by itself: hidden instead
+            self.hidden.append(path)
         self.added = [p for p in self.added if not locations.same_path(p, path)]
         self._fill(self._default)  # the one opened on Save, if the removed list was open
+
+    def _open_folder(self) -> None:
+        path = self.selected()
+        if path is not None:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(path.parent)))
 
     def _ask_path(self, title: str) -> Path | None:
         start = self._document.path.parent if self._document else self._personal.parent

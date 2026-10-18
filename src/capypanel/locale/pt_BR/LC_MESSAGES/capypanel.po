@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 20:56-0300\n"
+"POT-Creation-Date: 2026-10-18 00:33-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -53,9 +53,6 @@ msgstr "&Conectar"
 
 msgid "&Copy"
 msgstr "&Copiar"
-
-msgid "&Copy current list to…"
-msgstr "&Copiar lista atual para…"
 
 msgid "&Credentials:"
 msgstr "&Credenciais:"
@@ -177,8 +174,8 @@ msgstr "&Atualizar"
 msgid "&Refresh the status of the hosts shown every"
 msgstr "&Atualizar o status dos hosts exibidos a cada"
 
-msgid "&Remove from the list"
-msgstr "Re&mover da lista"
+msgid "&Remove"
+msgstr "&Remover"
 
 msgid "&Remove selected"
 msgstr "&Remover selecionado"
@@ -964,6 +961,9 @@ msgid_plural "Opened {n} remote screens."
 msgstr[0] "{n} tela remota aberta."
 msgstr[1] "{n} telas remotas abertas."
 
+msgid "Opens the folder the list is in"
+msgstr "Abre a pasta onde a lista está"
+
 #, python-brace-format
 msgid "Optional: a {extension} file saved from {tool}. It's used exactly as saved, including its encryption plugin; only the host is emptied, since the address comes from the host you open."
 msgstr "Opcional: um arquivo {extension} salvo no {tool}. Ele é usado exatamente como foi salvo, inclusive o plugin de criptografia; só o host é esvaziado, já que o endereço vem do host que você abre."
@@ -1101,6 +1101,9 @@ msgstr "Igual à linha {n}"
 msgid "Same name as row {n}"
 msgstr "Mesmo nome da linha {n}"
 
+msgid "Save a &copy…"
+msgstr "Salvar uma &cópia…"
+
 msgid "Save a copy"
 msgstr "Salvar uma cópia"
 
@@ -1112,6 +1115,9 @@ msgstr "Salvar minha versão como cópia…"
 
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arquivo CSV"
+
+msgid "Saves a copy of the list in use as a new file"
+msgstr "Salva uma cópia da lista em uso como um novo arquivo"
 
 msgid "Search"
 msgstr "Pesquisa"

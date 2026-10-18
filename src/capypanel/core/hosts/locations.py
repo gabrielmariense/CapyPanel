@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 
 RECENT_KEY = "recent_lists"  # most recent first; the first is reopened at start
 LISTS_KEY = "host_lists"  # the lists the user added, besides the default and personal ones
+HIDDEN_KEY = "hidden_lists"  # lists in a lists folder the user took out of their lists
 START_KEY = "start_list"  # "last", "default", "personal", or a list file's path
 START_LAST, START_DEFAULT, START_PERSONAL = "last", "default", "personal"
 RECENT_LIMIT = 10
@@ -151,6 +152,26 @@ def set_added_lists(prefs: dict[str, Any], paths: list[Path]) -> None:
         if not any(same_path(gone, p) for p in unique):
             forget_list(prefs, gone)
     prefs[LISTS_KEY] = [str(p) for p in unique]
+
+
+def hidden_lists(prefs: dict[str, Any]) -> list[Path]:
+    value = prefs.get(HIDDEN_KEY)
+    if not isinstance(value, list):
+        return []
+    return [Path(p) for p in value if isinstance(p, str) and p]
+
+
+def set_hidden_lists(prefs: dict[str, Any], paths: list[Path]) -> None:
+    """Lists in a lists folder taken out of this user's lists; their files stay. Like a list
+    taken out of the added ones, each is forgotten from the recent ones too."""
+    for path in paths:
+        forget_list(prefs, path)
+    prefs[HIDDEN_KEY] = [str(p) for p in paths]
+
+
+def without_hidden(prefs: dict[str, Any], found: list[Path]) -> list[Path]:
+    hidden = hidden_lists(prefs)
+    return [p for p in found if not any(same_path(p, h) for h in hidden)]
 
 
 def forget_list(prefs: dict[str, Any], path: Path) -> None:

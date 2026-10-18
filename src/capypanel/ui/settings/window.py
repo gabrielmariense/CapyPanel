@@ -62,6 +62,7 @@ class SettingsChoices:
     rewritten: bool  # the chosen list's file was written from Settings, so reopen it
     theme_id: str
     language: str
+    hidden_lists: list[Path]  # lists in a lists folder removed from Host lists
     connections: ConnectionChanges
     added_lists: list[Path]  # the lists in Host lists, besides the default and personal
     auto_status: tuple[bool, int] = (False, 5)  # check Status by itself, every N minutes
@@ -83,6 +84,7 @@ class SettingsDialog(QDialog):
         personal_list: Path,
         document: OpenList | None,
         added: list[Path],
+        hidden: list[Path] | None = None,
         registry: themes.Registry,
         found: list[Path] | None = None,
         catalogs: Catalogs,
@@ -95,6 +97,7 @@ class SettingsDialog(QDialog):
         self._paths = paths
         self._default_list = default_list
         self._personal_list = personal_list
+        self._hidden = hidden or []
         self._document = document
         self._found = found or []
         self._registry = registry
@@ -140,6 +143,7 @@ class SettingsDialog(QDialog):
             default_list=self._default_list,
             personal_list=self._personal_list,
             document=self._document,
+            hidden=self._hidden,
             added=added,
             found=self._found,
         )
@@ -246,6 +250,7 @@ class SettingsDialog(QDialog):
             self.general.theme_id(),
         )
         written = tuple(self.host_lists.written)
+        self._hidden = self.host_lists.hidden()
         start_view = self.hosts.show_first_choice()
         old.hide()
         self._layout.removeWidget(old)
@@ -403,6 +408,7 @@ class SettingsDialog(QDialog):
             connections=self.connections.changes(),
             auto_status=self.hosts.auto_status_choice(),
             start_view=self.hosts.show_first_choice(),
+            hidden_lists=self.host_lists.hidden(),
         )
 
     def showEvent(self, event: QShowEvent) -> None:
@@ -434,7 +440,7 @@ class SettingsDialog(QDialog):
             return None
         c = self.choices()
         return (
-            c.start_list, c.host_list, tuple(c.added_lists), c.auto_status,
+            c.start_list, c.host_list, tuple(c.added_lists), tuple(c.hidden_lists), c.auto_status,
             c.start_view, self.connections.has_changes(),
         )  # fmt: skip
 

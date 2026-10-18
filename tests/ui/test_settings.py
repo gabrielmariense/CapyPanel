@@ -4,6 +4,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -512,3 +513,35 @@ def test_list_tables_show_six_rows_at_most_and_pages_never_get_cut(
     page = dialog.host_lists
     assert page.width() >= page.minimumSizeHint().width()  # the window widened instead
     dialog.close()
+
+
+def test_a_list_in_a_lists_folder_can_be_removed_and_added_back(
+    window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    branch = paths.shared_lists_dir / "branch.json"
+    listfile.save(branch, HostList(), expected=None)
+    dialog = window.settings_dialog()
+    view = dialog.host_lists.view
+    view.select(branch)
+    assert view.remove_button.isEnabled()
+    view.remove_button.click()
+    assert len(_rows(view)) == 2 and branch.is_file()  # hidden here, the file stays
+    window.apply_settings(dialog.choices())
+    window.list_picker.menu().aboutToShow.emit()
+    assert "branch" not in [label(a) for a in window.list_picker.menu().actions()]
+    view = window.settings_dialog().host_lists.view
+    _answer_open_dialog(monkeypatch, branch)
+    view.add_button.click()  # Add existing… brings it back
+    assert len(_rows(view)) == 3 and view.hidden == [] and view.added == []
+
+
+def test_open_folder_opens_the_picked_list_s_folder(
+    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    opened: list[str] = []
+    monkeypatch.setattr(QDesktopServices, "openUrl", lambda url: opened.append(url.toLocalFile()))
+    window.open_list(office)
+    view = window.settings_dialog().host_lists.view
+    view.select(office)
+    view.open_folder.click()
+    assert [Path(p) for p in opened] == [office.parent]

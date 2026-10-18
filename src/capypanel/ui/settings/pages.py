@@ -372,6 +372,7 @@ class HostListsPage(Page):
         document: OpenList | None,
         added: list[Path],
         found: list[Path] | None = None,
+        hidden: list[Path] | None = None,
     ) -> None:
         super().__init__(_("Host lists"))
         self.view = HostListsView(
@@ -380,6 +381,7 @@ class HostListsPage(Page):
             added=added,
             document=document,
             found=found,
+            hidden=hidden,
         )
         box = Section(_("Lists"))
         lists = QVBoxLayout(box.inner)
@@ -398,6 +400,9 @@ class HostListsPage(Page):
 
     def added(self) -> list[Path]:
         return list(self.view.added)
+
+    def hidden(self) -> list[Path]:
+        return list(self.view.hidden)
 
     def is_valid(self) -> bool:
         return self.view.can_open(self.chosen())

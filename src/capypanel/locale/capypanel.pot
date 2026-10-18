@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 20:56-0300\n"
+"POT-Creation-Date: 2026-10-18 00:33-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -51,9 +51,6 @@ msgid "&Connect"
 msgstr ""
 
 msgid "&Copy"
-msgstr ""
-
-msgid "&Copy current list to…"
 msgstr ""
 
 msgid "&Credentials:"
@@ -176,7 +173,7 @@ msgstr ""
 msgid "&Refresh the status of the hosts shown every"
 msgstr ""
 
-msgid "&Remove from the list"
+msgid "&Remove"
 msgstr ""
 
 msgid "&Remove selected"
@@ -981,6 +978,9 @@ msgid_plural "Opened {n} remote screens."
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "Opens the folder the list is in"
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "Optional: a {extension} file saved from {tool}. It's used exactly as "
@@ -1121,6 +1121,9 @@ msgstr ""
 msgid "Same name as row {n}"
 msgstr ""
 
+msgid "Save a &copy…"
+msgstr ""
+
 msgid "Save a copy"
 msgstr ""
 
@@ -1131,6 +1134,9 @@ msgid "Save my version as a copy…"
 msgstr ""
 
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
+msgstr ""
+
+msgid "Saves a copy of the list in use as a new file"
 msgstr ""
 
 msgid "Search"

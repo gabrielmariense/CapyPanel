@@ -464,8 +464,10 @@ class MainWindow(QMainWindow):
 
     # ---- the list dropdown ----
 
-    def _found_lists(self) -> list[Path]:
-        return locations.found_lists(self._paths.shared_lists_dir, self._paths.user_lists_dir)
+    def _found_lists(self, *, hidden: bool = False) -> list[Path]:
+        """The lists in the lists folders; the ones removed in Host lists only when `hidden`."""
+        found = locations.found_lists(self._paths.shared_lists_dir, self._paths.user_lists_dir)
+        return found if hidden else locations.without_hidden(self._prefs, found)
 
     def _available_lists(self) -> list[Path]:
         return locations.available_lists(
@@ -537,7 +539,12 @@ class MainWindow(QMainWindow):
             self._clear_search()
         self._doc = doc
         locations.remember_list(self._prefs, doc.path)
-        in_folder = any(locations.same_path(doc.path, p) for p in self._found_lists())
+        hidden = locations.hidden_lists(self._prefs)
+        if any(locations.same_path(doc.path, p) for p in hidden):  # opened again: listed again
+            locations.set_hidden_lists(
+                self._prefs, [p for p in hidden if not locations.same_path(doc.path, p)]
+            )
+        in_folder = any(locations.same_path(doc.path, p) for p in self._found_lists(hidden=True))
         if self._kind(doc.path) is ListKind.SHARED and not in_folder:  # in the dropdown now
             # Only lists from elsewhere: before any was added, this falls back to the recent ones.
             added = [
@@ -1139,7 +1146,8 @@ class MainWindow(QMainWindow):
             personal_list=self._personal_list,
             document=self._doc,
             added=locations.added_lists(self._prefs),
-            found=self._found_lists(),
+            found=self._found_lists(hidden=True),
+            hidden=locations.hidden_lists(self._prefs),
             registry=self.registry,
             catalogs=self.connector.catalogs,
             auto_status=self._auto_status(),
@@ -1178,6 +1186,7 @@ class MainWindow(QMainWindow):
         self._prefs["auto_status"] = {"on": on, "minutes": minutes}
         self._apply_auto_status()
         self._save_prefs()
+        locations.set_hidden_lists(self._prefs, choices.hidden_lists)
 
     def _apply_connections(self, changes: ConnectionChanges) -> None:
         try:
