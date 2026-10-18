@@ -21,19 +21,19 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
+    QHBoxLayout,
     QInputDialog,
     QLabel,
     QMainWindow,
     QMenu,
     QMessageBox,
-    QSplitter,
     QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from capypanel import BUILD
-from capypanel.core import i18n, settings, winsec
+from capypanel.core import files, settings, winsec
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
@@ -46,11 +46,11 @@ from capypanel.core.remote.sessions import Account, Reason, Session, SessionsErr
 from capypanel.core.remote.status import Answer, Status
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import SessionCredentials, Target
-from capypanel.core.tools.profiles import ProfileError
 from capypanel.ui import about, language
 from capypanel.ui import checks as check_texts
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
+from capypanel.ui.dialogs import run_modal
 from capypanel.ui.export_hosts import ExportDialog, Source
 from capypanel.ui.groups import (
     ROLE_ID,
@@ -59,7 +59,6 @@ from capypanel.ui.groups import (
     fill_host_move_menu,
     fill_move_menu,
 )
-from capypanel.ui.host_lists import HostListsDialog
 from capypanel.ui.hosts import (
     HostDialog,
     ProfilePicker,
@@ -77,11 +76,12 @@ from capypanel.ui.main_window.host_views import (
     NavigationPane,
     SearchBox,
 )
+from capypanel.ui.main_window.panes import PaneSplitter
+from capypanel.ui.main_window.rail import ToolRail
 from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
-from capypanel.ui.menus import StayOpenMenu, popup
-from capypanel.ui.settings import connections
-from capypanel.ui.settings.connections import ConnectionChanges
-from capypanel.ui.settings.window import SettingsChoices, SettingsDialog
+from capypanel.ui.menus import MenuCombo, StayOpenMenu, popup
+from capypanel.ui.new_list import ask_new_list
+from capypanel.ui.settings.window import SettingsDialog, SettingsPrefs
 from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
@@ -121,11 +121,20 @@ class MainWindow(QMainWindow):
 
         self.commands = create_actions(self)
         self.search = SearchBox()
-        self.toolbar = MainToolBar(self.commands)
-        self.addToolBar(self.toolbar)
+        self.toolbar = MainToolBar(self.commands)  # the Hosts tool's own, beside the rail
+        self.rail = ToolRail()
+        self.rail.settings_requested.connect(lambda: self.open_settings())
         self.refresh_panel = RefreshPanel(self)
         self.refresh_panel.set_choices(self._prefs.get("refresh"))
         self.nav = NavigationPane()
+        # The list dropdown, on top of the left pane: switch lists, make or open one.
+        self.list_picker = MenuCombo()
+        self.list_picker.setObjectName("listPicker")
+        self.list_picker.menu().setToolTipsVisible(True)  # each list's path
+        self.list_picker.menu().aboutToShow.connect(self._fill_list_menu)
+        nav_layout = self.nav.layout()
+        assert isinstance(nav_layout, QVBoxLayout)
+        nav_layout.insertWidget(0, self.list_picker)
         self.table = HostTable()
         self._search_timer = QTimer(self)  # waits for a pause in typing, then filters
         self._search_timer.setSingleShot(True)
@@ -134,7 +143,7 @@ class MainWindow(QMainWindow):
         self.details.copied.connect(
             lambda text: self.statusBar().showMessage(_("Copied: {text}").format(text=text), 5000)
         )
-        self._splitter = QSplitter()
+        self._splitter = PaneSplitter()
         # The search box is a box of its own above the table, styled like the panes.
         self._hosts_pane = QWidget()
         column = QVBoxLayout(self._hosts_pane)
@@ -148,10 +157,23 @@ class MainWindow(QMainWindow):
         self._splitter.setChildrenCollapsible(False)
         self._size_panes()
         self._default_pane_sizes(1100)
-        central = QWidget()
-        margins = QVBoxLayout(central)
+        panes = QWidget()
+        margins = QVBoxLayout(panes)
         margins.setContentsMargins(8, 4, 8, 4)  # the same gap above and below the panes
         margins.addWidget(self._splitter)
+        # The rail runs down the left edge; the tool, its toolbar on top, fills the rest.
+        tool = QWidget()
+        column = QVBoxLayout(tool)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(0)
+        column.addWidget(self.toolbar)
+        column.addWidget(panes, 1)
+        central = QWidget()
+        row = QHBoxLayout(central)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        row.addWidget(self.rail)
+        row.addWidget(tool, 1)
         self.setCentralWidget(central)
         self._list_label = QLabel()
         self._list_label.setContentsMargins(6, 0, 6, 0)
@@ -179,60 +201,29 @@ class MainWindow(QMainWindow):
         a = self.commands
         bar = self.menuBar()
         self._file_menu = bar.addMenu("")
-        self._file_menu.addActions([a.new_list, a.open_list])
-        self._file_menu.addSeparator()
+        # Lists are the Hosts tool's: they're in its list dropdown, not here.
         self._file_menu.addAction(a.settings)
         self._file_menu.addSeparator()
         self._file_menu.addAction(a.exit)
 
-        self._inventory_menu = bar.addMenu("")
-        # What acts on a host or group (edit, remove, copy, open) is in its right-click menu.
-        self._inventory_menu.addActions([a.add_host, a.add_group])
-        self._inventory_menu.addSeparator()
-        self._inventory_menu.addAction(a.manage_groups)
-        self._inventory_menu.addSeparator()
-        self._inventory_menu.addActions([a.import_hosts, a.export_hosts])
-
-        self._connect_menu = bar.addMenu("")
-        self._connect_menu.addActions([a.manual_connect, a.connection_profiles])
-        self._connect_menu.addSeparator()
-        self._connect_menu.addAction(a.forget_passwords)
+        # The tool's own commands live in its toolbar: the menu bar is the same for every tool.
+        inventory = self.toolbar.inventory_menu
+        inventory.addActions([a.add_host, a.add_group, a.manage_groups])
+        inventory.addSeparator()
+        inventory.addAction(a.import_hosts)
 
         # It stays open while parts are ticked, so several can be shown or hidden in one go.
+        # The tools first, then the shown tool's panes; theme and language are in Settings.
         self._view_menu = StayOpenMenu(self)
         bar.addMenu(self._view_menu)
-        self._view_menu.addActions([a.show_toolbar, a.show_status_bar])
+        a.show_hosts.setChecked(True)  # the only tool for now
+        self._view_menu.addAction(a.show_hosts)
         self._view_menu.addSeparator()
         self._view_menu.addActions([a.show_groups, a.show_tags, a.show_details])
         self._view_menu.addSeparator()
         self._view_menu.addAction(a.show_domains)
         self._view_menu.addSeparator()
-        self._theme_menu = self._view_menu.addMenu("")
-        self._theme_group = QActionGroup(self)
-        previous_engine = None
-        for theme in self.registry.all():
-            if previous_engine and theme.engine != previous_engine:
-                self._theme_menu.addSeparator()  # native themes, then the app's own looks
-            previous_engine = theme.engine
-            item = self._theme_menu.addAction("")
-            item.setCheckable(True)
-            item.setData(theme.id)
-            item.setChecked(theme.id == themes.current().id)
-            self._theme_group.addAction(item)
-        self._theme_group.triggered.connect(lambda item: self.set_theme(item.data()))
-
-        # Each language is named in its own language, so these texts never change.
-        self._language_menu = self._view_menu.addMenu("")
-        self._language_group = QActionGroup(self)
-        for code, name in i18n.LANGUAGES.items():
-            item = self._language_menu.addAction(name)
-            item.setCheckable(True)
-            item.setData(code)
-            item.setChecked(code == i18n.language())
-            self._language_group.addAction(item)
-        self._language_group.triggered.connect(lambda item: self.set_language(item.data()))
-        self._view_menu.addSeparator()
-        self._view_menu.addAction(a.reset_layout)
+        self._view_menu.addActions([a.show_toolbar, a.show_status_bar])
 
         self._help_menu = bar.addMenu("")
         self._help_menu.addActions([a.documentation, a.report_problem])
@@ -243,23 +234,18 @@ class MainWindow(QMainWindow):
     def _retranslate_menus(self) -> None:
         retranslate_actions(self.commands)
         self.toolbar.retranslate()
+        self.rail.retranslate()
         self.refresh_panel.retranslate()
         self._stop_button.setText(_("Stop"))
         self.search.retranslate()
         self._file_menu.setTitle(_("&File"))
-        self._inventory_menu.setTitle(_("&Inventory"))
-        self._connect_menu.setTitle(_("&Connect"))
         self._view_menu.setTitle(_("&View"))
         self._help_menu.setTitle(_("&Help"))
-        self._theme_menu.setTitle(_("&Theme"))
-        self._language_menu.setTitle(_("&Language"))
-        for item in self._theme_group.actions():
-            item.setText(self.registry.find(item.data()).title())
 
     def _connect(self) -> None:
         a = self.commands
         a.new_list.triggered.connect(self.new_list)
-        a.open_list.triggered.connect(self.manage_lists)
+        a.open_list.triggered.connect(self.open_list_file)
         a.settings.triggered.connect(lambda: self.open_settings())
         a.exit.triggered.connect(self.close)
         a.add_host.triggered.connect(self.add_host)
@@ -269,29 +255,31 @@ class MainWindow(QMainWindow):
         a.export_hosts.triggered.connect(self.export_hosts)
         a.edit.triggered.connect(self.edit_selected)
         a.remove.triggered.connect(self.remove_selected)
-        # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C, F5) live here.
-        self.addActions([a.edit, a.remove, a.copy_address, a.refresh_shown])
+        # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C, F5, Ctrl+N,
+        # Ctrl+Shift+N, Ctrl+M) live here: toolbar menus only take keys while they're open.
+        self.addActions([
+            a.edit, a.remove, a.copy_address, a.refresh_shown, a.add_host, a.add_group,
+            a.manual_connect, a.open_list,
+        ])  # fmt: skip
+        a.show_hosts.triggered.connect(lambda: self._show_tool("hosts"))
+        self.rail.hosts_button.clicked.connect(lambda: self._show_tool("hosts"))
         a.refresh_shown.triggered.connect(self._run_refresh_panel)  # F5
         a.documentation.triggered.connect(lambda: about.open_url(about.docs_url()))
         a.report_problem.triggered.connect(
             lambda: about.open_url(about.report_url(self._paths.portable))
         )
-        a.about.triggered.connect(
-            lambda: about.AboutDialog(
-                self, self._paths.log_dir, portable=self._paths.portable
-            ).exec()
-        )
+        a.about.triggered.connect(lambda: self.open_settings("about"))  # About is a page there
         a.show_toolbar.toggled.connect(self.toolbar.setVisible)
         a.show_groups.toggled.connect(self.nav.setVisible)
         a.show_tags.toggled.connect(self.nav.set_tags_visible)
         a.show_details.toggled.connect(self.details.setVisible)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
         a.show_domains.toggled.connect(self._show_domains)
-        a.reset_layout.triggered.connect(self.reset_layout)
         # Refresh follows the end of the host table, wherever the panes are.
         for toggled in (a.show_groups.toggled, a.show_details.toggled, a.show_toolbar.toggled):
             toggled.connect(self._align_refresh_later)
         self._splitter.splitterMoved.connect(self._align_refresh_later)
+        self._splitter.edge_double_clicked.connect(self._fit_pane)
         a.check_status.triggered.connect(
             lambda: self.check_hosts(self._selected_hosts(), status=True, users=False)
         )
@@ -374,9 +362,28 @@ class MainWindow(QMainWindow):
         groups, details = (round(w * self._scale()) for w in self.PANES_DEFAULT)
         self._splitter.setSizes([groups, max(total - groups - details, 1), details])
 
+    def _fit_pane(self, edge: int) -> None:
+        """A double-click on the Groups or Hosts panel's right edge: that panel as wide as its
+        content, the panel on its right taking the rest, never below its minimum width."""
+        left, right = self._splitter.widget(edge - 1), self._splitter.widget(edge)
+        if left is None or right is None:
+            return
+        if left is self.nav:
+            natural = self.nav.natural_width()
+        elif left is self._hosts_pane:
+            natural = self.table.natural_width()
+        else:
+            return
+        sizes = self._splitter.sizes()
+        total = sizes[edge - 1] + sizes[edge]
+        wanted = min(max(natural, left.minimumWidth()), total - right.minimumWidth())
+        sizes[edge - 1], sizes[edge] = wanted, total - wanted
+        self._splitter.setSizes(sizes)
+        self._align_refresh_later()
+
     def reset_layout(self) -> None:
-        """View > Reset layout: default pane sizes, columns and hidden parts shown again. The
-        window's size, the theme and every other setting stay as they are."""
+        """Settings > Hosts > General > Window layout: default pane sizes, columns and hidden
+        parts shown again. The window's size, the theme and every other setting stay."""
         a = self.commands
         for action in (a.show_toolbar, a.show_status_bar, a.show_groups, a.show_tags):
             action.setChecked(True)
@@ -447,35 +454,85 @@ class MainWindow(QMainWindow):
         return True
 
     def new_list(self) -> None:
-        name, _filter = QFileDialog.getSaveFileName(
-            self, _("New host list"), str(self._personal_list.parent), list_file_filter()
+        """The list dropdown's New list…: shared, personal or elsewhere, as in Settings."""
+        path = ask_new_list(
+            self, shared_dir=self._paths.shared_lists_dir, user_dir=self._paths.user_lists_dir
         )
-        if name:
-            path = Path(name)
-            # The file dialog already asked before choosing an existing file.
+        if path is not None:  # replacing an existing file was asked already
             self._create_list(path, replace_existing=path.exists())
 
-    def manage_lists(self) -> None:
-        """File > Host lists…: every list this user works with; open one from there."""
-        dialog = HostListsDialog(
-            self,
-            default_list=self._default_list,
-            personal_list=self._personal_list,
-            added=locations.added_lists(self._prefs),
-            document=self._doc,
+    def open_list_file(self) -> None:
+        """The list dropdown's Open list… (Ctrl+O): any list file, which then stays in the
+        dropdown."""
+        shared = self._paths.shared_lists_dir
+        start = shared if shared.is_dir() else self._personal_list.parent
+        name, _filter = QFileDialog.getOpenFileName(
+            self, _("Open a host list"), str(start), list_file_filter()
         )
-        opened = dialog.exec() == QDialog.DialogCode.Accepted
-        locations.set_added_lists(self._prefs, dialog.view.added)  # added or forgotten there
-        self._save_prefs()
-        path = dialog.view.selected()
-        if opened and path is not None:
-            current = self._doc.path if self._doc else None
-            rewritten = any(locations.same_path(path, p) for p in dialog.view.written)
-            if current is None or rewritten or not locations.same_path(path, current):
-                self.open_list(path)
+        if name:
+            self.open_list(Path(name))
+
+    # ---- the list dropdown ----
+
+    def _found_lists(self, *, hidden: bool = False) -> list[Path]:
+        """The lists in the lists folders; the ones removed in Host lists only when `hidden`."""
+        found = locations.found_lists(self._paths.shared_lists_dir, self._paths.user_lists_dir)
+        return found if hidden else locations.without_hidden(self._prefs, found)
+
+    def _available_lists(self) -> list[Path]:
+        return locations.available_lists(
+            self._prefs,
+            default=self._default_list,
+            personal=self._personal_list,
+            found=self._found_lists(),
+        )
+
+    def _list_name(self, path: Path) -> str:
+        lists = self._available_lists()
+        if not any(locations.same_path(path, p) for p in lists):
+            lists.append(path)
+        names = locations.list_names(
+            lists, default=self._default_list, personal=self._personal_list
+        )
+        return next(n for p, n in zip(lists, names, strict=True) if locations.same_path(p, path))
+
+    def _names(self, lists: list[Path]) -> list[str]:
+        return locations.list_names(lists, default=self._default_list, personal=self._personal_list)
+
+    def _fill_list_menu(self) -> None:
+        """Every list, the open one ticked (its path in the tooltip), then making or opening
+        one, and managing them in Settings."""
+        a = self.commands
+        menu = self.list_picker.menu()
+        menu.clear()
+        lists = self._available_lists()
+        names = locations.list_names(
+            lists, default=self._default_list, personal=self._personal_list
+        )
+        current = self._doc.path if self._doc else None
+        picks = QActionGroup(menu)
+        for path, name in zip(lists, names, strict=True):
+            item = menu.addAction(name.replace("&", "&&"))
+            item.setCheckable(True)
+            item.setChecked(current is not None and locations.same_path(path, current))
+            item.setToolTip(str(path))
+            picks.addAction(item)
+            item.triggered.connect(lambda _c=False, p=path: self._pick_list(p))
+        menu.addSeparator()
+        menu.addActions([a.new_list, a.open_list])
+        menu.addSeparator()
+        manage = menu.addAction(_("&Manage host lists…"))
+        manage.triggered.connect(lambda: self.open_settings("host_lists"))
+
+    def _pick_list(self, path: Path) -> None:
+        current = self._doc.path if self._doc else None
+        if current is None or not locations.same_path(path, current):
+            self.open_list(path)
 
     def _create_list(self, path: Path, *, replace_existing: bool, quiet: bool = False) -> bool:
         try:
+            if self._kind(path) is ListKind.DEFAULT and not path.parent.exists():
+                files.make_shared_folder(path.parent)  # read by all, changed only by admins
             doc = OpenList.create(path, replace_existing=replace_existing)
         except (HostListFileError, OSError) as e:
             self._error(_("Couldn't create “{path}”: {error}").format(path=path, error=e), quiet)
@@ -492,8 +549,17 @@ class MainWindow(QMainWindow):
             self._clear_search()
         self._doc = doc
         locations.remember_list(self._prefs, doc.path)
-        if self._kind(doc.path) is ListKind.SHARED:  # it shows in File > Host lists… from now on
-            added = locations.added_lists(self._prefs)
+        hidden = locations.hidden_lists(self._prefs)
+        if any(locations.same_path(doc.path, p) for p in hidden):  # opened again: listed again
+            locations.set_hidden_lists(
+                self._prefs, [p for p in hidden if not locations.same_path(doc.path, p)]
+            )
+        in_folder = any(locations.same_path(doc.path, p) for p in self._found_lists(hidden=True))
+        if self._kind(doc.path) is ListKind.SHARED and not in_folder:  # in the dropdown now
+            # Only lists from elsewhere: before any was added, this falls back to the recent ones.
+            added = [
+                p for p in locations.added_lists(self._prefs) if self._kind(p) is ListKind.SHARED
+            ]
             locations.set_added_lists(self._prefs, [*added, doc.path])
         self._save_prefs()
         log.info("Opened host list %s (read-only=%s)", doc.path, doc.read_only)
@@ -548,7 +614,7 @@ class MainWindow(QMainWindow):
             default_group=self.nav.selected_group_id(),
             profiles=self._profile_picker(base),
         )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return
         values = dialog.values()
         try:
@@ -571,7 +637,7 @@ class MainWindow(QMainWindow):
         if doc is None:
             return
         dialog = HostDialog(self, doc.hosts, host, profiles=self._profile_picker(doc.hosts))
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return
         values = dialog.values()
         edited = replace(
@@ -736,7 +802,7 @@ class MainWindow(QMainWindow):
         cancel = box.addButton(QMessageBox.StandardButton.Cancel)
         box.setDefaultButton(cancel)
         box.setEscapeButton(cancel)
-        box.exec()
+        run_modal(box)
         if chosen:
             return chosen[0]
         return ("all", None) if box.clickedButton() is everything else None
@@ -774,7 +840,7 @@ class MainWindow(QMainWindow):
         copy = box.addButton(_("Save my version as a copy…"), QMessageBox.ButtonRole.AcceptRole)
         box.addButton(_("Reload the list"), QMessageBox.ButtonRole.RejectRole)
         box.setDefaultButton(copy)
-        box.exec()
+        run_modal(box)
         if box.clickedButton() is copy:
             name, _filter = QFileDialog.getSaveFileName(
                 self,
@@ -849,14 +915,14 @@ class MainWindow(QMainWindow):
         box.addButton(QMessageBox.StandardButton.Cancel)
         box.setDefaultButton(edit)
         edit.setEnabled(self._writable() is not None)
-        box.exec()
+        run_modal(box)
         if box.clickedButton() is edit:
             self.edit_host(host)
 
     def manual_connect(self) -> None:
         connector = self.connector
         dialog = ManualConnectDialog(self, connector.choices(), connector.default_profile())
-        if dialog.exec() == QDialog.DialogCode.Accepted:
+        if run_modal(dialog) == QDialog.DialogCode.Accepted:
             connector.connect([dialog.request()])
 
     # ---- connection profiles ----
@@ -904,14 +970,14 @@ class MainWindow(QMainWindow):
             return
         # Hosts without a group of their own get none, unless a group is picked.
         dialog = ImportDialog(self, doc.hosts, self.nav.selected_group_id() or NO_GROUP)
-        new = dialog.imported_list() if dialog.exec() == QDialog.DialogCode.Accepted else None
+        new = dialog.imported_list() if run_modal(dialog) == QDialog.DialogCode.Accepted else None
         if new is not None and self._commit(new):
             added = dialog.added()
             note = ngettext("Added {n} host.", "Added {n} hosts.", added).format(n=added)
             self.statusBar().showMessage(note, 10_000)
 
     def export_hosts(self) -> None:
-        """Inventory > Export hosts…: pick hosts and columns, then save a CSV file or copy the
+        """The toolbar's Report: pick hosts and columns, then save a CSV file or copy the
         rows. Works on read-only lists too: it changes nothing."""
         doc = self._doc
         if doc is None or not doc.hosts.hosts:
@@ -942,7 +1008,7 @@ class MainWindow(QMainWindow):
         )
         self.checks_changed.connect(dialog.checks_changed)
         try:
-            dialog.exec()
+            run_modal(dialog)
         finally:
             self.checks_changed.disconnect(dialog.checks_changed)
         if dialog.outcome:
@@ -1002,7 +1068,7 @@ class MainWindow(QMainWindow):
         if doc is None:
             return
         dialog = ManageGroupsDialog(self, doc.hosts)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
+        if run_modal(dialog) == QDialog.DialogCode.Accepted:
             self._arrange(dialog.order())
 
     def _groups_dragged(self) -> None:
@@ -1068,20 +1134,18 @@ class MainWindow(QMainWindow):
             dialog.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
         if page:
             dialog.show_page(page)
-        dialog.saved.connect(lambda choices: self._settings_saved(dialog, choices))
-        dialog.language_picked.connect(self.set_language)  # at once, like View > Language
-        dialog.exec()
+        run_modal(dialog)
         self._prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
         self._save_prefs()
 
-    def _settings_saved(self, dialog: SettingsDialog, choices: SettingsChoices) -> None:
-        """Save in Settings: apply now; the window stays open."""
-        self.apply_settings(choices)
-        self._selection_changed()  # profiles may have changed
-        dialog.after_save(self._doc)
+    def _open_from_settings(self, dialog: SettingsDialog, path: Path) -> None:
+        """A list opened from Settings > Host lists: Settings then shows it as the open one."""
+        self.open_list(path)
+        dialog.list_opened(self._doc, self._start_view(), self._doc.hosts if self._doc else None)
 
     def settings_dialog(self) -> SettingsDialog:
-        return SettingsDialog(
+        """Settings, wired up: every choice applies as it's made, with no Save."""
+        dialog = SettingsDialog(
             self,
             paths=self._paths,
             start_list=self._prefs.get(locations.START_KEY, locations.START_LAST),
@@ -1089,12 +1153,21 @@ class MainWindow(QMainWindow):
             personal_list=self._personal_list,
             document=self._doc,
             added=locations.added_lists(self._prefs),
+            found=self._found_lists(hidden=True),
+            hidden=locations.hidden_lists(self._prefs),
             registry=self.registry,
             catalogs=self.connector.catalogs,
             auto_status=self._auto_status(),
             start_view=self._start_view(),
             host_list=self._doc.hosts if self._doc else None,
         )
+        dialog.language_picked.connect(self.set_language)
+        dialog.theme_picked.connect(self.set_theme)
+        dialog.prefs_changed.connect(self.apply_prefs)
+        dialog.open_requested.connect(lambda path: self._open_from_settings(dialog, path))
+        dialog.profiles_changed.connect(self._selection_changed)  # Connect's menu follows
+        dialog.layout_reset_requested.connect(self.reset_layout)
+        return dialog
 
     def _start_view(self) -> tuple[str, str] | None:
         if self._doc is None:
@@ -1102,37 +1175,22 @@ class MainWindow(QMainWindow):
         view = locations.list_view(self._prefs, self._doc.path)
         return view.show, view.group
 
-    def apply_settings(self, choices: SettingsChoices) -> None:
-        self._prefs[locations.START_KEY] = choices.start_list
-        if choices.start_view is not None and self._doc is not None:  # for the list open now
-            show, group = choices.start_view
+    def apply_prefs(self, prefs: SettingsPrefs) -> None:
+        """A choice made in Settings, kept and applied at once."""
+        self._prefs[locations.START_KEY] = prefs.start_list
+        if prefs.start_view is not None and self._doc is not None:  # for the list open now
+            show, group = prefs.start_view
             view = locations.list_view(self._prefs, self._doc.path)
             locations.set_list_view(
                 self._prefs, self._doc.path, replace(view, show=show, group=group)
             )
-        locations.set_added_lists(self._prefs, choices.added_lists)
-        current = self._doc.path if self._doc else None
-        if (
-            current is None
-            or choices.rewritten
-            or not locations.same_path(choices.host_list, current)
-        ):
-            self.open_list(choices.host_list)
-        if choices.theme_id != themes.current().id:
-            self.set_theme(choices.theme_id)
-        if choices.language != i18n.language():
-            self.set_language(choices.language)
-        self._apply_connections(choices.connections)
-        on, minutes = choices.auto_status
+        locations.set_added_lists(self._prefs, prefs.added_lists)
+        locations.set_hidden_lists(self._prefs, prefs.hidden_lists)
+        on, minutes = prefs.auto_status
         self._prefs["auto_status"] = {"on": on, "minutes": minutes}
         self._apply_auto_status()
         self._save_prefs()
-
-    def _apply_connections(self, changes: ConnectionChanges) -> None:
-        try:
-            connections.apply(self.connector.catalogs, changes)
-        except (ProfileError, OSError) as e:
-            self._error(_("Couldn't save the connection profiles: {error}").format(error=e))
+        self._update_state()  # the list's name may change with the lists kept
 
     # ---- look ----
 
@@ -1142,8 +1200,6 @@ class MainWindow(QMainWindow):
         self.toolbar.restyle()  # icon colour follows the theme
         self._size_panes()  # the theme's font may be bigger
         self._align_refresh_later()  # each theme pads the toolbar differently
-        for item in self._theme_group.actions():
-            item.setChecked(item.data() == theme.id)
         self._prefs["theme"] = theme.id
         self._save_prefs()
         log.info("Theme: %s", theme.id)
@@ -1151,8 +1207,6 @@ class MainWindow(QMainWindow):
     def set_language(self, code: str) -> None:
         """Switches live: Qt then sends every window a LanguageChange event (see changeEvent)."""
         code = language.apply(code)
-        for item in self._language_group.actions():
-            item.setChecked(item.data() == code)
         self._prefs["language"] = code
         self._save_prefs()
         log.info("Language: %s", code)
@@ -1335,8 +1389,12 @@ class MainWindow(QMainWindow):
         if doc is None:
             self.setWindowTitle(f"CapyPanel {BUILD}")
             self._list_label.setText(_("No host list is open."))
+            self.list_picker.setText(_("No list open"))
             return
-        self.setWindowTitle(f"{doc.path.name} — CapyPanel {BUILD}")
+        name = self._list_name(doc.path)
+        self.setWindowTitle(f"{name} — CapyPanel {BUILD}")
+        self.list_picker.setText(name)
+        self.list_picker.setToolTip(str(doc.path))
         total = len(doc.hosts.hosts)
         parts = [
             f"{self._kind_label(self._kind(doc.path))} — {doc.path}",
@@ -1503,7 +1561,7 @@ class MainWindow(QMainWindow):
                 len(self._refused),
             ).format(n=len(self._refused), user=account.user)
         dialog = AccountDialog(self, text, account.user if account else "")
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return
         self._account = dialog.account()
         # Again: the hosts that refused, and those a rejection kept from being tried.
@@ -1558,16 +1616,27 @@ class MainWindow(QMainWindow):
         self._save_prefs()
         self.check_hosts(self._visible_hosts(), status=choices["status"], users=choices["users"])
 
+    def _show_tool(self, tool: str) -> None:
+        """The rail and View > tools agree on the tool shown (Hosts is the only one for now)."""
+        self.commands.show_hosts.setChecked(tool == "hosts")
+        self.rail.hosts_button.setChecked(tool == "hosts")
+
     def _fill_connect_menu(self) -> None:
-        """The toolbar's Connect arrow: connect the selection once with another profile."""
+        """The toolbar's Connect: connect the selection, or once with another profile, then the
+        connection commands that aren't about the selection."""
+        a = self.commands
         menu = self.toolbar.connect_menu
         menu.clear()
+        menu.addAction(a.connect_host)  # each host's own profile, as Enter does
+        menu.setDefaultAction(a.connect_host)
         for profile_id, name in self.connector.choices():
             item = menu.addAction(
                 _("Connect with {profile}").format(profile=name.replace("&", "&&"))
             )
             item.setEnabled(bool(self.table.selected_ids()))
             item.triggered.connect(lambda _c=False, p=profile_id: self.connect_selected(p))
+        menu.addSeparator()
+        menu.addActions([a.manual_connect, a.connection_profiles, a.forget_passwords])
 
     def _save_columns(self) -> None:
         self._prefs["hidden_columns"] = self.table.hidden_columns()
@@ -1580,8 +1649,8 @@ class MainWindow(QMainWindow):
     def _align_refresh(self) -> None:
         if self.toolbar.isVisible():
             left = self._splitter.mapTo(self, QPoint(0, 0)).x()
-            right = self.table.mapTo(self, QPoint(self.table.width(), 0)).x()
-            self.toolbar.align(left - self.toolbar.x(), right - self.toolbar.x())
+            start = self.toolbar.mapTo(self, QPoint(0, 0)).x()
+            self.toolbar.align(left - start)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
@@ -1603,7 +1672,7 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         menu.addActions([a.check_status, a.check_users])
         menu.addSeparator()
-        menu.addAction(self._copy_cell_action(menu, self.table.columnAt(position.x())))
+        self._add_copy_menu(menu)
         menu.addSeparator()
         menu.addAction(a.edit)
         hosts = self._selected_hosts()
@@ -1612,19 +1681,23 @@ class MainWindow(QMainWindow):
         menu.addAction(a.remove)
         popup(menu, self.table.viewport().mapToGlobal(position))
 
-    def _copy_cell_action(self, menu: QMenu, column: int) -> QAction:
-        """One Copy item, for the column clicked: one line per selected host. The address is
-        the Copy address command, so its shortcut shows."""
-        column = max(column, 0)
-        if HostTable.COLUMNS[column] == "address":
-            return self.commands.copy_address
-        title = self.table.headerItem().text(column)
-        item = QAction(_("Co&py {column}").format(column=title.lower()), menu)
+    def _add_copy_menu(self, menu: QMenu) -> None:
+        """Copy ▸ every column the table shows, one line per selected host. Wherever the menu
+        was opened (also from the keyboard), the same items. Address keeps Ctrl+Shift+C."""
+        copy = menu.addMenu(_("Co&py"))
         rows = sorted(self.table.selectedItems(), key=self.table.indexOfTopLevelItem)
-        item.triggered.connect(
-            lambda: QGuiApplication.clipboard().setText("\n".join(r.text(column) for r in rows))
-        )
-        return item
+        for column, key in enumerate(HostTable.COLUMNS):
+            if self.table.isColumnHidden(column):
+                continue
+            if key == "address":
+                copy.addAction(self.commands.copy_address)
+                continue
+            item = copy.addAction(self.table.headerItem().text(column))
+            item.triggered.connect(
+                lambda _c=False, n=column: QGuiApplication.clipboard().setText(
+                    "\n".join(r.text(n) for r in rows)
+                )
+            )
 
     def _add_hosts_move_menu(self, menu: QMenu, hosts: list[Host]) -> None:
         """Move to: "No group", then the groups as a tree; where they all are is ticked."""

@@ -17,9 +17,9 @@ def test_everything_is_in_one_folder_per_computer(tmp_path: Path) -> None:
     root = Path(r"C:\ProgramData\CapyPanel")
     assert not paths.portable and paths.root == root
     assert paths.settings_file == root / "users" / "ana@CORP" / "settings.json"
-    assert paths.personal_list == root / "users" / "ana@CORP" / "hosts.json"
+    assert paths.personal_list == root / "users" / "ana@CORP" / "lists" / "personal.json"
     assert paths.log_file == root / "logs" / "ana@CORP.log"
-    assert paths.default_list == root / "hosts.json"
+    assert paths.default_list == root / "lists" / "default.json"
     assert paths.profiles_dir == root / "profiles"
     assert paths.company_tools_dir == root / "tools"
 

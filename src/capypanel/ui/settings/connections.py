@@ -1,11 +1,12 @@
 """Settings > Connections: the shared connection profiles (add, edit, duplicate, delete, the
-default one) and where each remote tool was found on this PC. Like every other setting, nothing
-is written until Save; Cancel drops every change made here."""
+default one) and where each remote tool was found on this PC. Like every other setting, each
+change is written at once."""
 
-from dataclasses import dataclass, field, replace
+from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QUrl
+from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -14,16 +15,14 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QFormLayout,
-    QGridLayout,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QListWidget,
-    QListWidgetItem,
+    QMenu,
     QMessageBox,
     QPushButton,
     QSpinBox,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -35,37 +34,19 @@ from capypanel.core.tools import detect, viewer_settings
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profile_store import UNTRUSTED, make_id
-from capypanel.core.tools.profiles import ConnectionProfile, login_label, logins_of
+from capypanel.core.tools.profiles import (
+    ConnectionProfile,
+    ProfileError,
+    login_label,
+    logins_of,
+)
 from capypanel.ui.connect import ask_for_program
 from capypanel.ui.hosts import confirm
-from capypanel.ui.notes import hint
-from capypanel.ui.settings.pages import Page, PathLabel, open_folder
+from capypanel.ui.notes import hint, notes
+from capypanel.ui.settings.pages import Page, Section, SettingRow
+from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 
 MAX_PROFILE_NAME = 64
-
-
-@dataclass(frozen=True)
-class ConnectionChanges:
-    """What Save writes: profiles added or changed, profiles deleted, the default, tool paths."""
-
-    saved: tuple[ConnectionProfile, ...] = ()
-    deleted: tuple[str, ...] = ()
-    default: str = ""
-    tool_paths: dict[str, str] = field(default_factory=dict)  # tool id -> .exe; "" = automatic
-    settings: dict[str, bytes] = field(default_factory=dict)  # profile id -> new settings file
-
-
-def apply(catalogs: Catalogs, changes: ConnectionChanges) -> None:
-    """Writes what was changed on the page, once Save is clicked. Raises ProfileError, OSError."""
-    store = catalogs.profiles
-    for profile_id in changes.deleted:
-        store.delete(profile_id)
-    for profile in changes.saved:
-        store.save(profile, changes.settings.get(profile.id))
-    if changes.default and changes.default != store.default_id():
-        store.set_default(changes.default)
-    if changes.tool_paths:
-        catalogs.tools.set_paths(changes.tool_paths)
 
 
 class ProfileDialog(QDialog):
@@ -156,10 +137,8 @@ class ProfileDialog(QDialog):
         wanted_login = profile.login if profile else self.login.currentData()
         self.login.clear()
         for login in logins_of(tool):
-            text = login_label(login).capitalize()
-            if not tool.wants_password:  # e.g. Remote Desktop: it asks for the password itself
-                text = _("Asked by {tool}").format(tool=tool.name)
-            self.login.addItem(text, login)
+            text = login_label(login, tool.name)
+            self.login.addItem(text[:1].upper() + text[1:], login)  # keeps the tool's capitals
         self.login.setCurrentIndex(max(self.login.findData(wanted_login), 0))
         self.login.setEnabled(self.login.count() > 1)
         ticked = set(profile.options) if profile else set()
@@ -269,7 +248,7 @@ def skipped_note(problems: list[tuple[Path, str]]) -> QLabel:
         )
         for path, reason in seen.items()
     ]
-    label = hint(
+    label = notes(  # a note like the page's others
         ngettext("{n} file skipped: {files}", "{n} files skipped: {files}", len(names)).format(
             n=len(names), files=", ".join(names)
         )
@@ -279,135 +258,153 @@ def skipped_note(problems: list[tuple[Path, str]]) -> QLabel:
     return label
 
 
-class ConnectionsPage(Page):
-    def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
-        super().__init__(_("Connections"))
+class SharedSection(Section):
+    """A part of Connections whose changes go to files shared by everyone on this PC, written
+    at once; `changed` fires after each."""
+
+    changed = Signal()
+
+    def __init__(self, title: str, catalogs: Catalogs) -> None:
+        super().__init__(title)
         self.catalogs = catalogs
+
+    def _write(self, change: Callable[[], object], failed: str) -> bool:
+        """Runs a change to the shared files; says what went wrong when it can't."""
+        try:
+            change()
+        except (ProfileError, OSError) as e:
+            QMessageBox.warning(self, "CapyPanel", failed.format(error=e))
+            return False
+        self._written()
+        self.changed.emit()
+        return True
+
+    def _written(self) -> None:
+        """After a change was written."""
+
+
+class ProfilesSection(SharedSection):
+    """The connection profiles everyone on this PC connects with."""
+
+    def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
+        super().__init__(_("Connection profiles"), catalogs)
         self.store = catalogs.profiles
         self.document = document
         self.can_edit = self.store.can_edit()
-        self.can_edit_tools = catalogs.tools.can_edit()
-        self._profiles = {p.id: p for p in self.store.all()}
-        self._changed: set[str] = set()
-        self._deleted: set[str] = set()
-        self._tool_paths: dict[str, str] = {}
-        self._settings: dict[str, bytes] = {}  # settings files chosen here, written on Save
 
-        profiles_box = QGroupBox(_("Connection profiles"))
-        folder = PathLabel(self.store.folder)
-        self.open_folder = QPushButton(_("Open folder"))
-        self.open_folder.clicked.connect(lambda: open_folder(self.store.folder))
-        folder_row = QHBoxLayout()
-        folder_row.addWidget(folder, 1)
-        folder_row.addWidget(self.open_folder)
         # The folder is made at start; where this user couldn't, the app's own copies are shown.
-        self.builtin_note = hint(
-            _("These are the built-in profiles: the folder is created when you save a change.")
+        self.builtin_note = notes(
+            _("These are the built-in profiles: the folder is created when you change one.")
             if self.can_edit
             else _("These are the built-in profiles: the folder isn't there yet.")
         )
         self._show_folder_state()
         access = (
-            _("Shared by everyone on this PC. You can change them.")
+            _("Shared by everyone on this PC.")
             if self.can_edit
             else _(
                 "Shared by everyone on this PC. Read-only: only people Windows lets write this "
                 "folder can change them."
             )
         )
-        self.list = QListWidget()
+        self.list = grid_table([_("Profile"), _("Tool"), _("Signs in with")])
+        self.list.setColumnWidth(0, 190)
+        self.list.setColumnWidth(1, 150)
         self.list.itemSelectionChanged.connect(self._update_buttons)
-        self.list.itemDoubleClicked.connect(lambda _item: self.edit())
+        self.list.itemDoubleClicked.connect(lambda *_a: self.edit())
         self.add_button = QPushButton(_("&Add…"))
         self.edit_button = QPushButton(_("&Edit…"))
-        self.duplicate_button = QPushButton(_("D&uplicate…"))
         self.delete_button = QPushButton(_("&Delete…"))
         self.add_button.clicked.connect(self.add)
         self.edit_button.clicked.connect(self.edit)
-        self.duplicate_button.clicked.connect(self.duplicate)
         self.delete_button.clicked.connect(self.delete)
-        buttons = QVBoxLayout()
-        for button in (self.add_button, self.edit_button, self.duplicate_button,
-                       self.delete_button):  # fmt: skip
-            buttons.addWidget(button)
-        buttons.addStretch(1)
-        row = QHBoxLayout()
-        row.addWidget(self.list, 1)
-        row.addLayout(buttons)
+        profile_buttons = [self.add_button, self.edit_button, self.delete_button]
+        row_menu(self.list, self.fill_row_menu)  # Duplicate too
         self.default = QComboBox()
         self.default.setEnabled(self.can_edit)
-        default_row = QFormLayout()
-        default_row.addRow(_("Hosts with no profile &use:"), self.default)
-        inner = QVBoxLayout(profiles_box)
-        inner.addLayout(folder_row)
-        inner.addWidget(self.builtin_note)
-        inner.addWidget(hint(access))
+        self.default.currentIndexChanged.connect(lambda _i: self._default_picked())
+        inner = self.content
+        inner.addWidget(with_buttons(self.list, profile_buttons))
         self.profiles_skipped = skipped_note(self.store.problems)
+        inner.addWidget(notes(access))
+        inner.addWidget(self.builtin_note)
         inner.addWidget(self.profiles_skipped)
-        inner.addLayout(row)
-        inner.addLayout(default_row)
-
-        tools_box = QGroupBox(_("Remote tools"))
-        tools_layout = QVBoxLayout(tools_box)
-        tools_layout.addWidget(
-            hint(
-                _("Where each tool is installed, set once for everyone on this PC.")
-                if self.can_edit_tools
-                else _(
-                    "Where each tool is installed, set once for everyone on this PC. Read-only: "
-                    "only people Windows lets write the tools folder can change it."
-                )
+        inner.addWidget(
+            SettingRow(
+                _("Hosts with no profile &use"),
+                _("The profile a host connects with when it has none of its own."),
+                self.default,
             )
         )
-        self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])
-        tools_layout.addWidget(self.tools_skipped)
-        self._tools_grid = QGridLayout()
-        self._tools_grid.setColumnStretch(2, 1)
-        tools_layout.addLayout(self._tools_grid)
 
-        self.body.addWidget(profiles_box, 1)
-        self.body.addWidget(tools_box)
         self._fill_profiles(select=None)
-        self.default.setCurrentIndex(max(self.default.findData(self.store.default_id()), 0))
-        self._fill_tools()
 
-    # ---- profiles (a working copy until Save) ----
+    def _written(self) -> None:
+        self._show_folder_state()  # the first change makes the folder
+
+    def _save_failed(self) -> str:
+        return _("Couldn't save the connection profiles: {error}")
 
     def _fill_profiles(self, select: str | None) -> None:
-        current_default = self.default.currentData() or self.store.default_id()
         self.list.clear()
+        self.default.blockSignals(True)  # filling it isn't picking a default
         self.default.clear()
-        for profile in sorted(self._profiles.values(), key=lambda p: p.name.casefold()):
-            item = QListWidgetItem(profile.name)
-            item.setData(Qt.ItemDataRole.UserRole, profile.id)
-            self.list.addItem(item)
+        for profile in sorted(self.store.all(), key=lambda p: p.name.casefold()):
+            entry = self.catalogs.tools.find(profile.tool)
+            tool = entry.item.name if entry else profile.tool
+            item = QTreeWidgetItem([profile.name, tool, login_label(profile.login, tool)])
+            item.setData(0, Qt.ItemDataRole.UserRole, profile.id)
+            for column in range(3):
+                item.setToolTip(column, item.text(column))  # whole, if the column cuts it
+            if profile.login == "none":
+                item.setToolTip(
+                    2,
+                    _(
+                        "CapyPanel asks for nothing: {tool} asks for the user and "
+                        "password itself when it connects."
+                    ).format(tool=tool),
+                )
+            self.list.addTopLevelItem(item)
             if profile.id == select:
                 item.setSelected(True)
                 self.list.setCurrentItem(item)
             self.default.addItem(profile.name, profile.id)
-        self.default.setCurrentIndex(max(self.default.findData(current_default), 0))
+        self.default.setCurrentIndex(max(self.default.findData(self.store.default_id()), 0))
+        self.default.blockSignals(False)
+        fit_rows(self.list)
         self._update_buttons()
+        self._show_folder_state()
 
     def _selected(self) -> ConnectionProfile | None:
         items = self.list.selectedItems()
-        return self._profiles.get(items[0].data(Qt.ItemDataRole.UserRole)) if items else None
+        return self.store.find(items[0].data(0, Qt.ItemDataRole.UserRole)) if items else None
 
     def _update_buttons(self) -> None:
         picked = self.can_edit and self._selected() is not None
         self.add_button.setEnabled(self.can_edit)
-        for button in (self.edit_button, self.duplicate_button, self.delete_button):
+        for button in (self.edit_button, self.delete_button):
             button.setEnabled(picked)
 
+    def fill_row_menu(self, menu: QMenu) -> None:
+        picked = self.can_edit and self._selected() is not None
+        add_action(menu, _("&Edit…"), self.edit, picked)
+        add_action(menu, _("D&uplicate…"), self.duplicate, picked)
+        menu.addSeparator()
+        add_action(menu, _("&Delete…"), self.delete, picked)
+
     def _dialog(self, title: str, profile: ConnectionProfile | None) -> ProfileDialog:
-        tools = [self._tool_view(e.item) for e in self.catalogs.tools.all()]
+        tools = [e.item for e in self.catalogs.tools.all()]
         installed = {t.id for t in tools if detect.find_executable(t) is not None}
         return ProfileDialog(self, title, tools, installed, profile)
+
+    def _taken(self) -> dict[str, ConnectionProfile]:
+        return {p.id: p for p in self.store.all()}
 
     def add(self) -> None:
         dialog = self._dialog(_("New connection profile"), None)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            new_id = make_id(dialog.name.text().strip(), self._profiles)
-            self._keep(dialog.profile(new_id), dialog.new_settings)
+            new = dialog.profile(make_id(dialog.name.text().strip(), self._taken()))
+            self._save(new, dialog.new_settings)
 
     def edit(self) -> None:
         profile = self._selected()
@@ -416,7 +413,7 @@ class ConnectionsPage(Page):
         dialog = self._dialog(_("Edit connection profile"), profile)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             edited = replace(dialog.profile(profile.id), extra=profile.extra)
-            self._keep(edited, dialog.new_settings)
+            self._save(edited, dialog.new_settings)
 
     def duplicate(self) -> None:
         profile = self._selected()
@@ -425,13 +422,13 @@ class ConnectionsPage(Page):
         copy = replace(profile, name=_("{profile} (copy)").format(profile=profile.name))
         dialog = self._dialog(_("Duplicate connection profile"), copy)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            new = dialog.profile(make_id(dialog.name.text().strip(), self._profiles))
+            new = dialog.profile(make_id(dialog.name.text().strip(), self._taken()))
             content = dialog.new_settings
             if content is None and new.settings_file:
                 content = self._settings_content(profile)  # the copy gets its own file
                 if content is None:
                     new = replace(new, settings_file="")
-            self._keep(new, content)
+            self._save(new, content)
 
     def delete(self) -> None:
         profile = self._selected()
@@ -450,11 +447,7 @@ class ConnectionsPage(Page):
             )
         if not confirm(self, _("Delete connection profile"), text, _("Delete")):
             return
-        del self._profiles[profile.id]
-        self._settings.pop(profile.id, None)
-        self._changed.discard(profile.id)
-        if self.store.find(profile.id) is not None:
-            self._deleted.add(profile.id)
+        self._write(lambda: self.store.delete(profile.id), self._save_failed())
         self._fill_profiles(select=None)
 
     def _uses(self, profile_id: str) -> tuple[int, int]:
@@ -467,102 +460,151 @@ class ConnectionsPage(Page):
         )
 
     def _settings_content(self, profile: ConnectionProfile) -> bytes | None:
-        if profile.id in self._settings:
-            return self._settings[profile.id]
         path = self.store.settings_path(profile)
         try:
             return path.read_bytes() if path is not None else None
         except OSError:
             return None
 
-    def _keep(self, profile: ConnectionProfile, settings: bytes | None = None) -> None:
-        if settings is not None:
-            self._settings[profile.id] = settings
-        elif not profile.settings_file:
-            self._settings.pop(profile.id, None)
-        self._profiles[profile.id] = profile
-        self._changed.add(profile.id)
-        self._deleted.discard(profile.id)
+    def _save(self, profile: ConnectionProfile, settings: bytes | None = None) -> None:
+        self._write(lambda: self.store.save(profile, settings), self._save_failed())
         self._fill_profiles(select=profile.id)
+
+    def _default_picked(self) -> None:
+        chosen = self.default_choice()
+        if chosen and chosen != self.store.default_id():
+            self._write(lambda: self.store.set_default(chosen), self._save_failed())
 
     def default_choice(self) -> str:
         return self.default.currentData() or ""
 
-    def has_changes(self) -> bool:
-        edited = self._changed or self._deleted or self._tool_paths or self._settings
-        return bool(edited) or self.default_choice() != self.store.default_id()
-
-    def reset(self) -> None:
-        """Back to what's saved: after the changes were saved or dropped."""
-        self._profiles = {p.id: p for p in self.store.all()}
-        for pending in (self._changed, self._deleted, self._tool_paths, self._settings):
-            pending.clear()
-        self._fill_profiles(select=None)
-        self.default.setCurrentIndex(max(self.default.findData(self.store.default_id()), 0))
-        self._fill_tools()
-        self._show_folder_state()
-
     def _show_folder_state(self) -> None:
-        exists = self.store.folder.is_dir()
-        self.open_folder.setEnabled(exists)
-        self.open_folder.setToolTip("" if exists else _("Created when you save a change"))
-        self.builtin_note.setVisible(not exists)
+        self.builtin_note.setVisible(not self.store.folder.is_dir())
 
-    def changes(self) -> ConnectionChanges:
-        return ConnectionChanges(
-            saved=tuple(self._profiles[pid] for pid in sorted(self._changed)),
-            deleted=tuple(sorted(self._deleted)),
-            default=self.default_choice(),
-            tool_paths=dict(self._tool_paths),
-            settings={pid: c for pid, c in self._settings.items() if pid in self._changed},
+
+class ToolsSection(SharedSection):
+    """Where each remote tool is on this PC, set once for everyone."""
+
+    def __init__(self, catalogs: Catalogs) -> None:
+        super().__init__(_("Remote tools"), catalogs)
+        self.can_edit_tools = catalogs.tools.can_edit()
+        tools_layout = self.content
+        # The same table as the profiles: the buttons act on the tool picked.
+        self.tools = grid_table([_("Tool"), _("Status"), _("Where")])
+        self.tools.setColumnWidth(0, 190)
+        self.tools.setColumnWidth(1, 150)
+        self.tools.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # a path keeps both ends
+        self.tools.itemSelectionChanged.connect(self._update_tool_buttons)
+        self.tools.itemDoubleClicked.connect(lambda *_a: self._double_clicked())
+        self.locate_button = QPushButton(_("Change path…"))
+        self.download_button = QPushButton(_("Download"))
+        for button, action in ((self.locate_button, "locate"), (self.download_button, "download")):
+            button.clicked.connect(lambda _c=False, a=action: self._picked_tool_action(a))
+        tool_buttons = [self.locate_button, self.download_button]
+        row_menu(self.tools, self.fill_row_menu)  # Use the automatic path too
+        tools_layout.addWidget(with_buttons(self.tools, tool_buttons))
+        tools_layout.addWidget(
+            notes(
+                _("Where each tool is installed, set once for everyone on this PC.")
+                if self.can_edit_tools
+                else _(
+                    "Where each tool is installed, set once for everyone on this PC. Read-only: "
+                    "only people Windows lets write the tools folder can change it."
+                )
+            )
         )
+        self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])
+        tools_layout.addWidget(self.tools_skipped)
 
-    # ---- tools (paths chosen here are also kept until Save) ----
+        self._fill_tools()
 
-    def _tool_view(self, tool: ToolDefinition) -> ToolDefinition:
-        if tool.id in self._tool_paths:
-            return replace(tool, executable=self._tool_paths[tool.id])
-        return tool
+    # ---- tools: a path chosen here is written at once ----
 
     def _fill_tools(self) -> None:
-        while self._tools_grid.count():
-            item = self._tools_grid.takeAt(0)
-            widget = item.widget() if item else None
-            if widget is not None:
-                widget.deleteLater()
-        self.tool_status: dict[str, QLabel] = {}
-        self.tool_buttons: dict[str, dict[str, QPushButton]] = {}
-        for row, entry in enumerate(self.catalogs.tools.all()):
-            tool = self._tool_view(entry.item)
+        picked = self._picked_tool()
+        self.tools.clear()
+        for entry in self.catalogs.tools.all():
+            tool = entry.item
             found = detect.find_executable(tool)
             if found is None:
-                status = QLabel(_("✗ Not found"))
-                status.setToolTip(_("Install it, or locate its .exe."))
+                status, where = _("✗ Not found"), "—"
+                tip = _("Install it, or locate its .exe.")
             else:
-                status = QLabel(_("✓ Your choice") if tool.executable else _("✓ Found"))
-                status.setToolTip(str(found))  # the full path, without filling the page
-            # Only the actions that make sense in this state.
-            actions = {"locate": _("Change path…") if found else _("Locate…")}
-            if tool.executable:
-                actions["automatic"] = _("Find automatically")
-            if found is None and tool.website:
-                actions["download"] = _("Download")
-            buttons_row = QHBoxLayout()
-            buttons_row.setContentsMargins(0, 0, 0, 0)
-            buttons: dict[str, QPushButton] = {}
-            for action, text in actions.items():
-                button = QPushButton(text)
-                button.clicked.connect(lambda _c=False, t=tool, a=action: self._tool_action(t, a))
-                button.setEnabled(action == "download" or self.can_edit_tools)
-                buttons_row.addWidget(button)
-                buttons[action] = button
-            buttons_row.addStretch(1)
-            buttons_box = QWidget()
-            buttons_box.setLayout(buttons_row)
-            self._tools_grid.addWidget(QLabel(tool.name), row, 0)
-            self._tools_grid.addWidget(status, row, 1)
-            self._tools_grid.addWidget(buttons_box, row, 2)
-            self.tool_status[tool.id], self.tool_buttons[tool.id] = status, buttons
+                status = _("✓ Your choice") if tool.executable else _("✓ Found")
+                where = tip = str(found)
+            item = QTreeWidgetItem([tool.name, status, where])
+            item.setData(0, Qt.ItemDataRole.UserRole, tool.id)
+            for column in (1, 2):
+                item.setToolTip(column, tip)
+            self.tools.addTopLevelItem(item)
+            if picked is not None and picked.id == tool.id:
+                self.tools.setCurrentItem(item)
+        first = self.tools.topLevelItem(0)
+        if self.tools.currentItem() is None and first is not None:
+            self.tools.setCurrentItem(first)
+        fit_rows(self.tools)
+        self._update_tool_buttons()
+
+    def _picked_tool(self) -> ToolDefinition | None:
+        item = self.tools.currentItem() if hasattr(self, "tools") else None
+        entry = self.catalogs.tools.find(item.data(0, Qt.ItemDataRole.UserRole)) if item else None
+        return entry.item if entry else None
+
+    def tool_actions(self, tool_id: str) -> list[str]:
+        """What the buttons can do for a tool, in this state: locate, automatic, download."""
+        entry = self.catalogs.tools.find(tool_id)
+        if entry is None:
+            return []
+        tool = entry.item
+        found = detect.find_executable(tool)
+        actions = ["locate"]
+        if tool.executable:
+            actions.append("automatic")
+        if found is None and tool.website:
+            actions.append("download")
+        return actions
+
+    def select_tool(self, tool_id: str) -> None:
+        for index in range(self.tools.topLevelItemCount()):
+            item = self.tools.topLevelItem(index)
+            if item is not None and item.data(0, Qt.ItemDataRole.UserRole) == tool_id:
+                self.tools.setCurrentItem(item)
+
+    def _update_tool_buttons(self) -> None:
+        """Only the actions that make sense for the tool picked, in its state."""
+        tool = self._picked_tool()
+        actions = self.tool_actions(tool.id) if tool else []
+        self.locate_button.setEnabled("locate" in actions and self.can_edit_tools)
+        self.download_button.setEnabled("download" in actions)
+
+    def fill_row_menu(self, menu: QMenu) -> None:
+        tool = self._picked_tool()
+        actions = self.tool_actions(tool.id) if tool else []
+        add_action(
+            menu,
+            _("Change path…"),
+            lambda: self._picked_tool_action("locate"),
+            "locate" in actions and self.can_edit_tools,
+        )
+        if "automatic" in actions:  # only once a path was chosen
+            add_action(
+                menu,
+                _("Use the &automatic path"),
+                lambda: self._picked_tool_action("automatic"),
+                self.can_edit_tools,
+            )
+        if "download" in actions:
+            add_action(menu, _("Download"), lambda: self._picked_tool_action("download"))
+
+    def _double_clicked(self) -> None:
+        """Like a double-click on a profile edits it: the tool's path is changed."""
+        if self.locate_button.isEnabled():
+            self._picked_tool_action("locate")
+
+    def _picked_tool_action(self, action: str) -> None:
+        tool = self._picked_tool()
+        if tool is not None:
+            self._tool_action(tool, action)
 
     def _tool_action(self, tool: ToolDefinition, action: str) -> None:
         if action == "locate":
@@ -575,9 +617,27 @@ class ConnectionsPage(Page):
     def locate(self, tool: ToolDefinition) -> None:
         name = ask_for_program(self, tool)
         if name:
-            self._tool_paths[tool.id] = name
-            self._fill_tools()
+            self._set_path(tool, name)
 
     def automatic(self, tool: ToolDefinition) -> None:
-        self._tool_paths[tool.id] = ""
+        self._set_path(tool, "")
+
+    def _set_path(self, tool: ToolDefinition, executable: str) -> None:
+        self._write(
+            lambda: self.catalogs.tools.set_paths({tool.id: executable}),
+            _("Couldn't save where the tools are: {error}"),
+        )
         self._fill_tools()
+
+
+class ConnectionsPage(Page):
+    """Settings > Connections: the profiles, and where the tools they open are."""
+
+    def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
+        super().__init__(_("Connections"))
+        self.profiles = ProfilesSection(catalogs, document)
+        self.tools = ToolsSection(catalogs)
+        for section in (self.profiles, self.tools):
+            self.body.addWidget(section)
+            section.changed.connect(self.changed.emit)
+        self.body.addStretch(1)

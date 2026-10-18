@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QGuiApplication
-from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu, QMessageBox
+from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu, QMessageBox, QToolButton
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -231,17 +231,19 @@ def test_manual_connection_uses_the_chosen_profile(
     assert dialog.request().target.port == 5901
 
 
-def test_one_copy_item_for_the_column_clicked(window: MainWindow) -> None:
+def test_copy_lists_every_column_shown_wherever_the_menu_opens(window: MainWindow) -> None:
     _select(window, "PC-A", "PC-B")
     window.commands.copy_address.trigger()  # Ctrl+Shift+C
     assert sorted(QGuiApplication.clipboard().text().split("\n")) == ["10.0.0.1", "PC-B"]
+    window.table.setColumnHidden(HostTable.COLUMNS.index("tags"), True)
     menu = QMenu()
-    address = HostTable.COLUMNS.index("address")
-    copy = window._copy_cell_action  # pyright: ignore[reportPrivateUsage]
-    assert copy(menu, address) is window.commands.copy_address  # its shortcut shows
-    name = copy(menu, 0)
-    assert name.text() == "Co&py name"
-    name.trigger()
+    window._add_copy_menu(menu)  # pyright: ignore[reportPrivateUsage]
+    copy = menu.actions()[0].menu()
+    assert isinstance(copy, QMenu)
+    items = [label(a) for a in copy.actions()]
+    assert items == ["Name", "Status", "User", "&Address"]  # Tags is hidden: not offered
+    assert copy.actions()[3] is window.commands.copy_address  # its shortcut shows
+    copy.actions()[0].trigger()
     assert sorted(QGuiApplication.clipboard().text().split("\n")) == ["PC-A", "PC-B"]
 
 
@@ -331,9 +333,8 @@ def test_hosts_with_no_profile_anywhere_use_the_shared_default(
 
 def test_the_default_profile_chosen_in_settings_is_saved_for_everyone(window: MainWindow) -> None:
     dialog = window.settings_dialog()
-    page = dialog.connections
+    page = dialog.connections.profiles
     page.default.setCurrentIndex(page.default.findData("pis"))
-    window.apply_settings(dialog.choices())
     assert window.connector.catalogs.profiles.default_id() == "pis"
     assert window.connector.default_profile() == "pis"
 
@@ -347,8 +348,10 @@ def test_profile_rows_never_overlap(window: MainWindow) -> None:
         dialog.show_page("connections")
         dialog.show()
         QApplication.processEvents()
-        rows = dialog.connections.list
-        first, second = rows.visualItemRect(rows.item(0)), rows.visualItemRect(rows.item(1))
+        rows = dialog.connections.profiles.list
+        top, below = rows.topLevelItem(0), rows.topLevelItem(1)
+        assert top is not None and below is not None
+        first, second = rows.visualItemRect(top), rows.visualItemRect(below)
         assert second.top() >= first.bottom(), theme
         dialog.close()
 
@@ -467,3 +470,13 @@ def test_right_click_acts_on_what_is_under_the_mouse(
         "Add &host…", "Add &group…"
     ]  # fmt: skip
     window.close()
+
+
+def test_connect_is_a_dropdown_that_works_with_no_host_selected(window: MainWindow) -> None:
+    _select(window)  # nothing selected
+    button = window.toolbar.connect_button
+    assert button.isEnabled()  # its menu has Manual connection, which needs no host
+    assert button.popupMode() == QToolButton.ToolButtonPopupMode.InstantPopup  # like the others
+    window._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
+    first = window.toolbar.connect_menu.actions()[0]
+    assert first is window.commands.connect_host and not first.isEnabled()

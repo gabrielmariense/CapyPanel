@@ -219,7 +219,7 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     row = window.table.visualItemRect(first)
     window._host_menu(QPoint(row.left() + 10, row.center().y()))  # on the name
     assert seen == [
-        "&Connect", "Refresh &status", "Refresh &logged-on users", "Co&py name",
+        "&Connect", "Refresh &status", "Refresh &logged-on users", "Co&py",
         "&Edit selected…", "&Move to", "&Remove selected",
     ]  # fmt: skip
 
@@ -231,9 +231,13 @@ def test_the_toolbar_lines_up_with_the_panes(window: MainWindow) -> None:
         QApplication.processEvents()
     window._align_refresh()
     QApplication.processEvents()
-    button = window.toolbar.refresh_button
-    end = button.mapTo(window, QPoint(button.width(), 0)).x()
-    assert abs(end - window.table.mapTo(window, QPoint(window.table.width(), 0)).x()) <= 1
+    bar = window.toolbar  # Connect, Refresh | Inventory | Report, from the left
+    order = [bar.connect_button, bar.refresh_button, bar.inventory_button, bar.report_button]
+    lefts = [b.mapTo(window, QPoint(0, 0)).x() for b in order]
+    assert (
+        lefts == sorted(lefts)
+        and bar.refresh_button.parentWidget() is bar.connect_button.parentWidget()
+    )
     search, nav = window.search, window.nav  # the search box's top meets the panes'
     assert search.mapTo(window, QPoint(0, 0)).y() == nav.mapTo(window, QPoint(0, 0)).y()
     connect = window.toolbar.connect_button  # and Connect starts where the panes do
@@ -279,9 +283,7 @@ def test_automatic_status_is_off_by_default_and_checks_only_status(
 ) -> None:
     assert not window._auto_timer.isActive()
     dialog = window.settings_dialog()
-    dialog.general.auto_status.setChecked(True)
-    dialog.general.auto_minutes.setValue(3)
-    window.apply_settings(dialog.choices())
+    dialog.hosts.pick_every(3)  # Custom…: every 3 minutes
     assert window._auto_timer.isActive() and window._auto_timer.interval() == 3 * 60_000
     assert window._prefs["auto_status"] == {"on": True, "minutes": 3}
     window._auto_status_check()  # what the timer does

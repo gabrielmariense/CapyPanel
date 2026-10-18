@@ -1,5 +1,6 @@
 """Where host lists live (default, personal, shared) and the recent-lists menu."""
 
+import logging
 import os
 from dataclasses import dataclass
 from enum import StrEnum
@@ -8,9 +9,13 @@ from typing import Any
 
 from capypanel.core import winsec
 from capypanel.core.hosts import listfile
+from capypanel.core.i18n import _
+
+log = logging.getLogger(__name__)
 
 RECENT_KEY = "recent_lists"  # most recent first; the first is reopened at start
 LISTS_KEY = "host_lists"  # the lists the user added, besides the default and personal ones
+HIDDEN_KEY = "hidden_lists"  # lists in a lists folder the user took out of their lists
 START_KEY = "start_list"  # "last", "default", "personal", or a list file's path
 START_LAST, START_DEFAULT, START_PERSONAL = "last", "default", "personal"
 RECENT_LIMIT = 10
@@ -70,6 +75,50 @@ def startup_order(prefs: dict[str, Any], *, default: Path, personal: Path) -> li
     return order
 
 
+def found_lists(shared_dir: Path, user_dir: Path) -> list[Path]:
+    """The lists saved in the shared and the user's lists folders, which show up with no adding.
+    A shared one another standard user made is left out, as the default list would be."""
+    found: list[Path] = []
+    for folder, shared in ((shared_dir, True), (user_dir, False)):
+        files = sorted(folder.glob("*.json"), key=lambda p: p.stem.casefold())
+        for path in files if folder.is_dir() else []:
+            if shared and not winsec.made_by_trusted(path):
+                log.warning("Host list %s left out: made by another user", path)
+                continue
+            found.append(path)
+    return found
+
+
+def available_lists(
+    prefs: dict[str, Any], *, default: Path, personal: Path, found: list[Path]
+) -> list[Path]:
+    """Every list this user can pick: the default and personal ones, those in the lists
+    folders, then the ones added from elsewhere."""
+    lists: list[Path] = []
+    for path in (default, personal, *found, *added_lists(prefs)):
+        if not any(same_path(path, p) for p in lists):
+            lists.append(path)
+    return lists
+
+
+def list_names(paths: list[Path], *, default: Path, personal: Path) -> list[str]:
+    """How lists are named everywhere: "Default", "Personal", any other by its file name.
+    Two files with the same name get their folder's name too."""
+    stems = [p.stem.casefold() for p in paths]
+    names = []
+    for path in paths:
+        kind = list_kind(path, default=default, personal=personal)
+        if kind is ListKind.DEFAULT:
+            names.append(_("Default"))
+        elif kind is ListKind.PERSONAL:
+            names.append(_("Personal"))
+        elif stems.count(path.stem.casefold()) > 1:
+            names.append(f"{path.stem} ({path.parent.name})")
+        else:
+            names.append(path.stem)
+    return names
+
+
 def recent_lists(prefs: dict[str, Any]) -> list[Path]:
     value = prefs.get(RECENT_KEY)
     if not isinstance(value, list):
@@ -103,6 +152,26 @@ def set_added_lists(prefs: dict[str, Any], paths: list[Path]) -> None:
         if not any(same_path(gone, p) for p in unique):
             forget_list(prefs, gone)
     prefs[LISTS_KEY] = [str(p) for p in unique]
+
+
+def hidden_lists(prefs: dict[str, Any]) -> list[Path]:
+    value = prefs.get(HIDDEN_KEY)
+    if not isinstance(value, list):
+        return []
+    return [Path(p) for p in value if isinstance(p, str) and p]
+
+
+def set_hidden_lists(prefs: dict[str, Any], paths: list[Path]) -> None:
+    """Lists in a lists folder taken out of this user's lists; their files stay. Like a list
+    taken out of the added ones, each is forgotten from the recent ones too."""
+    for path in paths:
+        forget_list(prefs, path)
+    prefs[HIDDEN_KEY] = [str(p) for p in paths]
+
+
+def without_hidden(prefs: dict[str, Any], found: list[Path]) -> list[Path]:
+    hidden = hidden_lists(prefs)
+    return [p for p in found if not any(same_path(p, h) for h in hidden)]
 
 
 def forget_list(prefs: dict[str, Any], path: Path) -> None:

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QMenu, QSplitter, QWidget
 
 from capypanel.core import settings
@@ -16,6 +17,7 @@ from capypanel.ui.hosts import HostDialog, group_choices
 from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.host_views import HostTable
 from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.settings import pages
 
 
 @pytest.fixture
@@ -50,13 +52,11 @@ def _table_names(win: MainWindow) -> set[str]:
 
 def test_first_start_creates_the_personal_list_with_a_hosts_group(window: MainWindow) -> None:
     doc = window.document
-    assert doc is not None and doc.path.name == "hosts.json" and doc.path.exists()
+    assert doc is not None and doc.path.name == "default.json" and doc.path.exists()
     assert [g.name for g in doc.hosts.groups] == ["Default group"]
-    assert window.windowTitle().startswith("hosts.json")
+    assert window.windowTitle().startswith("Default —")
     assert [a.text() for a in window.menuBar().actions()] == [
         "&File",
-        "&Inventory",
-        "&Connect",
         "&View",
         "&Help",
     ]
@@ -241,7 +241,9 @@ def test_reset_layout_brings_back_panes_columns_and_default_widths(
     _drag(monkeypatch, window.table, 0, 400)
     size = window.size()
     a.show_domains.setChecked(False)
-    a.reset_layout.trigger()
+    # Settings > Hosts > General > Window layout: Reset…, then Reset in its question.
+    monkeypatch.setattr(pages, "confirm", lambda *_a: True)
+    window.settings_dialog().hosts.reset_button.click()
     QApplication.processEvents()
     assert a.show_details.isChecked() and window.details.isVisible()
     assert a.show_status_bar.isChecked()
@@ -349,4 +351,37 @@ def test_an_old_saved_layout_cant_drag_a_pane_out_of_sight(
     state = old.saveState().toBase64().toStdString()
     window = MainWindow(paths, {"schema": 1, "main_splitter": state})
     assert not window._splitter.childrenCollapsible()
+    window.close()
+
+
+def test_double_clicking_the_host_table_s_right_edge_fits_it_to_its_columns(
+    window: MainWindow, office: Path
+) -> None:
+    window.open_list(office)
+    window.resize(1600, 700)
+    window.show()
+    QApplication.processEvents()
+    splitter = window._splitter  # pyright: ignore[reportPrivateUsage]
+    edge = splitter.indexOf(window.details)
+    before = splitter.sizes()
+    QTest.mouseDClick(splitter.handle(edge), Qt.MouseButton.LeftButton)
+    after = splitter.sizes()
+    assert after[edge - 1] == max(window.table.natural_width(), window._hosts_pane.minimumWidth())  # pyright: ignore[reportPrivateUsage]
+    assert sum(after) == sum(before) and after[0] == before[0]  # only those two panes change
+    window.close()
+
+
+def test_double_clicking_the_groups_panel_s_right_edge_fits_it_to_its_groups(
+    window: MainWindow, office: Path
+) -> None:
+    window.open_list(office)
+    window.resize(1600, 700)
+    window.show()
+    QApplication.processEvents()
+    splitter = window._splitter  # pyright: ignore[reportPrivateUsage]
+    before = splitter.sizes()
+    QTest.mouseDClick(splitter.handle(1), Qt.MouseButton.LeftButton)
+    after = splitter.sizes()
+    assert after[0] == max(window.nav.natural_width(), window.nav.minimumWidth())
+    assert after[0] + after[1] == before[0] + before[1] and after[2] == before[2]
     window.close()

@@ -15,9 +15,9 @@ O CapyPanel é um app de desktop para Windows feito para equipes de TI: organize
 computadores que você administra, veja quais estão ligados e quem está logado neles, e abra a tela
 remota de qualquer um pela Área de Trabalho Remota ou pelo visualizador VNC que você já usa.
 
-> **Situação: beta (0.18.0).** Roda a partir do código-fonte; ainda não há instalador.
+> **Situação: beta (0.19.0).** Roda a partir do código-fonte; ainda não há instalador.
 
-![A janela principal do CapyPanel: grupos à esquerda, hosts no meio, detalhes à direita](docs/images/main-window-dark-pt-BR.png)
+![A janela principal do CapyPanel: a barra lateral, grupos à esquerda, hosts no meio, detalhes à direita](docs/images/main-window-dark-pt-BR.png)
 
 ## O que ele faz
 
@@ -38,16 +38,15 @@ Também online, com busca: **[gabrielmariense.github.io/CapyPanel/pt-BR](https:/
 
 - [Primeiros passos](docs/getting-started.pt-BR.md): rode o CapyPanel e adicione seus primeiros
   hosts
-- [Listas de hosts](docs/host-lists.pt-BR.md): grupos, tags e as listas padrão, pessoal e
-  compartilhadas
-- [Importando e exportando hosts](docs/importing.pt-BR.md): muitos hosts de uma vez, entrando e
-  saindo em CSV
-- [Conectando](docs/connecting.pt-BR.md): visualizadores VNC, Área de Trabalho Remota, perfis de
-  conexão e senhas
-- [Verificando hosts](docs/checking.pt-BR.md): status e usuários logados
-- [Pesquisando hosts](docs/searching.pt-BR.md): encontrar um host em qualquer lugar da lista
 - [Configurações e arquivos](docs/settings-and-files.pt-BR.md): o que cada configuração faz e
   onde o CapyPanel guarda os arquivos
+- [Listas de hosts](docs/hosts/host-lists.pt-BR.md): grupos, tags e as pastas de listas
+- [Importando e exportando hosts](docs/hosts/importing.pt-BR.md): muitos hosts de uma vez, entrando
+  e saindo em CSV
+- [Conectando](docs/hosts/connecting.pt-BR.md): visualizadores VNC, Área de Trabalho Remota, perfis
+  de conexão e senhas
+- [Verificando hosts](docs/hosts/checking.pt-BR.md): status e usuários logados
+- [Pesquisando hosts](docs/hosts/searching.pt-BR.md): encontrar um host em qualquer lugar da lista
 - [Desenvolvimento](docs/development.pt-BR.md): compilar, testar e traduzir
 
 ## Início rápido (pelo código-fonte)

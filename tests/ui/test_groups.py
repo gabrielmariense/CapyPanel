@@ -522,7 +522,7 @@ def test_a_list_opens_on_all_hosts_where_it_was_left_or_its_chosen_group(
 
 def test_settings_chooses_what_the_open_list_shows_first(window: MainWindow) -> None:
     dialog = window.settings_dialog()
-    page = dialog.general
+    page = dialog.hosts
     assert page.show_first.text() == "All hosts"
     menu = page.show_first.menu()
     assert menu is not None
@@ -537,7 +537,6 @@ def test_settings_chooses_what_the_open_list_shows_first(window: MainWindow) -> 
     ]  # fmt: skip
     _choose(chosen, "alpha wing")
     assert page.show_first.text() == "Group: alpha wing"
-    window.apply_settings(dialog.choices())
     doc = window.document
     assert doc is not None
     view = locations.list_view(window._prefs, doc.path)

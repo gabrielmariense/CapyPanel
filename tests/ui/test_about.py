@@ -10,7 +10,8 @@ from PySide6.QtWidgets import QApplication, QLabel, QMenu, QPushButton
 from capypanel import BUILD, __version__
 from capypanel.core import i18n, settings
 from capypanel.ui import about, branding, language
-from capypanel.ui.about import COMPONENTS, LICENSES_DIR, AboutDialog
+from capypanel.ui.about import COMPONENTS, LICENSES_DIR, AboutPage
+from capypanel.ui.main_window import window as window_module
 from capypanel.ui.main_window.window import MainWindow
 
 
@@ -50,32 +51,32 @@ def test_the_website_opens_in_the_app_s_language(qapp: QApplication) -> None:
 
 
 def test_about_names_the_creator_the_version_and_the_license(qapp: QApplication) -> None:
-    dialog = AboutDialog(None, Path("."), portable=True)
-    tabs = [dialog.tabs.tabText(i) for i in range(dialog.tabs.count())]
-    assert tabs == ["About", "Credits", "Licenses"]
-    texts = [label.text() for label in dialog.findChildren(QLabel)]
-    assert dialog.version.text() == __version__ and dialog.version.copy_text() == BUILD
+    page = AboutPage(Path("."), portable=True)
+    titles = [w.text() for w in page.findChildren(QLabel) if w.objectName() == "sectionTitle"]
+    assert titles == ["CapyPanel", "Credits", "Licenses"]
+    texts = [label.text() for label in page.findChildren(QLabel)]
+    assert page.version.text() == __version__ and page.version.copy_text() == BUILD
     assert '© 2026 Gabriel "GMErebos" Mariense' in texts
     notice = next(t for t in texts if "with no warranty" in t)  # the GPL's notices
     assert "GPL-3.0" in notice and 'href="#licenses"' in notice
     assert any(t.endswith("portable mode") for t in texts)  # only what applies
-    assert not any(b.isDefault() or b.autoDefault() for b in dialog.findChildren(QPushButton))
-    dialog._open_link("#licenses")  # "see Licenses" opens the tab
-    assert dialog.tabs.currentIndex() == 2
+    assert not any(b.isDefault() or b.autoDefault() for b in page.findChildren(QPushButton))
 
 
 def test_licenses_list_each_part_with_a_link_to_its_shipped_text(qapp: QApplication) -> None:
-    dialog = AboutDialog(None, Path("."), portable=False)
-    texts = [label.text() for label in dialog.licenses.findChildren(QLabel)]
-    assert [c.name for c in COMPONENTS][:1] == ["CapyPanel"]  # its own license first
+    page = AboutPage(Path("."), portable=False)
+    rows = [page.licenses.topLevelItem(i) for i in range(page.licenses.topLevelItemCount())]
+    assert [r.text(0) for r in rows if r] == [c.name for c in COMPONENTS]  # CapyPanel first
     for part in COMPONENTS:
         assert (LICENSES_DIR / part.file).is_file(), part.file  # shipped, readable offline
-        assert any(part.file in t and part.license in t for t in texts)  # linked by name
-    assert any("The Qt Company" in t for t in texts)  # the library's copyright, as LGPL asks
-    dialog._open_link("license:lgpl-3.0.txt")  # read in the app, not in Notepad
-    assert dialog.reader.isVisible() and dialog.reader.windowTitle() == "Qt · LGPL-3.0"
-    assert "GNU LESSER GENERAL PUBLIC LICENSE" in dialog.reader.text.toPlainText()
-    dialog.reader.close()
+    assert any("The Qt Company" in r.text(3) for r in rows if r)  # the copyright, as LGPL asks
+    qt = rows[1]
+    assert qt is not None
+    page.licenses.setCurrentItem(qt)
+    page.read_button.click()  # read in the app, not in Notepad
+    assert page.reader.isVisible() and page.reader.windowTitle() == "Qt · LGPL-3.0"
+    assert "GNU LESSER GENERAL PUBLIC LICENSE" in page.reader.text.toPlainText()
+    page.reader.close()
 
 
 def test_a_problem_report_carries_no_user_or_computer_name(qapp: QApplication) -> None:
@@ -89,3 +90,14 @@ def test_the_app_icon_and_mascot_load(qapp: QApplication) -> None:
     assert {s.width() for s in icon.availableSizes()} == set(branding.ICON_SIZES)
     picture = branding.mascot(120, 2.0)
     assert picture.height() == 240 and picture.devicePixelRatio() == 2.0
+
+
+def test_help_about_opens_settings_on_the_about_page(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    shown: list[str] = []
+    monkeypatch.setattr(
+        window_module, "run_modal", lambda dialog: shown.append(dialog.current_page()) or 0
+    )
+    window.commands.about.trigger()
+    assert shown == ["about"]

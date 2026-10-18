@@ -43,7 +43,8 @@ script again to compile them. The tests fail until every text is translated and 
 The pages in `docs/` are also published as a website with
 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/), each time they change on
 `main`. Each English page (`name.md`) has its Portuguese version beside it
-(`name.pt-BR.md`); change both together. To preview the site while writing:
+(`name.pt-BR.md`); change both together. Pages about the whole app sit in `docs/`, and a tool's
+own pages in a folder of its own, `docs/hosts/`. To preview the site while writing:
 
 ```
 uv run --only-group docs mkdocs serve

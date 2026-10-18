@@ -1,22 +1,20 @@
-"""The Settings pages. Each one shows the current values and reports the user's choices;
-nothing here changes the app, except the host-list buttons that write a file when clicked."""
+"""The Settings pages. Each one shows the current values and reports each choice as it's
+made (`changed`); the Settings window hands it on, to apply at once."""
 
 from pathlib import Path
 
-from PySide6.QtCore import QRectF, Qt, QUrl, Signal
-from PySide6.QtGui import QColor, QDesktopServices, QIcon, QPainter, QPixmap, QResizeEvent
+from PySide6.QtCore import Qt, QUrl, Signal
+from PySide6.QtGui import QDesktopServices, QResizeEvent
 from PySide6.QtWidgets import (
-    QButtonGroup,
-    QCheckBox,
     QComboBox,
-    QGridLayout,
-    QGroupBox,
+    QDialog,
+    QDialogButtonBox,
+    QFrame,
     QHBoxLayout,
     QLabel,
-    QMenu,
     QPushButton,
-    QRadioButton,
     QSpinBox,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -26,34 +24,85 @@ from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import HostList
-from capypanel.core.i18n import _
+from capypanel.core.i18n import _, ngettext
+from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import TreeMenu, fill_host_move_menu
 from capypanel.ui.host_lists import HostListsView
-from capypanel.ui.hosts import group_path
-from capypanel.ui.notes import hint, notes
+from capypanel.ui.hosts import confirm, group_path
+from capypanel.ui.menus import MenuCombo
+from capypanel.ui.notes import notes
+from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 from capypanel.ui.themes import engine as themes
 
 
 class Page(QWidget):
-    """A settings page: a title, then its content. `changed` fires when validity may change."""
+    """A settings page: its sections, one under the other. Its title shows in the page list
+    only. `changed` fires on every choice made on it."""
 
     changed = Signal()
 
     def __init__(self, title: str) -> None:
         super().__init__()
         self.title = title
-        heading = QLabel(title)
-        heading.setObjectName("pageTitle")
-        font = heading.font()
-        font.setPointSizeF(font.pointSizeF() * 1.3)
-        font.setBold(True)
-        heading.setFont(font)
         self.body = QVBoxLayout(self)
         self.body.setContentsMargins(0, 0, 0, 0)
-        self.body.addWidget(heading)
+        self.body.setSpacing(22)  # between sections
 
-    def is_valid(self) -> bool:
-        return True
+
+class Section(QWidget):
+    """A part of a page: its title, then its settings on a soft rounded card. Lay them out in
+    `content`."""
+
+    def __init__(self, title: str) -> None:
+        super().__init__()
+        heading = QLabel(title)
+        heading.setObjectName("sectionTitle")
+        self.inner = QWidget()
+        self.inner.setObjectName("sectionCard")
+        self.inner.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)  # draws the card
+        self.content = QVBoxLayout(self.inner)
+        self.content.setContentsMargins(14, 10, 14, 12)
+        self.content.setSpacing(6)
+        column = QVBoxLayout(self)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(8)
+        column.addWidget(heading)
+        column.addWidget(self.inner, 1)
+
+
+class SettingRow(QWidget):
+    """A setting: its name over a one-line description, its control at the right end. Every
+    row's control has the same width, so controls line up on both edges down the page."""
+
+    CONTROL_WIDTH = 240
+
+    def __init__(self, name: str, description: str, control: QWidget) -> None:
+        super().__init__()
+        self.name = QLabel(name)
+        self.name.setObjectName("rowName")
+        self.name.setBuddy(control)
+        self.description = notes(description)  # the size of the notes under tables
+        words = QVBoxLayout()
+        words.setSpacing(2)
+        words.addWidget(self.name)
+        words.addWidget(self.description)
+        if not isinstance(control, QPushButton):  # a button keeps its own width: it's no value
+            control.setFixedWidth(self.CONTROL_WIDTH)
+        line = QHBoxLayout(self)
+        line.setContentsMargins(0, 4, 0, 4)
+        line.setSpacing(16)
+        line.addLayout(words, 1)
+        line.addWidget(control, 0, Qt.AlignmentFlag.AlignVCenter)
+
+
+def add_rows(layout: QVBoxLayout, *rows: SettingRow) -> None:
+    """Rows one under the other, a faint line between two."""
+    for index, row in enumerate(rows):
+        if index:
+            line = QFrame()
+            line.setObjectName("rowLine")
+            layout.addWidget(line)
+        layout.addWidget(row)
 
 
 class PathLabel(QLabel):
@@ -85,42 +134,115 @@ def open_folder(folder: Path) -> None:
     QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 
 
-class MenuCombo(QComboBox):
-    """A dropdown that opens a menu instead of a list, so it can hold submenus, and still looks
-    and sizes like the other dropdowns. Its one item is the text shown."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._menu = QMenu(self)
-
-    def menu(self) -> QMenu:
-        return self._menu
-
-    def text(self) -> str:
-        return self.currentText()
-
-    def setText(self, text: str) -> None:
-        self.clear()
-        self.addItem(text)
-
-    def showPopup(self) -> None:
-        self._menu.setMinimumWidth(self.width())
-        self._menu.popup(self.mapToGlobal(self.rect().bottomLeft()))
-
-
-# ---- General ----
+# ---- CapyPanel: General and Files ----
 
 
 class GeneralPage(Page):
+    """The app's language and theme. Both apply as soon as they're picked."""
+
+    def __init__(self, *, language: str, registry: themes.Registry, theme_id: str) -> None:
+        super().__init__(_("General"))
+        # Each language is named in its own language, so anyone can find theirs.
+        self.language = QComboBox()
+        for code, name in i18n.LANGUAGES.items():
+            self.language.addItem(name, code)
+        self.language.setCurrentIndex(max(self.language.findData(language), 0))
+        # The Windows themes, then the app's own. The window shows the theme picked: no preview.
+        self.theme = QComboBox()
+        previous = None
+        for theme in registry.all():
+            if previous and theme.engine != previous:
+                self.theme.insertSeparator(self.theme.count())
+            previous = theme.engine
+            self.theme.addItem(theme.title(), theme.id)
+        self.theme.setCurrentIndex(max(self.theme.findData(theme_id), 0))
+        section = Section(_("Language and theme"))
+        add_rows(
+            section.content,
+            SettingRow(_("&Language"), _("The app's language. Changes at once."), self.language),
+            SettingRow(
+                _("&Theme"),
+                _("Windows themes follow Windows' look and accent; CapyPanel themes look the "
+                  "same everywhere."),
+                self.theme,
+            ),
+        )  # fmt: skip
+        self.body.addWidget(section)
+        self.body.addStretch(1)
+
+    def language_choice(self) -> str:
+        return str(self.language.currentData() or i18n.DEFAULT_LANGUAGE)
+
+    def theme_id(self) -> str:
+        return str(self.theme.currentData() or themes.DEFAULT_THEME.id)
+
+
+class FilesPage(Page):
+    """Where CapyPanel keeps everything, each folder a click away."""
+
+    def __init__(self, paths: settings.Paths) -> None:
+        super().__init__(_("Files"))
+        section = Section(_("Folders"))
+        folders = (
+            (_("Shared files"), paths.root,
+             _("Connection profiles and remote tools, for everyone on this PC.")),
+            (_("Shared lists"), paths.shared_lists_dir,
+             _("The default list, and every list saved there, for everyone on this PC.")),
+            (_("Your files"), paths.user_dir,
+             _("Your settings, private to you and administrators.")),
+            (_("Your lists"), paths.user_lists_dir,
+             _("Your personal list, and every list saved there, only for you.")),
+            (_("Logs"), paths.log_dir, _("One per user, named after the account.")),
+        )  # fmt: skip
+        # The one table design; a double-click opens the folder too.
+        self.folders = grid_table([_("Folder"), _("Where")])
+        self.folders.setColumnWidth(0, 170)
+        self.folders.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # a path keeps both ends
+        for label, folder, holds in folders:
+            item = QTreeWidgetItem([label, str(folder)])
+            item.setToolTip(0, holds)  # what it holds: hover the folder's name
+            item.setToolTip(1, str(folder))
+            item.setData(0, Qt.ItemDataRole.UserRole, str(folder))
+            self.folders.addTopLevelItem(item)
+        first = self.folders.topLevelItem(0)
+        if first is not None:
+            self.folders.setCurrentItem(first)
+        fit_rows(self.folders)
+        self.open_button = QPushButton(_("Open folder"))
+        self.open_button.clicked.connect(self._open_picked)
+        self.folders.itemDoubleClicked.connect(lambda *_a: self._open_picked())
+        row_menu(self.folders, lambda menu: add_action(menu, _("Open &folder"), self._open_picked))
+        layout = section.content
+        layout.addWidget(with_buttons(self.folders, [self.open_button]))
+        lines = [_("Hover a folder to see what it holds.")]
+        if paths.portable:
+            lines.append(_("Portable mode: everything stays in the app's own folder."))
+        layout.addWidget(notes(*lines))
+        self.body.addWidget(section)
+        self.body.addStretch(1)
+
+    def _open_picked(self) -> None:
+        item = self.folders.currentItem()
+        if item is not None:
+            open_folder(Path(item.data(0, Qt.ItemDataRole.UserRole)))
+
+
+# ---- Hosts: General ----
+
+
+class HostsPage(Page):
+    """The Hosts tool's own settings: which list opens, what it shows first, Refresh, and the
+    window's layout."""
+
+    layout_reset = Signal()  # Reset… was confirmed
+
     def __init__(
         self,
-        paths: settings.Paths,
         *,
         start_list: object,
         default_list: Path,
         personal_list: Path,
         added: list[Path],
-        language: str,
         auto_status: tuple[bool, int] = (False, 5),
         start_view: tuple[str, str] | None = None,
         host_list: HostList | None = None,
@@ -128,18 +250,7 @@ class GeneralPage(Page):
         """start_view: the open list's (show, group); None when no list is open. host_list: that
         list, for its groups."""
         super().__init__(_("General"))
-        # Each language is named in its own language, so anyone can find theirs.
-        self.language = QComboBox()
-        for code, name in i18n.LANGUAGES.items():
-            self.language.addItem(name, code)
-        self.language.setCurrentIndex(max(self.language.findData(language), 0))
-        language_label = QLabel(_("&Language:"))
-        language_label.setBuddy(self.language)
-        language_row = QHBoxLayout()
-        language_row.addWidget(language_label)
-        language_row.addWidget(self.language)
-        language_row.addStretch(1)
-        start = QGroupBox(_("Startup"))
+        start = Section(_("Startup"))
         self.start_list = QComboBox()
         self.start_list.setSizeAdjustPolicy(
             QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
@@ -168,17 +279,7 @@ class GeneralPage(Page):
             )
         index = self.start_list.findData(start_list)
         self.start_list.setCurrentIndex(max(index, 0))
-        label = QLabel(_("&Open on startup:"))
-        label.setBuddy(self.start_list)
-        # Labels in one column, the dropdowns lined up beside them at the same width.
-        start_layout = QGridLayout(start)
-        start_layout.setColumnStretch(1, 1)
-        start_layout.addWidget(label, 0, 0)
-        start_layout.addWidget(self.start_list, 0, 1)
-        start_layout.addWidget(
-            notes(_("If that list can't be opened: the default list, then your personal list.")),
-            1, 0, 1, 2,
-        )  # fmt: skip
+        self.start_list.currentIndexChanged.connect(lambda _i: self.changed.emit())
         # What the open list shows first; each list keeps its own choice. One button: its menu
         # has All hosts, Where I left off, and "A chosen group" with the groups as a tree.
         self._host_list = host_list
@@ -187,70 +288,56 @@ class GeneralPage(Page):
         self.show_first.setEnabled(start_view is not None)
         self.show_first.menu().aboutToShow.connect(self._fill_first_menu)
         self._show_first_text()
-        first_label = QLabel(_("Show &first:"))
-        first_label.setBuddy(self.show_first)
-        start_layout.addWidget(first_label, 2, 0)
-        start_layout.addWidget(self.show_first, 2, 1)
-        start_layout.addWidget(
-            notes(
-                _("For the list open now; each list keeps its own. A group's right-click menu "
-                  "can choose it too.")
-                if start_view is not None
-                else _("Open a host list to choose what it shows first.")
+        self._first_row = SettingRow(_("Show &first"), "", self.show_first)
+        self._show_first_note(start_view is not None)
+        add_rows(
+            start.content,
+            SettingRow(
+                _("&Open on startup"),
+                _("If that list can't be opened: the default list, then your personal list."),
+                self.start_list,
             ),
-            3, 0, 1, 2,
+            self._first_row,
+        )
+
+        refresh = Section(_("Refresh"))
+        # One dropdown: Off, a few common intervals, and Custom… for any other.
+        self.auto_every = QComboBox()
+        self._auto_minutes = auto_status[1]  # kept while it's off, for when it's on again
+        self._shown_minutes = auto_status[1] if auto_status[0] else 0
+        self._fill_every(self._shown_minutes)
+        self.auto_every.activated.connect(self._every_picked)
+        add_rows(
+            refresh.content,
+            SettingRow(
+                _("Refresh status &by itself"),
+                _("Only ping and ports, never logged-on users, so no account is needed. "
+                  "Refresh in the toolbar always works."),
+                self.auto_every,
+            ),
         )  # fmt: skip
 
-        files = QGroupBox(_("Where CapyPanel keeps its files"))
-        grid = QGridLayout(files)
-        grid.setColumnStretch(1, 1)
-        folders = (
-            (_("Shared files"), paths.root),
-            (_("Your files"), paths.user_dir),
-            (_("Logs"), paths.log_dir),
-        )
-        for row, (label, folder) in enumerate(folders):
-            button = QPushButton(_("Open folder"))
-            button.clicked.connect(lambda _checked=False, f=folder: open_folder(f))
-            grid.addWidget(QLabel(label), row, 0)
-            grid.addWidget(PathLabel(folder), row, 1)
-            grid.addWidget(button, row, 2)
-        lines = [
-            _("Shared files: the default list, connection profiles and tools, for everyone."),
-            _("Your files: your settings and personal list, private to you and admins."),
-            _("Logs: one per user, named after the account."),
-        ]
-        if paths.portable:
-            lines.append(_("Portable mode: everything stays in the app's own folder."))
-        grid.addWidget(notes(*lines), len(folders), 0, 1, 3)
-
-        refresh = QGroupBox(_("Refresh"))
-        self.auto_status = QCheckBox(_("&Refresh the status of the hosts shown every"))
-        self.auto_status.setChecked(auto_status[0])
-        self.auto_minutes = QSpinBox()
-        self.auto_minutes.setRange(1, 120)
-        self.auto_minutes.setValue(auto_status[1])
-        self.auto_minutes.setSuffix(_(" min"))
-        self.auto_minutes.setEnabled(auto_status[0])
-        self.auto_status.toggled.connect(self.auto_minutes.setEnabled)
-        auto_row = QHBoxLayout()
-        auto_row.addWidget(self.auto_status)
-        auto_row.addWidget(self.auto_minutes)
-        auto_row.addStretch(1)
-        refresh_layout = QVBoxLayout(refresh)
-        refresh_layout.addLayout(auto_row)
-        refresh_layout.addWidget(
-            notes(
-                _("Only ping and ports, never logged-on users, so no account is used."),
-                _("Off by default; Refresh in the toolbar always works."),
-            )
+        layout = Section(_("Layout"))
+        self.reset_button = QPushButton(_("&Reset…"))
+        self.reset_button.clicked.connect(self._reset_layout)
+        add_rows(
+            layout.content,
+            SettingRow(
+                _("Window layout"),
+                _("Panel sizes, columns and the panels shown, back to how they first were."),
+                self.reset_button,
+            ),
         )
 
-        self.body.addLayout(language_row)
         self.body.addWidget(start)
         self.body.addWidget(refresh)
-        self.body.addWidget(files)
+        self.body.addWidget(layout)
         self.body.addStretch(1)
+
+    def _reset_layout(self) -> None:
+        question = _("Panel sizes, columns and the panels shown go back to how they first were.")
+        if confirm(self, _("Reset window layout"), question, _("Reset")):
+            self.layout_reset.emit()
 
     def start_choice(self) -> str:
         return str(self.start_list.currentData())
@@ -281,6 +368,21 @@ class GeneralPage(Page):
     def pick_first(self, show: str, group: str = "") -> None:
         self._first = (show, group)
         self._show_first_text()
+        self.changed.emit()
+
+    def list_opened(self, start_view: tuple[str, str] | None, host_list: HostList | None) -> None:
+        """Another list is open: Show first is now about it."""
+        self._host_list, self._first = host_list, start_view or (locations.SHOW_ALL, "")
+        self.show_first.setEnabled(start_view is not None)
+        self._show_first_text()
+        self._show_first_note(start_view is not None)
+
+    def _show_first_note(self, open_list: bool) -> None:
+        self._first_row.description.setText(
+            _("For the list open now; each list keeps its own.")
+            if open_list
+            else _("Open a host list to choose what it shows first.")
+        )
 
     def _show_first_text(self) -> None:
         show, group = self._first
@@ -295,18 +397,81 @@ class GeneralPage(Page):
         """(show, group) for the open list; None when no list is open."""
         return self._first if self.show_first.isEnabled() else None
 
-    def language_choice(self) -> str:
-        return str(self.language.currentData() or i18n.DEFAULT_LANGUAGE)
-
     def auto_status_choice(self) -> tuple[bool, int]:
-        return self.auto_status.isChecked(), self.auto_minutes.value()
+        minutes = self.auto_every.currentData()
+        return (minutes > 0, minutes) if minutes else (False, self._auto_minutes)
+
+    EVERY = (1, 5, 15, 30)  # minutes offered in the dropdown, besides Custom…
+    CUSTOM = -1
+
+    def _fill_every(self, minutes: int) -> None:
+        """Off, the common intervals, any other interval in use, then Custom…."""
+        self.auto_every.clear()
+        self.auto_every.addItem(_("Off"), 0)
+        offered: set[int] = {*self.EVERY, minutes} if minutes > 0 else set(self.EVERY)
+        for every in sorted(offered):
+            self.auto_every.addItem(every_text(every), every)
+        self.auto_every.addItem(_("Custom…"), self.CUSTOM)
+        self.auto_every.setCurrentIndex(max(self.auto_every.findData(minutes), 0))
+
+    def _every_picked(self, index: int) -> None:
+        minutes = self.auto_every.itemData(index)
+        if minutes == self.CUSTOM:
+            chosen = self._ask_minutes()
+            if chosen is None:  # cancelled: back to what it was
+                self._fill_every(self._shown_minutes)
+                return
+            minutes = chosen
+        self.pick_every(minutes)
+
+    def pick_every(self, minutes: int) -> None:
+        """Refresh by itself every `minutes`; 0 is off."""
+        if minutes > 0:
+            self._auto_minutes = minutes
+        self._fill_every(minutes)
+        self._shown_minutes = minutes
+        self.changed.emit()
+
+    def _ask_minutes(self) -> int | None:
+        return ask_minutes(self, self._auto_minutes)
+
+
+def every_text(minutes: int) -> str:
+    return ngettext("Every minute", "Every {n} minutes", minutes).format(n=minutes)
+
+
+def ask_minutes(parent: QWidget, start: int) -> int | None:
+    """Custom…: how often, in minutes. Neither button is a default one."""
+    dialog = QDialog(parent)
+    dialog.setWindowTitle(_("Refresh status by itself"))
+    minutes = QSpinBox()
+    minutes.setRange(1, 120)
+    minutes.setValue(start)
+    minutes.setSuffix(_(" min"))
+    buttons = QDialogButtonBox(
+        QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+    )
+    for button in buttons.buttons():
+        if isinstance(button, QPushButton):
+            button.setAutoDefault(False)
+            button.setDefault(False)
+    buttons.accepted.connect(dialog.accept)
+    buttons.rejected.connect(dialog.reject)
+    row = QHBoxLayout()
+    row.addWidget(QLabel(_("Every")))
+    row.addWidget(minutes, 1)
+    layout = QVBoxLayout(dialog)
+    layout.addLayout(row)
+    layout.addWidget(buttons)
+    accepted = run_modal(dialog) == QDialog.DialogCode.Accepted
+    return minutes.value() if accepted else None
 
 
 # ---- Host lists ----
 
 
 class HostListsPage(Page):
-    """The same lists as File > Host lists…; the one picked here opens on Save."""
+    """The same lists as the list dropdown; a double-click opens one."""
 
     def __init__(
         self,
@@ -315,17 +480,23 @@ class HostListsPage(Page):
         personal_list: Path,
         document: OpenList | None,
         added: list[Path],
+        found: list[Path] | None = None,
+        hidden: list[Path] | None = None,
     ) -> None:
         super().__init__(_("Host lists"))
         self.view = HostListsView(
-            default_list=default_list, personal_list=personal_list, added=added, document=document
+            default_list=default_list,
+            personal_list=personal_list,
+            added=added,
+            document=document,
+            found=found,
+            hidden=hidden,
         )
-        self.body.addWidget(self.view, 1)
+        box = Section(_("Host lists"))
+        box.content.addWidget(self.view)
+        self.body.addWidget(box)
+        self.body.addStretch(1)
         self.view.changed.connect(self.changed.emit)
-
-    @property
-    def written(self) -> list[Path]:
-        return self.view.written
 
     def chosen(self) -> Path | None:
         return self.view.selected()
@@ -333,95 +504,5 @@ class HostListsPage(Page):
     def added(self) -> list[Path]:
         return list(self.view.added)
 
-    def is_valid(self) -> bool:
-        return self.view.can_open(self.chosen())
-
-
-# ---- Appearance ----
-
-
-class AppearancePage(Page):
-    def __init__(self, registry: themes.Registry, current_id: str) -> None:
-        super().__init__(_("Appearance"))
-        self._group = QButtonGroup(self)
-        native = QGroupBox(_("Windows"))
-        native_layout = QVBoxLayout(native)
-        native_layout.addWidget(hint(_("Native Windows styling, with your accent color.")))
-        custom = QGroupBox(_("CapyPanel"))
-        custom_layout = QVBoxLayout(custom)
-        custom_layout.addWidget(hint(_("CapyPanel's own appearance, the same on every computer.")))
-        for theme in registry.all():
-            button = QRadioButton(theme.title())
-            button.setIcon(theme_swatch(theme))
-            button.setIconSize(SWATCH.size().toSize())
-            button.setProperty("theme_id", theme.id)
-            button.setChecked(theme.id == current_id)
-            self._group.addButton(button)
-            (native_layout if theme.engine == "native" else custom_layout).addWidget(button)
-        self.body.addWidget(native)
-        self.body.addWidget(custom)
-        self.body.addWidget(hint(_("You can also change the theme under View > Theme.")))
-        self.body.addStretch(1)
-
-    def theme_id(self) -> str:
-        button = self._group.checkedButton()
-        return str(button.property("theme_id")) if button else themes.DEFAULT_THEME.id
-
-    def buttons(self) -> list[QRadioButton]:
-        return [b for b in self._group.buttons() if isinstance(b, QRadioButton)]
-
-
-SWATCH = QRectF(0, 0, 44, 30)
-WINDOWS_BLUE = QColor("#0078d4")  # a stand-in: the real accent is only known once applied
-
-
-def theme_swatch(theme: themes.Theme) -> QIcon:
-    """A tiny picture of the theme: background, header bar, a pane with a selected row."""
-    pixmap = QPixmap(SWATCH.size().toSize())
-    pixmap.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    if theme.scheme == "system":  # follow system: half light, half dark
-        half = SWATCH.width() / 2
-        _paint_scheme(painter, _swatch_colors(theme, "light"), QRectF(0, 0, half, SWATCH.height()))
-        _paint_scheme(
-            painter, _swatch_colors(theme, "dark"), QRectF(half, 0, half, SWATCH.height())
-        )
-    else:
-        _paint_scheme(painter, _swatch_colors(theme, theme.scheme), SWATCH)
-    painter.setPen(QColor(128, 128, 128))
-    painter.setBrush(Qt.BrushStyle.NoBrush)
-    painter.drawRoundedRect(SWATCH.adjusted(0.5, 0.5, -0.5, -0.5), 4, 4)
-    painter.end()
-    return QIcon(pixmap)
-
-
-def _swatch_colors(theme: themes.Theme, scheme: str) -> dict[str, str]:
-    if theme.engine == "custom":
-        c = theme.colors
-        return {"bg": c["bg"], "chrome": c["chrome"], "card": c["card"], "border": c["border"],
-                "sel": c["sel_solid"], "text": c["text2"]}  # fmt: skip
-    t = themes.NATIVE_TOKENS[scheme]
-    sel = themes.selection_tint(WINDOWS_BLUE, t["card"], t["text"])
-    return {"bg": t["bg"], "chrome": t["chrome"], "card": t["card"], "border": t["border"],
-            "sel": sel, "text": t["text2"]}  # fmt: skip
-
-
-def _paint_scheme(painter: QPainter, c: dict[str, str], area: QRectF) -> None:
-    painter.save()
-    painter.setClipRect(area)
-    painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(QColor(c["bg"]))
-    painter.drawRoundedRect(SWATCH, 4, 4)
-    painter.setBrush(QColor(c["chrome"]))
-    painter.drawRect(QRectF(0, 0, SWATCH.width(), 7))
-    pane = QRectF(5, 10, SWATCH.width() - 10, SWATCH.height() - 14)
-    painter.setPen(QColor(c["border"]))
-    painter.setBrush(QColor(c["card"]))
-    painter.drawRect(pane)
-    painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(QColor(c["sel"]))
-    painter.drawRect(QRectF(pane.left() + 1, pane.top() + 3, pane.width() - 2, 5))
-    painter.setBrush(QColor(c["text"]))
-    painter.drawRect(QRectF(pane.left() + 4, pane.top() + 11, pane.width() * 0.5, 2))
-    painter.restore()
+    def hidden(self) -> list[Path]:
+        return list(self.view.hidden)

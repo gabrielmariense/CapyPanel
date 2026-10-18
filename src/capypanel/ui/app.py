@@ -8,7 +8,8 @@ from types import TracebackType
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from capypanel import BUILD, __version__
-from capypanel.core import applog, i18n, migration, settings
+from capypanel.core import applog, files, i18n, migration, settings
+from capypanel.core.files import can_create_files
 from capypanel.core.i18n import _
 from capypanel.core.tools.profile_store import ProfileStore
 from capypanel.ui import branding, language
@@ -41,6 +42,14 @@ def run(argv: list[str] | None = None) -> int:
             log.info("Copied from an older version: %s", copied)
     except OSError:
         log.exception("Couldn't copy files from an older version")
+    try:
+        # The lists folders are there from the first start: the shared one for everyone,
+        # changed only by its maker and administrators; the user's own inside their folder.
+        if not paths.shared_lists_dir.is_dir() and can_create_files(paths.shared_lists_dir):
+            files.make_shared_folder(paths.shared_lists_dir)
+        paths.user_lists_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        log.exception("Couldn't create the lists folders")
     try:
         ProfileStore(paths.profiles_dir).place_starters()
     except OSError:

@@ -96,3 +96,27 @@ def test_a_list_taken_out_is_forgotten_and_does_not_reopen() -> None:
     locations.set_added_lists(prefs, [b])  # taken out in File > Host lists
     assert locations.recent_lists(prefs) == [b]
     assert locations.added_lists(prefs) == [b]
+
+
+def test_lists_in_the_lists_folders_show_up_by_themselves(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    shared, mine = tmp_path / "lists", tmp_path / "me" / "lists"
+    for folder, names in ((shared, ("Wards", "branch")), (mine, ("my-lab",))):
+        folder.mkdir(parents=True)
+        for name in names:
+            (folder / f"{name}.json").write_text("{}", encoding="utf-8")
+    planted = shared / "planted.json"
+    planted.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(winsec, "made_by_trusted", lambda path: path != planted)
+    found = locations.found_lists(shared, mine)
+    assert [p.name for p in found] == ["branch.json", "Wards.json", "my-lab.json"]  # no planted
+    default, personal = tmp_path / "hosts.json", tmp_path / "me" / "hosts.json"
+    added = tmp_path / "share" / "branch.json"
+    prefs: dict[str, Any] = {locations.LISTS_KEY: [str(added), str(found[0])]}
+    lists = locations.available_lists(prefs, default=default, personal=personal, found=found)
+    assert lists == [default, personal, *found, added]  # each once
+    names = locations.list_names(lists, default=default, personal=personal)
+    assert names == [
+        "Default", "Personal", "branch (lists)", "Wards", "my-lab", "branch (share)"
+    ]  # fmt: skip

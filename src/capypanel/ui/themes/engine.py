@@ -14,6 +14,7 @@ Shipped theme files (this folder, *.json) override some tokens of a base:
 import ctypes
 import json
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -133,6 +134,7 @@ class Registry:
 
 _current: Theme = DEFAULT_THEME
 _applied_once = False
+_generation = 0  # counts theme switches: a window open across one is never deleted
 _watching_system = False
 _native_font: QFont | None = None
 _watcher: QObject | None = None
@@ -142,12 +144,17 @@ def current() -> Theme:
     return _current
 
 
+def generation() -> int:
+    return _generation
+
+
 def apply(theme: Theme) -> None:
     """Switches the whole app's look, live. The comments mark workarounds found in the UI spike."""
-    global _current, _applied_once, _native_font
+    global _current, _applied_once, _native_font, _generation
     app = QApplication.instance()
     if not isinstance(app, QApplication):
         return
+    _generation += 1
     if _native_font is None:
         _native_font = QFont(app.font())
     scheme = {
@@ -211,6 +218,7 @@ def native_tokens(accent: QColor) -> dict[str, str]:
     tokens["accent"] = accent.name()
     tokens["accent_text"] = readable_on(accent, tokens["card"], tokens["text"])
     tokens["accent_drop"] = readable_on(accent, tokens["sel"], tokens["text"])
+    tokens.update(_card_tokens(tokens))
     tokens["arrow"] = (THEMES_DIR / f"arrow-{native_scheme()}.svg").as_posix()
     return tokens
 
@@ -266,6 +274,17 @@ def menu_mark() -> QColor:
         return QColor(mark_tint(accent, tokens["card"], tokens["text"]))
     colors = _current.colors
     return QColor(mark_tint(QColor(colors["accent"]), colors["card"], colors["text"]))
+
+
+def _card_tokens(colors: Mapping[str, str]) -> dict[str, str]:
+    """Settings' cards: between the window and a pane, a faint edge, and the line beside the
+    page list. Worked out from each theme's own colours."""
+    bg = QColor(colors["bg"])
+    return {
+        "section": _mix(QColor(colors["card"]), bg, 0.6),
+        "section_edge": _mix(QColor(colors["border"]), bg, 0.3),
+        "pages_line": _mix(QColor(colors["border"]), bg, 0.5),
+    }
 
 
 def _mix(color: QColor, base: QColor, amount: float) -> str:
@@ -415,6 +434,12 @@ QToolBar QToolButton { padding: 3px 9px; border: 1px solid %(border)s; backgroun
 QToolBar QToolButton:hover { background: %(hover)s; color: %(text)s; }
 QToolBar QToolButton:disabled { color: %(text3)s; }
 QFrame#toolDivider { background: %(border)s; border: none; }
+/* The tool rail: its own strip on the left edge; the tool shown sits on a rounded tint. */
+QWidget#toolRail { background: %(chrome)s; border-right: 1px solid %(border)s; }
+QWidget#toolRail QToolButton { border: none; background: transparent; border-radius: 8px;
+                               padding: 0; }
+QWidget#toolRail QToolButton:hover { background: %(hover)s; }
+QWidget#toolRail QToolButton:checked { background: %(sel_solid)s; }
 QToolBar QToolButton[popupMode="1"] { padding-right: 29px; }
 QToolBar QToolButton[popupMode="2"] { padding-right: 24px; }
 /* The arrow of a split button (Connect): a short divider, then the arrow, with its own hover. */
@@ -490,6 +515,12 @@ QFrame#divider { background: %(border)s; border: none; }
 /* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
 QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
 QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
+/* Settings: each section's settings on a soft card under a larger title; a line beside the
+   page list. */
+QLabel#sectionTitle { color: %(accent_text)s; font-weight: bold; font-size: 12pt; }
+QWidget#sectionCard { background: %(section)s; border: 1px solid %(section_edge)s;
+                      border-radius: 10px; }
+QFrame#pagesDivider { background: %(pages_line)s; border: none; }
 QLabel#copyValue { padding: 2px 4px; border-radius: 4px; }
 QLabel#copyValue:hover { background: %(hover)s; }
 QLabel#tagValue { background: %(sel_solid)s; border-radius: 9px; padding: 2px 9px; }
@@ -501,7 +532,13 @@ QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
 /* The Groups heading while a group is dragged over it: dropping moves it to the top. */
 QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel_solid)s;
                                      border-radius: %(r2)spx; }
-QListView#pageList::item { padding: 7px 10px; }
+/* Settings' page list sits straight on the window; the page shown is on a rounded tint, as on
+   the rail. */
+QListView#pageList { background: transparent; border: none; padding: 0; }
+QListView#pageList::item { padding: 7px 10px; border-radius: %(r2)spx; }
+/* A setting's row: its name over a one-line description; a faint line between two rows. */
+QLabel#rowName { font-weight: 600; }
+QFrame#rowLine { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
 
 /* Fusion outlines these with a darker shade of the background, invisible in dark themes. */
 QRadioButton::indicator, QCheckBox::indicator {
@@ -522,7 +559,8 @@ QSplitter::handle:horizontal { width: 8px; }
 QPushButton { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx;
               padding: 6px 20px; }
 QPushButton:hover { background: %(raised)s; }
-QPushButton:disabled { color: %(text3)s; }
+/* Greyed: faint text on no fill, clearly unlike a button that works. */
+QPushButton:disabled { color: %(text3)s; background: transparent; }
 QPushButton:default { background: %(button)s; border-color: %(button)s; color: #ffffff; }
 QPushButton:default:hover { background: %(button_hover)s; }
 QPushButton:default:disabled { background: %(raised)s; border-color: %(border)s; color: %(text3)s; }
@@ -556,11 +594,16 @@ QToolBar#main { border: none; border-bottom: 1px solid %(border)s; }
 QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; }
 /* Only the settings page list, not every QListView: combo box pop-ups are list views too. */
-QTreeView, QListView#pageList, QFrame#card { background: %(card)s; border: 1px solid %(border)s; }
+QTreeView, QFrame#card { background: %(card)s; border: 1px solid %(border)s; }
 /* outline: 0 hides Windows' focus box around the current row; the tint already marks it. */
 QTreeView, QListView#pageList { outline: 0; }
 QTreeView::item { padding: 4px 2px; }
-QListView#pageList::item { padding: 4px 8px; }
+/* Settings' page list sits straight on the window; the page shown is on a rounded tint. */
+QListView#pageList { background: transparent; border: none; }
+QListView#pageList::item { padding: 6px 8px; border-radius: 6px; }
+/* A setting's row: its name over a one-line description; a faint line between two rows. */
+QLabel#rowName { font-weight: 600; }
+QFrame#rowLine { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
 QTreeView::item:hover, QListView#pageList::item:hover { background: %(hover)s; }
 QTreeView::item:selected, QListView#pageList::item:selected {
     background: %(sel)s; color: %(text)s; }
@@ -574,6 +617,12 @@ QTreeView#grid QHeaderView::section:only-one { border-right: none; }
 /* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
 QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
 QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
+/* Settings: each section's settings on a soft card under a larger title; a line beside the
+   page list. */
+QLabel#sectionTitle { color: %(accent_text)s; font-weight: bold; font-size: 12pt; }
+QWidget#sectionCard { background: %(section)s; border: 1px solid %(section_edge)s;
+                      border-radius: 10px; }
+QFrame#pagesDivider { background: %(pages_line)s; border: none; }
 QLabel#copyValue { padding: 2px 4px; border-radius: 4px; }
 QLabel#copyValue:hover { background: %(hover)s; }
 QLabel#tagValue { background: %(sel)s; border-radius: 9px; padding: 2px 9px; }
@@ -598,6 +647,12 @@ QToolBar#main QToolButton::menu-indicator { subcontrol-position: right center; r
 QToolBar#main QToolButton::menu-arrow { subcontrol-origin: padding;
                                         subcontrol-position: center; }
 QFrame#toolDivider { background: %(border)s; border: none; }
+/* The tool rail: its own strip on the left edge; the tool shown sits on a rounded tint. */
+QWidget#toolRail { background: %(chrome)s; border-right: 1px solid %(border)s; }
+QWidget#toolRail QToolButton { border: none; background: transparent; border-radius: 8px;
+                               padding: 0; }
+QWidget#toolRail QToolButton:hover { background: %(hover)s; }
+QWidget#toolRail QToolButton:checked { background: %(sel)s; }
 QTreeView#flat { border: none; background: transparent; }
 QLineEdit#paneSearch { background: %(card)s; border: 1px solid %(border)s; padding: 5px 6px; }
 QFrame#divider { background: %(border)s; border: none; }
@@ -618,6 +673,7 @@ def stylesheet(theme: Theme) -> str:
     accent = QColor(colors["accent"])
     t["accent_text"] = readable_on(accent, colors["card"], colors["text"])
     t["accent_drop"] = readable_on(accent, colors["sel_solid"], colors["text"])
+    t.update(_card_tokens(colors))
     t["button"] = button_fill(accent)
     t["button_hover"] = button_fill(QColor(colors["accent_hover"]))
     t["check"] = (THEMES_DIR / "check.svg").as_posix()

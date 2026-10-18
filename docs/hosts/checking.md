@@ -1,20 +1,20 @@
 # Checking hosts
 
 CapyPanel can check whether hosts are on and who is logged on to them. The results show in the
-host table's **Status** and **User** columns and in the **Details** pane. They're kept in
+host table's **Status** and **User** columns and in the **Details** panel. They're kept in
 memory only: never in the list file, and gone when CapyPanel closes. Editing a host's address
-clears its results. To keep them, **Inventory > Export hosts…** writes the last check into a CSV,
-and offers to check the hosts first (see [Importing and exporting hosts](importing.md)).
+clears its results. To keep them, **Report** on the toolbar writes the last check into a CSV, and
+offers to check the hosts first (see [Importing and exporting hosts](importing.md)).
 
 ## Refresh
 
-**Refresh**, on the right of the toolbar, checks every host the table shows: the group picked on
-the left with its subgroups, a tag, All hosts, No group, or the results of a search. Nothing needs to be
-selected.
+**Refresh**, on the toolbar, checks every host the table shows: the group picked in the Groups
+panel with its subgroups, a tag, All hosts, No group, or the results of a search. Nothing needs to
+be selected.
 
 - Click it and choose **Status** or **Logged-on users**.
-- Right-click it to tick both and click **Run**. CapyPanel remembers the ticks, and its tooltip
-  says what they are.
+- Right-click it for the **Refresh every host shown** panel: tick both and click **Run**.
+  CapyPanel remembers the ticks, and its tooltip says what they are.
 - **F5** does the same as that **Run**, on the hosts shown, without opening the panel. It's
   ignored while a check is already running.
 
@@ -37,23 +37,28 @@ isn't a computer name, is skipped with a note in the status bar.
 The ports are 445 (Windows file sharing), 22 (SSH) and each tool's own port, such as 5900 for VNC
 and 3389 for Remote Desktop. A refused connection counts as an answer. Every address the name has
 is tried, cable and Wi-Fi alike. Hover over a status to see when it was checked and which address
-answered: a PC that answers only on its Wi-Fi address may have its cable out. The Details pane
+answered: a PC that answers only on its Wi-Fi address may have its cable out. The Details panel
 says it under the host's name, as "Online · checked 10:41", or "Not checked: use Refresh".
 
 Status uses no account and needs no administrator rights.
 
 ### Automatic status
 
-**Settings > General > Refresh** can check the status of the hosts shown every few minutes (from 1
-to 120, 5 by default). It only pings and tries ports, never reads logged-on users, so no account
-is used. It's off by default: nothing is checked by itself unless you turn it on.
+**Settings > Hosts > General > Refresh > Refresh status by itself** can check the status of the
+hosts shown every few minutes: **Every minute**, **Every 5 minutes**, **Every 15 minutes**, **Every
+30 minutes**, or **Custom…** for anything from 1 to 120. It's **Off** to begin with — nothing is
+checked by itself unless you turn it on — and turning it off again keeps your interval for next
+time.
+
+As the setting says: "Only ping and ports, never logged-on users, so no account is needed. Refresh
+in the toolbar always works."
 
 ## Logged-on users
 
 The **User** column shows who is logged on, as `DOMAIN\user`, with "(disconnected)" for a
 disconnected session, or **No one**.
 
-The Details pane lists each session under **Logged on**, with the time of the check, as in
+The Details panel lists each session under **Logged on**, with the time of the check, as in
 "Logged on (3) · 10:40". Every row names the user, a badge saying **Active** or **Disconnected**,
 and under it whether they're at the computer (**Console**) or on **Remote Desktop**, which PC they
 came from, and since when. Active sessions come first. Before any check the section says
@@ -61,7 +66,7 @@ came from, and since when. Active sessions come first. Before any check the sect
 below, with the full explanation in its tooltip.
 
 **View > Show users' domain** is on and remembered. Turn it off to see just `user` in the
-column, the Details pane and searches; what you hover over still shows the whole
+column, the Details panel and searches; what you hover over still shows the whole
 `DOMAIN\user`, so a local "admin" can't pass for the domain's.
 
 CapyPanel reads this through Windows' own remote session service: nothing is installed on the

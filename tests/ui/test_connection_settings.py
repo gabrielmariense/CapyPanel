@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 from PySide6.QtCore import Qt, QUrl
-from PySide6.QtWidgets import QApplication, QDialogButtonBox, QFileDialog
+from PySide6.QtWidgets import QApplication, QDialogButtonBox, QFileDialog, QMenu
 
 from capypanel.core import i18n, settings, winsec
 from capypanel.core.hosts.document import OpenList
@@ -12,7 +12,7 @@ from capypanel.core.hosts.model import HostList
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.profiles import ConnectionProfile
 from capypanel.ui.settings import connections
-from capypanel.ui.settings.connections import ConnectionsPage, ProfileDialog
+from capypanel.ui.settings.connections import ProfileDialog, ProfilesSection, ToolsSection
 
 
 @pytest.fixture
@@ -31,48 +31,40 @@ def _answer(monkeypatch: pytest.MonkeyPatch, fill: Callable[[ProfileDialog], Non
     monkeypatch.setattr(ProfileDialog, "exec", run)
 
 
-def _select(page: ConnectionsPage, profile_id: str) -> None:
-    for row in range(page.list.count()):
-        item = page.list.item(row)
-        if item is not None and item.data(Qt.ItemDataRole.UserRole) == profile_id:
+def _select(page: ProfilesSection, profile_id: str) -> None:
+    for row in range(page.list.topLevelItemCount()):
+        item = page.list.topLevelItem(row)
+        if item is not None and item.data(0, Qt.ItemDataRole.UserRole) == profile_id:
             page.list.setCurrentItem(item)
             item.setSelected(True)
 
 
-def _names(page: ConnectionsPage) -> list[str]:
-    return [item.text() for row in range(page.list.count()) if (item := page.list.item(row))]
+def _names(page: ProfilesSection) -> list[str]:
+    rows = range(page.list.topLevelItemCount())
+    return [item.text(0) for row in rows if (item := page.list.topLevelItem(row))]
 
 
-def test_a_new_profile_is_written_only_on_save(
-    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    page = ConnectionsPage(catalogs, None)
-
-    def fill(dialog: ProfileDialog) -> None:
-        dialog.name.setText("Clinics (SecureVNC)")
-        dialog.login.setCurrentIndex(dialog.login.findData("account"))
-        dialog.option_boxes["securevnc"].setChecked(True)
-
-    _answer(monkeypatch, fill)
-    page.add()
-    assert "Clinics (SecureVNC)" in _names(page)
-    assert catalogs.profiles.find("clinics-securevnc") is None  # nothing written yet
-    connections.apply(catalogs, page.changes())  # what Save does
-    assert catalogs.profiles.find("clinics-securevnc") == ConnectionProfile(
-        "clinics-securevnc", "ultravnc", "account", ("securevnc",), name="Clinics (SecureVNC)"
-    )
+def _tool_row(page: ToolsSection, tool_id: str) -> tuple[str, str]:
+    """The tool's status and the tooltip on it."""
+    for row in range(page.tools.topLevelItemCount()):
+        item = page.tools.topLevelItem(row)
+        if item is not None and item.data(0, Qt.ItemDataRole.UserRole) == tool_id:
+            return item.text(1), item.toolTip(1)
+    raise AssertionError(tool_id)
 
 
-def test_cancel_drops_every_change(catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch) -> None:
-    page = ConnectionsPage(catalogs, None)
-    monkeypatch.setattr(connections, "confirm", lambda *_args: True)
-    _select(page, "ultravnc")
-    page.delete()
-    assert "UltraVNC" not in _names(page)
-    # Cancel: the dialog closes without apply(); the store and folder are untouched.
-    assert catalogs.profiles.find("ultravnc") is not None
-    assert not catalogs.profiles.folder.exists()
-    assert "UltraVNC" in _names(ConnectionsPage(catalogs, None))
+def _menu(fill: Callable[[QMenu], None], *, enabled_only: bool = False) -> list[str]:
+    """What a row's right-click menu holds, as `fill` builds it."""
+    menu = QMenu()
+    fill(menu)
+    return [a.text() for a in menu.actions() if a.text() and (a.isEnabled() or not enabled_only)]
+
+
+def _trigger(fill: Callable[[QMenu], None], text: str) -> None:
+    menu = QMenu()
+    fill(menu)
+    [action] = [a for a in menu.actions() if a.text() == text]
+    action.trigger()
 
 
 def test_the_editor_offers_only_what_the_chosen_tool_supports(catalogs: Catalogs) -> None:
@@ -97,16 +89,15 @@ def test_the_editor_offers_only_what_the_chosen_tool_supports(catalogs: Catalogs
 def test_starter_profiles_can_be_duplicated_edited_and_deleted(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    page = ConnectionsPage(catalogs, None)
+    page = ProfilesSection(catalogs, None)
     _select(page, "ultravnc")
-    buttons = (page.edit_button, page.duplicate_button, page.delete_button)
-    assert all(b.isEnabled() for b in buttons)
+    assert page.edit_button.isEnabled() and page.delete_button.isEnabled()
+    assert _menu(page.fill_row_menu) == ["&Edit…", "D&uplicate…", "&Delete…"]  # right-click
     _answer(monkeypatch, lambda dialog: None)  # keep the suggested name
-    page.duplicate()
+    _trigger(page.fill_row_menu, "D&uplicate…")
     monkeypatch.setattr(connections, "confirm", lambda *_args: True)
     _select(page, "ultravnc")
     page.delete()
-    connections.apply(catalogs, page.changes())
     copy = catalogs.profiles.find("ultravnc-copy")
     assert copy is not None and copy.name == "UltraVNC (copy)"
     assert catalogs.profiles.find("ultravnc") is None
@@ -121,7 +112,7 @@ def test_deleting_says_how_many_hosts_use_it(
     hl, _a = hl.add_host("PI-1", group.id, profile="pis")
     hl, _b = hl.add_host("PI-2", group.id, profile="pis")
     document = OpenList.save_as(tmp_path / "list.json", hl)
-    page = ConnectionsPage(catalogs, document)
+    page = ProfilesSection(catalogs, document)
     asked: list[str] = []
     monkeypatch.setattr(
         connections, "confirm", lambda _parent, _title, text, _action: asked.append(text) or False
@@ -132,91 +123,22 @@ def test_deleting_says_how_many_hosts_use_it(
     assert "Pis" in _names(page)  # answered no: still there
     monkeypatch.setattr(connections, "confirm", lambda *_args: True)
     page.delete()
-    assert page.changes().deleted == ("pis",)
+    assert catalogs.profiles.find("pis") is None
 
 
 def test_a_folder_the_user_cannot_write_is_read_only(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(catalogs.profiles, "can_edit", lambda: False)
-    page = ConnectionsPage(catalogs, None)
+    page = ProfilesSection(catalogs, None)
     _select(page, "ultravnc")
-    buttons = (page.add_button, page.edit_button, page.duplicate_button, page.delete_button)
+    buttons = (page.add_button, page.edit_button, page.delete_button)
     assert not any(b.isEnabled() for b in buttons) and not page.default.isEnabled()
-
-
-def test_the_default_profile_waits_for_save(catalogs: Catalogs) -> None:
-    page = ConnectionsPage(catalogs, None)
-    assert page.default_choice() == "ultravnc"
-    page.default.setCurrentIndex(page.default.findData("realvnc"))
-    assert catalogs.profiles.default_id() == "ultravnc"  # nothing written until Save
-    connections.apply(catalogs, page.changes())
-    assert catalogs.profiles.default_id() == "realvnc"
-
-
-def test_tool_paths_chosen_here_also_wait_for_save(
-    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    page = ConnectionsPage(catalogs, None)
-    texts = [w.text() for w in page.findChildren(connections.QLabel)]
-    assert any("Not found" in t for t in texts)  # RealVNC
-    monkeypatch.setattr(
-        QFileDialog, "getOpenFileName", lambda *_a, **_k: (r"D:\Portable\vncviewer.exe", "")
-    )
-    realvnc = catalogs.tools.find("realvnc")
-    assert realvnc is not None
-    page.locate(realvnc.item)
-    assert page.changes().tool_paths == {"realvnc": r"D:\Portable\vncviewer.exe"}
-    connections.apply(catalogs, page.changes())
-    located = catalogs.tools.find("realvnc")
-    assert located is not None and located.item.executable == r"D:\Portable\vncviewer.exe"
-    page = ConnectionsPage(catalogs, None)
-    page.automatic(located.item)
-    connections.apply(catalogs, page.changes())
-    back = catalogs.tools.find("realvnc")
-    assert back is not None and not back.item.executable
+    assert not any(_menu(page.fill_row_menu, enabled_only=True))
 
 
 def _choose_settings_file(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
     monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *_args, **_kw: (str(path), ""))
-
-
-def test_a_settings_file_chosen_for_a_profile_is_cleaned_and_copied_on_save(
-    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    template = tmp_path / "saved from viewer.vnc"
-    template.write_bytes(b"[connection]\r\nhost=10.0.0.9\r\n[options]\r\nviewonly=1\r\n")
-    _choose_settings_file(monkeypatch, template)
-    page = ConnectionsPage(catalogs, None)
-
-    def fill(dialog: ProfileDialog) -> None:
-        dialog.name.setText("View only")
-        assert dialog.settings_state.text() == "The viewer's defaults"
-        dialog.choose_settings.click()
-        assert dialog.settings_state.text() == "From “saved from viewer.vnc”"
-
-    _answer(monkeypatch, fill)
-    page.add()
-    assert not catalogs.profiles.folder.exists()  # nothing written before Save
-    connections.apply(catalogs, page.changes())
-    profile = catalogs.profiles.find("view-only")
-    assert profile is not None and profile.settings_file == "view-only.vnc"
-    copied = catalogs.profiles.folder / "view-only.vnc"
-    assert copied.read_bytes() == b"[connection]\r\nhost=\r\n[options]\r\nviewonly=1\r\n"
-
-    # A duplicate gets its own copy; going back to defaults removes the file.
-    page = ConnectionsPage(catalogs, None)
-    _select(page, "view-only")
-    _answer(monkeypatch, lambda dialog: dialog.name.setText("View only 2"))
-    page.duplicate()
-    _select(page, "view-only")
-    _answer(monkeypatch, lambda dialog: dialog.default_settings.click())
-    page.edit()
-    connections.apply(catalogs, page.changes())
-    assert not copied.exists()
-    assert (catalogs.profiles.folder / "view-only-2.vnc").read_bytes() == (
-        b"[connection]\r\nhost=\r\n[options]\r\nviewonly=1\r\n"
-    )
 
 
 def test_only_tools_that_read_a_settings_file_offer_one(catalogs: Catalogs) -> None:
@@ -266,16 +188,21 @@ def test_with_a_settings_file_the_file_decides_not_the_options(
 def test_remote_tools_show_a_state_and_only_the_actions_that_fit(
     catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    page = ConnectionsPage(catalogs, None)  # UltraVNC found by itself, RealVNC missing
-    assert page.tool_status["ultravnc"].text() == "✓ Found"
-    assert page.tool_status["ultravnc"].toolTip() == r"C:\Tools\vncviewer.exe"  # not on the page
-    assert list(page.tool_buttons["ultravnc"]) == ["locate"]
-    assert page.tool_buttons["ultravnc"]["locate"].text() == "Change path…"
-    assert page.tool_status["realvnc"].text() == "✗ Not found"
-    assert list(page.tool_buttons["realvnc"]) == ["locate", "download"]
+    page = ToolsSection(catalogs)  # UltraVNC found by itself, RealVNC missing
+    assert _tool_row(page, "ultravnc") == ("✓ Found", r"C:\Tools\vncviewer.exe")
+    page.select_tool("ultravnc")  # the buttons act on the tool picked
+    assert page.tool_actions("ultravnc") == ["locate"]
+    assert page.locate_button.isEnabled() and not page.download_button.isEnabled()
+    assert _menu(page.fill_row_menu) == ["Change path…"]
+    assert _tool_row(page, "realvnc")[0] == "✗ Not found"
+    page.select_tool("realvnc")
+    assert page.tool_actions("realvnc") == ["locate", "download"]
+    assert page.locate_button.text() == "Change path…"  # one name, found or not
+    assert page.download_button.isEnabled()
+    assert _menu(page.fill_row_menu) == ["Change path…", "Download"]
     opened: list[QUrl] = []
     monkeypatch.setattr(connections.QDesktopServices, "openUrl", lambda url: opened.append(url))
-    page.tool_buttons["realvnc"]["download"].click()
+    page.download_button.click()
     assert [u.toString() for u in opened] == ["https://www.realvnc.com/en/connect/download/viewer/"]
 
     def chosen_only(tool: Any) -> Path | None:
@@ -285,13 +212,16 @@ def test_remote_tools_show_a_state_and_only_the_actions_that_fit(
     monkeypatch.setattr(
         QFileDialog, "getOpenFileName", lambda *_a, **_k: (r"D:\Apps\vncviewer.exe", "")
     )
-    page.tool_buttons["realvnc"]["locate"].click()
-    assert page.tool_status["realvnc"].text() == "✓ Your choice"
-    assert list(page.tool_buttons["realvnc"]) == ["locate", "automatic"]
-    assert not (catalogs.tools.folder / "_paths.json").exists()  # only on Save
-    connections.apply(catalogs, page.changes())
+    page.locate_button.click()
+    assert _tool_row(page, "realvnc")[0] == "✓ Your choice"
+    assert page.tool_actions("realvnc") == ["locate", "automatic"]
+    # Still on RealVNC after the table refilled; the chosen path can be dropped again.
+    assert _menu(page.fill_row_menu) == ["Change path…", "Use the &automatic path"]
     entry = catalogs.tools.find("realvnc")
     assert entry is not None and entry.item.executable == r"D:\Apps\vncviewer.exe"
+    _trigger(page.fill_row_menu, "Use the &automatic path")
+    entry = catalogs.tools.find("realvnc")
+    assert entry is not None and not entry.item.executable
 
 
 def test_rdp_options_show_in_the_app_s_language(catalogs: Catalogs) -> None:
@@ -318,21 +248,133 @@ def test_files_that_arent_used_are_named_with_the_reason(
     (folder / "planted.json").write_text("{}", encoding="utf-8")
     monkeypatch.setattr(winsec, "made_by_trusted", lambda path: path.name != "planted.json")
     catalogs.profiles.reload()
-    page = ConnectionsPage(catalogs, None)
+    page = ProfilesSection(catalogs, None)
     assert not page.profiles_skipped.isHidden()
     assert page.profiles_skipped.text() == (
         "2 files skipped: broken.json (can't be read), planted.json (made by another user)"
-    )
+    )  # a note, like the others
     assert str(folder / "planted.json") in page.profiles_skipped.toolTip()  # where, for a fix
-    assert page.tools_skipped.isHidden()  # nothing skipped there
+    assert ToolsSection(catalogs).tools_skipped.isHidden()  # nothing skipped there
 
 
-def test_open_folder_waits_for_the_folder_while_the_profiles_are_built_in(
-    catalogs: Catalogs,
+def test_remote_desktop_says_it_asks_for_the_password_itself(catalogs: Catalogs) -> None:
+    # "no password" read as if none were needed; Remote Desktop's own window asks for it.
+    page = ProfilesSection(catalogs, None)
+    rows = range(page.list.topLevelItemCount())
+    [rdp] = [i for r in rows if (i := page.list.topLevelItem(r)) and i.text(0) == "Remote Desktop"]
+    assert rdp.text(2) == "asked by Remote Desktop Connection itself"
+    assert "asks for the user and password itself" in rdp.toolTip(2)
+    tools = [e.item for e in catalogs.tools.all()]
+    dialog = ProfileDialog(None, "New", tools, {"rdp"})
+    dialog.tool.setCurrentIndex(dialog.tool.findData("rdp"))
+    assert dialog.login.currentText() == "Asked by Remote Desktop Connection itself"
+
+
+def test_a_new_profile_is_written_at_once(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    page = ConnectionsPage(catalogs, None)
+    page = ProfilesSection(catalogs, None)
+    told: list[bool] = []
+    page.changed.connect(lambda: told.append(True))
+
+    def fill(dialog: ProfileDialog) -> None:
+        dialog.name.setText("Clinics (SecureVNC)")
+        dialog.login.setCurrentIndex(dialog.login.findData("account"))
+        dialog.option_boxes["securevnc"].setChecked(True)
+
+    _answer(monkeypatch, fill)
+    page.add()
+    assert "Clinics (SecureVNC)" in _names(page) and told  # the main window hears of it
+    assert catalogs.profiles.find("clinics-securevnc") == ConnectionProfile(
+        "clinics-securevnc", "ultravnc", "account", ("securevnc",), name="Clinics (SecureVNC)"
+    )
+
+
+def test_saying_no_to_delete_keeps_the_profile(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    page = ProfilesSection(catalogs, None)
+    monkeypatch.setattr(connections, "confirm", lambda *_args: False)
+    _select(page, "ultravnc")
+    page.delete()
+    assert "UltraVNC" in _names(page) and not catalogs.profiles.folder.exists()
+
+
+def test_the_default_profile_is_written_at_once(catalogs: Catalogs) -> None:
+    page = ProfilesSection(catalogs, None)
+    assert page.default_choice() == "ultravnc"
+    page.default.setCurrentIndex(page.default.findData("realvnc"))
+    assert catalogs.profiles.default_id() == "realvnc"
+
+
+def test_tool_paths_chosen_here_are_written_at_once(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    page = ToolsSection(catalogs)
+    assert _tool_row(page, "realvnc")[0] == "✗ Not found"
+    monkeypatch.setattr(
+        QFileDialog, "getOpenFileName", lambda *_a, **_k: (r"D:\Portable\vncviewer.exe", "")
+    )
+    realvnc = catalogs.tools.find("realvnc")
+    assert realvnc is not None
+    page.locate(realvnc.item)
+    located = catalogs.tools.find("realvnc")
+    assert located is not None and located.item.executable == r"D:\Portable\vncviewer.exe"
+    page.automatic(located.item)
+    back = catalogs.tools.find("realvnc")
+    assert back is not None and not back.item.executable
+
+
+def test_a_settings_file_chosen_for_a_profile_is_cleaned_and_copied(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    template = tmp_path / "saved from viewer.vnc"
+    template.write_bytes(b"[connection]\r\nhost=10.0.0.9\r\n[options]\r\nviewonly=1\r\n")
+    _choose_settings_file(monkeypatch, template)
+    page = ProfilesSection(catalogs, None)
+
+    def fill(dialog: ProfileDialog) -> None:
+        dialog.name.setText("View only")
+        assert dialog.settings_state.text() == "The viewer's defaults"
+        dialog.choose_settings.click()
+        assert dialog.settings_state.text() == "From “saved from viewer.vnc”"
+
+    _answer(monkeypatch, fill)
+    page.add()
+    profile = catalogs.profiles.find("view-only")
+    assert profile is not None and profile.settings_file == "view-only.vnc"
+    copied = catalogs.profiles.folder / "view-only.vnc"
+    assert copied.read_bytes() == b"[connection]\r\nhost=\r\n[options]\r\nviewonly=1\r\n"
+
+    # A duplicate gets its own copy; going back to defaults removes the file.
+    _select(page, "view-only")
+    _answer(monkeypatch, lambda dialog: dialog.name.setText("View only 2"))
+    page.duplicate()
+    _select(page, "view-only")
+    _answer(monkeypatch, lambda dialog: dialog.default_settings.click())
+    page.edit()
+    assert not copied.exists()
+    assert (catalogs.profiles.folder / "view-only-2.vnc").read_bytes() == (
+        b"[connection]\r\nhost=\r\n[options]\r\nviewonly=1\r\n"
+    )
+
+
+def test_the_built_in_note_shows_until_a_profile_changes(catalogs: Catalogs) -> None:
+    page = ProfilesSection(catalogs, None)
     assert not catalogs.profiles.folder.exists()  # the built-in profiles are shown
-    assert not page.open_folder.isEnabled() and not page.builtin_note.isHidden()
-    catalogs.profiles.folder.mkdir(parents=True)  # what saving a change does
-    page.reset()
-    assert page.open_folder.isEnabled() and page.builtin_note.isHidden()
+    assert not page.builtin_note.isHidden()
+    page.default.setCurrentIndex(page.default.findData("realvnc"))  # a change makes the folder
+    assert page.builtin_note.isHidden()
+
+
+def test_a_double_click_on_a_tool_changes_its_path(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    page = ToolsSection(catalogs)
+    monkeypatch.setattr(
+        QFileDialog, "getOpenFileName", lambda *_a, **_k: (r"D:\Portable\vncviewer.exe", "")
+    )
+    page.select_tool("realvnc")
+    page.tools.itemDoubleClicked.emit(page.tools.currentItem(), 0)
+    entry = catalogs.tools.find("realvnc")
+    assert entry is not None and entry.item.executable == r"D:\Portable\vncviewer.exe"

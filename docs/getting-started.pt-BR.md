@@ -13,37 +13,51 @@ uv run capypanel
 
 A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes
 abrem na hora. A versão aparece na barra de título, seguida do commit quando você roda pelo
-código-fonte, por exemplo `CapyPanel 0.18.0 (abc1234)`. Informe-a ao relatar um problema.
+código-fonte, por exemplo `CapyPanel 0.19.0 (abc1234)`. Informe-a ao relatar um problema.
 
 A Área de Trabalho Remota funciona de cara, com o cliente que já vem no Windows. Para o VNC você
 também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
 [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/). Veja
-[Conectando](connecting.pt-BR.md).
+[Conectando](hosts/connecting.pt-BR.md).
 
 ## A janela principal
 
 | Parte | O que mostra |
 |---|---|
-| **Barra de ferramentas** (topo) | **Conectar**, e **Atualizar** para verificar os hosts exibidos (veja [Verificando hosts](checking.pt-BR.md)) |
-| **Grupos** (esquerda) | "Todos os hosts" fixo no topo, com quantos hosts a lista tem, e "Sem grupo" embaixo dele, com quantos não estão em nenhum. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags** |
-| **Pesquisa** (acima dos hosts) | Encontra um host em qualquer lugar da lista, seja o que for que esteja escolhido à esquerda (veja [Pesquisando hosts](searching.pt-BR.md)) |
-| **Hosts** (meio) | Os hosts do grupo ou da tag selecionada, com **Status** e **Usuário** |
-| **Detalhes** (direita) | O host selecionado: o nome e o status dele, depois **Conexão** (endereço, grupo, perfil), quem está **logado**, as **tags** e as **notas**. Clique em qualquer valor para copiá-lo. Sem nada selecionado, quantos hosts estão exibidos e quantos deles estão online, offline, não encontrados ou não verificados |
+| **Barra lateral** (borda esquerda) | Uma faixa estreita com um ícone por ferramenta, cada um com o nome numa dica: **Hosts** (Ctrl+1) no topo e **Configurações** (Ctrl+,) embaixo. Hosts é a única ferramenta por enquanto, e a que está aberta tem um quadrado colorido atrás do ícone |
+| **Barra de ferramentas** (topo) | Os botões da ferramenta aberta. Para o Hosts: **Conectar**, **Atualizar**, **Inventário** e **Relatório** |
+| **Painel de grupos** (esquerda) | O nome da lista aberta no topo, como um menu que troca de lista. Depois "Todos os hosts", com quantos hosts a lista tem, e "Sem grupo" embaixo dele, com quantos não estão em nenhum. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags** |
+| **Painel de hosts** (meio) | A caixa de pesquisa (veja [Pesquisando hosts](hosts/searching.pt-BR.md)) acima dos hosts do grupo ou da tag selecionada, com **Status** e **Usuário** |
+| **Painel de detalhes** (direita) | O host selecionado: o nome e o status dele, depois **Conexão** (endereço, grupo, perfil), quem está **logado**, as **tags** e as **notas**. Clique em qualquer valor para copiá-lo. Sem nada selecionado, quantos hosts estão exibidos e quantos deles estão online, offline, não encontrados ou não verificados |
 | **Barra de status** | Qual lista está aberta, onde ela está, quantos hosts tem, quantos estão online depois que algo foi verificado e quantos estão selecionados |
 
-A barra de ferramentas, a barra de status e os painéis em volta da tabela de hosts podem ser
-escondidos pelo menu **Exibir**, e os painéis podem ser arrastados para ficar mais largos ou mais
-estreitos. Para trocar de lista, use **Arquivo > Listas de hosts…** (veja
-[Listas de hosts](host-lists.pt-BR.md#a-janela-listas-de-hosts)).
+A barra de menus é a mesma em qualquer ferramenta, e não guarda nada que seja de uma delas:
 
-A janela é sua para organizar. Clique com o botão direito nos títulos das colunas da tabela de
-hosts para escolher quais aparecem, ou em **Ajustar colunas ao conteúdo**, no fim desse menu, para
-ajustar todas ao texto delas; um clique duplo na borda de uma coluna ajusta só ela. As larguras
-são salvas para a próxima vez, e nada as redimensiona por trás — nem uma atualização, nem trocar
-de lista. **Exibir > Redefinir layout** devolve os painéis, as colunas e o que você escondeu ao
-estado inicial, e não mexe nas suas configurações.
+- **Arquivo** abre as **Configurações…** (Ctrl+,) e fecha o CapyPanel com **Sair** (Ctrl+Q).
+- **Exibir** troca de ferramenta (**Hosts**, Ctrl+1), mostra ou esconde o **Painel de grupos**, o
+  **Painel de tags**, o **Painel de detalhes**, a **Barra de ferramentas** e a **Barra de status**,
+  e guarda **Mostrar domínio dos usuários** (veja
+  [Verificando hosts](hosts/checking.pt-BR.md#usuarios-logados)). Ele fica aberto enquanto você
+  marca, então várias partes podem aparecer ou sumir de uma vez.
+- **Ajuda** tem **Documentação**, **Relatar um problema** e **Sobre o CapyPanel**.
+
+A janela é sua para organizar. Arraste a borda entre dois painéis para movê-la, ou dê um **clique
+duplo** na borda direita do **painel de grupos** ou do **painel de hosts** para deixar esse painel
+exatamente da largura do que tem dentro — o grupo ou a tag mais longa, ou as colunas da tabela —
+com o painel ao lado ficando com o resto. Clique com o botão direito nos títulos das colunas da
+tabela de hosts para escolher quais aparecem, ou em **Ajustar colunas ao conteúdo**, no fim desse
+menu, para ajustar todas ao texto delas; um clique duplo na borda de uma coluna ajusta só ela. As
+larguras são salvas para a próxima vez, e nada as redimensiona por trás — nem uma atualização, nem
+trocar de lista. **Configurações > Hosts > Geral > Layout** devolve os painéis, as colunas e o que
+você escondeu ao estado inicial, e não mexe nas suas outras configurações.
+
+Para trabalhar em outra lista, use o menu no topo do painel de grupos: ele mostra todas as listas
+que o CapyPanel encontrou, e também cria, abre e gerencia listas (veja
+[Listas de hosts](hosts/host-lists.pt-BR.md#o-menu-de-listas)).
 
 ## Adicione seus primeiros hosts
+
+O botão **Inventário** da barra de ferramentas guarda tudo que coloca hosts numa lista.
 
 1. Uma lista nova começa com um grupo, **Grupo padrão**. **Inventário > Adicionar grupo…**
    (Ctrl+Shift+N) cria outro; com um grupo selecionado, o novo fica dentro dele. Já o **+** ao
@@ -62,16 +76,18 @@ estado inicial, e não mexe nas suas configurações.
    de ferramentas, para abrir uma conexão com ele pelo perfil dele.
 
 Clique com o botão direito num host para conectar, para atualizar o status ou os usuários logados
-dele, para copiar a coluna em que você clicou, ou para editá-lo, movê-lo ou removê-lo. O botão
-direito num espaço vazio oferece **Adicionar grupo…** no painel de grupos, e **Adicionar host…** e
-**Adicionar grupo…** na lista de hosts. Para mover hosts para outro grupo, arraste-os até ele
-(veja [Listas de hosts](host-lists.pt-BR.md#organizar-grupos-e-hosts)). Remover um grupo pergunta
+dele, para copiar uma coluna em **Copiar ▸**, ou para editá-lo, movê-lo ou removê-lo. O **Copiar**
+lista todas as colunas que a tabela mostra, uma linha por host selecionado, e o **Endereço**
+mantém o Ctrl+Shift+C. O botão direito num espaço vazio oferece **Adicionar grupo…** no painel de
+grupos, e **Adicionar host…** e **Adicionar grupo…** na lista de hosts. Para mover hosts para outro
+grupo, arraste-os até ele (veja
+[Listas de hosts](hosts/host-lists.pt-BR.md#organizar-grupos-e-hosts)). Remover um grupo pergunta
 o que fazer com os grupos e hosts dentro dele (veja
-[Listas de hosts](host-lists.pt-BR.md#remover-um-grupo)).
+[Listas de hosts](hosts/host-lists.pt-BR.md#remover-um-grupo)).
 
 As edições são salvas no arquivo da lista na hora; não há botão Salvar. Para adicionar muitos
 hosts de uma vez, de uma planilha ou de outro inventário, veja
-[Importando e exportando hosts](importing.pt-BR.md).
+[Importando e exportando hosts](hosts/importing.pt-BR.md).
 
 ## Ajuda e como relatar um problema
 
@@ -81,17 +97,10 @@ O menu **Ajuda** tem três itens:
 - **Relatar um problema** abre uma issue nova no GitHub já com os dados que importam: a versão,
   como o CapyPanel está rodando, o Windows, o tema, o idioma, o Qt e o Python. Nunca inclui nome
   de usuário, computador, domínio nem caminho de arquivo.
-- **Sobre o CapyPanel** mostra o ícone do app, o nome e a versão — clique na versão para copiá-la
-  com o commit — acima de três abas:
-
-| Aba | O que tem |
-|---|---|
-| **Sobre** | O que o CapyPanel é, os direitos autorais, que é software livre sob a GPL-3.0 sem garantia, links para a documentação e para o código-fonte, e uma linha **Build** com o commit e o modo portátil quando se aplicam |
-| **Créditos** | Quem fez o CapyPanel e os ícones que ele usa |
-| **Licenças** | Cada parte com que ele é feito — CapyPanel (GPL-3.0), Qt e Qt for Python (LGPL-3.0), Python (PSF License), Tabler Icons (MIT) — com a versão e os direitos autorais. Clique numa licença para lê-la numa janela aqui; todas vêm com o CapyPanel, e um link abre a pasta que as guarda |
-
-**Relatar um problema** e **Abrir pasta de logs** também estão nessa janela, para um relato sair
-com os logs anexados.
+- **Sobre o CapyPanel** abre as Configurações na página **Sobre**: a versão para clicar e copiar
+  com o commit, quem fez o CapyPanel, todas as licenças que vêm com ele, e **Relatar um problema**
+  ao lado de **Abrir pasta de logs**, para um relato sair com os logs anexados (veja
+  [Configurações e arquivos](settings-and-files.pt-BR.md#sobre)).
 
 ## Atalhos de teclado
 
@@ -104,6 +113,7 @@ com os logs anexados.
 | Ctrl+Shift+C | Copiar os endereços dos hosts selecionados |
 | Ctrl+N / Ctrl+Shift+N | Adicionar host / Adicionar grupo |
 | F2 / Del | Editar / remover a seleção |
-| Ctrl+O | Janela Listas de hosts |
+| Ctrl+1 | A ferramenta Hosts |
+| Ctrl+O | Abrir um arquivo de lista de hosts |
 | Ctrl+, | Configurações |
 | Ctrl+Q | Sair |

@@ -15,9 +15,9 @@ CapyPanel is a Windows desktop app for IT staff: keep the computers you look aft
 lists, see which ones are on and who is logged on to them, and open a remote screen on any of
 them through Remote Desktop or the VNC viewer you already use.
 
-> **Status: beta (0.18.0).** It runs from source; there's no installer yet.
+> **Status: beta (0.19.0).** It runs from source; there's no installer yet.
 
-![The CapyPanel main window: groups on the left, hosts in the middle, details on the right](docs/images/main-window-dark.png)
+![The CapyPanel main window: the tool rail, groups on the left, hosts in the middle, details on the right](docs/images/main-window-dark.png)
 
 ## What it does
 
@@ -37,13 +37,14 @@ them through Remote Desktop or the VNC viewer you already use.
 Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrielmariense.github.io/CapyPanel/)**.
 
 - [Getting started](docs/getting-started.md): run CapyPanel and add your first hosts
-- [Host lists](docs/host-lists.md): groups, tags, and default, personal and shared lists
-- [Importing and exporting hosts](docs/importing.md): many hosts at once, in and out as CSV
-- [Connecting](docs/connecting.md): VNC viewers, Remote Desktop, connection profiles and passwords
-- [Checking hosts](docs/checking.md): status and logged-on users
-- [Searching hosts](docs/searching.md): finding a host anywhere in the list
 - [Settings and files](docs/settings-and-files.md): what each setting does, and where CapyPanel
   keeps its files
+- [Host lists](docs/hosts/host-lists.md): groups, tags, and the lists folders
+- [Importing and exporting hosts](docs/hosts/importing.md): many hosts at once, in and out as CSV
+- [Connecting](docs/hosts/connecting.md): VNC viewers, Remote Desktop, connection profiles and
+  passwords
+- [Checking hosts](docs/hosts/checking.md): status and logged-on users
+- [Searching hosts](docs/hosts/searching.md): finding a host anywhere in the list
 - [Development](docs/development.md): building, testing and translating
 
 ## Quick start (from source)
