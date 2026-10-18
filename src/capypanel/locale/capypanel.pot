@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 13:29-0300\n"
+"POT-Creation-Date: 2026-10-18 13:32-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -216,9 +216,6 @@ msgid "&User:"
 msgstr ""
 
 msgid "&View"
-msgstr ""
-
-msgid "&every"
 msgstr ""
 
 msgid "A chosen &group"
@@ -520,6 +517,9 @@ msgstr ""
 msgid "Custom"
 msgstr ""
 
+msgid "Custom…"
+msgstr ""
+
 msgid "D&uplicate…"
 msgstr ""
 
@@ -593,8 +593,17 @@ msgid ""
 "(name, address, group, tags, notes), so the two always match. Continue?"
 msgstr ""
 
+msgid "Every"
+msgstr ""
+
 msgid "Every computer you look after, in one window."
 msgstr ""
+
+#, python-brace-format
+msgid "Every minute"
+msgid_plural "Every {n} minutes"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "File not found"
 msgstr ""
@@ -907,6 +916,9 @@ msgstr ""
 msgid "Nothing changes until you click OK."
 msgstr ""
 
+msgid "Off"
+msgstr ""
+
 msgid "Offline"
 msgstr ""
 
@@ -1034,6 +1046,9 @@ msgid "Refresh every host shown. Right-click to choose what Run and F5 check"
 msgstr ""
 
 msgid "Refresh logged-on users"
+msgstr ""
+
+msgid "Refresh status &by itself"
 msgstr ""
 
 msgid "Refresh status by itself"

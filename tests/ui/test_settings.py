@@ -23,6 +23,7 @@ from capypanel.ui import tables
 from capypanel.ui.host_lists import HostListsView
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
+from capypanel.ui.settings import pages
 from capypanel.ui.settings.window import PAGE_TITLES, ROOM, SettingsDialog
 from capypanel.ui.themes import engine as themes
 
@@ -463,7 +464,7 @@ def test_save_a_copy_writes_it_and_keeps_the_list_in_use(
 
 def test_every_choice_applies_at_once_and_only_close_is_left(window: MainWindow) -> None:
     dialog = window.settings_dialog()
-    dialog.hosts.auto_status.setChecked(True)
+    dialog.hosts.pick_every(5)
     assert window._auto_status()[0]  # kept and running, with no Save
     page = dialog.connections.profiles
     page.default.setCurrentIndex(page.default.findData("realvnc"))
@@ -483,11 +484,11 @@ def test_picking_a_language_switches_at_once_and_keeps_the_page(
 
     def run(dialog: SettingsDialog) -> int:
         dialog.show_page("general")
-        dialog.hosts.auto_status.setChecked(True)
+        dialog.hosts.pick_every(5)
         dialog.general.language.setCurrentIndex(dialog.general.language.findData("pt_BR"))
         QApplication.processEvents()  # the window follows once the dropdown has closed
         seen.append(
-            (dialog.windowTitle(), dialog.current_page(), dialog.hosts.auto_status.isChecked())
+            (dialog.windowTitle(), dialog.current_page(), dialog.hosts.auto_status_choice()[0])
         )
         return 0
 
@@ -531,3 +532,24 @@ def test_a_right_click_picks_the_row_and_opens_its_menu(
     assert tree.currentItem() is office_row  # picked by the right-click
     assert shown == [["&Open", "Save a &copy…", "Open &folder", "&Remove"]]
     dialog.close()
+
+
+def test_refresh_by_itself_is_one_dropdown_with_a_custom_interval(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    dialog = window.settings_dialog()
+    every = dialog.hosts.auto_every
+    texts = [every.itemText(i) for i in range(every.count())]
+    assert texts == [
+        "Off", "Every minute", "Every 5 minutes", "Every 15 minutes", "Every 30 minutes",
+        "Custom…",
+    ]  # fmt: skip
+    assert every.currentText() == "Off"
+    monkeypatch.setattr(pages, "ask_minutes", lambda _parent, _start: 7)
+    every.activated.emit(every.findData(-1))  # Custom…
+    assert every.currentText() == "Every 7 minutes" and window._auto_status() == (True, 7)
+    monkeypatch.setattr(pages, "ask_minutes", lambda _parent, _start: None)
+    every.activated.emit(every.findData(-1))  # Custom…, then Cancel: stays as it was
+    assert every.currentText() == "Every 7 minutes"
+    every.activated.emit(every.findData(0))  # Off
+    assert window._auto_status() == (False, 7)  # the last interval is kept for next time

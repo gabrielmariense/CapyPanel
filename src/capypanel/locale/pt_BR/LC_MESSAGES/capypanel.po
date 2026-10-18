@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 13:29-0300\n"
+"POT-Creation-Date: 2026-10-18 13:32-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -218,9 +218,6 @@ msgstr "&Usuário:"
 
 msgid "&View"
 msgstr "E&xibir"
-
-msgid "&every"
-msgstr "a &cada"
 
 msgid "A chosen &group"
 msgstr "Um &grupo escolhido"
@@ -517,6 +514,9 @@ msgstr "Créditos"
 msgid "Custom"
 msgstr "Personalizado"
 
+msgid "Custom…"
+msgstr "Personalizado…"
+
 msgid "D&uplicate…"
 msgstr "D&uplicar…"
 
@@ -586,8 +586,17 @@ msgstr "Editar a lista aqui"
 msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, tags, notes), so the two always match. Continue?"
 msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes), para que as duas sempre coincidam. Continuar?"
 
+msgid "Every"
+msgstr "A cada"
+
 msgid "Every computer you look after, in one window."
 msgstr "Todos os computadores sob seus cuidados, em uma só janela."
+
+#, python-brace-format
+msgid "Every minute"
+msgid_plural "Every {n} minutes"
+msgstr[0] "A cada minuto"
+msgstr[1] "A cada {n} minutos"
 
 msgid "File not found"
 msgstr "Arquivo não encontrado"
@@ -890,6 +899,9 @@ msgstr "Nada muda até você clicar em Adicionar."
 msgid "Nothing changes until you click OK."
 msgstr "Nada muda até você clicar em OK."
 
+msgid "Off"
+msgstr "Desligado"
+
 msgid "Offline"
 msgstr "Offline"
 
@@ -1011,6 +1023,9 @@ msgstr "Atualiza todos os hosts exibidos. Clique com o botão direito para escol
 
 msgid "Refresh logged-on users"
 msgstr "Atualizar usuários logados"
+
+msgid "Refresh status &by itself"
+msgstr "Atualizar o status &sozinho"
 
 msgid "Refresh status by itself"
 msgstr "Atualizar o status sozinho"

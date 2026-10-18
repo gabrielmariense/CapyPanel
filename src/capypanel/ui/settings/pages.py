@@ -6,8 +6,9 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QResizeEvent
 from PySide6.QtWidgets import (
-    QCheckBox,
     QComboBox,
+    QDialog,
+    QDialogButtonBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -23,7 +24,8 @@ from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import HostList
-from capypanel.core.i18n import _
+from capypanel.core.i18n import _, ngettext
+from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import TreeMenu, fill_host_move_menu
 from capypanel.ui.host_lists import HostListsView
 from capypanel.ui.hosts import group_path
@@ -300,30 +302,21 @@ class HostsPage(Page):
         )
 
         refresh = Section(_("Refresh"))
-        # The tick and how often, together at the row's right end.
-        self.auto_status = QCheckBox(_("&every"))
-        self.auto_status.setChecked(auto_status[0])
-        self.auto_minutes = QSpinBox()
-        self.auto_minutes.setRange(1, 120)
-        self.auto_minutes.setValue(auto_status[1])
-        self.auto_minutes.setSuffix(_(" min"))
-        self.auto_minutes.setEnabled(auto_status[0])
-        self.auto_status.toggled.connect(self.auto_minutes.setEnabled)
-        self.auto_status.toggled.connect(lambda _on: self.changed.emit())
-        self.auto_minutes.valueChanged.connect(lambda _v: self.changed.emit())
-        every = QWidget()
-        controls = QHBoxLayout(every)
-        controls.setContentsMargins(0, 0, 0, 0)
-        controls.addWidget(self.auto_status)
-        controls.addWidget(self.auto_minutes, 1)
-        auto_row = SettingRow(
-            _("Refresh status by itself"),
-            _("Only ping and ports, never logged-on users, so no account is needed. Refresh in "
-              "the toolbar always works."),
-            every,
+        # One dropdown: Off, a few common intervals, and Custom… for any other.
+        self.auto_every = QComboBox()
+        self._auto_minutes = auto_status[1]  # kept while it's off, for when it's on again
+        self._shown_minutes = auto_status[1] if auto_status[0] else 0
+        self._fill_every(self._shown_minutes)
+        self.auto_every.activated.connect(self._every_picked)
+        add_rows(
+            _section_layout(refresh),
+            SettingRow(
+                _("Refresh status &by itself"),
+                _("Only ping and ports, never logged-on users, so no account is needed. "
+                  "Refresh in the toolbar always works."),
+                self.auto_every,
+            ),
         )  # fmt: skip
-        auto_row.name.setBuddy(self.auto_status)
-        add_rows(_section_layout(refresh), auto_row)
 
         self.body.addWidget(start)
         self.body.addWidget(refresh)
@@ -388,7 +381,73 @@ class HostsPage(Page):
         return self._first if self.show_first.isEnabled() else None
 
     def auto_status_choice(self) -> tuple[bool, int]:
-        return self.auto_status.isChecked(), self.auto_minutes.value()
+        minutes = self.auto_every.currentData()
+        return (minutes > 0, minutes) if minutes else (False, self._auto_minutes)
+
+    EVERY = (1, 5, 15, 30)  # minutes offered in the dropdown, besides Custom…
+    CUSTOM = -1
+
+    def _fill_every(self, minutes: int) -> None:
+        """Off, the common intervals, any other interval in use, then Custom…."""
+        self.auto_every.clear()
+        self.auto_every.addItem(_("Off"), 0)
+        offered: set[int] = {*self.EVERY, minutes} if minutes > 0 else set(self.EVERY)
+        for every in sorted(offered):
+            self.auto_every.addItem(every_text(every), every)
+        self.auto_every.addItem(_("Custom…"), self.CUSTOM)
+        self.auto_every.setCurrentIndex(max(self.auto_every.findData(minutes), 0))
+
+    def _every_picked(self, index: int) -> None:
+        minutes = self.auto_every.itemData(index)
+        if minutes == self.CUSTOM:
+            chosen = self._ask_minutes()
+            if chosen is None:  # cancelled: back to what it was
+                self._fill_every(self._shown_minutes)
+                return
+            minutes = chosen
+        self.pick_every(minutes)
+
+    def pick_every(self, minutes: int) -> None:
+        """Refresh by itself every `minutes`; 0 is off."""
+        if minutes > 0:
+            self._auto_minutes = minutes
+        self._fill_every(minutes)
+        self._shown_minutes = minutes
+        self.changed.emit()
+
+    def _ask_minutes(self) -> int | None:
+        return ask_minutes(self, self._auto_minutes)
+
+
+def every_text(minutes: int) -> str:
+    return ngettext("Every minute", "Every {n} minutes", minutes).format(n=minutes)
+
+
+def ask_minutes(parent: QWidget, start: int) -> int | None:
+    """Custom…: how often, in minutes. Neither button is a default one."""
+    dialog = QDialog(parent)
+    dialog.setWindowTitle(_("Refresh status by itself"))
+    minutes = QSpinBox()
+    minutes.setRange(1, 120)
+    minutes.setValue(start)
+    minutes.setSuffix(_(" min"))
+    buttons = QDialogButtonBox(
+        QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+    )
+    for button in buttons.buttons():
+        if isinstance(button, QPushButton):
+            button.setAutoDefault(False)
+            button.setDefault(False)
+    buttons.accepted.connect(dialog.accept)
+    buttons.rejected.connect(dialog.reject)
+    row = QHBoxLayout()
+    row.addWidget(QLabel(_("Every")))
+    row.addWidget(minutes, 1)
+    layout = QVBoxLayout(dialog)
+    layout.addLayout(row)
+    layout.addWidget(buttons)
+    accepted = run_modal(dialog) == QDialog.DialogCode.Accepted
+    return minutes.value() if accepted else None
 
 
 # ---- Host lists ----

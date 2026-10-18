@@ -283,8 +283,7 @@ def test_automatic_status_is_off_by_default_and_checks_only_status(
 ) -> None:
     assert not window._auto_timer.isActive()
     dialog = window.settings_dialog()
-    dialog.hosts.auto_status.setChecked(True)
-    dialog.hosts.auto_minutes.setValue(3)
+    dialog.hosts.pick_every(3)  # Custom…: every 3 minutes
     assert window._auto_timer.isActive() and window._auto_timer.interval() == 3 * 60_000
     assert window._prefs["auto_status"] == {"on": True, "minutes": 3}
     window._auto_status_check()  # what the timer does
