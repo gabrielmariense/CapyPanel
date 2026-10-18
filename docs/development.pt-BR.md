@@ -42,8 +42,9 @@ de novo para compilá-las. Os testes falham enquanto algum texto não estiver tr
 
 As páginas em `docs/` também são publicadas como site com o
 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/), sempre que mudam na `main`. Cada
-página em inglês (`nome.md`) tem a versão em português ao lado (`nome.pt-BR.md`). Para ver o site
-enquanto escreve:
+página em inglês (`nome.md`) tem a versão em português ao lado (`nome.pt-BR.md`); mude as duas
+juntas. As páginas sobre o app inteiro ficam em `docs/`, e as páginas de uma ferramenta numa pasta
+própria, `docs/hosts/`. Para ver o site enquanto escreve:
 
 ```
 uv run --only-group docs mkdocs serve

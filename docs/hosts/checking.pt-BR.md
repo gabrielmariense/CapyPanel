@@ -1,21 +1,21 @@
 # Verificando hosts
 
 O CapyPanel pode verificar se os hosts estão ligados e quem está logado neles. Os resultados
-aparecem nas colunas **Status** e **Usuário** da tabela de hosts e no painel **Detalhes**. Eles
+aparecem nas colunas **Status** e **Usuário** da tabela de hosts e no painel de detalhes. Eles
 ficam só na memória: nunca no arquivo da lista, e somem quando o CapyPanel fecha. Editar o
-endereço de um host apaga os resultados dele. Para guardá-los, **Inventário > Exportar hosts…**
-grava a última verificação num CSV e oferece verificar os hosts antes (veja [Importando e
-exportando hosts](importing.pt-BR.md)).
+endereço de um host apaga os resultados dele. Para guardá-los, o **Relatório** da barra de
+ferramentas grava a última verificação num CSV e oferece verificar os hosts antes (veja
+[Importando e exportando hosts](importing.pt-BR.md)).
 
 ## Atualizar
 
-**Atualizar**, à direita da barra de ferramentas, verifica todos os hosts que a tabela mostra: o
-grupo escolhido à esquerda com seus subgrupos, uma tag, Todos os hosts, Sem grupo ou os
+**Atualizar**, na barra de ferramentas, verifica todos os hosts que a tabela mostra: o grupo
+escolhido no painel de grupos com seus subgrupos, uma tag, Todos os hosts, Sem grupo ou os
 resultados de uma pesquisa. Não é preciso selecionar nada.
 
 - Clique nele e escolha **Status** ou **Usuários logados**.
-- Clique com o botão direito para marcar os dois e clique em **Executar**. O CapyPanel lembra o
-  que você marcou, e a dica dele diz o que é.
+- Clique com o botão direito para abrir o painel **Atualizar todos os hosts exibidos**: marque os
+  dois e clique em **Executar**. O CapyPanel lembra o que você marcou, e a dica dele diz o que é.
 - **F5** faz o mesmo que esse **Executar**, nos hosts exibidos, sem abrir o painel. Ele é ignorado
   enquanto uma verificação já está rodando.
 
@@ -46,9 +46,14 @@ O status não usa conta nenhuma e não precisa de direitos de administrador.
 
 ### Status automático
 
-**Configurações > Geral > Atualizar** pode verificar o status dos hosts exibidos a cada alguns
-minutos (de 1 a 120, 5 por padrão). Ele só faz ping e tenta portas, nunca lê usuários logados,
-então nenhuma conta é usada. Vem desligado: nada é verificado sozinho a menos que você o ligue.
+**Configurações > Hosts > Geral > Atualizar > Atualizar o status sozinho** pode verificar o status
+dos hosts exibidos a cada alguns minutos: **A cada minuto**, **A cada 5 minutos**, **A cada 15
+minutos**, **A cada 30 minutos** ou **Personalizado…**, de 1 a 120. Começa **Desligado** — nada é
+verificado sozinho a menos que você ligue — e desligar de novo guarda o seu intervalo para a
+próxima vez.
+
+Como a própria configuração diz: "Só ping e portas, nunca usuários logados, então nenhuma conta é
+usada. O Atualizar da barra de ferramentas sempre funciona."
 
 ## Usuários logados
 

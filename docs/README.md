@@ -5,7 +5,7 @@ keep the computers you look after in organized lists, see which ones are on and 
 to them, and open a remote screen on any of them through Remote Desktop or the VNC viewer you
 already use.
 
-![The CapyPanel main window: groups on the left, hosts in the middle, details on the right](images/main-window-dark.png)
+![The CapyPanel main window: the tool rail, groups on the left, hosts in the middle, details on the right](images/main-window-dark.png)
 
 ## What it does
 
@@ -27,13 +27,16 @@ For people who use CapyPanel, and for people who set it up for a team.
 | Page | What it covers |
 |---|---|
 | [Getting started](getting-started.md) | Running CapyPanel, the main window, adding hosts |
-| [Host lists](host-lists.md) | Groups, tags, and the default, personal and shared lists |
-| [Importing and exporting hosts](importing.md) | Many hosts at once, in and out as CSV |
-| [Connecting](connecting.md) | VNC viewers, Remote Desktop, connection profiles, passwords and the login check |
-| [Checking hosts](checking.md) | Status, logged-on users and the account used to read them |
-| [Searching hosts](searching.md) | The search box, what it covers and how a search ends |
 | [Settings and files](settings-and-files.md) | Every setting, and where CapyPanel keeps its files |
+| [Host lists](hosts/host-lists.md) | Groups, tags, and the folders lists live in |
+| [Importing and exporting hosts](hosts/importing.md) | Many hosts at once, in and out as CSV |
+| [Connecting](hosts/connecting.md) | VNC viewers, Remote Desktop, connection profiles, passwords and the login check |
+| [Checking hosts](hosts/checking.md) | Status, logged-on users and the account used to read them |
+| [Searching hosts](hosts/searching.md) | The search box, what it covers and how a search ends |
 | [Development](development.md) | Building, testing and translating CapyPanel |
 
-These pages describe the current version (0.18.0). CapyPanel is in beta, so they grow with each
+Getting started, Settings and files and Development are about the whole app. The five pages between
+them belong to the **Hosts** tool, the one tool CapyPanel has today.
+
+These pages describe the current version (0.19.0). CapyPanel is in beta, so they grow with each
 feature.

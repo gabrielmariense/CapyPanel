@@ -13,35 +13,48 @@ uv run capypanel
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
 The version shows in the title bar, followed by the commit when you run from source, e.g.
-`CapyPanel 0.18.0 (abc1234)`. Quote it when you report a problem.
+`CapyPanel 0.19.0 (abc1234)`. Quote it when you report a problem.
 
 Remote Desktop works out of the box, with the client built into Windows. For VNC you also need a
 viewer: [UltraVNC](https://uvnc.com) or
 [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/). See
-[Connecting](connecting.md).
+[Connecting](hosts/connecting.md).
 
 ## The main window
 
 | Part | What it shows |
 |---|---|
-| **Toolbar** (top) | **Connect**, and **Refresh** to check the hosts shown (see [Checking hosts](checking.md)) |
-| **Groups** (left) | "All hosts" pinned on top with how many hosts the list has, and "No group" under it with how many are in none. Then **Groups**, with a **+** button to add one, and **Tags** |
-| **Search** (above the hosts) | Finds a host anywhere in the list, whatever is picked on the left (see [Searching hosts](searching.md)) |
-| **Hosts** (middle) | The hosts in the selected group or tag, with their **Status** and **User** |
-| **Details** (right) | The selected host: its name and status, then **Connection** (address, group, profile), who's **logged on**, its **tags** and its **notes**. Click any value to copy it. With nothing selected, how many hosts are shown, and how many of them are online, offline, not found or not checked |
+| **The rail** (left edge) | One icon per tool, with its name in a tooltip: **Hosts** (Ctrl+1) at the top, and **Settings** (Ctrl+,) at the bottom. Hosts is the only tool for now, and the tool you're in has a tinted square behind its icon |
+| **Toolbar** (top) | The buttons of the tool you're in. For Hosts: **Connect**, **Refresh**, **Inventory** and **Report** |
+| **Groups panel** (left) | The open list's name on top, as a dropdown that switches lists. Then "All hosts" with how many hosts the list has, and "No group" under it with how many are in none. Then **Groups**, with a **+** button to add one, and **Tags** |
+| **Hosts panel** (middle) | The search box (see [Searching hosts](hosts/searching.md)) above the hosts in the selected group or tag, with their **Status** and **User** |
+| **Details panel** (right) | The selected host: its name and status, then **Connection** (address, group, profile), who's **logged on**, its **tags** and its **notes**. Click any value to copy it. With nothing selected, how many hosts are shown, and how many of them are online, offline, not found or not checked |
 | **Status bar** | Which list is open, where it is, how many hosts it has, how many are online once anything has been checked, and how many are selected |
 
-The toolbar, the status bar and the panes around the host table can be hidden from the **View**
-menu, and the panes can be dragged wider or narrower. To switch to another list, use
-**File > Host lists…** (see [Host lists](host-lists.md#the-host-lists-window)).
+The menu bar is the same whichever tool you're in, and holds nothing a tool owns:
 
-The window is yours to arrange. Right-click the host table's column titles to choose which columns
-show, or **Fit columns to content** at the bottom of that menu to fit them all to their text;
-double-clicking a column's edge fits that one. Widths are saved for next time, and nothing resizes
-them behind your back — not a Refresh, not switching lists. **View > Reset layout** puts the
-panes, the columns and anything you hid back to the start, and leaves your settings alone.
+- **File** opens **Settings…** (Ctrl+,) and closes CapyPanel with **Exit** (Ctrl+Q).
+- **View** switches tools (**Hosts**, Ctrl+1), shows or hides the **Groups pane**, the **Tags
+  pane**, the **Details pane**, the **Toolbar** and the **Status bar**, and holds **Show users'
+  domain** (see [Checking hosts](hosts/checking.md#logged-on-users)). It stays open while you tick,
+  so several parts can be shown or hidden in one go.
+- **Help** has **Documentation**, **Report a problem** and **About CapyPanel**.
+
+The window is yours to arrange. Drag the edge between two panels to move it, or **double-click**
+the right edge of the **Groups panel** or the **Hosts panel** to make that panel exactly as wide as
+what's in it — the widest group or tag, or the table's columns — with the panel beside it taking
+the rest. Right-click the host table's column titles to choose which columns show, or **Fit columns
+to content** at the bottom of that menu to fit them all to their text; double-clicking a column's
+edge fits that one. Widths are saved for next time, and nothing resizes them behind your back — not
+a Refresh, not switching lists. **Settings > Hosts > General > Layout** puts the panels, the
+columns and anything you hid back to the start, and leaves your other settings alone.
+
+To work on another list, use the dropdown on top of the Groups panel: it lists every list CapyPanel
+found, and makes, opens and manages them (see [Host lists](hosts/host-lists.md#the-list-dropdown)).
 
 ## Add your first hosts
+
+The **Inventory** button on the toolbar holds everything that puts hosts in a list.
 
 1. A new list starts with one group, **Default group**. **Inventory > Add group…**
    (Ctrl+Shift+N) creates another; with a group selected, the new one goes inside it. The **+**
@@ -59,16 +72,17 @@ panes, the columns and anything you hid back to the start, and leaves your setti
 3. Double-click the host, select it and press Enter, or click **Connect** in the toolbar, to open
    a connection to it with its profile.
 
-Right-click a host to connect, to refresh its status or its logged-on users, to copy the column
-you clicked, or to edit, move or remove it. Right-clicking empty space offers **Add group…** in
-the groups pane, and **Add host…** and **Add group…** in the host list. To move hosts to another
-group, drag them onto it (see [Host lists](host-lists.md#arranging-groups-and-hosts)). Removing a
-group asks what should happen to the groups and hosts in it (see
-[Host lists](host-lists.md#removing-a-group)).
+Right-click a host to connect, to refresh its status or its logged-on users, to copy a column
+through **Copy ▸**, or to edit, move or remove it. **Copy** lists every column the table shows, one
+line per selected host, and **Address** keeps Ctrl+Shift+C. Right-clicking empty space offers **Add
+group…** in the groups panel, and **Add host…** and **Add group…** in the host list. To move hosts
+to another group, drag them onto it (see
+[Host lists](hosts/host-lists.md#arranging-groups-and-hosts)). Removing a group asks what should
+happen to the groups and hosts in it (see [Host lists](hosts/host-lists.md#removing-a-group)).
 
 Edits are saved to the list file at once; there's no Save button. To add many hosts in one go,
 from a spreadsheet or another inventory, see
-[Importing and exporting hosts](importing.md).
+[Importing and exporting hosts](hosts/importing.md).
 
 ## Help, and reporting a problem
 
@@ -78,17 +92,10 @@ The **Help** menu has three items:
 - **Report a problem** opens a new issue on GitHub with the facts that matter already in it: the
   version, how CapyPanel is running, Windows, the theme, the language, Qt and Python. It never
   includes a user name, a computer, a domain or a path.
-- **About CapyPanel** shows the app icon, the name and the version — click the version to copy it
-  with its commit — above three tabs:
-
-| Tab | What it holds |
-|---|---|
-| **About** | What CapyPanel is, the copyright, that it's free software under the GPL-3.0 with no warranty, links to the documentation and the source code, and a **Build** line with the commit and portable mode where they apply |
-| **Credits** | Who made CapyPanel, and the icons it uses |
-| **Licenses** | Every part it's built with — CapyPanel (GPL-3.0), Qt and Qt for Python (LGPL-3.0), Python (PSF License), Tabler Icons (MIT) — with its version and copyright. Click a license to read it in a window here; they all ship with CapyPanel, and a link opens the folder holding them |
-
-**Report a problem** and **Open log folder** are in that window too, so a report can go out with
-the logs attached.
+- **About CapyPanel** opens Settings on its **About** page: the version to click and copy with its
+  commit, who made CapyPanel, every license it ships, and **Report a problem** and **Open log
+  folder** side by side, so a report can go out with the logs attached (see
+  [Settings and files](settings-and-files.md#about)).
 
 ## Keyboard shortcuts
 
@@ -101,6 +108,7 @@ the logs attached.
 | Ctrl+Shift+C | Copy the selected hosts' addresses |
 | Ctrl+N / Ctrl+Shift+N | Add host / Add group |
 | F2 / Del | Edit / remove the selection |
-| Ctrl+O | Host lists window |
+| Ctrl+1 | The Hosts tool |
+| Ctrl+O | Open a host list file |
 | Ctrl+, | Settings |
 | Ctrl+Q | Exit |

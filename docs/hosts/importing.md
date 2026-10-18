@@ -1,8 +1,8 @@
 # Importing and exporting hosts
 
 Hosts don't have to be typed in one by one. **Inventory > Import hosts…** reads a list you paste
-or a CSV file, and **Inventory > Export hosts…** writes what you have back out as CSV. The two
-use the same format, so a list can make the round trip.
+or a CSV file, and **Report** on the toolbar writes what you have back out as CSV. The two use the
+same format, so a list can make the round trip.
 
 ## Importing hosts
 
@@ -69,7 +69,7 @@ skipped." and "{n} can't be added."
 
 ## Exporting hosts
 
-**Inventory > Export hosts…** opens **Export hosts**. It only reads your list, so it works on a
+**Report**, on the toolbar, opens the **Report** window. It only reads your list, so it works on a
 read-only list too.
 
 ### Hosts, columns and presets
@@ -77,12 +77,13 @@ read-only list too.
 - **Hosts:** a dropdown of everything you can export, each with how many hosts it holds: the
   **search results** while a search is on, the **selected hosts** when you have more than one
   selected, **All hosts**, **No group**, every group — with the hosts of the groups inside it —
-  and **Tag: {tag}** for each tag. It opens on whatever the window is showing.
+  and **Tag: {tag}** for each tag. It opens on whatever the window is showing, every time.
 - **Columns:** tick what each row should hold, grouped as **Host** (Name, Address, Group), **Tags
-  and notes** (Tags, Notes) and **Last check** (Status, Logged-on users).
-- **Preset:** **Full backup** ticks every field, in the format Import hosts reads back. Keep your
-  own set with **Save as preset…**, and remove one with **Delete**. Ticks matching no preset read
-  **Custom**.
+  and notes** (Tags, Notes) and **Last check** (Status, Logged-on users). The ticks are kept as
+  soon as you change them, so closing the window never loses them.
+- **Preset:** **For Import** ticks the hosts' own fields, "which Import hosts reads back: to move
+  hosts to a list". Keep your own set with **Save as preset…**, and remove one with **Delete**.
+  Ticks matching no preset read **Custom**.
 
 ### Status and logged-on users
 
@@ -98,13 +99,18 @@ PC. Keep the file private."
 **Preview** shows the rows that will go out. Then:
 
 - **Copy** puts every row on the clipboard with tabs between the columns, to paste straight into
-  Excel.
-- **Export…** saves a CSV named after the list, and after the part of it you picked, then offers
-  **Open file** or **Open folder**.
+  Excel. It says how many hosts it copied and from where, and the window stays open, so another
+  part of the list can go out next.
+- **Export…** saves a CSV named after the list, and after the part of it you picked, says "Report
+  saved: 12 hosts from All hosts." with the file under it, and offers **Open file** or **Open
+  folder**.
+
+**Close**, at the bottom, is the only way out: there's nothing to cancel, since every choice here
+is kept as soon as it's made. The status bar repeats what went out.
 
 The file uses the column separator your PC's Excel expects — a comma, or a semicolon where that's
 the local one — with tags separated by the other character, and it's written so that accented
-names open correctly. The status bar says how many hosts went out, and from where.
+names open correctly.
 
-What Export hosts writes is read back by Import hosts, which makes a full backup a way to copy
-hosts between lists, or to keep a copy of a list before a big change.
+What Report writes is read back by Import hosts, which makes **For Import** a way to copy hosts
+between lists, or to keep a copy of a list before a big change.

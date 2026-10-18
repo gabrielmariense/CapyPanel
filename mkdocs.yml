@@ -6,16 +6,19 @@ repo_url: https://github.com/gabrielmariense/CapyPanel
 repo_name: gabrielmariense/CapyPanel
 edit_uri: edit/main/docs/
 
+# Two bands: the pages about the whole app, then the Hosts tool's own, in docs/hosts/.
 nav:
-  - Home: README.md
-  - Getting started: getting-started.md
-  - Host lists: host-lists.md
-  - Importing and exporting: importing.md
-  - Connecting: connecting.md
-  - Checking hosts: checking.md
-  - Searching hosts: searching.md
-  - Settings and files: settings-and-files.md
-  - Development: development.md
+  - Start:
+      - Home: README.md
+      - Getting started: getting-started.md
+      - Settings and files: settings-and-files.md
+      - Development: development.md
+  - Hosts:
+      - Host lists: hosts/host-lists.md
+      - Importing and exporting: hosts/importing.md
+      - Connecting: hosts/connecting.md
+      - Checking: hosts/checking.md
+      - Searching: hosts/searching.md
 
 theme:
   name: material
@@ -52,15 +55,17 @@ plugins:
           build: true
           site_description: Todos os computadores sob seus cuidados, em uma só janela.
           nav_translations:
-            Home: Início
+            Start: Início
+            Home: Página inicial
             Getting started: Primeiros passos
+            Settings and files: Configurações e arquivos
+            Development: Desenvolvimento
+            Hosts: Hosts
             Host lists: Listas de hosts
             Importing and exporting: Importando e exportando
             Connecting: Conectando
-            Checking hosts: Verificando hosts
-            Searching hosts: Pesquisando hosts
-            Settings and files: Configurações e arquivos
-            Development: Desenvolvimento
+            Checking: Verificando
+            Searching: Pesquisando
 
 markdown_extensions:
   - admonition

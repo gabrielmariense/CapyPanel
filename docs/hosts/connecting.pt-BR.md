@@ -16,8 +16,8 @@ visualizador VNC instalado ele também encontra sozinho: onde o Windows registro
 (qualquer pasta), as pastas de Arquivos de Programas de costume, depois o seu PATH. Uma cópia
 portátil descompactada em outro lugar não é encontrada automaticamente; quando falta um
 visualizador, o CapyPanel pede para instalá-lo ou localizar o `.exe`. O caminho é salvo uma vez
-para todos no PC, como em **Configurações > Conexões > Ferramentas remotas** (veja
-[Configurações e arquivos](settings-and-files.pt-BR.md#conexoes)).
+para todos no PC, como em **Configurações > Hosts > Conexões > Ferramentas remotas** (veja
+[Configurações e arquivos](../settings-and-files.pt-BR.md#ferramentas-remotas)).
 
 ## Perfis de conexão
 
@@ -26,16 +26,16 @@ MS-Logon do UltraVNC), servidores que pedem só uma senha VNC, plugins de cripto
 Raspberry Pis, Área de Trabalho Remota. Um **perfil de conexão** diz qual delas um host usa:
 
 - a **ferramenta**: um visualizador VNC ou o Remote Desktop Connection;
-- o **login**: usuário e senha, ou só senha. Na Área de Trabalho Remota é "Pedido pelo Remote
-  Desktop Connection";
+- o **login**: usuário e senha, ou só senha. Na Área de Trabalho Remota a tabela lê "o próprio
+  Remote Desktop Connection pede";
 - **opções** que a ferramenta oferece, como o **plugin SecureVNC** do UltraVNC.
 
 ### Gerenciar perfis
 
-- Os perfis são gerenciados em **Configurações > Conexões** (também em **Conectar > Perfis de
-  conexão…**): adicionar, editar, duplicar, excluir. Cada um tem um nome, uma ferramenta, um
-  login (só os que essa ferramenta suporta), as opções da ferramenta (como o SecureVNC) e uma
-  porta, em branco para a da própria ferramenta.
+- Os perfis são gerenciados em **Configurações > Hosts > Conexões** (também em **Conectar >
+  Perfis de conexão…**): adicionar, editar, duplicar, excluir. Cada um tem um nome, uma
+  ferramenta, um login (só os que essa ferramenta suporta), as opções da ferramenta (como o
+  SecureVNC) e uma porta, em branco para a da própria ferramenta.
 - Cada ferramenta vem com um perfil inicial: **UltraVNC** e **RealVNC**, ambos com "usuário e
   senha", e **Remote Desktop**. Um perfil inicial é adicionado uma vez, também num PC que já tinha
   perfis; são perfis comuns, e um que você exclui continua excluído.
@@ -44,8 +44,8 @@ Raspberry Pis, Área de Trabalho Remota. Um **perfil de conexão** diz qual dela
   decidem quem pode alterá-los**: o CapyPanel cria a pasta no primeiro início, somente leitura
   para os outros usuários. Um arquivo de perfil criado por outro usuário (que não seja
   administrador) é ignorado.
-- **O perfil padrão**, usado pelos hosts cujos grupos não definem nenhum, é escolhido na mesma
-  página e salvo na mesma pasta, então é o mesmo para todos.
+- **Hosts sem perfil usam**, a última linha dessa seção, é o perfil com que um host conecta
+  quando não tem um próprio. Ele é salvo na mesma pasta, então é o mesmo para todos.
 - Excluir um perfil pergunta antes e diz quantos hosts e grupos da lista aberta o usam. Eles
   passam a seguir o perfil do grupo, ou o padrão.
 - Um perfil pode indicar um visualizador que não está instalado neste PC (ele aparece marcado),
@@ -62,7 +62,7 @@ assim por diante), um perfil do **UltraVNC** pode levar um arquivo de configura�
 2. No editor de perfil, **Configurações do visualizador > Escolher arquivo…** e selecione-o.
    **Usar padrões** volta às configurações do próprio visualizador.
 
-Quando você clica em Salvar, o CapyPanel copia o arquivo para junto do perfil
+Quando você clica em OK, o CapyPanel copia o arquivo para junto do perfil
 (`profiles\<id>.vnc`). Ele é usado **exatamente como foi salvo**, inclusive o plugin de
 criptografia; só o `host` é esvaziado, já que o endereço vem do host que você abre. Enquanto um
 perfil tem arquivo, as opções dele (como o SecureVNC) ficam desligadas: quem decide é o arquivo.
@@ -77,11 +77,11 @@ compartilhado nunca é alterado.
   Uma edição pode cobrir vários hosts de uma vez.
 - **"Do grupo"** significa que o host segue o grupo mais próximo que define um perfil. Hosts sem
   perfil em lugar nenhum usam o padrão.
-- **Só uma vez:** a seta do botão **Conectar** da barra de ferramentas lista **Conectar com
-  RealVNC**, **Conectar com Remote Desktop** e assim por diante, um por perfil: os hosts
-  selecionados abrem com aquele perfil desta vez, sem serem alterados.
+- **Só uma vez:** o menu **Conectar** da barra de ferramentas lista **Conectar com RealVNC**,
+  **Conectar com Remote Desktop** e assim por diante, um por perfil: os hosts selecionados abrem
+  com aquele perfil desta vez, sem serem alterados.
 
-O painel **Detalhes** diz qual perfil cada host acaba usando, em **Conexão**.
+O painel de **detalhes** diz qual perfil cada host acaba usando, em **Conexão**.
 
 Uma lista guarda só o ID do perfil. Quando um host ou grupo cita um perfil que o seu PC não tem,
 ele segue o perfil do grupo (ou o padrão), e o que falta é marcado como "não disponível neste PC"

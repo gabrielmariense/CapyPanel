@@ -19,13 +19,13 @@ Hiding or showing a column searches again. Users come from the last **Logged-on 
 ## While you search
 
 - What you typed is marked like a highlighter wherever it matched: in the table's columns, and in
-  the notes in the Details pane.
-- The results come from the whole list, so nothing is picked in the left pane. The Details pane
+  the notes in the Details panel.
+- The results come from the whole list, so nothing is picked in the Groups panel. The Details panel
   tells you which group the selected host is in, and CapyPanel never jumps there by itself.
 - The status bar adds **N found**.
 - **Refresh** checks only the results, and automatic status only the hosts shown.
-- **Inventory > Export hosts…** offers the results as what to export, counted, while the search
-  is on (see [Importing and exporting hosts](importing.md)).
+- **Report** offers the results as what to export, counted, while the search is on (see
+  [Importing and exporting hosts](importing.md)).
 
 ## Moving on and ending a search
 

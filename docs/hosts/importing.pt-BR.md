@@ -1,8 +1,8 @@
 # Importando e exportando hosts
 
 Os hosts não precisam ser digitados um a um. **Inventário > Importar hosts…** lê uma lista que
-você cola ou um arquivo CSV, e **Inventário > Exportar hosts…** grava o que você tem de volta em
-CSV. Os dois usam o mesmo formato, então uma lista pode fazer o caminho de ida e volta.
+você cola ou um arquivo CSV, e o **Relatório** da barra de ferramentas grava o que você tem de
+volta em CSV. Os dois usam o mesmo formato, então uma lista pode fazer o caminho de ida e volta.
 
 ## Importando hosts
 
@@ -69,7 +69,7 @@ e "{n} não podem ser adicionados."
 
 ## Exportando hosts
 
-**Inventário > Exportar hosts…** abre **Exportar hosts**. A janela só lê a sua lista, então
+O **Relatório**, na barra de ferramentas, abre a janela **Relatório**. Ela só lê a sua lista, então
 funciona também numa lista somente leitura.
 
 ### Hosts, colunas e predefinições
@@ -78,13 +78,14 @@ funciona também numa lista somente leitura.
   tem: os **resultados da pesquisa** enquanto uma pesquisa está ativa, os **hosts selecionados**
   quando você tem mais de um selecionado, **Todos os hosts**, **Sem grupo**, cada grupo — com os
   hosts dos grupos de dentro dele — e **Tag: {tag}** para cada tag. Ela abre no que a janela está
-  mostrando.
+  mostrando, sempre.
 - **Colunas:** marque o que cada linha deve ter, agrupado em **Host** (Nome, Endereço, Grupo),
-  **Tags e notas** (Tags, Notas) e **Última verificação** (Status, Usuários logados).
-- **Predefinição:** **Backup completo** marca todos os campos, no formato que Importar hosts lê de
-  volta. Guarde o seu próprio conjunto com **Salvar como predefinição…** e tire um com
-  **Excluir**. Marcações que não correspondem a nenhuma predefinição aparecem como
-  **Personalizado**.
+  **Tags e notas** (Tags, Notas) e **Última verificação** (Status, Usuários logados). As marcações
+  são guardadas assim que você as muda, então fechar a janela nunca as perde.
+- **Predefinição:** **Para importar** marca os campos dos próprios hosts, "que Importar hosts lê
+  de volta: para levar hosts a uma lista". Guarde o seu próprio conjunto com **Salvar como
+  predefinição…** e tire um com **Excluir**. Marcações que não correspondem a nenhuma
+  predefinição aparecem como **Personalizado**.
 
 ### Status e usuários logados
 
@@ -100,14 +101,19 @@ Mantenha o arquivo privado."
 A **Prévia** mostra as linhas que vão sair. Depois:
 
 - **Copiar** coloca todas as linhas na área de transferência com tabulações entre as colunas, para
-  colar direto no Excel.
-- **Exportar…** salva um CSV com o nome da lista, e da parte dela que você escolheu, e depois
-  oferece **Abrir arquivo** ou **Abrir pasta**.
+  colar direto no Excel. Ele diz quantos hosts copiou e de onde, e a janela fica aberta, então
+  outra parte da lista pode sair em seguida.
+- **Exportar…** salva um CSV com o nome da lista, e da parte dela que você escolheu, diz
+  "Relatório salvo: 12 hosts de Todos os hosts." com o arquivo embaixo, e oferece **Abrir arquivo**
+  ou **Abrir pasta**.
+
+**Fechar**, embaixo, é a única saída: não há nada para cancelar, já que cada escolha daqui é
+guardada assim que é feita. A barra de status repete o que saiu.
 
 O arquivo usa o separador de colunas que o Excel deste PC espera — vírgula, ou ponto e vírgula
 onde esse é o separador local — com as tags separadas pelo outro caractere, e é gravado de um jeito
-que abre os nomes acentuados corretamente. A barra de status diz quantos hosts saíram, e de onde.
+que abre os nomes acentuados corretamente.
 
-O que o Exportar hosts grava é lido de volta pelo Importar hosts, o que faz de um backup completo
-um jeito de copiar hosts entre listas, ou de guardar uma cópia de uma lista antes de uma mudança
+O que o Relatório grava é lido de volta pelo Importar hosts, o que faz do **Para importar** um
+jeito de copiar hosts entre listas, ou de guardar uma cópia de uma lista antes de uma mudança
 grande.

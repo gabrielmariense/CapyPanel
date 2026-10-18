@@ -15,8 +15,8 @@ Remote Desktop Connection is built into Windows, so CapyPanel finds it in `Syste
 an installed VNC viewer by itself too: where Windows recorded the install (any folder), the usual
 Program Files folders, then your PATH. A portable copy unzipped somewhere else isn't found
 automatically; when a viewer is missing, CapyPanel asks you to install it or to locate its
-`.exe`. The path is saved once for everyone on the PC, like in **Settings > Connections > Remote
-tools** (see [Settings and files](settings-and-files.md#connections)).
+`.exe`. The path is saved once for everyone on the PC, like in **Settings > Hosts > Connections >
+Remote tools** (see [Settings and files](../settings-and-files.md#remote-tools)).
 
 ## Connection profiles
 
@@ -25,15 +25,16 @@ MS-Logon), servers that ask only for a VNC password, encryption plugins, RealVNC
 Remote Desktop. A **connection profile** says which one a host uses:
 
 - the **tool**: a VNC viewer or Remote Desktop Connection;
-- the **login**: user and password, or password only. For Remote Desktop it's "Asked by Remote
-  Desktop Connection";
+- the **login**: user and password, or password only. For Remote Desktop the table reads
+  "asked by Remote Desktop Connection itself";
 - **options** the tool offers, such as UltraVNC's **SecureVNC plugin**.
 
 ### Managing profiles
 
-- Profiles are managed in **Settings > Connections** (also **Connect > Connection profiles…**):
-  add, edit, duplicate, delete. Each has a name, a tool, a login (only the ones that tool
-  supports), the tool's options (such as SecureVNC) and a port, blank for the tool's own.
+- Profiles are managed in **Settings > Hosts > Connections** (also **Connect > Connection
+  profiles…**): add, edit, duplicate, delete. Each has a name, a tool, a login (only the ones
+  that tool supports), the tool's options (such as SecureVNC) and a port, blank for the tool's
+  own.
 - Each tool comes with a starter profile: **UltraVNC** and **RealVNC**, both with "user and
   password", and **Remote Desktop**. A starter is added once, also on a PC that already had
   profiles; they're ordinary profiles, and one you delete stays deleted.
@@ -41,8 +42,8 @@ Remote Desktop. A **connection profile** says which one a host uses:
   list, so everyone on the PC sees the same ones and they're easy to check. **Windows
   permissions decide who can change them**: CapyPanel creates the folder at its first start,
   read-only for other users. A profile file made by another user (not an administrator) is ignored.
-- **The default profile**, used by hosts whose groups set none, is chosen on the same page and
-  saved in the same folder, so it's the same for everyone.
+- **Hosts with no profile use**, the last row of that section, is the profile a host connects
+  with when it has none of its own. It's saved in the same folder, so it's the same for everyone.
 - Deleting a profile asks first, and says how many hosts and groups in the open list use it.
   Those then follow their group's profile, or the default.
 - A profile can name a viewer that isn't installed on this PC (it's marked so), for example to
@@ -59,7 +60,7 @@ everything else the viewer offers (quality, scaling, view-only, full screen and 
 2. In the profile editor, **Viewer settings > Choose file…** and pick it. **Use defaults** goes
    back to the viewer's own settings.
 
-When you click Save, CapyPanel copies the file beside the profile (`profiles\<id>.vnc`). It's
+When you click OK, CapyPanel copies the file beside the profile (`profiles\<id>.vnc`). It's
 used **exactly as saved**, encryption plugin included; only the `host` is emptied, since the
 address comes from the host you open. While a profile has a file, its options (such as SecureVNC)
 are off: the file decides. When you connect, the viewer gets a temporary copy, deleted a minute
@@ -73,11 +74,11 @@ later, and the shared file is never changed.
   edit can cover several hosts at once.
 - **"From group"** means the host follows the nearest group that sets a profile. Hosts with no
   profile anywhere use the default.
-- **Just once:** the arrow on the toolbar's **Connect** button lists **Connect with RealVNC**,
-  **Connect with Remote Desktop** and so on, one per profile: the selected hosts open with that
-  profile this time, without changing them.
+- **Just once:** the toolbar's **Connect** dropdown lists **Connect with RealVNC**, **Connect
+  with Remote Desktop** and so on, one per profile: the selected hosts open with that profile this
+  time, without changing them.
 
-The **Details** pane names the profile each host ends up using, under **Connection**.
+The **Details** panel names the profile each host ends up using, under **Connection**.
 
 A list stores only the profile's ID. When a host or group names a profile your PC doesn't
 have, it follows its group's profile (or the default) instead, and the missing one is marked
