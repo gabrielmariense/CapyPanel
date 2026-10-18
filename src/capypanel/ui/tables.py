@@ -45,9 +45,8 @@ def fit_rows(table: QTreeWidget) -> None:
     row = table.sizeHintForRow(0) if first is not None else -1
     if row <= 0:
         row = table.fontMetrics().height() + 16  # the stylesheet pads each row
-    # The header, the rows, and the table's frame and padding.
-    frame = 2 * table.frameWidth() + 12
-    table.setFixedHeight(table.header().sizeHint().height() + rows * (row + 2) + frame)
+    # The header, exactly `rows` rows (a 7th never peeks in), and the frame.
+    table.setFixedHeight(table.header().sizeHint().height() + rows * row + 2 * table.frameWidth())
 
 
 def with_buttons(table: QTreeWidget, buttons: list[QPushButton]) -> QWidget:

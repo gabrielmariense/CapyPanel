@@ -6,7 +6,7 @@ the Connections page, ask first when something isn't saved."""
 from dataclasses import dataclass
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QObject, Qt, QTimer, Signal
+from PySide6.QtCore import QEvent, QObject, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QHideEvent, QShowEvent
 from PySide6.QtWidgets import (
     QAbstractButton,
@@ -476,12 +476,24 @@ class SettingsDialog(QDialog):
 
 def _scrolling(page: Page) -> QScrollArea:
     """A page that scrolls when it's taller than the window, with no frame of its own."""
-    area = QScrollArea()
+    area = _PageArea()
     area.setWidgetResizable(True)
     area.setFrameShape(QFrame.Shape.NoFrame)
     area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     area.setWidget(page)
     return area
+
+class _PageArea(QScrollArea):
+    """Never narrower than its page: the window widens instead of cutting off a button row."""
+
+    def minimumSizeHint(self) -> QSize:
+        hint = super().minimumSizeHint()
+        page = self.widget()
+        if page is None:
+            return hint
+        bar = self.verticalScrollBar().sizeHint().width()
+        return QSize(max(hint.width(), page.minimumSizeHint().width() + bar), hint.height())
+
 
 
 def _words(page: QWidget) -> str:

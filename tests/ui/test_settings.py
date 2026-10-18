@@ -496,3 +496,19 @@ def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow)
     assert dialog.search.text() == "" and dialog.current_page() == "files"
     assert dialog.files.findChildren(QLabel)  # its section is back on its page
     assert len(listed()) == dialog.page_list.count()
+
+
+def test_list_tables_show_six_rows_at_most_and_pages_never_get_cut(
+    window: MainWindow, paths: settings.Paths
+) -> None:
+    for name in "abcdefg":
+        listfile.save(paths.shared_lists_dir / f"{name}.json", HostList(), expected=None)
+    dialog = window.settings_dialog()
+    dialog.show()
+    dialog.show_page("host_lists")
+    QApplication.processEvents()
+    tree = dialog.host_lists.view.tree
+    assert tree.viewport().height() == 6 * tree.sizeHintForRow(0)  # no 7th row peeking in
+    page = dialog.host_lists
+    assert page.width() >= page.minimumSizeHint().width()  # the window widened instead
+    dialog.close()
