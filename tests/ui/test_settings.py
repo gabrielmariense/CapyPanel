@@ -5,9 +5,10 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QDesktopServices, QTextDocumentFragment
 from PySide6.QtWidgets import (
     QApplication,
+    QDialogButtonBox,
     QFileDialog,
     QHeaderView,
     QLabel,
@@ -483,9 +484,9 @@ def test_every_choice_applies_at_once_and_only_close_is_left(window: MainWindow)
     assert page.store.default_id() == "realvnc"  # written for everyone at once
     dialog.show()
     QApplication.processEvents()
-    assert [b.text() for b in dialog.buttons.buttons()] == ["Close"]
+    assert not dialog.findChildren(QDialogButtonBox)  # no Close: the X or Esc closes it
     assert not any(b.isDefault() or b.autoDefault() for b in dialog.findChildren(QPushButton))
-    dialog.close_button.click()  # nothing to ask: it just closes
+    dialog.reject()  # Esc: nothing to ask, it just closes
     assert not dialog.isVisible()
 
 
@@ -644,3 +645,15 @@ def test_about_is_pinned_at_the_bottom_and_one_page_is_picked_at_a_time(
     assert dialog.current_page() == "hosts" and dialog.pinned_list.currentRow() == -1
     dialog.show_page("about")
     assert dialog.current_page() == "about" and dialog.pinned_list.currentRow() == 0
+
+
+def test_searching_a_link_s_words_marks_them_and_keeps_the_link(window: MainWindow) -> None:
+    dialog = window.settings_dialog()
+    dialog.search.setText("github")
+    links = [w for w in dialog._marks.marked_labels() if "href=" in w.text()]  # pyright: ignore[reportPrivateUsage]
+    assert links  # the Documentation and Source code links
+    for link in links:
+        shown = QTextDocumentFragment.fromHtml(link.text()).toPlainText()
+        assert "href" not in shown and "<a" not in shown  # the link, not its code
+    dialog.search.clear()
+    assert all("<span" not in w.text() for w in links)  # back as they were

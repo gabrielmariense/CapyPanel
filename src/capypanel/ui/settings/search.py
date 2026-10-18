@@ -5,7 +5,7 @@ import html
 import re
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, Qt
-from PySide6.QtGui import QPainter, QPaintEvent
+from PySide6.QtGui import QPainter, QPaintEvent, QTextDocumentFragment
 from PySide6.QtWidgets import (
     QAbstractButton,
     QCheckBox,
@@ -43,7 +43,7 @@ def own_texts(widget: QWidget) -> list[str]:
     """What one widget says: a label's or button's text, a dropdown's items, a table's headers.
     Not a table's rows: those are data, like a tool's path, not settings."""
     if isinstance(widget, QLabel):
-        return [widget.text()]
+        return [visible_text(widget)]
     if isinstance(widget, QAbstractButton):
         return [shown(widget.text())]
     if isinstance(widget, QComboBox):
@@ -83,10 +83,15 @@ class SearchMarks(QWidget):
         for root in widgets:
             labels = [root] if isinstance(root, QLabel) else root.findChildren(QLabel)
             for label in labels:
-                if type(label) is QLabel and spans(label.text(), needle):  # not a custom one
+                if type(label) is QLabel and spans(visible_text(label), needle):  # not custom
                     self._labels.append((label, label.text(), label.textFormat()))
+                    marked = (
+                        _marked_rich(label.text(), needle)
+                        if _is_rich(label)
+                        else _marked_html(label.text(), needle)
+                    )
                     label.setTextFormat(Qt.TextFormat.RichText)
-                    label.setText(_marked_html(label.text(), needle))
+                    label.setText(marked)
             for control in root.findChildren(QWidget):
                 if isinstance(control, (QAbstractButton, QComboBox, QTreeWidget)) and any(
                     spans(text, needle) for text in own_texts(control)
@@ -130,15 +135,58 @@ class SearchMarks(QWidget):
         painter.end()
 
 
+_TAG = re.compile(r"<[A-Za-z/]")  # rich text, as Qt guesses it: it has a tag
+
+
+def _is_rich(label: QLabel) -> bool:
+    text_format = label.textFormat()
+    return text_format == Qt.TextFormat.RichText or (
+        text_format == Qt.TextFormat.AutoText and _TAG.search(label.text()) is not None
+    )
+
+
+def visible_text(label: QLabel) -> str:
+    """What a label shows: a link's words, not its address or tags."""
+    if not _is_rich(label):
+        return label.text()
+    return QTextDocumentFragment.fromHtml(label.text()).toPlainText()
+
+
+_MARK_STYLE = (
+    f"background-color: rgba({MARK.red()}, {MARK.green()}, {MARK.blue()}, {MARK.alphaF():.2f})"
+)
+
+
 def _marked_html(text: str, needle: str) -> str:
-    color = f"rgba({MARK.red()}, {MARK.green()}, {MARK.blue()}, {MARK.alphaF():.2f})"
+    """Plain text, its matches marked, as rich text."""
     parts, last = [], 0
     for start, end in spans(text, needle):
-        parts += [html.escape(text[last:start]), f'<span style="background-color: {color}">']
+        parts += [html.escape(text[last:start]), f'<span style="{_MARK_STYLE}">']
         parts += [html.escape(text[start:end]), "</span>"]
         last = end
     parts.append(html.escape(text[last:]))
     return "".join(parts).replace("\n", "<br>")
+
+
+def _marked_rich(text: str, needle: str) -> str:
+    """Rich text (a link, say), its matches marked only in what it shows: tags and the
+    addresses inside them stay as they are."""
+    marked = []
+    for part in re.split(r"(<[^>]*>)", text):
+        if part.startswith("<"):
+            marked.append(part)
+            continue
+        last = 0
+        for start, end in spans(part, needle):
+            marked += [
+                part[last:start],
+                f'<span style="{_MARK_STYLE}">',
+                part[start:end],
+                "</span>",
+            ]
+            last = end
+        marked.append(part[last:])
+    return "".join(marked)
 
 
 def _word_rects(text: str, needle: str, left: int, area: QRect, widget: QWidget) -> list[QRect]:

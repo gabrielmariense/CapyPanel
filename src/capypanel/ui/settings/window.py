@@ -1,6 +1,7 @@
-"""The Settings window: a search and a list of pages on the left, Close at the bottom. Every
-choice applies as soon as it's made, with no Save: the main window applies what the signals hand
-over, and profiles and tool paths are written by their page at once."""
+"""The Settings window: a search and a list of pages on the left, the page on the right. No
+buttons: the window's X or Esc closes it, and every choice applies as soon as it's made. The
+main window applies what the signals hand over; profiles and tool paths are written by their
+page at once."""
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,7 +10,6 @@ from PySide6.QtCore import QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
-    QDialogButtonBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -203,12 +203,6 @@ class SettingsDialog(QDialog):
         self.pinned_list.currentRowChanged.connect(self._pinned_picked)
         self.page_list.setCurrentRow(self.row_of("general"))
 
-        # Only Close: every choice is applied already. Not a default button, so Enter in a
-        # field never closes the window by surprise.
-        self.buttons = QDialogButtonBox()
-        role = QDialogButtonBox.ButtonRole.RejectRole
-        self.close_button = self.buttons.addButton(_("Close"), role)
-        self.buttons.rejected.connect(self.reject)
         content = QWidget()
         columns = QHBoxLayout()
         columns.setSpacing(16)
@@ -231,7 +225,6 @@ class SettingsDialog(QDialog):
         inside = QVBoxLayout(content)
         inside.setContentsMargins(0, 0, 0, 0)
         inside.addLayout(columns, 1)
-        inside.addWidget(self.buttons)
         self._layout.addWidget(content)
         self._content = content
         self._no_default_buttons()
