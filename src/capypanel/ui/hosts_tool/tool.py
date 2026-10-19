@@ -44,6 +44,9 @@ MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks fi
 
 
 class HostsTool(ListWorkspace):
+    TOOL_ID = "hosts"
+    ICON = "device-desktop"
+    INHERITS_TOP_LEVEL = True  # 0.19 kept the Hosts settings at the top level
     checks_changed = Signal()  # a Refresh started, found something, or ended
 
     def __init__(self, shell: Shell):
@@ -75,7 +78,7 @@ class HostsTool(ListWorkspace):
         self._targets: list[tuple[str, str]] = []
 
         self.refresh_panel = RefreshPanel(self)
-        self.refresh_panel.set_choices(self._prefs.get("refresh"))
+        self.refresh_panel.set_choices(self.prefs.get("refresh"))
         self._progress = QLabel()
         self._stop_button = QToolButton()
         self._stop_button.setText(_("Stop"))
@@ -145,9 +148,15 @@ class HostsTool(ListWorkspace):
         super().save_state()
         if self._run is not None:
             self._run.stop()  # hosts already being read finish in the background
-        self._prefs["refresh"] = self.refresh_panel.choices()
+        self.prefs["refresh"] = self.refresh_panel.choices()
 
     # ---- texts ----
+
+    def tool_name(self) -> str:
+        return _("Hosts")
+
+    def menu_name(self) -> str:
+        return _("&Hosts")
 
     def all_items_text(self) -> str:
         return _("All hosts")
@@ -286,7 +295,7 @@ class HostsTool(ListWorkspace):
             sources,
             current,
             list_name=doc.path.stem,
-            prefs=self._prefs,
+            prefs=self.prefs,
             save_prefs=self._save_prefs,
             results=results,
             refresh=lambda hosts, status, users: self.check_hosts(
@@ -495,13 +504,13 @@ class HostsTool(ListWorkspace):
     def settings_values(self) -> dict[str, Any]:
         """What Settings shows about Hosts."""
         return {
-            "start_list": self._prefs.get(locations.START_KEY, locations.START_LAST),
+            "start_list": self.prefs.get(locations.START_KEY, locations.START_LAST),
             "default_list": self._default_list,
             "personal_list": self._personal_list,
             "document": self._doc,
-            "added": locations.added_lists(self._prefs),
+            "added": locations.added_lists(self.prefs),
             "found": self.found_lists(hidden=True),
-            "hidden": locations.hidden_lists(self._prefs),
+            "hidden": locations.hidden_lists(self.prefs),
             "catalogs": self.connector.catalogs,
             "auto_status": self._auto_status(),
             "start_view": self.start_view(),
@@ -525,7 +534,7 @@ class HostsTool(ListWorkspace):
             prefs.start_list, prefs.start_view, prefs.added_lists, prefs.hidden_lists
         )
         on, minutes = prefs.auto_status
-        self._prefs["auto_status"] = {"on": on, "minutes": minutes}
+        self.prefs["auto_status"] = {"on": on, "minutes": minutes}
         self._apply_auto_status()
         self._save_prefs()
         self._update_state()  # the list's name may change with the lists kept
@@ -690,7 +699,7 @@ class HostsTool(ListWorkspace):
             self._start(targets, wanted)
 
     def _auto_status(self) -> tuple[bool, int]:
-        saved = self._prefs.get("auto_status")
+        saved = self.prefs.get("auto_status")
         saved = saved if isinstance(saved, dict) else {}
         minutes = saved.get("minutes", 5)
         minutes = minutes if isinstance(minutes, int) and 1 <= minutes <= 120 else 5
@@ -857,6 +866,6 @@ class HostsTool(ListWorkspace):
 
     def _run_refresh_panel(self) -> None:
         choices = self.refresh_panel.choices()
-        self._prefs["refresh"] = choices
+        self.prefs["refresh"] = choices
         self._save_prefs()
         self.check_hosts(self.visible_items(), status=choices["status"], users=choices["users"])

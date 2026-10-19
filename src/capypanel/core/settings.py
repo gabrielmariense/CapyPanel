@@ -7,6 +7,7 @@ users\\<user@DOMAIN>\\ holds each user's settings and lists\\ (the personal list
 lists), private to that user and administrators;
 logs\\<user@DOMAIN>.log, one per user."""
 
+import copy
 import json
 import logging
 import os
@@ -136,6 +137,29 @@ def load_settings(path: Path) -> dict[str, Any]:
         path.replace(path.with_name(path.name + ".broken"))
         return {"schema": SETTINGS_SCHEMA}
     return data
+
+
+TOOLS_KEY = "tools"  # each tool's own settings, by tool id
+# The shell's own settings; everything else at the top level was the Hosts tool's before 0.20.
+SHELL_KEYS = frozenset(
+    {"schema", "window_geometry", "settings_geometry", "theme", "language", "tool", TOOLS_KEY}
+)
+
+
+def tool_prefs(prefs: dict[str, Any], tool_id: str, *, inherit: bool = False) -> dict[str, Any]:
+    """A tool's own section of the settings, made the first time it's asked for. With `inherit`
+    (Hosts), a new section starts from what 0.19 kept at the top level, which stays there too, so
+    an older version still reads it."""
+    tools = prefs.get(TOOLS_KEY)
+    if not isinstance(tools, dict):
+        tools = prefs[TOOLS_KEY] = {}
+    section = tools.get(tool_id)
+    if not isinstance(section, dict):
+        section = {}
+        if inherit:
+            section = {k: copy.deepcopy(v) for k, v in prefs.items() if k not in SHELL_KEYS}
+        tools[tool_id] = section
+    return section
 
 
 def save_settings(path: Path, data: Mapping[str, Any]) -> None:

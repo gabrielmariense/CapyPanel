@@ -113,3 +113,14 @@ def test_non_object_json_is_set_aside(tmp_path: Path) -> None:
     path.write_text(json.dumps([1, 2]), encoding="utf-8")
     assert settings.load_settings(path) == {"schema": settings.SETTINGS_SCHEMA}
     assert path.with_name(path.name + ".broken").exists()
+
+
+def test_each_tool_has_its_own_section_and_hosts_starts_from_0_19s_settings() -> None:
+    prefs = {"schema": 1, "theme": "graphite", "recent_lists": ["a.json"], "view": {"tags": False}}
+    hosts = settings.tool_prefs(prefs, "hosts", inherit=True)
+    assert hosts == {"recent_lists": ["a.json"], "view": {"tags": False}}  # not the shell's own
+    hosts["recent_lists"].append("b.json")
+    assert prefs["recent_lists"] == ["a.json"]  # a copy: 0.19 still reads what it kept
+    assert settings.tool_prefs(prefs, "hosts", inherit=True) is hosts  # made once
+    assert settings.tool_prefs(prefs, "printers") == {}  # a new tool starts empty
+    assert set(prefs["tools"]) == {"hosts", "printers"}

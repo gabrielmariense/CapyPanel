@@ -185,7 +185,7 @@ def test_removing_a_list_forgets_it_but_never_deletes_the_file(
     assert [r[0] for r in _rows(view)] == ["Shared", "Yours"]  # the default and personal lists
     view.select(window.hosts._default_list)
     assert not view.remove_button.isEnabled()  # the default and personal lists always stay
-    assert window.prefs["host_lists"] == [] and office.is_file()
+    assert window.hosts.prefs["host_lists"] == [] and office.is_file()
 
 
 def test_missing_personal_list_is_created_when_chosen(window: MainWindow) -> None:
@@ -217,7 +217,7 @@ def test_open_list_from_the_dropdown_opens_a_list_and_keeps_it_there(
     _answer_open_dialog(monkeypatch, office)
     window.hosts.commands.open_list.trigger()  # the list dropdown's Open list… (Ctrl+O)
     assert window.hosts.document is not None and window.hosts.document.path == office
-    assert window.prefs["host_lists"] == [str(office)]
+    assert window.hosts.prefs["host_lists"] == [str(office)]
     window.hosts.list_picker.menu().aboutToShow.emit()  # filled as it opens
     texts = [label(a) for a in window.hosts.list_picker.menu().actions() if a.text()]
     assert texts[:3] == ["Default", "Personal", "office"]  # by file name
@@ -304,7 +304,7 @@ def test_the_path_is_in_the_tooltip_and_same_names_show_their_folder(
     window: MainWindow, tmp_path: Path
 ) -> None:
     a, b = tmp_path / "north" / "hosts.json", tmp_path / "south" / "hosts.json"
-    window.prefs["host_lists"] = [str(a), str(b)]
+    window.hosts.prefs["host_lists"] = [str(a), str(b)]
     view = window.settings_dialog().host_lists.view
     names = [view.tree.topLevelItem(i).text(0) for i in range(4)]  # type: ignore[union-attr]
     assert names[2:] == ["hosts (north)", "hosts (south)"]
@@ -445,7 +445,7 @@ def test_a_list_that_doesn_t_exist_can_t_be_opened(
 ) -> None:
     warned: list[str] = []
     monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: warned.append(text))
-    window.prefs["host_lists"] = [str(tmp_path / "nowhere.json")]
+    window.hosts.prefs["host_lists"] = [str(tmp_path / "nowhere.json")]
     view = window.settings_dialog().host_lists.view
     view.select(tmp_path / "nowhere.json")
     assert _rows(view)[2][1] == "File not found"
@@ -462,7 +462,7 @@ def test_an_added_list_is_kept_at_once_and_opens_on_a_double_click(
     dialog = window.settings_dialog()
     view = dialog.host_lists.view
     view.add_button.click()
-    assert window.prefs["host_lists"] == [str(office)]  # kept, with no Save
+    assert window.hosts.prefs["host_lists"] == [str(office)]  # kept, with no Save
     assert window.hosts.document is before  # adding a list doesn't open it
     view.open_picked()  # a double-click opens it
     assert window.hosts.document is not None and window.hosts.document.path == office
@@ -479,7 +479,7 @@ def test_save_a_copy_writes_it_and_keeps_the_list_in_use(
     view.select(office)
     view.copy_picked()  # the row's right-click: Save a copy…
     assert listfile.load(copy).hosts == listfile.load(office).hosts
-    assert view.selected() == copy and str(copy) in window.prefs["host_lists"]
+    assert view.selected() == copy and str(copy) in window.hosts.prefs["host_lists"]
     assert window.hosts.document is not None and window.hosts.document.path == office
 
 
@@ -613,7 +613,7 @@ def test_new_list_from_the_dropdown_makes_a_shared_list(
         and window.hosts.document is not None
         and window.hosts.document.path == shared
     )
-    assert not window.prefs.get("host_lists")  # in a lists folder: it shows up by itself
+    assert not window.hosts.prefs.get("host_lists")  # in a lists folder: it shows up by itself
 
 
 def test_remove_can_also_move_the_file_to_the_recycle_bin(
@@ -639,7 +639,7 @@ def test_remove_can_also_move_the_file_to_the_recycle_bin(
 def test_a_list_that_can_t_be_deleted_is_only_removed(
     window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    window.prefs["host_lists"] = [str(office.with_name("gone.json"))]
+    window.hosts.prefs["host_lists"] = [str(office.with_name("gone.json"))]
     monkeypatch.setattr(host_lists, "ask_remove", lambda *_a: pytest.fail("asked"))
     view = window.settings_dialog().host_lists.view
     view.select(office.with_name("gone.json"))  # no file to delete

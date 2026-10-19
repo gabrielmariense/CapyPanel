@@ -499,7 +499,7 @@ def test_a_list_opens_on_all_hosts_where_it_was_left_or_its_chosen_group(
     again = _reopened(window, tmp_path)
     assert again.hosts.nav.current_filter().kind == "all"  # the default: All hosts
     path = again.hosts.document.path  # type: ignore[union-attr]
-    locations.set_list_view(again.prefs, path, locations.ListView(show=locations.SHOW_LAST))
+    locations.set_list_view(again.hosts.prefs, path, locations.ListView(show=locations.SHOW_LAST))
     again.hosts.nav.select_group(lab)
     third = _reopened(again, tmp_path)
     assert third.hosts.nav.selected_group_id() == lab  # where it was left
@@ -540,5 +540,5 @@ def test_settings_chooses_what_the_open_list_shows_first(window: MainWindow) -> 
     assert page.show_first.text() == "Group: alpha wing"
     doc = window.hosts.document
     assert doc is not None
-    view = locations.list_view(window.prefs, doc.path)
+    view = locations.list_view(window.hosts.prefs, doc.path)
     assert (view.show, view.group) == (locations.SHOW_GROUP, _id(window, "alpha wing"))

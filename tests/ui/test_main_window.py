@@ -65,7 +65,7 @@ def test_first_start_creates_the_personal_list_with_a_hosts_group(window: MainWi
 def test_opening_a_list_shows_its_hosts_and_remembers_it(window: MainWindow, office: Path) -> None:
     assert window.hosts.open_list(office)
     assert _table_names(window) == {"HQ-01", "FIN-01", "FIN-02"}
-    assert recent_lists(window.prefs)[0] == office
+    assert recent_lists(window.hosts.prefs)[0] == office
 
 
 def test_picking_a_group_or_tag_filters_the_table(window: MainWindow, office: Path) -> None:
@@ -123,8 +123,9 @@ def test_closing_saves_layout_and_keeps_other_settings(
     win.close()
     saved = json.loads(paths.settings_file.read_text(encoding="utf-8"))
     assert saved["kept"] is True
-    assert saved["view"]["details"] is False
-    assert isinstance(saved["window_geometry"], str) and isinstance(saved["main_splitter"], str)
+    hosts = saved["tools"]["hosts"]  # each tool's settings in its own section
+    assert hosts["view"]["details"] is False and saved["view"]["toolbar"] is True
+    assert isinstance(saved["window_geometry"], str) and isinstance(hosts["main_splitter"], str)
 
 
 def test_host_dialog_cleans_values_and_shows_group_paths(qapp: QApplication) -> None:
@@ -158,7 +159,7 @@ def test_columns_keep_their_title_visible_and_can_be_hidden(
     assert table.columnWidth(table.USER) >= table.minimum_width(table.USER) > 5
     table._show_column(table.USER, False)
     assert table.isColumnHidden(table.USER)
-    assert window.prefs["hidden_columns"] == ["user"]
+    assert window.hosts.prefs["hidden_columns"] == ["user"]
     reopened = MainWindow(window.paths, dict(window.prefs))
     assert reopened.hosts.table.isColumnHidden(reopened.hosts.table.USER)
     reopened.hosts.table.set_hidden_columns(["computer"])
@@ -263,7 +264,7 @@ def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: MainWindow, office
     window.hosts.commands.show_tags.setChecked(False)
     assert window.hosts.nav.tags.isHidden() and window.hosts.nav.current_filter().kind == "all"
     window.close()
-    assert window.prefs["view"]["tags"] is False
+    assert window.hosts.prefs["view"]["tags"] is False
 
 
 def test_the_groups_pane_fits_all_computers(window: MainWindow, office: Path) -> None:

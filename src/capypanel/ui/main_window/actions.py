@@ -29,7 +29,6 @@ class ShellActions:
     exit: QAction
     show_toolbar: QAction
     show_status_bar: QAction
-    show_hosts: QAction
     documentation: QAction
     report_problem: QAction
     about: QAction
@@ -38,9 +37,8 @@ class ShellActions:
 SHORTCUTS = {
     "settings": "Ctrl+,",
     "exit": "Ctrl+Q",
-    "show_hosts": "Ctrl+1",  # the tools, in View and on the rail
 }
-CHECKABLE = {"show_toolbar", "show_status_bar", "show_hosts"}
+CHECKABLE = {"show_toolbar", "show_status_bar"}
 
 
 def create_actions(parent: QObject) -> ShellActions:
@@ -58,4 +56,3 @@ def retranslate_actions(a: ShellActions) -> None:
     a.about.setText(_("&About CapyPanel"))
     a.show_toolbar.setText(_("T&oolbar"))
     a.show_status_bar.setText(_("&Status bar"))
-    a.show_hosts.setText(_("&Hosts"))

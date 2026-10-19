@@ -85,7 +85,7 @@ def test_columns_come_in_groups_and_a_custom_pick_can_be_a_preset(
         assert d.preset.currentText() == "Walk-round" and d.delete_preset.isEnabled()
 
     _run(window, monkeypatch, pick)
-    assert window.prefs["export_presets"] == {"Walk-round": ["name", "users"]}
+    assert window.hosts.prefs["export_presets"] == {"Walk-round": ["name", "users"]}
 
     def again(d: ExportDialog) -> None:
         assert d.columns() == ["name", "users"]  # the last choice
@@ -126,7 +126,7 @@ def test_refresh_runs_on_the_hosts_being_exported_and_holds_export(
 def test_saving_a_preset_under_a_name_in_use_asks_before_replacing_it(
     window: MainWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    window.prefs["export_presets"] = {"Walk-round": ["name", "users"]}
+    window.hosts.prefs["export_presets"] = {"Walk-round": ["name", "users"]}
     monkeypatch.setattr(
         export_hosts.QInputDialog, "getText", lambda *_a, **_k: ("walk-round", True)
     )
@@ -141,10 +141,10 @@ def test_saving_a_preset_under_a_name_in_use_asks_before_replacing_it(
             box.setChecked(key in ("name", "address"))
         d.save_preset.click()  # Cancel: the old preset stays as it was
         assert asked == ["A preset named “Walk-round” already exists. Replace it?"]
-        assert window.prefs["export_presets"] == {"Walk-round": ["name", "users"]}
+        assert window.hosts.prefs["export_presets"] == {"Walk-round": ["name", "users"]}
         answer["replace"] = True
         d.save_preset.click()  # Replace: one preset, under the name just typed
-        assert window.prefs["export_presets"] == {"walk-round": ["name", "address"]}
+        assert window.hosts.prefs["export_presets"] == {"walk-round": ["name", "address"]}
         assert d.preset.currentText() == "walk-round"
 
     _run(window, monkeypatch, save)
