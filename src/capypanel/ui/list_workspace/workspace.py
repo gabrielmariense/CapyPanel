@@ -22,7 +22,11 @@ from PySide6.QtWidgets import (
 from capypanel.core import files, identity, settings, winsec
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList
-from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
+from capypanel.core.hosts.listfile import (
+    HostListChangedError,
+    HostListFileError,
+    HostListKindError,
+)
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
@@ -34,6 +38,7 @@ from capypanel.ui.list_workspace.actions import ListActions
 from capypanel.ui.list_workspace.details import DetailsPanel
 from capypanel.ui.list_workspace.panels import ItemTable, NavigationPane, SearchBox
 from capypanel.ui.list_workspace.splitter import PaneSplitter
+from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar
 from capypanel.ui.menus import MenuCombo, popup
@@ -65,7 +70,7 @@ class ListWorkspace(Tool):
         self._personal_list = self._places.personal
         self._make_lists_folders()
         self.search = SearchBox()
-        self.nav = NavigationPane(self.all_items_text)
+        self.nav = NavigationPane(lambda: self.list_texts().everything)
         # The list dropdown, on top of the Groups panel: switch lists, make or open one.
         self.list_picker = MenuCombo()
         self.list_picker.setObjectName("listPicker")
@@ -142,8 +147,8 @@ class ListWorkspace(Tool):
 
     # ---- what a tool says: texts ----
 
-    def all_items_text(self) -> str:
-        """Pinned on top of the Groups panel: "All hosts"."""
+    def list_texts(self) -> ListTexts:
+        """The tool's words for its lists, in the current language, and their kind."""
         raise NotImplementedError
 
     def items_text(self, n: int) -> str:
@@ -152,18 +157,6 @@ class ListWorkspace(Tool):
 
     def remove_items_text(self, items: Sequence[Host]) -> tuple[str, str]:
         """Removing items: the question's title and text."""
-        raise NotImplementedError
-
-    def no_list_text(self) -> str:
-        """The status bar with no list open: "No host list is open."."""
-        raise NotImplementedError
-
-    def open_list_title(self) -> str:
-        """The title of Open list…'s file dialog."""
-        raise NotImplementedError
-
-    def manage_lists_text(self) -> str:
-        """The list dropdown's last item, which opens the tool's lists page in Settings."""
         raise NotImplementedError
 
     def search_fields(self) -> tuple[list[str], str]:
@@ -189,10 +182,6 @@ class ListWorkspace(Tool):
 
     def lists_page(self) -> str:
         """The Settings page that manages the tool's lists: the list dropdown opens it."""
-        raise NotImplementedError
-
-    def list_file_filter(self) -> str:
-        """The file-type filter for the tool's list files in file dialogs."""
         raise NotImplementedError
 
     # ---- what a tool says: behaviour ----
@@ -381,10 +370,13 @@ class ListWorkspace(Tool):
             self._error(note.format(app=identity.current().name, path=path), quiet)
             return False
         try:
-            doc = OpenList.open(path)
+            doc = OpenList.open(path, kind=self.TOOL_ID)
         except FileNotFoundError:
             locations.forget_list(self.prefs, path)
             self._error(_("The list “{path}” doesn't exist anymore.").format(path=path), quiet)
+            return False
+        except HostListKindError:
+            self._error(self.list_texts().not_this_kind.format(path=path), quiet)
             return False
         except (HostListFileError, OSError) as e:
             self._error(_("Couldn't open “{path}”: {error}").format(path=path, error=e), quiet)
@@ -395,7 +387,10 @@ class ListWorkspace(Tool):
     def new_list(self) -> None:
         """The list dropdown's New list…: shared, personal or elsewhere, as in Settings."""
         path = ask_new_list(
-            self, shared_dir=self._places.shared_dir, user_dir=self._places.user_dir
+            self,
+            shared_dir=self._places.shared_dir,
+            user_dir=self._places.user_dir,
+            texts=self.list_texts(),
         )
         if path is not None:  # replacing an existing file was asked already
             self._create_list(path, replace_existing=path.exists())
@@ -406,7 +401,7 @@ class ListWorkspace(Tool):
         shared = self._places.shared_dir
         start = shared if shared.is_dir() else self._personal_list.parent
         name, _filter = QFileDialog.getOpenFileName(
-            self, self.open_list_title(), str(start), self.list_file_filter()
+            self, self.list_texts().open, str(start), self.list_texts().file_filter
         )
         if name:
             self.open_list(Path(name))
@@ -457,7 +452,7 @@ class ListWorkspace(Tool):
         menu.addSeparator()
         menu.addActions([a.new_list, a.open_list])
         menu.addSeparator()
-        manage = menu.addAction(self.manage_lists_text())
+        manage = menu.addAction(self.list_texts().manage)
         manage.triggered.connect(lambda: self._shell.open_settings(self.lists_page()))
 
     def _pick_list(self, path: Path) -> None:
@@ -469,7 +464,7 @@ class ListWorkspace(Tool):
         try:
             if self._kind(path) is ListKind.DEFAULT and not path.parent.exists():
                 files.make_shared_folder(path.parent)  # read by all, changed only by admins
-            doc = OpenList.create(path, replace_existing=replace_existing)
+            doc = OpenList.create(path, replace_existing=replace_existing, kind=self.TOOL_ID)
         except (HostListFileError, OSError) as e:
             self._error(_("Couldn't create “{path}”: {error}").format(path=path, error=e), quiet)
             return False
@@ -745,12 +740,15 @@ class ListWorkspace(Tool):
                 self,
                 _("Save a copy"),
                 str(doc.path.with_name(doc.path.stem + " (copy).json")),
-                self.list_file_filter(),
+                self.list_texts().file_filter,
             )
             if name:
                 path = Path(name)
                 try:
-                    self._use(OpenList.save_as(path, mine, replace_existing=path.exists()))
+                    copy = OpenList.save_as(
+                        path, mine, replace_existing=path.exists(), kind=self.TOOL_ID
+                    )
+                    self._use(copy)
                     return
                 except (HostListFileError, OSError) as e:
                     self._error(_("Couldn't save the copy: {error}").format(error=e))
@@ -908,7 +906,7 @@ class ListWorkspace(Tool):
         self.update_tool_state(writable, selected)
         if doc is None:
             self.title_changed.emit("")
-            self.status_label.setText(self.no_list_text())
+            self.status_label.setText(self.list_texts().no_list)
             self.list_picker.setText(_("No list open"))
             return
         name = self._list_name(doc.path)
@@ -951,7 +949,7 @@ class ListWorkspace(Tool):
             label, name = self.selected_source_texts()
             sources.append(Source(counted(label, len(selected)), name, tuple(selected)))
         every = host_list.hosts
-        everything = self.all_items_text()
+        everything = self.list_texts().everything
         sources.append(Source(counted(everything, len(every)), everything, every))
         if browsing and current.kind == "all":
             start = len(sources) - 1

@@ -1,6 +1,6 @@
-"""The host lists a user works with: the default list, their personal list, the lists in the
-lists folders and every list they added (e.g. on a network share). Shown in Settings > Host
-lists."""
+"""The lists a user works with in one tool: the default list, their personal list, the lists
+in the tool's lists folders and every list they added (e.g. on a network share). Shown in
+Settings (Host lists, for Hosts)."""
 
 import html
 import logging
@@ -19,12 +19,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from capypanel.core import identity
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.listfile import HostListFileError
 from capypanel.core.hosts.locations import Access, ListKind
 from capypanel.core.i18n import _
-from capypanel.ui.hosts import list_file_filter
+from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.new_list import ask_new_list
 from capypanel.ui.notes import notes
 from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
@@ -45,12 +46,12 @@ def access_text(access: Access, kind: ListKind) -> str:
     }[access]
 
 
-def ask_remove(parent: QWidget, path: Path) -> str | None:
+def ask_remove(parent: QWidget, path: Path, title: str) -> str | None:
     """Remove from the lists only, or delete the file too; None when cancelled. Cancel is the
     default, so Enter never deletes."""
     box = QMessageBox(
         QMessageBox.Icon.Question,
-        _("Remove host list"),
+        title,
         _("Remove “{name}” from your lists, or delete its file too?").format(name=path.stem),
         parent=parent,
     )
@@ -74,7 +75,7 @@ def ask_remove(parent: QWidget, path: Path) -> str | None:
     return DELETE if clicked is delete else REMOVE if clicked is remove else None
 
 
-class HostListsView(QWidget):
+class ListsView(QWidget):
     """The lists, with the one in use in bold and marked, and buttons to add, create or forget.
     `changed` fires when the lists change; `open_requested` asks to open one now: a double-click,
     a new list, or the default list when the open one is removed."""
@@ -91,10 +92,12 @@ class HostListsView(QWidget):
         document: OpenList | None,
         found: list[Path] | None = None,
         hidden: list[Path] | None = None,
+        texts: ListTexts,
     ) -> None:
         """found: the lists in the lists folders, shown with no adding, except the `hidden` ones
         the user removed here."""
         super().__init__()
+        self.texts = texts
         self._default, self._personal, self._document = default_list, personal_list, document
         self._all_found = found or []
         self.hidden = [p for p in hidden or [] if self._in_folder(p)]
@@ -166,7 +169,7 @@ class HostListsView(QWidget):
                 name=path.name,
                 why=self.tree.currentItem().text(2).lower(),  # type: ignore[union-attr]
             )
-            QMessageBox.warning(self, "CapyPanel", message)
+            QMessageBox.warning(self, identity.current().name, message)
             return
         self.open_requested.emit(path)
 
@@ -261,16 +264,19 @@ class HostListsView(QWidget):
     def _add_existing(self) -> None:
         start = str((self.selected() or self._personal).parent)
         name, _filter = QFileDialog.getOpenFileName(
-            self, _("Add a host list"), start, list_file_filter()
+            self, self.texts.add, start, self.texts.file_filter
         )
         if name:
             self._keep(Path(name))
 
     def _new(self) -> None:
         # The default list is in the shared lists folder, the personal one in the user's.
-        path = ask_new_list(self, shared_dir=self._default.parent, user_dir=self._personal.parent)
+        path = ask_new_list(
+            self, shared_dir=self._default.parent, user_dir=self._personal.parent, texts=self.texts
+        )
+        kind = self.texts.kind
         if path is not None and self._write(
-            path, lambda: OpenList.create(path, replace_existing=path.exists())
+            path, lambda: OpenList.create(path, replace_existing=path.exists(), kind=kind)
         ):
             self._keep(path)
             self.open_requested.emit(path)  # made to be used: it opens now
@@ -285,15 +291,18 @@ class HostListsView(QWidget):
             hosts = (
                 doc.hosts
                 if doc is not None and locations.same_path(source, doc.path)
-                else OpenList.open(source).hosts
+                else OpenList.open(source, kind=self.texts.kind).hosts
             )
         except (HostListFileError, OSError) as e:
             message = _("Couldn't open “{path}”: {error}").format(path=source, error=e)
-            QMessageBox.warning(self, "CapyPanel", message)
+            QMessageBox.warning(self, identity.current().name, message)
             return
         path = self._ask_path(_("Save a copy of the list"))
         if path is not None and self._write(
-            path, lambda: OpenList.save_as(path, hosts, replace_existing=path.exists())
+            path,
+            lambda: OpenList.save_as(
+                path, hosts, replace_existing=path.exists(), kind=self.texts.kind
+            ),
         ):
             self._keep(path)
 
@@ -303,13 +312,13 @@ class HostListsView(QWidget):
         path = self.selected()
         if path is None or self._kind(path) is not ListKind.SHARED:
             return
-        answer = ask_remove(self, path) if self._can_delete(path) else REMOVE
+        answer = ask_remove(self, path, self.texts.remove) if self._can_delete(path) else REMOVE
         if answer is None:
             return
         if answer == DELETE:
             if not QFile.moveToTrash(str(path)):
                 message = _("Couldn't move “{path}” to the Recycle Bin.").format(path=path)
-                QMessageBox.warning(self, "CapyPanel", message)
+                QMessageBox.warning(self, identity.current().name, message)
                 return
             log.info("Host list moved to the Recycle Bin: %s", path)
             self._all_found = [p for p in self._all_found if not locations.same_path(p, path)]
@@ -334,7 +343,7 @@ class HostListsView(QWidget):
     def _ask_path(self, title: str) -> Path | None:
         start = self._document.path.parent if self._document else self._personal.parent
         # The file dialog already asks before choosing an existing file.
-        name, _filter = QFileDialog.getSaveFileName(self, title, str(start), list_file_filter())
+        name, _filter = QFileDialog.getSaveFileName(self, title, str(start), self.texts.file_filter)
         return Path(name) if name else None
 
     def _write(self, path: Path, write: Callable[[], object]) -> bool:
@@ -342,6 +351,6 @@ class HostListsView(QWidget):
             write()
         except (HostListFileError, OSError) as e:
             message = _("Couldn't write “{path}”: {error}").format(path=path, error=e)
-            QMessageBox.warning(self, "CapyPanel", message)
+            QMessageBox.warning(self, identity.current().name, message)
             return False
         return True

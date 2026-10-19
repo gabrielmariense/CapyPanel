@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 17:12-0300\n"
+"POT-Creation-Date: 2026-10-19 17:20-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1343,8 +1343,8 @@ msgstr "A lista padrão"
 msgid "The default list was made by another user, so {app} won't open it. An administrator can replace or delete “{path}”."
 msgstr "A lista padrão foi criada por outro usuário, então o {app} não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
 
-msgid "The file doesn't contain a host list."
-msgstr "O arquivo não contém uma lista de hosts."
+msgid "The file doesn't contain a list."
+msgstr "O arquivo não contém uma lista."
 
 msgid "The file has no settings."
 msgstr "O arquivo não tem nenhuma configuração."
@@ -1455,8 +1455,8 @@ msgid "This isn't a text file."
 msgstr "Este não é um arquivo de texto."
 
 #, python-brace-format
-msgid "This isn't a valid host list file ({error})."
-msgstr "Este não é um arquivo de lista de hosts válido ({error})."
+msgid "This isn't a valid list file ({error})."
+msgstr "Este não é um arquivo de lista válido ({error})."
 
 msgid "This list is read-only."
 msgstr "Esta lista está em modo somente leitura."
@@ -1882,6 +1882,10 @@ msgstr "“{name}” tem este endereço, {place}"
 #, python-brace-format
 msgid "“{name}” holds {inside}. What should happen to them?"
 msgstr "“{name}” contém {inside}. O que fazer com eles?"
+
+#, python-brace-format
+msgid "“{path}” isn't a host list."
+msgstr "“{path}” não é uma lista de hosts."
 
 msgid "✓ Found"
 msgstr "✓ Encontrado"

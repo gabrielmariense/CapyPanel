@@ -8,7 +8,7 @@ from capypanel.core.hosts import locations
 from capypanel.core.i18n import N_
 from capypanel.ui.settings.connections import ConnectionsPage
 from capypanel.ui.settings.group import SettingsGroup
-from capypanel.ui.settings.pages import HostListsPage, HostsPage, Page
+from capypanel.ui.settings.pages import HostsPage, ListsPage, Page
 
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.tool import HostsTool
@@ -30,7 +30,7 @@ class HostsSettings(SettingsGroup):
     TITLES = (N_("General"), N_("Host lists"), N_("Connections"))
 
     general: HostsPage
-    lists: HostListsPage
+    lists: ListsPage
     connections: ConnectionsPage
 
     def __init__(self, tool: "HostsTool") -> None:
@@ -41,7 +41,9 @@ class HostsSettings(SettingsGroup):
     def build(self) -> list[tuple[str, Page]]:
         tool, prefs, doc = self._tool, self._tool.prefs, self._tool.document
         self._building = True
+        texts = tool.list_texts()
         self.general = HostsPage(
+            texts=texts,
             start_list=prefs.get(locations.START_KEY, locations.START_LAST),
             default_list=tool.default_list,
             personal_list=tool.personal_list,
@@ -50,7 +52,8 @@ class HostsSettings(SettingsGroup):
             start_view=tool.start_view(),
             host_list=doc.hosts if doc else None,
         )
-        self.lists = HostListsPage(
+        self.lists = ListsPage(
+            texts=texts,
             default_list=tool.default_list,
             personal_list=tool.personal_list,
             document=doc,

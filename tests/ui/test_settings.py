@@ -21,7 +21,7 @@ from capypanel.core import settings, winsec
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
 from capypanel.ui import host_lists, new_list, tables
-from capypanel.ui.host_lists import HostListsView
+from capypanel.ui.host_lists import ListsView
 from capypanel.ui.hosts_tool.settings import HostsSettings
 from capypanel.ui.list_workspace import workspace as workspace_module
 from capypanel.ui.main_window.window import MainWindow
@@ -108,7 +108,7 @@ def test_page_list_rows_never_overlap(window: MainWindow) -> None:
     assert all(r.height() > pages.fontMetrics().height() for r in rects)
 
 
-def _rows(view: HostListsView) -> list[tuple[str, str, bool]]:
+def _rows(view: ListsView) -> list[tuple[str, str, bool]]:
     """Each row: its kind, its access, and whether it's the list open now (bold)."""
     rows = []
     for i in range(view.tree.topLevelItemCount()):
@@ -598,8 +598,9 @@ def test_refresh_by_itself_is_one_dropdown_with_a_custom_interval(
 def test_a_new_list_can_be_shared_or_personal(
     window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    places, texts = paths.lists("hosts"), window.hosts.list_texts()
     dialog = NewListDialog(
-        None, shared_dir=paths.lists("hosts").shared_dir, user_dir=paths.lists("hosts").user_dir
+        None, shared_dir=places.shared_dir, user_dir=places.user_dir, texts=texts
     )
     assert not dialog.create_button.isEnabled()  # a name first
     dialog.name.setText("Branch offices")
@@ -618,8 +619,9 @@ def test_only_people_who_can_write_the_shared_folder_get_a_shared_list(
     window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(new_list, "can_create_files", lambda folder: False)
+    places, texts = paths.lists("hosts"), window.hosts.list_texts()
     dialog = NewListDialog(
-        None, shared_dir=paths.lists("hosts").shared_dir, user_dir=paths.lists("hosts").user_dir
+        None, shared_dir=places.shared_dir, user_dir=places.user_dir, texts=texts
     )
     assert not dialog.shared.isEnabled() and dialog.kind() == "personal"
     dialog.deleteLater()

@@ -1,4 +1,4 @@
-"""New host list: its name, and who it's for. Shared lists go in the shared lists folder, for
+"""New list: its name, and who it's for. Shared lists go in the shared lists folder, for
 everyone on this PC; personal ones in the user's own; "somewhere else" asks for the file."""
 
 import re
@@ -21,7 +21,8 @@ from PySide6.QtWidgets import (
 from capypanel.core.files import can_create_files
 from capypanel.core.i18n import _
 from capypanel.ui.dialogs import run_modal
-from capypanel.ui.hosts import confirm, list_file_filter
+from capypanel.ui.hosts import confirm
+from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.notes import notes
 
 SHARED, PERSONAL, ELSEWHERE = "shared", "personal", "elsewhere"
@@ -29,9 +30,12 @@ _NOT_IN_A_NAME = re.compile(r'[\\/:*?"<>|]')  # Windows won't take these in a fi
 
 
 class NewListDialog(QDialog):
-    def __init__(self, parent: QWidget | None, *, shared_dir: Path, user_dir: Path) -> None:
+    def __init__(
+        self, parent: QWidget | None, *, shared_dir: Path, user_dir: Path, texts: ListTexts
+    ) -> None:
         super().__init__(parent)
-        self.setWindowTitle(_("New host list"))
+        self.texts = texts
+        self.setWindowTitle(texts.new)
         self.shared_dir, self.user_dir = shared_dir, user_dir
         self.name = QLineEdit()
         self.name.setPlaceholderText(_("e.g. Branch offices"))
@@ -104,14 +108,14 @@ class NewListDialog(QDialog):
         """Where the new list goes; None when a question was cancelled."""
         if self.kind() == ELSEWHERE:
             name, _filter = QFileDialog.getSaveFileName(
-                self, _("New host list"), str(self.user_dir), list_file_filter()
+                self, self.texts.new, str(self.user_dir), self.texts.file_filter
             )
             return Path(name) if name else None  # the file dialog asked before replacing
         folder = self.shared_dir if self.kind() == SHARED else self.user_dir
         path = folder / f"{self.name.text().strip()}.json"
         if path.exists() and not confirm(
             self,
-            _("New host list"),
+            self.texts.new,
             _("A list named “{name}” is already there. Replace it with an empty one?").format(
                 name=path.stem
             ),
@@ -121,8 +125,10 @@ class NewListDialog(QDialog):
         return path
 
 
-def ask_new_list(parent: QWidget | None, *, shared_dir: Path, user_dir: Path) -> Path | None:
+def ask_new_list(
+    parent: QWidget | None, *, shared_dir: Path, user_dir: Path, texts: ListTexts
+) -> Path | None:
     """The new list's file, or None when cancelled."""
-    dialog = NewListDialog(parent, shared_dir=shared_dir, user_dir=user_dir)
+    dialog = NewListDialog(parent, shared_dir=shared_dir, user_dir=user_dir, texts=texts)
     accepted = run_modal(dialog) == QDialog.DialogCode.Accepted
     return dialog.chosen if accepted else None

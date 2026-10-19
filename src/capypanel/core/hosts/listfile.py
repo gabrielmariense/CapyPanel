@@ -12,6 +12,7 @@ from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList
 from capypanel.core.i18n import _
 
 SCHEMA = 1
+HOSTS = "hosts"  # a list's kind: the tool it belongs to; a file without one is a host list
 
 
 class HostListFileError(Exception):
@@ -24,6 +25,14 @@ class HostListFormatError(HostListFileError):
 
 class HostListTooNewError(HostListFileError):
     """Written by a newer version of the app: opening or saving it here could lose data."""
+
+
+class HostListKindError(HostListFileError):
+    """A list of another kind (another tool's): opening it here would mix them up."""
+
+    def __init__(self, kind: str) -> None:
+        super().__init__(kind)
+        self.kind = kind
 
 
 class HostListChangedError(HostListFileError):
@@ -41,6 +50,7 @@ class FileStamp:
 class LoadedList:
     hosts: HostList
     stamp: FileStamp
+    kind: str = HOSTS
 
 
 def stamp_of(path: Path) -> FileStamp | None:
@@ -50,17 +60,28 @@ def stamp_of(path: Path) -> FileStamp | None:
         return None
 
 
-def load(path: Path) -> LoadedList:
+def load(path: Path, kind: str | None = HOSTS) -> LoadedList:
+    """A list of `kind` (None: any kind); another kind raises HostListKindError."""
     raw = path.read_bytes()
     try:
         data = json.loads(raw.decode("utf-8-sig"))  # -sig: accept files saved by Notepad with a BOM
     except (UnicodeDecodeError, ValueError) as e:
-        message = _("This isn't a valid host list file ({error}).").format(error=e)
+        message = _("This isn't a valid list file ({error}).").format(error=e)
         raise HostListFormatError(message) from e
-    return LoadedList(from_data(data), FileStamp(hashlib.sha256(raw).hexdigest()))
+    found = kind_of(data)
+    if kind is not None and found != kind:
+        raise HostListKindError(found)
+    return LoadedList(from_data(data), FileStamp(hashlib.sha256(raw).hexdigest()), found)
 
 
-def save(path: Path, host_list: HostList, *, expected: FileStamp | None) -> FileStamp:
+def kind_of(data: object) -> str:
+    kind = data.get("kind") if isinstance(data, dict) else None
+    return kind if isinstance(kind, str) and kind else HOSTS
+
+
+def save(
+    path: Path, host_list: HostList, *, expected: FileStamp | None, kind: str = HOSTS
+) -> FileStamp:
     """Save atomically, only if the file is still what was loaded (`expected`; None = new file).
 
     The check never silently overwrites someone else's changes. What to do instead is
@@ -68,7 +89,8 @@ def save(path: Path, host_list: HostList, *, expected: FileStamp | None) -> File
     """
     if stamp_of(path) != expected:
         raise HostListChangedError(_("Someone else has changed the file since you opened it."))
-    raw = (json.dumps(to_data(host_list), indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+    text = json.dumps(to_data(host_list, kind), indent=2, ensure_ascii=False) + "\n"
+    raw = text.encode("utf-8")
     path.parent.mkdir(parents=True, exist_ok=True)
     files.write_atomic(path, raw)
     return FileStamp(hashlib.sha256(raw).hexdigest())
@@ -89,14 +111,15 @@ def can_write(path: Path) -> bool:
 
 # ---- JSON <-> records ----
 
-_LIST_KEYS = ("schema", "groups", "hosts")
+_LIST_KEYS = ("schema", "kind", "groups", "hosts")
 _GROUP_KEYS = ("id", "name", "parent", "profile")
 _HOST_KEYS = ("id", "name", "address", "group", "tags", "notes", "profile")
 
 
-def to_data(host_list: HostList) -> dict[str, Any]:
+def to_data(host_list: HostList, kind: str = HOSTS) -> dict[str, Any]:
     return {
         "schema": SCHEMA,
+        "kind": kind,
         "groups": [
             {"id": g.id, "name": g.name, "parent": g.parent, **_profile(g.profile), **g.extra}
             for g in host_list.groups
@@ -125,7 +148,7 @@ def _profile(profile: str) -> dict[str, str]:
 
 def from_data(data: object) -> HostList:
     if not isinstance(data, dict):
-        raise HostListFormatError(_("The file doesn't contain a host list."))
+        raise HostListFormatError(_("The file doesn't contain a list."))
     schema = data.get("schema")
     if not isinstance(schema, int) or isinstance(schema, bool) or schema < 1:
         raise HostListFormatError(_("The file has no valid schema version."))
