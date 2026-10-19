@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 13:11-0300\n"
+"POT-Creation-Date: 2026-10-19 13:13-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -192,9 +192,6 @@ msgstr "&Relatar um problema"
 msgid "&Report…"
 msgstr "&Relatório…"
 
-msgid "&Reset…"
-msgstr "&Redefinir…"
-
 msgid "&Run"
 msgstr "&Executar"
 
@@ -333,6 +330,9 @@ msgstr "Respondeu em {address}, porta {port}."
 
 msgid "Any name you like, then the computer's network name or IP address. Separate them with a comma, or copy two columns from Excel."
 msgstr "Um nome à sua escolha, depois o nome do computador na rede ou o endereço IP. Separe com vírgula, ou copie duas colunas do Excel."
+
+msgid "Appearance"
+msgstr "Aparência"
 
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
@@ -774,9 +774,6 @@ msgstr "Idioma e tema"
 msgid "Last check"
 msgstr "Última verificação"
 
-msgid "Layout"
-msgstr "Layout"
-
 msgid "License"
 msgstr "Licença"
 
@@ -1001,12 +998,6 @@ msgstr "Ou coloque só um nome e um endereço em cada linha."
 msgid "P&ort:"
 msgstr "P&orta:"
 
-msgid "Panel sizes, columns and the panels shown go back to how they first were."
-msgstr "Os tamanhos dos painéis, as colunas e os painéis mostrados voltam a ser como no início."
-
-msgid "Panel sizes, columns and the panels shown, back to how they first were."
-msgstr "Tamanhos dos painéis, colunas e painéis mostrados, de volta a como eram no início."
-
 #, python-brace-format
 msgid "Password for {profile}"
 msgstr "Senha para {profile}"
@@ -1131,12 +1122,6 @@ msgid "Report saved: {n} host from {source}."
 msgid_plural "Report saved: {n} hosts from {source}."
 msgstr[0] "Relatório salvo: {n} host de {source}."
 msgstr[1] "Relatório salvo: {n} hosts de {source}."
-
-msgid "Reset"
-msgstr "Redefinir"
-
-msgid "Reset window layout"
-msgstr "Redefinir o layout da janela"
 
 msgid "S&top"
 msgstr "Pa&rar"
@@ -1556,9 +1541,6 @@ msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste 
 #, python-brace-format
 msgid "Where is {tool}?"
 msgstr "Onde está o {tool}?"
-
-msgid "Window layout"
-msgstr "Layout da janela"
 
 #, python-brace-format
 msgid "Windows error {code}."

@@ -74,7 +74,7 @@ def test_settings_has_the_app_s_pages_then_the_hosts_tool_s(window: MainWindow) 
     rows = [dialog.page_list.item(i).text().strip() for i in range(dialog.page_list.count())]
     assert rows == [
         "CapyPanel",
-        "General",
+        "Appearance",
         "Files",
         "Hosts",
         "General",
@@ -82,7 +82,11 @@ def test_settings_has_the_app_s_pages_then_the_hosts_tool_s(window: MainWindow) 
         "Connections",
     ]
     assert [dialog.pinned_list.item(0).text().strip()] == ["About"]  # type: ignore[union-attr]
-    assert dialog.current_page() == "general"
+    assert dialog.current_page() == "appearance"
+    sections = [
+        w.text() for w in dialog.hosts.findChildren(QLabel) if w.objectName() == "sectionTitle"
+    ]
+    assert sections == ["Startup", "Refresh"]  # no Layout: there's no layout reset
 
 
 def test_page_list_rows_never_overlap(window: MainWindow) -> None:
@@ -290,7 +294,7 @@ def test_last_used_list_is_reopened(
 
 def test_picking_a_theme_applies_it_at_once(window: MainWindow) -> None:
     dialog = window.settings_dialog()
-    combo = dialog.general.theme
+    combo = dialog.appearance.theme
     combo.setCurrentIndex(combo.findData("paper"))  # the window shows it already
     assert themes.current().id == "paper"
     assert settings.load_settings(window.paths.settings_file)["theme"] == "paper"
@@ -319,9 +323,9 @@ def test_the_page_list_keeps_its_width_in_every_language(window: MainWindow) -> 
     dialog = window.settings_dialog()
     assert [p.title for p in dialog.pages.values()] == list(PAGE_TITLES)  # sized from these
     width = dialog.page_list.width()
-    dialog.general.language.setCurrentIndex(dialog.general.language.findData("pt_BR"))
+    dialog.appearance.language.setCurrentIndex(dialog.appearance.language.findData("pt_BR"))
     QApplication.processEvents()
-    assert dialog.page_list.width() == width and dialog.general.title == "Geral"
+    assert dialog.page_list.width() == width and dialog.appearance.title == "Aparência"
     window.set_language("en")
 
 
@@ -356,10 +360,10 @@ def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow)
         ]
 
     dialog.search.setText("th")  # too short: the pages as they were
-    assert len(listed()) == dialog.page_list.count() and dialog.current_page() == "general"
+    assert len(listed()) == dialog.page_list.count() and dialog.current_page() == "appearance"
     dialog.search.setText("theme")
-    assert dialog.current_page() == "search" and listed() == ["CapyPanel", "General"]
-    assert results()[:2] == ["CapyPanel › General", "Language and theme"]  # under its page
+    assert dialog.current_page() == "search" and listed() == ["CapyPanel", "Appearance"]
+    assert results()[:2] == ["CapyPanel › Appearance", "Language and theme"]  # under its page
     marks = dialog._marks  # pyright: ignore[reportPrivateUsage]
     assert [w.objectName() for w in marks.marked_labels()][:1] == ["sectionTitle"]
     dialog.search.setText("folder")  # in Files, a Host lists note, Connections. buttons
@@ -367,7 +371,7 @@ def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow)
     assert not dialog.pinned_list.isRowHidden(0)  # About, with its Open folder buttons
     assert "CapyPanel › About" in results()  # its sections, under its name
     dialog.search.setText("syst")  # "follow system theme"; not a tool path's "System32"
-    assert listed() == ["CapyPanel", "General"]
+    assert listed() == ["CapyPanel", "Appearance"]
     dialog.show_page("files")  # picking a page ends the search: everything goes home
     assert dialog.search.text() == "" and dialog.current_page() == "files"
     assert dialog.files.findChildren(QLabel)  # its section is back on its page
@@ -500,9 +504,9 @@ def test_picking_a_language_switches_at_once_and_keeps_the_page(
     seen: list[tuple[str, str, bool]] = []
 
     def run(dialog: SettingsDialog) -> int:
-        dialog.show_page("general")
+        dialog.show_page("appearance")
         dialog.hosts.pick_every(5)
-        dialog.general.language.setCurrentIndex(dialog.general.language.findData("pt_BR"))
+        dialog.appearance.language.setCurrentIndex(dialog.appearance.language.findData("pt_BR"))
         QApplication.processEvents()  # the window follows once the dropdown has closed
         seen.append(
             (dialog.windowTitle(), dialog.current_page(), dialog.hosts.auto_status_choice()[0])
@@ -512,7 +516,7 @@ def test_picking_a_language_switches_at_once_and_keeps_the_page(
     monkeypatch.setattr(SettingsDialog, "exec", run)
     window.open_settings()
     # The app and Settings are in Portuguese; the tick, applied already, still shows.
-    assert seen == [("Configurações", "general", True)]
+    assert seen == [("Configurações", "appearance", True)]
     assert window.menuBar().actions()[0].text() == "&Arquivo"
     window.set_language("en")
 

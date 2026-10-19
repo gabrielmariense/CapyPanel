@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 13:11-0300\n"
+"POT-Creation-Date: 2026-10-19 13:13-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -191,9 +191,6 @@ msgstr ""
 msgid "&Report…"
 msgstr ""
 
-msgid "&Reset…"
-msgstr ""
-
 msgid "&Run"
 msgstr ""
 
@@ -333,6 +330,9 @@ msgstr ""
 msgid ""
 "Any name you like, then the computer's network name or IP address. "
 "Separate them with a comma, or copy two columns from Excel."
+msgstr ""
+
+msgid "Appearance"
 msgstr ""
 
 #, python-brace-format
@@ -787,9 +787,6 @@ msgstr ""
 msgid "Last check"
 msgstr ""
 
-msgid "Layout"
-msgstr ""
-
 msgid "License"
 msgstr ""
 
@@ -1025,12 +1022,6 @@ msgstr ""
 msgid "P&ort:"
 msgstr ""
 
-msgid "Panel sizes, columns and the panels shown go back to how they first were."
-msgstr ""
-
-msgid "Panel sizes, columns and the panels shown, back to how they first were."
-msgstr ""
-
 #, python-brace-format
 msgid "Password for {profile}"
 msgstr ""
@@ -1155,12 +1146,6 @@ msgid "Report saved: {n} host from {source}."
 msgid_plural "Report saved: {n} hosts from {source}."
 msgstr[0] ""
 msgstr[1] ""
-
-msgid "Reset"
-msgstr ""
-
-msgid "Reset window layout"
-msgstr ""
 
 msgid "S&top"
 msgstr ""
@@ -1606,9 +1591,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Where is {tool}?"
-msgstr ""
-
-msgid "Window layout"
 msgstr ""
 
 #, python-brace-format

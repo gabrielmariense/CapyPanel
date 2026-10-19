@@ -17,7 +17,6 @@ from capypanel.ui.hosts import HostDialog, group_choices
 from capypanel.ui.hosts_tool.table import HostTable
 from capypanel.ui.list_workspace import workspace as workspace_module
 from capypanel.ui.main_window.window import MainWindow
-from capypanel.ui.settings import pages
 
 
 @pytest.fixture
@@ -226,33 +225,6 @@ def test_fit_columns_to_content_fits_the_full_text_again(
     assert table.widths()["address"] == max(
         table.sizeHintForColumn(table.ADDRESS), table.minimum_width(table.ADDRESS)
     )
-
-
-def test_reset_layout_brings_back_panes_columns_and_default_widths(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    window.hosts.open_list(office)
-    window.show()
-    QApplication.processEvents()
-    a, shell = window.hosts.commands, window.commands
-    a.show_details.setChecked(False)
-    shell.show_status_bar.setChecked(False)
-    window.hosts.table._show_column(window.hosts.table.TAGS, False)
-    _drag(monkeypatch, window.hosts.table, 0, 400)
-    size = window.size()
-    a.show_domains.setChecked(False)
-    # Settings > Hosts > General > Window layout: Reset…, then Reset in its question.
-    monkeypatch.setattr(pages, "confirm", lambda *_a: True)
-    window.settings_dialog().hosts.reset_button.click()
-    QApplication.processEvents()
-    assert a.show_details.isChecked() and window.hosts.details.isVisible()
-    assert shell.show_status_bar.isChecked()
-    assert not window.hosts.table.isColumnHidden(window.hosts.table.TAGS)
-    assert window.hosts.table.columnWidth(0) < 400  # fitted again
-    assert window.size() == size and not a.show_domains.isChecked()  # left alone
-    groups, _table_pane, details = window.hosts.splitter.sizes()
-    assert abs(details - round(340 * window.hosts._scale())) <= 2
-    window.close()
 
 
 def test_panes_cant_be_dragged_too_narrow_to_read(window: MainWindow) -> None:
