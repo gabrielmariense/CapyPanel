@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 from PySide6.QtCore import QUrl
-from PySide6.QtWidgets import QApplication, QDialog, QMenu
+from PySide6.QtWidgets import QApplication, QDialog, QGroupBox, QMenu
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -14,6 +14,7 @@ from capypanel.core.printers.printer import DOC360, PrinterInfo, info_of, with_i
 from capypanel.ui import menus
 from capypanel.ui.printers_tool import tool as tool_module
 from capypanel.ui.printers_tool.dialog import PrinterDialog
+from capypanel.ui.printers_tool.report import PrintersReport
 from capypanel.ui.printers_tool.tool import PrintersTool, web_page
 
 
@@ -276,3 +277,31 @@ def test_toolbar_mirrors_hosts_with_refresh_greyed_out(printers: PrintersTool) -
     assert [menus.label(a) for a in bar.inventory_menu.actions()] == [
         "Add &printer…", "Add &group…", "&Manage groups…",
     ]  # fmt: skip
+
+
+def test_report_lists_the_printers_columns_with_last_check_greyed(
+    shell: FakeShell, printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[PrintersReport] = []
+
+    def look(dialog: QDialog) -> QDialog.DialogCode:
+        assert isinstance(dialog, PrintersReport)
+        seen.append(dialog)
+        return QDialog.DialogCode.Rejected
+
+    monkeypatch.setattr(tool_module, "run_modal", look)
+    printers.commands.export_printers.trigger()
+    [report] = seen
+    titles = [g.title() for g in report.findChildren(QGroupBox)]
+    assert titles == ["Printer", "Details", "Last check"]
+    assert report.source.currentText() == "All printers (3 printers)"
+    assert report.preset.currentText() == "All details"
+    assert not report.boxes["status"].isEnabled() and not report.boxes["toner"].isEnabled()
+    assert not report.refresh_button.isEnabled()
+    assert report.header()[:6] == ["Name", "Address", "Group", "Brand", "Model", "Serial number"]
+    office = next(r for r in report.rows() if r[0] == "2F-OFFICE-01")
+    assert office == ["2F-OFFICE-01", "192.0.2.21", "Second floor", "BROTHER", "HL-L6402",
+                      "SAMPLE0021", "INV-1021", "SNMP", "mono", ""]  # fmt: skip
+    report.boxes["notes"].setChecked(False)
+    assert shell.prefs["printer_report_columns"][-1] == "tags"
+    assert "export_columns" not in shell.prefs  # Hosts' Report keeps its own choices

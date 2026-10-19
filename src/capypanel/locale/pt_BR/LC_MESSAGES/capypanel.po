@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 13:23-0300\n"
+"POT-Creation-Date: 2026-10-19 13:29-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -330,6 +330,9 @@ msgstr[1] "{n} hosts adicionados."
 msgid "Address"
 msgstr "Endereço"
 
+msgid "All details"
+msgstr "Todos os detalhes"
+
 msgid "All hosts"
 msgstr "Todos os hosts"
 
@@ -484,6 +487,12 @@ msgstr[0] "{n} host copiado de {source}."
 msgstr[1] "{n} hosts copiados de {source}."
 
 #, python-brace-format
+msgid "Copied {n} printer from {source}."
+msgid_plural "Copied {n} printers from {source}."
+msgstr[0] "{n} impressora copiada de {source}."
+msgstr[1] "{n} impressoras copiadas de {source}."
+
+#, python-brace-format
 msgid "Copied: {text}"
 msgstr "Copiado: {text}"
 
@@ -597,6 +606,9 @@ msgstr "Excluir o perfil de conexão “{profile}”? Todos neste PC deixam de t
 msgid "Deleting moves it to the Recycle Bin, for everyone who uses it:"
 msgstr "Excluir move o arquivo para a Lixeira, para todos que o usam:"
 
+msgid "Details"
+msgstr "Detalhes"
+
 msgid "Disconnected"
 msgstr "Desconectado"
 
@@ -641,6 +653,9 @@ msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabe�
 
 msgid "Every"
 msgstr "A cada"
+
+msgid "Every column the printers have"
+msgstr "Todas as colunas das impressoras"
 
 msgid "Every computer you look after, in one window."
 msgstr "Todos os computadores sob seus cuidados, em uma só janela."
@@ -1087,6 +1102,9 @@ msgstr "Pessoal"
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
 
+msgid "Pr&inters:"
+msgstr "&Impressoras:"
+
 msgid "Preset name:"
 msgstr "Nome da predefinição:"
 
@@ -1211,6 +1229,12 @@ msgid_plural "Report saved: {n} hosts from {source}."
 msgstr[0] "Relatório salvo: {n} host de {source}."
 msgstr[1] "Relatório salvo: {n} hosts de {source}."
 
+#, python-brace-format
+msgid "Report saved: {n} printer from {source}."
+msgid_plural "Report saved: {n} printers from {source}."
+msgstr[0] "Relatório salvo: {n} impressora de {source}."
+msgstr[1] "Relatório salvo: {n} impressoras de {source}."
+
 msgid "S&top"
 msgstr "Pa&rar"
 
@@ -1277,6 +1301,9 @@ msgstr "Selecione uma impressora para ver os detalhes."
 
 msgid "Selected hosts"
 msgstr "Hosts selecionados"
+
+msgid "Selected printers"
+msgstr "Impressoras selecionadas"
 
 msgid "Serial number"
 msgstr "Nº de série"
@@ -1573,6 +1600,9 @@ msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyP
 msgid "Tick Status or Logged-on users to check them"
 msgstr "Marque Status ou Usuários logados para verificá-los"
 
+msgid "Toner"
+msgstr "Toner"
+
 msgid "Tool"
 msgstr "Ferramenta"
 
@@ -1772,6 +1802,9 @@ msgstr "os resultados da pesquisa"
 msgid "the selected hosts"
 msgstr "os hosts selecionados"
 
+msgid "the selected printers"
+msgstr "as impressoras selecionadas"
+
 msgid "user"
 msgstr "usuário"
 
@@ -1796,6 +1829,12 @@ msgid "{name} ({n} host)"
 msgid_plural "{name} ({n} hosts)"
 msgstr[0] "{name} ({n} host)"
 msgstr[1] "{name} ({n} hosts)"
+
+#, python-brace-format
+msgid "{name} ({n} printer)"
+msgid_plural "{name} ({n} printers)"
+msgstr[0] "{name} ({n} impressora)"
+msgstr[1] "{name} ({n} impressoras)"
 
 #, python-brace-format
 msgid "{n} can't be added."

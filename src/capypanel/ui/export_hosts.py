@@ -85,6 +85,7 @@ class ExportDialog(QDialog):
     FOR_IMPORT: tuple[str, ...] = FOR_IMPORT
     PRESETS_KEY, LAST_KEY, FOLDER_KEY = PRESETS_KEY, LAST_KEY, FOLDER_KEY  # its own choices
     ITEMS_LABEL = N_("&Hosts:")
+    PRESET_NAME = N_("For Import")  # the built-in preset, with the FOR_IMPORT columns
 
     def __init__(
         self,
@@ -295,7 +296,7 @@ class ExportDialog(QDialog):
         wanted = columns if isinstance(columns, list) else []
         return [key for key in self.TITLES if key in wanted]
 
-    # ---- presets: "For Import", then the user's own ----
+    # ---- presets: the built-in one ("For Import"), then the user's own ----
 
     def _presets(self) -> dict[str, list[str]]:
         saved = self._prefs.get(self.PRESETS_KEY)
@@ -306,7 +307,7 @@ class ExportDialog(QDialog):
     def _fill_presets(self) -> None:
         self.preset.blockSignals(True)
         self.preset.clear()
-        self.preset.addItem(_("For Import"), list(self.FOR_IMPORT))
+        self.preset.addItem(_(self.PRESET_NAME), list(self.FOR_IMPORT))
         self.preset.setItemData(0, self.for_import_tip(), Qt.ItemDataRole.ToolTipRole)
         for name, columns in sorted(self._presets().items(), key=lambda p: p[0].casefold()):
             self.preset.addItem(name, columns)
@@ -330,7 +331,7 @@ class ExportDialog(QDialog):
         name = name.strip()
         if not ok or not name:
             return
-        if name.casefold() == _("For Import").casefold():
+        if name.casefold() == _(self.PRESET_NAME).casefold():
             QMessageBox.warning(self, _("Save as preset"), _("That name is taken."))
             return
         presets = self._presets()

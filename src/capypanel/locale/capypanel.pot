@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 13:23-0300\n"
+"POT-Creation-Date: 2026-10-19 13:29-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -329,6 +329,9 @@ msgstr[1] ""
 msgid "Address"
 msgstr ""
 
+msgid "All details"
+msgstr ""
+
 msgid "All hosts"
 msgstr ""
 
@@ -487,6 +490,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "Copied {n} printer from {source}."
+msgid_plural "Copied {n} printers from {source}."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "Copied: {text}"
 msgstr ""
 
@@ -600,6 +609,9 @@ msgstr ""
 msgid "Deleting moves it to the Recycle Bin, for everyone who uses it:"
 msgstr ""
 
+msgid "Details"
+msgstr ""
+
 msgid "Disconnected"
 msgstr ""
 
@@ -647,6 +659,9 @@ msgid ""
 msgstr ""
 
 msgid "Every"
+msgstr ""
+
+msgid "Every column the printers have"
 msgstr ""
 
 msgid "Every computer you look after, in one window."
@@ -1111,6 +1126,9 @@ msgstr ""
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr ""
 
+msgid "Pr&inters:"
+msgstr ""
+
 msgid "Preset name:"
 msgstr ""
 
@@ -1235,6 +1253,12 @@ msgid_plural "Report saved: {n} hosts from {source}."
 msgstr[0] ""
 msgstr[1] ""
 
+#, python-brace-format
+msgid "Report saved: {n} printer from {source}."
+msgid_plural "Report saved: {n} printers from {source}."
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "S&top"
 msgstr ""
 
@@ -1300,6 +1324,9 @@ msgid "Select a printer to see its details."
 msgstr ""
 
 msgid "Selected hosts"
+msgstr ""
+
+msgid "Selected printers"
 msgstr ""
 
 msgid "Serial number"
@@ -1622,6 +1649,9 @@ msgstr ""
 msgid "Tick Status or Logged-on users to check them"
 msgstr ""
 
+msgid "Toner"
+msgstr ""
+
 msgid "Tool"
 msgstr ""
 
@@ -1827,6 +1857,9 @@ msgstr ""
 msgid "the selected hosts"
 msgstr ""
 
+msgid "the selected printers"
+msgstr ""
+
 msgid "user"
 msgstr ""
 
@@ -1855,6 +1888,12 @@ msgstr ""
 #, python-brace-format
 msgid "{name} ({n} host)"
 msgid_plural "{name} ({n} hosts)"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{name} ({n} printer)"
+msgid_plural "{name} ({n} printers)"
 msgstr[0] ""
 msgstr[1] ""
 
