@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 17:06-0300\n"
+"POT-Creation-Date: 2026-10-19 17:10-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1952,6 +1952,13 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgctxt "printers"
+msgid "{n} found"
+msgid_plural "{n} found"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} group"
 msgid_plural "{n} groups"
 msgstr[0] ""
@@ -2042,6 +2049,13 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} selected"
+msgid_plural "{n} selected"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgctxt "printers"
 msgid "{n} selected"
 msgid_plural "{n} selected"
 msgstr[0] ""

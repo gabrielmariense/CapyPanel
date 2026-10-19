@@ -308,3 +308,14 @@ def test_report_lists_the_printers_columns_with_last_check_greyed(
     report.boxes["notes"].setChecked(False)
     assert printers.prefs["export_columns"][-1] == "tags"  # in the Printers section
     assert "export_columns" not in shell.prefs  # Hosts' Report keeps its own choices
+
+
+def test_counts_agree_with_printer_in_portuguese(printers: PrintersTool) -> None:
+    from capypanel.core import i18n
+
+    i18n.set_language("pt_BR")
+    try:
+        assert printers.selected_text(1) == "1 selecionada"  # impressora is feminine
+        assert printers.items_text(2) == "2 impressoras"
+    finally:
+        i18n.set_language(i18n.DEFAULT_LANGUAGE)

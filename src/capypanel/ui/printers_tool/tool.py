@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QDialog, QMenu
 
 from capypanel.core.hosts.document import starter_list
 from capypanel.core.hosts.model import Host, HostListRuleError
-from capypanel.core.i18n import _, ngettext
+from capypanel.core.i18n import _, ngettext, npgettext
 from capypanel.core.printers.printer import with_info
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
@@ -114,10 +114,10 @@ class PrintersTool(ListWorkspace):
         return _("&Manage printer lists…")
 
     def selected_text(self, n: int) -> str:
-        return ngettext("{n} selected", "{n} selected", n).format(n=n)
+        return npgettext("printers", "{n} selected", "{n} selected", n).format(n=n)
 
     def found_text(self, n: int) -> str:
-        return ngettext("{n} found", "{n} found", n).format(n=n)
+        return npgettext("printers", "{n} found", "{n} found", n).format(n=n)
 
     def counted_text(self, name: str, n: int) -> str:
         return ngettext("{name} ({n} printer)", "{name} ({n} printers)", n).format(name=name, n=n)
