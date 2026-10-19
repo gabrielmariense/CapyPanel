@@ -280,17 +280,6 @@ class ListWorkspace(QWidget):
         self.splitter.setSizes(sizes)
         self.align_toolbar_later()
 
-    def reset_layout(self) -> None:
-        """Default panel sizes, every column and panel shown again."""
-        a = self._list_commands
-        for action in (a.show_groups, a.show_tags, a.show_details):
-            action.setChecked(True)
-        self.table.reset_columns()
-        self._columns_shown()
-        self._save_columns()
-        self._default_pane_sizes(sum(self.splitter.sizes()))
-        self.align_toolbar_later()
-
     def restyle(self) -> None:
         """After a theme switch: its font may be bigger, and it pads the toolbar differently."""
         self.toolbar.restyle()

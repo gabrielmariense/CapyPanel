@@ -159,13 +159,6 @@ class MainWindow(QMainWindow):
         a = self.commands
         return {"toolbar": a.show_toolbar, "status_bar": a.show_status_bar}
 
-    def reset_layout(self) -> None:
-        """Settings > Window layout: default panel sizes, columns and hidden parts shown again.
-        The window's size, the theme and every other setting stay."""
-        for action in (self.commands.show_toolbar, self.commands.show_status_bar):
-            action.setChecked(True)
-        self.hosts.reset_layout()
-
     def _show_tool(self, tool: str) -> None:
         """The rail and View > tools agree on the tool shown (Hosts is the only one for now)."""
         self.commands.show_hosts.setChecked(tool == "hosts")
@@ -183,7 +176,6 @@ class MainWindow(QMainWindow):
         )
         dialog.language_picked.connect(self.set_language)
         dialog.theme_picked.connect(self.set_theme)
-        dialog.layout_reset_requested.connect(self.reset_layout)
         self.hosts.wire_settings(dialog)
         return dialog
 

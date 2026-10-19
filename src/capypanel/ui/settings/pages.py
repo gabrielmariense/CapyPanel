@@ -28,7 +28,7 @@ from capypanel.core.i18n import _, ngettext
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import TreeMenu, fill_host_move_menu
 from capypanel.ui.host_lists import HostListsView
-from capypanel.ui.hosts import confirm, group_path
+from capypanel.ui.hosts import group_path
 from capypanel.ui.menus import MenuCombo
 from capypanel.ui.notes import notes
 from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
@@ -134,14 +134,14 @@ def open_folder(folder: Path) -> None:
     QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 
 
-# ---- CapyPanel: General and Files ----
+# ---- CapyPanel: Appearance and Files ----
 
 
-class GeneralPage(Page):
+class AppearancePage(Page):
     """The app's language and theme. Both apply as soon as they're picked."""
 
     def __init__(self, *, language: str, registry: themes.Registry, theme_id: str) -> None:
-        super().__init__(_("General"))
+        super().__init__(_("Appearance"))
         # Each language is named in its own language, so anyone can find theirs.
         self.language = QComboBox()
         for code, name in i18n.LANGUAGES.items():
@@ -231,10 +231,7 @@ class FilesPage(Page):
 
 
 class HostsPage(Page):
-    """The Hosts tool's own settings: which list opens, what it shows first, Refresh, and the
-    window's layout."""
-
-    layout_reset = Signal()  # Reset… was confirmed
+    """The Hosts tool's own settings: which list opens, what it shows first, and Refresh."""
 
     def __init__(
         self,
@@ -317,27 +314,9 @@ class HostsPage(Page):
             ),
         )  # fmt: skip
 
-        layout = Section(_("Layout"))
-        self.reset_button = QPushButton(_("&Reset…"))
-        self.reset_button.clicked.connect(self._reset_layout)
-        add_rows(
-            layout.content,
-            SettingRow(
-                _("Window layout"),
-                _("Panel sizes, columns and the panels shown, back to how they first were."),
-                self.reset_button,
-            ),
-        )
-
         self.body.addWidget(start)
         self.body.addWidget(refresh)
-        self.body.addWidget(layout)
         self.body.addStretch(1)
-
-    def _reset_layout(self) -> None:
-        question = _("Panel sizes, columns and the panels shown go back to how they first were.")
-        if confirm(self, _("Reset window layout"), question, _("Reset")):
-            self.layout_reset.emit()
 
     def start_choice(self) -> str:
         return str(self.start_list.currentData())

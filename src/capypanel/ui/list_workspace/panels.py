@@ -517,11 +517,6 @@ class ItemTable(QTreeWidget):
             self._widths[self.COLUMNS[column]] = self._content_width(column)
         self._place_columns()
 
-    def reset_columns(self) -> None:
-        """Reset layout: every column shown again, fitted as on the first start."""
-        self._widths.clear()
-        self.set_hidden_columns([])
-
     def _place_columns(self) -> None:
         """Sizes each column shown: the user's width; a column with none yet (the first start,
         or switched on for the first time) is fitted once, and keeps that width from then on."""

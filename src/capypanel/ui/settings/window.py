@@ -33,8 +33,8 @@ from capypanel.ui.notes import hint
 from capypanel.ui.settings import search
 from capypanel.ui.settings.connections import ConnectionsPage
 from capypanel.ui.settings.pages import (
+    AppearancePage,
     FilesPage,
-    GeneralPage,
     HostListsPage,
     HostsPage,
     Page,
@@ -44,9 +44,9 @@ from capypanel.ui.themes import engine as themes
 
 # The pages' titles, as the pages set them, and the groups' labels: the page list is sized for the
 # longest in any language. The app's pages first, then each tool's.
-PAGE_TITLES = ("General", "Files", "About", "General", "Host lists", "Connections")
+PAGE_TITLES = ("Appearance", "Files", "About", "General", "Host lists", "Connections")
 GROUPS = (
-    ("CapyPanel", ("general", "files")),
+    ("CapyPanel", ("appearance", "files")),
     ("Hosts", ("hosts", "host_lists", "connections")),
 )
 PINNED = ("about",)  # pages kept at the very bottom of the page list, apart from the groups
@@ -71,7 +71,6 @@ class SettingsDialog(QDialog):
     prefs_changed = Signal(object)  # SettingsPrefs
     open_requested = Signal(object)  # a list's Path, to open now
     profiles_changed = Signal()  # profiles or tool paths were written
-    layout_reset_requested = Signal()  # Window layout: Reset…, confirmed
 
     def __init__(
         self,
@@ -115,7 +114,7 @@ class SettingsDialog(QDialog):
         """The pages and buttons, in the current language, showing what's set."""
         self._building = True  # pages report changes while they're filled
         self.setWindowTitle(_("Settings"))
-        self.general = GeneralPage(
+        self.appearance = AppearancePage(
             language=i18n.language(), registry=self._registry, theme_id=theme_id
         )
         self.files = FilesPage(self._paths)
@@ -139,22 +138,21 @@ class SettingsDialog(QDialog):
         )
         self.connections = ConnectionsPage(self._catalogs, self._document)
         self.pages: dict[str, Page] = {
-            "general": self.general,
+            "appearance": self.appearance,
             "files": self.files,
             "about": self.about,
             "hosts": self.hosts,
             "host_lists": self.host_lists,
             "connections": self.connections,
         }
-        self.general.language.currentIndexChanged.connect(self._language_changed)
-        self.general.theme.currentIndexChanged.connect(
-            lambda: self.theme_picked.emit(self.general.theme_id())
+        self.appearance.language.currentIndexChanged.connect(self._language_changed)
+        self.appearance.theme.currentIndexChanged.connect(
+            lambda: self.theme_picked.emit(self.appearance.theme_id())
         )
         for page in (self.hosts, self.host_lists):
             page.changed.connect(self._prefs_changed)
         self.host_lists.view.open_requested.connect(self.open_requested.emit)
         self.connections.changed.connect(self.profiles_changed.emit)
-        self.hosts.layout_reset.connect(self.layout_reset_requested.emit)
 
         self.page_list = QListWidget()
         self.page_list.setObjectName("pageList")
@@ -201,7 +199,7 @@ class SettingsDialog(QDialog):
         self.pinned_list.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._fit_pinned()
         self.pinned_list.currentRowChanged.connect(self._pinned_picked)
-        self.page_list.setCurrentRow(self.row_of("general"))
+        self.page_list.setCurrentRow(self.row_of("appearance"))
 
         content = QWidget()
         columns = QHBoxLayout()
@@ -231,7 +229,7 @@ class SettingsDialog(QDialog):
         self._building = False
 
     def _language_changed(self) -> None:
-        code = self.general.language_choice()
+        code = self.appearance.language_choice()
         if code != i18n.language():
             self.language_picked.emit(code)  # the app switches now; Settings follows
             QTimer.singleShot(0, self, self._rebuild)  # after the dropdown has closed
@@ -244,12 +242,12 @@ class SettingsDialog(QDialog):
         old.hide()
         self._layout.removeWidget(old)
         self._old.append(old)
-        self._build(self.general.theme_id())
+        self._build(self.appearance.theme_id())
         if chosen is not None:
             self.host_lists.view.select(chosen)
         self.show_page(page)
         self._make_room()
-        self.general.language.setFocus()
+        self.appearance.language.setFocus()
 
     def _no_default_buttons(self) -> None:
         for button in self.findChildren(QPushButton):  # the pages' buttons too
@@ -398,7 +396,7 @@ class SettingsDialog(QDialog):
         """The page shown, or the one shown before the search."""
         if self.stack.currentIndex() < len(self.pages):
             return list(self.pages)[self.stack.currentIndex()]
-        return getattr(self, "_before_search", "general")
+        return getattr(self, "_before_search", "appearance")
 
     def show_page(self, page_id: str) -> None:
         if page_id in PINNED:
