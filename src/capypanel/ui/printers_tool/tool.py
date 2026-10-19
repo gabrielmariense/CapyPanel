@@ -128,6 +128,14 @@ class PrintersTool(ListWorkspace):
     def lists_page(self) -> str:
         return "printer_lists"
 
+    def only_tags_text(self, shown: int, total: int) -> str:
+        return _("Only printers with all of: {tags} · {shown} of {total} shown").format(
+            tags="{tags}", shown=shown, total=total
+        )
+
+    def no_match_text(self) -> str:
+        return _("No printers in this group have all the picked tags.")
+
     def list_file_filter(self) -> str:
         return _("Printer lists (*.json);;All files (*)")
 

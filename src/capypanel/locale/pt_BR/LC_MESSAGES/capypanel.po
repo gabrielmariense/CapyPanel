@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 17:10-0300\n"
+"POT-Creation-Date: 2026-10-19 17:18-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -432,6 +432,15 @@ msgstr "Verifica estes hosts de novo agora"
 #, python-brace-format
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
+
+msgid "Clear"
+msgstr "Limpar"
+
+msgid "Clear tags"
+msgstr "Limpar tags"
+
+msgid "Clear the picked tags"
+msgstr "Limpar as tags escolhidas"
 
 msgid "Click to copy"
 msgstr "Clique para copiar"
@@ -933,6 +942,9 @@ msgstr "Sem grupo"
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
 
+msgid "No hosts in this group have all the picked tags."
+msgstr "Nenhum host deste grupo tem todas as tags escolhidas."
+
 msgid "No list open"
 msgstr "Nenhuma lista aberta"
 
@@ -947,6 +959,9 @@ msgstr "Ninguém logado"
 
 msgid "No printer list is open."
 msgstr "Nenhuma lista de impressoras está aberta."
+
+msgid "No printers in this group have all the picked tags."
+msgstr "Nenhuma impressora deste grupo tem todas as tags escolhidas."
 
 #, python-brace-format
 msgid "No settings mention “{text}”."
@@ -1003,11 +1018,19 @@ msgstr "Um por usuário, com o nome da conta."
 msgid "Online"
 msgstr "Online"
 
+#, python-brace-format
+msgid "Only hosts with all of: {tags} · {shown} of {total} shown"
+msgstr "Só hosts com todas estas tags: {tags} · {shown} de {total} exibidos"
+
 msgid "Only me (personal)"
 msgstr "Só eu (pessoal)"
 
 msgid "Only ping and ports, never logged-on users, so no account is needed. Refresh in the toolbar always works."
 msgstr "Só ping e portas, nunca usuários logados, então nenhuma conta é usada. O Atualizar da barra de ferramentas sempre funciona."
+
+#, python-brace-format
+msgid "Only printers with all of: {tags} · {shown} of {total} shown"
+msgstr "Só impressoras com todas estas tags: {tags} · {shown} de {total} exibidas"
 
 #, python-brace-format
 msgid "Only the first {n} open at once."
@@ -1101,6 +1124,10 @@ msgstr "Cole uma lista abaixo, ou"
 
 msgid "Personal"
 msgstr "Pessoal"
+
+#, python-brace-format
+msgid "Picked tags: {tags}"
+msgstr "Tags escolhidas: {tags}"
 
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
@@ -1424,11 +1451,19 @@ msgstr "Tag: {tag}"
 msgid "Tags"
 msgstr "Tags"
 
+#, python-brace-format
+msgid "Tags ({n})"
+msgstr "Tags ({n})"
+
 msgid "Tags and notes"
 msgstr "Tags e notas"
 
 msgid "Tags for the selected rows, separated by ;"
 msgstr "Tags das linhas selecionadas, separadas por ;"
+
+#, python-brace-format
+msgid "Tags: {tags}"
+msgstr "Tags: {tags}"
 
 msgid "Takes it out of your lists, or deletes its file too"
 msgstr "Tira das suas listas, ou exclui também o arquivo"
@@ -1805,6 +1840,9 @@ msgstr "a tag “{tag}”"
 
 msgid "tags"
 msgstr "tags"
+
+msgid "the picked tags"
+msgstr "as tags escolhidas"
 
 msgid "the search results"
 msgstr "os resultados da pesquisa"

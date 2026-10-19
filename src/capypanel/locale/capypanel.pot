@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 17:10-0300\n"
+"POT-Creation-Date: 2026-10-19 17:18-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -434,6 +434,15 @@ msgstr ""
 
 #, python-brace-format
 msgid "Choose a {tool} settings file"
+msgstr ""
+
+msgid "Clear"
+msgstr ""
+
+msgid "Clear tags"
+msgstr ""
+
+msgid "Clear the picked tags"
 msgstr ""
 
 msgid "Click to copy"
@@ -948,6 +957,9 @@ msgstr ""
 msgid "No host list is open."
 msgstr ""
 
+msgid "No hosts in this group have all the picked tags."
+msgstr ""
+
 msgid "No list open"
 msgstr ""
 
@@ -961,6 +973,9 @@ msgid "No one logged on"
 msgstr ""
 
 msgid "No printer list is open."
+msgstr ""
+
+msgid "No printers in this group have all the picked tags."
 msgstr ""
 
 #, python-brace-format
@@ -1022,12 +1037,20 @@ msgstr ""
 msgid "Online"
 msgstr ""
 
+#, python-brace-format
+msgid "Only hosts with all of: {tags} · {shown} of {total} shown"
+msgstr ""
+
 msgid "Only me (personal)"
 msgstr ""
 
 msgid ""
 "Only ping and ports, never logged-on users, so no account is needed. "
 "Refresh in the toolbar always works."
+msgstr ""
+
+#, python-brace-format
+msgid "Only printers with all of: {tags} · {shown} of {total} shown"
 msgstr ""
 
 #, python-brace-format
@@ -1124,6 +1147,10 @@ msgid "Paste a list below, or"
 msgstr ""
 
 msgid "Personal"
+msgstr ""
+
+#, python-brace-format
+msgid "Picked tags: {tags}"
 msgstr ""
 
 msgid "Portable mode: everything stays in the app's own folder."
@@ -1455,10 +1482,18 @@ msgstr ""
 msgid "Tags"
 msgstr ""
 
+#, python-brace-format
+msgid "Tags ({n})"
+msgstr ""
+
 msgid "Tags and notes"
 msgstr ""
 
 msgid "Tags for the selected rows, separated by ;"
+msgstr ""
+
+#, python-brace-format
+msgid "Tags: {tags}"
 msgstr ""
 
 msgid "Takes it out of your lists, or deletes its file too"
@@ -1859,6 +1894,9 @@ msgid "tag “{tag}”"
 msgstr ""
 
 msgid "tags"
+msgstr ""
+
+msgid "the picked tags"
 msgstr ""
 
 msgid "the search results"

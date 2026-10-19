@@ -97,10 +97,12 @@ def test_picking_a_group_or_tag_filters_the_table(window: MainWindow, office: Pa
     tree.setCurrentItem(finance)
     assert _table_names(window) == {"FIN-01", "FIN-02"}
     [kiosk] = window.hosts.nav.tags.findItems("kiosk", Qt.MatchFlag.MatchStartsWith)
-    window.hosts.nav.tags.setCurrentItem(kiosk)
-    assert _table_names(window) == {"HQ-01", "FIN-02"}
+    window.hosts.nav.tags.setCurrentItem(kiosk)  # narrows the group picked
+    assert _table_names(window) == {"FIN-02"}
     [everything] = window.hosts.nav.everything.findItems("All hosts", Qt.MatchFlag.MatchStartsWith)
     window.hosts.nav.everything.setCurrentItem(everything)  # pinned above the groups tree
+    assert _table_names(window) == {"HQ-01", "FIN-02"}  # the tag stays picked
+    window.hosts.nav.clear_tags()
     assert len(_table_names(window)) == 3
 
 
@@ -283,7 +285,7 @@ def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: MainWindow, office
     assert tag is not None
     window.hosts.nav.tags.setCurrentItem(tag)  # filtering by a tag
     window.hosts.commands.show_tags.setChecked(False)
-    assert window.hosts.nav.tags.isHidden() and window.hosts.nav.current_filter().kind == "all"
+    assert window.hosts.nav.tags.isHidden() and window.hosts.nav.picked_tags() == []
     window.close()
     assert window.hosts.prefs["view"]["tags"] is False
 

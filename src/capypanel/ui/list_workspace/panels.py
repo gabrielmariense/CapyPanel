@@ -1,5 +1,7 @@
 """The panels of a list tool: groups and tags, the search above the items, and the items table."""
 
+import html
+import re
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 
@@ -10,6 +12,7 @@ from PySide6.QtCore import (
     QPersistentModelIndex,
     QPoint,
     QRect,
+    QSize,
     Qt,
     Signal,
 )
@@ -31,6 +34,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMenu,
+    QPushButton,
     QStyle,
     QStyledItemDelegate,
     QStyleOptionViewItem,
@@ -58,7 +62,7 @@ from capypanel.ui.menus import popup
 
 @dataclass(frozen=True)
 class Filter:
-    kind: str  # "all", "nogroup", "group" or "tag"
+    kind: str  # "all", "nogroup" or "group": where to look (picked tags then narrow it)
     value: str | None = None
 
 
@@ -77,7 +81,8 @@ def pane_title(text: str, label: QLabel | None = None) -> QLabel:
 class NavigationPane(QWidget):
     """One card, like the other panels: "All hosts" (or the tool's own word) pinned on top, then
     the groups (in the list's own order, rearranged by dragging) and the tags, each under a small
-    heading and split by thin lines. Picking one filters the table."""
+    heading and split by thin lines. A group (or All hosts, or No group) picks where to look;
+    tags, any number of them, then keep only the items that have them all."""
 
     filter_changed = Signal()
 
@@ -91,6 +96,10 @@ class NavigationPane(QWidget):
         pane_title("", self.groups_heading)
         self.groups_heading.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._tags_title = pane_title("")
+        self.clear_tags_button = QToolButton()
+        self.clear_tags_button.setText("×")
+        self.clear_tags_button.clicked.connect(self.clear_tags)
+        self._picked_tags: list[str] = []
         header = QHBoxLayout()
         header.addWidget(self.groups_heading, 1)
         header.addWidget(self.add_group_button)
@@ -114,6 +123,11 @@ class NavigationPane(QWidget):
         self.tags = QTreeWidget()
         self.tags.setHeaderHidden(True)
         self.tags.setRootIsDecorated(False)
+        # A click picks a tag or drops it again, without Ctrl.
+        self.tags.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+        tags_header = QHBoxLayout()
+        tags_header.addWidget(self._tags_title, 1)
+        tags_header.addWidget(self.clear_tags_button)
 
         # The lists drop their own frames ("flat"): the card around them is the only box.
         for tree in (self.everything, self.groups, self.tags):
@@ -130,7 +144,7 @@ class NavigationPane(QWidget):
         inside.addLayout(header)
         inside.addWidget(self.groups, 3)
         inside.addWidget(self._tags_line)
-        inside.addWidget(self._tags_title)
+        inside.addLayout(tags_header)
         inside.addWidget(self.tags, 1)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -160,28 +174,35 @@ class NavigationPane(QWidget):
         self.add_group_button.setToolTip(_("Add group"))
         self.groups_heading.setText(_("Groups"))
         self.groups_heading.setToolTip(_("Drop a group here to put it directly under Groups"))
-        self._tags_title.setText(_("Tags"))
+        self.clear_tags_button.setToolTip(_("Clear the picked tags"))
+        self._show_tag_count()
 
     def set_tags_visible(self, visible: bool) -> None:
-        """View > Tags pane. Hiding it while a tag is picked goes back to All hosts."""
-        for widget in (self._tags_line, self._tags_title, self.tags):
+        """View > Tags pane. Hiding it drops the picked tags: nothing filters out of sight."""
+        for widget in (self._tags_line, self._tags_title, self.clear_tags_button, self.tags):
             widget.setVisible(visible)
-        if not visible and self._filter.kind == "tag":
-            self._filter = self._select(Filter("all"))
-            self.filter_changed.emit()
+        if not visible and self._picked_tags:
+            self.clear_tags()
 
     def current_filter(self) -> Filter:
         return self._filter
 
+    def picked_tags(self) -> list[str]:
+        return list(self._picked_tags)
+
+    def clear_tags(self) -> None:
+        self.tags.clearSelection()  # _tags_picked() follows
+
     def set_searching(self, searching: bool) -> None:
-        """A search looks through every host, so nothing shows as picked meanwhile."""
-        for tree in (self.everything, self.groups, self.tags):
+        """A search looks through every item, so no group shows as picked meanwhile. The picked
+        tags stay: they narrow the search too."""
+        for tree in (self.everything, self.groups):
             tree.blockSignals(True)
         if searching:
-            self._clear(self.everything, self.groups, self.tags)
+            self._clear(self.everything, self.groups)
         else:
             self._filter = self._select(self._filter)
-        for tree in (self.everything, self.groups, self.tags):
+        for tree in (self.everything, self.groups):
             tree.blockSignals(False)
 
     def selected_group_id(self) -> str | None:
@@ -193,7 +214,11 @@ class NavigationPane(QWidget):
         return item.data(0, ROLE_ID) if item else None
 
     def show_view(self, kind: str, value: str) -> None:
-        """A view as saved ("group", "tag", "nogroup" or "all"); All hosts when it's gone."""
+        """A view as saved ("group", "nogroup" or "all"); All hosts when it's gone. A "tag" view
+        (saved by 0.19) shows everything with that tag picked."""
+        if kind == "tag":
+            self._pick_tags([value])
+            kind = "all"
         self._filter = self._select(Filter(kind, value or None))
 
     def select_group(self, group_id: str) -> None:
@@ -220,7 +245,9 @@ class NavigationPane(QWidget):
                 item.setData(0, ROLE_KIND, "tag")
                 item.setData(0, ROLE_ID, tag)
                 self.tags.addTopLevelItem(item)
+                item.setSelected(tag in self._picked_tags)  # still picked, while it exists
         self._filter = self._select(wanted) if host_list is not None else Filter("all")
+        self._read_picked_tags()
         for tree in (self.everything, self.groups, self.tags):
             tree.blockSignals(False)
         self._fit_everything()  # the count may have grown a digit
@@ -247,11 +274,6 @@ class NavigationPane(QWidget):
         self.everything.setMinimumWidth(self.everything.sizeHintForColumn(0) + sides + 12)
 
     def _select(self, wanted: Filter) -> Filter:
-        if wanted.kind == "tag":
-            for item in _walk(self.tags.invisibleRootItem()):
-                if item.data(0, ROLE_ID) == wanted.value:
-                    self.tags.setCurrentItem(item)
-                    return wanted
         if wanted.kind == "group":
             for item in _walk(self.groups.invisibleRootItem()):
                 if item.data(0, ROLE_ID) == wanted.value:
@@ -260,11 +282,11 @@ class NavigationPane(QWidget):
         if wanted.kind == "nogroup":
             self.everything.setCurrentItem(self._no_group_item)
             self._no_group_item.setSelected(True)
-            self._clear(self.groups, self.tags)
+            self._clear(self.groups)
             return wanted
         self.everything.setCurrentItem(self._everything_item)
         self._everything_item.setSelected(True)
-        self._clear(self.groups, self.tags)
+        self._clear(self.groups)
         return Filter("all")
 
     def _clear(self, *trees: QTreeWidget) -> None:
@@ -277,7 +299,7 @@ class NavigationPane(QWidget):
         items = self.everything.selectedItems()
         if not items:
             return
-        self._clear(self.groups, self.tags)
+        self._clear(self.groups)
         self._filter = Filter(items[0].data(0, ROLE_KIND))  # "all" or "nogroup"
         self.filter_changed.emit()
 
@@ -285,17 +307,30 @@ class NavigationPane(QWidget):
         items = self.groups.selectedItems()
         if not items:
             return
-        self._clear(self.everything, self.tags)
+        self._clear(self.everything)
         self._filter = Filter("group", items[0].data(0, ROLE_ID))
         self.filter_changed.emit()
 
     def _tags_picked(self) -> None:
-        items = self.tags.selectedItems()
-        if not items:
-            return
-        self._clear(self.everything, self.groups)
-        self._filter = Filter("tag", items[0].data(0, ROLE_ID))
+        self._read_picked_tags()
         self.filter_changed.emit()
+
+    def _pick_tags(self, tags: Sequence[str]) -> None:
+        self.tags.blockSignals(True)
+        for item in _walk(self.tags.invisibleRootItem()):
+            item.setSelected(item.data(0, ROLE_ID) in tags)
+        self.tags.blockSignals(False)
+        self._read_picked_tags()
+
+    def _read_picked_tags(self) -> None:
+        items = (self.tags.topLevelItem(i) for i in range(self.tags.topLevelItemCount()))
+        self._picked_tags = [i.data(0, ROLE_ID) for i in items if i is not None and i.isSelected()]
+        self._show_tag_count()
+
+    def _show_tag_count(self) -> None:
+        picked = len(self._picked_tags)
+        self._tags_title.setText(_("Tags ({n})").format(n=picked) if picked else _("Tags"))
+        self.clear_tags_button.setEnabled(bool(picked))  # kept in place, greyed out
 
 
 class PinnedList(HostDropTree):
@@ -368,6 +403,64 @@ class SearchBox(QLineEdit):
         )
 
 
+class TagStrip(QFrame):
+    """Between the search box and the table while tags are picked: which ones, how many items
+    they leave, and Clear. It's there so nobody wonders where the other items went."""
+
+    clear_clicked = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setObjectName("tagStrip")
+        self._text = QLabel()
+        self._text.setTextFormat(Qt.TextFormat.RichText)
+        self._text.setWordWrap(True)
+        self.clear_button = QPushButton()
+        self.clear_button.setAutoDefault(False)
+        self.clear_button.clicked.connect(self.clear_clicked)
+        row = QHBoxLayout(self)
+        row.setContentsMargins(10, 4, 4, 4)
+        row.addWidget(self._text, 1)
+        row.addWidget(self.clear_button)
+        self.hide()
+
+    def show_tags(self, tags: Sequence[str], text: str) -> None:
+        """text: the tool's sentence, with {tags} where the picked tags go (in bold)."""
+        self.setVisible(bool(tags))
+        if tags:
+            names = html.escape(", ".join(tags))
+            self._text.setText(text.replace("{tags}", f"<b>{names}</b>"))
+            self._text.setToolTip(", ".join(tags))
+            self.clear_button.setText(_("Clear"))
+            self.clear_button.setToolTip(_("Clear the picked tags"))
+
+
+def natural_key(text: str) -> tuple[tuple[int, int | str], ...]:
+    """Sorts "Room 2" before "Room 10", and ignores case. Empty cells go last."""
+    if not text:
+        return ((2, ""),)
+    parts = re.split(r"(\d+)", text.casefold())
+    return tuple((0, int(p)) if p.isdigit() else (1, p) for p in parts if p)
+
+
+class SortedRow(QTreeWidgetItem):
+    """A table row that sorts naturally (A–Z or Z–A by the clicked column), ties by its name,
+    A–Z either way."""
+
+    def __lt__(self, other: QTreeWidgetItem) -> bool:
+        tree = self.treeWidget()
+        column = tree.sortColumn() if tree is not None else 0
+        mine, theirs = natural_key(self.text(column)), natural_key(other.text(column))
+        if mine != theirs:
+            return mine < theirs
+        names = natural_key(self.text(0)), natural_key(other.text(0))
+        # Z–A sorts by asking the other row: so a tie stays A–Z, the names answer the other way.
+        descending = tree is not None and tree.header().sortIndicatorOrder() == (
+            Qt.SortOrder.DescendingOrder
+        )
+        return names[0] > names[1] if descending else names[0] < names[1]
+
+
 def _tree_width(tree: QTreeWidget) -> int:
     """A list's widest row in full, with its frame and, when shown, its scroll bar."""
     bar = tree.verticalScrollBar()
@@ -413,6 +506,17 @@ class ItemTable(QTreeWidget):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # Selected items can be dragged onto a group in the Groups panel, to move them there.
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
+        # Centred in the empty table when the picked tags leave nothing.
+        self._empty = QWidget(self.viewport())
+        self._empty_text = QLabel()
+        self._empty_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._empty_text.setWordWrap(True)
+        self.clear_tags_button = QPushButton()
+        self.clear_tags_button.setAutoDefault(False)
+        note = QVBoxLayout(self._empty)
+        note.addWidget(self._empty_text)
+        note.addWidget(self.clear_tags_button, 0, Qt.AlignmentFlag.AlignHCenter)
+        self._empty.hide()
 
     def retranslate(self) -> None:
         """The column titles, in the current language."""
@@ -445,7 +549,7 @@ class ItemTable(QTreeWidget):
         self.clear()
         self._rows = {}
         for item in items:
-            row = QTreeWidgetItem(self.row_texts(item))
+            row = SortedRow(self.row_texts(item))
             row.setData(0, ROLE_ID, item.id)
             self.addTopLevelItem(row)
             self._rows[item.id] = row
@@ -455,6 +559,31 @@ class ItemTable(QTreeWidget):
         self.blockSignals(False)
         self._place_columns()
         self.itemSelectionChanged.emit()
+
+    def show_no_match(self, text: str) -> None:
+        """The note in the empty table when the picked tags leave nothing; "" hides it."""
+        self._empty_text.setText(text)
+        self.clear_tags_button.setText(_("Clear tags"))
+        self._empty.setVisible(bool(text))
+        self._place_empty()
+
+    def _place_empty(self) -> None:
+        if not self._empty.isVisible():
+            return
+        area = self.viewport().rect()
+        # One line when the table is wide enough, wrapped only when it isn't.
+        line = self._empty_text.fontMetrics().horizontalAdvance(self._empty_text.text())
+        layout = self._empty.layout()
+        margins = layout.contentsMargins() if layout is not None else None
+        sides = margins.left() + margins.right() if margins is not None else 0
+        width = min(line + sides + 4, area.width())
+        size = QSize(width, self._empty.heightForWidth(width)).boundedTo(area.size())
+        self._empty.setGeometry(
+            area.x() + (area.width() - size.width()) // 2,
+            area.y() + (area.height() - size.height()) // 2,
+            size.width(),
+            size.height(),
+        )
 
     def hidden_columns(self) -> list[str]:
         return [key for i, key in enumerate(self.COLUMNS) if self.isColumnHidden(i)]
@@ -591,6 +720,7 @@ class ItemTable(QTreeWidget):
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self._fill_last_column()
+        self._place_empty()
 
     def selected_ids(self) -> list[str]:
         return [item.data(0, ROLE_ID) for item in self.selectedItems()]

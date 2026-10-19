@@ -523,6 +523,8 @@ QWidget#sectionCard { background: %(section)s; border: 1px solid %(section_edge)
 QFrame#pagesDivider { background: %(pages_line)s; border: none; }
 QLabel#copyValue { padding: 2px 4px; border-radius: 4px; }
 QLabel#copyValue:hover { background: %(hover)s; }
+/* Tags picked: a tinted strip above the table, so a shorter list never goes unexplained. */
+QFrame#tagStrip { background: %(sel_solid)s; border: 1px solid %(accent)s; border-radius: 6px; }
 QLabel#tagValue { background: %(sel_solid)s; border-radius: 9px; padding: 2px 9px; }
 QLabel#tagValue:hover { background: %(hover)s; }
 QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8px; padding: 0 6px; }
@@ -625,6 +627,8 @@ QWidget#sectionCard { background: %(section)s; border: 1px solid %(section_edge)
 QFrame#pagesDivider { background: %(pages_line)s; border: none; }
 QLabel#copyValue { padding: 2px 4px; border-radius: 4px; }
 QLabel#copyValue:hover { background: %(hover)s; }
+/* Tags picked: a tinted strip above the table, so a shorter list never goes unexplained. */
+QFrame#tagStrip { background: %(sel)s; border: 1px solid %(accent)s; border-radius: 6px; }
 QLabel#tagValue { background: %(sel)s; border-radius: 9px; padding: 2px 9px; }
 QLabel#tagValue:hover { background: %(hover)s; }
 QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8px; padding: 0 6px; }

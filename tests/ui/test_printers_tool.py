@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import Qt, QUrl
 from PySide6.QtWidgets import QApplication, QDialog, QGroupBox, QMenu
 
 from capypanel.core import settings
@@ -319,3 +319,77 @@ def test_counts_agree_with_printer_in_portuguese(printers: PrintersTool) -> None
         assert printers.items_text(2) == "2 impressoras"
     finally:
         i18n.set_language(i18n.DEFAULT_LANGUAGE)
+
+
+def _pick_tags(tool: PrintersTool, *tags: str) -> None:
+    tool.nav.clear_tags()
+    for i in range(tool.nav.tags.topLevelItemCount()):
+        item = tool.nav.tags.topLevelItem(i)
+        if item is not None and item.text(0).split(" (")[0] in tags:
+            item.setSelected(True)  # a click toggles it, as in MultiSelection
+
+
+def test_several_tags_narrow_the_group_picked(
+    printers: PrintersTool, office: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    doc = printers.document
+    assert doc is not None
+    labels = next(h for h in doc.hosts.hosts if h.name == "2F-LABELS")
+    printers._commit(doc.hosts.update_host(replace(labels, tags=("labels", "mono"))))
+    _pick_tags(printers, "mono")
+    assert _names(printers) == ["2F-LABELS", "2F-OFFICE-01"]
+    _pick_tags(printers, "mono", "labels")  # every picked tag, not any
+    assert _names(printers) == ["2F-LABELS"]
+    assert printers.nav._tags_title.text() == "Tags (2)"
+    assert printers.nav.clear_tags_button.isEnabled()
+    assert not printers.tag_strip.isHidden()
+    assert printers.tag_strip._text.text() == (
+        "Only printers with all of: <b>labels, mono</b> · 1 of 3 shown"
+    )
+    assert "Tags: labels, mono" in printers.status_label.text()
+    sources, start = printers.report_sources(doc.hosts)
+    assert sources[start].label == "Picked tags: labels, mono (1 printer)"
+
+    printers.nav.select_group(NO_GROUP)  # the tags stay picked in another group
+    printers._show_items()
+    assert _names(printers) == [] and printers.nav.picked_tags() == ["labels", "mono"]
+    assert printers.table._empty_text.text() == (
+        "No printers in this group have all the picked tags."
+    )
+    assert not printers.table._empty.isHidden()
+    printers.table.clear_tags_button.click()
+    assert printers.nav.picked_tags() == [] and _names(printers) == ["LOOSE"]
+    assert printers.tag_strip.isHidden() and printers.table._empty.isHidden()
+    assert printers.nav._tags_title.text() == "Tags"
+
+
+def test_a_search_keeps_the_picked_tags(printers: PrintersTool) -> None:
+    _pick_tags(printers, "mono")
+    printers.search.setText("2F")
+    printers._show_items()
+    assert _names(printers) == ["2F-OFFICE-01"]  # 2F-LABELS has no "mono"
+    assert printers.nav.picked_tags() == ["mono"]
+
+
+def test_a_tag_view_saved_by_0_19_opens_with_that_tag_picked(printers: PrintersTool) -> None:
+    printers.nav.show_view("tag", "labels")
+    printers._show_items()
+    assert printers.nav.current_filter().kind == "all"
+    assert printers.nav.picked_tags() == ["labels"]
+    assert _names(printers) == ["2F-LABELS"]
+
+
+def test_columns_sort_naturally_and_ties_go_by_name(printers: PrintersTool) -> None:
+    doc = printers.document
+    assert doc is not None
+    hl = doc.hosts
+    for name, model in (("P10", "m2"), ("p9", "M10"), ("P2", "M2")):
+        hl = _printer(hl, name, NO_GROUP, brand="HP", model=model)
+    printers._commit(hl)
+    printers.nav.select_group(NO_GROUP)
+    printers._show_items()
+    assert _names(printers) == ["LOOSE", "P2", "p9", "P10"]  # natural, case ignored
+    printers.table.sortByColumn(printers.table.MODEL, Qt.SortOrder.AscendingOrder)
+    assert _names(printers) == ["P2", "P10", "p9", "LOOSE"]  # m2 = M2: ties by name; empty last
+    printers.table.sortByColumn(printers.table.MODEL, Qt.SortOrder.DescendingOrder)
+    assert _names(printers) == ["LOOSE", "p9", "P2", "P10"]  # Z–A, ties still by name A–Z

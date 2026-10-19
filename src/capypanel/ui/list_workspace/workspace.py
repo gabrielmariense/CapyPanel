@@ -32,7 +32,7 @@ from capypanel.ui.groups import ManageGroupsDialog, TreeMenu, fill_host_move_men
 from capypanel.ui.hosts import confirm, group_path
 from capypanel.ui.list_workspace.actions import ListActions
 from capypanel.ui.list_workspace.details import DetailsPanel
-from capypanel.ui.list_workspace.panels import ItemTable, NavigationPane, SearchBox
+from capypanel.ui.list_workspace.panels import ItemTable, NavigationPane, SearchBox, TagStrip
 from capypanel.ui.list_workspace.splitter import PaneSplitter
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar
@@ -82,10 +82,12 @@ class ListWorkspace(Tool):
         )
         self.splitter = PaneSplitter()
         # The search box is a box of its own above the table, styled like the panels.
+        self.tag_strip = TagStrip()  # while tags are picked: which, and how many they leave
         self.items_pane = QWidget()
         column = QVBoxLayout(self.items_pane)
         column.setContentsMargins(0, 0, 0, 0)
         column.addWidget(self.search)
+        column.addWidget(self.tag_strip)
         column.addWidget(self.table)
         for pane in (self.nav, self.items_pane, self.details):
             self.splitter.addWidget(pane)
@@ -120,6 +122,8 @@ class ListWorkspace(Tool):
         self.splitter.edge_double_clicked.connect(self._fit_pane)
         self.nav.add_group_button.clicked.connect(self.add_top_group)  # on the Groups heading
         self.nav.filter_changed.connect(self._filter_picked)
+        self.tag_strip.clear_clicked.connect(self.nav.clear_tags)
+        self.table.clear_tags_button.clicked.connect(self.nav.clear_tags)
         self.search.textChanged.connect(self._search_timer.start)
         self._search_timer.timeout.connect(self._show_items)
         self.search.to_results.connect(self._to_results)
@@ -183,6 +187,16 @@ class ListWorkspace(Tool):
     def selected_source_texts(self) -> tuple[str, str]:
         """Report's source for the items selected, and its name in sentences: "Selected
         hosts", "the selected hosts"."""
+        raise NotImplementedError
+
+    def only_tags_text(self, shown: int, total: int) -> str:
+        """The strip above the table while tags are picked, with {tags} left in for them:
+        "Only hosts with all of: {tags} · 3 of 8 shown"."""
+        raise NotImplementedError
+
+    def no_match_text(self) -> str:
+        """In the empty table when the picked tags leave nothing: "No hosts in this group have
+        all the picked tags."."""
         raise NotImplementedError
 
     def lists_page(self) -> str:
@@ -804,16 +818,26 @@ class ListWorkspace(Tool):
     def _show_items(self) -> None:
         self._search_timer.stop()
         needle = self._needle()
-        items = self.visible_items()
+        before_tags = self._place_items()
+        tags = self.nav.picked_tags()
+        items = self._with_tags(before_tags)
         self.nav.set_searching(bool(needle))
         self.fill_table(items)
         self.table.set_search(needle)
+        strip = self.only_tags_text(len(items), len(before_tags)) if tags else ""
+        self.tag_strip.show_tags(tags, strip)
+        self.table.show_no_match(self.no_match_text() if tags and before_tags and not items else "")
 
     def fill_table(self, items: Sequence[Host]) -> None:
         self.table.show_items(items)
 
     def visible_items(self) -> tuple[Host, ...]:
-        """The items the table shows: the search's results, or the group or tag picked."""
+        """The items the table shows: the search's results or the group picked, narrowed to the
+        ones with every picked tag."""
+        return self._with_tags(self._place_items())
+
+    def _place_items(self) -> tuple[Host, ...]:
+        """The search's results, or the items in the group picked (or all, or in none)."""
         if self._doc is None:
             return ()
         hosts, current = self._doc.hosts, self.nav.current_filter()
@@ -823,9 +847,11 @@ class ListWorkspace(Tool):
             return hosts.hosts_in(current.value)
         if current.kind == "nogroup":
             return tuple(h for h in hosts.hosts if h.group == NO_GROUP)
-        if current.kind == "tag":
-            return tuple(h for h in hosts.hosts if current.value in h.tags)
         return hosts.hosts
+
+    def _with_tags(self, items: tuple[Host, ...]) -> tuple[Host, ...]:
+        tags = self.nav.picked_tags()
+        return tuple(h for h in items if all(t in h.tags for t in tags)) if tags else items
 
     # ---- searching ----
 
@@ -842,14 +868,14 @@ class ListWorkspace(Tool):
         self.search.blockSignals(False)
 
     def _filter_picked(self) -> None:
-        """Picking a group or tag on the left ends a search: it means browsing again."""
+        """Picking a group or a tag on the left ends a search: it means browsing again."""
         self._clear_search()
         self._show_items()
 
     def _end_search(self) -> None:
         if self.search.text():
             self._clear_search()
-            self._show_items()  # back to the group or tag picked before, selection kept
+            self._show_items()  # back to the group and tags picked before, selection kept
 
     def _columns_shown(self) -> None:
         self.search.set_fields(*self.search_fields())
@@ -902,6 +928,8 @@ class ListWorkspace(Tool):
             found = self.table.topLevelItemCount()
             parts.append(self.found_text(found))
         parts.append(self.selected_text(selected))
+        if tags := self.nav.picked_tags():
+            parts.append(_("Tags: {tags}").format(tags=", ".join(tags)))
         if doc.read_only:
             parts.append(_("read-only"))
         if self._paths.portable:
@@ -913,17 +941,23 @@ class ListWorkspace(Tool):
         return self._list_name(self._doc.path) if self._doc is not None else ""
 
     def report_sources(self, host_list: HostList) -> tuple[list[Source], int]:
-        """What Report can take, and which one is shown now: the search's results, the items
-        picked, everything, no group, each group (with its subgroups) and each tag."""
+        """What Report can take, and which one is shown now: the search's results or what the
+        picked tags leave, the items selected, everything, no group, each group (with its
+        subgroups) and each tag."""
         counted = self.counted_text
         sources: list[Source] = []
         current = self.nav.current_filter()
-        browsing = not self._needle()
+        tags = self.nav.picked_tags()
+        browsing = not self._needle() and not tags
         start = 0
-        if not browsing:
+        if self._needle():
             found = self.visible_items()
             sources.append(Source(counted(_("Search results"), len(found)),
                                   _("the search results"), found))  # fmt: skip
+        elif tags:
+            shown = self.visible_items()
+            label = _("Picked tags: {tags}").format(tags=", ".join(tags))
+            sources.append(Source(counted(label, len(shown)), _("the picked tags"), shown))
         selected = self.selected_items()
         if len(selected) > 1:
             label, name = self.selected_source_texts()
@@ -954,8 +988,6 @@ class ListWorkspace(Tool):
             sources.append(
                 Source(counted(_("Tag: {tag}").format(tag=tag), len(items)), name, items)
             )
-            if browsing and current.kind == "tag" and current.value == tag:
-                start = len(sources) - 1
         return sources, start
 
     # ---- right-click menus ----
