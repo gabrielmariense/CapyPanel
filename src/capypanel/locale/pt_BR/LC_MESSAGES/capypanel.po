@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 13:13-0300\n"
+"POT-Creation-Date: 2026-10-19 13:23-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -47,6 +47,9 @@ msgstr "&Endereço:"
 
 msgid "&Add…"
 msgstr "&Adicionar…"
+
+msgid "&Brand:"
+msgstr "&Marca:"
 
 msgid "&Connect"
 msgstr "&Conectar"
@@ -138,8 +141,14 @@ msgstr "Ge&renciar grupos…"
 msgid "&Manage host lists…"
 msgstr "&Gerenciar listas de hosts…"
 
+msgid "&Manage printer lists…"
+msgstr "&Gerenciar listas de impressoras…"
+
 msgid "&Manual connection…"
 msgstr "Conexão &manual…"
+
+msgid "&Model:"
+msgstr "Mo&delo:"
 
 msgid "&Move them to"
 msgstr "&Mover para"
@@ -197,6 +206,9 @@ msgstr "&Executar"
 
 msgid "&Save as preset…"
 msgstr "&Salvar como predefinição…"
+
+msgid "&Serial number:"
+msgstr "Nº de &série:"
 
 msgid "&Settings…"
 msgstr "&Configurações…"
@@ -282,6 +294,9 @@ msgstr "Adicionar &grupo…"
 msgid "Add &host…"
 msgstr "Adicionar &host…"
 
+msgid "Add &printer…"
+msgstr "Adicionar &impressora…"
+
 msgid "Add a &row below"
 msgstr "Adicionar uma &linha abaixo"
 
@@ -297,6 +312,12 @@ msgstr "Adicionar host"
 msgid "Add hosts and groups, or import a list of hosts"
 msgstr "Adicione hosts e grupos, ou importe uma lista de hosts"
 
+msgid "Add printer"
+msgstr "Adicionar impressora"
+
+msgid "Add printers and groups, and manage the groups"
+msgstr "Adicione impressoras e grupos, e gerencie os grupos"
+
 msgid "Added"
 msgstr "Adicionada"
 
@@ -311,6 +332,9 @@ msgstr "Endereço"
 
 msgid "All hosts"
 msgstr "Todos os hosts"
+
+msgid "All printers"
+msgstr "Todas as impressoras"
 
 #, python-brace-format
 msgid "Already in the list, {place}"
@@ -333,6 +357,15 @@ msgstr "Um nome à sua escolha, depois o nome do computador na rede ou o endere�
 
 msgid "Appearance"
 msgstr "Aparência"
+
+msgid "Ass&et tag:"
+msgstr "&Patrimônio:"
+
+msgid "Asset tag"
+msgstr "Patrimônio"
+
+msgid "Brand"
+msgstr "Marca"
 
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
@@ -597,6 +630,9 @@ msgstr "Editar perfil de conexão"
 msgid "Edit host"
 msgstr "Editar host"
 
+msgid "Edit printer"
+msgstr "Editar impressora"
+
 msgid "Edit the list here"
 msgstr "Editar a lista aqui"
 
@@ -724,6 +760,9 @@ msgstr "Hosts sem perfil &usam"
 msgid "Hover a folder to see what it holds."
 msgstr "Passe o mouse sobre uma pasta para ver o que ela guarda."
 
+msgid "IP address or network name"
+msgstr "Endereço IP ou nome na rede"
+
 msgid "Icons:"
 msgstr "Ícones:"
 
@@ -812,6 +851,9 @@ msgstr "Conexão manual"
 msgid "Mascot:"
 msgstr "Mascote:"
 
+msgid "Model"
+msgstr "Modelo"
+
 msgid "Move &down"
 msgstr "Mover para &baixo"
 
@@ -885,6 +927,9 @@ msgstr "Ninguém"
 msgid "No one logged on"
 msgstr "Ninguém logado"
 
+msgid "No printer list is open."
+msgstr "Nenhuma lista de impressoras está aberta."
+
 #, python-brace-format
 msgid "No settings mention “{text}”."
 msgstr "Nenhuma configuração menciona “{text}”."
@@ -919,6 +964,9 @@ msgstr "Nada muda até você clicar em Adicionar."
 msgid "Nothing changes until you click OK."
 msgstr "Nada muda até você clicar em OK."
 
+msgid "Nothing to check on printers yet"
+msgstr "Ainda não há o que verificar nas impressoras"
+
 msgid "Notice"
 msgstr "Aviso"
 
@@ -943,6 +991,10 @@ msgstr "Só eu (pessoal)"
 msgid "Only ping and ports, never logged-on users, so no account is needed. Refresh in the toolbar always works."
 msgstr "Só ping e portas, nunca usuários logados, então nenhuma conta é usada. O Atualizar da barra de ferramentas sempre funciona."
 
+#, python-brace-format
+msgid "Only the first {n} open at once."
+msgstr "Só as {n} primeiras abrem de uma vez."
+
 msgid "Open &Settings"
 msgstr "Abrir &Configurações"
 
@@ -955,6 +1007,9 @@ msgstr "Abrir &pasta"
 msgid "Open &log folder"
 msgstr "Abrir pasta de &logs"
 
+msgid "Open &web page"
+msgstr "Abrir página &web"
+
 msgid "Open a CSV file"
 msgstr "Abrir um arquivo CSV"
 
@@ -964,6 +1019,9 @@ msgstr "Abrir uma lista de hosts"
 msgid "Open a host list to choose what it shows first."
 msgstr "Abra uma lista de hosts para escolher o que ela mostra primeiro."
 
+msgid "Open a printer list"
+msgstr "Abrir uma lista de impressoras"
+
 msgid "Open f&older"
 msgstr "Abrir &pasta"
 
@@ -972,6 +1030,12 @@ msgstr "Abrir pasta"
 
 msgid "Open many remote screens?"
 msgstr "Abrir muitas telas remotas?"
+
+msgid "Open the selected printers' web pages (Enter)"
+msgstr "Abre a página web das impressoras selecionadas (Enter)"
+
+msgid "Open web page"
+msgstr "Abrir página web"
 
 #, python-brace-format
 msgid "Open {n} remote screen at once?"
@@ -986,6 +1050,12 @@ msgstr[0] "{n} tela remota aberta."
 msgstr[1] "{n} telas remotas abertas."
 
 #, python-brace-format
+msgid "Opened {n} web page."
+msgid_plural "Opened {n} web pages."
+msgstr[0] "{n} página web aberta."
+msgstr[1] "{n} páginas web abertas."
+
+#, python-brace-format
 msgid "Optional: a {extension} file saved from {tool}. It's used exactly as saved, including its encryption plugin; only the host is emptied, since the address comes from the host you open."
 msgstr "Opcional: um arquivo {extension} salvo no {tool}. Ele é usado exatamente como foi salvo, inclusive o plugin de criptografia; só o host é esvaziado, já que o endereço vem do host que você abre."
 
@@ -997,6 +1067,12 @@ msgstr "Ou coloque só um nome e um endereço em cada linha."
 
 msgid "P&ort:"
 msgstr "P&orta:"
+
+msgid "Page &counters:"
+msgstr "&Contadores de páginas:"
+
+msgid "Page counters"
+msgstr "Contadores de páginas"
 
 #, python-brace-format
 msgid "Password for {profile}"
@@ -1016,6 +1092,9 @@ msgstr "Nome da predefinição:"
 
 msgid "Preview"
 msgstr "Prévia"
+
+msgid "Printer"
+msgstr "Impressora"
 
 msgid "Profile"
 msgstr "Perfil"
@@ -1083,6 +1162,9 @@ msgstr "Remover lista de hosts"
 msgid "Remove hosts"
 msgstr "Remover hosts"
 
+msgid "Remove printers"
+msgstr "Remover impressoras"
+
 msgid "Remove tag"
 msgstr "Remover tag"
 
@@ -1099,6 +1181,12 @@ msgid "Remove {n} host from the list?"
 msgid_plural "Remove {n} hosts from the list?"
 msgstr[0] "Remover {n} host da lista?"
 msgstr[1] "Remover {n} hosts da lista?"
+
+#, python-brace-format
+msgid "Remove {n} printer from the list?"
+msgid_plural "Remove {n} printers from the list?"
+msgstr[0] "Remover {n} impressora da lista?"
+msgstr[1] "Remover {n} impressoras da lista?"
 
 #, python-brace-format
 msgid "Remove “{name}” from the list?"
@@ -1156,6 +1244,9 @@ msgstr "Salvar minha versão como cópia…"
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arquivo CSV"
 
+msgid "Save the printers you pick, with the columns you pick, as a CSV file"
+msgstr "Salve as impressoras que você escolher, com as colunas que escolher, num arquivo CSV"
+
 msgid "Search"
 msgstr "Pesquisa"
 
@@ -1172,14 +1263,23 @@ msgstr "Pesquisar {fields}"
 msgid "Searches every host in the list (Ctrl+F)"
 msgstr "Pesquisa em todos os hosts da lista (Ctrl+F)"
 
+msgid "Searches every printer in the list (Ctrl+F)"
+msgstr "Pesquisa todas as impressoras da lista (Ctrl+F)"
+
 msgid "See examples in Formats…"
 msgstr "Veja exemplos em Formatos…"
 
 msgid "Select a host to see its details."
 msgstr "Selecione um host para ver os detalhes."
 
+msgid "Select a printer to see its details."
+msgstr "Selecione uma impressora para ver os detalhes."
+
 msgid "Selected hosts"
 msgstr "Hosts selecionados"
+
+msgid "Serial number"
+msgstr "Nº de série"
 
 msgid "Set &tags…"
 msgstr "Definir &tags…"
@@ -1246,6 +1346,9 @@ msgstr "Outro lugar, como uma pasta de rede…"
 
 msgid "Sorts every level by name, once; you can rearrange them after"
 msgstr "Classifica todos os níveis pelo nome, uma vez; depois você pode reorganizá-los"
+
+msgid "Source"
+msgstr "Origem"
 
 msgid "Source code:"
 msgstr "Código-fonte:"
@@ -1486,6 +1589,10 @@ msgid "Unexpected error"
 msgstr "Erro inesperado"
 
 #, python-brace-format
+msgid "Unknown ({source})"
+msgstr "Desconhecida ({source})"
+
+#, python-brace-format
 msgid "Unknown credential method “{method}”."
 msgstr "Método de credencial desconhecido: “{method}”."
 
@@ -1592,8 +1699,14 @@ msgstr "a própria ferramenta pede"
 msgid "asked by {tool} itself"
 msgstr "o próprio {tool} pede"
 
+msgid "asset tag"
+msgstr "patrimônio"
+
 msgid "at the computer"
 msgstr "no computador"
+
+msgid "brand"
+msgstr "marca"
 
 msgid "can't be read"
 msgstr "não pode ser lido"
@@ -1618,6 +1731,9 @@ msgstr "em “{group}”"
 msgid "made by another user"
 msgstr "feito por outro usuário"
 
+msgid "model"
+msgstr "modelo"
+
 msgid "name"
 msgstr "nome"
 
@@ -1635,6 +1751,9 @@ msgstr "modo portátil"
 
 msgid "read-only"
 msgstr "somente leitura"
+
+msgid "serial number"
+msgstr "nº de série"
 
 #, python-brace-format
 msgid "since {when}"
@@ -1695,6 +1814,12 @@ msgid "{n} computer didn't let “{user}” see who is logged on. Use another ac
 msgid_plural "{n} computers didn't let “{user}” see who is logged on. Use another account?"
 msgstr[0] "{n} computador não deixou “{user}” ver quem está logado. Usar outra conta?"
 msgstr[1] "{n} computadores não deixaram “{user}” ver quem está logado. Usar outra conta?"
+
+#, python-brace-format
+msgid "{n} couldn't be opened: check its address."
+msgid_plural "{n} couldn't be opened: check their addresses."
+msgstr[0] "{n} não pôde ser aberta: confira o endereço."
+msgstr[1] "{n} não puderam ser abertas: confira os endereços."
 
 #, python-brace-format
 msgid "{n} file skipped: {files}"
@@ -1779,6 +1904,24 @@ msgid "{n} online"
 msgid_plural "{n} online"
 msgstr[0] "{n} online"
 msgstr[1] "{n} online"
+
+#, python-brace-format
+msgid "{n} printer"
+msgid_plural "{n} printers"
+msgstr[0] "{n} impressora"
+msgstr[1] "{n} impressoras"
+
+#, python-brace-format
+msgid "{n} printer selected"
+msgid_plural "{n} printers selected"
+msgstr[0] "{n} impressora selecionada"
+msgstr[1] "{n} impressoras selecionadas"
+
+#, python-brace-format
+msgid "{n} printer shown"
+msgid_plural "{n} printers shown"
+msgstr[0] "{n} impressora exibida"
+msgstr[1] "{n} impressoras exibidas"
 
 #, python-brace-format
 msgid "{n} selected"
