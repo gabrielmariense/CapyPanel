@@ -62,7 +62,7 @@ def office(tmp_path: Path) -> Path:
                   model="HL-L6402", serial="SAMPLE0021", asset_tag="INV-1021")  # fmt: skip
     hl = _printer(hl, "LOOSE", NO_GROUP, "198.51.100.31")
     path = tmp_path / "office printers.json"
-    listfile.save(path, hl, expected=None)
+    listfile.save(path, hl, expected=None, kind="printers")
     return path
 
 
@@ -158,7 +158,7 @@ def test_adding_a_printer_saves_its_details(
 
     monkeypatch.setattr(tool_module, "run_modal", fill)
     printers.add_item()
-    saved = {h.name: h for h in listfile.load(office).hosts.hosts}
+    saved = {h.name: h for h in listfile.load(office, "printers").hosts.hosts}
     assert set(saved) == {"2F-LABELS", "2F-OFFICE-01", "LOOSE", "RECEPTION-01"}
     info = info_of(saved["RECEPTION-01"])
     assert (info.brand, info.model, info.serial, info.counter_source) == (
@@ -172,7 +172,7 @@ def test_adding_to_a_list_without_groups_keeps_its_printers(
 ) -> None:
     hl = _printer(HostList(), "LOOSE-01", NO_GROUP)
     path = tmp_path / "loose.json"
-    listfile.save(path, hl, expected=None)
+    listfile.save(path, hl, expected=None, kind="printers")
     tool = PrintersTool(shell)
     tool.open_list(path)
 
@@ -183,7 +183,7 @@ def test_adding_to_a_list_without_groups_keeps_its_printers(
 
     monkeypatch.setattr(tool_module, "run_modal", fill)
     tool.add_item()
-    assert {h.name for h in listfile.load(path).hosts.hosts} == {"LOOSE-01", "LOOSE-02"}
+    assert {h.name for h in listfile.load(path, "printers").hosts.hosts} == {"LOOSE-01", "LOOSE-02"}
     tool.deleteLater()
 
 
@@ -203,7 +203,7 @@ def test_editing_keeps_values_this_version_cant_read(
 
     monkeypatch.setattr(tool_module, "run_modal", rename)
     printers.edit_item(odd)
-    saved = next(h for h in listfile.load(office).hosts.hosts if h.name == "LOOSE")
+    saved = next(h for h in listfile.load(office, "printers").hosts.hosts if h.name == "LOOSE")
     assert saved.extra["printer"] == {"brand": 42, "toner": "low", "model": "M4080"}
 
 

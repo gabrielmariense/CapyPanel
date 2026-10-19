@@ -34,6 +34,7 @@ from capypanel.ui.hosts_tool.table import Cells, HostTable
 from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
 from capypanel.ui.icons import STATUS_COLORS, dot_icon
 from capypanel.ui.import_hosts import ImportDialog
+from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 
@@ -157,8 +158,21 @@ class HostsTool(ListWorkspace):
     def menu_name(self) -> str:
         return _("&Hosts")
 
-    def all_items_text(self) -> str:
-        return _("All hosts")
+    def list_texts(self) -> ListTexts:
+        return ListTexts(
+            kind=self.TOOL_ID,
+            everything=_("All hosts"),
+            lists=_("Host lists"),
+            new=_("New host list"),
+            add=_("Add a host list"),
+            open=_("Open a host list"),
+            remove=_("Remove host list"),
+            manage=_("&Manage host lists…"),
+            no_list=_("No host list is open."),
+            choose_first=_("Open a host list to choose what it shows first."),
+            not_this_kind=_("“{path}” isn't a host list."),
+            file_filter=list_file_filter(),
+        )
 
     def items_text(self, n: int) -> str:
         return ngettext("{n} host", "{n} hosts", n).format(n=n)
@@ -171,15 +185,6 @@ class HostsTool(ListWorkspace):
                 "Remove {n} host from the list?", "Remove {n} hosts from the list?", len(items)
             ).format(n=len(items))
         return _("Remove hosts"), text
-
-    def no_list_text(self) -> str:
-        return _("No host list is open.")
-
-    def open_list_title(self) -> str:
-        return _("Open a host list")
-
-    def manage_lists_text(self) -> str:
-        return _("&Manage host lists…")
 
     def search_fields(self) -> tuple[list[str], str]:
         """Address, user, tags: searched only while their columns show. Notes always are."""
@@ -214,9 +219,6 @@ class HostsTool(ListWorkspace):
 
     def no_match_text(self) -> str:
         return _("No hosts in this group have all the picked tags.")
-
-    def list_file_filter(self) -> str:
-        return list_file_filter()
 
     def retranslate(self) -> None:
         retranslate_actions(self.commands)

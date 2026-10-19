@@ -17,9 +17,11 @@ def test_everything_is_in_one_folder_per_computer(tmp_path: Path) -> None:
     root = Path(r"C:\ProgramData\CapyPanel")
     assert not paths.portable and paths.root == root
     assert paths.settings_file == root / "users" / "ana@CORP" / "settings.json"
-    assert paths.personal_list == root / "users" / "ana@CORP" / "lists" / "personal.json"
+    hosts = paths.lists("hosts")  # a folder per tool, shared and the user's own
+    assert hosts.personal == root / "users" / "ana@CORP" / "lists" / "hosts" / "personal.json"
     assert paths.log_file == root / "logs" / "ana@CORP.log"
-    assert paths.default_list == root / "lists" / "default.json"
+    assert hosts.default == root / "lists" / "hosts" / "default.json"
+    assert paths.lists("printers").shared_dir == root / "lists" / "printers"
     assert paths.profiles_dir == root / "profiles"
     assert paths.company_tools_dir == root / "tools"
 

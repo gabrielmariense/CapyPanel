@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 17:18-0300\n"
+"POT-Creation-Date: 2026-10-19 17:33-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -246,6 +246,12 @@ msgstr "Um &grupo escolhido"
 msgid "A connection profile must be a JSON object."
 msgstr "Um perfil de conexão deve ser um objeto JSON."
 
+msgid "A folder for each kind of list, with its default list and every list saved there, for everyone on this PC."
+msgstr "Uma pasta para cada tipo de lista, com a lista padrão dele e toda lista salva ali, para todos neste PC."
+
+msgid "A folder for each kind of list, with your personal list and every list saved there, only for you."
+msgstr "Uma pasta para cada tipo de lista, com sua lista pessoal e toda lista salva ali, só para você."
+
 msgid "A group can't be moved inside itself."
 msgstr "Um grupo não pode ser movido para dentro dele mesmo."
 
@@ -305,6 +311,9 @@ msgstr "Adicionar uma &linha abaixo"
 
 msgid "Add a host list"
 msgstr "Adicionar uma lista de hosts"
+
+msgid "Add a printer list"
+msgstr "Adicionar uma lista de impressoras"
 
 msgid "Add group"
 msgstr "Adicionar grupo"
@@ -924,6 +933,9 @@ msgstr "Nova lista de hosts"
 msgid "New name:"
 msgstr "Novo nome:"
 
+msgid "New printer list"
+msgstr "Nova lista de impressoras"
+
 msgid "No address"
 msgstr "Sem endereço"
 
@@ -1063,6 +1075,9 @@ msgstr "Abra uma lista de hosts para escolher o que ela mostra primeiro."
 msgid "Open a printer list"
 msgstr "Abrir uma lista de impressoras"
 
+msgid "Open a printer list to choose what it shows first."
+msgstr "Abra uma lista de impressoras para escolher o que ela mostra primeiro."
+
 msgid "Open f&older"
 msgstr "Abrir &pasta"
 
@@ -1144,6 +1159,9 @@ msgstr "Prévia"
 msgid "Printer"
 msgstr "Impressora"
 
+msgid "Printer lists"
+msgstr "Listas de impressoras"
+
 msgid "Printer lists (*.json);;All files (*)"
 msgstr "Listas de impressoras (*.json);;Todos os arquivos (*)"
 
@@ -1215,6 +1233,9 @@ msgstr "Remover lista de hosts"
 
 msgid "Remove hosts"
 msgstr "Remover hosts"
+
+msgid "Remove printer list"
+msgstr "Remover lista de impressoras"
 
 msgid "Remove printers"
 msgstr "Remover impressoras"
@@ -1511,11 +1532,8 @@ msgstr "A lista padrão"
 msgid "The default list was made by another user, so {app} won't open it. An administrator can replace or delete “{path}”."
 msgstr "A lista padrão foi criada por outro usuário, então o {app} não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
 
-msgid "The default list, and every list saved there, for everyone on this PC."
-msgstr "A lista padrão e toda lista salva ali, para todos neste PC."
-
-msgid "The file doesn't contain a host list."
-msgstr "O arquivo não contém uma lista de hosts."
+msgid "The file doesn't contain a list."
+msgstr "O arquivo não contém uma lista."
 
 msgid "The file has no settings."
 msgstr "O arquivo não tem nenhuma configuração."
@@ -1626,8 +1644,8 @@ msgid "This isn't a text file."
 msgstr "Este não é um arquivo de texto."
 
 #, python-brace-format
-msgid "This isn't a valid host list file ({error})."
-msgstr "Este não é um arquivo de lista de hosts válido ({error})."
+msgid "This isn't a valid list file ({error})."
+msgstr "Este não é um arquivo de lista válido ({error})."
 
 msgid "This list is read-only."
 msgstr "Esta lista está em modo somente leitura."
@@ -1751,9 +1769,6 @@ msgstr "Seus arquivos"
 
 msgid "Your lists"
 msgstr "Suas listas"
-
-msgid "Your personal list, and every list saved there, only for you."
-msgstr "Sua lista pessoal e toda lista salva ali, só para você."
 
 msgid "Your settings, private to you and administrators."
 msgstr "Suas configurações, só para você e os administradores."
@@ -2125,6 +2140,14 @@ msgstr "“{name}” tem este endereço, {place}"
 #, python-brace-format
 msgid "“{name}” holds {inside}. What should happen to them?"
 msgstr "“{name}” contém {inside}. O que fazer com eles?"
+
+#, python-brace-format
+msgid "“{path}” isn't a host list."
+msgstr "“{path}” não é uma lista de hosts."
+
+#, python-brace-format
+msgid "“{path}” isn't a printer list."
+msgstr "“{path}” não é uma lista de impressoras."
 
 msgid "✓ Found"
 msgstr "✓ Encontrado"

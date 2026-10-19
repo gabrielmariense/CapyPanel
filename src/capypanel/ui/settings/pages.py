@@ -27,8 +27,9 @@ from capypanel.core.hosts.model import HostList
 from capypanel.core.i18n import _, ngettext
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import TreeMenu, fill_host_move_menu
-from capypanel.ui.host_lists import HostListsView
+from capypanel.ui.host_lists import ListsView
 from capypanel.ui.hosts import group_path
+from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.menus import MenuCombo
 from capypanel.ui.notes import notes
 from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
@@ -186,12 +187,14 @@ class FilesPage(Page):
         folders = (
             (_("Shared files"), paths.root,
              _("Connection profiles and remote tools, for everyone on this PC.")),
-            (_("Shared lists"), paths.shared_lists_dir,
-             _("The default list, and every list saved there, for everyone on this PC.")),
+            (_("Shared lists"), paths.lists_dir,
+             _("A folder for each kind of list, with its default list and every list saved "
+               "there, for everyone on this PC.")),
             (_("Your files"), paths.user_dir,
              _("Your settings, private to you and administrators.")),
             (_("Your lists"), paths.user_lists_dir,
-             _("Your personal list, and every list saved there, only for you.")),
+             _("A folder for each kind of list, with your personal list and every list saved "
+               "there, only for you.")),
             (_("Logs"), paths.log_dir, _("One per user, named after the account.")),
         )  # fmt: skip
         # The one table design; a double-click opens the folder too.
@@ -227,26 +230,28 @@ class FilesPage(Page):
             open_folder(Path(item.data(0, Qt.ItemDataRole.UserRole)))
 
 
-# ---- Hosts: General ----
+# ---- a list tool's General page: Startup ----
 
 
-class HostsPage(Page):
-    """The Hosts tool's own settings: which list opens, what it shows first, and Refresh."""
+class ListsGeneralPage(Page):
+    """A list tool's General page: which list opens and what it shows first (Startup). A tool
+    adds its own sections below with add_section()."""
 
     def __init__(
         self,
         *,
+        texts: ListTexts,
         start_list: object,
         default_list: Path,
         personal_list: Path,
         added: list[Path],
-        auto_status: tuple[bool, int] = (False, 5),
         start_view: tuple[str, str] | None = None,
         host_list: HostList | None = None,
     ) -> None:
         """start_view: the open list's (show, group); None when no list is open. host_list: that
         list, for its groups."""
         super().__init__(_("General"))
+        self.texts = texts
         start = Section(_("Startup"))
         self.start_list = QComboBox()
         self.start_list.setSizeAdjustPolicy(
@@ -278,7 +283,8 @@ class HostsPage(Page):
         self.start_list.setCurrentIndex(max(index, 0))
         self.start_list.currentIndexChanged.connect(lambda _i: self.changed.emit())
         # What the open list shows first; each list keeps its own choice. One button: its menu
-        # has All hosts, Where I left off, and "A chosen group" with the groups as a tree.
+        # has All hosts (in the tool's words), Where I left off, and "A chosen group" with the
+        # groups as a tree.
         self._host_list = host_list
         self._first = start_view or (locations.SHOW_ALL, "")
         self.show_first = MenuCombo()
@@ -297,26 +303,12 @@ class HostsPage(Page):
             self._first_row,
         )
 
-        refresh = Section(_("Refresh"))
-        # One dropdown: Off, a few common intervals, and Custom… for any other.
-        self.auto_every = QComboBox()
-        self._auto_minutes = auto_status[1]  # kept while it's off, for when it's on again
-        self._shown_minutes = auto_status[1] if auto_status[0] else 0
-        self._fill_every(self._shown_minutes)
-        self.auto_every.activated.connect(self._every_picked)
-        add_rows(
-            refresh.content,
-            SettingRow(
-                _("Refresh status &by itself"),
-                _("Only ping and ports, never logged-on users, so no account is needed. "
-                  "Refresh in the toolbar always works."),
-                self.auto_every,
-            ),
-        )  # fmt: skip
-
         self.body.addWidget(start)
-        self.body.addWidget(refresh)
         self.body.addStretch(1)
+
+    def add_section(self, section: Section) -> None:
+        """A tool's own section, after the ones before it."""
+        self.body.insertWidget(self.body.count() - 1, section)
 
     def start_choice(self) -> str:
         return str(self.start_list.currentData())
@@ -326,7 +318,7 @@ class HostsPage(Page):
         menu.clear()
         show, group = self._first
         for text, value in (
-            (_("All hosts"), locations.SHOW_ALL),
+            (self.texts.everything, locations.SHOW_ALL),
             (_("Where I left off"), locations.SHOW_LAST),
         ):
             item = menu.addAction(text)
@@ -360,7 +352,7 @@ class HostsPage(Page):
         self._first_row.description.setText(
             _("For the list open now; each list keeps its own.")
             if open_list
-            else _("Open a host list to choose what it shows first.")
+            else self.texts.choose_first
         )
 
     def _show_first_text(self) -> None:
@@ -370,11 +362,58 @@ class HostsPage(Page):
             self.show_first.setText(_("Group: {name}").format(name=name))
         else:
             labels = {locations.SHOW_LAST: _("Where I left off")}
-            self.show_first.setText(labels.get(show, _("All hosts")))
+            self.show_first.setText(labels.get(show, self.texts.everything))
 
     def show_first_choice(self) -> tuple[str, str] | None:
         """(show, group) for the open list; None when no list is open."""
         return self._first if self.show_first.isEnabled() else None
+
+
+# ---- Hosts: General ----
+
+
+class HostsPage(ListsGeneralPage):
+    """The Hosts tool's General page: Startup, then Refresh."""
+
+    def __init__(
+        self,
+        *,
+        texts: ListTexts,
+        start_list: object,
+        default_list: Path,
+        personal_list: Path,
+        added: list[Path],
+        auto_status: tuple[bool, int] = (False, 5),
+        start_view: tuple[str, str] | None = None,
+        host_list: HostList | None = None,
+    ) -> None:
+        super().__init__(
+            texts=texts,
+            start_list=start_list,
+            default_list=default_list,
+            personal_list=personal_list,
+            added=added,
+            start_view=start_view,
+            host_list=host_list,
+        )
+        refresh = Section(_("Refresh"))
+        # One dropdown: Off, a few common intervals, and Custom… for any other.
+        self.auto_every = QComboBox()
+        self._auto_minutes = auto_status[1]  # kept while it's off, for when it's on again
+        self._shown_minutes = auto_status[1] if auto_status[0] else 0
+        self._fill_every(self._shown_minutes)
+        self.auto_every.activated.connect(self._every_picked)
+        add_rows(
+            refresh.content,
+            SettingRow(
+                _("Refresh status &by itself"),
+                _("Only ping and ports, never logged-on users, so no account is needed. "
+                  "Refresh in the toolbar always works."),
+                self.auto_every,
+            ),
+        )  # fmt: skip
+
+        self.add_section(refresh)
 
     def auto_status_choice(self) -> tuple[bool, int]:
         minutes = self.auto_every.currentData()
@@ -446,10 +485,10 @@ def ask_minutes(parent: QWidget, start: int) -> int | None:
     return minutes.value() if accepted else None
 
 
-# ---- Host lists ----
+# ---- a list tool's lists: Host lists, for Hosts ----
 
 
-class HostListsPage(Page):
+class ListsPage(Page):
     """The same lists as the list dropdown; a double-click opens one."""
 
     def __init__(
@@ -461,17 +500,19 @@ class HostListsPage(Page):
         added: list[Path],
         found: list[Path] | None = None,
         hidden: list[Path] | None = None,
+        texts: ListTexts,
     ) -> None:
-        super().__init__(_("Host lists"))
-        self.view = HostListsView(
+        super().__init__(texts.lists)
+        self.view = ListsView(
             default_list=default_list,
             personal_list=personal_list,
             added=added,
             document=document,
             found=found,
             hidden=hidden,
+            texts=texts,
         )
-        box = Section(_("Host lists"))
+        box = Section(texts.lists)
         box.content.addWidget(self.view)
         self.body.addWidget(box)
         self.body.addStretch(1)

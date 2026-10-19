@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 17:18-0300\n"
+"POT-Creation-Date: 2026-10-19 17:33-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -245,6 +245,16 @@ msgstr ""
 msgid "A connection profile must be a JSON object."
 msgstr ""
 
+msgid ""
+"A folder for each kind of list, with its default list and every list "
+"saved there, for everyone on this PC."
+msgstr ""
+
+msgid ""
+"A folder for each kind of list, with your personal list and every list "
+"saved there, only for you."
+msgstr ""
+
 msgid "A group can't be moved inside itself."
 msgstr ""
 
@@ -303,6 +313,9 @@ msgid "Add a &row below"
 msgstr ""
 
 msgid "Add a host list"
+msgstr ""
+
+msgid "Add a printer list"
 msgstr ""
 
 msgid "Add group"
@@ -939,6 +952,9 @@ msgstr ""
 msgid "New name:"
 msgstr ""
 
+msgid "New printer list"
+msgstr ""
+
 msgid "No address"
 msgstr ""
 
@@ -1084,6 +1100,9 @@ msgstr ""
 msgid "Open a printer list"
 msgstr ""
 
+msgid "Open a printer list to choose what it shows first."
+msgstr ""
+
 msgid "Open f&older"
 msgstr ""
 
@@ -1168,6 +1187,9 @@ msgstr ""
 msgid "Printer"
 msgstr ""
 
+msgid "Printer lists"
+msgstr ""
+
 msgid "Printer lists (*.json);;All files (*)"
 msgstr ""
 
@@ -1238,6 +1260,9 @@ msgid "Remove host list"
 msgstr ""
 
 msgid "Remove hosts"
+msgstr ""
+
+msgid "Remove printer list"
 msgstr ""
 
 msgid "Remove printers"
@@ -1550,10 +1575,7 @@ msgid ""
 "administrator can replace or delete “{path}”."
 msgstr ""
 
-msgid "The default list, and every list saved there, for everyone on this PC."
-msgstr ""
-
-msgid "The file doesn't contain a host list."
+msgid "The file doesn't contain a list."
 msgstr ""
 
 msgid "The file has no settings."
@@ -1673,7 +1695,7 @@ msgid "This isn't a text file."
 msgstr ""
 
 #, python-brace-format
-msgid "This isn't a valid host list file ({error})."
+msgid "This isn't a valid list file ({error})."
 msgstr ""
 
 msgid "This list is read-only."
@@ -1805,9 +1827,6 @@ msgid "Your files"
 msgstr ""
 
 msgid "Your lists"
-msgstr ""
-
-msgid "Your personal list, and every list saved there, only for you."
 msgstr ""
 
 msgid "Your settings, private to you and administrators."
@@ -2203,6 +2222,14 @@ msgstr ""
 
 #, python-brace-format
 msgid "“{name}” holds {inside}. What should happen to them?"
+msgstr ""
+
+#, python-brace-format
+msgid "“{path}” isn't a host list."
+msgstr ""
+
+#, python-brace-format
+msgid "“{path}” isn't a printer list."
 msgstr ""
 
 msgid "✓ Found"

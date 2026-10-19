@@ -1,11 +1,11 @@
 """Where the app keeps its files, portable mode, and the settings file.
 
 Everything lives in one folder per computer, C:\\ProgramData\\CapyPanel (or <app>\\userdata when
-portable). Shared by everyone on the PC: lists\\ (the default list and any shared list), profiles\\
-and tools\\ (the company's tool definitions and where each tool is installed).
-users\\<user@DOMAIN>\\ holds each user's settings and lists\\ (the personal list and their own
-lists), private to that user and administrators;
-logs\\<user@DOMAIN>.log, one per user."""
+portable). Shared by everyone on the PC: lists\\ (a folder per tool, e.g. lists\\hosts\\, with its
+default list and any shared list), profiles\\ and tools\\ (the company's tool definitions and where
+each tool is installed). users\\<user@DOMAIN>\\ holds each user's settings and lists\\ (again a
+folder per tool, with the personal list and their own lists), private to that user and
+administrators; logs\\<user@DOMAIN>.log, one per user."""
 
 import copy
 import json
@@ -40,14 +40,26 @@ def app_dir() -> Path:
 
 
 @dataclass(frozen=True)
+class ListPlaces:
+    """Where one tool keeps its lists."""
+
+    shared_dir: Path  # lists saved here show up for everyone on the PC, with no adding
+    user_dir: Path  # this user's own: lists saved here show up for them only
+
+    @property
+    def default(self) -> Path:
+        return self.shared_dir / "default.json"
+
+    @property
+    def personal(self) -> Path:
+        return self.user_dir / "personal.json"
+
+
+@dataclass(frozen=True)
 class Paths:
     root: Path  # ProgramData\CapyPanel, or <app>\userdata when portable
     account: str  # "user@DOMAIN": names this user's folder and log file
     portable: bool
-
-    @property
-    def default_list(self) -> Path:
-        return self.shared_lists_dir / "default.json"
 
     @property
     def profiles_dir(self) -> Path:
@@ -74,18 +86,18 @@ class Paths:
         return self.user_dir / "settings.json"
 
     @property
-    def personal_list(self) -> Path:
-        return self.user_lists_dir / "personal.json"
-
-    @property
-    def shared_lists_dir(self) -> Path:
-        """Lists saved here show up for everyone on the PC, with no adding."""
+    def lists_dir(self) -> Path:
+        """Every tool's shared lists, in a folder per tool."""
         return self.root / "lists"
 
     @property
     def user_lists_dir(self) -> Path:
-        """This user's own lists folder: lists saved here show up for them only."""
+        """This user's own lists, in a folder per tool."""
         return self.user_dir / "lists"
+
+    def lists(self, tool_id: str) -> ListPlaces:
+        """One tool's lists folders, shared and the user's own: lists\\<tool id>\\."""
+        return ListPlaces(self.lists_dir / tool_id, self.user_lists_dir / tool_id)
 
 
 def resolve_paths(

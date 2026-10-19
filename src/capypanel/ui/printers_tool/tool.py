@@ -16,12 +16,14 @@ from capypanel.core.printers.printer import with_info
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.hosts import group_path
+from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 from capypanel.ui.printers_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.printers_tool.details import PrinterDetails, PrinterDetailsPanel
 from capypanel.ui.printers_tool.dialog import PrinterDialog
 from capypanel.ui.printers_tool.report import PrintersReport
+from capypanel.ui.printers_tool.settings import PrintersSettings
 from capypanel.ui.printers_tool.table import PrinterTable
 from capypanel.ui.printers_tool.toolbar import PrintersToolBar
 
@@ -56,6 +58,7 @@ class PrintersTool(ListWorkspace):
         )
         for action in vars(self.commands).values():
             action.setParent(self)
+        self.settings_pages = PrintersSettings(self)  # its part of Settings
         self._fill_inventory()
         self._connect()
         self.restore_layout()
@@ -87,8 +90,21 @@ class PrintersTool(ListWorkspace):
     def menu_name(self) -> str:
         return _("&Printers")
 
-    def all_items_text(self) -> str:
-        return _("All printers")
+    def list_texts(self) -> ListTexts:
+        return ListTexts(
+            kind=self.TOOL_ID,
+            everything=_("All printers"),
+            lists=_("Printer lists"),
+            new=_("New printer list"),
+            add=_("Add a printer list"),
+            open=_("Open a printer list"),
+            remove=_("Remove printer list"),
+            manage=_("&Manage printer lists…"),
+            no_list=_("No printer list is open."),
+            choose_first=_("Open a printer list to choose what it shows first."),
+            not_this_kind=_("“{path}” isn't a printer list."),
+            file_filter=_("Printer lists (*.json);;All files (*)"),
+        )
 
     def items_text(self, n: int) -> str:
         return ngettext("{n} printer", "{n} printers", n).format(n=n)
@@ -103,15 +119,6 @@ class PrintersTool(ListWorkspace):
                 len(items),
             ).format(n=len(items))
         return _("Remove printers"), text
-
-    def no_list_text(self) -> str:
-        return _("No printer list is open.")
-
-    def open_list_title(self) -> str:
-        return _("Open a printer list")
-
-    def manage_lists_text(self) -> str:
-        return _("&Manage printer lists…")
 
     def selected_text(self, n: int) -> str:
         return npgettext("printers", "{n} selected", "{n} selected", n).format(n=n)
@@ -135,9 +142,6 @@ class PrintersTool(ListWorkspace):
 
     def no_match_text(self) -> str:
         return _("No printers in this group have all the picked tags.")
-
-    def list_file_filter(self) -> str:
-        return _("Printer lists (*.json);;All files (*)")
 
     def search_fields(self) -> tuple[list[str], str]:
         """Every column that shows, and the notes (which have no column)."""
@@ -213,6 +217,16 @@ class PrintersTool(ListWorkspace):
             self._error(str(e))
             return
         self._commit(new)
+
+    # ---- settings ----
+
+    def settings_group(self) -> PrintersSettings:
+        return self.settings_pages
+
+    def prefs_applied(self) -> None:
+        """A choice made in Settings was kept: save it, and show the list's new name."""
+        self._save_prefs()
+        self._update_state()
 
     # ---- Report ----
 

@@ -65,6 +65,22 @@ def test_add_host_keeps_every_host_of_a_list_with_no_groups(
     assert sorted(names) == ["LOOSE-01", "LOOSE-02", "NEW-01"]  # nothing lost
 
 
+def test_another_tool_s_list_isn_t_opened_as_a_host_list(
+    window: MainWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "printers.json"
+    listfile.save(path, HostList().add_group("Lab")[0], expected=None, kind="printers")
+    shown: list[str] = []
+    monkeypatch.setattr(
+        workspace_module.QMessageBox, "warning", lambda _p, _t, text: shown.append(text)
+    )
+    before = window.hosts.document
+    assert not window.hosts.open_list(path)
+    assert shown == [f"“{path}” isn't a host list."] and window.hosts.document is before
+    doc = window.hosts.document
+    assert doc is not None and listfile.load(doc.path).kind == "hosts"  # saved with its kind
+
+
 def _table_names(win: MainWindow) -> set[str]:
     items = (win.hosts.table.topLevelItem(i) for i in range(win.hosts.table.topLevelItemCount()))
     return {item.text(0) for item in items if item is not None}

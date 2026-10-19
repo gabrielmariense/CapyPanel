@@ -27,12 +27,13 @@ from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.rail import ToolRail
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.menus import StayOpenMenu
+from capypanel.ui.printers_tool.tool import PrintersTool
 from capypanel.ui.settings.window import SettingsDialog
 from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
 
-TOOLS: tuple[Callable[[Shell], Tool], ...] = (HostsTool,)  # in the rail's order
+TOOLS: tuple[Callable[[Shell], Tool], ...] = (HostsTool, PrintersTool)  # in the rail's order
 
 
 class MainWindow(QMainWindow):
