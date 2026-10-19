@@ -36,6 +36,16 @@ def ngettext(singular: str, plural: str, n: int) -> str:
     return _current.ngettext(singular, plural, n)
 
 
+def pgettext(context: str, message: str) -> str:
+    """The same English text translated by context, e.g. a word whose gender depends on what
+    it's about ("printers" and "hosts" differ in Portuguese)."""
+    return _current.pgettext(context, message)
+
+
+def npgettext(context: str, singular: str, plural: str, n: int) -> str:
+    return _current.npgettext(context, singular, plural, n)
+
+
 def in_every_language(message: str) -> list[str]:
     """The message in each language, e.g. to size something so it never changes on a switch."""
     return [
