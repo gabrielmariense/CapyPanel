@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from capypanel.core import files
+from capypanel.core import files, identity
 from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList
 from capypanel.core.i18n import _
 
@@ -23,7 +23,7 @@ class HostListFormatError(HostListFileError):
 
 
 class HostListTooNewError(HostListFileError):
-    """Written by a newer CapyPanel: opening or saving it here could lose data."""
+    """Written by a newer version of the app: opening or saving it here could lose data."""
 
 
 class HostListChangedError(HostListFileError):
@@ -131,7 +131,9 @@ def from_data(data: object) -> HostList:
         raise HostListFormatError(_("The file has no valid schema version."))
     if schema > SCHEMA:
         raise HostListTooNewError(
-            _("This list was saved by a newer version of CapyPanel. Update the app to open it.")
+            _("This list was saved by a newer version of {app}. Update the app to open it.").format(
+                app=identity.current().name
+            )
         )
     data = _migrate(data)
     host_list = HostList(

@@ -24,9 +24,9 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
 from capypanel.ui.dialogs import run_modal
-from capypanel.ui.export_hosts import ExportDialog, Source
+from capypanel.ui.export_hosts import ExportDialog
 from capypanel.ui.groups import ROLE_ID
-from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path
+from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, list_file_filter
 from capypanel.ui.hosts_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.hosts_tool.details import HostDetails, HostDetailsPanel
 from capypanel.ui.hosts_tool.settings import HostsSettings, SettingsPrefs
@@ -192,6 +192,24 @@ class HostsTool(ListWorkspace):
         fields.append(_("notes"))  # no column, so always searched
         return fields, _("Searches every host in the list (Ctrl+F)")
 
+    def selected_text(self, n: int) -> str:
+        return ngettext("{n} selected", "{n} selected", n).format(n=n)
+
+    def found_text(self, n: int) -> str:
+        return ngettext("{n} found", "{n} found", n).format(n=n)
+
+    def counted_text(self, name: str, n: int) -> str:
+        return ngettext("{name} ({n} host)", "{name} ({n} hosts)", n).format(name=name, n=n)
+
+    def selected_source_texts(self) -> tuple[str, str]:
+        return _("Selected hosts"), _("the selected hosts")
+
+    def lists_page(self) -> str:
+        return "host_lists"
+
+    def list_file_filter(self) -> str:
+        return list_file_filter()
+
     def retranslate(self) -> None:
         retranslate_actions(self.commands)
         self.toolbar.retranslate()
@@ -280,7 +298,7 @@ class HostsTool(ListWorkspace):
         doc = self._doc
         if doc is None or not doc.hosts.hosts:
             return
-        sources, current = self._export_sources(doc.hosts)
+        sources, current = self.report_sources(doc.hosts)
 
         def results(host_id: str) -> tuple[str, str]:
             cells = self._cells(host_id)
@@ -311,54 +329,6 @@ class HostsTool(ListWorkspace):
             self.checks_changed.disconnect(dialog.checks_changed)
         if dialog.outcome:
             self._shell.show_message(dialog.outcome, 10_000)
-
-    def _export_sources(self, host_list: HostList) -> tuple[list[Source], int]:
-        """What can be exported, and which one is shown now: the search's results, the hosts
-        picked, everything, no group, each group (with its subgroups) and each tag."""
-
-        def counted(name: str, n: int) -> str:
-            return ngettext("{name} ({n} host)", "{name} ({n} hosts)", n).format(name=name, n=n)
-
-        sources: list[Source] = []
-        current = self.nav.current_filter()
-        start = 0
-        if self._needle():
-            found = self.visible_items()
-            sources.append(Source(counted(_("Search results"), len(found)),
-                                  _("the search results"), found))  # fmt: skip
-        selected = self.selected_items()
-        if len(selected) > 1:
-            picked = tuple(selected)
-            sources.append(Source(counted(_("Selected hosts"), len(picked)),
-                                  _("the selected hosts"), picked))  # fmt: skip
-        every = host_list.hosts
-        sources.append(Source(counted(_("All hosts"), len(every)), _("All hosts"), every))
-        if not self._needle() and current.kind == "all":
-            start = len(sources) - 1
-        loose = tuple(h for h in every if h.group == NO_GROUP)
-        sources.append(Source(counted(_("No group"), len(loose)), _("No group"), loose))
-        if not self._needle() and current.kind == "nogroup":
-            start = len(sources) - 1
-
-        def visit(parent: str | None, depth: int) -> None:
-            nonlocal start
-            for group in host_list.children(parent):
-                hosts = host_list.hosts_in(group.id)
-                sources.append(Source(counted(group.name, len(hosts)), group.name, hosts, depth))
-                if not self._needle() and current.kind == "group" and current.value == group.id:
-                    start = len(sources) - 1
-                visit(group.id, depth + 1)
-
-        visit(None, 0)
-        for tag in sorted(host_list.all_tags(), key=str.casefold):
-            hosts = tuple(h for h in every if tag in h.tags)
-            name = _("tag “{tag}”").format(tag=tag)
-            sources.append(
-                Source(counted(_("Tag: {tag}").format(tag=tag), len(hosts)), name, hosts)
-            )
-            if not self._needle() and current.kind == "tag" and current.value == tag:
-                start = len(sources) - 1
-        return sources, start
 
     def _copy(self, value: Callable[[Host], str]) -> None:
         hosts = self.selected_items()

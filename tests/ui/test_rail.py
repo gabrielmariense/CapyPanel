@@ -5,7 +5,7 @@ import pytest
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QLabel, QWidget
 
-from capypanel.core import settings
+from capypanel.core import identity, settings
 from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar
@@ -120,3 +120,16 @@ def test_the_rail_view_toolbar_tool_and_status_bar_follow_the_tool_shown(
     assert again.shown_tool() is again.tools["notes"]  # opens on the tool last shown
     assert set(settings.load_settings(paths.settings_file)["tools"]) == {"hosts", "notes"}
     again.close()
+
+
+def test_a_one_tool_build_has_its_own_name_and_no_rail(
+    qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(identity, "_current", identity.Identity("Notebook", rail=False))
+    (tmp_path / settings.PORTABLE_MARKER).touch()
+    win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1}, tools=(_Notes,))
+    win.show()
+    QApplication.processEvents()
+    assert not win.rail.isVisible() and win.tools["notes"].isVisible()
+    assert win.windowTitle().startswith("Desk notes — Notebook ")
+    win.close()

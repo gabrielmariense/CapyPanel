@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.core import files, winsec
+from capypanel.core import files, identity, winsec
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
@@ -27,8 +27,9 @@ from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
 from capypanel.ui.dialogs import run_modal
+from capypanel.ui.export_hosts import Source
 from capypanel.ui.groups import ManageGroupsDialog, TreeMenu, fill_host_move_menu, fill_move_menu
-from capypanel.ui.hosts import confirm, group_path, list_file_filter
+from capypanel.ui.hosts import confirm, group_path
 from capypanel.ui.list_workspace.actions import ListActions
 from capypanel.ui.list_workspace.details import DetailsPanel
 from capypanel.ui.list_workspace.panels import ItemTable, NavigationPane, SearchBox
@@ -165,6 +166,31 @@ class ListWorkspace(Tool):
 
     def search_fields(self) -> tuple[list[str], str]:
         """What the search box searches, each a lower-case word, and its tooltip."""
+        raise NotImplementedError
+
+    def selected_text(self, n: int) -> str:
+        """The status bar's count of items selected: "{n} selected" (its word's gender)."""
+        raise NotImplementedError
+
+    def found_text(self, n: int) -> str:
+        """The status bar's count of items a search found: "{n} found"."""
+        raise NotImplementedError
+
+    def counted_text(self, name: str, n: int) -> str:
+        """A Report source with its count: "{name} ({n} hosts)"."""
+        raise NotImplementedError
+
+    def selected_source_texts(self) -> tuple[str, str]:
+        """Report's source for the items selected, and its name in sentences: "Selected
+        hosts", "the selected hosts"."""
+        raise NotImplementedError
+
+    def lists_page(self) -> str:
+        """The Settings page that manages the tool's lists: the list dropdown opens it."""
+        raise NotImplementedError
+
+    def list_file_filter(self) -> str:
+        """The file-type filter for the tool's list files in file dialogs."""
         raise NotImplementedError
 
     # ---- what a tool says: behaviour ----
@@ -327,10 +353,10 @@ class ListWorkspace(Tool):
             return self._create_list(path, replace_existing=False, quiet=quiet)
         if kind is ListKind.DEFAULT and not winsec.made_by_trusted(path):
             note = _(
-                "The default list was made by another user, so CapyPanel won't open it. An "
+                "The default list was made by another user, so {app} won't open it. An "
                 "administrator can replace or delete “{path}”."
             )
-            self._error(note.format(path=path), quiet)
+            self._error(note.format(app=identity.current().name, path=path), quiet)
             return False
         try:
             doc = OpenList.open(path)
@@ -358,7 +384,7 @@ class ListWorkspace(Tool):
         shared = self._paths.shared_lists_dir
         start = shared if shared.is_dir() else self._personal_list.parent
         name, _filter = QFileDialog.getOpenFileName(
-            self, self.open_list_title(), str(start), list_file_filter()
+            self, self.open_list_title(), str(start), self.list_file_filter()
         )
         if name:
             self.open_list(Path(name))
@@ -410,7 +436,7 @@ class ListWorkspace(Tool):
         menu.addActions([a.new_list, a.open_list])
         menu.addSeparator()
         manage = menu.addAction(self.manage_lists_text())
-        manage.triggered.connect(lambda: self._shell.open_settings("host_lists"))
+        manage.triggered.connect(lambda: self._shell.open_settings(self.lists_page()))
 
     def _pick_list(self, path: Path) -> None:
         current = self._doc.path if self._doc else None
@@ -697,7 +723,7 @@ class ListWorkspace(Tool):
                 self,
                 _("Save a copy"),
                 str(doc.path.with_name(doc.path.stem + " (copy).json")),
-                list_file_filter(),
+                self.list_file_filter(),
             )
             if name:
                 path = Path(name)
@@ -874,8 +900,8 @@ class ListWorkspace(Tool):
         ]
         if self._needle():
             found = self.table.topLevelItemCount()
-            parts.append(ngettext("{n} found", "{n} found", found).format(n=found))
-        parts.append(ngettext("{n} selected", "{n} selected", selected).format(n=selected))
+            parts.append(self.found_text(found))
+        parts.append(self.selected_text(selected))
         if doc.read_only:
             parts.append(_("read-only"))
         if self._paths.portable:
@@ -885,6 +911,52 @@ class ListWorkspace(Tool):
     def title(self) -> str:
         """The open list's name, or "" with none open."""
         return self._list_name(self._doc.path) if self._doc is not None else ""
+
+    def report_sources(self, host_list: HostList) -> tuple[list[Source], int]:
+        """What Report can take, and which one is shown now: the search's results, the items
+        picked, everything, no group, each group (with its subgroups) and each tag."""
+        counted = self.counted_text
+        sources: list[Source] = []
+        current = self.nav.current_filter()
+        browsing = not self._needle()
+        start = 0
+        if not browsing:
+            found = self.visible_items()
+            sources.append(Source(counted(_("Search results"), len(found)),
+                                  _("the search results"), found))  # fmt: skip
+        selected = self.selected_items()
+        if len(selected) > 1:
+            label, name = self.selected_source_texts()
+            sources.append(Source(counted(label, len(selected)), name, tuple(selected)))
+        every = host_list.hosts
+        everything = self.all_items_text()
+        sources.append(Source(counted(everything, len(every)), everything, every))
+        if browsing and current.kind == "all":
+            start = len(sources) - 1
+        loose = tuple(h for h in every if h.group == NO_GROUP)
+        sources.append(Source(counted(_("No group"), len(loose)), _("No group"), loose))
+        if browsing and current.kind == "nogroup":
+            start = len(sources) - 1
+
+        def visit(parent: str | None, depth: int) -> None:
+            nonlocal start
+            for group in host_list.children(parent):
+                items = host_list.hosts_in(group.id)
+                sources.append(Source(counted(group.name, len(items)), group.name, items, depth))
+                if browsing and current.kind == "group" and current.value == group.id:
+                    start = len(sources) - 1
+                visit(group.id, depth + 1)
+
+        visit(None, 0)
+        for tag in sorted(host_list.all_tags(), key=str.casefold):
+            items = tuple(h for h in every if tag in h.tags)
+            name = _("tag “{tag}”").format(tag=tag)
+            sources.append(
+                Source(counted(_("Tag: {tag}").format(tag=tag), len(items)), name, items)
+            )
+            if browsing and current.kind == "tag" and current.value == tag:
+                start = len(sources) - 1
+        return sources, start
 
     # ---- right-click menus ----
 
@@ -993,7 +1065,7 @@ class ListWorkspace(Tool):
         if quiet:
             self._shell.show_message(message, 10_000)
         else:
-            QMessageBox.warning(self, "CapyPanel", message)
+            QMessageBox.warning(self, identity.current().name, message)
 
     def _save_prefs(self) -> None:
         self._shell.save_prefs()

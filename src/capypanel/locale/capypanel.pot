@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 16:58-0300\n"
+"POT-Creation-Date: 2026-10-19 17:01-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1372,8 +1372,8 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
-"The default list was made by another user, so CapyPanel won't open it. An"
-" administrator can replace or delete “{path}”."
+"The default list was made by another user, so {app} won't open it. An "
+"administrator can replace or delete “{path}”."
 msgstr ""
 
 msgid "The default list, and every list saved there, for everyone on this PC."
@@ -1508,9 +1508,10 @@ msgstr ""
 msgid "This list needs a header row."
 msgstr ""
 
+#, python-brace-format
 msgid ""
-"This list was saved by a newer version of CapyPanel. Update the app to "
-"open it."
+"This list was saved by a newer version of {app}. Update the app to open "
+"it."
 msgstr ""
 
 msgid "This tool definition needs a newer version of CapyPanel."

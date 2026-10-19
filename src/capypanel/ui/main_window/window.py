@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel import BUILD
-from capypanel.core import settings
+from capypanel.core import identity, settings
 from capypanel.core.i18n import _
 from capypanel.ui import about, language
 from capypanel.ui.dialogs import run_modal
@@ -70,6 +70,7 @@ class MainWindow(QMainWindow):
         row.setSpacing(0)
         row.addWidget(self.rail)
         row.addWidget(self._pages, 1)
+        self.rail.setVisible(identity.current().rail)  # a one-tool build has none
         self.setCentralWidget(central)
 
         self._build_menus()
@@ -243,7 +244,8 @@ class MainWindow(QMainWindow):
             self._show_title(self.tools[tool_id].title())
 
     def _show_title(self, name: str) -> None:
-        self.setWindowTitle(f"{name} — CapyPanel {BUILD}" if name else f"CapyPanel {BUILD}")
+        app = f"{identity.current().name} {BUILD}"
+        self.setWindowTitle(f"{name} — {app}" if name else app)
 
     # ---- settings ----
 
