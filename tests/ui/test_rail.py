@@ -10,6 +10,8 @@ from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar
 from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.settings.group import SettingsGroup
+from capypanel.ui.settings.pages import Page
 
 
 @pytest.fixture
@@ -38,6 +40,13 @@ def test_the_rail_runs_down_the_left_edge_beside_the_tool_s_toolbar(
     assert opened == [None]
 
 
+class _NotesSettings(SettingsGroup):
+    LABEL, TITLES = "Notes", ("General",)
+
+    def build(self) -> list[tuple[str, Page]]:
+        return [("notes", Page("General"))]
+
+
 class _Notes(Tool):
     """A made-up second tool: the shell builds everything from the tools it's given."""
 
@@ -63,6 +72,9 @@ class _Notes(Tool):
 
     def view_actions(self) -> list[list[QAction]]:
         return [[self.show_lines]]
+
+    def settings_group(self) -> SettingsGroup:
+        return _NotesSettings()
 
 
 def test_the_rail_view_toolbar_tool_and_status_bar_follow_the_tool_shown(
@@ -95,6 +107,12 @@ def test_the_rail_view_toolbar_tool_and_status_bar_follow_the_tool_shown(
     stop.hide()
     win.show_tool("notes")
     assert win.windowTitle().startswith("Desk notes — CapyPanel")
+    dialog = win.settings_dialog()  # the app's pages, then each tool's group
+    pages = dialog.page_list
+    rows = [pages.item(i).text().strip() for i in range(pages.count())]  # type: ignore[union-attr]
+    assert rows[3:] == ["Hosts", "General", "Host lists", "Connections", "Notes", "General"]
+    dialog.show_page("notes")
+    assert dialog.current_page() == "notes"
     win.close()
     again = MainWindow(
         paths, settings.load_settings(paths.settings_file), tools=(HostsTool, _Notes)

@@ -295,6 +295,14 @@ class ListWorkspace(Tool):
     def document(self) -> OpenList | None:
         return self._doc
 
+    @property
+    def default_list(self) -> Path:
+        return self._default_list
+
+    @property
+    def personal_list(self) -> Path:
+        return self._personal_list
+
     def open_startup_list(self) -> None:
         """The chosen list (normally the last used), else the default, else the personal one."""
         prefs = self.prefs

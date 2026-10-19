@@ -26,6 +26,7 @@ from capypanel.ui.groups import (
     TreeMenu,
     fill_move_menu,
 )
+from capypanel.ui.hosts_tool.settings import HostsSettings
 from capypanel.ui.list_workspace import workspace as workspace_module
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
@@ -523,7 +524,7 @@ def test_a_list_opens_on_all_hosts_where_it_was_left_or_its_chosen_group(
 
 def test_settings_chooses_what_the_open_list_shows_first(window: MainWindow) -> None:
     dialog = window.settings_dialog()
-    page = dialog.hosts
+    page = dialog.group(HostsSettings).general
     assert page.show_first.text() == "All hosts"
     menu = page.show_first.menu()
     assert menu is not None

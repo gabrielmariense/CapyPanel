@@ -5,14 +5,12 @@ import logging
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QMessageBox, QToolButton, QWidget
 
-from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
@@ -31,13 +29,13 @@ from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path
 from capypanel.ui.hosts_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.hosts_tool.details import HostDetails, HostDetailsPanel
+from capypanel.ui.hosts_tool.settings import HostsSettings, SettingsPrefs
 from capypanel.ui.hosts_tool.table import Cells, HostTable
 from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
 from capypanel.ui.icons import STATUS_COLORS, dot_icon
 from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
-from capypanel.ui.settings.window import SettingsDialog, SettingsPrefs
 
 log = logging.getLogger(__name__)
 MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks first
@@ -88,6 +86,7 @@ class HostsTool(ListWorkspace):
         self._fill_inventory()
         self._connect()
         self.restore_layout()
+        self.settings_pages = HostsSettings(self)  # its part of Settings
         self._auto_timer = QTimer(self)  # Settings: Status by itself, if switched on
         self._auto_timer.timeout.connect(self._auto_status_check)
         self._apply_auto_status()
@@ -501,32 +500,12 @@ class HostsTool(ListWorkspace):
 
     # ---- settings ----
 
-    def settings_values(self) -> dict[str, Any]:
-        """What Settings shows about Hosts."""
-        return {
-            "start_list": self.prefs.get(locations.START_KEY, locations.START_LAST),
-            "default_list": self._default_list,
-            "personal_list": self._personal_list,
-            "document": self._doc,
-            "added": locations.added_lists(self.prefs),
-            "found": self.found_lists(hidden=True),
-            "hidden": locations.hidden_lists(self.prefs),
-            "catalogs": self.connector.catalogs,
-            "auto_status": self._auto_status(),
-            "start_view": self.start_view(),
-            "host_list": self._doc.hosts if self._doc else None,
-        }
+    def settings_group(self) -> HostsSettings:
+        return self.settings_pages
 
-    def wire_settings(self, dialog: SettingsDialog) -> None:
-        """Choices made in Settings about Hosts apply at once."""
-        dialog.prefs_changed.connect(self.apply_prefs)
-        dialog.open_requested.connect(lambda path: self._open_from_settings(dialog, path))
-        dialog.profiles_changed.connect(self._selection_changed)  # Connect's menu follows
-
-    def _open_from_settings(self, dialog: SettingsDialog, path: Path) -> None:
-        """A list opened from Settings > Host lists: Settings then shows it as the open one."""
-        self.open_list(path)
-        dialog.list_opened(self._doc, self.start_view(), self._doc.hosts if self._doc else None)
+    def profiles_changed(self) -> None:
+        """Settings changed the connection profiles or tool paths."""
+        self._selection_changed()  # the Details panel names the profile; Connect's menu follows
 
     def apply_prefs(self, prefs: SettingsPrefs) -> None:
         """A choice made in Settings, kept and applied at once."""
@@ -698,7 +677,7 @@ class HostsTool(ListWorkspace):
             wanted = Checks(status, users, self._ports(), self._account if users else None)
             self._start(targets, wanted)
 
-    def _auto_status(self) -> tuple[bool, int]:
+    def auto_status(self) -> tuple[bool, int]:
         saved = self.prefs.get("auto_status")
         saved = saved if isinstance(saved, dict) else {}
         minutes = saved.get("minutes", 5)
@@ -706,7 +685,7 @@ class HostsTool(ListWorkspace):
         return saved.get("on") is True, minutes
 
     def _apply_auto_status(self) -> None:
-        on, minutes = self._auto_status()
+        on, minutes = self.auto_status()
         if on:
             self._auto_timer.start(minutes * 60_000)
         else:

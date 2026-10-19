@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QLabel, QWidget
 
 from capypanel.core import settings
 from capypanel.ui.main_window.toolbar import ToolBar
+from capypanel.ui.settings.group import SettingsGroup
 
 
 class Shell(Protocol):
@@ -64,6 +65,10 @@ class Tool(QWidget):
     def view_actions(self) -> list[list[QAction]]:
         """The tool's part of the View menu, in groups split by lines."""
         return []
+
+    def settings_group(self) -> SettingsGroup | None:
+        """Its part of Settings, under its name in the page list."""
+        return None
 
     def save_state(self) -> None:
         """When the window closes."""

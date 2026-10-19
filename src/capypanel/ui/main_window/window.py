@@ -249,12 +249,10 @@ class MainWindow(QMainWindow):
 
     def settings_dialog(self) -> SettingsDialog:
         """Settings, wired up: every choice applies as it's made, with no Save."""
-        dialog = SettingsDialog(
-            self, paths=self.paths, registry=self.registry, **self.hosts.settings_values()
-        )
+        groups = [g for t in self.tools.values() if (g := t.settings_group()) is not None]
+        dialog = SettingsDialog(self, paths=self.paths, registry=self.registry, groups=groups)
         dialog.language_picked.connect(self.set_language)
         dialog.theme_picked.connect(self.set_theme)
-        self.hosts.wire_settings(dialog)
         return dialog
 
     # ---- look ----

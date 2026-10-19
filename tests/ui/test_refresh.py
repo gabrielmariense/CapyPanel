@@ -15,6 +15,7 @@ from capypanel.core.remote.sessions import Account, Reason, Session, SessionsErr
 from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_ui
 from capypanel.ui.hosts_tool import tool as hosts_module
+from capypanel.ui.hosts_tool.settings import HostsSettings
 from capypanel.ui.list_workspace import workspace as workspace_module
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
@@ -284,7 +285,7 @@ def test_automatic_status_is_off_by_default_and_checks_only_status(
 ) -> None:
     assert not window.hosts._auto_timer.isActive()
     dialog = window.settings_dialog()
-    dialog.hosts.pick_every(3)  # Custom…: every 3 minutes
+    dialog.group(HostsSettings).general.pick_every(3)  # Custom…: every 3 minutes
     assert window.hosts._auto_timer.isActive() and window.hosts._auto_timer.interval() == 3 * 60_000
     assert window.hosts.prefs["auto_status"] == {"on": True, "minutes": 3}
     window.hosts._auto_status_check()  # what the timer does
