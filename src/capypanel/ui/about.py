@@ -30,7 +30,7 @@ from capypanel import _COMMIT, BUILD, __version__
 from capypanel.core import i18n
 from capypanel.core.i18n import _
 from capypanel.ui import branding
-from capypanel.ui.main_window.details import CopyValue
+from capypanel.ui.list_workspace.details import CopyValue
 from capypanel.ui.settings.pages import Page, Section
 from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 from capypanel.ui.themes import engine as themes

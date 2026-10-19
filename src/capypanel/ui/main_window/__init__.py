@@ -1,1 +1,1 @@
-"""The main window: layout, menus and host views."""
+"""The main window: the shell that shows the tools (menus, rail, toolbar area, status bar)."""

@@ -43,13 +43,13 @@ def office(tmp_path: Path) -> Path:
 def window(qapp: QApplication, tmp_path: Path, office: Path) -> Iterator[MainWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
     win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1})
-    win.open_list(office)
+    win.hosts.open_list(office)
     yield win
     win.close()
 
 
 def _dialog(window: MainWindow) -> ImportDialog:
-    doc = window.document
+    doc = window.hosts.document
     assert doc is not None
     dialog = ImportDialog(None, doc.hosts, doc.hosts.groups[0].id)
     dialog.set_text(PASTED)
@@ -77,7 +77,7 @@ def test_the_preview_says_what_each_row_will_do(window: MainWindow) -> None:
 def test_nothing_changes_until_add_is_clicked(
     window: MainWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    doc = window.document
+    doc = window.hosts.document
     assert doc is not None
     before = doc.hosts
 
@@ -86,16 +86,17 @@ def test_nothing_changes_until_add_is_clicked(
         return QDialog.DialogCode.Rejected
 
     monkeypatch.setattr(ImportDialog, "exec", cancel)
-    window.commands.import_hosts.trigger()
-    assert window.document is not None and window.document.hosts == before  # Cancel: untouched
+    window.hosts.commands.import_hosts.trigger()
+    doc = window.hosts.document
+    assert doc is not None and doc.hosts == before  # Cancel: untouched
 
     def add(dialog: ImportDialog) -> int:
         dialog.set_text(PASTED)
         return QDialog.DialogCode.Accepted
 
     monkeypatch.setattr(ImportDialog, "exec", add)
-    window.commands.import_hosts.trigger()
-    doc = window.document
+    window.hosts.commands.import_hosts.trigger()
+    doc = window.hosts.document
     assert doc is not None
     assert {h.name for h in doc.hosts.hosts} == {"HQ-01", "Reception 01", "Finance 01"}
     assert listfile.load(doc.path).hosts == doc.hosts  # saved
