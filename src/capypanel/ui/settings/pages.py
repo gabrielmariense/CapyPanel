@@ -186,12 +186,14 @@ class FilesPage(Page):
         folders = (
             (_("Shared files"), paths.root,
              _("Connection profiles and remote tools, for everyone on this PC.")),
-            (_("Shared lists"), paths.shared_lists_dir,
-             _("The default list, and every list saved there, for everyone on this PC.")),
+            (_("Shared lists"), paths.lists_dir,
+             _("A folder for each kind of list, with its default list and every list saved "
+               "there, for everyone on this PC.")),
             (_("Your files"), paths.user_dir,
              _("Your settings, private to you and administrators.")),
             (_("Your lists"), paths.user_lists_dir,
-             _("Your personal list, and every list saved there, only for you.")),
+             _("A folder for each kind of list, with your personal list and every list saved "
+               "there, only for you.")),
             (_("Logs"), paths.log_dir, _("One per user, named after the account.")),
         )  # fmt: skip
         # The one table design; a double-click opens the folder too.

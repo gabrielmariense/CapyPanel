@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 17:01-0300\n"
+"POT-Creation-Date: 2026-10-19 17:12-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -230,6 +230,12 @@ msgstr "Um &grupo escolhido"
 
 msgid "A connection profile must be a JSON object."
 msgstr "Um perfil de conexão deve ser um objeto JSON."
+
+msgid "A folder for each kind of list, with its default list and every list saved there, for everyone on this PC."
+msgstr "Uma pasta para cada tipo de lista, com a lista padrão dele e toda lista salva ali, para todos neste PC."
+
+msgid "A folder for each kind of list, with your personal list and every list saved there, only for you."
+msgstr "Uma pasta para cada tipo de lista, com sua lista pessoal e toda lista salva ali, só para você."
 
 msgid "A group can't be moved inside itself."
 msgstr "Um grupo não pode ser movido para dentro dele mesmo."
@@ -1337,9 +1343,6 @@ msgstr "A lista padrão"
 msgid "The default list was made by another user, so {app} won't open it. An administrator can replace or delete “{path}”."
 msgstr "A lista padrão foi criada por outro usuário, então o {app} não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
 
-msgid "The default list, and every list saved there, for everyone on this PC."
-msgstr "A lista padrão e toda lista salva ali, para todos neste PC."
-
 msgid "The file doesn't contain a host list."
 msgstr "O arquivo não contém uma lista de hosts."
 
@@ -1570,9 +1573,6 @@ msgstr "Seus arquivos"
 
 msgid "Your lists"
 msgstr "Suas listas"
-
-msgid "Your personal list, and every list saved there, only for you."
-msgstr "Sua lista pessoal e toda lista salva ali, só para você."
 
 msgid "Your settings, private to you and administrators."
 msgstr "Suas configurações, só para você e os administradores."

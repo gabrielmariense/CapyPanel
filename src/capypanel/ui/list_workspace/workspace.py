@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.core import files, identity, winsec
+from capypanel.core import files, identity, settings, winsec
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
@@ -60,8 +60,10 @@ class ListWorkspace(Tool):
         self._paths = shell.paths
         self._list_commands = commands
         self._doc: OpenList | None = None
-        self._default_list = shell.paths.default_list
-        self._personal_list = shell.paths.personal_list
+        self._places = shell.paths.lists(self.TOOL_ID)  # lists\<tool>\, shared and own
+        self._default_list = self._places.default
+        self._personal_list = self._places.personal
+        self._make_lists_folders()
         self.search = SearchBox()
         self.nav = NavigationPane(self.all_items_text)
         # The list dropdown, on top of the Groups panel: switch lists, make or open one.
@@ -317,6 +319,26 @@ class ListWorkspace(Tool):
 
     # ---- opening lists ----
 
+    def _make_lists_folders(self) -> None:
+        """The tool's lists folders are there from the start: the shared one for everyone,
+        changed only by its maker and administrators; the user's own inside their folder."""
+        try:
+            shared = self._places.shared_dir
+            if not shared.is_dir():
+                lists = self._paths.lists_dir
+                if not lists.is_dir() and files.can_create_files(lists.parent):
+                    files.make_shared_folder(lists)
+                if lists.is_dir() and files.can_create_files(lists):
+                    files.make_shared_folder(shared)
+            self._places.user_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            log.exception("Couldn't create the lists folders")
+
+    @property
+    def places(self) -> settings.ListPlaces:
+        """Where the tool keeps its lists."""
+        return self._places
+
     @property
     def document(self) -> OpenList | None:
         return self._doc
@@ -373,7 +395,7 @@ class ListWorkspace(Tool):
     def new_list(self) -> None:
         """The list dropdown's New list…: shared, personal or elsewhere, as in Settings."""
         path = ask_new_list(
-            self, shared_dir=self._paths.shared_lists_dir, user_dir=self._paths.user_lists_dir
+            self, shared_dir=self._places.shared_dir, user_dir=self._places.user_dir
         )
         if path is not None:  # replacing an existing file was asked already
             self._create_list(path, replace_existing=path.exists())
@@ -381,7 +403,7 @@ class ListWorkspace(Tool):
     def open_list_file(self) -> None:
         """The list dropdown's Open list… (Ctrl+O): any list file, which then stays in the
         dropdown."""
-        shared = self._paths.shared_lists_dir
+        shared = self._places.shared_dir
         start = shared if shared.is_dir() else self._personal_list.parent
         name, _filter = QFileDialog.getOpenFileName(
             self, self.open_list_title(), str(start), self.list_file_filter()
@@ -393,7 +415,7 @@ class ListWorkspace(Tool):
 
     def found_lists(self, *, hidden: bool = False) -> list[Path]:
         """The lists in the lists folders; the ones removed in Settings only when `hidden`."""
-        found = locations.found_lists(self._paths.shared_lists_dir, self._paths.user_lists_dir)
+        found = locations.found_lists(self._places.shared_dir, self._places.user_dir)
         return found if hidden else locations.without_hidden(self.prefs, found)
 
     def _available_lists(self) -> list[Path]:

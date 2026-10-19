@@ -159,19 +159,24 @@ def test_a_default_list_another_user_made_cant_be_picked(
 def test_first_start_creates_and_opens_the_default_list(
     window: MainWindow, paths: settings.Paths
 ) -> None:
-    assert window.hosts.document is not None and window.hosts.document.path == paths.default_list
+    assert (
+        window.hosts.document is not None
+        and window.hosts.document.path == paths.lists("hosts").default
+    )
     assert [g.name for g in window.hosts.document.hosts.groups] == ["Default group"]
-    assert not paths.personal_list.exists()  # made only when someone chooses it
+    assert not paths.lists("hosts").personal.exists()  # made only when someone chooses it
 
 
 def test_a_default_list_another_user_made_is_not_opened(
     qapp: QApplication, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    paths.default_list.parent.mkdir(parents=True, exist_ok=True)
-    listfile.save(paths.default_list, HostList(), expected=None)
+    paths.lists("hosts").default.parent.mkdir(parents=True, exist_ok=True)
+    listfile.save(paths.lists("hosts").default, HostList(), expected=None)
     monkeypatch.setattr(winsec, "made_by_trusted", lambda _path: False)
     win = MainWindow(paths, {"schema": 1})
-    assert win.hosts.document is not None and win.hosts.document.path == paths.personal_list
+    assert (
+        win.hosts.document is not None and win.hosts.document.path == paths.lists("hosts").personal
+    )
     assert "another user" in win.statusBar().currentMessage()
     win.close()
 
@@ -280,7 +285,10 @@ def test_a_missing_start_list_falls_back_and_says_so(
 ) -> None:
     prefs = {"schema": 1, "start_list": str(office.with_name("gone.json"))}
     again = MainWindow(paths, prefs)
-    assert again.hosts.document is not None and again.hosts.document.path == paths.default_list
+    assert (
+        again.hosts.document is not None
+        and again.hosts.document.path == paths.lists("hosts").default
+    )
     assert "gone.json" in again.statusBar().currentMessage()
     again.close()
 
@@ -341,7 +349,10 @@ def test_removing_the_open_list_switches_to_the_default_list(
     view = dialog.group(HostsSettings).lists.view
     view.select(office)
     view.remove_button.click()  # the default list opens in its place, at once
-    assert window.hosts.document is not None and window.hosts.document.path == paths.default_list
+    assert (
+        window.hosts.document is not None
+        and window.hosts.document.path == paths.lists("hosts").default
+    )
     assert _rows(view)[0][2]  # marked in use
 
 
@@ -385,7 +396,7 @@ def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow)
 def test_a_list_in_a_lists_folder_can_be_removed_and_added_back(
     window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    branch = paths.shared_lists_dir / "branch.json"
+    branch = paths.lists("hosts").shared_dir / "branch.json"
     listfile.save(branch, HostList(), expected=None)
     dialog = window.settings_dialog()
     view = dialog.group(HostsSettings).lists.view
@@ -423,7 +434,7 @@ def test_list_tables_show_six_rows_at_most_and_pages_never_get_cut(
     window: MainWindow, paths: settings.Paths
 ) -> None:
     for name in "abcdefg":
-        listfile.save(paths.shared_lists_dir / f"{name}.json", HostList(), expected=None)
+        listfile.save(paths.lists("hosts").shared_dir / f"{name}.json", HostList(), expected=None)
     dialog = window.settings_dialog()
     dialog.show()
     dialog.show_page("host_lists")
@@ -587,13 +598,15 @@ def test_refresh_by_itself_is_one_dropdown_with_a_custom_interval(
 def test_a_new_list_can_be_shared_or_personal(
     window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    dialog = NewListDialog(None, shared_dir=paths.shared_lists_dir, user_dir=paths.user_lists_dir)
+    dialog = NewListDialog(
+        None, shared_dir=paths.lists("hosts").shared_dir, user_dir=paths.lists("hosts").user_dir
+    )
     assert not dialog.create_button.isEnabled()  # a name first
     dialog.name.setText("Branch offices")
     assert dialog.create_button.isEnabled() and dialog.kind() == "shared"
-    assert dialog.path() == paths.shared_lists_dir / "Branch offices.json"
+    assert dialog.path() == paths.lists("hosts").shared_dir / "Branch offices.json"
     dialog.personal.setChecked(True)
-    assert dialog.path() == paths.user_lists_dir / "Branch offices.json"
+    assert dialog.path() == paths.lists("hosts").user_dir / "Branch offices.json"
     dialog.name.setText("a/b")  # not a file name
     assert not dialog.create_button.isEnabled()
     dialog.elsewhere.setChecked(True)  # the file dialog asks for the name instead
@@ -605,7 +618,9 @@ def test_only_people_who_can_write_the_shared_folder_get_a_shared_list(
     window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(new_list, "can_create_files", lambda folder: False)
-    dialog = NewListDialog(None, shared_dir=paths.shared_lists_dir, user_dir=paths.user_lists_dir)
+    dialog = NewListDialog(
+        None, shared_dir=paths.lists("hosts").shared_dir, user_dir=paths.lists("hosts").user_dir
+    )
     assert not dialog.shared.isEnabled() and dialog.kind() == "personal"
     dialog.deleteLater()
 
@@ -613,7 +628,7 @@ def test_only_people_who_can_write_the_shared_folder_get_a_shared_list(
 def test_new_list_from_the_dropdown_makes_a_shared_list(
     window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    shared = paths.shared_lists_dir / "Clinics.json"
+    shared = paths.lists("hosts").shared_dir / "Clinics.json"
     monkeypatch.setattr(workspace_module, "ask_new_list", lambda *_a, **_k: shared)
     window.hosts.commands.new_list.trigger()
     assert (
@@ -627,7 +642,7 @@ def test_new_list_from_the_dropdown_makes_a_shared_list(
 def test_remove_can_also_move_the_file_to_the_recycle_bin(
     window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    branch = paths.shared_lists_dir / "branch.json"
+    branch = paths.lists("hosts").shared_dir / "branch.json"
     listfile.save(branch, HostList(), expected=None)
     window.hosts.open_list(branch)
     trashed: list[str] = []
@@ -641,7 +656,10 @@ def test_remove_can_also_move_the_file_to_the_recycle_bin(
     view.remove_button.click()
     assert [Path(t) for t in trashed] == [branch]
     assert len(_rows(view)) == 2 and view.hidden == []  # gone, not just hidden
-    assert window.hosts.document is not None and window.hosts.document.path == paths.default_list
+    assert (
+        window.hosts.document is not None
+        and window.hosts.document.path == paths.lists("hosts").default
+    )
 
 
 def test_a_list_that_can_t_be_deleted_is_only_removed(

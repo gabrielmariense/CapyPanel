@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 17:01-0300\n"
+"POT-Creation-Date: 2026-10-19 17:12-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -228,6 +228,16 @@ msgid "A chosen &group"
 msgstr ""
 
 msgid "A connection profile must be a JSON object."
+msgstr ""
+
+msgid ""
+"A folder for each kind of list, with its default list and every list "
+"saved there, for everyone on this PC."
+msgstr ""
+
+msgid ""
+"A folder for each kind of list, with your personal list and every list "
+"saved there, only for you."
 msgstr ""
 
 msgid "A group can't be moved inside itself."
@@ -1376,9 +1386,6 @@ msgid ""
 "administrator can replace or delete “{path}”."
 msgstr ""
 
-msgid "The default list, and every list saved there, for everyone on this PC."
-msgstr ""
-
 msgid "The file doesn't contain a host list."
 msgstr ""
 
@@ -1624,9 +1631,6 @@ msgid "Your files"
 msgstr ""
 
 msgid "Your lists"
-msgstr ""
-
-msgid "Your personal list, and every list saved there, only for you."
 msgstr ""
 
 msgid "Your settings, private to you and administrators."
