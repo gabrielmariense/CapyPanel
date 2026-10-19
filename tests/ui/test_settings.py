@@ -22,7 +22,7 @@ from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
 from capypanel.ui import host_lists, new_list, tables
 from capypanel.ui.host_lists import HostListsView
-from capypanel.ui.main_window import window as window_module
+from capypanel.ui.list_workspace import workspace as workspace_module
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
 from capypanel.ui.new_list import NewListDialog
@@ -118,7 +118,7 @@ def _answer_open_dialog(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
 def test_host_lists_shows_every_list_with_the_open_one_in_bold(
     window: MainWindow, office: Path
 ) -> None:
-    window.open_list(office)  # an opened list is added to Host lists from now on
+    window.hosts.open_list(office)  # an opened list is added to Host lists from now on
     view = window.settings_dialog().host_lists.view
     assert _rows(view) == [
         ("Shared", "Read/write", False),  # the default list: the first start created it
@@ -143,17 +143,17 @@ def test_a_default_list_another_user_made_cant_be_picked(
     dialog = window.settings_dialog()
     view = dialog.host_lists.view
     assert _rows(view)[0][1] == "Not used: made by another user"
-    view.select(window._default_list)
-    before = window.document
+    view.select(window.hosts._default_list)
+    before = window.hosts.document
     view.open_picked()  # a double-click
-    assert window.document is before and len(warned) == 1
+    assert window.hosts.document is before and len(warned) == 1
 
 
 def test_first_start_creates_and_opens_the_default_list(
     window: MainWindow, paths: settings.Paths
 ) -> None:
-    assert window.document is not None and window.document.path == paths.default_list
-    assert [g.name for g in window.document.hosts.groups] == ["Default group"]
+    assert window.hosts.document is not None and window.hosts.document.path == paths.default_list
+    assert [g.name for g in window.hosts.document.hosts.groups] == ["Default group"]
     assert not paths.personal_list.exists()  # made only when someone chooses it
 
 
@@ -164,7 +164,7 @@ def test_a_default_list_another_user_made_is_not_opened(
     listfile.save(paths.default_list, HostList(), expected=None)
     monkeypatch.setattr(winsec, "made_by_trusted", lambda _path: False)
     win = MainWindow(paths, {"schema": 1})
-    assert win.document is not None and win.document.path == paths.personal_list
+    assert win.hosts.document is not None and win.hosts.document.path == paths.personal_list
     assert "another user" in win.statusBar().currentMessage()
     win.close()
 
@@ -172,53 +172,54 @@ def test_a_default_list_another_user_made_is_not_opened(
 def test_removing_a_list_forgets_it_but_never_deletes_the_file(
     window: MainWindow, office: Path
 ) -> None:
-    window.open_list(office)
+    window.hosts.open_list(office)
     dialog = window.settings_dialog()
     view = dialog.host_lists.view
     view.select(office)
     assert view.remove_button.isEnabled()
     view.remove_button.click()
     assert [r[0] for r in _rows(view)] == ["Shared", "Yours"]  # the default and personal lists
-    view.select(window._default_list)
+    view.select(window.hosts._default_list)
     assert not view.remove_button.isEnabled()  # the default and personal lists always stay
-    assert window._prefs["host_lists"] == [] and office.is_file()
+    assert window.prefs["host_lists"] == [] and office.is_file()
 
 
 def test_missing_personal_list_is_created_when_chosen(window: MainWindow) -> None:
-    personal = window._personal_list
+    personal = window.hosts._personal_list
     assert not personal.exists()
     view = window.settings_dialog().host_lists.view
     view.select(personal)
     view.open_picked()
-    assert personal.exists() and window.document is not None
-    assert [g.name for g in window.document.hosts.groups] == ["Default group"]
+    assert personal.exists() and window.hosts.document is not None
+    assert [g.name for g in window.hosts.document.hosts.groups] == ["Default group"]
 
 
 def test_new_empty_list_over_the_open_one_reopens_it(
     window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    window.open_list(office)
+    window.hosts.open_list(office)
     # The new list window, answered: replace the open list (the user confirmed it).
     monkeypatch.setattr(host_lists, "ask_new_list", lambda *_a, **_k: office)
     dialog = window.settings_dialog()
     dialog.host_lists.view.new_button.click()  # a new list opens at once
-    assert window.document is not None and window.document.path == office
-    assert [g.name for g in window.document.hosts.groups] == ["Default group"]
-    assert not window.document.hosts.hosts
+    assert window.hosts.document is not None and window.hosts.document.path == office
+    assert [g.name for g in window.hosts.document.hosts.groups] == ["Default group"]
+    assert not window.hosts.document.hosts.hosts
 
 
 def test_open_list_from_the_dropdown_opens_a_list_and_keeps_it_there(
     window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _answer_open_dialog(monkeypatch, office)
-    window.commands.open_list.trigger()  # the list dropdown's Open list… (Ctrl+O)
-    assert window.document is not None and window.document.path == office
-    assert window._prefs["host_lists"] == [str(office)]
-    window.list_picker.menu().aboutToShow.emit()  # filled as it opens
-    texts = [label(a) for a in window.list_picker.menu().actions() if a.text()]
+    window.hosts.commands.open_list.trigger()  # the list dropdown's Open list… (Ctrl+O)
+    assert window.hosts.document is not None and window.hosts.document.path == office
+    assert window.prefs["host_lists"] == [str(office)]
+    window.hosts.list_picker.menu().aboutToShow.emit()  # filled as it opens
+    texts = [label(a) for a in window.hosts.list_picker.menu().actions() if a.text()]
     assert texts[:3] == ["Default", "Personal", "office"]  # by file name
     assert texts[3:] == ["&New list…", "&Open list…", "&Manage host lists…"]
-    assert window.list_picker.text() == "office" and window.windowTitle().startswith("office —")
+    assert window.hosts.list_picker.text() == "office"
+    assert window.windowTitle().startswith("office —")
 
 
 def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
@@ -234,21 +235,21 @@ def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
         "T&oolbar", "&Status bar",
     ]  # fmt: skip
     # The tool's own commands are in its toolbar.
-    inventory = [label(a) for a in window.toolbar.inventory_menu.actions() if a.text()]
+    inventory = [label(a) for a in window.hosts.toolbar.inventory_menu.actions() if a.text()]
     assert inventory == ["Add &host…", "Add &group…", "&Manage groups…", "&Import hosts…"]
-    window._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
-    connect = [label(a) for a in window.toolbar.connect_menu.actions() if a.text()][-3:]
+    window.hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
+    connect = [label(a) for a in window.hosts.toolbar.connect_menu.actions() if a.text()][-3:]
     assert connect == ["&Manual connection…", "Connection &profiles…", "&Forget typed passwords"]
     # Commands outside the menu bar keep their shortcuts.
-    a = window.commands
+    a = window.hosts.commands
     shortcuts = {a.edit, a.remove, a.copy_address, a.add_host, a.add_group, a.manual_connect}
-    assert shortcuts <= set(window.actions())
+    assert shortcuts <= set(window.hosts.actions())
 
 
 def test_start_list_choice_is_opened_next_time(
     window: MainWindow, paths: settings.Paths, office: Path
 ) -> None:
-    window.open_list(office)  # the last used list...
+    window.hosts.open_list(office)  # the last used list...
     dialog = window.settings_dialog()
     general = dialog.hosts.start_list
     assert general.currentData() == "last"
@@ -260,7 +261,10 @@ def test_start_list_choice_is_opened_next_time(
     ]
     general.setCurrentIndex(general.findData("personal"))  # kept at once, with no Save
     again = MainWindow(paths, settings.load_settings(paths.settings_file))
-    assert again.document is not None and again.document.path == window._personal_list
+    assert (
+        again.hosts.document is not None
+        and again.hosts.document.path == window.hosts._personal_list
+    )
     again.close()
 
 
@@ -269,7 +273,7 @@ def test_a_missing_start_list_falls_back_and_says_so(
 ) -> None:
     prefs = {"schema": 1, "start_list": str(office.with_name("gone.json"))}
     again = MainWindow(paths, prefs)
-    assert again.document is not None and again.document.path == paths.default_list
+    assert again.hosts.document is not None and again.hosts.document.path == paths.default_list
     assert "gone.json" in again.statusBar().currentMessage()
     again.close()
 
@@ -277,9 +281,9 @@ def test_a_missing_start_list_falls_back_and_says_so(
 def test_last_used_list_is_reopened(
     window: MainWindow, paths: settings.Paths, office: Path
 ) -> None:
-    window.open_list(office)
+    window.hosts.open_list(office)
     again = MainWindow(paths, settings.load_settings(paths.settings_file))
-    assert again.document is not None and again.document.path == office
+    assert again.hosts.document is not None and again.hosts.document.path == office
     assert not again.statusBar().currentMessage()
     again.close()
 
@@ -289,14 +293,14 @@ def test_picking_a_theme_applies_it_at_once(window: MainWindow) -> None:
     combo = dialog.general.theme
     combo.setCurrentIndex(combo.findData("paper"))  # the window shows it already
     assert themes.current().id == "paper"
-    assert settings.load_settings(window._paths.settings_file)["theme"] == "paper"
+    assert settings.load_settings(window.paths.settings_file)["theme"] == "paper"
 
 
 def test_the_path_is_in_the_tooltip_and_same_names_show_their_folder(
     window: MainWindow, tmp_path: Path
 ) -> None:
     a, b = tmp_path / "north" / "hosts.json", tmp_path / "south" / "hosts.json"
-    window._prefs["host_lists"] = [str(a), str(b)]
+    window.prefs["host_lists"] = [str(a), str(b)]
     view = window.settings_dialog().host_lists.view
     names = [view.tree.topLevelItem(i).text(0) for i in range(4)]  # type: ignore[union-attr]
     assert names[2:] == ["hosts (north)", "hosts (south)"]
@@ -306,7 +310,7 @@ def test_the_path_is_in_the_tooltip_and_same_names_show_their_folder(
 
 def test_list_tables_have_grid_lines_and_resizable_columns(window: MainWindow) -> None:
     view = window.settings_dialog().host_lists.view
-    assert view.tree.objectName() == window.table.objectName() == "grid"
+    assert view.tree.objectName() == window.hosts.table.objectName() == "grid"
     header = view.tree.header()
     assert all(header.sectionResizeMode(c) == QHeaderView.ResizeMode.Interactive for c in range(3))
 
@@ -324,12 +328,12 @@ def test_the_page_list_keeps_its_width_in_every_language(window: MainWindow) -> 
 def test_removing_the_open_list_switches_to_the_default_list(
     window: MainWindow, office: Path, paths: settings.Paths
 ) -> None:
-    window.open_list(office)
+    window.hosts.open_list(office)
     dialog = window.settings_dialog()
     view = dialog.host_lists.view
     view.select(office)
     view.remove_button.click()  # the default list opens in its place, at once
-    assert window.document is not None and window.document.path == paths.default_list
+    assert window.hosts.document is not None and window.hosts.document.path == paths.default_list
     assert _rows(view)[0][2]  # marked in use
 
 
@@ -381,8 +385,8 @@ def test_a_list_in_a_lists_folder_can_be_removed_and_added_back(
     assert view.remove_button.isEnabled()
     view.remove_button.click()
     assert len(_rows(view)) == 2 and branch.is_file()  # hidden here, the file stays
-    window.list_picker.menu().aboutToShow.emit()
-    assert "branch" not in [label(a) for a in window.list_picker.menu().actions()]
+    window.hosts.list_picker.menu().aboutToShow.emit()
+    assert "branch" not in [label(a) for a in window.hosts.list_picker.menu().actions()]
     view = window.settings_dialog().host_lists.view
     _answer_open_dialog(monkeypatch, branch)
     view.add_button.click()  # Add existing… brings it back
@@ -394,7 +398,7 @@ def test_open_folder_opens_the_picked_list_s_folder(
 ) -> None:
     opened: list[str] = []
     monkeypatch.setattr(QDesktopServices, "openUrl", lambda url: opened.append(url.toLocalFile()))
-    window.open_list(office)
+    window.hosts.open_list(office)
     view = window.settings_dialog().host_lists.view
     view.select(office)
     menu = QMenu()
@@ -437,48 +441,48 @@ def test_a_list_that_doesn_t_exist_can_t_be_opened(
 ) -> None:
     warned: list[str] = []
     monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: warned.append(text))
-    window._prefs["host_lists"] = [str(tmp_path / "nowhere.json")]
+    window.prefs["host_lists"] = [str(tmp_path / "nowhere.json")]
     view = window.settings_dialog().host_lists.view
     view.select(tmp_path / "nowhere.json")
     assert _rows(view)[2][1] == "File not found"
     view.open_picked()
-    assert warned and window.document is not None
-    assert window.document.path != tmp_path / "nowhere.json"
+    assert warned and window.hosts.document is not None
+    assert window.hosts.document.path != tmp_path / "nowhere.json"
 
 
 def test_an_added_list_is_kept_at_once_and_opens_on_a_double_click(
     window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _answer_open_dialog(monkeypatch, office)
-    before = window.document
+    before = window.hosts.document
     dialog = window.settings_dialog()
     view = dialog.host_lists.view
     view.add_button.click()
-    assert window._prefs["host_lists"] == [str(office)]  # kept, with no Save
-    assert window.document is before  # adding a list doesn't open it
+    assert window.prefs["host_lists"] == [str(office)]  # kept, with no Save
+    assert window.hosts.document is before  # adding a list doesn't open it
     view.open_picked()  # a double-click opens it
-    assert window.document is not None and window.document.path == office
+    assert window.hosts.document is not None and window.hosts.document.path == office
     assert _rows(view)[2][2]  # marked as the one in use now
 
 
 def test_save_a_copy_writes_it_and_keeps_the_list_in_use(
     window: MainWindow, office: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    window.open_list(office)
+    window.hosts.open_list(office)
     copy = tmp_path / "copy.json"
     _answer_save_dialog(monkeypatch, copy)
     view = window.settings_dialog().host_lists.view
     view.select(office)
     view.copy_picked()  # the row's right-click: Save a copy…
     assert listfile.load(copy).hosts == listfile.load(office).hosts
-    assert view.selected() == copy and str(copy) in window._prefs["host_lists"]
-    assert window.document is not None and window.document.path == office
+    assert view.selected() == copy and str(copy) in window.prefs["host_lists"]
+    assert window.hosts.document is not None and window.hosts.document.path == office
 
 
 def test_every_choice_applies_at_once_and_only_close_is_left(window: MainWindow) -> None:
     dialog = window.settings_dialog()
     dialog.hosts.pick_every(5)
-    assert window._auto_status()[0]  # kept and running, with no Save
+    assert window.hosts._auto_status()[0]  # kept and running, with no Save
     page = dialog.connections.profiles
     page.default.setCurrentIndex(page.default.findData("realvnc"))
     assert page.store.default_id() == "realvnc"  # written for everyone at once
@@ -533,7 +537,7 @@ def test_a_right_click_picks_the_row_and_opens_its_menu(
         "popup",
         lambda menu, _at: shown.append([label(a) for a in menu.actions() if a.text()]),
     )
-    window.open_list(office)
+    window.hosts.open_list(office)
     dialog = window.settings_dialog()
     dialog.show()
     dialog.show_page("host_lists")
@@ -560,12 +564,12 @@ def test_refresh_by_itself_is_one_dropdown_with_a_custom_interval(
     assert every.currentText() == "Off"
     monkeypatch.setattr(pages, "ask_minutes", lambda _parent, _start: 7)
     every.activated.emit(every.findData(-1))  # Custom…
-    assert every.currentText() == "Every 7 minutes" and window._auto_status() == (True, 7)
+    assert every.currentText() == "Every 7 minutes" and window.hosts._auto_status() == (True, 7)
     monkeypatch.setattr(pages, "ask_minutes", lambda _parent, _start: None)
     every.activated.emit(every.findData(-1))  # Custom…, then Cancel: stays as it was
     assert every.currentText() == "Every 7 minutes"
     every.activated.emit(every.findData(0))  # Off
-    assert window._auto_status() == (False, 7)  # the last interval is kept for next time
+    assert window.hosts._auto_status() == (False, 7)  # the last interval is kept for next time
 
 
 def test_a_new_list_can_be_shared_or_personal(
@@ -598,10 +602,14 @@ def test_new_list_from_the_dropdown_makes_a_shared_list(
     window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     shared = paths.shared_lists_dir / "Clinics.json"
-    monkeypatch.setattr(window_module, "ask_new_list", lambda *_a, **_k: shared)
-    window.commands.new_list.trigger()
-    assert shared.is_file() and window.document is not None and window.document.path == shared
-    assert not window._prefs.get("host_lists")  # in a lists folder: it shows up by itself
+    monkeypatch.setattr(workspace_module, "ask_new_list", lambda *_a, **_k: shared)
+    window.hosts.commands.new_list.trigger()
+    assert (
+        shared.is_file()
+        and window.hosts.document is not None
+        and window.hosts.document.path == shared
+    )
+    assert not window.prefs.get("host_lists")  # in a lists folder: it shows up by itself
 
 
 def test_remove_can_also_move_the_file_to_the_recycle_bin(
@@ -609,7 +617,7 @@ def test_remove_can_also_move_the_file_to_the_recycle_bin(
 ) -> None:
     branch = paths.shared_lists_dir / "branch.json"
     listfile.save(branch, HostList(), expected=None)
-    window.open_list(branch)
+    window.hosts.open_list(branch)
     trashed: list[str] = []
     monkeypatch.setattr(host_lists.QFile, "moveToTrash", lambda path: trashed.append(path) or True)
     view = window.settings_dialog().host_lists.view
@@ -621,13 +629,13 @@ def test_remove_can_also_move_the_file_to_the_recycle_bin(
     view.remove_button.click()
     assert [Path(t) for t in trashed] == [branch]
     assert len(_rows(view)) == 2 and view.hidden == []  # gone, not just hidden
-    assert window.document is not None and window.document.path == paths.default_list
+    assert window.hosts.document is not None and window.hosts.document.path == paths.default_list
 
 
 def test_a_list_that_can_t_be_deleted_is_only_removed(
     window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    window._prefs["host_lists"] = [str(office.with_name("gone.json"))]
+    window.prefs["host_lists"] = [str(office.with_name("gone.json"))]
     monkeypatch.setattr(host_lists, "ask_remove", lambda *_a: pytest.fail("asked"))
     view = window.settings_dialog().host_lists.view
     view.select(office.with_name("gone.json"))  # no file to delete

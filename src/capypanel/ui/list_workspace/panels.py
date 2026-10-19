@@ -1,6 +1,6 @@
-"""The three panes of the main window: groups and tags, the host table, and host details."""
+"""The panels of a list tool: groups and tags, the search above the items, and the items table."""
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 
 from PySide6.QtCore import (
@@ -55,8 +55,6 @@ from capypanel.ui.groups import (
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.menus import popup
 
-ROLE_QUIET = Qt.ItemDataRole.UserRole + 2  # a Status or User cell to show greyed
-
 
 @dataclass(frozen=True)
 class Filter:
@@ -77,15 +75,16 @@ def pane_title(text: str, label: QLabel | None = None) -> QLabel:
 
 
 class NavigationPane(QWidget):
-    """One card, like the other panes: "All hosts" pinned on top, then the groups (in the
-    list's own order, rearranged by dragging) and the tags, each under a small heading and
-    split by thin lines. Picking one filters the table."""
+    """One card, like the other panels: "All hosts" (or the tool's own word) pinned on top, then
+    the groups (in the list's own order, rearranged by dragging) and the tags, each under a small
+    heading and split by thin lines. Picking one filters the table."""
 
     filter_changed = Signal()
 
-    def __init__(self) -> None:
+    def __init__(self, everything: Callable[[], str]) -> None:
         super().__init__()
         self._filter = Filter("all")
+        self._everything_text = everything  # "All hosts", in the current language
         self.add_group_button = QToolButton()
         self.add_group_button.setText("+")
         self.groups_heading = GroupsHeading()  # drop a group here: it goes to the top level
@@ -212,7 +211,7 @@ class NavigationPane(QWidget):
         if host_list is None:
             self.groups.clear()
         else:
-            self._everything_item.setText(0, f"{_('All hosts')} ({len(host_list.hosts)})")
+            self._everything_item.setText(0, f"{self._everything_text()} ({len(host_list.hosts)})")
             loose = sum(1 for h in host_list.hosts if h.group == NO_GROUP)
             self._no_group_item.setText(0, f"{_('No group')} ({loose})")
             self.groups.fill(host_list)
@@ -332,36 +331,22 @@ def _walk(root: QTreeWidgetItem) -> Iterable[QTreeWidgetItem]:
 
 
 class SearchBox(QLineEdit):
-    """Above the host table: finds hosts by name, address or logged-on user. Esc clears it;
-    Down or Enter moves to the results (never connects, so a typo can't reach a wrong PC)."""
+    """Above the items table: its placeholder says what's searched. Esc clears it; Down or Enter
+    moves to the results (never acts on them, so a typo can't reach a wrong PC)."""
 
     to_results = Signal()
 
     def __init__(self) -> None:
         super().__init__()
-        self.setObjectName("paneSearch")  # the panes' corners and border, so its edges match
+        self.setObjectName("paneSearch")  # the panels' corners and border, so its edges match
         self.setClearButtonEnabled(True)
         self._icon = self.addAction(QIcon(), QLineEdit.ActionPosition.LeadingPosition)
-        # Address, user, tags: searched only while their columns show. Notes always are.
-        self._columns = (True, True, True)
         self._paint_icon()
-        self.retranslate()
 
-    def set_columns(self, address: bool, user: bool, tags: bool) -> None:
-        self._columns = (address, user, tags)
-        self.retranslate()
-
-    def retranslate(self) -> None:
-        """The placeholder says exactly what's searched."""
-        address, user, tags = self._columns
-        # Each a lower-case word in the list "Search name, address, user, tags, notes".
-        fields = [_("name")]
-        fields += [_("address")] if address else []
-        fields += [_("user")] if user else []
-        fields += [_("tags")] if tags else []
-        fields.append(_("notes"))  # no column, so always searched
+    def set_fields(self, fields: Sequence[str], tip: str) -> None:
+        """The placeholder names exactly what's searched: each a lower-case word."""
         self.setPlaceholderText(_("Search {fields}").format(fields=", ".join(fields)))
-        self.setToolTip(_("Searches every host in the list (Ctrl+F)"))
+        self.setToolTip(tip)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Escape and self.text():
@@ -390,12 +375,15 @@ def _tree_width(tree: QTreeWidget) -> int:
     return tree.sizeHintForColumn(0) + 2 * tree.frameWidth() + extra
 
 
-class HostTable(QTreeWidget):
-    """The host list as a table. A QTreeView-based widget: it selects whole rows in Windows 11.
-    Status and User come from Refresh; they're kept in memory, never in the list file."""
+class ItemTable(QTreeWidget):
+    """A list tool's items as a table. A QTreeView-based widget: it selects whole rows in
+    Windows 11. A tool says its columns (COLUMNS, saved by those keys; the first always shows),
+    their titles (retranslate) and each row's texts (row_texts)."""
 
-    STATUS, USER, ADDRESS, TAGS = 1, 2, 3, 4
-    COLUMNS = ("computer", "status", "user", "address", "tags")  # saved by these keys
+    COLUMNS: tuple[str, ...] = ()
+    SEARCHED: frozenset[int] = frozenset({0})  # columns where a search's text is marked
+    # Empty until something fills them later: a starting width, in average characters.
+    EMPTY: dict[int, int] = {}
     columns_changed = Signal()  # a column was shown or hidden
 
     def __init__(self) -> None:
@@ -405,8 +393,7 @@ class HostTable(QTreeWidget):
         # The user's column widths, by key: saved, shared by every list, changed only by them.
         self._widths: dict[str, int] = {}
         self._sizing = False  # the table is resizing a column, not the user
-        # What's searched and shown: notes are searched too, but have no column.
-        self._marker = MatchMarker(self, columns={0, self.USER, self.ADDRESS, self.TAGS})
+        self._marker = MatchMarker(self, columns=set(self.SEARCHED))
         self.setItemDelegate(self._marker)
         self.retranslate()
         header = self.header()
@@ -424,8 +411,18 @@ class HostTable(QTreeWidget):
         self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        # Selected hosts can be dragged onto a group in the Groups pane, to move them there.
+        # Selected items can be dragged onto a group in the Groups panel, to move them there.
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
+
+    def retranslate(self) -> None:
+        """The column titles, in the current language."""
+
+    def row_texts(self, item: Host) -> list[str]:
+        """What each column shows for an item."""
+        raise NotImplementedError
+
+    def decorate(self, row: QTreeWidgetItem, item: Host) -> None:
+        """Anything a row shows besides its texts (icons, tooltips, colours)."""
 
     def set_editable(self, editable: bool) -> None:
         self.setDragEnabled(editable)
@@ -436,49 +433,28 @@ class HostTable(QTreeWidget):
     def mimeData(self, items: Sequence[QTreeWidgetItem]) -> QMimeData:
         return hosts_mime([item.data(0, ROLE_ID) for item in items])
 
-    def retranslate(self) -> None:
-        self.setHeaderLabels([_("Name"), _("Status"), _("User"), _("Address"), _("Tags")])
-
     def set_search(self, needle: str) -> None:
-        """Marks the searched text, and shows where each host lives while searching."""
+        """Marks the searched text."""
         self._marker.needle = needle
         self.viewport().update()
 
-    def show_hosts(
-        self,
-        hosts: Sequence[Host],
-        cells: Mapping[str, "Cells"],
-    ) -> None:
+    def show_items(self, items: Sequence[Host]) -> None:
         keep = set(self.selected_ids())
         self.blockSignals(True)
         self.setSortingEnabled(False)
         self.clear()
         self._rows = {}
-        for host in hosts:
-            item = QTreeWidgetItem(
-                [
-                    host.name,
-                    "",
-                    "",
-                    host.address,
-                    ", ".join(host.tags),
-                ]  # fmt: skip
-            )
-            item.setData(0, ROLE_ID, host.id)
-            self.addTopLevelItem(item)
-            self._rows[host.id] = item
-            self._fill(item, cells.get(host.id))
-            item.setSelected(host.id in keep)
+        for item in items:
+            row = QTreeWidgetItem(self.row_texts(item))
+            row.setData(0, ROLE_ID, item.id)
+            self.addTopLevelItem(row)
+            self._rows[item.id] = row
+            self.decorate(row, item)
+            row.setSelected(item.id in keep)
         self.setSortingEnabled(True)
         self.blockSignals(False)
         self._place_columns()
         self.itemSelectionChanged.emit()
-
-    def changeEvent(self, event: QEvent) -> None:
-        super().changeEvent(event)
-        if event.type() == QEvent.Type.PaletteChange:  # the quiet colour of the new theme
-            for item in self._rows.values():
-                self._tint(item)
 
     def hidden_columns(self) -> list[str]:
         return [key for i, key in enumerate(self.COLUMNS) if self.isColumnHidden(i)]
@@ -486,7 +462,7 @@ class HostTable(QTreeWidget):
     def set_hidden_columns(self, keys: object) -> None:
         hidden = set(keys) if isinstance(keys, list) else set()
         for index, key in enumerate(self.COLUMNS):
-            self.setColumnHidden(index, index > 0 and key in hidden)  # Computer always shows
+            self.setColumnHidden(index, index > 0 and key in hidden)  # the first always shows
         self._place_columns()
 
     def _columns_menu(self, position: QPoint) -> None:
@@ -542,7 +518,7 @@ class HostTable(QTreeWidget):
         self._place_columns()
 
     def reset_columns(self) -> None:
-        """View > Reset layout: every column shown again, fitted as on the first start."""
+        """Reset layout: every column shown again, fitted as on the first start."""
         self._widths.clear()
         self.set_hidden_columns([])
 
@@ -553,19 +529,16 @@ class HostTable(QTreeWidget):
         self._sizing = True
         for column in self._shown():
             key = self.COLUMNS[column]
-            if key not in self._widths and (self.topLevelItemCount() or column in self._EMPTY):
+            if key not in self._widths and (self.topLevelItemCount() or column in self.EMPTY):
                 self._widths[key] = self._first_width(column)
             header.resizeSection(column, self._widths.get(key, self.minimum_width(column)))
         self._sizing = False
         self._fill_last_column()
 
-    # Empty until a check: a fixed starting width, wide enough for what a check brings.
-    _EMPTY = {1: 16, 2: 24}  # Status, User: room for that many average characters
-
     def _first_width(self, column: int) -> int:
         width = self._content_width(column)
-        if column in self._EMPTY:
-            width = max(width, self.fontMetrics().averageCharWidth() * self._EMPTY[column] + 16)
+        if column in self.EMPTY:
+            width = max(width, self.fontMetrics().averageCharWidth() * self.EMPTY[column] + 16)
         return width
 
     def _content_width(self, column: int) -> int:
@@ -624,50 +597,17 @@ class HostTable(QTreeWidget):
         super().resizeEvent(event)
         self._fill_last_column()
 
-    def show_cells(self, host_id: str, cells: "Cells") -> None:
-        """New Refresh results for one host, without rebuilding the table."""
-        item = self._rows.get(host_id)
-        if item is not None:
-            self._fill(item, cells)  # columns keep their widths: a Refresh never resizes them
-
-    def _fill(self, item: QTreeWidgetItem, cells: "Cells | None") -> None:
-        cells = cells or Cells()
-        for column, (text, tip, icon, quiet) in (
-            (self.STATUS, cells.status),
-            (self.USER, cells.user),
-        ):
-            item.setText(column, text)
-            item.setToolTip(column, tip)
-            item.setIcon(column, icon if icon is not None else QIcon())
-            item.setData(column, ROLE_QUIET, quiet)
-        self._tint(item)
-
-    def _tint(self, item: QTreeWidgetItem) -> None:
-        """Errors and "not checked" read quieter than real results, in the current theme."""
-        muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
-        for column in (self.STATUS, self.USER):
-            quiet = bool(item.data(column, ROLE_QUIET))
-            item.setData(column, Qt.ItemDataRole.ForegroundRole, muted if quiet else None)
-
     def selected_ids(self) -> list[str]:
         return [item.data(0, ROLE_ID) for item in self.selectedItems()]
 
-    def select_ids(self, host_ids: Iterable[str]) -> None:
-        wanted = set(host_ids)
+    def select_ids(self, ids: Iterable[str]) -> None:
+        wanted = set(ids)
         self.clearSelection()
         for index in range(self.topLevelItemCount()):
             item = self.topLevelItem(index)
             if item is not None and item.data(0, ROLE_ID) in wanted:
                 item.setSelected(True)
                 self.scrollToItem(item)
-
-
-@dataclass(frozen=True)
-class Cells:
-    """What the Status and User columns show for one host: text, tooltip, icon, quiet."""
-
-    status: tuple[str, str, QIcon | None, bool] = ("", "", None, False)
-    user: tuple[str, str, QIcon | None, bool] = ("", "", None, False)
 
 
 class MatchMarker(QStyledItemDelegate):

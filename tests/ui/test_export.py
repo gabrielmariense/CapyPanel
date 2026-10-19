@@ -10,6 +10,7 @@ from capypanel.core.hosts.bulk import parse
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.ui import export_hosts
 from capypanel.ui.export_hosts import FOR_IMPORT, ExportDialog
+from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.import_hosts import read_text
 from capypanel.ui.main_window.window import MainWindow
 
@@ -24,7 +25,7 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[MainWindow]:
     office = tmp_path / "office.json"
     listfile.save(office, hl, expected=None)
     win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1})
-    win.open_list(office)
+    win.hosts.open_list(office)
     yield win
     win.close()
 
@@ -39,13 +40,13 @@ def _run(
         return 0
 
     monkeypatch.setattr(ExportDialog, "exec", run)
-    window.commands.export_hosts.trigger()
+    window.hosts.commands.export_hosts.trigger()
 
 
 def test_it_opens_on_what_is_shown_with_every_row_in_the_preview(
     window: MainWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    window.nav.select_group(NO_GROUP)
+    window.hosts.nav.select_group(NO_GROUP)
     seen: list[object] = []
 
     def look(d: ExportDialog) -> None:
@@ -84,7 +85,7 @@ def test_columns_come_in_groups_and_a_custom_pick_can_be_a_preset(
         assert d.preset.currentText() == "Walk-round" and d.delete_preset.isEnabled()
 
     _run(window, monkeypatch, pick)
-    assert window._prefs["export_presets"] == {"Walk-round": ["name", "users"]}
+    assert window.prefs["export_presets"] == {"Walk-round": ["name", "users"]}
 
     def again(d: ExportDialog) -> None:
         assert d.columns() == ["name", "users"]  # the last choice
@@ -102,13 +103,13 @@ def test_refresh_runs_on_the_hosts_being_exported_and_holds_export(
 ) -> None:
     asked: list[tuple[list[str], bool, bool]] = []
     monkeypatch.setattr(
-        MainWindow,
+        HostsTool,
         "check_hosts",
         lambda _self, hosts, *, status, users: asked.append(
             ([h.name for h in hosts], status, users)
         ),
     )
-    window.nav.select_group(NO_GROUP)
+    window.hosts.nav.select_group(NO_GROUP)
 
     def refresh(d: ExportDialog) -> None:
         d.boxes["status"].setChecked(True)
@@ -120,6 +121,33 @@ def test_refresh_runs_on_the_hosts_being_exported_and_holds_export(
         assert d.stop_button.isVisibleTo(d) and d.checking.text() == "Checking 0 of 1…"
 
     _run(window, monkeypatch, refresh)
+
+
+def test_saving_a_preset_under_a_name_in_use_asks_before_replacing_it(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window.prefs["export_presets"] = {"Walk-round": ["name", "users"]}
+    monkeypatch.setattr(
+        export_hosts.QInputDialog, "getText", lambda *_a, **_k: ("walk-round", True)
+    )
+    asked: list[str] = []
+    answer = {"replace": False}
+    monkeypatch.setattr(
+        export_hosts, "confirm", lambda _p, _t, text, _a: asked.append(text) or answer["replace"]
+    )
+
+    def save(d: ExportDialog) -> None:
+        for key, box in d.boxes.items():
+            box.setChecked(key in ("name", "address"))
+        d.save_preset.click()  # Cancel: the old preset stays as it was
+        assert asked == ["A preset named “Walk-round” already exists. Replace it?"]
+        assert window.prefs["export_presets"] == {"Walk-round": ["name", "users"]}
+        answer["replace"] = True
+        d.save_preset.click()  # Replace: one preset, under the name just typed
+        assert window.prefs["export_presets"] == {"walk-round": ["name", "address"]}
+        assert d.preset.currentText() == "walk-round"
+
+    _run(window, monkeypatch, save)
 
 
 def test_export_saves_csv_that_imports_back_and_says_where(

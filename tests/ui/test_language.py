@@ -43,16 +43,16 @@ def test_switching_language_updates_the_open_window_live(window: MainWindow) -> 
         "E&xibir",
         "Aj&uda",
     ]
-    assert label(window.commands.add_host) == "Adicionar &host…"
-    assert window.table.headerItem().text(0) == "Nome"
-    [everything] = window.nav.everything.findItems("Todos", Qt.MatchFlag.MatchStartsWith)
+    assert label(window.hosts.commands.add_host) == "Adicionar &host…"
+    assert window.hosts.table.headerItem().text(0) == "Nome"
+    [everything] = window.hosts.nav.everything.findItems("Todos", Qt.MatchFlag.MatchStartsWith)
     assert everything.text(0) == "Todos os hosts (1)"
-    assert "1 host" in window._list_label.text()
+    assert "1 host" in window.hosts.status_label.text()
     _switch(window, "en")
     assert [m.title() for m in _menus(window)] == [
         "&File", "&View", "&Help"
     ]  # fmt: skip
-    assert window.table.headerItem().text(0) == "Name"
+    assert window.hosts.table.headerItem().text(0) == "Name"
 
 
 def test_qt_own_buttons_are_translated_too(window: MainWindow) -> None:
@@ -63,7 +63,7 @@ def test_qt_own_buttons_are_translated_too(window: MainWindow) -> None:
 
 def test_language_is_remembered(window: MainWindow) -> None:
     _switch(window, "pt_BR")
-    saved = settings.load_settings(window._paths.settings_file)
+    saved = settings.load_settings(window.paths.settings_file)
     assert saved["language"] == "pt_BR"
 
 
@@ -81,7 +81,7 @@ def test_the_language_dropdown_in_general_switches_at_once(window: MainWindow) -
 def test_access_keys_are_unique_in_every_menu(window: MainWindow, code: str) -> None:
     # Two items with the same underlined letter make Alt+letter ambiguous.
     _switch(window, code)
-    for menu in [*_menus(window), window.toolbar.inventory_menu]:
+    for menu in [*_menus(window), window.hosts.toolbar.inventory_menu]:
         texts = [label(a) for a in menu.actions() if "&" in a.text()]
         keys = [t[t.index("&") + 1].lower() for t in texts]
         assert len(keys) == len(set(keys)), f"{menu.title()}: {texts}"

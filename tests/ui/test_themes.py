@@ -205,7 +205,7 @@ def test_clicking_a_row_draws_no_focus_box(qapp: QApplication, tmp_path: Path) -
     window.show()
     window.activateWindow()  # the box only appears in the active window
     qapp.processEvents()
-    tree = window.nav.groups
+    tree = window.hosts.nav.groups
     [item] = tree.findItems("Default group", Qt.MatchFlag.MatchStartsWith)
     rect = tree.visualItemRect(item)
     QTest.mouseClick(tree.viewport(), Qt.MouseButton.LeftButton, pos=rect.center())

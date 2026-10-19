@@ -39,6 +39,7 @@ from capypanel.core.hosts.bulk import host_fields, list_separator, write_csv
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import N_, _, ngettext
 from capypanel.ui.groups import TREE_INDENT
+from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import hint
 
 # Each column, the group its checkbox is in, and its title (also the file's header row, which
@@ -333,6 +334,13 @@ class ExportDialog(QDialog):
             QMessageBox.warning(self, _("Save as preset"), _("That name is taken."))
             return
         presets = self._presets()
+        # The same name, whatever its case: replacing it is asked first, Cancel the default.
+        same = next((p for p in presets if p.casefold() == name.casefold()), None)
+        if same is not None:
+            question = _("A preset named “{name}” already exists. Replace it?").format(name=same)
+            if not confirm(self, _("Save as preset"), question, _("Replace")):
+                return
+            presets.pop(same)
         presets[name] = self.columns()
         self._prefs[self.PRESETS_KEY] = presets
         self._save_prefs()
