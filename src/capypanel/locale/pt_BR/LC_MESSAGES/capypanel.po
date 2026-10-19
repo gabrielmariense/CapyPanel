@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 17:17-0300\n"
+"POT-Creation-Date: 2026-10-19 13:11-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -256,6 +256,10 @@ msgstr "O nome é obrigatório."
 
 msgid "A new group: the import creates it"
 msgstr "Um grupo novo: a importação o cria"
+
+#, python-brace-format
+msgid "A preset named “{name}” already exists. Replace it?"
+msgstr "Já existe uma predefinição chamada “{name}”. Substituí-la?"
 
 msgid "A tool definition must be a JSON object."
 msgstr "Uma definição de ferramenta deve ser um objeto JSON."

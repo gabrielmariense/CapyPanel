@@ -123,6 +123,33 @@ def test_refresh_runs_on_the_hosts_being_exported_and_holds_export(
     _run(window, monkeypatch, refresh)
 
 
+def test_saving_a_preset_under_a_name_in_use_asks_before_replacing_it(
+    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window.prefs["export_presets"] = {"Walk-round": ["name", "users"]}
+    monkeypatch.setattr(
+        export_hosts.QInputDialog, "getText", lambda *_a, **_k: ("walk-round", True)
+    )
+    asked: list[str] = []
+    answer = {"replace": False}
+    monkeypatch.setattr(
+        export_hosts, "confirm", lambda _p, _t, text, _a: asked.append(text) or answer["replace"]
+    )
+
+    def save(d: ExportDialog) -> None:
+        for key, box in d.boxes.items():
+            box.setChecked(key in ("name", "address"))
+        d.save_preset.click()  # Cancel: the old preset stays as it was
+        assert asked == ["A preset named “Walk-round” already exists. Replace it?"]
+        assert window.prefs["export_presets"] == {"Walk-round": ["name", "users"]}
+        answer["replace"] = True
+        d.save_preset.click()  # Replace: one preset, under the name just typed
+        assert window.prefs["export_presets"] == {"walk-round": ["name", "address"]}
+        assert d.preset.currentText() == "walk-round"
+
+    _run(window, monkeypatch, save)
+
+
 def test_export_saves_csv_that_imports_back_and_says_where(
     window: MainWindow, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
