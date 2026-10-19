@@ -208,7 +208,8 @@ class HostsTool(ListWorkspace):
         doc = self._writable()
         if doc is None:
             return
-        base = doc.hosts if doc.hosts.groups else starter_list()
+        # Only a list with nothing in it starts with a group; any other keeps what it holds.
+        base = doc.hosts if doc.hosts.groups or doc.hosts.hosts else starter_list()
         dialog = HostDialog(
             self,
             base,

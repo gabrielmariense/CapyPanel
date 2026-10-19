@@ -7,13 +7,14 @@ from pathlib import Path
 import pytest
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QMenu, QSplitter, QWidget
+from PySide6.QtWidgets import QApplication, QDialog, QMenu, QSplitter, QWidget
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.locations import recent_lists
-from capypanel.core.hosts.model import Host, HostList
+from capypanel.core.hosts.model import NO_GROUP, Host, HostList
 from capypanel.ui.hosts import HostDialog, group_choices
+from capypanel.ui.hosts_tool import tool as hosts_module
 from capypanel.ui.hosts_tool.table import HostTable
 from capypanel.ui.list_workspace import workspace as workspace_module
 from capypanel.ui.main_window.window import MainWindow
@@ -42,6 +43,26 @@ def window(qapp: QApplication, paths: settings.Paths) -> Iterator[MainWindow]:
     win = MainWindow(paths, {"schema": 1})
     yield win
     win.close()
+
+
+def test_add_host_keeps_every_host_of_a_list_with_no_groups(
+    window: MainWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    hl, _ = HostList().add_host("LOOSE-01", NO_GROUP)
+    hl, _ = hl.add_host("LOOSE-02", NO_GROUP)
+    path = tmp_path / "loose.json"
+    listfile.save(path, hl, expected=None)
+    window.hosts.open_list(path)
+
+    def fill(dialog: object) -> QDialog.DialogCode:
+        assert isinstance(dialog, HostDialog)
+        dialog.name.setText("NEW-01")
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(hosts_module, "run_modal", fill)
+    window.hosts.commands.add_host.trigger()
+    names = [h.name for h in listfile.load(path).hosts.hosts]
+    assert sorted(names) == ["LOOSE-01", "LOOSE-02", "NEW-01"]  # nothing lost
 
 
 def _table_names(win: MainWindow) -> set[str]:
