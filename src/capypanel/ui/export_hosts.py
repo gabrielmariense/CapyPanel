@@ -1,10 +1,13 @@
-"""The toolbar's Report: pick the hosts and the columns, see every row, then save a CSV
-file or copy the rows for Excel. Status and logged-on users come from the last Refresh, which
-can be run again from here."""
+"""The toolbar's Report: pick the items and the columns, see every row, then save a CSV
+file or copy the rows for Excel. The checks' columns (for hosts: status and logged-on users) come
+from the last Refresh, which can be run again from here.
+
+ExportDialog is the Hosts tool's Report. Another tool's Report subclasses it and overrides its
+columns (TITLES, SECTIONS, CHECKED, FOR_IMPORT), where its choices are kept, and its texts."""
 
 import re
 import subprocess
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -73,6 +76,15 @@ class Source:
 
 
 class ExportDialog(QDialog):
+    # What this Report lists. SECTIONS are boxes of ticks, one row each; with CHECKED, the last
+    # box holds the checks from Refresh, stacked, with the run buttons under them.
+    TITLES: Mapping[str, str] = TITLES
+    SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = SECTIONS
+    CHECKED: tuple[str, ...] = CHECKED
+    FOR_IMPORT: tuple[str, ...] = FOR_IMPORT
+    PRESETS_KEY, LAST_KEY, FOLDER_KEY = PRESETS_KEY, LAST_KEY, FOLDER_KEY  # its own choices
+    ITEMS_LABEL = N_("&Hosts:")
+
     def __init__(
         self,
         parent: QWidget | None,
@@ -83,13 +95,14 @@ class ExportDialog(QDialog):
         list_name: str,
         prefs: dict[str, object],
         save_prefs: Callable[[], None],
-        results: Callable[[str], tuple[str, str]],
-        refresh: Callable[[Sequence[Host], bool, bool], None],
+        results: Callable[[str], tuple[str, ...]],
+        refresh: Callable[..., None],
         stop: Callable[[], None],
         progress: Callable[[], tuple[int, int] | None],
     ) -> None:
-        """results: a host's status and users texts ("" when not checked). refresh and stop
-        run the main window's Refresh; progress is (done, total) while one runs."""
+        """results: an item's texts for the CHECKED columns, in order ("" when not checked).
+        refresh(items, *wanted) and stop run the tool's Refresh, one flag per CHECKED column;
+        progress is (done, total) while one runs."""
         super().__init__(parent)
         self.setWindowTitle(_("Report"))
         self._hosts = host_list
@@ -117,45 +130,53 @@ class ExportDialog(QDialog):
         presets.addWidget(self.save_preset)
         presets.addWidget(self.delete_preset)
         top = QFormLayout()
-        top.addRow(_("&Hosts:"), self.source)
+        top.addRow(_(self.ITEMS_LABEL), self.source)
         preset_label = QLabel(_("&Preset:"))
         preset_label.setBuddy(self.preset)
         top.addRow(preset_label, presets)
 
         self.boxes: dict[str, QCheckBox] = {}
-        sections: list[QGroupBox] = []
-        for title, keys in SECTIONS:
+        rows: list[QGroupBox] = []
+        checks: QGroupBox | None = None
+        for index, (title, keys) in enumerate(self.SECTIONS):
             group = QGroupBox(_(title))
-            # Host and Tags and notes are one row each; Last check stacks its parts.
-            inside = QVBoxLayout(group) if "status" in keys else QHBoxLayout(group)
+            stacked = bool(self.CHECKED) and index == len(self.SECTIONS) - 1
+            inside = QVBoxLayout(group) if stacked else QHBoxLayout(group)
             for key in keys:
-                box = QCheckBox(_(TITLES[key]))
+                box = QCheckBox(_(self.TITLES[key]))
                 self.boxes[key] = box
                 inside.addWidget(box)
-            sections.append(group)
-        host_box, notes_box, check_box = sections
-        for box in (host_box, notes_box):
-            box.layout().addStretch(1)  # type: ignore[union-attr]
-        privacy = hint(_("Includes who was logged on to each PC. Keep the file private."))
+            if stacked:
+                checks = group
+            else:
+                inside.addStretch(1)
+                rows.append(group)
         self.unchecked = hint()
         self.refresh_button = QPushButton(_("&Refresh"))
         self.stop_button = QPushButton(_("S&top"))
         self.checking = QLabel()
-        run_row = QHBoxLayout()
-        run_row.addWidget(self.refresh_button)
-        run_row.addWidget(self.stop_button)
-        run_row.addWidget(self.checking, 1)
-        check_layout = check_box.layout()
-        assert isinstance(check_layout, QVBoxLayout)
-        check_layout.insertWidget(check_layout.indexOf(self.boxes["users"]) + 1, privacy)
-        check_layout.addWidget(self.unchecked)
-        check_layout.addLayout(run_row)
         left = QVBoxLayout()
-        left.addWidget(host_box)
-        left.addWidget(notes_box)
+        for group in rows:
+            left.addWidget(group)
         columns = QHBoxLayout()
         columns.addLayout(left, 1)
-        columns.addWidget(check_box, 1)
+        if checks is not None:
+            run_row = QHBoxLayout()
+            run_row.addWidget(self.refresh_button)
+            run_row.addWidget(self.stop_button)
+            run_row.addWidget(self.checking, 1)
+            check_layout = checks.layout()
+            assert isinstance(check_layout, QVBoxLayout)
+            note = self.checks_note()
+            if note:  # under the ticks it's about
+                check_layout.addWidget(hint(note))
+            check_layout.addWidget(self.unchecked)
+            check_layout.addLayout(run_row)
+            columns.addWidget(checks, 1)
+        else:  # nothing to check: no Refresh here
+            for widget in (self.unchecked, self.refresh_button, self.stop_button, self.checking):
+                widget.setParent(self)
+                widget.hide()
 
         self.preview = QTreeWidget()
         self.preview.setObjectName("grid")
@@ -184,8 +205,8 @@ class ExportDialog(QDialog):
         layout.addWidget(self.buttons)
 
         self._fill_presets()
-        last = prefs.get(LAST_KEY)
-        self._tick(_known(last) if isinstance(last, list) else FOR_IMPORT)
+        last = prefs.get(self.LAST_KEY)
+        self._tick(self._known(last) if isinstance(last, list) else self.FOR_IMPORT)
         self.source.currentIndexChanged.connect(self._update)
         self.preset.activated.connect(self._preset_picked)
         self.save_preset.clicked.connect(self._save_as_preset)
@@ -208,6 +229,40 @@ class ExportDialog(QDialog):
         super().showEvent(event)
         self._no_default_buttons()  # a dialog makes one default as it shows
 
+    # ---- what a tool's Report changes ----
+
+    def fields(self, host: Host, between_tags: str) -> dict[str, str]:
+        """An item's own values, by column key (the checks' come from `results`)."""
+        return host_fields(self._hosts, host, between_tags)
+
+    def checks_note(self) -> str:
+        return _("Includes who was logged on to each PC. Keep the file private.")
+
+    def for_import_tip(self) -> str:
+        return _("The hosts' own fields, which Import hosts reads back: to move hosts to a list.")
+
+    def unchecked_text(self, n: int) -> str:
+        return ngettext(
+            "{n} of these hosts wasn't checked yet.", "{n} of these hosts weren't checked yet.", n
+        ).format(n=n)
+
+    def refresh_tip(self, wanted: bool) -> str:
+        return (
+            _("Checks these hosts again now")
+            if wanted
+            else _("Tick Status or Logged-on users to check them")
+        )
+
+    def copied_text(self, n: int, source: str) -> str:
+        return ngettext(
+            "Copied {n} host from {source}.", "Copied {n} hosts from {source}.", n
+        ).format(n=n, source=source)
+
+    def saved_text(self, n: int, source: str) -> str:
+        return ngettext(
+            "Report saved: {n} host from {source}.", "Report saved: {n} hosts from {source}.", n
+        ).format(n=n, source=source)
+
     # ---- what's picked ----
 
     def columns(self) -> list[str]:
@@ -220,13 +275,13 @@ class ExportDialog(QDialog):
         columns = self.columns()
         rows = []
         for host in self.hosts():
-            values = host_fields(self._hosts, host, between_tags)
-            values["status"], values["users"] = self._results(host.id)
+            values = self.fields(host, between_tags)
+            values.update(zip(self.CHECKED, self._results(host.id), strict=True))
             rows.append([values[key] for key in columns])
         return rows
 
     def header(self) -> list[str]:
-        return [_(TITLES[key]) for key in self.columns()]
+        return [_(self.TITLES[key]) for key in self.columns()]
 
     def _tick(self, columns: Sequence[str]) -> None:
         for key, box in self.boxes.items():
@@ -234,23 +289,24 @@ class ExportDialog(QDialog):
             box.setChecked(key in columns)
             box.blockSignals(False)
 
+    def _known(self, columns: object) -> list[str]:
+        """Saved columns, in the window's order, without ones this version doesn't have."""
+        wanted = columns if isinstance(columns, list) else []
+        return [key for key in self.TITLES if key in wanted]
+
     # ---- presets: "For Import", then the user's own ----
 
     def _presets(self) -> dict[str, list[str]]:
-        saved = self._prefs.get(PRESETS_KEY)
+        saved = self._prefs.get(self.PRESETS_KEY)
         if not isinstance(saved, dict):
             return {}
-        return {str(k): _known(v) for k, v in saved.items() if isinstance(v, list)}
+        return {str(k): self._known(v) for k, v in saved.items() if isinstance(v, list)}
 
     def _fill_presets(self) -> None:
         self.preset.blockSignals(True)
         self.preset.clear()
-        self.preset.addItem(_("For Import"), list(FOR_IMPORT))
-        self.preset.setItemData(
-            0,
-            _("The hosts' own fields, which Import hosts reads back: to move hosts to a list."),
-            Qt.ItemDataRole.ToolTipRole,
-        )
+        self.preset.addItem(_("For Import"), list(self.FOR_IMPORT))
+        self.preset.setItemData(0, self.for_import_tip(), Qt.ItemDataRole.ToolTipRole)
         for name, columns in sorted(self._presets().items(), key=lambda p: p[0].casefold()):
             self.preset.addItem(name, columns)
         self.preset.blockSignals(False)
@@ -278,7 +334,7 @@ class ExportDialog(QDialog):
             return
         presets = self._presets()
         presets[name] = self.columns()
-        self._prefs[PRESETS_KEY] = presets
+        self._prefs[self.PRESETS_KEY] = presets
         self._save_prefs()
         self._fill_presets()
         self._match_preset()
@@ -289,7 +345,7 @@ class ExportDialog(QDialog):
             return
         presets = self._presets()
         presets.pop(self.preset.itemText(index), None)
-        self._prefs[PRESETS_KEY] = presets
+        self._prefs[self.PRESETS_KEY] = presets
         self._save_prefs()
         self._fill_presets()
         self._match_preset()
@@ -305,33 +361,23 @@ class ExportDialog(QDialog):
         """The preview, the "not checked" count and which buttons work."""
         self._fill_preview()
         hosts = self.hosts()
-        wanted = [key for key in CHECKED if self.boxes[key].isChecked()]
-        index = {"status": 0, "users": 1}
-        missing = sum(
-            1 for h in hosts if any(not self._results(h.id)[index[key]] for key in wanted)
-        )
-        self.unchecked.setText(
-            ngettext(
-                "{n} of these hosts wasn't checked yet.",
-                "{n} of these hosts weren't checked yet.",
-                missing,
-            ).format(n=missing)
-            if missing
-            else ""
-        )
-        self.unchecked.setVisible(bool(missing))
         running = self._progress()
-        if running is not None:
-            done, total = running
-            self.checking.setText(_("Checking {done} of {total}…").format(done=done, total=total))
-        self.checking.setVisible(running is not None)
-        self.stop_button.setVisible(running is not None)
-        self.refresh_button.setEnabled(running is None and bool(wanted) and bool(hosts))
-        self.refresh_button.setToolTip(
-            _("Checks these hosts again now")
-            if wanted
-            else _("Tick Status or Logged-on users to check them")
-        )
+        if self.CHECKED:
+            wanted = [key for key in self.CHECKED if self.boxes[key].isChecked()]
+            place = {key: i for i, key in enumerate(self.CHECKED)}
+            missing = sum(
+                1 for h in hosts if any(not self._results(h.id)[place[key]] for key in wanted)
+            )
+            self.unchecked.setText(self.unchecked_text(missing) if missing else "")
+            self.unchecked.setVisible(bool(missing))
+            if running is not None:
+                done, total = running
+                text = _("Checking {done} of {total}…").format(done=done, total=total)
+                self.checking.setText(text)
+            self.checking.setVisible(running is not None)
+            self.stop_button.setVisible(running is not None)
+            self.refresh_button.setEnabled(running is None and bool(wanted) and bool(hosts))
+            self.refresh_button.setToolTip(self.refresh_tip(bool(wanted)))
         can_export = running is None and bool(self.columns()) and bool(hosts)
         self.export_button.setEnabled(can_export)
         self.copy_button.setEnabled(can_export)
@@ -357,8 +403,7 @@ class ExportDialog(QDialog):
     # ---- Refresh, from here ----
 
     def _run_refresh(self) -> None:
-        status, users = self.boxes["status"].isChecked(), self.boxes["users"].isChecked()
-        self._refresh(self.hosts(), status, users)
+        self._refresh(self.hosts(), *(self.boxes[key].isChecked() for key in self.CHECKED))
         self._update()
 
     # ---- saving or copying ----
@@ -366,24 +411,21 @@ class ExportDialog(QDialog):
     def _remember(self) -> None:
         """The columns, kept at once: closing never loses them. The hosts follow what the main
         window shows each time."""
-        self._prefs[LAST_KEY] = self.columns()
+        self._prefs[self.LAST_KEY] = self.columns()
         self._save_prefs()
 
     def _copy(self) -> None:
         text = write_csv(self.header(), self.rows(), "\t")  # tabs: Excel pastes them as columns
         QGuiApplication.clipboard().setText(text)
         source = self._sources[self.source.currentIndex()]
-        n = len(source.hosts)
-        self.outcome = ngettext(
-            "Copied {n} host from {source}.", "Copied {n} hosts from {source}.", n
-        ).format(n=n, source=source.name)
+        self.outcome = self.copied_text(len(source.hosts), source.name)
         # The window stays open, to copy other hosts or save a file next.
         button = self.copy_button
         QToolTip.showText(button.mapToGlobal(QPoint(0, button.height())), self.outcome, button)
 
     def _export(self) -> None:
         source = self._sources[self.source.currentIndex()]
-        folder = self._prefs.get(FOLDER_KEY)
+        folder = self._prefs.get(self.FOLDER_KEY)
         if not isinstance(folder, str) or not Path(folder).is_dir():
             documents = QStandardPaths.StandardLocation.DocumentsLocation
             folder = QStandardPaths.writableLocation(documents)
@@ -410,12 +452,9 @@ class ExportDialog(QDialog):
                 _("Couldn't save “{path}”: {error}").format(path=path, error=e),
             )
             return
-        self._prefs[FOLDER_KEY] = str(path.parent)
+        self._prefs[self.FOLDER_KEY] = str(path.parent)
         self._remember()
-        n = len(source.hosts)
-        self.outcome = ngettext(
-            "Report saved: {n} host from {source}.", "Report saved: {n} hosts from {source}.", n
-        ).format(n=n, source=source.name)
+        self.outcome = self.saved_text(len(source.hosts), source.name)
         self.accept()
         exported_message(self.parentWidget(), self.outcome, path)
 
@@ -444,12 +483,6 @@ class _Indented(QStyledItemDelegate):
     def initStyleOption(self, option: QStyleOptionViewItem, index: QModelIndex) -> None:  # type: ignore[override]
         super().initStyleOption(option, index)
         option.text = TREE_INDENT * int(index.data(DEPTH) or 0) + option.text  # type: ignore[attr-defined]
-
-
-def _known(columns: object) -> list[str]:
-    """Saved columns, in the window's order, without ones this version doesn't have."""
-    wanted = columns if isinstance(columns, list) else []
-    return [key for key in TITLES if key in wanted]
 
 
 def _file_safe(name: str) -> str:
