@@ -7,13 +7,14 @@ from pathlib import Path
 import pytest
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QMenu, QSplitter, QWidget
+from PySide6.QtWidgets import QApplication, QDialog, QMenu, QSplitter, QWidget
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.locations import recent_lists
-from capypanel.core.hosts.model import Host, HostList
+from capypanel.core.hosts.model import NO_GROUP, Host, HostList
 from capypanel.ui.hosts import HostDialog, group_choices
+from capypanel.ui.hosts_tool import tool as hosts_module
 from capypanel.ui.hosts_tool.table import HostTable
 from capypanel.ui.list_workspace import workspace as workspace_module
 from capypanel.ui.main_window.window import MainWindow
@@ -44,6 +45,26 @@ def window(qapp: QApplication, paths: settings.Paths) -> Iterator[MainWindow]:
     win.close()
 
 
+def test_add_host_keeps_every_host_of_a_list_with_no_groups(
+    window: MainWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    hl, _ = HostList().add_host("LOOSE-01", NO_GROUP)
+    hl, _ = hl.add_host("LOOSE-02", NO_GROUP)
+    path = tmp_path / "loose.json"
+    listfile.save(path, hl, expected=None)
+    window.hosts.open_list(path)
+
+    def fill(dialog: object) -> QDialog.DialogCode:
+        assert isinstance(dialog, HostDialog)
+        dialog.name.setText("NEW-01")
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(hosts_module, "run_modal", fill)
+    window.hosts.commands.add_host.trigger()
+    names = [h.name for h in listfile.load(path).hosts.hosts]
+    assert sorted(names) == ["LOOSE-01", "LOOSE-02", "NEW-01"]  # nothing lost
+
+
 def _table_names(win: MainWindow) -> set[str]:
     items = (win.hosts.table.topLevelItem(i) for i in range(win.hosts.table.topLevelItemCount()))
     return {item.text(0) for item in items if item is not None}
@@ -65,7 +86,7 @@ def test_first_start_creates_the_personal_list_with_a_hosts_group(window: MainWi
 def test_opening_a_list_shows_its_hosts_and_remembers_it(window: MainWindow, office: Path) -> None:
     assert window.hosts.open_list(office)
     assert _table_names(window) == {"HQ-01", "FIN-01", "FIN-02"}
-    assert recent_lists(window.prefs)[0] == office
+    assert recent_lists(window.hosts.prefs)[0] == office
 
 
 def test_picking_a_group_or_tag_filters_the_table(window: MainWindow, office: Path) -> None:
@@ -123,8 +144,9 @@ def test_closing_saves_layout_and_keeps_other_settings(
     win.close()
     saved = json.loads(paths.settings_file.read_text(encoding="utf-8"))
     assert saved["kept"] is True
-    assert saved["view"]["details"] is False
-    assert isinstance(saved["window_geometry"], str) and isinstance(saved["main_splitter"], str)
+    hosts = saved["tools"]["hosts"]  # each tool's settings in its own section
+    assert hosts["view"]["details"] is False and saved["view"]["toolbar"] is True
+    assert isinstance(saved["window_geometry"], str) and isinstance(hosts["main_splitter"], str)
 
 
 def test_host_dialog_cleans_values_and_shows_group_paths(qapp: QApplication) -> None:
@@ -158,7 +180,7 @@ def test_columns_keep_their_title_visible_and_can_be_hidden(
     assert table.columnWidth(table.USER) >= table.minimum_width(table.USER) > 5
     table._show_column(table.USER, False)
     assert table.isColumnHidden(table.USER)
-    assert window.prefs["hidden_columns"] == ["user"]
+    assert window.hosts.prefs["hidden_columns"] == ["user"]
     reopened = MainWindow(window.paths, dict(window.prefs))
     assert reopened.hosts.table.isColumnHidden(reopened.hosts.table.USER)
     reopened.hosts.table.set_hidden_columns(["computer"])
@@ -263,7 +285,7 @@ def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: MainWindow, office
     window.hosts.commands.show_tags.setChecked(False)
     assert window.hosts.nav.tags.isHidden() and window.hosts.nav.current_filter().kind == "all"
     window.close()
-    assert window.prefs["view"]["tags"] is False
+    assert window.hosts.prefs["view"]["tags"] is False
 
 
 def test_the_groups_pane_fits_all_computers(window: MainWindow, office: Path) -> None:

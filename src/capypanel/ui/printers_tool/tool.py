@@ -10,11 +10,10 @@ from PySide6.QtGui import QAction, QDesktopServices, QGuiApplication
 from PySide6.QtWidgets import QDialog, QMenu
 
 from capypanel.core.hosts.document import starter_list
-from capypanel.core.hosts.model import NO_GROUP, Host, HostList, HostListRuleError
+from capypanel.core.hosts.model import Host, HostListRuleError
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.printers.printer import with_info
 from capypanel.ui.dialogs import run_modal
-from capypanel.ui.export_hosts import Source
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.hosts import group_path
 from capypanel.ui.list_workspace.workspace import ListWorkspace
@@ -40,6 +39,9 @@ def web_page(printer: Host) -> QUrl | None:
 
 
 class PrintersTool(ListWorkspace):
+    TOOL_ID = "printers"
+    ICON = "printer"
+
     def __init__(self, shell: Shell):
         self.commands = create_actions(None)  # owned by this widget once it exists
         self.table: PrinterTable = PrinterTable()
@@ -79,6 +81,12 @@ class PrintersTool(ListWorkspace):
 
     # ---- texts ----
 
+    def tool_name(self) -> str:
+        return _("Printers")
+
+    def menu_name(self) -> str:
+        return _("&Printers")
+
     def all_items_text(self) -> str:
         return _("All printers")
 
@@ -104,6 +112,24 @@ class PrintersTool(ListWorkspace):
 
     def manage_lists_text(self) -> str:
         return _("&Manage printer lists…")
+
+    def selected_text(self, n: int) -> str:
+        return ngettext("{n} selected", "{n} selected", n).format(n=n)
+
+    def found_text(self, n: int) -> str:
+        return ngettext("{n} found", "{n} found", n).format(n=n)
+
+    def counted_text(self, name: str, n: int) -> str:
+        return ngettext("{name} ({n} printer)", "{name} ({n} printers)", n).format(name=name, n=n)
+
+    def selected_source_texts(self) -> tuple[str, str]:
+        return _("Selected printers"), _("the selected printers")
+
+    def lists_page(self) -> str:
+        return "printer_lists"
+
+    def list_file_filter(self) -> str:
+        return _("Printer lists (*.json);;All files (*)")
 
     def search_fields(self) -> tuple[list[str], str]:
         """Every column that shows, and the notes (which have no column)."""
@@ -188,14 +214,14 @@ class PrintersTool(ListWorkspace):
         doc = self._doc
         if doc is None or not doc.hosts.hosts:
             return
-        sources, current = self._report_sources(doc.hosts)
+        sources, current = self.report_sources(doc.hosts)
         dialog = PrintersReport(
             self,
             doc.hosts,
             sources,
             current,
             list_name=doc.path.stem,
-            prefs=self._prefs,
+            prefs=self.prefs,
             save_prefs=self._save_prefs,
             results=lambda _id: ("", ""),  # status and toner: nothing checked yet
             refresh=lambda *_args: None,
@@ -205,57 +231,6 @@ class PrintersTool(ListWorkspace):
         run_modal(dialog)
         if dialog.outcome:
             self._shell.show_message(dialog.outcome, 10_000)
-
-    def _report_sources(self, printers: HostList) -> tuple[list[Source], int]:
-        """What Report can list, and which one is shown now: the search's results, the printers
-        picked, everything, no group, each group (with its subgroups) and each tag."""
-
-        def counted(name: str, n: int) -> str:
-            return ngettext("{name} ({n} printer)", "{name} ({n} printers)", n).format(
-                name=name, n=n
-            )
-
-        sources: list[Source] = []
-        current = self.nav.current_filter()
-        searching = bool(self._needle())
-        start = 0
-        if searching:
-            found = self.visible_items()
-            sources.append(Source(counted(_("Search results"), len(found)),
-                                  _("the search results"), found))  # fmt: skip
-        selected = self.selected_items()
-        if len(selected) > 1:
-            picked = tuple(selected)
-            sources.append(Source(counted(_("Selected printers"), len(picked)),
-                                  _("the selected printers"), picked))  # fmt: skip
-        every = printers.hosts
-        sources.append(Source(counted(_("All printers"), len(every)), _("All printers"), every))
-        if not searching and current.kind == "all":
-            start = len(sources) - 1
-        loose = tuple(p for p in every if p.group == NO_GROUP)
-        sources.append(Source(counted(_("No group"), len(loose)), _("No group"), loose))
-        if not searching and current.kind == "nogroup":
-            start = len(sources) - 1
-
-        def visit(parent: str | None, depth: int) -> None:
-            nonlocal start
-            for group in printers.children(parent):
-                inside = printers.hosts_in(group.id)
-                sources.append(Source(counted(group.name, len(inside)), group.name, inside, depth))
-                if not searching and current.kind == "group" and current.value == group.id:
-                    start = len(sources) - 1
-                visit(group.id, depth + 1)
-
-        visit(None, 0)
-        for tag in sorted(printers.all_tags(), key=str.casefold):
-            tagged = tuple(p for p in every if tag in p.tags)
-            name = _("tag “{tag}”").format(tag=tag)
-            sources.append(
-                Source(counted(_("Tag: {tag}").format(tag=tag), len(tagged)), name, tagged)
-            )
-            if not searching and current.kind == "tag" and current.value == tag:
-                start = len(sources) - 1
-        return sources, start
 
     # ---- web pages ----
 

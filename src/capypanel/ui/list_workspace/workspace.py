@@ -7,20 +7,19 @@ from collections.abc import Sequence
 from dataclasses import replace
 from pathlib import Path
 
-from PySide6.QtCore import QByteArray, QPoint, Qt, QTimer, Signal
+from PySide6.QtCore import QByteArray, QPoint, Qt, QTimer
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QInputDialog,
-    QLabel,
     QMenu,
     QMessageBox,
     QVBoxLayout,
     QWidget,
 )
 
-from capypanel.core import files, winsec
+from capypanel.core import files, identity, winsec
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
@@ -28,13 +27,14 @@ from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
 from capypanel.ui.dialogs import run_modal
+from capypanel.ui.export_hosts import Source
 from capypanel.ui.groups import ManageGroupsDialog, TreeMenu, fill_host_move_menu, fill_move_menu
-from capypanel.ui.hosts import confirm, group_path, list_file_filter
+from capypanel.ui.hosts import confirm, group_path
 from capypanel.ui.list_workspace.actions import ListActions
 from capypanel.ui.list_workspace.details import DetailsPanel
 from capypanel.ui.list_workspace.panels import ItemTable, NavigationPane, SearchBox
 from capypanel.ui.list_workspace.splitter import PaneSplitter
-from capypanel.ui.main_window.tool import Shell
+from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar
 from capypanel.ui.menus import MenuCombo, popup
 from capypanel.ui.new_list import ask_new_list
@@ -42,9 +42,7 @@ from capypanel.ui.new_list import ask_new_list
 log = logging.getLogger(__name__)
 
 
-class ListWorkspace(QWidget):
-    title_changed = Signal(str)  # the open list's name, or "" with none open
-
+class ListWorkspace(Tool):
     # Panel widths at a normal font size; a bigger font scales them up.
     PANES_DEFAULT = (220, 340)  # Groups, Details
     PANES_MINIMUM = (180, 300, 260)  # Groups, the table, Details
@@ -58,15 +56,12 @@ class ListWorkspace(QWidget):
         table: ItemTable,
         details: DetailsPanel,
     ):
-        super().__init__()
-        self._shell = shell
+        super().__init__(shell, toolbar)
         self._paths = shell.paths
-        self._prefs = shell.prefs
         self._list_commands = commands
         self._doc: OpenList | None = None
         self._default_list = shell.paths.default_list
         self._personal_list = shell.paths.personal_list
-        self.toolbar = toolbar  # the shell shows it above the panels
         self.search = SearchBox()
         self.nav = NavigationPane(self.all_items_text)
         # The list dropdown, on top of the Groups panel: switch lists, make or open one.
@@ -102,8 +97,6 @@ class ListWorkspace(QWidget):
         margins = QVBoxLayout(self)
         margins.setContentsMargins(8, 4, 8, 4)  # the same gap above and below the panels
         margins.addWidget(self.splitter)
-        self.status_label = QLabel()  # the shell shows it in its status bar
-        self.status_label.setContentsMargins(6, 0, 6, 0)
         self._connect_list()
 
     def _connect_list(self) -> None:
@@ -175,6 +168,31 @@ class ListWorkspace(QWidget):
         """What the search box searches, each a lower-case word, and its tooltip."""
         raise NotImplementedError
 
+    def selected_text(self, n: int) -> str:
+        """The status bar's count of items selected: "{n} selected" (its word's gender)."""
+        raise NotImplementedError
+
+    def found_text(self, n: int) -> str:
+        """The status bar's count of items a search found: "{n} found"."""
+        raise NotImplementedError
+
+    def counted_text(self, name: str, n: int) -> str:
+        """A Report source with its count: "{name} ({n} hosts)"."""
+        raise NotImplementedError
+
+    def selected_source_texts(self) -> tuple[str, str]:
+        """Report's source for the items selected, and its name in sentences: "Selected
+        hosts", "the selected hosts"."""
+        raise NotImplementedError
+
+    def lists_page(self) -> str:
+        """The Settings page that manages the tool's lists: the list dropdown opens it."""
+        raise NotImplementedError
+
+    def list_file_filter(self) -> str:
+        """The file-type filter for the tool's list files in file dialogs."""
+        raise NotImplementedError
+
     # ---- what a tool says: behaviour ----
 
     def add_item(self) -> None:
@@ -220,19 +238,19 @@ class ListWorkspace(QWidget):
     # ---- layout ----
 
     def restore_layout(self) -> None:
-        splitter = self._prefs.get("main_splitter")
+        splitter = self.prefs.get("main_splitter")
         if isinstance(splitter, str):
             self.splitter.restoreState(QByteArray.fromBase64(splitter.encode()))
             # Restoring turns collapsing back on: a panel dragged to the edge vanished.
             self.splitter.setChildrenCollapsible(False)
-        view = self._prefs.get("view")
+        view = self.prefs.get("view")
         view = view if isinstance(view, dict) else {}
         for key, action in self.view_choices().items():
             action.setChecked(bool(view.get(key, True)))
         a = self._list_commands
         self.nav.set_tags_visible(a.show_tags.isChecked())
-        self.table.set_widths(self._prefs.get("column_widths"))
-        self.table.set_hidden_columns(self._prefs.get("hidden_columns"))
+        self.table.set_widths(self.prefs.get("column_widths"))
+        self.table.set_hidden_columns(self.prefs.get("hidden_columns"))
         self._columns_shown()
         self.nav.setVisible(a.show_groups.isChecked())
         self.details.setVisible(a.show_details.isChecked())
@@ -243,7 +261,6 @@ class ListWorkspace(QWidget):
         return {"groups": a.show_groups, "tags": a.show_tags, "details": a.show_details}
 
     def view_actions(self) -> list[list[QAction]]:
-        """The tool's part of the View menu, in groups split by lines."""
         a = self._list_commands
         return [[a.show_groups, a.show_tags, a.show_details]]
 
@@ -282,28 +299,20 @@ class ListWorkspace(QWidget):
 
     def restyle(self) -> None:
         """After a theme switch: its font may be bigger, and it pads the toolbar differently."""
-        self.toolbar.restyle()
         self._size_panes()
-        self.align_toolbar_later()
+        super().restyle()
 
-    def align_toolbar_later(self) -> None:
-        # Tied to this widget, so a call still pending when it closes is dropped, not run.
-        QTimer.singleShot(0, self, self._align_toolbar)  # once the panels have their sizes
-
-    def _align_toolbar(self) -> None:
-        if self.toolbar.isVisible():
-            left = self.splitter.mapToGlobal(QPoint(0, 0)).x()
-            start = self.toolbar.mapToGlobal(QPoint(0, 0)).x()
-            self.toolbar.align(left - start)
+    def toolbar_anchor(self) -> QWidget:
+        return self.splitter
 
     def save_state(self) -> None:
-        """When the window closes."""
-        self._prefs["main_splitter"] = self.splitter.saveState().toBase64().toStdString()
-        self._prefs["column_widths"] = self.table.widths()
+        self.prefs["view"] = {k: a.isChecked() for k, a in self.view_choices().items()}
+        self.prefs["main_splitter"] = self.splitter.saveState().toBase64().toStdString()
+        self.prefs["column_widths"] = self.table.widths()
         self._remember_view()
 
     def _save_columns(self) -> None:
-        self._prefs["hidden_columns"] = self.table.hidden_columns()
+        self.prefs["hidden_columns"] = self.table.hidden_columns()
         self._save_prefs()
 
     # ---- opening lists ----
@@ -312,9 +321,17 @@ class ListWorkspace(QWidget):
     def document(self) -> OpenList | None:
         return self._doc
 
+    @property
+    def default_list(self) -> Path:
+        return self._default_list
+
+    @property
+    def personal_list(self) -> Path:
+        return self._personal_list
+
     def open_startup_list(self) -> None:
         """The chosen list (normally the last used), else the default, else the personal one."""
-        prefs = self._prefs
+        prefs = self.prefs
         order = locations.startup_order(
             prefs, default=self._default_list, personal=self._personal_list
         )
@@ -336,15 +353,15 @@ class ListWorkspace(QWidget):
             return self._create_list(path, replace_existing=False, quiet=quiet)
         if kind is ListKind.DEFAULT and not winsec.made_by_trusted(path):
             note = _(
-                "The default list was made by another user, so CapyPanel won't open it. An "
+                "The default list was made by another user, so {app} won't open it. An "
                 "administrator can replace or delete “{path}”."
             )
-            self._error(note.format(path=path), quiet)
+            self._error(note.format(app=identity.current().name, path=path), quiet)
             return False
         try:
             doc = OpenList.open(path)
         except FileNotFoundError:
-            locations.forget_list(self._prefs, path)
+            locations.forget_list(self.prefs, path)
             self._error(_("The list “{path}” doesn't exist anymore.").format(path=path), quiet)
             return False
         except (HostListFileError, OSError) as e:
@@ -367,7 +384,7 @@ class ListWorkspace(QWidget):
         shared = self._paths.shared_lists_dir
         start = shared if shared.is_dir() else self._personal_list.parent
         name, _filter = QFileDialog.getOpenFileName(
-            self, self.open_list_title(), str(start), list_file_filter()
+            self, self.open_list_title(), str(start), self.list_file_filter()
         )
         if name:
             self.open_list(Path(name))
@@ -377,11 +394,11 @@ class ListWorkspace(QWidget):
     def found_lists(self, *, hidden: bool = False) -> list[Path]:
         """The lists in the lists folders; the ones removed in Settings only when `hidden`."""
         found = locations.found_lists(self._paths.shared_lists_dir, self._paths.user_lists_dir)
-        return found if hidden else locations.without_hidden(self._prefs, found)
+        return found if hidden else locations.without_hidden(self.prefs, found)
 
     def _available_lists(self) -> list[Path]:
         return locations.available_lists(
-            self._prefs,
+            self.prefs,
             default=self._default_list,
             personal=self._personal_list,
             found=self.found_lists(),
@@ -419,7 +436,7 @@ class ListWorkspace(QWidget):
         menu.addActions([a.new_list, a.open_list])
         menu.addSeparator()
         manage = menu.addAction(self.manage_lists_text())
-        manage.triggered.connect(lambda: self._shell.open_settings("host_lists"))
+        manage.triggered.connect(lambda: self._shell.open_settings(self.lists_page()))
 
     def _pick_list(self, path: Path) -> None:
         current = self._doc.path if self._doc else None
@@ -444,19 +461,19 @@ class ListWorkspace(QWidget):
             self.list_switched()
             self._clear_search()
         self._doc = doc
-        locations.remember_list(self._prefs, doc.path)
-        hidden = locations.hidden_lists(self._prefs)
+        locations.remember_list(self.prefs, doc.path)
+        hidden = locations.hidden_lists(self.prefs)
         if any(locations.same_path(doc.path, p) for p in hidden):  # opened again: listed again
             locations.set_hidden_lists(
-                self._prefs, [p for p in hidden if not locations.same_path(doc.path, p)]
+                self.prefs, [p for p in hidden if not locations.same_path(doc.path, p)]
             )
         in_folder = any(locations.same_path(doc.path, p) for p in self.found_lists(hidden=True))
         if self._kind(doc.path) is ListKind.SHARED and not in_folder:  # in the dropdown now
             # Only lists from elsewhere: before any was added, this falls back to the recent ones.
             added = [
-                p for p in locations.added_lists(self._prefs) if self._kind(p) is ListKind.SHARED
+                p for p in locations.added_lists(self.prefs) if self._kind(p) is ListKind.SHARED
             ]
-            locations.set_added_lists(self._prefs, [*added, doc.path])
+            locations.set_added_lists(self.prefs, [*added, doc.path])
         self._save_prefs()
         log.info("Opened list %s (read-only=%s)", doc.path, doc.read_only)
         self.refresh()
@@ -467,7 +484,7 @@ class ListWorkspace(QWidget):
 
     def _show_first(self, doc: OpenList) -> None:
         """Everything, where this list was left, or its chosen group (Settings)."""
-        view = locations.list_view(self._prefs, doc.path)
+        view = locations.list_view(self.prefs, doc.path)
         if view.show == locations.SHOW_GROUP:
             self.nav.select_group(view.group)
         elif view.show == locations.SHOW_LAST:
@@ -481,27 +498,27 @@ class ListWorkspace(QWidget):
         if self._doc is None:
             return
         shown = self.nav.current_filter()
-        view = locations.list_view(self._prefs, self._doc.path)
+        view = locations.list_view(self.prefs, self._doc.path)
         last = (shown.kind, shown.value or "")
-        locations.set_list_view(self._prefs, self._doc.path, replace(view, last=last))
+        locations.set_list_view(self.prefs, self._doc.path, replace(view, last=last))
 
     def start_view(self) -> tuple[str, str] | None:
         """What the open list shows first, for Settings."""
         if self._doc is None:
             return None
-        view = locations.list_view(self._prefs, self._doc.path)
+        view = locations.list_view(self.prefs, self._doc.path)
         return view.show, view.group
 
     def set_first_group(self, group_id: str, first: bool) -> None:
         """Right-click a group > Show this group first: ticked, the list opens on it."""
         if self._doc is None:
             return
-        view = locations.list_view(self._prefs, self._doc.path)
+        view = locations.list_view(self.prefs, self._doc.path)
         if first:
             view = replace(view, show=locations.SHOW_GROUP, group=group_id)
         elif view.show == locations.SHOW_GROUP and view.group == group_id:
             view = replace(view, show=locations.SHOW_ALL)
-        locations.set_list_view(self._prefs, self._doc.path, view)
+        locations.set_list_view(self.prefs, self._doc.path, view)
         self._save_prefs()
 
     def apply_list_prefs(
@@ -512,15 +529,15 @@ class ListWorkspace(QWidget):
         hidden_lists: list[Path],
     ) -> None:
         """Choices made in Settings about lists, kept at once (the caller saves them)."""
-        self._prefs[locations.START_KEY] = start_list
+        self.prefs[locations.START_KEY] = start_list
         if start_view is not None and self._doc is not None:  # for the list open now
             show, group = start_view
-            view = locations.list_view(self._prefs, self._doc.path)
+            view = locations.list_view(self.prefs, self._doc.path)
             locations.set_list_view(
-                self._prefs, self._doc.path, replace(view, show=show, group=group)
+                self.prefs, self._doc.path, replace(view, show=show, group=group)
             )
-        locations.set_added_lists(self._prefs, added_lists)
-        locations.set_hidden_lists(self._prefs, hidden_lists)
+        locations.set_added_lists(self.prefs, added_lists)
+        locations.set_hidden_lists(self.prefs, hidden_lists)
 
     # ---- editing groups and removing ----
 
@@ -706,7 +723,7 @@ class ListWorkspace(QWidget):
                 self,
                 _("Save a copy"),
                 str(doc.path.with_name(doc.path.stem + " (copy).json")),
-                list_file_filter(),
+                self.list_file_filter(),
             )
             if name:
                 path = Path(name)
@@ -883,8 +900,8 @@ class ListWorkspace(QWidget):
         ]
         if self._needle():
             found = self.table.topLevelItemCount()
-            parts.append(ngettext("{n} found", "{n} found", found).format(n=found))
-        parts.append(ngettext("{n} selected", "{n} selected", selected).format(n=selected))
+            parts.append(self.found_text(found))
+        parts.append(self.selected_text(selected))
         if doc.read_only:
             parts.append(_("read-only"))
         if self._paths.portable:
@@ -894,6 +911,52 @@ class ListWorkspace(QWidget):
     def title(self) -> str:
         """The open list's name, or "" with none open."""
         return self._list_name(self._doc.path) if self._doc is not None else ""
+
+    def report_sources(self, host_list: HostList) -> tuple[list[Source], int]:
+        """What Report can take, and which one is shown now: the search's results, the items
+        picked, everything, no group, each group (with its subgroups) and each tag."""
+        counted = self.counted_text
+        sources: list[Source] = []
+        current = self.nav.current_filter()
+        browsing = not self._needle()
+        start = 0
+        if not browsing:
+            found = self.visible_items()
+            sources.append(Source(counted(_("Search results"), len(found)),
+                                  _("the search results"), found))  # fmt: skip
+        selected = self.selected_items()
+        if len(selected) > 1:
+            label, name = self.selected_source_texts()
+            sources.append(Source(counted(label, len(selected)), name, tuple(selected)))
+        every = host_list.hosts
+        everything = self.all_items_text()
+        sources.append(Source(counted(everything, len(every)), everything, every))
+        if browsing and current.kind == "all":
+            start = len(sources) - 1
+        loose = tuple(h for h in every if h.group == NO_GROUP)
+        sources.append(Source(counted(_("No group"), len(loose)), _("No group"), loose))
+        if browsing and current.kind == "nogroup":
+            start = len(sources) - 1
+
+        def visit(parent: str | None, depth: int) -> None:
+            nonlocal start
+            for group in host_list.children(parent):
+                items = host_list.hosts_in(group.id)
+                sources.append(Source(counted(group.name, len(items)), group.name, items, depth))
+                if browsing and current.kind == "group" and current.value == group.id:
+                    start = len(sources) - 1
+                visit(group.id, depth + 1)
+
+        visit(None, 0)
+        for tag in sorted(host_list.all_tags(), key=str.casefold):
+            items = tuple(h for h in every if tag in h.tags)
+            name = _("tag “{tag}”").format(tag=tag)
+            sources.append(
+                Source(counted(_("Tag: {tag}").format(tag=tag), len(items)), name, items)
+            )
+            if browsing and current.kind == "tag" and current.value == tag:
+                start = len(sources) - 1
+        return sources, start
 
     # ---- right-click menus ----
 
@@ -966,7 +1029,7 @@ class ListWorkspace(QWidget):
         if group is not None and self._doc is not None:
             self.fill_group_menu(menu, group)
             menu.addSeparator()
-            view = locations.list_view(self._prefs, self._doc.path)
+            view = locations.list_view(self.prefs, self._doc.path)
             first = menu.addAction(_("Show this group &first"))
             first.setToolTip(_("The list opens on this group"))
             first.setCheckable(True)
@@ -1002,7 +1065,7 @@ class ListWorkspace(QWidget):
         if quiet:
             self._shell.show_message(message, 10_000)
         else:
-            QMessageBox.warning(self, "CapyPanel", message)
+            QMessageBox.warning(self, identity.current().name, message)
 
     def _save_prefs(self) -> None:
         self._shell.save_prefs()

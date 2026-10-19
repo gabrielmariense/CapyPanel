@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 
+from capypanel.core import identity
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.listfile import (
     HostListChangedError,
@@ -94,9 +95,19 @@ def test_a_newer_schema_is_refused_not_rewritten(tmp_path: Path) -> None:
     path = tmp_path / "hosts.json"
     _write(path, {**EXAMPLE, "schema": listfile.SCHEMA + 1})
     before = path.read_bytes()
-    with pytest.raises(HostListTooNewError):
+    with pytest.raises(HostListTooNewError, match="newer version of CapyPanel"):
         listfile.load(path)
     assert path.read_bytes() == before
+
+
+def test_the_newer_version_message_names_the_app_in_use(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(identity, "_current", identity.Identity("PrinterManager", rail=False))
+    path = tmp_path / "printers.json"
+    _write(path, {**EXAMPLE, "schema": listfile.SCHEMA + 1})
+    with pytest.raises(HostListTooNewError, match="newer version of PrinterManager"):
+        listfile.load(path)
 
 
 def test_save_refuses_when_someone_else_changed_the_file(tmp_path: Path) -> None:

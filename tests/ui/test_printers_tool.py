@@ -27,6 +27,9 @@ class FakeShell:
         self.messages: list[str] = []
         self.settings_pages: list[str | None] = []
 
+    def tool_prefs(self, tool_id: str, *, inherit: bool = False) -> dict[str, Any]:
+        return settings.tool_prefs(self.prefs, tool_id, inherit=inherit)
+
     def save_prefs(self) -> None:
         pass
 
@@ -100,8 +103,8 @@ def test_the_table_shows_name_brand_model_address_and_tags(printers: PrintersToo
 
 def test_columns_shown_by_the_user_are_kept(shell: FakeShell, printers: PrintersTool) -> None:
     printers.table._show_column(printers.table.SERIAL, True)
-    assert shell.prefs["hidden_columns"] == ["asset_tag"]
-    printers.table.set_hidden_columns(shell.prefs["hidden_columns"])
+    assert printers.prefs["hidden_columns"] == ["asset_tag"]
+    printers.table.set_hidden_columns(printers.prefs["hidden_columns"])
     assert not printers.table.isColumnHidden(printers.table.SERIAL)
 
 
@@ -303,5 +306,5 @@ def test_report_lists_the_printers_columns_with_last_check_greyed(
     assert office == ["2F-OFFICE-01", "192.0.2.21", "Second floor", "BROTHER", "HL-L6402",
                       "SAMPLE0021", "INV-1021", "SNMP", "mono", ""]  # fmt: skip
     report.boxes["notes"].setChecked(False)
-    assert shell.prefs["printer_report_columns"][-1] == "tags"
+    assert printers.prefs["export_columns"][-1] == "tags"  # in the Printers section
     assert "export_columns" not in shell.prefs  # Hosts' Report keeps its own choices

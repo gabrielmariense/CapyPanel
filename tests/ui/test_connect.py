@@ -17,6 +17,7 @@ from capypanel.core.tools.profiles import ConnectionProfile
 from capypanel.ui import connect as connect_ui
 from capypanel.ui.connect import CredentialDialog, ManualConnectDialog, Request
 from capypanel.ui.hosts import HostDialog
+from capypanel.ui.hosts_tool.settings import HostsSettings
 from capypanel.ui.hosts_tool.table import HostTable
 from capypanel.ui.list_workspace import workspace as workspace_module
 from capypanel.ui.main_window.window import MainWindow
@@ -336,7 +337,7 @@ def test_hosts_with_no_profile_anywhere_use_the_shared_default(
 
 def test_the_default_profile_chosen_in_settings_is_saved_for_everyone(window: MainWindow) -> None:
     dialog = window.settings_dialog()
-    page = dialog.connections.profiles
+    page = dialog.group(HostsSettings).connections.profiles
     page.default.setCurrentIndex(page.default.findData("pis"))
     assert window.hosts.connector.catalogs.profiles.default_id() == "pis"
     assert window.hosts.connector.default_profile() == "pis"
@@ -351,7 +352,7 @@ def test_profile_rows_never_overlap(window: MainWindow) -> None:
         dialog.show_page("connections")
         dialog.show()
         QApplication.processEvents()
-        rows = dialog.connections.profiles.list
+        rows = dialog.group(HostsSettings).connections.profiles.list
         top, below = rows.topLevelItem(0), rows.topLevelItem(1)
         assert top is not None and below is not None
         first, second = rows.visualItemRect(top), rows.visualItemRect(below)

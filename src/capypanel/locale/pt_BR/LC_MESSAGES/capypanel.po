@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 13:29-0300\n"
+"POT-Creation-Date: 2026-10-19 17:06-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -182,6 +182,9 @@ msgstr "&Senha:"
 
 msgid "&Preset:"
 msgstr "&Predefinição:"
+
+msgid "&Printers"
+msgstr "&Impressoras"
 
 msgid "&Refresh"
 msgstr "&Atualizar"
@@ -763,8 +766,8 @@ msgstr "Nome do host ou endereço IP; deixe em branco para usar o nome"
 msgid "Hostnames"
 msgstr "Nomes de host"
 
-msgid "Hosts (Ctrl+1)"
-msgstr "Hosts (Ctrl+1)"
+msgid "Hosts"
+msgstr "Hosts"
 
 msgid "Hosts with no group &go to:"
 msgstr "Hosts sem grupo &vão para:"
@@ -1113,6 +1116,12 @@ msgstr "Prévia"
 
 msgid "Printer"
 msgstr "Impressora"
+
+msgid "Printer lists (*.json);;All files (*)"
+msgstr "Listas de impressoras (*.json);;Todos os arquivos (*)"
+
+msgid "Printers"
+msgstr "Impressoras"
 
 msgid "Profile"
 msgstr "Perfil"
@@ -1464,8 +1473,8 @@ msgid "The default list"
 msgstr "A lista padrão"
 
 #, python-brace-format
-msgid "The default list was made by another user, so CapyPanel won't open it. An administrator can replace or delete “{path}”."
-msgstr "A lista padrão foi criada por outro usuário, então o CapyPanel não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
+msgid "The default list was made by another user, so {app} won't open it. An administrator can replace or delete “{path}”."
+msgstr "A lista padrão foi criada por outro usuário, então o {app} não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
 
 msgid "The default list, and every list saved there, for everyone on this PC."
 msgstr "A lista padrão e toda lista salva ali, para todos neste PC."
@@ -1591,8 +1600,9 @@ msgstr "Esta lista está em modo somente leitura."
 msgid "This list needs a header row."
 msgstr "Esta lista precisa de uma linha de cabeçalho."
 
-msgid "This list was saved by a newer version of CapyPanel. Update the app to open it."
-msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o aplicativo para abri-la."
+#, python-brace-format
+msgid "This list was saved by a newer version of {app}. Update the app to open it."
+msgstr "Esta lista foi salva por uma versão mais nova do {app}. Atualize o aplicativo para abri-la."
 
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyPanel."

@@ -1,10 +1,9 @@
 """The Settings window: a search and a list of pages on the left, the page on the right. No
-buttons: the window's X or Esc closes it, and every choice applies as soon as it's made. The
-main window applies what the signals hand over; profiles and tool paths are written by their
-page at once."""
+buttons: the window's X or Esc closes it, and every choice applies as soon as it's made. The app's
+own pages come first (Appearance, Files), then each tool's group of pages, and About at the very
+bottom. A tool's pages apply their choices through the tool (see SettingsGroup)."""
 
-from dataclasses import dataclass
-from pathlib import Path
+from collections.abc import Sequence
 
 from PySide6.QtCore import QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QShowEvent
@@ -24,84 +23,39 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core import i18n, settings
-from capypanel.core.hosts.document import OpenList
-from capypanel.core.hosts.model import HostList
 from capypanel.core.i18n import _
-from capypanel.core.tools.catalog import Catalogs
 from capypanel.ui.about import AboutPage
 from capypanel.ui.notes import hint
 from capypanel.ui.settings import search
-from capypanel.ui.settings.connections import ConnectionsPage
-from capypanel.ui.settings.pages import (
-    AppearancePage,
-    FilesPage,
-    HostListsPage,
-    HostsPage,
-    Page,
-    Section,
-)
+from capypanel.ui.settings.group import SettingsGroup
+from capypanel.ui.settings.pages import AppearancePage, FilesPage, Page, Section
 from capypanel.ui.themes import engine as themes
 
-# The pages' titles, as the pages set them, and the groups' labels: the page list is sized for the
-# longest in any language. The app's pages first, then each tool's.
-PAGE_TITLES = ("Appearance", "Files", "About", "General", "Host lists", "Connections")
-GROUPS = (
-    ("CapyPanel", ("appearance", "files")),
-    ("Hosts", ("hosts", "host_lists", "connections")),
-)
+# The app's own pages' titles, as the pages set them: with the tools' titles and the groups'
+# labels, the page list is sized for the longest in any language.
+PAGE_TITLES = ("Appearance", "Files", "About")
+APP_GROUP = ("CapyPanel", ("appearance", "files"))
 PINNED = ("about",)  # pages kept at the very bottom of the page list, apart from the groups
 SEARCH_FROM = 3  # letters typed before the search shows its results
 ROOM = 60  # spare width past the widest page: a button row never ends just short of its table
 
 
-@dataclass(frozen=True)
-class SettingsPrefs:
-    """The choices the main window keeps in its settings file, handed over on every change."""
-
-    start_list: str  # see locations.START_KEY
-    added_lists: list[Path]  # the lists in Host lists, besides the default and personal
-    hidden_lists: list[Path]  # lists in a lists folder removed from Host lists
-    auto_status: tuple[bool, int] = (False, 5)  # check Status by itself, every N minutes
-    start_view: tuple[str, str] | None = None  # the open list's (show, group) first
-
-
 class SettingsDialog(QDialog):
     language_picked = Signal(str)
     theme_picked = Signal(str)
-    prefs_changed = Signal(object)  # SettingsPrefs
-    open_requested = Signal(object)  # a list's Path, to open now
-    profiles_changed = Signal()  # profiles or tool paths were written
 
     def __init__(
         self,
         parent: QWidget | None,
         *,
         paths: settings.Paths,
-        start_list: object,
-        default_list: Path,
-        personal_list: Path,
-        document: OpenList | None,
-        added: list[Path],
         registry: themes.Registry,
-        found: list[Path] | None = None,
-        hidden: list[Path] | None = None,
-        catalogs: Catalogs,
-        auto_status: tuple[bool, int] = (False, 5),
-        start_view: tuple[str, str] | None = None,
-        host_list: HostList | None = None,
+        groups: Sequence[SettingsGroup] = (),
     ) -> None:
         super().__init__(parent)
-        self._host_list = host_list
         self._paths = paths
-        self._default_list = default_list
-        self._personal_list = personal_list
-        self._document = document
-        self._found = found or []
         self._registry = registry
-        self._catalogs = catalogs
-        # What's set now: a language switch rebuilds the window with these.
-        self._start_list, self._added, self._hidden = start_list, added, hidden or []
-        self._auto_status, self._start_view = auto_status, start_view
+        self._groups = list(groups)
         # Contents replaced on a language switch stay alive, hidden: deleting a window part
         # holding a list can crash Qt after a theme switch (see DECISIONS, code cleanup).
         self._old: list[QWidget] = []
@@ -112,47 +66,27 @@ class SettingsDialog(QDialog):
 
     def _build(self, theme_id: str) -> None:
         """The pages and buttons, in the current language, showing what's set."""
-        self._building = True  # pages report changes while they're filled
         self.setWindowTitle(_("Settings"))
         self.appearance = AppearancePage(
             language=i18n.language(), registry=self._registry, theme_id=theme_id
         )
         self.files = FilesPage(self._paths)
         self.about = AboutPage(self._paths.log_dir, portable=self._paths.portable)
-        self.hosts = HostsPage(
-            start_list=self._start_list,
-            default_list=self._default_list,
-            personal_list=self._personal_list,
-            added=self._added,
-            auto_status=self._auto_status,
-            start_view=self._start_view,
-            host_list=self._host_list,
-        )
-        self.host_lists = HostListsPage(
-            default_list=self._default_list,
-            personal_list=self._personal_list,
-            document=self._document,
-            added=self._added,
-            found=self._found,
-            hidden=self._hidden,
-        )
-        self.connections = ConnectionsPage(self._catalogs, self._document)
         self.pages: dict[str, Page] = {
             "appearance": self.appearance,
             "files": self.files,
             "about": self.about,
-            "hosts": self.hosts,
-            "host_lists": self.host_lists,
-            "connections": self.connections,
         }
+        # The app's pages, then each tool's group: its label (not a page), then its pages.
+        self._layout_groups: list[tuple[str, tuple[str, ...]]] = [APP_GROUP]
+        for group in self._groups:
+            built = group.build()
+            self.pages.update(built)
+            self._layout_groups.append((group.LABEL, tuple(page_id for page_id, _p in built)))
         self.appearance.language.currentIndexChanged.connect(self._language_changed)
         self.appearance.theme.currentIndexChanged.connect(
             lambda: self.theme_picked.emit(self.appearance.theme_id())
         )
-        for page in (self.hosts, self.host_lists):
-            page.changed.connect(self._prefs_changed)
-        self.host_lists.view.open_requested.connect(self.open_requested.emit)
-        self.connections.changed.connect(self.profiles_changed.emit)
 
         self.page_list = QListWidget()
         self.page_list.setObjectName("pageList")
@@ -161,7 +95,7 @@ class SettingsDialog(QDialog):
         self.stack = QStackedWidget()
         # Each group: its label (not a page), then its pages. _rows maps rows to page ids.
         self._rows: list[str | None] = []
-        for group, ids in GROUPS:
+        for group, ids in self._layout_groups:
             label = QListWidgetItem(_(group))
             label.setFlags(Qt.ItemFlag.NoItemFlags)
             font = label.font()
@@ -185,7 +119,7 @@ class SettingsDialog(QDialog):
         metrics = self.page_list.fontMetrics()
         longest = max(
             metrics.horizontalAdvance("   " + title)
-            for message in (*PAGE_TITLES, *(group for group, _ids in GROUPS))
+            for message in (*PAGE_TITLES, *self._tool_titles(), *self._labels())
             for title in i18n.in_every_language(message)
         )
         self.page_list.setFixedWidth(longest + 64)
@@ -226,7 +160,16 @@ class SettingsDialog(QDialog):
         self._layout.addWidget(content)
         self._content = content
         self._no_default_buttons()
-        self._building = False
+
+    def group[G: SettingsGroup](self, kind: type[G]) -> G:
+        """A tool's group of pages, by its kind."""
+        return next(g for g in self._groups if isinstance(g, kind))
+
+    def _labels(self) -> list[str]:
+        return [label for label, _ids in self._layout_groups]
+
+    def _tool_titles(self) -> list[str]:
+        return [title for group in self._groups for title in group.TITLES]
 
     def _language_changed(self) -> None:
         code = self.appearance.language_choice()
@@ -237,14 +180,15 @@ class SettingsDialog(QDialog):
     def _rebuild(self) -> None:
         """The same window in the new language, on the same page."""
         page = self._shown_page()  # not "search": the rebuilt window opens without one
-        chosen = self.host_lists.chosen()
+        for group in self._groups:
+            group.before_rebuild()
         old = self._content
         old.hide()
         self._layout.removeWidget(old)
         self._old.append(old)
         self._build(self.appearance.theme_id())
-        if chosen is not None:
-            self.host_lists.view.select(chosen)
+        for group in self._groups:
+            group.after_rebuild()
         self.show_page(page)
         self._make_room()
         self.appearance.language.setFocus()
@@ -287,38 +231,6 @@ class SettingsDialog(QDialog):
         frame = 2 * self.pinned_list.frameWidth()
         self.pinned_list.setFixedHeight(rows + frame + 2)
 
-    # ---- applying at once ----
-
-    def prefs(self) -> SettingsPrefs:
-        return SettingsPrefs(
-            start_list=self.hosts.start_choice(),
-            added_lists=self.host_lists.added(),
-            hidden_lists=self.host_lists.hidden(),
-            auto_status=self.hosts.auto_status_choice(),
-            start_view=self.hosts.show_first_choice(),
-        )
-
-    def _prefs_changed(self) -> None:
-        if self._building:
-            return
-        prefs = self.prefs()
-        self._start_list, self._added = prefs.start_list, prefs.added_lists
-        self._hidden, self._auto_status = prefs.hidden_lists, prefs.auto_status
-        self._start_view = prefs.start_view
-        self.prefs_changed.emit(prefs)
-
-    def list_opened(
-        self,
-        document: OpenList | None,
-        start_view: tuple[str, str] | None,
-        host_list: HostList | None,
-    ) -> None:
-        """The main window opened a list: Host lists marks it, Show first is now about it."""
-        self._document, self._start_view, self._host_list = document, start_view, host_list
-        self.host_lists.view.list_opened(document)
-        self.hosts.list_opened(start_view, host_list)
-        self.connections.profiles.document = document
-
     def _filter_pages(self, text: str) -> None:
         """From SEARCH_FROM letters on: every section that mentions `text` at the start of a
         word, from every page, on one results page, each under its page's name, to change right
@@ -330,7 +242,7 @@ class SettingsDialog(QDialog):
         if len(wanted) < SEARCH_FROM:
             self.stack.setCurrentIndex(list(self.pages).index(page))
             return
-        group_of = {pid: group for group, ids in GROUPS for pid in ids}
+        group_of = {pid: group for group, ids in self._layout_groups for pid in ids}
         group_of.update(dict.fromkeys(PINNED, "CapyPanel"))  # About is the app's own
         shown: list[str] = []
         layout = self._results.body

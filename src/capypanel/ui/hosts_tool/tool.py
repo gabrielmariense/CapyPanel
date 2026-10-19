@@ -5,14 +5,12 @@ import logging
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QMessageBox, QToolButton, QWidget
 
-from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
@@ -26,24 +24,27 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
 from capypanel.ui.dialogs import run_modal
-from capypanel.ui.export_hosts import ExportDialog, Source
+from capypanel.ui.export_hosts import ExportDialog
 from capypanel.ui.groups import ROLE_ID
-from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path
+from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, list_file_filter
 from capypanel.ui.hosts_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.hosts_tool.details import HostDetails, HostDetailsPanel
+from capypanel.ui.hosts_tool.settings import HostsSettings, SettingsPrefs
 from capypanel.ui.hosts_tool.table import Cells, HostTable
 from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
 from capypanel.ui.icons import STATUS_COLORS, dot_icon
 from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
-from capypanel.ui.settings.window import SettingsDialog, SettingsPrefs
 
 log = logging.getLogger(__name__)
 MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks first
 
 
 class HostsTool(ListWorkspace):
+    TOOL_ID = "hosts"
+    ICON = "device-desktop"
+    INHERITS_TOP_LEVEL = True  # 0.19 kept the Hosts settings at the top level
     checks_changed = Signal()  # a Refresh started, found something, or ended
 
     def __init__(self, shell: Shell):
@@ -75,7 +76,7 @@ class HostsTool(ListWorkspace):
         self._targets: list[tuple[str, str]] = []
 
         self.refresh_panel = RefreshPanel(self)
-        self.refresh_panel.set_choices(self._prefs.get("refresh"))
+        self.refresh_panel.set_choices(self.prefs.get("refresh"))
         self._progress = QLabel()
         self._stop_button = QToolButton()
         self._stop_button.setText(_("Stop"))
@@ -85,6 +86,7 @@ class HostsTool(ListWorkspace):
         self._fill_inventory()
         self._connect()
         self.restore_layout()
+        self.settings_pages = HostsSettings(self)  # its part of Settings
         self._auto_timer = QTimer(self)  # Settings: Status by itself, if switched on
         self._auto_timer.timeout.connect(self._auto_status_check)
         self._apply_auto_status()
@@ -145,9 +147,15 @@ class HostsTool(ListWorkspace):
         super().save_state()
         if self._run is not None:
             self._run.stop()  # hosts already being read finish in the background
-        self._prefs["refresh"] = self.refresh_panel.choices()
+        self.prefs["refresh"] = self.refresh_panel.choices()
 
     # ---- texts ----
+
+    def tool_name(self) -> str:
+        return _("Hosts")
+
+    def menu_name(self) -> str:
+        return _("&Hosts")
 
     def all_items_text(self) -> str:
         return _("All hosts")
@@ -184,6 +192,24 @@ class HostsTool(ListWorkspace):
         fields.append(_("notes"))  # no column, so always searched
         return fields, _("Searches every host in the list (Ctrl+F)")
 
+    def selected_text(self, n: int) -> str:
+        return ngettext("{n} selected", "{n} selected", n).format(n=n)
+
+    def found_text(self, n: int) -> str:
+        return ngettext("{n} found", "{n} found", n).format(n=n)
+
+    def counted_text(self, name: str, n: int) -> str:
+        return ngettext("{name} ({n} host)", "{name} ({n} hosts)", n).format(name=name, n=n)
+
+    def selected_source_texts(self) -> tuple[str, str]:
+        return _("Selected hosts"), _("the selected hosts")
+
+    def lists_page(self) -> str:
+        return "host_lists"
+
+    def list_file_filter(self) -> str:
+        return list_file_filter()
+
     def retranslate(self) -> None:
         retranslate_actions(self.commands)
         self.toolbar.retranslate()
@@ -200,7 +226,8 @@ class HostsTool(ListWorkspace):
         doc = self._writable()
         if doc is None:
             return
-        base = doc.hosts if doc.hosts.groups else starter_list()
+        # Only a list with nothing in it starts with a group; any other keeps what it holds.
+        base = doc.hosts if doc.hosts.groups or doc.hosts.hosts else starter_list()
         dialog = HostDialog(
             self,
             base,
@@ -271,7 +298,7 @@ class HostsTool(ListWorkspace):
         doc = self._doc
         if doc is None or not doc.hosts.hosts:
             return
-        sources, current = self._export_sources(doc.hosts)
+        sources, current = self.report_sources(doc.hosts)
 
         def results(host_id: str) -> tuple[str, str]:
             cells = self._cells(host_id)
@@ -286,7 +313,7 @@ class HostsTool(ListWorkspace):
             sources,
             current,
             list_name=doc.path.stem,
-            prefs=self._prefs,
+            prefs=self.prefs,
             save_prefs=self._save_prefs,
             results=results,
             refresh=lambda hosts, status, users: self.check_hosts(
@@ -302,54 +329,6 @@ class HostsTool(ListWorkspace):
             self.checks_changed.disconnect(dialog.checks_changed)
         if dialog.outcome:
             self._shell.show_message(dialog.outcome, 10_000)
-
-    def _export_sources(self, host_list: HostList) -> tuple[list[Source], int]:
-        """What can be exported, and which one is shown now: the search's results, the hosts
-        picked, everything, no group, each group (with its subgroups) and each tag."""
-
-        def counted(name: str, n: int) -> str:
-            return ngettext("{name} ({n} host)", "{name} ({n} hosts)", n).format(name=name, n=n)
-
-        sources: list[Source] = []
-        current = self.nav.current_filter()
-        start = 0
-        if self._needle():
-            found = self.visible_items()
-            sources.append(Source(counted(_("Search results"), len(found)),
-                                  _("the search results"), found))  # fmt: skip
-        selected = self.selected_items()
-        if len(selected) > 1:
-            picked = tuple(selected)
-            sources.append(Source(counted(_("Selected hosts"), len(picked)),
-                                  _("the selected hosts"), picked))  # fmt: skip
-        every = host_list.hosts
-        sources.append(Source(counted(_("All hosts"), len(every)), _("All hosts"), every))
-        if not self._needle() and current.kind == "all":
-            start = len(sources) - 1
-        loose = tuple(h for h in every if h.group == NO_GROUP)
-        sources.append(Source(counted(_("No group"), len(loose)), _("No group"), loose))
-        if not self._needle() and current.kind == "nogroup":
-            start = len(sources) - 1
-
-        def visit(parent: str | None, depth: int) -> None:
-            nonlocal start
-            for group in host_list.children(parent):
-                hosts = host_list.hosts_in(group.id)
-                sources.append(Source(counted(group.name, len(hosts)), group.name, hosts, depth))
-                if not self._needle() and current.kind == "group" and current.value == group.id:
-                    start = len(sources) - 1
-                visit(group.id, depth + 1)
-
-        visit(None, 0)
-        for tag in sorted(host_list.all_tags(), key=str.casefold):
-            hosts = tuple(h for h in every if tag in h.tags)
-            name = _("tag “{tag}”").format(tag=tag)
-            sources.append(
-                Source(counted(_("Tag: {tag}").format(tag=tag), len(hosts)), name, hosts)
-            )
-            if not self._needle() and current.kind == "tag" and current.value == tag:
-                start = len(sources) - 1
-        return sources, start
 
     def _copy(self, value: Callable[[Host], str]) -> None:
         hosts = self.selected_items()
@@ -492,32 +471,12 @@ class HostsTool(ListWorkspace):
 
     # ---- settings ----
 
-    def settings_values(self) -> dict[str, Any]:
-        """What Settings shows about Hosts."""
-        return {
-            "start_list": self._prefs.get(locations.START_KEY, locations.START_LAST),
-            "default_list": self._default_list,
-            "personal_list": self._personal_list,
-            "document": self._doc,
-            "added": locations.added_lists(self._prefs),
-            "found": self.found_lists(hidden=True),
-            "hidden": locations.hidden_lists(self._prefs),
-            "catalogs": self.connector.catalogs,
-            "auto_status": self._auto_status(),
-            "start_view": self.start_view(),
-            "host_list": self._doc.hosts if self._doc else None,
-        }
+    def settings_group(self) -> HostsSettings:
+        return self.settings_pages
 
-    def wire_settings(self, dialog: SettingsDialog) -> None:
-        """Choices made in Settings about Hosts apply at once."""
-        dialog.prefs_changed.connect(self.apply_prefs)
-        dialog.open_requested.connect(lambda path: self._open_from_settings(dialog, path))
-        dialog.profiles_changed.connect(self._selection_changed)  # Connect's menu follows
-
-    def _open_from_settings(self, dialog: SettingsDialog, path: Path) -> None:
-        """A list opened from Settings > Host lists: Settings then shows it as the open one."""
-        self.open_list(path)
-        dialog.list_opened(self._doc, self.start_view(), self._doc.hosts if self._doc else None)
+    def profiles_changed(self) -> None:
+        """Settings changed the connection profiles or tool paths."""
+        self._selection_changed()  # the Details panel names the profile; Connect's menu follows
 
     def apply_prefs(self, prefs: SettingsPrefs) -> None:
         """A choice made in Settings, kept and applied at once."""
@@ -525,7 +484,7 @@ class HostsTool(ListWorkspace):
             prefs.start_list, prefs.start_view, prefs.added_lists, prefs.hidden_lists
         )
         on, minutes = prefs.auto_status
-        self._prefs["auto_status"] = {"on": on, "minutes": minutes}
+        self.prefs["auto_status"] = {"on": on, "minutes": minutes}
         self._apply_auto_status()
         self._save_prefs()
         self._update_state()  # the list's name may change with the lists kept
@@ -689,15 +648,15 @@ class HostsTool(ListWorkspace):
             wanted = Checks(status, users, self._ports(), self._account if users else None)
             self._start(targets, wanted)
 
-    def _auto_status(self) -> tuple[bool, int]:
-        saved = self._prefs.get("auto_status")
+    def auto_status(self) -> tuple[bool, int]:
+        saved = self.prefs.get("auto_status")
         saved = saved if isinstance(saved, dict) else {}
         minutes = saved.get("minutes", 5)
         minutes = minutes if isinstance(minutes, int) and 1 <= minutes <= 120 else 5
         return saved.get("on") is True, minutes
 
     def _apply_auto_status(self) -> None:
-        on, minutes = self._auto_status()
+        on, minutes = self.auto_status()
         if on:
             self._auto_timer.start(minutes * 60_000)
         else:
@@ -857,6 +816,6 @@ class HostsTool(ListWorkspace):
 
     def _run_refresh_panel(self) -> None:
         choices = self.refresh_panel.choices()
-        self._prefs["refresh"] = choices
+        self.prefs["refresh"] = choices
         self._save_prefs()
         self.check_hosts(self.visible_items(), status=choices["status"], users=choices["users"])

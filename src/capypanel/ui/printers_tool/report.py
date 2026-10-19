@@ -35,9 +35,6 @@ class PrintersReport(ExportDialog):
     FOR_IMPORT = ("name", "address", "group", "brand", "model", "serial", "asset_tag",
                   "counter_source", "tags", "notes")  # fmt: skip
     PRESET_NAME = N_("All details")
-    PRESETS_KEY = "printer_report_presets"
-    LAST_KEY = "printer_report_columns"
-    FOLDER_KEY = "printer_report_folder"
     ITEMS_LABEL = N_("Pr&inters:")  # &Preset is P
 
     def __init__(self, parent: QWidget | None, *args: object, **kwargs: object) -> None:
