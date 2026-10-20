@@ -1,4 +1,4 @@
-"""Which app this is: CapyPanel with all its tools, or a build with one tool (PrinterManager).
+"""Which app this is: CapyPanel with all its tools, or a build with one tool (CapyPrinters).
 The name shows in titles and messages; a one-tool build has no rail of tools."""
 
 from dataclasses import dataclass

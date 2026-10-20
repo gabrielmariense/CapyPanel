@@ -118,10 +118,10 @@ def test_a_newer_schema_is_refused_not_rewritten(tmp_path: Path) -> None:
 def test_the_newer_version_message_names_the_app_in_use(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(identity, "_current", identity.Identity("PrinterManager", rail=False))
+    monkeypatch.setattr(identity, "_current", identity.Identity("CapyPrinters", rail=False))
     path = tmp_path / "printers.json"
     _write(path, {**EXAMPLE, "schema": listfile.SCHEMA + 1})
-    with pytest.raises(HostListTooNewError, match="newer version of PrinterManager"):
+    with pytest.raises(HostListTooNewError, match="newer version of CapyPrinters"):
         listfile.load(path)
 
 
