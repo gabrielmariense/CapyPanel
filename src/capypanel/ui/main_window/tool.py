@@ -28,6 +28,14 @@ class Shell(Protocol):
         ...
 
 
+class ToolKind(Protocol):
+    """A tool class, as a build lists it: made from the shell, and able to prepare its files."""
+
+    def __call__(self, shell: Shell) -> "Tool": ...
+
+    def prepare(self, paths: settings.Paths) -> None: ...
+
+
 class Tool(QWidget):
     """What a tool gives the shell: its central widget (itself), its toolbar, its rail icon and
     View entry, its View items, its status bar text and its window title. A tool keeps its
@@ -45,6 +53,10 @@ class Tool(QWidget):
         self.toolbar = toolbar  # the shell shows it above the tool
         self.status_label = QLabel()  # the shell shows it in its status bar, on the left
         self.status_label.setContentsMargins(6, 0, 6, 0)
+
+    @classmethod
+    def prepare(cls, paths: settings.Paths) -> None:
+        """At start, before any window: files the tool needs to exist (e.g. its starters)."""
 
     def tool_name(self) -> str:
         """Its name on the rail: "Hosts"."""

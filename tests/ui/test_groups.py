@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt
 from PySide6.QtGui import QDragLeaveEvent, QDragMoveEvent, QDropEvent
 from PySide6.QtWidgets import (
@@ -28,7 +29,6 @@ from capypanel.ui.groups import (
 )
 from capypanel.ui.hosts_tool.settings import HostsSettings
 from capypanel.ui.list_workspace import workspace as workspace_module
-from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
 
 
@@ -46,9 +46,9 @@ def office(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def window(qapp: QApplication, tmp_path: Path, office: Path) -> Iterator[MainWindow]:
+def window(qapp: QApplication, tmp_path: Path, office: Path) -> Iterator[CapyWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1, "recent_lists": [str(office)]})
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1, "recent_lists": [str(office)]})
     yield win
     win.close()
 
@@ -57,14 +57,14 @@ def _names(item: QTreeWidgetItem) -> list[str]:
     return [item.child(i).text(0) for i in range(item.childCount())]  # type: ignore[union-attr]
 
 
-def _id(window: MainWindow, name: str) -> str:
+def _id(window: CapyWindow, name: str) -> str:
     doc = window.hosts.document
     assert doc is not None
     return next(g.id for g in doc.hosts.groups if g.name == name)
 
 
 def test_groups_keep_the_list_s_order_and_all_computers_is_pinned_above(
-    window: MainWindow,
+    window: CapyWindow,
 ) -> None:
     root = window.hosts.nav.groups.invisibleRootItem()
     assert _names(root) == ["Zebra wing (1)", "alpha wing (1)"]  # not sorted A–Z
@@ -75,7 +75,7 @@ def test_groups_keep_the_list_s_order_and_all_computers_is_pinned_above(
     assert not everything.isSelected()  # one pick at a time across both lists
 
 
-def test_dragging_a_group_saves_the_new_place(window: MainWindow) -> None:
+def test_dragging_a_group_saves_the_new_place(window: CapyWindow) -> None:
     tree = window.hosts.nav.groups
     root = tree.invisibleRootItem()
     alpha = root.takeChild(1)  # what a drag above "Zebra wing" leaves behind
@@ -88,7 +88,7 @@ def test_dragging_a_group_saves_the_new_place(window: MainWindow) -> None:
     assert listfile.load(doc.path).hosts == doc.hosts  # saved
 
 
-def test_hosts_dropped_on_a_group_move_there(window: MainWindow) -> None:
+def test_hosts_dropped_on_a_group_move_there(window: CapyWindow) -> None:
     doc = window.hosts.document
     assert doc is not None
     z01 = next(h.id for h in doc.hosts.hosts if h.name == "Z-01")
@@ -98,7 +98,7 @@ def test_hosts_dropped_on_a_group_move_there(window: MainWindow) -> None:
     assert doc.hosts.host(z01).group == _id(window, "Lab")  # type: ignore[union-attr]
 
 
-def test_read_only_lists_cant_be_rearranged(window: MainWindow, office: Path) -> None:
+def test_read_only_lists_cant_be_rearranged(window: CapyWindow, office: Path) -> None:
     office.chmod(0o444)
     try:
         window.hosts.open_list(office)
@@ -109,7 +109,7 @@ def test_read_only_lists_cant_be_rearranged(window: MainWindow, office: Path) ->
 
 
 def test_manage_groups_moves_sorts_and_applies_on_ok(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     doc = window.hosts.document
     assert doc is not None
@@ -149,7 +149,7 @@ def test_manage_groups_moves_sorts_and_applies_on_ok(
 
 
 def test_removing_a_group_can_keep_what_is_inside(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     asked: list[tuple[int, int]] = []
 
@@ -167,7 +167,7 @@ def test_removing_a_group_can_keep_what_is_inside(
 
 
 def test_removing_a_group_can_remove_everything(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(window.hosts, "_ask_how_to_remove", lambda *_args: ("all", None))
     window.hosts.remove_group(_id(window, "alpha wing"))
@@ -186,7 +186,7 @@ def _choose(menu: QMenu, text: str) -> None:
 
 
 def test_move_to_offers_groups_itself_first_and_never_the_group_itself(
-    window: MainWindow,
+    window: CapyWindow,
 ) -> None:
     doc = window.hosts.document
     assert doc is not None
@@ -229,7 +229,7 @@ def test_move_to_draws_the_tree_s_lines(qapp: QApplication) -> None:
 
 
 def test_right_click_move_to_puts_the_group_inside_another(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     class Choosing(QMenu):
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
@@ -255,7 +255,7 @@ def test_right_click_move_to_puts_the_group_inside_another(
 
 
 def test_right_clicking_the_groups_heading_offers_new_and_manage(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     seen: list[str] = []
 
@@ -269,7 +269,7 @@ def test_right_clicking_the_groups_heading_offers_new_and_manage(
 
 
 def test_add_group_from_the_heading_goes_to_the_top_level_even_with_a_group_picked(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     class Adding(QMenu):
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
@@ -284,14 +284,14 @@ def test_add_group_from_the_heading_goes_to_the_top_level_even_with_a_group_pick
     assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Annex"]
 
 
-def test_a_group_dropped_on_the_groups_heading_goes_to_the_top_level(window: MainWindow) -> None:
+def test_a_group_dropped_on_the_groups_heading_goes_to_the_top_level(window: CapyWindow) -> None:
     window.hosts.nav.groups_heading.group_dropped.emit(_id(window, "Lab"))
     doc = window.hosts.document
     assert doc is not None
     assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Lab"]
 
 
-def test_manage_groups_move_to_changes_only_its_working_copy(window: MainWindow) -> None:
+def test_manage_groups_move_to_changes_only_its_working_copy(window: CapyWindow) -> None:
     doc = window.hosts.document
     assert doc is not None
     dialog = ManageGroupsDialog(None, doc.hosts)
@@ -309,7 +309,7 @@ def test_manage_groups_move_to_changes_only_its_working_copy(window: MainWindow)
     assert saved is not None and saved.parent is not None  # nothing saved before OK
 
 
-def test_the_tree_s_drag_data_drops_on_the_heading(window: MainWindow) -> None:
+def test_the_tree_s_drag_data_drops_on_the_heading(window: CapyWindow) -> None:
     tree = window.hosts.nav.groups
     alpha = tree.invisibleRootItem().child(1)
     lab = alpha.child(0) if alpha is not None else None
@@ -330,7 +330,7 @@ def test_the_tree_s_drag_data_drops_on_the_heading(window: MainWindow) -> None:
 
 
 def test_the_plus_by_the_heading_adds_at_the_top_level(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(workspace_module.QInputDialog, "getText", lambda *_a, **_k: ("Annex", True))
     window.hosts.nav.select_group(_id(window, "Lab"))
@@ -340,7 +340,7 @@ def test_the_plus_by_the_heading_adds_at_the_top_level(
     assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Annex"]
 
 
-def test_a_group_closed_by_hand_stays_closed_after_a_change(window: MainWindow) -> None:
+def test_a_group_closed_by_hand_stays_closed_after_a_change(window: CapyWindow) -> None:
     alpha = window.hosts.nav.groups.invisibleRootItem().child(1)
     assert alpha is not None
     alpha.setExpanded(False)
@@ -352,7 +352,7 @@ def test_a_group_closed_by_hand_stays_closed_after_a_change(window: MainWindow) 
     assert alpha is not None and alpha.childCount() and not alpha.isExpanded()
 
 
-def test_hosts_with_no_group_show_under_no_group(window: MainWindow) -> None:
+def test_hosts_with_no_group_show_under_no_group(window: CapyWindow) -> None:
     nav = window.hosts.nav
     # Always there, so the first host can be dragged onto it too.
     assert not nav._no_group_item.isHidden() and nav._no_group_item.text(0) == "No group (0)"
@@ -371,7 +371,7 @@ def test_hosts_with_no_group_show_under_no_group(window: MainWindow) -> None:
 
 
 def test_hosts_right_click_move_to_any_group_or_none(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     class Choosing(QMenu):
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
@@ -398,7 +398,7 @@ def test_hosts_right_click_move_to_any_group_or_none(
 
 
 def test_removing_a_group_offers_where_its_contents_go(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def pick_zebra(box: QMessageBox) -> int:
         move = next(b for b in box.buttons() if b.text() == "&Move them to")
@@ -420,7 +420,7 @@ def test_removing_a_group_offers_where_its_contents_go(
 
 
 def test_hosts_dragged_over_a_group_light_it_without_leaving_where_they_are(
-    window: MainWindow,
+    window: CapyWindow,
 ) -> None:
     window.show()
     QApplication.processEvents()
@@ -455,7 +455,7 @@ def _walk_items(tree: QTreeWidget) -> list[QTreeWidgetItem]:
     return found
 
 
-def test_a_group_dropped_below_the_last_row_goes_under_groups(window: MainWindow) -> None:
+def test_a_group_dropped_below_the_last_row_goes_under_groups(window: CapyWindow) -> None:
     doc = window.hosts.document
     assert doc is not None
     dialog = ManageGroupsDialog(None, doc.hosts)
@@ -474,7 +474,7 @@ def test_a_group_dropped_below_the_last_row_goes_under_groups(window: MainWindow
     dialog.close()
 
 
-def test_manage_groups_draws_tree_lines(window: MainWindow) -> None:
+def test_manage_groups_draws_tree_lines(window: CapyWindow) -> None:
     doc = window.hosts.document
     assert doc is not None
     dialog = ManageGroupsDialog(None, doc.hosts)
@@ -485,15 +485,15 @@ def test_manage_groups_draws_tree_lines(window: MainWindow) -> None:
     dialog.close()
 
 
-def _reopened(window: MainWindow, tmp_path: Path) -> MainWindow:
+def _reopened(window: CapyWindow, tmp_path: Path) -> CapyWindow:
     """The app started again, with the settings the first window saved as it closed."""
     window.close()
-    again = MainWindow(settings.resolve_paths(tmp_path), window.prefs)
+    again = CapyWindow(settings.resolve_paths(tmp_path), window.prefs)
     return again
 
 
 def test_a_list_opens_on_all_hosts_where_it_was_left_or_its_chosen_group(
-    window: MainWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     lab = _id(window, "Lab")
     window.hosts.nav.select_group(lab)
@@ -522,7 +522,7 @@ def test_a_list_opens_on_all_hosts_where_it_was_left_or_its_chosen_group(
     fourth.close()
 
 
-def test_settings_chooses_what_the_open_list_shows_first(window: MainWindow) -> None:
+def test_settings_chooses_what_the_open_list_shows_first(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     page = dialog.group(HostsSettings).general
     assert page.show_first.text() == "All hosts"

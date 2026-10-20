@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QApplication
@@ -15,11 +16,10 @@ from capypanel.core.remote import checks
 from capypanel.core.remote.checks import Checks, Found
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
-from capypanel.ui.main_window.window import MainWindow
 
 
 @pytest.fixture
-def window(qapp: QApplication, tmp_path: Path) -> Iterator[MainWindow]:
+def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
     hl, er = HostList().add_group("Emergency")
     hl, triage = hl.add_group("Triage", parent=er.id)
@@ -31,7 +31,7 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[MainWindow]:
         hl, _host = hl.add_host(name, group, address=address)
     path = tmp_path / "hospital.json"
     listfile.save(path, hl, expected=None)
-    win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1})
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     win.hosts.open_list(path)
     win.hosts.nav.select_group(labs.id)  # searching ignores the group picked
     win.hosts._show_items()
@@ -39,22 +39,22 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[MainWindow]:
     win.close()
 
 
-def _search(win: MainWindow, text: str) -> None:
+def _search(win: CapyWindow, text: str) -> None:
     win.hosts.search.setText(text)
     win.hosts._show_items()  # what the typing pause does
 
 
-def _rows(win: MainWindow, column: int = 0) -> list[str]:
+def _rows(win: CapyWindow, column: int = 0) -> list[str]:
     items = (win.hosts.table.topLevelItem(i) for i in range(win.hosts.table.topLevelItemCount()))
     return sorted(item.text(column) for item in items if item is not None)
 
 
-def _id(win: MainWindow, name: str) -> str:
+def _id(win: CapyWindow, name: str) -> str:
     assert win.hosts.document is not None
     return next(h.id for h in win.hosts.document.hosts.hosts if h.name == name)
 
 
-def test_search_finds_hosts_in_every_group_by_name_or_address(window: MainWindow) -> None:
+def test_search_finds_hosts_in_every_group_by_name_or_address(window: CapyWindow) -> None:
     assert _rows(window) == ["LAB-01"]
     _search(window, "triage")
     assert _rows(window) == ["TRIAGE-01", "TRIAGE-02"]
@@ -64,14 +64,14 @@ def test_search_finds_hosts_in_every_group_by_name_or_address(window: MainWindow
     assert not window.hosts.nav.groups.selectedItems()  # but nothing shows as picked meanwhile
 
 
-def test_search_finds_logged_on_users_from_the_last_check(window: MainWindow) -> None:
+def test_search_finds_logged_on_users_from_the_last_check(window: CapyWindow) -> None:
     desk = Session("Tricia.N", "CORP", "console", "active", None)
     window.hosts._users_found[_id(window, "RECEP-04")] = ((desk,), None, datetime.now())
     _search(window, "tri")
     assert _rows(window) == ["RECEP-04", "TRIAGE-01", "TRIAGE-02"]
 
 
-def test_a_result_s_group_shows_in_the_details_pane(window: MainWindow) -> None:
+def test_a_result_s_group_shows_in_the_details_pane(window: CapyWindow) -> None:
     _search(window, "triage")
     table = window.hosts.table
     assert table.columnCount() == len(table.COLUMNS)  # no Group column: deep paths read badly
@@ -79,14 +79,14 @@ def test_a_result_s_group_shows_in_the_details_pane(window: MainWindow) -> None:
     assert window.hosts.details.shown_value("group") == "Emergency › Triage"
 
 
-def test_the_status_bar_counts_what_was_found(window: MainWindow) -> None:
+def test_the_status_bar_counts_what_was_found(window: CapyWindow) -> None:
     _search(window, "triage")
     assert "2 found" in window.hosts.status_label.text()
     _search(window, "")
     assert "found" not in window.hosts.status_label.text()
 
 
-def test_picking_a_group_ends_the_search(window: MainWindow) -> None:
+def test_picking_a_group_ends_the_search(window: CapyWindow) -> None:
     _search(window, "triage")
     window.hosts.nav.everything.setCurrentItem(window.hosts.nav._everything_item)
     window.hosts.nav._everything_item.setSelected(True)
@@ -95,7 +95,7 @@ def test_picking_a_group_ends_the_search(window: MainWindow) -> None:
 
 
 def test_double_click_connects_during_a_search(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     connected: list[bool] = []
     monkeypatch.setattr(window.hosts, "connect_selected", lambda: connected.append(True))
@@ -107,7 +107,7 @@ def test_double_click_connects_during_a_search(
     assert window.hosts.search.text() == "triage-02"
 
 
-def test_clearing_the_search_goes_back_to_the_group_picked_before(window: MainWindow) -> None:
+def test_clearing_the_search_goes_back_to_the_group_picked_before(window: CapyWindow) -> None:
     _search(window, "triage")
     window.hosts.table.select_ids([_id(window, "TRIAGE-01")])
     window.hosts.search.clear()
@@ -115,7 +115,7 @@ def test_clearing_the_search_goes_back_to_the_group_picked_before(window: MainWi
     assert _rows(window) == ["LAB-01"]  # Labs, as before the search; no jump to Triage
 
 
-def test_down_in_the_search_box_moves_to_the_first_result(window: MainWindow) -> None:
+def test_down_in_the_search_box_moves_to_the_first_result(window: CapyWindow) -> None:
     _search(window, "triage")
     down = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Down, Qt.KeyboardModifier.NoModifier)
     window.hosts.search.keyPressEvent(down)
@@ -123,7 +123,7 @@ def test_down_in_the_search_box_moves_to_the_first_result(window: MainWindow) ->
 
 
 def test_notes_are_always_searched_and_tags_while_their_column_shows(
-    window: MainWindow,
+    window: CapyWindow,
 ) -> None:
     doc = window.hosts.document
     assert doc is not None
@@ -139,7 +139,7 @@ def test_notes_are_always_searched_and_tags_while_their_column_shows(
     assert _rows(window) == []
 
 
-def test_the_placeholder_names_what_is_searched(window: MainWindow) -> None:
+def test_the_placeholder_names_what_is_searched(window: CapyWindow) -> None:
     table = window.hosts.table
     assert window.hosts.search.placeholderText() == "Search name, address, user, tags, notes"
     table._show_column(table.USER, False)
@@ -150,7 +150,7 @@ def test_the_placeholder_names_what_is_searched(window: MainWindow) -> None:
 
 
 def test_refresh_checks_only_the_search_results(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     seen: list[str] = []
 
@@ -168,7 +168,7 @@ def test_refresh_checks_only_the_search_results(
     assert sorted(seen) == ["10.0.4.21", "10.0.4.22"]
 
 
-def test_escape_clears_the_search_wherever_the_focus_is(window: MainWindow) -> None:
+def test_escape_clears_the_search_wherever_the_focus_is(window: CapyWindow) -> None:
     window.hosts.search.setText("triage")
     escape = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
     window.hosts.search.keyPressEvent(escape)
@@ -180,7 +180,7 @@ def test_escape_clears_the_search_wherever_the_focus_is(window: MainWindow) -> N
     assert _rows(window) == ["LAB-01"]
 
 
-def test_search_covers_only_the_columns_shown(window: MainWindow) -> None:
+def test_search_covers_only_the_columns_shown(window: CapyWindow) -> None:
     table = window.hosts.table
     _search(window, "10.0.4.4")
     assert _rows(window) == ["RECEP-04"]
@@ -190,7 +190,7 @@ def test_search_covers_only_the_columns_shown(window: MainWindow) -> None:
     assert _rows(window) == ["RECEP-04"]  # the name always counts
 
 
-def test_hiding_domains_changes_the_users_shown_and_searched(window: MainWindow) -> None:
+def test_hiding_domains_changes_the_users_shown_and_searched(window: CapyWindow) -> None:
     desk = Session("ana", "CORP", "console", "active", None)
     host = _id(window, "LAB-01")
     window.hosts._users_found[host] = ((desk,), None, datetime.now())
@@ -207,7 +207,7 @@ def test_hiding_domains_changes_the_users_shown_and_searched(window: MainWindow)
         window.hosts.commands.show_domains.setChecked(True)  # module-wide: leave it as found
 
 
-def test_tooltips_keep_the_domain_and_active_users_come_first(window: MainWindow) -> None:
+def test_tooltips_keep_the_domain_and_active_users_come_first(window: CapyWindow) -> None:
     away = Session("bob", "CORP", "rdp", "disconnected", None)
     here = Session("ana", "CORP", "console", "active", None)
     host = _id(window, "LAB-01")
@@ -222,7 +222,7 @@ def test_tooltips_keep_the_domain_and_active_users_come_first(window: MainWindow
         window.hosts.commands.show_domains.setChecked(True)
 
 
-def test_online_count_and_summary(window: MainWindow) -> None:
+def test_online_count_and_summary(window: CapyWindow) -> None:
     window.hosts._status_found[_id(window, "LAB-01")] = (Status.ONLINE, datetime.now(), None)
     window.hosts._show_items()
     assert "1 online" in window.hosts.status_label.text()

@@ -5,6 +5,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QMenu, QSplitter, QWidget
@@ -17,7 +18,6 @@ from capypanel.ui.hosts import HostDialog, group_choices
 from capypanel.ui.hosts_tool import tool as hosts_module
 from capypanel.ui.hosts_tool.table import HostTable
 from capypanel.ui.list_workspace import workspace as workspace_module
-from capypanel.ui.main_window.window import MainWindow
 
 
 @pytest.fixture
@@ -39,14 +39,14 @@ def office(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def window(qapp: QApplication, paths: settings.Paths) -> Iterator[MainWindow]:
-    win = MainWindow(paths, {"schema": 1})
+def window(qapp: QApplication, paths: settings.Paths) -> Iterator[CapyWindow]:
+    win = CapyWindow(paths, {"schema": 1})
     yield win
     win.close()
 
 
 def test_add_host_keeps_every_host_of_a_list_with_no_groups(
-    window: MainWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     hl, _ = HostList().add_host("LOOSE-01", NO_GROUP)
     hl, _ = hl.add_host("LOOSE-02", NO_GROUP)
@@ -66,7 +66,7 @@ def test_add_host_keeps_every_host_of_a_list_with_no_groups(
 
 
 def test_another_tool_s_list_isn_t_opened_as_a_host_list(
-    window: MainWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     path = tmp_path / "printers.json"
     listfile.save(path, HostList().add_group("Lab")[0], expected=None, kind="printers")
@@ -81,12 +81,12 @@ def test_another_tool_s_list_isn_t_opened_as_a_host_list(
     assert doc is not None and listfile.load(doc.path).kind == "hosts"  # saved with its kind
 
 
-def _table_names(win: MainWindow) -> set[str]:
+def _table_names(win: CapyWindow) -> set[str]:
     items = (win.hosts.table.topLevelItem(i) for i in range(win.hosts.table.topLevelItemCount()))
     return {item.text(0) for item in items if item is not None}
 
 
-def test_first_start_creates_the_personal_list_with_a_hosts_group(window: MainWindow) -> None:
+def test_first_start_creates_the_personal_list_with_a_hosts_group(window: CapyWindow) -> None:
     doc = window.hosts.document
     assert doc is not None and doc.path.name == "default.json" and doc.path.exists()
     assert [g.name for g in doc.hosts.groups] == ["Default group"]
@@ -99,13 +99,13 @@ def test_first_start_creates_the_personal_list_with_a_hosts_group(window: MainWi
     assert window.hosts.commands.add_host.isEnabled()
 
 
-def test_opening_a_list_shows_its_hosts_and_remembers_it(window: MainWindow, office: Path) -> None:
+def test_opening_a_list_shows_its_hosts_and_remembers_it(window: CapyWindow, office: Path) -> None:
     assert window.hosts.open_list(office)
     assert _table_names(window) == {"HQ-01", "FIN-01", "FIN-02"}
     assert recent_lists(window.hosts.prefs)[0] == office
 
 
-def test_picking_a_group_or_tag_filters_the_table(window: MainWindow, office: Path) -> None:
+def test_picking_a_group_or_tag_filters_the_table(window: CapyWindow, office: Path) -> None:
     window.hosts.open_list(office)
     tree = window.hosts.nav.groups
     flags = Qt.MatchFlag.MatchStartsWith | Qt.MatchFlag.MatchRecursive
@@ -122,7 +122,7 @@ def test_picking_a_group_or_tag_filters_the_table(window: MainWindow, office: Pa
     assert len(_table_names(window)) == 3
 
 
-def test_selecting_a_host_shows_its_details(window: MainWindow, office: Path) -> None:
+def test_selecting_a_host_shows_its_details(window: CapyWindow, office: Path) -> None:
     window.hosts.open_list(office)
     doc = window.hosts.document
     assert doc is not None
@@ -132,7 +132,7 @@ def test_selecting_a_host_shows_its_details(window: MainWindow, office: Path) ->
     assert window.hosts.details.shown_value("notes") == "Reception"
 
 
-def test_read_only_files_disable_editing(window: MainWindow, office: Path) -> None:
+def test_read_only_files_disable_editing(window: CapyWindow, office: Path) -> None:
     os.chmod(office, stat.S_IREAD)
     try:
         window.hosts.open_list(office)
@@ -145,7 +145,7 @@ def test_read_only_files_disable_editing(window: MainWindow, office: Path) -> No
 
 
 def test_a_broken_file_is_reported_and_the_current_list_stays_open(
-    window: MainWindow, tmp_path: Path
+    window: CapyWindow, tmp_path: Path
 ) -> None:
     before = window.hosts.document
     broken = tmp_path / "broken.json"
@@ -157,7 +157,7 @@ def test_a_broken_file_is_reported_and_the_current_list_stays_open(
 def test_closing_saves_layout_and_keeps_other_settings(
     qapp: QApplication, paths: settings.Paths
 ) -> None:
-    win = MainWindow(paths, {"schema": 1, "kept": True})
+    win = CapyWindow(paths, {"schema": 1, "kept": True})
     win.hosts.commands.show_details.setChecked(False)
     win.close()
     saved = json.loads(paths.settings_file.read_text(encoding="utf-8"))
@@ -190,7 +190,7 @@ def _drag(monkeypatch: pytest.MonkeyPatch, table: HostTable, column: int, width:
 
 
 def test_columns_keep_their_title_visible_and_can_be_hidden(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts.open_list(office)
     table = window.hosts.table
@@ -199,7 +199,7 @@ def test_columns_keep_their_title_visible_and_can_be_hidden(
     table._show_column(table.USER, False)
     assert table.isColumnHidden(table.USER)
     assert window.hosts.prefs["hidden_columns"] == ["user"]
-    reopened = MainWindow(window.paths, dict(window.prefs))
+    reopened = CapyWindow(window.paths, dict(window.prefs))
     assert reopened.hosts.table.isColumnHidden(reopened.hosts.table.USER)
     reopened.hosts.table.set_hidden_columns(["computer"])
     assert not reopened.hosts.table.isColumnHidden(0)  # the host name always shows
@@ -239,7 +239,7 @@ def test_the_first_start_fits_every_column_to_its_full_text(qapp: QApplication) 
 
 
 def test_column_widths_belong_to_the_user(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts.open_list(office)
     table = window.hosts.table
@@ -250,13 +250,13 @@ def test_column_widths_belong_to_the_user(
     window.hosts.nav.select_group(next(g.id for g in window.hosts.document.hosts.groups))  # type: ignore[union-attr]
     assert table.columnWidth(0) == 300
     window.close()  # saved across restarts
-    reopened = MainWindow(window.paths, dict(window.prefs))
+    reopened = CapyWindow(window.paths, dict(window.prefs))
     assert reopened.hosts.table.widths()["computer"] == 300
     reopened.close()
 
 
 def test_fit_columns_to_content_fits_the_full_text_again(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts.open_list(office)
     table = window.hosts.table
@@ -267,7 +267,7 @@ def test_fit_columns_to_content_fits_the_full_text_again(
     )
 
 
-def test_panes_cant_be_dragged_too_narrow_to_read(window: MainWindow) -> None:
+def test_panes_cant_be_dragged_too_narrow_to_read(window: CapyWindow) -> None:
     scale = window.hosts._scale()
     assert window.hosts.details.minimumWidth() == round(260 * scale)
     assert window.hosts.nav.minimumWidth() == round(180 * scale)
@@ -277,7 +277,7 @@ def test_settings_from_before_the_notes_column_went_load_cleanly(
     qapp: QApplication, paths: settings.Paths
 ) -> None:
     prefs = {"schema": 1, "hidden_columns": ["notes", "tags"], "column_widths": {"notes": 90}}
-    window = MainWindow(paths, prefs)
+    window = CapyWindow(paths, prefs)
     assert window.hosts.table.isColumnHidden(window.hosts.table.TAGS)
     assert "notes" not in window.hosts.table.widths()
     window.close()
@@ -295,7 +295,7 @@ def test_the_last_column_fills_a_wide_window_and_a_narrow_one_scrolls(
     table.close()
 
 
-def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: MainWindow, office: Path) -> None:
+def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: CapyWindow, office: Path) -> None:
     window.hosts.open_list(office)
     tag = window.hosts.nav.tags.topLevelItem(0)
     assert tag is not None
@@ -306,7 +306,7 @@ def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: MainWindow, office
     assert window.hosts.prefs["view"]["tags"] is False
 
 
-def test_the_groups_pane_fits_all_computers(window: MainWindow, office: Path) -> None:
+def test_the_groups_pane_fits_all_computers(window: CapyWindow, office: Path) -> None:
     window.hosts.open_list(office)
     window.show()
     QApplication.processEvents()
@@ -315,7 +315,7 @@ def test_the_groups_pane_fits_all_computers(window: MainWindow, office: Path) ->
     assert not window.hosts.splitter.childrenCollapsible()
 
 
-def test_the_view_menu_stays_open_while_ticking(window: MainWindow) -> None:
+def test_the_view_menu_stays_open_while_ticking(window: CapyWindow) -> None:
     from PySide6.QtCore import QEvent
     from PySide6.QtGui import QKeyEvent
 
@@ -330,7 +330,7 @@ def test_the_view_menu_stays_open_while_ticking(window: MainWindow) -> None:
 
 
 def test_right_click_menus_dont_pile_up(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # A menu is made per click; each one used to stay until the app closed.
     class Shown(QMenu):
@@ -361,13 +361,13 @@ def test_an_old_saved_layout_cant_drag_a_pane_out_of_sight(
     for _ in range(3):
         old.addWidget(QWidget())
     state = old.saveState().toBase64().toStdString()
-    window = MainWindow(paths, {"schema": 1, "main_splitter": state})
+    window = CapyWindow(paths, {"schema": 1, "main_splitter": state})
     assert not window.hosts.splitter.childrenCollapsible()
     window.close()
 
 
 def test_double_clicking_the_host_table_s_right_edge_fits_it_to_its_columns(
-    window: MainWindow, office: Path
+    window: CapyWindow, office: Path
 ) -> None:
     window.hosts.open_list(office)
     window.resize(1600, 700)
@@ -385,7 +385,7 @@ def test_double_clicking_the_host_table_s_right_edge_fits_it_to_its_columns(
 
 
 def test_double_clicking_the_groups_panel_s_right_edge_fits_it_to_its_groups(
-    window: MainWindow, office: Path
+    window: CapyWindow, office: Path
 ) -> None:
     window.hosts.open_list(office)
     window.resize(1600, 700)

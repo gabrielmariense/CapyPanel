@@ -2,6 +2,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QMessageBox
@@ -18,7 +19,6 @@ from capypanel.ui.import_hosts import (
     ImportDialog,
     read_text,
 )
-from capypanel.ui.main_window.window import MainWindow
 
 PASTED = (
     "name,address,group,tags,notes\n"
@@ -40,15 +40,15 @@ def office(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def window(qapp: QApplication, tmp_path: Path, office: Path) -> Iterator[MainWindow]:
+def window(qapp: QApplication, tmp_path: Path, office: Path) -> Iterator[CapyWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1})
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     win.hosts.open_list(office)
     yield win
     win.close()
 
 
-def _dialog(window: MainWindow) -> ImportDialog:
+def _dialog(window: CapyWindow) -> ImportDialog:
     doc = window.hosts.document
     assert doc is not None
     dialog = ImportDialog(None, doc.hosts, doc.hosts.groups[0].id)
@@ -62,7 +62,7 @@ def _add_button(dialog: ImportDialog) -> str:
     return ok.text() if ok.isEnabled() else ""
 
 
-def test_the_preview_says_what_each_row_will_do(window: MainWindow) -> None:
+def test_the_preview_says_what_each_row_will_do(window: CapyWindow) -> None:
     dialog = _dialog(window)
     table = dialog.table
     warnings = [table.topLevelItem(i).text(WARNING) for i in range(4)]  # type: ignore[union-attr]
@@ -75,7 +75,7 @@ def test_the_preview_says_what_each_row_will_do(window: MainWindow) -> None:
 
 
 def test_nothing_changes_until_add_is_clicked(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     doc = window.hosts.document
     assert doc is not None
@@ -104,7 +104,7 @@ def test_nothing_changes_until_add_is_clicked(
 
 
 def test_editing_the_table_asks_once_then_rewrites_the_list(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch, qapp: QApplication
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, qapp: QApplication
 ) -> None:
     asked: list[str] = []
 
@@ -136,7 +136,7 @@ def test_editing_the_table_asks_once_then_rewrites_the_list(
 
 
 def test_rows_can_be_left_out_or_added_below(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch, qapp: QApplication
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, qapp: QApplication
 ) -> None:
     monkeypatch.setattr(
         import_hosts.QMessageBox, "question", lambda *_a: QMessageBox.StandardButton.Yes
@@ -152,7 +152,7 @@ def test_rows_can_be_left_out_or_added_below(
     assert new.text(WARNING) == "No name"
 
 
-def test_a_list_it_cant_read_is_explained_and_adds_nothing(window: MainWindow) -> None:
+def test_a_list_it_cant_read_is_explained_and_adds_nothing(window: CapyWindow) -> None:
     dialog = _dialog(window)
     dialog.set_text("PC-1,10.0.0.1,Lab,kiosk")
     assert "<b>name, address, group, tags, notes</b>" in dialog.problem.text()

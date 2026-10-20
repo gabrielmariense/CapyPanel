@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu, QMessageBox, QToolButton
@@ -20,7 +21,6 @@ from capypanel.ui.hosts import HostDialog
 from capypanel.ui.hosts_tool.settings import HostsSettings
 from capypanel.ui.hosts_tool.table import HostTable
 from capypanel.ui.list_workspace import workspace as workspace_module
-from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
 
 Launch = tuple[str, str, int | None, Credential | None, tuple[str, ...]]
@@ -56,7 +56,7 @@ SHARED_PROFILES = (
 @pytest.fixture
 def window(
     qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> Iterator[MainWindow]:
+) -> Iterator[CapyWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
     paths = settings.resolve_paths(tmp_path)
     folder = paths.profiles_dir
@@ -75,12 +75,12 @@ def window(
     hl, _w = hl.add_host("Ward 2A - Desk", pis.id)
     path = tmp_path / "office.json"
     listfile.save(path, hl, expected=None)
-    win = MainWindow(paths, {"schema": 1, "recent_lists": [str(path)]})
+    win = CapyWindow(paths, {"schema": 1, "recent_lists": [str(path)]})
     yield win
     win.close()
 
 
-def _select(win: MainWindow, *names: str) -> None:
+def _select(win: CapyWindow, *names: str) -> None:
     doc = win.hosts.document
     ids = [h.id for h in doc.hosts.hosts if h.name in names] if doc else []
     win.hosts.table.select_ids(ids)
@@ -99,7 +99,7 @@ def _answer_with(
 
 
 def test_each_profile_asks_once_and_keeps_its_own_password(
-    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     asked: list[str] = []
     _answer_with(monkeypatch, "ana", "domain-pass", asked)
@@ -123,7 +123,7 @@ def test_each_profile_asks_once_and_keeps_its_own_password(
 
 
 def test_hosts_with_different_profiles_open_together(
-    window: MainWindow, launched: list[Launch]
+    window: CapyWindow, launched: list[Launch]
 ) -> None:
     window.hosts.connector.credentials.remember("offices", Credential("ana", "x"))
     window.hosts.connector.credentials.remember("pis", Credential("pi", "y"))
@@ -133,7 +133,7 @@ def test_hosts_with_different_profiles_open_together(
 
 
 def test_a_host_without_a_usable_address_is_not_sent_to_the_viewer(
-    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     shown: list[str] = []
     monkeypatch.setattr(QMessageBox, "exec", lambda box: shown.append(box.text()) or 0)
@@ -149,7 +149,7 @@ def test_a_host_without_a_usable_address_is_not_sent_to_the_viewer(
 
 
 def test_cancelling_the_password_starts_nothing(
-    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(CredentialDialog, "exec", lambda dialog: 0)
     _select(window, "PC-A")
@@ -158,7 +158,7 @@ def test_cancelling_the_password_starts_nothing(
 
 
 def test_a_profile_this_pc_lacks_is_reported(
-    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     shown: list[str] = []
     monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: shown.append(text))
@@ -170,7 +170,7 @@ def test_a_profile_this_pc_lacks_is_reported(
 
 
 def test_many_hosts_at_once_are_confirmed_first(
-    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts.connector.credentials.remember("ultravnc", Credential("ana", "x"))
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.No)
@@ -179,7 +179,7 @@ def test_many_hosts_at_once_are_confirmed_first(
     assert window.hosts.connector.connect(requests[:5]) == 5  # up to five: no question
 
 
-def test_password_prompt_asks_for_a_user_only_for_account_profiles(window: MainWindow) -> None:
+def test_password_prompt_asks_for_a_user_only_for_account_profiles(window: CapyWindow) -> None:
     connector = window.hosts.connector
     password_only = CredentialDialog(
         None, connector.resolve("vnc-password"), "PC-A", on_command_line=True
@@ -196,7 +196,7 @@ def test_password_prompt_asks_for_a_user_only_for_account_profiles(window: MainW
     assert ok.isEnabled() and account.credential() == Credential("pi", "x")
 
 
-def test_the_host_dialog_offers_following_the_group_or_a_profile(window: MainWindow) -> None:
+def test_the_host_dialog_offers_following_the_group_or_a_profile(window: CapyWindow) -> None:
     doc = window.hosts.document
     assert doc is not None
     host = next(h for h in doc.hosts.hosts if h.name == "PI-1")
@@ -211,20 +211,20 @@ def test_the_host_dialog_offers_following_the_group_or_a_profile(window: MainWin
     assert dialog.values().profile == "pis-password"
 
 
-def _set_profile(window: MainWindow, name: str, profile: str) -> None:
+def _set_profile(window: CapyWindow, name: str, profile: str) -> None:
     doc = window.hosts.document
     assert doc is not None
     host = next(h for h in doc.hosts.hosts if h.name == name)
     window.hosts._commit(doc.hosts.set_hosts_profile([host.id], profile))  # pyright: ignore[reportPrivateUsage]
 
 
-def test_details_show_the_profile_s_name(window: MainWindow) -> None:
+def test_details_show_the_profile_s_name(window: CapyWindow) -> None:
     _select(window, "PI-1")
     assert window.hosts.details.shown_value("profile") == "Pis"  # the group's, named plainly
 
 
 def test_manual_connection_uses_the_chosen_profile(
-    window: MainWindow, launched: list[Launch]
+    window: CapyWindow, launched: list[Launch]
 ) -> None:
     dialog = ManualConnectDialog(None, window.hosts.connector.choices(), "pis-password")
     dialog.address.setText(" 10.9.9.9 ")
@@ -235,7 +235,7 @@ def test_manual_connection_uses_the_chosen_profile(
     assert dialog.request().target.port == 5901
 
 
-def test_copy_lists_every_column_shown_wherever_the_menu_opens(window: MainWindow) -> None:
+def test_copy_lists_every_column_shown_wherever_the_menu_opens(window: CapyWindow) -> None:
     _select(window, "PC-A", "PC-B")
     window.hosts.commands.copy_address.trigger()  # Ctrl+Shift+C
     assert sorted(QGuiApplication.clipboard().text().split("\n")) == ["10.0.0.1", "PC-B"]
@@ -251,7 +251,7 @@ def test_copy_lists_every_column_shown_wherever_the_menu_opens(window: MainWindo
     assert sorted(QGuiApplication.clipboard().text().split("\n")) == ["PC-A", "PC-B"]
 
 
-def test_connect_commands_follow_the_selection(window: MainWindow) -> None:
+def test_connect_commands_follow_the_selection(window: CapyWindow) -> None:
     a = window.hosts.commands
     _select(window)
     assert not a.connect_host.isEnabled() and not a.copy_address.isEnabled()
@@ -264,7 +264,7 @@ def test_connect_commands_follow_the_selection(window: MainWindow) -> None:
 
 
 def test_a_windows_password_is_never_sent_to_a_server_that_wants_a_vnc_password(
-    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     offered = {"10.0.0.1": (17, 117, 2), "PC-B": (17, 117, 113)}
     probed: list[tuple[str, int]] = []
@@ -291,7 +291,7 @@ def test_a_windows_password_is_never_sent_to_a_server_that_wants_a_vnc_password(
 
 
 def test_when_the_server_cannot_be_asked_the_viewer_still_opens(
-    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def unreachable(*_args: object, **_kwargs: object) -> tuple[int, ...]:
         raise connect_ui.rfb.ProbeError("timed out")
@@ -304,7 +304,7 @@ def test_when_the_server_cannot_be_asked_the_viewer_still_opens(
 
 
 def test_password_only_profiles_never_check_and_vnc_passwords_stop_at_8(
-    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def must_not_probe(*_args: object, **_kwargs: object) -> tuple[int, ...]:
         raise AssertionError("password-only profiles connect without a check")
@@ -327,7 +327,7 @@ def test_password_only_profiles_never_check_and_vnc_passwords_stop_at_8(
 
 
 def test_hosts_with_no_profile_anywhere_use_the_shared_default(
-    window: MainWindow, launched: list[Launch]
+    window: CapyWindow, launched: list[Launch]
 ) -> None:
     window.hosts.connector.catalogs.profiles.set_default("pis-password")
     window.hosts.connector.credentials.remember("pis-password", Credential("", "x"))
@@ -335,7 +335,7 @@ def test_hosts_with_no_profile_anywhere_use_the_shared_default(
     assert launched[0][0] == "realvnc"
 
 
-def test_the_default_profile_chosen_in_settings_is_saved_for_everyone(window: MainWindow) -> None:
+def test_the_default_profile_chosen_in_settings_is_saved_for_everyone(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     page = dialog.group(HostsSettings).connections.profiles
     page.default.setCurrentIndex(page.default.findData("pis"))
@@ -343,7 +343,7 @@ def test_the_default_profile_chosen_in_settings_is_saved_for_everyone(window: Ma
     assert window.hosts.connector.default_profile() == "pis"
 
 
-def test_profile_rows_never_overlap(window: MainWindow) -> None:
+def test_profile_rows_never_overlap(window: CapyWindow) -> None:
     # Like the page list once did: rows kept positions from before the theme's padding arrived.
     window.show()
     for theme in ("paper", "capypanel-dark"):
@@ -361,7 +361,7 @@ def test_profile_rows_never_overlap(window: MainWindow) -> None:
 
 
 def test_a_missing_viewer_offers_to_open_settings(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     opened: list[str] = []
     monkeypatch.setattr(window, "open_settings", lambda page=None: opened.append(page or ""))
@@ -379,7 +379,7 @@ def test_a_missing_viewer_offers_to_open_settings(
     assert opened == ["connections"]
 
 
-def test_a_host_s_own_unavailable_profile_shows_checked_in_the_menu(window: MainWindow) -> None:
+def test_a_host_s_own_unavailable_profile_shows_checked_in_the_menu(window: CapyWindow) -> None:
     _set_profile(window, "PC-A", "gone-elsewhere")
     menu = QMenu()
     window.hosts._add_profile_menu(  # pyright: ignore[reportPrivateUsage]
@@ -392,7 +392,7 @@ def test_a_host_s_own_unavailable_profile_shows_checked_in_the_menu(window: Main
 
 
 def test_a_profile_this_pc_lacks_falls_back_to_the_group_s(
-    window: MainWindow, launched: list[Launch]
+    window: CapyWindow, launched: list[Launch]
 ) -> None:
     _set_profile(window, "PC-A", "gone-elsewhere")
     _select(window, "PC-A")
@@ -403,7 +403,7 @@ def test_a_profile_this_pc_lacks_falls_back_to_the_group_s(
 
 
 def test_a_profile_with_a_settings_file_hands_it_to_the_viewer(
-    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     store = window.hosts.connector.catalogs.profiles
     offices = store.find("offices")
@@ -418,7 +418,7 @@ def test_a_profile_with_a_settings_file_hands_it_to_the_viewer(
 
 
 def test_remote_desktop_opens_without_asking_for_a_password(
-    window: MainWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     store = window.hosts.connector.catalogs.profiles
     store.save(ConnectionProfile("desk", "mstsc", "none", ("admin",), name="Desk"))
@@ -452,7 +452,7 @@ def _items(tree: Any) -> list[Any]:
 
 
 def test_right_click_acts_on_what_is_under_the_mouse(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.show()
     QApplication.processEvents()
@@ -476,7 +476,7 @@ def test_right_click_acts_on_what_is_under_the_mouse(
     window.close()
 
 
-def test_connect_is_a_dropdown_that_works_with_no_host_selected(window: MainWindow) -> None:
+def test_connect_is_a_dropdown_that_works_with_no_host_selected(window: CapyWindow) -> None:
     _select(window)  # nothing selected
     button = window.hosts.toolbar.connect_button
     assert button.isEnabled()  # its menu has Manual connection, which needs no host

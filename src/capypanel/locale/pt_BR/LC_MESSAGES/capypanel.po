@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 17:33-0300\n"
+"POT-Creation-Date: 2026-10-20 11:02-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1551,8 +1551,8 @@ msgid "The first line names the columns, in any order. Subgroups are separated b
 msgstr "A primeira linha dá nome às colunas, em qualquer ordem, em português ou inglês. Subgrupos são separados por /, tags por ;. Listas exportadas usam este formato."
 
 #, python-brace-format
-msgid "The folder “{folder}” was created by another user, so CapyPanel won't use it. Ask an administrator to delete it; it will be created again."
-msgstr "A pasta “{folder}” foi criada por outro usuário, então o CapyPanel não vai usá-la. Peça a um administrador para excluí-la; ela será criada de novo."
+msgid "The folder “{folder}” was created by another user, so {app} won't use it. Ask an administrator to delete it; it will be created again."
+msgstr "A pasta “{folder}” foi criada por outro usuário, então o {app} não vai usá-la. Peça a um administrador para excluí-la; ela será criada de novo."
 
 msgid "The groups changed meanwhile; try again."
 msgstr "Os grupos mudaram enquanto isso; tente de novo."

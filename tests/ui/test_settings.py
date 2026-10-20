@@ -5,6 +5,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtGui import QDesktopServices, QTextDocumentFragment
 from PySide6.QtWidgets import (
     QApplication,
@@ -24,7 +25,6 @@ from capypanel.ui import host_lists, new_list, tables
 from capypanel.ui.host_lists import ListsView
 from capypanel.ui.hosts_tool.settings import HostsSettings
 from capypanel.ui.list_workspace import workspace as workspace_module
-from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
 from capypanel.ui.new_list import NewListDialog
 from capypanel.ui.printers_tool.settings import PrintersSettings
@@ -56,8 +56,8 @@ def office(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def window(qapp: QApplication, paths: settings.Paths) -> Iterator[MainWindow]:
-    win = MainWindow(paths, {"schema": 1})
+def window(qapp: QApplication, paths: settings.Paths) -> Iterator[CapyWindow]:
+    win = CapyWindow(paths, {"schema": 1})
     yield win
     win.close()
     if themes.current() is not themes.DEFAULT_THEME:  # a theme switch restyles every window
@@ -68,7 +68,7 @@ def _answer_save_dialog(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
     monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: (str(path), ""))
 
 
-def test_settings_has_the_app_s_pages_then_each_tool_s(window: MainWindow) -> None:
+def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> None:
     assert window.commands.settings.shortcut().toString() == "Ctrl+,"
     [file_menu] = [a.menu() for a in window.menuBar().actions() if a.text() == "&File"]
     assert isinstance(file_menu, QMenu) and window.commands.settings in file_menu.actions()
@@ -98,7 +98,7 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: MainWindow) -> No
     assert [w.text() for w in printers if w.objectName() == "sectionTitle"] == ["Startup"]
 
 
-def test_page_list_rows_never_overlap(window: MainWindow) -> None:
+def test_page_list_rows_never_overlap(window: CapyWindow) -> None:
     # The list once kept row positions from before the theme's padding arrived.
     window.show()
     window.set_theme("windows-light")
@@ -129,7 +129,7 @@ def _answer_open_dialog(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
 
 
 def test_host_lists_shows_every_list_with_the_open_one_in_bold(
-    window: MainWindow, office: Path
+    window: CapyWindow, office: Path
 ) -> None:
     window.hosts.open_list(office)  # an opened list is added to Host lists from now on
     view = window.settings_dialog().group(HostsSettings).lists.view
@@ -148,7 +148,7 @@ def test_host_lists_shows_every_list_with_the_open_one_in_bold(
 
 
 def test_a_default_list_another_user_made_cant_be_picked(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(winsec, "made_by_trusted", lambda _path: False)
     warned: list[str] = []
@@ -163,7 +163,7 @@ def test_a_default_list_another_user_made_cant_be_picked(
 
 
 def test_first_start_creates_and_opens_the_default_list(
-    window: MainWindow, paths: settings.Paths
+    window: CapyWindow, paths: settings.Paths
 ) -> None:
     assert (
         window.hosts.document is not None
@@ -179,7 +179,7 @@ def test_a_default_list_another_user_made_is_not_opened(
     paths.lists("hosts").default.parent.mkdir(parents=True, exist_ok=True)
     listfile.save(paths.lists("hosts").default, HostList(), expected=None)
     monkeypatch.setattr(winsec, "made_by_trusted", lambda _path: False)
-    win = MainWindow(paths, {"schema": 1})
+    win = CapyWindow(paths, {"schema": 1})
     assert (
         win.hosts.document is not None and win.hosts.document.path == paths.lists("hosts").personal
     )
@@ -188,7 +188,7 @@ def test_a_default_list_another_user_made_is_not_opened(
 
 
 def test_removing_a_list_forgets_it_but_never_deletes_the_file(
-    window: MainWindow, office: Path
+    window: CapyWindow, office: Path
 ) -> None:
     window.hosts.open_list(office)
     dialog = window.settings_dialog()
@@ -202,7 +202,7 @@ def test_removing_a_list_forgets_it_but_never_deletes_the_file(
     assert window.hosts.prefs["host_lists"] == [] and office.is_file()
 
 
-def test_missing_personal_list_is_created_when_chosen(window: MainWindow) -> None:
+def test_missing_personal_list_is_created_when_chosen(window: CapyWindow) -> None:
     personal = window.hosts._personal_list
     assert not personal.exists()
     view = window.settings_dialog().group(HostsSettings).lists.view
@@ -213,7 +213,7 @@ def test_missing_personal_list_is_created_when_chosen(window: MainWindow) -> Non
 
 
 def test_new_empty_list_over_the_open_one_reopens_it(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts.open_list(office)
     # The new list window, answered: replace the open list (the user confirmed it).
@@ -226,7 +226,7 @@ def test_new_empty_list_over_the_open_one_reopens_it(
 
 
 def test_open_list_from_the_dropdown_opens_a_list_and_keeps_it_there(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _answer_open_dialog(monkeypatch, office)
     window.hosts.commands.open_list.trigger()  # the list dropdown's Open list… (Ctrl+O)
@@ -240,7 +240,7 @@ def test_open_list_from_the_dropdown_opens_a_list_and_keeps_it_there(
     assert window.windowTitle().startswith("office —")
 
 
-def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
+def test_menus_hold_only_what_fits_them(window: CapyWindow) -> None:
     menus = {
         m.title(): [label(a) for a in m.actions() if a.text()]
         for a in window.menuBar().actions()
@@ -266,7 +266,7 @@ def test_menus_hold_only_what_fits_them(window: MainWindow) -> None:
 
 
 def test_start_list_choice_is_opened_next_time(
-    window: MainWindow, paths: settings.Paths, office: Path
+    window: CapyWindow, paths: settings.Paths, office: Path
 ) -> None:
     window.hosts.open_list(office)  # the last used list...
     dialog = window.settings_dialog()
@@ -279,7 +279,7 @@ def test_start_list_choice_is_opened_next_time(
         str(office),
     ]
     general.setCurrentIndex(general.findData("personal"))  # kept at once, with no Save
-    again = MainWindow(paths, settings.load_settings(paths.settings_file))
+    again = CapyWindow(paths, settings.load_settings(paths.settings_file))
     assert (
         again.hosts.document is not None
         and again.hosts.document.path == window.hosts._personal_list
@@ -288,10 +288,10 @@ def test_start_list_choice_is_opened_next_time(
 
 
 def test_a_missing_start_list_falls_back_and_says_so(
-    window: MainWindow, paths: settings.Paths, office: Path
+    window: CapyWindow, paths: settings.Paths, office: Path
 ) -> None:
     prefs = {"schema": 1, "start_list": str(office.with_name("gone.json"))}
-    again = MainWindow(paths, prefs)
+    again = CapyWindow(paths, prefs)
     assert (
         again.hosts.document is not None
         and again.hosts.document.path == paths.lists("hosts").default
@@ -301,16 +301,16 @@ def test_a_missing_start_list_falls_back_and_says_so(
 
 
 def test_last_used_list_is_reopened(
-    window: MainWindow, paths: settings.Paths, office: Path
+    window: CapyWindow, paths: settings.Paths, office: Path
 ) -> None:
     window.hosts.open_list(office)
-    again = MainWindow(paths, settings.load_settings(paths.settings_file))
+    again = CapyWindow(paths, settings.load_settings(paths.settings_file))
     assert again.hosts.document is not None and again.hosts.document.path == office
     assert not again.statusBar().currentMessage()
     again.close()
 
 
-def test_picking_a_theme_applies_it_at_once(window: MainWindow) -> None:
+def test_picking_a_theme_applies_it_at_once(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     combo = dialog.appearance.theme
     combo.setCurrentIndex(combo.findData("paper"))  # the window shows it already
@@ -319,7 +319,7 @@ def test_picking_a_theme_applies_it_at_once(window: MainWindow) -> None:
 
 
 def test_the_path_is_in_the_tooltip_and_same_names_show_their_folder(
-    window: MainWindow, tmp_path: Path
+    window: CapyWindow, tmp_path: Path
 ) -> None:
     a, b = tmp_path / "north" / "hosts.json", tmp_path / "south" / "hosts.json"
     window.hosts.prefs["host_lists"] = [str(a), str(b)]
@@ -330,14 +330,14 @@ def test_the_path_is_in_the_tooltip_and_same_names_show_their_folder(
     assert item is not None and item.toolTip(0) == str(a) == item.toolTip(1)
 
 
-def test_list_tables_have_grid_lines_and_resizable_columns(window: MainWindow) -> None:
+def test_list_tables_have_grid_lines_and_resizable_columns(window: CapyWindow) -> None:
     view = window.settings_dialog().group(HostsSettings).lists.view
     assert view.tree.objectName() == window.hosts.table.objectName() == "grid"
     header = view.tree.header()
     assert all(header.sectionResizeMode(c) == QHeaderView.ResizeMode.Interactive for c in range(3))
 
 
-def test_the_page_list_keeps_its_width_in_every_language(window: MainWindow) -> None:
+def test_the_page_list_keeps_its_width_in_every_language(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     titles = [*PAGE_TITLES, *HostsSettings.TITLES, *PrintersSettings.TITLES]  # sized from these
     assert [p.title for p in dialog.pages.values()] == titles
@@ -349,7 +349,7 @@ def test_the_page_list_keeps_its_width_in_every_language(window: MainWindow) -> 
 
 
 def test_removing_the_open_list_switches_to_the_default_list(
-    window: MainWindow, office: Path, paths: settings.Paths
+    window: CapyWindow, office: Path, paths: settings.Paths
 ) -> None:
     window.hosts.open_list(office)
     dialog = window.settings_dialog()
@@ -363,7 +363,7 @@ def test_removing_the_open_list_switches_to_the_default_list(
     assert _rows(view)[0][2]  # marked in use
 
 
-def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow) -> None:
+def test_the_search_shows_every_matching_section_on_one_page(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
 
     def listed() -> list[str]:
@@ -402,7 +402,7 @@ def test_the_search_shows_every_matching_section_on_one_page(window: MainWindow)
 
 
 def test_a_list_in_a_lists_folder_can_be_removed_and_added_back(
-    window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     branch = paths.lists("hosts").shared_dir / "branch.json"
     listfile.save(branch, HostList(), expected=None)
@@ -421,7 +421,7 @@ def test_a_list_in_a_lists_folder_can_be_removed_and_added_back(
 
 
 def test_open_folder_opens_the_picked_list_s_folder(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     opened: list[str] = []
     monkeypatch.setattr(QDesktopServices, "openUrl", lambda url: opened.append(url.toLocalFile()))
@@ -439,7 +439,7 @@ def test_open_folder_opens_the_picked_list_s_folder(
 
 
 def test_list_tables_show_six_rows_at_most_and_pages_never_get_cut(
-    window: MainWindow, paths: settings.Paths
+    window: CapyWindow, paths: settings.Paths
 ) -> None:
     for name in "abcdefg":
         listfile.save(paths.lists("hosts").shared_dir / f"{name}.json", HostList(), expected=None)
@@ -454,7 +454,7 @@ def test_list_tables_show_six_rows_at_most_and_pages_never_get_cut(
     dialog.close()
 
 
-def test_search_marks_go_away_with_the_search(window: MainWindow) -> None:
+def test_search_marks_go_away_with_the_search(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     dialog.search.setText("theme")
     [heading, *_notes] = dialog._marks.marked_labels()  # pyright: ignore[reportPrivateUsage]
@@ -464,7 +464,7 @@ def test_search_marks_go_away_with_the_search(window: MainWindow) -> None:
 
 
 def test_a_list_that_doesn_t_exist_can_t_be_opened(
-    window: MainWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     warned: list[str] = []
     monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: warned.append(text))
@@ -478,7 +478,7 @@ def test_a_list_that_doesn_t_exist_can_t_be_opened(
 
 
 def test_an_added_list_is_kept_at_once_and_opens_on_a_double_click(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _answer_open_dialog(monkeypatch, office)
     before = window.hosts.document
@@ -493,7 +493,7 @@ def test_an_added_list_is_kept_at_once_and_opens_on_a_double_click(
 
 
 def test_save_a_copy_writes_it_and_keeps_the_list_in_use(
-    window: MainWindow, office: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, office: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts.open_list(office)
     copy = tmp_path / "copy.json"
@@ -506,7 +506,7 @@ def test_save_a_copy_writes_it_and_keeps_the_list_in_use(
     assert window.hosts.document is not None and window.hosts.document.path == office
 
 
-def test_every_choice_applies_at_once_and_only_close_is_left(window: MainWindow) -> None:
+def test_every_choice_applies_at_once_and_only_close_is_left(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     dialog.group(HostsSettings).general.pick_every(5)
     assert window.hosts.auto_status()[0]  # kept and running, with no Save
@@ -522,7 +522,7 @@ def test_every_choice_applies_at_once_and_only_close_is_left(window: MainWindow)
 
 
 def test_picking_a_language_switches_at_once_and_keeps_the_page(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     seen: list[tuple[str, str, bool]] = []
 
@@ -548,7 +548,7 @@ def test_picking_a_language_switches_at_once_and_keeps_the_page(
     window.set_language("en")
 
 
-def test_the_settings_buttons_are_only_the_main_actions(window: MainWindow) -> None:
+def test_the_settings_buttons_are_only_the_main_actions(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     for page_id, wanted in (
         ("files", ["Open folder"]),
@@ -560,7 +560,7 @@ def test_the_settings_buttons_are_only_the_main_actions(window: MainWindow) -> N
 
 
 def test_a_right_click_picks_the_row_and_opens_its_menu(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     shown: list[list[str]] = []
     monkeypatch.setattr(
@@ -583,7 +583,7 @@ def test_a_right_click_picks_the_row_and_opens_its_menu(
 
 
 def test_refresh_by_itself_is_one_dropdown_with_a_custom_interval(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     dialog = window.settings_dialog()
     every = dialog.group(HostsSettings).general.auto_every
@@ -604,7 +604,7 @@ def test_refresh_by_itself_is_one_dropdown_with_a_custom_interval(
 
 
 def test_a_new_list_can_be_shared_or_personal(
-    window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     places, texts = paths.lists("hosts"), window.hosts.list_texts()
     dialog = NewListDialog(
@@ -624,7 +624,7 @@ def test_a_new_list_can_be_shared_or_personal(
 
 
 def test_only_people_who_can_write_the_shared_folder_get_a_shared_list(
-    window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(new_list, "can_create_files", lambda folder: False)
     places, texts = paths.lists("hosts"), window.hosts.list_texts()
@@ -636,7 +636,7 @@ def test_only_people_who_can_write_the_shared_folder_get_a_shared_list(
 
 
 def test_new_list_from_the_dropdown_makes_a_shared_list(
-    window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     shared = paths.lists("hosts").shared_dir / "Clinics.json"
     monkeypatch.setattr(workspace_module, "ask_new_list", lambda *_a, **_k: shared)
@@ -650,7 +650,7 @@ def test_new_list_from_the_dropdown_makes_a_shared_list(
 
 
 def test_remove_can_also_move_the_file_to_the_recycle_bin(
-    window: MainWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, paths: settings.Paths, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     branch = paths.lists("hosts").shared_dir / "branch.json"
     listfile.save(branch, HostList(), expected=None)
@@ -673,7 +673,7 @@ def test_remove_can_also_move_the_file_to_the_recycle_bin(
 
 
 def test_a_list_that_can_t_be_deleted_is_only_removed(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts.prefs["host_lists"] = [str(office.with_name("gone.json"))]
     monkeypatch.setattr(host_lists, "ask_remove", lambda *_a: pytest.fail("asked"))
@@ -684,7 +684,7 @@ def test_a_list_that_can_t_be_deleted_is_only_removed(
 
 
 def test_about_is_pinned_at_the_bottom_and_one_page_is_picked_at_a_time(
-    window: MainWindow,
+    window: CapyWindow,
 ) -> None:
     dialog = window.settings_dialog()
     dialog.pinned_list.setCurrentRow(0)  # About, at the very bottom
@@ -695,7 +695,7 @@ def test_about_is_pinned_at_the_bottom_and_one_page_is_picked_at_a_time(
     assert dialog.current_page() == "about" and dialog.pinned_list.currentRow() == 0
 
 
-def test_searching_a_link_s_words_marks_them_and_keeps_the_link(window: MainWindow) -> None:
+def test_searching_a_link_s_words_marks_them_and_keeps_the_link(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     dialog.search.setText("github")
     links = [w for w in dialog._marks.marked_labels() if "href=" in w.text()]  # pyright: ignore[reportPrivateUsage]

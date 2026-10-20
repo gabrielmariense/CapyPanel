@@ -2,6 +2,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu
 
@@ -9,34 +10,33 @@ from capypanel.core import i18n, settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
 from capypanel.ui import language
-from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
 
 
 @pytest.fixture
-def window(qapp: QApplication, tmp_path: Path) -> Iterator[MainWindow]:
+def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
     hl, hq = HostList().add_group("Headquarters")
     hl, _host = hl.add_host("HQ-01", hq.id)
     office = tmp_path / "office.json"
     listfile.save(office, hl, expected=None)
-    win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1, "recent_lists": [str(office)]})
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1, "recent_lists": [str(office)]})
     yield win
     win.close()
     language.apply(i18n.DEFAULT_LANGUAGE)
     QApplication.processEvents()
 
 
-def _menus(win: MainWindow) -> list[QMenu]:
+def _menus(win: CapyWindow) -> list[QMenu]:
     return [m for a in win.menuBar().actions() if isinstance(m := a.menu(), QMenu)]
 
 
-def _switch(win: MainWindow, code: str) -> None:
+def _switch(win: CapyWindow, code: str) -> None:
     win.set_language(code)
     QApplication.processEvents()  # the LanguageChange event arrives through the event loop
 
 
-def test_switching_language_updates_the_open_window_live(window: MainWindow) -> None:
+def test_switching_language_updates_the_open_window_live(window: CapyWindow) -> None:
     _switch(window, "pt_BR")
     assert [m.title() for m in _menus(window)] == [
         "&Arquivo",
@@ -55,19 +55,19 @@ def test_switching_language_updates_the_open_window_live(window: MainWindow) -> 
     assert window.hosts.table.headerItem().text(0) == "Name"
 
 
-def test_qt_own_buttons_are_translated_too(window: MainWindow) -> None:
+def test_qt_own_buttons_are_translated_too(window: CapyWindow) -> None:
     _switch(window, "pt_BR")
     buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
     assert buttons.button(QDialogButtonBox.StandardButton.Cancel).text() == "Cancelar"
 
 
-def test_language_is_remembered(window: MainWindow) -> None:
+def test_language_is_remembered(window: CapyWindow) -> None:
     _switch(window, "pt_BR")
     saved = settings.load_settings(window.paths.settings_file)
     assert saved["language"] == "pt_BR"
 
 
-def test_the_language_dropdown_in_appearance_switches_at_once(window: MainWindow) -> None:
+def test_the_language_dropdown_in_appearance_switches_at_once(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     assert "language" not in dialog.pages  # just a dropdown on General now
     dialog.language_picked.connect(window.set_language)
@@ -78,7 +78,7 @@ def test_the_language_dropdown_in_appearance_switches_at_once(window: MainWindow
 
 
 @pytest.mark.parametrize("code", list(i18n.LANGUAGES))
-def test_access_keys_are_unique_in_every_menu(window: MainWindow, code: str) -> None:
+def test_access_keys_are_unique_in_every_menu(window: CapyWindow, code: str) -> None:
     # Two items with the same underlined letter make Alt+letter ambiguous.
     _switch(window, code)
     for menu in [*_menus(window), window.hosts.toolbar.inventory_menu]:

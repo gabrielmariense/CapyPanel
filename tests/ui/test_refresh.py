@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtCore import QPoint
 from PySide6.QtWidgets import QApplication, QDialog, QWidgetAction
 
@@ -17,7 +18,6 @@ from capypanel.ui import checks as check_ui
 from capypanel.ui.hosts_tool import tool as hosts_module
 from capypanel.ui.hosts_tool.settings import HostsSettings
 from capypanel.ui.list_workspace import workspace as workspace_module
-from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.menus import label
 from capypanel.ui.themes import engine as themes
 
@@ -25,7 +25,7 @@ DESK = Session("ana", "CORP", "console", "active", None)
 
 
 @pytest.fixture
-def window(qapp: QApplication, tmp_path: Path) -> Iterator[MainWindow]:
+def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
     hl, office = HostList().add_group("Office")
     hl, inner = hl.add_group("Desks", parent=office.id)
@@ -36,18 +36,18 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[MainWindow]:
         hl, _host = hl.add_host(name, group, address=address)
     path = tmp_path / "office.json"
     listfile.save(path, hl, expected=None)
-    win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1})
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     win.hosts.open_list(path)
     yield win
     win.close()
 
 
-def _ids(win: MainWindow, *names: str) -> list[str]:
+def _ids(win: CapyWindow, *names: str) -> list[str]:
     assert win.hosts.document is not None
     return [h.id for h in win.hosts.document.hosts.hosts if h.name in names]
 
 
-def _wait(win: MainWindow) -> None:
+def _wait(win: CapyWindow) -> None:
     for _ in range(500):
         QApplication.processEvents()
         if win.hosts._run is None:
@@ -55,7 +55,7 @@ def _wait(win: MainWindow) -> None:
     pytest.fail("Refresh never finished")
 
 
-def _cells(win: MainWindow, name: str) -> tuple[str, str]:
+def _cells(win: CapyWindow, name: str) -> tuple[str, str]:
     table = win.hosts.table
     for index in range(table.topLevelItemCount()):
         item = table.topLevelItem(index)
@@ -79,7 +79,7 @@ def answers(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
 
 
 def test_checking_selected_hosts_fills_the_status_and_user_columns(
-    window: MainWindow, answers: dict[str, Any]
+    window: CapyWindow, answers: dict[str, Any]
 ) -> None:
     answers["10.0.0.2"] = Found(Status.OFFLINE, users_error=SessionsError(Reason.UNREACHABLE))
     answers["10.0.0.1"] = Found(Status.ONLINE, (DESK,), answered=("10.0.0.1", 445))
@@ -96,7 +96,7 @@ def test_checking_selected_hosts_fills_the_status_and_user_columns(
     assert window.hosts.details.shown_value("users") == "CORP\\ana"
 
 
-def test_status_only_doesnt_read_users(window: MainWindow, answers: dict[str, Any]) -> None:
+def test_status_only_doesnt_read_users(window: CapyWindow, answers: dict[str, Any]) -> None:
     answers["10.0.0.1"] = Found(Status.ONLINE)
     window.hosts.table.select_ids(_ids(window, "PC-1"))
     window.hosts.commands.check_status.trigger()
@@ -106,7 +106,7 @@ def test_status_only_doesnt_read_users(window: MainWindow, answers: dict[str, An
 
 
 def test_a_removed_host_no_longer_counts_as_online(
-    window: MainWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts.table.select_ids(_ids(window, "PC-1", "PC-2"))
     window.hosts.commands.check_status.trigger()
@@ -118,7 +118,7 @@ def test_a_removed_host_no_longer_counts_as_online(
     assert "1 online" in window.hosts.status_label.text()
 
 
-def _pick_group(window: MainWindow, name: str) -> None:
+def _pick_group(window: CapyWindow, name: str) -> None:
     assert window.hosts.document is not None
     group = next(g for g in window.hosts.document.hosts.groups if g.name == name)
     window.hosts.nav.select_group(group.id)
@@ -126,7 +126,7 @@ def _pick_group(window: MainWindow, name: str) -> None:
 
 
 def test_refresh_checks_every_host_shown_even_with_nothing_selected(
-    window: MainWindow, answers: dict[str, Any]
+    window: CapyWindow, answers: dict[str, Any]
 ) -> None:
     _pick_group(window, "Desks")
     assert window.hosts.table.selected_ids() == []
@@ -136,7 +136,7 @@ def test_refresh_checks_every_host_shown_even_with_nothing_selected(
 
 
 def test_the_panel_runs_several_checks_and_remembers_its_ticks(
-    window: MainWindow, answers: dict[str, Any]
+    window: CapyWindow, answers: dict[str, Any]
 ) -> None:
     _pick_group(window, "Office")  # the group and the one inside it
     panel = window.hosts.refresh_panel
@@ -147,7 +147,7 @@ def test_the_panel_runs_several_checks_and_remembers_its_ticks(
     assert window.hosts.prefs["refresh"] == {"status": True, "users": False}
 
 
-def test_f5_runs_what_the_panel_has_ticked(window: MainWindow, answers: dict[str, Any]) -> None:
+def test_f5_runs_what_the_panel_has_ticked(window: CapyWindow, answers: dict[str, Any]) -> None:
     _pick_group(window, "Desks")
     window.hosts.refresh_panel.users_box.setChecked(False)
     f5 = window.hosts.commands.refresh_shown
@@ -159,7 +159,7 @@ def test_f5_runs_what_the_panel_has_ticked(window: MainWindow, answers: dict[str
 
 
 def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
-    window: MainWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def admins_only(wanted: Checks) -> Found:
         if wanted.account is None:
@@ -189,7 +189,7 @@ def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
 
 
 def test_a_rejected_typed_account_is_never_tried_on_the_other_hosts(
-    window: MainWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts._account = Account("CORP\\admin", "typo")
     rejected = Found(Status.ONLINE, users_error=SessionsError(Reason.REJECTED, 1326))
@@ -203,7 +203,7 @@ def test_a_rejected_typed_account_is_never_tried_on_the_other_hosts(
 
 
 def test_host_menu_items_read_on_their_own_with_no_headings(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     seen: list[str] = []
 
@@ -226,7 +226,7 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     ]  # fmt: skip
 
 
-def test_the_toolbar_lines_up_with_the_panes(window: MainWindow) -> None:
+def test_the_toolbar_lines_up_with_the_panes(window: CapyWindow) -> None:
     window.resize(1200, 600)
     window.show()
     for _ in range(5):
@@ -246,7 +246,7 @@ def test_the_toolbar_lines_up_with_the_panes(window: MainWindow) -> None:
     assert abs(connect.mapTo(window, QPoint(0, 0)).x() - nav.mapTo(window, QPoint(0, 0)).x()) <= 1
 
 
-def test_the_toolbar_stays_lined_up_after_a_theme_switch(window: MainWindow) -> None:
+def test_the_toolbar_stays_lined_up_after_a_theme_switch(window: CapyWindow) -> None:
     # Each theme pads the toolbar differently; the Windows style ignores padding altogether.
     window.resize(1200, 600)
     window.show()
@@ -264,7 +264,7 @@ def test_the_toolbar_stays_lined_up_after_a_theme_switch(window: MainWindow) -> 
 
 
 def test_a_large_users_check_asks_first(
-    window: MainWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(hosts_module, "MANY_USER_CHECKS", 1)
     asked: list[str] = []
@@ -281,7 +281,7 @@ def test_a_large_users_check_asks_first(
 
 
 def test_automatic_status_is_off_by_default_and_checks_only_status(
-    window: MainWindow, answers: dict[str, Any]
+    window: CapyWindow, answers: dict[str, Any]
 ) -> None:
     assert not window.hosts._auto_timer.isActive()
     dialog = window.settings_dialog()

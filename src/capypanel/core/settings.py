@@ -17,13 +17,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from capypanel.core import files, winsec
+from capypanel.core import files, identity, winsec
 from capypanel.core.i18n import _
 
 log = logging.getLogger(__name__)
 
-APP_ID = "CapyPanel"  # internal folder name; stays the same if the product is renamed
-PORTABLE_MARKER = "capypanel.portable"
+APP_ID = "CapyPanel"  # CapyPanel's folder name, where older versions kept their files
+PORTABLE_MARKER = identity.CAPYPANEL.portable_marker
 SETTINGS_SCHEMA = 1
 _NOT_IN_FILE_NAMES = '<>:"/\\|?*'
 
@@ -109,10 +109,11 @@ def resolve_paths(
     folder = folder if folder is not None else app_dir()
     name = account if account is not None else winsec.account_name()
     name = "".join("_" if c in _NOT_IN_FILE_NAMES else c for c in name)
-    if (folder / PORTABLE_MARKER).exists():
+    app = identity.current()
+    if (folder / app.portable_marker).exists():
         return Paths(root=folder / "userdata", account=name, portable=True)
     env = os.environ if env is None else env
-    return Paths(root=Path(env["PROGRAMDATA"]) / APP_ID, account=name, portable=False)
+    return Paths(root=Path(env["PROGRAMDATA"]) / app.folder, account=name, portable=False)
 
 
 def ensure_dirs(paths: Paths) -> None:
@@ -127,9 +128,9 @@ def ensure_dirs(paths: Paths) -> None:
     if owner is not None and owner not in (me, winsec.ADMINISTRATORS, winsec.SYSTEM):
         raise UserFolderError(
             _(
-                "The folder “{folder}” was created by another user, so CapyPanel won't use it. "
+                "The folder “{folder}” was created by another user, so {app} won't use it. "
                 "Ask an administrator to delete it; it will be created again."
-            ).format(folder=paths.user_dir)
+            ).format(folder=paths.user_dir, app=identity.current().name)
         )
     try:
         winsec.make_private(paths.user_dir, me)  # every start: repairs changed permissions

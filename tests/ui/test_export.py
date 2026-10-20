@@ -2,6 +2,7 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QFileDialog
 
 from capypanel.core import settings
@@ -12,11 +13,10 @@ from capypanel.ui import export_hosts
 from capypanel.ui.export_hosts import FOR_IMPORT, ExportDialog
 from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.import_hosts import read_text
-from capypanel.ui.main_window.window import MainWindow
 
 
 @pytest.fixture
-def window(qapp: QApplication, tmp_path: Path) -> Iterator[MainWindow]:
+def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
     hl, hq = HostList().add_group("Headquarters")
     hl, _ = hl.add_group("Front desk", parent=hq.id)
@@ -24,14 +24,14 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[MainWindow]:
     hl, _ = hl.add_host("LOOSE-1", NO_GROUP, notes="spare")
     office = tmp_path / "office.json"
     listfile.save(office, hl, expected=None)
-    win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1})
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     win.hosts.open_list(office)
     yield win
     win.close()
 
 
 def _run(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch, use: Callable[[ExportDialog], None]
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, use: Callable[[ExportDialog], None]
 ) -> None:
     """Opens the toolbar's Report and does `use` with the window instead of a person."""
 
@@ -44,7 +44,7 @@ def _run(
 
 
 def test_it_opens_on_what_is_shown_with_every_row_in_the_preview(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts.nav.select_group(NO_GROUP)
     seen: list[object] = []
@@ -66,7 +66,7 @@ def test_it_opens_on_what_is_shown_with_every_row_in_the_preview(
 
 
 def test_columns_come_in_groups_and_a_custom_pick_can_be_a_preset(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
         export_hosts.QInputDialog, "getText", lambda *_a, **_k: ("Walk-round", True)
@@ -99,7 +99,7 @@ def test_columns_come_in_groups_and_a_custom_pick_can_be_a_preset(
 
 
 def test_refresh_runs_on_the_hosts_being_exported_and_holds_export(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     asked: list[tuple[list[str], bool, bool]] = []
     monkeypatch.setattr(
@@ -124,7 +124,7 @@ def test_refresh_runs_on_the_hosts_being_exported_and_holds_export(
 
 
 def test_saving_a_preset_under_a_name_in_use_asks_before_replacing_it(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts.prefs["export_presets"] = {"Walk-round": ["name", "users"]}
     monkeypatch.setattr(
@@ -151,7 +151,7 @@ def test_saving_a_preset_under_a_name_in_use_asks_before_replacing_it(
 
 
 def test_export_saves_csv_that_imports_back_and_says_where(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     target = tmp_path / "out" / "office.csv"
     target.parent.mkdir()
@@ -169,7 +169,7 @@ def test_export_saves_csv_that_imports_back_and_says_where(
 
 
 def test_copy_puts_every_row_on_the_clipboard_for_excel(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _run(window, monkeypatch, lambda d: d.copy_button.click())
     lines = QApplication.clipboard().text().splitlines()
@@ -179,7 +179,7 @@ def test_copy_puts_every_row_on_the_clipboard_for_excel(
 
 
 def test_choices_are_kept_at_once_and_copy_keeps_the_window_open(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def pick(d: ExportDialog) -> None:
         close = d.buttons.button(QDialogButtonBox.StandardButton.Close)

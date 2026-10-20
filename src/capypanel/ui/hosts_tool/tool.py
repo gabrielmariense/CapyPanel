@@ -11,6 +11,7 @@ from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QMessageBox, QToolButton, QWidget
 
+from capypanel.core import settings
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
@@ -20,6 +21,7 @@ from capypanel.core.remote.sessions import Account, Reason, Session, SessionsErr
 from capypanel.core.remote.status import Answer, Status
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import SessionCredentials, Target
+from capypanel.core.tools.profile_store import ProfileStore
 from capypanel.ui import checks as check_texts
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, ManualConnectDialog, Request
@@ -149,6 +151,14 @@ class HostsTool(ListWorkspace):
         if self._run is not None:
             self._run.stop()  # hosts already being read finish in the background
         self.prefs["refresh"] = self.refresh_panel.choices()
+
+    @classmethod
+    def prepare(cls, paths: settings.Paths) -> None:
+        """The connection profiles every PC starts with."""
+        try:
+            ProfileStore(paths.profiles_dir).place_starters()
+        except OSError:
+            log.exception("Couldn't place the connection profiles in %s", paths.profiles_dir)
 
     # ---- texts ----
 

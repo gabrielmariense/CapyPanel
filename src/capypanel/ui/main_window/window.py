@@ -4,7 +4,7 @@ and commands. The rail, View's tools, the toolbar, the tool and the status bar's
 the tool shown."""
 
 import logging
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 from PySide6.QtCore import QByteArray, QEvent, QObject
@@ -22,18 +22,14 @@ from capypanel.core import identity, settings
 from capypanel.core.i18n import _
 from capypanel.ui import about, language
 from capypanel.ui.dialogs import run_modal
-from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.rail import ToolRail
-from capypanel.ui.main_window.tool import Shell, Tool
+from capypanel.ui.main_window.tool import Tool, ToolKind
 from capypanel.ui.menus import StayOpenMenu
-from capypanel.ui.printers_tool.tool import PrintersTool
 from capypanel.ui.settings.window import SettingsDialog
 from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
-
-TOOLS: tuple[Callable[[Shell], Tool], ...] = (HostsTool, PrintersTool)  # in the rail's order
 
 
 class MainWindow(QMainWindow):
@@ -42,9 +38,10 @@ class MainWindow(QMainWindow):
         paths: settings.Paths,
         prefs: dict[str, Any],
         *,
+        tools: Sequence[ToolKind],
         registry: themes.Registry | None = None,
-        tools: Sequence[Callable[[Shell], Tool]] = TOOLS,
     ):
+        """tools: the build's tools, in the rail's order."""
         super().__init__()
         self.paths = paths
         self.prefs = prefs
@@ -105,13 +102,6 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(right)
         self._status[tool_id] = right
         tool.title_changed.connect(lambda _name, t=tool_id: self._title_changed(t))
-
-    @property
-    def hosts(self) -> HostsTool:
-        """The Hosts tool, in a build that has it."""
-        tool = self.tools["hosts"]
-        assert isinstance(tool, HostsTool)
-        return tool
 
     def shown_tool(self) -> Tool:
         return self.tools[self._shown]

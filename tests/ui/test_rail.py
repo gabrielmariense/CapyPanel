@@ -1,7 +1,9 @@
 from collections.abc import Iterator
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QLabel, QWidget
 
@@ -9,21 +11,20 @@ from capypanel.core import identity, settings
 from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar
-from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.settings.group import SettingsGroup
 from capypanel.ui.settings.pages import Page
 
 
 @pytest.fixture
-def window(qapp: QApplication, tmp_path: Path) -> Iterator[MainWindow]:
+def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1})
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     yield win
     win.close()
 
 
 def test_the_rail_runs_down_the_left_edge_beside_the_tool_s_toolbar(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.resize(1000, 500)
     window.show()
@@ -82,7 +83,7 @@ def test_the_rail_view_toolbar_tool_and_status_bar_follow_the_tool_shown(
 ) -> None:
     (tmp_path / settings.PORTABLE_MARKER).touch()
     paths = settings.resolve_paths(tmp_path)
-    win = MainWindow(paths, {"schema": 1}, tools=(HostsTool, _Notes))
+    win = CapyWindow(paths, {"schema": 1}, tools=(HostsTool, _Notes))
     win.show()
     QApplication.processEvents()
     notes = win.tools["notes"]
@@ -114,7 +115,7 @@ def test_the_rail_view_toolbar_tool_and_status_bar_follow_the_tool_shown(
     dialog.show_page("notes")
     assert dialog.current_page() == "notes"
     win.close()
-    again = MainWindow(
+    again = CapyWindow(
         paths, settings.load_settings(paths.settings_file), tools=(HostsTool, _Notes)
     )
     assert again.shown_tool() is again.tools["notes"]  # opens on the tool last shown
@@ -125,9 +126,11 @@ def test_the_rail_view_toolbar_tool_and_status_bar_follow_the_tool_shown(
 def test_a_one_tool_build_has_its_own_name_and_no_rail(
     qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(identity, "_current", identity.Identity("Notebook", rail=False))
+    monkeypatch.setattr(
+        identity, "_current", replace(identity.CAPYPANEL, name="Notebook", rail=False)
+    )
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1}, tools=(_Notes,))
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1}, tools=(_Notes,))
     win.show()
     QApplication.processEvents()
     assert not win.rail.isVisible() and win.tools["notes"].isVisible()
