@@ -1,9 +1,9 @@
 """The Settings window: a search and a list of pages on the left, the page on the right. No
 buttons: the window's X or Esc closes it, and every choice applies as soon as it's made. The app's
-own pages come first (Appearance, Files), then each tool's group of pages, and About at the very
-bottom. A tool's pages apply their choices through the tool (see SettingsGroup)."""
+own pages come first (General, Appearance, Files), then each tool's group of pages, and About at
+the very bottom. A tool's pages apply their choices through the tool (see SettingsGroup)."""
 
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 
 from PySide6.QtCore import QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QShowEvent
@@ -25,16 +25,19 @@ from PySide6.QtWidgets import (
 from capypanel.core import i18n, settings
 from capypanel.core.i18n import _
 from capypanel.ui.about import AboutPage
+from capypanel.ui.dialogs import run_modal
 from capypanel.ui.notes import hint
 from capypanel.ui.settings import search
 from capypanel.ui.settings.group import SettingsGroup
-from capypanel.ui.settings.pages import AppearancePage, FilesPage, Page, Section
+from capypanel.ui.settings.pages import AppearancePage, FilesPage, GeneralPage, Page, Section
 from capypanel.ui.themes import engine as themes
+from capypanel.ui.tool_catalog import ToolInfo
+from capypanel.ui.tool_switches import ToolsDialog
 
 # The app's own pages' titles, as the pages set them: with the tools' titles and the groups'
 # labels, the page list is sized for the longest in any language.
-PAGE_TITLES = ("Appearance", "Files", "About")
-APP_GROUP = ("CapyPanel", ("appearance", "files"))
+PAGE_TITLES = ("General", "Appearance", "Files", "About")
+APP_GROUP = ("CapyPanel", ("general", "appearance", "files"))
 PINNED = ("about",)  # pages kept at the very bottom of the page list, apart from the groups
 SEARCH_FROM = 3  # letters typed before the search shows its results
 ROOM = 60  # spare width past the widest page: a button row never ends just short of its table
@@ -43,6 +46,8 @@ ROOM = 60  # spare width past the widest page: a button row never ends just shor
 class SettingsDialog(QDialog):
     language_picked = Signal(str)
     theme_picked = Signal(str)
+    start_picked = Signal(str)
+    restart_picked = Signal(list)  # the ids of the tools to turn off, then restart
 
     def __init__(
         self,
@@ -51,10 +56,18 @@ class SettingsDialog(QDialog):
         paths: settings.Paths,
         registry: themes.Registry,
         groups: Sequence[SettingsGroup] = (),
+        tools: Sequence[ToolInfo] = (),
+        tools_on: Collection[str] = (),
+        start: str = settings.START_HOME,
     ) -> None:
+        """tools: every tool CapyPanel has; tools_on: the ids of those on; start: what the
+        window shows at start."""
         super().__init__(parent)
         self._paths = paths
         self._registry = registry
+        self._tools = list(tools)
+        self._tools_on = set(tools_on)
+        self._start = start
         self._groups = list(groups)
         # Contents replaced on a language switch stay alive, hidden: deleting a window part
         # holding a list can crash Qt after a theme switch (see DECISIONS, code cleanup).
@@ -67,12 +80,15 @@ class SettingsDialog(QDialog):
     def _build(self, theme_id: str) -> None:
         """The pages and buttons, in the current language, showing what's set."""
         self.setWindowTitle(_("Settings"))
+        on = [(t.tool_id, _(t.name)) for t in self._tools if t.tool_id in self._tools_on]
+        self.general = GeneralPage(tools=on, start=self._start)
         self.appearance = AppearancePage(
             language=i18n.language(), registry=self._registry, theme_id=theme_id
         )
         self.files = FilesPage(self._paths)
         self.about = AboutPage(self._paths.log_dir, portable=self._paths.portable)
         self.pages: dict[str, Page] = {
+            "general": self.general,
             "appearance": self.appearance,
             "files": self.files,
             "about": self.about,
@@ -83,6 +99,8 @@ class SettingsDialog(QDialog):
             built = group.build()
             self.pages.update(built)
             self._layout_groups.append((group.LABEL, tuple(page_id for page_id, _p in built)))
+        self.general.changed.connect(self._start_changed)
+        self.general.choose_tools.clicked.connect(self._choose_tools)
         self.appearance.language.currentIndexChanged.connect(self._language_changed)
         self.appearance.theme.currentIndexChanged.connect(
             lambda: self.theme_picked.emit(self.appearance.theme_id())
@@ -133,7 +151,7 @@ class SettingsDialog(QDialog):
         self.pinned_list.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._fit_pinned()
         self.pinned_list.currentRowChanged.connect(self._pinned_picked)
-        self.page_list.setCurrentRow(self.row_of("appearance"))
+        self.page_list.setCurrentRow(self.row_of("general"))
 
         content = QWidget()
         columns = QHBoxLayout()
@@ -170,6 +188,16 @@ class SettingsDialog(QDialog):
 
     def _tool_titles(self) -> list[str]:
         return [title for group in self._groups for title in group.TITLES]
+
+    def _start_changed(self) -> None:
+        self._start = self.general.start_choice()
+        self.start_picked.emit(self._start)
+
+    def _choose_tools(self) -> None:
+        """The Tools window; its Restart CapyPanel hands the choice on."""
+        dialog = ToolsDialog(self, tools=self._tools, on=self._tools_on)
+        if run_modal(dialog) == QDialog.DialogCode.Accepted:
+            self.restart_picked.emit(dialog.off())
 
     def _language_changed(self) -> None:
         code = self.appearance.language_choice()
@@ -308,7 +336,7 @@ class SettingsDialog(QDialog):
         """The page shown, or the one shown before the search."""
         if self.stack.currentIndex() < len(self.pages):
             return list(self.pages)[self.stack.currentIndex()]
-        return getattr(self, "_before_search", "appearance")
+        return getattr(self, "_before_search", "general")
 
     def show_page(self, page_id: str) -> None:
         if page_id in PINNED:

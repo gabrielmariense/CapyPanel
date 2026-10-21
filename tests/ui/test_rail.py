@@ -91,12 +91,12 @@ def test_the_rail_view_toolbar_tool_and_status_bar_follow_the_tool_shown(
     assert win.rail.buttons["notes"].toolTip() == "Notes (Ctrl+2)"
     view = win._view_menu  # pyright: ignore[reportPrivateUsage]
     texts = [a.text().split("\t")[0] for a in view.actions() if a.text()]  # no shortcut
-    assert texts[:3] == ["&Hosts", "&Notes", "&Groups pane"]  # the tools, then Hosts' panels
+    assert texts[:4] == ["Hom&e", "&Hosts", "&Notes", "&Groups pane"]  # then Hosts' panels
     tool_keys = [a for a in win.actions() if a.shortcut().toString() == "Ctrl+2"]
     tool_keys[0].trigger()  # Ctrl+2
     assert win.rail.buttons["notes"].isChecked() and not win.hosts.isVisible()
     assert notes.isVisible() and notes.toolbar.isVisible() and not win.hosts.toolbar.isVisible()
-    assert [a.text() for a in view.actions() if a.text()][2] == "&Lines"  # its panels now
+    assert [a.text() for a in view.actions() if a.text()][3] == "&Lines"  # its panels now
     assert notes.status_label.isVisible() and not win.hosts.status_label.isVisible()
     assert notes.busy.isVisible()
     stop = win.hosts.status_widgets()[1]
@@ -110,13 +110,13 @@ def test_the_rail_view_toolbar_tool_and_status_bar_follow_the_tool_shown(
     dialog = win.settings_dialog()  # the app's pages, then each tool's group
     pages = dialog.page_list
     rows = [pages.item(i).text().strip() for i in range(pages.count())]  # type: ignore[union-attr]
-    assert rows[3:] == ["Hosts", "General", "Host lists", "Connections", "Notes", "General"]
+    assert rows[4:] == ["Hosts", "General", "Host lists", "Connections", "Notes", "General"]
     dialog.show_page("notes")
     assert dialog.current_page() == "notes"
     win.close()
-    again = CapyWindow(
-        paths, settings.load_settings(paths.settings_file), tools=(HostsTool, _Notes)
-    )
-    assert again.shown_tool() is again.tools["notes"]  # opens on the tool last shown
+    prefs = settings.load_settings(paths.settings_file)
+    prefs[settings.START_KEY] = settings.START_LAST  # Open on startup: the last used tool
+    again = CapyWindow(paths, prefs, tools=(HostsTool, _Notes))
+    assert again.shown_tool() is again.tools["notes"]
     assert set(settings.load_settings(paths.settings_file)["tools"]) == {"hosts", "notes"}
     again.close()

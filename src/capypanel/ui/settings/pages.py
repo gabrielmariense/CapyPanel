@@ -1,6 +1,7 @@
 """The Settings pages. Each one shows the current values and reports each choice as it's
 made (`changed`); the Settings window hands it on, to apply at once."""
 
+from collections.abc import Sequence
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QUrl, Signal
@@ -135,7 +136,48 @@ def open_folder(folder: Path) -> None:
     QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 
 
-# ---- CapyPanel: Appearance and Files ----
+# ---- CapyPanel: General, Appearance and Files ----
+
+
+class GeneralPage(Page):
+    """What the window shows at start, and which tools are on. The start applies at once;
+    "Choose tools…" opens the Tools window, which restarts CapyPanel to apply."""
+
+    def __init__(self, *, tools: Sequence[tuple[str, str]], start: str) -> None:
+        """tools: the tools that are on, (id, name), in the rail's order."""
+        super().__init__(_("General"))
+        self.start = QComboBox()
+        self.start.addItem(_("Home page"), settings.START_HOME)
+        self.start.addItem(_("The last used tool"), settings.START_LAST)
+        for tool_id, name in tools:
+            self.start.addItem(name, tool_id)
+        self.start.setCurrentIndex(max(self.start.findData(start), 0))
+        self.start.currentIndexChanged.connect(lambda _i: self.changed.emit())
+        startup = Section(_("Startup"))
+        add_rows(
+            startup.content,
+            SettingRow(
+                _("&Open on startup"), _("What the window shows when CapyPanel starts."), self.start
+            ),
+        )
+        self.choose_tools = QPushButton(_("&Choose tools…"))
+        names = ", ".join(name for _id, name in tools)
+        section = Section(_("Tools"))
+        add_rows(
+            section.content,
+            SettingRow(
+                _("Tools that are on"),
+                _("{tools}. Tools that are off don't load; changing them restarts "
+                  "CapyPanel.").format(tools=names),
+                self.choose_tools,
+            ),
+        )  # fmt: skip
+        self.body.addWidget(startup)
+        self.body.addWidget(section)
+        self.body.addStretch(1)
+
+    def start_choice(self) -> str:
+        return str(self.start.currentData())
 
 
 class AppearancePage(Page):

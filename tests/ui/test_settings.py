@@ -76,6 +76,7 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
     rows = [dialog.page_list.item(i).text().strip() for i in range(dialog.page_list.count())]
     assert rows == [
         "CapyPanel",
+        "General",
         "Appearance",
         "Files",
         "Hosts",
@@ -87,7 +88,7 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
         "Printer lists",
     ]
     assert [dialog.pinned_list.item(0).text().strip()] == ["About"]  # type: ignore[union-attr]
-    assert dialog.current_page() == "appearance"
+    assert dialog.current_page() == "general"
     sections = [
         w.text()
         for w in dialog.group(HostsSettings).general.findChildren(QLabel)
@@ -249,7 +250,7 @@ def test_menus_hold_only_what_fits_them(window: CapyWindow) -> None:
     assert list(menus) == ["&File", "&View", "&Help"]  # the same for every tool
     assert menus["&File"] == ["&Settings…", "E&xit"]  # lists are in the list dropdown
     assert menus["&View"] == [
-        "&Hosts", "&Printers", "&Groups pane", "T&ags pane", "&Details pane",
+        "Hom&e", "&Hosts", "&Printers", "&Groups pane", "T&ags pane", "&Details pane",
         "Show users' do&main",
         "T&oolbar", "&Status bar",
     ]  # fmt: skip
@@ -382,7 +383,7 @@ def test_the_search_shows_every_matching_section_on_one_page(window: CapyWindow)
         ]
 
     dialog.search.setText("th")  # too short: the pages as they were
-    assert len(listed()) == dialog.page_list.count() and dialog.current_page() == "appearance"
+    assert len(listed()) == dialog.page_list.count() and dialog.current_page() == "general"
     dialog.search.setText("theme")
     assert dialog.current_page() == "search" and listed() == ["CapyPanel", "Appearance"]
     assert results()[:2] == ["CapyPanel › Appearance", "Language and theme"]  # under its page

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-21 13:43-0300\n"
+"POT-Creation-Date: 2026-10-21 19:11-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,6 +48,9 @@ msgid "&Add…"
 msgstr ""
 
 msgid "&Brand:"
+msgstr ""
+
+msgid "&Choose tools…"
 msgstr ""
 
 msgid "&Connect"
@@ -201,6 +204,9 @@ msgid "&Report a problem"
 msgstr ""
 
 msgid "&Report…"
+msgstr ""
+
+msgid "&Restart CapyPanel"
 msgstr ""
 
 msgid "&Run"
@@ -384,6 +390,9 @@ msgstr ""
 msgid "Asset tag"
 msgstr ""
 
+msgid "At least one tool stays on."
+msgstr ""
+
 msgid "Brand"
 msgstr ""
 
@@ -413,6 +422,9 @@ msgid ""
 msgstr ""
 
 msgid "CapyPanel is built with the following software:"
+msgstr ""
+
+msgid "CapyPanel restarts to apply the change. Open lists are saved first."
 msgstr ""
 
 msgid "CapyPanel — dark"
@@ -765,6 +777,15 @@ msgid "Group: {name}"
 msgstr ""
 
 msgid "Groups"
+msgstr ""
+
+msgid "Hom&e"
+msgstr ""
+
+msgid "Home (Ctrl+0)"
+msgstr ""
+
+msgid "Home page"
 msgstr ""
 
 msgid "Host"
@@ -1166,6 +1187,12 @@ msgid "Paste a list below, or"
 msgstr ""
 
 msgid "Personal"
+msgstr ""
+
+msgid ""
+"Pick the tools CapyPanel shows. Tools that are off don't load: no rail "
+"button, no menu entries, no Settings pages. Their lists and settings are "
+"kept."
 msgstr ""
 
 #, python-brace-format
@@ -1612,6 +1639,9 @@ msgstr ""
 msgid "The last used list"
 msgstr ""
 
+msgid "The last used tool"
+msgstr ""
+
 msgid "The licenses folder, shipped with CapyPanel"
 msgstr ""
 
@@ -1721,6 +1751,12 @@ msgstr ""
 msgid "Tool"
 msgstr ""
 
+msgid "Tools"
+msgstr ""
+
+msgid "Tools that are on"
+msgstr ""
+
 msgid "Type"
 msgstr ""
 
@@ -1778,6 +1814,9 @@ msgstr ""
 msgid "Warning"
 msgstr ""
 
+msgid "What the window shows when CapyPanel starts."
+msgstr ""
+
 msgid "Where"
 msgstr ""
 
@@ -1822,10 +1861,16 @@ msgstr ""
 msgid "With No group, the groups inside it go directly under Groups."
 msgstr ""
 
+msgid "Your computers: connect, see who's logged on, check them."
+msgstr ""
+
 msgid "Your files"
 msgstr ""
 
 msgid "Your lists"
+msgstr ""
+
+msgid "Your printers: web pages, details, reports."
 msgstr ""
 
 msgid "Your settings, private to you and administrators."
@@ -2137,6 +2182,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{status} · checked {when}"
+msgstr ""
+
+#, python-brace-format
+msgid "{tools}. Tools that are off don't load; changing them restarts CapyPanel."
 msgstr ""
 
 #, python-brace-format

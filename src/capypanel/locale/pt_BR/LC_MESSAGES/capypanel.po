@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-21 13:43-0300\n"
+"POT-Creation-Date: 2026-10-21 19:11-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -50,6 +50,9 @@ msgstr "&Adicionar…"
 
 msgid "&Brand:"
 msgstr "&Marca:"
+
+msgid "&Choose tools…"
+msgstr "Escol&her ferramentas…"
 
 msgid "&Connect"
 msgstr "&Conectar"
@@ -203,6 +206,9 @@ msgstr "&Relatar um problema"
 
 msgid "&Report…"
 msgstr "&Relatório…"
+
+msgid "&Restart CapyPanel"
+msgstr "&Reiniciar o CapyPanel"
 
 msgid "&Run"
 msgstr "&Executar"
@@ -379,6 +385,9 @@ msgstr "&Patrimônio:"
 msgid "Asset tag"
 msgstr "Patrimônio"
 
+msgid "At least one tool stays on."
+msgstr "Pelo menos uma ferramenta fica ligada."
+
 msgid "Brand"
 msgstr "Marca"
 
@@ -407,6 +416,9 @@ msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha 
 
 msgid "CapyPanel is built with the following software:"
 msgstr "O CapyPanel é feito com os seguintes softwares:"
+
+msgid "CapyPanel restarts to apply the change. Open lists are saved first."
+msgstr "O CapyPanel reinicia para aplicar a mudança. As listas abertas são salvas antes."
 
 msgid "CapyPanel — dark"
 msgstr "CapyPanel — escuro"
@@ -758,6 +770,15 @@ msgstr "Grupo: {name}"
 
 msgid "Groups"
 msgstr "Grupos"
+
+msgid "Hom&e"
+msgstr "I&nício"
+
+msgid "Home (Ctrl+0)"
+msgstr "Início (Ctrl+0)"
+
+msgid "Home page"
+msgstr "Página inicial"
 
 msgid "Host"
 msgstr "Host"
@@ -1139,6 +1160,9 @@ msgstr "Cole uma lista abaixo, ou"
 
 msgid "Personal"
 msgstr "Pessoal"
+
+msgid "Pick the tools CapyPanel shows. Tools that are off don't load: no rail button, no menu entries, no Settings pages. Their lists and settings are kept."
+msgstr "Escolha as ferramentas que o CapyPanel mostra. Ferramentas desligadas não carregam: sem botão na barra lateral, sem itens nos menus, sem páginas nas Configurações. As listas e configurações delas são mantidas."
 
 #, python-brace-format
 msgid "Picked tags: {tags}"
@@ -1563,6 +1587,9 @@ msgstr "Os campos dos próprios hosts, que Importar hosts lê de volta: para lev
 msgid "The last used list"
 msgstr "A última lista usada"
 
+msgid "The last used tool"
+msgstr "A última ferramenta usada"
+
 msgid "The licenses folder, shipped with CapyPanel"
 msgstr "A pasta de licenças, que vem com o CapyPanel"
 
@@ -1668,6 +1695,12 @@ msgstr "Toner"
 msgid "Tool"
 msgstr "Ferramenta"
 
+msgid "Tools"
+msgstr "Ferramentas"
+
+msgid "Tools that are on"
+msgstr "Ferramentas ligadas"
+
 msgid "Type"
 msgstr "Tipo"
 
@@ -1725,6 +1758,9 @@ msgstr "Configurações do visualizador:"
 msgid "Warning"
 msgstr "Aviso"
 
+msgid "What the window shows when CapyPanel starts."
+msgstr "O que a janela mostra quando o CapyPanel inicia."
+
 msgid "Where"
 msgstr "Onde"
 
@@ -1763,11 +1799,17 @@ msgstr "Windows — claro"
 msgid "With No group, the groups inside it go directly under Groups."
 msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
 
+msgid "Your computers: connect, see who's logged on, check them."
+msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
+
 msgid "Your files"
 msgstr "Seus arquivos"
 
 msgid "Your lists"
 msgstr "Suas listas"
+
+msgid "Your printers: web pages, details, reports."
+msgstr "Suas impressoras: páginas web, detalhes, relatórios."
 
 msgid "Your settings, private to you and administrators."
 msgstr "Suas configurações, só para você e os administradores."
@@ -2065,6 +2107,10 @@ msgstr "{profile} (não disponível neste PC)"
 #, python-brace-format
 msgid "{status} · checked {when}"
 msgstr "{status} · verificado em {when}"
+
+#, python-brace-format
+msgid "{tools}. Tools that are off don't load; changing them restarts CapyPanel."
+msgstr "{tools}. Ferramentas desligadas não carregam; mudá-las reinicia o CapyPanel."
 
 #, python-brace-format
 msgid "{tool} (not installed on this PC)"

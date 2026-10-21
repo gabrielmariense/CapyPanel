@@ -1,10 +1,9 @@
-"""Starts Qt, wires up the core services and shows the main window with the tools it's given,
-so this file imports no tool."""
+"""Starts Qt, wires up the core services and shows the main window with the tools that are on.
+It imports no tool itself: the tool catalog loads the ones that are on."""
 
 import logging
 import sys
 import traceback
-from collections.abc import Sequence
 from types import TracebackType
 
 from PySide6.QtWidgets import QApplication, QMessageBox
@@ -13,15 +12,14 @@ from capypanel import BUILD, __version__
 from capypanel.core import applog, i18n, migration, settings
 from capypanel.core.i18n import _
 from capypanel.ui import branding, language
-from capypanel.ui.main_window.tool import ToolKind
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.themes import engine as themes
+from capypanel.ui.tool_catalog import tools_on
 
 log = logging.getLogger(__name__)
 
 
-def run(tools: Sequence[ToolKind], argv: list[str] | None = None) -> int:
-    """tools: in the rail's order."""
+def run(argv: list[str] | None = None) -> int:
     branding.use_own_taskbar_icon()  # before any window exists
     app = QApplication(sys.argv if argv is None else argv)
     app.setApplicationName("CapyPanel")
@@ -44,10 +42,10 @@ def run(tools: Sequence[ToolKind], argv: list[str] | None = None) -> int:
             log.info("Copied from an older version: %s", copied)
     except OSError:
         log.exception("Couldn't copy files from an older version")
+    prefs = settings.load_settings(paths.settings_file)
+    tools = [info.load() for info in tools_on(prefs)]  # only these are imported
     for tool in tools:
         tool.prepare(paths)  # e.g. the files it starts with
-
-    prefs = settings.load_settings(paths.settings_file)
     language.apply(prefs.get("language", i18n.DEFAULT_LANGUAGE))  # before any window exists
 
     registry = themes.Registry()

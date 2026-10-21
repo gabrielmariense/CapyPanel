@@ -152,9 +152,23 @@ def load_settings(path: Path) -> dict[str, Any]:
 
 
 TOOLS_KEY = "tools"  # each tool's own settings, by tool id
+TOOLS_OFF_KEY = "tools_off"  # the ids of the tools turned off: they don't load
+TOOL_KEY = "tool"  # the tool shown last
+# What the window shows at start: the Home page, the tool shown last, or a tool's id.
+START_KEY, START_HOME, START_LAST = "start", "home", "last"
 # The shell's own settings; everything else at the top level was the Hosts tool's before 0.20.
 SHELL_KEYS = frozenset(
-    {"schema", "window_geometry", "settings_geometry", "theme", "language", "tool", TOOLS_KEY}
+    {
+        "schema",
+        "window_geometry",
+        "settings_geometry",
+        "theme",
+        "language",
+        TOOL_KEY,
+        TOOLS_KEY,
+        TOOLS_OFF_KEY,
+        START_KEY,
+    }
 )
 
 

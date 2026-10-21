@@ -1,15 +1,20 @@
 """The main window: the shell that shows the tools. It owns the menu bar, the rail, the toolbar
 area, the status bar, Settings, the theme and the language; each tool owns its toolbar, panels
 and commands. The rail, View's tools, the toolbar, the tool and the status bar's text all follow
-the tool shown."""
+the tool shown. With none shown, the Home page fills the window. Only the tools that are on are
+given to it; turning tools on or off restarts CapyPanel."""
 
 import logging
-from collections.abc import Sequence
+import sys
+from collections.abc import Callable, Sequence
+from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import QByteArray, QEvent, QObject
+from PySide6.QtCore import QByteArray, QEvent, QObject, QProcess, QTimer
 from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence, QResizeEvent, QShowEvent
 from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
     QHBoxLayout,
     QMainWindow,
     QStackedWidget,
@@ -23,11 +28,14 @@ from capypanel.core.i18n import _
 from capypanel.ui import about, language
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
+from capypanel.ui.main_window.home import HomePage
 from capypanel.ui.main_window.rail import ToolRail
 from capypanel.ui.main_window.tool import Tool, ToolKind
 from capypanel.ui.menus import StayOpenMenu
 from capypanel.ui.settings.window import SettingsDialog
 from capypanel.ui.themes import engine as themes
+from capypanel.ui.tool_catalog import CATALOG, ToolInfo
+from capypanel.ui.tool_switches import ToolsDialog
 
 log = logging.getLogger(__name__)
 
@@ -40,8 +48,11 @@ class MainWindow(QMainWindow):
         *,
         tools: Sequence[ToolKind],
         registry: themes.Registry | None = None,
+        catalog: Sequence[ToolInfo] = CATALOG,
+        start_again: Callable[[], None] | None = None,
     ):
-        """tools: the build's tools, in the rail's order."""
+        """tools: the tools that are on, in the rail's order. catalog: every tool CapyPanel
+        has, for the Tools window. start_again: starts a new CapyPanel, on a restart."""
         super().__init__()
         self.paths = paths
         self.prefs = prefs
@@ -49,17 +60,30 @@ class MainWindow(QMainWindow):
         self.commands = create_actions(self)
         self.rail = ToolRail()
         self.rail.settings_requested.connect(lambda: self.open_settings())
+        self.rail.home_requested.connect(self.show_home)
         self.rail.tool_picked.connect(self.show_tool)
+        self._catalog = list(catalog)
+        self._start_again = start_again or start_capypanel
         self.tools: dict[str, Tool] = {}
         # Each tool's toolbar on top of the tool, one page each; the page shown is the tool's.
         self._pages = QStackedWidget()
-        self._tool_actions = QActionGroup(self)  # View's tools: one shown at a time
+        self._tool_actions = QActionGroup(self)  # View's Home and tools: one shown at a time
         self._tool_actions.setExclusive(True)
+        self._home_action = QAction(self)
+        self._home_action.setCheckable(True)
+        self._home_action.setShortcut(QKeySequence("Ctrl+0"))
+        self._home_action.triggered.connect(lambda _c=False: self.show_home())
+        self._tool_actions.addAction(self._home_action)
+        self.addAction(self._home_action)
         self._status: dict[str, _StatusGroup] = {}  # each tool's, on the status bar's right
         self._page_of: dict[str, QWidget] = {}  # each tool's page: its toolbar and the tool
         for make in tools:
             self._add_tool(make(self))
-        self._shown = next(iter(self.tools))
+        self._shown: str | None = None  # the tool shown; None: Home
+        self.home = HomePage([info for info in self._catalog if info.tool_id in self.tools])
+        self.home.tool_picked.connect(self.show_tool)
+        self.home.choose_tools.connect(self.choose_tools)
+        self._pages.insertWidget(0, self.home)
 
         # The rail runs down the left edge; the tool shown, its toolbar on top, fills the rest.
         central = QWidget()
@@ -73,8 +97,11 @@ class MainWindow(QMainWindow):
         self._build_menus()
         self._connect()
         self._restore_layout()
-        saved = self.prefs.get("tool")
-        self.show_tool(saved if isinstance(saved, str) and saved in self.tools else self._shown)
+        # Home, unless the user picked a tool, or the tool shown last, in Settings.
+        start = self.prefs.get(settings.START_KEY, settings.START_HOME)
+        if start == settings.START_LAST:
+            start = self.prefs.get(settings.TOOL_KEY)
+        self._show(start if isinstance(start, str) and start in self.tools else None)
 
     def _add_tool(self, tool: Tool) -> None:
         tool_id = tool.TOOL_ID
@@ -102,24 +129,38 @@ class MainWindow(QMainWindow):
         self._status[tool_id] = right
         tool.title_changed.connect(lambda _name, t=tool_id: self._title_changed(t))
 
-    def shown_tool(self) -> Tool:
-        return self.tools[self._shown]
+    def shown_tool(self) -> Tool | None:
+        """None while Home is shown."""
+        return None if self._shown is None else self.tools[self._shown]
 
     def show_tool(self, tool_id: str) -> None:
-        """The rail, View's tools, the toolbar, the tool and the status bar follow."""
+        self._show(tool_id)
+
+    def show_home(self) -> None:
+        self._show(None)
+
+    def _show(self, tool_id: str | None) -> None:
+        """The rail, View's tools, the toolbar, the tool and the status bar follow. Home has
+        no toolbar and nothing on the status bar."""
         self._shown = tool_id
-        tool = self.tools[tool_id]
-        self._pages.setCurrentWidget(self._page_of[tool_id])
+        tool = self.shown_tool()
+        self._pages.setCurrentWidget(self.home if tool_id is None else self._page_of[tool_id])
         self.rail.show_tool(tool_id)
-        for action in self._tool_actions.actions():
+        self._home_action.setChecked(tool_id is None)
+        for action in self._tool_list_actions():
             action.setChecked(action.data() == tool_id)
         for other_id, other in self.tools.items():
             other.status_label.setVisible(other_id == tool_id)
             self._status[other_id].set_shown(other_id == tool_id)
         self._fill_view_menu()
-        self._show_title(tool.title())
-        tool.align_toolbar_later()
-        self.prefs["tool"] = tool_id
+        self._show_title(tool.title() if tool is not None else "")
+        if tool is not None:
+            tool.align_toolbar_later()
+            self.prefs[settings.TOOL_KEY] = tool_id
+
+    def _tool_list_actions(self) -> list[QAction]:
+        """View's tools, without Home."""
+        return [a for a in self._tool_actions.actions() if a is not self._home_action]
 
     # ---- what tools ask of the shell ----
 
@@ -146,6 +187,26 @@ class MainWindow(QMainWindow):
         self.prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
         self.save_prefs()
 
+    # ---- turning tools on and off ----
+
+    def choose_tools(self) -> None:
+        dialog = ToolsDialog(self, tools=self._catalog, on=self.tools)
+        if run_modal(dialog) == QDialog.DialogCode.Accepted:
+            self.restart(dialog.off())
+
+    def restart(self, off: list[str]) -> None:
+        """Turns those tools off and the others on, closes as on exit (everything saved),
+        and starts CapyPanel again: tools that are off aren't loaded at all."""
+        self.prefs[settings.TOOLS_OFF_KEY] = off
+        self.save_prefs()
+        QTimer.singleShot(0, self, self._close_and_start_again)  # once Settings has closed
+
+    def _close_and_start_again(self) -> None:
+        if self.close():
+            log.info("Restarting, tools off: %s", self.prefs[settings.TOOLS_OFF_KEY])
+            self._start_again()
+            QApplication.quit()
+
     # ---- building ----
 
     def _build_menus(self) -> None:
@@ -168,15 +229,18 @@ class MainWindow(QMainWindow):
         self._retranslate_menus()
 
     def _fill_view_menu(self) -> None:
-        """The tools first, then the shown tool's panels, then the window's parts; theme and
-        language are in Settings."""
+        """Home and the tools first, then the shown tool's panels, then the window's parts;
+        theme and language are in Settings."""
         menu = self._view_menu
         for action in menu.actions():  # not clear(): it deletes the tools' own actions
             menu.removeAction(action)
             if action.isSeparator():
                 action.deleteLater()  # the menu's own
-        menu.addActions(self._tool_actions.actions())
-        for group in self.shown_tool().view_actions():
+        menu.addAction(self._home_action)
+        menu.addSeparator()
+        menu.addActions(self._tool_list_actions())
+        tool = self.shown_tool()
+        for group in tool.view_actions() if tool is not None else []:
             menu.addSeparator()
             menu.addActions(group)
         menu.addSeparator()
@@ -187,7 +251,8 @@ class MainWindow(QMainWindow):
         self.rail.retranslate()
         for index, (tool_id, tool) in enumerate(self.tools.items(), start=1):
             self.rail.buttons[tool_id].setToolTip(f"{tool.tool_name()} (Ctrl+{index})")
-        for action in self._tool_actions.actions():
+        self._home_action.setText(_("Hom&e"))
+        for action in self._tool_list_actions():
             action.setText(self.tools[str(action.data())].menu_name())
         self._file_menu.setTitle(_("&File"))
         self._view_menu.setTitle(_("&View"))
@@ -208,7 +273,7 @@ class MainWindow(QMainWindow):
     def _show_toolbars(self, shown: bool) -> None:
         for tool in self.tools.values():
             tool.toolbar.setVisible(shown)
-        self.shown_tool().align_toolbar_later()
+        self._align_toolbar()
 
     def _restore_layout(self) -> None:
         geometry = self.prefs.get("window_geometry")
@@ -229,6 +294,10 @@ class MainWindow(QMainWindow):
         a = self.commands
         return {"toolbar": a.show_toolbar, "status_bar": a.show_status_bar}
 
+    def _align_toolbar(self) -> None:
+        if (tool := self.shown_tool()) is not None:
+            tool.align_toolbar_later()
+
     def _title_changed(self, tool_id: str) -> None:
         if tool_id == self._shown:
             self._show_title(self.tools[tool_id].title())
@@ -242,10 +311,25 @@ class MainWindow(QMainWindow):
     def settings_dialog(self) -> SettingsDialog:
         """Settings, wired up: every choice applies as it's made, with no Save."""
         groups = [g for t in self.tools.values() if (g := t.settings_group()) is not None]
-        dialog = SettingsDialog(self, paths=self.paths, registry=self.registry, groups=groups)
+        start = self.prefs.get(settings.START_KEY)
+        dialog = SettingsDialog(
+            self,
+            paths=self.paths,
+            registry=self.registry,
+            groups=groups,
+            tools=self._catalog,
+            tools_on=self.tools,
+            start=start if isinstance(start, str) else settings.START_HOME,
+        )
         dialog.language_picked.connect(self.set_language)
         dialog.theme_picked.connect(self.set_theme)
+        dialog.start_picked.connect(self._set_start)
+        dialog.restart_picked.connect(lambda off: (dialog.done(0), self.restart(off)))
         return dialog
+
+    def _set_start(self, start: str) -> None:
+        self.prefs[settings.START_KEY] = start
+        self.save_prefs()
 
     # ---- look ----
 
@@ -273,17 +357,18 @@ class MainWindow(QMainWindow):
     def retranslate(self) -> None:
         """Every text this window shows, in the current language."""
         self._retranslate_menus()
+        self.home.retranslate()
         for tool in self.tools.values():
             tool.retranslate()
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         themes.paint_title_bar(self)  # the window handle only exists once it's shown
-        self.shown_tool().align_toolbar_later()
+        self._align_toolbar()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
-        self.shown_tool().align_toolbar_later()
+        self._align_toolbar()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         self.prefs["window_geometry"] = self.saveGeometry().toBase64().toStdString()
@@ -292,6 +377,17 @@ class MainWindow(QMainWindow):
         self.prefs["view"] = {k: a.isChecked() for k, a in self._view_choices().items()}
         self.save_prefs()
         super().closeEvent(event)
+
+
+def start_capypanel() -> None:
+    """A new CapyPanel, started the way this one was: the packaged app, or from source (with
+    pythonw, so no console window opens)."""
+    if getattr(sys, "frozen", False):
+        QProcess.startDetached(sys.executable, sys.argv[1:])
+        return
+    windowless = Path(sys.executable).with_name("pythonw.exe")
+    python = windowless if windowless.exists() else Path(sys.executable)
+    QProcess.startDetached(str(python), ["-m", "capypanel", *sys.argv[1:]])
 
 
 class _StatusGroup(QWidget):

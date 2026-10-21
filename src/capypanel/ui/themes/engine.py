@@ -520,6 +520,12 @@ QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-
 QLabel#sectionTitle { color: %(accent_text)s; font-weight: bold; font-size: 12pt; }
 QWidget#sectionCard { background: %(section)s; border: 1px solid %(section_edge)s;
                       border-radius: 10px; }
+/* Home's tool tiles: a card each, the tool's icon on a tinted square; the pointer over
+   one edges it in the accent. */
+QFrame#homeTile { background: %(section)s; border: 1px solid %(section_edge)s;
+                  border-radius: 10px; }
+QFrame#homeTile:hover { border-color: %(accent)s; }
+QLabel#tileBadge { background: %(sel_solid)s; border-radius: 8px; }
 QFrame#pagesDivider { background: %(pages_line)s; border: none; }
 QLabel#copyValue { padding: 2px 4px; border-radius: 4px; }
 QLabel#copyValue:hover { background: %(hover)s; }
@@ -624,6 +630,12 @@ QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-
 QLabel#sectionTitle { color: %(accent_text)s; font-weight: bold; font-size: 12pt; }
 QWidget#sectionCard { background: %(section)s; border: 1px solid %(section_edge)s;
                       border-radius: 10px; }
+/* Home's tool tiles: a card each, the tool's icon on a tinted square; the pointer over
+   one edges it in the accent. */
+QFrame#homeTile { background: %(section)s; border: 1px solid %(section_edge)s;
+                  border-radius: 10px; }
+QFrame#homeTile:hover { border-color: %(accent)s; }
+QLabel#tileBadge { background: %(sel)s; border-radius: 8px; }
 QFrame#pagesDivider { background: %(pages_line)s; border: none; }
 QLabel#copyValue { padding: 2px 4px; border-radius: 4px; }
 QLabel#copyValue:hover { background: %(hover)s; }
