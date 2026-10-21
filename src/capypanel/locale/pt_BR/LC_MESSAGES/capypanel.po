@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-20 11:02-0300\n"
+"POT-Creation-Date: 2026-10-21 13:43-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1529,8 +1529,8 @@ msgid "The default list"
 msgstr "A lista padrão"
 
 #, python-brace-format
-msgid "The default list was made by another user, so {app} won't open it. An administrator can replace or delete “{path}”."
-msgstr "A lista padrão foi criada por outro usuário, então o {app} não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
+msgid "The default list was made by another user, so CapyPanel won't open it. An administrator can replace or delete “{path}”."
+msgstr "A lista padrão foi criada por outro usuário, então o CapyPanel não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
 
 msgid "The file doesn't contain a list."
 msgstr "O arquivo não contém uma lista."
@@ -1551,8 +1551,8 @@ msgid "The first line names the columns, in any order. Subgroups are separated b
 msgstr "A primeira linha dá nome às colunas, em qualquer ordem, em português ou inglês. Subgrupos são separados por /, tags por ;. Listas exportadas usam este formato."
 
 #, python-brace-format
-msgid "The folder “{folder}” was created by another user, so {app} won't use it. Ask an administrator to delete it; it will be created again."
-msgstr "A pasta “{folder}” foi criada por outro usuário, então o {app} não vai usá-la. Peça a um administrador para excluí-la; ela será criada de novo."
+msgid "The folder “{folder}” was created by another user, so CapyPanel won't use it. Ask an administrator to delete it; it will be created again."
+msgstr "A pasta “{folder}” foi criada por outro usuário, então o CapyPanel não vai usá-la. Peça a um administrador para excluí-la; ela será criada de novo."
 
 msgid "The groups changed meanwhile; try again."
 msgstr "Os grupos mudaram enquanto isso; tente de novo."
@@ -1653,9 +1653,8 @@ msgstr "Esta lista está em modo somente leitura."
 msgid "This list needs a header row."
 msgstr "Esta lista precisa de uma linha de cabeçalho."
 
-#, python-brace-format
-msgid "This list was saved by a newer version of {app}. Update the app to open it."
-msgstr "Esta lista foi salva por uma versão mais nova do {app}. Atualize o aplicativo para abri-la."
+msgid "This list was saved by a newer version of CapyPanel. Update the app to open it."
+msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o aplicativo para abri-la."
 
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyPanel."

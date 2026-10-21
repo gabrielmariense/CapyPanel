@@ -1,18 +1,16 @@
-"""Starts Qt, wires up the core services and shows the main window, for one build: CapyPanel
-with all its tools, or a build with one tool. A build names itself and its tools, so this file
-imports no tool."""
+"""Starts Qt, wires up the core services and shows the main window with the tools it's given,
+so this file imports no tool."""
 
 import logging
 import sys
 import traceback
 from collections.abc import Sequence
-from dataclasses import dataclass
 from types import TracebackType
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from capypanel import BUILD, __version__
-from capypanel.core import applog, i18n, identity, migration, settings
+from capypanel.core import applog, i18n, migration, settings
 from capypanel.core.i18n import _
 from capypanel.ui import branding, language
 from capypanel.ui.main_window.tool import ToolKind
@@ -22,21 +20,11 @@ from capypanel.ui.themes import engine as themes
 log = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class Build:
-    """One app made from this code: its identity and its tools, in the rail's order."""
-
-    identity: identity.Identity
-    tools: Sequence[ToolKind]
-    carry_over: bool = False  # copy what older versions of this app kept elsewhere (CapyPanel)
-
-
-def run(build: Build, argv: list[str] | None = None) -> int:
-    identity.use(build.identity)
-    name = build.identity.name
+def run(tools: Sequence[ToolKind], argv: list[str] | None = None) -> int:
+    """tools: in the rail's order."""
     branding.use_own_taskbar_icon()  # before any window exists
     app = QApplication(sys.argv if argv is None else argv)
-    app.setApplicationName(name)
+    app.setApplicationName("CapyPanel")
     app.setWindowIcon(branding.app_icon())
     app.setApplicationVersion(__version__)
     sys.excepthook = _report_unexpected_error
@@ -44,20 +32,19 @@ def run(build: Build, argv: list[str] | None = None) -> int:
     # Logging first, so a problem with the user's folder is logged and shown, not lost.
     paths = settings.resolve_paths()
     applog.setup_logging(paths.log_file)
-    log.info("%s %s starting for %s (portable=%s)", name, BUILD, paths.account, paths.portable)
+    log.info("CapyPanel %s starting for %s (portable=%s)", BUILD, paths.account, paths.portable)
     try:
         settings.ensure_dirs(paths)
     except settings.UserFolderError as e:
         log.error("%s", e)
-        QMessageBox.critical(None, name, str(e))
+        QMessageBox.critical(None, "CapyPanel", str(e))
         return 1
-    if build.carry_over:
-        try:
-            for copied in migration.migrate(paths):
-                log.info("Copied from an older version: %s", copied)
-        except OSError:
-            log.exception("Couldn't copy files from an older version")
-    for tool in build.tools:
+    try:
+        for copied in migration.migrate(paths):
+            log.info("Copied from an older version: %s", copied)
+    except OSError:
+        log.exception("Couldn't copy files from an older version")
+    for tool in tools:
         tool.prepare(paths)  # e.g. the files it starts with
 
     prefs = settings.load_settings(paths.settings_file)
@@ -65,10 +52,10 @@ def run(build: Build, argv: list[str] | None = None) -> int:
 
     registry = themes.Registry()
     themes.apply(registry.find(prefs.get("theme")))
-    window = MainWindow(paths, prefs, registry=registry, tools=build.tools)
+    window = MainWindow(paths, prefs, registry=registry, tools=tools)
     window.show()
     code = app.exec()
-    log.info("%s exiting (code %s)", name, code)
+    log.info("CapyPanel exiting (code %s)", code)
     return code
 
 

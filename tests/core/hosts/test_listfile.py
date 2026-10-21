@@ -1,13 +1,11 @@
 import json
 import os
 import stat
-from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from capypanel.core import identity
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.listfile import (
     HostListChangedError,
@@ -114,18 +112,6 @@ def test_a_newer_schema_is_refused_not_rewritten(tmp_path: Path) -> None:
     with pytest.raises(HostListTooNewError, match="newer version of CapyPanel"):
         listfile.load(path)
     assert path.read_bytes() == before
-
-
-def test_the_newer_version_message_names_the_app_in_use(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(
-        identity, "_current", replace(identity.CAPYPANEL, name="CapyPrinters", rail=False)
-    )
-    path = tmp_path / "printers.json"
-    _write(path, {**EXAMPLE, "schema": listfile.SCHEMA + 1})
-    with pytest.raises(HostListTooNewError, match="newer version of CapyPrinters"):
-        listfile.load(path)
 
 
 def test_save_refuses_when_someone_else_changed_the_file(tmp_path: Path) -> None:

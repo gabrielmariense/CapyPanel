@@ -5,9 +5,9 @@ import sys
 
 def main() -> int:
     from capypanel.ui.app import run
-    from capypanel.ui.builds import CAPYPANEL
+    from capypanel.ui.tool_catalog import TOOLS
 
-    return run(CAPYPANEL)
+    return run(TOOLS)
 
 
 if __name__ == "__main__":

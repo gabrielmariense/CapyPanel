@@ -19,7 +19,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.core import identity
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.listfile import HostListFileError
@@ -169,7 +168,7 @@ class ListsView(QWidget):
                 name=path.name,
                 why=self.tree.currentItem().text(2).lower(),  # type: ignore[union-attr]
             )
-            QMessageBox.warning(self, identity.current().name, message)
+            QMessageBox.warning(self, "CapyPanel", message)
             return
         self.open_requested.emit(path)
 
@@ -295,7 +294,7 @@ class ListsView(QWidget):
             )
         except (HostListFileError, OSError) as e:
             message = _("Couldn't open “{path}”: {error}").format(path=source, error=e)
-            QMessageBox.warning(self, identity.current().name, message)
+            QMessageBox.warning(self, "CapyPanel", message)
             return
         path = self._ask_path(_("Save a copy of the list"))
         if path is not None and self._write(
@@ -318,7 +317,7 @@ class ListsView(QWidget):
         if answer == DELETE:
             if not QFile.moveToTrash(str(path)):
                 message = _("Couldn't move “{path}” to the Recycle Bin.").format(path=path)
-                QMessageBox.warning(self, identity.current().name, message)
+                QMessageBox.warning(self, "CapyPanel", message)
                 return
             log.info("Host list moved to the Recycle Bin: %s", path)
             self._all_found = [p for p in self._all_found if not locations.same_path(p, path)]
@@ -351,6 +350,6 @@ class ListsView(QWidget):
             write()
         except (HostListFileError, OSError) as e:
             message = _("Couldn't write “{path}”: {error}").format(path=path, error=e)
-            QMessageBox.warning(self, identity.current().name, message)
+            QMessageBox.warning(self, "CapyPanel", message)
             return False
         return True

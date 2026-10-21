@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.core import files, identity, settings, winsec
+from capypanel.core import files, settings, winsec
 from capypanel.core.hosts import locations
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.listfile import (
@@ -378,10 +378,10 @@ class ListWorkspace(Tool):
             return self._create_list(path, replace_existing=False, quiet=quiet)
         if kind is ListKind.DEFAULT and not winsec.made_by_trusted(path):
             note = _(
-                "The default list was made by another user, so {app} won't open it. An "
+                "The default list was made by another user, so CapyPanel won't open it. An "
                 "administrator can replace or delete “{path}”."
             )
-            self._error(note.format(app=identity.current().name, path=path), quiet)
+            self._error(note.format(path=path), quiet)
             return False
         try:
             doc = OpenList.open(path, kind=self.TOOL_ID)
@@ -1117,7 +1117,7 @@ class ListWorkspace(Tool):
         if quiet:
             self._shell.show_message(message, 10_000)
         else:
-            QMessageBox.warning(self, identity.current().name, message)
+            QMessageBox.warning(self, "CapyPanel", message)
 
     def _save_prefs(self) -> None:
         self._shell.save_prefs()

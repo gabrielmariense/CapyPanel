@@ -29,7 +29,8 @@ class Shell(Protocol):
 
 
 class ToolKind(Protocol):
-    """A tool class, as a build lists it: made from the shell, and able to prepare its files."""
+    """A tool class, as the tool catalog lists it: made from the shell, and able to prepare its
+    files."""
 
     def __call__(self, shell: Shell) -> "Tool": ...
 

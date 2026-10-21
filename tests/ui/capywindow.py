@@ -4,14 +4,14 @@ tools."""
 from typing import Any
 
 from capypanel.core import settings
-from capypanel.ui.builds import CAPYPANEL
 from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.tool_catalog import TOOLS
 
 
 class CapyWindow(MainWindow):
     def __init__(self, paths: settings.Paths, prefs: dict[str, Any], **kwargs: Any) -> None:
-        kwargs.setdefault("tools", CAPYPANEL.tools)
+        kwargs.setdefault("tools", TOOLS)
         super().__init__(paths, prefs, **kwargs)
 
     @property
