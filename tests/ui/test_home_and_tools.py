@@ -161,3 +161,19 @@ def test_tools_that_are_off_aren_t_loaded() -> None:
         [sys.executable, "-c", code], capture_output=True, text=True, check=True
     ).stdout.strip()
     assert found == "[]"
+
+
+def test_the_mascot_on_home_can_be_hidden_in_settings(home: CapyWindow) -> None:
+    assert home.home.mascot.isVisible()  # shown by default
+    dialog = home.settings_dialog()
+    switch = dialog.general.mascot
+    assert switch.isChecked()
+    switch.setChecked(False)  # applies at once, no Save
+    assert not home.home.mascot.isVisible()
+    assert settings.load_settings(home.paths.settings_file)[settings.HOME_MASCOT_KEY] is False
+    again = CapyWindow(home.paths, settings.load_settings(home.paths.settings_file))
+    again.show()
+    QApplication.processEvents()
+    assert again.home.mascot.isHidden()  # hidden at start too, wherever it opens
+    assert not again.settings_dialog().general.mascot.isChecked()  # remembered
+    again.close()

@@ -132,6 +132,9 @@ class HomePage(QWidget):
         self.retranslate()
         self.restyle()
 
+    def show_mascot(self, shown: bool) -> None:
+        self.mascot.setVisible(shown)
+
     def retranslate(self) -> None:
         self.tagline.setText(_("Every computer you look after, in one window."))
         self.choose_button.setText(_("&Choose tools…"))

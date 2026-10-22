@@ -84,6 +84,7 @@ class MainWindow(QMainWindow):
         self.home.tool_picked.connect(self.show_tool)
         self.home.choose_tools.connect(self.choose_tools)
         self._pages.insertWidget(0, self.home)
+        self.home.show_mascot(self.prefs.get(settings.HOME_MASCOT_KEY) is not False)
 
         # The rail runs down the left edge; the tool shown, its toolbar on top, fills the rest.
         central = QWidget()
@@ -320,16 +321,23 @@ class MainWindow(QMainWindow):
             tools=self._catalog,
             tools_on=self.tools,
             start=start if isinstance(start, str) else settings.START_HOME,
+            mascot=self.prefs.get(settings.HOME_MASCOT_KEY) is not False,
         )
         dialog.language_picked.connect(self.set_language)
         dialog.theme_picked.connect(self.set_theme)
         dialog.start_picked.connect(self._set_start)
+        dialog.mascot_picked.connect(self._set_mascot)
         dialog.restart_picked.connect(lambda off: (dialog.done(0), self.restart(off)))
         return dialog
 
     def _set_start(self, start: str) -> None:
         self.prefs[settings.START_KEY] = start
         self.save_prefs()
+
+    def _set_mascot(self, shown: bool) -> None:
+        self.prefs[settings.HOME_MASCOT_KEY] = shown
+        self.save_prefs()
+        self.home.show_mascot(shown)
 
     # ---- look ----
 

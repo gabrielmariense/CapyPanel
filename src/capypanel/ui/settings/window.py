@@ -47,6 +47,7 @@ class SettingsDialog(QDialog):
     language_picked = Signal(str)
     theme_picked = Signal(str)
     start_picked = Signal(str)
+    mascot_picked = Signal(bool)  # Home shows the mascot, or not
     restart_picked = Signal(list)  # the ids of the tools to turn off, then restart
 
     def __init__(
@@ -59,6 +60,7 @@ class SettingsDialog(QDialog):
         tools: Sequence[ToolInfo] = (),
         tools_on: Collection[str] = (),
         start: str = settings.START_HOME,
+        mascot: bool = True,
     ) -> None:
         """tools: every tool CapyPanel has; tools_on: the ids of those on; start: what the
         window shows at start."""
@@ -68,6 +70,7 @@ class SettingsDialog(QDialog):
         self._tools = list(tools)
         self._tools_on = set(tools_on)
         self._start = start
+        self._mascot = mascot
         self._groups = list(groups)
         # Contents replaced on a language switch stay alive, hidden: deleting a window part
         # holding a list can crash Qt after a theme switch (see DECISIONS, code cleanup).
@@ -81,7 +84,7 @@ class SettingsDialog(QDialog):
         """The pages and buttons, in the current language, showing what's set."""
         self.setWindowTitle(_("Settings"))
         on = [(t.tool_id, _(t.name)) for t in self._tools if t.tool_id in self._tools_on]
-        self.general = GeneralPage(tools=on, start=self._start)
+        self.general = GeneralPage(tools=on, start=self._start, mascot=self._mascot)
         self.appearance = AppearancePage(
             language=i18n.language(), registry=self._registry, theme_id=theme_id
         )
@@ -101,6 +104,7 @@ class SettingsDialog(QDialog):
             self._layout_groups.append((group.LABEL, tuple(page_id for page_id, _p in built)))
         self.general.changed.connect(self._start_changed)
         self.general.choose_tools.clicked.connect(self._choose_tools)
+        self.general.mascot.toggled.connect(self._mascot_changed)
         self.appearance.language.currentIndexChanged.connect(self._language_changed)
         self.appearance.theme.currentIndexChanged.connect(
             lambda: self.theme_picked.emit(self.appearance.theme_id())
@@ -192,6 +196,10 @@ class SettingsDialog(QDialog):
     def _start_changed(self) -> None:
         self._start = self.general.start_choice()
         self.start_picked.emit(self._start)
+
+    def _mascot_changed(self, shown: bool) -> None:
+        self._mascot = shown
+        self.mascot_picked.emit(shown)
 
     def _choose_tools(self) -> None:
         """The Tools window; its Restart CapyPanel hands the choice on."""

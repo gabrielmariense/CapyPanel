@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 01:43-0300\n"
+"POT-Creation-Date: 2026-10-22 15:15-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -134,6 +134,9 @@ msgstr "&Idioma"
 
 msgid "&Leave out of the import"
 msgstr "&Deixar fora da importação"
+
+msgid "&List on startup"
+msgstr "&Lista ao iniciar"
 
 msgid "&Locate…"
 msgstr "&Localizar…"
@@ -1449,6 +1452,9 @@ msgstr "Listas compartilhadas ficam na pasta de listas compartilhadas e aparecem
 msgid "Show &first"
 msgstr "Mostrar &primeiro"
 
+msgid "Show the &mascot"
+msgstr "Mostrar o &mascote"
+
 msgid "Show this group &first"
 msgstr "Mostrar este grupo &primeiro"
 
@@ -1561,6 +1567,9 @@ msgstr "Os logs do app, para anexar a um relato de problema"
 #, python-brace-format
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
 msgstr "Os argumentos usam uma opção que não está em “options”: “{option}”."
+
+msgid "The capybara above the tools."
+msgstr "A capivara acima das ferramentas."
 
 msgid "The computer didn't accept the account: a wrong password, a locked account, or an account it doesn't trust."
 msgstr "O computador não aceitou a conta: senha errada, conta bloqueada ou uma conta em que ele não confia."

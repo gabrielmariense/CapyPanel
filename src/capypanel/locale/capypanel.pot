@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 01:43-0300\n"
+"POT-Creation-Date: 2026-10-22 15:15-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -132,6 +132,9 @@ msgid "&Language"
 msgstr ""
 
 msgid "&Leave out of the import"
+msgstr ""
+
+msgid "&List on startup"
 msgstr ""
 
 msgid "&Locate…"
@@ -1484,6 +1487,9 @@ msgstr ""
 msgid "Show &first"
 msgstr ""
 
+msgid "Show the &mascot"
+msgstr ""
+
 msgid "Show this group &first"
 msgstr ""
 
@@ -1602,6 +1608,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
+msgstr ""
+
+msgid "The capybara above the tools."
 msgstr ""
 
 msgid ""

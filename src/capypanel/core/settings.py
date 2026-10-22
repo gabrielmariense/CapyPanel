@@ -156,6 +156,7 @@ TOOLS_OFF_KEY = "tools_off"  # the ids of the tools turned off: they don't load
 TOOL_KEY = "tool"  # the tool shown last
 # What the window shows at start: the Home page, the tool shown last, or a tool's id.
 START_KEY, START_HOME, START_LAST = "start", "home", "last"
+HOME_MASCOT_KEY = "home_mascot"  # whether Home shows the mascot; it does unless turned off
 # The shell's own settings; everything else at the top level was the Hosts tool's before 0.20.
 SHELL_KEYS = frozenset(
     {
@@ -168,6 +169,7 @@ SHELL_KEYS = frozenset(
         TOOLS_KEY,
         TOOLS_OFF_KEY,
         START_KEY,
+        HOME_MASCOT_KEY,
     }
 )
 
