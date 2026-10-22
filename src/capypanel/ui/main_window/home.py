@@ -1,5 +1,5 @@
 """The Home page: what the window shows when no tool is. The mascot, the app's name and tagline,
-then a tile per tool that's on (a click opens it), then Choose tools…, all centred."""
+then a tile per tool (a click opens it), all centred."""
 
 from collections.abc import Sequence
 
@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLayout,
-    QPushButton,
     QVBoxLayout,
     QWidget,
 )
@@ -87,10 +86,9 @@ class ToolTile(QFrame):
 
 class HomePage(QWidget):
     tool_picked = Signal(str)  # a tool's id
-    choose_tools = Signal()
 
     def __init__(self, tools: Sequence[ToolInfo]) -> None:
-        """tools: the tools that are on, in the rail's order."""
+        """tools: in the rail's order."""
         super().__init__()
         self.mascot = QLabel()
         self.title = QLabel("CapyPanel")
@@ -107,9 +105,6 @@ class HomePage(QWidget):
         self._grid = QGridLayout()
         self._grid.setSpacing(TILE_GAP)
         self._columns = 0
-        self.choose_button = QPushButton()
-        self.choose_button.setAutoDefault(False)
-        self.choose_button.clicked.connect(self.choose_tools)
         column = QVBoxLayout(self)
         # The tiles' row never holds the window wide: they wrap instead (see minimumSizeHint).
         column.setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)
@@ -125,19 +120,13 @@ class HomePage(QWidget):
         tiles.addLayout(self._grid)
         tiles.addStretch(1)
         column.addLayout(tiles)
-        column.addSpacing(TILE_GAP)
-        column.addWidget(self.choose_button, 0, Qt.AlignmentFlag.AlignHCenter)
         column.addStretch(3)
         self._place_tiles(len(self.tiles))
         self.retranslate()
         self.restyle()
 
-    def show_mascot(self, shown: bool) -> None:
-        self.mascot.setVisible(shown)
-
     def retranslate(self) -> None:
         self.tagline.setText(_("Every computer you look after, in one window."))
-        self.choose_button.setText(_("&Choose tools…"))
         for tile in self.tiles:
             tile.retranslate()
 

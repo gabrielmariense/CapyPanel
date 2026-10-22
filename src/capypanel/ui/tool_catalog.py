@@ -1,11 +1,9 @@
-"""Every tool CapyPanel has, in the rail's order. A tool's code is imported only when the tool is
-on, so tools turned off cost nothing; what the Tools window shows of them is kept here."""
+"""Every tool CapyPanel has, in the rail's order, with what Home and Settings show of it. The
+window and the start-up import no tool themselves: load() does."""
 
 import importlib
 from dataclasses import dataclass
-from typing import Any
 
-from capypanel.core import settings
 from capypanel.core.i18n import N_
 from capypanel.ui.main_window.tool import ToolKind
 
@@ -16,7 +14,7 @@ class ToolInfo:
     icon: str  # a Tabler icon's name
     name: str  # N_() texts: shown through _()
     blurb: str  # what the tool is for, in one line
-    module: str  # where its class lives, imported only when the tool is on
+    module: str  # where its class lives
     class_name: str
 
     def load(self) -> ToolKind:
@@ -41,10 +39,3 @@ CATALOG = (
         "PrintersTool",
     ),
 )
-
-
-def tools_on(prefs: dict[str, Any], catalog: tuple[ToolInfo, ...] = CATALOG) -> list[ToolInfo]:
-    """The tools that are on, in the rail's order. Never none: with every one off, the first."""
-    off = prefs.get(settings.TOOLS_OFF_KEY)
-    off = {i for i in off if isinstance(i, str)} if isinstance(off, list) else set()
-    return [t for t in catalog if t.tool_id not in off] or list(catalog[:1])

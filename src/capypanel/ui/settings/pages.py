@@ -7,7 +7,6 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QResizeEvent
 from PySide6.QtWidgets import (
-    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -141,14 +140,10 @@ def open_folder(folder: Path) -> None:
 
 
 class GeneralPage(Page):
-    """What the window shows at start, whether Home shows the mascot, and which tools are on.
-    The first two apply at once; "Choose tools…" opens the Tools window, which restarts
-    CapyPanel to apply."""
+    """What the window shows at start. It applies at once."""
 
-    def __init__(
-        self, *, tools: Sequence[tuple[str, str]], start: str, mascot: bool = True
-    ) -> None:
-        """tools: the tools that are on, (id, name), in the rail's order."""
+    def __init__(self, *, tools: Sequence[tuple[str, str]], start: str) -> None:
+        """tools: (id, name), in the rail's order."""
         super().__init__(_("General"))
         self.start = QComboBox()
         self.start.addItem(_("Home page"), settings.START_HOME)
@@ -164,29 +159,7 @@ class GeneralPage(Page):
                 _("&Open on startup"), _("What the window shows when CapyPanel starts."), self.start
             ),
         )
-        self.mascot = QCheckBox()
-        self.mascot.setChecked(mascot)
-        home = Section(_("Home page"))
-        add_rows(
-            home.content,
-            SettingRow(_("Show the &mascot"), _("The capybara above the tools."), self.mascot),
-        )
-        self.mascot.setFixedWidth(22)  # a tick at the right end, as in the Tools window
-        self.choose_tools = QPushButton(_("&Choose tools…"))
-        names = ", ".join(name for _id, name in tools)
-        section = Section(_("Tools"))
-        add_rows(
-            section.content,
-            SettingRow(
-                _("Tools that are on"),
-                _("{tools}. Tools that are off don't load; changing them restarts "
-                  "CapyPanel.").format(tools=names),
-                self.choose_tools,
-            ),
-        )  # fmt: skip
         self.body.addWidget(startup)
-        self.body.addWidget(home)
-        self.body.addWidget(section)
         self.body.addStretch(1)
 
     def start_choice(self) -> str:

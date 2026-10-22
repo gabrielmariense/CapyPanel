@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 15:15-0300\n"
+"POT-Creation-Date: 2026-10-22 16:58-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -53,9 +53,6 @@ msgstr "&Todos os perfis"
 
 msgid "&Brand:"
 msgstr "&Marca:"
-
-msgid "&Choose tools…"
-msgstr "Escol&her ferramentas…"
 
 msgid "&Connect"
 msgstr "&Conectar"
@@ -212,9 +209,6 @@ msgstr "&Relatar um problema"
 
 msgid "&Report…"
 msgstr "&Relatório…"
-
-msgid "&Restart CapyPanel"
-msgstr "&Reiniciar o CapyPanel"
 
 msgid "&Restore"
 msgstr "&Restaurar"
@@ -397,9 +391,6 @@ msgstr "&Patrimônio:"
 msgid "Asset tag"
 msgstr "Patrimônio"
 
-msgid "At least one tool stays on."
-msgstr "Pelo menos uma ferramenta fica ligada."
-
 msgid "Brand"
 msgstr "Marca"
 
@@ -434,9 +425,6 @@ msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha 
 
 msgid "CapyPanel is built with the following software:"
 msgstr "O CapyPanel é feito com os seguintes softwares:"
-
-msgid "CapyPanel restarts to apply the change. Open lists are saved first."
-msgstr "O CapyPanel reinicia para aplicar a mudança. As listas abertas são salvas antes."
 
 msgid "CapyPanel — dark"
 msgstr "CapyPanel — escuro"
@@ -1179,9 +1167,6 @@ msgstr "Cole uma lista abaixo, ou"
 msgid "Personal"
 msgstr "Pessoal"
 
-msgid "Pick the tools CapyPanel shows. Tools that are off don't load: no rail button, no menu entries, no Settings pages. Their lists and settings are kept."
-msgstr "Escolha as ferramentas que o CapyPanel mostra. Ferramentas desligadas não carregam: sem botão na barra lateral, sem itens nos menus, sem páginas nas Configurações. As listas e configurações delas são mantidas."
-
 #, python-brace-format
 msgid "Picked tags: {tags}"
 msgstr "Tags escolhidas: {tags}"
@@ -1452,9 +1437,6 @@ msgstr "Listas compartilhadas ficam na pasta de listas compartilhadas e aparecem
 msgid "Show &first"
 msgstr "Mostrar &primeiro"
 
-msgid "Show the &mascot"
-msgstr "Mostrar o &mascote"
-
 msgid "Show this group &first"
 msgstr "Mostrar este grupo &primeiro"
 
@@ -1567,9 +1549,6 @@ msgstr "Os logs do app, para anexar a um relato de problema"
 #, python-brace-format
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
 msgstr "Os argumentos usam uma opção que não está em “options”: “{option}”."
-
-msgid "The capybara above the tools."
-msgstr "A capivara acima das ferramentas."
 
 msgid "The computer didn't accept the account: a wrong password, a locked account, or an account it doesn't trust."
 msgstr "O computador não aceitou a conta: senha errada, conta bloqueada ou uma conta em que ele não confia."
@@ -1727,12 +1706,6 @@ msgstr "Toner"
 
 msgid "Tool"
 msgstr "Ferramenta"
-
-msgid "Tools"
-msgstr "Ferramentas"
-
-msgid "Tools that are on"
-msgstr "Ferramentas ligadas"
 
 msgid "Type"
 msgstr "Tipo"
@@ -2143,10 +2116,6 @@ msgstr "{profile} (não disponível neste PC)"
 #, python-brace-format
 msgid "{status} · checked {when}"
 msgstr "{status} · verificado em {when}"
-
-#, python-brace-format
-msgid "{tools}. Tools that are off don't load; changing them restarts CapyPanel."
-msgstr "{tools}. Ferramentas desligadas não carregam; mudá-las reinicia o CapyPanel."
 
 #, python-brace-format
 msgid "{tool} (not installed on this PC)"

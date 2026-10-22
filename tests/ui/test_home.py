@@ -8,13 +8,11 @@ import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtWidgets import QApplication
 
 from capypanel.core import settings
 from capypanel.ui.main_window.home import HomePage
-from capypanel.ui.settings.pages import SettingRow
-from capypanel.ui.tool_catalog import CATALOG, tools_on
-from capypanel.ui.tool_switches import ToolsDialog
+from capypanel.ui.tool_catalog import CATALOG
 
 
 @pytest.fixture
@@ -79,7 +77,7 @@ def test_tiles_wrap_into_rows_when_they_don_t_fit(qapp: QApplication) -> None:
         ({"start": "last", "tool": "printers"}, "printers"),
         ({"start": "last"}, None),  # no tool shown yet
         ({"start": "printers"}, "printers"),
-        ({"start": "gone"}, None),  # a tool that's off, or no more
+        ({"start": "gone"}, None),  # a tool CapyPanel no longer has
     ],
 )
 def test_open_on_startup_picks_what_the_window_shows(
@@ -90,9 +88,7 @@ def test_open_on_startup_picks_what_the_window_shows(
     win.close()
 
 
-def test_settings_general_sets_open_on_startup(
-    home: CapyWindow, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_settings_general_sets_open_on_startup(home: CapyWindow) -> None:
     dialog = home.settings_dialog()
     assert dialog.current_page() == "general"  # Settings opens on it
     page = dialog.general
@@ -100,54 +96,9 @@ def test_settings_general_sets_open_on_startup(
     assert choices == ["Home page", "The last used tool", "Hosts", "Printers"]
     page.start.setCurrentIndex(3)
     assert settings.load_settings(home.paths.settings_file)["start"] == "printers"
-    [tools_row] = [r for r in page.findChildren(SettingRow) if r.name.text() == "Tools that are on"]
-    assert tools_row.description.text().startswith("Hosts, Printers. Tools that are off")
-    asked: list[list[str]] = []
-    dialog.restart_picked.connect(asked.append)
-    monkeypatch.setattr(
-        ToolsDialog,
-        "exec",
-        lambda self: (  # Printers unticked, then Restart
-            self.ticks["printers"].setChecked(False),
-            QDialog.DialogCode.Accepted.value,
-        )[1],
-    )
-    page.choose_tools.click()
-    assert asked == [["printers"]]
 
 
-def test_the_tools_window_keeps_one_tool_on_and_restarts_only_on_a_change(
-    qapp: QApplication,
-) -> None:
-    dialog = ToolsDialog(None, tools=CATALOG, on={"hosts", "printers"})
-    hosts, printers = dialog.ticks["hosts"], dialog.ticks["printers"]
-    assert not dialog.restart_button.isEnabled() and dialog.at_least_one.isHidden()
-    printers.setChecked(False)
-    assert dialog.restart_button.isEnabled() and dialog.off() == ["printers"]
-    assert not hosts.isEnabled() and not dialog.at_least_one.isHidden()  # the last one on
-    printers.setChecked(True)  # back as it was: nothing to restart for
-    assert not dialog.restart_button.isEnabled() and hosts.isEnabled()
-    dialog.close()
-
-
-def test_a_restart_saves_the_choice_closes_and_starts_capypanel_again(
-    qapp: QApplication, paths: settings.Paths
-) -> None:
-    started: list[bool] = []
-    win = CapyWindow(paths, {"schema": 1}, start_again=lambda: started.append(True))
-    win.show()
-    win.restart(["printers"])
-    QApplication.processEvents()
-    assert started == [True] and not win.isVisible()
-    saved = settings.load_settings(paths.settings_file)
-    assert saved[settings.TOOLS_OFF_KEY] == ["printers"]
-    assert "window_geometry" in saved  # closed as on exit: everything saved
-
-
-def test_tools_that_are_off_aren_t_loaded() -> None:
-    assert [t.tool_id for t in tools_on({})] == ["hosts", "printers"]
-    assert [t.tool_id for t in tools_on({"tools_off": ["printers", 3]})] == ["hosts"]
-    assert [t.tool_id for t in tools_on({"tools_off": ["hosts", "printers"]})] == ["hosts"]
+def test_the_catalog_matches_the_tools_and_the_start_up_imports_none() -> None:
     for info in CATALOG:  # what the catalog says matches the tool itself
         kind = info.load()
         assert (info.tool_id, info.icon) == (kind.TOOL_ID, kind.ICON)  # type: ignore[attr-defined]
@@ -161,19 +112,3 @@ def test_tools_that_are_off_aren_t_loaded() -> None:
         [sys.executable, "-c", code], capture_output=True, text=True, check=True
     ).stdout.strip()
     assert found == "[]"
-
-
-def test_the_mascot_on_home_can_be_hidden_in_settings(home: CapyWindow) -> None:
-    assert home.home.mascot.isVisible()  # shown by default
-    dialog = home.settings_dialog()
-    switch = dialog.general.mascot
-    assert switch.isChecked()
-    switch.setChecked(False)  # applies at once, no Save
-    assert not home.home.mascot.isVisible()
-    assert settings.load_settings(home.paths.settings_file)[settings.HOME_MASCOT_KEY] is False
-    again = CapyWindow(home.paths, settings.load_settings(home.paths.settings_file))
-    again.show()
-    QApplication.processEvents()
-    assert again.home.mascot.isHidden()  # hidden at start too, wherever it opens
-    assert not again.settings_dialog().general.mascot.isChecked()  # remembered
-    again.close()

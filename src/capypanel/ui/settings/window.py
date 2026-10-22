@@ -3,7 +3,7 @@ buttons: the window's X or Esc closes it, and every choice applies as soon as it
 own pages come first (General, Appearance, Files), then each tool's group of pages, and About at
 the very bottom. A tool's pages apply their choices through the tool (see SettingsGroup)."""
 
-from collections.abc import Collection, Sequence
+from collections.abc import Sequence
 
 from PySide6.QtCore import QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QShowEvent
@@ -25,14 +25,12 @@ from PySide6.QtWidgets import (
 from capypanel.core import i18n, settings
 from capypanel.core.i18n import _
 from capypanel.ui.about import AboutPage
-from capypanel.ui.dialogs import run_modal
 from capypanel.ui.notes import hint
 from capypanel.ui.settings import search
 from capypanel.ui.settings.group import SettingsGroup
 from capypanel.ui.settings.pages import AppearancePage, FilesPage, GeneralPage, Page, Section
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import ToolInfo
-from capypanel.ui.tool_switches import ToolsDialog
 
 # The app's own pages' titles, as the pages set them: with the tools' titles and the groups'
 # labels, the page list is sized for the longest in any language.
@@ -47,8 +45,6 @@ class SettingsDialog(QDialog):
     language_picked = Signal(str)
     theme_picked = Signal(str)
     start_picked = Signal(str)
-    mascot_picked = Signal(bool)  # Home shows the mascot, or not
-    restart_picked = Signal(list)  # the ids of the tools to turn off, then restart
 
     def __init__(
         self,
@@ -58,19 +54,14 @@ class SettingsDialog(QDialog):
         registry: themes.Registry,
         groups: Sequence[SettingsGroup] = (),
         tools: Sequence[ToolInfo] = (),
-        tools_on: Collection[str] = (),
         start: str = settings.START_HOME,
-        mascot: bool = True,
     ) -> None:
-        """tools: every tool CapyPanel has; tools_on: the ids of those on; start: what the
-        window shows at start."""
+        """tools: the window's tools; start: what the window shows at start."""
         super().__init__(parent)
         self._paths = paths
         self._registry = registry
         self._tools = list(tools)
-        self._tools_on = set(tools_on)
         self._start = start
-        self._mascot = mascot
         self._groups = list(groups)
         # Contents replaced on a language switch stay alive, hidden: deleting a window part
         # holding a list can crash Qt after a theme switch (see DECISIONS, code cleanup).
@@ -83,8 +74,8 @@ class SettingsDialog(QDialog):
     def _build(self, theme_id: str) -> None:
         """The pages and buttons, in the current language, showing what's set."""
         self.setWindowTitle(_("Settings"))
-        on = [(t.tool_id, _(t.name)) for t in self._tools if t.tool_id in self._tools_on]
-        self.general = GeneralPage(tools=on, start=self._start, mascot=self._mascot)
+        tools = [(t.tool_id, _(t.name)) for t in self._tools]
+        self.general = GeneralPage(tools=tools, start=self._start)
         self.appearance = AppearancePage(
             language=i18n.language(), registry=self._registry, theme_id=theme_id
         )
@@ -103,8 +94,6 @@ class SettingsDialog(QDialog):
             self.pages.update(built)
             self._layout_groups.append((group.LABEL, tuple(page_id for page_id, _p in built)))
         self.general.changed.connect(self._start_changed)
-        self.general.choose_tools.clicked.connect(self._choose_tools)
-        self.general.mascot.toggled.connect(self._mascot_changed)
         self.appearance.language.currentIndexChanged.connect(self._language_changed)
         self.appearance.theme.currentIndexChanged.connect(
             lambda: self.theme_picked.emit(self.appearance.theme_id())
@@ -196,16 +185,6 @@ class SettingsDialog(QDialog):
     def _start_changed(self) -> None:
         self._start = self.general.start_choice()
         self.start_picked.emit(self._start)
-
-    def _mascot_changed(self, shown: bool) -> None:
-        self._mascot = shown
-        self.mascot_picked.emit(shown)
-
-    def _choose_tools(self) -> None:
-        """The Tools window; its Restart CapyPanel hands the choice on."""
-        dialog = ToolsDialog(self, tools=self._tools, on=self._tools_on)
-        if run_modal(dialog) == QDialog.DialogCode.Accepted:
-            self.restart_picked.emit(dialog.off())
 
     def _language_changed(self) -> None:
         code = self.appearance.language_choice()

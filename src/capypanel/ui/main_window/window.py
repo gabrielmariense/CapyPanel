@@ -1,20 +1,15 @@
 """The main window: the shell that shows the tools. It owns the menu bar, the rail, the toolbar
 area, the status bar, Settings, the theme and the language; each tool owns its toolbar, panels
 and commands. The rail, View's tools, the toolbar, the tool and the status bar's text all follow
-the tool shown. With none shown, the Home page fills the window. Only the tools that are on are
-given to it; turning tools on or off restarts CapyPanel."""
+the tool shown. With none shown, the Home page fills the window."""
 
 import logging
-import sys
-from collections.abc import Callable, Sequence
-from pathlib import Path
+from collections.abc import Sequence
 from typing import Any
 
-from PySide6.QtCore import QByteArray, QEvent, QObject, QProcess, QTimer
+from PySide6.QtCore import QByteArray, QEvent, QObject
 from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence, QResizeEvent, QShowEvent
 from PySide6.QtWidgets import (
-    QApplication,
-    QDialog,
     QHBoxLayout,
     QMainWindow,
     QStackedWidget,
@@ -35,7 +30,6 @@ from capypanel.ui.menus import StayOpenMenu
 from capypanel.ui.settings.window import SettingsDialog
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import CATALOG, ToolInfo
-from capypanel.ui.tool_switches import ToolsDialog
 
 log = logging.getLogger(__name__)
 
@@ -49,10 +43,8 @@ class MainWindow(QMainWindow):
         tools: Sequence[ToolKind],
         registry: themes.Registry | None = None,
         catalog: Sequence[ToolInfo] = CATALOG,
-        start_again: Callable[[], None] | None = None,
     ):
-        """tools: the tools that are on, in the rail's order. catalog: every tool CapyPanel
-        has, for the Tools window. start_again: starts a new CapyPanel, on a restart."""
+        """tools: in the rail's order. catalog: what Home and Settings show of each tool."""
         super().__init__()
         self.paths = paths
         self.prefs = prefs
@@ -63,7 +55,6 @@ class MainWindow(QMainWindow):
         self.rail.home_requested.connect(self.show_home)
         self.rail.tool_picked.connect(self.show_tool)
         self._catalog = list(catalog)
-        self._start_again = start_again or start_capypanel
         self.tools: dict[str, Tool] = {}
         # Each tool's toolbar on top of the tool, one page each; the page shown is the tool's.
         self._pages = QStackedWidget()
@@ -80,11 +71,9 @@ class MainWindow(QMainWindow):
         for make in tools:
             self._add_tool(make(self))
         self._shown: str | None = None  # the tool shown; None: Home
-        self.home = HomePage([info for info in self._catalog if info.tool_id in self.tools])
+        self.home = HomePage(self._infos())
         self.home.tool_picked.connect(self.show_tool)
-        self.home.choose_tools.connect(self.choose_tools)
         self._pages.insertWidget(0, self.home)
-        self.home.show_mascot(self.prefs.get(settings.HOME_MASCOT_KEY) is not False)
 
         # The rail runs down the left edge; the tool shown, its toolbar on top, fills the rest.
         central = QWidget()
@@ -159,6 +148,10 @@ class MainWindow(QMainWindow):
             tool.align_toolbar_later()
             self.prefs[settings.TOOL_KEY] = tool_id
 
+    def _infos(self) -> list[ToolInfo]:
+        """The catalog's entries for the window's tools, in the rail's order."""
+        return [info for info in self._catalog if info.tool_id in self.tools]
+
     def _tool_list_actions(self) -> list[QAction]:
         """View's tools, without Home."""
         return [a for a in self._tool_actions.actions() if a is not self._home_action]
@@ -187,26 +180,6 @@ class MainWindow(QMainWindow):
         run_modal(dialog)
         self.prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
         self.save_prefs()
-
-    # ---- turning tools on and off ----
-
-    def choose_tools(self) -> None:
-        dialog = ToolsDialog(self, tools=self._catalog, on=self.tools)
-        if run_modal(dialog) == QDialog.DialogCode.Accepted:
-            self.restart(dialog.off())
-
-    def restart(self, off: list[str]) -> None:
-        """Turns those tools off and the others on, closes as on exit (everything saved),
-        and starts CapyPanel again: tools that are off aren't loaded at all."""
-        self.prefs[settings.TOOLS_OFF_KEY] = off
-        self.save_prefs()
-        QTimer.singleShot(0, self, self._close_and_start_again)  # once Settings has closed
-
-    def _close_and_start_again(self) -> None:
-        if self.close():
-            log.info("Restarting, tools off: %s", self.prefs[settings.TOOLS_OFF_KEY])
-            self._start_again()
-            QApplication.quit()
 
     # ---- building ----
 
@@ -318,26 +291,17 @@ class MainWindow(QMainWindow):
             paths=self.paths,
             registry=self.registry,
             groups=groups,
-            tools=self._catalog,
-            tools_on=self.tools,
+            tools=self._infos(),
             start=start if isinstance(start, str) else settings.START_HOME,
-            mascot=self.prefs.get(settings.HOME_MASCOT_KEY) is not False,
         )
         dialog.language_picked.connect(self.set_language)
         dialog.theme_picked.connect(self.set_theme)
         dialog.start_picked.connect(self._set_start)
-        dialog.mascot_picked.connect(self._set_mascot)
-        dialog.restart_picked.connect(lambda off: (dialog.done(0), self.restart(off)))
         return dialog
 
     def _set_start(self, start: str) -> None:
         self.prefs[settings.START_KEY] = start
         self.save_prefs()
-
-    def _set_mascot(self, shown: bool) -> None:
-        self.prefs[settings.HOME_MASCOT_KEY] = shown
-        self.save_prefs()
-        self.home.show_mascot(shown)
 
     # ---- look ----
 
@@ -385,17 +349,6 @@ class MainWindow(QMainWindow):
         self.prefs["view"] = {k: a.isChecked() for k, a in self._view_choices().items()}
         self.save_prefs()
         super().closeEvent(event)
-
-
-def start_capypanel() -> None:
-    """A new CapyPanel, started the way this one was: the packaged app, or from source (with
-    pythonw, so no console window opens)."""
-    if getattr(sys, "frozen", False):
-        QProcess.startDetached(sys.executable, sys.argv[1:])
-        return
-    windowless = Path(sys.executable).with_name("pythonw.exe")
-    python = windowless if windowless.exists() else Path(sys.executable)
-    QProcess.startDetached(str(python), ["-m", "capypanel", *sys.argv[1:]])
 
 
 class _StatusGroup(QWidget):
