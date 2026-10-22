@@ -18,7 +18,7 @@ file. Either way the lines fill the preview table below. Three shapes are unders
 | Format | What it looks like |
 |---|---|
 | **Hostnames** | One computer name per line |
-| **Name and address** | A name, then the computer's name or IP address, separated by a comma — or two columns copied from Excel |
+| **Name and address** | A name, then the computer's name or IP address, separated by a comma, or two columns copied from Excel |
 | **CSV with headers** | A first line naming the columns: `name, address, group, tags, notes` |
 
 With headers the columns can come in any order, and their names work in English or in Portuguese
@@ -46,7 +46,7 @@ agree. CapyPanel asks before doing that the first time.
 
 ### Where the hosts land
 
-**Hosts with no group go to:** chooses where rows that name no group of their own end up — **No
+**Hosts with no group go to:** chooses where rows that name no group of their own end up: **No
 group**, or any group in the list. It starts on the group you had picked when you opened the
 window.
 
@@ -76,7 +76,7 @@ read-only list too.
 
 - **Hosts:** a dropdown of everything you can export, each with how many hosts it holds: the
   **search results** while a search is on, the **selected hosts** when you have more than one
-  selected, **All hosts**, **No group**, every group — with the hosts of the groups inside it —
+  selected, **All hosts**, **No group**, every group (with the hosts of the groups inside it)
   and **Tag: {tag}** for each tag. It opens on whatever the window is showing, every time.
 - **Columns:** tick what each row should hold, grouped as **Host** (Name, Address, Group), **Tags
   and notes** (Tags, Notes) and **Last check** (Status, Logged-on users). The ticks are kept as
@@ -108,9 +108,9 @@ PC. Keep the file private."
 **Close**, at the bottom, is the only way out: there's nothing to cancel, since every choice here
 is kept as soon as it's made. The status bar repeats what went out.
 
-The file uses the column separator your PC's Excel expects — a comma, or a semicolon where that's
-the local one — with tags separated by the other character, and it's written so that accented
-names open correctly.
+The file uses the column separator your PC's Excel expects, a comma or a semicolon where that's
+the local one, with tags separated by the other character. It's written so that accented names
+open correctly.
 
 What Report writes is read back by Import hosts, which makes **For Import** a way to copy hosts
 between lists, or to keep a copy of a list before a big change.

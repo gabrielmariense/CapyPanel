@@ -27,7 +27,7 @@ Groups keep the order you give them. In the Groups panel:
   top level;
 - drag selected hosts from the host table onto a group to move them there.
 
-Right-click a group > **Move to** lists **Groups** — the top of the panel, inside nothing — and
+Right-click a group > **Move to** lists **Groups**, the top of the panel, inside nothing, then
 every group this one can go into, drawn as a tree; the group itself and its own subgroups aren't
 offered, and where it is now is ticked. For hosts, right-click them > **Move to** lists **No
 group** first, then the same tree. A group you collapsed stays collapsed as you work, and moving a
@@ -44,8 +44,8 @@ take it out of every group. Nothing changes until you click **OK**. Lists made b
 ## Removing a group
 
 Right-click a group > **Remove selected**, or press Del with a group picked. An empty group only
-asks to confirm. A group with anything in it asks what should happen first — "“Floor 3” holds 2
-groups and 7 hosts. What should happen to them?" — and offers two ways out:
+asks to confirm. A group with anything in it asks what should happen first, "“Floor 3” holds 2
+groups and 7 hosts. What should happen to them?", and offers two ways out:
 
 - **Move them to ▸** picks where they go, from the same tree as moving hosts: **No group**, or any
   group that isn't being removed. The group above this one is ticked, so the usual answer is one
@@ -64,7 +64,7 @@ CapyPanel keeps lists in two folders, made at its first start:
 | **Shared lists** | `C:\ProgramData\CapyPanel\lists` | Everyone on the PC. The **default list** is `default.json` there |
 | **Your lists** | `C:\ProgramData\CapyPanel\users\<you@DOMAIN>\lists` | Only you, and administrators. Your **personal list** is `personal.json` there |
 
-**Every list saved in either folder shows up by itself** — nothing to add. Drop a file in the
+**Every list saved in either folder shows up by itself**, with nothing to add. Drop a file in the
 shared folder and everyone on the PC has it in their dropdown; drop one in yours and it's yours
 alone. In portable mode both folders are inside the app's own `userdata` folder (see
 [Settings and files](../settings-and-files.md#portable-mode)).
@@ -77,8 +77,8 @@ lists with the same name show their folder's name after it, and the full path is
 tooltip.
 
 Windows permissions decide whether a list opens read-only, for every list wherever it lives. A
-read-only list can still be browsed and connected to; only editing is off. A list anywhere else —
-a network share, say — is added once and then stays in the dropdown.
+read-only list can still be browsed and connected to; only editing is off. A list anywhere else,
+on a network share for instance, is added once and then stays in the dropdown.
 
 Any user can add files to ProgramData, so **a shared list made by another user who isn't an
 administrator isn't opened**: it could send your password to the wrong computer. It's left out of
@@ -141,8 +141,8 @@ removed.
 
 Choose it under **Settings > Hosts > General > Startup > Open on startup**: the last used list
 (the default choice), the default list, your personal list, or any other list you have. If that
-list can't be opened, CapyPanel opens the next one it can — the default list, then your personal
-list — and says so.
+list can't be opened, CapyPanel opens the next one it can, the default list and then your
+personal list, and says so.
 
 ## What a list shows first
 

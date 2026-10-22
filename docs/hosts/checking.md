@@ -46,8 +46,8 @@ Status uses no account and needs no administrator rights.
 
 **Settings > Hosts > General > Refresh > Refresh status by itself** can check the status of the
 hosts shown every few minutes: **Every minute**, **Every 5 minutes**, **Every 15 minutes**, **Every
-30 minutes**, or **Custom…** for anything from 1 to 120. It's **Off** to begin with — nothing is
-checked by itself unless you turn it on — and turning it off again keeps your interval for next
+30 minutes**, or **Custom…** for anything from 1 to 120. It's **Off** to begin with, so nothing
+is checked by itself unless you turn it on, and turning it off again keeps your interval for next
 time.
 
 As the setting says: "Only ping and ports, never logged-on users, so no account is needed. Refresh

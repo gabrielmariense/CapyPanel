@@ -43,11 +43,11 @@ A barra de menus é a mesma em qualquer ferramenta, e não guarda nada que seja 
 
 A janela é sua para organizar. Arraste a borda entre dois painéis para movê-la, ou dê um **clique
 duplo** na borda direita do **painel de grupos** ou do **painel de hosts** para deixar esse painel
-exatamente da largura do que tem dentro — o grupo ou a tag mais longa, ou as colunas da tabela —
+exatamente da largura do que tem dentro, o grupo ou a tag mais longa, ou as colunas da tabela,
 com o painel ao lado ficando com o resto. Clique com o botão direito nos títulos das colunas da
 tabela de hosts para escolher quais aparecem, ou em **Ajustar colunas ao conteúdo**, no fim desse
 menu, para ajustar todas ao texto delas; um clique duplo na borda de uma coluna ajusta só ela. As
-larguras são salvas para a próxima vez, e nada as redimensiona por trás — nem uma atualização, nem
+larguras são salvas para a próxima vez, e nada as redimensiona por trás, nem uma atualização nem
 trocar de lista. **Configurações > Hosts > Geral > Layout** devolve os painéis, as colunas e o que
 você escondeu ao estado inicial, e não mexe nas suas outras configurações.
 
