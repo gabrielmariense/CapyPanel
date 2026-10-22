@@ -457,6 +457,8 @@ class HostsTool(ListWorkspace):
             item = forget.addAction(name.replace("&", "&&"))
             item.triggered.connect(lambda _c=False, p=profile_id: self.forget_password(p))
         if self._account is not None:
+            if typed:  # not a profile, so not in their run
+                forget.addSeparator()
             item = forget.addAction(_("Account for logged-on users"))
             item.triggered.connect(lambda: self.forget_password(None))
         anything = bool(credentials) or self._account is not None  # as of now, not last refresh

@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu, QMessageBox
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
+from capypanel.core.remote.sessions import Account
 from capypanel.core.tools.connect import Credential, Target
 from capypanel.core.tools.profiles import ConnectionProfile
 from capypanel.ui import connect as connect_ui
@@ -500,6 +501,12 @@ def test_forget_typed_passwords_forgets_all_or_one_profile_s(window: CapyWindow)
     entries = [a.text() for a in hosts.forget_menu.actions() if a.text()]
     assert entries == ["&All profiles", *sorted([names["offices"], names["pis"]])]  # by name
     assert hosts.commands.forget_passwords.isEnabled()
+    hosts._account = Account("EXAMPLE\\user", "z")  # pyright: ignore[reportPrivateUsage]
+    hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
+    *_, line, account = hosts.forget_menu.actions()
+    assert line.isSeparator() and account.text() == "Account for logged-on users"
+    hosts._account = None  # pyright: ignore[reportPrivateUsage]
+    hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
     [pis] = [a for a in hosts.forget_menu.actions() if a.text() == names["pis"]]
     pis.trigger()
     assert "pis" not in credentials and "offices" in credentials  # only that one
