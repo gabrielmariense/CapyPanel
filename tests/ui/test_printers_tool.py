@@ -242,6 +242,18 @@ def test_a_web_page_is_built_from_the_address_or_the_name() -> None:
     assert url("Reception desk", "bad host") is None
 
 
+def test_an_address_starting_with_https_opens_with_https() -> None:
+    def url(address: str) -> str:
+        page = web_page(Host(id="h1", name="P1", group=NO_GROUP, address=address))
+        return page.toString() if page else ""
+
+    assert url("https://192.0.2.5") == "https://192.0.2.5"
+    assert url("HTTPS://prn-01.example.com:8443") == "https://prn-01.example.com:8443"
+    assert url("https://2001:db8::5") == "https://[2001:db8::5]"
+    assert url("http://192.0.2.5") == "http://192.0.2.5"  # typed http stays http
+    assert url("https://") == ""
+
+
 def test_the_printer_menu_opens_the_web_page_first(
     printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -32,11 +32,17 @@ WEB_PAGES_AT_ONCE = 10  # more selected open only the first ones: a browser tab 
 
 
 def web_page(printer: Host) -> QUrl | None:
-    """The printer's web page: http on its address (or its name). None when that can't be one."""
+    """The printer's web page on its address (or its name): https when the address starts with
+    https://, else http. None when that can't be one."""
     target = printer.address or printer.name
+    scheme = "http"
+    for typed in ("https", "http"):
+        if target.lower().startswith(f"{typed}://"):
+            scheme, target = typed, target[len(typed) + 3 :]
+            break
     if target.count(":") > 1 and not target.startswith("["):  # an IPv6 address
         target = f"[{target}]"
-    url = QUrl(f"http://{target}")
+    url = QUrl(f"{scheme}://{target}")
     return url if url.isValid() and url.host() else None
 
 

@@ -54,6 +54,10 @@ class PrinterDialog(QDialog):
         self.address = QLineEdit(printer.address if printer else "")
         self.address.setMaxLength(MAX_ADDRESS)
         self.address.setPlaceholderText(_("IP address or network name"))
+        self.address.setToolTip(
+            _("Start it with https:// if the printer's web page needs it; otherwise it opens "
+              "with http.")
+        )  # fmt: skip
         self.group = QComboBox()
         for group_id, label in group_choices(printers):
             self.group.addItem(label, group_id)

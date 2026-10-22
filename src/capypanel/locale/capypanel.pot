@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-21 19:11-0300\n"
+"POT-Creation-Date: 2026-10-22 01:02-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1497,6 +1497,11 @@ msgid "Source"
 msgstr ""
 
 msgid "Source code:"
+msgstr ""
+
+msgid ""
+"Start it with https:// if the printer's web page needs it; otherwise it "
+"opens with http."
 msgstr ""
 
 #, python-brace-format
