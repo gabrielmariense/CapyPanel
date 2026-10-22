@@ -17,7 +17,7 @@ da janela ou o **Esc** a fecham, e nada nunca pergunta sobre alterações não s
 dela cresçam.
 
 Uma página é feita de seções: um título e, embaixo dele, as configurações num cartão arredondado.
-Uma configuração simples é uma linha — o nome dela, uma descrição de uma linha embaixo e o controle
+Uma configuração simples é uma linha: o nome dela, uma descrição de uma linha embaixo e o controle
 na ponta direita. Tudo que guarda várias coisas, de listas de hosts a licenças, é a mesma tabela em
 todo lugar: linhas de grade, um cabeçalho, seis linhas antes de rolar, as ações principais como
 botões embaixo, **todas as ações de uma linha no botão direito dela** e um clique duplo para a mais
@@ -38,8 +38,8 @@ página, ou limpar a caixa, põe tudo de volta no lugar.
 
 **Idioma e tema**, os dois valendo no instante em que você escolhe:
 
-- **Idioma:** English ou Português (Brasil). "O idioma do aplicativo. Muda na hora." — a janela de
-  Configurações inclusive, sem reiniciar.
+- **Idioma:** English ou Português (Brasil). "O idioma do aplicativo. Muda na hora.", e isso vale
+  para a própria janela de Configurações, sem reiniciar.
 - **Tema:** "Os temas do Windows seguem a aparência e a cor do Windows; os do CapyPanel são iguais
   em todo lugar."
 
@@ -49,8 +49,8 @@ página, ou limpar a caixa, põe tudo de volta no lugar.
 | CapyPanel — escuro / claro | O visual próprio do CapyPanel, igual em todo computador |
 | Graphite, Paper | Mais dois visuais próprios do CapyPanel |
 
-Os temas mudam só as cores — a fonte, o tamanho dela e os cantos arredondados são os mesmos em
-todos — e nunca mudam o que o app faz.
+Os temas mudam só as cores. A fonte, o tamanho dela e os cantos arredondados são os mesmos em
+todos, e um tema nunca muda o que o app faz.
 
 Os temas do Windows seguem a cor de destaque do seu Windows (**Configurações > Personalização >
 Cores**), e tudo o que vem dela continua legível com qualquer uma que você escolher: os títulos
@@ -79,7 +79,7 @@ nele, está em [Onde o CapyPanel guarda os arquivos](#onde-o-capypanel-guarda-os
 
 ### Inicialização
 
-- **Abrir ao iniciar:** qual lista de hosts abre quando o CapyPanel inicia — a última lista usada,
+- **Abrir ao iniciar:** qual lista de hosts abre quando o CapyPanel inicia: a última lista usada,
   a lista padrão, sua lista pessoal ou qualquer outra lista que você tenha. "Se essa lista não
   abrir: a lista padrão, depois a sua lista pessoal."
 - **Mostrar primeiro:** o que a lista aberta mostra quando ela abre (veja
@@ -99,8 +99,9 @@ ferramentas sempre funciona." Vem desligado até você ligar; veja
 
 ### Layout
 
-**Layout da janela** — "Tamanhos dos painéis, colunas e painéis mostrados, de volta a como eram no
-início." — com um botão **Redefinir…** que pergunta antes de fazer.
+**Layout da janela** tem um botão **Redefinir…**, que pergunta antes de fazer qualquer coisa. A
+configuração diz "Tamanhos dos painéis, colunas e painéis mostrados, de volta a como eram no
+início."
 
 ## Hosts > Listas de hosts
 
@@ -124,8 +125,8 @@ perfil é feito está em [Conectando](hosts/connecting.pt-BR.md#gerenciar-perfis
 as faz, e o **Excluir…** pergunta antes. Onde o Windows não deixa você gravar na pasta, o aviso
 acrescenta que é somente leitura, e que só quem ele deixa gravar pode alterá-los.
 
-**Hosts sem perfil usam** — "O perfil com que um host conecta quando não tem um próprio." — é a
-última linha da seção.
+**Hosts sem perfil usam** é a última linha da seção: "O perfil com que um host conecta quando não
+tem um próprio."
 
 O CapyPanel enche a pasta de perfis no primeiro início com os perfis que vêm com ele (RealVNC,
 Remote Desktop e UltraVNC) e um arquivo de configurações, `_profiles.json`, que registra a escolha
@@ -140,7 +141,7 @@ A tabela **Ferramenta | Status | Onde**: **✓ Encontrado** quando o CapyPanel a
 Sua escolha** quando um caminho foi definido aqui, ou **✗ Não encontrado**, cuja dica diz
 "Instale-o ou localize o .exe dele."
 
-- **Alterar caminho…** escolhe o `.exe` de uma ferramenta — de uma cópia portátil, por exemplo. O
+- **Alterar caminho…** escolhe o `.exe` de uma ferramenta, de uma cópia portátil por exemplo. O
   botão direito na linha passa a oferecer também **Usar o caminho automático**, que esquece essa
   escolha.
 - **Baixar** abre o site da ferramenta, e só aparece para uma que não foi encontrada. O Remote
@@ -160,7 +161,7 @@ arquivos estão em uso.
 
 | Cartão | O que tem |
 |---|---|
-| **CapyPanel** | O mascote, o nome e a versão — clique nela para copiá-la com o commit —, "Todos os computadores sob seus cuidados, em uma só janela.", os direitos autorais e "Software livre sob a GPL-3.0, sem garantia: veja Licenças.", que rola até elas, links para a documentação e para o código-fonte, uma linha **Build** com o commit e o modo portátil quando se aplicam, e **Relatar um problema** ao lado de **Abrir pasta de logs** |
+| **CapyPanel** | O mascote, o nome e a versão (clique nela para copiá-la com o commit), "Todos os computadores sob seus cuidados, em uma só janela.", os direitos autorais e "Software livre sob a GPL-3.0, sem garantia: veja Licenças.", que rola até elas, links para a documentação e para o código-fonte, uma linha **Build** com o commit e o modo portátil quando se aplicam, e **Relatar um problema** ao lado de **Abrir pasta de logs** |
 | **Créditos** | Quem fez o CapyPanel, o mascote dele e os ícones que ele usa |
 | **Licenças** | A tabela **Software \| Versão \| Licença \| Aviso**: CapyPanel (GPL-3.0), Qt e Qt for Python (LGPL-3.0), Python (PSF License), Tabler Icons (MIT). **Ler licença** abre o texto que vem com o app numa janela, também num clique duplo ou no botão direito da linha, e **Abrir pasta** abre a pasta em que todas vêm |
 

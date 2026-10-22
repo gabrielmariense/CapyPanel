@@ -17,7 +17,7 @@ Down the left are a **Search settings** box and the pages, in two groups:
 above it grow.
 
 A page is made of sections: a title, and its settings on a soft card under it. A simple setting is
-a row — its name, a one-line description under it, and its control at the right end. Anything that
+a row: its name, a one-line description under it, and its control at the right end. Anything that
 holds several things, from host lists to licenses, is the same table everywhere: grid lines, a
 header, six rows before it scrolls, the main actions as buttons under it, **every action for a row
 on its right-click**, and a double-click for the obvious one. The window opens at a fixed size, and
@@ -38,8 +38,8 @@ everything back.
 
 **Language and theme**, both applied the moment you pick them:
 
-- **Language:** English or Português (Brasil). "The app's language. Changes at once." — the
-  Settings window included, with no restart.
+- **Language:** English or Português (Brasil). "The app's language. Changes at once.", and that
+  includes the Settings window itself, with no restart.
 - **Theme:** "Windows themes follow Windows' look and accent; CapyPanel themes look the same
   everywhere."
 
@@ -49,8 +49,8 @@ everything back.
 | CapyPanel — dark / light | CapyPanel's own look, the same on every computer |
 | Graphite, Paper | Two more of CapyPanel's own looks |
 
-Themes change colors only — the font, its size and the rounded corners are the same in every one —
-and never change what the app does.
+Themes change colors only. The font, its size and the rounded corners are the same in every one,
+and a theme never changes what the app does.
 
 The Windows themes follow your Windows accent color (**Settings > Personalization > Colors**), and
 everything built from it stays readable whichever one you pick: section headings, the default
@@ -79,7 +79,7 @@ select. Where each one is, and what may and may not go in it, is under
 
 ### Startup
 
-- **Open on startup:** which host list opens when CapyPanel starts — the last used list, the
+- **Open on startup:** which host list opens when CapyPanel starts: the last used list, the
   default list, your personal list, or any other list you have. "If that list can't be opened: the
   default list, then your personal list."
 - **Show first:** what the open list shows when it opens (see
@@ -98,8 +98,8 @@ works." It's off until you turn it on; see [Checking hosts](hosts/checking.md#au
 
 ### Layout
 
-**Window layout** — "Panel sizes, columns and the panels shown, back to how they first were." —
-with a **Reset…** button that asks before it does it.
+**Window layout** has a **Reset…** button, which asks before it does anything. The setting reads
+"Panel sizes, columns and the panels shown, back to how they first were."
 
 ## Hosts > Host lists
 
@@ -122,8 +122,8 @@ client asks for the user and the password when it connects. What a profile is ma
 **Delete…** asks first. Where Windows doesn't let you write the folder, the note adds that it's
 read-only, and only people it does let write can change them.
 
-**Hosts with no profile use** — "The profile a host connects with when it has none of its own." —
-is the last row of the section.
+**Hosts with no profile use** is the last row of the section: "The profile a host connects with
+when it has none of its own."
 
 CapyPanel fills the profiles folder at its first start with the profiles it ships (RealVNC, Remote
 Desktop and UltraVNC) and a settings file, `_profiles.json`, which records that row's choice and
@@ -138,8 +138,8 @@ The table **Tool | Status | Where**: **✓ Found** when CapyPanel found it by it
 choice** when a path was set here, or **✗ Not found**, whose tooltip says "Install it, or locate
 its .exe."
 
-- **Change path…** picks a tool's `.exe` — a portable copy, say. A row's right-click then also
-  offers **Use the automatic path**, which forgets that choice.
+- **Change path…** picks a tool's `.exe`, a portable copy for instance. A row's right-click then
+  also offers **Use the automatic path**, which forgets that choice.
 - **Download** opens the tool's website, and is there only for a tool that wasn't found. Remote
   Desktop Connection is built into Windows, so it has none.
 
@@ -156,7 +156,7 @@ the errors; it's hidden when every file is in use.
 
 | Card | What it holds |
 |---|---|
-| **CapyPanel** | The mascot, the name and the version — click it to copy it with its commit — "Every computer you look after, in one window.", the copyright and "Free software under the GPL-3.0, with no warranty: see Licenses.", which scrolls down to them, links to the documentation and the source code, a **Build** line with the commit and portable mode where they apply, and **Report a problem** beside **Open log folder** |
+| **CapyPanel** | The mascot, the name and the version (click it to copy it with its commit), "Every computer you look after, in one window.", the copyright and "Free software under the GPL-3.0, with no warranty: see Licenses.", which scrolls down to them, links to the documentation and the source code, a **Build** line with the commit and portable mode where they apply, and **Report a problem** beside **Open log folder** |
 | **Credits** | Who made CapyPanel, its mascot, and the icons it uses |
 | **Licenses** | The table **Software \| Version \| License \| Notice**: CapyPanel (GPL-3.0), Qt and Qt for Python (LGPL-3.0), Python (PSF License), Tabler Icons (MIT). **Read license** opens the shipped text in a window, also on a double-click or the row's right-click, and **Open folder** opens the folder they all ship in |
 

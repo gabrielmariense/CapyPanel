@@ -42,11 +42,11 @@ The menu bar is the same whichever tool you're in, and holds nothing a tool owns
 
 The window is yours to arrange. Drag the edge between two panels to move it, or **double-click**
 the right edge of the **Groups panel** or the **Hosts panel** to make that panel exactly as wide as
-what's in it — the widest group or tag, or the table's columns — with the panel beside it taking
+what's in it, the widest group or tag or the table's columns, with the panel beside it taking
 the rest. Right-click the host table's column titles to choose which columns show, or **Fit columns
 to content** at the bottom of that menu to fit them all to their text; double-clicking a column's
-edge fits that one. Widths are saved for next time, and nothing resizes them behind your back — not
-a Refresh, not switching lists. **Settings > Hosts > General > Layout** puts the panels, the
+edge fits that one. Widths are saved for next time, and nothing resizes them behind your back,
+not a Refresh and not switching lists. **Settings > Hosts > General > Layout** puts the panels, the
 columns and anything you hid back to the start, and leaves your other settings alone.
 
 To work on another list, use the dropdown on top of the Groups panel: it lists every list CapyPanel

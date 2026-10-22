@@ -28,13 +28,12 @@ Os grupos mantêm a ordem que você der a eles. No painel de grupos:
   para o nível superior;
 - arraste os hosts selecionados da tabela de hosts para um grupo para movê-los para lá.
 
-Clique com o botão direito num grupo > **Mover para** lista **Grupos** — o topo do painel, dentro
-de nada — e todos os grupos em que esse pode entrar, desenhados como uma árvore; o próprio grupo e
-os subgrupos dele não aparecem, e o lugar atual fica marcado. Para hosts, clique com o botão
-direito neles > **Mover para** lista **Sem grupo** primeiro, e depois a mesma árvore. Um grupo que
-você recolheu continua recolhido enquanto
-você trabalha, e mover um grupo para dentro de um recolhido abre o caminho até ele, para o que você
-moveu continuar visível.
+Clique com o botão direito num grupo > **Mover para** lista **Grupos**, o topo do painel, dentro
+de nada, e depois todos os grupos em que esse pode entrar, desenhados como uma árvore; o próprio
+grupo e os subgrupos dele não aparecem, e o lugar atual fica marcado. Para hosts, clique com o
+botão direito neles > **Mover para** lista **Sem grupo** primeiro, e depois a mesma árvore. Um
+grupo que você recolheu continua recolhido enquanto você trabalha, e mover um grupo para dentro de
+um recolhido abre o caminho até ele, para o que você moveu continuar visível.
 
 Toda mudança é salva na hora. Numa lista somente leitura, arrastar fica desligado.
 
@@ -50,7 +49,7 @@ Classificar de A a Z os coloca em ordem uma vez.
 
 Clique com o botão direito num grupo > **Remover selecionado**, ou pressione Del com um grupo
 escolhido. Um grupo vazio só pede confirmação. Um grupo com algo dentro pergunta antes o que fazer
-— "“3º andar” contém 2 grupos e 7 hosts. O que fazer com eles?" — e oferece duas saídas:
+("“3º andar” contém 2 grupos e 7 hosts. O que fazer com eles?") e oferece duas saídas:
 
 - **Mover para ▸** escolhe para onde eles vão, na mesma árvore de mover hosts: **Sem grupo** ou
   qualquer grupo que não esteja sendo removido. O grupo acima deste fica marcado, então a resposta
@@ -69,7 +68,7 @@ O CapyPanel guarda as listas em duas pastas, criadas no primeiro início:
 | **Listas compartilhadas** | `C:\ProgramData\CapyPanel\lists` | Todos no PC. A **lista padrão** é o `default.json` ali |
 | **Suas listas** | `C:\ProgramData\CapyPanel\users\<você@DOMÍNIO>\lists` | Só você e os administradores. Sua **lista pessoal** é o `personal.json` ali |
 
-**Toda lista salva numa dessas pastas aparece sozinha** — não há nada para adicionar. Coloque um
+**Toda lista salva numa dessas pastas aparece sozinha**, não há nada para adicionar. Coloque um
 arquivo na pasta compartilhada e todos no PC o têm no menu de listas; coloque um na sua e ele é só
 seu. No modo portátil as duas pastas ficam dentro da pasta `userdata` do próprio app (veja
 [Configurações e arquivos](../settings-and-files.pt-BR.md#modo-portatil)).
@@ -83,7 +82,7 @@ na dica.
 
 As permissões do Windows decidem se uma lista abre somente leitura, para toda lista onde ela
 estiver. Uma lista somente leitura ainda pode ser navegada e usada para conectar; só a edição fica
-desligada. Uma lista em qualquer outro lugar — numa pasta de rede, por exemplo — é adicionada uma
+desligada. Uma lista em qualquer outro lugar, numa pasta de rede por exemplo, é adicionada uma
 vez e fica no menu de listas desde então.
 
 Qualquer usuário pode criar arquivos no ProgramData, então **uma lista compartilhada criada por
@@ -149,8 +148,8 @@ podem ser removidas.
 
 Escolha em **Configurações > Hosts > Geral > Inicialização > Abrir ao iniciar**: a última lista
 usada (a escolha padrão), a lista padrão, sua lista pessoal ou qualquer outra lista que você tenha.
-Se essa lista não abrir, o CapyPanel abre a próxima que conseguir — a lista padrão, depois a sua
-lista pessoal — e avisa.
+Se essa lista não abrir, o CapyPanel abre a próxima que conseguir, a lista padrão e depois a sua
+lista pessoal, e avisa.
 
 ## O que uma lista mostra primeiro
 
