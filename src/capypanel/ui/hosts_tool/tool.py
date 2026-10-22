@@ -127,6 +127,8 @@ class HostsTool(ListWorkspace):
         self.toolbar.refresh_requested.connect(self._refresh_shown)
         self.refresh_panel.run_clicked.connect(self._run_refresh_panel)
         self.toolbar.connect_menu.aboutToShow.connect(self._fill_connect_menu)
+        # Connect's last entry: forget every typed password, or one profile's.
+        self.forget_menu = QMenu(self)
         # Enter connects only from the host table, so it never fires while typing elsewhere.
         a.connect_host.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.table.addAction(a.connect_host)
@@ -437,12 +439,44 @@ class HostsTool(ListWorkspace):
             item.setEnabled(bool(self.table.selected_ids()))
             item.triggered.connect(lambda _c=False, p=profile_id: self.connect_selected(p))
         menu.addSeparator()
-        menu.addActions([a.manual_connect, a.connection_profiles, a.forget_passwords])
+        menu.addActions([a.manual_connect, a.connection_profiles])
+        menu.addMenu(self._fill_forget_menu())
+
+    def _fill_forget_menu(self) -> QMenu:
+        """All profiles, then each profile with a typed password, by name, and the account
+        typed for logged-on users, if any. Greyed when nothing was typed."""
+        forget = self.forget_menu
+        forget.clear()
+        forget.setTitle(_("&Forget typed passwords"))
+        forget.addAction(self.commands.forget_passwords)
+        credentials = self.connector.credentials
+        typed = [(pid, name) for pid, name in self.connector.choices() if pid in credentials]
+        if typed or self._account is not None:
+            forget.addSeparator()
+        for profile_id, name in typed:
+            item = forget.addAction(name.replace("&", "&&"))
+            item.triggered.connect(lambda _c=False, p=profile_id: self.forget_password(p))
+        if self._account is not None:
+            item = forget.addAction(_("Account for logged-on users"))
+            item.triggered.connect(lambda: self.forget_password(None))
+        anything = bool(credentials) or self._account is not None  # as of now, not last refresh
+        self.commands.forget_passwords.setEnabled(anything)
+        forget.setEnabled(anything)
+        return forget
 
     def forget_passwords(self) -> None:
         self.connector.credentials.forget()
         self._account = None
         self._shell.show_message(_("Typed passwords forgotten."), 5000)
+        self._update_state()
+
+    def forget_password(self, profile_id: str | None) -> None:
+        """One profile's typed password; None: the account typed for logged-on users."""
+        if profile_id is None:
+            self._account = None
+        else:
+            self.connector.credentials.forget(profile_id)
+        self._shell.show_message(_("Typed password forgotten."), 5000)
         self._update_state()
 
     # ---- connection profiles ----
@@ -588,7 +622,9 @@ class HostsTool(ListWorkspace):
         shown = self.table.topLevelItemCount() > 0
         for action in (self.toolbar.refresh_status, self.toolbar.refresh_users):
             action.setEnabled(shown and self._run is None)
-        a.forget_passwords.setEnabled(bool(self.connector.credentials) or bool(self._account))
+        typed = bool(self.connector.credentials) or self._account is not None
+        a.forget_passwords.setEnabled(typed)
+        self.forget_menu.setEnabled(typed)
 
     def status_extras(self, doc: OpenList) -> list[str]:
         # Hosts still in the list: a removed host's result stays in memory.

@@ -315,10 +315,17 @@ class ProfilesSection(SharedSection):
         self.add_button = QPushButton(_("&Add…"))
         self.edit_button = QPushButton(_("&Edit…"))
         self.delete_button = QPushButton(_("&Delete…"))
+        self.restore_button = QPushButton(_("&Restore built-in…"))
         self.add_button.clicked.connect(self.add)
         self.edit_button.clicked.connect(self.edit)
         self.delete_button.clicked.connect(self.delete)
-        profile_buttons = [self.add_button, self.edit_button, self.delete_button]
+        self.restore_button.clicked.connect(self.restore_builtin)
+        profile_buttons = [
+            self.add_button,
+            self.edit_button,
+            self.delete_button,
+            self.restore_button,
+        ]
         row_menu(self.list, self.fill_row_menu)  # Duplicate too
         self.default = QComboBox()
         self.default.setEnabled(self.can_edit)
@@ -384,6 +391,8 @@ class ProfilesSection(SharedSection):
         self.add_button.setEnabled(self.can_edit)
         for button in (self.edit_button, self.delete_button):
             button.setEnabled(picked)
+        # Greyed while no built-in profile is missing.
+        self.restore_button.setEnabled(self.can_edit and bool(self.store.missing_starters()))
 
     def fill_row_menu(self, menu: QMenu) -> None:
         picked = self.can_edit and self._selected() is not None
@@ -448,6 +457,23 @@ class ProfilesSection(SharedSection):
         if not confirm(self, _("Delete connection profile"), text, _("Delete")):
             return
         self._write(lambda: self.store.delete(profile.id), self._save_failed())
+        self._fill_profiles(select=None)
+
+    def restore_builtin(self) -> None:
+        """Brings back the built-in profiles that were deleted, after asking."""
+        missing = self.store.missing_starters()
+        if not missing or not self.can_edit:
+            return
+        names = ", ".join(p.name for p in missing)
+        text = ngettext(
+            "Bring back {n} built-in profile: {names}?",
+            "Bring back {n} built-in profiles: {names}?",
+            len(missing),
+        ).format(n=len(missing), names=names)
+        text += "\n\n" + _("Profiles you changed or made yourself stay as they are.")
+        if not confirm(self, _("Restore built-in profiles"), text, _("&Restore")):
+            return
+        self._write(self.store.restore_starters, self._save_failed())
         self._fill_profiles(select=None)
 
     def _uses(self, profile_id: str) -> tuple[int, int]:

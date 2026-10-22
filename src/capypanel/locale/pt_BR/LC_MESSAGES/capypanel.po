@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 01:02-0300\n"
+"POT-Creation-Date: 2026-10-22 01:43-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -47,6 +47,9 @@ msgstr "&Endereço:"
 
 msgid "&Add…"
 msgstr "&Adicionar…"
+
+msgid "&All profiles"
+msgstr "&Todos os perfis"
 
 msgid "&Brand:"
 msgstr "&Marca:"
@@ -209,6 +212,12 @@ msgstr "&Relatório…"
 
 msgid "&Restart CapyPanel"
 msgstr "&Reiniciar o CapyPanel"
+
+msgid "&Restore"
+msgstr "&Restaurar"
+
+msgid "&Restore built-in…"
+msgstr "&Restaurar originais…"
 
 msgid "&Run"
 msgstr "&Executar"
@@ -390,6 +399,12 @@ msgstr "Pelo menos uma ferramenta fica ligada."
 
 msgid "Brand"
 msgstr "Marca"
+
+#, python-brace-format
+msgid "Bring back {n} built-in profile: {names}?"
+msgid_plural "Bring back {n} built-in profiles: {names}?"
+msgstr[0] "Trazer de volta {n} perfil que vem com o app: {names}?"
+msgstr[1] "Trazer de volta {n} perfis que vêm com o app: {names}?"
 
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
@@ -1195,6 +1210,9 @@ msgstr "Impressoras"
 msgid "Profile"
 msgstr "Perfil"
 
+msgid "Profiles you changed or made yourself stay as they are."
+msgstr "Os perfis que você alterou ou criou continuam como estão."
+
 msgid "Programs (*.exe)"
 msgstr "Programas (*.exe)"
 
@@ -1315,6 +1333,9 @@ msgid "Report saved: {n} printer from {source}."
 msgid_plural "Report saved: {n} printers from {source}."
 msgstr[0] "Relatório salvo: {n} impressora de {source}."
 msgstr[1] "Relatório salvo: {n} impressoras de {source}."
+
+msgid "Restore built-in profiles"
+msgstr "Restaurar os perfis que vêm com o app"
 
 msgid "S&top"
 msgstr "Pa&rar"
@@ -1709,6 +1730,9 @@ msgstr "Tipo"
 
 msgid "Type a tag and press Enter"
 msgstr "Digite uma tag e pressione Enter"
+
+msgid "Typed password forgotten."
+msgstr "A senha digitada foi esquecida."
 
 msgid "Typed passwords forgotten."
 msgstr "As senhas digitadas foram esquecidas."

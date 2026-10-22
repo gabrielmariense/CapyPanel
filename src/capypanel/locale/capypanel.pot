@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 01:02-0300\n"
+"POT-Creation-Date: 2026-10-22 01:43-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -45,6 +45,9 @@ msgid "&Address:"
 msgstr ""
 
 msgid "&Add…"
+msgstr ""
+
+msgid "&All profiles"
 msgstr ""
 
 msgid "&Brand:"
@@ -207,6 +210,12 @@ msgid "&Report…"
 msgstr ""
 
 msgid "&Restart CapyPanel"
+msgstr ""
+
+msgid "&Restore"
+msgstr ""
+
+msgid "&Restore built-in…"
 msgstr ""
 
 msgid "&Run"
@@ -395,6 +404,12 @@ msgstr ""
 
 msgid "Brand"
 msgstr ""
+
+#, python-brace-format
+msgid "Bring back {n} built-in profile: {names}?"
+msgid_plural "Bring back {n} built-in profiles: {names}?"
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
@@ -1226,6 +1241,9 @@ msgstr ""
 msgid "Profile"
 msgstr ""
 
+msgid "Profiles you changed or made yourself stay as they are."
+msgstr ""
+
 msgid "Programs (*.exe)"
 msgstr ""
 
@@ -1346,6 +1364,9 @@ msgid "Report saved: {n} printer from {source}."
 msgid_plural "Report saved: {n} printers from {source}."
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "Restore built-in profiles"
+msgstr ""
 
 msgid "S&top"
 msgstr ""
@@ -1766,6 +1787,9 @@ msgid "Type"
 msgstr ""
 
 msgid "Type a tag and press Enter"
+msgstr ""
+
+msgid "Typed password forgotten."
 msgstr ""
 
 msgid "Typed passwords forgotten."

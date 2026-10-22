@@ -484,3 +484,24 @@ def test_connect_is_a_dropdown_that_works_with_no_host_selected(window: CapyWind
     window.hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
     first = window.hosts.toolbar.connect_menu.actions()[0]
     assert first is window.hosts.commands.connect_host and not first.isEnabled()
+
+
+def test_forget_typed_passwords_forgets_all_or_one_profile_s(window: CapyWindow) -> None:
+    hosts = window.hosts
+    hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
+    assert not hosts.forget_menu.isEnabled()  # nothing typed yet
+    names = dict(hosts.connector.choices())
+    credentials = hosts.connector.credentials
+    credentials.remember("offices", Credential("ana", "x"))
+    credentials.remember("pis", Credential("pi", "y"))
+    hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
+    connect = hosts.toolbar.connect_menu.actions()
+    assert connect[-1].menu() is hosts.forget_menu and hosts.forget_menu.isEnabled()
+    entries = [a.text() for a in hosts.forget_menu.actions() if a.text()]
+    assert entries == ["&All profiles", *sorted([names["offices"], names["pis"]])]  # by name
+    assert hosts.commands.forget_passwords.isEnabled()
+    [pis] = [a for a in hosts.forget_menu.actions() if a.text() == names["pis"]]
+    pis.trigger()
+    assert "pis" not in credentials and "offices" in credentials  # only that one
+    hosts.commands.forget_passwords.trigger()  # All profiles
+    assert not credentials

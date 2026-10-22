@@ -554,7 +554,10 @@ def test_the_settings_buttons_are_only_the_main_actions(window: CapyWindow) -> N
     for page_id, wanted in (
         ("files", ["Open folder"]),
         ("host_lists", ["&New…", "&Add existing…", "&Remove"]),
-        ("connections", ["&Add…", "&Edit…", "&Delete…", "Change path…", "Download"]),
+        (
+            "connections",
+            ["&Add…", "&Edit…", "&Delete…", "&Restore built-in…", "Change path…", "Download"],
+        ),
     ):
         page = dialog.pages[page_id]
         assert [b.text() for b in page.findChildren(QPushButton)] == wanted, page_id

@@ -55,6 +55,6 @@ def retranslate_actions(a: HostsActions) -> None:
     a.refresh_shown.setText(_("Refresh"))
     a.check_status.setText(_("Refresh &status"))
     a.check_users.setText(_("Refresh &logged-on users"))
-    a.forget_passwords.setText(_("&Forget typed passwords"))
+    a.forget_passwords.setText(_("&All profiles"))  # in Connect's Forget typed passwords
     a.connection_profiles.setText(_("Connection &profiles…"))
     a.show_domains.setText(_("Show users' do&main"))
