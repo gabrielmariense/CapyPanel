@@ -46,7 +46,7 @@ O status não usa conta nenhuma e não precisa de direitos de administrador.
 
 ### Status automático
 
-**Configurações > Hosts > Geral > Atualizar > Atualizar o status sozinho** pode verificar o status
+**Configurações > Hosts > Atualizar > Atualizar o status sozinho** pode verificar o status
 dos hosts exibidos a cada alguns minutos: **A cada minuto**, **A cada 5 minutos**, **A cada 15
 minutos**, **A cada 30 minutos** ou **Personalizado…**, de 1 a 120. Começa **Desligado**, então
 nada é verificado sozinho a menos que você ligue, e desligar de novo guarda o seu intervalo para

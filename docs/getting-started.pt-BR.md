@@ -13,18 +13,37 @@ uv run capypanel
 
 A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes
 abrem na hora. A versão aparece na barra de título, seguida do commit quando você roda pelo
-código-fonte, por exemplo `CapyPanel 0.19.0 (abc1234)`. Informe-a ao relatar um problema.
+código-fonte, por exemplo `CapyPanel 0.20.0 (abc1234)`. Informe-a ao relatar um problema.
 
 A Área de Trabalho Remota funciona de cara, com o cliente que já vem no Windows. Para o VNC você
 também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
 [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/). Veja
 [Conectando](hosts/connecting.pt-BR.md).
 
-## A janela principal
+## A página inicial
+
+O CapyPanel abre na página inicial dele: a capivara, a frase do app e um bloco para cada
+ferramenta, com uma linha sobre ela e o atalho dela. Clique num bloco para abrir aquela
+ferramenta.
+
+| Ferramenta | Para que serve |
+|---|---|
+| **Hosts** (Ctrl+1) | "Seus computadores: conecte, veja quem está logado, verifique-os." |
+| **Impressoras** (Ctrl+2) | "Suas impressoras: páginas web, detalhes, relatórios." |
+
+A página inicial é o botão de cima da barra lateral, o **Exibir > Início** e o **Ctrl+0**. As duas
+ferramentas estão sempre lá; não há nada para ligar. Para começar em outro lugar, defina
+**Configurações > CapyPanel > Inicialização > Abrir ao iniciar** como a última ferramenta usada, ou
+como uma delas pelo nome.
+
+O resto desta página é sobre a ferramenta **Hosts**. As Impressoras têm páginas próprias, a partir
+de [A ferramenta Impressoras](printers/printers.pt-BR.md).
+
+## A janela do Hosts
 
 | Parte | O que mostra |
 |---|---|
-| **Barra lateral** (borda esquerda) | Uma faixa estreita com um ícone por ferramenta, cada um com o nome numa dica: **Hosts** (Ctrl+1) no topo e **Configurações** (Ctrl+,) embaixo. Hosts é a única ferramenta por enquanto, e a que está aberta tem um quadrado colorido atrás do ícone |
+| **Barra lateral** (borda esquerda) | Uma faixa estreita com o **Início** (Ctrl+0) no topo, depois um ícone por ferramenta com o nome numa dica, **Hosts** (Ctrl+1) e **Impressoras** (Ctrl+2), e **Configurações** (Ctrl+,) embaixo. Onde você está tem um quadrado colorido atrás do ícone |
 | **Barra de ferramentas** (topo) | Os botões da ferramenta aberta. Para o Hosts: **Conectar**, **Atualizar**, **Inventário** e **Relatório** |
 | **Painel de grupos** (esquerda) | O nome da lista aberta no topo, como um menu que troca de lista. Depois "Todos os hosts", com quantos hosts a lista tem, e "Sem grupo" embaixo dele, com quantos não estão em nenhum. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags** |
 | **Painel de hosts** (meio) | A caixa de pesquisa (veja [Pesquisando hosts](hosts/searching.pt-BR.md)) acima dos hosts do grupo ou da tag selecionada, com **Status** e **Usuário** |
@@ -34,9 +53,9 @@ também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
 A barra de menus é a mesma em qualquer ferramenta, e não guarda nada que seja de uma delas:
 
 - **Arquivo** abre as **Configurações…** (Ctrl+,) e fecha o CapyPanel com **Sair** (Ctrl+Q).
-- **Exibir** troca de ferramenta (**Hosts**, Ctrl+1), mostra ou esconde o **Painel de grupos**, o
-  **Painel de tags**, o **Painel de detalhes**, a **Barra de ferramentas** e a **Barra de status**,
-  e guarda **Mostrar domínio dos usuários** (veja
+- **Exibir** leva ao **Início** e a cada ferramenta, e depois mostra ou esconde os painéis da
+  ferramenta em que você está, a **Barra de ferramentas** e a **Barra de status**. No Hosts ele
+  também guarda **Mostrar domínio dos usuários** (veja
   [Verificando hosts](hosts/checking.pt-BR.md#usuarios-logados)). Ele fica aberto enquanto você
   marca, então várias partes podem aparecer ou sumir de uma vez.
 - **Ajuda** tem **Documentação**, **Relatar um problema** e **Sobre o CapyPanel**.
@@ -48,8 +67,7 @@ com o painel ao lado ficando com o resto. Clique com o botão direito nos títul
 tabela de hosts para escolher quais aparecem, ou em **Ajustar colunas ao conteúdo**, no fim desse
 menu, para ajustar todas ao texto delas; um clique duplo na borda de uma coluna ajusta só ela. As
 larguras são salvas para a próxima vez, e nada as redimensiona por trás, nem uma atualização nem
-trocar de lista. **Configurações > Hosts > Geral > Layout** devolve os painéis, as colunas e o que
-você escondeu ao estado inicial, e não mexe nas suas outras configurações.
+trocar de lista.
 
 Para trabalhar em outra lista, use o menu no topo do painel de grupos: ele mostra todas as listas
 que o CapyPanel encontrou, e também cria, abre e gerencia listas (veja
@@ -98,9 +116,9 @@ O menu **Ajuda** tem três itens:
   como o CapyPanel está rodando, o Windows, o tema, o idioma, o Qt e o Python. Nunca inclui nome
   de usuário, computador, domínio nem caminho de arquivo.
 - **Sobre o CapyPanel** abre as Configurações na página **Sobre**: a versão para clicar e copiar
-  com o commit, quem fez o CapyPanel, todas as licenças que vêm com ele, e **Relatar um problema**
-  ao lado de **Abrir pasta de logs**, para um relato sair com os logs anexados (veja
-  [Configurações e arquivos](settings-and-files.pt-BR.md#sobre)).
+  com o commit, quem fez o CapyPanel, todas as licenças que vêm com ele, onde ele guarda os
+  arquivos, e **Relatar um problema** ao lado de **Abrir pasta de logs**, para um relato sair com
+  os logs anexados (veja [Configurações e arquivos](settings-and-files.pt-BR.md#sobre)).
 
 ## Atalhos de teclado
 
@@ -113,7 +131,7 @@ O menu **Ajuda** tem três itens:
 | Ctrl+Shift+C | Copiar os endereços dos hosts selecionados |
 | Ctrl+N / Ctrl+Shift+N | Adicionar host / Adicionar grupo |
 | F2 / Del | Editar / remover a seleção |
-| Ctrl+1 | A ferramenta Hosts |
+| Ctrl+0 / Ctrl+1 / Ctrl+2 | Início / a ferramenta Hosts / a ferramenta Impressoras |
 | Ctrl+O | Abrir um arquivo de lista de hosts |
 | Ctrl+, | Configurações |
 | Ctrl+Q | Sair |

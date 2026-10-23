@@ -13,18 +13,35 @@ uv run capypanel
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
 The version shows in the title bar, followed by the commit when you run from source, e.g.
-`CapyPanel 0.19.0 (abc1234)`. Quote it when you report a problem.
+`CapyPanel 0.20.0 (abc1234)`. Quote it when you report a problem.
 
 Remote Desktop works out of the box, with the client built into Windows. For VNC you also need a
 viewer: [UltraVNC](https://uvnc.com) or
 [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/). See
 [Connecting](hosts/connecting.md).
 
-## The main window
+## The Home page
+
+CapyPanel opens on its Home page: the capybara, the app's line, and a tile for each of its tools
+with one line about it and its shortcut. Click a tile to open that tool.
+
+| Tool | What it's for |
+|---|---|
+| **Hosts** (Ctrl+1) | "Your computers: connect, see who's logged on, check them." |
+| **Printers** (Ctrl+2) | "Your printers: web pages, details, reports." |
+
+Home is the top button on the rail, **View > Home**, and **Ctrl+0**. Both tools are always there;
+there's nothing to turn on. To start somewhere else, set **Settings > CapyPanel > Startup > Open on
+startup** to the last used tool, or to one by name.
+
+The rest of this page is about the **Hosts** tool. Printers has its own pages, starting at
+[The Printers tool](printers/printers.md).
+
+## The Hosts window
 
 | Part | What it shows |
 |---|---|
-| **The rail** (left edge) | One icon per tool, with its name in a tooltip: **Hosts** (Ctrl+1) at the top, and **Settings** (Ctrl+,) at the bottom. Hosts is the only tool for now, and the tool you're in has a tinted square behind its icon |
+| **The rail** (left edge) | **Home** (Ctrl+0) at the top, then one icon per tool with its name in a tooltip, **Hosts** (Ctrl+1) and **Printers** (Ctrl+2), and **Settings** (Ctrl+,) at the bottom. Where you are has a tinted square behind its icon |
 | **Toolbar** (top) | The buttons of the tool you're in. For Hosts: **Connect**, **Refresh**, **Inventory** and **Report** |
 | **Groups panel** (left) | The open list's name on top, as a dropdown that switches lists. Then "All hosts" with how many hosts the list has, and "No group" under it with how many are in none. Then **Groups**, with a **+** button to add one, and **Tags** |
 | **Hosts panel** (middle) | The search box (see [Searching hosts](hosts/searching.md)) above the hosts in the selected group or tag, with their **Status** and **User** |
@@ -34,10 +51,10 @@ viewer: [UltraVNC](https://uvnc.com) or
 The menu bar is the same whichever tool you're in, and holds nothing a tool owns:
 
 - **File** opens **Settings…** (Ctrl+,) and closes CapyPanel with **Exit** (Ctrl+Q).
-- **View** switches tools (**Hosts**, Ctrl+1), shows or hides the **Groups pane**, the **Tags
-  pane**, the **Details pane**, the **Toolbar** and the **Status bar**, and holds **Show users'
-  domain** (see [Checking hosts](hosts/checking.md#logged-on-users)). It stays open while you tick,
-  so several parts can be shown or hidden in one go.
+- **View** goes to **Home** and to each tool, then shows or hides the panels of the tool you're
+  in, the **Toolbar** and the **Status bar**. In Hosts it also holds **Show users' domain** (see
+  [Checking hosts](hosts/checking.md#logged-on-users)). It stays open while you tick, so several
+  parts can be shown or hidden in one go.
 - **Help** has **Documentation**, **Report a problem** and **About CapyPanel**.
 
 The window is yours to arrange. Drag the edge between two panels to move it, or **double-click**
@@ -46,8 +63,7 @@ what's in it, the widest group or tag or the table's columns, with the panel bes
 the rest. Right-click the host table's column titles to choose which columns show, or **Fit columns
 to content** at the bottom of that menu to fit them all to their text; double-clicking a column's
 edge fits that one. Widths are saved for next time, and nothing resizes them behind your back,
-not a Refresh and not switching lists. **Settings > Hosts > General > Layout** puts the panels, the
-columns and anything you hid back to the start, and leaves your other settings alone.
+not a Refresh and not switching lists.
 
 To work on another list, use the dropdown on top of the Groups panel: it lists every list CapyPanel
 found, and makes, opens and manages them (see [Host lists](hosts/host-lists.md#the-list-dropdown)).
@@ -93,8 +109,8 @@ The **Help** menu has three items:
   version, how CapyPanel is running, Windows, the theme, the language, Qt and Python. It never
   includes a user name, a computer, a domain or a path.
 - **About CapyPanel** opens Settings on its **About** page: the version to click and copy with its
-  commit, who made CapyPanel, every license it ships, and **Report a problem** and **Open log
-  folder** side by side, so a report can go out with the logs attached (see
+  commit, who made CapyPanel, every license it ships, where it keeps its files, and **Report a
+  problem** beside **Open log folder**, so a report can go out with the logs attached (see
   [Settings and files](settings-and-files.md#about)).
 
 ## Keyboard shortcuts
@@ -108,7 +124,7 @@ The **Help** menu has three items:
 | Ctrl+Shift+C | Copy the selected hosts' addresses |
 | Ctrl+N / Ctrl+Shift+N | Add host / Add group |
 | F2 / Del | Edit / remove the selection |
-| Ctrl+1 | The Hosts tool |
+| Ctrl+0 / Ctrl+1 / Ctrl+2 | Home / the Hosts tool / the Printers tool |
 | Ctrl+O | Open a host list file |
 | Ctrl+, | Settings |
 | Ctrl+Q | Exit |

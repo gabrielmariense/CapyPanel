@@ -7,9 +7,9 @@ num arquivo CSV, veja [Importando e exportando hosts](importing.pt-BR.md).
 ## Grupos e tags
 
 - **Grupos** se aninham o quanto você quiser ("Matriz › Financeiro › 3º andar").
-- **Tags** atravessam os grupos ("quiosque", "3-andar"). Clique numa tag no painel de grupos
-  para ver todos os hosts que a têm. Tags que você já usou são sugeridas enquanto digita, com a
-  grafia mantida.
+- **Tags** atravessam os grupos ("quiosque", "3-andar"). Clique numa tag no painel de grupos e a
+  tabela mantém só os hosts que a têm. Tags que você já usou são sugeridas enquanto digita, com a
+  grafia mantida. Veja [Escolher tags](#escolher-tags).
 - **Notas** guardam o que mais valer a pena saber sobre um host. Elas aparecem no painel de
   detalhes, e a pesquisa sempre as cobre.
 - **Sem grupo** é onde um host fica quando você não o colocou em nenhum. "Sem grupo (4)" aparece
@@ -17,6 +17,23 @@ num arquivo CSV, veja [Importando e exportando hosts](importing.pt-BR.md).
   arrastados para lá saem do grupo em que estavam.
 
 Uma lista nova começa com um grupo, **Grupo padrão**.
+
+### Escolher tags
+
+Uma tag filtra dentro do grupo que você escolheu, em vez de alcançar a lista inteira. Para ver uma
+tag em todo lugar, escolha **Todos os hosts** primeiro.
+
+Várias tags podem ser escolhidas de uma vez, e a tabela então mantém só os hosts que têm **todas**
+elas. Enquanto houver alguma escolhida:
+
+- uma faixa colorida acima da tabela diz quais, como em "Só hosts com todas estas tags: quiosque,
+  3-andar · 4 de 37 exibidos", com um botão **Limpar**;
+- o título **Tags** mostra quantas estão escolhidas e oferece um **×** para limpá-las;
+- a barra de status acrescenta "Tags: quiosque, 3-andar".
+
+As tags escolhidas continuam quando você troca de grupo e enquanto você pesquisa. Quando nada
+corresponde, a tabela diz "Nenhum host deste grupo tem todas as tags escolhidas." e oferece
+**Limpar tags**.
 
 ## Organizar grupos e hosts
 
@@ -65,16 +82,22 @@ O CapyPanel guarda as listas em duas pastas, criadas no primeiro início:
 
 | Pasta | Onde | Para quem |
 |---|---|---|
-| **Listas compartilhadas** | `C:\ProgramData\CapyPanel\lists` | Todos no PC. A **lista padrão** é o `default.json` ali |
-| **Suas listas** | `C:\ProgramData\CapyPanel\users\<você@DOMÍNIO>\lists` | Só você e os administradores. Sua **lista pessoal** é o `personal.json` ali |
+| **Listas de hosts compartilhadas** | `C:\ProgramData\CapyPanel\lists\hosts` | Todos no PC. A **lista padrão** é o `default.json` ali |
+| **Suas listas de hosts** | `C:\ProgramData\CapyPanel\users\<você@DOMÍNIO>\lists\hosts` | Só você e os administradores. Sua **lista pessoal** é o `personal.json` ali |
+
+Cada tipo de lista tem uma pasta própria, então a ferramenta Impressoras guarda as listas dela em
+`lists\printers` nos mesmos dois lugares, e as duas nunca se misturam. Cada arquivo de lista
+registra de que tipo é, e abrir o tipo errado é recusado com "“{path}” não é uma lista de hosts."
+em vez de mostrar uma tabela vazia.
 
 **Toda lista salva numa dessas pastas aparece sozinha**, não há nada para adicionar. Coloque um
 arquivo na pasta compartilhada e todos no PC o têm no menu de listas; coloque um na sua e ele é só
 seu. No modo portátil as duas pastas ficam dentro da pasta `userdata` do próprio app (veja
 [Configurações e arquivos](../settings-and-files.pt-BR.md#modo-portatil)).
 
-Uma lista de antes da versão 0.19, quando elas eram arquivos `hosts.json`, é copiada para dentro
-das pastas uma vez, sozinha.
+Listas de uma versão anterior são copiadas para dentro dessas pastas uma vez, sozinhas: os
+arquivos `hosts.json` de antes da 0.19 e as listas que a 0.19 guardava direto em `lists`. Os
+arquivos antigos ficam onde estão.
 
 As listas se chamam "Padrão", "Pessoal", e cada uma das outras pelo nome do arquivo sem o `.json`.
 Duas listas com o mesmo nome mostram o nome da pasta delas depois, e o caminho inteiro está sempre
@@ -146,14 +169,14 @@ podem ser removidas.
 
 ## Qual lista abre ao iniciar
 
-Escolha em **Configurações > Hosts > Geral > Inicialização > Abrir ao iniciar**: a última lista
+Escolha em **Configurações > Hosts > Inicialização > Lista ao iniciar**: a última lista
 usada (a escolha padrão), a lista padrão, sua lista pessoal ou qualquer outra lista que você tenha.
 Se essa lista não abrir, o CapyPanel abre a próxima que conseguir, a lista padrão e depois a sua
 lista pessoal, e avisa.
 
 ## O que uma lista mostra primeiro
 
-Cada lista guarda a própria resposta, em **Configurações > Hosts > Geral > Inicialização > Mostrar
+Cada lista guarda a própria resposta, em **Configurações > Hosts > Inicialização > Mostrar
 primeiro**:
 
 - **Todos os hosts**, a lista inteira;

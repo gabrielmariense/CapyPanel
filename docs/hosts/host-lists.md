@@ -7,9 +7,9 @@ a CSV file, see [Importing and exporting hosts](importing.md).
 ## Groups and tags
 
 - **Groups** nest as deep as you like ("Headquarters › Finance › Floor 3").
-- **Tags** cut across groups ("kiosk", "floor-3"). Click a tag in the Groups panel to see every
-  host that carries it. Tags you've used before are suggested as you type, with their spelling
-  kept.
+- **Tags** cut across groups ("kiosk", "floor-3"). Click a tag in the Groups panel and the table
+  keeps only the hosts carrying it. Tags you've used before are suggested as you type, with their
+  spelling kept. See [Picking tags](#picking-tags).
 - **Notes** hold anything else worth knowing about a host. They show in the Details panel, and
   searching always covers them.
 - **No group** is where a host sits when you haven't put it in one. "No group (4)" shows under
@@ -17,6 +17,22 @@ a CSV file, see [Importing and exporting hosts](importing.md).
   leave the group they were in.
 
 A new list starts with one group, **Default group**.
+
+### Picking tags
+
+A tag narrows the group you have picked, rather than reaching across the whole list. To see a tag
+everywhere, pick **All hosts** first.
+
+Several tags can be picked at once, and the table then keeps only the hosts carrying **all** of
+them. While any are picked:
+
+- a tinted strip above the table says which, as in "Only hosts with all of: kiosk, floor-3 · 4 of
+  37 shown", with a **Clear** button;
+- the **Tags** heading shows how many are picked and offers a **×** to clear them;
+- the status bar adds "Tags: kiosk, floor-3".
+
+Picked tags stay as you move between groups and while you search. When nothing matches, the table
+says "No hosts in this group have all the picked tags." and offers **Clear tags**.
 
 ## Arranging groups and hosts
 
@@ -61,16 +77,21 @@ CapyPanel keeps lists in two folders, made at its first start:
 
 | Folder | Where | Who it's for |
 |---|---|---|
-| **Shared lists** | `C:\ProgramData\CapyPanel\lists` | Everyone on the PC. The **default list** is `default.json` there |
-| **Your lists** | `C:\ProgramData\CapyPanel\users\<you@DOMAIN>\lists` | Only you, and administrators. Your **personal list** is `personal.json` there |
+| **Shared host lists** | `C:\ProgramData\CapyPanel\lists\hosts` | Everyone on the PC. The **default list** is `default.json` there |
+| **Your host lists** | `C:\ProgramData\CapyPanel\users\<you@DOMAIN>\lists\hosts` | Only you, and administrators. Your **personal list** is `personal.json` there |
+
+Each kind of list has a folder of its own, so the Printers tool keeps its lists in `lists\printers`
+in the same two places and the two never mix. Every list file records which kind it is, and opening
+the wrong kind is refused with "“{path}” isn't a host list." rather than showing an empty table.
 
 **Every list saved in either folder shows up by itself**, with nothing to add. Drop a file in the
 shared folder and everyone on the PC has it in their dropdown; drop one in yours and it's yours
 alone. In portable mode both folders are inside the app's own `userdata` folder (see
 [Settings and files](../settings-and-files.md#portable-mode)).
 
-A list from before version 0.19, when these were `hosts.json` files, is copied into the folders
-once, by itself.
+Lists from an earlier version are copied into these folders once, by themselves: the `hosts.json`
+files of before 0.19, and the lists 0.19 kept directly in `lists`. The older files stay where they
+are.
 
 Lists are named "Default", "Personal", and every other one by its file name without `.json`. Two
 lists with the same name show their folder's name after it, and the full path is always in the
@@ -139,14 +160,14 @@ removed.
 
 ## Which list opens at start
 
-Choose it under **Settings > Hosts > General > Startup > Open on startup**: the last used list
+Choose it under **Settings > Hosts > Startup > List on startup**: the last used list
 (the default choice), the default list, your personal list, or any other list you have. If that
 list can't be opened, CapyPanel opens the next one it can, the default list and then your
 personal list, and says so.
 
 ## What a list shows first
 
-Each list keeps its own answer, in **Settings > Hosts > General > Startup > Show first**:
+Each list keeps its own answer, in **Settings > Hosts > Startup > Show first**:
 
 - **All hosts**, the whole list;
 - **Where I left off**, the group, tag or view you had open when you closed it;

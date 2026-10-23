@@ -75,15 +75,17 @@ read-only list too.
 ### Hosts, columns and presets
 
 - **Hosts:** a dropdown of everything you can export, each with how many hosts it holds: the
-  **search results** while a search is on, the **selected hosts** when you have more than one
-  selected, **All hosts**, **No group**, every group (with the hosts of the groups inside it)
-  and **Tag: {tag}** for each tag. It opens on whatever the window is showing, every time.
+  **search results** while a search is on, the **picked tags** while any are picked, the
+  **selected hosts** when you have more than one selected, **All hosts**, **No group**, every
+  group (with the hosts of the groups inside it) and **Tag: {tag}** for each tag. It opens on
+  whatever the window is showing, every time.
 - **Columns:** tick what each row should hold, grouped as **Host** (Name, Address, Group), **Tags
   and notes** (Tags, Notes) and **Last check** (Status, Logged-on users). The ticks are kept as
   soon as you change them, so closing the window never loses them.
 - **Preset:** **For Import** ticks the hosts' own fields, "which Import hosts reads back: to move
   hosts to a list". Keep your own set with **Save as preset…**, and remove one with **Delete**.
-  Ticks matching no preset read **Custom**.
+  A name already in use asks "A preset named “{name}” already exists. Replace it?", with Cancel as
+  the default. Ticks matching no preset read **Custom**.
 
 ### Status and logged-on users
 

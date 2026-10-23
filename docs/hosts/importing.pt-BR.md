@@ -75,17 +75,18 @@ funciona também numa lista somente leitura.
 ### Hosts, colunas e predefinições
 
 - **Hosts:** uma caixa de seleção com tudo que você pode exportar, cada item com quantos hosts
-  tem: os **resultados da pesquisa** enquanto uma pesquisa está ativa, os **hosts selecionados**
-  quando você tem mais de um selecionado, **Todos os hosts**, **Sem grupo**, cada grupo (com os
-  hosts dos grupos de dentro dele) e **Tag: {tag}** para cada tag. Ela abre no que a janela está
-  mostrando, sempre.
+  tem: os **resultados da pesquisa** enquanto uma pesquisa está ativa, as **tags escolhidas**
+  enquanto houver alguma, os **hosts selecionados** quando você tem mais de um selecionado,
+  **Todos os hosts**, **Sem grupo**, cada grupo (com os hosts dos grupos de dentro dele) e
+  **Tag: {tag}** para cada tag. Ela abre no que a janela está mostrando, sempre.
 - **Colunas:** marque o que cada linha deve ter, agrupado em **Host** (Nome, Endereço, Grupo),
   **Tags e notas** (Tags, Notas) e **Última verificação** (Status, Usuários logados). As marcações
   são guardadas assim que você as muda, então fechar a janela nunca as perde.
 - **Predefinição:** **Para importar** marca os campos dos próprios hosts, "que Importar hosts lê
   de volta: para levar hosts a uma lista". Guarde o seu próprio conjunto com **Salvar como
-  predefinição…** e tire um com **Excluir**. Marcações que não correspondem a nenhuma
-  predefinição aparecem como **Personalizado**.
+  predefinição…** e tire um com **Excluir**. Um nome já usado pergunta "Já existe uma predefinição
+  chamada “{name}”. Substituí-la?", com Cancelar como padrão. Marcações que não correspondem a
+  nenhuma predefinição aparecem como **Personalizado**.
 
 ### Status e usuários logados
 
