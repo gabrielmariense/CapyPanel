@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 15:55-0300\n"
+"POT-Creation-Date: 2026-10-23 17:14-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -255,16 +255,6 @@ msgid "A chosen &group"
 msgstr ""
 
 msgid "A connection profile must be a JSON object."
-msgstr ""
-
-msgid ""
-"A folder for each kind of list, with its default list and every list "
-"saved there, for everyone on this PC."
-msgstr ""
-
-msgid ""
-"A folder for each kind of list, with your personal list and every list "
-"saved there, only for you."
 msgstr ""
 
 msgid "A group can't be moved inside itself."
@@ -514,9 +504,6 @@ msgstr ""
 msgid "Connection profiles"
 msgstr ""
 
-msgid "Connection profiles and remote tools, for everyone on this PC."
-msgstr ""
-
 msgid "Connections"
 msgstr ""
 
@@ -729,6 +716,11 @@ msgid "Folders"
 msgstr ""
 
 msgid "For Import"
+msgstr ""
+
+msgid ""
+"For everyone on this PC: connection profiles, remote tools, and the "
+"shared lists in “lists”, a folder for each kind of list."
 msgstr ""
 
 msgid ""
@@ -1075,6 +1067,11 @@ msgid "One per user, named after the account."
 msgstr ""
 
 msgid "Online"
+msgstr ""
+
+msgid ""
+"Only for you and administrators: your settings, and your lists in "
+"“lists”, a folder for each kind of list."
 msgstr ""
 
 #, python-brace-format
@@ -1450,12 +1447,6 @@ msgstr ""
 msgid ""
 "Shared by everyone on this PC. Read-only: only people Windows lets write "
 "this folder can change them."
-msgstr ""
-
-msgid "Shared files"
-msgstr ""
-
-msgid "Shared lists"
 msgstr ""
 
 msgid ""
@@ -1872,16 +1863,7 @@ msgstr ""
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr ""
 
-msgid "Your files"
-msgstr ""
-
-msgid "Your lists"
-msgstr ""
-
 msgid "Your printers: web pages, details, reports."
-msgstr ""
-
-msgid "Your settings, private to you and administrators."
 msgstr ""
 
 msgid "Yours"

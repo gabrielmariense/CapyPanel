@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 15:55-0300\n"
+"POT-Creation-Date: 2026-10-23 17:14-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -258,12 +258,6 @@ msgstr "Um &grupo escolhido"
 msgid "A connection profile must be a JSON object."
 msgstr "Um perfil de conexão deve ser um objeto JSON."
 
-msgid "A folder for each kind of list, with its default list and every list saved there, for everyone on this PC."
-msgstr "Uma pasta para cada tipo de lista, com a lista padrão dele e toda lista salva ali, para todos neste PC."
-
-msgid "A folder for each kind of list, with your personal list and every list saved there, only for you."
-msgstr "Uma pasta para cada tipo de lista, com sua lista pessoal e toda lista salva ali, só para você."
-
 msgid "A group can't be moved inside itself."
 msgstr "Um grupo não pode ser movido para dentro dele mesmo."
 
@@ -507,9 +501,6 @@ msgstr "&Perfis de conexão…"
 msgid "Connection profiles"
 msgstr "Perfis de conexão"
 
-msgid "Connection profiles and remote tools, for everyone on this PC."
-msgstr "Perfis de conexão e ferramentas remotas, para todos neste PC."
-
 msgid "Connections"
 msgstr "Conexões"
 
@@ -719,6 +710,9 @@ msgstr "Pastas"
 
 msgid "For Import"
 msgstr "Para importar"
+
+msgid "For everyone on this PC: connection profiles, remote tools, and the shared lists in “lists”, a folder for each kind of list."
+msgstr "Para todos neste PC: perfis de conexão, ferramentas remotas e as listas compartilhadas em “lists”, uma pasta para cada tipo de lista."
 
 msgid ""
 "For example:\n"
@@ -1053,6 +1047,9 @@ msgstr "Um por usuário, com o nome da conta."
 
 msgid "Online"
 msgstr "Online"
+
+msgid "Only for you and administrators: your settings, and your lists in “lists”, a folder for each kind of list."
+msgstr "Só para você e os administradores: suas configurações e suas listas em “lists”, uma pasta para cada tipo de lista."
 
 #, python-brace-format
 msgid "Only hosts with all of: {tags} · {shown} of {total} shown"
@@ -1421,12 +1418,6 @@ msgstr "Compartilhados por todos neste PC."
 
 msgid "Shared by everyone on this PC. Read-only: only people Windows lets write this folder can change them."
 msgstr "Compartilhados por todos neste PC. Somente leitura: só quem o Windows deixa gravar nesta pasta pode alterá-los."
-
-msgid "Shared files"
-msgstr "Arquivos compartilhados"
-
-msgid "Shared lists"
-msgstr "Listas compartilhadas"
 
 msgid "Shared lists are in the shared lists folder and show up for everyone; only people Windows lets write that folder can add one."
 msgstr "Listas compartilhadas ficam na pasta de listas compartilhadas e aparecem para todos; só quem o Windows deixa gravar nessa pasta pode criar uma."
@@ -1811,17 +1802,8 @@ msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
 
-msgid "Your files"
-msgstr "Seus arquivos"
-
-msgid "Your lists"
-msgstr "Suas listas"
-
 msgid "Your printers: web pages, details, reports."
 msgstr "Suas impressoras: páginas web, detalhes, relatórios."
-
-msgid "Your settings, private to you and administrators."
-msgstr "Suas configurações, só para você e os administradores."
 
 msgid "Yours"
 msgstr "Sua"
