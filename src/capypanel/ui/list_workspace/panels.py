@@ -493,6 +493,7 @@ class ItemTable(QTreeWidget):
         # _fill_last_column stretches the last one. Off before any column hides: a column hidden
         # while it's on kept counting 100 px, and the scroll bar showed with nothing to scroll.
         header.setStretchLastSection(False)
+        header.setSectionsMovable(False)  # one fixed column order, the same in every menu
         header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         header.customContextMenuRequested.connect(self._columns_menu)
         header.sectionResized.connect(self._resized)

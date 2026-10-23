@@ -1,4 +1,4 @@
-"""The host table: name, Status, User, address and tags. Status and User come from Refresh; they're
+"""The host table: name, address, Status, User and tags. Status and User come from Refresh; they're
 kept in memory, never in the list file."""
 
 from collections.abc import Mapping, Sequence
@@ -24,8 +24,8 @@ class Cells:
 
 
 class HostTable(ItemTable):
-    STATUS, USER, ADDRESS, TAGS = 1, 2, 3, 4
-    COLUMNS = ("computer", "status", "user", "address", "tags")  # saved by these keys
+    ADDRESS, STATUS, USER, TAGS = 1, 2, 3, 4
+    COLUMNS = ("computer", "address", "status", "user", "tags")  # saved by these keys
     # What's searched and shown: notes are searched too, but have no column.
     SEARCHED = frozenset({0, USER, ADDRESS, TAGS})
     EMPTY = {STATUS: 16, USER: 24}  # empty until a check: room for what a check brings
@@ -35,10 +35,10 @@ class HostTable(ItemTable):
         super().__init__()
 
     def retranslate(self) -> None:
-        self.setHeaderLabels([_("Name"), _("Status"), _("User"), _("Address"), _("Tags")])
+        self.setHeaderLabels([_("Name"), _("Address"), _("Status"), _("User"), _("Tags")])
 
     def row_texts(self, item: Host) -> list[str]:
-        return [item.name, "", "", item.address, ", ".join(item.tags)]
+        return [item.name, item.address, "", "", ", ".join(item.tags)]
 
     def decorate(self, row: QTreeWidgetItem, item: Host) -> None:
         self._fill(row, self._cells.get(item.id))

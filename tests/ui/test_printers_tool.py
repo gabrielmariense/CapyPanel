@@ -88,16 +88,17 @@ def _select(tool: PrintersTool, *names: str) -> None:
             row.setSelected(True)
 
 
-def test_the_table_shows_name_brand_model_address_and_tags(printers: PrintersTool) -> None:
+def test_the_table_shows_name_address_brand_model_and_tags(printers: PrintersTool) -> None:
     table = printers.table
     header = table.headerItem()
     shown = [header.text(i) for i in range(table.columnCount()) if not table.isColumnHidden(i)]
-    assert shown == ["Name", "Brand", "Model", "Address", "Tags"]  # serial and asset tag hidden
+    assert shown == ["Name", "Address", "Brand", "Model", "Tags"]  # serial and asset tag hidden
+    assert not table.header().sectionsMovable()  # one fixed order: titles can't be dragged
     assert _names(printers) == ["2F-LABELS", "2F-OFFICE-01", "LOOSE"]
     first = table.topLevelItem(0)
     assert first is not None
-    assert [first.text(i) for i in range(5)] == ["2F-LABELS", "ZEBRA", "ZD421", "192.0.2.25",
-                                                 "labels"]  # fmt: skip
+    texts = [first.text(i) for i in (0, 1, 2, 3, table.TAGS)]
+    assert texts == ["2F-LABELS", "192.0.2.25", "ZEBRA", "ZD421", "labels"]
     assert printers.nav.everything.topLevelItem(0).text(0).startswith("All printers")  # type: ignore[union-attr]
 
 
@@ -272,9 +273,9 @@ def test_the_printer_menu_opens_the_web_page_first(
     assert isinstance(copy, QMenu)
     assert [menus.label(a) for a in copy.actions()] == [
         "Name",
+        "&Address",
         "Brand",
         "Model",
-        "&Address",
         "Tags",
     ]
 

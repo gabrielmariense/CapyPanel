@@ -246,8 +246,8 @@ def test_copy_lists_every_column_shown_wherever_the_menu_opens(window: CapyWindo
     copy = menu.actions()[0].menu()
     assert isinstance(copy, QMenu)
     items = [label(a) for a in copy.actions()]
-    assert items == ["Name", "Status", "User", "&Address"]  # Tags is hidden: not offered
-    assert copy.actions()[3] is window.hosts.commands.copy_address  # its shortcut shows
+    assert items == ["Name", "&Address", "Status", "User"]  # Tags is hidden: not offered
+    assert copy.actions()[1] is window.hosts.commands.copy_address  # its shortcut shows
     copy.actions()[0].trigger()
     assert sorted(QGuiApplication.clipboard().text().split("\n")) == ["PC-A", "PC-B"]
 
