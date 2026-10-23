@@ -1,4 +1,5 @@
-"""Starts Qt, wires up the core services and shows the main window."""
+"""Starts Qt, wires up the core services and shows the main window with every tool. It imports
+no tool itself: the tool catalog loads them."""
 
 import logging
 import sys
@@ -8,13 +9,12 @@ from types import TracebackType
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from capypanel import BUILD, __version__
-from capypanel.core import applog, files, i18n, migration, settings
-from capypanel.core.files import can_create_files
+from capypanel.core import applog, i18n, migration, settings
 from capypanel.core.i18n import _
-from capypanel.core.tools.profile_store import ProfileStore
 from capypanel.ui import branding, language
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.themes import engine as themes
+from capypanel.ui.tool_catalog import CATALOG
 
 log = logging.getLogger(__name__)
 
@@ -42,25 +42,15 @@ def run(argv: list[str] | None = None) -> int:
             log.info("Copied from an older version: %s", copied)
     except OSError:
         log.exception("Couldn't copy files from an older version")
-    try:
-        # The lists folders are there from the first start: the shared one for everyone,
-        # changed only by its maker and administrators; the user's own inside their folder.
-        if not paths.shared_lists_dir.is_dir() and can_create_files(paths.shared_lists_dir):
-            files.make_shared_folder(paths.shared_lists_dir)
-        paths.user_lists_dir.mkdir(parents=True, exist_ok=True)
-    except OSError:
-        log.exception("Couldn't create the lists folders")
-    try:
-        ProfileStore(paths.profiles_dir).place_starters()
-    except OSError:
-        log.exception("Couldn't place the connection profiles in %s", paths.profiles_dir)
-
     prefs = settings.load_settings(paths.settings_file)
+    tools = [info.load() for info in CATALOG]
+    for tool in tools:
+        tool.prepare(paths)  # e.g. the files it starts with
     language.apply(prefs.get("language", i18n.DEFAULT_LANGUAGE))  # before any window exists
 
     registry = themes.Registry()
     themes.apply(registry.find(prefs.get("theme")))
-    window = MainWindow(paths, prefs, registry=registry)
+    window = MainWindow(paths, prefs, registry=registry, tools=tools)
     window.show()
     code = app.exec()
     log.info("CapyPanel exiting (code %s)", code)

@@ -16,7 +16,7 @@ visualizador VNC instalado ele também encontra sozinho: onde o Windows registro
 (qualquer pasta), as pastas de Arquivos de Programas de costume, depois o seu PATH. Uma cópia
 portátil descompactada em outro lugar não é encontrada automaticamente; quando falta um
 visualizador, o CapyPanel pede para instalá-lo ou localizar o `.exe`. O caminho é salvo uma vez
-para todos no PC, como em **Configurações > Hosts > Conexões > Ferramentas remotas** (veja
+para todos no PC, como em **Configurações > Hosts > Ferramentas remotas** (veja
 [Configurações e arquivos](../settings-and-files.pt-BR.md#ferramentas-remotas)).
 
 ## Perfis de conexão
@@ -32,8 +32,9 @@ Raspberry Pis, Área de Trabalho Remota. Um **perfil de conexão** diz qual dela
 
 ### Gerenciar perfis
 
-- Os perfis são gerenciados em **Configurações > Hosts > Conexões** (também em **Conectar >
-  Perfis de conexão…**): adicionar, editar, duplicar, excluir. Cada um tem um nome, uma
+- Os perfis são gerenciados em **Configurações > Hosts > Perfis de conexão** (também em
+  **Conectar > Perfis de conexão…**): adicionar, editar, duplicar, excluir e restaurar os que vêm
+  com o CapyPanel. Cada um tem um nome, uma
   ferramenta, um login (só os que essa ferramenta suporta), as opções da ferramenta (como o
   SecureVNC) e uma porta, em branco para a da própria ferramenta.
 - Cada ferramenta vem com um perfil inicial: **UltraVNC** e **RealVNC**, ambos com "usuário e
@@ -105,7 +106,11 @@ de login abaixo não se aplica.
   lembra na memória, por perfil**, até fechar. Hosts com outro perfil nunca a recebem.
 - As senhas **nunca são salvas** em disco.
 - **Conectar > Esquecer as senhas digitadas** as apaga, por exemplo depois de um erro de
-  digitação: o CapyPanel não consegue saber quando um visualizador recusa uma senha.
+  digitação: o CapyPanel não consegue saber quando um visualizador recusa uma senha. É um
+  submenu: **Todos os perfis** esquece todas, e embaixo dele cada perfil com senha digitada
+  aparece pelo nome, para que uma senha errada não custe as outras. A conta digitada para ler os
+  usuários logados também fica ali, como **Conta para usuários logados**. O menu inteiro fica
+  apagado enquanto nada foi digitado.
 - Senhas VNC clássicas têm no máximo 8 caracteres, então a caixa de senha de um perfil UltraVNC
   "só senha" para em 8.
 

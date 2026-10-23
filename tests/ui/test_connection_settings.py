@@ -378,3 +378,34 @@ def test_a_double_click_on_a_tool_changes_its_path(
     page.tools.itemDoubleClicked.emit(page.tools.currentItem(), 0)
     entry = catalogs.tools.find("realvnc")
     assert entry is not None and entry.item.executable == r"D:\Portable\vncviewer.exe"
+
+
+def test_restore_built_in_brings_back_deleted_profiles_after_asking(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    catalogs.profiles.place_starters()
+    page = ProfilesSection(catalogs, None)
+    assert page.restore_button.text() == "&Restore built-in…"
+    assert not page.restore_button.isEnabled()  # none missing
+    monkeypatch.setattr(connections, "confirm", lambda *_args: True)
+    for starter in ("realvnc", "remote-desktop"):
+        _select(page, starter)
+        page.delete()
+    assert page.restore_button.isEnabled()
+    asked: list[tuple[str, str]] = []
+
+    def answer(_parent: object, title: str, text: str, _action: str) -> bool:
+        asked.append((title, text))
+        return len(asked) > 1  # no the first time, yes the second
+
+    monkeypatch.setattr(connections, "confirm", answer)
+    page.restore_button.click()
+    assert asked[0] == (
+        "Restore built-in profiles",
+        "Bring back 2 built-in profiles: RealVNC, Remote Desktop?\n\n"
+        "Profiles you changed or made yourself stay as they are.",
+    )
+    assert _names(page) == ["UltraVNC"]  # answered no
+    page.restore_button.click()
+    assert _names(page) == ["RealVNC", "Remote Desktop", "UltraVNC"]
+    assert not page.restore_button.isEnabled()

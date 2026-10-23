@@ -147,6 +147,32 @@ class ProfileStore:
         self.reload()
         log.info("Connection profiles placed in %s", self.folder)
 
+    def missing_starters(self) -> list[ConnectionProfile]:
+        """The shipped profiles that were deleted, by name. One that was edited is still
+        there under its id, so it never counts; nor does a file in the way, e.g. one another
+        user made."""
+        if not self.folder.is_dir():
+            return []  # the shipped profiles are what's shown
+        missing: list[ConnectionProfile] = []
+        for pid in self._starter_ids():
+            if pid in self._profiles or (self.folder / f"{pid}.json").exists():
+                continue
+            try:
+                missing.append(profiles.load(self._starters / f"{pid}.json"))
+            except ProfileError as e:
+                log.warning("Starter profile %s skipped: %s", pid, e)
+        return sorted(missing, key=lambda p: p.name.casefold())
+
+    def restore_starters(self) -> list[ConnectionProfile]:
+        """Writes the deleted shipped profiles back, as they ship; the rest stay as they are.
+        Returns the ones written. Raises OSError."""
+        restored = self.missing_starters()
+        for profile in restored:
+            self._write(self.folder / f"{profile.id}.json", profiles.to_data(profile))
+            log.info("Built-in connection profile restored: %s", profile.id)
+        self.reload()
+        return restored
+
     def _seed(self) -> None:
         """Before the first change, the starters become real files, so they can be removed."""
         if self.folder.is_dir():

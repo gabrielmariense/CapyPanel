@@ -1,12 +1,13 @@
 """Where the app keeps its files, portable mode, and the settings file.
 
 Everything lives in one folder per computer, C:\\ProgramData\\CapyPanel (or <app>\\userdata when
-portable). Shared by everyone on the PC: lists\\ (the default list and any shared list), profiles\\
-and tools\\ (the company's tool definitions and where each tool is installed).
-users\\<user@DOMAIN>\\ holds each user's settings and lists\\ (the personal list and their own
-lists), private to that user and administrators;
-logs\\<user@DOMAIN>.log, one per user."""
+portable). Shared by everyone on the PC: lists\\ (a folder per tool, e.g. lists\\hosts\\, with its
+default list and any shared list), profiles\\ and tools\\ (the company's tool definitions and where
+each tool is installed). users\\<user@DOMAIN>\\ holds each user's settings and lists\\ (again a
+folder per tool, with the personal list and their own lists), private to that user and
+administrators; logs\\<user@DOMAIN>.log, one per user."""
 
+import copy
 import json
 import logging
 import os
@@ -39,14 +40,26 @@ def app_dir() -> Path:
 
 
 @dataclass(frozen=True)
+class ListPlaces:
+    """Where one tool keeps its lists."""
+
+    shared_dir: Path  # lists saved here show up for everyone on the PC, with no adding
+    user_dir: Path  # this user's own: lists saved here show up for them only
+
+    @property
+    def default(self) -> Path:
+        return self.shared_dir / "default.json"
+
+    @property
+    def personal(self) -> Path:
+        return self.user_dir / "personal.json"
+
+
+@dataclass(frozen=True)
 class Paths:
     root: Path  # ProgramData\CapyPanel, or <app>\userdata when portable
     account: str  # "user@DOMAIN": names this user's folder and log file
     portable: bool
-
-    @property
-    def default_list(self) -> Path:
-        return self.shared_lists_dir / "default.json"
 
     @property
     def profiles_dir(self) -> Path:
@@ -73,18 +86,18 @@ class Paths:
         return self.user_dir / "settings.json"
 
     @property
-    def personal_list(self) -> Path:
-        return self.user_lists_dir / "personal.json"
-
-    @property
-    def shared_lists_dir(self) -> Path:
-        """Lists saved here show up for everyone on the PC, with no adding."""
+    def lists_dir(self) -> Path:
+        """Every tool's shared lists, in a folder per tool."""
         return self.root / "lists"
 
     @property
     def user_lists_dir(self) -> Path:
-        """This user's own lists folder: lists saved here show up for them only."""
+        """This user's own lists, in a folder per tool."""
         return self.user_dir / "lists"
+
+    def lists(self, tool_id: str) -> ListPlaces:
+        """One tool's lists folders, shared and the user's own: lists\\<tool id>\\."""
+        return ListPlaces(self.lists_dir / tool_id, self.user_lists_dir / tool_id)
 
 
 def resolve_paths(
@@ -136,6 +149,41 @@ def load_settings(path: Path) -> dict[str, Any]:
         path.replace(path.with_name(path.name + ".broken"))
         return {"schema": SETTINGS_SCHEMA}
     return data
+
+
+TOOLS_KEY = "tools"  # each tool's own settings, by tool id
+TOOL_KEY = "tool"  # the tool shown last
+# What the window shows at start: the Home page, the tool shown last, or a tool's id.
+START_KEY, START_HOME, START_LAST = "start", "home", "last"
+# The shell's own settings; everything else at the top level was the Hosts tool's before 0.20.
+SHELL_KEYS = frozenset(
+    {
+        "schema",
+        "window_geometry",
+        "settings_geometry",
+        "theme",
+        "language",
+        TOOL_KEY,
+        TOOLS_KEY,
+        START_KEY,
+    }
+)
+
+
+def tool_prefs(prefs: dict[str, Any], tool_id: str, *, inherit: bool = False) -> dict[str, Any]:
+    """A tool's own section of the settings, made the first time it's asked for. With `inherit`
+    (Hosts), a new section starts from what 0.19 kept at the top level, which stays there too, so
+    an older version still reads it."""
+    tools = prefs.get(TOOLS_KEY)
+    if not isinstance(tools, dict):
+        tools = prefs[TOOLS_KEY] = {}
+    section = tools.get(tool_id)
+    if not isinstance(section, dict):
+        section = {}
+        if inherit:
+            section = {k: copy.deepcopy(v) for k, v in prefs.items() if k not in SHELL_KEYS}
+        tools[tool_id] = section
+    return section
 
 
 def save_settings(path: Path, data: Mapping[str, Any]) -> None:

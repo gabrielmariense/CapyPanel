@@ -18,7 +18,7 @@ são entendidos, e o botão **Formatos…** mostra cada um com um exemplo:
 | Formato | Como é |
 |---|---|
 | **Nomes de host** | Um nome de computador por linha |
-| **Nome e endereço** | Um nome e, depois, o nome do computador na rede ou o endereço IP, separados por vírgula — ou duas colunas copiadas do Excel |
+| **Nome e endereço** | Um nome e, depois, o nome do computador na rede ou o endereço IP, separados por vírgula, ou duas colunas copiadas do Excel |
 | **CSV com cabeçalho** | Uma primeira linha dando nome às colunas: `nome, endereço, grupo, tags, notas` |
 
 Com cabeçalho as colunas podem vir em qualquer ordem, e os nomes delas funcionam em português ou
@@ -46,7 +46,7 @@ dois sempre coincidam. O CapyPanel pergunta antes de fazer isso na primeira vez.
 
 ### Onde os hosts vão parar
 
-**Hosts sem grupo vão para:** escolhe onde ficam as linhas que não nomeiam grupo nenhum — **Sem
+**Hosts sem grupo vão para:** escolhe onde ficam as linhas que não nomeiam grupo nenhum: **Sem
 grupo** ou qualquer grupo da lista. Começa no grupo que estava escolhido quando você abriu a
 janela.
 
@@ -75,17 +75,18 @@ funciona também numa lista somente leitura.
 ### Hosts, colunas e predefinições
 
 - **Hosts:** uma caixa de seleção com tudo que você pode exportar, cada item com quantos hosts
-  tem: os **resultados da pesquisa** enquanto uma pesquisa está ativa, os **hosts selecionados**
-  quando você tem mais de um selecionado, **Todos os hosts**, **Sem grupo**, cada grupo — com os
-  hosts dos grupos de dentro dele — e **Tag: {tag}** para cada tag. Ela abre no que a janela está
-  mostrando, sempre.
+  tem: os **resultados da pesquisa** enquanto uma pesquisa está ativa, as **tags escolhidas**
+  enquanto houver alguma, os **hosts selecionados** quando você tem mais de um selecionado,
+  **Todos os hosts**, **Sem grupo**, cada grupo (com os hosts dos grupos de dentro dele) e
+  **Tag: {tag}** para cada tag. Ela abre no que a janela está mostrando, sempre.
 - **Colunas:** marque o que cada linha deve ter, agrupado em **Host** (Nome, Endereço, Grupo),
   **Tags e notas** (Tags, Notas) e **Última verificação** (Status, Usuários logados). As marcações
   são guardadas assim que você as muda, então fechar a janela nunca as perde.
 - **Predefinição:** **Para importar** marca os campos dos próprios hosts, "que Importar hosts lê
   de volta: para levar hosts a uma lista". Guarde o seu próprio conjunto com **Salvar como
-  predefinição…** e tire um com **Excluir**. Marcações que não correspondem a nenhuma
-  predefinição aparecem como **Personalizado**.
+  predefinição…** e tire um com **Excluir**. Um nome já usado pergunta "Já existe uma predefinição
+  chamada “{name}”. Substituí-la?", com Cancelar como padrão. Marcações que não correspondem a
+  nenhuma predefinição aparecem como **Personalizado**.
 
 ### Status e usuários logados
 
@@ -110,9 +111,9 @@ A **Prévia** mostra as linhas que vão sair. Depois:
 **Fechar**, embaixo, é a única saída: não há nada para cancelar, já que cada escolha daqui é
 guardada assim que é feita. A barra de status repete o que saiu.
 
-O arquivo usa o separador de colunas que o Excel deste PC espera — vírgula, ou ponto e vírgula
-onde esse é o separador local — com as tags separadas pelo outro caractere, e é gravado de um jeito
-que abre os nomes acentuados corretamente.
+O arquivo usa o separador de colunas que o Excel deste PC espera, vírgula ou ponto e vírgula onde
+esse é o separador local, com as tags separadas pelo outro caractere. Ele é gravado de um jeito que
+abre os nomes acentuados corretamente.
 
 O que o Relatório grava é lido de volta pelo Importar hosts, o que faz do **Para importar** um
 jeito de copiar hosts entre listas, ou de guardar uma cópia de uma lista antes de uma mudança

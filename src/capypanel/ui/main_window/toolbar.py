@@ -1,161 +1,68 @@
-"""The Hosts toolbar: outlined buttons in groups split by thin lines (set here, not by users):
-Connect and Refresh, Inventory, Report. Refresh always checks every host the table shows (the group
-picked on the left); one host is checked from its own right-click menu. Left-click picks one check;
-right-click opens a panel to run several at once."""
+"""A tool's toolbar: outlined buttons in groups split by thin lines (set by the tool, not by users),
+the first button lined up with the panels below it."""
 
-from PySide6.QtCore import QEvent, QMargins, QPoint, QSize, Qt, Signal
-from PySide6.QtGui import QPalette, QShowEvent
+from PySide6.QtCore import QEvent, QMargins, QPoint, QSize, Qt
+from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import (
-    QCheckBox,
     QFrame,
     QHBoxLayout,
-    QLabel,
-    QMenu,
-    QPushButton,
     QSizePolicy,
     QStyle,
     QStyleOptionToolButton,
     QToolBar,
     QToolButton,
-    QVBoxLayout,
     QWidget,
 )
-
-from capypanel.core.i18n import _
-from capypanel.ui.icons import tabler_icon
-from capypanel.ui.main_window.actions import Actions
 
 BAR_GAP = 6  # space above and below the toolbar's buttons
 
 
-class RefreshPanel(QFrame):
-    """Right-click on Refresh: tick what to check on the hosts shown, then Run. It stays open
-    while boxes are ticked; the ticks are kept for next time."""
+class ToolBar(QToolBar):
+    """A tool adds its groups of buttons (add_group) and gives them icons in restyle()."""
 
-    run_clicked = Signal()
-
-    def __init__(self, parent: QWidget) -> None:
-        super().__init__(parent, Qt.WindowType.Popup)
-        self.setObjectName("card")
-        self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.setBackgroundRole(QPalette.ColorRole.Base)
-        self.setAutoFillBackground(True)
-        self._check_title = _section("")
-        self.status_box, self.users_box = QCheckBox(), QCheckBox()
-        self.run_button = QPushButton()
-        self.run_button.setDefault(True)
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 10, 12, 12)
-        for widget in (self._check_title, self.status_box, self.users_box):
-            layout.addWidget(widget)
-        row = QHBoxLayout()
-        row.addStretch(1)
-        row.addWidget(self.run_button)
-        layout.addSpacing(6)
-        layout.addLayout(row)
-        self.status_box.toggled.connect(self._update)
-        self.users_box.toggled.connect(self._update)
-        self.run_button.clicked.connect(self._run)
-        self.retranslate()
-
-    def retranslate(self) -> None:
-        self._check_title.setText(_("Refresh every host shown"))
-        self.status_box.setText(_("&Status"))
-        self.users_box.setText(_("&Logged-on users"))
-        self.run_button.setText(_("&Run"))
-
-    def choices(self) -> dict[str, bool]:
-        return {"status": self.status_box.isChecked(), "users": self.users_box.isChecked()}
-
-    def set_choices(self, saved: object) -> None:
-        saved = saved if isinstance(saved, dict) else {}
-        self.status_box.setChecked(saved.get("status", True) is not False)
-        self.users_box.setChecked(saved.get("users", True) is not False)
-        self._update()
-
-    def _update(self) -> None:
-        self.run_button.setEnabled(self.status_box.isChecked() or self.users_box.isChecked())
-
-    def _run(self) -> None:
-        self.hide()
-        self.run_clicked.emit()
-
-
-class MainToolBar(QToolBar):
-    refresh_panel_requested = Signal(QPoint)
-    refresh_requested = Signal(bool, bool)  # status, users: on every host shown
-
-    def __init__(self, commands: Actions) -> None:
+    def __init__(self) -> None:
         super().__init__()
         self.setObjectName("main")
         self.setMovable(False)
         self.setFloatable(False)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)  # no hide-me menu
         self.setIconSize(QSize(16, 16))  # icons at the text's height, not 24 px
-
-        # Connect: a dropdown like the others, never greyed out. Its menu connects the selected
-        # hosts (also Enter or a double-click), once with another profile, or by address.
-        self.connect_button = _button()
-        self.connect_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-        self.connect_menu = QMenu(self.connect_button)
-        self.connect_button.setMenu(self.connect_menu)
-
-        # One row in a plain layout, its left edge lined up with the panes by align().
+        # One row in a plain layout, its left edge lined up with the panels by align().
         row = QWidget()
         row.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self._row = QHBoxLayout(row)
         self._row.setContentsMargins(0, 0, 0, 0)  # set by align(), once the theme is known
         self._row.setSpacing(0)
-        self._groups = 0
-        self.refresh_button = _button()
-        self.refresh_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-        self.refresh_menu = QMenu(self.refresh_button)
-        self.refresh_status = self.refresh_menu.addAction("")
-        self.refresh_users = self.refresh_menu.addAction("")
-        self.refresh_status.triggered.connect(lambda: self.refresh_requested.emit(True, False))
-        self.refresh_users.triggered.connect(lambda: self.refresh_requested.emit(False, True))
-        self.refresh_button.setMenu(self.refresh_menu)
-        self.refresh_button.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.refresh_button.customContextMenuRequested.connect(
-            lambda _pos: self.refresh_panel_requested.emit(
-                self.refresh_button.mapToGlobal(QPoint(0, self.refresh_button.height()))
-            )
-        )
-        # Inventory: adding hosts and groups, and importing them; its menu is filled by the window.
-        self.inventory_button = _button()
-        self.inventory_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-        self.inventory_menu = QMenu(self.inventory_button)
-        self.inventory_button.setMenu(self.inventory_menu)
-        self.report_button = _button()
-        self.report_button.clicked.connect(commands.export_hosts.trigger)
-        self._row.addWidget(self._group([self.connect_button, self.refresh_button]))
-        self._row.addWidget(self._group([self.inventory_button]))
-        self._row.addWidget(self._group([self.report_button]))
         self._row.addStretch(1)
+        self._groups = 0
         self.addWidget(row)
-        self.retranslate()
+
+    def add_group(self, buttons: list[QToolButton]) -> None:
+        """Buttons that belong together; a thin line sets each group apart from the one before."""
+        group = QWidget()
+        row = QHBoxLayout(group)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(6)  # between buttons
+        if self._groups:  # 10 px on each side of the line
+            row.addSpacing(4)
+            divider = QFrame()
+            divider.setObjectName("toolDivider")
+            divider.setFixedWidth(1)
+            row.addWidget(divider)
+            row.setContentsMargins(4, 0, 0, 0)
+        self._groups += 1
+        for button in buttons:
+            row.addWidget(button)
+        self._row.insertWidget(self._row.count() - 1, group)  # before the stretch
 
     def retranslate(self) -> None:
-        gap = " "  # the stylesheet drops the gap between icon and text
-        self.connect_button.setText(gap + _("Connect"))
-        self.connect_button.setToolTip(
-            _("Connect to the selected hosts, once with another profile, or by address")
-        )
-        self.refresh_button.setText(gap + _("Refresh"))
-        self.refresh_button.setToolTip(
-            _("Refresh every host shown. Right-click to choose what Run and F5 check")
-        )
-        self.refresh_status.setText(_("&Status"))
-        self.refresh_users.setText(_("&Logged-on users"))
-        self.inventory_button.setText(gap + _("Inventory"))
-        self.inventory_button.setToolTip(_("Add hosts and groups, or import a list of hosts"))
-        self.report_button.setText(gap + _("Report"))
-        self.report_button.setToolTip(
-            _("Save the hosts you pick, with the columns you pick, as a CSV file")
-        )
+        """The buttons' texts and tooltips."""
+
+    def restyle(self) -> None:
+        """Icons in the theme's colours."""
 
     def align(self, left: int) -> None:
-        """Lines the first button up with the panes: it starts at `left`, in this toolbar's
+        """Lines the first button up with the panels: it starts at `left`, in this toolbar's
         coordinates. Measured, so it holds in every theme."""
         row = self._row.parentWidget()  # the row of groups, not a group
         if row is None:
@@ -179,33 +86,6 @@ class MainToolBar(QToolBar):
         if event.type() == QEvent.Type.PaletteChange:
             self.restyle()
 
-    def restyle(self) -> None:
-        """Icons in the theme's text colour."""
-        color = self.connect_button.palette().color(QPalette.ColorRole.ButtonText)  # its text's
-        self.connect_button.setIcon(tabler_icon("plug-connected", color))
-        self.refresh_button.setIcon(tabler_icon("refresh", color))
-        self.inventory_button.setIcon(tabler_icon("plus", color))
-        self.report_button.setIcon(tabler_icon("report-analytics", color))
-        self.retranslate()
-
-    def _group(self, buttons: list[QToolButton]) -> QWidget:
-        """Buttons that belong together; a thin line sets each group apart from the one before."""
-        group = QWidget()
-        row = QHBoxLayout(group)
-        row.setContentsMargins(0, 0, 0, 0)
-        row.setSpacing(6)  # between buttons
-        if self._groups:  # 10 px on each side of the line
-            row.addSpacing(4)
-            divider = QFrame()
-            divider.setObjectName("toolDivider")
-            divider.setFixedWidth(1)
-            row.addWidget(divider)
-            row.setContentsMargins(4, 0, 0, 0)
-        self._groups += 1
-        for button in buttons:
-            row.addWidget(button)
-        return group
-
 
 class ToolButton(QToolButton):
     """Sized to exactly what it draws: icon, text and the theme's padding. Qt's own size also
@@ -228,14 +108,11 @@ class ToolButton(QToolButton):
         return self.sizeHint()
 
 
-def _button() -> QToolButton:
+def tool_button(*, dropdown: bool = False) -> QToolButton:
+    """A toolbar button; a dropdown opens its menu on a click."""
     button = ToolButton()
     button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
     button.setAutoRaise(True)
+    if dropdown:
+        button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
     return button
-
-
-def _section(text: str) -> QLabel:
-    label = QLabel(text)
-    label.setObjectName("menuSection")
-    return label

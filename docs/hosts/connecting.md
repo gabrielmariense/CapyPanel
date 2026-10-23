@@ -15,8 +15,8 @@ Remote Desktop Connection is built into Windows, so CapyPanel finds it in `Syste
 an installed VNC viewer by itself too: where Windows recorded the install (any folder), the usual
 Program Files folders, then your PATH. A portable copy unzipped somewhere else isn't found
 automatically; when a viewer is missing, CapyPanel asks you to install it or to locate its
-`.exe`. The path is saved once for everyone on the PC, like in **Settings > Hosts > Connections >
-Remote tools** (see [Settings and files](../settings-and-files.md#remote-tools)).
+`.exe`. The path is saved once for everyone on the PC, like in **Settings > Hosts > Remote
+tools** (see [Settings and files](../settings-and-files.md#remote-tools)).
 
 ## Connection profiles
 
@@ -31,8 +31,9 @@ Remote Desktop. A **connection profile** says which one a host uses:
 
 ### Managing profiles
 
-- Profiles are managed in **Settings > Hosts > Connections** (also **Connect > Connection
-  profiles…**): add, edit, duplicate, delete. Each has a name, a tool, a login (only the ones
+- Profiles are managed in **Settings > Hosts > Connection profiles** (also **Connect >
+  Connection profiles…**): add, edit, duplicate, delete, and restore the ones CapyPanel ships
+  with. Each has a name, a tool, a login (only the ones
   that tool supports), the tool's options (such as SecureVNC) and a port, blank for the tool's
   own.
 - Each tool comes with a starter profile: **UltraVNC** and **RealVNC**, both with "user and
@@ -102,7 +103,10 @@ below doesn't apply.
   receive it.
 - Passwords are **never saved** to disk.
 - **Connect > Forget typed passwords** clears them, e.g. after a typo: CapyPanel can't tell
-  when a viewer rejects a password.
+  when a viewer rejects a password. It's a submenu: **All profiles** forgets every one, and under
+  it each profile holding a typed password is named, so one wrong password doesn't cost you the
+  rest. The account typed for reading logged-on users is listed there too, as **Account for
+  logged-on users**. The whole menu is greyed while nothing has been typed.
 - Classic VNC passwords are at most 8 characters long, so the password box of an UltraVNC
   "password only" profile stops at 8.
 
