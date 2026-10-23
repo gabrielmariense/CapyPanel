@@ -30,6 +30,8 @@ with one line about it and its shortcut. Click a tile to open that tool.
 | **Hosts** (Ctrl+1) | "Your computers: connect, see who's logged on, check them." |
 | **Printers** (Ctrl+2) | "Your printers: web pages, details, reports." |
 
+![The Home page: the rail on the left, the capybara and the app's name, and a tile for each tool](images/home-dark.png)
+
 Home is the top button on the rail, **View > Home**, and **Ctrl+0**. Both tools are always there;
 there's nothing to turn on. To start somewhere else, set **Settings > CapyPanel > Startup > Open on
 startup** to the last used tool, or to one by name.

@@ -10,6 +10,8 @@ Ela tem as próprias listas, separadas das da ferramenta Hosts (veja
 
 ## A janela
 
+![A janela Impressoras: grupos à esquerda, as impressoras no meio, os detalhes de uma à direita](../images/printers-dark-pt-BR.png)
+
 | Parte | O que mostra |
 |---|---|
 | **Barra de ferramentas** | **Abrir página web**, **Atualizar**, **Inventário** e **Relatório** |

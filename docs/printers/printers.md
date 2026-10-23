@@ -9,6 +9,8 @@ It has its own lists, kept apart from the Hosts tool's (see
 
 ## The window
 
+![The Printers window: groups on the left, the printers in the middle, one printer's details on the right](../images/printers-dark.png)
+
 | Part | What it shows |
 |---|---|
 | **Toolbar** | **Open web page**, **Refresh**, **Inventory** and **Report** |

@@ -31,6 +31,8 @@ ferramenta.
 | **Hosts** (Ctrl+1) | "Seus computadores: conecte, veja quem está logado, verifique-os." |
 | **Impressoras** (Ctrl+2) | "Suas impressoras: páginas web, detalhes, relatórios." |
 
+![A página inicial: a barra lateral à esquerda, a capivara e o nome do app, e um bloco para cada ferramenta](images/home-dark-pt-BR.png)
+
 A página inicial é o botão de cima da barra lateral, o **Exibir > Início** e o **Ctrl+0**. As duas
 ferramentas estão sempre lá; não há nada para ligar. Para começar em outro lugar, defina
 **Configurações > CapyPanel > Inicialização > Abrir ao iniciar** como a última ferramenta usada, ou
