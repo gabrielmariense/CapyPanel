@@ -110,7 +110,10 @@ def test_the_rail_view_toolbar_tool_and_status_bar_follow_the_tool_shown(
     dialog = win.settings_dialog()  # the app's pages, then each tool's group
     pages = dialog.page_list
     rows = [pages.item(i).text().strip() for i in range(pages.count())]  # type: ignore[union-attr]
-    assert rows[4:] == ["Hosts", "General", "Host lists", "Connections", "Notes", "General"]
+    assert rows[4:] == [  # each group's sections; a page with none is listed by its title
+        "Hosts", "Startup", "Refresh", "Host lists", "Connection profiles", "Remote tools",
+        "Notes", "General",
+    ]  # fmt: skip
     dialog.show_page("notes")
     assert dialog.current_page() == "notes"
     win.close()

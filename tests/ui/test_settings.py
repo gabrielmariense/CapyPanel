@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from capywindow import CapyWindow
+from PySide6.QtCore import QPoint
 from PySide6.QtGui import QDesktopServices, QTextDocumentFragment
 from PySide6.QtWidgets import (
     QApplication,
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QPushButton,
+    QScrollArea,
 )
 
 from capypanel.core import settings, winsec
@@ -29,7 +31,7 @@ from capypanel.ui.menus import label
 from capypanel.ui.new_list import NewListDialog
 from capypanel.ui.printers_tool.settings import PrintersSettings
 from capypanel.ui.settings import pages
-from capypanel.ui.settings.window import PAGE_TITLES, ROOM, SettingsDialog
+from capypanel.ui.settings.window import ROOM, SettingsDialog
 from capypanel.ui.themes import engine as themes
 
 
@@ -74,17 +76,19 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
     assert isinstance(file_menu, QMenu) and window.commands.settings in file_menu.actions()
     dialog = window.settings_dialog()
     rows = [dialog.page_list.item(i).text().strip() for i in range(dialog.page_list.count())]
-    assert rows == [
+    assert rows == [  # one page per group; the page list shows each page's sections
         "CapyPanel",
-        "General",
-        "Appearance",
-        "Files",
+        "Startup",
+        "Language",
+        "Theme",
         "Hosts",
-        "General",
+        "Startup",
+        "Refresh",
         "Host lists",
-        "Connections",
+        "Connection profiles",
+        "Remote tools",
         "Printers",
-        "General",
+        "Startup",
         "Printer lists",
     ]
     assert [dialog.pinned_list.item(0).text().strip()] == ["About"]  # type: ignore[union-attr]
@@ -340,8 +344,6 @@ def test_list_tables_have_grid_lines_and_resizable_columns(window: CapyWindow) -
 
 def test_the_page_list_keeps_its_width_in_every_language(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
-    titles = [*PAGE_TITLES, *HostsSettings.TITLES, *PrintersSettings.TITLES]  # sized from these
-    assert [p.title for p in dialog.pages.values()] == titles
     width = dialog.page_list.width()
     dialog.appearance.language.setCurrentIndex(dialog.appearance.language.findData("pt_BR"))
     QApplication.processEvents()
@@ -385,20 +387,20 @@ def test_the_search_shows_every_matching_section_on_one_page(window: CapyWindow)
     dialog.search.setText("th")  # too short: the pages as they were
     assert len(listed()) == dialog.page_list.count() and dialog.current_page() == "general"
     dialog.search.setText("theme")
-    assert dialog.current_page() == "search" and listed() == ["CapyPanel", "Appearance"]
-    assert results()[:2] == ["CapyPanel › Appearance", "Language and theme"]  # under its page
+    assert dialog.current_page() == "search" and listed() == ["CapyPanel", "Theme"]
+    assert results()[:2] == ["CapyPanel", "Theme"]  # under its group's name
     marks = dialog._marks  # pyright: ignore[reportPrivateUsage]
     assert [w.objectName() for w in marks.marked_labels()][:1] == ["sectionTitle"]
-    dialog.search.setText("folder")  # in Files, each lists page's note, Connections. buttons
-    assert listed() == ["CapyPanel", "Files", "Hosts", "Host lists", "Connections", "Printers",
+    dialog.search.setText("folder")  # each lists section's note, Connection profiles, About
+    assert listed() == ["Hosts", "Host lists", "Connection profiles", "Printers",
                         "Printer lists"]  # fmt: skip
-    assert not dialog.pinned_list.isRowHidden(0)  # About, with its Open folder buttons
-    assert "CapyPanel › About" in results()  # its sections, under its name
+    assert not dialog.pinned_list.isRowHidden(0)  # About, with its Folders and Open folder
+    assert "About" in results() and "Folders" in results()  # its sections, under its name
     dialog.search.setText("syst")  # "follow system theme"; not a tool path's "System32"
-    assert listed() == ["CapyPanel", "Appearance"]
-    dialog.show_page("files")  # picking a page ends the search: everything goes home
-    assert dialog.search.text() == "" and dialog.current_page() == "files"
-    assert dialog.files.findChildren(QLabel)  # its section is back on its page
+    assert listed() == ["CapyPanel", "Theme"]
+    dialog.show_page("about")  # picking ends the search: everything goes home
+    assert dialog.search.text() == "" and dialog.current_page() == "about"
+    assert dialog.about.folders is not None and dialog.about.folders.parent() is dialog.about
     assert len(listed()) == dialog.page_list.count()
 
 
@@ -461,7 +463,7 @@ def test_search_marks_go_away_with_the_search(window: CapyWindow) -> None:
     [heading, *_notes] = dialog._marks.marked_labels()  # pyright: ignore[reportPrivateUsage]
     assert "<span" in heading.text()
     dialog.search.clear()
-    assert heading.text() == "Language and theme" and not dialog._marks.marked_labels()  # pyright: ignore[reportPrivateUsage]
+    assert heading.text() == "Theme" and not dialog._marks.marked_labels()  # pyright: ignore[reportPrivateUsage]
 
 
 def test_a_list_that_doesn_t_exist_can_t_be_opened(
@@ -551,8 +553,10 @@ def test_picking_a_language_switches_at_once_and_keeps_the_page(
 
 def test_the_settings_buttons_are_only_the_main_actions(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
+    folders = dialog.about.folders
+    assert folders is not None
+    assert [b.text() for b in folders.findChildren(QPushButton)] == ["Open folder"]
     for page_id, wanted in (
-        ("files", ["Open folder"]),
         ("host_lists", ["&New…", "&Add existing…", "&Remove"]),
         (
             "connections",
@@ -709,3 +713,33 @@ def test_searching_a_link_s_words_marks_them_and_keeps_the_link(window: CapyWind
         assert "href" not in shown and "<a" not in shown  # the link, not its code
     dialog.search.clear()
     assert all("<span" not in w.text() for w in links)  # back as they were
+
+
+def test_a_section_in_the_page_list_scrolls_to_it_and_the_list_follows_the_page(
+    window: CapyWindow,
+) -> None:
+    dialog = window.settings_dialog()
+    dialog.show()
+    QApplication.processEvents()
+
+    def row(name: str, after: str) -> int:
+        """The row named `name` in the group whose label is `after`."""
+        names = [dialog.page_list.item(r).text().strip() for r in range(dialog.page_list.count())]  # type: ignore[union-attr]
+        return names.index(name, names.index(after))
+
+    host_lists = row("Host lists", "Hosts")
+    dialog.page_list.setCurrentRow(host_lists)
+    QApplication.processEvents()
+    view = dialog.stack.currentWidget()
+    assert isinstance(view, QScrollArea)
+    page = view.widget()
+    assert page is not None
+    section = dialog.group(HostsSettings).lists
+    top = section.mapTo(page, QPoint(0, 0)).y()
+    assert view.verticalScrollBar().value() == min(top, view.verticalScrollBar().maximum())
+    assert dialog.current_page() == "host_lists"
+    view.verticalScrollBar().setValue(0)  # scrolling by hand: the list follows
+    assert dialog.page_list.currentRow() == row("Startup", "Hosts")
+    view.verticalScrollBar().setValue(view.verticalScrollBar().maximum())
+    assert dialog.page_list.currentRow() == row("Remote tools", "Hosts")  # the end: the last
+    dialog.close()

@@ -1,12 +1,14 @@
-"""The Settings window: a search and a list of pages on the left, the page on the right. No
-buttons: the window's X or Esc closes it, and every choice applies as soon as it's made. The app's
-own pages come first (General, Appearance, Files), then each tool's group of pages, and About at
-the very bottom. A tool's pages apply their choices through the tool (see SettingsGroup)."""
+"""The Settings window: a search and the page list on the left, the page on the right. No
+buttons: the window's X or Esc closes it, and every choice applies as soon as it's made. There's
+one page per group: CapyPanel's own, then each tool's, and About at the very bottom. The page list
+shows each group's sections under its name; a click scrolls to one, and the one in view is
+picked as the page scrolls. A tool's pages apply their choices through the tool (see
+SettingsGroup)."""
 
 from collections.abc import Sequence
 
-from PySide6.QtCore import QSize, Qt, QTimer, Signal
-from PySide6.QtGui import QShowEvent
+from PySide6.QtCore import QEvent, QPoint, QSize, Qt, QTimer, Signal
+from PySide6.QtGui import QPalette, QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
     QFrame,
@@ -28,17 +30,15 @@ from capypanel.ui.about import AboutPage
 from capypanel.ui.notes import hint
 from capypanel.ui.settings import search
 from capypanel.ui.settings.group import SettingsGroup
-from capypanel.ui.settings.pages import AppearancePage, FilesPage, GeneralPage, Page, Section
+from capypanel.ui.settings.pages import AppearancePage, GeneralPage, Page, Section
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import ToolInfo
 
-# The app's own pages' titles, as the pages set them: with the tools' titles and the groups'
-# labels, the page list is sized for the longest in any language.
-PAGE_TITLES = ("General", "Appearance", "Files", "About")
-APP_GROUP = ("CapyPanel", ("general", "appearance", "files"))
+APP_GROUP = ("CapyPanel", ("general", "appearance"))
 PINNED = ("about",)  # pages kept at the very bottom of the page list, apart from the groups
 SEARCH_FROM = 3  # letters typed before the search shows its results
 ROOM = 60  # spare width past the widest page: a button row never ends just short of its table
+SECTION_GAP = 22  # between two sections, as on a page
 
 
 class SettingsDialog(QDialog):
@@ -72,69 +72,89 @@ class SettingsDialog(QDialog):
         self.resize(860, 700)  # fixed: taller pages scroll, the window never grows for them
 
     def _build(self, theme_id: str) -> None:
-        """The pages and buttons, in the current language, showing what's set."""
+        """The pages, in the current language, showing what's set."""
         self.setWindowTitle(_("Settings"))
         tools = [(t.tool_id, _(t.name)) for t in self._tools]
         self.general = GeneralPage(tools=tools, start=self._start)
         self.appearance = AppearancePage(
             language=i18n.language(), registry=self._registry, theme_id=theme_id
         )
-        self.files = FilesPage(self._paths)
-        self.about = AboutPage(self._paths.log_dir, portable=self._paths.portable)
-        self.pages: dict[str, Page] = {
-            "general": self.general,
-            "appearance": self.appearance,
-            "files": self.files,
-            "about": self.about,
-        }
-        # The app's pages, then each tool's group: its label (not a page), then its pages.
+        self.about = AboutPage(
+            self._paths.log_dir, portable=self._paths.portable, paths=self._paths
+        )
+        self.pages: dict[str, Page] = {"general": self.general, "appearance": self.appearance}
+        # CapyPanel's pages, then each tool's group: its label, then its pages' sections.
         self._layout_groups: list[tuple[str, tuple[str, ...]]] = [APP_GROUP]
         for group in self._groups:
             built = group.build()
             self.pages.update(built)
             self._layout_groups.append((group.LABEL, tuple(page_id for page_id, _p in built)))
+        self.pages["about"] = self.about
         self.general.changed.connect(self._start_changed)
         self.appearance.language.currentIndexChanged.connect(self._language_changed)
         self.appearance.theme.currentIndexChanged.connect(
             lambda: self.theme_picked.emit(self.appearance.theme_id())
         )
 
+        # One scrolling view per group, its pages one under the other; About has its own.
+        self.stack = QStackedWidget()
+        self._views: list[QScrollArea] = []
+        self._view_of: dict[str, int] = {}  # page id -> its view
+        for _label, ids in self._layout_groups:
+            column = QWidget()
+            layout = QVBoxLayout(column)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setSpacing(SECTION_GAP)
+            for page_id in ids:
+                layout.addWidget(self.pages[page_id])  # stretch 0: the end takes the room
+                self._view_of[page_id] = len(self._views)
+            layout.addStretch(1)
+            self._add_view(column)
+        self._view_of["about"] = len(self._views)
+        self._add_view(self.about)
+        # Search results: the matching sections of every page, lent here while searching.
+        self._results = Page(_("Search"))
+        self._results_view = len(self._views)
+        self._add_view(self._results, follow=False)
+        self._lent: list[tuple[QVBoxLayout, int, QWidget]] = []  # where each came from
+        self._result_labels: list[QLabel] = []
+        self._marks = search.SearchMarks(self._results)
+        self._following = True  # the page list follows the scrolling; off while we scroll
+
         self.page_list = QListWidget()
         self.page_list.setObjectName("pageList")
         # No setUniformItemSizes: it caches a row height measured before the theme reaches the
         # list, and the rows then overlap (13 px rows for 27 px of text).
-        self.stack = QStackedWidget()
-        # Each group: its label (not a page), then its pages. _rows maps rows to page ids.
-        self._rows: list[str | None] = []
+        # Each group: its label (not picked), then its sections (a page with none: the page).
+        self._rows: list[tuple[str, QWidget] | None] = []
         for group, ids in self._layout_groups:
             label = QListWidgetItem(_(group))
-            label.setFlags(Qt.ItemFlag.NoItemFlags)
+            label.setFlags(Qt.ItemFlag.NoItemFlags)  # never picked; _paint_labels colours it
             font = label.font()
             font.setBold(True)
             label.setFont(font)
             self.page_list.addItem(label)
             self._rows.append(None)
             for page_id in ids:
-                self.page_list.addItem("   " + self.pages[page_id].title)
-                self._rows.append(page_id)
-        for page in self.pages.values():
-            self.stack.addWidget(_scrolling(page))  # long pages scroll
-        # Search results: the matching sections of every page, lent here while searching.
-        self._results = Page(_("Search"))
-        self.stack.addWidget(_scrolling(self._results))
-        self._lent: list[tuple[QVBoxLayout, int, QWidget]] = []  # where each came from
-        self._result_labels: list[QLabel] = []
-        self._marks = search.SearchMarks(self._results)
-        # Wide enough for the longest page name in any language, so the list never cuts it and
-        # keeps its width when the language changes.
+                page = self.pages[page_id]
+                for target in _sections(page) or [page]:
+                    name = target.heading.text() if isinstance(target, Section) else page.title
+                    self.page_list.addItem("   " + name)
+                    self._rows.append((page_id, target))
+        # Wide enough for the longest name, so the list never cuts one off.
         metrics = self.page_list.fontMetrics()
+        names = [self.page_list.item(r).text() for r in range(self.page_list.count())]  # type: ignore[union-attr]
         longest = max(
-            metrics.horizontalAdvance("   " + title)
-            for message in (*PAGE_TITLES, *self._tool_titles(), *self._labels())
-            for title in i18n.in_every_language(message)
+            [metrics.horizontalAdvance(name) for name in names]
+            + [
+                metrics.horizontalAdvance("   " + title)
+                for message in (*self._labels(), *self._tool_titles(), "General", "About")
+                for title in i18n.in_every_language(message)
+            ]
         )
         self.page_list.setFixedWidth(longest + 64)
-        self.page_list.currentRowChanged.connect(self._page_picked)
+        self._paint_labels()
+        self.page_list.currentRowChanged.connect(self._row_picked)
         # About stays at the very bottom, whatever pages the tools add above it.
         self.pinned_list = QListWidget()
         self.pinned_list.setObjectName("pageList")
@@ -144,12 +164,13 @@ class SettingsDialog(QDialog):
         self.pinned_list.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._fit_pinned()
         self.pinned_list.currentRowChanged.connect(self._pinned_picked)
+        self._pending: tuple[str, QWidget] | None = None  # scrolled to once it has its size
         self.page_list.setCurrentRow(self.row_of("general"))
 
         content = QWidget()
         columns = QHBoxLayout()
         columns.setSpacing(16)
-        # A search above the pages: only the pages that mention what's typed stay listed.
+        # A search above the pages: only the sections that mention what's typed stay listed.
         self.search = QLineEdit()
         self.search.setPlaceholderText(_("Search settings"))
         self.search.setClearButtonEnabled(True)
@@ -172,6 +193,14 @@ class SettingsDialog(QDialog):
         self._content = content
         self._no_default_buttons()
 
+    def _add_view(self, widget: QWidget, *, follow: bool = True) -> None:
+        area = _scrolling(widget)
+        index = len(self._views)
+        self._views.append(area)
+        self.stack.addWidget(area)
+        if follow:
+            area.verticalScrollBar().valueChanged.connect(lambda _v: self._follow(index))
+
     def group[G: SettingsGroup](self, kind: type[G]) -> G:
         """A tool's group of pages, by its kind."""
         return next(g for g in self._groups if isinstance(g, kind))
@@ -180,7 +209,16 @@ class SettingsDialog(QDialog):
         return [label for label, _ids in self._layout_groups]
 
     def _tool_titles(self) -> list[str]:
+        """The tools' page titles: with the labels, they keep the list as wide in every language."""
         return [title for group in self._groups for title in group.TITLES]
+
+    def _paint_labels(self) -> None:
+        """Group names in the text colour: rows that can't be picked would be greyed."""
+        text = self.palette().color(QPalette.ColorRole.Text)
+        for row, entry in enumerate(self._rows):
+            item = self.page_list.item(row)
+            if entry is None and item is not None:
+                item.setForeground(text)
 
     def _start_changed(self) -> None:
         self._start = self.general.start_choice()
@@ -213,29 +251,80 @@ class SettingsDialog(QDialog):
             button.setAutoDefault(False)
             button.setDefault(False)
 
-    def _page_picked(self, row: int) -> None:
-        page_id = self._rows[row] if 0 <= row < len(self._rows) else None
-        if page_id is None:
+    # ---- picking and following ----
+
+    def _row_picked(self, row: int) -> None:
+        entry = self._rows[row] if 0 <= row < len(self._rows) else None
+        if entry is None:
             return  # a group's label, never picked
         self._unpick(self.pinned_list)
-        self._show(page_id)
+        self._leave_search()
+        self._scroll_to(*entry)
 
     def _pinned_picked(self, row: int) -> None:
         if 0 <= row < len(PINNED):
             self._unpick(self.page_list)
-            self._show(PINNED[row])
+            self._leave_search()
+            view = self._views[self._view_of[PINNED[row]]]
+            self.stack.setCurrentWidget(view)
+            self._set_scroll(view, 0)
 
-    def _show(self, page_id: str) -> None:
-        if self._lent:  # picking a page ends the search: its sections go home first
+    def _leave_search(self) -> None:
+        if self._lent:  # picking ends the search: its sections go home first
             self.search.blockSignals(True)
             self.search.clear()
             self.search.blockSignals(False)
             self._end_search()
-        self.stack.setCurrentIndex(list(self.pages).index(page_id))
+
+    def _scroll_to(self, page_id: str, section: QWidget) -> None:
+        """Shows the section's group, its title at the top where the page is long enough."""
+        view = self._views[self._view_of[page_id]]
+        self.stack.setCurrentWidget(view)
+        if not self.isVisible():
+            self._pending = (page_id, section)  # no sizes yet: see showEvent
+            return
+        self._pending = None
+        page = view.widget()
+        assert page is not None
+        self._set_scroll(view, section.mapTo(page, QPoint(0, 0)).y())
+
+    def _set_scroll(self, view: QScrollArea, value: int) -> None:
+        """Scrolls without the page list following: the row picked stays picked, even for a
+        section near the end that can't reach the top."""
+        self._following = False
+        view.verticalScrollBar().setValue(value)
+        self._following = True
+
+    def _follow(self, index: int) -> None:
+        """Picks the section in view: the last whose title has scrolled to the top, or the last
+        section once the page is at its end."""
+        if not self._following or self.stack.currentIndex() != index or self._lent:
+            return
+        view = self._views[index]
+        page = view.widget()
+        if page is None:
+            return
+        bar = view.verticalScrollBar()
+        rows = [
+            (row, entry[1]) for row, entry in enumerate(self._rows)
+            if entry is not None and self._view_of[entry[0]] == index
+        ]  # fmt: skip
+        if not rows:
+            return
+        picked = rows[0][0]
+        for row, section in rows:
+            if section.mapTo(page, QPoint(0, 0)).y() <= bar.value() + 8:
+                picked = row
+        if bar.maximum() > 0 and bar.value() >= bar.maximum():
+            picked = rows[-1][0]
+        if picked != self.page_list.currentRow():
+            self.page_list.blockSignals(True)
+            self.page_list.setCurrentRow(picked)
+            self.page_list.blockSignals(False)
 
     @staticmethod
     def _unpick(pages: QListWidget) -> None:
-        """One page is picked across both lists: the other list shows none."""
+        """One row is picked across both lists: the other list shows none."""
         pages.blockSignals(True)
         pages.setCurrentRow(-1)
         pages.blockSignals(False)
@@ -246,63 +335,64 @@ class SettingsDialog(QDialog):
         frame = 2 * self.pinned_list.frameWidth()
         self.pinned_list.setFixedHeight(rows + frame + 2)
 
+    # ---- search ----
+
     def _filter_pages(self, text: str) -> None:
         """From SEARCH_FROM letters on: every section that mentions `text` at the start of a
-        word, from every page, on one results page, each under its page's name, to change right
-        there, with each match marked. The page list keeps only the pages with a match. Fewer
-        letters: back to the pages as they were."""
+        word, from every page, on one results page, each group's under its name, to change
+        right there, with each match marked. The page list keeps only the sections with a
+        match. Fewer letters: back to the page as it was."""
         page = self._shown_page()
         self._end_search()
         wanted = text.strip().casefold()
         if len(wanted) < SEARCH_FROM:
-            self.stack.setCurrentIndex(list(self.pages).index(page))
+            self.show_page(page)
             return
         group_of = {pid: group for group, ids in self._layout_groups for pid in ids}
-        group_of.update(dict.fromkeys(PINNED, "CapyPanel"))  # About is the app's own
-        shown: list[str] = []
+        group_of.update(dict.fromkeys(PINNED, "About"))
+        about = set(_sections(self.about))  # before they're lent to the results
+        found: list[Section] = []
+        heading = ""
         layout = self._results.body
         for page_id, source in self.pages.items():
-            title_match = bool(search.spans(source.title, wanted))
-            parts = (source.body.itemAt(i) for i in range(source.body.count()))
-            sections = [
-                w for part in parts
-                if part is not None and isinstance(w := part.widget(), Section)
-                and (title_match or search.mentions(w, wanted))
-            ]  # fmt: skip
+            sections = [s for s in _sections(source) if search.mentions(s, wanted)]
             if not sections:
                 continue
-            shown.append(page_id)
-            where = hint(f"{_(group_of[page_id])} › {source.title}")
-            self._result_labels.append(where)
-            layout.addWidget(where)
+            if group_of[page_id] != heading:  # one label per group
+                heading = group_of[page_id]
+                where = hint(_(heading))
+                self._result_labels.append(where)
+                layout.addWidget(where)
             for section in sections:
+                found.append(section)
                 self._lent.append((source.body, source.body.indexOf(section), section))
                 source.body.removeWidget(section)
                 layout.addWidget(section)
-        if not shown:
+        if not found:
             nothing = hint(_("No settings mention “{text}”.").format(text=text.strip()))
             self._result_labels.append(nothing)
             layout.addWidget(nothing)
         layout.addStretch(1)
-        lent = [section for _home, _index, section in self._lent]
-        self._marks.mark([*self._result_labels[: len(shown)], *lent], wanted)
-        for row, page_id in enumerate(self._rows):
-            if page_id is not None:
-                self.page_list.setRowHidden(row, page_id not in shown)
-        for row, page_id in enumerate(self._rows):  # a group's label: hidden with its pages
-            if page_id is None:
+        marked: list[QWidget] = [*found]
+        self._marks.mark(marked, wanted)
+        for row, entry in enumerate(self._rows):
+            if entry is not None:
+                self.page_list.setRowHidden(row, entry[1] not in found)
+        for row, entry in enumerate(self._rows):  # a group's label: hidden with its sections
+            if entry is None:
                 after = self._rows[row + 1 :]
                 end = after.index(None) if None in after else len(after)
-                self.page_list.setRowHidden(row, not any(p in shown for p in after[:end]))
-        for row, page_id in enumerate(PINNED):
-            self.pinned_list.setRowHidden(row, page_id not in shown)
+                shown = any(e is not None and e[1] in found for e in after[:end])
+                self.page_list.setRowHidden(row, not shown)
+        for row, _page_id in enumerate(PINNED):
+            self.pinned_list.setRowHidden(row, not any(s in about for s in found))
         for pages in (self.page_list, self.pinned_list):
             self._unpick(pages)
         self._before_search = page
-        self.stack.setCurrentIndex(len(self.pages))
+        self.stack.setCurrentIndex(self._results_view)
 
     def _end_search(self) -> None:
-        """Sends the lent sections back to their pages, where they were, and lists every page."""
+        """Sends the lent sections back to their pages, where they were, and lists every row."""
         self._marks.clear()
         layout = self._results.body
         for home, index, section in reversed(self._lent):
@@ -319,25 +409,40 @@ class SettingsDialog(QDialog):
             for row in range(pages.count()):
                 pages.setRowHidden(row, False)
 
+    # ---- which page ----
+
     def _shown_page(self) -> str:
         """The page shown, or the one shown before the search."""
-        if self.stack.currentIndex() < len(self.pages):
-            return list(self.pages)[self.stack.currentIndex()]
-        return getattr(self, "_before_search", "general")
+        current = self.current_page()
+        return current if current != "search" else getattr(self, "_before_search", "general")
 
     def show_page(self, page_id: str) -> None:
+        """Scrolls to the page's first section; About is picked on its own."""
         if page_id in PINNED:
             self.pinned_list.setCurrentRow(PINNED.index(page_id))
         else:
             self.page_list.setCurrentRow(self.row_of(page_id))
 
     def row_of(self, page_id: str) -> int:
-        return self._rows.index(page_id)
+        """The row of the page's first section."""
+        return next(
+            row for row, entry in enumerate(self._rows) if entry is not None and entry[0] == page_id
+        )
 
     def current_page(self) -> str:
-        """The page shown; "search" while the search's results are."""
-        index = self.stack.currentIndex()
-        return list(self.pages)[index] if index < len(self.pages) else "search"
+        """The page whose section is picked; "about", or "search" while results are shown."""
+        if self.stack.currentIndex() == self._results_view:
+            return "search"
+        if self.pinned_list.currentRow() >= 0:
+            return PINNED[self.pinned_list.currentRow()]
+        row = self.page_list.currentRow()
+        entry = self._rows[row] if 0 <= row < len(self._rows) else None
+        return entry[0] if entry is not None else "general"
+
+    def changeEvent(self, event: QEvent) -> None:
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.PaletteChange and hasattr(self, "page_list"):
+            self._paint_labels()  # a theme switch
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
@@ -345,12 +450,24 @@ class SettingsDialog(QDialog):
         self._make_room()
         themes.paint_title_bar(self)
         self._no_default_buttons()
+        if self._pending is not None:
+            QTimer.singleShot(0, self, self._scroll_pending)  # once the pages have their sizes
+
+    def _scroll_pending(self) -> None:
+        if self._pending is not None:
+            self._scroll_to(*self._pending)
 
     def _make_room(self) -> None:
         """At least ROOM wider than the widest page needs, in this language."""
         width = self.minimumSizeHint().width() + ROOM
         if self.width() < width:
             self.resize(width, self.height())
+
+
+def _sections(page: Page) -> list[Section]:
+    """The page's sections, in order: the ones lent to the search's results aren't there."""
+    parts = (page.body.itemAt(i) for i in range(page.body.count()))
+    return [w for part in parts if part is not None and isinstance(w := part.widget(), Section)]
 
 
 class _PageArea(QScrollArea):
@@ -365,11 +482,11 @@ class _PageArea(QScrollArea):
         return QSize(max(hint.width(), page.minimumSizeHint().width() + bar), hint.height())
 
 
-def _scrolling(page: Page) -> QScrollArea:
+def _scrolling(widget: QWidget) -> QScrollArea:
     """A page that scrolls when it's taller than the window, with no frame of its own."""
     area = _PageArea()
     area.setWidgetResizable(True)
     area.setFrameShape(QFrame.Shape.NoFrame)
     area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    area.setWidget(page)
+    area.setWidget(widget)
     return area

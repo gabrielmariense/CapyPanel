@@ -57,7 +57,7 @@ class Section(QWidget):
 
     def __init__(self, title: str) -> None:
         super().__init__()
-        heading = QLabel(title)
+        self.heading = heading = QLabel(title)  # also its name in the page list
         heading.setObjectName("sectionTitle")
         self.inner = QWidget()
         self.inner.setObjectName("sectionCard")
@@ -136,7 +136,7 @@ def open_folder(folder: Path) -> None:
     QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 
 
-# ---- CapyPanel: General, Appearance and Files ----
+# ---- CapyPanel: General and Appearance; About's Folders ----
 
 
 class GeneralPage(Page):
@@ -167,7 +167,7 @@ class GeneralPage(Page):
 
 
 class AppearancePage(Page):
-    """The app's language and theme. Both apply as soon as they're picked."""
+    """The app's language and theme, a section each. Both apply as soon as they're picked."""
 
     def __init__(self, *, language: str, registry: themes.Registry, theme_id: str) -> None:
         super().__init__(_("Appearance"))
@@ -185,10 +185,14 @@ class AppearancePage(Page):
             previous = theme.engine
             self.theme.addItem(theme.title(), theme.id)
         self.theme.setCurrentIndex(max(self.theme.findData(theme_id), 0))
-        section = Section(_("Language and theme"))
+        language_section = Section(_("Language"))
         add_rows(
-            section.content,
+            language_section.content,
             SettingRow(_("&Language"), _("The app's language. Changes at once."), self.language),
+        )
+        theme_section = Section(_("Theme"))
+        add_rows(
+            theme_section.content,
             SettingRow(
                 _("&Theme"),
                 _("Windows themes follow Windows' look and accent; CapyPanel themes look the "
@@ -196,7 +200,8 @@ class AppearancePage(Page):
                 self.theme,
             ),
         )  # fmt: skip
-        self.body.addWidget(section)
+        self.body.addWidget(language_section)
+        self.body.addWidget(theme_section)
         self.body.addStretch(1)
 
     def language_choice(self) -> str:
@@ -206,12 +211,11 @@ class AppearancePage(Page):
         return str(self.theme.currentData() or themes.DEFAULT_THEME.id)
 
 
-class FilesPage(Page):
-    """Where CapyPanel keeps everything, each folder a click away."""
+class FoldersSection(Section):
+    """Where CapyPanel keeps everything, each folder a click away (at the end of About)."""
 
     def __init__(self, paths: settings.Paths) -> None:
-        super().__init__(_("Files"))
-        section = Section(_("Folders"))
+        super().__init__(_("Folders"))
         folders = (
             (_("Shared files"), paths.root,
              _("Connection profiles and remote tools, for everyone on this PC.")),
@@ -243,14 +247,12 @@ class FilesPage(Page):
         self.open_button.clicked.connect(self._open_picked)
         self.folders.itemDoubleClicked.connect(lambda *_a: self._open_picked())
         row_menu(self.folders, lambda menu: add_action(menu, _("Open &folder"), self._open_picked))
-        layout = section.content
+        layout = self.content
         layout.addWidget(with_buttons(self.folders, [self.open_button]))
         lines = [_("Hover a folder to see what it holds.")]
         if paths.portable:
             lines.append(_("Portable mode: everything stays in the app's own folder."))
         layout.addWidget(notes(*lines))
-        self.body.addWidget(section)
-        self.body.addStretch(1)
 
     def _open_picked(self) -> None:
         item = self.folders.currentItem()

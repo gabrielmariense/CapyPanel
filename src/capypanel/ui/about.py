@@ -27,11 +27,11 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel import _COMMIT, BUILD, __version__
-from capypanel.core import i18n
+from capypanel.core import i18n, settings
 from capypanel.core.i18n import _
 from capypanel.ui import branding
 from capypanel.ui.list_workspace.details import CopyValue
-from capypanel.ui.settings.pages import Page, Section
+from capypanel.ui.settings.pages import FoldersSection, Page, Section
 from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 from capypanel.ui.themes import engine as themes
 
@@ -78,10 +78,13 @@ def open_url(url: str) -> None:
 
 
 class AboutPage(Page):
-    """Settings > CapyPanel > About: the app (icon, name, version, what it is, its notices and
-    links), Credits, and Licenses as the one table design. Help > About opens it."""
+    """Settings > About: the app (icon, name, version, what it is, its notices and links),
+    Credits, Licenses as the one table design, then where CapyPanel keeps its files (with
+    `paths`). Help > About opens it."""
 
-    def __init__(self, log_dir: Path, *, portable: bool) -> None:
+    def __init__(
+        self, log_dir: Path, *, portable: bool, paths: settings.Paths | None = None
+    ) -> None:
         super().__init__(_("About"))
         self._portable = portable
         self.reader = LicenseReader(self)  # one, reused
@@ -89,6 +92,9 @@ class AboutPage(Page):
         self.body.addWidget(self._credits_section())
         self.licenses_section = self._licenses_section()
         self.body.addWidget(self.licenses_section)
+        self.folders = FoldersSection(paths) if paths is not None else None
+        if self.folders is not None:
+            self.body.addWidget(self.folders)
         self.body.addStretch(1)
 
     def _app_section(self, log_dir: Path) -> Section:
