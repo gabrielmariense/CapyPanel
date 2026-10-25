@@ -1,107 +1,58 @@
-"""Every main-window command, defined once and reused by menus, right-click menus and shortcuts."""
+"""Every command, defined once and reused by menus, right-click menus and shortcuts. The shell has
+its own; each tool has its own (see the list workspace and the tools)."""
 
 from dataclasses import dataclass, fields
 
+from PySide6.QtCore import QObject
 from PySide6.QtGui import QAction, QKeySequence
-from PySide6.QtWidgets import QWidget
 
 from capypanel.core.i18n import _
 
 
+def make_actions[T](
+    kind: type[T], parent: QObject | None, shortcuts: dict[str, str], checkable: set[str]
+) -> T:
+    """One QAction per field of the dataclass `kind`, without text: retranslating fills it in."""
+    made = {}
+    for field in fields(kind):  # type: ignore[arg-type]
+        action = QAction(parent)
+        if field.name in shortcuts:
+            action.setShortcut(QKeySequence(shortcuts[field.name]))
+        action.setCheckable(field.name in checkable)
+        made[field.name] = action
+    return kind(**made)
+
+
 @dataclass(frozen=True)
-class Actions:
-    new_list: QAction
-    open_list: QAction
+class ShellActions:
     settings: QAction
     exit: QAction
-    add_host: QAction
-    add_group: QAction
-    manage_groups: QAction
-    import_hosts: QAction
-    export_hosts: QAction
-    edit: QAction
-    remove: QAction
-    connect_host: QAction
-    manual_connect: QAction
-    copy_address: QAction
-    check_status: QAction
-    check_users: QAction
-    refresh_shown: QAction
-    forget_passwords: QAction
-    connection_profiles: QAction
     show_toolbar: QAction
-    show_groups: QAction
-    show_tags: QAction
-    show_details: QAction
     show_status_bar: QAction
-    show_domains: QAction
-    show_hosts: QAction
     documentation: QAction
     report_problem: QAction
     about: QAction
 
 
 SHORTCUTS = {
-    "open_list": "Ctrl+O",
     "settings": "Ctrl+,",
     "exit": "Ctrl+Q",
-    "add_host": "Ctrl+N",
-    "add_group": "Ctrl+Shift+N",
-    "edit": "F2",
-    "remove": "Del",
-    "connect_host": "Return",  # only while the host table has focus (see MainWindow)
-    "manual_connect": "Ctrl+M",
-    "copy_address": "Ctrl+Shift+C",
-    "refresh_shown": "F5",  # what Refresh's right-click panel has ticked
-    "show_hosts": "Ctrl+1",  # the tools, in View and on the rail
 }
-CHECKABLE = {
-    "show_toolbar", "show_groups", "show_tags", "show_details", "show_status_bar", "show_domains",
-    "show_hosts",
-}  # fmt: skip
+CHECKABLE = {"show_toolbar", "show_status_bar"}
 
 
-def create_actions(parent: QWidget) -> Actions:
-    made = {}
-    for field in fields(Actions):
-        action = QAction(parent)
-        if field.name in SHORTCUTS:
-            action.setShortcut(QKeySequence(SHORTCUTS[field.name]))
-        action.setCheckable(field.name in CHECKABLE)
-        made[field.name] = action
-    actions = Actions(**made)
+def create_actions(parent: QObject) -> ShellActions:
+    actions = make_actions(ShellActions, parent, SHORTCUTS, CHECKABLE)
     retranslate_actions(actions)
     return actions
 
 
-def retranslate_actions(a: Actions) -> None:
+def retranslate_actions(a: ShellActions) -> None:
     """Sets every command's text in the current language; runs again when it changes."""
-    a.new_list.setText(_("&New list…"))
-    a.open_list.setText(_("&Open list…"))
     a.settings.setText(_("&Settings…"))
     a.exit.setText(_("E&xit"))
-    a.add_host.setText(_("Add &host…"))
-    a.add_group.setText(_("Add &group…"))
-    a.manage_groups.setText(_("&Manage groups…"))
-    a.import_hosts.setText(_("&Import hosts…"))
-    a.export_hosts.setText(_("&Report…"))
-    a.edit.setText(_("&Edit selected…"))
-    a.remove.setText(_("&Remove selected"))
-    a.connect_host.setText(_("&Connect"))
-    a.manual_connect.setText(_("&Manual connection…"))
-    a.copy_address.setText(_("&Address"))  # in the host menu's Copy submenu
-    a.refresh_shown.setText(_("Refresh"))
     a.documentation.setText(_("&Documentation"))
     a.report_problem.setText(_("&Report a problem"))
     a.about.setText(_("&About CapyPanel"))
-    a.check_status.setText(_("Refresh &status"))
-    a.check_users.setText(_("Refresh &logged-on users"))
-    a.forget_passwords.setText(_("&Forget typed passwords"))
-    a.connection_profiles.setText(_("Connection &profiles…"))
     a.show_toolbar.setText(_("T&oolbar"))
-    a.show_groups.setText(_("&Groups pane"))
-    a.show_tags.setText(_("T&ags pane"))
-    a.show_details.setText(_("&Details pane"))
     a.show_status_bar.setText(_("&Status bar"))
-    a.show_domains.setText(_("Show users' do&main"))
-    a.show_hosts.setText(_("&Hosts"))

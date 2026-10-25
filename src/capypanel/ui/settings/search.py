@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.ui.main_window.host_views import MatchMarker
+from capypanel.ui.list_workspace.panels import MatchMarker
 
 MARK = MatchMarker.COLOR
 

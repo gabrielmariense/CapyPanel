@@ -13,9 +13,10 @@
 
 CapyPanel is a Windows desktop app for IT staff: keep the computers you look after in organized
 lists, see which ones are on and who is logged on to them, and open a remote screen on any of
-them through Remote Desktop or the VNC viewer you already use.
+them through Remote Desktop or the VNC viewer you already use. It keeps your printers too, with
+the details you need and their web pages a click away.
 
-> **Status: beta (0.19.0).** It runs from source; there's no installer yet.
+> **Status: beta (0.20.0).** It runs from source; there's no installer yet.
 
 ![The CapyPanel main window: the tool rail, groups on the left, hosts in the middle, details on the right](docs/images/main-window-dark.png)
 
@@ -31,6 +32,9 @@ them through Remote Desktop or the VNC viewer you already use.
 - Logged-on users
 - Search
 - Import and export
+- Printer inventory
+  - Brand, model, serial number, asset tag
+  - Printers' web pages
 
 ## Documentation
 
@@ -45,6 +49,8 @@ Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrie
   passwords
 - [Checking hosts](docs/hosts/checking.md): status and logged-on users
 - [Searching hosts](docs/hosts/searching.md): finding a host anywhere in the list
+- [The Printers tool](docs/printers/printers.md): printers, their details and their web pages
+- [Printer lists](docs/printers/printer-lists.md): where printer lists live, and their settings
 - [Development](docs/development.md): building, testing and translating
 
 ## Quick start (from source)

@@ -1,198 +1,185 @@
-"""The main window: panes, menus, and opening and editing host lists."""
+"""The main window: the shell that shows the tools. It owns the menu bar, the rail, the toolbar
+area, the status bar, Settings, the theme and the language; each tool owns its toolbar, panels
+and commands. The rail, View's tools, the toolbar, the tool and the status bar's text all follow
+the tool shown. With none shown, the Home page fills the window."""
 
 import logging
-from collections.abc import Callable, Sequence
-from dataclasses import replace
-from datetime import datetime
-from pathlib import Path
+from collections.abc import Sequence
 from typing import Any
 
-from PySide6.QtCore import QByteArray, QEvent, QPoint, Qt, QTimer, Signal
-from PySide6.QtGui import (
-    QAction,
-    QActionGroup,
-    QCloseEvent,
-    QGuiApplication,
-    QKeySequence,
-    QResizeEvent,
-    QShortcut,
-    QShowEvent,
-)
+from PySide6.QtCore import QByteArray, QEvent, QObject
+from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence, QResizeEvent, QShowEvent
 from PySide6.QtWidgets import (
-    QDialog,
-    QFileDialog,
     QHBoxLayout,
-    QInputDialog,
-    QLabel,
     QMainWindow,
-    QMenu,
-    QMessageBox,
-    QToolButton,
+    QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
 
 from capypanel import BUILD
-from capypanel.core import files, settings, winsec
-from capypanel.core.hosts import locations
-from capypanel.core.hosts.document import OpenList, starter_list
-from capypanel.core.hosts.listfile import HostListChangedError, HostListFileError
-from capypanel.core.hosts.locations import ListKind
-from capypanel.core.hosts.model import NO_GROUP, Host, HostList, HostListRuleError
-from capypanel.core.i18n import _, ngettext
-from capypanel.core.remote import checks
-from capypanel.core.remote.checks import Checks, Found
-from capypanel.core.remote.sessions import Account, Reason, Session, SessionsError
-from capypanel.core.remote.status import Answer, Status
-from capypanel.core.tools.catalog import Catalogs
-from capypanel.core.tools.connect import SessionCredentials, Target
+from capypanel.core import settings
+from capypanel.core.i18n import _
 from capypanel.ui import about, language
-from capypanel.ui import checks as check_texts
-from capypanel.ui.checks import AccountDialog, CheckRun
-from capypanel.ui.connect import Connector, ManualConnectDialog, Request
 from capypanel.ui.dialogs import run_modal
-from capypanel.ui.export_hosts import ExportDialog, Source
-from capypanel.ui.groups import (
-    ROLE_ID,
-    ManageGroupsDialog,
-    TreeMenu,
-    fill_host_move_menu,
-    fill_move_menu,
-)
-from capypanel.ui.hosts import (
-    HostDialog,
-    ProfilePicker,
-    confirm,
-    group_path,
-    list_file_filter,
-)
-from capypanel.ui.icons import STATUS_COLORS, dot_icon
-from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
-from capypanel.ui.main_window.details import DetailsPane, HostDetails
-from capypanel.ui.main_window.host_views import (
-    Cells,
-    HostTable,
-    NavigationPane,
-    SearchBox,
-)
-from capypanel.ui.main_window.panes import PaneSplitter
+from capypanel.ui.main_window.home import HomePage
 from capypanel.ui.main_window.rail import ToolRail
-from capypanel.ui.main_window.toolbar import MainToolBar, RefreshPanel
-from capypanel.ui.menus import MenuCombo, StayOpenMenu, popup
-from capypanel.ui.new_list import ask_new_list
-from capypanel.ui.settings.window import SettingsDialog, SettingsPrefs
+from capypanel.ui.main_window.tool import Tool, ToolKind
+from capypanel.ui.menus import StayOpenMenu
+from capypanel.ui.settings.window import SettingsDialog
 from capypanel.ui.themes import engine as themes
+from capypanel.ui.tool_catalog import CATALOG, ToolInfo
 
 log = logging.getLogger(__name__)
-MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks first
 
 
 class MainWindow(QMainWindow):
-    checks_changed = Signal()  # a Refresh started, found something, or ended
-
     def __init__(
         self,
         paths: settings.Paths,
         prefs: dict[str, Any],
         *,
+        tools: Sequence[ToolKind],
         registry: themes.Registry | None = None,
+        catalog: Sequence[ToolInfo] = CATALOG,
     ):
+        """tools: in the rail's order. catalog: what Home and Settings show of each tool."""
         super().__init__()
-        self._paths = paths
-        self._prefs = prefs
+        self.paths = paths
+        self.prefs = prefs
         self.registry = registry if registry is not None else themes.Registry()
-        self._doc: OpenList | None = None
-        self._default_list = paths.default_list
-        self._personal_list = paths.personal_list
-        self.connector = Connector(self, Catalogs.for_paths(paths), SessionCredentials())
-        self.connector.open_settings = lambda: self.open_settings("connections")
-
-        # Refresh results, by host id: in memory only, since the list file is shared.
-        self._status_found: dict[str, tuple[Status, datetime, Answer | None]] = {}
-        self._users_found: dict[
-            str, tuple[tuple[Session, ...] | None, SessionsError | None, datetime]
-        ] = {}
-        self._run: CheckRun | None = None
-        self._account: Account | None = None  # typed for logged-on users; memory only
-        self._refused: list[str] = []  # hosts this run that didn't let the account read users
-        self._reported: set[str] = set()
-        self._targets: list[tuple[str, str]] = []
-
         self.commands = create_actions(self)
-        self.search = SearchBox()
-        self.toolbar = MainToolBar(self.commands)  # the Hosts tool's own, beside the rail
         self.rail = ToolRail()
         self.rail.settings_requested.connect(lambda: self.open_settings())
-        self.refresh_panel = RefreshPanel(self)
-        self.refresh_panel.set_choices(self._prefs.get("refresh"))
-        self.nav = NavigationPane()
-        # The list dropdown, on top of the left pane: switch lists, make or open one.
-        self.list_picker = MenuCombo()
-        self.list_picker.setObjectName("listPicker")
-        self.list_picker.menu().setToolTipsVisible(True)  # each list's path
-        self.list_picker.menu().aboutToShow.connect(self._fill_list_menu)
-        nav_layout = self.nav.layout()
-        assert isinstance(nav_layout, QVBoxLayout)
-        nav_layout.insertWidget(0, self.list_picker)
-        self.table = HostTable()
-        self._search_timer = QTimer(self)  # waits for a pause in typing, then filters
-        self._search_timer.setSingleShot(True)
-        self._search_timer.setInterval(150)
-        self.details = DetailsPane()
-        self.details.copied.connect(
-            lambda text: self.statusBar().showMessage(_("Copied: {text}").format(text=text), 5000)
-        )
-        self._splitter = PaneSplitter()
-        # The search box is a box of its own above the table, styled like the panes.
-        self._hosts_pane = QWidget()
-        column = QVBoxLayout(self._hosts_pane)
-        column.setContentsMargins(0, 0, 0, 0)
-        column.addWidget(self.search)
-        column.addWidget(self.table)
-        for pane in (self.nav, self._hosts_pane, self.details):
-            self._splitter.addWidget(pane)
-        self._splitter.setStretchFactor(1, 1)
-        # Dragged all the way, a pane would vanish; View hides panes on purpose instead.
-        self._splitter.setChildrenCollapsible(False)
-        self._size_panes()
-        self._default_pane_sizes(1100)
-        panes = QWidget()
-        margins = QVBoxLayout(panes)
-        margins.setContentsMargins(8, 4, 8, 4)  # the same gap above and below the panes
-        margins.addWidget(self._splitter)
-        # The rail runs down the left edge; the tool, its toolbar on top, fills the rest.
-        tool = QWidget()
-        column = QVBoxLayout(tool)
-        column.setContentsMargins(0, 0, 0, 0)
-        column.setSpacing(0)
-        column.addWidget(self.toolbar)
-        column.addWidget(panes, 1)
+        self.rail.home_requested.connect(self.show_home)
+        self.rail.tool_picked.connect(self.show_tool)
+        self._catalog = list(catalog)
+        self.tools: dict[str, Tool] = {}
+        # Each tool's toolbar on top of the tool, one page each; the page shown is the tool's.
+        self._pages = QStackedWidget()
+        self._tool_actions = QActionGroup(self)  # View's Home and tools: one shown at a time
+        self._tool_actions.setExclusive(True)
+        self._home_action = QAction(self)
+        self._home_action.setCheckable(True)
+        self._home_action.setShortcut(QKeySequence("Ctrl+0"))
+        self._home_action.triggered.connect(lambda _c=False: self.show_home())
+        self._tool_actions.addAction(self._home_action)
+        self.addAction(self._home_action)
+        self._status: dict[str, _StatusGroup] = {}  # each tool's, on the status bar's right
+        self._page_of: dict[str, QWidget] = {}  # each tool's page: its toolbar and the tool
+        for make in tools:
+            self._add_tool(make(self))
+        self._shown: str | None = None  # the tool shown; None: Home
+        self.home = HomePage(self._infos())
+        self.home.tool_picked.connect(self.show_tool)
+        self._pages.insertWidget(0, self.home)
+
+        # The rail runs down the left edge; the tool shown, its toolbar on top, fills the rest.
         central = QWidget()
         row = QHBoxLayout(central)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(0)
         row.addWidget(self.rail)
-        row.addWidget(tool, 1)
+        row.addWidget(self._pages, 1)
         self.setCentralWidget(central)
-        self._list_label = QLabel()
-        self._list_label.setContentsMargins(6, 0, 6, 0)
-        self.statusBar().addWidget(self._list_label, 1)
-        self._progress = QLabel()
-        self._stop_button = QToolButton()
-        self._stop_button.clicked.connect(self.stop_checks)
-        for widget in (self._progress, self._stop_button):
-            widget.hide()
-            self.statusBar().addPermanentWidget(widget)
 
         self._build_menus()
         self._connect()
         self._restore_layout()
-        self._auto_timer = QTimer(self)  # Settings > General: Status by itself, if switched on
-        self._auto_timer.timeout.connect(self._auto_status_check)
-        self._apply_auto_status()
-        self._open_startup_list()
-        self._refresh()
+        # Home, unless the user picked a tool, or the tool shown last, in Settings.
+        start = self.prefs.get(settings.START_KEY, settings.START_HOME)
+        if start == settings.START_LAST:
+            start = self.prefs.get(settings.TOOL_KEY)
+        self._show(start if isinstance(start, str) and start in self.tools else None)
+
+    def _add_tool(self, tool: Tool) -> None:
+        tool_id = tool.TOOL_ID
+        self.tools[tool_id] = tool
+        page = QWidget()
+        column = QVBoxLayout(page)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(0)
+        column.addWidget(tool.toolbar)
+        column.addWidget(tool, 1)
+        self._pages.addWidget(page)
+        self._page_of[tool_id] = page
+        self.rail.add_tool(tool_id, tool.ICON)
+        action = QAction(self)
+        action.setCheckable(True)
+        action.setData(tool_id)
+        if len(self.tools) <= 9:
+            action.setShortcut(QKeySequence(f"Ctrl+{len(self.tools)}"))
+        action.triggered.connect(lambda _c=False: self.show_tool(tool_id))
+        self._tool_actions.addAction(action)
+        self.addAction(action)  # its shortcut works wherever the focus is
+        self.statusBar().addWidget(tool.status_label, 1)
+        right = _StatusGroup(tool.status_widgets())
+        self.statusBar().addPermanentWidget(right)
+        self._status[tool_id] = right
+        tool.title_changed.connect(lambda _name, t=tool_id: self._title_changed(t))
+
+    def shown_tool(self) -> Tool | None:
+        """None while Home is shown."""
+        return None if self._shown is None else self.tools[self._shown]
+
+    def show_tool(self, tool_id: str) -> None:
+        self._show(tool_id)
+
+    def show_home(self) -> None:
+        self._show(None)
+
+    def _show(self, tool_id: str | None) -> None:
+        """The rail, View's tools, the toolbar, the tool and the status bar follow. Home has
+        no toolbar and nothing on the status bar."""
+        self._shown = tool_id
+        tool = self.shown_tool()
+        self._pages.setCurrentWidget(self.home if tool_id is None else self._page_of[tool_id])
+        self.rail.show_tool(tool_id)
+        self._home_action.setChecked(tool_id is None)
+        for action in self._tool_list_actions():
+            action.setChecked(action.data() == tool_id)
+        for other_id, other in self.tools.items():
+            other.status_label.setVisible(other_id == tool_id)
+            self._status[other_id].set_shown(other_id == tool_id)
+        self._fill_view_menu()
+        self._show_title(tool.title() if tool is not None else "")
+        if tool is not None:
+            tool.align_toolbar_later()
+            self.prefs[settings.TOOL_KEY] = tool_id
+
+    def _infos(self) -> list[ToolInfo]:
+        """The catalog's entries for the window's tools, in the rail's order."""
+        return [info for info in self._catalog if info.tool_id in self.tools]
+
+    def _tool_list_actions(self) -> list[QAction]:
+        """View's tools, without Home."""
+        return [a for a in self._tool_actions.actions() if a is not self._home_action]
+
+    # ---- what tools ask of the shell ----
+
+    def tool_prefs(self, tool_id: str, *, inherit: bool = False) -> dict[str, Any]:
+        return settings.tool_prefs(self.prefs, tool_id, inherit=inherit)
+
+    def save_prefs(self) -> None:
+        try:
+            settings.save_settings(self.paths.settings_file, self.prefs)
+        except OSError:
+            log.exception("Couldn't save settings")
+
+    def show_message(self, text: str, timeout: int = 5000) -> None:
+        self.statusBar().showMessage(text, timeout)
+
+    def open_settings(self, page: str | None = None) -> None:
+        dialog = self.settings_dialog()
+        geometry = self.prefs.get("settings_geometry")
+        if isinstance(geometry, str):
+            dialog.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
+        if page:
+            dialog.show_page(page)
+        run_modal(dialog)
+        self.prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
+        self.save_prefs()
 
     # ---- building ----
 
@@ -201,1014 +188,137 @@ class MainWindow(QMainWindow):
         a = self.commands
         bar = self.menuBar()
         self._file_menu = bar.addMenu("")
-        # Lists are the Hosts tool's: they're in its list dropdown, not here.
+        # Lists are the tools': they're in each tool's list dropdown, not here.
         self._file_menu.addAction(a.settings)
         self._file_menu.addSeparator()
         self._file_menu.addAction(a.exit)
-
-        # The tool's own commands live in its toolbar: the menu bar is the same for every tool.
-        inventory = self.toolbar.inventory_menu
-        inventory.addActions([a.add_host, a.add_group, a.manage_groups])
-        inventory.addSeparator()
-        inventory.addAction(a.import_hosts)
-
         # It stays open while parts are ticked, so several can be shown or hidden in one go.
-        # The tools first, then the shown tool's panes; theme and language are in Settings.
+        # A tool's own commands live in its toolbar: the menu bar is the same for every tool.
         self._view_menu = StayOpenMenu(self)
         bar.addMenu(self._view_menu)
-        a.show_hosts.setChecked(True)  # the only tool for now
-        self._view_menu.addAction(a.show_hosts)
-        self._view_menu.addSeparator()
-        self._view_menu.addActions([a.show_groups, a.show_tags, a.show_details])
-        self._view_menu.addSeparator()
-        self._view_menu.addAction(a.show_domains)
-        self._view_menu.addSeparator()
-        self._view_menu.addActions([a.show_toolbar, a.show_status_bar])
-
         self._help_menu = bar.addMenu("")
         self._help_menu.addActions([a.documentation, a.report_problem])
         self._help_menu.addSeparator()
         self._help_menu.addAction(a.about)
         self._retranslate_menus()
 
+    def _fill_view_menu(self) -> None:
+        """Home and the tools first, then the shown tool's panels, then the window's parts;
+        theme and language are in Settings."""
+        menu = self._view_menu
+        for action in menu.actions():  # not clear(): it deletes the tools' own actions
+            menu.removeAction(action)
+            if action.isSeparator():
+                action.deleteLater()  # the menu's own
+        menu.addAction(self._home_action)
+        menu.addSeparator()
+        menu.addActions(self._tool_list_actions())
+        tool = self.shown_tool()
+        for group in tool.view_actions() if tool is not None else []:
+            menu.addSeparator()
+            menu.addActions(group)
+        menu.addSeparator()
+        menu.addActions([self.commands.show_toolbar, self.commands.show_status_bar])
+
     def _retranslate_menus(self) -> None:
         retranslate_actions(self.commands)
-        self.toolbar.retranslate()
         self.rail.retranslate()
-        self.refresh_panel.retranslate()
-        self._stop_button.setText(_("Stop"))
-        self.search.retranslate()
+        for index, (tool_id, tool) in enumerate(self.tools.items(), start=1):
+            self.rail.buttons[tool_id].setToolTip(f"{tool.tool_name()} (Ctrl+{index})")
+        self._home_action.setText(_("Hom&e"))
+        for action in self._tool_list_actions():
+            action.setText(self.tools[str(action.data())].menu_name())
         self._file_menu.setTitle(_("&File"))
         self._view_menu.setTitle(_("&View"))
         self._help_menu.setTitle(_("&Help"))
 
     def _connect(self) -> None:
         a = self.commands
-        a.new_list.triggered.connect(self.new_list)
-        a.open_list.triggered.connect(self.open_list_file)
         a.settings.triggered.connect(lambda: self.open_settings())
         a.exit.triggered.connect(self.close)
-        a.add_host.triggered.connect(self.add_host)
-        a.add_group.triggered.connect(self.add_group)
-        a.manage_groups.triggered.connect(self.manage_groups)
-        a.import_hosts.triggered.connect(self.import_hosts)
-        a.export_hosts.triggered.connect(self.export_hosts)
-        a.edit.triggered.connect(self.edit_selected)
-        a.remove.triggered.connect(self.remove_selected)
-        # Not in any menu bar menu, so their shortcuts (F2, Del, Ctrl+Shift+C, F5, Ctrl+N,
-        # Ctrl+Shift+N, Ctrl+M) live here: toolbar menus only take keys while they're open.
-        self.addActions([
-            a.edit, a.remove, a.copy_address, a.refresh_shown, a.add_host, a.add_group,
-            a.manual_connect, a.open_list,
-        ])  # fmt: skip
-        a.show_hosts.triggered.connect(lambda: self._show_tool("hosts"))
-        self.rail.hosts_button.clicked.connect(lambda: self._show_tool("hosts"))
-        a.refresh_shown.triggered.connect(self._run_refresh_panel)  # F5
         a.documentation.triggered.connect(lambda: about.open_url(about.docs_url()))
         a.report_problem.triggered.connect(
-            lambda: about.open_url(about.report_url(self._paths.portable))
+            lambda: about.open_url(about.report_url(self.paths.portable))
         )
         a.about.triggered.connect(lambda: self.open_settings("about"))  # About is a page there
-        a.show_toolbar.toggled.connect(self.toolbar.setVisible)
-        a.show_groups.toggled.connect(self.nav.setVisible)
-        a.show_tags.toggled.connect(self.nav.set_tags_visible)
-        a.show_details.toggled.connect(self.details.setVisible)
+        a.show_toolbar.toggled.connect(self._show_toolbars)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
-        a.show_domains.toggled.connect(self._show_domains)
-        # Refresh follows the end of the host table, wherever the panes are.
-        for toggled in (a.show_groups.toggled, a.show_details.toggled, a.show_toolbar.toggled):
-            toggled.connect(self._align_refresh_later)
-        self._splitter.splitterMoved.connect(self._align_refresh_later)
-        self._splitter.edge_double_clicked.connect(self._fit_pane)
-        a.check_status.triggered.connect(
-            lambda: self.check_hosts(self._selected_hosts(), status=True, users=False)
-        )
-        a.check_users.triggered.connect(
-            lambda: self.check_hosts(self._selected_hosts(), status=False, users=True)
-        )
-        self.toolbar.refresh_panel_requested.connect(self._show_refresh_panel)
-        self.toolbar.refresh_requested.connect(self._refresh_shown)
-        self.refresh_panel.run_clicked.connect(self._run_refresh_panel)
-        self.toolbar.connect_menu.aboutToShow.connect(self._fill_connect_menu)
-        self.nav.add_group_button.clicked.connect(self.add_top_group)  # on the Groups heading row
-        self.nav.filter_changed.connect(self._filter_picked)
-        self.search.textChanged.connect(self._search_timer.start)
-        self._search_timer.timeout.connect(self._show_hosts)
-        self.search.to_results.connect(self._to_results)
-        QShortcut(QKeySequence.StandardKey.Find, self, self._focus_search)
-        # Esc ends a search wherever the focus is, not only in the box.
-        QShortcut(QKeySequence(Qt.Key.Key_Escape), self, self._end_search)
-        self.nav.groups.customContextMenuRequested.connect(self._group_menu)
-        self.nav.groups.rearranged.connect(self._groups_dragged)
-        self.nav.groups.hosts_dropped.connect(self.move_hosts)
-        self.nav.everything.hosts_dropped.connect(self.move_hosts)  # onto "No group"
-        self.nav.groups_heading.group_dropped.connect(lambda g: self.move_group(g, None))
-        self.nav.groups_heading.customContextMenuRequested.connect(self._heading_menu)
-        self.table.itemSelectionChanged.connect(self._selection_changed)
-        self.table.customContextMenuRequested.connect(self._host_menu)
-        self.table.columns_changed.connect(self._save_columns)
-        self.table.columns_changed.connect(self._columns_shown)  # a search covers only those
-        # Enter connects only from the host table, so it never fires while typing elsewhere.
-        a.connect_host.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
-        self.table.addAction(a.connect_host)
-        self.table.itemDoubleClicked.connect(lambda *_args: self.connect_selected())
-        a.connect_host.triggered.connect(self.connect_selected)
-        a.manual_connect.triggered.connect(self.manual_connect)
-        a.copy_address.triggered.connect(lambda: self._copy(lambda h: h.target))
-        a.forget_passwords.triggered.connect(self.forget_passwords)
-        a.connection_profiles.triggered.connect(lambda: self.open_settings("connections"))
+
+    def _show_toolbars(self, shown: bool) -> None:
+        for tool in self.tools.values():
+            tool.toolbar.setVisible(shown)
+        self._align_toolbar()
 
     def _restore_layout(self) -> None:
-        geometry = self._prefs.get("window_geometry")
+        geometry = self.prefs.get("window_geometry")
         if not (
             isinstance(geometry, str)
             and self.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
         ):
             self.resize(1100, 700)
-        splitter = self._prefs.get("main_splitter")
-        if isinstance(splitter, str):
-            self._splitter.restoreState(QByteArray.fromBase64(splitter.encode()))
-            # Restoring turns collapsing back on: a pane dragged to the edge vanished.
-            self._splitter.setChildrenCollapsible(False)
-        view = self._prefs.get("view")
+        view = self.prefs.get("view")
         view = view if isinstance(view, dict) else {}
         for key, action in self._view_choices().items():
             action.setChecked(bool(view.get(key, True)))
-        check_texts.show_domains(self.commands.show_domains.isChecked())
-        self.nav.set_tags_visible(self.commands.show_tags.isChecked())
-        self.toolbar.setVisible(self.commands.show_toolbar.isChecked())
-        self.table.set_widths(self._prefs.get("column_widths"))
-        self.table.set_hidden_columns(self._prefs.get("hidden_columns"))
-        self._columns_shown()
-        self.nav.setVisible(self.commands.show_groups.isChecked())
-        self.details.setVisible(self.commands.show_details.isChecked())
+        self._show_toolbars(self.commands.show_toolbar.isChecked())
         self.statusBar().setVisible(self.commands.show_status_bar.isChecked())
 
-    # Pane widths at a normal font size; a bigger font scales them up.
-    PANES_DEFAULT = (220, 340)  # Groups, Details
-    PANES_MINIMUM = (180, 300, 260)  # Groups, the table, Details
-
-    def _scale(self) -> float:
-        return max(1.0, self.fontMetrics().height() / 16)
-
-    def _size_panes(self) -> None:
-        """Minimum widths, so no pane can be dragged too narrow to read."""
-        for pane, width in zip(
-            (self.nav, self._hosts_pane, self.details), self.PANES_MINIMUM, strict=True
-        ):
-            pane.setMinimumWidth(round(width * self._scale()))
-
-    def _default_pane_sizes(self, total: int) -> None:
-        groups, details = (round(w * self._scale()) for w in self.PANES_DEFAULT)
-        self._splitter.setSizes([groups, max(total - groups - details, 1), details])
-
-    def _fit_pane(self, edge: int) -> None:
-        """A double-click on the Groups or Hosts panel's right edge: that panel as wide as its
-        content, the panel on its right taking the rest, never below its minimum width."""
-        left, right = self._splitter.widget(edge - 1), self._splitter.widget(edge)
-        if left is None or right is None:
-            return
-        if left is self.nav:
-            natural = self.nav.natural_width()
-        elif left is self._hosts_pane:
-            natural = self.table.natural_width()
-        else:
-            return
-        sizes = self._splitter.sizes()
-        total = sizes[edge - 1] + sizes[edge]
-        wanted = min(max(natural, left.minimumWidth()), total - right.minimumWidth())
-        sizes[edge - 1], sizes[edge] = wanted, total - wanted
-        self._splitter.setSizes(sizes)
-        self._align_refresh_later()
-
-    def reset_layout(self) -> None:
-        """Settings > Hosts > General > Window layout: default pane sizes, columns and hidden
-        parts shown again. The window's size, the theme and every other setting stay."""
-        a = self.commands
-        for action in (a.show_toolbar, a.show_status_bar, a.show_groups, a.show_tags):
-            action.setChecked(True)
-        a.show_details.setChecked(True)
-        self.table.reset_columns()
-        self._columns_shown()
-        self._save_columns()
-        self._default_pane_sizes(sum(self._splitter.sizes()))
-        self._align_refresh_later()
-
     def _view_choices(self) -> dict[str, QAction]:
-        """View menu ticks, by the key they're saved under."""
+        """The shell's View menu ticks, by the key they're saved under."""
         a = self.commands
-        return {
-            "toolbar": a.show_toolbar,
-            "groups": a.show_groups,
-            "tags": a.show_tags,
-            "details": a.show_details,
-            "status_bar": a.show_status_bar,
-            "domains": a.show_domains,
-        }
+        return {"toolbar": a.show_toolbar, "status_bar": a.show_status_bar}
 
-    # ---- opening lists ----
+    def _align_toolbar(self) -> None:
+        if (tool := self.shown_tool()) is not None:
+            tool.align_toolbar_later()
 
-    @property
-    def document(self) -> OpenList | None:
-        return self._doc
+    def _title_changed(self, tool_id: str) -> None:
+        if tool_id == self._shown:
+            self._show_title(self.tools[tool_id].title())
 
-    def _open_startup_list(self) -> None:
-        """The chosen list (normally the last used), else the default, else the personal one."""
-        prefs = self._prefs
-        order = locations.startup_order(
-            prefs, default=self._default_list, personal=self._personal_list
-        )
-        # On a first start there's nothing to miss; otherwise say when the expected list failed.
-        expected = prefs.get(locations.START_KEY, locations.START_LAST) != locations.START_LAST
-        expected = expected or bool(locations.recent_lists(prefs))
-        for index, path in enumerate(order):
-            if not path.exists() and self._kind(path) is ListKind.SHARED:
-                continue  # a missing list isn't an error at start: try the next one
-            if self.open_list(path, quiet=True):
-                if index and expected:
-                    note = _("Couldn't open “{wanted}”, so “{opened}” was opened instead.")
-                    self._error(note.format(wanted=order[0], opened=path), quiet=True)
-                return
-
-    def open_list(self, path: Path, *, quiet: bool = False) -> bool:
-        kind = self._kind(path)
-        if kind is not ListKind.SHARED and not path.exists():
-            return self._create_list(path, replace_existing=False, quiet=quiet)
-        if kind is ListKind.DEFAULT and not winsec.made_by_trusted(path):
-            note = _(
-                "The default list was made by another user, so CapyPanel won't open it. An "
-                "administrator can replace or delete “{path}”."
-            )
-            self._error(note.format(path=path), quiet)
-            return False
-        try:
-            doc = OpenList.open(path)
-        except FileNotFoundError:
-            locations.forget_list(self._prefs, path)
-            self._error(_("The list “{path}” doesn't exist anymore.").format(path=path), quiet)
-            return False
-        except (HostListFileError, OSError) as e:
-            self._error(_("Couldn't open “{path}”: {error}").format(path=path, error=e), quiet)
-            return False
-        self._use(doc)
-        return True
-
-    def new_list(self) -> None:
-        """The list dropdown's New list…: shared, personal or elsewhere, as in Settings."""
-        path = ask_new_list(
-            self, shared_dir=self._paths.shared_lists_dir, user_dir=self._paths.user_lists_dir
-        )
-        if path is not None:  # replacing an existing file was asked already
-            self._create_list(path, replace_existing=path.exists())
-
-    def open_list_file(self) -> None:
-        """The list dropdown's Open list… (Ctrl+O): any list file, which then stays in the
-        dropdown."""
-        shared = self._paths.shared_lists_dir
-        start = shared if shared.is_dir() else self._personal_list.parent
-        name, _filter = QFileDialog.getOpenFileName(
-            self, _("Open a host list"), str(start), list_file_filter()
-        )
-        if name:
-            self.open_list(Path(name))
-
-    # ---- the list dropdown ----
-
-    def _found_lists(self, *, hidden: bool = False) -> list[Path]:
-        """The lists in the lists folders; the ones removed in Host lists only when `hidden`."""
-        found = locations.found_lists(self._paths.shared_lists_dir, self._paths.user_lists_dir)
-        return found if hidden else locations.without_hidden(self._prefs, found)
-
-    def _available_lists(self) -> list[Path]:
-        return locations.available_lists(
-            self._prefs,
-            default=self._default_list,
-            personal=self._personal_list,
-            found=self._found_lists(),
-        )
-
-    def _list_name(self, path: Path) -> str:
-        lists = self._available_lists()
-        if not any(locations.same_path(path, p) for p in lists):
-            lists.append(path)
-        names = locations.list_names(
-            lists, default=self._default_list, personal=self._personal_list
-        )
-        return next(n for p, n in zip(lists, names, strict=True) if locations.same_path(p, path))
-
-    def _names(self, lists: list[Path]) -> list[str]:
-        return locations.list_names(lists, default=self._default_list, personal=self._personal_list)
-
-    def _fill_list_menu(self) -> None:
-        """Every list, the open one ticked (its path in the tooltip), then making or opening
-        one, and managing them in Settings."""
-        a = self.commands
-        menu = self.list_picker.menu()
-        menu.clear()
-        lists = self._available_lists()
-        names = locations.list_names(
-            lists, default=self._default_list, personal=self._personal_list
-        )
-        current = self._doc.path if self._doc else None
-        picks = QActionGroup(menu)
-        for path, name in zip(lists, names, strict=True):
-            item = menu.addAction(name.replace("&", "&&"))
-            item.setCheckable(True)
-            item.setChecked(current is not None and locations.same_path(path, current))
-            item.setToolTip(str(path))
-            picks.addAction(item)
-            item.triggered.connect(lambda _c=False, p=path: self._pick_list(p))
-        menu.addSeparator()
-        menu.addActions([a.new_list, a.open_list])
-        menu.addSeparator()
-        manage = menu.addAction(_("&Manage host lists…"))
-        manage.triggered.connect(lambda: self.open_settings("host_lists"))
-
-    def _pick_list(self, path: Path) -> None:
-        current = self._doc.path if self._doc else None
-        if current is None or not locations.same_path(path, current):
-            self.open_list(path)
-
-    def _create_list(self, path: Path, *, replace_existing: bool, quiet: bool = False) -> bool:
-        try:
-            if self._kind(path) is ListKind.DEFAULT and not path.parent.exists():
-                files.make_shared_folder(path.parent)  # read by all, changed only by admins
-            doc = OpenList.create(path, replace_existing=replace_existing)
-        except (HostListFileError, OSError) as e:
-            self._error(_("Couldn't create “{path}”: {error}").format(path=path, error=e), quiet)
-            return False
-        self._use(doc)
-        return True
-
-    def _use(self, doc: OpenList) -> None:
-        switched = self._doc is None or not locations.same_path(self._doc.path, doc.path)
-        if switched:
-            self._remember_view()  # where the list being left was
-            self._status_found.clear()  # another list's hosts: old results don't apply
-            self._users_found.clear()
-            self._clear_search()
-        self._doc = doc
-        locations.remember_list(self._prefs, doc.path)
-        hidden = locations.hidden_lists(self._prefs)
-        if any(locations.same_path(doc.path, p) for p in hidden):  # opened again: listed again
-            locations.set_hidden_lists(
-                self._prefs, [p for p in hidden if not locations.same_path(doc.path, p)]
-            )
-        in_folder = any(locations.same_path(doc.path, p) for p in self._found_lists(hidden=True))
-        if self._kind(doc.path) is ListKind.SHARED and not in_folder:  # in the dropdown now
-            # Only lists from elsewhere: before any was added, this falls back to the recent ones.
-            added = [
-                p for p in locations.added_lists(self._prefs) if self._kind(p) is ListKind.SHARED
-            ]
-            locations.set_added_lists(self._prefs, [*added, doc.path])
-        self._save_prefs()
-        log.info("Opened host list %s (read-only=%s)", doc.path, doc.read_only)
-        self._refresh()
-        if switched:
-            self._show_first(doc)
-
-    # ---- what a list shows first ----
-
-    def _show_first(self, doc: OpenList) -> None:
-        """All hosts, where this list was left, or its chosen group (Settings > General)."""
-        view = locations.list_view(self._prefs, doc.path)
-        if view.show == locations.SHOW_GROUP:
-            self.nav.select_group(view.group)
-        elif view.show == locations.SHOW_LAST:
-            self.nav.show_view(*view.last)
-        else:
-            self.nav.show_view("all", "")
-        self._show_hosts()
-        self._selection_changed()
-
-    def _remember_view(self) -> None:
-        if self._doc is None:
-            return
-        shown = self.nav.current_filter()
-        view = locations.list_view(self._prefs, self._doc.path)
-        last = (shown.kind, shown.value or "")
-        locations.set_list_view(self._prefs, self._doc.path, replace(view, last=last))
-
-    def set_first_group(self, group_id: str, first: bool) -> None:
-        """Right-click a group > Show this group first: ticked, the list opens on it."""
-        if self._doc is None:
-            return
-        view = locations.list_view(self._prefs, self._doc.path)
-        if first:
-            view = replace(view, show=locations.SHOW_GROUP, group=group_id)
-        elif view.show == locations.SHOW_GROUP and view.group == group_id:
-            view = replace(view, show=locations.SHOW_ALL)
-        locations.set_list_view(self._prefs, self._doc.path, view)
-        self._save_prefs()
-
-    # ---- editing ----
-
-    def add_host(self) -> None:
-        doc = self._writable()
-        if doc is None:
-            return
-        base = doc.hosts if doc.hosts.groups else starter_list()
-        dialog = HostDialog(
-            self,
-            base,
-            default_group=self.nav.selected_group_id(),
-            profiles=self._profile_picker(base),
-        )
-        if run_modal(dialog) != QDialog.DialogCode.Accepted:
-            return
-        values = dialog.values()
-        try:
-            new, host = base.add_host(
-                values.name,
-                values.group,
-                address=values.address,
-                tags=values.tags,
-                notes=values.notes,
-                profile=values.profile,
-            )
-        except HostListRuleError as e:
-            self._error(str(e))
-            return
-        if self._commit(new):
-            self.table.select_ids([host.id])
-
-    def edit_host(self, host: Host) -> None:
-        doc = self._writable()
-        if doc is None:
-            return
-        dialog = HostDialog(self, doc.hosts, host, profiles=self._profile_picker(doc.hosts))
-        if run_modal(dialog) != QDialog.DialogCode.Accepted:
-            return
-        values = dialog.values()
-        edited = replace(
-            host,
-            name=values.name,
-            address=values.address,
-            group=values.group,
-            tags=values.tags,
-            notes=values.notes,
-            profile=values.profile,
-        )
-        try:
-            new = doc.hosts.update_host(edited)
-        except HostListRuleError as e:
-            self._error(str(e))
-            return
-        if edited.connect_address != host.connect_address:  # results were for the old address
-            self._status_found.pop(host.id, None)
-            self._users_found.pop(host.id, None)
-        self._commit(new)
-
-    def add_group(self) -> None:
-        """Inside the picked group, or at the top level when none is."""
-        self._add_group(self.nav.selected_group_id())
-
-    def add_top_group(self) -> None:
-        """The + by the Groups heading, its right-click menu, and the empty space below."""
-        self._add_group(None)
-
-    def _add_group(self, parent: str | None) -> None:
-        doc = self._writable()
-        if doc is None:
-            return
-        where = group_path(doc.hosts, parent) if parent else ""
-        prompt = (
-            _("Name of the new group inside “{group}”:").format(group=where)
-            if parent
-            else _("Name of the new group:")
-        )
-        name, ok = QInputDialog.getText(self, _("Add group"), prompt)
-        if not ok or not name.strip():
-            return
-        try:
-            new, _group = doc.hosts.add_group(name, parent)
-        except HostListRuleError as e:
-            self._error(str(e))
-            return
-        self._commit(new)
-
-    def rename_group(self, group_id: str) -> None:
-        doc = self._writable()
-        group = doc.hosts.group(group_id) if doc else None
-        if doc is None or group is None:
-            return
-        name, ok = QInputDialog.getText(self, _("Rename group"), _("New name:"), text=group.name)
-        if ok and name.strip() and name.strip() != group.name:
-            self._commit(doc.hosts.rename_group(group_id, name))
-
-    def edit_selected(self) -> None:
-        if self._doc is None:
-            return
-        group_id = self.nav.selected_group_id()
-        hosts = self._selected_hosts()
-        if self.nav.groups.hasFocus() and group_id:
-            self.rename_group(group_id)
-        elif len(hosts) == 1:
-            self.edit_host(hosts[0])
-        elif group_id and not hosts:
-            self.rename_group(group_id)
-
-    def remove_selected(self) -> None:
-        doc = self._writable()
-        if doc is None:
-            return
-        group_id = self.nav.selected_group_id()
-        hosts = self._selected_hosts()
-        if (self.nav.groups.hasFocus() or not hosts) and group_id:
-            self.remove_group(group_id)
-        elif hosts:
-            self.remove_hosts(hosts)
-
-    def remove_hosts(self, hosts: list[Host]) -> None:
-        doc = self._writable()
-        if doc is None or not hosts:
-            return
-        if len(hosts) == 1:
-            text = _("Remove “{name}” from the list?").format(name=hosts[0].name)
-        else:
-            text = ngettext(
-                "Remove {n} host from the list?", "Remove {n} hosts from the list?", len(hosts)
-            ).format(n=len(hosts))
-        if confirm(self, _("Remove hosts"), text, _("Remove")):
-            self._commit(doc.hosts.remove_hosts(h.id for h in hosts))
-
-    def remove_group(self, group_id: str) -> None:
-        doc = self._writable()
-        group = doc.hosts.group(group_id) if doc else None
-        if doc is None or group is None:
-            return
-        hosts = len(doc.hosts.hosts_in(group_id))
-        groups = len(doc.hosts.subtree(group_id)) - 1
-        if not hosts and not groups:
-            text = _("Remove the empty group “{name}”?").format(name=group.name)
-            if confirm(self, _("Remove group"), text, _("Remove")):
-                self._commit(doc.hosts.remove_group(group_id))
-            return
-        choice = self._ask_how_to_remove(group_id, groups, hosts)
-        if choice is None:
-            return
-        how, into = choice
-        try:
-            new = doc.hosts.remove_group(group_id, keep_contents=how == "move", into=into)
-        except HostListRuleError as e:
-            self._error(str(e))
-            return
-        self._commit(new)
-
-    def _ask_how_to_remove(
-        self, group_id: str, groups: int, hosts: int
-    ) -> tuple[str, str | None] | None:
-        """Move what's inside somewhere (its parent is ticked) or remove everything.
-        Returns ("move", group id, or NO_GROUP for the top level), ("all", None), or None for
-        Cancel."""
-        assert self._doc is not None
-        host_list = self._doc.hosts
-        group = host_list.group(group_id)
-        assert group is not None
-        inside = [
-            ngettext("{n} group", "{n} groups", groups).format(n=groups) if groups else "",
-            ngettext("{n} host", "{n} hosts", hosts).format(n=hosts) if hosts else "",
-        ]
-        box = QMessageBox(
-            QMessageBox.Icon.Question,
-            _("Remove group"),
-            _("“{name}” holds {inside}. What should happen to them?").format(
-                name=group.name, inside=_(" and ").join(i for i in inside if i)
-            ),
-            parent=self,
-        )
-        if groups:
-            box.setInformativeText(
-                _("With No group, the groups inside it go directly under Groups.")
-            )
-        chosen: list[tuple[str, str | None]] = []
-        move = box.addButton(_("&Move them to"), QMessageBox.ButtonRole.ActionRole)
-        menu = TreeMenu("", move)
-        # The same menu as moving hosts, without what's being removed.
-        fill_host_move_menu(
-            menu,
-            host_list,
-            lambda target: chosen.append(("move", target)),
-            skip=host_list.subtree(group_id),
-        )
-        parent = group.parent or NO_GROUP  # where things go when a group goes
-        for item in menu.actions():
-            if item.data() == parent:
-                item.setChecked(True)
-                menu.marked = item
-        menu.triggered.connect(lambda _item: box.done(0))
-        move.setMenu(menu)
-        everything = box.addButton(_("Remove everything"), QMessageBox.ButtonRole.DestructiveRole)
-        cancel = box.addButton(QMessageBox.StandardButton.Cancel)
-        box.setDefaultButton(cancel)
-        box.setEscapeButton(cancel)
-        run_modal(box)
-        if chosen:
-            return chosen[0]
-        return ("all", None) if box.clickedButton() is everything else None
-
-    def _commit(self, new: HostList) -> bool:
-        """Save an edit. If someone else changed the file meanwhile, ask what to do with ours."""
-        doc = self._doc
-        if doc is None:
-            return False
-        try:
-            doc.commit(new)
-        except HostListChangedError:
-            self._resolve_conflict(new)
-            return False
-        except (HostListFileError, OSError) as e:
-            self._error(_("Couldn't save the list: {error}").format(error=e))
-            return False
-        self._refresh()
-        return True
-
-    def _resolve_conflict(self, mine: HostList) -> None:
-        doc = self._doc
-        if doc is None:
-            return
-        box = QMessageBox(
-            QMessageBox.Icon.Warning,
-            _("The list has changed"),
-            _(
-                "Someone else saved changes to this list after you opened it. Your change wasn't "
-                "saved. You can save your version as a separate copy or reload the list with "
-                "their changes."
-            ),
-            parent=self,
-        )
-        copy = box.addButton(_("Save my version as a copy…"), QMessageBox.ButtonRole.AcceptRole)
-        box.addButton(_("Reload the list"), QMessageBox.ButtonRole.RejectRole)
-        box.setDefaultButton(copy)
-        run_modal(box)
-        if box.clickedButton() is copy:
-            name, _filter = QFileDialog.getSaveFileName(
-                self,
-                _("Save a copy"),
-                str(doc.path.with_name(doc.path.stem + " (copy).json")),
-                list_file_filter(),
-            )
-            if name:
-                path = Path(name)
-                try:
-                    self._use(OpenList.save_as(path, mine, replace_existing=path.exists()))
-                    return
-                except (HostListFileError, OSError) as e:
-                    self._error(_("Couldn't save the copy: {error}").format(error=e))
-        try:
-            doc.reload()
-        except (HostListFileError, OSError) as e:
-            self._error(_("Couldn't reload the list: {error}").format(error=e))
-        self._refresh()
-
-    # ---- connecting ----
-
-    def connect_selected(self, profile: str | None = None) -> None:
-        """With the hosts' own profiles, or once with `profile` (the toolbar's Connect arrow)."""
-        hosts = self._selected_hosts()
-        if not hosts or self._doc is None:
-            return
-        # A name like "Ward 2A - Desk" isn't a computer name, so it can't stand in for an address.
-        missing = [h for h in hosts if not h.connect_address]
-        if len(hosts) == 1 and missing:
-            self._ask_for_address(missing[0])
-            return
-        host_list = self._doc.hosts
-        requests = [
-            Request(
-                h.name,
-                Target(h.connect_address),
-                profile or host_list.profile_of(h, self._profile_exists)[0],
-            )
-            for h in hosts
-            if h.connect_address
-        ]
-        started = self.connector.connect(requests) if requests else 0
-        if started:
-            self.statusBar().showMessage(
-                ngettext("Opened {n} remote screen.", "Opened {n} remote screens.", started).format(
-                    n=started
-                ),
-                5000,
-            )
-        if missing:
-            names = ", ".join(h.name for h in missing[:5]) + (" …" if len(missing) > 5 else "")
-            self._error(
-                ngettext(
-                    "{n} host has no address and was skipped: {names}",
-                    "{n} hosts have no address and were skipped: {names}",
-                    len(missing),
-                ).format(n=len(missing), names=names)
-            )
-
-    def _ask_for_address(self, host: Host) -> None:
-        box = QMessageBox(
-            QMessageBox.Icon.Warning,
-            _("No address"),
-            _(
-                "“{name}” has no address, and its name can't be used as one: a computer name "
-                "has no spaces or symbols other than - and _."
-            ).format(name=host.name),
-            parent=self,
-        )
-        edit = box.addButton(_("&Edit host…"), QMessageBox.ButtonRole.AcceptRole)
-        box.addButton(QMessageBox.StandardButton.Cancel)
-        box.setDefaultButton(edit)
-        edit.setEnabled(self._writable() is not None)
-        run_modal(box)
-        if box.clickedButton() is edit:
-            self.edit_host(host)
-
-    def manual_connect(self) -> None:
-        connector = self.connector
-        dialog = ManualConnectDialog(self, connector.choices(), connector.default_profile())
-        if run_modal(dialog) == QDialog.DialogCode.Accepted:
-            connector.connect([dialog.request()])
-
-    # ---- connection profiles ----
-
-    def _profile_picker(self, host_list: HostList) -> ProfilePicker:
-        connector = self.connector
-        return ProfilePicker(
-            choices=connector.choices(),
-            inherited=lambda group_id: connector.inherited_label(
-                *host_list.group_profile(group_id or None, self._profile_exists)
-            ),
-            label=connector.label,
-        )
-
-    def _profile_exists(self, profile_id: str) -> bool:
-        """A profile this PC has: a host or group naming another one follows its group instead."""
-        return self.connector.catalogs.profiles.find(profile_id) is not None
-
-    def _add_profile_menu(
-        self, menu: QMenu, current: set[str], follow_text: str, apply: Callable[[str], None]
-    ) -> None:
-        """A "Connection profile" submenu: follow the group, or one of the profiles."""
-        submenu = menu.addMenu(_("Connection &profile"))
-        submenu.setEnabled(self._writable() is not None)
-        exclusive = QActionGroup(submenu)
-        choices = [("", follow_text), *self.connector.choices()]
-        if len(current) == 1 and next(iter(current)) not in dict(choices):
-            # Its own profile isn't on this PC: show it, checked, so it's clear why the group's
-            # profile doesn't apply.
-            own = next(iter(current))
-            choices.insert(1, (own, self.connector.label(own)))
-        for profile_id, text in choices:
-            item = submenu.addAction(text.replace("&", "&&"))
-            item.setCheckable(True)
-            item.setChecked(current == {profile_id})  # several hosts that differ: none checked
-            exclusive.addAction(item)
-            item.triggered.connect(lambda _checked=False, p=profile_id: apply(p))
-            if not profile_id:
-                submenu.addSeparator()
-
-    def import_hosts(self) -> None:
-        """Inventory > Import hosts…: many hosts at once; nothing is saved until Add."""
-        doc = self._writable()
-        if doc is None:
-            return
-        # Hosts without a group of their own get none, unless a group is picked.
-        dialog = ImportDialog(self, doc.hosts, self.nav.selected_group_id() or NO_GROUP)
-        new = dialog.imported_list() if run_modal(dialog) == QDialog.DialogCode.Accepted else None
-        if new is not None and self._commit(new):
-            added = dialog.added()
-            note = ngettext("Added {n} host.", "Added {n} hosts.", added).format(n=added)
-            self.statusBar().showMessage(note, 10_000)
-
-    def export_hosts(self) -> None:
-        """The toolbar's Report: pick hosts and columns, then save a CSV file or copy the
-        rows. Works on read-only lists too: it changes nothing."""
-        doc = self._doc
-        if doc is None or not doc.hosts.hosts:
-            return
-        sources, current = self._export_sources(doc.hosts)
-
-        def results(host_id: str) -> tuple[str, str]:
-            cells = self._cells(host_id)
-            return cells.status[0], cells.user[0]
-
-        def progress() -> tuple[int, int] | None:
-            return (self._run.done, self._run.total) if self._run is not None else None
-
-        dialog = ExportDialog(
-            self,
-            doc.hosts,
-            sources,
-            current,
-            list_name=doc.path.stem,
-            prefs=self._prefs,
-            save_prefs=self._save_prefs,
-            results=results,
-            refresh=lambda hosts, status, users: self.check_hosts(
-                hosts, status=status, users=users
-            ),
-            stop=self.stop_checks,
-            progress=progress,
-        )
-        self.checks_changed.connect(dialog.checks_changed)
-        try:
-            run_modal(dialog)
-        finally:
-            self.checks_changed.disconnect(dialog.checks_changed)
-        if dialog.outcome:
-            self.statusBar().showMessage(dialog.outcome, 10_000)
-
-    def _export_sources(self, host_list: HostList) -> tuple[list[Source], int]:
-        """What can be exported, and which one is shown now: the search's results, the hosts
-        picked, everything, no group, each group (with its subgroups) and each tag."""
-
-        def counted(name: str, n: int) -> str:
-            return ngettext("{name} ({n} host)", "{name} ({n} hosts)", n).format(name=name, n=n)
-
-        sources: list[Source] = []
-        current = self.nav.current_filter()
-        start = 0
-        if self._needle():
-            found = self._visible_hosts()
-            sources.append(Source(counted(_("Search results"), len(found)),
-                                  _("the search results"), found))  # fmt: skip
-        selected = self._selected_hosts()
-        if len(selected) > 1:
-            picked = tuple(selected)
-            sources.append(Source(counted(_("Selected hosts"), len(picked)),
-                                  _("the selected hosts"), picked))  # fmt: skip
-        every = host_list.hosts
-        sources.append(Source(counted(_("All hosts"), len(every)), _("All hosts"), every))
-        if not self._needle() and current.kind == "all":
-            start = len(sources) - 1
-        loose = tuple(h for h in every if h.group == NO_GROUP)
-        sources.append(Source(counted(_("No group"), len(loose)), _("No group"), loose))
-        if not self._needle() and current.kind == "nogroup":
-            start = len(sources) - 1
-
-        def visit(parent: str | None, depth: int) -> None:
-            nonlocal start
-            for group in host_list.children(parent):
-                hosts = host_list.hosts_in(group.id)
-                sources.append(Source(counted(group.name, len(hosts)), group.name, hosts, depth))
-                if not self._needle() and current.kind == "group" and current.value == group.id:
-                    start = len(sources) - 1
-                visit(group.id, depth + 1)
-
-        visit(None, 0)
-        for tag in sorted(host_list.all_tags(), key=str.casefold):
-            hosts = tuple(h for h in every if tag in h.tags)
-            name = _("tag “{tag}”").format(tag=tag)
-            sources.append(
-                Source(counted(_("Tag: {tag}").format(tag=tag), len(hosts)), name, hosts)
-            )
-            if not self._needle() and current.kind == "tag" and current.value == tag:
-                start = len(sources) - 1
-        return sources, start
-
-    def manage_groups(self) -> None:
-        """Inventory > Manage groups…: reorder and nest every group at once."""
-        doc = self._writable()
-        if doc is None:
-            return
-        dialog = ManageGroupsDialog(self, doc.hosts)
-        if run_modal(dialog) == QDialog.DialogCode.Accepted:
-            self._arrange(dialog.order())
-
-    def _groups_dragged(self) -> None:
-        self._arrange(self.nav.groups.order())
-
-    def _arrange(self, order: list[tuple[str, str | None]]) -> None:
-        doc = self._writable()
-        if doc is None:
-            return
-        try:
-            new = doc.hosts.arrange_groups(order)
-        except HostListRuleError as e:
-            self._error(str(e))
-            self._refresh()  # puts the tree back as it was
-            return
-        self._commit(new)
-
-    def move_group(self, group_id: str, parent: str | None) -> None:
-        """Into `parent`, or the top level (None), with everything inside it."""
-        doc = self._writable()
-        if doc is None:
-            return
-        try:
-            new = doc.hosts.move_group(group_id, parent)
-        except HostListRuleError as e:
-            self._error(str(e))
-            return
-        if new is not doc.hosts and self._commit(new):
-            self.nav.select_group(group_id)
-            self._show_hosts()
-
-    def move_hosts(self, host_ids: list[str], group_id: str) -> None:
-        """Hosts dragged onto a group, or moved with right-click > Move to (NO_GROUP: out of
-        every group)."""
-        doc = self._writable()
-        if doc is None or (group_id != NO_GROUP and doc.hosts.group(group_id) is None):
-            return
-        self._commit(doc.hosts.move_hosts(host_ids, group_id))
-
-    def set_group_profile(self, group_id: str, profile: str) -> None:
-        doc = self._writable()
-        if doc is not None and doc.hosts.group(group_id) is not None:
-            self._commit(doc.hosts.set_group_profile(group_id, profile))
-            self._selection_changed()
-
-    def forget_passwords(self) -> None:
-        self.connector.credentials.forget()
-        self._account = None
-        self.statusBar().showMessage(_("Typed passwords forgotten."), 5000)
-        self._update_state()
-
-    def _copy(self, value: Callable[[Host], str]) -> None:
-        hosts = self._selected_hosts()
-        if hosts:
-            QGuiApplication.clipboard().setText("\n".join(value(h) for h in hosts))
+    def _show_title(self, name: str) -> None:
+        app = f"CapyPanel {BUILD}"
+        self.setWindowTitle(f"{name} — {app}" if name else app)
 
     # ---- settings ----
 
-    def open_settings(self, page: str | None = None) -> None:
-        dialog = self.settings_dialog()
-        geometry = self._prefs.get("settings_geometry")
-        if isinstance(geometry, str):
-            dialog.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
-        if page:
-            dialog.show_page(page)
-        run_modal(dialog)
-        self._prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
-        self._save_prefs()
-
-    def _open_from_settings(self, dialog: SettingsDialog, path: Path) -> None:
-        """A list opened from Settings > Host lists: Settings then shows it as the open one."""
-        self.open_list(path)
-        dialog.list_opened(self._doc, self._start_view(), self._doc.hosts if self._doc else None)
-
     def settings_dialog(self) -> SettingsDialog:
         """Settings, wired up: every choice applies as it's made, with no Save."""
+        groups = [g for t in self.tools.values() if (g := t.settings_group()) is not None]
+        start = self.prefs.get(settings.START_KEY)
         dialog = SettingsDialog(
             self,
-            paths=self._paths,
-            start_list=self._prefs.get(locations.START_KEY, locations.START_LAST),
-            default_list=self._default_list,
-            personal_list=self._personal_list,
-            document=self._doc,
-            added=locations.added_lists(self._prefs),
-            found=self._found_lists(hidden=True),
-            hidden=locations.hidden_lists(self._prefs),
+            paths=self.paths,
             registry=self.registry,
-            catalogs=self.connector.catalogs,
-            auto_status=self._auto_status(),
-            start_view=self._start_view(),
-            host_list=self._doc.hosts if self._doc else None,
+            groups=groups,
+            tools=self._infos(),
+            start=start if isinstance(start, str) else settings.START_HOME,
         )
         dialog.language_picked.connect(self.set_language)
         dialog.theme_picked.connect(self.set_theme)
-        dialog.prefs_changed.connect(self.apply_prefs)
-        dialog.open_requested.connect(lambda path: self._open_from_settings(dialog, path))
-        dialog.profiles_changed.connect(self._selection_changed)  # Connect's menu follows
-        dialog.layout_reset_requested.connect(self.reset_layout)
+        dialog.start_picked.connect(self._set_start)
         return dialog
 
-    def _start_view(self) -> tuple[str, str] | None:
-        if self._doc is None:
-            return None
-        view = locations.list_view(self._prefs, self._doc.path)
-        return view.show, view.group
-
-    def apply_prefs(self, prefs: SettingsPrefs) -> None:
-        """A choice made in Settings, kept and applied at once."""
-        self._prefs[locations.START_KEY] = prefs.start_list
-        if prefs.start_view is not None and self._doc is not None:  # for the list open now
-            show, group = prefs.start_view
-            view = locations.list_view(self._prefs, self._doc.path)
-            locations.set_list_view(
-                self._prefs, self._doc.path, replace(view, show=show, group=group)
-            )
-        locations.set_added_lists(self._prefs, prefs.added_lists)
-        locations.set_hidden_lists(self._prefs, prefs.hidden_lists)
-        on, minutes = prefs.auto_status
-        self._prefs["auto_status"] = {"on": on, "minutes": minutes}
-        self._apply_auto_status()
-        self._save_prefs()
-        self._update_state()  # the list's name may change with the lists kept
+    def _set_start(self, start: str) -> None:
+        self.prefs[settings.START_KEY] = start
+        self.save_prefs()
 
     # ---- look ----
 
     def set_theme(self, theme_id: str) -> None:
         theme = self.registry.find(theme_id)
         themes.apply(theme)
-        self.toolbar.restyle()  # icon colour follows the theme
-        self._size_panes()  # the theme's font may be bigger
-        self._align_refresh_later()  # each theme pads the toolbar differently
-        self._prefs["theme"] = theme.id
-        self._save_prefs()
+        for tool in self.tools.values():
+            tool.restyle()  # icon colours, the font's size, the toolbar's padding
+        self.prefs["theme"] = theme.id
+        self.save_prefs()
         log.info("Theme: %s", theme.id)
 
     def set_language(self, code: str) -> None:
         """Switches live: Qt then sends every window a LanguageChange event (see changeEvent)."""
         code = language.apply(code)
-        self._prefs["language"] = code
-        self._save_prefs()
+        self.prefs["language"] = code
+        self.save_prefs()
         log.info("Language: %s", code)
 
     def changeEvent(self, event: QEvent) -> None:
@@ -1219,596 +329,54 @@ class MainWindow(QMainWindow):
     def retranslate(self) -> None:
         """Every text this window shows, in the current language."""
         self._retranslate_menus()
-        self.nav.retranslate()
-        self.table.retranslate()
-        self.details.retranslate()
-        self._refresh()  # rebuilds the lists ("All hosts"), details hint and status bar
+        self.home.retranslate()
+        for tool in self.tools.values():
+            tool.retranslate()
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         themes.paint_title_bar(self)  # the window handle only exists once it's shown
-        self._align_refresh_later()
-
-    # ---- showing ----
-
-    def _refresh(self) -> None:
-        self.nav.show_list(self._doc.hosts if self._doc else None)
-        editable = self._writable() is not None  # read-only lists can't be rearranged
-        self.nav.groups.set_editable(editable)
-        self.table.set_editable(editable)
-        self._show_hosts()
-
-    def _show_hosts(self) -> None:
-        self._search_timer.stop()
-        needle = self._needle()
-        hosts = self._visible_hosts()
-        self.nav.set_searching(bool(needle))
-        self.table.show_hosts(hosts, {h.id: self._cells(h.id) for h in hosts})
-        self.table.set_search(needle)
-
-    def _visible_hosts(self) -> tuple[Host, ...]:
-        """The hosts the table shows: the search's results, or the group or tag picked."""
-        if self._doc is None:
-            return ()
-        hosts, current = self._doc.hosts, self.nav.current_filter()
-        if needle := self._needle():
-            return tuple(h for h in hosts.hosts if self._matches(h, needle))
-        if current.kind == "group" and current.value:
-            return hosts.hosts_in(current.value)
-        if current.kind == "nogroup":
-            return tuple(h for h in hosts.hosts if h.group == NO_GROUP)
-        if current.kind == "tag":
-            return tuple(h for h in hosts.hosts if current.value in h.tags)
-        return hosts.hosts
-
-    # ---- searching ----
-
-    def _needle(self) -> str:
-        return self.search.text().strip().casefold()
-
-    def _matches(self, host: Host, needle: str) -> bool:
-        """The name, plus the address, users and tags when their columns show: only what can be
-        seen. Notes are the exception: they have no column, so they're always searched. Users
-        come from the last logged-on users check (memory only)."""
-        table = self.table
-        if needle in host.name.casefold() or needle in host.notes.casefold():
-            return True
-        if not table.isColumnHidden(table.ADDRESS) and needle in host.address.casefold():
-            return True
-        if not table.isColumnHidden(table.TAGS) and any(needle in t.casefold() for t in host.tags):
-            return True
-        if table.isColumnHidden(table.USER):
-            return False
-        sessions = (self._users_found.get(host.id) or ((), None, None))[0] or ()
-        return any(needle in check_texts.user_name(s).casefold() for s in sessions)
-
-    def _show_domains(self, shown: bool) -> None:
-        check_texts.show_domains(shown)
-        self._show_hosts()  # the User column, the search and the details pane
-
-    def _focus_search(self) -> None:
-        self.search.setFocus(Qt.FocusReason.ShortcutFocusReason)
-        self.search.selectAll()
-
-    def _clear_search(self) -> None:
-        self.search.blockSignals(True)  # the caller shows the hosts once, right after
-        self.search.clear()
-        self.search.blockSignals(False)
-
-    def _filter_picked(self) -> None:
-        """Picking a group or tag on the left ends a search: it means browsing again."""
-        self._clear_search()
-        self._show_hosts()
-
-    def _end_search(self) -> None:
-        if self.search.text():
-            self._clear_search()
-            self._show_hosts()  # back to the group or tag picked before, selection kept
-
-    def _columns_shown(self) -> None:
-        table = self.table
-        self.search.set_columns(
-            *(not table.isColumnHidden(c) for c in (table.ADDRESS, table.USER, table.TAGS))
-        )
-        if self._needle():
-            self._show_hosts()
-
-    def _to_results(self) -> None:
-        """Down or Enter in the search box: the first result gets the focus, never a connection."""
-        first = self.table.topLevelItem(0)
-        if first is not None:
-            self.table.setCurrentItem(first)
-            self.table.setFocus(Qt.FocusReason.TabFocusReason)
-
-    def _selected_hosts(self) -> list[Host]:
-        if self._doc is None:
-            return []
-        found = (self._doc.hosts.host(i) for i in self.table.selected_ids())
-        return [h for h in found if h is not None]
-
-    def _selection_changed(self) -> None:
-        hosts = self._selected_hosts()
-        if len(hosts) == 1 and self._doc is not None:
-            host_list, host = self._doc.hosts, hosts[0]
-            status = self._status_found.get(host.id)
-            details = HostDetails(
-                host,
-                group_path(host_list, host.group),
-                self.connector.label(host_list.profile_of(host, self._profile_exists)[0]),
-                status=(status[0], status[1]) if status else None,
-                users=self._users_found.get(host.id),
-            )
-            self.details.show_host(details, 1, needle=self._needle())
-        else:
-            self.details.show_host(None, len(hosts), summary=self._summary())
-        self._update_state()
-
-    def _summary(self) -> str:
-        """With nothing selected, the details pane sums up the hosts shown."""
-        items = (self.table.topLevelItem(i) for i in range(self.table.topLevelItemCount()))
-        shown = [item.data(0, ROLE_ID) for item in items if item is not None]
-        if not shown:
-            return ""
-        counts: dict[Status | None, int] = {}
-        for host_id in shown:
-            state = found[0] if (found := self._status_found.get(host_id)) else None
-            counts[state] = counts.get(state, 0) + 1
-        lines = [ngettext("{n} host shown", "{n} hosts shown", len(shown)).format(n=len(shown))]
-        texts: tuple[tuple[Status | None, Callable[[int], str]], ...] = (
-            (Status.ONLINE, lambda n: ngettext("{n} online", "{n} online", n)),
-            (Status.OFFLINE, lambda n: ngettext("{n} offline", "{n} offline", n)),
-            (Status.NOT_FOUND, lambda n: ngettext("{n} not found", "{n} not found", n)),
-            (None, lambda n: ngettext("{n} not checked", "{n} not checked", n)),
-        )  # literal texts, so the translation script finds them
-        for state, text in texts:
-            if n := counts.get(state, 0):
-                lines.append(text(n).format(n=n))
-        return "\n".join(lines)
-
-    def _update_state(self) -> None:
-        doc = self._doc
-        writable = doc is not None and not doc.read_only
-        selected = len(self.table.selected_ids())
-        group_picked = self.nav.selected_group_id() is not None
-        a = self.commands
-        a.add_host.setEnabled(writable)
-        a.add_group.setEnabled(writable)
-        a.import_hosts.setEnabled(writable)
-        a.export_hosts.setEnabled(doc is not None and bool(doc.hosts.hosts))  # read-only too
-        self.nav.add_group_button.setEnabled(writable)
-        a.edit.setEnabled(writable and (selected == 1 or group_picked))
-        a.remove.setEnabled(writable and (selected > 0 or group_picked))
-        for action in (a.connect_host, a.copy_address):
-            action.setEnabled(selected > 0)  # read-only lists can still connect
-        for action in (a.check_status, a.check_users):
-            action.setEnabled(selected > 0 and self._run is None)  # one Refresh at a time
-        shown = self.table.topLevelItemCount() > 0
-        for action in (self.toolbar.refresh_status, self.toolbar.refresh_users):
-            action.setEnabled(shown and self._run is None)
-        a.forget_passwords.setEnabled(bool(self.connector.credentials) or bool(self._account))
-        if doc is None:
-            self.setWindowTitle(f"CapyPanel {BUILD}")
-            self._list_label.setText(_("No host list is open."))
-            self.list_picker.setText(_("No list open"))
-            return
-        name = self._list_name(doc.path)
-        self.setWindowTitle(f"{name} — CapyPanel {BUILD}")
-        self.list_picker.setText(name)
-        self.list_picker.setToolTip(str(doc.path))
-        total = len(doc.hosts.hosts)
-        parts = [
-            f"{self._kind_label(self._kind(doc.path))} — {doc.path}",
-            ngettext("{n} host", "{n} hosts", total).format(n=total),
-            ngettext("{n} selected", "{n} selected", selected).format(n=selected),
-        ]
-        # Hosts still in the list: a removed host's result stays in memory.
-        found = (self._status_found.get(h.id) for h in doc.hosts.hosts)
-        online = sum(1 for f in found if f is not None and f[0] is Status.ONLINE)
-        if self._status_found:  # once anything was checked; results are this list's only
-            parts.insert(2, ngettext("{n} online", "{n} online", online).format(n=online))
-        if self._needle():
-            found = self.table.topLevelItemCount()
-            parts.insert(-1, ngettext("{n} found", "{n} found", found).format(n=found))
-        if doc.read_only:
-            parts.append(_("read-only"))
-        if self._paths.portable:
-            parts.append(_("portable mode"))
-        self._list_label.setText(" · ".join(parts))
-
-    # ---- Refresh: status and logged-on users ----
-
-    def check_hosts(self, hosts: Sequence[Host], *, status: bool, users: bool) -> None:
-        if self._run is not None or not (status or users):
-            return
-        targets = [(h.id, h.connect_address) for h in hosts if h.connect_address]
-        skipped = len(hosts) - len(targets)
-        if skipped:
-            note = ngettext(
-                "{n} host has no address and was skipped.",
-                "{n} hosts have no address and were skipped.",
-                skipped,
-            )
-            self.statusBar().showMessage(note.format(n=skipped), 10_000)
-        if (
-            users
-            and len(targets) > MANY_USER_CHECKS
-            and not confirm(
-                self,
-                _("Refresh logged-on users"),
-                _("Check who is logged on to {n} hosts?").format(n=len(targets)),
-                _("Refresh"),
-            )
-        ):
-            return
-        if targets:
-            wanted = Checks(status, users, self._ports(), self._account if users else None)
-            self._start(targets, wanted)
-
-    def _auto_status(self) -> tuple[bool, int]:
-        saved = self._prefs.get("auto_status")
-        saved = saved if isinstance(saved, dict) else {}
-        minutes = saved.get("minutes", 5)
-        minutes = minutes if isinstance(minutes, int) and 1 <= minutes <= 120 else 5
-        return saved.get("on") is True, minutes
-
-    def _apply_auto_status(self) -> None:
-        on, minutes = self._auto_status()
-        if on:
-            self._auto_timer.start(minutes * 60_000)
-        else:
-            self._auto_timer.stop()
-
-    def _auto_status_check(self) -> None:
-        """Status only (ping and ports) on the hosts shown; skipped while a Refresh runs."""
-        hosts = self._visible_hosts()
-        if self._run is None and hosts:
-            self.check_hosts(hosts, status=True, users=False)
-
-    def _start(self, targets: list[tuple[str, str]], wanted: Checks) -> None:
-        run = CheckRun(targets, wanted)
-        run.found.connect(self._found)
-        run.finished.connect(self._run_finished)
-        self._run, self._refused, self._reported = run, [], set()
-        self._targets = targets
-        self._show_progress()
-        self._stop_button.setEnabled(True)
-        self._update_state()
-        self.checks_changed.emit()
-        log.info(
-            "Refresh: %d hosts (status=%s, users=%s, account=%s)",
-            len(targets), wanted.status, wanted.users, "typed" if wanted.account else "Windows",
-        )  # fmt: skip
-        run.start()
-
-    def stop_checks(self) -> None:
-        if self._run is not None:
-            self._run.stop()
-            self._stop_button.setEnabled(False)  # hosts already being read still finish
-
-    def _found(self, host_id: str, found: Found) -> None:
-        run = self._run
-        if run is None:
-            return
-        run.done += 1
-        self._reported.add(host_id)
-        if found.status is not None:
-            self._status_found[host_id] = (found.status, found.when, found.answered)
-        if run.wanted.users and (found.sessions is not None or found.users_error is not None):
-            self._users_found[host_id] = (found.sessions, found.users_error, found.when)
-            error = found.users_error
-            if error is not None and error.reason in (Reason.NOT_ADMIN, Reason.REJECTED):
-                self._refused.append(host_id)
-        self.table.show_cells(host_id, self._cells(host_id))
-        if self.table.selected_ids() in ([host_id], []):  # its details, or the summary
-            self._selection_changed()
-        else:
-            self._update_state()  # the online count
-        self._show_progress()
-        self.checks_changed.emit()
-
-    def _show_progress(self) -> None:
-        run = self._run
-        if run is not None:
-            self._progress.setText(
-                _("Checking {done} of {total}…").format(done=run.done, total=run.total)
-            )
-        self._progress.setVisible(run is not None)
-        self._stop_button.setVisible(run is not None)
-
-    def _run_finished(self) -> None:
-        run = self._run
-        if run is None:
-            return
-        self._run = None
-        self._show_progress()
-        self._update_state()
-        self.checks_changed.emit()
-        if run.stopped and run.done < run.total:
-            left = run.total - run.done
-            note = ngettext(
-                "Stopped: {n} host wasn't checked.", "Stopped: {n} hosts weren't checked.", left
-            )
-            self.statusBar().showMessage(note.format(n=left), 10_000)
-        else:
-            self.statusBar().showMessage(
-                ngettext("Checked {n} host.", "Checked {n} hosts.", run.done).format(n=run.done),
-                5000,
-            )
-        if run.wanted.users and (self._refused or run.halted):
-            self._ask_account(run)
-
-    def _ask_account(self, run: CheckRun) -> None:
-        """A host didn't let the account read who is logged on: offer another, once per run."""
-        account = run.wanted.account
-        first = self._name_of(self._refused[-1]) if self._refused else ""
-        if run.halted and account is not None:
-            text = _(
-                "“{host}” rejected the account “{user}”, so CapyPanel stopped before trying it "
-                "on other computers. Type the password again, or use another account."
-            ).format(host=first, user=account.user)
-        elif account is None:
-            text = ngettext(
-                "{n} computer didn't let your Windows account see who is logged on. Use another "
-                "account, such as an administrator of those computers?",
-                "{n} computers didn't let your Windows account see who is logged on. Use another "
-                "account, such as an administrator of those computers?",
-                len(self._refused),
-            ).format(n=len(self._refused))
-        else:
-            text = ngettext(
-                "{n} computer didn't let “{user}” see who is logged on. Use another account?",
-                "{n} computers didn't let “{user}” see who is logged on. Use another account?",
-                len(self._refused),
-            ).format(n=len(self._refused), user=account.user)
-        dialog = AccountDialog(self, text, account.user if account else "")
-        if run_modal(dialog) != QDialog.DialogCode.Accepted:
-            return
-        self._account = dialog.account()
-        # Again: the hosts that refused, and those a rejection kept from being tried.
-        again = [t for t in self._targets if t[0] in self._refused or t[0] not in self._reported]
-        if again:
-            self._start(again, Checks(False, True, run.wanted.ports, self._account))
-
-    def _name_of(self, host_id: str) -> str:
-        host = self._doc.hosts.host(host_id) if self._doc else None
-        return host.name if host else host_id
-
-    def _ports(self) -> tuple[int, ...]:
-        """The ports CapyPanel's tools connect to: one answering proves the computer is on."""
-        return checks.tool_ports(e.item.port for e in self.connector.catalogs.tools.all())
-
-    def _cells(self, host_id: str) -> Cells:
-        status = self._status_found.get(host_id)
-        users = self._users_found.get(host_id)
-        unchecked = ("", _("Not checked: use Refresh"), None, True)
-        status_cell: tuple[str, str, Any, bool] = unchecked
-        if status is not None:
-            state, when, answered = status
-            status_cell = (
-                check_texts.status_text(state),
-                check_texts.status_tip(state, when, answered),
-                dot_icon(STATUS_COLORS[state]),
-                state is not Status.ONLINE,
-            )
-        user_cell: tuple[str, str, Any, bool] = unchecked
-        if users is not None:
-            found, error, when = users
-            text, tip = check_texts.users_text(found, error), check_texts.users_tip(error, when)
-            if found:  # every name, when the column is too narrow; always with the domain
-                tip = f"{check_texts.users_text(found, error, full=True)}\n{tip}"
-            user_cell = (text, tip, None, error is not None or not found)
-        return Cells(status_cell, user_cell)
-
-    def _show_refresh_panel(self, where: QPoint) -> None:
-        panel = self.refresh_panel
-        panel.run_button.setEnabled(self._run is None)
-        panel.adjustSize()
-        panel.move(where)
-        panel.show()
-
-    def _refresh_shown(self, status: bool, users: bool) -> None:
-        """Refresh: every host the table shows (the search's results, or the group or tag)."""
-        self.check_hosts(self._visible_hosts(), status=status, users=users)
-
-    def _run_refresh_panel(self) -> None:
-        choices = self.refresh_panel.choices()
-        self._prefs["refresh"] = choices
-        self._save_prefs()
-        self.check_hosts(self._visible_hosts(), status=choices["status"], users=choices["users"])
-
-    def _show_tool(self, tool: str) -> None:
-        """The rail and View > tools agree on the tool shown (Hosts is the only one for now)."""
-        self.commands.show_hosts.setChecked(tool == "hosts")
-        self.rail.hosts_button.setChecked(tool == "hosts")
-
-    def _fill_connect_menu(self) -> None:
-        """The toolbar's Connect: connect the selection, or once with another profile, then the
-        connection commands that aren't about the selection."""
-        a = self.commands
-        menu = self.toolbar.connect_menu
-        menu.clear()
-        menu.addAction(a.connect_host)  # each host's own profile, as Enter does
-        menu.setDefaultAction(a.connect_host)
-        for profile_id, name in self.connector.choices():
-            item = menu.addAction(
-                _("Connect with {profile}").format(profile=name.replace("&", "&&"))
-            )
-            item.setEnabled(bool(self.table.selected_ids()))
-            item.triggered.connect(lambda _c=False, p=profile_id: self.connect_selected(p))
-        menu.addSeparator()
-        menu.addActions([a.manual_connect, a.connection_profiles, a.forget_passwords])
-
-    def _save_columns(self) -> None:
-        self._prefs["hidden_columns"] = self.table.hidden_columns()
-        self._save_prefs()
-
-    def _align_refresh_later(self) -> None:
-        # Tied to this window, so a call still pending when it closes is dropped, not run.
-        QTimer.singleShot(0, self, self._align_refresh)  # once the panes have their new sizes
-
-    def _align_refresh(self) -> None:
-        if self.toolbar.isVisible():
-            left = self._splitter.mapTo(self, QPoint(0, 0)).x()
-            start = self.toolbar.mapTo(self, QPoint(0, 0)).x()
-            self.toolbar.align(left - start)
+        self._align_toolbar()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
-        self._align_refresh_later()
-
-    # ---- right-click menus ----
-
-    def _host_menu(self, position: QPoint) -> None:
-        a = self.commands
-        menu = QMenu(self)
-        if self.table.itemAt(position) is None:  # empty space: what can be added here
-            self.table.clearSelection()
-            menu.addActions([a.add_host, a.add_group])
-            popup(menu, self.table.viewport().mapToGlobal(position))
-            return
-        # Use first, then copy, then managing the host: edit, move, remove.
-        menu.addAction(a.connect_host)
-        menu.setDefaultAction(a.connect_host)  # bold: what double-click and Enter do
-        menu.addSeparator()
-        menu.addActions([a.check_status, a.check_users])
-        menu.addSeparator()
-        self._add_copy_menu(menu)
-        menu.addSeparator()
-        menu.addAction(a.edit)
-        hosts = self._selected_hosts()
-        if hosts and self._doc is not None:
-            self._add_hosts_move_menu(menu, hosts)
-        menu.addAction(a.remove)
-        popup(menu, self.table.viewport().mapToGlobal(position))
-
-    def _add_copy_menu(self, menu: QMenu) -> None:
-        """Copy ▸ every column the table shows, one line per selected host. Wherever the menu
-        was opened (also from the keyboard), the same items. Address keeps Ctrl+Shift+C."""
-        copy = menu.addMenu(_("Co&py"))
-        rows = sorted(self.table.selectedItems(), key=self.table.indexOfTopLevelItem)
-        for column, key in enumerate(HostTable.COLUMNS):
-            if self.table.isColumnHidden(column):
-                continue
-            if key == "address":
-                copy.addAction(self.commands.copy_address)
-                continue
-            item = copy.addAction(self.table.headerItem().text(column))
-            item.triggered.connect(
-                lambda _c=False, n=column: QGuiApplication.clipboard().setText(
-                    "\n".join(r.text(n) for r in rows)
-                )
-            )
-
-    def _add_hosts_move_menu(self, menu: QMenu, hosts: list[Host]) -> None:
-        """Move to: "No group", then the groups as a tree; where they all are is ticked."""
-        assert self._doc is not None
-        move = TreeMenu(_("&Move to"), menu)
-        menu.addMenu(move)
-        move.setEnabled(self._writable() is not None)
-        ids = [h.id for h in hosts]
-        places = {h.group for h in hosts}
-        current = places.pop() if len(places) == 1 else None
-        fill_host_move_menu(
-            move, self._doc.hosts, lambda g: self.move_hosts(ids, g), current=current
-        )
-
-    def _heading_menu(self, position: QPoint) -> None:
-        menu = QMenu(self)
-        self._add_top_group_item(menu)
-        menu.addAction(self.commands.manage_groups)
-        popup(menu, self.nav.groups_heading.mapToGlobal(position))
-
-    def _add_top_group_item(self, menu: QMenu) -> None:
-        # Not the Add group command: that one adds inside the picked group.
-        item = menu.addAction(self.commands.add_group.text())
-        item.setEnabled(self._writable() is not None)
-        item.triggered.connect(self.add_top_group)
-
-    def _group_menu(self, position: QPoint) -> None:
-        menu = QMenu(self)
-        # Only the group under the mouse: empty space never acts on the one picked before.
-        group_id = self.nav.group_at(position)
-        if group_id is None:
-            self._add_top_group_item(menu)
-            menu.addAction(self.commands.manage_groups)
-            popup(menu, self.nav.groups.viewport().mapToGlobal(position))
-            return
-        self.nav.select_group(group_id)
-        menu.addAction(self.commands.add_group)  # inside the group under the mouse
-        group = self._doc.hosts.group(group_id) if self._doc else None
-        if group is not None and self._doc is not None:
-            menu.addSeparator()
-            follow = self.connector.inherited_label(
-                *self._doc.hosts.group_profile(group.parent, self._profile_exists)
-            )
-            self._add_profile_menu(
-                menu, {group.profile}, follow, lambda p: self.set_group_profile(group.id, p)
-            )
-            # The group's hosts, including those in the groups inside it.
-            hosts = list(self._doc.hosts.hosts_in(group.id))
-            menu.addSeparator()
-            for text, status, users in (
-                (_("Refresh &status"), True, False),
-                (_("Refresh &logged-on users"), False, True),
-            ):
-                item = menu.addAction(text)
-                item.setEnabled(bool(hosts) and self._run is None)
-                item.triggered.connect(
-                    lambda _c=False, s=status, u=users: self.check_hosts(hosts, status=s, users=u)
-                )
-            menu.addSeparator()
-            view = locations.list_view(self._prefs, self._doc.path)
-            first = menu.addAction(_("Show this group &first"))
-            first.setToolTip(_("The list opens on this group"))
-            first.setCheckable(True)
-            first.setChecked(view.show == locations.SHOW_GROUP and view.group == group.id)
-            first.toggled.connect(lambda on: self.set_first_group(group.id, on))
-            menu.addSeparator()  # managing it, in the host menu's order: edit, move, remove
-            menu.addAction(self.commands.edit)
-            move = TreeMenu(_("&Move to"), menu)
-            menu.addMenu(move)
-            move.setEnabled(self._writable() is not None)
-            fill_move_menu(move, self._doc.hosts, group.id, lambda p: self.move_group(group.id, p))
-            menu.addAction(self.commands.remove)
-        popup(menu, self.nav.groups.viewport().mapToGlobal(position))
-
-    # ---- helpers ----
-
-    def _writable(self) -> OpenList | None:
-        return self._doc if self._doc is not None and not self._doc.read_only else None
-
-    def _kind(self, path: Path) -> ListKind:
-        return locations.list_kind(path, default=self._default_list, personal=self._personal_list)
-
-    @staticmethod
-    def _kind_label(kind: ListKind) -> str:
-        return {
-            ListKind.DEFAULT: _("Default"),
-            ListKind.PERSONAL: _("Personal"),
-            ListKind.SHARED: _("Shared"),
-        }[kind]
-
-    def _error(self, message: str, quiet: bool = False) -> None:
-        log.warning("%s", message)
-        if quiet:
-            self.statusBar().showMessage(message, 10_000)
-        else:
-            QMessageBox.warning(self, "CapyPanel", message)
-
-    def _save_prefs(self) -> None:
-        try:
-            settings.save_settings(self._paths.settings_file, self._prefs)
-        except OSError:
-            log.exception("Couldn't save settings")
+        self._align_toolbar()
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        self._prefs["window_geometry"] = self.saveGeometry().toBase64().toStdString()
-        self._prefs["main_splitter"] = self._splitter.saveState().toBase64().toStdString()
-        if self._run is not None:
-            self._run.stop()  # hosts already being read finish in the background
-        self._prefs["refresh"] = self.refresh_panel.choices()
-        self._prefs["view"] = {k: a.isChecked() for k, a in self._view_choices().items()}
-        self._prefs["column_widths"] = self.table.widths()
-        self._remember_view()
-        self._save_prefs()
+        self.prefs["window_geometry"] = self.saveGeometry().toBase64().toStdString()
+        for tool in self.tools.values():
+            tool.save_state()
+        self.prefs["view"] = {k: a.isChecked() for k, a in self._view_choices().items()}
+        self.save_prefs()
         super().closeEvent(event)
+
+
+class _StatusGroup(QWidget):
+    """A tool's widgets on the status bar's right. Shown only while its tool is and one of them
+    is: an empty group would still draw a separator line in some themes."""
+
+    def __init__(self, widgets: list[QWidget]) -> None:
+        super().__init__()
+        self._widgets = widgets
+        self._shown = True
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(6)
+        for widget in widgets:
+            row.addWidget(widget)
+            widget.installEventFilter(self)
+            # As tall as they are even while hidden, so the bar never changes height.
+            self.setMinimumHeight(max(self.minimumHeight(), widget.sizeHint().height()))
+        self._update()
+
+    def set_shown(self, shown: bool) -> None:
+        self._shown = shown
+        self._update()
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() in (QEvent.Type.ShowToParent, QEvent.Type.HideToParent):
+            self._update()
+        return False
+
+    def _update(self) -> None:
+        self.setVisible(self._shown and any(not w.isHidden() for w in self._widgets))

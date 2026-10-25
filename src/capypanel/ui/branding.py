@@ -10,9 +10,9 @@ from PySide6.QtGui import QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 
 log = logging.getLogger(__name__)
+APP_ID = "CapyPanel.CapyPanel"
 BRANDING_DIR = Path(__file__).resolve().parent / "branding"
 ICON_SIZES = (16, 20, 24, 32, 40, 48, 64, 128, 256)  # drawn for each size, not scaled down
-APP_ID = "CapyPanel.CapyPanel"
 
 
 def app_icon() -> QIcon:

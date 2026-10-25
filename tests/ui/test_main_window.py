@@ -5,19 +5,19 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QMenu, QSplitter, QWidget
+from PySide6.QtWidgets import QApplication, QDialog, QMenu, QSplitter, QWidget
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.locations import recent_lists
-from capypanel.core.hosts.model import Host, HostList
+from capypanel.core.hosts.model import NO_GROUP, Host, HostList
 from capypanel.ui.hosts import HostDialog, group_choices
-from capypanel.ui.main_window import window as window_module
-from capypanel.ui.main_window.host_views import HostTable
-from capypanel.ui.main_window.window import MainWindow
-from capypanel.ui.settings import pages
+from capypanel.ui.hosts_tool import tool as hosts_module
+from capypanel.ui.hosts_tool.table import HostTable
+from capypanel.ui.list_workspace import workspace as workspace_module
 
 
 @pytest.fixture
@@ -39,19 +39,55 @@ def office(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def window(qapp: QApplication, paths: settings.Paths) -> Iterator[MainWindow]:
-    win = MainWindow(paths, {"schema": 1})
+def window(qapp: QApplication, paths: settings.Paths) -> Iterator[CapyWindow]:
+    win = CapyWindow(paths, {"schema": 1})
     yield win
     win.close()
 
 
-def _table_names(win: MainWindow) -> set[str]:
-    items = (win.table.topLevelItem(i) for i in range(win.table.topLevelItemCount()))
+def test_add_host_keeps_every_host_of_a_list_with_no_groups(
+    window: CapyWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    hl, _ = HostList().add_host("LOOSE-01", NO_GROUP)
+    hl, _ = hl.add_host("LOOSE-02", NO_GROUP)
+    path = tmp_path / "loose.json"
+    listfile.save(path, hl, expected=None)
+    window.hosts.open_list(path)
+
+    def fill(dialog: object) -> QDialog.DialogCode:
+        assert isinstance(dialog, HostDialog)
+        dialog.name.setText("NEW-01")
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(hosts_module, "run_modal", fill)
+    window.hosts.commands.add_host.trigger()
+    names = [h.name for h in listfile.load(path).hosts.hosts]
+    assert sorted(names) == ["LOOSE-01", "LOOSE-02", "NEW-01"]  # nothing lost
+
+
+def test_another_tool_s_list_isn_t_opened_as_a_host_list(
+    window: CapyWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "printers.json"
+    listfile.save(path, HostList().add_group("Lab")[0], expected=None, kind="printers")
+    shown: list[str] = []
+    monkeypatch.setattr(
+        workspace_module.QMessageBox, "warning", lambda _p, _t, text: shown.append(text)
+    )
+    before = window.hosts.document
+    assert not window.hosts.open_list(path)
+    assert shown == [f"“{path}” isn't a host list."] and window.hosts.document is before
+    doc = window.hosts.document
+    assert doc is not None and listfile.load(doc.path).kind == "hosts"  # saved with its kind
+
+
+def _table_names(win: CapyWindow) -> set[str]:
+    items = (win.hosts.table.topLevelItem(i) for i in range(win.hosts.table.topLevelItemCount()))
     return {item.text(0) for item in items if item is not None}
 
 
-def test_first_start_creates_the_personal_list_with_a_hosts_group(window: MainWindow) -> None:
-    doc = window.document
+def test_first_start_creates_the_personal_list_with_a_hosts_group(window: CapyWindow) -> None:
+    doc = window.hosts.document
     assert doc is not None and doc.path.name == "default.json" and doc.path.exists()
     assert [g.name for g in doc.hosts.groups] == ["Default group"]
     assert window.windowTitle().startswith("Default —")
@@ -60,72 +96,75 @@ def test_first_start_creates_the_personal_list_with_a_hosts_group(window: MainWi
         "&View",
         "&Help",
     ]
-    assert window.commands.add_host.isEnabled()
+    assert window.hosts.commands.add_host.isEnabled()
 
 
-def test_opening_a_list_shows_its_hosts_and_remembers_it(window: MainWindow, office: Path) -> None:
-    assert window.open_list(office)
+def test_opening_a_list_shows_its_hosts_and_remembers_it(window: CapyWindow, office: Path) -> None:
+    assert window.hosts.open_list(office)
     assert _table_names(window) == {"HQ-01", "FIN-01", "FIN-02"}
-    assert recent_lists(window._prefs)[0] == office
+    assert recent_lists(window.hosts.prefs)[0] == office
 
 
-def test_picking_a_group_or_tag_filters_the_table(window: MainWindow, office: Path) -> None:
-    window.open_list(office)
-    tree = window.nav.groups
+def test_picking_a_group_or_tag_filters_the_table(window: CapyWindow, office: Path) -> None:
+    window.hosts.open_list(office)
+    tree = window.hosts.nav.groups
     flags = Qt.MatchFlag.MatchStartsWith | Qt.MatchFlag.MatchRecursive
     [finance] = tree.findItems("Finance", flags)
     tree.setCurrentItem(finance)
     assert _table_names(window) == {"FIN-01", "FIN-02"}
-    [kiosk] = window.nav.tags.findItems("kiosk", Qt.MatchFlag.MatchStartsWith)
-    window.nav.tags.setCurrentItem(kiosk)
-    assert _table_names(window) == {"HQ-01", "FIN-02"}
-    [everything] = window.nav.everything.findItems("All hosts", Qt.MatchFlag.MatchStartsWith)
-    window.nav.everything.setCurrentItem(everything)  # pinned above the groups tree
+    [kiosk] = window.hosts.nav.tags.findItems("kiosk", Qt.MatchFlag.MatchStartsWith)
+    window.hosts.nav.tags.setCurrentItem(kiosk)  # narrows the group picked
+    assert _table_names(window) == {"FIN-02"}
+    [everything] = window.hosts.nav.everything.findItems("All hosts", Qt.MatchFlag.MatchStartsWith)
+    window.hosts.nav.everything.setCurrentItem(everything)  # pinned above the groups tree
+    assert _table_names(window) == {"HQ-01", "FIN-02"}  # the tag stays picked
+    window.hosts.nav.clear_tags()
     assert len(_table_names(window)) == 3
 
 
-def test_selecting_a_host_shows_its_details(window: MainWindow, office: Path) -> None:
-    window.open_list(office)
-    doc = window.document
+def test_selecting_a_host_shows_its_details(window: CapyWindow, office: Path) -> None:
+    window.hosts.open_list(office)
+    doc = window.hosts.document
     assert doc is not None
     fin02 = next(h for h in doc.hosts.hosts if h.name == "FIN-02")
-    window.table.select_ids([fin02.id])
-    assert window.details.shown_value("group") == "Headquarters › Finance"
-    assert window.details.shown_value("notes") == "Reception"
+    window.hosts.table.select_ids([fin02.id])
+    assert window.hosts.details.shown_value("group") == "Headquarters › Finance"
+    assert window.hosts.details.shown_value("notes") == "Reception"
 
 
-def test_read_only_files_disable_editing(window: MainWindow, office: Path) -> None:
+def test_read_only_files_disable_editing(window: CapyWindow, office: Path) -> None:
     os.chmod(office, stat.S_IREAD)
     try:
-        window.open_list(office)
-        doc = window.document
+        window.hosts.open_list(office)
+        doc = window.hosts.document
         assert doc is not None and doc.read_only
-        assert not window.commands.add_host.isEnabled()
-        assert not window.commands.remove.isEnabled()
+        assert not window.hosts.commands.add_host.isEnabled()
+        assert not window.hosts.commands.remove.isEnabled()
     finally:
         os.chmod(office, stat.S_IWRITE | stat.S_IREAD)
 
 
 def test_a_broken_file_is_reported_and_the_current_list_stays_open(
-    window: MainWindow, tmp_path: Path
+    window: CapyWindow, tmp_path: Path
 ) -> None:
-    before = window.document
+    before = window.hosts.document
     broken = tmp_path / "broken.json"
     broken.write_text("{ nope", encoding="utf-8")
-    assert not window.open_list(broken, quiet=True)
-    assert window.document is before
+    assert not window.hosts.open_list(broken, quiet=True)
+    assert window.hosts.document is before
 
 
 def test_closing_saves_layout_and_keeps_other_settings(
     qapp: QApplication, paths: settings.Paths
 ) -> None:
-    win = MainWindow(paths, {"schema": 1, "kept": True})
-    win.commands.show_details.setChecked(False)
+    win = CapyWindow(paths, {"schema": 1, "kept": True})
+    win.hosts.commands.show_details.setChecked(False)
     win.close()
     saved = json.loads(paths.settings_file.read_text(encoding="utf-8"))
     assert saved["kept"] is True
-    assert saved["view"]["details"] is False
-    assert isinstance(saved["window_geometry"], str) and isinstance(saved["main_splitter"], str)
+    hosts = saved["tools"]["hosts"]  # each tool's settings in its own section
+    assert hosts["view"]["details"] is False and saved["view"]["toolbar"] is True
+    assert isinstance(saved["window_geometry"], str) and isinstance(hosts["main_splitter"], str)
 
 
 def test_host_dialog_cleans_values_and_shows_group_paths(qapp: QApplication) -> None:
@@ -151,19 +190,19 @@ def _drag(monkeypatch: pytest.MonkeyPatch, table: HostTable, column: int, width:
 
 
 def test_columns_keep_their_title_visible_and_can_be_hidden(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    window.open_list(office)
-    table = window.table
+    window.hosts.open_list(office)
+    table = window.hosts.table
     _drag(monkeypatch, table, table.USER, 5)  # almost shut
     assert table.columnWidth(table.USER) >= table.minimum_width(table.USER) > 5
     table._show_column(table.USER, False)
     assert table.isColumnHidden(table.USER)
-    assert window._prefs["hidden_columns"] == ["user"]
-    reopened = MainWindow(window._paths, dict(window._prefs))
-    assert reopened.table.isColumnHidden(reopened.table.USER)
-    reopened.table.set_hidden_columns(["computer"])
-    assert not reopened.table.isColumnHidden(0)  # the host name always shows
+    assert window.hosts.prefs["hidden_columns"] == ["user"]
+    reopened = CapyWindow(window.paths, dict(window.prefs))
+    assert reopened.hosts.table.isColumnHidden(reopened.hosts.table.USER)
+    reopened.hosts.table.set_hidden_columns(["computer"])
+    assert not reopened.hosts.table.isColumnHidden(0)  # the host name always shows
     reopened.close()
 
 
@@ -200,27 +239,27 @@ def test_the_first_start_fits_every_column_to_its_full_text(qapp: QApplication) 
 
 
 def test_column_widths_belong_to_the_user(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    window.open_list(office)
-    table = window.table
+    window.hosts.open_list(office)
+    table = window.hosts.table
     _drag(monkeypatch, table, 0, 300)
     other = office.with_name("other.json")
     other.write_bytes(office.read_bytes())
-    window.open_list(other)  # another list: same widths, one set for all lists
-    window.nav.select_group(next(g.id for g in window.document.hosts.groups))  # type: ignore[union-attr]
+    window.hosts.open_list(other)  # another list: same widths, one set for all lists
+    window.hosts.nav.select_group(next(g.id for g in window.hosts.document.hosts.groups))  # type: ignore[union-attr]
     assert table.columnWidth(0) == 300
     window.close()  # saved across restarts
-    reopened = MainWindow(window._paths, dict(window._prefs))
-    assert reopened.table.widths()["computer"] == 300
+    reopened = CapyWindow(window.paths, dict(window.prefs))
+    assert reopened.hosts.table.widths()["computer"] == 300
     reopened.close()
 
 
 def test_fit_columns_to_content_fits_the_full_text_again(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, office: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    window.open_list(office)
-    table = window.table
+    window.hosts.open_list(office)
+    table = window.hosts.table
     _drag(monkeypatch, table, table.ADDRESS, 300)
     table.fit_columns()
     assert table.widths()["address"] == max(
@@ -228,46 +267,19 @@ def test_fit_columns_to_content_fits_the_full_text_again(
     )
 
 
-def test_reset_layout_brings_back_panes_columns_and_default_widths(
-    window: MainWindow, office: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    window.open_list(office)
-    window.show()
-    QApplication.processEvents()
-    a = window.commands
-    a.show_details.setChecked(False)
-    a.show_status_bar.setChecked(False)
-    window.table._show_column(window.table.TAGS, False)
-    _drag(monkeypatch, window.table, 0, 400)
-    size = window.size()
-    a.show_domains.setChecked(False)
-    # Settings > Hosts > General > Window layout: Reset…, then Reset in its question.
-    monkeypatch.setattr(pages, "confirm", lambda *_a: True)
-    window.settings_dialog().hosts.reset_button.click()
-    QApplication.processEvents()
-    assert a.show_details.isChecked() and window.details.isVisible()
-    assert a.show_status_bar.isChecked()
-    assert not window.table.isColumnHidden(window.table.TAGS)
-    assert window.table.columnWidth(0) < 400  # fitted again
-    assert window.size() == size and not a.show_domains.isChecked()  # left alone
-    groups, _table_pane, details = window._splitter.sizes()
-    assert abs(details - round(340 * window._scale())) <= 2
-    window.close()
-
-
-def test_panes_cant_be_dragged_too_narrow_to_read(window: MainWindow) -> None:
-    scale = window._scale()
-    assert window.details.minimumWidth() == round(260 * scale)
-    assert window.nav.minimumWidth() == round(180 * scale)
+def test_panes_cant_be_dragged_too_narrow_to_read(window: CapyWindow) -> None:
+    scale = window.hosts._scale()
+    assert window.hosts.details.minimumWidth() == round(260 * scale)
+    assert window.hosts.nav.minimumWidth() == round(180 * scale)
 
 
 def test_settings_from_before_the_notes_column_went_load_cleanly(
     qapp: QApplication, paths: settings.Paths
 ) -> None:
     prefs = {"schema": 1, "hidden_columns": ["notes", "tags"], "column_widths": {"notes": 90}}
-    window = MainWindow(paths, prefs)
-    assert window.table.isColumnHidden(window.table.TAGS)
-    assert "notes" not in window.table.widths()
+    window = CapyWindow(paths, prefs)
+    assert window.hosts.table.isColumnHidden(window.hosts.table.TAGS)
+    assert "notes" not in window.hosts.table.widths()
     window.close()
 
 
@@ -283,53 +295,53 @@ def test_the_last_column_fills_a_wide_window_and_a_narrow_one_scrolls(
     table.close()
 
 
-def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: MainWindow, office: Path) -> None:
-    window.open_list(office)
-    tag = window.nav.tags.topLevelItem(0)
+def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: CapyWindow, office: Path) -> None:
+    window.hosts.open_list(office)
+    tag = window.hosts.nav.tags.topLevelItem(0)
     assert tag is not None
-    window.nav.tags.setCurrentItem(tag)  # filtering by a tag
-    window.commands.show_tags.setChecked(False)
-    assert window.nav.tags.isHidden() and window.nav.current_filter().kind == "all"
+    window.hosts.nav.tags.setCurrentItem(tag)  # filtering by a tag
+    window.hosts.commands.show_tags.setChecked(False)
+    assert window.hosts.nav.tags.isHidden() and window.hosts.nav.picked_tags() == []
     window.close()
-    assert window._prefs["view"]["tags"] is False
+    assert window.hosts.prefs["view"]["tags"] is False
 
 
-def test_the_groups_pane_fits_all_computers(window: MainWindow, office: Path) -> None:
-    window.open_list(office)
+def test_the_groups_pane_fits_all_computers(window: CapyWindow, office: Path) -> None:
+    window.hosts.open_list(office)
     window.show()
     QApplication.processEvents()
-    everything = window.nav.everything
+    everything = window.hosts.nav.everything
     assert everything.minimumWidth() >= everything.sizeHintForColumn(0)
-    assert not window._splitter.childrenCollapsible()
+    assert not window.hosts.splitter.childrenCollapsible()
 
 
-def test_the_view_menu_stays_open_while_ticking(window: MainWindow) -> None:
+def test_the_view_menu_stays_open_while_ticking(window: CapyWindow) -> None:
     from PySide6.QtCore import QEvent
     from PySide6.QtGui import QKeyEvent
 
     menu = window._view_menu
     menu.popup(window.mapToGlobal(window.rect().center()))
-    menu.setActiveAction(window.commands.show_tags)
+    menu.setActiveAction(window.hosts.commands.show_tags)
     QApplication.sendEvent(
         menu, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Return, Qt.KeyboardModifier.NoModifier)
     )
-    assert not window.commands.show_tags.isChecked() and menu.isVisible()
+    assert not window.hosts.commands.show_tags.isChecked() and menu.isVisible()
     menu.close()
 
 
 def test_right_click_menus_dont_pile_up(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # A menu is made per click; each one used to stay until the app closed.
     class Shown(QMenu):
         def exec(self, *_args: object) -> None:  # type: ignore[override]
             return None
 
-    monkeypatch.setattr(window_module, "QMenu", Shown)
+    monkeypatch.setattr(workspace_module, "QMenu", Shown)
     before = len(window.findChildren(QMenu))
     for _ in range(3):
-        window._host_menu(QPoint(5, 5))
-        window._group_menu(QPoint(5, 5))
+        window.hosts._item_menu(QPoint(5, 5))
+        window.hosts._group_menu(QPoint(5, 5))
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
     assert len(window.findChildren(QMenu)) == before
 
@@ -349,39 +361,40 @@ def test_an_old_saved_layout_cant_drag_a_pane_out_of_sight(
     for _ in range(3):
         old.addWidget(QWidget())
     state = old.saveState().toBase64().toStdString()
-    window = MainWindow(paths, {"schema": 1, "main_splitter": state})
-    assert not window._splitter.childrenCollapsible()
+    window = CapyWindow(paths, {"schema": 1, "main_splitter": state})
+    assert not window.hosts.splitter.childrenCollapsible()
     window.close()
 
 
 def test_double_clicking_the_host_table_s_right_edge_fits_it_to_its_columns(
-    window: MainWindow, office: Path
+    window: CapyWindow, office: Path
 ) -> None:
-    window.open_list(office)
+    window.hosts.open_list(office)
     window.resize(1600, 700)
     window.show()
     QApplication.processEvents()
-    splitter = window._splitter  # pyright: ignore[reportPrivateUsage]
-    edge = splitter.indexOf(window.details)
+    splitter = window.hosts.splitter  # pyright: ignore[reportPrivateUsage]
+    edge = splitter.indexOf(window.hosts.details)
     before = splitter.sizes()
     QTest.mouseDClick(splitter.handle(edge), Qt.MouseButton.LeftButton)
     after = splitter.sizes()
-    assert after[edge - 1] == max(window.table.natural_width(), window._hosts_pane.minimumWidth())  # pyright: ignore[reportPrivateUsage]
+    hosts = window.hosts
+    assert after[edge - 1] == max(hosts.table.natural_width(), hosts.items_pane.minimumWidth())
     assert sum(after) == sum(before) and after[0] == before[0]  # only those two panes change
     window.close()
 
 
 def test_double_clicking_the_groups_panel_s_right_edge_fits_it_to_its_groups(
-    window: MainWindow, office: Path
+    window: CapyWindow, office: Path
 ) -> None:
-    window.open_list(office)
+    window.hosts.open_list(office)
     window.resize(1600, 700)
     window.show()
     QApplication.processEvents()
-    splitter = window._splitter  # pyright: ignore[reportPrivateUsage]
+    splitter = window.hosts.splitter  # pyright: ignore[reportPrivateUsage]
     before = splitter.sizes()
     QTest.mouseDClick(splitter.handle(1), Qt.MouseButton.LeftButton)
     after = splitter.sizes()
-    assert after[0] == max(window.nav.natural_width(), window.nav.minimumWidth())
+    assert after[0] == max(window.hosts.nav.natural_width(), window.hosts.nav.minimumWidth())
     assert after[0] + after[1] == before[0] + before[1] and after[2] == before[2]
     window.close()

@@ -152,3 +152,19 @@ def test_a_new_tool_s_starter_joins_an_existing_folder_once(tmp_path: Path) -> N
     assert (folder / "remote-desktop.json").is_file()  # written, so it can be edited
     store.delete("remote-desktop")
     assert "remote-desktop" not in {p.id for p in ProfileStore(folder, starters).all()}
+
+
+def test_restoring_brings_back_only_the_deleted_built_in_profiles(tmp_path: Path) -> None:
+    store = ProfileStore(tmp_path / "profiles")
+    assert store.missing_starters() == []  # no folder yet: the shipped ones are shown
+    store.place_starters()
+    edited = store.find("ultravnc")
+    assert edited is not None
+    store.save(ConnectionProfile("ultravnc", "ultravnc", name="Kiosk VNC"))
+    store.delete("realvnc")
+    store.delete("remote-desktop")
+    assert [p.name for p in store.missing_starters()] == ["RealVNC", "Remote Desktop"]
+    restored = store.restore_starters()
+    assert [p.id for p in restored] == ["realvnc", "remote-desktop"]
+    assert [p.name for p in store.all()] == ["Kiosk VNC", "RealVNC", "Remote Desktop"]
+    assert store.missing_starters() == []  # the edited one never counted

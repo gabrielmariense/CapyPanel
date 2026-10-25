@@ -17,9 +17,11 @@ def test_everything_is_in_one_folder_per_computer(tmp_path: Path) -> None:
     root = Path(r"C:\ProgramData\CapyPanel")
     assert not paths.portable and paths.root == root
     assert paths.settings_file == root / "users" / "ana@CORP" / "settings.json"
-    assert paths.personal_list == root / "users" / "ana@CORP" / "lists" / "personal.json"
+    hosts = paths.lists("hosts")  # a folder per tool, shared and the user's own
+    assert hosts.personal == root / "users" / "ana@CORP" / "lists" / "hosts" / "personal.json"
     assert paths.log_file == root / "logs" / "ana@CORP.log"
-    assert paths.default_list == root / "lists" / "default.json"
+    assert hosts.default == root / "lists" / "hosts" / "default.json"
+    assert paths.lists("printers").shared_dir == root / "lists" / "printers"
     assert paths.profiles_dir == root / "profiles"
     assert paths.company_tools_dir == root / "tools"
 
@@ -113,3 +115,14 @@ def test_non_object_json_is_set_aside(tmp_path: Path) -> None:
     path.write_text(json.dumps([1, 2]), encoding="utf-8")
     assert settings.load_settings(path) == {"schema": settings.SETTINGS_SCHEMA}
     assert path.with_name(path.name + ".broken").exists()
+
+
+def test_each_tool_has_its_own_section_and_hosts_starts_from_0_19s_settings() -> None:
+    prefs = {"schema": 1, "theme": "graphite", "recent_lists": ["a.json"], "view": {"tags": False}}
+    hosts = settings.tool_prefs(prefs, "hosts", inherit=True)
+    assert hosts == {"recent_lists": ["a.json"], "view": {"tags": False}}  # not the shell's own
+    hosts["recent_lists"].append("b.json")
+    assert prefs["recent_lists"] == ["a.json"]  # a copy: 0.19 still reads what it kept
+    assert settings.tool_prefs(prefs, "hosts", inherit=True) is hosts  # made once
+    assert settings.tool_prefs(prefs, "printers") == {}  # a new tool starts empty
+    assert set(prefs["tools"]) == {"hosts", "printers"}

@@ -45,6 +45,9 @@ class SessionCredentials:
         else:
             self._by_profile.pop(profile_id, None)
 
+    def __contains__(self, profile_id: str) -> bool:
+        return profile_id in self._by_profile
+
     def __bool__(self) -> bool:
         return bool(self._by_profile)
 

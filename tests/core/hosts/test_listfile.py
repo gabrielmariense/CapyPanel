@@ -10,6 +10,7 @@ from capypanel.core.hosts import listfile
 from capypanel.core.hosts.listfile import (
     HostListChangedError,
     HostListFormatError,
+    HostListKindError,
     HostListTooNewError,
 )
 from capypanel.core.hosts.model import NO_GROUP, HostList
@@ -44,7 +45,21 @@ def test_round_trip_keeps_everything_including_unknown_keys(tmp_path: Path) -> N
     _write(path, EXAMPLE)
     loaded = listfile.load(path)
     listfile.save(path, loaded.hosts, expected=loaded.stamp)
-    assert json.loads(path.read_text(encoding="utf-8")) == EXAMPLE
+    assert json.loads(path.read_text(encoding="utf-8")) == {**EXAMPLE, "kind": "hosts"}
+
+
+def test_a_list_says_its_kind_and_another_kind_is_refused(tmp_path: Path) -> None:
+    path = tmp_path / "printers.json"
+    _write(path, EXAMPLE)  # no kind: from before 0.20, so a host list
+    assert listfile.load(path).kind == "hosts"
+    loaded = listfile.load(path)
+    listfile.save(path, loaded.hosts, expected=loaded.stamp, kind="printers")
+    assert json.loads(path.read_text(encoding="utf-8"))["kind"] == "printers"
+    with pytest.raises(HostListKindError) as refused:
+        listfile.load(path)  # a host list is asked for
+    assert refused.value.kind == "printers"
+    assert listfile.load(path, "printers").hosts.host("h7") is not None
+    assert listfile.load(path, None).kind == "printers"  # any kind
 
 
 def test_file_with_a_bom_opens(tmp_path: Path) -> None:
@@ -94,7 +109,7 @@ def test_a_newer_schema_is_refused_not_rewritten(tmp_path: Path) -> None:
     path = tmp_path / "hosts.json"
     _write(path, {**EXAMPLE, "schema": listfile.SCHEMA + 1})
     before = path.read_bytes()
-    with pytest.raises(HostListTooNewError):
+    with pytest.raises(HostListTooNewError, match="newer version of CapyPanel"):
         listfile.load(path)
     assert path.read_bytes() == before
 

@@ -4,6 +4,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtTest import QTest
@@ -20,7 +21,6 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core import settings
-from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.themes import engine as themes
 
 
@@ -188,7 +188,7 @@ def test_every_theme_applies_in_any_order(qapp: QApplication) -> None:
 def test_picking_a_theme_applies_and_remembers_it(qapp: QApplication, tmp_path: Path) -> None:
     (tmp_path / settings.PORTABLE_MARKER).touch()
     paths = settings.resolve_paths(tmp_path)
-    window = MainWindow(paths, {"schema": 1})
+    window = CapyWindow(paths, {"schema": 1})
     window.set_theme("graphite")
     assert themes.current().id == "graphite"
     saved = json.loads(paths.settings_file.read_text(encoding="utf-8"))
@@ -200,12 +200,12 @@ def test_clicking_a_row_draws_no_focus_box(qapp: QApplication, tmp_path: Path) -
     # Windows drew a focus box around the clicked row, which looked broken on the selection tint.
     # A box edge shows up as a line where nearly the whole row is dark (in Windows light).
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    window = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1})
+    window = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     window.set_theme("windows-light")
     window.show()
     window.activateWindow()  # the box only appears in the active window
     qapp.processEvents()
-    tree = window.nav.groups
+    tree = window.hosts.nav.groups
     [item] = tree.findItems("Default group", Qt.MatchFlag.MatchStartsWith)
     rect = tree.visualItemRect(item)
     QTest.mouseClick(tree.viewport(), Qt.MouseButton.LeftButton, pos=rect.center())

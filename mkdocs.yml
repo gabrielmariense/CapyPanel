@@ -19,6 +19,9 @@ nav:
       - Connecting: hosts/connecting.md
       - Checking: hosts/checking.md
       - Searching: hosts/searching.md
+  - Printers:
+      - The Printers tool: printers/printers.md
+      - Printer lists: printers/printer-lists.md
 
 theme:
   name: material
@@ -66,6 +69,9 @@ plugins:
             Connecting: Conectando
             Checking: Verificando
             Searching: Pesquisando
+            Printers: Impressoras
+            The Printers tool: A ferramenta Impressoras
+            Printer lists: Listas de impressoras
 
 markdown_extensions:
   - admonition

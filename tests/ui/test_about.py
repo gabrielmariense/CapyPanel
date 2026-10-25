@@ -5,6 +5,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtWidgets import QApplication, QLabel, QMenu, QPushButton
 
 from capypanel import BUILD, __version__
@@ -12,20 +13,19 @@ from capypanel.core import i18n, settings
 from capypanel.ui import about, branding, language
 from capypanel.ui.about import COMPONENTS, LICENSES_DIR, AboutPage
 from capypanel.ui.main_window import window as window_module
-from capypanel.ui.main_window.window import MainWindow
 
 
 @pytest.fixture
-def window(qapp: QApplication, tmp_path: Path) -> Iterator[MainWindow]:
+def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1})
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     yield win
     win.close()
     language.apply(i18n.DEFAULT_LANGUAGE)
 
 
 def test_the_help_menu_has_the_website_a_problem_report_and_about(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     menus = [m for a in window.menuBar().actions() if isinstance(m := a.menu(), QMenu)]
     help_menu = menus[-1]
@@ -93,7 +93,7 @@ def test_the_app_icon_and_mascot_load(qapp: QApplication) -> None:
 
 
 def test_help_about_opens_settings_on_the_about_page(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     shown: list[str] = []
     monkeypatch.setattr(

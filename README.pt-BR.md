@@ -13,9 +13,11 @@
 
 O CapyPanel é um app de desktop para Windows feito para equipes de TI: organize em listas os
 computadores que você administra, veja quais estão ligados e quem está logado neles, e abra a tela
-remota de qualquer um pela Área de Trabalho Remota ou pelo visualizador VNC que você já usa.
+remota de qualquer um pela Área de Trabalho Remota ou pelo visualizador VNC que você já usa. Ele
+guarda também as suas impressoras, com os detalhes de que você precisa e a página web delas a um
+clique.
 
-> **Situação: beta (0.19.0).** Roda a partir do código-fonte; ainda não há instalador.
+> **Situação: beta (0.20.0).** Roda a partir do código-fonte; ainda não há instalador.
 
 ![A janela principal do CapyPanel: a barra lateral, grupos à esquerda, hosts no meio, detalhes à direita](docs/images/main-window-dark-pt-BR.png)
 
@@ -31,6 +33,9 @@ remota de qualquer um pela Área de Trabalho Remota ou pelo visualizador VNC que
 - Usuários logados
 - Pesquisa
 - Importação e exportação
+- Inventário de impressoras
+  - Marca, modelo, nº de série, patrimônio
+  - Páginas web das impressoras
 
 ## Documentação
 
@@ -47,6 +52,10 @@ Também online, com busca: **[gabrielmariense.github.io/CapyPanel/pt-BR](https:/
   de conexão e senhas
 - [Verificando hosts](docs/hosts/checking.pt-BR.md): status e usuários logados
 - [Pesquisando hosts](docs/hosts/searching.pt-BR.md): encontrar um host em qualquer lugar da lista
+- [A ferramenta Impressoras](docs/printers/printers.pt-BR.md): impressoras, os detalhes delas e as
+  páginas web
+- [Listas de impressoras](docs/printers/printer-lists.pt-BR.md): onde as listas de impressoras
+  ficam e as configurações delas
 - [Desenvolvimento](docs/development.pt-BR.md): compilar, testar e traduzir
 
 ## Início rápido (pelo código-fonte)

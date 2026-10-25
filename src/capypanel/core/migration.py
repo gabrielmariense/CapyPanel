@@ -2,6 +2,7 @@
 The old files are copied, never moved or deleted: going back to an older version still works."""
 
 import ctypes
+import logging
 import os
 import shutil
 from collections.abc import Mapping
@@ -10,6 +11,42 @@ from pathlib import Path
 
 from capypanel.core import files, settings
 from capypanel.core.hosts import locations
+
+log = logging.getLogger(__name__)
+HOSTS = "hosts"  # the Hosts tool's id: every list before 0.20 was a host list
+
+
+def _lists_into_tool_folders(paths: settings.Paths) -> list[str]:
+    """From 0.20 each tool keeps its lists in a folder of its own. 0.19's lists were all host
+    lists: they're copied into lists\\hosts\\ (shared and the user's own) the first time that
+    folder doesn't exist, and the Hosts settings that name them follow. A folder this user
+    can't create is left for someone who can."""
+    hosts = paths.lists(HOSTS)
+    pairs: list[tuple[Path, Path]] = []
+    for old_dir, new_dir in (
+        (paths.lists_dir, hosts.shared_dir),
+        (paths.user_lists_dir, hosts.user_dir),
+    ):
+        old_lists = sorted(old_dir.glob("*.json")) if old_dir.is_dir() else []
+        if new_dir.exists() or not old_lists:
+            continue
+        try:
+            if new_dir == hosts.shared_dir:
+                files.make_shared_folder(new_dir)  # everyone reads it, only its maker changes it
+            else:
+                new_dir.mkdir(parents=True)
+            for old in old_lists:
+                shutil.copy2(old, new_dir / old.name)
+                pairs.append((old, new_dir / old.name))
+        except OSError as e:
+            log.warning("Couldn't copy the lists in %s to %s: %s", old_dir, new_dir, e)
+    if pairs and paths.settings_file.exists():
+        prefs = settings.load_settings(paths.settings_file)
+        section = settings.tool_prefs(prefs, HOSTS, inherit=True)  # 0.19's keys stay as they were
+        for old, new in pairs:
+            _repoint(section, old, new)
+        settings.save_settings(paths.settings_file, prefs)
+    return [f"{old} -> {new}" for old, new in pairs]
 
 
 def old_files(
@@ -30,11 +67,13 @@ def migrate(
     paths: settings.Paths, env: Mapping[str, str] | None = None, documents: Path | None = None
 ) -> list[str]:
     """Copies old files the new folder doesn't have yet; returns what was copied, for the log."""
-    copied = _lists_into_folders(paths)
+    copied = _lists_into_tool_folders(paths)
+    copied += _lists_into_folders(paths)
     old_settings, old_list = old_files(paths, env, documents)
+    hosts = paths.lists(HOSTS)
     moves = [(old_settings, paths.settings_file)]
     if not paths.portable:  # there, the old place is the default list's before 0.19
-        moves.append((old_list, paths.personal_list))
+        moves.append((old_list, hosts.personal))
     for old, new in moves:
         if old.is_file() and not new.exists():
             new.parent.mkdir(parents=True, exist_ok=True)
@@ -44,7 +83,7 @@ def migrate(
         # Recent lists and the start choice may name the old personal list: point them here.
         prefs = settings.load_settings(paths.settings_file)
         recent = [
-            paths.personal_list if locations.same_path(p, old_list) else p
+            hosts.personal if locations.same_path(p, old_list) else p
             for p in locations.recent_lists(prefs)
         ]
         prefs[locations.RECENT_KEY] = [str(p) for p in recent]
@@ -57,31 +96,33 @@ def migrate(
 
 def _lists_into_folders(paths: settings.Paths) -> list[str]:
     """Before 0.19 the default and personal lists were hosts.json files beside the lists
-    folders; they're copied in once, and the settings that name them follow."""
+    folders; they're copied in once, straight into Hosts' folders, and the settings that name
+    them follow. Where 0.19 already copied one (lists\\default.json), it's left alone."""
+    hosts = paths.lists(HOSTS)
     pairs = [
-        (paths.root / "hosts.json", paths.default_list),
-        (paths.user_dir / "hosts.json", paths.personal_list),
+        (paths.root / "hosts.json", hosts.default, paths.lists_dir / "default.json"),
+        (paths.user_dir / "hosts.json", hosts.personal, paths.user_lists_dir / "personal.json"),
     ]
     copied = []
-    for old, new in pairs:
-        if old.is_file() and not new.exists():
-            if new == paths.default_list and not new.parent.exists():
+    for old, new, in_0_19 in pairs:
+        if old.is_file() and not new.exists() and not in_0_19.exists():
+            if new == hosts.default and not new.parent.exists():
                 files.make_shared_folder(new.parent)  # everyone reads it, only admins change it
             new.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(old, new)
             copied.append(f"{old} -> {new}")
     if copied and paths.settings_file.exists():
         prefs = settings.load_settings(paths.settings_file)
-        for old, new in pairs:
+        for old, new, _in_0_19 in pairs:
             _repoint(prefs, old, new)
         settings.save_settings(paths.settings_file, prefs)
     return copied
 
 
 def _repoint(prefs: dict[str, object], old: Path, new: Path) -> None:
-    """Recent and added lists, the start choice and what each list shows first: from `old`
-    to `new`."""
-    for key in (locations.RECENT_KEY, locations.LISTS_KEY):
+    """Recent, added and hidden lists, the start choice and what each list shows first: from
+    `old` to `new`."""
+    for key in (locations.RECENT_KEY, locations.LISTS_KEY, locations.HIDDEN_KEY):
         value = prefs.get(key)
         if isinstance(value, list):
             prefs[key] = [

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 17:17-0300\n"
+"POT-Creation-Date: 2026-10-23 17:14-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -47,6 +47,12 @@ msgstr "&Endereço:"
 
 msgid "&Add…"
 msgstr "&Adicionar…"
+
+msgid "&All profiles"
+msgstr "&Todos os perfis"
+
+msgid "&Brand:"
+msgstr "&Marca:"
 
 msgid "&Connect"
 msgstr "&Conectar"
@@ -126,6 +132,9 @@ msgstr "&Idioma"
 msgid "&Leave out of the import"
 msgstr "&Deixar fora da importação"
 
+msgid "&List on startup"
+msgstr "&Lista ao iniciar"
+
 msgid "&Locate…"
 msgstr "&Localizar…"
 
@@ -138,8 +147,14 @@ msgstr "Ge&renciar grupos…"
 msgid "&Manage host lists…"
 msgstr "&Gerenciar listas de hosts…"
 
+msgid "&Manage printer lists…"
+msgstr "&Gerenciar listas de impressoras…"
+
 msgid "&Manual connection…"
 msgstr "Conexão &manual…"
+
+msgid "&Model:"
+msgstr "Mo&delo:"
 
 msgid "&Move them to"
 msgstr "&Mover para"
@@ -174,6 +189,9 @@ msgstr "&Senha:"
 msgid "&Preset:"
 msgstr "&Predefinição:"
 
+msgid "&Printers"
+msgstr "&Impressoras"
+
 msgid "&Refresh"
 msgstr "&Atualizar"
 
@@ -192,14 +210,20 @@ msgstr "&Relatar um problema"
 msgid "&Report…"
 msgstr "&Relatório…"
 
-msgid "&Reset…"
-msgstr "&Redefinir…"
+msgid "&Restore"
+msgstr "&Restaurar"
+
+msgid "&Restore built-in…"
+msgstr "&Restaurar originais…"
 
 msgid "&Run"
 msgstr "&Executar"
 
 msgid "&Save as preset…"
 msgstr "&Salvar como predefinição…"
+
+msgid "&Serial number:"
+msgstr "Nº de &série:"
 
 msgid "&Settings…"
 msgstr "&Configurações…"
@@ -257,6 +281,10 @@ msgstr "O nome é obrigatório."
 msgid "A new group: the import creates it"
 msgstr "Um grupo novo: a importação o cria"
 
+#, python-brace-format
+msgid "A preset named “{name}” already exists. Replace it?"
+msgstr "Já existe uma predefinição chamada “{name}”. Substituí-la?"
+
 msgid "A tool definition must be a JSON object."
 msgstr "Uma definição de ferramenta deve ser um objeto JSON."
 
@@ -281,11 +309,17 @@ msgstr "Adicionar &grupo…"
 msgid "Add &host…"
 msgstr "Adicionar &host…"
 
+msgid "Add &printer…"
+msgstr "Adicionar &impressora…"
+
 msgid "Add a &row below"
 msgstr "Adicionar uma &linha abaixo"
 
 msgid "Add a host list"
 msgstr "Adicionar uma lista de hosts"
+
+msgid "Add a printer list"
+msgstr "Adicionar uma lista de impressoras"
 
 msgid "Add group"
 msgstr "Adicionar grupo"
@@ -295,6 +329,12 @@ msgstr "Adicionar host"
 
 msgid "Add hosts and groups, or import a list of hosts"
 msgstr "Adicione hosts e grupos, ou importe uma lista de hosts"
+
+msgid "Add printer"
+msgstr "Adicionar impressora"
+
+msgid "Add printers and groups, and manage the groups"
+msgstr "Adicione impressoras e grupos, e gerencie os grupos"
 
 msgid "Added"
 msgstr "Adicionada"
@@ -308,8 +348,14 @@ msgstr[1] "{n} hosts adicionados."
 msgid "Address"
 msgstr "Endereço"
 
+msgid "All details"
+msgstr "Todos os detalhes"
+
 msgid "All hosts"
 msgstr "Todos os hosts"
+
+msgid "All printers"
+msgstr "Todas as impressoras"
 
 #, python-brace-format
 msgid "Already in the list, {place}"
@@ -329,6 +375,24 @@ msgstr "Respondeu em {address}, porta {port}."
 
 msgid "Any name you like, then the computer's network name or IP address. Separate them with a comma, or copy two columns from Excel."
 msgstr "Um nome à sua escolha, depois o nome do computador na rede ou o endereço IP. Separe com vírgula, ou copie duas colunas do Excel."
+
+msgid "Appearance"
+msgstr "Aparência"
+
+msgid "Ass&et tag:"
+msgstr "&Patrimônio:"
+
+msgid "Asset tag"
+msgstr "Patrimônio"
+
+msgid "Brand"
+msgstr "Marca"
+
+#, python-brace-format
+msgid "Bring back {n} built-in profile: {names}?"
+msgid_plural "Bring back {n} built-in profiles: {names}?"
+msgstr[0] "Trazer de volta {n} perfil que vem com o app: {names}?"
+msgstr[1] "Trazer de volta {n} perfis que vêm com o app: {names}?"
 
 #, python-brace-format
 msgid "Broken placeholder in “{arg}”."
@@ -390,6 +454,15 @@ msgstr "Verifica estes hosts de novo agora"
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
 
+msgid "Clear"
+msgstr "Limpar"
+
+msgid "Clear tags"
+msgstr "Limpar tags"
+
+msgid "Clear the picked tags"
+msgstr "Limpar as tags escolhidas"
+
 msgid "Click to copy"
 msgstr "Clique para copiar"
 
@@ -428,9 +501,6 @@ msgstr "&Perfis de conexão…"
 msgid "Connection profiles"
 msgstr "Perfis de conexão"
 
-msgid "Connection profiles and remote tools, for everyone on this PC."
-msgstr "Perfis de conexão e ferramentas remotas, para todos neste PC."
-
 msgid "Connections"
 msgstr "Conexões"
 
@@ -445,6 +515,12 @@ msgid "Copied {n} host from {source}."
 msgid_plural "Copied {n} hosts from {source}."
 msgstr[0] "{n} host copiado de {source}."
 msgstr[1] "{n} hosts copiados de {source}."
+
+#, python-brace-format
+msgid "Copied {n} printer from {source}."
+msgid_plural "Copied {n} printers from {source}."
+msgstr[0] "{n} impressora copiada de {source}."
+msgstr[1] "{n} impressoras copiadas de {source}."
 
 #, python-brace-format
 msgid "Copied: {text}"
@@ -560,6 +636,9 @@ msgstr "Excluir o perfil de conexão “{profile}”? Todos neste PC deixam de t
 msgid "Deleting moves it to the Recycle Bin, for everyone who uses it:"
 msgstr "Excluir move o arquivo para a Lixeira, para todos que o usam:"
 
+msgid "Details"
+msgstr "Detalhes"
+
 msgid "Disconnected"
 msgstr "Desconectado"
 
@@ -593,6 +672,9 @@ msgstr "Editar perfil de conexão"
 msgid "Edit host"
 msgstr "Editar host"
 
+msgid "Edit printer"
+msgstr "Editar impressora"
+
 msgid "Edit the list here"
 msgstr "Editar a lista aqui"
 
@@ -601,6 +683,9 @@ msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabe�
 
 msgid "Every"
 msgstr "A cada"
+
+msgid "Every column the printers have"
+msgstr "Todas as colunas das impressoras"
 
 msgid "Every computer you look after, in one window."
 msgstr "Todos os computadores sob seus cuidados, em uma só janela."
@@ -617,9 +702,6 @@ msgstr "Todos neste PC (compartilhada)"
 msgid "File not found"
 msgstr "Arquivo não encontrado"
 
-msgid "Files"
-msgstr "Arquivos"
-
 msgid "Folder"
 msgstr "Pasta"
 
@@ -628,6 +710,9 @@ msgstr "Pastas"
 
 msgid "For Import"
 msgstr "Para importar"
+
+msgid "For everyone on this PC: connection profiles, remote tools, and the shared lists in “lists”, a folder for each kind of list."
+msgstr "Para todos neste PC: perfis de conexão, ferramentas remotas e as listas compartilhadas em “lists”, uma pasta para cada tipo de lista."
 
 msgid ""
 "For example:\n"
@@ -683,6 +768,15 @@ msgstr "Grupo: {name}"
 msgid "Groups"
 msgstr "Grupos"
 
+msgid "Hom&e"
+msgstr "I&nício"
+
+msgid "Home (Ctrl+0)"
+msgstr "Início (Ctrl+0)"
+
+msgid "Home page"
+msgstr "Página inicial"
+
 msgid "Host"
 msgstr "Host"
 
@@ -708,8 +802,8 @@ msgstr "Nome do host ou endereço IP; deixe em branco para usar o nome"
 msgid "Hostnames"
 msgstr "Nomes de host"
 
-msgid "Hosts (Ctrl+1)"
-msgstr "Hosts (Ctrl+1)"
+msgid "Hosts"
+msgstr "Hosts"
 
 msgid "Hosts with no group &go to:"
 msgstr "Hosts sem grupo &vão para:"
@@ -719,6 +813,9 @@ msgstr "Hosts sem perfil &usam"
 
 msgid "Hover a folder to see what it holds."
 msgstr "Passe o mouse sobre uma pasta para ver o que ela guarda."
+
+msgid "IP address or network name"
+msgstr "Endereço IP ou nome na rede"
 
 msgid "Icons:"
 msgstr "Ícones:"
@@ -764,14 +861,11 @@ msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on. If a computer rejects it, CapyPanel stops and asks again instead of trying it on the others, so the account isn't locked."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado. Se um computador recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta não ser bloqueada."
 
-msgid "Language and theme"
-msgstr "Idioma e tema"
+msgid "Language"
+msgstr "Idioma"
 
 msgid "Last check"
 msgstr "Última verificação"
-
-msgid "Layout"
-msgstr "Layout"
 
 msgid "License"
 msgstr "Licença"
@@ -810,6 +904,9 @@ msgstr "Conexão manual"
 
 msgid "Mascot:"
 msgstr "Mascote:"
+
+msgid "Model"
+msgstr "Modelo"
 
 msgid "Move &down"
 msgstr "Mover para &baixo"
@@ -854,6 +951,9 @@ msgstr "Nova lista de hosts"
 msgid "New name:"
 msgstr "Novo nome:"
 
+msgid "New printer list"
+msgstr "Nova lista de impressoras"
+
 msgid "No address"
 msgstr "Sem endereço"
 
@@ -872,6 +972,9 @@ msgstr "Sem grupo"
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
 
+msgid "No hosts in this group have all the picked tags."
+msgstr "Nenhum host deste grupo tem todas as tags escolhidas."
+
 msgid "No list open"
 msgstr "Nenhuma lista aberta"
 
@@ -883,6 +986,12 @@ msgstr "Ninguém"
 
 msgid "No one logged on"
 msgstr "Ninguém logado"
+
+msgid "No printer list is open."
+msgstr "Nenhuma lista de impressoras está aberta."
+
+msgid "No printers in this group have all the picked tags."
+msgstr "Nenhuma impressora deste grupo tem todas as tags escolhidas."
 
 #, python-brace-format
 msgid "No settings mention “{text}”."
@@ -918,6 +1027,9 @@ msgstr "Nada muda até você clicar em Adicionar."
 msgid "Nothing changes until you click OK."
 msgstr "Nada muda até você clicar em OK."
 
+msgid "Nothing to check on printers yet"
+msgstr "Ainda não há o que verificar nas impressoras"
+
 msgid "Notice"
 msgstr "Aviso"
 
@@ -936,11 +1048,26 @@ msgstr "Um por usuário, com o nome da conta."
 msgid "Online"
 msgstr "Online"
 
+msgid "Only for you and administrators: your settings, and your lists in “lists”, a folder for each kind of list."
+msgstr "Só para você e os administradores: suas configurações e suas listas em “lists”, uma pasta para cada tipo de lista."
+
+#, python-brace-format
+msgid "Only hosts with all of: {tags} · {shown} of {total} shown"
+msgstr "Só hosts com todas estas tags: {tags} · {shown} de {total} exibidos"
+
 msgid "Only me (personal)"
 msgstr "Só eu (pessoal)"
 
 msgid "Only ping and ports, never logged-on users, so no account is needed. Refresh in the toolbar always works."
 msgstr "Só ping e portas, nunca usuários logados, então nenhuma conta é usada. O Atualizar da barra de ferramentas sempre funciona."
+
+#, python-brace-format
+msgid "Only printers with all of: {tags} · {shown} of {total} shown"
+msgstr "Só impressoras com todas estas tags: {tags} · {shown} de {total} exibidas"
+
+#, python-brace-format
+msgid "Only the first {n} open at once."
+msgstr "Só as {n} primeiras abrem de uma vez."
 
 msgid "Open &Settings"
 msgstr "Abrir &Configurações"
@@ -954,6 +1081,9 @@ msgstr "Abrir &pasta"
 msgid "Open &log folder"
 msgstr "Abrir pasta de &logs"
 
+msgid "Open &web page"
+msgstr "Abrir página &web"
+
 msgid "Open a CSV file"
 msgstr "Abrir um arquivo CSV"
 
@@ -963,6 +1093,12 @@ msgstr "Abrir uma lista de hosts"
 msgid "Open a host list to choose what it shows first."
 msgstr "Abra uma lista de hosts para escolher o que ela mostra primeiro."
 
+msgid "Open a printer list"
+msgstr "Abrir uma lista de impressoras"
+
+msgid "Open a printer list to choose what it shows first."
+msgstr "Abra uma lista de impressoras para escolher o que ela mostra primeiro."
+
 msgid "Open f&older"
 msgstr "Abrir &pasta"
 
@@ -971,6 +1107,12 @@ msgstr "Abrir pasta"
 
 msgid "Open many remote screens?"
 msgstr "Abrir muitas telas remotas?"
+
+msgid "Open the selected printers' web pages (Enter)"
+msgstr "Abre a página web das impressoras selecionadas (Enter)"
+
+msgid "Open web page"
+msgstr "Abrir página web"
 
 #, python-brace-format
 msgid "Open {n} remote screen at once?"
@@ -985,6 +1127,12 @@ msgstr[0] "{n} tela remota aberta."
 msgstr[1] "{n} telas remotas abertas."
 
 #, python-brace-format
+msgid "Opened {n} web page."
+msgid_plural "Opened {n} web pages."
+msgstr[0] "{n} página web aberta."
+msgstr[1] "{n} páginas web abertas."
+
+#, python-brace-format
 msgid "Optional: a {extension} file saved from {tool}. It's used exactly as saved, including its encryption plugin; only the host is emptied, since the address comes from the host you open."
 msgstr "Opcional: um arquivo {extension} salvo no {tool}. Ele é usado exatamente como foi salvo, inclusive o plugin de criptografia; só o host é esvaziado, já que o endereço vem do host que você abre."
 
@@ -997,11 +1145,11 @@ msgstr "Ou coloque só um nome e um endereço em cada linha."
 msgid "P&ort:"
 msgstr "P&orta:"
 
-msgid "Panel sizes, columns and the panels shown go back to how they first were."
-msgstr "Os tamanhos dos painéis, as colunas e os painéis mostrados voltam a ser como no início."
+msgid "Page &counters:"
+msgstr "&Contadores de páginas:"
 
-msgid "Panel sizes, columns and the panels shown, back to how they first were."
-msgstr "Tamanhos dos painéis, colunas e painéis mostrados, de volta a como eram no início."
+msgid "Page counters"
+msgstr "Contadores de páginas"
 
 #, python-brace-format
 msgid "Password for {profile}"
@@ -1013,8 +1161,15 @@ msgstr "Cole uma lista abaixo, ou"
 msgid "Personal"
 msgstr "Pessoal"
 
+#, python-brace-format
+msgid "Picked tags: {tags}"
+msgstr "Tags escolhidas: {tags}"
+
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
+
+msgid "Pr&inters:"
+msgstr "&Impressoras:"
 
 msgid "Preset name:"
 msgstr "Nome da predefinição:"
@@ -1022,8 +1177,23 @@ msgstr "Nome da predefinição:"
 msgid "Preview"
 msgstr "Prévia"
 
+msgid "Printer"
+msgstr "Impressora"
+
+msgid "Printer lists"
+msgstr "Listas de impressoras"
+
+msgid "Printer lists (*.json);;All files (*)"
+msgstr "Listas de impressoras (*.json);;Todos os arquivos (*)"
+
+msgid "Printers"
+msgstr "Impressoras"
+
 msgid "Profile"
 msgstr "Perfil"
+
+msgid "Profiles you changed or made yourself stay as they are."
+msgstr "Os perfis que você alterou ou criou continuam como estão."
 
 msgid "Programs (*.exe)"
 msgstr "Programas (*.exe)"
@@ -1088,6 +1258,12 @@ msgstr "Remover lista de hosts"
 msgid "Remove hosts"
 msgstr "Remover hosts"
 
+msgid "Remove printer list"
+msgstr "Remover lista de impressoras"
+
+msgid "Remove printers"
+msgstr "Remover impressoras"
+
 msgid "Remove tag"
 msgstr "Remover tag"
 
@@ -1104,6 +1280,12 @@ msgid "Remove {n} host from the list?"
 msgid_plural "Remove {n} hosts from the list?"
 msgstr[0] "Remover {n} host da lista?"
 msgstr[1] "Remover {n} hosts da lista?"
+
+#, python-brace-format
+msgid "Remove {n} printer from the list?"
+msgid_plural "Remove {n} printers from the list?"
+msgstr[0] "Remover {n} impressora da lista?"
+msgstr[1] "Remover {n} impressoras da lista?"
 
 #, python-brace-format
 msgid "Remove “{name}” from the list?"
@@ -1128,11 +1310,14 @@ msgid_plural "Report saved: {n} hosts from {source}."
 msgstr[0] "Relatório salvo: {n} host de {source}."
 msgstr[1] "Relatório salvo: {n} hosts de {source}."
 
-msgid "Reset"
-msgstr "Redefinir"
+#, python-brace-format
+msgid "Report saved: {n} printer from {source}."
+msgid_plural "Report saved: {n} printers from {source}."
+msgstr[0] "Relatório salvo: {n} impressora de {source}."
+msgstr[1] "Relatório salvo: {n} impressoras de {source}."
 
-msgid "Reset window layout"
-msgstr "Redefinir o layout da janela"
+msgid "Restore built-in profiles"
+msgstr "Restaurar os perfis que vêm com o app"
 
 msgid "S&top"
 msgstr "Pa&rar"
@@ -1167,6 +1352,9 @@ msgstr "Salvar minha versão como cópia…"
 msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arquivo CSV"
 
+msgid "Save the printers you pick, with the columns you pick, as a CSV file"
+msgstr "Salve as impressoras que você escolher, com as colunas que escolher, num arquivo CSV"
+
 msgid "Search"
 msgstr "Pesquisa"
 
@@ -1183,14 +1371,26 @@ msgstr "Pesquisar {fields}"
 msgid "Searches every host in the list (Ctrl+F)"
 msgstr "Pesquisa em todos os hosts da lista (Ctrl+F)"
 
+msgid "Searches every printer in the list (Ctrl+F)"
+msgstr "Pesquisa todas as impressoras da lista (Ctrl+F)"
+
 msgid "See examples in Formats…"
 msgstr "Veja exemplos em Formatos…"
 
 msgid "Select a host to see its details."
 msgstr "Selecione um host para ver os detalhes."
 
+msgid "Select a printer to see its details."
+msgstr "Selecione uma impressora para ver os detalhes."
+
 msgid "Selected hosts"
 msgstr "Hosts selecionados"
+
+msgid "Selected printers"
+msgstr "Impressoras selecionadas"
+
+msgid "Serial number"
+msgstr "Nº de série"
 
 msgid "Set &tags…"
 msgstr "Definir &tags…"
@@ -1218,12 +1418,6 @@ msgstr "Compartilhados por todos neste PC."
 
 msgid "Shared by everyone on this PC. Read-only: only people Windows lets write this folder can change them."
 msgstr "Compartilhados por todos neste PC. Somente leitura: só quem o Windows deixa gravar nesta pasta pode alterá-los."
-
-msgid "Shared files"
-msgstr "Arquivos compartilhados"
-
-msgid "Shared lists"
-msgstr "Listas compartilhadas"
 
 msgid "Shared lists are in the shared lists folder and show up for everyone; only people Windows lets write that folder can add one."
 msgstr "Listas compartilhadas ficam na pasta de listas compartilhadas e aparecem para todos; só quem o Windows deixa gravar nessa pasta pode criar uma."
@@ -1258,8 +1452,14 @@ msgstr "Outro lugar, como uma pasta de rede…"
 msgid "Sorts every level by name, once; you can rearrange them after"
 msgstr "Classifica todos os níveis pelo nome, uma vez; depois você pode reorganizá-los"
 
+msgid "Source"
+msgstr "Origem"
+
 msgid "Source code:"
 msgstr "Código-fonte:"
+
+msgid "Start it with https:// if the printer's web page needs it; otherwise it opens with http."
+msgstr "Comece com https:// se a página web da impressora precisar; senão ela abre com http."
 
 #, python-brace-format
 msgid "Start it with {header}, in any order."
@@ -1296,11 +1496,19 @@ msgstr "Tag: {tag}"
 msgid "Tags"
 msgstr "Tags"
 
+#, python-brace-format
+msgid "Tags ({n})"
+msgstr "Tags ({n})"
+
 msgid "Tags and notes"
 msgstr "Tags e notas"
 
 msgid "Tags for the selected rows, separated by ;"
 msgstr "Tags das linhas selecionadas, separadas por ;"
+
+#, python-brace-format
+msgid "Tags: {tags}"
+msgstr "Tags: {tags}"
 
 msgid "Takes it out of your lists, or deletes its file too"
 msgstr "Tira das suas listas, ou exclui também o arquivo"
@@ -1348,11 +1556,8 @@ msgstr "A lista padrão"
 msgid "The default list was made by another user, so CapyPanel won't open it. An administrator can replace or delete “{path}”."
 msgstr "A lista padrão foi criada por outro usuário, então o CapyPanel não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
 
-msgid "The default list, and every list saved there, for everyone on this PC."
-msgstr "A lista padrão e toda lista salva ali, para todos neste PC."
-
-msgid "The file doesn't contain a host list."
-msgstr "O arquivo não contém uma lista de hosts."
+msgid "The file doesn't contain a list."
+msgstr "O arquivo não contém uma lista."
 
 msgid "The file has no settings."
 msgstr "O arquivo não tem nenhuma configuração."
@@ -1381,6 +1586,9 @@ msgstr "Os campos dos próprios hosts, que Importar hosts lê de volta: para lev
 
 msgid "The last used list"
 msgstr "A última lista usada"
+
+msgid "The last used tool"
+msgstr "A última ferramenta usada"
 
 msgid "The licenses folder, shipped with CapyPanel"
 msgstr "A pasta de licenças, que vem com o CapyPanel"
@@ -1443,6 +1651,9 @@ msgstr "O “settings_file” deve ser o nome de um arquivo na pasta de perfis."
 msgid "The “website” must be an https:// address."
 msgstr "O “website” deve ser um endereço https://."
 
+msgid "Theme"
+msgstr "Tema"
+
 msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr "Não há perfis de conexão. Crie um em Configurações > Conexões."
 
@@ -1463,8 +1674,8 @@ msgid "This isn't a text file."
 msgstr "Este não é um arquivo de texto."
 
 #, python-brace-format
-msgid "This isn't a valid host list file ({error})."
-msgstr "Este não é um arquivo de lista de hosts válido ({error})."
+msgid "This isn't a valid list file ({error})."
+msgstr "Este não é um arquivo de lista válido ({error})."
 
 msgid "This list is read-only."
 msgstr "Esta lista está em modo somente leitura."
@@ -1481,6 +1692,9 @@ msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyP
 msgid "Tick Status or Logged-on users to check them"
 msgstr "Marque Status ou Usuários logados para verificá-los"
 
+msgid "Toner"
+msgstr "Toner"
+
 msgid "Tool"
 msgstr "Ferramenta"
 
@@ -1490,11 +1704,18 @@ msgstr "Tipo"
 msgid "Type a tag and press Enter"
 msgstr "Digite uma tag e pressione Enter"
 
+msgid "Typed password forgotten."
+msgstr "A senha digitada foi esquecida."
+
 msgid "Typed passwords forgotten."
 msgstr "As senhas digitadas foram esquecidas."
 
 msgid "Unexpected error"
 msgstr "Erro inesperado"
+
+#, python-brace-format
+msgid "Unknown ({source})"
+msgstr "Desconhecida ({source})"
 
 #, python-brace-format
 msgid "Unknown credential method “{method}”."
@@ -1537,6 +1758,9 @@ msgstr "Configurações do visualizador:"
 msgid "Warning"
 msgstr "Aviso"
 
+msgid "What the window shows when CapyPanel starts."
+msgstr "O que a janela mostra quando o CapyPanel inicia."
+
 msgid "Where"
 msgstr "Onde"
 
@@ -1552,9 +1776,6 @@ msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste 
 #, python-brace-format
 msgid "Where is {tool}?"
 msgstr "Onde está o {tool}?"
-
-msgid "Window layout"
-msgstr "Layout da janela"
 
 #, python-brace-format
 msgid "Windows error {code}."
@@ -1578,17 +1799,11 @@ msgstr "Windows — claro"
 msgid "With No group, the groups inside it go directly under Groups."
 msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
 
-msgid "Your files"
-msgstr "Seus arquivos"
+msgid "Your computers: connect, see who's logged on, check them."
+msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
 
-msgid "Your lists"
-msgstr "Suas listas"
-
-msgid "Your personal list, and every list saved there, only for you."
-msgstr "Sua lista pessoal e toda lista salva ali, só para você."
-
-msgid "Your settings, private to you and administrators."
-msgstr "Suas configurações, só para você e os administradores."
+msgid "Your printers: web pages, details, reports."
+msgstr "Suas impressoras: páginas web, detalhes, relatórios."
 
 msgid "Yours"
 msgstr "Sua"
@@ -1606,8 +1821,14 @@ msgstr "a própria ferramenta pede"
 msgid "asked by {tool} itself"
 msgstr "o próprio {tool} pede"
 
+msgid "asset tag"
+msgstr "patrimônio"
+
 msgid "at the computer"
 msgstr "no computador"
+
+msgid "brand"
+msgstr "marca"
 
 msgid "can't be read"
 msgstr "não pode ser lido"
@@ -1632,6 +1853,9 @@ msgstr "em “{group}”"
 msgid "made by another user"
 msgstr "feito por outro usuário"
 
+msgid "model"
+msgstr "modelo"
+
 msgid "name"
 msgstr "nome"
 
@@ -1650,6 +1874,9 @@ msgstr "modo portátil"
 msgid "read-only"
 msgstr "somente leitura"
 
+msgid "serial number"
+msgstr "nº de série"
+
 #, python-brace-format
 msgid "since {when}"
 msgstr "desde {when}"
@@ -1661,11 +1888,17 @@ msgstr "a tag “{tag}”"
 msgid "tags"
 msgstr "tags"
 
+msgid "the picked tags"
+msgstr "as tags escolhidas"
+
 msgid "the search results"
 msgstr "os resultados da pesquisa"
 
 msgid "the selected hosts"
 msgstr "os hosts selecionados"
+
+msgid "the selected printers"
+msgstr "as impressoras selecionadas"
 
 msgid "user"
 msgstr "usuário"
@@ -1693,6 +1926,12 @@ msgstr[0] "{name} ({n} host)"
 msgstr[1] "{name} ({n} hosts)"
 
 #, python-brace-format
+msgid "{name} ({n} printer)"
+msgid_plural "{name} ({n} printers)"
+msgstr[0] "{name} ({n} impressora)"
+msgstr[1] "{name} ({n} impressoras)"
+
+#, python-brace-format
 msgid "{n} can't be added."
 msgid_plural "{n} can't be added."
 msgstr[0] "{n} não pode ser adicionado."
@@ -1711,12 +1950,25 @@ msgstr[0] "{n} computador não deixou “{user}” ver quem está logado. Usar o
 msgstr[1] "{n} computadores não deixaram “{user}” ver quem está logado. Usar outra conta?"
 
 #, python-brace-format
+msgid "{n} couldn't be opened: check its address."
+msgid_plural "{n} couldn't be opened: check their addresses."
+msgstr[0] "{n} não pôde ser aberta: confira o endereço."
+msgstr[1] "{n} não puderam ser abertas: confira os endereços."
+
+#, python-brace-format
 msgid "{n} file skipped: {files}"
 msgid_plural "{n} files skipped: {files}"
 msgstr[0] "{n} arquivo ignorado: {files}"
 msgstr[1] "{n} arquivos ignorados: {files}"
 
 #, python-brace-format
+msgid "{n} found"
+msgid_plural "{n} found"
+msgstr[0] "{n} resultado"
+msgstr[1] "{n} resultados"
+
+#, python-brace-format
+msgctxt "printers"
 msgid "{n} found"
 msgid_plural "{n} found"
 msgstr[0] "{n} resultado"
@@ -1795,10 +2047,35 @@ msgstr[0] "{n} online"
 msgstr[1] "{n} online"
 
 #, python-brace-format
+msgid "{n} printer"
+msgid_plural "{n} printers"
+msgstr[0] "{n} impressora"
+msgstr[1] "{n} impressoras"
+
+#, python-brace-format
+msgid "{n} printer selected"
+msgid_plural "{n} printers selected"
+msgstr[0] "{n} impressora selecionada"
+msgstr[1] "{n} impressoras selecionadas"
+
+#, python-brace-format
+msgid "{n} printer shown"
+msgid_plural "{n} printers shown"
+msgstr[0] "{n} impressora exibida"
+msgstr[1] "{n} impressoras exibidas"
+
+#, python-brace-format
 msgid "{n} selected"
 msgid_plural "{n} selected"
 msgstr[0] "{n} selecionado"
 msgstr[1] "{n} selecionados"
+
+#, python-brace-format
+msgctxt "printers"
+msgid "{n} selected"
+msgid_plural "{n} selected"
+msgstr[0] "{n} selecionada"
+msgstr[1] "{n} selecionadas"
 
 #, python-brace-format
 msgid "{n} skipped."
@@ -1895,6 +2172,14 @@ msgstr "“{name}” tem este endereço, {place}"
 #, python-brace-format
 msgid "“{name}” holds {inside}. What should happen to them?"
 msgstr "“{name}” contém {inside}. O que fazer com eles?"
+
+#, python-brace-format
+msgid "“{path}” isn't a host list."
+msgstr "“{path}” não é uma lista de hosts."
+
+#, python-brace-format
+msgid "“{path}” isn't a printer list."
+msgstr "“{path}” não é uma lista de impressoras."
 
 msgid "✓ Found"
 msgstr "✓ Encontrado"

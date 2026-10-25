@@ -14,6 +14,7 @@ PACKAGE = Path(i18n.__file__).resolve().parent.parent
 TRANSLATED = [code for code in i18n.LANGUAGES if code != i18n.DEFAULT_LANGUAGE]
 FIX = "run: uv run python scripts/translations.py"
 type Texts = tuple[str, ...]  # one text, or singular and plural
+type Key = tuple[str | None, Texts]  # the context (most texts have none) and the texts
 
 
 def _texts(value: object) -> Texts:
@@ -22,17 +23,19 @@ def _texts(value: object) -> Texts:
     return (str(value),) if value else ()
 
 
-def _in_code() -> set[Texts]:
+def _in_code() -> set[Key]:
     found = extract_from_dir(str(PACKAGE), [("**.py", "python")], keywords=DEFAULT_KEYWORDS)
-    return {_texts(message) for _file, _line, message, _comments, _context in found}
+    return {(context or None, _texts(message)) for *_, message, _notes, context in found}
 
 
-def _po(code: str) -> list[tuple[Texts, Texts, set[str]]]:
-    """(source texts, translated texts, flags) for every entry but the header."""
+def _po(code: str) -> list[tuple[Key, Texts, set[str]]]:
+    """(context and source texts, translated texts, flags) for every entry but the header."""
     path = i18n.LOCALE_DIR / code / "LC_MESSAGES" / f"{i18n.DOMAIN}.po"
     with path.open("rb") as f:
         catalog = read_po(f, locale=code)
-    return [(_texts(m.id), _texts(m.string), set(m.flags)) for m in catalog if m.id]
+    return [
+        ((m.context or None, _texts(m.id)), _texts(m.string), set(m.flags)) for m in catalog if m.id
+    ]
 
 
 def _fields(text: str) -> set[str]:
@@ -41,14 +44,14 @@ def _fields(text: str) -> set[str]:
 
 @pytest.mark.parametrize("code", TRANSLATED)
 def test_every_text_in_the_code_is_in_the_catalog(code: str) -> None:
-    catalog = {ids for ids, _strings, _flags in _po(code)}
+    catalog = {key for key, _strings, _flags in _po(code)}
     assert not _in_code() - catalog, f"new texts not in the {code} catalog; {FIX}"
     assert not catalog - _in_code(), f"texts no longer used are still in the catalog; {FIX}"
 
 
 @pytest.mark.parametrize("code", TRANSLATED)
 def test_every_text_is_translated_with_the_same_fields(code: str) -> None:
-    for ids, strings, flags in _po(code):
+    for (_context, ids), strings, flags in _po(code):
         assert "fuzzy" not in flags, f"needs checking: {ids[0]!r}"
         assert strings and all(strings), f"not translated: {ids[0]!r}"
         # A translation may drop {n} ("O host desse grupo…") but never invent a field.
@@ -62,9 +65,13 @@ def test_every_text_is_translated_with_the_same_fields(code: str) -> None:
 def test_compiled_catalog_matches_the_source(code: str) -> None:
     # The app reads the .mo; a forgotten compile would ship old translations.
     compiled = gettext.translation(i18n.DOMAIN, i18n.LOCALE_DIR, [code])
-    for ids, strings, _flags in _po(code):
-        if len(ids) == 2:
+    for (context, ids), strings, _flags in _po(code):
+        if len(ids) == 2 and context:
+            assert compiled.npgettext(context, ids[0], ids[1], 2) == strings[1], FIX
+        elif len(ids) == 2:
             assert compiled.ngettext(ids[0], ids[1], 2) == strings[1], FIX
+        elif context:
+            assert compiled.pgettext(context, ids[0]) == strings[0], FIX
         else:
             assert compiled.gettext(ids[0]) == strings[0], FIX
 

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt
 from PySide6.QtGui import QDragLeaveEvent, QDragMoveEvent, QDropEvent
 from PySide6.QtWidgets import (
@@ -26,8 +27,8 @@ from capypanel.ui.groups import (
     TreeMenu,
     fill_move_menu,
 )
-from capypanel.ui.main_window import window as window_module
-from capypanel.ui.main_window.window import MainWindow
+from capypanel.ui.hosts_tool.settings import HostsSettings
+from capypanel.ui.list_workspace import workspace as workspace_module
 from capypanel.ui.menus import label
 
 
@@ -45,9 +46,9 @@ def office(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def window(qapp: QApplication, tmp_path: Path, office: Path) -> Iterator[MainWindow]:
+def window(qapp: QApplication, tmp_path: Path, office: Path) -> Iterator[CapyWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    win = MainWindow(settings.resolve_paths(tmp_path), {"schema": 1, "recent_lists": [str(office)]})
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1, "recent_lists": [str(office)]})
     yield win
     win.close()
 
@@ -56,61 +57,61 @@ def _names(item: QTreeWidgetItem) -> list[str]:
     return [item.child(i).text(0) for i in range(item.childCount())]  # type: ignore[union-attr]
 
 
-def _id(window: MainWindow, name: str) -> str:
-    doc = window.document
+def _id(window: CapyWindow, name: str) -> str:
+    doc = window.hosts.document
     assert doc is not None
     return next(g.id for g in doc.hosts.groups if g.name == name)
 
 
 def test_groups_keep_the_list_s_order_and_all_computers_is_pinned_above(
-    window: MainWindow,
+    window: CapyWindow,
 ) -> None:
-    root = window.nav.groups.invisibleRootItem()
+    root = window.hosts.nav.groups.invisibleRootItem()
     assert _names(root) == ["Zebra wing (1)", "alpha wing (1)"]  # not sorted A–Z
-    everything = window.nav.everything.topLevelItem(0)
+    everything = window.hosts.nav.everything.topLevelItem(0)
     assert everything is not None and everything.text(0) == "All hosts (2)"
-    assert window.nav.current_filter().kind == "all"
-    window.nav.select_group(_id(window, "Lab"))
+    assert window.hosts.nav.current_filter().kind == "all"
+    window.hosts.nav.select_group(_id(window, "Lab"))
     assert not everything.isSelected()  # one pick at a time across both lists
 
 
-def test_dragging_a_group_saves_the_new_place(window: MainWindow) -> None:
-    tree = window.nav.groups
+def test_dragging_a_group_saves_the_new_place(window: CapyWindow) -> None:
+    tree = window.hosts.nav.groups
     root = tree.invisibleRootItem()
     alpha = root.takeChild(1)  # what a drag above "Zebra wing" leaves behind
     assert alpha is not None
     root.insertChild(0, alpha)
     tree.rearranged.emit()
-    doc = window.document
+    doc = window.hosts.document
     assert doc is not None
     assert [g.name for g in doc.hosts.children(None)] == ["alpha wing", "Zebra wing"]
     assert listfile.load(doc.path).hosts == doc.hosts  # saved
 
 
-def test_hosts_dropped_on_a_group_move_there(window: MainWindow) -> None:
-    doc = window.document
+def test_hosts_dropped_on_a_group_move_there(window: CapyWindow) -> None:
+    doc = window.hosts.document
     assert doc is not None
     z01 = next(h.id for h in doc.hosts.hosts if h.name == "Z-01")
-    window.nav.groups.hosts_dropped.emit([z01], _id(window, "Lab"))
-    doc = window.document
+    window.hosts.nav.groups.hosts_dropped.emit([z01], _id(window, "Lab"))
+    doc = window.hosts.document
     assert doc is not None
     assert doc.hosts.host(z01).group == _id(window, "Lab")  # type: ignore[union-attr]
 
 
-def test_read_only_lists_cant_be_rearranged(window: MainWindow, office: Path) -> None:
+def test_read_only_lists_cant_be_rearranged(window: CapyWindow, office: Path) -> None:
     office.chmod(0o444)
     try:
-        window.open_list(office)
-        assert window.nav.groups.dragDropMode() == QAbstractItemView.DragDropMode.NoDragDrop
-        assert not window.table.dragEnabled()
+        window.hosts.open_list(office)
+        assert window.hosts.nav.groups.dragDropMode() == QAbstractItemView.DragDropMode.NoDragDrop
+        assert not window.hosts.table.dragEnabled()
     finally:
         office.chmod(0o666)
 
 
 def test_manage_groups_moves_sorts_and_applies_on_ok(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    doc = window.document
+    doc = window.hosts.document
     assert doc is not None
     dialog = ManageGroupsDialog(None, doc.hosts)
     tops = dialog.tree.invisibleRootItem()
@@ -136,19 +137,19 @@ def test_manage_groups_moves_sorts_and_applies_on_ok(
         return QDialog.DialogCode.Accepted
 
     monkeypatch.setattr(ManageGroupsDialog, "exec", use)
-    window.commands.manage_groups.trigger()
-    doc = window.document
+    window.hosts.commands.manage_groups.trigger()
+    doc = window.hosts.document
     assert doc is not None
     assert [g.name for g in doc.hosts.children(None)] == ["alpha wing", "Zebra wing"]
     lab = doc.hosts.group(_id(window, "Lab"))
     assert lab is not None and lab.parent == _id(window, "alpha wing")  # nesting kept
-    item = window.nav.groups.invisibleRootItem().child(0)
+    item = window.hosts.nav.groups.invisibleRootItem().child(0)
     assert item is not None and item.data(0, ROLE_ID) == _id(window, "alpha wing")
     assert item.child(0) is not None and item.isExpanded()
 
 
 def test_removing_a_group_can_keep_what_is_inside(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     asked: list[tuple[int, int]] = []
 
@@ -156,9 +157,9 @@ def test_removing_a_group_can_keep_what_is_inside(
         asked.append((groups, hosts))
         return ("move", None)  # the top level: its parent
 
-    monkeypatch.setattr(window, "_ask_how_to_remove", keep)
-    window.remove_group(_id(window, "alpha wing"))
-    doc = window.document
+    monkeypatch.setattr(window.hosts, "_ask_how_to_remove", keep)
+    window.hosts.remove_group(_id(window, "alpha wing"))
+    doc = window.hosts.document
     assert doc is not None
     assert asked == [(1, 1)]  # Lab, and L-01 inside it
     assert {g.name: g.parent for g in doc.hosts.groups} == {"Zebra wing": None, "Lab": None}
@@ -166,11 +167,11 @@ def test_removing_a_group_can_keep_what_is_inside(
 
 
 def test_removing_a_group_can_remove_everything(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(window, "_ask_how_to_remove", lambda *_args: ("all", None))
-    window.remove_group(_id(window, "alpha wing"))
-    doc = window.document
+    monkeypatch.setattr(window.hosts, "_ask_how_to_remove", lambda *_args: ("all", None))
+    window.hosts.remove_group(_id(window, "alpha wing"))
+    doc = window.hosts.document
     assert doc is not None
     assert [g.name for g in doc.hosts.groups] == ["Zebra wing"]
     assert [h.name for h in doc.hosts.hosts] == ["Z-01"]
@@ -185,9 +186,9 @@ def _choose(menu: QMenu, text: str) -> None:
 
 
 def test_move_to_offers_groups_itself_first_and_never_the_group_itself(
-    window: MainWindow,
+    window: CapyWindow,
 ) -> None:
-    doc = window.document
+    doc = window.hosts.document
     assert doc is not None
     chosen: list[str | None] = []
     menu = TreeMenu()
@@ -228,7 +229,7 @@ def test_move_to_draws_the_tree_s_lines(qapp: QApplication) -> None:
 
 
 def test_right_click_move_to_puts_the_group_inside_another(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     class Choosing(QMenu):
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
@@ -238,22 +239,23 @@ def test_right_click_move_to_puts_the_group_inside_another(
 
     window.show()
     QApplication.processEvents()
-    tree = window.nav.groups
+    tree = window.hosts.nav.groups
     alpha = tree.invisibleRootItem().child(1)
     lab = alpha.child(0) if alpha is not None else None
     assert lab is not None
-    monkeypatch.setattr(window_module, "QMenu", Choosing)
-    window._group_menu(tree.visualItemRect(lab).center())
-    doc = window.document
+    monkeypatch.setattr(workspace_module, "QMenu", Choosing)
+    window.hosts._group_menu(tree.visualItemRect(lab).center())
+    doc = window.hosts.document
     assert doc is not None
     assert doc.hosts.group(_id(window, "Lab")).parent == _id(window, "Zebra wing")  # type: ignore[union-attr]
     assert listfile.load(doc.path).hosts == doc.hosts  # saved
-    assert window.nav.selected_group_id() == _id(window, "Lab")  # still picked, in its new place
+    picked = window.hosts.nav.selected_group_id()
+    assert picked == _id(window, "Lab")  # still picked, in its new place
     window.close()
 
 
 def test_right_clicking_the_groups_heading_offers_new_and_manage(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     seen: list[str] = []
 
@@ -261,36 +263,36 @@ def test_right_clicking_the_groups_heading_offers_new_and_manage(
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
             seen.extend(_texts(self))
 
-    monkeypatch.setattr(window_module, "QMenu", Recorded)
-    window.nav.groups_heading.customContextMenuRequested.emit(QPoint(5, 5))
+    monkeypatch.setattr(workspace_module, "QMenu", Recorded)
+    window.hosts.nav.groups_heading.customContextMenuRequested.emit(QPoint(5, 5))
     assert seen == ["Add &group…", "&Manage groups…"]
 
 
 def test_add_group_from_the_heading_goes_to_the_top_level_even_with_a_group_picked(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     class Adding(QMenu):
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
             _choose(self, "Add &group…")
 
-    monkeypatch.setattr(window_module, "QMenu", Adding)
-    monkeypatch.setattr(window_module.QInputDialog, "getText", lambda *_a, **_k: ("Annex", True))
-    window.nav.select_group(_id(window, "Lab"))
-    window.nav.groups_heading.customContextMenuRequested.emit(QPoint(5, 5))
-    doc = window.document
+    monkeypatch.setattr(workspace_module, "QMenu", Adding)
+    monkeypatch.setattr(workspace_module.QInputDialog, "getText", lambda *_a, **_k: ("Annex", True))
+    window.hosts.nav.select_group(_id(window, "Lab"))
+    window.hosts.nav.groups_heading.customContextMenuRequested.emit(QPoint(5, 5))
+    doc = window.hosts.document
     assert doc is not None
     assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Annex"]
 
 
-def test_a_group_dropped_on_the_groups_heading_goes_to_the_top_level(window: MainWindow) -> None:
-    window.nav.groups_heading.group_dropped.emit(_id(window, "Lab"))
-    doc = window.document
+def test_a_group_dropped_on_the_groups_heading_goes_to_the_top_level(window: CapyWindow) -> None:
+    window.hosts.nav.groups_heading.group_dropped.emit(_id(window, "Lab"))
+    doc = window.hosts.document
     assert doc is not None
     assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Lab"]
 
 
-def test_manage_groups_move_to_changes_only_its_working_copy(window: MainWindow) -> None:
-    doc = window.document
+def test_manage_groups_move_to_changes_only_its_working_copy(window: CapyWindow) -> None:
+    doc = window.hosts.document
     assert doc is not None
     dialog = ManageGroupsDialog(None, doc.hosts)
     root = dialog.tree.top()
@@ -307,8 +309,8 @@ def test_manage_groups_move_to_changes_only_its_working_copy(window: MainWindow)
     assert saved is not None and saved.parent is not None  # nothing saved before OK
 
 
-def test_the_tree_s_drag_data_drops_on_the_heading(window: MainWindow) -> None:
-    tree = window.nav.groups
+def test_the_tree_s_drag_data_drops_on_the_heading(window: CapyWindow) -> None:
+    tree = window.hosts.nav.groups
     alpha = tree.invisibleRootItem().child(1)
     lab = alpha.child(0) if alpha is not None else None
     assert lab is not None
@@ -320,56 +322,56 @@ def test_the_tree_s_drag_data_drops_on_the_heading(window: MainWindow) -> None:
         Qt.MouseButton.LeftButton,
         Qt.KeyboardModifier.NoModifier,
     )
-    window.nav.groups_heading.dropEvent(drop)
-    doc = window.document
+    window.hosts.nav.groups_heading.dropEvent(drop)
+    doc = window.hosts.document
     assert doc is not None
     assert doc.hosts.group(_id(window, "Lab")).parent is None  # type: ignore[union-attr]
     assert drop.dropAction() == Qt.DropAction.CopyAction  # the tree doesn't drop its own row
 
 
 def test_the_plus_by_the_heading_adds_at_the_top_level(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(window_module.QInputDialog, "getText", lambda *_a, **_k: ("Annex", True))
-    window.nav.select_group(_id(window, "Lab"))
-    window.nav.add_group_button.click()
-    doc = window.document
+    monkeypatch.setattr(workspace_module.QInputDialog, "getText", lambda *_a, **_k: ("Annex", True))
+    window.hosts.nav.select_group(_id(window, "Lab"))
+    window.hosts.nav.add_group_button.click()
+    doc = window.hosts.document
     assert doc is not None
     assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing", "Annex"]
 
 
-def test_a_group_closed_by_hand_stays_closed_after_a_change(window: MainWindow) -> None:
-    alpha = window.nav.groups.invisibleRootItem().child(1)
+def test_a_group_closed_by_hand_stays_closed_after_a_change(window: CapyWindow) -> None:
+    alpha = window.hosts.nav.groups.invisibleRootItem().child(1)
     assert alpha is not None
     alpha.setExpanded(False)
-    doc = window.document
+    doc = window.hosts.document
     assert doc is not None
     z01 = next(h.id for h in doc.hosts.hosts if h.name == "Z-01")
-    window.move_hosts([z01], _id(window, "Lab"))  # any change rebuilds the tree
-    alpha = window.nav.groups.invisibleRootItem().child(1)
+    window.hosts.move_items([z01], _id(window, "Lab"))  # any change rebuilds the tree
+    alpha = window.hosts.nav.groups.invisibleRootItem().child(1)
     assert alpha is not None and alpha.childCount() and not alpha.isExpanded()
 
 
-def test_hosts_with_no_group_show_under_no_group(window: MainWindow) -> None:
-    nav = window.nav
+def test_hosts_with_no_group_show_under_no_group(window: CapyWindow) -> None:
+    nav = window.hosts.nav
     # Always there, so the first host can be dragged onto it too.
     assert not nav._no_group_item.isHidden() and nav._no_group_item.text(0) == "No group (0)"
-    doc = window.document
+    doc = window.hosts.document
     assert doc is not None
     z01 = next(h.id for h in doc.hosts.hosts if h.name == "Z-01")
-    window.nav.everything.hosts_dropped.emit([z01], NO_GROUP)  # dragged onto "No group"
-    doc = window.document
+    window.hosts.nav.everything.hosts_dropped.emit([z01], NO_GROUP)  # dragged onto "No group"
+    doc = window.hosts.document
     assert doc is not None and doc.hosts.host(z01).group == NO_GROUP  # type: ignore[union-attr]
     assert nav._no_group_item.text(0) == "No group (1)"
-    window.nav.select_group(NO_GROUP)
-    window.table.select_ids([z01])
+    window.hosts.nav.select_group(NO_GROUP)
+    window.hosts.table.select_ids([z01])
     assert nav.current_filter().kind == "nogroup"
-    assert [window.table.topLevelItem(0).text(0)] == ["Z-01"]  # type: ignore[union-attr]
-    assert window.details.shown_value("group") == "No group"
+    assert [window.hosts.table.topLevelItem(0).text(0)] == ["Z-01"]  # type: ignore[union-attr]
+    assert window.hosts.details.shown_value("group") == "No group"
 
 
 def test_hosts_right_click_move_to_any_group_or_none(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     class Choosing(QMenu):
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
@@ -381,22 +383,22 @@ def test_hosts_right_click_move_to_any_group_or_none(
 
     window.show()
     QApplication.processEvents()
-    doc = window.document
+    doc = window.hosts.document
     assert doc is not None
     l01 = next(h.id for h in doc.hosts.hosts if h.name == "L-01")
-    window.nav.select_group(doc.hosts.host(l01).group)  # type: ignore[union-attr]
-    window.table.select_ids([l01])
-    item = window.table.topLevelItem(0)
+    window.hosts.nav.select_group(doc.hosts.host(l01).group)  # type: ignore[union-attr]
+    window.hosts.table.select_ids([l01])
+    item = window.hosts.table.topLevelItem(0)
     assert item is not None
-    monkeypatch.setattr(window_module, "QMenu", Choosing)
-    window._host_menu(window.table.visualItemRect(item).center())
-    doc = window.document
+    monkeypatch.setattr(workspace_module, "QMenu", Choosing)
+    window.hosts._item_menu(window.hosts.table.visualItemRect(item).center())
+    doc = window.hosts.document
     assert doc is not None and doc.hosts.host(l01).group == NO_GROUP  # type: ignore[union-attr]
     window.close()
 
 
 def test_removing_a_group_offers_where_its_contents_go(
-    window: MainWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def pick_zebra(box: QMessageBox) -> int:
         move = next(b for b in box.buttons() if b.text() == "&Move them to")
@@ -409,20 +411,20 @@ def test_removing_a_group_offers_where_its_contents_go(
         _choose(menu, "Zebra wing")
         return 0
 
-    monkeypatch.setattr(window_module.QMessageBox, "exec", pick_zebra)
-    window.remove_group(_id(window, "alpha wing"))
-    doc = window.document
+    monkeypatch.setattr(workspace_module.QMessageBox, "exec", pick_zebra)
+    window.hosts.remove_group(_id(window, "alpha wing"))
+    doc = window.hosts.document
     assert doc is not None
     lab = doc.hosts.group(_id(window, "Lab"))
     assert lab is not None and lab.parent == _id(window, "Zebra wing")
 
 
 def test_hosts_dragged_over_a_group_light_it_without_leaving_where_they_are(
-    window: MainWindow,
+    window: CapyWindow,
 ) -> None:
     window.show()
     QApplication.processEvents()
-    tree = window.nav.groups
+    tree = window.hosts.nav.groups
     zebra = next(i for i in _walk_items(tree) if i.data(0, ROLE_ID) == _id(window, "Zebra wing"))
     data = QMimeData()
     data.setData(HOSTS_MIME, b"some-host")
@@ -433,9 +435,9 @@ def test_hosts_dragged_over_a_group_light_it_without_leaving_where_they_are(
                        Qt.KeyboardModifier.NoModifier)
     )  # fmt: skip
     assert zebra.isSelected()  # shows where they'd go
-    assert window.nav.current_filter().kind == "all"  # but the table still shows all hosts
+    assert window.hosts.nav.current_filter().kind == "all"  # but the table still shows all hosts
     tree.dragLeaveEvent(QDragLeaveEvent())
-    assert not zebra.isSelected() and window.nav.current_filter().kind == "all"
+    assert not zebra.isSelected() and window.hosts.nav.current_filter().kind == "all"
     window.close()
 
 
@@ -453,8 +455,8 @@ def _walk_items(tree: QTreeWidget) -> list[QTreeWidgetItem]:
     return found
 
 
-def test_a_group_dropped_below_the_last_row_goes_under_groups(window: MainWindow) -> None:
-    doc = window.document
+def test_a_group_dropped_below_the_last_row_goes_under_groups(window: CapyWindow) -> None:
+    doc = window.hosts.document
     assert doc is not None
     dialog = ManageGroupsDialog(None, doc.hosts)
     dialog.resize(460, 480)
@@ -472,57 +474,57 @@ def test_a_group_dropped_below_the_last_row_goes_under_groups(window: MainWindow
     dialog.close()
 
 
-def test_manage_groups_draws_tree_lines(window: MainWindow) -> None:
-    doc = window.document
+def test_manage_groups_draws_tree_lines(window: CapyWindow) -> None:
+    doc = window.hosts.document
     assert doc is not None
     dialog = ManageGroupsDialog(None, doc.hosts)
-    assert dialog.tree.tree_lines and not window.nav.groups.tree_lines  # only in this window
+    assert dialog.tree.tree_lines and not window.hosts.nav.groups.tree_lines  # only in this window
     dialog.show()
     QApplication.processEvents()
     assert not dialog.tree.viewport().grab().isNull()  # draws in any theme without failing
     dialog.close()
 
 
-def _reopened(window: MainWindow, tmp_path: Path) -> MainWindow:
+def _reopened(window: CapyWindow, tmp_path: Path) -> CapyWindow:
     """The app started again, with the settings the first window saved as it closed."""
     window.close()
-    again = MainWindow(settings.resolve_paths(tmp_path), window._prefs)
+    again = CapyWindow(settings.resolve_paths(tmp_path), window.prefs)
     return again
 
 
 def test_a_list_opens_on_all_hosts_where_it_was_left_or_its_chosen_group(
-    window: MainWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     lab = _id(window, "Lab")
-    window.nav.select_group(lab)
+    window.hosts.nav.select_group(lab)
     again = _reopened(window, tmp_path)
-    assert again.nav.current_filter().kind == "all"  # the default: All hosts
-    path = again.document.path  # type: ignore[union-attr]
-    locations.set_list_view(again._prefs, path, locations.ListView(show=locations.SHOW_LAST))
-    again.nav.select_group(lab)
+    assert again.hosts.nav.current_filter().kind == "all"  # the default: All hosts
+    path = again.hosts.document.path  # type: ignore[union-attr]
+    locations.set_list_view(again.hosts.prefs, path, locations.ListView(show=locations.SHOW_LAST))
+    again.hosts.nav.select_group(lab)
     third = _reopened(again, tmp_path)
-    assert third.nav.selected_group_id() == lab  # where it was left
-    assert [third.table.topLevelItem(0).text(0)] == ["L-01"]  # type: ignore[union-attr]
+    assert third.hosts.nav.selected_group_id() == lab  # where it was left
+    assert [third.hosts.table.topLevelItem(0).text(0)] == ["L-01"]  # type: ignore[union-attr]
 
     class Ticking(QMenu):
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
             _choose(self, "Show this group &first")
 
-    monkeypatch.setattr(window_module, "QMenu", Ticking)
+    monkeypatch.setattr(workspace_module, "QMenu", Ticking)
     zebra = _id(third, "Zebra wing")
     third.show()
     QApplication.processEvents()
-    item = next(i for i in _walk_items(third.nav.groups) if i.data(0, ROLE_ID) == zebra)
-    third._group_menu(third.nav.groups.visualItemRect(item).center())
-    third.nav.select_group(lab)  # left on Lab, but Zebra wing is the chosen one
+    item = next(i for i in _walk_items(third.hosts.nav.groups) if i.data(0, ROLE_ID) == zebra)
+    third.hosts._group_menu(third.hosts.nav.groups.visualItemRect(item).center())
+    third.hosts.nav.select_group(lab)  # left on Lab, but Zebra wing is the chosen one
     fourth = _reopened(third, tmp_path)
-    assert fourth.nav.selected_group_id() == zebra
+    assert fourth.hosts.nav.selected_group_id() == zebra
     fourth.close()
 
 
-def test_settings_chooses_what_the_open_list_shows_first(window: MainWindow) -> None:
+def test_settings_chooses_what_the_open_list_shows_first(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
-    page = dialog.hosts
+    page = dialog.group(HostsSettings).general
     assert page.show_first.text() == "All hosts"
     menu = page.show_first.menu()
     assert menu is not None
@@ -537,7 +539,7 @@ def test_settings_chooses_what_the_open_list_shows_first(window: MainWindow) -> 
     ]  # fmt: skip
     _choose(chosen, "alpha wing")
     assert page.show_first.text() == "Group: alpha wing"
-    doc = window.document
+    doc = window.hosts.document
     assert doc is not None
-    view = locations.list_view(window._prefs, doc.path)
+    view = locations.list_view(window.hosts.prefs, doc.path)
     assert (view.show, view.group) == (locations.SHOW_GROUP, _id(window, "alpha wing"))
