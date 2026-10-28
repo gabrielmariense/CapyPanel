@@ -32,7 +32,7 @@ def main() -> int:
     except snmp.SnmpError as e:
         print(f"The printer's answer couldn't be read: {e}")
         return 1
-    print(f"State:     {found.state.value}")
+    print(f"State:     {found.state.value} (device: {found.device.value})")
     print(f"Problems:  {', '.join(p.name.lower() for p in sorted(found.problems)) or 'none'}")
     print(f"Messages:  {' | '.join(found.messages) or 'none'}")
     print(f"Brand:     {found.brand or '?'}")

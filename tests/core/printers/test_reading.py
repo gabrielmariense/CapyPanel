@@ -2,7 +2,7 @@ import pytest
 from snmp_agent import Objects, running
 
 from capypanel.core.printers import reading, snmp
-from capypanel.core.printers.reading import Problem, State, SupplyKind
+from capypanel.core.printers.reading import Device, Problem, State, SupplyKind
 
 S = reading.SUPPLIES
 A = reading.ALERTS
@@ -24,10 +24,14 @@ COLOUR: Objects = {
     reading.SYS_OBJECT_ID: "1.3.6.1.4.1.11.2.3.9.1",
     f"{reading.HR_DEVICE_DESCR}.1": b"HP Color LaserJet SAMPLE-M479",
     f"{reading.HR_PRINTER_STATUS}.1": 1,  # other: stopped by an error
+    f"{reading.HR_DEVICE_STATUS}.1": 5,  # down
     f"{reading.HR_PRINTER_ERRORS}.1": bytes([0b00001100, 0x00]),  # door open, jammed
     f"{reading.SERIAL_NUMBER}.1": b"SAMPLE0001",
+    f"{reading.MARKERS}.3.1.1": 7,  # impressions
     f"{reading.LIFE_COUNT}.1.1": snmp.counter(48_213),
-    **_supply("1.1", 3, 21, b"Black Cartridge", 7500, 3000),
+    f"{reading.MARKERS}.3.1.2": 3,  # ten-thousandths of an inch: not pages
+    f"{reading.LIFE_COUNT}.1.2": snmp.counter(990_000_000),
+    **_supply("1.1", 3, 21, b"Black Cartridge S/N:CRUM-SAMPLE0001", 7500, 3000),
     **_supply("1.2", 3, 21, b"Cyan Cartridge", 6000, 600),
     **_supply("1.3", 3, 21, b"Magenta Cartridge", 6000, -3),
     **_supply("1.4", 3, 21, b"Yellow Cartridge\x00\x00", 6000, -2),
@@ -51,7 +55,7 @@ def _read(objects: Objects) -> reading.Reading:
 
 def test_a_colour_printer_with_problems() -> None:
     found = _read(COLOUR)
-    assert found.state is State.OTHER
+    assert found.state is State.OTHER and found.device is Device.DOWN
     assert found.problems == {Problem.DOOR_OPEN, Problem.JAMMED}
     assert found.messages == ("Paper jam in tray 2", "Front door open")
     assert (found.brand, found.model, found.serial) == (
@@ -59,12 +63,16 @@ def test_a_colour_printer_with_problems() -> None:
         "Color LaserJet SAMPLE-M479",
         "SAMPLE0001",
     )
-    assert found.pages == 48_213
+    assert found.pages == 48_213  # the marker counting impressions, not the one in inches
     by_name = {s.name: s for s in found.supplies}
     assert list(by_name) == [
-        "Black Cartridge", "Cyan Cartridge", "Magenta Cartridge", "Yellow Cartridge",
-        "Imaging Drum", "Toner Collection Unit",
-    ]  # fmt: skip
+        "Black Cartridge",
+        "Cyan Cartridge",
+        "Magenta Cartridge",
+        "Yellow Cartridge",
+        "Imaging Drum",
+        "Toner Collection Unit",
+    ]  # fmt: skip  (the toner chip's serial is left out of its name)
     assert by_name["Black Cartridge"].percent == 40
     assert by_name["Cyan Cartridge"].low(10) and not by_name["Black Cartridge"].low(10)
     magenta, yellow = by_name["Magenta Cartridge"], by_name["Yellow Cartridge"]
@@ -82,6 +90,20 @@ def test_a_printer_that_answers_little_still_reads() -> None:
     assert found.state is State.IDLE
     assert (found.brand, found.model) == ("BROTHER", "HL-SAMPLE series")  # from the description
     assert found.supplies == () and found.pages is None and found.serial == ""
+    assert found.device is Device.UNKNOWN
+
+
+def test_a_running_printer_that_calls_its_state_other_and_keeps_its_serial_elsewhere() -> None:
+    found = _read({
+        reading.SYS_OBJECT_ID: "1.3.6.1.4.1.367.1.1",
+        f"{reading.HR_DEVICE_DESCR}.1": b"SAMPLE 3700",
+        f"{reading.HR_PRINTER_STATUS}.1": 1,
+        f"{reading.HR_DEVICE_STATUS}.1": 2,
+        f"{reading.ENTITY_SERIAL}.1": b"SAMPLE0002",
+        f"{reading.LIFE_COUNT}.1.1": snmp.counter(1_234),  # no unit given: counted as pages
+    })  # fmt: skip
+    assert (found.state, found.device) == (State.OTHER, Device.RUNNING)
+    assert (found.brand, found.serial, found.pages) == ("RICOH", "SAMPLE0002", 1_234)
 
 
 def test_a_printer_that_does_not_answer_raises_no_answer() -> None:

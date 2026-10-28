@@ -1,10 +1,11 @@
 """What Refresh reads from a printer over SNMP: its status and the printer's own error
 messages, each supply's level, the page counter, and its brand, model and serial number.
 
-All of it comes from the standard printer objects (Host Resources and Printer MIB), which
-printers of every brand answer, so nothing here is tuned to one maker. What a printer doesn't
-answer is left empty."""
+All of it comes from the standard printer objects (Host Resources, Printer MIB and Entity
+MIB), which printers of every brand answer, so nothing here is tuned to one maker. What a
+printer doesn't answer is left empty."""
 
+import re
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 from urllib.parse import urlsplit
@@ -14,16 +15,21 @@ from capypanel.core.printers import snmp
 SYS_DESCR = "1.3.6.1.2.1.1.1.0"
 SYS_OBJECT_ID = "1.3.6.1.2.1.1.2.0"
 HR_DEVICE_DESCR = "1.3.6.1.2.1.25.3.2.1.3"  # .<device index>
+HR_DEVICE_STATUS = "1.3.6.1.2.1.25.3.2.1.5"
 HR_PRINTER_STATUS = "1.3.6.1.2.1.25.3.5.1.1"
 HR_PRINTER_ERRORS = "1.3.6.1.2.1.25.3.5.1.2"
 SERIAL_NUMBER = "1.3.6.1.2.1.43.5.1.1.17"  # prtGeneralSerialNumber
-LIFE_COUNT = "1.3.6.1.2.1.43.10.2.1.4"  # prtMarkerLifeCount: pages printed, per marker
+ENTITY_SERIAL = "1.3.6.1.2.1.47.1.1.1.1.11"  # entPhysicalSerialNum: where some brands put it
+MARKERS = "1.3.6.1.2.1.43.10.2.1"  # prtMarkerTable: what each marker counts, and in what unit
+LIFE_COUNT = f"{MARKERS}.4"  # prtMarkerLifeCount
 SUPPLIES = "1.3.6.1.2.1.43.11.1.1"  # prtMarkerSuppliesTable
 ALERTS = "1.3.6.1.2.1.43.18.1.1"  # prtAlertTable
 
 # Columns of the supplies table, and of the alerts table.
 _CLASS, _TYPE, _DESCRIPTION, _MAX, _LEVEL = 4, 5, 6, 8, 9
 _SEVERITY, _ALERT_TEXT = 2, 8
+_COUNTER_UNIT, _LIFE_COUNT = 3, 4
+_PAGE_UNITS = {7, 8}  # impressions, sheets (others count distance or time, not pages)
 _RECEPTACLE = 4  # prtMarkerSuppliesClass: a box that fills up (waste toner), not one that empties
 _SOME_LEFT = -3  # a level the printer can't measure, but it says there's some left
 _SERIOUS = {3, 4}  # alert severities: critical, warning (others are just information)
@@ -47,6 +53,21 @@ class State(StrEnum):
 
 
 _STATES = {1: State.OTHER, 2: State.UNKNOWN, 3: State.IDLE, 4: State.PRINTING, 5: State.WARMING_UP}
+
+
+class Device(StrEnum):
+    """How the printer rates itself as a device (hrDeviceStatus). Many printers say "other"
+    as their state while running fine: this tells that apart from a stopped one."""
+
+    RUNNING = "running"
+    WARNING = "warning"
+    TESTING = "testing"
+    DOWN = "down"
+    UNKNOWN = "unknown"
+
+
+_DEVICES = {1: Device.UNKNOWN, 2: Device.RUNNING, 3: Device.WARNING, 4: Device.TESTING,
+            5: Device.DOWN}  # fmt: skip
 
 
 class Problem(IntEnum):
@@ -100,6 +121,7 @@ class Supply:
 @dataclass(frozen=True)
 class Reading:
     state: State = State.UNKNOWN
+    device: Device = Device.UNKNOWN
     problems: frozenset[Problem] = frozenset()
     messages: tuple[str, ...] = ()  # the printer's own words for what's wrong, e.g. "Paper jam"
     supplies: tuple[Supply, ...] = ()
@@ -133,24 +155,28 @@ def read(
         status = _number(printers[0][1]) if printers else None
         details = session.get([
             f"{HR_DEVICE_DESCR}.{device}",
+            f"{HR_DEVICE_STATUS}.{device}",
             f"{HR_PRINTER_ERRORS}.{device}",
         ])  # fmt: skip
-        serials = session.walk(SERIAL_NUMBER)
+        serial = _first_text(session.walk(SERIAL_NUMBER))
+        if not serial:
+            serial = _first_text(session.walk(ENTITY_SERIAL))
         supplies = session.walk(SUPPLIES)
-        counters = session.walk(LIFE_COUNT)
+        markers = session.walk(MARKERS)
         alerts = session.walk(ALERTS)
     description = _text(details[f"{HR_DEVICE_DESCR}.{device}"]) or _text(top[SYS_DESCR])
     brand = _brand(top[SYS_OBJECT_ID], description)
-    pages = [n for _oid, value in counters if (n := _number(value)) is not None and n >= 0]
+    device_status = _number(details[f"{HR_DEVICE_STATUS}.{device}"])
     return Reading(
         state=_STATES.get(status, State.UNKNOWN) if status is not None else State.UNKNOWN,
+        device=_DEVICES.get(device_status, Device.UNKNOWN) if device_status else Device.UNKNOWN,
         problems=_problems(details[f"{HR_PRINTER_ERRORS}.{device}"]),
         messages=_messages(alerts),
         supplies=_supplies(supplies),
-        pages=max(pages) if pages else None,
+        pages=_pages(markers),
         brand=brand,
         model=_model(description, brand),
-        serial=next((t for _oid, v in serials if (t := _text(v))), ""),
+        serial=serial,
     )
 
 
@@ -167,6 +193,10 @@ def _text(value: snmp.Value) -> str:
     except UnicodeDecodeError:
         text = value.decode("latin-1")
     return " ".join(text.replace("\x00", " ").split())
+
+
+def _first_text(rows: list[tuple[str, snmp.Value]]) -> str:
+    return next((t for _oid, v in rows if (t := _text(v))), "")
 
 
 def _brand(object_id: snmp.Value, description: str) -> str:
@@ -206,6 +236,21 @@ def _table(rows: list[tuple[str, snmp.Value]], base: str) -> dict[str, dict[int,
     return table
 
 
+def _pages(rows: list[tuple[str, snmp.Value]]) -> int | None:
+    """The page counter: the highest marker counting pages. A marker that says it counts
+    something else (distance, hours) is left out; one that doesn't say counts."""
+    counted = []
+    for row in _table(rows, MARKERS).values():
+        count, unit = _number(row.get(_LIFE_COUNT)), _number(row.get(_COUNTER_UNIT))
+        if count is not None and count >= 0 and (unit is None or unit in _PAGE_UNITS):
+            counted.append(count)
+    return max(counted) if counted else None
+
+
+# A supply's own chip serial some printers add to its name ("Black Toner S/N:CRUM-...").
+_CHIP_SERIAL = re.compile(r"\s*\bS/?N\s*:\s*\S+", re.IGNORECASE)
+
+
 def _supplies(rows: list[tuple[str, snmp.Value]]) -> tuple[Supply, ...]:
     found = []
     for row in _table(rows, SUPPLIES).values():
@@ -215,7 +260,7 @@ def _supplies(rows: list[tuple[str, snmp.Value]]) -> tuple[Supply, ...]:
         percent = None
         if level is not None and most and most > 0 and level >= 0:
             percent = max(0, min(100, round(level * 100 / most)))
-        name = _text(row.get(_DESCRIPTION)) or kind.value
+        name = _CHIP_SERIAL.sub("", _text(row.get(_DESCRIPTION))).strip() or kind.value
         found.append(
             Supply(
                 name=name,
