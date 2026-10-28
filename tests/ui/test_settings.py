@@ -89,6 +89,7 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
         "Remote tools",
         "Printers",
         "Startup",
+        "Refresh",
         "Printer lists",
     ]
     assert [dialog.pinned_list.item(0).text().strip()] == ["About"]  # type: ignore[union-attr]
@@ -100,7 +101,8 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
     ]
     assert sections == ["Startup", "Refresh"]  # no Layout: there's no layout reset
     printers = dialog.group(PrintersSettings).general.findChildren(QLabel)
-    assert [w.text() for w in printers if w.objectName() == "sectionTitle"] == ["Startup"]
+    titles = [w.text() for w in printers if w.objectName() == "sectionTitle"]
+    assert titles == ["Startup", "Refresh"]  # Refresh: the SNMP community, the low level
 
 
 def test_page_list_rows_never_overlap(window: CapyWindow) -> None:

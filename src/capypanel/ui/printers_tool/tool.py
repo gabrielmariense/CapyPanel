@@ -1,29 +1,33 @@
 """The Printers tool: the list workspace with printers, each with its brand, model, serial number,
-asset tag and where its page counters come from, plus opening their web pages."""
+asset tag and where its page counters come from, plus opening their web pages and Refresh, which
+reads each printer's status, supplies and page counter over SNMP."""
 
 import logging
 from collections.abc import Sequence
 from dataclasses import replace
 
-from PySide6.QtCore import Qt, QUrl
+from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QGuiApplication
-from PySide6.QtWidgets import QDialog, QMenu
+from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QWidget
 
 from capypanel.core.hosts.document import starter_list
 from capypanel.core.hosts.model import Host, HostListRuleError
 from capypanel.core.i18n import _, ngettext, npgettext
-from capypanel.core.printers.printer import with_info
+from capypanel.core.printers.printer import info_of, with_info
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.hosts import group_path
 from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
+from capypanel.ui.printers_tool import status
 from capypanel.ui.printers_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.printers_tool.details import PrinterDetails, PrinterDetailsPanel
 from capypanel.ui.printers_tool.dialog import PrinterDialog
+from capypanel.ui.printers_tool.refresh import PrinterRun, community
 from capypanel.ui.printers_tool.report import PrintersReport
-from capypanel.ui.printers_tool.settings import PrintersSettings
+from capypanel.ui.printers_tool.settings import HIGHEST, LOWEST, PrintersSettings
+from capypanel.ui.printers_tool.status import Cell, Checked
 from capypanel.ui.printers_tool.table import PrinterTable
 from capypanel.ui.printers_tool.toolbar import PrintersToolBar
 
@@ -49,6 +53,7 @@ def web_page(printer: Host) -> QUrl | None:
 class PrintersTool(ListWorkspace):
     TOOL_ID = "printers"
     ICON = "printer"
+    checks_changed = Signal()  # a Refresh started, found something, or ended
 
     def __init__(self, shell: Shell):
         self.commands = create_actions(None)  # owned by this widget once it exists
@@ -64,12 +69,25 @@ class PrintersTool(ListWorkspace):
         )
         for action in vars(self.commands).values():
             action.setParent(self)
+        self._checked: dict[str, Checked] = {}  # each printer's last Refresh, in memory only
+        self._run: PrinterRun | None = None
+        self._progress = QLabel()
+        self._stop_button = QToolButton()
+        self._stop_button.setText(_("Stop"))
+        self._stop_button.clicked.connect(self.stop_checks)
+        for widget in (self._progress, self._stop_button):
+            widget.hide()
+        self.table.set_cells(self._cells)
         self.settings_pages = PrintersSettings(self)  # its part of Settings
         self._fill_inventory()
         self._connect()
         self.restore_layout()
         self.open_startup_list()
         self.refresh()
+
+    def status_widgets(self) -> list[QWidget]:
+        """Shown on the right of the status bar: a Refresh's progress and Stop."""
+        return [self._progress, self._stop_button]
 
     def _fill_inventory(self) -> None:
         a = self.commands
@@ -79,9 +97,11 @@ class PrintersTool(ListWorkspace):
         a = self.commands
         a.add_printer.triggered.connect(self.add_item)
         a.export_printers.triggered.connect(self.export_printers)
-        # Not in any menu bar menu, so their shortcuts (Ctrl+Shift+C, Ctrl+N) live here:
+        # Not in any menu bar menu, so their shortcuts (Ctrl+Shift+C, Ctrl+N, F5) live here:
         # toolbar menus only take keys while they're open.
-        self.addActions([a.copy_address, a.add_printer])
+        self.addActions([a.copy_address, a.add_printer, a.refresh_shown])
+        a.refresh_shown.triggered.connect(lambda: self.check_printers(self.visible_items()))
+        a.refresh_selected.triggered.connect(lambda: self.check_printers(self.selected_items()))
         # Enter opens web pages only from the printer table, so it never fires while typing.
         a.open_web_page.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.table.addAction(a.open_web_page)
@@ -168,6 +188,7 @@ class PrintersTool(ListWorkspace):
 
     def retranslate(self) -> None:
         retranslate_actions(self.commands)
+        self._stop_button.setText(_("Stop"))
         self.toolbar.retranslate()
         super().retranslate()
 
@@ -229,6 +250,19 @@ class PrintersTool(ListWorkspace):
     def settings_group(self) -> PrintersSettings:
         return self.settings_pages
 
+    def low_level(self) -> int:
+        """The low supply level from Settings, in %."""
+        saved = self.prefs.get("low_level")
+        ok = isinstance(saved, int) and not isinstance(saved, bool) and LOWEST <= saved <= HIGHEST
+        return saved if ok else status.DEFAULT_LOW  # type: ignore[return-value]
+
+    def set_low_level(self, low: int) -> None:
+        if low != self.low_level():
+            self.prefs["low_level"] = low
+            for printer_id in self._checked:
+                self.table.show_cells(printer_id)
+            self._selection_changed()
+
     def prefs_applied(self) -> None:
         """A choice made in Settings was kept: save it, and show the list's new name."""
         self._save_prefs()
@@ -251,12 +285,19 @@ class PrintersTool(ListWorkspace):
             list_name=doc.path.stem,
             prefs=self.prefs,
             save_prefs=self._save_prefs,
-            results=lambda _id: ("", ""),  # status and toner: nothing checked yet
-            refresh=lambda *_args: None,
-            stop=lambda: None,
-            progress=lambda: None,
+            results=self._report_cells,
+            # Status and Toner come from the same read: either box ticked reads both.
+            refresh=lambda printers, *wanted: (
+                self.check_printers(printers) if any(wanted) else None
+            ),
+            stop=self.stop_checks,
+            progress=lambda: (self._run.done, self._run.total) if self._run else None,
         )
-        run_modal(dialog)
+        self.checks_changed.connect(dialog.checks_changed)
+        try:
+            run_modal(dialog)
+        finally:
+            self.checks_changed.disconnect(dialog.checks_changed)
         if dialog.outcome:
             self._shell.show_message(dialog.outcome, 10_000)
 
@@ -313,7 +354,15 @@ class PrintersTool(ListWorkspace):
     def show_details(self, items: Sequence[Host]) -> None:
         if len(items) == 1 and self._doc is not None:
             printer = items[0]
-            details = PrinterDetails(printer, group_path(self._doc.hosts, printer.group))
+            details = PrinterDetails(
+                printer,
+                group_path(self._doc.hosts, printer.group),
+                self._checked.get(printer.id),
+                self.low_level(),
+                (lambda key, value: self.use_value(printer.id, key, value))
+                if self._writable() is not None
+                else None,
+            )
             self.details.show_printer(details, 1, needle=self._needle())
         else:
             self.details.show_printer(None, len(items), summary=self._summary())
@@ -333,6 +382,9 @@ class PrintersTool(ListWorkspace):
         a.export_printers.setEnabled(doc is not None and bool(doc.hosts.hosts))  # read-only too
         for action in (a.open_web_page, a.copy_address):
             action.setEnabled(selected > 0)  # read-only lists can still open them
+        idle = self._run is None
+        a.refresh_shown.setEnabled(idle and bool(self.visible_items()))  # read-only lists too
+        a.refresh_selected.setEnabled(idle and selected > 0)
 
     # ---- right-click menus ----
 
@@ -345,8 +397,102 @@ class PrintersTool(ListWorkspace):
         menu.addAction(a.open_web_page)
         menu.setDefaultAction(a.open_web_page)  # bold: what double-click and Enter do
         menu.addSeparator()
+        menu.addAction(a.refresh_selected)
+        menu.addSeparator()
         self.add_copy_menu(menu)
         menu.addSeparator()
         menu.addAction(a.edit)
         self.add_move_menu(menu, items)
         menu.addAction(a.remove)
+
+    # ---- Refresh: status, supplies and page counter ----
+
+    def check_printers(self, printers: Sequence[Host]) -> None:
+        """One SNMP read per printer, a few at a time; a printer with no address uses its name."""
+        if self._run is not None or not printers:
+            return
+        targets = [(p.id, p.address or p.name) for p in printers]
+        run = PrinterRun(targets, community())
+        run.found.connect(self._found)
+        run.finished.connect(self._run_finished)
+        self._run = run
+        self._show_progress()
+        self._stop_button.setEnabled(True)
+        self._update_state()
+        self.checks_changed.emit()
+        log.info("Refresh: %d printers", len(targets))
+        run.start()
+
+    def stop_checks(self) -> None:
+        if self._run is not None:
+            self._run.stop()
+            self._stop_button.setEnabled(False)  # printers already being read still finish
+
+    def _found(self, printer_id: str, checked: Checked) -> None:
+        run = self._run
+        if run is None:
+            return
+        run.done += 1
+        self._checked[printer_id] = checked
+        self.table.show_cells(printer_id)
+        if self.table.selected_ids() in ([printer_id], []):  # its details, or the summary
+            self._selection_changed()
+        self._show_progress()
+        self.checks_changed.emit()
+
+    def _show_progress(self) -> None:
+        run = self._run
+        if run is not None:
+            self._progress.setText(
+                _("Checking {done} of {total}…").format(done=run.done, total=run.total)
+            )
+        self._progress.setVisible(run is not None)
+        self._stop_button.setVisible(run is not None)
+
+    def _run_finished(self) -> None:
+        run = self._run
+        if run is None:
+            return
+        self._run = None
+        self._show_progress()
+        self._update_state()
+        self.checks_changed.emit()
+        if run.stopped and run.done < run.total:
+            left = run.total - run.done
+            note = ngettext(
+                "Stopped: {n} printer wasn't checked.",
+                "Stopped: {n} printers weren't checked.",
+                left,
+            )
+            self._shell.show_message(note.format(n=left), 10_000)
+        else:
+            self._shell.show_message(
+                ngettext("Checked {n} printer.", "Checked {n} printers.", run.done).format(
+                    n=run.done
+                ),
+                5000,
+            )
+
+    def _cells(self, printer_id: str) -> tuple[Cell, Cell]:
+        checked, low = self._checked.get(printer_id), self.low_level()
+        return status.status(checked, low), status.toner(checked, low)
+
+    def _report_cells(self, printer_id: str) -> tuple[str, str]:
+        state, toner = self._cells(printer_id)
+        return state.text, toner.text
+
+    def use_value(self, printer_id: str, key: str, value: str) -> None:
+        """Details' "Use this": the value the printer reports replaces the list's."""
+        doc = self._writable()
+        printer = doc.hosts.host(printer_id) if doc else None
+        if doc is None or printer is None or key not in ("brand", "model", "serial"):
+            return
+        if key in ("brand", "serial"):
+            value = value.upper()  # as the printer dialog keeps them
+        info = replace(info_of(printer), **{key: value})
+        try:
+            new = doc.hosts.update_host(with_info(printer, info))
+        except HostListRuleError as e:
+            self._error(str(e))
+            return
+        self._commit(new)

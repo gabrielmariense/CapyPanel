@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 17:14-0300\n"
+"POT-Creation-Date: 2026-10-28 17:27-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,9 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
+
+msgid " %"
+msgstr ""
 
 msgid " and "
 msgstr ""
@@ -140,6 +143,9 @@ msgstr ""
 msgid "&Logged-on users"
 msgstr ""
 
+msgid "&Low supply level"
+msgstr ""
+
 msgid "&Manage groups…"
 msgstr ""
 
@@ -218,6 +224,9 @@ msgstr ""
 msgid "&Run"
 msgstr ""
 
+msgid "&Save"
+msgstr ""
+
 msgid "&Save as preset…"
 msgstr ""
 
@@ -225,6 +234,9 @@ msgid "&Serial number:"
 msgstr ""
 
 msgid "&Settings…"
+msgstr ""
+
+msgid "&Show"
 msgstr ""
 
 msgid "&Sort A–Z"
@@ -282,6 +294,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "A preset named “{name}” already exists. Replace it?"
+msgstr ""
+
+msgid "A toner, ink, drum or box at or below this shows as low."
 msgstr ""
 
 msgid "A tool definition must be a JSON object."
@@ -386,6 +401,9 @@ msgstr ""
 msgid "Asset tag"
 msgstr ""
 
+msgid "Black"
+msgstr ""
+
 msgid "Brand"
 msgstr ""
 
@@ -414,6 +432,9 @@ msgstr ""
 msgid "CSV with headers"
 msgstr ""
 
+msgid "Cancel"
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "CapyPanel asks for nothing: {tool} asks for the user and password itself "
@@ -432,6 +453,9 @@ msgstr ""
 msgid "Change path…"
 msgstr ""
 
+msgid "Change…"
+msgstr ""
+
 #, python-brace-format
 msgid "Check who is logged on to {n} hosts?"
 msgstr ""
@@ -439,6 +463,12 @@ msgstr ""
 #, python-brace-format
 msgid "Checked {n} host."
 msgid_plural "Checked {n} hosts."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Checked {n} printer."
+msgid_plural "Checked {n} printers."
 msgstr[0] ""
 msgstr[1] ""
 
@@ -552,6 +582,10 @@ msgid "Couldn't read"
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't read the printer's answer at {when}."
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't read “{file}”: {error}"
 msgstr ""
 
@@ -606,6 +640,9 @@ msgstr ""
 msgid "Custom…"
 msgstr ""
 
+msgid "Cyan"
+msgstr ""
+
 msgid "D&uplicate…"
 msgstr ""
 
@@ -646,6 +683,9 @@ msgid "Disconnected"
 msgstr ""
 
 msgid "Documentation:"
+msgstr ""
+
+msgid "Door open"
 msgstr ""
 
 msgid ""
@@ -848,6 +888,12 @@ msgstr ""
 msgid "Includes who was logged on to each PC. Keep the file private."
 msgstr ""
 
+msgid "Ink"
+msgstr ""
+
+msgid "Ink low"
+msgstr ""
+
 msgid "Install it, or locate its .exe."
 msgstr ""
 
@@ -913,6 +959,12 @@ msgstr ""
 msgid "Logs"
 msgstr ""
 
+msgid "Magenta"
+msgstr ""
+
+msgid "Maintenance due"
+msgstr ""
+
 msgid "Manage groups"
 msgstr ""
 
@@ -953,6 +1005,9 @@ msgstr ""
 msgid "Name of the new group:"
 msgstr ""
 
+msgid "Needs attention"
+msgstr ""
+
 msgid "New connection profile"
 msgstr ""
 
@@ -978,6 +1033,10 @@ msgid "No address: the name must then be the computer's name on the network"
 msgstr ""
 
 msgid "No admin rights"
+msgstr ""
+
+#, python-brace-format
+msgid "No answer at {when}."
 msgstr ""
 
 msgid "No computer by that name or address was found on the network."
@@ -1029,6 +1088,9 @@ msgid_plural "Not opened ({n}): {names}"
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "Not set: printers are asked with \"public\"."
+msgstr ""
+
 msgid "Not used: made by another user"
 msgstr ""
 
@@ -1044,9 +1106,6 @@ msgid "Nothing changes until you click Add."
 msgstr ""
 
 msgid "Nothing changes until you click OK."
-msgstr ""
-
-msgid "Nothing to check on printers yet"
 msgstr ""
 
 msgid "Notice"
@@ -1170,6 +1229,21 @@ msgstr ""
 msgid "Or give just a name and an address on each line."
 msgstr ""
 
+msgid "Out of paper"
+msgstr ""
+
+msgid "Out of toner"
+msgstr ""
+
+msgid "Output tray full"
+msgstr ""
+
+msgid "Output tray missing"
+msgstr ""
+
+msgid "Output tray nearly full"
+msgstr ""
+
 msgid "P&ort:"
 msgstr ""
 
@@ -1179,11 +1253,20 @@ msgstr ""
 msgid "Page counters"
 msgstr ""
 
+msgid "Paper jam"
+msgstr ""
+
+msgid "Paper low"
+msgstr ""
+
 #, python-brace-format
 msgid "Password for {profile}"
 msgstr ""
 
 msgid "Paste a list below, or"
+msgstr ""
+
+msgid "Paused"
 msgstr ""
 
 msgid "Personal"
@@ -1217,6 +1300,9 @@ msgstr ""
 msgid "Printers"
 msgstr ""
 
+msgid "Printing"
+msgstr ""
+
 msgid "Profile"
 msgstr ""
 
@@ -1232,10 +1318,19 @@ msgstr ""
 msgid "Read license"
 msgstr ""
 
+msgid "Read the status and supplies of every printer shown (F5)"
+msgstr ""
+
 msgid "Read-only"
 msgstr ""
 
 msgid "Read/write"
+msgstr ""
+
+msgid "Reads these printers again now"
+msgstr ""
+
+msgid "Ready"
 msgstr ""
 
 msgid "Refresh"
@@ -1350,6 +1445,12 @@ msgstr ""
 msgid "S&top"
 msgstr ""
 
+msgid "SNMP &community string"
+msgstr ""
+
+msgid "SNMP community string"
+msgstr ""
+
 #, python-brace-format
 msgid "Same address as row {n}"
 msgstr ""
@@ -1420,6 +1521,9 @@ msgstr ""
 msgid "Serial number"
 msgstr ""
 
+msgid "Service requested"
+msgstr ""
+
 msgid "Set &tags…"
 msgstr ""
 
@@ -1427,6 +1531,9 @@ msgid "Set in the settings file"
 msgstr ""
 
 msgid "Set tags"
+msgstr ""
+
+msgid "Set. Kept in Windows Credential Manager, never in a file."
 msgstr ""
 
 msgid "Settings"
@@ -1511,11 +1618,26 @@ msgstr ""
 msgid "Stop"
 msgstr ""
 
+msgid "Stopped"
+msgstr ""
+
 #, python-brace-format
 msgid "Stopped: {n} host wasn't checked."
 msgid_plural "Stopped: {n} hosts weren't checked."
 msgstr[0] ""
 msgstr[1] ""
+
+#, python-brace-format
+msgid "Stopped: {n} printer wasn't checked."
+msgid_plural "Stopped: {n} printers weren't checked."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Supplies"
+msgstr ""
+
+msgid "Supply missing"
+msgstr ""
 
 msgid "T&ags pane"
 msgstr ""
@@ -1665,6 +1787,13 @@ msgstr ""
 msgid "The placeholder “{{{name}}}” goes with “settings_file”."
 msgstr ""
 
+msgid "The printer doesn't report its supplies."
+msgstr ""
+
+#, python-brace-format
+msgid "The printer says {value}"
+msgstr ""
+
 msgid "The profile a host connects with when it has none of its own."
 msgstr ""
 
@@ -1676,6 +1805,15 @@ msgstr ""
 
 #, python-brace-format
 msgid "The profile's “{key}” must be lowercase letters, digits, - or _."
+msgstr ""
+
+msgid ""
+"The read-only community string your printers answer to. Most use "
+"\"public\". It's kept in Windows Credential Manager."
+msgstr ""
+
+#, python-brace-format
+msgid "The tick is the low level, {low} %."
 msgstr ""
 
 msgid "The tool needs a “name”."
@@ -1747,10 +1885,25 @@ msgstr ""
 msgid "Tick Status or Logged-on users to check them"
 msgstr ""
 
+msgid "Tick Status or Toner to read them"
+msgstr ""
+
 msgid "Toner"
 msgstr ""
 
+msgid "Toner low"
+msgstr ""
+
 msgid "Tool"
+msgstr ""
+
+msgid "Total pages"
+msgstr ""
+
+msgid "Tray empty"
+msgstr ""
+
+msgid "Tray missing"
 msgstr ""
 
 msgid "Type"
@@ -1791,10 +1944,16 @@ msgstr ""
 msgid "Unreachable"
 msgstr ""
 
+msgid "Unreadable"
+msgstr ""
+
 msgid "Use &defaults"
 msgstr ""
 
 msgid "Use the &automatic path"
+msgstr ""
+
+msgid "Use this"
 msgstr ""
 
 msgid "User"
@@ -1808,6 +1967,9 @@ msgid "Viewer settings (*{extension})"
 msgstr ""
 
 msgid "Viewer settings:"
+msgstr ""
+
+msgid "Warming up"
 msgstr ""
 
 msgid "Warning"
@@ -1835,6 +1997,10 @@ msgid "Where is {tool}?"
 msgstr ""
 
 #, python-brace-format
+msgid "Windows didn't keep it: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid "Windows error {code}."
 msgstr ""
 
@@ -1858,6 +2024,9 @@ msgid "Windows — light"
 msgstr ""
 
 msgid "With No group, the groups inside it go directly under Groups."
+msgstr ""
+
+msgid "Yellow"
 msgstr ""
 
 msgid "Your computers: connect, see who's logged on, check them."
@@ -1911,6 +2080,9 @@ msgstr ""
 msgid "in “{group}”"
 msgstr ""
 
+msgid "level unknown"
+msgstr ""
+
 msgid "made by another user"
 msgstr ""
 
@@ -1942,6 +2114,9 @@ msgstr ""
 msgid "since {when}"
 msgstr ""
 
+msgid "some left"
+msgstr ""
+
 #, python-brace-format
 msgid "tag “{tag}”"
 msgstr ""
@@ -1968,6 +2143,30 @@ msgid "user and password"
 msgstr ""
 
 msgid "with no group"
+msgstr ""
+
+#, python-brace-format
+msgid "{colour} {percent} %"
+msgstr ""
+
+#, python-brace-format
+msgid "{colour}: level unknown"
+msgstr ""
+
+#, python-brace-format
+msgid "{colour}: some left"
+msgstr ""
+
+#, python-brace-format
+msgid "{level} · Low"
+msgstr ""
+
+#, python-brace-format
+msgid "{level} · Nearly full"
+msgstr ""
+
+#, python-brace-format
+msgid "{level} · low"
 msgstr ""
 
 #, python-brace-format
@@ -2110,6 +2309,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} of these printers wasn't checked yet."
+msgid_plural "{n} of these printers weren't checked yet."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} offline"
 msgid_plural "{n} offline"
 msgstr[0] ""
@@ -2163,6 +2368,10 @@ msgid "{path} (in use)"
 msgstr ""
 
 #, python-brace-format
+msgid "{percent} %"
+msgstr ""
+
+#, python-brace-format
 msgid "{profile} (copy)"
 msgstr ""
 
@@ -2172,6 +2381,14 @@ msgstr ""
 
 #, python-brace-format
 msgid "{status} · checked {when}"
+msgstr ""
+
+#, python-brace-format
+msgid "{supply} low"
+msgstr ""
+
+#, python-brace-format
+msgid "{supply} nearly full"
 msgstr ""
 
 #, python-brace-format

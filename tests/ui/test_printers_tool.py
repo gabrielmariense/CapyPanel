@@ -88,16 +88,19 @@ def _select(tool: PrintersTool, *names: str) -> None:
             row.setSelected(True)
 
 
-def test_the_table_shows_name_address_brand_model_and_tags(printers: PrintersTool) -> None:
+def test_the_table_shows_name_address_status_toner_brand_model_and_tags(
+    printers: PrintersTool,
+) -> None:
     table = printers.table
     header = table.headerItem()
     shown = [header.text(i) for i in range(table.columnCount()) if not table.isColumnHidden(i)]
-    assert shown == ["Name", "Address", "Brand", "Model", "Tags"]  # serial and asset tag hidden
+    # Serial number and asset tag are hidden at first.
+    assert shown == ["Name", "Address", "Status", "Toner", "Brand", "Model", "Tags"]
     assert not table.header().sectionsMovable()  # one fixed order: titles can't be dragged
     assert _names(printers) == ["2F-LABELS", "2F-OFFICE-01", "LOOSE"]
     first = table.topLevelItem(0)
     assert first is not None
-    texts = [first.text(i) for i in (0, 1, 2, 3, table.TAGS)]
+    texts = [first.text(i) for i in (0, 1, table.BRAND, table.MODEL, table.TAGS)]
     assert texts == ["2F-LABELS", "192.0.2.25", "ZEBRA", "ZD421", "labels"]
     assert printers.nav.everything.topLevelItem(0).text(0).startswith("All printers")  # type: ignore[union-attr]
 
@@ -267,25 +270,29 @@ def test_the_printer_menu_opens_the_web_page_first(
     assert row is not None
     printers._item_menu(printers.table.visualItemRect(row).center())
     texts = [menus.label(a) for a in shown[-1].actions() if not a.isSeparator()]
-    assert texts == ["Open &web page", "Co&py", "&Edit selected…", "&Move to", "&Remove selected"]
+    assert texts == ["Open &web page", "&Refresh", "Co&py", "&Edit selected…", "&Move to",
+                     "&Remove selected"]  # fmt: skip
     assert shown[-1].defaultAction() is printers.commands.open_web_page
-    copy = shown[-1].actions()[2].menu()
+    copy = shown[-1].actions()[4].menu()
     assert isinstance(copy, QMenu)
     assert [menus.label(a) for a in copy.actions()] == [
         "Name",
         "&Address",
+        "Status",
+        "Toner",
         "Brand",
         "Model",
         "Tags",
     ]
 
 
-def test_toolbar_mirrors_hosts_with_refresh_greyed_out(printers: PrintersTool) -> None:
+def test_toolbar_mirrors_hosts_with_a_plain_refresh(printers: PrintersTool) -> None:
     bar = printers.toolbar
     buttons = (bar.web_button, bar.refresh_button, bar.inventory_button, bar.report_button)
     assert [b.text().strip() for b in buttons] == ["Open web page", "Refresh", "Inventory",
                                                    "Report"]  # fmt: skip
-    assert not bar.refresh_button.isEnabled()
+    assert bar.refresh_button.isEnabled() and bar.refresh_button.menu() is None  # one check
+    assert printers.commands.refresh_shown.shortcut().toString() == "F5"
     _select(printers)
     assert not bar.web_button.isEnabled()
     _select(printers, "LOOSE")
@@ -295,7 +302,7 @@ def test_toolbar_mirrors_hosts_with_refresh_greyed_out(printers: PrintersTool) -
     ]  # fmt: skip
 
 
-def test_report_lists_the_printers_columns_with_last_check_greyed(
+def test_report_lists_the_printers_columns_and_last_check(
     shell: FakeShell, printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     seen: list[PrintersReport] = []
@@ -312,12 +319,11 @@ def test_report_lists_the_printers_columns_with_last_check_greyed(
     assert titles == ["Printer", "Details", "Last check"]
     assert report.source.currentText() == "All printers (3 printers)"
     assert report.preset.currentText() == "All details"
-    assert not report.boxes["status"].isEnabled() and not report.boxes["toner"].isEnabled()
-    assert not report.refresh_button.isEnabled()
+    assert report.boxes["status"].isEnabled() and report.boxes["toner"].isEnabled()
     assert report.header()[:6] == ["Name", "Address", "Group", "Brand", "Model", "Serial number"]
     office = next(r for r in report.rows() if r[0] == "2F-OFFICE-01")
-    assert office == ["2F-OFFICE-01", "192.0.2.21", "Second floor", "BROTHER", "HL-L6402",
-                      "SAMPLE0021", "INV-1021", "SNMP", "mono", ""]  # fmt: skip
+    assert office[:10] == ["2F-OFFICE-01", "192.0.2.21", "Second floor", "BROTHER", "HL-L6402",
+                           "SAMPLE0021", "INV-1021", "SNMP", "mono", ""]  # fmt: skip
     report.boxes["notes"].setChecked(False)
     assert printers.prefs["export_columns"][-1] == "tags"  # in the Printers section
     assert "export_columns" not in shell.prefs  # Hosts' Report keeps its own choices
