@@ -10,6 +10,7 @@ from capypanel.ui.printers_tool import status
 
 HEIGHT = 8
 HALF = 50  # %: the fainter mark
+MARK = 2  # px: each mark's width
 
 
 def draw_meter(
@@ -31,16 +32,15 @@ def draw_meter(
         painter.setBrush(QColor(status.supply_color(supply)))
         filled = max(4.0, bar.width() * fill)
         painter.drawRoundedRect(QRectF(bar.x(), bar.y(), filled, bar.height()), 3, 3)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)  # crisp 1 px marks
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)  # crisp 2 px marks
     top, bottom = round(bar.y()), round(bar.bottom())
     for level, strong in ((HALF, False), (low, True)):
-        x = round(bar.x() + bar.width() * level / 100)
-        on_fill = x < bar.x() + filled
+        x = round(bar.x() + bar.width() * level / 100) - MARK // 2
+        on_fill = x + MARK <= bar.x() + filled
         mark = QColor(back if on_fill else text)
-        mark.setAlpha(255 if strong else 140)
-        painter.setPen(mark)
+        mark.setAlpha(255 if strong else 190)
         if strong:  # the low level reaches past the bar
-            painter.drawLine(x, top - 1, x, bottom)
+            painter.fillRect(x, top - 1, MARK, bottom - top + 2, mark)
         else:
-            painter.drawLine(x, top + 1, x, bottom - 2)
+            painter.fillRect(x, top + 1, MARK, bottom - top - 2, mark)
     painter.restore()
