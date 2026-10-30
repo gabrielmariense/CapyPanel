@@ -34,7 +34,7 @@ CATALOG = (
         "printers",
         "printer",
         N_("Printers"),
-        N_("Your printers: web pages, details, reports."),
+        N_("Your printers: status and toner, web pages, reports."),
         "capypanel.ui.printers_tool.tool",
         "PrintersTool",
     ),
