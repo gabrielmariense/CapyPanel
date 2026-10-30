@@ -6,24 +6,20 @@ quais estão ligados e quem está logado neles, e abra a tela remota de qualquer
 Trabalho Remota ou pelo visualizador VNC que você já usa. Ele guarda também as suas impressoras,
 com os detalhes de que você precisa e a página web delas a um clique.
 
-![A janela principal do CapyPanel: a barra lateral, grupos à esquerda, hosts no meio, detalhes à direita](images/main-window-dark-pt-BR.png)
+![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts e outro para Impressoras](images/home-dark-pt-BR.png)
 
 ## O que ele faz
 
-- Conexão remota
-  - UltraVNC
-  - RealVNC
-  - Área de Trabalho Remota (RDP)
-- Perfis de conexão
-- Listas de hosts compartilhadas
-- Status dos hosts
-- Usuários logados
-- Pesquisa
-- Importação e exportação
-- Inventário de impressoras
-  - Marca, modelo, nº de série, patrimônio
-  - Páginas web das impressoras
-  - Status, toner e contadores de páginas por SNMP
+- Hosts
+  - Conexão remota: UltraVNC, RealVNC, Área de Trabalho Remota
+  - Perfis de conexão
+  - Listas compartilhadas, grupos e tags
+  - Status e usuários logados
+  - Pesquisa, importação e exportação
+- Impressoras
+  - Listas com marca, modelo, nº de série e patrimônio
+  - Status, toner e suprimentos por SNMP
+  - Páginas web e relatórios
 
 ## Páginas
 

@@ -29,7 +29,7 @@ ferramenta.
 | Ferramenta | Para que serve |
 |---|---|
 | **Hosts** (Ctrl+1) | "Seus computadores: conecte, veja quem está logado, verifique-os." |
-| **Impressoras** (Ctrl+2) | "Suas impressoras: páginas web, detalhes, relatórios." |
+| **Impressoras** (Ctrl+2) | "Suas impressoras: status e toner, páginas web, relatórios." |
 
 ![A página inicial: a barra lateral à esquerda, a capivara e o nome do app, e um bloco para cada ferramenta](images/home-dark-pt-BR.png)
 
@@ -42,6 +42,8 @@ O resto desta página é sobre a ferramenta **Hosts**. As Impressoras têm pági
 de [A ferramenta Impressoras](printers/printers.pt-BR.md).
 
 ## A janela do Hosts
+
+![A janela do Hosts: grupos à esquerda, os hosts no meio com status e usuário, os detalhes de um host à direita](images/main-window-dark-pt-BR.png)
 
 | Parte | O que mostra |
 |---|---|

@@ -28,7 +28,7 @@ with one line about it and its shortcut. Click a tile to open that tool.
 | Tool | What it's for |
 |---|---|
 | **Hosts** (Ctrl+1) | "Your computers: connect, see who's logged on, check them." |
-| **Printers** (Ctrl+2) | "Your printers: web pages, details, reports." |
+| **Printers** (Ctrl+2) | "Your printers: status and toner, web pages, reports." |
 
 ![The Home page: the rail on the left, the capybara and the app's name, and a tile for each tool](images/home-dark.png)
 
@@ -40,6 +40,8 @@ The rest of this page is about the **Hosts** tool. Printers has its own pages, s
 [The Printers tool](printers/printers.md).
 
 ## The Hosts window
+
+![The Hosts window: groups on the left, the hosts in the middle with their status and user, one host's details on the right](images/main-window-dark.png)
 
 | Part | What it shows |
 |---|---|

@@ -6,24 +6,20 @@ to them, and open a remote screen on any of them through Remote Desktop or the V
 already use. It keeps your printers too, with the details you need and their web pages a click
 away.
 
-![The CapyPanel main window: the tool rail, groups on the left, hosts in the middle, details on the right](images/main-window-dark.png)
+![CapyPanel's Home page: the tool rail, the capybara, and a tile for Hosts and one for Printers](images/home-dark.png)
 
 ## What it does
 
-- Remote connection
-  - UltraVNC
-  - RealVNC
-  - Remote Desktop (RDP)
-- Connection profiles
-- Shared host lists
-- Host status
-- Logged-on users
-- Search
-- Import and export
-- Printer inventory
-  - Brand, model, serial number, asset tag
-  - Printers' web pages
-  - Status, toner and page counters over SNMP
+- Hosts
+  - Remote connection: UltraVNC, RealVNC, Remote Desktop
+  - Connection profiles
+  - Shared lists, groups and tags
+  - Status and logged-on users
+  - Search, import and export
+- Printers
+  - Lists with brand, model, serial number and asset tag
+  - Status, toner and supplies over SNMP
+  - Web pages and reports
 
 ## Pages
 
