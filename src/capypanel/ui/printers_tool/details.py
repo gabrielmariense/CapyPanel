@@ -17,7 +17,7 @@ from capypanel.core.printers.printer import DOC360, SNMP, info_of
 from capypanel.core.printers.reading import Supply
 from capypanel.ui.checks import clock_text
 from capypanel.ui.icons import dot_icon
-from capypanel.ui.list_workspace.details import DetailsPanel
+from capypanel.ui.list_workspace.details import DetailsPanel, breakable
 from capypanel.ui.printers_tool import status
 from capypanel.ui.printers_tool.status import AMBER, GREY, Checked
 
@@ -154,6 +154,12 @@ class PrinterDetailsPanel(DetailsPanel):
         under = self.muted(words)
         under.setToolTip(cell.tip)
         layout.addWidget(under)
+        reading = shown.checked.reading if shown.checked else None
+        for message in reading.messages if reading else ():  # the printer's own words, in full
+            said = QLabel(breakable(message))
+            said.setTextFormat(Qt.TextFormat.PlainText)  # what a printer sends is never markup
+            said.setWordWrap(True)
+            layout.addWidget(said)
 
     def _supplies(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
         self.section(layout, _("Supplies"))

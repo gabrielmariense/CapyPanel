@@ -19,9 +19,9 @@ import sys
 from capypanel.core.printers import reading, snmp
 
 # Brand data areas checked by --brand-data (the brand's own objects, outside the standard ones).
-RICOH_TONER = "1.3.6.1.4.1.367.3.2.1.2.24.1"  # ricohEngTonerTable
-RICOH_SERIAL = "1.3.6.1.4.1.367.3.2.1.2.1.4.0"  # ricohEngSerialNumber
-BROTHER_MAINTENANCE = "1.3.6.1.4.1.2435.2.3.9.4.2.1.5.5.8"  # brInfoMaintenance: 7-byte records
+RICOH_TONER = "1.3.6.1.4.1.367.3.2.1.2.24.1"  # ricohEngTonerTable, every column
+RICOH_SERIAL = reading.RICOH_SERIAL
+BROTHER_MAINTENANCE = reading.BROTHER_MAINTENANCE.removesuffix(".0")  # and anything beside it
 # Brother record codes seen in published readers; the rest print as their code.
 BROTHER_CODES = {0x41: "drum life", 0x6F: "black toner", 0x70: "cyan toner",
                  0x71: "magenta toner", 0x72: "yellow toner"}  # fmt: skip

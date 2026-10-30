@@ -1,10 +1,12 @@
 """What Refresh reads from a printer over SNMP: its status and the printer's own error
 messages, each supply's level, the page counter, and its brand, model and serial number.
 
-All of it comes from the standard printer objects (Host Resources, Printer MIB and Entity
-MIB), which printers of every brand answer, so nothing here is tuned to one maker. What a
-printer doesn't answer is left empty."""
+It comes from the standard printer objects (Host Resources, Printer MIB and Entity MIB), which
+printers of every brand answer. Only where those leave a gap (a level with no %, an empty
+serial) does it also read a brand's own data, for the brands in _BRAND_DATA, each checked
+against a real printer's web page first. What a printer doesn't answer is left empty."""
 
+import dataclasses
 import re
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
@@ -40,6 +42,16 @@ _MAKERS = {
     1347: "KYOCERA", 1602: "CANON", 2435: "BROTHER", 10642: "ZEBRA",
 }  # fmt: skip
 _ENTERPRISES = "1.3.6.1.4.1."
+
+# Brands' own data, read only to fill a gap the standard objects leave.
+RICOH_SERIAL = "1.3.6.1.4.1.367.3.2.1.2.1.4.0"  # ricohEngSerialNumber
+RICOH_TONER = "1.3.6.1.4.1.367.3.2.1.2.24.1.1"  # ricohEngTonerEntry
+_RICOH_COLOUR, _RICOH_LEVEL = 2, 5  # its level: a %, or below 0 for "some left", "unknown"...
+BROTHER_MAINTENANCE = "1.3.6.1.4.1.2435.2.3.9.4.2.1.5.5.8.0"  # brInfoMaintenance
+# brInfoMaintenance is 7-byte records: a code, two bytes, then the value in hundredths of a %.
+_BROTHER_LEVELS = {0x6F: "black", 0x70: "cyan", 0x71: "magenta", 0x72: "yellow", 0x41: "drum"}
+_BRAND_DATA = {"RICOH", "BROTHER"}
+_COLOURS = re.compile(r"\b(black|cyan|magenta|yellow)\b", re.IGNORECASE)
 
 
 class State(StrEnum):
@@ -158,21 +170,25 @@ def read(
             f"{HR_DEVICE_STATUS}.{device}",
             f"{HR_PRINTER_ERRORS}.{device}",
         ])  # fmt: skip
+        description = _text(details[f"{HR_DEVICE_DESCR}.{device}"]) or _text(top[SYS_DESCR])
+        brand = _brand(top[SYS_OBJECT_ID], description)
         serial = _first_text(session.walk(SERIAL_NUMBER))
         if not serial:
             serial = _first_text(session.walk(ENTITY_SERIAL))
-        supplies = session.walk(SUPPLIES)
+        if not serial and brand == "RICOH":
+            serial = _text(session.get([RICOH_SERIAL])[RICOH_SERIAL])
+        supplies = _supplies(session.walk(SUPPLIES))
+        if brand in _BRAND_DATA and any(_key(s) and s.percent is None for s in supplies):
+            supplies = _filled(supplies, _brand_levels(session, brand))
         markers = session.walk(MARKERS)
         alerts = session.walk(ALERTS)
-    description = _text(details[f"{HR_DEVICE_DESCR}.{device}"]) or _text(top[SYS_DESCR])
-    brand = _brand(top[SYS_OBJECT_ID], description)
     device_status = _number(details[f"{HR_DEVICE_STATUS}.{device}"])
     return Reading(
         state=_STATES.get(status, State.UNKNOWN) if status is not None else State.UNKNOWN,
         device=_DEVICES.get(device_status, Device.UNKNOWN) if device_status else Device.UNKNOWN,
         problems=_problems(details[f"{HR_PRINTER_ERRORS}.{device}"]),
         messages=_messages(alerts),
-        supplies=_supplies(supplies),
+        supplies=supplies,
         pages=_pages(markers),
         brand=brand,
         model=_model(description, brand),
@@ -271,6 +287,46 @@ def _supplies(rows: list[tuple[str, snmp.Value]]) -> tuple[Supply, ...]:
             )
         )
     return tuple(found)
+
+
+def _key(supply: Supply) -> str:
+    """What a brand's own data calls this supply: its colour, or "drum"; "" for others. A toner
+    whose name says no colour is black (a black-only printer's "Toner Cartridge")."""
+    if supply.kind is SupplyKind.DRUM:
+        return "drum"
+    if supply.kind in (SupplyKind.TONER, SupplyKind.INK):
+        found = _COLOURS.search(supply.name)
+        return found[1].lower() if found else "black"
+    return ""
+
+
+def _filled(supplies: tuple[Supply, ...], levels: dict[str, int]) -> tuple[Supply, ...]:
+    """Each supply with no % given the brand's own level for it, when there is one."""
+    return tuple(
+        dataclasses.replace(s, percent=levels[key])
+        if s.percent is None and (key := _key(s)) in levels
+        else s
+        for s in supplies
+    )
+
+
+def _brand_levels(session: snmp.Session, brand: str) -> dict[str, int]:
+    """The % left of each toner (by colour) and the drum, from the brand's own data."""
+    levels: dict[str, int] = {}
+    if brand == "RICOH":
+        for row in _table(session.walk(RICOH_TONER), RICOH_TONER).values():
+            colour, level = _text(row.get(_RICOH_COLOUR)).lower(), _number(row.get(_RICOH_LEVEL))
+            if _COLOURS.fullmatch(colour) and level is not None and 0 <= level <= 100:
+                levels[colour] = level
+    elif brand == "BROTHER":
+        data = session.get([BROTHER_MAINTENANCE])[BROTHER_MAINTENANCE]
+        if isinstance(data, bytes):
+            for start in range(0, len(data) - 6, 7):
+                key = _BROTHER_LEVELS.get(data[start])
+                hundredths = int.from_bytes(data[start + 3 : start + 7], "big")
+                if key and hundredths <= 10_000:
+                    levels[key] = round(hundredths / 100)
+    return levels
 
 
 def _messages(rows: list[tuple[str, snmp.Value]]) -> tuple[str, ...]:

@@ -63,7 +63,8 @@ class Cell:
 
 
 def status(checked: Checked | None, low: int) -> Cell:
-    """The Status cell, and the line under a printer's name in Details."""
+    """The Status cell, and the line under a printer's name in Details: a few words. The
+    printer's own messages can be long, so they go in the tip and in Details, in full."""
     if checked is None:
         return Cell("", _("Not checked: use Refresh"), "", quiet=True)
     when = clock_text(checked.when)
@@ -76,14 +77,11 @@ def status(checked: Checked | None, low: int) -> Cell:
     tip = "\n".join((_("Checked {when}.").format(when=when), *reading.messages))
     stops = [text() for problem, text in _STOPS.items() if problem in reading.problems]
     if stops or reading.device is Device.DOWN:
-        words = reading.messages[0] if reading.messages else stops[0] if stops else _("Stopped")
-        return Cell(words, tip, RED)
+        return Cell(stops[0] if stops else _("Stopped"), tip, RED)
     warnings = [text() for problem, text in _WARNINGS.items() if problem in reading.problems]
     lows = [s for s in reading.supplies if is_low(s, low)]
     if warnings or lows or reading.messages or reading.device is Device.WARNING:
-        if reading.messages:
-            words = reading.messages[0]
-        elif warnings:
+        if warnings:
             words = warnings[0]
         elif lows:
             words = low_text(lows[0])

@@ -106,6 +106,45 @@ def test_a_running_printer_that_calls_its_state_other_and_keeps_its_serial_elsew
     assert (found.brand, found.serial, found.pages) == ("RICOH", "SAMPLE0002", 1_234)
 
 
+RT = reading.RICOH_TONER
+
+
+def test_a_ricoh_fills_its_toner_level_and_serial_from_its_own_data() -> None:
+    found = _read({
+        reading.SYS_OBJECT_ID: "1.3.6.1.4.1.367.1.1",
+        f"{reading.HR_PRINTER_STATUS}.1": 3,
+        **_supply("1.1", 3, 21, b"Black Cartridge", -2, -2),  # the standard level: unknown
+        reading.RICOH_SERIAL: b"SAMPLE0004",
+        f"{RT}.2.1": b"Black",
+        f"{RT}.5.1": 70,
+    })  # fmt: skip
+    assert found.serial == "SAMPLE0004"
+    assert [(s.name, s.percent) for s in found.supplies] == [("Black Cartridge", 70)]
+
+
+def test_a_brother_fills_only_the_levels_the_standard_objects_leave_out() -> None:
+    records = bytes.fromhex("63010400000001 41010400002328 6f010400002454 81010400000064")
+    found = _read({
+        reading.SYS_OBJECT_ID: "1.3.6.1.4.1.2435.2.3.9.1",
+        f"{reading.HR_PRINTER_STATUS}.1": 3,
+        **_supply("1.1", 3, 3, b"Black Toner Cartridge", 100, -3),  # some left, no %
+        **_supply("1.2", 3, 9, b"Drum Unit", 100, 98),
+        reading.BROTHER_MAINTENANCE: records,  # drum 90 %, black toner 93 %
+    })  # fmt: skip
+    levels = {s.name: (s.percent, s.some_left) for s in found.supplies}
+    assert levels == {"Black Toner Cartridge": (93, True), "Drum Unit": (98, False)}
+
+
+def test_brand_data_is_left_alone_when_the_standard_levels_are_there() -> None:
+    found = _read({
+        reading.SYS_OBJECT_ID: "1.3.6.1.4.1.367.1.1",
+        **_supply("1.1", 3, 21, b"Black Cartridge", 100, 55),
+        f"{RT}.2.1": b"Black",
+        f"{RT}.5.1": 70,
+    })  # fmt: skip
+    assert found.supplies[0].percent == 55
+
+
 def test_a_printer_that_does_not_answer_raises_no_answer() -> None:
     with running(COLOUR, community=b"other") as agent, pytest.raises(snmp.NoAnswer):
         reading.read("127.0.0.1", "public", port=agent.port, timeout=0.2)

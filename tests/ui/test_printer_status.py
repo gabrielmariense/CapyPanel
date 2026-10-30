@@ -50,9 +50,16 @@ def test_status_says_what_is_wrong_most_first() -> None:
     assert status.status(_checked(state=State.OTHER, device=Device.RUNNING), 10).text == "Ready"
     jam = status.status(_checked(problems=frozenset({Problem.JAMMED})), 10)
     assert (jam.text, jam.color) == ("Paper jam", RED)
+    # The printer's own words can be long: they go in the tip (and Details), not the cell.
     said = _checked(problems=frozenset({Problem.JAMMED}), messages=("Jam in tray 2",))
-    assert status.status(said, 10).text == "Jam in tray 2"  # the printer's own words first
+    assert status.status(said, 10).text == "Paper jam"
+    assert "Jam in tray 2" in status.status(said, 10).tip
     assert status.status(_checked(device=Device.DOWN), 10).text == "Stopped"
+    message = _checked(state=State.IDLE, messages=("Bypass tray paper empty(warning)",))
+    assert (status.status(message, 10).text, status.status(message, 10).color) == (
+        "Needs attention",
+        AMBER,
+    )
     low = status.status(_checked(state=State.IDLE, supplies=(_supply("Cyan Toner", 8),)), 10)
     assert (low.text, low.color) == ("Toner low", AMBER)
     worn = _checked(state=State.IDLE, supplies=(_supply("MP Roller", 3, SupplyKind.OTHER),))
