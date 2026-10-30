@@ -1,7 +1,5 @@
-"""The Printers tool's Report: the same window as Hosts', with the printers' columns. Its Last
-check box (status and toner) stays greyed out until printers can be checked."""
-
-from PySide6.QtWidgets import QWidget
+"""The Printers tool's Report: the same window as Hosts', with the printers' columns. Last check
+(Status, Toner and Total pages) comes from Refresh, which the window can run too."""
 
 from capypanel.core.hosts.bulk import host_fields
 from capypanel.core.hosts.model import Host
@@ -25,24 +23,18 @@ class PrintersReport(ExportDialog):
         "notes": N_("Notes"),
         "status": N_("Status"),
         "toner": N_("Toner"),
+        "pages": N_("Total pages"),
     }
     SECTIONS = (
         (N_("Printer"), ("name", "address", "group", "brand", "model")),
         (N_("Details"), ("serial", "asset_tag", "counter_source", "tags", "notes")),
-        (N_("Last check"), ("status", "toner")),
+        (N_("Last check"), ("status", "toner", "pages")),
     )
-    CHECKED = ("status", "toner")
+    CHECKED = ("status", "toner", "pages")
     FOR_IMPORT = ("name", "address", "group", "brand", "model", "serial", "asset_tag",
                   "counter_source", "tags", "notes")  # fmt: skip
     PRESET_NAME = N_("All details")
     ITEMS_LABEL = N_("Pr&inters:")  # &Preset is P
-
-    def __init__(self, parent: QWidget | None, *args: object, **kwargs: object) -> None:
-        super().__init__(parent, *args, **kwargs)  # type: ignore[arg-type]
-        for key in self.CHECKED:  # nothing to check on printers yet
-            self.boxes[key].setEnabled(False)
-            self.boxes[key].setChecked(False)
-        self.refresh_button.setEnabled(False)
 
     def fields(self, host: Host, between_tags: str) -> dict[str, str]:
         info = info_of(host)
@@ -62,10 +54,18 @@ class PrintersReport(ExportDialog):
         return _("Every column the printers have")
 
     def unchecked_text(self, n: int) -> str:
-        return ""  # nothing can be ticked to check
+        return ngettext(
+            "{n} of these printers wasn't checked yet.",
+            "{n} of these printers weren't checked yet.",
+            n,
+        ).format(n=n)
 
     def refresh_tip(self, wanted: bool) -> str:
-        return _("Nothing to check on printers yet")
+        return (
+            _("Reads these printers again now")
+            if wanted
+            else _("Tick Status, Toner or Total pages to read them")
+        )
 
     def copied_text(self, n: int, source: str) -> str:
         return ngettext(

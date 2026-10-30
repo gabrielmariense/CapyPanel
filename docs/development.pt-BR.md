@@ -38,6 +38,20 @@ uv run python scripts/translations.py
 Depois traduza as novas entradas em cada arquivo `.po` em `src/capypanel/locale/` e rode o script
 de novo para compilá-las. Os testes falham enquanto algum texto não estiver traduzido e compilado.
 
+## Ler uma impressora de verdade
+
+Antes de confiar no que a janela mostra, dá para fazer a uma impressora as mesmas perguntas pelo
+terminal:
+
+```
+uv run python scripts/read_printer.py 192.0.2.5
+```
+
+Ele pede a comunidade sem mostrá-la, lê por SNMP (só leitura) e imprime o que o CapyPanel
+entendeu. O `--public` usa "public" sem perguntar, e o `--brand-data` também imprime a área de
+dados da Ricoh ou da Brother como números brutos. O nº de série sai só como o tamanho dele, para a
+saída poder ser colada numa issue.
+
 ## Site da documentação
 
 As páginas em `docs/` também são publicadas como site com o

@@ -1,6 +1,6 @@
 [project]
 name = "capypanel"
-version = "0.20.0"
+version = "0.21.0"
 description = "Manage the computers on your network from one window."
 readme = "README.md"
 license = "GPL-3.0-only"
@@ -29,11 +29,12 @@ select = ["E", "W", "F", "I", "UP", "B", "SIM", "TID"]
 include = ["src", "tests", "scripts"]
 typeCheckingMode = "standard"
 pythonVersion = "3.13"
+extraPaths = ["tests/helpers"]  # helpers the tests import by name, as pytest's pythonpath does
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib"]
-pythonpath = ["tests/ui"]  # helpers the UI tests share (capywindow.py)
+pythonpath = ["tests/ui", "tests/helpers"]  # helpers the tests share (capywindow.py, snmp_agent.py)
 
 [dependency-groups]
 dev = [

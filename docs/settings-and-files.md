@@ -14,7 +14,7 @@ its sections, indented. **About** sits on its own at the very bottom, below the 
 |---|---|
 | **CapyPanel** | Startup, Language, Theme |
 | **Hosts** | Startup, Refresh, Host lists, Connection profiles, Remote tools |
-| **Printers** | Startup, Printer lists |
+| **Printers** | Startup, Refresh, Printer lists |
 
 A group is one long page. Clicking a section in the list scrolls the page to it, and as you scroll,
 the list follows and highlights where you are. Settings opens on **CapyPanel > Startup**.
@@ -131,9 +131,14 @@ the errors; it's hidden when every file is in use.
 
 ## Printers
 
-**Startup > List on startup** and **Show first** work as they do for Hosts, for printer lists.
-**Printer lists** is the same table and the same buttons as Host lists. Both are under
+**Startup > List on startup** and **Show first** work as they do for Hosts, for printer lists,
+and **Printer lists** is the same table and the same buttons as Host lists. Both are under
 [Printer lists](printers/printer-lists.md#settings).
+
+**Refresh** holds the three settings for reading printers over SNMP: the **SNMP community
+string** behind a **Change…** button, the **Low supply level** between 1 and 50 %, and whether the
+**Toner column** shows text or a bar. [Checking printers](printers/checking.md) explains all
+three.
 
 ## About
 

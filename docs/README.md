@@ -6,23 +6,20 @@ to them, and open a remote screen on any of them through Remote Desktop or the V
 already use. It keeps your printers too, with the details you need and their web pages a click
 away.
 
-![The CapyPanel main window: the tool rail, groups on the left, hosts in the middle, details on the right](images/main-window-dark.png)
+![CapyPanel's Home page: the tool rail, the capybara, and a tile for Hosts and one for Printers](images/home-dark.png)
 
 ## What it does
 
-- Remote connection
-  - UltraVNC
-  - RealVNC
-  - Remote Desktop (RDP)
-- Connection profiles
-- Shared host lists
-- Host status
-- Logged-on users
-- Search
-- Import and export
-- Printer inventory
-  - Brand, model, serial number, asset tag
-  - Printers' web pages
+- Hosts
+  - Remote connection: UltraVNC, RealVNC, Remote Desktop
+  - Connection profiles
+  - Shared lists, groups and tags
+  - Status and logged-on users
+  - Search, import and export
+- Printers
+  - Lists with brand, model, serial number and asset tag
+  - Status, toner and supplies over SNMP
+  - Web pages and reports
 
 ## Pages
 
@@ -38,11 +35,12 @@ For people who use CapyPanel, and for people who set it up for a team.
 | [Checking hosts](hosts/checking.md) | Status, logged-on users and the account used to read them |
 | [Searching hosts](hosts/searching.md) | The search box, what it covers and how a search ends |
 | [The Printers tool](printers/printers.md) | The Printers window, a printer's details, and web pages |
+| [Checking printers](printers/checking.md) | Status, toner and supplies, and how they're read |
 | [Printer lists](printers/printer-lists.md) | Where printer lists live, and their settings |
 | [Development](development.md) | Building, testing and translating CapyPanel |
 
 Getting started, Settings and files and Development are about the whole app. The five pages after
-them belong to the **Hosts** tool, and the two after those to **Printers**.
+them belong to the **Hosts** tool, and the three after those to **Printers**.
 
-These pages describe the current version (0.20.0). CapyPanel is in beta, so they grow with each
+These pages describe the current version (0.21.0). CapyPanel is in beta, so they grow with each
 feature.

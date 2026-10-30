@@ -2,6 +2,7 @@ import json
 import os
 import stat
 from collections.abc import Iterator
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -398,3 +399,21 @@ def test_double_clicking_the_groups_panel_s_right_edge_fits_it_to_its_groups(
     assert after[0] == max(window.hosts.nav.natural_width(), window.hosts.nav.minimumWidth())
     assert after[0] + after[1] == before[0] + before[1] and after[2] == before[2]
     window.close()
+
+
+def test_an_edit_keeps_the_table_where_it_was_scrolled(qapp: QApplication) -> None:
+    hosts = _hosts(*((f"PC-{n:03}", f"192.0.2.{n}") for n in range(1, 81)))
+    table = _table(qapp, hosts)
+    bar = table.verticalScrollBar()
+    bar.setValue(bar.maximum() // 2)
+    middle = bar.value()
+    assert middle > 0
+    table.select_ids([hosts[40].id])
+    renamed = (*hosts[:40], replace(hosts[40], name="PC-040b"), *hosts[41:])
+    table.show_hosts(renamed, {})  # what an edit does: the table is filled again
+    qapp.processEvents()
+    assert bar.value() == middle
+    table.show_hosts(hosts[:5], {})  # another group: back to the top
+    table.show_hosts(hosts, {})
+    assert bar.value() == 0
+    table.close()

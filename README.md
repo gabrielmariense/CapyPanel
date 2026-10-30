@@ -16,25 +16,22 @@ lists, see which ones are on and who is logged on to them, and open a remote scr
 them through Remote Desktop or the VNC viewer you already use. It keeps your printers too, with
 the details you need and their web pages a click away.
 
-> **Status: beta (0.20.0).** It runs from source; there's no installer yet.
+> **Status: beta (0.21.0).** It runs from source; there's no installer yet.
 
-![The CapyPanel main window: the tool rail, groups on the left, hosts in the middle, details on the right](docs/images/main-window-dark.png)
+![CapyPanel's Home page: the tool rail, the capybara, and a tile for Hosts and one for Printers](docs/images/home-dark.png)
 
 ## What it does
 
-- Remote connection
-  - UltraVNC
-  - RealVNC
-  - Remote Desktop (RDP)
-- Connection profiles
-- Shared host lists
-- Host status
-- Logged-on users
-- Search
-- Import and export
-- Printer inventory
-  - Brand, model, serial number, asset tag
-  - Printers' web pages
+- Hosts
+  - Remote connection: UltraVNC, RealVNC, Remote Desktop
+  - Connection profiles
+  - Shared lists, groups and tags
+  - Status and logged-on users
+  - Search, import and export
+- Printers
+  - Lists with brand, model, serial number and asset tag
+  - Status, toner and supplies over SNMP
+  - Web pages and reports
 
 ## Documentation
 
@@ -50,6 +47,7 @@ Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrie
 - [Checking hosts](docs/hosts/checking.md): status and logged-on users
 - [Searching hosts](docs/hosts/searching.md): finding a host anywhere in the list
 - [The Printers tool](docs/printers/printers.md): printers, their details and their web pages
+- [Checking printers](docs/printers/checking.md): status, toner and supplies over SNMP
 - [Printer lists](docs/printers/printer-lists.md): where printer lists live, and their settings
 - [Development](docs/development.md): building, testing and translating
 

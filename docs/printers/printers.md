@@ -19,18 +19,20 @@ It has its own lists, kept apart from the Hosts tool's (see
 | **Details panel** (right) | Everything known about the printer you selected. Click any value to copy it |
 | **Status bar** | Which list is open, where it is, how many printers it holds and how many are selected |
 
-**Refresh** is there but does nothing yet, and says so: "Nothing to check on printers yet". Toner
-levels and printer status arrive in the next version.
+**Refresh** reads the status and the supplies of every printer shown, over SNMP, and fills the
+**Status** and **Toner** columns. It has a page of its own:
+[Checking printers](checking.md).
 
 **Inventory** holds **Add printer…** (Ctrl+N), **Add group…** and **Manage groups…**, the same
 three as in Hosts.
 
 ### The table
 
-The columns are **Name**, **Address**, **Brand**, **Model**, **Serial number**, **Asset tag** and
-**Tags**, in that order. Serial number and Asset tag start hidden: right-click the column titles to
-show them. The same right-click menu, and **Copy ▸** on a printer, list the columns in that order.
-Columns can't be dragged into another order, in either tool.
+The columns are **Name**, **Address**, **Status**, **Toner**, **Brand**, **Model**, **Serial
+number**, **Asset tag** and **Tags**, in that order. Serial number and Asset tag start hidden:
+right-click the column titles to show them. Status and Toner stay empty until you refresh. The
+same right-click menu, and **Copy ▸** on a printer, list the columns in that order. Columns can't
+be dragged into another order, in either tool.
 
 Click a column title to sort by it, and again to reverse it. Numbers inside names sort as numbers,
 so "P2" comes before "P10"; upper and lower case don't matter, and printers that tie are ordered by
@@ -54,8 +56,11 @@ name.
 
 **Edit selected…** (F2) opens the same window for printers already in the list.
 
-The **Details** panel shows all of it, under **Connection** (address, group), **Printer** (brand,
-model, serial number, asset tag), **Page counters** (source), **Tags** and **Notes**.
+The **Details** panel shows all of it, under **Connection** (address, group), **Supplies**,
+**Printer** (brand, model, serial number, asset tag), **Page counters** (source and the printer's
+own total), **Tags** and **Notes**. The status, the printer's messages and the supplies arrive
+with a refresh, and so does the chance to copy the brand, model or serial number the printer
+reports into your list.
 
 ## Opening a printer's web page
 
@@ -99,8 +104,13 @@ describes the window in full.
 
 What differs is what goes in it. The columns are grouped as **Printer** (name, address, group,
 brand, model), **Details** (serial number, asset tag, page counters, tags, notes) and **Last
-check** (status, toner), and that last group stays greyed until there is something to check. The
-built-in preset is **All details**.
+check** (status, toner as text, and total pages in plain digits, so a spreadsheet reads it as a
+number). The built-in preset is **All details**.
+
+Ticking any of the three lets the window refresh those printers itself, and it says how many of
+them have never been checked. With none ticked the button explains itself: "Tick Status, Toner or
+Total pages to read them". A printer whose counters come from Doc360 MPS has "Error" under Total
+pages; [Checking printers](checking.md#what-the-printer-says-about-itself) says why.
 
 The printers to export are the same kinds of choice as in Hosts: the search results or the picked
 tags while either is on, the selected printers when you have more than one, every printer, those in

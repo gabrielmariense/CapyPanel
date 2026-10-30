@@ -6,23 +6,20 @@ quais estão ligados e quem está logado neles, e abra a tela remota de qualquer
 Trabalho Remota ou pelo visualizador VNC que você já usa. Ele guarda também as suas impressoras,
 com os detalhes de que você precisa e a página web delas a um clique.
 
-![A janela principal do CapyPanel: a barra lateral, grupos à esquerda, hosts no meio, detalhes à direita](images/main-window-dark-pt-BR.png)
+![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts e outro para Impressoras](images/home-dark-pt-BR.png)
 
 ## O que ele faz
 
-- Conexão remota
-  - UltraVNC
-  - RealVNC
-  - Área de Trabalho Remota (RDP)
-- Perfis de conexão
-- Listas de hosts compartilhadas
-- Status dos hosts
-- Usuários logados
-- Pesquisa
-- Importação e exportação
-- Inventário de impressoras
-  - Marca, modelo, nº de série, patrimônio
-  - Páginas web das impressoras
+- Hosts
+  - Conexão remota: UltraVNC, RealVNC, Área de Trabalho Remota
+  - Perfis de conexão
+  - Listas compartilhadas, grupos e tags
+  - Status e usuários logados
+  - Pesquisa, importação e exportação
+- Impressoras
+  - Listas com marca, modelo, nº de série e patrimônio
+  - Status, toner e suprimentos por SNMP
+  - Páginas web e relatórios
 
 ## Páginas
 
@@ -38,11 +35,12 @@ Para quem usa o CapyPanel e para quem o configura para uma equipe.
 | [Verificando hosts](hosts/checking.pt-BR.md) | Status, usuários logados e a conta usada para lê-los |
 | [Pesquisando hosts](hosts/searching.pt-BR.md) | A caixa de pesquisa, o que ela abrange e como encerrar uma pesquisa |
 | [A ferramenta Impressoras](printers/printers.pt-BR.md) | A janela Impressoras, os detalhes de uma impressora e as páginas web |
+| [Verificando impressoras](printers/checking.pt-BR.md) | Status, toner e suprimentos, e como são lidos |
 | [Listas de impressoras](printers/printer-lists.pt-BR.md) | Onde as listas de impressoras ficam e as configurações delas |
 | [Desenvolvimento](development.pt-BR.md) | Compilar, testar e traduzir o CapyPanel |
 
 Primeiros passos, Configurações e arquivos e Desenvolvimento falam do app inteiro. As cinco páginas
-depois deles são da ferramenta **Hosts**, e as duas seguintes das **Impressoras**.
+depois deles são da ferramenta **Hosts**, e as três seguintes das **Impressoras**.
 
-Estas páginas descrevem a versão atual (0.20.0). O CapyPanel está em beta, então elas crescem a
+Estas páginas descrevem a versão atual (0.21.0). O CapyPanel está em beta, então elas crescem a
 cada funcionalidade.

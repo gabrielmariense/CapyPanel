@@ -19,5 +19,5 @@ def test_unknown_language_falls_back_to_english() -> None:
 def test_strings_without_a_catalog_pass_through() -> None:
     i18n.set_language("pt_BR")
     assert i18n.language() == "pt_BR"
-    assert i18n._("Ready") == "Ready"
+    assert i18n._("A text no catalog has") == "A text no catalog has"
     assert i18n.ngettext("{n} host", "{n} hosts", 2) == "{n} hosts"

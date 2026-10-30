@@ -1,6 +1,5 @@
 """The Printers toolbar, slot for slot like Hosts': Open web page and Refresh, Inventory, Report.
-Refresh has nothing to check on printers yet, so it stays greyed out (toner and status come
-later)."""
+Refresh is a plain button: printers have one check (one SNMP read), so there's nothing to pick."""
 
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QMenu
@@ -18,8 +17,9 @@ class PrintersToolBar(ToolBar):
         self.web_button.clicked.connect(commands.open_web_page.trigger)
         commands.open_web_page.enabledChanged.connect(self.web_button.setEnabled)
         self.web_button.setEnabled(commands.open_web_page.isEnabled())
-        self.refresh_button = tool_button(dropdown=True)
-        self.refresh_button.setEnabled(False)
+        self.refresh_button = tool_button()
+        self.refresh_button.clicked.connect(commands.refresh_shown.trigger)
+        commands.refresh_shown.enabledChanged.connect(self.refresh_button.setEnabled)
         # Inventory: adding printers and groups; its menu is filled by the tool.
         self.inventory_button = tool_button(dropdown=True)
         self.inventory_menu = QMenu(self.inventory_button)
@@ -36,7 +36,9 @@ class PrintersToolBar(ToolBar):
         self.web_button.setText(gap + _("Open web page"))
         self.web_button.setToolTip(_("Open the selected printers' web pages (Enter)"))
         self.refresh_button.setText(gap + _("Refresh"))
-        self.refresh_button.setToolTip(_("Nothing to check on printers yet"))
+        self.refresh_button.setToolTip(
+            _("Read the status and supplies of every printer shown (F5)")
+        )
         self.inventory_button.setText(gap + _("Inventory"))
         self.inventory_button.setToolTip(_("Add printers and groups, and manage the groups"))
         self.report_button.setText(gap + _("Report"))

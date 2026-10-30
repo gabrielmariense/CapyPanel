@@ -38,10 +38,12 @@ funcionam como no Hosts, que [Listas de hosts](../hosts/host-lists.pt-BR.md) des
 
 ## Configurações
 
-**Configurações > Impressoras** tem duas seções:
+**Configurações > Impressoras** tem três seções:
 
 - **Inicialização > Lista ao iniciar:** qual lista de impressoras abre com a ferramenta, e
   **Mostrar primeiro**, o que essa lista mostra quando abre. Cada lista guarda a própria resposta.
+- **Atualizar:** a comunidade SNMP, o nível baixo de suprimento e como a coluna Toner aparece,
+  tudo em [Verificando impressoras](checking.pt-BR.md).
 - **Listas de impressoras:** a tabela de todas as listas com o tipo e o que você pode fazer com
   cada uma, com **Nova…**, **Adicionar existente…** e **Remover**. É a mesma página do Listas de
   hosts, inclusive no que o **Remover** pergunta, como

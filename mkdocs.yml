@@ -21,6 +21,7 @@ nav:
       - Searching: hosts/searching.md
   - Printers:
       - The Printers tool: printers/printers.md
+      - Checking: printers/checking.md
       - Printer lists: printers/printer-lists.md
 
 theme:

@@ -36,10 +36,12 @@ as they do in Hosts, which [Host lists](../hosts/host-lists.md) describes.
 
 ## Settings
 
-**Settings > Printers** has two sections:
+**Settings > Printers** has three sections:
 
 - **Startup > List on startup:** which printer list opens with the tool, and **Show first**, what
   that list shows when it opens. Each list keeps its own answer.
+- **Refresh:** the SNMP community string, the low supply level and how the Toner column shows,
+  all under [Checking printers](checking.md).
 - **Printer lists:** the table of every list with its type and what you can do to it, with
   **New…**, **Add existing…** and **Remove**. It's the same page as Host lists, down to what
   **Remove** asks, which [Host lists](../hosts/host-lists.md#settings-hosts-host-lists) covers.

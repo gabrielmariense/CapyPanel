@@ -15,7 +15,7 @@ sozinha no fim da lista, embaixo dos grupos.
 |---|---|
 | **CapyPanel** | Inicialização, Idioma, Tema |
 | **Hosts** | Inicialização, Atualizar, Listas de hosts, Perfis de conexão, Ferramentas remotas |
-| **Impressoras** | Inicialização, Listas de impressoras |
+| **Impressoras** | Inicialização, Atualizar, Listas de impressoras |
 
 Um grupo é uma página só, comprida. Clicar numa seção da lista rola a página até ela, e, conforme
 você rola, a lista acompanha e destaca onde você está. As Configurações abrem em **CapyPanel >
@@ -141,9 +141,14 @@ arquivos estão em uso.
 
 ## Impressoras
 
-**Inicialização > Lista ao iniciar** e **Mostrar primeiro** funcionam como no Hosts, para listas de
-impressoras. **Listas de impressoras** é a mesma tabela e os mesmos botões do Listas de hosts. As
-duas estão em [Listas de impressoras](printers/printer-lists.pt-BR.md#configuracoes).
+**Inicialização > Lista ao iniciar** e **Mostrar primeiro** funcionam como no Hosts, para listas
+de impressoras, e **Listas de impressoras** é a mesma tabela e os mesmos botões do Listas de
+hosts. As duas estão em [Listas de impressoras](printers/printer-lists.pt-BR.md#configuracoes).
+
+O **Atualizar** guarda as três configurações de leitura das impressoras por SNMP: a **Comunidade
+SNMP** atrás de um botão **Alterar…**, o **Nível baixo de suprimento** entre 1 e 50 %, e se a
+**Coluna Toner** mostra texto ou uma barra. O
+[Verificando impressoras](printers/checking.pt-BR.md) explica as três.
 
 ## Sobre
 

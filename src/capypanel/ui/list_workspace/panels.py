@@ -545,6 +545,13 @@ class ItemTable(QTreeWidget):
 
     def show_items(self, items: Sequence[Host]) -> None:
         keep = set(self.selected_ids())
+        # An edit, add or delete refills the table, and clear() would jump to the top: the same
+        # rows give or take the ones changed stay where they were. Another group or search
+        # starts at the top.
+        before, after = set(self._rows), {item.id for item in items}
+        same = bool(before) and len(before ^ after) <= max(1, len(keep))
+        down = self.verticalScrollBar().value() if same else 0
+        across = self.horizontalScrollBar().value()
         self.blockSignals(True)
         self.setSortingEnabled(False)
         self.clear()
@@ -559,6 +566,9 @@ class ItemTable(QTreeWidget):
         self.setSortingEnabled(True)
         self.blockSignals(False)
         self._place_columns()
+        self.updateGeometries()  # the scroll bars' new range, before going back
+        self.verticalScrollBar().setValue(down)
+        self.horizontalScrollBar().setValue(across)
         self.itemSelectionChanged.emit()
 
     def show_no_match(self, text: str) -> None:

@@ -20,17 +20,19 @@ Ela tem as próprias listas, separadas das da ferramenta Hosts (veja
 | **Painel de detalhes** (direita) | Tudo que se sabe sobre a impressora selecionada. Clique em qualquer valor para copiá-lo |
 | **Barra de status** | Qual lista está aberta, onde ela está, quantas impressoras tem e quantas estão selecionadas |
 
-O **Atualizar** está lá, mas ainda não faz nada, e diz isso: "Ainda não há o que verificar nas
-impressoras". Os níveis de toner e o status das impressoras chegam na próxima versão.
+O **Atualizar** lê o status e os suprimentos de todas as impressoras exibidas, por SNMP, e
+preenche as colunas **Status** e **Toner**. Ele tem uma página própria:
+[Verificando impressoras](checking.pt-BR.md).
 
 O **Inventário** guarda **Adicionar impressora…** (Ctrl+N), **Adicionar grupo…** e **Gerenciar
 grupos…**, os mesmos três do Hosts.
 
 ### A tabela
 
-As colunas são **Nome**, **Endereço**, **Marca**, **Modelo**, **Nº de série**, **Patrimônio** e
-**Tags**, nessa ordem. Nº de série e Patrimônio começam escondidas: clique com o botão direito nos
-títulos das colunas para mostrá-las. Esse mesmo menu, e o **Copiar ▸** de uma impressora, listam as
+As colunas são **Nome**, **Endereço**, **Status**, **Toner**, **Marca**, **Modelo**, **Nº de
+série**, **Patrimônio** e **Tags**, nessa ordem. Nº de série e Patrimônio começam escondidas:
+clique com o botão direito nos títulos das colunas para mostrá-las. Status e Toner ficam vazias
+até você atualizar. Esse mesmo menu, e o **Copiar ▸** de uma impressora, listam as
 colunas nessa ordem. As colunas não podem ser arrastadas para outra posição, em nenhuma das duas
 ferramentas.
 
@@ -56,8 +58,11 @@ importam, e impressoras empatadas ficam em ordem de nome.
 
 **Editar selecionado…** (F2) abre a mesma janela para impressoras que já estão na lista.
 
-O painel de **detalhes** mostra tudo isso, em **Conexão** (endereço, grupo), **Impressora** (marca,
-modelo, nº de série, patrimônio), **Contadores de páginas** (origem), **Tags** e **Notas**.
+O painel de **detalhes** mostra tudo isso, em **Conexão** (endereço, grupo), **Suprimentos**,
+**Impressora** (marca, modelo, nº de série, patrimônio), **Contadores de páginas** (origem e o
+total da própria impressora), **Tags** e **Notas**. O status, as mensagens da impressora e os
+suprimentos chegam com uma atualização, e com ela também a chance de copiar para a sua lista a
+marca, o modelo ou o nº de série que a impressora informa.
 
 ## Abrir a página web de uma impressora
 
@@ -103,8 +108,15 @@ inteira.
 
 O que muda é o que entra nele. As colunas são agrupadas em **Impressora** (nome, endereço, grupo,
 marca, modelo), **Detalhes** (nº de série, patrimônio, contadores de páginas, tags, notas) e
-**Última verificação** (status, toner), e esse último grupo fica apagado enquanto não houver o que
-verificar. A predefinição que vem pronta é **Todos os detalhes**.
+**Última verificação** (status, toner em texto, e total de páginas em dígitos simples, para uma
+planilha ler como número). A predefinição que vem pronta é **Todos os detalhes**.
+
+Marcar qualquer uma das três deixa a janela atualizar essas impressoras ali mesmo, e ela diz
+quantas nunca foram verificadas. Sem nenhuma marcada o botão se explica: "Marque Status, Toner ou
+Total de páginas para lê-las". Uma impressora cujos contadores vêm do Doc360 MPS fica com "Erro"
+no Total de páginas; o
+[Verificando impressoras](checking.pt-BR.md#o-que-a-impressora-diz-sobre-si-mesma) explica por
+quê.
 
 As impressoras a exportar são os mesmos tipos de escolha do Hosts: os resultados da pesquisa ou as
 tags escolhidas enquanto uma das duas está ativa, as impressoras selecionadas quando você tem mais
