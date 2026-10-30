@@ -193,6 +193,16 @@ def test_the_low_level_comes_from_settings(printers: PrintersTool) -> None:
     assert printers.table._rows[lab.id].text(printers.table.TONER) == "Black 15 % · low"
 
 
+def test_the_report_gets_status_toner_and_the_page_count(printers: PrintersTool) -> None:
+    lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
+    assert printers._report_cells(lab.id) == ("", "", "")  # not checked yet
+    printers._checked[lab.id] = _checked(
+        state=State.IDLE, supplies=(_supply("Black Cartridge", 40),), pages=1_604_394
+    )
+    # Plain digits, so a spreadsheet reads the page count as a number.
+    assert printers._report_cells(lab.id) == ("Idle", "Black 40 %", "1604394")
+
+
 def test_the_printer_s_own_words_show_as_plain_text(printers: PrintersTool) -> None:
     lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
     printers._checked[lab.id] = _checked(

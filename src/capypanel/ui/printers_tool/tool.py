@@ -308,7 +308,7 @@ class PrintersTool(ListWorkspace):
             prefs=self.prefs,
             save_prefs=self._save_prefs,
             results=self._report_cells,
-            # Status and Toner come from the same read: either box ticked reads both.
+            # Status, Toner and Total pages come from one read: any box ticked reads them all.
             refresh=lambda printers, *wanted: (
                 self.check_printers(printers) if any(wanted) else None
             ),
@@ -499,9 +499,11 @@ class PrintersTool(ListWorkspace):
         checked, low = self._checked.get(printer_id), self.low_level()
         return status.status(checked, low), status.toner(checked, low)
 
-    def _report_cells(self, printer_id: str) -> tuple[str, str]:
+    def _report_cells(self, printer_id: str) -> tuple[str, str, str]:
         state, toner = self._cells(printer_id)
-        return state.text, toner.text
+        checked = self._checked.get(printer_id)
+        pages = checked.reading.pages if checked and checked.reading else None
+        return state.text, toner.text, "" if pages is None else str(pages)  # plain digits: CSV
 
     def use_value(self, printer_id: str, key: str, value: str) -> None:
         """Details' "Use this": the value the printer reports replaces the list's."""
