@@ -7,6 +7,8 @@ counter. CapyPanel only ever reads: it never changes a setting on a printer.
 The results are kept in memory, never in the list file, and they're gone when CapyPanel closes.
 That also means a read-only list can be refreshed like any other.
 
+![The Printers window after a refresh: a status and a toner level on every printer, and the supplies of the selected one](../images/printers-dark.png)
+
 ## Refresh
 
 **Refresh** on the toolbar reads every printer the table shows, which is the group, tag or search
@@ -38,8 +40,9 @@ or select the printer and read it in full under its name in the Details panel.
 
 ## Toner and the other supplies
 
-The **Toner** column shows the lowest toner or ink the printer reports, as text by default:
-"Black 24 %", or "Cyan 8 % · low" in amber once it's at or below the low level. A printer that
+The **Toner** column shows the lowest toner or ink the printer reports, as text by default, with
+a dab of that toner's own colour beside it: "Black 24 %", or "Cyan 8 % · low" in amber once it's
+at or below the low level. A printer that
 reports a toner without a percentage shows "Black: some left" or "Toner: level unknown", and a
 black-only printer that names no colour simply shows "Toner".
 
@@ -47,11 +50,15 @@ black-only printer that names no colour simply shows "Toner".
 the percentage beside it. The bar stretches with the column, and in a very narrow column only the
 percentage shows. Copying a cell and the report always use the text form.
 
+![The Supplies section: a bar for each toner, the drum, the waste box and the fuser, with the two marks explained under them](../images/printer-details-dark.png)
+
 The Details panel's **Supplies** section lists everything the printer reports: toners and inks,
-the drum, the waste box, the fuser, the rollers. Each has its level and a bar, a low one is marked
-"24 % · Low", and a waste box close to full is marked "88 % · Nearly full". The fuser and the
-rollers show a level but are never called low, because they wear out rather than run out. When a
-printer reports none of this, the section says "The printer doesn't report its supplies."
+the drum, the waste box, the fuser, the rollers. Each is named as the printer names it, which is
+usually English whatever language CapyPanel is in. Each has its level and a bar, a low one is
+marked "24 % · Low", and a waste box close to full is marked "88 % · Nearly full". The fuser and
+the rollers show a level but are never called low, because they wear out rather than run out.
+When a printer reports none of this, the section says "The printer doesn't report its
+supplies."
 
 Every bar carries two marks, explained under them: "The tick is the low level, 10 %; the faint one
 is half."

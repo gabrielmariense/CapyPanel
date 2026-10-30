@@ -7,6 +7,8 @@ e o contador de páginas. O CapyPanel só lê: ele nunca altera uma configuraç�
 Os resultados ficam na memória, nunca no arquivo da lista, e somem quando o CapyPanel fecha. Isso
 também significa que uma lista somente leitura pode ser atualizada como qualquer outra.
 
+![A janela Impressoras depois de uma atualização: um status e um nível de toner em cada impressora, e os suprimentos da selecionada](../images/printers-dark-pt-BR.png)
+
 ## Atualizar
 
 O **Atualizar** da barra de ferramentas lê todas as impressoras que a tabela mostra, ou seja, o
@@ -40,7 +42,8 @@ detalhes.
 ## Toner e os outros suprimentos
 
 A coluna **Toner** mostra o toner ou a tinta mais baixa que a impressora informa, como texto por
-padrão: "Preto 24 %", ou "Ciano 8 % · baixo" em âmbar quando está no nível baixo ou abaixo dele.
+padrão, com um quadradinho da cor daquele toner ao lado: "Preto 24 %", ou "Ciano 8 % · baixo" em
+âmbar quando está no nível baixo ou abaixo dele.
 Uma impressora que informa um toner sem porcentagem mostra "Preto: ainda há" ou "Toner: nível
 desconhecido", e uma impressora só preto que não nomeia cor nenhuma mostra apenas "Toner".
 
@@ -48,8 +51,12 @@ Em **Configurações > Impressoras > Atualizar > Coluna Toner** dá para mostrar
 preenchida até aquele nível e com a porcentagem ao lado. A barra estica junto com a coluna, e numa
 coluna bem estreita aparece só a porcentagem. Copiar uma célula e o relatório sempre usam o texto.
 
+![A seção Suprimentos: uma barra para cada toner, o cilindro, a caixa de resíduos e o fusor, com os dois traços explicados embaixo](../images/printer-details-dark-pt-BR.png)
+
 A seção **Suprimentos** do painel de detalhes lista tudo que a impressora informa: toners e
-tintas, o cilindro, a caixa de resíduos, o fusor, os roletes. Cada um tem o nível e uma barra, um
+tintas, o cilindro, a caixa de resíduos, o fusor, os roletes. Cada um aparece com o nome que a
+própria impressora dá a ele, que costuma estar em inglês ("Black Toner", "Drum Unit") seja qual
+for o idioma do CapyPanel. Cada um tem o nível e uma barra, um
 nível baixo é marcado "24 % · Baixo", e uma caixa de resíduos quase cheia é marcada "88 % · Quase
 cheia". O fusor e os roletes mostram o nível mas nunca são chamados de baixos, porque eles se
 desgastam em vez de acabar. Quando a impressora não informa nada disso, a seção diz "A impressora
