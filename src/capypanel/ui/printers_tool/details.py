@@ -140,7 +140,7 @@ class PrinterDetailsPanel(DetailsPanel):
                 status=cell.text, when=clock_text(shown.checked.when)
             )
         under = self.muted(words)
-        under.setToolTip(cell.tip)
+        under.setToolTip(status.plain_tip(cell.tip))
         layout.addWidget(under)
         reading = shown.checked.reading if shown.checked else None
         for message in reading.messages if reading else ():  # the printer's own words, in full
@@ -164,7 +164,9 @@ class PrinterDetailsPanel(DetailsPanel):
         for supply in checked.reading.supplies:
             top = QHBoxLayout()
             top.setSpacing(6)
-            top.addWidget(self.muted(supply.name), 1)
+            name = self.muted(supply.name)
+            name.setTextFormat(Qt.TextFormat.PlainText)  # the printer's own words
+            top.addWidget(name, 1)
             level = QLabel(status.level_text(supply))
             if status.is_low(supply, shown.low):
                 words = _("{level} · Low") if not supply.receptacle else _("{level} · Nearly full")

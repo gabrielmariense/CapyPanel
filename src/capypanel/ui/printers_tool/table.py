@@ -21,7 +21,7 @@ from capypanel.core.printers.reading import Supply
 from capypanel.ui.icons import dot_icon
 from capypanel.ui.list_workspace.panels import ItemTable
 from capypanel.ui.printers_tool.meter import HEIGHT, draw_meter
-from capypanel.ui.printers_tool.status import AMBER, DEFAULT_LOW, Cell, level_text
+from capypanel.ui.printers_tool.status import AMBER, DEFAULT_LOW, Cell, level_text, plain_tip
 
 ROLE_QUIET = Qt.ItemDataRole.UserRole + 2  # a Status cell to show greyed
 ROLE_WARN = Qt.ItemDataRole.UserRole + 3  # a Toner cell to show in amber
@@ -100,11 +100,11 @@ class PrinterTable(ItemTable):
 
     def _fill(self, row: QTreeWidgetItem, status: Cell, toner: Cell) -> None:
         row.setText(self.STATUS, status.text)
-        row.setToolTip(self.STATUS, status.tip)
+        row.setToolTip(self.STATUS, plain_tip(status.tip))
         row.setIcon(self.STATUS, dot_icon(status.color) if status.color else QIcon())
         row.setData(self.STATUS, ROLE_QUIET, status.quiet)
         row.setText(self.TONER, toner.text)  # kept with bars too: it's what Copy and sorting use
-        row.setToolTip(self.TONER, toner.tip)
+        row.setToolTip(self.TONER, plain_tip(toner.tip))
         bar = self.bars and toner.supply is not None
         row.setIcon(self.TONER, swatch(toner.color) if toner.color and not bar else QIcon())
         row.setData(self.TONER, ROLE_WARN, toner.warn)

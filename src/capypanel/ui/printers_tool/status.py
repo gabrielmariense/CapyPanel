@@ -1,6 +1,7 @@
 """What a printer's last Refresh says, in words and colours: the Status and Toner cells, and the
 heading of its Details. One place, so the table, Details and Report always agree."""
 
+import html
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -91,6 +92,12 @@ def status(checked: Checked | None, low: int) -> Cell:
         return Cell(words, tip, AMBER)
     words = _STATES[reading.state]() if reading.state in _STATES else _("Ready")
     return Cell(words, tip, GREEN)
+
+
+def plain_tip(text: str) -> str:
+    """A tooltip that shows `text` exactly: Qt takes anything that looks like HTML as HTML, and
+    tips hold the printer's own words (its messages, its supplies' names)."""
+    return f"<p style='white-space:pre-wrap'>{html.escape(text)}</p>" if text else ""
 
 
 def is_low(supply: Supply, low: int) -> bool:

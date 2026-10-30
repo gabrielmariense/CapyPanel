@@ -86,8 +86,20 @@ def test_encoding_round_trips() -> None:
         b"\x04\x00",  # not a sequence
         snmp.message(b"c", snmp.RESPONSE, 1, [(SYS_DESCR, b"x")])[:-3],  # cut short
         b"\x30\x0e\x02\x01\x00\x04\x01c\xa2\x06\x02\x01\x01\x02\x01\x00",  # SNMP v1, no bindings
+        # A counter far longer than any real one (it would be a number too big to show).
+        snmp.message(b"c", snmp.RESPONSE, 1, [(SYS_DESCR, (0x41, b"\x01" * 40))]),
     ],
 )
 def test_malformed_answers_raise_snmp_error(data: bytes) -> None:
     with pytest.raises(snmp.SnmpError):
         snmp.parse(data)
+
+
+def test_a_session_stops_asking_after_its_time_limit() -> None:
+    with (
+        running({SYS_DESCR: b"x"}) as agent,
+        snmp.Session("127.0.0.1", "public", port=agent.port, limit=0.0) as session,
+        pytest.raises(snmp.SnmpError, match="too slowly"),
+    ):
+        session.get([SYS_DESCR])
+    assert agent.requests == []  # nothing sent once the time is up

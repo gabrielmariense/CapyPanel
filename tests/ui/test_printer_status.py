@@ -8,6 +8,7 @@ from functools import partial
 from pathlib import Path
 
 import pytest
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QTreeWidgetItem
 from snmp_agent import Objects, running
 
@@ -190,6 +191,21 @@ def test_the_low_level_comes_from_settings(printers: PrintersTool) -> None:
     printers.set_low_level(20)
     assert printers.prefs["low_level"] == 20
     assert printers.table._rows[lab.id].text(printers.table.TONER) == "Black 15 % · low"
+
+
+def test_the_printer_s_own_words_show_as_plain_text(printers: PrintersTool) -> None:
+    lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
+    printers._checked[lab.id] = _checked(
+        messages=("<b>Tray 2</b> <img src='x'>",), supplies=(_supply("<i>Black</i>", 40),)
+    )
+    printers.table.show_cells(lab.id)
+    tip = printers.table._rows[lab.id].toolTip(printers.table.STATUS)
+    assert "&lt;b&gt;Tray 2&lt;/b&gt;" in tip and "<b>" not in tip
+    assert "&lt;i&gt;Black&lt;/i&gt;" in printers.table._rows[lab.id].toolTip(printers.table.TONER)
+    printers.table.select_ids([lab.id])
+    shown = {w.text(): w for w in printers.details.findChildren(QLabel)}
+    assert shown["<i>Black</i>"].textFormat() == Qt.TextFormat.PlainText
+    assert shown["<b>Tray 2</b> <img src='x'>"].textFormat() == Qt.TextFormat.PlainText
 
 
 def test_the_toner_column_shows_a_bar_when_settings_asks(printers: PrintersTool) -> None:

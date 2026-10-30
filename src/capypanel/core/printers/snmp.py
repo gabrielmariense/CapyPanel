@@ -15,6 +15,7 @@ from enum import Enum
 PORT = 161
 TIMEOUT = 1.5  # seconds to wait for each answer
 RETRIES = 1  # one more try: UDP may drop a packet
+LIMIT = 30.0  # seconds for everything one Session asks: a printer slow on purpose can't hold on
 MAX_REPETITIONS = 20  # rows one GetBulk asks for
 MAX_ROWS = 400  # a walk stops here: no printer table is anywhere near this long
 _MAX_ANSWER = 65_535
@@ -68,9 +69,11 @@ class Session:
         port: int = PORT,
         timeout: float = TIMEOUT,
         retries: int = RETRIES,
+        limit: float = LIMIT,
     ) -> None:
         self._community = community.encode()
         self._timeout, self._retries = timeout, retries
+        self._until = time.monotonic() + limit
         try:
             family, _type, _proto, _name, address = socket.getaddrinfo(
                 host, port, type=socket.SOCK_DGRAM
@@ -123,11 +126,13 @@ class Session:
         request_id = secrets.randbelow(2**31 - 1) + 1
         packet = message(self._community, pdu, request_id, [(o, None) for o in oids], a, b)
         for _attempt in range(self._retries + 1):
+            if time.monotonic() >= self._until:
+                raise SnmpError(f"{self._host}: answers too slowly")
             try:
                 self._sock.send(packet)
             except OSError as e:
                 raise NoAnswer(f"{self._host}: {e}") from e
-            deadline = time.monotonic() + self._timeout
+            deadline = min(time.monotonic() + self._timeout, self._until)
             while (left := deadline - time.monotonic()) > 0:
                 self._sock.settimeout(left)
                 try:
@@ -144,6 +149,8 @@ class Session:
                 if answer.error_status:
                     raise SnmpError(f"{self._host}: error {answer.error_status}")
                 return answer.bindings
+        if time.monotonic() >= self._until:
+            raise SnmpError(f"{self._host}: answers too slowly")
         raise NoAnswer(f"{self._host}: no answer")
 
 
@@ -307,6 +314,8 @@ def _binding(oid: str, tag: int, body: bytes) -> Binding:
     if tag == _INTEGER:
         return Binding(oid, _signed(body))
     if tag in _UNSIGNED:
+        if len(body) > 9:  # Counter64 is 8 bytes, plus a leading zero
+            raise SnmpError("bad counter")
         return Binding(oid, int.from_bytes(body, "big") if body else 0)
     if tag == _OID:
         return Binding(oid, _decode_oid(body))
