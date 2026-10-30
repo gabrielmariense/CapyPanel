@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 01:43-0300\n"
+"POT-Creation-Date: 2026-10-30 01:59-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1772,8 +1772,8 @@ msgid "The read-only community string your printers answer to. Most use \"public
 msgstr "A comunidade somente leitura à qual suas impressoras respondem. A maioria usa \"public\". Ela fica guardada no Gerenciador de Credenciais do Windows."
 
 #, python-brace-format
-msgid "The tick is the low level, {low} %."
-msgstr "O traço marca o nível baixo, {low} %."
+msgid "The tick is the low level, {low} %; the faint one is half."
+msgstr "O traço marca o nível baixo, {low} %; o mais fraco, a metade."
 
 msgid "The tool needs a “name”."
 msgstr "A ferramenta precisa de um “name”."

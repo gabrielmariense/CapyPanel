@@ -47,12 +47,14 @@ class Meter(QWidget):
     def __init__(self, supply: Supply, low: int) -> None:
         super().__init__()
         self.supply, self.low = supply, low
-        self.setFixedHeight(8)
+        self.setFixedHeight(HEIGHT + 2)
 
     def paintEvent(self, _event: object) -> None:
         painter = QPainter(self)
         text = self.palette().color(QPalette.ColorRole.Text)
-        draw_meter(painter, QRectF(0, 1, self.width(), HEIGHT), self.supply, self.low, text)
+        back = self.palette().color(QPalette.ColorRole.Base)
+        bar = QRectF(0, 1, self.width(), HEIGHT)
+        draw_meter(painter, bar, self.supply, self.low, text, back)
         painter.end()
 
 
@@ -172,7 +174,8 @@ class PrinterDetailsPanel(DetailsPanel):
             layout.addLayout(top)
             layout.addWidget(Meter(supply, shown.low))
             layout.addSpacing(2)
-        layout.addWidget(self.muted(_("The tick is the low level, {low} %.").format(low=shown.low)))
+        hint = _("The tick is the low level, {low} %; the faint one is half.")
+        layout.addWidget(self.muted(hint.format(low=shown.low)))
 
     def _printer_says(self, key: str, value: str, use: Callable[[str, str], None] | None) -> QLabel:
         """What the printer reports instead of the list's value; "Use this" copies it over."""

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 01:43-0300\n"
+"POT-Creation-Date: 2026-10-30 01:59-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1825,7 +1825,7 @@ msgid ""
 msgstr ""
 
 #, python-brace-format
-msgid "The tick is the low level, {low} %."
+msgid "The tick is the low level, {low} %; the faint one is half."
 msgstr ""
 
 msgid "The tool needs a “name”."

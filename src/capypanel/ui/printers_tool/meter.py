@@ -1,5 +1,6 @@
-"""A supply's level as a bar with a tick at the low level: in Details, and in the Toner column
-when Settings asks for bars. One drawing, so both look the same."""
+"""A supply's level as a bar with a tick at the low level and a fainter mark at half: in
+Details, and in the Toner column when Settings asks for bars. One drawing, so both look the
+same."""
 
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QColor, QPainter
@@ -7,12 +8,16 @@ from PySide6.QtGui import QColor, QPainter
 from capypanel.core.printers.reading import Supply
 from capypanel.ui.printers_tool import status
 
-HEIGHT = 6
+HEIGHT = 8
+HALF = 50  # %: the fainter mark
 
 
-def draw_meter(painter: QPainter, bar: QRectF, supply: Supply, low: int, text: QColor) -> None:
-    """The bar in `bar`, its track and tick tinted from the text colour, so they read in every
-    theme. "Some left" fills half; an unknown level, none."""
+def draw_meter(
+    painter: QPainter, bar: QRectF, supply: Supply, low: int, text: QColor, back: QColor
+) -> None:
+    """The bar in `bar`, its track tinted from the text colour, so it reads in every theme.
+    The marks are cut in the background colour where the bar is filled, and drawn in the text
+    colour where it's empty, so they show on both. "Some left" fills half; unknown, none."""
     painter.save()
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
     track = QColor(text)
@@ -21,13 +26,21 @@ def draw_meter(painter: QPainter, bar: QRectF, supply: Supply, low: int, text: Q
     painter.setBrush(track)
     painter.drawRoundedRect(bar, 3, 3)
     fill = supply.percent / 100 if supply.percent is not None else 0.5 if supply.some_left else 0
+    filled = 0.0
     if fill:
         painter.setBrush(QColor(status.supply_color(supply)))
-        width = max(4.0, bar.width() * fill)
-        painter.drawRoundedRect(QRectF(bar.x(), bar.y(), width, bar.height()), 3, 3)
-    mark = QColor(text)
-    mark.setAlpha(150)
-    painter.setPen(mark)
-    x = round(bar.x() + bar.width() * low / 100)
-    painter.drawLine(x, round(bar.y()) - 1, x, round(bar.bottom()) + 1)
+        filled = max(4.0, bar.width() * fill)
+        painter.drawRoundedRect(QRectF(bar.x(), bar.y(), filled, bar.height()), 3, 3)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)  # crisp 1 px marks
+    top, bottom = round(bar.y()), round(bar.bottom())
+    for level, strong in ((HALF, False), (low, True)):
+        x = round(bar.x() + bar.width() * level / 100)
+        on_fill = x < bar.x() + filled
+        mark = QColor(back if on_fill else text)
+        mark.setAlpha(255 if strong else 140)
+        painter.setPen(mark)
+        if strong:  # the low level reaches past the bar
+            painter.drawLine(x, top - 1, x, bottom)
+        else:
+            painter.drawLine(x, top + 1, x, bottom - 2)
     painter.restore()

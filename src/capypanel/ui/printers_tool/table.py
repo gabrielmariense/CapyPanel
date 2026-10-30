@@ -159,7 +159,8 @@ class TonerBar(QStyledItemDelegate):
         if width >= MIN_BAR:
             top = area.center().y() - HEIGHT / 2 + 1
             bar = QRectF(area.x() + 2, top, width, HEIGHT)
-            draw_meter(painter, bar, supply, self._table.low, text)
+            back = option.palette.color(QPalette.ColorRole.Base)  # type: ignore[attr-defined]
+            draw_meter(painter, bar, supply, self._table.low, text, back)
             words = area.adjusted(2 + width + GAP, 0, 0, 0)
         warn = bool(index.data(ROLE_WARN))
         painter.save()
