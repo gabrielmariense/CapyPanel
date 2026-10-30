@@ -296,6 +296,29 @@ def test_the_last_column_fills_a_wide_window_and_a_narrow_one_scrolls(
     table.close()
 
 
+def test_clicking_a_row_with_a_long_text_doesnt_scroll_sideways(qapp: QApplication) -> None:
+    long = "a." * 150 + "example.internal"  # far wider than the view
+    hosts = _hosts(*((f"Ward {n:02}", long) for n in range(40)))
+    table = _table(qapp, hosts)
+    _fit_view(qapp, table, 400)
+    across = table.horizontalScrollBar()
+    assert across.maximum() > 0 and across.value() == 0
+    row = table.topLevelItem(0)
+    assert row is not None
+    # In the long cell, which starts in view and ends far past it.
+    spot = QPoint(
+        table.columnViewportPosition(table.ADDRESS) + 20, table.visualItemRect(row).center().y()
+    )
+    QTest.mouseClick(table.viewport(), Qt.MouseButton.LeftButton, pos=spot)
+    QTest.qWait(QApplication.doubleClickInterval() + 200)  # Qt scrolls to a click that late
+    assert table.selected_ids() == [hosts[0].id] and across.value() == 0
+    # The keyboard still brings a row into view, up and down only.
+    QTest.keyClick(table, Qt.Key.Key_End)
+    qapp.processEvents()
+    assert table.verticalScrollBar().value() > 0 and across.value() == 0
+    table.close()
+
+
 def test_the_tags_pane_can_be_hidden_and_stays_hidden(window: CapyWindow, office: Path) -> None:
     window.hosts.open_list(office)
     tag = window.hosts.nav.tags.topLevelItem(0)
