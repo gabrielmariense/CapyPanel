@@ -3,6 +3,7 @@ a pretend printer on 127.0.0.1 with invented data."""
 
 import time
 from collections.abc import Iterator
+from dataclasses import replace
 from datetime import datetime
 from functools import partial
 from pathlib import Path
@@ -15,7 +16,7 @@ from snmp_agent import Objects, running
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.printers import reading, snmp
-from capypanel.core.printers.printer import PrinterInfo, info_of, with_info
+from capypanel.core.printers.printer import DOC360, PrinterInfo, info_of, with_info
 from capypanel.core.printers.reading import Device, Problem, Reading, State, Supply, SupplyKind
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.printers_tool import refresh, status
@@ -201,6 +202,22 @@ def test_the_report_gets_status_toner_and_the_page_count(printers: PrintersTool)
     )
     # Plain digits, so a spreadsheet reads the page count as a number.
     assert printers._report_cells(lab.id) == ("Idle", "Black 40 %", "1604394")
+
+
+def test_doc360_page_counters_show_an_error(printers: PrintersTool) -> None:
+    doc = printers.document
+    assert doc is not None
+    lab = next(h for h in doc.hosts.hosts if h.name == "3F-LAB-01")
+    printers._commit(
+        doc.hosts.update_host(with_info(lab, replace(info_of(lab), counter_source=DOC360)))
+    )
+    printers._checked[lab.id] = _checked(state=State.IDLE, pages=1_604_394)
+    # The SNMP counter isn't this printer's source, so neither shows it.
+    assert printers._report_cells(lab.id) == ("Idle", "", "Error")
+    printers.table.select_ids([lab.id])
+    labels = [w.text() for w in printers.details.findChildren(QLabel)]
+    assert "Error: CapyPanel can't read page counters from Doc360 MPS yet." in labels
+    assert not any("1,604,394" in text for text in labels)
 
 
 def test_the_printer_s_own_words_show_as_plain_text(printers: PrintersTool) -> None:

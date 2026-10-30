@@ -104,6 +104,8 @@ class PrinterDetailsPanel(DetailsPanel):
         self.section(layout, _("Page counters"))
         pages = reading.pages if reading else None
         total = QLocale(i18n.language()).toString(pages) if pages is not None else ""
+        if error := status.counter_error(info.counter_source):
+            total = _("Error: {why}").format(why=error)  # not the SNMP counter: it isn't the source
         source = source_text(info.counter_source)
         self._fields(layout, (("pages", _("Total pages"), total),
                               ("counter_source", _("Source"), source)))  # fmt: skip

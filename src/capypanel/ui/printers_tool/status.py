@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from capypanel.core.i18n import _
+from capypanel.core.printers.printer import DOC360
 from capypanel.core.printers.reading import Device, Problem, Reading, State, Supply, SupplyKind
 from capypanel.ui.checks import clock_text
 
@@ -92,6 +93,11 @@ def status(checked: Checked | None, low: int) -> Cell:
         return Cell(words, tip, AMBER)
     words = _STATES[reading.state]() if reading.state in _STATES else _("Ready")
     return Cell(words, tip, GREEN)
+
+
+def counter_error(source: str) -> str:
+    """Why a printer's page counters can't be read, or "" when they can."""
+    return _("CapyPanel can't read page counters from Doc360 MPS yet.") if source == DOC360 else ""
 
 
 def plain_tip(text: str) -> str:

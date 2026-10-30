@@ -503,6 +503,9 @@ class PrintersTool(ListWorkspace):
         state, toner = self._cells(printer_id)
         checked = self._checked.get(printer_id)
         pages = checked.reading.pages if checked and checked.reading else None
+        printer = self._doc.hosts.host(printer_id) if self._doc else None
+        if printer and status.counter_error(info_of(printer).counter_source):
+            return state.text, toner.text, _("Error")  # Details says why
         return state.text, toner.text, "" if pages is None else str(pages)  # plain digits: CSV
 
     def use_value(self, printer_id: str, key: str, value: str) -> None:

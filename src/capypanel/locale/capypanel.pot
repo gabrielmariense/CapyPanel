@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 12:47-0300\n"
+"POT-Creation-Date: 2026-10-30 19:54-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -447,6 +447,9 @@ msgid ""
 "when it connects."
 msgstr ""
 
+msgid "CapyPanel can't read page counters from Doc360 MPS yet."
+msgstr ""
+
 msgid "CapyPanel is built with the following software:"
 msgstr ""
 
@@ -732,6 +735,13 @@ msgstr ""
 msgid ""
 "Editing in the table rewrites the list above as CSV with a header row "
 "(name, address, group, tags, notes), so the two always match. Continue?"
+msgstr ""
+
+msgid "Error"
+msgstr ""
+
+#, python-brace-format
+msgid "Error: {why}"
 msgstr ""
 
 msgid "Every"

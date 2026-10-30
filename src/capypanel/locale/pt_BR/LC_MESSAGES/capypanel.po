@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 12:47-0300\n"
+"POT-Creation-Date: 2026-10-30 19:54-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -444,6 +444,9 @@ msgstr "Cancelar"
 msgid "CapyPanel asks for nothing: {tool} asks for the user and password itself when it connects."
 msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha ao conectar."
 
+msgid "CapyPanel can't read page counters from Doc360 MPS yet."
+msgstr "O CapyPanel ainda não lê contadores de páginas do Doc360 MPS."
+
 msgid "CapyPanel is built with the following software:"
 msgstr "O CapyPanel é feito com os seguintes softwares:"
 
@@ -726,6 +729,13 @@ msgstr "Editar a lista aqui"
 
 msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, tags, notes), so the two always match. Continue?"
 msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes), para que as duas sempre coincidam. Continuar?"
+
+msgid "Error"
+msgstr "Erro"
+
+#, python-brace-format
+msgid "Error: {why}"
+msgstr "Erro: {why}"
 
 msgid "Every"
 msgstr "A cada"
