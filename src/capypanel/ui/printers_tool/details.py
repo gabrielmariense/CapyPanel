@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from html import escape
 
 from PySide6.QtCore import QLocale, QRectF, Qt
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPalette
+from PySide6.QtGui import QFont, QFontMetrics, QPainter, QPalette
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from capypanel.core import i18n
@@ -19,6 +19,7 @@ from capypanel.ui.checks import clock_text
 from capypanel.ui.icons import dot_icon
 from capypanel.ui.list_workspace.details import DetailsPanel, breakable
 from capypanel.ui.printers_tool import status
+from capypanel.ui.printers_tool.meter import HEIGHT, draw_meter
 from capypanel.ui.printers_tool.status import AMBER, GREY, Checked
 
 
@@ -50,26 +51,8 @@ class Meter(QWidget):
 
     def paintEvent(self, _event: object) -> None:
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         text = self.palette().color(QPalette.ColorRole.Text)
-        track = QColor(text)
-        track.setAlpha(36)
-        width, height = self.width(), 6
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(track)
-        painter.drawRoundedRect(QRectF(0, 1, width, height), 3, 3)
-        supply = self.supply
-        fill = (
-            supply.percent / 100 if supply.percent is not None else 0.5 if supply.some_left else 0
-        )
-        if fill:
-            painter.setBrush(QColor(status.supply_color(supply)))
-            painter.drawRoundedRect(QRectF(0, 1, max(4.0, width * fill), height), 3, 3)
-        mark = QColor(text)
-        mark.setAlpha(150)
-        painter.setPen(mark)
-        x = round(width * self.low / 100)
-        painter.drawLine(x, 0, x, height + 1)
+        draw_meter(painter, QRectF(0, 1, self.width(), HEIGHT), self.supply, self.low, text)
         painter.end()
 
 

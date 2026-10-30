@@ -26,7 +26,14 @@ from capypanel.ui.printers_tool.details import PrinterDetails, PrinterDetailsPan
 from capypanel.ui.printers_tool.dialog import PrinterDialog
 from capypanel.ui.printers_tool.refresh import PrinterRun, community
 from capypanel.ui.printers_tool.report import PrintersReport
-from capypanel.ui.printers_tool.settings import HIGHEST, LOWEST, PrintersSettings
+from capypanel.ui.printers_tool.settings import (
+    BARS,
+    HIGHEST,
+    LOWEST,
+    TEXT,
+    TONER_VIEW,
+    PrintersSettings,
+)
 from capypanel.ui.printers_tool.status import Cell, Checked
 from capypanel.ui.printers_tool.table import PrinterTable
 from capypanel.ui.printers_tool.toolbar import PrintersToolBar
@@ -78,6 +85,7 @@ class PrintersTool(ListWorkspace):
         for widget in (self._progress, self._stop_button):
             widget.hide()
         self.table.set_cells(self._cells)
+        self.table.bars, self.table.low = self.toner_bars(), self.low_level()
         self.settings_pages = PrintersSettings(self)  # its part of Settings
         self._fill_inventory()
         self._connect()
@@ -259,9 +267,23 @@ class PrintersTool(ListWorkspace):
     def set_low_level(self, low: int) -> None:
         if low != self.low_level():
             self.prefs["low_level"] = low
-            for printer_id in self._checked:
-                self.table.show_cells(printer_id)
-            self._selection_changed()
+            self.table.low = low
+            self._show_all_cells()
+
+    def toner_bars(self) -> bool:
+        """Settings' Toner column choice: a bar (True) or text, the default."""
+        return self.prefs.get(TONER_VIEW) == BARS
+
+    def set_toner_bars(self, bars: bool) -> None:
+        if bars != self.toner_bars():
+            self.prefs[TONER_VIEW] = BARS if bars else TEXT
+            self.table.bars = bars
+            self._show_all_cells()
+
+    def _show_all_cells(self) -> None:
+        for printer_id in self._checked:
+            self.table.show_cells(printer_id)
+        self._selection_changed()
 
     def prefs_applied(self) -> None:
         """A choice made in Settings was kept: save it, and show the list's new name."""

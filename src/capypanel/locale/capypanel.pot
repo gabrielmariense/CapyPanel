@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-28 17:27-0300\n"
+"POT-Creation-Date: 2026-10-30 01:43-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -254,6 +254,9 @@ msgstr ""
 msgid "&Theme"
 msgstr ""
 
+msgid "&Toner column"
+msgstr ""
+
 msgid "&Tool:"
 msgstr ""
 
@@ -399,6 +402,9 @@ msgid "Ass&et tag:"
 msgstr ""
 
 msgid "Asset tag"
+msgstr ""
+
+msgid "Bar"
 msgstr ""
 
 msgid "Black"
@@ -1672,6 +1678,9 @@ msgstr ""
 msgid "Takes it out of your lists, or deletes its file too"
 msgstr ""
 
+msgid "Text"
+msgstr ""
+
 msgid "That group doesn't exist."
 msgstr ""
 
@@ -1774,6 +1783,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "The list “{path}” doesn't exist anymore."
+msgstr ""
+
+msgid "The lowest toner as text (\"Black 24 %\") or as a bar, like in Details."
 msgstr ""
 
 msgid "The parent group doesn't exist."

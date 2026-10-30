@@ -60,6 +60,7 @@ class Cell:
     color: str  # the dot's or swatch's colour; "" for none
     quiet: bool = False  # greyed: not checked, offline
     warn: bool = False  # in amber: a low supply
+    supply: Supply | None = None  # the Toner cell's supply, for its bar
 
 
 def status(checked: Checked | None, low: int) -> Cell:
@@ -128,7 +129,7 @@ def toner(checked: Checked | None, low: int) -> Cell:
     if running_low:
         text = _("{level} · low").format(level=text)
     tip = "\n".join(f"{s.name}: {level_text(s)}" for s in found)
-    return Cell(text, tip, supply_color(lowest), warn=running_low)
+    return Cell(text, tip, supply_color(lowest), warn=running_low, supply=lowest)
 
 
 def colour_name(supply: Supply) -> str:

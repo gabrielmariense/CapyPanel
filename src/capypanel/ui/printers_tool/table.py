@@ -4,19 +4,29 @@ Refresh; they're kept in memory, never in the list file."""
 
 from collections.abc import Callable
 
-from PySide6.QtCore import QEvent, QRectF, Qt
+from PySide6.QtCore import QEvent, QModelIndex, QPersistentModelIndex, QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QPainter, QPalette, QPixmap
-from PySide6.QtWidgets import QTreeWidgetItem
+from PySide6.QtWidgets import (
+    QApplication,
+    QStyle,
+    QStyledItemDelegate,
+    QStyleOptionViewItem,
+    QTreeWidgetItem,
+)
 
 from capypanel.core.hosts.model import Host
 from capypanel.core.i18n import _
 from capypanel.core.printers.printer import info_of
+from capypanel.core.printers.reading import Supply
 from capypanel.ui.icons import dot_icon
 from capypanel.ui.list_workspace.panels import ItemTable
-from capypanel.ui.printers_tool.status import AMBER, Cell
+from capypanel.ui.printers_tool.meter import HEIGHT, draw_meter
+from capypanel.ui.printers_tool.status import AMBER, DEFAULT_LOW, Cell, level_text
 
 ROLE_QUIET = Qt.ItemDataRole.UserRole + 2  # a Status cell to show greyed
 ROLE_WARN = Qt.ItemDataRole.UserRole + 3  # a Toner cell to show in amber
+ROLE_SUPPLY = Qt.ItemDataRole.UserRole + 4  # a Toner cell's supply, drawn as a bar
+BAR_WIDTH = 64  # px: the Toner column's bar, when Settings asks for bars
 
 
 class PrinterTable(ItemTable):
@@ -30,7 +40,10 @@ class PrinterTable(ItemTable):
 
     def __init__(self) -> None:
         self._cells: Callable[[str], tuple[Cell, Cell]] = lambda _id: (_EMPTY, _EMPTY)
+        self.bars = False  # the Toner column as a bar (Settings › Printers), not text
+        self.low = DEFAULT_LOW  # where the bar's tick goes
         super().__init__()
+        self.setItemDelegateForColumn(self.TONER, TonerBar(self))
 
     def retranslate(self) -> None:
         self.setHeaderLabels(
@@ -88,10 +101,12 @@ class PrinterTable(ItemTable):
         row.setToolTip(self.STATUS, status.tip)
         row.setIcon(self.STATUS, dot_icon(status.color) if status.color else QIcon())
         row.setData(self.STATUS, ROLE_QUIET, status.quiet)
-        row.setText(self.TONER, toner.text)
+        row.setText(self.TONER, toner.text)  # kept with bars too: it's what Copy and sorting use
         row.setToolTip(self.TONER, toner.tip)
-        row.setIcon(self.TONER, swatch(toner.color) if toner.color else QIcon())
+        bar = self.bars and toner.supply is not None
+        row.setIcon(self.TONER, swatch(toner.color) if toner.color and not bar else QIcon())
         row.setData(self.TONER, ROLE_WARN, toner.warn)
+        row.setData(self.TONER, ROLE_SUPPLY, toner.supply if bar else None)
         self._tint(row)
 
     def _tint(self, row: QTreeWidgetItem) -> None:
@@ -104,6 +119,57 @@ class PrinterTable(ItemTable):
 
 
 _EMPTY = Cell("", "", "")
+
+
+class TonerBar(QStyledItemDelegate):
+    """A Toner cell as a bar filled to the lowest toner's level, its % beside it, drawn like
+    Details' bars. A cell with no bar to draw (text chosen, nothing read) paints as usual."""
+
+    def __init__(self, table: PrinterTable) -> None:
+        super().__init__(table)
+        self._table = table
+
+    def paint(
+        self,
+        painter: QPainter,
+        option: QStyleOptionViewItem,
+        index: QModelIndex | QPersistentModelIndex,
+    ) -> None:
+        supply = index.data(ROLE_SUPPLY)
+        if not isinstance(supply, Supply):
+            super().paint(painter, option, index)
+            return
+        text = option.palette.color(QPalette.ColorRole.Text)  # type: ignore[attr-defined]
+        cell = QStyleOptionViewItem(option)  # its palette turns amber for a low one: not the bar
+        self.initStyleOption(cell, index)
+        cell.text = ""  # type: ignore[attr-defined]
+        widget = cell.widget  # type: ignore[attr-defined]
+        style = widget.style() if widget is not None else QApplication.style()
+        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, cell, painter, widget)
+        area = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, cell, widget)
+        width = min(BAR_WIDTH, area.width())
+        top = area.center().y() - HEIGHT / 2 + 1
+        draw_meter(painter, QRectF(area.x() + 2, top, width, HEIGHT), supply, self._table.low, text)
+        warn = bool(index.data(ROLE_WARN))
+        painter.save()
+        painter.setPen(QColor(AMBER) if warn else text)
+        words = area.adjusted(width + 10, 0, 0, 0)
+        shown = cell.fontMetrics.elidedText(  # type: ignore[attr-defined]
+            level_text(supply), Qt.TextElideMode.ElideRight, words.width()
+        )
+        painter.drawText(words, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, shown)
+        painter.restore()
+
+    def sizeHint(
+        self, option: QStyleOptionViewItem, index: QModelIndex | QPersistentModelIndex
+    ) -> QSize:
+        """Room for the bar and its words, so Fit columns to content shows both in full."""
+        size = super().sizeHint(option, index)
+        supply = index.data(ROLE_SUPPLY)
+        if isinstance(supply, Supply):
+            words = option.fontMetrics.horizontalAdvance(level_text(supply))  # type: ignore[attr-defined]
+            size.setWidth(BAR_WIDTH + 10 + words + 16)
+        return size
 
 
 def swatch(color: str, px: int = 10) -> QIcon:

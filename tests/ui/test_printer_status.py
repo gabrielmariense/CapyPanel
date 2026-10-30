@@ -19,7 +19,9 @@ from capypanel.core.printers.reading import Device, Problem, Reading, State, Sup
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.printers_tool import refresh, status
 from capypanel.ui.printers_tool import settings as settings_module
+from capypanel.ui.printers_tool.settings import BARS, TONER_VIEW
 from capypanel.ui.printers_tool.status import AMBER, GREEN, GREY, RED, Checked
+from capypanel.ui.printers_tool.table import ROLE_SUPPLY
 from capypanel.ui.printers_tool.tool import PrintersTool
 
 NOW = datetime(2026, 10, 28, 14, 32)
@@ -188,6 +190,27 @@ def test_the_low_level_comes_from_settings(printers: PrintersTool) -> None:
     printers.set_low_level(20)
     assert printers.prefs["low_level"] == 20
     assert printers.table._rows[lab.id].text(printers.table.TONER) == "Black 15 % · low"
+
+
+def test_the_toner_column_shows_a_bar_when_settings_asks(printers: PrintersTool) -> None:
+    lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
+    black = _supply("Black Cartridge", 15)
+    printers._checked[lab.id] = _checked(supplies=(black,))
+    printers.table.show_cells(lab.id)
+    row = printers.table._rows[lab.id]
+    assert row.data(printers.table.TONER, ROLE_SUPPLY) is None  # text, the default
+    group = printers.settings_group()
+    group.build()
+    page = group.general
+    page.toner_view.setCurrentIndex(page.toner_view.findData(BARS))
+    assert printers.prefs[TONER_VIEW] == BARS
+    assert row.data(printers.table.TONER, ROLE_SUPPLY) == black
+    assert row.text(printers.table.TONER) == "Black 15 %"  # still what Copy and the Report use
+    printers.table.resize(900, 300)
+    printers.table.show()
+    QApplication.processEvents()
+    assert not printers.table.grab().isNull()  # the bar draws without an error
+    printers.table.hide()
 
 
 def test_settings_keeps_the_community_in_the_vault_only(

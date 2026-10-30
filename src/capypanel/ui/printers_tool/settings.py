@@ -1,11 +1,12 @@
-"""The Printers tool's part of Settings: Startup, Refresh (the SNMP community string and the low
-supply level) and Printer lists."""
+"""The Printers tool's part of Settings: Startup, Refresh (the SNMP community string, the low
+supply level and how the Toner column shows) and Printer lists."""
 
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QDialog,
     QHBoxLayout,
     QLineEdit,
@@ -37,6 +38,7 @@ if TYPE_CHECKING:
 
 MAX_COMMUNITY = 255
 LOWEST, HIGHEST = 1, 50  # the low supply level's range, in %
+TONER_VIEW, TEXT, BARS = "toner_view", "text", "bars"  # the Toner column: "Black 24 %", or a bar
 
 
 class CommunityDialog(QDialog):
@@ -81,9 +83,10 @@ class CommunityDialog(QDialog):
 
 
 class PrintersPage(ListsGeneralPage):
-    """Startup, then Refresh: the community string behind Change…, and the low supply level."""
+    """Startup, then Refresh: the community string behind Change…, the low supply level, and
+    the Toner column as text or a bar."""
 
-    def __init__(self, *, low: int, community_set: bool, **lists: object) -> None:
+    def __init__(self, *, low: int, bars: bool, community_set: bool, **lists: object) -> None:
         super().__init__(**lists)  # type: ignore[arg-type]
         section = Section(_("Refresh"))
         self.change_button = QPushButton(_("Change…"))
@@ -96,6 +99,11 @@ class PrintersPage(ListsGeneralPage):
         self.low_level.setValue(low)
         self.low_level.setSuffix(_(" %"))
         self.low_level.valueChanged.connect(self.changed)
+        self.toner_view = QComboBox()
+        self.toner_view.addItem(_("Text"), TEXT)
+        self.toner_view.addItem(_("Bar"), BARS)
+        self.toner_view.setCurrentIndex(1 if bars else 0)
+        self.toner_view.currentIndexChanged.connect(lambda _i: self.changed.emit())
         add_rows(
             section.content,
             self.community_row,
@@ -103,6 +111,11 @@ class PrintersPage(ListsGeneralPage):
                 _("&Low supply level"),
                 _("A toner, ink, drum or box at or below this shows as low."),
                 self.low_level,
+            ),
+            SettingRow(
+                _("&Toner column"),
+                _('The lowest toner as text ("Black 24 %") or as a bar, like in Details.'),
+                self.toner_view,
             ),
         )
         self.add_section(section)
@@ -135,6 +148,7 @@ class PrintersSettings(SettingsGroup):
         texts = tool.list_texts()
         self.general = PrintersPage(
             low=tool.low_level(),
+            bars=tool.toner_bars(),
             community_set=community_is_set(),
             texts=texts,
             start_list=prefs.get(locations.START_KEY, locations.START_LAST),
@@ -176,6 +190,7 @@ class PrintersSettings(SettingsGroup):
                 self.lists.hidden(),
             )
             self._tool.set_low_level(self.general.low_level.value())
+            self._tool.set_toner_bars(self.general.toner_view.currentData() == BARS)
             self._tool.prefs_applied()
 
     def _change_community(self) -> None:
