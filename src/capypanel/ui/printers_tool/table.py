@@ -26,7 +26,9 @@ from capypanel.ui.printers_tool.status import AMBER, DEFAULT_LOW, Cell, level_te
 ROLE_QUIET = Qt.ItemDataRole.UserRole + 2  # a Status cell to show greyed
 ROLE_WARN = Qt.ItemDataRole.UserRole + 3  # a Toner cell to show in amber
 ROLE_SUPPLY = Qt.ItemDataRole.UserRole + 4  # a Toner cell's supply, drawn as a bar
-BAR_WIDTH = 64  # px: the Toner column's bar, when Settings asks for bars
+BAR_WIDTH = 64  # px: the Toner column's bar when fitted to content; it stretches with the column
+MIN_BAR = 16  # px: narrower than this, the bar gives way and only the words show
+GAP = 8  # px between the bar and its words
 
 
 class PrinterTable(ItemTable):
@@ -147,16 +149,22 @@ class TonerBar(QStyledItemDelegate):
         style = widget.style() if widget is not None else QApplication.style()
         style.drawControl(QStyle.ControlElement.CE_ItemViewItem, cell, painter, widget)
         area = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, cell, widget)
-        width = min(BAR_WIDTH, area.width())
-        top = area.center().y() - HEIGHT / 2 + 1
-        draw_meter(painter, QRectF(area.x() + 2, top, width, HEIGHT), supply, self._table.low, text)
+        # The words always show in full; the bar takes what's left, so it grows and shrinks
+        # with the column. Room for "100 %" on every row keeps the bars lined up.
+        metrics = cell.fontMetrics  # type: ignore[attr-defined]
+        said = level_text(supply)
+        room = max(metrics.horizontalAdvance(said), metrics.horizontalAdvance(_widest()))
+        width = area.width() - 2 - GAP - room
+        words = area
+        if width >= MIN_BAR:
+            top = area.center().y() - HEIGHT / 2 + 1
+            bar = QRectF(area.x() + 2, top, width, HEIGHT)
+            draw_meter(painter, bar, supply, self._table.low, text)
+            words = area.adjusted(2 + width + GAP, 0, 0, 0)
         warn = bool(index.data(ROLE_WARN))
         painter.save()
         painter.setPen(QColor(AMBER) if warn else text)
-        words = area.adjusted(width + 10, 0, 0, 0)
-        shown = cell.fontMetrics.elidedText(  # type: ignore[attr-defined]
-            level_text(supply), Qt.TextElideMode.ElideRight, words.width()
-        )
+        shown = metrics.elidedText(said, Qt.TextElideMode.ElideRight, words.width())
         painter.drawText(words, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, shown)
         painter.restore()
 
@@ -167,9 +175,17 @@ class TonerBar(QStyledItemDelegate):
         size = super().sizeHint(option, index)
         supply = index.data(ROLE_SUPPLY)
         if isinstance(supply, Supply):
-            words = option.fontMetrics.horizontalAdvance(level_text(supply))  # type: ignore[attr-defined]
-            size.setWidth(BAR_WIDTH + 10 + words + 16)
+            metrics = option.fontMetrics  # type: ignore[attr-defined]
+            room = max(
+                metrics.horizontalAdvance(level_text(supply)), metrics.horizontalAdvance(_widest())
+            )
+            size.setWidth(2 + BAR_WIDTH + GAP + room + 16)
         return size
+
+
+def _widest() -> str:
+    """The widest a level in % gets, in the language shown."""
+    return _("{percent} %").format(percent=100)
 
 
 def swatch(color: str, px: int = 10) -> QIcon:
