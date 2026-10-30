@@ -108,12 +108,15 @@ inteira.
 
 O que muda é o que entra nele. As colunas são agrupadas em **Impressora** (nome, endereço, grupo,
 marca, modelo), **Detalhes** (nº de série, patrimônio, contadores de páginas, tags, notas) e
-**Última verificação** (status e toner, em texto). A predefinição que vem pronta é **Todos os
-detalhes**.
+**Última verificação** (status, toner em texto, e total de páginas em dígitos simples, para uma
+planilha ler como número). A predefinição que vem pronta é **Todos os detalhes**.
 
-Marcar Status ou Toner deixa a janela atualizar essas impressoras ali mesmo, e ela diz quantas
-nunca foram verificadas. Sem nenhuma das duas marcada o botão se explica: "Marque Status ou Toner
-para lê-las".
+Marcar qualquer uma das três deixa a janela atualizar essas impressoras ali mesmo, e ela diz
+quantas nunca foram verificadas. Sem nenhuma marcada o botão se explica: "Marque Status, Toner ou
+Total de páginas para lê-las". Uma impressora cujos contadores vêm do Doc360 MPS fica com "Erro"
+no Total de páginas; o
+[Verificando impressoras](checking.pt-BR.md#o-que-a-impressora-diz-sobre-si-mesma) explica por
+quê.
 
 As impressoras a exportar são os mesmos tipos de escolha do Hosts: os resultados da pesquisa ou as
 tags escolhidas enquanto uma das duas está ativa, as impressoras selecionadas quando você tem mais

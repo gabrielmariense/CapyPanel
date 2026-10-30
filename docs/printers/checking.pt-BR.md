@@ -74,7 +74,14 @@ O Atualizar também lê a marca, o modelo, o nº de série e o total de páginas
 informa.
 
 O total de páginas aparece no painel de detalhes, em **Contadores de páginas**, ao lado da
-**Origem** que você escolheu para a impressora.
+**Origem** que você escolheu para a impressora, e o relatório pode levá-lo como **Total de
+páginas**.
+
+Uma impressora cuja Origem é o **Doc360 MPS** é a exceção. O CapyPanel ainda não lê esse portal,
+então o Total de páginas dela fica "Erro: O CapyPanel ainda não lê contadores de páginas do Doc360
+MPS.", nos detalhes e antes de qualquer atualização, e só "Erro" no relatório. O CapyPanel não
+recorre ao contador SNMP da própria impressora nesse caso, porque não é a origem que você escolheu
+para ela. O status e o toner dela continuam vindo de uma atualização como os de qualquer outra.
 
 A marca, o modelo e o nº de série são comparados com o que a sua lista diz. Onde eles diferem, ou
 onde a sua lista não tem nada, o painel de detalhes acrescenta a resposta da impressora embaixo do

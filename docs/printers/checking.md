@@ -71,7 +71,13 @@ is half."
 A Refresh also reads the brand, model, serial number and total page count the printer reports.
 
 The page count shows in the Details panel under **Page counters**, beside the **Source** you chose
-for the printer.
+for the printer, and the report can carry it as **Total pages**.
+
+A printer whose Source is **Doc360 MPS** is the exception. CapyPanel can't read that portal yet,
+so its Total pages reads "Error: CapyPanel can't read page counters from Doc360 MPS yet.", in
+Details and before any refresh, and plain "Error" in the report. CapyPanel doesn't fall back to
+the printer's own SNMP counter there, because that isn't the source you picked for it. Its status
+and toner still come from a refresh like any other printer's.
 
 The brand, model and serial number are compared with what your list says. Where they differ, or
 where your list has nothing, the Details panel adds the printer's own answer under the value, as

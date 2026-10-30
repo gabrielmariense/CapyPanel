@@ -104,11 +104,13 @@ describes the window in full.
 
 What differs is what goes in it. The columns are grouped as **Printer** (name, address, group,
 brand, model), **Details** (serial number, asset tag, page counters, tags, notes) and **Last
-check** (status, toner, as text). The built-in preset is **All details**.
+check** (status, toner as text, and total pages in plain digits, so a spreadsheet reads it as a
+number). The built-in preset is **All details**.
 
-Ticking Status or Toner lets the window refresh those printers itself, and it says how many of
-them have never been checked. With neither ticked the button explains itself: "Tick Status or
-Toner to read them".
+Ticking any of the three lets the window refresh those printers itself, and it says how many of
+them have never been checked. With none ticked the button explains itself: "Tick Status, Toner or
+Total pages to read them". A printer whose counters come from Doc360 MPS has "Error" under Total
+pages; [Checking printers](checking.md#what-the-printer-says-about-itself) says why.
 
 The printers to export are the same kinds of choice as in Hosts: the search results or the picked
 tags while either is on, the selected printers when you have more than one, every printer, those in
