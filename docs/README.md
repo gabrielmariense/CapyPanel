@@ -23,6 +23,7 @@ away.
 - Printer inventory
   - Brand, model, serial number, asset tag
   - Printers' web pages
+  - Status, toner and page counters over SNMP
 
 ## Pages
 
@@ -38,11 +39,12 @@ For people who use CapyPanel, and for people who set it up for a team.
 | [Checking hosts](hosts/checking.md) | Status, logged-on users and the account used to read them |
 | [Searching hosts](hosts/searching.md) | The search box, what it covers and how a search ends |
 | [The Printers tool](printers/printers.md) | The Printers window, a printer's details, and web pages |
+| [Checking printers](printers/checking.md) | Status, toner and supplies, and how they're read |
 | [Printer lists](printers/printer-lists.md) | Where printer lists live, and their settings |
 | [Development](development.md) | Building, testing and translating CapyPanel |
 
 Getting started, Settings and files and Development are about the whole app. The five pages after
-them belong to the **Hosts** tool, and the two after those to **Printers**.
+them belong to the **Hosts** tool, and the three after those to **Printers**.
 
-These pages describe the current version (0.20.0). CapyPanel is in beta, so they grow with each
+These pages describe the current version (0.21.0). CapyPanel is in beta, so they grow with each
 feature.

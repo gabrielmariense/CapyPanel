@@ -38,6 +38,19 @@ uv run python scripts/translations.py
 Then translate the new entries in each `.po` file under `src/capypanel/locale/` and run the
 script again to compile them. The tests fail until every text is translated and compiled.
 
+## Reading a real printer
+
+Before trusting what the window shows, you can ask one printer the same questions from a terminal:
+
+```
+uv run python scripts/read_printer.py 192.0.2.5
+```
+
+It asks for the community string without showing it, reads over SNMP (reading only) and prints
+what CapyPanel understood. `--public` uses "public" without asking, and `--brand-data` also prints
+the Ricoh or Brother data area as raw numbers. The serial number is printed only as its length, so
+the output is safe to paste into an issue.
+
 ## Documentation website
 
 The pages in `docs/` are also published as a website with

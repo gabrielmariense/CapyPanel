@@ -17,7 +17,7 @@ remota de qualquer um pela Área de Trabalho Remota ou pelo visualizador VNC que
 guarda também as suas impressoras, com os detalhes de que você precisa e a página web delas a um
 clique.
 
-> **Situação: beta (0.20.0).** Roda a partir do código-fonte; ainda não há instalador.
+> **Situação: beta (0.21.0).** Roda a partir do código-fonte; ainda não há instalador.
 
 ![A janela principal do CapyPanel: a barra lateral, grupos à esquerda, hosts no meio, detalhes à direita](docs/images/main-window-dark-pt-BR.png)
 
@@ -36,6 +36,7 @@ clique.
 - Inventário de impressoras
   - Marca, modelo, nº de série, patrimônio
   - Páginas web das impressoras
+  - Status, toner e contadores de páginas por SNMP
 
 ## Documentação
 
@@ -54,6 +55,7 @@ Também online, com busca: **[gabrielmariense.github.io/CapyPanel/pt-BR](https:/
 - [Pesquisando hosts](docs/hosts/searching.pt-BR.md): encontrar um host em qualquer lugar da lista
 - [A ferramenta Impressoras](docs/printers/printers.pt-BR.md): impressoras, os detalhes delas e as
   páginas web
+- [Verificando impressoras](docs/printers/checking.pt-BR.md): status, toner e suprimentos por SNMP
 - [Listas de impressoras](docs/printers/printer-lists.pt-BR.md): onde as listas de impressoras
   ficam e as configurações delas
 - [Desenvolvimento](docs/development.pt-BR.md): compilar, testar e traduzir
