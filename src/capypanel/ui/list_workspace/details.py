@@ -4,7 +4,7 @@ several items selected, a summary instead. A tool says what the sections are (bu
 import html
 from collections.abc import Sequence
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QGuiApplication, QMouseEvent, QPalette
 from PySide6.QtWidgets import (
     QFrame,
@@ -100,6 +100,10 @@ class DetailsPanel(QWidget):
         """With none selected: "Select a host to see its details."."""
         raise NotImplementedError
 
+    def item_id(self, shown: object) -> str:
+        """Which item a page is about. The same item drawn again keeps its scroll position."""
+        return ""
+
     # ---- showing ----
 
     def retranslate(self) -> None:
@@ -121,9 +125,14 @@ class DetailsPanel(QWidget):
                 self._hint.setText(f"{summary}\n\n{hint}" if summary else hint)
             self._pages.setCurrentIndex(0)
             return
+        before = self.item_id(self._shown[0]) if self._shown else ""
         self._shown = (shown, needle)
+        bar = self._scroll.verticalScrollBar()
+        kept = bar.value() if before and before == self.item_id(shown) else 0
         self._build(shown, needle)
         self._pages.setCurrentIndex(1)
+        if kept:  # after the new page is laid out, or the bar's range is still the old one's
+            QTimer.singleShot(0, lambda: bar.setValue(kept))
 
     def shown_value(self, key: str) -> str:
         """The text a section shows, one value per line: for tests and the window."""

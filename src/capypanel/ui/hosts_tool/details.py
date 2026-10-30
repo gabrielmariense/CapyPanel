@@ -39,6 +39,9 @@ class HostDetailsPanel(DetailsPanel):
     def pick_hint(self) -> str:
         return _("Select a host to see its details.")
 
+    def item_id(self, shown: object) -> str:
+        return shown.host.id if isinstance(shown, HostDetails) else ""
+
     def build_page(self, layout: QVBoxLayout, shown: object, needle: str) -> None:
         assert isinstance(shown, HostDetails)
         self._heading(layout, shown)

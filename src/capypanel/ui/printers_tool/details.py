@@ -87,6 +87,9 @@ class PrinterDetailsPanel(DetailsPanel):
     def pick_hint(self) -> str:
         return _("Select a printer to see its details.")
 
+    def item_id(self, shown: object) -> str:
+        return shown.printer.id if isinstance(shown, PrinterDetails) else ""
+
     def build_page(self, layout: QVBoxLayout, shown: object, needle: str) -> None:
         assert isinstance(shown, PrinterDetails)
         printer, info = shown.printer, info_of(shown.printer)

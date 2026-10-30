@@ -4,7 +4,7 @@ from PySide6.QtCore import QPointF, Qt
 from PySide6.QtGui import QGuiApplication, QMouseEvent
 from PySide6.QtWidgets import QApplication, QLabel
 
-from capypanel.core.hosts.model import HostList
+from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.remote.sessions import Reason, Session, SessionsError
 from capypanel.core.remote.status import Status
 from capypanel.ui.hosts_tool.details import HostDetails, HostDetailsPanel
@@ -101,3 +101,22 @@ def test_a_long_address_never_widens_the_pane(qapp: QApplication) -> None:
     address = "kiosk-12-lobby-north-wing.branch-office.corp.example.internal"
     assert breakable(address) != address  # it may wrap at any character
     assert breakable("PC-0142") == "PC-0142"  # short words are left alone
+
+
+def test_the_same_item_drawn_again_keeps_its_scroll_position(qapp: QApplication) -> None:
+    pane = HostDetailsPanel()
+    pane.resize(260, 160)  # shorter than the page, so it scrolls
+    pane.show()
+    shown = _details(notes="\n".join(f"line {n}" for n in range(40)))
+    pane.show_host(shown, 1)
+    qapp.processEvents()
+    bar = pane._scroll.verticalScrollBar()  # pyright: ignore[reportPrivateUsage]
+    bar.setValue(bar.maximum())
+    pane.show_host(shown, 1)  # e.g. after "Use this" changed one of its values
+    qapp.processEvents()
+    assert bar.value() == bar.maximum() > 0
+    other = HostDetails(Host(id="other", name="Other", group=""), "", "")
+    pane.show_host(other, 1)  # another item starts at the top
+    qapp.processEvents()
+    assert bar.value() == 0
+    pane.close()
