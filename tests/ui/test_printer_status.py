@@ -22,7 +22,7 @@ from capypanel.ui.printers_tool import refresh, status
 from capypanel.ui.printers_tool import settings as settings_module
 from capypanel.ui.printers_tool.settings import BARS, TONER_VIEW
 from capypanel.ui.printers_tool.status import AMBER, GREEN, GREY, RED, Checked
-from capypanel.ui.printers_tool.table import ROLE_SUPPLY
+from capypanel.ui.printers_tool.table import BAR_WIDTH, ROLE_SUPPLY
 from capypanel.ui.printers_tool.tool import PrintersTool
 
 NOW = datetime(2026, 10, 28, 14, 32)
@@ -226,6 +226,9 @@ def test_the_toner_column_shows_a_bar_when_settings_asks(printers: PrintersTool)
     printers.table.show()
     QApplication.processEvents()
     assert not printers.table.grab().isNull()  # the bar draws without an error
+    # Fit columns to content leaves room for the bar and the widest %, beside each other.
+    words = printers.table.fontMetrics().horizontalAdvance("100 %")
+    assert printers.table.sizeHintForColumn(printers.table.TONER) >= BAR_WIDTH + words
     printers.table.hide()
 
 
