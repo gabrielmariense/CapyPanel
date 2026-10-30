@@ -19,7 +19,7 @@ from capypanel.ui.checks import clock_text
 from capypanel.ui.icons import dot_icon
 from capypanel.ui.list_workspace.details import DetailsPanel, breakable
 from capypanel.ui.printers_tool import status
-from capypanel.ui.printers_tool.meter import HEIGHT, draw_meter
+from capypanel.ui.printers_tool.meter import HEIGHT, REACH, draw_meter
 from capypanel.ui.printers_tool.status import AMBER, GREY, Checked
 
 
@@ -47,13 +47,13 @@ class Meter(QWidget):
     def __init__(self, supply: Supply, low: int) -> None:
         super().__init__()
         self.supply, self.low = supply, low
-        self.setFixedHeight(HEIGHT + 2)
+        self.setFixedHeight(HEIGHT + 2 * REACH)
 
     def paintEvent(self, _event: object) -> None:
         painter = QPainter(self)
         text = self.palette().color(QPalette.ColorRole.Text)
         back = self.palette().color(QPalette.ColorRole.Base)
-        bar = QRectF(0, 1, self.width(), HEIGHT)
+        bar = QRectF(0, REACH, self.width(), HEIGHT)
         draw_meter(painter, bar, self.supply, self.low, text, back)
         painter.end()
 
