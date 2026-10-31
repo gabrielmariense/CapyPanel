@@ -16,7 +16,7 @@ lists, see which ones are on and who is logged on to them, and open a remote scr
 them through Remote Desktop or the VNC viewer you already use. It keeps your printers too, with
 the details you need and their web pages a click away.
 
-> **Status: beta (0.21.0).** It runs from source; there's no installer yet.
+> **Status: beta (0.21.1).** It runs from source; there's no installer yet.
 
 ![CapyPanel's Home page: the tool rail, the capybara, and a tile for Hosts and one for Printers](docs/images/home-dark.png)
 
