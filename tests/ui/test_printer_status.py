@@ -195,14 +195,24 @@ def test_the_low_level_comes_from_settings(printers: PrintersTool) -> None:
     assert printers.table._rows[lab.id].text(printers.table.TONER) == "Black 15 % · low"
 
 
-def test_the_report_gets_status_toner_and_the_page_count(printers: PrintersTool) -> None:
+def test_the_report_gets_everything_refresh_read(printers: PrintersTool) -> None:
     lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
-    assert printers._report_cells(lab.id) == ("", "", "")  # not checked yet
+    assert printers._report_cells(lab.id) == ("",) * 6  # not checked yet
     printers._checked[lab.id] = _checked(
-        state=State.IDLE, supplies=(_supply("Black Cartridge", 40),), pages=1_604_394
+        state=State.IDLE,
+        supplies=(
+            _supply("Black Cartridge HP CF258A", 40),
+            _supply("Imaging Drum", 80, SupplyKind.DRUM),
+        ),
+        pages=1_604_394,
+        mac="02:00:5E:AA:BB:01",
+        firmware="SAMPLE-FW 2.4.1",
     )
-    # Plain digits, so a spreadsheet reads the page count as a number.
-    assert printers._report_cells(lab.id) == ("Idle", "Black 40 %", "1604394")
+    # Plain digits, so a spreadsheet reads the page count as a number; only toners' names.
+    assert printers._report_cells(lab.id) == (
+        "Idle", "Black 40 %", "Black Cartridge HP CF258A", "1604394", "02:00:5E:AA:BB:01",
+        "SAMPLE-FW 2.4.1",
+    )  # fmt: skip
 
 
 def test_doc360_page_counters_show_an_error(printers: PrintersTool) -> None:
@@ -214,7 +224,7 @@ def test_doc360_page_counters_show_an_error(printers: PrintersTool) -> None:
     )
     printers._checked[lab.id] = _checked(state=State.IDLE, pages=1_604_394)
     # The SNMP counter isn't this printer's source, so neither shows it.
-    assert printers._report_cells(lab.id) == ("Idle", "", "Error")
+    assert printers._report_cells(lab.id)[:4] == ("Idle", "", "", "Error")
     printers.table.select_ids([lab.id])
     labels = [w.text() for w in printers.details.findChildren(QLabel)]
     assert "Error: CapyPanel can't read page counters from Doc360 MPS yet." in labels

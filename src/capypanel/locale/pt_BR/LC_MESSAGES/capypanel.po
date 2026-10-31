@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 16:34-0300\n"
+"POT-Creation-Date: 2026-10-31 16:37-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -802,6 +802,9 @@ msgstr "Todos neste PC (compartilhada)"
 msgid "File not found"
 msgstr "Arquivo não encontrado"
 
+msgid "Firmware"
+msgstr "Firmware"
+
 msgid "Folder"
 msgstr "Pasta"
 
@@ -1010,6 +1013,9 @@ msgstr "Usuários logados"
 
 msgid "Logs"
 msgstr "Logs"
+
+msgid "MAC address"
+msgstr "Endereço MAC"
 
 msgid "Magenta"
 msgstr "Magenta"
@@ -1940,14 +1946,17 @@ msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyP
 msgid "Tick Status or Logged-on users to check them"
 msgstr "Marque Status ou Usuários logados para verificá-los"
 
-msgid "Tick Status, Toner or Total pages to read them"
-msgstr "Marque Status, Toner ou Total de páginas para lê-las"
+msgid "Tick a column under Last check to read them"
+msgstr "Marque uma coluna em Última verificação para lê-las"
 
 msgid "Toner"
 msgstr "Toner"
 
 msgid "Toner low"
 msgstr "Toner baixo"
+
+msgid "Toner model"
+msgstr "Modelo do toner"
 
 msgid "Tool"
 msgstr "Ferramenta"

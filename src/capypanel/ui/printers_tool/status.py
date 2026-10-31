@@ -101,6 +101,13 @@ def status(checked: Checked | None, low: int) -> Cell:
     return Cell(words, tip, GREEN)
 
 
+def toner_models(reading: Reading) -> str:
+    """The toners' and inks' names as the printer gives them, which often hold the cartridge's
+    model ("Black Cartridge HP CF258A"), for the Report."""
+    kinds = (SupplyKind.TONER, SupplyKind.INK)
+    return "; ".join(s.name for s in reading.supplies if s.kind in kinds and s.name)
+
+
 def refused_text(reason: str) -> str:
     """Why a printer refused the SNMP v3 account, in words."""
     texts = {

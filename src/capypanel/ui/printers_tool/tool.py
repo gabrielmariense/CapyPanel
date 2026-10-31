@@ -513,14 +513,18 @@ class PrintersTool(ListWorkspace):
         checked, low = self._checked.get(printer_id), self.low_level()
         return status.status(checked, low), status.toner(checked, low)
 
-    def _report_cells(self, printer_id: str) -> tuple[str, str, str]:
+    def _report_cells(self, printer_id: str) -> tuple[str, ...]:
+        """The Report's Last check columns, in PrintersReport.CHECKED's order."""
         state, toner = self._cells(printer_id)
         checked = self._checked.get(printer_id)
-        pages = checked.reading.pages if checked and checked.reading else None
+        reading = checked.reading if checked else None
+        pages = "" if reading is None or reading.pages is None else str(reading.pages)  # digits
         printer = self._doc.hosts.host(printer_id) if self._doc else None
         if printer and status.counter_error(info_of(printer).counter_source):
-            return state.text, toner.text, _("Error")  # Details says why
-        return state.text, toner.text, "" if pages is None else str(pages)  # plain digits: CSV
+            pages = _("Error")  # Details says why
+        models = status.toner_models(reading) if reading else ""
+        mac, firmware = (reading.mac, reading.firmware) if reading else ("", "")
+        return state.text, toner.text, models, pages, mac, firmware
 
     def use_value(self, printer_id: str, key: str, value: str) -> None:
         """Details' "Use this": the value the printer reports replaces the list's."""

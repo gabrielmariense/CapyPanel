@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 16:34-0300\n"
+"POT-Creation-Date: 2026-10-31 16:37-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -807,6 +807,9 @@ msgstr ""
 msgid "File not found"
 msgstr ""
 
+msgid "Firmware"
+msgstr ""
+
 msgid "Folder"
 msgstr ""
 
@@ -1025,6 +1028,9 @@ msgid "Logged-on users"
 msgstr ""
 
 msgid "Logs"
+msgstr ""
+
+msgid "MAC address"
 msgstr ""
 
 msgid "Magenta"
@@ -2006,13 +2012,16 @@ msgstr ""
 msgid "Tick Status or Logged-on users to check them"
 msgstr ""
 
-msgid "Tick Status, Toner or Total pages to read them"
+msgid "Tick a column under Last check to read them"
 msgstr ""
 
 msgid "Toner"
 msgstr ""
 
 msgid "Toner low"
+msgstr ""
+
+msgid "Toner model"
 msgstr ""
 
 msgid "Tool"

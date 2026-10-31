@@ -327,9 +327,11 @@ def test_report_lists_the_printers_columns_and_last_check(
     report.boxes["notes"].setChecked(False)
     assert printers.prefs["export_columns"][-1] == "tags"  # in the Printers section
     assert "export_columns" not in shell.prefs  # Hosts' Report keeps its own choices
-    for key in ("status", "toner", "pages"):
+    for key in report.CHECKED:
         report.boxes[key].setChecked(True)
-    assert report.header()[-3:] == ["Status", "Toner", "Total pages"]
+    assert report.header()[-6:] == [
+        "Status", "Toner", "Toner model", "Total pages", "MAC address", "Firmware",
+    ]  # fmt: skip
 
 
 def test_counts_agree_with_printer_in_portuguese(printers: PrintersTool) -> None:

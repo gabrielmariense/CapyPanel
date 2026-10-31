@@ -8,7 +8,7 @@
 It asks for the community string without showing it (--public uses "public" without asking,
 for printers left on the default), reads the printer over SNMP (reading only, it never changes
 anything) and prints what CapyPanel understood. The serial number is shown only as its length,
-so the output can be shared without it.
+and the MAC address only as its maker's half, so the output can be shared without them.
 
 --v3 reads over SNMP v3 instead: it asks for the user, the authentication and encryption
 types and their passwords (passwords not shown).
@@ -69,6 +69,9 @@ def main() -> int:
     print(f"Model:     {found.model or '?'}")
     print(f"Serial:    {f'{len(found.serial)} characters' if found.serial else '?'}")
     print(f"Pages:     {found.pages if found.pages is not None else '?'}")
+    # The MAC's first half names the maker; the rest, like the serial, stays out of shared output.
+    print(f"MAC:       {found.mac[:8] + ':xx:xx:xx' if found.mac else '?'}")
+    print(f"Firmware:  {found.firmware or '?'}")
     print(f"Supplies:  {len(found.supplies)}")
     for supply in found.supplies:
         level = (

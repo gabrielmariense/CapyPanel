@@ -1,7 +1,8 @@
 """What Refresh reads from a printer over SNMP: its status and the printer's own error
-messages, each supply's level, the page counter, and its brand, model and serial number.
+messages, each supply's level, the page counter, its brand, model and serial number, and its
+MAC address and firmware version.
 
-It comes from the standard printer objects (Host Resources, Printer MIB and Entity MIB), which
+It comes from the standard objects (Host Resources, Printer MIB, Entity MIB and IF-MIB), which
 printers of every brand answer. Only where those leave a gap (a level with no %, an empty
 serial) does it also read a brand's own data, for the brands in _BRAND_DATA, each checked
 against a real printer's web page first. What a printer doesn't answer is left empty."""
@@ -22,6 +23,9 @@ HR_PRINTER_STATUS = "1.3.6.1.2.1.25.3.5.1.1"
 HR_PRINTER_ERRORS = "1.3.6.1.2.1.25.3.5.1.2"
 SERIAL_NUMBER = "1.3.6.1.2.1.43.5.1.1.17"  # prtGeneralSerialNumber
 ENTITY_SERIAL = "1.3.6.1.2.1.47.1.1.1.1.11"  # entPhysicalSerialNum: where some brands put it
+ENTITY_FIRMWARE = "1.3.6.1.2.1.47.1.1.1.1.9"  # entPhysicalFirmwareRev
+ENTITY_SOFTWARE = "1.3.6.1.2.1.47.1.1.1.1.10"  # entPhysicalSoftwareRev: some put it here
+IF_ADDRESS = "1.3.6.1.2.1.2.2.1.6"  # ifPhysAddress: each network interface's MAC
 MARKERS = "1.3.6.1.2.1.43.10.2.1"  # prtMarkerTable: what each marker counts, and in what unit
 LIFE_COUNT = f"{MARKERS}.4"  # prtMarkerLifeCount
 SUPPLIES = "1.3.6.1.2.1.43.11.1.1"  # prtMarkerSuppliesTable
@@ -141,6 +145,8 @@ class Reading:
     brand: str = ""
     model: str = ""
     serial: str = ""
+    mac: str = ""  # "00:1A:2B:3C:4D:5E"
+    firmware: str = ""
 
 
 def snmp_host(address: str) -> str:
@@ -183,6 +189,10 @@ def read(
             supplies = _filled(supplies, _brand_levels(session, brand))
         markers = session.walk(MARKERS)
         alerts = session.walk(ALERTS)
+        mac = _mac(session.walk(IF_ADDRESS))
+        firmware = _first_text(session.walk(ENTITY_FIRMWARE))
+        if not firmware:
+            firmware = _first_text(session.walk(ENTITY_SOFTWARE))
     device_status = _number(details[f"{HR_DEVICE_STATUS}.{device}"])
     return Reading(
         state=_STATES.get(status, State.UNKNOWN) if status is not None else State.UNKNOWN,
@@ -194,7 +204,17 @@ def read(
         brand=brand,
         model=_model(description, brand),
         serial=serial,
+        mac=mac,
+        firmware=firmware,
     )
+
+
+def _mac(rows: list[tuple[str, snmp.Value]]) -> str:
+    """The first network interface's MAC address; the loopback and others have none."""
+    for _oid, value in rows:
+        if isinstance(value, bytes) and len(value) == 6 and any(value):
+            return ":".join(f"{b:02X}" for b in value)
+    return ""
 
 
 def _number(value: snmp.Value) -> int | None:

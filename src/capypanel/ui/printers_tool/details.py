@@ -83,13 +83,15 @@ class PrinterDetailsPanel(DetailsPanel):
         if about:
             layout.addWidget(self.muted(about))
 
+        reading = shown.checked.reading if shown.checked else None
+        mac, firmware = (reading.mac, reading.firmware) if reading else ("", "")
         self.section(layout, _("Connection"))
         self._fields(layout, (("address", _("Address"), printer.address),
-                              ("group", _("Group"), shown.group)))  # fmt: skip
+                              ("group", _("Group"), shown.group),
+                              ("mac", _("MAC address"), mac)))  # fmt: skip
 
         self._supplies(layout, shown)
 
-        reading = shown.checked.reading if shown.checked else None
         self.section(layout, _("Printer"))
         for key, label, value, read in (
             ("brand", _("Brand"), info.brand, reading.brand if reading else ""),
@@ -99,7 +101,8 @@ class PrinterDetailsPanel(DetailsPanel):
             self._fields(layout, ((key, label, value),))
             if read and read.casefold() != value.strip().casefold():
                 layout.addWidget(self._printer_says(key, read, shown.use))
-        self._fields(layout, (("asset_tag", _("Asset tag"), info.asset_tag),))
+        self._fields(layout, (("asset_tag", _("Asset tag"), info.asset_tag),
+                              ("firmware", _("Firmware"), firmware)))  # fmt: skip
 
         self.section(layout, _("Page counters"))
         pages = reading.pages if reading else None
