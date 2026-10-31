@@ -13,15 +13,16 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QTreeWidgetItem
 from snmp_agent import Objects, running
 
+from capypanel.core import credstore
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import NO_GROUP, HostList
-from capypanel.core.printers import reading, snmp
+from capypanel.core.printers import reading, snmp, usm
 from capypanel.core.printers.printer import DOC360, PrinterInfo, info_of, with_info
 from capypanel.core.printers.reading import Device, Problem, Reading, State, Supply, SupplyKind
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.printers_tool import refresh, status
 from capypanel.ui.printers_tool import settings as settings_module
-from capypanel.ui.printers_tool.settings import BARS, TONER_VIEW
+from capypanel.ui.printers_tool.settings import BARS, SNMP_VERSION, TONER_VIEW
 from capypanel.ui.printers_tool.status import AMBER, GREEN, GREY, RED, Checked
 from capypanel.ui.printers_tool.table import BAR_WIDTH, ROLE_SUPPLY
 from capypanel.ui.printers_tool.tool import PrintersTool
@@ -262,14 +263,11 @@ def test_the_toner_column_shows_a_bar_when_settings_asks(printers: PrintersTool)
 def test_settings_keeps_the_community_in_the_vault_only(
     printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    kept: list[tuple[str, str | None]] = []
-    monkeypatch.setattr(settings_module.credstore, "save", lambda n, s: kept.append((n, s)))
-    monkeypatch.setattr(settings_module.credstore, "forget", lambda n: kept.append((n, None)))
-    monkeypatch.setattr(settings_module, "community_is_set", lambda: False)
     group = printers.settings_group()
     group.build()
     page = group.general
-    assert "public" in page.community_row.description.text()
+    assert page.version.currentData() == refresh.V2C  # the default
+    assert "public" in page.account_row.description.text()
 
     def answer(dialog: QDialog) -> QDialog.DialogCode:
         dialog.field.setText("SAMPLE-community")  # type: ignore[attr-defined]
@@ -277,6 +275,80 @@ def test_settings_keeps_the_community_in_the_vault_only(
 
     monkeypatch.setattr(settings_module, "run_modal", answer)
     page.change_button.click()
-    assert kept == [(refresh.COMMUNITY, "SAMPLE-community")]
-    assert page.community_row.description.text().startswith("Set.")
+    assert credstore.load(refresh.COMMUNITY) == "SAMPLE-community"
+    assert page.account_row.description.text().startswith("v2c: community string set.")
     assert "SAMPLE-community" not in str(printers.prefs)  # never in the settings file
+
+
+def test_settings_keeps_the_v3_account_in_the_vault_only(
+    printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    group = printers.settings_group()
+    group.build()
+    page = group.general
+    page.version.setCurrentIndex(page.version.findData(refresh.V3))
+    assert printers.prefs[SNMP_VERSION] == refresh.V3
+    assert "not set" in page.account_row.description.text()
+
+    def fill(dialog: QDialog) -> QDialog.DialogCode:
+        assert isinstance(dialog, settings_module.V3AccountDialog)
+        dialog.user.setText("sample-reader")
+        dialog.auth.setCurrentIndex(dialog.auth.findData(usm.Auth.SHA256))
+        dialog.auth_password.setText("short")
+        assert not dialog.save_button.isEnabled()  # under 8 characters
+        assert "8 characters" in dialog.problem.text()
+        dialog.auth_password.setText("auth-pass-1")
+        dialog.privacy_password.setText("priv-pass-1")
+        assert dialog.save_button.isEnabled()
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(settings_module, "run_modal", fill)
+    page.change_button.click()
+    assert refresh.v3_account() == usm.Account(
+        "sample-reader", usm.Auth.SHA256, "auth-pass-1", usm.Privacy.AES128, "priv-pass-1"
+    )
+    assert page.account_row.description.text() == (
+        "v3: user sample-reader, SHA-256, AES-128. Kept in Windows Credential Manager."
+    )
+    assert "pass-1" not in str(printers.prefs)
+
+    def keep(dialog: QDialog) -> QDialog.DialogCode:
+        # Kept passwords aren't shown; left empty, they stay as they were.
+        assert isinstance(dialog, settings_module.V3AccountDialog)
+        assert dialog.auth_password.text() == "" and dialog.privacy_password.text() == ""
+        assert dialog.save_button.isEnabled()
+        dialog.user.setText("other-reader")
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(settings_module, "run_modal", keep)
+    page.change_button.click()
+    account = refresh.v3_account()
+    assert account is not None and account.user == "other-reader"
+    assert account.auth_password == "auth-pass-1"
+
+
+def test_refresh_over_v3_reads_the_printer_or_says_why_it_refused(
+    printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
+    printers.set_snmp_version(refresh.V3)
+    printers.check_printers([lab])
+    assert printers._run is None  # no account yet: nothing is read
+    assert "SNMP v3 account" in printers._shell.messages[-1]  # type: ignore[attr-defined]
+
+    account = usm.Account("sample", usm.Auth.SHA, "auth-pass-1", usm.Privacy.AES128, "priv-pass-1")
+    refresh.save_v3_account(account)
+    with running(COLOUR, account=account) as agent:
+        monkeypatch.setattr(reading, "read", partial(reading.read, port=agent.port, timeout=0.2))
+        printers.check_printers([lab])
+        _wait(printers)
+    assert printers._checked[lab.id].reading is not None
+
+    refresh.save_v3_account(replace(account, auth_password="wrong-pass"))
+    with running(COLOUR, account=account) as agent:
+        monkeypatch.setattr(reading, "read", partial(reading.read, port=agent.port, timeout=0.2))
+        printers.check_printers([lab])
+        _wait(printers)
+    cell = status.status(printers._checked[lab.id], 10)
+    assert cell.text == "Refused"
+    assert "wrong authentication password" in cell.tip

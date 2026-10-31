@@ -24,12 +24,13 @@ from capypanel.ui.printers_tool import status
 from capypanel.ui.printers_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.printers_tool.details import PrinterDetails, PrinterDetailsPanel
 from capypanel.ui.printers_tool.dialog import PrinterDialog
-from capypanel.ui.printers_tool.refresh import PrinterRun, community
+from capypanel.ui.printers_tool.refresh import V2C, V3, PrinterRun, community, v3_account
 from capypanel.ui.printers_tool.report import PrintersReport
 from capypanel.ui.printers_tool.settings import (
     BARS,
     HIGHEST,
     LOWEST,
+    SNMP_VERSION,
     TEXT,
     TONER_VIEW,
     PrintersSettings,
@@ -270,6 +271,14 @@ class PrintersTool(ListWorkspace):
             self.table.low = low
             self._show_all_cells()
 
+    def snmp_version(self) -> str:
+        """Settings' SNMP version: V2C (the default) or V3."""
+        return V3 if self.prefs.get(SNMP_VERSION) == V3 else V2C
+
+    def set_snmp_version(self, version: str) -> None:
+        if version != self.snmp_version():
+            self.prefs[SNMP_VERSION] = version
+
     def toner_bars(self) -> bool:
         """Settings' Toner column choice: a bar (True) or text, the default."""
         return self.prefs.get(TONER_VIEW) == BARS
@@ -433,8 +442,13 @@ class PrintersTool(ListWorkspace):
         """One SNMP read per printer, a few at a time; a printer with no address uses its name."""
         if self._run is not None or not printers:
             return
+        secret = community() if self.snmp_version() == V2C else v3_account()
+        if secret is None:
+            note = _("Set the SNMP v3 account in Settings › Printers › Refresh first.")
+            self._shell.show_message(note, 10_000)
+            return
         targets = [(p.id, p.address or p.name) for p in printers]
-        run = PrinterRun(targets, community())
+        run = PrinterRun(targets, secret)
         run.found.connect(self._found)
         run.finished.connect(self._run_finished)
         self._run = run

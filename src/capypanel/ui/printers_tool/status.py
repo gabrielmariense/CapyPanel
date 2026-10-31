@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from capypanel.core.i18n import _
+from capypanel.core.printers import snmp
 from capypanel.core.printers.printer import DOC360
 from capypanel.core.printers.reading import Device, Problem, Reading, State, Supply, SupplyKind
 from capypanel.ui.checks import clock_text
@@ -53,6 +54,7 @@ class Checked:
     reading: Reading | None = None
     offline: bool = False  # no answer
     error: str = ""  # it answered, but not in a way CapyPanel could read
+    refused: str = ""  # it refused the SNMP v3 account: snmp.Refused's reason
 
 
 @dataclass(frozen=True)
@@ -73,6 +75,10 @@ def status(checked: Checked | None, low: int) -> Cell:
     when = clock_text(checked.when)
     if checked.offline:
         return Cell(_("Offline"), _("No answer at {when}.").format(when=when), GREY, quiet=True)
+    if checked.refused:
+        tip = _("Refused at {when}: {why}").format(when=when, why=refused_text(checked.refused))
+        hint = _("Check the SNMP account in Settings › Printers › Refresh.")
+        return Cell(_("Refused"), "\n".join((tip, hint)), AMBER, quiet=True)
     if checked.reading is None:
         tip = _("Couldn't read the printer's answer at {when}.").format(when=when)
         return Cell(_("Unreadable"), f"{tip}\n{checked.error}".strip(), AMBER, quiet=True)
@@ -93,6 +99,18 @@ def status(checked: Checked | None, low: int) -> Cell:
         return Cell(words, tip, AMBER)
     words = _STATES[reading.state]() if reading.state in _STATES else _("Ready")
     return Cell(words, tip, GREEN)
+
+
+def refused_text(reason: str) -> str:
+    """Why a printer refused the SNMP v3 account, in words."""
+    texts = {
+        snmp.USER: lambda: _("it doesn't know the SNMP v3 user name."),
+        snmp.AUTH: lambda: _("wrong authentication password or type."),
+        snmp.PRIVACY: lambda: _("wrong encryption password."),
+        snmp.LEVEL: lambda: _("it wants authentication or encryption set differently."),
+        snmp.TIME_WINDOW: lambda: _("its clock and CapyPanel's didn't agree."),
+    }
+    return texts.get(reason, lambda: _("it refused the SNMP v3 request."))()
 
 
 def counter_error(source: str) -> str:

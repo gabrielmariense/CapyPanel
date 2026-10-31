@@ -1,5 +1,5 @@
-"""The Printers tool's part of Settings: Startup, Refresh (the SNMP community string, the low
-supply level and how the Toner column shows) and Printer lists."""
+"""The Printers tool's part of Settings: Startup, Refresh (the SNMP version and its account,
+the low supply level and how the Toner column shows) and Printer lists."""
 
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
+    QFormLayout,
     QHBoxLayout,
     QLineEdit,
     QMessageBox,
@@ -20,6 +21,7 @@ from PySide6.QtWidgets import (
 from capypanel.core import credstore
 from capypanel.core.hosts import locations
 from capypanel.core.i18n import N_, _
+from capypanel.core.printers import usm
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.notes import notes
 from capypanel.ui.printers_tool import refresh
@@ -37,6 +39,8 @@ if TYPE_CHECKING:
     from capypanel.ui.printers_tool.tool import PrintersTool
 
 MAX_COMMUNITY = 255
+MAX_V3_USER, MAX_V3_PASSWORD = 32, 255  # RFC 3414's longest user name
+SNMP_VERSION = "snmp_version"  # refresh.V2C or refresh.V3
 LOWEST, HIGHEST = 1, 50  # the low supply level's range, in %
 TONER_VIEW, TEXT, BARS = "toner_view", "text", "bars"  # the Toner column: "Black 24 %", or a bar
 
@@ -82,18 +86,146 @@ class CommunityDialog(QDialog):
         self.resize(420, self.sizeHint().height())
 
 
-class PrintersPage(ListsGeneralPage):
-    """Startup, then Refresh: the community string behind Change…, the low supply level, and
-    the Toner column as text or a bar."""
+class V3AccountDialog(QDialog):
+    """The SNMP v3 account's own small window (Save keeps it in Windows Credential Manager).
+    A password already kept isn't shown: its box stays empty and keeps it unless typed over."""
 
-    def __init__(self, *, low: int, bars: bool, community_set: bool, **lists: object) -> None:
+    def __init__(self, parent: QWidget | None, kept: usm.Account | None) -> None:
+        super().__init__(parent)
+        self._kept = kept
+        self.setWindowTitle(_("SNMP v3 account"))
+        column = QVBoxLayout(self)
+        column.setContentsMargins(16, 16, 16, 16)
+        column.setSpacing(10)
+        column.addWidget(
+            notes(
+                _("The read-only SNMP v3 user your printers know. The passwords are kept in "
+                  "Windows Credential Manager.")
+            )
+        )  # fmt: skip
+        self.user = QLineEdit(kept.user if kept else "")
+        self.user.setMaxLength(MAX_V3_USER)
+        self.auth = QComboBox()
+        self.auth.addItem(_("None"), None)
+        for auth in usm.Auth:
+            self.auth.addItem(auth.label, auth)
+        self.auth_password = self._password_box(bool(kept and kept.auth))
+        self.privacy = QComboBox()
+        self.privacy.addItem(_("None"), None)
+        for privacy in usm.Privacy:
+            self.privacy.addItem(privacy.value, privacy)
+        self.privacy_password = self._password_box(bool(kept and kept.privacy))
+        if kept:
+            self.auth.setCurrentIndex(self.auth.findData(kept.auth))
+            self.privacy.setCurrentIndex(self.privacy.findData(kept.privacy))
+        else:  # what most printers set up for v3 use
+            self.auth.setCurrentIndex(self.auth.findData(usm.Auth.SHA))
+            self.privacy.setCurrentIndex(self.privacy.findData(usm.Privacy.AES128))
+        form = QFormLayout()
+        form.addRow(_("&User name"), self.user)
+        form.addRow(_("&Authentication"), self.auth)
+        form.addRow(_("Authentication &password"), self.auth_password)
+        form.addRow(_("&Encryption"), self.privacy)
+        form.addRow(_("Encryption pass&word"), self.privacy_password)
+        column.addLayout(form)
+        self.show_box = QCheckBox(_("&Show passwords"))
+        self.show_box.toggled.connect(self._show_passwords)
+        column.addWidget(self.show_box)
+        self.problem = notes("")
+        column.addWidget(self.problem)
+        buttons = QHBoxLayout()
+        buttons.addStretch(1)
+        self.save_button = QPushButton(_("&Save"))
+        self.save_button.setDefault(True)
+        self.save_button.clicked.connect(self.accept)
+        cancel = QPushButton(_("Cancel"))
+        cancel.setAutoDefault(False)
+        cancel.clicked.connect(self.reject)
+        buttons.addWidget(self.save_button)
+        buttons.addWidget(cancel)
+        column.addLayout(buttons)
+        for box in (self.user, self.auth_password, self.privacy_password):
+            box.textChanged.connect(self._update)
+        for choice in (self.auth, self.privacy):
+            choice.currentIndexChanged.connect(self._update)
+        self._update()
+        self.resize(460, self.sizeHint().height())
+
+    def account(self) -> usm.Account | None:
+        """The account as filled in, or None while something's missing."""
+        auth: usm.Auth | None = self.auth.currentData()
+        privacy: usm.Privacy | None = self.privacy.currentData() if auth else None
+        kept = self._kept
+        auth_password = self.auth_password.text() or (kept.auth_password if kept else "")
+        privacy_password = self.privacy_password.text() or (kept.privacy_password if kept else "")
+        try:
+            return usm.Account(
+                self.user.text().strip(),
+                auth,
+                auth_password if auth else "",
+                privacy,
+                privacy_password if privacy else "",
+            )
+        except ValueError:
+            return None
+
+    def _update(self) -> None:
+        signing = self.auth.currentData() is not None
+        self.auth_password.setEnabled(signing)
+        self.privacy.setEnabled(signing)  # encryption needs authentication
+        self.privacy_password.setEnabled(signing and self.privacy.currentData() is not None)
+        self.problem.setText(self._problem())
+        self.problem.setVisible(bool(self.problem.text()))
+        self.save_button.setEnabled(self.account() is not None)
+
+    def _problem(self) -> str:
+        """What's still missing, in words; "" when the account is complete."""
+        if not self.user.text().strip():
+            return _("Type the user name.")
+        account = self.account()
+        if account is not None:
+            return ""
+        if self.auth_password.isEnabled() and not self._long_enough(self.auth_password, "auth"):
+            return _("The authentication password needs at least 8 characters.")
+        return _("The encryption password needs at least 8 characters.")
+
+    def _long_enough(self, box: QLineEdit, which: str) -> bool:
+        typed = box.text()
+        if not typed and self._kept:
+            typed = self._kept.auth_password if which == "auth" else self._kept.privacy_password
+        return len(typed.encode()) >= usm.MIN_PASSWORD
+
+    def _password_box(self, kept: bool) -> QLineEdit:
+        box = QLineEdit()
+        box.setEchoMode(QLineEdit.EchoMode.Password)
+        box.setMaxLength(MAX_V3_PASSWORD)
+        if kept:
+            box.setPlaceholderText(_("Kept: type to change it"))
+        return box
+
+    def _show_passwords(self, on: bool) -> None:
+        mode = QLineEdit.EchoMode.Normal if on else QLineEdit.EchoMode.Password
+        self.auth_password.setEchoMode(mode)
+        self.privacy_password.setEchoMode(mode)
+
+
+class PrintersPage(ListsGeneralPage):
+    """Startup, then Refresh: the SNMP version, its account behind Change…, the low supply
+    level, and the Toner column as text or a bar."""
+
+    def __init__(
+        self, *, low: int, bars: bool, version: str, account: str, **lists: object
+    ) -> None:
         super().__init__(**lists)  # type: ignore[arg-type]
         section = Section(_("Refresh"))
+        self.version = QComboBox()
+        self.version.addItem("v2c", refresh.V2C)
+        self.version.addItem("v3", refresh.V3)
+        self.version.setCurrentIndex(self.version.findData(version))
+        self.version.currentIndexChanged.connect(lambda _i: self.changed.emit())
         self.change_button = QPushButton(_("Change…"))
         self.change_button.setAutoDefault(False)
-        self.community_row = SettingRow(
-            _("SNMP &community string"), self._community_text(community_set), self.change_button
-        )
+        self.account_row = SettingRow(_("SNMP &account"), account, self.change_button)
         self.low_level = QSpinBox()
         self.low_level.setRange(LOWEST, HIGHEST)
         self.low_level.setValue(low)
@@ -106,7 +238,12 @@ class PrintersPage(ListsGeneralPage):
         self.toner_view.currentIndexChanged.connect(lambda _i: self.changed.emit())
         add_rows(
             section.content,
-            self.community_row,
+            SettingRow(
+                _("SNMP &version"),
+                _("v2c: a community string. v3: a user, with a password and encryption."),
+                self.version,
+            ),
+            self.account_row,
             SettingRow(
                 _("&Low supply level"),
                 _("A toner, ink, drum or box at or below this shows as low."),
@@ -120,14 +257,25 @@ class PrintersPage(ListsGeneralPage):
         )
         self.add_section(section)
 
-    def show_community(self, community_set: bool) -> None:
-        self.community_row.description.setText(self._community_text(community_set))
+    def show_account(self, text: str) -> None:
+        self.account_row.description.setText(text)
 
-    @staticmethod
-    def _community_text(community_set: bool) -> str:
-        if community_set:
-            return _("Set. Kept in Windows Credential Manager, never in a file.")
-        return _('Not set: printers are asked with "public".')
+
+def account_text(version: str) -> str:
+    """The SNMP account row's line: what's set for the version picked."""
+    if version == refresh.V3:
+        account = refresh.v3_account()
+        if account is None:
+            return _("v3: not set. Use Change… to add the user.")
+        parts = [account.user]
+        parts += [account.auth.label] if account.auth else []
+        parts += [account.privacy.value] if account.privacy else []
+        return _("v3: user {parts}. Kept in Windows Credential Manager.").format(
+            parts=", ".join(parts)
+        )
+    if community_is_set():
+        return _("v2c: community string set. Kept in Windows Credential Manager.")
+    return _('v2c: not set, printers are asked with "public".')
 
 
 class PrintersSettings(SettingsGroup):
@@ -149,7 +297,8 @@ class PrintersSettings(SettingsGroup):
         self.general = PrintersPage(
             low=tool.low_level(),
             bars=tool.toner_bars(),
-            community_set=community_is_set(),
+            version=tool.snmp_version(),
+            account=account_text(tool.snmp_version()),
             texts=texts,
             start_list=prefs.get(locations.START_KEY, locations.START_LAST),
             default_list=tool.default_list,
@@ -169,7 +318,7 @@ class PrintersSettings(SettingsGroup):
         )
         for page in (self.general, self.lists):
             page.changed.connect(self._changed)
-        self.general.change_button.clicked.connect(self._change_community)
+        self.general.change_button.clicked.connect(self._change_account)
         self.lists.view.open_requested.connect(self._open)
         self._building = False
         return [("printers", self.general), ("printer_lists", self.lists)]
@@ -191,7 +340,32 @@ class PrintersSettings(SettingsGroup):
             )
             self._tool.set_low_level(self.general.low_level.value())
             self._tool.set_toner_bars(self.general.toner_view.currentData() == BARS)
+            self._tool.set_snmp_version(str(self.general.version.currentData()))
+            self.general.show_account(account_text(self._tool.snmp_version()))
             self._tool.prefs_applied()
+
+    def _change_account(self) -> None:
+        if self._tool.snmp_version() == refresh.V3:
+            self._change_v3_account()
+        else:
+            self._change_community()
+        self.general.show_account(account_text(self._tool.snmp_version()))
+
+    def _change_v3_account(self) -> None:
+        dialog = V3AccountDialog(self.general.window(), refresh.v3_account())
+        if (
+            run_modal(dialog) != QDialog.DialogCode.Accepted
+            or (account := dialog.account()) is None
+        ):
+            return
+        try:
+            refresh.save_v3_account(account)
+        except (OSError, ValueError) as e:
+            QMessageBox.warning(
+                self.general,
+                _("SNMP v3 account"),
+                _("Windows didn't keep it: {error}").format(error=e),
+            )
 
     def _change_community(self) -> None:
         dialog = CommunityDialog(self.general.window())
@@ -210,7 +384,6 @@ class PrintersSettings(SettingsGroup):
                 _("Windows didn't keep it: {error}").format(error=e),
             )
             return
-        self.general.show_community(bool(secret))
 
     def _open(self, path: Path) -> None:
         """A list opened from Printer lists: Settings then shows it as the open one."""

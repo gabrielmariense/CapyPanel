@@ -157,10 +157,11 @@ def snmp_host(address: str) -> str:
 
 
 def read(
-    host: str, community: str, *, port: int = snmp.PORT, timeout: float = snmp.TIMEOUT
+    host: str, secret: snmp.Secret, *, port: int = snmp.PORT, timeout: float = snmp.TIMEOUT
 ) -> Reading:
-    """Everything Refresh shows. Raises snmp.NoAnswer when the printer doesn't answer."""
-    with snmp.Session(host, community, port=port, timeout=timeout) as session:
+    """Everything Refresh shows. Raises snmp.NoAnswer when the printer doesn't answer, and
+    snmp.Refused when it refuses a v3 account."""
+    with snmp.Session(host, secret, port=port, timeout=timeout) as session:
         top = session.get([SYS_DESCR, SYS_OBJECT_ID])
         printers = session.walk(HR_PRINTER_STATUS)
         device = printers[0][0].rsplit(".", 1)[1] if printers else "1"
