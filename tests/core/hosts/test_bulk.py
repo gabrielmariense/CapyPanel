@@ -42,6 +42,29 @@ def test_lines_without_a_header_are_name_and_address() -> None:
     assert parse("Lab 08,10.20.30.48").rows[0].address == "10.20.30.48"
 
 
+def test_headers_match_however_the_words_are_joined() -> None:
+    parsed = parse("Hostname\tIP_Address\tGroupName\nLab 07\t192.0.2.47\tWard A\n")
+    assert parsed.rows == (ImportRow("Lab 07", "192.0.2.47", "Ward A"),)
+    assert parse("Nome;Nome do grupo\nLab 07;Ala B\n").rows[0].group == "Ala B"
+
+
+def test_a_table_lined_up_with_spaces_imports_by_its_columns() -> None:
+    pasted = (
+        "Hostname        Address         Group Name\n"
+        "Lab 07          192.0.2.47      Ward A / 2nd floor\n"
+        "LAB-08                          Ward B\n"  # an empty address: cut where titles start
+        "Reception-workstation-01  192.0.2.49  Ward C\n"  # too long for its column
+    )
+    parsed = parse(pasted)
+    assert [(r.name, r.address, r.group) for r in parsed.rows] == [
+        ("Lab 07", "192.0.2.47", "Ward A / 2nd floor"),
+        ("LAB-08", "", "Ward B"),
+        ("Reception-workstation-01", "192.0.2.49", "Ward C"),
+    ]
+    # Without a header row, two-space gaps are part of the name, as before.
+    assert parse("Lab 07    192.0.2.47\n").rows[0].name == "Lab 07    192.0.2.47"
+
+
 def test_quoted_cells_keep_their_delimiters() -> None:
     rows = parse('name,address,tags\n"Lab, 2nd floor",10.0.0.9,"a;b"\n').rows
     assert rows[0].name == "Lab, 2nd floor" and rows[0].tags == ("a", "b")

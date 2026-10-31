@@ -5,12 +5,14 @@ A list is either a header row naming its columns (name, address, group, tags, no
 in English or Portuguese; other columns are ignored), or lines of "name, address" without one,
 where the address may be left out when the name is the computer's name on the network. A CSV file
 must have the header row. Columns are split by a tab (as Excel copies), a semicolon (Excel's CSV
-in pt-BR) or a comma. A group is a path, its levels joined by "/"; tags are joined by ";" (or ","
+in pt-BR) or a comma; a pasted table whose columns are lined up with spaces works too, with its
+header row. A group is a path, its levels joined by "/"; tags are joined by ";" (or ","
 in a ";" list)."""
 
 import csv
 import ctypes
 import io
+import re
 import unicodedata
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -24,7 +26,7 @@ LOCALE_SLIST = 0x0C  # GetLocaleInfoEx: the list separator
 _HEADERS = {
     "name": {"name", "nome", "host", "hostname", "computer", "computador"},
     "address": {"address", "endereco", "ip", "ip address", "endereco ip", "dns"},
-    "group": {"group", "grupo", "group path"},
+    "group": {"group", "grupo", "group path", "group name", "nome do grupo"},
     "tags": {"tags", "tag", "etiquetas", "marcadores"},
     "notes": {"notes", "note", "notas", "nota", "observacoes", "observacao"},
 }
@@ -85,30 +87,38 @@ def parse(text: str, *, file: bool = False) -> Parsed:
     header = _header(lines[0])
     if header is not None:
         delimiter, columns = header
-        return _read(lines[1:], delimiter, columns)
+        return _read((_split(line, delimiter) for line in lines[1:]), columns, delimiter)
+    aligned = _aligned(lines)
+    if aligned is not None:
+        return aligned
     if file:
         return Parsed((), needs_header=True)
     delimiter = _delimiter(lines[0])
     if any(len(_split(line, delimiter)) > 2 for line in lines):
         # Without a header, a third column could be anything: say so rather than guess.
         return Parsed((), needs_header=True)
-    return _read(lines, delimiter, ["name", "address"])
+    return _read((_split(line, delimiter) for line in lines), ["name", "address"], delimiter)
 
 
 def _fold(text: str) -> str:
-    """For matching headers: lower case, no accents ("Endereço" = "endereco")."""
-    plain = unicodedata.normalize("NFKD", text.strip().casefold())
-    return "".join(c for c in plain if not unicodedata.combining(c))
+    """For matching headers: lower case, no accents, no spaces, "_" or "-" ("Endereço IP" =
+    "enderecoip", "GroupName" = "Group_name" = "groupname")."""
+    plain = unicodedata.normalize("NFKD", text.casefold())
+    return "".join(c for c in plain if not unicodedata.combining(c) and c not in " \t_-")
+
+
+def _columns(cells: Sequence[str]) -> list[str]:
+    """Each header cell's meaning: a known column's key, or the cell as typed."""
+    known = {key: {_fold(name) for name in names} for key, names in _HEADERS.items()}
+    return [
+        next((key for key, names in known.items() if _fold(cell) in names), cell) for cell in cells
+    ]
 
 
 def _header(line: str) -> tuple[str, list[str]] | None:
     """The delimiter and each column's meaning, when the first line names a "name" column."""
     for delimiter in ("\t", ";", ","):
-        cells = _split(line, delimiter)
-        columns = [
-            next((key for key, names in _HEADERS.items() if _fold(cell) in names), cell)
-            for cell in cells
-        ]
+        columns = _columns(_split(line, delimiter))
         if "name" in columns:
             return delimiter, columns
     return None
@@ -122,15 +132,38 @@ def _split(line: str, delimiter: str) -> list[str]:
     return next(csv.reader([line], delimiter=delimiter), [])
 
 
-def _read(lines: Sequence[str], delimiter: str, columns: list[str]) -> Parsed:
+# A cell in a table lined up with spaces: words with one space between them; columns have more.
+_ALIGNED_CELL = re.compile(r"\S+(?: \S+)*")
+
+
+def _aligned(lines: Sequence[str]) -> Parsed | None:
+    """A table whose columns are lined up with spaces, as some programs copy one: the header
+    row's titles mark where each column starts. None when the first line isn't such a header."""
+    titles = list(_ALIGNED_CELL.finditer(lines[0]))
+    columns = _columns([t.group() for t in titles])
+    if len(titles) < 2 or "name" not in columns:
+        return None
+    starts = [t.start() for t in titles]
+
+    def cells(line: str) -> list[str]:
+        found = _ALIGNED_CELL.findall(line)
+        if len(found) == len(starts):
+            return found
+        # An empty cell, or one that runs into the next: cut where the titles start.
+        return [line[a:b] for a, b in zip(starts, [*starts[1:], None], strict=True)]
+
+    return _read((cells(line) for line in lines[1:]), columns, " ")
+
+
+def _read(rows: Iterable[Sequence[str]], columns: list[str], delimiter: str) -> Parsed:
     known = set(_HEADERS)
     ignored = tuple(c for c in columns if c not in known and c.strip())
     tag_split = "," if delimiter == ";" else ";"
-    rows = []
-    for line in lines:
-        cells = dict(zip(columns, (c.strip() for c in _split(line, delimiter)), strict=False))
+    parsed = []
+    for row in rows:
+        cells = dict(zip(columns, (c.strip() for c in row), strict=False))
         tags = (t.strip() for t in cells.get("tags", "").split(tag_split))
-        rows.append(
+        parsed.append(
             ImportRow(
                 name=cells.get("name", ""),
                 address=cells.get("address", ""),
@@ -139,7 +172,7 @@ def _read(lines: Sequence[str], delimiter: str, columns: list[str]) -> Parsed:
                 notes=cells.get("notes", ""),
             )
         )
-    return Parsed(tuple(rows), ignored)
+    return Parsed(tuple(parsed), ignored)
 
 
 # ---- planning ----
