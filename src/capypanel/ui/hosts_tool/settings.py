@@ -23,6 +23,7 @@ class SettingsPrefs:
     hidden_lists: list[Path]  # lists in a lists folder removed from Host lists
     auto_status: tuple[bool, int] = (False, 5)  # check Status by itself, every N minutes
     start_view: tuple[str, str] | None = None  # the open list's (show, group) first
+    save_passwords: bool = False  # typed passwords also go to Windows Credential Manager
 
 
 class HostsSettings(SettingsGroup):
@@ -61,9 +62,12 @@ class HostsSettings(SettingsGroup):
             found=tool.found_lists(hidden=True),
             hidden=locations.hidden_lists(prefs),
         )
-        self.connections = ConnectionsPage(tool.connector.catalogs, doc)
+        self.connections = ConnectionsPage(
+            tool.connector.catalogs, doc, save_passwords=tool.saves_passwords()
+        )
         for page in (self.general, self.lists):
             page.changed.connect(self._changed)
+        self.connections.profiles.passwords_changed.connect(self._changed)
         self.lists.view.open_requested.connect(self._open)
         self.connections.changed.connect(tool.profiles_changed)  # Connect's menu follows
         self._building = False
@@ -87,6 +91,7 @@ class HostsSettings(SettingsGroup):
             hidden_lists=self.lists.hidden(),
             auto_status=self.general.auto_status_choice(),
             start_view=self.general.show_first_choice(),
+            save_passwords=self.connections.profiles.save_passwords_choice(),
         )
 
     def _changed(self) -> None:

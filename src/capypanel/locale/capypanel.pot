@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 19:54-0300\n"
+"POT-Creation-Date: 2026-10-31 16:28-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -398,6 +398,11 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
+msgid ""
+"Asked once, then kept in memory until CapyPanel closes. Your own choice, "
+"not shared with others on this PC."
+msgstr ""
+
 msgid "Ass&et tag:"
 msgstr ""
 
@@ -576,6 +581,15 @@ msgid "Couldn't create “{path}”: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"Couldn't delete the password saved in Windows Credential Manager: {error}"
+"\n"
+"\n"
+"You can delete it in Control Panel › Credential Manager › Windows "
+"Credentials, under “{prefix}”."
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't move “{path}” to the Recycle Bin."
 msgstr ""
 
@@ -612,6 +626,13 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't save the list: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Couldn't save the password in Windows Credential Manager: {error}\n"
+"\n"
+"It's kept until CapyPanel closes."
 msgstr ""
 
 #, python-brace-format
@@ -885,6 +906,11 @@ msgstr ""
 msgid "Idle"
 msgstr ""
 
+msgid ""
+"If a computer rejects it, CapyPanel stops and asks again instead of "
+"trying it on the others, so the account isn't locked."
+msgstr ""
+
 msgid "If that list can't be opened: the default list, then your personal list."
 msgstr ""
 
@@ -927,6 +953,9 @@ msgstr ""
 msgid "Its own settings file"
 msgstr ""
 
+msgid "Keep until CapyPanel closes"
+msgstr ""
+
 msgid ""
 "Kept in memory until CapyPanel closes, never saved, and used only for "
 "hosts with this connection profile."
@@ -934,8 +963,7 @@ msgstr ""
 
 msgid ""
 "Kept in memory until CapyPanel closes, never saved, and used only to read"
-" who is logged on. If a computer rejects it, CapyPanel stops and asks "
-"again instead of trying it on the others, so the account isn't locked."
+" who is logged on."
 msgstr ""
 
 msgid "Language"
@@ -1491,6 +1519,9 @@ msgstr ""
 msgid "Save as preset"
 msgstr ""
 
+msgid "Save in Windows Credential Manager"
+msgstr ""
+
 msgid "Save my version as a copy…"
 msgstr ""
 
@@ -1498,6 +1529,26 @@ msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr ""
 
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
+msgstr ""
+
+msgid ""
+"Saved for your Windows account on this PC, encrypted by Windows, domain "
+"accounts too: anyone using your Windows session can connect with them. "
+"After a password changes, use Connect › Forget typed passwords. Keeping "
+"them until CapyPanel closes again deletes them."
+msgstr ""
+
+msgid ""
+"Saved in Windows Credential Manager for your Windows account (Settings › "
+"Connections), and used only for hosts with this connection profile."
+msgstr ""
+
+msgid ""
+"Saved in Windows Credential Manager for your Windows account (Settings › "
+"Connections), and used only to read who is logged on."
+msgstr ""
+
+msgid "Saved passwords deleted."
 msgstr ""
 
 msgid "Search"
@@ -1932,6 +1983,9 @@ msgid "Type"
 msgstr ""
 
 msgid "Type a tag and press Enter"
+msgstr ""
+
+msgid "Typed &passwords"
 msgstr ""
 
 msgid "Typed password forgotten."

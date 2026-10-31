@@ -1,6 +1,6 @@
 """Settings > Connections: the shared connection profiles (add, edit, duplicate, delete, the
-default one) and where each remote tool was found on this PC. Like every other setting, each
-change is written at once."""
+default one), where this user's typed passwords are kept, and where each remote tool was found
+on this PC. Like every other setting, each change is written at once."""
 
 from collections.abc import Callable
 from dataclasses import replace
@@ -43,7 +43,7 @@ from capypanel.core.tools.profiles import (
 from capypanel.ui.connect import ask_for_program
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import hint, notes
-from capypanel.ui.settings.pages import Page, Section, SettingRow
+from capypanel.ui.settings.pages import Page, Section, SettingRow, add_rows
 from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 
 MAX_PROFILE_NAME = 64
@@ -284,9 +284,14 @@ class SharedSection(Section):
 
 
 class ProfilesSection(SharedSection):
-    """The connection profiles everyone on this PC connects with."""
+    """The connection profiles everyone on this PC connects with, and where this user's typed
+    passwords are kept."""
 
-    def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
+    passwords_changed = Signal()  # the user's own choice, not a shared file
+
+    def __init__(
+        self, catalogs: Catalogs, document: OpenList | None, *, save_passwords: bool = False
+    ) -> None:
         super().__init__(_("Connection profiles"), catalogs)
         self.store = catalogs.profiles
         self.document = document
@@ -336,15 +341,46 @@ class ProfilesSection(SharedSection):
         inner.addWidget(notes(access))
         inner.addWidget(self.builtin_note)
         inner.addWidget(self.profiles_skipped)
-        inner.addWidget(
+        self.passwords = QComboBox()
+        self.passwords.addItem(_("Keep until CapyPanel closes"), False)
+        self.passwords.addItem(_("Save in Windows Credential Manager"), True)
+        self.passwords.setCurrentIndex(1 if save_passwords else 0)
+        self.passwords_row = SettingRow(_("Typed &passwords"), "", self.passwords)
+        self._describe_passwords()
+        self.passwords.currentIndexChanged.connect(self._passwords_picked)
+        add_rows(
+            inner,
             SettingRow(
                 _("Hosts with no profile &use"),
                 _("The profile a host connects with when it has none of its own."),
                 self.default,
-            )
+            ),
+            self.passwords_row,
         )
 
         self._fill_profiles(select=None)
+
+    def save_passwords_choice(self) -> bool:
+        return self.passwords.currentData() is True
+
+    def _passwords_picked(self) -> None:
+        self._describe_passwords()
+        self.passwords_changed.emit()
+
+    def _describe_passwords(self) -> None:
+        if self.save_passwords_choice():
+            text = _(
+                "Saved for your Windows account on this PC, encrypted by Windows, domain "
+                "accounts too: anyone using your Windows session can connect with them. After a "
+                "password changes, use Connect › Forget typed passwords. Keeping them until "
+                "CapyPanel closes again deletes them."
+            )
+        else:
+            text = _(
+                "Asked once, then kept in memory until CapyPanel closes. Your own choice, not "
+                "shared with others on this PC."
+            )
+        self.passwords_row.description.setText(text)
 
     def _written(self) -> None:
         self._show_folder_state()  # the first change makes the folder
@@ -659,9 +695,11 @@ class ToolsSection(SharedSection):
 class ConnectionsPage(Page):
     """Settings > Connections: the profiles, and where the tools they open are."""
 
-    def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
+    def __init__(
+        self, catalogs: Catalogs, document: OpenList | None, *, save_passwords: bool = False
+    ) -> None:
         super().__init__(_("Connections"))
-        self.profiles = ProfilesSection(catalogs, document)
+        self.profiles = ProfilesSection(catalogs, document, save_passwords=save_passwords)
         self.tools = ToolsSection(catalogs)
         for section in (self.profiles, self.tools):
             self.body.addWidget(section)

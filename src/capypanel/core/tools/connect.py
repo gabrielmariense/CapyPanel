@@ -1,4 +1,5 @@
-"""Starting a remote tool for one target, and the passwords typed this session (memory only)."""
+"""Starting a remote tool for one target, and the passwords typed for it (in memory, or saved
+in Windows Credential Manager when the user chose so)."""
 
 import logging
 import subprocess
@@ -6,6 +7,7 @@ from collections.abc import Collection
 from dataclasses import dataclass
 from pathlib import Path
 
+from capypanel.core import credstore
 from capypanel.core.tools import viewer_settings, vncpass
 from capypanel.core.tools.definitions import (
     PASSWORD_FILE,
@@ -26,30 +28,72 @@ class Credential:
     password: str
 
 
-class SessionCredentials:
-    """Passwords typed while the app runs, one per connection profile. Never written anywhere:
-    gone on exit. Per profile, so the Windows-account password never reaches the Pis."""
+SAVED = "profile/"  # saved passwords: CapyPanel/profile/<profile id> in Credential Manager
 
-    def __init__(self) -> None:
+
+class SessionCredentials:
+    """Passwords typed while the app runs, one per connection profile: in memory until the app
+    closes, and also in Windows Credential Manager when the user chose to save them. Per
+    profile, so the Windows-account password never reaches the Pis."""
+
+    def __init__(self, saving: bool = False) -> None:
         self._by_profile: dict[str, Credential] = {}
+        self.saving = saving
+
+    def set_saving(self, saving: bool) -> None:
+        """Off again deletes every saved password; the ones typed this session stay in memory.
+        Raises OSError."""
+        self.saving = saving
+        if not saving:
+            self._delete_saved(None)
 
     def get(self, profile_id: str) -> Credential | None:
-        return self._by_profile.get(profile_id)
+        found = self._by_profile.get(profile_id)
+        if found is None and self.saving:
+            found = self._load(profile_id)
+            if found is not None:
+                self._by_profile[profile_id] = found
+        return found
 
     def remember(self, profile_id: str, credential: Credential) -> None:
+        """Raises OSError or ValueError when it couldn't be saved; it's kept in memory anyway."""
         self._by_profile[profile_id] = credential
+        if self.saving:
+            credstore.save(SAVED + profile_id, credential.password, user=credential.user)
 
     def forget(self, profile_id: str | None = None) -> None:
+        """Also deletes the saved password, saving or not. Raises OSError."""
         if profile_id is None:
             self._by_profile.clear()
         else:
             self._by_profile.pop(profile_id, None)
+        self._delete_saved(profile_id)
 
     def __contains__(self, profile_id: str) -> bool:
-        return profile_id in self._by_profile
+        return self.get(profile_id) is not None
 
     def __bool__(self) -> bool:
-        return bool(self._by_profile)
+        return bool(self._by_profile) or bool(self.saving and self._saved_names())
+
+    def _load(self, profile_id: str) -> Credential | None:
+        try:
+            found = credstore.read(SAVED + profile_id)
+        except OSError as e:
+            log.warning("Couldn't read the saved password of %s: %s", profile_id, e)
+            return None
+        return Credential(*found) if found is not None else None
+
+    def _saved_names(self) -> list[str]:
+        try:
+            return credstore.names(SAVED)
+        except OSError as e:
+            log.warning("Couldn't list the saved passwords: %s", e)
+            return []
+
+    def _delete_saved(self, profile_id: str | None) -> None:
+        names = self._saved_names() if profile_id is None else [SAVED + profile_id]
+        for name in names:
+            credstore.forget(name)
 
 
 @dataclass(frozen=True)

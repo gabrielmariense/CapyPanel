@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from capypanel.core import credstore
 from capypanel.core.tools import definitions, vncpass
 from capypanel.core.tools.connect import Credential, SessionCredentials, Target, launch
 
@@ -98,3 +99,27 @@ def test_typed_passwords_are_kept_per_profile_until_forgotten() -> None:
     assert kept.get("realvnc-account") is None  # another profile never gets it
     kept.forget()
     assert not kept and kept.get("ultravnc-account") is None
+    assert credstore.names("") == []  # not saved: nothing in Credential Manager
+
+
+def test_saved_passwords_outlive_the_session_until_forgotten() -> None:
+    kept = SessionCredentials(saving=True)
+    kept.remember("ultravnc-account", Credential("CORP\\ana", "x"))
+    kept.remember("realvnc-password", Credential("", "y"))
+    assert credstore.read("profile/ultravnc-account") == ("CORP\\ana", "x")
+    later = SessionCredentials(saving=True)  # the next time CapyPanel opens
+    assert later and "ultravnc-account" in later and "rustdesk" not in later
+    assert later.get("ultravnc-account") == Credential("CORP\\ana", "x")
+    assert SessionCredentials(saving=False).get("ultravnc-account") is None  # memory only
+    later.forget("ultravnc-account")
+    assert credstore.names("profile/") == ["profile/realvnc-password"]
+    later.forget()
+    assert not later and credstore.names("") == []
+
+
+def test_turning_saving_off_deletes_what_was_saved() -> None:
+    kept = SessionCredentials(saving=True)
+    kept.remember("ultravnc-account", Credential("ana", "x"))
+    kept.set_saving(False)
+    assert credstore.names("") == []
+    assert kept.get("ultravnc-account") == Credential("ana", "x")  # still typed this session

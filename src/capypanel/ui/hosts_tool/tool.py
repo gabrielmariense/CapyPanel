@@ -11,7 +11,7 @@ from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QMessageBox, QToolButton, QWidget
 
-from capypanel.core import settings
+from capypanel.core import credstore, settings
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
@@ -42,6 +42,7 @@ from capypanel.ui.main_window.tool import Shell
 
 log = logging.getLogger(__name__)
 MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks first
+SAVED_ACCOUNT = "account/logged-on-users"  # in Credential Manager, when passwords are saved
 
 
 class HostsTool(ListWorkspace):
@@ -64,7 +65,8 @@ class HostsTool(ListWorkspace):
         )
         for action in vars(self.commands).values():
             action.setParent(self)
-        self.connector = Connector(self, Catalogs.for_paths(shell.paths), SessionCredentials())
+        credentials = SessionCredentials(saving=self.saves_passwords())
+        self.connector = Connector(self, Catalogs.for_paths(shell.paths), credentials)
         self.connector.open_settings = lambda: self._shell.open_settings("connections")
 
         # Refresh results, by host id: in memory only, since the list file is shared.
@@ -73,7 +75,7 @@ class HostsTool(ListWorkspace):
             str, tuple[tuple[Session, ...] | None, SessionsError | None, datetime]
         ] = {}
         self._run: CheckRun | None = None
-        self._account: Account | None = None  # typed for logged-on users; memory only
+        self._account = self._saved_account()  # typed for logged-on users
         self._refused: list[str] = []  # hosts this run that didn't let the account read users
         self._reported: set[str] = set()
         self._targets: list[tuple[str, str]] = []
@@ -467,19 +469,82 @@ class HostsTool(ListWorkspace):
         return forget
 
     def forget_passwords(self) -> None:
-        self.connector.credentials.forget()
+        """Saved ones too."""
         self._account = None
-        self._shell.show_message(_("Typed passwords forgotten."), 5000)
+        if self._forgot(lambda: (self.connector.credentials.forget(), self._delete_account())):
+            self._shell.show_message(_("Typed passwords forgotten."), 5000)
         self._update_state()
 
     def forget_password(self, profile_id: str | None) -> None:
-        """One profile's typed password; None: the account typed for logged-on users."""
+        """One profile's typed password, saved or not; None: the account typed for logged-on
+        users."""
         if profile_id is None:
             self._account = None
+            done = self._forgot(self._delete_account)
         else:
-            self.connector.credentials.forget(profile_id)
-        self._shell.show_message(_("Typed password forgotten."), 5000)
+            done = self._forgot(lambda: self.connector.credentials.forget(profile_id))
+        if done:
+            self._shell.show_message(_("Typed password forgotten."), 5000)
         self._update_state()
+
+    def _forgot(self, forget: Callable[[], object]) -> bool:
+        """Runs `forget`; says so when Windows didn't delete a saved password."""
+        try:
+            forget()
+        except OSError as e:
+            log.warning("Couldn't delete a saved password: %s", e)
+            QMessageBox.warning(
+                self,
+                "CapyPanel",
+                _("Couldn't delete the password saved in Windows Credential Manager: {error}\n\n"
+                  "You can delete it in Control Panel › Credential Manager › Windows "
+                  "Credentials, under “{prefix}”.").format(error=e, prefix=credstore.PREFIX),
+            )  # fmt: skip
+            return False
+        return True
+
+    # ---- saved passwords ----
+
+    def saves_passwords(self) -> bool:
+        """Settings: typed passwords are also saved in Windows Credential Manager."""
+        return self.prefs.get("save_passwords") is True
+
+    def _saved_account(self) -> Account | None:
+        if not self.connector.credentials.saving:
+            return None
+        try:
+            found = credstore.read(SAVED_ACCOUNT)
+        except OSError as e:
+            log.warning("Couldn't read the saved account for logged-on users: %s", e)
+            return None
+        return Account(*found) if found is not None else None
+
+    def _save_account(self, account: Account) -> None:
+        if not self.connector.credentials.saving:
+            return
+        try:
+            credstore.save(SAVED_ACCOUNT, account.password, user=account.user)
+        except (OSError, ValueError) as e:
+            log.warning("Couldn't save the account for logged-on users: %s", e)
+            QMessageBox.warning(
+                self,
+                "CapyPanel",
+                _("Couldn't save the password in Windows Credential Manager: {error}\n\n"
+                  "It's kept until CapyPanel closes.").format(error=e),
+            )  # fmt: skip
+
+    def _delete_account(self) -> None:
+        credstore.forget(SAVED_ACCOUNT)  # saving or not, like the profiles' passwords
+
+    def _apply_saving(self, saving: bool) -> None:
+        """Off again deletes every saved password; what was typed this session stays."""
+        credentials = self.connector.credentials
+        if saving == credentials.saving:
+            return
+        if saving:
+            credentials.set_saving(True)  # passwords typed from now on
+        elif self._forgot(lambda: (credentials.set_saving(False), self._delete_account())):
+            self._shell.show_message(_("Saved passwords deleted."), 5000)
 
     # ---- connection profiles ----
 
@@ -542,6 +607,8 @@ class HostsTool(ListWorkspace):
         on, minutes = prefs.auto_status
         self.prefs["auto_status"] = {"on": on, "minutes": minutes}
         self._apply_auto_status()
+        self.prefs["save_passwords"] = prefs.save_passwords
+        self._apply_saving(prefs.save_passwords)
         self._save_prefs()
         self._update_state()  # the list's name may change with the lists kept
 
@@ -822,10 +889,13 @@ class HostsTool(ListWorkspace):
                 "{n} computers didn't let “{user}” see who is logged on. Use another account?",
                 len(self._refused),
             ).format(n=len(self._refused), user=account.user)
-        dialog = AccountDialog(self, text, account.user if account else "")
+        dialog = AccountDialog(
+            self, text, account.user if account else "", saved=self.connector.credentials.saving
+        )
         if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return
         self._account = dialog.account()
+        self._save_account(self._account)
         # Again: the hosts that refused, and those a rejection kept from being tried.
         again = [t for t in self._targets if t[0] in self._refused or t[0] not in self._reported]
         if again:

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 19:54-0300\n"
+"POT-Creation-Date: 2026-10-31 16:28-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -397,6 +397,9 @@ msgstr "Um nome à sua escolha, depois o nome do computador na rede ou o endere�
 msgid "Appearance"
 msgstr "Aparência"
 
+msgid "Asked once, then kept in memory until CapyPanel closes. Your own choice, not shared with others on this PC."
+msgstr "Pedidas uma vez e guardadas na memória até o CapyPanel fechar. É uma escolha só sua, não compartilhada com os outros usuários deste PC."
+
 msgid "Ass&et tag:"
 msgstr "&Patrimônio:"
 
@@ -573,6 +576,16 @@ msgid "Couldn't create “{path}”: {error}"
 msgstr "Não foi possível criar “{path}”: {error}"
 
 #, python-brace-format
+msgid ""
+"Couldn't delete the password saved in Windows Credential Manager: {error}\n"
+"\n"
+"You can delete it in Control Panel › Credential Manager › Windows Credentials, under “{prefix}”."
+msgstr ""
+"Não foi possível apagar a senha salva no Gerenciador de Credenciais do Windows: {error}\n"
+"\n"
+"Você pode apagá-la em Painel de Controle › Gerenciador de Credenciais › Credenciais do Windows, em “{prefix}”."
+
+#, python-brace-format
 msgid "Couldn't move “{path}” to the Recycle Bin."
 msgstr "Não foi possível mover “{path}” para a Lixeira."
 
@@ -610,6 +623,16 @@ msgstr "Não foi possível salvar a cópia: {error}"
 #, python-brace-format
 msgid "Couldn't save the list: {error}"
 msgstr "Não foi possível salvar a lista: {error}"
+
+#, python-brace-format
+msgid ""
+"Couldn't save the password in Windows Credential Manager: {error}\n"
+"\n"
+"It's kept until CapyPanel closes."
+msgstr ""
+"Não foi possível salvar a senha no Gerenciador de Credenciais do Windows: {error}\n"
+"\n"
+"Ela fica guardada até o CapyPanel fechar."
 
 #, python-brace-format
 msgid "Couldn't save where the tools are: {error}"
@@ -879,6 +902,9 @@ msgstr "Ícones:"
 msgid "Idle"
 msgstr "Inativo"
 
+msgid "If a computer rejects it, CapyPanel stops and asks again instead of trying it on the others, so the account isn't locked."
+msgstr "Se um computador recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta não ser bloqueada."
+
 msgid "If that list can't be opened: the default list, then your personal list."
 msgstr "Se essa lista não abrir: a lista padrão, depois a sua lista pessoal."
 
@@ -917,11 +943,14 @@ msgstr "Ela é passada ao visualizador na linha de comando, que os administrador
 msgid "Its own settings file"
 msgstr "Arquivo de configurações próprio"
 
+msgid "Keep until CapyPanel closes"
+msgstr "Guardar até o CapyPanel fechar"
+
 msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
 
-msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on. If a computer rejects it, CapyPanel stops and asks again instead of trying it on the others, so the account isn't locked."
-msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado. Se um computador recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta não ser bloqueada."
+msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on."
+msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado."
 
 msgid "Language"
 msgstr "Idioma"
@@ -1463,6 +1492,9 @@ msgstr "Salvar uma cópia da lista"
 msgid "Save as preset"
 msgstr "Salvar como predefinição"
 
+msgid "Save in Windows Credential Manager"
+msgstr "Salvar no Gerenciador de Credenciais do Windows"
+
 msgid "Save my version as a copy…"
 msgstr "Salvar minha versão como cópia…"
 
@@ -1471,6 +1503,18 @@ msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arqu
 
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr "Salve as impressoras que você escolher, com as colunas que escolher, num arquivo CSV"
+
+msgid "Saved for your Windows account on this PC, encrypted by Windows, domain accounts too: anyone using your Windows session can connect with them. After a password changes, use Connect › Forget typed passwords. Keeping them until CapyPanel closes again deletes them."
+msgstr "Salvas para a sua conta do Windows neste PC, criptografadas pelo Windows, inclusive contas de domínio: quem usar a sua sessão do Windows pode se conectar com elas. Depois que uma senha mudar, use Conectar › Esquecer as senhas digitadas. Voltar a guardá-las até o CapyPanel fechar apaga as salvas."
+
+msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only for hosts with this connection profile."
+msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada nos hosts com este perfil de conexão."
+
+msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only to read who is logged on."
+msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada para ler quem está logado."
+
+msgid "Saved passwords deleted."
+msgstr "As senhas salvas foram apagadas."
 
 msgid "Search"
 msgstr "Pesquisa"
@@ -1876,6 +1920,9 @@ msgstr "Tipo"
 
 msgid "Type a tag and press Enter"
 msgstr "Digite uma tag e pressione Enter"
+
+msgid "Typed &passwords"
+msgstr "&Senhas digitadas"
 
 msgid "Typed password forgotten."
 msgstr "A senha digitada foi esquecida."
