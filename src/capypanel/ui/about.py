@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import quote
 
+from cryptography import __version__ as cryptography_version
 from PySide6 import __version__ as pyside_version
 from PySide6.QtCore import Qt, QUrl, qVersion
 from PySide6.QtGui import QCursor, QDesktopServices, QFontDatabase, QShowEvent, QTextCursor
@@ -296,6 +297,13 @@ COMPONENTS = (
         "© 2001-2024 Python Software Foundation",
         "PSF License",
         "python.txt",
+    ),
+    Component(
+        "cryptography",
+        cryptography_version,
+        "© Individual contributors",
+        "BSD-3-Clause",
+        "cryptography.txt",
     ),
     Component("Tabler Icons", "", "© 2020-2026 Paweł Kuna", "MIT", "tabler-icons.txt"),
 )
