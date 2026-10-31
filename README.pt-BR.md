@@ -17,7 +17,7 @@ remota de qualquer um pela Área de Trabalho Remota ou pelo visualizador VNC que
 guarda também as suas impressoras, com os detalhes de que você precisa e a página web delas a um
 clique.
 
-> **Situação: beta (0.21.0).** Roda a partir do código-fonte; ainda não há instalador.
+> **Situação: beta (0.21.1).** Roda a partir do código-fonte; ainda não há instalador.
 
 ![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts e outro para Impressoras](docs/images/home-dark-pt-BR.png)
 

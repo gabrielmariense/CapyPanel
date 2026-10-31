@@ -22,9 +22,16 @@ file. Either way the lines fill the preview table below. Three shapes are unders
 | **CSV with headers** | A first line naming the columns: `name, address, group, tags, notes` |
 
 With headers the columns can come in any order, and their names work in English or in Portuguese
-(`nome, endereço, grupo, tags, notas`). In a group cell, `/` separates the levels
-("Headquarters/Front desk"); in a tags cell, `;` separates the tags. Columns CapyPanel has no use
-for are ignored, and the summary names them: "Ignored columns: …".
+(`nome, endereço, grupo, tags, notas`). A column's name counts however its words are joined, and
+whatever its case: `GroupName`, `Group name` and `group_name` are all the group column, and so is
+`Nome do grupo`. In a group cell, `/` separates the levels ("Headquarters/Front desk"); in a tags
+cell, `;` separates the tags. Columns CapyPanel has no use for are ignored, and the summary names
+them: "Ignored columns: …".
+
+Some programs copy a table with its columns lined up with spaces instead of tabs. That is read too,
+as long as the first line is the header row and names at least two columns, one of them the name:
+the titles mark where each column starts, so a cell left empty stays empty instead of pulling the
+next one into its place.
 
 A list with more than a name and an address but no header row can't be read, because CapyPanel
 won't guess which column is which. It says "This list needs a header row." and points at
@@ -113,6 +120,11 @@ is kept as soon as it's made. The status bar repeats what went out.
 The file uses the column separator your PC's Excel expects, a comma or a semicolon where that's
 the local one, with tags separated by the other character. It's written so that accented names
 open correctly.
+
+A cell that starts with `=`, `+`, `-` or `@` runs as a formula when Excel opens the file, or when
+copied rows are pasted, so a host named `=HYPERLINK(…)` could put a working link in someone's
+spreadsheet. The Report writes such a cell with an apostrophe in front of it, which keeps it as
+text; Excel shows the apostrophe. Import hosts takes the apostrophe off again.
 
 What Report writes is read back by Import hosts, which makes **For Import** a way to copy hosts
 between lists, or to keep a copy of a list before a big change.

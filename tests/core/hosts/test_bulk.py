@@ -42,6 +42,29 @@ def test_lines_without_a_header_are_name_and_address() -> None:
     assert parse("Lab 08,10.20.30.48").rows[0].address == "10.20.30.48"
 
 
+def test_headers_match_however_the_words_are_joined() -> None:
+    parsed = parse("Hostname\tIP_Address\tGroupName\nLab 07\t192.0.2.47\tWard A\n")
+    assert parsed.rows == (ImportRow("Lab 07", "192.0.2.47", "Ward A"),)
+    assert parse("Nome;Nome do grupo\nLab 07;Ala B\n").rows[0].group == "Ala B"
+
+
+def test_a_table_lined_up_with_spaces_imports_by_its_columns() -> None:
+    pasted = (
+        "Hostname        Address         Group Name\n"
+        "Lab 07          192.0.2.47      Ward A / 2nd floor\n"
+        "LAB-08                          Ward B\n"  # an empty address: cut where titles start
+        "Reception-workstation-01  192.0.2.49  Ward C\n"  # too long for its column
+    )
+    parsed = parse(pasted)
+    assert [(r.name, r.address, r.group) for r in parsed.rows] == [
+        ("Lab 07", "192.0.2.47", "Ward A / 2nd floor"),
+        ("LAB-08", "", "Ward B"),
+        ("Reception-workstation-01", "192.0.2.49", "Ward C"),
+    ]
+    # Without a header row, two-space gaps are part of the name, as before.
+    assert parse("Lab 07    192.0.2.47\n").rows[0].name == "Lab 07    192.0.2.47"
+
+
 def test_quoted_cells_keep_their_delimiters() -> None:
     rows = parse('name,address,tags\n"Lab, 2nd floor",10.0.0.9,"a;b"\n').rows
     assert rows[0].name == "Lab, 2nd floor" and rows[0].tags == ("a", "b")
@@ -104,6 +127,23 @@ def test_an_export_imports_back_into_the_same_groups() -> None:
     assert back.adding == 2 and back.new_groups == ()
     fd01 = next(h for h in back.result.hosts if h.name == "FD-01")
     assert fd01.group == slash and fd01.tags == ("kiosk", "2nd floor")
+
+
+def test_a_report_never_hands_a_spreadsheet_a_formula() -> None:
+    hl, branch = _office()
+    link = '=HYPERLINK("http://198.51.100.9")'
+    hl, _ = hl.add_host(link, branch, address="192.0.2.5", notes="-2 floors")
+    hl, _ = hl.add_host("@SUM", branch, address="192.0.2.6", tags=["+kiosk"])
+    text = export(hl, hl.hosts)
+    assert "'=HYPERLINK" in text and "'-2 floors" in text and "'@SUM" in text
+    assert "'+kiosk" in text and "HQ-01,10.0.0.1," in text  # plain cells stay as they were
+    # It imports back as it was, without the marks.
+    emptied = hl.remove_hosts(h.id for h in hl.hosts)
+    back = plan(emptied, parse(text).rows, branch).result.hosts
+    assert {(h.name, h.notes, h.tags) for h in back} >= {
+        ('=HYPERLINK("http://198.51.100.9")', "-2 floors", ()),
+        ("@SUM", "", ("+kiosk",)),
+    }
 
 
 def test_table_edits_are_written_back_as_csv() -> None:

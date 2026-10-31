@@ -42,5 +42,5 @@ For people who use CapyPanel, and for people who set it up for a team.
 Getting started, Settings and files and Development are about the whole app. The five pages after
 them belong to the **Hosts** tool, and the three after those to **Printers**.
 
-These pages describe the current version (0.21.0). CapyPanel is in beta, so they grow with each
+These pages describe the current version (0.21.1). CapyPanel is in beta, so they grow with each
 feature.

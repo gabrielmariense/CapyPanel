@@ -733,6 +733,17 @@ class ItemTable(QTreeWidget):
         self._fill_last_column()
         self._place_empty()
 
+    def scrollTo(
+        self,
+        index: QModelIndex | QPersistentModelIndex,
+        hint: QAbstractItemView.ScrollHint = QAbstractItemView.ScrollHint.EnsureVisible,
+    ) -> None:
+        """Brings the row into view, up or down only. Qt also scrolls sideways to show the whole
+        clicked cell, so a click on a long text jumped the table to the right."""
+        across = self.horizontalScrollBar().value()
+        super().scrollTo(index, hint)
+        self.horizontalScrollBar().setValue(across)
+
     def selected_ids(self) -> list[str]:
         return [item.data(0, ROLE_ID) for item in self.selectedItems()]
 

@@ -21,10 +21,17 @@ são entendidos, e o botão **Formatos…** mostra cada um com um exemplo:
 | **Nome e endereço** | Um nome e, depois, o nome do computador na rede ou o endereço IP, separados por vírgula, ou duas colunas copiadas do Excel |
 | **CSV com cabeçalho** | Uma primeira linha dando nome às colunas: `nome, endereço, grupo, tags, notas` |
 
-Com cabeçalho as colunas podem vir em qualquer ordem, e os nomes delas funcionam em português ou
-em inglês (`name, address, group, tags, notes`). Numa célula de grupo, `/` separa os níveis
-("Matriz/Recepção"); numa célula de tags, `;` separa as tags. As colunas que o CapyPanel não usa
-são ignoradas, e o resumo diz quais: "Colunas ignoradas: …".
+Com cabeçalho as colunas podem vir em qualquer ordem, e os nomes delas funcionam em português ou em
+inglês (`name, address, group, tags, notes`). O nome de uma coluna vale com as palavras juntas de
+qualquer jeito, e em qualquer caixa: `GroupName`, `Group name` e `group_name` são todos a coluna de
+grupo, e `Nome do grupo` também. Numa célula de grupo, `/` separa os níveis ("Matriz/Recepção");
+numa célula de tags, `;` separa as tags. As colunas que o CapyPanel não usa são ignoradas, e o
+resumo diz quais: "Colunas ignoradas: …".
+
+Alguns programas copiam uma tabela com as colunas alinhadas por espaços, em vez de tabulações. Isso
+também é lido, desde que a primeira linha seja o cabeçalho e nomeie pelo menos duas colunas, uma
+delas o nome: os títulos marcam onde cada coluna começa, então uma célula vazia continua vazia, em
+vez de puxar a próxima para o lugar dela.
 
 Uma lista com mais do que um nome e um endereço, e sem linha de cabeçalho, não pode ser lida,
 porque o CapyPanel não adivinha qual coluna é qual. Ele diz "Esta lista precisa de uma linha de
@@ -114,6 +121,11 @@ guardada assim que é feita. A barra de status repete o que saiu.
 O arquivo usa o separador de colunas que o Excel deste PC espera, vírgula ou ponto e vírgula onde
 esse é o separador local, com as tags separadas pelo outro caractere. Ele é gravado de um jeito que
 abre os nomes acentuados corretamente.
+
+Uma célula que começa com `=`, `+`, `-` ou `@` roda como fórmula quando o Excel abre o arquivo, ou
+quando as linhas copiadas são coladas, então um host chamado `=HYPERLINK(…)` poderia colocar um
+link funcionando na planilha de alguém. O Relatório grava essa célula com um apóstrofo na frente, o
+que a mantém como texto; o Excel mostra o apóstrofo. O Importar hosts tira o apóstrofo de novo.
 
 O que o Relatório grava é lido de volta pelo Importar hosts, o que faz do **Para importar** um
 jeito de copiar hosts entre listas, ou de guardar uma cópia de uma lista antes de uma mudança
