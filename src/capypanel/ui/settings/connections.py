@@ -343,7 +343,7 @@ class ProfilesSection(SharedSection):
         inner.addWidget(self.profiles_skipped)
         self.passwords = QComboBox()
         self.passwords.addItem(_("Keep until CapyPanel closes"), False)
-        self.passwords.addItem(_("Save in Windows Credential Manager"), True)
+        self.passwords.addItem(_("Save in Credential Manager"), True)  # fits the box
         self.passwords.setCurrentIndex(1 if save_passwords else 0)
         self.passwords_row = SettingRow(_("Typed &passwords"), "", self.passwords)
         self._describe_passwords()
@@ -370,10 +370,9 @@ class ProfilesSection(SharedSection):
     def _describe_passwords(self) -> None:
         if self.save_passwords_choice():
             text = _(
-                "Saved for your Windows account on this PC, encrypted by Windows, domain "
-                "accounts too: anyone using your Windows session can connect with them. After a "
-                "password changes, use Connect › Forget typed passwords. Keeping them until "
-                "CapyPanel closes again deletes them."
+                "Saved in Windows Credential Manager for your Windows account, domain accounts "
+                "too: anyone using your Windows session can connect with them. After a password "
+                "changes, use Connect › Forget typed passwords. Switching back deletes them."
             )
         else:
             text = _(

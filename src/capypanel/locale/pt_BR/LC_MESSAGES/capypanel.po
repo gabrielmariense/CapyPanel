@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 16:33-0300\n"
+"POT-Creation-Date: 2026-10-31 16:34-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1529,9 +1529,8 @@ msgstr "Salvar uma cópia da lista"
 msgid "Save as preset"
 msgstr "Salvar como predefinição"
 
-#, fuzzy
 msgid "Save in Credential Manager"
-msgstr "Salvar no Gerenciador de Credenciais do Windows"
+msgstr "Salvar no Gerenciador de Credenciais"
 
 msgid "Save my version as a copy…"
 msgstr "Salvar minha versão como cópia…"
@@ -1548,9 +1547,8 @@ msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windo
 msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only to read who is logged on."
 msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada para ler quem está logado."
 
-#, fuzzy
 msgid "Saved in Windows Credential Manager for your Windows account, domain accounts too: anyone using your Windows session can connect with them. After a password changes, use Connect › Forget typed passwords. Switching back deletes them."
-msgstr "Salvas para a sua conta do Windows neste PC, criptografadas pelo Windows, inclusive contas de domínio: quem usar a sua sessão do Windows pode se conectar com elas. Depois que uma senha mudar, use Conectar › Esquecer as senhas digitadas. Voltar a guardá-las até o CapyPanel fechar apaga as salvas."
+msgstr "Salvas no Gerenciador de Credenciais do Windows para a sua conta do Windows, inclusive contas de domínio: quem usar a sua sessão do Windows pode se conectar com elas. Depois que uma senha mudar, use Conectar › Esquecer as senhas digitadas. Voltar atrás apaga as salvas."
 
 msgid "Saved passwords deleted."
 msgstr "As senhas salvas foram apagadas."
