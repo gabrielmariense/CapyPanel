@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 16:37-0300\n"
+"POT-Creation-Date: 2026-10-31 16:49-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -66,6 +66,9 @@ msgid "&Copy"
 msgstr ""
 
 msgid "&Create"
+msgstr ""
+
+msgid "&Credentials"
 msgstr ""
 
 msgid "&Credentials:"
@@ -410,11 +413,6 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
-msgid ""
-"Asked once, then kept in memory until CapyPanel closes. Your own choice, "
-"not shared with others on this PC."
-msgstr ""
-
 msgid "Ass&et tag:"
 msgstr ""
 
@@ -679,6 +677,9 @@ msgstr ""
 msgid "Created when opened"
 msgstr ""
 
+msgid "Credential Manager"
+msgstr ""
+
 msgid "Credits"
 msgstr ""
 
@@ -836,6 +837,9 @@ msgstr ""
 msgid "For:"
 msgstr ""
 
+msgid "Forgotten when CapyPanel closes."
+msgstr ""
+
 msgid "Formats CapyPanel can import"
 msgstr ""
 
@@ -975,9 +979,6 @@ msgid ""
 msgstr ""
 
 msgid "Its own settings file"
-msgstr ""
-
-msgid "Keep until CapyPanel closes"
 msgstr ""
 
 msgid ""
@@ -1562,9 +1563,6 @@ msgstr ""
 msgid "Save as preset"
 msgstr ""
 
-msgid "Save in Credential Manager"
-msgstr ""
-
 msgid "Save my version as a copy…"
 msgstr ""
 
@@ -1575,6 +1573,11 @@ msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr ""
 
 msgid ""
+"Saved for your Windows account. Remove with Connect › Forget typed "
+"passwords."
+msgstr ""
+
+msgid ""
 "Saved in Windows Credential Manager for your Windows account (Settings › "
 "Connections), and used only for hosts with this connection profile."
 msgstr ""
@@ -1582,13 +1585,6 @@ msgstr ""
 msgid ""
 "Saved in Windows Credential Manager for your Windows account (Settings › "
 "Connections), and used only to read who is logged on."
-msgstr ""
-
-msgid ""
-"Saved in Windows Credential Manager for your Windows account, domain "
-"accounts too: anyone using your Windows session can connect with them. "
-"After a password changes, use Connect › Forget typed passwords. Switching"
-" back deletes them."
 msgstr ""
 
 msgid "Saved passwords deleted."
@@ -1780,6 +1776,9 @@ msgid "Tags: {tags}"
 msgstr ""
 
 msgid "Takes it out of your lists, or deletes its file too"
+msgstr ""
+
+msgid "Temporary credentials"
 msgstr ""
 
 msgid "Text"
@@ -2045,9 +2044,6 @@ msgstr ""
 msgid "Type the user name."
 msgstr ""
 
-msgid "Typed &passwords"
-msgstr ""
-
 msgid "Typed password forgotten."
 msgstr ""
 
@@ -2134,6 +2130,11 @@ msgstr ""
 
 #, python-brace-format
 msgid "Windows didn't keep it: {error}"
+msgstr ""
+
+msgid ""
+"Windows encrypts them for your account, domain accounts too: anyone using"
+" your Windows session can connect with them."
 msgstr ""
 
 #, python-brace-format

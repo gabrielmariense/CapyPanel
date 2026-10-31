@@ -84,7 +84,8 @@ def test_passwords_are_kept_in_memory_only_unless_saving_is_chosen(
 ) -> None:
     profiles = _profiles(window)
     assert not profiles.save_passwords_choice()  # the default
-    assert "until CapyPanel closes" in profiles.passwords_row.description.text()
+    assert profiles.passwords.currentText() == "Temporary credentials"
+    assert profiles.passwords_row.description.text() == "Forgotten when CapyPanel closes."
     asked: list[str] = []
     _type(monkeypatch, asked)
     _connect(window)
@@ -103,6 +104,7 @@ def test_a_saved_password_is_used_the_next_time_capypanel_opens(
     profiles.passwords.setCurrentIndex(1)  # Save in Windows Credential Manager
     assert window.hosts.prefs["save_passwords"] is True
     assert "Forget typed passwords" in profiles.passwords_row.description.text()
+    assert "domain accounts" in profiles.passwords.toolTip()  # the details, for who looks
     asked: list[str] = []
     _type(monkeypatch, asked)
     _connect(window)

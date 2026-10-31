@@ -342,10 +342,15 @@ class ProfilesSection(SharedSection):
         inner.addWidget(self.builtin_note)
         inner.addWidget(self.profiles_skipped)
         self.passwords = QComboBox()
-        self.passwords.addItem(_("Keep until CapyPanel closes"), False)
-        self.passwords.addItem(_("Save in Credential Manager"), True)  # fits the box
+        self.passwords.addItem(_("Temporary credentials"), False)
+        self.passwords.addItem(_("Credential Manager"), True)
+        self._saved_tip = _(
+            "Windows encrypts them for your account, domain accounts too: anyone using your "
+            "Windows session can connect with them."
+        )
+        self.passwords.setItemData(1, self._saved_tip, Qt.ItemDataRole.ToolTipRole)
         self.passwords.setCurrentIndex(1 if save_passwords else 0)
-        self.passwords_row = SettingRow(_("Typed &passwords"), "", self.passwords)
+        self.passwords_row = SettingRow(_("&Credentials"), "", self.passwords)
         self._describe_passwords()
         self.passwords.currentIndexChanged.connect(self._passwords_picked)
         add_rows(
@@ -368,18 +373,13 @@ class ProfilesSection(SharedSection):
         self.passwords_changed.emit()
 
     def _describe_passwords(self) -> None:
-        if self.save_passwords_choice():
-            text = _(
-                "Saved in Windows Credential Manager for your Windows account, domain accounts "
-                "too: anyone using your Windows session can connect with them. After a password "
-                "changes, use Connect › Forget typed passwords. Switching back deletes them."
-            )
-        else:
-            text = _(
-                "Asked once, then kept in memory until CapyPanel closes. Your own choice, not "
-                "shared with others on this PC."
-            )
-        self.passwords_row.description.setText(text)
+        saving = self.save_passwords_choice()
+        self.passwords_row.description.setText(
+            _("Saved for your Windows account. Remove with Connect › Forget typed passwords.")
+            if saving
+            else _("Forgotten when CapyPanel closes.")
+        )
+        self.passwords.setToolTip(self._saved_tip if saving else "")
 
     def _written(self) -> None:
         self._show_folder_state()  # the first change makes the folder

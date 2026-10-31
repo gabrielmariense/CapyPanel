@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 16:37-0300\n"
+"POT-Creation-Date: 2026-10-31 16:49-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -68,6 +68,9 @@ msgstr "&Copiar"
 
 msgid "&Create"
 msgstr "&Criar"
+
+msgid "&Credentials"
+msgstr "&Credenciais"
 
 msgid "&Credentials:"
 msgstr "&Credenciais:"
@@ -409,9 +412,6 @@ msgstr "Um nome à sua escolha, depois o nome do computador na rede ou o endere�
 msgid "Appearance"
 msgstr "Aparência"
 
-msgid "Asked once, then kept in memory until CapyPanel closes. Your own choice, not shared with others on this PC."
-msgstr "Pedidas uma vez e guardadas na memória até o CapyPanel fechar. É uma escolha só sua, não compartilhada com os outros usuários deste PC."
-
 msgid "Ass&et tag:"
 msgstr "&Patrimônio:"
 
@@ -678,6 +678,9 @@ msgstr "Criado por:"
 msgid "Created when opened"
 msgstr "Criada ao abrir"
 
+msgid "Credential Manager"
+msgstr "Gerenciador de Credenciais"
+
 msgid "Credits"
 msgstr "Créditos"
 
@@ -832,6 +835,9 @@ msgstr "Para a lista aberta agora; cada lista guarda a sua."
 msgid "For:"
 msgstr "Para:"
 
+msgid "Forgotten when CapyPanel closes."
+msgstr "Esquecidas quando o CapyPanel fecha."
+
 msgid "Formats CapyPanel can import"
 msgstr "Formatos que o CapyPanel importa"
 
@@ -966,9 +972,6 @@ msgstr "Ela é passada ao visualizador na linha de comando, que os administrador
 
 msgid "Its own settings file"
 msgstr "Arquivo de configurações próprio"
-
-msgid "Keep until CapyPanel closes"
-msgstr "Guardar até o CapyPanel fechar"
 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
@@ -1535,9 +1538,6 @@ msgstr "Salvar uma cópia da lista"
 msgid "Save as preset"
 msgstr "Salvar como predefinição"
 
-msgid "Save in Credential Manager"
-msgstr "Salvar no Windows"
-
 msgid "Save my version as a copy…"
 msgstr "Salvar minha versão como cópia…"
 
@@ -1547,14 +1547,14 @@ msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arqu
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr "Salve as impressoras que você escolher, com as colunas que escolher, num arquivo CSV"
 
+msgid "Saved for your Windows account. Remove with Connect › Forget typed passwords."
+msgstr "Salvas para a sua conta do Windows. Para apagar, use Conectar › Esquecer as senhas digitadas."
+
 msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only for hosts with this connection profile."
 msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada nos hosts com este perfil de conexão."
 
 msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only to read who is logged on."
 msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada para ler quem está logado."
-
-msgid "Saved in Windows Credential Manager for your Windows account, domain accounts too: anyone using your Windows session can connect with them. After a password changes, use Connect › Forget typed passwords. Switching back deletes them."
-msgstr "Salvas no Gerenciador de Credenciais do Windows para a sua conta, inclusive de domínio: quem usar a sua sessão do Windows pode se conectar com elas. Se uma senha mudar, use Conectar › Esquecer as senhas digitadas. Voltar atrás apaga as salvas."
 
 msgid "Saved passwords deleted."
 msgstr "As senhas salvas foram apagadas."
@@ -1737,6 +1737,9 @@ msgstr "Tags: {tags}"
 
 msgid "Takes it out of your lists, or deletes its file too"
 msgstr "Tira das suas listas, ou exclui também o arquivo"
+
+msgid "Temporary credentials"
+msgstr "Credenciais temporárias"
 
 msgid "Text"
 msgstr "Texto"
@@ -1979,9 +1982,6 @@ msgstr "Digite uma tag e pressione Enter"
 msgid "Type the user name."
 msgstr "Digite o nome do usuário."
 
-msgid "Typed &passwords"
-msgstr "&Senhas digitadas"
-
 msgid "Typed password forgotten."
 msgstr "A senha digitada foi esquecida."
 
@@ -2067,6 +2067,9 @@ msgstr "Onde está o {tool}?"
 #, python-brace-format
 msgid "Windows didn't keep it: {error}"
 msgstr "O Windows não a guardou: {error}"
+
+msgid "Windows encrypts them for your account, domain accounts too: anyone using your Windows session can connect with them."
+msgstr "O Windows as criptografa para a sua conta, inclusive contas de domínio: quem usar a sua sessão do Windows pode se conectar com elas."
 
 #, python-brace-format
 msgid "Windows error {code}."
