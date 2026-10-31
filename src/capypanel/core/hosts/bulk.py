@@ -161,7 +161,7 @@ def _read(rows: Iterable[Sequence[str]], columns: list[str], delimiter: str) -> 
     tag_split = "," if delimiter == ";" else ";"
     parsed = []
     for row in rows:
-        cells = dict(zip(columns, (c.strip() for c in row), strict=False))
+        cells = dict(zip(columns, (_unguarded(c.strip()) for c in row), strict=False))
         tags = (t.strip() for t in cells.get("tags", "").split(tag_split))
         parsed.append(
             ImportRow(
@@ -173,6 +173,12 @@ def _read(rows: Iterable[Sequence[str]], columns: list[str], delimiter: str) -> 
             )
         )
     return Parsed(tuple(parsed), ignored)
+
+
+def _unguarded(cell: str) -> str:
+    """A cell as it was before a Report wrote it spreadsheet-safe."""
+    guarded = cell.startswith(GUARD) and cell[len(GUARD) :].startswith(FORMULA_START)
+    return cell[len(GUARD) :] if guarded else cell
 
 
 # ---- planning ----
@@ -309,11 +315,29 @@ def _group(
 # ---- writing ----
 
 
-def write_csv(header: Sequence[str], rows: Iterable[Sequence[str]], delimiter: str = ",") -> str:
+# A spreadsheet runs a cell that starts with one of these as a formula.
+FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
+GUARD = "'"  # put before such a cell, so it's shown as text; the import takes it off again
+
+
+def spreadsheet_safe(cell: str) -> str:
+    """The cell as plain text in Excel: a name like "=HYPERLINK(...)" is never run."""
+    return GUARD + cell if cell.startswith(FORMULA_START) else cell
+
+
+def write_csv(
+    header: Sequence[str],
+    rows: Iterable[Sequence[str]],
+    delimiter: str = ",",
+    *,
+    guard: bool = True,
+) -> str:
+    """guard: cells a spreadsheet would run as formulas are written as text (spreadsheet_safe).
+    Off only for text that never reaches a spreadsheet."""
     out = io.StringIO()
     writer = csv.writer(out, delimiter=delimiter, lineterminator="\n")
-    writer.writerow(header)
-    writer.writerows(rows)
+    writer.writerow([spreadsheet_safe(c) for c in header] if guard else header)
+    writer.writerows([spreadsheet_safe(c) for c in row] if guard else row for row in rows)
     return out.getvalue()
 
 
@@ -325,6 +349,7 @@ def to_csv(rows: Iterable[ImportRow], delimiter: str = ",") -> str:
         ["name", "address", "group", "tags", "notes"],
         ([r.name, r.address, r.group, between_tags.join(r.tags), r.notes] for r in rows),
         delimiter,
+        guard=False,  # read back by the import window itself
     )
 
 

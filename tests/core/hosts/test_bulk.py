@@ -129,6 +129,23 @@ def test_an_export_imports_back_into_the_same_groups() -> None:
     assert fd01.group == slash and fd01.tags == ("kiosk", "2nd floor")
 
 
+def test_a_report_never_hands_a_spreadsheet_a_formula() -> None:
+    hl, branch = _office()
+    link = '=HYPERLINK("http://198.51.100.9")'
+    hl, _ = hl.add_host(link, branch, address="192.0.2.5", notes="-2 floors")
+    hl, _ = hl.add_host("@SUM", branch, address="192.0.2.6", tags=["+kiosk"])
+    text = export(hl, hl.hosts)
+    assert "'=HYPERLINK" in text and "'-2 floors" in text and "'@SUM" in text
+    assert "'+kiosk" in text and "HQ-01,10.0.0.1," in text  # plain cells stay as they were
+    # It imports back as it was, without the marks.
+    emptied = hl.remove_hosts(h.id for h in hl.hosts)
+    back = plan(emptied, parse(text).rows, branch).result.hosts
+    assert {(h.name, h.notes, h.tags) for h in back} >= {
+        ('=HYPERLINK("http://198.51.100.9")', "-2 floors", ()),
+        ("@SUM", "", ("+kiosk",)),
+    }
+
+
 def test_table_edits_are_written_back_as_csv() -> None:
     rows = [ImportRow("Lab 07", "10.20.30.47", "Branch office", ("a", "b"), "USB printer")]
     assert to_csv(rows) == (
