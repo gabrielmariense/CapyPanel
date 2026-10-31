@@ -42,5 +42,5 @@ Para quem usa o CapyPanel e para quem o configura para uma equipe.
 Primeiros passos, Configurações e arquivos e Desenvolvimento falam do app inteiro. As cinco páginas
 depois deles são da ferramenta **Hosts**, e as três seguintes das **Impressoras**.
 
-Estas páginas descrevem a versão atual (0.21.0). O CapyPanel está em beta, então elas crescem a
+Estas páginas descrevem a versão atual (0.21.1). O CapyPanel está em beta, então elas crescem a
 cada funcionalidade.
