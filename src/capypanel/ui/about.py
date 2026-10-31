@@ -273,7 +273,7 @@ COMPONENTS = (
     Component(
         "CapyPanel",
         __version__,
-        f"© {YEAR} Gabriel Tobias Mariense",
+        f"© {YEAR} {CREATOR}",
         "GPL-3.0",
         "gpl-3.0.txt",
     ),

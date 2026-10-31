@@ -39,6 +39,7 @@ PINNED = ("about",)  # pages kept at the very bottom of the page list, apart fro
 SEARCH_FROM = 3  # letters typed before the search shows its results
 ROOM = 60  # spare width past the widest page: a button row never ends just short of its table
 SECTION_GAP = 22  # between two sections, as on a page
+GUTTER = 16  # right of the pages and under the last one: the columns' gap left of them
 
 
 class SettingsDialog(QDialog):
@@ -169,7 +170,7 @@ class SettingsDialog(QDialog):
 
         content = QWidget()
         columns = QHBoxLayout()
-        columns.setSpacing(16)
+        columns.setSpacing(GUTTER)
         # A search above the pages: only the sections that mention what's typed stay listed.
         self.search = QLineEdit()
         self.search.setPlaceholderText(_("Search settings"))
@@ -483,10 +484,16 @@ class _PageArea(QScrollArea):
 
 
 def _scrolling(widget: QWidget) -> QScrollArea:
-    """A page that scrolls when it's taller than the window, with no frame of its own."""
+    """A page that scrolls when it's taller than the window, with no frame of its own. A
+    gutter keeps the cards off the scroll bar and the bottom edge, as wide as the gap left of
+    them."""
     area = _PageArea()
     area.setWidgetResizable(True)
     area.setFrameShape(QFrame.Shape.NoFrame)
     area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    area.setWidget(widget)
+    holder = QWidget()
+    layout = QVBoxLayout(holder)
+    layout.setContentsMargins(0, 0, GUTTER, GUTTER)
+    layout.addWidget(widget)
+    area.setWidget(holder)
     return area
