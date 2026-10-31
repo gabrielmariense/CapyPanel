@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 16:28-0300\n"
+"POT-Creation-Date: 2026-10-31 16:33-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -53,6 +53,9 @@ msgstr ""
 msgid "&All profiles"
 msgstr ""
 
+msgid "&Authentication"
+msgstr ""
+
 msgid "&Brand:"
 msgstr ""
 
@@ -93,6 +96,9 @@ msgid "&Edit selected…"
 msgstr ""
 
 msgid "&Edit…"
+msgstr ""
+
+msgid "&Encryption"
 msgstr ""
 
 msgid "&Export…"
@@ -239,6 +245,9 @@ msgstr ""
 msgid "&Show"
 msgstr ""
 
+msgid "&Show passwords"
+msgstr ""
+
 msgid "&Sort A–Z"
 msgstr ""
 
@@ -258,6 +267,9 @@ msgid "&Toner column"
 msgstr ""
 
 msgid "&Tool:"
+msgstr ""
+
+msgid "&User name"
 msgstr ""
 
 msgid "&User:"
@@ -409,6 +421,9 @@ msgstr ""
 msgid "Asset tag"
 msgstr ""
 
+msgid "Authentication &password"
+msgstr ""
+
 msgid "Bar"
 msgstr ""
 
@@ -468,6 +483,9 @@ msgid "Change path…"
 msgstr ""
 
 msgid "Change…"
+msgstr ""
+
+msgid "Check the SNMP account in Settings › Printers › Refresh."
 msgstr ""
 
 #, python-brace-format
@@ -758,6 +776,9 @@ msgid ""
 "(name, address, group, tags, notes), so the two always match. Continue?"
 msgstr ""
 
+msgid "Encryption pass&word"
+msgstr ""
+
 msgid "Error"
 msgstr ""
 
@@ -966,6 +987,9 @@ msgid ""
 " who is logged on."
 msgstr ""
 
+msgid "Kept: type to change it"
+msgstr ""
+
 msgid "Language"
 msgstr ""
 
@@ -1117,6 +1141,9 @@ msgstr ""
 msgid "No settings mention “{text}”."
 msgstr ""
 
+msgid "None"
+msgstr ""
+
 msgid "Not a computer name or IP address"
 msgstr ""
 
@@ -1131,9 +1158,6 @@ msgid "Not opened: {names}"
 msgid_plural "Not opened ({n}): {names}"
 msgstr[0] ""
 msgstr[1] ""
-
-msgid "Not set: printers are asked with \"public\"."
-msgstr ""
 
 msgid "Not used: made by another user"
 msgstr ""
@@ -1401,6 +1425,13 @@ msgstr ""
 msgid "Refresh status by itself"
 msgstr ""
 
+msgid "Refused"
+msgstr ""
+
+#, python-brace-format
+msgid "Refused at {when}: {why}"
+msgstr ""
+
 msgid "Reload the list"
 msgstr ""
 
@@ -1489,10 +1520,16 @@ msgstr ""
 msgid "S&top"
 msgstr ""
 
-msgid "SNMP &community string"
+msgid "SNMP &account"
+msgstr ""
+
+msgid "SNMP &version"
 msgstr ""
 
 msgid "SNMP community string"
+msgstr ""
+
+msgid "SNMP v3 account"
 msgstr ""
 
 #, python-brace-format
@@ -1519,7 +1556,7 @@ msgstr ""
 msgid "Save as preset"
 msgstr ""
 
-msgid "Save in Windows Credential Manager"
+msgid "Save in Credential Manager"
 msgstr ""
 
 msgid "Save my version as a copy…"
@@ -1532,13 +1569,6 @@ msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr ""
 
 msgid ""
-"Saved for your Windows account on this PC, encrypted by Windows, domain "
-"accounts too: anyone using your Windows session can connect with them. "
-"After a password changes, use Connect › Forget typed passwords. Keeping "
-"them until CapyPanel closes again deletes them."
-msgstr ""
-
-msgid ""
 "Saved in Windows Credential Manager for your Windows account (Settings › "
 "Connections), and used only for hosts with this connection profile."
 msgstr ""
@@ -1546,6 +1576,13 @@ msgstr ""
 msgid ""
 "Saved in Windows Credential Manager for your Windows account (Settings › "
 "Connections), and used only to read who is logged on."
+msgstr ""
+
+msgid ""
+"Saved in Windows Credential Manager for your Windows account, domain "
+"accounts too: anyone using your Windows session can connect with them. "
+"After a password changes, use Connect › Forget typed passwords. Switching"
+" back deletes them."
 msgstr ""
 
 msgid "Saved passwords deleted."
@@ -1600,7 +1637,7 @@ msgstr ""
 msgid "Set tags"
 msgstr ""
 
-msgid "Set. Kept in Windows Credential Manager, never in a file."
+msgid "Set the SNMP v3 account in Settings › Printers › Refresh first."
 msgstr ""
 
 msgid "Settings"
@@ -1769,6 +1806,9 @@ msgstr ""
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
 msgstr ""
 
+msgid "The authentication password needs at least 8 characters."
+msgstr ""
+
 msgid ""
 "The computer didn't accept the account: a wrong password, a locked "
 "account, or an account it doesn't trust."
@@ -1791,6 +1831,9 @@ msgstr ""
 msgid ""
 "The default list was made by another user, so CapyPanel won't open it. An"
 " administrator can replace or delete “{path}”."
+msgstr ""
+
+msgid "The encryption password needs at least 8 characters."
 msgstr ""
 
 msgid "The file doesn't contain a list."
@@ -1878,6 +1921,11 @@ msgstr ""
 
 #, python-brace-format
 msgid "The profile's “{key}” must be lowercase letters, digits, - or _."
+msgstr ""
+
+msgid ""
+"The read-only SNMP v3 user your printers know. The passwords are kept in "
+"Windows Credential Manager."
 msgstr ""
 
 msgid ""
@@ -1983,6 +2031,9 @@ msgid "Type"
 msgstr ""
 
 msgid "Type a tag and press Enter"
+msgstr ""
+
+msgid "Type the user name."
 msgstr ""
 
 msgid "Typed &passwords"
@@ -2156,6 +2207,18 @@ msgstr ""
 msgid "in “{group}”"
 msgstr ""
 
+msgid "it doesn't know the SNMP v3 user name."
+msgstr ""
+
+msgid "it refused the SNMP v3 request."
+msgstr ""
+
+msgid "it wants authentication or encryption set differently."
+msgstr ""
+
+msgid "its clock and CapyPanel's didn't agree."
+msgstr ""
+
 msgid "level unknown"
 msgstr ""
 
@@ -2218,7 +2281,29 @@ msgstr ""
 msgid "user and password"
 msgstr ""
 
+msgid "v2c: a community string. v3: a user, with a password and encryption."
+msgstr ""
+
+msgid "v2c: community string set. Kept in Windows Credential Manager."
+msgstr ""
+
+msgid "v2c: not set, printers are asked with \"public\"."
+msgstr ""
+
+msgid "v3: not set. Use Change… to add the user."
+msgstr ""
+
+#, python-brace-format
+msgid "v3: user {parts}. Kept in Windows Credential Manager."
+msgstr ""
+
 msgid "with no group"
+msgstr ""
+
+msgid "wrong authentication password or type."
+msgstr ""
+
+msgid "wrong encryption password."
 msgstr ""
 
 #, python-brace-format

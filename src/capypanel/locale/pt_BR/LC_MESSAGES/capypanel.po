@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 16:28-0300\n"
+"POT-Creation-Date: 2026-10-31 16:33-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -54,6 +54,9 @@ msgstr "&Adicionar…"
 msgid "&All profiles"
 msgstr "&Todos os perfis"
 
+msgid "&Authentication"
+msgstr "&Autenticação"
+
 msgid "&Brand:"
 msgstr "&Marca:"
 
@@ -95,6 +98,9 @@ msgstr "&Editar selecionado…"
 
 msgid "&Edit…"
 msgstr "&Editar…"
+
+msgid "&Encryption"
+msgstr "&Criptografia"
 
 msgid "&Export…"
 msgstr "&Exportar…"
@@ -240,6 +246,9 @@ msgstr "&Configurações…"
 msgid "&Show"
 msgstr "&Mostrar"
 
+msgid "&Show passwords"
+msgstr "&Mostrar senhas"
+
 msgid "&Sort A–Z"
 msgstr "&Classificar de A a Z"
 
@@ -260,6 +269,9 @@ msgstr "Coluna &Toner"
 
 msgid "&Tool:"
 msgstr "&Ferramenta:"
+
+msgid "&User name"
+msgstr "&Usuário"
 
 msgid "&User:"
 msgstr "&Usuário:"
@@ -406,6 +418,9 @@ msgstr "&Patrimônio:"
 msgid "Asset tag"
 msgstr "Patrimônio"
 
+msgid "Authentication &password"
+msgstr "Senha da au&tenticação"
+
 msgid "Bar"
 msgstr "Barra"
 
@@ -464,6 +479,9 @@ msgstr "Alterar caminho…"
 
 msgid "Change…"
 msgstr "Alterar…"
+
+msgid "Check the SNMP account in Settings › Printers › Refresh."
+msgstr "Confira a conta SNMP em Configurações › Impressoras › Atualizar."
 
 #, python-brace-format
 msgid "Check who is logged on to {n} hosts?"
@@ -753,6 +771,9 @@ msgstr "Editar a lista aqui"
 msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, tags, notes), so the two always match. Continue?"
 msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes), para que as duas sempre coincidam. Continuar?"
 
+msgid "Encryption pass&word"
+msgstr "Senha da cri&ptografia"
+
 msgid "Error"
 msgstr "Erro"
 
@@ -952,6 +973,9 @@ msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado."
 
+msgid "Kept: type to change it"
+msgstr "Guardada: digite para alterá-la"
+
 msgid "Language"
 msgstr "Idioma"
 
@@ -1101,6 +1125,9 @@ msgstr "Nenhuma impressora deste grupo tem todas as tags escolhidas."
 msgid "No settings mention “{text}”."
 msgstr "Nenhuma configuração menciona “{text}”."
 
+msgid "None"
+msgstr "Nenhuma"
+
 msgid "Not a computer name or IP address"
 msgstr "Não é um nome de computador nem um endereço IP"
 
@@ -1115,9 +1142,6 @@ msgid "Not opened: {names}"
 msgid_plural "Not opened ({n}): {names}"
 msgstr[0] "Não aberto: {names}"
 msgstr[1] "Não abertos ({n}): {names}"
-
-msgid "Not set: printers are asked with \"public\"."
-msgstr "Não definida: as impressoras são consultadas com \"public\"."
 
 msgid "Not used: made by another user"
 msgstr "Não usada: criada por outro usuário"
@@ -1374,6 +1398,13 @@ msgstr "Atualizar o status &sozinho"
 msgid "Refresh status by itself"
 msgstr "Atualizar o status sozinho"
 
+msgid "Refused"
+msgstr "Recusada"
+
+#, python-brace-format
+msgid "Refused at {when}: {why}"
+msgstr "Recusada às {when}: {why}"
+
 msgid "Reload the list"
 msgstr "Recarregar a lista"
 
@@ -1462,11 +1493,17 @@ msgstr "Restaurar os perfis que vêm com o app"
 msgid "S&top"
 msgstr "Pa&rar"
 
-msgid "SNMP &community string"
-msgstr "&Comunidade SNMP"
+msgid "SNMP &account"
+msgstr "&Conta SNMP"
+
+msgid "SNMP &version"
+msgstr "&Versão do SNMP"
 
 msgid "SNMP community string"
 msgstr "Comunidade SNMP"
+
+msgid "SNMP v3 account"
+msgstr "Conta SNMP v3"
 
 #, python-brace-format
 msgid "Same address as row {n}"
@@ -1492,7 +1529,8 @@ msgstr "Salvar uma cópia da lista"
 msgid "Save as preset"
 msgstr "Salvar como predefinição"
 
-msgid "Save in Windows Credential Manager"
+#, fuzzy
+msgid "Save in Credential Manager"
 msgstr "Salvar no Gerenciador de Credenciais do Windows"
 
 msgid "Save my version as a copy…"
@@ -1504,14 +1542,15 @@ msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arqu
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr "Salve as impressoras que você escolher, com as colunas que escolher, num arquivo CSV"
 
-msgid "Saved for your Windows account on this PC, encrypted by Windows, domain accounts too: anyone using your Windows session can connect with them. After a password changes, use Connect › Forget typed passwords. Keeping them until CapyPanel closes again deletes them."
-msgstr "Salvas para a sua conta do Windows neste PC, criptografadas pelo Windows, inclusive contas de domínio: quem usar a sua sessão do Windows pode se conectar com elas. Depois que uma senha mudar, use Conectar › Esquecer as senhas digitadas. Voltar a guardá-las até o CapyPanel fechar apaga as salvas."
-
 msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only for hosts with this connection profile."
 msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada nos hosts com este perfil de conexão."
 
 msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only to read who is logged on."
 msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada para ler quem está logado."
+
+#, fuzzy
+msgid "Saved in Windows Credential Manager for your Windows account, domain accounts too: anyone using your Windows session can connect with them. After a password changes, use Connect › Forget typed passwords. Switching back deletes them."
+msgstr "Salvas para a sua conta do Windows neste PC, criptografadas pelo Windows, inclusive contas de domínio: quem usar a sua sessão do Windows pode se conectar com elas. Depois que uma senha mudar, use Conectar › Esquecer as senhas digitadas. Voltar a guardá-las até o CapyPanel fechar apaga as salvas."
 
 msgid "Saved passwords deleted."
 msgstr "As senhas salvas foram apagadas."
@@ -1565,8 +1604,8 @@ msgstr "Definido no arquivo de configurações"
 msgid "Set tags"
 msgstr "Definir tags"
 
-msgid "Set. Kept in Windows Credential Manager, never in a file."
-msgstr "Definida. Guardada no Gerenciador de Credenciais do Windows, nunca em um arquivo."
+msgid "Set the SNMP v3 account in Settings › Printers › Refresh first."
+msgstr "Defina antes a conta SNMP v3 em Configurações › Impressoras › Atualizar."
 
 msgid "Settings"
 msgstr "Configurações"
@@ -1723,6 +1762,9 @@ msgstr "Os logs do app, para anexar a um relato de problema"
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
 msgstr "Os argumentos usam uma opção que não está em “options”: “{option}”."
 
+msgid "The authentication password needs at least 8 characters."
+msgstr "A senha da autenticação precisa ter pelo menos 8 caracteres."
+
 msgid "The computer didn't accept the account: a wrong password, a locked account, or an account it doesn't trust."
 msgstr "O computador não aceitou a conta: senha errada, conta bloqueada ou uma conta em que ele não confia."
 
@@ -1740,6 +1782,9 @@ msgstr "A lista padrão"
 #, python-brace-format
 msgid "The default list was made by another user, so CapyPanel won't open it. An administrator can replace or delete “{path}”."
 msgstr "A lista padrão foi criada por outro usuário, então o CapyPanel não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
+
+msgid "The encryption password needs at least 8 characters."
+msgstr "A senha da criptografia precisa ter pelo menos 8 caracteres."
 
 msgid "The file doesn't contain a list."
 msgstr "O arquivo não contém uma lista."
@@ -1821,6 +1866,9 @@ msgstr "As “options” do perfil devem ser uma lista de ids de opções."
 #, python-brace-format
 msgid "The profile's “{key}” must be lowercase letters, digits, - or _."
 msgstr "O “{key}” do perfil deve ter só letras minúsculas, dígitos, - ou _."
+
+msgid "The read-only SNMP v3 user your printers know. The passwords are kept in Windows Credential Manager."
+msgstr "O usuário SNMP v3 somente leitura que suas impressoras conhecem. As senhas ficam guardadas no Gerenciador de Credenciais do Windows."
 
 msgid "The read-only community string your printers answer to. Most use \"public\". It's kept in Windows Credential Manager."
 msgstr "A comunidade somente leitura à qual suas impressoras respondem. A maioria usa \"public\". Ela fica guardada no Gerenciador de Credenciais do Windows."
@@ -1920,6 +1968,9 @@ msgstr "Tipo"
 
 msgid "Type a tag and press Enter"
 msgstr "Digite uma tag e pressione Enter"
+
+msgid "Type the user name."
+msgstr "Digite o nome do usuário."
 
 msgid "Typed &passwords"
 msgstr "&Senhas digitadas"
@@ -2086,6 +2137,18 @@ msgstr "inativa"
 msgid "in “{group}”"
 msgstr "em “{group}”"
 
+msgid "it doesn't know the SNMP v3 user name."
+msgstr "ela não conhece o usuário SNMP v3."
+
+msgid "it refused the SNMP v3 request."
+msgstr "ela recusou o pedido SNMP v3."
+
+msgid "it wants authentication or encryption set differently."
+msgstr "ela espera a autenticação ou a criptografia definidas de outro jeito."
+
+msgid "its clock and CapyPanel's didn't agree."
+msgstr "o relógio dela e o do CapyPanel não bateram."
+
 msgid "level unknown"
 msgstr "nível desconhecido"
 
@@ -2148,8 +2211,30 @@ msgstr "usuário"
 msgid "user and password"
 msgstr "usuário e senha"
 
+msgid "v2c: a community string. v3: a user, with a password and encryption."
+msgstr "v2c: uma comunidade. v3: um usuário, com senha e criptografia."
+
+msgid "v2c: community string set. Kept in Windows Credential Manager."
+msgstr "v2c: comunidade definida. Guardada no Gerenciador de Credenciais do Windows."
+
+msgid "v2c: not set, printers are asked with \"public\"."
+msgstr "v2c: não definida, as impressoras são consultadas com \"public\"."
+
+msgid "v3: not set. Use Change… to add the user."
+msgstr "v3: não definida. Use Alterar… para adicionar o usuário."
+
+#, python-brace-format
+msgid "v3: user {parts}. Kept in Windows Credential Manager."
+msgstr "v3: usuário {parts}. Guardada no Gerenciador de Credenciais do Windows."
+
 msgid "with no group"
 msgstr "sem grupo"
+
+msgid "wrong authentication password or type."
+msgstr "senha ou tipo de autenticação errado."
+
+msgid "wrong encryption password."
+msgstr "senha da criptografia errada."
 
 #, python-brace-format
 msgid "{colour} {percent} %"
