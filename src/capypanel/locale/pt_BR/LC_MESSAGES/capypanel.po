@@ -1530,7 +1530,7 @@ msgid "Save as preset"
 msgstr "Salvar como predefinição"
 
 msgid "Save in Credential Manager"
-msgstr "Salvar no Gerenciador de Credenciais"
+msgstr "Salvar no Windows"
 
 msgid "Save my version as a copy…"
 msgstr "Salvar minha versão como cópia…"
@@ -1548,7 +1548,7 @@ msgid "Saved in Windows Credential Manager for your Windows account (Settings �
 msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada para ler quem está logado."
 
 msgid "Saved in Windows Credential Manager for your Windows account, domain accounts too: anyone using your Windows session can connect with them. After a password changes, use Connect › Forget typed passwords. Switching back deletes them."
-msgstr "Salvas no Gerenciador de Credenciais do Windows para a sua conta do Windows, inclusive contas de domínio: quem usar a sua sessão do Windows pode se conectar com elas. Depois que uma senha mudar, use Conectar › Esquecer as senhas digitadas. Voltar atrás apaga as salvas."
+msgstr "Salvas no Gerenciador de Credenciais do Windows para a sua conta, inclusive de domínio: quem usar a sua sessão do Windows pode se conectar com elas. Se uma senha mudar, use Conectar › Esquecer as senhas digitadas. Voltar atrás apaga as salvas."
 
 msgid "Saved passwords deleted."
 msgstr "As senhas salvas foram apagadas."
