@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 22:01-0300\n"
+"POT-Creation-Date: 2026-10-31 22:03-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -286,6 +286,12 @@ msgstr ""
 
 msgid "&View"
 msgstr ""
+
+#, python-brace-format
+msgid "<b>{n} printer</b> needs attention: {reasons}."
+msgid_plural "<b>{n} printers</b> need attention: {reasons}."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "A chosen &group"
 msgstr ""
@@ -1023,6 +1029,9 @@ msgstr ""
 msgid "List"
 msgstr ""
 
+msgid "List only the printers that need attention"
+msgstr ""
+
 msgid ""
 "Lists saved in a lists folder show up here by themselves; Remove asks "
 "whether to delete the file too."
@@ -1687,7 +1696,16 @@ msgid ""
 "only people Windows lets write that folder can add one."
 msgstr ""
 
+msgid "Show"
+msgstr ""
+
 msgid "Show &first"
+msgstr ""
+
+msgid "Show all"
+msgstr ""
+
+msgid "Show every printer again"
 msgstr ""
 
 msgid "Show this group &first"
@@ -1695,6 +1713,12 @@ msgstr ""
 
 msgid "Show users' do&main"
 msgstr ""
+
+#, python-brace-format
+msgid "Showing the <b>{n} printer</b> that needs attention."
+msgid_plural "Showing the <b>{n} printers</b> that need attention."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Signs in with"
 msgstr ""
@@ -2488,6 +2512,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} low"
+msgid_plural "{n} low"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} not checked"
 msgid_plural "{n} not checked"
 msgstr[0] ""
@@ -2530,6 +2560,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} printer needs attention"
+msgid_plural "{n} printers need attention"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} printer selected"
 msgid_plural "{n} printers selected"
 msgstr[0] ""
@@ -2557,6 +2593,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} skipped."
 msgid_plural "{n} skipped."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} stopped"
+msgid_plural "{n} stopped"
 msgstr[0] ""
 msgstr[1] ""
 

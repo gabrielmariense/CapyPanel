@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 22:01-0300\n"
+"POT-Creation-Date: 2026-10-31 22:03-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -287,6 +287,12 @@ msgstr "&Usuário:"
 
 msgid "&View"
 msgstr "E&xibir"
+
+#, python-brace-format
+msgid "<b>{n} printer</b> needs attention: {reasons}."
+msgid_plural "<b>{n} printers</b> need attention: {reasons}."
+msgstr[0] "<b>{n} impressora</b> requer atenção: {reasons}."
+msgstr[1] "<b>{n} impressoras</b> requerem atenção: {reasons}."
 
 msgid "A chosen &group"
 msgstr "Um &grupo escolhido"
@@ -809,7 +815,7 @@ msgstr[0] "A cada minuto"
 msgstr[1] "A cada {n} minutos"
 
 msgid "Every printer in the open list, 8 at a time, while CapyPanel is open or in the tray."
-msgstr ""
+msgstr "Todas as impressoras da lista aberta, 8 por vez, enquanto o CapyPanel estiver aberto ou na bandeja."
 
 msgid "Everyone on this PC (shared)"
 msgstr "Todos neste PC (compartilhada)"
@@ -1008,6 +1014,9 @@ msgstr "Licenças"
 
 msgid "List"
 msgstr "Lista"
+
+msgid "List only the printers that need attention"
+msgstr "Listar só as impressoras que requerem atenção"
 
 msgid "Lists saved in a lists folder show up here by themselves; Remove asks whether to delete the file too."
 msgstr "Listas salvas numa pasta de listas aparecem aqui sozinhas; Remover pergunta se o arquivo também deve ser excluído."
@@ -1416,9 +1425,8 @@ msgstr "Atualiza todos os hosts exibidos. Clique com o botão direito para escol
 msgid "Refresh logged-on users"
 msgstr "Atualizar usuários logados"
 
-#, fuzzy
 msgid "Refresh on its &own"
-msgstr "Atualizar todos os hosts exibidos"
+msgstr "Atualizar &sozinho"
 
 msgid "Refresh status &by itself"
 msgstr "Atualizar o status &sozinho"
@@ -1651,14 +1659,29 @@ msgstr "Compartilhados por todos neste PC. Somente leitura: só quem o Windows d
 msgid "Shared lists are in the shared lists folder and show up for everyone; only people Windows lets write that folder can add one."
 msgstr "Listas compartilhadas ficam na pasta de listas compartilhadas e aparecem para todos; só quem o Windows deixa gravar nessa pasta pode criar uma."
 
+msgid "Show"
+msgstr "Mostrar"
+
 msgid "Show &first"
 msgstr "Mostrar &primeiro"
+
+msgid "Show all"
+msgstr "Mostrar todas"
+
+msgid "Show every printer again"
+msgstr "Mostrar todas as impressoras de novo"
 
 msgid "Show this group &first"
 msgstr "Mostrar este grupo &primeiro"
 
 msgid "Show users' do&main"
 msgstr "Mostrar do&mínio dos usuários"
+
+#, python-brace-format
+msgid "Showing the <b>{n} printer</b> that needs attention."
+msgid_plural "Showing the <b>{n} printers</b> that need attention."
+msgstr[0] "Mostrando a <b>{n} impressora</b> que requer atenção."
+msgstr[1] "Mostrando as <b>{n} impressoras</b> que requerem atenção."
 
 msgid "Signs in with"
 msgstr "Entra com"
@@ -2403,6 +2426,12 @@ msgstr[0] "{n} host será adicionado."
 msgstr[1] "{n} hosts serão adicionados."
 
 #, python-brace-format
+msgid "{n} low"
+msgid_plural "{n} low"
+msgstr[0] "{n} com suprimento baixo"
+msgstr[1] "{n} com suprimento baixo"
+
+#, python-brace-format
 msgid "{n} not checked"
 msgid_plural "{n} not checked"
 msgstr[0] "{n} não verificado"
@@ -2445,6 +2474,12 @@ msgstr[0] "{n} impressora"
 msgstr[1] "{n} impressoras"
 
 #, python-brace-format
+msgid "{n} printer needs attention"
+msgid_plural "{n} printers need attention"
+msgstr[0] "{n} impressora requer atenção"
+msgstr[1] "{n} impressoras requerem atenção"
+
+#, python-brace-format
 msgid "{n} printer selected"
 msgid_plural "{n} printers selected"
 msgstr[0] "{n} impressora selecionada"
@@ -2474,6 +2509,12 @@ msgid "{n} skipped."
 msgid_plural "{n} skipped."
 msgstr[0] "{n} ignorado."
 msgstr[1] "{n} ignorados."
+
+#, python-brace-format
+msgid "{n} stopped"
+msgid_plural "{n} stopped"
+msgstr[0] "{n} parada"
+msgstr[1] "{n} paradas"
 
 #, python-brace-format
 msgid "{path} (in use)"
