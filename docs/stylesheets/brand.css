@@ -14,9 +14,9 @@
   --md-accent-fg-color: #0f766e;
 }
 
-/* Dark pages: the darker navy in the header, and the bright teal for links and headings. */
+/* Dark pages: the same navy header, so it doesn't blend into the slate page, and the bright teal
+   for links and headings. */
 [data-md-color-scheme="slate"] {
-  --md-primary-fg-color: #1b2742;
   --md-typeset-a-color: #14b8a6;
   --md-accent-fg-color: #14b8a6;
 }
