@@ -68,6 +68,9 @@ class HostsTool(ListWorkspace):
         credentials = SessionCredentials(saving=self.saves_passwords())
         self.connector = Connector(self, Catalogs.for_paths(shell.paths), credentials)
         self.connector.open_settings = lambda: self._shell.open_settings("connections")
+        self.details.profile_menu.aboutToShow.connect(
+            lambda: self._fill_details_profile_menu(self.details.profile_menu)
+        )
 
         # Refresh results, by host id: in memory only, since the list file is shared.
         self._status_found: dict[str, tuple[Status, datetime, Answer | None]] = {}
@@ -568,6 +571,11 @@ class HostsTool(ListWorkspace):
         """A "Connection profile" submenu: follow the group, or one of the profiles."""
         submenu = menu.addMenu(_("Connection &profile"))
         submenu.setEnabled(self._writable() is not None)
+        self._fill_profile_menu(submenu, current, follow_text, apply)
+
+    def _fill_profile_menu(
+        self, submenu: QMenu, current: set[str], follow_text: str, apply: Callable[[str], None]
+    ) -> None:
         exclusive = QActionGroup(submenu)
         choices = [("", follow_text), *self.connector.choices()]
         if len(current) == 1 and next(iter(current)) not in dict(choices):
@@ -589,6 +597,30 @@ class HostsTool(ListWorkspace):
         if doc is not None and doc.hosts.group(group_id) is not None:
             self._commit(doc.hosts.set_group_profile(group_id, profile))
             self._selection_changed()
+
+    def set_host_profile(self, host_id: str, profile: str) -> None:
+        """An empty profile: the host follows its group again."""
+        doc = self._writable()
+        if doc is not None and doc.hosts.host(host_id) is not None:
+            self._commit(doc.hosts.set_hosts_profile([host_id], profile))
+            self._selection_changed()
+
+    def _fill_details_profile_menu(self, menu: QMenu) -> None:
+        """The arrow by Profile in the Details panel: the group's choices, for this host."""
+        menu.clear()
+        doc = self._doc
+        ids = self.table.selected_ids()
+        host = doc.hosts.host(ids[0]) if doc is not None and len(ids) == 1 else None
+        if doc is None or host is None:
+            return
+        follow = self.connector.inherited_label(
+            *doc.hosts.group_profile(host.group or None, self._profile_exists)
+        )
+        self._fill_profile_menu(
+            menu, {host.profile}, follow, lambda p: self.set_host_profile(host.id, p)
+        )
+        for action in menu.actions():
+            action.setEnabled(self._writable() is not None)
 
     # ---- settings ----
 
