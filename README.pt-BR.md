@@ -1,9 +1,6 @@
-<h1 align="center">
-  <img src="docs/images/capypanel-icon.png" width="96" height="96" alt=""><br>
-  CapyPanel
-</h1>
-
-<p align="center">Todos os computadores sob seus cuidados, em uma só janela.</p>
+<p align="center">
+  <img src="docs/images/readme-banner-pt-BR.png" width="900" alt="CapyPanel: Todos os computadores sob seus cuidados, em uma só janela.">
+</p>
 
 <p align="center">
   <a href="README.md"><img src="https://flagcdn.com/40x30/us.png" width="40" height="30" alt="English" title="English"></a>

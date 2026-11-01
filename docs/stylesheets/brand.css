@@ -1,0 +1,38 @@
+/* CapyPanel's brand on the documentation site: a navy header, teal links, and the site name in
+   Nunito. The rest of the page keeps the theme's own look. */
+
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@800&display=swap");
+
+:root {
+  --md-primary-fg-color: #233661;
+  --md-primary-fg-color--dark: #1b2742;
+}
+
+/* Light pages: the deep teal, which is readable on white. */
+[data-md-color-scheme="default"] {
+  --md-typeset-a-color: #0f766e;
+  --md-accent-fg-color: #0f766e;
+}
+
+/* Dark pages: the darker navy in the header, and the bright teal for links and headings. */
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #1b2742;
+  --md-typeset-a-color: #14b8a6;
+  --md-accent-fg-color: #14b8a6;
+}
+
+[data-md-color-scheme="slate"] .md-typeset h1,
+[data-md-color-scheme="slate"] .md-typeset h2,
+[data-md-color-scheme="slate"] .md-typeset h3,
+[data-md-color-scheme="slate"] .md-typeset h4,
+[data-md-color-scheme="slate"] .md-typeset h5,
+[data-md-color-scheme="slate"] .md-typeset h6 {
+  color: #14b8a6;
+}
+
+/* The name beside the logo only: the page title next to it keeps the theme's font. */
+.md-header__topic:first-child .md-ellipsis {
+  color: #fff;
+  font-family: "Nunito", var(--md-text-font-family), sans-serif;
+  font-weight: 800;
+}
