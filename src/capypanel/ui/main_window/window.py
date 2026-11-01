@@ -8,7 +8,15 @@ from collections.abc import Sequence
 from typing import Any
 
 from PySide6.QtCore import QByteArray, QEvent, QObject
-from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence, QResizeEvent, QShowEvent
+from PySide6.QtGui import (
+    QAction,
+    QActionGroup,
+    QCloseEvent,
+    QGuiApplication,
+    QKeySequence,
+    QResizeEvent,
+    QShowEvent,
+)
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -342,7 +350,15 @@ class MainWindow(QMainWindow):
         self.tray.quit_requested.connect(self.quit_app)
         self.tray.attention_requested.connect(self._show_attention)
         self.tray.message_clicked.connect(self._notification_clicked)
+        app = QGuiApplication.instance()
+        if isinstance(app, QGuiApplication):
+            app.commitDataRequest.connect(self._session_ending)
         self._update_tray()
+
+    def _session_ending(self, _manager: object) -> None:
+        """Windows is logging off or shutting down: the X then quits, with no question and no
+        tray, so CapyPanel never holds the shutdown up."""
+        self._quitting = True
 
     def _update_tray(self) -> None:
         """The tray icon shows while the window is in the tray, or while a tool works on its

@@ -210,3 +210,18 @@ def test_the_close_question_offers_tray_quit_and_cancel(
     assert tray.ask_closing(window) == (settings.CLOSE_QUIT, False)
     monkeypatch.setattr(tray, "run_modal", click("Cancel", True))
     assert tray.ask_closing(window) == (None, False)
+
+
+def test_windows_shutting_down_quits_without_asking(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(window.tray, "set_shown", lambda shown: None)
+    monkeypatch.setattr(window.tray, "available", lambda: True)
+    asked: list[object] = []
+    monkeypatch.setattr(window_module, "ask_closing", lambda parent: asked.append(parent))
+    window.prefs[settings.CLOSE_KEY] = settings.CLOSE_TRAY  # even with the tray picked
+    _printers(window).set_auto_refresh(15)
+    window.show()
+    window._session_ending(None)  # what QGuiApplication.commitDataRequest calls
+    window.close()
+    assert asked == [] and not window.isVisible() and not window._in_tray
