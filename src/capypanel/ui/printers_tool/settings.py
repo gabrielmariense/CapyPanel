@@ -1,5 +1,5 @@
 """The Printers tool's part of Settings: Startup, Refresh (the SNMP version and its account,
-the low supply level and how the Toner column shows) and Printer lists."""
+Refresh on its own, the low supply level and how the Toner column shows) and Printer lists."""
 
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -33,6 +33,7 @@ from capypanel.ui.settings.pages import (
     Section,
     SettingRow,
     add_rows,
+    every_text,
 )
 
 if TYPE_CHECKING:
@@ -43,6 +44,8 @@ MAX_V3_USER, MAX_V3_PASSWORD = 32, 255  # RFC 3414's longest user name
 SNMP_VERSION = "snmp_version"  # refresh.V2C or refresh.V3
 LOWEST, HIGHEST = 1, 50  # the low supply level's range, in %
 TONER_VIEW, TEXT, BARS = "toner_view", "text", "bars"  # the Toner column: "Black 24 %", or a bar
+AUTO_REFRESH = "auto_refresh"  # minutes between Refreshes on its own; 0 is off
+AUTO_EVERY = (5, 15, 30, 60)
 
 
 class CommunityDialog(QDialog):
@@ -210,11 +213,11 @@ class V3AccountDialog(QDialog):
 
 
 class PrintersPage(ListsGeneralPage):
-    """Startup, then Refresh: the SNMP version, its account behind Change…, the low supply
-    level, and the Toner column as text or a bar."""
+    """Startup, then Refresh: the SNMP version, its account behind Change…, Refresh on its own,
+    the low supply level, and the Toner column as text or a bar."""
 
     def __init__(
-        self, *, low: int, bars: bool, version: str, account: str, **lists: object
+        self, *, low: int, bars: bool, version: str, account: str, auto: int, **lists: object
     ) -> None:
         super().__init__(**lists)  # type: ignore[arg-type]
         section = Section(_("Refresh"))
@@ -226,6 +229,12 @@ class PrintersPage(ListsGeneralPage):
         self.change_button = QPushButton(_("Change…"))
         self.change_button.setAutoDefault(False)
         self.account_row = SettingRow(_("SNMP &account"), account, self.change_button)
+        self.auto_every = QComboBox()
+        self.auto_every.addItem(_("Off"), 0)
+        for minutes in AUTO_EVERY:
+            self.auto_every.addItem(every_text(minutes), minutes)
+        self.auto_every.setCurrentIndex(max(self.auto_every.findData(auto), 0))
+        self.auto_every.currentIndexChanged.connect(lambda _i: self.changed.emit())
         self.low_level = QSpinBox()
         self.low_level.setRange(LOWEST, HIGHEST)
         self.low_level.setValue(low)
@@ -244,6 +253,14 @@ class PrintersPage(ListsGeneralPage):
                 self.version,
             ),
             self.account_row,
+            SettingRow(
+                _("Refresh on its &own"),
+                _(
+                    "Every printer in the open list, 8 at a time, while CapyPanel is open or in "
+                    "the tray."
+                ),
+                self.auto_every,
+            ),
             SettingRow(
                 _("&Low supply level"),
                 _("A toner, ink, drum or box at or below this shows as low."),
@@ -299,6 +316,7 @@ class PrintersSettings(SettingsGroup):
             bars=tool.toner_bars(),
             version=tool.snmp_version(),
             account=account_text(tool.snmp_version()),
+            auto=tool.auto_refresh(),
             texts=texts,
             start_list=prefs.get(locations.START_KEY, locations.START_LAST),
             default_list=tool.default_list,
@@ -341,6 +359,7 @@ class PrintersSettings(SettingsGroup):
             self._tool.set_low_level(self.general.low_level.value())
             self._tool.set_toner_bars(self.general.toner_view.currentData() == BARS)
             self._tool.set_snmp_version(str(self.general.version.currentData()))
+            self._tool.set_auto_refresh(int(self.general.auto_every.currentData()))
             self.general.show_account(account_text(self._tool.snmp_version()))
             self._tool.prefs_applied()
 

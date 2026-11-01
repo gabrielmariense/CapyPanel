@@ -22,7 +22,7 @@ from capypanel.core.printers.reading import Device, Problem, Reading, State, Sup
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.printers_tool import refresh, status
 from capypanel.ui.printers_tool import settings as settings_module
-from capypanel.ui.printers_tool.settings import BARS, SNMP_VERSION, TONER_VIEW
+from capypanel.ui.printers_tool.settings import AUTO_REFRESH, BARS, SNMP_VERSION, TONER_VIEW
 from capypanel.ui.printers_tool.status import AMBER, GREEN, GREY, RED, Checked
 from capypanel.ui.printers_tool.table import BAR_WIDTH, ROLE_SUPPLY
 from capypanel.ui.printers_tool.tool import PrintersTool
@@ -271,6 +271,28 @@ def test_the_toner_column_shows_a_bar_when_settings_asks(printers: PrintersTool)
     words = printers.table.fontMetrics().horizontalAdvance("100 %")
     assert printers.table.sizeHintForColumn(printers.table.TONER) >= BAR_WIDTH + words
     printers.table.hide()
+
+
+def test_refresh_on_its_own_checks_every_printer_in_the_list(
+    printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert printers.auto_refresh() == 0 and not printers._auto_timer.isActive()  # off by default
+    group = printers.settings_group()
+    group.build()
+    every = group.general.auto_every
+    every.setCurrentIndex(every.findData(15))
+    assert printers.prefs[AUTO_REFRESH] == 15
+    assert printers._auto_timer.isActive() and printers._auto_timer.interval() == 15 * 60_000
+    asked: list[list[str]] = []
+    monkeypatch.setattr(
+        printers, "check_printers", lambda hosts, quiet: asked.append([h.name for h in hosts])
+    )
+    printers.search.setText("NO-ANSWER")  # one printer shown; warnings still count them all
+    printers._show_items()
+    printers._auto_timer.timeout.emit()
+    assert sorted(asked[0]) == ["3F-LAB-01", "NO-ANSWER"]
+    every.setCurrentIndex(every.findData(0))
+    assert not printers._auto_timer.isActive()
 
 
 def test_settings_keeps_the_community_in_the_vault_only(

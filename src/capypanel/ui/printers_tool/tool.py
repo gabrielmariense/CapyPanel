@@ -6,7 +6,7 @@ import logging
 from collections.abc import Sequence
 from dataclasses import replace
 
-from PySide6.QtCore import Qt, QUrl, Signal
+from PySide6.QtCore import Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QGuiApplication
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QWidget
 
@@ -27,6 +27,8 @@ from capypanel.ui.printers_tool.dialog import PrinterDialog
 from capypanel.ui.printers_tool.refresh import V2C, V3, PrinterRun, community, v3_account
 from capypanel.ui.printers_tool.report import PrintersReport
 from capypanel.ui.printers_tool.settings import (
+    AUTO_EVERY,
+    AUTO_REFRESH,
     BARS,
     HIGHEST,
     LOWEST,
@@ -85,6 +87,9 @@ class PrintersTool(ListWorkspace):
         self._stop_button.clicked.connect(self.stop_checks)
         for widget in (self._progress, self._stop_button):
             widget.hide()
+        self._auto_timer = QTimer(self)  # Settings: Refresh on its own, if switched on
+        self._auto_timer.timeout.connect(self._auto_refresh)
+        self._apply_auto_refresh()
         self.table.set_cells(self._cells)
         self.table.bars, self.table.low = self.toner_bars(), self.low_level()
         self.settings_pages = PrintersSettings(self)  # its part of Settings
@@ -279,6 +284,29 @@ class PrintersTool(ListWorkspace):
         if version != self.snmp_version():
             self.prefs[SNMP_VERSION] = version
 
+    def auto_refresh(self) -> int:
+        """Settings' Refresh on its own: minutes between two, 0 when it's off (the default)."""
+        saved = self.prefs.get(AUTO_REFRESH)
+        return saved if saved in AUTO_EVERY else 0  # type: ignore[return-value]
+
+    def set_auto_refresh(self, minutes: int) -> None:
+        if minutes != self.auto_refresh():
+            self.prefs[AUTO_REFRESH] = minutes
+            self._apply_auto_refresh()
+
+    def _apply_auto_refresh(self) -> None:
+        if minutes := self.auto_refresh():
+            self._auto_timer.start(minutes * 60_000)
+        else:
+            self._auto_timer.stop()
+
+    def _auto_refresh(self) -> None:
+        """Every printer in the open list, not only the ones shown: warnings count them all.
+        Skipped while a Refresh runs, and quietly when there's no SNMP v3 account yet."""
+        doc = self._doc
+        if self._run is None and doc is not None and doc.hosts.hosts:
+            self.check_printers(doc.hosts.hosts, quiet=True)
+
     def toner_bars(self) -> bool:
         """Settings' Toner column choice: a bar (True) or text, the default."""
         return self.prefs.get(TONER_VIEW) == BARS
@@ -438,12 +466,14 @@ class PrintersTool(ListWorkspace):
 
     # ---- Refresh: status, supplies and page counter ----
 
-    def check_printers(self, printers: Sequence[Host]) -> None:
+    def check_printers(self, printers: Sequence[Host], *, quiet: bool = False) -> None:
         """One SNMP read per printer, a few at a time; a printer with no address uses its name."""
         if self._run is not None or not printers:
             return
         secret = community() if self.snmp_version() == V2C else v3_account()
         if secret is None:
+            if quiet:
+                return
             note = _("Set the SNMP v3 account in Settings › Printers › Refresh first.")
             self._shell.show_message(note, 10_000)
             return
