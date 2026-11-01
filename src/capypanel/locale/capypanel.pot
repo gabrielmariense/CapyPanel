@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 21:55-0300\n"
+"POT-Creation-Date: 2026-10-31 22:01-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -182,6 +182,9 @@ msgstr ""
 msgid "&New list…"
 msgstr ""
 
+msgid "&New tag…"
+msgstr ""
+
 msgid "&New…"
 msgstr ""
 
@@ -258,6 +261,9 @@ msgid "&Status"
 msgstr ""
 
 msgid "&Status bar"
+msgstr ""
+
+msgid "&Tags"
 msgstr ""
 
 msgid "&Tags:"
@@ -805,6 +811,11 @@ msgid_plural "Every {n} minutes"
 msgstr[0] ""
 msgstr[1] ""
 
+msgid ""
+"Every printer in the open list, 8 at a time, while CapyPanel is open or "
+"in the tray."
+msgstr ""
+
 msgid "Everyone on this PC (shared)"
 msgstr ""
 
@@ -1102,6 +1113,9 @@ msgid "New name:"
 msgstr ""
 
 msgid "New printer list"
+msgstr ""
+
+msgid "New tag"
 msgstr ""
 
 msgid "No address"
@@ -1427,6 +1441,9 @@ msgid "Refresh every host shown. Right-click to choose what Run and F5 check"
 msgstr ""
 
 msgid "Refresh logged-on users"
+msgstr ""
+
+msgid "Refresh on its &own"
 msgstr ""
 
 msgid "Refresh status &by itself"
@@ -1755,6 +1772,9 @@ msgid "T&oolbar"
 msgstr ""
 
 msgid "Table"
+msgstr ""
+
+msgid "Tag for the selected items:"
 msgstr ""
 
 #, python-brace-format
@@ -2566,6 +2586,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{supply} nearly full"
+msgstr ""
+
+#, python-brace-format
+msgid "{tag} ({n} of {total})"
 msgstr ""
 
 #, python-brace-format

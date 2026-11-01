@@ -222,7 +222,7 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     window.hosts._item_menu(QPoint(row.left() + 10, row.center().y()))  # on the name
     assert seen == [
         "&Connect", "Refresh &status", "Refresh &logged-on users", "Co&py",
-        "&Edit selected…", "&Move to", "&Remove selected",
+        "&Edit selected…", "&Move to", "&Tags", "&Remove selected",
     ]  # fmt: skip
 
 

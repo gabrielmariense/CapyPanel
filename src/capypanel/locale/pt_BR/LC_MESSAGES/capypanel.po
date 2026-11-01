@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 21:55-0300\n"
+"POT-Creation-Date: 2026-10-31 22:01-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -183,6 +183,9 @@ msgstr "&Nome:"
 msgid "&New list…"
 msgstr "&Nova lista…"
 
+msgid "&New tag…"
+msgstr "&Nova tag…"
+
 msgid "&New…"
 msgstr "&Nova…"
 
@@ -260,6 +263,9 @@ msgstr "&Status"
 
 msgid "&Status bar"
 msgstr "Barra de &status"
+
+msgid "&Tags"
+msgstr "&Tags"
 
 msgid "&Tags:"
 msgstr "&Tags:"
@@ -802,6 +808,9 @@ msgid_plural "Every {n} minutes"
 msgstr[0] "A cada minuto"
 msgstr[1] "A cada {n} minutos"
 
+msgid "Every printer in the open list, 8 at a time, while CapyPanel is open or in the tray."
+msgstr ""
+
 msgid "Everyone on this PC (shared)"
 msgstr "Todos neste PC (compartilhada)"
 
@@ -1089,6 +1098,9 @@ msgstr "Novo nome:"
 
 msgid "New printer list"
 msgstr "Nova lista de impressoras"
+
+msgid "New tag"
+msgstr "Nova tag"
 
 msgid "No address"
 msgstr "Sem endereço"
@@ -1404,6 +1416,10 @@ msgstr "Atualiza todos os hosts exibidos. Clique com o botão direito para escol
 msgid "Refresh logged-on users"
 msgstr "Atualizar usuários logados"
 
+#, fuzzy
+msgid "Refresh on its &own"
+msgstr "Atualizar todos os hosts exibidos"
+
 msgid "Refresh status &by itself"
 msgstr "Atualizar o status &sozinho"
 
@@ -1716,6 +1732,9 @@ msgstr "&Barra de ferramentas"
 
 msgid "Table"
 msgstr "Tabela"
+
+msgid "Tag for the selected items:"
+msgstr "Tag para os itens selecionados:"
 
 #, python-brace-format
 msgid "Tag: {tag}"
@@ -2483,6 +2502,10 @@ msgstr "{supply} baixo"
 #, python-brace-format
 msgid "{supply} nearly full"
 msgstr "{supply} quase cheio"
+
+#, python-brace-format
+msgid "{tag} ({n} of {total})"
+msgstr "{tag} ({n} de {total})"
 
 #, python-brace-format
 msgid "{tool} (not installed on this PC)"
