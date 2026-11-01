@@ -123,7 +123,9 @@ def ask_closing(parent: QWidget) -> tuple[str | None, bool]:
         _("Refresh on its own and warnings keep working while CapyPanel is in the tray. "
           "Quit stops them.")
     )  # fmt: skip
-    box.setCheckBox(QCheckBox(_("Don't ask again (change it in Settings › CapyPanel › Startup)")))
+    # Kept in a name: PySide doesn't hand the box ownership, so a bare one is collected.
+    ask_again = QCheckBox(_("Don't ask again (change it in Settings › CapyPanel › Startup)"))
+    box.setCheckBox(ask_again)
     keep = box.addButton(_("Keep in &tray"), QMessageBox.ButtonRole.AcceptRole)
     quitter = box.addButton(_("&Quit"), QMessageBox.ButtonRole.DestructiveRole)
     cancel = box.addButton(QMessageBox.StandardButton.Cancel)
@@ -136,4 +138,4 @@ def ask_closing(parent: QWidget) -> tuple[str | None, bool]:
         choice = settings.CLOSE_TRAY
     elif clicked is quitter:
         choice = settings.CLOSE_QUIT
-    return choice, choice is not None and box.checkBox().isChecked()
+    return choice, choice is not None and ask_again.isChecked()

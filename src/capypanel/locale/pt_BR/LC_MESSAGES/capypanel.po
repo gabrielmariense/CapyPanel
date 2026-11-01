@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 22:12-0300\n"
+"POT-Creation-Date: 2026-10-31 22:16-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -402,8 +402,8 @@ msgstr[1] "{n} hosts adicionados."
 msgid "Address"
 msgstr "Endereço"
 
-msgid "After a Refresh on its own, for printers that need attention since the one before."
-msgstr "Depois de uma atualização sozinha, para as impressoras que passaram a requerer atenção desde a anterior."
+msgid "After a Refresh on its own, for printers that stopped or went offline (and with low supplies, if picked) since the one before."
+msgstr "Depois de uma atualização sozinha, para as impressoras que pararam ou ficaram offline (e com suprimento baixo, se escolhido) desde a anterior."
 
 msgid "All details"
 msgstr "Todos os detalhes"
@@ -418,8 +418,8 @@ msgstr "Todas as impressoras"
 msgid "Already in the list, {place}"
 msgstr "Já está na lista, {place}"
 
-msgid "Also when a supply gets low"
-msgstr "Também quando um suprimento ficar baixo"
+msgid "Also low supplies"
+msgstr "Também suprimento baixo"
 
 #, python-brace-format
 msgid "An item is missing the “{key}” field or has an invalid value for it."
@@ -1765,6 +1765,9 @@ msgstr "Parar"
 msgid "Stopped"
 msgstr "Parada"
 
+msgid "Stopped or offline"
+msgstr "Parada ou offline"
+
 #, python-brace-format
 msgid "Stopped: {n} host wasn't checked."
 msgid_plural "Stopped: {n} hosts weren't checked."
@@ -2137,9 +2140,6 @@ msgstr "O que o ✕ da janela faz. Na bandeja, a atualização sozinha e os avis
 
 msgid "When &closing"
 msgstr "Ao &fechar"
-
-msgid "When a printer stops or goes offline"
-msgstr "Quando uma impressora parar ou ficar offline"
 
 msgid "Where"
 msgstr "Onde"

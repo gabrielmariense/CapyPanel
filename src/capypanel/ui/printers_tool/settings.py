@@ -248,8 +248,8 @@ class PrintersPage(ListsGeneralPage):
         self.auto_every.currentIndexChanged.connect(lambda _i: self.changed.emit())
         self.notify = QComboBox()
         self.notify.addItem(_("Off"), NOTIFY_OFF)
-        self.notify.addItem(_("When a printer stops or goes offline"), NOTIFY_STOPS)
-        self.notify.addItem(_("Also when a supply gets low"), NOTIFY_LOW)
+        self.notify.addItem(_("Stopped or offline"), NOTIFY_STOPS)
+        self.notify.addItem(_("Also low supplies"), NOTIFY_LOW)
         self.notify.setCurrentIndex(max(self.notify.findData(notify), 0))
         self.notify.currentIndexChanged.connect(lambda _i: self.changed.emit())
         self.low_level = QSpinBox()
@@ -281,8 +281,8 @@ class PrintersPage(ListsGeneralPage):
             SettingRow(
                 _("Windows &notification"),
                 _(
-                    "After a Refresh on its own, for printers that need attention since the one "
-                    "before."
+                    "After a Refresh on its own, for printers that stopped or went offline "
+                    "(and with low supplies, if picked) since the one before."
                 ),
                 self.notify,
             ),

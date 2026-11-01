@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 22:12-0300\n"
+"POT-Creation-Date: 2026-10-31 22:16-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -402,8 +402,8 @@ msgid "Address"
 msgstr ""
 
 msgid ""
-"After a Refresh on its own, for printers that need attention since the "
-"one before."
+"After a Refresh on its own, for printers that stopped or went offline "
+"(and with low supplies, if picked) since the one before."
 msgstr ""
 
 msgid "All details"
@@ -419,7 +419,7 @@ msgstr ""
 msgid "Already in the list, {place}"
 msgstr ""
 
-msgid "Also when a supply gets low"
+msgid "Also low supplies"
 msgstr ""
 
 #, python-brace-format
@@ -1811,6 +1811,9 @@ msgstr ""
 msgid "Stopped"
 msgstr ""
 
+msgid "Stopped or offline"
+msgstr ""
+
 #, python-brace-format
 msgid "Stopped: {n} host wasn't checked."
 msgid_plural "Stopped: {n} hosts weren't checked."
@@ -2206,9 +2209,6 @@ msgid ""
 msgstr ""
 
 msgid "When &closing"
-msgstr ""
-
-msgid "When a printer stops or goes offline"
 msgstr ""
 
 msgid "Where"

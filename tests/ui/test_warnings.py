@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -185,3 +185,28 @@ def test_settings_keeps_the_when_closing_choice(window: CapyWindow) -> None:
     closing.setCurrentIndex(closing.findData(settings.CLOSE_QUIT))
     assert window.prefs[settings.CLOSE_KEY] == settings.CLOSE_QUIT
     dialog.close()
+
+
+def test_the_close_question_offers_tray_quit_and_cancel(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from capypanel.ui.main_window import tray
+
+    def click(label: str, tick: bool):  # noqa: ANN202
+        def run(box: QMessageBox) -> int:
+            box.checkBox().setChecked(tick)  # the box must still hold its tick box
+            texts = [b.text() for b in box.buttons()]
+            assert sorted(texts) == ["&Quit", "Cancel", "Keep in &tray"]
+            assert box.defaultButton().text() == texts[0]
+            [button] = [b for b in box.buttons() if b.text() == label]
+            button.click()
+            return 0
+
+        return run
+
+    monkeypatch.setattr(tray, "run_modal", click("Keep in &tray", True))
+    assert tray.ask_closing(window) == (settings.CLOSE_TRAY, True)
+    monkeypatch.setattr(tray, "run_modal", click("&Quit", False))
+    assert tray.ask_closing(window) == (settings.CLOSE_QUIT, False)
+    monkeypatch.setattr(tray, "run_modal", click("Cancel", True))
+    assert tray.ask_closing(window) == (None, False)
