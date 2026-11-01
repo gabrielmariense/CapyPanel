@@ -172,6 +172,11 @@ class PrinterDetailsPanel(DetailsPanel):
             name = self.muted(supply.name)
             name.setTextFormat(Qt.TextFormat.PlainText)  # the printer's own words
             top.addWidget(name, 1)
+            if not status.reports_level(supply):  # an empty bar would only look like 0 %
+                layout.addLayout(top)
+                layout.addWidget(self.muted(status.no_level_text()))
+                layout.addSpacing(2)
+                continue
             level = QLabel(status.level_text(supply))
             if status.is_low(supply, shown.low):
                 words = _("{level} · Low") if not supply.receptacle else _("{level} · Nearly full")

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 16:49-0300\n"
+"POT-Creation-Date: 2026-10-31 21:54-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -476,6 +476,10 @@ msgstr "CapyPanel — claro"
 
 msgid "Change path…"
 msgstr "Alterar caminho…"
+
+#, fuzzy
+msgid "Change the connection profile"
+msgstr "Novo perfil de conexão"
 
 msgid "Change…"
 msgstr "Alterar…"
@@ -1943,6 +1947,9 @@ msgstr "Esta lista precisa de uma linha de cabeçalho."
 msgid "This list was saved by a newer version of CapyPanel. Update the app to open it."
 msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o aplicativo para abri-la."
 
+msgid "This printer doesn't report a level for this supply."
+msgstr "Esta impressora não informa o nível deste suprimento."
+
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyPanel."
 
@@ -2159,9 +2166,6 @@ msgstr "ela espera a autenticação ou a criptografia definidas de outro jeito."
 msgid "its clock and CapyPanel's didn't agree."
 msgstr "o relógio dela e o do CapyPanel não bateram."
 
-msgid "level unknown"
-msgstr "nível desconhecido"
-
 msgid "made by another user"
 msgstr "feito por outro usuário"
 
@@ -2173,6 +2177,9 @@ msgstr "nome"
 
 msgid "name, address, group, tags, notes"
 msgstr "nome, endereço, grupo, tags, notas"
+
+msgid "not reported"
+msgstr "não informado"
 
 msgid "notes"
 msgstr "notas"
@@ -2251,8 +2258,8 @@ msgid "{colour} {percent} %"
 msgstr "{colour} {percent} %"
 
 #, python-brace-format
-msgid "{colour}: level unknown"
-msgstr "{colour}: nível desconhecido"
+msgid "{colour}: not reported"
+msgstr "{colour}: não informado"
 
 #, python-brace-format
 msgid "{colour}: some left"

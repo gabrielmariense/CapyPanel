@@ -86,6 +86,9 @@ def test_toner_shows_the_lowest_toner_or_ink() -> None:
     assert status.toner(mono, 10).text == "Toner 83 %"  # no colour in its name
     some = _checked(supplies=(_supply("Black Cartridge", None, some_left=True),))
     assert status.toner(some, 10).text == "Black: some left"
+    silent = status.toner(_checked(supplies=(_supply("Black Cartridge", None),)), 10)
+    assert silent.text == "Black: not reported"
+    assert "This printer doesn't report a level for this supply." in silent.tip
     assert status.toner(_checked(), 10).text == ""  # no toner reported
     assert status.toner(Checked(NOW, offline=True), 10).text == ""
 

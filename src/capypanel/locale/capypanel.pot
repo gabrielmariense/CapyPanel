@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 16:49-0300\n"
+"POT-Creation-Date: 2026-10-31 21:54-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -478,6 +478,9 @@ msgid "CapyPanel — light"
 msgstr ""
 
 msgid "Change path…"
+msgstr ""
+
+msgid "Change the connection profile"
 msgstr ""
 
 msgid "Change…"
@@ -2005,6 +2008,9 @@ msgid ""
 "open it."
 msgstr ""
 
+msgid "This printer doesn't report a level for this supply."
+msgstr ""
+
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr ""
 
@@ -2229,9 +2235,6 @@ msgstr ""
 msgid "its clock and CapyPanel's didn't agree."
 msgstr ""
 
-msgid "level unknown"
-msgstr ""
-
 msgid "made by another user"
 msgstr ""
 
@@ -2242,6 +2245,9 @@ msgid "name"
 msgstr ""
 
 msgid "name, address, group, tags, notes"
+msgstr ""
+
+msgid "not reported"
 msgstr ""
 
 msgid "notes"
@@ -2321,7 +2327,7 @@ msgid "{colour} {percent} %"
 msgstr ""
 
 #, python-brace-format
-msgid "{colour}: level unknown"
+msgid "{colour}: not reported"
 msgstr ""
 
 #, python-brace-format

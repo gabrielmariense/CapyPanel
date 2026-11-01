@@ -162,12 +162,14 @@ def toner(checked: Checked | None, low: int) -> Cell:
     elif lowest.some_left:
         text = _("{colour}: some left").format(colour=colour)
     else:
-        text = _("{colour}: level unknown").format(colour=colour)
+        text = _("{colour}: not reported").format(colour=colour)
     running_low = is_low(lowest, low)
     if running_low:
         text = _("{level} · low").format(level=text)
-    tip = "\n".join(f"{s.name}: {level_text(s)}" for s in found)
-    return Cell(text, tip, supply_color(lowest), warn=running_low, supply=lowest)
+    lines = [f"{s.name}: {level_text(s)}" for s in found]
+    if not all(reports_level(s) for s in found):
+        lines.append(no_level_text())
+    return Cell(text, "\n".join(lines), supply_color(lowest), warn=running_low, supply=lowest)
 
 
 def colour_name(supply: Supply) -> str:
@@ -191,4 +193,13 @@ def supply_color(supply: Supply) -> str:
 def level_text(supply: Supply) -> str:
     if supply.percent is not None:
         return _("{percent} %").format(percent=supply.percent)
-    return _("some left") if supply.some_left else _("level unknown")
+    return _("some left") if supply.some_left else _("not reported")
+
+
+def reports_level(supply: Supply) -> bool:
+    """Whether the printer gives this supply a level: a percent, or at least "some left"."""
+    return supply.percent is not None or supply.some_left
+
+
+def no_level_text() -> str:
+    return _("This printer doesn't report a level for this supply.")
