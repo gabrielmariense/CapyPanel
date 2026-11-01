@@ -103,7 +103,7 @@ def test_a_saved_password_is_used_the_next_time_capypanel_opens(
     profiles = _profiles(window)
     profiles.passwords.setCurrentIndex(1)  # Save in Windows Credential Manager
     assert window.hosts.prefs["save_passwords"] is True
-    assert "Forget typed passwords" in profiles.passwords_row.description.text()
+    assert profiles.passwords_row.description.text() == "Saved for your Windows account."
     assert "domain accounts" in profiles.passwords.toolTip()  # the details, for who looks
     asked: list[str] = []
     _type(monkeypatch, asked)
@@ -116,9 +116,10 @@ def test_a_saved_password_is_used_the_next_time_capypanel_opens(
     _connect(later)
     assert launched[-1] == Credential("CORP\\ana", "x")
     assert later.hosts._account == Account("CORP\\admin", "y")  # pyright: ignore[reportPrivateUsage]
-    later.hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
-    assert later.hosts.forget_menu.isEnabled()  # saved ones can be forgotten too
-    later.hosts.forget_passwords()
+    kept = later.hosts.kept_logins()
+    assert [(k.used_for, k.saved) for k in kept] == [("Offices", True), ("Logged-on users", True)]
+    for login in kept:  # saved ones can be forgotten too
+        login.forget()
     assert credstore.names("") == [] and later.hosts._account is None  # pyright: ignore[reportPrivateUsage]
 
 

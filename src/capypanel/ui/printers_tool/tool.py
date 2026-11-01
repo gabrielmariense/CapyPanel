@@ -30,7 +30,14 @@ from capypanel.ui.printers_tool.attention import (
 )
 from capypanel.ui.printers_tool.details import PrinterDetails, PrinterDetailsPanel
 from capypanel.ui.printers_tool.dialog import PrinterDialog
-from capypanel.ui.printers_tool.refresh import V2C, V3, PrinterRun, community, v3_account
+from capypanel.ui.printers_tool.refresh import (
+    V2C,
+    V3,
+    PrinterRun,
+    community,
+    kept_logins,
+    v3_account,
+)
 from capypanel.ui.printers_tool.report import PrintersReport
 from capypanel.ui.printers_tool.settings import (
     AUTO_EVERY,
@@ -50,6 +57,7 @@ from capypanel.ui.printers_tool.settings import (
 from capypanel.ui.printers_tool.status import Attention, Cell, Checked
 from capypanel.ui.printers_tool.table import PrinterTable
 from capypanel.ui.printers_tool.toolbar import PrintersToolBar
+from capypanel.ui.saved_credentials import KeptLogin
 
 log = logging.getLogger(__name__)
 WEB_PAGES_AT_ONCE = 10  # more selected open only the first ones: a browser tab each
@@ -318,6 +326,9 @@ class PrintersTool(ListWorkspace):
 
     def works_in_background(self) -> bool:
         return self.auto_refresh() > 0
+
+    def kept_logins(self) -> list[KeptLogin]:
+        return kept_logins()
 
     def notify_choice(self) -> str:
         """Settings' Windows notification: NOTIFY_OFF, NOTIFY_STOPS (the default) or NOTIFY_LOW."""

@@ -39,6 +39,12 @@ class FakeShell:
     def show_message(self, text: str, timeout: int = 5000) -> None:
         self.messages.append(text)
 
+    def kept_logins(self) -> list[Any]:
+        return []
+
+    def open_saved_credentials(self, parent: Any = None) -> None:
+        pass
+
 
 @pytest.fixture
 def shell(tmp_path: Path) -> FakeShell:

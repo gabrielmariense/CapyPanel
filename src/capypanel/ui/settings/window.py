@@ -210,6 +210,10 @@ class SettingsDialog(QDialog):
         """A tool's group of pages, by its kind."""
         return next(g for g in self._groups if isinstance(g, kind))
 
+    def credentials_changed(self) -> None:
+        for group in self._groups:
+            group.credentials_changed()
+
     def _labels(self) -> list[str]:
         return [label for label, _ids in self._layout_groups]
 

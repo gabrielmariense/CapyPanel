@@ -37,6 +37,7 @@ from capypanel.ui.main_window.rail import ToolRail
 from capypanel.ui.main_window.tool import Tool, ToolKind
 from capypanel.ui.main_window.tray import Tray, ask_closing
 from capypanel.ui.menus import StayOpenMenu
+from capypanel.ui.saved_credentials import KeptLogin, SavedCredentialsDialog
 from capypanel.ui.settings.window import SettingsDialog
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import CATALOG, ToolInfo
@@ -199,6 +200,14 @@ class MainWindow(QMainWindow):
         self.prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
         self.save_prefs()
         self._update_tray()  # Refresh on its own may have been switched on or off
+
+    def kept_logins(self) -> list[KeptLogin]:
+        return [login for tool in self.tools.values() for login in tool.kept_logins()]
+
+    def open_saved_credentials(self, parent: QWidget | None = None) -> None:
+        run_modal(SavedCredentialsDialog(parent or self, self.kept_logins))
+        if isinstance(parent, SettingsDialog):  # its pages show what's kept
+            parent.credentials_changed()
 
     # ---- building ----
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 22:16-0300\n"
+"POT-Creation-Date: 2026-11-01 10:38-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,9 +48,6 @@ msgid "&Address:"
 msgstr ""
 
 msgid "&Add…"
-msgstr ""
-
-msgid "&All profiles"
 msgstr ""
 
 msgid "&Authentication"
@@ -113,7 +110,10 @@ msgstr ""
 msgid "&Fit columns to content"
 msgstr ""
 
-msgid "&Forget typed passwords"
+msgid "&Forget"
+msgstr ""
+
+msgid "&Forget all"
 msgstr ""
 
 msgid "&Formats…"
@@ -162,6 +162,9 @@ msgid "&Manage host lists…"
 msgstr ""
 
 msgid "&Manage printer lists…"
+msgstr ""
+
+msgid "&Manage…"
 msgstr ""
 
 msgid "&Manual connection…"
@@ -294,6 +297,9 @@ msgid "&User:"
 msgstr ""
 
 msgid "&View"
+msgstr ""
+
+msgid "(password only)"
 msgstr ""
 
 #, python-brace-format
@@ -834,6 +840,9 @@ msgstr ""
 msgid "Every computer you look after, in one window."
 msgstr ""
 
+msgid "Every login CapyPanel keeps for you. Passwords never show here."
+msgstr ""
+
 #, python-brace-format
 msgid "Every minute"
 msgid_plural "Every {n} minutes"
@@ -878,6 +887,21 @@ msgid "For the list open now; each list keeps its own."
 msgstr ""
 
 msgid "For:"
+msgstr ""
+
+msgid "Forget &all"
+msgstr ""
+
+#, python-brace-format
+msgid "Forget {n} login?"
+msgid_plural "Forget all {n} logins?"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid ""
+"Forgotten logins are deleted from Credential Manager too; you type them "
+"again the next time. Where new ones are kept: Settings › Connection "
+"profiles › Credentials."
 msgstr ""
 
 msgid "Forgotten when CapyPanel closes."
@@ -965,6 +989,9 @@ msgstr ""
 msgid "Hosts with no profile &use"
 msgstr ""
 
+msgid "Hosts › Refresh"
+msgstr ""
+
 msgid "Hover a folder to see what it holds."
 msgstr ""
 
@@ -1031,6 +1058,9 @@ msgid "Keep in &tray"
 msgstr ""
 
 msgid "Keep running in the tray"
+msgstr ""
+
+msgid "Kept"
 msgstr ""
 
 msgid ""
@@ -1207,6 +1237,9 @@ msgid "No settings mention “{text}”."
 msgstr ""
 
 msgid "None"
+msgstr ""
+
+msgid "None kept."
 msgstr ""
 
 msgid "Not a computer name or IP address"
@@ -1433,6 +1466,9 @@ msgstr ""
 msgid "Printers"
 msgstr ""
 
+msgid "Printers › Refresh"
+msgstr ""
+
 msgid "Printing"
 msgstr ""
 
@@ -1602,10 +1638,22 @@ msgstr ""
 msgid "SNMP &version"
 msgstr ""
 
+msgid "SNMP account (v3)"
+msgstr ""
+
 msgid "SNMP community string"
 msgstr ""
 
+msgid "SNMP community string (v2c)"
+msgstr ""
+
 msgid "SNMP v3 account"
+msgstr ""
+
+msgid "Sa&ved credentials"
+msgstr ""
+
+msgid "Sa&ved credentials…"
 msgstr ""
 
 #, python-brace-format
@@ -1641,9 +1689,10 @@ msgstr ""
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr ""
 
-msgid ""
-"Saved for your Windows account. Remove with Connect › Forget typed "
-"passwords."
+msgid "Saved credentials"
+msgstr ""
+
+msgid "Saved for your Windows account."
 msgstr ""
 
 msgid ""
@@ -2137,12 +2186,6 @@ msgstr ""
 msgid "Type the user name."
 msgstr ""
 
-msgid "Typed password forgotten."
-msgstr ""
-
-msgid "Typed passwords forgotten."
-msgstr ""
-
 msgid "Unexpected error"
 msgstr ""
 
@@ -2172,6 +2215,9 @@ msgstr ""
 msgid "Unreadable"
 msgstr ""
 
+msgid "Until CapyPanel closes"
+msgstr ""
+
 msgid "Use &defaults"
 msgstr ""
 
@@ -2179,6 +2225,9 @@ msgid "Use the &automatic path"
 msgstr ""
 
 msgid "Use this"
+msgstr ""
+
+msgid "Used for"
 msgstr ""
 
 msgid "User"
@@ -2268,6 +2317,9 @@ msgid "With No group, the groups inside it go directly under Groups."
 msgstr ""
 
 msgid "Yellow"
+msgstr ""
+
+msgid "You type them again the next time."
 msgstr ""
 
 msgid "Your computers: connect, see who's logged on, check them."
@@ -2576,6 +2628,16 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} in Credential Manager"
+msgstr ""
+
+#, python-brace-format
+msgid "{n} kept: {places}."
+msgid_plural "{n} kept: {places}."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} low"
 msgid_plural "{n} low"
 msgstr[0] ""
@@ -2665,6 +2727,10 @@ msgid "{n} stopped"
 msgid_plural "{n} stopped"
 msgstr[0] ""
 msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} until CapyPanel closes"
+msgstr ""
 
 #, python-brace-format
 msgid "{path} (in use)"

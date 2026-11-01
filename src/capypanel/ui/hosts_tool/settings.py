@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from capypanel.core.hosts import locations
 from capypanel.core.i18n import N_
+from capypanel.ui.saved_credentials import kept_text
 from capypanel.ui.settings.connections import ConnectionsPage
 from capypanel.ui.settings.group import SettingsGroup
 from capypanel.ui.settings.pages import HostsPage, ListsPage, Page
@@ -67,7 +68,12 @@ class HostsSettings(SettingsGroup):
         )
         for page in (self.general, self.lists):
             page.changed.connect(self._changed)
-        self.connections.profiles.passwords_changed.connect(self._changed)
+        profiles = self.connections.profiles
+        profiles.passwords_changed.connect(self._changed)
+        profiles.manage_button.clicked.connect(
+            lambda: tool.open_saved_credentials(profiles.window())
+        )
+        self.credentials_changed()
         self.lists.view.open_requested.connect(self._open)
         self.connections.changed.connect(tool.profiles_changed)  # Connect's menu follows
         self._building = False
@@ -97,6 +103,11 @@ class HostsSettings(SettingsGroup):
     def _changed(self) -> None:
         if not self._building:
             self._tool.apply_prefs(self.choices())
+            self.credentials_changed()  # Temporary credentials deletes the saved ones
+
+    def credentials_changed(self) -> None:
+        row = self.connections.profiles.saved_row
+        row.description.setText(kept_text(self._tool.every_kept_login()))
 
     def _open(self, path: Path) -> None:
         """A list opened from Host lists: Settings then shows it as the open one."""

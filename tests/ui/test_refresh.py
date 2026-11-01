@@ -184,7 +184,9 @@ def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
     retried = [(a, acc) for a, _s, _u, acc in answers["seen"] if acc is not None]
     assert retried == [("10.0.0.3", Account("CORP\\admin", "pw"))]
     assert _cells(window, "PC-3")[1] == "CORP\\ana"
-    window.hosts.forget_passwords()
+    [kept] = window.hosts.kept_logins()
+    assert (kept.used_for, kept.user, kept.saved) == ("Logged-on users", "CORP\\admin", False)
+    kept.forget()
     assert window.hosts._account is None
 
 

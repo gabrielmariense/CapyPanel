@@ -39,6 +39,7 @@ from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
+from capypanel.ui.saved_credentials import KeptLogin, forget_failed
 
 log = logging.getLogger(__name__)
 MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks first
@@ -132,16 +133,14 @@ class HostsTool(ListWorkspace):
         self.toolbar.refresh_requested.connect(self._refresh_shown)
         self.refresh_panel.run_clicked.connect(self._run_refresh_panel)
         self.toolbar.connect_menu.aboutToShow.connect(self._fill_connect_menu)
-        # Connect's last entry: forget every typed password, or one profile's.
-        self.forget_menu = QMenu(self)
         # Enter connects only from the host table, so it never fires while typing elsewhere.
         a.connect_host.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.table.addAction(a.connect_host)
         a.connect_host.triggered.connect(self.connect_selected)
         a.manual_connect.triggered.connect(self.manual_connect)
         a.copy_address.triggered.connect(lambda: self._copy(lambda h: h.target))
-        a.forget_passwords.triggered.connect(self.forget_passwords)
         a.connection_profiles.triggered.connect(lambda: self._shell.open_settings("connections"))
+        a.saved_credentials.triggered.connect(lambda: self._shell.open_saved_credentials())
 
     def restore_layout(self) -> None:
         super().restore_layout()
@@ -444,69 +443,71 @@ class HostsTool(ListWorkspace):
             item.setEnabled(bool(self.table.selected_ids()))
             item.triggered.connect(lambda _c=False, p=profile_id: self.connect_selected(p))
         menu.addSeparator()
-        menu.addActions([a.manual_connect, a.connection_profiles])
-        menu.addMenu(self._fill_forget_menu())
-
-    def _fill_forget_menu(self) -> QMenu:
-        """All profiles, then each profile with a typed password, by name, and the account
-        typed for logged-on users, if any. Greyed when nothing was typed."""
-        forget = self.forget_menu
-        forget.clear()
-        forget.setTitle(_("&Forget typed passwords"))
-        forget.addAction(self.commands.forget_passwords)
-        credentials = self.connector.credentials
-        typed = [(pid, name) for pid, name in self.connector.choices() if pid in credentials]
-        if typed or self._account is not None:
-            forget.addSeparator()
-        for profile_id, name in typed:
-            item = forget.addAction(name.replace("&", "&&"))
-            item.triggered.connect(lambda _c=False, p=profile_id: self.forget_password(p))
-        if self._account is not None:
-            if typed:  # not a profile, so not in their run
-                forget.addSeparator()
-            item = forget.addAction(_("Account for logged-on users"))
-            item.triggered.connect(lambda: self.forget_password(None))
-        anything = bool(credentials) or self._account is not None  # as of now, not last refresh
-        self.commands.forget_passwords.setEnabled(anything)
-        forget.setEnabled(anything)
-        return forget
-
-    def forget_passwords(self) -> None:
-        """Saved ones too."""
-        self._account = None
-        if self._forgot(lambda: (self.connector.credentials.forget(), self._delete_account())):
-            self._shell.show_message(_("Typed passwords forgotten."), 5000)
-        self._update_state()
-
-    def forget_password(self, profile_id: str | None) -> None:
-        """One profile's typed password, saved or not; None: the account typed for logged-on
-        users."""
-        if profile_id is None:
-            self._account = None
-            done = self._forgot(self._delete_account)
-        else:
-            done = self._forgot(lambda: self.connector.credentials.forget(profile_id))
-        if done:
-            self._shell.show_message(_("Typed password forgotten."), 5000)
-        self._update_state()
+        menu.addActions([a.manual_connect, a.connection_profiles, a.saved_credentials])
 
     def _forgot(self, forget: Callable[[], object]) -> bool:
         """Runs `forget`; says so when Windows didn't delete a saved password."""
         try:
             forget()
         except OSError as e:
-            log.warning("Couldn't delete a saved password: %s", e)
-            QMessageBox.warning(
-                self,
-                "CapyPanel",
-                _("Couldn't delete the password saved in Windows Credential Manager: {error}\n\n"
-                  "You can delete it in Control Panel › Credential Manager › Windows "
-                  "Credentials, under “{prefix}”.").format(error=e, prefix=credstore.PREFIX),
-            )  # fmt: skip
+            forget_failed(self, e)
             return False
         return True
 
     # ---- saved passwords ----
+
+    def kept_logins(self) -> list[KeptLogin]:
+        """Each profile's typed password, then the account typed for logged-on users."""
+        catalogs = self.connector.catalogs
+        logins = []
+        for profile_id, credential, saved in self.connector.credentials.kept():
+            profile = catalogs.profiles.find(profile_id)
+            entry = catalogs.tools.find(profile.tool) if profile else None
+            logins.append(
+                KeptLogin(
+                    profile.name if profile else profile_id,  # a deleted profile: its id
+                    entry.item.name if entry else "—",
+                    credential.user or _("(password only)"),
+                    saved,
+                    lambda p=profile_id: self._forget_kept(p),
+                )
+            )
+        try:  # with saving off too: one Windows didn't delete is still kept
+            saved = credstore.read(SAVED_ACCOUNT)
+        except OSError as e:
+            log.warning("Couldn't read the saved account for logged-on users: %s", e)
+            saved = None
+        user = self._account.user if self._account else saved[0] if saved else None
+        if user is not None:
+            logins.append(
+                KeptLogin(
+                    _("Logged-on users"),
+                    _("Hosts › Refresh"),
+                    user,
+                    saved is not None,
+                    lambda: self._forget_kept(None),
+                )
+            )
+        return logins
+
+    def _forget_kept(self, profile_id: str | None) -> None:
+        """One profile's password, or (None) the account for logged-on users: from memory and
+        from Credential Manager. Raises OSError."""
+        try:
+            if profile_id is None:
+                self._account = None
+                self._delete_account()
+            else:
+                self.connector.credentials.forget(profile_id)
+        finally:
+            self._update_state()
+
+    def every_kept_login(self) -> list[KeptLogin]:
+        """Every tool's, for Settings' Saved credentials row."""
+        return self._shell.kept_logins()
+
+    def open_saved_credentials(self, parent: QWidget) -> None:
+        self._shell.open_saved_credentials(parent)
 
     def saves_passwords(self) -> bool:
         """Settings: typed passwords are also saved in Windows Credential Manager."""
@@ -723,9 +724,6 @@ class HostsTool(ListWorkspace):
         shown = self.table.topLevelItemCount() > 0
         for action in (self.toolbar.refresh_status, self.toolbar.refresh_users):
             action.setEnabled(shown and self._run is None)
-        typed = bool(self.connector.credentials) or self._account is not None
-        a.forget_passwords.setEnabled(typed)
-        self.forget_menu.setEnabled(typed)
 
     def status_extras(self, doc: OpenList) -> list[str]:
         # Hosts still in the list: a removed host's result stays in memory.

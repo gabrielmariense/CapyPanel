@@ -69,6 +69,17 @@ class SessionCredentials:
             self._by_profile.pop(profile_id, None)
         self._delete_saved(profile_id)
 
+    def kept(self) -> list[tuple[str, Credential, bool]]:
+        """Every password kept: (profile id, credential, saved in Credential Manager), by id.
+        Saved ones are listed even with saving off, when Windows didn't delete them."""
+        saved = {name.removeprefix(SAVED) for name in self._saved_names()}
+        found = []
+        for profile_id in sorted(set(self._by_profile) | saved):
+            credential = self._by_profile.get(profile_id) or self._load(profile_id)
+            if credential is not None:
+                found.append((profile_id, credential, profile_id in saved))
+        return found
+
     def __contains__(self, profile_id: str) -> bool:
         return self.get(profile_id) is not None
 

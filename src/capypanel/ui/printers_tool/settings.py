@@ -35,6 +35,7 @@ from capypanel.ui.settings.pages import (
     add_rows,
     every_text,
 )
+from capypanel.ui.settings.window import SettingsDialog
 
 if TYPE_CHECKING:
     from capypanel.ui.printers_tool.tool import PrintersTool
@@ -395,6 +396,13 @@ class PrintersSettings(SettingsGroup):
             self._change_v3_account()
         else:
             self._change_community()
+        window = self.general.window()
+        if isinstance(window, SettingsDialog):  # Saved credentials' count too
+            window.credentials_changed()
+        else:
+            self.credentials_changed()
+
+    def credentials_changed(self) -> None:
         self.general.show_account(account_text(self._tool.snmp_version()))
 
     def _change_v3_account(self) -> None:

@@ -117,6 +117,16 @@ def test_saved_passwords_outlive_the_session_until_forgotten() -> None:
     assert not later and credstore.names("") == []
 
 
+def test_kept_lists_typed_and_saved_passwords_and_where_each_is() -> None:
+    SessionCredentials(saving=True).remember("realvnc-password", Credential("", "y"))
+    kept = SessionCredentials(saving=False)  # a saved one Windows didn't delete still shows
+    kept.remember("ultravnc-account", Credential("ana", "x"))
+    assert kept.kept() == [
+        ("realvnc-password", Credential("", "y"), True),
+        ("ultravnc-account", Credential("ana", "x"), False),
+    ]
+
+
 def test_turning_saving_off_deletes_what_was_saved() -> None:
     kept = SessionCredentials(saving=True)
     kept.remember("ultravnc-account", Credential("ana", "x"))

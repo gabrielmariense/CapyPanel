@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 22:16-0300\n"
+"POT-Creation-Date: 2026-11-01 10:38-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -50,9 +50,6 @@ msgstr "&Endereço:"
 
 msgid "&Add…"
 msgstr "&Adicionar…"
-
-msgid "&All profiles"
-msgstr "&Todos os perfis"
 
 msgid "&Authentication"
 msgstr "&Autenticação"
@@ -114,8 +111,11 @@ msgstr "&Arquivo"
 msgid "&Fit columns to content"
 msgstr "&Ajustar colunas ao conteúdo"
 
-msgid "&Forget typed passwords"
-msgstr "Esquecer as &senhas digitadas"
+msgid "&Forget"
+msgstr "&Esquecer"
+
+msgid "&Forget all"
+msgstr "&Esquecer todas"
 
 msgid "&Formats…"
 msgstr "&Formatos…"
@@ -164,6 +164,9 @@ msgstr "&Gerenciar listas de hosts…"
 
 msgid "&Manage printer lists…"
 msgstr "&Gerenciar listas de impressoras…"
+
+msgid "&Manage…"
+msgstr "&Gerenciar…"
 
 msgid "&Manual connection…"
 msgstr "Conexão &manual…"
@@ -296,6 +299,9 @@ msgstr "&Usuário:"
 
 msgid "&View"
 msgstr "E&xibir"
+
+msgid "(password only)"
+msgstr "(só senha)"
 
 #, python-brace-format
 msgid "<b>{n} printer</b> needs attention: {reasons}."
@@ -829,6 +835,9 @@ msgstr "Todas as colunas das impressoras"
 msgid "Every computer you look after, in one window."
 msgstr "Todos os computadores sob seus cuidados, em uma só janela."
 
+msgid "Every login CapyPanel keeps for you. Passwords never show here."
+msgstr "Todos os logins que o CapyPanel guarda para você. As senhas nunca aparecem aqui."
+
 #, python-brace-format
 msgid "Every minute"
 msgid_plural "Every {n} minutes"
@@ -873,6 +882,18 @@ msgstr "Para a lista aberta agora; cada lista guarda a sua."
 
 msgid "For:"
 msgstr "Para:"
+
+msgid "Forget &all"
+msgstr "Esquecer &todas"
+
+#, python-brace-format
+msgid "Forget {n} login?"
+msgid_plural "Forget all {n} logins?"
+msgstr[0] "Esquecer {n} login?"
+msgstr[1] "Esquecer todos os {n} logins?"
+
+msgid "Forgotten logins are deleted from Credential Manager too; you type them again the next time. Where new ones are kept: Settings › Connection profiles › Credentials."
+msgstr "Logins esquecidos também são apagados do Gerenciador de Credenciais; você os digita de novo na próxima vez. Onde os novos ficam: Configurações › Perfis de conexão › Credenciais."
 
 msgid "Forgotten when CapyPanel closes."
 msgstr "Esquecidas quando o CapyPanel fecha."
@@ -959,6 +980,9 @@ msgstr "Hosts sem grupo &vão para:"
 msgid "Hosts with no profile &use"
 msgstr "Hosts sem perfil &usam"
 
+msgid "Hosts › Refresh"
+msgstr "Hosts › Atualizar"
+
 msgid "Hover a folder to see what it holds."
 msgstr "Passe o mouse sobre uma pasta para ver o que ela guarda."
 
@@ -1020,6 +1044,9 @@ msgstr "Manter na &bandeja"
 
 msgid "Keep running in the tray"
 msgstr "Manter aberto na bandeja"
+
+msgid "Kept"
+msgstr "Guardada"
 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
@@ -1190,6 +1217,9 @@ msgstr "Nenhuma configuração menciona “{text}”."
 
 msgid "None"
 msgstr "Nenhuma"
+
+msgid "None kept."
+msgstr "Nenhum guardado."
 
 msgid "Not a computer name or IP address"
 msgstr "Não é um nome de computador nem um endereço IP"
@@ -1404,6 +1434,9 @@ msgstr "Listas de impressoras (*.json);;Todos os arquivos (*)"
 msgid "Printers"
 msgstr "Impressoras"
 
+msgid "Printers › Refresh"
+msgstr "Impressoras › Atualizar"
+
 msgid "Printing"
 msgstr "Imprimindo"
 
@@ -1571,11 +1604,23 @@ msgstr "&Conta SNMP"
 msgid "SNMP &version"
 msgstr "&Versão do SNMP"
 
+msgid "SNMP account (v3)"
+msgstr "Conta SNMP (v3)"
+
 msgid "SNMP community string"
 msgstr "Comunidade SNMP"
 
+msgid "SNMP community string (v2c)"
+msgstr "Comunidade SNMP (v2c)"
+
 msgid "SNMP v3 account"
 msgstr "Conta SNMP v3"
+
+msgid "Sa&ved credentials"
+msgstr "Credenciais sal&vas"
+
+msgid "Sa&ved credentials…"
+msgstr "Credenciais sal&vas…"
 
 #, python-brace-format
 msgid "Same address as row {n}"
@@ -1610,8 +1655,11 @@ msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arqu
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr "Salve as impressoras que você escolher, com as colunas que escolher, num arquivo CSV"
 
-msgid "Saved for your Windows account. Remove with Connect › Forget typed passwords."
-msgstr "Salvas para a sua conta do Windows. Para apagar, use Conectar › Esquecer as senhas digitadas."
+msgid "Saved credentials"
+msgstr "Credenciais salvas"
+
+msgid "Saved for your Windows account."
+msgstr "Salvas para a sua conta do Windows."
 
 msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only for hosts with this connection profile."
 msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada nos hosts com este perfil de conexão."
@@ -2069,12 +2117,6 @@ msgstr "Digite uma tag e pressione Enter"
 msgid "Type the user name."
 msgstr "Digite o nome do usuário."
 
-msgid "Typed password forgotten."
-msgstr "A senha digitada foi esquecida."
-
-msgid "Typed passwords forgotten."
-msgstr "As senhas digitadas foram esquecidas."
-
 msgid "Unexpected error"
 msgstr "Erro inesperado"
 
@@ -2104,6 +2146,9 @@ msgstr "Inacessível"
 msgid "Unreadable"
 msgstr "Ilegível"
 
+msgid "Until CapyPanel closes"
+msgstr "Até o CapyPanel fechar"
+
 msgid "Use &defaults"
 msgstr "Usar &padrões"
 
@@ -2112,6 +2157,9 @@ msgstr "Usar o caminho &automático"
 
 msgid "Use this"
 msgstr "Usar este"
+
+msgid "Used for"
+msgstr "Usada para"
 
 msgid "User"
 msgstr "Usuário"
@@ -2191,6 +2239,9 @@ msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
 
 msgid "Yellow"
 msgstr "Amarelo"
+
+msgid "You type them again the next time."
+msgstr "Você os digita de novo na próxima vez."
 
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
@@ -2484,6 +2535,16 @@ msgstr[0] "{n} host será adicionado."
 msgstr[1] "{n} hosts serão adicionados."
 
 #, python-brace-format
+msgid "{n} in Credential Manager"
+msgstr "{n} no Gerenciador de Credenciais"
+
+#, python-brace-format
+msgid "{n} kept: {places}."
+msgid_plural "{n} kept: {places}."
+msgstr[0] "{n} guardado: {places}."
+msgstr[1] "{n} guardados: {places}."
+
+#, python-brace-format
 msgid "{n} low"
 msgid_plural "{n} low"
 msgstr[0] "{n} com suprimento baixo"
@@ -2573,6 +2634,10 @@ msgid "{n} stopped"
 msgid_plural "{n} stopped"
 msgstr[0] "{n} parada"
 msgstr[1] "{n} paradas"
+
+#, python-brace-format
+msgid "{n} until CapyPanel closes"
+msgstr "{n} até o CapyPanel fechar"
 
 #, python-brace-format
 msgid "{path} (in use)"

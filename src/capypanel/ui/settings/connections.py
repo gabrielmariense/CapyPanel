@@ -353,6 +353,8 @@ class ProfilesSection(SharedSection):
         self.passwords_row = SettingRow(_("&Credentials"), "", self.passwords)
         self._describe_passwords()
         self.passwords.currentIndexChanged.connect(self._passwords_picked)
+        self.manage_button = QPushButton(_("&Manage…"))  # opens Saved credentials
+        self.saved_row = SettingRow(_("Sa&ved credentials"), "", self.manage_button)
         add_rows(
             inner,
             SettingRow(
@@ -361,6 +363,7 @@ class ProfilesSection(SharedSection):
                 self.default,
             ),
             self.passwords_row,
+            self.saved_row,
         )
 
         self._fill_profiles(select=None)
@@ -375,7 +378,7 @@ class ProfilesSection(SharedSection):
     def _describe_passwords(self) -> None:
         saving = self.save_passwords_choice()
         self.passwords_row.description.setText(
-            _("Saved for your Windows account. Remove with Connect › Forget typed passwords.")
+            _("Saved for your Windows account.")
             if saving
             else _("Forgotten when CapyPanel closes.")
         )

@@ -6,13 +6,16 @@ import logging
 import threading
 from collections.abc import Sequence
 from datetime import datetime
+from functools import partial
 
 from PySide6.QtCore import QObject, Signal
 
 from capypanel.core import credstore
+from capypanel.core.i18n import _
 from capypanel.core.printers import reading, snmp, usm
 from capypanel.core.remote.batch import Batch
 from capypanel.ui.printers_tool.status import Checked
+from capypanel.ui.saved_credentials import KeptLogin
 
 log = logging.getLogger(__name__)
 COMMUNITY = "printers/snmp-community"  # its name in Windows Credential Manager
@@ -61,6 +64,23 @@ def save_v3_account(account: usm.Account) -> None:
         "privacy_password": account.privacy_password,
     }
     credstore.save(V3_ACCOUNT, json.dumps(fields), user=account.user)
+
+
+def kept_logins() -> list[KeptLogin]:
+    """The v3 account and the community string, when set, for Saved credentials."""
+    try:
+        account, secret = credstore.read(V3_ACCOUNT), credstore.read(COMMUNITY)
+    except OSError as e:
+        log.warning("Couldn't read the SNMP accounts: %s", e)
+        return []
+    tool, logins = _("Printers › Refresh"), []
+    if account is not None:
+        forget = partial(credstore.forget, V3_ACCOUNT)
+        logins.append(KeptLogin(_("SNMP account (v3)"), tool, account[0], True, forget))
+    if secret is not None:
+        forget = partial(credstore.forget, COMMUNITY)
+        logins.append(KeptLogin(_("SNMP community string (v2c)"), tool, "—", True, forget))
+    return logins
 
 
 def _by_label[E: (usm.Auth, usm.Privacy)](kind: type[E], label: object) -> E | None:
