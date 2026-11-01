@@ -21,3 +21,6 @@ class SettingsGroup:
 
     def after_rebuild(self) -> None:
         """The pages were built again, in the new language."""
+
+    def credentials_changed(self) -> None:
+        """Saved credentials were forgotten: show what's kept now."""

@@ -55,7 +55,13 @@ class Ready:
 
 class CredentialDialog(QDialog):
     def __init__(
-        self, parent: QWidget | None, ready: Ready, target: str, *, on_command_line: bool
+        self,
+        parent: QWidget | None,
+        ready: Ready,
+        target: str,
+        *,
+        on_command_line: bool,
+        saved: bool = False,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Password for {profile}").format(profile=ready.profile.name))
@@ -72,10 +78,13 @@ class CredentialDialog(QDialog):
         if self.wants_user:
             form.addRow(_("&User:"), self.user)
         form.addRow(_("&Password:"), self.password)
-        remembered = _(
-            "Kept in memory until CapyPanel closes, never saved, and used only for hosts with "
-            "this connection profile."
-        )
+        remembered = (
+            _("Saved in Windows Credential Manager for your Windows account (Settings › "
+              "Connections), and used only for hosts with this connection profile.")
+            if saved
+            else _("Kept in memory until CapyPanel closes, never saved, and used only for hosts "
+                   "with this connection profile.")
+        )  # fmt: skip
         how = (
             _("It's passed to the viewer on its command line, which administrators of this PC "
               "can see.")
@@ -265,12 +274,23 @@ class Connector:
             if credential is None:
                 label = requests[0].label if len(requests) == 1 else _("the selected hosts")
                 dialog = CredentialDialog(
-                    self._parent, ready, label, on_command_line=tool.credentials == "arguments"
+                    self._parent,
+                    ready,
+                    label,
+                    on_command_line=tool.credentials == "arguments",
+                    saved=self.credentials.saving,
                 )
                 if dialog.exec() != QDialog.DialogCode.Accepted:
                     return 0
                 credential = dialog.credential()
-                self.credentials.remember(profile.id, credential)
+                try:
+                    self.credentials.remember(profile.id, credential)
+                except (OSError, ValueError) as e:
+                    log.warning("Couldn't save the password of %s: %s", profile.id, e)
+                    self._error(
+                        _("Couldn't save the password in Windows Credential Manager: {error}\n\n"
+                          "It's kept until CapyPanel closes.").format(error=e)
+                    )  # fmt: skip
         settings = self.catalogs.profiles.settings_path(profile)
         started = 0
         for request in requests:

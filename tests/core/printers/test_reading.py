@@ -45,6 +45,10 @@ COLOUR: Objects = {
     f"{A}.8.1.3": b"Sleep mode on",
     f"{A}.2.1.4": 3,
     f"{A}.8.1.4": b"Paper jam in tray 2",  # said twice: shown once
+    f"{reading.IF_ADDRESS}.1": b"",  # the loopback: no MAC
+    f"{reading.IF_ADDRESS}.2": bytes.fromhex("02005eaabb01"),  # an invented, local MAC
+    f"{reading.ENTITY_FIRMWARE}.1": b"",
+    f"{reading.ENTITY_FIRMWARE}.2": b"SAMPLE-FW 2.4.1",
 }
 
 
@@ -64,6 +68,7 @@ def test_a_colour_printer_with_problems() -> None:
         "SAMPLE0001",
     )
     assert found.pages == 48_213  # the marker counting impressions, not the one in inches
+    assert (found.mac, found.firmware) == ("02:00:5E:AA:BB:01", "SAMPLE-FW 2.4.1")
     by_name = {s.name: s for s in found.supplies}
     assert list(by_name) == [
         "Black Cartridge",
@@ -101,9 +106,11 @@ def test_a_running_printer_that_calls_its_state_other_and_keeps_its_serial_elsew
         f"{reading.HR_DEVICE_STATUS}.1": 2,
         f"{reading.ENTITY_SERIAL}.1": b"SAMPLE0002",
         f"{reading.LIFE_COUNT}.1.1": snmp.counter(1_234),  # no unit given: counted as pages
+        f"{reading.ENTITY_SOFTWARE}.1": b"SAMPLE 1.07",  # its firmware, where some put it
     })  # fmt: skip
     assert (found.state, found.device) == (State.OTHER, Device.RUNNING)
     assert (found.brand, found.serial, found.pages) == ("RICOH", "SAMPLE0002", 1_234)
+    assert (found.firmware, found.mac) == ("SAMPLE 1.07", "")
 
 
 RT = reading.RICOH_TONER

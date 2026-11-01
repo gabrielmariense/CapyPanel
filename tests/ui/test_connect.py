@@ -119,7 +119,8 @@ def test_each_profile_asks_once_and_keeps_its_own_password(
         ("ultravnc", "PC-B", None, domain, ("securevnc",)),  # a computer name is its address
         ("realvnc", "10.0.1.1", None, pi, ()),
     ]
-    window.hosts.forget_passwords()
+    for kept in window.hosts.kept_logins():
+        kept.forget()
     assert not window.hosts.connector.credentials
 
 
@@ -487,28 +488,21 @@ def test_connect_is_a_dropdown_that_works_with_no_host_selected(window: CapyWind
     assert first is window.hosts.commands.connect_host and not first.isEnabled()
 
 
-def test_forget_typed_passwords_forgets_all_or_one_profile_s(window: CapyWindow) -> None:
+def test_hosts_lists_each_typed_password_and_forgets_one(window: CapyWindow) -> None:
     hosts = window.hosts
-    hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
-    assert not hosts.forget_menu.isEnabled()  # nothing typed yet
+    assert hosts.kept_logins() == []  # nothing typed yet
     names = dict(hosts.connector.choices())
     credentials = hosts.connector.credentials
     credentials.remember("offices", Credential("ana", "x"))
-    credentials.remember("pis", Credential("pi", "y"))
-    hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
-    connect = hosts.toolbar.connect_menu.actions()
-    assert connect[-1].menu() is hosts.forget_menu and hosts.forget_menu.isEnabled()
-    entries = [a.text() for a in hosts.forget_menu.actions() if a.text()]
-    assert entries == ["&All profiles", *sorted([names["offices"], names["pis"]])]  # by name
-    assert hosts.commands.forget_passwords.isEnabled()
+    credentials.remember("pis", Credential("", "y"))  # a VNC password, no user
     hosts._account = Account("EXAMPLE\\user", "z")  # pyright: ignore[reportPrivateUsage]
-    hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
-    *_, line, account = hosts.forget_menu.actions()
-    assert line.isSeparator() and account.text() == "Account for logged-on users"
-    hosts._account = None  # pyright: ignore[reportPrivateUsage]
-    hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
-    [pis] = [a for a in hosts.forget_menu.actions() if a.text() == names["pis"]]
-    pis.trigger()
+    kept = {login.used_for: login for login in hosts.kept_logins()}
+    assert [(k.user, k.saved) for k in kept.values()] == [
+        ("ana", False), ("(password only)", False), ("EXAMPLE\\user", False)
+    ]  # fmt: skip
+    assert list(kept) == [names["offices"], names["pis"], "Logged-on users"]
+    assert kept["Logged-on users"].tool == "Hosts › Refresh"
+    kept[names["pis"]].forget()
     assert "pis" not in credentials and "offices" in credentials  # only that one
-    hosts.commands.forget_passwords.trigger()  # All profiles
-    assert not credentials
+    kept["Logged-on users"].forget()
+    assert hosts._account is None  # pyright: ignore[reportPrivateUsage]

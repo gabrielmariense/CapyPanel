@@ -1,6 +1,6 @@
 """A tool the shell shows (Hosts, Printers…), and what a tool can ask of the shell."""
 
-from typing import Any, ClassVar, Protocol
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol
 
 from PySide6.QtCore import QPoint, QTimer, Signal
 from PySide6.QtGui import QAction
@@ -9,6 +9,9 @@ from PySide6.QtWidgets import QLabel, QWidget
 from capypanel.core import settings
 from capypanel.ui.main_window.toolbar import ToolBar
 from capypanel.ui.settings.group import SettingsGroup
+
+if TYPE_CHECKING:
+    from capypanel.ui.saved_credentials import KeptLogin
 
 
 class Shell(Protocol):
@@ -26,6 +29,12 @@ class Shell(Protocol):
     def show_message(self, text: str, timeout: int = 5000) -> None:
         """A short note in the status bar."""
         ...
+
+    def kept_logins(self) -> list["KeptLogin"]:
+        """Every tool's."""
+        ...
+
+    def open_saved_credentials(self, parent: QWidget | None = None) -> None: ...
 
 
 class ToolKind(Protocol):
@@ -46,6 +55,8 @@ class Tool(QWidget):
     ICON: ClassVar[str] = ""  # a Tabler icon, for the rail
     INHERITS_TOP_LEVEL: ClassVar[bool] = False  # Hosts: 0.19 kept its settings at the top
     title_changed = Signal(str)  # the window title's first part, or "" for none
+    badge_changed = Signal(int)  # how many items need attention: the rail's count; 0 hides it
+    notify_requested = Signal(str, str)  # a Windows notification: its title and text
 
     def __init__(self, shell: Shell, toolbar: ToolBar):
         super().__init__()
@@ -70,6 +81,22 @@ class Tool(QWidget):
     def title(self) -> str:
         """The window title's first part (the open list's name), or "" for none."""
         return ""
+
+    def attention_text(self, n: int) -> str:
+        """What its rail count means, "3 printers need attention", for tooltips and the tray."""
+        return ""
+
+    def show_attention(self) -> None:
+        """Lists just the items that need attention (the tray's menu asks for it)."""
+
+    def works_in_background(self) -> bool:
+        """Whether it does something on its own (Refresh on its own), worth keeping CapyPanel
+        running in the tray for when the window closes."""
+        return False
+
+    def kept_logins(self) -> list["KeptLogin"]:
+        """The logins it keeps (typed passwords, accounts), for Saved credentials."""
+        return []
 
     def status_widgets(self) -> list[QWidget]:
         """Shown on the right of the status bar while the tool is."""

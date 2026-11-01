@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 19:54-0300\n"
+"POT-Creation-Date: 2026-11-01 10:38-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -51,8 +51,8 @@ msgstr "&Endereço:"
 msgid "&Add…"
 msgstr "&Adicionar…"
 
-msgid "&All profiles"
-msgstr "&Todos os perfis"
+msgid "&Authentication"
+msgstr "&Autenticação"
 
 msgid "&Brand:"
 msgstr "&Marca:"
@@ -65,6 +65,9 @@ msgstr "&Copiar"
 
 msgid "&Create"
 msgstr "&Criar"
+
+msgid "&Credentials"
+msgstr "&Credenciais"
 
 msgid "&Credentials:"
 msgstr "&Credenciais:"
@@ -96,6 +99,9 @@ msgstr "&Editar selecionado…"
 msgid "&Edit…"
 msgstr "&Editar…"
 
+msgid "&Encryption"
+msgstr "&Criptografia"
+
 msgid "&Export…"
 msgstr "&Exportar…"
 
@@ -105,8 +111,11 @@ msgstr "&Arquivo"
 msgid "&Fit columns to content"
 msgstr "&Ajustar colunas ao conteúdo"
 
-msgid "&Forget typed passwords"
-msgstr "Esquecer as &senhas digitadas"
+msgid "&Forget"
+msgstr "&Esquecer"
+
+msgid "&Forget all"
+msgstr "&Esquecer todas"
 
 msgid "&Formats…"
 msgstr "&Formatos…"
@@ -156,6 +165,9 @@ msgstr "&Gerenciar listas de hosts…"
 msgid "&Manage printer lists…"
 msgstr "&Gerenciar listas de impressoras…"
 
+msgid "&Manage…"
+msgstr "&Gerenciar…"
+
 msgid "&Manual connection…"
 msgstr "Conexão &manual…"
 
@@ -174,11 +186,17 @@ msgstr "&Nome:"
 msgid "&New list…"
 msgstr "&Nova lista…"
 
+msgid "&New tag…"
+msgstr "&Nova tag…"
+
 msgid "&New…"
 msgstr "&Nova…"
 
 msgid "&Open"
 msgstr "&Abrir"
+
+msgid "&Open CapyPanel"
+msgstr "&Abrir o CapyPanel"
 
 msgid "&Open a CSV file…"
 msgstr "A&brir um arquivo CSV…"
@@ -197,6 +215,12 @@ msgstr "&Predefinição:"
 
 msgid "&Printers"
 msgstr "&Impressoras"
+
+msgid "&Quit"
+msgstr "&Sair"
+
+msgid "&Quit CapyPanel"
+msgstr "&Sair do CapyPanel"
 
 msgid "&Refresh"
 msgstr "&Atualizar"
@@ -240,6 +264,9 @@ msgstr "&Configurações…"
 msgid "&Show"
 msgstr "&Mostrar"
 
+msgid "&Show passwords"
+msgstr "&Mostrar senhas"
+
 msgid "&Sort A–Z"
 msgstr "&Classificar de A a Z"
 
@@ -248,6 +275,9 @@ msgstr "&Status"
 
 msgid "&Status bar"
 msgstr "Barra de &status"
+
+msgid "&Tags"
+msgstr "&Tags"
 
 msgid "&Tags:"
 msgstr "&Tags:"
@@ -261,11 +291,23 @@ msgstr "Coluna &Toner"
 msgid "&Tool:"
 msgstr "&Ferramenta:"
 
+msgid "&User name"
+msgstr "&Usuário"
+
 msgid "&User:"
 msgstr "&Usuário:"
 
 msgid "&View"
 msgstr "E&xibir"
+
+msgid "(password only)"
+msgstr "(só senha)"
+
+#, python-brace-format
+msgid "<b>{n} printer</b> needs attention: {reasons}."
+msgid_plural "<b>{n} printers</b> need attention: {reasons}."
+msgstr[0] "<b>{n} impressora</b> requer atenção: {reasons}."
+msgstr[1] "<b>{n} impressoras</b> requerem atenção: {reasons}."
 
 msgid "A chosen &group"
 msgstr "Um &grupo escolhido"
@@ -366,6 +408,9 @@ msgstr[1] "{n} hosts adicionados."
 msgid "Address"
 msgstr "Endereço"
 
+msgid "After a Refresh on its own, for printers that stopped or went offline (and with low supplies, if picked) since the one before."
+msgstr "Depois de uma atualização sozinha, para as impressoras que pararam ou ficaram offline (e com suprimento baixo, se escolhido) desde a anterior."
+
 msgid "All details"
 msgstr "Todos os detalhes"
 
@@ -378,6 +423,9 @@ msgstr "Todas as impressoras"
 #, python-brace-format
 msgid "Already in the list, {place}"
 msgstr "Já está na lista, {place}"
+
+msgid "Also low supplies"
+msgstr "Também suprimento baixo"
 
 #, python-brace-format
 msgid "An item is missing the “{key}” field or has an invalid value for it."
@@ -397,11 +445,17 @@ msgstr "Um nome à sua escolha, depois o nome do computador na rede ou o endere�
 msgid "Appearance"
 msgstr "Aparência"
 
+msgid "Ask each time"
+msgstr "Perguntar sempre"
+
 msgid "Ass&et tag:"
 msgstr "&Patrimônio:"
 
 msgid "Asset tag"
 msgstr "Patrimônio"
+
+msgid "Authentication &password"
+msgstr "Senha da au&tenticação"
 
 msgid "Bar"
 msgstr "Barra"
@@ -459,8 +513,14 @@ msgstr "CapyPanel — claro"
 msgid "Change path…"
 msgstr "Alterar caminho…"
 
+msgid "Change the connection profile"
+msgstr "Trocar o perfil de conexão"
+
 msgid "Change…"
 msgstr "Alterar…"
+
+msgid "Check the SNMP account in Settings › Printers › Refresh."
+msgstr "Confira a conta SNMP em Configurações › Impressoras › Atualizar."
 
 #, python-brace-format
 msgid "Check who is logged on to {n} hosts?"
@@ -573,6 +633,16 @@ msgid "Couldn't create “{path}”: {error}"
 msgstr "Não foi possível criar “{path}”: {error}"
 
 #, python-brace-format
+msgid ""
+"Couldn't delete the password saved in Windows Credential Manager: {error}\n"
+"\n"
+"You can delete it in Control Panel › Credential Manager › Windows Credentials, under “{prefix}”."
+msgstr ""
+"Não foi possível apagar a senha salva no Gerenciador de Credenciais do Windows: {error}\n"
+"\n"
+"Você pode apagá-la em Painel de Controle › Gerenciador de Credenciais › Credenciais do Windows, em “{prefix}”."
+
+#, python-brace-format
 msgid "Couldn't move “{path}” to the Recycle Bin."
 msgstr "Não foi possível mover “{path}” para a Lixeira."
 
@@ -612,6 +682,16 @@ msgid "Couldn't save the list: {error}"
 msgstr "Não foi possível salvar a lista: {error}"
 
 #, python-brace-format
+msgid ""
+"Couldn't save the password in Windows Credential Manager: {error}\n"
+"\n"
+"It's kept until CapyPanel closes."
+msgstr ""
+"Não foi possível salvar a senha no Gerenciador de Credenciais do Windows: {error}\n"
+"\n"
+"Ela fica guardada até o CapyPanel fechar."
+
+#, python-brace-format
 msgid "Couldn't save where the tools are: {error}"
 msgstr "Não foi possível salvar onde as ferramentas estão: {error}"
 
@@ -636,6 +716,9 @@ msgstr "Criado por:"
 
 msgid "Created when opened"
 msgstr "Criada ao abrir"
+
+msgid "Credential Manager"
+msgstr "Gerenciador de Credenciais"
 
 msgid "Credits"
 msgstr "Créditos"
@@ -691,6 +774,9 @@ msgstr "Desconectado"
 msgid "Documentation:"
 msgstr "Documentação:"
 
+msgid "Don't ask again (change it in Settings › CapyPanel › Startup)"
+msgstr "Não perguntar de novo (altere em Configurações › CapyPanel › Inicialização)"
+
 msgid "Door open"
 msgstr "Porta aberta"
 
@@ -730,6 +816,9 @@ msgstr "Editar a lista aqui"
 msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, tags, notes), so the two always match. Continue?"
 msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes), para que as duas sempre coincidam. Continuar?"
 
+msgid "Encryption pass&word"
+msgstr "Senha da cri&ptografia"
+
 msgid "Error"
 msgstr "Erro"
 
@@ -746,17 +835,26 @@ msgstr "Todas as colunas das impressoras"
 msgid "Every computer you look after, in one window."
 msgstr "Todos os computadores sob seus cuidados, em uma só janela."
 
+msgid "Every login CapyPanel keeps for you. Passwords never show here."
+msgstr "Todos os logins que o CapyPanel guarda para você. As senhas nunca aparecem aqui."
+
 #, python-brace-format
 msgid "Every minute"
 msgid_plural "Every {n} minutes"
 msgstr[0] "A cada minuto"
 msgstr[1] "A cada {n} minutos"
 
+msgid "Every printer in the open list, 8 at a time, while CapyPanel is open or in the tray."
+msgstr "Todas as impressoras da lista aberta, 8 por vez, enquanto o CapyPanel estiver aberto ou na bandeja."
+
 msgid "Everyone on this PC (shared)"
 msgstr "Todos neste PC (compartilhada)"
 
 msgid "File not found"
 msgstr "Arquivo não encontrado"
+
+msgid "Firmware"
+msgstr "Firmware"
 
 msgid "Folder"
 msgstr "Pasta"
@@ -784,6 +882,21 @@ msgstr "Para a lista aberta agora; cada lista guarda a sua."
 
 msgid "For:"
 msgstr "Para:"
+
+msgid "Forget &all"
+msgstr "Esquecer &todas"
+
+#, python-brace-format
+msgid "Forget {n} login?"
+msgid_plural "Forget all {n} logins?"
+msgstr[0] "Esquecer {n} login?"
+msgstr[1] "Esquecer todos os {n} logins?"
+
+msgid "Forgotten logins are deleted from Credential Manager too; you type them again the next time. Where new ones are kept: Settings › Connection profiles › Credentials."
+msgstr "Logins esquecidos também são apagados do Gerenciador de Credenciais; você os digita de novo na próxima vez. Onde os novos ficam: Configurações › Perfis de conexão › Credenciais."
+
+msgid "Forgotten when CapyPanel closes."
+msgstr "Esquecidas quando o CapyPanel fecha."
 
 msgid "Formats CapyPanel can import"
 msgstr "Formatos que o CapyPanel importa"
@@ -867,6 +980,9 @@ msgstr "Hosts sem grupo &vão para:"
 msgid "Hosts with no profile &use"
 msgstr "Hosts sem perfil &usam"
 
+msgid "Hosts › Refresh"
+msgstr "Hosts › Atualizar"
+
 msgid "Hover a folder to see what it holds."
 msgstr "Passe o mouse sobre uma pasta para ver o que ela guarda."
 
@@ -878,6 +994,9 @@ msgstr "Ícones:"
 
 msgid "Idle"
 msgstr "Inativo"
+
+msgid "If a computer rejects it, CapyPanel stops and asks again instead of trying it on the others, so the account isn't locked."
+msgstr "Se um computador recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta não ser bloqueada."
 
 msgid "If that list can't be opened: the default list, then your personal list."
 msgstr "Se essa lista não abrir: a lista padrão, depois a sua lista pessoal."
@@ -917,11 +1036,26 @@ msgstr "Ela é passada ao visualizador na linha de comando, que os administrador
 msgid "Its own settings file"
 msgstr "Arquivo de configurações próprio"
 
+msgid "Keep CapyPanel running in the tray?"
+msgstr "Manter o CapyPanel aberto na bandeja?"
+
+msgid "Keep in &tray"
+msgstr "Manter na &bandeja"
+
+msgid "Keep running in the tray"
+msgstr "Manter aberto na bandeja"
+
+msgid "Kept"
+msgstr "Guardada"
+
 msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
 
-msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on. If a computer rejects it, CapyPanel stops and asks again instead of trying it on the others, so the account isn't locked."
-msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado. Se um computador recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta não ser bloqueada."
+msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on."
+msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado."
+
+msgid "Kept: type to change it"
+msgstr "Guardada: digite para alterá-la"
 
 msgid "Language"
 msgstr "Idioma"
@@ -937,6 +1071,9 @@ msgstr "Licenças"
 
 msgid "List"
 msgstr "Lista"
+
+msgid "List only the printers that need attention"
+msgstr "Listar só as impressoras que requerem atenção"
 
 msgid "Lists saved in a lists folder show up here by themselves; Remove asks whether to delete the file too."
 msgstr "Listas salvas numa pasta de listas aparecem aqui sozinhas; Remover pergunta se o arquivo também deve ser excluído."
@@ -957,6 +1094,9 @@ msgstr "Usuários logados"
 
 msgid "Logs"
 msgstr "Logs"
+
+msgid "MAC address"
+msgstr "Endereço MAC"
 
 msgid "Magenta"
 msgstr "Magenta"
@@ -1025,6 +1165,9 @@ msgstr "Novo nome:"
 msgid "New printer list"
 msgstr "Nova lista de impressoras"
 
+msgid "New tag"
+msgstr "Nova tag"
+
 msgid "No address"
 msgstr "Sem endereço"
 
@@ -1072,6 +1215,12 @@ msgstr "Nenhuma impressora deste grupo tem todas as tags escolhidas."
 msgid "No settings mention “{text}”."
 msgstr "Nenhuma configuração menciona “{text}”."
 
+msgid "None"
+msgstr "Nenhuma"
+
+msgid "None kept."
+msgstr "Nenhum guardado."
+
 msgid "Not a computer name or IP address"
 msgstr "Não é um nome de computador nem um endereço IP"
 
@@ -1086,9 +1235,6 @@ msgid "Not opened: {names}"
 msgid_plural "Not opened ({n}): {names}"
 msgstr[0] "Não aberto: {names}"
 msgstr[1] "Não abertos ({n}): {names}"
-
-msgid "Not set: printers are asked with \"public\"."
-msgstr "Não definida: as impressoras são consultadas com \"public\"."
 
 msgid "Not used: made by another user"
 msgstr "Não usada: criada por outro usuário"
@@ -1288,6 +1434,9 @@ msgstr "Listas de impressoras (*.json);;Todos os arquivos (*)"
 msgid "Printers"
 msgstr "Impressoras"
 
+msgid "Printers › Refresh"
+msgstr "Impressoras › Atualizar"
+
 msgid "Printing"
 msgstr "Imprimindo"
 
@@ -1302,6 +1451,9 @@ msgstr "Programas (*.exe)"
 
 msgid "Put in &group"
 msgstr "Colocar no &grupo"
+
+msgid "Quit"
+msgstr "Sair"
 
 msgid "Read license"
 msgstr "Ler licença"
@@ -1339,11 +1491,24 @@ msgstr "Atualiza todos os hosts exibidos. Clique com o botão direito para escol
 msgid "Refresh logged-on users"
 msgstr "Atualizar usuários logados"
 
+msgid "Refresh on its &own"
+msgstr "Atualizar &sozinho"
+
+msgid "Refresh on its own and warnings keep working while CapyPanel is in the tray. Quit stops them."
+msgstr "A atualização sozinha e os avisos continuam funcionando enquanto o CapyPanel estiver na bandeja. Sair os interrompe."
+
 msgid "Refresh status &by itself"
 msgstr "Atualizar o status &sozinho"
 
 msgid "Refresh status by itself"
 msgstr "Atualizar o status sozinho"
+
+msgid "Refused"
+msgstr "Recusada"
+
+#, python-brace-format
+msgid "Refused at {when}: {why}"
+msgstr "Recusada às {when}: {why}"
 
 msgid "Reload the list"
 msgstr "Recarregar a lista"
@@ -1433,11 +1598,29 @@ msgstr "Restaurar os perfis que vêm com o app"
 msgid "S&top"
 msgstr "Pa&rar"
 
-msgid "SNMP &community string"
-msgstr "&Comunidade SNMP"
+msgid "SNMP &account"
+msgstr "&Conta SNMP"
+
+msgid "SNMP &version"
+msgstr "&Versão do SNMP"
+
+msgid "SNMP account (v3)"
+msgstr "Conta SNMP (v3)"
 
 msgid "SNMP community string"
 msgstr "Comunidade SNMP"
+
+msgid "SNMP community string (v2c)"
+msgstr "Comunidade SNMP (v2c)"
+
+msgid "SNMP v3 account"
+msgstr "Conta SNMP v3"
+
+msgid "Sa&ved credentials"
+msgstr "Credenciais sal&vas"
+
+msgid "Sa&ved credentials…"
+msgstr "Credenciais sal&vas…"
 
 #, python-brace-format
 msgid "Same address as row {n}"
@@ -1471,6 +1654,21 @@ msgstr "Salve os hosts que você escolher, com as colunas que escolher, num arqu
 
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
 msgstr "Salve as impressoras que você escolher, com as colunas que escolher, num arquivo CSV"
+
+msgid "Saved credentials"
+msgstr "Credenciais salvas"
+
+msgid "Saved for your Windows account."
+msgstr "Salvas para a sua conta do Windows."
+
+msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only for hosts with this connection profile."
+msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada nos hosts com este perfil de conexão."
+
+msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only to read who is logged on."
+msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada para ler quem está logado."
+
+msgid "Saved passwords deleted."
+msgstr "As senhas salvas foram apagadas."
 
 msgid "Search"
 msgstr "Pesquisa"
@@ -1521,8 +1719,8 @@ msgstr "Definido no arquivo de configurações"
 msgid "Set tags"
 msgstr "Definir tags"
 
-msgid "Set. Kept in Windows Credential Manager, never in a file."
-msgstr "Definida. Guardada no Gerenciador de Credenciais do Windows, nunca em um arquivo."
+msgid "Set the SNMP v3 account in Settings › Printers › Refresh first."
+msgstr "Defina antes a conta SNMP v3 em Configurações › Impressoras › Atualizar."
 
 msgid "Settings"
 msgstr "Configurações"
@@ -1545,14 +1743,29 @@ msgstr "Compartilhados por todos neste PC. Somente leitura: só quem o Windows d
 msgid "Shared lists are in the shared lists folder and show up for everyone; only people Windows lets write that folder can add one."
 msgstr "Listas compartilhadas ficam na pasta de listas compartilhadas e aparecem para todos; só quem o Windows deixa gravar nessa pasta pode criar uma."
 
+msgid "Show"
+msgstr "Mostrar"
+
 msgid "Show &first"
 msgstr "Mostrar &primeiro"
+
+msgid "Show all"
+msgstr "Mostrar todas"
+
+msgid "Show every printer again"
+msgstr "Mostrar todas as impressoras de novo"
 
 msgid "Show this group &first"
 msgstr "Mostrar este grupo &primeiro"
 
 msgid "Show users' do&main"
 msgstr "Mostrar do&mínio dos usuários"
+
+#, python-brace-format
+msgid "Showing the <b>{n} printer</b> that needs attention."
+msgid_plural "Showing the <b>{n} printers</b> that need attention."
+msgstr[0] "Mostrando a <b>{n} impressora</b> que requer atenção."
+msgstr[1] "Mostrando as <b>{n} impressoras</b> que requerem atenção."
 
 msgid "Signs in with"
 msgstr "Entra com"
@@ -1600,6 +1813,9 @@ msgstr "Parar"
 msgid "Stopped"
 msgstr "Parada"
 
+msgid "Stopped or offline"
+msgstr "Parada ou offline"
+
 #, python-brace-format
 msgid "Stopped: {n} host wasn't checked."
 msgid_plural "Stopped: {n} hosts weren't checked."
@@ -1627,6 +1843,9 @@ msgstr "&Barra de ferramentas"
 msgid "Table"
 msgstr "Tabela"
 
+msgid "Tag for the selected items:"
+msgstr "Tag para os itens selecionados:"
+
 #, python-brace-format
 msgid "Tag: {tag}"
 msgstr "Tag: {tag}"
@@ -1650,6 +1869,9 @@ msgstr "Tags: {tags}"
 
 msgid "Takes it out of your lists, or deletes its file too"
 msgstr "Tira das suas listas, ou exclui também o arquivo"
+
+msgid "Temporary credentials"
+msgstr "Credenciais temporárias"
 
 msgid "Text"
 msgstr "Texto"
@@ -1679,6 +1901,9 @@ msgstr "Os logs do app, para anexar a um relato de problema"
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
 msgstr "Os argumentos usam uma opção que não está em “options”: “{option}”."
 
+msgid "The authentication password needs at least 8 characters."
+msgstr "A senha da autenticação precisa ter pelo menos 8 caracteres."
+
 msgid "The computer didn't accept the account: a wrong password, a locked account, or an account it doesn't trust."
 msgstr "O computador não aceitou a conta: senha errada, conta bloqueada ou uma conta em que ele não confia."
 
@@ -1696,6 +1921,9 @@ msgstr "A lista padrão"
 #, python-brace-format
 msgid "The default list was made by another user, so CapyPanel won't open it. An administrator can replace or delete “{path}”."
 msgstr "A lista padrão foi criada por outro usuário, então o CapyPanel não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
+
+msgid "The encryption password needs at least 8 characters."
+msgstr "A senha da criptografia precisa ter pelo menos 8 caracteres."
 
 msgid "The file doesn't contain a list."
 msgstr "O arquivo não contém uma lista."
@@ -1778,6 +2006,9 @@ msgstr "As “options” do perfil devem ser uma lista de ids de opções."
 msgid "The profile's “{key}” must be lowercase letters, digits, - or _."
 msgstr "O “{key}” do perfil deve ter só letras minúsculas, dígitos, - ou _."
 
+msgid "The read-only SNMP v3 user your printers know. The passwords are kept in Windows Credential Manager."
+msgstr "O usuário SNMP v3 somente leitura que suas impressoras conhecem. As senhas ficam guardadas no Gerenciador de Credenciais do Windows."
+
 msgid "The read-only community string your printers answer to. Most use \"public\". It's kept in Windows Credential Manager."
 msgstr "A comunidade somente leitura à qual suas impressoras respondem. A maioria usa \"public\". Ela fica guardada no Gerenciador de Credenciais do Windows."
 
@@ -1844,20 +2075,26 @@ msgstr "Esta lista precisa de uma linha de cabeçalho."
 msgid "This list was saved by a newer version of CapyPanel. Update the app to open it."
 msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o aplicativo para abri-la."
 
+msgid "This printer doesn't report a level for this supply."
+msgstr "Esta impressora não informa o nível deste suprimento."
+
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyPanel."
 
 msgid "Tick Status or Logged-on users to check them"
 msgstr "Marque Status ou Usuários logados para verificá-los"
 
-msgid "Tick Status, Toner or Total pages to read them"
-msgstr "Marque Status, Toner ou Total de páginas para lê-las"
+msgid "Tick a column under Last check to read them"
+msgstr "Marque uma coluna em Última verificação para lê-las"
 
 msgid "Toner"
 msgstr "Toner"
 
 msgid "Toner low"
 msgstr "Toner baixo"
+
+msgid "Toner model"
+msgstr "Modelo do toner"
 
 msgid "Tool"
 msgstr "Ferramenta"
@@ -1877,11 +2114,8 @@ msgstr "Tipo"
 msgid "Type a tag and press Enter"
 msgstr "Digite uma tag e pressione Enter"
 
-msgid "Typed password forgotten."
-msgstr "A senha digitada foi esquecida."
-
-msgid "Typed passwords forgotten."
-msgstr "As senhas digitadas foram esquecidas."
+msgid "Type the user name."
+msgstr "Digite o nome do usuário."
 
 msgid "Unexpected error"
 msgstr "Erro inesperado"
@@ -1912,6 +2146,9 @@ msgstr "Inacessível"
 msgid "Unreadable"
 msgstr "Ilegível"
 
+msgid "Until CapyPanel closes"
+msgstr "Até o CapyPanel fechar"
+
 msgid "Use &defaults"
 msgstr "Usar &padrões"
 
@@ -1920,6 +2157,9 @@ msgstr "Usar o caminho &automático"
 
 msgid "Use this"
 msgstr "Usar este"
+
+msgid "Used for"
+msgstr "Usada para"
 
 msgid "User"
 msgstr "Usuário"
@@ -1943,6 +2183,12 @@ msgstr "Aviso"
 msgid "What the window shows when CapyPanel starts."
 msgstr "O que a janela mostra quando o CapyPanel inicia."
 
+msgid "What the window's ✕ does. In the tray, Refresh on its own and warnings keep working."
+msgstr "O que o ✕ da janela faz. Na bandeja, a atualização sozinha e os avisos continuam funcionando."
+
+msgid "When &closing"
+msgstr "Ao &fechar"
+
 msgid "Where"
 msgstr "Onde"
 
@@ -1959,9 +2205,15 @@ msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste 
 msgid "Where is {tool}?"
 msgstr "Onde está o {tool}?"
 
+msgid "Windows &notification"
+msgstr "&Notificação do Windows"
+
 #, python-brace-format
 msgid "Windows didn't keep it: {error}"
 msgstr "O Windows não a guardou: {error}"
+
+msgid "Windows encrypts them for your account, domain accounts too: anyone using your Windows session can connect with them."
+msgstr "O Windows as criptografa para a sua conta, inclusive contas de domínio: quem usar a sua sessão do Windows pode se conectar com elas."
 
 #, python-brace-format
 msgid "Windows error {code}."
@@ -1988,6 +2240,9 @@ msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
 msgid "Yellow"
 msgstr "Amarelo"
 
+msgid "You type them again the next time."
+msgstr "Você os digita de novo na próxima vez."
+
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
 
@@ -2002,6 +2257,12 @@ msgstr "ativa"
 
 msgid "address"
 msgstr "endereço"
+
+#, python-brace-format
+msgid "and {n} more"
+msgid_plural "and {n} more"
+msgstr[0] "e mais {n}"
+msgstr[1] "e mais {n}"
 
 msgid "asked by the tool"
 msgstr "a própria ferramenta pede"
@@ -2039,8 +2300,17 @@ msgstr "inativa"
 msgid "in “{group}”"
 msgstr "em “{group}”"
 
-msgid "level unknown"
-msgstr "nível desconhecido"
+msgid "it doesn't know the SNMP v3 user name."
+msgstr "ela não conhece o usuário SNMP v3."
+
+msgid "it refused the SNMP v3 request."
+msgstr "ela recusou o pedido SNMP v3."
+
+msgid "it wants authentication or encryption set differently."
+msgstr "ela espera a autenticação ou a criptografia definidas de outro jeito."
+
+msgid "its clock and CapyPanel's didn't agree."
+msgstr "o relógio dela e o do CapyPanel não bateram."
 
 msgid "made by another user"
 msgstr "feito por outro usuário"
@@ -2053,6 +2323,9 @@ msgstr "nome"
 
 msgid "name, address, group, tags, notes"
 msgstr "nome, endereço, grupo, tags, notas"
+
+msgid "not reported"
+msgstr "não informado"
 
 msgid "notes"
 msgstr "notas"
@@ -2101,16 +2374,38 @@ msgstr "usuário"
 msgid "user and password"
 msgstr "usuário e senha"
 
+msgid "v2c: a community string. v3: a user, with a password and encryption."
+msgstr "v2c: uma comunidade. v3: um usuário, com senha e criptografia."
+
+msgid "v2c: community string set. Kept in Windows Credential Manager."
+msgstr "v2c: comunidade definida. Guardada no Gerenciador de Credenciais do Windows."
+
+msgid "v2c: not set, printers are asked with \"public\"."
+msgstr "v2c: não definida, as impressoras são consultadas com \"public\"."
+
+msgid "v3: not set. Use Change… to add the user."
+msgstr "v3: não definida. Use Alterar… para adicionar o usuário."
+
+#, python-brace-format
+msgid "v3: user {parts}. Kept in Windows Credential Manager."
+msgstr "v3: usuário {parts}. Guardada no Gerenciador de Credenciais do Windows."
+
 msgid "with no group"
 msgstr "sem grupo"
+
+msgid "wrong authentication password or type."
+msgstr "senha ou tipo de autenticação errado."
+
+msgid "wrong encryption password."
+msgstr "senha da criptografia errada."
 
 #, python-brace-format
 msgid "{colour} {percent} %"
 msgstr "{colour} {percent} %"
 
 #, python-brace-format
-msgid "{colour}: level unknown"
-msgstr "{colour}: nível desconhecido"
+msgid "{colour}: not reported"
+msgstr "{colour}: não informado"
 
 #, python-brace-format
 msgid "{colour}: some left"
@@ -2149,6 +2444,10 @@ msgid "{name} ({n} printer)"
 msgid_plural "{name} ({n} printers)"
 msgstr[0] "{name} ({n} impressora)"
 msgstr[1] "{name} ({n} impressoras)"
+
+#, python-brace-format
+msgid "{name}: {why}"
+msgstr "{name}: {why}"
 
 #, python-brace-format
 msgid "{n} can't be added."
@@ -2236,6 +2535,22 @@ msgstr[0] "{n} host será adicionado."
 msgstr[1] "{n} hosts serão adicionados."
 
 #, python-brace-format
+msgid "{n} in Credential Manager"
+msgstr "{n} no Gerenciador de Credenciais"
+
+#, python-brace-format
+msgid "{n} kept: {places}."
+msgid_plural "{n} kept: {places}."
+msgstr[0] "{n} guardado: {places}."
+msgstr[1] "{n} guardados: {places}."
+
+#, python-brace-format
+msgid "{n} low"
+msgid_plural "{n} low"
+msgstr[0] "{n} com suprimento baixo"
+msgstr[1] "{n} com suprimento baixo"
+
+#, python-brace-format
 msgid "{n} not checked"
 msgid_plural "{n} not checked"
 msgstr[0] "{n} não verificado"
@@ -2278,6 +2593,12 @@ msgstr[0] "{n} impressora"
 msgstr[1] "{n} impressoras"
 
 #, python-brace-format
+msgid "{n} printer needs attention"
+msgid_plural "{n} printers need attention"
+msgstr[0] "{n} impressora requer atenção"
+msgstr[1] "{n} impressoras requerem atenção"
+
+#, python-brace-format
 msgid "{n} printer selected"
 msgid_plural "{n} printers selected"
 msgstr[0] "{n} impressora selecionada"
@@ -2309,6 +2630,16 @@ msgstr[0] "{n} ignorado."
 msgstr[1] "{n} ignorados."
 
 #, python-brace-format
+msgid "{n} stopped"
+msgid_plural "{n} stopped"
+msgstr[0] "{n} parada"
+msgstr[1] "{n} paradas"
+
+#, python-brace-format
+msgid "{n} until CapyPanel closes"
+msgstr "{n} até o CapyPanel fechar"
+
+#, python-brace-format
 msgid "{path} (in use)"
 msgstr "{path} (em uso)"
 
@@ -2335,6 +2666,10 @@ msgstr "{supply} baixo"
 #, python-brace-format
 msgid "{supply} nearly full"
 msgstr "{supply} quase cheio"
+
+#, python-brace-format
+msgid "{tag} ({n} of {total})"
+msgstr "{tag} ({n} de {total})"
 
 #, python-brace-format
 msgid "{tool} (not installed on this PC)"

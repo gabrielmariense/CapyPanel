@@ -13,15 +13,24 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QTreeWidgetItem
 from snmp_agent import Objects, running
 
+from capypanel.core import credstore
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import NO_GROUP, HostList
-from capypanel.core.printers import reading, snmp
+from capypanel.core.printers import reading, snmp, usm
 from capypanel.core.printers.printer import DOC360, PrinterInfo, info_of, with_info
 from capypanel.core.printers.reading import Device, Problem, Reading, State, Supply, SupplyKind
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.printers_tool import refresh, status
 from capypanel.ui.printers_tool import settings as settings_module
-from capypanel.ui.printers_tool.settings import BARS, TONER_VIEW
+from capypanel.ui.printers_tool.attention import notice_text
+from capypanel.ui.printers_tool.settings import (
+    AUTO_REFRESH,
+    BARS,
+    NOTIFY_LOW,
+    NOTIFY_STOPS,
+    SNMP_VERSION,
+    TONER_VIEW,
+)
 from capypanel.ui.printers_tool.status import AMBER, GREEN, GREY, RED, Checked
 from capypanel.ui.printers_tool.table import BAR_WIDTH, ROLE_SUPPLY
 from capypanel.ui.printers_tool.tool import PrintersTool
@@ -85,6 +94,9 @@ def test_toner_shows_the_lowest_toner_or_ink() -> None:
     assert status.toner(mono, 10).text == "Toner 83 %"  # no colour in its name
     some = _checked(supplies=(_supply("Black Cartridge", None, some_left=True),))
     assert status.toner(some, 10).text == "Black: some left"
+    silent = status.toner(_checked(supplies=(_supply("Black Cartridge", None),)), 10)
+    assert silent.text == "Black: not reported"
+    assert "This printer doesn't report a level for this supply." in silent.tip
     assert status.toner(_checked(), 10).text == ""  # no toner reported
     assert status.toner(Checked(NOW, offline=True), 10).text == ""
 
@@ -194,14 +206,24 @@ def test_the_low_level_comes_from_settings(printers: PrintersTool) -> None:
     assert printers.table._rows[lab.id].text(printers.table.TONER) == "Black 15 % · low"
 
 
-def test_the_report_gets_status_toner_and_the_page_count(printers: PrintersTool) -> None:
+def test_the_report_gets_everything_refresh_read(printers: PrintersTool) -> None:
     lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
-    assert printers._report_cells(lab.id) == ("", "", "")  # not checked yet
+    assert printers._report_cells(lab.id) == ("",) * 6  # not checked yet
     printers._checked[lab.id] = _checked(
-        state=State.IDLE, supplies=(_supply("Black Cartridge", 40),), pages=1_604_394
+        state=State.IDLE,
+        supplies=(
+            _supply("Black Cartridge HP CF258A", 40),
+            _supply("Imaging Drum", 80, SupplyKind.DRUM),
+        ),
+        pages=1_604_394,
+        mac="02:00:5E:AA:BB:01",
+        firmware="SAMPLE-FW 2.4.1",
     )
-    # Plain digits, so a spreadsheet reads the page count as a number.
-    assert printers._report_cells(lab.id) == ("Idle", "Black 40 %", "1604394")
+    # Plain digits, so a spreadsheet reads the page count as a number; only toners' names.
+    assert printers._report_cells(lab.id) == (
+        "Idle", "Black 40 %", "Black Cartridge HP CF258A", "1604394", "02:00:5E:AA:BB:01",
+        "SAMPLE-FW 2.4.1",
+    )  # fmt: skip
 
 
 def test_doc360_page_counters_show_an_error(printers: PrintersTool) -> None:
@@ -213,7 +235,7 @@ def test_doc360_page_counters_show_an_error(printers: PrintersTool) -> None:
     )
     printers._checked[lab.id] = _checked(state=State.IDLE, pages=1_604_394)
     # The SNMP counter isn't this printer's source, so neither shows it.
-    assert printers._report_cells(lab.id) == ("Idle", "", "Error")
+    assert printers._report_cells(lab.id)[:4] == ("Idle", "", "", "Error")
     printers.table.select_ids([lab.id])
     labels = [w.text() for w in printers.details.findChildren(QLabel)]
     assert "Error: CapyPanel can't read page counters from Doc360 MPS yet." in labels
@@ -259,17 +281,36 @@ def test_the_toner_column_shows_a_bar_when_settings_asks(printers: PrintersTool)
     printers.table.hide()
 
 
+def test_refresh_on_its_own_checks_every_printer_in_the_list(
+    printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert printers.auto_refresh() == 0 and not printers._auto_timer.isActive()  # off by default
+    group = printers.settings_group()
+    group.build()
+    every = group.general.auto_every
+    every.setCurrentIndex(every.findData(15))
+    assert printers.prefs[AUTO_REFRESH] == 15
+    assert printers._auto_timer.isActive() and printers._auto_timer.interval() == 15 * 60_000
+    asked: list[list[str]] = []
+    monkeypatch.setattr(
+        printers, "check_printers", lambda hosts, quiet: asked.append([h.name for h in hosts])
+    )
+    printers.search.setText("NO-ANSWER")  # one printer shown; warnings still count them all
+    printers._show_items()
+    printers._auto_timer.timeout.emit()
+    assert sorted(asked[0]) == ["3F-LAB-01", "NO-ANSWER"]
+    every.setCurrentIndex(every.findData(0))
+    assert not printers._auto_timer.isActive()
+
+
 def test_settings_keeps_the_community_in_the_vault_only(
     printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    kept: list[tuple[str, str | None]] = []
-    monkeypatch.setattr(settings_module.credstore, "save", lambda n, s: kept.append((n, s)))
-    monkeypatch.setattr(settings_module.credstore, "forget", lambda n: kept.append((n, None)))
-    monkeypatch.setattr(settings_module, "community_is_set", lambda: False)
     group = printers.settings_group()
     group.build()
     page = group.general
-    assert "public" in page.community_row.description.text()
+    assert page.version.currentData() == refresh.V2C  # the default
+    assert "public" in page.account_row.description.text()
 
     def answer(dialog: QDialog) -> QDialog.DialogCode:
         dialog.field.setText("SAMPLE-community")  # type: ignore[attr-defined]
@@ -277,6 +318,109 @@ def test_settings_keeps_the_community_in_the_vault_only(
 
     monkeypatch.setattr(settings_module, "run_modal", answer)
     page.change_button.click()
-    assert kept == [(refresh.COMMUNITY, "SAMPLE-community")]
-    assert page.community_row.description.text().startswith("Set.")
+    assert credstore.load(refresh.COMMUNITY) == "SAMPLE-community"
+    assert page.account_row.description.text().startswith("v2c: community string set.")
     assert "SAMPLE-community" not in str(printers.prefs)  # never in the settings file
+
+
+def test_settings_keeps_the_v3_account_in_the_vault_only(
+    printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    group = printers.settings_group()
+    group.build()
+    page = group.general
+    page.version.setCurrentIndex(page.version.findData(refresh.V3))
+    assert printers.prefs[SNMP_VERSION] == refresh.V3
+    assert "not set" in page.account_row.description.text()
+
+    def fill(dialog: QDialog) -> QDialog.DialogCode:
+        assert isinstance(dialog, settings_module.V3AccountDialog)
+        dialog.user.setText("sample-reader")
+        dialog.auth.setCurrentIndex(dialog.auth.findData(usm.Auth.SHA256))
+        dialog.auth_password.setText("short")
+        assert not dialog.save_button.isEnabled()  # under 8 characters
+        assert "8 characters" in dialog.problem.text()
+        dialog.auth_password.setText("auth-pass-1")
+        dialog.privacy_password.setText("priv-pass-1")
+        assert dialog.save_button.isEnabled()
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(settings_module, "run_modal", fill)
+    page.change_button.click()
+    assert refresh.v3_account() == usm.Account(
+        "sample-reader", usm.Auth.SHA256, "auth-pass-1", usm.Privacy.AES128, "priv-pass-1"
+    )
+    assert page.account_row.description.text() == (
+        "v3: user sample-reader, SHA-256, AES-128. Kept in Windows Credential Manager."
+    )
+    assert "pass-1" not in str(printers.prefs)
+
+    def keep(dialog: QDialog) -> QDialog.DialogCode:
+        # Kept passwords aren't shown; left empty, they stay as they were.
+        assert isinstance(dialog, settings_module.V3AccountDialog)
+        assert dialog.auth_password.text() == "" and dialog.privacy_password.text() == ""
+        assert dialog.save_button.isEnabled()
+        dialog.user.setText("other-reader")
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(settings_module, "run_modal", keep)
+    page.change_button.click()
+    account = refresh.v3_account()
+    assert account is not None and account.user == "other-reader"
+    assert account.auth_password == "auth-pass-1"
+
+
+def test_refresh_over_v3_reads_the_printer_or_says_why_it_refused(
+    printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
+    printers.set_snmp_version(refresh.V3)
+    printers.check_printers([lab])
+    assert printers._run is None  # no account yet: nothing is read
+    assert "SNMP v3 account" in printers._shell.messages[-1]  # type: ignore[attr-defined]
+
+    account = usm.Account("sample", usm.Auth.SHA, "auth-pass-1", usm.Privacy.AES128, "priv-pass-1")
+    refresh.save_v3_account(account)
+    with running(COLOUR, account=account) as agent:
+        monkeypatch.setattr(reading, "read", partial(reading.read, port=agent.port, timeout=0.2))
+        printers.check_printers([lab])
+        _wait(printers)
+    assert printers._checked[lab.id].reading is not None
+
+    refresh.save_v3_account(replace(account, auth_password="wrong-pass"))
+    with running(COLOUR, account=account) as agent:
+        monkeypatch.setattr(reading, "read", partial(reading.read, port=agent.port, timeout=0.2))
+        printers.check_printers([lab])
+        _wait(printers)
+    cell = status.status(printers._checked[lab.id], 10)
+    assert cell.text == "Refused"
+    assert "wrong authentication password" in cell.tip
+
+
+def test_refresh_on_its_own_notifies_what_is_new(
+    printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sent: list[tuple[str, str]] = []
+    printers.notify_requested.connect(lambda title, text: sent.append((title, text)))
+    assert printers.notify_choice() == NOTIFY_STOPS  # the default
+    with running(COLOUR) as agent:
+        monkeypatch.setattr(reading, "read", partial(reading.read, port=agent.port, timeout=0.2))
+        printers._auto_refresh()
+        _wait(printers)
+        # Stopped or offline only: the lab printer's low cyan isn't in it.
+        assert sent == [("1 printer needs attention", "NO-ANSWER: Offline")]
+        printers._auto_refresh()  # nothing new since the last one: no notification
+        _wait(printers)
+        assert len(sent) == 1
+        printers.check_printers(printers.document.hosts.hosts)  # type: ignore[union-attr]
+        _wait(printers)  # F5 doesn't notify: the window is in front of you
+        assert len(sent) == 1
+        printers.set_notify_choice(NOTIFY_LOW)
+        printers._checked.clear()
+        printers._count_attention()
+        printers._auto_refresh()
+        _wait(printers)
+    assert sent[-1] == (
+        "2 printers need attention", "3F-LAB-01: Cyan 8 %\nNO-ANSWER: Offline"
+    )  # fmt: skip
+    assert notice_text([f"P{n}" for n in range(7)]).splitlines()[-1] == "and 2 more"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 19:54-0300\n"
+"POT-Creation-Date: 2026-11-01 10:38-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -50,7 +50,7 @@ msgstr ""
 msgid "&Add…"
 msgstr ""
 
-msgid "&All profiles"
+msgid "&Authentication"
 msgstr ""
 
 msgid "&Brand:"
@@ -63,6 +63,9 @@ msgid "&Copy"
 msgstr ""
 
 msgid "&Create"
+msgstr ""
+
+msgid "&Credentials"
 msgstr ""
 
 msgid "&Credentials:"
@@ -95,6 +98,9 @@ msgstr ""
 msgid "&Edit…"
 msgstr ""
 
+msgid "&Encryption"
+msgstr ""
+
 msgid "&Export…"
 msgstr ""
 
@@ -104,7 +110,10 @@ msgstr ""
 msgid "&Fit columns to content"
 msgstr ""
 
-msgid "&Forget typed passwords"
+msgid "&Forget"
+msgstr ""
+
+msgid "&Forget all"
 msgstr ""
 
 msgid "&Formats…"
@@ -155,6 +164,9 @@ msgstr ""
 msgid "&Manage printer lists…"
 msgstr ""
 
+msgid "&Manage…"
+msgstr ""
+
 msgid "&Manual connection…"
 msgstr ""
 
@@ -173,10 +185,16 @@ msgstr ""
 msgid "&New list…"
 msgstr ""
 
+msgid "&New tag…"
+msgstr ""
+
 msgid "&New…"
 msgstr ""
 
 msgid "&Open"
+msgstr ""
+
+msgid "&Open CapyPanel"
 msgstr ""
 
 msgid "&Open a CSV file…"
@@ -195,6 +213,12 @@ msgid "&Preset:"
 msgstr ""
 
 msgid "&Printers"
+msgstr ""
+
+msgid "&Quit"
+msgstr ""
+
+msgid "&Quit CapyPanel"
 msgstr ""
 
 msgid "&Refresh"
@@ -239,6 +263,9 @@ msgstr ""
 msgid "&Show"
 msgstr ""
 
+msgid "&Show passwords"
+msgstr ""
+
 msgid "&Sort A–Z"
 msgstr ""
 
@@ -246,6 +273,9 @@ msgid "&Status"
 msgstr ""
 
 msgid "&Status bar"
+msgstr ""
+
+msgid "&Tags"
 msgstr ""
 
 msgid "&Tags:"
@@ -260,11 +290,23 @@ msgstr ""
 msgid "&Tool:"
 msgstr ""
 
+msgid "&User name"
+msgstr ""
+
 msgid "&User:"
 msgstr ""
 
 msgid "&View"
 msgstr ""
+
+msgid "(password only)"
+msgstr ""
+
+#, python-brace-format
+msgid "<b>{n} printer</b> needs attention: {reasons}."
+msgid_plural "<b>{n} printers</b> need attention: {reasons}."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "A chosen &group"
 msgstr ""
@@ -365,6 +407,11 @@ msgstr[1] ""
 msgid "Address"
 msgstr ""
 
+msgid ""
+"After a Refresh on its own, for printers that stopped or went offline "
+"(and with low supplies, if picked) since the one before."
+msgstr ""
+
 msgid "All details"
 msgstr ""
 
@@ -376,6 +423,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Already in the list, {place}"
+msgstr ""
+
+msgid "Also low supplies"
 msgstr ""
 
 #, python-brace-format
@@ -398,10 +448,16 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
+msgid "Ask each time"
+msgstr ""
+
 msgid "Ass&et tag:"
 msgstr ""
 
 msgid "Asset tag"
+msgstr ""
+
+msgid "Authentication &password"
 msgstr ""
 
 msgid "Bar"
@@ -462,7 +518,13 @@ msgstr ""
 msgid "Change path…"
 msgstr ""
 
+msgid "Change the connection profile"
+msgstr ""
+
 msgid "Change…"
+msgstr ""
+
+msgid "Check the SNMP account in Settings › Printers › Refresh."
 msgstr ""
 
 #, python-brace-format
@@ -576,6 +638,15 @@ msgid "Couldn't create “{path}”: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"Couldn't delete the password saved in Windows Credential Manager: {error}"
+"\n"
+"\n"
+"You can delete it in Control Panel › Credential Manager › Windows "
+"Credentials, under “{prefix}”."
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't move “{path}” to the Recycle Bin."
 msgstr ""
 
@@ -615,6 +686,13 @@ msgid "Couldn't save the list: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"Couldn't save the password in Windows Credential Manager: {error}\n"
+"\n"
+"It's kept until CapyPanel closes."
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't save where the tools are: {error}"
 msgstr ""
 
@@ -638,6 +716,9 @@ msgid "Created by:"
 msgstr ""
 
 msgid "Created when opened"
+msgstr ""
+
+msgid "Credential Manager"
 msgstr ""
 
 msgid "Credits"
@@ -694,6 +775,9 @@ msgstr ""
 msgid "Documentation:"
 msgstr ""
 
+msgid "Don't ask again (change it in Settings › CapyPanel › Startup)"
+msgstr ""
+
 msgid "Door open"
 msgstr ""
 
@@ -737,6 +821,9 @@ msgid ""
 "(name, address, group, tags, notes), so the two always match. Continue?"
 msgstr ""
 
+msgid "Encryption pass&word"
+msgstr ""
+
 msgid "Error"
 msgstr ""
 
@@ -753,16 +840,27 @@ msgstr ""
 msgid "Every computer you look after, in one window."
 msgstr ""
 
+msgid "Every login CapyPanel keeps for you. Passwords never show here."
+msgstr ""
+
 #, python-brace-format
 msgid "Every minute"
 msgid_plural "Every {n} minutes"
 msgstr[0] ""
 msgstr[1] ""
 
+msgid ""
+"Every printer in the open list, 8 at a time, while CapyPanel is open or "
+"in the tray."
+msgstr ""
+
 msgid "Everyone on this PC (shared)"
 msgstr ""
 
 msgid "File not found"
+msgstr ""
+
+msgid "Firmware"
 msgstr ""
 
 msgid "Folder"
@@ -789,6 +887,24 @@ msgid "For the list open now; each list keeps its own."
 msgstr ""
 
 msgid "For:"
+msgstr ""
+
+msgid "Forget &all"
+msgstr ""
+
+#, python-brace-format
+msgid "Forget {n} login?"
+msgid_plural "Forget all {n} logins?"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid ""
+"Forgotten logins are deleted from Credential Manager too; you type them "
+"again the next time. Where new ones are kept: Settings › Connection "
+"profiles › Credentials."
+msgstr ""
+
+msgid "Forgotten when CapyPanel closes."
 msgstr ""
 
 msgid "Formats CapyPanel can import"
@@ -873,6 +989,9 @@ msgstr ""
 msgid "Hosts with no profile &use"
 msgstr ""
 
+msgid "Hosts › Refresh"
+msgstr ""
+
 msgid "Hover a folder to see what it holds."
 msgstr ""
 
@@ -883,6 +1002,11 @@ msgid "Icons:"
 msgstr ""
 
 msgid "Idle"
+msgstr ""
+
+msgid ""
+"If a computer rejects it, CapyPanel stops and asks again instead of "
+"trying it on the others, so the account isn't locked."
 msgstr ""
 
 msgid "If that list can't be opened: the default list, then your personal list."
@@ -927,6 +1051,18 @@ msgstr ""
 msgid "Its own settings file"
 msgstr ""
 
+msgid "Keep CapyPanel running in the tray?"
+msgstr ""
+
+msgid "Keep in &tray"
+msgstr ""
+
+msgid "Keep running in the tray"
+msgstr ""
+
+msgid "Kept"
+msgstr ""
+
 msgid ""
 "Kept in memory until CapyPanel closes, never saved, and used only for "
 "hosts with this connection profile."
@@ -934,8 +1070,10 @@ msgstr ""
 
 msgid ""
 "Kept in memory until CapyPanel closes, never saved, and used only to read"
-" who is logged on. If a computer rejects it, CapyPanel stops and asks "
-"again instead of trying it on the others, so the account isn't locked."
+" who is logged on."
+msgstr ""
+
+msgid "Kept: type to change it"
 msgstr ""
 
 msgid "Language"
@@ -951,6 +1089,9 @@ msgid "Licenses"
 msgstr ""
 
 msgid "List"
+msgstr ""
+
+msgid "List only the printers that need attention"
 msgstr ""
 
 msgid ""
@@ -973,6 +1114,9 @@ msgid "Logged-on users"
 msgstr ""
 
 msgid "Logs"
+msgstr ""
+
+msgid "MAC address"
 msgstr ""
 
 msgid "Magenta"
@@ -1042,6 +1186,9 @@ msgstr ""
 msgid "New printer list"
 msgstr ""
 
+msgid "New tag"
+msgstr ""
+
 msgid "No address"
 msgstr ""
 
@@ -1089,6 +1236,12 @@ msgstr ""
 msgid "No settings mention “{text}”."
 msgstr ""
 
+msgid "None"
+msgstr ""
+
+msgid "None kept."
+msgstr ""
+
 msgid "Not a computer name or IP address"
 msgstr ""
 
@@ -1103,9 +1256,6 @@ msgid "Not opened: {names}"
 msgid_plural "Not opened ({n}): {names}"
 msgstr[0] ""
 msgstr[1] ""
-
-msgid "Not set: printers are asked with \"public\"."
-msgstr ""
 
 msgid "Not used: made by another user"
 msgstr ""
@@ -1316,6 +1466,9 @@ msgstr ""
 msgid "Printers"
 msgstr ""
 
+msgid "Printers › Refresh"
+msgstr ""
+
 msgid "Printing"
 msgstr ""
 
@@ -1329,6 +1482,9 @@ msgid "Programs (*.exe)"
 msgstr ""
 
 msgid "Put in &group"
+msgstr ""
+
+msgid "Quit"
 msgstr ""
 
 msgid "Read license"
@@ -1367,10 +1523,25 @@ msgstr ""
 msgid "Refresh logged-on users"
 msgstr ""
 
+msgid "Refresh on its &own"
+msgstr ""
+
+msgid ""
+"Refresh on its own and warnings keep working while CapyPanel is in the "
+"tray. Quit stops them."
+msgstr ""
+
 msgid "Refresh status &by itself"
 msgstr ""
 
 msgid "Refresh status by itself"
+msgstr ""
+
+msgid "Refused"
+msgstr ""
+
+#, python-brace-format
+msgid "Refused at {when}: {why}"
 msgstr ""
 
 msgid "Reload the list"
@@ -1461,10 +1632,28 @@ msgstr ""
 msgid "S&top"
 msgstr ""
 
-msgid "SNMP &community string"
+msgid "SNMP &account"
+msgstr ""
+
+msgid "SNMP &version"
+msgstr ""
+
+msgid "SNMP account (v3)"
 msgstr ""
 
 msgid "SNMP community string"
+msgstr ""
+
+msgid "SNMP community string (v2c)"
+msgstr ""
+
+msgid "SNMP v3 account"
+msgstr ""
+
+msgid "Sa&ved credentials"
+msgstr ""
+
+msgid "Sa&ved credentials…"
 msgstr ""
 
 #, python-brace-format
@@ -1498,6 +1687,25 @@ msgid "Save the hosts you pick, with the columns you pick, as a CSV file"
 msgstr ""
 
 msgid "Save the printers you pick, with the columns you pick, as a CSV file"
+msgstr ""
+
+msgid "Saved credentials"
+msgstr ""
+
+msgid "Saved for your Windows account."
+msgstr ""
+
+msgid ""
+"Saved in Windows Credential Manager for your Windows account (Settings › "
+"Connections), and used only for hosts with this connection profile."
+msgstr ""
+
+msgid ""
+"Saved in Windows Credential Manager for your Windows account (Settings › "
+"Connections), and used only to read who is logged on."
+msgstr ""
+
+msgid "Saved passwords deleted."
 msgstr ""
 
 msgid "Search"
@@ -1549,7 +1757,7 @@ msgstr ""
 msgid "Set tags"
 msgstr ""
 
-msgid "Set. Kept in Windows Credential Manager, never in a file."
+msgid "Set the SNMP v3 account in Settings › Printers › Refresh first."
 msgstr ""
 
 msgid "Settings"
@@ -1577,7 +1785,16 @@ msgid ""
 "only people Windows lets write that folder can add one."
 msgstr ""
 
+msgid "Show"
+msgstr ""
+
 msgid "Show &first"
+msgstr ""
+
+msgid "Show all"
+msgstr ""
+
+msgid "Show every printer again"
 msgstr ""
 
 msgid "Show this group &first"
@@ -1585,6 +1802,12 @@ msgstr ""
 
 msgid "Show users' do&main"
 msgstr ""
+
+#, python-brace-format
+msgid "Showing the <b>{n} printer</b> that needs attention."
+msgid_plural "Showing the <b>{n} printers</b> that need attention."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Signs in with"
 msgstr ""
@@ -1637,6 +1860,9 @@ msgstr ""
 msgid "Stopped"
 msgstr ""
 
+msgid "Stopped or offline"
+msgstr ""
+
 #, python-brace-format
 msgid "Stopped: {n} host wasn't checked."
 msgid_plural "Stopped: {n} hosts weren't checked."
@@ -1664,6 +1890,9 @@ msgstr ""
 msgid "Table"
 msgstr ""
 
+msgid "Tag for the selected items:"
+msgstr ""
+
 #, python-brace-format
 msgid "Tag: {tag}"
 msgstr ""
@@ -1686,6 +1915,9 @@ msgid "Tags: {tags}"
 msgstr ""
 
 msgid "Takes it out of your lists, or deletes its file too"
+msgstr ""
+
+msgid "Temporary credentials"
 msgstr ""
 
 msgid "Text"
@@ -1718,6 +1950,9 @@ msgstr ""
 msgid "The arguments use an option that “options” doesn't list: “{option}”."
 msgstr ""
 
+msgid "The authentication password needs at least 8 characters."
+msgstr ""
+
 msgid ""
 "The computer didn't accept the account: a wrong password, a locked "
 "account, or an account it doesn't trust."
@@ -1740,6 +1975,9 @@ msgstr ""
 msgid ""
 "The default list was made by another user, so CapyPanel won't open it. An"
 " administrator can replace or delete “{path}”."
+msgstr ""
+
+msgid "The encryption password needs at least 8 characters."
 msgstr ""
 
 msgid "The file doesn't contain a list."
@@ -1830,6 +2068,11 @@ msgid "The profile's “{key}” must be lowercase letters, digits, - or _."
 msgstr ""
 
 msgid ""
+"The read-only SNMP v3 user your printers know. The passwords are kept in "
+"Windows Credential Manager."
+msgstr ""
+
+msgid ""
 "The read-only community string your printers answer to. Most use "
 "\"public\". It's kept in Windows Credential Manager."
 msgstr ""
@@ -1901,19 +2144,25 @@ msgid ""
 "open it."
 msgstr ""
 
+msgid "This printer doesn't report a level for this supply."
+msgstr ""
+
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr ""
 
 msgid "Tick Status or Logged-on users to check them"
 msgstr ""
 
-msgid "Tick Status, Toner or Total pages to read them"
+msgid "Tick a column under Last check to read them"
 msgstr ""
 
 msgid "Toner"
 msgstr ""
 
 msgid "Toner low"
+msgstr ""
+
+msgid "Toner model"
 msgstr ""
 
 msgid "Tool"
@@ -1934,10 +2183,7 @@ msgstr ""
 msgid "Type a tag and press Enter"
 msgstr ""
 
-msgid "Typed password forgotten."
-msgstr ""
-
-msgid "Typed passwords forgotten."
+msgid "Type the user name."
 msgstr ""
 
 msgid "Unexpected error"
@@ -1969,6 +2215,9 @@ msgstr ""
 msgid "Unreadable"
 msgstr ""
 
+msgid "Until CapyPanel closes"
+msgstr ""
+
 msgid "Use &defaults"
 msgstr ""
 
@@ -1976,6 +2225,9 @@ msgid "Use the &automatic path"
 msgstr ""
 
 msgid "Use this"
+msgstr ""
+
+msgid "Used for"
 msgstr ""
 
 msgid "User"
@@ -2000,6 +2252,14 @@ msgstr ""
 msgid "What the window shows when CapyPanel starts."
 msgstr ""
 
+msgid ""
+"What the window's ✕ does. In the tray, Refresh on its own and warnings "
+"keep working."
+msgstr ""
+
+msgid "When &closing"
+msgstr ""
+
 msgid "Where"
 msgstr ""
 
@@ -2018,8 +2278,16 @@ msgstr ""
 msgid "Where is {tool}?"
 msgstr ""
 
+msgid "Windows &notification"
+msgstr ""
+
 #, python-brace-format
 msgid "Windows didn't keep it: {error}"
+msgstr ""
+
+msgid ""
+"Windows encrypts them for your account, domain accounts too: anyone using"
+" your Windows session can connect with them."
 msgstr ""
 
 #, python-brace-format
@@ -2051,6 +2319,9 @@ msgstr ""
 msgid "Yellow"
 msgstr ""
 
+msgid "You type them again the next time."
+msgstr ""
+
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr ""
 
@@ -2065,6 +2336,12 @@ msgstr ""
 
 msgid "address"
 msgstr ""
+
+#, python-brace-format
+msgid "and {n} more"
+msgid_plural "and {n} more"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "asked by the tool"
 msgstr ""
@@ -2102,7 +2379,16 @@ msgstr ""
 msgid "in “{group}”"
 msgstr ""
 
-msgid "level unknown"
+msgid "it doesn't know the SNMP v3 user name."
+msgstr ""
+
+msgid "it refused the SNMP v3 request."
+msgstr ""
+
+msgid "it wants authentication or encryption set differently."
+msgstr ""
+
+msgid "its clock and CapyPanel's didn't agree."
 msgstr ""
 
 msgid "made by another user"
@@ -2115,6 +2401,9 @@ msgid "name"
 msgstr ""
 
 msgid "name, address, group, tags, notes"
+msgstr ""
+
+msgid "not reported"
 msgstr ""
 
 msgid "notes"
@@ -2164,7 +2453,29 @@ msgstr ""
 msgid "user and password"
 msgstr ""
 
+msgid "v2c: a community string. v3: a user, with a password and encryption."
+msgstr ""
+
+msgid "v2c: community string set. Kept in Windows Credential Manager."
+msgstr ""
+
+msgid "v2c: not set, printers are asked with \"public\"."
+msgstr ""
+
+msgid "v3: not set. Use Change… to add the user."
+msgstr ""
+
+#, python-brace-format
+msgid "v3: user {parts}. Kept in Windows Credential Manager."
+msgstr ""
+
 msgid "with no group"
+msgstr ""
+
+msgid "wrong authentication password or type."
+msgstr ""
+
+msgid "wrong encryption password."
 msgstr ""
 
 #, python-brace-format
@@ -2172,7 +2483,7 @@ msgid "{colour} {percent} %"
 msgstr ""
 
 #, python-brace-format
-msgid "{colour}: level unknown"
+msgid "{colour}: not reported"
 msgstr ""
 
 #, python-brace-format
@@ -2218,6 +2529,10 @@ msgid "{name} ({n} printer)"
 msgid_plural "{name} ({n} printers)"
 msgstr[0] ""
 msgstr[1] ""
+
+#, python-brace-format
+msgid "{name}: {why}"
+msgstr ""
 
 #, python-brace-format
 msgid "{n} can't be added."
@@ -2313,6 +2628,22 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} in Credential Manager"
+msgstr ""
+
+#, python-brace-format
+msgid "{n} kept: {places}."
+msgid_plural "{n} kept: {places}."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} low"
+msgid_plural "{n} low"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} not checked"
 msgid_plural "{n} not checked"
 msgstr[0] ""
@@ -2355,6 +2686,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} printer needs attention"
+msgid_plural "{n} printers need attention"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} printer selected"
 msgid_plural "{n} printers selected"
 msgstr[0] ""
@@ -2386,6 +2723,16 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} stopped"
+msgid_plural "{n} stopped"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} until CapyPanel closes"
+msgstr ""
+
+#, python-brace-format
 msgid "{path} (in use)"
 msgstr ""
 
@@ -2411,6 +2758,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{supply} nearly full"
+msgstr ""
+
+#, python-brace-format
+msgid "{tag} ({n} of {total})"
 msgstr ""
 
 #, python-brace-format

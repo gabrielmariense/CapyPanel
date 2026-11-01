@@ -82,7 +82,9 @@ class CheckRun(QObject):
 class AccountDialog(QDialog):
     """Another account for reading who is logged on, when the Windows login can't."""
 
-    def __init__(self, parent: QWidget | None, reason: str, user: str = "") -> None:
+    def __init__(
+        self, parent: QWidget | None, reason: str, user: str = "", *, saved: bool = False
+    ) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Account for logged-on users"))
         intro = QLabel(reason)
@@ -96,13 +98,18 @@ class AccountDialog(QDialog):
         form = QFormLayout()
         form.addRow(_("&User:"), self.user)
         form.addRow(_("&Password:"), self.password)
-        note = hint(
-            _(
-                "Kept in memory until CapyPanel closes, never saved, and used only to read who "
-                "is logged on. If a computer rejects it, CapyPanel stops and asks again instead "
-                "of trying it on the others, so the account isn't locked."
-            )
+        kept = (
+            _("Saved in Windows Credential Manager for your Windows account (Settings › "
+              "Connections), and used only to read who is logged on.")
+            if saved
+            else _("Kept in memory until CapyPanel closes, never saved, and used only to read "
+                   "who is logged on.")
+        )  # fmt: skip
+        stops = _(
+            "If a computer rejects it, CapyPanel stops and asks again instead of trying it on "
+            "the others, so the account isn't locked."
         )
+        note = hint(f"{kept} {stops}")
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )

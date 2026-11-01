@@ -184,7 +184,9 @@ def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
     retried = [(a, acc) for a, _s, _u, acc in answers["seen"] if acc is not None]
     assert retried == [("10.0.0.3", Account("CORP\\admin", "pw"))]
     assert _cells(window, "PC-3")[1] == "CORP\\ana"
-    window.hosts.forget_passwords()
+    [kept] = window.hosts.kept_logins()
+    assert (kept.used_for, kept.user, kept.saved) == ("Logged-on users", "CORP\\admin", False)
+    kept.forget()
     assert window.hosts._account is None
 
 
@@ -222,7 +224,7 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     window.hosts._item_menu(QPoint(row.left() + 10, row.center().y()))  # on the name
     assert seen == [
         "&Connect", "Refresh &status", "Refresh &logged-on users", "Co&py",
-        "&Edit selected…", "&Move to", "&Remove selected",
+        "&Edit selected…", "&Move to", "&Tags", "&Remove selected",
     ]  # fmt: skip
 
 

@@ -39,6 +39,12 @@ class FakeShell:
     def show_message(self, text: str, timeout: int = 5000) -> None:
         self.messages.append(text)
 
+    def kept_logins(self) -> list[Any]:
+        return []
+
+    def open_saved_credentials(self, parent: Any = None) -> None:
+        pass
+
 
 @pytest.fixture
 def shell(tmp_path: Path) -> FakeShell:
@@ -271,7 +277,7 @@ def test_the_printer_menu_opens_the_web_page_first(
     printers._item_menu(printers.table.visualItemRect(row).center())
     texts = [menus.label(a) for a in shown[-1].actions() if not a.isSeparator()]
     assert texts == ["Open &web page", "&Refresh", "Co&py", "&Edit selected…", "&Move to",
-                     "&Remove selected"]  # fmt: skip
+                     "&Tags", "&Remove selected"]  # fmt: skip
     assert shown[-1].defaultAction() is printers.commands.open_web_page
     copy = shown[-1].actions()[4].menu()
     assert isinstance(copy, QMenu)
@@ -327,9 +333,11 @@ def test_report_lists_the_printers_columns_and_last_check(
     report.boxes["notes"].setChecked(False)
     assert printers.prefs["export_columns"][-1] == "tags"  # in the Printers section
     assert "export_columns" not in shell.prefs  # Hosts' Report keeps its own choices
-    for key in ("status", "toner", "pages"):
+    for key in report.CHECKED:
         report.boxes[key].setChecked(True)
-    assert report.header()[-3:] == ["Status", "Toner", "Total pages"]
+    assert report.header()[-6:] == [
+        "Status", "Toner", "Toner model", "Total pages", "MAC address", "Firmware",
+    ]  # fmt: skip
 
 
 def test_counts_agree_with_printer_in_portuguese(printers: PrintersTool) -> None:

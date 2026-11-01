@@ -33,7 +33,7 @@ from capypanel.core.i18n import _, ngettext
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.export_hosts import Source
 from capypanel.ui.groups import ManageGroupsDialog, TreeMenu, fill_host_move_menu, fill_move_menu
-from capypanel.ui.hosts import confirm, group_path
+from capypanel.ui.hosts import MAX_TAG, confirm, group_path
 from capypanel.ui.list_workspace.actions import ListActions
 from capypanel.ui.list_workspace.details import DetailsPanel
 from capypanel.ui.list_workspace.panels import ItemTable, NavigationPane, SearchBox, TagStrip
@@ -1040,7 +1040,8 @@ class ListWorkspace(Tool):
             )
 
     def add_move_menu(self, menu: QMenu, items: Sequence[Host]) -> None:
-        """Move to: "No group", then the groups as a tree; where they all are is ticked."""
+        """Move to: "No group", then the groups as a tree; where they all are is ticked. Then
+        Tags, which both tools show right after it."""
         if not items or self._doc is None:
             return
         move = TreeMenu(_("&Move to"), menu)
@@ -1052,6 +1053,51 @@ class ListWorkspace(Tool):
         fill_host_move_menu(
             move, self._doc.hosts, lambda g: self.move_items(ids, g), current=current
         )
+        self._add_tags_menu(menu, items)
+
+    def _add_tags_menu(self, menu: QMenu, items: Sequence[Host]) -> None:
+        """Tags: the list's tags, ticked where every selected item has it, "(1 of 2)" where only
+        some do. Picking one gives it to all of them, or takes it from all when all had it."""
+        assert self._doc is not None
+        tags = menu.addMenu(_("&Tags"))
+        tags.setEnabled(self._writable() is not None)
+        ids = [h.id for h in items]
+        for tag in sorted(self._doc.hosts.all_tags(), key=str.casefold):
+            having = sum(tag in h.tags for h in items)
+            every = having == len(items)
+            text = (
+                tag
+                if every or not having
+                else _("{tag} ({n} of {total})").format(tag=tag, n=having, total=len(items))
+            )
+            item = tags.addAction(text.replace("&", "&&"))
+            item.setCheckable(True)
+            item.setChecked(every)
+            item.triggered.connect(
+                lambda _c=False, t=tag, off=every: self.tag_items(ids, t, on=not off)
+            )
+        if tags.actions():
+            tags.addSeparator()
+        new = tags.addAction(_("&New tag…"))
+        new.triggered.connect(lambda: self._new_tag(ids))
+
+    def tag_items(self, ids: list[str], tag: str, *, on: bool) -> None:
+        doc = self._writable()
+        if doc is not None:
+            self._commit(doc.hosts.tag_hosts(ids, tag, on))
+
+    def _new_tag(self, ids: list[str]) -> None:
+        """A tag typed once, given to every selected item. One the list has in another case
+        keeps the list's spelling, like the edit window's suggestions."""
+        doc = self._writable()
+        if doc is None:
+            return
+        typed, ok = QInputDialog.getText(self, _("New tag"), _("Tag for the selected items:"))
+        tag = typed.strip()[:MAX_TAG]
+        if not ok or not tag:
+            return
+        known = {t.casefold(): t for t in doc.hosts.all_tags()}
+        self.tag_items(ids, known.get(tag.casefold(), tag), on=True)
 
     def _heading_menu(self, position: QPoint) -> None:
         menu = QMenu(self)

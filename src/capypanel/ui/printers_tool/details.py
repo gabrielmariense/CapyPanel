@@ -83,13 +83,15 @@ class PrinterDetailsPanel(DetailsPanel):
         if about:
             layout.addWidget(self.muted(about))
 
+        reading = shown.checked.reading if shown.checked else None
+        mac, firmware = (reading.mac, reading.firmware) if reading else ("", "")
         self.section(layout, _("Connection"))
         self._fields(layout, (("address", _("Address"), printer.address),
-                              ("group", _("Group"), shown.group)))  # fmt: skip
+                              ("group", _("Group"), shown.group),
+                              ("mac", _("MAC address"), mac)))  # fmt: skip
 
         self._supplies(layout, shown)
 
-        reading = shown.checked.reading if shown.checked else None
         self.section(layout, _("Printer"))
         for key, label, value, read in (
             ("brand", _("Brand"), info.brand, reading.brand if reading else ""),
@@ -99,7 +101,8 @@ class PrinterDetailsPanel(DetailsPanel):
             self._fields(layout, ((key, label, value),))
             if read and read.casefold() != value.strip().casefold():
                 layout.addWidget(self._printer_says(key, read, shown.use))
-        self._fields(layout, (("asset_tag", _("Asset tag"), info.asset_tag),))
+        self._fields(layout, (("asset_tag", _("Asset tag"), info.asset_tag),
+                              ("firmware", _("Firmware"), firmware)))  # fmt: skip
 
         self.section(layout, _("Page counters"))
         pages = reading.pages if reading else None
@@ -169,6 +172,11 @@ class PrinterDetailsPanel(DetailsPanel):
             name = self.muted(supply.name)
             name.setTextFormat(Qt.TextFormat.PlainText)  # the printer's own words
             top.addWidget(name, 1)
+            if not status.reports_level(supply):  # an empty bar would only look like 0 %
+                layout.addLayout(top)
+                layout.addWidget(self.muted(status.no_level_text()))
+                layout.addSpacing(2)
+                continue
             level = QLabel(status.level_text(supply))
             if status.is_low(supply, shown.low):
                 words = _("{level} · Low") if not supply.receptacle else _("{level} · Nearly full")
