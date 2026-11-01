@@ -67,6 +67,7 @@ class MainWindow(QMainWindow):
         self._tool_actions.addAction(self._home_action)
         self.addAction(self._home_action)
         self._status: dict[str, _StatusGroup] = {}  # each tool's, on the status bar's right
+        self._badges: dict[str, int] = {}  # each tool's count of items needing attention
         self._page_of: dict[str, QWidget] = {}  # each tool's page: its toolbar and the tool
         for make in tools:
             self._add_tool(make(self))
@@ -118,6 +119,7 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(right)
         self._status[tool_id] = right
         tool.title_changed.connect(lambda _name, t=tool_id: self._title_changed(t))
+        tool.badge_changed.connect(lambda count, t=tool_id: self._badge_changed(t, count))
 
     def shown_tool(self) -> Tool | None:
         """None while Home is shown."""
@@ -223,8 +225,8 @@ class MainWindow(QMainWindow):
     def _retranslate_menus(self) -> None:
         retranslate_actions(self.commands)
         self.rail.retranslate()
-        for index, (tool_id, tool) in enumerate(self.tools.items(), start=1):
-            self.rail.buttons[tool_id].setToolTip(f"{tool.tool_name()} (Ctrl+{index})")
+        for tool_id in self.tools:
+            self._rail_tip(tool_id)
         self._home_action.setText(_("Hom&e"))
         for action in self._tool_list_actions():
             action.setText(self.tools[str(action.data())].menu_name())
@@ -271,6 +273,20 @@ class MainWindow(QMainWindow):
     def _align_toolbar(self) -> None:
         if (tool := self.shown_tool()) is not None:
             tool.align_toolbar_later()
+
+    def _badge_changed(self, tool_id: str, count: int) -> None:
+        self._badges[tool_id] = count
+        self.rail.set_badge(tool_id, count)
+        self._rail_tip(tool_id)
+
+    def _rail_tip(self, tool_id: str) -> None:
+        """The rail icon's tip, "Printers (Ctrl+2)", and under it what the red count means,
+        while there's one."""
+        tool, index = self.tools[tool_id], list(self.tools).index(tool_id) + 1
+        tip = f"{tool.tool_name()} (Ctrl+{index})"
+        if count := self._badges.get(tool_id, 0):
+            tip = "\n".join((tip, tool.attention_text(count)))
+        self.rail.buttons[tool_id].setToolTip(tip)
 
     def _title_changed(self, tool_id: str) -> None:
         if tool_id == self._shown:

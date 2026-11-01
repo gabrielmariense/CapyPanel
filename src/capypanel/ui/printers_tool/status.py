@@ -5,6 +5,7 @@ import html
 import re
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 
 from capypanel.core.i18n import _
 from capypanel.core.printers import snmp
@@ -57,6 +58,15 @@ class Checked:
     refused: str = ""  # it refused the SNMP v3 account: snmp.Refused's reason
 
 
+class Attention(Enum):
+    """Why a printer needs attention, for the warnings: the rail's count, the strip above the
+    table and Windows notifications."""
+
+    STOPPED = "stopped"
+    OFFLINE = "offline"
+    LOW = "low"
+
+
 @dataclass(frozen=True)
 class Cell:
     text: str
@@ -99,6 +109,23 @@ def status(checked: Checked | None, low: int) -> Cell:
         return Cell(words, tip, AMBER)
     words = _STATES[reading.state]() if reading.state in _STATES else _("Ready")
     return Cell(words, tip, GREEN)
+
+
+def attention(checked: Checked | None, low: int) -> Attention | None:
+    """A stopped printer (the red Status), one that didn't answer, or one with a toner, ink,
+    drum or box at the low level; None for the rest. "Needs attention" from the printer's own
+    messages, a refused account or an unreadable answer don't count: they're not warnings."""
+    if checked is None:
+        return None
+    if checked.offline:
+        return Attention.OFFLINE
+    if checked.reading is None:
+        return None
+    if status(checked, low).color == RED:
+        return Attention.STOPPED
+    if any(is_low(s, low) for s in checked.reading.supplies):
+        return Attention.LOW
+    return None
 
 
 def toner_models(reading: Reading) -> str:

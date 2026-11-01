@@ -8,7 +8,7 @@ from dataclasses import replace
 
 from PySide6.QtCore import Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QGuiApplication
-from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QWidget
+from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QVBoxLayout, QWidget
 
 from capypanel.core.hosts.document import starter_list
 from capypanel.core.hosts.model import Host, HostListRuleError
@@ -22,6 +22,7 @@ from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 from capypanel.ui.printers_tool import status
 from capypanel.ui.printers_tool.actions import create_actions, retranslate_actions
+from capypanel.ui.printers_tool.attention import AttentionStrip, attention_text
 from capypanel.ui.printers_tool.details import PrinterDetails, PrinterDetailsPanel
 from capypanel.ui.printers_tool.dialog import PrinterDialog
 from capypanel.ui.printers_tool.refresh import V2C, V3, PrinterRun, community, v3_account
@@ -37,7 +38,7 @@ from capypanel.ui.printers_tool.settings import (
     TONER_VIEW,
     PrintersSettings,
 )
-from capypanel.ui.printers_tool.status import Cell, Checked
+from capypanel.ui.printers_tool.status import Attention, Cell, Checked
 from capypanel.ui.printers_tool.table import PrinterTable
 from capypanel.ui.printers_tool.toolbar import PrintersToolBar
 
@@ -70,6 +71,10 @@ class PrintersTool(ListWorkspace):
         self.table: PrinterTable = PrinterTable()
         self.details: PrinterDetailsPanel = PrinterDetailsPanel()
         self.toolbar: PrintersToolBar = PrintersToolBar(self.commands)
+        self._checked: dict[str, Checked] = {}  # each printer's last Refresh, in memory only
+        self.attention_strip = AttentionStrip()
+        self._attention: dict[str, Attention] = {}  # the open list's printers that need it
+        self._only_attention = False  # the strip's Show: the table lists just those
         super().__init__(
             shell,
             commands=self.commands,
@@ -79,7 +84,9 @@ class PrintersTool(ListWorkspace):
         )
         for action in vars(self.commands).values():
             action.setParent(self)
-        self._checked: dict[str, Checked] = {}  # each printer's last Refresh, in memory only
+        column = self.items_pane.layout()
+        assert isinstance(column, QVBoxLayout)
+        column.insertWidget(1, self.attention_strip)  # right under the search box
         self._run: PrinterRun | None = None
         self._progress = QLabel()
         self._stop_button = QToolButton()
@@ -121,6 +128,10 @@ class PrintersTool(ListWorkspace):
         self.table.addAction(a.open_web_page)
         a.open_web_page.triggered.connect(self.open_web_pages)
         a.copy_address.triggered.connect(self._copy_address)
+        self.attention_strip.show_clicked.connect(self._toggle_attention)
+        # Picking a group or a tag, or searching, means browsing again: every printer.
+        self.nav.filter_changed.connect(self._leave_attention)
+        self.search.textChanged.connect(self._leave_attention)
 
     # ---- texts ----
 
@@ -275,6 +286,7 @@ class PrintersTool(ListWorkspace):
             self.prefs["low_level"] = low
             self.table.low = low
             self._show_all_cells()
+            self._count_attention()
 
     def snmp_version(self) -> str:
         """Settings' SNMP version: V2C (the default) or V3."""
@@ -359,6 +371,71 @@ class PrintersTool(ListWorkspace):
             self.checks_changed.disconnect(dialog.checks_changed)
         if dialog.outcome:
             self._shell.show_message(dialog.outcome, 10_000)
+
+    # ---- warnings: the rail's count and the strip ----
+
+    def refresh(self) -> None:
+        super().refresh()
+        self._count_attention()  # another list, or printers added or removed
+
+    def attention_text(self, n: int) -> str:
+        return attention_text(n)
+
+    def attention(self) -> dict[str, Attention]:
+        """The open list's printers that need attention, by id, from their last Refresh."""
+        return dict(self._attention)
+
+    def _count_attention(self) -> None:
+        doc, low = self._doc, self.low_level()
+        found: dict[str, Attention] = {}
+        for printer in doc.hosts.hosts if doc else ():
+            if (why := status.attention(self._checked.get(printer.id), low)) is not None:
+                found[printer.id] = why
+        changed = found != self._attention
+        self._attention = found
+        if self._only_attention and not found:
+            self._only_attention = False  # nothing left to list: back to every printer
+            self._show_items()
+        elif self._only_attention and changed:
+            self._show_items()
+        self.attention_strip.show_found(list(found.values()), self._only_attention)
+        if changed:
+            self.badge_changed.emit(len(found))
+
+    def show_attention(self) -> None:
+        """Only the printers that need attention, out of the whole list: no search, group or
+        tags left picked to hide some of them."""
+        if not self._attention:
+            return
+        self._clear_search()
+        self.nav.show_view("all", "")
+        self.nav.clear_tags()
+        self._only_attention = True
+        self._show_items()
+        self.attention_strip.show_found(list(self._attention.values()), True)
+
+    def _toggle_attention(self) -> None:
+        if self._only_attention:
+            self._leave_attention()
+        else:
+            self.show_attention()
+
+    def _leave_attention(self) -> None:
+        if self._only_attention:
+            self._only_attention = False
+            self._show_items()
+            self.attention_strip.show_found(list(self._attention.values()), False)
+
+    def fill_table(self, items: Sequence[Host]) -> None:
+        super().fill_table(self._narrowed(items))
+
+    def visible_items(self) -> tuple[Host, ...]:
+        return tuple(self._narrowed(super().visible_items()))
+
+    def _narrowed(self, items: Sequence[Host]) -> Sequence[Host]:
+        if not self._only_attention:
+            return items
+        return [p for p in items if p.id in self._attention]
 
     # ---- web pages ----
 
@@ -501,6 +578,7 @@ class PrintersTool(ListWorkspace):
         run.done += 1
         self._checked[printer_id] = checked
         self.table.show_cells(printer_id)
+        self._count_attention()
         if self.table.selected_ids() in ([printer_id], []):  # its details, or the summary
             self._selection_changed()
         self._show_progress()

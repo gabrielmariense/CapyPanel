@@ -46,6 +46,7 @@ class Tool(QWidget):
     ICON: ClassVar[str] = ""  # a Tabler icon, for the rail
     INHERITS_TOP_LEVEL: ClassVar[bool] = False  # Hosts: 0.19 kept its settings at the top
     title_changed = Signal(str)  # the window title's first part, or "" for none
+    badge_changed = Signal(int)  # how many items need attention: the rail's count; 0 hides it
 
     def __init__(self, shell: Shell, toolbar: ToolBar):
         super().__init__()
@@ -70,6 +71,13 @@ class Tool(QWidget):
     def title(self) -> str:
         """The window title's first part (the open list's name), or "" for none."""
         return ""
+
+    def attention_text(self, n: int) -> str:
+        """What its rail count means, "3 printers need attention", for tooltips and the tray."""
+        return ""
+
+    def show_attention(self) -> None:
+        """Lists just the items that need attention (the tray's menu asks for it)."""
 
     def status_widgets(self) -> list[QWidget]:
         """Shown on the right of the status bar while the tool is."""

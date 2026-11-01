@@ -3,18 +3,20 @@ bottom."""
 
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import QButtonGroup, QFrame, QToolButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QButtonGroup, QFrame, QLabel, QToolButton, QVBoxLayout, QWidget
 
 from capypanel.core.i18n import _
 from capypanel.ui.icons import tabler_icon
 
 RAIL_WIDTH = 52
 ICON_SIZE = 22
+BADGE = 16  # px: the count's height, and its narrowest width
+BADGE_RED = "#e5534b"  # the Status column's red
 
 
 class ToolRail(QWidget):
     """Icons only, each with a tooltip. The tool shown, or Home, has a tinted square behind
-    its icon."""
+    its icon. A tool with items needing attention shows their count on its icon, in red."""
 
     home_requested = Signal()
     settings_requested = Signal()
@@ -26,6 +28,7 @@ class ToolRail(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)  # the stylesheet paints it
         self.setFixedWidth(RAIL_WIDTH)
         self.buttons: dict[str, QToolButton] = {}
+        self.badges: dict[str, QLabel] = {}
         self._icons: dict[str, str] = {}
         # Home or one tool is always shown: clicking it again keeps it picked.
         self._tools = QButtonGroup(self)
@@ -59,8 +62,34 @@ class ToolRail(QWidget):
         self._layout.insertWidget(len(self.buttons) + 1, button, 0, Qt.AlignmentFlag.AlignHCenter)
         button.clicked.connect(lambda: self.tool_picked.emit(tool_id))
         button.toggled.connect(lambda _on: self.restyle())
+        badge = QLabel(button)  # on the icon's top right corner, over the button
+        badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        badge.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)  # the button's tip
+        badge.hide()
+        self.badges[tool_id] = badge
         self.restyle()
         return button
+
+    def set_badge(self, tool_id: str, count: int) -> None:
+        """A tool's count on its icon; 0 hides it. Past 99 it says "99+"."""
+        badge = self.badges[tool_id]
+        badge.setVisible(count > 0)
+        if count > 0:
+            badge.setText(str(count) if count < 100 else "99+")
+            self._place_badge(tool_id)
+
+    def _place_badge(self, tool_id: str) -> None:
+        badge, button = self.badges[tool_id], self.buttons[tool_id]
+        font = badge.font()
+        font.setBold(True)
+        font.setPixelSize(BADGE - 5)
+        badge.setFont(font)
+        width = max(BADGE, badge.fontMetrics().horizontalAdvance(badge.text()) + 8)
+        badge.setFixedSize(width, BADGE)
+        badge.move(button.width() - width, 0)
+        badge.setStyleSheet(
+            f"background: {BADGE_RED}; color: white; border-radius: {BADGE // 2}px; padding: 0;"
+        )
 
     def show_tool(self, tool_id: str | None) -> None:
         """None: Home."""
@@ -87,6 +116,9 @@ class ToolRail(QWidget):
         home = text if self.home_button.isChecked() else dim
         self.home_button.setIcon(tabler_icon("home", home, ICON_SIZE))
         self.settings_button.setIcon(tabler_icon("settings", dim, ICON_SIZE))
+        for tool_id, badge in self.badges.items():
+            if not badge.isHidden():
+                self._place_badge(tool_id)  # a theme's font may change its width
 
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
