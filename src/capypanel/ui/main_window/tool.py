@@ -47,6 +47,7 @@ class Tool(QWidget):
     INHERITS_TOP_LEVEL: ClassVar[bool] = False  # Hosts: 0.19 kept its settings at the top
     title_changed = Signal(str)  # the window title's first part, or "" for none
     badge_changed = Signal(int)  # how many items need attention: the rail's count; 0 hides it
+    notify_requested = Signal(str, str)  # a Windows notification: its title and text
 
     def __init__(self, shell: Shell, toolbar: ToolBar):
         super().__init__()
@@ -78,6 +79,11 @@ class Tool(QWidget):
 
     def show_attention(self) -> None:
         """Lists just the items that need attention (the tray's menu asks for it)."""
+
+    def works_in_background(self) -> bool:
+        """Whether it does something on its own (Refresh on its own), worth keeping CapyPanel
+        running in the tray for when the window closes."""
+        return False
 
     def status_widgets(self) -> list[QWidget]:
         """Shown on the right of the status bar while the tool is."""

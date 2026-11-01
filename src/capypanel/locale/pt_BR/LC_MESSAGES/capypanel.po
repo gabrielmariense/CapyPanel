@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 22:03-0300\n"
+"POT-Creation-Date: 2026-10-31 22:12-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -192,6 +192,9 @@ msgstr "&Nova…"
 msgid "&Open"
 msgstr "&Abrir"
 
+msgid "&Open CapyPanel"
+msgstr "&Abrir o CapyPanel"
+
 msgid "&Open a CSV file…"
 msgstr "A&brir um arquivo CSV…"
 
@@ -209,6 +212,12 @@ msgstr "&Predefinição:"
 
 msgid "&Printers"
 msgstr "&Impressoras"
+
+msgid "&Quit"
+msgstr "&Sair"
+
+msgid "&Quit CapyPanel"
+msgstr "&Sair do CapyPanel"
 
 msgid "&Refresh"
 msgstr "&Atualizar"
@@ -393,6 +402,9 @@ msgstr[1] "{n} hosts adicionados."
 msgid "Address"
 msgstr "Endereço"
 
+msgid "After a Refresh on its own, for printers that need attention since the one before."
+msgstr "Depois de uma atualização sozinha, para as impressoras que passaram a requerer atenção desde a anterior."
+
 msgid "All details"
 msgstr "Todos os detalhes"
 
@@ -405,6 +417,9 @@ msgstr "Todas as impressoras"
 #, python-brace-format
 msgid "Already in the list, {place}"
 msgstr "Já está na lista, {place}"
+
+msgid "Also when a supply gets low"
+msgstr "Também quando um suprimento ficar baixo"
 
 #, python-brace-format
 msgid "An item is missing the “{key}” field or has an invalid value for it."
@@ -423,6 +438,9 @@ msgstr "Um nome à sua escolha, depois o nome do computador na rede ou o endere�
 
 msgid "Appearance"
 msgstr "Aparência"
+
+msgid "Ask each time"
+msgstr "Perguntar sempre"
 
 msgid "Ass&et tag:"
 msgstr "&Patrimônio:"
@@ -750,6 +768,9 @@ msgstr "Desconectado"
 msgid "Documentation:"
 msgstr "Documentação:"
 
+msgid "Don't ask again (change it in Settings › CapyPanel › Startup)"
+msgstr "Não perguntar de novo (altere em Configurações › CapyPanel › Inicialização)"
+
 msgid "Door open"
 msgstr "Porta aberta"
 
@@ -990,6 +1011,15 @@ msgstr "Ela é passada ao visualizador na linha de comando, que os administrador
 
 msgid "Its own settings file"
 msgstr "Arquivo de configurações próprio"
+
+msgid "Keep CapyPanel running in the tray?"
+msgstr "Manter o CapyPanel aberto na bandeja?"
+
+msgid "Keep in &tray"
+msgstr "Manter na &bandeja"
+
+msgid "Keep running in the tray"
+msgstr "Manter aberto na bandeja"
 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
@@ -1389,6 +1419,9 @@ msgstr "Programas (*.exe)"
 msgid "Put in &group"
 msgstr "Colocar no &grupo"
 
+msgid "Quit"
+msgstr "Sair"
+
 msgid "Read license"
 msgstr "Ler licença"
 
@@ -1427,6 +1460,9 @@ msgstr "Atualizar usuários logados"
 
 msgid "Refresh on its &own"
 msgstr "Atualizar &sozinho"
+
+msgid "Refresh on its own and warnings keep working while CapyPanel is in the tray. Quit stops them."
+msgstr "A atualização sozinha e os avisos continuam funcionando enquanto o CapyPanel estiver na bandeja. Sair os interrompe."
 
 msgid "Refresh status &by itself"
 msgstr "Atualizar o status &sozinho"
@@ -2096,6 +2132,15 @@ msgstr "Aviso"
 msgid "What the window shows when CapyPanel starts."
 msgstr "O que a janela mostra quando o CapyPanel inicia."
 
+msgid "What the window's ✕ does. In the tray, Refresh on its own and warnings keep working."
+msgstr "O que o ✕ da janela faz. Na bandeja, a atualização sozinha e os avisos continuam funcionando."
+
+msgid "When &closing"
+msgstr "Ao &fechar"
+
+msgid "When a printer stops or goes offline"
+msgstr "Quando uma impressora parar ou ficar offline"
+
 msgid "Where"
 msgstr "Onde"
 
@@ -2111,6 +2156,9 @@ msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste 
 #, python-brace-format
 msgid "Where is {tool}?"
 msgstr "Onde está o {tool}?"
+
+msgid "Windows &notification"
+msgstr "&Notificação do Windows"
 
 #, python-brace-format
 msgid "Windows didn't keep it: {error}"
@@ -2158,6 +2206,12 @@ msgstr "ativa"
 
 msgid "address"
 msgstr "endereço"
+
+#, python-brace-format
+msgid "and {n} more"
+msgid_plural "and {n} more"
+msgstr[0] "e mais {n}"
+msgstr[1] "e mais {n}"
 
 msgid "asked by the tool"
 msgstr "a própria ferramenta pede"
@@ -2339,6 +2393,10 @@ msgid "{name} ({n} printer)"
 msgid_plural "{name} ({n} printers)"
 msgstr[0] "{name} ({n} impressora)"
 msgstr[1] "{name} ({n} impressoras)"
+
+#, python-brace-format
+msgid "{name}: {why}"
+msgstr "{name}: {why}"
 
 #, python-brace-format
 msgid "{n} can't be added."

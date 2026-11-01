@@ -22,7 +22,15 @@ from capypanel.core.printers.reading import Device, Problem, Reading, State, Sup
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.printers_tool import refresh, status
 from capypanel.ui.printers_tool import settings as settings_module
-from capypanel.ui.printers_tool.settings import AUTO_REFRESH, BARS, SNMP_VERSION, TONER_VIEW
+from capypanel.ui.printers_tool.attention import notice_text
+from capypanel.ui.printers_tool.settings import (
+    AUTO_REFRESH,
+    BARS,
+    NOTIFY_LOW,
+    NOTIFY_STOPS,
+    SNMP_VERSION,
+    TONER_VIEW,
+)
 from capypanel.ui.printers_tool.status import AMBER, GREEN, GREY, RED, Checked
 from capypanel.ui.printers_tool.table import BAR_WIDTH, ROLE_SUPPLY
 from capypanel.ui.printers_tool.tool import PrintersTool
@@ -387,3 +395,32 @@ def test_refresh_over_v3_reads_the_printer_or_says_why_it_refused(
     cell = status.status(printers._checked[lab.id], 10)
     assert cell.text == "Refused"
     assert "wrong authentication password" in cell.tip
+
+
+def test_refresh_on_its_own_notifies_what_is_new(
+    printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sent: list[tuple[str, str]] = []
+    printers.notify_requested.connect(lambda title, text: sent.append((title, text)))
+    assert printers.notify_choice() == NOTIFY_STOPS  # the default
+    with running(COLOUR) as agent:
+        monkeypatch.setattr(reading, "read", partial(reading.read, port=agent.port, timeout=0.2))
+        printers._auto_refresh()
+        _wait(printers)
+        # Stopped or offline only: the lab printer's low cyan isn't in it.
+        assert sent == [("1 printer needs attention", "NO-ANSWER: Offline")]
+        printers._auto_refresh()  # nothing new since the last one: no notification
+        _wait(printers)
+        assert len(sent) == 1
+        printers.check_printers(printers.document.hosts.hosts)  # type: ignore[union-attr]
+        _wait(printers)  # F5 doesn't notify: the window is in front of you
+        assert len(sent) == 1
+        printers.set_notify_choice(NOTIFY_LOW)
+        printers._checked.clear()
+        printers._count_attention()
+        printers._auto_refresh()
+        _wait(printers)
+    assert sent[-1] == (
+        "2 printers need attention", "3F-LAB-01: Cyan 8 %\nNO-ANSWER: Offline"
+    )  # fmt: skip
+    assert notice_text([f"P{n}" for n in range(7)]).splitlines()[-1] == "and 2 more"

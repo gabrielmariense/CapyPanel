@@ -46,6 +46,7 @@ class SettingsDialog(QDialog):
     language_picked = Signal(str)
     theme_picked = Signal(str)
     start_picked = Signal(str)
+    closing_picked = Signal(str)
 
     def __init__(
         self,
@@ -56,13 +57,16 @@ class SettingsDialog(QDialog):
         groups: Sequence[SettingsGroup] = (),
         tools: Sequence[ToolInfo] = (),
         start: str = settings.START_HOME,
+        closing: str = settings.CLOSE_ASK,
     ) -> None:
-        """tools: the window's tools; start: what the window shows at start."""
+        """tools: the window's tools; start: what the window shows at start; closing: what
+        its X does."""
         super().__init__(parent)
         self._paths = paths
         self._registry = registry
         self._tools = list(tools)
         self._start = start
+        self._closing = closing
         self._groups = list(groups)
         # Contents replaced on a language switch stay alive, hidden: deleting a window part
         # holding a list can crash Qt after a theme switch (see DECISIONS, code cleanup).
@@ -76,7 +80,7 @@ class SettingsDialog(QDialog):
         """The pages, in the current language, showing what's set."""
         self.setWindowTitle(_("Settings"))
         tools = [(t.tool_id, _(t.name)) for t in self._tools]
-        self.general = GeneralPage(tools=tools, start=self._start)
+        self.general = GeneralPage(tools=tools, start=self._start, closing=self._closing)
         self.appearance = AppearancePage(
             language=i18n.language(), registry=self._registry, theme_id=theme_id
         )
@@ -222,8 +226,12 @@ class SettingsDialog(QDialog):
                 item.setForeground(text)
 
     def _start_changed(self) -> None:
-        self._start = self.general.start_choice()
-        self.start_picked.emit(self._start)
+        if self.general.start_choice() != self._start:
+            self._start = self.general.start_choice()
+            self.start_picked.emit(self._start)
+        if self.general.closing_choice() != self._closing:
+            self._closing = self.general.closing_choice()
+            self.closing_picked.emit(self._closing)
 
     def _language_changed(self) -> None:
         code = self.appearance.language_choice()

@@ -22,7 +22,12 @@ from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 from capypanel.ui.printers_tool import status
 from capypanel.ui.printers_tool.actions import create_actions, retranslate_actions
-from capypanel.ui.printers_tool.attention import AttentionStrip, attention_text
+from capypanel.ui.printers_tool.attention import (
+    AttentionStrip,
+    attention_text,
+    notice_text,
+    why_text,
+)
 from capypanel.ui.printers_tool.details import PrinterDetails, PrinterDetailsPanel
 from capypanel.ui.printers_tool.dialog import PrinterDialog
 from capypanel.ui.printers_tool.refresh import V2C, V3, PrinterRun, community, v3_account
@@ -33,6 +38,10 @@ from capypanel.ui.printers_tool.settings import (
     BARS,
     HIGHEST,
     LOWEST,
+    NOTIFY,
+    NOTIFY_LOW,
+    NOTIFY_OFF,
+    NOTIFY_STOPS,
     SNMP_VERSION,
     TEXT,
     TONER_VIEW,
@@ -75,6 +84,7 @@ class PrintersTool(ListWorkspace):
         self.attention_strip = AttentionStrip()
         self._attention: dict[str, Attention] = {}  # the open list's printers that need it
         self._only_attention = False  # the strip's Show: the table lists just those
+        self._before_auto: dict[str, Attention] | None = None  # while a Refresh on its own runs
         super().__init__(
             shell,
             commands=self.commands,
@@ -306,6 +316,18 @@ class PrintersTool(ListWorkspace):
             self.prefs[AUTO_REFRESH] = minutes
             self._apply_auto_refresh()
 
+    def works_in_background(self) -> bool:
+        return self.auto_refresh() > 0
+
+    def notify_choice(self) -> str:
+        """Settings' Windows notification: NOTIFY_OFF, NOTIFY_STOPS (the default) or NOTIFY_LOW."""
+        saved = self.prefs.get(NOTIFY)
+        return saved if saved in (NOTIFY_OFF, NOTIFY_STOPS, NOTIFY_LOW) else NOTIFY_STOPS  # type: ignore[return-value]
+
+    def set_notify_choice(self, choice: str) -> None:
+        if choice != self.notify_choice():
+            self.prefs[NOTIFY] = choice
+
     def _apply_auto_refresh(self) -> None:
         if minutes := self.auto_refresh():
             self._auto_timer.start(minutes * 60_000)
@@ -317,7 +339,32 @@ class PrintersTool(ListWorkspace):
         Skipped while a Refresh runs, and quietly when there's no SNMP v3 account yet."""
         doc = self._doc
         if self._run is None and doc is not None and doc.hosts.hosts:
+            before = dict(self._attention)
             self.check_printers(doc.hosts.hosts, quiet=True)
+            if self._run is not None:
+                self._before_auto = before
+
+    def _notify_new(self, before: dict[str, Attention]) -> None:
+        """One notification for the printers that need attention now and didn't before (or
+        for another reason), as Settings asks."""
+        wanted = {
+            NOTIFY_OFF: (),
+            NOTIFY_STOPS: (Attention.STOPPED, Attention.OFFLINE),
+            NOTIFY_LOW: tuple(Attention),
+        }[self.notify_choice()]
+        doc, low = self._doc, self.low_level()
+        if doc is None or not wanted:
+            return
+        lines = []
+        for printer in sorted(doc.hosts.hosts, key=lambda p: p.name.casefold()):
+            why = self._attention.get(printer.id)
+            checked = self._checked.get(printer.id)
+            if why in wanted and checked is not None and before.get(printer.id) != why:
+                assert why is not None
+                reason = why_text(checked, why, low)
+                lines.append(_("{name}: {why}").format(name=printer.name, why=reason))
+        if lines:
+            self.notify_requested.emit(attention_text(len(lines)), notice_text(lines))
 
     def toner_bars(self) -> bool:
         """Settings' Toner column choice: a bar (True) or text, the default."""
@@ -598,9 +645,12 @@ class PrintersTool(ListWorkspace):
         if run is None:
             return
         self._run = None
+        before, self._before_auto = self._before_auto, None
         self._show_progress()
         self._update_state()
         self.checks_changed.emit()
+        if before is not None and not run.stopped:
+            self._notify_new(before)
         if run.stopped and run.done < run.total:
             left = run.total - run.done
             note = ngettext(

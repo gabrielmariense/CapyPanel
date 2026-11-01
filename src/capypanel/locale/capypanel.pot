@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 22:03-0300\n"
+"POT-Creation-Date: 2026-10-31 22:12-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -191,6 +191,9 @@ msgstr ""
 msgid "&Open"
 msgstr ""
 
+msgid "&Open CapyPanel"
+msgstr ""
+
 msgid "&Open a CSV file…"
 msgstr ""
 
@@ -207,6 +210,12 @@ msgid "&Preset:"
 msgstr ""
 
 msgid "&Printers"
+msgstr ""
+
+msgid "&Quit"
+msgstr ""
+
+msgid "&Quit CapyPanel"
 msgstr ""
 
 msgid "&Refresh"
@@ -392,6 +401,11 @@ msgstr[1] ""
 msgid "Address"
 msgstr ""
 
+msgid ""
+"After a Refresh on its own, for printers that need attention since the "
+"one before."
+msgstr ""
+
 msgid "All details"
 msgstr ""
 
@@ -403,6 +417,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Already in the list, {place}"
+msgstr ""
+
+msgid "Also when a supply gets low"
 msgstr ""
 
 #, python-brace-format
@@ -423,6 +440,9 @@ msgid ""
 msgstr ""
 
 msgid "Appearance"
+msgstr ""
+
+msgid "Ask each time"
 msgstr ""
 
 msgid "Ass&et tag:"
@@ -749,6 +769,9 @@ msgstr ""
 msgid "Documentation:"
 msgstr ""
 
+msgid "Don't ask again (change it in Settings › CapyPanel › Startup)"
+msgstr ""
+
 msgid "Door open"
 msgstr ""
 
@@ -999,6 +1022,15 @@ msgid ""
 msgstr ""
 
 msgid "Its own settings file"
+msgstr ""
+
+msgid "Keep CapyPanel running in the tray?"
+msgstr ""
+
+msgid "Keep in &tray"
+msgstr ""
+
+msgid "Keep running in the tray"
 msgstr ""
 
 msgid ""
@@ -1416,6 +1448,9 @@ msgstr ""
 msgid "Put in &group"
 msgstr ""
 
+msgid "Quit"
+msgstr ""
+
 msgid "Read license"
 msgstr ""
 
@@ -1453,6 +1488,11 @@ msgid "Refresh logged-on users"
 msgstr ""
 
 msgid "Refresh on its &own"
+msgstr ""
+
+msgid ""
+"Refresh on its own and warnings keep working while CapyPanel is in the "
+"tray. Quit stops them."
 msgstr ""
 
 msgid "Refresh status &by itself"
@@ -2160,6 +2200,17 @@ msgstr ""
 msgid "What the window shows when CapyPanel starts."
 msgstr ""
 
+msgid ""
+"What the window's ✕ does. In the tray, Refresh on its own and warnings "
+"keep working."
+msgstr ""
+
+msgid "When &closing"
+msgstr ""
+
+msgid "When a printer stops or goes offline"
+msgstr ""
+
 msgid "Where"
 msgstr ""
 
@@ -2176,6 +2227,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Where is {tool}?"
+msgstr ""
+
+msgid "Windows &notification"
 msgstr ""
 
 #, python-brace-format
@@ -2230,6 +2284,12 @@ msgstr ""
 
 msgid "address"
 msgstr ""
+
+#, python-brace-format
+msgid "and {n} more"
+msgid_plural "and {n} more"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "asked by the tool"
 msgstr ""
@@ -2417,6 +2477,10 @@ msgid "{name} ({n} printer)"
 msgid_plural "{name} ({n} printers)"
 msgstr[0] ""
 msgstr[1] ""
+
+#, python-brace-format
+msgid "{name}: {why}"
+msgstr ""
 
 #, python-brace-format
 msgid "{n} can't be added."

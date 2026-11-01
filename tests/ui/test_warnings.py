@@ -13,6 +13,7 @@ from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
 from capypanel.core.printers.reading import Device, Problem, Reading, Supply, SupplyKind
+from capypanel.ui.main_window import window as window_module
 from capypanel.ui.printers_tool import refresh, status
 from capypanel.ui.printers_tool.attention import reasons_text
 from capypanel.ui.printers_tool.status import Attention, Checked
@@ -107,3 +108,80 @@ def test_the_strip_and_the_rail_count_show_what_needs_attention(window: CapyWind
     tool._count_attention()
     assert strip.isHidden() and badge.isHidden()
     assert window.rail.buttons["printers"].toolTip() == "Printers (Ctrl+2)"
+
+
+def test_closing_asks_keeps_running_in_the_tray_and_quits_from_there(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    shown: list[bool] = []
+    monkeypatch.setattr(window.tray, "set_shown", shown.append)  # no real tray icon in tests
+    monkeypatch.setattr(window.tray, "available", lambda: True)
+    asked: list[object] = []
+
+    def answer(choice: str | None, remember: bool):  # noqa: ANN202
+        def ask(parent: object) -> tuple[str | None, bool]:
+            asked.append(parent)
+            return choice, remember
+
+        return ask
+
+    window.show()
+    tool = _printers(window)
+    window.close()  # nothing works on its own: no question, it just closes
+    assert asked == [] and not window.isVisible()
+
+    window.show()
+    tool.set_auto_refresh(15)
+    monkeypatch.setattr(window_module, "ask_closing", answer(None, False))
+    window.close()  # Cancel
+    assert len(asked) == 1 and window.isVisible()
+
+    monkeypatch.setattr(window_module, "ask_closing", answer(settings.CLOSE_TRAY, True))
+    window.close()  # Keep in tray, and don't ask again
+    assert not window.isVisible() and window._in_tray and shown[-1] is True
+    assert window.prefs[settings.CLOSE_KEY] == settings.CLOSE_TRAY
+    assert not QApplication.quitOnLastWindowClosed()  # a box closing now mustn't end the app
+    window.open_from_tray()
+    assert window.isVisible() and not window._in_tray and QApplication.quitOnLastWindowClosed()
+    window.close()  # remembered: straight to the tray
+    assert len(asked) == 2 and window._in_tray
+
+    quits: list[bool] = []
+    monkeypatch.setattr(QApplication, "quit", lambda: quits.append(True))
+    window.tray.quit_requested.emit()  # the tray's Quit CapyPanel
+    assert quits == [True] and shown[-1] is False and QApplication.quitOnLastWindowClosed()
+
+
+def test_the_tray_menu_and_a_notification_open_what_needs_attention(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(window.tray, "set_shown", lambda shown: None)
+    tool = _printers(window)
+    window.show_home()
+    ids = {h.name: h.id for h in tool.document.hosts.hosts}  # type: ignore[union-attr]
+    tool._checked[ids["PRN-2F-02"]] = OFFLINE
+    tool._count_attention()
+    texts = [a.text() for a in window.tray.menu.actions() if not a.isSeparator()]
+    assert texts == ["&Open CapyPanel", "1 printer needs attention…", "&Quit CapyPanel"]
+    assert window.tray.menu.defaultAction() is window.tray.menu.actions()[0]  # bold: the click
+    assert window.tray.icon.toolTip() == "CapyPanel\n1 printer needs attention"
+    window.tray.menu.actions()[2].trigger()
+    assert window.shown_tool() is tool and _shown(tool) == ["PRN-2F-02"]
+
+    tool._leave_attention()
+    window.show_home()
+    sent: list[tuple[str, str]] = []
+    monkeypatch.setattr(window.tray, "notify", lambda title, text: sent.append((title, text)))
+    tool.notify_requested.emit("1 printer needs attention", "PRN-2F-02: Offline")
+    assert sent == [("1 printer needs attention", "PRN-2F-02: Offline")]
+    window.tray.message_clicked.emit()  # a click on the notification: Show
+    assert window.shown_tool() is tool and _shown(tool) == ["PRN-2F-02"]
+
+
+def test_settings_keeps_the_when_closing_choice(window: CapyWindow) -> None:
+    dialog = window.settings_dialog()
+    closing = dialog.general.closing
+    assert closing.currentData() == settings.CLOSE_ASK  # the default
+    closing.setCurrentIndex(closing.findData(settings.CLOSE_QUIT))
+    assert window.prefs[settings.CLOSE_KEY] == settings.CLOSE_QUIT
+    dialog.close()

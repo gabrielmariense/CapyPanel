@@ -46,6 +46,9 @@ LOWEST, HIGHEST = 1, 50  # the low supply level's range, in %
 TONER_VIEW, TEXT, BARS = "toner_view", "text", "bars"  # the Toner column: "Black 24 %", or a bar
 AUTO_REFRESH = "auto_refresh"  # minutes between Refreshes on its own; 0 is off
 AUTO_EVERY = (5, 15, 30, 60)
+# Windows notifications after a Refresh on its own, for what's new: none, a printer stopping or
+# going offline (the default), or that and a supply getting low.
+NOTIFY, NOTIFY_OFF, NOTIFY_STOPS, NOTIFY_LOW = "notify", "off", "stops", "low"
 
 
 class CommunityDialog(QDialog):
@@ -217,7 +220,15 @@ class PrintersPage(ListsGeneralPage):
     the low supply level, and the Toner column as text or a bar."""
 
     def __init__(
-        self, *, low: int, bars: bool, version: str, account: str, auto: int, **lists: object
+        self,
+        *,
+        low: int,
+        bars: bool,
+        version: str,
+        account: str,
+        auto: int,
+        notify: str,
+        **lists: object,
     ) -> None:
         super().__init__(**lists)  # type: ignore[arg-type]
         section = Section(_("Refresh"))
@@ -235,6 +246,12 @@ class PrintersPage(ListsGeneralPage):
             self.auto_every.addItem(every_text(minutes), minutes)
         self.auto_every.setCurrentIndex(max(self.auto_every.findData(auto), 0))
         self.auto_every.currentIndexChanged.connect(lambda _i: self.changed.emit())
+        self.notify = QComboBox()
+        self.notify.addItem(_("Off"), NOTIFY_OFF)
+        self.notify.addItem(_("When a printer stops or goes offline"), NOTIFY_STOPS)
+        self.notify.addItem(_("Also when a supply gets low"), NOTIFY_LOW)
+        self.notify.setCurrentIndex(max(self.notify.findData(notify), 0))
+        self.notify.currentIndexChanged.connect(lambda _i: self.changed.emit())
         self.low_level = QSpinBox()
         self.low_level.setRange(LOWEST, HIGHEST)
         self.low_level.setValue(low)
@@ -260,6 +277,14 @@ class PrintersPage(ListsGeneralPage):
                     "the tray."
                 ),
                 self.auto_every,
+            ),
+            SettingRow(
+                _("Windows &notification"),
+                _(
+                    "After a Refresh on its own, for printers that need attention since the one "
+                    "before."
+                ),
+                self.notify,
             ),
             SettingRow(
                 _("&Low supply level"),
@@ -317,6 +342,7 @@ class PrintersSettings(SettingsGroup):
             version=tool.snmp_version(),
             account=account_text(tool.snmp_version()),
             auto=tool.auto_refresh(),
+            notify=tool.notify_choice(),
             texts=texts,
             start_list=prefs.get(locations.START_KEY, locations.START_LAST),
             default_list=tool.default_list,
@@ -360,6 +386,7 @@ class PrintersSettings(SettingsGroup):
             self._tool.set_toner_bars(self.general.toner_view.currentData() == BARS)
             self._tool.set_snmp_version(str(self.general.version.currentData()))
             self._tool.set_auto_refresh(int(self.general.auto_every.currentData()))
+            self._tool.set_notify_choice(str(self.general.notify.currentData()))
             self.general.show_account(account_text(self._tool.snmp_version()))
             self._tool.prefs_applied()
 
