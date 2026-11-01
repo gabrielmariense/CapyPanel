@@ -24,6 +24,7 @@ from PySide6.QtWidgets import QApplication, QListView, QMenu, QTreeView, QWidget
 
 from capypanel.core.i18n import N_, _
 from capypanel.ui import menus
+from capypanel.ui.icons import STATUS_COLORS
 
 log = logging.getLogger(__name__)
 
@@ -183,7 +184,7 @@ def apply(theme: Theme) -> None:
         # views with the previous theme's colours.
         app.setStyle("windows11")
         tokens = native_tokens(app.palette().color(QPalette.ColorRole.Accent))
-        app.setStyleSheet(_NATIVE_QSS % tokens)  # noqa: UP031
+        app.setStyleSheet(_NATIVE_QSS % {**tokens, **_status_tokens()})  # noqa: UP031
         # Windows' link colour is the accent as is: a deep accent was hard to read on dark.
         links = QPalette()
         links.setColor(QPalette.ColorRole.Link, QColor(tokens["accent_text"]))
@@ -533,7 +534,9 @@ QLabel#copyValue:hover { background: %(hover)s; }
 QFrame#tagStrip { background: %(sel_solid)s; border: 1px solid %(accent)s; border-radius: 6px; }
 /* Printers needing attention: the same strip, with an amber edge. */
 QFrame#attentionStrip { background: %(sel_solid)s; border: 1px solid %(accent)s;
-                        border-left: 3px solid #d29922; border-radius: 6px; }
+                        border-left: 3px solid %(attention)s; border-radius: 6px; }
+/* A tool's count of items needing attention, on its rail icon. */
+QLabel#railBadge { background: %(stopped)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel_solid)s; border-radius: 9px; padding: 2px 9px; }
 QLabel#tagValue:hover { background: %(hover)s; }
 QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8px; padding: 0 6px; }
@@ -646,7 +649,9 @@ QLabel#copyValue:hover { background: %(hover)s; }
 QFrame#tagStrip { background: %(sel)s; border: 1px solid %(accent)s; border-radius: 6px; }
 /* Printers needing attention: the same strip, with an amber edge. */
 QFrame#attentionStrip { background: %(sel)s; border: 1px solid %(accent)s;
-                        border-left: 3px solid #d29922; border-radius: 6px; }
+                        border-left: 3px solid %(attention)s; border-radius: 6px; }
+/* A tool's count of items needing attention, on its rail icon. */
+QLabel#railBadge { background: %(stopped)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel)s; border-radius: 9px; padding: 2px 9px; }
 QLabel#tagValue:hover { background: %(hover)s; }
 QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8px; padding: 0 6px; }
@@ -688,6 +693,11 @@ QToolButton#tagChipRemove {
 """
 
 
+def _status_tokens() -> dict[str, str]:
+    """Warning colours, the same in every theme (see icons.STATUS_COLORS)."""
+    return {"stopped": STATUS_COLORS["stopped"], "attention": STATUS_COLORS["attention"]}
+
+
 def stylesheet(theme: Theme) -> str:
     t: dict[str, object] = {k: _qss_color(v) for k, v in theme.colors.items()}
     t["r"], t["r2"] = theme.radius, max(0, theme.radius - 2)
@@ -701,6 +711,7 @@ def stylesheet(theme: Theme) -> str:
     t["check"] = (THEMES_DIR / "check.svg").as_posix()
     t["arrow"] = (THEMES_DIR / f"arrow-{theme.scheme}.svg").as_posix()
     t["arrow_up"] = (THEMES_DIR / f"arrow-up-{theme.scheme}.svg").as_posix()
+    t.update(_status_tokens())
     return _QSS % t  # noqa: UP031 -- %-format: CSS braces would all need doubling for .format()
 
 

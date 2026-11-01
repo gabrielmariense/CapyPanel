@@ -284,8 +284,9 @@ class MainWindow(QMainWindow):
         while there's one."""
         tool, index = self.tools[tool_id], list(self.tools).index(tool_id) + 1
         tip = f"{tool.tool_name()} (Ctrl+{index})"
-        if count := self._badges.get(tool_id, 0):
-            tip = "\n".join((tip, tool.attention_text(count)))
+        count = self._badges.get(tool_id, 0)
+        if count and (meaning := tool.attention_text(count)):
+            tip = "\n".join((tip, meaning))
         self.rail.buttons[tool_id].setToolTip(tip)
 
     def _title_changed(self, tool_id: str) -> None:

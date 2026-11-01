@@ -11,7 +11,6 @@ from capypanel.ui.icons import tabler_icon
 RAIL_WIDTH = 52
 ICON_SIZE = 22
 BADGE = 16  # px: the count's height, and its narrowest width
-BADGE_RED = "#e5534b"  # the Status column's red
 
 
 class ToolRail(QWidget):
@@ -63,6 +62,7 @@ class ToolRail(QWidget):
         button.clicked.connect(lambda: self.tool_picked.emit(tool_id))
         button.toggled.connect(lambda _on: self.restyle())
         badge = QLabel(button)  # on the icon's top right corner, over the button
+        badge.setObjectName("railBadge")  # red, white number: the theme's stylesheet
         badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         badge.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)  # the button's tip
         badge.hide()
@@ -87,9 +87,6 @@ class ToolRail(QWidget):
         width = max(BADGE, badge.fontMetrics().horizontalAdvance(badge.text()) + 8)
         badge.setFixedSize(width, BADGE)
         badge.move(button.width() - width, 0)
-        badge.setStyleSheet(
-            f"background: {BADGE_RED}; color: white; border-radius: {BADGE // 2}px; padding: 0;"
-        )
 
     def show_tool(self, tool_id: str | None) -> None:
         """None: Home."""

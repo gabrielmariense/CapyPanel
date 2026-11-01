@@ -12,8 +12,11 @@ from capypanel.core.printers import snmp
 from capypanel.core.printers.printer import DOC360
 from capypanel.core.printers.reading import Device, Problem, Reading, State, Supply, SupplyKind
 from capypanel.ui.checks import clock_text
+from capypanel.ui.icons import STATUS_COLORS
 
-GREEN, AMBER, RED, GREY = "#3fae4a", "#d29922", "#e5534b", "#8a8a8a"  # working ... offline
+GREEN, AMBER, RED, GREY = (  # working, needs attention, stopped, offline
+    STATUS_COLORS[k] for k in ("online", "attention", "stopped", "offline")
+)
 DEFAULT_LOW = 10  # %: a supply at or below this shows as low
 # A supply's bar colour, by the colour its name says; drums, boxes and the rest are grey-blue.
 INKS = {"black": "#9aa3b2", "cyan": "#22b8cf", "magenta": "#d6409f", "yellow": "#f2c94c"}
