@@ -1,11 +1,13 @@
 import getpass
 import platform
 from collections.abc import Iterator
+from importlib import metadata
 from pathlib import Path
 from urllib.parse import unquote
 
 import pytest
 from capywindow import CapyWindow
+from packaging.requirements import Requirement
 from PySide6.QtWidgets import QApplication, QLabel, QMenu, QPushButton
 
 from capypanel import BUILD, __version__
@@ -78,6 +80,21 @@ def test_licenses_list_each_part_with_a_link_to_its_shipped_text(qapp: QApplicat
     assert page.reader.isVisible() and page.reader.windowTitle() == "Qt · LGPL-3.0"
     assert "GNU LESSER GENERAL PUBLIC LICENSE" in page.reader.text.toPlainText()
     page.reader.close()
+
+
+def test_every_library_cryptography_brings_has_a_license_row() -> None:
+    # What ships with CapyPanel through cryptography (cffi, and pycparser through cffi).
+    names, todo = set(), ["cryptography"]
+    while todo:
+        dist = metadata.distribution(todo.pop())
+        names.add(dist.metadata["Name"].casefold())
+        for line in dist.requires or []:
+            if "extra ==" in line:
+                continue  # an extra: not installed with us
+            requirement = Requirement(line)
+            if requirement.marker is None or requirement.marker.evaluate():
+                todo.append(requirement.name)
+    assert names <= {c.name.casefold() for c in COMPONENTS}, names
 
 
 def test_a_problem_report_carries_no_user_or_computer_name(qapp: QApplication) -> None:
