@@ -1,9 +1,6 @@
-<h1 align="center">
-  <img src="docs/images/capypanel-icon.png" width="96" height="96" alt=""><br>
-  CapyPanel
-</h1>
-
-<p align="center">Every computer you look after, in one window.</p>
+<p align="center">
+  <img src="docs/images/readme-banner.png" width="900" alt="CapyPanel: Every computer you look after, in one window.">
+</p>
 
 <p align="center">
   <a href="README.md"><img src="https://flagcdn.com/40x30/us.png" width="40" height="30" alt="English" title="English"></a>
@@ -16,7 +13,7 @@ lists, see which ones are on and who is logged on to them, and open a remote scr
 them through Remote Desktop or the VNC viewer you already use. It keeps your printers too, with
 the details you need and their web pages a click away.
 
-> **Status: beta (0.21.1).** It runs from source; there's no installer yet.
+> **Status: beta (0.22.0).** It runs from source; there's no installer yet.
 
 ![CapyPanel's Home page: the tool rail, the capybara, and a tile for Hosts and one for Printers](docs/images/home-dark.png)
 
@@ -30,7 +27,8 @@ the details you need and their web pages a click away.
   - Search, import and export
 - Printers
   - Lists with brand, model, serial number and asset tag
-  - Status, toner and supplies over SNMP
+  - Status, toner and supplies over SNMP, v2c or v3
+  - Warnings when a printer needs attention
   - Web pages and reports
 
 ## Documentation

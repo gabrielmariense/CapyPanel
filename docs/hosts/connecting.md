@@ -79,7 +79,10 @@ later, and the shared file is never changed.
   with Remote Desktop** and so on, one per profile: the selected hosts open with that profile this
   time, without changing them.
 
-The **Details** panel names the profile each host ends up using, under **Connection**.
+The **Details** panel names the profile each host ends up using, under **Connection**, with an
+arrow beside it, "Change the connection profile". It opens the same list as the right-click
+**Connection profile** submenu, **From group** or a profile by name, so a host's profile can be
+changed from there without opening **Edit selected…**.
 
 A list stores only the profile's ID. When a host or group names a profile your PC doesn't
 have, it follows its group's profile (or the default) instead, and the missing one is marked
@@ -94,21 +97,52 @@ unless the host or profile sets another. Its options are checkboxes on the profi
 **Full screen** and **Use all my monitors**. There's no settings file for Remote Desktop.
 
 CapyPanel never handles a Remote Desktop password: the client asks for it, and the login check
-below doesn't apply.
+below doesn't apply. A Remote Desktop login is never in **Saved credentials** either. If you tick
+**Remember me** in Remote Desktop Connection, Windows keeps that login itself, as
+`TERMSRV/<address>`; remove it there, or in **Control Panel > Credential Manager**.
 
 ## Passwords
 
 - For VNC, CapyPanel asks for a profile's password the first time you connect with it, and
-  **remembers it in memory, per profile**, until it closes. Hosts with another profile never
-  receive it.
-- Passwords are **never saved** to disk.
-- **Connect > Forget typed passwords** clears them, e.g. after a typo: CapyPanel can't tell
-  when a viewer rejects a password. It's a submenu: **All profiles** forgets every one, and under
-  it each profile holding a typed password is named, so one wrong password doesn't cost you the
-  rest. The account typed for reading logged-on users is listed there too, as **Account for
-  logged-on users**. The whole menu is greyed while nothing has been typed.
+  **remembers it, per profile**, until it closes. Hosts with another profile never receive it.
+- Where it keeps that password is yours to choose, in **Settings > Hosts > Connection profiles >
+  Credentials**: **Temporary credentials**, the default, "forgotten when CapyPanel closes", or
+  **Credential Manager**, "saved for your Windows account". Neither of them puts a password in a
+  file of CapyPanel's own.
 - Classic VNC passwords are at most 8 characters long, so the password box of an UltraVNC
   "password only" profile stops at 8.
+
+### Saved credentials
+
+**Credential Manager** keeps a typed password in **Windows Credential Manager**, under your own
+Windows account, so CapyPanel doesn't ask for it again the next time it starts. Its tooltip says
+what that means: "Windows encrypts them for your account, domain accounts too: anyone using your
+Windows session can connect with them." Going back to **Temporary credentials** deletes the ones
+already saved. The choice covers the account typed for reading logged-on users too (see
+[Checking hosts](checking.md#which-account-is-used)).
+
+**Connect ▾ > Saved credentials…**, and **Manage…** on the **Saved credentials** row of that same
+settings section, open one window with every login CapyPanel keeps: "Every login CapyPanel keeps
+for you. Passwords never show here." The settings row says how many there are and where, as in
+"2 kept: 1 in Credential Manager, 1 temporary.", or "None kept."
+
+![The Saved credentials window: one row per login, with what it's used for, the tool, the user and where it's kept](../images/saved-credentials-dark.png)
+
+| Column | What it shows |
+|---|---|
+| **Used for** | The connection profile, or **Logged-on users** |
+| **Tool** | What signs in with it, as in "RealVNC Viewer" or "Hosts › Refresh" |
+| **User** | The user name, or "(password only)" for a profile that takes only a password |
+| **Kept** | **Credential Manager**, or **Temporary** until CapyPanel closes |
+
+**Forget** drops the login you picked, after a typo for instance: CapyPanel can't tell when a
+viewer rejects a password. **Forget all** asks first, listing every login under "Saved in
+Credential Manager:" and "Temporary:", then "CapyPanel asks for them again when it needs them.";
+Cancel is the default button. A login forgotten here is deleted from Credential Manager too.
+
+Only connection logins are listed. The printers' SNMP community string and v3 account are not:
+they're managed in **Settings > Printers > Refresh**, where emptying the field forgets them (see
+[Checking printers](../printers/checking.md#the-snmp-account)).
 
 ## The login check
 

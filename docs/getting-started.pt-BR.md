@@ -13,7 +13,7 @@ uv run capypanel
 
 A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes
 abrem na hora. A versão aparece na barra de título, seguida do commit quando você roda pelo
-código-fonte, por exemplo `CapyPanel 0.21.1 (abc1234)`. Informe-a ao relatar um problema.
+código-fonte, por exemplo `CapyPanel 0.22.0 (abc1234)`. Informe-a ao relatar um problema.
 
 A Área de Trabalho Remota funciona de cara, com o cliente que já vem no Windows. Para o VNC você
 também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
@@ -110,6 +110,29 @@ o que fazer com os grupos e hosts dentro dele (veja
 As edições são salvas no arquivo da lista na hora; não há botão Salvar. Para adicionar muitos
 hosts de uma vez, de uma planilha ou de outro inventário, veja
 [Importando e exportando hosts](hosts/importing.pt-BR.md).
+
+## Fechando o CapyPanel e a bandeja
+
+O **✕** da janela normalmente fecha o CapyPanel, e o **Arquivo > Sair** (Ctrl+Q) também, assim
+como o Windows fazendo logoff ou desligando, que nunca perguntam nada.
+
+Mas enquanto algo trabalha sozinho, sair interrompe esse trabalho: a ferramenta Impressoras pode
+[atualizar sozinha](printers/checking.pt-BR.md#atualizar-sozinho) e avisar sobre uma impressora que
+requer atenção. O CapyPanel então mantém um ícone na **bandeja do Windows**, com a mesma contagem
+vermelha da barra lateral, e com "CapyPanel" e o que essa contagem significa na dica dele. Um
+clique no ícone abre a janela de novo, e o menu dele tem o **Abrir o CapyPanel** em negrito, uma
+linha por ferramenta com algo a relatar, como "3 impressoras requerem atenção…", que abre aquela
+ferramenta com só esses itens listados, e o **Sair do CapyPanel**.
+
+![O menu da bandeja: Abrir o CapyPanel, as impressoras que requerem atenção e Sair do CapyPanel](images/tray-menu-dark-pt-BR.png)
+
+Com algo trabalhando sozinho, o **✕** pergunta o que você quis dizer: "Manter o CapyPanel aberto
+na bandeja?", "A atualização sozinha e os avisos continuam funcionando enquanto o CapyPanel estiver
+na bandeja. Sair os interrompe.", com o **Manter na bandeja** como botão padrão, o **Sair**, o
+**Cancelar** e uma caixa "Não perguntar de novo (altere em Configurações › CapyPanel ›
+Inicialização)". Em **Configurações > CapyPanel > Inicialização > Ao fechar** você responde de vez,
+com **Perguntar sempre**, **Manter aberto na bandeja** ou **Sair**. Sem nada trabalhando sozinho, o
+✕ fecha na hora.
 
 ## Ajuda e como relatar um problema
 

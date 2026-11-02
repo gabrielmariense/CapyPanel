@@ -140,9 +140,11 @@ def open_folder(folder: Path) -> None:
 
 
 class GeneralPage(Page):
-    """What the window shows at start. It applies at once."""
+    """What the window shows at start, and what its X does. They apply at once."""
 
-    def __init__(self, *, tools: Sequence[tuple[str, str]], start: str) -> None:
+    def __init__(
+        self, *, tools: Sequence[tuple[str, str]], start: str, closing: str = settings.CLOSE_ASK
+    ) -> None:
         """tools: (id, name), in the rail's order."""
         super().__init__(_("General"))
         self.start = QComboBox()
@@ -152,18 +154,33 @@ class GeneralPage(Page):
             self.start.addItem(name, tool_id)
         self.start.setCurrentIndex(max(self.start.findData(start), 0))
         self.start.currentIndexChanged.connect(lambda _i: self.changed.emit())
+        self.closing = QComboBox()
+        self.closing.addItem(_("Ask each time"), settings.CLOSE_ASK)
+        self.closing.addItem(_("Keep running in the tray"), settings.CLOSE_TRAY)
+        self.closing.addItem(_("Quit"), settings.CLOSE_QUIT)
+        self.closing.setCurrentIndex(max(self.closing.findData(closing), 0))
+        self.closing.currentIndexChanged.connect(lambda _i: self.changed.emit())
         startup = Section(_("Startup"))
         add_rows(
             startup.content,
             SettingRow(
                 _("&Open on startup"), _("What the window shows when CapyPanel starts."), self.start
             ),
-        )
+            SettingRow(
+                _("When &closing"),
+                _("What the window's ✕ does. In the tray, Refresh on its own and warnings keep "
+                  "working."),
+                self.closing,
+            ),
+        )  # fmt: skip
         self.body.addWidget(startup)
         self.body.addStretch(1)
 
     def start_choice(self) -> str:
         return str(self.start.currentData())
+
+    def closing_choice(self) -> str:
+        return str(self.closing.currentData())
 
 
 class AppearancePage(Page):

@@ -5,13 +5,18 @@ import html
 import re
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 
 from capypanel.core.i18n import _
+from capypanel.core.printers import snmp
 from capypanel.core.printers.printer import DOC360
 from capypanel.core.printers.reading import Device, Problem, Reading, State, Supply, SupplyKind
 from capypanel.ui.checks import clock_text
+from capypanel.ui.icons import STATUS_COLORS
 
-GREEN, AMBER, RED, GREY = "#3fae4a", "#d29922", "#e5534b", "#8a8a8a"  # working ... offline
+GREEN, AMBER, RED, GREY = (  # working, needs attention, stopped, offline
+    STATUS_COLORS[k] for k in ("online", "attention", "stopped", "offline")
+)
 DEFAULT_LOW = 10  # %: a supply at or below this shows as low
 # A supply's bar colour, by the colour its name says; drums, boxes and the rest are grey-blue.
 INKS = {"black": "#9aa3b2", "cyan": "#22b8cf", "magenta": "#d6409f", "yellow": "#f2c94c"}
@@ -53,6 +58,16 @@ class Checked:
     reading: Reading | None = None
     offline: bool = False  # no answer
     error: str = ""  # it answered, but not in a way CapyPanel could read
+    refused: str = ""  # it refused the SNMP v3 account: snmp.Refused's reason
+
+
+class Attention(Enum):
+    """Why a printer needs attention, for the warnings: the rail's count, the strip above the
+    table and Windows notifications."""
+
+    STOPPED = "stopped"
+    OFFLINE = "offline"
+    LOW = "low"
 
 
 @dataclass(frozen=True)
@@ -73,6 +88,10 @@ def status(checked: Checked | None, low: int) -> Cell:
     when = clock_text(checked.when)
     if checked.offline:
         return Cell(_("Offline"), _("No answer at {when}.").format(when=when), GREY, quiet=True)
+    if checked.refused:
+        tip = _("Refused at {when}: {why}").format(when=when, why=refused_text(checked.refused))
+        hint = _("Check the SNMP account in Settings › Printers › Refresh.")
+        return Cell(_("Refused"), "\n".join((tip, hint)), AMBER, quiet=True)
     if checked.reading is None:
         tip = _("Couldn't read the printer's answer at {when}.").format(when=when)
         return Cell(_("Unreadable"), f"{tip}\n{checked.error}".strip(), AMBER, quiet=True)
@@ -93,6 +112,42 @@ def status(checked: Checked | None, low: int) -> Cell:
         return Cell(words, tip, AMBER)
     words = _STATES[reading.state]() if reading.state in _STATES else _("Ready")
     return Cell(words, tip, GREEN)
+
+
+def attention(checked: Checked | None, low: int) -> Attention | None:
+    """A stopped printer (the red Status), one that didn't answer, or one with a toner, ink,
+    drum or box at the low level; None for the rest. "Needs attention" from the printer's own
+    messages, a refused account or an unreadable answer don't count: they're not warnings."""
+    if checked is None:
+        return None
+    if checked.offline:
+        return Attention.OFFLINE
+    if checked.reading is None:
+        return None
+    if status(checked, low).color == RED:
+        return Attention.STOPPED
+    if any(is_low(s, low) for s in checked.reading.supplies):
+        return Attention.LOW
+    return None
+
+
+def toner_models(reading: Reading) -> str:
+    """The toners' and inks' names as the printer gives them, which often hold the cartridge's
+    model ("Black Cartridge HP CF258A"), for the Report."""
+    kinds = (SupplyKind.TONER, SupplyKind.INK)
+    return "; ".join(s.name for s in reading.supplies if s.kind in kinds and s.name)
+
+
+def refused_text(reason: str) -> str:
+    """Why a printer refused the SNMP v3 account, in words."""
+    texts = {
+        snmp.USER: lambda: _("it doesn't know the SNMP v3 user name."),
+        snmp.AUTH: lambda: _("wrong authentication password or type."),
+        snmp.PRIVACY: lambda: _("wrong encryption password."),
+        snmp.LEVEL: lambda: _("it wants authentication or encryption set differently."),
+        snmp.TIME_WINDOW: lambda: _("its clock and CapyPanel's didn't agree."),
+    }
+    return texts.get(reason, lambda: _("it refused the SNMP v3 request."))()
 
 
 def counter_error(source: str) -> str:
@@ -137,12 +192,14 @@ def toner(checked: Checked | None, low: int) -> Cell:
     elif lowest.some_left:
         text = _("{colour}: some left").format(colour=colour)
     else:
-        text = _("{colour}: level unknown").format(colour=colour)
+        text = _("{colour}: not reported").format(colour=colour)
     running_low = is_low(lowest, low)
     if running_low:
         text = _("{level} · low").format(level=text)
-    tip = "\n".join(f"{s.name}: {level_text(s)}" for s in found)
-    return Cell(text, tip, supply_color(lowest), warn=running_low, supply=lowest)
+    lines = [f"{s.name}: {level_text(s)}" for s in found]
+    if not all(reports_level(s) for s in found):
+        lines.append(no_level_text())
+    return Cell(text, "\n".join(lines), supply_color(lowest), warn=running_low, supply=lowest)
 
 
 def colour_name(supply: Supply) -> str:
@@ -166,4 +223,13 @@ def supply_color(supply: Supply) -> str:
 def level_text(supply: Supply) -> str:
     if supply.percent is not None:
         return _("{percent} %").format(percent=supply.percent)
-    return _("some left") if supply.some_left else _("level unknown")
+    return _("some left") if supply.some_left else _("not reported")
+
+
+def reports_level(supply: Supply) -> bool:
+    """Whether the printer gives this supply a level: a percent, or at least "some left"."""
+    return supply.percent is not None or supply.some_left
+
+
+def no_level_text() -> str:
+    return _("This printer doesn't report a level for this supply.")

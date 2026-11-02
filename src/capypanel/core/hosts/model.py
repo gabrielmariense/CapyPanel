@@ -161,6 +161,20 @@ class HostList:
         hosts = tuple(replace(h, profile=profile) if h.id in wanted else h for h in self.hosts)
         return replace(self, hosts=hosts)
 
+    def tag_hosts(self, host_ids: Iterable[str], tag: str, on: bool) -> "HostList":
+        """Adds the tag to every one of the hosts that lacks it (at the end), or removes it."""
+        wanted, tag = set(host_ids), tag.strip()
+        if not tag:
+            return self
+
+        def tagged(host: Host) -> Host:
+            if host.id not in wanted or (tag in host.tags) == on:
+                return host
+            tags = (*host.tags, tag) if on else tuple(t for t in host.tags if t != tag)
+            return replace(host, tags=tags)
+
+        return replace(self, hosts=tuple(tagged(h) for h in self.hosts))
+
     def arrange_groups(self, order: Sequence[tuple[str, str | None]]) -> "HostList":
         """Every group's new parent, in the new order (siblings show in this order). Used by
         drag and drop, Manage groups and Sort A–Z. A group can't end up inside itself."""

@@ -82,7 +82,10 @@ compartilhado nunca é alterado.
   **Conectar com Remote Desktop** e assim por diante, um por perfil: os hosts selecionados abrem
   com aquele perfil desta vez, sem serem alterados.
 
-O painel de **detalhes** diz qual perfil cada host acaba usando, em **Conexão**.
+O painel de **detalhes** diz qual perfil cada host acaba usando, em **Conexão**, com uma seta ao
+lado dele, "Trocar o perfil de conexão". Ela abre a mesma lista do submenu **Perfil de conexão**
+do botão direito, o **Do grupo** ou um perfil pelo nome, então o perfil de um host pode ser
+trocado dali sem abrir o **Editar selecionado…**.
 
 Uma lista guarda só o ID do perfil. Quando um host ou grupo cita um perfil que o seu PC não tem,
 ele segue o perfil do grupo (ou o padrão), e o que falta é marcado como "não disponível neste PC"
@@ -98,21 +101,56 @@ servidores de Serviços de Área de Trabalho Remota, **Tela cheia** e **Usar tod
 monitores**. Não há arquivo de configurações para a Área de Trabalho Remota.
 
 O CapyPanel nunca lida com a senha da Área de Trabalho Remota: o cliente a pede, e a verificação
-de login abaixo não se aplica.
+de login abaixo não se aplica. Um login da Área de Trabalho Remota também nunca está nas
+**Credenciais salvas**. Se você marcar **Lembrar de mim** no cliente de Área de Trabalho Remota, o
+Windows guarda esse login por conta própria, como `TERMSRV/<endereço>`; remova-o por lá, ou no
+**Painel de Controle > Gerenciador de Credenciais**.
 
 ## Senhas
 
 - No VNC, o CapyPanel pede a senha de um perfil na primeira vez que você conecta com ele e **a
-  lembra na memória, por perfil**, até fechar. Hosts com outro perfil nunca a recebem.
-- As senhas **nunca são salvas** em disco.
-- **Conectar > Esquecer as senhas digitadas** as apaga, por exemplo depois de um erro de
-  digitação: o CapyPanel não consegue saber quando um visualizador recusa uma senha. É um
-  submenu: **Todos os perfis** esquece todas, e embaixo dele cada perfil com senha digitada
-  aparece pelo nome, para que uma senha errada não custe as outras. A conta digitada para ler os
-  usuários logados também fica ali, como **Conta para usuários logados**. O menu inteiro fica
-  apagado enquanto nada foi digitado.
+  lembra, por perfil**, até fechar. Hosts com outro perfil nunca a recebem.
+- Onde ele guarda essa senha é você que escolhe, em **Configurações > Hosts > Perfis de conexão >
+  Credenciais**: **Credenciais temporárias**, o padrão, "esquecidas quando o CapyPanel fecha", ou
+  **Gerenciador de Credenciais**, "salvas para a sua conta do Windows". Em nenhum dos dois casos o
+  CapyPanel grava uma senha num arquivo próprio.
 - Senhas VNC clássicas têm no máximo 8 caracteres, então a caixa de senha de um perfil UltraVNC
   "só senha" para em 8.
+
+### Credenciais salvas
+
+O **Gerenciador de Credenciais** guarda a senha digitada no **Gerenciador de Credenciais do
+Windows**, na sua própria conta do Windows, para o CapyPanel não pedi-la de novo na próxima vez que
+abrir. A dica dele diz o que isso significa: "O Windows as criptografa para a sua conta, inclusive
+contas de domínio: quem usar a sua sessão do Windows pode se conectar com elas." Voltar para
+**Credenciais temporárias** apaga as que já estavam salvas. A escolha vale também para a conta
+digitada para ler os usuários logados (veja
+[Verificando hosts](checking.pt-BR.md#qual-conta-e-usada)).
+
+O **Conectar ▾ > Credenciais salvas…**, e o **Gerenciar…** da linha **Credenciais salvas** dessa
+mesma seção das configurações, abrem uma janela com todos os logins que o CapyPanel guarda: "Todos
+os logins que o CapyPanel guarda para você. As senhas nunca aparecem aqui." A linha das
+configurações diz quantos são e onde estão, como "2 guardados: 1 no Gerenciador de Credenciais, 1
+temporário.", ou "Nenhum guardado."
+
+![A janela Credenciais salvas: uma linha por login, com para que ela é usada, a ferramenta, o usuário e onde ela fica guardada](../images/saved-credentials-dark-pt-BR.png)
+
+| Coluna | O que ela mostra |
+|---|---|
+| **Usada para** | O perfil de conexão, ou **Usuários logados** |
+| **Ferramenta** | O que entra com ela, como "RealVNC Viewer" ou "Hosts › Atualizar" |
+| **Usuário** | O nome de usuário, ou "(só senha)" num perfil que só recebe senha |
+| **Guardada** | **Gerenciador de Credenciais**, ou **Temporária** até o CapyPanel fechar |
+
+O **Esquecer** descarta o login escolhido, por exemplo depois de um erro de digitação: o CapyPanel
+não consegue saber quando um visualizador recusa uma senha. O **Esquecer todas** pergunta antes,
+listando cada login em "Salvos no Gerenciador de Credenciais:" e "Temporários:", e então "O
+CapyPanel pede de novo quando precisar deles."; o Cancelar é o botão padrão. Um login esquecido
+aqui também é apagado do Gerenciador de Credenciais.
+
+Só os logins de conexão são listados. A comunidade SNMP e a conta v3 das impressoras não: elas são
+gerenciadas em **Configurações > Impressoras > Atualizar**, onde esvaziar o campo as esquece (veja
+[Verificando impressoras](../printers/checking.pt-BR.md#a-conta-snmp)).
 
 ## A verificação de login
 

@@ -91,10 +91,13 @@ Por padrão, a sua própria conta do Windows. Se hosts responderem **Sem direito
 administrador** ou **Conta recusada**, o CapyPanel pede outra conta (`DOMÍNIO\usuário` e senha) e
 tenta de novo só nesses hosts. Essa conta:
 
-- fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado;
+- fica guardada como as **Configurações > Hosts > Perfis de conexão > Credenciais** dizem: na
+  memória até o CapyPanel fechar, ou salva no Gerenciador de Credenciais do Windows para a sua
+  conta do Windows. Nos dois casos ela só é usada para ler quem está logado;
 - é tentada num host por vez: se um host a recusar, o CapyPanel para e pergunta de novo em vez de
   tentá-la nos outros, para a conta não ser bloqueada;
-- é esquecida, como as senhas, com **Conectar > Esquecer as senhas digitadas**.
+- é esquecida, como a senha de um perfil, no **Conectar ▾ > Credenciais salvas…**, onde ela
+  aparece como **Usuários logados** (veja [Conectando](connecting.pt-BR.md#credenciais-salvas)).
 
 Em PCs fora de um domínio, o Administrador interno é a única conta local que o Windows aceita
 remotamente.

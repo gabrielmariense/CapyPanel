@@ -8,8 +8,17 @@ from collections.abc import Sequence
 from typing import Any
 
 from PySide6.QtCore import QByteArray, QEvent, QObject
-from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence, QResizeEvent, QShowEvent
+from PySide6.QtGui import (
+    QAction,
+    QActionGroup,
+    QCloseEvent,
+    QGuiApplication,
+    QKeySequence,
+    QResizeEvent,
+    QShowEvent,
+)
 from PySide6.QtWidgets import (
+    QApplication,
     QHBoxLayout,
     QMainWindow,
     QStackedWidget,
@@ -26,7 +35,9 @@ from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.home import HomePage
 from capypanel.ui.main_window.rail import ToolRail
 from capypanel.ui.main_window.tool import Tool, ToolKind
+from capypanel.ui.main_window.tray import Tray, ask_closing
 from capypanel.ui.menus import StayOpenMenu
+from capypanel.ui.saved_credentials import KeptLogin, SavedCredentialsDialog
 from capypanel.ui.settings.window import SettingsDialog
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import CATALOG, ToolInfo
@@ -67,6 +78,11 @@ class MainWindow(QMainWindow):
         self._tool_actions.addAction(self._home_action)
         self.addAction(self._home_action)
         self._status: dict[str, _StatusGroup] = {}  # each tool's, on the status bar's right
+        self._badges: dict[str, int] = {}  # each tool's count of items needing attention
+        self.tray = Tray(self)
+        self._in_tray = False  # the window's X sent it to the tray
+        self._quitting = False  # Quit CapyPanel: the X's choice isn't asked
+        self._notified_by: str | None = None  # the tool behind the last notification
         self._page_of: dict[str, QWidget] = {}  # each tool's page: its toolbar and the tool
         for make in tools:
             self._add_tool(make(self))
@@ -86,6 +102,7 @@ class MainWindow(QMainWindow):
 
         self._build_menus()
         self._connect()
+        self._connect_tray()
         self._restore_layout()
         # Home, unless the user picked a tool, or the tool shown last, in Settings.
         start = self.prefs.get(settings.START_KEY, settings.START_HOME)
@@ -118,6 +135,8 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(right)
         self._status[tool_id] = right
         tool.title_changed.connect(lambda _name, t=tool_id: self._title_changed(t))
+        tool.badge_changed.connect(lambda count, t=tool_id: self._badge_changed(t, count))
+        tool.notify_requested.connect(lambda title, text, t=tool_id: self._notify(t, title, text))
 
     def shown_tool(self) -> Tool | None:
         """None while Home is shown."""
@@ -180,6 +199,15 @@ class MainWindow(QMainWindow):
         run_modal(dialog)
         self.prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
         self.save_prefs()
+        self._update_tray()  # Refresh on its own may have been switched on or off
+
+    def kept_logins(self) -> list[KeptLogin]:
+        return [login for tool in self.tools.values() for login in tool.kept_logins()]
+
+    def open_saved_credentials(self, parent: QWidget | None = None) -> None:
+        run_modal(SavedCredentialsDialog(parent or self, self.kept_logins))
+        if isinstance(parent, SettingsDialog):  # its pages show what's kept
+            parent.credentials_changed()
 
     # ---- building ----
 
@@ -223,8 +251,8 @@ class MainWindow(QMainWindow):
     def _retranslate_menus(self) -> None:
         retranslate_actions(self.commands)
         self.rail.retranslate()
-        for index, (tool_id, tool) in enumerate(self.tools.items(), start=1):
-            self.rail.buttons[tool_id].setToolTip(f"{tool.tool_name()} (Ctrl+{index})")
+        for tool_id in self.tools:
+            self._rail_tip(tool_id)
         self._home_action.setText(_("Hom&e"))
         for action in self._tool_list_actions():
             action.setText(self.tools[str(action.data())].menu_name())
@@ -272,6 +300,22 @@ class MainWindow(QMainWindow):
         if (tool := self.shown_tool()) is not None:
             tool.align_toolbar_later()
 
+    def _badge_changed(self, tool_id: str, count: int) -> None:
+        self._badges[tool_id] = count
+        self.rail.set_badge(tool_id, count)
+        self._rail_tip(tool_id)
+        self._tray_counts()
+
+    def _rail_tip(self, tool_id: str) -> None:
+        """The rail icon's tip, "Printers (Ctrl+2)", and under it what the red count means,
+        while there's one."""
+        tool, index = self.tools[tool_id], list(self.tools).index(tool_id) + 1
+        tip = f"{tool.tool_name()} (Ctrl+{index})"
+        count = self._badges.get(tool_id, 0)
+        if count and (meaning := tool.attention_text(count)):
+            tip = "\n".join((tip, meaning))
+        self.rail.buttons[tool_id].setToolTip(tip)
+
     def _title_changed(self, tool_id: str) -> None:
         if tool_id == self._shown:
             self._show_title(self.tools[tool_id].title())
@@ -297,11 +341,103 @@ class MainWindow(QMainWindow):
         dialog.language_picked.connect(self.set_language)
         dialog.theme_picked.connect(self.set_theme)
         dialog.start_picked.connect(self._set_start)
+        dialog.closing_picked.connect(self._set_closing)
         return dialog
 
     def _set_start(self, start: str) -> None:
         self.prefs[settings.START_KEY] = start
         self.save_prefs()
+
+    def _set_closing(self, closing: str) -> None:
+        self.prefs[settings.CLOSE_KEY] = closing
+        self.save_prefs()
+
+    # ---- the tray ----
+
+    def _connect_tray(self) -> None:
+        self.tray.open_requested.connect(self.open_from_tray)
+        self.tray.quit_requested.connect(self.quit_app)
+        self.tray.attention_requested.connect(self._show_attention)
+        self.tray.message_clicked.connect(self._notification_clicked)
+        app = QGuiApplication.instance()
+        if isinstance(app, QGuiApplication):
+            app.commitDataRequest.connect(self._session_ending)
+        self._update_tray()
+
+    def _session_ending(self, _manager: object) -> None:
+        """Windows is logging off or shutting down: the X then quits, with no question and no
+        tray, so CapyPanel never holds the shutdown up."""
+        self._quitting = True
+
+    def _update_tray(self) -> None:
+        """The tray icon shows while the window is in the tray, or while a tool works on its
+        own: its notifications need it."""
+        working = any(t.works_in_background() for t in self.tools.values())
+        self.tray.set_shown(self._in_tray or working)
+
+    def _tray_counts(self) -> None:
+        self.tray.set_counts(
+            {t: (n, self.tools[t].attention_text(n)) for t, n in self._badges.items()}
+        )
+
+    def _notify(self, tool_id: str, title: str, text: str) -> None:
+        self._notified_by = tool_id
+        self.tray.set_shown(True)  # already shown while a tool works on its own
+        self.tray.notify(title, text)
+
+    def _notification_clicked(self) -> None:
+        if self._notified_by is not None:
+            self._show_attention(self._notified_by)
+        else:
+            self.open_from_tray()
+
+    def _show_attention(self, tool_id: str) -> None:
+        """The tool, listing just its items needing attention."""
+        self.open_from_tray()
+        self.show_tool(tool_id)
+        self.tools[tool_id].show_attention()
+
+    def to_tray(self) -> None:
+        """Hidden, still running: the tools' Refresh on its own and warnings go on."""
+        self._save_state()
+        self._in_tray = True
+        QApplication.setQuitOnLastWindowClosed(False)  # a box closing now mustn't quit
+        self.hide()
+        self._update_tray()
+        log.info("Window sent to the tray")
+
+    def open_from_tray(self) -> None:
+        if self._in_tray:
+            self._in_tray = False
+            QApplication.setQuitOnLastWindowClosed(True)
+        if self.isMinimized():
+            self.showNormal()
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        self._update_tray()
+
+    def quit_app(self) -> None:
+        """Quit CapyPanel, from the tray's menu: no question asked."""
+        self._quitting = True
+        hidden = self._in_tray
+        if self.close() and hidden:
+            QApplication.quit()  # a hidden window closing doesn't end the app by itself
+
+    def _close_choice(self) -> str | None:
+        """What the X does now: settings.CLOSE_TRAY, CLOSE_QUIT, or None to stay open. "Ask
+        each time" asks only while there's something to keep running."""
+        if self._quitting or not self.tray.available():
+            return settings.CLOSE_QUIT
+        choice = self.prefs.get(settings.CLOSE_KEY, settings.CLOSE_ASK)
+        if choice in (settings.CLOSE_TRAY, settings.CLOSE_QUIT):
+            return str(choice)
+        if not any(t.works_in_background() for t in self.tools.values()):
+            return settings.CLOSE_QUIT
+        answer, remember = ask_closing(self)
+        if answer is not None and remember:
+            self._set_closing(answer)
+        return answer
 
     # ---- look ----
 
@@ -332,6 +468,7 @@ class MainWindow(QMainWindow):
         self.home.retranslate()
         for tool in self.tools.values():
             tool.retranslate()
+        self._tray_counts()  # the tray's menu, in the new language
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
@@ -343,12 +480,24 @@ class MainWindow(QMainWindow):
         self._align_toolbar()
 
     def closeEvent(self, event: QCloseEvent) -> None:
+        choice = self._close_choice()
+        if choice != settings.CLOSE_QUIT:
+            event.ignore()
+            if choice == settings.CLOSE_TRAY:
+                self.to_tray()
+            return
+        if not self._in_tray:  # saved when it went there, as it was shown
+            self._save_state()
+        self.tray.set_shown(False)
+        QApplication.setQuitOnLastWindowClosed(True)
+        super().closeEvent(event)
+
+    def _save_state(self) -> None:
         self.prefs["window_geometry"] = self.saveGeometry().toBase64().toStdString()
         for tool in self.tools.values():
             tool.save_state()
         self.prefs["view"] = {k: a.isChecked() for k, a in self._view_choices().items()}
         self.save_prefs()
-        super().closeEvent(event)
 
 
 class _StatusGroup(QWidget):

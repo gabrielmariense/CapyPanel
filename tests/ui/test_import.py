@@ -5,7 +5,7 @@ import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QMessageBox
+from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QLineEdit, QMessageBox
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -19,6 +19,7 @@ from capypanel.ui.import_hosts import (
     ImportDialog,
     read_text,
 )
+from capypanel.ui.themes import engine as themes
 
 PASTED = (
     "name,address,group,tags,notes\n"
@@ -133,6 +134,27 @@ def test_editing_the_table_asks_once_then_rewrites_the_list(
     assert dialog.text.toPlainText().startswith("name,address,group,tags,notes")
     # Still the same address as Finance 01: skipped, now for being already in this import.
     assert _add_button(dialog) == "&Add 2 hosts"
+
+
+def test_a_cell_being_edited_shows_its_whole_text(window: CapyWindow) -> None:
+    try:
+        for theme in ("capypanel-dark", "paper", "windows-dark"):
+            window.set_theme(theme)
+            dialog = _dialog(window)
+            dialog.show()
+            QTest.qWaitForWindowExposed(dialog)
+            dialog.table.unlocked = True
+            item = dialog.table.topLevelItem(0)
+            assert item is not None
+            dialog.table.editItem(item, NAME)
+            editor = dialog.table.findChild(QLineEdit)
+            assert editor is not None
+            # The field covers the cell, tall enough for its text (the text was cut off).
+            assert editor.height() >= editor.minimumSizeHint().height(), theme
+            assert editor.height() >= dialog.table.visualItemRect(item).height() - 2, theme
+            dialog.close()
+    finally:
+        themes.apply(themes.DEFAULT_THEME)
 
 
 def test_rows_can_be_left_out_or_added_below(

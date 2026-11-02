@@ -155,6 +155,8 @@ TOOLS_KEY = "tools"  # each tool's own settings, by tool id
 TOOL_KEY = "tool"  # the tool shown last
 # What the window shows at start: the Home page, the tool shown last, or a tool's id.
 START_KEY, START_HOME, START_LAST = "start", "home", "last"
+# What the window's X does: ask each time, keep CapyPanel running in the tray, or quit.
+CLOSE_KEY, CLOSE_ASK, CLOSE_TRAY, CLOSE_QUIT = "on_close", "ask", "tray", "quit"
 # The shell's own settings; everything else at the top level was the Hosts tool's before 0.20.
 SHELL_KEYS = frozenset(
     {
@@ -166,6 +168,7 @@ SHELL_KEYS = frozenset(
         TOOL_KEY,
         TOOLS_KEY,
         START_KEY,
+        CLOSE_KEY,
     }
 )
 

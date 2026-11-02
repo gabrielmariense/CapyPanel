@@ -83,6 +83,18 @@ def test_tag_counts() -> None:
     assert hl.all_tags() == {"kiosk": 2, "floor-3": 1}
 
 
+def test_a_tag_is_given_to_or_taken_from_several_hosts_at_once() -> None:
+    hl, _, finance = _office()
+    hl, a = hl.add_host("A", finance, tags=["kiosk", "floor-3"])
+    hl, b = hl.add_host("B", finance)
+    hl, c = hl.add_host("C", finance, tags=["kiosk"])
+    tagged = hl.tag_hosts([a.id, b.id], "kiosk", True)
+    assert [h.tags for h in tagged.hosts[-3:]] == [("kiosk", "floor-3"), ("kiosk",), ("kiosk",)]
+    untagged = tagged.tag_hosts([a.id, b.id], "kiosk", False)
+    assert [h.tags for h in untagged.hosts[-3:]] == [("floor-3",), (), ("kiosk",)]  # C kept it
+    assert hl.tag_hosts([a.id], "  ", True) is hl
+
+
 def test_clean_tags_keeps_typed_order() -> None:
     assert clean_tags(["b", "a", " b ", ""]) == ("b", "a")
 

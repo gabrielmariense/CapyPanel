@@ -5,7 +5,7 @@ import html
 from dataclasses import replace
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, Qt, QTimer
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QPoint, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QKeyEvent, QMouseEvent, QPalette
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -23,6 +23,8 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QPushButton,
     QStackedLayout,
+    QStyledItemDelegate,
+    QStyleOptionViewItem,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -45,6 +47,19 @@ NOTES_WIDTH = 200  # notes can be long: the column stops here, the tooltip has i
 COLORS = {Verdict.ADD: STATUS_COLORS["online"], Verdict.SKIP: "#d29922", Verdict.BAD: "#d13438"}
 
 
+class CellEditor(QStyledItemDelegate):
+    """Puts the editor over the whole cell: the text's own area is too short for a field."""
+
+    def updateEditorGeometry(
+        self,
+        editor: QWidget,
+        option: QStyleOptionViewItem,
+        index: QModelIndex | QPersistentModelIndex,
+    ) -> None:
+        rect = option.rect  # type: ignore[attr-defined]
+        editor.setGeometry(rect.adjusted(0, 0, -2, -2))  # inside the grid lines
+
+
 class PreviewTable(QTreeWidget):
     """The rows as they'll be imported. The first click in it asks once whether to edit here:
     editing rewrites the pasted list as CSV, so the two always say the same thing."""
@@ -64,6 +79,7 @@ class PreviewTable(QTreeWidget):
             | QAbstractItemView.EditTrigger.AnyKeyPressed
         )
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.setItemDelegate(CellEditor(self))
 
     def edit(self, *args: object) -> bool:  # type: ignore[override]
         if len(args) == 3:

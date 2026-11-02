@@ -8,6 +8,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import quote
 
+from cffi import __version__ as cffi_version
+from cryptography import __version__ as cryptography_version
+from pycparser import __version__ as pycparser_version
 from PySide6 import __version__ as pyside_version
 from PySide6.QtCore import Qt, QUrl, qVersion
 from PySide6.QtGui import QCursor, QDesktopServices, QFontDatabase, QShowEvent, QTextCursor
@@ -272,7 +275,7 @@ COMPONENTS = (
     Component(
         "CapyPanel",
         __version__,
-        f"© {YEAR} Gabriel Tobias Mariense",
+        f"© {YEAR} {CREATOR}",
         "GPL-3.0",
         "gpl-3.0.txt",
     ),
@@ -296,6 +299,23 @@ COMPONENTS = (
         "© 2001-2024 Python Software Foundation",
         "PSF License",
         "python.txt",
+    ),
+    Component(
+        "cryptography",
+        cryptography_version,
+        "© Individual contributors",
+        "BSD-3-Clause",
+        "cryptography.txt",
+    ),
+    Component(
+        "cffi",
+        cffi_version,
+        "© Armin Rigo, Maciej Fijalkowski and contributors",
+        "MIT-0",
+        "cffi.txt",
+    ),
+    Component(
+        "pycparser", pycparser_version, "© 2008-2027 Eli Bendersky", "BSD-3-Clause", "pycparser.txt"
     ),
     Component("Tabler Icons", "", "© 2020-2026 Paweł Kuna", "MIT", "tabler-icons.txt"),
 )

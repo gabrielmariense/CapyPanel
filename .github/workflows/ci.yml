@@ -6,6 +6,10 @@ on:
   push:
     branches: [main]
 
+# The checks only read the code.
+permissions:
+  contents: read
+
 jobs:
   checks:
     runs-on: windows-latest

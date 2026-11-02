@@ -26,6 +26,8 @@ nav:
 
 theme:
   name: material
+  logo: images/docs-logo.svg
+  favicon: images/favicon.ico
   features:
     - navigation.footer
     - search.highlight
@@ -33,13 +35,13 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: teal
+      primary: custom
       toggle:
         icon: material/weather-night
         name: Dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: teal
+      primary: custom
       toggle:
         icon: material/weather-sunny
         name: Light mode
@@ -73,6 +75,10 @@ plugins:
             Printers: Impressoras
             The Printers tool: A ferramenta Impressoras
             Printer lists: Listas de impressoras
+
+# The brand: the navy header, the teal links and the site name's font.
+extra_css:
+  - stylesheets/brand.css
 
 markdown_extensions:
   - admonition

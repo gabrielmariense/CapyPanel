@@ -4,16 +4,24 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QFontMetrics
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtGui import QFont, QFontMetrics, QPalette
+from PySide6.QtWidgets import (
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QMenu,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from capypanel.core.hosts.model import Host
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.sessions import Session, SessionsError
 from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_texts
-from capypanel.ui.icons import STATUS_COLORS, dot_icon
+from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import DetailsPanel
 
 
@@ -28,6 +36,11 @@ class HostDetails:
 
 
 class HostDetailsPanel(DetailsPanel):
+    def __init__(self) -> None:
+        super().__init__()
+        # Opened by the arrow beside Profile; the tool fills it each time (aboutToShow).
+        self.profile_menu = QMenu(self)
+
     def show_host(
         self, details: HostDetails | None, selected: int, summary: str = "", needle: str = ""
     ) -> None:
@@ -51,10 +64,11 @@ class HostDetailsPanel(DetailsPanel):
         for key, label, value in (
             ("address", _("Address"), host.address),
             ("group", _("Group"), shown.group),
-            ("profile", _("Profile"), shown.profile),
         ):
             layout.addWidget(self.muted(label))
             layout.addWidget(self.value(key, value) if value else self.muted("—"))
+        layout.addWidget(self.muted(_("Profile")))
+        layout.addLayout(self._profile_row(shown.profile))
 
         self._users(layout, shown)
 
@@ -63,6 +77,28 @@ class HostDetailsPanel(DetailsPanel):
 
         self.section(layout, _("Notes"))
         layout.addWidget(self.notes(host.notes, needle) if host.notes else self.muted("—"))
+
+    def _profile_row(self, profile: str) -> QHBoxLayout:
+        """The profile, copied by a click like every value, and an arrow to pick another."""
+        row = QHBoxLayout()
+        row.setSpacing(2)
+        row.addWidget(self.value("profile", profile) if profile else self.muted("—"), 1)
+        self.profile_button = QToolButton()
+        self.profile_button.setObjectName("profilePicker")
+        self.profile_button.setToolTip(_("Change the connection profile"))
+        self.profile_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        text = self.palette().color(QPalette.ColorRole.Text)
+        self.profile_button.setIcon(tabler_icon("chevron-down", text, 14))
+        self.profile_button.clicked.connect(self._open_profile_menu)
+        row.addWidget(self.profile_button, 0, Qt.AlignmentFlag.AlignTop)
+        return row
+
+    def _open_profile_menu(self) -> None:
+        """Under the arrow, its right edge on the arrow's: the panel is at the window's right."""
+        button, menu = self.profile_button, self.profile_menu
+        menu.aboutToShow.emit()  # filled first, so its width is known
+        left = button.width() - menu.sizeHint().width()
+        menu.popup(button.mapToGlobal(QPoint(left, button.height())))
 
     def _heading(self, layout: QVBoxLayout, details: HostDetails) -> None:
         row = QHBoxLayout()

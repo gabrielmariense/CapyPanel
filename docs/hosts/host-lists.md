@@ -18,6 +18,11 @@ a CSV file, see [Importing and exporting hosts](importing.md).
 
 A new list starts with one group, **Default group**.
 
+Right-click selected hosts and **Tags ▸** lists the tags the list already has, ticked where every
+selected host carries one and "(1 of 2)" where only some do. Picking a tag gives it to all of
+them, or takes it from all of them when they all had it, and **New tag…** at the bottom asks for
+one and gives it to the selection. Printers has the same menu.
+
 ### Picking tags
 
 A tag narrows the group you have picked, rather than reaching across the whole list. To see a tag

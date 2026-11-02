@@ -1,4 +1,5 @@
-"""Secrets CapyPanel keeps between runs, such as the printers' SNMP community string, stored in
+"""Secrets CapyPanel keeps between runs, such as the printers' SNMP community string and, when
+the user chooses so, the passwords typed for connection profiles. They're stored in
 Windows Credential Manager under the user's own account. They never go into the settings file
 or a log: Windows encrypts them for this user, who can see or remove them in Control Panel ›
 Credential Manager › Windows Credentials."""
@@ -39,11 +40,15 @@ _advapi32.CredReadW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD
 _advapi32.CredReadW.restype = wintypes.BOOL
 _advapi32.CredDeleteW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD]
 _advapi32.CredDeleteW.restype = wintypes.BOOL
+_advapi32.CredEnumerateW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, _P(wintypes.DWORD),
+                                     _P(_P(_P(_Credential)))]  # fmt: skip
+_advapi32.CredEnumerateW.restype = wintypes.BOOL
 _advapi32.CredFree.argtypes = [ctypes.c_void_p]
 
 
-def save(name: str, secret: str) -> None:
-    """Keeps `secret` as CapyPanel/<name>, replacing what was there. Raises OSError."""
+def save(name: str, secret: str, user: str = "CapyPanel") -> None:
+    """Keeps `secret` as CapyPanel/<name>, replacing what was there. `user` is shown beside it
+    in Credential Manager. Raises OSError."""
     blob = secret.encode("utf-16-le")
     if len(blob) > _MAX_SECRET:
         raise ValueError("too long to keep")
@@ -54,7 +59,7 @@ def save(name: str, secret: str) -> None:
         CredentialBlobSize=len(blob),
         CredentialBlob=ctypes.cast(buffer, _P(ctypes.c_ubyte)),
         Persist=_PERSIST_LOCAL_MACHINE,
-        UserName="CapyPanel",
+        UserName=user,
     )
     if not _advapi32.CredWriteW(ctypes.byref(credential), 0):
         raise ctypes.WinError(ctypes.get_last_error())
@@ -62,6 +67,13 @@ def save(name: str, secret: str) -> None:
 
 def load(name: str) -> str | None:
     """The secret kept as CapyPanel/<name>, or None when there's none. Raises OSError."""
+    found = read(name)
+    return found[1] if found is not None else None
+
+
+def read(name: str) -> tuple[str, str] | None:
+    """The user and secret kept as CapyPanel/<name>, or None when there's none. Raises
+    OSError."""
     found = _P(_Credential)()
     if not _advapi32.CredReadW(PREFIX + name, _GENERIC, 0, ctypes.byref(found)):
         error = ctypes.get_last_error()
@@ -71,7 +83,24 @@ def load(name: str) -> str | None:
     try:
         credential = found.contents
         blob = ctypes.string_at(credential.CredentialBlob, credential.CredentialBlobSize)
-        return blob.decode("utf-16-le", errors="replace")
+        return credential.UserName or "", blob.decode("utf-16-le", errors="replace")
+    finally:
+        _advapi32.CredFree(found)
+
+
+def names(folder: str) -> list[str]:
+    """The names kept under CapyPanel/<folder> (a folder ends in "/"). Raises OSError."""
+    count = wintypes.DWORD()
+    found = _P(_P(_Credential))()
+    if not _advapi32.CredEnumerateW(PREFIX + folder + "*", 0, ctypes.byref(count),
+                                    ctypes.byref(found)):  # fmt: skip
+        error = ctypes.get_last_error()
+        if error == _NOT_FOUND:
+            return []
+        raise ctypes.WinError(error)
+    try:
+        targets = (found[i].contents.TargetName for i in range(count.value))
+        return sorted(t[len(PREFIX) :] for t in targets if t.startswith(PREFIX + folder))
     finally:
         _advapi32.CredFree(found)
 

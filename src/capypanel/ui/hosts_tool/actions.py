@@ -22,8 +22,8 @@ class HostsActions(ListActions):
     check_status: QAction
     check_users: QAction
     refresh_shown: QAction
-    forget_passwords: QAction
     connection_profiles: QAction
+    saved_credentials: QAction
     show_domains: QAction
 
 
@@ -55,6 +55,6 @@ def retranslate_actions(a: HostsActions) -> None:
     a.refresh_shown.setText(_("Refresh"))
     a.check_status.setText(_("Refresh &status"))
     a.check_users.setText(_("Refresh &logged-on users"))
-    a.forget_passwords.setText(_("&All profiles"))  # in Connect's Forget typed passwords
     a.connection_profiles.setText(_("Connection &profiles…"))
+    a.saved_credentials.setText(_("Sa&ved credentials…"))
     a.show_domains.setText(_("Show users' do&main"))

@@ -265,7 +265,7 @@ def test_menus_hold_only_what_fits_them(window: CapyWindow) -> None:
     assert inventory == ["Add &host…", "Add &group…", "&Manage groups…", "&Import hosts…"]
     window.hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
     connect = [label(a) for a in window.hosts.toolbar.connect_menu.actions() if a.text()][-3:]
-    assert connect == ["&Manual connection…", "Connection &profiles…", "&Forget typed passwords"]
+    assert connect == ["&Manual connection…", "Connection &profiles…", "Sa&ved credentials…"]
     # Commands outside the menu bar keep their shortcuts.
     a = window.hosts.commands
     shortcuts = {a.edit, a.remove, a.copy_address, a.add_host, a.add_group, a.manual_connect}
@@ -562,7 +562,15 @@ def test_the_settings_buttons_are_only_the_main_actions(window: CapyWindow) -> N
         ("host_lists", ["&New…", "&Add existing…", "&Remove"]),
         (
             "connections",
-            ["&Add…", "&Edit…", "&Delete…", "&Restore built-in…", "Change path…", "Download"],
+            [
+                "&Add…",
+                "&Edit…",
+                "&Delete…",
+                "&Restore built-in…",
+                "&Manage…",
+                "Change path…",
+                "Download",
+            ],  # fmt: skip
         ),
     ):
         page = dialog.pages[page_id]

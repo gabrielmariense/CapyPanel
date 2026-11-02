@@ -1,5 +1,6 @@
 """The Printers tool's Report: the same window as Hosts', with the printers' columns. Last check
-(Status, Toner and Total pages) comes from Refresh, which the window can run too."""
+(status, toner, page count, MAC address, firmware) comes from Refresh, which the window can run
+too."""
 
 from capypanel.core.hosts.bulk import host_fields
 from capypanel.core.hosts.model import Host
@@ -23,14 +24,17 @@ class PrintersReport(ExportDialog):
         "notes": N_("Notes"),
         "status": N_("Status"),
         "toner": N_("Toner"),
+        "toner_model": N_("Toner model"),
         "pages": N_("Total pages"),
+        "mac": N_("MAC address"),
+        "firmware": N_("Firmware"),
     }
     SECTIONS = (
         (N_("Printer"), ("name", "address", "group", "brand", "model")),
         (N_("Details"), ("serial", "asset_tag", "counter_source", "tags", "notes")),
-        (N_("Last check"), ("status", "toner", "pages")),
+        (N_("Last check"), ("status", "toner", "toner_model", "pages", "mac", "firmware")),
     )
-    CHECKED = ("status", "toner", "pages")
+    CHECKED = ("status", "toner", "toner_model", "pages", "mac", "firmware")
     FOR_IMPORT = ("name", "address", "group", "brand", "model", "serial", "asset_tag",
                   "counter_source", "tags", "notes")  # fmt: skip
     PRESET_NAME = N_("All details")
@@ -64,7 +68,7 @@ class PrintersReport(ExportDialog):
         return (
             _("Reads these printers again now")
             if wanted
-            else _("Tick Status, Toner or Total pages to read them")
+            else _("Tick a column under Last check to read them")
         )
 
     def copied_text(self, n: int, source: str) -> str:
