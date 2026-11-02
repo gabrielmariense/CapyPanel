@@ -76,10 +76,15 @@ def kept_logins() -> list[KeptLogin]:
     tool, logins = _("Printers › Refresh"), []
     if account is not None:
         forget = partial(credstore.forget, V3_ACCOUNT)
-        logins.append(KeptLogin(_("SNMP account (v3)"), tool, account[0], True, forget))
+        after = _(
+            "Printers › Refresh can't read SNMP v3 printers until the account is set "
+            "again in Settings › Printers."
+        )
+        logins.append(KeptLogin(_("SNMP account (v3)"), tool, account[0], True, forget, after))
     if secret is not None:
         forget = partial(credstore.forget, COMMUNITY)
-        logins.append(KeptLogin(_("SNMP community string (v2c)"), tool, "—", True, forget))
+        after = _("Printers › Refresh goes back to the community string “public”.")
+        logins.append(KeptLogin(_("SNMP community string (v2c)"), tool, "—", True, forget, after))
     return logins
 
 

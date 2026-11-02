@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-01 10:38-0300\n"
+"POT-Creation-Date: 2026-11-02 07:50-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -113,8 +113,11 @@ msgstr ""
 msgid "&Forget"
 msgstr ""
 
-msgid "&Forget all"
-msgstr ""
+#, python-brace-format
+msgid "&Forget {n} login"
+msgid_plural "&Forget {n} logins"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "&Formats…"
 msgstr ""
@@ -501,6 +504,12 @@ msgstr ""
 msgid ""
 "CapyPanel asks for nothing: {tool} asks for the user and password itself "
 "when it connects."
+msgstr ""
+
+msgid "CapyPanel asks for the others again when it needs them."
+msgstr ""
+
+msgid "CapyPanel asks for them again when it needs them."
 msgstr ""
 
 msgid "CapyPanel can't read page counters from Doc360 MPS yet."
@@ -893,8 +902,8 @@ msgid "Forget &all"
 msgstr ""
 
 #, python-brace-format
-msgid "Forget {n} login?"
-msgid_plural "Forget all {n} logins?"
+msgid "Forget this login?"
+msgid_plural "Forget these {n} logins?"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -1071,6 +1080,9 @@ msgstr ""
 msgid ""
 "Kept in memory until CapyPanel closes, never saved, and used only to read"
 " who is logged on."
+msgstr ""
+
+msgid "Kept until CapyPanel closes:"
 msgstr ""
 
 msgid "Kept: type to change it"
@@ -1469,6 +1481,14 @@ msgstr ""
 msgid "Printers › Refresh"
 msgstr ""
 
+msgid ""
+"Printers › Refresh can't read SNMP v3 printers until the account is set "
+"again in Settings › Printers."
+msgstr ""
+
+msgid "Printers › Refresh goes back to the community string “public”."
+msgstr ""
+
 msgid "Printing"
 msgstr ""
 
@@ -1703,6 +1723,9 @@ msgstr ""
 msgid ""
 "Saved in Windows Credential Manager for your Windows account (Settings › "
 "Connections), and used only to read who is logged on."
+msgstr ""
+
+msgid "Saved in Windows Credential Manager, and deleted there too:"
 msgstr ""
 
 msgid "Saved passwords deleted."
@@ -2317,9 +2340,6 @@ msgid "With No group, the groups inside it go directly under Groups."
 msgstr ""
 
 msgid "Yellow"
-msgstr ""
-
-msgid "You type them again the next time."
 msgstr ""
 
 msgid "Your computers: connect, see who's logged on, check them."

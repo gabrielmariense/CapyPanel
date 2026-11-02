@@ -33,6 +33,12 @@ class KeptLogin:
     user: str  # as shown: "EXAMPLE\ana", "(password only)"
     saved: bool  # in Windows Credential Manager; otherwise until CapyPanel closes
     forget: Callable[[], object]  # raises OSError when Windows didn't delete it
+    after: str = ""  # what changes once it's forgotten, when more than being asked again
+
+    @property
+    def line(self) -> str:
+        """How the Forget question lists it."""
+        return self.used_for if self.user == "—" else f"{self.used_for} · {self.user}"
 
 
 def kept_text(logins: list[KeptLogin]) -> str:
@@ -59,6 +65,23 @@ def forget_failed(parent: QWidget, error: OSError) -> None:
           "You can delete it in Control Panel › Credential Manager › Windows "
           "Credentials, under “{prefix}”.").format(error=error, prefix=credstore.PREFIX),
     )  # fmt: skip
+
+
+def forget_details(logins: list[KeptLogin]) -> str:
+    """The logins the question names, by where they're kept, then what forgetting means."""
+    parts = []
+    for heading, saved in (
+        (_("Saved in Windows Credential Manager, and deleted there too:"), True),
+        (_("Kept until CapyPanel closes:"), False),
+    ):
+        lines = [f"• {login.line}" for login in logins if login.saved == saved]
+        if lines:
+            parts.append("\n".join([heading, *lines]))
+    after = [login.after for login in logins if login.after]
+    if len(after) < len(logins):  # the rest are asked for again
+        asked = _("CapyPanel asks for the others again when it needs them.")
+        after.insert(0, asked if after else _("CapyPanel asks for them again when it needs them."))
+    return "\n\n".join([*parts, " ".join(after)])
 
 
 class SavedCredentialsDialog(QDialog):
@@ -133,9 +156,13 @@ class SavedCredentialsDialog(QDialog):
 
     def forget_all(self) -> None:
         n = len(self._logins)
-        text = ngettext("Forget {n} login?", "Forget all {n} logins?", n).format(n=n)
-        text += "\n\n" + _("You type them again the next time.")
-        if n and confirm(self, _("Saved credentials"), text, _("&Forget all")):
+        if n and confirm(
+            self,
+            _("Saved credentials"),
+            ngettext("Forget this login?", "Forget these {n} logins?", n).format(n=n),
+            ngettext("&Forget {n} login", "&Forget {n} logins", n).format(n=n),
+            forget_details(self._logins),
+        ):
             self._run(self._logins)
             self._fill(0)
 

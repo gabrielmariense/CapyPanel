@@ -162,9 +162,11 @@ class HostDialog(QDialog):
         )
 
 
-def confirm(parent: QWidget, title: str, text: str, action: str) -> bool:
-    """A yes/no question whose default is Cancel, so Enter or a stray click never confirms."""
+def confirm(parent: QWidget, title: str, text: str, action: str, details: str = "") -> bool:
+    """A yes/no question whose default is Cancel, so Enter or a stray click never confirms.
+    `details` goes under the question, in the normal font."""
     box = QMessageBox(QMessageBox.Icon.Question, title, text, parent=parent)
+    box.setInformativeText(details)
     yes = box.addButton(action, QMessageBox.ButtonRole.DestructiveRole)
     cancel = box.addButton(QMessageBox.StandardButton.Cancel)
     box.setDefaultButton(cancel)

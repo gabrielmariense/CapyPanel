@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-01 10:38-0300\n"
+"POT-Creation-Date: 2026-11-02 07:50-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -114,8 +114,11 @@ msgstr "&Ajustar colunas ao conteúdo"
 msgid "&Forget"
 msgstr "&Esquecer"
 
-msgid "&Forget all"
-msgstr "&Esquecer todas"
+#, python-brace-format
+msgid "&Forget {n} login"
+msgid_plural "&Forget {n} logins"
+msgstr[0] "&Esquecer {n} login"
+msgstr[1] "&Esquecer {n} logins"
 
 msgid "&Formats…"
 msgstr "&Formatos…"
@@ -497,6 +500,12 @@ msgstr "Cancelar"
 #, python-brace-format
 msgid "CapyPanel asks for nothing: {tool} asks for the user and password itself when it connects."
 msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha ao conectar."
+
+msgid "CapyPanel asks for the others again when it needs them."
+msgstr "O CapyPanel pede os outros de novo quando precisar deles."
+
+msgid "CapyPanel asks for them again when it needs them."
+msgstr "O CapyPanel pede de novo quando precisar deles."
 
 msgid "CapyPanel can't read page counters from Doc360 MPS yet."
 msgstr "O CapyPanel ainda não lê contadores de páginas do Doc360 MPS."
@@ -887,10 +896,10 @@ msgid "Forget &all"
 msgstr "Esquecer &todas"
 
 #, python-brace-format
-msgid "Forget {n} login?"
-msgid_plural "Forget all {n} logins?"
-msgstr[0] "Esquecer {n} login?"
-msgstr[1] "Esquecer todos os {n} logins?"
+msgid "Forget this login?"
+msgid_plural "Forget these {n} logins?"
+msgstr[0] "Esquecer este login?"
+msgstr[1] "Esquecer estes {n} logins?"
 
 msgid "Forgotten logins are deleted from Credential Manager too; you type them again the next time. Where new ones are kept: Settings › Connection profiles › Credentials."
 msgstr "Logins esquecidos também são apagados do Gerenciador de Credenciais; você os digita de novo na próxima vez. Onde os novos ficam: Configurações › Perfis de conexão › Credenciais."
@@ -1053,6 +1062,9 @@ msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada 
 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado."
+
+msgid "Kept until CapyPanel closes:"
+msgstr "Guardados até o CapyPanel fechar:"
 
 msgid "Kept: type to change it"
 msgstr "Guardada: digite para alterá-la"
@@ -1437,6 +1449,12 @@ msgstr "Impressoras"
 msgid "Printers › Refresh"
 msgstr "Impressoras › Atualizar"
 
+msgid "Printers › Refresh can't read SNMP v3 printers until the account is set again in Settings › Printers."
+msgstr "Impressoras › Atualizar não consegue ler impressoras SNMP v3 até a conta ser definida de novo em Configurações › Impressoras."
+
+msgid "Printers › Refresh goes back to the community string “public”."
+msgstr "Impressoras › Atualizar volta a usar a comunidade “public”."
+
 msgid "Printing"
 msgstr "Imprimindo"
 
@@ -1666,6 +1684,9 @@ msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windo
 
 msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only to read who is logged on."
 msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada para ler quem está logado."
+
+msgid "Saved in Windows Credential Manager, and deleted there too:"
+msgstr "Salvos no Gerenciador de Credenciais do Windows, e apagados de lá também:"
 
 msgid "Saved passwords deleted."
 msgstr "As senhas salvas foram apagadas."
@@ -2239,9 +2260,6 @@ msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
 
 msgid "Yellow"
 msgstr "Amarelo"
-
-msgid "You type them again the next time."
-msgstr "Você os digita de novo na próxima vez."
 
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."

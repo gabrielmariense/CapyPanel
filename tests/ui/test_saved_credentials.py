@@ -14,7 +14,12 @@ from capypanel.ui import saved_credentials
 from capypanel.ui.hosts_tool.settings import HostsSettings
 from capypanel.ui.printers_tool import refresh
 from capypanel.ui.printers_tool.settings import PrintersSettings
-from capypanel.ui.saved_credentials import KeptLogin, SavedCredentialsDialog, kept_text
+from capypanel.ui.saved_credentials import (
+    KeptLogin,
+    SavedCredentialsDialog,
+    forget_details,
+    kept_text,
+)
 
 
 @pytest.fixture
@@ -69,13 +74,15 @@ def test_forget_deletes_the_picked_login_and_forget_all_the_rest(
     assert refresh.v3_account() is None and len(_rows(dialog)) == 2
     asked: list[str] = []
 
-    def answer(_parent: Any, _title: str, text: str, _action: str) -> bool:
-        asked.append(text)
+    def answer(_parent: Any, _title: str, text: str, action: str, details: str) -> bool:
+        asked.extend([text, action, details])
         return True
 
     monkeypatch.setattr(saved_credentials, "confirm", answer)
     dialog.forget_all_button.click()
-    assert asked[0].startswith("Forget all 2 logins?")
+    assert asked[:2] == ["Forget these 2 logins?", "&Forget 2 logins"]
+    assert "Saved in Windows Credential Manager, and deleted there too:\n• " in asked[2]
+    assert "Kept until CapyPanel closes:\n• Logged-on users · EXAMPLE\\svc" in asked[2]
     assert _rows(dialog) == [] and credstore.names("") == []
     assert window.hosts._account is None  # pyright: ignore[reportPrivateUsage]
     assert not dialog.forget_button.isEnabled() and not dialog.forget_all_button.isEnabled()
@@ -137,3 +144,20 @@ def test_connect_opens_saved_credentials(
     ]
     entry.trigger()
     assert opened == [1]
+
+
+def test_forget_all_names_each_login_and_what_forgetting_changes(qapp: QApplication) -> None:
+    refresh.save_v3_account(usm.Account("snmp-reader", usm.Auth.SHA, "auth-pass"))
+    credstore.save(refresh.COMMUNITY, "s3cret")
+    vnc = KeptLogin("RealVNC", "RealVNC Viewer", "(password only)", False, lambda: None)
+    assert forget_details([*refresh.kept_logins(), vnc]) == (
+        "Saved in Windows Credential Manager, and deleted there too:\n"
+        "• SNMP account (v3) · snmp-reader\n"
+        "• SNMP community string (v2c)\n\n"
+        "Kept until CapyPanel closes:\n"
+        "• RealVNC · (password only)\n\n"
+        "CapyPanel asks for the others again when it needs them. Printers › Refresh can't "
+        "read SNMP v3 printers until the account is set again in Settings › Printers. "
+        "Printers › Refresh goes back to the community string “public”."
+    )
+    assert forget_details([vnc]).endswith("CapyPanel asks for them again when it needs them.")
