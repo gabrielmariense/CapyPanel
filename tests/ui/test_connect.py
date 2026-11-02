@@ -13,7 +13,7 @@ from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu, QMessageBox
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.core.remote.sessions import Account
+from capypanel.core.remote.access import Account
 from capypanel.core.tools.connect import Credential, Target
 from capypanel.core.tools.profiles import ConnectionProfile
 from capypanel.ui import connect as connect_ui

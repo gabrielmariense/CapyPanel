@@ -18,7 +18,8 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import Host
 from capypanel.core.i18n import _, ngettext
-from capypanel.core.remote.sessions import Session, SessionsError
+from capypanel.core.remote.access import RemoteError
+from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_texts
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
@@ -32,7 +33,7 @@ class HostDetails:
     profile: str  # the connection profile's name
     status: tuple[Status, datetime] | None = None  # None: not checked yet
     # The last logged-on users check: sessions (None when it failed), its error, and when.
-    users: tuple[Sequence[Session] | None, SessionsError | None, datetime] | None = None
+    users: tuple[Sequence[Session] | None, RemoteError | None, datetime] | None = None
 
 
 class HostDetailsPanel(DetailsPanel):

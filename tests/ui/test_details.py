@@ -5,7 +5,8 @@ from PySide6.QtGui import QGuiApplication, QMouseEvent
 from PySide6.QtWidgets import QApplication, QLabel
 
 from capypanel.core.hosts.model import Host, HostList
-from capypanel.core.remote.sessions import Reason, Session, SessionsError
+from capypanel.core.remote.access import Reason, RemoteError
+from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.ui.hosts_tool.details import HostDetails, HostDetailsPanel
 from capypanel.ui.list_workspace.details import breakable, marked
@@ -15,7 +16,7 @@ def _details(
     tags: tuple[str, ...] = (),
     notes: str = "",
     status: tuple[Status, datetime] | None = None,
-    users: tuple[list[Session] | tuple[()] | None, SessionsError | None, datetime] | None = None,
+    users: tuple[list[Session] | tuple[()] | None, RemoteError | None, datetime] | None = None,
 ) -> HostDetails:
     hl, group = HostList().add_group("Front desk")
     address = "PC-0142.corp.example.net"
@@ -65,7 +66,7 @@ def test_logged_on_says_nobody_or_why_the_check_failed(qapp: QApplication) -> No
     pane = HostDetailsPanel()
     pane.show_host(_details(users=((), None, now)), 1)
     assert "No one logged on" in _texts(pane)
-    pane.show_host(_details(users=(None, SessionsError(Reason.UNREACHABLE), now)), 1)
+    pane.show_host(_details(users=(None, RemoteError(Reason.UNREACHABLE), now)), 1)
     assert "Unreachable" in _texts(pane)
 
 

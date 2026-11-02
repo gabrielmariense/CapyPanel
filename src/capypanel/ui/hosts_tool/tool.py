@@ -16,8 +16,9 @@ from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote import checks
+from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.checks import Checks, Found
-from capypanel.core.remote.sessions import Account, Reason, Session, SessionsError
+from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Answer, Status
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import SessionCredentials, Target
@@ -76,7 +77,7 @@ class HostsTool(ListWorkspace):
         # Refresh results, by host id: in memory only, since the list file is shared.
         self._status_found: dict[str, tuple[Status, datetime, Answer | None]] = {}
         self._users_found: dict[
-            str, tuple[tuple[Session, ...] | None, SessionsError | None, datetime]
+            str, tuple[tuple[Session, ...] | None, RemoteError | None, datetime]
         ] = {}
         self._run: CheckRun | None = None
         self._account = self._saved_account()  # typed for logged-on users

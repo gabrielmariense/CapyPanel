@@ -19,9 +19,10 @@ from PySide6.QtWidgets import (
 from capypanel.core import i18n
 from capypanel.core.i18n import _
 from capypanel.core.remote import checks
+from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.batch import Batch
 from capypanel.core.remote.checks import Checks, Found
-from capypanel.core.remote.sessions import Account, Reason, Session, SessionsError
+from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Answer, Status
 from capypanel.ui.notes import hint
 
@@ -75,7 +76,7 @@ class CheckRun(QObject):
         self, target: tuple[str, str], found: Found | None, error: Exception | None
     ) -> None:
         if found is None:  # a bug in a check: show it as unreadable rather than lose the host
-            found = Found(users_error=SessionsError(Reason.OTHER)) if error else Found()
+            found = Found(users_error=RemoteError(Reason.OTHER)) if error else Found()
         self.found.emit(target[0], found)
 
 
@@ -201,7 +202,7 @@ def by_state(sessions: Sequence[Session]) -> list[Session]:
 
 
 def users_text(
-    sessions: Sequence[Session] | None, error: SessionsError | None, *, full: bool = False
+    sessions: Sequence[Session] | None, error: RemoteError | None, *, full: bool = False
 ) -> str:
     if error is not None:
         return {
@@ -222,7 +223,7 @@ def users_text(
     return ", ".join(names)
 
 
-def users_tip(error: SessionsError | None, when: datetime) -> str:
+def users_tip(error: RemoteError | None, when: datetime) -> str:
     checked = _("Checked {when}.").format(when=when_text(when))
     if error is None:
         return checked

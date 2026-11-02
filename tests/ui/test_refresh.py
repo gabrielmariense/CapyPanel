@@ -11,8 +11,9 @@ from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
 from capypanel.core.remote import checks
+from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.checks import Checks, Found
-from capypanel.core.remote.sessions import Account, Reason, Session, SessionsError
+from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_ui
 from capypanel.ui.hosts_tool import tool as hosts_module
@@ -81,7 +82,7 @@ def answers(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
 def test_checking_selected_hosts_fills_the_status_and_user_columns(
     window: CapyWindow, answers: dict[str, Any]
 ) -> None:
-    answers["10.0.0.2"] = Found(Status.OFFLINE, users_error=SessionsError(Reason.UNREACHABLE))
+    answers["10.0.0.2"] = Found(Status.OFFLINE, users_error=RemoteError(Reason.UNREACHABLE))
     answers["10.0.0.1"] = Found(Status.ONLINE, (DESK,), answered=("10.0.0.1", 445))
     window.hosts.table.select_ids(_ids(window, "PC-1", "PC-2", "Desk 4"))
     window.hosts.commands.check_users.trigger()
@@ -163,7 +164,7 @@ def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
 ) -> None:
     def admins_only(wanted: Checks) -> Found:
         if wanted.account is None:
-            return Found(Status.ONLINE, users_error=SessionsError(Reason.NOT_ADMIN, 259))
+            return Found(Status.ONLINE, users_error=RemoteError(Reason.NOT_ADMIN, 259))
         return Found(Status.ONLINE, (DESK,))
 
     answers["10.0.0.3"] = admins_only
@@ -194,7 +195,7 @@ def test_a_rejected_typed_account_is_never_tried_on_the_other_hosts(
     window: CapyWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts._account = Account("CORP\\admin", "typo")
-    rejected = Found(Status.ONLINE, users_error=SessionsError(Reason.REJECTED, 1326))
+    rejected = Found(Status.ONLINE, users_error=RemoteError(Reason.REJECTED, 1326))
     for address in ("10.0.0.1", "10.0.0.2", "10.0.0.3"):
         answers[address] = rejected
     monkeypatch.setattr(check_ui.AccountDialog, "exec", lambda _self: QDialog.DialogCode.Rejected)

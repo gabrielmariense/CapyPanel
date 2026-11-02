@@ -1,8 +1,9 @@
 import pytest
 
 from capypanel.core.remote import checks, sessions, status
+from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.checks import Checks, Found
-from capypanel.core.remote.sessions import Account, Reason, Session, SessionsError
+from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 
 DESK = Session("ana", "CORP", "console", "active", None)
@@ -47,7 +48,7 @@ def test_a_failed_users_read_alone_leaves_the_status_unknown(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     def refuse(_host: str, _account: Account | None = None) -> list[Session]:
-        raise SessionsError(Reason.UNREACHABLE)
+        raise RemoteError(Reason.UNREACHABLE)
 
     monkeypatch.setattr(sessions, "read_sessions", refuse)
     found = checks.run("pc1", Checks(status=False))
@@ -56,7 +57,7 @@ def test_a_failed_users_read_alone_leaves_the_status_unknown(
 
 def test_which_outcomes_prove_or_reject_an_account() -> None:
     def failed(reason: Reason) -> Found:
-        return Found(users_error=SessionsError(reason))
+        return Found(users_error=RemoteError(reason))
 
     assert checks.account_proven(Found(sessions=()), None)
     assert checks.account_proven(failed(Reason.NOT_ADMIN), None)  # accepted, just not admin

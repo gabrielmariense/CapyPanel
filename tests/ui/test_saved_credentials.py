@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from capypanel.core import credstore, settings
 from capypanel.core.printers import usm
-from capypanel.core.remote.sessions import Account
+from capypanel.core.remote.access import Account
 from capypanel.core.tools.connect import Credential
 from capypanel.ui import saved_credentials
 from capypanel.ui.hosts_tool.settings import HostsSettings
