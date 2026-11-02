@@ -157,7 +157,8 @@ def test_forget_all_names_each_login_and_what_forgetting_changes(qapp: QApplicat
         "Kept until CapyPanel closes:\n"
         "• RealVNC · (password only)\n\n"
         "CapyPanel asks for the others again when it needs them. Printers › Refresh can't "
-        "read SNMP v3 printers until the account is set again in Settings › Printers. "
+        "read SNMP v3 printers until the account is set again in Settings › Printers › "
+        "Refresh. "
         "Printers › Refresh goes back to the community string “public”."
     )
     assert forget_details([vnc]).endswith("CapyPanel asks for them again when it needs them.")
