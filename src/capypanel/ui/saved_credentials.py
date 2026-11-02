@@ -28,17 +28,11 @@ log = logging.getLogger(__name__)
 class KeptLogin:
     """One login a tool keeps, as the window lists it. Its password never shows."""
 
-    used_for: str  # "RealVNC", "Logged-on users", "SNMP account (v3)"
+    used_for: str  # "RealVNC", "Logged-on users"
     tool: str  # what signs in with it: "RealVNC Viewer", "Hosts › Refresh"
     user: str  # as shown: "EXAMPLE\ana", "(password only)"
-    saved: bool  # in Windows Credential Manager; otherwise until CapyPanel closes
+    saved: bool  # in Windows Credential Manager; otherwise temporary, until CapyPanel closes
     forget: Callable[[], object]  # raises OSError when Windows didn't delete it
-    after: str = ""  # what changes once it's forgotten, when more than being asked again
-
-    @property
-    def line(self) -> str:
-        """How the Forget question lists it."""
-        return self.used_for if self.user == "—" else f"{self.used_for} · {self.user}"
 
 
 def kept_text(logins: list[KeptLogin]) -> str:
@@ -50,7 +44,8 @@ def kept_text(logins: list[KeptLogin]) -> str:
     if saved:
         places.append(_("{n} in Credential Manager").format(n=saved))
     if len(logins) > saved:
-        places.append(_("{n} until CapyPanel closes").format(n=len(logins) - saved))
+        n = len(logins) - saved
+        places.append(ngettext("{n} temporary", "{n} temporary", n).format(n=n))
     return ngettext("{n} kept: {places}.", "{n} kept: {places}.", len(logins)).format(
         n=len(logins), places=", ".join(places)
     )
@@ -71,17 +66,13 @@ def forget_details(logins: list[KeptLogin]) -> str:
     """The logins the question names, by where they're kept, then what forgetting means."""
     parts = []
     for heading, saved in (
-        (_("Saved in Windows Credential Manager, and deleted there too:"), True),
-        (_("Kept until CapyPanel closes:"), False),
+        (_("Saved in Credential Manager:"), True),
+        (_("Temporary:"), False),
     ):
-        lines = [f"• {login.line}" for login in logins if login.saved == saved]
+        lines = [f"• {login.used_for} · {login.user}" for login in logins if login.saved == saved]
         if lines:
             parts.append("\n".join([heading, *lines]))
-    after = [login.after for login in logins if login.after]
-    if len(after) < len(logins):  # the rest are asked for again
-        asked = _("CapyPanel asks for the others again when it needs them.")
-        after.insert(0, asked if after else _("CapyPanel asks for them again when it needs them."))
-    return "\n\n".join([*parts, " ".join(after)])
+    return "\n\n".join([*parts, _("CapyPanel asks for them again when it needs them.")])
 
 
 class SavedCredentialsDialog(QDialog):
@@ -129,7 +120,7 @@ class SavedCredentialsDialog(QDialog):
         self._logins = sorted(self._kept(), key=lambda login: login.used_for.casefold())
         self.table.clear()
         for login in self._logins:
-            place = _("Credential Manager") if login.saved else _("Until CapyPanel closes")
+            place = _("Credential Manager") if login.saved else _("Temporary")
             item = QTreeWidgetItem([login.used_for, login.tool, login.user, place])
             for index in range(4):
                 item.setToolTip(index, item.text(index))  # whole, if the column cuts it

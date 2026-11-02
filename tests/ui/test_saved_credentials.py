@@ -13,7 +13,6 @@ from capypanel.core.tools.connect import Credential
 from capypanel.ui import saved_credentials
 from capypanel.ui.hosts_tool.settings import HostsSettings
 from capypanel.ui.printers_tool import refresh
-from capypanel.ui.printers_tool.settings import PrintersSettings
 from capypanel.ui.saved_credentials import (
     KeptLogin,
     SavedCredentialsDialog,
@@ -31,12 +30,10 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
 
 
 def _keep_some(win: CapyWindow) -> None:
-    """A saved profile password, an account typed for logged-on users (in memory only) and
-    the printers' v3 account."""
+    """A saved profile password and an account typed for logged-on users (in memory only)."""
     profile = win.hosts.connector.choices()[0][0]
     win.hosts.connector.credentials.remember(profile, Credential("EXAMPLE\\ana", "x"))
     win.hosts._account = Account("EXAMPLE\\svc", "y")  # pyright: ignore[reportPrivateUsage]
-    refresh.save_v3_account(usm.Account("snmp-reader", usm.Auth.SHA, "auth-pass"))
 
 
 def _rows(dialog: SavedCredentialsDialog) -> list[list[str]]:
@@ -47,18 +44,24 @@ def _rows(dialog: SavedCredentialsDialog) -> list[list[str]]:
     ]
 
 
-def test_the_window_lists_every_tool_s_logins_by_what_they_re_used_for(
+def test_the_window_lists_the_connection_logins_by_what_they_re_used_for(
     window: CapyWindow,
 ) -> None:
     _keep_some(window)
-    credstore.save(refresh.COMMUNITY, "s3cret")
     dialog = SavedCredentialsDialog(None, window.kept_logins)
     rows = _rows(dialog)
+    assert len(rows) == 2
     assert [r[0] for r in rows] == sorted((r[0] for r in rows), key=str.casefold)
-    assert ["Logged-on users", "Hosts › Refresh", "EXAMPLE\\svc", "Until CapyPanel closes"] in rows
-    assert ["SNMP account (v3)", "Printers › Refresh", "snmp-reader", "Credential Manager"] in rows
-    assert ["SNMP community string (v2c)", "Printers › Refresh", "—", "Credential Manager"] in rows
-    assert not any("x" in r or "auth-pass" in r or "s3cret" in r for r in rows)  # no password
+    assert ["Logged-on users", "Hosts › Refresh", "EXAMPLE\\svc", "Temporary"] in rows
+    assert any(r[2:] == ["EXAMPLE\\ana", "Credential Manager"] for r in rows)
+    assert not any("x" in r or "y" in r for r in rows)  # no password
+
+
+def test_printers_snmp_logins_are_not_listed(window: CapyWindow) -> None:
+    # They're set in Settings › Printers › Refresh, not with the connection logins.
+    refresh.save_v3_account(usm.Account("snmp-reader", usm.Auth.SHA, "auth-pass"))
+    credstore.save(refresh.COMMUNITY, "s3cret")
+    assert window.kept_logins() == []
 
 
 def test_forget_deletes_the_picked_login_and_forget_all_the_rest(
@@ -66,12 +69,16 @@ def test_forget_deletes_the_picked_login_and_forget_all_the_rest(
 ) -> None:
     _keep_some(window)
     dialog = SavedCredentialsDialog(None, window.kept_logins)
-    assert len(_rows(dialog)) == 3
-    snmp = dialog.table.topLevelItem(2)  # SNMP account (v3)
-    assert snmp is not None
-    dialog.table.setCurrentItem(snmp)
+    [account] = [
+        dialog.table.topLevelItem(r)
+        for r in range(2)
+        if dialog.table.topLevelItem(r).text(0) == "Logged-on users"  # type: ignore[union-attr]
+    ]
+    assert account is not None
+    dialog.table.setCurrentItem(account)
     dialog.forget_button.click()
-    assert refresh.v3_account() is None and len(_rows(dialog)) == 2
+    assert window.hosts._account is None  # pyright: ignore[reportPrivateUsage]
+    assert len(_rows(dialog)) == 1
     asked: list[str] = []
 
     def answer(_parent: Any, _title: str, text: str, action: str, details: str) -> bool:
@@ -80,11 +87,10 @@ def test_forget_deletes_the_picked_login_and_forget_all_the_rest(
 
     monkeypatch.setattr(saved_credentials, "confirm", answer)
     dialog.forget_all_button.click()
-    assert asked[:2] == ["Forget these 2 logins?", "&Forget 2 logins"]
-    assert "Saved in Windows Credential Manager, and deleted there too:\n• " in asked[2]
-    assert "Kept until CapyPanel closes:\n• Logged-on users · EXAMPLE\\svc" in asked[2]
+    assert asked[:2] == ["Forget this login?", "&Forget 1 login"]
+    assert asked[2].startswith("Saved in Credential Manager:\n• ")
+    assert "EXAMPLE\\ana" in asked[2]
     assert _rows(dialog) == [] and credstore.names("") == []
-    assert window.hosts._account is None  # pyright: ignore[reportPrivateUsage]
     assert not dialog.forget_button.isEnabled() and not dialog.forget_all_button.isEnabled()
 
 
@@ -109,8 +115,7 @@ def test_settings_counts_what_s_kept_and_opens_the_window(
     _keep_some(window)
     dialog = window.settings_dialog()
     row = dialog.group(HostsSettings).connections.profiles.saved_row
-    assert row.description.text() == "3 kept: 2 in Credential Manager, 1 until CapyPanel closes."
-    printers = dialog.group(PrintersSettings)
+    assert row.description.text() == "2 kept: 1 in Credential Manager, 1 temporary."
 
     def forget_everything(win: SavedCredentialsDialog) -> int:
         for login in window.kept_logins():
@@ -120,8 +125,6 @@ def test_settings_counts_what_s_kept_and_opens_the_window(
     monkeypatch.setattr(SavedCredentialsDialog, "exec", forget_everything)
     dialog.group(HostsSettings).connections.profiles.manage_button.click()
     assert row.description.text() == "None kept."  # Settings shows it at once
-    printers.general.version.setCurrentIndex(printers.general.version.findData(refresh.V3))
-    assert "not set" in printers.general.account_row.description.text()
 
 
 def test_the_settings_line_names_both_places() -> None:
@@ -130,7 +133,7 @@ def test_the_settings_line_names_both_places() -> None:
 
     assert kept_text([]) == "None kept."
     assert kept_text([login(True)]) == "1 kept: 1 in Credential Manager."
-    assert kept_text([login(False)] * 2) == "2 kept: 2 until CapyPanel closes."
+    assert kept_text([login(False)] * 2) == "2 kept: 2 temporary."
 
 
 def test_connect_opens_saved_credentials(
@@ -146,19 +149,13 @@ def test_connect_opens_saved_credentials(
     assert opened == [1]
 
 
-def test_forget_all_names_each_login_and_what_forgetting_changes(qapp: QApplication) -> None:
-    refresh.save_v3_account(usm.Account("snmp-reader", usm.Auth.SHA, "auth-pass"))
-    credstore.save(refresh.COMMUNITY, "s3cret")
+def test_forget_all_names_each_login_by_where_it_s_kept() -> None:
+    ultra = KeptLogin("UltraVNC", "UltraVNC Viewer", "EXAMPLE\\ana", True, lambda: None)
     vnc = KeptLogin("RealVNC", "RealVNC Viewer", "(password only)", False, lambda: None)
-    assert forget_details([*refresh.kept_logins(), vnc]) == (
-        "Saved in Windows Credential Manager, and deleted there too:\n"
-        "• SNMP account (v3) · snmp-reader\n"
-        "• SNMP community string (v2c)\n\n"
-        "Kept until CapyPanel closes:\n"
+    assert forget_details([ultra, vnc]) == (
+        "Saved in Credential Manager:\n"
+        "• UltraVNC · EXAMPLE\\ana\n\n"
+        "Temporary:\n"
         "• RealVNC · (password only)\n\n"
-        "CapyPanel asks for the others again when it needs them. Printers › Refresh can't "
-        "read SNMP v3 printers until the account is set again in Settings › Printers › "
-        "Refresh. "
-        "Printers › Refresh goes back to the community string “public”."
+        "CapyPanel asks for them again when it needs them."
     )
-    assert forget_details([vnc]).endswith("CapyPanel asks for them again when it needs them.")

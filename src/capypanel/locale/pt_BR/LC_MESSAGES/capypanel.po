@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 07:53-0300\n"
+"POT-Creation-Date: 2026-11-02 08:25-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -500,9 +500,6 @@ msgstr "Cancelar"
 #, python-brace-format
 msgid "CapyPanel asks for nothing: {tool} asks for the user and password itself when it connects."
 msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha ao conectar."
-
-msgid "CapyPanel asks for the others again when it needs them."
-msgstr "O CapyPanel pede os outros de novo quando precisar deles."
 
 msgid "CapyPanel asks for them again when it needs them."
 msgstr "O CapyPanel pede de novo quando precisar deles."
@@ -1063,9 +1060,6 @@ msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada 
 msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado."
 
-msgid "Kept until CapyPanel closes:"
-msgstr "Guardados até o CapyPanel fechar:"
-
 msgid "Kept: type to change it"
 msgstr "Guardada: digite para alterá-la"
 
@@ -1446,15 +1440,6 @@ msgstr "Listas de impressoras (*.json);;Todos os arquivos (*)"
 msgid "Printers"
 msgstr "Impressoras"
 
-msgid "Printers › Refresh"
-msgstr "Impressoras › Atualizar"
-
-msgid "Printers › Refresh can't read SNMP v3 printers until the account is set again in Settings › Printers › Refresh."
-msgstr "Impressoras › Atualizar não consegue ler impressoras SNMP v3 até a conta ser definida de novo em Configurações › Impressoras › Atualizar."
-
-msgid "Printers › Refresh goes back to the community string “public”."
-msgstr "Impressoras › Atualizar volta a usar a comunidade “public”."
-
 msgid "Printing"
 msgstr "Imprimindo"
 
@@ -1622,14 +1607,8 @@ msgstr "&Conta SNMP"
 msgid "SNMP &version"
 msgstr "&Versão do SNMP"
 
-msgid "SNMP account (v3)"
-msgstr "Conta SNMP (v3)"
-
 msgid "SNMP community string"
 msgstr "Comunidade SNMP"
-
-msgid "SNMP community string (v2c)"
-msgstr "Comunidade SNMP (v2c)"
 
 msgid "SNMP v3 account"
 msgstr "Conta SNMP v3"
@@ -1679,14 +1658,14 @@ msgstr "Credenciais salvas"
 msgid "Saved for your Windows account."
 msgstr "Salvas para a sua conta do Windows."
 
+msgid "Saved in Credential Manager:"
+msgstr "Salvos no Gerenciador de Credenciais:"
+
 msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only for hosts with this connection profile."
 msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada nos hosts com este perfil de conexão."
 
 msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only to read who is logged on."
 msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada para ler quem está logado."
-
-msgid "Saved in Windows Credential Manager, and deleted there too:"
-msgstr "Salvos no Gerenciador de Credenciais do Windows, e apagados de lá também:"
 
 msgid "Saved passwords deleted."
 msgstr "As senhas salvas foram apagadas."
@@ -1891,8 +1870,14 @@ msgstr "Tags: {tags}"
 msgid "Takes it out of your lists, or deletes its file too"
 msgstr "Tira das suas listas, ou exclui também o arquivo"
 
+msgid "Temporary"
+msgstr "Temporário"
+
 msgid "Temporary credentials"
 msgstr "Credenciais temporárias"
+
+msgid "Temporary:"
+msgstr "Temporários:"
 
 msgid "Text"
 msgstr "Texto"
@@ -2166,9 +2151,6 @@ msgstr "Inacessível"
 
 msgid "Unreadable"
 msgstr "Ilegível"
-
-msgid "Until CapyPanel closes"
-msgstr "Até o CapyPanel fechar"
 
 msgid "Use &defaults"
 msgstr "Usar &padrões"
@@ -2654,8 +2636,10 @@ msgstr[0] "{n} parada"
 msgstr[1] "{n} paradas"
 
 #, python-brace-format
-msgid "{n} until CapyPanel closes"
-msgstr "{n} até o CapyPanel fechar"
+msgid "{n} temporary"
+msgid_plural "{n} temporary"
+msgstr[0] "{n} temporário"
+msgstr[1] "{n} temporários"
 
 #, python-brace-format
 msgid "{path} (in use)"

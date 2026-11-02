@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 07:53-0300\n"
+"POT-Creation-Date: 2026-11-02 08:25-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -504,9 +504,6 @@ msgstr ""
 msgid ""
 "CapyPanel asks for nothing: {tool} asks for the user and password itself "
 "when it connects."
-msgstr ""
-
-msgid "CapyPanel asks for the others again when it needs them."
 msgstr ""
 
 msgid "CapyPanel asks for them again when it needs them."
@@ -1082,9 +1079,6 @@ msgid ""
 " who is logged on."
 msgstr ""
 
-msgid "Kept until CapyPanel closes:"
-msgstr ""
-
 msgid "Kept: type to change it"
 msgstr ""
 
@@ -1478,17 +1472,6 @@ msgstr ""
 msgid "Printers"
 msgstr ""
 
-msgid "Printers › Refresh"
-msgstr ""
-
-msgid ""
-"Printers › Refresh can't read SNMP v3 printers until the account is set "
-"again in Settings › Printers › Refresh."
-msgstr ""
-
-msgid "Printers › Refresh goes back to the community string “public”."
-msgstr ""
-
 msgid "Printing"
 msgstr ""
 
@@ -1658,13 +1641,7 @@ msgstr ""
 msgid "SNMP &version"
 msgstr ""
 
-msgid "SNMP account (v3)"
-msgstr ""
-
 msgid "SNMP community string"
-msgstr ""
-
-msgid "SNMP community string (v2c)"
 msgstr ""
 
 msgid "SNMP v3 account"
@@ -1715,6 +1692,9 @@ msgstr ""
 msgid "Saved for your Windows account."
 msgstr ""
 
+msgid "Saved in Credential Manager:"
+msgstr ""
+
 msgid ""
 "Saved in Windows Credential Manager for your Windows account (Settings › "
 "Connections), and used only for hosts with this connection profile."
@@ -1723,9 +1703,6 @@ msgstr ""
 msgid ""
 "Saved in Windows Credential Manager for your Windows account (Settings › "
 "Connections), and used only to read who is logged on."
-msgstr ""
-
-msgid "Saved in Windows Credential Manager, and deleted there too:"
 msgstr ""
 
 msgid "Saved passwords deleted."
@@ -1940,7 +1917,13 @@ msgstr ""
 msgid "Takes it out of your lists, or deletes its file too"
 msgstr ""
 
+msgid "Temporary"
+msgstr ""
+
 msgid "Temporary credentials"
+msgstr ""
+
+msgid "Temporary:"
 msgstr ""
 
 msgid "Text"
@@ -2236,9 +2219,6 @@ msgid "Unreachable"
 msgstr ""
 
 msgid "Unreadable"
-msgstr ""
-
-msgid "Until CapyPanel closes"
 msgstr ""
 
 msgid "Use &defaults"
@@ -2749,8 +2729,10 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
-msgid "{n} until CapyPanel closes"
-msgstr ""
+msgid "{n} temporary"
+msgid_plural "{n} temporary"
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-brace-format
 msgid "{path} (in use)"
