@@ -512,6 +512,8 @@ QFrame#card { background: %(card)s; border: 1px solid %(border)s; border-radius:
 QTreeView#flat { border: none; background: transparent; padding: 0 2px; }
 /* The search box above the host table: a small pane, with the panes' corners. */
 QLineEdit#paneSearch { border-radius: %(r)spx; padding: 6px 8px; }
+/* A cell being edited: the fields' usual padding would cut its text off at the row's height. */
+QTreeView#grid QLineEdit { padding: 0 3px; border-radius: 0; }
 QFrame#divider { background: %(border)s; border: none; }
 /* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
 QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
