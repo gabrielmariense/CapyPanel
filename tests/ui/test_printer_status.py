@@ -369,6 +369,22 @@ def test_settings_keeps_the_v3_account_in_the_vault_only(
     assert account is not None and account.user == "other-reader"
     assert account.auth_password == "auth-pass-1"
 
+    def empty(dialog: QDialog) -> QDialog.DialogCode:
+        # An empty user name forgets the kept account, as an empty community string does.
+        assert isinstance(dialog, settings_module.V3AccountDialog)
+        dialog.user.clear()
+        assert dialog.save_button.isEnabled()
+        assert dialog.problem.text() == "Save forgets the saved account."
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(settings_module, "run_modal", empty)
+    page.change_button.click()
+    assert refresh.v3_account() is None
+    assert page.account_row.description.text() == "v3: not set. Use Change… to add the user."
+    fresh = settings_module.V3AccountDialog(None, None)
+    assert not fresh.save_button.isEnabled()  # nothing kept: an empty user is only missing
+    assert fresh.problem.text() == "Type the user name."
+
 
 def test_refresh_over_v3_reads_the_printer_or_says_why_it_refused(
     printers: PrintersTool, monkeypatch: pytest.MonkeyPatch

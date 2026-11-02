@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 08:25-0300\n"
+"POT-Creation-Date: 2026-11-02 08:30-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1643,6 +1643,9 @@ msgstr "Salvar uma cópia da lista"
 msgid "Save as preset"
 msgstr "Salvar como predefinição"
 
+msgid "Save forgets the saved account."
+msgstr "Salvar esquece a conta guardada."
+
 msgid "Save my version as a copy…"
 msgstr "Salvar minha versão como cópia…"
 
@@ -1871,7 +1874,7 @@ msgid "Takes it out of your lists, or deletes its file too"
 msgstr "Tira das suas listas, ou exclui também o arquivo"
 
 msgid "Temporary"
-msgstr "Temporário"
+msgstr "Temporária"
 
 msgid "Temporary credentials"
 msgstr "Credenciais temporárias"

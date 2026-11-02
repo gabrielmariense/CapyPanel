@@ -94,7 +94,8 @@ class CommunityDialog(QDialog):
 
 class V3AccountDialog(QDialog):
     """The SNMP v3 account's own small window (Save keeps it in Windows Credential Manager).
-    A password already kept isn't shown: its box stays empty and keeps it unless typed over."""
+    A password already kept isn't shown: its box stays empty and keeps it unless typed over.
+    An empty user name forgets the kept account, as an empty community string does."""
 
     def __init__(self, parent: QWidget | None, kept: usm.Account | None) -> None:
         super().__init__(parent)
@@ -175,6 +176,10 @@ class V3AccountDialog(QDialog):
         except ValueError:
             return None
 
+    def forgets(self) -> bool:
+        """Save would forget the kept account: its user name was emptied."""
+        return self._kept is not None and not self.user.text().strip()
+
     def _update(self) -> None:
         signing = self.auth.currentData() is not None
         self.auth_password.setEnabled(signing)
@@ -182,10 +187,12 @@ class V3AccountDialog(QDialog):
         self.privacy_password.setEnabled(signing and self.privacy.currentData() is not None)
         self.problem.setText(self._problem())
         self.problem.setVisible(bool(self.problem.text()))
-        self.save_button.setEnabled(self.account() is not None)
+        self.save_button.setEnabled(self.account() is not None or self.forgets())
 
     def _problem(self) -> str:
         """What's still missing, in words; "" when the account is complete."""
+        if self.forgets():
+            return _("Save forgets the saved account.")
         if not self.user.text().strip():
             return _("Type the user name.")
         account = self.account()
@@ -399,13 +406,14 @@ class PrintersSettings(SettingsGroup):
 
     def _change_v3_account(self) -> None:
         dialog = V3AccountDialog(self.general.window(), refresh.v3_account())
-        if (
-            run_modal(dialog) != QDialog.DialogCode.Accepted
-            or (account := dialog.account()) is None
-        ):
+        if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return
+        account = dialog.account()
         try:
-            refresh.save_v3_account(account)
+            if dialog.forgets():
+                credstore.forget(refresh.V3_ACCOUNT)
+            elif account is not None:
+                refresh.save_v3_account(account)
         except (OSError, ValueError) as e:
             QMessageBox.warning(
                 self.general,
