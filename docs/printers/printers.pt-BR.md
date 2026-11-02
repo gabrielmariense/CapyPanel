@@ -21,7 +21,8 @@ Ela tem as próprias listas, separadas das da ferramenta Hosts (veja
 | **Barra de status** | Qual lista está aberta, onde ela está, quantas impressoras tem e quantas estão selecionadas |
 
 O **Atualizar** lê o status e os suprimentos de todas as impressoras exibidas, por SNMP, e
-preenche as colunas **Status** e **Toner**. Ele tem uma página própria:
+preenche as colunas **Status** e **Toner**. Ele também pode ler por tempo, e uma faixa acima da
+tabela avisa quando impressoras requerem atenção. Ele tem uma página própria:
 [Verificando impressoras](checking.pt-BR.md).
 
 O **Inventário** guarda **Adicionar impressora…** (Ctrl+N), **Adicionar grupo…** e **Gerenciar
@@ -58,11 +59,11 @@ importam, e impressoras empatadas ficam em ordem de nome.
 
 **Editar selecionado…** (F2) abre a mesma janela para impressoras que já estão na lista.
 
-O painel de **detalhes** mostra tudo isso, em **Conexão** (endereço, grupo), **Suprimentos**,
-**Impressora** (marca, modelo, nº de série, patrimônio), **Contadores de páginas** (origem e o
-total da própria impressora), **Tags** e **Notas**. O status, as mensagens da impressora e os
-suprimentos chegam com uma atualização, e com ela também a chance de copiar para a sua lista a
-marca, o modelo ou o nº de série que a impressora informa.
+O painel de **detalhes** mostra tudo isso, em **Conexão** (endereço, grupo, endereço MAC),
+**Suprimentos**, **Impressora** (marca, modelo, nº de série, patrimônio, firmware), **Contadores
+de páginas** (origem e o total da própria impressora), **Tags** e **Notas**. O status, as
+mensagens da impressora e os suprimentos chegam com uma atualização, e com ela também a chance de
+copiar para a sua lista a marca, o modelo ou o nº de série que a impressora informa.
 
 ## Abrir a página web de uma impressora
 
@@ -108,13 +109,18 @@ inteira.
 
 O que muda é o que entra nele. As colunas são agrupadas em **Impressora** (nome, endereço, grupo,
 marca, modelo), **Detalhes** (nº de série, patrimônio, contadores de páginas, tags, notas) e
-**Última verificação** (status, toner em texto, e total de páginas em dígitos simples, para uma
-planilha ler como número). A predefinição que vem pronta é **Todos os detalhes**.
+**Última verificação** (status, toner em texto, o modelo do toner, o total de páginas em dígitos
+simples para uma planilha ler como número, o endereço MAC e a versão do firmware). A
+predefinição que vem pronta é **Todos os detalhes**.
 
-Marcar qualquer uma das três deixa a janela atualizar essas impressoras ali mesmo, e ela diz
-quantas nunca foram verificadas. Sem nenhuma marcada o botão se explica: "Marque Status, Toner ou
-Total de páginas para lê-las". Uma impressora cujos contadores vêm do Doc360 MPS fica com "Erro"
-no Total de páginas; o
+O **modelo do toner** é o nome que a impressora dá aos toners e às tintas dela, que costuma
+incluir o cartucho, como "Black Cartridge HP CF258A"; quando ela informa vários, eles vêm
+juntos, separados por "; ".
+
+Marcar qualquer coluna em Última verificação deixa a janela atualizar essas impressoras ali
+mesmo, e ela diz quantas nunca foram verificadas. Sem nenhuma marcada o botão se explica:
+"Marque uma coluna em Última verificação para lê-las". Uma impressora cujos contadores vêm do
+Doc360 MPS fica com "Erro" no Total de páginas; o
 [Verificando impressoras](checking.pt-BR.md#o-que-a-impressora-diz-sobre-si-mesma) explica por
 quê.
 

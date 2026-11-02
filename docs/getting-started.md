@@ -13,7 +13,7 @@ uv run capypanel
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
 The version shows in the title bar, followed by the commit when you run from source, e.g.
-`CapyPanel 0.21.1 (abc1234)`. Quote it when you report a problem.
+`CapyPanel 0.22.0 (abc1234)`. Quote it when you report a problem.
 
 Remote Desktop works out of the box, with the client built into Windows. For VNC you also need a
 viewer: [UltraVNC](https://uvnc.com) or
@@ -103,6 +103,28 @@ happen to the groups and hosts in it (see [Host lists](hosts/host-lists.md#remov
 Edits are saved to the list file at once; there's no Save button. To add many hosts in one go,
 from a spreadsheet or another inventory, see
 [Importing and exporting hosts](hosts/importing.md).
+
+## Closing CapyPanel and the tray
+
+The window's **✕** usually quits CapyPanel, as do **File > Exit** (Ctrl+Q) and Windows logging off
+or shutting down, which never ask anything.
+
+While something works on its own, though, quitting stops it: the Printers tool can
+[refresh on its own](printers/checking.md#refresh-on-its-own) and warn you about a printer that
+needs attention. CapyPanel then keeps an icon in the **Windows tray**, carrying the same red count
+as the rail, with "CapyPanel" and what the count means in its tooltip. A click on the icon opens
+the window again, and its menu holds **Open CapyPanel** in bold, a line per tool with something to
+report, as in "3 printers need attention…", which opens that tool with just those items listed,
+and **Quit CapyPanel**.
+
+![The tray menu: Open CapyPanel, the printers that need attention, and Quit CapyPanel](images/tray-menu-dark.png)
+
+With something working on its own, the **✕** asks what you meant: "Keep CapyPanel running in the
+tray?", "Refresh on its own and warnings keep working while CapyPanel is in the tray. Quit stops
+them.", with **Keep in tray** as the default button, **Quit**, **Cancel**, and a "Don't ask again
+(change it in Settings › CapyPanel › Startup)" box. **Settings > CapyPanel > Startup > When
+closing** answers it for good, with **Ask each time**, **Keep running in the tray** or **Quit**.
+With nothing working on its own, the ✕ quits straight away.
 
 ## Help, and reporting a problem
 

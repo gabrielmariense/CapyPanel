@@ -50,7 +50,7 @@
     <path d="M126 386 C114 402 108 416 108 430" fill="none" stroke="#6e3517" stroke-width="5" stroke-linecap="round"/>
   </g>
 
-  
+
   <g clip-path="url(#bust)">
     <path d="M206 300 C238 300 272 292 290 278 C293 292 294 308 291 322 C276 332 260 336 244 336 C220 338 194 318 206 300 Z" fill="#d38640" opacity="0.85"/>
     <path d="M212 298 C240 298 266 290 284 276" fill="none" stroke="#6e3517" stroke-width="8" stroke-linecap="round"/>

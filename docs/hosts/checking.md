@@ -88,11 +88,13 @@ By default, your own Windows account. If hosts answer **No admin rights** or **A
 rejected**, CapyPanel asks for another account (`DOMAIN\user` and password) and retries only those
 hosts. That account:
 
-- stays in memory until CapyPanel closes, is never saved, and is used only to read who is logged
-  on;
+- is kept the way **Settings > Hosts > Connection profiles > Credentials** says: in memory until
+  CapyPanel closes, or saved in Windows Credential Manager for your Windows account. Either way
+  it's used only to read who is logged on;
 - is tried on one host at a time: if a host rejects it, CapyPanel stops and asks again instead of
   trying it on the others, so the account isn't locked out;
-- is forgotten, like passwords, with **Connect > Forget typed passwords**.
+- is forgotten, like a profile's password, in **Connect ▾ > Saved credentials…**, where it's
+  listed as **Logged-on users** (see [Connecting](connecting.md#saved-credentials)).
 
 On PCs that aren't in a domain, the built-in Administrator is the only local account Windows
 accepts remotely.

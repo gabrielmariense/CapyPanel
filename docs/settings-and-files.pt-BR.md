@@ -42,6 +42,11 @@ lugar.
 **Inicialização > Abrir ao iniciar** é o que a janela mostra quando o CapyPanel inicia: a **Página
 inicial**, **A última ferramenta usada** ou uma ferramenta pelo nome.
 
+**Inicialização > Ao fechar** é o que o **✕** da janela faz: **Perguntar sempre**, o padrão,
+**Manter aberto na bandeja** ou **Sair**. "O que o ✕ da janela faz. Na bandeja, a atualização
+sozinha e os avisos continuam funcionando." Veja
+[Primeiros passos](getting-started.pt-BR.md#fechando-o-capypanel-e-a-bandeja).
+
 **Idioma** é English ou Português (Brasil). "O idioma do aplicativo. Muda na hora.", e isso vale
 para a própria janela de Configurações, sem reiniciar.
 
@@ -110,7 +115,15 @@ as faz, e o **Excluir…** pergunta antes. Onde o Windows não deixa você grava
 acrescenta que é somente leitura, e que só quem ele deixa gravar pode alterá-los.
 
 **Hosts sem perfil usam** é a última linha da seção: "O perfil com que um host conecta quando não
-tem um próprio."
+tem um próprio." Duas linhas vêm depois dela, sobre as senhas digitadas ao conectar:
+
+- **Credenciais:** **Credenciais temporárias**, "esquecidas quando o CapyPanel fecha", ou
+  **Gerenciador de Credenciais**, "salvas para a sua conta do Windows".
+- **Credenciais salvas:** quantos logins estão guardados e onde, como "2 guardados: 1 no
+  Gerenciador de Credenciais, 1 temporário.", com um **Gerenciar…** para abrir a janela que os
+  lista.
+
+O [Conectando](hosts/connecting.pt-BR.md#credenciais-salvas) explica as duas.
 
 O CapyPanel enche a pasta de perfis no primeiro início com os perfis que vêm com ele (RealVNC,
 Remote Desktop e UltraVNC) e um arquivo de configurações, `_profiles.json`, que registra a escolha
@@ -145,10 +158,11 @@ arquivos estão em uso.
 de impressoras, e **Listas de impressoras** é a mesma tabela e os mesmos botões do Listas de
 hosts. As duas estão em [Listas de impressoras](printers/printer-lists.pt-BR.md#configuracoes).
 
-O **Atualizar** guarda as três configurações de leitura das impressoras por SNMP: a **Comunidade
-SNMP** atrás de um botão **Alterar…**, o **Nível baixo de suprimento** entre 1 e 50 %, e se a
-**Coluna Toner** mostra texto ou uma barra. O
-[Verificando impressoras](printers/checking.pt-BR.md) explica as três.
+O **Atualizar** guarda as seis configurações de leitura das impressoras por SNMP: a **Versão do
+SNMP**, v2c ou v3, a **Conta SNMP** dela atrás de um botão **Alterar…**, o **Atualizar sozinho**, a
+**Notificação do Windows** sobre as impressoras que requerem atenção, o **Nível baixo de
+suprimento** entre 1 e 50 %, e se a **Coluna Toner** mostra texto ou uma barra. O
+[Verificando impressoras](printers/checking.pt-BR.md) explica as seis.
 
 ## Sobre
 
@@ -158,7 +172,7 @@ SNMP** atrás de um botão **Alterar…**, o **Nível baixo de suprimento** entr
 |---|---|
 | **CapyPanel** | O mascote, o nome e a versão (clique nela para copiá-la com o commit), "Todos os computadores sob seus cuidados, em uma só janela.", os direitos autorais e "Software livre sob a GPL-3.0, sem garantia: veja Licenças.", que rola até elas, links para a documentação e para o código-fonte, uma linha **Build** com o commit e o modo portátil quando se aplicam, e **Relatar um problema** ao lado de **Abrir pasta de logs** |
 | **Créditos** | Quem fez o CapyPanel, o mascote dele e os ícones que ele usa |
-| **Licenças** | A tabela **Software \| Versão \| Licença \| Aviso**: CapyPanel (GPL-3.0), Qt e Qt for Python (LGPL-3.0), Python (PSF License), Tabler Icons (MIT). **Ler licença** abre o texto que vem com o app numa janela, também num clique duplo ou no botão direito da linha, e **Abrir pasta** abre a pasta em que todas vêm |
+| **Licenças** | A tabela **Software \| Versão \| Licença \| Aviso**: CapyPanel (GPL-3.0), Qt e Qt for Python (LGPL-3.0), Python (PSF License), cryptography (BSD-3-Clause, e a licença do OpenSSL, Apache-2.0, no mesmo aviso, porque o build dela para Windows leva o OpenSSL), cffi (MIT-0) e pycparser (BSD-3-Clause), de que a cryptography precisa, e Tabler Icons (MIT). **Ler licença** abre o texto que vem com o app numa janela, também num clique duplo ou no botão direito da linha, e **Abrir pasta** abre a pasta em que todas vêm |
 | **Pastas** | Onde o CapyPanel guarda tudo, três linhas e um botão **Abrir pasta** |
 
 A tabela **Pastas** é a versão curta da seção abaixo:

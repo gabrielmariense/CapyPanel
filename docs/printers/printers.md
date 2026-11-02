@@ -20,7 +20,8 @@ It has its own lists, kept apart from the Hosts tool's (see
 | **Status bar** | Which list is open, where it is, how many printers it holds and how many are selected |
 
 **Refresh** reads the status and the supplies of every printer shown, over SNMP, and fills the
-**Status** and **Toner** columns. It has a page of its own:
+**Status** and **Toner** columns. It can also read on a timer, and a strip above the table says
+when printers need attention. It has a page of its own:
 [Checking printers](checking.md).
 
 **Inventory** holds **Add printer…** (Ctrl+N), **Add group…** and **Manage groups…**, the same
@@ -56,11 +57,11 @@ name.
 
 **Edit selected…** (F2) opens the same window for printers already in the list.
 
-The **Details** panel shows all of it, under **Connection** (address, group), **Supplies**,
-**Printer** (brand, model, serial number, asset tag), **Page counters** (source and the printer's
-own total), **Tags** and **Notes**. The status, the printer's messages and the supplies arrive
-with a refresh, and so does the chance to copy the brand, model or serial number the printer
-reports into your list.
+The **Details** panel shows all of it, under **Connection** (address, group, MAC address),
+**Supplies**, **Printer** (brand, model, serial number, asset tag, firmware), **Page counters**
+(source and the printer's own total), **Tags** and **Notes**. The status, the printer's messages
+and the supplies arrive with a refresh, and so does the chance to copy the brand, model or serial
+number the printer reports into your list.
 
 ## Opening a printer's web page
 
@@ -104,12 +105,17 @@ describes the window in full.
 
 What differs is what goes in it. The columns are grouped as **Printer** (name, address, group,
 brand, model), **Details** (serial number, asset tag, page counters, tags, notes) and **Last
-check** (status, toner as text, and total pages in plain digits, so a spreadsheet reads it as a
-number). The built-in preset is **All details**.
+check** (status, toner as text, the toner model, total pages in plain digits so a spreadsheet
+reads them as a number, the MAC address and the firmware version). The built-in preset is **All
+details**.
 
-Ticking any of the three lets the window refresh those printers itself, and it says how many of
-them have never been checked. With none ticked the button explains itself: "Tick Status, Toner or
-Total pages to read them". A printer whose counters come from Doc360 MPS has "Error" under Total
+**Toner model** is what the printer calls its own toners and inks, which usually names the
+cartridge, as in "Black Cartridge HP CF258A"; a printer with several of them has them joined
+with "; ".
+
+Ticking any column under Last check lets the window refresh those printers itself, and it says how
+many of them have never been checked. With none ticked the button explains itself: "Tick a column
+under Last check to read them". A printer whose counters come from Doc360 MPS has "Error" under Total
 pages; [Checking printers](checking.md#what-the-printer-says-about-itself) says why.
 
 The printers to export are the same kinds of choice as in Hosts: the search results or the picked

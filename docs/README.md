@@ -18,7 +18,8 @@ away.
   - Search, import and export
 - Printers
   - Lists with brand, model, serial number and asset tag
-  - Status, toner and supplies over SNMP
+  - Status, toner and supplies over SNMP, v2c or v3
+  - Warnings when a printer needs attention
   - Web pages and reports
 
 ## Pages
@@ -42,5 +43,5 @@ For people who use CapyPanel, and for people who set it up for a team.
 Getting started, Settings and files and Development are about the whole app. The five pages after
 them belong to the **Hosts** tool, and the three after those to **Printers**.
 
-These pages describe the current version (0.21.1). CapyPanel is in beta, so they grow with each
+These pages describe the current version (0.22.0). CapyPanel is in beta, so they grow with each
 feature.

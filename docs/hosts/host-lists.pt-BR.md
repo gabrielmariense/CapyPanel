@@ -18,6 +18,11 @@ num arquivo CSV, veja [Importando e exportando hosts](importing.pt-BR.md).
 
 Uma lista nova começa com um grupo, **Grupo padrão**.
 
+Clique com o botão direito nos hosts selecionados e o **Tags ▸** lista as tags que a lista já
+tem, marcadas quando todos os hosts selecionados a têm e com "(1 de 2)" quando só alguns.
+Escolher uma tag a dá a todos eles, ou a tira de todos quando todos a tinham, e o **Nova tag…**
+no fim pede uma e a dá à seleção. As Impressoras têm o mesmo menu.
+
 ### Escolher tags
 
 Uma tag filtra dentro do grupo que você escolheu, em vez de alcançar a lista inteira. Para ver uma

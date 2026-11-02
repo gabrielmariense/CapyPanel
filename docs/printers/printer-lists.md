@@ -31,8 +31,8 @@ printer lists…**, which opens **Settings > Printers > Printer lists**.
 ## Groups and tags
 
 Groups nest as deep as you like, printers with no group of their own sit under **No group**, and
-tags cut across groups. Dragging, **Move to**, **Manage groups…** and removing a group all behave
-as they do in Hosts, which [Host lists](../hosts/host-lists.md) describes.
+tags cut across groups. Dragging, **Move to**, **Tags ▸**, **Manage groups…** and removing a group
+all behave as they do in Hosts, which [Host lists](../hosts/host-lists.md) describes.
 
 ## Settings
 
@@ -40,8 +40,9 @@ as they do in Hosts, which [Host lists](../hosts/host-lists.md) describes.
 
 - **Startup > List on startup:** which printer list opens with the tool, and **Show first**, what
   that list shows when it opens. Each list keeps its own answer.
-- **Refresh:** the SNMP community string, the low supply level and how the Toner column shows,
-  all under [Checking printers](checking.md).
+- **Refresh:** the SNMP version and its account, Refresh on its own, the Windows notification,
+  the low supply level and how the Toner column shows, all under
+  [Checking printers](checking.md).
 - **Printer lists:** the table of every list with its type and what you can do to it, with
   **New…**, **Add existing…** and **Remove**. It's the same page as Host lists, down to what
   **Remove** asks, which [Host lists](../hosts/host-lists.md#settings-hosts-host-lists) covers.

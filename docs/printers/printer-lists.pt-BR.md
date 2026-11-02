@@ -33,8 +33,9 @@ impressoras que o CapyPanel encontrou ou que você adicionou, depois **Nova list
 ## Grupos e tags
 
 Os grupos se aninham o quanto você quiser, impressoras sem grupo próprio ficam em **Sem grupo**, e
-as tags atravessam os grupos. Arrastar, **Mover para**, **Gerenciar grupos…** e remover um grupo
-funcionam como no Hosts, que [Listas de hosts](../hosts/host-lists.pt-BR.md) descreve.
+as tags atravessam os grupos. Arrastar, **Mover para**, **Tags ▸**, **Gerenciar grupos…** e
+remover um grupo funcionam como no Hosts, que [Listas de hosts](../hosts/host-lists.pt-BR.md)
+descreve.
 
 ## Configurações
 
@@ -42,8 +43,9 @@ funcionam como no Hosts, que [Listas de hosts](../hosts/host-lists.pt-BR.md) des
 
 - **Inicialização > Lista ao iniciar:** qual lista de impressoras abre com a ferramenta, e
   **Mostrar primeiro**, o que essa lista mostra quando abre. Cada lista guarda a própria resposta.
-- **Atualizar:** a comunidade SNMP, o nível baixo de suprimento e como a coluna Toner aparece,
-  tudo em [Verificando impressoras](checking.pt-BR.md).
+- **Atualizar:** a versão do SNMP e a conta dela, o Atualizar sozinho, a notificação do Windows,
+  o nível baixo de suprimento e como a coluna Toner aparece, tudo em
+  [Verificando impressoras](checking.pt-BR.md).
 - **Listas de impressoras:** a tabela de todas as listas com o tipo e o que você pode fazer com
   cada uma, com **Nova…**, **Adicionar existente…** e **Remover**. É a mesma página do Listas de
   hosts, inclusive no que o **Remover** pergunta, como

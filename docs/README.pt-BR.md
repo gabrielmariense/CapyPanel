@@ -18,7 +18,8 @@ com os detalhes de que você precisa e a página web delas a um clique.
   - Pesquisa, importação e exportação
 - Impressoras
   - Listas com marca, modelo, nº de série e patrimônio
-  - Status, toner e suprimentos por SNMP
+  - Status, toner e suprimentos por SNMP, v2c ou v3
+  - Avisos quando uma impressora requer atenção
   - Páginas web e relatórios
 
 ## Páginas
@@ -42,5 +43,5 @@ Para quem usa o CapyPanel e para quem o configura para uma equipe.
 Primeiros passos, Configurações e arquivos e Desenvolvimento falam do app inteiro. As cinco páginas
 depois deles são da ferramenta **Hosts**, e as três seguintes das **Impressoras**.
 
-Estas páginas descrevem a versão atual (0.21.1). O CapyPanel está em beta, então elas crescem a
+Estas páginas descrevem a versão atual (0.22.0). O CapyPanel está em beta, então elas crescem a
 cada funcionalidade.

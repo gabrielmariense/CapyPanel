@@ -39,6 +39,11 @@ showing, gets the mark on its arrow. Clicking a group, or clearing the box, puts
 **Startup > Open on startup** is what the window shows when CapyPanel starts: the **Home page**,
 **The last used tool**, or a tool by name.
 
+**Startup > When closing** is what the window's **✕** does: **Ask each time**, the default,
+**Keep running in the tray**, or **Quit**. "What the window's ✕ does. In the tray, Refresh on
+its own and warnings keep working." See
+[Getting started](getting-started.md#closing-capypanel-and-the-tray).
+
 **Language** is English or Português (Brasil). "The app's language. Changes at once.", and that
 includes the Settings window itself, with no restart.
 
@@ -103,7 +108,14 @@ and adds "Profiles you changed or made yourself stay as they are." Cancel is the
 read-only, and only people it does let write can change them.
 
 **Hosts with no profile use** is the last row of the section: "The profile a host connects with
-when it has none of its own."
+when it has none of its own." Two rows follow it, about the passwords typed while connecting:
+
+- **Credentials:** **Temporary credentials**, "forgotten when CapyPanel closes", or **Credential
+  Manager**, "saved for your Windows account".
+- **Saved credentials:** how many logins are kept and where, as in "2 kept: 1 in Credential
+  Manager, 1 temporary.", with **Manage…** to open the window that lists them.
+
+[Connecting](hosts/connecting.md#saved-credentials) covers both.
 
 CapyPanel fills the profiles folder at its first start with the profiles it ships (RealVNC, Remote
 Desktop and UltraVNC) and a settings file, `_profiles.json`, which records that row's choice and
@@ -135,10 +147,11 @@ the errors; it's hidden when every file is in use.
 and **Printer lists** is the same table and the same buttons as Host lists. Both are under
 [Printer lists](printers/printer-lists.md#settings).
 
-**Refresh** holds the three settings for reading printers over SNMP: the **SNMP community
-string** behind a **Change…** button, the **Low supply level** between 1 and 50 %, and whether the
-**Toner column** shows text or a bar. [Checking printers](printers/checking.md) explains all
-three.
+**Refresh** holds the six settings for reading printers over SNMP: the **SNMP version**, v2c or v3,
+the **SNMP account** for it behind a **Change…** button, **Refresh on its own**, the **Windows
+notification** about printers that need attention, the **Low supply level** between 1 and 50 %,
+and whether the **Toner column** shows text or a bar. [Checking printers](printers/checking.md)
+explains all six.
 
 ## About
 
@@ -148,7 +161,7 @@ three.
 |---|---|
 | **CapyPanel** | The mascot, the name and the version (click it to copy it with its commit), "Every computer you look after, in one window.", the copyright and "Free software under the GPL-3.0, with no warranty: see Licenses.", which scrolls down to them, links to the documentation and the source code, a **Build** line with the commit and portable mode where they apply, and **Report a problem** beside **Open log folder** |
 | **Credits** | Who made CapyPanel, its mascot, and the icons it uses |
-| **Licenses** | The table **Software \| Version \| License \| Notice**: CapyPanel (GPL-3.0), Qt and Qt for Python (LGPL-3.0), Python (PSF License), Tabler Icons (MIT). **Read license** opens the shipped text in a window, also on a double-click or the row's right-click, and **Open folder** opens the folder they all ship in |
+| **Licenses** | The table **Software \| Version \| License \| Notice**: CapyPanel (GPL-3.0), Qt and Qt for Python (LGPL-3.0), Python (PSF License), cryptography (BSD-3-Clause, and the OpenSSL license, Apache-2.0, in the same notice, because its Windows build carries OpenSSL), cffi (MIT-0) and pycparser (BSD-3-Clause), which cryptography needs, and Tabler Icons (MIT). **Read license** opens the shipped text in a window, also on a double-click or the row's right-click, and **Open folder** opens the folder they all ship in |
 | **Folders** | Where CapyPanel keeps everything, three rows and an **Open folder** button |
 
 The **Folders** table is the short version of the section below:
