@@ -78,7 +78,7 @@ def kept_logins() -> list[KeptLogin]:
         forget = partial(credstore.forget, V3_ACCOUNT)
         after = _(
             "Printers › Refresh can't read SNMP v3 printers until the account is set "
-            "again in Settings › Printers."
+            "again in Settings › Printers › Refresh."
         )
         logins.append(KeptLogin(_("SNMP account (v3)"), tool, account[0], True, forget, after))
     if secret is not None:
