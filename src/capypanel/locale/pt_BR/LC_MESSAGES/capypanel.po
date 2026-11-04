@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 08:30-0300\n"
+"POT-Creation-Date: 2026-11-04 12:50-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -341,6 +341,9 @@ msgstr "O nome é obrigatório."
 msgid "A new group: the import creates it"
 msgstr "Um grupo novo: a importação o cria"
 
+msgid "A pop-up on the screen of everyone signed in."
+msgstr "Um aviso na tela de todos que estão conectados."
+
 #, python-brace-format
 msgid "A preset named “{name}” already exists. Replace it?"
 msgstr "Já existe uma predefinição chamada “{name}”. Substituí-la?"
@@ -442,6 +445,9 @@ msgstr "Respondeu a um ping em {address}."
 msgid "Answered at {address}, port {port}."
 msgstr "Respondeu em {address}, porta {port}."
 
+msgid "Any folder on the PC, such as D:\\Logs."
+msgstr "Qualquer pasta do PC, como D:\\Logs."
+
 msgid "Any name you like, then the computer's network name or IP address. Separate them with a comma, or copy two columns from Excel."
 msgstr "Um nome à sua escolha, depois o nome do computador na rede ou o endereço IP. Separe com vírgula, ou copie duas colunas do Excel."
 
@@ -482,6 +488,9 @@ msgstr "Espaço reservado malformado em “{arg}”."
 msgid "Build:"
 msgstr "Build:"
 
+msgid "C$ share"
+msgstr "Compartilhamento C$"
+
 msgid "C&hoose file…"
 msgstr "Escol&her arquivo…"
 
@@ -496,6 +505,9 @@ msgstr "CSV com cabeçalho"
 
 msgid "Cancel"
 msgstr "Cancelar"
+
+msgid "Cancel restart"
+msgstr "Cancelar reinicialização"
 
 #, python-brace-format
 msgid "CapyPanel asks for nothing: {tool} asks for the user and password itself when it connects."
@@ -524,6 +536,9 @@ msgstr "Trocar o perfil de conexão"
 
 msgid "Change…"
 msgstr "Alterar…"
+
+msgid "Check"
+msgstr "Verificar"
 
 msgid "Check the SNMP account in Settings › Printers › Refresh."
 msgstr "Confira a conta SNMP em Configurações › Impressoras › Atualizar."
@@ -576,6 +591,9 @@ msgstr "Fechar"
 
 msgid "Co&py"
 msgstr "Co&piar"
+
+msgid "Computer Management"
+msgstr "Gerenciamento do Computador"
 
 msgid "Connect"
 msgstr "Conectar"
@@ -777,6 +795,9 @@ msgstr "Detalhes"
 msgid "Disconnected"
 msgstr "Desconectado"
 
+msgid "Disconnect…"
+msgstr "Desconectar…"
+
 msgid "Documentation:"
 msgstr "Documentação:"
 
@@ -825,12 +846,18 @@ msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabe�
 msgid "Encryption pass&word"
 msgstr "Senha da cri&ptografia"
 
+msgid "Ends a user's session connection; their programs keep running."
+msgstr "Encerra a conexão da sessão de um usuário; os programas dele continuam abertos."
+
 msgid "Error"
 msgstr "Erro"
 
 #, python-brace-format
 msgid "Error: {why}"
 msgstr "Erro: {why}"
+
+msgid "Event Viewer"
+msgstr "Visualizador de Eventos"
 
 msgid "Every"
 msgstr "A cada"
@@ -1030,6 +1057,9 @@ msgstr "Tinta baixa"
 msgid "Install it, or locate its .exe."
 msgstr "Instale-o ou localize o .exe dele."
 
+msgid "Installed programs"
+msgstr "Programas instalados"
+
 msgid "Inventory"
 msgstr "Inventário"
 
@@ -1083,6 +1113,9 @@ msgstr "Listar só as impressoras que requerem atenção"
 
 msgid "Lists saved in a lists folder show up here by themselves; Remove asks whether to delete the file too."
 msgstr "Listas salvas numa pasta de listas aparecem aqui sozinhas; Remover pergunta se o arquivo também deve ser excluído."
+
+msgid "Log off…"
+msgstr "Fazer logoff…"
 
 msgid "Logged on"
 msgstr "Logados"
@@ -1296,6 +1329,9 @@ msgstr "Só impressoras com todas estas tags: {tags} · {shown} de {total} exibi
 msgid "Only the first {n} open at once."
 msgstr "Só as {n} primeiras abrem de uma vez."
 
+msgid "Open"
+msgstr "Abrir"
+
 msgid "Open &Settings"
 msgstr "Abrir &Configurações"
 
@@ -1319,6 +1355,9 @@ msgstr "Abrir uma lista de hosts"
 
 msgid "Open a host list to choose what it shows first."
 msgstr "Abra uma lista de hosts para escolher o que ela mostra primeiro."
+
+msgid "Open a path…"
+msgstr "Abrir um caminho…"
 
 msgid "Open a printer list"
 msgstr "Abrir uma lista de impressoras"
@@ -1387,6 +1426,9 @@ msgstr "Bandeja de saída quase cheia"
 msgid "P&ort:"
 msgstr "P&orta:"
 
+msgid "PC facts"
+msgstr "Dados do PC"
+
 msgid "Page &counters:"
 msgstr "&Contadores de páginas:"
 
@@ -1419,6 +1461,9 @@ msgstr "Tags escolhidas: {tags}"
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
 
+msgid "Power"
+msgstr "Energia"
+
 msgid "Pr&inters:"
 msgstr "&Impressoras:"
 
@@ -1439,6 +1484,9 @@ msgstr "Listas de impressoras (*.json);;Todos os arquivos (*)"
 
 msgid "Printers"
 msgstr "Impressoras"
+
+msgid "Printers on this PC"
+msgstr "Impressoras deste PC"
 
 msgid "Printing"
 msgstr "Imprimindo"
@@ -1499,6 +1547,9 @@ msgstr "Atualizar &sozinho"
 
 msgid "Refresh on its own and warnings keep working while CapyPanel is in the tray. Quit stops them."
 msgstr "A atualização sozinha e os avisos continuam funcionando enquanto o CapyPanel estiver na bandeja. Sair os interrompe."
+
+msgid "Refresh status"
+msgstr "Atualizar status"
 
 msgid "Refresh status &by itself"
 msgstr "Atualizar o status &sozinho"
@@ -1594,6 +1645,18 @@ msgid "Report saved: {n} printer from {source}."
 msgid_plural "Report saved: {n} printers from {source}."
 msgstr[0] "Relatório salvo: {n} impressora de {source}."
 msgstr[1] "Relatório salvo: {n} impressoras de {source}."
+
+msgid "Restart Print Spooler…"
+msgstr "Reiniciar o Spooler de Impressão…"
+
+msgid "Restarts Windows' printing service, which unsticks most queues."
+msgstr "Reinicia o serviço de impressão do Windows, o que destrava a maioria das filas."
+
+msgid "Restarts Windows, now or after a delay with a message."
+msgstr "Reinicia o Windows, agora ou depois de um tempo, com uma mensagem."
+
+msgid "Restart…"
+msgstr "Reiniciar…"
 
 msgid "Restore built-in profiles"
 msgstr "Restaurar os perfis que vêm com o app"
@@ -1707,11 +1770,17 @@ msgstr "Hosts selecionados"
 msgid "Selected printers"
 msgstr "Impressoras selecionadas"
 
+msgid "Send a message…"
+msgstr "Enviar uma mensagem…"
+
 msgid "Serial number"
 msgstr "Nº de série"
 
 msgid "Service requested"
 msgstr "Assistência técnica solicitada"
+
+msgid "Services"
+msgstr "Serviços"
 
 msgid "Set &tags…"
 msgstr "Definir &tags…"
@@ -1770,6 +1839,12 @@ msgid_plural "Showing the <b>{n} printers</b> that need attention."
 msgstr[0] "Mostrando a <b>{n} impressora</b> que requer atenção."
 msgstr[1] "Mostrando as <b>{n} impressoras</b> que requerem atenção."
 
+msgid "Shut down…"
+msgstr "Desligar…"
+
+msgid "Signs a user out; unsaved work is lost."
+msgstr "Desconecta um usuário da conta; o que não foi salvo se perde."
+
 msgid "Signs in with"
 msgstr "Entra com"
 
@@ -1807,6 +1882,9 @@ msgstr "Comece com {header}, em qualquer ordem."
 msgid "Startup"
 msgstr "Inicialização"
 
+msgid "Startup folder"
+msgstr "Pasta Inicializar"
+
 msgid "Status"
 msgstr "Status"
 
@@ -1830,6 +1908,9 @@ msgid "Stopped: {n} printer wasn't checked."
 msgid_plural "Stopped: {n} printers weren't checked."
 msgstr[0] "Parado: {n} impressora não foi verificada."
 msgstr[1] "Parado: {n} impressoras não foram verificadas."
+
+msgid "Stops a restart or shutdown that is still waiting."
+msgstr "Cancela uma reinicialização ou desligamento que ainda está aguardando."
 
 msgid "Supplies"
 msgstr "Suprimentos"
@@ -1896,6 +1977,15 @@ msgstr "Esse nome já está em uso."
 
 msgid "That profile doesn't exist."
 msgstr "Esse perfil não existe."
+
+msgid "The PC's C: drive in File Explorer."
+msgstr "A unidade C: do PC no Explorador de Arquivos."
+
+msgid "The PC's Windows services."
+msgstr "Os serviços do Windows no PC."
+
+msgid "The PC's event logs."
+msgstr "Os logs de eventos do PC."
 
 msgid "The account was accepted, but only administrators of that computer can see who is logged on."
 msgstr "A conta foi aceita, mas só administradores daquele computador podem ver quem está logado."
@@ -1981,6 +2071,9 @@ msgstr "A lista abre neste grupo"
 msgid "The list “{path}” doesn't exist anymore."
 msgstr "A lista “{path}” não existe mais."
 
+msgid "The logged-on user's profile folder."
+msgstr "A pasta de perfil do usuário logado."
+
 msgid "The lowest toner as text (\"Black 24 %\") or as a bar, like in Details."
 msgstr "O toner mais baixo como texto (\"Preto 24 %\") ou como uma barra, como em Detalhes."
 
@@ -2002,6 +2095,9 @@ msgstr "A impressora não informa seus suprimentos."
 msgid "The printer says {value}"
 msgstr "A impressora diz {value}"
 
+msgid "The printers installed on the PC, their queues and problems."
+msgstr "As impressoras instaladas no PC, suas filas e problemas."
+
 msgid "The profile a host connects with when it has none of its own."
 msgstr "O perfil com que um host conecta quando não tem um próprio."
 
@@ -2014,6 +2110,12 @@ msgstr "As “options” do perfil devem ser uma lista de ids de opções."
 #, python-brace-format
 msgid "The profile's “{key}” must be lowercase letters, digits, - or _."
 msgstr "O “{key}” do perfil deve ter só letras minúsculas, dígitos, - ou _."
+
+msgid "The programs installed for every user of the PC."
+msgstr "Os programas instalados para todos os usuários do PC."
+
+msgid "The programs that start for every user who signs in."
+msgstr "Os programas que iniciam para todo usuário que entra."
 
 msgid "The read-only SNMP v3 user your printers know. The passwords are kept in Windows Credential Manager."
 msgstr "O usuário SNMP v3 somente leitura que suas impressoras conhecem. As senhas ficam guardadas no Gerenciador de Credenciais do Windows."
@@ -2117,6 +2219,9 @@ msgstr "Bandeja vazia"
 msgid "Tray missing"
 msgstr "Bandeja ausente"
 
+msgid "Turns the PC off; someone has to turn it back on."
+msgstr "Desliga o PC; alguém precisa ligá-lo de novo."
+
 msgid "Type"
 msgstr "Tipo"
 
@@ -2170,6 +2275,12 @@ msgstr "Usada para"
 msgid "User"
 msgstr "Usuário"
 
+msgid "User's folder"
+msgstr "Pasta do usuário"
+
+msgid "Users"
+msgstr "Usuários"
+
 msgid "Version"
 msgstr "Versão"
 
@@ -2211,6 +2322,12 @@ msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste 
 msgid "Where is {tool}?"
 msgstr "Onde está o {tool}?"
 
+msgid "Whether the PC answers on the network."
+msgstr "Se o PC responde na rede."
+
+msgid "Who is signed in to the PC, and since when."
+msgstr "Quem está conectado ao PC, e desde quando."
+
 msgid "Windows &notification"
 msgstr "&Notificação do Windows"
 
@@ -2231,6 +2348,9 @@ msgstr "O compartilhamento de arquivos do Windows (porta 445) não respondeu: o 
 msgid "Windows themes follow Windows' look and accent; CapyPanel themes look the same everywhere."
 msgstr "Os temas do Windows seguem a aparência e a cor do Windows; os do CapyPanel são iguais em todo lugar."
 
+msgid "Windows version, model, serial number, memory, free space and last restart."
+msgstr "Versão do Windows, modelo, número de série, memória, espaço livre e última reinicialização."
+
 msgid "Windows — dark"
 msgstr "Windows — escuro"
 
@@ -2239,6 +2359,9 @@ msgstr "Windows — seguir o tema do sistema"
 
 msgid "Windows — light"
 msgstr "Windows — claro"
+
+msgid "Windows' Computer Management, pointed at the PC."
+msgstr "O Gerenciamento do Computador do Windows, apontado para o PC."
 
 msgid "With No group, the groups inside it go directly under Groups."
 msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."

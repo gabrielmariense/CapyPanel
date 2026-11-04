@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-02 08:30-0300\n"
+"POT-Creation-Date: 2026-11-04 12:50-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -340,6 +340,9 @@ msgstr ""
 msgid "A new group: the import creates it"
 msgstr ""
 
+msgid "A pop-up on the screen of everyone signed in."
+msgstr ""
+
 #, python-brace-format
 msgid "A preset named “{name}” already exists. Replace it?"
 msgstr ""
@@ -443,6 +446,9 @@ msgstr ""
 msgid "Answered at {address}, port {port}."
 msgstr ""
 
+msgid "Any folder on the PC, such as D:\\Logs."
+msgstr ""
+
 msgid ""
 "Any name you like, then the computer's network name or IP address. "
 "Separate them with a comma, or copy two columns from Excel."
@@ -485,6 +491,9 @@ msgstr ""
 msgid "Build:"
 msgstr ""
 
+msgid "C$ share"
+msgstr ""
+
 msgid "C&hoose file…"
 msgstr ""
 
@@ -498,6 +507,9 @@ msgid "CSV with headers"
 msgstr ""
 
 msgid "Cancel"
+msgstr ""
+
+msgid "Cancel restart"
 msgstr ""
 
 #, python-brace-format
@@ -528,6 +540,9 @@ msgid "Change the connection profile"
 msgstr ""
 
 msgid "Change…"
+msgstr ""
+
+msgid "Check"
 msgstr ""
 
 msgid "Check the SNMP account in Settings › Printers › Refresh."
@@ -580,6 +595,9 @@ msgid "Close"
 msgstr ""
 
 msgid "Co&py"
+msgstr ""
+
+msgid "Computer Management"
 msgstr ""
 
 msgid "Connect"
@@ -778,6 +796,9 @@ msgstr ""
 msgid "Disconnected"
 msgstr ""
 
+msgid "Disconnect…"
+msgstr ""
+
 msgid "Documentation:"
 msgstr ""
 
@@ -830,11 +851,17 @@ msgstr ""
 msgid "Encryption pass&word"
 msgstr ""
 
+msgid "Ends a user's session connection; their programs keep running."
+msgstr ""
+
 msgid "Error"
 msgstr ""
 
 #, python-brace-format
 msgid "Error: {why}"
+msgstr ""
+
+msgid "Event Viewer"
 msgstr ""
 
 msgid "Every"
@@ -1043,6 +1070,9 @@ msgstr ""
 msgid "Install it, or locate its .exe."
 msgstr ""
 
+msgid "Installed programs"
+msgstr ""
+
 msgid "Inventory"
 msgstr ""
 
@@ -1103,6 +1133,9 @@ msgstr ""
 msgid ""
 "Lists saved in a lists folder show up here by themselves; Remove asks "
 "whether to delete the file too."
+msgstr ""
+
+msgid "Log off…"
 msgstr ""
 
 msgid "Logged on"
@@ -1325,6 +1358,9 @@ msgstr ""
 msgid "Only the first {n} open at once."
 msgstr ""
 
+msgid "Open"
+msgstr ""
+
 msgid "Open &Settings"
 msgstr ""
 
@@ -1347,6 +1383,9 @@ msgid "Open a host list"
 msgstr ""
 
 msgid "Open a host list to choose what it shows first."
+msgstr ""
+
+msgid "Open a path…"
 msgstr ""
 
 msgid "Open a printer list"
@@ -1419,6 +1458,9 @@ msgstr ""
 msgid "P&ort:"
 msgstr ""
 
+msgid "PC facts"
+msgstr ""
+
 msgid "Page &counters:"
 msgstr ""
 
@@ -1451,6 +1493,9 @@ msgstr ""
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr ""
 
+msgid "Power"
+msgstr ""
+
 msgid "Pr&inters:"
 msgstr ""
 
@@ -1470,6 +1515,9 @@ msgid "Printer lists (*.json);;All files (*)"
 msgstr ""
 
 msgid "Printers"
+msgstr ""
+
+msgid "Printers on this PC"
 msgstr ""
 
 msgid "Printing"
@@ -1532,6 +1580,9 @@ msgstr ""
 msgid ""
 "Refresh on its own and warnings keep working while CapyPanel is in the "
 "tray. Quit stops them."
+msgstr ""
+
+msgid "Refresh status"
 msgstr ""
 
 msgid "Refresh status &by itself"
@@ -1628,6 +1679,18 @@ msgid "Report saved: {n} printer from {source}."
 msgid_plural "Report saved: {n} printers from {source}."
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "Restart Print Spooler…"
+msgstr ""
+
+msgid "Restarts Windows' printing service, which unsticks most queues."
+msgstr ""
+
+msgid "Restarts Windows, now or after a delay with a message."
+msgstr ""
+
+msgid "Restart…"
+msgstr ""
 
 msgid "Restore built-in profiles"
 msgstr ""
@@ -1745,10 +1808,16 @@ msgstr ""
 msgid "Selected printers"
 msgstr ""
 
+msgid "Send a message…"
+msgstr ""
+
 msgid "Serial number"
 msgstr ""
 
 msgid "Service requested"
+msgstr ""
+
+msgid "Services"
 msgstr ""
 
 msgid "Set &tags…"
@@ -1812,6 +1881,12 @@ msgid_plural "Showing the <b>{n} printers</b> that need attention."
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "Shut down…"
+msgstr ""
+
+msgid "Signs a user out; unsaved work is lost."
+msgstr ""
+
 msgid "Signs in with"
 msgstr ""
 
@@ -1854,6 +1929,9 @@ msgstr ""
 msgid "Startup"
 msgstr ""
 
+msgid "Startup folder"
+msgstr ""
+
 msgid "Status"
 msgstr ""
 
@@ -1877,6 +1955,9 @@ msgid "Stopped: {n} printer wasn't checked."
 msgid_plural "Stopped: {n} printers weren't checked."
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "Stops a restart or shutdown that is still waiting."
+msgstr ""
 
 msgid "Supplies"
 msgstr ""
@@ -1942,6 +2023,15 @@ msgid "That name is taken."
 msgstr ""
 
 msgid "That profile doesn't exist."
+msgstr ""
+
+msgid "The PC's C: drive in File Explorer."
+msgstr ""
+
+msgid "The PC's Windows services."
+msgstr ""
+
+msgid "The PC's event logs."
 msgstr ""
 
 msgid ""
@@ -2042,6 +2132,9 @@ msgstr ""
 msgid "The list “{path}” doesn't exist anymore."
 msgstr ""
 
+msgid "The logged-on user's profile folder."
+msgstr ""
+
 msgid "The lowest toner as text (\"Black 24 %\") or as a bar, like in Details."
 msgstr ""
 
@@ -2063,6 +2156,9 @@ msgstr ""
 msgid "The printer says {value}"
 msgstr ""
 
+msgid "The printers installed on the PC, their queues and problems."
+msgstr ""
+
 msgid "The profile a host connects with when it has none of its own."
 msgstr ""
 
@@ -2074,6 +2170,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "The profile's “{key}” must be lowercase letters, digits, - or _."
+msgstr ""
+
+msgid "The programs installed for every user of the PC."
+msgstr ""
+
+msgid "The programs that start for every user who signs in."
 msgstr ""
 
 msgid ""
@@ -2186,6 +2288,9 @@ msgstr ""
 msgid "Tray missing"
 msgstr ""
 
+msgid "Turns the PC off; someone has to turn it back on."
+msgstr ""
+
 msgid "Type"
 msgstr ""
 
@@ -2239,6 +2344,12 @@ msgstr ""
 msgid "User"
 msgstr ""
 
+msgid "User's folder"
+msgstr ""
+
+msgid "Users"
+msgstr ""
+
 msgid "Version"
 msgstr ""
 
@@ -2284,6 +2395,12 @@ msgstr ""
 msgid "Where is {tool}?"
 msgstr ""
 
+msgid "Whether the PC answers on the network."
+msgstr ""
+
+msgid "Who is signed in to the PC, and since when."
+msgstr ""
+
 msgid "Windows &notification"
 msgstr ""
 
@@ -2310,6 +2427,11 @@ msgid ""
 " same everywhere."
 msgstr ""
 
+msgid ""
+"Windows version, model, serial number, memory, free space and last "
+"restart."
+msgstr ""
+
 msgid "Windows — dark"
 msgstr ""
 
@@ -2317,6 +2439,9 @@ msgid "Windows — follow system theme"
 msgstr ""
 
 msgid "Windows — light"
+msgstr ""
+
+msgid "Windows' Computer Management, pointed at the PC."
 msgstr ""
 
 msgid "With No group, the groups inside it go directly under Groups."
