@@ -20,7 +20,7 @@ from capypanel.ui.icons import dot_icon
 from capypanel.ui.list_workspace.details import DetailsPanel, breakable
 from capypanel.ui.printers_tool import status
 from capypanel.ui.printers_tool.meter import HEIGHT, REACH, draw_meter
-from capypanel.ui.printers_tool.status import AMBER, GREY, Checked
+from capypanel.ui.printers_tool.status import AMBER, GREY, Checked, Counted
 
 
 @dataclass(frozen=True)
@@ -30,6 +30,7 @@ class PrinterDetails:
     checked: Checked | None = None  # its last Refresh
     low: int = status.DEFAULT_LOW
     use: Callable[[str, str], None] | None = None  # "Use this": (field, value); None: read-only
+    counted: Counted | None = None  # the last Refresh's Doc360 MPS counters
 
 
 def source_text(source: str) -> str:
@@ -104,20 +105,37 @@ class PrinterDetailsPanel(DetailsPanel):
         self._fields(layout, (("asset_tag", _("Asset tag"), info.asset_tag),
                               ("firmware", _("Firmware"), firmware)))  # fmt: skip
 
-        self.section(layout, _("Page counters"))
-        pages = reading.pages if reading else None
-        total = QLocale(i18n.language()).toString(pages) if pages is not None else ""
-        if error := status.counter_error(info.counter_source):
-            total = _("Error: {why}").format(why=error)  # not the SNMP counter: it isn't the source
-        source = source_text(info.counter_source)
-        self._fields(layout, (("pages", _("Total pages"), total),
-                              ("counter_source", _("Source"), source)))  # fmt: skip
+        self._page_counters(layout, shown)
 
         self.section(layout, _("Tags"))
         layout.addWidget(self.chips(printer.tags) if printer.tags else self.muted("—"))
 
         self.section(layout, _("Notes"))
         layout.addWidget(self.notes(printer.notes, needle) if printer.notes else self.muted("—"))
+
+    def _page_counters(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
+        """Total pages from the printer itself, or from Doc360 MPS with when it was fetched
+        (never the printer's own counter then: it isn't the source)."""
+        self.section(layout, _("Page counters"))
+        info, checked = info_of(shown.printer), shown.checked
+        reading = checked.reading if checked else None
+        pages, error, tip = reading.pages if reading else None, "", ""
+        source = source_text(info.counter_source)
+        if info.counter_source == DOC360:
+            pages, error = status.doc360_pages(info, reading, shown.counted)
+            if shown.counted is not None:
+                when = clock_text(shown.counted.when)
+                source = _("{source} · fetched {when}").format(source=source, when=when)
+                tip = status.doc360_tip(shown.counted)
+        total = QLocale(i18n.language()).toString(pages) if pages is not None else ""
+        if error:
+            total = _("Error: {why}").format(why=error)
+        for key, label, value in (("pages", _("Total pages"), total),
+                                  ("counter_source", _("Source"), source)):  # fmt: skip
+            layout.addWidget(self.muted(label))
+            shown_value = self.value(key, value) if value else self.muted("—")
+            shown_value.setToolTip(tip)
+            layout.addWidget(shown_value)
 
     def _heading(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
         """Like Hosts': a status dot by the name, then "status · checked 14:32"."""

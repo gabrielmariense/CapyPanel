@@ -1,5 +1,6 @@
-"""The Printers tool's part of Settings: Startup, Refresh (the SNMP version and its account,
-Refresh on its own, the low supply level and how the Toner column shows) and Printer lists."""
+"""The Printers tool's part of Settings: Startup, Refresh (the SNMP version and its account, the
+Doc360 MPS account, Refresh on its own, the low supply level and how the Toner column shows) and
+Printer lists."""
 
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -21,7 +22,7 @@ from PySide6.QtWidgets import (
 from capypanel.core import credstore
 from capypanel.core.hosts import locations
 from capypanel.core.i18n import N_, _
-from capypanel.core.printers import usm
+from capypanel.core.printers import doc360, usm
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.notes import notes
 from capypanel.ui.printers_tool import refresh
@@ -41,6 +42,7 @@ if TYPE_CHECKING:
 
 MAX_COMMUNITY = 255
 MAX_V3_USER, MAX_V3_PASSWORD = 32, 255  # RFC 3414's longest user name
+MAX_DOC360 = 255  # the Doc360 MPS partner, user name and password
 SNMP_VERSION = "snmp_version"  # refresh.V2C or refresh.V3
 LOWEST, HIGHEST = 1, 50  # the low supply level's range, in %
 TONER_VIEW, TEXT, BARS = "toner_view", "text", "bars"  # the Toner column: "Black 24 %", or a bar
@@ -222,6 +224,94 @@ class V3AccountDialog(QDialog):
         self.privacy_password.setEchoMode(mode)
 
 
+class Doc360AccountDialog(QDialog):
+    """The Doc360 MPS login's own small window (Save keeps it in Windows Credential Manager),
+    for printers whose page counters come from Doc360. A password already kept isn't shown;
+    an empty user name forgets the kept login."""
+
+    def __init__(self, parent: QWidget | None, kept: doc360.Account | None) -> None:
+        super().__init__(parent)
+        self._kept = kept
+        self.setWindowTitle(_("Doc360 MPS account"))
+        column = QVBoxLayout(self)
+        column.setContentsMargins(16, 16, 16, 16)
+        column.setSpacing(10)
+        column.addWidget(
+            notes(
+                _("The login you use on the Doc360 MPS portal. CapyPanel signs in once per "
+                  "Refresh to fetch the latest page counters, then signs out. The password is "
+                  "kept in Windows Credential Manager.")
+            )
+        )  # fmt: skip
+        self.partner = self._box(kept.partner if kept else "")
+        self.user = self._box(kept.user if kept else "")
+        self.password = self._box("")
+        self.password.setEchoMode(QLineEdit.EchoMode.Password)
+        if kept:
+            self.password.setPlaceholderText(_("Kept: type to change it"))
+        form = QFormLayout()
+        form.addRow(_("&Partner"), self.partner)
+        form.addRow(_("&User name"), self.user)
+        form.addRow(_("Pass&word"), self.password)
+        column.addLayout(form)
+        self.show_box = QCheckBox(_("&Show password"))
+        self.show_box.toggled.connect(
+            lambda on: self.password.setEchoMode(
+                QLineEdit.EchoMode.Normal if on else QLineEdit.EchoMode.Password
+            )
+        )
+        column.addWidget(self.show_box)
+        self.problem = notes("")
+        column.addWidget(self.problem)
+        buttons = QHBoxLayout()
+        buttons.addStretch(1)
+        self.save_button = QPushButton(_("&Save"))
+        self.save_button.setDefault(True)
+        self.save_button.clicked.connect(self.accept)
+        cancel = QPushButton(_("Cancel"))
+        cancel.setAutoDefault(False)
+        cancel.clicked.connect(self.reject)
+        buttons.addWidget(self.save_button)
+        buttons.addWidget(cancel)
+        column.addLayout(buttons)
+        for box in (self.partner, self.user, self.password):
+            box.textChanged.connect(self._update)
+        self._update()
+        self.resize(460, self.sizeHint().height())
+
+    def account(self) -> doc360.Account | None:
+        """The login as filled in, or None while something's missing."""
+        partner, user = self.partner.text().strip(), self.user.text().strip()
+        password = self.password.text() or (self._kept.password if self._kept else "")
+        return doc360.Account(partner, user, password) if partner and user and password else None
+
+    def forgets(self) -> bool:
+        """Save would forget the kept login: its user name was emptied."""
+        return self._kept is not None and not self.user.text().strip()
+
+    def _update(self) -> None:
+        self.problem.setText(self._problem())
+        self.problem.setVisible(bool(self.problem.text()))
+        self.save_button.setEnabled(self.account() is not None or self.forgets())
+
+    def _problem(self) -> str:
+        if self.forgets():
+            return _("Save forgets the saved account.")
+        if not self.partner.text().strip():
+            return _("Type the partner, as on Doc360's login page.")
+        if not self.user.text().strip():
+            return _("Type the user name.")
+        if self.account() is None:
+            return _("Type the password.")
+        return ""
+
+    @staticmethod
+    def _box(text: str) -> QLineEdit:
+        box = QLineEdit(text)
+        box.setMaxLength(MAX_DOC360)
+        return box
+
+
 class PrintersPage(ListsGeneralPage):
     """Startup, then Refresh: the SNMP version, its account behind Change…, Refresh on its own,
     the low supply level, and the Toner column as text or a bar."""
@@ -233,6 +323,7 @@ class PrintersPage(ListsGeneralPage):
         bars: bool,
         version: str,
         account: str,
+        doc360_text: str,
         auto: int,
         notify: str,
         **lists: object,
@@ -247,6 +338,9 @@ class PrintersPage(ListsGeneralPage):
         self.change_button = QPushButton(_("Change…"))
         self.change_button.setAutoDefault(False)
         self.account_row = SettingRow(_("SNMP &account"), account, self.change_button)
+        self.doc360_button = QPushButton(_("Change…"))
+        self.doc360_button.setAutoDefault(False)
+        self.doc360_row = SettingRow(_("Doc360 &MPS account"), doc360_text, self.doc360_button)
         self.auto_every = QComboBox()
         self.auto_every.addItem(_("Off"), 0)
         for minutes in AUTO_EVERY:
@@ -277,6 +371,7 @@ class PrintersPage(ListsGeneralPage):
                 self.version,
             ),
             self.account_row,
+            self.doc360_row,
             SettingRow(
                 _("Refresh on its &own"),
                 _(
@@ -308,6 +403,16 @@ class PrintersPage(ListsGeneralPage):
 
     def show_account(self, text: str) -> None:
         self.account_row.description.setText(text)
+
+
+def doc360_text() -> str:
+    """The Doc360 MPS account row's line: what's set."""
+    account = refresh.doc360_account()
+    if account is None:
+        return _("Not set. Needed only for printers whose page counters come from Doc360 MPS.")
+    return _("Partner {partner}, user {user}. Kept in Windows Credential Manager.").format(
+        partner=account.partner, user=account.user
+    )
 
 
 def account_text(version: str) -> str:
@@ -348,6 +453,7 @@ class PrintersSettings(SettingsGroup):
             bars=tool.toner_bars(),
             version=tool.snmp_version(),
             account=account_text(tool.snmp_version()),
+            doc360_text=doc360_text(),
             auto=tool.auto_refresh(),
             notify=tool.notify_choice(),
             texts=texts,
@@ -370,6 +476,7 @@ class PrintersSettings(SettingsGroup):
         for page in (self.general, self.lists):
             page.changed.connect(self._changed)
         self.general.change_button.clicked.connect(self._change_account)
+        self.general.doc360_button.clicked.connect(self._change_doc360_account)
         self.lists.view.open_requested.connect(self._open)
         self._building = False
         return [("printers", self.general), ("printer_lists", self.lists)]
@@ -420,6 +527,23 @@ class PrintersSettings(SettingsGroup):
                 _("SNMP v3 account"),
                 _("Windows didn't keep it: {error}").format(error=e),
             )
+
+    def _change_doc360_account(self) -> None:
+        dialog = Doc360AccountDialog(self.general.window(), refresh.doc360_account())
+        if run_modal(dialog) == QDialog.DialogCode.Accepted:
+            account = dialog.account()
+            try:
+                if dialog.forgets():
+                    credstore.forget(refresh.DOC360_ACCOUNT)
+                elif account is not None:
+                    refresh.save_doc360_account(account)
+            except (OSError, ValueError) as e:
+                QMessageBox.warning(
+                    self.general,
+                    _("Doc360 MPS account"),
+                    _("Windows didn't keep it: {error}").format(error=e),
+                )
+        self.general.doc360_row.description.setText(doc360_text())
 
     def _change_community(self) -> None:
         dialog = CommunityDialog(self.general.window())

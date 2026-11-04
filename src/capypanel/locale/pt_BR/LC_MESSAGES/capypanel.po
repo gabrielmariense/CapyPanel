@@ -210,6 +210,9 @@ msgstr "&Abrir lista…"
 msgid "&Open on startup"
 msgstr "&Abrir ao iniciar"
 
+msgid "&Partner"
+msgstr "&Parceiro"
+
 msgid "&Password:"
 msgstr "&Senha:"
 
@@ -266,6 +269,9 @@ msgstr "&Configurações…"
 
 msgid "&Show"
 msgstr "&Mostrar"
+
+msgid "&Show password"
+msgstr "&Mostrar senha"
 
 msgid "&Show passwords"
 msgstr "&Mostrar senhas"
@@ -402,6 +408,9 @@ msgstr "Adicionar impressora"
 msgid "Add printers and groups, and manage the groups"
 msgstr "Adicione impressoras e grupos, e gerencie os grupos"
 
+msgid "Add the printer's serial number: Doc360 MPS lists printers by serial."
+msgstr "Adicione o número de série da impressora: o Doc360 MPS identifica as impressoras pelo número de série."
+
 msgid "Added"
 msgstr "Adicionada"
 
@@ -515,9 +524,6 @@ msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha 
 
 msgid "CapyPanel asks for them again when it needs them."
 msgstr "O CapyPanel pede de novo quando precisar deles."
-
-msgid "CapyPanel can't read page counters from Doc360 MPS yet."
-msgstr "O CapyPanel ainda não lê contadores de páginas do Doc360 MPS."
 
 msgid "CapyPanel is built with the following software:"
 msgstr "O CapyPanel é feito com os seguintes softwares:"
@@ -798,6 +804,31 @@ msgstr "Desconectado"
 msgid "Disconnect…"
 msgstr "Desconectar…"
 
+msgid "Doc360 &MPS account"
+msgstr "Conta do Doc360 &MPS"
+
+msgid "Doc360 MPS account"
+msgstr "Conta do Doc360 MPS"
+
+msgid "Doc360 MPS answered with an error."
+msgstr "O Doc360 MPS respondeu com um erro."
+
+msgid "Doc360 MPS didn't answer."
+msgstr "O Doc360 MPS não respondeu."
+
+#, python-brace-format
+msgid "Doc360 MPS doesn't list serial {serial}."
+msgstr "O Doc360 MPS não tem o número de série {serial}."
+
+msgid "Doc360 MPS has no total for this printer."
+msgstr "O Doc360 MPS não tem o total desta impressora."
+
+msgid "Doc360 MPS refused the login. Check the account in Settings › Printers › Refresh."
+msgstr "O Doc360 MPS recusou o login. Confira a conta em Configurações › Impressoras › Atualizar."
+
+msgid "Doc360 MPS's pages changed, so CapyPanel couldn't read the counters."
+msgstr "As páginas do Doc360 MPS mudaram, então o CapyPanel não conseguiu ler os contadores."
+
 msgid "Documentation:"
 msgstr "Documentação:"
 
@@ -882,6 +913,10 @@ msgstr "Todas as impressoras da lista aberta, 8 por vez, enquanto o CapyPanel es
 
 msgid "Everyone on this PC (shared)"
 msgstr "Todos neste PC (compartilhada)"
+
+#, python-brace-format
+msgid "Fetched from Doc360 MPS at {when}. Doc360 reads printers on its own schedule, so this can be behind the printer."
+msgstr "Obtido do Doc360 MPS em {when}. O Doc360 lê as impressoras no horário dele, então este número pode estar atrasado em relação à impressora."
 
 msgid "File not found"
 msgstr "Arquivo não encontrado"
@@ -1275,6 +1310,9 @@ msgid_plural "Not opened ({n}): {names}"
 msgstr[0] "Não aberto: {names}"
 msgstr[1] "Não abertos ({n}): {names}"
 
+msgid "Not set. Needed only for printers whose page counters come from Doc360 MPS."
+msgstr "Não definida. Só é necessária para impressoras cujos contadores de páginas vêm do Doc360 MPS."
+
 msgid "Not used: made by another user"
 msgstr "Não usada: criada por outro usuário"
 
@@ -1440,6 +1478,13 @@ msgstr "Papel atolado"
 
 msgid "Paper low"
 msgstr "Pouco papel"
+
+#, python-brace-format
+msgid "Partner {partner}, user {user}. Kept in Windows Credential Manager."
+msgstr "Parceiro {partner}, usuário {user}. Guardada no Gerenciador de Credenciais do Windows."
+
+msgid "Pass&word"
+msgstr "Se&nha"
 
 #, python-brace-format
 msgid "Password for {profile}"
@@ -1791,6 +1836,9 @@ msgstr "Definido no arquivo de configurações"
 msgid "Set tags"
 msgstr "Definir tags"
 
+msgid "Set the Doc360 MPS account in Settings › Printers › Refresh."
+msgstr "Defina a conta do Doc360 MPS em Configurações › Impressoras › Atualizar."
+
 msgid "Set the SNMP v3 account in Settings › Printers › Refresh first."
 msgstr "Defina antes a conta SNMP v3 em Configurações › Impressoras › Atualizar."
 
@@ -2074,6 +2122,9 @@ msgstr "A lista “{path}” não existe mais."
 msgid "The logged-on user's profile folder."
 msgstr "A pasta de perfil do usuário logado."
 
+msgid "The login you use on the Doc360 MPS portal. CapyPanel signs in once per Refresh to fetch the latest page counters, then signs out. The password is kept in Windows Credential Manager."
+msgstr "O login que você usa no portal Doc360 MPS. O CapyPanel entra uma vez a cada atualização para buscar os últimos contadores de páginas e depois sai. A senha fica guardada no Gerenciador de Credenciais do Windows."
+
 msgid "The lowest toner as text (\"Black 24 %\") or as a bar, like in Details."
 msgstr "O toner mais baixo como texto (\"Preto 24 %\") ou como uma barra, como em Detalhes."
 
@@ -2227,6 +2278,12 @@ msgstr "Tipo"
 
 msgid "Type a tag and press Enter"
 msgstr "Digite uma tag e pressione Enter"
+
+msgid "Type the partner, as on Doc360's login page."
+msgstr "Digite o parceiro, como na página de login do Doc360."
+
+msgid "Type the password."
+msgstr "Digite a senha."
 
 msgid "Type the user name."
 msgstr "Digite o nome do usuário."
@@ -2782,6 +2839,10 @@ msgstr "{profile} (cópia)"
 #, python-brace-format
 msgid "{profile} (not available on this PC)"
 msgstr "{profile} (não disponível neste PC)"
+
+#, python-brace-format
+msgid "{source} · fetched {when}"
+msgstr "{source} · obtido em {when}"
 
 #, python-brace-format
 msgid "{status} · checked {when}"
