@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-04 17:18-0300\n"
+"POT-Creation-Date: 2026-11-04 17:27-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -50,6 +50,9 @@ msgstr "&Endereço:"
 
 msgid "&Add…"
 msgstr "&Adicionar…"
+
+msgid "&All commands…"
+msgstr "&Todos os comandos…"
 
 msgid "&Authentication"
 msgstr "&Autenticação"
@@ -247,6 +250,9 @@ msgstr "&Predefinição:"
 msgid "&Printers"
 msgstr "&Impressoras"
 
+msgid "&Profile:"
+msgstr "&Perfil:"
+
 msgid "&Quit"
 msgstr "&Sair"
 
@@ -412,6 +418,9 @@ msgstr "Um toner, tinta, cilindro ou caixa neste nível ou abaixo aparece como b
 msgid "A tool definition must be a JSON object."
 msgstr "Uma definição de ferramenta deve ser um objeto JSON."
 
+msgid "A&dd to list…"
+msgstr "A&dicionar à lista…"
+
 msgid "About"
 msgstr "Sobre"
 
@@ -475,6 +484,9 @@ msgstr[1] "{n} hosts adicionados."
 msgid "Address"
 msgstr "Endereço"
 
+msgid "Adds this PC to the open host list"
+msgstr "Adiciona este PC à lista de hosts aberta"
+
 msgid "After a Refresh on its own, for printers that stopped or went offline (and with low supplies, if picked) since the one before."
 msgstr "Depois de uma atualização sozinha, para as impressoras que pararam ou ficaram offline (e com suprimento baixo, se escolhido) desde a anterior."
 
@@ -490,6 +502,10 @@ msgstr "Todas as impressoras"
 #, python-brace-format
 msgid "Already in the list, {place}"
 msgstr "Já está na lista, {place}"
+
+#, python-brace-format
+msgid "Already in this list: {where}"
+msgstr "Já está nesta lista: {where}"
 
 msgid "Also low supplies"
 msgstr "Também suprimento baixo"
@@ -1549,6 +1565,9 @@ msgstr "Não é um nome de computador nem um endereço IP"
 msgid "Not checked"
 msgstr "Não verificado"
 
+msgid "Not checked yet: run Status"
+msgstr "Ainda não verificado: execute Status"
+
 msgid "Not checked: use Refresh"
 msgstr "Não verificado: use Atualizar"
 
@@ -2069,6 +2088,9 @@ msgstr "Restaurar os perfis que vêm com o app"
 
 msgid "Run all checks"
 msgstr "Executar todas as verificações"
+
+msgid "Run checks whether it answers."
+msgstr "Executar verifica se ele responde."
 
 msgid "S&top"
 msgstr "Pa&rar"
@@ -2723,6 +2745,9 @@ msgstr "Desliga o PC; alguém precisa ligá-lo de novo."
 msgid "Type"
 msgstr "Tipo"
 
+msgid "Type a host name or address to run its commands."
+msgstr "Digite o nome ou o endereço de um host para executar os comandos dele."
+
 msgid "Type a tag and press Enter"
 msgstr "Digite uma tag e pressione Enter"
 
@@ -2956,6 +2981,10 @@ msgstr "de {computer}"
 
 msgid "idle"
 msgstr "inativa"
+
+#, python-brace-format
+msgid "in {group}, as {name}"
+msgstr "em {group}, como {name}"
 
 #, python-brace-format
 msgid "in “{group}”"
@@ -3524,6 +3553,9 @@ msgstr "“{path}” não é uma lista de hosts."
 #, python-brace-format
 msgid "“{path}” isn't a printer list."
 msgstr "“{path}” não é uma lista de impressoras."
+
+msgid "↑ ↓ pick, Enter runs, typing searches. Commands that need more open a small window; risky ones ask first."
+msgstr "↑ ↓ escolhe, Enter executa, digitar pesquisa. Comandos que precisam de mais abrem uma janela pequena; os arriscados perguntam antes."
 
 msgid "✓ Found"
 msgstr "✓ Encontrado"

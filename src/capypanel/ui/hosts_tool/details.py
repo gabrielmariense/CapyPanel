@@ -88,7 +88,7 @@ class HostDetailsPanel(DetailsPanel):
 
     def build_page(self, layout: QVBoxLayout, shown: object, needle: str) -> None:
         assert isinstance(shown, HostDetails)
-        self._heading(layout, shown)
+        self.heading(layout, shown.host.name, shown.status)
         layout.addSpacing(6)
         layout.addLayout(self._command_row(shown))
         if shown.pending is not None and shown.pending.at > datetime.now(UTC):
@@ -106,8 +106,8 @@ class HostDetailsPanel(DetailsPanel):
         layout.addWidget(self.muted(_("Profile")))
         layout.addLayout(self._profile_row(shown.profile))
 
-        self._users(layout, shown)
-        self._facts(layout, shown.facts)
+        self.users(layout, shown.users)
+        self.facts(layout, shown.facts)
 
         self.section(layout, _("Tags"))
         layout.addWidget(self.chips(host.tags) if host.tags else self.muted("—"))
@@ -228,15 +228,23 @@ class HostDetailsPanel(DetailsPanel):
         left = button.width() - menu.sizeHint().width()
         menu.popup(button.mapToGlobal(QPoint(left, button.height())))
 
-    def _heading(self, layout: QVBoxLayout, details: HostDetails) -> None:
+    def heading(
+        self,
+        layout: QVBoxLayout,
+        host_name: str,
+        checked: tuple[Status, datetime] | None,
+        *,
+        unchecked: str = "",
+    ) -> None:
+        """The status dot and the host's name, then its status and when it was checked."""
         row = QHBoxLayout()
         row.setSpacing(4)
-        name = self.value("name", details.host.name)
+        name = self.value("name", host_name)
         font = QFont(name.font())
         font.setBold(True)
         font.setPointSizeF(font.pointSizeF() * 1.25)
         name.setFont(font)
-        status = details.status[0] if details.status else None
+        status = checked[0] if checked else None
         color = STATUS_COLORS.get(str(status), STATUS_COLORS["offline"])
         line = QFontMetrics(font).height()
         size = round(line * 0.5)
@@ -249,21 +257,26 @@ class HostDetailsPanel(DetailsPanel):
         row.addWidget(dot, 0, Qt.AlignmentFlag.AlignTop)
         row.addWidget(name, 1)
         layout.addLayout(row)
-        if details.status is None:
-            line = _("Not checked: use Refresh")
+        if checked is None:
+            line = unchecked or _("Not checked: use Refresh")
         else:
-            found, when = details.status
+            found, when = checked
             line = _("{status} · checked {when}").format(
                 status=check_texts.status_text(found), when=check_texts.clock_text(when)
             )
         layout.addWidget(self.muted(line))
 
-    def _users(self, layout: QVBoxLayout, details: HostDetails) -> None:
-        if details.users is None:
+    def users(
+        self,
+        layout: QVBoxLayout,
+        users: tuple[Sequence[Session] | None, RemoteError | None, datetime] | None,
+    ) -> None:
+        """Logged on: each person with their session; a right-click offers what can be done."""
+        if users is None:
             self.section(layout, _("Logged on"))
             layout.addWidget(self.muted(_("Not checked")))
             return
-        found, error, when = details.users
+        found, error, when = users
         sessions = found or ()
         clock = check_texts.clock_text(when)
         if error is not None or not sessions:
@@ -317,9 +330,9 @@ class HostDetailsPanel(DetailsPanel):
         grid.setColumnStretch(0, 1)
         return row
 
-    def _facts(self, layout: QVBoxLayout, facts: Facts | None) -> None:
-        """PC facts: read once when the host is opened here, with Read again. While the slow
-        part is still on its way, its rows read "Reading…"."""
+    def facts(self, layout: QVBoxLayout, facts: Facts | None, *, button: bool = True) -> None:
+        """PC facts: read once when the host is opened here, with Read again (`button`). While
+        the slow part is still on its way, its rows read "Reading…"."""
         if facts is None:
             self.section(layout, _("PC facts"))
             layout.addWidget(self.muted(_("Not read yet")))
@@ -354,6 +367,8 @@ class HostDetailsPanel(DetailsPanel):
                     layout.addWidget(self.value(key, value))
                 else:
                     layout.addWidget(self._indented(self.muted("—")))
+        if not button:
+            return
         again = QPushButton(_("Read again") if facts is not None else _("Read"))
         again.setAutoDefault(False)
         again.setEnabled(facts is None or not facts.reading)

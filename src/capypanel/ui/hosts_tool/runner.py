@@ -157,6 +157,7 @@ class Runner(QObject):
         super().__init__(tool)
         self._tool = tool
         self._jobs: set[Job] = set()
+        self._parent: QWidget | None = None  # the window a command's questions open over
 
     # ---- the common parts ----
 

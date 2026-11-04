@@ -423,4 +423,6 @@ def test_commands_menu_on_the_toolbar_lists_the_groups(window: CapyWindow) -> No
     _select(window, "PC-1")
     menu = window.hosts.toolbar.commands_menu
     menu.aboutToShow.emit()
-    assert [a.text() for a in menu.actions()] == ["Check", "Open", "Users", "Power", "Printers"]
+    assert [a.text() for a in menu.actions()] == [
+        "Check", "Open", "Users", "Power", "Printers", "", "&All commands…",
+    ]  # fmt: skip

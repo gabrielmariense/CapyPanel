@@ -11,7 +11,6 @@ from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
-    QComboBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
@@ -19,12 +18,11 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMessageBox,
-    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
 
-from capypanel.core.hosts.model import MAX_ADDRESS, Group
+from capypanel.core.hosts.model import Group
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.tools import detect, profiles, rfb
 from capypanel.core.tools.catalog import Catalogs
@@ -115,53 +113,6 @@ class CredentialDialog(QDialog):
     def credential(self) -> Credential:
         user = self.user.text().strip() if self.wants_user else ""
         return Credential(user, self.password.text())
-
-
-class ManualConnectDialog(QDialog):
-    """Connect to an address typed on the spot, without adding it to the list."""
-
-    def __init__(
-        self, parent: QWidget | None, choices: list[tuple[str, str]], default_profile: str
-    ) -> None:
-        super().__init__(parent)
-        self.setWindowTitle(_("Manual connection"))
-        self.address = QLineEdit()
-        self.address.setPlaceholderText(_("Hostname or IP address"))
-        self.address.setMaxLength(MAX_ADDRESS)
-        self.port = QSpinBox()
-        self.port.setRange(0, 65535)
-        self.port.setSpecialValueText(_("Default"))  # shown for 0: the profile's own port
-        # A port is typed, not clicked up one by one; arrow keys and the wheel still work.
-        self.port.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
-        self.profile = QComboBox()
-        for profile_id, text in choices:
-            self.profile.addItem(text, profile_id)
-        self.profile.setCurrentIndex(max(self.profile.findData(default_profile), 0))
-        form = QFormLayout()
-        form.addRow(_("&Address:"), self.address)
-        form.addRow(_("P&ort:"), self.port)
-        form.addRow(_("Connection &profile:"), self.profile)
-        self.buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self.buttons.button(QDialogButtonBox.StandardButton.Ok).setText(_("&Connect"))
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
-        layout = QVBoxLayout(self)
-        layout.addLayout(form)
-        layout.addWidget(self.buttons)
-        self.address.textChanged.connect(self._update_ok)
-        self._update_ok()
-        self.resize(460, self.sizeHint().height())
-
-    def _update_ok(self) -> None:
-        ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)
-        ok.setEnabled(bool(self.address.text().strip()) and self.profile.count() > 0)
-
-    def request(self) -> Request:
-        address = self.address.text().strip()
-        port = self.port.value() or None
-        return Request(address, Target(address, port), self.profile.currentData() or "")
 
 
 def ask_for_program(parent: QWidget, tool: ToolDefinition) -> str:

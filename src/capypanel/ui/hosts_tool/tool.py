@@ -37,7 +37,7 @@ from capypanel.core.tools.connect import SessionCredentials, Target
 from capypanel.core.tools.profile_store import ProfileStore
 from capypanel.ui import checks as check_texts
 from capypanel.ui.checks import AccountDialog, CheckRun
-from capypanel.ui.connect import Connector, ManualConnectDialog, Request
+from capypanel.ui.connect import Connector, Request
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.export_hosts import ExportDialog
 from capypanel.ui.groups import ROLE_ID
@@ -124,6 +124,7 @@ class HostsTool(ListWorkspace):
         assert isinstance(column, QVBoxLayout)
         column.insertWidget(1, self.result_strip)  # right under the search box
         self.host_actions = self._make_host_actions()
+        self._commands_window: QDialog | None = None
         self._facts_timer = QTimer(self)
         self._facts_timer.setSingleShot(True)
         self._facts_timer.setInterval(FACTS_AFTER)
@@ -190,7 +191,7 @@ class HostsTool(ListWorkspace):
         a.connection_profiles.triggered.connect(lambda: self._shell.open_settings("connections"))
         a.saved_credentials.triggered.connect(lambda: self._shell.open_saved_credentials())
         self.toolbar.commands_menu.aboutToShow.connect(
-            lambda: self._fill_commands_menu(self.toolbar.commands_menu)
+            lambda: self._fill_commands_menu(self.toolbar.commands_menu, window=True)
         )
         details = self.details
         details.command_clicked.connect(self.run_on_selected)
@@ -310,19 +311,32 @@ class HostsTool(ListWorkspace):
         return self.commands.add_host
 
     def add_item(self) -> None:
+        self._add_host()
+
+    def _add_host(
+        self, address: str = "", profile: str = "", parent: QWidget | None = None
+    ) -> str | None:
+        """Add host…, with the address and profile filled in when they're known. The new
+        host's id, or None."""
         doc = self._writable()
         if doc is None:
-            return
+            return None
         # Only a list with nothing in it starts with a group; any other keeps what it holds.
         base = doc.hosts if doc.hosts.groups or doc.hosts.hosts else starter_list()
         dialog = HostDialog(
-            self,
+            parent or self,
             base,
             default_group=self.nav.selected_group_id(),
             profiles=self._profile_picker(base),
         )
+        if address:
+            dialog.name.setText(address)
+            dialog.address.setText(address)
+            index = dialog.profile.findData(profile)
+            if profile and index >= 0:
+                dialog.profile.setCurrentIndex(index)
         if run_modal(dialog) != QDialog.DialogCode.Accepted:
-            return
+            return None
         values = dialog.values()
         try:
             new, host = base.add_host(
@@ -335,9 +349,11 @@ class HostsTool(ListWorkspace):
             )
         except HostListRuleError as e:
             self._error(str(e))
-            return
-        if self._commit(new):
-            self.table.select_ids([host.id])
+            return None
+        if not self._commit(new):
+            return None
+        self.table.select_ids([host.id])
+        return host.id
 
     def edit_item(self, item: Host) -> None:
         doc = self._writable()
@@ -485,10 +501,26 @@ class HostsTool(ListWorkspace):
             self.edit_item(host)
 
     def manual_connect(self) -> None:
-        connector = self.connector
-        dialog = ManualConnectDialog(self, connector.choices(), connector.default_profile())
-        if run_modal(dialog) == QDialog.DialogCode.Accepted:
-            connector.connect([dialog.request()])
+        """Manual connection: the Commands window, for an address typed there."""
+        self.open_commands(None)
+
+    def open_commands(self, target: HostTarget | None) -> None:
+        """The Commands window, for `target` (None: an address typed there). One at a time."""
+        from capypanel.ui.hosts_tool.commands_window import CommandsWindow
+
+        if self._commands_window is not None:
+            self._commands_window.close()
+            self._commands_window.deleteLater()
+        profile = self.connector.default_profile()
+        if target is not None and self._doc is not None:
+            host = self._doc.hosts.host(target.key)
+            if host is not None:
+                profile = self._doc.hosts.profile_of(host, self._profile_exists)[0]
+        window = CommandsWindow(self, target, profile)
+        window.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        window.destroyed.connect(lambda: setattr(self, "_commands_window", None))
+        self._commands_window = window
+        window.show()
 
     def _fill_connect_menu(self) -> None:
         """The toolbar's Connect: connect the selection, or once with another profile, then the
@@ -1123,10 +1155,16 @@ class HostsTool(ListWorkspace):
             submenu.addActions([self.host_actions[c.id] for c in host_commands.in_group(group)])
             submenu.setEnabled(self.selected_target() is not None)
 
-    def _fill_commands_menu(self, menu: QMenu) -> None:
-        """Commands ▾ and the Details panel's …: every command, by group."""
+    def _fill_commands_menu(self, menu: QMenu, *, window: bool = False) -> None:
+        """Commands ▾ and the Details panel's …: every command, by group; Commands ▾ ends with
+        All commands…, the Commands window (`window`)."""
         menu.clear()
         self._add_command_menus(menu)
+        if window:
+            menu.addSeparator()
+            every = menu.addAction(_("&All commands…"))
+            every.setEnabled(self.selected_target() is not None)
+            every.triggered.connect(lambda: self.open_commands(self.selected_target()))
 
     def _known_sessions(self, key: str) -> tuple[Session, ...]:
         found = self._users_found.get(key)
@@ -1179,11 +1217,20 @@ class HostsTool(ListWorkspace):
             item.triggered.connect(action.trigger)
 
     def _session_menu(self, session: Session, where: QPoint) -> None:
-        """A right-click on a person in Details: message, disconnect or log them off, Copy."""
         target = self.selected_target()
-        if target is None:
-            return
-        menu = QMenu(self)
+        if target is not None:
+            self.session_menu(session, where, target, self.show_outcome)
+
+    def session_menu(
+        self,
+        session: Session,
+        where: QPoint,
+        target: HostTarget,
+        report: Report,
+        parent: QWidget | None = None,
+    ) -> None:
+        """A right-click on a person: message, disconnect or log them off, then Copy."""
+        menu = QMenu(parent or self)
         name = session.user.replace("&", "&&")
         for command_id, text in (
             ("message", _("Send a message to {user}…")),
@@ -1197,14 +1244,47 @@ class HostsTool(ListWorkspace):
             item = menu.addAction(text.format(user=name))
             item.triggered.connect(
                 lambda _c=False, c=command_id: self.runner.run(
-                    c, target, self.show_outcome, session=session
+                    c, target, report, parent=parent, session=session
                 )
             )
-        menu.addSeparator()
-        self.add_copy_menu(menu)
+        if parent is None:  # the host's columns: only from the host's own Details
+            menu.addSeparator()
+            self.add_copy_menu(menu)
         menu.exec(where)
 
     # ---- what the commands keep ----
+
+    def status_found(self, key: str) -> tuple[Status, datetime] | None:
+        found = self._status_found.get(key)
+        return (found[0], found[1]) if found is not None else None
+
+    def recent_addresses(self) -> list[str]:
+        saved = self.prefs.get("recent_addresses")
+        return [a for a in saved if isinstance(a, str)] if isinstance(saved, list) else []
+
+    def remember_address(self, typed: str) -> None:
+        kept = [typed, *(a for a in self.recent_addresses() if a.casefold() != typed.casefold())]
+        self.prefs["recent_addresses"] = kept[:RECENT_PATHS]
+        self._save_prefs()
+
+    def where_in_list(self, address: str) -> list[tuple[str, str]]:
+        """Each host of the open list reached at `address`: its group's path and its name."""
+        doc = self._doc
+        if doc is None:
+            return []
+        wanted = address.strip().casefold()
+        return [
+            (group_path(doc.hosts, h.group), h.name)
+            for h in doc.hosts.hosts
+            if h.connect_address.casefold() == wanted
+        ]
+
+    def can_add_hosts(self) -> bool:
+        return self._doc is not None and not self._doc.read_only
+
+    def add_typed_host(self, address: str, profile: str) -> str | None:
+        """Add to list…: Add host… with the address typed in the Commands window."""
+        return self._add_host(address, profile, parent=self._commands_window)
 
     def account(self) -> Account | None:
         """The account typed for other PCs (logged-on users and host commands), or None for

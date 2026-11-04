@@ -17,8 +17,9 @@ from capypanel.core.remote.access import Account
 from capypanel.core.tools.connect import Credential, Target
 from capypanel.core.tools.profiles import ConnectionProfile
 from capypanel.ui import connect as connect_ui
-from capypanel.ui.connect import CredentialDialog, ManualConnectDialog, Request
+from capypanel.ui.connect import CredentialDialog, Request
 from capypanel.ui.hosts import HostDialog
+from capypanel.ui.hosts_tool.commands_window import CommandsWindow
 from capypanel.ui.hosts_tool.settings import HostsSettings
 from capypanel.ui.hosts_tool.table import HostTable
 from capypanel.ui.list_workspace import workspace as workspace_module
@@ -226,15 +227,22 @@ def test_details_show_the_profile_s_name(window: CapyWindow) -> None:
 
 
 def test_manual_connection_uses_the_chosen_profile(
-    window: CapyWindow, launched: list[Launch]
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    dialog = ManualConnectDialog(None, window.hosts.connector.choices(), "pis-password")
-    dialog.address.setText(" 10.9.9.9 ")
-    assert dialog.port.text() == "Default"
-    request = dialog.request()
-    assert request == Request("10.9.9.9", connect_ui.Target("10.9.9.9", None), "pis-password")
-    dialog.port.setValue(5901)
-    assert dialog.request().target.port == 5901
+    asked: list[list[Request]] = []
+    monkeypatch.setattr(window.hosts.connector, "connect", lambda requests: asked.append(requests))
+    window.hosts.commands.manual_connect.trigger()  # Ctrl+M: the Commands window, typed
+    commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
+    assert isinstance(commands, CommandsWindow)
+    assert not commands.connect_button.isEnabled()  # nothing typed yet
+    commands.address.setEditText(" 10.9.9.9 ")
+    commands.profile.setCurrentIndex(commands.profile.findData("pis-password"))
+    commands.connect_button.click()
+    assert asked[-1] == [Request("10.9.9.9", connect_ui.Target("10.9.9.9", None), "pis-password")]
+    commands.address.setEditText("10.9.9.9:5901")
+    commands.connect_button.click()
+    assert asked[-1][0].target == connect_ui.Target("10.9.9.9", 5901)
+    assert window.hosts.recent_addresses()[0] == "10.9.9.9:5901"
 
 
 def test_copy_lists_every_column_shown_wherever_the_menu_opens(window: CapyWindow) -> None:

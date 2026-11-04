@@ -556,6 +556,17 @@ QToolButton#commandButton[popupMode="2"] { padding-right: 12px; }
 QToolButton#commandButton::menu-indicator { width: 8px; height: 5px; right: 5px; }
 QToolButton#commandButton[arrow="false"] { padding-right: 0; }
 QToolButton#commandButton[arrow="false"]::menu-indicator { image: none; width: 0; }
+/* The Commands window: one line per command under small group headings; the picked one is
+   edged in the accent and grows; risky ones have an amber left edge and name. */
+QLabel#groupHeading { color: %(text3)s; font-size: 8pt; font-weight: 600;
+                      padding: 4px 2px 2px 2px; }
+QFrame#commandRow { border: 1px solid transparent; border-radius: %(r2)spx; }
+QFrame#commandRow:hover { background: %(hover)s; }
+QFrame#commandRow[picked="true"] { border-color: %(accent)s; background: %(card)s; }
+QFrame#commandRow[risky="true"] { border-left: 2px solid %(attention)s; }
+QLabel#commandName[risky="true"] { color: %(attention)s; }
+QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
+                            color: %(attention)s; }
 /* A tool's count of items needing attention, on its rail icon. */
 QLabel#railBadge { background: %(stopped)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel_solid)s; border-radius: 9px; padding: 2px 9px; }
@@ -686,6 +697,15 @@ QToolButton#commandButton[popupMode="2"] { padding-right: 12px; }
 QToolButton#commandButton::menu-indicator { width: 8px; height: 5px; right: 5px; }
 QToolButton#commandButton[arrow="false"] { padding-right: 0; }
 QToolButton#commandButton[arrow="false"]::menu-indicator { image: none; width: 0; }
+QLabel#groupHeading { color: %(text2)s; font-size: 8pt; font-weight: 600;
+                      padding: 4px 2px 2px 2px; }
+QFrame#commandRow { border: 1px solid transparent; border-radius: 4px; }
+QFrame#commandRow:hover { background: %(hover)s; }
+QFrame#commandRow[picked="true"] { border-color: %(accent)s; background: %(card)s; }
+QFrame#commandRow[risky="true"] { border-left: 2px solid %(attention)s; }
+QLabel#commandName[risky="true"] { color: %(attention)s; }
+QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
+                            color: %(attention)s; }
 /* A tool's count of items needing attention, on its rail icon. */
 QLabel#railBadge { background: %(stopped)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel)s; border-radius: 9px; padding: 2px 9px; }

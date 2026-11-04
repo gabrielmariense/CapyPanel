@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-04 17:18-0300\n"
+"POT-Creation-Date: 2026-11-04 17:27-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,6 +48,9 @@ msgid "&Address:"
 msgstr ""
 
 msgid "&Add…"
+msgstr ""
+
+msgid "&All commands…"
 msgstr ""
 
 msgid "&Authentication"
@@ -246,6 +249,9 @@ msgstr ""
 msgid "&Printers"
 msgstr ""
 
+msgid "&Profile:"
+msgstr ""
+
 msgid "&Quit"
 msgstr ""
 
@@ -411,6 +417,9 @@ msgstr ""
 msgid "A tool definition must be a JSON object."
 msgstr ""
 
+msgid "A&dd to list…"
+msgstr ""
+
 msgid "About"
 msgstr ""
 
@@ -474,6 +483,9 @@ msgstr[1] ""
 msgid "Address"
 msgstr ""
 
+msgid "Adds this PC to the open host list"
+msgstr ""
+
 msgid ""
 "After a Refresh on its own, for printers that stopped or went offline "
 "(and with low supplies, if picked) since the one before."
@@ -490,6 +502,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Already in the list, {place}"
+msgstr ""
+
+#, python-brace-format
+msgid "Already in this list: {where}"
 msgstr ""
 
 msgid "Also low supplies"
@@ -1583,6 +1599,9 @@ msgstr ""
 msgid "Not checked"
 msgstr ""
 
+msgid "Not checked yet: run Status"
+msgstr ""
+
 msgid "Not checked: use Refresh"
 msgstr ""
 
@@ -2123,6 +2142,9 @@ msgid "Restore built-in profiles"
 msgstr ""
 
 msgid "Run all checks"
+msgstr ""
+
+msgid "Run checks whether it answers."
 msgstr ""
 
 msgid "S&top"
@@ -2819,6 +2841,9 @@ msgstr ""
 msgid "Type"
 msgstr ""
 
+msgid "Type a host name or address to run its commands."
+msgstr ""
+
 msgid "Type a tag and press Enter"
 msgstr ""
 
@@ -3063,6 +3088,10 @@ msgid "from {computer}"
 msgstr ""
 
 msgid "idle"
+msgstr ""
+
+#, python-brace-format
+msgid "in {group}, as {name}"
 msgstr ""
 
 #, python-brace-format
@@ -3661,6 +3690,11 @@ msgstr ""
 
 #, python-brace-format
 msgid "“{path}” isn't a printer list."
+msgstr ""
+
+msgid ""
+"↑ ↓ pick, Enter runs, typing searches. Commands that need more open a "
+"small window; risky ones ask first."
 msgstr ""
 
 msgid "✓ Found"
