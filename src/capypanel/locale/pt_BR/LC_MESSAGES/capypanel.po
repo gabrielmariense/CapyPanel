@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-04 12:50-0300\n"
+"POT-Creation-Date: 2026-11-04 17:18-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -57,11 +57,17 @@ msgstr "&Autenticação"
 msgid "&Brand:"
 msgstr "&Marca:"
 
+msgid "&Clear queue"
+msgstr "&Limpar fila"
+
 msgid "&Connect"
 msgstr "&Conectar"
 
 msgid "&Copy"
 msgstr "&Copiar"
+
+msgid "&Copy list"
+msgstr "&Copiar lista"
 
 msgid "&Create"
 msgstr "&Criar"
@@ -84,6 +90,9 @@ msgstr "E&xcluir…"
 msgid "&Details pane"
 msgstr "Painel de &detalhes"
 
+msgid "&Disconnect"
+msgstr "&Desconectar"
+
 msgid "&Documentation"
 msgstr "&Documentação"
 
@@ -102,6 +111,9 @@ msgstr "&Editar…"
 msgid "&Encryption"
 msgstr "&Criptografia"
 
+msgid "&Export CSV…"
+msgstr "&Exportar CSV…"
+
 msgid "&Export…"
 msgstr "&Exportar…"
 
@@ -110,6 +122,10 @@ msgstr "&Arquivo"
 
 msgid "&Fit columns to content"
 msgstr "&Ajustar colunas ao conteúdo"
+
+#, python-brace-format
+msgid "&Folder on {host}:"
+msgstr "&Pasta em {host}:"
 
 msgid "&Forget"
 msgstr "&Esquecer"
@@ -153,6 +169,9 @@ msgstr "&Lista ao iniciar"
 msgid "&Locate…"
 msgstr "&Localizar…"
 
+msgid "&Log off"
+msgstr "Fazer &logoff"
+
 msgid "&Logged-on users"
 msgstr "Usuários &logados"
 
@@ -173,6 +192,12 @@ msgstr "&Gerenciar…"
 
 msgid "&Manual connection…"
 msgstr "Conexão &manual…"
+
+msgid "&Message to them:"
+msgstr "&Mensagem para eles:"
+
+msgid "&Message:"
+msgstr "&Mensagem:"
 
 msgid "&Model:"
 msgstr "Mo&delo:"
@@ -228,6 +253,9 @@ msgstr "&Sair"
 msgid "&Quit CapyPanel"
 msgstr "&Sair do CapyPanel"
 
+msgid "&Read again"
+msgstr "&Ler de novo"
+
 msgid "&Refresh"
 msgstr "&Atualizar"
 
@@ -246,6 +274,15 @@ msgstr "&Relatar um problema"
 msgid "&Report…"
 msgstr "&Relatório…"
 
+msgid "&Restart"
+msgstr "&Reiniciar"
+
+msgid "&Restart Print Spooler"
+msgstr "&Reiniciar o Spooler de Impressão"
+
+msgid "&Restart now"
+msgstr "&Reiniciar agora"
+
 msgid "&Restore"
 msgstr "&Restaurar"
 
@@ -261,6 +298,9 @@ msgstr "&Salvar"
 msgid "&Save as preset…"
 msgstr "&Salvar como predefinição…"
 
+msgid "&Send"
+msgstr "&Enviar"
+
 msgid "&Serial number:"
 msgstr "Nº de &série:"
 
@@ -275,6 +315,12 @@ msgstr "&Mostrar senha"
 
 msgid "&Show passwords"
 msgstr "&Mostrar senhas"
+
+msgid "&Shut down"
+msgstr "&Desligar"
+
+msgid "&Shut down now"
+msgstr "&Desligar agora"
 
 msgid "&Sort A–Z"
 msgstr "&Classificar de A a Z"
@@ -309,6 +355,9 @@ msgstr "&Usuário:"
 msgid "&View"
 msgstr "E&xibir"
 
+msgid "&When:"
+msgstr "&Quando:"
+
 msgid "(password only)"
 msgstr "(só senha)"
 
@@ -317,6 +366,9 @@ msgid "<b>{n} printer</b> needs attention: {reasons}."
 msgid_plural "<b>{n} printers</b> need attention: {reasons}."
 msgstr[0] "<b>{n} impressora</b> requer atenção: {reasons}."
 msgstr[1] "<b>{n} impressoras</b> requerem atenção: {reasons}."
+
+msgid "A Refresh is running. Try again once it ends."
+msgstr "Uma atualização está em andamento. Tente de novo quando ela terminar."
 
 msgid "A chosen &group"
 msgstr "Um &grupo escolhido"
@@ -366,8 +418,8 @@ msgstr "Sobre"
 msgid "Access"
 msgstr "Acesso"
 
-msgid "Account for logged-on users"
-msgstr "Conta para usuários logados"
+msgid "Account for other PCs"
+msgstr "Conta para outros PCs"
 
 msgid "Account rejected"
 msgstr "Conta recusada"
@@ -475,6 +527,9 @@ msgstr "Patrimônio"
 msgid "Authentication &password"
 msgstr "Senha da au&tenticação"
 
+msgid "BIOS"
+msgstr "BIOS"
+
 msgid "Bar"
 msgstr "Barra"
 
@@ -518,12 +573,25 @@ msgstr "Cancelar"
 msgid "Cancel restart"
 msgstr "Cancelar reinicialização"
 
+msgid "Cancel shutdown"
+msgstr "Cancelar desligamento"
+
+msgid "Cancel the pending restart"
+msgstr "Cancelar a reinicialização pendente"
+
+#, python-brace-format
+msgid "CapyPanel asked for it at {when}."
+msgstr "O CapyPanel pediu às {when}."
+
 #, python-brace-format
 msgid "CapyPanel asks for nothing: {tool} asks for the user and password itself when it connects."
 msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha ao conectar."
 
 msgid "CapyPanel asks for them again when it needs them."
 msgstr "O CapyPanel pede de novo quando precisar deles."
+
+msgid "CapyPanel couldn't see who is signed in. Work anyone hasn't saved is lost."
+msgstr "O CapyPanel não conseguiu ver quem está conectado. O que não foi salvo se perde."
 
 msgid "CapyPanel is built with the following software:"
 msgstr "O CapyPanel é feito com os seguintes softwares:"
@@ -583,20 +651,46 @@ msgstr "Escolha um arquivo de configurações do {tool}"
 msgid "Clear"
 msgstr "Limpar"
 
+msgid "Clear &queue…"
+msgstr "Limpar &fila…"
+
+msgid "Clear queue"
+msgstr "Limpar fila"
+
+msgid "Clear queue deletes the documents waiting on the printer picked. Restart Print Spooler stops every printer on this PC for a few seconds. Both ask first."
+msgstr "Limpar fila exclui os documentos aguardando na impressora escolhida. Reiniciar o Spooler de Impressão para todas as impressoras deste PC por alguns segundos. Os dois perguntam antes."
+
 msgid "Clear tags"
 msgstr "Limpar tags"
 
 msgid "Clear the picked tags"
 msgstr "Limpar as tags escolhidas"
 
+#, python-brace-format
+msgid "Clear the queue of {printer} on {host}?"
+msgstr "Limpar a fila de {printer} em {host}?"
+
+#, python-brace-format
+msgid "Cleared the queue of {printer} on {host}."
+msgstr "Fila de {printer} em {host} limpa."
+
 msgid "Click to copy"
 msgstr "Clique para copiar"
+
+msgid "Click to copy, right-click for what you can do"
+msgstr "Clique para copiar, botão direito para ver o que dá para fazer"
 
 msgid "Close"
 msgstr "Fechar"
 
 msgid "Co&py"
 msgstr "Co&piar"
+
+msgid "Commands"
+msgstr "Comandos"
+
+msgid "Commands for the selected host: open its folders, message its users, restart it…"
+msgstr "Comandos para o host selecionado: abrir suas pastas, enviar mensagem aos usuários, reiniciá-lo…"
 
 msgid "Computer Management"
 msgstr "Gerenciamento do Computador"
@@ -677,6 +771,10 @@ msgid "Couldn't move “{path}” to the Recycle Bin."
 msgstr "Não foi possível mover “{path}” para a Lixeira."
 
 #, python-brace-format
+msgid "Couldn't open it: {error}"
+msgstr "Não foi possível abrir: {error}"
+
+#, python-brace-format
 msgid "Couldn't open “{path}”: {error}"
 msgstr "Não foi possível abrir “{path}”: {error}"
 
@@ -692,8 +790,23 @@ msgid "Couldn't read the printer's answer at {when}."
 msgstr "Não foi possível ler a resposta da impressora às {when}."
 
 #, python-brace-format
+msgid "Couldn't read {host}: {reason}"
+msgstr "Não foi possível ler {host}: {reason}"
+
+#, python-brace-format
 msgid "Couldn't read “{file}”: {error}"
 msgstr "Não foi possível ler “{file}”: {error}"
+
+#, python-brace-format
+msgid "Couldn't read: Windows error {code}"
+msgstr "Não foi possível ler: erro {code} do Windows"
+
+msgid "Couldn't read: it took too long to answer"
+msgstr "Não foi possível ler: demorou demais para responder"
+
+#, python-brace-format
+msgid "Couldn't read: {error}"
+msgstr "Não foi possível ler: {error}"
 
 #, python-brace-format
 msgid "Couldn't reload the list: {error}"
@@ -726,6 +839,10 @@ msgid "Couldn't save where the tools are: {error}"
 msgstr "Não foi possível salvar onde as ferramentas estão: {error}"
 
 #, python-brace-format
+msgid "Couldn't save {path}: {error}"
+msgstr "Não foi possível salvar {path}: {error}"
+
+#, python-brace-format
 msgid "Couldn't save “{path}”: {error}"
 msgstr "Não foi possível salvar “{path}”: {error}"
 
@@ -740,6 +857,14 @@ msgstr "Não foi possível usar “{file}”: {error}"
 #, python-brace-format
 msgid "Couldn't write “{path}”: {error}"
 msgstr "Não foi possível gravar “{path}”: {error}"
+
+#, python-brace-format
+msgid "Couldn't {action} on {host}: a restart or shutdown is already on its way. Cancel it first."
+msgstr "Não foi possível {action} em {host}: uma reinicialização ou desligamento já está a caminho. Cancele-o antes."
+
+#, python-brace-format
+msgid "Couldn't {action} on {host}: {reason}"
+msgstr "Não foi possível {action} em {host}: {reason}"
 
 msgid "Created by:"
 msgstr "Criado por:"
@@ -764,6 +889,9 @@ msgstr "Ciano"
 
 msgid "D&uplicate…"
 msgstr "D&uplicar…"
+
+msgid "D:\\Logs"
+msgstr "D:\\Logs"
 
 msgid "DOMAIN\\user"
 msgstr "DOMÍNIO\\usuário"
@@ -798,8 +926,23 @@ msgstr "Excluir move o arquivo para a Lixeira, para todos que o usam:"
 msgid "Details"
 msgstr "Detalhes"
 
+msgid "Disconnect"
+msgstr "Desconectar"
+
+#, python-brace-format
+msgid "Disconnect {user} on {host}?"
+msgstr "Desconectar {user} em {host}?"
+
+#, python-brace-format
+msgid "Disconnect {user}…"
+msgstr "Desconectar {user}…"
+
 msgid "Disconnected"
 msgstr "Desconectado"
+
+#, python-brace-format
+msgid "Disconnected {user} on {host}."
+msgstr "{user} desconectado em {host}."
 
 msgid "Disconnect…"
 msgstr "Desconectar…"
@@ -846,6 +989,9 @@ msgstr "Baixar"
 
 msgid "Drag a group to move it, or drop it onto another group to put it inside."
 msgstr "Arraste um grupo para movê-lo, ou solte-o sobre outro grupo para colocá-lo dentro dele."
+
+msgid "Driver"
+msgstr "Driver"
 
 msgid "Drop a group here to put it directly under Groups"
 msgstr "Solte um grupo aqui para colocá-lo direto em Grupos"
@@ -896,6 +1042,9 @@ msgstr "A cada"
 msgid "Every column the printers have"
 msgstr "Todas as colunas das impressoras"
 
+msgid "Every command"
+msgstr "Todos os comandos"
+
 msgid "Every computer you look after, in one window."
 msgstr "Todos os computadores sob seus cuidados, em uma só janela."
 
@@ -911,8 +1060,15 @@ msgstr[1] "A cada {n} minutos"
 msgid "Every printer in the open list, 8 at a time, while CapyPanel is open or in the tray."
 msgstr "Todas as impressoras da lista aberta, 8 por vez, enquanto o CapyPanel estiver aberto ou na bandeja."
 
+#, python-brace-format
+msgid "Every printer on {host} stops for a few seconds. Documents waiting in the queues stay and print once it's back."
+msgstr "Todas as impressoras de {host} param por alguns segundos. Os documentos nas filas continuam lá e são impressos quando ele voltar."
+
 msgid "Everyone on this PC (shared)"
 msgstr "Todos neste PC (compartilhada)"
+
+msgid "Export CSV"
+msgstr "Exportar CSV"
 
 #, python-brace-format
 msgid "Fetched from Doc360 MPS at {when}. Doc360 reads printers on its own schedule, so this can be behind the printer."
@@ -968,6 +1124,9 @@ msgstr "Esquecidas quando o CapyPanel fecha."
 
 msgid "Formats CapyPanel can import"
 msgstr "Formatos que o CapyPanel importa"
+
+msgid "Free on C:"
+msgstr "Livre em C:"
 
 #, python-brace-format
 msgid "Free software under the GPL-3.0, with no warranty: see {licenses}."
@@ -1080,6 +1239,12 @@ msgstr "Importar hosts"
 msgid "In the open list it's set on {hosts} and {groups}. They'll use their group's profile, or the default, instead."
 msgstr "Na lista aberta ele está definido em {hosts} e {groups}. Eles passarão a usar o perfil do grupo, ou o padrão."
 
+#, python-brace-format
+msgid "In {n} minute"
+msgid_plural "In {n} minutes"
+msgstr[0] "Em {n} minuto"
+msgstr[1] "Em {n} minutos"
+
 msgid "Includes who was logged on to each PC. Keep the file private."
 msgstr "Inclui quem estava logado em cada PC. Mantenha o arquivo privado."
 
@@ -1092,11 +1257,26 @@ msgstr "Tinta baixa"
 msgid "Install it, or locate its .exe."
 msgstr "Instale-o ou localize o .exe dele."
 
+msgid "Installed on"
+msgstr "Instalado em"
+
 msgid "Installed programs"
 msgstr "Programas instalados"
 
+#, python-brace-format
+msgid "Installed programs on {host}"
+msgstr "Programas instalados em {host}"
+
 msgid "Inventory"
 msgstr "Inventário"
+
+#, python-brace-format
+msgid "It pops up on their screen on {host} until they click OK."
+msgstr "Ela aparece na tela deles em {host} até clicarem em OK."
+
+#, python-brace-format
+msgid "It restarted at {at} and answered again at {now}. Click to show it."
+msgstr "Ele reiniciou às {at} e respondeu de novo às {now}. Clique para mostrá-lo."
 
 msgid "It's handed to the viewer privately, never on its command line."
 msgstr "Ela é entregue ao visualizador de forma privada, nunca na linha de comando."
@@ -1106,6 +1286,9 @@ msgstr "Ela é passada ao visualizador na linha de comando, que os administrador
 
 msgid "Its own settings file"
 msgstr "Arquivo de configurações próprio"
+
+msgid "Jobs"
+msgstr "Trabalhos"
 
 msgid "Keep CapyPanel running in the tray?"
 msgstr "Manter o CapyPanel aberto na bandeja?"
@@ -1122,8 +1305,8 @@ msgstr "Guardada"
 msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
 
-msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on."
-msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada para ler quem está logado."
+msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on and for the commands you run on a host."
+msgstr "Mantida na memória até o CapyPanel fechar, nunca salva, e usada só para ver quem está conectado e nos comandos que você executa em um host."
 
 msgid "Kept: type to change it"
 msgstr "Guardada: digite para alterá-la"
@@ -1133,6 +1316,9 @@ msgstr "Idioma"
 
 msgid "Last check"
 msgstr "Última verificação"
+
+msgid "Last restart"
+msgstr "Última reinicialização"
 
 msgid "License"
 msgstr "Licença"
@@ -1149,8 +1335,26 @@ msgstr "Listar só as impressoras que requerem atenção"
 msgid "Lists saved in a lists folder show up here by themselves; Remove asks whether to delete the file too."
 msgstr "Listas salvas numa pasta de listas aparecem aqui sozinhas; Remover pergunta se o arquivo também deve ser excluído."
 
+msgid "Log off"
+msgstr "Fazer logoff"
+
+msgid "Log off or disconnect someone"
+msgstr "Fazer logoff ou desconectar alguém"
+
+#, python-brace-format
+msgid "Log off {user} on {host}?"
+msgstr "Fazer logoff de {user} em {host}?"
+
+#, python-brace-format
+msgid "Log off {user}…"
+msgstr "Fazer logoff de {user}…"
+
 msgid "Log off…"
 msgstr "Fazer logoff…"
+
+#, python-brace-format
+msgid "Logged off {user} on {host}."
+msgstr "Logoff de {user} feito em {host}."
 
 msgid "Logged on"
 msgstr "Logados"
@@ -1187,6 +1391,17 @@ msgstr "Conexão manual"
 msgid "Mascot:"
 msgstr "Mascote:"
 
+msgid "Memory"
+msgstr "Memória"
+
+#, python-brace-format
+msgid "Message from {user}"
+msgstr "Mensagem de {user}"
+
+#, python-brace-format
+msgid "Message sent to {names} on {host}."
+msgstr "Mensagem enviada para {names} em {host}."
+
 msgid "Model"
 msgstr "Modelo"
 
@@ -1221,6 +1436,9 @@ msgstr "Nome do novo grupo:"
 msgid "Needs attention"
 msgstr "Requer atenção"
 
+msgid "Needs someone at the printer"
+msgstr "Precisa de alguém na impressora"
+
 msgid "New connection profile"
 msgstr "Novo perfil de conexão"
 
@@ -1241,6 +1459,12 @@ msgstr "Nova lista de impressoras"
 
 msgid "New tag"
 msgstr "Nova tag"
+
+msgid "No access: needs an admin account on this PC"
+msgstr "Sem acesso: precisa de uma conta de administrador neste PC"
+
+msgid "No access: the PC didn't accept the account"
+msgstr "Sem acesso: o PC não aceitou a conta"
 
 msgid "No address"
 msgstr "Sem endereço"
@@ -1270,17 +1494,41 @@ msgstr "Nenhum host deste grupo tem todas as tags escolhidas."
 msgid "No list open"
 msgstr "Nenhuma lista aberta"
 
+msgid "No message: it restarts right away."
+msgstr "Sem mensagem: ele reinicia na hora."
+
+msgid "No message: it shuts down right away."
+msgstr "Sem mensagem: ele desliga na hora."
+
 msgid "No name"
 msgstr "Sem nome"
 
 msgid "No one"
 msgstr "Ninguém"
 
+#, python-brace-format
+msgid "No one is at their screen on {host} right now."
+msgstr "Ninguém está na frente da tela em {host} agora."
+
+#, python-brace-format
+msgid "No one is signed in to {host}, so there's no user's folder to open."
+msgstr "Ninguém está conectado em {host}, então não há pasta de usuário para abrir."
+
+msgid "No one is signed in, or no one was checked: use Refresh"
+msgstr "Ninguém está conectado, ou ninguém foi verificado: use Atualizar"
+
+msgid "No one is signed in."
+msgstr "Ninguém está conectado."
+
 msgid "No one logged on"
 msgstr "Ninguém logado"
 
 msgid "No printer list is open."
 msgstr "Nenhuma lista de impressoras está aberta."
+
+#, python-brace-format
+msgid "No printers are installed on {host}."
+msgstr "Nenhuma impressora está instalada em {host}."
 
 msgid "No printers in this group have all the picked tags."
 msgstr "Nenhuma impressora deste grupo tem todas as tags escolhidas."
@@ -1310,6 +1558,12 @@ msgid_plural "Not opened ({n}): {names}"
 msgstr[0] "Não aberto: {names}"
 msgstr[1] "Não abertos ({n}): {names}"
 
+msgid "Not reached: the PC didn't answer"
+msgstr "Sem resposta: o PC não respondeu"
+
+msgid "Not read yet"
+msgstr "Ainda não lido"
+
 msgid "Not set. Needed only for printers whose page counters come from Doc360 MPS."
 msgstr "Não definida. Só é necessária para impressoras cujos contadores de páginas vêm do Doc360 MPS."
 
@@ -1328,8 +1582,23 @@ msgstr "Nada muda até você clicar em Adicionar."
 msgid "Nothing changes until you click OK."
 msgstr "Nada muda até você clicar em OK."
 
+#, python-brace-format
+msgid "Nothing was waiting to restart or shut down {host}."
+msgstr "Nada estava aguardando para reiniciar ou desligar {host}."
+
 msgid "Notice"
 msgstr "Aviso"
+
+msgid "Now"
+msgstr "Agora"
+
+#, python-brace-format
+msgid "Now restarts {host} at once, with no warning on its screen. Pick a delay to send them a message first."
+msgstr "Agora reinicia {host} na hora, sem aviso na tela. Escolha um tempo de espera para mandar uma mensagem antes."
+
+#, python-brace-format
+msgid "Now shuts {host} down at once, with no warning on its screen. Pick a delay to send them a message first."
+msgstr "Agora desliga {host} na hora, sem aviso na tela. Escolha um tempo de espera para mandar uma mensagem antes."
 
 msgid "Off"
 msgstr "Desligado"
@@ -1388,6 +1657,10 @@ msgstr "Abrir página &web"
 msgid "Open a CSV file"
 msgstr "Abrir um arquivo CSV"
 
+#, python-brace-format
+msgid "Open a folder on {host}"
+msgstr "Abrir uma pasta em {host}"
+
 msgid "Open a host list"
 msgstr "Abrir uma lista de hosts"
 
@@ -1437,6 +1710,18 @@ msgstr[0] "{n} página web aberta."
 msgstr[1] "{n} páginas web abertas."
 
 #, python-brace-format
+msgid "Opened {path}"
+msgstr "Aberto: {path}"
+
+#, python-brace-format
+msgid "Opens a folder on {host} in File Explorer, over file sharing."
+msgstr "Abre uma pasta de {host} no Explorador de Arquivos, pelo compartilhamento de arquivos."
+
+#, python-brace-format
+msgid "Opens {path}"
+msgstr "Abre {path}"
+
+#, python-brace-format
 msgid "Optional: a {extension} file saved from {tool}. It's used exactly as saved, including its encryption plugin; only the host is emptied, since the address comes from the host you open."
 msgstr "Opcional: um arquivo {extension} salvo no {tool}. Ele é usado exatamente como foi salvo, inclusive o plugin de criptografia; só o host é esvaziado, já que o endereço vem do host que você abre."
 
@@ -1446,11 +1731,17 @@ msgstr "Opções:"
 msgid "Or give just a name and an address on each line."
 msgstr "Ou coloque só um nome e um endereço em cada linha."
 
+msgid "Out of memory"
+msgstr "Sem memória"
+
 msgid "Out of paper"
 msgstr "Sem papel"
 
 msgid "Out of toner"
 msgstr "Sem toner"
+
+msgid "Output bin full"
+msgstr "Bandeja de saída cheia"
 
 msgid "Output tray full"
 msgstr "Bandeja de saída cheia"
@@ -1467,17 +1758,30 @@ msgstr "P&orta:"
 msgid "PC facts"
 msgstr "Dados do PC"
 
+msgid "PC facts · reading…"
+msgstr "Dados do PC · lendo…"
+
+#, python-brace-format
+msgid "PC facts · {when}"
+msgstr "Dados do PC · {when}"
+
 msgid "Page &counters:"
 msgstr "&Contadores de páginas:"
 
 msgid "Page counters"
 msgstr "Contadores de páginas"
 
+msgid "Page too complex"
+msgstr "Página complexa demais"
+
 msgid "Paper jam"
 msgstr "Papel atolado"
 
 msgid "Paper low"
 msgstr "Pouco papel"
+
+msgid "Paper problem"
+msgstr "Problema no papel"
 
 #, python-brace-format
 msgid "Partner {partner}, user {user}. Kept in Windows Credential Manager."
@@ -1493,6 +1797,10 @@ msgstr "Senha para {profile}"
 msgid "Paste a list below, or"
 msgstr "Cole uma lista abaixo, ou"
 
+#, python-brace-format
+msgid "Paste a path as File Explorer copies it, quotes and all, or a full \\\\{host}\\D$\\… path. The list keeps the last {n} folders you opened."
+msgstr "Cole um caminho como o Explorador de Arquivos copia, com aspas e tudo, ou um caminho completo \\\\{host}\\D$\\…. A lista guarda as últimas {n} pastas que você abriu."
+
 msgid "Paused"
 msgstr "Pausada"
 
@@ -1502,6 +1810,9 @@ msgstr "Pessoal"
 #, python-brace-format
 msgid "Picked tags: {tags}"
 msgstr "Tags escolhidas: {tags}"
+
+msgid "Port"
+msgstr "Porta"
 
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
@@ -1518,6 +1829,10 @@ msgstr "Nome da predefinição:"
 msgid "Preview"
 msgstr "Prévia"
 
+#, python-brace-format
+msgid "Print Spooler restarted on {host}."
+msgstr "Spooler de Impressão reiniciado em {host}."
+
 msgid "Printer"
 msgstr "Impressora"
 
@@ -1533,6 +1848,10 @@ msgstr "Impressoras"
 msgid "Printers on this PC"
 msgstr "Impressoras deste PC"
 
+#, python-brace-format
+msgid "Printers on {host}"
+msgstr "Impressoras em {host}"
+
 msgid "Printing"
 msgstr "Imprimindo"
 
@@ -1545,11 +1864,20 @@ msgstr "Os perfis que você alterou ou criou continuam como estão."
 msgid "Programs (*.exe)"
 msgstr "Programas (*.exe)"
 
+msgid "Publisher"
+msgstr "Fabricante"
+
 msgid "Put in &group"
 msgstr "Colocar no &grupo"
 
 msgid "Quit"
 msgstr "Sair"
+
+msgid "Read"
+msgstr "Ler"
+
+msgid "Read again"
+msgstr "Ler de novo"
 
 msgid "Read license"
 msgstr "Ler licença"
@@ -1562,6 +1890,13 @@ msgstr "Somente leitura"
 
 msgid "Read/write"
 msgstr "Leitura/gravação"
+
+#, python-brace-format
+msgid "Reading {host}…"
+msgstr "Lendo {host}…"
+
+msgid "Reading…"
+msgstr "Lendo…"
 
 msgid "Reads these printers again now"
 msgstr "Lê estas impressoras de novo agora"
@@ -1592,9 +1927,6 @@ msgstr "Atualizar &sozinho"
 
 msgid "Refresh on its own and warnings keep working while CapyPanel is in the tray. Quit stops them."
 msgstr "A atualização sozinha e os avisos continuam funcionando enquanto o CapyPanel estiver na bandeja. Sair os interrompe."
-
-msgid "Refresh status"
-msgstr "Atualizar status"
 
 msgid "Refresh status &by itself"
 msgstr "Atualizar o status &sozinho"
@@ -1691,8 +2023,33 @@ msgid_plural "Report saved: {n} printers from {source}."
 msgstr[0] "Relatório salvo: {n} impressora de {source}."
 msgstr[1] "Relatório salvo: {n} impressoras de {source}."
 
+msgid "Restart Print &Spooler…"
+msgstr "Reiniciar o &Spooler de Impressão…"
+
+msgid "Restart Print Spooler"
+msgstr "Reiniciar o Spooler de Impressão"
+
 msgid "Restart Print Spooler…"
 msgstr "Reiniciar o Spooler de Impressão…"
+
+#, python-brace-format
+msgid "Restart at {when}"
+msgstr "Reinicia às {when}"
+
+msgid "Restart or shut down"
+msgstr "Reiniciar ou desligar"
+
+#, python-brace-format
+msgid "Restart the Print Spooler on {host}?"
+msgstr "Reiniciar o Spooler de Impressão em {host}?"
+
+#, python-brace-format
+msgid "Restart {host}"
+msgstr "Reiniciar {host}"
+
+#, python-brace-format
+msgid "Restart {host}?"
+msgstr "Reiniciar {host}?"
 
 msgid "Restarts Windows' printing service, which unsticks most queues."
 msgstr "Reinicia o serviço de impressão do Windows, o que destrava a maioria das filas."
@@ -1700,11 +2057,18 @@ msgstr "Reinicia o serviço de impressão do Windows, o que destrava a maioria d
 msgid "Restarts Windows, now or after a delay with a message."
 msgstr "Reinicia o Windows, agora ou depois de um tempo, com uma mensagem."
 
+#, python-brace-format
+msgid "Restarts at {when}"
+msgstr "Reinicia às {when}"
+
 msgid "Restart…"
 msgstr "Reiniciar…"
 
 msgid "Restore built-in profiles"
 msgstr "Restaurar os perfis que vêm com o app"
+
+msgid "Run all checks"
+msgstr "Executar todas as verificações"
 
 msgid "S&top"
 msgstr "Pa&rar"
@@ -1775,14 +2139,17 @@ msgstr "Salvos no Gerenciador de Credenciais:"
 msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only for hosts with this connection profile."
 msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada nos hosts com este perfil de conexão."
 
-msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only to read who is logged on."
-msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada para ler quem está logado."
+msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only to read who is logged on and for the commands you run on a host."
+msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões), e usada só para ver quem está conectado e nos comandos que você executa em um host."
 
 msgid "Saved passwords deleted."
 msgstr "As senhas salvas foram apagadas."
 
 msgid "Search"
 msgstr "Pesquisa"
+
+msgid "Search programs"
+msgstr "Pesquisar programas"
 
 msgid "Search results"
 msgstr "Resultados da pesquisa"
@@ -1815,8 +2182,19 @@ msgstr "Hosts selecionados"
 msgid "Selected printers"
 msgstr "Impressoras selecionadas"
 
+#, python-brace-format
+msgid "Send a message to {host}"
+msgstr "Enviar uma mensagem para {host}"
+
+#, python-brace-format
+msgid "Send a message to {user}…"
+msgstr "Enviar uma mensagem para {user}…"
+
 msgid "Send a message…"
 msgstr "Enviar uma mensagem…"
+
+msgid "Serial"
+msgstr "Número de série"
 
 msgid "Serial number"
 msgstr "Nº de série"
@@ -1887,8 +2265,28 @@ msgid_plural "Showing the <b>{n} printers</b> that need attention."
 msgstr[0] "Mostrando a <b>{n} impressora</b> que requer atenção."
 msgstr[1] "Mostrando as <b>{n} impressoras</b> que requerem atenção."
 
+#, python-brace-format
+msgid "Shut down {host}"
+msgstr "Desligar {host}"
+
+#, python-brace-format
+msgid "Shut down {host}?"
+msgstr "Desligar {host}?"
+
 msgid "Shut down…"
 msgstr "Desligar…"
+
+#, python-brace-format
+msgid "Shutdown at {when}"
+msgstr "Desliga às {when}"
+
+#, python-brace-format
+msgid "Shuts down at {when}"
+msgstr "Desliga às {when}"
+
+#, python-brace-format
+msgid "Signed in: {names}. Work they haven't saved is lost."
+msgstr "Conectados: {names}. O que não foi salvo se perde."
 
 msgid "Signs a user out; unsaved work is lost."
 msgstr "Desconecta um usuário da conta; o que não foi salvo se perde."
@@ -1935,6 +2333,9 @@ msgstr "Pasta Inicializar"
 
 msgid "Status"
 msgstr "Status"
+
+msgid "Status, logged-on users and PC facts, one after the other."
+msgstr "Status, usuários conectados e dados do PC, um depois do outro."
 
 msgid "Stop"
 msgstr "Parar"
@@ -2143,6 +2544,12 @@ msgid "The printer doesn't report its supplies."
 msgstr "A impressora não informa seus suprimentos."
 
 #, python-brace-format
+msgid "The printer installed on {host}, read at {when}."
+msgid_plural "The {n} printers installed on {host}, read at {when}."
+msgstr[0] "A impressora instalada em {host}, lida às {when}."
+msgstr[1] "As {n} impressoras instaladas em {host}, lidas às {when}."
+
+#, python-brace-format
 msgid "The printer says {value}"
 msgstr "A impressora diz {value}"
 
@@ -2175,6 +2582,10 @@ msgid "The read-only community string your printers answer to. Most use \"public
 msgstr "A comunidade somente leitura à qual suas impressoras respondem. A maioria usa \"public\". Ela fica guardada no Gerenciador de Credenciais do Windows."
 
 #, python-brace-format
+msgid "The restart or shutdown of {host} is cancelled."
+msgstr "A reinicialização ou o desligamento de {host} foi cancelado."
+
+#, python-brace-format
 msgid "The tick is the low level, {low} %; the faint one is half."
 msgstr "O traço marca o nível baixo, {low} %; o mais fraco, a metade."
 
@@ -2189,6 +2600,12 @@ msgstr "O “id” da ferramenta deve ter só letras minúsculas, dígitos, - ou
 
 msgid "The viewer's defaults"
 msgstr "Padrões do visualizador"
+
+#, python-brace-format
+msgid "The {n} document waiting is deleted, and nobody gets it printed."
+msgid_plural "The {n} documents waiting are deleted, and nobody gets them printed."
+msgstr[0] "O {n} documento aguardando é excluído e ninguém recebe a impressão."
+msgstr[1] "Os {n} documentos aguardando são excluídos e ninguém recebe a impressão."
 
 msgid "The “executable” must be a path."
 msgstr "O “executable” deve ser um caminho."
@@ -2213,6 +2630,26 @@ msgstr "Estes são os perfis que vêm com o app: a pasta é criada quando você 
 
 msgid "These are the built-in profiles: the folder isn't there yet."
 msgstr "Estes são os perfis que vêm com o app: a pasta ainda não existe."
+
+#, python-brace-format
+msgid "They're signed in {where}. Their programs keep running, and they get back to them when they sign in again."
+msgstr "Está conectado {where}. Os programas continuam abertos, e ele volta a eles quando entrar de novo."
+
+#, python-brace-format
+msgid "They're signed in {where}. Work they haven't saved is lost."
+msgstr "Está conectado {where}. O que não foi salvo se perde."
+
+#, python-brace-format
+msgid "This PC restarts in {n} minute. Please save your work."
+msgid_plural "This PC restarts in {n} minutes. Please save your work."
+msgstr[0] "Este PC reinicia em {n} minuto. Salve o seu trabalho."
+msgstr[1] "Este PC reinicia em {n} minutos. Salve o seu trabalho."
+
+#, python-brace-format
+msgid "This PC shuts down in {n} minute. Please save your work."
+msgid_plural "This PC shuts down in {n} minutes. Please save your work."
+msgstr[0] "Este PC desliga em {n} minuto. Salve o seu trabalho."
+msgstr[1] "Este PC desliga em {n} minutos. Salve o seu trabalho."
 
 msgid "This connection profile needs a newer version of CapyPanel."
 msgstr "Este perfil de conexão precisa de uma versão mais nova do CapyPanel."
@@ -2249,6 +2686,13 @@ msgstr "Marque Status ou Usuários logados para verificá-los"
 msgid "Tick a column under Last check to read them"
 msgstr "Marque uma coluna em Última verificação para lê-las"
 
+msgid "To:"
+msgstr "Para:"
+
+#, python-brace-format
+msgid "Today {time}"
+msgstr "Hoje {time}"
+
 msgid "Toner"
 msgstr "Toner"
 
@@ -2269,6 +2713,9 @@ msgstr "Bandeja vazia"
 
 msgid "Tray missing"
 msgstr "Bandeja ausente"
+
+msgid "Try another account…"
+msgstr "Tentar outra conta…"
 
 msgid "Turns the PC off; someone has to turn it back on."
 msgstr "Desliga o PC; alguém precisa ligá-lo de novo."
@@ -2319,6 +2766,10 @@ msgstr "Ilegível"
 
 msgid "Use &defaults"
 msgstr "Usar &padrões"
+
+#, python-brace-format
+msgid "Use an account that is an administrator of {host}, such as a domain admin."
+msgstr "Use uma conta que seja administradora de {host}, como um admin do domínio."
 
 msgid "Use the &automatic path"
 msgstr "Usar o caminho &automático"
@@ -2385,6 +2836,9 @@ msgstr "Se o PC responde na rede."
 msgid "Who is signed in to the PC, and since when."
 msgstr "Quem está conectado ao PC, e desde quando."
 
+msgid "Windows"
+msgstr "Windows"
+
 msgid "Windows &notification"
 msgstr "&Notificação do Windows"
 
@@ -2401,6 +2855,9 @@ msgstr "Erro do Windows {code}."
 
 msgid "Windows file sharing (port 445) didn't answer: the computer is off, not on the network, a firewall blocks file sharing, or it isn't Windows."
 msgstr "O compartilhamento de arquivos do Windows (porta 445) não respondeu: o computador está desligado, fora da rede, um firewall bloqueia o compartilhamento ou não é Windows."
+
+msgid "Windows shows the message with a countdown. You can cancel until then."
+msgstr "O Windows mostra a mensagem com uma contagem regressiva. Dá para cancelar até lá."
 
 msgid "Windows themes follow Windows' look and accent; CapyPanel themes look the same everywhere."
 msgstr "Os temas do Windows seguem a aparência e a cor do Windows; os do CapyPanel são iguais em todo lugar."
@@ -2426,6 +2883,10 @@ msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
 msgid "Yellow"
 msgstr "Amarelo"
 
+#, python-brace-format
+msgid "You asked at {when}."
+msgstr "Você pediu às {when}."
+
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
 
@@ -2434,6 +2895,9 @@ msgstr "Suas impressoras: status e toner, páginas web, relatórios."
 
 msgid "Yours"
 msgstr "Sua"
+
+msgid "access denied. It needs an admin account on that PC."
+msgstr "acesso negado. É preciso uma conta de administrador naquele PC."
 
 msgid "active"
 msgstr "ativa"
@@ -2457,6 +2921,9 @@ msgstr "o próprio {tool} pede"
 msgid "asset tag"
 msgstr "patrimônio"
 
+msgid "at the PC"
+msgstr "no PC"
+
 msgid "at the computer"
 msgstr "no computador"
 
@@ -2465,6 +2932,17 @@ msgstr "marca"
 
 msgid "can't be read"
 msgstr "não pode ser lido"
+
+msgid "cancel the restart"
+msgstr "cancelar a reinicialização"
+
+#, python-brace-format
+msgid "clear the queue of {printer}"
+msgstr "limpar a fila de {printer}"
+
+#, python-brace-format
+msgid "disconnect {user}"
+msgstr "desconectar {user}"
 
 msgid "disconnected"
 msgstr "desconectada"
@@ -2483,17 +2961,30 @@ msgstr "inativa"
 msgid "in “{group}”"
 msgstr "em “{group}”"
 
+msgid "it didn't accept the account: a wrong password, a locked account, or one it doesn't trust."
+msgstr "ele não aceitou a conta: senha errada, conta bloqueada ou uma conta em que ele não confia."
+
+msgid "it didn't answer. It's off, not on the network, or a firewall blocks file sharing."
+msgstr "ele não respondeu. Está desligado, fora da rede, ou um firewall bloqueia o compartilhamento de arquivos."
+
 msgid "it doesn't know the SNMP v3 user name."
 msgstr "ela não conhece o usuário SNMP v3."
 
 msgid "it refused the SNMP v3 request."
 msgstr "ela recusou o pedido SNMP v3."
 
+msgid "it took too long to answer."
+msgstr "demorou demais para responder."
+
 msgid "it wants authentication or encryption set differently."
 msgstr "ela espera a autenticação ou a criptografia definidas de outro jeito."
 
 msgid "its clock and CapyPanel's didn't agree."
 msgstr "o relógio dela e o do CapyPanel não bateram."
+
+#, python-brace-format
+msgid "log off {user}"
+msgstr "fazer logoff de {user}"
 
 msgid "made by another user"
 msgstr "feito por outro usuário"
@@ -2513,17 +3004,43 @@ msgstr "não informado"
 msgid "notes"
 msgstr "notas"
 
+#, python-brace-format
+msgid "open {what}"
+msgstr "abrir {what}"
+
 msgid "password only"
 msgstr "só senha"
 
 msgid "portable mode"
 msgstr "modo portátil"
 
+msgid "programs"
+msgstr "programas"
+
+msgid "read the PC facts"
+msgstr "ler os dados do PC"
+
 msgid "read-only"
 msgstr "somente leitura"
 
+msgid "restart it"
+msgstr "reiniciá-lo"
+
+msgid "restart the Print Spooler"
+msgstr "reiniciar o Spooler de Impressão"
+
+msgid "send a message"
+msgstr "enviar uma mensagem"
+
+#, python-brace-format
+msgid "send the message to {names}"
+msgstr "enviar a mensagem para {names}"
+
 msgid "serial number"
 msgstr "nº de série"
+
+msgid "shut it down"
+msgstr "desligá-lo"
 
 #, python-brace-format
 msgid "since {when}"
@@ -2595,6 +3112,46 @@ msgid "{colour}: some left"
 msgstr "{colour}: ainda há"
 
 #, python-brace-format
+msgid "{count} on {host} · read at {when}"
+msgstr "{count} em {host} · lido às {when}"
+
+#, python-brace-format
+msgid "{error}."
+msgstr "{error}."
+
+#, python-brace-format
+msgid "{free} of {total}"
+msgstr "{free} de {total}"
+
+#, python-brace-format
+msgid "{host} didn't accept “{user}”. Type the password again, or use another account."
+msgstr "{host} não aceitou “{user}”. Digite a senha de novo, ou use outra conta."
+
+#, python-brace-format
+msgid "{host} is back online"
+msgstr "{host} está online de novo"
+
+#, python-brace-format
+msgid "{host} is restarting."
+msgstr "{host} está reiniciando."
+
+#, python-brace-format
+msgid "{host} is shutting down."
+msgstr "{host} está desligando."
+
+#, python-brace-format
+msgid "{host} restarts at {when}."
+msgstr "{host} reinicia às {when}."
+
+#, python-brace-format
+msgid "{host} shuts down at {when}."
+msgstr "{host} desliga às {when}."
+
+#, python-brace-format
+msgid "{kind} from {computer}"
+msgstr "{kind} de {computer}"
+
+#, python-brace-format
 msgid "{level} · Low"
 msgstr "{level} · Baixo"
 
@@ -2613,6 +3170,10 @@ msgstr[0] "{names} não aceita usuário e senha (pode pedir uma senha VNC ou ser
 msgstr[1] "{names} não aceitam usuário e senha (podem pedir uma senha VNC ou ser outro tipo de servidor VNC), então o CapyPanel não enviou a sua senha. Confira o perfil de conexão deles."
 
 #, python-brace-format
+msgid "{names} got your message."
+msgstr "{names} recebeu a sua mensagem."
+
+#, python-brace-format
 msgid "{name} (in use)"
 msgstr "{name} (em uso)"
 
@@ -2629,8 +3190,16 @@ msgstr[0] "{name} ({n} impressora)"
 msgstr[1] "{name} ({n} impressoras)"
 
 #, python-brace-format
+msgid "{name} is signed in ({where}). Work they haven't saved is lost."
+msgstr "{name} está conectado ({where}). O que não foi salvo se perde."
+
+#, python-brace-format
 msgid "{name}: {why}"
 msgstr "{name}: {why}"
+
+#, python-brace-format
+msgid "{n} GB"
+msgstr "{n} GB"
 
 #, python-brace-format
 msgid "{n} can't be added."
@@ -2794,6 +3363,12 @@ msgstr[0] "{n} impressora exibida"
 msgstr[1] "{n} impressoras exibidas"
 
 #, python-brace-format
+msgid "{n} program"
+msgid_plural "{n} programs"
+msgstr[0] "{n} programa"
+msgstr[1] "{n} programas"
+
+#, python-brace-format
 msgid "{n} selected"
 msgid_plural "{n} selected"
 msgstr[0] "{n} selecionado"
@@ -2839,6 +3414,10 @@ msgstr "{profile} (cópia)"
 #, python-brace-format
 msgid "{profile} (not available on this PC)"
 msgstr "{profile} (não disponível neste PC)"
+
+#, python-brace-format
+msgid "{shown} of {total} programs"
+msgstr "{shown} de {total} programas"
 
 #, python-brace-format
 msgid "{source} · fetched {when}"
@@ -2891,6 +3470,10 @@ msgstr "O {tool} não foi encontrado neste PC. Instale-o ou mostre ao CapyPanel 
 #, python-brace-format
 msgid "{user} (disconnected)"
 msgstr "{user} (desconectado)"
+
+#, python-brace-format
+msgid "{user}'s folder"
+msgstr "Pasta de {user}"
 
 msgid "“account_types” must be a list of numbers from 1 to 255."
 msgstr "“account_types” deve ser uma lista de números de 1 a 255."

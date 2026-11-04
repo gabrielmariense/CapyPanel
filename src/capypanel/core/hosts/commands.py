@@ -47,15 +47,22 @@ class HostCommand:
     need: Need
     risky: bool = False  # disturbs whoever uses the PC: shown in amber, always asks first
     needs_user: bool = False  # only when someone is logged on to the PC
+    # Acts on one signed-in person: offered on that person (Details, Users ▾), not in the lists.
+    per_person: bool = False
 
 
 COMMANDS: tuple[HostCommand, ...] = (
     HostCommand(
-        "status", Group.CHECK, N_("Refresh status"),
-        N_("Whether the PC answers on the network."), "refresh", Need.READ,
+        "all-checks", Group.CHECK, N_("Run all checks"),
+        N_("Status, logged-on users and PC facts, one after the other."), "list-check",
+        Need.READ,
     ),
     HostCommand(
-        "users", Group.CHECK, N_("Refresh logged-on users"),
+        "status", Group.CHECK, N_("Status"),
+        N_("Whether the PC answers on the network."), "activity", Need.READ,
+    ),
+    HostCommand(
+        "users", Group.CHECK, N_("Logged-on users"),
         N_("Who is signed in to the PC, and since when."), "users", Need.READ,
     ),
     HostCommand(
@@ -105,12 +112,12 @@ COMMANDS: tuple[HostCommand, ...] = (
     HostCommand(
         "disconnect", Group.USERS, N_("Disconnect…"),
         N_("Ends a user's session connection; their programs keep running."), "plug-connected-x",
-        Need.ASK_WINDOWS, risky=True, needs_user=True,
+        Need.ASK_WINDOWS, risky=True, needs_user=True, per_person=True,
     ),
     HostCommand(
         "log-off", Group.USERS, N_("Log off…"),
         N_("Signs a user out; unsaved work is lost."), "logout", Need.ASK_WINDOWS,
-        risky=True, needs_user=True,
+        risky=True, needs_user=True, per_person=True,
     ),
     HostCommand(
         "restart", Group.POWER, N_("Restart…"),
@@ -123,7 +130,7 @@ COMMANDS: tuple[HostCommand, ...] = (
         risky=True,
     ),
     HostCommand(
-        "cancel-restart", Group.POWER, N_("Cancel restart"),
+        "cancel-restart", Group.POWER, N_("Cancel the pending restart"),
         N_("Stops a restart or shutdown that is still waiting."), "clock-x", Need.ASK_WINDOWS,
     ),
     HostCommand(
@@ -138,8 +145,8 @@ COMMANDS: tuple[HostCommand, ...] = (
     ),
 )  # fmt: skip
 
-# The Details panel's icon row, in order; every command is under its … button.
-QUICK = ("c-share", "user-folder", "computer-management", "message", "log-off", "restart")
+# The Details panel's icon buttons, in order; then Users ▾ and Power ▾, then … for every one.
+QUICK = ("c-share", "user-folder", "computer-management", "message")
 
 
 def command(command_id: str) -> HostCommand:
@@ -148,7 +155,8 @@ def command(command_id: str) -> HostCommand:
 
 
 def in_group(group: Group) -> list[HostCommand]:
-    return [c for c in COMMANDS if c.group is group]
+    """The group's commands as menus and lists show them: without the per-person ones."""
+    return [c for c in COMMANDS if c.group is group and not c.per_person]
 
 
 _BY_ID = {c.id: c for c in COMMANDS}

@@ -3,9 +3,9 @@ prompt, and how their results read in the table and the details pane."""
 
 import threading
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import date, datetime
 
-from PySide6.QtCore import QDateTime, QLocale, QObject, QTimeZone, Signal
+from PySide6.QtCore import QDate, QDateTime, QLocale, QObject, QTimeZone, Signal
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -87,7 +87,7 @@ class AccountDialog(QDialog):
         self, parent: QWidget | None, reason: str, user: str = "", *, saved: bool = False
     ) -> None:
         super().__init__(parent)
-        self.setWindowTitle(_("Account for logged-on users"))
+        self.setWindowTitle(_("Account for other PCs"))
         intro = QLabel(reason)
         intro.setWordWrap(True)
         self.user = QLineEdit(user)
@@ -101,10 +101,11 @@ class AccountDialog(QDialog):
         form.addRow(_("&Password:"), self.password)
         kept = (
             _("Saved in Windows Credential Manager for your Windows account (Settings › "
-              "Connections), and used only to read who is logged on.")
+              "Connections), and used only to read who is logged on and for the commands you "
+              "run on a host.")
             if saved
             else _("Kept in memory until CapyPanel closes, never saved, and used only to read "
-                   "who is logged on.")
+                   "who is logged on and for the commands you run on a host.")
         )  # fmt: skip
         stops = _(
             "If a computer rejects it, CapyPanel stops and asks again instead of trying it on "
@@ -141,6 +142,13 @@ class AccountDialog(QDialog):
 def when_text(when: datetime) -> str:
     moment = QDateTime.fromSecsSinceEpoch(int(when.timestamp()), QTimeZone.systemTimeZone())
     return QLocale(i18n.language()).toString(moment, QLocale.FormatType.ShortFormat)
+
+
+def date_text(day: date) -> str:
+    """A day with its month's short name: "Aug 20, 2026", "20 ago 2026"."""
+    language = i18n.language()
+    pattern = "MMM d, yyyy" if language.startswith("en") else "d MMM yyyy"
+    return QLocale(language).toString(QDate(day.year, day.month, day.day), pattern)
 
 
 def clock_text(when: datetime) -> str:

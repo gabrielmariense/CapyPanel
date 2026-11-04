@@ -14,7 +14,7 @@ from capypanel.core.remote.access import (
     last_error,
 )
 
-MAX_DELAY = 600  # seconds; longer waits are better planned another way
+MAX_DELAY = 15 * 60  # seconds: the Restart window's longest wait; longer is better planned
 # "Other (Planned)": what `shutdown /m` reports when given no reason.
 _PLANNED = 0x80000000
 _IN_PROGRESS, _NONE_PENDING = 1115, 1116
