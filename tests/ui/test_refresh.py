@@ -131,7 +131,8 @@ def test_refresh_checks_every_host_shown_even_with_nothing_selected(
 ) -> None:
     _pick_group(window, "Desks")
     assert window.hosts.table.selected_ids() == []
-    window.hosts.toolbar.refresh_status.trigger()
+    window.hosts.refresh_panel.users_box.setChecked(False)
+    window.hosts.toolbar.refresh_button.click()  # what the right-click panel has ticked
     _wait(window)
     assert sorted(a for a, *_ in answers["seen"]) == ["10.0.0.2", "10.0.0.3"]
 
@@ -276,10 +277,14 @@ def test_a_large_users_check_asks_first(
         hosts_module, "confirm", lambda _p, _t, text, _a: asked.append(text) or False
     )
     _pick_group(window, "Office")
-    window.hosts.toolbar.refresh_users.trigger()
+    panel = window.hosts.refresh_panel
+    panel.status_box.setChecked(False)
+    window.hosts.toolbar.refresh_button.click()
     _wait(window)
     assert asked == ["Check who is logged on to 3 hosts?"] and answers["seen"] == []
-    window.hosts.toolbar.refresh_status.trigger()  # Status never asks
+    panel.status_box.setChecked(True)
+    panel.users_box.setChecked(False)
+    window.hosts.toolbar.refresh_button.click()  # Status never asks
     _wait(window)
     assert len(answers["seen"]) == 3 and len(asked) == 1
 

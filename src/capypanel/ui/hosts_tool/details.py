@@ -28,6 +28,7 @@ from capypanel.core.remote.access import Reason, RemoteError
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_texts
+from capypanel.ui.hosts import FlowLayout
 from capypanel.ui.hosts_tool.host_state import Facts, PendingPower
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import DetailsPanel
@@ -90,7 +91,7 @@ class HostDetailsPanel(DetailsPanel):
         assert isinstance(shown, HostDetails)
         self.heading(layout, shown.host.name, shown.status)
         layout.addSpacing(6)
-        layout.addLayout(self._command_row(shown))
+        layout.addWidget(self._command_row(shown))
         if shown.pending is not None and shown.pending.at > datetime.now(UTC):
             layout.addSpacing(8)
             layout.addWidget(self._pending_strip(shown.pending))
@@ -117,11 +118,13 @@ class HostDetailsPanel(DetailsPanel):
 
     # ---- the command buttons ----
 
-    def _command_row(self, details: HostDetails) -> QHBoxLayout:
+    def _command_row(self, details: HostDetails) -> QWidget:
         """C$, the user's folder, Computer Management and Send a message as icons, then Users ▾
-        and Power ▾ in amber, then … with every command. A tooltip names each."""
-        row = QHBoxLayout()
-        row.setSpacing(6)
+        and Power ▾ in amber, then … with every command. A tooltip names each. In a narrow
+        panel they wrap onto a second line rather than push the panel's text out of sight."""
+        widget = QWidget()
+        row = FlowLayout(widget, 6, stretch_last=False)
+        row.setContentsMargins(0, 0, 0, 0)
         self.buttons = {}
         text = self.palette().color(QPalette.ColorRole.Text)
         amber = QColor(STATUS_COLORS["attention"])
@@ -163,8 +166,7 @@ class HostDetailsPanel(DetailsPanel):
             row.addWidget(button)
         for button in (users, power):
             button.setFixedWidth(MENU_BUTTON)
-        row.addStretch(1)
-        return row
+        return widget
 
     def _button(self, icon: str, color: QColor, tip: str, *, risky: bool = False) -> QToolButton:
         button = QToolButton()

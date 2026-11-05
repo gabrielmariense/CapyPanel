@@ -179,7 +179,6 @@ class HostsTool(ListWorkspace):
             lambda: self.check_hosts(self.selected_items(), status=False, users=True)
         )
         self.toolbar.refresh_panel_requested.connect(self._show_refresh_panel)
-        self.toolbar.refresh_requested.connect(self._refresh_shown)
         self.refresh_panel.run_clicked.connect(self._run_refresh_panel)
         self.toolbar.connect_menu.aboutToShow.connect(self._fill_connect_menu)
         # Enter connects only from the host table, so it never fires while typing elsewhere.
@@ -822,8 +821,8 @@ class HostsTool(ListWorkspace):
             action.setEnabled(selected > 0 and self._run is None)  # one Refresh at a time
         self._update_host_actions()
         shown = self.table.topLevelItemCount() > 0
-        for action in (self.toolbar.refresh_status, self.toolbar.refresh_users):
-            action.setEnabled(shown and self._run is None)
+        a.refresh_shown.setEnabled(shown and self._run is None)
+        self.toolbar.refresh_button.setEnabled(shown and self._run is None)
 
     def status_extras(self, doc: OpenList) -> list[str]:
         # Hosts still in the list: a removed host's result stays in memory.
@@ -1083,10 +1082,6 @@ class HostsTool(ListWorkspace):
         panel.adjustSize()
         panel.move(where)
         panel.show()
-
-    def _refresh_shown(self, status: bool, users: bool) -> None:
-        """Refresh: every host the table shows (the search's results, or the group or tag)."""
-        self.check_hosts(self.visible_items(), status=status, users=users)
 
     def _run_refresh_panel(self) -> None:
         choices = self.refresh_panel.choices()

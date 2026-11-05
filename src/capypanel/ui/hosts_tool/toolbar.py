@@ -1,7 +1,7 @@
 """The Hosts toolbar: Connect, Refresh and Commands, Inventory, Report. Refresh always checks
 every host the table shows (the group picked on the left); one host is checked from its own
-right-click menu. Left-click picks one check; right-click opens a panel to run several at once.
-Commands lists the selected host's commands by group."""
+right-click menu. A click runs the checks ticked in the panel a right-click opens (as F5 does), as
+Printers' Refresh does. Commands lists the selected host's commands by group."""
 
 from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QPalette
@@ -77,7 +77,6 @@ class RefreshPanel(QFrame):
 
 class HostsToolBar(ToolBar):
     refresh_panel_requested = Signal(QPoint)
-    refresh_requested = Signal(bool, bool)  # status, users: on every host shown
 
     def __init__(self, commands: HostsActions) -> None:
         super().__init__()
@@ -86,13 +85,8 @@ class HostsToolBar(ToolBar):
         self.connect_button = tool_button(dropdown=True)
         self.connect_menu = QMenu(self.connect_button)
         self.connect_button.setMenu(self.connect_menu)
-        self.refresh_button = tool_button(dropdown=True)
-        self.refresh_menu = QMenu(self.refresh_button)
-        self.refresh_status = self.refresh_menu.addAction("")
-        self.refresh_users = self.refresh_menu.addAction("")
-        self.refresh_status.triggered.connect(lambda: self.refresh_requested.emit(True, False))
-        self.refresh_users.triggered.connect(lambda: self.refresh_requested.emit(False, True))
-        self.refresh_button.setMenu(self.refresh_menu)
+        self.refresh_button = tool_button()
+        self.refresh_button.clicked.connect(commands.refresh_shown.trigger)
         self.refresh_button.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.refresh_button.customContextMenuRequested.connect(
             lambda _pos: self.refresh_panel_requested.emit(
@@ -123,10 +117,8 @@ class HostsToolBar(ToolBar):
         )
         self.refresh_button.setText(gap + _("Refresh"))
         self.refresh_button.setToolTip(
-            _("Refresh every host shown. Right-click to choose what Run and F5 check")
+            _("Refresh every host shown, with the checks ticked on a right-click (also F5)")
         )
-        self.refresh_status.setText(_("&Status"))
-        self.refresh_users.setText(_("&Logged-on users"))
         self.commands_button.setText(gap + _("Commands"))
         self.commands_button.setToolTip(
             _("Commands for the selected host: open its folders, message its users, restart it…")

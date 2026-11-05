@@ -160,7 +160,8 @@ def test_refresh_checks_only_the_search_results(
 
     monkeypatch.setattr(checks, "run", run)
     _search(window, "triage")
-    window.hosts._refresh_shown(True, False)
+    window.hosts.refresh_panel.users_box.setChecked(False)
+    window.hosts.toolbar.refresh_button.click()  # the ticked checks, on the hosts shown
     for _ in range(500):
         QApplication.processEvents()
         if window.hosts._run is None:

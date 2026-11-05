@@ -64,7 +64,7 @@ if TYPE_CHECKING:
 
 SIZE = (1000, 620)  # fixed: it never grows as commands are added
 GROUPS_WIDTH = 150
-RESULTS_WIDTH = 460
+RESULTS_WIDTH = 400  # px: the rest goes to the commands, whose names are longer in pt
 ROW = 28  # px: a command's line
 ICON = 16
 RECENT_ADDRESSES = 10
@@ -245,6 +245,7 @@ class CommandRow(QFrame):
         icon.setPixmap(tabler_icon(command.icon, color, ICON).pixmap(ICON, ICON))
         self.name = QLabel()
         self.name.setObjectName("commandName")
+        self.name.setWordWrap(True)  # a long name wraps rather than widen the list
         self.name.setProperty("risky", command.risky)
         self.run = QPushButton(_("&Run"))
         self.run.setObjectName("risky" if command.risky else "")
@@ -489,8 +490,13 @@ class CommandsWindow(QDialog):
             self._picked.set_picked(False)
         self._picked = row
         row.set_picked(True)
-        QTimer.singleShot(0, lambda: self.list.ensureWidgetVisible(row, 0, 4))
+        QTimer.singleShot(0, lambda: self._scroll_to(row))
         self._show_results()
+
+    def _scroll_to(self, row: CommandRow) -> None:
+        """Up or down to the row; never sideways, which cut the group headings off."""
+        self.list.ensureWidgetVisible(row, 0, 4)
+        self.list.horizontalScrollBar().setValue(0)
 
     def picked(self) -> HostCommand | None:
         return self._picked.command if self._picked is not None else None
