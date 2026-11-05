@@ -8,18 +8,21 @@ from typing import Any
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtWidgets import QApplication, QDialog, QMenu, QTreeWidget
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.core.remote import access, inventory, places
+from capypanel.core.remote import access, host_printers, inventory, places, services
 from capypanel.core.remote.access import Reason, RemoteError
-from capypanel.core.remote.inventory import DiskSpace
+from capypanel.core.remote.host_printers import HostPrinter
+from capypanel.core.remote.inventory import DiskSpace, Program
 from capypanel.core.tools.connect import Target
+from capypanel.ui.hosts_tool import commands_window as commands_module
 from capypanel.ui.hosts_tool import tool as tool_module
+from capypanel.ui.hosts_tool.command_windows import ProgramsDialog
 from capypanel.ui.hosts_tool.commands_window import CommandsWindow, Shown, split_address
 
 
@@ -178,3 +181,56 @@ def test_typing_anywhere_goes_to_the_search(window: CapyWindow) -> None:
     commands.list.setFocus()
     _key(commands, Qt.Key.Key_P, "p")
     assert commands.search.text() == "p"
+
+
+def test_printers_show_as_a_table_with_the_spooler_state(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    found = [
+        HostPrinter("Front", "SAMPLE PCL6", "192.0.2.52", "", 3, ("paper jam",)),
+        HostPrinter("PDF", "Microsoft Print To PDF", "PORTPROMPT:", "", 0, ()),
+    ]
+    monkeypatch.setattr(host_printers, "list_printers", lambda *_a: found)
+    monkeypatch.setattr(services, "service_state", lambda *_a: "running")
+    commands = _open(window, "DESK-02")
+    row = next(r for r in commands.rows if r.command.id == "printers")
+    commands.pick(row)
+    row.run.click()
+    _settle(window)
+    listed = _shown(commands).listed
+    assert listed is not None and not listed.reading and listed.spooler == "running"
+    tables = commands.results.findChildren(QTreeWidget)
+    assert len(tables) == 1 and tables[0].topLevelItemCount() == 2
+    first = tables[0].topLevelItem(0)
+    assert first is not None and first.text(1) == "Paper jam"
+
+
+def test_programs_right_click_opens_them_in_their_own_window(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    programs = [Program("7-Zip", "24.08", "Igor Pavlov", None)]
+    monkeypatch.setattr(inventory, "installed_programs", lambda *_a: programs)
+    commands = _open(window, "DESK-02")
+    row = next(r for r in commands.rows if r.command.id == "programs")
+    commands.pick(row)
+    row.run.click()
+    _settle(window)
+    opened: list[QDialog] = []
+
+    def record(dialog: QDialog) -> int:
+        opened.append(dialog)
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(commands_module, "run_modal", record)
+    picked: list[str] = []
+
+    class Recorded(QMenu):
+        def exec(self, *_args: Any) -> None:  # type: ignore[override]
+            picked.extend(a.text() for a in self.actions() if a.text())
+            next(a for a in self.actions() if a.text().startswith("&Open")).trigger()
+
+    monkeypatch.setattr(commands_module, "QMenu", Recorded)
+    commands._list_menu("programs", 0, QPoint(0, 0))  # pyright: ignore[reportPrivateUsage]
+    assert picked == ["&Copy row", "Copy &list", "&Export CSV…", "&Open in its own window…"]
+    assert len(opened) == 1 and isinstance(opened[0], ProgramsDialog)
+    assert opened[0].table.topLevelItemCount() == 1  # the list read here, not read again

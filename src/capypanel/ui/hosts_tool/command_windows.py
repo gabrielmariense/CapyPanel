@@ -496,7 +496,7 @@ class PrintersDialog(ReadList):
         self._printers = list(found)
         self.table.clear()
         for printer in self._printers:
-            status = ", ".join(problem_text(p) for p in printer.problems) or _("Ready")
+            status = printer_status(printer)
             row = QTreeWidgetItem([printer.name, printer.driver, printer.port, status,
                                    str(printer.jobs)])  # fmt: skip
             self.table.addTopLevelItem(row)
@@ -557,7 +557,9 @@ class ProgramsDialog(ReadList):
     CSV… for the rows shown."""
 
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget",
-                 folder: Callable[[str | None], str]) -> None:  # fmt: skip
+                 folder: Callable[[str | None], str], found: Sequence[Any] | None = None,
+                 read_at: datetime | None = None) -> None:  # fmt: skip
+        """`found`: a list already read (the Commands window's), shown without reading again."""
         super().__init__(parent, runner, target)
         self._folder = folder  # the last folder a CSV went to; called with one to keep it
         self._programs: list[Any] = []
@@ -594,7 +596,12 @@ class ProgramsDialog(ReadList):
         layout.addLayout(bottom)
         self.resize(900, 620)
         self._update()
-        self.read()
+        if found is None:
+            self.read()
+        else:
+            self._read(list(found))
+            self.read_at = read_at or self.read_at
+            self._filter()
 
     def work(self, account: Any) -> list[Any]:
         from capypanel.core.remote import inventory
@@ -654,28 +661,64 @@ class ProgramsDialog(ReadList):
         QGuiApplication.clipboard().setText(write_csv(self._header(), self._table_rows(), "\t"))
 
     def _export(self) -> None:
-        folder = self._folder(None)
-        if not folder or not Path(folder).is_dir():
-            folder = QStandardPaths.writableLocation(
-                QStandardPaths.StandardLocation.DocumentsLocation
-            )
-        name, _filter = QFileDialog.getSaveFileName(
-            self,
-            _("Export CSV"),
-            str(Path(folder) / f"{_file_safe(self.target.name)} - {_('programs')}.csv"),
-            _("CSV files (*.csv)"),
-        )
-        if not name:
-            return
-        path = Path(name)
-        text = write_csv(self._header(), self._table_rows(), list_separator())
-        try:
-            path.write_text(text, encoding="utf-8-sig")  # the BOM: Excel reads accents right
-        except OSError as e:
-            text = _("Couldn't save {path}: {error}").format(path=path, error=e)
-            QMessageBox.warning(self, _("Export CSV"), text)
-            return
-        self._folder(str(path.parent))
+        export_csv(self, self.target.name, self._header(), self._table_rows(), self._folder)
+
+
+def program_header() -> list[str]:
+    return [_("Name"), _("Publisher"), _("Version"), _("Installed on")]
+
+
+def program_rows(programs: Sequence[Any]) -> list[list[str]]:
+    return [
+        [p.name, p.publisher, p.version, check_texts.date_text(p.installed) if p.installed else ""]
+        for p in programs
+    ]
+
+
+def export_csv(
+    parent: QWidget,
+    host: str,
+    header: Sequence[str],
+    rows: Sequence[Sequence[str]],
+    folder: Callable[[str | None], str],
+) -> None:
+    """Export CSV…: the programs, in the CSV Excel opens on this PC; the folder is kept."""
+    start = folder(None)
+    if not start or not Path(start).is_dir():
+        start = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
+    name, _filter = QFileDialog.getSaveFileName(
+        parent,
+        _("Export CSV"),
+        str(Path(start) / f"{_file_safe(host)} - {_('programs')}.csv"),
+        _("CSV files (*.csv)"),
+    )
+    if not name:
+        return
+    path = Path(name)
+    text = write_csv(header, rows, list_separator())
+    try:
+        path.write_text(text, encoding="utf-8-sig")  # the BOM: Excel reads accents right
+    except OSError as e:
+        text = _("Couldn't save {path}: {error}").format(path=path, error=e)
+        QMessageBox.warning(parent, _("Export CSV"), text)
+        return
+    folder(str(path.parent))
+
+
+def printer_dot(printer: HostPrinter) -> str:
+    """The Printers tool's status colours: green ready, grey offline, red stopped, amber the
+    rest that needs someone."""
+    if not printer.problems:
+        return "online"
+    if "offline" in printer.problems:
+        return "offline"
+    if "error" in printer.problems or "paused" in printer.problems:
+        return "stopped"
+    return "attention"
+
+
+def printer_status(printer: HostPrinter) -> str:
+    return ", ".join(problem_text(p) for p in printer.problems) or _("Ready")
 
 
 SORT_KEY = Qt.ItemDataRole.UserRole + 1

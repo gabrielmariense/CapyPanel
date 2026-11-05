@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-04 17:27-0300\n"
+"POT-Creation-Date: 2026-11-04 22:02-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -71,6 +71,9 @@ msgstr "&Copiar"
 
 msgid "&Copy list"
 msgstr "&Copiar lista"
+
+msgid "&Copy row"
+msgstr "&Copiar linha"
 
 msgid "&Create"
 msgstr "&Criar"
@@ -231,6 +234,9 @@ msgstr "&Abrir o CapyPanel"
 
 msgid "&Open a CSV file…"
 msgstr "A&brir um arquivo CSV…"
+
+msgid "&Open in its own window…"
+msgstr "&Abrir na própria janela…"
 
 msgid "&Open list…"
 msgstr "&Abrir lista…"
@@ -767,6 +773,9 @@ msgstr "Copiado: {text}"
 
 msgid "Copies every row, to paste into Excel"
 msgstr "Copia todas as linhas, para colar no Excel"
+
+msgid "Copy &list"
+msgstr "Copiar &lista"
 
 #, python-brace-format
 msgid "Couldn't create “{path}”: {error}"
@@ -1852,6 +1861,10 @@ msgstr "Prévia"
 msgid "Print Spooler restarted on {host}."
 msgstr "Spooler de Impressão reiniciado em {host}."
 
+#, python-brace-format
+msgid "Print Spooler: {state}. Right-click a printer to clear its queue."
+msgstr "Spooler de Impressão: {state}. Clique com o botão direito numa impressora para limpar a fila."
+
 msgid "Printer"
 msgstr "Impressora"
 
@@ -2085,6 +2098,12 @@ msgstr "Reiniciar…"
 
 msgid "Restore built-in profiles"
 msgstr "Restaurar os perfis que vêm com o app"
+
+msgid "Right-click a printer to clear its queue."
+msgstr "Clique com o botão direito numa impressora para limpar a fila."
+
+msgid "Right-click to copy a row, copy or export the list, or open it in its own window with a search."
+msgstr "Clique com o botão direito para copiar uma linha, copiar ou exportar a lista, ou abri-la na própria janela, com pesquisa."
 
 msgid "Run all checks"
 msgstr "Executar todas as verificações"
@@ -3049,6 +3068,12 @@ msgstr "programas"
 msgid "read the PC facts"
 msgstr "ler os dados do PC"
 
+msgid "read the installed programs"
+msgstr "ler os programas instalados"
+
+msgid "read the printers"
+msgstr "ler as impressoras"
+
 msgid "read-only"
 msgstr "somente leitura"
 
@@ -3057,6 +3082,9 @@ msgstr "reiniciá-lo"
 
 msgid "restart the Print Spooler"
 msgstr "reiniciar o Spooler de Impressão"
+
+msgid "running"
+msgstr "em execução"
 
 msgid "send a message"
 msgstr "enviar uma mensagem"
@@ -3077,6 +3105,15 @@ msgstr "desde {when}"
 
 msgid "some left"
 msgstr "ainda há"
+
+msgid "starting"
+msgstr "iniciando"
+
+msgid "stopped"
+msgstr "parado"
+
+msgid "stopping"
+msgstr "parando"
 
 #, python-brace-format
 msgid "tag “{tag}”"
@@ -3467,6 +3504,18 @@ msgstr "{supply} quase cheio"
 #, python-brace-format
 msgid "{tag} ({n} of {total})"
 msgstr "{tag} ({n} de {total})"
+
+#, python-brace-format
+msgid "{title} · reading…"
+msgstr "{title} · lendo…"
+
+#, python-brace-format
+msgid "{title} · {n} · {when}"
+msgstr "{title} · {n} · {when}"
+
+#, python-brace-format
+msgid "{title} · {when}"
+msgstr "{title} · {when}"
 
 #, python-brace-format
 msgid "{tool} (not installed on this PC)"

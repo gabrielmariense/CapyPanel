@@ -93,3 +93,12 @@ def test_an_unreachable_host_is_never_asked() -> None:
     with pytest.raises(RemoteError) as caught:
         services.restart_service("192.0.2.1", services.SPOOLER)  # a documentation address
     assert caught.value.reason is Reason.UNREACHABLE
+
+
+def test_the_state_is_read_and_the_handles_closed(
+    monkeypatch: pytest.MonkeyPatch, reachable: None
+) -> None:
+    fake = FakeAdvapi(states=[4])
+    monkeypatch.setattr(services, "_advapi32", fake)
+    assert services.service_state("192.0.2.10", services.SPOOLER) == "running"
+    assert fake.calls == ["manager 192.0.2.10", "open Spooler", "query", "close 2", "close 1"]

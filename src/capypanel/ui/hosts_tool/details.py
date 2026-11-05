@@ -126,7 +126,7 @@ class HostDetailsPanel(DetailsPanel):
         text = self.palette().color(QPalette.ColorRole.Text)
         amber = QColor(STATUS_COLORS["attention"])
         reachable = bool(details.host.connect_address)
-        icons = {"c-share": "", "user-folder": "folder-user", "computer-management": "settings",
+        icons = {"c-share": "", "user-folder": "folder-person", "computer-management": "settings",
                  "message": "message"}  # fmt: skip
         for command_id in host_commands.QUICK:
             command = host_commands.command(command_id)

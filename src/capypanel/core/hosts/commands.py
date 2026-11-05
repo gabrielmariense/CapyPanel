@@ -88,7 +88,7 @@ COMMANDS: tuple[HostCommand, ...] = (
     ),
     HostCommand(
         "user-folder", Group.OPEN, N_("User's folder"),
-        N_("The logged-on user's profile folder."), "folder-user", Need.OPEN_HERE,
+        N_("The logged-on user's profile folder."), "folder-person", Need.OPEN_HERE,
         needs_user=True,
     ),
     HostCommand(

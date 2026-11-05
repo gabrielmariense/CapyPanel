@@ -6,13 +6,14 @@ move, typing searches); on the right, what the picked command found, in the Deta
 parts and with no buttons. Commands that need typing open their small window over this one."""
 
 from collections.abc import Sequence
-from dataclasses import dataclass
-from datetime import datetime
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import QEvent, QObject, QPoint, Qt, QTimer
-from PySide6.QtGui import QColor, QKeyEvent, QPalette
+from PySide6.QtCore import QEvent, QObject, QPoint, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QGuiApplication, QKeyEvent, QPalette
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QComboBox,
     QDialog,
     QFrame,
@@ -22,28 +23,41 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QListWidget,
     QListWidgetItem,
+    QMenu,
     QPushButton,
     QScrollArea,
     QSizePolicy,
+    QTreeWidget,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
 from capypanel.core.hosts import commands as host_commands
+from capypanel.core.hosts.bulk import write_csv
 from capypanel.core.hosts.commands import GROUP_NAMES, HostCommand
 from capypanel.core.hosts.commands import Group as CommandGroup
 from capypanel.core.hosts.model import MAX_ADDRESS
 from capypanel.core.i18n import _
-from capypanel.core.remote.access import RemoteError
+from capypanel.core.remote import host_printers, services
+from capypanel.core.remote.access import Account, RemoteError
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.core.tools.connect import Target
 from capypanel.ui import checks as check_texts
 from capypanel.ui.connect import Request
+from capypanel.ui.dialogs import run_modal
+from capypanel.ui.hosts_tool import command_windows as windows
 from capypanel.ui.hosts_tool.details import HostDetailsPanel
 from capypanel.ui.hosts_tool.host_state import Facts
-from capypanel.ui.hosts_tool.runner import HostTarget, Outcome, folder_user
-from capypanel.ui.icons import STATUS_COLORS, tabler_icon
+from capypanel.ui.hosts_tool.runner import (
+    RETRY_REASONS,
+    HostTarget,
+    Outcome,
+    failed_text,
+    folder_user,
+)
+from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.tool import HostsTool
@@ -54,6 +68,9 @@ RESULTS_WIDTH = 460
 ROW = 28  # px: a command's line
 ICON = 16
 RECENT_ADDRESSES = 10
+LISTS = ("printers", "programs")  # their answer is a table on the right, not a window
+TABLE_ROW = 30  # px, about a grid row: a printers table shows every printer
+MOST_TABLE = 330  # px: a longer list (programs) scrolls inside its table
 
 
 def split_address(typed: str) -> Target:
@@ -75,10 +92,23 @@ class Shown:
     users: tuple[Sequence[Session] | None, RemoteError | None, datetime] | None
     facts: Facts | None
     outcome: Outcome | None
+    listed: "Listed | None" = None
+
+
+@dataclass(frozen=True)
+class Listed:
+    """Printers or Installed programs as read for the right side: rows, or why not."""
+
+    reading: bool = True
+    when: datetime | None = None
+    rows: Sequence[Any] = field(default_factory=tuple)
+    spooler: str = ""  # the Print Spooler's state, for printers: "running", "stopped"…
 
 
 class Results(HostDetailsPanel):
     """The right side: the Details panel's heading and parts, for the picked command only."""
+
+    list_menu_requested = Signal(str, int, QPoint)  # command id, row (-1: none), where
 
     def item_id(self, shown: object) -> str:
         return shown.target.key if isinstance(shown, Shown) else ""
@@ -103,23 +133,99 @@ class Results(HostDetailsPanel):
         elif command.id == "all-checks":
             self.users(layout, shown.users)
             self.facts(layout, shown.facts, button=False)
+        elif command.id in LISTS:
+            self._listed(layout, shown)
         else:
             self.section(layout, _(command.name).rstrip("…"))
-            outcome = shown.outcome
-            if outcome is None:
+            if shown.outcome is None:
                 layout.addWidget(self.muted(_(command.description)))
-            else:
-                answer = QLabel(outcome.text)
-                answer.setTextFormat(Qt.TextFormat.RichText)
-                answer.setWordWrap(True)
-                if outcome.failed:
-                    answer.setObjectName("warningText")
-                layout.addWidget(answer)
-                if outcome.retry is not None:
-                    link = QLabel(f'<a href="retry">{_("Try another account…")}</a>')
-                    link.setTextFormat(Qt.TextFormat.RichText)
-                    link.linkActivated.connect(lambda _href, r=outcome.retry: r())
-                    layout.addWidget(link)
+            self._outcome(layout, shown.outcome)
+
+    def _listed(self, layout: QVBoxLayout, shown: Shown) -> None:
+        """A read-only grid table under its heading, with a line under it; what can be done
+        with a row is on its right-click."""
+        listed, printers = shown.listed, shown.command.id == "printers"
+        title = _("Printers") if printers else _("Installed programs")
+        if listed is None or listed.reading or listed.when is None:
+            self.section(layout, _("{title} · reading…").format(title=title) if listed
+                         else title)  # fmt: skip
+            if listed is None:
+                layout.addWidget(self.muted(_(shown.command.description)))
+            self._outcome(layout, shown.outcome)
+            return
+        when = check_texts.clock_text(listed.when)
+        if printers:
+            self.section(layout, _("{title} · {when}").format(title=title, when=when))
+        else:
+            self.section(layout, _("{title} · {n} · {when}").format(
+                title=title, n=len(listed.rows), when=when))  # fmt: skip
+        table = QTreeWidget()
+        table.setObjectName("grid")
+        table.setRootIsDecorated(False)
+        table.setUniformRowHeights(True)
+        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        if printers:
+            table.setHeaderLabels([_("Printer"), _("Status"), _("Jobs")])
+            for printer in listed.rows:
+                row = QTreeWidgetItem([printer.name, windows.printer_status(printer),
+                                       str(printer.jobs)])  # fmt: skip
+                row.setIcon(1, dot_icon(STATUS_COLORS[windows.printer_dot(printer)]))
+                table.addTopLevelItem(row)
+        else:
+            table.setHeaderLabels([_("Name"), _("Version")])
+            for program in listed.rows:
+                table.addTopLevelItem(QTreeWidgetItem([program.name, program.version]))
+        header = table.header()
+        header.setStretchLastSection(False)
+        header.setSectionResizeMode(0, header.ResizeMode.Stretch)
+        for column in range(1, table.columnCount()):
+            header.setSectionResizeMode(column, header.ResizeMode.ResizeToContents)
+        # Every row shows, up to MOST_TABLE; a longer list scrolls inside the table.
+        row_height = table.sizeHintForRow(0) if listed.rows else TABLE_ROW
+        rows = max(len(listed.rows), 1) * max(row_height, 1)
+        frame = 2 * table.frameWidth() + 4
+        table.setFixedHeight(min(MOST_TABLE, header.sizeHint().height() + rows + frame))
+        table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        command_id = shown.command.id
+
+        def menu(pos: QPoint) -> None:
+            item = table.itemAt(pos)
+            index = table.indexOfTopLevelItem(item) if item is not None else -1
+            if item is not None:
+                table.setCurrentItem(item)
+            self.list_menu_requested.emit(command_id, index, table.viewport().mapToGlobal(pos))
+
+        table.customContextMenuRequested.connect(menu)
+        layout.addWidget(table)
+        if printers:
+            states = {"running": _("running"), "stopped": _("stopped"),
+                      "starting": _("starting"), "stopping": _("stopping")}  # fmt: skip
+            spooler = states.get(listed.spooler, listed.spooler)
+            line = (_("Print Spooler: {state}. Right-click a printer to clear its queue.")
+                    .format(state=spooler) if spooler
+                    else _("Right-click a printer to clear its queue."))  # fmt: skip
+        else:
+            line = _("Right-click to copy a row, copy or export the list, or open it in its own "
+                     "window with a search.")  # fmt: skip
+        layout.addWidget(self.muted(line))
+        self._outcome(layout, shown.outcome)
+
+    def _outcome(self, layout: QVBoxLayout, outcome: Outcome | None) -> None:
+        """The last answer, and Try another account… when the account was refused."""
+        if outcome is None:
+            return
+        answer = QLabel(outcome.text)
+        answer.setTextFormat(Qt.TextFormat.RichText)
+        answer.setWordWrap(True)
+        if outcome.failed:
+            answer.setObjectName("warningText")
+        layout.addWidget(answer)
+        if outcome.retry is not None:
+            link = QLabel(f'<a href="retry">{_("Try another account…")}</a>')
+            link.setTextFormat(Qt.TextFormat.RichText)
+            link.linkActivated.connect(lambda _href, r=outcome.retry: r())
+            layout.addWidget(link)
 
 
 class CommandRow(QFrame):
@@ -188,6 +294,7 @@ class CommandsWindow(QDialog):
         self._typed = target is None  # Manual connection: the address is typed here
         self._target = target
         self._outcomes: dict[tuple[str, str], Outcome] = {}  # (target key, command id)
+        self._lists: dict[tuple[str, str], Listed] = {}  # printers and programs, as read
         self.setFixedSize(*SIZE)
 
         # ---- the top line ----
@@ -273,6 +380,7 @@ class CommandsWindow(QDialog):
         self.results = Results()
         self.results.setFixedWidth(RESULTS_WIDTH)
         self.results.session_menu_requested.connect(self._session_menu)
+        self.results.list_menu_requested.connect(self._list_menu)
         self.results.copied.connect(lambda text: tool.say(_("Copied: {text}").format(text=text)))
 
         hint = QLabel(_("↑ ↓ pick, Enter runs, typing searches. Commands that need more open a "
@@ -393,8 +501,107 @@ class CommandsWindow(QDialog):
             return
         if self._typed:
             self._tool.remember_address(self.address.currentText().strip())
-        self._tool.runner.run(command.id, target, self._report, parent=self)
+        if command.id in LISTS:
+            self._read_list(command.id, target)
+        else:
+            self._tool.runner.run(command.id, target, self._report, parent=self)
         self._show_results()
+
+    # ---- printers and programs, as tables on the right ----
+
+    def _read_list(self, command_id: str, target: HostTarget) -> None:
+        key = (target.key, command_id)
+        before = self._lists.get(key)
+        self._lists[key] = Listed(True, before.when if before else None,
+                                  before.rows if before else ())  # fmt: skip
+        self._outcomes.pop(key, None)
+
+        def work(account: Account | None) -> Listed:
+            if command_id == "programs":
+                from capypanel.core.remote import inventory
+
+                rows: Sequence[Any] = inventory.installed_programs(target.address, account)
+                return Listed(False, datetime.now(UTC), rows)
+            rows = host_printers.list_printers(target.address, account)
+            try:
+                spooler = services.service_state(target.address, services.SPOOLER, account)
+            except RemoteError:
+                spooler = ""  # listed anyway: only its state line goes
+            return Listed(False, datetime.now(UTC), rows, spooler)
+
+        def done(listed: Listed) -> None:
+            self._lists[key] = listed
+            self._show_results()
+
+        def failed(error: BaseException) -> None:
+            self._lists.pop(key, None)
+            action = (
+                _("read the printers")
+                if command_id == "printers"
+                else _("read the installed programs")
+            )
+            retry = None
+            if isinstance(error, RemoteError) and error.reason in RETRY_REASONS:
+                again = lambda: self._read_list(command_id, target)  # noqa: E731
+                retry = lambda: self._tool.runner.another_account(target, error, again)  # noqa: E731
+            self._outcomes[key] = Outcome(failed_text(action, target.name, error), error, retry)
+            self._show_results()
+
+        self._tool.runner.call(work, done, failed)
+
+    def _list_menu(self, command_id: str, index: int, where: QPoint) -> None:
+        target = self.target()
+        listed = self._lists.get((target.key, command_id)) if target else None
+        if target is None or listed is None:
+            return
+        menu = QMenu(self)
+        row = listed.rows[index] if 0 <= index < len(listed.rows) else None
+        if command_id == "printers":
+            clear = menu.addAction(_("Clear &queue…"))
+            clear.setEnabled(row is not None and row.jobs > 0)
+            clear.triggered.connect(lambda: self._clear_queue(target, row))
+            copy = menu.addAction(_("&Copy row"))
+            copy.setEnabled(row is not None)
+            if row is not None:
+                text = "\t".join([row.name, windows.printer_status(row), str(row.jobs)])
+                copy.triggered.connect(lambda: QGuiApplication.clipboard().setText(text))
+        else:
+            header, rows = windows.program_header(), windows.program_rows(listed.rows)
+            copy = menu.addAction(_("&Copy row"))
+            copy.setEnabled(row is not None)
+            copy.triggered.connect(lambda: QGuiApplication.clipboard().setText(
+                "\t".join(rows[index])))  # fmt: skip
+            menu.addSeparator()
+            menu.addAction(_("Copy &list"), lambda: QGuiApplication.clipboard().setText(
+                write_csv(header, rows, "\t")))  # fmt: skip
+            menu.addAction(_("&Export CSV…"), lambda: windows.export_csv(
+                self, target.name, header, rows, self._tool.csv_folder))  # fmt: skip
+            menu.addSeparator()
+            menu.addAction(_("&Open in its own window…"), lambda: run_modal(
+                windows.ProgramsDialog(self, self._tool.runner, target, self._tool.csv_folder,
+                                       listed.rows, listed.when)))  # fmt: skip
+        menu.exec(where)
+
+    def _clear_queue(self, target: HostTarget, printer: Any) -> None:
+        if printer is None or not windows.ask_clear_queue(self, target.name, printer):
+            return
+        key = (target.key, "printers")
+
+        def done(_value: object) -> None:
+            self._tool.say(_("Cleared the queue of {printer} on {host}.").format(
+                printer=printer.name, host=target.name))  # fmt: skip
+            self._read_list("printers", target)
+
+        def failed(error: BaseException) -> None:
+            action = _("clear the queue of {printer}").format(printer=printer.name)
+            self._outcomes[key] = Outcome(failed_text(action, target.name, error), error)
+            self._show_results()
+
+        self._tool.runner.call(
+            lambda account: host_printers.clear_queue(target.address, printer.name, account),
+            done,
+            failed,
+        )
 
     def _report(self, command_id: str, outcome: Outcome) -> None:
         target = self.target()
@@ -417,6 +624,7 @@ class CommandsWindow(QDialog):
                 tool.users_found(target.key),
                 tool.facts_of(target.key),
                 self._outcomes.get((target.key, command.id)),
+                self._lists.get((target.key, command.id)),
             ),
             1,
         )

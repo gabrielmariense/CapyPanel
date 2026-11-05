@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-04 17:27-0300\n"
+"POT-Creation-Date: 2026-11-04 22:02-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -69,6 +69,9 @@ msgid "&Copy"
 msgstr ""
 
 msgid "&Copy list"
+msgstr ""
+
+msgid "&Copy row"
 msgstr ""
 
 msgid "&Create"
@@ -229,6 +232,9 @@ msgid "&Open CapyPanel"
 msgstr ""
 
 msgid "&Open a CSV file…"
+msgstr ""
+
+msgid "&Open in its own window…"
 msgstr ""
 
 msgid "&Open list…"
@@ -776,6 +782,9 @@ msgid "Copied: {text}"
 msgstr ""
 
 msgid "Copies every row, to paste into Excel"
+msgstr ""
+
+msgid "Copy &list"
 msgstr ""
 
 #, python-brace-format
@@ -1905,6 +1914,10 @@ msgstr ""
 msgid "Print Spooler restarted on {host}."
 msgstr ""
 
+#, python-brace-format
+msgid "Print Spooler: {state}. Right-click a printer to clear its queue."
+msgstr ""
+
 msgid "Printer"
 msgstr ""
 
@@ -2139,6 +2152,14 @@ msgid "Restart…"
 msgstr ""
 
 msgid "Restore built-in profiles"
+msgstr ""
+
+msgid "Right-click a printer to clear its queue."
+msgstr ""
+
+msgid ""
+"Right-click to copy a row, copy or export the list, or open it in its own"
+" window with a search."
 msgstr ""
 
 msgid "Run all checks"
@@ -3161,6 +3182,12 @@ msgstr ""
 msgid "read the PC facts"
 msgstr ""
 
+msgid "read the installed programs"
+msgstr ""
+
+msgid "read the printers"
+msgstr ""
+
 msgid "read-only"
 msgstr ""
 
@@ -3168,6 +3195,9 @@ msgid "restart it"
 msgstr ""
 
 msgid "restart the Print Spooler"
+msgstr ""
+
+msgid "running"
 msgstr ""
 
 msgid "send a message"
@@ -3188,6 +3218,15 @@ msgid "since {when}"
 msgstr ""
 
 msgid "some left"
+msgstr ""
+
+msgid "starting"
+msgstr ""
+
+msgid "stopped"
+msgstr ""
+
+msgid "stopping"
 msgstr ""
 
 #, python-brace-format
@@ -3594,6 +3633,18 @@ msgstr ""
 
 #, python-brace-format
 msgid "{tag} ({n} of {total})"
+msgstr ""
+
+#, python-brace-format
+msgid "{title} · reading…"
+msgstr ""
+
+#, python-brace-format
+msgid "{title} · {n} · {when}"
+msgstr ""
+
+#, python-brace-format
+msgid "{title} · {when}"
 msgstr ""
 
 #, python-brace-format

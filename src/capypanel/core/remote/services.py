@@ -1,6 +1,7 @@
-"""Restarting a Windows service on another PC (the Print Spooler, for a stuck queue): Windows'
-service manager over its own remote call, as `sc \\\\PC stop` and `start` do. Nothing is
-installed or run on the target; the account needs admin rights there."""
+"""Restarting a Windows service on another PC (the Print Spooler, for a stuck queue), and
+whether it's running: Windows' service manager over its own remote call, as `sc \\\\PC query`,
+`stop` and `start` do. Nothing is installed or run on the target; the account needs admin rights
+there."""
 
 import ctypes
 import time
@@ -14,6 +15,10 @@ STOP_TIMEOUT = 30.0  # seconds a service gets to stop before giving up
 _CONNECT = 0x0001
 _QUERY, _START, _STOP = 0x0004, 0x0010, 0x0020
 _STOPPED, _STOP_CONTROL = 1, 1
+STATES = {  # what QueryServiceStatus reports, by the words sc.exe uses
+    1: "stopped", 2: "starting", 3: "stopping", 4: "running",
+    5: "continuing", 6: "pausing", 7: "paused",
+}  # fmt: skip
 _NOT_ACTIVE = 1062  # ERROR_SERVICE_NOT_ACTIVE: stopping one that's already stopped
 
 
@@ -45,6 +50,29 @@ def restart_service(
                 _stop(service, sleep)
                 if not _advapi32.StartServiceW(service, 0, None):
                     raise last_error()
+            finally:
+                _advapi32.CloseServiceHandle(service)
+        finally:
+            _advapi32.CloseServiceHandle(manager)
+
+
+def service_state(host: str, name: str, account: Account | None = None) -> str:
+    """Whether service `name` on `host` runs: "running", "stopped"… (STATES). Raises
+    RemoteError."""
+    check_reachable(host)
+    with as_account(account):
+        manager = _advapi32.OpenSCManagerW(host, None, _CONNECT)
+        if not manager:
+            raise last_error()
+        try:
+            service = _advapi32.OpenServiceW(manager, name, _QUERY)
+            if not service:
+                raise last_error()
+            try:
+                status = _Status()
+                if not _advapi32.QueryServiceStatus(service, ctypes.byref(status)):
+                    raise last_error()
+                return STATES.get(status.state, "unknown")
             finally:
                 _advapi32.CloseServiceHandle(service)
         finally:
