@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-04 23:09-0300\n"
+"POT-Creation-Date: 2026-11-05 20:47-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -627,6 +627,9 @@ msgstr "CapyPanel — claro"
 msgid "Change path…"
 msgstr "Alterar caminho…"
 
+msgid "Change the account…"
+msgstr "Alterar a conta…"
+
 msgid "Change the connection profile"
 msgstr "Trocar o perfil de conexão"
 
@@ -975,6 +978,9 @@ msgstr "Conta do Doc360 &MPS"
 msgid "Doc360 MPS account"
 msgstr "Conta do Doc360 MPS"
 
+msgid "Doc360 MPS account saved. Refresh fetches the page counts."
+msgstr "Conta do Doc360 MPS salva. Atualizar busca os contadores de páginas."
+
 msgid "Doc360 MPS answered with an error."
 msgstr "O Doc360 MPS respondeu com um erro."
 
@@ -988,8 +994,8 @@ msgstr "O Doc360 MPS não tem o número de série {serial}."
 msgid "Doc360 MPS has no total for this printer."
 msgstr "O Doc360 MPS não tem o total desta impressora."
 
-msgid "Doc360 MPS refused the login. Check the account in Settings › Printers › Refresh."
-msgstr "O Doc360 MPS recusou o login. Confira a conta em Configurações › Impressoras › Atualizar."
+msgid "Doc360 MPS refused the login."
+msgstr "O Doc360 MPS recusou o login."
 
 msgid "Doc360 MPS's pages changed, so CapyPanel couldn't read the counters."
 msgstr "As páginas do Doc360 MPS mudaram, então o CapyPanel não conseguiu ler os contadores."
@@ -1481,6 +1487,9 @@ msgstr "Nova lista de impressoras"
 
 msgid "New tag"
 msgstr "Nova tag"
+
+msgid "No Doc360 MPS account is set."
+msgstr "Nenhuma conta do Doc360 MPS definida."
 
 msgid "No access: needs an admin account on this PC"
 msgstr "Sem acesso: precisa de uma conta de administrador neste PC"
@@ -2255,11 +2264,11 @@ msgstr "Definido no arquivo de configurações"
 msgid "Set tags"
 msgstr "Definir tags"
 
-msgid "Set the Doc360 MPS account in Settings › Printers › Refresh."
-msgstr "Defina a conta do Doc360 MPS em Configurações › Impressoras › Atualizar."
-
 msgid "Set the SNMP v3 account in Settings › Printers › Refresh first."
 msgstr "Defina antes a conta SNMP v3 em Configurações › Impressoras › Atualizar."
+
+msgid "Set the account…"
+msgstr "Definir a conta…"
 
 msgid "Settings"
 msgstr "Configurações"

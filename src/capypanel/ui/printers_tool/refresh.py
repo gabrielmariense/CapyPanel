@@ -15,7 +15,7 @@ from capypanel.core import credstore
 from capypanel.core.i18n import _
 from capypanel.core.printers import doc360, reading, snmp, usm
 from capypanel.core.remote.batch import Batch
-from capypanel.ui.printers_tool.status import Checked, Counted
+from capypanel.ui.printers_tool.status import NO_ACCOUNT, REFUSED, Checked, Counted
 
 log = logging.getLogger(__name__)
 COMMUNITY = "printers/snmp-community"  # its name in Windows Credential Manager
@@ -112,11 +112,12 @@ def count(account: doc360.Account | None) -> Counted:
     """Every printer's latest counters from Doc360 MPS, or why there are none. Never raises."""
     when = datetime.now()
     if account is None:
-        return Counted(
-            when, error=_("Set the Doc360 MPS account in Settings › Printers › Refresh.")
-        )
+        return Counted(when, error=_("No Doc360 MPS account is set."), account=NO_ACCOUNT)
     try:
         return Counted(when, doc360.read_counters(account))
+    except doc360.Refused:
+        log.info("Doc360 MPS: the login was refused")
+        return Counted(when, error=_("Doc360 MPS refused the login."), account=REFUSED)
     except doc360.Doc360Error as e:
         log.info("Doc360 MPS: %s", e)  # its own few words: never a page, a login or a serial
         return Counted(when, error=_doc360_error(e))
@@ -126,10 +127,6 @@ def count(account: doc360.Account | None) -> Counted:
 
 
 def _doc360_error(error: doc360.Doc360Error) -> str:
-    if isinstance(error, doc360.Refused):
-        return _(
-            "Doc360 MPS refused the login. Check the account in Settings › Printers › Refresh."
-        )
     if isinstance(error, doc360.NoAnswer):
         return _("Doc360 MPS didn't answer.")
     if isinstance(error, doc360.Changed):

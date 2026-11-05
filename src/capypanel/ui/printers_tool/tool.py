@@ -53,6 +53,7 @@ from capypanel.ui.printers_tool.settings import (
     TEXT,
     TONER_VIEW,
     PrintersSettings,
+    change_doc360_account,
 )
 from capypanel.ui.printers_tool.status import Attention, Cell, Checked, Counted
 from capypanel.ui.printers_tool.table import PrinterTable
@@ -554,6 +555,7 @@ class PrintersTool(ListWorkspace):
                 if self._writable() is not None
                 else None,
                 self._counted,
+                self._set_doc360_account,
             )
             self.details.show_printer(details, 1, needle=self._needle())
         else:
@@ -643,6 +645,13 @@ class PrintersTool(ListWorkspace):
             self._selection_changed()
         self._show_progress()
         self.checks_changed.emit()
+
+    def _set_doc360_account(self) -> None:
+        """Details' button under a missing or refused Doc360 login."""
+        if change_doc360_account(self.details):
+            self._shell.show_message(
+                _("Doc360 MPS account saved. Refresh fetches the page counts."), 10_000
+            )
 
     def _doc360_counted(self, counted: Counted) -> None:
         if self._run is None:

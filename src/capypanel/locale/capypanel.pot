@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-04 23:09-0300\n"
+"POT-Creation-Date: 2026-11-05 20:47-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -632,6 +632,9 @@ msgstr ""
 msgid "Change path…"
 msgstr ""
 
+msgid "Change the account…"
+msgstr ""
+
 msgid "Change the connection profile"
 msgstr ""
 
@@ -981,6 +984,9 @@ msgstr ""
 msgid "Doc360 MPS account"
 msgstr ""
 
+msgid "Doc360 MPS account saved. Refresh fetches the page counts."
+msgstr ""
+
 msgid "Doc360 MPS answered with an error."
 msgstr ""
 
@@ -994,9 +1000,7 @@ msgstr ""
 msgid "Doc360 MPS has no total for this printer."
 msgstr ""
 
-msgid ""
-"Doc360 MPS refused the login. Check the account in Settings › Printers › "
-"Refresh."
+msgid "Doc360 MPS refused the login."
 msgstr ""
 
 msgid "Doc360 MPS's pages changed, so CapyPanel couldn't read the counters."
@@ -1512,6 +1516,9 @@ msgid "New printer list"
 msgstr ""
 
 msgid "New tag"
+msgstr ""
+
+msgid "No Doc360 MPS account is set."
 msgstr ""
 
 msgid "No access: needs an admin account on this PC"
@@ -2319,10 +2326,10 @@ msgstr ""
 msgid "Set tags"
 msgstr ""
 
-msgid "Set the Doc360 MPS account in Settings › Printers › Refresh."
+msgid "Set the SNMP v3 account in Settings › Printers › Refresh first."
 msgstr ""
 
-msgid "Set the SNMP v3 account in Settings › Printers › Refresh first."
+msgid "Set the account…"
 msgstr ""
 
 msgid "Settings"

@@ -70,6 +70,10 @@ class Counted:
     when: datetime
     counters: Mapping[str, doc360.Counter] = field(default_factory=dict)
     error: str = ""
+    account: str = ""  # NO_ACCOUNT or REFUSED: Details offers the account's window
+
+
+NO_ACCOUNT, REFUSED = "none", "refused"  # Counted.account
 
 
 class Attention(Enum):

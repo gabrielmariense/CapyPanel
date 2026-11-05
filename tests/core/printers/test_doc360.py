@@ -44,6 +44,8 @@ class Portal:
         self.asked: list[tuple[str, str]] = []  # (method, path with query)
         self.posted: dict[str, list[tuple[str, str]]] = {}
         self.counters = CSV
+        self.empty_months: set[tuple[str, str]] = set()  # (mes, ano) with no counters yet
+        self.exports: list[tuple[str, str]] = []  # (mes, ano) of each export asked for
         self.login_page = LOGIN_FORM
         self.export_page = EXPORT_FORM
 
@@ -96,7 +98,12 @@ def portal() -> Iterator[tuple[Portal, str]]:
                 else:
                     self._send(state.login_page)
             elif self.path == "/docmps/acao.php" and self._signed_in():
-                self._send(state.counters, kind="text/csv")
+                asked = dict(fields)
+                month = (asked.get("mes", ""), asked.get("ano", ""))
+                state.exports.append(month)
+                empty = "Cliente;Site;Patr.;Modelo;IP;N/S;Life;Mono;Color\n"
+                body = empty if month in state.empty_months else state.counters
+                self._send(body, kind="text/csv")
             else:
                 self._send(state.login_page)
 
@@ -125,9 +132,19 @@ def test_reads_the_latest_counters_by_serial(portal: tuple[Portal, str]) -> None
     assert login["token"] == "t-1" and login["dispositivo"] == "desktop"
     export = state.posted["/docmps/acao.php"]
     assert ("botao", "csv_contadores") in export
-    assert ("mes", "12") in export and ("ano", "2025") in export  # last month, across the year
+    assert state.exports == [("1", "2026")]  # this month's counters: the newest
     assert [v for k, v in export if k == "clientes[]"] == ["7", "9"]
     assert ("secao", "fechamento") in export and ("modulo", "porperiodo") in export
+
+
+def test_early_in_a_month_with_none_yet_it_takes_last_month_s(
+    portal: tuple[Portal, str],
+) -> None:
+    state, base = portal
+    state.empty_months = {("1", "2026")}
+    found = doc360.read_counters(account(), base=base, today=lambda: date(2026, 1, 2))
+    assert state.exports == [("1", "2026"), ("12", "2025")]
+    assert len(found) == 2
 
 
 def test_asks_only_for_its_own_pages_and_logs_out(portal: tuple[Portal, str]) -> None:

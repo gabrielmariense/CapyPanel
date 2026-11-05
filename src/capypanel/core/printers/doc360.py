@@ -148,21 +148,25 @@ def read_counters(
             raise Changed("Doc360's export page changed.")
         hidden = [(name, value) for name, kind, value in form if kind == "hidden"]
         clients = [value for name, _kind, value in form if name == "clientes[]"]
-        now = today()  # last month, as the portal's own page offers; this export ignores it
-        month, year = (12, now.year - 1) if now.month == 1 else (now.month - 1, now.year)
-        fields = [
-            *hidden,
-            ("mes", str(month)),
-            ("ano", str(year)),
-            ("inicio", ""),
-            ("fim", ""),
-            ("retroativo", "1"),
-            *(("clientes[]", client) for client in clients),
-            ("botao", "csv_contadores"),
-            ("envio", "enviar"),
-        ]
-        answer = session.ask(EXPORT_ACTION, fields, referer=EXPORT_PAGE)
-        counters = parse_counters(answer)
+        # The export gives the counters as of the month asked for: this month's are the newest.
+        # Early in a month it may have none yet, so then last month's.
+        now = today()
+        last = (now.year - 1, 12) if now.month == 1 else (now.year, now.month - 1)
+        for year, month in ((now.year, now.month), last):
+            fields = [
+                *hidden,
+                ("mes", str(month)),
+                ("ano", str(year)),
+                ("inicio", ""),
+                ("fim", ""),
+                ("retroativo", "1"),
+                *(("clientes[]", client) for client in clients),
+                ("botao", "csv_contadores"),
+                ("envio", "enviar"),
+            ]
+            counters = parse_counters(session.ask(EXPORT_ACTION, fields, referer=EXPORT_PAGE))
+            if counters:
+                break
         log.info("Doc360: latest counters for %d printers", len(counters))
         return counters
     finally:

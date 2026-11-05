@@ -8,7 +8,7 @@ from html import escape
 
 from PySide6.QtCore import QLocale, QRectF, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QPainter, QPalette
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from capypanel.core import i18n
 from capypanel.core.hosts.model import Host
@@ -31,6 +31,7 @@ class PrinterDetails:
     low: int = status.DEFAULT_LOW
     use: Callable[[str, str], None] | None = None  # "Use this": (field, value); None: read-only
     counted: Counted | None = None  # the last Refresh's Doc360 MPS counters
+    set_doc360: Callable[[], None] | None = None  # opens the Doc360 MPS account's window
 
 
 def source_text(source: str) -> str:
@@ -136,6 +137,23 @@ class PrinterDetailsPanel(DetailsPanel):
             shown_value = self.value(key, value) if value else self.muted("—")
             shown_value.setToolTip(tip)
             layout.addWidget(shown_value)
+            if key == "pages" and error and shown.counted and shown.counted.account:
+                self._account_button(layout, shown)
+
+    def _account_button(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
+        """Under a missing or refused Doc360 login: its window, straight from here."""
+        if shown.set_doc360 is None:
+            return
+        missing = shown.counted is not None and shown.counted.account == status.NO_ACCOUNT
+        button = QPushButton(_("Set the account…") if missing else _("Change the account…"))
+        button.setObjectName("doc360Account")
+        button.setAutoDefault(False)
+        button.clicked.connect(shown.set_doc360)
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 4, 0, 0)
+        row.addWidget(button)
+        row.addStretch(1)
+        layout.addLayout(row)
 
     def _heading(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
         """Like Hosts': a status dot by the name, then "status · checked 14:32"."""

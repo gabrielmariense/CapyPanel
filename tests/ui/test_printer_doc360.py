@@ -6,7 +6,7 @@ from dataclasses import replace
 from datetime import datetime
 
 import pytest
-from PySide6.QtWidgets import QDialog, QLabel
+from PySide6.QtWidgets import QDialog, QLabel, QPushButton
 from test_printer_status import _checked, _wait, lab, printers  # noqa: F401  (fixtures)
 
 from capypanel.core.hosts.model import Host
@@ -134,9 +134,41 @@ def test_refresh_says_when_the_doc360_account_is_missing(
     printers.commands.refresh_shown.trigger()
     _wait(printers)
     printers.table.select_ids([printer.id])
-    assert "Error: Set the Doc360 MPS account in Settings › Printers › Refresh." in _labels(
-        printers
-    )
+    assert "Error: No Doc360 MPS account is set." in _labels(printers)
+
+    # A button under it opens the account's window straight from Details.
+    [button] = [b for b in printers.details.findChildren(QPushButton)
+                if b.objectName() == "doc360Account"]  # fmt: skip
+    assert button.text() == "Set the account…"
+    opened: list[QDialog] = []
+
+    def fill(dialog: QDialog) -> QDialog.DialogCode:
+        assert isinstance(dialog, settings_module.Doc360AccountDialog)
+        opened.append(dialog)
+        dialog.partner.setText(ACCOUNT.partner)
+        dialog.user.setText(ACCOUNT.user)
+        dialog.password.setText(ACCOUNT.password)
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(settings_module, "run_modal", fill)
+    button.click()
+    assert len(opened) == 1 and refresh.doc360_account() == ACCOUNT
+    assert "Doc360 MPS account saved" in printers._shell.messages[-1]  # type: ignore[attr-defined]
+
+
+def test_a_refused_login_offers_to_change_the_account(printers: PrintersTool) -> None:  # noqa: F811
+    printer = _from_doc360(printers)
+    printers._counted = Counted(WHEN, error="Doc360 MPS refused the login.", account=status.REFUSED)
+    printers.table.select_ids([printer.id])
+    assert "Error: Doc360 MPS refused the login." in _labels(printers)
+    [button] = [b for b in printers.details.findChildren(QPushButton)
+                if b.objectName() == "doc360Account"]  # fmt: skip
+    assert button.text() == "Change the account…"
+    printers._counted = Counted(WHEN, error="Doc360 MPS didn't answer.")
+    printers.table.select_ids([])
+    printers.table.select_ids([printer.id])
+    buttons = printers.details.findChildren(QPushButton)
+    assert not [b for b in buttons if b.objectName() == "doc360Account" and b.isVisibleTo(printers.details)]  # fmt: skip  # noqa: E501
 
 
 def test_no_doc360_printer_no_doc360_login(

@@ -529,20 +529,7 @@ class PrintersSettings(SettingsGroup):
             )
 
     def _change_doc360_account(self) -> None:
-        dialog = Doc360AccountDialog(self.general.window(), refresh.doc360_account())
-        if run_modal(dialog) == QDialog.DialogCode.Accepted:
-            account = dialog.account()
-            try:
-                if dialog.forgets():
-                    credstore.forget(refresh.DOC360_ACCOUNT)
-                elif account is not None:
-                    refresh.save_doc360_account(account)
-            except (OSError, ValueError) as e:
-                QMessageBox.warning(
-                    self.general,
-                    _("Doc360 MPS account"),
-                    _("Windows didn't keep it: {error}").format(error=e),
-                )
+        change_doc360_account(self.general)
         self.general.doc360_row.description.setText(doc360_text())
 
     def _change_community(self) -> None:
@@ -569,6 +556,26 @@ class PrintersSettings(SettingsGroup):
         doc = self._tool.document
         self.lists.view.list_opened(doc)
         self.general.list_opened(self._tool.start_view(), doc.hosts if doc else None)
+
+
+def change_doc360_account(parent: QWidget) -> bool:
+    """The Doc360 MPS account's window, from Settings or from Details; True when Save kept or
+    forgot the login."""
+    dialog = Doc360AccountDialog(parent.window(), refresh.doc360_account())
+    if run_modal(dialog) != QDialog.DialogCode.Accepted:
+        return False
+    account = dialog.account()
+    try:
+        if dialog.forgets():
+            credstore.forget(refresh.DOC360_ACCOUNT)
+        elif account is not None:
+            refresh.save_doc360_account(account)
+    except (OSError, ValueError) as e:
+        QMessageBox.warning(
+            parent, _("Doc360 MPS account"), _("Windows didn't keep it: {error}").format(error=e)
+        )
+        return False
+    return True
 
 
 def community_is_set() -> bool:
