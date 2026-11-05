@@ -10,8 +10,9 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
+import shiboken6
 from PySide6.QtCore import QEvent, QObject, QPoint, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QGuiApplication, QKeyEvent, QPalette
+from PySide6.QtGui import QCloseEvent, QColor, QGuiApplication, QKeyEvent, QPalette
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -490,7 +491,7 @@ class CommandsWindow(QDialog):
             self._picked.set_picked(False)
         self._picked = row
         row.set_picked(True)
-        QTimer.singleShot(0, lambda: self._scroll_to(row))
+        QTimer.singleShot(0, self, lambda: self._scroll_to(row))  # dropped if the window goes
         self._show_results()
 
     def _scroll_to(self, row: CommandRow) -> None:
@@ -536,10 +537,13 @@ class CommandsWindow(QDialog):
             return Listed(False, datetime.now(UTC), rows, spooler)
 
         def done(listed: Listed) -> None:
-            self._lists[key] = listed
-            self._show_results()
+            if self._alive():
+                self._lists[key] = listed
+                self._show_results()
 
         def failed(error: BaseException) -> None:
+            if not self._alive():
+                return
             self._lists.pop(key, None)
             action = (
                 _("read the printers")
@@ -594,11 +598,15 @@ class CommandsWindow(QDialog):
         key = (target.key, "printers")
 
         def done(_value: object) -> None:
+            if not self._alive():
+                return
             self._tool.say(_("Cleared the queue of {printer} on {host}.").format(
                 printer=printer.name, host=target.name))  # fmt: skip
             self._read_list("printers", target)
 
         def failed(error: BaseException) -> None:
+            if not self._alive():
+                return
             action = _("clear the queue of {printer}").format(printer=printer.name)
             self._outcomes[key] = Outcome(failed_text(action, target.name, error), error)
             self._show_results()
@@ -609,7 +617,13 @@ class CommandsWindow(QDialog):
             failed,
         )
 
+    def _alive(self) -> bool:
+        """Still open: an answer can come back after the window was closed and deleted."""
+        return shiboken6.isValid(self) and shiboken6.isValid(self.results)
+
     def _report(self, command_id: str, outcome: Outcome) -> None:
+        if not self._alive():
+            return
         target = self.target()
         if target is not None:
             self._outcomes[(target.key, command_id)] = outcome
@@ -708,6 +722,12 @@ class CommandsWindow(QDialog):
             self._move(-1 if event.key() == Qt.Key.Key_Up else 1)
             return True
         return super().eventFilter(watched, event)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Closing deletes the window: its key watch on the search goes first, so no key
+        reaches it while its parts are being deleted."""
+        self.search.removeEventFilter(self)
+        super().closeEvent(event)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() in (Qt.Key.Key_Up, Qt.Key.Key_Down):

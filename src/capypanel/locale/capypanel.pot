@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-04 22:47-0300\n"
+"POT-Creation-Date: 2026-11-04 23:09-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -717,11 +717,6 @@ msgid "Co&py"
 msgstr ""
 
 msgid "Commands"
-msgstr ""
-
-msgid ""
-"Commands for the selected host: open its folders, message its users, "
-"restart it…"
 msgstr ""
 
 msgid "Computer Management"
@@ -1759,6 +1754,11 @@ msgid "Open folder"
 msgstr ""
 
 msgid "Open many remote screens?"
+msgstr ""
+
+msgid ""
+"Open the Commands window for the selected host; the arrow lists its "
+"commands"
 msgstr ""
 
 msgid "Open the selected printers' web pages (Enter)"

@@ -189,6 +189,10 @@ class HostsTool(ListWorkspace):
         a.copy_address.triggered.connect(lambda: self._copy(lambda h: h.target))
         a.connection_profiles.triggered.connect(lambda: self._shell.open_settings("connections"))
         a.saved_credentials.triggered.connect(lambda: self._shell.open_saved_credentials())
+        # With no host picked, the window opens for an address typed in it.
+        self.toolbar.commands_button.clicked.connect(
+            lambda: self.open_commands(self.selected_target())
+        )
         self.toolbar.commands_menu.aboutToShow.connect(
             lambda: self._fill_commands_menu(self.toolbar.commands_menu, window=True)
         )

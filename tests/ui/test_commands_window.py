@@ -234,3 +234,13 @@ def test_programs_right_click_opens_them_in_their_own_window(
     assert picked == ["&Copy row", "Copy &list", "&Export CSV…", "&Open in its own window…"]
     assert len(opened) == 1 and isinstance(opened[0], ProgramsDialog)
     assert opened[0].table.topLevelItemCount() == 1  # the list read here, not read again
+
+
+def test_an_answer_after_the_window_closed_is_dropped(window: CapyWindow, calls: list[Any]) -> None:
+    commands = _open(window, "DESK-02")
+    row = next(r for r in commands.rows if r.command.id == "c-share")
+    commands.pick(row)
+    row.run.click()
+    commands.close()  # deleted on close, while the command is still on its way
+    _settle(window)  # its answer comes back to nothing, quietly
+    assert ("folder", "\\\\192.0.2.12\\C$") in calls

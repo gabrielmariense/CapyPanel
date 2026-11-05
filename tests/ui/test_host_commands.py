@@ -426,3 +426,17 @@ def test_commands_menu_on_the_toolbar_lists_the_groups(window: CapyWindow) -> No
     assert [a.text() for a in menu.actions()] == [
         "Check", "Open", "Users", "Power", "Printers", "", "&All commands…",
     ]  # fmt: skip
+
+
+def test_a_click_on_commands_opens_the_window_for_the_selected_host(window: CapyWindow) -> None:
+    from capypanel.ui.hosts_tool.commands_window import CommandsWindow
+
+    target = _select(window, "PC-1")
+    window.hosts.toolbar.commands_button.click()
+    commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
+    assert isinstance(commands, CommandsWindow) and commands.target() == target
+    window.hosts.table.clearSelection()
+    window.hosts.toolbar.commands_button.click()  # no host: an address typed in it
+    commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
+    assert isinstance(commands, CommandsWindow) and commands.target() is None
+    commands.close()

@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import shiboken6
 from PySide6.QtCore import QStandardPaths, Qt
 from PySide6.QtGui import QColor, QGuiApplication
 from PySide6.QtWidgets import (
@@ -439,7 +440,13 @@ class ReadList(QDialog):
     def show_rows(self, found: Any) -> None:
         raise NotImplementedError
 
+    def _alive(self) -> bool:
+        """Still open: the list can come back after the window was closed and deleted."""
+        return shiboken6.isValid(self) and shiboken6.isValid(self.table)
+
     def _read(self, found: Any) -> None:
+        if not self._alive():
+            return
         self.read_at = datetime.now(UTC)
         self.read_button.setEnabled(True)
         self.show_rows(found)
@@ -447,6 +454,8 @@ class ReadList(QDialog):
     def _failed(self, error: BaseException) -> None:
         from capypanel.ui.hosts_tool.runner import reason_text
 
+        if not self._alive():
+            return
         self.read_button.setEnabled(True)
         self.table.clear()
         self.summary.setText(_("Couldn't read {host}: {reason}").format(

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-04 22:47-0300\n"
+"POT-Creation-Date: 2026-11-04 23:09-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -710,9 +710,6 @@ msgstr "Co&piar"
 
 msgid "Commands"
 msgstr "Comandos"
-
-msgid "Commands for the selected host: open its folders, message its users, restart it…"
-msgstr "Comandos para o host selecionado: abrir suas pastas, enviar mensagem aos usuários, reiniciá-lo…"
 
 msgid "Computer Management"
 msgstr "Gerenciamento do Computador"
@@ -1712,6 +1709,9 @@ msgstr "Abrir pasta"
 
 msgid "Open many remote screens?"
 msgstr "Abrir muitas telas remotas?"
+
+msgid "Open the Commands window for the selected host; the arrow lists its commands"
+msgstr "Abre a janela Comandos para o host selecionado; a seta lista os comandos dele"
 
 msgid "Open the selected printers' web pages (Enter)"
 msgstr "Abre a página web das impressoras selecionadas (Enter)"

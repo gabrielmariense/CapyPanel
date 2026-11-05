@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMenu,
     QPushButton,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -93,9 +94,10 @@ class HostsToolBar(ToolBar):
                 self.refresh_button.mapToGlobal(QPoint(0, self.refresh_button.height()))
             )
         )
-        # Commands: the selected host's commands by group, then the Commands window; the tool
-        # fills its menu each time it opens.
-        self.commands_button = tool_button(dropdown=True)
+        # Commands: a split button. A click opens the Commands window; its arrow, the selected
+        # host's commands by group (the tool fills the menu each time it opens).
+        self.commands_button = tool_button()
+        self.commands_button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         self.commands_menu = QMenu(self.commands_button)
         self.commands_button.setMenu(self.commands_menu)
         # Inventory: adding hosts and groups, and importing them; its menu is filled by the tool.
@@ -121,7 +123,7 @@ class HostsToolBar(ToolBar):
         )
         self.commands_button.setText(gap + _("Commands"))
         self.commands_button.setToolTip(
-            _("Commands for the selected host: open its folders, message its users, restart it…")
+            _("Open the Commands window for the selected host; the arrow lists its commands")
         )
         self.inventory_button.setText(gap + _("Inventory"))
         self.inventory_button.setToolTip(_("Add hosts and groups, or import a list of hosts"))
