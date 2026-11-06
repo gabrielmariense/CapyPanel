@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-06 17:50-0300\n"
+"POT-Creation-Date: 2026-11-06 17:55-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -499,6 +499,9 @@ msgid "Address"
 msgstr ""
 
 msgid "Adds this PC to the open host list"
+msgstr ""
+
+msgid "Admin tools"
 msgstr ""
 
 msgid ""
@@ -1748,9 +1751,6 @@ msgstr ""
 msgid "Only the first {n} open at once."
 msgstr ""
 
-msgid "Open"
-msgstr ""
-
 msgid "Open &Settings"
 msgstr ""
 
@@ -1999,6 +1999,9 @@ msgstr ""
 msgid "Put in &group"
 msgstr ""
 
+msgid "Quick check"
+msgstr ""
+
 msgid "Quit"
 msgstr ""
 
@@ -2209,9 +2212,6 @@ msgstr ""
 msgid ""
 "Right-click to copy a row, copy or export the list, or open it in its own"
 " window with a search."
-msgstr ""
-
-msgid "Run all checks"
 msgstr ""
 
 msgid "Run checks whether it answers."

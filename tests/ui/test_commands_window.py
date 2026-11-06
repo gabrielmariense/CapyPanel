@@ -107,7 +107,22 @@ def test_typing_searches_by_name_and_description(window: CapyWindow) -> None:
     assert shown == ["spooler"]
     assert commands.picked() is not None and commands.picked().id in shown  # type: ignore[union-attr]
     hidden = [commands.groups.item(i).isHidden() for i in range(commands.groups.count())]
-    assert hidden == [True, True, True, True, False]
+    assert hidden == [True, True, True, True, False, True]  # only Printers
+
+
+def test_a_command_set_apart_has_a_small_gap_above_it(window: CapyWindow) -> None:
+    commands = _open(window, "DESK-02")
+    commands.show()
+    QApplication.processEvents()
+    row = {r.command.id: r for r in commands.rows}
+
+    def gap(above: str, below: str) -> int:
+        return row[below].y() - (row[above].y() + row[above].height())
+
+    # Installed programs and Cancel the pending restart: where the menus draw a line.
+    assert gap("facts", "programs") == gap("status", "users") + commands_module.APART
+    assert gap("shut-down", "cancel-restart") == gap("restart", "shut-down") + commands_module.APART
+    commands.close()
 
 
 def test_run_opens_and_the_answer_stays_on_the_right(

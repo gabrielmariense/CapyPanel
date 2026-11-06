@@ -1147,11 +1147,15 @@ class HostsTool(ListWorkspace):
         self.result_strip.show_outcome(outcome)
 
     def _add_command_menus(self, menu: QMenu) -> None:
-        """Open ▸, Users ▸, Power ▸… with the selected host's commands, in the list's groups."""
+        """Check ▸, Folders ▸… Power ▸ with the selected host's commands, in the list's groups;
+        a line before each command set apart."""
         self._update_host_actions()
         for group in CommandGroup:
             submenu = menu.addMenu(_(GROUP_NAMES[group]))
-            submenu.addActions([self.host_actions[c.id] for c in host_commands.in_group(group)])
+            for command in host_commands.in_group(group):
+                if command.apart:
+                    submenu.addSeparator()
+                submenu.addAction(self.host_actions[command.id])
             submenu.setEnabled(self.selected_target() is not None)
 
     def _fill_commands_menu(self, menu: QMenu, *, window: bool = False) -> None:
