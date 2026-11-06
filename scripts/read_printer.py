@@ -4,6 +4,7 @@
     uv run python scripts/read_printer.py --public 192.0.2.5
     uv run python scripts/read_printer.py --brand-data 192.0.2.5
     uv run python scripts/read_printer.py --v3 192.0.2.5
+    uv run python scripts/read_printer.py --firmware 192.0.2.5
 
 It asks for the community string without showing it (--public uses "public" without asking,
 for printers left on the default), reads the printer over SNMP (reading only, it never changes
@@ -14,7 +15,12 @@ and the MAC address only as its maker's half, so the output can be shared withou
 types and their passwords (passwords not shown).
 
 --brand-data also prints what a Ricoh or Brother keeps in its own data area, as raw numbers,
-to compare with the printer's web page before Refresh uses them."""
+to compare with the printer's web page before Refresh uses them.
+
+--firmware also prints every standard place a printer may keep its firmware version, with a
+number per line, to find which one matches the version on the printer's web page. Only say
+which number matches: the lines are printed as the printer gives them (its own serial number is
+replaced by <serial>), so keep them on this PC."""
 
 import getpass
 import re
@@ -29,6 +35,16 @@ BROTHER_MAINTENANCE = reading.BROTHER_MAINTENANCE.removesuffix(".0")  # and anyt
 # Brother record codes seen in published readers; the rest print as their code.
 BROTHER_CODES = {0x41: "drum life", 0x6F: "black toner", 0x70: "cyan toner",
                  0x71: "magenta toner", 0x72: "yellow toner"}  # fmt: skip
+# Where printers keep their firmware version, for --firmware: (label, OID, walk it?).
+FIRMWARE_PLACES = [
+    ("system description", reading.SYS_DESCR, False),
+    ("device description", reading.HR_DEVICE_DESCR, True),
+    ("entity firmware", reading.ENTITY_FIRMWARE, True),
+    ("entity software", reading.ENTITY_SOFTWARE, True),
+    ("entity description", "1.3.6.1.2.1.47.1.1.1.1.2", True),  # entPhysicalDescr
+    ("installed software", "1.3.6.1.2.1.25.6.3.1.2", True),  # hrSWInstalledName
+]
+MAX_ROWS = 15  # per place: installed software can be a long list
 # A word with digits in it might be a serial number: hidden like the printer's own.
 _SERIAL_LIKE = re.compile(r"\b(?=\w*\d)\w{6,}\b")
 
@@ -36,7 +52,8 @@ _SERIAL_LIKE = re.compile(r"\b(?=\w*\d)\w{6,}\b")
 def main() -> int:
     args = sys.argv[1:]
     public, brand_data, v3 = "--public" in args, "--brand-data" in args, "--v3" in args
-    args = [a for a in args if a not in ("--public", "--brand-data", "--v3")]
+    firmware = "--firmware" in args
+    args = [a for a in args if a not in ("--public", "--brand-data", "--v3", "--firmware")]
     if len(args) != 1:
         print(__doc__)
         return 2
@@ -86,6 +103,11 @@ def main() -> int:
             show_brand_data(host, secret, found.brand)
         except snmp.SnmpError as e:
             print(f"Brand data couldn't be read: {e}")
+    if firmware:
+        try:
+            show_firmware_places(host, secret, found.serial)
+        except snmp.SnmpError as e:
+            print(f"The firmware places couldn't be read: {e}")
     return 0
 
 
@@ -130,6 +152,22 @@ def show_brand_data(host: str, secret: snmp.Secret, brand: str) -> None:
                     print(f"  {name:<14} {number:>8}  ({number / 100:g} if a %)")
         else:
             print(f"Brand data: nothing checked for {brand or 'this brand'}.")
+
+
+def show_firmware_places(host: str, secret: snmp.Secret, serial: str) -> None:
+    print("Firmware places (say which number shows the web page's firmware version):")
+    number = 0
+    with snmp.Session(host, secret) as session:
+        for label, oid, walk in FIRMWARE_PLACES:
+            rows = session.walk(oid) if walk else list(session.get([oid]).items())
+            texts = [t for _oid, v in rows if (t := reading._text(v))][:MAX_ROWS]
+            if not texts:
+                print(f"  -  {label}: nothing")
+            for text in texts:
+                number += 1
+                if serial:
+                    text = text.replace(serial, "<serial>")
+                print(f"  {number:>2}. {label}: {text}")
 
 
 def shown(value: snmp.Value) -> str:

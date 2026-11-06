@@ -118,7 +118,8 @@ acrescenta que é somente leitura, e que só quem ele deixa gravar pode alterá-
 tem um próprio." Duas linhas vêm depois dela, sobre as senhas digitadas ao conectar:
 
 - **Credenciais:** **Credenciais temporárias**, "esquecidas quando o CapyPanel fecha", ou
-  **Gerenciador de Credenciais**, "salvas para a sua conta do Windows".
+  **Gerenciador de Credenciais**, "salvas para a sua conta do Windows". Ela vale também para a
+  conta digitada para outros PCs, a que lê os usuários logados e executa os comandos de um host.
 - **Credenciais salvas:** quantos logins estão guardados e onde, como "2 guardados: 1 no
   Gerenciador de Credenciais, 1 temporário.", com um **Gerenciar…** para abrir a janela que os
   lista.
@@ -158,11 +159,13 @@ arquivos estão em uso.
 de impressoras, e **Listas de impressoras** é a mesma tabela e os mesmos botões do Listas de
 hosts. As duas estão em [Listas de impressoras](printers/printer-lists.pt-BR.md#configuracoes).
 
-O **Atualizar** guarda as seis configurações de leitura das impressoras por SNMP: a **Versão do
-SNMP**, v2c ou v3, a **Conta SNMP** dela atrás de um botão **Alterar…**, o **Atualizar sozinho**, a
-**Notificação do Windows** sobre as impressoras que requerem atenção, o **Nível baixo de
-suprimento** entre 1 e 50 %, e se a **Coluna Toner** mostra texto ou uma barra. O
-[Verificando impressoras](printers/checking.pt-BR.md) explica as seis.
+O **Atualizar** guarda as oito configurações de leitura das impressoras: a **Versão do SNMP**, v2c
+ou v3, a **Conta SNMP** dela atrás de um botão **Alterar…**, a **Conta do Doc360 MPS** atrás de
+outro, para as impressoras cujos contadores de páginas vêm daquele portal, o **Atualizar
+sozinho**, a **Notificação do Windows** sobre as impressoras que requerem atenção, o **Nível
+baixo de suprimento** entre 1 e 50 %, as **Marcas das barras** de suprimento, e se a **Coluna
+Toner** mostra texto ou uma barra. O [Verificando impressoras](printers/checking.pt-BR.md)
+explica as oito.
 
 ## Sobre
 

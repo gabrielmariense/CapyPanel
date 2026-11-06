@@ -52,9 +52,10 @@ importam, e impressoras empatadas ficam em ordem de nome.
   Kyocera, Lexmark, Ricoh, Samsung, Xerox, Zebra), e você pode digitar qualquer outra.
 - **Nº de série** e **Patrimônio**, os dois números de que você precisa ao abrir um chamado ou
   fazer um inventário. Marca e nº de série são salvos em maiúsculas.
-- **Contadores de páginas**, que diz de onde virão as contagens: **SNMP**, perguntado à própria
-  impressora, ou **Doc360 MPS**, o portal de impressão gerenciada. Nada lê contadores ainda; a
-  configuração registra de onde eles serão lidos.
+- **Contadores de páginas**, que diz de onde vem a contagem: **SNMP**, perguntado à própria
+  impressora, ou **Doc360 MPS**, o portal de impressão gerenciada (veja
+  [Verificando impressoras](checking.pt-BR.md#contadores-de-paginas-do-doc360-mps)). Um Atualizar
+  lê a contagem da origem que você escolher aqui.
 - **Notas**, para o que mais houver.
 
 **Editar selecionado…** (F2) abre a mesma janela para impressoras que já estão na lista.
@@ -120,9 +121,9 @@ juntos, separados por "; ".
 Marcar qualquer coluna em Última verificação deixa a janela atualizar essas impressoras ali
 mesmo, e ela diz quantas nunca foram verificadas. Sem nenhuma marcada o botão se explica:
 "Marque uma coluna em Última verificação para lê-las". Uma impressora cujos contadores vêm do
-Doc360 MPS fica com "Erro" no Total de páginas; o
-[Verificando impressoras](checking.pt-BR.md#o-que-a-impressora-diz-sobre-si-mesma) explica por
-quê.
+Doc360 MPS fica com o número do portal, ou com "Erro" quando o portal não tinha nenhum para
+ela; o [Verificando impressoras](checking.pt-BR.md#contadores-de-paginas-do-doc360-mps) diz o que
+pode dar errado lá.
 
 As impressoras a exportar são os mesmos tipos de escolha do Hosts: os resultados da pesquisa ou as
 tags escolhidas enquanto uma das duas está ativa, as impressoras selecionadas quando você tem mais

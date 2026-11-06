@@ -321,9 +321,13 @@ class TagChip(QFrame):
 class FlowLayout(QLayout):
     """Lays widgets out left to right, wrapping onto new lines like words in a paragraph."""
 
-    def __init__(self, parent: QWidget | None = None, spacing: int = 4) -> None:
+    def __init__(
+        self, parent: QWidget | None = None, spacing: int = 4, *, stretch_last: bool = True
+    ) -> None:
+        """stretch_last: the last widget (a text box) takes the rest of its line."""
         super().__init__(parent)
         self._items: list[QLayoutItem] = []
+        self._stretch_last = stretch_last
         self.setSpacing(spacing)
 
     def addItem(self, item: QLayoutItem) -> None:
@@ -376,7 +380,7 @@ class FlowLayout(QLayout):
             if x + hint.width() > area.right() + 1 and line_height:
                 x, y, line_height = area.x(), y + line_height + self.spacing(), 0
             width = hint.width()
-            if index == last:  # the text box takes the rest of its line
+            if index == last and self._stretch_last:  # the text box takes the rest
                 width = max(hint.width(), area.right() + 1 - x)
             if move:
                 item.setGeometry(QRect(QPoint(x, y), QSize(width, hint.height())))

@@ -11,8 +11,9 @@ from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
 from capypanel.core.remote import checks
+from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.checks import Checks, Found
-from capypanel.core.remote.sessions import Account, Reason, Session, SessionsError
+from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_ui
 from capypanel.ui.hosts_tool import tool as hosts_module
@@ -81,7 +82,7 @@ def answers(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
 def test_checking_selected_hosts_fills_the_status_and_user_columns(
     window: CapyWindow, answers: dict[str, Any]
 ) -> None:
-    answers["10.0.0.2"] = Found(Status.OFFLINE, users_error=SessionsError(Reason.UNREACHABLE))
+    answers["10.0.0.2"] = Found(Status.OFFLINE, users_error=RemoteError(Reason.UNREACHABLE))
     answers["10.0.0.1"] = Found(Status.ONLINE, (DESK,), answered=("10.0.0.1", 445))
     window.hosts.table.select_ids(_ids(window, "PC-1", "PC-2", "Desk 4"))
     window.hosts.commands.check_users.trigger()
@@ -130,7 +131,8 @@ def test_refresh_checks_every_host_shown_even_with_nothing_selected(
 ) -> None:
     _pick_group(window, "Desks")
     assert window.hosts.table.selected_ids() == []
-    window.hosts.toolbar.refresh_status.trigger()
+    window.hosts.refresh_panel.users_box.setChecked(False)
+    window.hosts.toolbar.refresh_button.click()  # what the right-click panel has ticked
     _wait(window)
     assert sorted(a for a, *_ in answers["seen"]) == ["10.0.0.2", "10.0.0.3"]
 
@@ -163,7 +165,7 @@ def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
 ) -> None:
     def admins_only(wanted: Checks) -> Found:
         if wanted.account is None:
-            return Found(Status.ONLINE, users_error=SessionsError(Reason.NOT_ADMIN, 259))
+            return Found(Status.ONLINE, users_error=RemoteError(Reason.NOT_ADMIN, 259))
         return Found(Status.ONLINE, (DESK,))
 
     answers["10.0.0.3"] = admins_only
@@ -180,7 +182,7 @@ def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
     window.hosts.commands.check_users.trigger()
     _wait(window)
     _wait(window)  # the retry with the typed account
-    assert asked == ["Account for logged-on users"]
+    assert asked == ["Account for other PCs"]
     retried = [(a, acc) for a, _s, _u, acc in answers["seen"] if acc is not None]
     assert retried == [("10.0.0.3", Account("CORP\\admin", "pw"))]
     assert _cells(window, "PC-3")[1] == "CORP\\ana"
@@ -194,7 +196,7 @@ def test_a_rejected_typed_account_is_never_tried_on_the_other_hosts(
     window: CapyWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts._account = Account("CORP\\admin", "typo")
-    rejected = Found(Status.ONLINE, users_error=SessionsError(Reason.REJECTED, 1326))
+    rejected = Found(Status.ONLINE, users_error=RemoteError(Reason.REJECTED, 1326))
     for address in ("10.0.0.1", "10.0.0.2", "10.0.0.3"):
         answers[address] = rejected
     monkeypatch.setattr(check_ui.AccountDialog, "exec", lambda _self: QDialog.DialogCode.Rejected)
@@ -223,7 +225,8 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     row = window.hosts.table.visualItemRect(first)
     window.hosts._item_menu(QPoint(row.left() + 10, row.center().y()))  # on the name
     assert seen == [
-        "&Connect", "Refresh &status", "Refresh &logged-on users", "Co&py",
+        "&Connect", "Refresh &status", "Refresh &logged-on users",
+        "Check", "Open", "Users", "Power", "Printers", "Co&py",
         "&Edit selected…", "&Move to", "&Tags", "&Remove selected",
     ]  # fmt: skip
 
@@ -274,10 +277,14 @@ def test_a_large_users_check_asks_first(
         hosts_module, "confirm", lambda _p, _t, text, _a: asked.append(text) or False
     )
     _pick_group(window, "Office")
-    window.hosts.toolbar.refresh_users.trigger()
+    panel = window.hosts.refresh_panel
+    panel.status_box.setChecked(False)
+    window.hosts.toolbar.refresh_button.click()
     _wait(window)
     assert asked == ["Check who is logged on to 3 hosts?"] and answers["seen"] == []
-    window.hosts.toolbar.refresh_status.trigger()  # Status never asks
+    panel.status_box.setChecked(True)
+    panel.users_box.setChecked(False)
+    window.hosts.toolbar.refresh_button.click()  # Status never asks
     _wait(window)
     assert len(answers["seen"]) == 3 and len(asked) == 1
 

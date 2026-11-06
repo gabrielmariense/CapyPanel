@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QLabel
 from capypanel.core import credstore, settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.core.remote.sessions import Account
+from capypanel.core.remote.access import Account
 from capypanel.core.tools.connect import Credential
 from capypanel.ui import connect as connect_ui
 from capypanel.ui.checks import AccountDialog

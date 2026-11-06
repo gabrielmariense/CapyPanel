@@ -13,7 +13,7 @@ lists, see which ones are on and who is logged on to them, and open a remote scr
 them through Remote Desktop or the VNC viewer you already use. It keeps your printers too, with
 the details you need and their web pages a click away.
 
-> **Status: beta (0.22.0).** It runs from source; there's no installer yet.
+> **Status: beta (0.23.0).** It runs from source; there's no installer yet.
 
 ![CapyPanel's Home page: the tool rail, the capybara, and a tile for Hosts and one for Printers](docs/images/home-dark.png)
 
@@ -23,11 +23,13 @@ the details you need and their web pages a click away.
   - Remote connection: UltraVNC, RealVNC, Remote Desktop
   - Connection profiles
   - Shared lists, groups and tags
-  - Status and logged-on users
+  - Status, logged-on users and PC facts
+  - Commands on a PC: its folders and consoles, its users, power and printers
   - Search, import and export
 - Printers
   - Lists with brand, model, serial number and asset tag
   - Status, toner and supplies over SNMP, v2c or v3
+  - Page counts from Doc360 MPS
   - Warnings when a printer needs attention
   - Web pages and reports
 
@@ -42,7 +44,9 @@ Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrie
 - [Importing and exporting hosts](docs/hosts/importing.md): many hosts at once, in and out as CSV
 - [Connecting](docs/hosts/connecting.md): VNC viewers, Remote Desktop, connection profiles and
   passwords
-- [Checking hosts](docs/hosts/checking.md): status and logged-on users
+- [Checking hosts](docs/hosts/checking.md): status, logged-on users and PC facts
+- [Commands on a host](docs/hosts/commands.md): folders and consoles, messages, log off,
+  restart, printers and installed programs
 - [Searching hosts](docs/hosts/searching.md): finding a host anywhere in the list
 - [The Printers tool](docs/printers/printers.md): printers, their details and their web pages
 - [Checking printers](docs/printers/checking.md): status, toner and supplies over SNMP

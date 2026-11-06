@@ -25,6 +25,7 @@ SERIAL_NUMBER = "1.3.6.1.2.1.43.5.1.1.17"  # prtGeneralSerialNumber
 ENTITY_SERIAL = "1.3.6.1.2.1.47.1.1.1.1.11"  # entPhysicalSerialNum: where some brands put it
 ENTITY_FIRMWARE = "1.3.6.1.2.1.47.1.1.1.1.9"  # entPhysicalFirmwareRev
 ENTITY_SOFTWARE = "1.3.6.1.2.1.47.1.1.1.1.10"  # entPhysicalSoftwareRev: some put it here
+SOFTWARE_INSTALLED = "1.3.6.1.2.1.25.6.3.1.2"  # hrSWInstalledName: "<model> Main V4.00.02.14 …"
 IF_ADDRESS = "1.3.6.1.2.1.2.2.1.6"  # ifPhysAddress: each network interface's MAC
 MARKERS = "1.3.6.1.2.1.43.10.2.1"  # prtMarkerTable: what each marker counts, and in what unit
 LIFE_COUNT = f"{MARKERS}.4"  # prtMarkerLifeCount
@@ -46,6 +47,9 @@ _MAKERS = {
     1347: "KYOCERA", 1602: "CANON", 2435: "BROTHER", 10642: "ZEBRA",
 }  # fmt: skip
 _ENTERPRISES = "1.3.6.1.4.1."
+# A firmware version in a description: "V4.00.02.14" or "V1.11", and "Firmware Ver.Q".
+_VERSION = re.compile(r"\bV\d+(?:\.\d+)+\b")
+_FIRMWARE_VER = re.compile(r"\bFirmware\s+Ver\.?\s*(\w+)", re.IGNORECASE)
 
 # Brands' own data, read only to fill a gap the standard objects leave.
 RICOH_SERIAL = "1.3.6.1.4.1.367.3.2.1.2.1.4.0"  # ricohEngSerialNumber
@@ -193,6 +197,10 @@ def read(
         firmware = _first_text(session.walk(ENTITY_FIRMWARE))
         if not firmware:
             firmware = _first_text(session.walk(ENTITY_SOFTWARE))
+        if not firmware:
+            firmware = _installed_firmware(session.walk(SOFTWARE_INSTALLED))
+        if not firmware:
+            firmware = _described_firmware(_text(top[SYS_DESCR]))
     device_status = _number(details[f"{HR_DEVICE_STATUS}.{device}"])
     return Reading(
         state=_STATES.get(status, State.UNKNOWN) if status is not None else State.UNKNOWN,
@@ -207,6 +215,25 @@ def read(
         mac=mac,
         firmware=firmware,
     )
+
+
+def _installed_firmware(rows: list[tuple[str, snmp.Value]]) -> str:
+    """The version in the installed-software list: the main firmware's line if one says
+    "Main", else the first line with a version (Samsung lists Main, Engine and Network)."""
+    texts = [_text(value) for _oid, value in rows]
+    for text in sorted(texts, key=lambda t: " main " not in f" {t.casefold()} "):
+        if found := _VERSION.search(text):
+            return found[0]
+    return ""
+
+
+def _described_firmware(description: str) -> str:
+    """The version in the printer's system description, when it gives one there ("…;
+    V4.00.02.14 MAY-02-2017;…", "SP 3710DN V1.11 / …", "Firmware Ver.Q ,MID …")."""
+    if found := _FIRMWARE_VER.search(description):
+        return found[1]
+    found = _VERSION.search(description)
+    return found[0] if found else ""
 
 
 def _mac(rows: list[tuple[str, snmp.Value]]) -> str:

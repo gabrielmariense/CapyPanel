@@ -13,7 +13,7 @@ uv run capypanel
 
 A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes
 abrem na hora. A versão aparece na barra de título, seguida do commit quando você roda pelo
-código-fonte, por exemplo `CapyPanel 0.22.0 (abc1234)`. Informe-a ao relatar um problema.
+código-fonte, por exemplo `CapyPanel 0.23.0 (abc1234)`. Informe-a ao relatar um problema.
 
 A Área de Trabalho Remota funciona de cara, com o cliente que já vem no Windows. Para o VNC você
 também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
@@ -48,10 +48,10 @@ de [A ferramenta Impressoras](printers/printers.pt-BR.md).
 | Parte | O que mostra |
 |---|---|
 | **Barra lateral** (borda esquerda) | Uma faixa estreita com o **Início** (Ctrl+0) no topo, depois um ícone por ferramenta com o nome numa dica, **Hosts** (Ctrl+1) e **Impressoras** (Ctrl+2), e **Configurações** (Ctrl+,) embaixo. Onde você está tem um quadrado colorido atrás do ícone |
-| **Barra de ferramentas** (topo) | Os botões da ferramenta aberta. Para o Hosts: **Conectar**, **Atualizar**, **Inventário** e **Relatório** |
+| **Barra de ferramentas** (topo) | Os botões da ferramenta aberta. Para o Hosts: **Conectar**, **Atualizar**, **Comandos**, **Inventário** e **Relatório** |
 | **Painel de grupos** (esquerda) | O nome da lista aberta no topo, como um menu que troca de lista. Depois "Todos os hosts", com quantos hosts a lista tem, e "Sem grupo" embaixo dele, com quantos não estão em nenhum. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags** |
 | **Painel de hosts** (meio) | A caixa de pesquisa (veja [Pesquisando hosts](hosts/searching.pt-BR.md)) acima dos hosts do grupo ou da tag selecionada, com **Status** e **Usuário** |
-| **Painel de detalhes** (direita) | O host selecionado: o nome e o status dele, depois **Conexão** (endereço, grupo, perfil), quem está **logado**, as **tags** e as **notas**. Clique em qualquer valor para copiá-lo. Sem nada selecionado, quantos hosts estão exibidos e quantos deles estão online, offline, não encontrados ou não verificados |
+| **Painel de detalhes** (direita) | O host selecionado: o nome e o status dele, uma fileira de botões para os [comandos](hosts/commands.pt-BR.md) dele, depois **Conexão** (endereço, grupo, perfil), quem está **logado**, os **dados do PC**, as **tags** e as **notas**. Clique em qualquer valor para copiá-lo. Sem nada selecionado, quantos hosts estão exibidos e quantos deles estão online, offline, não encontrados ou não verificados |
 | **Barra de status** | Qual lista está aberta, onde ela está, quantos hosts tem, quantos estão online depois que algo foi verificado e quantos estão selecionados |
 
 A barra de menus é a mesma em qualquer ferramenta, e não guarda nada que seja de uma delas:
@@ -98,7 +98,9 @@ O botão **Inventário** da barra de ferramentas guarda tudo que coloca hosts nu
    de ferramentas, para abrir uma conexão com ele pelo perfil dele.
 
 Clique com o botão direito num host para conectar, para atualizar o status ou os usuários logados
-dele, para copiar uma coluna em **Copiar ▸**, ou para editá-lo, movê-lo ou removê-lo. O **Copiar**
+dele, para executar um dos [comandos](hosts/commands.pt-BR.md) dele em **Verificar ▸**,
+**Abrir ▸**, **Usuários ▸**, **Energia ▸** ou **Impressoras ▸**, para copiar uma coluna em
+**Copiar ▸**, ou para editá-lo, movê-lo ou removê-lo. O **Copiar**
 lista todas as colunas que a tabela mostra, uma linha por host selecionado, e o **Endereço**
 mantém o Ctrl+Shift+C. O botão direito num espaço vazio oferece **Adicionar grupo…** no painel de
 grupos, e **Adicionar host…** e **Adicionar grupo…** na lista de hosts. Para mover hosts para outro
@@ -154,7 +156,11 @@ O menu **Ajuda** tem três itens:
 | Enter (na lista de hosts) | Abrir uma conexão com os hosts selecionados |
 | Ctrl+F / Esc | Pesquisar na lista inteira / encerrar a pesquisa |
 | F5 | Atualizar os hosts exibidos, verificando o que está marcado no painel do botão Atualizar |
-| Ctrl+M | Conexão manual a um endereço que não está na lista |
+| Ctrl+M | A janela Comandos para um endereço que não está na lista |
+| Ctrl+E | Abrir o compartilhamento C$ do host selecionado |
+| Ctrl+Shift+O | Abrir um caminho no host selecionado |
+| Ctrl+Shift+U | Abrir a pasta do usuário logado |
+| Ctrl+Shift+M | O Gerenciamento do Computador, apontado para o host selecionado |
 | Ctrl+Shift+C | Copiar os endereços dos hosts selecionados |
 | Ctrl+N / Ctrl+Shift+N | Adicionar host / Adicionar grupo |
 | F2 / Del | Editar / remover a seleção |

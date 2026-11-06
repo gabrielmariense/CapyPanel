@@ -5,7 +5,8 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from capypanel.core.remote import sessions, status
-from capypanel.core.remote.sessions import Account, Reason, Session, SessionsError
+from capypanel.core.remote.access import Account, Reason, RemoteError
+from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import BASE_PORTS, Answer, Status
 
 
@@ -23,7 +24,7 @@ class Found:
 
     status: Status | None = None
     sessions: tuple[Session, ...] | None = None
-    users_error: SessionsError | None = None
+    users_error: RemoteError | None = None
     answered: Answer | None = None  # the address (and port) that proved the status
     when: datetime = field(default_factory=lambda: datetime.now(UTC))
 
@@ -34,10 +35,10 @@ def run(address: str, checks: Checks) -> Found:
         return Found(state, answered=answered)
     if state is not None and state is not Status.ONLINE:
         # Nothing answered: reading users would only wait for the same silence.
-        return Found(state, users_error=SessionsError(Reason.UNREACHABLE))
+        return Found(state, users_error=RemoteError(Reason.UNREACHABLE))
     try:
         found = tuple(sessions.read_sessions(address, checks.account))
-    except SessionsError as e:
+    except RemoteError as e:
         return Found(state, users_error=e, answered=answered)
     return Found(Status.ONLINE, found, answered=answered)  # it answered, so it's up
 

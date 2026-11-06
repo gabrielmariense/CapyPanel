@@ -13,7 +13,7 @@ uv run capypanel
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
 The version shows in the title bar, followed by the commit when you run from source, e.g.
-`CapyPanel 0.22.0 (abc1234)`. Quote it when you report a problem.
+`CapyPanel 0.23.0 (abc1234)`. Quote it when you report a problem.
 
 Remote Desktop works out of the box, with the client built into Windows. For VNC you also need a
 viewer: [UltraVNC](https://uvnc.com) or
@@ -46,10 +46,10 @@ The rest of this page is about the **Hosts** tool. Printers has its own pages, s
 | Part | What it shows |
 |---|---|
 | **The rail** (left edge) | **Home** (Ctrl+0) at the top, then one icon per tool with its name in a tooltip, **Hosts** (Ctrl+1) and **Printers** (Ctrl+2), and **Settings** (Ctrl+,) at the bottom. Where you are has a tinted square behind its icon |
-| **Toolbar** (top) | The buttons of the tool you're in. For Hosts: **Connect**, **Refresh**, **Inventory** and **Report** |
+| **Toolbar** (top) | The buttons of the tool you're in. For Hosts: **Connect**, **Refresh**, **Commands**, **Inventory** and **Report** |
 | **Groups panel** (left) | The open list's name on top, as a dropdown that switches lists. Then "All hosts" with how many hosts the list has, and "No group" under it with how many are in none. Then **Groups**, with a **+** button to add one, and **Tags** |
 | **Hosts panel** (middle) | The search box (see [Searching hosts](hosts/searching.md)) above the hosts in the selected group or tag, with their **Status** and **User** |
-| **Details panel** (right) | The selected host: its name and status, then **Connection** (address, group, profile), who's **logged on**, its **tags** and its **notes**. Click any value to copy it. With nothing selected, how many hosts are shown, and how many of them are online, offline, not found or not checked |
+| **Details panel** (right) | The selected host: its name and status, a row of buttons for its [commands](hosts/commands.md), then **Connection** (address, group, profile), who's **logged on**, the **PC facts**, its **tags** and its **notes**. Click any value to copy it. With nothing selected, how many hosts are shown, and how many of them are online, offline, not found or not checked |
 | **Status bar** | Which list is open, where it is, how many hosts it has, how many are online once anything has been checked, and how many are selected |
 
 The menu bar is the same whichever tool you're in, and holds nothing a tool owns:
@@ -92,10 +92,12 @@ The **Inventory** button on the toolbar holds everything that puts hosts in a li
 3. Double-click the host, select it and press Enter, or click **Connect** in the toolbar, to open
    a connection to it with its profile.
 
-Right-click a host to connect, to refresh its status or its logged-on users, to copy a column
-through **Copy ▸**, or to edit, move or remove it. **Copy** lists every column the table shows, one
-line per selected host, and **Address** keeps Ctrl+Shift+C. Right-clicking empty space offers **Add
-group…** in the groups panel, and **Add host…** and **Add group…** in the host list. To move hosts
+Right-click a host to connect, to refresh its status or its logged-on users, to run one of its
+[commands](hosts/commands.md) from **Check ▸**, **Open ▸**, **Users ▸**, **Power ▸** or
+**Printers ▸**, to copy a column through **Copy ▸**, or to edit, move or remove it. **Copy** lists
+every column the table shows, one line per selected host, and **Address** keeps Ctrl+Shift+C.
+Right-clicking empty space offers **Add group…** in the groups panel, and **Add host…** and
+**Add group…** in the host list. To move hosts
 to another group, drag them onto it (see
 [Host lists](hosts/host-lists.md#arranging-groups-and-hosts)). Removing a group asks what should
 happen to the groups and hosts in it (see [Host lists](hosts/host-lists.md#removing-a-group)).
@@ -146,7 +148,11 @@ The **Help** menu has three items:
 | Enter (in the host list) | Open a connection to the selected hosts |
 | Ctrl+F / Esc | Search the whole list / end the search |
 | F5 | Refresh the hosts shown, checking what the Refresh button's panel has ticked |
-| Ctrl+M | Manual connection to an address that isn't in the list |
+| Ctrl+M | The Commands window for an address that isn't in the list |
+| Ctrl+E | Open the selected host's C$ share |
+| Ctrl+Shift+O | Open a path on the selected host |
+| Ctrl+Shift+U | Open the logged-on user's folder |
+| Ctrl+Shift+M | Computer Management, pointed at the selected host |
 | Ctrl+Shift+C | Copy the selected hosts' addresses |
 | Ctrl+N / Ctrl+Shift+N | Add host / Add group |
 | F2 / Del | Edit / remove the selection |

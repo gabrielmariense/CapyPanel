@@ -118,8 +118,8 @@ below doesn't apply. A Remote Desktop login is never in **Saved credentials** ei
 Windows account, so CapyPanel doesn't ask for it again the next time it starts. Its tooltip says
 what that means: "Windows encrypts them for your account, domain accounts too: anyone using your
 Windows session can connect with them." Going back to **Temporary credentials** deletes the ones
-already saved. The choice covers the account typed for reading logged-on users too (see
-[Checking hosts](checking.md#which-account-is-used)).
+already saved. The choice covers the account typed for reading logged-on users and running
+a host's commands too (see [Checking hosts](checking.md#which-account-is-used)).
 
 **Connect ▾ > Saved credentials…**, and **Manage…** on the **Saved credentials** row of that same
 settings section, open one window with every login CapyPanel keeps: "Every login CapyPanel keeps
@@ -169,5 +169,9 @@ the host.
 
 ## Manual connection
 
-**Connect > Manual connection…** (Ctrl+M) opens an address that isn't in the list, with the
-profile and port you choose. Leave the port on "Default" to use the profile's.
+**Connect > Manual connection…** (Ctrl+M) reaches an address that isn't in the list. It opens
+the Commands window with an **Address** box instead of a host's name: type the address, pick a
+**Profile** and click **Connect**. An address with a port in it, as in `192.0.2.77:5901`, uses
+that port. **Add to list…** at the bottom puts the PC into the open list, and the commands in the
+window work on it like on any other host (see
+[Commands on a host](commands.md#the-commands-window)).

@@ -1,6 +1,7 @@
-"""The Hosts toolbar: Connect and Refresh, Inventory, Report. Refresh always checks every host the
-table shows (the group picked on the left); one host is checked from its own right-click menu.
-Left-click picks one check; right-click opens a panel to run several at once."""
+"""The Hosts toolbar: Connect, Refresh and Commands, Inventory, Report. Refresh always checks
+every host the table shows (the group picked on the left); one host is checked from its own
+right-click menu. A click runs the checks ticked in the panel a right-click opens (as F5 does), as
+Printers' Refresh does. Commands lists the selected host's commands by group."""
 
 from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QPalette
@@ -11,6 +12,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMenu,
     QPushButton,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -76,7 +78,6 @@ class RefreshPanel(QFrame):
 
 class HostsToolBar(ToolBar):
     refresh_panel_requested = Signal(QPoint)
-    refresh_requested = Signal(bool, bool)  # status, users: on every host shown
 
     def __init__(self, commands: HostsActions) -> None:
         super().__init__()
@@ -85,26 +86,27 @@ class HostsToolBar(ToolBar):
         self.connect_button = tool_button(dropdown=True)
         self.connect_menu = QMenu(self.connect_button)
         self.connect_button.setMenu(self.connect_menu)
-        self.refresh_button = tool_button(dropdown=True)
-        self.refresh_menu = QMenu(self.refresh_button)
-        self.refresh_status = self.refresh_menu.addAction("")
-        self.refresh_users = self.refresh_menu.addAction("")
-        self.refresh_status.triggered.connect(lambda: self.refresh_requested.emit(True, False))
-        self.refresh_users.triggered.connect(lambda: self.refresh_requested.emit(False, True))
-        self.refresh_button.setMenu(self.refresh_menu)
+        self.refresh_button = tool_button()
+        self.refresh_button.clicked.connect(commands.refresh_shown.trigger)
         self.refresh_button.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.refresh_button.customContextMenuRequested.connect(
             lambda _pos: self.refresh_panel_requested.emit(
                 self.refresh_button.mapToGlobal(QPoint(0, self.refresh_button.height()))
             )
         )
+        # Commands: a split button. A click opens the Commands window; its arrow, the selected
+        # host's commands by group (the tool fills the menu each time it opens).
+        self.commands_button = tool_button()
+        self.commands_button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
+        self.commands_menu = QMenu(self.commands_button)
+        self.commands_button.setMenu(self.commands_menu)
         # Inventory: adding hosts and groups, and importing them; its menu is filled by the tool.
         self.inventory_button = tool_button(dropdown=True)
         self.inventory_menu = QMenu(self.inventory_button)
         self.inventory_button.setMenu(self.inventory_menu)
         self.report_button = tool_button()
         self.report_button.clicked.connect(commands.export_hosts.trigger)
-        self.add_group([self.connect_button, self.refresh_button])
+        self.add_group([self.connect_button, self.refresh_button, self.commands_button])
         self.add_group([self.inventory_button])
         self.add_group([self.report_button])
         self.retranslate()
@@ -117,10 +119,12 @@ class HostsToolBar(ToolBar):
         )
         self.refresh_button.setText(gap + _("Refresh"))
         self.refresh_button.setToolTip(
-            _("Refresh every host shown. Right-click to choose what Run and F5 check")
+            _("Refresh every host shown, with the checks ticked on a right-click (also F5)")
         )
-        self.refresh_status.setText(_("&Status"))
-        self.refresh_users.setText(_("&Logged-on users"))
+        self.commands_button.setText(gap + _("Commands"))
+        self.commands_button.setToolTip(
+            _("Open the Commands window for the selected host; the arrow lists its commands")
+        )
         self.inventory_button.setText(gap + _("Inventory"))
         self.inventory_button.setToolTip(_("Add hosts and groups, or import a list of hosts"))
         self.report_button.setText(gap + _("Report"))
@@ -133,6 +137,7 @@ class HostsToolBar(ToolBar):
         color = self.connect_button.palette().color(QPalette.ColorRole.ButtonText)  # its text's
         self.connect_button.setIcon(tabler_icon("plug-connected", color))
         self.refresh_button.setIcon(tabler_icon("refresh", color))
+        self.commands_button.setIcon(tabler_icon("bolt", color))
         self.inventory_button.setIcon(tabler_icon("plus", color))
         self.report_button.setIcon(tabler_icon("report-analytics", color))
         self.retranslate()

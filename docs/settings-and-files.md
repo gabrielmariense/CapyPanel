@@ -111,7 +111,8 @@ read-only, and only people it does let write can change them.
 when it has none of its own." Two rows follow it, about the passwords typed while connecting:
 
 - **Credentials:** **Temporary credentials**, "forgotten when CapyPanel closes", or **Credential
-  Manager**, "saved for your Windows account".
+  Manager**, "saved for your Windows account". It covers the account typed for other PCs too, the
+  one that reads logged-on users and runs a host's commands.
 - **Saved credentials:** how many logins are kept and where, as in "2 kept: 1 in Credential
   Manager, 1 temporary.", with **Manage…** to open the window that lists them.
 
@@ -147,11 +148,12 @@ the errors; it's hidden when every file is in use.
 and **Printer lists** is the same table and the same buttons as Host lists. Both are under
 [Printer lists](printers/printer-lists.md#settings).
 
-**Refresh** holds the six settings for reading printers over SNMP: the **SNMP version**, v2c or v3,
-the **SNMP account** for it behind a **Change…** button, **Refresh on its own**, the **Windows
-notification** about printers that need attention, the **Low supply level** between 1 and 50 %,
-and whether the **Toner column** shows text or a bar. [Checking printers](printers/checking.md)
-explains all six.
+**Refresh** holds the eight settings for reading printers: the **SNMP version**, v2c or v3, the
+**SNMP account** for it behind a **Change…** button, the **Doc360 MPS account** behind another one,
+for printers whose page counters come from that portal, **Refresh on its own**, the **Windows
+notification** about printers that need attention, the **Low supply level** between 1 and 50 %, the
+**Bar marks** on the supply bars, and whether the **Toner column** shows text or a bar.
+[Checking printers](printers/checking.md) explains all eight.
 
 ## About
 

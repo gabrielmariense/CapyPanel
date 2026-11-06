@@ -8,7 +8,7 @@ from html import escape
 
 from PySide6.QtCore import QLocale, QRectF, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QPainter, QPalette
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from capypanel.core import i18n
 from capypanel.core.hosts.model import Host
@@ -18,9 +18,11 @@ from capypanel.core.printers.reading import Supply
 from capypanel.ui.checks import clock_text
 from capypanel.ui.icons import dot_icon
 from capypanel.ui.list_workspace.details import DetailsPanel, breakable
+from capypanel.ui.printers_tool import marks as bar_marks
 from capypanel.ui.printers_tool import status
-from capypanel.ui.printers_tool.meter import HEIGHT, REACH, draw_meter
-from capypanel.ui.printers_tool.status import AMBER, GREY, Checked
+from capypanel.ui.printers_tool.marks import Mark
+from capypanel.ui.printers_tool.meter import HEIGHT, ROOM, draw_meter
+from capypanel.ui.printers_tool.status import AMBER, GREY, Checked, Counted
 
 
 @dataclass(frozen=True)
@@ -30,6 +32,9 @@ class PrinterDetails:
     checked: Checked | None = None  # its last Refresh
     low: int = status.DEFAULT_LOW
     use: Callable[[str, str], None] | None = None  # "Use this": (field, value); None: read-only
+    counted: Counted | None = None  # the last Refresh's Doc360 MPS counters
+    set_doc360: Callable[[], None] | None = None  # opens the Doc360 MPS account's window
+    marks: tuple[Mark, ...] = ()  # the bars' marks; () is just the low level's
 
 
 def source_text(source: str) -> str:
@@ -42,19 +47,18 @@ def source_text(source: str) -> str:
 
 
 class Meter(QWidget):
-    """A supply's level as a bar, with a tick at the low level."""
+    """A supply's level as a bar, with its marks."""
 
-    def __init__(self, supply: Supply, low: int) -> None:
+    def __init__(self, supply: Supply, marks: tuple[Mark, ...]) -> None:
         super().__init__()
-        self.supply, self.low = supply, low
-        self.setFixedHeight(HEIGHT + 2 * REACH)
+        self.supply, self.marks = supply, marks
+        self.setFixedHeight(HEIGHT + 2 * ROOM)
 
     def paintEvent(self, _event: object) -> None:
         painter = QPainter(self)
         text = self.palette().color(QPalette.ColorRole.Text)
-        back = self.palette().color(QPalette.ColorRole.Base)
-        bar = QRectF(0, REACH, self.width(), HEIGHT)
-        draw_meter(painter, bar, self.supply, self.low, text, back)
+        bar = QRectF(0, ROOM, self.width(), HEIGHT)
+        draw_meter(painter, bar, self.supply, self.marks, text)
         painter.end()
 
 
@@ -104,20 +108,63 @@ class PrinterDetailsPanel(DetailsPanel):
         self._fields(layout, (("asset_tag", _("Asset tag"), info.asset_tag),
                               ("firmware", _("Firmware"), firmware)))  # fmt: skip
 
-        self.section(layout, _("Page counters"))
-        pages = reading.pages if reading else None
-        total = QLocale(i18n.language()).toString(pages) if pages is not None else ""
-        if error := status.counter_error(info.counter_source):
-            total = _("Error: {why}").format(why=error)  # not the SNMP counter: it isn't the source
-        source = source_text(info.counter_source)
-        self._fields(layout, (("pages", _("Total pages"), total),
-                              ("counter_source", _("Source"), source)))  # fmt: skip
+        self._page_counters(layout, shown)
 
         self.section(layout, _("Tags"))
         layout.addWidget(self.chips(printer.tags) if printer.tags else self.muted("—"))
 
         self.section(layout, _("Notes"))
         layout.addWidget(self.notes(printer.notes, needle) if printer.notes else self.muted("—"))
+
+    def _page_counters(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
+        """Total pages from the printer itself, or from Doc360 MPS with when it was fetched
+        (never the printer's own counter then: it isn't the source)."""
+        self.section(layout, _("Page counters"))
+        info, checked = info_of(shown.printer), shown.checked
+        reading = checked.reading if checked else None
+        pages, error, tip = reading.pages if reading else None, "", ""
+        source = source_text(info.counter_source)
+        if info.counter_source == DOC360:
+            pages, error = status.doc360_pages(info, reading, shown.counted)
+            if shown.counted is not None:
+                when = clock_text(shown.counted.when)
+                source = _("{source} · fetched {when}").format(source=source, when=when)
+                tip = status.doc360_tip(shown.counted)
+        total = QLocale(i18n.language()).toString(pages) if pages is not None else ""
+        if error:
+            total = _("Error: {why}").format(why=error)
+        for key, label, value in (("pages", _("Total pages"), total),
+                                  ("counter_source", _("Source"), source)):  # fmt: skip
+            layout.addWidget(self.muted(label))
+            shown_value = self.value(key, value) if value else self.muted("—")
+            shown_value.setToolTip(tip)
+            layout.addWidget(shown_value)
+            if key == "pages" and error and shown.counted and shown.counted.account:
+                self._account_button(layout, shown)
+            if key == "pages" and pages is not None and (month := status.older_text(shown.counted)):
+                warning = QLabel(
+                    _("⚠ From {month}: Doc360 MPS has no counts for this month yet. Check the "
+                      "portal before using this number.").format(month=month)
+                )  # fmt: skip
+                warning.setObjectName("doc360Older")
+                warning.setWordWrap(True)
+                warning.setStyleSheet(f"color: {AMBER};")
+                layout.addWidget(warning)
+
+    def _account_button(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
+        """Under a missing or refused Doc360 login: its window, straight from here."""
+        if shown.set_doc360 is None:
+            return
+        missing = shown.counted is not None and shown.counted.account == status.NO_ACCOUNT
+        button = QPushButton(_("Set the account…") if missing else _("Change the account…"))
+        button.setObjectName("doc360Account")
+        button.setAutoDefault(False)
+        button.clicked.connect(shown.set_doc360)
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 4, 0, 0)
+        row.addWidget(button)
+        row.addStretch(1)
+        layout.addLayout(row)
 
     def _heading(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
         """Like Hosts': a status dot by the name, then "status · checked 14:32"."""
@@ -163,6 +210,7 @@ class PrinterDetailsPanel(DetailsPanel):
         if checked.reading is None:
             layout.addWidget(self.muted("—"))
             return
+        marks = shown.marks or (Mark(shown.low, low=True),)
         if not checked.reading.supplies:
             layout.addWidget(self.muted(_("The printer doesn't report its supplies.")))
             return
@@ -184,10 +232,9 @@ class PrinterDetailsPanel(DetailsPanel):
                 level.setStyleSheet(f"color: {AMBER}; font-weight: 600;")
             top.addWidget(level)
             layout.addLayout(top)
-            layout.addWidget(Meter(supply, shown.low))
+            layout.addWidget(Meter(supply, marks))
             layout.addSpacing(2)
-        hint = _("The tick is the low level, {low} %; the faint one is half.")
-        layout.addWidget(self.muted(hint.format(low=shown.low)))
+        layout.addWidget(self.muted(bar_marks.hint(marks)))
 
     def _printer_says(self, key: str, value: str, use: Callable[[str, str], None] | None) -> QLabel:
         """What the printer reports instead of the list's value; "Use this" copies it over."""

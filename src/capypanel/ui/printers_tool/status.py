@@ -3,13 +3,17 @@ heading of its Details. One place, so the table, Details and Report always agree
 
 import html
 import re
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 
+from PySide6.QtCore import QLocale
+
+from capypanel.core import i18n
 from capypanel.core.i18n import _
-from capypanel.core.printers import snmp
-from capypanel.core.printers.printer import DOC360
+from capypanel.core.printers import doc360, snmp
+from capypanel.core.printers.printer import PrinterInfo
 from capypanel.core.printers.reading import Device, Problem, Reading, State, Supply, SupplyKind
 from capypanel.ui.checks import clock_text
 from capypanel.ui.icons import STATUS_COLORS
@@ -59,6 +63,21 @@ class Checked:
     offline: bool = False  # no answer
     error: str = ""  # it answered, but not in a way CapyPanel could read
     refused: str = ""  # it refused the SNMP v3 account: snmp.Refused's reason
+
+
+@dataclass(frozen=True)
+class Counted:
+    """The last Refresh's page counters from Doc360 MPS, by serial (doc360.key()), or why
+    there are none. For every printer whose counters come from there."""
+
+    when: datetime
+    counters: Mapping[str, doc360.Counter] = field(default_factory=dict)
+    error: str = ""
+    account: str = ""  # NO_ACCOUNT or REFUSED: Details offers the account's window
+    older: tuple[int, int] | None = None  # (year, month) when these aren't this month's
+
+
+NO_ACCOUNT, REFUSED = "none", "refused"  # Counted.account
 
 
 class Attention(Enum):
@@ -150,9 +169,43 @@ def refused_text(reason: str) -> str:
     return texts.get(reason, lambda: _("it refused the SNMP v3 request."))()
 
 
-def counter_error(source: str) -> str:
-    """Why a printer's page counters can't be read, or "" when they can."""
-    return _("CapyPanel can't read page counters from Doc360 MPS yet.") if source == DOC360 else ""
+def doc360_pages(
+    info: PrinterInfo, reading: Reading | None, counted: Counted | None
+) -> tuple[int | None, str]:
+    """A Doc360 MPS printer's total pages, or why there's none; (None, "") before a Refresh.
+    Doc360 lists printers by serial: the list's own, or else the one the printer reports."""
+    if counted is None:
+        return None, ""
+    if counted.error:
+        return None, counted.error
+    serial = info.serial or (reading.serial if reading else "")
+    if not serial:
+        return None, _("Add the printer's serial number: Doc360 MPS lists printers by serial.")
+    found = counted.counters.get(doc360.key(serial))
+    if found is None:
+        return None, _("Doc360 MPS doesn't list serial {serial}.").format(serial=serial)
+    if found.life is None:
+        return None, _("Doc360 MPS has no total for this printer.")
+    return found.life, ""
+
+
+def older_text(counted: Counted | None) -> str:
+    """The month Doc360's counts are from, when it isn't this one ("October 2026"); "" when
+    they're this month's, as they should be."""
+    if counted is None or counted.older is None:
+        return ""
+    year, month = counted.older
+    locale = QLocale(i18n.language())
+    # i18n: a month and its year, "October 2026"
+    return _("{month} {year}").format(month=locale.standaloneMonthName(month), year=year)
+
+
+def doc360_tip(counted: Counted) -> str:
+    """Where a Doc360 MPS total comes from, and why it can be behind the printer."""
+    return _(
+        "Fetched from Doc360 MPS at {when}. Doc360 reads printers on its own schedule, so this "
+        "can be behind the printer."
+    ).format(when=clock_text(counted.when))
 
 
 def plain_tip(text: str) -> str:

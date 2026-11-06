@@ -537,6 +537,36 @@ QFrame#tagStrip { background: %(sel_solid)s; border: 1px solid %(accent)s; borde
 /* Printers needing attention: the same strip, with an amber edge. */
 QFrame#attentionStrip { background: %(sel_solid)s; border: 1px solid %(accent)s;
                         border-left: 3px solid %(attention)s; border-radius: 6px; }
+/* A host command's answer above the table: a green edge when it worked, red when it didn't. */
+QFrame#resultStrip { background: %(sel_solid)s; border: 1px solid %(accent)s;
+                     border-left: 3px solid %(online)s; border-radius: 6px; }
+QFrame#resultStrip[failed="true"] { border-left-color: %(stopped)s; }
+/* Commands that disturb whoever uses the PC are amber, wherever they show. */
+QPushButton#risky, QToolButton[risky="true"] { color: %(attention)s;
+                                               border-color: %(attention)s; }
+QPushButton#risky:disabled, QToolButton[risky="true"]:disabled { color: %(text3)s;
+                                                                border-color: %(border)s; }
+QLabel#warningText { color: %(attention)s; }
+/* The Details panel's command buttons: icons in the app's button look. */
+QToolButton#commandButton { background: %(card)s; border: 1px solid %(border)s;
+                            border-radius: %(r2)spx; padding: 0; }
+QToolButton#commandButton:hover { background: %(raised)s; }
+QToolButton#commandButton:disabled { background: transparent; }
+QToolButton#commandButton[popupMode="2"] { padding-right: 12px; }
+QToolButton#commandButton::menu-indicator { width: 8px; height: 5px; right: 5px; }
+QToolButton#commandButton[arrow="false"] { padding-right: 0; }
+QToolButton#commandButton[arrow="false"]::menu-indicator { image: none; width: 0; }
+/* The Commands window: one line per command under small group headings; the picked one is
+   edged in the accent and grows; risky ones have an amber left edge and name. */
+QLabel#groupHeading { color: %(text3)s; font-size: 8pt; font-weight: 600;
+                      padding: 4px 2px 2px 2px; }
+QFrame#commandRow { border: 1px solid transparent; border-radius: %(r2)spx; }
+QFrame#commandRow:hover { background: %(hover)s; }
+QFrame#commandRow[picked="true"] { border-color: %(accent)s; background: %(card)s; }
+QFrame#commandRow[risky="true"] { border-left: 2px solid %(attention)s; }
+QLabel#commandName[risky="true"] { color: %(attention)s; }
+QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
+                            color: %(attention)s; }
 /* A tool's count of items needing attention, on its rail icon. */
 QLabel#railBadge { background: %(stopped)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel_solid)s; border-radius: 9px; padding: 2px 9px; }
@@ -652,6 +682,30 @@ QFrame#tagStrip { background: %(sel)s; border: 1px solid %(accent)s; border-radi
 /* Printers needing attention: the same strip, with an amber edge. */
 QFrame#attentionStrip { background: %(sel)s; border: 1px solid %(accent)s;
                         border-left: 3px solid %(attention)s; border-radius: 6px; }
+QFrame#resultStrip { background: %(sel)s; border: 1px solid %(accent)s;
+                     border-left: 3px solid %(online)s; border-radius: 6px; }
+QFrame#resultStrip[failed="true"] { border-left-color: %(stopped)s; }
+QPushButton#risky, QToolButton[risky="true"] { color: %(attention)s;
+                                               border-color: %(attention)s; }
+QPushButton#risky:disabled, QToolButton[risky="true"]:disabled { color: %(text2)s;
+                                                                border-color: %(border)s; }
+QLabel#warningText { color: %(attention)s; }
+QToolButton#commandButton { background: %(card)s; border: 1px solid %(border)s; padding: 0; }
+QToolButton#commandButton:hover { background: %(hover)s; }
+QToolButton#commandButton:disabled { background: transparent; }
+QToolButton#commandButton[popupMode="2"] { padding-right: 12px; }
+QToolButton#commandButton::menu-indicator { width: 8px; height: 5px; right: 5px; }
+QToolButton#commandButton[arrow="false"] { padding-right: 0; }
+QToolButton#commandButton[arrow="false"]::menu-indicator { image: none; width: 0; }
+QLabel#groupHeading { color: %(text2)s; font-size: 8pt; font-weight: 600;
+                      padding: 4px 2px 2px 2px; }
+QFrame#commandRow { border: 1px solid transparent; border-radius: 4px; }
+QFrame#commandRow:hover { background: %(hover)s; }
+QFrame#commandRow[picked="true"] { border-color: %(accent)s; background: %(card)s; }
+QFrame#commandRow[risky="true"] { border-left: 2px solid %(attention)s; }
+QLabel#commandName[risky="true"] { color: %(attention)s; }
+QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
+                            color: %(attention)s; }
 /* A tool's count of items needing attention, on its rail icon. */
 QLabel#railBadge { background: %(stopped)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel)s; border-radius: 9px; padding: 2px 9px; }
@@ -697,7 +751,11 @@ QToolButton#tagChipRemove {
 
 def _status_tokens() -> dict[str, str]:
     """Warning colours, the same in every theme (see icons.STATUS_COLORS)."""
-    return {"stopped": STATUS_COLORS["stopped"], "attention": STATUS_COLORS["attention"]}
+    return {
+        "online": STATUS_COLORS["online"],
+        "stopped": STATUS_COLORS["stopped"],
+        "attention": STATUS_COLORS["attention"],
+    }
 
 
 def stylesheet(theme: Theme) -> str:

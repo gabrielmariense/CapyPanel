@@ -113,6 +113,28 @@ def test_a_running_printer_that_calls_its_state_other_and_keeps_its_serial_elsew
     assert (found.firmware, found.mac) == ("SAMPLE 1.07", "")
 
 
+# Shaped like what real Samsung, Ricoh, Brother and Canon printers answer (checked 2026-11-04).
+@pytest.mark.parametrize(
+    ("objects", "firmware"),
+    [
+        ({reading.SYS_DESCR: b"Samsung SAMPLE-1; V4.00.02.20 MAY-27-2020;Engine V1.03.14;NIC "
+                             b"V4.01.58 MARCH-15-2019;S/N SAMPLE0003",
+          f"{reading.SOFTWARE_INSTALLED}.1": b"Samsung SAMPLE Series Engine V1.03.14",
+          f"{reading.SOFTWARE_INSTALLED}.2": b"Samsung SAMPLE Series Main V4.00.02.20 MAY-27-2020",
+          f"{reading.SOFTWARE_INSTALLED}.3": b"Samsung SAMPLE Series AddressBook V1.0.0"},
+         "V4.00.02.20"),  # the Main line, not the engine's that's listed first here
+        ({reading.SYS_DESCR: b"RICOH SP SAMPLE V1.11 / RICOH Network Printer C model"}, "V1.11"),
+        ({reading.SYS_DESCR: b"Brother NC-SAMPLE, Firmware Ver.Q ,MID 8C5-H27,FID 2"}, "Q"),
+        ({reading.SYS_DESCR: b"Canon SAMPLE /P"}, ""),
+        ({reading.SYS_DESCR: b"SAMPLE printer at 192.0.2.7"}, ""),  # an address isn't a version
+    ],
+)  # fmt: skip
+def test_firmware_from_installed_software_or_the_description(
+    objects: Objects, firmware: str
+) -> None:
+    assert _read({reading.SYS_OBJECT_ID: "1.3.6.1.4.1.236.1", **objects}).firmware == firmware
+
+
 RT = reading.RICOH_TONER
 
 

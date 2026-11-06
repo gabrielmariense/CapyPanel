@@ -1,59 +1,18 @@
-"""Who is logged on to a computer: the Windows session API (WTS) over its own RPC channel,
-called from here. Nothing is installed or run on the target, and it reads typed fields, so it
-works whatever the target's display language.
-
-Another account (an admin, when the user's daily one isn't) goes through a "new credentials"
-logon, like `runas /netonly`: only the network identity of this thread changes, for the call.
-Windows doesn't check that password here; each target does, so callers must stop at the first
-rejection instead of trying the same password on every host (account lockout)."""
+"""Who is logged on to a computer, and logging them off, disconnecting them or sending them a
+message: the Windows session API (WTS) over its own RPC channel, called from here. Nothing is
+installed or run on the target, and it reads typed fields, so it works whatever the target's
+display language. Another account goes through `access.as_account`."""
 
 import ctypes
 import logging
-import socket
-from collections.abc import Iterator
-from contextlib import contextmanager
+from collections.abc import Callable
 from ctypes import wintypes
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from enum import StrEnum
+
+from capypanel.core.remote.access import Account, as_account, check_reachable, last_error
 
 log = logging.getLogger(__name__)
-REACH_PORT = 445  # the session API's RPC runs over SMB named pipes
-REACH_TIMEOUT = 2.0  # seconds: an offline PC otherwise holds the call for ~20 s
-
-
-class Reason(StrEnum):
-    UNREACHABLE = "unreachable"  # off, not on the network, or blocked by a firewall
-    NOT_ADMIN = "not-admin"  # the account was accepted, but isn't an admin there
-    REJECTED = "rejected"  # the account wasn't accepted: wrong password, locked…
-    OTHER = "other"
-
-
-# Codes seen on real hosts: 259 for a non-admin caller, 5 for an account the host refused.
-_REJECTED = {5, 1326, 1327, 1330, 1331, 1909}
-_UNREACHABLE = {53, 67, 1231, 1237, 1721, 1722, 1723, 1753}
-
-
-class SessionsError(Exception):
-    def __init__(self, reason: Reason, code: int = 0) -> None:
-        super().__init__(f"{reason} (Windows error {code})" if code else str(reason))
-        self.reason, self.code = reason, code
-
-
-def reason_of(code: int) -> Reason:
-    if code == 259:  # ERROR_NO_MORE_ITEMS: how a non-admin remote enumerate fails
-        return Reason.NOT_ADMIN
-    if code in _REJECTED:
-        return Reason.REJECTED
-    if code in _UNREACHABLE:
-        return Reason.UNREACHABLE
-    return Reason.OTHER
-
-
-@dataclass(frozen=True)
-class Account:
-    user: str  # "DOMAIN\\name" or "name@domain"
-    password: str
 
 
 @dataclass(frozen=True)
@@ -64,22 +23,58 @@ class Session:
     state: str  # "active", "disconnected", …
     logon_time: datetime | None
     client: str = ""  # the RDP client's computer name, when there is one
+    session_id: int = -1  # Windows' number for it on that host, for Log off and the like
 
 
 def read_sessions(host: str | None, account: Account | None = None) -> list[Session]:
     """The logged-on sessions of `host` (None: this PC). Sessions with no user (services, the
-    listening RDP stack) aren't logons and are left out. Raises SessionsError."""
+    listening RDP stack) aren't logons and are left out. Raises RemoteError."""
     if host is not None:
-        _check_reachable(host)
-    with _as_account(account):
+        check_reachable(host)
+    with as_account(account):
         return _enumerate(host)
 
 
-def _check_reachable(host: str) -> None:
-    try:
-        socket.create_connection((host, REACH_PORT), REACH_TIMEOUT).close()
-    except OSError as e:
-        raise SessionsError(Reason.UNREACHABLE) from e
+def log_off(host: str, session_id: int, account: Account | None = None) -> None:
+    """Signs the session out; its open programs close without saving. Raises RemoteError."""
+    _act(host, account, lambda server: _wts.WTSLogoffSession(server, session_id, False))
+
+
+def disconnect(host: str, session_id: int, account: Account | None = None) -> None:
+    """Disconnects the session: its programs keep running and the user can come back to them.
+    Raises RemoteError."""
+    _act(host, account, lambda server: _wts.WTSDisconnectSession(server, session_id, False))
+
+
+def send_message(
+    host: str, session_id: int, title: str, text: str, account: Account | None = None
+) -> None:
+    """Pops up `text` in the session, with an OK button; doesn't wait for the user to read it.
+    Raises RemoteError."""
+    style = 0x40 | 0x40000  # an information icon, kept above the user's windows
+    answer = wintypes.DWORD()
+
+    def call(server: int) -> bool:
+        return _wts.WTSSendMessageW(
+            server, session_id, title, len(title) * 2, text, len(text) * 2, style, 0,
+            ctypes.byref(answer), False,
+        )  # fmt: skip
+
+    _act(host, account, call)
+
+
+def _act(host: str, account: Account | None, call: Callable[[int], bool]) -> None:
+    """Runs `call` with an open handle to `host`'s session API."""
+    check_reachable(host)
+    with as_account(account):
+        server = _wts.WTSOpenServerW(host)
+        if not server:
+            raise last_error()
+        try:
+            if not call(server):
+                raise last_error()
+        finally:
+            _wts.WTSCloseServer(server)
 
 
 # ---- the Windows API ----
@@ -141,29 +136,26 @@ _wts.WTSQuerySessionInformationW.argtypes = [
     ctypes.POINTER(ctypes.c_void_p), ctypes.POINTER(wintypes.DWORD),
 ]  # fmt: skip
 _wts.WTSFreeMemory.argtypes = [ctypes.c_void_p]
-
-_advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)
-_advapi32.LogonUserW.restype = wintypes.BOOL
-_advapi32.LogonUserW.argtypes = [
-    wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
-    ctypes.POINTER(wintypes.HANDLE),
+_wts.WTSLogoffSession.restype = wintypes.BOOL
+_wts.WTSLogoffSession.argtypes = [wintypes.HANDLE, wintypes.DWORD, wintypes.BOOL]
+_wts.WTSDisconnectSession.restype = wintypes.BOOL
+_wts.WTSDisconnectSession.argtypes = [wintypes.HANDLE, wintypes.DWORD, wintypes.BOOL]
+_wts.WTSSendMessageW.restype = wintypes.BOOL
+_wts.WTSSendMessageW.argtypes = [
+    wintypes.HANDLE, wintypes.DWORD, wintypes.LPWSTR, wintypes.DWORD, wintypes.LPWSTR,
+    wintypes.DWORD, wintypes.DWORD, wintypes.DWORD, ctypes.POINTER(wintypes.DWORD), wintypes.BOOL,
 ]  # fmt: skip
-_advapi32.ImpersonateLoggedOnUser.restype = wintypes.BOOL
-_advapi32.ImpersonateLoggedOnUser.argtypes = [wintypes.HANDLE]
-_advapi32.RevertToSelf.restype = wintypes.BOOL
-_kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-_kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
 
 
 def _enumerate(host: str | None) -> list[Session]:
     server = _wts.WTSOpenServerW(host) if host else wintypes.HANDLE(0).value  # 0: this PC
     if host and not server:
-        raise SessionsError(reason_of(err := ctypes.get_last_error()), err)
+        raise last_error()
     try:
         listing = ctypes.POINTER(_SessionInfo)()
         count = wintypes.DWORD()
         if not _wts.WTSEnumerateSessionsW(server, 0, 1, ctypes.byref(listing), ctypes.byref(count)):
-            raise SessionsError(reason_of(err := ctypes.get_last_error()), err)
+            raise last_error()
         try:
             found, seen = [], []
             for index in range(count.value):
@@ -182,6 +174,7 @@ def _enumerate(host: str | None) -> list[Session]:
                         state=state,
                         logon_time=_logon_time(server, info.SessionId),
                         client=_text(server, info.SessionId, _CLIENT_NAME),
+                        session_id=info.SessionId,
                     )
                 )
             # Every session Windows listed (no names), to explain a user that didn't show up.
@@ -239,28 +232,3 @@ def _logon_time(server: int | None, session: int) -> datetime | None:
         return filetime(info.Data.LogonTime) if info.Level == 1 else None
     finally:
         _wts.WTSFreeMemory(buffer)
-
-
-@contextmanager
-def _as_account(account: Account | None) -> Iterator[None]:
-    """This thread uses `account` for the network calls inside; nothing changes locally."""
-    if account is None:
-        yield
-        return
-    domain, _sep, name = account.user.rpartition("\\")  # "DOMAIN\\name", or a UPN
-    token = wintypes.HANDLE()
-    new_credentials, provider_winnt50 = 9, 3
-    if not _advapi32.LogonUserW(
-        name, domain or None, account.password, new_credentials, provider_winnt50,
-        ctypes.byref(token),
-    ):  # fmt: skip
-        raise SessionsError(reason_of(err := ctypes.get_last_error()), err)
-    try:
-        if not _advapi32.ImpersonateLoggedOnUser(token):
-            raise SessionsError(Reason.OTHER, ctypes.get_last_error())
-        try:
-            yield
-        finally:
-            _advapi32.RevertToSelf()
-    finally:
-        _kernel32.CloseHandle(token)

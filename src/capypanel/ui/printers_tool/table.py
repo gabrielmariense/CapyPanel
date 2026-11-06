@@ -20,6 +20,7 @@ from capypanel.core.printers.printer import info_of
 from capypanel.core.printers.reading import Supply
 from capypanel.ui.icons import dot_icon
 from capypanel.ui.list_workspace.panels import ItemTable
+from capypanel.ui.printers_tool.marks import Mark
 from capypanel.ui.printers_tool.meter import HEIGHT, draw_meter
 from capypanel.ui.printers_tool.status import AMBER, DEFAULT_LOW, Cell, level_text, plain_tip
 
@@ -43,7 +44,7 @@ class PrinterTable(ItemTable):
     def __init__(self) -> None:
         self._cells: Callable[[str], tuple[Cell, Cell]] = lambda _id: (_EMPTY, _EMPTY)
         self.bars = False  # the Toner column as a bar (Settings › Printers), not text
-        self.low = DEFAULT_LOW  # where the bar's tick goes
+        self.marks: tuple[Mark, ...] = (Mark(DEFAULT_LOW, low=True),)  # the bars' marks
         super().__init__()
         self.setItemDelegateForColumn(self.TONER, TonerBar(self))
 
@@ -159,8 +160,7 @@ class TonerBar(QStyledItemDelegate):
         if width >= MIN_BAR:
             top = area.center().y() - HEIGHT / 2 + 1
             bar = QRectF(area.x() + 2, top, width, HEIGHT)
-            back = option.palette.color(QPalette.ColorRole.Base)  # type: ignore[attr-defined]
-            draw_meter(painter, bar, supply, self._table.low, text, back)
+            draw_meter(painter, bar, supply, self._table.marks, text)
             words = area.adjusted(2 + width + GAP, 0, 0, 0)
         warn = bool(index.data(ROLE_WARN))
         painter.save()

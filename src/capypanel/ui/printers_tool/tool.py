@@ -13,14 +13,14 @@ from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QVBoxLayout, 
 from capypanel.core.hosts.document import starter_list
 from capypanel.core.hosts.model import Host, HostListRuleError
 from capypanel.core.i18n import _, ngettext, npgettext
-from capypanel.core.printers.printer import info_of, with_info
+from capypanel.core.printers.printer import DOC360, info_of, with_info
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.hosts import group_path
 from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
-from capypanel.ui.printers_tool import status
+from capypanel.ui.printers_tool import marks, status
 from capypanel.ui.printers_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.printers_tool.attention import (
     AttentionStrip,
@@ -30,7 +30,15 @@ from capypanel.ui.printers_tool.attention import (
 )
 from capypanel.ui.printers_tool.details import PrinterDetails, PrinterDetailsPanel
 from capypanel.ui.printers_tool.dialog import PrinterDialog
-from capypanel.ui.printers_tool.refresh import V2C, V3, PrinterRun, community, v3_account
+from capypanel.ui.printers_tool.marks import Mark
+from capypanel.ui.printers_tool.refresh import (
+    V2C,
+    V3,
+    PrinterRun,
+    community,
+    doc360_account,
+    v3_account,
+)
 from capypanel.ui.printers_tool.report import PrintersReport
 from capypanel.ui.printers_tool.settings import (
     AUTO_EVERY,
@@ -46,8 +54,9 @@ from capypanel.ui.printers_tool.settings import (
     TEXT,
     TONER_VIEW,
     PrintersSettings,
+    change_doc360_account,
 )
-from capypanel.ui.printers_tool.status import Attention, Cell, Checked
+from capypanel.ui.printers_tool.status import Attention, Cell, Checked, Counted
 from capypanel.ui.printers_tool.table import PrinterTable
 from capypanel.ui.printers_tool.toolbar import PrintersToolBar
 
@@ -81,6 +90,7 @@ class PrintersTool(ListWorkspace):
         self.details: PrinterDetailsPanel = PrinterDetailsPanel()
         self.toolbar: PrintersToolBar = PrintersToolBar(self.commands)
         self._checked: dict[str, Checked] = {}  # each printer's last Refresh, in memory only
+        self._counted: Counted | None = None  # the last Refresh's Doc360 MPS counters
         self.attention_strip = AttentionStrip()
         self._attention: dict[str, Attention] = {}  # the open list's printers that need it
         self._only_attention = False  # the strip's Show: the table lists just those
@@ -108,7 +118,7 @@ class PrintersTool(ListWorkspace):
         self._auto_timer.timeout.connect(self._auto_refresh)
         self._apply_auto_refresh()
         self.table.set_cells(self._cells)
-        self.table.bars, self.table.low = self.toner_bars(), self.low_level()
+        self.table.bars, self.table.marks = self.toner_bars(), self.bar_marks()
         self.settings_pages = PrintersSettings(self)  # its part of Settings
         self._fill_inventory()
         self._connect()
@@ -294,9 +304,19 @@ class PrintersTool(ListWorkspace):
     def set_low_level(self, low: int) -> None:
         if low != self.low_level():
             self.prefs["low_level"] = low
-            self.table.low = low
+            self.table.marks = self.bar_marks()  # the low mark follows it
             self._show_all_cells()
             self._count_attention()
+
+    def bar_marks(self) -> tuple[Mark, ...]:
+        """The supply bars' marks: the low level's, then any added in Settings."""
+        return marks.load(self.prefs, self.low_level())
+
+    def set_bar_marks(self, chosen: tuple[Mark, ...]) -> None:
+        marks.save(self.prefs, chosen)
+        self.table.marks = self.bar_marks()
+        self.table.viewport().update()
+        self._selection_changed()  # Details' bars
 
     def snmp_version(self) -> str:
         """Settings' SNMP version: V2C (the default) or V3."""
@@ -545,6 +565,9 @@ class PrintersTool(ListWorkspace):
                 (lambda key, value: self.use_value(printer.id, key, value))
                 if self._writable() is not None
                 else None,
+                self._counted,
+                self._set_doc360_account,
+                self.bar_marks(),
             )
             self.details.show_printer(details, 1, needle=self._needle())
         else:
@@ -602,8 +625,12 @@ class PrintersTool(ListWorkspace):
             self._shell.show_message(note, 10_000)
             return
         targets = [(p.id, p.address or p.name) for p in printers]
-        run = PrinterRun(targets, secret)
+        counts = any(info_of(p).counter_source == DOC360 for p in printers)
+        run = PrinterRun(
+            targets, secret, counts=counts, account=doc360_account() if counts else None
+        )
         run.found.connect(self._found)
+        run.counted.connect(self._doc360_counted)
         run.finished.connect(self._run_finished)
         self._run = run
         self._show_progress()
@@ -629,6 +656,20 @@ class PrintersTool(ListWorkspace):
         if self.table.selected_ids() in ([printer_id], []):  # its details, or the summary
             self._selection_changed()
         self._show_progress()
+        self.checks_changed.emit()
+
+    def _set_doc360_account(self) -> None:
+        """Details' button under a missing or refused Doc360 login."""
+        if change_doc360_account(self.details):
+            self._shell.show_message(
+                _("Doc360 MPS account saved. Refresh fetches the page counts."), 10_000
+            )
+
+    def _doc360_counted(self, counted: Counted) -> None:
+        if self._run is None:
+            return
+        self._counted = counted
+        self._selection_changed()  # Details shows the totals
         self.checks_changed.emit()
 
     def _show_progress(self) -> None:
@@ -678,8 +719,11 @@ class PrintersTool(ListWorkspace):
         reading = checked.reading if checked else None
         pages = "" if reading is None or reading.pages is None else str(reading.pages)  # digits
         printer = self._doc.hosts.host(printer_id) if self._doc else None
-        if printer and status.counter_error(info_of(printer).counter_source):
-            pages = _("Error")  # Details says why
+        if printer and info_of(printer).counter_source == DOC360:
+            total, error = status.doc360_pages(info_of(printer), reading, self._counted)
+            pages = _("Error") if error else "" if total is None else str(total)  # Details: why
+            if total is not None and (month := status.older_text(self._counted)):
+                pages = _("{pages} (from {month})").format(pages=pages, month=month)
         models = status.toner_models(reading) if reading else ""
         mac, firmware = (reading.mac, reading.firmware) if reading else ("", "")
         return state.text, toner.text, models, pages, mac, firmware

@@ -44,6 +44,15 @@ def free_windows(qapp: QApplication) -> Iterator[None]:
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
 
 
+@pytest.fixture(autouse=True)
+def no_facts_on_their_own(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A host shown in Details has its PC facts read after a moment: never in tests, which would
+    reach out to the made-up addresses on the real network. Tests of it call it themselves."""
+    from capypanel.ui.hosts_tool.tool import HostsTool
+
+    monkeypatch.setattr(HostsTool, "_read_shown_facts", lambda _self: None)
+
+
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     """Theme tests first. A theme switch restyles every window still alive, and closed windows
     from earlier tests pile up, so the theme tests took minutes at the end of the run."""
