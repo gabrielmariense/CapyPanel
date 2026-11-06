@@ -571,6 +571,19 @@ class ItemTable(QTreeWidget):
         self.horizontalScrollBar().setValue(across)
         self.itemSelectionChanged.emit()
 
+    def in_shown_order(self, items: Sequence[Host]) -> tuple[Host, ...]:
+        """Items in the order the table shows them now: by the sorted column, A–Z or Z–A, ties
+        by name A–Z, as SortedRow does. Report lists them so, wherever they come from."""
+        column = max(self.sortColumn(), 0)
+        descending = self.header().sortIndicatorOrder() == Qt.SortOrder.DescendingOrder
+        texts = {item.id: self.row_texts(item) for item in items}
+        by_name = sorted(items, key=lambda h: natural_key(texts[h.id][0]))
+        # A stable sort keeps the names' order among ties, also with reverse.
+        by_column = sorted(
+            by_name, key=lambda h: natural_key(texts[h.id][column]), reverse=descending
+        )
+        return tuple(by_column)
+
     def show_no_match(self, text: str) -> None:
         """The note in the empty table when the picked tags leave nothing; "" hides it."""
         self._empty_text.setText(text)

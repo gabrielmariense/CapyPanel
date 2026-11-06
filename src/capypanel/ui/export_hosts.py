@@ -40,6 +40,7 @@ from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import N_, _, ngettext
 from capypanel.ui.groups import TREE_INDENT
 from capypanel.ui.hosts import confirm
+from capypanel.ui.list_workspace.panels import natural_key
 from capypanel.ui.notes import hint
 
 # Each column, the group its checkbox is in, and its title (also the file's header row, which
@@ -185,6 +186,11 @@ class ExportDialog(QDialog):
         self.preview.setRootIsDecorated(False)
         self.preview.setUniformRowHeights(True)
         self.preview.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # keeps a path's both ends
+        # A click on a column's title sorts the rows by it, A–Z then Z–A, as in the main table;
+        # until then they're in the main table's order. Copy and Export use the same order.
+        self._sort: tuple[str, bool] | None = None  # (column key, Z–A)
+        self.preview.header().setSectionsClickable(True)
+        self.preview.header().sectionClicked.connect(self._sort_by)
         preview_title = QLabel(_("Preview"))
         preview_title.setObjectName("detailsSection")
 
@@ -279,8 +285,24 @@ class ExportDialog(QDialog):
         for host in self.hosts():
             values = self.fields(host, between_tags)
             values.update(zip(self.CHECKED, self._results(host.id), strict=True))
-            rows.append([values[key] for key in columns])
-        return rows
+            rows.append((host, [values[key] for key in columns]))
+        if self._sort is not None and self._sort[0] in columns:
+            key, descending = self._sort
+            at = columns.index(key)
+            # Ties by name A–Z either way; a stable sort keeps that order with reverse too.
+            rows.sort(key=lambda r: natural_key(r[0].name))
+            rows.sort(key=lambda r: natural_key(r[1][at]), reverse=descending)
+        return [cells for _host, cells in rows]
+
+    def _sort_by(self, index: int) -> None:
+        """A click on a column title: A–Z, or Z–A when it's already sorted A–Z by it."""
+        columns = self.columns()
+        if not 0 <= index < len(columns):
+            return
+        key = columns[index]
+        descending = self._sort == (key, False)
+        self._sort = (key, descending)
+        self._fill_preview()
 
     def header(self) -> list[str]:
         return [_(self.TITLES[key]) for key in self.columns()]
@@ -395,6 +417,12 @@ class ExportDialog(QDialog):
         self.preview.clear()
         self.preview.setColumnCount(max(len(self.columns()), 1))
         self.preview.setHeaderLabels(self.header() or [""])
+        header, columns = self.preview.header(), self.columns()
+        sorted_by = self._sort is not None and self._sort[0] in columns
+        header.setSortIndicatorShown(sorted_by)
+        if self._sort is not None and sorted_by:
+            order = Qt.SortOrder.DescendingOrder if self._sort[1] else Qt.SortOrder.AscendingOrder
+            header.setSortIndicator(columns.index(self._sort[0]), order)
         for row in self.rows():
             item = QTreeWidgetItem([" ".join(cell.split()) for cell in row])  # one line each
             for column, cell in enumerate(row):

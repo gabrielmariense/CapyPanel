@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 from capywindow import CapyWindow
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QFileDialog
 
 from capypanel.core import settings
@@ -198,3 +199,69 @@ def test_choices_are_kept_at_once_and_copy_keeps_the_window_open(
 
     _run(window, monkeypatch, reopen)
     assert seen == ["All hosts (2 hosts)", ["name"]]  # the hosts shown; the columns kept
+
+
+@pytest.fixture
+def rooms(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
+    """Rooms added out of order: Room 4 last, after Room 10."""
+    (tmp_path / settings.PORTABLE_MARKER).touch()
+    hl, ward = HostList().add_group("Ward")
+    for n, address in ((1, "10.0.0.9"), (3, "10.0.0.2"), (10, "10.0.0.5"), (4, "10.0.0.1")):
+        hl, _ = hl.add_host(f"Room {n}", ward.id, address=address)
+    path = tmp_path / "rooms.json"
+    listfile.save(path, hl, expected=None)
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
+    win.hosts.open_list(path)
+    yield win
+    win.close()
+
+
+def _names(d: ExportDialog) -> list[str]:
+    return [row[0] for row in d.rows()]
+
+
+def test_report_lists_every_source_in_the_tables_order_not_the_order_added(
+    rooms: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[list[str]] = []
+
+    def look(d: ExportDialog) -> None:
+        for i in range(d.source.count()):  # everything, the group, no group
+            d.source.setCurrentIndex(i)
+            if d.hosts():
+                seen.append(_names(d))
+
+    _run(rooms, monkeypatch, look)
+    assert seen == [["Room 1", "Room 3", "Room 4", "Room 10"]] * 2
+
+    seen.clear()
+    rooms.hosts.table.sortByColumn(1, Qt.SortOrder.DescendingOrder)  # Address, Z–A
+    _run(rooms, monkeypatch, lambda d: seen.append(_names(d)))
+    assert seen == [["Room 1", "Room 10", "Room 3", "Room 4"]]
+
+
+def test_a_click_on_a_preview_title_sorts_and_copy_follows(
+    rooms: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[object] = []
+
+    def sort(d: ExportDialog) -> None:
+        header = d.preview.header()
+        header.sectionClicked.emit(1)  # Address, A–Z
+        seen.append(_names(d))
+        assert header.isSortIndicatorShown() and header.sortIndicatorSection() == 1
+        header.sectionClicked.emit(1)  # again: Z–A
+        seen.append(_names(d))
+        assert header.sortIndicatorOrder() == Qt.SortOrder.DescendingOrder
+        top = d.preview.topLevelItem(0)
+        seen.append(top.text(0) if top is not None else "")
+        d.copy_button.click()
+
+    _run(rooms, monkeypatch, sort)
+    assert seen == [
+        ["Room 4", "Room 3", "Room 10", "Room 1"],
+        ["Room 1", "Room 10", "Room 3", "Room 4"],
+        "Room 1",
+    ]
+    lines = QApplication.clipboard().text().splitlines()
+    assert [line.split("\t")[0] for line in lines[1:]] == seen[1]
