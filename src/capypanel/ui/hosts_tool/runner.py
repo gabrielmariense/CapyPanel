@@ -109,6 +109,8 @@ def reason_text(error: BaseException) -> str:
         }[error.reason]
     if isinstance(error, TimeoutError):
         return _("it took too long to answer.")
+    if isinstance(error, NotADirectoryError):
+        return _("there's no folder there.")
     return _("{error}.").format(error=str(error).rstrip(".") or type(error).__name__)
 
 
@@ -312,7 +314,9 @@ class Runner(QObject):
 
         def check() -> str:
             access.check_reachable(target.address)
-            return where()
+            path = where()
+            places.require_folder(path)  # never a file: opening one would run it here
+            return path
 
         def done(path: str) -> None:
             try:

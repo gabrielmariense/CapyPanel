@@ -45,6 +45,7 @@ def calls(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Any, ...]]:
     seen: list[tuple[Any, ...]] = []
     monkeypatch.setattr(access, "check_reachable", lambda host: seen.append(("reach", host)))
     monkeypatch.setattr(places, "open_folder", lambda path: seen.append(("folder", path)))
+    monkeypatch.setattr(places, "require_folder", lambda path: None)  # no file sharing here
     return seen
 
 

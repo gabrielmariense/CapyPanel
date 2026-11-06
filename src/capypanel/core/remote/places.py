@@ -63,6 +63,14 @@ def user_folder(host: str, user: str) -> str:
     return max(found, key=lambda entry: entry.stat().st_mtime).path
 
 
+def require_folder(path: str) -> None:
+    """Raises NotADirectoryError unless `path` is a folder: Windows' "open" runs a file it's
+    given, so a path typed to a script on the PC would run it on this one. It reads the
+    path over file sharing: call it off the window's thread."""
+    if not os.path.isdir(path):
+        raise NotADirectoryError(path)
+
+
 def open_folder(path: str) -> None:
     """Opens `path` in File Explorer. Raises OSError when Windows can't."""
     os.startfile(path)  # noqa: S606 (Windows' own "open", as a double-click)

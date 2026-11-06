@@ -63,6 +63,7 @@ def calls(monkeypatch: pytest.MonkeyPatch) -> list[tuple[Any, ...]]:
 
     monkeypatch.setattr(access, "check_reachable", record("reach"))
     monkeypatch.setattr(places, "open_folder", record("folder"))
+    monkeypatch.setattr(places, "require_folder", lambda path: None)  # no file sharing here
     monkeypatch.setattr(places, "open_console", record("console"))
     monkeypatch.setattr(sessions, "read_sessions", record("sessions", [ANA, BRUNO]))
     monkeypatch.setattr(sessions, "log_off", record("log-off"))
@@ -440,3 +441,24 @@ def test_a_click_on_commands_opens_the_window_for_the_selected_host(window: Capy
     commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
     assert isinstance(commands, CommandsWindow) and commands.target() is None
     commands.close()
+
+
+def test_a_path_to_a_file_is_never_opened(
+    window: CapyWindow, calls: list[Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def not_a_folder(path: str) -> None:
+        raise NotADirectoryError(path)
+
+    monkeypatch.setattr(places, "require_folder", not_a_folder)
+    _answer(
+        monkeypatch,
+        lambda dialog: (
+            dialog.path.setEditText("C:\\Tools\\run.bat"),  # type: ignore[attr-defined]
+            ACCEPT,
+        )[1],
+    )
+    _select(window, "PC-1")
+    window.hosts.host_actions["path"].trigger()
+    _settle(window)
+    assert not any(c[0] == "folder" for c in calls)  # a file would have run on this PC
+    assert "there's no folder there." in window.hosts.result_strip.text()

@@ -74,3 +74,13 @@ def test_consoles_open_pointed_at_the_pc(monkeypatch: pytest.MonkeyPatch) -> Non
         ("eventvwr.exe", "\\\\DESK-02"),
         ("services.msc", "/computer=DESK-02"),
     ]
+
+
+def test_only_a_folder_is_opened(tmp_path: Path) -> None:
+    places.require_folder(str(tmp_path))
+    script = tmp_path / "run.bat"
+    script.write_text("echo", encoding="utf-8")
+    with pytest.raises(NotADirectoryError):
+        places.require_folder(str(script))  # opening it would run it
+    with pytest.raises(NotADirectoryError):
+        places.require_folder(str(tmp_path / "missing"))

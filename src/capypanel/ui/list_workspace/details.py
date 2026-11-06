@@ -132,7 +132,7 @@ class DetailsPanel(QWidget):
         self._build(shown, needle)
         self._pages.setCurrentIndex(1)
         if kept:  # after the new page is laid out, or the bar's range is still the old one's
-            QTimer.singleShot(0, lambda: bar.setValue(kept))
+            QTimer.singleShot(0, self, lambda: bar.setValue(kept))  # dropped if it goes
 
     def shown_value(self, key: str) -> str:
         """The text a section shows, one value per line: for tests and the window."""
