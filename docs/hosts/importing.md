@@ -105,7 +105,13 @@ PC. Keep the file private."
 
 ### Copy, or Export… to a file
 
-**Preview** shows the rows that will go out. Then:
+**Preview** shows the rows that will go out, in the order the list itself shows them: by the
+column the table is sorted on, A–Z or Z–A, and hosts with the same value in that column by name.
+A host added later shows in its place in that order.
+
+A click on a column title in Preview sorts the rows by that column instead, A–Z, and a second
+click Z–A, with an arrow on the title to say which way. That sort lasts while the window is open:
+Report opens in the list's own order every time. What goes out follows Preview:
 
 - **Copy** puts every row on the clipboard with tabs between the columns, to paste straight into
   Excel. It says how many hosts it copied and from where, and the window stays open, so another

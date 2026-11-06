@@ -1008,7 +1008,9 @@ class ListWorkspace(Tool):
             sources.append(
                 Source(counted(_("Tag: {tag}").format(tag=tag), len(items)), name, items)
             )
-        return sources, start
+        # Every source in the table's order, never the order the items were added in.
+        order = self.table.in_shown_order
+        return [replace(s, hosts=order(s.hosts)) for s in sources], start
 
     # ---- right-click menus ----
 

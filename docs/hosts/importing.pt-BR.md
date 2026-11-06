@@ -106,7 +106,14 @@ Mantenha o arquivo privado."
 
 ### Copiar, ou Exportar… para um arquivo
 
-A **Prévia** mostra as linhas que vão sair. Depois:
+A **Prévia** mostra as linhas que vão sair, na ordem em que a própria lista as mostra: pela coluna
+em que a tabela está ordenada, de A a Z ou de Z a A, e os hosts com o mesmo valor nessa coluna por
+nome. Um host adicionado depois aparece no lugar que essa ordem lhe dá.
+
+Um clique no título de uma coluna da Prévia ordena as linhas por ela, de A a Z, e um segundo
+clique, de Z a A, com uma seta no título dizendo em que sentido. Essa ordenação dura enquanto a
+janela fica aberta: o Relatório abre na ordem da própria lista todas as vezes. O que sai segue a
+Prévia:
 
 - **Copiar** coloca todas as linhas na área de transferência com tabulações entre as colunas, para
   colar direto no Excel. Ele diz quantos hosts copiou e de onde, e a janela fica aberta, então
