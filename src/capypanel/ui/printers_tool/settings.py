@@ -5,16 +5,20 @@ Printer lists."""
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
     QCheckBox,
+    QColorDialog,
     QComboBox,
     QDialog,
     QFormLayout,
     QHBoxLayout,
+    QInputDialog,
     QLineEdit,
     QMessageBox,
     QPushButton,
     QSpinBox,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -25,7 +29,10 @@ from capypanel.core.i18n import N_, _
 from capypanel.core.printers import doc360, usm
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.notes import notes
+from capypanel.ui.printers_tool import marks as bar_marks
 from capypanel.ui.printers_tool import refresh
+from capypanel.ui.printers_tool.marks import Mark
+from capypanel.ui.printers_tool.table import swatch
 from capypanel.ui.settings.group import SettingsGroup
 from capypanel.ui.settings.pages import (
     ListsGeneralPage,
@@ -36,6 +43,7 @@ from capypanel.ui.settings.pages import (
     add_rows,
     every_text,
 )
+from capypanel.ui.tables import fit_rows, grid_table, with_buttons
 
 if TYPE_CHECKING:
     from capypanel.ui.printers_tool.tool import PrintersTool
@@ -312,6 +320,129 @@ class Doc360AccountDialog(QDialog):
         return box
 
 
+class BarMarksDialog(QDialog):
+    """The supply bars' marks: the low level's, always there, plus any the user adds, each in
+    the theme's text colour or one picked here. Save keeps them in Settings."""
+
+    def __init__(self, parent: QWidget | None, chosen: tuple[Mark, ...]) -> None:
+        super().__init__(parent)
+        self.setWindowTitle(_("Bar marks"))
+        self._marks = list(chosen)
+        column = QVBoxLayout(self)
+        column.setContentsMargins(16, 16, 16, 16)
+        column.setSpacing(10)
+        column.addWidget(
+            notes(
+                _("Lines across the supply bars, in Details and the Toner column. The low level's "
+                  "follows Low supply level. A colour you pick may be hard to see on some bars; "
+                  "Reset to default goes back to one mark in the theme's colour.")
+            )
+        )  # fmt: skip
+        self.table = grid_table([_("Mark"), _("Colour")])
+        self.table.setColumnWidth(0, 170)
+        self.table.itemSelectionChanged.connect(self._update)
+        self.table.itemDoubleClicked.connect(lambda *_a: self.pick_colour())
+        self.add_button = QPushButton(_("&Add…"))
+        self.colour_button = QPushButton(_("&Colour…"))
+        self.theme_button = QPushButton(_("&Theme colour"))
+        self.remove_button = QPushButton(_("&Remove"))
+        self.reset_button = QPushButton(_("Reset to &default"))
+        self.add_button.clicked.connect(self.add)
+        self.colour_button.clicked.connect(self.pick_colour)
+        self.theme_button.clicked.connect(lambda: self._set_colour(""))
+        self.remove_button.clicked.connect(self.remove)
+        self.reset_button.clicked.connect(self.reset)
+        buttons = [self.add_button, self.colour_button, self.theme_button, self.remove_button,
+                   self.reset_button]  # fmt: skip
+        column.addWidget(with_buttons(self.table, buttons))
+        row = QHBoxLayout()
+        row.addStretch(1)
+        self.save_button = QPushButton(_("&Save"))
+        self.save_button.setDefault(True)
+        self.save_button.clicked.connect(self.accept)
+        cancel = QPushButton(_("Cancel"))
+        cancel.setAutoDefault(False)
+        cancel.clicked.connect(self.reject)
+        row.addWidget(self.save_button)
+        row.addWidget(cancel)
+        column.addLayout(row)
+        self._fill(0)
+        self.resize(560, 380)
+
+    def marks(self) -> tuple[Mark, ...]:
+        return tuple(self._marks)
+
+    def picked(self) -> int:
+        rows = [self.table.indexOfTopLevelItem(i) for i in self.table.selectedItems()]
+        return rows[0] if rows else -1
+
+    def add(self) -> None:
+        taken = {m.percent for m in self._marks}
+        start = next((p for p in (50, 25, 75, *range(5, 100, 5)) if p not in taken), 50)
+        percent, ok = QInputDialog.getInt(
+            self, _("Add a mark"), _("Where the mark goes, in %:"), start,
+            bar_marks.LOWEST, bar_marks.HIGHEST,
+        )  # fmt: skip
+        if not ok:
+            return
+        if percent in taken:
+            QMessageBox.information(self, _("Bar marks"), _("There's a mark at {n} % already.")
+                                    .format(n=percent))  # fmt: skip
+            return
+        self._marks.append(Mark(percent))
+        low, *extra = self._marks
+        self._marks = [low, *sorted(extra, key=lambda m: m.percent)]
+        self._fill(next(i for i, m in enumerate(self._marks) if m.percent == percent))
+
+    def pick_colour(self) -> None:
+        row = self.picked()
+        if row < 0:
+            return
+        start = QColor(self._marks[row].color or self.palette().color(QPalette.ColorRole.Text))
+        colour = QColorDialog.getColor(start, self, _("Mark colour"))
+        if colour.isValid():
+            self._set_colour(colour.name())
+
+    def remove(self) -> None:
+        row = self.picked()
+        if row > 0:  # the low mark stays
+            del self._marks[row]
+            self._fill(min(row, len(self._marks) - 1))
+
+    def reset(self) -> None:
+        self._marks = [Mark(self._marks[0].percent, low=True)]
+        self._fill(0)
+
+    def _set_colour(self, colour: str) -> None:
+        row = self.picked()
+        if row >= 0:
+            mark = self._marks[row]
+            self._marks[row] = Mark(mark.percent, colour, mark.low)
+            self._fill(row)
+
+    def _fill(self, pick: int) -> None:
+        self.table.clear()
+        for mark in self._marks:
+            where = _("{percent} %").format(percent=mark.percent)
+            if mark.low:
+                where = _("{level} (low level)").format(level=where)
+            item = QTreeWidgetItem([where, mark.color or _("Theme colour")])
+            item.setIcon(1, swatch(mark.color or self.palette().color(QPalette.ColorRole.Text)
+                                   .name()))  # fmt: skip
+            self.table.addTopLevelItem(item)
+        fit_rows(self.table)
+        if (row := self.table.topLevelItem(pick)) is not None:
+            self.table.setCurrentItem(row)
+        self._update()
+
+    def _update(self) -> None:
+        row = self.picked()
+        self.colour_button.setEnabled(row >= 0)
+        self.theme_button.setEnabled(row >= 0 and bool(self._marks[row].color))
+        self.remove_button.setEnabled(row > 0)
+        self.add_button.setEnabled(len(self._marks) <= bar_marks.MOST)
+
+
 class PrintersPage(ListsGeneralPage):
     """Startup, then Refresh: the SNMP version, its account behind Change…, Refresh on its own,
     the low supply level, and the Toner column as text or a bar."""
@@ -324,6 +455,7 @@ class PrintersPage(ListsGeneralPage):
         version: str,
         account: str,
         doc360_text: str,
+        marks_text: str,
         auto: int,
         notify: str,
         **lists: object,
@@ -358,6 +490,9 @@ class PrintersPage(ListsGeneralPage):
         self.low_level.setValue(low)
         self.low_level.setSuffix(_(" %"))
         self.low_level.valueChanged.connect(self.changed)
+        self.marks_button = QPushButton(_("Change…"))
+        self.marks_button.setAutoDefault(False)
+        self.marks_row = SettingRow(_("Bar &marks"), marks_text, self.marks_button)
         self.toner_view = QComboBox()
         self.toner_view.addItem(_("Text"), TEXT)
         self.toner_view.addItem(_("Bar"), BARS)
@@ -393,6 +528,7 @@ class PrintersPage(ListsGeneralPage):
                 _("A toner, ink, drum or box at or below this shows as low."),
                 self.low_level,
             ),
+            self.marks_row,
             SettingRow(
                 _("&Toner column"),
                 _('The lowest toner as text ("Black 24 %") or as a bar, like in Details.'),
@@ -403,6 +539,13 @@ class PrintersPage(ListsGeneralPage):
 
     def show_account(self, text: str) -> None:
         self.account_row.description.setText(text)
+
+
+def marks_text(marks: tuple[Mark, ...]) -> str:
+    """The Bar marks row's line: where the marks are."""
+    return _("Lines across the supply bars at {marks}.").format(
+        marks=bar_marks.percents_text(marks)
+    )
 
 
 def doc360_text() -> str:
@@ -454,6 +597,7 @@ class PrintersSettings(SettingsGroup):
             version=tool.snmp_version(),
             account=account_text(tool.snmp_version()),
             doc360_text=doc360_text(),
+            marks_text=marks_text(tool.bar_marks()),
             auto=tool.auto_refresh(),
             notify=tool.notify_choice(),
             texts=texts,
@@ -477,6 +621,7 @@ class PrintersSettings(SettingsGroup):
             page.changed.connect(self._changed)
         self.general.change_button.clicked.connect(self._change_account)
         self.general.doc360_button.clicked.connect(self._change_doc360_account)
+        self.general.marks_button.clicked.connect(self._change_marks)
         self.lists.view.open_requested.connect(self._open)
         self._building = False
         return [("printers", self.general), ("printer_lists", self.lists)]
@@ -502,6 +647,7 @@ class PrintersSettings(SettingsGroup):
             self._tool.set_auto_refresh(int(self.general.auto_every.currentData()))
             self._tool.set_notify_choice(str(self.general.notify.currentData()))
             self.general.show_account(account_text(self._tool.snmp_version()))
+            self.general.marks_row.description.setText(marks_text(self._tool.bar_marks()))
             self._tool.prefs_applied()
 
     def _change_account(self) -> None:
@@ -527,6 +673,12 @@ class PrintersSettings(SettingsGroup):
                 _("SNMP v3 account"),
                 _("Windows didn't keep it: {error}").format(error=e),
             )
+
+    def _change_marks(self) -> None:
+        dialog = BarMarksDialog(self.general.window(), self._tool.bar_marks())
+        if run_modal(dialog) == QDialog.DialogCode.Accepted:
+            self._tool.set_bar_marks(dialog.marks())
+            self.general.marks_row.description.setText(marks_text(self._tool.bar_marks()))
 
     def _change_doc360_account(self) -> None:
         change_doc360_account(self.general)

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 21:01-0300\n"
+"POT-Creation-Date: 2026-11-05 22:50-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -62,6 +62,9 @@ msgstr "&Marca:"
 
 msgid "&Clear queue"
 msgstr "&Limpar fila"
+
+msgid "&Colour…"
+msgstr "&Cor…"
 
 msgid "&Connect"
 msgstr "&Conectar"
@@ -352,6 +355,9 @@ msgstr "&Tags:"
 msgid "&Theme"
 msgstr "&Tema"
 
+msgid "&Theme colour"
+msgstr "Cor do &tema"
+
 msgid "&Toner column"
 msgstr "Coluna &Toner"
 
@@ -457,6 +463,9 @@ msgstr "Adicionar uma &linha abaixo"
 msgid "Add a host list"
 msgstr "Adicionar uma lista de hosts"
 
+msgid "Add a mark"
+msgstr "Adicionar marca"
+
 msgid "Add a printer list"
 msgstr "Adicionar uma lista de impressoras"
 
@@ -554,6 +563,12 @@ msgstr "BIOS"
 
 msgid "Bar"
 msgstr "Barra"
+
+msgid "Bar &marks"
+msgstr "&Marcas das barras"
+
+msgid "Bar marks"
+msgstr "Marcas das barras"
 
 msgid "Black"
 msgstr "Preto"
@@ -710,6 +725,9 @@ msgstr "Fechar"
 
 msgid "Co&py"
 msgstr "Co&piar"
+
+msgid "Colour"
+msgstr "Cor"
 
 msgid "Commands"
 msgstr "Comandos"
@@ -1354,6 +1372,13 @@ msgstr "Licença"
 msgid "Licenses"
 msgstr "Licenças"
 
+#, python-brace-format
+msgid "Lines across the supply bars at {marks}."
+msgstr "Traços nas barras de suprimento em {marks}."
+
+msgid "Lines across the supply bars, in Details and the Toner column. The low level's follows Low supply level. A colour you pick may be hard to see on some bars; Reset to default goes back to one mark in the theme's colour."
+msgstr "Traços nas barras de suprimento, nos Detalhes e na coluna Toner. O do nível baixo segue o Nível baixo de suprimento. Uma cor escolhida pode ficar difícil de ver em algumas barras; Restaurar padrão volta a uma marca na cor do tema."
+
 msgid "List"
 msgstr "Lista"
 
@@ -1415,6 +1440,12 @@ msgstr "Gerenciar grupos"
 
 msgid "Manual connection"
 msgstr "Conexão manual"
+
+msgid "Mark"
+msgstr "Marca"
+
+msgid "Mark colour"
+msgstr "Cor da marca"
 
 msgid "Mascot:"
 msgstr "Mascote:"
@@ -2064,6 +2095,9 @@ msgid_plural "Report saved: {n} printers from {source}."
 msgstr[0] "Relatório salvo: {n} impressora de {source}."
 msgstr[1] "Relatório salvo: {n} impressoras de {source}."
 
+msgid "Reset to &default"
+msgstr "Restaurar &padrão"
+
 msgid "Restart Print &Spooler…"
 msgstr "Reiniciar o &Spooler de Impressão…"
 
@@ -2580,8 +2614,12 @@ msgid "The lowest toner as text (\"Black 24 %\") or as a bar, like in Details."
 msgstr "O toner mais baixo como texto (\"Preto 24 %\") ou como uma barra, como em Detalhes."
 
 #, python-brace-format
-msgid "The marks show {low} % (low) and 50 %."
-msgstr "Os traços marcam {low} % (baixo) e 50 %."
+msgid "The mark shows the low level, {low} %."
+msgstr "O traço marca o nível baixo, {low} %."
+
+#, python-brace-format
+msgid "The marks show {marks}."
+msgstr "Os traços marcam {marks}."
 
 msgid "The parent group doesn't exist."
 msgstr "O grupo pai não existe."
@@ -2672,8 +2710,15 @@ msgstr "O “website” deve ser um endereço https://."
 msgid "Theme"
 msgstr "Tema"
 
+msgid "Theme colour"
+msgstr "Cor do tema"
+
 msgid "There are no connection profiles. Create one in Settings > Connections."
 msgstr "Não há perfis de conexão. Crie um em Configurações > Conexões."
+
+#, python-brace-format
+msgid "There's a mark at {n} % already."
+msgstr "Já existe uma marca em {n} %."
 
 msgid "These are the built-in profiles: the folder is created when you change one."
 msgstr "Estes são os perfis que vêm com o app: a pasta é criada quando você altera um."
@@ -2882,6 +2927,9 @@ msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste 
 #, python-brace-format
 msgid "Where is {tool}?"
 msgstr "Onde está o {tool}?"
+
+msgid "Where the mark goes, in %:"
+msgstr "Onde fica a marca, em %:"
 
 msgid "Whether the PC answers on the network."
 msgstr "Se o PC responde na rede."
@@ -3225,6 +3273,14 @@ msgstr "{host} desliga às {when}."
 #, python-brace-format
 msgid "{kind} from {computer}"
 msgstr "{kind} de {computer}"
+
+#, python-brace-format
+msgid "{level} (low level)"
+msgstr "{level} (nível baixo)"
+
+#, python-brace-format
+msgid "{level} (low)"
+msgstr "{level} (baixo)"
 
 #, python-brace-format
 msgid "{level} · Low"

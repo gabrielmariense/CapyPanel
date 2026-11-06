@@ -18,8 +18,10 @@ from capypanel.core.printers.reading import Supply
 from capypanel.ui.checks import clock_text
 from capypanel.ui.icons import dot_icon
 from capypanel.ui.list_workspace.details import DetailsPanel, breakable
+from capypanel.ui.printers_tool import marks as bar_marks
 from capypanel.ui.printers_tool import status
-from capypanel.ui.printers_tool.meter import HEIGHT, REACH, draw_meter
+from capypanel.ui.printers_tool.marks import Mark
+from capypanel.ui.printers_tool.meter import HEIGHT, ROOM, draw_meter
 from capypanel.ui.printers_tool.status import AMBER, GREY, Checked, Counted
 
 
@@ -32,6 +34,7 @@ class PrinterDetails:
     use: Callable[[str, str], None] | None = None  # "Use this": (field, value); None: read-only
     counted: Counted | None = None  # the last Refresh's Doc360 MPS counters
     set_doc360: Callable[[], None] | None = None  # opens the Doc360 MPS account's window
+    marks: tuple[Mark, ...] = ()  # the bars' marks; () is just the low level's
 
 
 def source_text(source: str) -> str:
@@ -44,19 +47,18 @@ def source_text(source: str) -> str:
 
 
 class Meter(QWidget):
-    """A supply's level as a bar, with a tick at the low level."""
+    """A supply's level as a bar, with its marks."""
 
-    def __init__(self, supply: Supply, low: int) -> None:
+    def __init__(self, supply: Supply, marks: tuple[Mark, ...]) -> None:
         super().__init__()
-        self.supply, self.low = supply, low
-        self.setFixedHeight(HEIGHT + 2 * REACH)
+        self.supply, self.marks = supply, marks
+        self.setFixedHeight(HEIGHT + 2 * ROOM)
 
     def paintEvent(self, _event: object) -> None:
         painter = QPainter(self)
         text = self.palette().color(QPalette.ColorRole.Text)
-        back = self.palette().color(QPalette.ColorRole.Base)
-        bar = QRectF(0, REACH, self.width(), HEIGHT)
-        draw_meter(painter, bar, self.supply, self.low, text, back)
+        bar = QRectF(0, ROOM, self.width(), HEIGHT)
+        draw_meter(painter, bar, self.supply, self.marks, text)
         painter.end()
 
 
@@ -208,6 +210,7 @@ class PrinterDetailsPanel(DetailsPanel):
         if checked.reading is None:
             layout.addWidget(self.muted("—"))
             return
+        marks = shown.marks or (Mark(shown.low, low=True),)
         if not checked.reading.supplies:
             layout.addWidget(self.muted(_("The printer doesn't report its supplies.")))
             return
@@ -229,10 +232,9 @@ class PrinterDetailsPanel(DetailsPanel):
                 level.setStyleSheet(f"color: {AMBER}; font-weight: 600;")
             top.addWidget(level)
             layout.addLayout(top)
-            layout.addWidget(Meter(supply, shown.low))
+            layout.addWidget(Meter(supply, marks))
             layout.addSpacing(2)
-        hint = _("The marks show {low} % (low) and 50 %.")
-        layout.addWidget(self.muted(hint.format(low=shown.low)))
+        layout.addWidget(self.muted(bar_marks.hint(marks)))
 
     def _printer_says(self, key: str, value: str, use: Callable[[str, str], None] | None) -> QLabel:
         """What the printer reports instead of the list's value; "Use this" copies it over."""

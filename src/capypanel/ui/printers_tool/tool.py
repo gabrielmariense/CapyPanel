@@ -20,7 +20,7 @@ from capypanel.ui.hosts import group_path
 from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
-from capypanel.ui.printers_tool import status
+from capypanel.ui.printers_tool import marks, status
 from capypanel.ui.printers_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.printers_tool.attention import (
     AttentionStrip,
@@ -30,6 +30,7 @@ from capypanel.ui.printers_tool.attention import (
 )
 from capypanel.ui.printers_tool.details import PrinterDetails, PrinterDetailsPanel
 from capypanel.ui.printers_tool.dialog import PrinterDialog
+from capypanel.ui.printers_tool.marks import Mark
 from capypanel.ui.printers_tool.refresh import (
     V2C,
     V3,
@@ -117,7 +118,7 @@ class PrintersTool(ListWorkspace):
         self._auto_timer.timeout.connect(self._auto_refresh)
         self._apply_auto_refresh()
         self.table.set_cells(self._cells)
-        self.table.bars, self.table.low = self.toner_bars(), self.low_level()
+        self.table.bars, self.table.marks = self.toner_bars(), self.bar_marks()
         self.settings_pages = PrintersSettings(self)  # its part of Settings
         self._fill_inventory()
         self._connect()
@@ -303,9 +304,19 @@ class PrintersTool(ListWorkspace):
     def set_low_level(self, low: int) -> None:
         if low != self.low_level():
             self.prefs["low_level"] = low
-            self.table.low = low
+            self.table.marks = self.bar_marks()  # the low mark follows it
             self._show_all_cells()
             self._count_attention()
+
+    def bar_marks(self) -> tuple[Mark, ...]:
+        """The supply bars' marks: the low level's, then any added in Settings."""
+        return marks.load(self.prefs, self.low_level())
+
+    def set_bar_marks(self, chosen: tuple[Mark, ...]) -> None:
+        marks.save(self.prefs, chosen)
+        self.table.marks = self.bar_marks()
+        self.table.viewport().update()
+        self._selection_changed()  # Details' bars
 
     def snmp_version(self) -> str:
         """Settings' SNMP version: V2C (the default) or V3."""
@@ -556,6 +567,7 @@ class PrintersTool(ListWorkspace):
                 else None,
                 self._counted,
                 self._set_doc360_account,
+                self.bar_marks(),
             )
             self.details.show_printer(details, 1, needle=self._needle())
         else:

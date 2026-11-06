@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 21:01-0300\n"
+"POT-Creation-Date: 2026-11-05 22:50-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -60,6 +60,9 @@ msgid "&Brand:"
 msgstr ""
 
 msgid "&Clear queue"
+msgstr ""
+
+msgid "&Colour…"
 msgstr ""
 
 msgid "&Connect"
@@ -351,6 +354,9 @@ msgstr ""
 msgid "&Theme"
 msgstr ""
 
+msgid "&Theme colour"
+msgstr ""
+
 msgid "&Toner column"
 msgstr ""
 
@@ -456,6 +462,9 @@ msgstr ""
 msgid "Add a host list"
 msgstr ""
 
+msgid "Add a mark"
+msgstr ""
+
 msgid "Add a printer list"
 msgstr ""
 
@@ -556,6 +565,12 @@ msgid "BIOS"
 msgstr ""
 
 msgid "Bar"
+msgstr ""
+
+msgid "Bar &marks"
+msgstr ""
+
+msgid "Bar marks"
 msgstr ""
 
 msgid "Black"
@@ -717,6 +732,9 @@ msgid "Close"
 msgstr ""
 
 msgid "Co&py"
+msgstr ""
+
+msgid "Colour"
 msgstr ""
 
 msgid "Commands"
@@ -1382,6 +1400,16 @@ msgstr ""
 msgid "Licenses"
 msgstr ""
 
+#, python-brace-format
+msgid "Lines across the supply bars at {marks}."
+msgstr ""
+
+msgid ""
+"Lines across the supply bars, in Details and the Toner column. The low "
+"level's follows Low supply level. A colour you pick may be hard to see on"
+" some bars; Reset to default goes back to one mark in the theme's colour."
+msgstr ""
+
 msgid "List"
 msgstr ""
 
@@ -1444,6 +1472,12 @@ msgid "Manage groups"
 msgstr ""
 
 msgid "Manual connection"
+msgstr ""
+
+msgid "Mark"
+msgstr ""
+
+msgid "Mark colour"
 msgstr ""
 
 msgid "Mascot:"
@@ -2119,6 +2153,9 @@ msgid_plural "Report saved: {n} printers from {source}."
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "Reset to &default"
+msgstr ""
+
 msgid "Restart Print &Spooler…"
 msgstr ""
 
@@ -2668,7 +2705,11 @@ msgid "The lowest toner as text (\"Black 24 %\") or as a bar, like in Details."
 msgstr ""
 
 #, python-brace-format
-msgid "The marks show {low} % (low) and 50 %."
+msgid "The mark shows the low level, {low} %."
+msgstr ""
+
+#, python-brace-format
+msgid "The marks show {marks}."
 msgstr ""
 
 msgid "The parent group doesn't exist."
@@ -2764,7 +2805,14 @@ msgstr ""
 msgid "Theme"
 msgstr ""
 
+msgid "Theme colour"
+msgstr ""
+
 msgid "There are no connection profiles. Create one in Settings > Connections."
+msgstr ""
+
+#, python-brace-format
+msgid "There's a mark at {n} % already."
 msgstr ""
 
 msgid ""
@@ -2983,6 +3031,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Where is {tool}?"
+msgstr ""
+
+msgid "Where the mark goes, in %:"
 msgstr ""
 
 msgid "Whether the PC answers on the network."
@@ -3340,6 +3391,14 @@ msgstr ""
 
 #, python-brace-format
 msgid "{kind} from {computer}"
+msgstr ""
+
+#, python-brace-format
+msgid "{level} (low level)"
+msgstr ""
+
+#, python-brace-format
+msgid "{level} (low)"
 msgstr ""
 
 #, python-brace-format
