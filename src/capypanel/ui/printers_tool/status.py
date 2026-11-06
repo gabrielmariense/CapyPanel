@@ -8,6 +8,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 
+from PySide6.QtCore import QLocale
+
+from capypanel.core import i18n
 from capypanel.core.i18n import _
 from capypanel.core.printers import doc360, snmp
 from capypanel.core.printers.printer import PrinterInfo
@@ -71,6 +74,7 @@ class Counted:
     counters: Mapping[str, doc360.Counter] = field(default_factory=dict)
     error: str = ""
     account: str = ""  # NO_ACCOUNT or REFUSED: Details offers the account's window
+    older: tuple[int, int] | None = None  # (year, month) when these aren't this month's
 
 
 NO_ACCOUNT, REFUSED = "none", "refused"  # Counted.account
@@ -183,6 +187,17 @@ def doc360_pages(
     if found.life is None:
         return None, _("Doc360 MPS has no total for this printer.")
     return found.life, ""
+
+
+def older_text(counted: Counted | None) -> str:
+    """The month Doc360's counts are from, when it isn't this one ("October 2026"); "" when
+    they're this month's, as they should be."""
+    if counted is None or counted.older is None:
+        return ""
+    year, month = counted.older
+    locale = QLocale(i18n.language())
+    # i18n: a month and its year, "October 2026"
+    return _("{month} {year}").format(month=locale.standaloneMonthName(month), year=year)
 
 
 def doc360_tip(counted: Counted) -> str:

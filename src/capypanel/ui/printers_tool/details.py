@@ -139,6 +139,15 @@ class PrinterDetailsPanel(DetailsPanel):
             layout.addWidget(shown_value)
             if key == "pages" and error and shown.counted and shown.counted.account:
                 self._account_button(layout, shown)
+            if key == "pages" and pages is not None and (month := status.older_text(shown.counted)):
+                warning = QLabel(
+                    _("⚠ From {month}: Doc360 MPS has no counts for this month yet. Check the "
+                      "portal before using this number.").format(month=month)
+                )  # fmt: skip
+                warning.setObjectName("doc360Older")
+                warning.setWordWrap(True)
+                warning.setStyleSheet(f"color: {AMBER};")
+                layout.addWidget(warning)
 
     def _account_button(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
         """Under a missing or refused Doc360 login: its window, straight from here."""
@@ -222,7 +231,7 @@ class PrinterDetailsPanel(DetailsPanel):
             layout.addLayout(top)
             layout.addWidget(Meter(supply, shown.low))
             layout.addSpacing(2)
-        hint = _("The tick is the low level, {low} %; the faint one is half.")
+        hint = _("The marks show {low} % (low) and 50 %.")
         layout.addWidget(self.muted(hint.format(low=shown.low)))
 
     def _printer_says(self, key: str, value: str, use: Callable[[str, str], None] | None) -> QLabel:

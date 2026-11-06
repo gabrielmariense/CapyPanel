@@ -114,7 +114,9 @@ def count(account: doc360.Account | None) -> Counted:
     if account is None:
         return Counted(when, error=_("No Doc360 MPS account is set."), account=NO_ACCOUNT)
     try:
-        return Counted(when, doc360.read_counters(account))
+        found = doc360.read_counters(account)
+        older = None if found.this_month else (found.year, found.month)
+        return Counted(when, found.counters, older=older)
     except doc360.Refused:
         log.info("Doc360 MPS: the login was refused")
         return Counted(when, error=_("Doc360 MPS refused the login."), account=REFUSED)

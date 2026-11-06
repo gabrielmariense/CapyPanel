@@ -54,6 +54,33 @@ def test_details_and_the_report_show_doc360_s_total(printers: PrintersTool) -> N
     assert source
 
 
+def test_counts_from_an_older_month_say_so(printers: PrintersTool) -> None:  # noqa: F811
+    printer = _from_doc360(printers)
+    printers._counted = Counted(WHEN, {"sample0001": Counter(20_500, 0, 0)}, older=(2026, 10))
+    printers.table.select_ids([printer.id])
+    [warning] = [w for w in printers.details.findChildren(QLabel)
+                 if w.objectName() == "doc360Older"]  # fmt: skip
+    assert "From October 2026" in warning.text() and "Check the portal" in warning.text()
+    assert printers._report_cells(printer.id)[3] == "20500 (from October 2026)"
+    printers._counted = Counted(WHEN, {"sample0001": Counter(20_500, 0, 0)})  # this month's
+    printers.table.select_ids([])
+    printers.table.select_ids([printer.id])
+    assert not [w for w in printers.details.findChildren(QLabel)
+                if w.objectName() == "doc360Older" and w.isVisibleTo(printers.details)]  # fmt: skip
+    assert printers._report_cells(printer.id)[3] == "20500"
+
+
+def test_refresh_keeps_the_month_when_it_isn_t_this_one(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        doc360, "read_counters", lambda _a: doc360.Latest({"x": Counter(1, 1, 0)}, 2026, 10, False)
+    )
+    assert refresh.count(ACCOUNT).older == (2026, 10)
+    monkeypatch.setattr(
+        doc360, "read_counters", lambda _a: doc360.Latest({"x": Counter(1, 1, 0)}, 2026, 11, True)
+    )
+    assert refresh.count(ACCOUNT).older is None
+
+
 def test_before_a_refresh_doc360_s_total_is_empty(printers: PrintersTool) -> None:  # noqa: F811
     printer = _from_doc360(printers)
     printers.table.select_ids([printer.id])
@@ -100,9 +127,9 @@ def test_refresh_fetches_doc360_once_beside_the_printers(
     printer = _from_doc360(printers)
     asked: list[Account] = []
 
-    def fake_counters(account: Account) -> dict[str, Counter]:
+    def fake_counters(account: Account) -> doc360.Latest:
         asked.append(account)
-        return {"sample0001": Counter(20_500, 15_000, 5_500)}
+        return doc360.Latest({"sample0001": Counter(20_500, 15_000, 5_500)}, 2026, 11, True)
 
     def no_answer(*_args: object, **_kw: object) -> reading.Reading:
         raise snmp.NoAnswer("192.0.2.99")
@@ -123,7 +150,7 @@ def test_refresh_says_when_the_doc360_account_is_missing(
 ) -> None:
     printer = _from_doc360(printers)
 
-    def must_not_run(_account: Account) -> dict[str, Counter]:
+    def must_not_run(_account: Account) -> doc360.Latest:
         raise AssertionError("no account: Doc360 isn't asked")
 
     def no_answer(*_args: object, **_kw: object) -> reading.Reading:
@@ -175,7 +202,7 @@ def test_no_doc360_printer_no_doc360_login(
     printers: PrintersTool,  # noqa: F811
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def must_not_run(_account: Account) -> dict[str, Counter]:
+    def must_not_run(_account: Account) -> doc360.Latest:
         raise AssertionError("no Doc360 printer: Doc360 isn't asked")
 
     def no_answer(*_args: object, **_kw: object) -> reading.Reading:
@@ -199,7 +226,7 @@ def test_no_doc360_printer_no_doc360_login(
     ],
 )
 def test_count_never_raises(monkeypatch: pytest.MonkeyPatch, error: Exception, words: str) -> None:
-    def fail(_account: Account) -> dict[str, Counter]:
+    def fail(_account: Account) -> doc360.Latest:
         raise error
 
     monkeypatch.setattr(doc360, "read_counters", fail)

@@ -56,6 +56,16 @@ class Counter:
     color: int | None
 
 
+@dataclass(frozen=True)
+class Latest:
+    """The export's counters and the month they're from: this month's, unless it had none."""
+
+    counters: dict[str, Counter]
+    year: int
+    month: int
+    this_month: bool
+
+
 def key(serial: str) -> str:
     """How serials are matched: Doc360's N/S against the list's serial."""
     return serial.strip().casefold()
@@ -134,7 +144,7 @@ def read_counters(
     base: str = BASE,
     timeout: float = TIMEOUT,
     today: Callable[[], date] = date.today,
-) -> dict[str, Counter]:
+) -> Latest:
     """Every printer's latest counters, by serial (see key()). Raises Doc360Error: Refused
     for a refused login (no retry), NoAnswer, or Changed when a page isn't as expected."""
     session = _Session(base, timeout)
@@ -152,6 +162,8 @@ def read_counters(
         # Early in a month it may have none yet, so then last month's.
         now = today()
         last = (now.year - 1, 12) if now.month == 1 else (now.year, now.month - 1)
+        counters: dict[str, Counter] = {}
+        year, month = now.year, now.month
         for year, month in ((now.year, now.month), last):
             fields = [
                 *hidden,
@@ -167,8 +179,8 @@ def read_counters(
             counters = parse_counters(session.ask(EXPORT_ACTION, fields, referer=EXPORT_PAGE))
             if counters:
                 break
-        log.info("Doc360: latest counters for %d printers", len(counters))
-        return counters
+        log.info("Doc360: counters for %d printers, %d/%d", len(counters), month, year)
+        return Latest(counters, year, month, (year, month) == (now.year, now.month))
     finally:
         with contextlib.suppress(Doc360Error):  # the session also ends on its own there
             session.ask(LOGOUT)

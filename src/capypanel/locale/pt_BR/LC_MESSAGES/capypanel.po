@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 20:47-0300\n"
+"POT-Creation-Date: 2026-11-05 21:01-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -2579,6 +2579,10 @@ msgstr "O login que você usa no portal Doc360 MPS. O CapyPanel entra uma vez a 
 msgid "The lowest toner as text (\"Black 24 %\") or as a bar, like in Details."
 msgstr "O toner mais baixo como texto (\"Preto 24 %\") ou como uma barra, como em Detalhes."
 
+#, python-brace-format
+msgid "The marks show {low} % (low) and 50 %."
+msgstr "Os traços marcam {low} % (baixo) e 50 %."
+
 msgid "The parent group doesn't exist."
 msgstr "O grupo pai não existe."
 
@@ -2634,10 +2638,6 @@ msgstr "A comunidade somente leitura à qual suas impressoras respondem. A maior
 #, python-brace-format
 msgid "The restart or shutdown of {host} is cancelled."
 msgstr "A reinicialização ou o desligamento de {host} foi cancelado."
-
-#, python-brace-format
-msgid "The tick is the low level, {low} %; the faint one is half."
-msgstr "O traço marca o nível baixo, {low} %; o mais fraco, a metade."
 
 msgid "The tool needs a “name”."
 msgstr "A ferramenta precisa de um “name”."
@@ -3238,6 +3238,11 @@ msgstr "{level} · Quase cheia"
 msgid "{level} · low"
 msgstr "{level} · baixo"
 
+#. i18n: a month and its year, "October 2026"
+#, python-brace-format
+msgid "{month} {year}"
+msgstr "{month} de {year}"
+
 #, python-brace-format
 msgid "{names} doesn't take a user and password (it may want a VNC password, or be another kind of VNC server), so CapyPanel didn't send your password. Check its connection profile."
 msgid_plural "{names} don't take a user and password (they may want a VNC password, or be another kind of VNC server), so CapyPanel didn't send your password. Check their connection profile."
@@ -3475,6 +3480,10 @@ msgstr[0] "{n} temporário"
 msgstr[1] "{n} temporários"
 
 #, python-brace-format
+msgid "{pages} (from {month})"
+msgstr "{pages} (de {month})"
+
+#, python-brace-format
 msgid "{path} (in use)"
 msgstr "{path} (em uso)"
 
@@ -3614,6 +3623,10 @@ msgstr "“{path}” não é uma lista de impressoras."
 
 msgid "↑ ↓ pick, Enter runs, typing searches. Commands that need more open a small window; risky ones ask first."
 msgstr "↑ ↓ escolhe, Enter executa, digitar pesquisa. Comandos que precisam de mais abrem uma janela pequena; os arriscados perguntam antes."
+
+#, python-brace-format
+msgid "⚠ From {month}: Doc360 MPS has no counts for this month yet. Check the portal before using this number."
+msgstr "⚠ De {month}: o Doc360 MPS ainda não tem contadores deste mês. Confira o portal antes de usar este número."
 
 msgid "✓ Found"
 msgstr "✓ Encontrado"

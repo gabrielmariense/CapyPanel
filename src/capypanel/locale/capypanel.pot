@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 20:47-0300\n"
+"POT-Creation-Date: 2026-11-05 21:01-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2667,6 +2667,10 @@ msgstr ""
 msgid "The lowest toner as text (\"Black 24 %\") or as a bar, like in Details."
 msgstr ""
 
+#, python-brace-format
+msgid "The marks show {low} % (low) and 50 %."
+msgstr ""
+
 msgid "The parent group doesn't exist."
 msgstr ""
 
@@ -2725,10 +2729,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "The restart or shutdown of {host} is cancelled."
-msgstr ""
-
-#, python-brace-format
-msgid "The tick is the low level, {low} %; the faint one is half."
 msgstr ""
 
 msgid "The tool needs a “name”."
@@ -3354,6 +3354,11 @@ msgstr ""
 msgid "{level} · low"
 msgstr ""
 
+#. i18n: a month and its year, "October 2026"
+#, python-brace-format
+msgid "{month} {year}"
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "{names} doesn't take a user and password (it may want a VNC password, or "
@@ -3605,6 +3610,10 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{pages} (from {month})"
+msgstr ""
+
+#, python-brace-format
 msgid "{path} (in use)"
 msgstr ""
 
@@ -3755,6 +3764,12 @@ msgstr ""
 msgid ""
 "↑ ↓ pick, Enter runs, typing searches. Commands that need more open a "
 "small window; risky ones ask first."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"⚠ From {month}: Doc360 MPS has no counts for this month yet. Check the "
+"portal before using this number."
 msgstr ""
 
 msgid "✓ Found"

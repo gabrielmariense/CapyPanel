@@ -1,4 +1,4 @@
-"""A supply's level as a bar with a tick at the low level and a fainter mark at half: in
+"""A supply's level as a bar with a mark at the low level and one at half: in
 Details, and in the Toner column when Settings asks for bars. One drawing, so both look the
 same."""
 
@@ -9,9 +9,9 @@ from capypanel.core.printers.reading import Supply
 from capypanel.ui.printers_tool import status
 
 HEIGHT = 8
-HALF = 50  # %: the fainter mark
+HALF = 50  # %: the second mark
 MARK = 2  # px: each mark's width
-REACH = 3  # px the low tick sticks out above and below the bar; the half mark, one less
+REACH = 3  # px the marks stick out above and below the bar
 
 
 def draw_meter(
@@ -35,11 +35,8 @@ def draw_meter(
         painter.drawRoundedRect(QRectF(bar.x(), bar.y(), width, bar.height()), 3, 3)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)  # crisp 2 px marks
     top, bottom = round(bar.y()), round(bar.bottom())
-    for level, strong in ((HALF, False), (low, True)):
+    for level in (HALF, low):  # both alike, so both are as easy to see
         x = round(bar.x() + bar.width() * level / 100) - MARK // 2
-        mark = QColor(text)
-        mark.setAlpha(255 if strong else 170)
-        reach = REACH if strong else REACH - 1
         painter.fillRect(x - 1, top, MARK + 2, bottom - top, back)  # stands out on the fill
-        painter.fillRect(x, top - reach, MARK, bottom - top + 2 * reach, mark)
+        painter.fillRect(x, top - REACH, MARK, bottom - top + 2 * REACH, text)
     painter.restore()

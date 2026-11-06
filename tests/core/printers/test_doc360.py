@@ -123,7 +123,8 @@ def account(password: str = PASSWORD) -> Account:
 def test_reads_the_latest_counters_by_serial(portal: tuple[Portal, str]) -> None:
     state, base = portal
     found = doc360.read_counters(account(), base=base, today=lambda: date(2026, 1, 15))
-    assert found == {
+    assert found.this_month and (found.year, found.month) == (2026, 1)
+    assert found.counters == {
         "sample0011": Counter(12345, 12345, 0),
         "sample0012": Counter(20500, 15000, 5500),
     }
@@ -144,7 +145,8 @@ def test_early_in_a_month_with_none_yet_it_takes_last_month_s(
     state.empty_months = {("1", "2026")}
     found = doc360.read_counters(account(), base=base, today=lambda: date(2026, 1, 2))
     assert state.exports == [("1", "2026"), ("12", "2025")]
-    assert len(found) == 2
+    assert len(found.counters) == 2
+    assert not found.this_month and (found.year, found.month) == (2025, 12)
 
 
 def test_asks_only_for_its_own_pages_and_logs_out(portal: tuple[Portal, str]) -> None:

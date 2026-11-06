@@ -710,6 +710,8 @@ class PrintersTool(ListWorkspace):
         if printer and info_of(printer).counter_source == DOC360:
             total, error = status.doc360_pages(info_of(printer), reading, self._counted)
             pages = _("Error") if error else "" if total is None else str(total)  # Details: why
+            if total is not None and (month := status.older_text(self._counted)):
+                pages = _("{pages} (from {month})").format(pages=pages, month=month)
         models = status.toner_models(reading) if reading else ""
         mac, firmware = (reading.mac, reading.firmware) if reading else ("", "")
         return state.text, toner.text, models, pages, mac, firmware
