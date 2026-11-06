@@ -68,7 +68,7 @@ Em **Configurações > Impressoras > Atualizar > Coluna Toner** dá para mostrar
 preenchida até aquele nível e com a porcentagem ao lado. A barra estica junto com a coluna, e numa
 coluna bem estreita aparece só a porcentagem. Copiar uma célula e o relatório sempre usam o texto.
 
-![A seção Suprimentos: uma barra para cada toner, o cilindro, a caixa de resíduos e o fusor, com os dois traços explicados embaixo](../images/printer-details-dark-pt-BR.png)
+![A seção Suprimentos: uma barra para cada toner, o cilindro, a caixa de resíduos e o fusor, com o traço explicado embaixo](../images/printer-details-dark-pt-BR.png)
 
 A seção **Suprimentos** do painel de detalhes lista tudo que a impressora informa: toners e
 tintas, o cilindro, a caixa de resíduos, o fusor, os roletes. Cada um aparece com o nome que a
@@ -80,11 +80,23 @@ desgastam em vez de acabar. Um suprimento cujo nível a impressora não informa 
 diz isso no lugar: "Esta impressora não informa o nível deste suprimento." Quando a impressora
 não informa nada disso, a seção diz "A impressora não informa seus suprimentos."
 
-Toda barra tem dois traços, explicados embaixo delas: "O traço marca o nível baixo, 10 %; o mais
-fraco, a metade."
+Em **Configurações > Impressoras > Atualizar > Nível baixo de suprimento** você define o nível
+baixo, de 1 a 50 %, e começa em 10 %. Um nível só vale para todo tipo de suprimento.
 
-Em **Configurações > Impressoras > Atualizar > Nível baixo de suprimento** você define esse nível,
-de 1 a 50 %, e começa em 10 %. Um nível só vale para todo tipo de suprimento.
+### Os traços nas barras
+
+Toda barra tem um traço no nível baixo, e a linha embaixo das barras diz onde os traços estão:
+"O traço marca o nível baixo, 10 %." Cada traço tem um contorno escuro fino e passa um pouco da
+barra, para dar para ver em qualquer preenchimento e em qualquer tema.
+
+As **Configurações > Impressoras > Atualizar > Marcas das barras** listam os traços, e o
+**Alterar…** abre uma janela para mudá-los: o **Adicionar…** põe um traço de 1 a 99 %, até oito
+seus, o **Cor…** dá a um deles uma cor própria e a **Cor do tema** a devolve, o **Remover** tira
+um, e o **Restaurar padrão** volta ao traço do nível baixo sozinho. Esse sempre segue o **Nível
+baixo de suprimento** e não pode ser removido. Com vários traços, a linha embaixo das barras
+nomeia todos, como em "Os traços marcam 10 % (baixo), 50 %."
+
+![A janela Marcas das barras: o traço do nível baixo e mais três, cada um com a cor dele](../images/marks-window-dark-pt-BR.png)
 
 ## O que a impressora diz sobre si mesma
 
@@ -92,23 +104,73 @@ O Atualizar também lê a marca, o modelo, o nº de série e o total de páginas
 informa, o **endereço MAC** dela e a **versão do firmware**. O endereço MAC aparece no painel de
 detalhes em **Conexão**, depois do grupo, e o firmware em **Impressora**, depois do patrimônio.
 Os dois ficam em "—" até um Atualizar lê-los, e o relatório pode levar qualquer um dos dois (veja
-[A ferramenta Impressoras](printers.pt-BR.md#relatorio)).
+[A ferramenta Impressoras](printers.pt-BR.md#relatorio)). O firmware vem da descrição da própria
+impressora ou da lista de software instalado nela, que impressoras Samsung, Ricoh e Brother
+preenchem; algumas impressoras não informam versão nenhuma, e a delas fica vazia.
 
 O total de páginas aparece no painel de detalhes, em **Contadores de páginas**, ao lado da
 **Origem** que você escolheu para a impressora, e o relatório pode levá-lo como **Total de
-páginas**.
-
-Uma impressora cuja Origem é o **Doc360 MPS** é a exceção. O CapyPanel ainda não lê esse portal,
-então o Total de páginas dela fica "Erro: O CapyPanel ainda não lê contadores de páginas do Doc360
-MPS.", nos detalhes e antes de qualquer atualização, e só "Erro" no relatório. O CapyPanel não
-recorre ao contador SNMP da própria impressora nesse caso, porque não é a origem que você escolheu
-para ela. O status e o toner dela continuam vindo de uma atualização como os de qualquer outra.
+páginas**. Uma impressora cuja Origem é o **Doc360 MPS** recebe a contagem do portal, como a
+próxima seção explica; o CapyPanel nunca recorre ao contador SNMP dessas impressoras, porque não
+é a origem que você escolheu para elas.
 
 A marca, o modelo e o nº de série são comparados com o que a sua lista diz. Onde eles diferem, ou
 onde a sua lista não tem nada, o painel de detalhes acrescenta a resposta da impressora embaixo do
 valor, como "A impressora diz **RICOH IM C3000** · Usar este". O **Usar este** copia o valor para
 a lista, e só você pode fazer isso: o CapyPanel nunca grava numa lista sozinho, e o link não
 aparece numa lista somente leitura.
+
+## Contadores de páginas do Doc360 MPS
+
+Uma impressora cuja origem em **Contadores de páginas** é o **Doc360 MPS** recebe o total daquele
+portal, não da impressora. Um Atualizar entra no Doc360 uma vez, baixa os contadores mais
+recentes, sai, e identifica cada impressora pelo número de série: o da sua lista ou o que a
+impressora informa. Ele só faz isso quando a lista aberta tem uma impressora do Doc360, e o
+[Atualizar sozinho](#atualizar-sozinho) também faz.
+
+Uma impressora dessas não precisa estar na sua rede. Ela aparece como **Offline** quando não
+está, e a contagem chega assim mesmo.
+
+![Uma impressora do Doc360 MPS no painel de detalhes: o total de páginas dela e de onde ele veio](../images/doc360-details-dark-pt-BR.png)
+
+O número aparece nos detalhes em **Contadores de páginas**, com a **Origem** dizendo "Doc360 MPS ·
+obtido em 14:32", cuja dica acrescenta que o Doc360 lê as impressoras no horário dele, então o
+número pode estar atrasado em relação à impressora. Ele é a contagem deste mês.
+
+Nos primeiros dias de um mês o Doc360 pode ainda não ter contadores dele. O CapyPanel então pega
+os do mês passado e avisa: uma linha âmbar nos detalhes, "⚠ De outubro de 2026: o Doc360 MPS ainda
+não tem contadores deste mês. Confira o portal antes de usar este número.", e o relatório escreve
+"20500 (de outubro de 2026)".
+
+Quando não há contagem nenhuma, os detalhes dizem o porquê no lugar dela, e o relatório fica com
+"Erro":
+
+| O que os detalhes dizem | O que significa |
+|---|---|
+| "Nenhuma conta do Doc360 MPS definida." | Ainda não há com o que entrar |
+| "O Doc360 MPS recusou o login." | O parceiro, o usuário ou a senha está errado |
+| "O Doc360 MPS não respondeu." | Sem rede, ou o portal está fora do ar |
+| "As páginas do Doc360 MPS mudaram, então o CapyPanel não conseguiu ler os contadores." | O portal foi refeito; o CapyPanel precisa aprender as páginas novas |
+| "O Doc360 MPS não tem o número de série SAMPLE0011." | O portal não tem nenhuma impressora com esse número |
+| "Adicione o número de série da impressora: o Doc360 MPS identifica as impressoras pelo número de série." | A sua lista não tem o número de série desta impressora |
+
+Nos dois primeiros, um botão embaixo do erro abre a janela da conta na hora: **Definir a conta…**,
+ou **Alterar a conta…** quando já existe uma. Um login recusado é tentado uma vez e deixado em paz
+até o próximo Atualizar, para uma senha errada não ser enviada de novo e de novo.
+
+### A conta do Doc360 MPS
+
+As **Configurações > Impressoras > Atualizar > Conta do Doc360 MPS** guardam um login para o
+portal inteiro. O **Alterar…** abre uma janela para "o login que você usa no portal Doc360 MPS":
+**Parceiro**, **Usuário** e **Senha**, com uma caixa **Mostrar senha**. O parceiro é o código de
+parceiro da própria página de login do Doc360.
+
+![A janela Conta do Doc360 MPS: parceiro, usuário e senha](../images/doc360-window-dark-pt-BR.png)
+
+A senha fica no **Gerenciador de Credenciais do Windows**, na sua própria conta do Windows, e a
+linha das configurações mostra só o resto: "Parceiro SAMPLE-PARTNER, usuário EXAMPLE\ana. Guardada
+no Gerenciador de Credenciais do Windows.", ou "Não definida. Só é necessária para impressoras
+cujos contadores de páginas vêm do Doc360 MPS." Apagar o usuário e salvar esquece a conta.
 
 ## Impressoras que requerem atenção
 
@@ -176,7 +238,7 @@ guardado no **Gerenciador de Credenciais do Windows**, na sua própria conta do 
 para um arquivo de configurações, um arquivo de lista ou um log, e uma conta só vale para todas as
 impressoras.
 
-![Configurações > Impressoras > Atualizar: a versão e a conta SNMP, o Atualizar sozinho, a notificação do Windows, o nível baixo de suprimento e a coluna Toner](../images/settings-printers-refresh-dark-pt-BR.png)
+![Configurações > Impressoras > Atualizar: a versão e a conta SNMP, a conta do Doc360 MPS, o Atualizar sozinho, a notificação do Windows, o nível baixo de suprimento, as marcas das barras e a coluna Toner](../images/settings-printers-refresh-dark-pt-BR.png)
 
 ### v2c: uma comunidade
 

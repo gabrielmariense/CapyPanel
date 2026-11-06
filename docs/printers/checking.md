@@ -66,7 +66,7 @@ simply shows "Toner".
 the percentage beside it. The bar stretches with the column, and in a very narrow column only the
 percentage shows. Copying a cell and the report always use the text form.
 
-![The Supplies section: a bar for each toner, the drum, the waste box and the fuser, with the two marks explained under them](../images/printer-details-dark.png)
+![The Supplies section: a bar for each toner, the drum, the waste box and the fuser, with the mark explained under them](../images/printer-details-dark.png)
 
 The Details panel's **Supplies** section lists everything the printer reports: toners and inks,
 the drum, the waste box, the fuser, the rollers. Each is named as the printer names it, which is
@@ -77,11 +77,23 @@ A supply the printer gives no level for has no bar, and says so instead: "This p
 doesn't report a level for this supply." When a printer reports none of this, the section says
 "The printer doesn't report its supplies."
 
-Every bar carries two marks, explained under them: "The tick is the low level, 10 %; the faint one
-is half."
+**Settings > Printers > Refresh > Low supply level** sets the low level, anywhere from 1 to 50 %,
+and 10 % to begin with. One level covers every kind of supply.
 
-**Settings > Printers > Refresh > Low supply level** sets that level, anywhere from 1 to 50 %, and
-10 % to begin with. One level covers every kind of supply.
+### Marks on the bars
+
+Every bar carries a mark at the low level, and the line under the bars says where the marks are:
+"The mark shows the low level, 10 %." Each mark has a thin dark outline and sticks out a little
+past the bar, so it can be seen on any fill and in any theme.
+
+**Settings > Printers > Refresh > Bar marks** lists them, and **Change…** opens a window to
+change them: **Add…** puts a mark anywhere from 1 to 99 %, up to eight of your own, **Colour…**
+gives one a colour of its own and **Theme colour** takes it back, **Remove** drops one, and
+**Reset to default** goes back to the low level's mark alone. That one always follows **Low supply
+level** and can't be removed. With several marks the line under the bars names them all, as in
+"The marks show 10 % (low), 50 %."
+
+![The Bar marks window: the low level's mark and three more, each with its colour](../images/marks-window-dark.png)
 
 ## What the printer says about itself
 
@@ -89,22 +101,72 @@ A Refresh also reads the brand, model, serial number and total page count the pr
 its **MAC address** and its **firmware version**. The MAC address shows in the Details panel
 under **Connection**, after the group, and the firmware under **Printer**, after the asset tag.
 Both read "—" until a Refresh has read them, and the report can carry either (see
-[The Printers tool](printers.md#report)).
+[The Printers tool](printers.md#report)). The firmware comes from the printer's own description or
+its list of installed software, which Samsung, Ricoh and Brother printers fill in; some printers
+name no version anywhere, and theirs stays empty.
 
 The page count shows in the Details panel under **Page counters**, beside the **Source** you chose
-for the printer, and the report can carry it as **Total pages**.
-
-A printer whose Source is **Doc360 MPS** is the exception. CapyPanel can't read that portal yet,
-so its Total pages reads "Error: CapyPanel can't read page counters from Doc360 MPS yet.", in
-Details and before any refresh, and plain "Error" in the report. CapyPanel doesn't fall back to
-the printer's own SNMP counter there, because that isn't the source you picked for it. Its status
-and toner still come from a refresh like any other printer's.
+for the printer, and the report can carry it as **Total pages**. A printer whose Source is
+**Doc360 MPS** gets its count from the portal instead, as the next section explains; CapyPanel
+never falls back to such a printer's own SNMP counter, because that isn't the source you picked
+for it.
 
 The brand, model and serial number are compared with what your list says. Where they differ, or
 where your list has nothing, the Details panel adds the printer's own answer under the value, as
 "The printer says **RICOH IM C3000** · Use this". **Use this** copies it into the list, and only
 you can do that: CapyPanel never writes to a list on its own, and the link isn't offered on a
 read-only list.
+
+## Page counts from Doc360 MPS
+
+A printer whose **Page counters** source is **Doc360 MPS** gets its total from that portal rather
+than from the printer. A Refresh signs in to Doc360 once, downloads the latest counters, signs
+out, and matches each printer by its serial number: the one in your list, or the one the printer
+reports. It only does that when the open list has a Doc360 printer in it, and
+[Refresh on its own](#refresh-on-its-own) does it too.
+
+Such a printer doesn't have to be on your network. It shows **Offline** when it isn't, and its
+count still arrives.
+
+![A Doc360 MPS printer in the Details panel: its total pages and the source it came from](../images/doc360-details-dark.png)
+
+The number shows in Details under **Page counters**, with **Source** reading "Doc360 MPS · fetched
+14:32", whose tooltip adds that Doc360 reads printers on its own schedule, so the number can be
+behind the printer. It's this month's count.
+
+In the first days of a month Doc360 may have no counts for it yet. CapyPanel then takes last
+month's and says so: an amber line in Details, "⚠ From October 2026: Doc360 MPS has no counts for
+this month yet. Check the portal before using this number.", and the report writes "20500 (from
+October 2026)".
+
+When there's no count at all, Details says why in its place, and the report has plain "Error":
+
+| What Details says | What it means |
+|---|---|
+| "No Doc360 MPS account is set." | Nothing to sign in with yet |
+| "Doc360 MPS refused the login." | The partner, user name or password is wrong |
+| "Doc360 MPS didn't answer." | No network, or the portal is down |
+| "Doc360 MPS's pages changed, so CapyPanel couldn't read the counters." | The portal was rebuilt; CapyPanel has to be taught the new pages |
+| "Doc360 MPS doesn't list serial SAMPLE0011." | The portal has no printer with that serial |
+| "Add the printer's serial number: Doc360 MPS lists printers by serial." | Your list has no serial for this printer |
+
+For the first two, a button under the error opens the account window straight away: **Set the
+account…**, or **Change the account…** once there is one. A refused login is tried once and left
+alone until the next Refresh, so a wrong password isn't sent over and over.
+
+### The Doc360 MPS account
+
+**Settings > Printers > Refresh > Doc360 MPS account** holds one login for the whole portal.
+**Change…** opens a window for "the login you use on the Doc360 MPS portal": **Partner**, **User
+name** and **Password**, with a **Show password** box. The partner is the partner code on
+Doc360's own login page.
+
+![The Doc360 MPS account window: partner, user name and password](../images/doc360-window-dark.png)
+
+The password is kept in **Windows Credential Manager**, under your own Windows account, and the
+settings row shows only the rest of it: "Partner SAMPLE-PARTNER, user EXAMPLE\ana. Kept in
+Windows Credential Manager.", or "Not set. Needed only for printers whose page counters come from
+Doc360 MPS." Emptying the user name and saving forgets the account.
 
 ## Printers that need attention
 
@@ -169,7 +231,7 @@ opens the window that belongs to that version. Either way it's kept in **Windows
 Manager**, under your own Windows account. It never goes into a settings file, a list file or a
 log, and one account covers every printer.
 
-![Settings > Printers > Refresh: the SNMP version and account, Refresh on its own, the Windows notification, the low supply level and the Toner column](../images/settings-printers-refresh-dark.png)
+![Settings > Printers > Refresh: the SNMP version and account, the Doc360 MPS account, Refresh on its own, the Windows notification, the low supply level, the bar marks and the Toner column](../images/settings-printers-refresh-dark.png)
 
 ### v2c: a community string
 

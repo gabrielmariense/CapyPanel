@@ -50,9 +50,10 @@ name.
   Lexmark, Ricoh, Samsung, Xerox, Zebra), and you can type any other one in.
 - **Serial number** and **Asset tag**, the two numbers you need when you call support or do an
   audit. Brand and serial number are saved in capitals.
-- **Page counters**, which says where the page counts will come from: **SNMP**, asked from the
-  printer itself, or **Doc360 MPS**, the managed-print portal. Nothing reads counters yet; the
-  setting records where they will be read from.
+- **Page counters**, which says where the page count comes from: **SNMP**, asked from the printer
+  itself, or **Doc360 MPS**, the managed-print portal (see
+  [Checking printers](checking.md#page-counts-from-doc360-mps)). A Refresh reads it from the
+  source you pick here.
 - **Notes**, for anything else.
 
 **Edit selected…** (F2) opens the same window for printers already in the list.
@@ -115,8 +116,9 @@ with "; ".
 
 Ticking any column under Last check lets the window refresh those printers itself, and it says how
 many of them have never been checked. With none ticked the button explains itself: "Tick a column
-under Last check to read them". A printer whose counters come from Doc360 MPS has "Error" under Total
-pages; [Checking printers](checking.md#what-the-printer-says-about-itself) says why.
+under Last check to read them". A printer whose counters come from Doc360 MPS has the portal's
+number, or "Error" when the portal had none for it;
+[Checking printers](checking.md#page-counts-from-doc360-mps) says what can go wrong there.
 
 The printers to export are the same kinds of choice as in Hosts: the search results or the picked
 tags while either is on, the selected printers when you have more than one, every printer, those in

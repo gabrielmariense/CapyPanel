@@ -1,0 +1,189 @@
+# Commands on a host
+
+A host's commands are the everyday jobs you would otherwise do from a console or a command line:
+open a PC's C: drive, see what is installed on it, message or log off whoever is using it,
+restart it, or unstick its printing. They work on one host at a time, the one you selected or an
+address you type.
+
+Nothing is installed on the other PC and nothing of yours runs there. Every command uses
+Windows' own remote functions: file sharing, the session service, remote shutdown, the print
+spooler, the service manager, and WMI for the PC's facts and its installed programs. The account
+is your own Windows login, or the one you typed for reading logged-on users (see
+[Which account is used](checking.md#which-account-is-used)).
+
+## Where they are
+
+![The Hosts window: the Commands button on the toolbar and the command buttons under the host's name in Details](../images/commands-details-dark.png)
+
+- **Right-click a host:** after **Refresh status** and **Refresh logged-on users**, one submenu
+  per group: **Check**, **Open**, **Users**, **Power** and **Printers**. They work on one host
+  with an address, so they're greyed when you selected several or none.
+- **The toolbar:** **Commands**, beside Refresh, opens the
+  [Commands window](#the-commands-window) for the selected host. Its arrow lists the same groups,
+  and ends with **All commands…**, which opens that window too.
+- **The Details panel:** a row of buttons under the host's name. **C$**, the signed-in user's
+  folder, Computer Management and Send a message run one command each; the two amber ones open
+  **Log off or disconnect someone** and **Restart or shut down**; and **…** holds every command.
+  A tooltip names each of them. In a narrow panel the row wraps onto a second line.
+- **A person under Logged on:** right-click them in Details for **Send a message to {user}…**,
+  **Disconnect {user}…** and **Log off {user}…**, then **Copy ▸**.
+
+The amber buttons and menu items are the commands that disturb whoever is using the PC. They
+always ask first.
+
+## What each command does
+
+**Check** reads something and shows it where that check normally shows:
+
+| Command | What it does |
+|---|---|
+| **Run all checks** | Status, logged-on users and PC facts, one after the other |
+| **Status** | Whether the PC answers on the network (see [Checking hosts](checking.md#status)) |
+| **Logged-on users** | Who is signed in, and since when |
+| **PC facts** | Windows version, model, serial number, memory, free space and last restart (see [PC facts](checking.md#pc-facts)) |
+| **Installed programs** | The programs installed for every user of the PC |
+
+**Open** opens something on *your* PC pointed at the other one:
+
+| Command | What it opens |
+|---|---|
+| **C$ share** (Ctrl+E) | The PC's C: drive in File Explorer |
+| **Startup folder** | The programs that start for every user who signs in |
+| **Open a path…** (Ctrl+Shift+O) | Any folder on the PC, such as `D:\Logs` |
+| **{user}'s folder** (Ctrl+Shift+U) | The signed-in user's profile folder |
+| **Computer Management** (Ctrl+Shift+M) | Windows' Computer Management, pointed at the PC |
+| **Event Viewer** | The PC's event logs |
+| **Services** | The PC's Windows services |
+
+A folder waits for the PC to answer before File Explorer opens, because Explorer itself can hang
+for half a minute on a PC that's off. A path that isn't a folder is refused with "there's no
+folder there.", so that a file is never opened, and so run, on your own PC. The three Windows
+consoles open straight away and show their own error when the PC can't be reached.
+
+**Users** holds **Send a message…**. Log off and Disconnect act on one person, so they're offered
+on that person instead: in Details, or under the amber users button, which lists everyone signed
+in as a heading, as in "ana.admin  (at the PC, active, since 8:05 AM)", with **Log off…** and
+**Disconnect…** under each. It's greyed when nobody is signed in, or nobody was checked yet.
+
+**Power** holds **Restart…**, **Shut down…** and **Cancel the pending restart**, the last one
+greyed unless a restart CapyPanel asked for is still waiting.
+
+**Printers** holds **Printers on this PC** and **Restart Print Spooler…**.
+
+## The questions and the small windows
+
+### Open a path…
+
+"Open a folder on {host}" takes a path the way you already have it: as File Explorer copies it,
+quotes and all (`"D:\Logs\App"`), on another drive (`D:\Logs` or `D$\Logs`), on C: alone
+(`Users\Public`), or as a whole `\\PC\share\…` path. A line under the box shows what will open,
+as in "Opens \\DESK-02\D$\Logs\App". The box keeps the last 10 folders you opened.
+
+### Send a message…
+
+The message goes to everyone at their screen on the PC, shown as chips beside **To:** whose
+tooltip says where each of them is signed in; disconnected sessions, and your own, aren't
+included. It pops up on their screen until they click OK, titled "Message from {your Windows user
+name}", and Windows shows about 255 characters of it.
+
+### Log off… and Disconnect…
+
+Both ask first, naming the person and where they're signed in. Log off warns that "Work they
+haven't saved is lost."; Disconnect says their programs keep running and they get back to them
+next time. Cancel is the button that's ready to press.
+
+### Restart… and Shut down…
+
+![The Restart question: who is signed in, when it restarts, and the message they get](../images/commands-restart-dark.png)
+
+This window is the question. It names whoever is signed in and what they stand to lose. **When**
+is **Now**, or **In 1 minute**, **In 5 minutes** (the usual choice) or **In 15 minutes**, each
+with a message Windows shows them with a countdown, prefilled as "This PC restarts in 5 minutes.
+Please save your work." and yours to change. Pick **Now** and the message box greys out, saying
+"No message: it restarts right away.", and the button becomes **Restart now**.
+
+### Printers on this PC
+
+![The printers installed on a host: printer, driver, port, status and jobs, with Clear queue and Restart Print Spooler](../images/commands-printers-dark.png)
+
+A window with **Printer**, **Driver**, **Port**, **Status** and **Jobs**, and three buttons:
+**Clear queue…** deletes the documents waiting on the printer you picked, **Restart Print
+Spooler…** stops every printer on that PC for a few seconds (documents waiting stay, and print
+once it's back), and **Read again** reads the list afresh. Both of the first two ask first.
+
+These are the PC's own printers, not the ones a user added for themselves from a print server.
+The printers in the [Printers tool](../printers/printers.md) are a different thing: those are the
+printers themselves, on the network.
+
+### Installed programs
+
+**Name**, **Publisher**, **Version** and **Installed on**, with a **Search programs** box, how
+many there are and when they were read, then **Copy list**, **Export CSV…** and **Read again**.
+The CSV opens in the spreadsheet your PC uses for CSV files, with the same guard against a cell
+a spreadsheet would run as a formula as the host report has.
+
+The list is the programs installed for every user of the PC. Windows' own parts and its updates
+are left out, and CapyPanel never asks Windows through `Win32_Product`, which repairs every
+program it lists as it goes.
+
+## What happened: the strip above the table
+
+![The strip above the host table after a command failed, with Try another account](../images/commands-strip-failed-dark.png)
+
+A command that worked says so in green above the host table, as in "Message sent to ana.admin on
+DESK-02.", and the strip closes by itself after a few seconds.
+
+A command that failed says so in red, with Windows' own reason: "Couldn't log off bruno.costa on
+DESK-02: access denied. It needs an admin account on that PC." That strip stays until you close
+it. When the account was the problem, **Try another account…** asks for another one, the same
+account the logged-on users check uses, and runs the command again.
+
+Opening a folder is the exception: it says "Opened \\DESK-02\C$" in the status bar, where the
+rest of what you open shows too.
+
+## A restart that waits
+
+![A host with a restart waiting: the Status column and the amber strip in Details, with Cancel restart](../images/commands-restart-waiting-dark.png)
+
+A restart or shutdown with a delay shows in the **Status** column, as "Restart at 2:37 PM" with a
+clock, and in Details as an amber strip: "Restarts at 2:37 PM", "You asked at 2:32 PM. ana.admin
+got your message." and **Cancel restart**. **Power > Cancel the pending restart** does the same
+from the menus.
+
+After the PC restarts, CapyPanel looks it up every 15 seconds. Once it has gone away and answers
+again, a Windows notification says "{host} is back online", with "It restarted at 2:37 PM and
+answered again at 2:39 PM. Click to show it."; the click selects that host. CapyPanel stops
+watching 20 minutes after the restart time.
+
+## The Commands window
+
+![The Commands window: the groups on the left, every command in the middle, what the picked one found on the right](../images/commands-window-dark.png)
+
+The Commands window holds every command for one PC in one place, with its answer beside it. It
+opens from the **Commands** button, from **All commands…**, and from **Connect > Manual
+connection…** (Ctrl+M), which is the same window for an address that isn't in your list.
+
+- **On top:** the host's name and address, or an **Address** box when you typed one (`host:port`
+  works), then **Profile** and **Connect**. The window is called "Commands" for a host of yours,
+  "Manual connection" for an address you typed.
+- **On the left:** a **Search** box and the five groups; a click jumps to a group.
+- **In the middle:** every command, one line each. The one you pick grows to show what it does
+  and a **Run** button. The arrow keys move, Enter runs, and typing anywhere searches.
+- **On the right:** what the command found, laid out as the Details panel lays it out: the
+  status, who is logged on, the PC facts, or the last answer with **Try another account…**.
+  Printers on this PC and Installed programs show there as tables: right-click a printer to clear
+  its queue or copy the row, and a program to copy the row, copy or export the whole list, or
+  open the list in its own window with a search. Commands that need you to type something open
+  their small window over this one.
+- **At the bottom:** **Add to list…** puts a typed address into the open host list, with the
+  address already filled in. For a PC that's in the list already it's greyed, and its tooltip
+  says where: "Already in this list: in Front desks, as DESK-02".
+
+## Which account is used
+
+Your own Windows login, and otherwise the account you typed when a host answered **No admin
+rights** or **Account rejected** while reading logged-on users. That one window, **Account for
+other PCs**, covers both: as it says, the account is "used only to read who is logged on and for
+the commands you run on a host". Where it's kept, and how to forget it, is in
+[Checking hosts](checking.md#which-account-is-used) and
+[Connecting](connecting.md#saved-credentials).

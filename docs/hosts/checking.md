@@ -1,7 +1,8 @@
 # Checking hosts
 
-CapyPanel can check whether hosts are on and who is logged on to them. The results show in the
-host table's **Status** and **User** columns and in the **Details** panel. They're kept in
+CapyPanel can check whether hosts are on, who is logged on to them, and what the PC itself
+is. The results show in the host table's **Status** and **User** columns and in the
+**Details** panel. They're kept in
 memory only: never in the list file, and gone when CapyPanel closes. Editing a host's address
 clears its results. To keep them, **Report** on the toolbar writes the last check into a CSV, and
 offers to check the hosts first (see [Importing and exporting hosts](importing.md)).
@@ -12,9 +13,10 @@ offers to check the hosts first (see [Importing and exporting hosts](importing.m
 panel with its subgroups, a tag, All hosts, No group, or the results of a search. Nothing needs to
 be selected.
 
-- Click it and choose **Status** or **Logged-on users**.
+- Click it to run the checks that are ticked, on every host shown. Its tooltip says so: "Refresh
+  every host shown, with the checks ticked on a right-click (also F5)".
 - Right-click it for the **Refresh every host shown** panel: tick both and click **Run**.
-  CapyPanel remembers the ticks, and its tooltip says what they are.
+  CapyPanel remembers the ticks.
 - **F5** does the same as that **Run**, on the hosts shown, without opening the panel. It's
   ignored while a check is already running.
 
@@ -88,9 +90,10 @@ By default, your own Windows account. If hosts answer **No admin rights** or **A
 rejected**, CapyPanel asks for another account (`DOMAIN\user` and password) and retries only those
 hosts. That account:
 
-- is kept the way **Settings > Hosts > Connection profiles > Credentials** says: in memory until
-  CapyPanel closes, or saved in Windows Credential Manager for your Windows account. Either way
-  it's used only to read who is logged on;
+- is typed in a window called **Account for other PCs**, and kept the way **Settings > Hosts >
+  Connection profiles > Credentials** says: in memory until CapyPanel closes, or saved in Windows
+  Credential Manager for your Windows account. Either way it's used only to read who is logged
+  on and to run the commands you ask for on a host (see [Commands on a host](commands.md));
 - is tried on one host at a time: if a host rejects it, CapyPanel stops and asks again instead of
   trying it on the others, so the account isn't locked out;
 - is forgotten, like a profile's password, in **Connect ▾ > Saved credentials…**, where it's
@@ -98,3 +101,20 @@ hosts. That account:
 
 On PCs that aren't in a domain, the built-in Administrator is the only local account Windows
 accepts remotely.
+
+## PC facts
+
+The Details panel ends with what the PC says about itself: **Last restart**, **Free on C:**,
+**Windows** (its edition, release and build, as in "Windows 11 Pro 25H2 · 26200.9168"),
+**Model**, **Serial**, **Memory** and **BIOS**, with a **Read again** button under them.
+
+![The PC facts section in the Details panel: last restart, free space, Windows, model, serial, memory and BIOS](../images/commands-pc-facts-dark.png)
+
+They're read once, when a host stays selected for a moment, and never by Refresh, so a list of
+hundreds of hosts is left alone. The free space and the last restart come in first, while the
+heading says "PC facts · reading…" and the rest is on its way, a few seconds over WMI. A fact
+the account isn't allowed to read says so in amber in its place, as in "No access: needs an
+admin account on this PC".
+
+**Check > PC facts** reads them again whenever you want, from the host's right-click menu, the
+Details panel's **…** or the Commands window (see [Commands on a host](commands.md)).

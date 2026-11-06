@@ -124,7 +124,7 @@ Windows**, na sua própria conta do Windows, para o CapyPanel não pedi-la de no
 abrir. A dica dele diz o que isso significa: "O Windows as criptografa para a sua conta, inclusive
 contas de domínio: quem usar a sua sessão do Windows pode se conectar com elas." Voltar para
 **Credenciais temporárias** apaga as que já estavam salvas. A escolha vale também para a conta
-digitada para ler os usuários logados (veja
+digitada para ler os usuários logados e executar os comandos de um host (veja
 [Verificando hosts](checking.pt-BR.md#qual-conta-e-usada)).
 
 O **Conectar ▾ > Credenciais salvas…**, e o **Gerenciar…** da linha **Credenciais salvas** dessa
@@ -178,5 +178,9 @@ host.
 
 ## Conexão manual
 
-**Conectar > Conexão manual…** (Ctrl+M) abre um endereço que não está na lista, com o perfil e a
-porta que você escolher. Deixe a porta em "Padrão" para usar a do perfil.
+**Conectar > Conexão manual…** (Ctrl+M) alcança um endereço que não está na lista. Ele abre a
+janela Comandos com uma caixa **Endereço** no lugar do nome de um host: digite o endereço,
+escolha um **Perfil** e clique em **Conectar**. Um endereço com porta, como `192.0.2.77:5901`, usa
+aquela porta. O **Adicionar à lista…** embaixo põe o PC na lista aberta, e os comandos da janela
+funcionam nele como em qualquer outro host (veja
+[Comandos em um host](commands.pt-BR.md#a-janela-comandos)).

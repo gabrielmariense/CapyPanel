@@ -1,7 +1,8 @@
 # Verificando hosts
 
-O CapyPanel pode verificar se os hosts estão ligados e quem está logado neles. Os resultados
-aparecem nas colunas **Status** e **Usuário** da tabela de hosts e no painel de detalhes. Eles
+O CapyPanel pode verificar se os hosts estão ligados, quem está logado neles e o que o próprio
+PC é. Os resultados aparecem nas colunas **Status** e **Usuário** da tabela de hosts e no
+painel de detalhes. Eles
 ficam só na memória: nunca no arquivo da lista, e somem quando o CapyPanel fecha. Editar o
 endereço de um host apaga os resultados dele. Para guardá-los, o **Relatório** da barra de
 ferramentas grava a última verificação num CSV e oferece verificar os hosts antes (veja
@@ -13,9 +14,11 @@ ferramentas grava a última verificação num CSV e oferece verificar os hosts a
 escolhido no painel de grupos com seus subgrupos, uma tag, Todos os hosts, Sem grupo ou os
 resultados de uma pesquisa. Não é preciso selecionar nada.
 
-- Clique nele e escolha **Status** ou **Usuários logados**.
+- Clique nele para rodar as verificações marcadas em todos os hosts exibidos. A dica dele diz
+  isso: "Atualiza todos os hosts exibidos, com as verificações marcadas no botão direito
+  (também F5)".
 - Clique com o botão direito para abrir o painel **Atualizar todos os hosts exibidos**: marque os
-  dois e clique em **Executar**. O CapyPanel lembra o que você marcou, e a dica dele diz o que é.
+  dois e clique em **Executar**. O CapyPanel lembra o que você marcou.
 - **F5** faz o mesmo que esse **Executar**, nos hosts exibidos, sem abrir o painel. Ele é ignorado
   enquanto uma verificação já está rodando.
 
@@ -91,9 +94,11 @@ Por padrão, a sua própria conta do Windows. Se hosts responderem **Sem direito
 administrador** ou **Conta recusada**, o CapyPanel pede outra conta (`DOMÍNIO\usuário` e senha) e
 tenta de novo só nesses hosts. Essa conta:
 
-- fica guardada como as **Configurações > Hosts > Perfis de conexão > Credenciais** dizem: na
-  memória até o CapyPanel fechar, ou salva no Gerenciador de Credenciais do Windows para a sua
-  conta do Windows. Nos dois casos ela só é usada para ler quem está logado;
+- é digitada numa janela chamada **Conta para outros PCs**, e fica guardada como as
+  **Configurações > Hosts > Perfis de conexão > Credenciais** dizem: na memória até o CapyPanel
+  fechar, ou salva no Gerenciador de Credenciais do Windows para a sua conta do Windows. Nos dois
+  casos ela só é usada para ler quem está logado e para executar os comandos que você pede num
+  host (veja [Comandos em um host](commands.pt-BR.md));
 - é tentada num host por vez: se um host a recusar, o CapyPanel para e pergunta de novo em vez de
   tentá-la nos outros, para a conta não ser bloqueada;
 - é esquecida, como a senha de um perfil, no **Conectar ▾ > Credenciais salvas…**, onde ela
@@ -101,3 +106,22 @@ tenta de novo só nesses hosts. Essa conta:
 
 Em PCs fora de um domínio, o Administrador interno é a única conta local que o Windows aceita
 remotamente.
+
+## Dados do PC
+
+O painel de detalhes termina com o que o PC diz sobre si mesmo: **Última reinicialização**,
+**Livre em C:**, **Windows** (a edição, a versão e o build dele, como em "Windows 11 Pro 25H2 ·
+26200.9168"), **Modelo**, **Número de série**, **Memória** e **BIOS**, com um botão **Ler de
+novo** embaixo deles.
+
+![A seção Dados do PC no painel de detalhes: última reinicialização, espaço livre, Windows, modelo, número de série, memória e BIOS](../images/commands-pc-facts-dark-pt-BR.png)
+
+Eles são lidos uma vez, quando um host fica selecionado por um instante, e nunca pelo Atualizar,
+então uma lista de centenas de hosts fica em paz. O espaço livre e a última reinicialização chegam
+primeiro, enquanto o título diz "Dados do PC · lendo…" e o resto está a caminho, alguns segundos
+pelo WMI. Um dado que a conta não tem permissão de ler diz isso em âmbar no lugar do valor, como
+em "Sem acesso: precisa de uma conta de administrador neste PC".
+
+O **Verificar > Dados do PC** lê tudo de novo quando você quiser, pelo menu de botão direito do
+host, pelo **…** do painel de detalhes ou pela janela Comandos (veja
+[Comandos em um host](commands.pt-BR.md)).

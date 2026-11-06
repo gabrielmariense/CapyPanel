@@ -50,8 +50,10 @@ uv run python scripts/read_printer.py 192.0.2.5
 Ele pede a comunidade sem mostrá-la, lê por SNMP (só leitura) e imprime o que o CapyPanel
 entendeu, incluindo o endereço MAC e a versão do firmware. O `--public` usa "public" sem
 perguntar; o `--v3` lê por SNMP v3 no lugar, pedindo o usuário e os tipos e as senhas da
-autenticação e da criptografia, sem mostrar as senhas; e o `--brand-data` também imprime a área de
-dados da Ricoh ou da Brother como números brutos. O nº de série sai só como o tamanho dele, e o
+autenticação e da criptografia, sem mostrar as senhas; o `--brand-data` também imprime a área de
+dados da Ricoh ou da Brother como números brutos; e o `--firmware` imprime todos os lugares
+padrão onde uma impressora pode guardar a versão do firmware, um por linha, para descobrir qual
+deles bate com a versão da página web dela. O nº de série sai só como o tamanho dele, e o
 endereço MAC só como a metade do fabricante, para a saída poder ser colada numa issue.
 
 ## Site da documentação

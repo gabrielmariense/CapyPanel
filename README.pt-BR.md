@@ -14,7 +14,7 @@ remota de qualquer um pela Área de Trabalho Remota ou pelo visualizador VNC que
 guarda também as suas impressoras, com os detalhes de que você precisa e a página web delas a um
 clique.
 
-> **Situação: beta (0.22.0).** Roda a partir do código-fonte; ainda não há instalador.
+> **Situação: beta (0.23.0).** Roda a partir do código-fonte; ainda não há instalador.
 
 ![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts e outro para Impressoras](docs/images/home-dark-pt-BR.png)
 
@@ -24,11 +24,13 @@ clique.
   - Conexão remota: UltraVNC, RealVNC, Área de Trabalho Remota
   - Perfis de conexão
   - Listas compartilhadas, grupos e tags
-  - Status e usuários logados
+  - Status, usuários logados e dados do PC
+  - Comandos num PC: as pastas e os consoles dele, os usuários, a energia e as impressoras
   - Pesquisa, importação e exportação
 - Impressoras
   - Listas com marca, modelo, nº de série e patrimônio
   - Status, toner e suprimentos por SNMP, v2c ou v3
+  - Contadores de páginas do Doc360 MPS
   - Avisos quando uma impressora requer atenção
   - Páginas web e relatórios
 
@@ -45,7 +47,9 @@ Também online, com busca: **[gabrielmariense.github.io/CapyPanel/pt-BR](https:/
   e saindo em CSV
 - [Conectando](docs/hosts/connecting.pt-BR.md): visualizadores VNC, Área de Trabalho Remota, perfis
   de conexão e senhas
-- [Verificando hosts](docs/hosts/checking.pt-BR.md): status e usuários logados
+- [Verificando hosts](docs/hosts/checking.pt-BR.md): status, usuários logados e dados do PC
+- [Comandos em um host](docs/hosts/commands.pt-BR.md): pastas e consoles, mensagens, logoff,
+  reinicialização, impressoras e programas instalados
 - [Pesquisando hosts](docs/hosts/searching.pt-BR.md): encontrar um host em qualquer lugar da lista
 - [A ferramenta Impressoras](docs/printers/printers.pt-BR.md): impressoras, os detalhes delas e as
   páginas web
