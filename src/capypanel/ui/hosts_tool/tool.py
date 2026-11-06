@@ -289,7 +289,7 @@ class HostsTool(ListWorkspace):
         return _("Selected hosts"), _("the selected hosts")
 
     def lists_page(self) -> str:
-        return "host_lists"
+        return "hosts"
 
     def only_tags_text(self, shown: int, total: int) -> str:
         return _("Only hosts with all of: {tags} · {shown} of {total} shown").format(

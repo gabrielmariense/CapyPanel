@@ -204,7 +204,7 @@ class PrintersTool(ListWorkspace):
         return _("Selected printers"), _("the selected printers")
 
     def lists_page(self) -> str:
-        return "printer_lists"
+        return "printers"
 
     def only_tags_text(self, shown: int, total: int) -> str:
         return _("Only printers with all of: {tags} · {shown} of {total} shown").format(

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 23:54-0300\n"
+"POT-Creation-Date: 2026-11-06 17:50-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -745,6 +745,9 @@ msgstr "Conecta aos hosts selecionados, uma vez com outro perfil, ou por endere�
 msgid "Connect with {profile}"
 msgstr "Conectar com {profile}"
 
+msgid "Connecting"
+msgstr "Conexão"
+
 #, python-brace-format
 msgid "Connecting to {target}."
 msgstr "Conectando a {target}."
@@ -763,9 +766,6 @@ msgstr "&Perfis de conexão…"
 
 msgid "Connection profiles"
 msgstr "Perfis de conexão"
-
-msgid "Connections"
-msgstr "Conexões"
 
 msgid "Console"
 msgstr "Console"
@@ -992,6 +992,9 @@ msgstr "Desconectar…"
 
 msgid "Doc360 &MPS account"
 msgstr "Conta do Doc360 &MPS"
+
+msgid "Doc360 MPS"
+msgstr "Doc360 MPS"
 
 msgid "Doc360 MPS account"
 msgstr "Conta do Doc360 MPS"
@@ -1356,9 +1359,6 @@ msgstr "Mantida na memória até o CapyPanel fechar, nunca salva, e usada só pa
 
 msgid "Kept: type to change it"
 msgstr "Guardada: digite para alterá-la"
-
-msgid "Language"
-msgstr "Idioma"
 
 msgid "Last check"
 msgstr "Última verificação"
@@ -1862,6 +1862,9 @@ msgstr "Se&nha"
 msgid "Password for {profile}"
 msgstr "Senha para {profile}"
 
+msgid "Passwords"
+msgstr "Senhas"
+
 msgid "Paste a list below, or"
 msgstr "Cole uma lista abaixo, ou"
 
@@ -2157,6 +2160,9 @@ msgstr "Executar verifica se ele responde."
 msgid "S&top"
 msgstr "Pa&rar"
 
+msgid "SNMP"
+msgstr "SNMP"
+
 msgid "SNMP &account"
 msgstr "&Conta SNMP"
 
@@ -2409,8 +2415,8 @@ msgstr "Comece com https:// se a página web da impressora precisar; senão ela 
 msgid "Start it with {header}, in any order."
 msgstr "Comece com {header}, em qualquer ordem."
 
-msgid "Startup"
-msgstr "Inicialização"
+msgid "Startup and closing"
+msgstr "Inicialização e fechamento"
 
 msgid "Startup folder"
 msgstr "Pasta Inicializar"
@@ -2707,9 +2713,6 @@ msgstr "O “settings_file” deve ser o nome de um arquivo na pasta de perfis."
 msgid "The “website” must be an https:// address."
 msgstr "O “website” deve ser um endereço https://."
 
-msgid "Theme"
-msgstr "Tema"
-
 msgid "Theme colour"
 msgstr "Cor do tema"
 
@@ -2902,6 +2905,9 @@ msgstr "Aquecendo"
 
 msgid "Warning"
 msgstr "Aviso"
+
+msgid "Warnings and supplies"
+msgstr "Avisos e suprimentos"
 
 msgid "What the window shows when CapyPanel starts."
 msgstr "O que a janela mostra quando o CapyPanel inicia."
