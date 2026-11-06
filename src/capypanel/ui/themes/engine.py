@@ -138,7 +138,7 @@ _applied_once = False
 _generation = 0  # counts theme switches: a window open across one is never deleted
 _watching_system = False
 _native_font: QFont | None = None
-_watcher: QObject | None = None
+_watcher: "_Watcher | None" = None
 
 
 def current() -> Theme:
@@ -171,7 +171,25 @@ def apply(theme: Theme) -> None:
     # steps (it flashed): lists open at once instead.
     QApplication.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, False)
     _follow_system_changes()
-    _watch_widgets(app)
+    watcher = _watch_widgets(app)
+    # Nothing the watcher fixes happens during a switch, and its Python call on each of the
+    # thousands of events a switch sends only made the switch slower.
+    app.removeEventFilter(watcher)
+    try:
+        _switch(app, theme, scheme, engine_changed=engine_changed)
+    finally:
+        app.installEventFilter(watcher)
+    for widget in app.topLevelWidgets():
+        if widget.isWindow() and widget.isVisible():
+            paint_title_bar(widget)
+
+
+def _switch(
+    app: QApplication, theme: Theme, scheme: Qt.ColorScheme, *, engine_changed: bool
+) -> None:
+    """Every stylesheet, style or palette change makes Qt restyle every widget, the slow part
+    of a switch, so each switch asks for as few as it can."""
+    assert _native_font is not None
     if theme.engine == "native":
         # Windows' default app font is 9 pt; use the same size as the custom themes.
         readable = QFont(_native_font)
@@ -190,25 +208,25 @@ def apply(theme: Theme) -> None:
         links.setColor(QPalette.ColorRole.Link, QColor(tokens["accent_text"]))
         app.setPalette(links)  # only Link is set; every other colour stays the system's
         _refont(app, readable.families())
-    else:
-        if engine_changed:
-            app.setFont(_native_font)
-            # The stylesheet goes first, so widgets remember the native font to go back to.
-            app.setStyleSheet(stylesheet(theme))
-            app.setStyle("Fusion")
-        font = QFont()
-        font.setFamilies(list(theme.font[0]))
-        font.setPointSizeF(theme.font[1])
-        # Lining digits: in fonts like Georgia, old-style digits make "PC01" read as "PCo1".
-        font.setFeature(QFont.Tag("lnum"), 1)
-        app.setFont(font)
-        QGuiApplication.styleHints().setColorScheme(scheme)
-        app.setPalette(_palette(theme.colors))
-        app.setStyleSheet(stylesheet(theme))
-        _refont(app, font.families())
-    for widget in app.topLevelWidgets():
-        if widget.isWindow() and widget.isVisible():
-            paint_title_bar(widget)
+        return
+    font = QFont()
+    font.setFamilies(list(theme.font[0]))
+    font.setPointSizeF(theme.font[1])
+    # Lining digits: in fonts like Georgia, old-style digits make "PC01" read as "PCo1".
+    font.setFeature(QFont.Tag("lnum"), 1)
+    QGuiApplication.styleHints().setColorScheme(scheme)
+    if engine_changed:
+        # Widgets keep the font they had when a stylesheet first reached them, to go back to
+        # it: give them the native one under an empty stylesheet, which restyles them quickly.
+        # The theme's own stylesheet is then set once, below; setting it here too doubled the
+        # time of a switch from a Windows theme.
+        app.setFont(_native_font)
+        app.setStyleSheet("QWidget { }")
+        app.setStyle("Fusion")
+    app.setFont(font)
+    app.setPalette(_palette(theme.colors))
+    app.setStyleSheet(stylesheet(theme))
+    _refont(app, font.families())
 
 
 def native_tokens(accent: QColor) -> dict[str, str]:
@@ -348,11 +366,12 @@ class _Watcher(QObject):
         return False
 
 
-def _watch_widgets(app: QApplication) -> None:
+def _watch_widgets(app: QApplication) -> "_Watcher":
     global _watcher
     if _watcher is None:
         _watcher = _Watcher(app)
         app.installEventFilter(_watcher)
+    return _watcher
 
 
 def _refont(app: QApplication, families: list[str]) -> None:

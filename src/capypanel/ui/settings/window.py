@@ -99,9 +99,7 @@ class SettingsDialog(QDialog):
         self.pages["about"] = self.about
         self.general.changed.connect(self._start_changed)
         self.general.language.currentIndexChanged.connect(self._language_changed)
-        self.general.theme.currentIndexChanged.connect(
-            lambda: self.theme_picked.emit(self.general.theme_id())
-        )
+        self.general.theme.currentIndexChanged.connect(self._theme_changed)
 
         # One scrolling view per page, and one for the search's results.
         self.stack = QStackedWidget()
@@ -221,6 +219,11 @@ class SettingsDialog(QDialog):
         if self.general.closing_choice() != self._closing:
             self._closing = self.general.closing_choice()
             self.closing_picked.emit(self._closing)
+
+    def _theme_changed(self) -> None:
+        # After the dropdown has closed: the switch restyles every widget, which takes a
+        # moment, and the list then stayed open on screen until it was done.
+        QTimer.singleShot(0, self, lambda: self.theme_picked.emit(self.general.theme_id()))
 
     def _language_changed(self) -> None:
         code = self.general.language_choice()

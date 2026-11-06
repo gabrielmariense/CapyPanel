@@ -318,7 +318,9 @@ def test_last_used_list_is_reopened(
 def test_picking_a_theme_applies_it_at_once(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     combo = dialog.general.theme
-    combo.setCurrentIndex(combo.findData("paper"))  # the window shows it already
+    combo.setCurrentIndex(combo.findData("paper"))
+    assert themes.current().id != "paper"  # once the dropdown has closed
+    QApplication.processEvents()
     assert themes.current().id == "paper"
     assert settings.load_settings(window.paths.settings_file)["theme"] == "paper"
 
