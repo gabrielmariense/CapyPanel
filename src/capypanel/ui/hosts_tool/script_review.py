@@ -55,6 +55,7 @@ def state_text(script: OwnScript) -> str:
         State.OPEN: _("every user can change it"),
         State.TOO_BIG: _("too big for a script"),
         State.UNREADABLE: _("couldn't be read"),
+        State.NO_PATH: _("names no script on the PC"),
     }[script.state]
 
 
@@ -64,7 +65,12 @@ class ReviewDialog(QDialog):
         self.script = script
         self.setWindowTitle(_("Review {name}").format(name=script.name))
         self.resize(*SIZE)
-        language = "PowerShell" if script.language is Language.POWERSHELL else _("Batch file")
+        if script.file.suffix.casefold() == own_scripts.ON_PC:
+            language = _("File on the PC")
+        elif script.language is Language.POWERSHELL:
+            language = "PowerShell"
+        else:
+            language = _("Batch file")
         about = QLabel(f"<b>{_escape(script.file.name)}</b> · {language} · "
                        f"{_escape(str(script.file.parent))}")  # fmt: skip
         about.setWordWrap(True)
@@ -80,7 +86,15 @@ class ReviewDialog(QDialog):
             State.TOO_BIG: _("It's bigger than {n} KB, too big for a script.").format(
                 n=own_scripts.MAX_SIZE // 1024),
             State.UNREADABLE: _("CapyPanel couldn't read the file."),
+            State.NO_PATH: _("Its first line should be the script's path on the PC, such as "
+                             "C:\\ProgramData\\Scripts\\printers.cmd or "
+                             "%ProgramData%\\Scripts\\printers.ps1."),
         }.get(script.state, "")  # fmt: skip
+        if script.on_pc and script.state in (State.NEW, State.CHANGED):
+            why += " " + _("It runs {path} on each PC, which can't be shown here: every PC has "
+                           "its own copy. Run as anyone but the person signed in, it doesn't run "
+                           "where every user of the PC can change that file.").format(
+                path=script.on_pc)  # fmt: skip
         if why:
             note = QLabel(why)
             note.setWordWrap(True)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-07 19:42-0300\n"
+"POT-Creation-Date: 2026-11-07 19:59-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1254,6 +1254,9 @@ msgstr ""
 msgid "File not found"
 msgstr ""
 
+msgid "File on the PC"
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "Files in Windows' Temp folder and in every user's Temp folder that no one"
@@ -1475,12 +1478,24 @@ msgstr ""
 msgid "It changed since it was approved. Read it again before approving."
 msgstr ""
 
+msgid ""
+"It names no .ps1, .bat or .cmd file on the PC. Review it to see what it "
+"should hold."
+msgstr ""
+
 #, python-brace-format
 msgid "It pops up on their screen on {host} until they click OK."
 msgstr ""
 
 #, python-brace-format
 msgid "It restarted at {at} and answered again at {now}. Click to show it."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"It runs {path} on each PC, which can't be shown here: every PC has its "
+"own copy. Run as anyone but the person signed in, it doesn't run where "
+"every user of the PC can change that file."
 msgstr ""
 
 #, python-brace-format
@@ -1497,6 +1512,12 @@ msgstr ""
 msgid ""
 "It's passed to the viewer on its command line, which administrators of "
 "this PC can see."
+msgstr ""
+
+msgid ""
+"Its first line should be the script's path on the PC, such as "
+"C:\\ProgramData\\Scripts\\printers.cmd or "
+"%ProgramData%\\Scripts\\printers.ps1."
 msgstr ""
 
 msgid "Its own settings file"
@@ -1701,7 +1722,7 @@ msgid "New tag"
 msgstr ""
 
 #, python-brace-format
-msgid "No .ps1, .bat or .cmd files in {folder}."
+msgid "No .ps1, .bat, .cmd or .onpc files in {folder}."
 msgstr ""
 
 msgid "No Doc360 MPS account is set."
@@ -2436,6 +2457,10 @@ msgid "Run {name} on {host}?"
 msgstr ""
 
 msgid "Runs without asking."
+msgstr ""
+
+#, python-brace-format
+msgid "Runs {path} on the PC."
 msgstr ""
 
 msgid "S&top"
@@ -3443,6 +3468,12 @@ msgid "every user can change it"
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"every user of that PC can change {path}, so it only runs as the person "
+"signed in."
+msgstr ""
+
+#, python-brace-format
 msgid "from {computer}"
 msgstr ""
 
@@ -3515,6 +3546,9 @@ msgid "name"
 msgstr ""
 
 msgid "name, address, group, tags, notes"
+msgstr ""
+
+msgid "names no script on the PC"
 msgstr ""
 
 msgid "new, review before use"
@@ -3616,6 +3650,10 @@ msgid "the selected printers"
 msgstr ""
 
 msgid "there's no folder there."
+msgstr ""
+
+#, python-brace-format
+msgid "there's no {path} on that PC."
 msgstr ""
 
 msgid "too big for a script"

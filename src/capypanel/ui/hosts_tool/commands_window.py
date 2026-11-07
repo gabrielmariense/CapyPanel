@@ -864,7 +864,7 @@ class CommandsWindow(QDialog):
         elif own.error is not None:
             text = _("Couldn't read {folder}: {error}").format(folder=folder, error=own.error)
         elif not own.scripts:
-            text = _("No .ps1, .bat or .cmd files in {folder}.").format(folder=folder)
+            text = _("No .ps1, .bat, .cmd or .onpc files in {folder}.").format(folder=folder)
         else:
             text = ""
         self._own_hint.setText(text)
@@ -1004,9 +1004,15 @@ def _own_description(script: OwnScript) -> str:
             State.OPEN: _("Every user can change this file, so it can't run."),
             State.TOO_BIG: _("Too big for a script, so it can't run."),
             State.UNREADABLE: _("The file couldn't be read."),
+            State.NO_PATH: _(
+                "It names no .ps1, .bat or .cmd file on the PC. Review it to see "
+                "what it should hold."
+            ),
         }[script.state]
     asks = _("Asks before every run.") if approval.risky else _("Runs without asking.")
-    return f"{script.file.name}. {asks}"
+    where = _("Runs {path} on the PC.").format(path=script.on_pc) if script.on_pc else (
+        script.file.name + ".")  # fmt: skip
+    return f"{where} {asks}"
 
 
 def _icon_button(icon: str, color: QColor, tip: str) -> QToolButton:

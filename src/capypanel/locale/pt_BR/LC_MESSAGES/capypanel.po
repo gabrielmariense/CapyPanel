@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-07 19:42-0300\n"
+"POT-Creation-Date: 2026-11-07 19:59-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1224,6 +1224,9 @@ msgstr "Obtido do Doc360 MPS em {when}. O Doc360 lê as impressoras no horário 
 msgid "File not found"
 msgstr "Arquivo não encontrado"
 
+msgid "File on the PC"
+msgstr "Arquivo no PC"
+
 #, python-brace-format
 msgid "Files in Windows' Temp folder and in every user's Temp folder that no one has touched for a day are deleted from {host}. Files in use stay."
 msgstr "Os arquivos da pasta Temp do Windows e da pasta Temp de cada usuário que ninguém mexe há um dia são excluídos de {host}. Arquivos em uso ficam."
@@ -1437,6 +1440,9 @@ msgstr "É arriscado?"
 msgid "It changed since it was approved. Read it again before approving."
 msgstr "Ele mudou desde que foi aprovado. Leia de novo antes de aprovar."
 
+msgid "It names no .ps1, .bat or .cmd file on the PC. Review it to see what it should hold."
+msgstr "Não aponta para um arquivo .ps1, .bat ou .cmd no PC. Revise para ver o que ele deve conter."
+
 #, python-brace-format
 msgid "It pops up on their screen on {host} until they click OK."
 msgstr "Ela aparece na tela deles em {host} até clicarem em OK."
@@ -1444,6 +1450,10 @@ msgstr "Ela aparece na tela deles em {host} até clicarem em OK."
 #, python-brace-format
 msgid "It restarted at {at} and answered again at {now}. Click to show it."
 msgstr "Ele reiniciou às {at} e respondeu de novo às {now}. Clique para mostrá-lo."
+
+#, python-brace-format
+msgid "It runs {path} on each PC, which can't be shown here: every PC has its own copy. Run as anyone but the person signed in, it doesn't run where every user of the PC can change that file."
+msgstr "Ele executa {path} em cada PC, que não pode ser mostrado aqui: cada PC tem a sua cópia. Executado como qualquer um que não seja a pessoa conectada, ele não executa onde todo usuário do PC pode alterar esse arquivo."
 
 #, python-brace-format
 msgid "It was approved as risky, so it asks every time. It runs as: {who}."
@@ -1458,6 +1468,9 @@ msgstr "Ela é entregue ao visualizador de forma privada, nunca na linha de coma
 
 msgid "It's passed to the viewer on its command line, which administrators of this PC can see."
 msgstr "Ela é passada ao visualizador na linha de comando, que os administradores deste PC podem ver."
+
+msgid "Its first line should be the script's path on the PC, such as C:\\ProgramData\\Scripts\\printers.cmd or %ProgramData%\\Scripts\\printers.ps1."
+msgstr "A primeira linha deve ser o caminho do script no PC, como C:\\ProgramData\\Scripts\\printers.cmd ou %ProgramData%\\Scripts\\printers.ps1."
 
 msgid "Its own settings file"
 msgstr "Arquivo de configurações próprio"
@@ -1652,8 +1665,8 @@ msgid "New tag"
 msgstr "Nova tag"
 
 #, python-brace-format
-msgid "No .ps1, .bat or .cmd files in {folder}."
-msgstr "Nenhum arquivo .ps1, .bat ou .cmd em {folder}."
+msgid "No .ps1, .bat, .cmd or .onpc files in {folder}."
+msgstr "Nenhum arquivo .ps1, .bat, .cmd ou .onpc em {folder}."
 
 msgid "No Doc360 MPS account is set."
 msgstr "Nenhuma conta do Doc360 MPS definida."
@@ -2361,6 +2374,10 @@ msgstr "Executar {name} em {host}?"
 
 msgid "Runs without asking."
 msgstr "Executa sem perguntar."
+
+#, python-brace-format
+msgid "Runs {path} on the PC."
+msgstr "Executa {path} no PC."
 
 msgid "S&top"
 msgstr "Pa&rar"
@@ -3312,6 +3329,10 @@ msgid "every user can change it"
 msgstr "qualquer usuário pode alterá-lo"
 
 #, python-brace-format
+msgid "every user of that PC can change {path}, so it only runs as the person signed in."
+msgstr "todo usuário desse PC pode alterar {path}, então ele só executa como a pessoa conectada."
+
+#, python-brace-format
 msgid "from {computer}"
 msgstr "de {computer}"
 
@@ -3381,6 +3402,9 @@ msgstr "nome"
 
 msgid "name, address, group, tags, notes"
 msgstr "nome, endereço, grupo, tags, notas"
+
+msgid "names no script on the PC"
+msgstr "não aponta para um script no PC"
 
 msgid "new, review before use"
 msgstr "novo, revise antes de usar"
@@ -3482,6 +3506,10 @@ msgstr "as impressoras selecionadas"
 
 msgid "there's no folder there."
 msgstr "não há uma pasta aí."
+
+#, python-brace-format
+msgid "there's no {path} on that PC."
+msgstr "não existe {path} nesse PC."
 
 msgid "too big for a script"
 msgstr "grande demais para um script"

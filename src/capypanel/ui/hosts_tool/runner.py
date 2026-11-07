@@ -28,7 +28,7 @@ from capypanel.core.remote import (
     sessions,
 )
 from capypanel.core.remote.access import Account, Reason, RemoteError
-from capypanel.core.remote.own_scripts import OwnScript, State
+from capypanel.core.remote.own_scripts import OwnScript, PcProblem, State
 from capypanel.core.remote.places import Console
 from capypanel.core.remote.run import Problem, RunAs, RunError, RunResult
 from capypanel.core.remote.sessions import Session
@@ -132,6 +132,11 @@ def reason_text(error: BaseException) -> str:
         }[error.problem]  # fmt: skip
     if isinstance(error, ScriptFailed):
         return _("it ended with code {code}. Its output says why.").format(code=error.code)
+    if isinstance(error, OnPcRefused):
+        if error.problem is PcProblem.MISSING:
+            return _("there's no {path} on that PC.").format(path=error.path)
+        return _("every user of that PC can change {path}, so it only runs as the person signed "
+                 "in.").format(path=error.path)  # fmt: skip
     if isinstance(error, NotApproved):
         return (_("it changed since it was approved, so it didn't run. Review it again.")
                 if error.state is State.CHANGED
@@ -149,6 +154,14 @@ class ScriptFailed(Exception):
     def __init__(self, code: int) -> None:
         super().__init__(f"exit code {code}")
         self.code = code
+
+
+class OnPcRefused(Exception):
+    """The launcher of a file on the PC didn't run it: missing, or every user can change it."""
+
+    def __init__(self, problem: PcProblem, path: str) -> None:
+        super().__init__(f"{problem}: {path}")
+        self.problem, self.path = problem, path
 
 
 class NotApproved(Exception):
@@ -677,8 +690,9 @@ class Runner(QObject):
             now = own_scripts.read(script.file, approval)
             if not now.ready:
                 raise NotApproved(now.state)
-            return self.scripts.run(target.address, own_scripts.to_script(now, target.name),
-                                    self.account(), run.TIMEOUT, run_as, user)  # fmt: skip
+            sent = own_scripts.to_script(now, target.name, run_as)
+            return self.scripts.run(target.address, sent, self.account(), run.TIMEOUT, run_as,
+                                    user)  # fmt: skip
 
         def done(result: RunResult) -> None:
             self._running.discard(key)
@@ -687,7 +701,10 @@ class Runner(QObject):
                 text = _("{name} finished on {host}.").format(name=name, host=escape(target.name))
                 report(script.id, Outcome(text, output=output))
                 return
-            error = ScriptFailed(result.exit_code)
+            error: Exception = ScriptFailed(result.exit_code)
+            problem = own_scripts.pc_problem(result.output) if script.on_pc else None
+            if problem is not None:
+                error, output = OnPcRefused(problem, script.on_pc), ""
             text = failed_text(_("run {name}").format(name=name), target.name, error)
             report(script.id, Outcome(text, error, output=output))
 

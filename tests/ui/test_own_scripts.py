@@ -299,3 +299,27 @@ def test_the_commands_tab_shows_none_of_your_scripts(window: CapyWindow, folder:
     commands = _open(window)
     commands.tabs.setCurrentIndex(0)
     assert not [r for r in commands.rows if r.script is not None and not r.isHidden()]
+
+
+def test_a_file_on_the_pc_runs_through_a_launcher_and_says_when_it_was_refused(
+    window: CapyWindow, folder: Path, runs: FakeRuns, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (folder / "PC printers.onpc").write_bytes(b"%ProgramData%\\Scripts\\printers.cmd\r\n")
+    window.hosts.own_scripts.rescan()
+    _settle(window)
+    commands = _open(window)
+    _answer(monkeypatch, _approve(False, run_as=RunAs.SYSTEM))
+    commands.review(_row(commands, "PC printers").script)  # type: ignore[arg-type]
+    _settle(window)
+    row = _row(commands, "PC printers")
+    assert "%ProgramData%" in row.about.text()
+    runs.answer = lambda: RunResult(Engine.WMI, 1, "CAPYPANEL-ONPC open\n", "", 1.0)
+    commands.pick(row)
+    commands.run(row.command)
+    _settle(window)
+    [(_host, script, run_as, _user)] = runs.runs
+    assert run_as is RunAs.SYSTEM and b"printers.cmd" in script.code
+    assert script.arguments == ("PC-1",)
+    outcomes = commands._outcomes  # pyright: ignore[reportPrivateUsage]
+    outcome = outcomes[(_target(window).key, row.command.id)]
+    assert outcome.failed and "every user of that PC can change" in outcome.text
