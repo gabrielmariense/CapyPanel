@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from capypanel.core import i18n
 from capypanel.core.hosts import commands as host_commands
 from capypanel.core.hosts.bulk import write_csv
 from capypanel.core.hosts.commands import GROUP_NAMES, HostCommand
@@ -64,9 +65,11 @@ if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.tool import HostsTool
 
 SIZE = (1000, 620)  # fixed: it never grows as commands are added
-GROUPS_WIDTH = 150
+GROUPS_WIDTH = 150  # px, at least
+GROUP_ROOM = 40  # px past a group's name: the rows' padding and the list's frame
 RESULTS_WIDTH = 400  # px: the rest goes to the commands, whose names are longer in pt
 ROW = 28  # px: a command's line
+APART = 8  # px: the gap above a command set apart, where menus draw a line
 ICON = 16
 RECENT_ADDRESSES = 10
 LISTS = ("printers", "programs")  # their answer is a table on the right, not a window
@@ -343,8 +346,18 @@ class CommandsWindow(QDialog):
         self.groups.setObjectName("pageList")
         self.groups.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.groups.itemClicked.connect(self._jump)
+        self.groups.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # Wide enough for the longest group name in any language, so none is cut off and the
+        # columns don't move on a language switch.
+        metrics = self.groups.fontMetrics()
+        longest = max(
+            metrics.horizontalAdvance(name)
+            for group in CommandGroup
+            for name in i18n.in_every_language(GROUP_NAMES[group])
+        )
+        groups_width = max(GROUPS_WIDTH, longest + GROUP_ROOM)
         for widget in (self.search, self.groups):
-            widget.setFixedWidth(GROUPS_WIDTH)
+            widget.setFixedWidth(groups_width)
         left = QVBoxLayout()
         left.setSpacing(8)
         left.addWidget(self.search)
@@ -368,6 +381,8 @@ class CommandsWindow(QDialog):
             item.setData(Qt.ItemDataRole.UserRole, group)
             self.groups.addItem(item)
             for command in commands:
+                if command.apart:
+                    rows.addSpacing(APART)  # where menus draw a line
                 row = CommandRow(self, command)
                 self.rows.append(row)
                 rows.addWidget(row)
@@ -412,7 +427,7 @@ class CommandsWindow(QDialog):
         bottom.addStretch(1)
         bottom.addWidget(close)
         grid.addLayout(bottom, 3, 0, 1, 5)
-        grid.setColumnMinimumWidth(0, GROUPS_WIDTH)
+        grid.setColumnMinimumWidth(0, groups_width)
         grid.setColumnStretch(2, 1)
         grid.setRowStretch(1, 1)
 

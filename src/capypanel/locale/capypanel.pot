@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 23:54-0300\n"
+"POT-Creation-Date: 2026-11-07 02:57-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -501,6 +501,9 @@ msgstr ""
 msgid "Adds this PC to the open host list"
 msgstr ""
 
+msgid "Admin tools"
+msgstr ""
+
 msgid ""
 "After a Refresh on its own, for printers that stopped or went offline "
 "(and with low supplies, if picked) since the one before."
@@ -753,6 +756,9 @@ msgstr ""
 msgid "Connect with {profile}"
 msgstr ""
 
+msgid "Connecting"
+msgstr ""
+
 #, python-brace-format
 msgid "Connecting to {target}."
 msgstr ""
@@ -770,9 +776,6 @@ msgid "Connection &profiles…"
 msgstr ""
 
 msgid "Connection profiles"
-msgstr ""
-
-msgid "Connections"
 msgstr ""
 
 msgid "Console"
@@ -997,6 +1000,9 @@ msgid "Disconnect…"
 msgstr ""
 
 msgid "Doc360 &MPS account"
+msgstr ""
+
+msgid "Doc360 MPS"
 msgstr ""
 
 msgid "Doc360 MPS account"
@@ -1385,9 +1391,6 @@ msgstr ""
 msgid "Kept: type to change it"
 msgstr ""
 
-msgid "Language"
-msgstr ""
-
 msgid "Last check"
 msgstr ""
 
@@ -1748,9 +1751,6 @@ msgstr ""
 msgid "Only the first {n} open at once."
 msgstr ""
 
-msgid "Open"
-msgstr ""
-
 msgid "Open &Settings"
 msgstr ""
 
@@ -1914,6 +1914,9 @@ msgstr ""
 msgid "Password for {profile}"
 msgstr ""
 
+msgid "Passwords"
+msgstr ""
+
 msgid "Paste a list below, or"
 msgstr ""
 
@@ -1990,10 +1993,16 @@ msgstr ""
 msgid "Programs (*.exe)"
 msgstr ""
 
+msgid "PsExec runs scripts on a PC only when WinRM and WMI can't reach it."
+msgstr ""
+
 msgid "Publisher"
 msgstr ""
 
 msgid "Put in &group"
+msgstr ""
+
+msgid "Quick check"
 msgstr ""
 
 msgid "Quit"
@@ -2208,13 +2217,13 @@ msgid ""
 " window with a search."
 msgstr ""
 
-msgid "Run all checks"
-msgstr ""
-
 msgid "Run checks whether it answers."
 msgstr ""
 
 msgid "S&top"
+msgstr ""
+
+msgid "SNMP"
 msgstr ""
 
 msgid "SNMP &account"
@@ -2483,7 +2492,7 @@ msgstr ""
 msgid "Start it with {header}, in any order."
 msgstr ""
 
-msgid "Startup"
+msgid "Startup and closing"
 msgstr ""
 
 msgid "Startup folder"
@@ -2802,9 +2811,6 @@ msgstr ""
 msgid "The “website” must be an https:// address."
 msgstr ""
 
-msgid "Theme"
-msgstr ""
-
 msgid "Theme colour"
 msgstr ""
 
@@ -3002,6 +3008,9 @@ msgid "Warming up"
 msgstr ""
 
 msgid "Warning"
+msgstr ""
+
+msgid "Warnings and supplies"
 msgstr ""
 
 msgid "What the window shows when CapyPanel starts."

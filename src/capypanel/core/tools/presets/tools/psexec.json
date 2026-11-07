@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "id": "psexec",
+  "name": "PsExec",
+  "kind": "run",
+  "credentials": "none",
+  "arguments": [["\\\\{address}"]],
+  "website": "https://learn.microsoft.com/sysinternals/downloads/psexec",
+  "detect": {
+    "exe": "PsExec64.exe"
+  }
+}

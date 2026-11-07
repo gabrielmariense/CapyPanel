@@ -118,6 +118,12 @@ def make_shared(folder: Path, user_sid: str) -> None:
     _set_dacl(folder, f"(A;OICI;FA;;;{user_sid})(A;OICI;{_READ_EXECUTE};;;{USERS})")
 
 
+def make_admins_only(folder: Path) -> None:
+    """Only Administrators and the system can open the folder or anything in it; also a folder
+    on another PC, by its share path. Raises OSError."""
+    _set_dacl(folder, "")
+
+
 @contextmanager
 def security_descriptor(sddl: str) -> Iterator[ctypes.c_void_p]:
     """Windows permissions written as SDDL text, as the structure the API takes; freed after."""

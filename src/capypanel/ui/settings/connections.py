@@ -32,7 +32,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.tools import detect, viewer_settings
 from capypanel.core.tools.catalog import Catalogs
-from capypanel.core.tools.definitions import ToolDefinition
+from capypanel.core.tools.definitions import VIEWERS, ToolDefinition
 from capypanel.core.tools.profile_store import UNTRUSTED, make_id
 from capypanel.core.tools.profiles import (
     ConnectionProfile,
@@ -362,9 +362,11 @@ class ProfilesSection(SharedSection):
                 _("The profile a host connects with when it has none of its own."),
                 self.default,
             ),
-            self.passwords_row,
-            self.saved_row,
         )
+        # The passwords' rows are this user's own, so they sit on a card of their own, under
+        # this one; they stay this section's, which handles them.
+        self.passwords_section = Section(_("Passwords"))
+        add_rows(self.passwords_section.content, self.passwords_row, self.saved_row)
 
         self._fill_profiles(select=None)
 
@@ -440,7 +442,7 @@ class ProfilesSection(SharedSection):
         add_action(menu, _("&Delete…"), self.delete, picked)
 
     def _dialog(self, title: str, profile: ConnectionProfile | None) -> ProfileDialog:
-        tools = [e.item for e in self.catalogs.tools.all()]
+        tools = [e.item for e in self.catalogs.tools.all() if e.item.kind in VIEWERS]
         installed = {t.id for t in tools if detect.find_executable(t) is not None}
         return ProfileDialog(self, title, tools, installed, profile)
 
@@ -574,7 +576,8 @@ class ToolsSection(SharedSection):
                 else _(
                     "Where each tool is installed, set once for everyone on this PC. Read-only: "
                     "only people Windows lets write the tools folder can change it."
-                )
+                ),
+                _("PsExec runs scripts on a PC only when WinRM and WMI can't reach it."),
             )
         )
         self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])
@@ -695,15 +698,17 @@ class ToolsSection(SharedSection):
 
 
 class ConnectionsPage(Page):
-    """Settings > Connections: the profiles, and where the tools they open are."""
+    """Settings > Hosts > Connecting: the profiles, where typed passwords are kept, and where
+    the tools the profiles open are."""
 
     def __init__(
         self, catalogs: Catalogs, document: OpenList | None, *, save_passwords: bool = False
     ) -> None:
-        super().__init__(_("Connections"))
+        super().__init__(_("Connecting"))
         self.profiles = ProfilesSection(catalogs, document, save_passwords=save_passwords)
         self.tools = ToolsSection(catalogs)
-        for section in (self.profiles, self.tools):
+        for section in (self.profiles, self.profiles.passwords_section, self.tools):
             self.body.addWidget(section)
-            section.changed.connect(self.changed.emit)
+        for shared in (self.profiles, self.tools):
+            shared.changed.connect(self.changed.emit)
         self.body.addStretch(1)

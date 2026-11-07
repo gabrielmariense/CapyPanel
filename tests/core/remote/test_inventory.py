@@ -57,7 +57,9 @@ def test_the_host_and_password_go_in_through_standard_input(
     inventory.installed_programs(host, Account("EXAMPLE\\admin", secret))
     command = " ".join(fake.argv)
     assert "192.0.2.10" not in command and "pa'ss" not in command
-    assert json.loads(fake.input) == {"host": host, "user": "EXAMPLE\\admin", "password": secret}
+    assert json.loads(fake.input) == {
+        "host": host, "protocol": "Dcom", "user": "EXAMPLE\\admin", "password": secret,
+    }  # fmt: skip
 
 
 def test_programs_are_cleaned_sorted_and_listed_once(

@@ -20,20 +20,22 @@ class Need(StrEnum):
     ASK_WINDOWS = "ask-windows"
 
 
-class Group(StrEnum):
+class Group(StrEnum):  # in the order the menus and the Commands window show them
     CHECK = "check"
-    OPEN = "open"
+    FOLDERS = "folders"
+    ADMIN = "admin"
     USERS = "users"
-    POWER = "power"
     PRINTERS = "printers"
+    POWER = "power"  # last: it disturbs whoever is at the PC
 
 
-GROUP_NAMES = {  # in the order the menu and the manual connection window show them
+GROUP_NAMES = {
     Group.CHECK: N_("Check"),
-    Group.OPEN: N_("Open"),
+    Group.FOLDERS: N_("Folders"),
+    Group.ADMIN: N_("Admin tools"),
     Group.USERS: N_("Users"),
-    Group.POWER: N_("Power"),
     Group.PRINTERS: N_("Printers"),
+    Group.POWER: N_("Power"),
 }
 
 
@@ -49,11 +51,13 @@ class HostCommand:
     needs_user: bool = False  # only when someone is logged on to the PC
     # Acts on one signed-in person: offered on that person (Details, Users ▾), not in the lists.
     per_person: bool = False
+    # Set apart from the ones above it: a line in menus, a small gap in the Commands window.
+    apart: bool = False
 
 
 COMMANDS: tuple[HostCommand, ...] = (
     HostCommand(
-        "all-checks", Group.CHECK, N_("Run all checks"),
+        "all-checks", Group.CHECK, N_("Quick check"),
         N_("Status, logged-on users and PC facts, one after the other."), "list-check",
         Need.READ,
     ),
@@ -73,35 +77,36 @@ COMMANDS: tuple[HostCommand, ...] = (
     HostCommand(
         "programs", Group.CHECK, N_("Installed programs"),
         N_("The programs installed for every user of the PC."), "apps", Need.READ,
+        apart=True,  # a long table, not part of Quick check
     ),
     HostCommand(
-        "c-share", Group.OPEN, N_("C$ share"),
+        "c-share", Group.FOLDERS, N_("C$ share"),
         N_("The PC's C: drive in File Explorer."), "folder-share", Need.OPEN_HERE,
     ),
     HostCommand(
-        "startup", Group.OPEN, N_("Startup folder"),
-        N_("The programs that start for every user who signs in."), "rocket", Need.OPEN_HERE,
-    ),
-    HostCommand(
-        "path", Group.OPEN, N_("Open a path…"),
-        N_("Any folder on the PC, such as D:\\Logs."), "folder-search", Need.OPEN_HERE,
-    ),
-    HostCommand(
-        "user-folder", Group.OPEN, N_("User's folder"),
+        "user-folder", Group.FOLDERS, N_("User's folder"),
         N_("The logged-on user's profile folder."), "folder-person", Need.OPEN_HERE,
         needs_user=True,
     ),
     HostCommand(
-        "computer-management", Group.OPEN, N_("Computer Management"),
+        "startup", Group.FOLDERS, N_("Startup folder"),
+        N_("The programs that start for every user who signs in."), "rocket", Need.OPEN_HERE,
+    ),
+    HostCommand(
+        "path", Group.FOLDERS, N_("Open a path…"),
+        N_("Any folder on the PC, such as D:\\Logs."), "folder-search", Need.OPEN_HERE,
+    ),
+    HostCommand(
+        "computer-management", Group.ADMIN, N_("Computer Management"),
         N_("Windows' Computer Management, pointed at the PC."), "device-desktop-cog",
         Need.OPEN_HERE,
     ),
     HostCommand(
-        "event-viewer", Group.OPEN, N_("Event Viewer"),
+        "event-viewer", Group.ADMIN, N_("Event Viewer"),
         N_("The PC's event logs."), "list-search", Need.OPEN_HERE,
     ),
     HostCommand(
-        "services", Group.OPEN, N_("Services"),
+        "services", Group.ADMIN, N_("Services"),
         N_("The PC's Windows services."), "settings-cog", Need.OPEN_HERE,
     ),
     HostCommand(
@@ -120,6 +125,16 @@ COMMANDS: tuple[HostCommand, ...] = (
         risky=True, needs_user=True, per_person=True,
     ),
     HostCommand(
+        "printers", Group.PRINTERS, N_("Printers on this PC"),
+        N_("The printers installed on the PC, their queues and problems."), "printer",
+        Need.ASK_WINDOWS,
+    ),
+    HostCommand(
+        "spooler", Group.PRINTERS, N_("Restart Print Spooler…"),
+        N_("Restarts Windows' printing service, which unsticks most queues."), "printer-off",
+        Need.ASK_WINDOWS, risky=True,
+    ),
+    HostCommand(
         "restart", Group.POWER, N_("Restart…"),
         N_("Restarts Windows, now or after a delay with a message."), "refresh",
         Need.ASK_WINDOWS, risky=True,
@@ -132,16 +147,7 @@ COMMANDS: tuple[HostCommand, ...] = (
     HostCommand(
         "cancel-restart", Group.POWER, N_("Cancel the pending restart"),
         N_("Stops a restart or shutdown that is still waiting."), "clock-x", Need.ASK_WINDOWS,
-    ),
-    HostCommand(
-        "printers", Group.PRINTERS, N_("Printers on this PC"),
-        N_("The printers installed on the PC, their queues and problems."), "printer",
-        Need.ASK_WINDOWS,
-    ),
-    HostCommand(
-        "spooler", Group.PRINTERS, N_("Restart Print Spooler…"),
-        N_("Restarts Windows' printing service, which unsticks most queues."), "printer-off",
-        Need.ASK_WINDOWS, risky=True,
+        apart=True,
     ),
 )  # fmt: skip
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 23:54-0300\n"
+"POT-Creation-Date: 2026-11-07 02:57-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -502,6 +502,9 @@ msgstr "Endereço"
 msgid "Adds this PC to the open host list"
 msgstr "Adiciona este PC à lista de hosts aberta"
 
+msgid "Admin tools"
+msgstr "Ferramentas administrativas"
+
 msgid "After a Refresh on its own, for printers that stopped or went offline (and with low supplies, if picked) since the one before."
 msgstr "Depois de uma atualização sozinha, para as impressoras que pararam ou ficaram offline (e com suprimento baixo, se escolhido) desde a anterior."
 
@@ -745,6 +748,9 @@ msgstr "Conecta aos hosts selecionados, uma vez com outro perfil, ou por endere�
 msgid "Connect with {profile}"
 msgstr "Conectar com {profile}"
 
+msgid "Connecting"
+msgstr "Conexão"
+
 #, python-brace-format
 msgid "Connecting to {target}."
 msgstr "Conectando a {target}."
@@ -763,9 +769,6 @@ msgstr "&Perfis de conexão…"
 
 msgid "Connection profiles"
 msgstr "Perfis de conexão"
-
-msgid "Connections"
-msgstr "Conexões"
 
 msgid "Console"
 msgstr "Console"
@@ -992,6 +995,9 @@ msgstr "Desconectar…"
 
 msgid "Doc360 &MPS account"
 msgstr "Conta do Doc360 &MPS"
+
+msgid "Doc360 MPS"
+msgstr "Doc360 MPS"
 
 msgid "Doc360 MPS account"
 msgstr "Conta do Doc360 MPS"
@@ -1357,9 +1363,6 @@ msgstr "Mantida na memória até o CapyPanel fechar, nunca salva, e usada só pa
 msgid "Kept: type to change it"
 msgstr "Guardada: digite para alterá-la"
 
-msgid "Language"
-msgstr "Idioma"
-
 msgid "Last check"
 msgstr "Última verificação"
 
@@ -1701,9 +1704,6 @@ msgstr "Só impressoras com todas estas tags: {tags} · {shown} de {total} exibi
 msgid "Only the first {n} open at once."
 msgstr "Só as {n} primeiras abrem de uma vez."
 
-msgid "Open"
-msgstr "Abrir"
-
 msgid "Open &Settings"
 msgstr "Abrir &Configurações"
 
@@ -1862,6 +1862,9 @@ msgstr "Se&nha"
 msgid "Password for {profile}"
 msgstr "Senha para {profile}"
 
+msgid "Passwords"
+msgstr "Senhas"
+
 msgid "Paste a list below, or"
 msgstr "Cole uma lista abaixo, ou"
 
@@ -1936,11 +1939,17 @@ msgstr "Os perfis que você alterou ou criou continuam como estão."
 msgid "Programs (*.exe)"
 msgstr "Programas (*.exe)"
 
+msgid "PsExec runs scripts on a PC only when WinRM and WMI can't reach it."
+msgstr "O PsExec só roda scripts num PC quando o WinRM e o WMI não conseguem acessá-lo."
+
 msgid "Publisher"
 msgstr "Fabricante"
 
 msgid "Put in &group"
 msgstr "Colocar no &grupo"
+
+msgid "Quick check"
+msgstr "Verificação rápida"
 
 msgid "Quit"
 msgstr "Sair"
@@ -2148,14 +2157,14 @@ msgstr "Clique com o botão direito numa impressora para limpar a fila."
 msgid "Right-click to copy a row, copy or export the list, or open it in its own window with a search."
 msgstr "Clique com o botão direito para copiar uma linha, copiar ou exportar a lista, ou abri-la na própria janela, com pesquisa."
 
-msgid "Run all checks"
-msgstr "Executar todas as verificações"
-
 msgid "Run checks whether it answers."
 msgstr "Executar verifica se ele responde."
 
 msgid "S&top"
 msgstr "Pa&rar"
+
+msgid "SNMP"
+msgstr "SNMP"
 
 msgid "SNMP &account"
 msgstr "&Conta SNMP"
@@ -2409,8 +2418,8 @@ msgstr "Comece com https:// se a página web da impressora precisar; senão ela 
 msgid "Start it with {header}, in any order."
 msgstr "Comece com {header}, em qualquer ordem."
 
-msgid "Startup"
-msgstr "Inicialização"
+msgid "Startup and closing"
+msgstr "Inicialização e fechamento"
 
 msgid "Startup folder"
 msgstr "Pasta Inicializar"
@@ -2707,9 +2716,6 @@ msgstr "O “settings_file” deve ser o nome de um arquivo na pasta de perfis."
 msgid "The “website” must be an https:// address."
 msgstr "O “website” deve ser um endereço https://."
 
-msgid "Theme"
-msgstr "Tema"
-
 msgid "Theme colour"
 msgstr "Cor do tema"
 
@@ -2902,6 +2908,9 @@ msgstr "Aquecendo"
 
 msgid "Warning"
 msgstr "Aviso"
+
+msgid "Warnings and supplies"
+msgstr "Avisos e suprimentos"
 
 msgid "What the window shows when CapyPanel starts."
 msgstr "O que a janela mostra quando o CapyPanel inicia."

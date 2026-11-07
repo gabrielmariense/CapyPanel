@@ -107,13 +107,10 @@ def test_the_rail_view_toolbar_tool_and_status_bar_follow_the_tool_shown(
     stop.hide()
     win.show_tool("notes")
     assert win.windowTitle().startswith("Desk notes — CapyPanel")
-    dialog = win.settings_dialog()  # the app's pages, then each tool's group
+    dialog = win.settings_dialog()  # the app's page, then each tool's group
     pages = dialog.page_list
     rows = [pages.item(i).text().strip() for i in range(pages.count())]  # type: ignore[union-attr]
-    assert rows[4:] == [  # each group's sections; a page with none is listed by its title
-        "Hosts", "Startup", "Refresh", "Host lists", "Connection profiles", "Remote tools",
-        "Notes", "General",
-    ]  # fmt: skip
+    assert rows[2:] == ["Hosts", "General", "Connecting", "Notes", "General"]  # a row per page
     dialog.show_page("notes")
     assert dialog.current_page() == "notes"
     win.close()

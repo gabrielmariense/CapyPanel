@@ -1,6 +1,7 @@
 """Icons from Tabler Icons (MIT, see tabler/LICENSE), drawn in the theme's colour, and the
 status dots."""
 
+from functools import cache, lru_cache
 from pathlib import Path
 
 from PySide6.QtCore import QByteArray, QRectF, Qt
@@ -29,15 +30,29 @@ def _pixmap(px: int) -> QPixmap:
 
 
 def tabler_icon(name: str, color: QColor, px: int = 16) -> QIcon:
-    """A Tabler outline icon (tabler/<name>.svg): its strokes use currentColor."""
-    svg = (TABLER_DIR / f"{name}.svg").read_text(encoding="utf-8")
-    renderer = QSvgRenderer(QByteArray(svg.replace("currentColor", color.name()).encode()))
+    """A Tabler outline icon (tabler/<name>.svg): its strokes use currentColor. Each one is
+    drawn once per colour and size: a theme switch redraws every icon, and reading and drawing
+    them all again made the switch slower."""
+    screen = QGuiApplication.primaryScreen()
+    ratio = screen.devicePixelRatio() if screen else 1.0
+    return QIcon(_drawn(name, color.name(), px, ratio))
+
+
+@cache
+def _svg(name: str) -> str:
+    return (TABLER_DIR / f"{name}.svg").read_text(encoding="utf-8")
+
+
+@lru_cache(maxsize=1024)
+def _drawn(name: str, color: str, px: int, _ratio: float) -> QPixmap:
+    """The icon drawn; the screen's scale is part of the key, so a new scale draws it anew."""
+    renderer = QSvgRenderer(QByteArray(_svg(name).replace("currentColor", color).encode()))
     pixmap = _pixmap(px)
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
     renderer.render(painter, QRectF(0, 0, px, px))
     painter.end()
-    return QIcon(pixmap)
+    return pixmap
 
 
 def dot_icon(color: str, px: int = 10) -> QIcon:

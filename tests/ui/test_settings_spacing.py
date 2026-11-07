@@ -23,7 +23,8 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
 def test_the_cards_keep_a_gutter_from_the_scroll_bar_and_the_bottom(window: CapyWindow) -> None:
     dialog = window.settings_dialog()
     dialog.show()
-    page = dialog.group(HostsSettings).connections  # a long group: it scrolls
+    dialog.resize(dialog.width(), 420)  # short enough for Connecting to scroll
+    page = dialog.group(HostsSettings).connections
     view = page.parentWidget()
     while view is not None and not isinstance(view, QScrollArea):
         view = view.parentWidget()
