@@ -14,6 +14,12 @@ CapyPanel lost track of are deleted the next time it runs something on that PC.
 A PowerShell script travels inside the command; a batch file, or a PowerShell script too big
 for a command line, is first copied to that folder under a random name.
 
+A script runs as the account CapyPanel uses for the PC, or (Run as) as SYSTEM or as the person
+signed in at the PC. Those two go through a scheduled task the wrapper makes for the run and
+deletes after: SYSTEM's runs out of sight, the person's runs in their own session (so a drive it
+maps is theirs), started hidden through Windows Script Host, with no password, and with read
+access to that run's files only.
+
 Each run, worked or not, gets a line in the run log."""
 
 import base64
@@ -58,7 +64,7 @@ COMMAND_LIMIT = 30_000  # characters: Windows' command line holds 32 767; room f
 LOG_SIZE, LOG_KEEP = 2_000_000, 5  # the run log: bytes per file, older files kept
 FOLDER = r"Temp\CapyPanel"  # under Windows' folder on the PC, so C:\Windows\Temp\CapyPanel
 # Only files with these names are ever deleted from the folder: what CapyPanel itself made.
-_OURS = re.compile(r"^[0-9a-f]{16}\.(run|json|tmp|out|err|ps1|cmd)$")
+_OURS = re.compile(r"^[0-9a-f]{16}(-task)?\.(run|json|tmp|out|err|ps1|cmd|vbs|code)$")
 
 log = logging.getLogger(__name__)
 
@@ -74,6 +80,12 @@ class Script:
     language: Language
     code: bytes  # the script as written, byte for byte
     arguments: tuple[str, ...] = ()
+
+
+class RunAs(StrEnum):
+    ACCOUNT = "account"  # the account CapyPanel uses for the PC: yours, or the one typed for it
+    SYSTEM = "system"
+    USER = "user"  # the person signed in at the PC, named when the run starts
 
 
 class Engine(StrEnum):  # in the order they're tried
@@ -156,21 +168,40 @@ class Runner:
         return self._worked.get(host.casefold())
 
     def run(
-        self, host: str, script: Script, account: Account | None = None, timeout: float = TIMEOUT
+        self,
+        host: str,
+        script: Script,
+        account: Account | None = None,
+        timeout: float = TIMEOUT,
+        run_as: RunAs = RunAs.ACCOUNT,
+        user: str = "",
     ) -> RunResult:
-        """Runs `script` on `host` and waits for it to end. Raises RemoteError (unreachable, or
-        the account isn't accepted or isn't an admin there) or RunError."""
+        """Runs `script` on `host` and waits for it to end; `user` ("DOMAIN\\name") is who it
+        runs as with RunAs.USER. Raises RemoteError (unreachable, or the account isn't accepted
+        or isn't an admin there) or RunError."""
+        if run_as is RunAs.USER and not user:
+            raise ValueError("running as the signed-in person needs their name")
+        as_who = {RunAs.ACCOUNT: "", RunAs.SYSTEM: "SYSTEM", RunAs.USER: user}[run_as]
         try:
             self._reachable(host)
-            result = self._run(host, script, account, timeout)
+            result = self._run(host, script, account, timeout, run_as, user)
         except (RemoteError, RunError, OSError) as e:
             engine = e.engine if isinstance(e, RunError) else None
-            self._write_log(host, script, engine, account, _log_outcome(e))
+            self._write_log(host, script, engine, account, as_who, _log_outcome(e))
             raise
-        self._write_log(host, script, result.engine, account, f"exit {result.exit_code}")
+        outcome = f"exit {result.exit_code}"
+        self._write_log(host, script, result.engine, account, as_who, outcome)
         return result
 
-    def _run(self, host: str, script: Script, account: Account | None, timeout: float) -> RunResult:
+    def _run(
+        self,
+        host: str,
+        script: Script,
+        account: Account | None,
+        timeout: float,
+        run_as: RunAs = RunAs.ACCOUNT,
+        user: str = "",
+    ) -> RunResult:
         started = self._clock()
         run_id = secrets.token_hex(8)
         folder = self._folder_of(host)
@@ -181,7 +212,7 @@ class Runner:
                 self._sweep(folder)
             try:
                 with identity():
-                    command = self._command(folder, run_id, script)
+                    command = self._command(folder, run_id, script, run_as, user, timeout)
                 engine = self._start(host, command, account, folder, run_id, identity)
                 try:
                     with identity():
@@ -195,34 +226,51 @@ class Runner:
 
     # ---- the command the PC runs ----
 
-    def _command(self, folder: Path, run_id: str, script: Script) -> list[str]:
+    def _command(
+        self,
+        folder: Path,
+        run_id: str,
+        script: Script,
+        run_as: RunAs = RunAs.ACCOUNT,
+        user: str = "",
+        timeout: float = TIMEOUT,
+    ) -> list[str]:
         """The wrapper's command line; writes the script to the folder first when it has to."""
+
+        def wrapped(launch: str) -> list[str]:
+            return _powershell(self._wrapper(run_id, launch, run_as, user, timeout))
+
+        rest = subprocess.list2cmdline(script.arguments)
+        rest = f" {rest}" if rest else ""
         if script.language is Language.POWERSHELL:
             text = _text(script.code)
             if text is not None:
                 inline = "& {\n" + text + "\n} " + " ".join(map(_ps_quote, script.arguments))
-                command = _powershell(self._wrapper(run_id, _launch_inline(inline)))
+                command = wrapped(_launch_inline(inline))
                 if len(" ".join(command)) <= COMMAND_LIMIT:
                     return command
             (folder / f"{run_id}.ps1").write_bytes(_with_bom(script.code))
-            child = subprocess.list2cmdline([f".\\{run_id}.ps1", *script.arguments])
-            launch = _launch("powershell", f"{_POWERSHELL_FLAGS} -File {child}")
+            launch = _launch("powershell", f"{_POWERSHELL_FLAGS} -File ", f"{run_id}.ps1", rest)
         else:
             (folder / f"{run_id}.cmd").write_bytes(script.code)
-            child = subprocess.list2cmdline([f".\\{run_id}.cmd", *script.arguments])
-            launch = _launch("cmd", f'/d /s /c "{child}"')
-        return _powershell(self._wrapper(run_id, launch))
+            launch = _launch("cmd", '/d /s /c "', f"{run_id}.cmd", f'{rest}"')
+        return wrapped(launch)
 
-    def _wrapper(self, run_id: str, launch: str) -> str:
+    def _wrapper(self, run_id: str, launch: str, run_as: RunAs, user: str, timeout: float) -> str:
         folder = (
             _ps_quote(self._remote_folder)
             if self._remote_folder
             else f"(Join-Path $env:SystemRoot {_ps_quote(FOLDER)})"
         )
+        start = _START_HERE if run_as is RunAs.ACCOUNT else _START_TASK
         return (
-            _WRAPPER.replace("__DIR__", folder)
+            _WRAPPER.replace("__START__", start)
+            .replace("__DIR__", folder)
             .replace("__ID__", run_id)
             .replace("__LAUNCH__", launch)
+            .replace("__AS__", _ps_quote(str(run_as)))
+            .replace("__USER__", _ps_quote(user))
+            .replace("__TIMEOUT__", str(int(timeout)))
         )
 
     # ---- starting it ----
@@ -352,12 +400,15 @@ class Runner:
         script: Script,
         engine: Engine | None,
         account: Account | None,
+        as_who: str,
         outcome: str,
     ) -> None:
         if self._log_file is None:
             return
         way = ENGINE_NAMES[engine] if engine is not None else "-"
         who = account.user if account is not None else "(your Windows account)"
+        if as_who:
+            who = f"{who} as {as_who}"
         when = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         line = "\t".join((when, host, script.name, way, who, outcome)).replace("\n", " ")
         with self._log_lock:
@@ -384,16 +435,97 @@ function Loader($packed) {
   '$r=[IO.StreamReader]::new($d,[Text.Encoding]::UTF8);$s=$r.ReadToEnd();$r.Dispose();' +
   'Invoke-Expression $s'
 }
+function Q([string]$text) { "'" + ($text -replace "(['‘’‚‛])", '$1$1') + "'" }
 try {
 __LAUNCH__
+__START__
+} catch { $result.error = $_.Exception.Message }
+[IO.File]::WriteAllText("$base.tmp", (ConvertTo-Json -InputObject $result -Compress))
+Move-Item -LiteralPath "$base.tmp" -Destination "$base.json" -Force
+"""
+
+# As the account CapyPanel uses: the wrapper starts the script itself.
+_START_HERE = r"""
   $p = Start-Process -FilePath $exe -ArgumentList $argline -WorkingDirectory $dir -NoNewWindow `
     -PassThru -RedirectStandardOutput "$base.out" -RedirectStandardError "$base.err"
   $null = $p.Handle  # keeps the process' handle, so its exit code can be read
   $p.WaitForExit()
   $result.code = $p.ExitCode
-} catch { $result.error = $_.Exception.Message }
-[IO.File]::WriteAllText("$base.tmp", (ConvertTo-Json -InputObject $result -Compress))
-Move-Item -LiteralPath "$base.tmp" -Destination "$base.json" -Force
+"""
+
+# As SYSTEM or the signed-in person: a scheduled task runs a small script that starts the script
+# and writes its exit code to .code. Task Scheduler's own API (not its PowerShell module, which
+# fails on PCs with a broken WMI). The person's task uses their open session: no password.
+_START_TASK = r"""
+  $user = __USER__; $system = __AS__ -eq 'system'
+  $work = if ($system) { $dir } else { Join-Path $env:SystemRoot 'Temp' }  # theirs to enter
+  $inner = "`$p = Start-Process -FilePath $(Q $exe) -ArgumentList $(Q $argline) " +
+    "-WorkingDirectory $(Q $work) -NoNewWindow -PassThru " +
+    "-RedirectStandardOutput $(Q "$base.out") -RedirectStandardError $(Q "$base.err")`r`n" +
+    "`$null = `$p.Handle; `$p.WaitForExit()`r`n" +
+    "[IO.File]::WriteAllText($(Q "$base.code"), [string]`$p.ExitCode)"
+  [IO.File]::WriteAllText("$base-task.ps1", $inner, (New-Object Text.UTF8Encoding $true))
+  $shell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+  $run = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File " +
+    "`"$base-task.ps1`""
+  if ($system) {
+    $command = $shell; $arguments = $run
+    $principal = '<UserId>S-1-5-18</UserId><LogonType>ServiceAccount</LogonType>' +
+      '<RunLevel>HighestAvailable</RunLevel>'
+  } else {
+    # Hidden: Windows Script Host starts PowerShell with no window on the person's screen.
+    $vbs = "WScript.Quit CreateObject(`"WScript.Shell`").Run(`"`"`"$shell`"`" " +
+      ($run -replace '"', '""') + "`", 0, True)"
+    [IO.File]::WriteAllText("$base.vbs", $vbs, [Text.Encoding]::Unicode)
+    $command = Join-Path $env:SystemRoot 'System32\wscript.exe'
+    $arguments = "//B //Nologo `"$base.vbs`""
+    $principal = "<UserId>$([Security.SecurityElement]::Escape($user))</UserId>" +
+      '<LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel>'
+    foreach ($kind in 'out', 'err', 'code') { [IO.File]::WriteAllText("$base.$kind", '') }
+    $grants = @{"$base-task.ps1" = 'R'; "$base.vbs" = 'R'; "$base.out" = 'M'; "$base.err" = 'M'
+                "$base.code" = 'M'; "$base.ps1" = 'R'; "$base.cmd" = 'R'}
+    foreach ($file in $grants.Keys) {
+      if (Test-Path -LiteralPath $file) {
+        $null = & icacls.exe $file /grant "$($user):($($grants[$file]))"
+        if ($LASTEXITCODE) { throw "Couldn't let $user read $file (icacls $LASTEXITCODE)." }
+      }
+    }
+  }
+  $limit = __TIMEOUT__
+  $xml = '<?xml version="1.0" encoding="UTF-16"?>' +
+    '<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">' +
+    "<Principals><Principal id=`"Run`">$principal</Principal></Principals>" +
+    '<Settings><MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>' +
+    '<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>' +
+    '<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries><AllowStartOnDemand>true' +
+    "</AllowStartOnDemand><Enabled>true</Enabled><ExecutionTimeLimit>PT$($limit + 60)S" +
+    '</ExecutionTimeLimit><Priority>7</Priority></Settings>' +
+    "<Actions Context=`"Run`"><Exec><Command>$([Security.SecurityElement]::Escape($command))" +
+    "</Command><Arguments>$([Security.SecurityElement]::Escape($arguments))</Arguments>" +
+    '</Exec></Actions></Task>'
+  $service = New-Object -ComObject Schedule.Service
+  $service.Connect()
+  $tasks = $service.GetFolder('\')
+  $name = 'CapyPanel-__ID__'
+  try {
+    if ($system) { $null = $tasks.RegisterTask($name, $xml, 6, 'SYSTEM', $null, 5) }
+    else { $null = $tasks.RegisterTask($name, $xml, 6, $null, $null, 3) }
+    $null = $tasks.GetTask($name).Run($null)
+    $from = Get-Date
+    while ($true) {
+      Start-Sleep -Milliseconds 500
+      $code = if (Test-Path -LiteralPath "$base.code") { [IO.File]::ReadAllText("$base.code") }
+      if ("$code".Trim()) { $result.code = [int]"$code".Trim(); break }
+      $task = $tasks.GetTask($name)
+      $waited = ((Get-Date) - $from).TotalSeconds
+      if ($task.State -ne 4 -and $waited -gt 15) {  # 4: running
+        $result.error = 'The scheduled task ended without an answer (result 0x{0:X8}).' -f
+          $task.LastTaskResult
+        break
+      }
+      if ($waited -gt $limit) { $task.Stop(0); $result.error = 'Out of time.'; break }
+    }
+  } finally { try { $tasks.DeleteTask($name, 0) } catch { } }
 """
 
 # Text: with its output going to files, PowerShell would otherwise write errors and progress as XML.
@@ -404,8 +536,11 @@ _PROGRAMS = {
 }
 
 
-def _launch(program: str, argline: str) -> str:
-    return f"  $exe = {_PROGRAMS[program]}\n  $argline = {_ps_quote(argline)}"
+def _launch(program: str, before: str, file_name: str, after: str) -> str:
+    """Starts a script copied to the folder, by its full path on the PC, in quotes."""
+    path = f"(Join-Path $dir {_ps_quote(file_name)})"
+    argline = f"{_ps_quote(before)} + '\"' + {path} + '\"' + {_ps_quote(after)}"
+    return f"  $exe = {_PROGRAMS[program]}\n  $argline = {argline}"
 
 
 def _launch_inline(text: str) -> str:
@@ -486,9 +621,12 @@ def _prepare(folder: Path, protect: bool) -> None:
 
 
 def _delete_run(folder: Path, run_id: str) -> None:
-    for kind in ("run", "json", "tmp", "out", "err", "ps1", "cmd"):
+    for name in (f"{run_id}-task.ps1", *(f"{run_id}.{kind}" for kind in _KINDS)):
         with contextlib.suppress(OSError):
-            (folder / f"{run_id}.{kind}").unlink(missing_ok=True)
+            (folder / name).unlink(missing_ok=True)
+
+
+_KINDS = ("run", "json", "tmp", "out", "err", "ps1", "cmd", "vbs", "code")
 
 
 def _read_output(file: Path, oem: int) -> str:

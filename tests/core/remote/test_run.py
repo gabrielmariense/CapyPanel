@@ -9,7 +9,7 @@ import pytest
 
 from capypanel.core.remote import run
 from capypanel.core.remote.access import Account, Reason, RemoteError
-from capypanel.core.remote.run import Engine, Language, Problem, RunError, Runner, Script
+from capypanel.core.remote.run import Engine, Language, Problem, RunAs, RunError, Runner, Script
 
 PS = Script("check", Language.POWERSHELL, b"Write-Output 'hello'")
 
@@ -332,3 +332,53 @@ def test_a_second_start_of_the_same_run_does_nothing(tmp_path: Path) -> None:
     (folder / ("c" * 16 + ".run")).write_bytes(b"")  # the first start got there first
     subprocess.run(command, creationflags=subprocess.CREATE_NO_WINDOW, timeout=60)
     assert sorted(p.name for p in folder.iterdir()) == ["c" * 16 + ".run"]
+
+
+# ---- Run as ----
+
+
+def _wrapper_text(command: Sequence[str]) -> str:
+    """The wrapper a command carries, unpacked: what the PC would run."""
+    import base64
+    import re
+    import zlib
+
+    loader = base64.b64decode(command[-1]).decode("utf-16-le")
+    packed = re.search(r"FromBase64String\('([^']+)'\)", loader)
+    assert packed is not None
+    return zlib.decompress(base64.b64decode(packed[1]), -15).decode("utf-8")
+
+
+def test_running_as_the_signed_in_person_needs_their_name(pc: FakePc) -> None:
+    with pytest.raises(ValueError):
+        runner(pc).run("DESK-01", PS, run_as=RunAs.USER)
+
+
+def test_as_the_account_the_wrapper_starts_the_script_itself(tmp_path: Path) -> None:
+    text = _wrapper_text(_local_runner(tmp_path)._command(tmp_path, "c" * 16, PS))
+    assert "Start-Process" in text and "Schedule.Service" not in text
+
+
+def test_as_the_signed_in_person_a_hidden_task_in_their_session_runs_it(tmp_path: Path) -> None:
+    runs = _local_runner(tmp_path)
+    script = Script("x", Language.BATCH, b"echo hi")
+    text = _wrapper_text(runs._command(tmp_path, "c" * 16, script, RunAs.USER, "EXAMPLE\ana"))
+    assert "'EXAMPLE\ana'" in text and "InteractiveToken" in text
+    assert "wscript.exe" in text and "icacls.exe" in text  # hidden, and only this run's files
+    assert "DeleteTask" in text
+
+
+def test_the_run_log_says_who_it_ran_as(pc: FakePc, tmp_path: Path) -> None:
+    log_file = tmp_path / "me.runs.log"
+    runner(pc, log_file=log_file).run("DESK-01", PS, run_as=RunAs.SYSTEM)
+    assert log_file.read_text(encoding="utf-8").split("\t")[4] == "(your Windows account) as SYSTEM"
+
+
+@pytest.mark.skipif(
+    not os.environ.get("GITHUB_ACTIONS"),
+    reason="makes a scheduled task as SYSTEM: only on CI's throwaway machine",
+)
+def test_as_system_a_scheduled_task_runs_it(tmp_path: Path) -> None:
+    script = Script("x", Language.POWERSHELL, b"Write-Output ([Environment]::UserName); exit 4")
+    result = _local_runner(tmp_path).run("DESK-01", script, timeout=120, run_as=RunAs.SYSTEM)
+    assert (result.exit_code, result.output.strip().upper()) == (4, "SYSTEM")
