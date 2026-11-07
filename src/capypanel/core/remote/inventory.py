@@ -15,6 +15,7 @@ import base64
 import ctypes
 import json
 import subprocess
+from collections.abc import Mapping
 from ctypes import wintypes
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
@@ -92,7 +93,7 @@ def last_restart(host: str, account: Account | None = None) -> datetime:
 def pc_facts(host: str, account: Account | None = None) -> PcFacts:
     """`host`'s Windows version and hardware, over WMI. Raises RemoteError, TimeoutError."""
     check_reachable(host)
-    found = _run_wmi(_FACTS, host, account)
+    found = run_cim(_FACTS, host, account)
     return PcFacts(
         windows=str(found["caption"] or "").removeprefix("Microsoft ").strip(),
         release=str(found["release"] or ""),
@@ -110,7 +111,7 @@ def installed_programs(host: str, account: Account | None = None) -> list[Progra
     """The programs installed for every user of `host`, by name, without Windows' own parts and
     updates. Raises RemoteError, TimeoutError."""
     check_reachable(host)
-    found = _run_wmi(_PROGRAMS, host, account)
+    found = run_cim(_PROGRAMS, host, account)
     programs = {
         (p.name.casefold(), p.version): p
         for p in (_program(entry) for entry in found)  # 32- and 64-bit lists can repeat one
@@ -132,13 +133,20 @@ def _program(entry: dict[str, str | None]) -> Program:
     )
 
 
-def _run_wmi(script: str, host: str, account: Account | None) -> Any:
-    """Runs one of the PowerShell scripts below for `host`. The host and the account go in through
-    standard input, never on the command line, so they can't change the script and the password
-    isn't visible to other programs."""
-    data = {"host": host, "user": account.user if account else "", "password": ""}
+def run_cim(
+    script: str,
+    host: str,
+    account: Account | None,
+    protocol: str = "Dcom",
+    values: Mapping[str, str] | None = None,
+) -> Any:
+    """Runs a PowerShell script that uses `$session`, a CIM session to `host` over `protocol`
+    ("Dcom" for WMI, "Wsman" for WinRM), and answers with Send. The host, the account and
+    `values` (as `$in.<name>`) go in through standard input, never on the command line, so they
+    can't change the script and the password isn't visible to other programs."""
+    data = {**(values or {}), "host": host, "protocol": protocol, "user": "", "password": ""}
     if account:
-        data["password"] = account.password
+        data["user"], data["password"] = account.user, account.password
     command = base64.b64encode((_COMMON + script).encode("utf-16-le")).decode()
     try:
         done = subprocess.run(
@@ -170,7 +178,7 @@ def wmi_error(code: int) -> RemoteError:
     return RemoteError(Reason.OTHER, code)
 
 
-# Shared by both scripts: read the input, open one DCOM session, send back base64'd UTF-8 JSON
+# Shared by every CIM script: read the input, open one session, send back base64'd UTF-8 JSON
 # (so names in any language survive the console), and turn a failure into its HRESULT.
 _COMMON = r"""
 $ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'
@@ -187,7 +195,7 @@ function Reg($method, $key, $name) {
     -MethodName $method -Arguments $a
 }
 try {
-  $p = @{ComputerName = $in.host; SessionOption = (New-CimSessionOption -Protocol Dcom)
+  $p = @{ComputerName = $in.host; SessionOption = (New-CimSessionOption -Protocol $in.protocol)
          OperationTimeoutSec = 30}
   if ($in.user) {
     $secret = ConvertTo-SecureString $in.password -AsPlainText -Force

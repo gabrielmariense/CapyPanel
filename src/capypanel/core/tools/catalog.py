@@ -13,7 +13,7 @@ from pathlib import Path
 from capypanel.core import files, settings, winsec
 from capypanel.core.files import can_create_files
 from capypanel.core.tools import definitions
-from capypanel.core.tools.definitions import ToolDefinition, ToolDefinitionError
+from capypanel.core.tools.definitions import VIEWERS, ToolDefinition, ToolDefinitionError
 from capypanel.core.tools.profile_store import UNTRUSTED, ProfileStore
 
 log = logging.getLogger(__name__)
@@ -75,6 +75,11 @@ class ToolCatalog:
 
     def find(self, tool_id: str) -> Entry | None:
         return self._entries.get(tool_id)
+
+    def viewer(self, tool_id: str) -> Entry | None:
+        """A tool a connection profile can open: never one that runs things, like PsExec."""
+        entry = self._entries.get(tool_id)
+        return entry if entry is not None and entry.item.kind in VIEWERS else None
 
     def paths(self) -> dict[str, str]:
         """The paths chosen on this PC; none when the file is missing, broken or untrusted."""

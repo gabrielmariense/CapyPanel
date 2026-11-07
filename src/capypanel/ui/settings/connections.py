@@ -32,7 +32,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.tools import detect, viewer_settings
 from capypanel.core.tools.catalog import Catalogs
-from capypanel.core.tools.definitions import ToolDefinition
+from capypanel.core.tools.definitions import VIEWERS, ToolDefinition
 from capypanel.core.tools.profile_store import UNTRUSTED, make_id
 from capypanel.core.tools.profiles import (
     ConnectionProfile,
@@ -442,7 +442,7 @@ class ProfilesSection(SharedSection):
         add_action(menu, _("&Delete…"), self.delete, picked)
 
     def _dialog(self, title: str, profile: ConnectionProfile | None) -> ProfileDialog:
-        tools = [e.item for e in self.catalogs.tools.all()]
+        tools = [e.item for e in self.catalogs.tools.all() if e.item.kind in VIEWERS]
         installed = {t.id for t in tools if detect.find_executable(t) is not None}
         return ProfileDialog(self, title, tools, installed, profile)
 
@@ -576,7 +576,8 @@ class ToolsSection(SharedSection):
                 else _(
                     "Where each tool is installed, set once for everyone on this PC. Read-only: "
                     "only people Windows lets write the tools folder can change it."
-                )
+                ),
+                _("PsExec runs scripts on a PC only when WinRM and WMI can't reach it."),
             )
         )
         self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])

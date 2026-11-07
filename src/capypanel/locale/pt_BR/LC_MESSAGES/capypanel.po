@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-06 17:55-0300\n"
+"POT-Creation-Date: 2026-11-07 02:57-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1938,6 +1938,9 @@ msgstr "Os perfis que você alterou ou criou continuam como estão."
 
 msgid "Programs (*.exe)"
 msgstr "Programas (*.exe)"
+
+msgid "PsExec runs scripts on a PC only when WinRM and WMI can't reach it."
+msgstr "O PsExec só roda scripts num PC quando o WinRM e o WMI não conseguem acessá-lo."
 
 msgid "Publisher"
 msgstr "Fabricante"
