@@ -122,7 +122,15 @@ def test_the_host_menu_has_a_submenu_per_group_greyed_for_several_hosts(
     menu = QMenu()
     window.hosts._add_command_menus(menu)
     groups = {a.text(): a.menu() for a in menu.actions()}
-    assert list(groups) == ["Check", "Folders", "Admin tools", "Users", "Printers", "Power"]
+    assert list(groups) == [
+        "Check",
+        "Folders",
+        "Admin tools",
+        "Users",
+        "Printers",
+        "Scripts",
+        "Power",
+    ]
     users = groups["Users"]
     assert isinstance(users, QMenu)
     assert [a.text() for a in users.actions()] == ["Send a message…"]  # log off: on the person
@@ -439,7 +447,8 @@ def test_commands_menu_on_the_toolbar_lists_the_groups(window: CapyWindow) -> No
     menu = window.hosts.toolbar.commands_menu
     menu.aboutToShow.emit()
     assert [a.text() for a in menu.actions()] == [
-        "Check", "Folders", "Admin tools", "Users", "Printers", "Power", "", "&All commands…",
+        "Check", "Folders", "Admin tools", "Users", "Printers", "Scripts", "Power", "",
+        "&All commands…",
     ]  # fmt: skip
 
 

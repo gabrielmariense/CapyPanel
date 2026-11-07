@@ -16,10 +16,11 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QDialog, QWidget
 
 from capypanel.core.hosts import commands as host_commands
-from capypanel.core.i18n import _
-from capypanel.core.remote import access, places, power, services, sessions
+from capypanel.core.i18n import _, ngettext
+from capypanel.core.remote import access, builtin, places, power, run, services, sessions
 from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.places import Console
+from capypanel.core.remote.run import Problem, RunError, RunResult
 from capypanel.core.remote.sessions import Session
 from capypanel.ui import checks as check_texts
 from capypanel.ui.checks import AccountDialog
@@ -54,6 +55,8 @@ class Outcome:
     text: str  # rich text: names in bold
     error: BaseException | None = None  # None: it worked
     retry: Callable[[], None] | None = None  # run it again once another account is typed
+    output: str = ""  # what a script wrote on the PC
+    running: bool = False  # not an answer yet: it was started and is still going
 
     @property
     def failed(self) -> bool:
@@ -107,11 +110,73 @@ def reason_text(error: BaseException) -> str:
             ),
             Reason.OTHER: _("Windows error {code}.").format(code=error.code),
         }[error.reason]
+    if isinstance(error, RunError):
+        return {
+            Problem.NO_WAY_IN: _("CapyPanel couldn't start anything there. WinRM is off, WMI "
+                                 "didn't answer, and PsExec isn't set up or didn't work."),
+            Problem.BLOCKED: _("it started but never ran. Security software on the PC may have "
+                               "stopped it."),
+            Problem.NOT_STARTED: _("the PC couldn't start it."),
+            Problem.TIMED_OUT: _("it didn't finish in time. It may still be running there."),
+            Problem.NO_RESULT: _("its answer couldn't be read."),
+        }[error.problem]  # fmt: skip
+    if isinstance(error, ScriptFailed):
+        return _("it ended with code {code}. Its output says why.").format(code=error.code)
     if isinstance(error, TimeoutError):
         return _("it took too long to answer.")
     if isinstance(error, NotADirectoryError):
         return _("there's no folder there.")
     return _("{error}.").format(error=str(error).rstrip(".") or type(error).__name__)
+
+
+class ScriptFailed(Exception):
+    """A script ran on the PC and ended with an exit code other than 0."""
+
+    def __init__(self, code: int) -> None:
+        super().__init__(f"exit code {code}")
+        self.code = code
+
+
+def size_text(size: int) -> str:
+    """ "312 MB" under a gigabyte, "1.4 GB" above."""
+    if size < 1024**3:
+        return _("{n} MB").format(n=round(size / 1024**2))
+    return _("{n} GB").format(n=f"{size / 1024**3:.1f}")
+
+
+def script_output(result: RunResult) -> str:
+    """What a script wrote, then what it wrote as errors."""
+    return "\n".join(part.strip("\n") for part in (result.output, result.errors) if part.strip())
+
+
+def script_outcome(command_id: str, host: str, result: RunResult) -> Outcome:
+    """The answer of a built-in script that ran: what it did, or the code it ended with."""
+    where = escape(host)
+    output = script_output(result)
+    if not result.worked:
+        name = bold(_(host_commands.command(command_id).name).rstrip("…"))
+        error = ScriptFailed(result.exit_code)
+        text = failed_text(_("run {name}").format(name=name), host, error)
+        return Outcome(text, error, output=output)
+    if command_id == "clean-temp":
+        found, rest = builtin.cleaned(result.output)
+        output = "\n".join(p.strip("\n") for p in (rest, result.errors) if p.strip())
+        if found is not None:
+            text = ngettext("Freed {size} on {host}: {n} file deleted.",
+                            "Freed {size} on {host}: {n} files deleted.", found.files)  # fmt: skip
+            text = text.format(size=size_text(found.freed), host=where, n=found.files)
+            if found.left:
+                text += " " + ngettext("{n} file in use stayed.", "{n} files in use stayed.",
+                                       found.left).format(n=found.left)  # fmt: skip
+            return Outcome(text, output=output)
+    texts = {
+        "gpupdate": _("Group policy updated on {host}."),
+        "dns": _("DNS refreshed on {host}."),
+        "clock": _("Clock synced on {host}."),
+        "repair": _("Repair Windows files finished on {host}. Its output says what it found."),
+        "clean-temp": _("Temporary files cleaned on {host}."),
+    }
+    return Outcome(texts[command_id].format(host=where), output=output)
 
 
 def failed_text(action: str, host: str, error: BaseException) -> str:
@@ -160,6 +225,8 @@ class Runner(QObject):
         self._tool = tool
         self._jobs: set[Job] = set()
         self._parent: QWidget | None = None  # the window a command's questions open over
+        self.scripts = run.Runner(tool.psexec_path, tool.run_log_file)
+        self._running: set[tuple[str, str]] = set()  # (target key, command id) of scripts going
 
     # ---- the common parts ----
 
@@ -196,11 +263,13 @@ class Runner(QObject):
         target: HostTarget,
         error: BaseException,
         again: Callable[[], None],
+        output: str = "",
     ) -> None:
         retry = None
         if isinstance(error, RemoteError) and error.reason in RETRY_REASONS:
             retry = lambda: self.another_account(target, error, again)  # noqa: E731
-        report(command_id, Outcome(failed_text(action, target.name, error), error, retry))
+        text = failed_text(action, target.name, error)
+        report(command_id, Outcome(text, error, retry, output=output))
 
     def another_account(
         self, target: HostTarget, error: BaseException | None, again: Callable[[], None]
@@ -289,6 +358,10 @@ class Runner(QObject):
             "cancel-restart": self._cancel_restart,
             "printers": self._printers,
             "spooler": self._spooler,
+            **{
+                command_id: lambda t, r, c=command_id: self._built_in(c, t, r)
+                for command_id in builtin.BUILT_IN
+            },
         }
         if command_id in ("log-off", "disconnect"):
             if session is not None:
@@ -494,6 +567,47 @@ class Runner(QObject):
             self._fail(report, command_id, action, target, error, again)
 
         self._start(act, done, failed)
+
+    # ---- Scripts ----
+
+    def _built_in(self, command_id: str, target: HostTarget, report: Report) -> None:
+        """A built-in script: asked first when it disturbs the PC; never twice at once."""
+        command = host_commands.command(command_id)
+        if (target.key, command_id) in self._running:
+            name = _(command.name).rstrip("…")
+            self._tool.say(_("{name} is still running on {host}.").format(
+                name=name, host=target.name))  # fmt: skip
+            return
+        if command.risky and not windows.ask_script(self._window(), command_id, target.name):
+            return
+        self._run_built_in(command_id, target, report)
+
+    def _run_built_in(self, command_id: str, target: HostTarget, report: Report) -> None:
+        built = builtin.BUILT_IN[command_id]
+        key = (target.key, command_id)
+        self._running.add(key)
+        name = bold(_(host_commands.command(command_id).name).rstrip("…"))
+        since = check_texts.clock_text(datetime.now(UTC))
+        text = _("{name} is running on {host} since {when}…").format(
+            name=name, host=escape(target.name), when=since)  # fmt: skip
+        report(command_id, Outcome(text, running=True))
+
+        def work() -> RunResult:
+            return self.scripts.run(target.address, built.script, self.account(), built.timeout)
+
+        def done(result: RunResult) -> None:
+            self._running.discard(key)
+            report(command_id, script_outcome(command_id, target.name, result))
+
+        def failed(error: BaseException) -> None:
+            self._running.discard(key)
+            again = lambda: self._run_built_in(command_id, target, report)  # noqa: E731
+            output = "\n".join((*error.tried, error.detail)).strip() if isinstance(
+                error, RunError) else ""  # fmt: skip
+            action = _("run {name}").format(name=name)
+            self._fail(report, command_id, action, target, error, again, output)
+
+        self._start(work, done, failed)
 
     def _cancel_restart(self, target: HostTarget, report: Report) -> None:
         def act() -> bool:

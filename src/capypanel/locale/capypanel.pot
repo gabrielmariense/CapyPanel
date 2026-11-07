@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-07 02:57-0300\n"
+"POT-Creation-Date: 2026-11-07 16:53-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -282,6 +282,9 @@ msgstr ""
 msgid "&Remove selected"
 msgstr ""
 
+msgid "&Repair"
+msgstr ""
+
 msgid "&Report a problem"
 msgstr ""
 
@@ -552,6 +555,11 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
+msgid ""
+"Applies the PC's group policies again now, without waiting for the next "
+"refresh."
+msgstr ""
+
 msgid "Ask each time"
 msgstr ""
 
@@ -638,6 +646,11 @@ msgstr ""
 msgid "CapyPanel couldn't see who is signed in. Work anyone hasn't saved is lost."
 msgstr ""
 
+msgid ""
+"CapyPanel couldn't start anything there. WinRM is off, WMI didn't answer,"
+" and PsExec isn't set up or didn't work."
+msgstr ""
+
 msgid "CapyPanel is built with the following software:"
 msgstr ""
 
@@ -689,11 +702,22 @@ msgstr ""
 msgid "Checking {done} of {total}…"
 msgstr ""
 
+msgid ""
+"Checks every Windows file and repairs damaged ones (DISM and sfc); up to "
+"an hour."
+msgstr ""
+
 msgid "Checks these hosts again now"
 msgstr ""
 
 #, python-brace-format
 msgid "Choose a {tool} settings file"
+msgstr ""
+
+msgid "Clean temporary files"
+msgstr ""
+
+msgid "Clean temporary files…"
 msgstr ""
 
 msgid "Clear"
@@ -729,6 +753,10 @@ msgid "Click to copy"
 msgstr ""
 
 msgid "Click to copy, right-click for what you can do"
+msgstr ""
+
+#, python-brace-format
+msgid "Clock synced on {host}."
 msgstr ""
 
 msgid "Close"
@@ -945,6 +973,17 @@ msgstr ""
 msgid "D:\\Logs"
 msgstr ""
 
+#, python-brace-format
+msgid ""
+"DISM and sfc check every Windows file on {host} and repair the damaged "
+"ones. It takes up to an hour and slows the PC while it runs; whoever uses"
+" it can keep working. Nothing restarts."
+msgstr ""
+
+#, python-brace-format
+msgid "DNS refreshed on {host}."
+msgstr ""
+
 msgid "DOMAIN\\user"
 msgstr ""
 
@@ -969,7 +1008,16 @@ msgid "Delete connection profile"
 msgstr ""
 
 #, python-brace-format
+msgid "Delete temporary files on {host}?"
+msgstr ""
+
+#, python-brace-format
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
+msgstr ""
+
+msgid ""
+"Deletes temporary files no one has touched for a day, for Windows and "
+"every user."
 msgstr ""
 
 msgid "Deleting moves it to the Recycle Bin, for everyone who uses it:"
@@ -1082,6 +1130,9 @@ msgid ""
 "(name, address, group, tags, notes), so the two always match. Continue?"
 msgstr ""
 
+msgid "Empties the PC's DNS cache and registers its name with DNS again."
+msgstr ""
+
 msgid "Encryption pass&word"
 msgstr ""
 
@@ -1145,6 +1196,12 @@ msgstr ""
 msgid "File not found"
 msgstr ""
 
+#, python-brace-format
+msgid ""
+"Files in Windows' Temp folder and in every user's Temp folder that no one"
+" has touched for a day are deleted from {host}. Files in use stay."
+msgstr ""
+
 msgid "Firmware"
 msgstr ""
 
@@ -1202,6 +1259,12 @@ msgstr ""
 msgid "Free software under the GPL-3.0, with no warranty: see {licenses}."
 msgstr ""
 
+#, python-brace-format
+msgid "Freed {size} on {host}: {n} file deleted."
+msgid_plural "Freed {size} on {host}: {n} files deleted."
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "From group"
 msgstr ""
 
@@ -1217,6 +1280,10 @@ msgid "General"
 msgstr ""
 
 msgid "Group"
+msgstr ""
+
+#, python-brace-format
+msgid "Group policy updated on {host}."
 msgstr ""
 
 #, python-brace-format
@@ -1860,6 +1927,9 @@ msgstr ""
 msgid "Out of toner"
 msgstr ""
 
+msgid "Output"
+msgstr ""
+
 msgid "Output bin full"
 msgstr ""
 
@@ -2048,6 +2118,9 @@ msgstr ""
 msgid "Refresh &status"
 msgstr ""
 
+msgid "Refresh DNS"
+msgstr ""
+
 msgid "Refresh every host shown"
 msgstr ""
 
@@ -2142,6 +2215,20 @@ msgid "Remove “{name}” from your lists, or delete its file too?"
 msgstr ""
 
 msgid "Rename group"
+msgstr ""
+
+msgid "Repair Windows files"
+msgstr ""
+
+#, python-brace-format
+msgid "Repair Windows files finished on {host}. Its output says what it found."
+msgstr ""
+
+#, python-brace-format
+msgid "Repair Windows files on {host}?"
+msgstr ""
+
+msgid "Repair Windows files…"
 msgstr ""
 
 msgid "Replace"
@@ -2303,6 +2390,9 @@ msgstr ""
 msgid "Saved passwords deleted."
 msgstr ""
 
+msgid "Scripts"
+msgstr ""
+
 msgid "Search"
 msgstr ""
 
@@ -2378,6 +2468,9 @@ msgstr ""
 msgid "Set the account…"
 msgstr ""
 
+msgid "Sets the PC's clock from its time server now."
+msgstr ""
+
 msgid "Settings"
 msgstr ""
 
@@ -2413,6 +2506,9 @@ msgid "Show all"
 msgstr ""
 
 msgid "Show every printer again"
+msgstr ""
+
+msgid "Show output…"
 msgstr ""
 
 msgid "Show this group &first"
@@ -2534,6 +2630,9 @@ msgstr ""
 msgid "Supply missing"
 msgstr ""
 
+msgid "Sync the clock"
+msgstr ""
+
 msgid "T&ags pane"
 msgstr ""
 
@@ -2574,6 +2673,10 @@ msgid "Temporary"
 msgstr ""
 
 msgid "Temporary credentials"
+msgstr ""
+
+#, python-brace-format
+msgid "Temporary files cleaned on {host}."
 msgstr ""
 
 msgid "Temporary:"
@@ -2969,6 +3072,9 @@ msgstr ""
 msgid "Unreadable"
 msgstr ""
 
+msgid "Update group policy"
+msgstr ""
+
 msgid "Use &defaults"
 msgstr ""
 
@@ -3198,16 +3304,29 @@ msgid ""
 " sharing."
 msgstr ""
 
+msgid "it didn't finish in time. It may still be running there."
+msgstr ""
+
 msgid "it doesn't know the SNMP v3 user name."
 msgstr ""
 
+#, python-brace-format
+msgid "it ended with code {code}. Its output says why."
+msgstr ""
+
 msgid "it refused the SNMP v3 request."
+msgstr ""
+
+msgid "it started but never ran. Security software on the PC may have stopped it."
 msgstr ""
 
 msgid "it took too long to answer."
 msgstr ""
 
 msgid "it wants authentication or encryption set differently."
+msgstr ""
+
+msgid "its answer couldn't be read."
 msgstr ""
 
 msgid "its clock and CapyPanel's didn't agree."
@@ -3266,6 +3385,10 @@ msgstr ""
 msgid "restart the Print Spooler"
 msgstr ""
 
+#, python-brace-format
+msgid "run {name}"
+msgstr ""
+
 msgid "running"
 msgstr ""
 
@@ -3303,6 +3426,9 @@ msgid "tag “{tag}”"
 msgstr ""
 
 msgid "tags"
+msgstr ""
+
+msgid "the PC couldn't start it."
 msgstr ""
 
 msgid "the picked tags"
@@ -3463,7 +3589,15 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{name} is running on {host} since {when}…"
+msgstr ""
+
+#, python-brace-format
 msgid "{name} is signed in ({where}). Work they haven't saved is lost."
+msgstr ""
+
+#, python-brace-format
+msgid "{name} is still running on {host}."
 msgstr ""
 
 #, python-brace-format
@@ -3472,6 +3606,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{n} GB"
+msgstr ""
+
+#, python-brace-format
+msgid "{n} MB"
 msgstr ""
 
 #, python-brace-format
@@ -3503,6 +3641,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} couldn't be opened: check its address."
 msgid_plural "{n} couldn't be opened: check their addresses."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} file in use stayed."
+msgid_plural "{n} files in use stayed."
 msgstr[0] ""
 msgstr[1] ""
 

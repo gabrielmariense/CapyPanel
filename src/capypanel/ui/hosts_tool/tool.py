@@ -1,11 +1,14 @@
 """The Hosts tool: the list workspace with hosts, plus connecting, connection profiles, Refresh
 (status and logged-on users), the host commands (opening a PC's folders, messaging or logging off
-its users, restarting it, its printers and facts), importing and Report."""
+its users, restarting it, its printers and facts, scripts), importing and Report."""
 
+import html
 import logging
+import re
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
@@ -32,6 +35,7 @@ from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.checks import Checks, Found
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Answer, Status
+from capypanel.core.tools import detect
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import SessionCredentials, Target
 from capypanel.core.tools.profile_store import ProfileStore
@@ -1144,7 +1148,19 @@ class HostsTool(ListWorkspace):
             self.runner.run(command_id, target, self.show_outcome)
 
     def show_outcome(self, _command_id: str, outcome: Outcome) -> None:
+        if outcome.running:  # the answer comes later; meanwhile a line in the status bar
+            self.say(html.unescape(re.sub(r"<[^>]+>", "", outcome.text)))
+            return
         self.result_strip.show_outcome(outcome)
+
+    def psexec_path(self) -> Path | None:
+        """Where PsExec is, from Settings' Remote tools; None when it isn't on this PC."""
+        entry = self.connector.catalogs.tools.find("psexec")
+        return detect.find_executable(entry.item) if entry is not None else None
+
+    @property
+    def run_log_file(self) -> Path:
+        return self._shell.paths.run_log_file
 
     def _add_command_menus(self, menu: QMenu) -> None:
         """Check ▸, Folders ▸… Power ▸ with the selected host's commands, in the list's groups;

@@ -82,6 +82,11 @@ class Paths:
         return self.log_dir / f"{self.account}.log"
 
     @property
+    def run_log_file(self) -> Path:
+        """Every script this user ran on a PC: when, where, how it got in and how it ended."""
+        return self.log_dir / f"{self.account}.runs.log"
+
+    @property
     def settings_file(self) -> Path:
         return self.user_dir / "settings.json"
 

@@ -225,6 +225,8 @@ class Results(HostDetailsPanel):
         if outcome.failed:
             answer.setObjectName("warningText")
         layout.addWidget(answer)
+        if outcome.output:
+            layout.addWidget(windows.output_box(outcome.output))
         if outcome.retry is not None:
             link = QLabel(f'<a href="retry">{_("Try another account…")}</a>')
             link.setTextFormat(Qt.TextFormat.RichText)

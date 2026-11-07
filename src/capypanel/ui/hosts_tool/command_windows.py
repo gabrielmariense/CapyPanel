@@ -1,7 +1,8 @@
 """The small windows host commands open: Open a path…, Send a message…, Restart… and Shut down…,
-the questions before logging someone off, disconnecting them or restarting the Print Spooler,
-and the two lists a PC is read for, Printers on this PC and Installed programs. The same window
-opens from the menus, the Details panel and the Commands window."""
+the questions before logging someone off, disconnecting them, restarting the Print Spooler or
+running a script that disturbs the PC, a script's output, and the two lists a PC is read for,
+Printers on this PC and Installed programs. The same window opens from the menus, the Details
+panel and the Commands window."""
 
 import html
 from collections.abc import Callable, Sequence
@@ -11,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 import shiboken6
 from PySide6.QtCore import QStandardPaths, Qt
-from PySide6.QtGui import QColor, QGuiApplication
+from PySide6.QtGui import QColor, QFontDatabase, QGuiApplication
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -154,6 +155,62 @@ def ask_spooler(parent: QWidget | None, host: str) -> bool:
         _("&Restart Print Spooler"),
     )
     return run_modal(box) == QDialog.DialogCode.Accepted
+
+
+def ask_script(parent: QWidget | None, command_id: str, host: str) -> bool:
+    """The question before a script that disturbs the PC: Repair Windows files… or Clean
+    temporary files…"""
+    if command_id == "repair":
+        title, question = _("Repair Windows files"), _("Repair Windows files on {host}?")
+        text = _("DISM and sfc check every Windows file on {host} and repair the damaged ones. It "
+                 "takes up to an hour and slows the PC while it runs; whoever uses it can keep "
+                 "working. Nothing restarts.")  # fmt: skip
+        action = _("&Repair")
+    else:
+        title, question = _("Clean temporary files"), _("Delete temporary files on {host}?")
+        text = _("Files in Windows' Temp folder and in every user's Temp folder that no one has "
+                 "touched for a day are deleted from {host}. Files in use stay.")  # fmt: skip
+        action = _("&Delete")
+    box = Question(
+        parent, title, question.format(host=host), escape(text.format(host=host)), action
+    )
+    return run_modal(box) == QDialog.DialogCode.Accepted
+
+
+class OutputDialog(QDialog):
+    """What a script wrote on the PC, to read and copy."""
+
+    def __init__(self, parent: QWidget | None, title: str, output: str) -> None:
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.resize(720, 460)
+        self.text = output_box(output)
+        self.text.setMaximumHeight(16_777_215)  # here it takes the whole window
+        copy = QPushButton(_("&Copy"))
+        copy.clicked.connect(lambda: QGuiApplication.clipboard().setText(output))
+        close = QPushButton(_("Close"))
+        close.setDefault(True)
+        close.clicked.connect(self.accept)
+        buttons = QHBoxLayout()
+        buttons.addWidget(copy)
+        buttons.addStretch(1)
+        buttons.addWidget(close)
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.text, 1)
+        layout.addLayout(buttons)
+
+
+def output_box(output: str) -> QPlainTextEdit:
+    """A script's output as the console showed it: fixed-width, read-only; long lines wrap."""
+    box = QPlainTextEdit(output)
+    box.setReadOnly(True)
+    box.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
+    box.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
+    box.setMaximumHeight(OUTPUT_HEIGHT)
+    return box
+
+
+OUTPUT_HEIGHT = 240  # px in the Commands window; Show output… opens it bigger
 
 
 def ask_clear_queue(parent: QWidget | None, host: str, printer: HostPrinter) -> bool:

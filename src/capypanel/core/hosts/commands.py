@@ -4,9 +4,9 @@ shows up everywhere at once and looks the same in each place.
 
 Each command says what it needs from the PC, which is how CapyPanel knows what can fail: READ
 only reads (status, users, facts), OPEN_HERE opens something on this PC pointed at the PC (File
-Explorer, a console), and ASK_WINDOWS asks Windows on the PC to do something through its own
-remote calls (log off, restart, the print spooler). Nothing in this list installs or runs a
-program on the PC."""
+Explorer, a console), ASK_WINDOWS asks Windows on the PC to do something through its own remote
+calls (log off, restart, the print spooler), and RUN runs a script on the PC (core.remote.run).
+Nothing in this list installs anything on the PC."""
 
 from dataclasses import dataclass
 from enum import StrEnum
@@ -18,6 +18,7 @@ class Need(StrEnum):
     READ = "read"
     OPEN_HERE = "open-here"
     ASK_WINDOWS = "ask-windows"
+    RUN = "run"
 
 
 class Group(StrEnum):  # in the order the menus and the Commands window show them
@@ -26,6 +27,7 @@ class Group(StrEnum):  # in the order the menus and the Commands window show the
     ADMIN = "admin"
     USERS = "users"
     PRINTERS = "printers"
+    SCRIPTS = "scripts"
     POWER = "power"  # last: it disturbs whoever is at the PC
 
 
@@ -35,6 +37,7 @@ GROUP_NAMES = {
     Group.ADMIN: N_("Admin tools"),
     Group.USERS: N_("Users"),
     Group.PRINTERS: N_("Printers"),
+    Group.SCRIPTS: N_("Scripts"),
     Group.POWER: N_("Power"),
 }
 
@@ -133,6 +136,30 @@ COMMANDS: tuple[HostCommand, ...] = (
         "spooler", Group.PRINTERS, N_("Restart Print Spooler…"),
         N_("Restarts Windows' printing service, which unsticks most queues."), "printer-off",
         Need.ASK_WINDOWS, risky=True,
+    ),
+    HostCommand(
+        "gpupdate", Group.SCRIPTS, N_("Update group policy"),
+        N_("Applies the PC's group policies again now, without waiting for the next refresh."),
+        "shield-check", Need.RUN,
+    ),
+    HostCommand(
+        "dns", Group.SCRIPTS, N_("Refresh DNS"),
+        N_("Empties the PC's DNS cache and registers its name with DNS again."), "world",
+        Need.RUN,
+    ),
+    HostCommand(
+        "clock", Group.SCRIPTS, N_("Sync the clock"),
+        N_("Sets the PC's clock from its time server now."), "clock", Need.RUN,
+    ),
+    HostCommand(
+        "clean-temp", Group.SCRIPTS, N_("Clean temporary files…"),
+        N_("Deletes temporary files no one has touched for a day, for Windows and every user."),
+        "trash", Need.RUN, risky=True,
+    ),
+    HostCommand(
+        "repair", Group.SCRIPTS, N_("Repair Windows files…"),
+        N_("Checks every Windows file and repairs damaged ones (DISM and sfc); up to an hour."),
+        "tool", Need.RUN, risky=True, apart=True,  # long, and slows the PC
     ),
     HostCommand(
         "restart", Group.POWER, N_("Restart…"),

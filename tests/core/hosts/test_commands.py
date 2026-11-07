@@ -22,8 +22,9 @@ def test_the_quick_row_names_existing_commands() -> None:
 def test_risky_commands_ask_first() -> None:
     for c in COMMANDS:
         if c.risky:
-            assert c.name.endswith("…") and c.need is Need.ASK_WINDOWS, c.id
+            assert c.name.endswith("…") and c.need in (Need.ASK_WINDOWS, Need.RUN), c.id
 
 
-def test_nothing_runs_a_program_on_the_pc() -> None:
-    assert {c.need for c in COMMANDS} <= {Need.READ, Need.OPEN_HERE, Need.ASK_WINDOWS}
+def test_only_scripts_run_a_program_on_the_pc() -> None:
+    running = {c.id for c in COMMANDS if c.need is Need.RUN}
+    assert running == {c.id for c in commands.in_group(Group.SCRIPTS)}
