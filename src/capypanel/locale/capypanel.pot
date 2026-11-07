@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-07 17:56-0300\n"
+"POT-Creation-Date: 2026-11-07 19:42-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -51,6 +51,9 @@ msgid "&Add…"
 msgstr ""
 
 msgid "&All commands…"
+msgstr ""
+
+msgid "&Arguments:"
 msgstr ""
 
 msgid "&Authentication"
@@ -177,6 +180,9 @@ msgstr ""
 msgid "&Locate…"
 msgstr ""
 
+msgid "&Lock: always run as this"
+msgstr ""
+
 msgid "&Log off"
 msgstr ""
 
@@ -226,6 +232,9 @@ msgid "&New tag…"
 msgstr ""
 
 msgid "&New…"
+msgstr ""
+
+msgid "&No: it runs at once"
 msgstr ""
 
 msgid "&Open"
@@ -378,6 +387,9 @@ msgstr ""
 msgid "&When:"
 msgstr ""
 
+msgid "&Yes: it asks before every run"
+msgstr ""
+
 msgid "(password only)"
 msgstr ""
 
@@ -426,6 +438,9 @@ msgstr ""
 msgid "A preset named “{name}” already exists. Replace it?"
 msgstr ""
 
+msgid "A quote in the arguments isn't closed."
+msgstr ""
+
 msgid "A toner, ink, drum or box at or below this shows as low."
 msgstr ""
 
@@ -433,6 +448,9 @@ msgid "A tool definition must be a JSON object."
 msgstr ""
 
 msgid "A&dd to list…"
+msgstr ""
+
+msgid "A&pprove"
 msgstr ""
 
 msgid "About"
@@ -563,6 +581,9 @@ msgstr ""
 msgid "Ask each time"
 msgstr ""
 
+msgid "Asks before every run."
+msgstr ""
+
 msgid "Ass&et tag:"
 msgstr ""
 
@@ -582,6 +603,9 @@ msgid "Bar &marks"
 msgstr ""
 
 msgid "Bar marks"
+msgstr ""
+
+msgid "Batch file"
 msgstr ""
 
 msgid "Black"
@@ -618,6 +642,9 @@ msgstr ""
 msgid "CSV with headers"
 msgstr ""
 
+msgid "Called as: script <host> <arguments>. Quotes keep spaces together."
+msgstr ""
+
 msgid "Cancel"
 msgstr ""
 
@@ -643,6 +670,9 @@ msgstr ""
 msgid "CapyPanel asks for them again when it needs them."
 msgstr ""
 
+msgid "CapyPanel couldn't read the file."
+msgstr ""
+
 msgid "CapyPanel couldn't see who is signed in. Work anyone hasn't saved is lost."
 msgstr ""
 
@@ -660,6 +690,9 @@ msgstr ""
 msgid "CapyPanel — light"
 msgstr ""
 
+msgid "CapyPanel's account for the PC"
+msgstr ""
+
 msgid "Change path…"
 msgstr ""
 
@@ -667,6 +700,9 @@ msgid "Change the account…"
 msgstr ""
 
 msgid "Change the connection profile"
+msgstr ""
+
+msgid "Changed since it was approved. Review it again before it can run."
 msgstr ""
 
 msgid "Change…"
@@ -710,8 +746,17 @@ msgstr ""
 msgid "Checks these hosts again now"
 msgstr ""
 
+msgid "Choose a scripts folder"
+msgstr ""
+
+msgid "Choose a scripts folder in Settings › Hosts › General."
+msgstr ""
+
 #, python-brace-format
 msgid "Choose a {tool} settings file"
+msgstr ""
+
+msgid "Choose the scripts folder"
 msgstr ""
 
 msgid "Clean temporary files"
@@ -868,6 +913,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't read the printer's answer at {when}."
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't read {folder}: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -1181,6 +1230,15 @@ msgid ""
 " queues stay and print once it's back."
 msgstr ""
 
+msgid ""
+"Every user can change this file, so it can't be approved: someone could "
+"change it between your review and a run. Make the file writable by "
+"administrators only, then Rescan."
+msgstr ""
+
+msgid "Every user can change this file, so it can't run."
+msgstr ""
+
 msgid "Everyone on this PC (shared)"
 msgstr ""
 
@@ -1411,12 +1469,26 @@ msgstr ""
 msgid "Inventory"
 msgstr ""
 
+msgid "Is it risky?"
+msgstr ""
+
+msgid "It changed since it was approved. Read it again before approving."
+msgstr ""
+
 #, python-brace-format
 msgid "It pops up on their screen on {host} until they click OK."
 msgstr ""
 
 #, python-brace-format
 msgid "It restarted at {at} and answered again at {now}. Click to show it."
+msgstr ""
+
+#, python-brace-format
+msgid "It was approved as risky, so it asks every time. It runs as: {who}."
+msgstr ""
+
+#, python-brace-format
+msgid "It's bigger than {n} KB, too big for a script."
 msgstr ""
 
 msgid "It's handed to the viewer privately, never on its command line."
@@ -1489,6 +1561,9 @@ msgstr ""
 msgid ""
 "Lists saved in a lists folder show up here by themselves; Remove asks "
 "whether to delete the file too."
+msgstr ""
+
+msgid "Locked when it was approved"
 msgstr ""
 
 msgid "Log off"
@@ -1613,6 +1688,9 @@ msgstr[1] ""
 msgid "New host list"
 msgstr ""
 
+msgid "New in the scripts folder. Review it before it can run."
+msgstr ""
+
 msgid "New name:"
 msgstr ""
 
@@ -1620,6 +1698,10 @@ msgid "New printer list"
 msgstr ""
 
 msgid "New tag"
+msgstr ""
+
+#, python-brace-format
+msgid "No .ps1, .bat or .cmd files in {folder}."
 msgstr ""
 
 msgid "No Doc360 MPS account is set."
@@ -1645,6 +1727,12 @@ msgid "No answer at {when}."
 msgstr ""
 
 msgid "No computer by that name or address was found on the network."
+msgstr ""
+
+msgid "No folder"
+msgstr ""
+
+msgid "No folder chosen yet."
 msgstr ""
 
 msgid "No group"
@@ -1677,6 +1765,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "No one is signed in to {host}, so there's no user's folder to open."
+msgstr ""
+
+#, python-brace-format
+msgid "No one is signed in to {host}, so {name} can't run as them."
 msgstr ""
 
 msgid "No one is signed in, or no one was checked: use Refresh"
@@ -1867,6 +1959,9 @@ msgstr ""
 msgid ""
 "Open the Commands window for the selected host; the arrow lists its "
 "commands"
+msgstr ""
+
+msgid "Open the scripts folder"
 msgstr ""
 
 msgid "Open the selected printers' web pages (Enter)"
@@ -2078,10 +2173,19 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
+msgid "Re&scan"
+msgstr ""
+
+msgid "Re&view…"
+msgstr ""
+
 msgid "Read"
 msgstr ""
 
 msgid "Read again"
+msgstr ""
+
+msgid "Read it all before approving: once approved, it can run on any PC."
 msgstr ""
 
 msgid "Read license"
@@ -2094,6 +2198,10 @@ msgid "Read-only"
 msgstr ""
 
 msgid "Read/write"
+msgstr ""
+
+#, python-brace-format
+msgid "Reading {folder}…"
 msgstr ""
 
 #, python-brace-format
@@ -2249,6 +2357,9 @@ msgid_plural "Report saved: {n} printers from {source}."
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "Rescan the scripts folder"
+msgstr ""
+
 msgid "Reset to &default"
 msgstr ""
 
@@ -2296,6 +2407,10 @@ msgstr ""
 msgid "Restore built-in profiles"
 msgstr ""
 
+#, python-brace-format
+msgid "Review {name}"
+msgstr ""
+
 msgid "Right-click a printer to clear its queue."
 msgstr ""
 
@@ -2304,10 +2419,23 @@ msgid ""
 " window with a search."
 msgstr ""
 
+msgid "Run &as:"
+msgstr ""
+
 msgid "Run a &script…"
 msgstr ""
 
+msgid "Run as:"
+msgstr ""
+
 msgid "Run checks whether it answers."
+msgstr ""
+
+#, python-brace-format
+msgid "Run {name} on {host}?"
+msgstr ""
+
+msgid "Runs without asking."
 msgstr ""
 
 msgid "S&top"
@@ -2326,6 +2454,9 @@ msgid "SNMP community string"
 msgstr ""
 
 msgid "SNMP v3 account"
+msgstr ""
+
+msgid "SYSTEM"
 msgstr ""
 
 msgid "Sa&ved credentials"
@@ -2394,6 +2525,9 @@ msgid "Saved passwords deleted."
 msgstr ""
 
 msgid "Scripts"
+msgstr ""
+
+msgid "Scripts &folder"
 msgstr ""
 
 msgid "Search"
@@ -2754,6 +2888,9 @@ msgstr ""
 msgid "The encryption password needs at least 8 characters."
 msgstr ""
 
+msgid "The file couldn't be read."
+msgstr ""
+
 msgid "The file doesn't contain a list."
 msgstr ""
 
@@ -2828,6 +2965,9 @@ msgid "The marks show {marks}."
 msgstr ""
 
 msgid "The parent group doesn't exist."
+msgstr ""
+
+msgid "The person signed in"
 msgstr ""
 
 #, python-brace-format
@@ -3008,6 +3148,9 @@ msgid "Toner low"
 msgstr ""
 
 msgid "Toner model"
+msgstr ""
+
+msgid "Too big for a script, so it can't run."
 msgstr ""
 
 msgid "Tool"
@@ -3222,7 +3365,15 @@ msgstr ""
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr ""
 
+msgid ""
+"Your own PowerShell and batch scripts, for the Scripts tab of the "
+"Commands window. Only administrators should be able to change it."
+msgstr ""
+
 msgid "Your printers: status and toner, web pages, reports."
+msgstr ""
+
+msgid "Your scripts"
 msgstr ""
 
 msgid "Yours"
@@ -3268,8 +3419,14 @@ msgstr ""
 msgid "cancel the restart"
 msgstr ""
 
+msgid "changed, review before use"
+msgstr ""
+
 #, python-brace-format
 msgid "clear the queue of {printer}"
+msgstr ""
+
+msgid "couldn't be read"
 msgstr ""
 
 #, python-brace-format
@@ -3280,6 +3437,9 @@ msgid "disconnected"
 msgstr ""
 
 msgid "e.g. Branch offices"
+msgstr ""
+
+msgid "every user can change it"
 msgstr ""
 
 #, python-brace-format
@@ -3295,6 +3455,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "in “{group}”"
+msgstr ""
+
+msgid "it can't run as it is now. Rescan to see why."
+msgstr ""
+
+msgid "it changed since it was approved, so it didn't run. Review it again."
 msgstr ""
 
 msgid ""
@@ -3349,6 +3515,9 @@ msgid "name"
 msgstr ""
 
 msgid "name, address, group, tags, notes"
+msgstr ""
+
+msgid "new, review before use"
 msgstr ""
 
 msgid "not reported"
@@ -3447,6 +3616,9 @@ msgid "the selected printers"
 msgstr ""
 
 msgid "there's no folder there."
+msgstr ""
+
+msgid "too big for a script"
 msgstr ""
 
 msgid "user"
@@ -3590,6 +3762,10 @@ msgid "{name} ({n} printer)"
 msgid_plural "{name} ({n} printers)"
 msgstr[0] ""
 msgstr[1] ""
+
+#, python-brace-format
+msgid "{name} finished on {host}."
+msgstr ""
 
 #, python-brace-format
 msgid "{name} is running on {host} since {when}…"

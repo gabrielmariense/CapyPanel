@@ -6,6 +6,7 @@ Each command says what it needs from the PC, which is how CapyPanel knows what c
 only reads (status, users, facts), OPEN_HERE opens something on this PC pointed at the PC (File
 Explorer, a console), ASK_WINDOWS asks Windows on the PC to do something through its own remote
 calls (log off, restart, the print spooler), and RUN runs a script on the PC (core.remote.run).
+Your own scripts aren't in this list: they come from the scripts folder (core.remote.own_scripts).
 Nothing in this list installs anything on the PC."""
 
 from dataclasses import dataclass
@@ -28,6 +29,7 @@ class Group(StrEnum):  # in the order the menus and the Commands window show the
     USERS = "users"
     PRINTERS = "printers"
     SCRIPTS = "scripts"
+    OWN = "own"  # your own scripts, from the scripts folder: none in COMMANDS
     POWER = "power"  # last: it disturbs whoever is at the PC
 
 
@@ -38,6 +40,7 @@ GROUP_NAMES = {
     Group.USERS: N_("Users"),
     Group.PRINTERS: N_("Printers"),
     Group.SCRIPTS: N_("Scripts"),
+    Group.OWN: N_("Your scripts"),
     Group.POWER: N_("Power"),
 }
 

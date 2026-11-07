@@ -12,7 +12,14 @@ from typing import TYPE_CHECKING, Any
 
 import shiboken6
 from PySide6.QtCore import QEvent, QObject, QPoint, Qt, QTimer, Signal
-from PySide6.QtGui import QCloseEvent, QColor, QGuiApplication, QKeyEvent, QPalette
+from PySide6.QtGui import (
+    QCloseEvent,
+    QColor,
+    QContextMenuEvent,
+    QGuiApplication,
+    QKeyEvent,
+    QPalette,
+)
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -29,6 +36,7 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSizePolicy,
     QTabBar,
+    QToolButton,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -38,12 +46,14 @@ from PySide6.QtWidgets import (
 from capypanel.core import i18n
 from capypanel.core.hosts import commands as host_commands
 from capypanel.core.hosts.bulk import write_csv
-from capypanel.core.hosts.commands import GROUP_NAMES, HostCommand
+from capypanel.core.hosts.commands import GROUP_NAMES, HostCommand, Need
 from capypanel.core.hosts.commands import Group as CommandGroup
 from capypanel.core.hosts.model import MAX_ADDRESS
 from capypanel.core.i18n import _
 from capypanel.core.remote import host_printers, services
 from capypanel.core.remote.access import Account, RemoteError
+from capypanel.core.remote.own_scripts import OwnScript, State
+from capypanel.core.remote.run import RunAs
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.core.tools.connect import Target
@@ -60,7 +70,10 @@ from capypanel.ui.hosts_tool.runner import (
     failed_text,
     folder_user,
 )
+from capypanel.ui.hosts_tool.script_review import ReviewDialog, state_text
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
+from capypanel.ui.notes import hint as hint_label
+from capypanel.ui.settings.pages import PathLabel, open_folder
 
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.tool import HostsTool
@@ -75,6 +88,7 @@ APART = 8  # px: the gap above a command set apart, where menus draw a line
 ICON = 16
 RECENT_ADDRESSES = 10
 LISTS = ("printers", "programs")  # their answer is a table on the right, not a window
+SCRIPT_GROUPS = (CommandGroup.SCRIPTS, CommandGroup.OWN)  # the Scripts tab
 TABLE_ROW = 30  # px, about a grid row: a printers table shows every printer
 MOST_TABLE = 330  # px: a longer list (programs) scrolls inside its table
 
@@ -240,9 +254,12 @@ class CommandRow(QFrame):
     """One command: its icon and name on one line; picked, it grows to show its description
     and Run. Risky ones are amber, with an amber left edge."""
 
-    def __init__(self, window: "CommandsWindow", command: HostCommand) -> None:
+    def __init__(
+        self, window: "CommandsWindow", command: HostCommand, script: OwnScript | None = None
+    ) -> None:
         super().__init__()
         self.command = command
+        self.script = script  # one of your own scripts
         self.setObjectName("commandRow")
         self.setProperty("risky", command.risky)
         self.setProperty("picked", False)
@@ -270,9 +287,52 @@ class CommandRow(QFrame):
         grid.addWidget(self.run, 0, 2)
         grid.addWidget(self.about, 1, 1, 1, 2)
         grid.setColumnStretch(1, 1)
+        self.extra: QWidget | None = None  # your own script's Run as and Review…
+        self.run_as: QComboBox | None = None
+        name = _(command.name)
+        if script is not None:
+            name = command.name  # a file's name: never translated
+            if not script.ready:
+                name = f"{name} · {state_text(script)}"
+                self.run.setText(_("Re&view…"))
+                self.run.setObjectName("")
+            else:
+                self._add_run_as(window, script, grid)
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
-        self.set_name(_(command.name))
+        self.set_name(name)
         self.set_picked(False)
+
+    def _add_run_as(self, window: "CommandsWindow", script: OwnScript, grid: QGridLayout) -> None:
+        """Who it runs as, for this run: as approved, and fixed when it was locked."""
+        approval = script.approval
+        assert approval is not None
+        self.run_as = QComboBox()
+        # Narrower than its longest choice, so the row fits the column; the list shows it whole.
+        self.run_as.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+        )
+        self.run_as.setMinimumContentsLength(8)
+        for choice in RunAs:
+            self.run_as.addItem(windows.run_as_text(choice), choice)
+        self.run_as.setCurrentIndex(max(self.run_as.findData(approval.run_as), 0))
+        if approval.locked:
+            self.run_as.setEnabled(False)
+            self.run_as.setToolTip(_("Locked when it was approved"))
+        label = QLabel(_("Run as:"))
+        label.setObjectName("hint")
+        review = QPushButton(_("Re&view…"))
+        review.setAutoDefault(False)
+        review.clicked.connect(lambda: window.review(script))
+        self.extra = QWidget()
+        line = QHBoxLayout(self.extra)
+        line.setContentsMargins(0, 2, 0, 2)
+        line.addWidget(label)
+        line.addWidget(self.run_as, 1)
+        line.addWidget(review)
+        grid.addWidget(self.extra, 2, 1, 1, 2)
+
+    def run_as_choice(self) -> RunAs:
+        return RunAs(self.run_as.currentData()) if self.run_as is not None else RunAs.ACCOUNT
 
     def set_name(self, text: str) -> None:
         self.name.setText(text)
@@ -285,6 +345,8 @@ class CommandRow(QFrame):
         self.run.setVisible(picked)
         self.run.setDefault(picked)  # Enter runs the picked one
         self.about.setVisible(picked)
+        if self.extra is not None:
+            self.extra.setVisible(picked)
         self.setMinimumHeight(ROW)
         self.setMaximumHeight(16_777_215 if picked else ROW)  # picked: as tall as it needs
         self.style().unpolish(self)
@@ -292,6 +354,11 @@ class CommandRow(QFrame):
 
     def mousePressEvent(self, event: object) -> None:
         self._window.pick(self)
+
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        if self.script is not None:
+            self._window.pick(self)
+            self._window.own_menu(self.script, event.globalPos())
 
     def mouseDoubleClickEvent(self, event: object) -> None:
         self._window.pick(self)  # a double-click doesn't run: risky ones mustn't run by accident
@@ -387,7 +454,7 @@ class CommandsWindow(QDialog):
         rows.setSpacing(ROW_SPACING)
         for group in CommandGroup:
             commands = host_commands.in_group(group)
-            if not commands:
+            if not commands and group is not CommandGroup.OWN:
                 continue
             heading = QLabel(_(GROUP_NAMES[group]).upper())
             heading.setObjectName("groupHeading")
@@ -399,6 +466,13 @@ class CommandsWindow(QDialog):
             item = QListWidgetItem(_(GROUP_NAMES[group]))
             item.setData(Qt.ItemDataRole.UserRole, group)
             self.groups.addItem(item)
+            if group is CommandGroup.OWN:  # filled from the scripts folder, again on a change
+                rows.addWidget(self._own_bar())
+                self._own_box = QWidget()
+                self._own_rows = QVBoxLayout(self._own_box)
+                self._own_rows.setContentsMargins(0, 0, 0, 0)
+                self._own_rows.setSpacing(ROW_SPACING)
+                rows.addWidget(self._own_box)
             for command in commands:
                 row = CommandRow(self, command)
                 if command.apart:
@@ -453,6 +527,8 @@ class CommandsWindow(QDialog):
         grid.setRowStretch(2, 1)
 
         self._picked: CommandRow | None = None
+        self._fill_own()
+        tool.own_scripts.changed.connect(self._fill_own)
         tool.host_changed.connect(self._changed)
         tool.runner.facts_changed.connect(self._changed)
         self.address.editTextChanged.connect(self._address_typed)
@@ -484,7 +560,8 @@ class CommandsWindow(QDialog):
                      else f"<b>{_escape(target.name)}</b> · {_escape(target.address)}")  # fmt: skip
             self.host_label.setText(shown)
         for row in self.rows:
-            row.run.setEnabled(target is not None)
+            review = row.script is not None and not row.script.ready  # needs no PC
+            row.run.setEnabled(target is not None or review)
         self.connect_button.setEnabled(target is not None and self.profile.count() > 0)
         self._update_add()
         self._update_names()
@@ -539,6 +616,11 @@ class CommandsWindow(QDialog):
         return self._picked.command if self._picked is not None else None
 
     def run(self, command: HostCommand) -> None:
+        row = next((r for r in self.rows if r.command is command), None)
+        script = row.script if row is not None else None
+        if script is not None and not script.ready:
+            self.review(script)
+            return
         target = self.target()
         if target is None:
             return
@@ -546,6 +628,8 @@ class CommandsWindow(QDialog):
             self._tool.remember_address(self.address.currentText().strip())
         if command.id in LISTS:
             self._read_list(command.id, target)
+        elif script is not None and row is not None:
+            self._tool.runner.run_own(script, target, self._report, row.run_as_choice())
         else:
             self._tool.runner.run(command.id, target, self._report, parent=self)
         self._show_results()
@@ -710,7 +794,7 @@ class CommandsWindow(QDialog):
         scripts = self.showing_scripts()
         for row in self.rows:
             text = f"{row.name.text()} {row.about.text()}".casefold()
-            in_tab = (row.command.group is CommandGroup.SCRIPTS) == scripts
+            in_tab = (row.command.group in SCRIPT_GROUPS) == scripts
             row.setHidden(not in_tab or (bool(needle) and needle not in text))
             if row.gap is not None:
                 row.gap.setHidden(row.isHidden())
@@ -719,6 +803,9 @@ class CommandsWindow(QDialog):
             item = self.groups.item(index)
             group = item.data(Qt.ItemDataRole.UserRole)
             any_shown = any(not r.isHidden() for r in self.rows if r.command.group == group)
+            if group is CommandGroup.OWN:  # shown even when empty: its folder and Rescan
+                any_shown = scripts and (not needle or any_shown)
+                self._own_line.setHidden(not any_shown)
             self._headings[group].setHidden(not any_shown)
             self._gaps[group].setHidden(not any_shown or first)  # none above the first
             first = first and not any_shown
@@ -727,6 +814,95 @@ class CommandsWindow(QDialog):
         if shown and self._picked not in shown:
             self.pick(shown[0])
             self.list.verticalScrollBar().setValue(0)
+
+    # ---- your own scripts ----
+
+    def _own_bar(self) -> QWidget:
+        """Under Your scripts: where they come from, Rescan, and the folder."""
+        self._own_line = QWidget()
+        self._own_hint = hint_label()  # what's wrong, when something is
+        self._own_path = PathLabel()  # else the folder, cut in the middle
+        color = self.palette().color(QPalette.ColorRole.Text)
+        self._rescan = _icon_button("refresh", color, _("Rescan the scripts folder"))
+        self._rescan.clicked.connect(self._tool.own_scripts.rescan)
+        self._folder_button = _icon_button("folder-search", color, "")
+        self._folder_button.clicked.connect(self._open_scripts_folder)
+        line = QHBoxLayout(self._own_line)
+        line.setContentsMargins(8, 0, 6, 2)
+        line.setSpacing(4)
+        line.addWidget(self._own_hint, 1)
+        line.addWidget(self._own_path, 1)
+        line.addWidget(self._rescan)
+        line.addWidget(self._folder_button)
+        return self._own_line
+
+    def _fill_own(self) -> None:
+        """Your scripts' rows, from what the scripts folder holds now."""
+        if not self._alive():
+            return
+        own = self._tool.own_scripts
+        picked = self._picked.command.id if self._picked is not None else ""
+        for row in [r for r in self.rows if r.script is not None]:
+            self.rows.remove(row)
+            if row is self._picked:
+                self._picked = None
+            row.hide()
+            row.deleteLater()
+        for script in own.scripts:
+            risky = bool(script.ready and script.approval and script.approval.risky)
+            command = HostCommand(script.id, CommandGroup.OWN, script.name,
+                                  _own_description(script), "bolt", Need.RUN,
+                                  risky=risky)  # fmt: skip
+            row = CommandRow(self, command, script)
+            self.rows.append(row)
+            self._own_rows.addWidget(row)
+        folder = own.folder()
+        if folder is None:
+            text = _("Choose a scripts folder in Settings › Hosts › General.")
+        elif own.scanning:
+            text = _("Reading {folder}…").format(folder=folder)
+        elif own.error is not None:
+            text = _("Couldn't read {folder}: {error}").format(folder=folder, error=own.error)
+        elif not own.scripts:
+            text = _("No .ps1, .bat or .cmd files in {folder}.").format(folder=folder)
+        else:
+            text = ""
+        self._own_hint.setText(text)
+        self._own_hint.setVisible(bool(text))
+        self._own_path.set_path(folder or "")
+        self._own_path.setVisible(not text)
+        self._rescan.setVisible(folder is not None)
+        self._rescan.setEnabled(not own.scanning)
+        self._folder_button.setToolTip(_("Open the scripts folder") if folder
+                                       else _("Choose a scripts folder"))  # fmt: skip
+        target = self.target()
+        for row in self.rows:
+            if row.script is not None:
+                row.run.setEnabled(target is not None or not row.script.ready)
+        again = next((r for r in self.rows if r.command.id == picked), None)
+        if again is not None:
+            self.pick(again)
+        self._filter()
+
+    def _open_scripts_folder(self) -> None:
+        folder = self._tool.own_scripts.folder()
+        if folder is None:
+            self._tool.open_settings("hosts")
+        else:
+            open_folder(folder)
+
+    def review(self, script: OwnScript) -> None:
+        dialog = ReviewDialog(self, script)
+        if run_modal(dialog) == QDialog.DialogCode.Accepted:
+            self._tool.own_scripts.approve(script, dialog.approval())
+
+    def own_menu(self, script: OwnScript, where: QPoint) -> None:
+        menu = QMenu(self)
+        menu.addAction(_("Re&view…"), lambda: self.review(script))
+        menu.addAction(_("Open &folder"), lambda: open_folder(script.file.parent))
+        menu.addSeparator()
+        menu.addAction(_("Re&scan"), self._tool.own_scripts.rescan)
+        menu.exec(where)
 
     def _jump(self, item: QListWidgetItem) -> None:
         heading = self._headings[item.data(Qt.ItemDataRole.UserRole)]
@@ -816,6 +992,31 @@ class CommandsWindow(QDialog):
         host_id = self._tool.add_typed_host(target.address, self.profile.currentData() or "")
         if host_id is not None:
             self._update_add()
+
+
+def _own_description(script: OwnScript) -> str:
+    """The line under your own script: its file and whether it asks, or why it can't run."""
+    approval = script.approval
+    if not script.ready or approval is None:
+        return {
+            State.NEW: _("New in the scripts folder. Review it before it can run."),
+            State.CHANGED: _("Changed since it was approved. Review it again before it can run."),
+            State.OPEN: _("Every user can change this file, so it can't run."),
+            State.TOO_BIG: _("Too big for a script, so it can't run."),
+            State.UNREADABLE: _("The file couldn't be read."),
+        }[script.state]
+    asks = _("Asks before every run.") if approval.risky else _("Runs without asking.")
+    return f"{script.file.name}. {asks}"
+
+
+def _icon_button(icon: str, color: QColor, tip: str) -> QToolButton:
+    """A small icon button, as in the Details panel's row."""
+    button = QToolButton()
+    button.setObjectName("commandButton")
+    button.setIcon(tabler_icon(icon, color, ICON))
+    button.setToolTip(tip)
+    button.setCursor(Qt.CursorShape.PointingHandCursor)
+    return button
 
 
 def _gap(height: int) -> QWidget:

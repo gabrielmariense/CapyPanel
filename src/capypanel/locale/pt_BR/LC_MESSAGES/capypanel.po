@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-07 17:56-0300\n"
+"POT-Creation-Date: 2026-11-07 19:42-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -53,6 +53,9 @@ msgstr "&Adicionar…"
 
 msgid "&All commands…"
 msgstr "&Todos os comandos…"
+
+msgid "&Arguments:"
+msgstr "&Argumentos:"
 
 msgid "&Authentication"
 msgstr "&Autenticação"
@@ -178,6 +181,9 @@ msgstr "&Lista ao iniciar"
 msgid "&Locate…"
 msgstr "&Localizar…"
 
+msgid "&Lock: always run as this"
+msgstr "&Travar: sempre executar assim"
+
 msgid "&Log off"
 msgstr "Fazer &logoff"
 
@@ -228,6 +234,9 @@ msgstr "&Nova tag…"
 
 msgid "&New…"
 msgstr "&Nova…"
+
+msgid "&No: it runs at once"
+msgstr "&Não: executa na hora"
 
 msgid "&Open"
 msgstr "&Abrir"
@@ -379,6 +388,9 @@ msgstr "E&xibir"
 msgid "&When:"
 msgstr "&Quando:"
 
+msgid "&Yes: it asks before every run"
+msgstr "&Sim: pergunta antes de cada execução"
+
 msgid "(password only)"
 msgstr "(só senha)"
 
@@ -427,6 +439,9 @@ msgstr "Um aviso na tela de todos que estão conectados."
 msgid "A preset named “{name}” already exists. Replace it?"
 msgstr "Já existe uma predefinição chamada “{name}”. Substituí-la?"
 
+msgid "A quote in the arguments isn't closed."
+msgstr "Uma aspa nos argumentos não foi fechada."
+
 msgid "A toner, ink, drum or box at or below this shows as low."
 msgstr "Um toner, tinta, cilindro ou caixa neste nível ou abaixo aparece como baixo."
 
@@ -435,6 +450,9 @@ msgstr "Uma definição de ferramenta deve ser um objeto JSON."
 
 msgid "A&dd to list…"
 msgstr "A&dicionar à lista…"
+
+msgid "A&pprove"
+msgstr "A&provar"
 
 msgid "About"
 msgstr "Sobre"
@@ -558,6 +576,9 @@ msgstr "Aplica de novo as políticas de grupo do PC agora, sem esperar a próxim
 msgid "Ask each time"
 msgstr "Perguntar sempre"
 
+msgid "Asks before every run."
+msgstr "Pergunta antes de cada execução."
+
 msgid "Ass&et tag:"
 msgstr "&Patrimônio:"
 
@@ -578,6 +599,9 @@ msgstr "&Marcas das barras"
 
 msgid "Bar marks"
 msgstr "Marcas das barras"
+
+msgid "Batch file"
+msgstr "Arquivo batch"
 
 msgid "Black"
 msgstr "Preto"
@@ -613,6 +637,9 @@ msgstr "Arquivos CSV (*.csv)"
 msgid "CSV with headers"
 msgstr "CSV com cabeçalho"
 
+msgid "Called as: script <host> <arguments>. Quotes keep spaces together."
+msgstr "Chamado como: script <host> <argumentos>. Aspas mantêm os espaços juntos."
+
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -636,6 +663,9 @@ msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha 
 msgid "CapyPanel asks for them again when it needs them."
 msgstr "O CapyPanel pede de novo quando precisar deles."
 
+msgid "CapyPanel couldn't read the file."
+msgstr "O CapyPanel não conseguiu ler o arquivo."
+
 msgid "CapyPanel couldn't see who is signed in. Work anyone hasn't saved is lost."
 msgstr "O CapyPanel não conseguiu ver quem está conectado. O que não foi salvo se perde."
 
@@ -651,6 +681,9 @@ msgstr "CapyPanel — escuro"
 msgid "CapyPanel — light"
 msgstr "CapyPanel — claro"
 
+msgid "CapyPanel's account for the PC"
+msgstr "A conta do CapyPanel para o PC"
+
 msgid "Change path…"
 msgstr "Alterar caminho…"
 
@@ -659,6 +692,9 @@ msgstr "Alterar a conta…"
 
 msgid "Change the connection profile"
 msgstr "Trocar o perfil de conexão"
+
+msgid "Changed since it was approved. Review it again before it can run."
+msgstr "Mudou desde que foi aprovado. Revise de novo antes que possa executar."
 
 msgid "Change…"
 msgstr "Alterar…"
@@ -699,9 +735,18 @@ msgstr "Verifica todos os arquivos do Windows e repara os danificados (DISM e sf
 msgid "Checks these hosts again now"
 msgstr "Verifica estes hosts de novo agora"
 
+msgid "Choose a scripts folder"
+msgstr "Escolher uma pasta de scripts"
+
+msgid "Choose a scripts folder in Settings › Hosts › General."
+msgstr "Escolha uma pasta de scripts em Configurações › Hosts › Geral."
+
 #, python-brace-format
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
+
+msgid "Choose the scripts folder"
+msgstr "Escolha a pasta de scripts"
 
 msgid "Clean temporary files"
 msgstr "Limpar arquivos temporários"
@@ -856,6 +901,10 @@ msgstr "Não foi possível ler"
 #, python-brace-format
 msgid "Couldn't read the printer's answer at {when}."
 msgstr "Não foi possível ler a resposta da impressora às {when}."
+
+#, python-brace-format
+msgid "Couldn't read {folder}: {error}"
+msgstr "Não foi possível ler {folder}: {error}"
 
 #, python-brace-format
 msgid "Couldn't read {host}: {reason}"
@@ -1156,6 +1205,12 @@ msgstr "Todas as impressoras da lista aberta, 8 por vez, enquanto o CapyPanel es
 msgid "Every printer on {host} stops for a few seconds. Documents waiting in the queues stay and print once it's back."
 msgstr "Todas as impressoras de {host} param por alguns segundos. Os documentos nas filas continuam lá e são impressos quando ele voltar."
 
+msgid "Every user can change this file, so it can't be approved: someone could change it between your review and a run. Make the file writable by administrators only, then Rescan."
+msgstr "Qualquer usuário pode alterar este arquivo, então ele não pode ser aprovado: alguém poderia alterá-lo entre a sua revisão e uma execução. Deixe o arquivo gravável só por administradores e depois use Verificar de novo."
+
+msgid "Every user can change this file, so it can't run."
+msgstr "Qualquer usuário pode alterar este arquivo, então ele não pode executar."
+
 msgid "Everyone on this PC (shared)"
 msgstr "Todos neste PC (compartilhada)"
 
@@ -1376,6 +1431,12 @@ msgstr "Programas instalados em {host}"
 msgid "Inventory"
 msgstr "Inventário"
 
+msgid "Is it risky?"
+msgstr "É arriscado?"
+
+msgid "It changed since it was approved. Read it again before approving."
+msgstr "Ele mudou desde que foi aprovado. Leia de novo antes de aprovar."
+
 #, python-brace-format
 msgid "It pops up on their screen on {host} until they click OK."
 msgstr "Ela aparece na tela deles em {host} até clicarem em OK."
@@ -1383,6 +1444,14 @@ msgstr "Ela aparece na tela deles em {host} até clicarem em OK."
 #, python-brace-format
 msgid "It restarted at {at} and answered again at {now}. Click to show it."
 msgstr "Ele reiniciou às {at} e respondeu de novo às {now}. Clique para mostrá-lo."
+
+#, python-brace-format
+msgid "It was approved as risky, so it asks every time. It runs as: {who}."
+msgstr "Foi aprovado como arriscado, então pergunta toda vez. Executa como: {who}."
+
+#, python-brace-format
+msgid "It's bigger than {n} KB, too big for a script."
+msgstr "Tem mais de {n} KB, grande demais para um script."
 
 msgid "It's handed to the viewer privately, never on its command line."
 msgstr "Ela é entregue ao visualizador de forma privada, nunca na linha de comando."
@@ -1444,6 +1513,9 @@ msgstr "Listar só as impressoras que requerem atenção"
 
 msgid "Lists saved in a lists folder show up here by themselves; Remove asks whether to delete the file too."
 msgstr "Listas salvas numa pasta de listas aparecem aqui sozinhas; Remover pergunta se o arquivo também deve ser excluído."
+
+msgid "Locked when it was approved"
+msgstr "Travado quando foi aprovado"
 
 msgid "Log off"
 msgstr "Fazer logoff"
@@ -1567,6 +1639,9 @@ msgstr[1] "Grupos novos: {names}."
 msgid "New host list"
 msgstr "Nova lista de hosts"
 
+msgid "New in the scripts folder. Review it before it can run."
+msgstr "Novo na pasta de scripts. Revise antes que possa executar."
+
 msgid "New name:"
 msgstr "Novo nome:"
 
@@ -1575,6 +1650,10 @@ msgstr "Nova lista de impressoras"
 
 msgid "New tag"
 msgstr "Nova tag"
+
+#, python-brace-format
+msgid "No .ps1, .bat or .cmd files in {folder}."
+msgstr "Nenhum arquivo .ps1, .bat ou .cmd em {folder}."
 
 msgid "No Doc360 MPS account is set."
 msgstr "Nenhuma conta do Doc360 MPS definida."
@@ -1600,6 +1679,12 @@ msgstr "Sem resposta às {when}."
 
 msgid "No computer by that name or address was found on the network."
 msgstr "Nenhum computador com esse nome ou endereço foi encontrado na rede."
+
+msgid "No folder"
+msgstr "Nenhuma pasta"
+
+msgid "No folder chosen yet."
+msgstr "Nenhuma pasta escolhida ainda."
 
 msgid "No group"
 msgstr "Sem grupo"
@@ -1632,6 +1717,10 @@ msgstr "Ninguém está na frente da tela em {host} agora."
 #, python-brace-format
 msgid "No one is signed in to {host}, so there's no user's folder to open."
 msgstr "Ninguém está conectado em {host}, então não há pasta de usuário para abrir."
+
+#, python-brace-format
+msgid "No one is signed in to {host}, so {name} can't run as them."
+msgstr "Ninguém está conectado em {host}, então {name} não pode executar como essa pessoa."
 
 msgid "No one is signed in, or no one was checked: use Refresh"
 msgstr "Ninguém está conectado, ou ninguém foi verificado: use Atualizar"
@@ -1806,6 +1895,9 @@ msgstr "Abrir muitas telas remotas?"
 
 msgid "Open the Commands window for the selected host; the arrow lists its commands"
 msgstr "Abre a janela Comandos para o host selecionado; a seta lista os comandos dele"
+
+msgid "Open the scripts folder"
+msgstr "Abrir a pasta de scripts"
 
 msgid "Open the selected printers' web pages (Enter)"
 msgstr "Abre a página web das impressoras selecionadas (Enter)"
@@ -2011,11 +2103,20 @@ msgstr "Verificação rápida"
 msgid "Quit"
 msgstr "Sair"
 
+msgid "Re&scan"
+msgstr "Verificar de &novo"
+
+msgid "Re&view…"
+msgstr "Re&visar…"
+
 msgid "Read"
 msgstr "Ler"
 
 msgid "Read again"
 msgstr "Ler de novo"
+
+msgid "Read it all before approving: once approved, it can run on any PC."
+msgstr "Leia tudo antes de aprovar: depois de aprovado, ele pode executar em qualquer PC."
 
 msgid "Read license"
 msgstr "Ler licença"
@@ -2028,6 +2129,10 @@ msgstr "Somente leitura"
 
 msgid "Read/write"
 msgstr "Leitura/gravação"
+
+#, python-brace-format
+msgid "Reading {folder}…"
+msgstr "Lendo {folder}…"
 
 #, python-brace-format
 msgid "Reading {host}…"
@@ -2178,6 +2283,9 @@ msgid_plural "Report saved: {n} printers from {source}."
 msgstr[0] "Relatório salvo: {n} impressora de {source}."
 msgstr[1] "Relatório salvo: {n} impressoras de {source}."
 
+msgid "Rescan the scripts folder"
+msgstr "Verificar a pasta de scripts de novo"
+
 msgid "Reset to &default"
 msgstr "Restaurar &padrão"
 
@@ -2225,17 +2333,34 @@ msgstr "Reiniciar…"
 msgid "Restore built-in profiles"
 msgstr "Restaurar os perfis que vêm com o app"
 
+#, python-brace-format
+msgid "Review {name}"
+msgstr "Revisar {name}"
+
 msgid "Right-click a printer to clear its queue."
 msgstr "Clique com o botão direito numa impressora para limpar a fila."
 
 msgid "Right-click to copy a row, copy or export the list, or open it in its own window with a search."
 msgstr "Clique com o botão direito para copiar uma linha, copiar ou exportar a lista, ou abri-la na própria janela, com pesquisa."
 
+msgid "Run &as:"
+msgstr "Executar &como:"
+
 msgid "Run a &script…"
 msgstr "Executar um &script…"
 
+msgid "Run as:"
+msgstr "Executar como:"
+
 msgid "Run checks whether it answers."
 msgstr "Executar verifica se ele responde."
+
+#, python-brace-format
+msgid "Run {name} on {host}?"
+msgstr "Executar {name} em {host}?"
+
+msgid "Runs without asking."
+msgstr "Executa sem perguntar."
 
 msgid "S&top"
 msgstr "Pa&rar"
@@ -2254,6 +2379,9 @@ msgstr "Comunidade SNMP"
 
 msgid "SNMP v3 account"
 msgstr "Conta SNMP v3"
+
+msgid "SYSTEM"
+msgstr "SYSTEM"
 
 msgid "Sa&ved credentials"
 msgstr "Credenciais sal&vas"
@@ -2317,6 +2445,9 @@ msgstr "As senhas salvas foram apagadas."
 
 msgid "Scripts"
 msgstr "Scripts"
+
+msgid "Scripts &folder"
+msgstr "&Pasta de scripts"
 
 msgid "Search"
 msgstr "Pesquisa"
@@ -2659,6 +2790,9 @@ msgstr "A lista padrão foi criada por outro usuário, então o CapyPanel não v
 msgid "The encryption password needs at least 8 characters."
 msgstr "A senha da criptografia precisa ter pelo menos 8 caracteres."
 
+msgid "The file couldn't be read."
+msgstr "Não foi possível ler o arquivo."
+
 msgid "The file doesn't contain a list."
 msgstr "O arquivo não contém uma lista."
 
@@ -2725,6 +2859,9 @@ msgstr "Os traços marcam {marks}."
 
 msgid "The parent group doesn't exist."
 msgstr "O grupo pai não existe."
+
+msgid "The person signed in"
+msgstr "A pessoa conectada"
 
 #, python-brace-format
 msgid "The placeholder “{{{name}}}” goes with the “{method}” credential method."
@@ -2895,6 +3032,9 @@ msgstr "Toner baixo"
 
 msgid "Toner model"
 msgstr "Modelo do toner"
+
+msgid "Too big for a script, so it can't run."
+msgstr "Grande demais para um script, então não executa."
 
 msgid "Tool"
 msgstr "Ferramenta"
@@ -3096,8 +3236,14 @@ msgstr "Você pediu às {when}."
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
 
+msgid "Your own PowerShell and batch scripts, for the Scripts tab of the Commands window. Only administrators should be able to change it."
+msgstr "Seus próprios scripts PowerShell e batch, para a aba Scripts da janela Comandos. Só administradores devem poder alterá-la."
+
 msgid "Your printers: status and toner, web pages, reports."
 msgstr "Suas impressoras: status e toner, páginas web, relatórios."
+
+msgid "Your scripts"
+msgstr "Seus scripts"
 
 msgid "Yours"
 msgstr "Sua"
@@ -3142,9 +3288,15 @@ msgstr "não pode ser lido"
 msgid "cancel the restart"
 msgstr "cancelar a reinicialização"
 
+msgid "changed, review before use"
+msgstr "alterado, revise antes de usar"
+
 #, python-brace-format
 msgid "clear the queue of {printer}"
 msgstr "limpar a fila de {printer}"
+
+msgid "couldn't be read"
+msgstr "não foi possível ler"
 
 #, python-brace-format
 msgid "disconnect {user}"
@@ -3155,6 +3307,9 @@ msgstr "desconectada"
 
 msgid "e.g. Branch offices"
 msgstr "ex.: Filiais"
+
+msgid "every user can change it"
+msgstr "qualquer usuário pode alterá-lo"
 
 #, python-brace-format
 msgid "from {computer}"
@@ -3170,6 +3325,12 @@ msgstr "em {group}, como {name}"
 #, python-brace-format
 msgid "in “{group}”"
 msgstr "em “{group}”"
+
+msgid "it can't run as it is now. Rescan to see why."
+msgstr "ele não pode executar como está agora. Verifique de novo para ver o motivo."
+
+msgid "it changed since it was approved, so it didn't run. Review it again."
+msgstr "ele mudou desde que foi aprovado, então não executou. Revise de novo."
 
 msgid "it didn't accept the account: a wrong password, a locked account, or one it doesn't trust."
 msgstr "ele não aceitou a conta: senha errada, conta bloqueada ou uma conta em que ele não confia."
@@ -3220,6 +3381,9 @@ msgstr "nome"
 
 msgid "name, address, group, tags, notes"
 msgstr "nome, endereço, grupo, tags, notas"
+
+msgid "new, review before use"
+msgstr "novo, revise antes de usar"
 
 msgid "not reported"
 msgstr "não informado"
@@ -3318,6 +3482,9 @@ msgstr "as impressoras selecionadas"
 
 msgid "there's no folder there."
 msgstr "não há uma pasta aí."
+
+msgid "too big for a script"
+msgstr "grande demais para um script"
 
 msgid "user"
 msgstr "usuário"
@@ -3452,6 +3619,10 @@ msgid "{name} ({n} printer)"
 msgid_plural "{name} ({n} printers)"
 msgstr[0] "{name} ({n} impressora)"
 msgstr[1] "{name} ({n} impressoras)"
+
+#, python-brace-format
+msgid "{name} finished on {host}."
+msgstr "{name} terminou em {host}."
 
 #, python-brace-format
 msgid "{name} is running on {host} since {when}…"

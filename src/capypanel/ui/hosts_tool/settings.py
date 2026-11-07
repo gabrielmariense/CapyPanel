@@ -25,6 +25,7 @@ class SettingsPrefs:
     auto_status: tuple[bool, int] = (False, 5)  # check Status by itself, every N minutes
     start_view: tuple[str, str] | None = None  # the open list's (show, group) first
     save_passwords: bool = False  # typed passwords also go to Windows Credential Manager
+    scripts_folder: Path | None = None  # your own scripts, for the Commands window
 
 
 class HostsSettings(SettingsGroup):
@@ -55,6 +56,7 @@ class HostsSettings(SettingsGroup):
             auto_status=tool.auto_status(),
             start_view=tool.start_view(),
             host_list=doc.hosts if doc else None,
+            scripts_folder=tool.own_scripts.folder(),
         )
         self.connections = ConnectionsPage(
             tool.connector.catalogs, doc, save_passwords=tool.saves_passwords()
@@ -86,6 +88,7 @@ class HostsSettings(SettingsGroup):
             auto_status=self.general.auto_status_choice(),
             start_view=self.general.show_first_choice(),
             save_passwords=self.connections.profiles.save_passwords_choice(),
+            scripts_folder=self.general.scripts_folder_choice(),
         )
 
     def _changed(self) -> None:

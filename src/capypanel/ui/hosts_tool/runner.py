@@ -17,10 +17,20 @@ from PySide6.QtWidgets import QDialog, QWidget
 
 from capypanel.core.hosts import commands as host_commands
 from capypanel.core.i18n import _, ngettext
-from capypanel.core.remote import access, builtin, places, power, run, services, sessions
+from capypanel.core.remote import (
+    access,
+    builtin,
+    own_scripts,
+    places,
+    power,
+    run,
+    services,
+    sessions,
+)
 from capypanel.core.remote.access import Account, Reason, RemoteError
+from capypanel.core.remote.own_scripts import OwnScript, State
 from capypanel.core.remote.places import Console
-from capypanel.core.remote.run import Problem, RunError, RunResult
+from capypanel.core.remote.run import Problem, RunAs, RunError, RunResult
 from capypanel.core.remote.sessions import Session
 from capypanel.ui import checks as check_texts
 from capypanel.ui.checks import AccountDialog
@@ -122,6 +132,10 @@ def reason_text(error: BaseException) -> str:
         }[error.problem]  # fmt: skip
     if isinstance(error, ScriptFailed):
         return _("it ended with code {code}. Its output says why.").format(code=error.code)
+    if isinstance(error, NotApproved):
+        return (_("it changed since it was approved, so it didn't run. Review it again.")
+                if error.state is State.CHANGED
+                else _("it can't run as it is now. Rescan to see why."))  # fmt: skip
     if isinstance(error, TimeoutError):
         return _("it took too long to answer.")
     if isinstance(error, NotADirectoryError):
@@ -135,6 +149,14 @@ class ScriptFailed(Exception):
     def __init__(self, code: int) -> None:
         super().__init__(f"exit code {code}")
         self.code = code
+
+
+class NotApproved(Exception):
+    """Your own script isn't as it was approved anymore, so it didn't run."""
+
+    def __init__(self, state: State) -> None:
+        super().__init__(str(state))
+        self.state = state
 
 
 def size_text(size: int) -> str:
@@ -606,6 +628,78 @@ class Runner(QObject):
                 error, RunError) else ""  # fmt: skip
             action = _("run {name}").format(name=name)
             self._fail(report, command_id, action, target, error, again, output)
+
+        self._start(work, done, failed)
+
+    def run_own(self, script: OwnScript, target: HostTarget, report: Report, run_as: RunAs) -> None:
+        """One of your own scripts, approved: asked first when it's risky; as the person
+        signed in at the PC with RunAs.USER; never twice at once."""
+        approval = script.approval
+        if not script.ready or approval is None:
+            return
+        if (target.key, script.id) in self._running:
+            self._tool.say(_("{name} is still running on {host}.").format(
+                name=script.name, host=target.name))  # fmt: skip
+            return
+        if approval.risky and not windows.ask_own_script(self._window(), script.name,
+                                                         target.name, run_as):  # fmt: skip
+            return
+        if run_as is not RunAs.USER:
+            self._run_own(script, target, report, run_as, "")
+            return
+
+        def go(found: Sequence[Session] | None, error: BaseException | None) -> None:
+            who = folder_user([s for s in found or () if s.state == "active"])
+            if who is None:
+                text = _("No one is signed in to {host}, so {name} can't run as them.").format(
+                    host=escape(target.name), name=bold(script.name))  # fmt: skip
+                report(script.id, Outcome(text, error or RemoteError(Reason.OTHER)))
+                return
+            user = f"{who.domain}\\{who.user}" if who.domain else who.user
+            self._run_own(script, target, report, run_as, user)
+
+        self.with_sessions(target, go)
+
+    def _run_own(
+        self, script: OwnScript, target: HostTarget, report: Report, run_as: RunAs, user: str
+    ) -> None:
+        key = (target.key, script.id)
+        self._running.add(key)
+        name = bold(script.name)
+        since = check_texts.clock_text(datetime.now(UTC))
+        text = _("{name} is running on {host} since {when}…").format(
+            name=name, host=escape(target.name), when=since)  # fmt: skip
+        report(script.id, Outcome(text, running=True))
+        approval = script.approval
+
+        def work() -> RunResult:
+            # Read again on the way: what runs is what was approved, byte for byte.
+            now = own_scripts.read(script.file, approval)
+            if not now.ready:
+                raise NotApproved(now.state)
+            return self.scripts.run(target.address, own_scripts.to_script(now, target.name),
+                                    self.account(), run.TIMEOUT, run_as, user)  # fmt: skip
+
+        def done(result: RunResult) -> None:
+            self._running.discard(key)
+            output = script_output(result)
+            if result.worked:
+                text = _("{name} finished on {host}.").format(name=name, host=escape(target.name))
+                report(script.id, Outcome(text, output=output))
+                return
+            error = ScriptFailed(result.exit_code)
+            text = failed_text(_("run {name}").format(name=name), target.name, error)
+            report(script.id, Outcome(text, error, output=output))
+
+        def failed(error: BaseException) -> None:
+            self._running.discard(key)
+            if isinstance(error, NotApproved):
+                self._tool.own_scripts.rescan()  # shows it as changed, to review again
+            again = lambda: self._run_own(script, target, report, run_as, user)  # noqa: E731
+            output = "\n".join((*error.tried, error.detail)).strip() if isinstance(
+                error, RunError) else ""  # fmt: skip
+            self._fail(report, script.id, _("run {name}").format(name=name), target, error,
+                       again, output)  # fmt: skip
 
         self._start(work, done, failed)
 

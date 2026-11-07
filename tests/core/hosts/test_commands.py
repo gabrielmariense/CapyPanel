@@ -12,7 +12,9 @@ def test_every_group_is_named_and_has_commands_in_list_order() -> None:
     assert list(GROUP_NAMES) == list(Group)
     order = [list(Group).index(c.group) for c in COMMANDS]
     assert order == sorted(order)  # the list reads group by group, as the menu shows it
-    assert all(commands.in_group(group) for group in Group)
+    # Your scripts come from the scripts folder, not this list.
+    assert all(commands.in_group(group) for group in Group if group is not Group.OWN)
+    assert not commands.in_group(Group.OWN)
 
 
 def test_the_quick_row_names_existing_commands() -> None:

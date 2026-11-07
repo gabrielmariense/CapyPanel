@@ -35,6 +35,7 @@ from capypanel.core.hosts.bulk import list_separator, write_csv
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote import host_printers, places
 from capypanel.core.remote.host_printers import HostPrinter
+from capypanel.core.remote.run import RunAs
 from capypanel.core.remote.sessions import Session
 from capypanel.ui import checks as check_texts
 from capypanel.ui.dialogs import run_modal
@@ -174,6 +175,23 @@ def ask_script(parent: QWidget | None, command_id: str, host: str) -> bool:
     box = Question(
         parent, title, question.format(host=host), escape(text.format(host=host)), action
     )
+    return run_modal(box) == QDialog.DialogCode.Accepted
+
+
+def run_as_text(run_as: RunAs) -> str:
+    return {
+        RunAs.ACCOUNT: _("CapyPanel's account for the PC"),
+        RunAs.SYSTEM: _("SYSTEM"),
+        RunAs.USER: _("The person signed in"),
+    }[run_as]
+
+
+def ask_own_script(parent: QWidget | None, name: str, host: str, run_as: RunAs) -> bool:
+    """The question before one of your own scripts approved as risky."""
+    text = _("It was approved as risky, so it asks every time. It runs as: {who}.").format(
+        who=run_as_text(run_as))  # fmt: skip
+    box = Question(parent, name, _("Run {name} on {host}?").format(name=name, host=host),
+                   escape(text), _("&Run"))  # fmt: skip
     return run_modal(box) == QDialog.DialogCode.Accepted
 
 

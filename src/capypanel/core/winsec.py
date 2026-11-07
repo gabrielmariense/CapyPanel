@@ -19,6 +19,13 @@ _DACL_INFO = 0x4
 _PROTECTED_DACL = 0x80000000
 _TOKEN_QUERY = 0x8
 _TOKEN_USER = 1
+_ACCESS_ALLOWED = 0
+_INHERIT_ONLY = 0x8
+# Write data, append, change permissions or owner, generic write or all.
+_ANY_WRITE = 0x2 | 0x4 | 0x40000 | 0x80000 | 0x40000000 | 0x10000000
+# Everyone, Authenticated Users, Interactive, Anonymous, Users, Guests; Domain Users and Domain
+# Guests are matched by their last number.
+_EVERY_USER = ("S-1-1-0", "S-1-5-11", "S-1-5-4", "S-1-5-7", "S-1-5-32-545", "S-1-5-32-546")
 
 _advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)
 _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
@@ -50,6 +57,7 @@ _advapi32.GetSecurityDescriptorDacl.argtypes = [
     _VOID, _P(wintypes.BOOL), _P(_VOID), _P(wintypes.BOOL)
 ]  # fmt: skip
 _advapi32.ConvertSidToStringSidW.argtypes = [_VOID, _P(wintypes.LPWSTR)]
+_advapi32.GetAce.argtypes = [_VOID, wintypes.DWORD, _P(_VOID)]
 
 
 def account_name() -> str:
@@ -104,6 +112,42 @@ def made_by_trusted(path: Path) -> bool:
     owner = owner_sid(path)
     trusted = (SYSTEM, ADMINISTRATORS, TRUSTED_INSTALLER, current_user_sid())
     return owner is None or owner in trusted
+
+
+def anyone_can_change(path: Path) -> bool:
+    """Whether every user (Everyone, Users, Authenticated Users, Domain Users…) may change the
+    file or its permissions. True too when its permissions can't be read: then no one can tell."""
+    descriptor, dacl = ctypes.c_void_p(), ctypes.c_void_p()
+    status = _advapi32.GetNamedSecurityInfoW(
+        str(path), _SE_FILE_OBJECT, _DACL_INFO,
+        None, None, ctypes.byref(dacl), None, ctypes.byref(descriptor),
+    )  # fmt: skip
+    if status != 0:
+        return True
+    try:
+        if not dacl.value:
+            return True  # no permissions at all: everyone has full access
+        count = ctypes.c_uint16.from_address(dacl.value + 4).value  # ACL.AceCount
+        for index in range(count):
+            ace = ctypes.c_void_p()
+            if not _advapi32.GetAce(dacl, index, ctypes.byref(ace)) or not ace.value:
+                return True
+            kind = ctypes.c_uint8.from_address(ace.value).value  # ACE_HEADER.AceType
+            flags = ctypes.c_uint8.from_address(ace.value + 1).value  # ACE_HEADER.AceFlags
+            if kind != _ACCESS_ALLOWED or flags & _INHERIT_ONLY:
+                continue
+            mask = ctypes.c_uint32.from_address(ace.value + 4).value
+            if mask & _ANY_WRITE and _everyone(_sid_string(ace.value + 8)):
+                return True
+        return False
+    finally:
+        _kernel32.LocalFree(descriptor)
+
+
+def _everyone(sid: str) -> bool:
+    if sid in _EVERY_USER:
+        return True
+    return sid.startswith("S-1-5-21-") and sid.rsplit("-", 1)[-1] in ("513", "514")
 
 
 def make_private(folder: Path, user_sid: str) -> None:

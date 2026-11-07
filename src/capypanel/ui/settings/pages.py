@@ -10,11 +10,13 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
     QPushButton,
     QSpinBox,
+    QToolButton,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -118,9 +120,10 @@ class PathLabel(QLabel):
         if path is not None:
             self.set_path(path)
 
-    def set_path(self, path: Path) -> None:
+    def set_path(self, path: Path | str) -> None:
+        """A path, or a word in its place ("None") when there's no path."""
         self._full = str(path)
-        self.setToolTip(self._full)
+        self.setToolTip(self._full if isinstance(path, Path) else "")
         self._elide()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
@@ -134,6 +137,51 @@ class PathLabel(QLabel):
 
 def open_folder(folder: Path) -> None:
     QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
+
+
+class FolderPicker(QWidget):
+    """A folder setting's buttons, Change path… and × to clear it; its path, cut in the middle,
+    is `path`, for a line under the row."""
+
+    changed = Signal()
+
+    def __init__(self, folder: Path | None, title: str) -> None:
+        super().__init__()
+        self.folder = folder
+        self._title = title
+        self.path = PathLabel()
+        self.choose = QPushButton(_("Change path…"))  # as Remote tools says it
+        self.choose.clicked.connect(self._choose)
+        self.clear = QToolButton()
+        self.clear.setText("×")
+        self.clear.setToolTip(_("No folder"))
+        self.clear.clicked.connect(lambda: self.set_folder(None))
+        line = QHBoxLayout(self)
+        line.setContentsMargins(0, 0, 0, 0)
+        line.setSpacing(6)
+        line.addStretch(1)
+        line.addWidget(self.choose)
+        line.addWidget(self.clear)
+        self._show()
+
+    def set_folder(self, folder: Path | None) -> None:
+        if folder != self.folder:
+            self.folder = folder
+            self._show()
+            self.changed.emit()
+
+    def _show(self) -> None:
+        if self.folder is None:
+            self.path.set_path(_("No folder chosen yet."))
+        else:
+            self.path.set_path(self.folder)
+        self.clear.setVisible(self.folder is not None)
+
+    def _choose(self) -> None:
+        start = str(self.folder) if self.folder else str(Path.home())
+        chosen = QFileDialog.getExistingDirectory(self, self._title, start)
+        if chosen:
+            self.set_folder(Path(chosen))
 
 
 # ---- CapyPanel: General and Appearance; About's Folders ----
@@ -453,6 +501,7 @@ class HostsPage(ListsGeneralPage):
         auto_status: tuple[bool, int] = (False, 5),
         start_view: tuple[str, str] | None = None,
         host_list: HostList | None = None,
+        scripts_folder: Path | None = None,
     ) -> None:
         super().__init__(
             texts=texts,
@@ -484,6 +533,24 @@ class HostsPage(ListsGeneralPage):
         )  # fmt: skip
 
         self.add_section(refresh)
+
+        scripts = Section(_("Scripts"))
+        self.scripts_folder = FolderPicker(scripts_folder, _("Choose the scripts folder"))
+        self.scripts_folder.changed.connect(self.changed)
+        add_rows(
+            scripts.content,
+            SettingRow(
+                _("Scripts &folder"),
+                _("Your own PowerShell and batch scripts, for the Scripts tab of the Commands "
+                  "window. Only administrators should be able to change it."),
+                self.scripts_folder,
+            ),
+        )  # fmt: skip
+        scripts.content.addWidget(self.scripts_folder.path)
+        self.add_section(scripts)
+
+    def scripts_folder_choice(self) -> Path | None:
+        return self.scripts_folder.folder
 
     def auto_status_choice(self) -> tuple[bool, int]:
         minutes = self.auto_every.currentData()

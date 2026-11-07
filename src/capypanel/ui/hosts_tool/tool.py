@@ -49,6 +49,7 @@ from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, l
 from capypanel.ui.hosts_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.hosts_tool.details import HostDetails, HostDetailsPanel
 from capypanel.ui.hosts_tool.host_state import Facts, PendingPower
+from capypanel.ui.hosts_tool.own_scripts import OwnScripts
 from capypanel.ui.hosts_tool.result_strip import ResultStrip
 from capypanel.ui.hosts_tool.runner import HostTarget, Outcome, Report, Runner, folder_user
 from capypanel.ui.hosts_tool.settings import HostsSettings, SettingsPrefs
@@ -123,6 +124,8 @@ class HostsTool(ListWorkspace):
         self._back_online: str | None = None  # the host the last notification was about
         self.runner = Runner(self)
         self.runner.facts_changed.connect(self._facts_changed)
+        self.own_scripts = OwnScripts(self)
+        self.own_scripts.rescan()  # in the background: the folder is often on a server
         self.result_strip = ResultStrip()
         column = self.items_pane.layout()
         assert isinstance(column, QVBoxLayout)
@@ -745,6 +748,7 @@ class HostsTool(ListWorkspace):
         self.prefs["save_passwords"] = prefs.save_passwords
         self._apply_saving(prefs.save_passwords)
         self._save_prefs()
+        self.own_scripts.set_folder(prefs.scripts_folder)
         self._update_state()  # the list's name may change with the lists kept
 
     # ---- showing ----
@@ -1163,6 +1167,12 @@ class HostsTool(ListWorkspace):
     def run_log_file(self) -> Path:
         return self._shell.paths.run_log_file
 
+    def save_prefs(self) -> None:
+        self._save_prefs()
+
+    def open_settings(self, page: str) -> None:
+        self._shell.open_settings(page)
+
     def _add_command_menus(self, menu: QMenu) -> None:
         """Check ▸, Folders ▸… Power ▸ with the selected host's commands, in the list's groups;
         a line before each command set apart. Scripts aren't listed, so the menus don't grow
@@ -1170,7 +1180,7 @@ class HostsTool(ListWorkspace):
         self._update_host_actions()
         target = self.selected_target()
         for group in CommandGroup:
-            if group is CommandGroup.SCRIPTS:
+            if group in (CommandGroup.SCRIPTS, CommandGroup.OWN):
                 continue
             submenu = menu.addMenu(_(GROUP_NAMES[group]))
             for command in host_commands.in_group(group):
