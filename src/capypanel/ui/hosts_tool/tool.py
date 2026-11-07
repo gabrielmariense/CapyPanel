@@ -511,8 +511,9 @@ class HostsTool(ListWorkspace):
         """Manual connection: the Commands window, for an address typed there."""
         self.open_commands(None)
 
-    def open_commands(self, target: HostTarget | None) -> None:
-        """The Commands window, for `target` (None: an address typed there). One at a time."""
+    def open_commands(self, target: HostTarget | None, *, scripts: bool = False) -> None:
+        """The Commands window, for `target` (None: an address typed there), on its Scripts tab
+        with `scripts`. One at a time."""
         from capypanel.ui.hosts_tool.commands_window import CommandsWindow
 
         if self._commands_window is not None:
@@ -523,7 +524,7 @@ class HostsTool(ListWorkspace):
             host = self._doc.hosts.host(target.key)
             if host is not None:
                 profile = self._doc.hosts.profile_of(host, self._profile_exists)[0]
-        window = CommandsWindow(self, target, profile)
+        window = CommandsWindow(self, target, profile, scripts=scripts)
         window.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         window.destroyed.connect(lambda: setattr(self, "_commands_window", None))
         self._commands_window = window
@@ -1164,15 +1165,23 @@ class HostsTool(ListWorkspace):
 
     def _add_command_menus(self, menu: QMenu) -> None:
         """Check ▸, Folders ▸… Power ▸ with the selected host's commands, in the list's groups;
-        a line before each command set apart."""
+        a line before each command set apart. Scripts aren't listed, so the menus don't grow
+        with them: Run a script… opens the Commands window's Scripts tab."""
         self._update_host_actions()
+        target = self.selected_target()
         for group in CommandGroup:
+            if group is CommandGroup.SCRIPTS:
+                continue
             submenu = menu.addMenu(_(GROUP_NAMES[group]))
             for command in host_commands.in_group(group):
                 if command.apart:
                     submenu.addSeparator()
                 submenu.addAction(self.host_actions[command.id])
-            submenu.setEnabled(self.selected_target() is not None)
+            submenu.setEnabled(target is not None)
+        menu.addSeparator()
+        scripts = menu.addAction(_("Run a &script…"))
+        scripts.setEnabled(target is not None)
+        scripts.triggered.connect(lambda: self.open_commands(self.selected_target(), scripts=True))
 
     def _fill_commands_menu(self, menu: QMenu, *, window: bool = False) -> None:
         """Commands ▾ and the Details panel's …: every command, by group; Commands ▾ ends with
@@ -1180,7 +1189,6 @@ class HostsTool(ListWorkspace):
         menu.clear()
         self._add_command_menus(menu)
         if window:
-            menu.addSeparator()
             every = menu.addAction(_("&All commands…"))
             every.setEnabled(self.selected_target() is not None)
             every.triggered.connect(lambda: self.open_commands(self.selected_target()))

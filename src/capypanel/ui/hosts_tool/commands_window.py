@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSizePolicy,
+    QTabBar,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -67,6 +68,7 @@ if TYPE_CHECKING:
 SIZE = (1000, 620)  # fixed: it never grows as commands are added
 GROUPS_WIDTH = 150  # px, at least
 GROUP_ROOM = 40  # px past a group's name: the rows' padding and the list's frame
+ROW_SPACING = 2  # px between the commands; a gap widget adds one more
 RESULTS_WIDTH = 400  # px: the rest goes to the commands, whose names are longer in pt
 ROW = 28  # px: a command's line
 APART = 8  # px: the gap above a command set apart, where menus draw a line
@@ -245,6 +247,7 @@ class CommandRow(QFrame):
         self.setProperty("risky", command.risky)
         self.setProperty("picked", False)
         self._window = window
+        self.gap: QWidget | None = None  # above a command set apart
         text = self.palette().color(QPalette.ColorRole.Text)
         color = QColor(STATUS_COLORS["attention"]) if command.risky else text
         icon = QLabel()
@@ -295,7 +298,9 @@ class CommandRow(QFrame):
 
 
 class CommandsWindow(QDialog):
-    def __init__(self, tool: "HostsTool", target: HostTarget | None, profile: str) -> None:
+    def __init__(
+        self, tool: "HostsTool", target: HostTarget | None, profile: str, *, scripts: bool = False
+    ) -> None:
         super().__init__(tool)
         self._tool = tool
         self._typed = target is None  # Manual connection: the address is typed here
@@ -339,6 +344,15 @@ class CommandsWindow(QDialog):
         right_top.addWidget(self.profile, 1)
         right_top.addWidget(self.connect_button)
 
+        # ---- two tabs: the commands, and the scripts, which change more of the PC ----
+        self.tabs = QTabBar()
+        self.tabs.setDrawBase(False)
+        self.tabs.setExpanding(False)
+        self.tabs.addTab(_("Commands"))
+        self.tabs.addTab(_("Scripts"))
+        self.tabs.setCurrentIndex(1 if scripts else 0)
+        self.tabs.currentChanged.connect(lambda _index: self._filter())
+
         # ---- the groups, the commands, the results ----
         self.search = QLineEdit()
         self.search.setPlaceholderText(_("Search"))
@@ -365,27 +379,31 @@ class CommandsWindow(QDialog):
         left.addWidget(self.search)
         left.addWidget(self.groups, 1)
         self._headings: dict[CommandGroup, QLabel] = {}
+        self._gaps: dict[CommandGroup, QWidget] = {}  # above each heading
         self.rows: list[CommandRow] = []
         column = QWidget()
         rows = QVBoxLayout(column)
         rows.setContentsMargins(0, 0, 8, 0)
-        rows.setSpacing(2)
+        rows.setSpacing(ROW_SPACING)
         for group in CommandGroup:
             commands = host_commands.in_group(group)
             if not commands:
                 continue
             heading = QLabel(_(GROUP_NAMES[group]).upper())
             heading.setObjectName("groupHeading")
-            rows.addSpacing(6 if self._headings else 0)
+            # Gaps are widgets, so they hide with their group or command (another tab, a search).
+            self._gaps[group] = _gap(6 - ROW_SPACING)
+            rows.addWidget(self._gaps[group])
             rows.addWidget(heading)
             self._headings[group] = heading
             item = QListWidgetItem(_(GROUP_NAMES[group]))
             item.setData(Qt.ItemDataRole.UserRole, group)
             self.groups.addItem(item)
             for command in commands:
-                if command.apart:
-                    rows.addSpacing(APART)  # where menus draw a line
                 row = CommandRow(self, command)
+                if command.apart:
+                    row.gap = _gap(APART - ROW_SPACING)  # where menus draw a line
+                    rows.addWidget(row.gap)
                 self.rows.append(row)
                 rows.addWidget(row)
         rows.addStretch(1)
@@ -418,27 +436,28 @@ class CommandsWindow(QDialog):
         grid.setVerticalSpacing(10)
         grid.addLayout(left_top, 0, 0, 1, 4)
         grid.addLayout(right_top, 0, 4)
-        grid.addLayout(left, 1, 0)
-        grid.addWidget(_divider(), 1, 1)
-        grid.addWidget(self.list, 1, 2)
-        grid.addWidget(_divider(), 1, 3)
-        grid.addWidget(self.results, 1, 4)
-        grid.addWidget(hint, 2, 0, 1, 5)
+        grid.addWidget(self.tabs, 1, 0, 1, 3)
+        grid.addLayout(left, 2, 0)
+        grid.addWidget(_divider(), 2, 1)
+        grid.addWidget(self.list, 2, 2)
+        grid.addWidget(_divider(), 1, 3, 2, 1)
+        grid.addWidget(self.results, 1, 4, 2, 1)
+        grid.addWidget(hint, 3, 0, 1, 5)
         bottom = QHBoxLayout()
         bottom.addWidget(self.add_button)
         bottom.addStretch(1)
         bottom.addWidget(close)
-        grid.addLayout(bottom, 3, 0, 1, 5)
+        grid.addLayout(bottom, 4, 0, 1, 5)
         grid.setColumnMinimumWidth(0, groups_width)
         grid.setColumnStretch(2, 1)
-        grid.setRowStretch(1, 1)
+        grid.setRowStretch(2, 1)
 
         self._picked: CommandRow | None = None
         tool.host_changed.connect(self._changed)
         tool.runner.facts_changed.connect(self._changed)
         self.address.editTextChanged.connect(self._address_typed)
         self.search.installEventFilter(self)
-        self.pick(self.rows[0])
+        self._filter()  # the tab's commands only
         self._show_target()
         (self.address if self._typed else self.search).setFocus()
 
@@ -681,21 +700,33 @@ class CommandsWindow(QDialog):
         index = shown.index(self._picked) if self._picked in shown else -1
         self.pick(shown[max(0, min(len(shown) - 1, index + step))])
 
+    def showing_scripts(self) -> bool:
+        return self.tabs.currentIndex() == 1
+
     def _filter(self) -> None:
-        """Typing narrows every group to the commands whose name or description match."""
+        """The tab's commands; typing narrows every group to those whose name or description
+        match."""
         needle = self.search.text().strip().casefold()
+        scripts = self.showing_scripts()
         for row in self.rows:
             text = f"{row.name.text()} {row.about.text()}".casefold()
-            row.setHidden(bool(needle) and needle not in text)
+            in_tab = (row.command.group is CommandGroup.SCRIPTS) == scripts
+            row.setHidden(not in_tab or (bool(needle) and needle not in text))
+            if row.gap is not None:
+                row.gap.setHidden(row.isHidden())
+        first = True
         for index in range(self.groups.count()):
             item = self.groups.item(index)
             group = item.data(Qt.ItemDataRole.UserRole)
             any_shown = any(not r.isHidden() for r in self.rows if r.command.group == group)
             self._headings[group].setHidden(not any_shown)
+            self._gaps[group].setHidden(not any_shown or first)  # none above the first
+            first = first and not any_shown
             item.setHidden(not any_shown)
         shown = self._visible_rows()
         if shown and self._picked not in shown:
             self.pick(shown[0])
+            self.list.verticalScrollBar().setValue(0)
 
     def _jump(self, item: QListWidgetItem) -> None:
         heading = self._headings[item.data(Qt.ItemDataRole.UserRole)]
@@ -785,6 +816,12 @@ class CommandsWindow(QDialog):
         host_id = self._tool.add_typed_host(target.address, self.profile.currentData() or "")
         if host_id is not None:
             self._update_add()
+
+
+def _gap(height: int) -> QWidget:
+    gap = QWidget()
+    gap.setFixedHeight(height)
+    return gap
 
 
 def _divider() -> QFrame:

@@ -123,14 +123,8 @@ def test_the_host_menu_has_a_submenu_per_group_greyed_for_several_hosts(
     window.hosts._add_command_menus(menu)
     groups = {a.text(): a.menu() for a in menu.actions()}
     assert list(groups) == [
-        "Check",
-        "Folders",
-        "Admin tools",
-        "Users",
-        "Printers",
-        "Scripts",
-        "Power",
-    ]
+        "Check", "Folders", "Admin tools", "Users", "Printers", "Power", "", "Run a &script…",
+    ]  # fmt: skip
     users = groups["Users"]
     assert isinstance(users, QMenu)
     assert [a.text() for a in users.actions()] == ["Send a message…"]  # log off: on the person
@@ -150,7 +144,7 @@ def test_the_host_menu_has_a_submenu_per_group_greyed_for_several_hosts(
     window.hosts.table.select_ids([window.hosts.table.selected_ids()[0], *_ids(window, "PC-2")])
     menu = QMenu()
     window.hosts._add_command_menus(menu)
-    assert not any(a.isEnabled() for a in menu.actions())
+    assert not any(a.isEnabled() for a in menu.actions() if not a.isSeparator())
 
 
 def _ids(win: CapyWindow, *names: str) -> list[str]:
@@ -447,7 +441,7 @@ def test_commands_menu_on_the_toolbar_lists_the_groups(window: CapyWindow) -> No
     menu = window.hosts.toolbar.commands_menu
     menu.aboutToShow.emit()
     assert [a.text() for a in menu.actions()] == [
-        "Check", "Folders", "Admin tools", "Users", "Printers", "Scripts", "Power", "",
+        "Check", "Folders", "Admin tools", "Users", "Printers", "Power", "", "Run a &script…",
         "&All commands…",
     ]  # fmt: skip
 

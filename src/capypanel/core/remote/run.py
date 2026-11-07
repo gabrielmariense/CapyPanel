@@ -458,7 +458,9 @@ _START_HERE = r"""
 # fails on PCs with a broken WMI). The person's task uses their open session: no password.
 _START_TASK = r"""
   $user = __USER__; $system = __AS__ -eq 'system'
-  $work = if ($system) { $dir } else { Join-Path $env:SystemRoot 'Temp' }  # theirs to enter
+  # The person can't enter our folder; System32, not Temp: any user can drop files in Temp, and a
+  # batch file looks for the programs it calls in its working folder first.
+  $work = if ($system) { $dir } else { Join-Path $env:SystemRoot 'System32' }
   $inner = "`$p = Start-Process -FilePath $(Q $exe) -ArgumentList $(Q $argline) " +
     "-WorkingDirectory $(Q $work) -NoNewWindow -PassThru " +
     "-RedirectStandardOutput $(Q "$base.out") -RedirectStandardError $(Q "$base.err")`r`n" +

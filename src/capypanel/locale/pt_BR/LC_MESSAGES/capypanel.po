@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-07 16:53-0300\n"
+"POT-Creation-Date: 2026-11-07 17:56-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -2230,6 +2230,9 @@ msgstr "Clique com o botão direito numa impressora para limpar a fila."
 
 msgid "Right-click to copy a row, copy or export the list, or open it in its own window with a search."
 msgstr "Clique com o botão direito para copiar uma linha, copiar ou exportar a lista, ou abri-la na própria janela, com pesquisa."
+
+msgid "Run a &script…"
+msgstr "Executar um &script…"
 
 msgid "Run checks whether it answers."
 msgstr "Executar verifica se ele responde."

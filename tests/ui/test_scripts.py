@@ -20,7 +20,6 @@ from capypanel.ui.hosts_tool import command_windows, result_strip, runner
 from capypanel.ui.hosts_tool.command_windows import OutputDialog
 from capypanel.ui.hosts_tool.commands_window import CommandsWindow
 from capypanel.ui.hosts_tool.runner import HostTarget
-from capypanel.ui.menus import label
 
 ACCEPT, REJECT = QDialog.DialogCode.Accepted, QDialog.DialogCode.Rejected
 
@@ -99,18 +98,40 @@ def _run(win: CapyWindow, command_id: str, name: str = "PC-1") -> None:
     _settle(win)
 
 
-def test_the_scripts_group_comes_before_power(window: CapyWindow) -> None:
+def _commands(win: CapyWindow) -> CommandsWindow:
+    commands = win.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
+    assert isinstance(commands, CommandsWindow)
+    return commands
+
+
+def _shown(commands: CommandsWindow) -> list[str]:
+    return [r.command.id for r in commands.rows if not r.isHidden()]
+
+
+def test_the_menus_list_no_scripts_but_open_the_scripts_tab(window: CapyWindow) -> None:
     _select(window, "PC-1")
     menu = QMenu()
     window.hosts._add_command_menus(menu)
-    groups = {a.text(): a.menu() for a in menu.actions()}
-    assert list(groups)[-2:] == ["Scripts", "Power"]
-    scripts = groups["Scripts"]
-    assert isinstance(scripts, QMenu)
-    assert [label(a) if a.text() else "—" for a in scripts.actions()] == [
-        "Update group policy", "Refresh DNS", "Sync the clock", "Clean temporary files…", "—",
-        "Repair Windows files…",
-    ]  # fmt: skip
+    names = [a.text().replace("&", "") if a.text() else "—" for a in menu.actions()]
+    assert names[-2:] == ["—", "Run a script…"] and "Scripts" not in names
+    menu.actions()[-1].trigger()
+    commands = _commands(window)
+    assert commands.showing_scripts()
+    assert _shown(commands) == ["gpupdate", "dns", "clock", "clean-temp", "repair"]
+    assert commands.picked() is not None and commands.picked().id == "gpupdate"  # type: ignore[union-attr]
+    commands.close()
+
+
+def test_scripts_stay_out_of_the_commands_tab_even_in_a_search(window: CapyWindow) -> None:
+    window.hosts.open_commands(_select(window, "PC-1"))
+    commands = _commands(window)
+    assert not commands.showing_scripts()
+    assert "dns" not in _shown(commands) and "c-share" in _shown(commands)
+    commands.search.setText("dns")
+    assert _shown(commands) == []
+    commands.tabs.setCurrentIndex(1)
+    assert _shown(commands) == ["dns"]
+    commands.close()
 
 
 def test_a_script_that_worked_says_so_and_keeps_its_output_to_read(
@@ -206,9 +227,8 @@ def test_a_script_still_running_isn_t_started_twice(
 
 def test_the_commands_window_shows_a_script_s_output(window: CapyWindow, runs: FakeRuns) -> None:
     runs.answer = lambda: result(0, "Windows IP Configuration\nSuccessfully flushed.\n")
-    window.hosts.open_commands(_select(window, "PC-1"))
-    commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
-    assert isinstance(commands, CommandsWindow)
+    window.hosts.open_commands(_select(window, "PC-1"), scripts=True)
+    commands = _commands(window)
     row = next(r for r in commands.rows if r.command.id == "dns")
     commands.pick(row)
     commands.run(row.command)
