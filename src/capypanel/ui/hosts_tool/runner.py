@@ -135,8 +135,8 @@ def reason_text(error: BaseException) -> str:
     if isinstance(error, OnPcRefused):
         if error.problem is PcProblem.MISSING:
             return _("there's no {path} on that PC.").format(path=error.path)
-        return _("every user of that PC can change {path}, so it only runs as the person signed "
-                 "in.").format(path=error.path)  # fmt: skip
+        return _("every user of that PC can change {path}, and it isn't the copy reviewed, so "
+                 "it only runs as the person signed in.").format(path=error.path)  # fmt: skip
     if isinstance(error, NotApproved):
         return (_("it changed since it was approved, so it didn't run. Review it again.")
                 if error.state is State.CHANGED

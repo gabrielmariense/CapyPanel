@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-07 19:59-0300\n"
+"POT-Creation-Date: 2026-11-07 21:16-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -670,6 +670,9 @@ msgstr ""
 msgid "CapyPanel asks for them again when it needs them."
 msgstr ""
 
+msgid "CapyPanel can't tell where that folder is from here."
+msgstr ""
+
 msgid "CapyPanel couldn't read the file."
 msgstr ""
 
@@ -921,6 +924,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't read {host}: {reason}"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Couldn't read {path} on {host}: {error} Without it, a copy runs only "
+"where admins alone can change it, unless it runs as the person signed in."
 msgstr ""
 
 #, python-brace-format
@@ -1489,13 +1498,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "It restarted at {at} and answered again at {now}. Click to show it."
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"It runs {path} on each PC, which can't be shown here: every PC has its "
-"own copy. Run as anyone but the person signed in, it doesn't run where "
-"every user of the PC can change that file."
 msgstr ""
 
 #, python-brace-format
@@ -2227,6 +2229,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Reading {host}…"
+msgstr ""
+
+#, python-brace-format
+msgid "Reading {path} on {host}…"
 msgstr ""
 
 msgid "Reading…"
@@ -3129,6 +3135,12 @@ msgstr ""
 msgid "This doesn't look like a viewer settings file: “{line}”."
 msgstr ""
 
+#, python-brace-format
+msgid ""
+"This is {path} as {host} has it. Other PCs may have their own copy: it "
+"runs where only admins can change it, or where it matches this one."
+msgstr ""
+
 msgid "This isn't a text file."
 msgstr ""
 
@@ -3469,8 +3481,8 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
-"every user of that PC can change {path}, so it only runs as the person "
-"signed in."
+"every user of that PC can change {path}, and it isn't the copy reviewed, "
+"so it only runs as the person signed in."
 msgstr ""
 
 #, python-brace-format
@@ -3647,6 +3659,9 @@ msgid "the selected hosts"
 msgstr ""
 
 msgid "the selected printers"
+msgstr ""
+
+msgid "there's no PC in this window."
 msgstr ""
 
 msgid "there's no folder there."

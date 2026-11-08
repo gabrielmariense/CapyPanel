@@ -60,9 +60,20 @@ def state_text(script: OwnScript) -> str:
 
 
 class ReviewDialog(QDialog):
-    def __init__(self, parent: QWidget | None, script: OwnScript) -> None:
+    """`pc_copy`: a .onpc entry's script as `pc_host` has it, or None with `pc_error` saying
+    why it couldn't be read."""
+
+    def __init__(
+        self,
+        parent: QWidget | None,
+        script: OwnScript,
+        pc_copy: bytes | None = None,
+        pc_host: str = "",
+        pc_error: str = "",
+    ) -> None:
         super().__init__(parent)
         self.script = script
+        self.pc_copy = pc_copy
         self.setWindowTitle(_("Review {name}").format(name=script.name))
         self.resize(*SIZE)
         if script.file.suffix.casefold() == own_scripts.ON_PC:
@@ -90,18 +101,24 @@ class ReviewDialog(QDialog):
                              "C:\\ProgramData\\Scripts\\printers.cmd or "
                              "%ProgramData%\\Scripts\\printers.ps1."),
         }.get(script.state, "")  # fmt: skip
-        if script.on_pc and script.state in (State.NEW, State.CHANGED):
-            why += " " + _("It runs {path} on each PC, which can't be shown here: every PC has "
-                           "its own copy. Run as anyone but the person signed in, it doesn't run "
-                           "where every user of the PC can change that file.").format(
-                path=script.on_pc)  # fmt: skip
+        if script.on_pc and script.state in (State.NEW, State.CHANGED, State.READY):
+            if pc_copy is not None:
+                why = _("This is {path} as {host} has it. Other PCs may have their own copy: it "
+                        "runs where only admins can change it, or where it matches this one."
+                        ).format(path=script.on_pc, host=pc_host)  # fmt: skip
+            else:
+                why = _("Couldn't read {path} on {host}: {error} Without it, a copy runs only "
+                        "where admins alone can change it, unless it runs as the person signed "
+                        "in.").format(path=script.on_pc, host=pc_host or "-",
+                                      error=pc_error)  # fmt: skip
         if why:
             note = QLabel(why)
             note.setWordWrap(True)
             if script.state not in (State.NEW, State.CHANGED):
                 note.setObjectName("warningText")
             layout.addWidget(note)
-        self.code = output_box(script_text(script.code))
+        shown = pc_copy if script.on_pc and pc_copy is not None else script.code
+        self.code = output_box(script_text(shown))
         self.code.setMaximumHeight(16_777_215)
         layout.addWidget(self.code, 1)
 
@@ -177,6 +194,7 @@ class ReviewDialog(QDialog):
             arguments=self.arguments.text().strip(),
             run_as=RunAs(self.run_as.currentData()),
             locked=self.locked.isChecked(),
+            pc_digest=own_scripts.fingerprint(self.pc_copy) if self.pc_copy is not None else "",
         )
 
 

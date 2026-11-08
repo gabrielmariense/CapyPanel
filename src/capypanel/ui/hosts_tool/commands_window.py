@@ -50,7 +50,7 @@ from capypanel.core.hosts.commands import GROUP_NAMES, HostCommand, Need
 from capypanel.core.hosts.commands import Group as CommandGroup
 from capypanel.core.hosts.model import MAX_ADDRESS
 from capypanel.core.i18n import _
-from capypanel.core.remote import host_printers, services
+from capypanel.core.remote import host_printers, own_scripts, services
 from capypanel.core.remote.access import Account, RemoteError
 from capypanel.core.remote.own_scripts import OwnScript, State
 from capypanel.core.remote.run import RunAs
@@ -69,6 +69,7 @@ from capypanel.ui.hosts_tool.runner import (
     Outcome,
     failed_text,
     folder_user,
+    reason_text,
 )
 from capypanel.ui.hosts_tool.script_review import ReviewDialog, state_text
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
@@ -892,7 +893,29 @@ class CommandsWindow(QDialog):
             open_folder(folder)
 
     def review(self, script: OwnScript) -> None:
-        dialog = ReviewDialog(self, script)
+        """Review…; a file on the PC is first read from the PC this window is for."""
+        target = self.target()
+        if not script.on_pc or target is None:
+            self._review(script, None, target.name if target else "",
+                         _("there's no PC in this window.") if script.on_pc else "")  # fmt: skip
+            return
+        self._tool.say(_("Reading {path} on {host}…").format(path=script.on_pc, host=target.name))
+
+        def read(account: Account | None) -> bytes:
+            return own_scripts.read_pc_copy(target.address, script.on_pc, account)
+
+        def failed(error: BaseException) -> None:
+            reason = (_("CapyPanel can't tell where that folder is from here.")
+                      if isinstance(error, ValueError) else reason_text(error))  # fmt: skip
+            self._review(script, None, target.name, reason)
+
+        self._tool.runner.call(read, lambda code: self._review(script, code, target.name, ""),
+                               failed)  # fmt: skip
+
+    def _review(self, script: OwnScript, code: bytes | None, host: str, error: str) -> None:
+        if not self._alive():
+            return
+        dialog = ReviewDialog(self, script, code, host, error)
         if run_modal(dialog) == QDialog.DialogCode.Accepted:
             self._tool.own_scripts.approve(script, dialog.approval())
 

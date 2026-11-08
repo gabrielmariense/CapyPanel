@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-07 19:59-0300\n"
+"POT-Creation-Date: 2026-11-07 21:16-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -663,6 +663,9 @@ msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha 
 msgid "CapyPanel asks for them again when it needs them."
 msgstr "O CapyPanel pede de novo quando precisar deles."
 
+msgid "CapyPanel can't tell where that folder is from here."
+msgstr "O CapyPanel não consegue saber daqui onde fica essa pasta."
+
 msgid "CapyPanel couldn't read the file."
 msgstr "O CapyPanel não conseguiu ler o arquivo."
 
@@ -909,6 +912,10 @@ msgstr "Não foi possível ler {folder}: {error}"
 #, python-brace-format
 msgid "Couldn't read {host}: {reason}"
 msgstr "Não foi possível ler {host}: {reason}"
+
+#, python-brace-format
+msgid "Couldn't read {path} on {host}: {error} Without it, a copy runs only where admins alone can change it, unless it runs as the person signed in."
+msgstr "Não foi possível ler {path} em {host}: {error} Sem ele, uma cópia só executa onde apenas administradores podem alterá-la, a não ser que execute como a pessoa conectada."
 
 #, python-brace-format
 msgid "Couldn't read “{file}”: {error}"
@@ -1450,10 +1457,6 @@ msgstr "Ela aparece na tela deles em {host} até clicarem em OK."
 #, python-brace-format
 msgid "It restarted at {at} and answered again at {now}. Click to show it."
 msgstr "Ele reiniciou às {at} e respondeu de novo às {now}. Clique para mostrá-lo."
-
-#, python-brace-format
-msgid "It runs {path} on each PC, which can't be shown here: every PC has its own copy. Run as anyone but the person signed in, it doesn't run where every user of the PC can change that file."
-msgstr "Ele executa {path} em cada PC, que não pode ser mostrado aqui: cada PC tem a sua cópia. Executado como qualquer um que não seja a pessoa conectada, ele não executa onde todo usuário do PC pode alterar esse arquivo."
 
 #, python-brace-format
 msgid "It was approved as risky, so it asks every time. It runs as: {who}."
@@ -2150,6 +2153,10 @@ msgstr "Lendo {folder}…"
 #, python-brace-format
 msgid "Reading {host}…"
 msgstr "Lendo {host}…"
+
+#, python-brace-format
+msgid "Reading {path} on {host}…"
+msgstr "Lendo {path} em {host}…"
 
 msgid "Reading…"
 msgstr "Lendo…"
@@ -3006,6 +3013,10 @@ msgstr "Este perfil de conexão precisa de uma versão mais nova do CapyPanel."
 msgid "This doesn't look like a viewer settings file: “{line}”."
 msgstr "Isto não parece um arquivo de configurações do visualizador: “{line}”."
 
+#, python-brace-format
+msgid "This is {path} as {host} has it. Other PCs may have their own copy: it runs where only admins can change it, or where it matches this one."
+msgstr "Este é {path} como está em {host}. Outros PCs podem ter a sua própria cópia: ela executa onde só administradores podem alterá-la, ou onde for igual a esta."
+
 msgid "This isn't a text file."
 msgstr "Este não é um arquivo de texto."
 
@@ -3329,8 +3340,8 @@ msgid "every user can change it"
 msgstr "qualquer usuário pode alterá-lo"
 
 #, python-brace-format
-msgid "every user of that PC can change {path}, so it only runs as the person signed in."
-msgstr "todo usuário desse PC pode alterar {path}, então ele só executa como a pessoa conectada."
+msgid "every user of that PC can change {path}, and it isn't the copy reviewed, so it only runs as the person signed in."
+msgstr "todo usuário desse PC pode alterar {path}, e não é a cópia revisada, então ele só executa como a pessoa conectada."
 
 #, python-brace-format
 msgid "from {computer}"
@@ -3503,6 +3514,9 @@ msgstr "os hosts selecionados"
 
 msgid "the selected printers"
 msgstr "as impressoras selecionadas"
+
+msgid "there's no PC in this window."
+msgstr "não há um PC nesta janela."
 
 msgid "there's no folder there."
 msgstr "não há uma pasta aí."

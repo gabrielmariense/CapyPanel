@@ -37,11 +37,12 @@ def test_a_onpc_file_is_listed_and_one_with_no_path_says_so(tmp_path: Path) -> N
     assert found["Broken"].state is State.NO_PATH
 
 
-def _ready(tmp_path: Path, target: Path) -> own_scripts.OwnScript:
+def _ready(tmp_path: Path, target: Path, pc_digest: str = "") -> own_scripts.OwnScript:
     pointer = tmp_path / "Run it.onpc"
     pointer.write_bytes(str(target).encode())
     digest = hashlib.sha256(pointer.read_bytes()).hexdigest()
-    found = own_scripts.read(pointer, Approval(digest, risky=False, arguments='"a b"'))
+    approval = Approval(digest, risky=False, arguments='"a b"', pc_digest=pc_digest)
+    found = own_scripts.read(pointer, approval)
     assert found.ready
     return found
 
@@ -99,3 +100,42 @@ def test_a_missing_file_says_so(tmp_path: Path) -> None:
     script = _ready(tmp_path, tmp_path / "nowhere" / "printers.cmd")
     code, output = _launch(script, RunAs.SYSTEM, tmp_path)
     assert code == 1 and own_scripts.pc_problem(output) is PcProblem.MISSING
+
+
+def test_the_reviewed_copy_runs_even_where_every_user_can_change_it(tmp_path: Path) -> None:
+    target = _target(tmp_path)
+    subprocess.run(["icacls", str(target), "/grant", "*S-1-5-11:M"], check=True,
+                   capture_output=True)  # fmt: skip
+    reviewed = own_scripts.fingerprint(target.read_bytes())
+    code, output = _launch(_ready(tmp_path, target, reviewed), RunAs.SYSTEM, tmp_path)
+    assert "host=PC-1" in output and code == 3
+    target.write_bytes(b"@echo off\r\necho changed\r\n")  # now it isn't the reviewed copy
+    code, output = _launch(_ready(tmp_path, target, reviewed), RunAs.SYSTEM, tmp_path)
+    assert own_scripts.pc_problem(output) is PcProblem.OPEN and "changed" not in output
+
+
+def test_another_copy_runs_where_only_admins_can_change_it(tmp_path: Path) -> None:
+    target = _target(tmp_path)  # this user's own temp folder: no "every user" rights
+    code, output = _launch(_ready(tmp_path, target, "AB" * 32), RunAs.SYSTEM, tmp_path)
+    assert "host=PC-1" in output
+
+
+@pytest.mark.parametrize(
+    ("on_pc", "where"),
+    [
+        ("C:\\ProgramData\\S\\a.cmd", "\\\\PC-1\\C$\\ProgramData\\S\\a.cmd"),
+        ("%ProgramData%\\S\\a.cmd", "\\\\PC-1\\C$\\ProgramData\\S\\a.cmd"),
+        ("%SystemRoot%\\a.ps1", "\\\\PC-1\\C$\\Windows\\a.ps1"),
+        ("D:\\Tools\\a.bat", "\\\\PC-1\\D$\\Tools\\a.bat"),
+        ("%MyFolder%\\a.bat", None),
+    ],
+)
+def test_where_the_pc_s_copy_is_read(on_pc: str, where: str | None) -> None:
+    assert own_scripts.pc_copy_path("PC-1", on_pc) == where
+
+
+def test_the_reviewed_copy_s_fingerprint_is_kept() -> None:
+    kept = {"a.onpc": Approval("ab" * 32, False, pc_digest="cd" * 32)}
+    assert own_scripts.approvals_from(own_scripts.approvals_to(kept)) == kept
+    assert "pc_sha256" not in own_scripts.approvals_to({"b.ps1": Approval("ab" * 32, False)})[
+        "b.ps1"]  # fmt: skip

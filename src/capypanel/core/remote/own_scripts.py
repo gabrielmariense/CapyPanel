@@ -10,10 +10,12 @@ user may change can't be approved at all.
 
 A file on the PC: a `.onpc` text file in the folder names a script that's already on each PC
 (`C:\\ProgramData\\Scripts\\printers.cmd`, or with %ProgramData%). CapyPanel sends a small
-launcher that runs that file with the same arguments. The PC's copy can't be reviewed here, so
-before running it as anyone but the person signed in, the launcher reads its permissions on the
-PC (never changes them) and refuses when every user can change it: someone could edit it and
-have it run with an admin's or SYSTEM's rights."""
+launcher that runs that file with the same arguments. Review reads one PC's copy and keeps
+its fingerprint. Each PC may have its own copy (a printer script per sector), so a copy runs
+when it matches the reviewed one, or when only admins can change it on that PC: an admin put it
+there. Run as anyone but the person signed in, a copy every user can change that matches
+nothing doesn't run: someone could have edited it to run with an admin's or SYSTEM's rights.
+Permissions are only read, never changed. Run as the person signed in, it always runs."""
 
 import hashlib
 import re
@@ -25,6 +27,8 @@ from pathlib import Path
 from typing import Any
 
 from capypanel.core import winsec
+from capypanel.core.remote import places
+from capypanel.core.remote.access import Account, network_identity
 from capypanel.core.remote.run import Language, RunAs, Script
 
 EXTENSIONS = {".ps1": Language.POWERSHELL, ".bat": Language.BATCH, ".cmd": Language.BATCH}
@@ -51,6 +55,7 @@ class Approval:
     arguments: str = ""  # after the host's name, as typed
     run_as: RunAs = RunAs.ACCOUNT
     locked: bool = False  # always runs as run_as: no other choice at run time
+    pc_digest: str = ""  # a .onpc entry: SHA-256 of the PC's copy that was reviewed, if read
 
 
 @dataclass(frozen=True)
@@ -143,7 +148,11 @@ def to_script(own: OwnScript, host: str, run_as: RunAs = RunAs.ACCOUNT) -> Scrip
     arguments = (host, *split_arguments(own.approval.arguments))
     if own.on_pc:
         check = "$true" if run_as is not RunAs.USER else "$false"
-        launcher = _LAUNCHER.replace("__PATH__", _quote(own.on_pc)).replace("__CHECK__", check)
+        launcher = (
+            _LAUNCHER.replace("__PATH__", _quote(own.on_pc))
+            .replace("__CHECK__", check)
+            .replace("__KNOWN__", _quote(own.approval.pc_digest))
+        )
         return Script(own.name, Language.POWERSHELL, launcher.encode("utf-8"), arguments)
     return Script(own.name, own.language, own.code, arguments)
 
@@ -164,17 +173,62 @@ def pc_problem(output: str) -> PcProblem | None:
     return None
 
 
+# Folders a .onpc path may start with, where Windows puts them; others can't be read from here.
+_KNOWN_FOLDERS = {
+    "programdata": "C:\\ProgramData",
+    "allusersprofile": "C:\\ProgramData",
+    "systemroot": "C:\\Windows",
+    "windir": "C:\\Windows",
+    "systemdrive": "C:",
+    "programfiles": "C:\\Program Files",
+    "public": "C:\\Users\\Public",
+}
+
+
+def pc_copy_path(host: str, on_pc: str) -> str | None:
+    """Where CapyPanel reads the PC's copy over file sharing: `\\\\host\\C$\\…`; None for a
+    %VARIABLE% it can't place."""
+    path = on_pc
+    if path.startswith("%"):
+        name, _sep, rest = path[1:].partition("%")
+        folder = _KNOWN_FOLDERS.get(name.casefold())
+        if folder is None:
+            return None
+        path = folder + rest
+    return places.typed_path(host, path)
+
+
+def read_pc_copy(host: str, on_pc: str, account: Account | None) -> bytes:
+    """The PC's copy of a .onpc entry's script, for Review. Raises OSError (also when it's too
+    big) or ValueError (a folder that can't be placed)."""
+    where = pc_copy_path(host, on_pc)
+    if where is None:
+        raise ValueError(on_pc)
+    with network_identity(account) as identity, identity():
+        file = Path(where)
+        if file.stat().st_size > MAX_SIZE:
+            raise OSError(f"bigger than {MAX_SIZE // 1024} KB")
+        return file.read_bytes()
+
+
+def fingerprint(code: bytes) -> str:
+    return hashlib.sha256(code).hexdigest()
+
+
 def _quote(text: str) -> str:
     return "'" + text.replace("'", "''") + "'"
 
 
 # Runs the PC's own file with the arguments it was given. Before that, unless it runs as the
-# person signed in, it reads who may change the file (and replace it, through its folder): every
-# user (Everyone, Users, Authenticated Users, Domain Users…) means it doesn't run. Read only.
+# person signed in or the copy is the one reviewed, it reads who may change the file (and replace
+# it, through its folder): every user (Everyone, Users, Authenticated Users, Domain Users…) means
+# it doesn't run. Read only.
 _LAUNCHER = r"""
 $path = [Environment]::ExpandEnvironmentVariables(__PATH__)
 if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { 'CAPYPANEL-ONPC missing'; exit 1 }
-if (__CHECK__) {
+$known = __KNOWN__
+$same = $known -and ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -eq $known)
+if (__CHECK__ -and -not $same) {
   $everyone = @('S-1-1-0', 'S-1-5-11', 'S-1-5-4', 'S-1-5-7', 'S-1-5-32-545', 'S-1-5-32-546')
   function Open([string]$item, [int64]$mask) {
     try { $acl = Get-Acl -LiteralPath $item -ErrorAction Stop } catch { return $true }
@@ -219,11 +273,13 @@ def approvals_from(saved: object) -> dict[str, Approval]:
             continue
         digest, risky = value.get("sha256"), value.get("risky")
         arguments, locked = value.get("arguments", ""), value.get("locked", False)
-        run_as = value.get("run_as")
+        run_as, pc_digest = value.get("run_as"), value.get("pc_sha256", "")
         if not (isinstance(digest, str) and isinstance(risky, bool) and isinstance(arguments, str)
-                and isinstance(locked, bool) and run_as in set(RunAs)):  # fmt: skip
+                and isinstance(locked, bool) and run_as in set(RunAs)
+                and isinstance(pc_digest, str)):  # fmt: skip
             continue
-        kept[name.casefold()] = Approval(digest, risky, arguments, RunAs(run_as), locked)
+        kept[name.casefold()] = Approval(digest, risky, arguments, RunAs(run_as), locked,
+                                         pc_digest)  # fmt: skip
     return kept
 
 
@@ -231,5 +287,6 @@ def approvals_to(approvals: Mapping[str, Approval]) -> dict[str, Any]:
     return {
         name: {"sha256": a.digest, "risky": a.risky, "arguments": a.arguments,
                "run_as": str(a.run_as), "locked": a.locked}
+              | ({"pc_sha256": a.pc_digest} if a.pc_digest else {})
         for name, a in sorted(approvals.items())
     }  # fmt: skip
