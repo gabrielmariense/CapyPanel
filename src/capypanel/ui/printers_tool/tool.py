@@ -5,6 +5,7 @@ reads each printer's status, supplies and page counter over SNMP."""
 import logging
 from collections.abc import Sequence
 from dataclasses import replace
+from datetime import datetime
 
 from PySide6.QtCore import Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QGuiApplication
@@ -424,6 +425,7 @@ class PrintersTool(ListWorkspace):
             prefs=self.prefs,
             save_prefs=self._save_prefs,
             results=self._report_cells,
+            checked_at=self._checked_at,
             # Status, Toner and Total pages come from one read: any box ticked reads them all.
             refresh=lambda printers, *wanted: (
                 self.check_printers(printers) if any(wanted) else None
@@ -711,6 +713,11 @@ class PrintersTool(ListWorkspace):
     def _cells(self, printer_id: str) -> tuple[Cell, Cell]:
         checked, low = self._checked.get(printer_id), self.low_level()
         return status.status(checked, low), status.toner(checked, low)
+
+    def _checked_at(self, printer_id: str) -> tuple[datetime | None, ...]:
+        """When each Last check column was read: one Refresh reads them all."""
+        checked = self._checked.get(printer_id)
+        return (checked.when if checked else None,) * len(PrintersReport.CHECKED)
 
     def _report_cells(self, printer_id: str) -> tuple[str, ...]:
         """The Report's Last check columns, in PrintersReport.CHECKED's order."""

@@ -1,5 +1,6 @@
 from collections.abc import Iterator
 from dataclasses import replace
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -12,9 +13,11 @@ from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import NO_GROUP, Host, HostList
 from capypanel.core.printers.printer import DOC360, PrinterInfo, info_of, with_info
 from capypanel.ui import menus
+from capypanel.ui.checks import clock_text
 from capypanel.ui.printers_tool import tool as tool_module
 from capypanel.ui.printers_tool.dialog import PrinterDialog
 from capypanel.ui.printers_tool.report import PrintersReport
+from capypanel.ui.printers_tool.status import Checked
 from capypanel.ui.printers_tool.tool import PrintersTool, web_page
 
 
@@ -338,6 +341,32 @@ def test_report_lists_the_printers_columns_and_last_check(
     assert report.header()[-6:] == [
         "Status", "Toner", "Toner model", "Total pages", "MAC address", "Firmware",
     ]  # fmt: skip
+    assert report.checks_box is not None
+    assert report.checks_box.title() == "Last check"  # nothing read yet: no time
+
+
+def test_the_report_shows_when_the_printers_were_last_read(
+    printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    doc = printers.document
+    assert doc is not None
+    office_id = next(h.id for h in doc.hosts.hosts if h.name == "2F-OFFICE-01")
+    when = datetime(2026, 11, 8, 10, 41)
+    printers._checked[office_id] = Checked(when, offline=True)  # one read covers every column
+    assert printers._checked_at(office_id) == (when,) * len(PrintersReport.CHECKED)
+    seen: list[PrintersReport] = []
+
+    def look(dialog: QDialog) -> QDialog.DialogCode:
+        assert isinstance(dialog, PrintersReport)
+        dialog.boxes["status"].setChecked(True)
+        seen.append(dialog)
+        return QDialog.DialogCode.Rejected
+
+    monkeypatch.setattr(tool_module, "run_modal", look)
+    printers.commands.export_printers.trigger()
+    [report] = seen
+    assert report.checks_box is not None
+    assert report.checks_box.title() == f"Last check: {clock_text(when)}"
 
 
 def test_counts_agree_with_printer_in_portuguese(printers: PrintersTool) -> None:
