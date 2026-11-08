@@ -342,7 +342,7 @@ def test_report_lists_the_printers_columns_and_last_check(
         "Status", "Toner", "Toner model", "Total pages", "MAC address", "Firmware",
     ]  # fmt: skip
     assert report.checks_box is not None
-    assert report.checks_box.text() == "Last check"  # nothing read yet: no time
+    assert report.checks_box.text() == "Last check" and not report.checks_time.text()
 
 
 def test_the_report_shows_when_the_printers_were_last_read(
@@ -366,7 +366,7 @@ def test_the_report_shows_when_the_printers_were_last_read(
     printers.commands.export_printers.trigger()
     [report] = seen
     assert report.checks_box is not None
-    assert report.checks_box.text() == f"Last check: {clock_text(when)}"
+    assert report.checks_time.text() == clock_text(when)
 
 
 def test_counts_agree_with_printer_in_portuguese(printers: PrintersTool) -> None:

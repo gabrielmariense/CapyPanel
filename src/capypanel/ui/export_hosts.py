@@ -10,10 +10,18 @@ import subprocess
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from html import escape
 from pathlib import Path
 
 from PySide6.QtCore import QModelIndex, QPoint, QStandardPaths, Qt, QUrl
-from PySide6.QtGui import QDesktopServices, QGuiApplication, QShowEvent
+from PySide6.QtGui import (
+    QColor,
+    QDesktopServices,
+    QGuiApplication,
+    QPalette,
+    QResizeEvent,
+    QShowEvent,
+)
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -21,8 +29,8 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QFormLayout,
+    QFrame,
     QGridLayout,
-    QGroupBox,
     QHBoxLayout,
     QInputDialog,
     QLabel,
@@ -30,6 +38,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QStyledItemDelegate,
     QStyleOptionViewItem,
+    QToolButton,
     QToolTip,
     QTreeWidget,
     QTreeWidgetItem,
@@ -43,6 +52,7 @@ from capypanel.core.i18n import N_, _, ngettext
 from capypanel.ui.checks import clock_text
 from capypanel.ui.groups import TREE_INDENT
 from capypanel.ui.hosts import confirm
+from capypanel.ui.icons import tabler_icon
 from capypanel.ui.list_workspace.panels import natural_key
 from capypanel.ui.notes import hint
 from capypanel.ui.tables import fit_menu
@@ -68,6 +78,7 @@ FOR_IMPORT = ("name", "address", "group", "tags", "notes")  # what Import hosts 
 PRESETS_KEY, LAST_KEY, FOLDER_KEY = "export_presets", "export_columns", "export_folder"
 DEPTH = Qt.ItemDataRole.UserRole + 1
 WIDEST = 240  # px: the preview's widest column
+TICK_HEIGHT, TICK_SPACING = 22, 2  # px: one tick per line, the same height in every box
 
 
 @dataclass(frozen=True)
@@ -144,59 +155,74 @@ class ExportDialog(QDialog):
         preset_label.setBuddy(self.preset)
         top.addRow(preset_label, presets)
 
-        # One box, Columns: a line per section, its name on the left and its ticks after it, so
-        # the lines align and nothing leaves empty space. With CHECKED, the last line is the
-        # checks from Refresh, Refresh right after its ticks; under them the names note (while
-        # that tick is on) and how many weren't checked yet.
+        # Three boxes side by side, equal widths and heights (the tallest sets it): one tick per
+        # line at a fixed height, so the ticks line up inside and across the boxes. Each title
+        # has All · None. With CHECKED, the last box is the checks from Refresh: its time and
+        # Refresh (Stop while one runs) on its title line, and under its ticks the names note
+        # (while that tick is on), how many weren't checked yet and the progress. A window too
+        # narrow for three puts that box under the other two, full width.
         self.boxes: dict[str, QCheckBox] = {}
-        sections = QGroupBox(_("Columns"))
-        grid = QGridLayout(sections)
-        grid.setHorizontalSpacing(16)
-        grid.setVerticalSpacing(8)
-        grid.setColumnStretch(1, 1)
-        checks: QLabel | None = None
-        check_ticks: QHBoxLayout | None = None
+        self._section_boxes: list[QFrame] = []
+        self.checks_box: QLabel | None = None
+        self.checks_time = hint()
         self.checks_title = ""
         self.note = hint(self.checks_note())
+        self.unchecked = hint()
+        self.checking = hint()
+        color = self.palette().color(QPalette.ColorRole.Text)
+        self.refresh_button = _icon_button("refresh", color)
+        self.stop_button = _icon_button("x", color)
+        self.stop_button.setToolTip(_("Stop"))
         for index, (title, keys) in enumerate(self.SECTIONS):
+            frame = QFrame()
+            frame.setObjectName("reportBox")
+            inside = QVBoxLayout(frame)
+            inside.setContentsMargins(12, 8, 12, 10)
+            inside.setSpacing(TICK_SPACING)
             name = QLabel(_(title))
             name.setObjectName("rowName")
-            ticks = QHBoxLayout()
-            ticks.setSpacing(12)
+            # As tall as Last check's title line with its button: the ticks line up across boxes.
+            name.setFixedHeight(self.refresh_button.sizeHint().height())
+            both = QLabel(f'<a href="all">{escape(_("All"))}</a> · '
+                          f'<a href="none">{escape(_("None"))}</a>')  # fmt: skip
+            both.setObjectName("hint")
+            both.setTextFormat(Qt.TextFormat.RichText)
+            both.linkActivated.connect(lambda href, ks=keys: self._tick_section(ks, href == "all"))
+            head = QHBoxLayout()
+            head.setSpacing(6)
+            head.addWidget(name)
+            head.addStretch(1)
+            checks = bool(self.CHECKED) and index == len(self.SECTIONS) - 1
+            if checks:
+                self.checks_box = name
+                self.checks_title = _(title)
+                for widget in (self.checks_time, self.stop_button, self.refresh_button):
+                    head.addWidget(widget)
+            inside.addLayout(head)
+            inside.addWidget(both)  # under the title, small: the boxes stay narrow enough
             for key in keys:
                 box = QCheckBox(_(self.TITLES[key]))
+                box.setFixedHeight(TICK_HEIGHT)
                 self.boxes[key] = box
-                ticks.addWidget(box)
-            grid.addWidget(name, grid.rowCount(), 0)
-            grid.addLayout(ticks, grid.rowCount() - 1, 1)
-            if self.CHECKED and index == len(self.SECTIONS) - 1:
-                checks, check_ticks = name, ticks
-                self.checks_title = _(title)  # "Last check: 10:41" once something was read
-            else:
-                ticks.addStretch(1)
-        self.unchecked = hint()
-        self.refresh_button = QPushButton(_("&Refresh"))
-        self.stop_button = QPushButton(_("S&top"))
-        self.checking = QLabel()
-        if checks is not None and check_ticks is not None:
-            check_ticks.addSpacing(8)
-            for widget in (self.refresh_button, self.stop_button, self.checking):
-                check_ticks.addWidget(widget)
-            check_ticks.addStretch(1)
-            under = QVBoxLayout()
-            under.setSpacing(2)
-            if self.note.text():
-                under.addWidget(self.note)
-            under.addWidget(self.unchecked)
-            grid.addLayout(under, grid.rowCount(), 1)
-        else:  # nothing to check: no Refresh here
-            for widget in (self.unchecked, self.refresh_button, self.stop_button, self.checking):
+                inside.addWidget(box)
+            if checks:
+                for widget in (self.note, self.unchecked, self.checking):
+                    inside.addWidget(widget)
+            inside.addStretch(1)
+            self._section_boxes.append(frame)
+        if self.checks_box is None:  # nothing to check: no Refresh here
+            parts = (self.unchecked, self.refresh_button, self.stop_button, self.checking,
+                     self.checks_time, self.note)  # fmt: skip
+            for widget in parts:
                 widget.setParent(self)
                 widget.hide()
-        self.checks_box = checks
-        if self.note.parent() is None:  # no note, or nothing to check
-            self.note.setParent(self)
+        if not self.note.text():
             self.note.hide()
+        self._sections = QGridLayout()
+        self._sections.setHorizontalSpacing(10)
+        self._sections.setVerticalSpacing(10)
+        self._side_by_side: bool | None = None
+        self._place_sections(True)
 
         self.preview = QTreeWidget()
         self.preview.setObjectName("grid")
@@ -225,7 +251,7 @@ class ExportDialog(QDialog):
 
         layout = QVBoxLayout(self)
         layout.addLayout(top)
-        layout.addWidget(sections)
+        layout.addLayout(self._sections)
         layout.addWidget(preview_title)
         layout.addWidget(self.preview, 1)
         layout.addWidget(self.buttons)
@@ -244,12 +270,51 @@ class ExportDialog(QDialog):
         self.export_button.clicked.connect(self._export)
         self.copy_button.clicked.connect(self._copy)
         self._ticks_changed()
-        self.resize(720, 600)
+        self.resize(780, 620)
 
     def _no_default_buttons(self) -> None:
         for button in self.findChildren(QPushButton):
             button.setAutoDefault(False)
             button.setDefault(False)
+
+    def _place_sections(self, side_by_side: bool) -> None:
+        """The boxes in one row; or, with checks and too little room, the checks box under the
+        others at full width."""
+        if side_by_side == self._side_by_side:
+            return
+        self._side_by_side = side_by_side
+        boxes = self._section_boxes
+        for frame in boxes:
+            self._sections.removeWidget(frame)
+        under = not side_by_side and self.checks_box is not None and len(boxes) > 1
+        top = boxes[:-1] if under else boxes
+        for column, frame in enumerate(top):
+            self._sections.addWidget(frame, 0, column)
+        if under:
+            self._sections.addWidget(boxes[-1], 1, 0, 1, len(top))
+        for column in range(len(boxes)):
+            self._sections.setColumnStretch(column, 1 if column < len(top) else 0)
+
+    def _fits_side_by_side(self) -> bool:
+        layout = self.layout()
+        margins = layout.contentsMargins() if layout is not None else None
+        room = self.width() - (margins.left() + margins.right() if margins else 0)
+        spacing = self._sections.horizontalSpacing() * (len(self._section_boxes) - 1)
+        widest = max((f.minimumSizeHint().width() for f in self._section_boxes), default=0)
+        return widest * len(self._section_boxes) + spacing <= room
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._place_sections(self._fits_side_by_side())
+
+    def _tick_section(self, keys: Sequence[str], on: bool) -> None:
+        """A box's All or None: its ticks at once, then one update."""
+        for key in keys:
+            box = self.boxes[key]
+            box.blockSignals(True)
+            box.setChecked(on)
+            box.blockSignals(False)
+        self._ticks_changed()
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
@@ -437,8 +502,8 @@ class ExportDialog(QDialog):
         self.copy_button.setEnabled(can_export)
 
     def _title_time(self, hosts: Sequence[Host], at: Sequence[int]) -> None:
-        """ "Last check: 10:41": the newest read of the ticked checks among these items (a date
-        too when it isn't today); the title alone when none was read."""
+        """Last check's time: the newest read of the ticked checks among these items (a date
+        too when it isn't today); none when none was read."""
         if self.checks_box is None:
             return
         times = (
@@ -446,10 +511,8 @@ class ExportDialog(QDialog):
             if self._checked_at is not None
             else []
         )
-        title = self.checks_title
-        if times:
-            title = _("{title}: {time}").format(title=title, time=clock_text(max(times)))
-        self.checks_box.setText(title)
+        self.checks_time.setText(clock_text(max(times)) if times else "")
+        self.checks_time.setVisible(bool(times))
 
     def _fill_preview(self) -> None:
         self.preview.clear()
@@ -562,3 +625,12 @@ class _Indented(QStyledItemDelegate):
 
 def _file_safe(name: str) -> str:
     return re.sub(r'[\\/:*?"<>|]+', "-", name).strip(" .") or "hosts"
+
+
+def _icon_button(icon: str, color: QColor) -> QToolButton:
+    """Refresh or Stop on Last check's title line: an icon, its words in the tooltip."""
+    button = QToolButton()
+    button.setObjectName("commandButton")
+    button.setIcon(tabler_icon(icon, color, 16))
+    button.setCursor(Qt.CursorShape.PointingHandCursor)
+    return button

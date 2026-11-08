@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 18:02-0300\n"
+"POT-Creation-Date: 2026-11-08 18:07-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -568,6 +568,9 @@ msgid ""
 "(and with low supplies, if picked) since the one before."
 msgstr ""
 
+msgid "All"
+msgstr ""
+
 msgid "All details"
 msgstr ""
 
@@ -857,9 +860,6 @@ msgid "Co&py"
 msgstr ""
 
 msgid "Colour"
-msgstr ""
-
-msgid "Columns"
 msgstr ""
 
 msgid "Commands"
@@ -2625,9 +2625,6 @@ msgstr ""
 msgid "Runs {path} on the PC."
 msgstr ""
 
-msgid "S&top"
-msgstr ""
-
 msgid "SNMP"
 msgstr ""
 
@@ -4341,10 +4338,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "{title} · {when}"
-msgstr ""
-
-#, python-brace-format
-msgid "{title}: {time}"
 msgstr ""
 
 #, python-brace-format

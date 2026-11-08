@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 18:02-0300\n"
+"POT-Creation-Date: 2026-11-08 18:07-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -565,6 +565,9 @@ msgstr "Ferramentas administrativas"
 msgid "After a Refresh on its own, for printers that stopped or went offline (and with low supplies, if picked) since the one before."
 msgstr "Depois de uma atualização sozinha, para as impressoras que pararam ou ficaram offline (e com suprimento baixo, se escolhido) desde a anterior."
 
+msgid "All"
+msgstr "Todas"
+
 msgid "All details"
 msgstr "Todos os detalhes"
 
@@ -842,9 +845,6 @@ msgstr "Co&piar"
 
 msgid "Colour"
 msgstr "Cor"
-
-msgid "Columns"
-msgstr "Colunas"
 
 msgid "Commands"
 msgstr "Comandos"
@@ -2533,9 +2533,6 @@ msgstr "Executa sem perguntar."
 msgid "Runs {path} on the PC."
 msgstr "Executa {path} no PC."
 
-msgid "S&top"
-msgstr "Pa&rar"
-
 msgid "SNMP"
 msgstr "SNMP"
 
@@ -4159,10 +4156,6 @@ msgstr "{title} · {n} · {when}"
 #, python-brace-format
 msgid "{title} · {when}"
 msgstr "{title} · {when}"
-
-#, python-brace-format
-msgid "{title}: {time}"
-msgstr "{title}: {time}"
 
 #, python-brace-format
 msgid "{tool} (not installed on this PC)"

@@ -39,12 +39,24 @@ def _run(
 ) -> None:
     """Opens the toolbar's Report and does `use` with the window instead of a person."""
 
+    # The window runs inside Qt's call, which only prints an exception: keep it and raise it
+    # here, or a failed check would pass.
+    failed: list[BaseException] = []
+    opened: list[bool] = []
+
     def run(dialog: ExportDialog) -> int:
-        use(dialog)
+        opened.append(True)
+        try:
+            use(dialog)
+        except BaseException as e:  # noqa: BLE001 - raised again below
+            failed.append(e)
         return 0
 
     monkeypatch.setattr(ExportDialog, "exec", run)
     window.hosts.commands.export_hosts.trigger()
+    assert opened, "Report didn't open"
+    if failed:
+        raise failed[0]
 
 
 def test_it_opens_on_what_is_shown_with_every_row_in_the_preview(
@@ -136,7 +148,7 @@ def test_last_check_shows_when_and_the_names_note_only_with_its_tick(
         assert d.checks_box is not None
         d.boxes["status"].setChecked(True)
         d.boxes["users"].setChecked(False)
-        assert d.checks_box.text() == "Last check"  # nothing read yet: no time
+        assert d.checks_box.text() == "Last check" and not d.checks_time.text()  # no time yet
         assert not d.note.isVisibleTo(d)
         d.boxes["users"].setChecked(True)
         assert d.note.isVisibleTo(d) and d.note.text() == "People's names: keep the file private."
@@ -144,9 +156,32 @@ def test_last_check_shows_when_and_the_names_note_only_with_its_tick(
         when = datetime.now(UTC).replace(hour=10, minute=41)
         window.hosts._status_found[loose.id] = (Status.ONLINE, when, None)
         d.checks_changed()
-        assert d.checks_box.text() == f"Last check: {clock_text(when)}"
+        assert d.checks_box.text() == "Last check" and d.checks_time.text() == clock_text(when)
         d.boxes["status"].setChecked(False)  # only users ticked, and they weren't read
-        assert d.checks_box.text() == "Last check"
+        assert not d.checks_time.text()
+
+    _run(window, monkeypatch, look)
+
+
+def test_each_box_has_all_and_none_and_last_check_moves_under_when_narrow(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def look(d: ExportDialog) -> None:
+        links = [label for label in d.findChildren(export_hosts.QLabel)
+                 if 'href="all"' in label.text()]  # fmt: skip
+        assert len(links) == 3  # one per box
+        links[0].linkActivated.emit("none")  # Host: none
+        assert not any(d.boxes[k].isChecked() for k in ("name", "address", "group"))
+        links[2].linkActivated.emit("all")  # Last check: all
+        assert d.boxes["status"].isChecked() and d.boxes["users"].isChecked()
+        grid = d._sections  # pyright: ignore[reportPrivateUsage]
+        last = d._section_boxes[-1]  # pyright: ignore[reportPrivateUsage]
+        d.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
+        d.show()  # a hidden window gets no resize events
+        d.resize(2000, 600)
+        assert grid.getItemPosition(grid.indexOf(last))[:2] == (0, 2)  # side by side
+        d.resize(200, 600)
+        assert grid.getItemPosition(grid.indexOf(last))[:2] == (1, 0)  # under the other two
 
     _run(window, monkeypatch, look)
 

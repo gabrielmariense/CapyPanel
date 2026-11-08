@@ -638,6 +638,8 @@ QPushButton:checked { background: %(sel_solid)s; border-color: %(accent)s; color
 QGroupBox { border: 1px solid %(border)s; border-radius: %(r)spx; margin-top: 16px;
             padding: 14px 12px 10px 12px; background: %(card)s; }
 QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 4px; color: %(text2)s; }
+/* Report's boxes of ticks: a group box's look, with the title as a line inside it. */
+QFrame#reportBox { border: 1px solid %(border)s; border-radius: %(r)spx; background: %(card)s; }
 
 QStatusBar { background: %(chrome)s; color: %(text2)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; padding: 2px 8px; }
