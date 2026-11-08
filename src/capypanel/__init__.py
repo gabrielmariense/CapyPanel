@@ -27,6 +27,32 @@ def _commit() -> str:
     return ""
 
 
-# What the title bar and the log show: "0.8.1", plus "(3b4c3e0)" when run from source.
+def _commit_time() -> str:
+    """When that commit was made, "2026-11-08 22:15" (this PC's time): unlike the commit's
+    code it tells a newer build from an older one at a glance. "" without git."""
+    import subprocess
+
+    root = Path(__file__).resolve().parents[2]
+    if not (root / ".git").exists():
+        return ""
+    try:
+        done = subprocess.run(
+            ["git", "-C", str(root), "log", "-1", "--format=%cd",
+             "--date=format-local:%Y-%m-%d %H:%M"],
+            capture_output=True, text=True, timeout=3,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )  # fmt: skip
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return done.stdout.strip() if done.returncode == 0 else ""
+
+
+# What the title bar and the log show: "0.8.1", plus "(3b4c3e0, 2026-11-08 22:15)" when run
+# from source: the commit, and when it was made, to compare with the build a test asks for.
 _COMMIT = _commit()
-BUILD = f"{__version__} ({_COMMIT})" if _COMMIT else __version__
+_WHEN = _commit_time() if _COMMIT else ""
+BUILD = (
+    f"{__version__} ({_COMMIT}, {_WHEN})" if _WHEN
+    else f"{__version__} ({_COMMIT})" if _COMMIT
+    else __version__
+)  # fmt: skip
