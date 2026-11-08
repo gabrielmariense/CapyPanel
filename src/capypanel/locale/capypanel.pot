@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 17:00-0300\n"
+"POT-Creation-Date: 2026-11-08 17:19-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -448,6 +448,9 @@ msgstr ""
 msgid "A list named “{name}” is already there. Replace it with an empty one?"
 msgstr ""
 
+msgid "A name can't have \\ / : * ? \" < > |."
+msgstr ""
+
 msgid "A name is required."
 msgstr ""
 
@@ -800,6 +803,9 @@ msgstr ""
 msgid "Choose a {tool} settings file"
 msgstr ""
 
+msgid "Choose another folder in Settings"
+msgstr ""
+
 msgid "Choose the scripts folder"
 msgstr ""
 
@@ -973,11 +979,11 @@ msgid "Couldn't read"
 msgstr ""
 
 #, python-brace-format
-msgid "Couldn't read the printer's answer at {when}."
+msgid "Couldn't read it: {error}"
 msgstr ""
 
 #, python-brace-format
-msgid "Couldn't read {folder}: {error}"
+msgid "Couldn't read the printer's answer at {when}."
 msgstr ""
 
 #, python-brace-format
@@ -1033,7 +1039,9 @@ msgid "Couldn't save where the tools are: {error}"
 msgstr ""
 
 #, python-brace-format
-msgid "Couldn't save {file}: {error}"
+msgid ""
+"Couldn't save {file}: {error} Choose a folder you can write to in "
+"Settings › Hosts › General."
 msgstr ""
 
 #, python-brace-format
@@ -1447,6 +1455,9 @@ msgstr ""
 msgid "General"
 msgstr ""
 
+msgid "Give it a name: it's the name in Your scripts."
+msgstr ""
+
 msgid "Group"
 msgstr ""
 
@@ -1836,10 +1847,6 @@ msgstr ""
 msgid "New tag"
 msgstr ""
 
-#, python-brace-format
-msgid "No .ps1, .bat, .cmd or .onpc files in {folder}."
-msgstr ""
-
 msgid "No Doc360 MPS account is set."
 msgstr ""
 
@@ -1929,6 +1936,11 @@ msgstr ""
 msgid ""
 "No row of Settings › Hosts › Credentials names this PC, so it's the "
 "Windows account you're signed in with."
+msgstr ""
+
+msgid ""
+"No scripts here yet. Put .ps1, .bat or .cmd files in this folder, or add "
+"a script that's on the PCs with the new-file button."
 msgstr ""
 
 #, python-brace-format
@@ -2353,8 +2365,7 @@ msgstr ""
 msgid "Read/write"
 msgstr ""
 
-#, python-brace-format
-msgid "Reading {folder}…"
+msgid "Reading the folder…"
 msgstr ""
 
 #, python-brace-format
@@ -3005,6 +3016,11 @@ msgstr ""
 msgid "That profile doesn't exist."
 msgstr ""
 
+msgid ""
+"That's a share, not a place on the PC. A script on a share can go in the "
+"scripts folder itself instead."
+msgstr ""
+
 msgid "The PC's C: drive in File Explorer."
 msgstr ""
 
@@ -3377,6 +3393,9 @@ msgstr ""
 msgid "Type the password."
 msgstr ""
 
+msgid "Type the script's path on each PC."
+msgstr ""
+
 msgid "Type the user name."
 msgstr ""
 
@@ -3431,6 +3450,11 @@ msgid "Use it &for:"
 msgstr ""
 
 msgid "Use the &automatic path"
+msgstr ""
+
+msgid ""
+"Use the script's full path on the PC: a .ps1, .bat, .cmd or .vbs file, "
+"such as C:\\ProgramData\\Scripts\\printers.cmd."
 msgstr ""
 
 msgid "Use this"

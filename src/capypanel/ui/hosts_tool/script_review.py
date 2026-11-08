@@ -249,13 +249,30 @@ class OnPcDialog(QDialog):
 
     def _file(self) -> Path | None:
         name = self.name.text().strip().strip(".")
-        if not name or any(c in name for c in r'<>:"/\|?*'):
+        if not name or any(c in name for c in '<>:"/\\|?*'):
             return None
         return self._folder / f"{name}{own_scripts.ON_PC}"
 
+    def _why_not(self) -> str:
+        """What's still missing, in words: Create is never grey without a reason."""
+        name = self.name.text().strip().strip(".")
+        path = self.path.text().strip().strip('"')
+        if name and self._file() is None:
+            return _("A name can't have \\ / : * ? \" < > |.")
+        if not path:
+            return "" if not name else _("Type the script's path on each PC.")
+        if own_scripts.pc_path(path.encode("utf-8")):
+            return "" if name else _("Give it a name: it's the name in Your scripts.")
+        if path.startswith("\\\\"):
+            return _("That's a share, not a place on the PC. A script on a share can go in the "
+                     "scripts folder itself instead.")  # fmt: skip
+        return _("Use the script's full path on the PC: a .ps1, .bat, .cmd or .vbs file, such as "
+                 "C:\\ProgramData\\Scripts\\printers.cmd.")  # fmt: skip
+
     def _update(self) -> None:
-        self.problem.clear()
-        self.problem.hide()
+        why = self._why_not()
+        self.problem.setText(why)
+        self.problem.setVisible(bool(why))
         path = self.path.text().strip().strip('"')
         ready = self._file() is not None and bool(own_scripts.pc_path(path.encode("utf-8")))
         self.create_button.setEnabled(ready)
@@ -274,7 +291,12 @@ class OnPcDialog(QDialog):
             with file.open("x", encoding="utf-8", newline="") as out:
                 out.write(text)
         except OSError as e:
-            self._say(_("Couldn't save {file}: {error}").format(file=file, error=e.strerror or e))
+            self._say(
+                _(
+                    "Couldn't save {file}: {error} Choose a folder you can write to in "
+                    "Settings › Hosts › General."
+                ).format(file=file, error=e.strerror or e)
+            )
             return
         self.made = file
         self.accept()

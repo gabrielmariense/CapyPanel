@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 17:00-0300\n"
+"POT-Creation-Date: 2026-11-08 17:19-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -447,6 +447,9 @@ msgstr "Um host com este nome já está na lista, {place}"
 msgid "A list named “{name}” is already there. Replace it with an empty one?"
 msgstr "Já existe uma lista chamada “{name}” ali. Substituí-la por uma vazia?"
 
+msgid "A name can't have \\ / : * ? \" < > |."
+msgstr "Um nome não pode ter \\ / : * ? \" < > |."
+
 msgid "A name is required."
 msgstr "O nome é obrigatório."
 
@@ -787,6 +790,9 @@ msgstr "Verifica estes hosts de novo agora"
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
 
+msgid "Choose another folder in Settings"
+msgstr "Escolha outra pasta nas Configurações"
+
 msgid "Choose the scripts folder"
 msgstr "Escolha a pasta de scripts"
 
@@ -958,12 +964,12 @@ msgid "Couldn't read"
 msgstr "Não foi possível ler"
 
 #, python-brace-format
-msgid "Couldn't read the printer's answer at {when}."
-msgstr "Não foi possível ler a resposta da impressora às {when}."
+msgid "Couldn't read it: {error}"
+msgstr "Não foi possível ler: {error}"
 
 #, python-brace-format
-msgid "Couldn't read {folder}: {error}"
-msgstr "Não foi possível ler {folder}: {error}"
+msgid "Couldn't read the printer's answer at {when}."
+msgstr "Não foi possível ler a resposta da impressora às {when}."
 
 #, python-brace-format
 msgid "Couldn't read {host}: {reason}"
@@ -1019,8 +1025,8 @@ msgid "Couldn't save where the tools are: {error}"
 msgstr "Não foi possível salvar onde as ferramentas estão: {error}"
 
 #, python-brace-format
-msgid "Couldn't save {file}: {error}"
-msgstr "Não foi possível salvar {file}: {error}"
+msgid "Couldn't save {file}: {error} Choose a folder you can write to in Settings › Hosts › General."
+msgstr "Não foi possível salvar {file}: {error} Escolha uma pasta em que você possa gravar em Configurações › Hosts › Geral."
 
 #, python-brace-format
 msgid "Couldn't save {path}: {error}"
@@ -1406,6 +1412,9 @@ msgstr "De “{file}”"
 msgid "General"
 msgstr "Geral"
 
+msgid "Give it a name: it's the name in Your scripts."
+msgstr "Dê um nome: é o nome em Seus scripts."
+
 msgid "Group"
 msgstr "Grupo"
 
@@ -1777,10 +1786,6 @@ msgstr "Novo script nos PCs…"
 msgid "New tag"
 msgstr "Nova tag"
 
-#, python-brace-format
-msgid "No .ps1, .bat, .cmd or .onpc files in {folder}."
-msgstr "Nenhum arquivo .ps1, .bat, .cmd ou .onpc em {folder}."
-
 msgid "No Doc360 MPS account is set."
 msgstr "Nenhuma conta do Doc360 MPS definida."
 
@@ -1869,6 +1874,9 @@ msgstr "Nenhuma impressora deste grupo tem todas as tags escolhidas."
 
 msgid "No row of Settings › Hosts › Credentials names this PC, so it's the Windows account you're signed in with."
 msgstr "Nenhuma linha de Configurações › Hosts › Credenciais nomeia este PC, então é a conta do Windows com que você entrou."
+
+msgid "No scripts here yet. Put .ps1, .bat or .cmd files in this folder, or add a script that's on the PCs with the new-file button."
+msgstr "Ainda não há scripts aqui. Coloque arquivos .ps1, .bat ou .cmd nesta pasta, ou adicione um script que já está nos PCs com o botão de novo arquivo."
 
 #, python-brace-format
 msgid "No settings mention “{text}”."
@@ -2271,9 +2279,8 @@ msgstr "Somente leitura"
 msgid "Read/write"
 msgstr "Leitura/gravação"
 
-#, python-brace-format
-msgid "Reading {folder}…"
-msgstr "Lendo {folder}…"
+msgid "Reading the folder…"
+msgstr "Lendo a pasta…"
 
 #, python-brace-format
 msgid "Reading {host}…"
@@ -2905,6 +2912,9 @@ msgstr "Esse nome já está em uso."
 msgid "That profile doesn't exist."
 msgstr "Esse perfil não existe."
 
+msgid "That's a share, not a place on the PC. A script on a share can go in the scripts folder itself instead."
+msgstr "Isso é um compartilhamento, não um lugar no PC. Um script em um compartilhamento pode ir direto na pasta de scripts."
+
 msgid "The PC's C: drive in File Explorer."
 msgstr "A unidade C: do PC no Explorador de Arquivos."
 
@@ -3246,6 +3256,9 @@ msgstr "Digite a senha de “{user}”. Essa conta entra em {host} ({uses})."
 msgid "Type the password."
 msgstr "Digite a senha."
 
+msgid "Type the script's path on each PC."
+msgstr "Digite o caminho do script em cada PC."
+
 msgid "Type the user name."
 msgstr "Digite o nome do usuário."
 
@@ -3299,6 +3312,9 @@ msgstr "Usar &para:"
 
 msgid "Use the &automatic path"
 msgstr "Usar o caminho &automático"
+
+msgid "Use the script's full path on the PC: a .ps1, .bat, .cmd or .vbs file, such as C:\\ProgramData\\Scripts\\printers.cmd."
+msgstr "Use o caminho completo do script no PC: um arquivo .ps1, .bat, .cmd ou .vbs, como C:\\ProgramData\\Scripts\\printers.cmd."
 
 msgid "Use this"
 msgstr "Usar este"

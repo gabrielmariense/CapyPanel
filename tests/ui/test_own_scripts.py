@@ -146,6 +146,10 @@ def test_until_one_is_chosen_the_folder_is_capypanel_s_own(
     _settle(window)
     assert shared.is_dir()  # made at the first look, to put scripts in
     assert not [r for r in commands.rows if r.script is not None]
+    # Empty, Your scripts still shows: its heading, its place on the left and what to do.
+    heading = commands._headings[commands_window.CommandGroup.OWN]  # pyright: ignore[reportPrivateUsage]
+    assert not heading.isHidden()
+    assert "No scripts here yet" in commands._own_hint.text()  # pyright: ignore[reportPrivateUsage]
     own.set_folder(tmp_path)
     assert own.folder() == tmp_path
     own.set_folder(None)  # Settings' ×: back to the shared one
@@ -158,8 +162,11 @@ def test_a_script_on_the_pcs_is_made_from_its_path_and_shows_for_review(
     def fill(dialog: QDialog) -> Any:
         assert isinstance(dialog, OnPcDialog)
         dialog.name.setText("Printers")
-        dialog.path.setText("C:\\Tools\\setup.exe")  # not a script: can't be made
+        dialog.path.setText("C:\\Tools\\setup.exe")  # not a script: can't be made, and says why
         assert not dialog.create_button.isEnabled()
+        assert ".ps1, .bat, .cmd or .vbs" in dialog.problem.text()
+        dialog.path.setText("\\\\FS01\\scripts\\printers.cmd")
+        assert "share" in dialog.problem.text() and not dialog.create_button.isEnabled()
         dialog.path.setText('"%ProgramData%\\Scripts\\printers.cmd"')
         dialog.create_button.click()
         return dialog.result()

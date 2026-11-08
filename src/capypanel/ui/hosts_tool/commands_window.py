@@ -9,6 +9,7 @@ import subprocess
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from html import escape as _escape
 from typing import TYPE_CHECKING, Any
 
 import shiboken6
@@ -855,7 +856,7 @@ class CommandsWindow(QDialog):
         first = True
         for index in range(self.groups.count()):
             item = self.groups.item(index)
-            group = item.data(Qt.ItemDataRole.UserRole)
+            group = CommandGroup(item.data(Qt.ItemDataRole.UserRole))  # Qt hands back a str
             any_shown = any(not r.isHidden() for r in self.rows if r.command.group == group)
             if group is CommandGroup.OWN:  # shown even when empty: its folder and Rescan
                 any_shown = scripts and (not needle or any_shown)
@@ -883,14 +884,21 @@ class CommandsWindow(QDialog):
         self._folder_button.clicked.connect(lambda: open_folder(self._tool.own_scripts.folder()))
         self._new_on_pc = _icon_button("file-plus", color, _("New script on the PCs…"))
         self._new_on_pc.clicked.connect(self._make_on_pc)
-        line = QHBoxLayout(self._own_line)
-        line.setContentsMargins(8, 0, 6, 2)
+        # The folder and its buttons on one line; under it, what's wrong or what to do, with a
+        # link to Settings when the folder itself is the problem.
+        self._own_hint.setTextFormat(Qt.TextFormat.RichText)
+        self._own_hint.linkActivated.connect(lambda _link: self._tool.open_settings("hosts"))
+        stack = QVBoxLayout(self._own_line)
+        stack.setContentsMargins(8, 0, 6, 2)
+        stack.setSpacing(2)
+        line = QHBoxLayout()
         line.setSpacing(4)
-        line.addWidget(self._own_hint, 1)
         line.addWidget(self._own_path, 1)
         line.addWidget(self._new_on_pc)
         line.addWidget(self._rescan)
         line.addWidget(self._folder_button)
+        stack.addLayout(line)
+        stack.addWidget(self._own_hint)
         return self._own_line
 
     def _fill_own(self) -> None:
@@ -914,18 +922,21 @@ class CommandsWindow(QDialog):
             self.rows.append(row)
             self._own_rows.addWidget(row)
         folder = own.folder()
+        settings = f'<a href="settings">{_escape(_("Choose another folder in Settings"))}</a>'
         if own.scanning:
-            text = _("Reading {folder}…").format(folder=folder)
+            text = _escape(_("Reading the folder…"))
         elif own.error is not None:
-            text = _("Couldn't read {folder}: {error}").format(folder=folder, error=own.error)
+            text = _escape(_("Couldn't read it: {error}").format(error=reason_text(own.error)))
+            text = f"{text} {settings}"
         elif not own.scripts:
-            text = _("No .ps1, .bat, .cmd or .onpc files in {folder}.").format(folder=folder)
+            empty = _("No scripts here yet. Put .ps1, .bat or .cmd files in this folder, or add "
+                      "a script that's on the PCs with the new-file button.")  # fmt: skip
+            text = _escape(empty)
         else:
             text = ""
         self._own_hint.setText(text)
         self._own_hint.setVisible(bool(text))
         self._own_path.set_path(folder)
-        self._own_path.setVisible(not text)
         self._rescan.setEnabled(not own.scanning)
         target = self.target()
         for row in self.rows:
