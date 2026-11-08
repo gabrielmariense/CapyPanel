@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QFormLayout,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QInputDialog,
@@ -143,41 +144,51 @@ class ExportDialog(QDialog):
         preset_label.setBuddy(self.preset)
         top.addRow(preset_label, presets)
 
-        # Every box is a row of ticks, one under the other, as wide as the window. With CHECKED,
-        # the last one is the checks from Refresh: Refresh at the end of its row, and under the
-        # ticks the names note (while that tick is on) and how many weren't checked yet.
+        # One box, Columns: a line per section, its name on the left and its ticks after it, so
+        # the lines align and nothing leaves empty space. With CHECKED, the last line is the
+        # checks from Refresh, Refresh right after its ticks; under them the names note (while
+        # that tick is on) and how many weren't checked yet.
         self.boxes: dict[str, QCheckBox] = {}
-        sections = QVBoxLayout()
-        checks: QGroupBox | None = None
+        sections = QGroupBox(_("Columns"))
+        grid = QGridLayout(sections)
+        grid.setHorizontalSpacing(16)
+        grid.setVerticalSpacing(8)
+        grid.setColumnStretch(1, 1)
+        checks: QLabel | None = None
         check_ticks: QHBoxLayout | None = None
         self.checks_title = ""
         self.note = hint(self.checks_note())
         for index, (title, keys) in enumerate(self.SECTIONS):
-            group = QGroupBox(_(title))
-            inside = QVBoxLayout(group)
+            name = QLabel(_(title))
+            name.setObjectName("rowName")
             ticks = QHBoxLayout()
+            ticks.setSpacing(12)
             for key in keys:
                 box = QCheckBox(_(self.TITLES[key]))
                 self.boxes[key] = box
                 ticks.addWidget(box)
-            ticks.addStretch(1)
-            inside.addLayout(ticks)
+            grid.addWidget(name, grid.rowCount(), 0)
+            grid.addLayout(ticks, grid.rowCount() - 1, 1)
             if self.CHECKED and index == len(self.SECTIONS) - 1:
-                checks, check_ticks = group, ticks
+                checks, check_ticks = name, ticks
                 self.checks_title = _(title)  # "Last check: 10:41" once something was read
-            sections.addWidget(group)
+            else:
+                ticks.addStretch(1)
         self.unchecked = hint()
         self.refresh_button = QPushButton(_("&Refresh"))
         self.stop_button = QPushButton(_("S&top"))
         self.checking = QLabel()
         if checks is not None and check_ticks is not None:
-            for widget in (self.checking, self.stop_button, self.refresh_button):
+            check_ticks.addSpacing(8)
+            for widget in (self.refresh_button, self.stop_button, self.checking):
                 check_ticks.addWidget(widget)
-            check_layout = checks.layout()
-            assert isinstance(check_layout, QVBoxLayout)
+            check_ticks.addStretch(1)
+            under = QVBoxLayout()
+            under.setSpacing(2)
             if self.note.text():
-                check_layout.addWidget(self.note)
-            check_layout.addWidget(self.unchecked)
+                under.addWidget(self.note)
+            under.addWidget(self.unchecked)
+            grid.addLayout(under, grid.rowCount(), 1)
         else:  # nothing to check: no Refresh here
             for widget in (self.unchecked, self.refresh_button, self.stop_button, self.checking):
                 widget.setParent(self)
@@ -214,7 +225,7 @@ class ExportDialog(QDialog):
 
         layout = QVBoxLayout(self)
         layout.addLayout(top)
-        layout.addLayout(sections)
+        layout.addWidget(sections)
         layout.addWidget(preview_title)
         layout.addWidget(self.preview, 1)
         layout.addWidget(self.buttons)
@@ -438,7 +449,7 @@ class ExportDialog(QDialog):
         title = self.checks_title
         if times:
             title = _("{title}: {time}").format(title=title, time=clock_text(max(times)))
-        self.checks_box.setTitle(title)
+        self.checks_box.setText(title)
 
     def _fill_preview(self) -> None:
         self.preview.clear()

@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QApplication, QGroupBox
+from PySide6.QtWidgets import QApplication, QLabel
 
 from capypanel.core.hosts.model import NO_GROUP, Host, HostList
 from capypanel.core.i18n import N_
@@ -34,7 +34,7 @@ def test_a_tool_s_own_report_has_its_columns_and_no_refresh(qapp: QApplication) 
         stop=lambda: None,
         progress=lambda: None,
     )
-    assert [g.title() for g in dialog.findChildren(QGroupBox)] == ["Printer"]  # no Last check
+    assert [n.text() for n in dialog.findChildren(QLabel, "rowName")] == ["Printer"]  # no checks
     assert dialog.refresh_button.isHidden()  # nothing to check: no Refresh here
     assert dialog.columns() == ["name"]  # starts on its own For Import
     dialog.boxes["serial"].setChecked(True)

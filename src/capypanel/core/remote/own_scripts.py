@@ -135,6 +135,20 @@ def pc_path(code: bytes) -> str:
     return ""
 
 
+_ADMIN_SHARE = re.compile(r"^\\\\[^\\]+\\([A-Za-z])\$(\\.*)?$")
+
+
+def on_pc_path(picked: str) -> str:
+    """A file picked over a PC's admin share, as the PC itself names it: `\\\\PC\\C$\\Tools\\a.cmd`
+    → `C:\\Tools\\a.cmd`. A path on this PC stays as it is (the same on each PC); slashes from
+    the file window become backslashes."""
+    path = picked.strip().replace("/", "\\")
+    found = _ADMIN_SHARE.match(path)
+    if found:
+        return f"{found.group(1).upper()}:{found.group(2) or chr(92)}"
+    return path
+
+
 def split_arguments(typed: str) -> list[str]:
     """`-Name "Front desk" C:\\Temp` → ["-Name", "Front desk", "C:\\Temp"]: quotes group,
     backslashes stay as they are. Raises ValueError on a quote left open."""

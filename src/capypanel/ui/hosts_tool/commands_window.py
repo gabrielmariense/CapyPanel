@@ -84,7 +84,7 @@ if TYPE_CHECKING:
 
 SIZE = (1120, 620)  # fixed: it never grows as commands are added
 GROUPS_WIDTH = 150  # px, at least
-GROUP_ROOM = 24  # px past a group's name: the rows' padding (10 + 10) and a little air
+GROUP_ROOM = 34  # px past a group's name: the rows' padding (10 + 10), the frame and air
 ROW_SPACING = 2  # px between the commands; a gap widget adds one more
 RESULTS_WIDTH = 400  # px: the rest goes to the commands, whose names are longer in pt
 ROW = 28  # px: a command's line
@@ -431,9 +431,15 @@ class CommandsWindow(QDialog):
         self.connect_button = QPushButton(_("&Connect"))
         self.connect_button.setAutoDefault(False)
         self.connect_button.clicked.connect(self._connect)
+        # Beside the PC it adds, and only when that PC isn't in the open list yet.
+        self.add_button = QPushButton(_("A&dd to host list…"))
+        self.add_button.setAutoDefault(False)
+        self.add_button.setToolTip(_("Adds this PC to the open host list"))
+        self.add_button.clicked.connect(self._add_to_list)
         left_top = QHBoxLayout()
         left_top.addWidget(address_label)
         left_top.addWidget(self.address, 1)
+        left_top.addWidget(self.add_button)
         right_top = QHBoxLayout()
         right_top.addWidget(profile_label)
         right_top.addWidget(self.profile, 1)
@@ -525,9 +531,6 @@ class CommandsWindow(QDialog):
         hint = QLabel(_("↑ ↓ pick, Enter runs, typing searches. Commands that need more open a "
                         "small window; risky ones ask first."))  # fmt: skip
         hint.setObjectName("hint")
-        self.add_button = QPushButton(_("A&dd to list…"))
-        self.add_button.setAutoDefault(False)
-        self.add_button.clicked.connect(self._add_to_list)
         close = QPushButton(_("Close"))
         close.setAutoDefault(False)
         close.clicked.connect(self.close)
@@ -546,7 +549,6 @@ class CommandsWindow(QDialog):
         grid.addWidget(self.results, 1, 4, 2, 1)
         grid.addWidget(hint, 3, 0, 1, 5)
         bottom = QHBoxLayout()
-        bottom.addWidget(self.add_button)
         bottom.addStretch(1)
         bottom.addWidget(close)
         grid.addLayout(bottom, 4, 0, 1, 5)
@@ -622,16 +624,11 @@ class CommandsWindow(QDialog):
         self._show_results()
 
     def _update_add(self) -> None:
+        """Add to host list… shows for an address typed here that the open list doesn't have."""
         target = self.target()
         places = self._tool.where_in_list(target.address) if target else []
-        self.add_button.setEnabled(target is not None and not places and
+        self.add_button.setVisible(target is not None and not places and
                                    self._tool.can_add_hosts())  # fmt: skip
-        if places:
-            where = "; ".join(_("in {group}, as {name}").format(group=g or _("No group"), name=n)
-                              for g, n in places)  # fmt: skip
-            self.add_button.setToolTip(_("Already in this list: {where}").format(where=where))
-        else:
-            self.add_button.setToolTip(_("Adds this PC to the open host list"))
 
     def _update_names(self) -> None:
         """The user's folder row names the person: "ana.admin's folder"."""
@@ -951,7 +948,8 @@ class CommandsWindow(QDialog):
         """New script on the PCs…: writes the .onpc file, then reads the folder again; it shows
         as new, to review on a PC."""
         folder = self._tool.own_scripts.folder()
-        dialog = OnPcDialog(self, folder)
+        target = self.target()  # Browse… opens its C: drive
+        dialog = OnPcDialog(self, folder, target.address if target else "")
         if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return
         self._tool.own_scripts.rescan()

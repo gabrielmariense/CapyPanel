@@ -29,6 +29,21 @@ def test_the_path_on_the_pc(text: bytes, path: str) -> None:
     assert own_scripts.pc_path(text) == path
 
 
+@pytest.mark.parametrize(
+    ("picked", "path"),
+    [
+        ("//DESK-02/C$/ProgramData/Scripts/printers.cmd", "C:\\ProgramData\\Scripts\\printers.cmd"),
+        ("\\\\192.0.2.12\\d$\\Tools\\a.bat", "D:\\Tools\\a.bat"),
+        ("C:/ProgramData/Scripts/fix.ps1", "C:\\ProgramData\\Scripts\\fix.ps1"),  # this PC's
+        ("\\\\FS01\\scripts\\a.cmd", "\\\\FS01\\scripts\\a.cmd"),  # a share stays a share
+    ],
+)
+def test_a_file_picked_over_the_admin_share_is_named_as_the_pc_names_it(
+    picked: str, path: str
+) -> None:
+    assert own_scripts.on_pc_path(picked) == path
+
+
 def test_a_onpc_file_is_listed_and_one_with_no_path_says_so(tmp_path: Path) -> None:
     (tmp_path / "Printers.onpc").write_bytes(b"C:\\Scripts\\printers.cmd")
     (tmp_path / "Broken.onpc").write_bytes(b"just words")

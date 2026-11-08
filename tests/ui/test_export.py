@@ -77,7 +77,7 @@ def test_columns_come_in_groups_and_a_custom_pick_can_be_a_preset(
     )
 
     def pick(d: ExportDialog) -> None:
-        titles = [g.title() for g in d.findChildren(export_hosts.QGroupBox)]
+        titles = [n.text() for n in d.findChildren(export_hosts.QLabel, "rowName")]
         assert titles == ["Host", "Tags and notes", "Last check"]
         for key, box in d.boxes.items():
             box.setChecked(key in ("name", "users"))
@@ -136,7 +136,7 @@ def test_last_check_shows_when_and_the_names_note_only_with_its_tick(
         assert d.checks_box is not None
         d.boxes["status"].setChecked(True)
         d.boxes["users"].setChecked(False)
-        assert d.checks_box.title() == "Last check"  # nothing read yet: no time
+        assert d.checks_box.text() == "Last check"  # nothing read yet: no time
         assert not d.note.isVisibleTo(d)
         d.boxes["users"].setChecked(True)
         assert d.note.isVisibleTo(d) and d.note.text() == "People's names: keep the file private."
@@ -144,9 +144,9 @@ def test_last_check_shows_when_and_the_names_note_only_with_its_tick(
         when = datetime.now(UTC).replace(hour=10, minute=41)
         window.hosts._status_found[loose.id] = (Status.ONLINE, when, None)
         d.checks_changed()
-        assert d.checks_box.title() == f"Last check: {clock_text(when)}"
+        assert d.checks_box.text() == f"Last check: {clock_text(when)}"
         d.boxes["status"].setChecked(False)  # only users ticked, and they weren't read
-        assert d.checks_box.title() == "Last check"
+        assert d.checks_box.text() == "Last check"
 
     _run(window, monkeypatch, look)
 

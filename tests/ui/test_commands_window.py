@@ -85,12 +85,13 @@ def test_a_port_after_the_address_is_the_connection_s_port() -> None:
     assert split_address("fe80::1") == Target("fe80::1")  # IPv6 keeps its colons
 
 
-def test_from_a_selected_host_it_names_the_host_and_greys_add_to_list(window: CapyWindow) -> None:
+def test_from_a_selected_host_it_names_the_host_and_hides_add_to_host_list(
+    window: CapyWindow,
+) -> None:
     commands = _open(window, "DESK-02")
     assert commands.windowTitle() == "Commands · DESK-02"
     assert commands.address.currentText() == "DESK-02 · 192.0.2.12"
-    assert not commands.add_button.isEnabled()
-    assert commands.add_button.toolTip() == ("Already in this list: in Front desks, as DESK-02")
+    assert commands.add_button.isHidden()  # already in the list: nothing to add
 
 
 def test_the_host_can_be_picked_from_the_list_typed_or_stepped_with_the_arrows(
@@ -113,7 +114,7 @@ def test_the_host_can_be_picked_from_the_list_typed_or_stepped_with_the_arrows(
     target = commands.target()
     assert target is not None and target.key == "@192.0.2.99"
     assert commands.windowTitle() == "Manual connection · 192.0.2.99"
-    assert commands.add_button.isEnabled()
+    assert not commands.add_button.isHidden()
 
 
 def test_typed_addresses_come_under_a_recent_heading_the_arrows_skip(window: CapyWindow) -> None:
@@ -223,10 +224,10 @@ def test_a_typed_address_can_be_added_to_the_list(
 ) -> None:
     commands = _open(window, None)
     assert commands.windowTitle() == "Manual connection"
-    assert not commands.add_button.isEnabled()  # nothing typed
+    assert commands.add_button.isHidden()  # nothing typed
     commands.address.setEditText("192.0.2.77")
     assert commands.windowTitle() == "Manual connection · 192.0.2.77"
-    assert commands.add_button.isEnabled()
+    assert not commands.add_button.isHidden()
 
     def accept(dialog: QDialog) -> int:
         assert dialog.address.text() == "192.0.2.77"  # type: ignore[attr-defined]
@@ -235,8 +236,7 @@ def test_a_typed_address_can_be_added_to_the_list(
     monkeypatch.setattr(tool_module, "run_modal", accept)
     commands.add_button.click()
     assert window.hosts.where_in_list("192.0.2.77") == [("No group", "192.0.2.77")]
-    assert not commands.add_button.isEnabled()
-    assert "Already in this list" in commands.add_button.toolTip()
+    assert commands.add_button.isHidden()  # in the list now
 
 
 def test_typing_anywhere_goes_to_the_search(window: CapyWindow) -> None:

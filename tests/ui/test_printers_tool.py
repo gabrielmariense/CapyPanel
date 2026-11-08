@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 from PySide6.QtCore import Qt, QUrl
-from PySide6.QtWidgets import QApplication, QDialog, QGroupBox, QMenu
+from PySide6.QtWidgets import QApplication, QDialog, QLabel, QMenu
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -324,7 +324,7 @@ def test_report_lists_the_printers_columns_and_last_check(
     monkeypatch.setattr(tool_module, "run_modal", look)
     printers.commands.export_printers.trigger()
     [report] = seen
-    titles = [g.title() for g in report.findChildren(QGroupBox)]
+    titles = [n.text() for n in report.findChildren(QLabel, "rowName")]
     assert titles == ["Printer", "Details", "Last check"]
     assert report.source.currentText() == "All printers (3 printers)"
     assert report.preset.currentText() == "All details"
@@ -342,7 +342,7 @@ def test_report_lists_the_printers_columns_and_last_check(
         "Status", "Toner", "Toner model", "Total pages", "MAC address", "Firmware",
     ]  # fmt: skip
     assert report.checks_box is not None
-    assert report.checks_box.title() == "Last check"  # nothing read yet: no time
+    assert report.checks_box.text() == "Last check"  # nothing read yet: no time
 
 
 def test_the_report_shows_when_the_printers_were_last_read(
@@ -366,7 +366,7 @@ def test_the_report_shows_when_the_printers_were_last_read(
     printers.commands.export_printers.trigger()
     [report] = seen
     assert report.checks_box is not None
-    assert report.checks_box.title() == f"Last check: {clock_text(when)}"
+    assert report.checks_box.text() == f"Last check: {clock_text(when)}"
 
 
 def test_counts_agree_with_printer_in_portuguese(printers: PrintersTool) -> None:

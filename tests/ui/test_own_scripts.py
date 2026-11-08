@@ -20,7 +20,7 @@ from capypanel.core.remote.access import Account
 from capypanel.core.remote.own_scripts import State
 from capypanel.core.remote.run import Engine, RunAs, RunResult, Script
 from capypanel.core.remote.sessions import Session
-from capypanel.ui.hosts_tool import command_windows, commands_window, runner
+from capypanel.ui.hosts_tool import command_windows, commands_window, runner, script_review
 from capypanel.ui.hosts_tool.commands_window import CommandRow, CommandsWindow
 from capypanel.ui.hosts_tool.runner import HostTarget
 from capypanel.ui.hosts_tool.script_review import OnPcDialog, ReviewDialog
@@ -159,6 +159,8 @@ def test_until_one_is_chosen_the_folder_is_capypanel_s_own(
 def test_a_script_on_the_pcs_is_made_from_its_path_and_shows_for_review(
     window: CapyWindow, folder: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    seen: list[str] = []
+
     def fill(dialog: QDialog) -> Any:
         assert isinstance(dialog, OnPcDialog)
         dialog.name.setText("Printers")
@@ -167,6 +169,15 @@ def test_a_script_on_the_pcs_is_made_from_its_path_and_shows_for_review(
         assert ".ps1, .bat, .cmd or .vbs" in dialog.problem.text()
         dialog.path.setText("\\\\FS01\\scripts\\printers.cmd")
         assert "share" in dialog.problem.text() and not dialog.create_button.isEnabled()
+        picked = ("//192.0.2.1/C$/ProgramData/Scripts/printers.cmd", "")
+        monkeypatch.setattr(script_review.QFileDialog, "getOpenFileName",
+                            lambda _p, _t, start, _f: seen.append(start) or picked)  # fmt: skip
+        dialog.name.clear()
+        dialog.browse.click()  # the PC's own drive, over C$
+        assert seen == ["\\\\192.0.2.1\\C$\\ProgramData"]
+        assert dialog.path.text() == "C:\\ProgramData\\Scripts\\printers.cmd"
+        assert dialog.name.text() == "printers"  # named after the file when no name was typed
+        dialog.name.setText("Printers")
         dialog.path.setText('"%ProgramData%\\Scripts\\printers.cmd"')
         dialog.create_button.click()
         return dialog.result()

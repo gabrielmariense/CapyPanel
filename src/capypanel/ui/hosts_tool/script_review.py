@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
+    QFileDialog,
     QFormLayout,
     QHBoxLayout,
     QLabel,
@@ -23,8 +24,8 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.i18n import _
-from capypanel.core.remote import own_scripts
-from capypanel.core.remote.own_scripts import Approval, OwnScript, State
+from capypanel.core.remote import own_scripts, places
+from capypanel.core.remote.own_scripts import Approval, OwnScript, State, on_pc_path
 from capypanel.core.remote.run import Language, RunAs
 from capypanel.ui.hosts_tool.command_windows import output_box, run_as_text
 from capypanel.ui.notes import hint
@@ -209,10 +210,12 @@ class OnPcDialog(QDialog):
     """New script on the PCs…: makes the .onpc file that names a script already on each PC, so
     nobody has to write one by hand. It then shows under Your scripts as new, for Review."""
 
-    def __init__(self, parent: QWidget | None, folder: Path) -> None:
+    def __init__(self, parent: QWidget | None, folder: Path, host: str = "") -> None:
+        """`host`: the PC whose drive Browse… opens (over its C$ share); none, this PC's own."""
         super().__init__(parent)
         self.setWindowTitle(_("New script on the PCs"))
         self._folder = folder
+        self._host = host
         self.made: Path | None = None
         self.name = QLineEdit()
         self.name.setPlaceholderText(_("Printers"))
@@ -224,9 +227,20 @@ class OnPcDialog(QDialog):
         self.problem = QLabel()
         self.problem.setObjectName("warningText")
         self.problem.setWordWrap(True)
+        self.browse = QPushButton(_("&Browse…"))
+        self.browse.setAutoDefault(False)
+        self.browse.setToolTip(
+            _("Opens {host}'s C: drive, to pick the file there").format(host=host)
+            if host
+            else _("Opens this PC's C: drive: the path is the same on each PC")
+        )
+        self.browse.clicked.connect(self._browse)
+        path_line = QHBoxLayout()
+        path_line.addWidget(self.path, 1)
+        path_line.addWidget(self.browse)
         form = QFormLayout()
         form.addRow(_("&Name:"), self.name)
-        form.addRow(_("&Path on each PC:"), self.path)
+        form.addRow(_("&Path on each PC:"), path_line)
         self.create_button = QPushButton(_("C&reate"))
         self.create_button.setDefault(True)
         self.create_button.clicked.connect(self._make)
@@ -246,6 +260,18 @@ class OnPcDialog(QDialog):
         for field in (self.name, self.path):
             field.textChanged.connect(self._update)
         self._update()
+
+    def _browse(self) -> None:
+        """Pick the script on the PC; its path there goes in the field (\\\\PC\\C$\\… → C:\\…)."""
+        start = places.typed_path(self._host, "C:\\ProgramData") if self._host else "C:\\"
+        chosen, _filter = QFileDialog.getOpenFileName(
+            self, _("The script on the PC"), start,
+            _("Scripts (*.ps1 *.bat *.cmd *.vbs)"),
+        )  # fmt: skip
+        if chosen:
+            self.path.setText(on_pc_path(chosen))
+            if not self.name.text().strip():
+                self.name.setText(Path(chosen).stem)
 
     def _file(self) -> Path | None:
         name = self.name.text().strip().strip(".")
