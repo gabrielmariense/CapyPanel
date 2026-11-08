@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel import _COMMIT, BUILD, __version__
+from capypanel import _COMMIT, _NUMBER, BUILD, __version__
 from capypanel.core import i18n, settings
 from capypanel.core.i18n import _
 from capypanel.ui import branding
@@ -140,7 +140,8 @@ class AboutPage(Page):
             (_("Documentation:"), _link(docs_url(), DOCS_URL.removeprefix("https://").rstrip("/"))),
             (_("Source code:"), _link(source_url(), REPO_URL.removeprefix("https://"))),
         ]
-        build = [f"commit {_COMMIT}"] if _COMMIT else []  # only what applies
+        build = [f"build {_NUMBER}"] if _NUMBER else []  # only what applies
+        build += [f"commit {_COMMIT}"] if _COMMIT else []
         if self._portable:
             build.append(_("portable mode"))
         if build:

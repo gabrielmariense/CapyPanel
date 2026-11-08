@@ -1,5 +1,5 @@
-"""The build label testers compare against: the version, and from a source checkout the commit
-and when it was made, which tells a newer build from an older one."""
+"""The build label testers compare against: the version, and from a source checkout the build
+number, which only grows, and the commit."""
 
 import re
 import shutil
@@ -15,6 +15,6 @@ import capypanel
     or shutil.which("git") is None,
     reason="not a source checkout with git",
 )
-def test_a_source_checkout_shows_its_commit_and_when_it_was_made() -> None:
-    pattern = r"\S+ \([0-9a-f]{7}, \d{4}-\d{2}-\d{2} \d{2}:\d{2}\)"
+def test_a_source_checkout_shows_its_build_number_and_commit() -> None:
+    pattern = r"\S+ build [1-9]\d* \([0-9a-f]{7}\)"
     assert re.fullmatch(pattern, capypanel.BUILD), capypanel.BUILD

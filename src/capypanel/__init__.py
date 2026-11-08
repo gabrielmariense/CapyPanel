@@ -27,9 +27,9 @@ def _commit() -> str:
     return ""
 
 
-def _commit_time() -> str:
-    """When that commit was made, "2026-11-08 22:15" (this PC's time): unlike the commit's
-    code it tells a newer build from an older one at a glance. "" without git."""
+def _build_number() -> str:
+    """How many commits this build has, "1378": it only grows (PRs merge with a merge commit),
+    so a bigger number is a newer build. "" without git."""
     import subprocess
 
     root = Path(__file__).resolve().parents[2]
@@ -37,22 +37,22 @@ def _commit_time() -> str:
         return ""
     try:
         done = subprocess.run(
-            ["git", "-C", str(root), "log", "-1", "--format=%cd",
-             "--date=format-local:%Y-%m-%d %H:%M"],
+            ["git", "-C", str(root), "rev-list", "--count", "HEAD"],
             capture_output=True, text=True, timeout=3,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )  # fmt: skip
     except (OSError, subprocess.SubprocessError):
         return ""
-    return done.stdout.strip() if done.returncode == 0 else ""
+    number = done.stdout.strip()
+    return number if done.returncode == 0 and number.isdigit() else ""
 
 
-# What the title bar and the log show: "0.8.1", plus "(3b4c3e0, 2026-11-08 22:15)" when run
-# from source: the commit, and when it was made, to compare with the build a test asks for.
+# What the title bar and the log show: "0.8.1", plus "build 1378 (3b4c3e0)" when run from
+# source: the number to compare with the build a test asks for, and its commit.
 _COMMIT = _commit()
-_WHEN = _commit_time() if _COMMIT else ""
+_NUMBER = _build_number() if _COMMIT else ""
 BUILD = (
-    f"{__version__} ({_COMMIT}, {_WHEN})" if _WHEN
+    f"{__version__} build {_NUMBER} ({_COMMIT})" if _NUMBER
     else f"{__version__} ({_COMMIT})" if _COMMIT
     else __version__
 )  # fmt: skip
