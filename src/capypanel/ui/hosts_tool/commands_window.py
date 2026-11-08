@@ -335,7 +335,8 @@ class CommandRow(QFrame):
         self.review = QPushButton(_("Re&view…"))
         self.review.setAutoDefault(False)
         self.review.clicked.connect(lambda: window.review(script))
-        self.buttons.insertWidget(0, self.review)  # beside Run, so Run as has its line to itself
+        # Just before Run, so Run as has its line to itself; the pencil stays first.
+        self.buttons.insertWidget(self.buttons.indexOf(self.run), self.review)
         # Its title over the dropdown: side by side, the longest choice doesn't fit the column.
         self.extra = QWidget()
         stack = QVBoxLayout(self.extra)
