@@ -85,7 +85,7 @@ def test_passwords_are_kept_in_memory_only_unless_saving_is_chosen(
 ) -> None:
     profiles = _profiles(window)
     assert not profiles.save_passwords_choice()  # the default
-    assert profiles.passwords.currentText() == "Temporary credentials"
+    assert profiles.passwords.currentText() == "Temporary"
     assert profiles.passwords_row.description.text() == "Forgotten when CapyPanel closes."
     asked: list[str] = []
     _type(monkeypatch, asked)

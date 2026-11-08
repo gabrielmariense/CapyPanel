@@ -31,7 +31,7 @@ class SettingsPrefs:
 
 class HostsSettings(SettingsGroup):
     LABEL = N_("Hosts")
-    TITLES = (N_("General"), N_("Connecting"), N_("Accounts and passwords"))
+    TITLES = (N_("General"), N_("Connecting"), N_("Credentials"))
 
     general: HostsPage
     connections: ConnectionsPage
@@ -65,7 +65,7 @@ class HostsSettings(SettingsGroup):
             tool.connector.catalogs, doc, save_passwords=tool.saves_passwords()
         )
         self.accounts = AccountsSection(tool.accounts)  # which account signs in to which PCs
-        self.accounts_page = Page(_("Accounts and passwords"))
+        self.accounts_page = Page(_("Credentials"))
         for section in (self.accounts, self.connections.profiles.passwords_section):
             self.accounts_page.body.addWidget(section)
         self.accounts_page.body.addStretch(1)
@@ -107,7 +107,7 @@ class HostsSettings(SettingsGroup):
     def _changed(self) -> None:
         if not self._building:
             self._tool.apply_prefs(self.choices())
-            self.credentials_changed()  # Temporary credentials deletes the saved ones
+            self.credentials_changed()  # Kept in Temporary deletes the saved ones
 
     def credentials_changed(self) -> None:
         row = self.connections.profiles.saved_row

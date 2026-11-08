@@ -111,7 +111,7 @@ def test_the_rail_view_toolbar_tool_and_status_bar_follow_the_tool_shown(
     pages = dialog.page_list
     rows = [pages.item(i).text().strip() for i in range(pages.count())]  # type: ignore[union-attr]
     assert rows[2:] == [
-        "Hosts", "General", "Connecting", "Accounts and passwords", "Notes", "General"
+        "Hosts", "General", "Connecting", "Credentials", "Notes", "General"
     ]  # a row per page  # fmt: skip
     dialog.show_page("notes")
     assert dialog.current_page() == "notes"

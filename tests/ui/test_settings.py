@@ -81,7 +81,7 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
         "Hosts",
         "General",
         "Connecting",
-        "Accounts and passwords",
+        "Credentials",
         "Printers",
         "General",
         "Warnings and supplies",

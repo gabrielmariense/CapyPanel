@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 08:14-0300\n"
+"POT-Creation-Date: 2026-11-08 08:19-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -86,9 +86,6 @@ msgstr "&Copiar linha"
 
 msgid "&Create"
 msgstr "&Criar"
-
-msgid "&Credentials"
-msgstr "&Credenciais"
 
 msgid "&Credentials:"
 msgstr "&Credenciais:"
@@ -171,6 +168,9 @@ msgstr "&Hosts:"
 
 msgid "&Import hosts…"
 msgstr "&Importar hosts…"
+
+msgid "&Kept in"
+msgstr "&Guardadas em"
 
 msgid "&Language"
 msgstr "&Idioma"
@@ -486,9 +486,6 @@ msgstr "Conta recusada"
 
 msgid "Accounts"
 msgstr "Contas"
-
-msgid "Accounts and passwords"
-msgstr "Contas e senhas"
 
 msgid "Active"
 msgstr "Ativo"
@@ -1045,6 +1042,9 @@ msgstr "Criada ao abrir"
 msgid "Credential Manager"
 msgstr "Gerenciador de Credenciais"
 
+msgid "Credentials"
+msgstr "Credenciais"
+
 msgid "Credits"
 msgstr "Créditos"
 
@@ -1347,8 +1347,8 @@ msgid_plural "Forget these {n} logins?"
 msgstr[0] "Esquecer este login?"
 msgstr[1] "Esquecer estes {n} logins?"
 
-msgid "Forgotten logins are deleted from Credential Manager too; you type them again the next time. Where new ones are kept: Settings › Hosts › Accounts and passwords › Credentials."
-msgstr "Logins esquecidos também são apagados do Gerenciador de Credenciais; você os digita de novo na próxima vez. Onde os novos ficam: Configurações › Hosts › Contas e senhas › Credenciais."
+msgid "Forgotten logins are deleted from Credential Manager too; you type them again the next time. Where new ones are kept: Settings › Hosts › Credentials › Kept in."
+msgstr "Logins esquecidos também são apagados do Gerenciador de Credenciais; você os digita de novo na próxima vez. Onde os novos ficam: Configurações › Hosts › Credenciais › Guardadas em."
 
 msgid "Forgotten when CapyPanel closes."
 msgstr "Esquecidas quando o CapyPanel fecha."
@@ -1837,8 +1837,8 @@ msgstr "Nenhuma impressora está instalada em {host}."
 msgid "No printers in this group have all the picked tags."
 msgstr "Nenhuma impressora deste grupo tem todas as tags escolhidas."
 
-msgid "No row of Settings › Hosts › Accounts and passwords names this PC, so it's the Windows account you're signed in with."
-msgstr "Nenhuma linha de Configurações › Hosts › Contas e senhas nomeia este PC, então é a conta do Windows com que você entrou."
+msgid "No row of Settings › Hosts › Credentials names this PC, so it's the Windows account you're signed in with."
+msgstr "Nenhuma linha de Configurações › Hosts › Credenciais nomeia este PC, então é a conta do Windows com que você entrou."
 
 #, python-brace-format
 msgid "No settings mention “{text}”."
@@ -2550,8 +2550,8 @@ msgstr "Salvas para a sua conta do Windows."
 msgid "Saved in Credential Manager:"
 msgstr "Salvos no Gerenciador de Credenciais:"
 
-msgid "Saved in Windows Credential Manager for your Windows account (Settings › Hosts › Accounts and passwords), and used only for hosts with this connection profile."
-msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Hosts › Contas e senhas) e só é usada nos hosts com este perfil de conexão."
+msgid "Saved in Windows Credential Manager for your Windows account (Settings › Hosts › Credentials), and used only for hosts with this connection profile."
+msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Hosts › Credenciais) e só é usada nos hosts com este perfil de conexão."
 
 msgid "Saved passwords deleted."
 msgstr "As senhas salvas foram apagadas."
@@ -2647,8 +2647,8 @@ msgid "Settings (Ctrl+,)"
 msgstr "Configurações (Ctrl+,)"
 
 #, python-brace-format
-msgid "Settings › Hosts › Accounts and passwords: {uses}"
-msgstr "Configurações › Hosts › Contas e senhas: {uses}"
+msgid "Settings › Hosts › Credentials: {uses}"
+msgstr "Configurações › Hosts › Credenciais: {uses}"
 
 msgid "Shared"
 msgstr "Compartilhada"
@@ -2840,8 +2840,9 @@ msgstr "Tira das suas listas, ou exclui também o arquivo"
 msgid "Temporary"
 msgstr "Temporária"
 
-msgid "Temporary credentials"
-msgstr "Credenciais temporárias"
+msgctxt "passwords"
+msgid "Temporary"
+msgstr "Temporárias"
 
 #, python-brace-format
 msgid "Temporary files cleaned on {host}."

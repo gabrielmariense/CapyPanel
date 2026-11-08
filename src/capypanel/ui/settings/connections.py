@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core import i18n
 from capypanel.core.hosts.document import OpenList
-from capypanel.core.i18n import _, ngettext
+from capypanel.core.i18n import _, ngettext, pgettext
 from capypanel.core.tools import detect, viewer_settings
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.definitions import VIEWERS, ToolDefinition
@@ -342,7 +342,7 @@ class ProfilesSection(SharedSection):
         inner.addWidget(self.builtin_note)
         inner.addWidget(self.profiles_skipped)
         self.passwords = QComboBox()
-        self.passwords.addItem(_("Temporary credentials"), False)
+        self.passwords.addItem(pgettext("passwords", "Temporary"), False)  # pt: plural
         self.passwords.addItem(_("Credential Manager"), True)
         self._saved_tip = _(
             "Windows encrypts them for your account, domain accounts too: anyone using your "
@@ -350,7 +350,7 @@ class ProfilesSection(SharedSection):
         )
         self.passwords.setItemData(1, self._saved_tip, Qt.ItemDataRole.ToolTipRole)
         self.passwords.setCurrentIndex(1 if save_passwords else 0)
-        self.passwords_row = SettingRow(_("&Credentials"), "", self.passwords)
+        self.passwords_row = SettingRow(_("&Kept in"), "", self.passwords)  # as Accounts' column
         self._describe_passwords()
         self.passwords.currentIndexChanged.connect(self._passwords_picked)
         self.manage_button = QPushButton(_("&Manage…"))  # opens Saved credentials
@@ -700,7 +700,7 @@ class ToolsSection(SharedSection):
 class ConnectionsPage(Page):
     """Settings › Hosts › Connecting: what everyone on this PC shares, the profiles and where
     the tools the profiles open are. The profiles' Passwords card is this person's own: it
-    shows on Accounts and passwords."""
+    shows on Credentials."""
 
     def __init__(
         self, catalogs: Catalogs, document: OpenList | None, *, save_passwords: bool = False

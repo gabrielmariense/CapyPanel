@@ -78,8 +78,7 @@ class CredentialDialog(QDialog):
         form.addRow(_("&Password:"), self.password)
         remembered = (
             _("Saved in Windows Credential Manager for your Windows account (Settings › "
-              "Hosts › Accounts and passwords), and used only for hosts with this connection "
-              "profile.")
+              "Hosts › Credentials), and used only for hosts with this connection profile.")
             if saved
             else _("Kept in memory until CapyPanel closes, never saved, and used only for hosts "
                    "with this connection profile.")

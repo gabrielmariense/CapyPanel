@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 08:14-0300\n"
+"POT-Creation-Date: 2026-11-08 08:19-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -84,9 +84,6 @@ msgid "&Copy row"
 msgstr ""
 
 msgid "&Create"
-msgstr ""
-
-msgid "&Credentials"
 msgstr ""
 
 msgid "&Credentials:"
@@ -169,6 +166,9 @@ msgid "&Hosts:"
 msgstr ""
 
 msgid "&Import hosts…"
+msgstr ""
+
+msgid "&Kept in"
 msgstr ""
 
 msgid "&Language"
@@ -486,9 +486,6 @@ msgid "Account rejected"
 msgstr ""
 
 msgid "Accounts"
-msgstr ""
-
-msgid "Accounts and passwords"
 msgstr ""
 
 msgid "Active"
@@ -1061,6 +1058,9 @@ msgstr ""
 msgid "Credential Manager"
 msgstr ""
 
+msgid "Credentials"
+msgstr ""
+
 msgid "Credits"
 msgstr ""
 
@@ -1384,8 +1384,8 @@ msgstr[1] ""
 
 msgid ""
 "Forgotten logins are deleted from Credential Manager too; you type them "
-"again the next time. Where new ones are kept: Settings › Hosts › Accounts"
-" and passwords › Credentials."
+"again the next time. Where new ones are kept: Settings › Hosts › "
+"Credentials › Kept in."
 msgstr ""
 
 msgid "Forgotten when CapyPanel closes."
@@ -1894,8 +1894,8 @@ msgid "No printers in this group have all the picked tags."
 msgstr ""
 
 msgid ""
-"No row of Settings › Hosts › Accounts and passwords names this PC, so "
-"it's the Windows account you're signed in with."
+"No row of Settings › Hosts › Credentials names this PC, so it's the "
+"Windows account you're signed in with."
 msgstr ""
 
 #, python-brace-format
@@ -2637,8 +2637,8 @@ msgstr ""
 
 msgid ""
 "Saved in Windows Credential Manager for your Windows account (Settings › "
-"Hosts › Accounts and passwords), and used only for hosts with this "
-"connection profile."
+"Hosts › Credentials), and used only for hosts with this connection "
+"profile."
 msgstr ""
 
 msgid "Saved passwords deleted."
@@ -2735,7 +2735,7 @@ msgid "Settings (Ctrl+,)"
 msgstr ""
 
 #, python-brace-format
-msgid "Settings › Hosts › Accounts and passwords: {uses}"
+msgid "Settings › Hosts › Credentials: {uses}"
 msgstr ""
 
 msgid "Shared"
@@ -2937,7 +2937,8 @@ msgstr ""
 msgid "Temporary"
 msgstr ""
 
-msgid "Temporary credentials"
+msgctxt "passwords"
+msgid "Temporary"
 msgstr ""
 
 #, python-brace-format

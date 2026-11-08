@@ -322,7 +322,7 @@ class Accounts(QObject):
             self.changed.emit()
 
     def forget_saved(self) -> None:
-        """Settings' Temporary credentials: every remembered password leaves Credential
+        """Settings' Kept in, Temporary: every remembered password leaves Credential
         Manager; what was typed this session stays until CapyPanel closes. Raises OSError."""
         for user in accounts.users(self.links):
             credstore.forget(accounts.credential_name(user))
@@ -345,7 +345,7 @@ class Accounts(QObject):
         return logins
 
 
-# ---- Settings › Hosts › Accounts and passwords › Accounts ----
+# ---- Settings › Hosts › Credentials › Accounts ----
 
 
 class LinkDialog(QDialog):
