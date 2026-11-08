@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 08:19-0300\n"
+"POT-Creation-Date: 2026-11-08 14:53-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1493,9 +1493,6 @@ msgid_plural "In {n} minutes"
 msgstr[0] "Em {n} minuto"
 msgstr[1] "Em {n} minutos"
 
-msgid "Includes who was logged on to each PC. Keep the file private."
-msgstr "Inclui quem estava logado em cada PC. Mantenha o arquivo privado."
-
 msgid "Ink"
 msgstr "Tinta"
 
@@ -2128,6 +2125,9 @@ msgstr "Cole um caminho como o Explorador de Arquivos copia, com aspas e tudo, o
 
 msgid "Paused"
 msgstr "Pausada"
+
+msgid "People's names: keep the file private."
+msgstr "Nomes de pessoas: guarde em sigilo."
 
 msgid "Personal"
 msgstr "Pessoal"
@@ -4099,6 +4099,10 @@ msgstr "{title} · {n} · {when}"
 #, python-brace-format
 msgid "{title} · {when}"
 msgstr "{title} · {when}"
+
+#, python-brace-format
+msgid "{title}: {time}"
+msgstr "{title}: {time}"
 
 #, python-brace-format
 msgid "{tool} (not installed on this PC)"

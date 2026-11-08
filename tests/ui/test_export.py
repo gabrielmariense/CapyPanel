@@ -1,4 +1,5 @@
 from collections.abc import Callable, Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -10,7 +11,9 @@ from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.bulk import parse
 from capypanel.core.hosts.model import NO_GROUP, HostList
+from capypanel.core.remote.status import Status
 from capypanel.ui import export_hosts
+from capypanel.ui.checks import clock_text
 from capypanel.ui.export_hosts import FOR_IMPORT, ExportDialog
 from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.import_hosts import read_text
@@ -122,6 +125,30 @@ def test_refresh_runs_on_the_hosts_being_exported_and_holds_export(
         assert d.stop_button.isVisibleTo(d) and d.checking.text() == "Checking 0 of 1…"
 
     _run(window, monkeypatch, refresh)
+
+
+def test_last_check_shows_when_and_the_names_note_only_with_its_tick(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window.hosts.nav.select_group(NO_GROUP)
+
+    def look(d: ExportDialog) -> None:
+        assert d.checks_box is not None
+        d.boxes["status"].setChecked(True)
+        d.boxes["users"].setChecked(False)
+        assert d.checks_box.title() == "Last check"  # nothing read yet: no time
+        assert not d.note.isVisibleTo(d)
+        d.boxes["users"].setChecked(True)
+        assert d.note.isVisibleTo(d) and d.note.text() == "People's names: keep the file private."
+        loose = d.hosts()[0]  # LOOSE-1, the only host without a group
+        when = datetime.now(UTC).replace(hour=10, minute=41)
+        window.hosts._status_found[loose.id] = (Status.ONLINE, when, None)
+        d.checks_changed()
+        assert d.checks_box.title() == f"Last check: {clock_text(when)}"
+        d.boxes["status"].setChecked(False)  # only users ticked, and they weren't read
+        assert d.checks_box.title() == "Last check"
+
+    _run(window, monkeypatch, look)
 
 
 def test_saving_a_preset_under_a_name_in_use_asks_before_replacing_it(

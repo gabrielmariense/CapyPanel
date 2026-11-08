@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 08:19-0300\n"
+"POT-Creation-Date: 2026-11-08 14:53-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1535,9 +1535,6 @@ msgid_plural "In {n} minutes"
 msgstr[0] ""
 msgstr[1] ""
 
-msgid "Includes who was logged on to each PC. Keep the file private."
-msgstr ""
-
 msgid "Ink"
 msgstr ""
 
@@ -2206,6 +2203,9 @@ msgid ""
 msgstr ""
 
 msgid "Paused"
+msgstr ""
+
+msgid "People's names: keep the file private."
 msgstr ""
 
 msgid "Personal"
@@ -4274,6 +4274,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{title} · {when}"
+msgstr ""
+
+#, python-brace-format
+msgid "{title}: {time}"
 msgstr ""
 
 #, python-brace-format

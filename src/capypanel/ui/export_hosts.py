@@ -9,6 +9,7 @@ import re
 import subprocess
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QModelIndex, QPoint, QStandardPaths, Qt, QUrl
@@ -26,7 +27,9 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
+    QStyle,
     QStyledItemDelegate,
+    QStyleOptionButton,
     QStyleOptionViewItem,
     QToolTip,
     QTreeWidget,
@@ -38,6 +41,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.bulk import host_fields, list_separator, write_csv
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import N_, _, ngettext
+from capypanel.ui.checks import clock_text
 from capypanel.ui.groups import TREE_INDENT
 from capypanel.ui.hosts import confirm
 from capypanel.ui.list_workspace.panels import natural_key
@@ -103,10 +107,11 @@ class ExportDialog(QDialog):
         refresh: Callable[..., None],
         stop: Callable[[], None],
         progress: Callable[[], tuple[int, int] | None],
+        checked_at: Callable[[str], Sequence[datetime | None]] | None = None,
     ) -> None:
-        """results: an item's texts for the CHECKED columns, in order ("" when not checked).
-        refresh(items, *wanted) and stop run the tool's Refresh, one flag per CHECKED column;
-        progress is (done, total) while one runs."""
+        """results: an item's texts for the CHECKED columns, in order ("" when not checked);
+        checked_at: when each was read (None when not). refresh(items, *wanted) and stop run the
+        tool's Refresh, one flag per CHECKED column; progress is (done, total) while one runs."""
         super().__init__(parent)
         self.setWindowTitle(_("Report"))
         self._hosts = host_list
@@ -116,6 +121,7 @@ class ExportDialog(QDialog):
         self._results, self._refresh, self._stop, self._progress = (
             results, refresh, stop, progress
         )  # fmt: skip
+        self._checked_at = checked_at
         self.outcome = ""  # for the status bar: what was exported or copied
 
         self.source = QComboBox()
@@ -142,6 +148,9 @@ class ExportDialog(QDialog):
         self.boxes: dict[str, QCheckBox] = {}
         rows: list[QGroupBox] = []
         checks: QGroupBox | None = None
+        self.checks_title = ""
+        # The note under the tick it's about, shown while that tick is on.
+        self.note = hint(self.checks_note())
         for index, (title, keys) in enumerate(self.SECTIONS):
             group = QGroupBox(_(title))
             stacked = bool(self.CHECKED) and index == len(self.SECTIONS) - 1
@@ -150,8 +159,11 @@ class ExportDialog(QDialog):
                 box = QCheckBox(_(self.TITLES[key]))
                 self.boxes[key] = box
                 inside.addWidget(box)
+                if stacked and key == self.NOTE_UNDER and self.note.text():
+                    inside.addWidget(self.note)
             if stacked:
                 checks = group
+                self.checks_title = _(title)  # "Last check: 10:41" once something was read
             else:
                 inside.addStretch(1)
                 rows.append(group)
@@ -171,9 +183,6 @@ class ExportDialog(QDialog):
             run_row.addWidget(self.checking, 1)
             check_layout = checks.layout()
             assert isinstance(check_layout, QVBoxLayout)
-            note = self.checks_note()
-            if note:  # under the ticks it's about
-                check_layout.addWidget(hint(note))
             check_layout.addWidget(self.unchecked)
             check_layout.addLayout(run_row)
             columns.addWidget(checks, 1)
@@ -181,6 +190,10 @@ class ExportDialog(QDialog):
             for widget in (self.unchecked, self.refresh_button, self.stop_button, self.checking):
                 widget.setParent(self)
                 widget.hide()
+        self.checks_box = checks
+        if self.note.parent() is None:  # no note, or no tick it's about
+            self.note.setParent(self)
+            self.note.hide()
 
         self.preview = QTreeWidget()
         self.preview.setObjectName("grid")
@@ -238,15 +251,28 @@ class ExportDialog(QDialog):
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         self._no_default_buttons()  # a dialog makes one default as it shows
+        self._indent_note()
+
+    def _indent_note(self) -> None:
+        """The note starts where its tick's text does, so it reads as part of that tick."""
+        box = self.boxes.get(self.NOTE_UNDER)
+        if box is None:
+            return
+        option = QStyleOptionButton()
+        box.initStyleOption(option)
+        text = box.style().subElementRect(QStyle.SubElement.SE_CheckBoxContents, option, box)
+        self.note.setContentsMargins(max(text.x(), 0), 0, 0, 0)
 
     # ---- what a tool's Report changes ----
+
+    NOTE_UNDER = "users"  # the tick checks_note is about
 
     def fields(self, host: Host, between_tags: str) -> dict[str, str]:
         """An item's own values, by column key (the checks' come from `results`)."""
         return host_fields(self._hosts, host, between_tags)
 
     def checks_note(self) -> str:
-        return _("Includes who was logged on to each PC. Keep the file private.")
+        return _("People's names: keep the file private.")
 
     def for_import_tip(self) -> str:
         return _("The hosts' own fields, which Import hosts reads back: to move hosts to a list.")
@@ -403,6 +429,9 @@ class ExportDialog(QDialog):
             )
             self.unchecked.setText(self.unchecked_text(missing) if missing else "")
             self.unchecked.setVisible(bool(missing))
+            if under := self.boxes.get(self.NOTE_UNDER):
+                self.note.setVisible(bool(self.note.text()) and under.isChecked())
+            self._title_time(hosts, [place[key] for key in wanted])
             if running is not None:
                 done, total = running
                 text = _("Checking {done} of {total}…").format(done=done, total=total)
@@ -414,6 +443,21 @@ class ExportDialog(QDialog):
         can_export = running is None and bool(self.columns()) and bool(hosts)
         self.export_button.setEnabled(can_export)
         self.copy_button.setEnabled(can_export)
+
+    def _title_time(self, hosts: Sequence[Host], at: Sequence[int]) -> None:
+        """ "Last check: 10:41": the newest read of the ticked checks among these items (a date
+        too when it isn't today); the title alone when none was read."""
+        if self.checks_box is None:
+            return
+        times = (
+            [t for h in hosts for i, t in enumerate(self._checked_at(h.id)) if i in at and t]
+            if self._checked_at is not None
+            else []
+        )
+        title = self.checks_title
+        if times:
+            title = _("{title}: {time}").format(title=title, time=clock_text(max(times)))
+        self.checks_box.setTitle(title)
 
     def _fill_preview(self) -> None:
         self.preview.clear()

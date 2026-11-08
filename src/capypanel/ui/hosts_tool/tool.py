@@ -424,6 +424,10 @@ class HostsTool(ListWorkspace):
             cells = self._cells(host_id)
             return cells.status[0], cells.user[0]
 
+        def checked_at(host_id: str) -> tuple[datetime | None, datetime | None]:
+            status, users = self._status_found.get(host_id), self._users_found.get(host_id)
+            return (status[1] if status else None), (users[2] if users else None)
+
         def progress() -> tuple[int, int] | None:
             return (self._run.done, self._run.total) if self._run is not None else None
 
@@ -441,6 +445,7 @@ class HostsTool(ListWorkspace):
             ),
             stop=self.stop_checks,
             progress=progress,
+            checked_at=checked_at,
         )
         self.checks_changed.connect(dialog.checks_changed)
         try:
