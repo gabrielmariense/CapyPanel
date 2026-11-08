@@ -490,6 +490,10 @@ class MainWindow(QMainWindow):
             self._save_state()
         self.tray.set_shown(False)
         QApplication.setQuitOnLastWindowClosed(True)
+        # Windows of CapyPanel's own that no window owns, such as Commands: they go too.
+        for other in QApplication.topLevelWidgets():
+            if other is not self and other.isWindow() and other.isVisible():
+                other.close()
         super().closeEvent(event)
 
     def _save_state(self) -> None:

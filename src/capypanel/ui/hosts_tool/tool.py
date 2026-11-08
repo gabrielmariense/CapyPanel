@@ -533,15 +533,12 @@ class HostsTool(ListWorkspace):
         if self._commands_window is not None:
             self._commands_window.close()
             self._commands_window.deleteLater()
-        profile = self.connector.default_profile()
-        if target is not None and self._doc is not None:
-            host = self._doc.hosts.host(target.key)
-            if host is not None:
-                profile = self._doc.hosts.profile_of(host, self._profile_exists)[0]
-        window = CommandsWindow(self, target, profile, scripts=scripts)
+        window = CommandsWindow(self, target, self.profile_for(target), scripts=scripts)
         window.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         window.destroyed.connect(lambda: setattr(self, "_commands_window", None))
         self._commands_window = window
+        # Over the main window, where it opened from; it isn't owned by it, so Windows wouldn't.
+        window.move(self.window().frameGeometry().center() - window.rect().center())
         window.show()
 
     def _fill_connect_menu(self) -> None:
@@ -1400,6 +1397,26 @@ class HostsTool(ListWorkspace):
     def status_found(self, key: str) -> tuple[Status, datetime] | None:
         found = self._status_found.get(key)
         return (found[0], found[1]) if found is not None else None
+
+    def profile_for(self, target: HostTarget | None) -> str:
+        """The connection profile a host of the list uses; the default one for a typed address."""
+        if target is not None and self._doc is not None:
+            host = self._doc.hosts.host(target.key)
+            if host is not None:
+                return self._doc.hosts.profile_of(host, self._profile_exists)[0]
+        return self.connector.default_profile()
+
+    def host_choices(self) -> list[HostTarget]:
+        """The Commands window's host list: what the Hosts panel shows, in its order."""
+        return self._host_targets(self.table.in_shown_order(self.visible_items()))
+
+    def host_named(self, typed: str) -> HostTarget | None:
+        """The open list's host with that name or address, as typed in the Commands window."""
+        wanted = typed.strip().casefold()
+        hosts = self._doc.hosts.hosts if self._doc is not None else ()
+        found = next((h for h in hosts if h.connect_address and wanted in
+                      (h.name.casefold(), h.connect_address.casefold())), None)  # fmt: skip
+        return self._host_targets([found])[0] if found is not None else None
 
     def recent_addresses(self) -> list[str]:
         saved = self.prefs.get("recent_addresses")

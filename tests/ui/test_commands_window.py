@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import shiboken6
 from capywindow import CapyWindow
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QKeyEvent
@@ -87,9 +88,42 @@ def test_a_port_after_the_address_is_the_connection_s_port() -> None:
 def test_from_a_selected_host_it_names_the_host_and_greys_add_to_list(window: CapyWindow) -> None:
     commands = _open(window, "DESK-02")
     assert commands.windowTitle() == "Commands · DESK-02"
-    assert commands.host_label.text() == "<b>DESK-02</b> · 192.0.2.12"
+    assert commands.address.currentText() == "DESK-02 · 192.0.2.12"
     assert not commands.add_button.isEnabled()
     assert commands.add_button.toolTip() == ("Already in this list: in Front desks, as DESK-02")
+
+
+def test_the_host_can_be_picked_from_the_list_typed_or_stepped_with_the_arrows(
+    window: CapyWindow,
+) -> None:
+    commands = _open(window, "DESK-02")
+    shown = [commands.address.itemText(i) for i in range(commands.address.count())]
+    assert shown[:2] == ["DESK-01 · 192.0.2.11", "DESK-02 · 192.0.2.12"]  # the panel's order
+    _key(commands.address, Qt.Key.Key_Up)  # host by host
+    target = commands.target()
+    assert target is not None and target.name == "DESK-01" and not target.key.startswith("@")
+    assert commands.windowTitle() == "Commands · DESK-01"
+    commands.address.setEditText("desk-02")  # a list host's name, typed: that host
+    target = commands.target()
+    assert target is not None and target.address == "192.0.2.12"
+    assert not target.key.startswith("@")
+    commands.address.setEditText("192.0.2.11")  # or its address
+    assert (target := commands.target()) is not None and target.name == "DESK-01"
+    commands.address.setEditText("192.0.2.99")  # not in the list: a manual connection
+    target = commands.target()
+    assert target is not None and target.key == "@192.0.2.99"
+    assert commands.windowTitle() == "Manual connection · 192.0.2.99"
+    assert commands.add_button.isEnabled()
+
+
+def test_it_is_a_window_of_its_own_that_closes_when_capypanel_quits(window: CapyWindow) -> None:
+    commands = _open(window, "DESK-02")
+    assert commands.parent() is None  # not owned: the main window can come in front of it
+    window.show()
+    commands.show()
+    window.close()
+    QApplication.processEvents()
+    assert not shiboken6.isValid(commands) or not commands.isVisible()
 
 
 def test_the_picked_row_grows_and_the_arrows_move(window: CapyWindow) -> None:

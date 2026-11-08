@@ -376,27 +376,44 @@ class CommandsWindow(QDialog):
     def __init__(
         self, tool: "HostsTool", target: HostTarget | None, profile: str, *, scripts: bool = False
     ) -> None:
-        super().__init__(tool)
+        # A window of its own, not owned by the main one: either can be in front, to work in
+        # the list and here by turns. Quitting CapyPanel closes it (MainWindow.closeEvent).
+        super().__init__(None)
         self._tool = tool
-        self._typed = target is None  # Manual connection: the address is typed here
-        self._target = target
+        self._typed = target is None  # opened as Manual connection: nothing picked yet
+        self._shown_key = target.key if target else ""  # whose profile the dropdown shows
         self._outcomes: dict[tuple[str, str], Outcome] = {}  # (target key, command id)
         self._lists: dict[tuple[str, str], Listed] = {}  # printers and programs, as read
         self.setFixedSize(*SIZE)
 
-        # ---- the top line ----
+        # ---- the top line: the PC, typed or picked from what the Hosts panel shows; the arrows
+        # go host by host. Then the addresses typed here before. ----
         self.address = QComboBox()
         self.address.setEditable(True)
         self.address.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
-        self.address.addItems(tool.recent_addresses())
-        self.address.setCurrentIndex(-1)
+        self.address.setMaxVisibleItems(15)
+        self._choices = {t.key: t for t in tool.host_choices()}
+        for choice in self._choices.values():
+            same = choice.name.casefold() == choice.address.casefold()
+            shown = choice.name if same else f"{choice.name} · {choice.address}"
+            self.address.addItem(shown, choice.key)
+        recent = tool.recent_addresses()
+        if self._choices and recent:
+            self.address.insertSeparator(self.address.count())
+        self.address.addItems(recent)
+        if target is None:
+            self.address.setCurrentIndex(-1)
+        elif (index := self.address.findData(target.key)) >= 0:
+            self.address.setCurrentIndex(index)
+        else:  # not among what the panel shows (a search changed since): by its name
+            self.address.setCurrentIndex(-1)
+            self.address.setEditText(target.name)
         line = self.address.lineEdit()
         assert line is not None
         line.setMaxLength(MAX_ADDRESS)
-        line.setPlaceholderText(_("Hostname or IP address"))
-        address_label = QLabel(_("&Address:"))
+        line.setPlaceholderText(_("Host name or IP address"))
+        address_label = QLabel(_("&Host:"))
         address_label.setBuddy(self.address)
-        self.host_label = QLabel()
         self.profile = QComboBox()
         for profile_id, text in tool.connector.choices():
             self.profile.addItem(text, profile_id)
@@ -407,13 +424,8 @@ class CommandsWindow(QDialog):
         self.connect_button.setAutoDefault(False)
         self.connect_button.clicked.connect(self._connect)
         left_top = QHBoxLayout()
-        if self._typed:
-            left_top.addWidget(address_label)
-            left_top.addWidget(self.address, 1)
-        else:
-            left_top.addWidget(self.host_label)
-            left_top.addStretch(1)
-            self.address.hide()
+        left_top.addWidget(address_label)
+        left_top.addWidget(self.address, 1)
         right_top = QHBoxLayout()
         right_top.addWidget(profile_label)
         right_top.addWidget(self.profile, 1)
@@ -548,25 +560,37 @@ class CommandsWindow(QDialog):
     # ---- the PC ----
 
     def target(self) -> HostTarget | None:
-        if not self._typed:
-            return self._target
+        """The PC in the Host field: a host of the list (picked, or typed by its name or
+        address), else the address typed, which isn't in the list."""
         typed = self.address.currentText().strip()
         if not typed:
             return None
+        index = self.address.findText(typed, Qt.MatchFlag.MatchFixedString)  # any case
+        picked = self._choices.get(self.address.itemData(index)) if index >= 0 else None
+        if picked is not None:
+            return picked
+        found = self._tool.host_named(typed)
+        if found is not None:
+            return found
         address = split_address(typed).address
         return HostTarget("@" + address.casefold(), address, address)
 
     def _address_typed(self) -> None:
+        target = self.target()
+        key = target.key if target else ""
+        if key != self._shown_key and target is not None and not target.key.startswith("@"):
+            # Another host of the list: its own profile, as Connect would use.
+            index = self.profile.findData(self._tool.profile_for(target))
+            if index >= 0:
+                self.profile.setCurrentIndex(index)
+        self._shown_key = key
         self._show_target()
 
     def _show_target(self) -> None:
         target = self.target()
-        title = _("Manual connection") if self._typed else _("Commands")
+        typed = target.key.startswith("@") if target else self._typed
+        title = _("Manual connection") if typed else _("Commands")
         self.setWindowTitle(f"{title} · {target.name}" if target else title)
-        if target is not None and not self._typed:
-            shown = (f"<b>{_escape(target.name)}</b>" if target.name == target.address
-                     else f"<b>{_escape(target.name)}</b> · {_escape(target.address)}")  # fmt: skip
-            self.host_label.setText(shown)
         for row in self.rows:
             review = row.script is not None and not row.script.ready  # needs no PC
             row.run.setEnabled(target is not None or review)
@@ -632,7 +656,7 @@ class CommandsWindow(QDialog):
         target = self.target()
         if target is None:
             return
-        if self._typed:
+        if target.key.startswith("@"):  # typed, not in the list: offered again next time
             self._tool.remember_address(self.address.currentText().strip())
         if command.id in LISTS:
             self._read_list(command.id, target)
@@ -1006,7 +1030,7 @@ class CommandsWindow(QDialog):
         target = self.target()
         if target is None:
             return
-        if self._typed:
+        if target.key.startswith("@"):  # typed: its port too, as typed
             typed = self.address.currentText().strip()
             self._tool.remember_address(typed)
             where = split_address(typed)
@@ -1067,9 +1091,3 @@ def _divider() -> QFrame:
     line.setObjectName("pagesDivider")
     line.setFixedWidth(1)
     return line
-
-
-def _escape(text: str) -> str:
-    import html
-
-    return html.escape(text, quote=False)

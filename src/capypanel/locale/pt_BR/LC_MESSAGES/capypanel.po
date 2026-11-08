@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 14:53-0300\n"
+"POT-Creation-Date: 2026-11-08 16:06-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -159,6 +159,9 @@ msgstr "Painel de &grupos"
 
 msgid "&Help"
 msgstr "Aj&uda"
+
+msgid "&Host:"
+msgstr "&Host:"
 
 msgid "&Hosts"
 msgstr "&Hosts"
@@ -1430,15 +1433,15 @@ msgstr "Listas de hosts"
 msgid "Host lists (*.json);;All files (*)"
 msgstr "Listas de hosts (*.json);;Todos os arquivos (*)"
 
+msgid "Host name or IP address"
+msgstr "Nome do host ou endereço IP"
+
 msgid "Host not found"
 msgstr "Host não encontrado"
 
 #, python-brace-format
 msgid "Host “{name}” is in a group that doesn't exist."
 msgstr "O host “{name}” está em um grupo que não existe."
-
-msgid "Hostname or IP address"
-msgstr "Nome do host ou endereço IP"
 
 msgid "Hostname or IP address; leave blank to use the name"
 msgstr "Nome do host ou endereço IP; deixe em branco para usar o nome"
