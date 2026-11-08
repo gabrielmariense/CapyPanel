@@ -621,7 +621,7 @@ class PrintersTool(ListWorkspace):
         if secret is None:
             if quiet:
                 return
-            note = _("Set the SNMP v3 account in Settings › Printers › Refresh first.")
+            note = _("Set the SNMP v3 account in Settings › Printers › Connecting first.")
             self._shell.show_message(note, 10_000)
             return
         targets = [(p.id, p.address or p.name) for p in printers]

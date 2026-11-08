@@ -60,7 +60,7 @@ def test_the_window_lists_the_connection_logins_by_what_they_re_used_for(
 
 
 def test_printers_snmp_logins_are_not_listed(window: CapyWindow) -> None:
-    # They're set in Settings › Printers › Refresh, not with the connection logins.
+    # They're set in Settings › Printers › Connecting, not with the connection logins.
     refresh.save_v3_account(usm.Account("snmp-reader", usm.Auth.SHA, "auth-pass"))
     credstore.save(refresh.COMMUNITY, "s3cret")
     assert window.kept_logins() == []

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 08:11-0300\n"
+"POT-Creation-Date: 2026-11-08 08:14-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -749,7 +749,7 @@ msgstr ""
 msgid "Check"
 msgstr ""
 
-msgid "Check the SNMP account in Settings › Printers › Refresh."
+msgid "Check the SNMP account in Settings › Printers › Connecting."
 msgstr ""
 
 #, python-brace-format
@@ -2719,7 +2719,7 @@ msgstr ""
 msgid "Set tags"
 msgstr ""
 
-msgid "Set the SNMP v3 account in Settings › Printers › Refresh first."
+msgid "Set the SNMP v3 account in Settings › Printers › Connecting first."
 msgstr ""
 
 msgid "Set the account…"
