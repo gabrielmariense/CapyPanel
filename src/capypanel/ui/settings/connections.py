@@ -1,8 +1,8 @@
-"""Settings > Connections: the shared connection profiles (add, edit, duplicate, delete, the
+"""Settings › Hosts › Connecting: the shared connection profiles (add, edit, duplicate, delete, the
 default one), where this user's typed passwords are kept, and where each remote tool was found
 on this PC. Like every other setting, each change is written at once."""
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 
@@ -698,22 +698,17 @@ class ToolsSection(SharedSection):
 
 
 class ConnectionsPage(Page):
-    """Settings > Hosts > Connecting: the profiles, where typed passwords are kept, and where
-    the tools the profiles open are."""
+    """Settings › Hosts › Connecting: what everyone on this PC shares, the profiles and where
+    the tools the profiles open are. The profiles' Passwords card is this person's own: it
+    shows on Accounts and passwords."""
 
     def __init__(
-        self,
-        catalogs: Catalogs,
-        document: OpenList | None,
-        *,
-        save_passwords: bool = False,
-        own: Sequence[Section] = (),
+        self, catalogs: Catalogs, document: OpenList | None, *, save_passwords: bool = False
     ) -> None:
         super().__init__(_("Connecting"))
         self.profiles = ProfilesSection(catalogs, document, save_passwords=save_passwords)
         self.tools = ToolsSection(catalogs)
-        # `own`: more of this person's own sections, such as the accounts, under Passwords.
-        for section in (self.profiles, self.profiles.passwords_section, *own, self.tools):
+        for section in (self.profiles, self.tools):
             self.body.addWidget(section)
         for shared in (self.profiles, self.tools):
             shared.changed.connect(self.changed.emit)

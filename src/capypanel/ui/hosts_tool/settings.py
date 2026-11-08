@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from capypanel.core.hosts import locations
-from capypanel.core.i18n import N_
+from capypanel.core.i18n import N_, _
 from capypanel.ui.hosts_tool.accounts import AccountsSection
 from capypanel.ui.saved_credentials import kept_text
 from capypanel.ui.settings.connections import ConnectionsPage
@@ -31,10 +31,11 @@ class SettingsPrefs:
 
 class HostsSettings(SettingsGroup):
     LABEL = N_("Hosts")
-    TITLES = (N_("General"), N_("Connecting"))
+    TITLES = (N_("General"), N_("Connecting"), N_("Accounts and passwords"))
 
     general: HostsPage
     connections: ConnectionsPage
+    accounts_page: Page  # only this person's: which account signs in where, and passwords
     accounts: AccountsSection
 
     def __init__(self, tool: "HostsTool") -> None:
@@ -60,11 +61,14 @@ class HostsSettings(SettingsGroup):
             host_list=doc.hosts if doc else None,
             scripts_folder=tool.own_scripts.folder(),
         )
-        self.accounts = AccountsSection(tool.accounts)  # which account signs in to which PCs
         self.connections = ConnectionsPage(
-            tool.connector.catalogs, doc, save_passwords=tool.saves_passwords(),
-            own=[self.accounts],
-        )  # fmt: skip
+            tool.connector.catalogs, doc, save_passwords=tool.saves_passwords()
+        )
+        self.accounts = AccountsSection(tool.accounts)  # which account signs in to which PCs
+        self.accounts_page = Page(_("Accounts and passwords"))
+        for section in (self.accounts, self.connections.profiles.passwords_section):
+            self.accounts_page.body.addWidget(section)
+        self.accounts_page.body.addStretch(1)
         tool.accounts.changed.connect(self.credentials_changed)
         self.general.changed.connect(self._changed)
         profiles = self.connections.profiles
@@ -76,7 +80,11 @@ class HostsSettings(SettingsGroup):
         self.general.view.open_requested.connect(self._open)
         self.connections.changed.connect(tool.profiles_changed)  # Connect's menu follows
         self._building = False
-        return [("hosts", self.general), ("connections", self.connections)]
+        return [
+            ("hosts", self.general),
+            ("connections", self.connections),
+            ("accounts", self.accounts_page),
+        ]
 
     def before_rebuild(self) -> None:
         self._chosen = self.general.chosen()

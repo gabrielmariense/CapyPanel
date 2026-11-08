@@ -860,15 +860,15 @@ class HostsTool(ListWorkspace):
                  "not for Connect.")  # fmt: skip
         link = self.accounts.link_for(HostTarget(host.id, host.name, host.connect_address))
         if link is not None and link.user == WINDOWS:
-            where = _("Settings › Hosts › Connecting › Accounts: {uses}").format(
+            where = _("Settings › Hosts › Accounts and passwords: {uses}").format(
                 uses=used_for(link, self._doc)
             )
             return windows_account(), _("your Windows account"), f"{used}\n{where}"
         if link is None:
-            why = _("No row of Settings › Hosts › Connecting › Accounts names this PC, so it's "
+            why = _("No row of Settings › Hosts › Accounts and passwords names this PC, so it's "
                     "the Windows account you're signed in with.")  # fmt: skip
             return windows_account(), _("your Windows account"), f"{used}\n{why}"
-        where = _("Settings › Hosts › Connecting › Accounts: {uses}").format(
+        where = _("Settings › Hosts › Accounts and passwords: {uses}").format(
             uses=used_for(link, self._doc)
         )
         return link.user, _("from Accounts"), f"{used}\n{where}"

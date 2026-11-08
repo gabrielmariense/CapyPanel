@@ -81,6 +81,7 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
         "Hosts",
         "General",
         "Connecting",
+        "Accounts and passwords",
         "Printers",
         "General",
         "Warnings and supplies",
@@ -95,9 +96,8 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
     assert titles(dialog.general) == ["Appearance", "Startup and closing"]
     hosts = dialog.group(HostsSettings)
     assert titles(hosts.general) == ["Host lists", "Refresh", "Scripts"]
-    assert titles(hosts.connections) == [
-        "Connection profiles", "Passwords", "Accounts", "Remote tools"
-    ]  # fmt: skip
+    assert titles(hosts.connections) == ["Connection profiles", "Remote tools"]  # shared
+    assert titles(hosts.accounts_page) == ["Accounts", "Passwords"]  # only yours
     printers = dialog.group(PrintersSettings).general
     assert titles(printers) == ["Printer lists"]
     assert titles(printers.warnings_page) == ["Refresh", "Supplies"]
@@ -568,14 +568,11 @@ def test_the_settings_buttons_are_only_the_main_actions(window: CapyWindow) -> N
                 "&Edit…",
                 "&Delete…",
                 "&Restore built-in…",
-                "&Manage…",
-                "&Add…",
-                "&Edit…",
-                "Re&move",
                 "Change path…",
                 "Download",
             ],  # fmt: skip
         ),
+        ("accounts", ["&Add…", "&Edit…", "Re&move", "&Manage…"]),
     ):
         page = dialog.pages[page_id]
         assert [b.text() for b in page.findChildren(QPushButton)] == wanted, page_id

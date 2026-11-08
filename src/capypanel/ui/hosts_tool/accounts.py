@@ -1,5 +1,6 @@
 """Which account signs in to which PCs: the links (core.hosts.accounts) in the person's own
-settings, the passwords typed for them, and their table in Settings › Hosts › Connecting.
+settings, the passwords typed for them, and their table in Settings › Hosts › Accounts and
+passwords.
 
 A password is kept in memory once typed, and in Windows Credential Manager when "Remember it on
 this computer" is ticked; a link whose password isn't known yet asks for it the first time it's
@@ -344,7 +345,7 @@ class Accounts(QObject):
         return logins
 
 
-# ---- Settings › Hosts › Connecting › Accounts ----
+# ---- Settings › Hosts › Accounts and passwords › Accounts ----
 
 
 class LinkDialog(QDialog):

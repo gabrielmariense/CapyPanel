@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 07:48-0300\n"
+"POT-Creation-Date: 2026-11-08 08:11-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -486,6 +486,9 @@ msgstr "Conta recusada"
 
 msgid "Accounts"
 msgstr "Contas"
+
+msgid "Accounts and passwords"
+msgstr "Contas e senhas"
 
 msgid "Active"
 msgstr "Ativo"
@@ -1344,8 +1347,8 @@ msgid_plural "Forget these {n} logins?"
 msgstr[0] "Esquecer este login?"
 msgstr[1] "Esquecer estes {n} logins?"
 
-msgid "Forgotten logins are deleted from Credential Manager too; you type them again the next time. Where new ones are kept: Settings › Connection profiles › Credentials."
-msgstr "Logins esquecidos também são apagados do Gerenciador de Credenciais; você os digita de novo na próxima vez. Onde os novos ficam: Configurações › Perfis de conexão › Credenciais."
+msgid "Forgotten logins are deleted from Credential Manager too; you type them again the next time. Where new ones are kept: Settings › Hosts › Accounts and passwords › Credentials."
+msgstr "Logins esquecidos também são apagados do Gerenciador de Credenciais; você os digita de novo na próxima vez. Onde os novos ficam: Configurações › Hosts › Contas e senhas › Credenciais."
 
 msgid "Forgotten when CapyPanel closes."
 msgstr "Esquecidas quando o CapyPanel fecha."
@@ -1834,8 +1837,8 @@ msgstr "Nenhuma impressora está instalada em {host}."
 msgid "No printers in this group have all the picked tags."
 msgstr "Nenhuma impressora deste grupo tem todas as tags escolhidas."
 
-msgid "No row of Settings › Hosts › Connecting › Accounts names this PC, so it's the Windows account you're signed in with."
-msgstr "Nenhuma linha de Configurações › Hosts › Conexão › Contas nomeia este PC, então é a conta do Windows com que você entrou."
+msgid "No row of Settings › Hosts › Accounts and passwords names this PC, so it's the Windows account you're signed in with."
+msgstr "Nenhuma linha de Configurações › Hosts › Contas e senhas nomeia este PC, então é a conta do Windows com que você entrou."
 
 #, python-brace-format
 msgid "No settings mention “{text}”."
@@ -2547,8 +2550,8 @@ msgstr "Salvas para a sua conta do Windows."
 msgid "Saved in Credential Manager:"
 msgstr "Salvos no Gerenciador de Credenciais:"
 
-msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only for hosts with this connection profile."
-msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada nos hosts com este perfil de conexão."
+msgid "Saved in Windows Credential Manager for your Windows account (Settings › Hosts › Accounts and passwords), and used only for hosts with this connection profile."
+msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Hosts › Contas e senhas) e só é usada nos hosts com este perfil de conexão."
 
 msgid "Saved passwords deleted."
 msgstr "As senhas salvas foram apagadas."
@@ -2644,8 +2647,8 @@ msgid "Settings (Ctrl+,)"
 msgstr "Configurações (Ctrl+,)"
 
 #, python-brace-format
-msgid "Settings › Hosts › Connecting › Accounts: {uses}"
-msgstr "Configurações › Hosts › Conexão › Contas: {uses}"
+msgid "Settings › Hosts › Accounts and passwords: {uses}"
+msgstr "Configurações › Hosts › Contas e senhas: {uses}"
 
 msgid "Shared"
 msgstr "Compartilhada"
@@ -3067,8 +3070,8 @@ msgstr "O “website” deve ser um endereço https://."
 msgid "Theme colour"
 msgstr "Cor do tema"
 
-msgid "There are no connection profiles. Create one in Settings > Connections."
-msgstr "Não há perfis de conexão. Crie um em Configurações > Conexões."
+msgid "There are no connection profiles. Create one in Settings › Hosts › Connecting."
+msgstr "Não há perfis de conexão. Crie um em Configurações › Hosts › Conexão."
 
 #, python-brace-format
 msgid "There's a mark at {n} % already."
@@ -4121,8 +4124,8 @@ msgid "{tool} not found"
 msgstr "{tool} não encontrado"
 
 #, python-brace-format
-msgid "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. The path is saved for everyone on this PC; you can also change it later in Settings > Hosts > Connections."
-msgstr "O {tool} não foi encontrado neste PC. Instale-o ou mostre ao CapyPanel onde ele está. O caminho é salvo para todos neste PC; você também pode alterá-lo depois em Configurações > Hosts > Conexões."
+msgid "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. The path is saved for everyone on this PC; you can also change it later in Settings › Hosts › Connecting."
+msgstr "O {tool} não foi encontrado neste PC. Instale-o ou mostre ao CapyPanel onde ele está. O caminho é salvo para todos neste PC; você também pode alterá-lo depois em Configurações › Hosts › Conexão."
 
 #, python-brace-format
 msgid "{user} (disconnected)"

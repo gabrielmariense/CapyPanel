@@ -78,7 +78,8 @@ class CredentialDialog(QDialog):
         form.addRow(_("&Password:"), self.password)
         remembered = (
             _("Saved in Windows Credential Manager for your Windows account (Settings › "
-              "Connections), and used only for hosts with this connection profile.")
+              "Hosts › Accounts and passwords), and used only for hosts with this connection "
+              "profile.")
             if saved
             else _("Kept in memory until CapyPanel closes, never saved, and used only for hosts "
                    "with this connection profile.")
@@ -138,7 +139,7 @@ class Connector:
         self._parent = parent
         self.catalogs = catalogs
         self.credentials = credentials
-        self.open_settings: Callable[[], None] | None = None  # Settings > Connections
+        self.open_settings: Callable[[], None] | None = None  # Settings › Hosts › Connecting
 
     # ---- profiles ----
 
@@ -173,7 +174,7 @@ class Connector:
         profile_id = profile_id or self.default_profile()
         if not profile_id:
             raise ProfileError(
-                _("There are no connection profiles. Create one in Settings > Connections.")
+                _("There are no connection profiles. Create one in Settings › Hosts › Connecting.")
             )
         profile = self.catalogs.profiles.find(profile_id)
         if profile is None:
@@ -318,7 +319,7 @@ class Connector:
             _(
                 "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. "
                 "The path is saved for everyone on this PC; you can also change it later in "
-                "Settings > Hosts > Connections."
+                "Settings › Hosts › Connecting."
             ).format(tool=tool.name),
             parent=self._parent,
         )
