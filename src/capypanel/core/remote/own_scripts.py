@@ -282,6 +282,10 @@ if (__CHECK__ -and -not $same) {
   }
 }
 $global:LASTEXITCODE = 0
+# From the script's own folder, as when Windows runs it at logon (and as VNC-Menu does): a
+# script can count on finding its files there.
+[Environment]::CurrentDirectory = [IO.Path]::GetDirectoryName($path)
+Set-Location -LiteralPath ([IO.Path]::GetDirectoryName($path))
 # cscript, not wscript: its output comes back, and the run is hidden either way.
 $vbs = $path -match '\.vbs$'
 if ($vbs) { & "$env:SystemRoot\System32\cscript.exe" //nologo $path @args } else { & $path @args }

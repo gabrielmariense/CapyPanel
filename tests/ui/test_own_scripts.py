@@ -174,7 +174,7 @@ def test_a_script_on_the_pcs_is_made_from_its_path_and_shows_for_review(
                             lambda _p, _t, start, _f: seen.append(start) or picked)  # fmt: skip
         dialog.name.clear()
         dialog.browse.click()  # the PC's own drive, over C$
-        assert seen == ["\\\\192.0.2.1\\C$\\ProgramData"]
+        assert seen == ["\\\\192.0.2.1\\C$"]  # the drive's top: the script can be anywhere
         assert dialog.path.text() == "C:\\ProgramData\\Scripts\\printers.cmd"
         assert dialog.name.text() == "printers"  # named after the file when no name was typed
         dialog.name.setText("Printers")

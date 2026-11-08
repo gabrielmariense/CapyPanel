@@ -92,6 +92,15 @@ def test_the_launcher_runs_the_pc_s_file_with_its_arguments(tmp_path: Path) -> N
     assert code == 3  # the file's own exit code
 
 
+def test_the_pc_s_file_runs_from_its_own_folder(tmp_path: Path) -> None:
+    folder = tmp_path / "pc"
+    folder.mkdir()
+    target = folder / "where.cmd"
+    target.write_bytes(b"@echo off\r\necho cwd=%CD%\r\n")
+    code, output = _launch(_ready(tmp_path, target), RunAs.SYSTEM, tmp_path)
+    assert f"cwd={folder}".casefold() in output.casefold() and code == 0
+
+
 def test_a_vbs_on_the_pc_runs_with_its_output_and_exit_code(tmp_path: Path) -> None:
     folder = tmp_path / "pc"
     folder.mkdir()

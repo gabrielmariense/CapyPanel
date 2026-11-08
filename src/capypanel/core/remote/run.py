@@ -64,7 +64,10 @@ COMMAND_LIMIT = 30_000  # characters: Windows' command line holds 32 767; room f
 LOG_SIZE, LOG_KEEP = 2_000_000, 5  # the run log: bytes per file, older files kept
 FOLDER = r"Temp\CapyPanel"  # under Windows' folder on the PC, so C:\Windows\Temp\CapyPanel
 # Only files with these names are ever deleted from the folder: what CapyPanel itself made.
-_OURS = re.compile(r"^[0-9a-f]{16}(-task)?\.(run|json|tmp|out|err|ps1|cmd|vbs|code|task\.log)$")
+# (-task.ps1: left by earlier versions, swept too)
+_OURS = re.compile(
+    r"^[0-9a-f]{16}(-task)?\.(run|json|tmp|out|err|ps1|cmd|vbs|code|args|task\.log)$"
+)
 
 log = logging.getLogger(__name__)
 
@@ -461,27 +464,29 @@ _START_TASK = r"""
   # The person can't enter our folder; System32, not Temp: any user can drop files in Temp, and a
   # batch file looks for the programs it calls in its working folder first.
   $work = if ($system) { $dir } else { Join-Path $env:SystemRoot 'System32' }
-  $inner = "`$p = Start-Process -FilePath $(Q $exe) -ArgumentList $(Q $argline) " +
+  # The task's own few lines travel inside its command, as every PowerShell CapyPanel sends: no
+  # .ps1 file, which some PCs refuse to run from Temp. The script's long command line waits in
+  # .args, plain text. What goes wrong before the script starts lands in .task.log.
+  [IO.File]::WriteAllText("$base.args", $argline)
+  $inner = "try { `$p = Start-Process -FilePath $(Q $exe) " +
+    "-ArgumentList ([IO.File]::ReadAllText($(Q "$base.args"))) " +
     "-WorkingDirectory $(Q $work) -NoNewWindow -PassThru " +
     "-RedirectStandardOutput $(Q "$base.out") -RedirectStandardError $(Q "$base.err")`r`n" +
     "`$null = `$p.Handle; `$p.WaitForExit()`r`n" +
-    "[IO.File]::WriteAllText($(Q "$base.code"), [string]`$p.ExitCode)"
-  [IO.File]::WriteAllText("$base-task.ps1", $inner, (New-Object Text.UTF8Encoding $true))
+    "[IO.File]::WriteAllText($(Q "$base.code"), [string]`$p.ExitCode) }`r`n" +
+    "catch { [IO.File]::WriteAllText($(Q "$base.task.log"), `$_.Exception.Message) }"
+  $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($inner))
   $shell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-  # Through cmd, so whatever PowerShell itself says (a policy refusing the file, an error before
-  # the script starts) lands in .task.log, for the answer when the task gives none.
-  $run = "/d /c `"`"$shell`" -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle " +
-    "Hidden -File `"$base-task.ps1`" > `"$base.task.log`" 2>&1`""
-  $cmd = Join-Path $env:SystemRoot 'System32\cmd.exe'
+  $run = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden " +
+    "-EncodedCommand $encoded"
   if ($system) {
-    $command = $cmd; $arguments = $run
+    $command = $shell; $arguments = $run
     # No LogonType: "ServiceAccount" isn't a value the task format takes on every Windows
     # (rejected at that spot); RegisterTask's own logon type, 5, says it below.
     $principal = '<UserId>S-1-5-18</UserId><RunLevel>HighestAvailable</RunLevel>'
   } else {
     # Hidden: Windows Script Host starts it with no window on the person's screen.
-    $vbs = "WScript.Quit CreateObject(`"WScript.Shell`").Run(`"`"`"$cmd`"`" " +
-      ($run -replace '"', '""') + "`", 0, True)"
+    $vbs = "WScript.Quit CreateObject(`"WScript.Shell`").Run(`"`"`"$shell`"`" $run`", 0, True)"
     [IO.File]::WriteAllText("$base.vbs", $vbs, [Text.Encoding]::Unicode)
     $command = Join-Path $env:SystemRoot 'System32\wscript.exe'
     $arguments = "//B //Nologo `"$base.vbs`""
@@ -490,7 +495,7 @@ _START_TASK = r"""
     foreach ($kind in 'out', 'err', 'code', 'task.log') {
       [IO.File]::WriteAllText("$base.$kind", '')
     }
-    $grants = @{"$base-task.ps1" = 'R'; "$base.vbs" = 'R'; "$base.out" = 'M'; "$base.err" = 'M'
+    $grants = @{"$base.args" = 'R'; "$base.vbs" = 'R'; "$base.out" = 'M'; "$base.err" = 'M'
                 "$base.code" = 'M'; "$base.task.log" = 'M'; "$base.ps1" = 'R'; "$base.cmd" = 'R'}
     foreach ($file in $grants.Keys) {
       if (Test-Path -LiteralPath $file) {
@@ -638,7 +643,7 @@ def _delete_run(folder: Path, run_id: str) -> None:
             (folder / name).unlink(missing_ok=True)
 
 
-_KINDS = ("run", "json", "tmp", "out", "err", "ps1", "cmd", "vbs", "code", "task.log")
+_KINDS = ("run", "json", "tmp", "out", "err", "ps1", "cmd", "vbs", "code", "args", "task.log")
 
 
 def _read_output(file: Path, oem: int) -> str:

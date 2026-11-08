@@ -263,7 +263,7 @@ class OnPcDialog(QDialog):
 
     def _browse(self) -> None:
         """Pick the script on the PC; its path there goes in the field (\\\\PC\\C$\\… → C:\\…)."""
-        start = places.typed_path(self._host, "C:\\ProgramData") if self._host else "C:\\"
+        start = places.typed_path(self._host, "C:\\") if self._host else "C:\\"
         chosen, _filter = QFileDialog.getOpenFileName(
             self, _("The script on the PC"), start,
             _("Scripts (*.ps1 *.bat *.cmd *.vbs)"),
