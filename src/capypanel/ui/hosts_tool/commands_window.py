@@ -285,10 +285,14 @@ class CommandRow(QFrame):
         grid.setHorizontalSpacing(10)
         grid.addWidget(icon, 0, 0, Qt.AlignmentFlag.AlignVCenter)
         grid.addWidget(self.name, 0, 1)
-        grid.addWidget(self.run, 0, 2)
+        self.buttons = QHBoxLayout()  # Run; your own script's Review… before it
+        self.buttons.setSpacing(6)
+        self.buttons.addWidget(self.run)
+        grid.addLayout(self.buttons, 0, 2)
         grid.addWidget(self.about, 1, 1, 1, 2)
         grid.setColumnStretch(1, 1)
-        self.extra: QWidget | None = None  # your own script's Run as and Review…
+        self.extra: QWidget | None = None  # your own script's Run as
+        self.review: QPushButton | None = None
         self.run_as: QComboBox | None = None
         name = _(command.name)
         if script is not None:
@@ -308,11 +312,12 @@ class CommandRow(QFrame):
         approval = script.approval
         assert approval is not None
         self.run_as = QComboBox()
-        # Narrower than its longest choice, so the row fits the column; the list shows it whole.
+        # It fills its own line, as wide as the column, never wider: the open list shows all.
         self.run_as.setSizeAdjustPolicy(
             QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
         )
         self.run_as.setMinimumContentsLength(8)
+        self.run_as.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         for choice in RunAs:
             self.run_as.addItem(windows.run_as_text(choice), choice)
         self.run_as.setCurrentIndex(max(self.run_as.findData(approval.run_as), 0))
@@ -321,15 +326,17 @@ class CommandRow(QFrame):
             self.run_as.setToolTip(_("Locked when it was approved"))
         label = QLabel(_("Run as:"))
         label.setObjectName("hint")
-        review = QPushButton(_("Re&view…"))
-        review.setAutoDefault(False)
-        review.clicked.connect(lambda: window.review(script))
+        self.review = QPushButton(_("Re&view…"))
+        self.review.setAutoDefault(False)
+        self.review.clicked.connect(lambda: window.review(script))
+        self.buttons.insertWidget(0, self.review)  # beside Run, so Run as has its line to itself
+        # Its title over the dropdown: side by side, the longest choice doesn't fit the column.
         self.extra = QWidget()
-        line = QHBoxLayout(self.extra)
-        line.setContentsMargins(0, 2, 0, 2)
-        line.addWidget(label)
-        line.addWidget(self.run_as, 1)
-        line.addWidget(review)
+        stack = QVBoxLayout(self.extra)
+        stack.setContentsMargins(0, 4, 0, 2)
+        stack.setSpacing(3)
+        stack.addWidget(label)
+        stack.addWidget(self.run_as)
         grid.addWidget(self.extra, 2, 1, 1, 2)
 
     def run_as_choice(self) -> RunAs:
@@ -346,10 +353,10 @@ class CommandRow(QFrame):
         self.run.setVisible(picked)
         self.run.setDefault(picked)  # Enter runs the picked one
         self.about.setVisible(picked)
-        if self.extra is not None:
-            self.extra.setVisible(picked)
-        self.setMinimumHeight(ROW)
-        self.setMaximumHeight(16_777_215 if picked else ROW)  # picked: as tall as it needs
+        for part in (self.extra, self.review):
+            if part is not None:
+                part.setVisible(picked)
+        self.setMinimumHeight(ROW)  # one line at least; more when the name wraps or it's picked
         self.style().unpolish(self)
         self.style().polish(self)
 

@@ -263,6 +263,27 @@ def test_an_unlocked_choice_can_change_for_one_run(
     assert runs.runs[0][2] is RunAs.SYSTEM
 
 
+def test_a_picked_script_fits_the_list_with_nothing_cut(
+    window: CapyWindow, folder: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    commands = _open(window)
+    _answer(monkeypatch, _approve(False))
+    commands.review(_row(commands, "Fix").script)  # type: ignore[arg-type]
+    _settle(window)
+    row = _row(commands, "Fix")
+    commands.pick(row)
+    commands.show()
+    QApplication.processEvents()
+    assert row.run_as is not None and row.review is not None
+    assert row.review.isVisible() and row.review.y() == row.run.y()  # beside Run
+    assert row.run_as.width() >= row.about.width()  # Run as: a line of its own, full width
+    viewport = commands.list.viewport()
+    for part in (row.run, row.run_as):
+        right = part.mapTo(viewport, part.rect().topRight()).x()
+        assert right < viewport.width()  # not under the list's right edge
+    commands.close()
+
+
 def test_a_file_every_user_can_change_can_t_be_approved(
     window: CapyWindow, folder: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
