@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 18:07-0300\n"
+"POT-Creation-Date: 2026-11-08 18:41-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -734,14 +734,8 @@ msgstr "A conta do CapyPanel para o PC"
 msgid "Change path…"
 msgstr "Alterar caminho…"
 
-msgid "Change the account commands run as"
-msgstr "Alterar a conta dos comandos"
-
 msgid "Change the account…"
 msgstr "Alterar a conta…"
-
-msgid "Change the connection profile"
-msgstr "Trocar o perfil de conexão"
 
 msgid "Changed since it was approved. Review it again before it can run."
 msgstr "Mudou desde que foi aprovado. Revise de novo antes que possa executar."
@@ -1989,6 +1983,9 @@ msgstr "Só impressoras com todas estas tags: {tags} · {shown} de {total} exibi
 msgid "Only the first {n} open at once."
 msgstr "Só as {n} primeiras abrem de uma vez."
 
+msgid "Only this PC"
+msgstr "Só este PC"
+
 msgid "Open &Settings"
 msgstr "Abrir &Configurações"
 
@@ -2763,6 +2760,10 @@ msgstr "Conectados: {names}. O que não foi salvo se perde."
 
 msgid "Signs a user out; unsaved work is lost."
 msgstr "Desconecta um usuário da conta; o que não foi salvo se perde."
+
+#, python-brace-format
+msgid "Signs in as {user}"
+msgstr "Entra como {user}"
 
 msgid "Signs in with"
 msgstr "Entra com"
@@ -3541,9 +3542,6 @@ msgstr "qualquer usuário pode alterá-lo"
 msgid "every user of that PC can change {path}, and it isn't the copy reviewed, so it only runs as the person signed in."
 msgstr "todo usuário desse PC pode alterar {path}, e não é a cópia revisada, então ele só executa como a pessoa conectada."
 
-msgid "from Accounts"
-msgstr "das Contas"
-
 #, python-brace-format
 msgid "from {computer}"
 msgstr "de {computer}"
@@ -4116,10 +4114,6 @@ msgstr "{profile} (cópia)"
 #, python-brace-format
 msgid "{profile} (not available on this PC)"
 msgstr "{profile} (não disponível neste PC)"
-
-#, python-brace-format
-msgid "{profile} · as {user}"
-msgstr "{profile} · como {user}"
 
 #, python-brace-format
 msgid "{shown} of {total} programs"

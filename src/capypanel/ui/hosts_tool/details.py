@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from PySide6.QtCore import QLocale, QPoint, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPalette
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPalette, QResizeEvent
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMenu,
     QPushButton,
+    QSizePolicy,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -42,6 +43,7 @@ def escape(text: str) -> str:
 BUTTON = (34, 30)  # px: the command buttons
 MENU_BUTTON = 48  # px: Users ▾ and Power ▾, room for their arrow
 ICON = 18
+PICKER_HEIGHT = 28  # px: a changeable value's button, as tall as a dropdown
 GB = 1024**3
 
 
@@ -55,8 +57,9 @@ class HostDetails:
     users: tuple[Sequence[Session] | None, RemoteError | None, datetime] | None = None
     facts: Facts | None = None
     pending: PendingPower | None = None  # a restart or shutdown CapyPanel asked for
-    # Commands run as: the account, where it comes from, and the tooltip saying why that one.
-    commands_as: tuple[str, str, str] = ("", "", "")
+    # Commands run as: the account, whether this PC overrides its group (its own Accounts row),
+    # and the tooltip saying why that one.
+    commands_as: tuple[str, bool, str] = ("", False, "")
     profile_user: str = ""  # the login kept for that profile, if one was typed or saved
 
 
@@ -100,19 +103,29 @@ class HostDetailsPanel(DetailsPanel):
             layout.addSpacing(8)
             layout.addWidget(self._pending_strip(shown.pending))
 
+        # Connection: a label on the left, its value on the same line, every value at the same
+        # x. The two logins, each named by what uses it, are buttons filling the value column.
         self.section(layout, _("Connection"))
         host = shown.host
-        for key, label, value in (
-            ("address", _("Address"), host.address),
-            ("group", _("Group"), shown.group),
-        ):
-            layout.addWidget(self.muted(label))
-            layout.addWidget(self.value(key, value) if value else self.muted("—"))
-        # Two logins, each named by what uses it: Connect, then the commands.
-        layout.addWidget(self.muted(_("Connect with")))
-        layout.addLayout(self._profile_row(shown.profile, shown.profile_user))
-        layout.addWidget(self.muted(_("Commands run as")))
-        layout.addLayout(self._commands_row(*shown.commands_as))
+        self.profile_button = self._profile_picker(shown.profile, shown.profile_user)
+        self.account_button = self._account_picker(*shown.commands_as)
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(12)
+        grid.setVerticalSpacing(6)
+        grid.setColumnStretch(1, 1)
+        rows: tuple[tuple[str, QWidget], ...] = (
+            (_("Address"), self.value("address", host.address) if host.address
+             else self.muted("—")),
+            (_("Group"), self.value("group", shown.group) if shown.group else self.muted("—")),
+            (_("Connect with"), self.profile_button),
+            (_("Commands run as"), self.account_button),
+        )  # fmt: skip
+        for row, (label, value) in enumerate(rows):
+            name = QLabel(label)  # never wraps: the column is as wide as its widest label
+            name.setObjectName("hint")
+            grid.addWidget(name, row, 0, Qt.AlignmentFlag.AlignVCenter)
+            grid.addWidget(value, row, 1, Qt.AlignmentFlag.AlignVCenter)
+        layout.addLayout(grid)
 
         self.users(layout, shown.users)
         self.facts(layout, shown.facts)
@@ -215,58 +228,28 @@ class HostDetailsPanel(DetailsPanel):
 
     # ---- the sections ----
 
-    def _profile_row(self, profile: str, user: str) -> QHBoxLayout:
-        """The profile and the login kept for it, copied by a click like every value, and right
-        after it an arrow to pick another (at the panel's far edge it read as a stray arrow)."""
-        row = QHBoxLayout()
-        row.setSpacing(2)
-        shown = _("{profile} · as {user}").format(profile=profile, user=user) if user else None
-        self._profile_value = self.value("profile", profile, shown) if profile else self.muted("—")
-        self._profile_value.setToolTip(
-            _("What Connect opens, and the login it uses. Refresh's logged-on users, commands "
-              "and scripts use the account under it.")
-        )  # fmt: skip
-        row.addWidget(self._profile_value)
-        self.profile_button = self._picker(_("Change the connection profile"))
-        self.profile_button.clicked.connect(
-            lambda: self._open_menu(self.profile_menu, self._profile_value, self.profile_button)
-        )
-        row.addWidget(self.profile_button, 0, Qt.AlignmentFlag.AlignVCenter)
-        row.addStretch(1)
-        return row
+    def _profile_picker(self, profile: str, user: str) -> "ValuePicker":
+        """The profile; a key when a login is kept for it, which the tooltip names."""
+        tip = _("What Connect opens, and the login it uses. Refresh's logged-on users, commands "
+                "and scripts use the account under it.")  # fmt: skip
+        if user:
+            tip = f"{_('Signs in as {user}').format(user=user)}\n{tip}"
+        picker = ValuePicker(profile or "—", ("key",) if user else (), tip)
+        picker.clicked.connect(lambda: self._open_menu(self.profile_menu, picker))
+        return picker
 
-    def _picker(self, tip: str) -> QToolButton:
-        """The small arrow right after a value, opening the menu to pick another."""
-        button = QToolButton()
-        button.setObjectName("profilePicker")
-        button.setToolTip(tip)
-        button.setCursor(Qt.CursorShape.PointingHandCursor)
-        text = self.palette().color(QPalette.ColorRole.Text)
-        button.setIcon(tabler_icon("chevron-down", text, 14))
-        return button
+    def _account_picker(self, account: str, own: bool, tip: str) -> "ValuePicker":
+        """The account; a pin only when this PC overrides its group, which the tooltip says."""
+        if own:
+            tip = f"{_('Only this PC')}\n{tip}"
+        picker = ValuePicker(account, ("pin",) if own else (), tip)
+        picker.clicked.connect(lambda: self._open_menu(self.account_menu, picker))
+        return picker
 
-    def _commands_row(self, account: str, source: str, tip: str) -> QHBoxLayout:
-        """The account, its arrow to pick another, then where it comes from, muted."""
-        row = QHBoxLayout()
-        row.setSpacing(2)
-        value = self.value("commands-as", account)
-        value.setToolTip(f"{tip}\n{value.toolTip()}")  # and Click to copy
-        row.addWidget(value)
-        self.account_button = self._picker(_("Change the account commands run as"))
-        self.account_button.clicked.connect(
-            lambda: self._open_menu(self.account_menu, value, self.account_button)
-        )
-        row.addWidget(self.account_button, 0, Qt.AlignmentFlag.AlignVCenter)
-        row.addSpacing(4)
-        row.addWidget(self.muted(source))
-        row.addStretch(1)
-        return row
-
-    def _open_menu(self, menu: QMenu, value: QWidget, button: QToolButton) -> None:
+    def _open_menu(self, menu: QMenu, picker: QWidget) -> None:
         """Under the value, from its left edge, like a dropdown's list."""
         menu.aboutToShow.emit()  # filled first
-        below = button.geometry().bottom() - value.geometry().top()
-        menu.popup(value.mapToGlobal(QPoint(0, below)))
+        menu.popup(picker.mapToGlobal(QPoint(0, picker.height())))
 
     def heading(
         self,
@@ -507,3 +490,55 @@ def facts_error_text(error: BaseException) -> str:
     if isinstance(error, TimeoutError):
         return _("Couldn't read: it took too long to answer")
     return _("Couldn't read: {error}").format(error=error)
+
+
+class ValuePicker(QPushButton):
+    """A value you can change in Details: a flat button filling the value column, the value on
+    the left, small marks (key, pin) and one chevron at its right edge. A click opens its menu;
+    the tooltip says what the marks mean."""
+
+    def __init__(self, text: str, marks: Sequence[str], tip: str) -> None:
+        super().__init__()
+        self.setObjectName("valuePicker")
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip(tip)
+        self.marks = tuple(marks)
+        self.label = _Elided(text)
+        row = QHBoxLayout(self)
+        row.setContentsMargins(8, 3, 6, 3)
+        row.setSpacing(6)
+        row.addWidget(self.label, 1)
+        muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
+        text_color = self.palette().color(QPalette.ColorRole.Text)
+        for icon, color in [*((m, muted) for m in self.marks), ("chevron-down", text_color)]:
+            mark = QLabel()
+            mark.setPixmap(tabler_icon(icon, color, 14).pixmap(14, 14))
+            row.addWidget(mark)
+        for child in self.findChildren(QLabel):  # the button takes the clicks
+            child.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.setMinimumHeight(PICKER_HEIGHT)
+
+    def value_text(self) -> str:
+        return self.label.full
+
+    def sizeHint(self) -> QSize:
+        hint = super().sizeHint()
+        layout = self.layout()
+        if layout is not None:
+            hint = hint.expandedTo(layout.sizeHint())
+        return QSize(hint.width(), max(hint.height(), PICKER_HEIGHT))
+
+
+class _Elided(QLabel):
+    """One line that ends in "…" when the column is narrower than the text."""
+
+    def __init__(self, text: str) -> None:
+        super().__init__(text)
+        self.full = text
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        shown = self.fontMetrics().elidedText(self.full, Qt.TextElideMode.ElideRight, self.width())
+        if shown != self.text():
+            self.setText(shown)

@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
 from capypanel.core import settings
 from capypanel.core.hosts import accounts as account_links
 from capypanel.core.hosts import commands as host_commands
-from capypanel.core.hosts.accounts import WINDOWS
+from capypanel.core.hosts.accounts import WINDOWS, Scope
 from capypanel.core.hosts.commands import GROUP_NAMES
 from capypanel.core.hosts.commands import Group as CommandGroup
 from capypanel.core.hosts.document import OpenList, starter_list
@@ -840,22 +840,20 @@ class HostsTool(ListWorkspace):
     def _default_profile(self) -> str:
         return self.connector.catalogs.profiles.default_id()
 
-    def _commands_as(self, host: Host) -> tuple[str, str, str]:
-        """Details' Commands run as: the account, where it comes from, and why that one."""
+    def _commands_as(self, host: Host) -> tuple[str, bool, str]:
+        """Details' Commands run as: the account, whether this PC overrides its group (its own
+        Accounts row), and why that one."""
         used = _("Used for Refresh's logged-on users and the commands and scripts run on this PC, "
                  "not for Connect.")  # fmt: skip
         link = self.accounts.link_for(HostTarget(host.id, host.name, host.connect_address))
-        if link is not None and link.user == WINDOWS:
-            where = _("Settings › Hosts › Credentials: {uses}").format(
-                uses=used_for(link, self._doc)
-            )
-            return windows_account(), _("your Windows account"), f"{used}\n{where}"
         if link is None:
             why = _("No row of Settings › Hosts › Credentials names this PC, so it's "
                     "the Windows account you're signed in with.")  # fmt: skip
-            return windows_account(), _("your Windows account"), f"{used}\n{why}"
+            return windows_account(), False, f"{used}\n{why}"
+        own = link.scope is Scope.PC
         where = _("Settings › Hosts › Credentials: {uses}").format(uses=used_for(link, self._doc))
-        return link.user, _("from Accounts"), f"{used}\n{where}"
+        user = windows_account() if link.user == WINDOWS else link.user
+        return user, own, f"{used}\n{where}"
 
     def _summary(self) -> str:
         """With nothing selected, the Details panel sums up the hosts shown."""

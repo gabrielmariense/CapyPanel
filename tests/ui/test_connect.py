@@ -224,7 +224,7 @@ def _set_profile(window: CapyWindow, name: str, profile: str) -> None:
 
 def test_details_show_the_profile_s_name(window: CapyWindow) -> None:
     _select(window, "PI-1")
-    assert window.hosts.details.shown_value("profile") == "Pis"  # the group's, named plainly
+    assert window.hosts.details.profile_button.value_text() == "Pis"  # the group's, named plainly
 
 
 def test_manual_connection_uses_the_chosen_profile(
@@ -407,7 +407,7 @@ def test_a_profile_this_pc_lacks_falls_back_to_the_group_s(
 ) -> None:
     _set_profile(window, "PC-A", "gone-elsewhere")
     _select(window, "PC-A")
-    assert window.hosts.details.shown_value("profile") == "Offices (SecureVNC)"
+    assert window.hosts.details.profile_button.value_text() == "Offices (SecureVNC)"
     window.hosts.connector.credentials.remember("offices", Credential("ana", "x"))
     window.hosts.connect_selected()
     assert launched[0][0] == "ultravnc" and launched[0][4] == ("securevnc",)

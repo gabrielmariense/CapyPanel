@@ -109,15 +109,20 @@ def test_each_pc_gets_its_own_account_and_details_says_which(
     typed = HostTarget("@192.0.2.12", "192.0.2.12", "192.0.2.12")  # the Commands window's
     assert _account_used(window, typed) == [other]
 
+    details = window.hosts.details
     window.hosts.table.select_ids([_host(window, "DESK-01").key])
-    labels = [w.text() for w in window.hosts.details.findChildren(QLabel)]
-    at = labels.index("Commands run as")
-    assert labels[at + 1 : at + 3] == [ADMIN.user, "from Accounts"]
-    assert "Connect with" in labels  # the profile: what Connect uses, named apart
+    account = details.account_button
+    assert account.value_text() == ADMIN.user and account.marks == ()  # the group's: no mark
+    assert "Clinic › Front desk" in account.toolTip()  # where it comes from, in the tooltip
+    labels = [w.text() for w in details.findChildren(QLabel)]
+    assert "Connect with" in labels and "Commands run as" in labels
+    assert "from Accounts" not in labels  # no grey source on the line any more
+    window.hosts.table.select_ids([_host(window, "DESK-02").key])
+    assert details.account_button.value_text() == other.user
+    assert details.account_button.marks == ("pin",)  # its own row: only this PC
+    assert details.account_button.toolTip().startswith("Only this PC")
     window.hosts.table.select_ids([_host(window, "DESK-03").key])
-    labels = [w.text() for w in window.hosts.details.findChildren(QLabel)]
-    at = labels.index("Commands run as")
-    assert labels[at + 1 : at + 3] == [accounts_ui.windows_account(), "your Windows account"]
+    assert details.account_button.value_text() == accounts_ui.windows_account()
 
 
 def test_a_password_not_typed_yet_is_asked_once_and_never_for_a_read_on_its_own(
@@ -281,15 +286,15 @@ def test_links_never_go_in_the_shared_list(window: CapyWindow, tmp_path: Path) -
 def test_connect_with_shows_the_login_kept_for_the_profile(window: CapyWindow) -> None:
     hosts = window.hosts
     hosts.table.select_ids([_host(window, "DESK-01").key])
-    labels = [w.text() for w in hosts.details.findChildren(QLabel)]
-    profile = labels[labels.index("Connect with") + 1]
-    assert "· as" not in profile  # nothing typed for it yet
+    profile = hosts.details.profile_button.value_text()
+    assert hosts.details.profile_button.marks == ()  # nothing typed for it yet
     profile_id = hosts.connector.catalogs.profiles.default_id()
     hosts.connector.credentials.remember(profile_id, Credential("EXAMPLE\\helpdesk", "x"))
     hosts.table.select_ids([_host(window, "DESK-03").key])
     hosts.table.select_ids([_host(window, "DESK-01").key])
-    labels = [w.text() for w in hosts.details.findChildren(QLabel)]
-    assert labels[labels.index("Connect with") + 1] == f"{profile} · as EXAMPLE\\helpdesk"
+    button = hosts.details.profile_button
+    assert button.value_text() == profile and button.marks == ("key",)  # a login is kept
+    assert button.toolTip().startswith("Signs in as EXAMPLE\\helpdesk")
 
 
 def _texts(menu: Any) -> list[str]:
@@ -320,9 +325,8 @@ def test_details_arrow_picks_the_account_for_this_pc(
     target = _host(window, "DESK-01")
     assert _account_used(window, target) == [None]
     assert _account_used(window, _host(window, "DESK-02")) == [ADMIN]  # the group's others
-    labels = [w.text() for w in hosts.details.findChildren(QLabel)]
-    at = labels.index("Commands run as")
-    assert labels[at + 1 : at + 3] == [accounts_ui.windows_account(), "your Windows account"]
+    assert hosts.details.account_button.value_text() == accounts_ui.windows_account()
+    assert hosts.details.account_button.marks == ("pin",)  # this PC overrides its group
 
     menu.aboutToShow.emit()
     _choose(menu, "Follow Accounts")  # its own row goes; the group's applies again

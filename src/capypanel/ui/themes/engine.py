@@ -640,6 +640,10 @@ QGroupBox { border: 1px solid %(border)s; border-radius: %(r)spx; margin-top: 16
 QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 4px; color: %(text2)s; }
 /* Report's boxes of ticks: a group box's look, with the title as a line inside it. */
 QFrame#reportBox { border: 1px solid %(border)s; border-radius: %(r)spx; background: %(card)s; }
+/* A value you can change in Details: a flat button a step off the panel, no border. */
+QPushButton#valuePicker { background: rgba(128, 128, 128, 0.24); border: none;
+                          border-radius: %(r2)spx; padding: 0; text-align: left; }
+QPushButton#valuePicker:hover { background: %(sel_solid)s; }
 
 QStatusBar { background: %(chrome)s; color: %(text2)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; padding: 2px 8px; }
@@ -688,6 +692,9 @@ QTreeView#grid QHeaderView::section:only-one { border-right: none; }
 /* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
 QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
 QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
+QPushButton#valuePicker { background: rgba(128, 128, 128, 0.24); border: none;
+                          border-radius: 4px; padding: 0; text-align: left; }
+QPushButton#valuePicker:hover { background: %(sel)s; }
 /* Settings: each section's settings on a soft card under a larger title; a line beside the
    page list. */
 QLabel#sectionTitle { color: %(accent_text)s; font-weight: bold; font-size: 12pt; }

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 18:07-0300\n"
+"POT-Creation-Date: 2026-11-08 18:41-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -745,13 +745,7 @@ msgstr ""
 msgid "Change path…"
 msgstr ""
 
-msgid "Change the account commands run as"
-msgstr ""
-
 msgid "Change the account…"
-msgstr ""
-
-msgid "Change the connection profile"
 msgstr ""
 
 msgid "Changed since it was approved. Review it again before it can run."
@@ -2068,6 +2062,9 @@ msgstr ""
 msgid "Only the first {n} open at once."
 msgstr ""
 
+msgid "Only this PC"
+msgstr ""
+
 msgid "Open &Settings"
 msgstr ""
 
@@ -2858,6 +2855,10 @@ msgid "Signed in: {names}. Work they haven't saved is lost."
 msgstr ""
 
 msgid "Signs a user out; unsaved work is lost."
+msgstr ""
+
+#, python-brace-format
+msgid "Signs in as {user}"
 msgstr ""
 
 msgid "Signs in with"
@@ -3704,9 +3705,6 @@ msgid ""
 "so it only runs as the person signed in."
 msgstr ""
 
-msgid "from Accounts"
-msgstr ""
-
 #, python-brace-format
 msgid "from {computer}"
 msgstr ""
@@ -4298,10 +4296,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "{profile} (not available on this PC)"
-msgstr ""
-
-#, python-brace-format
-msgid "{profile} · as {user}"
 msgstr ""
 
 #, python-brace-format

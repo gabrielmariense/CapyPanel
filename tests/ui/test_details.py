@@ -45,7 +45,7 @@ def test_every_section_shows_even_when_empty(qapp: QApplication) -> None:
     for heading in ("Connection", "Logged on", "Tags", "Notes"):
         assert heading in texts  # the layout never changes from host to host
     assert "Not checked" in texts and texts.count("—") == 2  # no tags, no notes
-    assert pane.shown_value("profile") == "Remote Desktop"
+    assert pane.profile_button.value_text() == "Remote Desktop"
 
 
 def test_logged_on_users_active_first_with_the_check_time(qapp: QApplication) -> None:
