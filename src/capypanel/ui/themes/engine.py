@@ -586,6 +586,10 @@ QFrame#commandRow[risky="true"] { border-left: 2px solid %(attention)s; }
 QLabel#commandName[risky="true"] { color: %(attention)s; }
 QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
                             color: %(attention)s; }
+/* With the keyboard on it (Tab), a risky button fills in amber: as plain to see as the blue
+   default it takes over from, where Enter would press it. */
+QPushButton#risky:focus { background: %(attention)s; border-color: %(attention)s;
+                          color: #1b1b1b; }
 /* A tool's count of items needing attention, on its rail icon. */
 QLabel#railBadge { background: %(stopped)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel_solid)s; border-radius: 9px; padding: 2px 9px; }
@@ -725,6 +729,10 @@ QFrame#commandRow[risky="true"] { border-left: 2px solid %(attention)s; }
 QLabel#commandName[risky="true"] { color: %(attention)s; }
 QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
                             color: %(attention)s; }
+/* With the keyboard on it (Tab), a risky button fills in amber: as plain to see as the blue
+   default it takes over from, where Enter would press it. */
+QPushButton#risky:focus { background: %(attention)s; border-color: %(attention)s;
+                          color: #1b1b1b; }
 /* A tool's count of items needing attention, on its rail icon. */
 QLabel#railBadge { background: %(stopped)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel)s; border-radius: 9px; padding: 2px 9px; }
