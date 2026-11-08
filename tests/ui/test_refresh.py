@@ -1,3 +1,4 @@
+import time
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -49,7 +50,8 @@ def _ids(win: CapyWindow, *names: str) -> list[str]:
 
 
 def _wait(win: CapyWindow) -> None:
-    for _ in range(500):
+    deadline = time.monotonic() + 10  # a deadline, not a count: threads can be slow
+    while time.monotonic() < deadline:
         QApplication.processEvents()
         if win.hosts._run is None:
             return

@@ -2,6 +2,7 @@
 Commands window, and their output. The run on the PC is replaced: nothing here reaches the
 network or runs anything."""
 
+import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
@@ -73,7 +74,8 @@ def _select(win: CapyWindow, name: str) -> HostTarget:
 
 
 def _settle(win: CapyWindow) -> None:
-    for _ in range(500):
+    deadline = time.monotonic() + 10  # a deadline, not a count: threads can be slow
+    while time.monotonic() < deadline:
         QApplication.processEvents()
         if not win.hosts.runner.busy():
             QApplication.processEvents()

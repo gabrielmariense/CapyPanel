@@ -1,6 +1,7 @@
 """The host commands: menus, the Details panel's buttons, the small windows and the answers in the
 result strip. Every call to another PC is replaced: nothing here reaches the network."""
 
+import time
 from collections.abc import Callable, Iterator
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -86,7 +87,8 @@ def _select(win: CapyWindow, name: str) -> HostTarget:
 
 
 def _settle(win: CapyWindow) -> None:
-    for _ in range(500):
+    deadline = time.monotonic() + 10  # a deadline, not a count: threads can be slow
+    while time.monotonic() < deadline:
         QApplication.processEvents()
         if not win.hosts.runner.busy():
             QApplication.processEvents()

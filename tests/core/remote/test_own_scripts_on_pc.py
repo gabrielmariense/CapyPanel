@@ -18,6 +18,7 @@ from capypanel.core.remote.run import RunAs
         (b"C:\\ProgramData\\Scripts\\printers.cmd", "C:\\ProgramData\\Scripts\\printers.cmd"),
         (b'# the printers\r\n\r\n"%ProgramData%\\Fix it.PS1"\r\n', "%ProgramData%\\Fix it.PS1"),
         (b"\xef\xbb\xbfD:\\Tools\\a.bat", "D:\\Tools\\a.bat"),
+        (b"%ProgramData%\\Startup\\PRINTERS.VBS", "%ProgramData%\\Startup\\PRINTERS.VBS"),
         (b"\\\\FS01\\share\\a.cmd", ""),  # a share, not the PC
         (b"C:\\Tools\\setup.exe", ""),
         (b"printers.cmd", ""),
@@ -73,6 +74,16 @@ def test_the_launcher_runs_the_pc_s_file_with_its_arguments(tmp_path: Path) -> N
     code, output = _launch(script, RunAs.SYSTEM, tmp_path)
     assert 'host=PC-1 then="a b"' in output
     assert code == 3  # the file's own exit code
+
+
+def test_a_vbs_on_the_pc_runs_with_its_output_and_exit_code(tmp_path: Path) -> None:
+    folder = tmp_path / "pc"
+    folder.mkdir()
+    target = folder / "PRINTERS.VBS"
+    target.write_bytes(b'WScript.Echo "host=" & WScript.Arguments(0)\r\nWScript.Quit 3\r\n')
+    code, output = _launch(_ready(tmp_path, target), RunAs.SYSTEM, tmp_path)
+    assert "host=PC-1" in output
+    assert code == 3
 
 
 def test_a_file_every_user_can_change_doesn_t_run_as_admin_or_system(tmp_path: Path) -> None:

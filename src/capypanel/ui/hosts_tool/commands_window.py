@@ -1028,7 +1028,7 @@ def _own_description(script: OwnScript) -> str:
             State.TOO_BIG: _("Too big for a script, so it can't run."),
             State.UNREADABLE: _("The file couldn't be read."),
             State.NO_PATH: _(
-                "It names no .ps1, .bat or .cmd file on the PC. Review it to see "
+                "It names no .ps1, .bat, .cmd or .vbs file on the PC. Review it to see "
                 "what it should hold."
             ),
         }[script.state]

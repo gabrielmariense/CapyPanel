@@ -1,3 +1,4 @@
+import time
 from collections.abc import Iterator
 from dataclasses import replace
 from datetime import datetime
@@ -162,7 +163,8 @@ def test_refresh_checks_only_the_search_results(
     _search(window, "triage")
     window.hosts.refresh_panel.users_box.setChecked(False)
     window.hosts.toolbar.refresh_button.click()  # the ticked checks, on the hosts shown
-    for _ in range(500):
+    deadline = time.monotonic() + 10  # a deadline, not a count: threads can be slow
+    while time.monotonic() < deadline:
         QApplication.processEvents()
         if window.hosts._run is None:
             break

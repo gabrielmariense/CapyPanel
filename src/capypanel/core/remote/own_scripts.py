@@ -9,7 +9,8 @@ review before use" again, and the bytes that run are the bytes that were checked
 user may change can't be approved at all.
 
 A file on the PC: a `.onpc` text file in the folder names a script that's already on each PC
-(`C:\\ProgramData\\Scripts\\printers.cmd`, or with %ProgramData%). CapyPanel sends a small
+(`C:\\ProgramData\\Scripts\\printers.cmd`, or with %ProgramData%; .vbs too, run by cscript
+so its output comes back). CapyPanel sends a small
 launcher that runs that file with the same arguments. Review reads one PC's copy and keeps
 its fingerprint. Each PC may have its own copy (a printer script per sector), so a copy runs
 when it matches the reviewed one, or when only admins can change it on that PC: an admin put it
@@ -34,7 +35,9 @@ from capypanel.core.remote.run import Language, RunAs, Script
 EXTENSIONS = {".ps1": Language.POWERSHELL, ".bat": Language.BATCH, ".cmd": Language.BATCH}
 ON_PC = ".onpc"  # names a script already on each PC
 # A file on the PC: a drive or an environment variable first, and one of the script kinds.
-_ON_PC_PATH = re.compile(r'^(?:[A-Za-z]:\\|%\w+%\\)[^<>|"*?\r\n]+\.(?:ps1|bat|cmd)$', re.IGNORECASE)
+_ON_PC_PATH = re.compile(
+    r'^(?:[A-Za-z]:\\|%\w+%\\)[^<>|"*?\r\n]+\.(?:ps1|bat|cmd|vbs)$', re.IGNORECASE
+)
 MAX_SIZE = 512 * 1024  # bytes: a script, not a program
 
 
@@ -121,7 +124,8 @@ def read(path: Path, approval: Approval | None) -> OwnScript:
 
 def pc_path(code: bytes) -> str:
     """The script a .onpc file names: its first line that isn't empty or a # note, quotes
-    taken off; "" when that isn't a .ps1, .bat or .cmd path on a drive or under a %VARIABLE%."""
+    taken off; "" when that isn't a .ps1, .bat, .cmd or .vbs path on a drive or under a
+    %VARIABLE%."""
     text = code.decode("utf-8-sig", "replace")
     for line in text.splitlines():
         line = line.strip()
@@ -253,7 +257,9 @@ if (__CHECK__ -and -not $same) {
   }
 }
 $global:LASTEXITCODE = 0
-& $path @args
+# cscript, not wscript: its output comes back, and the run is hidden either way.
+$vbs = $path -match '\.vbs$'
+if ($vbs) { & "$env:SystemRoot\System32\cscript.exe" //nologo $path @args } else { & $path @args }
 if ($LASTEXITCODE) { exit $LASTEXITCODE }
 if (-not $?) { exit 1 }
 exit 0

@@ -3,6 +3,7 @@ risk question, Run as and the checks before a run. The run on the PC is replaced
 reaches the network or runs anything."""
 
 import subprocess
+import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
@@ -77,11 +78,14 @@ def runs(window: CapyWindow, monkeypatch: pytest.MonkeyPatch) -> FakeRuns:
 
 
 def _settle(win: CapyWindow) -> None:
-    for _ in range(500):
+    # A deadline, not a count: the scan runs on a thread, and a busy machine can take longer.
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline:
         QApplication.processEvents()
         if not win.hosts.runner.busy() and not win.hosts.own_scripts.scanning:
             QApplication.processEvents()
             return
+        time.sleep(0.005)
     pytest.fail("never finished")
 
 
