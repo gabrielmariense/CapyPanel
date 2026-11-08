@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 from capywindow import CapyWindow
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QDialog, QMenu
 
 from capypanel.core import settings
@@ -295,7 +296,15 @@ def test_restart_waits_shows_in_status_and_details_and_cancels(
 def test_restart_now_has_no_message(qapp: QApplication) -> None:
     dialog = PowerDialog(None, "PC-1", [ANA], restart=True)
     assert dialog.delay() == 0 and dialog.message() == ""  # Now, without picking it
-    assert PowerDialog(None, "PC-1", [ANA], restart=False).delay() == 5 * 60  # shut down waits
+    assert PowerDialog(None, "PC-1", [ANA], restart=False).delay() == 0  # Shut down too
+    dialog.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
+    dialog.show()
+    assert dialog.focusWidget() is dialog.when  # arrows pick at once
+    assert dialog.cancel.isDefault()  # Enter in When cancels
+    dialog.focusNextChild()  # Tab: no message to type for Now, so straight to the action
+    assert dialog.focusWidget() is dialog.action
+    dialog.close()
+    dialog.when.setCurrentIndex(0)
     assert not dialog.box.isEnabled()
     assert dialog.action.text() == "&Restart now"
     assert "<b>ana</b>" in dialog.text.text()
