@@ -271,7 +271,8 @@ def test_restart_waits_shows_in_status_and_details_and_cancels(
 ) -> None:
     def answer(dialog: QDialog) -> int:
         assert isinstance(dialog, PowerDialog)
-        assert dialog.delay() == 5 * 60  # the default
+        assert dialog.delay() == 0  # Restart's default: now
+        dialog.when.setCurrentIndex(dialog.when.findData(5 * 60))
         return ACCEPT
 
     _answer(monkeypatch, answer)
@@ -293,8 +294,8 @@ def test_restart_waits_shows_in_status_and_details_and_cancels(
 
 def test_restart_now_has_no_message(qapp: QApplication) -> None:
     dialog = PowerDialog(None, "PC-1", [ANA], restart=True)
-    dialog.when.setCurrentIndex(0)
-    assert dialog.delay() == 0 and dialog.message() == ""
+    assert dialog.delay() == 0 and dialog.message() == ""  # Now, without picking it
+    assert PowerDialog(None, "PC-1", [ANA], restart=False).delay() == 5 * 60  # shut down waits
     assert not dialog.box.isEnabled()
     assert dialog.action.text() == "&Restart now"
     assert "<b>ana</b>" in dialog.text.text()

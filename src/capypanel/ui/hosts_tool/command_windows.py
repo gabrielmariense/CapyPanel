@@ -56,7 +56,7 @@ MAX_MESSAGE = 255  # Windows' message box shows about this much
 MAX_PATH = 1024
 RECENT_PATHS = 10
 DELAYS = (0, 60, 5 * 60, 15 * 60)  # Restart's When: now, or in 1, 5 or 15 minutes
-DEFAULT_DELAY = 5 * 60
+RESTART_DELAY, SHUT_DOWN_DELAY = 0, 5 * 60  # When's first pick (Cancel stays the default button)
 AMBER = STATUS_COLORS["attention"]
 WIDE = 460  # px: a question names a person, a session and a time; narrower, it wraps badly
 
@@ -389,7 +389,7 @@ class PowerDialog(Question):
         self.when = QComboBox()
         for delay in DELAYS:
             self.when.addItem(_delay_text(delay), delay)
-        self.when.setCurrentIndex(DELAYS.index(DEFAULT_DELAY))
+        self.when.setCurrentIndex(DELAYS.index(RESTART_DELAY if restart else SHUT_DOWN_DELAY))
         self.box = QPlainTextEdit()
         self.box.setTabChangesFocus(True)
         self.box.setFixedHeight(64)
