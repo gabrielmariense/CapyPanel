@@ -70,6 +70,7 @@ class HostDetailsPanel(DetailsPanel):
         super().__init__()
         # Opened by the arrow beside Profile; the tool fills it each time (aboutToShow).
         self.profile_menu = QMenu(self)
+        self.account_menu = QMenu(self)  # the arrow by Commands run as, filled the same way
         # The command buttons' menus: the tool fills them each time they open.
         self.users_menu = QMenu(self)
         self.power_menu = QMenu(self)
@@ -226,37 +227,46 @@ class HostDetailsPanel(DetailsPanel):
               "and scripts use the account under it.")
         )  # fmt: skip
         row.addWidget(self._profile_value)
-        self.profile_button = QToolButton()
-        self.profile_button.setObjectName("profilePicker")
-        self.profile_button.setToolTip(_("Change the connection profile"))
-        self.profile_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        text = self.palette().color(QPalette.ColorRole.Text)
-        self.profile_button.setIcon(tabler_icon("chevron-down", text, 14))
-        self.profile_button.clicked.connect(self._open_profile_menu)
+        self.profile_button = self._picker(_("Change the connection profile"))
+        self.profile_button.clicked.connect(
+            lambda: self._open_menu(self.profile_menu, self._profile_value, self.profile_button)
+        )
         row.addWidget(self.profile_button, 0, Qt.AlignmentFlag.AlignVCenter)
         row.addStretch(1)
         return row
 
+    def _picker(self, tip: str) -> QToolButton:
+        """The small arrow right after a value, opening the menu to pick another."""
+        button = QToolButton()
+        button.setObjectName("profilePicker")
+        button.setToolTip(tip)
+        button.setCursor(Qt.CursorShape.PointingHandCursor)
+        text = self.palette().color(QPalette.ColorRole.Text)
+        button.setIcon(tabler_icon("chevron-down", text, 14))
+        return button
+
     def _commands_row(self, account: str, source: str, tip: str) -> QHBoxLayout:
-        """The account, then where it comes from, muted: Accounts, or your Windows account."""
+        """The account, its arrow to pick another, then where it comes from, muted."""
         row = QHBoxLayout()
-        row.setSpacing(6)
+        row.setSpacing(2)
         value = self.value("commands-as", account)
         value.setToolTip(f"{tip}\n{value.toolTip()}")  # and Click to copy
         row.addWidget(value)
+        self.account_button = self._picker(_("Change the account commands run as"))
+        self.account_button.clicked.connect(
+            lambda: self._open_menu(self.account_menu, value, self.account_button)
+        )
+        row.addWidget(self.account_button, 0, Qt.AlignmentFlag.AlignVCenter)
+        row.addSpacing(4)
         row.addWidget(self.muted(source))
         row.addStretch(1)
         return row
 
-    def _open_profile_menu(self) -> None:
-        """Under the profile's name, from its left edge, like a dropdown's list."""
-        value, menu = self._profile_value, self.profile_menu
+    def _open_menu(self, menu: QMenu, value: QWidget, button: QToolButton) -> None:
+        """Under the value, from its left edge, like a dropdown's list."""
         menu.aboutToShow.emit()  # filled first
-        menu.popup(
-            value.mapToGlobal(
-                QPoint(0, self.profile_button.geometry().bottom() - value.geometry().top())
-            )
-        )
+        below = button.geometry().bottom() - value.geometry().top()
+        menu.popup(value.mapToGlobal(QPoint(0, below)))
 
     def heading(
         self,

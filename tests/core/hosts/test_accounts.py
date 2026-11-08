@@ -74,7 +74,7 @@ def test_settings_round_trip_and_bad_entries_skipped() -> None:
     assert load(dump(links)) == links
     bad = [
         "nope",
-        {"user": "", "scope": "all"},
+        {"user": "x", "scope": "all", "value": 3},
         {"user": "x", "scope": "planet"},
         {"user": "x", "scope": "pc"},  # which PC?
         {"user": "x", "scope": "tag", "value": "VPN"},  # which list?
@@ -82,3 +82,13 @@ def test_settings_round_trip_and_bad_entries_skipped() -> None:
     ]
     assert load(bad) == []
     assert load(None) == []
+
+
+def test_a_row_with_no_user_is_the_windows_account() -> None:
+    from capypanel.core.hosts.accounts import WINDOWS
+
+    pc = Link(WINDOWS, Scope.PC, "desk-02.example.test")
+    group = Link("EXAMPLE\\g", Scope.GROUP, "front", LIST)
+    assert pick([group, pc], PLACE) == pc  # kept on Windows' even though its group has another
+    assert load(dump([pc])) == [pc]
+    assert users([pc, group]) == ["EXAMPLE\\g"]  # no password to keep for it

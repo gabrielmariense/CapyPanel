@@ -4,10 +4,11 @@ for", Details' Signs in as, and Refresh and the host commands using each PC's ow
 import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtWidgets import QApplication, QDialog, QLabel
+from PySide6.QtWidgets import QApplication, QDialog, QLabel, QMenu
 
 from capypanel.core import credstore, settings
 from capypanel.core.hosts import listfile
@@ -288,3 +289,79 @@ def test_connect_with_shows_the_login_kept_for_the_profile(window: CapyWindow) -
     hosts.table.select_ids([_host(window, "DESK-01").key])
     labels = [w.text() for w in hosts.details.findChildren(QLabel)]
     assert labels[labels.index("Connect with") + 1] == f"{profile} · as EXAMPLE\\helpdesk"
+
+
+def _texts(menu: Any) -> list[str]:
+    return [a.text() for a in menu.actions() if a.text()]
+
+
+def _choose(menu: Any, text: str) -> None:
+    next(a for a in menu.actions() if a.text().startswith(text)).trigger()
+
+
+def test_details_arrow_picks_the_account_for_this_pc(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    hosts = window.hosts
+    accounts = hosts.accounts
+    accounts.use(Link(ADMIN.user, Scope.GROUP, _group_id(window, "Front desk"), _list(window)),
+                 ADMIN, remember=False)  # fmt: skip
+    hosts.table.select_ids([_host(window, "DESK-01").key])
+    menu = hosts.details.account_menu
+    menu.aboutToShow.emit()
+    texts = _texts(menu)
+    assert texts[0] == f"Follow Accounts: {ADMIN.user}"
+    assert texts[1].startswith("Your Windows account (") and ADMIN.user in texts
+    assert texts[-1] == "&Another account…"
+    assert next(a for a in menu.actions() if a.text() == texts[0]).isChecked()
+
+    _choose(menu, "Your Windows account")  # this PC stays on mine, despite its group
+    target = _host(window, "DESK-01")
+    assert _account_used(window, target) == [None]
+    assert _account_used(window, _host(window, "DESK-02")) == [ADMIN]  # the group's others
+    labels = [w.text() for w in hosts.details.findChildren(QLabel)]
+    at = labels.index("Commands run as")
+    assert labels[at + 1 : at + 3] == [accounts_ui.windows_account(), "your Windows account"]
+
+    menu.aboutToShow.emit()
+    _choose(menu, "Follow Accounts")  # its own row goes; the group's applies again
+    assert accounts.own(target) is None
+    assert _account_used(window, target) == [ADMIN]
+
+    other = Account("EXAMPLE\\desk1", "y")
+
+    def type_it(dialog: check_ui.AccountDialog) -> bool:
+        dialog.user.setText(other.user)
+        dialog.password.setText(other.password)
+        return True
+
+    _answer(monkeypatch, type_it)
+    menu.aboutToShow.emit()
+    _choose(menu, "&Another account")
+    assert _account_used(window, target) == [other]
+
+
+def test_right_click_sets_several_pcs_or_a_group(window: CapyWindow) -> None:
+    hosts = window.hosts
+    accounts = hosts.accounts
+    accounts.use(Link(ADMIN.user, Scope.ALL), ADMIN, remember=False)
+    doc = hosts.document
+    assert doc is not None
+    picked = [h for h in doc.hosts.hosts if h.name in ("DESK-01", "DESK-03")]
+    menu = QMenu()
+    hosts._fill_hosts_account_menu(menu, picked)  # pyright: ignore[reportPrivateUsage]
+    assert _texts(menu)[0] == "Follow Accounts"
+    _choose(menu, "Your Windows account")
+    assert _account_used(window, _host(window, "DESK-01")) == [None]
+    assert _account_used(window, _host(window, "DESK-03")) == [None]
+    assert _account_used(window, _host(window, "DESK-02")) == [ADMIN]  # not picked
+
+    group = next(g for g in doc.hosts.groups if g.name == "Front desk")
+    menu = QMenu()
+    hosts._fill_group_account_menu(menu, group)  # pyright: ignore[reportPrivateUsage]
+    _choose(menu, "Your Windows account")
+    assert accounts.group_row(group.id) is not None
+    assert _account_used(window, _host(window, "DESK-02")) == [None]
+    _choose(menu, "Follow Accounts")
+    assert accounts.group_row(group.id) is None
+    assert _account_used(window, _host(window, "DESK-02")) == [ADMIN]

@@ -242,6 +242,7 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     assert seen == [
         "&Connect", "Refresh &status", "Refresh &logged-on users",
         "Check", "Folders", "Admin tools", "Users", "Printers", "Power", "Run a &script…",
+        "Commands run &as",
         "Co&py",
         "&Edit selected…", "&Move to", "&Tags", "&Remove selected",
     ]  # fmt: skip

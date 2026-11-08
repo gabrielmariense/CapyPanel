@@ -24,7 +24,9 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core import settings
+from capypanel.core.hosts import accounts as account_links
 from capypanel.core.hosts import commands as host_commands
+from capypanel.core.hosts.accounts import WINDOWS
 from capypanel.core.hosts.commands import GROUP_NAMES
 from capypanel.core.hosts.commands import Group as CommandGroup
 from capypanel.core.hosts.document import OpenList, starter_list
@@ -104,6 +106,9 @@ class HostsTool(ListWorkspace):
         self.connector.open_settings = lambda: self._shell.open_settings("connections")
         self.details.profile_menu.aboutToShow.connect(
             lambda: self._fill_details_profile_menu(self.details.profile_menu)
+        )
+        self.details.account_menu.aboutToShow.connect(
+            lambda: self._fill_hosts_account_menu(self.details.account_menu, self.selected_items())
         )
 
         # Refresh results, by host id: in memory only, since the list file is shared.
@@ -681,6 +686,87 @@ class HostsTool(ListWorkspace):
         for action in menu.actions():
             action.setEnabled(self._writable() is not None)
 
+    # ---- which account commands run as: Details' arrow and the right-click menus ----
+
+    def _host_targets(self, hosts: Sequence[Host]) -> list[HostTarget]:
+        return [HostTarget(h.id, h.name, h.connect_address) for h in hosts if h.connect_address]
+
+    def _fill_account_menu(
+        self,
+        menu: QMenu,
+        current: set[str | None],
+        follow_text: str,
+        apply: Callable[[str | None], None],
+        another: Callable[[], None],
+    ) -> None:
+        """Follow Accounts (None), your Windows account, each account in the Accounts table,
+        then Another account…; `current` ticks one when every PC picked has it."""
+        menu.clear()
+        exclusive = QActionGroup(menu)
+        mine = _("Your Windows account ({user})").format(user=windows_account())
+        choices: list[tuple[str | None, str]] = [(None, follow_text), (WINDOWS, mine)]
+        choices += [(user, user) for user in account_links.users(self.accounts.links)]
+        for user, text in choices:
+            item = menu.addAction(text.replace("&", "&&"))
+            item.setCheckable(True)
+            item.setChecked(current == {user})
+            exclusive.addAction(item)
+            item.triggered.connect(lambda _checked=False, u=user: apply(u))
+            if user is None:
+                menu.addSeparator()
+        menu.addSeparator()
+        menu.addAction(_("&Another account…"), another)
+
+    def _follow_text(self, targets: Sequence[HostTarget]) -> str:
+        """ "Follow Accounts", with what it gives for one PC: an account, or Windows'."""
+        if len(targets) != 1:
+            return _("Follow Accounts")
+        own = self.accounts.own(targets[0])
+        rest = [lk for lk in self.accounts.links if lk is not own]
+        link = account_links.pick(rest, self.accounts.place(targets[0]))
+        user = link.user if link is not None and link.user else _("your Windows account")
+        return _("Follow Accounts: {user}").format(user=user)
+
+    def _fill_hosts_account_menu(self, menu: QMenu, hosts: Sequence[Host]) -> None:
+        targets = self._host_targets(hosts)
+        menu.clear()
+        if not targets:
+            return
+        current = {own.user if (own := self.accounts.own(t)) else None for t in targets}
+
+        def another() -> None:
+            account = self._ask_another(targets[0].name if len(targets) == 1 else "")
+            if account is not None:
+                self.accounts.set_pcs(targets, account.user)
+
+        self._fill_account_menu(menu, current, self._follow_text(targets),
+                                lambda u: self.accounts.set_pcs(targets, u), another)  # fmt: skip
+
+    def _fill_group_account_menu(self, menu: QMenu, group: Group) -> None:
+        row = self.accounts.group_row(group.id)
+
+        def another() -> None:
+            account = self._ask_another(group.name)
+            if account is not None:
+                self.accounts.set_group(group.id, account.user)
+
+        current = {row.user if row else None}
+        apply = lambda u: self.accounts.set_group(group.id, u)  # noqa: E731
+        self._fill_account_menu(menu, current, _("Follow Accounts"), apply, another)
+
+    def _ask_another(self, where: str) -> Account | None:
+        """Another account…: the login window, for the PCs the menu was opened on."""
+        text = (_("Use an account that is an administrator of {host}, such as a domain admin.")
+                .format(host=where) if where else
+                _("Use an account that is an administrator of these PCs, such as a domain "
+                  "admin."))  # fmt: skip
+        dialog = AccountDialog(self, text, saved=self.accounts.saving())
+        if run_modal(dialog) != QDialog.DialogCode.Accepted:
+            return None
+        account = dialog.account()
+        self.accounts.keep(account, remember=dialog.remember.isChecked())
+        return account
+
     # ---- settings ----
 
     def settings_group(self) -> HostsSettings:
@@ -773,6 +859,11 @@ class HostsTool(ListWorkspace):
         used = _("Used for Refresh's logged-on users and the commands and scripts run on this PC, "
                  "not for Connect.")  # fmt: skip
         link = self.accounts.link_for(HostTarget(host.id, host.name, host.connect_address))
+        if link is not None and link.user == WINDOWS:
+            where = _("Settings › Hosts › Connecting › Accounts: {uses}").format(
+                uses=used_for(link, self._doc)
+            )
+            return windows_account(), _("your Windows account"), f"{used}\n{where}"
         if link is None:
             why = _("No row of Settings › Hosts › Connecting › Accounts names this PC, so it's "
                     "the Windows account you're signed in with.")  # fmt: skip
@@ -841,6 +932,9 @@ class HostsTool(ListWorkspace):
         menu.addActions([a.check_status, a.check_users])
         menu.addSeparator()
         self._add_command_menus(menu)
+        account = menu.addMenu(_("Commands run &as"))  # this person's own rows: never read-only
+        self._fill_hosts_account_menu(account, items)
+        account.setEnabled(bool(account.actions()))
         menu.addSeparator()
         self.add_copy_menu(menu)
         menu.addSeparator()
@@ -857,6 +951,7 @@ class HostsTool(ListWorkspace):
         self._add_profile_menu(
             menu, {group.profile}, follow, lambda p: self.set_group_profile(group.id, p)
         )
+        self._fill_group_account_menu(menu.addMenu(_("Commands run &as")), group)
         # The group's hosts, including those in the groups inside it.
         hosts = list(self._doc.hosts.hosts_in(group.id))
         menu.addSeparator()

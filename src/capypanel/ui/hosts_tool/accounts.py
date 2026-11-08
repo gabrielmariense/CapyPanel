@@ -31,7 +31,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core import credstore
 from capypanel.core.hosts import accounts
-from capypanel.core.hosts.accounts import Link, Place, Scope
+from capypanel.core.hosts.accounts import WINDOWS, Link, Place, Scope
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.i18n import _
@@ -144,7 +144,10 @@ class Accounts(QObject):
         return accounts.pick(self.links, self.place(target))
 
     def known(self, user: str) -> Account | None:
-        """Its password, typed this session or remembered by Windows; None until typed."""
+        """Its password, typed this session or remembered by Windows; None until typed (and
+        for the Windows account, which needs none)."""
+        if user == WINDOWS:
+            return None
         kept = self._typed.get(user.casefold())
         if kept is not None:
             return kept[0]
@@ -163,6 +166,8 @@ class Accounts(QObject):
         return self.known(user) is not None and self._typed[user.casefold()][1]
 
     def kept_in(self, user: str) -> str:
+        if user == WINDOWS:
+            return "—"
         if self.known(user) is None:
             return _("Asked when needed")
         return _("Credential Manager") if self.saved(user) else _("Temporary")
@@ -174,7 +179,7 @@ class Accounts(QObject):
         the PC's account, asks for it over `parent`; (False, None) when cancelled, or with no
         `parent` to ask over."""
         link = self.link_for(target)
-        if link is None:
+        if link is None or link.user == WINDOWS:
             return True, None
         known = self.known(link.user)
         if known is not None:
@@ -252,18 +257,59 @@ class Accounts(QObject):
         if account is not None:
             self.keep(account, remember=remember)
 
+    def own(self, target: "HostTarget") -> Link | None:
+        """The PC's own row (for its address), if it has one."""
+        return next((lk for lk in self.links if lk.scope is Scope.PC
+                     and lk.value.casefold() == target.address.casefold()), None)  # fmt: skip
+
+    def group_row(self, group_id: str) -> Link | None:
+        doc = self.document()
+        return next((lk for lk in self.links if lk.scope is Scope.GROUP and lk.value == group_id
+                     and doc is not None and _same_list(lk, doc)), None)  # fmt: skip
+
+    def set_pcs(self, targets: Sequence["HostTarget"], user: str | None) -> None:
+        """Each PC's own row: `user` (WINDOWS for the Windows account), or None to remove it, so
+        its group's, tag's or Every PC row applies again."""
+        links = list(self.links)
+        for target in targets:
+            if not target.address:
+                continue
+            new = Link(user or WINDOWS, Scope.PC, target.address, name=target.name)
+            links = [lk for lk in links if not lk.same_place(new)]
+            if user is not None:
+                links.append(new)
+        self._set(links)
+
+    def set_group(self, group_id: str, user: str | None) -> None:
+        """The group's row: `user`, or None to remove it."""
+        doc = self.document()
+        if doc is None:
+            return
+        new = Link(user or WINDOWS, Scope.GROUP, group_id, str(doc.path),
+                   group_path(doc.hosts, group_id))  # fmt: skip
+        links = [lk for lk in self.links if not lk.same_place(new)]
+        self._set([*links, new] if user is not None else links)
+
+    def _set(self, links: list[Link]) -> None:
+        """New rows; a password no row uses any more is forgotten."""
+        before = accounts.users(self.links)
+        self._store(links)
+        for user in before:
+            if not accounts.uses(links, user):
+                self.forget(user)
+
     def replace_link(self, old: Link, new: Link) -> None:
         """An edited row: in the same place in the table."""
         links = [new if lk == old else lk for lk in self.links
                  if lk == old or not lk.same_place(new)]  # fmt: skip
         self._store(links if new in links else [*links, new])
-        if not accounts.uses(self.links, old.user):
+        if old.user != WINDOWS and not accounts.uses(self.links, old.user):
             self.forget(old.user)
 
     def remove(self, link: Link) -> None:
         """The link goes; its password too when no other link uses that account."""
         self._store([lk for lk in self.links if lk != link])
-        if not accounts.uses(self.links, link.user):
+        if link.user != WINDOWS and not accounts.uses(self.links, link.user):
             self.forget(link.user)
 
     def forget(self, user: str) -> None:
@@ -314,7 +360,7 @@ class LinkDialog(QDialog):
         doc = self._doc = manager.document()
         self.user = QLineEdit(link.user if link else "")
         self.user.setMaxLength(accounts.MAX_TEXT)
-        self.user.setPlaceholderText(_("DOMAIN\\user"))
+        self.user.setPlaceholderText(_("DOMAIN\\user, or empty for your Windows account"))
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
         self.password.setMaxLength(accounts.MAX_TEXT)
@@ -406,8 +452,11 @@ class LinkDialog(QDialog):
             Scope.GROUP: self.group.currentData() or "",
             Scope.TAG: self.tag.currentText().strip(),
         }.get(scope, "")
+        typed = bool(self.user.text().strip())  # none: the Windows account, with no password
+        self.password.setEnabled(typed)
+        self.remember.setEnabled(typed)
         ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)
-        ok.setEnabled(bool(self.user.text().strip()) and bool(value))
+        ok.setEnabled(bool(value))
 
     def link(self) -> Link:
         user = self.user.text().strip()
@@ -466,7 +515,8 @@ class AccountsSection(Section):
         doc = self._manager.document()
         for link in self._manager.links:
             where = used_for(link, doc)
-            item = QTreeWidgetItem([link.user, where, self._manager.kept_in(link.user)])
+            user = link.user or _("Your Windows account")
+            item = QTreeWidgetItem([user, where, self._manager.kept_in(link.user)])
             item.setData(0, Qt.ItemDataRole.UserRole, link)
             for column in range(3):
                 item.setToolTip(column, item.text(column))
@@ -502,7 +552,7 @@ class AccountsSection(Section):
             manager.replace_link(old, link)
         typed = dialog.password.text()
         remember = dialog.remember.isChecked()
-        if typed:
+        if typed and link.user:
             manager.keep(Account(link.user, typed), remember=remember)
         elif (known := manager.known(link.user)) is not None and remember != manager.saved(
                 link.user):  # fmt: skip

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 03:58-0300\n"
+"POT-Creation-Date: 2026-11-08 07:48-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -51,6 +51,9 @@ msgid "&Add…"
 msgstr ""
 
 msgid "&All commands…"
+msgstr ""
+
+msgid "&Another account…"
 msgstr ""
 
 msgid "&Arguments:"
@@ -725,6 +728,9 @@ msgstr ""
 msgid "Change path…"
 msgstr ""
 
+msgid "Change the account commands run as"
+msgstr ""
+
 msgid "Change the account…"
 msgstr ""
 
@@ -843,6 +849,9 @@ msgid "Colour"
 msgstr ""
 
 msgid "Commands"
+msgstr ""
+
+msgid "Commands run &as"
 msgstr ""
 
 msgid "Commands run as"
@@ -1079,6 +1088,9 @@ msgid "DNS refreshed on {host}."
 msgstr ""
 
 msgid "DOMAIN\\user"
+msgstr ""
+
+msgid "DOMAIN\\user, or empty for your Windows account"
 msgstr ""
 
 msgid "Default"
@@ -1329,6 +1341,13 @@ msgid "Folder"
 msgstr ""
 
 msgid "Folders"
+msgstr ""
+
+msgid "Follow Accounts"
+msgstr ""
+
+#, python-brace-format
+msgid "Follow Accounts: {user}"
 msgstr ""
 
 msgid "For Import"
@@ -3346,6 +3365,11 @@ msgstr ""
 msgid "Use &defaults"
 msgstr ""
 
+msgid ""
+"Use an account that is an administrator of these PCs, such as a domain "
+"admin."
+msgstr ""
+
 #, python-brace-format
 msgid "Use an account that is an administrator of {host}, such as a domain admin."
 msgstr ""
@@ -3513,6 +3537,10 @@ msgid "You asked at {when}."
 msgstr ""
 
 msgid "Your Windows account"
+msgstr ""
+
+#, python-brace-format
+msgid "Your Windows account ({user})"
 msgstr ""
 
 msgid "Your computers: connect, see who's logged on, check them."

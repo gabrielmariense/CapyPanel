@@ -22,9 +22,14 @@ MAX_TEXT = 256
 _ORDER = (Scope.PC, Scope.GROUP, Scope.TAG, Scope.ALL)  # most specific first
 
 
+WINDOWS = (
+    ""  # a link's user: the Windows account CapyPanel runs as, kept even if a group has another
+)
+
+
 @dataclass(frozen=True)
 class Link:
-    user: str  # "EXAMPLE\admin"
+    user: str  # "EXAMPLE\admin", or WINDOWS
     scope: Scope
     value: str = ""  # PC: its address; GROUP: the group's id; TAG: the tag; ALL: ""
     list: str = ""  # GROUP and TAG: the host list file they belong to
@@ -88,10 +93,11 @@ def with_link(links: Sequence[Link], new: Link) -> list[Link]:
 
 
 def users(links: Iterable[Link]) -> list[str]:
-    """Each account the links use, once, in their order."""
+    """Each typed account the links use, once, in their order (not the Windows account)."""
     seen: dict[str, str] = {}
     for link in links:
-        seen.setdefault(_fold(link.user), link.user)
+        if link.user != WINDOWS:
+            seen.setdefault(_fold(link.user), link.user)
     return list(seen.values())
 
 
@@ -117,8 +123,8 @@ def load(saved: Any) -> list[Link]:
             scope = Scope(texts["scope"])
         except ValueError:
             continue
-        user = texts["user"].strip()
-        if not user or (scope is not Scope.ALL and not texts["value"].strip()):
+        user = texts["user"].strip()  # none: the Windows account
+        if scope is not Scope.ALL and not texts["value"].strip():
             continue
         if scope in (Scope.GROUP, Scope.TAG) and not texts["list"]:
             continue

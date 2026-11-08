@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 03:58-0300\n"
+"POT-Creation-Date: 2026-11-08 07:48-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -53,6 +53,9 @@ msgstr "&Adicionar…"
 
 msgid "&All commands…"
 msgstr "&Todos os comandos…"
+
+msgid "&Another account…"
+msgstr "&Outra conta…"
 
 msgid "&Arguments:"
 msgstr "&Argumentos:"
@@ -714,6 +717,9 @@ msgstr "A conta do CapyPanel para o PC"
 msgid "Change path…"
 msgstr "Alterar caminho…"
 
+msgid "Change the account commands run as"
+msgstr "Alterar a conta dos comandos"
+
 msgid "Change the account…"
 msgstr "Alterar a conta…"
 
@@ -828,6 +834,9 @@ msgstr "Cor"
 
 msgid "Commands"
 msgstr "Comandos"
+
+msgid "Commands run &as"
+msgstr "Comandos c&omo"
 
 msgid "Commands run as"
 msgstr "Comandos como"
@@ -1062,6 +1071,9 @@ msgstr "DNS atualizado em {host}."
 msgid "DOMAIN\\user"
 msgstr "DOMÍNIO\\usuário"
 
+msgid "DOMAIN\\user, or empty for your Windows account"
+msgstr "DOMÍNIO\\usuário, ou vazio para a sua conta do Windows"
+
 msgid "Default"
 msgstr "Padrão"
 
@@ -1294,6 +1306,13 @@ msgstr "Pasta"
 
 msgid "Folders"
 msgstr "Pastas"
+
+msgid "Follow Accounts"
+msgstr "Seguir as Contas"
+
+#, python-brace-format
+msgid "Follow Accounts: {user}"
+msgstr "Seguir as Contas: {user}"
 
 msgid "For Import"
 msgstr "Para importar"
@@ -3221,6 +3240,9 @@ msgstr "Atualizar política de grupo"
 msgid "Use &defaults"
 msgstr "Usar &padrões"
 
+msgid "Use an account that is an administrator of these PCs, such as a domain admin."
+msgstr "Use uma conta que seja administradora destes PCs, como um admin do domínio."
+
 #, python-brace-format
 msgid "Use an account that is an administrator of {host}, such as a domain admin."
 msgstr "Use uma conta que seja administradora de {host}, como um admin do domínio."
@@ -3367,6 +3389,10 @@ msgstr "Você pediu às {when}."
 
 msgid "Your Windows account"
 msgstr "Sua conta do Windows"
+
+#, python-brace-format
+msgid "Your Windows account ({user})"
+msgstr "Sua conta do Windows ({user})"
 
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
