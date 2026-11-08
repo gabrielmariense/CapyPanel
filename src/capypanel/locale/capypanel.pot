@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 16:06-0300\n"
+"POT-Creation-Date: 2026-11-08 16:32-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2339,6 +2339,9 @@ msgid "Reads these printers again now"
 msgstr ""
 
 msgid "Ready"
+msgstr ""
+
+msgid "Recent"
 msgstr ""
 
 msgid "Refresh"

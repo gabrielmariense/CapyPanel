@@ -19,6 +19,7 @@ from PySide6.QtGui import (
     QGuiApplication,
     QKeyEvent,
     QPalette,
+    QStandardItemModel,
 )
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -399,7 +400,7 @@ class CommandsWindow(QDialog):
             self.address.addItem(shown, choice.key)
         recent = tool.recent_addresses()
         if self._choices and recent:
-            self.address.insertSeparator(self.address.count())
+            self._add_heading(_("Recent"))
         self.address.addItems(recent)
         if target is None:
             self.address.setCurrentIndex(-1)
@@ -558,6 +559,20 @@ class CommandsWindow(QDialog):
         (self.address if self._typed else self.search).setFocus()
 
     # ---- the PC ----
+
+    def _add_heading(self, text: str) -> None:
+        """A muted title in the Host list, between the panel's hosts and the typed addresses:
+        it can't be picked, and the arrows skip it."""
+        self.address.addItem(text.upper())
+        model = self.address.model()
+        assert isinstance(model, QStandardItemModel)
+        item = model.item(self.address.count() - 1)
+        item.setFlags(Qt.ItemFlag.NoItemFlags)
+        font = item.font()
+        font.setBold(True)
+        font.setPointSizeF(font.pointSizeF() * 0.85)
+        item.setFont(font)
+        item.setForeground(self.palette().color(QPalette.ColorRole.PlaceholderText))
 
     def target(self) -> HostTarget | None:
         """The PC in the Host field: a host of the list (picked, or typed by its name or

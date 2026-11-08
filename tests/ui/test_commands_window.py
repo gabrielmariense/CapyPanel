@@ -116,6 +116,17 @@ def test_the_host_can_be_picked_from_the_list_typed_or_stepped_with_the_arrows(
     assert commands.add_button.isEnabled()
 
 
+def test_typed_addresses_come_under_a_recent_heading_the_arrows_skip(window: CapyWindow) -> None:
+    window.hosts.prefs["recent_addresses"] = ["198.51.100.40"]
+    commands = _open(window, "DESK-02")
+    shown = [commands.address.itemText(i) for i in range(commands.address.count())]
+    assert shown == ["DESK-01 · 192.0.2.11", "DESK-02 · 192.0.2.12", "RECENT", "198.51.100.40"]
+    heading = commands.address.model().index(2, 0)
+    assert not commands.address.model().flags(heading) & Qt.ItemFlag.ItemIsEnabled
+    _key(commands.address, Qt.Key.Key_Down)  # from DESK-02, past the heading
+    assert commands.address.currentText() == "198.51.100.40"
+
+
 def test_it_is_a_window_of_its_own_that_closes_when_capypanel_quits(window: CapyWindow) -> None:
     commands = _open(window, "DESK-02")
     assert commands.parent() is None  # not owned: the main window can come in front of it
