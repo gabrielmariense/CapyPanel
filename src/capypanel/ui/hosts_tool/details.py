@@ -220,10 +220,12 @@ class HostDetailsPanel(DetailsPanel):
     # ---- the sections ----
 
     def _profile_row(self, profile: str) -> QHBoxLayout:
-        """The profile, copied by a click like every value, and an arrow to pick another."""
+        """The profile, copied by a click like every value, and right after it an arrow to pick
+        another (at the panel's far edge it read as a stray arrow, tied to nothing)."""
         row = QHBoxLayout()
         row.setSpacing(2)
-        row.addWidget(self.value("profile", profile) if profile else self.muted("—"), 1)
+        self._profile_value = self.value("profile", profile) if profile else self.muted("—")
+        row.addWidget(self._profile_value)
         self.profile_button = QToolButton()
         self.profile_button.setObjectName("profilePicker")
         self.profile_button.setToolTip(_("Change the connection profile"))
@@ -231,15 +233,19 @@ class HostDetailsPanel(DetailsPanel):
         text = self.palette().color(QPalette.ColorRole.Text)
         self.profile_button.setIcon(tabler_icon("chevron-down", text, 14))
         self.profile_button.clicked.connect(self._open_profile_menu)
-        row.addWidget(self.profile_button, 0, Qt.AlignmentFlag.AlignTop)
+        row.addWidget(self.profile_button, 0, Qt.AlignmentFlag.AlignVCenter)
+        row.addStretch(1)
         return row
 
     def _open_profile_menu(self) -> None:
-        """Under the arrow, its right edge on the arrow's: the panel is at the window's right."""
-        button, menu = self.profile_button, self.profile_menu
-        menu.aboutToShow.emit()  # filled first, so its width is known
-        left = button.width() - menu.sizeHint().width()
-        menu.popup(button.mapToGlobal(QPoint(left, button.height())))
+        """Under the profile's name, from its left edge, like a dropdown's list."""
+        value, menu = self._profile_value, self.profile_menu
+        menu.aboutToShow.emit()  # filled first
+        menu.popup(
+            value.mapToGlobal(
+                QPoint(0, self.profile_button.geometry().bottom() - value.geometry().top())
+            )
+        )
 
     def heading(
         self,

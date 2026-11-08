@@ -42,6 +42,7 @@ from capypanel.ui.groups import TREE_INDENT
 from capypanel.ui.hosts import confirm
 from capypanel.ui.list_workspace.panels import natural_key
 from capypanel.ui.notes import hint
+from capypanel.ui.tables import fit_menu
 
 # Each column, the group its checkbox is in, and its title (also the file's header row, which
 # Import hosts reads back in English or Portuguese).
@@ -186,6 +187,7 @@ class ExportDialog(QDialog):
         self.preview.setRootIsDecorated(False)
         self.preview.setUniformRowHeights(True)
         self.preview.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # keeps a path's both ends
+        fit_menu(self.preview)
         # A click on a column's title sorts the rows by it, A–Z then Z–A, as in the main table;
         # until then they're in the main table's order. Copy and Export use the same order.
         self._sort: tuple[str, bool] | None = None  # (column key, Z–A)

@@ -41,6 +41,7 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.icons import STATUS_COLORS, tabler_icon
 from capypanel.ui.notes import hint
+from capypanel.ui.tables import fit_menu
 
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.runner import HostTarget, Report, Runner
@@ -494,6 +495,7 @@ class ReadList(QDialog):
         self.table.setRootIsDecorated(False)
         self.table.setUniformRowHeights(True)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        fit_menu(self.table)
         self.summary = QLabel()
         self.summary.setObjectName("hint")
         self.summary.setWordWrap(True)

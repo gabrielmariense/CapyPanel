@@ -4,7 +4,7 @@ actions in a row of buttons under it, and every action of a row on its right-cli
 
 from collections.abc import Callable
 
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QEvent, QObject, QPoint, Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
@@ -16,15 +16,29 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from capypanel.core.i18n import _
 from capypanel.ui.menus import popup
 
 MOST_ROWS = 6  # taller lists scroll
 FEWEST_ROWS = 3  # a short list still looks like a list
-WIDEST = 260  # a column fits its text up to this; the last one takes what's left
+WIDEST = 480  # px: only a paragraph (a license notice) is cut, its whole text in the tooltip
+_FITS = "fitWidths"  # property: each column's width for its text, set by fit_rows
+
+
+class _Refit(QObject):
+    """Fits the columns again when the table changes width: the last one takes the room left."""
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() in (QEvent.Type.Resize, QEvent.Type.Show):
+            table = watched.parent() if not isinstance(watched, QTreeWidget) else watched
+            if isinstance(table, QTreeWidget):
+                _fit_width(table)
+        return False
 
 
 def grid_table(headers: list[str]) -> QTreeWidget:
-    """A table in the app's one style: grid lines, resizable columns, one row picked at a time."""
+    """A table in the app's one style: grid lines, resizable columns, one row picked at a time.
+    Every column shows its whole text; when they can't all fit, the table scrolls sideways."""
     table = QTreeWidget()
     table.setObjectName("grid")  # the stylesheet draws the lines
     table.setRootIsDecorated(False)
@@ -32,26 +46,68 @@ def grid_table(headers: list[str]) -> QTreeWidget:
     table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
     header = table.header()
     header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)  # drag to resize
-    header.setStretchLastSection(True)
-    # No sideways scrolling: long text is cut with "…", its whole text in the tooltip.
-    table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    header.setStretchLastSection(False)  # _fit_width gives the last column what's left
+    table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+    refit = _Refit(table)
+    table.viewport().installEventFilter(refit)
+    fit_menu(table)
     return table
+
+
+def fit_menu(table: QTreeWidget) -> None:
+    """Right-click on the column titles > Fit columns to content, as in the host and printer
+    tables: every column back to its full text."""
+
+    def show(point: QPoint) -> None:
+        menu = QMenu(table)
+        menu.addAction(_("&Fit columns to content"), lambda: fit_columns(table))
+        popup(menu, header.viewport().mapToGlobal(point))
+
+    header = table.header()
+    header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+    header.customContextMenuRequested.connect(show)
+
+
+def fit_columns(table: QTreeWidget) -> None:
+    if table.property(_FITS) is not None:  # a grid_table: fitted and stretched as at first
+        fit_rows(table)
+        return
+    for column in range(table.columnCount()):
+        if not table.isColumnHidden(column):
+            table.resizeColumnToContents(column)
 
 
 def fit_rows(table: QTreeWidget) -> None:
     """As tall as its rows, between FEWEST_ROWS and MOST_ROWS: no empty space under a short
-    list, a scroll bar on a long one. Each column but the last fits its text, up to WIDEST.
-    Call it after filling the table."""
-    for column in range(table.columnCount() - 1):
+    list, a scroll bar on a long one. Each column fits its text (up to WIDEST), the last one
+    stretching into the room left. Call it after filling the table."""
+    fits = []
+    for column in range(table.columnCount()):
         table.resizeColumnToContents(column)
-        table.setColumnWidth(column, min(table.columnWidth(column) + 12, WIDEST))
+        fits.append(min(table.columnWidth(column) + 12, WIDEST))
+    table.setProperty(_FITS, fits)
+    _fit_width(table)
+
+
+def _fit_width(table: QTreeWidget) -> None:
+    fits = table.property(_FITS)
+    if not isinstance(fits, list) or len(fits) != table.columnCount():
+        return
+    for column, width in enumerate(fits[:-1]):
+        table.setColumnWidth(column, width)
+    room = table.viewport().width() - sum(fits[:-1])
+    table.setColumnWidth(len(fits) - 1, max(fits[-1], room))
     rows = min(max(table.topLevelItemCount(), FEWEST_ROWS), MOST_ROWS)
     first = table.topLevelItem(0)
     row = table.sizeHintForRow(0) if first is not None else -1
     if row <= 0:
         row = table.fontMetrics().height() + 16  # the stylesheet pads each row
-    # The header, exactly `rows` rows (a 7th never peeks in), and the frame.
-    table.setFixedHeight(table.header().sizeHint().height() + rows * row + 2 * table.frameWidth())
+    # The header, exactly `rows` rows (a 7th never peeks in), the frame, and the sideways
+    # scroll bar when the columns are wider than the table.
+    across = table.horizontalScrollBar().sizeHint().height() if room < fits[-1] else 0
+    height = table.header().sizeHint().height() + rows * row + 2 * table.frameWidth() + across
+    if table.height() != height or table.minimumHeight() != height:
+        table.setFixedHeight(height)
 
 
 def row_menu(table: QTreeWidget, fill: Callable[[QMenu], None]) -> None:
