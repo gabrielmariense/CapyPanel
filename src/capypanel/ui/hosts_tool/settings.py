@@ -25,7 +25,6 @@ class SettingsPrefs:
     hidden_lists: list[Path]  # lists in a lists folder removed from the lists table
     auto_status: tuple[bool, int] = (False, 5)  # check Status by itself, every N minutes
     start_view: tuple[str, str] | None = None  # the open list's (show, group) first
-    save_passwords: bool = False  # typed passwords also go to Windows Credential Manager
     scripts_folder: Path | None = None  # your own scripts, for the Commands window
 
 
@@ -62,9 +61,7 @@ class HostsSettings(SettingsGroup):
             scripts_folder=tool.own_scripts.folder(),
             scripts_default=tool.own_scripts.default(),
         )
-        self.connections = ConnectionsPage(
-            tool.connector.catalogs, doc, save_passwords=tool.saves_passwords()
-        )
+        self.connections = ConnectionsPage(tool.connector.catalogs, doc)
         self.accounts = AccountsSection(tool.accounts)  # which account signs in to which PCs
         self.accounts_page = Page(_("Credentials"))
         for section in (self.accounts, self.connections.profiles.passwords_section):
@@ -73,7 +70,6 @@ class HostsSettings(SettingsGroup):
         tool.accounts.changed.connect(self.credentials_changed)
         self.general.changed.connect(self._changed)
         profiles = self.connections.profiles
-        profiles.passwords_changed.connect(self._changed)
         profiles.manage_button.clicked.connect(
             lambda: tool.open_saved_credentials(profiles.window())
         )
@@ -101,14 +97,12 @@ class HostsSettings(SettingsGroup):
             hidden_lists=self.general.hidden(),
             auto_status=self.general.auto_status_choice(),
             start_view=self.general.show_first_choice(),
-            save_passwords=self.connections.profiles.save_passwords_choice(),
             scripts_folder=self.general.scripts_folder_choice(),
         )
 
     def _changed(self) -> None:
         if not self._building:
             self._tool.apply_prefs(self.choices())
-            self.credentials_changed()  # Kept in Temporary deletes the saved ones
 
     def credentials_changed(self) -> None:
         row = self.connections.profiles.saved_row

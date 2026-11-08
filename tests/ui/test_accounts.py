@@ -262,7 +262,7 @@ def test_the_account_an_older_capypanel_saved_becomes_every_pc(
 ) -> None:
     credstore.save(accounts_ui.OLD_SAVED, "pw", user=ADMIN.user)
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1, "save_passwords": True})
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     try:
         assert win.hosts.accounts.links == [Link(ADMIN.user, Scope.ALL)]
         assert win.hosts.accounts.known(ADMIN.user) == ADMIN

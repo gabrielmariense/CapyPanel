@@ -11,6 +11,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
+    QCheckBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
@@ -59,7 +60,6 @@ class CredentialDialog(QDialog):
         target: str,
         *,
         on_command_line: bool,
-        saved: bool = False,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Password for {profile}").format(profile=ready.profile.name))
@@ -76,20 +76,21 @@ class CredentialDialog(QDialog):
         if self.wants_user:
             form.addRow(_("&User:"), self.user)
         form.addRow(_("&Password:"), self.password)
-        remembered = (
-            _("Saved in Windows Credential Manager for your Windows account (Settings › "
-              "Hosts › Credentials), and used only for hosts with this connection profile.")
-            if saved
-            else _("Kept in memory until CapyPanel closes, never saved, and used only for hosts "
-                   "with this connection profile.")
+        # As every login window: you decide here whether Windows keeps it (unticked by default).
+        self.remember = QCheckBox(_("&Remember it on this computer"))
+        self.remember.setToolTip(
+            _("Windows keeps it in Credential Manager for your Windows account. Otherwise "
+              "CapyPanel forgets it when it closes and asks once the next time.")
         )  # fmt: skip
+        form.addRow("", self.remember)
+        used = _("Used only for hosts with this connection profile.")
         how = (
             _("It's passed to the viewer on its command line, which administrators of this PC "
               "can see.")
             if on_command_line
             else _("It's handed to the viewer privately, never on its command line.")
         )  # fmt: skip
-        note = hint(f"{remembered} {how}")
+        note = hint(f"{used} {how}")
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -229,13 +230,14 @@ class Connector:
                     ready,
                     label,
                     on_command_line=tool.credentials == "arguments",
-                    saved=self.credentials.saving,
                 )
                 if dialog.exec() != QDialog.DialogCode.Accepted:
                     return 0
                 credential = dialog.credential()
                 try:
-                    self.credentials.remember(profile.id, credential)
+                    self.credentials.remember(
+                        profile.id, credential, save=dialog.remember.isChecked()
+                    )
                 except (OSError, ValueError) as e:
                     log.warning("Couldn't save the password of %s: %s", profile.id, e)
                     self._error(

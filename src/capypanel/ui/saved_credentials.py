@@ -101,8 +101,8 @@ class SavedCredentialsDialog(QDialog):
             notes(
                 _(
                     "Forgotten logins are deleted from Credential Manager too; you type them "
-                    "again the next time. Where new ones are kept: Settings › Hosts › "
-                    "Credentials › Kept in."
+                    "again the next time. A new one is saved only when you tick Remember it on "
+                    "this computer as you type it."
                 )
             )
         )

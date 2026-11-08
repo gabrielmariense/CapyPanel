@@ -103,14 +103,14 @@ def test_typed_passwords_are_kept_per_profile_until_forgotten() -> None:
 
 
 def test_saved_passwords_outlive_the_session_until_forgotten() -> None:
-    kept = SessionCredentials(saving=True)
-    kept.remember("ultravnc-account", Credential("CORP\\ana", "x"))
-    kept.remember("realvnc-password", Credential("", "y"))
+    kept = SessionCredentials()
+    kept.remember("ultravnc-account", Credential("CORP\\ana", "x"), save=True)  # ticked
+    kept.remember("realvnc-password", Credential("", "y"), save=True)
+    kept.remember("rustdesk", Credential("", "z"))  # not ticked: this session only
     assert credstore.read("profile/ultravnc-account") == ("CORP\\ana", "x")
-    later = SessionCredentials(saving=True)  # the next time CapyPanel opens
+    later = SessionCredentials()  # the next time CapyPanel opens
     assert later and "ultravnc-account" in later and "rustdesk" not in later
     assert later.get("ultravnc-account") == Credential("CORP\\ana", "x")
-    assert SessionCredentials(saving=False).get("ultravnc-account") is None  # memory only
     later.forget("ultravnc-account")
     assert credstore.names("profile/") == ["profile/realvnc-password"]
     later.forget()
@@ -118,18 +118,10 @@ def test_saved_passwords_outlive_the_session_until_forgotten() -> None:
 
 
 def test_kept_lists_typed_and_saved_passwords_and_where_each_is() -> None:
-    SessionCredentials(saving=True).remember("realvnc-password", Credential("", "y"))
-    kept = SessionCredentials(saving=False)  # a saved one Windows didn't delete still shows
+    SessionCredentials().remember("realvnc-password", Credential("", "y"), save=True)
+    kept = SessionCredentials()
     kept.remember("ultravnc-account", Credential("ana", "x"))
     assert kept.kept() == [
         ("realvnc-password", Credential("", "y"), True),
         ("ultravnc-account", Credential("ana", "x"), False),
     ]
-
-
-def test_turning_saving_off_deletes_what_was_saved() -> None:
-    kept = SessionCredentials(saving=True)
-    kept.remember("ultravnc-account", Credential("ana", "x"))
-    kept.set_saving(False)
-    assert credstore.names("") == []
-    assert kept.get("ultravnc-account") == Credential("ana", "x")  # still typed this session

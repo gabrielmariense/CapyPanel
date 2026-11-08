@@ -25,7 +25,7 @@ from capypanel.ui.saved_credentials import (
 @pytest.fixture
 def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1, "save_passwords": True})
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     yield win
     win.close()
 
@@ -33,7 +33,9 @@ def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
 def _keep_some(win: CapyWindow) -> None:
     """A saved profile password and an account typed for every PC (in memory only)."""
     profile = win.hosts.connector.choices()[0][0]
-    win.hosts.connector.credentials.remember(profile, Credential("EXAMPLE\\ana", "x"))
+    win.hosts.connector.credentials.remember(
+        profile, Credential("EXAMPLE\\ana", "x"), save=True
+    )  # Remember ticked
     win.hosts.accounts.use(Link("EXAMPLE\\svc", Scope.ALL), Account("EXAMPLE\\svc", "y"),
                            remember=False)  # fmt: skip
 

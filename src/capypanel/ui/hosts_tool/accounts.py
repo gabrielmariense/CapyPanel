@@ -190,7 +190,7 @@ class Accounts(QObject):
         text = _("Type the password of “{user}”. It signs in to {host} ({uses}).").format(
             user=link.user, host=target.name, uses=used_for(link, self.document())
         )
-        dialog = AccountDialog(parent, text, link.user, saved=self.saving(), fixed_user=True)
+        dialog = AccountDialog(parent, text, link.user, fixed_user=True)
         if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return False, None
         account = dialog.account()
@@ -222,10 +222,6 @@ class Accounts(QObject):
         return found
 
     # ---- changes ----
-
-    def saving(self) -> bool:
-        """Settings' Credentials: what "Remember it on this computer" starts as."""
-        return self._tool.connector.credentials.saving
 
     def document(self) -> OpenList | None:
         return self._tool.document
@@ -321,17 +317,6 @@ class Accounts(QObject):
         finally:
             self.changed.emit()
 
-    def forget_saved(self) -> None:
-        """Settings' Kept in, Temporary: every remembered password leaves Credential
-        Manager; what was typed this session stays until CapyPanel closes. Raises OSError."""
-        for user in accounts.users(self.links):
-            credstore.forget(accounts.credential_name(user))
-            kept = self._typed.get(user.casefold())
-            if kept is not None:
-                self._typed[user.casefold()] = (kept[0], False)
-        credstore.forget(OLD_SAVED)
-        self.changed.emit()
-
     def kept_logins(self) -> list[KeptLogin]:
         """For the Saved credentials window: each account whose password is kept."""
         logins = []
@@ -394,7 +379,7 @@ class LinkDialog(QDialog):
             if doc is None:
                 self.kind.model().item(index).setEnabled(False)  # type: ignore[attr-defined]
         self.remember = QCheckBox(_("&Remember it on this computer"))
-        self.remember.setChecked(manager.saved(link.user) if known and link else manager.saving())
+        self.remember.setChecked(bool(known and link and manager.saved(link.user)))
         form = QFormLayout()
         form.addRow(_("&User:"), self.user)
         form.addRow(_("&Password:"), self.password)

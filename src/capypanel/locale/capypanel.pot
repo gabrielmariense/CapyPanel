@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 17:54-0300\n"
+"POT-Creation-Date: 2026-11-08 18:02-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -175,9 +175,6 @@ msgid "&Hosts:"
 msgstr ""
 
 msgid "&Import hosts…"
-msgstr ""
-
-msgid "&Kept in"
 msgstr ""
 
 msgid "&Language"
@@ -1426,11 +1423,8 @@ msgstr[1] ""
 
 msgid ""
 "Forgotten logins are deleted from Credential Manager too; you type them "
-"again the next time. Where new ones are kept: Settings › Hosts › "
-"Credentials › Kept in."
-msgstr ""
-
-msgid "Forgotten when CapyPanel closes."
+"again the next time. A new one is saved only when you tick Remember it on"
+" this computer as you type it."
 msgstr ""
 
 msgid "Formats CapyPanel can import"
@@ -1667,11 +1661,6 @@ msgstr ""
 msgid "Kept in"
 msgstr ""
 
-msgid ""
-"Kept in memory until CapyPanel closes, never saved, and used only for "
-"hosts with this connection profile."
-msgstr ""
-
 msgid "Kept: type to change it"
 msgstr ""
 
@@ -1744,6 +1733,11 @@ msgid "Logged on · {when}"
 msgstr ""
 
 msgid "Logged-on users"
+msgstr ""
+
+msgid ""
+"Logins you ticked Remember for: Windows encrypts them for your account, "
+"so anyone using your Windows session can connect with them."
 msgstr ""
 
 msgid "Logs"
@@ -2697,19 +2691,7 @@ msgstr ""
 msgid "Saved credentials"
 msgstr ""
 
-msgid "Saved for your Windows account."
-msgstr ""
-
 msgid "Saved in Credential Manager:"
-msgstr ""
-
-msgid ""
-"Saved in Windows Credential Manager for your Windows account (Settings › "
-"Hosts › Credentials), and used only for hosts with this connection "
-"profile."
-msgstr ""
-
-msgid "Saved passwords deleted."
 msgstr ""
 
 msgid "Scripts"
@@ -3005,10 +2987,6 @@ msgstr ""
 msgid "Takes it out of your lists, or deletes its file too"
 msgstr ""
 
-msgid "Temporary"
-msgstr ""
-
-msgctxt "passwords"
 msgid "Temporary"
 msgstr ""
 
@@ -3489,6 +3467,9 @@ msgid ""
 "this PC, not for Connect."
 msgstr ""
 
+msgid "Used only for hosts with this connection profile."
+msgstr ""
+
 msgid "Used only to read who is logged on and for the commands you run on a host."
 msgstr ""
 
@@ -3577,11 +3558,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Windows didn't keep it: {error}"
-msgstr ""
-
-msgid ""
-"Windows encrypts them for your account, domain accounts too: anyone using"
-" your Windows session can connect with them."
 msgstr ""
 
 #, python-brace-format

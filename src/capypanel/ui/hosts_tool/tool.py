@@ -101,7 +101,7 @@ class HostsTool(ListWorkspace):
         )
         for action in vars(self.commands).values():
             action.setParent(self)
-        credentials = SessionCredentials(saving=self.saves_passwords())
+        credentials = SessionCredentials()
         self.connector = Connector(self, Catalogs.for_paths(shell.paths), credentials)
         self.connector.open_settings = lambda: self._shell.open_settings("connections")
         self.details.profile_menu.aboutToShow.connect(
@@ -601,20 +601,6 @@ class HostsTool(ListWorkspace):
     def open_saved_credentials(self, parent: QWidget) -> None:
         self._shell.open_saved_credentials(parent)
 
-    def saves_passwords(self) -> bool:
-        """Settings: typed passwords are also saved in Windows Credential Manager."""
-        return self.prefs.get("save_passwords") is True
-
-    def _apply_saving(self, saving: bool) -> None:
-        """Off again deletes every saved password; what was typed this session stays."""
-        credentials = self.connector.credentials
-        if saving == credentials.saving:
-            return
-        if saving:
-            credentials.set_saving(True)  # passwords typed from now on
-        elif self._forgot(lambda: (credentials.set_saving(False), self.accounts.forget_saved())):
-            self._shell.show_message(_("Saved passwords deleted."), 5000)
-
     # ---- connection profiles ----
 
     def _profile_picker(self, host_list: HostList) -> ProfilePicker:
@@ -762,7 +748,7 @@ class HostsTool(ListWorkspace):
                 .format(host=where) if where else
                 _("Use an account that is an administrator of these PCs, such as a domain "
                   "admin."))  # fmt: skip
-        dialog = AccountDialog(self, text, saved=self.accounts.saving())
+        dialog = AccountDialog(self, text)
         if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return None
         account = dialog.account()
@@ -786,8 +772,6 @@ class HostsTool(ListWorkspace):
         on, minutes = prefs.auto_status
         self.prefs["auto_status"] = {"on": on, "minutes": minutes}
         self._apply_auto_status()
-        self.prefs["save_passwords"] = prefs.save_passwords
-        self._apply_saving(prefs.save_passwords)
         self._save_prefs()
         self.own_scripts.set_folder(prefs.scripts_folder)
         self._update_state()  # the list's name may change with the lists kept
@@ -1139,7 +1123,7 @@ class HostsTool(ListWorkspace):
         again = [t for t in self._targets if t[0] in self._refused or t[0] not in self._reported]
         uses = self.accounts.uses_for([self._target(*t) for t in again or self._targets])
         dialog = AccountDialog(self, text, account.user if account else "",
-                               saved=self.accounts.saving(), uses=uses)  # fmt: skip
+                               uses=uses)  # fmt: skip
         if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return
         link = dialog.link()

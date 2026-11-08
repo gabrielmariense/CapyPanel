@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 17:54-0300\n"
+"POT-Creation-Date: 2026-11-08 18:02-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -177,9 +177,6 @@ msgstr "&Hosts:"
 
 msgid "&Import hosts…"
 msgstr "&Importar hosts…"
-
-msgid "&Kept in"
-msgstr "&Guardadas em"
 
 msgid "&Language"
 msgstr "&Idioma"
@@ -1384,11 +1381,8 @@ msgid_plural "Forget these {n} logins?"
 msgstr[0] "Esquecer este login?"
 msgstr[1] "Esquecer estes {n} logins?"
 
-msgid "Forgotten logins are deleted from Credential Manager too; you type them again the next time. Where new ones are kept: Settings › Hosts › Credentials › Kept in."
-msgstr "Logins esquecidos também são apagados do Gerenciador de Credenciais; você os digita de novo na próxima vez. Onde os novos ficam: Configurações › Hosts › Credenciais › Guardadas em."
-
-msgid "Forgotten when CapyPanel closes."
-msgstr "Esquecidas quando o CapyPanel fecha."
+msgid "Forgotten logins are deleted from Credential Manager too; you type them again the next time. A new one is saved only when you tick Remember it on this computer as you type it."
+msgstr "Logins esquecidos também são apagados do Gerenciador de Credenciais; você os digita de novo na próxima vez. Um novo só é salvo quando você marca Lembrar neste computador ao digitá-lo."
 
 msgid "Formats CapyPanel can import"
 msgstr "Formatos que o CapyPanel importa"
@@ -1613,9 +1607,6 @@ msgstr "Guardada"
 msgid "Kept in"
 msgstr "Guardada em"
 
-msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
-msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
-
 msgid "Kept: type to change it"
 msgstr "Guardada: digite para alterá-la"
 
@@ -1684,6 +1675,9 @@ msgstr "Logados · {when}"
 
 msgid "Logged-on users"
 msgstr "Usuários logados"
+
+msgid "Logins you ticked Remember for: Windows encrypts them for your account, so anyone using your Windows session can connect with them."
+msgstr "Logins em que você marcou Lembrar: o Windows os criptografa para a sua conta, então quem usar a sua sessão do Windows pode se conectar com eles."
 
 msgid "Logs"
 msgstr "Logs"
@@ -2605,17 +2599,8 @@ msgstr "Salve as impressoras que você escolher, com as colunas que escolher, nu
 msgid "Saved credentials"
 msgstr "Credenciais salvas"
 
-msgid "Saved for your Windows account."
-msgstr "Salvas para a sua conta do Windows."
-
 msgid "Saved in Credential Manager:"
 msgstr "Salvos no Gerenciador de Credenciais:"
-
-msgid "Saved in Windows Credential Manager for your Windows account (Settings › Hosts › Credentials), and used only for hosts with this connection profile."
-msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Hosts › Credenciais) e só é usada nos hosts com este perfil de conexão."
-
-msgid "Saved passwords deleted."
-msgstr "As senhas salvas foram apagadas."
 
 msgid "Scripts"
 msgstr "Scripts"
@@ -2903,10 +2888,6 @@ msgstr "Tira das suas listas, ou exclui também o arquivo"
 
 msgid "Temporary"
 msgstr "Temporária"
-
-msgctxt "passwords"
-msgid "Temporary"
-msgstr "Temporárias"
 
 #, python-brace-format
 msgid "Temporary files cleaned on {host}."
@@ -3346,6 +3327,9 @@ msgstr "Usada para"
 msgid "Used for Refresh's logged-on users and the commands and scripts run on this PC, not for Connect."
 msgstr "Usada para os usuários logados do Atualizar e os comandos e scripts executados neste PC, não para o Conectar."
 
+msgid "Used only for hosts with this connection profile."
+msgstr "Usado só nos hosts com este perfil de conexão."
+
 msgid "Used only to read who is logged on and for the commands you run on a host."
 msgstr "Usada só para ver quem está logado e nos comandos que você executa em um host."
 
@@ -3426,9 +3410,6 @@ msgstr "&Notificação do Windows"
 #, python-brace-format
 msgid "Windows didn't keep it: {error}"
 msgstr "O Windows não a guardou: {error}"
-
-msgid "Windows encrypts them for your account, domain accounts too: anyone using your Windows session can connect with them."
-msgstr "O Windows as criptografa para a sua conta, inclusive contas de domínio: quem usar a sua sessão do Windows pode se conectar com elas."
 
 #, python-brace-format
 msgid "Windows error {code}."
