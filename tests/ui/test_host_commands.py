@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import Qt
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QMenu
 
 from capypanel.core import settings
@@ -301,10 +302,14 @@ def test_restart_now_has_no_message(qapp: QApplication) -> None:
     dialog.show()
     assert dialog.focusWidget() is dialog.when  # arrows pick at once
     assert dialog.cancel.isDefault()  # Enter in When cancels
+    QTest.keyClick(dialog.when, Qt.Key.Key_Return)  # Enter in When: Cancel
+    assert dialog.result() == QDialog.DialogCode.Rejected
+    dialog.show()
+    dialog.when.setFocus()
     dialog.focusNextChild()  # Tab: no message to type for Now, so straight to the action
     assert dialog.focusWidget() is dialog.action
-    dialog.close()
-    dialog.when.setCurrentIndex(0)
+    QTest.keyClick(dialog.action, Qt.Key.Key_Return)  # Enter there runs it
+    assert dialog.result() == QDialog.DialogCode.Accepted
     assert not dialog.box.isEnabled()
     assert dialog.action.text() == "&Restart now"
     assert "<b>ana</b>" in dialog.text.text()

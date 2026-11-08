@@ -110,6 +110,7 @@ class Question(QDialog):
         top.addWidget(sign, 0, Qt.AlignmentFlag.AlignTop)
         top.addLayout(self.body, 1)
         self.action = risky_button(action)
+        self.action.setAutoDefault(True)  # Enter runs it once Tab has put the keyboard on it
         self.cancel = QPushButton(_("Cancel"))
         self.cancel.setDefault(True)
         self.action.clicked.connect(self.accept)
