@@ -1270,6 +1270,10 @@ class HostsTool(ListWorkspace):
     def run_log_file(self) -> Path:
         return self._shell.paths.run_log_file
 
+    @property
+    def default_scripts_folder(self) -> Path:
+        return self._shell.paths.scripts_dir
+
     def save_prefs(self) -> None:
         self._save_prefs()
 

@@ -28,14 +28,20 @@ class OwnScripts(QObject):
         self.error: OSError | None = None  # why the folder couldn't be read
         self._again = False  # scan once more when this one ends: the folder changed meanwhile
 
-    def folder(self) -> Path | None:
+    def folder(self) -> Path:
+        """The folder chosen in Settings; until one is, CapyPanel's own shared one
+        (ProgramData\\CapyPanel\\scripts), made when it's first read."""
         saved = self._tool.prefs.get(FOLDER_KEY)
-        return Path(saved) if isinstance(saved, str) and saved else None
+        return Path(saved) if isinstance(saved, str) and saved else self.default()
+
+    def default(self) -> Path:
+        return self._tool.default_scripts_folder
 
     def set_folder(self, folder: Path | None) -> None:
+        """None, or the default folder itself: back to the default."""
         if folder == self.folder():
             return
-        self._tool.prefs[FOLDER_KEY] = str(folder) if folder else ""
+        self._tool.prefs[FOLDER_KEY] = str(folder) if folder and folder != self.default() else ""
         self._tool.save_prefs()
         self.scripts = []
         self.rescan()
@@ -48,10 +54,6 @@ class OwnScripts(QObject):
 
     def rescan(self) -> None:
         folder = self.folder()
-        if folder is None:
-            self.scripts, self.error = [], None
-            self.changed.emit()
-            return
         if self.scanning:
             self._again = True
             return
@@ -65,7 +67,14 @@ class OwnScripts(QObject):
         def failed(error: BaseException) -> None:
             self._ended([], error if isinstance(error, OSError) else OSError(str(error)), folder)
 
-        self._tool.runner.call(lambda _account: own_scripts.scan(folder, approvals), done, failed)
+        default = folder == self.default()
+
+        def read(_account: object) -> list[OwnScript]:
+            if default:  # CapyPanel's own: there from the first look, to put scripts in
+                folder.mkdir(parents=True, exist_ok=True)
+            return own_scripts.scan(folder, approvals)
+
+        self._tool.runner.call(read, done, failed)
 
     def _ended(self, found: list[OwnScript], error: OSError | None, folder: Path) -> None:
         self.scanning = False

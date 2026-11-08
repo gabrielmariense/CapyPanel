@@ -60,6 +60,7 @@ class HostsSettings(SettingsGroup):
             start_view=tool.start_view(),
             host_list=doc.hosts if doc else None,
             scripts_folder=tool.own_scripts.folder(),
+            scripts_default=tool.own_scripts.default(),
         )
         self.connections = ConnectionsPage(
             tool.connector.catalogs, doc, save_passwords=tool.saves_passwords()

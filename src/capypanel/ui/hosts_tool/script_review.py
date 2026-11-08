@@ -5,6 +5,7 @@ or one too big or unreadable, is shown with why and can't be approved."""
 
 import codecs
 import locale
+from pathlib import Path
 
 from PySide6.QtWidgets import (
     QButtonGroup,
@@ -202,3 +203,82 @@ def _escape(text: str) -> str:
     import html
 
     return html.escape(text, quote=False)
+
+
+class OnPcDialog(QDialog):
+    """New script on the PCs…: makes the .onpc file that names a script already on each PC, so
+    nobody has to write one by hand. It then shows under Your scripts as new, for Review."""
+
+    def __init__(self, parent: QWidget | None, folder: Path) -> None:
+        super().__init__(parent)
+        self.setWindowTitle(_("New script on the PCs"))
+        self._folder = folder
+        self.made: Path | None = None
+        self.name = QLineEdit()
+        self.name.setPlaceholderText(_("Printers"))
+        self.path = QLineEdit()
+        self.path.setPlaceholderText(r"C:\ProgramData\Scripts\printers.cmd")
+        about = hint(_("For a script that's already on each PC, in the same place: CapyPanel runs "
+                       "that PC's own copy. A .ps1, .bat, .cmd or .vbs file, by its full path on "
+                       "the PC; %ProgramData% and the like work too."))  # fmt: skip
+        self.problem = QLabel()
+        self.problem.setObjectName("warningText")
+        self.problem.setWordWrap(True)
+        form = QFormLayout()
+        form.addRow(_("&Name:"), self.name)
+        form.addRow(_("&Path on each PC:"), self.path)
+        self.create_button = QPushButton(_("C&reate"))
+        self.create_button.setDefault(True)
+        self.create_button.clicked.connect(self._make)
+        cancel = QPushButton(_("Cancel"))
+        cancel.setAutoDefault(False)
+        cancel.clicked.connect(self.reject)
+        buttons = QHBoxLayout()
+        buttons.addStretch(1)
+        buttons.addWidget(self.create_button)
+        buttons.addWidget(cancel)
+        layout = QVBoxLayout(self)
+        layout.addWidget(about)
+        layout.addLayout(form)
+        layout.addWidget(self.problem)
+        layout.addLayout(buttons)
+        self.setMinimumWidth(520)
+        for field in (self.name, self.path):
+            field.textChanged.connect(self._update)
+        self._update()
+
+    def _file(self) -> Path | None:
+        name = self.name.text().strip().strip(".")
+        if not name or any(c in name for c in r'<>:"/\|?*'):
+            return None
+        return self._folder / f"{name}{own_scripts.ON_PC}"
+
+    def _update(self) -> None:
+        self.problem.clear()
+        self.problem.hide()
+        path = self.path.text().strip().strip('"')
+        ready = self._file() is not None and bool(own_scripts.pc_path(path.encode("utf-8")))
+        self.create_button.setEnabled(ready)
+
+    def _make(self) -> None:
+        file = self._file()
+        path = self.path.text().strip().strip('"')
+        if file is None or not own_scripts.pc_path(path.encode("utf-8")):
+            return
+        if file.exists():
+            self._say(_("There's already a {file} in the scripts folder.").format(file=file.name))
+            return
+        text = f"# {_('Runs this file, already on each PC, from CapyPanel.')}\r\n{path}\r\n"
+        try:
+            file.parent.mkdir(parents=True, exist_ok=True)
+            with file.open("x", encoding="utf-8", newline="") as out:
+                out.write(text)
+        except OSError as e:
+            self._say(_("Couldn't save {file}: {error}").format(file=file, error=e.strerror or e))
+            return
+        self.made = file
+        self.accept()
+
+    def _say(self, text: str) -> None:
+        self.problem.setText(text)
+        self.problem.show()

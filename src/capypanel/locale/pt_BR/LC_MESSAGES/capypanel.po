@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 16:32-0300\n"
+"POT-Creation-Date: 2026-11-08 17:00-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -113,6 +113,9 @@ msgstr "&Editar célula"
 
 msgid "&Edit host…"
 msgstr "&Editar host…"
+
+msgid "&Edit in Notepad"
+msgstr "&Editar no Bloco de Notas"
 
 msgid "&Edit selected…"
 msgstr "&Editar selecionado…"
@@ -267,6 +270,9 @@ msgstr "&Parceiro"
 
 msgid "&Password:"
 msgstr "&Senha:"
+
+msgid "&Path on each PC:"
+msgstr "&Caminho em cada PC:"
 
 msgid "&Preset:"
 msgstr "&Predefinição:"
@@ -621,6 +627,9 @@ msgstr "Senha da au&tenticação"
 msgid "BIOS"
 msgstr "BIOS"
 
+msgid "Back to CapyPanel's own folder"
+msgstr "Voltar à pasta do próprio CapyPanel"
+
 msgid "Bar"
 msgstr "Barra"
 
@@ -657,6 +666,9 @@ msgstr "Compartilhamento C$"
 
 msgid "C&hoose file…"
 msgstr "Escol&her arquivo…"
+
+msgid "C&reate"
+msgstr "C&riar"
 
 msgid "CSV files (*.csv *.txt);;All files (*)"
 msgstr "Arquivos CSV (*.csv *.txt);;Todos os arquivos (*)"
@@ -770,12 +782,6 @@ msgstr "Verifica todos os arquivos do Windows e repara os danificados (DISM e sf
 
 msgid "Checks these hosts again now"
 msgstr "Verifica estes hosts de novo agora"
-
-msgid "Choose a scripts folder"
-msgstr "Escolher uma pasta de scripts"
-
-msgid "Choose a scripts folder in Settings › Hosts › General."
-msgstr "Escolha uma pasta de scripts em Configurações › Hosts › Geral."
 
 #, python-brace-format
 msgid "Choose a {tool} settings file"
@@ -937,6 +943,10 @@ msgid "Couldn't open it: {error}"
 msgstr "Não foi possível abrir: {error}"
 
 #, python-brace-format
+msgid "Couldn't open {file}: {error}"
+msgstr "Não foi possível abrir {file}: {error}"
+
+#, python-brace-format
 msgid "Couldn't open “{path}”: {error}"
 msgstr "Não foi possível abrir “{path}”: {error}"
 
@@ -1007,6 +1017,10 @@ msgstr ""
 #, python-brace-format
 msgid "Couldn't save where the tools are: {error}"
 msgstr "Não foi possível salvar onde as ferramentas estão: {error}"
+
+#, python-brace-format
+msgid "Couldn't save {file}: {error}"
+msgstr "Não foi possível salvar {file}: {error}"
 
 #, python-brace-format
 msgid "Couldn't save {path}: {error}"
@@ -1208,6 +1222,9 @@ msgstr "Editar perfil de conexão"
 msgid "Edit host"
 msgstr "Editar host"
 
+msgid "Edit in Notepad"
+msgstr "Editar no Bloco de Notas"
+
 msgid "Edit printer"
 msgstr "Editar impressora"
 
@@ -1322,6 +1339,9 @@ msgstr "Seguir as Contas: {user}"
 
 msgid "For Import"
 msgstr "Para importar"
+
+msgid "For a script that's already on each PC, in the same place: CapyPanel runs that PC's own copy. A .ps1, .bat, .cmd or .vbs file, by its full path on the PC; %ProgramData% and the like work too."
+msgstr "Para um script que já está em cada PC, no mesmo lugar: o CapyPanel executa a cópia daquele PC. Um arquivo .ps1, .bat, .cmd ou .vbs, pelo caminho completo no PC; %ProgramData% e afins também funcionam."
 
 msgid "For everyone on this PC: connection profiles, remote tools, and the shared lists in “lists”, a folder for each kind of list."
 msgstr "Para todos neste PC: perfis de conexão, ferramentas remotas e as listas compartilhadas em “lists”, uma pasta para cada tipo de lista."
@@ -1654,6 +1674,10 @@ msgstr "Logs"
 msgid "MAC address"
 msgstr "Endereço MAC"
 
+#, python-brace-format
+msgid "Made {file}. Review it on a PC before it runs."
+msgstr "{file} criado. Revise em um PC antes que ele execute."
+
 msgid "Magenta"
 msgstr "Magenta"
 
@@ -1743,6 +1767,12 @@ msgstr "Novo nome:"
 
 msgid "New printer list"
 msgstr "Nova lista de impressoras"
+
+msgid "New script on the PCs"
+msgstr "Novo script nos PCs"
+
+msgid "New script on the PCs…"
+msgstr "Novo script nos PCs…"
 
 msgid "New tag"
 msgstr "Nova tag"
@@ -2477,6 +2507,9 @@ msgstr "Executar verifica se ele responde."
 msgid "Run {name} on {host}?"
 msgstr "Executar {name} em {host}?"
 
+msgid "Runs this file, already on each PC, from CapyPanel."
+msgstr "Executa este arquivo, que já está em cada PC, pelo CapyPanel."
+
 msgid "Runs without asking."
 msgstr "Executa sem perguntar."
 
@@ -3084,6 +3117,10 @@ msgstr "Não há perfis de conexão. Crie um em Configurações › Hosts › Co
 msgid "There's a mark at {n} % already."
 msgstr "Já existe uma marca em {n} %."
 
+#, python-brace-format
+msgid "There's already a {file} in the scripts folder."
+msgstr "Já existe um {file} na pasta de scripts."
+
 msgid "These are the built-in profiles: the folder is created when you change one."
 msgstr "Estes são os perfis que vêm com o app: a pasta é criada quando você altera um."
 
@@ -3407,8 +3444,8 @@ msgstr "Sua conta do Windows ({user})"
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
 
-msgid "Your own PowerShell and batch scripts, for the Scripts tab of the Commands window. Only administrators should be able to change it."
-msgstr "Seus próprios scripts PowerShell e batch, para a aba Scripts da janela Comandos. Só administradores devem poder alterá-la."
+msgid "Your own scripts and .onpc files, for the Scripts tab of the Commands window. CapyPanel's own shared folder until you choose another; only administrators should be able to change it."
+msgstr "Seus próprios scripts e arquivos .onpc, para a aba Scripts da janela Comandos. A pasta compartilhada do próprio CapyPanel até você escolher outra; só administradores devem poder alterá-la."
 
 msgid "Your printers: status and toner, web pages, reports."
 msgstr "Suas impressoras: status e toner, páginas web, relatórios."

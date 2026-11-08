@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QApplication, QDialog
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.core.remote import own_scripts
+from capypanel.core.remote import access, own_scripts
 from capypanel.core.remote.access import Account
 from capypanel.core.remote.own_scripts import State
 from capypanel.core.remote.run import Engine, RunAs, RunResult, Script
@@ -23,7 +23,7 @@ from capypanel.core.remote.sessions import Session
 from capypanel.ui.hosts_tool import command_windows, commands_window, runner
 from capypanel.ui.hosts_tool.commands_window import CommandRow, CommandsWindow
 from capypanel.ui.hosts_tool.runner import HostTarget
-from capypanel.ui.hosts_tool.script_review import ReviewDialog
+from capypanel.ui.hosts_tool.script_review import OnPcDialog, ReviewDialog
 
 ACCEPT, REJECT = QDialog.DialogCode.Accepted, QDialog.DialogCode.Rejected
 
@@ -136,10 +136,55 @@ def _approve(risky: bool, arguments: str = "", run_as: RunAs = RunAs.ACCOUNT,
     return answer
 
 
-def test_no_folder_says_where_to_choose_one(window: CapyWindow) -> None:
+def test_until_one_is_chosen_the_folder_is_capypanel_s_own(
+    window: CapyWindow, tmp_path: Path
+) -> None:
+    own = window.hosts.own_scripts
+    shared = tmp_path / "userdata" / "scripts"  # ProgramData\CapyPanel\scripts, portable here
+    assert own.folder() == shared
     commands = _open(window)
-    assert "Settings › Hosts › General" in commands._own_hint.text()  # pyright: ignore[reportPrivateUsage]
+    _settle(window)
+    assert shared.is_dir()  # made at the first look, to put scripts in
     assert not [r for r in commands.rows if r.script is not None]
+    own.set_folder(tmp_path)
+    assert own.folder() == tmp_path
+    own.set_folder(None)  # Settings' ×: back to the shared one
+    assert own.folder() == shared and window.hosts.prefs["scripts_folder"] == ""
+
+
+def test_a_script_on_the_pcs_is_made_from_its_path_and_shows_for_review(
+    window: CapyWindow, folder: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fill(dialog: QDialog) -> Any:
+        assert isinstance(dialog, OnPcDialog)
+        dialog.name.setText("Printers")
+        dialog.path.setText("C:\\Tools\\setup.exe")  # not a script: can't be made
+        assert not dialog.create_button.isEnabled()
+        dialog.path.setText('"%ProgramData%\\Scripts\\printers.cmd"')
+        dialog.create_button.click()
+        return dialog.result()
+
+    _answer(monkeypatch, fill)
+    commands = _open(window)
+    commands._make_on_pc()  # pyright: ignore[reportPrivateUsage]
+    _settle(window)
+    made = folder / "Printers.onpc"
+    assert own_scripts.pc_path(made.read_bytes()) == "%ProgramData%\\Scripts\\printers.cmd"
+    row = _row(commands, "Printers")
+    assert row.script is not None and row.script.state is State.NEW
+
+
+def test_edit_opens_the_script_in_notepad(
+    window: CapyWindow, folder: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    opened: list[list[str]] = []
+    monkeypatch.setattr(commands_window.subprocess, "Popen", lambda args: opened.append(args))
+    commands = _open(window)
+    row = _row(commands, "Fix")
+    commands.pick(row)
+    assert row.edit is not None and row.edit.isVisibleTo(commands)
+    row.edit.click()
+    assert opened == [["notepad.exe", str(folder / "Fix.cmd")]]
 
 
 def test_new_scripts_show_under_your_scripts_and_need_a_review(
@@ -223,8 +268,10 @@ def test_run_as_the_signed_in_person_names_them(
     row = _row(commands, "Fix")
     assert row.run_as is not None and not row.run_as.isEnabled()  # locked
     target = _target(window)
+    window.hosts.keep_users(target.key, (), None)  # the last Refresh found no one…
     ana = Session("ana", "EXAMPLE", "console", "active", None, session_id=1)
-    window.hosts.keep_users(target.key, (ana,), None)
+    monkeypatch.setattr(runner.sessions, "read_sessions", lambda *_a: [ana])  # …ana is there now
+    monkeypatch.setattr(access, "check_reachable", lambda _host: None)
     commands.pick(row)
     commands.run(row.command)
     _settle(window)
@@ -239,7 +286,8 @@ def test_no_one_signed_in_means_no_run_as_them(
     _answer(monkeypatch, _approve(False, run_as=RunAs.USER))
     commands.review(_row(commands, "Fix").script)  # type: ignore[arg-type]
     _settle(window)
-    window.hosts.keep_users(_target(window).key, (), None)
+    monkeypatch.setattr(runner.sessions, "read_sessions", lambda *_a: [])  # read when it runs
+    monkeypatch.setattr(access, "check_reachable", lambda _host: None)
     row = _row(commands, "Fix")
     commands.pick(row)
     commands.run(row.command)

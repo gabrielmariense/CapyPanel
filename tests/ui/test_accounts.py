@@ -126,6 +126,7 @@ def test_a_password_not_typed_yet_is_asked_once_and_never_for_a_read_on_its_own(
     window.hosts.accounts.use(Link(ADMIN.user, Scope.TAG, "vpn", _list(window)), None,
                               remember=False)  # fmt: skip
     target = _host(window, "DESK-02")
+    _settle(window)  # the scripts folder, read as CapyPanel opens
     window.hosts.runner.read_facts(target)  # on its own, as when a host stays selected
     assert not window.hosts.runner.busy()  # nothing asked, nothing read
 

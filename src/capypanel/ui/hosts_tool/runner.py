@@ -361,9 +361,12 @@ class Runner(QObject):
         self,
         target: HostTarget,
         then: Callable[[Sequence[Session] | None, BaseException | None], None],
+        *,
+        fresh: bool = False,
     ) -> None:
-        """Who is signed in, from the last check, or read now when there's none."""
-        known = self._tool.users_found(target.key)
+        """Who is signed in, from the last check, or read now when there's none (always now
+        with `fresh`: the last check may be from before someone signed in)."""
+        known = None if fresh else self._tool.users_found(target.key)
         if known is not None and known[0] is not None:
             then(known[0], None)
             return
@@ -697,7 +700,7 @@ class Runner(QObject):
             user = f"{who.domain}\\{who.user}" if who.domain else who.user
             self._run_own(script, target, report, run_as, user)
 
-        self.with_sessions(target, go)
+        self.with_sessions(target, go, fresh=True)  # who is there now, not at the last Refresh
 
     def _run_own(
         self, script: OwnScript, target: HostTarget, report: Report, run_as: RunAs, user: str

@@ -5,6 +5,7 @@ line each, the picked one grown to show its description and Run (Enter runs it, 
 move, typing searches); on the right, what the picked command found, in the Details panel's
 parts and with no buttons. Commands that need typing open their small window over this one."""
 
+import subprocess
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -72,7 +73,7 @@ from capypanel.ui.hosts_tool.runner import (
     folder_user,
     reason_text,
 )
-from capypanel.ui.hosts_tool.script_review import ReviewDialog, state_text
+from capypanel.ui.hosts_tool.script_review import OnPcDialog, ReviewDialog, state_text
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 from capypanel.ui.notes import hint as hint_label
 from capypanel.ui.settings.pages import PathLabel, open_folder
@@ -80,9 +81,9 @@ from capypanel.ui.settings.pages import PathLabel, open_folder
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.tool import HostsTool
 
-SIZE = (1000, 620)  # fixed: it never grows as commands are added
+SIZE = (1120, 620)  # fixed: it never grows as commands are added
 GROUPS_WIDTH = 150  # px, at least
-GROUP_ROOM = 40  # px past a group's name: the rows' padding and the list's frame
+GROUP_ROOM = 24  # px past a group's name: the rows' padding (10 + 10) and a little air
 ROW_SPACING = 2  # px between the commands; a gap widget adds one more
 RESULTS_WIDTH = 400  # px: the rest goes to the commands, whose names are longer in pt
 ROW = 28  # px: a command's line
@@ -294,10 +295,14 @@ class CommandRow(QFrame):
         grid.setColumnStretch(1, 1)
         self.extra: QWidget | None = None  # your own script's Run as
         self.review: QPushButton | None = None
+        self.edit: QToolButton | None = None  # your own script, in Notepad
         self.run_as: QComboBox | None = None
         name = _(command.name)
         if script is not None:
             name = command.name  # a file's name: never translated
+            self.edit = _icon_button("pencil", text, _("Edit in Notepad"))
+            self.edit.clicked.connect(lambda: window.edit(script))
+            self.buttons.insertWidget(0, self.edit)
             if not script.ready:
                 name = f"{name} · {state_text(script)}"
                 self.run.setText(_("Re&view…"))
@@ -354,7 +359,7 @@ class CommandRow(QFrame):
         self.run.setVisible(picked)
         self.run.setDefault(picked)  # Enter runs the picked one
         self.about.setVisible(picked)
-        for part in (self.extra, self.review):
+        for part in (self.extra, self.review, self.edit):
             if part is not None:
                 part.setVisible(picked)
         self.setMinimumHeight(ROW)  # one line at least; more when the name wraps or it's picked
@@ -873,13 +878,16 @@ class CommandsWindow(QDialog):
         color = self.palette().color(QPalette.ColorRole.Text)
         self._rescan = _icon_button("refresh", color, _("Rescan the scripts folder"))
         self._rescan.clicked.connect(self._tool.own_scripts.rescan)
-        self._folder_button = _icon_button("folder-search", color, "")
-        self._folder_button.clicked.connect(self._open_scripts_folder)
+        self._folder_button = _icon_button("folder-search", color, _("Open the scripts folder"))
+        self._folder_button.clicked.connect(lambda: open_folder(self._tool.own_scripts.folder()))
+        self._new_on_pc = _icon_button("file-plus", color, _("New script on the PCs…"))
+        self._new_on_pc.clicked.connect(self._make_on_pc)
         line = QHBoxLayout(self._own_line)
         line.setContentsMargins(8, 0, 6, 2)
         line.setSpacing(4)
         line.addWidget(self._own_hint, 1)
         line.addWidget(self._own_path, 1)
+        line.addWidget(self._new_on_pc)
         line.addWidget(self._rescan)
         line.addWidget(self._folder_button)
         return self._own_line
@@ -905,9 +913,7 @@ class CommandsWindow(QDialog):
             self.rows.append(row)
             self._own_rows.addWidget(row)
         folder = own.folder()
-        if folder is None:
-            text = _("Choose a scripts folder in Settings › Hosts › General.")
-        elif own.scanning:
+        if own.scanning:
             text = _("Reading {folder}…").format(folder=folder)
         elif own.error is not None:
             text = _("Couldn't read {folder}: {error}").format(folder=folder, error=own.error)
@@ -917,12 +923,9 @@ class CommandsWindow(QDialog):
             text = ""
         self._own_hint.setText(text)
         self._own_hint.setVisible(bool(text))
-        self._own_path.set_path(folder or "")
+        self._own_path.set_path(folder)
         self._own_path.setVisible(not text)
-        self._rescan.setVisible(folder is not None)
         self._rescan.setEnabled(not own.scanning)
-        self._folder_button.setToolTip(_("Open the scripts folder") if folder
-                                       else _("Choose a scripts folder"))  # fmt: skip
         target = self.target()
         for row in self.rows:
             if row.script is not None:
@@ -932,12 +935,24 @@ class CommandsWindow(QDialog):
             self.pick(again)
         self._filter()
 
-    def _open_scripts_folder(self) -> None:
+    def _make_on_pc(self) -> None:
+        """New script on the PCs…: writes the .onpc file, then reads the folder again; it shows
+        as new, to review on a PC."""
         folder = self._tool.own_scripts.folder()
-        if folder is None:
-            self._tool.open_settings("hosts")
-        else:
-            open_folder(folder)
+        dialog = OnPcDialog(self, folder)
+        if run_modal(dialog) != QDialog.DialogCode.Accepted:
+            return
+        self._tool.own_scripts.rescan()
+        self._tool.say(_("Made {file}. Review it on a PC before it runs.").format(
+            file=dialog.made.name if dialog.made else ""))  # fmt: skip
+
+    def edit(self, script: OwnScript) -> None:
+        """Opens the file in Notepad. A change makes it "changed, review before use" at once."""
+        try:
+            subprocess.Popen(["notepad.exe", str(script.file)])  # noqa: S603, S607
+        except OSError as e:
+            self._tool.say(_("Couldn't open {file}: {error}").format(file=script.file.name,
+                                                                     error=e))  # fmt: skip
 
     def review(self, script: OwnScript) -> None:
         """Review…; a file on the PC is first read from the PC this window is for."""
@@ -969,6 +984,7 @@ class CommandsWindow(QDialog):
     def own_menu(self, script: OwnScript, where: QPoint) -> None:
         menu = QMenu(self)
         menu.addAction(_("Re&view…"), lambda: self.review(script))
+        menu.addAction(_("&Edit in Notepad"), lambda: self.edit(script))
         menu.addAction(_("Open &folder"), lambda: open_folder(script.file.parent))
         menu.addSeparator()
         menu.addAction(_("Re&scan"), self._tool.own_scripts.rescan)

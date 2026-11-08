@@ -145,17 +145,20 @@ class FolderPicker(QWidget):
 
     changed = Signal()
 
-    def __init__(self, folder: Path | None, title: str) -> None:
+    def __init__(self, folder: Path | None, title: str, default: Path | None = None) -> None:
+        """With `default`, × goes back to it, and shows only when another folder is chosen."""
         super().__init__()
         self.folder = folder
         self._title = title
+        self._default = default
         self.path = PathLabel()
         self.choose = QPushButton(_("Change path…"))  # as Remote tools says it
         self.choose.clicked.connect(self._choose)
         self.clear = QToolButton()
         self.clear.setText("×")
-        self.clear.setToolTip(_("No folder"))
-        self.clear.clicked.connect(lambda: self.set_folder(None))
+        self.clear.setToolTip(_("No folder") if default is None
+                              else _("Back to CapyPanel's own folder"))  # fmt: skip
+        self.clear.clicked.connect(lambda: self.set_folder(self._default))
         line = QHBoxLayout(self)
         line.setContentsMargins(0, 0, 0, 0)
         line.setSpacing(6)
@@ -175,7 +178,7 @@ class FolderPicker(QWidget):
             self.path.set_path(_("No folder chosen yet."))
         else:
             self.path.set_path(self.folder)
-        self.clear.setVisible(self.folder is not None)
+        self.clear.setVisible(self.folder is not None and self.folder != self._default)
 
     def _choose(self) -> None:
         start = str(self.folder) if self.folder else str(Path.home())
@@ -502,6 +505,7 @@ class HostsPage(ListsGeneralPage):
         start_view: tuple[str, str] | None = None,
         host_list: HostList | None = None,
         scripts_folder: Path | None = None,
+        scripts_default: Path | None = None,
     ) -> None:
         super().__init__(
             texts=texts,
@@ -535,14 +539,17 @@ class HostsPage(ListsGeneralPage):
         self.add_section(refresh)
 
         scripts = Section(_("Scripts"))
-        self.scripts_folder = FolderPicker(scripts_folder, _("Choose the scripts folder"))
+        self.scripts_folder = FolderPicker(
+            scripts_folder, _("Choose the scripts folder"), scripts_default
+        )
         self.scripts_folder.changed.connect(self.changed)
         add_rows(
             scripts.content,
             SettingRow(
                 _("Scripts &folder"),
-                _("Your own PowerShell and batch scripts, for the Scripts tab of the Commands "
-                  "window. Only administrators should be able to change it."),
+                _("Your own scripts and .onpc files, for the Scripts tab of the Commands "
+                  "window. CapyPanel's own shared folder until you choose another; only "
+                  "administrators should be able to change it."),
                 self.scripts_folder,
             ),
         )  # fmt: skip

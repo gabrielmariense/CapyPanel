@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 16:32-0300\n"
+"POT-Creation-Date: 2026-11-08 17:00-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -111,6 +111,9 @@ msgid "&Edit cell"
 msgstr ""
 
 msgid "&Edit host…"
+msgstr ""
+
+msgid "&Edit in Notepad"
 msgstr ""
 
 msgid "&Edit selected…"
@@ -265,6 +268,9 @@ msgid "&Partner"
 msgstr ""
 
 msgid "&Password:"
+msgstr ""
+
+msgid "&Path on each PC:"
 msgstr ""
 
 msgid "&Preset:"
@@ -628,6 +634,9 @@ msgstr ""
 msgid "BIOS"
 msgstr ""
 
+msgid "Back to CapyPanel's own folder"
+msgstr ""
+
 msgid "Bar"
 msgstr ""
 
@@ -663,6 +672,9 @@ msgid "C$ share"
 msgstr ""
 
 msgid "C&hoose file…"
+msgstr ""
+
+msgid "C&reate"
 msgstr ""
 
 msgid "CSV files (*.csv *.txt);;All files (*)"
@@ -782,12 +794,6 @@ msgid ""
 msgstr ""
 
 msgid "Checks these hosts again now"
-msgstr ""
-
-msgid "Choose a scripts folder"
-msgstr ""
-
-msgid "Choose a scripts folder in Settings › Hosts › General."
 msgstr ""
 
 #, python-brace-format
@@ -952,6 +958,10 @@ msgid "Couldn't open it: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't open {file}: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't open “{path}”: {error}"
 msgstr ""
 
@@ -1020,6 +1030,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't save where the tools are: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't save {file}: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -1231,6 +1245,9 @@ msgstr ""
 msgid "Edit host"
 msgstr ""
 
+msgid "Edit in Notepad"
+msgstr ""
+
 msgid "Edit printer"
 msgstr ""
 
@@ -1357,6 +1374,12 @@ msgid "Follow Accounts: {user}"
 msgstr ""
 
 msgid "For Import"
+msgstr ""
+
+msgid ""
+"For a script that's already on each PC, in the same place: CapyPanel runs"
+" that PC's own copy. A .ps1, .bat, .cmd or .vbs file, by its full path on"
+" the PC; %ProgramData% and the like work too."
 msgstr ""
 
 msgid ""
@@ -1710,6 +1733,10 @@ msgstr ""
 msgid "MAC address"
 msgstr ""
 
+#, python-brace-format
+msgid "Made {file}. Review it on a PC before it runs."
+msgstr ""
+
 msgid "Magenta"
 msgstr ""
 
@@ -1798,6 +1825,12 @@ msgid "New name:"
 msgstr ""
 
 msgid "New printer list"
+msgstr ""
+
+msgid "New script on the PCs"
+msgstr ""
+
+msgid "New script on the PCs…"
 msgstr ""
 
 msgid "New tag"
@@ -2562,6 +2595,9 @@ msgstr ""
 msgid "Run {name} on {host}?"
 msgstr ""
 
+msgid "Runs this file, already on each PC, from CapyPanel."
+msgstr ""
+
 msgid "Runs without asking."
 msgstr ""
 
@@ -3204,6 +3240,10 @@ msgstr ""
 msgid "There's a mark at {n} % already."
 msgstr ""
 
+#, python-brace-format
+msgid "There's already a {file} in the scripts folder."
+msgstr ""
+
 msgid ""
 "These are the built-in profiles: the folder is created when you change "
 "one."
@@ -3560,8 +3600,9 @@ msgid "Your computers: connect, see who's logged on, check them."
 msgstr ""
 
 msgid ""
-"Your own PowerShell and batch scripts, for the Scripts tab of the "
-"Commands window. Only administrators should be able to change it."
+"Your own scripts and .onpc files, for the Scripts tab of the Commands "
+"window. CapyPanel's own shared folder until you choose another; only "
+"administrators should be able to change it."
 msgstr ""
 
 msgid "Your printers: status and toner, web pages, reports."
