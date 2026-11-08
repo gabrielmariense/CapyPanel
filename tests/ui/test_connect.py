@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu, QMessageBox
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
+from capypanel.core.hosts.accounts import Link, Scope
 from capypanel.core.hosts.model import HostList
 from capypanel.core.remote.access import Account
 from capypanel.core.tools.connect import Credential, Target
@@ -503,14 +504,16 @@ def test_hosts_lists_each_typed_password_and_forgets_one(window: CapyWindow) -> 
     credentials = hosts.connector.credentials
     credentials.remember("offices", Credential("ana", "x"))
     credentials.remember("pis", Credential("", "y"))  # a VNC password, no user
-    hosts._account = Account("EXAMPLE\\user", "z")  # pyright: ignore[reportPrivateUsage]
+    hosts.accounts.use(Link("EXAMPLE\\user", Scope.ALL), Account("EXAMPLE\\user", "z"),
+                       remember=False)  # fmt: skip
     kept = {login.used_for: login for login in hosts.kept_logins()}
     assert [(k.user, k.saved) for k in kept.values()] == [
         ("ana", False), ("(password only)", False), ("EXAMPLE\\user", False)
     ]  # fmt: skip
-    assert list(kept) == [names["offices"], names["pis"], "Logged-on users"]
-    assert kept["Logged-on users"].tool == "Hosts › Refresh"
+    assert list(kept) == [names["offices"], names["pis"], "Every PC"]
+    assert kept["Every PC"].tool == "Hosts › Accounts"
     kept[names["pis"]].forget()
     assert "pis" not in credentials and "offices" in credentials  # only that one
-    kept["Logged-on users"].forget()
-    assert hosts._account is None  # pyright: ignore[reportPrivateUsage]
+    kept["Every PC"].forget()
+    assert hosts.accounts.known("EXAMPLE\\user") is None
+    assert hosts.accounts.links == [Link("EXAMPLE\\user", Scope.ALL)]  # asked again when needed

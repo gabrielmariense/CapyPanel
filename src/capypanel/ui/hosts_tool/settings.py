@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from capypanel.core.hosts import locations
 from capypanel.core.i18n import N_
+from capypanel.ui.hosts_tool.accounts import AccountsSection
 from capypanel.ui.saved_credentials import kept_text
 from capypanel.ui.settings.connections import ConnectionsPage
 from capypanel.ui.settings.group import SettingsGroup
@@ -34,6 +35,7 @@ class HostsSettings(SettingsGroup):
 
     general: HostsPage
     connections: ConnectionsPage
+    accounts: AccountsSection
 
     def __init__(self, tool: "HostsTool") -> None:
         self._tool = tool
@@ -58,9 +60,12 @@ class HostsSettings(SettingsGroup):
             host_list=doc.hosts if doc else None,
             scripts_folder=tool.own_scripts.folder(),
         )
+        self.accounts = AccountsSection(tool.accounts)  # which account signs in to which PCs
         self.connections = ConnectionsPage(
-            tool.connector.catalogs, doc, save_passwords=tool.saves_passwords()
-        )
+            tool.connector.catalogs, doc, save_passwords=tool.saves_passwords(),
+            own=[self.accounts],
+        )  # fmt: skip
+        tool.accounts.changed.connect(self.credentials_changed)
         self.general.changed.connect(self._changed)
         profiles = self.connections.profiles
         profiles.passwords_changed.connect(self._changed)

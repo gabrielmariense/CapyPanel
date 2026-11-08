@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QLabel
 
 from capypanel.core import credstore, settings
 from capypanel.core.hosts import listfile
+from capypanel.core.hosts.accounts import Link, Scope
 from capypanel.core.hosts.model import HostList
 from capypanel.core.remote.access import Account
 from capypanel.core.tools.connect import Credential
@@ -109,18 +110,20 @@ def test_a_saved_password_is_used_the_next_time_capypanel_opens(
     _type(monkeypatch, asked)
     _connect(window)
     assert credstore.read("profile/offices") == ("CORP\\ana", "x")
-    window.hosts._save_account(Account("CORP\\admin", "y"))  # pyright: ignore[reportPrivateUsage]
+    admin = Account("CORP\\admin", "y")
+    window.hosts.accounts.use(Link(admin.user, Scope.ALL), admin, remember=True)
 
-    later = _open(qapp, paths, {"save_passwords": True})
+    later = _open(qapp, paths, {"save_passwords": True,
+                                "accounts": window.hosts.prefs["accounts"]})  # fmt: skip
     monkeypatch.setattr(CredentialDialog, "exec", lambda _self: pytest.fail("asked again"))
     _connect(later)
     assert launched[-1] == Credential("CORP\\ana", "x")
-    assert later.hosts._account == Account("CORP\\admin", "y")  # pyright: ignore[reportPrivateUsage]
+    assert later.hosts.accounts.known("CORP\\admin") == admin
     kept = later.hosts.kept_logins()
-    assert [(k.used_for, k.saved) for k in kept] == [("Offices", True), ("Logged-on users", True)]
+    assert [(k.used_for, k.saved) for k in kept] == [("Offices", True), ("Every PC", True)]
     for login in kept:  # saved ones can be forgotten too
         login.forget()
-    assert credstore.names("") == [] and later.hosts._account is None  # pyright: ignore[reportPrivateUsage]
+    assert credstore.names("") == [] and later.hosts.accounts.known("CORP\\admin") is None
 
 
 def test_the_password_boxes_say_where_the_password_goes(window: CapyWindow) -> None:
@@ -131,8 +134,9 @@ def test_the_password_boxes_say_where_the_password_goes(window: CapyWindow) -> N
     assert "never saved" in note(CredentialDialog(None, ready, "PC-A", on_command_line=False))
     saved = CredentialDialog(None, ready, "PC-A", on_command_line=False, saved=True)
     assert "Windows Credential Manager" in note(saved) and "never saved" not in note(saved)
-    assert "never saved" in note(AccountDialog(None, "Why"))
-    assert "never saved" not in note(AccountDialog(None, "Why", saved=True))
+    # The account's box: Remember it on this computer starts as Settings' Credentials says.
+    assert not AccountDialog(None, "Why").remember.isChecked()
+    assert AccountDialog(None, "Why", saved=True).remember.isChecked()
 
 
 def test_keeping_passwords_until_closing_again_deletes_the_saved_ones(
@@ -142,7 +146,8 @@ def test_keeping_passwords_until_closing_again_deletes_the_saved_ones(
     profiles.passwords.setCurrentIndex(1)
     _type(monkeypatch, [])
     _connect(window)
-    window.hosts._save_account(Account("CORP\\admin", "y"))  # pyright: ignore[reportPrivateUsage]
+    window.hosts.accounts.use(Link("CORP\\admin", Scope.ALL), Account("CORP\\admin", "y"),
+                              remember=True)  # fmt: skip
     assert len(credstore.names("")) == 2
     profiles.passwords.setCurrentIndex(0)  # Keep until CapyPanel closes
     assert window.hosts.prefs["save_passwords"] is False and credstore.names("") == []

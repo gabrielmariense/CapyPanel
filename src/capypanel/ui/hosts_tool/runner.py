@@ -287,8 +287,22 @@ class Runner(QObject):
     def busy(self) -> bool:
         return bool(self._jobs)
 
-    def account(self) -> Account | None:
-        return self._tool.account()
+    def _start_as(
+        self,
+        target: HostTarget,
+        work: Callable[[Account | None], Any],
+        done: Callable[[Any], None],
+        failed: Callable[[BaseException], None],
+        *,
+        ask: bool = True,
+    ) -> bool:
+        """`work` gets the account that signs in to `target` (Settings' Accounts; None for the
+        Windows account). A password not typed yet this session is asked first, unless not
+        `ask`; False when it wasn't typed, and nothing started."""
+        go, account = self._tool.accounts.account_for(target, self._window() if ask else None)
+        if go:
+            self._start(lambda: work(account), done, failed)
+        return go
 
     def _fail(
         self,
@@ -309,8 +323,10 @@ class Runner(QObject):
     def another_account(
         self, target: HostTarget, error: BaseException | None, again: Callable[[], None]
     ) -> None:
-        """Try another account…: asks for one, keeps it like Refresh's, then runs `again`."""
-        current = self.account()
+        """Try another account…: asks for one and which PCs it's for (Settings' Accounts keeps
+        it), then runs `again`."""
+        accounts = self._tool.accounts
+        current = accounts.link_for(target)
         if isinstance(error, RemoteError) and error.reason is Reason.REJECTED and current:
             text = _("{host} didn't accept “{user}”. Type the password again, or use another "
                      "account.").format(host=target.name, user=current.user)  # fmt: skip
@@ -318,14 +334,22 @@ class Runner(QObject):
             text = _(
                 "Use an account that is an administrator of {host}, such as a domain admin."
             ).format(host=target.name)
+        uses = accounts.uses_for([target])
         dialog = AccountDialog(
             self._parent_widget(),
             text,
             current.user if current else "",
-            saved=self._tool.connector.credentials.saving,
+            saved=accounts.saving(),
+            uses=uses,
         )
+        if current is not None:  # the PCs it was for, unless a narrower choice is wanted
+            for index, (_label, link) in enumerate(uses):
+                if link.same_place(current):
+                    dialog.use_for.setCurrentIndex(index)
         if run_modal(dialog) == QDialog.DialogCode.Accepted:
-            self._tool.use_account(dialog.account())
+            link = dialog.link()
+            assert link is not None  # "Every PC" at least
+            accounts.use(link, dialog.account(), remember=dialog.remember.isChecked())
             again()
 
     def _parent_widget(self) -> QWidget:
@@ -344,8 +368,8 @@ class Runner(QObject):
             then(known[0], None)
             return
 
-        def read() -> list[Session]:
-            return sessions.read_sessions(target.address, self.account())
+        def read(account: Account | None) -> list[Session]:
+            return sessions.read_sessions(target.address, account)
 
         def done(found: list[Session]) -> None:
             self._tool.keep_users(target.key, tuple(found), None)
@@ -356,7 +380,7 @@ class Runner(QObject):
                 self._tool.keep_users(target.key, None, error)
             then(None, error)
 
-        self._start(read, done, failed)
+        self._start_as(target, read, done, failed)
 
     # ---- running a command ----
 
@@ -496,10 +520,9 @@ class Runner(QObject):
         names = ", ".join(bold(person(s)) for s in to)
         title = _("Message from {user}").format(user=_sender())
 
-        def send() -> None:
+        def send(account: Account | None) -> None:
             for session in to:
-                sessions.send_message(target.address, session.session_id, title, text,
-                                      self.account())  # fmt: skip
+                sessions.send_message(target.address, session.session_id, title, text, account)
 
         def done(_value: object) -> None:
             text_ = _("Message sent to {names} on {host}.")
@@ -510,7 +533,7 @@ class Runner(QObject):
             action = _("send the message to {names}").format(names=names)
             self._fail(report, "message", action, target, error, again)
 
-        self._start(send, done, failed)
+        self._start_as(target, send, done, failed)
 
     def _session_action(
         self, command_id: str, target: HostTarget, report: Report, session: Session
@@ -527,8 +550,8 @@ class Runner(QObject):
         call = sessions.log_off if log_off else sessions.disconnect
         who = bold(person(session))
 
-        def act() -> None:
-            call(target.address, session.session_id, self.account())
+        def act(account: Account | None) -> None:
+            call(target.address, session.session_id, account)
 
         def done(_value: object) -> None:
             text = (
@@ -544,7 +567,7 @@ class Runner(QObject):
             again = lambda: self._do_session_action(command_id, target, report, session)  # noqa: E731
             self._fail(report, command_id, action, target, error, again)
 
-        self._start(act, done, failed)
+        self._start_as(target, act, done, failed)
 
     # ---- Power ----
 
@@ -570,8 +593,8 @@ class Runner(QObject):
         call = power.restart if restart else power.shut_down
         asked = datetime.now(UTC)
 
-        def act() -> None:
-            call(target.address, delay, message, self.account())
+        def act(account: Account | None) -> None:
+            call(target.address, delay, message, account)
 
         def done(_value: object) -> None:
             at = asked + timedelta(seconds=delay)
@@ -601,7 +624,7 @@ class Runner(QObject):
             again = lambda: self._shut_down(target, report, restart, delay, message, people)  # noqa: E731
             self._fail(report, command_id, action, target, error, again)
 
-        self._start(act, done, failed)
+        self._start_as(target, act, done, failed)
 
     # ---- Scripts ----
 
@@ -618,6 +641,9 @@ class Runner(QObject):
         self._run_built_in(command_id, target, report)
 
     def _run_built_in(self, command_id: str, target: HostTarget, report: Report) -> None:
+        go, account = self._tool.accounts.account_for(target, self._window())
+        if not go:
+            return
         built = builtin.BUILT_IN[command_id]
         key = (target.key, command_id)
         self._running.add(key)
@@ -628,7 +654,7 @@ class Runner(QObject):
         report(command_id, Outcome(text, running=True))
 
         def work() -> RunResult:
-            return self.scripts.run(target.address, built.script, self.account(), built.timeout)
+            return self.scripts.run(target.address, built.script, account, built.timeout)
 
         def done(result: RunResult) -> None:
             self._running.discard(key)
@@ -676,6 +702,9 @@ class Runner(QObject):
     def _run_own(
         self, script: OwnScript, target: HostTarget, report: Report, run_as: RunAs, user: str
     ) -> None:
+        go, account = self._tool.accounts.account_for(target, self._window())
+        if not go:
+            return
         key = (target.key, script.id)
         self._running.add(key)
         name = bold(script.name)
@@ -691,8 +720,7 @@ class Runner(QObject):
             if not now.ready:
                 raise NotApproved(now.state)
             sent = own_scripts.to_script(now, target.name, run_as)
-            return self.scripts.run(target.address, sent, self.account(), run.TIMEOUT, run_as,
-                                    user)  # fmt: skip
+            return self.scripts.run(target.address, sent, account, run.TIMEOUT, run_as, user)
 
         def done(result: RunResult) -> None:
             self._running.discard(key)
@@ -721,8 +749,8 @@ class Runner(QObject):
         self._start(work, done, failed)
 
     def _cancel_restart(self, target: HostTarget, report: Report) -> None:
-        def act() -> bool:
-            return power.cancel(target.address, self.account())
+        def act(account: Account | None) -> bool:
+            return power.cancel(target.address, account)
 
         def done(cancelled: bool) -> None:
             host = escape(target.name)
@@ -735,7 +763,7 @@ class Runner(QObject):
             again = lambda: self._cancel_restart(target, report)  # noqa: E731
             self._fail(report, "cancel-restart", _("cancel the restart"), target, error, again)
 
-        self._start(act, done, failed)
+        self._start_as(target, act, done, failed)
 
     # ---- Printers ----
 
@@ -750,8 +778,8 @@ class Runner(QObject):
     def restart_spooler(
         self, target: HostTarget, report: Report, then: Callable[[], None] | None = None
     ) -> None:
-        def act() -> None:
-            services.restart_service(target.address, services.SPOOLER, self.account())
+        def act(account: Account | None) -> None:
+            services.restart_service(target.address, services.SPOOLER, account)
 
         def done(_value: object) -> None:
             text = _("Print Spooler restarted on {host}.").format(host=escape(target.name))
@@ -764,32 +792,42 @@ class Runner(QObject):
             action = _("restart the Print Spooler")
             self._fail(report, "spooler", action, target, error, again)
 
-        self._start(act, done, failed)
+        self._start_as(target, act, done, failed)
 
     def call(
         self,
         work: Callable[[Account | None], Any],
         done: Callable[[Any], None],
         failed: Callable[[BaseException], None],
+        target: HostTarget | None = None,
     ) -> None:
-        """For the command windows: `work` gets the account to use, on a background thread."""
-        self._start(lambda: work(self.account()), done, failed)
+        """For the command windows: `work` runs on a background thread and gets the account
+        that signs in to `target`; with no target, None (nothing on a PC needs one)."""
+        if target is None:
+            self._start(lambda: work(None), done, failed)
+        else:
+            self._start_as(target, work, done, failed)
 
     # ---- Check ----
 
     def read_facts(self, target: HostTarget, *, report: Report | None = None) -> None:
-        """PC facts: free space and the last restart at once, then the rest over WMI."""
+        """PC facts: free space and the last restart at once, then the rest over WMI. Read on
+        its own (no `report`), it never asks for a password: it waits for one typed."""
+        go, account = self._tool.accounts.account_for(
+            target, self._window() if report is not None else None
+        )
+        if not go:
+            return
         self._tool.facts_reading(target.key)
         self.facts_changed.emit(target.key)
         from capypanel.core.remote import inventory  # its PowerShell parts load on first use
 
         def quick() -> tuple[Any, Any]:
-            account = self.account()
             return (inventory.disk_space(target.address, account),
                     inventory.last_restart(target.address, account))  # fmt: skip
 
         def slow() -> Any:
-            return inventory.pc_facts(target.address, self.account())
+            return inventory.pc_facts(target.address, account)
 
         def quick_done(found: tuple[Any, Any]) -> None:
             self._tool.keep_facts(target.key, quick=found)

@@ -55,6 +55,8 @@ class HostDetails:
     users: tuple[Sequence[Session] | None, RemoteError | None, datetime] | None = None
     facts: Facts | None = None
     pending: PendingPower | None = None  # a restart or shutdown CapyPanel asked for
+    # The account that signs in to it ("" for the Windows account), and why that one.
+    signs_in: tuple[str, str] = ("", "")
 
 
 class HostDetailsPanel(DetailsPanel):
@@ -106,6 +108,15 @@ class HostDetailsPanel(DetailsPanel):
             layout.addWidget(self.value(key, value) if value else self.muted("—"))
         layout.addWidget(self.muted(_("Profile")))
         layout.addLayout(self._profile_row(shown.profile))
+        account, why = shown.signs_in
+        layout.addWidget(self.muted(_("Signs in as")))
+        if account:
+            signs_in: QLabel = self.value("signs-in", account)
+            signs_in.setToolTip(f"{why}\n{signs_in.toolTip()}")  # and Click to copy
+        else:
+            signs_in = self.muted(_("Your Windows account"))
+            signs_in.setToolTip(why)
+        layout.addWidget(signs_in)
 
         self.users(layout, shown.users)
         self.facts(layout, shown.facts)

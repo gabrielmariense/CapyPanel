@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-07 23:12-0300\n"
+"POT-Creation-Date: 2026-11-08 03:27-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -282,6 +282,9 @@ msgstr ""
 msgid "&Refresh"
 msgstr ""
 
+msgid "&Remember it on this computer"
+msgstr ""
+
 msgid "&Remove"
 msgstr ""
 
@@ -399,6 +402,11 @@ msgid_plural "<b>{n} printers</b> need attention: {reasons}."
 msgstr[0] ""
 msgstr[1] ""
 
+msgid ""
+"A PC's own account wins over its group's, a group's over a tag's, and "
+"those over Every PC. PCs none of them names use your Windows account."
+msgstr ""
+
 msgid "A Refresh is running. Try again once it ends."
 msgstr ""
 
@@ -406,6 +414,9 @@ msgid "A chosen &group"
 msgstr ""
 
 msgid "A connection profile must be a JSON object."
+msgstr ""
+
+msgid "A group"
 msgstr ""
 
 msgid "A group can't be moved inside itself."
@@ -441,6 +452,9 @@ msgstr ""
 msgid "A quote in the arguments isn't closed."
 msgstr ""
 
+msgid "A tag"
+msgstr ""
+
 msgid "A toner, ink, drum or box at or below this shows as low."
 msgstr ""
 
@@ -459,10 +473,16 @@ msgstr ""
 msgid "Access"
 msgstr ""
 
+msgid "Account"
+msgstr ""
+
 msgid "Account for other PCs"
 msgstr ""
 
 msgid "Account rejected"
+msgstr ""
+
+msgid "Accounts"
 msgstr ""
 
 msgid "Active"
@@ -487,6 +507,9 @@ msgid "Add a mark"
 msgstr ""
 
 msgid "Add a printer list"
+msgstr ""
+
+msgid "Add an account"
 msgstr ""
 
 msgid "Add group"
@@ -579,6 +602,9 @@ msgid ""
 msgstr ""
 
 msgid "Ask each time"
+msgstr ""
+
+msgid "Asked when needed"
 msgstr ""
 
 msgid "Asks before every run."
@@ -887,6 +913,10 @@ msgid "Couldn't create “{path}”: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't delete its saved password: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid ""
 "Couldn't delete the password saved in Windows Credential Manager: {error}"
 "\n"
@@ -1180,6 +1210,9 @@ msgstr ""
 msgid "Edit printer"
 msgstr ""
 
+msgid "Edit the account"
+msgstr ""
+
 msgid "Edit the list here"
 msgstr ""
 
@@ -1208,6 +1241,17 @@ msgid "Event Viewer"
 msgstr ""
 
 msgid "Every"
+msgstr ""
+
+msgid "Every PC"
+msgstr ""
+
+#, python-brace-format
+msgid "Every PC in group {group}"
+msgstr ""
+
+#, python-brace-format
+msgid "Every PC tagged {tag}"
 msgstr ""
 
 msgid "Every column the printers have"
@@ -1357,6 +1401,10 @@ msgid "Group policy updated on {host}."
 msgstr ""
 
 #, python-brace-format
+msgid "Group {group}"
+msgstr ""
+
+#, python-brace-format
 msgid "Group “{name}” is inside a group that doesn't exist."
 msgstr ""
 
@@ -1369,6 +1417,9 @@ msgid "Group: {name}"
 msgstr ""
 
 msgid "Groups"
+msgstr ""
+
+msgid "Groups and tags are the open list's."
 msgstr ""
 
 msgid "Hom&e"
@@ -1414,7 +1465,7 @@ msgstr ""
 msgid "Hosts with no profile &use"
 msgstr ""
 
-msgid "Hosts › Refresh"
+msgid "Hosts › Accounts"
 msgstr ""
 
 msgid "Hover a folder to see what it holds."
@@ -1516,6 +1567,9 @@ msgid ""
 "this PC can see."
 msgstr ""
 
+msgid "Its address or name, as in the host list"
+msgstr ""
+
 msgid ""
 "Its first line should be the script's path on the PC, such as "
 "C:\\ProgramData\\Scripts\\printers.cmd or "
@@ -1540,14 +1594,12 @@ msgstr ""
 msgid "Kept"
 msgstr ""
 
-msgid ""
-"Kept in memory until CapyPanel closes, never saved, and used only for "
-"hosts with this connection profile."
+msgid "Kept in"
 msgstr ""
 
 msgid ""
-"Kept in memory until CapyPanel closes, never saved, and used only to read"
-" who is logged on and for the commands you run on a host."
+"Kept in memory until CapyPanel closes, never saved, and used only for "
+"hosts with this connection profile."
 msgstr ""
 
 msgid "Kept: type to change it"
@@ -1813,6 +1865,9 @@ msgstr ""
 msgid "No printers in this group have all the picked tags."
 msgstr ""
 
+msgid "No row of Settings › Hosts › Connecting › Accounts names this PC."
+msgstr ""
+
 #, python-brace-format
 msgid "No settings mention “{text}”."
 msgstr ""
@@ -1895,6 +1950,9 @@ msgid "Off"
 msgstr ""
 
 msgid "Offline"
+msgstr ""
+
+msgid "One PC"
 msgstr ""
 
 msgid ""
@@ -2028,6 +2086,9 @@ msgid ""
 "Optional: a {extension} file saved from {tool}. It's used exactly as "
 "saved, including its encryption plugin; only the host is emptied, since "
 "the address comes from the host you open."
+msgstr ""
+
+msgid "Optional: asked the first time it's needed"
 msgstr ""
 
 msgid "Options:"
@@ -2194,6 +2255,9 @@ msgid "Quick check"
 msgstr ""
 
 msgid "Quit"
+msgstr ""
+
+msgid "Re&move"
 msgstr ""
 
 msgid "Re&scan"
@@ -2546,12 +2610,6 @@ msgid ""
 "Connections), and used only for hosts with this connection profile."
 msgstr ""
 
-msgid ""
-"Saved in Windows Credential Manager for your Windows account (Settings › "
-"Connections), and used only to read who is logged on and for the commands"
-" you run on a host."
-msgstr ""
-
 msgid "Saved passwords deleted."
 msgstr ""
 
@@ -2645,6 +2703,10 @@ msgstr ""
 msgid "Settings (Ctrl+,)"
 msgstr ""
 
+#, python-brace-format
+msgid "Settings › Hosts › Connecting › Accounts: {uses}"
+msgstr ""
+
 msgid "Shared"
 msgstr ""
 
@@ -2715,6 +2777,9 @@ msgid "Signed in: {names}. Work they haven't saved is lost."
 msgstr ""
 
 msgid "Signs a user out; unsaved work is lost."
+msgstr ""
+
+msgid "Signs in as"
 msgstr ""
 
 msgid "Signs in with"
@@ -2811,6 +2876,10 @@ msgid "Table"
 msgstr ""
 
 msgid "Tag for the selected items:"
+msgstr ""
+
+#, python-brace-format
+msgid "Tag {tag}"
 msgstr ""
 
 #, python-brace-format
@@ -3117,6 +3186,10 @@ msgid "They're signed in {where}. Work they haven't saved is lost."
 msgstr ""
 
 #, python-brace-format
+msgid "This PC ({name})"
+msgstr ""
+
+#, python-brace-format
 msgid "This PC restarts in {n} minute. Please save your work."
 msgid_plural "This PC restarts in {n} minutes. Please save your work."
 msgstr[0] ""
@@ -3220,10 +3293,17 @@ msgstr ""
 msgid "Type the partner, as on Doc360's login page."
 msgstr ""
 
+#, python-brace-format
+msgid "Type the password of “{user}”. It signs in to {host} ({uses})."
+msgstr ""
+
 msgid "Type the password."
 msgstr ""
 
 msgid "Type the user name."
+msgstr ""
+
+msgid "Unchanged"
 msgstr ""
 
 msgid "Unexpected error"
@@ -3265,6 +3345,9 @@ msgstr ""
 msgid "Use an account that is an administrator of {host}, such as a domain admin."
 msgstr ""
 
+msgid "Use it &for:"
+msgstr ""
+
 msgid "Use the &automatic path"
 msgstr ""
 
@@ -3272,6 +3355,9 @@ msgid "Use this"
 msgstr ""
 
 msgid "Used for"
+msgstr ""
+
+msgid "Used only to read who is logged on and for the commands you run on a host."
 msgstr ""
 
 msgid "User"
@@ -3337,6 +3423,12 @@ msgstr ""
 msgid "Whether the PC answers on the network."
 msgstr ""
 
+msgid ""
+"Which account signs in to which PCs, for Refresh's logged-on users and "
+"the commands you run on a host. PCs no row names use your Windows "
+"account."
+msgstr ""
+
 msgid "Who is signed in to the PC, and since when."
 msgstr ""
 
@@ -3362,6 +3454,12 @@ msgstr ""
 msgid ""
 "Windows file sharing (port 445) didn't answer: the computer is off, not "
 "on the network, a firewall blocks file sharing, or it isn't Windows."
+msgstr ""
+
+msgid ""
+"Windows keeps it in Credential Manager for your Windows account. "
+"Otherwise CapyPanel forgets it when it closes and asks once the next "
+"time."
 msgstr ""
 
 msgid "Windows shows the message with a countdown. You can cancel until then."
@@ -3399,6 +3497,9 @@ msgstr ""
 msgid "You asked at {when}."
 msgstr ""
 
+msgid "Your Windows account"
+msgstr ""
+
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr ""
 
@@ -3414,6 +3515,9 @@ msgid "Your scripts"
 msgstr ""
 
 msgid "Yours"
+msgstr ""
+
+msgid "Yours only: kept in your own settings, never in the shared host lists."
 msgstr ""
 
 msgid "access denied. It needs an admin account on that PC."
@@ -4149,6 +4253,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{user}'s folder"
+msgstr ""
+
+#, python-brace-format
+msgid "{what}, in {list}"
 msgstr ""
 
 msgid "“account_types” must be a list of numbers from 1 to 255."

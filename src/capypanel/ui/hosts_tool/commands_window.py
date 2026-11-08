@@ -678,7 +678,7 @@ class CommandsWindow(QDialog):
             self._outcomes[key] = Outcome(failed_text(action, target.name, error), error, retry)
             self._show_results()
 
-        self._tool.runner.call(work, done, failed)
+        self._tool.runner.call(work, done, failed, target)
 
     def _list_menu(self, command_id: str, index: int, where: QPoint) -> None:
         target = self.target()
@@ -736,6 +736,7 @@ class CommandsWindow(QDialog):
             lambda account: host_printers.clear_queue(target.address, printer.name, account),
             done,
             failed,
+            target,
         )
 
     def _alive(self) -> bool:
@@ -910,7 +911,7 @@ class CommandsWindow(QDialog):
             self._review(script, None, target.name, reason)
 
         self._tool.runner.call(read, lambda code: self._review(script, code, target.name, ""),
-                               failed)  # fmt: skip
+                               failed, target)  # fmt: skip
 
     def _review(self, script: OwnScript, code: bytes | None, host: str, error: str) -> None:
         if not self._alive():

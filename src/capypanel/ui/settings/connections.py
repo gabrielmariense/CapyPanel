@@ -2,7 +2,7 @@
 default one), where this user's typed passwords are kept, and where each remote tool was found
 on this PC. Like every other setting, each change is written at once."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import replace
 from pathlib import Path
 
@@ -702,12 +702,18 @@ class ConnectionsPage(Page):
     the tools the profiles open are."""
 
     def __init__(
-        self, catalogs: Catalogs, document: OpenList | None, *, save_passwords: bool = False
+        self,
+        catalogs: Catalogs,
+        document: OpenList | None,
+        *,
+        save_passwords: bool = False,
+        own: Sequence[Section] = (),
     ) -> None:
         super().__init__(_("Connecting"))
         self.profiles = ProfilesSection(catalogs, document, save_passwords=save_passwords)
         self.tools = ToolsSection(catalogs)
-        for section in (self.profiles, self.profiles.passwords_section, self.tools):
+        # `own`: more of this person's own sections, such as the accounts, under Passwords.
+        for section in (self.profiles, self.profiles.passwords_section, *own, self.tools):
             self.body.addWidget(section)
         for shared in (self.profiles, self.tools):
             shared.changed.connect(self.changed.emit)

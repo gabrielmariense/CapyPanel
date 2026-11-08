@@ -95,7 +95,9 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
     assert titles(dialog.general) == ["Appearance", "Startup and closing"]
     hosts = dialog.group(HostsSettings)
     assert titles(hosts.general) == ["Host lists", "Refresh", "Scripts"]
-    assert titles(hosts.connections) == ["Connection profiles", "Passwords", "Remote tools"]
+    assert titles(hosts.connections) == [
+        "Connection profiles", "Passwords", "Accounts", "Remote tools"
+    ]  # fmt: skip
     printers = dialog.group(PrintersSettings).general
     assert titles(printers) == ["Printer lists"]
     assert titles(printers.warnings_page) == ["Refresh", "Supplies"]
@@ -567,6 +569,9 @@ def test_the_settings_buttons_are_only_the_main_actions(window: CapyWindow) -> N
                 "&Delete…",
                 "&Restore built-in…",
                 "&Manage…",
+                "&Add…",
+                "&Edit…",
+                "Re&move",
                 "Change path…",
                 "Download",
             ],  # fmt: skip

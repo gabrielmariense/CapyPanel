@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-07 23:12-0300\n"
+"POT-Creation-Date: 2026-11-08 03:27-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -283,6 +283,9 @@ msgstr "&Ler de novo"
 msgid "&Refresh"
 msgstr "&Atualizar"
 
+msgid "&Remember it on this computer"
+msgstr "Le&mbrar neste computador"
+
 msgid "&Remove"
 msgstr "&Remover"
 
@@ -400,6 +403,9 @@ msgid_plural "<b>{n} printers</b> need attention: {reasons}."
 msgstr[0] "<b>{n} impressora</b> requer atenção: {reasons}."
 msgstr[1] "<b>{n} impressoras</b> requerem atenção: {reasons}."
 
+msgid "A PC's own account wins over its group's, a group's over a tag's, and those over Every PC. PCs none of them names use your Windows account."
+msgstr "A conta do próprio PC vale mais que a do grupo, a do grupo mais que a da tag, e essas mais que Todos os PCs. PCs que nenhuma delas nomeia usam a sua conta do Windows."
+
 msgid "A Refresh is running. Try again once it ends."
 msgstr "Uma atualização está em andamento. Tente de novo quando ela terminar."
 
@@ -408,6 +414,9 @@ msgstr "Um &grupo escolhido"
 
 msgid "A connection profile must be a JSON object."
 msgstr "Um perfil de conexão deve ser um objeto JSON."
+
+msgid "A group"
+msgstr "Um grupo"
 
 msgid "A group can't be moved inside itself."
 msgstr "Um grupo não pode ser movido para dentro dele mesmo."
@@ -442,6 +451,9 @@ msgstr "Já existe uma predefinição chamada “{name}”. Substituí-la?"
 msgid "A quote in the arguments isn't closed."
 msgstr "Uma aspa nos argumentos não foi fechada."
 
+msgid "A tag"
+msgstr "Uma tag"
+
 msgid "A toner, ink, drum or box at or below this shows as low."
 msgstr "Um toner, tinta, cilindro ou caixa neste nível ou abaixo aparece como baixo."
 
@@ -460,11 +472,17 @@ msgstr "Sobre"
 msgid "Access"
 msgstr "Acesso"
 
+msgid "Account"
+msgstr "Conta"
+
 msgid "Account for other PCs"
 msgstr "Conta para outros PCs"
 
 msgid "Account rejected"
 msgstr "Conta recusada"
+
+msgid "Accounts"
+msgstr "Contas"
 
 msgid "Active"
 msgstr "Ativo"
@@ -489,6 +507,9 @@ msgstr "Adicionar marca"
 
 msgid "Add a printer list"
 msgstr "Adicionar uma lista de impressoras"
+
+msgid "Add an account"
+msgstr "Adicionar uma conta"
 
 msgid "Add group"
 msgstr "Adicionar grupo"
@@ -575,6 +596,9 @@ msgstr "Aplica de novo as políticas de grupo do PC agora, sem esperar a próxim
 
 msgid "Ask each time"
 msgstr "Perguntar sempre"
+
+msgid "Asked when needed"
+msgstr "Pedida quando precisar"
 
 msgid "Asks before every run."
 msgstr "Pergunta antes de cada execução."
@@ -873,6 +897,10 @@ msgid "Couldn't create “{path}”: {error}"
 msgstr "Não foi possível criar “{path}”: {error}"
 
 #, python-brace-format
+msgid "Couldn't delete its saved password: {error}"
+msgstr "Não foi possível apagar a senha salva: {error}"
+
+#, python-brace-format
 msgid ""
 "Couldn't delete the password saved in Windows Credential Manager: {error}\n"
 "\n"
@@ -1159,6 +1187,9 @@ msgstr "Editar host"
 msgid "Edit printer"
 msgstr "Editar impressora"
 
+msgid "Edit the account"
+msgstr "Editar a conta"
+
 msgid "Edit the list here"
 msgstr "Editar a lista aqui"
 
@@ -1186,6 +1217,17 @@ msgstr "Visualizador de Eventos"
 
 msgid "Every"
 msgstr "A cada"
+
+msgid "Every PC"
+msgstr "Todos os PCs"
+
+#, python-brace-format
+msgid "Every PC in group {group}"
+msgstr "Todos os PCs do grupo {group}"
+
+#, python-brace-format
+msgid "Every PC tagged {tag}"
+msgstr "Todos os PCs com a tag {tag}"
 
 msgid "Every column the printers have"
 msgstr "Todas as colunas das impressoras"
@@ -1321,6 +1363,10 @@ msgid "Group policy updated on {host}."
 msgstr "Política de grupo atualizada em {host}."
 
 #, python-brace-format
+msgid "Group {group}"
+msgstr "Grupo {group}"
+
+#, python-brace-format
 msgid "Group “{name}” is inside a group that doesn't exist."
 msgstr "O grupo “{name}” está dentro de um grupo que não existe."
 
@@ -1334,6 +1380,9 @@ msgstr "Grupo: {name}"
 
 msgid "Groups"
 msgstr "Grupos"
+
+msgid "Groups and tags are the open list's."
+msgstr "Os grupos e as tags são os da lista aberta."
 
 msgid "Hom&e"
 msgstr "I&nício"
@@ -1378,8 +1427,8 @@ msgstr "Hosts sem grupo &vão para:"
 msgid "Hosts with no profile &use"
 msgstr "Hosts sem perfil &usam"
 
-msgid "Hosts › Refresh"
-msgstr "Hosts › Atualizar"
+msgid "Hosts › Accounts"
+msgstr "Hosts › Contas"
 
 msgid "Hover a folder to see what it holds."
 msgstr "Passe o mouse sobre uma pasta para ver o que ela guarda."
@@ -1472,6 +1521,9 @@ msgstr "Ela é entregue ao visualizador de forma privada, nunca na linha de coma
 msgid "It's passed to the viewer on its command line, which administrators of this PC can see."
 msgstr "Ela é passada ao visualizador na linha de comando, que os administradores deste PC podem ver."
 
+msgid "Its address or name, as in the host list"
+msgstr "O endereço ou nome, como na lista de hosts"
+
 msgid "Its first line should be the script's path on the PC, such as C:\\ProgramData\\Scripts\\printers.cmd or %ProgramData%\\Scripts\\printers.ps1."
 msgstr "A primeira linha deve ser o caminho do script no PC, como C:\\ProgramData\\Scripts\\printers.cmd ou %ProgramData%\\Scripts\\printers.ps1."
 
@@ -1493,11 +1545,11 @@ msgstr "Manter aberto na bandeja"
 msgid "Kept"
 msgstr "Guardada"
 
+msgid "Kept in"
+msgstr "Guardada em"
+
 msgid "Kept in memory until CapyPanel closes, never saved, and used only for hosts with this connection profile."
 msgstr "Fica na memória até o CapyPanel fechar, nunca é salva e só é usada nos hosts com este perfil de conexão."
-
-msgid "Kept in memory until CapyPanel closes, never saved, and used only to read who is logged on and for the commands you run on a host."
-msgstr "Mantida na memória até o CapyPanel fechar, nunca salva, e usada só para ver quem está conectado e nos comandos que você executa em um host."
 
 msgid "Kept: type to change it"
 msgstr "Guardada: digite para alterá-la"
@@ -1757,6 +1809,9 @@ msgstr "Nenhuma impressora está instalada em {host}."
 msgid "No printers in this group have all the picked tags."
 msgstr "Nenhuma impressora deste grupo tem todas as tags escolhidas."
 
+msgid "No row of Settings › Hosts › Connecting › Accounts names this PC."
+msgstr "Nenhuma linha de Configurações › Hosts › Conexão › Contas nomeia este PC."
+
 #, python-brace-format
 msgid "No settings mention “{text}”."
 msgstr "Nenhuma configuração menciona “{text}”."
@@ -1832,6 +1887,9 @@ msgstr "Desligado"
 
 msgid "Offline"
 msgstr "Offline"
+
+msgid "One PC"
+msgstr "Um PC"
 
 msgid "One computer per line, by its name on the network. To show another name, use Name and address."
 msgstr "Um computador por linha, pelo nome dele na rede. Para mostrar outro nome, use Nome e endereço."
@@ -1954,6 +2012,9 @@ msgstr "Abre {path}"
 #, python-brace-format
 msgid "Optional: a {extension} file saved from {tool}. It's used exactly as saved, including its encryption plugin; only the host is emptied, since the address comes from the host you open."
 msgstr "Opcional: um arquivo {extension} salvo no {tool}. Ele é usado exatamente como foi salvo, inclusive o plugin de criptografia; só o host é esvaziado, já que o endereço vem do host que você abre."
+
+msgid "Optional: asked the first time it's needed"
+msgstr "Opcional: pedida na primeira vez que precisar"
 
 msgid "Options:"
 msgstr "Opções:"
@@ -2118,6 +2179,9 @@ msgstr "Verificação rápida"
 
 msgid "Quit"
 msgstr "Sair"
+
+msgid "Re&move"
+msgstr "Re&mover"
 
 msgid "Re&scan"
 msgstr "Verificar de &novo"
@@ -2461,9 +2525,6 @@ msgstr "Salvos no Gerenciador de Credenciais:"
 msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only for hosts with this connection profile."
 msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões) e só é usada nos hosts com este perfil de conexão."
 
-msgid "Saved in Windows Credential Manager for your Windows account (Settings › Connections), and used only to read who is logged on and for the commands you run on a host."
-msgstr "Salva no Gerenciador de Credenciais do Windows para a sua conta do Windows (Configurações › Conexões), e usada só para ver quem está conectado e nos comandos que você executa em um host."
-
 msgid "Saved passwords deleted."
 msgstr "As senhas salvas foram apagadas."
 
@@ -2557,6 +2618,10 @@ msgstr "Configurações"
 msgid "Settings (Ctrl+,)"
 msgstr "Configurações (Ctrl+,)"
 
+#, python-brace-format
+msgid "Settings › Hosts › Connecting › Accounts: {uses}"
+msgstr "Configurações › Hosts › Conexão › Contas: {uses}"
+
 msgid "Shared"
 msgstr "Compartilhada"
 
@@ -2624,6 +2689,9 @@ msgstr "Conectados: {names}. O que não foi salvo se perde."
 
 msgid "Signs a user out; unsaved work is lost."
 msgstr "Desconecta um usuário da conta; o que não foi salvo se perde."
+
+msgid "Signs in as"
+msgstr "Entra como"
 
 msgid "Signs in with"
 msgstr "Entra com"
@@ -2715,6 +2783,10 @@ msgstr "Tabela"
 
 msgid "Tag for the selected items:"
 msgstr "Tag para os itens selecionados:"
+
+#, python-brace-format
+msgid "Tag {tag}"
+msgstr "Tag {tag}"
 
 #, python-brace-format
 msgid "Tag: {tag}"
@@ -2995,6 +3067,10 @@ msgid "They're signed in {where}. Work they haven't saved is lost."
 msgstr "Está conectado {where}. O que não foi salvo se perde."
 
 #, python-brace-format
+msgid "This PC ({name})"
+msgstr "Este PC ({name})"
+
+#, python-brace-format
 msgid "This PC restarts in {n} minute. Please save your work."
 msgid_plural "This PC restarts in {n} minutes. Please save your work."
 msgstr[0] "Este PC reinicia em {n} minuto. Salve o seu trabalho."
@@ -3094,11 +3170,18 @@ msgstr "Digite uma tag e pressione Enter"
 msgid "Type the partner, as on Doc360's login page."
 msgstr "Digite o parceiro, como na página de login do Doc360."
 
+#, python-brace-format
+msgid "Type the password of “{user}”. It signs in to {host} ({uses})."
+msgstr "Digite a senha de “{user}”. Essa conta entra em {host} ({uses})."
+
 msgid "Type the password."
 msgstr "Digite a senha."
 
 msgid "Type the user name."
 msgstr "Digite o nome do usuário."
+
+msgid "Unchanged"
+msgstr "Sem alteração"
 
 msgid "Unexpected error"
 msgstr "Erro inesperado"
@@ -3139,6 +3222,9 @@ msgstr "Usar &padrões"
 msgid "Use an account that is an administrator of {host}, such as a domain admin."
 msgstr "Use uma conta que seja administradora de {host}, como um admin do domínio."
 
+msgid "Use it &for:"
+msgstr "Usar &para:"
+
 msgid "Use the &automatic path"
 msgstr "Usar o caminho &automático"
 
@@ -3147,6 +3233,9 @@ msgstr "Usar este"
 
 msgid "Used for"
 msgstr "Usada para"
+
+msgid "Used only to read who is logged on and for the commands you run on a host."
+msgstr "Usada só para ver quem está logado e nos comandos que você executa em um host."
 
 msgid "User"
 msgstr "Usuário"
@@ -3207,6 +3296,9 @@ msgstr "Onde fica a marca, em %:"
 msgid "Whether the PC answers on the network."
 msgstr "Se o PC responde na rede."
 
+msgid "Which account signs in to which PCs, for Refresh's logged-on users and the commands you run on a host. PCs no row names use your Windows account."
+msgstr "Qual conta entra em quais PCs, para os usuários logados do Atualizar e os comandos que você executa em um host. PCs que nenhuma linha nomeia usam a sua conta do Windows."
+
 msgid "Who is signed in to the PC, and since when."
 msgstr "Quem está conectado ao PC, e desde quando."
 
@@ -3229,6 +3321,9 @@ msgstr "Erro do Windows {code}."
 
 msgid "Windows file sharing (port 445) didn't answer: the computer is off, not on the network, a firewall blocks file sharing, or it isn't Windows."
 msgstr "O compartilhamento de arquivos do Windows (porta 445) não respondeu: o computador está desligado, fora da rede, um firewall bloqueia o compartilhamento ou não é Windows."
+
+msgid "Windows keeps it in Credential Manager for your Windows account. Otherwise CapyPanel forgets it when it closes and asks once the next time."
+msgstr "O Windows a guarda no Gerenciador de Credenciais para a sua conta do Windows. Senão, o CapyPanel a esquece ao fechar e pede uma vez na próxima."
 
 msgid "Windows shows the message with a countdown. You can cancel until then."
 msgstr "O Windows mostra a mensagem com uma contagem regressiva. Dá para cancelar até lá."
@@ -3261,6 +3356,9 @@ msgstr "Amarelo"
 msgid "You asked at {when}."
 msgstr "Você pediu às {when}."
 
+msgid "Your Windows account"
+msgstr "Sua conta do Windows"
+
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
 
@@ -3275,6 +3373,9 @@ msgstr "Seus scripts"
 
 msgid "Yours"
 msgstr "Sua"
+
+msgid "Yours only: kept in your own settings, never in the shared host lists."
+msgstr "Só suas: guardadas nas suas próprias configurações, nunca nas listas de hosts compartilhadas."
 
 msgid "access denied. It needs an admin account on that PC."
 msgstr "acesso negado. É preciso uma conta de administrador naquele PC."
@@ -3985,6 +4086,10 @@ msgstr "{user} (desconectado)"
 #, python-brace-format
 msgid "{user}'s folder"
 msgstr "Pasta de {user}"
+
+#, python-brace-format
+msgid "{what}, in {list}"
+msgstr "{what}, em {list}"
 
 msgid "“account_types” must be a list of numbers from 1 to 255."
 msgstr "“account_types” deve ser uma lista de números de 1 a 255."

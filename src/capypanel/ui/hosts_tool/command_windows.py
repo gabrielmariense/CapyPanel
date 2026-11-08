@@ -507,7 +507,7 @@ class ReadList(QDialog):
     def read(self) -> None:
         self.read_button.setEnabled(False)
         self.summary.setText(_("Reading {host}…").format(host=self.target.name))
-        self.runner.call(self.work, self._read, self._failed)
+        self.runner.call(self.work, self._read, self._failed, self.target)
 
     def work(self, account: Any) -> Any:
         raise NotImplementedError
@@ -629,6 +629,7 @@ class PrintersDialog(ReadList):
             lambda account: host_printers.clear_queue(self.target.address, printer.name, account),
             done,
             failed,
+            self.target,
         )
 
     def _spooler(self) -> None:

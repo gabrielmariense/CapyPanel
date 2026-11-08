@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.core import credstore, settings
+from capypanel.core import settings
 from capypanel.core.hosts import commands as host_commands
 from capypanel.core.hosts.commands import GROUP_NAMES
 from capypanel.core.hosts.commands import Group as CommandGroup
@@ -46,6 +46,7 @@ from capypanel.ui.dialogs import run_modal
 from capypanel.ui.export_hosts import ExportDialog
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, list_file_filter
+from capypanel.ui.hosts_tool.accounts import Accounts, used_for
 from capypanel.ui.hosts_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.hosts_tool.details import HostDetails, HostDetailsPanel
 from capypanel.ui.hosts_tool.host_state import Facts, PendingPower
@@ -64,7 +65,6 @@ from capypanel.ui.saved_credentials import KeptLogin, forget_failed
 
 log = logging.getLogger(__name__)
 MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks first
-SAVED_ACCOUNT = "account/logged-on-users"  # in Credential Manager, when passwords are saved
 # Host commands' keys; the rest have none for now (a Keyboard shortcuts page comes later).
 COMMAND_SHORTCUTS = {
     "c-share": "Ctrl+E",
@@ -112,7 +112,8 @@ class HostsTool(ListWorkspace):
             str, tuple[tuple[Session, ...] | None, RemoteError | None, datetime]
         ] = {}
         self._run: CheckRun | None = None
-        self._account = self._saved_account()  # typed for logged-on users
+        self.accounts = Accounts(self)  # which account signs in to which PC
+        self.accounts.changed.connect(self._accounts_changed)
         self._refused: list[str] = []  # hosts this run that didn't let the account read users
         self._reported: set[str] = set()
         self._targets: list[tuple[str, str]] = []
@@ -577,33 +578,12 @@ class HostsTool(ListWorkspace):
                     lambda p=profile_id: self._forget_kept(p),
                 )
             )
-        try:  # with saving off too: one Windows didn't delete is still kept
-            saved = credstore.read(SAVED_ACCOUNT)
-        except OSError as e:
-            log.warning("Couldn't read the saved account for logged-on users: %s", e)
-            saved = None
-        user = self._account.user if self._account else saved[0] if saved else None
-        if user is not None:
-            logins.append(
-                KeptLogin(
-                    _("Logged-on users"),
-                    _("Hosts › Refresh"),
-                    user,
-                    saved is not None,
-                    lambda: self._forget_kept(None),
-                )
-            )
-        return logins
+        return [*logins, *self.accounts.kept_logins()]
 
-    def _forget_kept(self, profile_id: str | None) -> None:
-        """One profile's password, or (None) the account for logged-on users: from memory and
-        from Credential Manager. Raises OSError."""
+    def _forget_kept(self, profile_id: str) -> None:
+        """One profile's password: from memory and from Credential Manager. Raises OSError."""
         try:
-            if profile_id is None:
-                self._account = None
-                self._delete_account()
-            else:
-                self.connector.credentials.forget(profile_id)
+            self.connector.credentials.forget(profile_id)
         finally:
             self._update_state()
 
@@ -618,33 +598,6 @@ class HostsTool(ListWorkspace):
         """Settings: typed passwords are also saved in Windows Credential Manager."""
         return self.prefs.get("save_passwords") is True
 
-    def _saved_account(self) -> Account | None:
-        if not self.connector.credentials.saving:
-            return None
-        try:
-            found = credstore.read(SAVED_ACCOUNT)
-        except OSError as e:
-            log.warning("Couldn't read the saved account for logged-on users: %s", e)
-            return None
-        return Account(*found) if found is not None else None
-
-    def _save_account(self, account: Account) -> None:
-        if not self.connector.credentials.saving:
-            return
-        try:
-            credstore.save(SAVED_ACCOUNT, account.password, user=account.user)
-        except (OSError, ValueError) as e:
-            log.warning("Couldn't save the account for logged-on users: %s", e)
-            QMessageBox.warning(
-                self,
-                "CapyPanel",
-                _("Couldn't save the password in Windows Credential Manager: {error}\n\n"
-                  "It's kept until CapyPanel closes.").format(error=e),
-            )  # fmt: skip
-
-    def _delete_account(self) -> None:
-        credstore.forget(SAVED_ACCOUNT)  # saving or not, like the profiles' passwords
-
     def _apply_saving(self, saving: bool) -> None:
         """Off again deletes every saved password; what was typed this session stays."""
         credentials = self.connector.credentials
@@ -652,7 +605,7 @@ class HostsTool(ListWorkspace):
             return
         if saving:
             credentials.set_saving(True)  # passwords typed from now on
-        elif self._forgot(lambda: (credentials.set_saving(False), self._delete_account())):
+        elif self._forgot(lambda: (credentials.set_saving(False), self.accounts.forget_saved())):
             self._shell.show_message(_("Saved passwords deleted."), 5000)
 
     # ---- connection profiles ----
@@ -793,12 +746,22 @@ class HostsTool(ListWorkspace):
                 users=self._users_found.get(host.id),
                 facts=self._facts.get(host.id),
                 pending=self._pending.get(host.id),
+                signs_in=self._signs_in(host),
             )
             self.details.show_host(details, 1, needle=self._needle())
             if host.connect_address and host.id not in self._facts:
                 self._facts_timer.start()  # read once it stays selected a moment
         else:
             self.details.show_host(None, len(items), summary=self._summary())
+
+    def _signs_in(self, host: Host) -> tuple[str, str]:
+        """Details' Signs in as: the account, and which row of Settings' Accounts says so."""
+        link = self.accounts.link_for(HostTarget(host.id, host.name, host.connect_address))
+        if link is None:
+            return "", _("No row of Settings › Hosts › Connecting › Accounts names this PC.")
+        return link.user, _("Settings › Hosts › Connecting › Accounts: {uses}").format(
+            uses=used_for(link, self._doc)
+        )
 
     def _summary(self) -> str:
         """With nothing selected, the Details panel sums up the hosts shown."""
@@ -913,9 +876,9 @@ class HostsTool(ListWorkspace):
             )
         ):
             return
-        if targets:
-            wanted = Checks(status, users, self._ports(), self._account if users else None)
-            self._start(targets, wanted)
+        accounts = self._accounts_of(targets) if users and targets else {}
+        if targets and accounts is not None:
+            self._start(targets, Checks(status, users, self._ports()), accounts)
 
     def auto_status(self) -> tuple[bool, int]:
         saved = self.prefs.get("auto_status")
@@ -937,8 +900,28 @@ class HostsTool(ListWorkspace):
         if self._run is None and hosts:
             self.check_hosts(hosts, status=True, users=False)
 
-    def _start(self, targets: list[tuple[str, str]], wanted: Checks) -> None:
-        run = CheckRun(targets, wanted)
+    def _accounts_of(self, targets: Sequence[tuple[str, str]]) -> dict[str, Account | None] | None:
+        """Each host's account; a password not typed yet is asked first. None: cancelled."""
+        found: dict[str, Account | None] = {}
+        for key, address in targets:
+            go, account = self.accounts.account_for(self._target(key, address), self)
+            if not go:
+                return None
+            found[key] = account
+        return found
+
+    def _target(self, key: str, address: str) -> HostTarget:
+        host = self._doc.hosts.host(key) if self._doc else None
+        return HostTarget(key, host.name if host else address, address)
+
+    def _start(
+        self,
+        targets: list[tuple[str, str]],
+        wanted: Checks,
+        accounts: dict[str, Account | None] | None = None,
+    ) -> None:
+        accounts = accounts or {}
+        run = CheckRun(targets, wanted, accounts.get)
         run.found.connect(self._found)
         run.finished.connect(self._run_finished)
         self._run, self._refused, self._reported = run, [], set()
@@ -948,8 +931,8 @@ class HostsTool(ListWorkspace):
         self._update_state()
         self.checks_changed.emit()
         log.info(
-            "Refresh: %d hosts (status=%s, users=%s, account=%s)",
-            len(targets), wanted.status, wanted.users, "typed" if wanted.account else "Windows",
+            "Refresh: %d hosts (status=%s, users=%s, typed accounts=%d)",
+            len(targets), wanted.status, wanted.users, len({a for a in accounts.values() if a}),
         )  # fmt: skip
         run.start()
 
@@ -1012,14 +995,18 @@ class HostsTool(ListWorkspace):
             self._ask_account(run)
 
     def _ask_account(self, run: CheckRun) -> None:
-        """A host didn't let the account read who is logged on: offer another, once per run."""
-        account = run.wanted.account
+        """A host didn't let its account read who is logged on: offer another, once per run,
+        and the PCs to use it for."""
+        rejected = run.rejected[-1] if run.rejected else None
+        account = rejected or next((a for a in map(run.account_of, self._refused) if a), None)
         first = self._name_of(self._refused[-1]) if self._refused else ""
-        if run.halted and account is not None:
+        if rejected is not None:
+            first = next((self._name_of(k) for k in reversed(self._refused)
+                          if run.account_of(k) == rejected), first)  # fmt: skip
             text = _(
                 "“{host}” rejected the account “{user}”, so CapyPanel stopped before trying it "
                 "on other computers. Type the password again, or use another account."
-            ).format(host=first, user=account.user)
+            ).format(host=first, user=rejected.user)
         elif account is None:
             text = ngettext(
                 "{n} computer didn't let your Windows account see who is logged on. Use another "
@@ -1034,17 +1021,19 @@ class HostsTool(ListWorkspace):
                 "{n} computers didn't let “{user}” see who is logged on. Use another account?",
                 len(self._refused),
             ).format(n=len(self._refused), user=account.user)
-        dialog = AccountDialog(
-            self, text, account.user if account else "", saved=self.connector.credentials.saving
-        )
-        if run_modal(dialog) != QDialog.DialogCode.Accepted:
-            return
-        self._account = dialog.account()
-        self._save_account(self._account)
         # Again: the hosts that refused, and those a rejection kept from being tried.
         again = [t for t in self._targets if t[0] in self._refused or t[0] not in self._reported]
-        if again:
-            self._start(again, Checks(False, True, run.wanted.ports, self._account))
+        uses = self.accounts.uses_for([self._target(*t) for t in again or self._targets])
+        dialog = AccountDialog(self, text, account.user if account else "",
+                               saved=self.accounts.saving(), uses=uses)  # fmt: skip
+        if run_modal(dialog) != QDialog.DialogCode.Accepted:
+            return
+        link = dialog.link()
+        assert link is not None  # "Every PC" at least
+        self.accounts.use(link, dialog.account(), remember=dialog.remember.isChecked())
+        accounts = self._accounts_of(again) if again else None
+        if accounts is not None:
+            self._start(again, Checks(False, True, run.wanted.ports), accounts)
 
     def _name_of(self, host_id: str) -> str:
         host = self._doc.hosts.host(host_id) if self._doc else None
@@ -1323,15 +1312,16 @@ class HostsTool(ListWorkspace):
         """Add to list…: Add host… with the address typed in the Commands window."""
         return self._add_host(address, profile, parent=self._commands_window)
 
-    def account(self) -> Account | None:
-        """The account typed for other PCs (logged-on users and host commands), or None for
-        the Windows account."""
-        return self._account
+    def keep_pref(self, key: str, value: object) -> None:
+        """One of this person's own settings, written at once (the accounts' links)."""
+        self.prefs[key] = value
+        self._save_prefs()
 
-    def use_account(self, account: Account) -> None:
-        self._account = account
-        self._save_account(account)
+    def _accounts_changed(self) -> None:
+        """Details says which account signs in; Settings' Saved credentials row counts them."""
         self._update_state()
+        if len(self.selected_items()) == 1:
+            self._selection_changed()
 
     def users_found(
         self, key: str
@@ -1357,8 +1347,10 @@ class HostsTool(ListWorkspace):
                     ),  # fmt: skip
                 )
             return
-        wanted = Checks(status, users, self._ports(), self._account if users else None)
-        self._start([(target.key, target.address)], wanted)
+        targets = [(target.key, target.address)]
+        accounts = self._accounts_of(targets) if users else {}
+        if accounts is not None:
+            self._start(targets, Checks(status, users, self._ports()), accounts)
 
     def say(self, text: str) -> None:
         self._shell.show_message(text, 5000)
