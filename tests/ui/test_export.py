@@ -178,10 +178,15 @@ def test_each_box_has_all_and_none_and_last_check_moves_under_when_narrow(
         last = d._section_boxes[-1]  # pyright: ignore[reportPrivateUsage]
         d.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
         d.show()  # a hidden window gets no resize events
+
+        def place() -> tuple[int, int]:
+            row, column, _rows, _columns = grid.getItemPosition(grid.indexOf(last))  # type: ignore[misc]
+            return row, column
+
         d.resize(2000, 600)
-        assert grid.getItemPosition(grid.indexOf(last))[:2] == (0, 2)  # side by side
+        assert place() == (0, 2)  # side by side
         d.resize(200, 600)
-        assert grid.getItemPosition(grid.indexOf(last))[:2] == (1, 0)  # under the other two
+        assert place() == (1, 0)  # under the other two
 
     _run(window, monkeypatch, look)
 
