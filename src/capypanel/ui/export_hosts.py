@@ -27,9 +27,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
-    QStyle,
     QStyledItemDelegate,
-    QStyleOptionButton,
     QStyleOptionViewItem,
     QToolTip,
     QTreeWidget,
@@ -83,8 +81,8 @@ class Source:
 
 
 class ExportDialog(QDialog):
-    # What this Report lists. SECTIONS are boxes of ticks, one row each; with CHECKED, the last
-    # box holds the checks from Refresh, stacked, with the run buttons under them.
+    # What this Report lists. SECTIONS are boxes of ticks, one row each, one under the other;
+    # with CHECKED, the last box holds the checks from Refresh, with Refresh at its row's end.
     TITLES: Mapping[str, str] = TITLES
     SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = SECTIONS
     CHECKED: tuple[str, ...] = CHECKED
@@ -145,53 +143,47 @@ class ExportDialog(QDialog):
         preset_label.setBuddy(self.preset)
         top.addRow(preset_label, presets)
 
+        # Every box is a row of ticks, one under the other, as wide as the window. With CHECKED,
+        # the last one is the checks from Refresh: Refresh at the end of its row, and under the
+        # ticks the names note (while that tick is on) and how many weren't checked yet.
         self.boxes: dict[str, QCheckBox] = {}
-        rows: list[QGroupBox] = []
+        sections = QVBoxLayout()
         checks: QGroupBox | None = None
+        check_ticks: QHBoxLayout | None = None
         self.checks_title = ""
-        # The note under the tick it's about, shown while that tick is on.
         self.note = hint(self.checks_note())
         for index, (title, keys) in enumerate(self.SECTIONS):
             group = QGroupBox(_(title))
-            stacked = bool(self.CHECKED) and index == len(self.SECTIONS) - 1
-            inside = QVBoxLayout(group) if stacked else QHBoxLayout(group)
+            inside = QVBoxLayout(group)
+            ticks = QHBoxLayout()
             for key in keys:
                 box = QCheckBox(_(self.TITLES[key]))
                 self.boxes[key] = box
-                inside.addWidget(box)
-                if stacked and key == self.NOTE_UNDER and self.note.text():
-                    inside.addWidget(self.note)
-            if stacked:
-                checks = group
+                ticks.addWidget(box)
+            ticks.addStretch(1)
+            inside.addLayout(ticks)
+            if self.CHECKED and index == len(self.SECTIONS) - 1:
+                checks, check_ticks = group, ticks
                 self.checks_title = _(title)  # "Last check: 10:41" once something was read
-            else:
-                inside.addStretch(1)
-                rows.append(group)
+            sections.addWidget(group)
         self.unchecked = hint()
         self.refresh_button = QPushButton(_("&Refresh"))
         self.stop_button = QPushButton(_("S&top"))
         self.checking = QLabel()
-        left = QVBoxLayout()
-        for group in rows:
-            left.addWidget(group)
-        columns = QHBoxLayout()
-        columns.addLayout(left, 1)
-        if checks is not None:
-            run_row = QHBoxLayout()
-            run_row.addWidget(self.refresh_button)
-            run_row.addWidget(self.stop_button)
-            run_row.addWidget(self.checking, 1)
+        if checks is not None and check_ticks is not None:
+            for widget in (self.checking, self.stop_button, self.refresh_button):
+                check_ticks.addWidget(widget)
             check_layout = checks.layout()
             assert isinstance(check_layout, QVBoxLayout)
+            if self.note.text():
+                check_layout.addWidget(self.note)
             check_layout.addWidget(self.unchecked)
-            check_layout.addLayout(run_row)
-            columns.addWidget(checks, 1)
         else:  # nothing to check: no Refresh here
             for widget in (self.unchecked, self.refresh_button, self.stop_button, self.checking):
                 widget.setParent(self)
                 widget.hide()
         self.checks_box = checks
-        if self.note.parent() is None:  # no note, or no tick it's about
+        if self.note.parent() is None:  # no note, or nothing to check
             self.note.setParent(self)
             self.note.hide()
 
@@ -222,7 +214,7 @@ class ExportDialog(QDialog):
 
         layout = QVBoxLayout(self)
         layout.addLayout(top)
-        layout.addLayout(columns)
+        layout.addLayout(sections)
         layout.addWidget(preview_title)
         layout.addWidget(self.preview, 1)
         layout.addWidget(self.buttons)
@@ -251,21 +243,10 @@ class ExportDialog(QDialog):
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         self._no_default_buttons()  # a dialog makes one default as it shows
-        self._indent_note()
-
-    def _indent_note(self) -> None:
-        """The note starts where its tick's text does, so it reads as part of that tick."""
-        box = self.boxes.get(self.NOTE_UNDER)
-        if box is None:
-            return
-        option = QStyleOptionButton()
-        box.initStyleOption(option)
-        text = box.style().subElementRect(QStyle.SubElement.SE_CheckBoxContents, option, box)
-        self.note.setContentsMargins(max(text.x(), 0), 0, 0, 0)
 
     # ---- what a tool's Report changes ----
 
-    NOTE_UNDER = "users"  # the tick checks_note is about
+    NOTE_UNDER = "users"  # the tick checks_note is about: shown while it's ticked
 
     def fields(self, host: Host, between_tags: str) -> dict[str, str]:
         """An item's own values, by column key (the checks' come from `results`)."""
