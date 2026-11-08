@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 03:27-0300\n"
+"POT-Creation-Date: 2026-11-08 03:58-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -829,6 +829,9 @@ msgstr "Cor"
 msgid "Commands"
 msgstr "Comandos"
 
+msgid "Commands run as"
+msgstr "Comandos como"
+
 msgid "Computer Management"
 msgstr "Gerenciamento do Computador"
 
@@ -837,6 +840,9 @@ msgstr "Conectar"
 
 msgid "Connect to the selected hosts, once with another profile, or by address"
 msgstr "Conecta aos hosts selecionados, uma vez com outro perfil, ou por endereço"
+
+msgid "Connect with"
+msgstr "Conectar com"
 
 #, python-brace-format
 msgid "Connect with {profile}"
@@ -1809,8 +1815,8 @@ msgstr "Nenhuma impressora está instalada em {host}."
 msgid "No printers in this group have all the picked tags."
 msgstr "Nenhuma impressora deste grupo tem todas as tags escolhidas."
 
-msgid "No row of Settings › Hosts › Connecting › Accounts names this PC."
-msgstr "Nenhuma linha de Configurações › Hosts › Conexão › Contas nomeia este PC."
+msgid "No row of Settings › Hosts › Connecting › Accounts names this PC, so it's the Windows account you're signed in with."
+msgstr "Nenhuma linha de Configurações › Hosts › Conexão › Contas nomeia este PC, então é a conta do Windows com que você entrou."
 
 #, python-brace-format
 msgid "No settings mention “{text}”."
@@ -2690,9 +2696,6 @@ msgstr "Conectados: {names}. O que não foi salvo se perde."
 msgid "Signs a user out; unsaved work is lost."
 msgstr "Desconecta um usuário da conta; o que não foi salvo se perde."
 
-msgid "Signs in as"
-msgstr "Entra como"
-
 msgid "Signs in with"
 msgstr "Entra com"
 
@@ -3234,6 +3237,9 @@ msgstr "Usar este"
 msgid "Used for"
 msgstr "Usada para"
 
+msgid "Used for Refresh's logged-on users and the commands and scripts run on this PC, not for Connect."
+msgstr "Usada para os usuários logados do Atualizar e os comandos e scripts executados neste PC, não para o Conectar."
+
 msgid "Used only to read who is logged on and for the commands you run on a host."
 msgstr "Usada só para ver quem está logado e nos comandos que você executa em um host."
 
@@ -3264,6 +3270,9 @@ msgstr "Aviso"
 
 msgid "Warnings and supplies"
 msgstr "Avisos e suprimentos"
+
+msgid "What Connect opens, and the login it uses. Refresh's logged-on users, commands and scripts use the account under it."
+msgstr "O que o Conectar abre, e o login que ele usa. Os usuários logados do Atualizar, os comandos e os scripts usam a conta abaixo."
 
 msgid "What the window shows when CapyPanel starts."
 msgstr "O que a janela mostra quando o CapyPanel inicia."
@@ -3443,6 +3452,9 @@ msgstr "qualquer usuário pode alterá-lo"
 #, python-brace-format
 msgid "every user of that PC can change {path}, and it isn't the copy reviewed, so it only runs as the person signed in."
 msgstr "todo usuário desse PC pode alterar {path}, e não é a cópia revisada, então ele só executa como a pessoa conectada."
+
+msgid "from Accounts"
+msgstr "das Contas"
 
 #, python-brace-format
 msgid "from {computer}"
@@ -3659,6 +3671,9 @@ msgstr "senha ou tipo de autenticação errado."
 
 msgid "wrong encryption password."
 msgstr "senha da criptografia errada."
+
+msgid "your Windows account"
+msgstr "sua conta do Windows"
 
 #, python-brace-format
 msgid "{colour} {percent} %"
@@ -4014,6 +4029,10 @@ msgstr "{profile} (cópia)"
 #, python-brace-format
 msgid "{profile} (not available on this PC)"
 msgstr "{profile} (não disponível neste PC)"
+
+#, python-brace-format
+msgid "{profile} · as {user}"
+msgstr "{profile} · como {user}"
 
 #, python-brace-format
 msgid "{shown} of {total} programs"

@@ -55,8 +55,9 @@ class HostDetails:
     users: tuple[Sequence[Session] | None, RemoteError | None, datetime] | None = None
     facts: Facts | None = None
     pending: PendingPower | None = None  # a restart or shutdown CapyPanel asked for
-    # The account that signs in to it ("" for the Windows account), and why that one.
-    signs_in: tuple[str, str] = ("", "")
+    # Commands run as: the account, where it comes from, and the tooltip saying why that one.
+    commands_as: tuple[str, str, str] = ("", "", "")
+    profile_user: str = ""  # the login kept for that profile, if one was typed or saved
 
 
 class HostDetailsPanel(DetailsPanel):
@@ -106,17 +107,11 @@ class HostDetailsPanel(DetailsPanel):
         ):
             layout.addWidget(self.muted(label))
             layout.addWidget(self.value(key, value) if value else self.muted("—"))
-        layout.addWidget(self.muted(_("Profile")))
-        layout.addLayout(self._profile_row(shown.profile))
-        account, why = shown.signs_in
-        layout.addWidget(self.muted(_("Signs in as")))
-        if account:
-            signs_in: QLabel = self.value("signs-in", account)
-            signs_in.setToolTip(f"{why}\n{signs_in.toolTip()}")  # and Click to copy
-        else:
-            signs_in = self.muted(_("Your Windows account"))
-            signs_in.setToolTip(why)
-        layout.addWidget(signs_in)
+        # Two logins, each named by what uses it: Connect, then the commands.
+        layout.addWidget(self.muted(_("Connect with")))
+        layout.addLayout(self._profile_row(shown.profile, shown.profile_user))
+        layout.addWidget(self.muted(_("Commands run as")))
+        layout.addLayout(self._commands_row(*shown.commands_as))
 
         self.users(layout, shown.users)
         self.facts(layout, shown.facts)
@@ -219,12 +214,17 @@ class HostDetailsPanel(DetailsPanel):
 
     # ---- the sections ----
 
-    def _profile_row(self, profile: str) -> QHBoxLayout:
-        """The profile, copied by a click like every value, and right after it an arrow to pick
-        another (at the panel's far edge it read as a stray arrow, tied to nothing)."""
+    def _profile_row(self, profile: str, user: str) -> QHBoxLayout:
+        """The profile and the login kept for it, copied by a click like every value, and right
+        after it an arrow to pick another (at the panel's far edge it read as a stray arrow)."""
         row = QHBoxLayout()
         row.setSpacing(2)
-        self._profile_value = self.value("profile", profile) if profile else self.muted("—")
+        shown = _("{profile} · as {user}").format(profile=profile, user=user) if user else None
+        self._profile_value = self.value("profile", profile, shown) if profile else self.muted("—")
+        self._profile_value.setToolTip(
+            _("What Connect opens, and the login it uses. Refresh's logged-on users, commands "
+              "and scripts use the account under it.")
+        )  # fmt: skip
         row.addWidget(self._profile_value)
         self.profile_button = QToolButton()
         self.profile_button.setObjectName("profilePicker")
@@ -234,6 +234,17 @@ class HostDetailsPanel(DetailsPanel):
         self.profile_button.setIcon(tabler_icon("chevron-down", text, 14))
         self.profile_button.clicked.connect(self._open_profile_menu)
         row.addWidget(self.profile_button, 0, Qt.AlignmentFlag.AlignVCenter)
+        row.addStretch(1)
+        return row
+
+    def _commands_row(self, account: str, source: str, tip: str) -> QHBoxLayout:
+        """The account, then where it comes from, muted: Accounts, or your Windows account."""
+        row = QHBoxLayout()
+        row.setSpacing(6)
+        value = self.value("commands-as", account)
+        value.setToolTip(f"{tip}\n{value.toolTip()}")  # and Click to copy
+        row.addWidget(value)
+        row.addWidget(self.muted(source))
         row.addStretch(1)
         return row
 

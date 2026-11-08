@@ -18,6 +18,7 @@ from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.checks import Checks, Found
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
+from capypanel.core.tools.connect import Credential
 from capypanel.ui import checks as check_ui
 from capypanel.ui.hosts_tool import accounts as accounts_ui
 from capypanel.ui.hosts_tool.accounts import AccountsSection, LinkDialog
@@ -109,10 +110,13 @@ def test_each_pc_gets_its_own_account_and_details_says_which(
 
     window.hosts.table.select_ids([_host(window, "DESK-01").key])
     labels = [w.text() for w in window.hosts.details.findChildren(QLabel)]
-    assert labels[labels.index("Signs in as") + 1] == ADMIN.user
+    at = labels.index("Commands run as")
+    assert labels[at + 1 : at + 3] == [ADMIN.user, "from Accounts"]
+    assert "Connect with" in labels  # the profile: what Connect uses, named apart
     window.hosts.table.select_ids([_host(window, "DESK-03").key])
     labels = [w.text() for w in window.hosts.details.findChildren(QLabel)]
-    assert labels[labels.index("Signs in as") + 1] == "Your Windows account"
+    at = labels.index("Commands run as")
+    assert labels[at + 1 : at + 3] == [accounts_ui.windows_account(), "your Windows account"]
 
 
 def test_a_password_not_typed_yet_is_asked_once_and_never_for_a_read_on_its_own(
@@ -270,3 +274,17 @@ def test_links_never_go_in_the_shared_list(window: CapyWindow, tmp_path: Path) -
     window.hosts.accounts.use(Link(ADMIN.user, Scope.ALL), ADMIN, remember=False)
     text = (tmp_path / "clinic.json").read_text(encoding="utf-8")
     assert ADMIN.user.replace("\\", "\\\\") not in text and "admin" not in text
+
+
+def test_connect_with_shows_the_login_kept_for_the_profile(window: CapyWindow) -> None:
+    hosts = window.hosts
+    hosts.table.select_ids([_host(window, "DESK-01").key])
+    labels = [w.text() for w in hosts.details.findChildren(QLabel)]
+    profile = labels[labels.index("Connect with") + 1]
+    assert "· as" not in profile  # nothing typed for it yet
+    profile_id = hosts.connector.catalogs.profiles.default_id()
+    hosts.connector.credentials.remember(profile_id, Credential("EXAMPLE\\helpdesk", "x"))
+    hosts.table.select_ids([_host(window, "DESK-03").key])
+    hosts.table.select_ids([_host(window, "DESK-01").key])
+    labels = [w.text() for w in hosts.details.findChildren(QLabel)]
+    assert labels[labels.index("Connect with") + 1] == f"{profile} · as EXAMPLE\\helpdesk"

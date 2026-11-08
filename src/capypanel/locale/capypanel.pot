@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 03:27-0300\n"
+"POT-Creation-Date: 2026-11-08 03:58-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -845,6 +845,9 @@ msgstr ""
 msgid "Commands"
 msgstr ""
 
+msgid "Commands run as"
+msgstr ""
+
 msgid "Computer Management"
 msgstr ""
 
@@ -852,6 +855,9 @@ msgid "Connect"
 msgstr ""
 
 msgid "Connect to the selected hosts, once with another profile, or by address"
+msgstr ""
+
+msgid "Connect with"
 msgstr ""
 
 #, python-brace-format
@@ -1865,7 +1871,9 @@ msgstr ""
 msgid "No printers in this group have all the picked tags."
 msgstr ""
 
-msgid "No row of Settings › Hosts › Connecting › Accounts names this PC."
+msgid ""
+"No row of Settings › Hosts › Connecting › Accounts names this PC, so it's"
+" the Windows account you're signed in with."
 msgstr ""
 
 #, python-brace-format
@@ -2779,9 +2787,6 @@ msgstr ""
 msgid "Signs a user out; unsaved work is lost."
 msgstr ""
 
-msgid "Signs in as"
-msgstr ""
-
 msgid "Signs in with"
 msgstr ""
 
@@ -3357,6 +3362,11 @@ msgstr ""
 msgid "Used for"
 msgstr ""
 
+msgid ""
+"Used for Refresh's logged-on users and the commands and scripts run on "
+"this PC, not for Connect."
+msgstr ""
+
 msgid "Used only to read who is logged on and for the commands you run on a host."
 msgstr ""
 
@@ -3386,6 +3396,11 @@ msgid "Warning"
 msgstr ""
 
 msgid "Warnings and supplies"
+msgstr ""
+
+msgid ""
+"What Connect opens, and the login it uses. Refresh's logged-on users, "
+"commands and scripts use the account under it."
 msgstr ""
 
 msgid "What the window shows when CapyPanel starts."
@@ -3587,6 +3602,9 @@ msgstr ""
 msgid ""
 "every user of that PC can change {path}, and it isn't the copy reviewed, "
 "so it only runs as the person signed in."
+msgstr ""
+
+msgid "from Accounts"
 msgstr ""
 
 #, python-brace-format
@@ -3807,6 +3825,9 @@ msgid "wrong authentication password or type."
 msgstr ""
 
 msgid "wrong encryption password."
+msgstr ""
+
+msgid "your Windows account"
 msgstr ""
 
 #, python-brace-format
@@ -4178,6 +4199,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{profile} (not available on this PC)"
+msgstr ""
+
+#, python-brace-format
+msgid "{profile} · as {user}"
 msgstr ""
 
 #, python-brace-format

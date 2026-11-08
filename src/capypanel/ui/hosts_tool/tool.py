@@ -46,7 +46,7 @@ from capypanel.ui.dialogs import run_modal
 from capypanel.ui.export_hosts import ExportDialog
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, list_file_filter
-from capypanel.ui.hosts_tool.accounts import Accounts, used_for
+from capypanel.ui.hosts_tool.accounts import Accounts, used_for, windows_account
 from capypanel.ui.hosts_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.hosts_tool.details import HostDetails, HostDetailsPanel
 from capypanel.ui.hosts_tool.host_state import Facts, PendingPower
@@ -746,7 +746,10 @@ class HostsTool(ListWorkspace):
                 users=self._users_found.get(host.id),
                 facts=self._facts.get(host.id),
                 pending=self._pending.get(host.id),
-                signs_in=self._signs_in(host),
+                profile_user=self._profile_user(
+                    host_list.profile_of(host, self._profile_exists)[0]
+                ),
+                commands_as=self._commands_as(host),
             )
             self.details.show_host(details, 1, needle=self._needle())
             if host.connect_address and host.id not in self._facts:
@@ -754,14 +757,30 @@ class HostsTool(ListWorkspace):
         else:
             self.details.show_host(None, len(items), summary=self._summary())
 
-    def _signs_in(self, host: Host) -> tuple[str, str]:
-        """Details' Signs in as: the account, and which row of Settings' Accounts says so."""
+    def _profile_user(self, profile_id: str) -> str:
+        """The login kept for a profile (typed this session or saved); "" when none is."""
+        try:
+            kept = self.connector.credentials.get(profile_id or self._default_profile())
+        except OSError:
+            return ""
+        return kept.user if kept is not None else ""
+
+    def _default_profile(self) -> str:
+        return self.connector.catalogs.profiles.default_id()
+
+    def _commands_as(self, host: Host) -> tuple[str, str, str]:
+        """Details' Commands run as: the account, where it comes from, and why that one."""
+        used = _("Used for Refresh's logged-on users and the commands and scripts run on this PC, "
+                 "not for Connect.")  # fmt: skip
         link = self.accounts.link_for(HostTarget(host.id, host.name, host.connect_address))
         if link is None:
-            return "", _("No row of Settings › Hosts › Connecting › Accounts names this PC.")
-        return link.user, _("Settings › Hosts › Connecting › Accounts: {uses}").format(
+            why = _("No row of Settings › Hosts › Connecting › Accounts names this PC, so it's "
+                    "the Windows account you're signed in with.")  # fmt: skip
+            return windows_account(), _("your Windows account"), f"{used}\n{why}"
+        where = _("Settings › Hosts › Connecting › Accounts: {uses}").format(
             uses=used_for(link, self._doc)
         )
+        return link.user, _("from Accounts"), f"{used}\n{where}"
 
     def _summary(self) -> str:
         """With nothing selected, the Details panel sums up the hosts shown."""

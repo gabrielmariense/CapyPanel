@@ -5,7 +5,9 @@ A password is kept in memory once typed, and in Windows Credential Manager when 
 this computer" is ticked; a link whose password isn't known yet asks for it the first time it's
 needed, once per session."""
 
+import getpass
 import logging
+import os
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -49,6 +51,17 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 PREFS_KEY = "accounts"
 OLD_SAVED = "account/logged-on-users"  # 0.23's one account for every PC, in Credential Manager
+
+
+def windows_account() -> str:
+    """The Windows account CapyPanel runs as: "EXAMPLE\\ana", or the name alone off a domain."""
+    try:
+        user = getpass.getuser()
+    except (OSError, KeyError):
+        return _("Your Windows account")
+    domain = os.environ.get("USERDOMAIN", "")
+    computer = os.environ.get("COMPUTERNAME", "")
+    return f"{domain}\\{user}" if domain and domain.casefold() != computer.casefold() else user
 
 
 def group_chain(host_list: HostList, group_id: str) -> tuple[str, ...]:
