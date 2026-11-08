@@ -27,8 +27,12 @@ def _commit() -> str:
     return ""
 
 
+# Commits that PRs #1–#35 had before squash merges folded each into one: 336 in 35 PRs.
+_SQUASHED = 336 - 35
+
+
 def _build_number() -> str:
-    """How many commits this build has, "1378": it only grows (PRs merge with a merge commit),
+    """Every commit ever made toward this build, "1378", the squashed ones too: it only grows,
     so a bigger number is a newer build. "" without git."""
     import subprocess
 
@@ -44,7 +48,7 @@ def _build_number() -> str:
     except (OSError, subprocess.SubprocessError):
         return ""
     number = done.stdout.strip()
-    return number if done.returncode == 0 and number.isdigit() else ""
+    return str(int(number) + _SQUASHED) if done.returncode == 0 and number.isdigit() else ""
 
 
 # What the title bar and the log show: "0.8.1", plus "build 1378 (3b4c3e0)" when run from
