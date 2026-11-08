@@ -64,7 +64,7 @@ COMMAND_LIMIT = 30_000  # characters: Windows' command line holds 32 767; room f
 LOG_SIZE, LOG_KEEP = 2_000_000, 5  # the run log: bytes per file, older files kept
 FOLDER = r"Temp\CapyPanel"  # under Windows' folder on the PC, so C:\Windows\Temp\CapyPanel
 # Only files with these names are ever deleted from the folder: what CapyPanel itself made.
-_OURS = re.compile(r"^[0-9a-f]{16}(-task)?\.(run|json|tmp|out|err|ps1|cmd|vbs|code)$")
+_OURS = re.compile(r"^[0-9a-f]{16}(-task)?\.(run|json|tmp|out|err|ps1|cmd|vbs|code|task\.log)$")
 
 log = logging.getLogger(__name__)
 
@@ -468,25 +468,30 @@ _START_TASK = r"""
     "[IO.File]::WriteAllText($(Q "$base.code"), [string]`$p.ExitCode)"
   [IO.File]::WriteAllText("$base-task.ps1", $inner, (New-Object Text.UTF8Encoding $true))
   $shell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-  $run = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File " +
-    "`"$base-task.ps1`""
+  # Through cmd, so whatever PowerShell itself says (a policy refusing the file, an error before
+  # the script starts) lands in .task.log, for the answer when the task gives none.
+  $run = "/d /c `"`"$shell`" -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle " +
+    "Hidden -File `"$base-task.ps1`" > `"$base.task.log`" 2>&1`""
+  $cmd = Join-Path $env:SystemRoot 'System32\cmd.exe'
   if ($system) {
-    $command = $shell; $arguments = $run
+    $command = $cmd; $arguments = $run
     # No LogonType: "ServiceAccount" isn't a value the task format takes on every Windows
     # (rejected at that spot); RegisterTask's own logon type, 5, says it below.
     $principal = '<UserId>S-1-5-18</UserId><RunLevel>HighestAvailable</RunLevel>'
   } else {
-    # Hidden: Windows Script Host starts PowerShell with no window on the person's screen.
-    $vbs = "WScript.Quit CreateObject(`"WScript.Shell`").Run(`"`"`"$shell`"`" " +
+    # Hidden: Windows Script Host starts it with no window on the person's screen.
+    $vbs = "WScript.Quit CreateObject(`"WScript.Shell`").Run(`"`"`"$cmd`"`" " +
       ($run -replace '"', '""') + "`", 0, True)"
     [IO.File]::WriteAllText("$base.vbs", $vbs, [Text.Encoding]::Unicode)
     $command = Join-Path $env:SystemRoot 'System32\wscript.exe'
     $arguments = "//B //Nologo `"$base.vbs`""
     $principal = "<UserId>$([Security.SecurityElement]::Escape($user))</UserId>" +
       '<LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel>'
-    foreach ($kind in 'out', 'err', 'code') { [IO.File]::WriteAllText("$base.$kind", '') }
+    foreach ($kind in 'out', 'err', 'code', 'task.log') {
+      [IO.File]::WriteAllText("$base.$kind", '')
+    }
     $grants = @{"$base-task.ps1" = 'R'; "$base.vbs" = 'R'; "$base.out" = 'M'; "$base.err" = 'M'
-                "$base.code" = 'M'; "$base.ps1" = 'R'; "$base.cmd" = 'R'}
+                "$base.code" = 'M'; "$base.task.log" = 'M'; "$base.ps1" = 'R'; "$base.cmd" = 'R'}
     foreach ($file in $grants.Keys) {
       if (Test-Path -LiteralPath $file) {
         $null = & icacls.exe $file /grant "$($user):($($grants[$file]))"
@@ -524,6 +529,10 @@ _START_TASK = r"""
       if ($task.State -ne 4 -and $waited -gt 15) {  # 4: running
         $result.error = 'The scheduled task ended without an answer (result 0x{0:X8}).' -f
           $task.LastTaskResult
+        $said = if (Test-Path -LiteralPath "$base.task.log") {
+          [IO.File]::ReadAllText("$base.task.log").Trim()
+        }
+        if ($said) { $result.error += " PowerShell said: $said" }
         break
       }
       if ($waited -gt $limit) { $task.Stop(0); $result.error = 'Out of time.'; break }
@@ -629,7 +638,7 @@ def _delete_run(folder: Path, run_id: str) -> None:
             (folder / name).unlink(missing_ok=True)
 
 
-_KINDS = ("run", "json", "tmp", "out", "err", "ps1", "cmd", "vbs", "code")
+_KINDS = ("run", "json", "tmp", "out", "err", "ps1", "cmd", "vbs", "code", "task.log")
 
 
 def _read_output(file: Path, oem: int) -> str:

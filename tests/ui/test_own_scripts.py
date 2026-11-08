@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtWidgets import QApplication, QDialog, QLabel
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -241,6 +241,11 @@ def test_an_approved_script_runs_with_the_host_and_its_arguments(
     outcomes = commands._outcomes  # pyright: ignore[reportPrivateUsage]
     outcome = outcomes[(_target(window).key, row.command.id)]
     assert "finished on" in outcome.text and outcome.output == "ok"
+    # Copy all: the answer and the output together, as plain text.
+    copy = next(label for label in commands.results.findChildren(QLabel)
+                if 'href="copy"' in label.text())  # fmt: skip
+    copy.linkActivated.emit("copy")
+    assert QApplication.clipboard().text() == "Reset printers finished on PC-1.\n\nok"
 
 
 def test_a_risky_script_asks_before_every_run(

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 17:40-0300\n"
+"POT-Creation-Date: 2026-11-08 17:54-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -937,7 +937,13 @@ msgstr ""
 msgid "Copies every row, to paste into Excel"
 msgstr ""
 
+msgid "Copies the answer and everything the PC wrote"
+msgstr ""
+
 msgid "Copy &list"
+msgstr ""
+
+msgid "Copy all"
 msgstr ""
 
 #, python-brace-format
@@ -3886,6 +3892,9 @@ msgid "tags"
 msgstr ""
 
 msgid "the PC couldn't start it."
+msgstr ""
+
+msgid "the answer and its output"
 msgstr ""
 
 msgid "the picked tags"

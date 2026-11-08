@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 17:40-0300\n"
+"POT-Creation-Date: 2026-11-08 17:54-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -921,8 +921,14 @@ msgstr "Copiado: {text}"
 msgid "Copies every row, to paste into Excel"
 msgstr "Copia todas as linhas, para colar no Excel"
 
+msgid "Copies the answer and everything the PC wrote"
+msgstr "Copia a resposta e tudo o que o PC escreveu"
+
 msgid "Copy &list"
 msgstr "Copiar &lista"
+
+msgid "Copy all"
+msgstr "Copiar tudo"
 
 #, python-brace-format
 msgid "Couldn't create “{path}”: {error}"
@@ -3715,6 +3721,9 @@ msgstr "tags"
 
 msgid "the PC couldn't start it."
 msgstr "o PC não conseguiu iniciá-lo."
+
+msgid "the answer and its output"
+msgstr "a resposta e a saída"
 
 msgid "the picked tags"
 msgstr "as tags escolhidas"

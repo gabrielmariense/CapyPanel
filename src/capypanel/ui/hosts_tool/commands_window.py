@@ -22,6 +22,7 @@ from PySide6.QtGui import (
     QKeyEvent,
     QPalette,
     QStandardItemModel,
+    QTextDocumentFragment,
 )
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -235,6 +236,10 @@ class Results(HostDetailsPanel):
         layout.addWidget(self.muted(line))
         self._outcome(layout, shown.outcome)
 
+    def _copy_all(self, text: str) -> None:
+        QGuiApplication.clipboard().setText(text)
+        self.copied.emit(_("the answer and its output"))
+
     def _outcome(self, layout: QVBoxLayout, outcome: Outcome | None) -> None:
         """The last answer, and Try another account… when the account was refused."""
         if outcome is None:
@@ -242,11 +247,21 @@ class Results(HostDetailsPanel):
         answer = QLabel(outcome.text)
         answer.setTextFormat(Qt.TextFormat.RichText)
         answer.setWordWrap(True)
+        answer.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         if outcome.failed:
             answer.setObjectName("warningText")
         layout.addWidget(answer)
         if outcome.output:
             layout.addWidget(windows.output_box(outcome.output))
+        # The answer and the output together, to paste whole into a message or a ticket.
+        whole = QTextDocumentFragment.fromHtml(outcome.text).toPlainText()
+        if outcome.output:
+            whole = f"{whole}\n\n{outcome.output.rstrip()}"
+        copy = QLabel(f'<a href="copy">{_escape(_("Copy all"))}</a>')
+        copy.setTextFormat(Qt.TextFormat.RichText)
+        copy.setToolTip(_("Copies the answer and everything the PC wrote"))
+        copy.linkActivated.connect(lambda _href: self._copy_all(whole))
+        layout.addWidget(copy)
         if outcome.retry is not None:
             link = QLabel(f'<a href="retry">{_("Try another account…")}</a>')
             link.setTextFormat(Qt.TextFormat.RichText)
