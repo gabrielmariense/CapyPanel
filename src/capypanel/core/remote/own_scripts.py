@@ -226,16 +226,27 @@ def _quote(text: str) -> str:
 # Runs the PC's own file with the arguments it was given. Before that, unless it runs as the
 # person signed in or the copy is the one reviewed, it reads who may change the file (and replace
 # it, through its folder): every user (Everyone, Users, Authenticated Users, Domain Users…) means
-# it doesn't run. Read only.
+# it doesn't run. Read only. .NET only, no cmdlets from modules: a PC whose PowerShell can't load
+# a module (another PowerShell's module path, a broken install) must still check right.
 _LAUNCHER = r"""
 $path = [Environment]::ExpandEnvironmentVariables(__PATH__)
-if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { 'CAPYPANEL-ONPC missing'; exit 1 }
+if (-not [IO.File]::Exists($path)) { 'CAPYPANEL-ONPC missing'; exit 1 }
 $known = __KNOWN__
-$same = $known -and ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -eq $known)
+$same = $false
+if ($known) {
+  $sha = [Security.Cryptography.SHA256]::Create()
+  $stream = [IO.File]::OpenRead($path)
+  try { $hash = [BitConverter]::ToString($sha.ComputeHash($stream)).Replace('-', '') }
+  finally { $stream.Dispose() }
+  $same = $hash -eq $known
+}
 if (__CHECK__ -and -not $same) {
   $everyone = @('S-1-1-0', 'S-1-5-11', 'S-1-5-4', 'S-1-5-7', 'S-1-5-32-545', 'S-1-5-32-546')
-  function Open([string]$item, [int64]$mask) {
-    try { $acl = Get-Acl -LiteralPath $item -ErrorAction Stop } catch { return $true }
+  function Open([string]$item, [int64]$mask, [bool]$isFolder) {
+    try {
+      $acl = if ($isFolder) { [IO.Directory]::GetAccessControl($item) }
+             else { [IO.File]::GetAccessControl($item) }
+    } catch { return $true }
     $sid = [Security.Principal.SecurityIdentifier]
     foreach ($rule in $acl.GetAccessRules($true, $true, $sid)) {
       if ($rule.AccessControlType -ne 'Allow') { continue }
@@ -252,7 +263,7 @@ if (__CHECK__ -and -not $same) {
   # delete what's in it, permissions, owner, generic all.
   $file = 0x2 -bor 0x4 -bor 0x10000 -bor 0x40000 -bor 0x80000 -bor 0x40000000 -bor 0x10000000
   $folder = 0x40 -bor 0x40000 -bor 0x80000 -bor 0x10000000
-  if ((Open $path $file) -or (Open (Split-Path -LiteralPath $path) $folder)) {
+  if ((Open $path $file $false) -or (Open ([IO.Path]::GetDirectoryName($path)) $folder $true)) {
     'CAPYPANEL-ONPC open'; exit 1
   }
 }

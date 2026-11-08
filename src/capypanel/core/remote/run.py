@@ -472,8 +472,9 @@ _START_TASK = r"""
     "`"$base-task.ps1`""
   if ($system) {
     $command = $shell; $arguments = $run
-    $principal = '<UserId>S-1-5-18</UserId><LogonType>ServiceAccount</LogonType>' +
-      '<RunLevel>HighestAvailable</RunLevel>'
+    # No LogonType: "ServiceAccount" isn't a value the task format takes on every Windows
+    # (rejected at that spot); RegisterTask's own logon type, 5, says it below.
+    $principal = '<UserId>S-1-5-18</UserId><RunLevel>HighestAvailable</RunLevel>'
   } else {
     # Hidden: Windows Script Host starts PowerShell with no window on the person's screen.
     $vbs = "WScript.Quit CreateObject(`"WScript.Shell`").Run(`"`"`"$shell`"`" " +

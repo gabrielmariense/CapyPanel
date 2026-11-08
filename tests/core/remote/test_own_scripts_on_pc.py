@@ -58,6 +58,7 @@ def _launch(script: own_scripts.OwnScript, run_as: RunAs, tmp_path: Path) -> tup
          str(launcher), *sent.arguments],
         capture_output=True, text=True, timeout=60,
     )  # fmt: skip
+    print(done.stderr)  # shown when a test fails: PowerShell's own errors
     return done.returncode, done.stdout
 
 
