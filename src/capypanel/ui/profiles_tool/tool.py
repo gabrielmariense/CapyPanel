@@ -1,92 +1,90 @@
-"""The User profiles tool: the Windows profiles on one PC, which of them can be deleted, and how
-big they are. Three panels, as Hosts: the open host list's PCs, the profiles, one profile's
-details. It keeps no list of its own: the PCs are Hosts' open list, and the account that signs
-in to a PC is the one Hosts' Accounts give it. Scanning and counting sizes only read."""
+"""The User profiles tool: the Windows profiles on the hosts of Hosts' open list, which can be
+deleted, how big they are. Hosts' Groups panel on the left (read only); in the middle and on the
+right, tabs: the pinned Hosts tab lists the group's hosts, and each host opened gets its own tab,
+so several hosts are read, counted and cleaned at once. It keeps no list of its own, and the
+account that signs in to a host is the one Hosts' Accounts give it. Scanning only reads."""
 
-import os
-from collections.abc import Callable
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
 
-from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import QDialog, QStackedWidget, QVBoxLayout, QWidget
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtGui import QAction, QColor, QKeySequence, QPalette, QShortcut
+from PySide6.QtWidgets import (
+    QDialog,
+    QMenu,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
-from capypanel.core.i18n import _
-from capypanel.core.remote import user_profiles
-from capypanel.core.remote.access import Account
-from capypanel.core.remote.user_profiles import Deleted, Kind, Outcome, Profile, Scan, Why
-from capypanel.ui.checks import clock_text
+from capypanel.core.hosts.model import NO_GROUP, Host
+from capypanel.core.i18n import _, ngettext
+from capypanel.core.remote.status import Status
+from capypanel.ui import checks as check_texts
 from capypanel.ui.dialogs import run_modal
+from capypanel.ui.hosts import group_path
 from capypanel.ui.hosts_tool.accounts import windows_account
-from capypanel.ui.hosts_tool.runner import HostTarget, Job
+from capypanel.ui.hosts_tool.command_windows import Question
+from capypanel.ui.hosts_tool.runner import HostTarget
 from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.icons import STATUS_COLORS, tabler_icon
+from capypanel.ui.list_workspace.panels import NavigationPane, natural_key
 from capypanel.ui.list_workspace.splitter import PaneSplitter
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar, tool_button
-from capypanel.ui.profiles_tool import rows
-from capypanel.ui.profiles_tool.panels import (
-    ALL_GROUPS,
-    LEFT,
-    RIGHT,
-    DeleteDialog,
-    HeaderCard,
-    HintCard,
-    PcPane,
-    ProfileDetails,
-    ProfilesTable,
-    ProgressPanel,
-    Shown,
-)
-from capypanel.ui.profiles_tool.rows import Result
+from capypanel.ui.menus import MenuCombo, popup
+from capypanel.ui.profiles_tool import work
+from capypanel.ui.profiles_tool.host_page import Context, HostPage, Stage
+from capypanel.ui.profiles_tool.hosts_page import HostFacts, HostsPage, RowFacts
+from capypanel.ui.profiles_tool.panels import LEFT, RIGHT
+from capypanel.ui.profiles_tool.tabs import HOSTS, TabStrip, mark_icon
 
-SIZES_AT_ONCE = 4  # folders counted at the same time: walking a tree is mostly waiting
 PANES_KEY = "panes"  # the side panels' widths, in the tool's settings
-GROUPS_KEY = "groups"  # the group each host list was left on, by the list's file
-PROGRESS_WIDTH = 320  # px: the progress panel is at least this wide, for its queue's columns
+VIEWS_KEY = "views"  # the group each host list was left on, by the list's file
+SHOWN_KEY = "shown"  # View's Groups panel and Details panel ticks
 
 
 class ProfilesToolBar(ToolBar):
+    """One set of buttons on every tab, greyed where it doesn't apply; the tooltips name the
+    host."""
+
     def __init__(self) -> None:
         super().__init__()
-        self.rescan_button = tool_button()
+        self.scan_button = tool_button()
         self.sizes_button = tool_button()
         self.delete_button = tool_button()
         self.delete_button.setProperty("risky", True)  # amber, as every action that destroys
         self._counting = False
-        self.add_group([self.rescan_button, self.sizes_button])
+        self._scan_text = ""
+        self._delete_text = ""
+        self.add_group([self.scan_button, self.sizes_button])
         self.add_group([self.delete_button])
         self.retranslate()
 
-    def show_counting(self, counting: bool) -> None:
-        """While sizes are counted, the button stops the count."""
-        self._counting = counting
-        self.restyle()
+    def show_texts(self, scan: str, scan_tip: str, delete: str, delete_tip: str,
+                   sizes_tip: str, counting: bool) -> None:  # fmt: skip
+        gap = " "  # the stylesheet drops the gap between icon and text
+        self._scan_text, self._delete_text, self._counting = scan, delete, counting
+        self.scan_button.setText(gap + scan)
+        self.scan_button.setToolTip(scan_tip)
+        self.delete_button.setText(gap + delete)
+        self.delete_button.setToolTip(delete_tip)
+        self.sizes_button.setText(gap + (_("Stop the count") if counting else _("Calculate sizes")))
+        self.sizes_button.setToolTip(sizes_tip)
+        self._icons()
 
     def retranslate(self) -> None:
-        gap = " "  # the stylesheet drops the gap between icon and text
-        self.rescan_button.setText(gap + _("Scan again"))
-        self.rescan_button.setToolTip(_("Read this PC's profiles again"))
-        if self._counting:
-            self.sizes_button.setText(gap + _("Stop counting"))
-            self.sizes_button.setToolTip(_("Stop at once; sizes already counted stay"))
-        else:
-            self.sizes_button.setText(gap + _("Calculate sizes"))
-            self.sizes_button.setToolTip(
-                _("Count the size of each profile shown; it only reads, and can take minutes")
-            )
-        self.delete_button.setText(gap + _("Delete ticked…"))
-        self.delete_button.setToolTip(
-            _("Delete the profiles ticked, after a question that lists them")
-        )
+        self.show_texts(_("Scan"), "", _("Delete profiles…"), "", "", self._counting)
 
     def restyle(self) -> None:
-        """Icons in the theme's text colour."""
-        color = self.rescan_button.palette().color(QPalette.ColorRole.ButtonText)
-        self.rescan_button.setIcon(tabler_icon("refresh", color))
+        self._icons()
+
+    def _icons(self) -> None:
+        color = self.scan_button.palette().color(QPalette.ColorRole.ButtonText)
+        self.scan_button.setIcon(tabler_icon("refresh", color))
         self.sizes_button.setIcon(tabler_icon("x" if self._counting else "report-analytics", color))
         self.show_delete(self.delete_button.isEnabled())
-        self.retranslate()
 
     def show_delete(self, enabled: bool) -> None:
         """Amber while it can be pressed, greyed with its icon while it can't."""
@@ -104,82 +102,99 @@ class ProfilesTool(Tool):
         super().__init__(shell, ProfilesToolBar())
         hosts = shell.tool(HostsTool.TOOL_ID)
         self._hosts = hosts if isinstance(hosts, HostsTool) else None
-        self._target: HostTarget | None = None  # the PC on show: scanned, or tried
-        self._scan: Scan | None = None
-        self._account: Account | None = None  # who signed in for the scan; None: Windows'
-        self._account_name = ""
-        self._scanning = False
-        self._read_at = datetime.now().astimezone()  # when the scan on show was read
-        self._scan_run = 0  # an answer for an older scan is dropped
-        self._sizes: dict[str, int | None] = {}  # bytes per row; None while it's counted
-        self._waiting: list[Profile] = []  # rows still to count
-        self._count_run = 0  # counts of a stopped run are dropped, and stop themselves
-        self._active = 0  # counts running now
-        self._uncounted = 0  # folders the last run couldn't read
-        self._results: dict[str, Result] = {}  # where each row of a delete run stands
-        self._done: dict[str, Deleted] = {}  # how each delete ended
-        self._queue: list[Profile] = []  # ticked rows still to delete
-        self._run: list[Profile] = []  # every row of the delete run, in its order
-        self._deleting = False
-        self._cancelled = False
-        self._began = datetime.now().astimezone()  # when the delete run started
-        self._freed = 0  # bytes of the deleted rows that had been counted
-        self._side_width = 0  # Details' width before the progress panel widened it
-        self._jobs: set[Job] = set()
+        self.pool = work.Pool()
+        self._pages: dict[str, HostPage] = {}  # by host key, as the tabs are
+        self._kept: dict[str, tuple[int, int, datetime]] = {}  # closed tabs' counts and time
+        self._quitting = False  # quit asked while a host deletes: quit once they're done
 
-        self.pcs = PcPane(self._list_choices)
-        self.header = HeaderCard()
-        self.table = ProfilesTable()
-        self.details = ProfileDetails()
-        self.progress = ProgressPanel()
-        self._side = QStackedWidget()  # Details, or the progress of a delete run
-        self._side.addWidget(self.details)
-        self._side.addWidget(self.progress)
-        self._card_page = QWidget()
-        self._card_box = QVBoxLayout(self._card_page)
-        self._card_box.setContentsMargins(0, 0, 0, 0)
-        self.card: HintCard | None = None
-        self._stack = QStackedWidget()
-        self._stack.addWidget(self._card_page)
-        self._stack.addWidget(self.table)
-        middle = QWidget()
-        column = QVBoxLayout(middle)
+        self.nav = NavigationPane(lambda: _("All hosts"))
+        self.nav.add_group_button.hide()  # read only: groups are made in Hosts
+        self.nav.groups.set_editable(False)
+        self.nav.everything.setAcceptDrops(False)
+        self.nav.groups_heading.setAcceptDrops(False)
+        self.list_picker = MenuCombo()
+        self.list_picker.setObjectName("listPicker")
+        self.list_picker.menu().setToolTipsVisible(True)  # each list's path
+        self.list_picker.menu().aboutToShow.connect(self._fill_list_menu)
+        nav_layout = self.nav.layout()
+        assert isinstance(nav_layout, QVBoxLayout)
+        nav_layout.insertWidget(0, self.list_picker)
+
+        self.hosts_page = HostsPage()
+        self.tabs = TabStrip()
+        self.middle = QStackedWidget()
+        self.side = QStackedWidget()
+        self.middle.addWidget(self.hosts_page.box)
+        self.side.addWidget(self.hosts_page.side)
+        self.inner = PaneSplitter()
+        self.inner.addWidget(self.middle)
+        self.inner.addWidget(self.side)
+        self.inner.setStretchFactor(0, 1)
+        self.inner.setChildrenCollapsible(False)
+        area = QWidget()
+        column = QVBoxLayout(area)
         column.setContentsMargins(0, 0, 0, 0)
-        column.setSpacing(6)
-        column.addWidget(self.header)
-        column.addWidget(self._stack, 1)
+        column.setSpacing(0)
+        column.addWidget(self.tabs)
+        column.addWidget(self.inner, 1)
         self.splitter = PaneSplitter()
-        for pane in (self.pcs, middle, self._side):
-            self.splitter.addWidget(pane)
+        self.splitter.addWidget(self.nav)
+        self.splitter.addWidget(area)
         self.splitter.setStretchFactor(1, 1)
-        self.splitter.setChildrenCollapsible(False)  # dragged all the way, a panel would vanish
+        self.splitter.setChildrenCollapsible(False)
         left, right = _two_widths(self.prefs.get(PANES_KEY)) or (LEFT, RIGHT)
-        self.splitter.setSizes([left, max(400, 1100 - left - right), right])
-        self.splitter.splitterMoved.connect(self.align_toolbar_later)
+        self.splitter.setSizes([left, 1100 - left])
+        self.inner.setSizes([max(400, 1100 - left - right), right])
         margins = QVBoxLayout(self)
         margins.setContentsMargins(8, 4, 8, 4)  # as the Hosts page
         margins.addWidget(self.splitter)
 
+        self.show_groups = QAction(self)
+        self.show_details = QAction(self)
+        shown = self.prefs.get(SHOWN_KEY)
+        shown = shown if isinstance(shown, dict) else {}
+        for action, key, pane in (
+            (self.show_groups, "groups", self.nav),
+            (self.show_details, "details", self.side),
+        ):
+            action.setCheckable(True)
+            action.setChecked(bool(shown.get(key, True)))
+            pane.setVisible(action.isChecked())
+            action.toggled.connect(pane.setVisible)
+            action.toggled.connect(self._save_shown)
+            action.toggled.connect(self.align_toolbar_later)
+
+        self._connect()
+        self.retranslate()
+        self._show_list()
+
+    def _connect(self) -> None:
         bar = self.bar
-        bar.rescan_button.clicked.connect(self.scan_again)
-        bar.sizes_button.clicked.connect(self.toggle_sizes)
+        bar.scan_button.clicked.connect(self.scan_clicked)
+        bar.sizes_button.clicked.connect(self._toggle_sizes)
         bar.delete_button.clicked.connect(self.delete_ticked)
-        self.table.ticked_changed.connect(self._ticks_changed)
-        self.progress.cancel_requested.connect(self.cancel_rest)
-        self.progress.log_requested.connect(self.open_log)
-        self.progress.closed.connect(self._close_progress)
-        self.pcs.scan_requested.connect(self.scan)
-        self.pcs.list_picked.connect(self._pick_list)
-        self.pcs.group_picked.connect(self._keep_group)
-        self.header.filters_changed.connect(self._show_rows)
-        self.table.picked.connect(self._show_details)
-        self.details.copied.connect(
-            lambda text: shell.show_message(_("Copied: {text}").format(text=text), 5000)
-        )
+        self.splitter.splitterMoved.connect(self.align_toolbar_later)
+        self.nav.filter_changed.connect(self._group_picked)
+        self.hosts_page.search.textChanged.connect(self._fill_hosts)
+        table = self.hosts_page.table
+        table.open_requested.connect(self.open_hosts)
+        table.picked.connect(self._hosts_picked)
+        table.scan_typed.connect(self.open_typed)
+        self.hosts_page.progress.go_to.connect(self.switch)
+        self.tabs.picked.connect(self.switch)
+        self.tabs.close_requested.connect(self.close_tab)
+        self.tabs.menu_requested.connect(self._tab_menu)
+        for keys, run in (
+            ("Ctrl+Tab", lambda: self._step(1)),
+            ("Ctrl+Shift+Tab", lambda: self._step(-1)),
+            ("Ctrl+W", lambda: self.close_tab(self.tabs.current())),
+        ):
+            shortcut = QShortcut(QKeySequence(keys), self, run)
+            shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         if self._hosts is not None:
             self._hosts.list_changed.connect(self._show_list)
-        self._show_list()
-        self._show_start()
+            self._hosts.host_changed.connect(self._host_checked)
+            self._hosts.checks_changed.connect(self._fill_hosts)
 
     @property
     def bar(self) -> ProfilesToolBar:
@@ -195,30 +210,73 @@ class ProfilesTool(Tool):
         return _("&User profiles")
 
     def toolbar_anchor(self) -> QWidget:
-        return self.pcs
+        return self.nav if self.nav.isVisible() else self.middle
+
+    def view_actions(self) -> list[list[QAction]]:
+        return [[self.show_groups, self.show_details]]
 
     def save_state(self) -> None:
-        sizes = self.splitter.sizes()
-        if len(sizes) == 3 and all(sizes):
-            self.prefs[PANES_KEY] = [sizes[0], sizes[2]]
+        outer, inner = self.splitter.sizes(), self.inner.sizes()
+        if len(outer) == 2 and len(inner) == 2 and outer[0] and inner[1]:
+            self.prefs[PANES_KEY] = [outer[0], inner[1]]
+
+    def quit_question(self, parent: QWidget) -> bool:
+        """Before CapyPanel quits: while a host deletes, ask. Cancel the rest and quit lets the
+        profile under way finish, then quits."""
+        deleting = [p for p in self._pages.values() if p.deleting]
+        if self._quitting or not deleting:
+            return True
+        n = len(deleting)
+        question = Question(
+            parent,
+            _("Quit CapyPanel"),
+            ngettext(
+                "{n} host is still deleting profiles", "{n} hosts are still deleting profiles", n
+            ).format(n=n),  # fmt: skip
+            _(
+                "Quitting now cancels the profiles still queued. The profile being deleted on "
+                "each host finishes first; CapyPanel quits after that."
+            ),  # fmt: skip
+            _("Cancel the rest and quit"),
+        )
+        question.cancel.setText(_("Continue"))
+        if run_modal(question) != QDialog.DialogCode.Accepted:
+            return False
+        self._quitting = True
+        for page in deleting:
+            page.cancel_rest()
+        return False  # the window closes once the last profile under way ends
 
     def retranslate(self) -> None:
-        self.toolbar.retranslate()
-        self.pcs.retranslate()
-        self.header.retranslate()
-        self.table.retranslate()
-        self.progress.retranslate()
+        self.nav.retranslate()
+        self.show_groups.setText(_("&Groups pane"))
+        self.show_details.setText(_("&Details pane"))
+        self.hosts_page.retranslate()
+        for page in self._pages.values():
+            page.show_again()
         self._show_list()
-        self._show_again()
+        self._update()
 
     def restyle(self) -> None:
         super().restyle()
-        self._show_again()  # greyed rows and icons take the new theme's colours
+        self.tabs.restyle()
+        for page in self._pages.values():
+            page.show_again()
+        self._fill_hosts()
+        self._update()
 
-    # ---- the PCs ----
+    # ---- the list and its groups ----
 
-    def _list_choices(self) -> list[tuple[Any, str, bool]]:
-        return self._hosts.list_choices() if self._hosts is not None else []
+    def _fill_list_menu(self) -> None:
+        menu = self.list_picker.menu()
+        menu.clear()
+        choices = self._hosts.list_choices() if self._hosts is not None else []
+        for path, name, current in choices:
+            item = menu.addAction(name.replace("&", "&&"))
+            item.setCheckable(True)
+            item.setChecked(current)
+            item.setToolTip(str(path))
+            item.triggered.connect(lambda _c=False, p=path: self._pick_list(p))
 
     def _pick_list(self, path: Any) -> None:
         if self._hosts is not None:
@@ -228,467 +286,429 @@ class ProfilesTool(Tool):
         """Hosts opened another list, or the open one changed."""
         doc = self._hosts.document if self._hosts is not None else None
         if doc is None:
-            self.pcs.show_list(_("No list open"), "", None)
+            self.list_picker.setText(_("No list open"))
+            self.list_picker.setToolTip("")
+            self.nav.show_list(None)
+            self._fill_hosts()
+            self._overview()
             return
-        name = next((n for _p, n, current in self._list_choices() if current), doc.path.stem)
-        self.pcs.show_list(name, str(doc.path), doc.hosts, self._group_of(str(doc.path)))
+        choices = self._hosts.list_choices() if self._hosts is not None else []
+        name = next((n for _p, n, current in choices if current), doc.path.stem)
+        self.list_picker.setText(name)
+        self.list_picker.setToolTip(str(doc.path))
+        self.nav.show_list(doc.hosts)
+        kind, value = self._view_of(str(doc.path))
+        self.nav.blockSignals(True)
+        self.nav.show_view(kind, value)
+        self.nav.blockSignals(False)
+        self._fill_hosts()
+        self._overview()
 
-    def _group_of(self, list_path: str) -> str:
-        """The group this list was left on, here."""
-        kept = self.prefs.get(GROUPS_KEY)
-        group = kept.get(list_path) if isinstance(kept, dict) else None
-        return group if isinstance(group, str) else ALL_GROUPS
+    def _view_of(self, list_path: str) -> tuple[str, str]:
+        kept = self.prefs.get(VIEWS_KEY)
+        view = kept.get(list_path) if isinstance(kept, dict) else None
+        if isinstance(view, list) and len(view) == 2 and all(isinstance(v, str) for v in view):
+            return view[0], view[1]
+        return "all", ""
 
-    def _keep_group(self, group: str) -> None:
+    def _group_picked(self) -> None:
+        """A group on the left: the Hosts tab comes forward on it, and a search ends."""
+        doc = self._hosts.document if self._hosts is not None else None
+        if doc is not None:
+            current = self.nav.current_filter()
+            kept = self.prefs.get(VIEWS_KEY)
+            kept = dict(kept) if isinstance(kept, dict) else {}
+            kept[str(doc.path)] = [current.kind, current.value or ""]
+            self.prefs[VIEWS_KEY] = kept
+            self._shell.save_prefs()
+        search = self.hosts_page.search
+        search.blockSignals(True)
+        search.clear()
+        search.blockSignals(False)
+        self.switch(HOSTS)
+        self._fill_hosts()
+
+    def _all_hosts(self) -> tuple[Host, ...]:
+        doc = self._hosts.document if self._hosts is not None else None
+        return tuple(h for h in doc.hosts.hosts if h.connect_address) if doc is not None else ()
+
+    def visible_hosts(self) -> list[Host]:
+        """The Hosts tab's rows: a search looks through the whole list; otherwise the group
+        picked, narrowed to the picked tags."""
         doc = self._hosts.document if self._hosts is not None else None
         if doc is None:
-            return
-        kept = self.prefs.get(GROUPS_KEY)
-        kept = dict(kept) if isinstance(kept, dict) else {}
-        if group == ALL_GROUPS:
-            kept.pop(str(doc.path), None)
+            return []
+        reachable = self._all_hosts()
+        needle = self.hosts_page.search.text().strip().casefold()
+        if needle:
+            found = [h for h in reachable
+                     if needle in h.name.casefold() or needle in h.address.casefold()]  # fmt: skip
         else:
-            kept[str(doc.path)] = group
-        self.prefs[GROUPS_KEY] = kept
-        self._shell.save_prefs()
+            current = self.nav.current_filter()
+            if current.kind == "group" and current.value:
+                inside = {h.id for h in doc.hosts.hosts_in(current.value)}
+                found = [h for h in reachable if h.id in inside]
+            elif current.kind == "nogroup":
+                found = [h for h in reachable if h.group == NO_GROUP]
+            else:
+                found = list(reachable)
+        tags = self.nav.picked_tags()
+        if tags:
+            found = [h for h in found if all(t in h.tags for t in tags)]
+        return sorted(found, key=lambda h: natural_key(h.name))
 
-    # ---- scanning ----
+    def _place_name(self) -> str:
+        """The Hosts tab's first line: the group's name, or All hosts."""
+        doc = self._hosts.document if self._hosts is not None else None
+        current = self.nav.current_filter()
+        if self.hosts_page.search.text().strip():
+            return _("All hosts")
+        if doc is not None and current.kind == "group" and current.value:
+            group = doc.hosts.group(current.value)
+            if group is not None:
+                return group.name
+        if current.kind == "nogroup":
+            return _("No group")
+        return _("All hosts")
 
-    def scan(self, target: HostTarget) -> None:
-        """Reads `target`'s profiles. Nothing on the PC changes."""
-        if self._scanning or self._deleting or self._hosts is None:
+    def _fill_hosts(self) -> None:
+        hosts = self.visible_hosts()
+        typed = self.hosts_page.search.text().strip()
+        self.hosts_page.table.show_hosts(hosts, self._row_facts)
+        self.hosts_page.table.show_typed(typed if typed and not hosts else "")
+        if typed:
+            about = _("{shown} of {total} shown").format(
+                shown=len(hosts), total=len(self._all_hosts())
+            )
+        else:
+            about = ngettext("{n} host", "{n} hosts", len(hosts)).format(n=len(hosts))
+        self.hosts_page.show_title(self._place_name(), about)
+        self._hosts_picked()
+
+    def _host_checked(self, key: str) -> None:
+        host = self._host(key)
+        if host is not None:
+            self.hosts_page.table.show_facts(key, self._row_facts(host))
+            self._hosts_picked()
+
+    def _host(self, key: str) -> Host | None:
+        doc = self._hosts.document if self._hosts is not None else None
+        return doc.hosts.host(key) if doc is not None else None
+
+    def _checked(self, key: str) -> tuple[Status, datetime] | None:
+        return self._hosts.status_found(key) if self._hosts is not None else None
+
+    def _row_facts(self, host: Host) -> RowFacts:
+        checked = self._checked(host.id)
+        if checked is None:
+            status, color, tip = _("Not checked"), "", _("Hosts hasn't checked it yet.")
+        else:
+            state, when = checked
+            status, color = check_texts.status_text(state), STATUS_COLORS[state]
+            tip = _("Hosts' last check: {when}").format(when=check_texts.when_text(when))
+        page = self._pages.get(host.id)
+        profiles = deletable = None
+        words, time, scan_color = "", None, ""
+        if page is not None:
+            counts = page.counts()
+            if counts is not None:
+                profiles, deletable = counts
+            words = page.scan_words()
+            if page.read_at is not None and page.stage is Stage.SCANNED:
+                time = page.read_at.timestamp()
+            mark = page.mark()
+            scan_color = mark.color if mark.bad else ("#3b82f6" if mark.busy else "")
+        elif host.id in self._kept:
+            profiles, deletable, when = self._kept[host.id]
+            words, time = check_texts.clock_text(when), when.timestamp()
+        return RowFacts(status, color, tip, profiles, deletable, words, time, scan_color)
+
+    def _hosts_picked(self) -> None:
+        ids = self.hosts_page.table.selected_ids()
+        host = self._host(ids[0]) if len(ids) == 1 else None
+        self.hosts_page.show_host(self._host_facts(host) if host is not None else None)
+        if self.tabs.current() == HOSTS:
+            self._update()
+
+    def _host_facts(self, host: Host) -> HostFacts:
+        doc = self._hosts.document if self._hosts is not None else None
+        checked = self._checked(host.id)
+        if checked is None:
+            dot, status = "", _("Not checked by Hosts")
+        else:
+            state, when = checked
+            dot = STATUS_COLORS[state]
+            status = _("{status} · checked by Hosts at {time}").format(
+                status=check_texts.status_text(state), time=check_texts.clock_text(when)
+            )
+        page = self._pages.get(host.id)
+        scanned, account = "—", "—"
+        if page is not None and page.read_at is not None and page.stage is Stage.SCANNED:
+            scanned, account = check_texts.clock_text(page.read_at), page.account_name
+        elif host.id in self._kept:
+            scanned = check_texts.clock_text(self._kept[host.id][2])
+        group = group_path(doc.hosts, host.group) if doc is not None else ""
+        return HostFacts(host.name, dot, status, host.address, group, scanned, account)
+
+    # ---- opening hosts ----
+
+    def scan_clicked(self) -> None:
+        """Scan on the Hosts tab opens the hosts picked; on a host's tab, Scan again."""
+        page = self._pages.get(self.tabs.current())
+        if page is not None:
+            page.start_scan()
+            return
+        ids = self.hosts_page.table.selected_ids()
+        self.open_hosts(ids, len(ids) == 1)  # several open behind, as middle-clicks
+
+    def open_hosts(self, ids: Sequence[str], focus: bool) -> None:
+        """Each host in its own tab; a host that has one already isn't read again. `focus`:
+        go to the (first) host's tab."""
+        targets = [_target(h) for key in ids if (h := self._host(key)) is not None]
+        for index, target in enumerate(targets):
+            self.open_target(target, focus and index == 0)
+
+    def open_typed(self, typed: str) -> None:
+        """A host that isn't in the list, typed in the search box."""
+        typed = typed.strip()
+        if typed:
+            self.open_target(HostTarget(f"@{typed}", typed, typed), True)
+
+    def open_target(self, target: HostTarget, focus: bool) -> None:
+        if target.key in self._pages:
+            if focus:
+                self.switch(target.key)
+            return
+        if self._hosts is None:
             return
         go, account = self._hosts.accounts.account_for(target, self.window())
         if not go:
             return  # its password wasn't typed
-        self.stop_sizes()
-        self._results, self._done, self._run = {}, {}, []  # a new scan forgets the last run
-        self._close_progress()
-        same = self._target is not None and self._target.key == target.key
-        kept = dict(self._sizes) if same else {}  # sizes counted before, for rows still there
-        self._target, self._scan, self._sizes = target, None, {}
-        self._account = account
-        self._account_name = account.user if account is not None else windows_account()
-        self._scanning = True
-        self._scan_run += 1
-        run = self._scan_run
-        self.header.show_pc(target.name, self._about(_("reading…")))
-        self._show_card(
-            HintCard(
-                "refresh",
-                self._muted(),
-                _("Reading {host}'s profiles…").format(host=target.name),
-                [_("This only reads. Nothing on the PC changes.")],
+        context = self._context(self._hosts)
+        name = account.user if account is not None else windows_account()
+        page = HostPage(target, account, name, context)
+        self._pages[target.key] = page
+        self.middle.addWidget(page.box)
+        self.side.addWidget(page.side)
+        self.tabs.add(target.key, target.name)
+        page.changed.connect(lambda p=page: self._page_changed(p))
+        page.status_changed.connect(lambda p=page: self._page_status(p))
+        page.start_scan()
+        if focus:
+            self.switch(target.key)
+        self._page_changed(page)
+
+    # ---- the tabs ----
+
+    def switch(self, key: str) -> None:
+        """The tab in front: HOSTS, or a host's key."""
+        page = self._pages.get(key)
+        self.tabs.set_current(key if page is not None else HOSTS)
+        if page is not None:
+            self.middle.setCurrentWidget(page.box)
+            self.side.setCurrentWidget(page.side)
+        else:
+            self.middle.setCurrentWidget(self.hosts_page.box)
+            self.side.setCurrentWidget(self.hosts_page.side)
+        self._update()
+
+    def _step(self, by: int) -> None:
+        """Ctrl+Tab: the next tab, the Hosts tab included, round and round."""
+        keys = [HOSTS, *self.tabs.host_keys()]
+        index = keys.index(self.tabs.current()) if self.tabs.current() in keys else 0
+        self.switch(keys[(index + by) % len(keys)])
+
+    def close_tab(self, key: str) -> bool:
+        """Never the Hosts tab, nor a host that's deleting (the status bar says why)."""
+        page = self._pages.get(key)
+        if page is None:
+            return False
+        if page.deleting:
+            self._shell.show_message(
+                _(
+                    "{host} is deleting profiles: its tab closes once it ends. Use Cancel the "
+                    "rest to stop it sooner."
+                ).format(host=page.target.name)  # fmt: skip
             )
+            return False
+        page.stop_sizes()
+        self.pool.drop(page)
+        if page.scan is not None and page.read_at is not None:
+            total, deletable = page.counts() or (0, 0)
+            self._kept[key] = (total, deletable, page.read_at)
+        keys = self.tabs.host_keys()
+        index = keys.index(key)
+        was_current = self.tabs.current() == key
+        self.tabs.remove(key)
+        del self._pages[key]
+        self.middle.removeWidget(page.box)
+        self.side.removeWidget(page.side)
+        page.box.deleteLater()
+        page.side.deleteLater()
+        page.deleteLater()
+        if was_current:  # the tab on its left, or the Hosts tab
+            left = self.tabs.host_keys()
+            self.switch(left[index - 1] if index > 0 and left else HOSTS)
+        self._overview()
+        return True
+
+    def close_others(self, key: str) -> None:
+        for other in [k for k in self.tabs.host_keys() if k != key]:
+            self.close_tab(other)
+
+    def close_finished(self) -> None:
+        """Every tab whose host is done: scanned, failed or through its delete run."""
+        for key in [k for k, p in self._pages.items() if not p.busy()]:
+            self.close_tab(key)
+
+    def _tab_menu(self, key: str, where: QPoint) -> None:
+        menu = QMenu(self)
+        page = self._pages.get(key)
+        close = menu.addAction(_("Close"), lambda: self.close_tab(key))
+        close.setEnabled(page is not None and not page.deleting)
+        menu.addAction(_("Close the others"), lambda: self.close_others(key))
+        menu.addAction(_("Close the finished ones"), self.close_finished)
+        popup(menu, where)
+
+    def _page_changed(self, page: HostPage) -> None:
+        mark = page.mark()
+        self.tabs.show_tab(
+            page.target.key,
+            page.tab_text(),
+            mark_icon(mark.icon, mark.color),
+            mark.tip,
+            closable=not page.deleting,
         )
-        self.details.show_hint(_("Scan a PC to see its profiles."))
-        self.status_label.setText(_("{host} · reading…").format(host=target.name))
-        self._update_bar()
+        host = self._host(page.target.key)
+        if host is not None:
+            self.hosts_page.table.show_facts(host.id, self._row_facts(host))
+        self._overview()
+        if self.tabs.current() == page.target.key:
+            self._update()
+        if self._quitting and not any(p.deleting for p in self._pages.values()):
+            self._shell.quit_app()  # the quit asked while hosts were deleting
 
-        def done(found: Scan) -> None:
-            if run != self._scan_run:
-                return
-            self._scanning = False
-            self._scan = found
-            idents = {p.ident for p in found.profiles}
-            self._sizes = {i: s for i, s in kept.items() if i in idents and s is not None}
-            self._read_at = datetime.now().astimezone()
-            self._show_scan()
+    def _page_status(self, page: HostPage) -> None:
+        if self.tabs.current() == page.target.key:
+            self.status_label.setText(page.status_text())
 
-        def failed(error: BaseException) -> None:
-            if run != self._scan_run:
-                return
-            self._scanning = False
-            self._show_failure(target, error)
+    def _overview(self) -> None:
+        """Andamento, the Hosts tab's name and ▾'s list."""
+        pages = [self._pages[k] for k in self.tabs.host_keys() if k in self._pages]
+        self.hosts_page.progress.show_pages(pages)
+        total = len(self._all_hosts())
+        self.tabs.set_hosts_text(_("Hosts ({n})").format(n=total))
+        items = [(HOSTS, _("Hosts ({n})").format(n=total), mark_icon("device-desktop", ""))]
+        for page in pages:
+            mark = page.mark()
+            text = f"{page.target.name} · {mark.short}" if mark.short else page.target.name
+            items.append((page.target.key, text, mark_icon(mark.icon, mark.color)))
+        self.tabs.set_more(items)
+        if self.tabs.current() == HOSTS:
+            self.status_label.setText(self._hosts_status())
 
-        self._start(lambda: user_profiles.scan(target.address, account), done, failed)
-
-    def scan_again(self) -> None:
-        if self._target is not None:
-            self.scan(self._target)
-
-    def _about(self, what: str) -> str:
-        """The header's line: "192.0.2.13 · read at 10:41 · as EXAMPLE\\support"."""
-        target = self._target
-        assert target is not None
-        parts = [what, _("as {account}").format(account=self._account_name)]
-        if target.address != target.name:
-            parts.insert(0, target.address)
+    def _hosts_status(self) -> str:
+        """ "8 hosts · 4 in tabs · 1 deleting profiles · 2 scanning"."""
+        total = len(self._all_hosts())
+        parts = [ngettext("{n} host", "{n} hosts", total).format(n=total)]
+        pages = list(self._pages.values())
+        if pages:
+            parts.append(_("{n} in tabs").format(n=len(pages)))
+        deleting = sum(p.deleting for p in pages)
+        if deleting:
+            parts.append(_("{n} deleting profiles").format(n=deleting))
+        scanning = sum(p.stage is Stage.SCANNING for p in pages)
+        if scanning:
+            parts.append(_("{n} scanning").format(n=scanning))
         return " · ".join(parts)
 
-    def _show_start(self) -> None:
-        """Before any scan: what to do."""
-        self.header.hide()
-        self._show_card(
-            HintCard(
-                self.ICON,
-                self._muted(),
-                _("Choose a PC"),
-                [
-                    _("Pick a PC in the list and click Scan, or double-click it."),
-                    _("For a PC that isn't in the list, type its name or address in "
-                      "\"Another PC\"."),
-                    "",
-                    _("Scanning only reads. Nothing is deleted before you tick it, ask for it "
-                      "and confirm."),
-                ],
-            )
-        )  # fmt: skip
-        self.details.show_hint(_("Scan a PC to see its profiles."))
-        self.status_label.setText(_("No PC scanned"))
-        self._update_bar()
+    # ---- the toolbar ----
 
-    def _show_scan(self) -> None:
-        target = self._target
-        assert target is not None
-        when = clock_text(self._read_at)
-        self.header.show_pc(target.name, self._about(_("read at {time}").format(time=when)))
-        self.header.filters.show()
-        self.header.show()
-        self._stack.setCurrentWidget(self.table)
-        if target.key and not target.key.startswith("@"):
-            self.pcs.pick(target.key)
-        self._show_rows()
-        self._update_bar()
-
-    def _show_failure(self, target: HostTarget, error: BaseException) -> None:
-        said = rows.failure(error, target.name, target.address, self._account_name)
-        when = clock_text(datetime.now().astimezone())
-        self.header.show_pc(target.name, self._about(_("tried at {time}").format(time=when)))
-        buttons: list[tuple[str, Callable[[], None]]] = []
-        hosts = self._hosts
-        if said.another_account and hosts is not None:
-            buttons.append(
-                (
-                    _("Try another account…"),
-                    lambda: hosts.runner.another_account(target, error, lambda: self.scan(target)),
-                )
-            )
-        buttons.append((_("Try again"), lambda: self.scan(target)))
-        color = QColor(STATUS_COLORS["stopped"])
-        self._show_card(HintCard("circle-x", color, said.title, said.lines, buttons))
-        self.details.show_hint(_("Scan a PC to see its profiles."))
-        self.status_label.setText(said.status)
-        self._update_bar()
-
-    def _show_card(self, card: HintCard) -> None:
-        """A card in the middle instead of the table; the header keeps only the PC's name."""
-        old, self.card = self.card, card
-        if old is not None:
-            self._card_box.removeWidget(old)
-            old.deleteLater()
-        self._card_box.addWidget(card)
-        self._stack.setCurrentWidget(self._card_page)
-        self.header.filters.hide()
-        self.header.setVisible(self._target is not None)
-
-    def _show_again(self) -> None:
-        """Everything on show drawn again: another language, or another theme."""
-        if self._scanning:
-            return
-        if self._scan is not None:
-            self._show_scan()
-        elif self._target is None:
-            self._show_start()
-
-    # ---- the rows ----
-
-    def _show_rows(self) -> None:
-        if self._scan is None or self._target is None:
-            return
-        shown = rows.visible(self._scan.profiles, self.header.chosen())
-        self.table.show_profiles(shown, self._sizes, self._results)
-        self.header.shown.setText(rows.shown_text(len(shown), len(self._scan.profiles)))
-        self._show_status()
-
-    def _counted(self) -> dict[str, int]:
-        return {i: s for i, s in self._sizes.items() if s is not None}
-
-    def _show_status(self) -> None:
-        if self._scan is None or self._target is None or self._deleting:
-            return
-        if self._run:  # a delete run ended: what it did stays until the next scan
-            return
-        self.status_label.setText(
-            rows.status_text(self._scan, self._target.name, self.table.ticked(), self._counted())
-        )
-
-    def _ticks_changed(self) -> None:
-        self._show_status()
-        self._update_bar()
-
-    def _show_details(self) -> None:
-        profile = self.table.selected() if self._scan is not None else None
-        if profile is None or self._scan is None:
-            self.details.show_hint(
-                "" if self._scan is not None else _("Scan a PC to see its profiles.")
-            )
-            return
-        size = self._sizes.get(profile.ident)
-        counting = profile.ident in self._sizes and size is None
-        result, done = self._results.get(profile.ident), self._done.get(profile.ident)
-        self.details.show_item(Shown(profile, self._scan.root, size, counting, result, done), 1)
-
-    # ---- sizes ----
-
-    def counting(self) -> bool:
-        return bool(self._active or self._waiting)
-
-    def toggle_sizes(self) -> None:
-        if self.counting():
-            self.stop_sizes()
-        else:
-            self.count_sizes()
-
-    def count_sizes(self) -> None:
-        """Counts the folder of every row shown that isn't counted yet, a few at a time."""
-        if self._scan is None or self.counting():
-            return
-        self._waiting = [
-            p for p in self.table.shown()
-            if p.path and p.kind is not Kind.ENTRY and p.ident not in self._sizes
-        ]  # fmt: skip
-        if not self._waiting:
-            self._shell.show_message(_("Every folder shown is already counted."))
-            return
-        self._uncounted = 0
-        self._count_run += 1
-        for _slot in range(SIZES_AT_ONCE):
-            self._count_next()
-        self._update_bar()
-
-    def stop_sizes(self) -> None:
-        """At once: it only reads, so nothing is left half done. Sizes counted stay."""
-        if not self.counting():
-            return
-        self._count_run += 1  # the counts under way stop themselves and are dropped
-        self._waiting, self._active = [], 0
-        for ident in [i for i, size in self._sizes.items() if size is None]:
-            del self._sizes[ident]
-            self.table.show_size(ident, self._sizes)
-        self._show_details()
-        self._update_bar()
-
-    def _count_next(self) -> None:
-        scanned = self._scan
-        if not self._waiting or scanned is None:
-            if not self._active:
-                self._sizes_counted()
-            return
-        profile, run, account = self._waiting.pop(0), self._count_run, self._account
-        self._active += 1
-        self._sizes[profile.ident] = None
-        self._show_size(profile)
-
-        def ended(size: int | None) -> None:
-            if run != self._count_run:
-                return
-            self._active -= 1
-            if size is None:
-                del self._sizes[profile.ident]
-                self._uncounted += 1
+    def _update(self) -> None:
+        bar = self.bar
+        page = self._pages.get(self.tabs.current())
+        if page is None:
+            ids = self.hosts_page.table.selected_ids()
+            names = [h.name for k in ids if (h := self._host(k)) is not None]
+            if len(names) == 1:
+                scan = _("Scan {host}").format(host=names[0])
+                tip = _("Opens {host} in a tab and reads its profiles").format(host=names[0])
+            elif names:
+                scan = ngettext("Scan {n} host", "Scan {n} hosts", len(names)).format(n=len(names))
+                tip = _("Opens each in a tab of its own and reads their profiles")
             else:
-                self._sizes[profile.ident] = size
-            self._show_size(profile)
-            self._show_status()
-            self._count_next()
-
-        self._start(
-            lambda: user_profiles.profile_size(
-                scanned, profile, account, stop=lambda: run != self._count_run
-            ),
-            ended,
-            lambda _error: ended(None),
-        )
-
-    def _show_size(self, profile: Profile) -> None:
-        self.table.show_size(profile.ident, self._sizes)
-        picked = self.table.selected()
-        if picked is not None and picked.ident == profile.ident:
-            self._show_details()
-
-    def _sizes_counted(self) -> None:
-        """The last count of a run ended."""
-        self._update_bar()
-        if self._uncounted:
-            self._shell.show_message(
-                _("Sizes counted; {n} couldn't be read.").format(n=self._uncounted)
+                scan, tip = _("Scan"), _("Pick hosts in the list first")
+            bar.show_texts(scan, tip, _("Delete profiles…"), "", "", counting=False)
+            bar.scan_button.setEnabled(bool(names))
+            bar.sizes_button.setEnabled(False)
+            bar.show_delete(False)
+            self.status_label.setText(self._hosts_status())
+            self.align_toolbar_later()
+            return
+        name = page.target.name
+        ticked = page.ticked()
+        delete = (
+            ngettext("Delete {n} profile…", "Delete {n} profiles…", len(ticked)).format(
+                n=len(ticked)
             )
-        else:
-            self._shell.show_message(_("Sizes counted."))
+            if ticked
+            else _("Delete profiles…")
+        )
+        counting = page.counting()
+        bar.show_texts(
+            _("Scan again"),
+            _("Scans {host}'s profiles again").format(host=name),
+            delete,
+            _("Deletes the profiles ticked on {host}, after a question that lists them").format(
+                host=name
+            ),
+            _("Stops at once; sizes already counted stay")
+            if counting
+            else _("Counts the size of each profile shown on {host}; it only reads").format(
+                host=name
+            ),
+            counting,
+        )
+        idle = page.stage in (Stage.SCANNED, Stage.FAILED) and not page.deleting
+        bar.scan_button.setEnabled(idle)
+        bar.sizes_button.setEnabled(page.scan is not None and not page.deleting)
+        bar.show_delete(page.scan is not None and idle and bool(ticked))
+        self.status_label.setText(page.status_text())
+        self.align_toolbar_later()
 
-    # ---- deleting ----
+    def _toggle_sizes(self) -> None:
+        page = self._pages.get(self.tabs.current())
+        if page is not None:
+            page.toggle_sizes()
 
     def delete_ticked(self) -> None:
-        """Asks, listing the ticked rows, then deletes them one at a time."""
-        target, scanned = self._target, self._scan
-        ticked = self.table.ticked()
-        if target is None or scanned is None or not ticked or self._deleting:
-            return
-        self.stop_sizes()
-        dialog = DeleteDialog(self.window(), target.name, ticked, self._counted())
-        if run_modal(dialog) == QDialog.DialogCode.Accepted:
-            self._delete(ticked)
+        page = self._pages.get(self.tabs.current())
+        if page is not None:
+            page.delete_ticked(self.window())
 
-    def _delete(self, profiles: list[Profile]) -> None:
-        self._deleting, self._cancelled = True, False
-        self._run, self._queue = list(profiles), list(profiles)
-        self._results, self._done, self._freed = {}, {}, 0
-        self._began = datetime.now().astimezone()
-        self.table.lock(True)
-        self.progress.start(profiles)
-        for profile in profiles:
-            self._set_result(profile, Result.QUEUED)
-        self._open_progress()
-        self._update_bar()
-        self._delete_next()
+    def page(self, key: str) -> HostPage | None:
+        """A host's tab (for tests)."""
+        return self._pages.get(key)
 
-    def cancel_rest(self) -> None:
-        """The profile being deleted finishes; the ones still queued don't start."""
-        if not self._deleting or self._cancelled:
-            return
-        self._cancelled = True
-        left, self._queue = self._queue, []
-        for profile in left:
-            self._set_result(profile, None)
-        if left:
-            self._log(_("cancelled: {n} not started").format(n=len(left)))
-
-    def _delete_next(self) -> None:
-        target, scanned = self._target, self._scan
-        if not self._queue or target is None or scanned is None:
-            self._delete_over()
-            return
-        profile, account = self._queue.pop(0), self._account
-        self._set_result(profile, Result.DELETING)
-        ended = sum(result in rows.ENDED for result in self._results.values())
-        total = ended + 1 + len(self._queue)
-        since = clock_text(self._began)
-        self.progress.show_progress(
-            _("{host} · {n} of {total} · since {time}").format(
-                host=target.name, n=ended + 1, total=total, time=since
-            ),
-            ended,
-        )
-        status = _("{host} · deleting {n} of {total}").format(
-            host=target.name, n=ended + 1, total=total
-        )
-        counts = rows.counts_text(self._results.values())
-        self.status_label.setText(f"{status} · {counts}" if counts else status)
-        self._log(f"{profile.user}: " + _("checking and deleting…"))
-        log_file = self._shell.paths.user_profiles_log_file
-
-        def done(ended: Deleted) -> None:
-            size = self._sizes.get(profile.ident)
-            self._done[profile.ident] = ended
-            if ended.outcome is Outcome.DELETED and size:
-                self._freed += size
-            self._log(f"{profile.user}: " + rows.ended_text(ended, size))
-            self._set_result(profile, rows.result_of(ended))
-            self._delete_next()
-
-        self._start(
-            lambda: user_profiles.delete(scanned, profile, account, log_file=log_file),
-            done,
-            lambda error: done(Deleted(profile, Outcome.FAILED, Why.ERROR, str(error))),
+    def _context(self, hosts: HostsTool) -> Context:
+        """What a host's tab needs from the tool and from Hosts."""
+        return Context(
+            pool=self.pool,
+            log_file=lambda: self._shell.paths.user_profiles_log_file,
+            message=self._shell.show_message,
+            another_account=hosts.runner.another_account,
         )
 
-    def _delete_over(self) -> None:
-        target = self._target
-        assert target is not None
-        self._deleting = False
-        self.table.lock(False)
-        results = [self._results[p.ident] for p in self._run if p.ident in self._results]
-        counts = rows.counts_text(results) or _("nothing deleted")
-        times = _("{start} to {end}").format(
-            start=clock_text(self._began), end=clock_text(datetime.now().astimezone())
-        )
-        freed = _("{size} freed").format(size=rows.size_text(self._freed)) if self._freed else ""
-        self.progress.finish(f"{target.name} · {counts}", f"{freed} · {times}" if freed else times)
-        parts = [target.name, *counts.split(", ")]
-        if freed:
-            parts.append(freed)
-        self.status_label.setText(" · ".join(parts))
-        self._show_details()
-        self._update_bar()
+    def _save_shown(self) -> None:
+        self.prefs[SHOWN_KEY] = {
+            "groups": self.show_groups.isChecked(),
+            "details": self.show_details.isChecked(),
+        }
+        self._shell.save_prefs()
 
-    def _set_result(self, profile: Profile, result: Result | None) -> None:
-        if result is None:
-            self._results.pop(profile.ident, None)
-        else:
-            self._results[profile.ident] = result
-        self.table.show_result(profile.ident, result)
-        self.progress.show_result(profile.ident, result)
-        picked = self.table.selected()
-        if picked is not None and picked.ident == profile.ident:
-            self._show_details()
 
-    def _log(self, text: str) -> None:
-        """A line in the progress panel's log: the time, then what happened."""
-        self.progress.add_line(f"{datetime.now().astimezone():%H:%M}  {text}")
-
-    def open_log(self) -> None:
-        """The file every delete is written to, in whatever opens text files."""
-        log_file = self._shell.paths.user_profiles_log_file
-        if log_file.exists():
-            os.startfile(log_file)  # noqa: S606 (Windows' own "open", as a double-click)
-        else:
-            self._shell.show_message(_("The log has nothing yet."))
-
-    def _open_progress(self) -> None:
-        """The progress panel takes Details' place, a little wider when Details was narrow."""
-        self._side.setCurrentWidget(self.progress)
-        sizes = self.splitter.sizes()
-        if len(sizes) == 3 and 0 < sizes[2] < PROGRESS_WIDTH:
-            self._side_width = sizes[2]
-            wider = PROGRESS_WIDTH - sizes[2]
-            self.splitter.setSizes([sizes[0], max(200, sizes[1] - wider), PROGRESS_WIDTH])
-
-    def _close_progress(self) -> None:
-        """Details again, at the width it had."""
-        if self._deleting or self._side.currentWidget() is self.details:
-            return
-        self._side.setCurrentWidget(self.details)
-        sizes = self.splitter.sizes()
-        if self._side_width and len(sizes) == 3:
-            back = sizes[2] - self._side_width
-            self.splitter.setSizes([sizes[0], sizes[1] + back, self._side_width])
-        self._side_width = 0
-        self._show_details()
-
-    # ---- the toolbar, and work off the main thread ----
-
-    def _update_bar(self) -> None:
-        bar = self.bar
-        busy = self._scanning or self._deleting
-        bar.rescan_button.setEnabled(self._target is not None and not busy)
-        bar.sizes_button.setEnabled(self._scan is not None and not busy)
-        bar.show_counting(self.counting())
-        bar.show_delete(self._scan is not None and not busy and bool(self.table.ticked()))
-        self.pcs.setEnabled(not busy)
-
-    def _muted(self) -> QColor:
-        return self.palette().color(QPalette.ColorRole.PlaceholderText)
-
-    def _start(
-        self,
-        work: Callable[[], Any],
-        done: Callable[[Any], None],
-        failed: Callable[[BaseException], None],
-    ) -> None:
-        """`work` on a background thread; its value or its error comes back on this one."""
-        job = Job(work)
-        self._jobs.add(job)
-
-        def finish(value: object, error: object) -> None:
-            self._jobs.discard(job)
-            if isinstance(error, BaseException):
-                failed(error)
-            else:
-                done(value)
-
-        job.done.connect(finish)
-        job.start()
+def _target(host: Host) -> HostTarget:
+    return HostTarget(host.id, host.name, host.connect_address)
 
 
 def _two_widths(saved: object) -> tuple[int, int] | None:

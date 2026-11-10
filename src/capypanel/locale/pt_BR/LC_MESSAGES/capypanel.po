@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 08:54-0300\n"
+"POT-Creation-Date: 2026-11-10 11:09-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -457,6 +457,9 @@ msgstr "Um &grupo escolhido"
 msgid "A connection profile must be a JSON object."
 msgstr "Um perfil de conexão deve ser um objeto JSON."
 
+msgid "A few hosts are read at a time; this one starts when one ends."
+msgstr "Alguns hosts são lidos por vez; este começa quando um terminar."
+
 msgid "A group"
 msgstr "Um grupo"
 
@@ -625,9 +628,6 @@ msgstr "Também suprimento baixo"
 msgid "An item is missing the “{key}” field or has an invalid value for it."
 msgstr "Um item não contém o campo “{key}” ou tem um valor inválido nesse campo."
 
-msgid "Another PC"
-msgstr "Outro PC"
-
 #, python-brace-format
 msgid "Answered a ping at {address}."
 msgstr "Respondeu a um ping em {address}."
@@ -650,6 +650,9 @@ msgstr "Aparência"
 
 msgid "Applies the PC's group policies again now, without waiting for the next refresh."
 msgstr "Aplica de novo as políticas de grupo do PC agora, sem esperar a próxima atualização."
+
+msgid "As"
+msgstr "Como"
 
 msgid "Ask each time"
 msgstr "Perguntar sempre"
@@ -730,8 +733,19 @@ msgstr "CSV com cabeçalho"
 msgid "Calculate sizes"
 msgstr "Calcular tamanhos"
 
+#, python-brace-format
+msgid "Calculating sizes: {n} of {total}"
+msgstr "Calculando tamanhos: {n} de {total}"
+
 msgid "Called as: script <host> <arguments>. Quotes keep spaces together."
 msgstr "Chamado como: script <host> <argumentos>. Aspas mantêm os espaços juntos."
+
+msgid "Can be deleted"
+msgstr "Podem ser excluídos"
+
+msgctxt "profile"
+msgid "Can be deleted"
+msgstr "Pode excluir"
 
 msgid "Cancel"
 msgstr "Cancelar"
@@ -747,6 +761,9 @@ msgstr "Cancelar a reinicialização pendente"
 
 msgid "Cancel the rest"
 msgstr "Cancelar o restante"
+
+msgid "Cancel the rest and quit"
+msgstr "Cancelar o restante e sair"
 
 #, python-brace-format
 msgid "CapyPanel asked for it at {when}."
@@ -837,9 +854,6 @@ msgstr "Verifica todos os arquivos do Windows e repara os danificados (DISM e sf
 msgid "Checks these hosts again now"
 msgstr "Verifica estes hosts de novo agora"
 
-msgid "Choose a PC"
-msgstr "Escolha um PC"
-
 #, python-brace-format
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
@@ -913,6 +927,12 @@ msgstr "Relógio sincronizado em {host}."
 msgid "Close"
 msgstr "Fechar"
 
+msgid "Close the finished ones"
+msgstr "Fechar as concluídas"
+
+msgid "Close the others"
+msgstr "Fechar as outras"
+
 msgid "Co&py"
 msgstr "Co&piar"
 
@@ -974,6 +994,9 @@ msgstr "Perfis de conexão"
 
 msgid "Console"
 msgstr "Console"
+
+msgid "Continue"
+msgstr "Continuar"
 
 msgid "Copied"
 msgstr "Copiado"
@@ -1155,8 +1178,9 @@ msgstr "Não foi possível {action} em {host}: uma reinicialização ou desligam
 msgid "Couldn't {action} on {host}: {reason}"
 msgstr "Não foi possível {action} em {host}: {reason}"
 
-msgid "Count the size of each profile shown; it only reads, and can take minutes"
-msgstr "Conta o tamanho de cada perfil exibido; só lê, e pode levar minutos"
+#, python-brace-format
+msgid "Counts the size of each profile shown on {host}; it only reads"
+msgstr "Conta o tamanho de cada perfil exibido em {host}; só lê"
 
 msgid "Created by:"
 msgstr "Criado por:"
@@ -1230,6 +1254,9 @@ msgstr "Excluir perfil de conexão"
 msgid "Delete profiles from {host}"
 msgstr "Excluir perfis de {host}"
 
+msgid "Delete profiles…"
+msgstr "Excluir perfis…"
+
 #, python-brace-format
 msgid "Delete temporary files on {host}?"
 msgstr "Excluir os arquivos temporários de {host}?"
@@ -1237,12 +1264,6 @@ msgstr "Excluir os arquivos temporários de {host}?"
 #, python-brace-format
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
 msgstr "Excluir o perfil de conexão “{profile}”? Todos neste PC deixam de tê-lo."
-
-msgid "Delete the profiles ticked, after a question that lists them"
-msgstr "Exclui os perfis marcados, depois de uma pergunta que lista cada um"
-
-msgid "Delete ticked…"
-msgstr "Excluir marcados…"
 
 #, python-brace-format
 msgid "Delete {n} profile"
@@ -1255,6 +1276,12 @@ msgid "Delete {n} profile from {host}?"
 msgid_plural "Delete {n} profiles from {host}?"
 msgstr[0] "Excluir {n} perfil de {host}?"
 msgstr[1] "Excluir {n} perfis de {host}?"
+
+#, python-brace-format
+msgid "Delete {n} profile…"
+msgid_plural "Delete {n} profiles…"
+msgstr[0] "Excluir {n} perfil…"
+msgstr[1] "Excluir {n} perfis…"
 
 msgid "Deleted"
 msgstr "Excluído"
@@ -1271,8 +1298,16 @@ msgstr "Excluído: a sobra no registro."
 msgid "Deletes temporary files no one has touched for a day, for Windows and every user."
 msgstr "Exclui os arquivos temporários que ninguém mexe há um dia, do Windows e de cada usuário."
 
+#, python-brace-format
+msgid "Deletes the profiles ticked on {host}, after a question that lists them"
+msgstr "Exclui os perfis marcados em {host}, depois de uma pergunta que lista cada um"
+
 msgid "Deleting moves it to the Recycle Bin, for everyone who uses it:"
 msgstr "Excluir move o arquivo para a Lixeira, para todos que o usam:"
+
+#, python-brace-format
+msgid "Deleting profile {n} of {total}. The tab can't close until it ends; use Cancel the rest."
+msgstr "Excluindo o perfil {n} de {total}. A aba não fecha até terminar; use Cancelar o restante."
 
 msgid "Deleting profiles"
 msgstr "Excluindo perfis"
@@ -1343,6 +1378,10 @@ msgstr "Documentação:"
 
 msgid "Don't ask again (change it in Settings › CapyPanel › Startup)"
 msgstr "Não perguntar de novo (altere em Configurações › CapyPanel › Inicialização)"
+
+#, python-brace-format
+msgid "Done ({n})"
+msgstr "Concluídos ({n})"
 
 msgid "Door open"
 msgstr "Porta aberta"
@@ -1525,9 +1564,6 @@ msgstr "Seguir as Contas: {user}"
 msgid "For Import"
 msgstr "Para importar"
 
-msgid "For a PC that isn't in the list, type its name or address in \"Another PC\"."
-msgstr "Para um PC fora da lista, digite o nome ou endereço em \"Outro PC\"."
-
 msgid "For a script that's already on each PC, in the same place: CapyPanel runs that PC's own copy. A .ps1, .bat, .cmd or .vbs file, by its full path on the PC; %ProgramData% and the like work too."
 msgstr "Para um script que já está em cada PC, no mesmo lugar: o CapyPanel executa a cópia daquele PC. Um arquivo .ps1, .bat, .cmd ou .vbs, pelo caminho completo no PC; %ProgramData% e afins também funcionam."
 
@@ -1629,6 +1665,9 @@ msgstr "Os grupos e as tags são os da lista aberta."
 msgid "Hide Windows' own"
 msgstr "Ocultar os do Windows"
 
+msgid "History"
+msgstr "Histórico"
+
 msgid "Hom&e"
 msgstr "I&nício"
 
@@ -1666,6 +1705,13 @@ msgstr "Nomes de host"
 msgid "Hosts"
 msgstr "Hosts"
 
+#, python-brace-format
+msgid "Hosts ({n})"
+msgstr "Hosts ({n})"
+
+msgid "Hosts hasn't checked it yet."
+msgstr "O Hosts ainda não o verificou."
+
 msgid "Hosts with no group &go to:"
 msgstr "Hosts sem grupo &vão para:"
 
@@ -1674,6 +1720,10 @@ msgstr "Hosts sem perfil &usam"
 
 msgid "Hosts › Accounts"
 msgstr "Hosts › Contas"
+
+#, python-brace-format
+msgid "Hosts' last check: {when}"
+msgstr "Última verificação do Hosts: {when}"
 
 msgid "Hover a folder to see what it holds."
 msgstr "Passe o mouse sobre uma pasta para ver o que ela guarda."
@@ -1699,6 +1749,10 @@ msgstr "Colunas ignoradas: {names}."
 
 msgid "Import hosts"
 msgstr "Importar hosts"
+
+#, python-brace-format
+msgid "In progress ({n})"
+msgstr "Em andamento ({n})"
 
 #, python-brace-format
 msgid "In the open list it's set on {hosts} and {groups}. They'll use their group's profile, or the default, instead."
@@ -1843,9 +1897,6 @@ msgstr "Listas salvas numa pasta de listas aparecem aqui sozinhas; Remover pergu
 msgid "Locked when it was approved"
 msgstr "Travado quando foi aprovado"
 
-msgid "Log"
-msgstr "Registro"
-
 msgid "Log off"
 msgstr "Fazer logoff"
 
@@ -1887,8 +1938,8 @@ msgstr "Logins em que você marcou Lembrar: o Windows os criptografa para a sua 
 msgid "Logs"
 msgstr "Logs"
 
-msgid "Looks through every group for PCs with this name or address"
-msgstr "Procura em todos os grupos os PCs com este nome ou endereço"
+msgid "Looks through every host of the list, whatever the group"
+msgstr "Procura em todos os hosts da lista, em qualquer grupo"
 
 msgid "MAC address"
 msgstr "Endereço MAC"
@@ -1981,9 +2032,6 @@ msgstr "Nome do novo grupo dentro de “{group}”:"
 msgid "Name of the new group:"
 msgstr "Nome do novo grupo:"
 
-msgid "Name or address"
-msgstr "Nome ou endereço"
-
 msgid "Needs attention"
 msgstr "Requer atenção"
 
@@ -2023,9 +2071,6 @@ msgstr "Nova tag"
 msgid "No Doc360 MPS account is set."
 msgstr "Nenhuma conta do Doc360 MPS definida."
 
-msgid "No PC scanned"
-msgstr "Nenhum PC escaneado"
-
 msgid "No access: needs an admin account on this PC"
 msgstr "Sem acesso: precisa de uma conta de administrador neste PC"
 
@@ -2062,6 +2107,10 @@ msgstr "Sem grupo"
 
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
+
+#, python-brace-format
+msgid "No host of the list with “{text}”."
+msgstr "Nenhum host da lista com “{text}”."
 
 msgid "No hosts in this group have all the picked tags."
 msgstr "Nenhum host deste grupo tem todas as tags escolhidas."
@@ -2145,6 +2194,9 @@ msgstr "Não é um nome de computador nem um endereço IP"
 msgid "Not checked"
 msgstr "Não verificado"
 
+msgid "Not checked by Hosts"
+msgstr "Não verificado pelo Hosts"
+
 msgid "Not checked yet: run Status"
 msgstr "Ainda não verificado: execute Status"
 
@@ -2177,9 +2229,6 @@ msgstr "Ainda não lido"
 
 msgid "Not set. Needed only for printers whose page counters come from Doc360 MPS."
 msgstr "Não definida. Só é necessária para impressoras cujos contadores de páginas vêm do Doc360 MPS."
-
-msgid "Not started"
-msgstr "Não começou"
 
 msgid "Not used: made by another user"
 msgstr "Não usada: criada por outro usuário"
@@ -2305,6 +2354,9 @@ msgstr "Abrir uma lista de hosts"
 msgid "Open a host list to choose what it shows first."
 msgstr "Abra uma lista de hosts para escolher o que ela mostra primeiro."
 
+msgid "Open a host to scan it: double-click it, or pick it and click Scan."
+msgstr "Abra um host para escaneá-lo: dê dois cliques nele, ou selecione-o e clique em Escanear."
+
 msgid "Open a path…"
 msgstr "Abrir um caminho…"
 
@@ -2326,8 +2378,8 @@ msgstr "Abrir muitas telas remotas?"
 msgid "Open the Commands window for the selected host; the arrow lists its commands"
 msgstr "Abre a janela Comandos para o host selecionado; a seta lista os comandos dele"
 
-msgid "Open the log"
-msgstr "Abrir o log"
+msgid "Open the history"
+msgstr "Abrir o histórico"
 
 msgid "Open the scripts folder"
 msgstr "Abrir a pasta de scripts"
@@ -2364,8 +2416,18 @@ msgstr "Aberto: {path}"
 msgid "Opens a folder on {host} in File Explorer, over file sharing."
 msgstr "Abre uma pasta de {host} no Explorador de Arquivos, pelo compartilhamento de arquivos."
 
+msgid "Opens each in a tab of its own and reads their profiles"
+msgstr "Abre cada um numa aba própria e lê os perfis"
+
+msgid "Opens the host in a new tab. Typing alone never scans."
+msgstr "Abre o host numa aba nova. Digitar sozinho nunca escaneia."
+
 msgid "Opens this PC's C: drive: the path is the same on each PC"
 msgstr "Abre o disco C: deste PC: o caminho é o mesmo em cada PC"
+
+#, python-brace-format
+msgid "Opens {host} in a tab and reads its profiles"
+msgstr "Abre {host} numa aba e lê os perfis dele"
 
 #, python-brace-format
 msgid "Opens {host}'s C: drive, to pick the file there"
@@ -2384,9 +2446,6 @@ msgstr "Opcional: pedida na primeira vez que precisar"
 
 msgid "Options:"
 msgstr "Opções:"
-
-msgid "Or double-click a PC in the list."
-msgstr "Ou dois cliques num PC da lista."
 
 msgid "Or give just a name and an address on each line."
 msgstr "Ou coloque só um nome e um endereço em cada linha."
@@ -2485,8 +2544,8 @@ msgstr "Pessoa"
 msgid "Personal"
 msgstr "Pessoal"
 
-msgid "Pick a PC in the list and click Scan, or double-click it."
-msgstr "Marque um PC da lista e clique em Escanear, ou dê dois cliques nele."
+msgid "Pick hosts in the list first"
+msgstr "Selecione hosts na lista primeiro"
 
 #, python-brace-format
 msgid "Picked tags: {tags}"
@@ -2543,11 +2602,23 @@ msgstr "Imprimindo"
 msgid "Profile"
 msgstr "Perfil"
 
+msgid "Profiles"
+msgstr "Perfis"
+
+msgid "Profiles found by the last scan"
+msgstr "Perfis encontrados no último escaneamento"
+
+msgid "Profiles the last scan found that can be deleted"
+msgstr "Perfis do último escaneamento que podem ser excluídos"
+
 msgid "Profiles you changed or made yourself stay as they are."
 msgstr "Os perfis que você alterou ou criou continuam como estão."
 
 msgid "Programs (*.exe)"
 msgstr "Programas (*.exe)"
+
+msgid "Progress"
+msgstr "Andamento"
 
 msgid "Protected"
 msgstr "Protegido"
@@ -2564,9 +2635,6 @@ msgstr "Fabricante"
 msgid "Put in &group"
 msgstr "Colocar no &grupo"
 
-msgid "Queue"
-msgstr "Fila"
-
 msgid "Queued"
 msgstr "Na fila"
 
@@ -2575,6 +2643,12 @@ msgstr "Verificação rápida"
 
 msgid "Quit"
 msgstr "Sair"
+
+msgid "Quit CapyPanel"
+msgstr "Sair do CapyPanel"
+
+msgid "Quitting now cancels the profiles still queued. The profile being deleted on each host finishes first; CapyPanel quits after that."
+msgstr "Sair agora cancela os perfis ainda na fila. O perfil sendo excluído em cada host termina primeiro; o CapyPanel sai depois disso."
 
 msgid "Re&move"
 msgstr "Re&mover"
@@ -2600,9 +2674,6 @@ msgstr "Ler licença"
 msgid "Read the status and supplies of every printer shown (F5)"
 msgstr "Lê o status e os suprimentos de todas as impressoras exibidas (F5)"
 
-msgid "Read this PC's profiles again"
-msgstr "Lê os perfis deste PC de novo"
-
 msgid "Read-only"
 msgstr "Somente leitura"
 
@@ -2611,10 +2682,6 @@ msgstr "Leitura/gravação"
 
 msgid "Reading the folder…"
 msgstr "Lendo a pasta…"
-
-#, python-brace-format
-msgid "Reading {host}'s profiles…"
-msgstr "Lendo os perfis de {host}…"
 
 #, python-brace-format
 msgid "Reading {host}…"
@@ -2632,10 +2699,6 @@ msgstr "Lê estas impressoras de novo agora"
 
 msgid "Ready"
 msgstr "Pronta"
-
-msgctxt "profile"
-msgid "Ready"
-msgstr "Pronto"
 
 msgid "Recent"
 msgstr "Recentes"
@@ -2679,6 +2742,10 @@ msgstr "Recusada"
 #, python-brace-format
 msgid "Refused at {when}: {why}"
 msgstr "Recusada às {when}: {why}"
+
+#, python-brace-format
+msgid "Refused the account {account}"
+msgstr "Recusou a conta {account}"
 
 msgid "Registry entry, no folder"
 msgstr "Registro sem pasta"
@@ -2871,6 +2938,9 @@ msgstr "Executa sem perguntar."
 msgid "Runs {path} on the PC."
 msgstr "Executa {path} no PC."
 
+msgid "SELECTED HOST"
+msgstr "HOST SELECIONADO"
+
 msgid "SID"
 msgstr "SID"
 
@@ -2943,18 +3013,40 @@ msgstr "Salvos no Gerenciador de Credenciais:"
 msgid "Scan"
 msgstr "Escanear"
 
-msgid "Scan a PC to see its profiles."
-msgstr "Escaneie um PC para ver os perfis dele."
+msgctxt "column"
+msgid "Scan"
+msgstr "Escaneamento"
 
 msgid "Scan again"
 msgstr "Escanear de novo"
 
 #, python-brace-format
-msgid "Scan {pc}"
-msgstr "Escanear {pc}"
+msgid "Scan {host}"
+msgstr "Escanear {host}"
 
-msgid "Scanning only reads. Nothing is deleted before you tick it, ask for it and confirm."
-msgstr "Escanear só lê. Nada é excluído antes de você marcar, pedir e confirmar."
+#, python-brace-format
+msgid "Scan {n} host"
+msgid_plural "Scan {n} hosts"
+msgstr[0] "Escanear {n} host"
+msgstr[1] "Escanear {n} hosts"
+
+msgid "Scanned at"
+msgstr "Escaneado às"
+
+#, python-brace-format
+msgid "Scanned at {time}"
+msgstr "Escaneado às {time}"
+
+msgid "Scanning the profiles…"
+msgstr "Escaneando os perfis…"
+
+#, python-brace-format
+msgid "Scanning {host}'s profiles…"
+msgstr "Escaneando os perfis de {host}…"
+
+#, python-brace-format
+msgid "Scans {host}'s profiles again"
+msgstr "Escaneia os perfis de {host} de novo"
 
 msgid "Scripts"
 msgstr "Scripts"
@@ -2968,8 +3060,8 @@ msgstr "Scripts (*.ps1 *.bat *.cmd *.vbs)"
 msgid "Search"
 msgstr "Pesquisa"
 
-msgid "Search PCs"
-msgstr "Pesquisar PCs"
+msgid "Search name, address"
+msgstr "Pesquisar nome, endereço"
 
 msgid "Search programs"
 msgstr "Pesquisar programas"
@@ -3101,9 +3193,6 @@ msgid_plural "Showing the <b>{n} printers</b> that need attention."
 msgstr[0] "Mostrando a <b>{n} impressora</b> que requer atenção."
 msgstr[1] "Mostrando as <b>{n} impressoras</b> que requerem atenção."
 
-msgid "Shows the PCs of one group"
-msgstr "Mostra os PCs de um grupo"
-
 #, python-brace-format
 msgid "Shut down {host}"
 msgstr "Desligar {host}"
@@ -3139,13 +3228,6 @@ msgstr "Entra com"
 
 msgid "Size"
 msgstr "Tamanho"
-
-msgid "Sizes counted."
-msgstr "Tamanhos contados."
-
-#, python-brace-format
-msgid "Sizes counted; {n} couldn't be read."
-msgstr "Tamanhos contados; {n} não puderam ser lidos."
 
 msgid "Skipped"
 msgstr "Ignorado"
@@ -3212,11 +3294,8 @@ msgstr "Status, usuários conectados e dados do PC, um depois do outro."
 msgid "Stop"
 msgstr "Parar"
 
-msgid "Stop at once; sizes already counted stay"
-msgstr "Para na hora; os tamanhos já contados ficam"
-
-msgid "Stop counting"
-msgstr "Parar a contagem"
+msgid "Stop the count"
+msgstr "Parar o cálculo"
 
 msgid "Stopped"
 msgstr "Parada"
@@ -3238,6 +3317,9 @@ msgstr[1] "Parado: {n} impressoras não foram verificadas."
 
 msgid "Stops a restart or shutdown that is still waiting."
 msgstr "Cancela uma reinicialização ou desligamento que ainda está aguardando."
+
+msgid "Stops at once; sizes already counted stay"
+msgstr "Para na hora; os tamanhos já contados ficam"
 
 msgid "Supplies"
 msgstr "Suprimentos"
@@ -3321,9 +3403,6 @@ msgstr "O PC respondeu, mas a leitura demorou demais e foi interrompida."
 
 msgid "The PC answered, but this account isn't an administrator on it, or its password changed."
 msgstr "O PC respondeu, mas esta conta não é administradora nele, ou a senha mudou."
-
-msgid "The PC is checked again before each delete: anyone who signed in since the scan is skipped. Every delete goes in the log."
-msgstr "O PC é verificado de novo antes de cada exclusão: quem tiver entrado desde a leitura é pulado. Cada exclusão fica no log."
 
 msgid "The PC's C: drive in File Explorer."
 msgstr "A unidade C: do PC no Explorador de Arquivos."
@@ -3411,6 +3490,12 @@ msgstr "A pasta “{folder}” foi criada por outro usuário, então o CapyPanel
 msgid "The groups changed meanwhile; try again."
 msgstr "Os grupos mudaram enquanto isso; tente de novo."
 
+msgid "The history has nothing yet."
+msgstr "O histórico ainda não tem nada."
+
+msgid "The host is checked again before each delete: anyone who signed in since the scan is skipped. Every delete goes in the history."
+msgstr "O host é verificado de novo antes de cada exclusão: quem tiver entrado desde o escaneamento é ignorado. Cada exclusão fica no histórico."
+
 msgid "The hosts' own fields, which Import hosts reads back: to move hosts to a list."
 msgstr "Os campos dos próprios hosts, que Importar hosts lê de volta: para levar hosts a uma lista."
 
@@ -3432,9 +3517,6 @@ msgstr "A lista abre neste grupo"
 #, python-brace-format
 msgid "The list “{path}” doesn't exist anymore."
 msgstr "A lista “{path}” não existe mais."
-
-msgid "The log has nothing yet."
-msgstr "O log ainda não tem nada."
 
 msgid "The logged-on user's profile folder."
 msgstr "A pasta de perfil do usuário logado."
@@ -3498,6 +3580,9 @@ msgstr "As “options” do perfil devem ser uma lista de ids de opções."
 #, python-brace-format
 msgid "The profile's “{key}” must be lowercase letters, digits, - or _."
 msgstr "O “{key}” do perfil deve ter só letras minúsculas, dígitos, - ou _."
+
+msgid "The profiles show once the host is scanned."
+msgstr "Os perfis aparecem quando o host for escaneado."
 
 msgid "The programs installed for every user of the PC."
 msgstr "Os programas instalados para todos os usuários do PC."
@@ -3636,8 +3721,8 @@ msgstr "Esta lista precisa de uma linha de cabeçalho."
 msgid "This list was saved by a newer version of CapyPanel. Update the app to open it."
 msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o aplicativo para abri-la."
 
-msgid "This only reads. Nothing on the PC changes."
-msgstr "Isto só lê. Nada muda no PC."
+msgid "This only reads. Nothing on the host changes."
+msgstr "Isto só lê. Nada muda no host."
 
 msgid "This person is signed in now. It can only be deleted after they sign out."
 msgstr "Esta pessoa está conectada agora. Só pode ser excluído depois que ela sair."
@@ -3820,6 +3905,13 @@ msgstr "Configurações do visualizador (*{extension})"
 msgid "Viewer settings:"
 msgstr "Configurações do visualizador:"
 
+#, python-brace-format
+msgid "Waiting ({n})"
+msgstr "Na fila ({n})"
+
+msgid "Waiting to scan"
+msgstr "Na fila para escanear"
+
 msgid "Warming up"
 msgstr "Aquecendo"
 
@@ -3840,6 +3932,9 @@ msgstr "O que o ✕ da janela faz. Na bandeja, a atualização sozinha e os avis
 
 msgid "When &closing"
 msgstr "Ao &fechar"
+
+msgid "When the host was scanned, or where its scan is"
+msgstr "Quando o host foi escaneado, ou em que ponto está o escaneamento"
 
 msgid "Where"
 msgstr "Onde"
@@ -3957,6 +4052,9 @@ msgstr "Só suas: guardadas nas suas próprias configurações, nunca nas listas
 msgid "access denied. It needs an admin account on that PC."
 msgstr "acesso negado. É preciso uma conta de administrador naquele PC."
 
+msgid "account refused"
+msgstr "conta recusada"
+
 msgid "active"
 msgstr "ativa"
 
@@ -3992,6 +4090,9 @@ msgstr "no computador"
 msgid "brand"
 msgstr "marca"
 
+msgid "calculating sizes"
+msgstr "calculando tamanhos"
+
 msgid "can't be read"
 msgstr "não pode ser lido"
 
@@ -4005,9 +4106,6 @@ msgstr "cancelado: {n} não começaram"
 msgid "changed, review before use"
 msgstr "alterado, revise antes de usar"
 
-msgid "checking and deleting…"
-msgstr "verificando e excluindo…"
-
 #, python-brace-format
 msgid "clear caches for {user}"
 msgstr "limpar os caches de {user}"
@@ -4017,7 +4115,7 @@ msgid "clear the queue of {printer}"
 msgstr "limpar a fila de {printer}"
 
 msgid "couldn't be read"
-msgstr "não foi possível ler"
+msgstr "não foi lido"
 
 msgid "counting…"
 msgstr "contando…"
@@ -4028,6 +4126,16 @@ msgstr "excluído"
 #, python-brace-format
 msgid "deleted, {size}"
 msgstr "excluído, {size}"
+
+#, python-brace-format
+msgid "deleting {n} of {total}"
+msgstr "excluindo {n} de {total}"
+
+msgid "deleting…"
+msgstr "excluindo…"
+
+msgid "didn't answer"
+msgstr "não respondeu"
 
 #, python-brace-format
 msgid "disconnect {user}"
@@ -4160,9 +4268,8 @@ msgstr "modo portátil"
 msgid "programs"
 msgstr "programas"
 
-#, python-brace-format
-msgid "read at {time}"
-msgstr "lido às {time}"
+msgid "queued"
+msgstr "na fila"
 
 msgid "read the PC facts"
 msgstr "ler os dados do PC"
@@ -4179,9 +4286,6 @@ msgstr "ler as impressoras"
 msgid "read-only"
 msgstr "somente leitura"
 
-msgid "reading…"
-msgstr "lendo…"
-
 msgid "restart it"
 msgstr "reiniciá-lo"
 
@@ -4194,6 +4298,13 @@ msgstr "executar {name}"
 
 msgid "running"
 msgstr "em execução"
+
+#, python-brace-format
+msgid "scanned at {time}"
+msgstr "escaneado às {time}"
+
+msgid "scanning…"
+msgstr "escaneando…"
 
 msgid "send a message"
 msgstr "enviar uma mensagem"
@@ -4328,6 +4439,10 @@ msgid "{colour}: some left"
 msgstr "{colour}: ainda há"
 
 #, python-brace-format
+msgid "{counts}. See the history."
+msgstr "{counts}. Veja o histórico."
+
+#, python-brace-format
 msgid "{count} on {host} · read at {when}"
 msgstr "{count} em {host} · lido às {when}"
 
@@ -4352,6 +4467,10 @@ msgid "{host} is back online"
 msgstr "{host} está online de novo"
 
 #, python-brace-format
+msgid "{host} is deleting profiles: its tab closes once it ends. Use Cancel the rest to stop it sooner."
+msgstr "{host} está excluindo perfis: a aba fecha quando terminar. Use Cancelar o restante para parar antes."
+
+#, python-brace-format
 msgid "{host} is restarting."
 msgstr "{host} está reiniciando."
 
@@ -4372,6 +4491,10 @@ msgid "{host} shuts down at {when}."
 msgstr "{host} desliga às {when}."
 
 #, python-brace-format
+msgid "{host} waits for its turn"
+msgstr "{host} aguarda a vez"
+
+#, python-brace-format
 msgid "{host} · account refused"
 msgstr "{host} · conta recusada"
 
@@ -4380,20 +4503,24 @@ msgid "{host} · couldn't be read"
 msgstr "{host} · não foi lido"
 
 #, python-brace-format
-msgid "{host} · deleting {n} of {total}"
-msgstr "{host} · excluindo {n} de {total}"
+msgid "{host} · deleting profile {n} of {total}"
+msgstr "{host} · excluindo o perfil {n} de {total}"
 
 #, python-brace-format
 msgid "{host} · didn't answer"
 msgstr "{host} · não respondeu"
 
 #, python-brace-format
-msgid "{host} · reading…"
-msgstr "{host} · lendo…"
+msgid "{host} · profile {n} of {total} · since {time}"
+msgstr "{host} · perfil {n} de {total} · desde {time}"
 
 #, python-brace-format
-msgid "{host} · {n} of {total} · since {time}"
-msgstr "{host} · {n} de {total} · desde {time}"
+msgid "{host}: sizes counted."
+msgstr "{host}: tamanhos contados."
+
+#, python-brace-format
+msgid "{host}: sizes counted; {n} couldn't be read."
+msgstr "{host}: tamanhos contados; {n} não puderam ser lidos."
 
 #, python-brace-format
 msgid "{kind} from {computer}"
@@ -4519,6 +4646,16 @@ msgstr[0] "{n} excluído"
 msgstr[1] "{n} excluídos"
 
 #, python-brace-format
+msgid "{n} deleting profiles"
+msgstr "{n} excluindo perfis"
+
+#, python-brace-format
+msgid "{n} done"
+msgid_plural "{n} done"
+msgstr[0] "{n} concluído"
+msgstr[1] "{n} concluídos"
+
+#, python-brace-format
 msgid "{n} failed"
 msgid_plural "{n} failed"
 msgstr[0] "{n} falhou"
@@ -4574,6 +4711,18 @@ msgstr[0] "{n} host não tem endereço e foi ignorado: {names}"
 msgstr[1] "{n} hosts não têm endereço e foram ignorados: {names}"
 
 #, python-brace-format
+msgid "{n} host in tabs"
+msgid_plural "{n} hosts in tabs"
+msgstr[0] "{n} host em abas"
+msgstr[1] "{n} hosts em abas"
+
+#, python-brace-format
+msgid "{n} host is still deleting profiles"
+msgid_plural "{n} hosts are still deleting profiles"
+msgstr[0] "{n} host ainda excluindo perfis"
+msgstr[1] "{n} hosts ainda excluindo perfis"
+
+#, python-brace-format
 msgid "{n} host selected"
 msgid_plural "{n} hosts selected"
 msgstr[0] "{n} host selecionado"
@@ -4594,6 +4743,10 @@ msgstr[1] "{n} hosts serão adicionados."
 #, python-brace-format
 msgid "{n} in Credential Manager"
 msgstr "{n} no Gerenciador de Credenciais"
+
+#, python-brace-format
+msgid "{n} in tabs"
+msgstr "{n} em abas"
 
 #, python-brace-format
 msgid "{n} kept: {places}."
@@ -4680,6 +4833,12 @@ msgstr[0] "{n} perfil"
 msgstr[1] "{n} perfis"
 
 #, python-brace-format
+msgid "{n} profile deleted"
+msgid_plural "{n} profiles deleted"
+msgstr[0] "{n} perfil excluído"
+msgstr[1] "{n} perfis excluídos"
+
+#, python-brace-format
 msgid "{n} profiles selected"
 msgstr "{n} perfis selecionados"
 
@@ -4688,6 +4847,10 @@ msgid "{n} program"
 msgid_plural "{n} programs"
 msgstr[0] "{n} programa"
 msgstr[1] "{n} programas"
+
+#, python-brace-format
+msgid "{n} scanning"
+msgstr "{n} escaneando"
 
 #, python-brace-format
 msgid "{n} selected"
@@ -4775,6 +4938,10 @@ msgstr "{source} · obtido em {when}"
 #, python-brace-format
 msgid "{start} to {end}"
 msgstr "{start} a {end}"
+
+#, python-brace-format
+msgid "{status} · checked by Hosts at {time}"
+msgstr "{status} · verificado pelo Hosts às {time}"
 
 #, python-brace-format
 msgid "{status} · checked {when}"

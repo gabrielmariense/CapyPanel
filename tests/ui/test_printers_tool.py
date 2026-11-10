@@ -51,6 +51,9 @@ class FakeShell:
     def tool(self, tool_id: str) -> None:
         return None  # no other tool: Printers builds on none
 
+    def quit_app(self) -> None:
+        pass
+
 
 @pytest.fixture
 def shell(tmp_path: Path) -> FakeShell:

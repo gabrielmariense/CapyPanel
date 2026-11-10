@@ -489,6 +489,10 @@ class MainWindow(QMainWindow):
             if choice == settings.CLOSE_TRAY:
                 self.to_tray()
             return
+        if not all(tool.quit_question(self) for tool in self.tools.values()):
+            event.ignore()
+            self._quitting = False
+            return
         if not self._in_tray:  # saved when it went there, as it was shown
             self._save_state()
         self.tray.set_shown(False)

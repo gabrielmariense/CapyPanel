@@ -1,14 +1,13 @@
-"""The parts of the User profiles page: the PCs on the left, the header and the profiles table in
-the middle (or a card saying what to do, or what went wrong), a profile's details on the right."""
+"""The parts of a host's tab in the User profiles tool: its box (the host's name, the filters and
+the profiles table, or a card saying what's happening or what went wrong), a profile's details,
+the Delete window and the progress of a delete run."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QPalette
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QCheckBox,
     QComboBox,
     QFrame,
@@ -18,31 +17,27 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QProgressBar,
     QPushButton,
-    QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
-from capypanel.core.hosts.model import NO_GROUP, Host, HostList
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.user_profiles import Deleted, Kind, Outcome, Profile
 from capypanel.ui.hosts_tool.command_windows import Question, output_box
-from capypanel.ui.hosts_tool.runner import HostTarget, escape
+from capypanel.ui.hosts_tool.runner import escape
 from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import DetailsPanel
-from capypanel.ui.list_workspace.panels import SearchBox, natural_key, pane_title
-from capypanel.ui.menus import MenuCombo
+from capypanel.ui.list_workspace.panels import natural_key
 from capypanel.ui.profiles_tool import rows
 from capypanel.ui.profiles_tool.rows import Filters, Result
 from capypanel.ui.tables import fit_rows, grid_table
 
-LEFT, RIGHT = 206, 284  # px: the PCs panel and Details, at a normal font size
+LEFT, RIGHT = 234, 284  # px: the Groups panel and the right panel, at a normal font size
 TICK, USER, USED, SIZE, KIND, STATE = range(6)  # the table's columns
 SORT_ROLE = Qt.ItemDataRole.UserRole + 1  # what a cell sorts by
 ARROW = 16  # px a column title needs for the sort arrow
 IDENT_ROLE = Qt.ItemDataRole.UserRole  # the row's profile
-ALL_GROUPS = "*"  # the group dropdown's first choice: every PC of the list
 
 
 def card() -> QFrame:
@@ -73,265 +68,65 @@ def _fold(text: str) -> str:
     return text.strip().casefold()
 
 
-# ---- the PCs ----
+# ---- a tab's box ----
 
 
-class PcPane(QWidget):
-    """The open host list's PCs, a group at a time: a dropdown picks the group (as the Groups
-    panel does in Hosts; a list of hundreds of PCs is no place to look for one), and a search
-    looks through the whole list. Under them, a field for any other PC. One Scan button names
-    what it would scan: the PC picked in the list, or the one typed. Picking a PC empties the
-    field and typing clears the pick, so there's never a doubt which. A double-click on a PC
-    scans it; typing never does by itself."""
-
-    scan_requested = Signal(object)  # a HostTarget
-    list_picked = Signal(object)  # a host list's file (Path)
-    group_picked = Signal(str)  # a group's id, ALL_GROUPS or NO_GROUP
-
-    def __init__(self, choices: Callable[[], list[tuple[Path, str, bool]]]) -> None:
-        super().__init__()
-        self._choices = choices
-        self._hosts: list[Host] = []  # every PC of the list that can be reached
-        self._list: HostList | None = None
-        self._group = ALL_GROUPS
-        self.picker = MenuCombo()
-        self.picker.setObjectName("listPicker")
-        self.picker.menu().setToolTipsVisible(True)  # each list's path
-        self.picker.menu().aboutToShow.connect(self._fill_menu)
-        self.groups = QComboBox()
-        self.groups.setSizeAdjustPolicy(
-            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
-        )  # a long group name never widens the panel; the list that drops down shows it whole
-        self.groups.setMinimumContentsLength(8)
-        self.groups.activated.connect(self._group_chosen)
-        self.search = SearchBox()
-        self.search.textChanged.connect(self._show_hosts)
-        self.search.to_results.connect(self._to_list)
-        self.tree = QTreeWidget()
-        self.tree.setObjectName("flat")
-        self.tree.setHeaderHidden(True)
-        self.tree.setRootIsDecorated(False)
-        self.tree.setColumnCount(2)
-        self.tree.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.tree.itemSelectionChanged.connect(self._picked)
-        self.tree.itemDoubleClicked.connect(lambda _item, _column: self._scan())
-        self.other_title = pane_title("")
-        self.other = QLineEdit()
-        self.other.textEdited.connect(self._typed)
-        self.scan_button = QPushButton()
-        self.scan_button.setAutoDefault(False)  # Enter in the field never scans
-        self.scan_button.clicked.connect(self._scan)
-        self.tip = hint()
-        self.tip.setContentsMargins(6, 0, 0, 2)
-        self.tip.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        box = card()
-        inside = QVBoxLayout(box)
-        inside.setContentsMargins(4, 4, 4, 6)
-        inside.setSpacing(4)
-        inside.addWidget(self.groups)
-        inside.addWidget(self.search)
-        inside.addWidget(self.tree, 1)
-        inside.addWidget(_divider())
-        inside.addWidget(self.other_title)
-        for widget, gap in ((self.other, 6), (self.scan_button, 0)):
-            row = QHBoxLayout()
-            row.setContentsMargins(4, 0, 4, 0)
-            row.addWidget(widget)
-            inside.addLayout(row)
-            inside.addSpacing(gap)
-        inside.addWidget(self.tip)
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.picker)
-        layout.addWidget(box, 1)
-        self.retranslate()
-
-    def retranslate(self) -> None:
-        # Not "Search name, address" as the wider panels say: it's cut at this width.
-        self.search.setPlaceholderText(_("Search PCs"))
-        self.search.setToolTip(_("Looks through every group for PCs with this name or address"))
-        self.groups.setToolTip(_("Shows the PCs of one group"))
-        self._fill_groups()
-        self.other_title.setText(_("Another PC"))
-        self.other.setPlaceholderText(_("Name or address"))
-        self.tip.setText(_("Or double-click a PC in the list."))
-        self._name_button()
-
-    def show_list(
-        self, name: str, tip: str, host_list: HostList | None, group: str = ALL_GROUPS
-    ) -> None:
-        """The open host list: its name on the dropdown, its groups, and the PCs of `group`
-        that can be reached (ALL_GROUPS when the list has no such group any more)."""
-        self.picker.setText(name)
-        self.picker.setToolTip(tip)
-        self._list = host_list
-        hosts = host_list.hosts if host_list is not None else ()
-        self._hosts = sorted(
-            (h for h in hosts if h.connect_address), key=lambda h: natural_key(h.name)
-        )
-        self._group = group
-        self._fill_groups()
-        self._show_hosts()
-
-    def group(self) -> str:
-        """The group on show: its id, ALL_GROUPS or NO_GROUP."""
-        return self._group
-
-    def _fill_groups(self) -> None:
-        """Every PC first, then the PCs in no group, then the groups as Hosts' Groups panel
-        lists them, a level deeper a step to the right, each with how many PCs it holds."""
-        host_list = self._list
-        self.groups.blockSignals(True)
-        self.groups.clear()
-        self.groups.addItem(f"{_('All hosts')} ({len(self._hosts)})", ALL_GROUPS)
-        if host_list is not None:
-            loose = sum(1 for h in self._hosts if h.group == NO_GROUP)
-            if loose:
-                self.groups.addItem(f"{_('No group')} ({loose})", NO_GROUP)
-            reachable = {h.id for h in self._hosts}
-
-            def add(parent: str | None, depth: int) -> None:
-                for group in host_list.children(parent):
-                    inside = sum(1 for h in host_list.hosts_in(group.id) if h.id in reachable)
-                    self.groups.addItem(f"{'    ' * depth}{group.name} ({inside})", group.id)
-                    add(group.id, depth + 1)
-
-            add(None, 0)
-        index = self.groups.findData(self._group)
-        if index < 0:  # the group is gone, or another list was opened
-            index, self._group = 0, ALL_GROUPS
-        self.groups.setCurrentIndex(index)
-        self.groups.setEnabled(self.groups.count() > 1)
-        self.groups.blockSignals(False)
-
-    def _group_chosen(self, index: int) -> None:
-        picked = self.groups.itemData(index)
-        if isinstance(picked, str) and picked != self._group:
-            self._group = picked
-            self.search.clear()  # the group is on show, not the last search
-            self._show_hosts()
-            self.group_picked.emit(picked)
-
-    def _in_group(self) -> list[Host]:
-        """The PCs of the group on show, the ones in its groups inside it too."""
-        if self._group == ALL_GROUPS or self._list is None:
-            return self._hosts
-        if self._group == NO_GROUP:
-            return [h for h in self._hosts if h.group == NO_GROUP]
-        inside = {h.id for h in self._list.hosts_in(self._group)}
-        return [h for h in self._hosts if h.id in inside]
-
-    def target(self) -> HostTarget | None:
-        """What Scan would scan now."""
-        typed = self.other.text().strip()
-        if typed:
-            known = next(
-                (h for h in self._hosts if _fold(typed) in (_fold(h.name), _fold(h.address))),
-                None,
-            )
-            return _target(known) if known else HostTarget(f"@{typed}", typed, typed)
-        item = self.tree.currentItem()
-        picked = item.data(0, IDENT_ROLE) if item is not None and item.isSelected() else None
-        host = next((h for h in self._hosts if h.id == picked), None)
-        return _target(host) if host else None
-
-    def pick(self, key: str) -> None:
-        """Marks the PC with this id, when the list has it."""
-        for index in range(self.tree.topLevelItemCount()):
-            item = self.tree.topLevelItem(index)
-            if item is not None and item.data(0, IDENT_ROLE) == key:
-                self.tree.setCurrentItem(item)
-                return
-
-    def _show_hosts(self) -> None:
-        kept = self.tree.currentItem()
-        picked = kept.data(0, IDENT_ROLE) if kept is not None and kept.isSelected() else None
-        needle = _fold(self.search.text())
-        self.tree.blockSignals(True)
-        self.tree.clear()
-        muted = QBrush(self.palette().color(QPalette.ColorRole.PlaceholderText))
-        for host in self._hosts if needle else self._in_group():  # a search: the whole list
-            if needle and needle not in _fold(host.name) and needle not in _fold(host.address):
-                continue
-            item = QTreeWidgetItem([host.name, host.address])
-            item.setData(0, IDENT_ROLE, host.id)
-            item.setForeground(1, muted)
-            self.tree.addTopLevelItem(item)
-            if host.id == picked:
-                self.tree.setCurrentItem(item)
-        self.tree.resizeColumnToContents(0)
-        self.tree.setColumnWidth(0, self.tree.columnWidth(0) + 14)
-        self.tree.blockSignals(False)
-        self._name_button()
-
-    def _picked(self) -> None:
-        if self.tree.selectedItems():
-            self.other.clear()
-        self._name_button()
-
-    def _typed(self, text: str) -> None:
-        if text.strip():
-            self.tree.clearSelection()
-        self._name_button()
-
-    def _to_list(self) -> None:
-        first = self.tree.topLevelItem(0)
-        if first is not None:
-            self.tree.setCurrentItem(first)
-            self.tree.setFocus(Qt.FocusReason.TabFocusReason)
-
-    def _name_button(self) -> None:
-        target = self.target()
-        self.scan_button.setEnabled(target is not None)
-        self.scan_button.setText(
-            _("Scan {pc}").format(pc=target.name) if target is not None else _("Scan")
-        )
-
-    def _scan(self) -> None:
-        target = self.target()
-        if target is not None:
-            self.scan_requested.emit(target)
-
-    def _fill_menu(self) -> None:
-        menu = self.picker.menu()
-        menu.clear()
-        for path, name, current in self._choices():
-            item = menu.addAction(name.replace("&", "&&"))
-            item.setCheckable(True)
-            item.setChecked(current)
-            item.setToolTip(str(path))
-            item.triggered.connect(lambda _c=False, p=path: self.list_picked.emit(p))
+def second_line_height() -> int:
+    """The second line's height on every tab: the taller of a search box and a dropdown, so the
+    table's top edge is at the same place whichever tab is in front."""
+    return max(QLineEdit().sizeHint().height(), QComboBox().sizeHint().height())
 
 
-def _target(host: Host) -> HostTarget:
-    return HostTarget(host.id, host.name, host.connect_address)
+class TabBox(QFrame):
+    """A tab's one box: a bold name and a grey line about it on top, a second line under them
+    (the search, or the filters), a thin rule, then `body` flush to the box's edges."""
 
-
-# ---- above the table ----
-
-
-class HeaderCard(QFrame):
-    """Which PC this is, always in sight; under it the filters, while there's a table."""
-
-    filters_changed = Signal()
-
-    def __init__(self) -> None:
+    def __init__(self, second: QWidget, body: QWidget) -> None:
         super().__init__()
         self.setObjectName("card")
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setBackgroundRole(QPalette.ColorRole.Base)
         self.setAutoFillBackground(True)
+        self.icon = QLabel()
+        self.icon.hide()
         self.name = QLabel()
         font = QFont(self.name.font())
         font.setBold(True)
-        font.setPointSizeF(font.pointSizeF() * 1.25)
+        font.setPointSizeF(font.pointSizeF() * 1.15)
         self.name.setFont(font)
         self.about = hint()
         self.about.setWordWrap(False)
         top = QHBoxLayout()
         top.setSpacing(10)
+        top.addWidget(self.icon)
         top.addWidget(self.name)
         top.addWidget(self.about, 1)
+        self.second = second
+        self.second.setFixedHeight(second_line_height())
+        head = QVBoxLayout()
+        head.setContentsMargins(12, 10, 10, 8)
+        head.setSpacing(8)
+        head.addLayout(top)
+        head.addWidget(second)
+        column = QVBoxLayout(self)
+        column.setContentsMargins(1, 1, 1, 1)
+        column.setSpacing(0)
+        column.addLayout(head)
+        column.addWidget(_divider())
+        column.addWidget(body, 1)
+
+    def show_title(self, name: str, about: str) -> None:
+        self.name.setText(name)
+        self.about.setText(about)
+
+
+class FilterRow(QWidget):
+    """A host tab's second line: which rows to show, and how many are shown."""
+
+    changed = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
         self.hide_own = QCheckBox()
         self.hide_own.setChecked(True)
         self.leftovers = QCheckBox()
@@ -339,8 +134,7 @@ class HeaderCard(QFrame):
         self.since = QComboBox()
         self.shown = hint()
         self.shown.setWordWrap(False)
-        self.filters = QWidget()
-        row = QHBoxLayout(self.filters)
+        row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(14)
         row.addWidget(self.hide_own)
@@ -353,15 +147,10 @@ class HeaderCard(QFrame):
         row.addLayout(pair)
         row.addStretch(1)
         row.addWidget(self.shown)
-        column = QVBoxLayout(self)
-        column.setContentsMargins(12, 8, 10, 8)
-        column.setSpacing(6)
-        column.addLayout(top)
-        column.addWidget(self.filters)
         self.retranslate()
-        self.hide_own.toggled.connect(self.filters_changed)
-        self.leftovers.toggled.connect(self.filters_changed)
-        self.since.currentIndexChanged.connect(self.filters_changed)
+        self.hide_own.toggled.connect(self.changed)
+        self.leftovers.toggled.connect(self.changed)
+        self.since.currentIndexChanged.connect(self.changed)
 
     def retranslate(self) -> None:
         self.hide_own.setText(_("Hide Windows' own"))
@@ -384,10 +173,6 @@ class HeaderCard(QFrame):
         self.since.addItems([rows.months_text(months) for months in rows.MONTHS])
         self.since.setCurrentIndex(picked)
         self.since.blockSignals(False)
-
-    def show_pc(self, name: str, about: str) -> None:
-        self.name.setText(name)
-        self.about.setText(about)
 
     def chosen(self) -> Filters:
         return Filters(
@@ -479,6 +264,7 @@ class ProfilesTable(QWidget):
     def __init__(self) -> None:
         super().__init__()
         self.tree = grid_table([""] * 6)
+        self.tree.setFrameShape(QFrame.Shape.NoFrame)  # flush to its box's edges
         self.tree.setUniformRowHeights(True)
         self.tree.header().setStretchLastSection(True)
         self.tree.setSortingEnabled(True)
@@ -492,6 +278,7 @@ class ProfilesTable(QWidget):
         self._results: dict[str, Result] = {}
         self._locked = False  # during a delete run no tick changes
         self._fitted = False
+        self._root = ""  # the host's Users folder
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.tree)
@@ -505,10 +292,12 @@ class ProfilesTable(QWidget):
         profiles: Sequence[Profile],
         sizes: dict[str, int | None],
         results: dict[str, Result] | None = None,
+        root: str = "",
     ) -> None:
         """`sizes`: bytes for the rows counted; None for one being counted now. `results`: how
-        the rows of a delete run stand. A tick on a row no longer shown is dropped: what's
-        ticked is always in sight."""
+        the rows of a delete run stand. `root`: the host's Users folder, for the State tips. A
+        tick on a row no longer shown is dropped: what's ticked is always in sight."""
+        self._root = root
         kept = self.selected()
         self._profiles = {p.ident: p for p in profiles}
         self._results = dict(results or {})
@@ -652,11 +441,13 @@ class ProfilesTable(QWidget):
             item.setText(STATE, rows.state_name(profile.state))
             item.setIcon(STATE, dot_icon(rows.STATE_COLORS[profile.state], 10))
             item.setData(STATE, SORT_ROLE, rows.STATE_ORDER.index(profile.state))
+            item.setToolTip(STATE, rows.state_why(profile, self._root))
         else:
             icon, color = rows.RESULT_ICONS[result]
             item.setText(STATE, _(rows.RESULT_NAMES[result]))
             item.setIcon(STATE, tabler_icon(icon, QColor(color), 16))
             item.setData(STATE, SORT_ROLE, 10 + list(Result).index(result))
+            item.setToolTip(STATE, "")
         flags = item.flags() & ~Qt.ItemFlag.ItemIsUserCheckable
         if self._tickable(ident):
             if not self._locked:
@@ -860,8 +651,8 @@ class DeleteDialog(Question):
         self.total = hint(total)
         note = hint(
             _(
-                "The PC is checked again before each delete: anyone who signed in since the "
-                "scan is skipped. Every delete goes in the log."
+                "The host is checked again before each delete: anyone who signed in since the "
+                "scan is skipped. Every delete goes in the history."
             )
         )
         self.word = QLineEdit()
@@ -884,9 +675,10 @@ class DeleteDialog(Question):
 
 
 class ProgressPanel(QWidget):
-    """In Details' place while profiles are deleted, and after: the queue with each result, a
-    line in the log per step, and Cancel the rest. Once it's over, Open the log and Close,
-    which brings the details back."""
+    """In Details' place while a host's profiles are deleted, and after: where the run is, a
+    line in the history when a profile starts and when it ends, and Cancel the rest. No queue of
+    its own: the profiles table's State column is the queue. Once it's over, Open the history
+    and Close, which brings the details back."""
 
     cancel_requested = Signal()
     log_requested = Signal()
@@ -904,8 +696,6 @@ class ProgressPanel(QWidget):
         self.bar.setObjectName("thin")
         self.bar.setTextVisible(False)
         self.bar.setFixedHeight(8)
-        self.queue = grid_table(["", ""])
-        self.queue.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.log = output_box("")
         self.log.setFont(QFont("Consolas", 8))
         self.cancel_button = QPushButton()
@@ -917,7 +707,7 @@ class ProgressPanel(QWidget):
         self.cancel_button.clicked.connect(self._cancel)
         self.log_button.clicked.connect(self.log_requested)
         self.close_button.clicked.connect(self.closed)
-        self._queue_title, self._log_title = QLabel(), QLabel()
+        self._log_title = QLabel()
         box = card()
         column = QVBoxLayout(box)
         column.setContentsMargins(14, 12, 14, 12)
@@ -926,8 +716,6 @@ class ProgressPanel(QWidget):
             column.addWidget(widget)
         column.addSpacing(6)
         column.addWidget(self.bar)
-        self._section(column, self._queue_title)
-        column.addWidget(self.queue)
         self._section(column, self._log_title)
         column.addWidget(self.log)
         column.addSpacing(8)
@@ -942,7 +730,6 @@ class ProgressPanel(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(box)
-        self._users: dict[str, QTreeWidgetItem] = {}
         self._over = False
         self._show_buttons()  # or the buttons of both states set the panel's narrowest width
         self.retranslate()
@@ -959,58 +746,24 @@ class ProgressPanel(QWidget):
         layout.addWidget(heading)
 
     def retranslate(self) -> None:
-        self._queue_title.setText(_("Queue"))
-        self._log_title.setText(_("Log"))
-        self.queue.setHeaderLabels([_("User"), _("Result")])
+        self._log_title.setText(_("History"))
         self.cancel_button.setText(_("Cancel the rest"))
-        self.log_button.setText(_("Open the log"))
+        self.log_button.setText(_("Open the history"))
         self.close_button.setText(_("Close"))
         self.note.setText(_("The current profile finishes first; the queued ones don't start."))
         self._show_title()
 
-    def start(self, profiles: Sequence[Profile]) -> None:
-        """A new run: every profile queued, an empty log."""
+    def start(self, total: int) -> None:
+        """A new run of `total` profiles, an empty history."""
         self._over = False
-        self._users = {}
-        self.queue.clear()
-        for profile in profiles:
-            item = QTreeWidgetItem([rows.user_text(profile), ""])
-            self.queue.addTopLevelItem(item)
-            self._users[profile.ident] = item
-            self.show_result(profile.ident, Result.QUEUED)
-        self.queue.header().setStretchLastSection(True)
-        self.queue.resizeColumnToContents(0)
-        self.queue.setColumnWidth(0, self.queue.columnWidth(0) + 10)
-        fit_rows(self.queue)
         self.log.clear()
-        self.log.setFixedHeight(110)
-        self.bar.setRange(0, len(profiles))
+        self.log.setFixedHeight(130)
+        self.bar.setRange(0, total)
         self.bar.setValue(0)
         self.second.hide()
         self.cancel_button.setEnabled(True)
         self._show_buttons()
         self._show_title()
-
-    def show_result(self, ident: str, result: Result | None) -> None:
-        """None: taken out of the run (the rest was cancelled)."""
-        item = self._users.get(ident)
-        if item is None:
-            return
-        if result is None:
-            item.setText(1, _("Not started"))
-            item.setIcon(1, tabler_icon(*self._look(Result.QUEUED), 16))
-        else:
-            item.setText(1, _(rows.RESULT_NAMES[result]))
-            item.setIcon(1, tabler_icon(*self._look(result), 16))
-        greyed = result in (None, Result.QUEUED)
-        role = QPalette.ColorRole.PlaceholderText if greyed else QPalette.ColorRole.Text
-        for column in range(2):
-            item.setForeground(column, QBrush(self.palette().color(role)))
-
-    @staticmethod
-    def _look(result: Result) -> tuple[str, QColor]:
-        icon, color = rows.RESULT_ICONS[result]
-        return icon, QColor(color)
 
     def show_progress(self, text: str, ended: int) -> None:
         """The grey line under the title, and how many of the queue have ended."""
@@ -1027,7 +780,7 @@ class ProgressPanel(QWidget):
         self.second.setText(second)
         self.second.show()
         self.bar.setValue(self.bar.maximum())
-        self.log.setFixedHeight(150)
+        self.log.setFixedHeight(170)
         self._show_buttons()
         self._show_title()
 

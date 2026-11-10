@@ -1,6 +1,7 @@
-"""The User profiles tool's page: the PCs it takes from Hosts' open list, the Scan button that
-names its target, the profiles table with its filters and order, a profile's details, sizes, and
-what a failed scan says. Nothing here reaches a PC: the scan and the sizes are answered by hand."""
+"""The User profiles tool: the Hosts tab with the hosts of Hosts' open list, a tab per host opened,
+the profiles table with its filters and order, a profile's details, sizes, deletes, what a failed
+scan says, and the limit on reads and counts shared by every tab. Nothing here reaches a PC: the
+scan, the sizes and the deletes are answered by hand."""
 
 from collections.abc import Callable, Iterator
 from datetime import UTC, datetime
@@ -9,7 +10,8 @@ from typing import Any
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEvent, QPointF, Qt
+from PySide6.QtGui import QKeyEvent, QMouseEvent
 from PySide6.QtWidgets import QApplication, QDialog
 
 from capypanel.core import settings
@@ -17,6 +19,7 @@ from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.remote import user_profiles
 from capypanel.core.remote.access import Account, Reason, RemoteError
+from capypanel.core.remote.status import Status
 from capypanel.core.remote.user_profiles import (
     Deleted,
     Kind,
@@ -26,10 +29,12 @@ from capypanel.core.remote.user_profiles import (
     State,
     Why,
 )
-from capypanel.ui.profiles_tool import panels, rows
+from capypanel.ui.profiles_tool import host_page, hosts_page, panels, rows, work
 from capypanel.ui.profiles_tool import tool as tool_ui
+from capypanel.ui.profiles_tool.host_page import HostPage, Stage
 from capypanel.ui.profiles_tool.panels import DeleteDialog
 from capypanel.ui.profiles_tool.rows import Filters
+from capypanel.ui.profiles_tool.tabs import HOSTS
 from capypanel.ui.profiles_tool.tool import ProfilesTool
 
 SID = "S-1-5-21-1004336348-1177238915-682003330-"
@@ -65,18 +70,19 @@ SIZES = {RUI.ident: 3 * GB, BIA.ident: 6 * GB, MARTA.ident: GB // 2, OLD.ident: 
 
 
 class Pc:
-    """The PC the tool talks to: what a scan and a size answer, and what was asked."""
+    """The PCs the tool talks to: what a scan and a size answer, and what was asked."""
 
     def __init__(self) -> None:
-        self.answer: Scan | BaseException = Scan("192.0.2.13", "C:\\Users", ROWS)
+        self.answers: dict[str, Scan | BaseException] = {}
         self.scanned: list[tuple[str, Account | None]] = []
         self.sized: list[str] = []
 
     def scan(self, host: str, account: Account | None = None, **_more: object) -> Scan:
         self.scanned.append((host, account))
-        if isinstance(self.answer, BaseException):
-            raise self.answer
-        return self.answer
+        answer = self.answers.get(host, Scan(host, "C:\\Users", ROWS))
+        if isinstance(answer, BaseException):
+            raise answer
+        return answer
 
     def size(self, scanned: Scan, profile: Profile, account: Account | None = None,
              **_more: object) -> int | None:  # fmt: skip
@@ -84,16 +90,31 @@ class Pc:
         return SIZES.get(profile.ident, 0)
 
 
-def _at_once(
-    work: Callable[[], Any], done: Callable[[Any], None], failed: Callable[[BaseException], None]
-) -> None:
-    """The tool's background work, done on the spot."""
-    try:
-        value = work()
-    except Exception as e:  # noqa: BLE001 - as the tool's own worker does
-        failed(e)
-    else:
-        done(value)
+class Worker:
+    """The tool's background work: done on the spot, or held until a test lets it end."""
+
+    def __init__(self) -> None:
+        self.holding = False
+        self.held: list[Callable[[], None]] = []
+
+    def start(self, job: Callable[[], Any], done: Callable[[Any], None],
+              failed: Callable[[BaseException], None], jobs: Any) -> None:  # fmt: skip
+        def run() -> None:
+            try:
+                value = job()
+            except Exception as e:  # noqa: BLE001 - as the tool's own worker does
+                failed(e)
+            else:
+                done(value)
+
+        if self.holding:
+            self.held.append(run)
+        else:
+            run()
+
+    def end(self, n: int = 1) -> None:
+        for _turn in range(n):
+            self.held.pop(0)()
 
 
 @pytest.fixture
@@ -106,7 +127,14 @@ def pc(monkeypatch: pytest.MonkeyPatch) -> Pc:
 
 
 @pytest.fixture
-def window(qapp: QApplication, tmp_path: Path, pc: Pc) -> Iterator[CapyWindow]:
+def worker(monkeypatch: pytest.MonkeyPatch) -> Worker:
+    worker = Worker()
+    monkeypatch.setattr(work, "start", worker.start)
+    return worker
+
+
+@pytest.fixture
+def window(qapp: QApplication, tmp_path: Path, pc: Pc, worker: Worker) -> Iterator[CapyWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
     hl, clinic = HostList().add_group("Clinic")
     for name, address in (("DESK-10", "192.0.2.20"), ("DESK-03", "192.0.2.13"), ("LAB-02", "")):
@@ -124,27 +152,33 @@ def window(qapp: QApplication, tmp_path: Path, pc: Pc) -> Iterator[CapyWindow]:
 def _tool(win: CapyWindow) -> ProfilesTool:
     tool = win.tools["profiles"]
     assert isinstance(tool, ProfilesTool)
-    tool._start = _at_once  # type: ignore[method-assign]
     return tool
 
 
-def _pcs(tool: ProfilesTool) -> list[str]:
-    tree = tool.pcs.tree
-    return [tree.topLevelItem(i).text(0) for i in range(tree.topLevelItemCount())]  # type: ignore[union-attr]
+def _id(win: CapyWindow, name: str) -> str:
+    doc = win.hosts.document
+    assert doc is not None
+    return next(h.id for h in doc.hosts.hosts if h.name == name)
 
 
-def _pick(tool: ProfilesTool, name: str) -> None:
-    tree = tool.pcs.tree
-    for index in range(tree.topLevelItemCount()):
-        item = tree.topLevelItem(index)
-        if item is not None and item.text(0) == name:
-            tree.setCurrentItem(item)
-            return
-    raise AssertionError(name)
+def _hosts(tool: ProfilesTool) -> list[str]:
+    return [row[hosts_page.NAME] for row in tool.hosts_page.table.texts()]
 
 
-def _pick_row(tool: ProfilesTool, user: str) -> None:
-    tree = tool.table.tree
+def _host_row(tool: ProfilesTool, name: str) -> list[str]:
+    return next(r for r in tool.hosts_page.table.texts() if r[hosts_page.NAME] == name)
+
+
+def _open(win: CapyWindow, name: str = "DESK-03", focus: bool = True) -> HostPage:
+    tool = _tool(win)
+    tool.open_hosts([_id(win, name)], focus)
+    page = tool.page(_id(win, name))
+    assert page is not None
+    return page
+
+
+def _pick_row(page: HostPage, user: str) -> None:
+    tree = page.table.tree
     for index in range(tree.topLevelItemCount()):
         item = tree.topLevelItem(index)
         if item is not None and item.text(panels.USER) == user:
@@ -153,121 +187,220 @@ def _pick_row(tool: ProfilesTool, user: str) -> None:
     raise AssertionError(user)
 
 
-def _users(tool: ProfilesTool) -> list[str]:
-    return [row[panels.USER] for row in tool.table.texts()]
+def _users(page: HostPage) -> list[str]:
+    return [row[panels.USER] for row in page.table.texts()]
 
 
-def _scanned(tool: ProfilesTool, name: str = "DESK-03") -> ProfilesTool:
-    _pick(tool, name)
-    tool.pcs.scan_button.click()
-    return tool
+def _states(page: HostPage) -> dict[str, str]:
+    return {row[panels.USER]: row[panels.STATE] for row in page.table.texts()}
 
 
-# ---- the PCs ----
+def _tab_tip(tool: ProfilesTool, page: HostPage) -> str:
+    return tool.tabs.bar.tabToolTip(tool.tabs.index_of(page.target.key))
 
 
-def test_it_is_the_third_tool_and_lists_the_pcs_of_hosts_open_list(
+# ---- the Hosts tab ----
+
+
+def test_it_is_the_third_tool_and_its_hosts_tab_lists_hosts_open_list(
     window: CapyWindow, tmp_path: Path
 ) -> None:
     tool = _tool(window)
     assert list(window.tools) == ["hosts", "printers", "profiles"]
     assert (tool.tool_name(), tool.ICON) == ("User profiles", "profile-card")
-    assert tool.pcs.picker.text() == "clinic"
-    assert _pcs(tool) == ["DESK-03", "DESK-10", "LAB-02"]  # in natural order; reachable ones
-    assert tool.status_label.text() == "No PC scanned"
-    assert tool.card is not None and tool.card.heading.text() == "Choose a PC"
-    assert not tool.bar.rescan_button.isEnabled() and not tool.bar.sizes_button.isEnabled()
+    assert tool.list_picker.text() == "clinic"
+    assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]  # natural order; reachable ones
+    assert tool.tabs.current() == HOSTS and tool.tabs.pinned.tabText(0) == "Hosts (3)"
+    assert tool.hosts_page.box.name.text() == "All hosts"
+    assert tool.hosts_page.box.about.text() == "3 hosts"
+    assert tool.status_label.text() == "3 hosts"
+    assert _host_row(tool, "DESK-03") == ["DESK-03", "192.0.2.13", "Not checked", "", "", ""]
+    bar = tool.bar
+    assert (bar.scan_button.text().strip(), bar.scan_button.isEnabled()) == ("Scan", False)
+    assert not bar.sizes_button.isEnabled() and not bar.delete_button.isEnabled()
+    assert tool.nav.add_group_button.isHidden()  # read only: groups are made in Hosts
 
     hl, group = HostList().add_group("Lab")
     hl, _host = hl.add_host("LAB-07", group.id, address="198.51.100.7")
     other = tmp_path / "lab.json"
     listfile.save(other, hl, expected=None)
-    window.hosts.open_list(other)  # Hosts opens another list: this page follows
-    assert tool.pcs.picker.text() == "lab" and _pcs(tool) == ["LAB-07"]
-    choices = {name: current for _path, name, current in tool.pcs._choices()}
-    assert (choices["clinic"], choices["lab"]) == (False, True)  # among Hosts' other lists
-    tool.pcs.list_picked.emit(tmp_path / "clinic.json")  # and its dropdown opens one in Hosts
+    window.hosts.open_list(other)  # Hosts opens another list: this tool follows
+    assert tool.list_picker.text() == "lab" and _hosts(tool) == ["LAB-07"]
+    tool._pick_list(tmp_path / "clinic.json")  # and its dropdown opens one in Hosts
     assert window.hosts.document is not None and window.hosts.document.path.name == "clinic.json"
-    assert _pcs(tool) == ["DESK-03", "DESK-10", "LAB-02"]
+    assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]
 
 
-def test_the_search_narrows_the_pcs_by_name_or_address(window: CapyWindow) -> None:
+def test_the_status_column_is_hosts_own_last_check(window: CapyWindow) -> None:
     tool = _tool(window)
-    tool.pcs.search.setText("desk")
-    assert _pcs(tool) == ["DESK-03", "DESK-10"]
-    tool.pcs.search.setText("0.2.20")
-    assert _pcs(tool) == ["DESK-10"]
-    tool.pcs.search.clear()
-    assert len(_pcs(tool)) == 3
+    key = _id(window, "DESK-03")
+    window.hosts._status_found[key] = (Status.OFFLINE, datetime.now(UTC), None)
+    window.hosts.host_changed.emit(key)
+    assert _host_row(tool, "DESK-03")[hosts_page.STATUS] == "Offline"
+    tool.hosts_page.table.select(key)
+    card = tool.hosts_page.host_card
+    assert card.isVisibleTo(tool.hosts_page.side) and card.name.text() == "DESK-03"
+    assert card.status.text().startswith("Offline · checked by Hosts at ")
 
 
-def test_scan_names_its_target_the_pc_picked_or_the_one_typed(window: CapyWindow) -> None:
+def test_the_search_looks_through_every_host_and_a_group_narrows_them(
+    window: CapyWindow, tmp_path: Path
+) -> None:
     tool = _tool(window)
-    button, other = tool.pcs.scan_button, tool.pcs.other
-    assert (button.text(), button.isEnabled()) == ("Scan", False)
-    _pick(tool, "DESK-03")
-    assert (button.text(), button.isEnabled()) == ("Scan DESK-03", True)
-    other.setText("192.0.2.50")
-    other.textEdited.emit("192.0.2.50")  # typing clears the list's pick
-    assert button.text() == "Scan 192.0.2.50" and not tool.pcs.tree.selectedItems()
-    target = tool.pcs.target()
-    assert target is not None and (target.key, target.address) == ("@192.0.2.50", "192.0.2.50")
-    _pick(tool, "DESK-10")  # picking empties the field
-    assert other.text() == "" and button.text() == "Scan DESK-10"
-    other.setText("desk-03")
-    other.textEdited.emit("desk-03")  # a PC of the list, typed: that PC, with its own account
-    target = tool.pcs.target()
-    assert target is not None and (target.name, target.address) == ("DESK-03", "192.0.2.13")
-    assert not target.key.startswith("@")
+    hl, clinic = HostList().add_group("Clinic")
+    hl, lab = hl.add_group("Lab", parent=clinic.id)
+    hl, er = hl.add_group("ER")
+    for name, group, address, tags in (
+        ("DESK-01", clinic.id, "192.0.2.11", ()), ("LAB-01", lab.id, "192.0.2.31", ("lab",)),
+        ("ER-01", er.id, "192.0.2.41", ()), ("SPARE", NO_GROUP, "192.0.2.90", ()),
+    ):  # fmt: skip
+        hl, _host = hl.add_host(name, group, address=address, tags=tags)
+    path = tmp_path / "wards.json"
+    listfile.save(path, hl, expected=None)
+    window.hosts.open_list(path)
+    assert _hosts(tool) == ["DESK-01", "ER-01", "LAB-01", "SPARE"]
+    tool.nav.select_group(clinic.id)
+    tool.nav.filter_changed.emit()
+    assert _hosts(tool) == ["DESK-01", "LAB-01"]  # the groups inside it too
+    assert tool.hosts_page.box.name.text() == "Clinic"
+    tool.hosts_page.search.setText("0.2.4")  # a search: every group
+    assert _hosts(tool) == ["ER-01"] and tool.hosts_page.box.about.text() == "1 of 4 shown"
+    tool.hosts_page.search.clear()
+    tool.nav.select_group(NO_GROUP)
+    tool.nav.filter_changed.emit()
+    assert _hosts(tool) == ["SPARE"]
+
+    # Each list comes back on the group it was left on.
+    tool.nav.select_group(er.id)
+    tool.nav.filter_changed.emit()
+    assert tool.prefs[tool_ui.VIEWS_KEY][str(path)] == ["group", er.id]
+    window.hosts.open_list(tmp_path / "clinic.json")
+    assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]
+    window.hosts.open_list(path)
+    assert _hosts(tool) == ["ER-01"]
 
 
-def test_typing_never_scans_by_itself_and_a_double_click_does(window: CapyWindow, pc: Pc) -> None:
+def test_a_group_picked_while_a_hosts_tab_is_in_front_brings_the_hosts_tab_back(
+    window: CapyWindow,
+) -> None:
     tool = _tool(window)
-    tool.pcs.other.setText("192.0.2.50")
-    tool.pcs.other.textEdited.emit("192.0.2.50")
-    tool.pcs.other.returnPressed.emit()
-    assert pc.scanned == [] and not tool.pcs.scan_button.autoDefault()
-    _pick(tool, "DESK-03")
-    item = tool.pcs.tree.currentItem()
-    assert item is not None
-    tool.pcs.tree.itemDoubleClicked.emit(item, 0)
-    assert pc.scanned == [("192.0.2.13", None)]
+    _open(window)
+    assert tool.tabs.current() == _id(window, "DESK-03")
+    tool.nav.filter_changed.emit()
+    assert tool.tabs.current() == HOSTS
 
 
-# ---- a scanned PC ----
+# ---- opening hosts ----
 
 
-def test_a_scan_shows_the_pc_its_profiles_and_what_can_be_deleted(
+def test_a_double_click_or_enter_opens_a_hosts_tab_and_goes_to_it(
     window: CapyWindow, pc: Pc
 ) -> None:
-    tool = _scanned(_tool(window))
-    assert pc.scanned == [("192.0.2.13", None)]
-    assert tool.header.name.text() == "DESK-03"
-    about = tool.header.about.text()
-    assert about.startswith("192.0.2.13 · read at ") and about.endswith(" · as EXAMPLE\\support")
-    assert tool.header.shown.text() == "6 of 7 shown"  # Windows' own is hidden at first
-    assert tool.table.texts() == [  # the newest use first; rows with no date last
+    tool = _tool(window)
+    table = tool.hosts_page.table
+    key = _id(window, "DESK-03")
+    table.select(key)
+    assert tool.bar.scan_button.text().strip() == "Scan DESK-03"
+    item = table.tree.currentItem()
+    assert item is not None
+    table.tree.itemDoubleClicked.emit(item, 0)
+    assert pc.scanned == [("192.0.2.13", None)] and tool.tabs.current() == key
+    assert tool.tabs.host_keys() == [key]
+    tool.switch(HOSTS)
+    table.select(key)
+    QApplication.sendEvent(table.tree, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Return,
+                                                 Qt.KeyboardModifier.NoModifier))  # fmt: skip
+    assert tool.tabs.current() == key and len(pc.scanned) == 1  # its tab: never a second read
+
+
+def test_a_middle_click_or_ctrl_enter_opens_it_behind(window: CapyWindow, pc: Pc) -> None:
+    tool = _tool(window)
+    table = tool.hosts_page.table
+    table.select(_id(window, "DESK-10"))
+    QApplication.sendEvent(table.tree, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Return,
+                                                 Qt.KeyboardModifier.ControlModifier))  # fmt: skip
+    assert tool.tabs.current() == HOSTS and tool.tabs.host_keys() == [_id(window, "DESK-10")]
+    item = table.tree.topLevelItem(0)  # DESK-03
+    assert item is not None
+    where = QPointF(table.tree.visualItemRect(item).center())
+    release = QMouseEvent(QEvent.Type.MouseButtonRelease, where, where,
+                          Qt.MouseButton.MiddleButton, Qt.MouseButton.NoButton,
+                          Qt.KeyboardModifier.NoModifier)  # fmt: skip
+    QApplication.sendEvent(table.tree.viewport(), release)
+    assert tool.tabs.current() == HOSTS and len(tool.tabs.host_keys()) == 2
+    assert [a for a, _b in pc.scanned] == ["192.0.2.20", "192.0.2.13"]
+
+
+def test_scan_with_several_hosts_picked_opens_each_behind(window: CapyWindow) -> None:
+    tool = _tool(window)
+    table = tool.hosts_page.table
+    for index in range(table.tree.topLevelItemCount()):
+        item = table.tree.topLevelItem(index)
+        assert item is not None
+        item.setSelected(True)
+    assert tool.bar.scan_button.text().strip() == "Scan 3 hosts"
+    tool.bar.scan_button.click()
+    assert tool.tabs.current() == HOSTS and len(tool.tabs.host_keys()) == 3
+    assert _host_row(tool, "DESK-03")[3:] == ["7", "5", _host_row(tool, "DESK-03")[5]]
+
+
+def test_typing_never_scans_and_the_empty_table_offers_the_typed_host(
+    window: CapyWindow, pc: Pc
+) -> None:
+    tool = _tool(window)
+    page = tool.hosts_page
+    page.search.setText("192.0.2.50")
+    page.search.returnPressed.emit()
+    assert pc.scanned == [] and _hosts(tool) == []
+    table = page.table
+    assert table.scan_button.text() == "Scan 192.0.2.50" and table._empty.isVisibleTo(table)
+    table.scan_button.click()
+    assert pc.scanned == [("192.0.2.50", None)] and tool.tabs.current() == "@192.0.2.50"
+    typed = tool.page("@192.0.2.50")
+    assert typed is not None and typed.box.name.text() == "192.0.2.50"
+
+
+# ---- a host's tab ----
+
+
+def test_a_scan_shows_the_host_its_profiles_and_fills_the_hosts_tab(
+    window: CapyWindow, pc: Pc
+) -> None:
+    tool = _tool(window)
+    page = _open(window)
+    assert page.box.name.text() == "DESK-03"
+    about = page.box.about.text()
+    assert about.startswith("192.0.2.13 · scanned at ") and about.endswith(" · as EXAMPLE\\support")
+    assert page.filters.shown.text() == "6 of 7 shown"  # Windows' own is hidden at first
+    assert page.table.texts() == [  # the newest use first; rows with no date last
         ["", "EXAMPLE\\ana", "11/10/2026", "", "Profile", "In use"],
-        ["", "EXAMPLE\\rui", "11/03/2026", "", "Profile", "Ready"],
-        ["", "EXAMPLE\\bia", "08/14/2026", "", "Profile", "Ready"],
-        ["", "marta.old  (unknown)", "03/11/2025", "", "Profile", "Ready"],
-        ["", "pedro  (unknown)", "—", "", "Registry entry, no folder", "Ready"],
-        ["", "temp.joao  (unknown)", "—", "", "Folder, no registry entry", "Ready"],
+        ["", "EXAMPLE\\rui", "11/03/2026", "", "Profile", "Can be deleted"],
+        ["", "EXAMPLE\\bia", "08/14/2026", "", "Profile", "Can be deleted"],
+        ["", "marta.old  (unknown)", "03/11/2025", "", "Profile", "Can be deleted"],
+        ["", "pedro  (unknown)", "—", "", "Registry entry, no folder", "Can be deleted"],
+        ["", "temp.joao  (unknown)", "—", "", "Folder, no registry entry", "Can be deleted"],
     ]
     assert tool.status_label.text() == "DESK-03 · 7 profiles · 5 can be deleted"
-    assert tool.bar.rescan_button.isEnabled() and tool.bar.sizes_button.isEnabled()
-    assert tool.details.shown_value("path") == ""  # nothing picked yet
+    bar = tool.bar
+    assert bar.scan_button.text().strip() == "Scan again" and bar.scan_button.isEnabled()
+    assert "DESK-03" in bar.scan_button.toolTip() and bar.sizes_button.isEnabled()
+    assert bar.delete_button.text().strip() == "Delete profiles…"
+    assert page.details.shown_value("path") == ""  # nothing picked yet
+    row = _host_row(tool, "DESK-03")
+    assert row[hosts_page.PROFILES : hosts_page.DELETABLE + 1] == ["7", "5"]
+    assert row[hosts_page.SCAN] != "" and _tab_tip(tool, page).startswith("Scanned at ")
 
 
 def test_the_filters_narrow_the_rows(window: CapyWindow) -> None:
-    tool = _scanned(_tool(window))
-    tool.header.hide_own.setChecked(False)
-    assert "Public" in "".join(_users(tool)) and tool.header.shown.text() == "7 of 7 shown"
-    tool.header.leftovers.setChecked(True)
-    assert _users(tool) == ["pedro  (unknown)", "Public  (unknown)", "temp.joao  (unknown)"]
-    tool.header.hide_own.setChecked(True)
-    assert tool.header.shown.text() == "2 of 7 shown"
-    choices = [tool.header.since.itemText(i) for i in range(tool.header.since.count())]
+    page = _open(window)
+    page.filters.hide_own.setChecked(False)
+    assert "Public" in "".join(_users(page)) and page.filters.shown.text() == "7 of 7 shown"
+    page.filters.leftovers.setChecked(True)
+    assert _users(page) == ["pedro  (unknown)", "Public  (unknown)", "temp.joao  (unknown)"]
+    page.filters.hide_own.setChecked(True)
+    assert page.filters.shown.text() == "2 of 7 shown"
+    since = page.filters.since
+    choices = [since.itemText(i) for i in range(since.count())]
     assert choices == ["Any time", "1 month", "3 months", "6 months", "1 year"]
 
 
@@ -282,144 +415,180 @@ def test_unused_for_goes_by_the_last_use_or_else_the_folders_date() -> None:
 
 
 def test_a_click_on_a_column_title_sorts_by_what_the_cells_mean(window: CapyWindow) -> None:
-    tool = _scanned(_tool(window))
-    tool.count_sizes()
-    tree = tool.table.tree
+    page = _open(window)
+    page.count_sizes()
+    tree = page.table.tree
     tree.sortByColumn(panels.SIZE, Qt.SortOrder.DescendingOrder)
-    assert _users(tool)[:3] == ["EXAMPLE\\bia", "EXAMPLE\\rui", "marta.old  (unknown)"]
+    assert _users(page)[:3] == ["EXAMPLE\\bia", "EXAMPLE\\rui", "marta.old  (unknown)"]
     tree.sortByColumn(panels.USED, Qt.SortOrder.AscendingOrder)  # the oldest on top
-    assert _users(tool)[2:4] == ["marta.old  (unknown)", "EXAMPLE\\bia"]
+    assert _users(page)[2:4] == ["marta.old  (unknown)", "EXAMPLE\\bia"]
     tree.sortByColumn(panels.USER, Qt.SortOrder.AscendingOrder)
-    assert _users(tool)[:2] == ["EXAMPLE\\ana", "EXAMPLE\\bia"]
+    assert _users(page)[:2] == ["EXAMPLE\\ana", "EXAMPLE\\bia"]
 
 
 def test_details_say_why_a_row_is_in_its_state(window: CapyWindow) -> None:
-    tool = _scanned(_tool(window))
-    _pick_row(tool, "marta.old  (unknown)")
-    details = tool.details
+    page = _open(window)
+    _pick_row(page, "marta.old  (unknown)")
+    details = page.details
     assert details.shown_value("name") == "marta.old"
     assert details.shown_value("sid") == f"{SID}1147"
     assert details.shown_value("path") == "C:\\Users\\marta.old"
     assert details.shown_value("account") == ""  # Windows no longer knows it: "Unknown", muted
     assert details.shown_value("used") == "03/11/2025"
-    _pick_row(tool, "EXAMPLE\\ana")
+    _pick_row(page, "EXAMPLE\\ana")
     assert details.shown_value("account") == "EXAMPLE\\ana"
     assert rows.state_why(ANA, "C:\\Users").startswith("This person is signed in now.")
     outside = _row("svc", 1150, None, state=State.OUTSIDE, path="D:\\Perfis\\svc")
     assert rows.state_why(outside, "C:\\Users").endswith("profiles inside C:\\Users.")
+    tree = page.table.tree
+    item = tree.topLevelItem(0)
+    assert item is not None and item.toolTip(panels.STATE).startswith("This person is signed")
 
 
-# ---- sizes ----
+# ---- sizes, and the limit every tab shares ----
 
 
 def test_sizes_are_counted_on_demand_for_the_rows_shown_that_have_a_folder(
     window: CapyWindow, pc: Pc
 ) -> None:
-    tool = _scanned(_tool(window))
+    tool = _tool(window)
+    page = _open(window)
     assert pc.sized == [] and tool.bar.sizes_button.text().strip() == "Calculate sizes"
-    tool.count_sizes()
+    tool.bar.sizes_button.click()
     assert "pedro" not in pc.sized and "Public" not in pc.sized  # no folder; hidden
     assert len(pc.sized) == 5
-    sizes = {row[panels.USER]: row[panels.SIZE] for row in tool.table.texts()}
+    sizes = {row[panels.USER]: row[panels.SIZE] for row in page.table.texts()}
     assert sizes["EXAMPLE\\rui"] == "3.0 GB" and sizes["marta.old  (unknown)"] == "0.5 GB"
     assert sizes["temp.joao  (unknown)"] == "40 MB" and sizes["pedro  (unknown)"] == ""
-    assert tool.status_label.text() == "DESK-03 · 7 profiles · 5 can be deleted"
-    assert not tool.counting() and tool.bar.sizes_button.text().strip() == "Calculate sizes"
-    tool.count_sizes()  # nothing left to count
+    assert not page.counting() and tool.bar.sizes_button.text().strip() == "Calculate sizes"
+    page.count_sizes()  # nothing left to count
     assert len(pc.sized) == 5
 
 
-def test_counting_can_be_stopped_and_what_was_counted_stays(window: CapyWindow, pc: Pc) -> None:
-    tool = _scanned(_tool(window))
-    held: list[Callable[[], None]] = []
+def test_counting_can_be_stopped_and_what_was_counted_stays(
+    window: CapyWindow, worker: Worker
+) -> None:
+    tool = _tool(window)
+    page = _open(window)
+    worker.holding = True
+    page.count_sizes()
+    assert len(worker.held) == work.AT_ONCE and page.counting()
+    assert tool.bar.sizes_button.text().strip() == "Stop the count"
+    assert _tab_tip(tool, page) == "Calculating sizes: 0 of 5"
+    assert [row[panels.SIZE] for row in page.table.texts()].count("counting…") == 5
+    worker.end()  # one ends; the next one starts
+    assert len(worker.held) == 4 and _tab_tip(tool, page) == "Calculating sizes: 1 of 5"
+    tool.bar.sizes_button.click()  # Stop
+    assert not page.counting() and tool.bar.sizes_button.text().strip() == "Calculate sizes"
+    assert "counting…" not in [row[panels.SIZE] for row in page.table.texts()]
+    while worker.held:  # the ones under way end later: dropped
+        worker.end()
+    assert sum(size is not None for size in page._sizes.values()) == 1
 
-    def later(work: Callable[[], Any], done: Callable[[Any], None], failed: Any) -> None:
-        held.append(lambda: done(work()))
 
-    tool._start = later  # type: ignore[method-assign]
-    tool.count_sizes()
-    assert len(held) == tool_ui.SIZES_AT_ONCE and tool.counting()
-    assert tool.bar.sizes_button.text().strip() == "Stop counting"
-    assert [row[panels.SIZE] for row in tool.table.texts()].count("counting…") == 4
-    held.pop(0)()  # one ends; the next one starts
-    assert len(held) == 4 and "0 MB" in "".join(r[panels.SIZE] for r in tool.table.texts())
-    tool.toggle_sizes()  # Stop
-    assert not tool.counting() and tool.bar.sizes_button.text().strip() == "Calculate sizes"
-    assert "counting…" not in [row[panels.SIZE] for row in tool.table.texts()]
-    for late in held:  # the ones under way end later: dropped
-        late()
-    assert sum(size is not None for size in tool._sizes.values()) == 1
+def test_reads_and_counts_share_one_limit_across_every_tab_and_reads_go_first(
+    window: CapyWindow, worker: Worker, tmp_path: Path, pc: Pc
+) -> None:
+    tool = _tool(window)
+    hl, ward = HostList().add_group("Ward")
+    for n in range(6):
+        hl, _host = hl.add_host(f"PC-{n}", ward.id, address=f"192.0.2.{50 + n}")
+    path = tmp_path / "ward.json"
+    listfile.save(path, hl, expected=None)
+    window.hosts.open_list(path)
+    first = _open(window, "PC-0")
+    worker.holding = True
+    first.count_sizes()
+    assert len(worker.held) == 4  # four folders under way, one waits
+    tool.open_hosts([_id(window, f"PC-{n}") for n in range(1, 6)], False)
+    pages = [tool.page(_id(window, f"PC-{n}")) for n in range(1, 6)]
+    assert all(p is not None and p.stage is Stage.QUEUED for p in pages)
+    assert _tab_tip(tool, pages[0]) == "Waiting to scan"  # type: ignore[arg-type]
+    assert _host_row(tool, "PC-1")[hosts_page.SCAN] == "queued"
+    worker.end()  # a count ends: the first read takes its place, ahead of the last folder
+    assert pages[0] is not None and pages[0].stage is Stage.SCANNING
+    assert _host_row(tool, "PC-1")[hosts_page.SCAN] == "scanning…"
+    assert pc.scanned[-1] == ("192.0.2.50", None) and len(worker.held) == 4
+    while worker.held:
+        worker.end()
+    assert all(p is not None and p.stage is Stage.SCANNED for p in pages)
+    assert len(pc.sized) == 5  # the waiting folder was counted after the reads
+    progress = tool.hosts_page.progress
+    assert progress.summary.text() == "6 hosts in tabs · 6 done"
 
 
-def test_scanning_the_same_pc_again_keeps_the_sizes_of_rows_still_there(
+def test_scanning_the_same_host_again_keeps_the_sizes_of_rows_still_there(
     window: CapyWindow, pc: Pc
 ) -> None:
-    tool = _scanned(_tool(window))
-    tool.count_sizes()
-    pc.answer = Scan("192.0.2.13", "C:\\Users", (ANA, RUI, MARTA))  # bia was deleted meanwhile
-    tool.bar.rescan_button.click()
+    tool = _tool(window)
+    page = _open(window)
+    page.count_sizes()
+    pc.answers["192.0.2.13"] = Scan("192.0.2.13", "C:\\Users", (ANA, RUI, MARTA))
+    tool.bar.scan_button.click()  # Scan again
     assert len(pc.scanned) == 2
-    sizes = {row[panels.USER]: row[panels.SIZE] for row in tool.table.texts()}
+    sizes = {row[panels.USER]: row[panels.SIZE] for row in page.table.texts()}
     assert sizes == {"EXAMPLE\\ana": "0 MB", "EXAMPLE\\rui": "3.0 GB",
                      "marta.old  (unknown)": "0.5 GB"}  # fmt: skip
-    pc.answer = Scan("192.0.2.20", "C:\\Users", (RUI,))
-    _scanned(tool, "DESK-10")  # another PC: nothing carried over
-    assert tool.table.texts()[0][panels.SIZE] == ""
+    other = _open(window, "DESK-10")  # another host: its own tab, nothing carried over
+    assert other.table.texts()[0][panels.SIZE] == ""
 
 
 # ---- a scan that fails ----
 
 
-def test_a_pc_that_doesnt_answer_says_so_and_offers_to_try_again(
+def test_a_host_that_doesnt_answer_says_so_and_offers_to_try_again(
     window: CapyWindow, pc: Pc
 ) -> None:
     tool = _tool(window)
-    pc.answer = RemoteError(Reason.UNREACHABLE)
-    _scanned(tool)
-    card = tool.card
+    pc.answers["192.0.2.13"] = RemoteError(Reason.UNREACHABLE)
+    page = _open(window)
+    card = page.card
     assert card is not None and card.heading.text() == "DESK-03 didn't answer"
     assert card.body.text().endswith("Nothing was read.")
     assert [b.text() for b in card.buttons] == ["Try again"]
     assert tool.status_label.text() == "DESK-03 · didn't answer"
-    assert " · tried at " in tool.header.about.text() and tool.header.filters.isHidden()
-    assert tool.bar.rescan_button.isEnabled() and not tool.bar.sizes_button.isEnabled()
-    pc.answer = Scan("192.0.2.13", "C:\\Users", ROWS)
+    assert " · tried at " in page.box.about.text() and not page.filters.isEnabled()
+    assert tool.bar.scan_button.isEnabled() and not tool.bar.sizes_button.isEnabled()
+    assert _tab_tip(tool, page) == "DESK-03 didn't answer"
+    assert _host_row(tool, "DESK-03")[hosts_page.SCAN] == "didn't answer"
+    del pc.answers["192.0.2.13"]
     card.buttons[0].click()
-    assert len(pc.scanned) == 2 and len(tool.table.texts()) == 6
+    assert len(pc.scanned) == 2 and len(page.table.texts()) == 6
 
 
-def test_a_pc_that_refuses_the_account_offers_another_one(
+def test_a_host_that_refuses_the_account_offers_another_one(
     window: CapyWindow, pc: Pc, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     tool = _tool(window)
-    pc.answer = RemoteError(Reason.REJECTED, 5)
-    _scanned(tool)
-    card = tool.card
-    assert card is not None
-    assert card.heading.text() == "DESK-03 refused the account EXAMPLE\\support"
-    assert [b.text() for b in card.buttons] == ["Try another account…", "Try again"]
-    assert tool.status_label.text() == "DESK-03 · account refused"
+    pc.answers["192.0.2.13"] = error = RemoteError(Reason.REJECTED, 5)
     asked: list[tuple[str, BaseException | None]] = []
     monkeypatch.setattr(
         window.hosts.runner, "another_account",
         lambda target, error, again: asked.append((target.name, error)),
     )  # fmt: skip
+    page = _open(window)
+    card = page.card
+    assert card is not None
+    assert card.heading.text() == "DESK-03 refused the account EXAMPLE\\support"
+    assert [b.text() for b in card.buttons] == ["Try another account…", "Try again"]
+    assert tool.status_label.text() == "DESK-03 · account refused"
+    assert _tab_tip(tool, page).startswith("Refused the account EXAMPLE\\support: The PC")
+    assert _host_row(tool, "DESK-03")[hosts_page.SCAN] == "account refused"
     card.buttons[0].click()
-    assert asked == [("DESK-03", pc.answer)]
+    assert asked == [("DESK-03", error)]
 
 
 def test_any_other_failure_names_windows_error(window: CapyWindow, pc: Pc) -> None:
-    tool = _tool(window)
-    pc.answer = RemoteError(Reason.OTHER, 1722)
-    _scanned(tool)
-    card = tool.card
+    pc.answers["192.0.2.13"] = RemoteError(Reason.OTHER, 1722)
+    page = _open(window)
+    card = page.card
     assert card is not None and card.heading.text() == "Couldn't read DESK-03's profiles"
     assert card.body.text().startswith("Windows error 1722.")
     said = rows.failure(TimeoutError("slow"), "DESK-03", "192.0.2.13", "EXAMPLE\\support")
     assert "took too long" in said.lines[0] and not said.another_account
 
 
-# ---- how values read ----
+# ---- how values read, and what's kept ----
 
 
 def test_sizes_read_in_gigabytes_from_a_tenth_up_and_megabytes_under() -> None:
@@ -430,21 +599,69 @@ def test_sizes_read_in_gigabytes_from_a_tenth_up_and_megabytes_under() -> None:
     assert rows.size_text(1) == "1 MB" and rows.size_text(0) == "0 MB"
 
 
-def test_the_panels_widths_are_kept(window: CapyWindow) -> None:
+def test_the_panels_widths_and_view_choices_are_kept(window: CapyWindow) -> None:
     tool = _tool(window)
-    tool.splitter.setSizes([230, 600, 300])
     tool.save_state()
     left, right = tool.prefs[tool_ui.PANES_KEY]
     assert left > 0 and right > 0
     assert tool_ui._two_widths([230, 300]) == (230, 300)
     assert tool_ui._two_widths([0, 300]) is None and tool_ui._two_widths("wide") is None
+    assert tool.view_actions() == [[tool.show_groups, tool.show_details]]
+    tool.show_details.setChecked(False)
+    assert tool.side.isHidden() and tool.prefs[tool_ui.SHOWN_KEY]["details"] is False
+    tool.show_groups.setChecked(False)
+    assert tool.nav.isHidden()
+
+
+# ---- the tabs ----
+
+
+def test_tabs_open_at_the_right_end_and_close_in_every_way(window: CapyWindow) -> None:
+    tool = _tool(window)
+    desk, other = _open(window), _open(window, "DESK-10", focus=False)
+    keys = [desk.target.key, other.target.key]
+    assert tool.tabs.host_keys() == keys and tool.tabs.current() == keys[0]
+    tool._step(1)
+    assert tool.tabs.current() == keys[1]
+    tool._step(1)  # round to the Hosts tab
+    assert tool.tabs.current() == HOSTS
+    tool._step(-1)
+    assert tool.tabs.current() == keys[1]
+    assert tool.close_tab(keys[1]) and tool.tabs.current() == keys[0]  # the one on its left
+    assert not tool.close_tab(HOSTS)  # pinned
+    _open(window, "DESK-10", focus=False)
+    tool.close_others(keys[0])
+    assert tool.tabs.host_keys() == [keys[0]]
+    tool.close_finished()
+    assert tool.tabs.host_keys() == [] and tool.tabs.current() == HOSTS
+    # A closed tab's counts stay on the Hosts tab.
+    assert _host_row(tool, "DESK-03")[hosts_page.PROFILES : hosts_page.DELETABLE + 1] == ["7", "5"]
+
+
+def test_progress_lists_the_hosts_in_tabs_by_where_they_are(
+    window: CapyWindow, worker: Worker, pc: Pc
+) -> None:
+    tool = _tool(window)
+    progress = tool.hosts_page.progress
+    assert not progress.bar.isVisibleTo(progress)  # nothing open yet
+    pc.answers["192.0.2.20"] = RemoteError(Reason.UNREACHABLE)
+    _open(window, "DESK-10", focus=False)
+    worker.holding = True
+    _open(window, focus=False)
+    assert progress.summary.text() == "2 hosts in tabs · 1 done"
+    texts = [w.text() for w in progress.findChildren(hosts_page.QLabel) if w.isVisibleTo(progress)]
+    assert "In progress (1)" in texts and "Done (1)" in texts and "didn't answer" in texts
+    lines = progress.findChildren(hosts_page._Line)
+    target = next(line for line in lines if line.name.text() == "DESK-10" and not line.isHidden())
+    target.clicked.emit(target._key)
+    assert tool.tabs.current() == _id(window, "DESK-10")
 
 
 # ---- deleting ----
 
 
 class Deletes:
-    """What the PC answers to each delete, by user; and what was asked, in order."""
+    """What a host answers to each delete, by user; and what was asked, in order."""
 
     def __init__(self) -> None:
         self.answers: dict[str, tuple[Outcome, Why | None, str]] = {}
@@ -466,10 +683,10 @@ def deletes(monkeypatch: pytest.MonkeyPatch) -> Deletes:
     return deletes
 
 
-def _answer(monkeypatch: pytest.MonkeyPatch, fill: Callable[[DeleteDialog], bool]) -> list[Any]:
-    """The Delete window is answered by `fill` (True: its action is pressed; False: Cancel);
-    the windows opened are kept."""
-    opened: list[DeleteDialog] = []
+def _answer(monkeypatch: pytest.MonkeyPatch, fill: Callable[[Any], bool]) -> list[Any]:
+    """The Delete window (and the quit question) answered by `fill` (True: its action is
+    pressed; False: Cancel); the windows opened are kept."""
+    opened: list[Any] = []
 
     def run(dialog: Any) -> int:
         opened.append(dialog)
@@ -478,22 +695,25 @@ def _answer(monkeypatch: pytest.MonkeyPatch, fill: Callable[[DeleteDialog], bool
             return int(QDialog.DialogCode.Accepted)
         return int(QDialog.DialogCode.Rejected)
 
+    monkeypatch.setattr(host_page, "run_modal", run)
     monkeypatch.setattr(tool_ui, "run_modal", run)
     return opened
 
 
-def _typed(word: str) -> Callable[[DeleteDialog], bool]:
-    def fill(dialog: DeleteDialog) -> bool:
-        dialog.word.setText(word)
+def _typed(word: str) -> Callable[[Any], bool]:
+    def fill(dialog: Any) -> bool:
+        if isinstance(dialog, DeleteDialog):
+            dialog.word.setText(word)
         return True
 
     return fill
 
 
 def test_only_a_row_that_can_be_deleted_has_a_tick_box(window: CapyWindow) -> None:
-    tool = _scanned(_tool(window))
-    tool.header.hide_own.setChecked(False)
-    tree = tool.table.tree
+    tool = _tool(window)
+    page = _open(window)
+    page.filters.hide_own.setChecked(False)
+    tree = page.table.tree
     boxes = {}
     for index in range(tree.topLevelItemCount()):
         item = tree.topLevelItem(index)
@@ -502,25 +722,27 @@ def test_only_a_row_that_can_be_deleted_has_a_tick_box(window: CapyWindow) -> No
     assert boxes["EXAMPLE\\ana"] is None and boxes["Public  (unknown)"] is None  # in use; Windows'
     assert all(boxes[user] is not None for user in ("EXAMPLE\\rui", "pedro  (unknown)"))
     assert not tool.bar.delete_button.isEnabled()
-    tool.table.tick(ANA.ident)  # as a click where there's no box: nothing
-    assert tool.table.ticked() == []
-    tool.table.tick(RUI.ident)
-    tool.table.tick(BIA.ident)
-    assert tool.table.ticked() == [RUI, BIA] and tool.bar.delete_button.isEnabled()
+    page.table.tick(ANA.ident)  # as a click where there's no box: nothing
+    assert page.ticked() == []
+    page.table.tick(RUI.ident)
+    page.table.tick(BIA.ident)
+    assert page.ticked() == [RUI, BIA] and tool.bar.delete_button.isEnabled()
+    assert tool.bar.delete_button.text().strip() == "Delete 2 profiles…"
     assert tool.status_label.text() == "DESK-03 · 7 profiles · 5 can be deleted · 2 ticked"
-    tool.count_sizes()
+    page.count_sizes()
     assert tool.status_label.text().endswith(" · 2 ticked · 9.0 GB")
-    tool.header.leftovers.setChecked(True)  # a tick on a row no longer shown is dropped
-    assert tool.table.ticked() == [] and not tool.bar.delete_button.isEnabled()
+    page.filters.leftovers.setChecked(True)  # a tick on a row no longer shown is dropped
+    assert page.ticked() == [] and not tool.bar.delete_button.isEnabled()
 
 
 def test_the_delete_window_lists_the_ticked_rows_and_wants_the_word_typed(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch, deletes: Deletes
 ) -> None:
-    tool = _scanned(_tool(window))
-    tool.count_sizes()
-    tool.table.tick(RUI.ident)
-    tool.table.tick(MARTA.ident)
+    tool = _tool(window)
+    page = _open(window)
+    page.count_sizes()
+    page.table.tick(RUI.ident)
+    page.table.tick(MARTA.ident)
     seen: list[tuple[Any, ...]] = []
 
     def look(dialog: DeleteDialog) -> bool:
@@ -556,17 +778,18 @@ def test_the_delete_window_lists_the_ticked_rows_and_wants_the_word_typed(
     )
     assert seen[1] == (False, False, True, True)  # any case, spaces around it ignored
     assert seen[2] == (0,)
-    assert deletes.asked == [] and tool.table.ticked() == [RUI, MARTA]  # cancelled: as before
+    assert deletes.asked == [] and page.ticked() == [RUI, MARTA]  # cancelled: as before
     assert rows.confirm_word() == "DELETE" and rows.confirms("Delete") and not rows.confirms("")
 
 
 def test_ticked_rows_are_deleted_one_at_a_time_and_each_says_how_it_ended(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch, deletes: Deletes
 ) -> None:
-    tool = _scanned(_tool(window))
-    tool.count_sizes()
+    tool = _tool(window)
+    page = _open(window)
+    page.count_sizes()
     for profile in (RUI, BIA, MARTA):
-        tool.table.tick(profile.ident)
+        page.table.tick(profile.ident)
     deletes.answers = {
         BIA.user: (Outcome.SKIPPED, Why.IN_USE, ""),
         MARTA.user: (Outcome.FAILED, Why.ERROR, "Access is denied."),
@@ -575,82 +798,99 @@ def test_ticked_rows_are_deleted_one_at_a_time_and_each_says_how_it_ended(
     tool.bar.delete_button.click()
     assert deletes.asked == [RUI.user, BIA.user, MARTA.user]
     assert deletes.log_files == {window.paths.user_profiles_log_file}
-    states = {row[panels.USER]: row[panels.STATE] for row in tool.table.texts()}
+    states = _states(page)
     assert (states["EXAMPLE\\rui"], states["EXAMPLE\\bia"], states["marta.old  (unknown)"]) == (
         "Deleted", "Skipped", "Failed",
     )  # fmt: skip
-    assert states["temp.joao  (unknown)"] == "Ready"  # not ticked: untouched
-    assert tool.table.ticked() == [] and not tool.bar.delete_button.isEnabled()
-    progress = tool.progress
-    assert tool._side.currentWidget() is progress and progress.over()
+    assert states["temp.joao  (unknown)"] == "Can be deleted"  # not ticked: untouched
+    assert page.ticked() == [] and not tool.bar.delete_button.isEnabled()
+    progress = page.progress
+    assert page.side.currentWidget() is progress and progress.over()
     assert progress.title.text() == "Deletion finished"
     assert progress.first.text() == "DESK-03 · 1 deleted, 1 skipped, 1 failed"
     assert progress.second.text().startswith("3.0 GB freed · ")
     assert progress.bar.value() == progress.bar.maximum() == 3
-    queue = progress.queue
-    assert [queue.topLevelItem(i).text(1) for i in range(3)] == [  # type: ignore[union-attr]
-        "Deleted", "Skipped", "Failed",
-    ]  # fmt: skip
     log = progress.log.toPlainText().splitlines()
     assert len(log) == 6 and log[1].endswith("EXAMPLE\\rui: deleted, 3.0 GB")
     assert log[3].endswith("EXAMPLE\\bia: skipped, signed in to the PC since the scan")
     assert log[5].endswith("marta.old: failed, Access is denied.")
     assert tool.status_label.text() == ("DESK-03 · 1 deleted · 1 skipped · 1 failed · 3.0 GB freed")
+    assert _tab_tip(tool, page) == "1 deleted, 1 skipped, 1 failed. See the history."
     assert not progress.cancel_button.isVisibleTo(progress)
-    assert tool.pcs.isEnabled() and tool.bar.rescan_button.isEnabled()
+    assert tool.bar.scan_button.isEnabled()
 
-    _pick_row(tool, "marta.old  (unknown)")  # Details waits behind the panel
+    _pick_row(page, "marta.old  (unknown)")  # Details waits behind the panel
     progress.close_button.click()
-    assert tool._side.currentWidget() is tool.details
-    assert tool.details.shown_value("windows") == "Access is denied."
-    states = {row[panels.USER]: row[panels.STATE] for row in tool.table.texts()}
-    assert states["EXAMPLE\\rui"] == "Deleted"  # results stay until the next scan
-    tool.bar.rescan_button.click()
-    states = {row[panels.USER]: row[panels.STATE] for row in tool.table.texts()}
-    assert states["EXAMPLE\\rui"] == "Ready"  # the fake PC still has it
+    assert page.side.currentWidget() is page.details
+    assert page.details.shown_value("windows") == "Access is denied."
+    assert _states(page)["EXAMPLE\\rui"] == "Deleted"  # results stay until the next scan
+    tool.bar.scan_button.click()
+    assert _states(page)["EXAMPLE\\rui"] == "Can be deleted"  # the fake PC still has it
 
 
-def test_cancel_the_rest_lets_the_current_one_finish_and_starts_no_other(
-    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, deletes: Deletes
+def test_while_a_host_deletes_its_tab_wont_close_and_its_rows_always_show(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, deletes: Deletes, worker: Worker
 ) -> None:
-    tool = _scanned(_tool(window))
+    tool = _tool(window)
+    page = _open(window)
     for profile in (RUI, BIA, MARTA):
-        tool.table.tick(profile.ident)
-    held: list[Callable[[], None]] = []
-
-    def later(work: Callable[[], Any], done: Callable[[Any], None], failed: Any) -> None:
-        held.append(lambda: done(work()))
-
-    tool._start = later  # type: ignore[method-assign]
+        page.table.tick(profile.ident)
+    worker.holding = True
     _answer(monkeypatch, _typed("DELETE"))
     tool.bar.delete_button.click()
-    progress = tool.progress
-    assert tool._side.currentWidget() is progress and not progress.over()
+    progress = page.progress
+    assert page.side.currentWidget() is progress and not progress.over()
     assert progress.title.text() == "Deleting profiles"
-    assert progress.first.text().startswith("DESK-03 · 1 of 3 · since ")
-    assert tool.status_label.text() == "DESK-03 · deleting 1 of 3"
-    states = {row[panels.USER]: row[panels.STATE] for row in tool.table.texts()}
+    assert progress.first.text().startswith("DESK-03 · profile 1 of 3 · since ")
+    assert tool.status_label.text() == "DESK-03 · deleting profile 1 of 3"
+    assert tool.tabs.bar.tabText(0) == "DESK-03 · 1/3"
+    assert _host_row(tool, "DESK-03")[hosts_page.SCAN] == "deleting 1 of 3"
+    states = _states(page)
     assert (states["EXAMPLE\\rui"], states["EXAMPLE\\bia"]) == ("Deleting…", "Queued")
-    # While it runs: no scan, no other PC, no tick, no second run.
-    assert not tool.pcs.isEnabled() and not tool.bar.rescan_button.isEnabled()
-    assert not tool.bar.delete_button.isEnabled() and not tool.bar.sizes_button.isEnabled()
-    tool.table.tick(BIA.ident, on=False)
-    assert BIA in tool.table.ticked()
-    tool.scan_again()
-    assert len(held) == 1 and deletes.asked == []
+    # While it runs: no scan, no tick, no second run, no closing.
+    assert not tool.bar.scan_button.isEnabled() and not tool.bar.delete_button.isEnabled()
+    assert not tool.bar.sizes_button.isEnabled()
+    page.table.tick(BIA.ident, on=False)
+    assert BIA in page.ticked()
+    assert not tool.close_tab(page.target.key) and tool.tabs.host_keys() == [page.target.key]
+    assert window.statusBar().currentMessage().startswith("DESK-03 is deleting profiles")
+    tool.close_finished()
+    assert tool.tabs.host_keys() == [page.target.key]
+    page.filters.leftovers.setChecked(True)  # the run's rows show whatever the filters
+    assert {"EXAMPLE\\rui", "EXAMPLE\\bia", "marta.old  (unknown)"} <= set(_users(page))
 
     progress.cancel_button.click()
     assert not progress.cancel_button.isEnabled() and not progress.over()
-    held.pop(0)()  # the current one finishes
-    assert deletes.asked == [RUI.user] and held == []  # and no other starts
+    worker.end()  # the current one finishes
+    assert deletes.asked == [RUI.user] and worker.held == []  # and no other starts
     assert progress.over() and progress.first.text() == "DESK-03 · 1 deleted"
-    assert [progress.queue.topLevelItem(i).text(1) for i in range(3)] == [  # type: ignore[union-attr]
-        "Deleted", "Not started", "Not started",
-    ]  # fmt: skip
     assert "cancelled: 2 not started" in progress.log.toPlainText()
-    states = {row[panels.USER]: row[panels.STATE] for row in tool.table.texts()}
-    assert states["EXAMPLE\\bia"] == "Ready" and tool.table.ticked() == [BIA, MARTA]
+    page.filters.leftovers.setChecked(False)
+    states = _states(page)
+    assert states["EXAMPLE\\bia"] == "Can be deleted" and page.ticked() == [BIA, MARTA]
     assert tool.bar.delete_button.isEnabled()  # the ticks left can be run again
+    assert tool.close_tab(page.target.key)
+
+
+def test_quitting_while_a_host_deletes_asks_and_waits_for_the_profile_under_way(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, deletes: Deletes, worker: Worker
+) -> None:
+    tool = _tool(window)
+    page = _open(window)
+    page.table.tick(RUI.ident)
+    page.table.tick(BIA.ident)
+    worker.holding = True
+    opened = _answer(monkeypatch, _typed("DELETE"))
+    tool.bar.delete_button.click()
+    assert tool.quit_question(window) is False  # Cancel the rest and quit
+    question = opened[-1]
+    assert question.heading.text() == "<b>1 host is still deleting profiles</b>"
+    assert question.cancel.text() == "Continue"
+    assert deletes.asked == [] and page.deleting
+    quits: list[bool] = []
+    monkeypatch.setattr(window, "quit_app", lambda: quits.append(True))
+    worker.end()  # the profile under way ends; the queued one never starts
+    assert deletes.asked == [RUI.user] and quits == [True]
 
 
 def test_how_a_delete_ended_reads_in_the_log_and_in_details() -> None:
@@ -668,72 +908,16 @@ def test_how_a_delete_ended_reads_in_the_log_and_in_details() -> None:
     assert rows.counts_text([]) == ""
 
 
-def test_open_the_log_says_so_when_there_is_none_yet(
+def test_open_the_history_says_so_when_there_is_none_yet(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    tool = _tool(window)
+    page = _open(window)
     opened: list[Path] = []
-    monkeypatch.setattr(tool_ui.os, "startfile", opened.append, raising=False)
-    tool.open_log()
+    monkeypatch.setattr(host_page.os, "startfile", opened.append, raising=False)
+    page.open_log()
     assert opened == []  # nothing was ever deleted: no file to open
     log_file = window.paths.user_profiles_log_file
     log_file.parent.mkdir(parents=True, exist_ok=True)
     log_file.write_text("a line\n", encoding="utf-8")
-    tool.open_log()
+    page.open_log()
     assert opened == [log_file]
-
-
-# ---- groups ----
-
-
-def test_a_dropdown_shows_one_groups_pcs_and_the_search_looks_through_them_all(
-    window: CapyWindow, tmp_path: Path
-) -> None:
-    tool = _tool(window)
-    hl, clinic = HostList().add_group("Clinic")
-    hl, lab = hl.add_group("Lab", parent=clinic.id)
-    hl, er = hl.add_group("ER")
-    for name, group, address in (
-        ("DESK-01", clinic.id, "192.0.2.11"), ("LAB-01", lab.id, "192.0.2.31"),
-        ("ER-01", er.id, "192.0.2.41"), ("SPARE", NO_GROUP, "192.0.2.90"),
-        ("Front desk printer room", er.id, ""),  # can't be reached: never listed or counted
-    ):  # fmt: skip
-        hl, _host = hl.add_host(name, group, address=address)
-    path = tmp_path / "wards.json"
-    listfile.save(path, hl, expected=None)
-    window.hosts.open_list(path)
-    groups = tool.pcs.groups
-    assert [groups.itemText(i) for i in range(groups.count())] == [
-        "All hosts (4)", "No group (1)", "Clinic (2)", "    Lab (1)", "ER (1)",
-    ]  # fmt: skip
-    assert groups.currentIndex() == 0 and _pcs(tool) == ["DESK-01", "ER-01", "LAB-01", "SPARE"]
-
-    def choose(index: int) -> None:
-        groups.setCurrentIndex(index)
-        groups.activated.emit(index)
-
-    choose(2)  # Clinic: its own PCs and those of the groups inside it
-    assert _pcs(tool) == ["DESK-01", "LAB-01"]
-    choose(1)
-    assert _pcs(tool) == ["SPARE"]
-    choose(4)
-    assert _pcs(tool) == ["ER-01"]
-    tool.pcs.search.setText("lab")  # a search looks through every group
-    assert _pcs(tool) == ["LAB-01"]
-    tool.pcs.search.clear()
-    assert _pcs(tool) == ["ER-01"]
-    _pick(tool, "ER-01")
-    assert tool.pcs.scan_button.text() == "Scan ER-01"
-    tool.pcs.other.setText("desk-01")  # a PC of another group, typed: still that PC
-    tool.pcs.other.textEdited.emit("desk-01")
-    target = tool.pcs.target()
-    assert target is not None and target.address == "192.0.2.11"
-
-    # Each list comes back on the group it was left on.
-    assert tool.prefs[tool_ui.GROUPS_KEY] == {str(path): er.id}
-    window.hosts.open_list(tmp_path / "clinic.json")
-    assert groups.currentIndex() == 0 and tool.pcs.group() == panels.ALL_GROUPS
-    window.hosts.open_list(path)
-    assert groups.currentText() == "ER (1)" and _pcs(tool) == ["ER-01"]
-    choose(0)
-    assert tool.prefs[tool_ui.GROUPS_KEY] == {}

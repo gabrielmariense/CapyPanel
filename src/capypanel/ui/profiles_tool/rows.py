@@ -61,8 +61,8 @@ MONTHS = (0, 1, 3, 6, 12)  # "Unused for": any time, then at least this many mon
 
 
 def state_name(state: State) -> str:
-    if state is State.READY:  # its own entry: Portuguese says "Pronto" here, "Pronta" of a printer
-        return pgettext("profile", "Ready")
+    if state is State.READY:  # its own entry: Portuguese says "Pode excluir"
+        return pgettext("profile", "Can be deleted")
     return _(STATE_NAMES[state])
 
 

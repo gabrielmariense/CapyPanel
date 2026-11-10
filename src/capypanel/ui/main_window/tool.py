@@ -36,6 +36,10 @@ class Shell(Protocol):
 
     def open_saved_credentials(self, parent: QWidget | None = None) -> None: ...
 
+    def quit_app(self) -> None:
+        """Quit CapyPanel with no question (a tool that held the quit lets it go on)."""
+        ...
+
     def tool(self, tool_id: str) -> "Tool | None":
         """Another tool of the window, for a tool that builds on it (User profiles reads Hosts'
         lists); None when the window has no such tool."""
@@ -117,6 +121,11 @@ class Tool(QWidget):
 
     def save_state(self) -> None:
         """When the window closes."""
+
+    def quit_question(self, parent: QWidget) -> bool:
+        """Before CapyPanel quits; False keeps it running (the tool is in the middle of
+        something it asked about)."""
+        return True
 
     def retranslate(self) -> None:
         """Every text the tool shows, in the current language."""

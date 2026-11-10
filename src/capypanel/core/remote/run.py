@@ -62,6 +62,7 @@ SWEEP_AGE = 3 * 60 * 60.0  # leftovers older than this are deleted: past any run
 PSEXEC_TIMEOUT = 60  # seconds for PsExec to start the wrapper (it doesn't wait for the run)
 COMMAND_LIMIT = 30_000  # characters: Windows' command line holds 32 767; room for PsExec's own
 LOG_SIZE, LOG_KEEP = 2_000_000, 5  # the run log: bytes per file, older files kept
+_LOG_LOCK = threading.Lock()  # several hosts at once write to one log
 FOLDER = r"Temp\CapyPanel"  # under Windows' folder on the PC, so C:\Windows\Temp\CapyPanel
 # Only files with these names are ever deleted from the folder: what CapyPanel itself made.
 # (-task.ps1: left by earlier versions, swept too)
@@ -710,16 +711,18 @@ def _log_outcome(error: BaseException) -> str:
 
 
 def append_line(log_file: Path, line: str) -> None:
-    """One line at the end of a log; a full one moves aside first, the oldest dropped."""
-    log_file.parent.mkdir(parents=True, exist_ok=True)
-    if log_file.exists() and log_file.stat().st_size > LOG_SIZE:
-        for n in range(LOG_KEEP - 1, 0, -1):
-            older = log_file.with_name(f"{log_file.name}.{n}")
-            if older.exists():
-                older.replace(log_file.with_name(f"{log_file.name}.{n + 1}"))
-        log_file.replace(log_file.with_name(f"{log_file.name}.1"))
-    with log_file.open("a", encoding="utf-8") as f:
-        f.write(line + "\n")
+    """One line at the end of a log; a full one moves aside first, the oldest dropped. One
+    writer at a time, so lines of hosts worked on together never mix."""
+    with _LOG_LOCK:
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        if log_file.exists() and log_file.stat().st_size > LOG_SIZE:
+            for n in range(LOG_KEEP - 1, 0, -1):
+                older = log_file.with_name(f"{log_file.name}.{n}")
+                if older.exists():
+                    older.replace(log_file.with_name(f"{log_file.name}.{n + 1}"))
+            log_file.replace(log_file.with_name(f"{log_file.name}.1"))
+        with log_file.open("a", encoding="utf-8") as f:
+            f.write(line + "\n")
 
 
 # ---- the ways in ----
