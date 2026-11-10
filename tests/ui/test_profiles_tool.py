@@ -770,7 +770,9 @@ def test_a_tab_closed_while_its_scan_runs_ignores_the_answer(
     worker.holding = True
     page = _open(window)
     assert page.stage is Stage.SCANNING and len(worker.held) == 1
+    assert _host_row(tool, "DESK-03")[hosts_page.SCAN] == "scanning…"
     assert tool.close_tab(page.target.key)
+    assert _host_row(tool, "DESK-03")[hosts_page.SCAN] == ""  # no "scanning…" left on its row
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)  # its widgets are gone
     worker.end()  # the read ends after: dropped, not shown in a deleted tab
     assert tool.tabs.host_keys() == [] and tool.pool.waiting(page) == 0

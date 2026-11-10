@@ -724,7 +724,11 @@ class ProfilesTool(Tool):
         if was_current:  # the tab on its left, or the Hosts tab
             left = self.tabs.host_keys()
             self.switch(left[index - 1] if index > 0 and left else HOSTS)
+        host = self._host(key)
+        if host is not None:  # its row: the last scan kept, never a "scanning…" left behind
+            self.hosts_page.table.show_facts(host.id, self._row_facts(host))
         self._overview()
+        self._show_side()
         return True
 
     def close_others(self, key: str) -> None:
