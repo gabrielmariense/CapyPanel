@@ -61,7 +61,17 @@ def test_this_pcs_signed_in_people_are_the_same_both_ways() -> None:
 
 def test_this_pcs_profiles_are_the_same_both_ways() -> None:
     direct, shell = _both(lambda: user_profiles.scan("localhost", opened=_here))
-    assert direct == shell and direct.profiles
+
+    def lasting(scanned: Scan) -> set[tuple[Any, ...]]:
+        """What can't change between two reads a moment apart: not the times (a sign-in, a
+        file written), nor the account CI's real delete test makes and removes meanwhile."""
+        return {
+            (p.sid, p.key, p.user, p.known, p.path, p.kind, p.state)
+            for p in scanned.profiles
+            if not p.user.rpartition("\\")[2].startswith("capy")
+        }
+
+    assert direct.root == shell.root and lasting(direct) == lasting(shell) and direct.profiles
 
 
 def test_both_delete_ways_find_nothing_to_delete_for_a_sid_nobody_has() -> None:
