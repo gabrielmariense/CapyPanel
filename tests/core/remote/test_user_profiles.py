@@ -85,7 +85,9 @@ def test_this_pcs_own_profiles_read_over_wmi(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setattr(user_profiles, "check_reachable", lambda host: None)
     found = user_profiles.scan("localhost", opened=_here)
     mine = next(p for p in found.profiles if p.sid == winsec.current_user_sid())
-    assert (mine.kind, mine.state, mine.known) == (Kind.PROFILE, State.IN_USE, True)
+    # CI runs as the built-in Administrator, whose profile is Windows' own before it's in use.
+    state = State.PROTECTED if mine.sid.endswith("-500") else State.IN_USE
+    assert (mine.kind, mine.state, mine.known) == (Kind.PROFILE, state, True)
     assert mine.user.rpartition("\\")[2].casefold() == getpass.getuser().casefold()
     assert mine.path.casefold() == os.environ["USERPROFILE"].casefold()
     assert mine.last_used is not None and mine.modified is not None
@@ -496,8 +498,10 @@ def test_a_real_profile_an_entry_and_a_leftover_folder_are_deleted(
     gone_sid = f"S-1-5-21-1111111111-222222222-333333333-{secrets.randbelow(80000) + 10000}"
     gone_key = f"{_PROFILE_LIST}\\{gone_sid}"
     leftover: Path | None = None
-    made = _quiet("net", "user", name, secrets.token_urlsafe(12) + "aA1!", "/add")
-    assert made.returncode == 0, made.stderr
+    # 14 characters: past that, net user stops to ask about old versions of Windows.
+    made = _quiet("net", "user", name, secrets.token_urlsafe(8)[:10] + "aA1!", "/add")
+    created, said = made.returncode == 0, made.stderr  # the password stays out of the report
+    assert created, said
     try:
         sid = _quiet(
             "powershell", "-NoProfile", "-Command",
