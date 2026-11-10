@@ -109,7 +109,7 @@ def test_columns_come_in_groups_and_a_custom_pick_can_be_a_preset(
         d.boxes["users"].setChecked(False)
         d.boxes["status"].setChecked(False)
         assert not d.refresh_button.isEnabled()  # nothing from the last check is ticked
-        assert d.refresh_button.toolTip() == "Tick Status or Logged-on users to check them"
+        assert d.refresh_button.toolTip() == "Tick Status or Logged-on users to refresh them"
 
     _run(window, monkeypatch, again)
 
@@ -129,12 +129,20 @@ def test_refresh_runs_on_the_hosts_being_exported_and_holds_export(
 
     def refresh(d: ExportDialog) -> None:
         d.boxes["status"].setChecked(True)
+        # A plain button at the box's foot, saying how many it reads; not on the title line.
+        assert d.refresh_button.text().strip() == "Refresh host"  # one host: the menu's words
+        assert d.refresh_button.toolTip() == "Reads what's ticked in this box again"
+        assert d.refresh_tip(True) and d.refresh_text(31) == "Refresh 31 hosts"
+        assert d.refresh_text(0) == "Refresh" and d.nothing_to_refresh() == "No hosts to refresh"
+        assert d.left_out_text(2) == "2 with no address are left out"
+        assert not d.stop_button.isVisibleTo(d)
         d.refresh_button.click()
         assert asked == [(["LOOSE-1"], True, False)]  # only the ticked check, only these hosts
         d._progress = lambda: (0, 1)  # as while the main window's Refresh runs
         d.checks_changed()
         assert not d.export_button.isEnabled() and not d.copy_button.isEnabled()
-        assert d.stop_button.isVisibleTo(d) and d.checking.text() == "Checking 0 of 1…"
+        assert d.stop_button.isVisibleTo(d) and d.checking.text() == "Refreshing 0 of 1…"
+        assert d.stop_button.text().strip() == "Stop" and not d.refresh_button.isVisibleTo(d)
 
     _run(window, monkeypatch, refresh)
 

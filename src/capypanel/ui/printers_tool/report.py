@@ -67,10 +67,20 @@ class PrintersReport(ExportDialog):
 
     def refresh_tip(self, wanted: bool) -> str:
         return (
-            _("Reads these printers again now")
+            _("Reads what's ticked in this box again")
             if wanted
             else _("Tick a column under Last check to read them")
         )
+
+    def refresh_text(self, n: int) -> str:
+        if n == 1:
+            return _("Refresh printer")
+        if not n:
+            return _("Refresh")
+        return ngettext("Refresh {n} printer", "Refresh {n} printers", n).format(n=n)
+
+    def nothing_to_refresh(self) -> str:
+        return _("No printers to refresh")
 
     def copied_text(self, n: int, source: str) -> str:
         return ngettext(

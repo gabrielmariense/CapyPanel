@@ -38,7 +38,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QStyledItemDelegate,
     QStyleOptionViewItem,
-    QToolButton,
     QToolTip,
     QTreeWidget,
     QTreeWidgetItem,
@@ -170,9 +169,12 @@ class ExportDialog(QDialog):
         self.unchecked = hint()
         self.checking = hint()
         color = self.palette().color(QPalette.ColorRole.Text)
-        self.refresh_button = _icon_button("refresh", color)
-        self.stop_button = _icon_button("x", color)
-        self.stop_button.setToolTip(_("Stop"))
+        # Refresh is a plain button at the foot of Last check, saying how many it reads; Stop
+        # takes its place while a check runs. Exportar stays the window's one main button.
+        self.refresh_button = _plain_button("refresh", color)
+        self.stop_button = _plain_button("x", color)
+        self.stop_button.setText(" " + _("Stop"))
+        self.stop_button.hide()  # only while a check runs
         for index, (title, keys) in enumerate(self.SECTIONS):
             frame = QFrame()
             frame.setObjectName("reportBox")
@@ -181,8 +183,6 @@ class ExportDialog(QDialog):
             inside.setSpacing(TICK_SPACING)
             name = QLabel(_(title))
             name.setObjectName("rowName")
-            # As tall as Last check's title line with its button: the ticks line up across boxes.
-            name.setFixedHeight(self.refresh_button.sizeHint().height())
             both = QLabel(f'<a href="all">{escape(_("All"))}</a> · '
                           f'<a href="none">{escape(_("None"))}</a>')  # fmt: skip
             both.setObjectName("hint")
@@ -196,8 +196,7 @@ class ExportDialog(QDialog):
             if checks:
                 self.checks_box = name
                 self.checks_title = _(title)
-                for widget in (self.checks_time, self.stop_button, self.refresh_button):
-                    head.addWidget(widget)
+                head.addWidget(self.checks_time)
             inside.addLayout(head)
             inside.addWidget(both)  # under the title, small: the boxes stay narrow enough
             for key in keys:
@@ -209,6 +208,13 @@ class ExportDialog(QDialog):
                 for widget in (self.note, self.unchecked, self.checking):
                     inside.addWidget(widget)
             inside.addStretch(1)
+            if checks:  # at the box's foot, lined up with the other boxes' ends: it never jumps
+                buttons = QHBoxLayout()
+                buttons.setContentsMargins(0, 6, 0, 0)
+                buttons.addWidget(self.refresh_button)
+                buttons.addWidget(self.stop_button)
+                buttons.addStretch(1)  # its own width, as every other button
+                inside.addLayout(buttons)
             self._section_boxes.append(frame)
         if self.checks_box is None:  # nothing to check: no Refresh here
             parts = (self.unchecked, self.refresh_button, self.stop_button, self.checking,
@@ -341,10 +347,26 @@ class ExportDialog(QDialog):
 
     def refresh_tip(self, wanted: bool) -> str:
         return (
-            _("Checks these hosts again now")
+            _("Reads what's ticked in this box again")
             if wanted
-            else _("Tick Status or Logged-on users to check them")
+            else _("Tick Status or Logged-on users to refresh them")
         )
+
+    def refresh_text(self, n: int) -> str:
+        """The button's words: one verb, then how many it reads (the right-click's words)."""
+        if n == 1:
+            return _("Refresh host")
+        if not n:
+            return _("Refresh")
+        return ngettext("Refresh {n} host", "Refresh {n} hosts", n).format(n=n)
+
+    def nothing_to_refresh(self) -> str:
+        return _("No hosts to refresh")
+
+    def left_out_text(self, n: int) -> str:
+        return ngettext(
+            "{n} with no address is left out", "{n} with no address are left out", n
+        ).format(n=n)
 
     def copied_text(self, n: int, source: str) -> str:
         return ngettext(
@@ -491,12 +513,21 @@ class ExportDialog(QDialog):
             self._title_time(hosts, [place[key] for key in wanted])
             if running is not None:
                 done, total = running
-                text = _("Checking {done} of {total}…").format(done=done, total=total)
+                text = _("Refreshing {done} of {total}…").format(done=done, total=total)
                 self.checking.setText(text)
             self.checking.setVisible(running is not None)
             self.stop_button.setVisible(running is not None)
-            self.refresh_button.setEnabled(running is None and bool(wanted) and bool(hosts))
-            self.refresh_button.setToolTip(self.refresh_tip(bool(wanted)))
+            self.refresh_button.setVisible(running is None)
+            reached = sum(1 for h in hosts if h.connect_address)
+            self.refresh_button.setText(" " + self.refresh_text(reached))
+            self.refresh_button.setEnabled(running is None and bool(wanted) and bool(reached))
+            if not reached:
+                tip = self.nothing_to_refresh()
+            else:
+                tip = self.refresh_tip(bool(wanted))
+                if wanted and reached < len(hosts):
+                    tip += "\n" + self.left_out_text(len(hosts) - reached)
+            self.refresh_button.setToolTip(tip)
         can_export = running is None and bool(self.columns()) and bool(hosts)
         self.export_button.setEnabled(can_export)
         self.copy_button.setEnabled(can_export)
@@ -627,10 +658,9 @@ def _file_safe(name: str) -> str:
     return re.sub(r'[\\/:*?"<>|]+', "-", name).strip(" .") or "hosts"
 
 
-def _icon_button(icon: str, color: QColor) -> QToolButton:
-    """Refresh or Stop on Last check's title line: an icon, its words in the tooltip."""
-    button = QToolButton()
-    button.setObjectName("commandButton")
+def _plain_button(icon: str, color: QColor) -> QPushButton:
+    """Refresh or Stop at Last check's foot: a plain button with its icon and words."""
+    button = QPushButton()
+    button.setAutoDefault(False)  # Enter never refreshes by surprise
     button.setIcon(tabler_icon(icon, color, 16))
-    button.setCursor(Qt.CursorShape.PointingHandCursor)
     return button

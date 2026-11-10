@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 16:14-0300\n"
+"POT-Creation-Date: 2026-11-10 16:41-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -879,9 +879,6 @@ msgstr ""
 msgid ""
 "Checks every Windows file and repairs damaged ones (DISM and sfc); up to "
 "an hour."
-msgstr ""
-
-msgid "Checks these hosts again now"
 msgstr ""
 
 msgid ""
@@ -2237,6 +2234,9 @@ msgstr ""
 msgid "No hosts in this group have all the picked tags."
 msgstr ""
 
+msgid "No hosts to refresh"
+msgstr ""
+
 msgid "No list open"
 msgstr ""
 
@@ -2289,6 +2289,9 @@ msgid "No printers are installed on {host}."
 msgstr ""
 
 msgid "No printers in this group have all the picked tags."
+msgstr ""
+
+msgid "No printers to refresh"
 msgstr ""
 
 msgid ""
@@ -2860,7 +2863,7 @@ msgstr ""
 msgid "Reading…"
 msgstr ""
 
-msgid "Reads these printers again now"
+msgid "Reads what's ticked in this box again"
 msgstr ""
 
 msgid "Ready"
@@ -2906,6 +2909,9 @@ msgid ""
 "tray. Quit stops them."
 msgstr ""
 
+msgid "Refresh printer"
+msgstr ""
+
 msgid "Refresh status &by itself"
 msgstr ""
 
@@ -2913,7 +2919,23 @@ msgid "Refresh status by itself"
 msgstr ""
 
 #, python-brace-format
+msgid "Refresh {n} host"
+msgid_plural "Refresh {n} hosts"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Refresh {n} printer"
+msgid_plural "Refresh {n} printers"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "Refreshing status: {done} of {total}…"
+msgstr ""
+
+#, python-brace-format
+msgid "Refreshing {done} of {total}…"
 msgstr ""
 
 msgid "Refused"
@@ -3996,7 +4018,7 @@ msgstr ""
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr ""
 
-msgid "Tick Status or Logged-on users to check them"
+msgid "Tick Status or Logged-on users to refresh them"
 msgstr ""
 
 msgid "Tick a column under Last check to read them"
@@ -5254,6 +5276,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} ticked"
 msgid_plural "{n} ticked"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} with no address is left out"
+msgid_plural "{n} with no address are left out"
 msgstr[0] ""
 msgstr[1] ""
 

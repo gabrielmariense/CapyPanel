@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 16:14-0300\n"
+"POT-Creation-Date: 2026-11-10 16:41-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -859,9 +859,6 @@ msgstr "Verificando {done} de {total}…"
 
 msgid "Checks every Windows file and repairs damaged ones (DISM and sfc); up to an hour."
 msgstr "Verifica todos os arquivos do Windows e repara os danificados (DISM e sfc); até uma hora."
-
-msgid "Checks these hosts again now"
-msgstr "Verifica estes hosts de novo agora"
 
 msgid "Checks whether each host shown answers, as Hosts' Refresh does; its Status column shows here and in Hosts"
 msgstr "Verifica se cada host exibido responde, como o Atualizar do Hosts; a coluna Status aparece aqui e no Hosts"
@@ -2150,6 +2147,9 @@ msgstr "Nenhum host exibido"
 msgid "No hosts in this group have all the picked tags."
 msgstr "Nenhum host deste grupo tem todas as tags escolhidas."
 
+msgid "No hosts to refresh"
+msgstr "Nenhum host para atualizar"
+
 msgid "No list open"
 msgstr "Nenhuma lista aberta"
 
@@ -2203,6 +2203,9 @@ msgstr "Nenhuma impressora está instalada em {host}."
 
 msgid "No printers in this group have all the picked tags."
 msgstr "Nenhuma impressora deste grupo tem todas as tags escolhidas."
+
+msgid "No printers to refresh"
+msgstr "Nenhuma impressora para atualizar"
 
 msgid "No row of Settings › Hosts › Credentials names this PC, so it's the Windows account you're signed in with."
 msgstr "Nenhuma linha de Configurações › Hosts › Credenciais nomeia este PC, então é a conta do Windows com que você entrou."
@@ -2739,8 +2742,8 @@ msgstr "Lendo {path} em {host}…"
 msgid "Reading…"
 msgstr "Lendo…"
 
-msgid "Reads these printers again now"
-msgstr "Lê estas impressoras de novo agora"
+msgid "Reads what's ticked in this box again"
+msgstr "Lê de novo o que está marcado nesta caixa"
 
 msgid "Ready"
 msgstr "Pronta"
@@ -2781,6 +2784,9 @@ msgstr "Atualizar &sozinho"
 msgid "Refresh on its own and warnings keep working while CapyPanel is in the tray. Quit stops them."
 msgstr "A atualização sozinha e os avisos continuam funcionando enquanto o CapyPanel estiver na bandeja. Sair os interrompe."
 
+msgid "Refresh printer"
+msgstr "Atualizar impressora"
+
 msgid "Refresh status &by itself"
 msgstr "Atualizar o status &sozinho"
 
@@ -2788,8 +2794,24 @@ msgid "Refresh status by itself"
 msgstr "Atualizar o status sozinho"
 
 #, python-brace-format
+msgid "Refresh {n} host"
+msgid_plural "Refresh {n} hosts"
+msgstr[0] "Atualizar {n} host"
+msgstr[1] "Atualizar {n} hosts"
+
+#, python-brace-format
+msgid "Refresh {n} printer"
+msgid_plural "Refresh {n} printers"
+msgstr[0] "Atualizar {n} impressora"
+msgstr[1] "Atualizar {n} impressoras"
+
+#, python-brace-format
 msgid "Refreshing status: {done} of {total}…"
 msgstr "Atualizando status: {done} de {total}…"
+
+#, python-brace-format
+msgid "Refreshing {done} of {total}…"
+msgstr "Atualizando {done} de {total}…"
 
 msgid "Refused"
 msgstr "Recusada"
@@ -3810,8 +3832,8 @@ msgstr "Esta impressora não informa o nível deste suprimento."
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyPanel."
 
-msgid "Tick Status or Logged-on users to check them"
-msgstr "Marque Status ou Usuários logados para verificá-los"
+msgid "Tick Status or Logged-on users to refresh them"
+msgstr "Marque Status ou Usuários logados para atualizá-los"
 
 msgid "Tick a column under Last check to read them"
 msgstr "Marque uma coluna em Última verificação para lê-las"
@@ -5017,6 +5039,12 @@ msgid "{n} ticked"
 msgid_plural "{n} ticked"
 msgstr[0] "{n} marcado"
 msgstr[1] "{n} marcados"
+
+#, python-brace-format
+msgid "{n} with no address is left out"
+msgid_plural "{n} with no address are left out"
+msgstr[0] "{n} sem endereço fica de fora"
+msgstr[1] "{n} sem endereço ficam de fora"
 
 #, python-brace-format
 msgid "{online} online · {offline} offline"
