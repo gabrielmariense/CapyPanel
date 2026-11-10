@@ -116,6 +116,21 @@ def test_sort_groups_a_to_z_asks_once_then_sorts_every_level(
     assert len(asked) == 2
 
 
+def test_the_arrow_keys_go_on_from_the_row_edited_after_the_table_refills(
+    window: CapyWindow,
+) -> None:
+    table = window.hosts.table
+    rows = [table.topLevelItem(i) for i in range(table.topLevelItemCount())]
+    last = rows[-1]
+    assert last is not None and len(rows) == 2
+    table.setCurrentItem(last)  # as a click on it, before Edit
+    picked = last.data(0, ROLE_ID)
+    window.hosts.refresh()  # what saving an edit does
+    current = table.currentItem()
+    assert current is not None and current.data(0, ROLE_ID) == picked
+    assert table.selected_ids() == [picked]
+
+
 def test_hosts_dropped_on_a_group_move_there(window: CapyWindow) -> None:
     doc = window.hosts.document
     assert doc is not None

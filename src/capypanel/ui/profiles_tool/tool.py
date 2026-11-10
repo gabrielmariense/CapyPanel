@@ -226,8 +226,9 @@ class ProfilesTool(Tool):
         if self._hosts is not None:
             self._hosts.list_changed.connect(self._show_list)
             self._hosts.host_changed.connect(self._host_checked)
-            self._hosts.checks_changed.connect(self._fill_hosts)
-            self._hosts.checks_changed.connect(self._update)  # Refresh all greys while it runs
+            # Once per host a Refresh checks: only the toolbar here (each row follows by
+            # host_changed). Refilling the table each time froze the window on 460 hosts.
+            self._hosts.checks_changed.connect(self._update)
 
     @property
     def bar(self) -> ProfilesToolBar:
@@ -382,6 +383,8 @@ class ProfilesTool(Tool):
         hosts = self._hosts
         if hosts is None or hosts.checking() or self.tabs.current() != HOSTS:
             return
+        if self.nav.current_filter().kind == "all":
+            return  # every host of the list is too many to check unasked: Atualizar todos does
         minutes = hosts.auto_status()[1]
         now = datetime.now(UTC)
         stale = [
@@ -708,7 +711,7 @@ class ProfilesTool(Tool):
             else:
                 scan, tip = _("Scan"), _("Pick hosts in the list first")
             bar.show_texts(scan, tip, _("Delete profiles…"), "", "", counting=False)
-            shown = len(self.visible_hosts())
+            shown = self.hosts_page.table.tree.topLevelItemCount()  # cheap: this runs per result
             bar.show_refresh(
                 _("Refresh all"),
                 _("Checks whether each host shown answers, as Hosts' Refresh does; its Status "

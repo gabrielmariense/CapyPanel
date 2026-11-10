@@ -320,12 +320,30 @@ def test_picking_a_group_checks_the_hosts_not_checked_lately(
     window.hosts._status_found[_id(window, "DESK-10")] = (
         Status.OFFLINE, now - timedelta(minutes=30), None,
     )  # fmt: skip
-    tool.nav.filter_changed.emit()
+    tool.nav.filter_changed.emit()  # All hosts: the whole list, too many to check unasked
+    assert calls == []
+    doc = window.hosts.document
+    assert doc is not None
+    tool.nav.select_group(doc.hosts.groups[0].id)  # Clinic, as a click on it
     assert calls == [["DESK-10", "LAB-02"]]  # DESK-03 was checked a moment ago
     tool.hosts_page.search.setText("desk")  # a search alone checks nothing
     assert len(calls) == 1
+    tool.hosts_page.search.clear()
     tool.showEvent(QShowEvent())  # opening the tool checks once more what's stale
     assert len(calls) == 2
+
+
+def test_a_refresh_result_updates_one_row_without_refilling_the_table(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tool = _tool(window)
+    refills: list[int] = []
+    monkeypatch.setattr(tool, "_fill_hosts", lambda: refills.append(1))
+    key = _id(window, "DESK-10")
+    window.hosts._status_found[key] = (Status.ONLINE, datetime.now(UTC), None)
+    window.hosts.host_changed.emit(key)
+    window.hosts.checks_changed.emit()  # Hosts sends it once per host checked
+    assert refills == [] and _host_row(tool, "DESK-10")[hosts_page.STATUS] == "Online"
 
 
 def test_the_panels_open_wide_enough_for_long_names(window: CapyWindow) -> None:

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from PySide6.QtCore import (
     QEvent,
+    QItemSelectionModel,
     QMimeData,
     QModelIndex,
     QPersistentModelIndex,
@@ -545,6 +546,8 @@ class ItemTable(QTreeWidget):
 
     def show_items(self, items: Sequence[Host]) -> None:
         keep = set(self.selected_ids())
+        current = self.currentItem()
+        current_id = current.data(0, ROLE_ID) if current is not None else None
         # An edit, add or delete refills the table, and clear() would jump to the top: the same
         # rows give or take the ones changed stay where they were. Another group or search
         # starts at the top.
@@ -564,6 +567,13 @@ class ItemTable(QTreeWidget):
             self.decorate(row, item)
             row.setSelected(item.id in keep)
         self.setSortingEnabled(True)
+        # The arrow keys go on from the row they were on, not from the top: the current row
+        # comes back too, without touching the selection just put back.
+        if current_id in self._rows:
+            self.selectionModel().setCurrentIndex(
+                self.indexFromItem(self._rows[current_id]),
+                QItemSelectionModel.SelectionFlag.NoUpdate,
+            )
         self.blockSignals(False)
         self._place_columns()
         self.updateGeometries()  # the scroll bars' new range, before going back
