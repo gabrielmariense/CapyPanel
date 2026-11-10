@@ -193,6 +193,11 @@ def shown_text(shown: int, total: int) -> str:
     return _("{shown} of {total} shown").format(shown=shown, total=total)
 
 
+def shown_short(shown: int, total: int) -> str:
+    """The same, where "shown" doesn't fit: "12 of 15"."""
+    return _("{n} of {total}").format(n=shown, total=total)
+
+
 # ---- a scan that failed ----
 
 

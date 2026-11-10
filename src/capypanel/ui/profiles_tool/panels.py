@@ -372,14 +372,16 @@ class FilterRow(QWidget):
         self.since.setCurrentIndex(picked)
         self.since.blockSignals(False)
 
-    def show_count(self, shown: str, ticked: str = "", short: str = "", least: str = "") -> None:
+    def show_count(self, shown: str, ticked: str = "", short: str = "", least: str = "",
+                   shown_short: str = "") -> None:  # fmt: skip
         """How many rows show; with rows ticked, how many and their size instead, in bold
         amber with the bin, in the same place. Short of room, the ticked words lose the size
-        (`short`), then all but the number (`least`)."""
+        (`short`), then all but the number (`least`); the plain count loses its last word
+        (`shown_short`: "12 of 15"). A word is never cut."""
         if ticked:
             self.shown.show_count(ticked, True, short, least)
         else:
-            self.shown.show_count(shown, False)
+            self.shown.show_count(shown, False, shown_short)
 
     def chosen(self) -> Filters:
         return Filters(

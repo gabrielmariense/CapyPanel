@@ -459,8 +459,9 @@ class HostPage(QObject):
             words = short = ngettext("{n} ticked", "{n} ticked", len(ticked)).format(n=len(ticked))
             if size := self.ticked_size():
                 words += " · " + rows.size_text(size)
-        shown = rows.shown_text(len(self.table.shown()), len(self.scan.profiles))
-        self.filters.show_count(shown, words, short, str(len(ticked)))
+        showing, total = len(self.table.shown()), len(self.scan.profiles)
+        self.filters.show_count(rows.shown_text(showing, total), words, short, str(len(ticked)),
+                                rows.shown_short(showing, total))  # fmt: skip
 
     def title(self) -> str:
         """The box's first line: what this list is, so it's never taken for a list of hosts."""

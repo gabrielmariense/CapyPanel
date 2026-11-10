@@ -2,7 +2,7 @@
 then a tab per host, which scroll when they don't fit while the Hosts tab stays. A ▾ at the end
 lists every tab. Tabs never reorder themselves: a new one opens at the right end."""
 
-from PySide6.QtCore import QPoint, Qt, Signal
+from PySide6.QtCore import QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QMouseEvent, QPalette
 from PySide6.QtWidgets import (
     QFrame,
@@ -40,6 +40,35 @@ class _Bar(QTabBar):
     def set_active(self, active: bool) -> None:
         self.active = active
         self.update()
+
+    def _scrollers(self) -> list[QToolButton]:
+        """Qt's own two buttons, left then right."""
+        names = ("ScrollLeftButton", "ScrollRightButton")
+        return [b for name in names if (b := self.findChild(QToolButton, name)) is not None]
+
+    def tabLayoutChange(self) -> None:
+        """Qt gives its two buttons their arrows back each time it lays the tabs out, and a
+        button with an arrow draws no icon."""
+        super().tabLayoutChange()
+        for button in self._scrollers():
+            if button.arrowType() != Qt.ArrowType.NoArrow:
+                button.setArrowType(Qt.ArrowType.NoArrow)
+
+    def restyle(self) -> None:
+        """The two arrows that scroll the tabs when they don't fit. Qt's own are tool buttons,
+        and the theme's padding for tool buttons left them see-through with no arrow: the
+        last tab just looked cut. They get a chevron and the window's own background."""
+        color = self.palette().color(QPalette.ColorRole.ButtonText)
+        back = self.palette().color(QPalette.ColorRole.Window).name()
+        icons = ("chevron-left", "chevron-right")
+        for button, icon in zip(self._scrollers(), icons, strict=False):
+            button.setArrowType(Qt.ArrowType.NoArrow)
+            button.setIcon(tabler_icon(icon, color, 16))
+            button.setIconSize(QSize(16, 16))
+            button.setStyleSheet(
+                f"QToolButton {{ padding: 0px; border: none; border-radius: 0px;"
+                f" background: {back}; }}"
+            )
 
     def initStyleOption(self, option: QStyleOptionTab, index: int) -> None:
         super().initStyleOption(option, index)
@@ -106,6 +135,7 @@ class TabStrip(QWidget):
     def restyle(self) -> None:
         color = self.palette().color(QPalette.ColorRole.ButtonText)
         self.more.setIcon(tabler_icon("chevron-down", color))
+        self.bar.restyle()
         self.pinned.setTabIcon(0, tabler_icon("device-desktop", color))
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
         for index in range(self.bar.count()):

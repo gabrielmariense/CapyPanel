@@ -13,7 +13,7 @@ from capywindow import CapyWindow
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, QPointF, QRect, Qt
 from PySide6.QtGui import QKeyEvent, QMouseEvent, QShowEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtWidgets import QApplication, QDialog, QToolButton
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -843,6 +843,18 @@ def test_a_middle_click_closes_a_tab_without_going_to_it(window: CapyWindow) -> 
     assert tool.tabs.current() == desk.target.key
 
 
+def test_the_arrows_that_scroll_the_tabs_can_be_seen(window: CapyWindow) -> None:
+    tool = _tool(window)
+    page = _open(window)
+    assert page.filters.shown.text() == "6 of 7 shown" and page.filters.shown._short == "6 of 7"
+    found = {b.objectName(): b for b in tool.tabs.bar.findChildren(QToolButton)
+             if b.objectName().startswith("Scroll")}  # fmt: skip
+    assert set(found) == {"ScrollLeftButton", "ScrollRightButton"}
+    for button in found.values():  # a chevron on the window's colour, never see-through
+        assert not button.icon().isNull() and "padding: 0px" in button.styleSheet()
+        assert "background: #" in button.styleSheet()
+
+
 def test_a_tab_closed_while_its_scan_runs_ignores_the_answer(
     window: CapyWindow, worker: Worker
 ) -> None:
@@ -1343,6 +1355,10 @@ def test_the_count_drops_the_size_before_it_ends_in_an_ellipsis(qapp: QApplicati
     assert count.shown_text() == "3 ticked" and count.toolTip() == "3 ticked · 12.4 GB"
     count.resize(bin_room + 20, 20)  # no room for the word: the bin and the number
     assert count.shown_text() == "3" and count.toolTip() == "3 ticked · 12.4 GB"
+    # The plain count loses "shown" before any word is cut; the whole text in its tooltip.
+    count.show_count("12 of 15 shown", False, "12 of 15")
+    count.resize(metrics.horizontalAdvance("12 of 15 shown") - 4, 20)
+    assert count.shown_text() == "12 of 15" and count.toolTip() == "12 of 15 shown"
     count.show_count("12 of 15 shown", False)  # nothing shorter to fall back on: "…"
     count.resize(40, 20)
     assert count.shown_text().endswith("…")
