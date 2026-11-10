@@ -10,8 +10,9 @@ from typing import Any
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtCore import QEvent, QPointF, Qt
+from PySide6.QtCore import QCoreApplication, QEvent, QPointF, Qt
 from PySide6.QtGui import QKeyEvent, QMouseEvent, QShowEvent
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog
 
 from capypanel.core import settings
@@ -732,6 +733,31 @@ def test_tabs_open_at_the_right_end_and_close_in_every_way(window: CapyWindow) -
     assert _host_row(tool, "DESK-03")[hosts_page.PROFILES : hosts_page.DELETABLE + 1] == ["7", "5"]
 
 
+def test_a_middle_click_closes_a_tab_without_going_to_it(window: CapyWindow) -> None:
+    tool = _tool(window)
+    desk, other = _open(window), _open(window, "DESK-10", focus=False)
+    bar = tool.tabs.bar
+    where = bar.tabRect(tool.tabs.index_of(other.target.key)).center()
+    went: list[str] = []
+    tool.tabs.picked.connect(went.append)
+    QTest.mouseClick(bar, Qt.MouseButton.MiddleButton, pos=where)
+    assert tool.tabs.host_keys() == [desk.target.key] and went == []
+    assert tool.tabs.current() == desk.target.key
+
+
+def test_a_tab_closed_while_its_scan_runs_ignores_the_answer(
+    window: CapyWindow, worker: Worker
+) -> None:
+    tool = _tool(window)
+    worker.holding = True
+    page = _open(window)
+    assert page.stage is Stage.SCANNING and len(worker.held) == 1
+    assert tool.close_tab(page.target.key)
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)  # its widgets are gone
+    worker.end()  # the read ends after: dropped, not shown in a deleted tab
+    assert tool.tabs.host_keys() == [] and tool.pool.waiting(page) == 0
+
+
 def test_progress_lists_the_hosts_in_tabs_by_where_they_are(
     window: CapyWindow, worker: Worker, pc: Pc
 ) -> None:
@@ -905,7 +931,11 @@ def test_the_delete_window_lists_the_ticked_rows_and_wants_the_word_typed(
             dialog.word.setText(word)
             states.append(dialog.action.isEnabled())
         seen.append(tuple(states))
+        # Once lit, the amber button has the keyboard and is the default: Enter deletes.
+        seen.append((dialog.action.isDefault(), dialog.cancel.isDefault(),
+                     dialog.focusWidget() is dialog.action))  # fmt: skip
         dialog.word.clear()
+        seen.append((dialog.action.isDefault(), dialog.cancel.isDefault()))
         dialog.accept()  # Enter with the word missing: nothing
         seen.append((dialog.result(),))
         return False  # then Cancel
@@ -925,7 +955,9 @@ def test_the_delete_window_lists_the_ticked_rows_and_wants_the_word_typed(
         True,
     )
     assert seen[1] == (False, False, True, True)  # any case, spaces around it ignored
-    assert seen[2] == (0,)
+    assert seen[2] == (True, False, True)
+    assert seen[3] == (False, True)  # the word gone: Cancel is the default again
+    assert seen[4] == (0,)
     assert deletes.asked == [] and page.ticked() == [RUI, MARTA]  # cancelled: as before
     assert rows.confirm_word() == "DELETE" and rows.confirms("Delete") and not rows.confirms("")
 

@@ -293,6 +293,13 @@ class HostPage(QObject):
 
         self._ctx.pool.read(self, read, done, failed, began)
 
+    def close(self) -> None:
+        """Its tab closes: sizes stop, waiting work never starts, and a read under way is
+        ignored when it ends (its widgets are gone by then)."""
+        self.stop_sizes()
+        self._scan_run += 1
+        self._ctx.pool.drop(self)
+
     def _show_waiting(self) -> None:
         """Queued or reading: a card in the table's place, the filters greyed."""
         reading = self.stage is Stage.SCANNING

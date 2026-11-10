@@ -703,8 +703,7 @@ class ProfilesTool(Tool):
                 ).format(host=page.target.name)  # fmt: skip
             )
             return False
-        page.stop_sizes()
-        self.pool.drop(page)
+        page.close()
         if page.scan is not None and page.read_at is not None:
             total, deletable = page.counts() or (0, 0)
             self._kept[key] = (total, deletable, page.read_at)

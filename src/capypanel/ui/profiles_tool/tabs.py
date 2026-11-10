@@ -46,6 +46,12 @@ class _Bar(QTabBar):
         if not self.active:
             option.state &= ~QStyle.StateFlag.State_Selected
 
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if event.button() != Qt.MouseButton.LeftButton:
+            event.accept()  # Qt picks a tab on any press: a middle-click went there, then closed
+            return
+        super().mousePressEvent(event)
+
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.MiddleButton:
             index = self.tabAt(event.position().toPoint())

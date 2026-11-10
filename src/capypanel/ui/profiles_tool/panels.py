@@ -919,8 +919,8 @@ class ProfileDetails(DetailsPanel):
 
 class DeleteDialog(Question):
     """The question before profiles are deleted: which ones, that it's final, and a word to
-    type. The amber button lights only once the word is there; Cancel stays the default, so
-    Enter in the field never confirms by itself."""
+    type. Cancel is the default until the word is there; then the amber button lights, takes
+    the keyboard and becomes the default, so the Enter that follows deletes."""
 
     def __init__(
         self, parent: QWidget | None, host: str, profiles: Sequence[Profile], sizes: dict[str, int]
@@ -974,10 +974,18 @@ class DeleteDialog(Question):
         self.body.addWidget(ask)
         self.body.addWidget(self.word)
         self.action.setEnabled(False)
-        self.word.textChanged.connect(lambda text: self.action.setEnabled(rows.confirms(text)))
+        self.word.textChanged.connect(self._word_changed)
         self.resize(540, 10)
         fit_rows(self.table)
         self.word.setFocus()
+
+    def _word_changed(self, text: str) -> None:
+        typed = rows.confirms(text)
+        self.action.setEnabled(typed)
+        self.action.setDefault(typed)
+        self.cancel.setDefault(not typed)
+        if typed:  # it looks in focus once lit: it really is, so Enter isn't Cancel
+            self.action.setFocus()
 
     def accept(self) -> None:
         if rows.confirms(self.word.text()):  # never by a stray Enter on a greyed button
