@@ -214,6 +214,9 @@ class ProfilesTool(Tool):
         bar.delete_button.clicked.connect(self.delete_ticked)
         self.splitter.splitterMoved.connect(self.align_toolbar_later)
         self.nav.filter_changed.connect(self._group_picked)
+        # A click on the group already picked changes no selection: it still goes to the group.
+        for tree in (self.nav.everything, self.nav.groups):
+            tree.itemClicked.connect(lambda *_a: self._group_clicked())
         self.hosts_page.search.textChanged.connect(self._fill_hosts)
         table = self.hosts_page.table
         table.open_requested.connect(self.open_hosts)
@@ -430,6 +433,12 @@ class ProfilesTool(Tool):
         wanted = min(wanted, sum(sizes) - 400)
         self.splitter.setSizes([wanted, sum(sizes) - wanted])
         self.align_toolbar_later()
+
+    def _group_clicked(self) -> None:
+        """A click on a group, the one already picked too: back to the Hosts tab on it. (When
+        the click picked another group, _group_picked ran first and nothing is left to do.)"""
+        if self.tabs.current() != HOSTS or self.hosts_page.search.text():
+            self._group_picked()
 
     def _all_hosts(self) -> tuple[Host, ...]:
         doc = self._hosts.document if self._hosts is not None else None

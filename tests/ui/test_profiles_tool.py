@@ -371,6 +371,15 @@ def test_a_group_picked_while_a_hosts_tab_is_in_front_brings_the_hosts_tab_back(
     assert tool.tabs.current() == _id(window, "DESK-03")
     tool.nav.filter_changed.emit()
     assert tool.tabs.current() == HOSTS
+    # A click on the group already picked changes no selection, and still goes back.
+    tool.switch(_id(window, "DESK-03"))
+    item = tool.nav.everything.topLevelItem(0)
+    assert item is not None
+    tool.nav.everything.itemClicked.emit(item, 0)
+    assert tool.tabs.current() == HOSTS
+    tool.hosts_page.search.setText("desk-10")  # and it ends a search, as picking one does
+    tool.nav.everything.itemClicked.emit(item, 0)
+    assert tool.hosts_page.search.text() == "" and len(_hosts(tool)) == 3
 
 
 # ---- opening hosts ----
@@ -831,7 +840,10 @@ def test_a_ticked_row_looks_like_something_to_be_careful_with(window: CapyWindow
     assert rui.text(panels.STATE) == "Can be deleted" and rui.icon(panels.STATE).isNull()  # no dot
     assert not rui.data(panels.USER, panels.CAREFUL_ROLE)
     header = tree.headerItem()
-    assert header.toolTip(panels.TICK) == "Tick to delete" and not header.icon(panels.TICK).isNull()
+    assert (
+        header.toolTip(panels.TICK).startswith("Tick to delete")
+        and not header.icon(panels.TICK).isNull()
+    )
     page.count_sizes()
     page.table.tick(RUI.ident)
     assert rui.text(panels.STATE) == "Will be deleted" and rui.data(
@@ -1162,3 +1174,23 @@ def test_a_size_being_counted_shows_its_bytes_so_far(
     assert tool.status_label.text().endswith(" so far")
     page.stop_sizes()
     assert not page._ticker.isActive()
+
+
+def test_space_and_a_double_click_tick_the_row_the_keyboard_is_on(window: CapyWindow) -> None:
+    page = _open(window)
+    tree = page.table.tree
+    _pick_row(page, "EXAMPLE\\rui")
+    space = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space, Qt.KeyboardModifier.NoModifier)
+    QApplication.sendEvent(tree, space)
+    assert page.ticked() == [RUI]
+    QApplication.sendEvent(tree, space)  # again: unticked
+    assert page.ticked() == []
+    item = tree.currentItem()
+    assert item is not None
+    tree.itemDoubleClicked.emit(item, panels.USER)
+    assert page.ticked() == [RUI]
+    tree.itemDoubleClicked.emit(item, panels.TICK)  # on the box: its own clicks did it
+    assert page.ticked() == [RUI]
+    _pick_row(page, "EXAMPLE\\ana")  # in use: no box, so nothing to tick
+    QApplication.sendEvent(tree, space)
+    assert page.ticked() == [RUI]

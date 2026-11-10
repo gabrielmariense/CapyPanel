@@ -19,6 +19,7 @@ from PySide6.QtGui import (
     QColor,
     QFont,
     QIcon,
+    QKeyEvent,
     QPainter,
     QPaintEvent,
     QPalette,
@@ -496,6 +497,10 @@ class ProfilesTable(QWidget):
         self.tree.setItemDelegate(_Careful(self.tree))
         self.tree.itemSelectionChanged.connect(self.picked)
         self.tree.itemChanged.connect(self._changed)
+        # Going down the list with the keyboard: Space ticks the row the arrows are on, and so
+        # does a double-click anywhere on a row.
+        self.tree.itemDoubleClicked.connect(self._double_clicked)
+        self.tree.installEventFilter(self)
         self._profiles: dict[str, Profile] = {}
         self._ticked: set[str] = set()
         self._results: dict[str, Result] = {}
@@ -513,7 +518,7 @@ class ProfilesTable(QWidget):
         header = self.tree.headerItem()
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
         header.setIcon(TICK, tabler_icon("trash", muted, 14))
-        header.setToolTip(TICK, _("Tick to delete"))
+        header.setToolTip(TICK, _("Tick to delete: the box, Space, or a double-click on the row"))
 
     def _sort_picked(self, column: int, order: Qt.SortOrder) -> None:
         """A click on the ticks' title does nothing: no sort, no tick-all."""
@@ -638,6 +643,27 @@ class ProfilesTable(QWidget):
         item = self._item(ident)
         if item is not None and self._tickable(ident) and not self._locked:
             item.setCheckState(TICK, Qt.CheckState.Checked if on else Qt.CheckState.Unchecked)
+
+    def toggle(self, ident: str) -> None:
+        """Ticks a row, or unticks it; a row without a box stays as it is."""
+        self.tick(ident, ident not in self._ticked)
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if (
+            watched is self.tree
+            and event.type() == QEvent.Type.KeyPress
+            and isinstance(event, QKeyEvent)
+            and event.key() == Qt.Key.Key_Space
+        ):
+            current = self.tree.currentItem()
+            if current is not None:
+                self.toggle(current.data(USER, IDENT_ROLE))
+            return True  # or Qt ticks it a second time when the box's own cell is current
+        return super().eventFilter(watched, event)
+
+    def _double_clicked(self, item: QTreeWidgetItem, column: int) -> None:
+        if column != TICK:  # on the box itself, the two clicks already ticked and unticked
+            self.toggle(item.data(USER, IDENT_ROLE))
 
     def texts(self) -> list[list[str]]:
         """Every row's cells, in the order on screen (for tests); the tick's cell has no text."""
