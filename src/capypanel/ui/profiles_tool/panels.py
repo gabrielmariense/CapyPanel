@@ -5,8 +5,18 @@ the Delete window and the progress of a delete run."""
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex, Qt, Signal
-from PySide6.QtGui import QBrush, QColor, QFont, QIcon, QPainter, QPalette, QPen
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QSize, Qt, Signal
+from PySide6.QtGui import (
+    QBrush,
+    QColor,
+    QFont,
+    QIcon,
+    QPainter,
+    QPaintEvent,
+    QPalette,
+    QPen,
+    QResizeEvent,
+)
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -17,6 +27,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QProgressBar,
     QPushButton,
+    QSizePolicy,
     QStyledItemDelegate,
     QStyleOptionViewItem,
     QTreeWidgetItem,
@@ -124,6 +135,77 @@ class TabBox(QFrame):
         self.about.setText(about)
 
 
+class Count(QWidget):
+    """The right end of a host tab's second line: how many rows show, or, with rows ticked, a
+    bin and "3 ticked · 12.4 GB" in bold amber. It never widens its row: short of room it ends
+    in "…" on the right, with the whole text in its tooltip, and its start is never cut."""
+
+    GAP = 5  # px between the bin and the words
+    BIN = 14
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._text = ""
+        self._ticked = False
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+
+    def show_count(self, text: str, ticked: bool) -> None:
+        self._text, self._ticked = text, ticked
+        font = QFont(self.font())
+        font.setBold(ticked)
+        self.setFont(font)
+        self.updateGeometry()
+        self._tip()
+        self.update()
+
+    def text(self) -> str:
+        return self._text
+
+    def has_bin(self) -> bool:
+        return self._ticked
+
+    def shown_text(self) -> str:
+        """The words as drawn at this width."""
+        room = self.width() - (self.BIN + self.GAP if self._ticked else 0)
+        return self.fontMetrics().elidedText(self._text, Qt.TextElideMode.ElideRight, max(room, 0))
+
+    def sizeHint(self) -> QSize:
+        width = self.fontMetrics().horizontalAdvance(self._text) + 2
+        return QSize(
+            width + (self.BIN + self.GAP if self._ticked else 0), self.fontMetrics().height()
+        )
+
+    def minimumSizeHint(self) -> QSize:
+        return QSize(self.fontMetrics().horizontalAdvance("…") + 2, self.fontMetrics().height())
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._tip()
+
+    def _tip(self) -> None:
+        self.setToolTip(self._text if self.shown_text() != self._text else "")
+
+    def paintEvent(self, event: QPaintEvent) -> None:
+        shown = self.shown_text()
+        painter = QPainter(self)
+        color = (
+            QColor(AMBER)
+            if self._ticked
+            else self.palette().color(QPalette.ColorRole.PlaceholderText)
+        )
+        width = self.fontMetrics().horizontalAdvance(shown)
+        left = self.width() - width
+        if self._ticked:
+            icon = tabler_icon("trash", QColor(AMBER), self.BIN)
+            left -= self.BIN + self.GAP
+            top = (self.height() - self.BIN) // 2
+            icon.paint(painter, left, top, self.BIN, self.BIN)
+            left += self.BIN + self.GAP
+        painter.setPen(color)
+        painter.drawText(left, 0, width, self.height(), Qt.AlignmentFlag.AlignVCenter, shown)
+        painter.end()
+
+
 class FilterRow(QWidget):
     """A host tab's second line: which rows to show, and how many are shown."""
 
@@ -136,12 +218,7 @@ class FilterRow(QWidget):
         self.leftovers = QCheckBox()
         self.since_label = QLabel()
         self.since = QComboBox()
-        self.shown = hint()
-        self.shown.setWordWrap(False)
-        self.shown.setMinimumWidth(1)  # it clips rather than widen the box
-        self.shown.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self.bin = QLabel()
-        self.bin.hide()
+        self.shown = Count()
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(14)
@@ -153,9 +230,8 @@ class FilterRow(QWidget):
         pair.addWidget(self.since_label)
         pair.addWidget(self.since)
         row.addLayout(pair)
-        row.addStretch(1)
-        row.addWidget(self.bin)
-        row.addWidget(self.shown)
+        row.addSpacing(10)
+        row.addWidget(self.shown, 1)  # the room left, its words on the right
         self.retranslate()
         self.hide_own.toggled.connect(self.changed)
         self.leftovers.toggled.connect(self.changed)
@@ -186,14 +262,7 @@ class FilterRow(QWidget):
     def show_count(self, shown: str, ticked: str = "") -> None:
         """How many rows show; with rows ticked, how many and their size instead, in bold
         amber with the bin, in the same place."""
-        self.bin.setVisible(bool(ticked))
-        if ticked:
-            self.bin.setPixmap(tabler_icon("trash", QColor(AMBER), 14).pixmap(14, 14))
-            self.shown.setStyleSheet(f"color: {AMBER}; font-weight: bold;")
-            self.shown.setText(ticked)
-        else:
-            self.shown.setStyleSheet("")
-            self.shown.setText(shown)
+        self.shown.show_count(ticked or shown, bool(ticked))
 
     def chosen(self) -> Filters:
         return Filters(
@@ -625,7 +694,8 @@ class ProfileDetails(DetailsPanel):
         if result is not None or profile.state is not State.READY:
             top.addWidget(dot)
         else:  # no dot, as the table: the name starts where the line under it does
-            name.setStyleSheet("QLabel#copyValue { padding-left: 0px; }")
+            # Its padding and the label's own edge would start it 4 px further in.
+            name.setStyleSheet("QLabel#copyValue { padding-left: 0px; margin-left: -4px; }")
         top.addWidget(name, 1)
         layout.addLayout(top)
         state = _(rows.RESULT_NAMES[result]) if result else rows.state_name(profile.state)

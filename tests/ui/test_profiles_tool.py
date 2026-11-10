@@ -756,16 +756,34 @@ def test_a_ticked_row_looks_like_something_to_be_careful_with(window: CapyWindow
     assert rui.foreground(panels.STATE).color().name() == amber
     dark = not page.table._light()
     assert (rui.foreground(panels.USER).color().name() == amber) == dark  # light: normal text
-    assert page.filters.shown.text() == "1 ticked · 3.0 GB" and page.filters.bin.isVisibleTo(
-        page.filters
-    )
+    assert page.filters.shown.text() == "1 ticked · 3.0 GB" and page.filters.shown.has_bin()
     tree.sortByColumn(panels.TICK, Qt.SortOrder.AscendingOrder)  # a click on its title: nothing
     assert tree.header().sortIndicatorSection() == panels.USED
     page.table.tick(RUI.ident, on=False)
     assert (
         rui.text(panels.STATE) == "Can be deleted" and page.filters.shown.text() == "6 of 7 shown"
     )
-    assert not page.filters.bin.isVisibleTo(page.filters) and tool.tabs.current() != HOSTS
+    assert not page.filters.shown.has_bin() and tool.tabs.current() != HOSTS
+
+
+def test_the_count_of_ticks_ends_in_an_ellipsis_rather_than_lose_its_start(
+    qapp: QApplication,
+) -> None:
+    row = panels.FilterRow()
+    row.resize(3000, 40)  # room to spare, whatever font an earlier test left
+    row.show()
+    row.show_count("12 of 15 shown", "3 ticked · 12.4 GB")
+    for _turn in range(6):  # the bold font, then the layout's second pass
+        qapp.processEvents()
+    assert row.shown.shown_text() == "3 ticked · 12.4 GB" and row.shown.toolTip() == ""
+    filters = (row.hide_own, row.leftovers, row.since_label, row.since)
+    row.resize(sum(w.sizeHint().width() for w in filters) + 160, 40)  # short of room
+    for _turn in range(6):  # the bold font, then the layout's second pass
+        qapp.processEvents()
+    shown = row.shown.shown_text()
+    assert shown.endswith("…") and "3 ticked · 12.4 GB".startswith(shown[:-1])
+    assert row.shown.toolTip() == "3 ticked · 12.4 GB"
+    row.close()
 
 
 def test_the_delete_window_lists_the_ticked_rows_and_wants_the_word_typed(
