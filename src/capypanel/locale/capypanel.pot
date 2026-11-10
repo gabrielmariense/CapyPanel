@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 11:09-0300\n"
+"POT-Creation-Date: 2026-11-10 11:30-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3917,6 +3917,12 @@ msgstr ""
 msgid "Tick a column under Last check to read them"
 msgstr ""
 
+msgid "Tick to delete"
+msgstr ""
+
+msgid "Ticked: it's deleted once you click Delete and confirm"
+msgstr ""
+
 #, python-brace-format
 msgid "To confirm, type <b>{word}</b>:"
 msgstr ""
@@ -4073,6 +4079,10 @@ msgstr ""
 msgid "User profiles"
 msgstr ""
 
+#, python-brace-format
+msgid "User profiles on {host}"
+msgstr ""
+
 msgid "User's folder"
 msgstr ""
 
@@ -4155,6 +4165,9 @@ msgid ""
 msgstr ""
 
 msgid "Who is signed in to the PC, and since when."
+msgstr ""
+
+msgid "Will be deleted"
 msgstr ""
 
 msgid "Windows"

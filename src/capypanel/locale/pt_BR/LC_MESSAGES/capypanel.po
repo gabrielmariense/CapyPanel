@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 11:09-0300\n"
+"POT-Creation-Date: 2026-11-10 11:30-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -3739,6 +3739,12 @@ msgstr "Marque Status ou Usuários logados para verificá-los"
 msgid "Tick a column under Last check to read them"
 msgstr "Marque uma coluna em Última verificação para lê-las"
 
+msgid "Tick to delete"
+msgstr "Marque para excluir"
+
+msgid "Ticked: it's deleted once you click Delete and confirm"
+msgstr "Marcado: é excluído quando você clicar em Excluir e confirmar"
+
 #, python-brace-format
 msgid "To confirm, type <b>{word}</b>:"
 msgstr "Para confirmar, digite <b>{word}</b>:"
@@ -3889,6 +3895,10 @@ msgstr "Usuário"
 msgid "User profiles"
 msgstr "Perfis de usuário"
 
+#, python-brace-format
+msgid "User profiles on {host}"
+msgstr "Perfis de usuário em {host}"
+
 msgid "User's folder"
 msgstr "Pasta do usuário"
 
@@ -3963,6 +3973,9 @@ msgstr "Qual conta entra em quais PCs, para os usuários logados do Atualizar e 
 
 msgid "Who is signed in to the PC, and since when."
 msgstr "Quem está conectado ao PC, e desde quando."
+
+msgid "Will be deleted"
+msgstr "Será excluído"
 
 msgid "Windows"
 msgstr "Windows"

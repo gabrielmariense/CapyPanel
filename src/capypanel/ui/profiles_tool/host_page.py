@@ -342,7 +342,7 @@ class HostPage(QObject):
         self._card_box.addWidget(card)
         self._stack.setCurrentWidget(self._card_page)
         self.filters.setEnabled(False)
-        self.filters.shown.setText("")
+        self.filters.show_count("")
 
     def show_again(self) -> None:
         """Everything drawn again: another language, or another theme."""
@@ -367,8 +367,8 @@ class HostPage(QObject):
             extra = {p.ident for p in self._run} - seen
             shown = [p for p in self.scan.profiles if p.ident in seen or p.ident in extra]
         self.table.show_profiles(shown, self._sizes, self._results, self.scan.root)
-        self.filters.shown.setText(rows.shown_text(len(shown), len(self.scan.profiles)))
-        self.box.show_title(self.target.name, self.about())
+        self._show_count()
+        self.box.show_title(self.title(), self.about())
         self.status_changed.emit()
 
     def _counted(self) -> dict[str, int]:
@@ -380,7 +380,25 @@ class HostPage(QObject):
     def ticked_size(self) -> int:
         return sum(self._counted().get(p.ident, 0) for p in self.ticked())
 
+    def _show_count(self) -> None:
+        """Line 2's right end: how many rows show, or, with ticks, how many and their size."""
+        if self.scan is None:
+            return
+        ticked = self.ticked()
+        words = ""
+        if ticked:
+            words = ngettext("{n} ticked", "{n} ticked", len(ticked)).format(n=len(ticked))
+            if size := self.ticked_size():
+                words += " · " + rows.size_text(size)
+        shown = rows.shown_text(len(self.table.shown()), len(self.scan.profiles))
+        self.filters.show_count(shown, words)
+
+    def title(self) -> str:
+        """The box's first line: what this list is, so it's never taken for a list of hosts."""
+        return _("User profiles on {host}").format(host=self.target.name)
+
     def _ticks_changed(self) -> None:
+        self._show_count()
         self.status_changed.emit()
         self.changed.emit()
 
@@ -467,6 +485,7 @@ class HostPage(QObject):
 
     def _show_size(self, profile: Profile) -> None:
         self.table.show_size(profile.ident, self._sizes)
+        self._show_count()
         picked = self.table.selected()
         if picked is not None and picked.ident == profile.ident:
             self._show_details()
@@ -608,7 +627,7 @@ class HostPage(QObject):
     # ---- helpers ----
 
     def _changed(self) -> None:
-        self.box.show_title(self.target.name, self.about())
+        self.box.show_title(self.title(), self.about())
         self.changed.emit()
         self.status_changed.emit()
 

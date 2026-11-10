@@ -357,7 +357,7 @@ def test_typing_never_scans_and_the_empty_table_offers_the_typed_host(
     table.scan_button.click()
     assert pc.scanned == [("192.0.2.50", None)] and tool.tabs.current() == "@192.0.2.50"
     typed = tool.page("@192.0.2.50")
-    assert typed is not None and typed.box.name.text() == "192.0.2.50"
+    assert typed is not None and typed.box.name.text() == "User profiles on 192.0.2.50"
 
 
 # ---- a host's tab ----
@@ -368,7 +368,7 @@ def test_a_scan_shows_the_host_its_profiles_and_fills_the_hosts_tab(
 ) -> None:
     tool = _tool(window)
     page = _open(window)
-    assert page.box.name.text() == "DESK-03"
+    assert page.box.name.text() == "User profiles on DESK-03"
     about = page.box.about.text()
     assert about.startswith("192.0.2.13 · scanned at ") and about.endswith(" · as EXAMPLE\\support")
     assert page.filters.shown.text() == "6 of 7 shown"  # Windows' own is hidden at first
@@ -735,6 +735,39 @@ def test_only_a_row_that_can_be_deleted_has_a_tick_box(window: CapyWindow) -> No
     assert page.ticked() == [] and not tool.bar.delete_button.isEnabled()
 
 
+def test_a_ticked_row_looks_like_something_to_be_careful_with(window: CapyWindow) -> None:
+    tool = _tool(window)
+    page = _open(window)
+    tree = page.table.tree
+    assert page.box.name.text() == "User profiles on DESK-03"
+    rui = next(tree.topLevelItem(i) for i in range(tree.topLevelItemCount())
+               if tree.topLevelItem(i).text(panels.USER) == "EXAMPLE\\rui")  # type: ignore[union-attr]  # fmt: skip
+    assert rui is not None
+    assert rui.text(panels.STATE) == "Can be deleted" and rui.icon(panels.STATE).isNull()  # no dot
+    assert not rui.data(panels.USER, panels.CAREFUL_ROLE)
+    header = tree.headerItem()
+    assert header.toolTip(panels.TICK) == "Tick to delete" and not header.icon(panels.TICK).isNull()
+    page.count_sizes()
+    page.table.tick(RUI.ident)
+    assert rui.text(panels.STATE) == "Will be deleted" and rui.data(
+        panels.USER, panels.CAREFUL_ROLE
+    )
+    amber = panels.AMBER.lower()
+    assert rui.foreground(panels.STATE).color().name() == amber
+    dark = not page.table._light()
+    assert (rui.foreground(panels.USER).color().name() == amber) == dark  # light: normal text
+    assert page.filters.shown.text() == "1 ticked · 3.0 GB" and page.filters.bin.isVisibleTo(
+        page.filters
+    )
+    tree.sortByColumn(panels.TICK, Qt.SortOrder.AscendingOrder)  # a click on its title: nothing
+    assert tree.header().sortIndicatorSection() == panels.USED
+    page.table.tick(RUI.ident, on=False)
+    assert (
+        rui.text(panels.STATE) == "Can be deleted" and page.filters.shown.text() == "6 of 7 shown"
+    )
+    assert not page.filters.bin.isVisibleTo(page.filters) and tool.tabs.current() != HOSTS
+
+
 def test_the_delete_window_lists_the_ticked_rows_and_wants_the_word_typed(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch, deletes: Deletes
 ) -> None:
@@ -867,7 +900,7 @@ def test_while_a_host_deletes_its_tab_wont_close_and_its_rows_always_show(
     assert "cancelled: 2 not started" in progress.log.toPlainText()
     page.filters.leftovers.setChecked(False)
     states = _states(page)
-    assert states["EXAMPLE\\bia"] == "Can be deleted" and page.ticked() == [BIA, MARTA]
+    assert states["EXAMPLE\\bia"] == "Will be deleted" and page.ticked() == [BIA, MARTA]
     assert tool.bar.delete_button.isEnabled()  # the ticks left can be run again
     assert tool.close_tab(page.target.key)
 
