@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 18:41-0300\n"
+"POT-Creation-Date: 2026-11-09 23:14-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -66,6 +66,9 @@ msgid "&Brand:"
 msgstr ""
 
 msgid "&Browse…"
+msgstr ""
+
+msgid "&Clear caches"
 msgstr ""
 
 msgid "&Clear queue"
@@ -144,6 +147,9 @@ msgstr ""
 msgid "&Folder on {host}:"
 msgstr ""
 
+msgid "&Folder:"
+msgstr ""
+
 msgid "&Forget"
 msgstr ""
 
@@ -183,6 +189,9 @@ msgstr ""
 msgid "&Leave out of the import"
 msgstr ""
 
+msgid "&Letter:"
+msgstr ""
+
 msgid "&List on startup"
 msgstr ""
 
@@ -214,6 +223,12 @@ msgid "&Manage…"
 msgstr ""
 
 msgid "&Manual connection…"
+msgstr ""
+
+msgid "&Map"
+msgstr ""
+
+msgid "&Map a drive…"
 msgstr ""
 
 msgid "&Message to them:"
@@ -465,6 +480,12 @@ msgid "A preset named “{name}” already exists. Replace it?"
 msgstr ""
 
 msgid "A quote in the arguments isn't closed."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"A shared folder as \\\\server\\share. It runs as {user}, so the drive is "
+"theirs; if the letter is taken, Windows says so."
 msgstr ""
 
 msgid "A tag"
@@ -760,6 +781,9 @@ msgstr ""
 msgid "Check the SNMP account in Settings › Printers › Connecting."
 msgstr ""
 
+msgid "Check their session"
+msgstr ""
+
 #, python-brace-format
 msgid "Check who is logged on to {n} hosts?"
 msgstr ""
@@ -778,6 +802,9 @@ msgstr[1] ""
 
 #, python-brace-format
 msgid "Checked {when}."
+msgstr ""
+
+msgid "Checking their session…"
 msgstr ""
 
 #, python-brace-format
@@ -814,6 +841,20 @@ msgstr ""
 msgid "Clear &queue…"
 msgstr ""
 
+msgid "Clear caches"
+msgstr ""
+
+#, python-brace-format
+msgid "Clear caches for {user} on {host}?"
+msgstr ""
+
+#, python-brace-format
+msgid "Clear caches is still running on {host}."
+msgstr ""
+
+msgid "Clear caches…"
+msgstr ""
+
 msgid "Clear queue"
 msgstr ""
 
@@ -835,6 +876,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Cleared the queue of {printer} on {host}."
+msgstr ""
+
+#, python-brace-format
+msgid "Cleared {size} of caches for {user} on {host}: {apps}."
 msgstr ""
 
 msgid "Click to copy"
@@ -879,6 +924,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "Connect with {profile}"
+msgstr ""
+
+msgid "Connected"
+msgstr ""
+
+msgid "Connected, this session only"
 msgstr ""
 
 msgid "Connecting"
@@ -935,6 +986,17 @@ msgid "Copy &list"
 msgstr ""
 
 msgid "Copy all"
+msgstr ""
+
+msgid "Couldn't check"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't check their session: {reason}"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't check {user}'s session: {reason}"
 msgstr ""
 
 #, python-brace-format
@@ -1231,8 +1293,17 @@ msgstr ""
 msgid "Drag a group to move it, or drop it onto another group to put it inside."
 msgstr ""
 
+msgid "Drive"
+msgstr ""
+
 msgid "Driver"
 msgstr ""
+
+#, python-brace-format
+msgid "Drives saved for the person signed in to {host}, read at {when}."
+msgid_plural "Drives saved for the {n} people signed in to {host}, read at {when}."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Drop a group here to put it directly under Groups"
 msgstr ""
@@ -1267,6 +1338,11 @@ msgstr ""
 msgid ""
 "Editing in the table rewrites the list above as CSV with a header row "
 "(name, address, group, tags, notes), so the two always match. Continue?"
+msgstr ""
+
+msgid ""
+"Empties Teams' and the browsers' caches for the person signed in; never "
+"passwords, cookies or history. An app that's open is left alone."
 msgstr ""
 
 msgid "Empties the PC's DNS cache and registers its name with DNS again."
@@ -1452,6 +1528,11 @@ msgid "General"
 msgstr ""
 
 msgid "Give it a name: it's the name in Your scripts."
+msgstr ""
+
+msgid ""
+"Gives the person signed in a network drive; it comes back at every sign-"
+"in."
 msgstr ""
 
 msgid "Group"
@@ -1756,6 +1837,29 @@ msgstr ""
 msgid "Manual connection"
 msgstr ""
 
+msgid "Map a drive"
+msgstr ""
+
+msgid "Map a drive…"
+msgstr ""
+
+msgid "Mapped drives"
+msgstr ""
+
+#, python-brace-format
+msgid "Mapped drives on {host}"
+msgstr ""
+
+#, python-brace-format
+msgid "Mapped {letter} to {path} for {user} on {host}."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Maps a network drive for {user} on {host}. It shows in their File "
+"Explorer at once and comes back at every sign-in."
+msgstr ""
+
 msgid "Mark"
 msgstr ""
 
@@ -1868,6 +1972,9 @@ msgstr ""
 msgid "No computer by that name or address was found on the network."
 msgstr ""
 
+msgid "No drives"
+msgstr ""
+
 msgid "No folder"
 msgstr ""
 
@@ -1903,11 +2010,19 @@ msgid "No one is at their screen on {host} right now."
 msgstr ""
 
 #, python-brace-format
+msgid "No one is signed in to {host} (read at {when})."
+msgstr ""
+
+#, python-brace-format
 msgid "No one is signed in to {host}, so there's no user's folder to open."
 msgstr ""
 
 #, python-brace-format
 msgid "No one is signed in to {host}, so {name} can't run as them."
+msgstr ""
+
+#, python-brace-format
+msgid "No one is signed in to {host}, so {name} has no one to act for."
 msgstr ""
 
 msgid "No one is signed in, or no one was checked: use Refresh"
@@ -1932,6 +2047,9 @@ msgstr ""
 msgid ""
 "No row of Settings › Hosts › Credentials names this PC, so it's the "
 "Windows account you're signed in with."
+msgstr ""
+
+msgid "No saved drives"
 msgstr ""
 
 msgid ""
@@ -1959,6 +2077,15 @@ msgid "Not checked yet: run Status"
 msgstr ""
 
 msgid "Not checked: use Refresh"
+msgstr ""
+
+msgid "Not connected"
+msgstr ""
+
+msgid "Not connected, this session only"
+msgstr ""
+
+msgid "Not mapped now"
 msgstr ""
 
 #, python-brace-format
@@ -1993,6 +2120,14 @@ msgid "Nothing changes until you click Add."
 msgstr ""
 
 msgid "Nothing changes until you click OK."
+msgstr ""
+
+#, python-brace-format
+msgid "Nothing cleared for {user} on {host}."
+msgstr ""
+
+#, python-brace-format
+msgid "Nothing to clear for {user} on {host}: those apps keep no cache there."
 msgstr ""
 
 #, python-brace-format
@@ -2035,6 +2170,13 @@ msgid "One per user, named after the account."
 msgstr ""
 
 msgid "Online"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Only cache folders go: passwords, cookies, history and bookmarks stay. An"
+" app that's open for {user} is left alone. Teams' whole cache goes, as "
+"Microsoft's own steps clear it, so Teams may ask them to sign in again."
 msgstr ""
 
 msgid ""
@@ -2256,10 +2398,16 @@ msgid ""
 "\\\\{host}\\D$\\… path. The list keeps the last {n} folders you opened."
 msgstr ""
 
+msgid "Path"
+msgstr ""
+
 msgid "Paused"
 msgstr ""
 
 msgid "People's names: keep the file private."
+msgstr ""
+
+msgid "Person"
 msgstr ""
 
 msgid "Personal"
@@ -2906,6 +3054,9 @@ msgstr ""
 msgid "Startup folder"
 msgstr ""
 
+msgid "State"
+msgstr ""
+
 msgid "Status"
 msgstr ""
 
@@ -3145,6 +3296,11 @@ msgstr ""
 msgid "The marks show {marks}."
 msgstr ""
 
+msgid ""
+"The network drives of the people signed in: each letter and where it "
+"points."
+msgstr ""
+
 msgid "The parent group doesn't exist."
 msgstr ""
 
@@ -3263,6 +3419,12 @@ msgid ""
 msgstr ""
 
 msgid "These are the built-in profiles: the folder isn't there yet."
+msgstr ""
+
+msgid ""
+"These are the drives that come back at every sign-in. Check their session"
+" shows a drive mapped only for now, and whether each one is connected; it"
+" runs a short hidden task as each person."
 msgstr ""
 
 #, python-brace-format
@@ -3680,6 +3842,10 @@ msgid "changed, review before use"
 msgstr ""
 
 #, python-brace-format
+msgid "clear caches for {user}"
+msgstr ""
+
+#, python-brace-format
 msgid "clear the queue of {printer}"
 msgstr ""
 
@@ -3767,6 +3933,10 @@ msgstr ""
 msgid "made by another user"
 msgstr ""
 
+#, python-brace-format
+msgid "map {letter} for {user}"
+msgstr ""
+
 msgid "model"
 msgstr ""
 
@@ -3805,6 +3975,9 @@ msgid "read the PC facts"
 msgstr ""
 
 msgid "read the installed programs"
+msgstr ""
+
+msgid "read the mapped drives"
 msgstr ""
 
 msgid "read the printers"
@@ -3926,6 +4099,12 @@ msgstr ""
 
 msgid "your Windows account"
 msgstr ""
+
+#, python-brace-format
+msgid "{apps} was open, so its cache stayed."
+msgid_plural "{apps} were open, so their caches stayed."
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-brace-format
 msgid "{colour} {percent} %"
@@ -4371,6 +4550,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{user}'s folder"
+msgstr ""
+
+#, python-brace-format
+msgid "{user}'s profile isn't there"
 msgstr ""
 
 #, python-brace-format

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
+import shiboken6
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QDialog, QWidget
 
@@ -419,6 +420,9 @@ class Runner(QObject):
             "cancel-restart": self._cancel_restart,
             "printers": self._printers,
             "spooler": self._spooler,
+            "drives": self._drives,
+            "map-drive": lambda t, r: self.map_drive(t, r),
+            "clear-caches": self._clear_caches,
             **{
                 command_id: lambda t, r, c=command_id: self._built_in(c, t, r)
                 for command_id in builtin.BUILT_IN
@@ -431,7 +435,9 @@ class Runner(QObject):
         handler[command_id](target, report)
 
     def _window(self) -> QWidget:
-        return self._parent if self._parent is not None else self._parent_widget()
+        if self._parent is not None and shiboken6.isValid(self._parent):  # not closed since
+            return self._parent
+        return self._parent_widget()
 
     def _all_checks(self, target: HostTarget, report: Report) -> None:
         self._tool.check_target(target, status=True, users=True, report=report)
@@ -570,6 +576,153 @@ class Runner(QObject):
             self._fail(report, command_id, action, target, error, again)
 
         self._start_as(target, act, done, failed)
+
+    # ---- Drives and caches ----
+
+    def _drives(self, target: HostTarget, report: Report) -> None:
+        from capypanel.ui.hosts_tool.drive_windows import DrivesDialog
+
+        parent = self._window()
+        dialog = DrivesDialog(
+            parent, self, target, lambda then: self._map_from(dialog, target, report, then)
+        )
+        run_modal(dialog)
+
+    def _map_from(
+        self, dialog: QWidget, target: HostTarget, report: Report, then: Callable[[], None]
+    ) -> None:
+        self._parent = dialog  # its questions open over Mapped drives
+        self.map_drive(target, report, then)
+
+    def _signed_in(
+        self, target: HostTarget, report: Report, command_id: str, go: Callable[[Session], None]
+    ) -> None:
+        """The person a command for "the person signed in" is for: at the PC's screen first."""
+
+        def pick(found: Sequence[Session] | None, error: BaseException | None) -> None:
+            who = folder_user(found)
+            if who is None:
+                name = bold(_(host_commands.command(command_id).name).rstrip("…"))
+                text = _("No one is signed in to {host}, so {name} has no one to act for.")
+                report(command_id, Outcome(text.format(host=escape(target.name), name=name),
+                                           error or RemoteError(Reason.OTHER)))  # fmt: skip
+                return
+            go(who)
+
+        self.with_sessions(target, pick, fresh=True)  # who is there now
+
+    def map_drive(
+        self, target: HostTarget, report: Report, then: Callable[[], None] | None = None
+    ) -> None:
+        """Map a drive…: a letter and a share, mapped as the person signed in."""
+        from capypanel.ui.hosts_tool.drive_windows import MapDriveDialog
+
+        def ask(who: Session) -> None:
+            dialog = MapDriveDialog(self._window(), target.name, person(who))
+            if run_modal(dialog) == QDialog.DialogCode.Accepted:
+                letter, path = dialog.picked()
+                self._run_map(target, report, who, letter, path, then)
+
+        self._signed_in(target, report, "map-drive", ask)
+
+    def _run_map(self, target: HostTarget, report: Report, who: Session, letter: str, path: str,
+                 then: Callable[[], None] | None) -> None:  # fmt: skip
+        from capypanel.core.remote import drives
+
+        go, account = self._tool.accounts.account_for(target, self._window())
+        if not go:
+            return
+        user = f"{who.domain}\\{who.user}" if who.domain else who.user
+        mapped = _("map {letter} for {user}").format(letter=letter, user=bold(person(who)))
+
+        def work() -> RunResult:
+            script = drives.map_script(letter, path)
+            return self.scripts.run(target.address, script, account, run.TIMEOUT, RunAs.USER, user)
+
+        def done(result: RunResult) -> None:
+            if not result.worked:
+                error = ScriptFailed(result.exit_code)
+                report("map-drive", Outcome(failed_text(mapped, target.name, error), error,
+                                            output=script_output(result)))  # fmt: skip
+                return
+            text = _("Mapped {letter} to {path} for {user} on {host}.").format(
+                letter=letter, path=escape(path), user=bold(person(who)),
+                host=escape(target.name))  # fmt: skip
+            report("map-drive", Outcome(text))
+            if then is not None:
+                then()
+
+        def failed(error: BaseException) -> None:
+            again = lambda: self._run_map(target, report, who, letter, path, then)  # noqa: E731
+            output = "\n".join((*error.tried, error.detail)).strip() if isinstance(
+                error, RunError) else ""  # fmt: skip
+            self._fail(report, "map-drive", mapped, target, error, again, output)
+
+        self._start(work, done, failed)
+
+    def _clear_caches(self, target: HostTarget, report: Report) -> None:
+        """Clear caches…: the person signed in, which apps, then a script as CapyPanel's
+        account; never twice at once."""
+        from capypanel.ui.hosts_tool.drive_windows import ClearCachesDialog
+
+        if (target.key, "clear-caches") in self._running:
+            self._tool.say(_("Clear caches is still running on {host}.").format(host=target.name))
+            return
+
+        def ask(who: Session) -> None:
+            dialog = ClearCachesDialog(self._window(), target.name, person(who))
+            if run_modal(dialog) == QDialog.DialogCode.Accepted:
+                self._run_clear(target, report, who, dialog.apps())
+
+        self._signed_in(target, report, "clear-caches", ask)
+
+    def _run_clear(self, target: HostTarget, report: Report, who: Session,
+                   apps: tuple[Any, ...]) -> None:  # fmt: skip
+        from capypanel.core.remote import drives
+        from capypanel.ui.hosts_tool.drive_windows import cleared_text
+
+        go, account = self._tool.accounts.account_for(target, self._window())
+        if not go:
+            return
+        key = (target.key, "clear-caches")
+        self._running.add(key)
+        name = bold(_("Clear caches"))
+        since = check_texts.clock_text(datetime.now(UTC))
+        report("clear-caches", Outcome(_("{name} is running on {host} since {when}…").format(
+            name=name, host=escape(target.name), when=since), running=True))  # fmt: skip
+        owner = drives.Person(who.user, who.domain, ())
+
+        def work() -> RunResult:
+            script = drives.clear_script(owner, apps)
+            return self.scripts.run(target.address, script, account)
+
+        def done(result: RunResult) -> None:
+            self._running.discard(key)
+            if drives.NO_PROFILE in result.output:
+                error: Exception = FileNotFoundError(
+                    _("{user}'s profile isn't there").format(user=person(who))
+                )
+                action = _("clear caches for {user}").format(user=bold(person(who)))
+                report("clear-caches", Outcome(failed_text(action, target.name, error), error))
+                return
+            if not result.worked:
+                error = ScriptFailed(result.exit_code)
+                action = _("clear caches for {user}").format(user=bold(person(who)))
+                report("clear-caches", Outcome(failed_text(action, target.name, error), error,
+                                               output=script_output(result)))  # fmt: skip
+                return
+            found = drives.cleared(result.output)
+            report("clear-caches", Outcome(cleared_text(person(who), target.name, found)))
+
+        def failed(error: BaseException) -> None:
+            self._running.discard(key)
+            again = lambda: self._run_clear(target, report, who, apps)  # noqa: E731
+            action = _("clear caches for {user}").format(user=bold(person(who)))
+            output = "\n".join((*error.tried, error.detail)).strip() if isinstance(
+                error, RunError) else ""  # fmt: skip
+            self._fail(report, "clear-caches", action, target, error, again, output)
+
+        self._start(work, done, failed)
 
     # ---- Power ----
 

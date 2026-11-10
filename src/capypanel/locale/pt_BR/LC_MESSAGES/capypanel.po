@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-08 18:41-0300\n"
+"POT-Creation-Date: 2026-11-09 23:14-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -68,6 +68,9 @@ msgstr "&Marca:"
 
 msgid "&Browse…"
 msgstr "&Procurar…"
+
+msgid "&Clear caches"
+msgstr "&Limpar caches"
 
 msgid "&Clear queue"
 msgstr "&Limpar fila"
@@ -145,6 +148,9 @@ msgstr "&Ajustar colunas ao conteúdo"
 msgid "&Folder on {host}:"
 msgstr "&Pasta em {host}:"
 
+msgid "&Folder:"
+msgstr "&Pasta:"
+
 msgid "&Forget"
 msgstr "&Esquecer"
 
@@ -184,6 +190,9 @@ msgstr "&Idioma"
 msgid "&Leave out of the import"
 msgstr "&Deixar fora da importação"
 
+msgid "&Letter:"
+msgstr "&Letra:"
+
 msgid "&List on startup"
 msgstr "&Lista ao iniciar"
 
@@ -216,6 +225,12 @@ msgstr "&Gerenciar…"
 
 msgid "&Manual connection…"
 msgstr "Conexão &manual…"
+
+msgid "&Map"
+msgstr "&Mapear"
+
+msgid "&Map a drive…"
+msgstr "&Mapear uma unidade…"
 
 msgid "&Message to them:"
 msgstr "&Mensagem para eles:"
@@ -465,6 +480,10 @@ msgstr "Já existe uma predefinição chamada “{name}”. Substituí-la?"
 
 msgid "A quote in the arguments isn't closed."
 msgstr "Uma aspa nos argumentos não foi fechada."
+
+#, python-brace-format
+msgid "A shared folder as \\\\server\\share. It runs as {user}, so the drive is theirs; if the letter is taken, Windows says so."
+msgstr "Uma pasta compartilhada como \\\\servidor\\pasta. Roda como {user}, então a unidade é dessa pessoa; se a letra já estiver em uso, o Windows avisa."
 
 msgid "A tag"
 msgstr "Uma tag"
@@ -749,6 +768,9 @@ msgstr "Verificar"
 msgid "Check the SNMP account in Settings › Printers › Connecting."
 msgstr "Confira a conta SNMP em Configurações › Impressoras › Conexão."
 
+msgid "Check their session"
+msgstr "Verificar a sessão"
+
 #, python-brace-format
 msgid "Check who is logged on to {n} hosts?"
 msgstr "Verificar quem está logado em {n} hosts?"
@@ -768,6 +790,9 @@ msgstr[1] "{n} impressoras verificadas."
 #, python-brace-format
 msgid "Checked {when}."
 msgstr "Verificado em {when}."
+
+msgid "Checking their session…"
+msgstr "Verificando a sessão…"
 
 #, python-brace-format
 msgid "Checking {done} of {total}…"
@@ -801,6 +826,20 @@ msgstr "Limpar"
 msgid "Clear &queue…"
 msgstr "Limpar &fila…"
 
+msgid "Clear caches"
+msgstr "Limpar caches"
+
+#, python-brace-format
+msgid "Clear caches for {user} on {host}?"
+msgstr "Limpar os caches de {user} em {host}?"
+
+#, python-brace-format
+msgid "Clear caches is still running on {host}."
+msgstr "Limpar caches ainda está rodando em {host}."
+
+msgid "Clear caches…"
+msgstr "Limpar caches…"
+
 msgid "Clear queue"
 msgstr "Limpar fila"
 
@@ -820,6 +859,10 @@ msgstr "Limpar a fila de {printer} em {host}?"
 #, python-brace-format
 msgid "Cleared the queue of {printer} on {host}."
 msgstr "Fila de {printer} em {host} limpa."
+
+#, python-brace-format
+msgid "Cleared {size} of caches for {user} on {host}: {apps}."
+msgstr "{size} de caches limpos de {user} em {host}: {apps}."
 
 msgid "Click to copy"
 msgstr "Clique para copiar"
@@ -864,6 +907,12 @@ msgstr "Conectar com"
 #, python-brace-format
 msgid "Connect with {profile}"
 msgstr "Conectar com {profile}"
+
+msgid "Connected"
+msgstr "Conectada"
+
+msgid "Connected, this session only"
+msgstr "Conectada, só nesta sessão"
 
 msgid "Connecting"
 msgstr "Conexão"
@@ -920,6 +969,17 @@ msgstr "Copiar &lista"
 
 msgid "Copy all"
 msgstr "Copiar tudo"
+
+msgid "Couldn't check"
+msgstr "Não deu para verificar"
+
+#, python-brace-format
+msgid "Couldn't check their session: {reason}"
+msgstr "Não deu para verificar a sessão: {reason}"
+
+#, python-brace-format
+msgid "Couldn't check {user}'s session: {reason}"
+msgstr "Não deu para verificar a sessão de {user}: {reason}"
 
 #, python-brace-format
 msgid "Couldn't create “{path}”: {error}"
@@ -1206,8 +1266,17 @@ msgstr "Baixar"
 msgid "Drag a group to move it, or drop it onto another group to put it inside."
 msgstr "Arraste um grupo para movê-lo, ou solte-o sobre outro grupo para colocá-lo dentro dele."
 
+msgid "Drive"
+msgstr "Unidade"
+
 msgid "Driver"
 msgstr "Driver"
+
+#, python-brace-format
+msgid "Drives saved for the person signed in to {host}, read at {when}."
+msgid_plural "Drives saved for the {n} people signed in to {host}, read at {when}."
+msgstr[0] "Unidades salvas para a pessoa conectada em {host}, lidas às {when}."
+msgstr[1] "Unidades salvas para as {n} pessoas conectadas em {host}, lidas às {when}."
 
 msgid "Drop a group here to put it directly under Groups"
 msgstr "Solte um grupo aqui para colocá-lo direto em Grupos"
@@ -1241,6 +1310,9 @@ msgstr "Editar a lista aqui"
 
 msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, tags, notes), so the two always match. Continue?"
 msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes), para que as duas sempre coincidam. Continuar?"
+
+msgid "Empties Teams' and the browsers' caches for the person signed in; never passwords, cookies or history. An app that's open is left alone."
+msgstr "Esvazia os caches do Teams e dos navegadores da pessoa conectada; nunca senhas, cookies ou histórico. Um app aberto não é mexido."
 
 msgid "Empties the PC's DNS cache and registers its name with DNS again."
 msgstr "Esvazia o cache de DNS do PC e registra o nome dele no DNS de novo."
@@ -1410,6 +1482,9 @@ msgstr "Geral"
 
 msgid "Give it a name: it's the name in Your scripts."
 msgstr "Dê um nome: é o nome em Seus scripts."
+
+msgid "Gives the person signed in a network drive; it comes back at every sign-in."
+msgstr "Dá à pessoa conectada uma unidade de rede; ela volta a cada entrada."
 
 msgid "Group"
 msgstr "Grupo"
@@ -1695,6 +1770,27 @@ msgstr "Gerenciar grupos"
 msgid "Manual connection"
 msgstr "Conexão manual"
 
+msgid "Map a drive"
+msgstr "Mapear uma unidade"
+
+msgid "Map a drive…"
+msgstr "Mapear uma unidade…"
+
+msgid "Mapped drives"
+msgstr "Unidades mapeadas"
+
+#, python-brace-format
+msgid "Mapped drives on {host}"
+msgstr "Unidades mapeadas em {host}"
+
+#, python-brace-format
+msgid "Mapped {letter} to {path} for {user} on {host}."
+msgstr "{letter} mapeada para {path} para {user} em {host}."
+
+#, python-brace-format
+msgid "Maps a network drive for {user} on {host}. It shows in their File Explorer at once and comes back at every sign-in."
+msgstr "Mapeia uma unidade de rede para {user} em {host}. Ela aparece no Explorador de Arquivos na hora e volta a cada entrada."
+
 msgid "Mark"
 msgstr "Marca"
 
@@ -1807,6 +1903,9 @@ msgstr "Sem resposta às {when}."
 msgid "No computer by that name or address was found on the network."
 msgstr "Nenhum computador com esse nome ou endereço foi encontrado na rede."
 
+msgid "No drives"
+msgstr "Nenhuma unidade"
+
 msgid "No folder"
 msgstr "Nenhuma pasta"
 
@@ -1842,12 +1941,20 @@ msgid "No one is at their screen on {host} right now."
 msgstr "Ninguém está na frente da tela em {host} agora."
 
 #, python-brace-format
+msgid "No one is signed in to {host} (read at {when})."
+msgstr "Ninguém está conectado em {host} (lido às {when})."
+
+#, python-brace-format
 msgid "No one is signed in to {host}, so there's no user's folder to open."
 msgstr "Ninguém está conectado em {host}, então não há pasta de usuário para abrir."
 
 #, python-brace-format
 msgid "No one is signed in to {host}, so {name} can't run as them."
 msgstr "Ninguém está conectado em {host}, então {name} não pode executar como essa pessoa."
+
+#, python-brace-format
+msgid "No one is signed in to {host}, so {name} has no one to act for."
+msgstr "Ninguém está conectado em {host}, então {name} não tem para quem agir."
 
 msgid "No one is signed in, or no one was checked: use Refresh"
 msgstr "Ninguém está conectado, ou ninguém foi verificado: use Atualizar"
@@ -1870,6 +1977,9 @@ msgstr "Nenhuma impressora deste grupo tem todas as tags escolhidas."
 
 msgid "No row of Settings › Hosts › Credentials names this PC, so it's the Windows account you're signed in with."
 msgstr "Nenhuma linha de Configurações › Hosts › Credenciais nomeia este PC, então é a conta do Windows com que você entrou."
+
+msgid "No saved drives"
+msgstr "Nenhuma unidade salva"
 
 msgid "No scripts here yet. Put .ps1, .bat or .cmd files in this folder, or add a script that's on the PCs with the new-file button."
 msgstr "Ainda não há scripts aqui. Coloque arquivos .ps1, .bat ou .cmd nesta pasta, ou adicione um script que já está nos PCs com o botão de novo arquivo."
@@ -1895,6 +2005,15 @@ msgstr "Ainda não verificado: execute Status"
 
 msgid "Not checked: use Refresh"
 msgstr "Não verificado: use Atualizar"
+
+msgid "Not connected"
+msgstr "Desconectada"
+
+msgid "Not connected, this session only"
+msgstr "Desconectada, só nesta sessão"
+
+msgid "Not mapped now"
+msgstr "Não mapeada agora"
 
 #, python-brace-format
 msgid "Not opened: {names}"
@@ -1925,6 +2044,14 @@ msgstr "Nada muda até você clicar em Adicionar."
 
 msgid "Nothing changes until you click OK."
 msgstr "Nada muda até você clicar em OK."
+
+#, python-brace-format
+msgid "Nothing cleared for {user} on {host}."
+msgstr "Nada limpo de {user} em {host}."
+
+#, python-brace-format
+msgid "Nothing to clear for {user} on {host}: those apps keep no cache there."
+msgstr "Nada para limpar de {user} em {host}: esses apps não guardam cache lá."
 
 #, python-brace-format
 msgid "Nothing was waiting to restart or shut down {host}."
@@ -1961,6 +2088,10 @@ msgstr "Um por usuário, com o nome da conta."
 
 msgid "Online"
 msgstr "Online"
+
+#, python-brace-format
+msgid "Only cache folders go: passwords, cookies, history and bookmarks stay. An app that's open for {user} is left alone. Teams' whole cache goes, as Microsoft's own steps clear it, so Teams may ask them to sign in again."
+msgstr "Só as pastas de cache são apagadas: senhas, cookies, histórico e favoritos ficam. Um app aberto para {user} não é mexido. O cache inteiro do Teams é apagado, como nos passos da própria Microsoft, então o Teams pode pedir para entrar de novo."
 
 msgid "Only for you and administrators: your settings, and your lists in “lists”, a folder for each kind of list."
 msgstr "Só para você e os administradores: suas configurações e suas listas em “lists”, uma pasta para cada tipo de lista."
@@ -2170,11 +2301,17 @@ msgstr "Cole uma lista abaixo, ou"
 msgid "Paste a path as File Explorer copies it, quotes and all, or a full \\\\{host}\\D$\\… path. The list keeps the last {n} folders you opened."
 msgstr "Cole um caminho como o Explorador de Arquivos copia, com aspas e tudo, ou um caminho completo \\\\{host}\\D$\\…. A lista guarda as últimas {n} pastas que você abriu."
 
+msgid "Path"
+msgstr "Caminho"
+
 msgid "Paused"
 msgstr "Pausada"
 
 msgid "People's names: keep the file private."
 msgstr "Nomes de pessoas: guarde em sigilo."
+
+msgid "Person"
+msgstr "Pessoa"
 
 msgid "Personal"
 msgstr "Pessoal"
@@ -2805,6 +2942,9 @@ msgstr "Inicialização e fechamento"
 msgid "Startup folder"
 msgstr "Pasta Inicializar"
 
+msgid "State"
+msgstr "Estado"
+
 msgid "Status"
 msgstr "Status"
 
@@ -3025,6 +3165,9 @@ msgstr "O traço marca o nível baixo, {low} %."
 msgid "The marks show {marks}."
 msgstr "Os traços marcam {marks}."
 
+msgid "The network drives of the people signed in: each letter and where it points."
+msgstr "As unidades de rede das pessoas conectadas: cada letra e para onde ela aponta."
+
 msgid "The parent group doesn't exist."
 msgstr "O grupo pai não existe."
 
@@ -3136,6 +3279,9 @@ msgstr "Estes são os perfis que vêm com o app: a pasta é criada quando você 
 
 msgid "These are the built-in profiles: the folder isn't there yet."
 msgstr "Estes são os perfis que vêm com o app: a pasta ainda não existe."
+
+msgid "These are the drives that come back at every sign-in. Check their session shows a drive mapped only for now, and whether each one is connected; it runs a short hidden task as each person."
+msgstr "Estas são as unidades que voltam a cada entrada. Verificar a sessão mostra uma unidade mapeada só por agora e se cada uma está conectada; roda uma tarefa curta e oculta como cada pessoa."
 
 #, python-brace-format
 msgid "They're signed in {where}. Their programs keep running, and they get back to them when they sign in again."
@@ -3519,6 +3665,10 @@ msgid "changed, review before use"
 msgstr "alterado, revise antes de usar"
 
 #, python-brace-format
+msgid "clear caches for {user}"
+msgstr "limpar os caches de {user}"
+
+#, python-brace-format
 msgid "clear the queue of {printer}"
 msgstr "limpar a fila de {printer}"
 
@@ -3600,6 +3750,10 @@ msgstr "fazer logoff de {user}"
 msgid "made by another user"
 msgstr "feito por outro usuário"
 
+#, python-brace-format
+msgid "map {letter} for {user}"
+msgstr "mapear {letter} para {user}"
+
 msgid "model"
 msgstr "modelo"
 
@@ -3639,6 +3793,9 @@ msgstr "ler os dados do PC"
 
 msgid "read the installed programs"
 msgstr "ler os programas instalados"
+
+msgid "read the mapped drives"
+msgstr "ler as unidades mapeadas"
 
 msgid "read the printers"
 msgstr "ler as impressoras"
@@ -3759,6 +3916,12 @@ msgstr "senha da criptografia errada."
 
 msgid "your Windows account"
 msgstr "sua conta do Windows"
+
+#, python-brace-format
+msgid "{apps} was open, so its cache stayed."
+msgid_plural "{apps} were open, so their caches stayed."
+msgstr[0] "{apps} estava aberto, então o cache ficou."
+msgstr[1] "{apps} estavam abertos, então os caches ficaram."
 
 #, python-brace-format
 msgid "{colour} {percent} %"
@@ -4186,6 +4349,10 @@ msgstr "{user} (desconectado)"
 #, python-brace-format
 msgid "{user}'s folder"
 msgstr "Pasta de {user}"
+
+#, python-brace-format
+msgid "{user}'s profile isn't there"
+msgstr "o perfil de {user} não está lá"
 
 #, python-brace-format
 msgid "{what}, in {list}"

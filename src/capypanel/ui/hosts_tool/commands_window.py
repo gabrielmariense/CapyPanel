@@ -7,7 +7,7 @@ parts and with no buttons. Commands that need typing open their small window ove
 
 import subprocess
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from html import escape as _escape
 from typing import TYPE_CHECKING, Any
@@ -54,8 +54,9 @@ from capypanel.core.hosts.commands import GROUP_NAMES, HostCommand, Need
 from capypanel.core.hosts.commands import Group as CommandGroup
 from capypanel.core.hosts.model import MAX_ADDRESS
 from capypanel.core.i18n import _
-from capypanel.core.remote import host_printers, own_scripts, services
+from capypanel.core.remote import drives, host_printers, own_scripts, services
 from capypanel.core.remote.access import Account, RemoteError
+from capypanel.core.remote.drives import Checked
 from capypanel.core.remote.own_scripts import OwnScript, State
 from capypanel.core.remote.run import RunAs
 from capypanel.core.remote.sessions import Session
@@ -65,6 +66,7 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui.connect import Request
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.hosts_tool import command_windows as windows
+from capypanel.ui.hosts_tool import drive_windows
 from capypanel.ui.hosts_tool.details import HostDetailsPanel
 from capypanel.ui.hosts_tool.host_state import Facts
 from capypanel.ui.hosts_tool.runner import (
@@ -92,7 +94,7 @@ ROW = 28  # px: a command's line
 APART = 8  # px: the gap above a command set apart, where menus draw a line
 ICON = 16
 RECENT_ADDRESSES = 10
-LISTS = ("printers", "programs")  # their answer is a table on the right, not a window
+LISTS = ("printers", "programs", "drives")  # their answer is a table on the right
 SCRIPT_GROUPS = (CommandGroup.SCRIPTS, CommandGroup.OWN)  # the Scripts tab
 TABLE_ROW = 30  # px, about a grid row: a printers table shows every printer
 MOST_TABLE = 330  # px: a longer list (programs) scrolls inside its table
@@ -122,18 +124,28 @@ class Shown:
 
 @dataclass(frozen=True)
 class Listed:
-    """Printers or Installed programs as read for the right side: rows, or why not."""
+    """Printers, Installed programs or Mapped drives as read for the right side: rows, or why
+    not."""
 
     reading: bool = True
     when: datetime | None = None
-    rows: Sequence[Any] = field(default_factory=tuple)
+    rows: Sequence[Any] = field(default_factory=tuple)  # for Mapped drives, the people
     spooler: str = ""  # the Print Spooler's state, for printers: "running", "stopped"…
+    checked: Checked | None = None  # Mapped drives: what their sessions said
+    checking: bool = False
+    check_error: str = ""  # why their sessions couldn't be asked
+
+
+def list_title(command_id: str) -> str:
+    return {"printers": _("Printers"), "programs": _("Installed programs"),
+            "drives": _("Mapped drives")}[command_id]  # fmt: skip
 
 
 class Results(HostDetailsPanel):
     """The right side: the Details panel's heading and parts, for the picked command only."""
 
     list_menu_requested = Signal(str, int, QPoint)  # command id, row (-1: none), where
+    check_drives_requested = Signal()  # Mapped drives' Check their session
 
     def item_id(self, shown: object) -> str:
         return shown.target.key if isinstance(shown, Shown) else ""
@@ -170,7 +182,8 @@ class Results(HostDetailsPanel):
         """A read-only grid table under its heading, with a line under it; what can be done
         with a row is on its right-click."""
         listed, printers = shown.listed, shown.command.id == "printers"
-        title = _("Printers") if printers else _("Installed programs")
+        mapped = shown.command.id == "drives"
+        title = list_title(shown.command.id)
         if listed is None or listed.reading or listed.when is None:
             self.section(layout, _("{title} · reading…").format(title=title) if listed
                          else title)  # fmt: skip
@@ -179,7 +192,7 @@ class Results(HostDetailsPanel):
             self._outcome(layout, shown.outcome)
             return
         when = check_texts.clock_text(listed.when)
-        if printers:
+        if printers or mapped:
             self.section(layout, _("{title} · {when}").format(title=title, when=when))
         else:
             self.section(layout, _("{title} · {n} · {when}").format(
@@ -197,18 +210,30 @@ class Results(HostDetailsPanel):
                                        str(printer.jobs)])  # fmt: skip
                 row.setIcon(1, dot_icon(STATUS_COLORS[windows.printer_dot(printer)]))
                 table.addTopLevelItem(row)
+        elif mapped:
+            shown_rows = drive_windows.drive_rows(listed.rows, listed.checked)
+            table.setHeaderLabels(drive_windows.drive_header())
+            for drive in shown_rows:
+                row = QTreeWidgetItem(drive_windows.row_text(drive))
+                if drive.problem:
+                    row.setForeground(3, QColor(STATUS_COLORS["attention"]))
+                table.addTopLevelItem(row)
+            if listed.checked is None:
+                table.setColumnHidden(3, True)  # State: only after a check
         else:
             table.setHeaderLabels([_("Name"), _("Version")])
             for program in listed.rows:
                 table.addTopLevelItem(QTreeWidgetItem([program.name, program.version]))
         header = table.header()
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(0, header.ResizeMode.Stretch)
-        for column in range(1, table.columnCount()):
-            header.setSectionResizeMode(column, header.ResizeMode.ResizeToContents)
+        stretch = 2 if mapped else 0  # the path, for drives
+        fit, fill = header.ResizeMode.ResizeToContents, header.ResizeMode.Stretch
+        for column in range(table.columnCount()):
+            header.setSectionResizeMode(column, fill if column == stretch else fit)
         # Every row shows, up to MOST_TABLE; a longer list scrolls inside the table.
-        row_height = table.sizeHintForRow(0) if listed.rows else TABLE_ROW
-        rows = max(len(listed.rows), 1) * max(row_height, 1)
+        count = table.topLevelItemCount()
+        row_height = table.sizeHintForRow(0) if count else TABLE_ROW
+        rows = max(count, 1) * max(row_height, 1)
         frame = 2 * table.frameWidth() + 4
         table.setFixedHeight(min(MOST_TABLE, header.sizeHint().height() + rows + frame))
         table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -230,10 +255,22 @@ class Results(HostDetailsPanel):
             line = (_("Print Spooler: {state}. Right-click a printer to clear its queue.")
                     .format(state=spooler) if spooler
                     else _("Right-click a printer to clear its queue."))  # fmt: skip
+        elif mapped:
+            line = _(drive_windows.SAVED_NOTE)
         else:
             line = _("Right-click to copy a row, copy or export the list, or open it in its own "
                      "window with a search.")  # fmt: skip
         layout.addWidget(self.muted(line))
+        if mapped and listed.rows:
+            check = QLabel(drive_windows.check_link(listed.checking))
+            check.setTextFormat(Qt.TextFormat.RichText)
+            check.linkActivated.connect(lambda _href: self.check_drives_requested.emit())
+            layout.addWidget(check)
+            failures = listed.check_error or (
+                drive_windows.checked_text(listed.rows, listed.checked) if listed.checked else ""
+            )
+            if failures:
+                layout.addWidget(self.muted(failures))
         self._outcome(layout, shown.outcome)
 
     def _copy_all(self, text: str) -> None:
@@ -541,6 +578,7 @@ class CommandsWindow(QDialog):
         self.results.setFixedWidth(RESULTS_WIDTH)
         self.results.session_menu_requested.connect(self._session_menu)
         self.results.list_menu_requested.connect(self._list_menu)
+        self.results.check_drives_requested.connect(self._check_drives)
         self.results.copied.connect(lambda text: tool.say(_("Copied: {text}").format(text=text)))
 
         hint = QLabel(_("↑ ↓ pick, Enter runs, typing searches. Commands that need more open a "
@@ -710,6 +748,9 @@ class CommandsWindow(QDialog):
         self._outcomes.pop(key, None)
 
         def work(account: Account | None) -> Listed:
+            if command_id == "drives":
+                people = drives.saved_drives(target.address, account)
+                return Listed(False, datetime.now(UTC), people)
             if command_id == "programs":
                 from capypanel.core.remote import inventory
 
@@ -731,11 +772,11 @@ class CommandsWindow(QDialog):
             if not self._alive():
                 return
             self._lists.pop(key, None)
-            action = (
-                _("read the printers")
-                if command_id == "printers"
-                else _("read the installed programs")
-            )
+            action = {
+                "printers": _("read the printers"),
+                "programs": _("read the installed programs"),
+                "drives": _("read the mapped drives"),
+            }[command_id]
             retry = None
             if isinstance(error, RemoteError) and error.reason in RETRY_REASONS:
                 again = lambda: self._read_list(command_id, target)  # noqa: E731
@@ -745,12 +786,55 @@ class CommandsWindow(QDialog):
 
         self._tool.runner.call(work, done, failed, target)
 
+    def _check_drives(self) -> None:
+        """Mapped drives' Check their session: each person's session, as them."""
+        target = self.target()
+        key = (target.key, "drives") if target else ("", "")
+        listed = self._lists.get(key)
+        if target is None or listed is None or listed.checking or not listed.rows:
+            return
+        self._lists[key] = replace(listed, checking=True, check_error="")
+        self._show_results()
+        people = list(listed.rows)
+
+        def work(account: Account | None) -> drives.Checked:
+            scripts = self._tool.runner.scripts
+            return drives.check_sessions(scripts, target.address, people, account)
+
+        def done(checked: drives.Checked) -> None:
+            now = self._lists.get(key)
+            if self._alive() and now is not None:
+                self._lists[key] = replace(now, checked=checked, checking=False)
+                self._show_results()
+
+        def failed(error: BaseException) -> None:
+            now = self._lists.get(key)
+            if self._alive() and now is not None:
+                why = _("Couldn't check their session: {reason}").format(reason=reason_text(error))
+                self._lists[key] = replace(now, checking=False, check_error=why)
+                self._show_results()
+
+        self._tool.runner.call(work, done, failed, target)
+
     def _list_menu(self, command_id: str, index: int, where: QPoint) -> None:
         target = self.target()
         listed = self._lists.get((target.key, command_id)) if target else None
         if target is None or listed is None:
             return
         menu = QMenu(self)
+        if command_id == "drives":
+            header = drive_windows.drive_header()
+            rows = [drive_windows.row_text(r)
+                    for r in drive_windows.drive_rows(listed.rows, listed.checked)]  # fmt: skip
+            copy = menu.addAction(_("&Copy row"))
+            copy.setEnabled(0 <= index < len(rows))
+            if 0 <= index < len(rows):
+                text = "\t".join(rows[index])
+                copy.triggered.connect(lambda: QGuiApplication.clipboard().setText(text))
+            menu.addAction(_("Copy &list"), lambda: QGuiApplication.clipboard().setText(
+                write_csv(header, rows, "\t")))  # fmt: skip
+            menu.exec(where)
+            return
         row = listed.rows[index] if 0 <= index < len(listed.rows) else None
         if command_id == "printers":
             clear = menu.addAction(_("Clear &queue…"))

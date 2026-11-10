@@ -121,6 +121,22 @@ COMMANDS: tuple[HostCommand, ...] = (
         needs_user=True,
     ),
     HostCommand(
+        "drives", Group.USERS, N_("Mapped drives"),
+        N_("The network drives of the people signed in: each letter and where it points."),
+        "server-2", Need.READ, needs_user=True, apart=True,
+    ),
+    HostCommand(
+        "map-drive", Group.USERS, N_("Map a drive…"),
+        N_("Gives the person signed in a network drive; it comes back at every sign-in."),
+        "link-plus", Need.RUN, needs_user=True,
+    ),
+    HostCommand(
+        "clear-caches", Group.USERS, N_("Clear caches…"),
+        N_("Empties Teams' and the browsers' caches for the person signed in; never passwords, "
+           "cookies or history. An app that's open is left alone."),
+        "eraser", Need.RUN, risky=True, needs_user=True,
+    ),
+    HostCommand(
         "disconnect", Group.USERS, N_("Disconnect…"),
         N_("Ends a user's session connection; their programs keep running."), "plug-connected-x",
         Need.ASK_WINDOWS, risky=True, needs_user=True, per_person=True,

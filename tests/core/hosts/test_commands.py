@@ -27,6 +27,7 @@ def test_risky_commands_ask_first() -> None:
             assert c.name.endswith("…") and c.need in (Need.ASK_WINDOWS, Need.RUN), c.id
 
 
-def test_only_scripts_run_a_program_on_the_pc() -> None:
+def test_only_scripts_and_the_person_s_drives_and_caches_run_a_program_on_the_pc() -> None:
     running = {c.id for c in COMMANDS if c.need is Need.RUN}
-    assert running == {c.id for c in commands.in_group(Group.SCRIPTS)}
+    scripts = {c.id for c in commands.in_group(Group.SCRIPTS)}
+    assert running == scripts | {"map-drive", "clear-caches"}

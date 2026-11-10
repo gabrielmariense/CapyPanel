@@ -131,7 +131,9 @@ def test_the_host_menu_has_a_submenu_per_group_greyed_for_several_hosts(
     ]  # fmt: skip
     users = groups["Users"]
     assert isinstance(users, QMenu)
-    assert [a.text() for a in users.actions()] == ["Send a message…"]  # log off: on the person
+    assert [a.text() for a in users.actions()] == [
+        "Send a message…", "", "Mapped drives", "Map a drive…", "Clear caches…",
+    ]  # log off: on the person; the drives and caches set apart  # fmt: skip
 
     def names(group: str) -> list[str]:
         submenu = groups[group]
