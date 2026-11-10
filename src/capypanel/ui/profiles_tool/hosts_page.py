@@ -86,6 +86,7 @@ class GroupFacts:
     unchecked: int
     scanned: str  # "4 of 31"
     deletable: str  # "66", or "—" before any scan
+    empty: bool = False  # no host on show
 
 
 class _Row(QTreeWidgetItem):
@@ -537,11 +538,16 @@ class HostCard(QFrame):
         column.addStretch(1)
 
     def show_group(self, facts: GroupFacts) -> None:
-        """No single host picked: the hosts on show as a whole."""
+        """No single host picked: the hosts on show as a whole. With none on show (a search
+        that found nothing), it says so and has no rows."""
         self.heading.setText(_("HOSTS SHOWN"))
         self.name.setText(facts.name)
         self.dot.hide()
         self.status.setText(facts.status)
+        if facts.empty:
+            for widget in (*self._labels, *self._values):
+                widget.hide()
+            return
         self._show(
             (
                 (_("Status"), facts.checked),
@@ -571,6 +577,8 @@ class HostCard(QFrame):
         for (label, value), name, shown in zip(pairs, self._labels, self._values, strict=True):
             name.setText(label)
             shown.setText(value)
+            name.show()
+            shown.show()
 
 
 class HostsPage(QObject):

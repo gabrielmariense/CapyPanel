@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 14:52-0300\n"
+"POT-Creation-Date: 2026-11-10 14:58-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2212,6 +2212,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "No host of the list with “{text}”."
+msgstr ""
+
+msgid "No host shown"
 msgstr ""
 
 msgid "No hosts in this group have all the picked tags."

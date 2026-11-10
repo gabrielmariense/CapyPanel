@@ -1108,7 +1108,7 @@ def test_at_a_narrow_width_the_tables_fit_their_box_and_the_last_column_stays(
 
 def test_the_count_drops_the_size_before_it_ends_in_an_ellipsis(qapp: QApplication) -> None:
     count = panels.Count()
-    count.show_count("3 ticked · 12.4 GB", True, "3 ticked")
+    count.show_count("3 ticked · 12.4 GB", True, "3 ticked", "3")
     count.show()
     for _turn in range(4):
         qapp.processEvents()
@@ -1118,7 +1118,10 @@ def test_the_count_drops_the_size_before_it_ends_in_an_ellipsis(qapp: QApplicati
     assert count.shown_text() == "3 ticked · 12.4 GB"
     count.resize(metrics.horizontalAdvance("3 ticked") + bin_room + 4, 20)
     assert count.shown_text() == "3 ticked" and count.toolTip() == "3 ticked · 12.4 GB"
-    count.resize(bin_room + 20, 20)
+    count.resize(bin_room + 20, 20)  # no room for the word: the bin and the number
+    assert count.shown_text() == "3" and count.toolTip() == "3 ticked · 12.4 GB"
+    count.show_count("12 of 15 shown", False)  # nothing shorter to fall back on: "…"
+    count.resize(40, 20)
     assert count.shown_text().endswith("…")
     count.close()
 
@@ -1146,6 +1149,11 @@ def test_with_no_single_host_picked_the_box_describes_the_hosts_on_show(
     assert [v.text() for v in card._values][2:] == ["1 of 3", "5"]
     tool.hosts_page.table.select(_id(window, "DESK-03"))  # one host picked: its own box
     assert card.heading.text() == "SELECTED HOST"
+    tool.hosts_page.search.setText("no such host")  # nothing on show: it says so, no rows
+    assert card.heading.text() == "HOSTS SHOWN" and card.status.text() == "No host shown"
+    assert all(v.isHidden() for v in card._values)
+    tool.hosts_page.search.clear()
+    assert not any(v.isHidden() for v in card._values)
 
 
 def test_a_size_being_counted_shows_its_bytes_so_far(

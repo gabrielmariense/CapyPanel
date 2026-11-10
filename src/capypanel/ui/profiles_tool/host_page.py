@@ -406,7 +406,7 @@ class HostPage(QObject):
             if size := self.ticked_size():
                 words += " · " + rows.size_text(size)
         shown = rows.shown_text(len(self.table.shown()), len(self.scan.profiles))
-        self.filters.show_count(shown, words, short)
+        self.filters.show_count(shown, words, short, str(len(ticked)))
 
     def title(self) -> str:
         """The box's first line: what this list is, so it's never taken for a list of hosts."""

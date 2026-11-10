@@ -240,13 +240,15 @@ class Count(QWidget):
         super().__init__()
         self._text = ""
         self._short = ""
+        self._least = ""
         self._ticked = False
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-    def show_count(self, text: str, ticked: bool, short: str = "") -> None:
-        """`short`: what's left of `text` when it can't all fit ("3 ticked", without the
-        size), before any "…"."""
-        self._text, self._ticked, self._short = text, ticked, short
+    def show_count(self, text: str, ticked: bool, short: str = "", least: str = "") -> None:
+        """What stands in for `text` when it can't all fit: `short` ("3 ticked", without the
+        size), then `least` (just "3", beside the bin). A word is never cut; only a text
+        with neither ends in "…"."""
+        self._text, self._ticked, self._short, self._least = text, ticked, short, least
         font = QFont(self.font())
         font.setBold(ticked)
         self.setFont(font)
@@ -264,9 +266,12 @@ class Count(QWidget):
         """The words as drawn at this width."""
         room = max(0, self.width() - (self.BIN + self.GAP if self._ticked else 0))
         metrics = self.fontMetrics()
-        if metrics.horizontalAdvance(self._text) <= room or not self._short:
-            return metrics.elidedText(self._text, Qt.TextElideMode.ElideRight, room)
-        return metrics.elidedText(self._short, Qt.TextElideMode.ElideRight, room)
+        for words in (self._text, self._short):
+            if words and metrics.horizontalAdvance(words) <= room:
+                return words
+        if self._least:
+            return self._least
+        return metrics.elidedText(self._text, Qt.TextElideMode.ElideRight, room)
 
     def sizeHint(self) -> QSize:
         width = self.fontMetrics().horizontalAdvance(self._text) + 2
@@ -358,11 +363,14 @@ class FilterRow(QWidget):
         self.since.setCurrentIndex(picked)
         self.since.blockSignals(False)
 
-    def show_count(self, shown: str, ticked: str = "", short: str = "") -> None:
+    def show_count(self, shown: str, ticked: str = "", short: str = "", least: str = "") -> None:
         """How many rows show; with rows ticked, how many and their size instead, in bold
-        amber with the bin, in the same place. `short`: the ticked words without the size,
-        for when there's no room for both."""
-        self.shown.show_count(ticked or shown, bool(ticked), short if ticked else "")
+        amber with the bin, in the same place. Short of room, the ticked words lose the size
+        (`short`), then all but the number (`least`)."""
+        if ticked:
+            self.shown.show_count(ticked, True, short, least)
+        else:
+            self.shown.show_count(shown, False)
 
     def chosen(self) -> Filters:
         return Filters(

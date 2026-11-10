@@ -567,6 +567,8 @@ class ProfilesTool(Tool):
             if counts is not None:
                 scanned += 1
                 deletable += counts[1]
+        if not self._shown:
+            return GroupFacts(self._place_name(), _("No host shown"), "", 0, "", "", empty=True)
         progress = self._hosts.check_progress() if self._hosts is not None else None
         if progress is not None:
             status = _("Refreshing status: {done} of {total}…").format(
