@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 08:11-0300\n"
+"POT-Creation-Date: 2026-11-10 08:54-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1964,6 +1964,9 @@ msgstr ""
 msgid "Logs"
 msgstr ""
 
+msgid "Looks through every group for PCs with this name or address"
+msgstr ""
+
 msgid "MAC address"
 msgstr ""
 
@@ -2058,9 +2061,6 @@ msgid "Name of the new group:"
 msgstr ""
 
 msgid "Name or address"
-msgstr ""
-
-msgid "Narrows the PCs to those with this name or address"
 msgstr ""
 
 msgid "Needs attention"
@@ -3223,6 +3223,9 @@ msgid "Showing the <b>{n} printer</b> that needs attention."
 msgid_plural "Showing the <b>{n} printers</b> that need attention."
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "Shows the PCs of one group"
+msgstr ""
 
 #, python-brace-format
 msgid "Shut down {host}"

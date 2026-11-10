@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.core.hosts.model import Host
+from capypanel.core.hosts.model import NO_GROUP, Host, HostList
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.user_profiles import Deleted, Kind, Outcome, Profile
 from capypanel.ui.hosts_tool.command_windows import Question, output_box
@@ -42,6 +42,7 @@ TICK, USER, USED, SIZE, KIND, STATE = range(6)  # the table's columns
 SORT_ROLE = Qt.ItemDataRole.UserRole + 1  # what a cell sorts by
 ARROW = 16  # px a column title needs for the sort arrow
 IDENT_ROLE = Qt.ItemDataRole.UserRole  # the row's profile
+ALL_GROUPS = "*"  # the group dropdown's first choice: every PC of the list
 
 
 def card() -> QFrame:
@@ -76,22 +77,33 @@ def _fold(text: str) -> str:
 
 
 class PcPane(QWidget):
-    """The open host list's PCs, with a search; under them, a field for any other PC. One Scan
-    button names what it would scan: the PC picked in the list, or the one typed. Picking a PC
-    empties the field and typing clears the pick, so there's never a doubt which. A double-click
-    on a PC scans it; typing never does by itself."""
+    """The open host list's PCs, a group at a time: a dropdown picks the group (as the Groups
+    panel does in Hosts; a list of hundreds of PCs is no place to look for one), and a search
+    looks through the whole list. Under them, a field for any other PC. One Scan button names
+    what it would scan: the PC picked in the list, or the one typed. Picking a PC empties the
+    field and typing clears the pick, so there's never a doubt which. A double-click on a PC
+    scans it; typing never does by itself."""
 
     scan_requested = Signal(object)  # a HostTarget
     list_picked = Signal(object)  # a host list's file (Path)
+    group_picked = Signal(str)  # a group's id, ALL_GROUPS or NO_GROUP
 
     def __init__(self, choices: Callable[[], list[tuple[Path, str, bool]]]) -> None:
         super().__init__()
         self._choices = choices
-        self._hosts: list[Host] = []
+        self._hosts: list[Host] = []  # every PC of the list that can be reached
+        self._list: HostList | None = None
+        self._group = ALL_GROUPS
         self.picker = MenuCombo()
         self.picker.setObjectName("listPicker")
         self.picker.menu().setToolTipsVisible(True)  # each list's path
         self.picker.menu().aboutToShow.connect(self._fill_menu)
+        self.groups = QComboBox()
+        self.groups.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+        )  # a long group name never widens the panel; the list that drops down shows it whole
+        self.groups.setMinimumContentsLength(8)
+        self.groups.activated.connect(self._group_chosen)
         self.search = SearchBox()
         self.search.textChanged.connect(self._show_hosts)
         self.search.to_results.connect(self._to_list)
@@ -116,6 +128,7 @@ class PcPane(QWidget):
         inside = QVBoxLayout(box)
         inside.setContentsMargins(4, 4, 4, 6)
         inside.setSpacing(4)
+        inside.addWidget(self.groups)
         inside.addWidget(self.search)
         inside.addWidget(self.tree, 1)
         inside.addWidget(_divider())
@@ -136,20 +149,77 @@ class PcPane(QWidget):
     def retranslate(self) -> None:
         # Not "Search name, address" as the wider panels say: it's cut at this width.
         self.search.setPlaceholderText(_("Search PCs"))
-        self.search.setToolTip(_("Narrows the PCs to those with this name or address"))
+        self.search.setToolTip(_("Looks through every group for PCs with this name or address"))
+        self.groups.setToolTip(_("Shows the PCs of one group"))
+        self._fill_groups()
         self.other_title.setText(_("Another PC"))
         self.other.setPlaceholderText(_("Name or address"))
         self.tip.setText(_("Or double-click a PC in the list."))
         self._name_button()
 
-    def show_list(self, name: str, tip: str, hosts: Sequence[Host]) -> None:
-        """The open host list: its name on the dropdown, its PCs that can be reached."""
+    def show_list(
+        self, name: str, tip: str, host_list: HostList | None, group: str = ALL_GROUPS
+    ) -> None:
+        """The open host list: its name on the dropdown, its groups, and the PCs of `group`
+        that can be reached (ALL_GROUPS when the list has no such group any more)."""
         self.picker.setText(name)
         self.picker.setToolTip(tip)
+        self._list = host_list
+        hosts = host_list.hosts if host_list is not None else ()
         self._hosts = sorted(
             (h for h in hosts if h.connect_address), key=lambda h: natural_key(h.name)
         )
+        self._group = group
+        self._fill_groups()
         self._show_hosts()
+
+    def group(self) -> str:
+        """The group on show: its id, ALL_GROUPS or NO_GROUP."""
+        return self._group
+
+    def _fill_groups(self) -> None:
+        """Every PC first, then the PCs in no group, then the groups as Hosts' Groups panel
+        lists them, a level deeper a step to the right, each with how many PCs it holds."""
+        host_list = self._list
+        self.groups.blockSignals(True)
+        self.groups.clear()
+        self.groups.addItem(f"{_('All hosts')} ({len(self._hosts)})", ALL_GROUPS)
+        if host_list is not None:
+            loose = sum(1 for h in self._hosts if h.group == NO_GROUP)
+            if loose:
+                self.groups.addItem(f"{_('No group')} ({loose})", NO_GROUP)
+            reachable = {h.id for h in self._hosts}
+
+            def add(parent: str | None, depth: int) -> None:
+                for group in host_list.children(parent):
+                    inside = sum(1 for h in host_list.hosts_in(group.id) if h.id in reachable)
+                    self.groups.addItem(f"{'    ' * depth}{group.name} ({inside})", group.id)
+                    add(group.id, depth + 1)
+
+            add(None, 0)
+        index = self.groups.findData(self._group)
+        if index < 0:  # the group is gone, or another list was opened
+            index, self._group = 0, ALL_GROUPS
+        self.groups.setCurrentIndex(index)
+        self.groups.setEnabled(self.groups.count() > 1)
+        self.groups.blockSignals(False)
+
+    def _group_chosen(self, index: int) -> None:
+        picked = self.groups.itemData(index)
+        if isinstance(picked, str) and picked != self._group:
+            self._group = picked
+            self.search.clear()  # the group is on show, not the last search
+            self._show_hosts()
+            self.group_picked.emit(picked)
+
+    def _in_group(self) -> list[Host]:
+        """The PCs of the group on show, the ones in its groups inside it too."""
+        if self._group == ALL_GROUPS or self._list is None:
+            return self._hosts
+        if self._group == NO_GROUP:
+            return [h for h in self._hosts if h.group == NO_GROUP]
+        inside = {h.id for h in self._list.hosts_in(self._group)}
+        return [h for h in self._hosts if h.id in inside]
 
     def target(self) -> HostTarget | None:
         """What Scan would scan now."""
@@ -180,7 +250,7 @@ class PcPane(QWidget):
         self.tree.blockSignals(True)
         self.tree.clear()
         muted = QBrush(self.palette().color(QPalette.ColorRole.PlaceholderText))
-        for host in self._hosts:
+        for host in self._hosts if needle else self._in_group():  # a search: the whole list
             if needle and needle not in _fold(host.name) and needle not in _fold(host.address):
                 continue
             item = QTreeWidgetItem([host.name, host.address])

@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QApplication, QDialog
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
-from capypanel.core.hosts.model import HostList
+from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.remote import user_profiles
 from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.user_profiles import (
@@ -681,3 +681,59 @@ def test_open_the_log_says_so_when_there_is_none_yet(
     log_file.write_text("a line\n", encoding="utf-8")
     tool.open_log()
     assert opened == [log_file]
+
+
+# ---- groups ----
+
+
+def test_a_dropdown_shows_one_groups_pcs_and_the_search_looks_through_them_all(
+    window: CapyWindow, tmp_path: Path
+) -> None:
+    tool = _tool(window)
+    hl, clinic = HostList().add_group("Clinic")
+    hl, lab = hl.add_group("Lab", parent=clinic.id)
+    hl, er = hl.add_group("ER")
+    for name, group, address in (
+        ("DESK-01", clinic.id, "192.0.2.11"), ("LAB-01", lab.id, "192.0.2.31"),
+        ("ER-01", er.id, "192.0.2.41"), ("SPARE", NO_GROUP, "192.0.2.90"),
+        ("Front desk printer room", er.id, ""),  # can't be reached: never listed or counted
+    ):  # fmt: skip
+        hl, _host = hl.add_host(name, group, address=address)
+    path = tmp_path / "wards.json"
+    listfile.save(path, hl, expected=None)
+    window.hosts.open_list(path)
+    groups = tool.pcs.groups
+    assert [groups.itemText(i) for i in range(groups.count())] == [
+        "All hosts (4)", "No group (1)", "Clinic (2)", "    Lab (1)", "ER (1)",
+    ]  # fmt: skip
+    assert groups.currentIndex() == 0 and _pcs(tool) == ["DESK-01", "ER-01", "LAB-01", "SPARE"]
+
+    def choose(index: int) -> None:
+        groups.setCurrentIndex(index)
+        groups.activated.emit(index)
+
+    choose(2)  # Clinic: its own PCs and those of the groups inside it
+    assert _pcs(tool) == ["DESK-01", "LAB-01"]
+    choose(1)
+    assert _pcs(tool) == ["SPARE"]
+    choose(4)
+    assert _pcs(tool) == ["ER-01"]
+    tool.pcs.search.setText("lab")  # a search looks through every group
+    assert _pcs(tool) == ["LAB-01"]
+    tool.pcs.search.clear()
+    assert _pcs(tool) == ["ER-01"]
+    _pick(tool, "ER-01")
+    assert tool.pcs.scan_button.text() == "Scan ER-01"
+    tool.pcs.other.setText("desk-01")  # a PC of another group, typed: still that PC
+    tool.pcs.other.textEdited.emit("desk-01")
+    target = tool.pcs.target()
+    assert target is not None and target.address == "192.0.2.11"
+
+    # Each list comes back on the group it was left on.
+    assert tool.prefs[tool_ui.GROUPS_KEY] == {str(path): er.id}
+    window.hosts.open_list(tmp_path / "clinic.json")
+    assert groups.currentIndex() == 0 and tool.pcs.group() == panels.ALL_GROUPS
+    window.hosts.open_list(path)
+    assert groups.currentText() == "ER (1)" and _pcs(tool) == ["ER-01"]
+    choose(0)
+    assert tool.prefs[tool_ui.GROUPS_KEY] == {}

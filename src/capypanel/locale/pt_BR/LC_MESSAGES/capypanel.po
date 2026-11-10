@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 08:11-0300\n"
+"POT-Creation-Date: 2026-11-10 08:54-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1887,6 +1887,9 @@ msgstr "Logins em que você marcou Lembrar: o Windows os criptografa para a sua 
 msgid "Logs"
 msgstr "Logs"
 
+msgid "Looks through every group for PCs with this name or address"
+msgstr "Procura em todos os grupos os PCs com este nome ou endereço"
+
 msgid "MAC address"
 msgstr "Endereço MAC"
 
@@ -1980,9 +1983,6 @@ msgstr "Nome do novo grupo:"
 
 msgid "Name or address"
 msgstr "Nome ou endereço"
-
-msgid "Narrows the PCs to those with this name or address"
-msgstr "Mostra só os PCs com este nome ou endereço"
 
 msgid "Needs attention"
 msgstr "Requer atenção"
@@ -3100,6 +3100,9 @@ msgid "Showing the <b>{n} printer</b> that needs attention."
 msgid_plural "Showing the <b>{n} printers</b> that need attention."
 msgstr[0] "Mostrando a <b>{n} impressora</b> que requer atenção."
 msgstr[1] "Mostrando as <b>{n} impressoras</b> que requerem atenção."
+
+msgid "Shows the PCs of one group"
+msgstr "Mostra os PCs de um grupo"
 
 #, python-brace-format
 msgid "Shut down {host}"

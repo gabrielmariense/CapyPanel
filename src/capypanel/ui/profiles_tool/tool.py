@@ -26,6 +26,7 @@ from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar, tool_button
 from capypanel.ui.profiles_tool import rows
 from capypanel.ui.profiles_tool.panels import (
+    ALL_GROUPS,
     LEFT,
     RIGHT,
     DeleteDialog,
@@ -41,6 +42,7 @@ from capypanel.ui.profiles_tool.rows import Result
 
 SIZES_AT_ONCE = 4  # folders counted at the same time: walking a tree is mostly waiting
 PANES_KEY = "panes"  # the side panels' widths, in the tool's settings
+GROUPS_KEY = "groups"  # the group each host list was left on, by the list's file
 PROGRESS_WIDTH = 320  # px: the progress panel is at least this wide, for its queue's columns
 
 
@@ -168,6 +170,7 @@ class ProfilesTool(Tool):
         self.progress.closed.connect(self._close_progress)
         self.pcs.scan_requested.connect(self.scan)
         self.pcs.list_picked.connect(self._pick_list)
+        self.pcs.group_picked.connect(self._keep_group)
         self.header.filters_changed.connect(self._show_rows)
         self.table.picked.connect(self._show_details)
         self.details.copied.connect(
@@ -225,10 +228,29 @@ class ProfilesTool(Tool):
         """Hosts opened another list, or the open one changed."""
         doc = self._hosts.document if self._hosts is not None else None
         if doc is None:
-            self.pcs.show_list(_("No list open"), "", [])
+            self.pcs.show_list(_("No list open"), "", None)
             return
         name = next((n for _p, n, current in self._list_choices() if current), doc.path.stem)
-        self.pcs.show_list(name, str(doc.path), doc.hosts.hosts)
+        self.pcs.show_list(name, str(doc.path), doc.hosts, self._group_of(str(doc.path)))
+
+    def _group_of(self, list_path: str) -> str:
+        """The group this list was left on, here."""
+        kept = self.prefs.get(GROUPS_KEY)
+        group = kept.get(list_path) if isinstance(kept, dict) else None
+        return group if isinstance(group, str) else ALL_GROUPS
+
+    def _keep_group(self, group: str) -> None:
+        doc = self._hosts.document if self._hosts is not None else None
+        if doc is None:
+            return
+        kept = self.prefs.get(GROUPS_KEY)
+        kept = dict(kept) if isinstance(kept, dict) else {}
+        if group == ALL_GROUPS:
+            kept.pop(str(doc.path), None)
+        else:
+            kept[str(doc.path)] = group
+        self.prefs[GROUPS_KEY] = kept
+        self._shell.save_prefs()
 
     # ---- scanning ----
 
