@@ -399,3 +399,40 @@ def test_winrm_is_skipped_when_powershell_isnt_used_on_this_pc(
     monkeypatch.setattr(inventory, "powershell_blocked", False)
     pc.asked.clear()
     assert runner(pc).run("DESK-03", PS).engine is Engine.WINRM  # as before
+
+
+def test_a_pc_that_refuses_to_start_a_program_is_reported_as_refused(
+    pc: FakePc, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The account gets in over WMI, but the PC answers "access denied" to the start itself:
+    what security software does to programs started from another PC. It isn't "no way in"."""
+    monkeypatch.setattr(run, "run_cim", lambda *_a, **_k: {"code": 2})
+    with pytest.raises(run._Refused) as refused:
+        run._start_cim("DESK-01", ["powershell.exe"], None, "Dcom")
+    assert "the PC refused to start a program" in str(refused.value)
+    assert "Win32_Process.Create: access denied" in str(refused.value)
+    monkeypatch.setattr(run, "run_cim", lambda *_a, **_k: {"code": 9})
+    with pytest.raises(run._NotThisWay) as other:  # any other answer: just not this way
+        run._start_cim("DESK-01", ["powershell.exe"], None, "Dcom")
+    assert not isinstance(other.value, run._Refused)
+
+    def refuse() -> None:
+        raise run._Refused("the PC refused to start a program")
+
+    pc.answers = {Engine.WMI: refuse}
+    with pytest.raises(RunError) as caught:
+        runner(pc, psexec=None, winrm=False).run("DESK-01", PS)
+    assert caught.value.problem is Problem.REFUSED
+    assert caught.value.tried[1] == "WMI: the PC refused to start a program"
+
+
+def test_psexec_that_cant_start_on_this_pc_says_so(monkeypatch: pytest.MonkeyPatch) -> None:
+    def blocked(*_a: object) -> int:
+        raise OSError(-2147024809, "The parameter is incorrect")  # as an antivirus answered
+
+    monkeypatch.setattr(run, "_spawn", blocked)
+    runs = Runner(lambda: Path("PsExec64.exe"))
+    with pytest.raises(run._NotThisWay) as caught:
+        runs._start_psexec("DESK-01", ["powershell.exe"], None)
+    assert str(caught.value).startswith("it couldn't start on this PC (")
+    assert "an antivirus here may have blocked it" in str(caught.value)

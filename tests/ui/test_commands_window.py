@@ -12,13 +12,14 @@ import shiboken6
 from capywindow import CapyWindow
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QApplication, QDialog, QMenu, QTreeWidget
+from PySide6.QtWidgets import QApplication, QDialog, QLabel, QMenu, QTreeWidget
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
-from capypanel.core.remote import access, host_printers, inventory, places, services
+from capypanel.core.remote import access, drives, host_printers, inventory, places, services
 from capypanel.core.remote.access import Reason, RemoteError
+from capypanel.core.remote.drives import Drive, Person
 from capypanel.core.remote.host_printers import HostPrinter
 from capypanel.core.remote.inventory import DiskSpace, Program
 from capypanel.core.tools.connect import Target
@@ -266,6 +267,32 @@ def test_printers_show_as_a_table_with_the_spooler_state(
     assert len(tables) == 1 and tables[0].topLevelItemCount() == 2
     first = tables[0].topLevelItem(0)
     assert first is not None and first.text(1) == "Paper jam"
+
+
+def test_one_persons_mapped_drives_name_them_in_the_heading_not_on_every_row(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    long_path = r"\\FS01\Projects\A long folder name\Another one\Ward 3"
+    ana = Person("ana", "EXAMPLE", (Drive("H:", r"\\FS01\Home\ana"), Drive("S:", long_path)))
+    monkeypatch.setattr(drives, "saved_drives", lambda *_a: [ana])
+    commands = _open(window, "DESK-02")
+    row = next(r for r in commands.rows if r.command.id == "drives")
+    commands.pick(row)
+    row.run.click()
+    _settle(window)
+    table = commands.results.findChildren(QTreeWidget)[0]
+    assert table.isColumnHidden(0) and not table.isColumnHidden(2)  # no Person column
+    headings = [w.text() for w in commands.results.findChildren(QLabel)
+                if w.objectName() == "detailsSection"]  # fmt: skip
+    assert any(h.startswith("Mapped drives · ana · ") for h in headings)
+    second = table.topLevelItem(1)
+    assert second is not None and second.toolTip(2) == long_path  # whole, when it's cut
+    assert table.textElideMode() == Qt.TextElideMode.ElideMiddle  # the share's end stays
+    rui = Person("rui", "EXAMPLE", (Drive("H:", r"\\FS01\Home\rui"),))
+    monkeypatch.setattr(drives, "saved_drives", lambda *_a: [ana, rui])
+    row.run.click()  # two people: the column says whose each drive is
+    _settle(window)
+    assert not commands.results.findChildren(QTreeWidget)[0].isColumnHidden(0)
 
 
 def test_programs_right_click_opens_them_in_their_own_window(

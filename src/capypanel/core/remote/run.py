@@ -118,6 +118,7 @@ class RunResult:
 
 class Problem(StrEnum):
     NO_WAY_IN = "no-way-in"  # WinRM off, WMI not answering, PsExec not set up or not working
+    REFUSED = "refused"  # a way in reached the PC, which refused to start a program for it
     BLOCKED = "blocked"  # started, but never ran: security software on the PC, most likely
     NOT_STARTED = "not-started"  # the wrapper ran but couldn't start the script
     TIMED_OUT = "timed-out"  # no answer in time; it may still be running on the PC
@@ -133,6 +134,11 @@ class RunError(Exception):
 
 class _NotThisWay(Exception):
     """This way in didn't start the run; the next one may."""
+
+
+class _Refused(_NotThisWay):
+    """This way in reached the PC and the account was let in, but the PC wouldn't start a
+    program for it: what security software does to programs started from another PC."""
 
 
 # Starts `command` (a program and its arguments, none with spaces) on the PC, or raises.
@@ -299,7 +305,7 @@ class Runner:
         identity: Callable[[], AbstractContextManager[None]],
     ) -> Engine:
         tried: list[str] = []
-        blocked = False
+        blocked = refused = False
         for engine in self._ways(host):
             name = ENGINE_NAMES[engine]
             if engine is Engine.WINRM and (
@@ -321,6 +327,7 @@ class Runner:
                 tried.append(f"{name}: {e}")
                 continue
             except (_NotThisWay, OSError, TimeoutError) as e:
+                refused = refused or isinstance(e, _Refused)
                 tried.append(f"{name}: {e}")
                 continue
             with identity():
@@ -332,7 +339,7 @@ class Runner:
             tried.append(f"{name}: started, but never ran")
         if blocked:
             raise RunError(Problem.BLOCKED, tried=tried)
-        raise RunError(Problem.NO_WAY_IN, tried=tried)
+        raise RunError(Problem.REFUSED if refused else Problem.NO_WAY_IN, tried=tried)
 
     def _began(self, folder: Path, run_id: str) -> bool:
         """Whether the wrapper shows it started, within START_GRACE."""
@@ -354,7 +361,12 @@ class Runner:
             str(program), rf"\\{host}", "-accepteula", "-nobanner", "-d", "-h", "-n", "10",
             *command,
         ]  # fmt: skip
-        code = _spawn(argv, account, PSEXEC_TIMEOUT)
+        try:
+            code = _spawn(argv, account, PSEXEC_TIMEOUT)
+        except OSError as e:  # PsExec itself never started, here
+            raise _NotThisWay(
+                f"it couldn't start on this PC ({e}); an antivirus here may have blocked it"
+            ) from e
         if code > 0 and code % 4 == 0:  # a process ID: Windows' are multiples of 4, its errors not
             return
         reason = reason_of(code)
@@ -758,6 +770,12 @@ def _start_cim(host: str, command: Sequence[str], account: Account | None, proto
             raise
         raise _NotThisWay(str(e)) from e
     code = int(found.get("code") or 0)
+    if code in (2, 3):  # the account got in (the call was answered); the start was refused
+        raise _Refused(
+            f"the PC refused to start a program (Win32_Process.Create: "
+            f"{_CREATE_ERRORS[code]}); security software there may block programs started "
+            f"from another PC"
+        )
     if code:
         raise _NotThisWay(f"Win32_Process.Create: {_CREATE_ERRORS.get(code, code)}")
 

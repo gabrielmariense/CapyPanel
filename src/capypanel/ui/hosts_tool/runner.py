@@ -125,8 +125,16 @@ def reason_text(error: BaseException, host: str = "") -> str:
         }[error.reason]
     if isinstance(error, RunError):
         return {
-            Problem.NO_WAY_IN: _("CapyPanel couldn't start anything there. WinRM is off, WMI "
-                                 "didn't answer, and PsExec isn't set up or didn't work."),
+            Problem.NO_WAY_IN: _("CapyPanel found no way to start anything there. What each "
+                                 "way answered is below."),
+            Problem.REFUSED: (
+                _("{host} let the account in but refused to start a program for it. Security "
+                  "software there may block programs started from another PC. What each way "
+                  "answered is below.").format(host=host) if host
+                else _("the PC let the account in but refused to start a program for it. "
+                       "Security software there may block programs started from another PC. "
+                       "What each way answered is below.")
+            ),
             Problem.BLOCKED: (
                 _("it started but never ran. Security software on {host} may have stopped it.")
                 .format(host=host) if host

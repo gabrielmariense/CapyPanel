@@ -192,7 +192,13 @@ class Results(HostDetailsPanel):
             self._outcome(layout, shown.outcome)
             return
         when = check_texts.clock_text(listed.when)
-        if printers or mapped:
+        # Mapped drives for one person: their name goes in the heading, not in a column of its
+        # own repeated on every row, so the path has the room.
+        one_person = mapped and len({p.user for p in listed.rows}) == 1
+        if one_person:
+            self.section(layout, _("{title} · {person} · {when}").format(
+                title=title, person=listed.rows[0].user, when=when))  # fmt: skip
+        elif printers or mapped:
             self.section(layout, _("{title} · {when}").format(title=title, when=when))
         else:
             self.section(layout, _("{title} · {n} · {when}").format(
@@ -213,13 +219,20 @@ class Results(HostDetailsPanel):
         elif mapped:
             shown_rows = drive_windows.drive_rows(listed.rows, listed.checked)
             table.setHeaderLabels(drive_windows.drive_header())
+            # A share's last folder tells two paths apart, so a path too long loses its
+            # middle; the whole of it is in the tooltip.
+            table.setTextElideMode(Qt.TextElideMode.ElideMiddle)
             for drive in shown_rows:
-                row = QTreeWidgetItem(drive_windows.row_text(drive))
+                texts = drive_windows.row_text(drive)
+                row = QTreeWidgetItem(texts)
+                for column, text in enumerate(texts):
+                    row.setToolTip(column, text)
                 if drive.problem:
                     row.setForeground(3, QColor(STATUS_COLORS["attention"]))
                 table.addTopLevelItem(row)
             if listed.checked is None:
                 table.setColumnHidden(3, True)  # State: only after a check
+            table.setColumnHidden(0, one_person)
         else:
             table.setHeaderLabels([_("Name"), _("Version")])
             for program in listed.rows:

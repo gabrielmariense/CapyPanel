@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 18:56-0300\n"
+"POT-Creation-Date: 2026-11-10 19:01-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -839,8 +839,8 @@ msgid "CapyPanel couldn't see who is signed in. Work anyone hasn't saved is lost
 msgstr ""
 
 msgid ""
-"CapyPanel couldn't start anything there. WinRM is off, WMI didn't answer,"
-" and PsExec isn't set up or didn't work."
+"CapyPanel found no way to start anything there. What each way answered is"
+" below."
 msgstr ""
 
 msgid "CapyPanel is built with the following software:"
@@ -4775,6 +4775,12 @@ msgstr ""
 msgid "the PC couldn't start it."
 msgstr ""
 
+msgid ""
+"the PC let the account in but refused to start a program for it. Security"
+" software there may block programs started from another PC. What each way"
+" answered is below."
+msgstr ""
+
 msgid "the answer and its output"
 msgstr ""
 
@@ -4901,6 +4907,13 @@ msgstr ""
 
 #, python-brace-format
 msgid "{host} is shutting down."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"{host} let the account in but refused to start a program for it. Security"
+" software there may block programs started from another PC. What each way"
+" answered is below."
 msgstr ""
 
 #, python-brace-format
@@ -5438,6 +5451,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{title} · {n} · {when}"
+msgstr ""
+
+#, python-brace-format
+msgid "{title} · {person} · {when}"
 msgstr ""
 
 #, python-brace-format
