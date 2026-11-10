@@ -10,8 +10,8 @@ from typing import Any
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtCore import QCoreApplication, QEvent, QPoint, QPointF, QRect, Qt
-from PySide6.QtGui import QKeyEvent, QMouseEvent, QShowEvent
+from PySide6.QtCore import QCoreApplication, QEvent, QPoint, QPointF, QRect, QSize, Qt
+from PySide6.QtGui import QIcon, QKeyEvent, QMouseEvent, QShowEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QToolButton
 
@@ -853,6 +853,10 @@ def test_the_arrows_that_scroll_the_tabs_can_be_seen(window: CapyWindow) -> None
     for button in found.values():  # a chevron on the window's colour, never see-through
         assert not button.icon().isNull() and "padding: 0px" in button.styleSheet()
         assert "background: #" in button.styleSheet()
+        # At the end the bar is already at, its arrow is drawn muted, not just left to the style.
+        size = QSize(16, 16)
+        normal = button.icon().pixmap(size, QIcon.Mode.Normal).toImage()
+        assert button.icon().pixmap(size, QIcon.Mode.Disabled).toImage() != normal
 
 
 def test_a_tab_closed_while_its_scan_runs_ignores_the_answer(

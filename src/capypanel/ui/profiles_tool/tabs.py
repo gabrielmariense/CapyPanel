@@ -59,11 +59,22 @@ class _Bar(QTabBar):
         and the theme's padding for tool buttons left them see-through with no arrow: the
         last tab just looked cut. They get a chevron and the window's own background."""
         color = self.palette().color(QPalette.ColorRole.ButtonText)
-        back = self.palette().color(QPalette.ColorRole.Window).name()
-        icons = ("chevron-left", "chevron-right")
-        for button, icon in zip(self._scrollers(), icons, strict=False):
+        window = self.palette().color(QPalette.ColorRole.Window)
+        # The end the bar is already at: its arrow faded towards the background, drawn so by
+        # us (the style's own greying of an icon barely showed). Mixed from the two colours,
+        # so it's fainter in every theme.
+        muted = QColor(
+            round(color.red() * 0.4 + window.red() * 0.6),
+            round(color.green() * 0.4 + window.green() * 0.6),
+            round(color.blue() * 0.4 + window.blue() * 0.6),
+        )
+        back = window.name()
+        names = ("chevron-left", "chevron-right")
+        for button, name in zip(self._scrollers(), names, strict=False):
+            icon = tabler_icon(name, color, 16)
+            icon.addPixmap(tabler_icon(name, muted, 16).pixmap(16, 16), QIcon.Mode.Disabled)
             button.setArrowType(Qt.ArrowType.NoArrow)
-            button.setIcon(tabler_icon(icon, color, 16))
+            button.setIcon(icon)
             button.setIconSize(QSize(16, 16))
             button.setStyleSheet(
                 f"QToolButton {{ padding: 0px; border: none; border-radius: 0px;"
