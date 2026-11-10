@@ -134,6 +134,7 @@ class PrintersTool(ListWorkspace):
     def _fill_inventory(self) -> None:
         a = self.commands
         self.toolbar.inventory_menu.addActions([a.add_printer, a.add_group, a.manage_groups])
+        self.toolbar.inventory_menu.addAction(self.sort_groups_action)  # as in Hosts
 
     def _connect(self) -> None:
         a = self.commands

@@ -313,7 +313,7 @@ def test_toolbar_mirrors_hosts_with_a_plain_refresh(printers: PrintersTool) -> N
     _select(printers, "LOOSE")
     assert bar.web_button.isEnabled()
     assert [menus.label(a) for a in bar.inventory_menu.actions()] == [
-        "Add &printer…", "Add &group…", "&Manage groups…",
+        "Add &printer…", "Add &group…", "&Manage groups…", "&Sort groups A–Z",
     ]  # fmt: skip
 
 
