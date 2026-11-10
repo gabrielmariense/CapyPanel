@@ -549,3 +549,12 @@ def test_a_real_profile_an_entry_and_a_leftover_folder_are_deleted(
         _quiet("reg", "delete", gone_key, "/f")
         if leftover is not None:
             shutil.rmtree(leftover, ignore_errors=True)
+
+
+def test_a_folder_count_says_how_far_it_is_after_each_folder(tmp_path: Path) -> None:
+    (tmp_path / "a").mkdir()
+    (tmp_path / "a" / "one.bin").write_bytes(b"x" * 10)
+    (tmp_path / "two.bin").write_bytes(b"x" * 5)
+    heard: list[int] = []
+    assert user_profiles.folder_size(str(tmp_path), progress=heard.append) == 15
+    assert heard == [5, 15]  # the folder itself, then the one inside it

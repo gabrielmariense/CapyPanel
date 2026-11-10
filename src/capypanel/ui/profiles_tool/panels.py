@@ -5,7 +5,15 @@ the Delete window and the progress of a delete run."""
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QSize, Qt, Signal
+from PySide6.QtCore import (
+    QEvent,
+    QModelIndex,
+    QObject,
+    QPersistentModelIndex,
+    QSize,
+    Qt,
+    Signal,
+)
 from PySide6.QtGui import (
     QBrush,
     QColor,
@@ -30,6 +38,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QStyledItemDelegate,
     QStyleOptionViewItem,
+    QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -53,6 +62,7 @@ SORT_ROLE = Qt.ItemDataRole.UserRole + 1  # what a cell sorts by
 ARROW = 16  # px a column title needs for the sort arrow
 IDENT_ROLE = Qt.ItemDataRole.UserRole  # the row's profile
 CAREFUL_ROLE = Qt.ItemDataRole.UserRole + 2  # ticked: deleted on Delete…
+COUNTING_ROLE = Qt.ItemDataRole.UserRole + 3  # its size is being counted now
 AMBER = STATUS_COLORS["attention"]  # what deletes, everywhere in the app
 
 
@@ -136,6 +146,87 @@ class TabBox(QFrame):
         self.about.setText(about)
 
 
+class Squeeze(QObject):
+    """Keeps a table's columns inside its box. When their full widths don't fit, the columns in
+    `order` give up width one after another, each down to its least (cut text ends in "…"),
+    while the last column keeps the room `last_least` says it needs. Only when that isn't
+    enough does the table scroll sideways. A width the admin drags becomes that column's full
+    width. `narrowed` says the full widths stopped (or started) fitting."""
+
+    narrowed = Signal(bool)
+
+    def __init__(
+        self,
+        tree: QTreeWidget,
+        order: Sequence[tuple[int, int]],
+        last_least: Callable[[], int],
+    ) -> None:
+        super().__init__(tree)
+        self._tree = tree
+        self._order = order
+        self._last_least = last_least
+        self._full: dict[int, int] = {}  # every column but the last, at its full width
+        self._narrow_widths: dict[int, int] = {}  # full widths that apply only while narrow
+        self._narrow = False
+        self._busy = False
+        tree.viewport().installEventFilter(self)
+        tree.header().sectionResized.connect(self._dragged)
+
+    def set_full(self) -> None:
+        """The widths the columns have now are their full ones."""
+        last = self._tree.columnCount() - 1
+        self._full = {c: self._tree.columnWidth(c) for c in range(last)}
+        self._tree.header().setStretchLastSection(False)  # apply() sizes it from here on
+        self.apply()
+
+    def set_narrow_width(self, column: int, width: int) -> None:
+        """While narrow, `column` is this wide at most (its title got shorter)."""
+        self._narrow_widths[column] = width
+        self.apply()
+
+    def is_narrow(self) -> bool:
+        return self._narrow
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.Resize:
+            self.apply()
+        return False
+
+    def _dragged(self, column: int, _old: int, new: int) -> None:
+        if not self._busy and column in self._full:
+            self._full[column] = new
+
+    def apply(self, room: int | None = None) -> None:
+        """`room`: the width to fit in; the table's own when not given."""
+        if not self._full:
+            return
+        tree = self._tree
+        room = tree.viewport().width() if room is None else room
+        need = self._last_least()
+        widths = dict(self._full)
+        narrow = sum(widths.values()) + need > room
+        if narrow:
+            for column, width in self._narrow_widths.items():
+                widths[column] = min(widths[column], width)
+        over = sum(widths.values()) + need - room
+        for column, least in self._order:
+            if over <= 0:
+                break
+            give = min(over, max(0, widths[column] - least))
+            widths[column] -= give
+            over -= give
+        self._busy = True
+        for column, width in widths.items():
+            if tree.columnWidth(column) != width:
+                tree.setColumnWidth(column, width)
+        last = tree.columnCount() - 1
+        tree.setColumnWidth(last, max(need, room - sum(widths.values())))
+        self._busy = False
+        if narrow != self._narrow:
+            self._narrow = narrow
+            self.narrowed.emit(narrow)
+
+
 class Count(QWidget):
     """The right end of a host tab's second line: how many rows show, or, with rows ticked, a
     bin and "3 ticked · 12.4 GB" in bold amber. It never widens its row: short of room it ends
@@ -147,11 +238,14 @@ class Count(QWidget):
     def __init__(self) -> None:
         super().__init__()
         self._text = ""
+        self._short = ""
         self._ticked = False
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
-    def show_count(self, text: str, ticked: bool) -> None:
-        self._text, self._ticked = text, ticked
+    def show_count(self, text: str, ticked: bool, short: str = "") -> None:
+        """`short`: what's left of `text` when it can't all fit ("3 ticked", without the
+        size), before any "…"."""
+        self._text, self._ticked, self._short = text, ticked, short
         font = QFont(self.font())
         font.setBold(ticked)
         self.setFont(font)
@@ -167,8 +261,11 @@ class Count(QWidget):
 
     def shown_text(self) -> str:
         """The words as drawn at this width."""
-        room = self.width() - (self.BIN + self.GAP if self._ticked else 0)
-        return self.fontMetrics().elidedText(self._text, Qt.TextElideMode.ElideRight, max(room, 0))
+        room = max(0, self.width() - (self.BIN + self.GAP if self._ticked else 0))
+        metrics = self.fontMetrics()
+        if metrics.horizontalAdvance(self._text) <= room or not self._short:
+            return metrics.elidedText(self._text, Qt.TextElideMode.ElideRight, room)
+        return metrics.elidedText(self._short, Qt.TextElideMode.ElideRight, room)
 
     def sizeHint(self) -> QSize:
         width = self.fontMetrics().horizontalAdvance(self._text) + 2
@@ -260,10 +357,11 @@ class FilterRow(QWidget):
         self.since.setCurrentIndex(picked)
         self.since.blockSignals(False)
 
-    def show_count(self, shown: str, ticked: str = "") -> None:
+    def show_count(self, shown: str, ticked: str = "", short: str = "") -> None:
         """How many rows show; with rows ticked, how many and their size instead, in bold
-        amber with the bin, in the same place."""
-        self.shown.show_count(ticked or shown, bool(ticked))
+        amber with the bin, in the same place. `short`: the ticked words without the size,
+        for when there's no room for both."""
+        self.shown.show_count(ticked or shown, bool(ticked), short if ticked else "")
 
     def chosen(self) -> Filters:
         return Filters(
@@ -387,6 +485,8 @@ class ProfilesTable(QWidget):
         self.tree.setFrameShape(QFrame.Shape.NoFrame)  # flush to its box's edges
         self.tree.setUniformRowHeights(True)
         self.tree.header().setStretchLastSection(True)
+        # At a narrow width User gives up room first, then Kind; the ticks and State stay.
+        self.squeeze = Squeeze(self.tree, ((USER, 110), (KIND, 70)), self._state_least)
         self.tree.setSortingEnabled(True)
         # Newest first, as people scan the list for who still uses the PC; a click on Last used
         # turns it round, the oldest on top.
@@ -459,11 +559,12 @@ class ProfilesTable(QWidget):
         if before != self._ticked:
             self.ticked_changed.emit()
 
-    def show_size(self, ident: str, sizes: dict[str, int | None]) -> None:
-        """One row's size changed: counted, or being counted."""
+    def show_size(self, ident: str, sizes: dict[str, int | None], so_far: int = 0) -> None:
+        """One row's size changed: counted, or being counted (`so_far`: the bytes counted up
+        to now, shown as "1.2 GB…" so the count is seen moving)."""
         item = self._item(ident)
         if item is not None:
-            self._fill_size(item, ident, sizes)
+            self._fill_size(item, ident, sizes, so_far)
 
     def show_result(self, ident: str, result: Result | None) -> None:
         """One row moved on in a delete run; None takes it out of the run again."""
@@ -509,6 +610,15 @@ class ProfilesTable(QWidget):
         )
         self.tree.setColumnWidth(SIZE, max(self.tree.columnWidth(SIZE), widest + 20))
         self._fitted = True
+        self.squeeze.set_full()
+
+    def _state_least(self) -> int:
+        """State's width for its longest word with its icon, so it's never cut."""
+        words = [rows.state_name(state) for state in rows.STATE_ORDER]
+        words += [_(name) for name in rows.RESULT_NAMES.values()]
+        words += [_("Will be deleted"), _("State")]
+        metrics = self.tree.fontMetrics()
+        return max(metrics.horizontalAdvance(word) for word in words) + 16 + 26  # icon, padding
 
     def selected(self) -> Profile | None:
         items = self.tree.selectedItems()
@@ -561,6 +671,7 @@ class ProfilesTable(QWidget):
 
     def _fill(self, item: QTreeWidgetItem, profile: Profile, sizes: dict[str, int | None]) -> None:
         item.setText(USER, rows.user_text(profile))
+        item.setToolTip(USER, rows.user_text(profile))  # whole, when the column is narrow
         item.setData(USER, SORT_ROLE, natural_key(profile.user))
         item.setText(USED, rows.date_text(profile.last_used) or "—")
         used = profile.last_used.timestamp() if profile.last_used else float("-inf")
@@ -615,24 +726,27 @@ class ProfilesTable(QWidget):
         for column in (USER, USED, KIND):
             item.setForeground(column, brush)
         item.setForeground(STATE, QBrush(QColor(AMBER)) if careful else brush)
-        if item.text(SIZE) != _("counting…"):
+        if not item.data(SIZE, COUNTING_ROLE):
             item.setForeground(SIZE, brush)
 
     def _light(self) -> bool:
         """A light theme: amber is too faint as text there, so rows keep their text colour."""
         return self.palette().color(QPalette.ColorRole.Base).lightness() > 128
 
-    def _fill_size(self, item: QTreeWidgetItem, ident: str, sizes: dict[str, int | None]) -> None:
+    def _fill_size(
+        self, item: QTreeWidgetItem, ident: str, sizes: dict[str, int | None], so_far: int = 0
+    ) -> None:
         profile = self._profiles[ident]
         muted = QBrush(self.palette().color(QPalette.ColorRole.PlaceholderText))
         normal = QBrush(self.palette().color(QPalette.ColorRole.Text))
+        item.setData(SIZE, COUNTING_ROLE, ident in sizes and sizes[ident] is None)
         if ident not in sizes:
             item.setText(SIZE, "")
             item.setData(SIZE, SORT_ROLE, -1)
             return
         size = sizes[ident]
         if size is None:
-            item.setText(SIZE, _("counting…"))
+            item.setText(SIZE, rows.size_text(so_far) + "…" if so_far else _("counting…"))
             item.setForeground(SIZE, muted)
             item.setData(SIZE, SORT_ROLE, -1)
         else:

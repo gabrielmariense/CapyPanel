@@ -981,6 +981,10 @@ class HostsTool(ListWorkspace):
         """A Refresh is running (another one waits for it to end)."""
         return self._run is not None
 
+    def check_progress(self) -> tuple[int, int] | None:
+        """(hosts checked so far, hosts to check) while a Refresh runs."""
+        return (self._run.done, self._run.total) if self._run is not None else None
+
     def auto_status(self) -> tuple[bool, int]:
         saved = self.prefs.get("auto_status")
         saved = saved if isinstance(saved, dict) else {}

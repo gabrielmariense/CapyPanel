@@ -38,7 +38,7 @@ from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import DetailsPanel
 from capypanel.ui.list_workspace.panels import SearchBox, natural_key
 from capypanel.ui.profiles_tool.host_page import HostPage
-from capypanel.ui.profiles_tool.panels import TabBox, hint
+from capypanel.ui.profiles_tool.panels import Squeeze, TabBox, hint
 from capypanel.ui.tables import grid_table
 
 NAME, ADDRESS, STATUS, PROFILES, DELETABLE, SCAN = range(6)  # the table's columns
@@ -75,6 +75,19 @@ class HostFacts:
     account: str  # who signs in, or "—"
 
 
+@dataclass(frozen=True)
+class GroupFacts:
+    """The hosts on show, when no single host is picked: how many answer by Hosts' last check,
+    the check under way, and what the scans found so far."""
+
+    name: str  # the group's name, or "All hosts"
+    status: str  # "Refreshing status: 12 of 31…", or when Hosts last checked
+    checked: str  # "28 online · 3 offline"
+    unchecked: int
+    scanned: str  # "4 of 31"
+    deletable: str  # "66", or "—" before any scan
+
+
 class _Row(QTreeWidgetItem):
     """Sorts by what a cell means. The Scan column goes by time, the hosts with no time after
     the others whichever way it's sorted; ties stay in name order."""
@@ -109,6 +122,9 @@ class HostsTable(QWidget):
         self.tree.setUniformRowHeights(True)
         self.tree.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.tree.header().setStretchLastSection(True)
+        # At a narrow width Name gives up room first; Scan, the last one, stays whole.
+        self.squeeze = Squeeze(self.tree, ((NAME, 90), (ADDRESS, 80)), self._scan_least)
+        self.squeeze.narrowed.connect(lambda _narrow: self._title_deletable())
         self.tree.setSortingEnabled(True)
         self.tree.sortByColumn(NAME, Qt.SortOrder.AscendingOrder)
         self.tree.itemSelectionChanged.connect(self.picked)
@@ -151,12 +167,31 @@ class HostsTable(QWidget):
                 pgettext("column", "Scan"),
             ]  # fmt: skip
         )
+        self._title_deletable()
         header = self.tree.headerItem()
         header.setToolTip(PROFILES, _("Profiles found by the last scan"))
         header.setToolTip(DELETABLE, _("Profiles the last scan found that can be deleted"))
         header.setToolTip(SCAN, _("When the host was scanned, or where its scan is"))
         self._empty_hint.setText(_("Opens the host in a new tab. Typing alone never scans."))
         self.show_typed(self._typed)
+
+    def _title_deletable(self) -> None:
+        """ "Can be deleted", or one short word while the columns don't fit at full width;
+        the tooltip has the whole phrase either way."""
+        narrow = self.squeeze.is_narrow()
+        self.tree.headerItem().setText(DELETABLE, _("Deletable") if narrow else _("Can be deleted"))
+
+    def _scan_least(self) -> int:
+        """Scan's width for its longest words, so where a host stands is never cut."""
+        words = [
+            _("deleting {n} of {total}").format(n=99, total=99),
+            _("account refused"),
+            _("didn't answer"),
+            _("couldn't be read"),
+            pgettext("column", "Scan"),
+        ]
+        metrics = self.tree.fontMetrics()
+        return max(metrics.horizontalAdvance(word) for word in words) + 24
 
     def show_hosts(self, hosts: Sequence[Host], facts: Callable[[Host], RowFacts]) -> None:
         kept = set(self.selected_ids())
@@ -167,6 +202,7 @@ class HostsTable(QWidget):
             item = _Row()
             item.setData(NAME, ID_ROLE, host.id)
             item.setText(NAME, host.name)
+            item.setToolTip(NAME, host.name)  # whole, when the column is narrow
             item.setData(NAME, SORT_ROLE, natural_key(host.name))
             item.setText(ADDRESS, host.address)
             item.setData(ADDRESS, SORT_ROLE, natural_key(host.address))
@@ -268,6 +304,9 @@ class HostsTable(QWidget):
             self.tree.setColumnWidth(column, self.tree.columnWidth(column) + 14)
         header.setSortIndicatorShown(True)
         self._fitted = True
+        self.squeeze.set_full()
+        metrics = self.tree.header().fontMetrics()
+        self.squeeze.set_narrow_width(DELETABLE, metrics.horizontalAdvance(_("Deletable")) + 30)
 
     def _place_empty(self) -> None:
         if not self._empty.isVisible():
@@ -497,6 +536,21 @@ class HostCard(QFrame):
         column.addLayout(grid)
         column.addStretch(1)
 
+    def show_group(self, facts: GroupFacts) -> None:
+        """No single host picked: the hosts on show as a whole."""
+        self.heading.setText(_("HOSTS SHOWN"))
+        self.name.setText(facts.name)
+        self.dot.hide()
+        self.status.setText(facts.status)
+        self._show(
+            (
+                (_("Status"), facts.checked),
+                (pgettext("hosts", "Not checked"), str(facts.unchecked)),
+                (_("Scanned"), facts.scanned),
+                (_("Can be deleted"), facts.deletable),
+            )
+        )
+
     def show_host(self, facts: HostFacts) -> None:
         self.heading.setText(_("SELECTED HOST"))
         self.name.setText(facts.name)
@@ -504,12 +558,16 @@ class HostCard(QFrame):
         if facts.dot:
             self.dot.setPixmap(dot_icon(facts.dot, 12).pixmap(12, 12))
         self.status.setText(facts.status)
-        pairs = (
-            (_("Address"), facts.address),
-            (_("Group"), facts.group),
-            (_("Scanned at"), facts.scanned),
-            (_("As"), facts.account),
+        self._show(
+            (
+                (_("Address"), facts.address),
+                (_("Group"), facts.group),
+                (_("Scanned at"), facts.scanned),
+                (_("As"), facts.account),
+            )
         )
+
+    def _show(self, pairs: Sequence[tuple[str, str]]) -> None:
         for (label, value), name, shown in zip(pairs, self._labels, self._values, strict=True):
             name.setText(label)
             shown.setText(value)
@@ -525,7 +583,6 @@ class HostsPage(QObject):
         self.box = TabBox(self.search, self.table)
         self.progress = ProgressCard()
         self.host_card = HostCard()
-        self.host_card.hide()
         self.side = QWidget()
         column = QVBoxLayout(self.side)
         column.setContentsMargins(0, 0, 0, 0)
@@ -543,11 +600,12 @@ class HostsPage(QObject):
     def show_title(self, name: str, about: str) -> None:
         self.box.show_title(name, about)
 
-    def show_host(self, facts: HostFacts | None) -> None:
-        """The picked host's box: only with one host picked."""
-        self.host_card.setVisible(facts is not None)
-        if facts is not None:
+    def show_host(self, facts: HostFacts | GroupFacts) -> None:
+        """The box under Progress: the one host picked, or the hosts on show as a whole."""
+        if isinstance(facts, HostFacts):
             self.host_card.show_host(facts)
+        else:
+            self.host_card.show_group(facts)
 
     def _to_results(self) -> None:
         tree = self.table.tree

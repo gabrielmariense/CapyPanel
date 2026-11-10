@@ -9,7 +9,7 @@ from datetime import datetime
 from enum import Enum
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QDialog, QStackedWidget, QVBoxLayout, QWidget
 
@@ -93,6 +93,10 @@ class HostPage(QObject):
         self._count_total = 0
         self._count_left = 0  # counts not ended yet
         self._uncounted = 0
+        self._so_far: dict[str, int] = {}  # bytes counted up to now, written by the counts
+        self._ticker = QTimer(self)  # shows them moving, so a long count isn't taken for stuck
+        self._ticker.setInterval(700)
+        self._ticker.timeout.connect(self._show_so_far)
         self._results: dict[str, Result] = {}
         self._done: dict[str, Deleted] = {}
         self._queue: list[Profile] = []
@@ -213,6 +217,17 @@ class HostPage(QObject):
             return self._said().status
         if self.scan is None:
             return f"{self.target.name} · {self.mark().short}"
+        if self._counting is not None:
+            done = self._count_total - self._count_left
+            text = _("{host} · calculating sizes: {n} of {total}").format(
+                host=self.target.name, n=done, total=self._count_total
+            )
+            counted = sum(self._counted().values()) + sum(
+                size for ident, size in self._so_far.items() if self._sizes.get(ident, 0) is None
+            )
+            if counted:
+                text += " · " + _("{size} so far").format(size=rows.size_text(counted))
+            return text
         if self._run:
             results = [self._results[p.ident] for p in self._run if p.ident in self._results]
             parts = [self.target.name, *(rows.counts_text(results) or _("nothing deleted"))
@@ -385,13 +400,13 @@ class HostPage(QObject):
         if self.scan is None:
             return
         ticked = self.ticked()
-        words = ""
+        words = short = ""
         if ticked:
-            words = ngettext("{n} ticked", "{n} ticked", len(ticked)).format(n=len(ticked))
+            words = short = ngettext("{n} ticked", "{n} ticked", len(ticked)).format(n=len(ticked))
             if size := self.ticked_size():
                 words += " · " + rows.size_text(size)
         shown = rows.shown_text(len(self.table.shown()), len(self.scan.profiles))
-        self.filters.show_count(shown, words)
+        self.filters.show_count(shown, words, short)
 
     def title(self) -> str:
         """The box's first line: what this list is, so it's never taken for a list of hosts."""
@@ -441,6 +456,8 @@ class HostPage(QObject):
         owner = self._counting = object()
         self._count_total = self._count_left = len(waiting)
         self._uncounted = 0
+        self._so_far = {}
+        self._ticker.start()
         account = self._account
         for profile in waiting:
             self._sizes[profile.ident] = None
@@ -462,9 +479,17 @@ class HostPage(QObject):
                 else:
                     self._changed()
 
+            def so_far(counted: int, ident: str = profile.ident) -> None:
+                if self._counting is owner:  # from the count's own thread: just the number
+                    self._so_far[ident] = counted
+
             def count(profile: Profile = profile) -> int | None:
                 return user_profiles.profile_size(
-                    scanned, profile, account, stop=lambda: self._counting is not owner
+                    scanned,
+                    profile,
+                    account,
+                    stop=lambda: self._counting is not owner,
+                    progress=so_far,
                 )
 
             self._ctx.pool.count(owner, count, ended, lambda _error, e=ended: e(None))
@@ -476,6 +501,7 @@ class HostPage(QObject):
         if owner is None:
             return
         self._counting = None  # counts under way stop themselves and are dropped
+        self._ticker.stop()
         self._ctx.pool.drop(owner)
         for ident in [i for i, size in self._sizes.items() if size is None]:
             del self._sizes[ident]
@@ -490,8 +516,16 @@ class HostPage(QObject):
         if picked is not None and picked.ident == profile.ident:
             self._show_details()
 
+    def _show_so_far(self) -> None:
+        """Each row being counted, with its bytes up to now; the status bar adds them up."""
+        for ident, size in self._sizes.items():
+            if size is None and self._so_far.get(ident):
+                self.table.show_size(ident, self._sizes, self._so_far[ident])
+        self.status_changed.emit()
+
     def _sizes_counted(self) -> None:
         self._counting = None
+        self._ticker.stop()
         self._changed()
         if self._uncounted:
             self._ctx.message(

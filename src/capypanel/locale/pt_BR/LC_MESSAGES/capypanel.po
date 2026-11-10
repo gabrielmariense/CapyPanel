@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 13:04-0300\n"
+"POT-Creation-Date: 2026-11-10 14:47-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1254,6 +1254,9 @@ msgstr "Grupo padrão"
 msgid "Default: {profile}"
 msgstr "Padrão: {profile}"
 
+msgid "Deletable"
+msgstr "Excluíveis"
+
 msgid "Delete"
 msgstr "Excluir"
 
@@ -1674,6 +1677,9 @@ msgstr "Os grupos e as tags são os da lista aberta."
 
 msgid "Groups inside other groups are sorted too. The order they're in now isn't kept."
 msgstr "Os grupos dentro de outros grupos também são classificados. A ordem atual não é mantida."
+
+msgid "HOSTS SHOWN"
+msgstr "HOSTS EXIBIDOS"
 
 msgid "Hide Windows' own"
 msgstr "Ocultar os do Windows"
@@ -2206,6 +2212,10 @@ msgstr "Não é um nome de computador nem um endereço IP"
 
 msgid "Not checked"
 msgstr "Não verificado"
+
+msgctxt "hosts"
+msgid "Not checked"
+msgstr "Não verificados"
 
 msgid "Not checked by Hosts"
 msgstr "Não verificado pelo Hosts"
@@ -2755,6 +2765,10 @@ msgstr "Atualizar o status &sozinho"
 msgid "Refresh status by itself"
 msgstr "Atualizar o status sozinho"
 
+#, python-brace-format
+msgid "Refreshing status: {done} of {total}…"
+msgstr "Atualizando status: {done} de {total}…"
+
 msgid "Refused"
 msgstr "Recusada"
 
@@ -3049,6 +3063,9 @@ msgid_plural "Scan {n} hosts"
 msgstr[0] "Escanear {n} host"
 msgstr[1] "Escanear {n} hosts"
 
+msgid "Scanned"
+msgstr "Escaneados"
+
 msgid "Scanned at"
 msgstr "Escaneado às"
 
@@ -3315,6 +3332,13 @@ msgstr "Estado"
 
 msgid "Status"
 msgstr "Status"
+
+#, python-brace-format
+msgid "Status checked by Hosts at {time}"
+msgstr "Status verificado pelo Hosts às {time}"
+
+msgid "Status not checked yet: use Refresh all"
+msgstr "Status ainda não verificado: use Atualizar todos"
 
 msgid "Status, logged-on users and PC facts, one after the other."
 msgstr "Status, usuários conectados e dados do PC, um depois do outro."
@@ -4543,6 +4567,10 @@ msgid "{host} · account refused"
 msgstr "{host} · conta recusada"
 
 #, python-brace-format
+msgid "{host} · calculating sizes: {n} of {total}"
+msgstr "{host} · calculando tamanhos: {n} de {total}"
+
+#, python-brace-format
 msgid "{host} · couldn't be read"
 msgstr "{host} · não foi lido"
 
@@ -4835,6 +4863,10 @@ msgstr[0] "{n} destas impressoras ainda não foi verificada."
 msgstr[1] "{n} destas impressoras ainda não foram verificadas."
 
 #, python-brace-format
+msgid "{n} of {total}"
+msgstr "{n} de {total}"
+
+#, python-brace-format
 msgid "{n} offline"
 msgid_plural "{n} offline"
 msgstr[0] "{n} offline"
@@ -4940,6 +4972,10 @@ msgstr[0] "{n} marcado"
 msgstr[1] "{n} marcados"
 
 #, python-brace-format
+msgid "{online} online · {offline} offline"
+msgstr "{online} online · {offline} offline"
+
+#, python-brace-format
 msgid "{pages} (from {month})"
 msgstr "{pages} (de {month})"
 
@@ -4974,6 +5010,10 @@ msgstr "{size} liberados"
 #, python-brace-format
 msgid "{size} in the {n} counted"
 msgstr "{size} nos {n} contados"
+
+#, python-brace-format
+msgid "{size} so far"
+msgstr "{size} até agora"
 
 #, python-brace-format
 msgid "{source} · fetched {when}"

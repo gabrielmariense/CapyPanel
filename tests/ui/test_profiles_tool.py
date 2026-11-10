@@ -689,7 +689,9 @@ def test_the_panels_widths_and_view_choices_are_kept(window: CapyWindow) -> None
     assert left > 0 and right > 0
     assert tool_ui._two_widths([230, 300]) == (230, 300)
     assert tool_ui._two_widths([0, 300]) is None and tool_ui._two_widths("wide") is None
-    assert tool.view_actions() == [[tool.show_groups, tool.show_details]]
+    assert tool.view_actions() == [[tool.show_groups, tool.show_tags, tool.show_details]]
+    tool.show_tags.setChecked(False)  # as in Hosts: the Tags panel can be hidden
+    assert tool.nav.tags.isHidden() and tool.prefs[tool_ui.SHOWN_KEY]["tags"] is False
     tool.show_details.setChecked(False)
     assert tool.side.isHidden() and tool.prefs[tool_ui.SHOWN_KEY]["details"] is False
     tool.show_groups.setChecked(False)
@@ -1055,3 +1057,108 @@ def test_open_the_history_says_so_when_there_is_none_yet(
     log_file.write_text("a line\n", encoding="utf-8")
     page.open_log()
     assert opened == [log_file]
+
+
+# ---- narrow windows, and the box of the hosts on show ----
+
+
+def test_at_a_narrow_width_the_tables_fit_their_box_and_the_last_column_stays(
+    window: CapyWindow,
+) -> None:
+    tool = _tool(window)
+    table = tool.hosts_page.table
+    tree = table.tree
+    table.squeeze.apply(1200)
+    full = tree.columnWidth(hosts_page.NAME)
+    assert tree.headerItem().text(hosts_page.DELETABLE) == "Can be deleted"
+    least = table._scan_least()
+    room = least + sum(tree.columnWidth(c) for c in range(hosts_page.SCAN)) - 40
+    table.squeeze.apply(room)
+    assert tree.headerItem().text(hosts_page.DELETABLE) == "Deletable"  # one short word
+    assert tree.headerItem().toolTip(hosts_page.DELETABLE).endswith("can be deleted")
+    assert tree.columnWidth(hosts_page.NAME) <= full  # Name gives up room first
+    assert tree.columnWidth(hosts_page.SCAN) >= least  # where a host stands is never cut
+    widths = sum(tree.columnWidth(c) for c in range(hosts_page.SCAN + 1))
+    assert widths <= room  # nothing to scroll sideways
+    item = tree.topLevelItem(0)
+    assert item is not None and item.toolTip(hosts_page.NAME) == item.text(hosts_page.NAME)
+
+    page = _open(window)
+    page.table.squeeze.apply(1200)
+    ptree = page.table.tree
+    user, kind = ptree.columnWidth(panels.USER), ptree.columnWidth(panels.KIND)
+    page.table.squeeze.apply(430)
+    assert ptree.columnWidth(panels.USER) == 110 and ptree.columnWidth(panels.KIND) <= kind
+    assert ptree.columnWidth(panels.USER) < user
+    assert ptree.columnWidth(panels.TICK) == 34  # the ticks never shrink
+    assert ptree.columnWidth(panels.STATE) >= page.table._state_least()
+
+
+def test_the_count_drops_the_size_before_it_ends_in_an_ellipsis(qapp: QApplication) -> None:
+    count = panels.Count()
+    count.show_count("3 ticked · 12.4 GB", True, "3 ticked")
+    count.show()
+    for _turn in range(4):
+        qapp.processEvents()
+    metrics = count.fontMetrics()
+    bin_room = count.BIN + count.GAP
+    count.resize(metrics.horizontalAdvance("3 ticked · 12.4 GB") + bin_room + 4, 20)
+    assert count.shown_text() == "3 ticked · 12.4 GB"
+    count.resize(metrics.horizontalAdvance("3 ticked") + bin_room + 4, 20)
+    assert count.shown_text() == "3 ticked" and count.toolTip() == "3 ticked · 12.4 GB"
+    count.resize(bin_room + 20, 20)
+    assert count.shown_text().endswith("…")
+    count.close()
+
+
+def test_with_no_single_host_picked_the_box_describes_the_hosts_on_show(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tool = _tool(window)
+    card = tool.hosts_page.host_card
+    assert card.heading.text() == "HOSTS SHOWN" and card.name.text() == "All hosts"
+    assert card.status.text() == "Status not checked yet: use Refresh all"
+    values = [v.text() for v in card._values]
+    assert values == ["—", "3", "0 of 3", "—"]
+    now = datetime.now(UTC)
+    window.hosts._status_found[_id(window, "DESK-03")] = (Status.ONLINE, now, None)
+    window.hosts._status_found[_id(window, "DESK-10")] = (Status.OFFLINE, now, None)
+    monkeypatch.setattr(window.hosts, "check_progress", lambda: (2, 3))
+    window.hosts.checks_changed.emit()  # a Refresh under way
+    assert card.status.text() == "Refreshing status: 2 of 3…"
+    assert [v.text() for v in card._values][:2] == ["1 online · 1 offline", "1"]
+    monkeypatch.setattr(window.hosts, "check_progress", lambda: None)
+    window.hosts.checks_changed.emit()
+    assert card.status.text().startswith("Status checked by Hosts at ")
+    _open(window, focus=False)  # a scan fills the rest
+    assert [v.text() for v in card._values][2:] == ["1 of 3", "5"]
+    tool.hosts_page.table.select(_id(window, "DESK-03"))  # one host picked: its own box
+    assert card.heading.text() == "SELECTED HOST"
+
+
+def test_a_size_being_counted_shows_its_bytes_so_far(
+    window: CapyWindow, worker: Worker, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tool = _tool(window)
+    page = _open(window)
+    heard: dict[str, Callable[[int], None]] = {}
+
+    def size(scanned: Scan, profile: Profile, account: Any = None, **more: Any) -> int:
+        heard[profile.user] = more["progress"]
+        return SIZES.get(profile.ident, 0)
+
+    monkeypatch.setattr(user_profiles, "profile_size", size)
+    worker.holding = True
+    page.count_sizes()
+    assert tool.status_label.text() == "DESK-03 · calculating sizes: 0 of 5"
+    worker.held.pop(0)()  # rui's count ran to its end: 3 GB
+    worker.held[0]()  # the next one is under way; run it again below to hear from it
+    name = next(user for user in heard if user != RUI.user)
+    heard[name](2 * GB)  # its count reports from its own thread: 2 GB so far
+    page._show_so_far()  # what the ticker does every moment
+    sizes = [row[panels.SIZE] for row in page.table.texts()]
+    assert "2.0 GB…" in sizes and "3.0 GB" in sizes
+    assert tool.status_label.text().startswith("DESK-03 · calculating sizes: ")
+    assert tool.status_label.text().endswith(" so far")
+    page.stop_sizes()
+    assert not page._ticker.isActive()

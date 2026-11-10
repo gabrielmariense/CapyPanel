@@ -357,23 +357,30 @@ def profile_size(
     *,
     stop: Callable[[], bool] = lambda: False,
     opened: Opened | None = None,
+    progress: Callable[[int], None] | None = None,
 ) -> int | None:
     """The bytes in `profile`'s folder, read over the PC's drive share; None when `stop` said
-    so first, or when it has no folder. Reads only. Raises RemoteError."""
+    so first, or when it has no folder. `progress` hears the bytes counted so far, folder by
+    folder (on this thread). Reads only. Raises RemoteError."""
     if not profile.path or profile.kind is Kind.ENTRY:
         return None
     opened = opened or (lambda path: share_path(scanned.host, path))
     with as_account(account):
         try:
-            return folder_size(opened(profile.path), stop)
+            return folder_size(opened(profile.path), stop, progress)
         except OSError as e:
             raise RemoteError(reason_of(e.winerror or 0), e.winerror or 0) from e
 
 
-def folder_size(folder: str, stop: Callable[[], bool] = lambda: False) -> int | None:
+def folder_size(
+    folder: str,
+    stop: Callable[[], bool] = lambda: False,
+    progress: Callable[[int], None] | None = None,
+) -> int | None:
     """The bytes in the files under `folder`; None when `stop` said so. Links are never followed
     (AppData has several, and the count would leave the profile), and a folder inside that can't
-    be read counts as empty. Raises OSError when `folder` itself can't be read."""
+    be read counts as empty. `progress` hears the bytes so far after each folder read. Raises
+    OSError when `folder` itself can't be read."""
     total = 0
     waiting = [folder]
     while waiting:
@@ -394,6 +401,8 @@ def folder_size(folder: str, stop: Callable[[], bool] = lambda: False) -> int | 
         except OSError:
             if current is folder:
                 raise
+        if progress is not None:
+            progress(total)
     return total
 
 

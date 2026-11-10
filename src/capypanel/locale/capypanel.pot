@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 13:04-0300\n"
+"POT-Creation-Date: 2026-11-10 14:47-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1283,6 +1283,9 @@ msgstr ""
 msgid "Default: {profile}"
 msgstr ""
 
+msgid "Deletable"
+msgstr ""
+
 msgid "Delete"
 msgstr ""
 
@@ -1732,6 +1735,9 @@ msgstr ""
 msgid ""
 "Groups inside other groups are sorted too. The order they're in now isn't"
 " kept."
+msgstr ""
+
+msgid "HOSTS SHOWN"
 msgstr ""
 
 msgid "Hide Windows' own"
@@ -2291,6 +2297,10 @@ msgstr ""
 msgid "Not a computer name or IP address"
 msgstr ""
 
+msgid "Not checked"
+msgstr ""
+
+msgctxt "hosts"
 msgid "Not checked"
 msgstr ""
 
@@ -2876,6 +2886,10 @@ msgstr ""
 msgid "Refresh status by itself"
 msgstr ""
 
+#, python-brace-format
+msgid "Refreshing status: {done} of {total}…"
+msgstr ""
+
 msgid "Refused"
 msgstr ""
 
@@ -3172,6 +3186,9 @@ msgid_plural "Scan {n} hosts"
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "Scanned"
+msgstr ""
+
 msgid "Scanned at"
 msgstr ""
 
@@ -3448,6 +3465,13 @@ msgid "State"
 msgstr ""
 
 msgid "Status"
+msgstr ""
+
+#, python-brace-format
+msgid "Status checked by Hosts at {time}"
+msgstr ""
+
+msgid "Status not checked yet: use Refresh all"
 msgstr ""
 
 msgid "Status, logged-on users and PC facts, one after the other."
@@ -4762,6 +4786,10 @@ msgid "{host} · account refused"
 msgstr ""
 
 #, python-brace-format
+msgid "{host} · calculating sizes: {n} of {total}"
+msgstr ""
+
+#, python-brace-format
 msgid "{host} · couldn't be read"
 msgstr ""
 
@@ -5068,6 +5096,10 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} of {total}"
+msgstr ""
+
+#, python-brace-format
 msgid "{n} offline"
 msgid_plural "{n} offline"
 msgstr[0] ""
@@ -5173,6 +5205,10 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{online} online · {offline} offline"
+msgstr ""
+
+#, python-brace-format
 msgid "{pages} (from {month})"
 msgstr ""
 
@@ -5206,6 +5242,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{size} in the {n} counted"
+msgstr ""
+
+#, python-brace-format
+msgid "{size} so far"
 msgstr ""
 
 #, python-brace-format
