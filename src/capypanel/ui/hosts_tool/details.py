@@ -491,7 +491,7 @@ def facts_error_text(error: BaseException) -> str:
     if isinstance(error, TimeoutError):
         return _("Couldn't read: it took too long to answer")
     if isinstance(error, PowerShellBlocked):
-        return _("Couldn't read: Windows didn't let PowerShell start on this PC (an antivirus "
+        return _("Couldn't read: Windows didn't let PowerShell start on your PC (an antivirus "
                  "may block it)")  # fmt: skip
     return _("Couldn't read: {error}").format(error=error)
 

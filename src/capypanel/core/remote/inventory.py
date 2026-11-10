@@ -42,6 +42,7 @@ DIRECT = "direct"  # only WMI straight from CapyPanel
 POWERSHELL = "powershell"  # only a PowerShell started on this PC, as before 0.24
 TRANSPORTS = (AUTO, DIRECT, POWERSHELL)
 transport = AUTO  # set from Settings
+powershell_blocked = False  # Windows refused to start it here this session
 
 # Each PowerShell script that has a twin reading the same over WMI directly, with the same answer.
 Reader = Callable[[Any, Mapping[str, str]], Any]
@@ -222,6 +223,8 @@ def _powershell(
     except subprocess.TimeoutExpired as e:
         raise TimeoutError(f"WMI didn't answer within {timeout:.0f} s") from e
     except OSError as e:  # the program itself wasn't let start: never the other PC's doing
+        global powershell_blocked  # noqa: PLW0603 - for the session, as the log says
+        powershell_blocked = True
         log.warning("PowerShell couldn't start on this PC to read %s: %s", host, e)
         raise PowerShellBlocked(e) from e
     try:

@@ -543,7 +543,7 @@ class ReadList(QDialog):
         self.read_button.setEnabled(True)
         self.table.clear()
         self.summary.setText(_("Couldn't read {host}: {reason}").format(
-            host=self.target.name, reason=reason_text(error)))  # fmt: skip
+            host=self.target.name, reason=reason_text(error, self.target.name)))  # fmt: skip
 
 
 class PrintersDialog(ReadList):

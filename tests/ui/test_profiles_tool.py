@@ -1213,8 +1213,16 @@ def test_a_powershell_blocked_on_this_pc_is_named_as_such(window: CapyWindow, pc
     pc.answers["192.0.2.13"] = blocked
     page = _open(window)
     card = page.card
-    assert card is not None and card.heading.text() == "PowerShell couldn't start on this PC"
+    assert card is not None and card.heading.text() == "PowerShell couldn't start on your PC"
     assert "An antivirus may block it." in card.body.text()
-    assert _tool(window).status_label.text() == "DESK-03 · PowerShell blocked on this PC"
+    assert _tool(window).status_label.text() == "DESK-03 · PowerShell blocked on your PC"
     assert [b.text() for b in card.buttons] == ["Try again"]  # another account won't help
     assert "antivirus" in facts_error_text(blocked) and "antivirus" in reason_text(blocked)
+    assert (
+        "on DESK-03 to read" not in card.body.text()
+        and "on your PC to read DESK-03" in card.body.text()
+    )
+    from capypanel.core.remote.run import Problem, RunError
+
+    stopped = reason_text(RunError(Problem.BLOCKED), "DESK-03")
+    assert stopped.endswith("Security software on DESK-03 may have stopped it.")  # names the host

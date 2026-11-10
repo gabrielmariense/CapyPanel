@@ -208,15 +208,15 @@ def failure(error: BaseException, name: str, address: str, account: str) -> Fail
     nothing = _("Nothing was read.")
     if isinstance(error, PowerShellBlocked):
         return Failure(
-            _("PowerShell couldn't start on this PC"),
+            _("PowerShell couldn't start on your PC"),
             (
                 _(
-                    "Windows didn't let CapyPanel start PowerShell here to read {host}. An "
+                    "Windows didn't let CapyPanel start PowerShell on your PC to read {host}. An "
                     "antivirus may block it."
                 ).format(host=name),
                 nothing,
             ),  # fmt: skip
-            _("{host} · PowerShell blocked on this PC").format(host=name),
+            _("{host} · PowerShell blocked on your PC").format(host=name),
             another_account=False,
         )
     if isinstance(error, RemoteError) and error.reason is Reason.UNREACHABLE:

@@ -179,7 +179,7 @@ def test_a_blocked_run_says_security_software_may_have_stopped_it(
     _run(window, "dns")
     strip = window.hosts.result_strip
     assert strip.property("failed") is True
-    assert "Security software on the PC may have stopped it" in strip.text()
+    assert "Security software on PC-1 may have stopped it" in strip.text()
     assert strip._output == "WMI: started, but never ran"
 
 

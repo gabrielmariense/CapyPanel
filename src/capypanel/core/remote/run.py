@@ -302,6 +302,11 @@ class Runner:
         blocked = False
         for engine in self._ways(host):
             name = ENGINE_NAMES[engine]
+            if engine is Engine.WINRM and (
+                inventory.transport == inventory.DIRECT or inventory.powershell_blocked
+            ):  # it starts a PowerShell on this PC, which is pinned out or was refused
+                tried.append(f"{name}: skipped, PowerShell isn't used on this PC")
+                continue
             if engine is Engine.WINRM and not self._listens(host, WINRM_PORT):
                 tried.append(f"{name}: not on")
                 continue

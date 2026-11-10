@@ -108,8 +108,9 @@ def bold(text: str) -> str:
     return f"<b>{escape(text)}</b>"
 
 
-def reason_text(error: BaseException) -> str:
-    """Why it failed, as the end of "Couldn't … on DESK-02: …"."""
+def reason_text(error: BaseException, host: str = "") -> str:
+    """Why it failed, as the end of "Couldn't … on DESK-02: …". `host` names the other PC where
+    the reason is about it."""
     if isinstance(error, RemoteError):
         return {
             Reason.UNREACHABLE: _(
@@ -126,8 +127,12 @@ def reason_text(error: BaseException) -> str:
         return {
             Problem.NO_WAY_IN: _("CapyPanel couldn't start anything there. WinRM is off, WMI "
                                  "didn't answer, and PsExec isn't set up or didn't work."),
-            Problem.BLOCKED: _("it started but never ran. Security software on the PC may have "
-                               "stopped it."),
+            Problem.BLOCKED: (
+                _("it started but never ran. Security software on {host} may have stopped it.")
+                .format(host=host) if host
+                else _("it started but never ran. Security software on the PC may have stopped "
+                       "it.")
+            ),
             Problem.NOT_STARTED: _("the PC couldn't start it."),
             Problem.TIMED_OUT: _("it didn't finish in time. It may still be running there."),
             Problem.NO_RESULT: _("its answer couldn't be read."),
@@ -135,7 +140,7 @@ def reason_text(error: BaseException) -> str:
     if isinstance(error, ScriptFailed):
         return _("it ended with code {code}. Its output says why.").format(code=error.code)
     if isinstance(error, PowerShellBlocked):
-        return _("Windows didn't let PowerShell start on this PC. An antivirus may block it.")
+        return _("Windows didn't let PowerShell start on your PC. An antivirus may block it.")
     if isinstance(error, OnPcRefused):
         if error.problem is PcProblem.MISSING:
             return _("there's no {path} on that PC.").format(path=error.path)
@@ -221,7 +226,7 @@ def script_outcome(command_id: str, host: str, result: RunResult) -> Outcome:
 def failed_text(action: str, host: str, error: BaseException) -> str:
     """`action` is rich text already, e.g. "log off <b>ana</b>"."""
     return _("Couldn't {action} on {host}: {reason}").format(
-        action=action, host=escape(host), reason=escape(reason_text(error))
+        action=action, host=escape(host), reason=escape(reason_text(error, host))
     )
 
 

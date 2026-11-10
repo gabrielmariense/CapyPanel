@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 15:50-0300\n"
+"POT-Creation-Date: 2026-11-10 16:14-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -686,6 +686,9 @@ msgstr ""
 msgid "Authentication &password"
 msgstr ""
 
+msgid "Automatic (recommended)"
+msgstr ""
+
 msgid "BIOS"
 msgstr ""
 
@@ -705,6 +708,11 @@ msgid "Batch file"
 msgstr ""
 
 msgid "Black"
+msgstr ""
+
+msgid ""
+"Both read over WMI; only what starts on this PC changes. Automatic reads "
+"directly, and through PowerShell only when that can't be used here."
 msgstr ""
 
 msgid "Brand"
@@ -1141,7 +1149,7 @@ msgid "Couldn't read “{file}”: {error}"
 msgstr ""
 
 msgid ""
-"Couldn't read: Windows didn't let PowerShell start on this PC (an "
+"Couldn't read: Windows didn't let PowerShell start on your PC (an "
 "antivirus may block it)"
 msgstr ""
 
@@ -1158,6 +1166,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't reload the list: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't save how PCs are read: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -2704,7 +2716,7 @@ msgstr ""
 msgid "Power"
 msgstr ""
 
-msgid "PowerShell couldn't start on this PC"
+msgid "PowerShell couldn't start on your PC"
 msgstr ""
 
 msgid "Pr&inters:"
@@ -2811,6 +2823,9 @@ msgid "Re&view…"
 msgstr ""
 
 msgid "Read"
+msgstr ""
+
+msgid "Read PC data with:"
 msgstr ""
 
 msgid "Read again"
@@ -4169,6 +4184,12 @@ msgstr ""
 msgid "Viewer settings:"
 msgstr ""
 
+msgid "WMI directly"
+msgstr ""
+
+msgid "WMI through PowerShell"
+msgstr ""
+
 #, python-brace-format
 msgid "Waiting ({n})"
 msgstr ""
@@ -4255,11 +4276,11 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
-"Windows didn't let CapyPanel start PowerShell here to read {host}. An "
-"antivirus may block it."
+"Windows didn't let CapyPanel start PowerShell on your PC to read {host}. "
+"An antivirus may block it."
 msgstr ""
 
-msgid "Windows didn't let PowerShell start on this PC. An antivirus may block it."
+msgid "Windows didn't let PowerShell start on your PC. An antivirus may block it."
 msgstr ""
 
 #, python-brace-format
@@ -4464,6 +4485,10 @@ msgid "idle"
 msgstr ""
 
 #, python-brace-format
+msgid "in use: {way}"
+msgstr ""
+
+#, python-brace-format
 msgid "in “{group}”"
 msgstr ""
 
@@ -4503,6 +4528,10 @@ msgid "it refused the SNMP v3 request."
 msgstr ""
 
 msgid "it started but never ran. Security software on the PC may have stopped it."
+msgstr ""
+
+#, python-brace-format
+msgid "it started but never ran. Security software on {host} may have stopped it."
 msgstr ""
 
 msgid "it took too long to answer."
@@ -4802,7 +4831,7 @@ msgid "{host} waits for its turn"
 msgstr ""
 
 #, python-brace-format
-msgid "{host} · PowerShell blocked on this PC"
+msgid "{host} · PowerShell blocked on your PC"
 msgstr ""
 
 #, python-brace-format

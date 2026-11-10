@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from capypanel.core.remote import run
+from capypanel.core.remote import inventory, run
 from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.run import Engine, Language, Problem, RunAs, RunError, Runner, Script
 
@@ -382,3 +382,20 @@ def test_as_system_a_scheduled_task_runs_it(tmp_path: Path) -> None:
     script = Script("x", Language.POWERSHELL, b"Write-Output ([Environment]::UserName); exit 4")
     result = _local_runner(tmp_path).run("DESK-01", script, timeout=120, run_as=RunAs.SYSTEM)
     assert (result.exit_code, result.output.strip().upper()) == (4, "SYSTEM")
+
+
+def test_winrm_is_skipped_when_powershell_isnt_used_on_this_pc(
+    pc: FakePc, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """WinRM starts a PowerShell on this PC: never with WMI directly pinned, nor once Windows
+    refused to start it this session."""
+    monkeypatch.setattr(inventory, "transport", inventory.DIRECT)
+    assert runner(pc).run("DESK-01", PS).engine is Engine.WMI
+    assert pc.asked == [Engine.WMI]
+    monkeypatch.setattr(inventory, "transport", inventory.AUTO)
+    monkeypatch.setattr(inventory, "powershell_blocked", True)
+    pc.asked.clear()
+    assert runner(pc).run("DESK-02", PS).engine is Engine.WMI
+    monkeypatch.setattr(inventory, "powershell_blocked", False)
+    pc.asked.clear()
+    assert runner(pc).run("DESK-03", PS).engine is Engine.WINRM  # as before

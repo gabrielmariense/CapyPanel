@@ -53,6 +53,14 @@ class _Stages:
         return f"Started in {total:.2f} s ({parts})"
 
 
+def _set_reads(paths: settings.Paths) -> None:
+    """How other PCs are read, as set for everyone on this PC (Settings › Hosts › Connecting)."""
+    from capypanel.core.remote import inventory
+    from capypanel.core.tools.catalog import reads_of
+
+    inventory.transport = reads_of(paths.company_tools_dir)
+
+
 def _reads_line() -> str:
     """How CapyPanel reads other PCs this time, for the log: a support question starts there."""
     from capypanel.core.remote import inventory, wmi
@@ -61,6 +69,8 @@ def _reads_line() -> str:
         return "Reads other PCs through PowerShell started on this PC (set in Settings)"
     if not wmi.available():
         return "Reads other PCs through PowerShell: WMI from Python isn't available here"
+    if inventory.transport == inventory.DIRECT:
+        return "Reads other PCs over WMI from CapyPanel itself, never PowerShell (set in Settings)"
     return "Reads other PCs over WMI from CapyPanel itself (PowerShell only if that can't be used)"
 
 
@@ -76,6 +86,7 @@ def run(argv: list[str] | None = None) -> int:
     # Logging first, so a problem with the user's folder is logged and shown, not lost.
     paths = settings.resolve_paths()
     applog.setup_logging(paths.log_file)
+    _set_reads(paths)
     stages.done("Qt and the log")
     log.info("CapyPanel %s starting for %s (portable=%s)", BUILD, paths.account, paths.portable)
     log.info("%s", _reads_line())

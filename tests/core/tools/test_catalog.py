@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from capypanel.core import winsec
-from capypanel.core.tools.catalog import PATHS_FILE, Layer, ToolCatalog
+from capypanel.core.tools.catalog import PATHS_FILE, READS_FILE, Layer, ToolCatalog, reads_of
 
 
 def _write(folder: Path, tool_id: str, name: str, **extra: Any) -> None:
@@ -80,3 +80,33 @@ def test_a_company_tool_or_path_another_user_made_is_ignored(
     assert entry is not None and entry.layer is Layer.SHIPPED  # never runs the planted program
     assert not entry.item.executable
     assert {p.path for p in tools.problems} == {planted, paths}
+
+
+def test_how_pcs_are_read_is_set_for_everyone_on_this_pc_and_back_to_automatic(
+    tmp_path: Path,
+) -> None:
+    tools = _tools(tmp_path)
+    assert tools.reads() == "auto"  # nothing set: automatic
+    tools.set_reads("direct")
+    assert _tools(tmp_path).reads() == "direct" and reads_of(tmp_path / "company") == "direct"
+    tools.set_reads("auto")  # back to automatic: the file goes
+    assert not (tmp_path / "company" / READS_FILE).exists() and tools.reads() == "auto"
+    with pytest.raises(ValueError):
+        tools.set_reads("telnet")
+
+
+def test_a_reads_file_another_user_made_or_a_broken_one_is_ignored(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    folder = tmp_path / "company"
+    folder.mkdir()
+    planted = folder / READS_FILE
+    planted.write_text(json.dumps({"schema": 1, "reads": "powershell"}), "utf-8")
+    monkeypatch.setattr(winsec, "made_by_trusted", lambda path: path != planted)
+    assert reads_of(folder) == "auto"  # another user's file never changes everyone's way
+    monkeypatch.setattr(winsec, "made_by_trusted", lambda path: True)
+    assert reads_of(folder) == "powershell"
+    planted.write_text(json.dumps({"schema": 1, "reads": "carrier pigeon"}), "utf-8")
+    assert reads_of(folder) == "auto"
+    planted.write_text("{not json", "utf-8")
+    assert reads_of(folder) == "auto"

@@ -556,8 +556,60 @@ class ToolsSection(SharedSection):
         )
         self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])
         tools_layout.addWidget(self.tools_skipped)
+        tools_layout.addLayout(self._reads_row())
 
         self._fill_tools()
+
+    # ---- how other PCs are read: written at once, for everyone on this PC ----
+
+    def _reads_row(self) -> QHBoxLayout:
+        self.reads_label = QLabel(_("Read PC data with:"))
+        self.reads = QComboBox()
+        for way, text in (
+            ("auto", _("Automatic (recommended)")),
+            ("direct", _("WMI directly")),
+            ("powershell", _("WMI through PowerShell")),
+        ):
+            self.reads.addItem(text, way)
+        self.reads.setToolTip(
+            _("Both read over WMI; only what starts on this PC changes. Automatic reads directly, "
+              "and through PowerShell only when that can't be used here.")
+        )  # fmt: skip
+        self.reads.setCurrentIndex(max(0, self.reads.findData(self.catalogs.tools.reads())))
+        self.reads.setEnabled(self.can_edit_tools)
+        self.reads.activated.connect(self._reads_picked)
+        self.reads_note = QLabel()
+        self.reads_note.setObjectName("hint")
+        row = QHBoxLayout()
+        row.addWidget(self.reads_label)
+        row.addWidget(self.reads)
+        row.addWidget(self.reads_note)
+        row.addStretch(1)
+        self._show_reads_note()
+        return row
+
+    def _reads_picked(self) -> None:
+        from capypanel.core.remote import inventory
+
+        way = str(self.reads.currentData())
+        if self._write(
+            lambda: self.catalogs.tools.set_reads(way),
+            _("Couldn't save how PCs are read: {error}"),
+        ):
+            inventory.transport = way
+        else:
+            self.reads.setCurrentIndex(max(0, self.reads.findData(self.catalogs.tools.reads())))
+        self._show_reads_note()
+
+    def _show_reads_note(self) -> None:
+        """With Automatic, which way it uses now, so nobody needs the log to know."""
+        from capypanel.core.remote import wmi
+
+        if self.reads.currentData() != "auto":
+            self.reads_note.setText("")
+            return
+        way = _("WMI directly") if wmi.available() else _("WMI through PowerShell")
+        self.reads_note.setText(_("in use: {way}").format(way=way))
 
     # ---- tools: a path chosen here is written at once ----
 

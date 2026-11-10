@@ -19,6 +19,8 @@ from capypanel.core.tools.profile_store import UNTRUSTED, ProfileStore
 log = logging.getLogger(__name__)
 SHIPPED_DIR = Path(__file__).resolve().parent / "presets"
 PATHS_FILE = "_paths.json"  # tool id -> .exe; "_" can't start a tool id
+READS_FILE = "_reads.json"  # how CapyPanel reads other PCs, for everyone on this PC
+READS = ("auto", "direct", "powershell")  # as inventory.AUTO, DIRECT, POWERSHELL
 
 
 class Layer(StrEnum):
@@ -31,6 +33,20 @@ class Entry:
     item: ToolDefinition
     layer: Layer
     path: Path
+
+
+def reads_of(folder: Path) -> str:
+    """The way set in `folder`'s reads file, when an administrator wrote it; "auto" otherwise:
+    another user's file must not change how everyone's account reaches other PCs."""
+    path = folder / READS_FILE
+    if not path.is_file() or not winsec.made_by_trusted(path):
+        return "auto"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return "auto"
+    way = data.get("reads") if isinstance(data, dict) else None
+    return way if way in READS else "auto"
 
 
 @dataclass(frozen=True)
@@ -114,6 +130,23 @@ class ToolCatalog:
         files.write_json(self.folder / PATHS_FILE, {"schema": 1, "paths": chosen})
         log.info("Tool paths for this PC: %s", chosen)
         self.reload()
+
+    def reads(self) -> str:
+        """How CapyPanel reads other PCs here: "auto" unless set for everyone on this PC."""
+        return reads_of(self.folder)
+
+    def set_reads(self, way: str) -> None:
+        """Sets it for everyone on this PC; "auto" removes the choice. Raises OSError."""
+        if way not in READS:
+            raise ValueError(way)
+        path = self.folder / READS_FILE
+        if way == "auto":
+            path.unlink(missing_ok=True)
+        else:
+            if not self.folder.is_dir():
+                files.make_shared_folder(self.folder)
+            files.write_json(path, {"schema": 1, "reads": way})
+        log.info("Reads other PCs with: %s", way)
 
     def _trusted(self, path: Path) -> bool:
         # A tool names a program to run: another user's file must not choose it.
