@@ -232,7 +232,7 @@ def test_every_run_goes_in_the_run_log_without_the_password(pc: FakePc, tmp_path
 def test_a_full_run_log_moves_aside(tmp_path: Path) -> None:
     log_file = tmp_path / "me.runs.log"
     log_file.write_text("x" * (run.LOG_SIZE + 1), encoding="utf-8")
-    run._append(log_file, "new")
+    run.append_line(log_file, "new")
     assert log_file.read_text(encoding="utf-8") == "new\n"
     assert log_file.with_name("me.runs.log.1").stat().st_size == run.LOG_SIZE + 1
 

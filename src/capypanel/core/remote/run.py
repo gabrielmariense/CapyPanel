@@ -416,7 +416,7 @@ class Runner:
         line = "\t".join((when, host, script.name, way, who, outcome)).replace("\n", " ")
         with self._log_lock:
             try:
-                _append(self._log_file, line)
+                append_line(self._log_file, line)
             except OSError as e:
                 log.warning("Couldn't write the run log %s: %s", self._log_file, e)
 
@@ -709,8 +709,8 @@ def _log_outcome(error: BaseException) -> str:
     return f"failed: {error}"
 
 
-def _append(log_file: Path, line: str) -> None:
-    """One line at the end of the run log; a full one moves aside first, the oldest dropped."""
+def append_line(log_file: Path, line: str) -> None:
+    """One line at the end of a log; a full one moves aside first, the oldest dropped."""
     log_file.parent.mkdir(parents=True, exist_ok=True)
     if log_file.exists() and log_file.stat().st_size > LOG_SIZE:
         for n in range(LOG_KEEP - 1, 0, -1):

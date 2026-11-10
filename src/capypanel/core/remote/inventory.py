@@ -139,6 +139,7 @@ def run_cim(
     account: Account | None,
     protocol: str = "Dcom",
     values: Mapping[str, str] | None = None,
+    timeout: float = WMI_TIMEOUT,
 ) -> Any:
     """Runs a PowerShell script that uses `$session`, a CIM session to `host` over `protocol`
     ("Dcom" for WMI, "Wsman" for WinRM), and answers with Send. The host, the account and
@@ -153,11 +154,11 @@ def run_cim(
             ["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", command],
             input=json.dumps(data).encode(),  # ASCII: other characters travel as \u escapes
             capture_output=True,
-            timeout=WMI_TIMEOUT,
+            timeout=timeout,
             creationflags=subprocess.CREATE_NO_WINDOW,
         )
     except subprocess.TimeoutExpired as e:
-        raise TimeoutError(f"WMI didn't answer within {WMI_TIMEOUT} s") from e
+        raise TimeoutError(f"WMI didn't answer within {timeout:.0f} s") from e
     try:
         answer = json.loads(base64.b64decode(done.stdout).decode("utf-8"))
     except ValueError as e:

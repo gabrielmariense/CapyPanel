@@ -93,6 +93,12 @@ class Paths:
         return self.log_dir / f"{self.account}.runs.log"
 
     @property
+    def user_profiles_log_file(self) -> Path:
+        """Every user profile this user deleted on a PC, or tried to: when, where, whose and how
+        it ended."""
+        return self.log_dir / f"{self.account}.user-profiles.log"
+
+    @property
     def settings_file(self) -> Path:
         return self.user_dir / "settings.json"
 
