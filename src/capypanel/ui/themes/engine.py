@@ -14,12 +14,19 @@ Shipped theme files (this folder, *.json) override some tokens of a base:
 import ctypes
 import json
 import logging
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QObject, Qt
-from PySide6.QtGui import QActionEvent, QColor, QFont, QGuiApplication, QPalette
+from PySide6.QtGui import (
+    QActionEvent,
+    QColor,
+    QFont,
+    QFontDatabase,
+    QGuiApplication,
+    QPalette,
+)
 from PySide6.QtWidgets import QApplication, QListView, QMenu, QTreeView, QWidget
 
 from capypanel.core.i18n import N_, _
@@ -210,7 +217,7 @@ def _switch(
         _refont(app, readable.families())
         return
     font = QFont()
-    font.setFamilies(list(theme.font[0]))
+    font.setFamilies(installed(theme.font[0]))
     font.setPointSizeF(theme.font[1])
     # Lining digits: in fonts like Georgia, old-style digits make "PC01" read as "PCo1".
     font.setFeature(QFont.Tag("lnum"), 1)
@@ -372,6 +379,15 @@ def _watch_widgets(app: QApplication) -> "_Watcher":
         _watcher = _Watcher(app)
         app.installEventFilter(_watcher)
     return _watcher
+
+
+def installed(families: Sequence[str]) -> list[str]:
+    """The first of `families` this PC has, alone: the look is the same, and Qt isn't left to
+    walk a list of fallbacks the first time it measures text, which took up to 2.6 s at the
+    start on a PC with many fonts. The whole list when it has none of them."""
+    have = {family.casefold() for family in QFontDatabase.families()}
+    first = next((family for family in families if family.casefold() in have), None)
+    return [first] if first is not None else list(families)
 
 
 def _refont(app: QApplication, families: list[str]) -> None:

@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtGui import QColor, QFontDatabase, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
     QApplication,
@@ -357,3 +357,14 @@ def test_home_tiles_take_the_new_theme_s_icon_colour(qapp: QApplication, tmp_pat
             for c in inked
         ), tile.tool.name
     window.close()
+
+
+def test_the_font_is_the_first_family_this_pc_has_alone(
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(QFontDatabase, "families", lambda *_a: ["Arial", "Segoe UI", "Tahoma"])
+    assert themes.installed(("Segoe UI Variable Text", "Segoe UI")) == ["Segoe UI"]  # Windows 10
+    assert themes.installed(("TAHOMA", "Segoe UI")) == ["TAHOMA"]  # any case
+    assert themes.installed(("No Such Font", "Nor This")) == ["No Such Font", "Nor This"]
+    themes.apply(themes.Registry().find("capypanel-dark"))
+    assert qapp.font().families() == ["Segoe UI"]

@@ -7,6 +7,7 @@ import pytest
 from capypanel.core import credstore
 
 
+@pytest.hookimpl(tryfirst=True)  # before xdist reads the groups
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     """With the tests spread over several workers (CI's -n auto --dist loadgroup), the files
     that use Windows Credential Manager all run on one worker. Run side by side, a few of them
