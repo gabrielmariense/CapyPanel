@@ -3,18 +3,20 @@ big they are. Three panels, as Hosts: the open host list's PCs, the profiles, on
 details. It keeps no list of its own: the PCs are Hosts' open list, and the account that signs
 in to a PC is the one Hosts' Accounts give it. Scanning and counting sizes only read."""
 
+import os
 from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
 from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import QStackedWidget, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QDialog, QStackedWidget, QVBoxLayout, QWidget
 
 from capypanel.core.i18n import _
 from capypanel.core.remote import user_profiles
 from capypanel.core.remote.access import Account
-from capypanel.core.remote.user_profiles import Kind, Profile, Scan
+from capypanel.core.remote.user_profiles import Deleted, Kind, Outcome, Profile, Scan, Why
 from capypanel.ui.checks import clock_text
+from capypanel.ui.dialogs import run_modal
 from capypanel.ui.hosts_tool.accounts import windows_account
 from capypanel.ui.hosts_tool.runner import HostTarget, Job
 from capypanel.ui.hosts_tool.tool import HostsTool
@@ -26,16 +28,20 @@ from capypanel.ui.profiles_tool import rows
 from capypanel.ui.profiles_tool.panels import (
     LEFT,
     RIGHT,
+    DeleteDialog,
     HeaderCard,
     HintCard,
     PcPane,
     ProfileDetails,
     ProfilesTable,
+    ProgressPanel,
     Shown,
 )
+from capypanel.ui.profiles_tool.rows import Result
 
 SIZES_AT_ONCE = 4  # folders counted at the same time: walking a tree is mostly waiting
 PANES_KEY = "panes"  # the side panels' widths, in the tool's settings
+PROGRESS_WIDTH = 320  # px: the progress panel is at least this wide, for its queue's columns
 
 
 class ProfilesToolBar(ToolBar):
@@ -43,8 +49,11 @@ class ProfilesToolBar(ToolBar):
         super().__init__()
         self.rescan_button = tool_button()
         self.sizes_button = tool_button()
+        self.delete_button = tool_button()
+        self.delete_button.setProperty("risky", True)  # amber, as every action that destroys
         self._counting = False
         self.add_group([self.rescan_button, self.sizes_button])
+        self.add_group([self.delete_button])
         self.retranslate()
 
     def show_counting(self, counting: bool) -> None:
@@ -64,13 +73,25 @@ class ProfilesToolBar(ToolBar):
             self.sizes_button.setToolTip(
                 _("Count the size of each profile shown; it only reads, and can take minutes")
             )
+        self.delete_button.setText(gap + _("Delete ticked…"))
+        self.delete_button.setToolTip(
+            _("Delete the profiles ticked, after a question that lists them")
+        )
 
     def restyle(self) -> None:
         """Icons in the theme's text colour."""
         color = self.rescan_button.palette().color(QPalette.ColorRole.ButtonText)
         self.rescan_button.setIcon(tabler_icon("refresh", color))
         self.sizes_button.setIcon(tabler_icon("x" if self._counting else "report-analytics", color))
+        self.show_delete(self.delete_button.isEnabled())
         self.retranslate()
+
+    def show_delete(self, enabled: bool) -> None:
+        """Amber while it can be pressed, greyed with its icon while it can't."""
+        self.delete_button.setEnabled(enabled)
+        muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
+        color = QColor(STATUS_COLORS["attention"]) if enabled else muted
+        self.delete_button.setIcon(tabler_icon("trash", color))
 
 
 class ProfilesTool(Tool):
@@ -93,12 +114,25 @@ class ProfilesTool(Tool):
         self._count_run = 0  # counts of a stopped run are dropped, and stop themselves
         self._active = 0  # counts running now
         self._uncounted = 0  # folders the last run couldn't read
+        self._results: dict[str, Result] = {}  # where each row of a delete run stands
+        self._done: dict[str, Deleted] = {}  # how each delete ended
+        self._queue: list[Profile] = []  # ticked rows still to delete
+        self._run: list[Profile] = []  # every row of the delete run, in its order
+        self._deleting = False
+        self._cancelled = False
+        self._began = datetime.now().astimezone()  # when the delete run started
+        self._freed = 0  # bytes of the deleted rows that had been counted
+        self._side_width = 0  # Details' width before the progress panel widened it
         self._jobs: set[Job] = set()
 
         self.pcs = PcPane(self._list_choices)
         self.header = HeaderCard()
         self.table = ProfilesTable()
         self.details = ProfileDetails()
+        self.progress = ProgressPanel()
+        self._side = QStackedWidget()  # Details, or the progress of a delete run
+        self._side.addWidget(self.details)
+        self._side.addWidget(self.progress)
         self._card_page = QWidget()
         self._card_box = QVBoxLayout(self._card_page)
         self._card_box.setContentsMargins(0, 0, 0, 0)
@@ -113,7 +147,7 @@ class ProfilesTool(Tool):
         column.addWidget(self.header)
         column.addWidget(self._stack, 1)
         self.splitter = PaneSplitter()
-        for pane in (self.pcs, middle, self.details):
+        for pane in (self.pcs, middle, self._side):
             self.splitter.addWidget(pane)
         self.splitter.setStretchFactor(1, 1)
         self.splitter.setChildrenCollapsible(False)  # dragged all the way, a panel would vanish
@@ -127,6 +161,11 @@ class ProfilesTool(Tool):
         bar = self.bar
         bar.rescan_button.clicked.connect(self.scan_again)
         bar.sizes_button.clicked.connect(self.toggle_sizes)
+        bar.delete_button.clicked.connect(self.delete_ticked)
+        self.table.ticked_changed.connect(self._ticks_changed)
+        self.progress.cancel_requested.connect(self.cancel_rest)
+        self.progress.log_requested.connect(self.open_log)
+        self.progress.closed.connect(self._close_progress)
         self.pcs.scan_requested.connect(self.scan)
         self.pcs.list_picked.connect(self._pick_list)
         self.header.filters_changed.connect(self._show_rows)
@@ -165,6 +204,7 @@ class ProfilesTool(Tool):
         self.pcs.retranslate()
         self.header.retranslate()
         self.table.retranslate()
+        self.progress.retranslate()
         self._show_list()
         self._show_again()
 
@@ -194,12 +234,14 @@ class ProfilesTool(Tool):
 
     def scan(self, target: HostTarget) -> None:
         """Reads `target`'s profiles. Nothing on the PC changes."""
-        if self._scanning or self._hosts is None:
+        if self._scanning or self._deleting or self._hosts is None:
             return
         go, account = self._hosts.accounts.account_for(target, self.window())
         if not go:
             return  # its password wasn't typed
         self.stop_sizes()
+        self._results, self._done, self._run = {}, {}, []  # a new scan forgets the last run
+        self._close_progress()
         same = self._target is not None and self._target.key == target.key
         kept = dict(self._sizes) if same else {}  # sizes counted before, for rows still there
         self._target, self._scan, self._sizes = target, None, {}
@@ -333,14 +375,25 @@ class ProfilesTool(Tool):
         if self._scan is None or self._target is None:
             return
         shown = rows.visible(self._scan.profiles, self.header.chosen())
-        self.table.show_profiles(shown, self._sizes)
+        self.table.show_profiles(shown, self._sizes, self._results)
         self.header.shown.setText(rows.shown_text(len(shown), len(self._scan.profiles)))
         self._show_status()
 
+    def _counted(self) -> dict[str, int]:
+        return {i: s for i, s in self._sizes.items() if s is not None}
+
     def _show_status(self) -> None:
-        if self._scan is not None and self._target is not None:
-            counted = {i: s for i, s in self._sizes.items() if s is not None}
-            self.status_label.setText(rows.status_text(self._scan, self._target.name, counted))
+        if self._scan is None or self._target is None or self._deleting:
+            return
+        if self._run:  # a delete run ended: what it did stays until the next scan
+            return
+        self.status_label.setText(
+            rows.status_text(self._scan, self._target.name, self.table.ticked(), self._counted())
+        )
+
+    def _ticks_changed(self) -> None:
+        self._show_status()
+        self._update_bar()
 
     def _show_details(self) -> None:
         profile = self.table.selected() if self._scan is not None else None
@@ -351,7 +404,8 @@ class ProfilesTool(Tool):
             return
         size = self._sizes.get(profile.ident)
         counting = profile.ident in self._sizes and size is None
-        self.details.show_item(Shown(profile, self._scan.root, size, counting), 1)
+        result, done = self._results.get(profile.ident), self._done.get(profile.ident)
+        self.details.show_item(Shown(profile, self._scan.root, size, counting, result, done), 1)
 
     # ---- sizes ----
 
@@ -397,7 +451,7 @@ class ProfilesTool(Tool):
         scanned = self._scan
         if not self._waiting or scanned is None:
             if not self._active:
-                self._counted()
+                self._sizes_counted()
             return
         profile, run, account = self._waiting.pop(0), self._count_run, self._account
         self._active += 1
@@ -431,7 +485,7 @@ class ProfilesTool(Tool):
         if picked is not None and picked.ident == profile.ident:
             self._show_details()
 
-    def _counted(self) -> None:
+    def _sizes_counted(self) -> None:
         """The last count of a run ended."""
         self._update_bar()
         if self._uncounted:
@@ -441,14 +495,155 @@ class ProfilesTool(Tool):
         else:
             self._shell.show_message(_("Sizes counted."))
 
+    # ---- deleting ----
+
+    def delete_ticked(self) -> None:
+        """Asks, listing the ticked rows, then deletes them one at a time."""
+        target, scanned = self._target, self._scan
+        ticked = self.table.ticked()
+        if target is None or scanned is None or not ticked or self._deleting:
+            return
+        self.stop_sizes()
+        dialog = DeleteDialog(self.window(), target.name, ticked, self._counted())
+        if run_modal(dialog) == QDialog.DialogCode.Accepted:
+            self._delete(ticked)
+
+    def _delete(self, profiles: list[Profile]) -> None:
+        self._deleting, self._cancelled = True, False
+        self._run, self._queue = list(profiles), list(profiles)
+        self._results, self._done, self._freed = {}, {}, 0
+        self._began = datetime.now().astimezone()
+        self.table.lock(True)
+        self.progress.start(profiles)
+        for profile in profiles:
+            self._set_result(profile, Result.QUEUED)
+        self._open_progress()
+        self._update_bar()
+        self._delete_next()
+
+    def cancel_rest(self) -> None:
+        """The profile being deleted finishes; the ones still queued don't start."""
+        if not self._deleting or self._cancelled:
+            return
+        self._cancelled = True
+        left, self._queue = self._queue, []
+        for profile in left:
+            self._set_result(profile, None)
+        if left:
+            self._log(_("cancelled: {n} not started").format(n=len(left)))
+
+    def _delete_next(self) -> None:
+        target, scanned = self._target, self._scan
+        if not self._queue or target is None or scanned is None:
+            self._delete_over()
+            return
+        profile, account = self._queue.pop(0), self._account
+        self._set_result(profile, Result.DELETING)
+        ended = sum(result in rows.ENDED for result in self._results.values())
+        total = ended + 1 + len(self._queue)
+        since = clock_text(self._began)
+        self.progress.show_progress(
+            _("{host} · {n} of {total} · since {time}").format(
+                host=target.name, n=ended + 1, total=total, time=since
+            ),
+            ended,
+        )
+        status = _("{host} · deleting {n} of {total}").format(
+            host=target.name, n=ended + 1, total=total
+        )
+        counts = rows.counts_text(self._results.values())
+        self.status_label.setText(f"{status} · {counts}" if counts else status)
+        self._log(f"{profile.user}: " + _("checking and deleting…"))
+        log_file = self._shell.paths.user_profiles_log_file
+
+        def done(ended: Deleted) -> None:
+            size = self._sizes.get(profile.ident)
+            self._done[profile.ident] = ended
+            if ended.outcome is Outcome.DELETED and size:
+                self._freed += size
+            self._log(f"{profile.user}: " + rows.ended_text(ended, size))
+            self._set_result(profile, rows.result_of(ended))
+            self._delete_next()
+
+        self._start(
+            lambda: user_profiles.delete(scanned, profile, account, log_file=log_file),
+            done,
+            lambda error: done(Deleted(profile, Outcome.FAILED, Why.ERROR, str(error))),
+        )
+
+    def _delete_over(self) -> None:
+        target = self._target
+        assert target is not None
+        self._deleting = False
+        self.table.lock(False)
+        results = [self._results[p.ident] for p in self._run if p.ident in self._results]
+        counts = rows.counts_text(results) or _("nothing deleted")
+        times = _("{start} to {end}").format(
+            start=clock_text(self._began), end=clock_text(datetime.now().astimezone())
+        )
+        freed = _("{size} freed").format(size=rows.size_text(self._freed)) if self._freed else ""
+        self.progress.finish(f"{target.name} · {counts}", f"{freed} · {times}" if freed else times)
+        parts = [target.name, *counts.split(", ")]
+        if freed:
+            parts.append(freed)
+        self.status_label.setText(" · ".join(parts))
+        self._show_details()
+        self._update_bar()
+
+    def _set_result(self, profile: Profile, result: Result | None) -> None:
+        if result is None:
+            self._results.pop(profile.ident, None)
+        else:
+            self._results[profile.ident] = result
+        self.table.show_result(profile.ident, result)
+        self.progress.show_result(profile.ident, result)
+        picked = self.table.selected()
+        if picked is not None and picked.ident == profile.ident:
+            self._show_details()
+
+    def _log(self, text: str) -> None:
+        """A line in the progress panel's log: the time, then what happened."""
+        self.progress.add_line(f"{datetime.now().astimezone():%H:%M}  {text}")
+
+    def open_log(self) -> None:
+        """The file every delete is written to, in whatever opens text files."""
+        log_file = self._shell.paths.user_profiles_log_file
+        if log_file.exists():
+            os.startfile(log_file)  # noqa: S606 (Windows' own "open", as a double-click)
+        else:
+            self._shell.show_message(_("The log has nothing yet."))
+
+    def _open_progress(self) -> None:
+        """The progress panel takes Details' place, a little wider when Details was narrow."""
+        self._side.setCurrentWidget(self.progress)
+        sizes = self.splitter.sizes()
+        if len(sizes) == 3 and 0 < sizes[2] < PROGRESS_WIDTH:
+            self._side_width = sizes[2]
+            wider = PROGRESS_WIDTH - sizes[2]
+            self.splitter.setSizes([sizes[0], max(200, sizes[1] - wider), PROGRESS_WIDTH])
+
+    def _close_progress(self) -> None:
+        """Details again, at the width it had."""
+        if self._deleting or self._side.currentWidget() is self.details:
+            return
+        self._side.setCurrentWidget(self.details)
+        sizes = self.splitter.sizes()
+        if self._side_width and len(sizes) == 3:
+            back = sizes[2] - self._side_width
+            self.splitter.setSizes([sizes[0], sizes[1] + back, self._side_width])
+        self._side_width = 0
+        self._show_details()
+
     # ---- the toolbar, and work off the main thread ----
 
     def _update_bar(self) -> None:
         bar = self.bar
-        bar.rescan_button.setEnabled(self._target is not None and not self._scanning)
-        bar.sizes_button.setEnabled(self._scan is not None and not self._scanning)
+        busy = self._scanning or self._deleting
+        bar.rescan_button.setEnabled(self._target is not None and not busy)
+        bar.sizes_button.setEnabled(self._scan is not None and not busy)
         bar.show_counting(self.counting())
-        self.pcs.setEnabled(not self._scanning)
+        bar.show_delete(self._scan is not None and not busy and bool(self.table.ticked()))
+        self.pcs.setEnabled(not busy)
 
     def _muted(self) -> QColor:
         return self.palette().color(QPalette.ColorRole.PlaceholderText)

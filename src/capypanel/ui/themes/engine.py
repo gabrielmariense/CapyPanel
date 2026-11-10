@@ -557,6 +557,10 @@ QFrame#tagStrip { background: %(sel_solid)s; border: 1px solid %(accent)s; borde
 QFrame#attentionStrip { background: %(sel_solid)s; border: 1px solid %(accent)s;
                         border-left: 3px solid %(attention)s; border-radius: 6px; }
 /* A host command's answer above the table: a green edge when it worked, red when it didn't. */
+/* A thin bar for work that counts its steps (deleting profiles): a track a shade darker than
+   the card, the accent filling it. */
+QProgressBar#thin { background: %(bg)s; border: none; border-radius: 4px; }
+QProgressBar#thin::chunk { background: %(accent)s; border-radius: 4px; }
 QFrame#resultStrip { background: %(sel_solid)s; border: 1px solid %(accent)s;
                      border-left: 3px solid %(online)s; border-radius: 6px; }
 QFrame#resultStrip[failed="true"] { border-left-color: %(stopped)s; }
@@ -714,6 +718,10 @@ QFrame#tagStrip { background: %(sel)s; border: 1px solid %(accent)s; border-radi
 /* Printers needing attention: the same strip, with an amber edge. */
 QFrame#attentionStrip { background: %(sel)s; border: 1px solid %(accent)s;
                         border-left: 3px solid %(attention)s; border-radius: 6px; }
+/* A thin bar for work that counts its steps (deleting profiles): a track a shade darker than
+   the card, the accent filling it. */
+QProgressBar#thin { background: %(bg)s; border: none; border-radius: 4px; }
+QProgressBar#thin::chunk { background: %(accent)s; border-radius: 4px; }
 QFrame#resultStrip { background: %(sel)s; border: 1px solid %(accent)s;
                      border-left: 3px solid %(online)s; border-radius: 6px; }
 QFrame#resultStrip[failed="true"] { border-left-color: %(stopped)s; }

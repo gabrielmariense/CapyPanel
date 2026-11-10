@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QProgressBar,
     QPushButton,
     QTreeWidget,
     QTreeWidgetItem,
@@ -24,20 +25,22 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.hosts.model import Host
-from capypanel.core.i18n import _
-from capypanel.core.remote.user_profiles import Kind, Profile
-from capypanel.ui.hosts_tool.runner import HostTarget
+from capypanel.core.i18n import _, ngettext
+from capypanel.core.remote.user_profiles import Deleted, Kind, Outcome, Profile
+from capypanel.ui.hosts_tool.command_windows import Question, output_box
+from capypanel.ui.hosts_tool.runner import HostTarget, escape
 from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import DetailsPanel
 from capypanel.ui.list_workspace.panels import SearchBox, natural_key, pane_title
 from capypanel.ui.menus import MenuCombo
 from capypanel.ui.profiles_tool import rows
-from capypanel.ui.profiles_tool.rows import Filters
-from capypanel.ui.tables import grid_table
+from capypanel.ui.profiles_tool.rows import Filters, Result
+from capypanel.ui.tables import fit_rows, grid_table
 
 LEFT, RIGHT = 206, 284  # px: the PCs panel and Details, at a normal font size
-USER, USED, SIZE, KIND, STATE = range(5)  # the table's columns
+TICK, USER, USED, SIZE, KIND, STATE = range(6)  # the table's columns
 SORT_ROLE = Qt.ItemDataRole.UserRole + 1  # what a cell sorts by
+ARROW = 16  # px a column title needs for the sort arrow
 IDENT_ROLE = Qt.ItemDataRole.UserRole  # the row's profile
 
 
@@ -396,14 +399,16 @@ class _Row(QTreeWidgetItem):
 
 
 class ProfilesTable(QWidget):
-    """One row per profile and leftover. A row that can't be deleted is greyed, with its state
-    saying why. A click on a column's title sorts by it."""
+    """One row per profile and leftover. Only a row that can be deleted has a tick box; the
+    others are greyed, with their state saying why. A row that was in a delete run shows how it
+    ended instead of its state. A click on a column's title sorts by it."""
 
     picked = Signal()  # another row has the selection
+    ticked_changed = Signal()
 
     def __init__(self) -> None:
         super().__init__()
-        self.tree = grid_table([""] * 5)
+        self.tree = grid_table([""] * 6)
         self.tree.setUniformRowHeights(True)
         self.tree.header().setStretchLastSection(True)
         self.tree.setSortingEnabled(True)
@@ -411,7 +416,11 @@ class ProfilesTable(QWidget):
         # turns it round, the oldest on top.
         self.tree.sortByColumn(USED, Qt.SortOrder.DescendingOrder)
         self.tree.itemSelectionChanged.connect(self.picked)
+        self.tree.itemChanged.connect(self._changed)
         self._profiles: dict[str, Profile] = {}
+        self._ticked: set[str] = set()
+        self._results: dict[str, Result] = {}
+        self._locked = False  # during a delete run no tick changes
         self._fitted = False
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -419,12 +428,22 @@ class ProfilesTable(QWidget):
         self.retranslate()
 
     def retranslate(self) -> None:
-        self.tree.setHeaderLabels([_("User"), _("Last used"), _("Size"), _("Kind"), _("State")])
+        self.tree.setHeaderLabels(["", _("User"), _("Last used"), _("Size"), _("Kind"), _("State")])
 
-    def show_profiles(self, profiles: Sequence[Profile], sizes: dict[str, int | None]) -> None:
-        """`sizes`: bytes for the rows counted; None for one being counted now."""
+    def show_profiles(
+        self,
+        profiles: Sequence[Profile],
+        sizes: dict[str, int | None],
+        results: dict[str, Result] | None = None,
+    ) -> None:
+        """`sizes`: bytes for the rows counted; None for one being counted now. `results`: how
+        the rows of a delete run stand. A tick on a row no longer shown is dropped: what's
+        ticked is always in sight."""
         kept = self.selected()
         self._profiles = {p.ident: p for p in profiles}
+        self._results = dict(results or {})
+        before = set(self._ticked)
+        self._ticked = {i for i in self._ticked if self._tickable(i)}
         self.tree.setSortingEnabled(False)  # or each cell set would move its row
         self.tree.blockSignals(True)
         self.tree.clear()
@@ -440,25 +459,58 @@ class ProfilesTable(QWidget):
         if not self._fitted and profiles:  # once: widths the admin drags afterwards stay
             self.fit()
         self.picked.emit()
+        if before != self._ticked:
+            self.ticked_changed.emit()
 
     def show_size(self, ident: str, sizes: dict[str, int | None]) -> None:
         """One row's size changed: counted, or being counted."""
-        for index in range(self.tree.topLevelItemCount()):
-            item = self.tree.topLevelItem(index)
-            if item is not None and item.data(USER, IDENT_ROLE) == ident:
-                self._fill_size(item, ident, sizes)
-                return
+        item = self._item(ident)
+        if item is not None:
+            self._fill_size(item, ident, sizes)
+
+    def show_result(self, ident: str, result: Result | None) -> None:
+        """One row moved on in a delete run; None takes it out of the run again."""
+        if result is None:
+            self._results.pop(ident, None)
+        else:
+            self._results[ident] = result
+            if result in rows.ENDED:
+                self._ticked.discard(ident)
+        item = self._item(ident)
+        if item is not None:
+            self.tree.blockSignals(True)
+            self._fill_state(item, self._profiles[ident])
+            self.tree.blockSignals(False)
+
+    def lock(self, locked: bool) -> None:
+        """While profiles are deleted, the ticks can't change."""
+        self._locked = locked
+        self.tree.blockSignals(True)
+        for ident in self._profiles:
+            item = self._item(ident)
+            if item is not None:
+                self._fill_state(item, self._profiles[ident])
+        self.tree.blockSignals(False)
 
     def fit(self) -> None:
-        for column in range(STATE):
+        """Each column as wide as its text, and no wider: State, the last one, must stay in
+        sight when the progress panel takes room on the right."""
+        header = self.tree.header()
+        header.setSortIndicatorShown(False)  # or every title is sized for an arrow it lacks
+        for column in range(USER, STATE):
             self.tree.resizeColumnToContents(column)
             self.tree.setColumnWidth(column, self.tree.columnWidth(column) + 6)
+        header.setSortIndicatorShown(True)
+        sorted_by = header.sortIndicatorSection()
+        if USER <= sorted_by < STATE:  # the one title that does have the arrow
+            self.tree.setColumnWidth(sorted_by, self.tree.columnWidth(sorted_by) + ARROW)
+        self.tree.setColumnWidth(TICK, 34)
         # Size starts empty: room for "counting…" and a size, so neither is ever cut.
         widest = max(
             self.tree.fontMetrics().horizontalAdvance(text)
             for text in (_("counting…"), rows.size_text(888 * rows.GB))
         )
-        self.tree.setColumnWidth(SIZE, max(self.tree.columnWidth(SIZE), widest + 24))
+        self.tree.setColumnWidth(SIZE, max(self.tree.columnWidth(SIZE), widest + 20))
         self._fitted = True
 
     def selected(self) -> Profile | None:
@@ -470,10 +522,45 @@ class ProfilesTable(QWidget):
         found = (self.tree.topLevelItem(i) for i in range(self.tree.topLevelItemCount()))
         return [self._profiles[item.data(USER, IDENT_ROLE)] for item in found if item]
 
+    def ticked(self) -> list[Profile]:
+        """The rows ticked, in the order on screen."""
+        return [p for p in self.shown() if p.ident in self._ticked]
+
+    def tick(self, ident: str, on: bool = True) -> None:
+        """Ticks a row as a click on its box does; a row without a box stays as it is."""
+        item = self._item(ident)
+        if item is not None and self._tickable(ident) and not self._locked:
+            item.setCheckState(TICK, Qt.CheckState.Checked if on else Qt.CheckState.Unchecked)
+
     def texts(self) -> list[list[str]]:
-        """Every row's cells, in the order on screen (for tests)."""
+        """Every row's cells, in the order on screen (for tests); the tick's cell has no text."""
         found = (self.tree.topLevelItem(i) for i in range(self.tree.topLevelItemCount()))
-        return [[item.text(c) for c in range(5)] for item in found if item]
+        return [[item.text(c) for c in range(STATE + 1)] for item in found if item]
+
+    def _item(self, ident: str) -> QTreeWidgetItem | None:
+        for index in range(self.tree.topLevelItemCount()):
+            item = self.tree.topLevelItem(index)
+            if item is not None and item.data(USER, IDENT_ROLE) == ident:
+                return item
+        return None
+
+    def _tickable(self, ident: str) -> bool:
+        """Ready, and not already through a delete run."""
+        profile = self._profiles.get(ident)
+        return profile is not None and profile.ready and self._results.get(ident) not in rows.ENDED
+
+    def _changed(self, item: QTreeWidgetItem, column: int) -> None:
+        if column != TICK:
+            return
+        ident = item.data(USER, IDENT_ROLE)
+        on = item.checkState(TICK) == Qt.CheckState.Checked
+        if on == (ident in self._ticked) or not self._tickable(ident):
+            return
+        (self._ticked.add if on else self._ticked.discard)(ident)
+        self.tree.blockSignals(True)
+        item.setData(TICK, SORT_ROLE, 0 if on else 1)
+        self.tree.blockSignals(False)
+        self.ticked_changed.emit()
 
     def _fill(self, item: QTreeWidgetItem, profile: Profile, sizes: dict[str, int | None]) -> None:
         item.setText(USER, rows.user_text(profile))
@@ -483,15 +570,41 @@ class ProfilesTable(QWidget):
         item.setData(USED, SORT_ROLE, used)
         item.setText(KIND, _(rows.KIND_NAMES[profile.kind]))
         item.setData(KIND, SORT_ROLE, list(Kind).index(profile.kind))
-        item.setText(STATE, rows.state_name(profile.state))
-        item.setIcon(STATE, dot_icon(rows.STATE_COLORS[profile.state], 10))
-        item.setData(STATE, SORT_ROLE, rows.STATE_ORDER.index(profile.state))
         item.setTextAlignment(SIZE, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        if not profile.ready:
-            muted = QBrush(self.palette().color(QPalette.ColorRole.PlaceholderText))
-            for column in range(5):
-                item.setForeground(column, muted)
+        self._fill_state(item, profile)
         self._fill_size(item, profile.ident, sizes)
+
+    def _fill_state(self, item: QTreeWidgetItem, profile: Profile) -> None:
+        """The tick box, the State cell and the row's colour: its state, or where it stands in
+        a delete run."""
+        ident, result = profile.ident, self._results.get(profile.ident)
+        if result is None:
+            item.setText(STATE, rows.state_name(profile.state))
+            item.setIcon(STATE, dot_icon(rows.STATE_COLORS[profile.state], 10))
+            item.setData(STATE, SORT_ROLE, rows.STATE_ORDER.index(profile.state))
+        else:
+            icon, color = rows.RESULT_ICONS[result]
+            item.setText(STATE, _(rows.RESULT_NAMES[result]))
+            item.setIcon(STATE, tabler_icon(icon, QColor(color), 16))
+            item.setData(STATE, SORT_ROLE, 10 + list(Result).index(result))
+        flags = item.flags() & ~Qt.ItemFlag.ItemIsUserCheckable
+        if self._tickable(ident):
+            if not self._locked:
+                flags |= Qt.ItemFlag.ItemIsUserCheckable
+            on = ident in self._ticked
+            item.setCheckState(TICK, Qt.CheckState.Checked if on else Qt.CheckState.Unchecked)
+            item.setData(TICK, SORT_ROLE, 0 if on else 1)
+        else:
+            item.setData(TICK, Qt.ItemDataRole.CheckStateRole, None)  # no box at all
+            item.setData(TICK, SORT_ROLE, 2)
+        item.setFlags(flags)
+        greyed = not profile.ready or result in (Result.DELETED, Result.QUEUED)
+        role = QPalette.ColorRole.PlaceholderText if greyed else QPalette.ColorRole.Text
+        brush = QBrush(self.palette().color(role))
+        for column in (USER, USED, KIND, STATE):
+            item.setForeground(column, brush)
+        if item.text(SIZE) != _("counting…"):
+            item.setForeground(SIZE, brush)
 
     def _fill_size(self, item: QTreeWidgetItem, ident: str, sizes: dict[str, int | None]) -> None:
         profile = self._profiles[ident]
@@ -507,8 +620,9 @@ class ProfilesTable(QWidget):
             item.setForeground(SIZE, muted)
             item.setData(SIZE, SORT_ROLE, -1)
         else:
+            greyed = not profile.ready or self._results.get(ident) is Result.DELETED
             item.setText(SIZE, rows.size_text(size))
-            item.setForeground(SIZE, normal if profile.ready else muted)
+            item.setForeground(SIZE, muted if greyed else normal)
             item.setData(SIZE, SORT_ROLE, size)
 
 
@@ -523,6 +637,8 @@ class Shown:
     root: str  # the PC's Users folder
     size: int | None  # bytes, once counted
     counting: bool = False
+    result: Result | None = None  # where it stands in a delete run
+    done: Deleted | None = None  # how its delete ended
 
 
 class ProfileDetails(DetailsPanel):
@@ -546,24 +662,36 @@ class ProfileDetails(DetailsPanel):
 
     def build_page(self, layout: QVBoxLayout, shown: object, needle: str) -> None:
         assert isinstance(shown, Shown)
-        profile = shown.profile
+        profile, result = shown.profile, shown.result
         name = self.value("name", profile.user)
         font = QFont(name.font())
         font.setBold(True)
         font.setPointSizeF(font.pointSizeF() * 1.25)
         name.setFont(font)
+        color = rows.RESULT_ICONS[result][1] if result else rows.STATE_COLORS[profile.state]
         dot = QLabel()
-        dot.setPixmap(dot_icon(rows.STATE_COLORS[profile.state], 12).pixmap(12, 12))
+        dot.setPixmap(dot_icon(color, 12).pixmap(12, 12))
         top = QHBoxLayout()
         top.setSpacing(4)
         top.addWidget(dot)
         top.addWidget(name, 1)
         layout.addLayout(top)
-        state, kind = rows.state_name(profile.state), _(rows.KIND_NAMES[profile.kind])
-        layout.addWidget(self.muted(f"{state} · {kind}"))
+        state = _(rows.RESULT_NAMES[result]) if result else rows.state_name(profile.state)
+        layout.addWidget(self.muted(f"{state} · {_(rows.KIND_NAMES[profile.kind])}"))
 
-        self.section(layout, _("State"))
-        layout.addWidget(self.muted(rows.state_why(profile, shown.root)))
+        if result is not None:
+            self.section(layout, _("Result"))
+            if shown.done is not None:
+                layout.addWidget(self.muted(rows.result_why(shown.done)))
+                if shown.done.detail and shown.done.outcome is not Outcome.DELETED:
+                    layout.addSpacing(4)
+                    layout.addWidget(self.muted(_("Windows answered:")))
+                    layout.addWidget(self.value("windows", shown.done.detail))
+            else:
+                layout.addWidget(self.muted(_(rows.RESULT_NAMES[result])))
+        else:
+            self.section(layout, _("State"))
+            layout.addWidget(self.muted(rows.state_why(profile, shown.root)))
 
         self.section(layout, _("Account"))
         account = self.value("account", profile.user) if profile.known else self.muted(_("Unknown"))
@@ -593,8 +721,9 @@ class ProfileDetails(DetailsPanel):
             ),
         )  # fmt: skip
 
-        self.section(layout, _("Kind"))
-        layout.addWidget(self.muted(_(rows.KIND_WHY[profile.kind])))
+        if result is None:
+            self.section(layout, _("Kind"))
+            layout.addWidget(self.muted(_(rows.KIND_WHY[profile.kind])))
 
     def _pairs(self, layout: QVBoxLayout, pairs: Sequence[tuple[str, QLabel]]) -> None:
         """A label on the left, its value on the same line, every value at the same x."""
@@ -612,3 +741,238 @@ class ProfileDetails(DetailsPanel):
             grid.addWidget(name, index, 0, Qt.AlignmentFlag.AlignTop)
             grid.addWidget(value, index, 1, Qt.AlignmentFlag.AlignVCenter)
         layout.addLayout(grid)
+
+
+# ---- deleting ----
+
+
+class DeleteDialog(Question):
+    """The question before profiles are deleted: which ones, that it's final, and a word to
+    type. The amber button lights only once the word is there; Cancel stays the default, so
+    Enter in the field never confirms by itself."""
+
+    def __init__(
+        self, parent: QWidget | None, host: str, profiles: Sequence[Profile], sizes: dict[str, int]
+    ) -> None:
+        n = len(profiles)
+        super().__init__(
+            parent,
+            _("Delete profiles from {host}").format(host=host),
+            ngettext(
+                "Delete {n} profile from {host}?", "Delete {n} profiles from {host}?", n
+            ).format(n=n, host=host),
+            _(
+                "This is <b>final</b>. With local profiles, each person's desktop and documents "
+                "go too: there's no recycle bin and no copy."
+            ),
+            ngettext("Delete {n} profile", "Delete {n} profiles", n).format(n=n),
+        )
+        self.table = grid_table([_("User"), _("Last used"), _("Size")])
+        for profile in profiles:
+            size = sizes.get(profile.ident)
+            self.table.addTopLevelItem(
+                QTreeWidgetItem(
+                    [
+                        rows.user_text(profile),
+                        rows.date_text(profile.last_used) or "—",
+                        rows.size_text(size) if size is not None else "",
+                    ]
+                )
+            )
+        total = ngettext("{n} profile", "{n} profiles", n).format(n=n)
+        counted = [sizes[p.ident] for p in profiles if p.ident in sizes]
+        if counted and len(counted) == n:
+            total += " · " + rows.size_text(sum(counted))
+        elif counted:
+            total += " · " + _("{size} in the {n} counted").format(
+                size=rows.size_text(sum(counted)), n=len(counted)
+            )
+        self.total = hint(total)
+        note = hint(
+            _(
+                "The PC is checked again before each delete: anyone who signed in since the "
+                "scan is skipped. Every delete goes in the log."
+            )
+        )
+        self.word = QLineEdit()
+        ask = QLabel(_("To confirm, type <b>{word}</b>:").format(word=escape(rows.confirm_word())))
+        self.body.addSpacing(4)
+        for widget in (self.table, self.total, note):
+            self.body.addWidget(widget)
+        self.body.addSpacing(6)
+        self.body.addWidget(ask)
+        self.body.addWidget(self.word)
+        self.action.setEnabled(False)
+        self.word.textChanged.connect(lambda text: self.action.setEnabled(rows.confirms(text)))
+        self.resize(540, 10)
+        fit_rows(self.table)
+        self.word.setFocus()
+
+    def accept(self) -> None:
+        if rows.confirms(self.word.text()):  # never by a stray Enter on a greyed button
+            super().accept()
+
+
+class ProgressPanel(QWidget):
+    """In Details' place while profiles are deleted, and after: the queue with each result, a
+    line in the log per step, and Cancel the rest. Once it's over, Open the log and Close,
+    which brings the details back."""
+
+    cancel_requested = Signal()
+    log_requested = Signal()
+    closed = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.title = QLabel()
+        font = QFont(self.title.font())
+        font.setBold(True)
+        font.setPointSizeF(font.pointSizeF() * 1.25)
+        self.title.setFont(font)
+        self.first, self.second = DetailsPanel.muted(""), DetailsPanel.muted("")
+        self.bar = QProgressBar()
+        self.bar.setObjectName("thin")
+        self.bar.setTextVisible(False)
+        self.bar.setFixedHeight(8)
+        self.queue = grid_table(["", ""])
+        self.queue.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.log = output_box("")
+        self.log.setFont(QFont("Consolas", 8))
+        self.cancel_button = QPushButton()
+        self.log_button = QPushButton()
+        self.close_button = QPushButton()
+        for button in (self.cancel_button, self.log_button, self.close_button):
+            button.setAutoDefault(False)
+        self.note = DetailsPanel.muted("")
+        self.cancel_button.clicked.connect(self._cancel)
+        self.log_button.clicked.connect(self.log_requested)
+        self.close_button.clicked.connect(self.closed)
+        self._queue_title, self._log_title = QLabel(), QLabel()
+        box = card()
+        column = QVBoxLayout(box)
+        column.setContentsMargins(14, 12, 14, 12)
+        column.setSpacing(3)
+        for widget in (self.title, self.first, self.second):
+            column.addWidget(widget)
+        column.addSpacing(6)
+        column.addWidget(self.bar)
+        self._section(column, self._queue_title)
+        column.addWidget(self.queue)
+        self._section(column, self._log_title)
+        column.addWidget(self.log)
+        column.addSpacing(8)
+        buttons = QHBoxLayout()
+        buttons.addWidget(self.cancel_button)
+        buttons.addWidget(self.log_button)
+        buttons.addStretch(1)
+        buttons.addWidget(self.close_button)
+        column.addLayout(buttons)
+        column.addWidget(self.note)
+        column.addStretch(1)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(box)
+        self._users: dict[str, QTreeWidgetItem] = {}
+        self._over = False
+        self._show_buttons()  # or the buttons of both states set the panel's narrowest width
+        self.retranslate()
+
+    @staticmethod
+    def _section(layout: QVBoxLayout, heading: QLabel) -> None:
+        """As Details' sections: a thin line, then the heading in the accent colour."""
+        rule = QFrame()
+        rule.setObjectName("detailsRule")
+        layout.addSpacing(10)
+        layout.addWidget(rule)
+        layout.addSpacing(6)
+        heading.setObjectName("detailsSection")
+        layout.addWidget(heading)
+
+    def retranslate(self) -> None:
+        self._queue_title.setText(_("Queue"))
+        self._log_title.setText(_("Log"))
+        self.queue.setHeaderLabels([_("User"), _("Result")])
+        self.cancel_button.setText(_("Cancel the rest"))
+        self.log_button.setText(_("Open the log"))
+        self.close_button.setText(_("Close"))
+        self.note.setText(_("The current profile finishes first; the queued ones don't start."))
+        self._show_title()
+
+    def start(self, profiles: Sequence[Profile]) -> None:
+        """A new run: every profile queued, an empty log."""
+        self._over = False
+        self._users = {}
+        self.queue.clear()
+        for profile in profiles:
+            item = QTreeWidgetItem([rows.user_text(profile), ""])
+            self.queue.addTopLevelItem(item)
+            self._users[profile.ident] = item
+            self.show_result(profile.ident, Result.QUEUED)
+        self.queue.header().setStretchLastSection(True)
+        self.queue.resizeColumnToContents(0)
+        self.queue.setColumnWidth(0, self.queue.columnWidth(0) + 10)
+        fit_rows(self.queue)
+        self.log.clear()
+        self.log.setFixedHeight(110)
+        self.bar.setRange(0, len(profiles))
+        self.bar.setValue(0)
+        self.second.hide()
+        self.cancel_button.setEnabled(True)
+        self._show_buttons()
+        self._show_title()
+
+    def show_result(self, ident: str, result: Result | None) -> None:
+        """None: taken out of the run (the rest was cancelled)."""
+        item = self._users.get(ident)
+        if item is None:
+            return
+        if result is None:
+            item.setText(1, _("Not started"))
+            item.setIcon(1, tabler_icon(*self._look(Result.QUEUED), 16))
+        else:
+            item.setText(1, _(rows.RESULT_NAMES[result]))
+            item.setIcon(1, tabler_icon(*self._look(result), 16))
+        greyed = result in (None, Result.QUEUED)
+        role = QPalette.ColorRole.PlaceholderText if greyed else QPalette.ColorRole.Text
+        for column in range(2):
+            item.setForeground(column, QBrush(self.palette().color(role)))
+
+    @staticmethod
+    def _look(result: Result) -> tuple[str, QColor]:
+        icon, color = rows.RESULT_ICONS[result]
+        return icon, QColor(color)
+
+    def show_progress(self, text: str, ended: int) -> None:
+        """The grey line under the title, and how many of the queue have ended."""
+        self.first.setText(text)
+        self.bar.setValue(ended)
+
+    def add_line(self, line: str) -> None:
+        self.log.appendPlainText(line)
+
+    def finish(self, first: str, second: str) -> None:
+        """The run is over: what happened in two lines, the bar full, Open the log and Close."""
+        self._over = True
+        self.first.setText(first)
+        self.second.setText(second)
+        self.second.show()
+        self.bar.setValue(self.bar.maximum())
+        self.log.setFixedHeight(150)
+        self._show_buttons()
+        self._show_title()
+
+    def over(self) -> bool:
+        return self._over
+
+    def _cancel(self) -> None:
+        self.cancel_button.setEnabled(False)
+        self.cancel_requested.emit()
+
+    def _show_buttons(self) -> None:
+        for widget in (self.cancel_button, self.note):
+            widget.setVisible(not self._over)
+        for widget in (self.log_button, self.close_button):
+            widget.setVisible(self._over)
+
+    def _show_title(self) -> None:
+        self.title.setText(_("Deletion finished") if self._over else _("Deleting profiles"))

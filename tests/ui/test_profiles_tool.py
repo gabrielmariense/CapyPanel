@@ -10,16 +10,25 @@ from typing import Any
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QDialog
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
 from capypanel.core.remote import user_profiles
 from capypanel.core.remote.access import Account, Reason, RemoteError
-from capypanel.core.remote.user_profiles import Kind, Profile, Scan, State
+from capypanel.core.remote.user_profiles import (
+    Deleted,
+    Kind,
+    Outcome,
+    Profile,
+    Scan,
+    State,
+    Why,
+)
 from capypanel.ui.profiles_tool import panels, rows
 from capypanel.ui.profiles_tool import tool as tool_ui
+from capypanel.ui.profiles_tool.panels import DeleteDialog
 from capypanel.ui.profiles_tool.rows import Filters
 from capypanel.ui.profiles_tool.tool import ProfilesTool
 
@@ -238,12 +247,12 @@ def test_a_scan_shows_the_pc_its_profiles_and_what_can_be_deleted(
     assert about.startswith("192.0.2.13 · read at ") and about.endswith(" · as EXAMPLE\\support")
     assert tool.header.shown.text() == "6 of 7 shown"  # Windows' own is hidden at first
     assert tool.table.texts() == [  # the newest use first; rows with no date last
-        ["EXAMPLE\\ana", "11/10/2026", "", "Profile", "In use"],
-        ["EXAMPLE\\rui", "11/03/2026", "", "Profile", "Ready"],
-        ["EXAMPLE\\bia", "08/14/2026", "", "Profile", "Ready"],
-        ["marta.old  (unknown)", "03/11/2025", "", "Profile", "Ready"],
-        ["pedro  (unknown)", "—", "", "Registry entry, no folder", "Ready"],
-        ["temp.joao  (unknown)", "—", "", "Folder, no registry entry", "Ready"],
+        ["", "EXAMPLE\\ana", "11/10/2026", "", "Profile", "In use"],
+        ["", "EXAMPLE\\rui", "11/03/2026", "", "Profile", "Ready"],
+        ["", "EXAMPLE\\bia", "08/14/2026", "", "Profile", "Ready"],
+        ["", "marta.old  (unknown)", "03/11/2025", "", "Profile", "Ready"],
+        ["", "pedro  (unknown)", "—", "", "Registry entry, no folder", "Ready"],
+        ["", "temp.joao  (unknown)", "—", "", "Folder, no registry entry", "Ready"],
     ]
     assert tool.status_label.text() == "DESK-03 · 7 profiles · 5 can be deleted"
     assert tool.bar.rescan_button.isEnabled() and tool.bar.sizes_button.isEnabled()
@@ -314,7 +323,7 @@ def test_sizes_are_counted_on_demand_for_the_rows_shown_that_have_a_folder(
     sizes = {row[panels.USER]: row[panels.SIZE] for row in tool.table.texts()}
     assert sizes["EXAMPLE\\rui"] == "3.0 GB" and sizes["marta.old  (unknown)"] == "0.5 GB"
     assert sizes["temp.joao  (unknown)"] == "40 MB" and sizes["pedro  (unknown)"] == ""
-    assert tool.status_label.text().endswith(" · 9.5 GB counted")
+    assert tool.status_label.text() == "DESK-03 · 7 profiles · 5 can be deleted"
     assert not tool.counting() and tool.bar.sizes_button.text().strip() == "Calculate sizes"
     tool.count_sizes()  # nothing left to count
     assert len(pc.sized) == 5
@@ -429,3 +438,246 @@ def test_the_panels_widths_are_kept(window: CapyWindow) -> None:
     assert left > 0 and right > 0
     assert tool_ui._two_widths([230, 300]) == (230, 300)
     assert tool_ui._two_widths([0, 300]) is None and tool_ui._two_widths("wide") is None
+
+
+# ---- deleting ----
+
+
+class Deletes:
+    """What the PC answers to each delete, by user; and what was asked, in order."""
+
+    def __init__(self) -> None:
+        self.answers: dict[str, tuple[Outcome, Why | None, str]] = {}
+        self.asked: list[str] = []
+        self.log_files: set[Path | None] = set()
+
+    def delete(self, scanned: Scan, profile: Profile, account: Account | None = None,
+               **more: Any) -> Deleted:  # fmt: skip
+        self.asked.append(profile.user)
+        self.log_files.add(more.get("log_file"))
+        outcome, why, detail = self.answers.get(profile.user, (Outcome.DELETED, None, ""))
+        return Deleted(profile, outcome, why, detail)
+
+
+@pytest.fixture
+def deletes(monkeypatch: pytest.MonkeyPatch) -> Deletes:
+    deletes = Deletes()
+    monkeypatch.setattr(user_profiles, "delete", deletes.delete)
+    return deletes
+
+
+def _answer(monkeypatch: pytest.MonkeyPatch, fill: Callable[[DeleteDialog], bool]) -> list[Any]:
+    """The Delete window is answered by `fill` (True: its action is pressed; False: Cancel);
+    the windows opened are kept."""
+    opened: list[DeleteDialog] = []
+
+    def run(dialog: Any) -> int:
+        opened.append(dialog)
+        if fill(dialog) and dialog.action.isEnabled():
+            dialog.accept()
+            return int(QDialog.DialogCode.Accepted)
+        return int(QDialog.DialogCode.Rejected)
+
+    monkeypatch.setattr(tool_ui, "run_modal", run)
+    return opened
+
+
+def _typed(word: str) -> Callable[[DeleteDialog], bool]:
+    def fill(dialog: DeleteDialog) -> bool:
+        dialog.word.setText(word)
+        return True
+
+    return fill
+
+
+def test_only_a_row_that_can_be_deleted_has_a_tick_box(window: CapyWindow) -> None:
+    tool = _scanned(_tool(window))
+    tool.header.hide_own.setChecked(False)
+    tree = tool.table.tree
+    boxes = {}
+    for index in range(tree.topLevelItemCount()):
+        item = tree.topLevelItem(index)
+        assert item is not None
+        boxes[item.text(panels.USER)] = item.data(panels.TICK, Qt.ItemDataRole.CheckStateRole)
+    assert boxes["EXAMPLE\\ana"] is None and boxes["Public  (unknown)"] is None  # in use; Windows'
+    assert all(boxes[user] is not None for user in ("EXAMPLE\\rui", "pedro  (unknown)"))
+    assert not tool.bar.delete_button.isEnabled()
+    tool.table.tick(ANA.ident)  # as a click where there's no box: nothing
+    assert tool.table.ticked() == []
+    tool.table.tick(RUI.ident)
+    tool.table.tick(BIA.ident)
+    assert tool.table.ticked() == [RUI, BIA] and tool.bar.delete_button.isEnabled()
+    assert tool.status_label.text() == "DESK-03 · 7 profiles · 5 can be deleted · 2 ticked"
+    tool.count_sizes()
+    assert tool.status_label.text().endswith(" · 2 ticked · 9.0 GB")
+    tool.header.leftovers.setChecked(True)  # a tick on a row no longer shown is dropped
+    assert tool.table.ticked() == [] and not tool.bar.delete_button.isEnabled()
+
+
+def test_the_delete_window_lists_the_ticked_rows_and_wants_the_word_typed(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, deletes: Deletes
+) -> None:
+    tool = _scanned(_tool(window))
+    tool.count_sizes()
+    tool.table.tick(RUI.ident)
+    tool.table.tick(MARTA.ident)
+    seen: list[tuple[Any, ...]] = []
+
+    def look(dialog: DeleteDialog) -> bool:
+        table = dialog.table
+        listed = [[table.topLevelItem(r).text(c) for c in range(3)]  # type: ignore[union-attr]
+                  for r in range(table.topLevelItemCount())]  # fmt: skip
+        seen.append((dialog.windowTitle(), dialog.heading.text(), listed, dialog.total.text(),
+                     dialog.action.text(), dialog.action.isEnabled(),
+                     dialog.cancel.isDefault()))  # fmt: skip
+        states = []
+        for word in ("delet", "DELETE ME", " delete ", "DELETE"):
+            dialog.word.setText(word)
+            states.append(dialog.action.isEnabled())
+        seen.append(tuple(states))
+        dialog.word.clear()
+        dialog.accept()  # Enter with the word missing: nothing
+        seen.append((dialog.result(),))
+        return False  # then Cancel
+
+    _answer(monkeypatch, look)
+    tool.bar.delete_button.click()
+    assert seen[0] == (
+        "Delete profiles from DESK-03",
+        "<b>Delete 2 profiles from DESK-03?</b>",
+        [
+            ["EXAMPLE\\rui", "11/03/2026", "3.0 GB"],
+            ["marta.old  (unknown)", "03/11/2025", "0.5 GB"],
+        ],
+        "2 profiles · 3.5 GB",
+        "Delete 2 profiles",
+        False,
+        True,
+    )
+    assert seen[1] == (False, False, True, True)  # any case, spaces around it ignored
+    assert seen[2] == (0,)
+    assert deletes.asked == [] and tool.table.ticked() == [RUI, MARTA]  # cancelled: as before
+    assert rows.confirm_word() == "DELETE" and rows.confirms("Delete") and not rows.confirms("")
+
+
+def test_ticked_rows_are_deleted_one_at_a_time_and_each_says_how_it_ended(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, deletes: Deletes
+) -> None:
+    tool = _scanned(_tool(window))
+    tool.count_sizes()
+    for profile in (RUI, BIA, MARTA):
+        tool.table.tick(profile.ident)
+    deletes.answers = {
+        BIA.user: (Outcome.SKIPPED, Why.IN_USE, ""),
+        MARTA.user: (Outcome.FAILED, Why.ERROR, "Access is denied."),
+    }
+    _answer(monkeypatch, _typed("delete"))
+    tool.bar.delete_button.click()
+    assert deletes.asked == [RUI.user, BIA.user, MARTA.user]
+    assert deletes.log_files == {window.paths.user_profiles_log_file}
+    states = {row[panels.USER]: row[panels.STATE] for row in tool.table.texts()}
+    assert (states["EXAMPLE\\rui"], states["EXAMPLE\\bia"], states["marta.old  (unknown)"]) == (
+        "Deleted", "Skipped", "Failed",
+    )  # fmt: skip
+    assert states["temp.joao  (unknown)"] == "Ready"  # not ticked: untouched
+    assert tool.table.ticked() == [] and not tool.bar.delete_button.isEnabled()
+    progress = tool.progress
+    assert tool._side.currentWidget() is progress and progress.over()
+    assert progress.title.text() == "Deletion finished"
+    assert progress.first.text() == "DESK-03 · 1 deleted, 1 skipped, 1 failed"
+    assert progress.second.text().startswith("3.0 GB freed · ")
+    assert progress.bar.value() == progress.bar.maximum() == 3
+    queue = progress.queue
+    assert [queue.topLevelItem(i).text(1) for i in range(3)] == [  # type: ignore[union-attr]
+        "Deleted", "Skipped", "Failed",
+    ]  # fmt: skip
+    log = progress.log.toPlainText().splitlines()
+    assert len(log) == 6 and log[1].endswith("EXAMPLE\\rui: deleted, 3.0 GB")
+    assert log[3].endswith("EXAMPLE\\bia: skipped, signed in to the PC since the scan")
+    assert log[5].endswith("marta.old: failed, Access is denied.")
+    assert tool.status_label.text() == ("DESK-03 · 1 deleted · 1 skipped · 1 failed · 3.0 GB freed")
+    assert not progress.cancel_button.isVisibleTo(progress)
+    assert tool.pcs.isEnabled() and tool.bar.rescan_button.isEnabled()
+
+    _pick_row(tool, "marta.old  (unknown)")  # Details waits behind the panel
+    progress.close_button.click()
+    assert tool._side.currentWidget() is tool.details
+    assert tool.details.shown_value("windows") == "Access is denied."
+    states = {row[panels.USER]: row[panels.STATE] for row in tool.table.texts()}
+    assert states["EXAMPLE\\rui"] == "Deleted"  # results stay until the next scan
+    tool.bar.rescan_button.click()
+    states = {row[panels.USER]: row[panels.STATE] for row in tool.table.texts()}
+    assert states["EXAMPLE\\rui"] == "Ready"  # the fake PC still has it
+
+
+def test_cancel_the_rest_lets_the_current_one_finish_and_starts_no_other(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, deletes: Deletes
+) -> None:
+    tool = _scanned(_tool(window))
+    for profile in (RUI, BIA, MARTA):
+        tool.table.tick(profile.ident)
+    held: list[Callable[[], None]] = []
+
+    def later(work: Callable[[], Any], done: Callable[[Any], None], failed: Any) -> None:
+        held.append(lambda: done(work()))
+
+    tool._start = later  # type: ignore[method-assign]
+    _answer(monkeypatch, _typed("DELETE"))
+    tool.bar.delete_button.click()
+    progress = tool.progress
+    assert tool._side.currentWidget() is progress and not progress.over()
+    assert progress.title.text() == "Deleting profiles"
+    assert progress.first.text().startswith("DESK-03 · 1 of 3 · since ")
+    assert tool.status_label.text() == "DESK-03 · deleting 1 of 3"
+    states = {row[panels.USER]: row[panels.STATE] for row in tool.table.texts()}
+    assert (states["EXAMPLE\\rui"], states["EXAMPLE\\bia"]) == ("Deleting…", "Queued")
+    # While it runs: no scan, no other PC, no tick, no second run.
+    assert not tool.pcs.isEnabled() and not tool.bar.rescan_button.isEnabled()
+    assert not tool.bar.delete_button.isEnabled() and not tool.bar.sizes_button.isEnabled()
+    tool.table.tick(BIA.ident, on=False)
+    assert BIA in tool.table.ticked()
+    tool.scan_again()
+    assert len(held) == 1 and deletes.asked == []
+
+    progress.cancel_button.click()
+    assert not progress.cancel_button.isEnabled() and not progress.over()
+    held.pop(0)()  # the current one finishes
+    assert deletes.asked == [RUI.user] and held == []  # and no other starts
+    assert progress.over() and progress.first.text() == "DESK-03 · 1 deleted"
+    assert [progress.queue.topLevelItem(i).text(1) for i in range(3)] == [  # type: ignore[union-attr]
+        "Deleted", "Not started", "Not started",
+    ]  # fmt: skip
+    assert "cancelled: 2 not started" in progress.log.toPlainText()
+    states = {row[panels.USER]: row[panels.STATE] for row in tool.table.texts()}
+    assert states["EXAMPLE\\bia"] == "Ready" and tool.table.ticked() == [BIA, MARTA]
+    assert tool.bar.delete_button.isEnabled()  # the ticks left can be run again
+
+
+def test_how_a_delete_ended_reads_in_the_log_and_in_details() -> None:
+    assert rows.ended_text(Deleted(RUI, Outcome.DELETED), None) == "deleted"
+    gone = Deleted(RUI, Outcome.SKIPPED, Why.GONE)
+    assert rows.ended_text(gone, None) == "skipped, it's no longer there"
+    assert rows.result_why(gone) == "Skipped: it was no longer there."
+    left = Deleted(OLD, Outcome.FAILED, Why.LEFT, "C:\\Users\\temp.joao\\a.txt: in use")
+    assert rows.ended_text(left, 5).endswith("(C:\\Users\\temp.joao\\a.txt: in use)")
+    assert rows.result_why(left) == "Failed: some files couldn't be removed."
+    assert rows.result_why(Deleted(OLD, Outcome.DELETED)) == "Deleted: the folder."
+    assert rows.result_why(Deleted(GONE, Outcome.DELETED)) == (
+        "Deleted: the leftover in the registry."
+    )
+    assert rows.counts_text([]) == ""
+
+
+def test_open_the_log_says_so_when_there_is_none_yet(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tool = _tool(window)
+    opened: list[Path] = []
+    monkeypatch.setattr(tool_ui.os, "startfile", opened.append, raising=False)
+    tool.open_log()
+    assert opened == []  # nothing was ever deleted: no file to open
+    log_file = window.paths.user_profiles_log_file
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    log_file.write_text("a line\n", encoding="utf-8")
+    tool.open_log()
+    assert opened == [log_file]

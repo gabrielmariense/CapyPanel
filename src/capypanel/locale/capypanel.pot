@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 07:58-0300\n"
+"POT-Creation-Date: 2026-11-10 08:11-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -758,6 +758,9 @@ msgstr ""
 msgid "Cancel the pending restart"
 msgstr ""
 
+msgid "Cancel the rest"
+msgstr ""
+
 #, python-brace-format
 msgid "CapyPanel asked for it at {when}."
 msgstr ""
@@ -1209,6 +1212,10 @@ msgstr ""
 msgid "D:\\Logs"
 msgstr ""
 
+msgctxt "the word typed to confirm"
+msgid "DELETE"
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "DISM and sfc check every Windows file on {host} and repair the damaged "
@@ -1247,11 +1254,45 @@ msgid "Delete connection profile"
 msgstr ""
 
 #, python-brace-format
+msgid "Delete profiles from {host}"
+msgstr ""
+
+#, python-brace-format
 msgid "Delete temporary files on {host}?"
 msgstr ""
 
 #, python-brace-format
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
+msgstr ""
+
+msgid "Delete the profiles ticked, after a question that lists them"
+msgstr ""
+
+msgid "Delete ticked…"
+msgstr ""
+
+#, python-brace-format
+msgid "Delete {n} profile"
+msgid_plural "Delete {n} profiles"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Delete {n} profile from {host}?"
+msgid_plural "Delete {n} profiles from {host}?"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Deleted"
+msgstr ""
+
+msgid "Deleted: the folder and the registry entry."
+msgstr ""
+
+msgid "Deleted: the folder."
+msgstr ""
+
+msgid "Deleted: the leftover in the registry."
 msgstr ""
 
 msgid ""
@@ -1260,6 +1301,15 @@ msgid ""
 msgstr ""
 
 msgid "Deleting moves it to the Recycle Bin, for everyone who uses it:"
+msgstr ""
+
+msgid "Deleting profiles"
+msgstr ""
+
+msgid "Deleting…"
+msgstr ""
+
+msgid "Deletion finished"
 msgstr ""
 
 msgid "Details"
@@ -1467,6 +1517,15 @@ msgid "Everyone on this PC (shared)"
 msgstr ""
 
 msgid "Export CSV"
+msgstr ""
+
+msgid "Failed"
+msgstr ""
+
+msgid "Failed: Windows refused, or the PC stopped answering."
+msgstr ""
+
+msgid "Failed: some files couldn't be removed."
 msgstr ""
 
 #, python-brace-format
@@ -1859,6 +1918,9 @@ msgstr ""
 msgid "Locked when it was approved"
 msgstr ""
 
+msgid "Log"
+msgstr ""
+
 msgid "Log off"
 msgstr ""
 
@@ -2201,6 +2263,9 @@ msgid ""
 "MPS."
 msgstr ""
 
+msgid "Not started"
+msgstr ""
+
 msgid "Not used: made by another user"
 msgstr ""
 
@@ -2363,6 +2428,9 @@ msgstr ""
 msgid ""
 "Open the Commands window for the selected host; the arrow lists its "
 "commands"
+msgstr ""
+
+msgid "Open the log"
 msgstr ""
 
 msgid "Open the scripts folder"
@@ -2605,6 +2673,12 @@ msgid "Publisher"
 msgstr ""
 
 msgid "Put in &group"
+msgstr ""
+
+msgid "Queue"
+msgstr ""
+
+msgid "Queued"
 msgstr ""
 
 msgid "Quick check"
@@ -2868,6 +2942,9 @@ msgid "Restart…"
 msgstr ""
 
 msgid "Restore built-in profiles"
+msgstr ""
+
+msgid "Result"
 msgstr ""
 
 msgid "Review"
@@ -3190,6 +3267,20 @@ msgstr ""
 msgid "Sizes counted; {n} couldn't be read."
 msgstr ""
 
+msgid "Skipped"
+msgstr ""
+
+msgid "Skipped: it was no longer there."
+msgstr ""
+
+msgid "Skipped: it wasn't what the scan saw any more. Scan again."
+msgstr ""
+
+msgid ""
+"Skipped: this person signed in to the PC after the scan. Nothing was "
+"deleted."
+msgstr ""
+
 msgid "Software"
 msgstr ""
 
@@ -3362,6 +3453,11 @@ msgid ""
 "password changed."
 msgstr ""
 
+msgid ""
+"The PC is checked again before each delete: anyone who signed in since "
+"the scan is skipped. Every delete goes in the log."
+msgstr ""
+
 msgid "The PC's C: drive in File Explorer."
 msgstr ""
 
@@ -3402,6 +3498,9 @@ msgstr ""
 msgid ""
 "The connection profile “{profile}” needs the tool “{tool}”, which isn't "
 "available on this PC."
+msgstr ""
+
+msgid "The current profile finishes first; the queued ones don't start."
 msgstr ""
 
 msgid "The default list"
@@ -3481,6 +3580,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "The list “{path}” doesn't exist anymore."
+msgstr ""
+
+msgid "The log has nothing yet."
 msgstr ""
 
 msgid "The logged-on user's profile folder."
@@ -3680,6 +3782,11 @@ msgstr ""
 msgid "This error happened {n} times:"
 msgstr ""
 
+msgid ""
+"This is <b>final</b>. With local profiles, each person's desktop and "
+"documents go too: there's no recycle bin and no copy."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "This is {path} as {host} has it. Other PCs may have their own copy: it "
@@ -3720,6 +3827,10 @@ msgid "Tick Status or Logged-on users to check them"
 msgstr ""
 
 msgid "Tick a column under Last check to read them"
+msgstr ""
+
+#, python-brace-format
+msgid "To confirm, type <b>{word}</b>:"
 msgstr ""
 
 msgid "To:"
@@ -3954,6 +4065,9 @@ msgstr ""
 msgid "Windows &notification"
 msgstr ""
 
+msgid "Windows answered:"
+msgstr ""
+
 #, python-brace-format
 msgid "Windows didn't keep it: {error}"
 msgstr ""
@@ -3974,6 +4088,9 @@ msgid ""
 msgstr ""
 
 msgid "Windows no longer knows this account; it was probably deleted."
+msgstr ""
+
+msgid "Windows refused, or the PC stopped answering"
 msgstr ""
 
 msgid "Windows shows the message with a countdown. You can cancel until then."
@@ -4083,7 +4200,14 @@ msgstr ""
 msgid "cancel the restart"
 msgstr ""
 
+#, python-brace-format
+msgid "cancelled: {n} not started"
+msgstr ""
+
 msgid "changed, review before use"
+msgstr ""
+
+msgid "checking and deleting…"
 msgstr ""
 
 #, python-brace-format
@@ -4098,6 +4222,13 @@ msgid "couldn't be read"
 msgstr ""
 
 msgid "counting…"
+msgstr ""
+
+msgid "deleted"
+msgstr ""
+
+#, python-brace-format
+msgid "deleted, {size}"
 msgstr ""
 
 #, python-brace-format
@@ -4119,6 +4250,9 @@ msgid ""
 "so it only runs as the person signed in."
 msgstr ""
 
+msgid "failed"
+msgstr ""
+
 #, python-brace-format
 msgid "from {computer}"
 msgstr ""
@@ -4130,10 +4264,16 @@ msgstr ""
 msgid "in “{group}”"
 msgstr ""
 
+msgid "it can't be deleted"
+msgstr ""
+
 msgid "it can't run as it is now. Rescan to see why."
 msgstr ""
 
 msgid "it changed since it was approved, so it didn't run. Review it again."
+msgstr ""
+
+msgid "it changed since the scan; scan again"
 msgstr ""
 
 msgid ""
@@ -4166,6 +4306,12 @@ msgid "it took too long to answer."
 msgstr ""
 
 msgid "it wants authentication or encryption set differently."
+msgstr ""
+
+msgid "it's no longer there"
+msgstr ""
+
+msgid "it's one of Windows' own"
 msgstr ""
 
 msgid "its answer couldn't be read."
@@ -4204,6 +4350,9 @@ msgid "not reported"
 msgstr ""
 
 msgid "notes"
+msgstr ""
+
+msgid "nothing deleted"
 msgstr ""
 
 #, python-brace-format
@@ -4267,8 +4416,17 @@ msgstr ""
 msgid "shut it down"
 msgstr ""
 
+msgid "signed in to the PC since the scan"
+msgstr ""
+
 #, python-brace-format
 msgid "since {when}"
+msgstr ""
+
+msgid "skipped"
+msgstr ""
+
+msgid "some files couldn't be removed"
 msgstr ""
 
 msgid "some left"
@@ -4432,11 +4590,19 @@ msgid "{host} · couldn't be read"
 msgstr ""
 
 #, python-brace-format
+msgid "{host} · deleting {n} of {total}"
+msgstr ""
+
+#, python-brace-format
 msgid "{host} · didn't answer"
 msgstr ""
 
 #, python-brace-format
 msgid "{host} · reading…"
+msgstr ""
+
+#, python-brace-format
+msgid "{host} · {n} of {total} · since {time}"
 msgstr ""
 
 #, python-brace-format
@@ -4567,6 +4733,18 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} couldn't be opened: check its address."
 msgid_plural "{n} couldn't be opened: check their addresses."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} deleted"
+msgid_plural "{n} deleted"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} failed"
+msgid_plural "{n} failed"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -4749,6 +4927,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} skipped"
+msgid_plural "{n} skipped"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} skipped."
 msgid_plural "{n} skipped."
 msgstr[0] ""
@@ -4763,6 +4947,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} temporary"
 msgid_plural "{n} temporary"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} ticked"
+msgid_plural "{n} ticked"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -4795,11 +4985,19 @@ msgid "{shown} of {total} shown"
 msgstr ""
 
 #, python-brace-format
-msgid "{size} counted"
+msgid "{size} freed"
+msgstr ""
+
+#, python-brace-format
+msgid "{size} in the {n} counted"
 msgstr ""
 
 #, python-brace-format
 msgid "{source} · fetched {when}"
+msgstr ""
+
+#, python-brace-format
+msgid "{start} to {end}"
 msgstr ""
 
 #, python-brace-format
