@@ -15,6 +15,13 @@ def reachable(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(inventory, "check_reachable", lambda host: None)
 
 
+@pytest.fixture(autouse=True)
+def through_powershell(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These tests answer for the PowerShell way (a fake powershell.exe); the direct way has its
+    own, in test_wmi.py."""
+    monkeypatch.setattr(inventory, "transport", inventory.POWERSHELL)
+
+
 def test_this_pcs_space_and_last_restart_read_with_the_real_api(reachable: None) -> None:
     space = inventory.disk_space("localhost")
     assert space.total > space.free > 0

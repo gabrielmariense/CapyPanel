@@ -29,6 +29,7 @@ from capypanel.core.remote import (
     sessions,
 )
 from capypanel.core.remote.access import Account, Reason, RemoteError
+from capypanel.core.remote.inventory import PowerShellBlocked
 from capypanel.core.remote.own_scripts import OwnScript, PcProblem, State
 from capypanel.core.remote.places import Console
 from capypanel.core.remote.run import Problem, RunAs, RunError, RunResult
@@ -133,6 +134,8 @@ def reason_text(error: BaseException) -> str:
         }[error.problem]  # fmt: skip
     if isinstance(error, ScriptFailed):
         return _("it ended with code {code}. Its output says why.").format(code=error.code)
+    if isinstance(error, PowerShellBlocked):
+        return _("Windows didn't let PowerShell start on this PC. An antivirus may block it.")
     if isinstance(error, OnPcRefused):
         if error.problem is PcProblem.MISSING:
             return _("there's no {path} on that PC.").format(path=error.path)

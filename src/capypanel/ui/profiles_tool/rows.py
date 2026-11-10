@@ -12,6 +12,7 @@ from PySide6.QtCore import QDate, QLocale
 from capypanel.core import i18n
 from capypanel.core.i18n import N_, _, ngettext, pgettext
 from capypanel.core.remote.access import Reason, RemoteError
+from capypanel.core.remote.inventory import PowerShellBlocked
 from capypanel.core.remote.user_profiles import (
     Deleted,
     Kind,
@@ -205,6 +206,19 @@ class Failure:
 def failure(error: BaseException, name: str, address: str, account: str) -> Failure:
     """What a failed scan says in the middle of the page."""
     nothing = _("Nothing was read.")
+    if isinstance(error, PowerShellBlocked):
+        return Failure(
+            _("PowerShell couldn't start on this PC"),
+            (
+                _(
+                    "Windows didn't let CapyPanel start PowerShell here to read {host}. An "
+                    "antivirus may block it."
+                ).format(host=name),
+                nothing,
+            ),  # fmt: skip
+            _("{host} · PowerShell blocked on this PC").format(host=name),
+            another_account=False,
+        )
     if isinstance(error, RemoteError) and error.reason is Reason.UNREACHABLE:
         return Failure(
             _("{host} didn't answer").format(host=name),

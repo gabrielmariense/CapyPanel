@@ -53,6 +53,17 @@ class _Stages:
         return f"Started in {total:.2f} s ({parts})"
 
 
+def _reads_line() -> str:
+    """How CapyPanel reads other PCs this time, for the log: a support question starts there."""
+    from capypanel.core.remote import inventory, wmi
+
+    if inventory.transport == inventory.POWERSHELL:
+        return "Reads other PCs through PowerShell started on this PC (set in Settings)"
+    if not wmi.available():
+        return "Reads other PCs through PowerShell: WMI from Python isn't available here"
+    return "Reads other PCs over WMI from CapyPanel itself (PowerShell only if that can't be used)"
+
+
 def run(argv: list[str] | None = None) -> int:
     stages = _Stages()
     branding.use_own_taskbar_icon()  # before any window exists
@@ -67,6 +78,7 @@ def run(argv: list[str] | None = None) -> int:
     applog.setup_logging(paths.log_file)
     stages.done("Qt and the log")
     log.info("CapyPanel %s starting for %s (portable=%s)", BUILD, paths.account, paths.portable)
+    log.info("%s", _reads_line())
     try:
         settings.ensure_dirs(paths)
     except settings.UserFolderError as e:

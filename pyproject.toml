@@ -8,6 +8,7 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
     "cryptography>=50",
     "pyside6>=6.11.2",
+    "pywin32>=311",
 ]
 
 [project.gui-scripts]

@@ -9,11 +9,12 @@ session too, and whether it's connected. Mapping runs as the person for the same
 mapped as the admin lands in the admin's session, where they never see it."""
 
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from capypanel.core.remote import inventory
 from capypanel.core.remote.access import Account, check_reachable
 from capypanel.core.remote.run import TIMEOUT, Language, RunAs, RunError, Script
 
@@ -309,4 +310,30 @@ def cleared(output: str) -> list[Cleared]:
             found.append(Cleared(App(line[1]), CacheState(line[2]), int(line[3]), int(line[4])))
         except ValueError:
             continue
+    return found
+
+
+# ---- the same read over WMI directly ----
+
+_PERSON_HIVE = re.compile(r"S-1-5-21-[\d-]+")
+
+
+@inventory.reads(_SAVED)
+def _saved_direct(wmi: Any, _values: Mapping[str, str]) -> list[dict[str, Any]]:
+    from capypanel.core.remote.wmi import HKU
+
+    found = []
+    for sid in wmi.subkeys(HKU, ""):
+        if not _PERSON_HIVE.fullmatch(sid):
+            continue
+        user = wmi.string(HKU, f"{sid}\\Volatile Environment", "USERNAME")
+        if not user:
+            continue
+        domain = wmi.string(HKU, f"{sid}\\Volatile Environment", "USERDOMAIN")
+        drives = [
+            {"letter": letter,
+             "path": wmi.string(HKU, f"{sid}\\Network\\{letter}", "RemotePath")}
+            for letter in wmi.subkeys(HKU, f"{sid}\\Network")
+        ]  # fmt: skip
+        found.append({"user": user, "domain": domain, "drives": drives})
     return found

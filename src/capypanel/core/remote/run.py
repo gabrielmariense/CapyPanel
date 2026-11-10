@@ -42,8 +42,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
+from typing import Any
 
 from capypanel.core import winsec
+from capypanel.core.remote import inventory
 from capypanel.core.remote.access import (
     REACH_TIMEOUT,
     Account,
@@ -830,3 +832,12 @@ _kernel32.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
 _kernel32.TerminateProcess.argtypes = [wintypes.HANDLE, wintypes.UINT]
 _kernel32.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
 _kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+
+
+# ---- the same start over WMI directly ----
+
+
+@inventory.reads(_START)
+def _start_direct(wmi: Any, values: Mapping[str, str]) -> dict[str, int]:
+    found = wmi.call("Win32_Process", "Create", CommandLine=values["command"])
+    return {"code": int(found.ReturnValue or 0)}

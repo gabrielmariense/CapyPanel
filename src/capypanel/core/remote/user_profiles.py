@@ -15,6 +15,7 @@ handled apart: a registry entry whose folder is gone, and a folder no registry e
 
 import contextlib
 import ctypes
+import json
 import logging
 import os
 import re
@@ -27,6 +28,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
+from capypanel.core.remote import inventory
 from capypanel.core.remote.access import (
     Account,
     RemoteError,
@@ -760,3 +762,142 @@ try {
 finally { Remove-CimSession $session }
 """
 )
+
+
+# ---- the same reads and deletes over WMI directly ----
+
+_LIST = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList"
+_GUIDS = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileGuid"
+_LISTED = re.compile(r"S-1-(5-21|12-1)-.*", re.IGNORECASE)  # ProfileList's people
+_SIGNED_IN = re.compile(r"S-1-(5-21|12-1)-[\d-]+", re.IGNORECASE)  # HKEY_USERS' people
+
+
+def _signed_in(wmi: Any) -> list[str]:
+    from capypanel.core.remote.wmi import HKU
+
+    return wmi.subkeys(HKU, "")
+
+
+@inventory.reads(_FACTS)
+def _facts_direct(wmi: Any, _values: Mapping[str, str]) -> dict[str, Any]:
+    from capypanel.core.remote.wmi import HKLM, HKU
+
+    os_ = wmi.first("SELECT WindowsDirectory FROM Win32_OperatingSystem")
+    system = wmi.first("SELECT UserName FROM Win32_ComputerSystem")
+    keys = []
+    for name in wmi.subkeys(HKLM, _LIST):
+        if not _LISTED.match(name):
+            continue
+        key = f"{_LIST}\\{name}"
+        keys.append({
+            "name": name,
+            "path": wmi.expanded(HKLM, key, "ProfileImagePath"),
+            "load_high": wmi.dword(HKLM, key, "LocalProfileLoadTimeHigh"),
+            "load_low": wmi.dword(HKLM, key, "LocalProfileLoadTimeLow"),
+            "unload_high": wmi.dword(HKLM, key, "LocalProfileUnloadTimeHigh"),
+            "unload_low": wmi.dword(HKLM, key, "LocalProfileUnloadTimeLow"),
+        })  # fmt: skip
+    profiles = [
+        {"sid": p.SID, "path": p.LocalPath, "loaded": bool(p.Loaded), "special": bool(p.Special)}
+        for p in wmi.rows("SELECT SID, LocalPath, Loaded, Special FROM Win32_UserProfile")
+    ]
+    hives = [
+        {"sid": sid,
+         "user": wmi.string(HKU, f"{sid}\\Volatile Environment", "USERNAME"),
+         "folder": wmi.string(HKU, f"{sid}\\Volatile Environment", "USERPROFILE")}
+        for sid in _signed_in(wmi)
+        if _SIGNED_IN.fullmatch(sid)
+    ]  # fmt: skip
+    admin = ""
+    with contextlib.suppress(RemoteError):  # a renamed built-in Administrator; often unreadable
+        for found in wmi.rows("SELECT Name, SID FROM Win32_UserAccount WHERE LocalAccount=True"):
+            if str(found.SID or "").endswith("-500"):
+                admin = str(found.Name or "")
+                break
+    return {
+        "keys": keys, "profiles": profiles, "hives": hives, "admin": admin,
+        "console": str(system.UserName or ""), "windows": str(os_.WindowsDirectory or ""),
+        "root": wmi.expanded(HKLM, _LIST, "ProfilesDirectory"),
+    }  # fmt: skip
+
+
+@inventory.reads(_DELETE_PROFILE)
+def _delete_profile_direct(wmi: Any, values: Mapping[str, str]) -> dict[str, Any]:
+    """Checked again in the same connection that deletes, then Windows' own removal: the
+    folder and the registry entries together, done by WMI on that PC."""
+    import pywintypes
+
+    from capypanel.core.remote.wmi import message_of
+
+    sid = values["sid"]
+    if not _PERSON.fullmatch(sid):  # it goes into the query
+        return {"outcome": "changed"}
+    found = wmi.first(f"SELECT * FROM Win32_UserProfile WHERE SID='{sid}'")
+    if found is None:
+        return {"outcome": "gone"}
+    if found.Special:
+        return {"outcome": "protected"}
+    if found.Loaded or sid in _signed_in(wmi):
+        return {"outcome": "in-use"}
+    if str(found.LocalPath or "").rstrip("\\") != values["path"]:
+        return {"outcome": "changed"}
+    try:
+        found.Delete_()
+    except pywintypes.com_error as e:
+        return {"outcome": "failed", "text": message_of(e)}
+    return {"outcome": "deleted"}
+
+
+_STRINGS, _BINARY, _DWORD, _MULTI, _QWORD = (1, 2), 3, 4, 7, 11  # registry value types
+
+
+@inventory.reads(_DELETE_ENTRY)
+def _delete_entry_direct(wmi: Any, values: Mapping[str, str]) -> dict[str, Any]:
+    """The entry's values are read first and sent back, for the log. The PC's GUID index loses
+    the SID's line only when no twin entry (the SID beside its .bak) still stands for that
+    person."""
+    from capypanel.core.remote.wmi import HKLM
+
+    key, sid = f"{_LIST}\\{values['key']}", values["sid"]
+    answer, names, types = wmi.value_names(HKLM, key)
+    if answer:
+        return {"outcome": "gone"}
+    if sid in _signed_in(wmi):
+        return {"outcome": "in-use"}
+    if str(wmi.expanded(HKLM, key, "ProfileImagePath") or "").rstrip("\\") != values["path"]:
+        return {"outcome": "changed"}
+    try:
+        kept: dict[str, Any] = {}
+        for name, kind in zip(names, types, strict=False):
+            if kind in _STRINGS:
+                kept[name] = wmi.string(HKLM, key, name)
+            elif kind == _DWORD:
+                kept[name] = wmi.dword(HKLM, key, name)
+            elif kind == _QWORD:
+                value = wmi.reg("GetQWORDValue", HKLM, key, name).uValue
+                kept[name] = None if value is None else int(value)
+            elif kind == _MULTI:
+                kept[name] = list(wmi.reg("GetMultiStringValue", HKLM, key, name).sValue or ())
+            elif kind == _BINARY:
+                data = wmi.reg("GetBinaryValue", HKLM, key, name).uValue or ()
+                kept[name] = "-".join(f"{int(b):02X}" for b in data)
+        twin = f"{sid}.bak" if values["key"] == sid else sid
+        if wmi.value_names(HKLM, f"{_LIST}\\{twin}")[0]:  # no twin left: the GUID line goes
+            for guid in wmi.subkeys(HKLM, _GUIDS):
+                if wmi.string(HKLM, f"{_GUIDS}\\{guid}", "SidString") == sid:
+                    _drop_key(wmi, f"{_GUIDS}\\{guid}")
+        _drop_key(wmi, key)
+    except (RemoteError, OSError) as e:
+        return {"outcome": "failed", "text": str(e)}
+    return {"outcome": "deleted", "kept": json.dumps(kept, separators=(",", ":"))}
+
+
+def _drop_key(wmi: Any, key: str) -> None:
+    """A registry key and everything under it: StdRegProv deletes only empty keys."""
+    from capypanel.core.remote.wmi import HKLM
+
+    for sub in wmi.subkeys(HKLM, key):
+        _drop_key(wmi, f"{key}\\{sub}")
+    code = int(wmi.reg("DeleteKey", HKLM, key).ReturnValue or 0)
+    if code:
+        raise OSError(code, f"Windows error {code} deleting {key}")

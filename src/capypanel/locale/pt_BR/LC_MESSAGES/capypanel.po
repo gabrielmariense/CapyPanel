@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 14:58-0300\n"
+"POT-Creation-Date: 2026-11-10 15:50-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1114,6 +1114,9 @@ msgstr "Não foi possível ler {path} em {host}: {error} Sem ele, uma cópia só
 #, python-brace-format
 msgid "Couldn't read “{file}”: {error}"
 msgstr "Não foi possível ler “{file}”: {error}"
+
+msgid "Couldn't read: Windows didn't let PowerShell start on this PC (an antivirus may block it)"
+msgstr "Não foi possível ler: o Windows não deixou o PowerShell abrir neste PC (um antivírus pode bloqueá-lo)"
 
 #, python-brace-format
 msgid "Couldn't read: Windows error {code}"
@@ -2586,6 +2589,9 @@ msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
 msgid "Power"
 msgstr "Energia"
 
+msgid "PowerShell couldn't start on this PC"
+msgstr "O PowerShell não abriu neste PC"
+
 msgid "Pr&inters:"
 msgstr "&Impressoras:"
 
@@ -4049,6 +4055,13 @@ msgid "Windows didn't keep it: {error}"
 msgstr "O Windows não a guardou: {error}"
 
 #, python-brace-format
+msgid "Windows didn't let CapyPanel start PowerShell here to read {host}. An antivirus may block it."
+msgstr "O Windows não deixou o CapyPanel abrir o PowerShell aqui para ler {host}. Um antivírus pode bloqueá-lo."
+
+msgid "Windows didn't let PowerShell start on this PC. An antivirus may block it."
+msgstr "o Windows não deixou o PowerShell abrir neste PC. Um antivírus pode bloqueá-lo."
+
+#, python-brace-format
 msgid "Windows error {code}."
 msgstr "Erro do Windows {code}."
 
@@ -4564,6 +4577,10 @@ msgstr "{host} desliga às {when}."
 #, python-brace-format
 msgid "{host} waits for its turn"
 msgstr "{host} aguarda a vez"
+
+#, python-brace-format
+msgid "{host} · PowerShell blocked on this PC"
+msgstr "{host} · PowerShell bloqueado neste PC"
 
 #, python-brace-format
 msgid "{host} · account refused"

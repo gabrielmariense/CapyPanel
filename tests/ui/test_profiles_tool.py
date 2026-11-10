@@ -1202,3 +1202,19 @@ def test_space_and_a_double_click_tick_the_row_the_keyboard_is_on(window: CapyWi
     _pick_row(page, "EXAMPLE\\ana")  # in use: no box, so nothing to tick
     QApplication.sendEvent(tree, space)
     assert page.ticked() == [RUI]
+
+
+def test_a_powershell_blocked_on_this_pc_is_named_as_such(window: CapyWindow, pc: Pc) -> None:
+    from capypanel.core.remote.inventory import PowerShellBlocked
+    from capypanel.ui.hosts_tool.details import facts_error_text
+    from capypanel.ui.hosts_tool.runner import reason_text
+
+    blocked = PowerShellBlocked(PermissionError(13, "Access is denied"))
+    pc.answers["192.0.2.13"] = blocked
+    page = _open(window)
+    card = page.card
+    assert card is not None and card.heading.text() == "PowerShell couldn't start on this PC"
+    assert "An antivirus may block it." in card.body.text()
+    assert _tool(window).status_label.text() == "DESK-03 · PowerShell blocked on this PC"
+    assert [b.text() for b in card.buttons] == ["Try again"]  # another account won't help
+    assert "antivirus" in facts_error_text(blocked) and "antivirus" in reason_text(blocked)

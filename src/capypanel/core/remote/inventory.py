@@ -14,8 +14,9 @@ only for themselves is in their own profile and isn't listed."""
 import base64
 import ctypes
 import json
+import logging
 import subprocess
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from ctypes import wintypes
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
@@ -31,7 +32,42 @@ from capypanel.core.remote.access import (
     reason_of,
 )
 
-WMI_TIMEOUT = 90  # seconds for one PowerShell run, its connection included
+WMI_TIMEOUT = 90  # seconds for one read, its connection included
+
+log = logging.getLogger(__name__)
+
+# How reads reach a PC's WMI (over DCOM; WinRM always goes through PowerShell):
+AUTO = "auto"  # WMI straight from CapyPanel; PowerShell only when that can't be used here
+DIRECT = "direct"  # only WMI straight from CapyPanel
+POWERSHELL = "powershell"  # only a PowerShell started on this PC, as before 0.24
+TRANSPORTS = (AUTO, DIRECT, POWERSHELL)
+transport = AUTO  # set from Settings
+
+# Each PowerShell script that has a twin reading the same over WMI directly, with the same answer.
+Reader = Callable[[Any, Mapping[str, str]], Any]
+_READERS: dict[str, Reader] = {}
+
+
+def reads(script: str) -> Callable[[Reader], Reader]:
+    """Marks a function as `script`'s twin: it gets a wmi.Wmi and the script's `$in` values,
+    and answers what the script would have sent."""
+
+    def mark(reader: Reader) -> Reader:
+        _READERS[script] = reader
+        return reader
+
+    return mark
+
+
+class PowerShellBlocked(OSError):
+    """Windows didn't let CapyPanel start PowerShell on this PC, often an antivirus's doing."""
+
+    def __init__(self, error: OSError) -> None:
+        super().__init__(
+            error.errno,
+            f"PowerShell couldn't start on this PC ({error.strerror or error}); an antivirus "
+            "may have blocked it",
+        )
 
 
 @dataclass(frozen=True)
@@ -141,6 +177,32 @@ def run_cim(
     values: Mapping[str, str] | None = None,
     timeout: float = WMI_TIMEOUT,
 ) -> Any:
+    """Reads `host` with `script`, or with its twin over WMI directly when it has one and
+    `protocol` is DCOM (the twin starts no program, so no antivirus has a command line to
+    judge). PowerShell is the way when WMI can't be used from this PC at all, and for WinRM.
+    Raises RemoteError, TimeoutError, or PowerShellBlocked when PowerShell was needed and
+    Windows wouldn't start it."""
+    from capypanel.core.remote import wmi
+
+    reader = _READERS.get(script)
+    if protocol == "Dcom" and reader is not None and transport != POWERSHELL:
+        try:
+            return wmi.read(reader, host, account, dict(values or {}), timeout)
+        except wmi.Unavailable as e:
+            if transport == DIRECT:
+                raise RemoteError(Reason.OTHER) from e
+            log.warning("WMI can't be used from this PC (%s); reading %s with PowerShell", e, host)
+    return _powershell(script, host, account, protocol, values, timeout)
+
+
+def _powershell(
+    script: str,
+    host: str,
+    account: Account | None,
+    protocol: str,
+    values: Mapping[str, str] | None,
+    timeout: float,
+) -> Any:
     """Runs a PowerShell script that uses `$session`, a CIM session to `host` over `protocol`
     ("Dcom" for WMI, "Wsman" for WinRM), and answers with Send. The host, the account and
     `values` (as `$in.<name>`) go in through standard input, never on the command line, so they
@@ -159,6 +221,9 @@ def run_cim(
         )
     except subprocess.TimeoutExpired as e:
         raise TimeoutError(f"WMI didn't answer within {timeout:.0f} s") from e
+    except OSError as e:  # the program itself wasn't let start: never the other PC's doing
+        log.warning("PowerShell couldn't start on this PC to read %s: %s", host, e)
+        raise PowerShellBlocked(e) from e
     try:
         answer = json.loads(base64.b64decode(done.stdout).decode("utf-8"))
     except ValueError as e:
@@ -248,6 +313,53 @@ try {
 } catch { Send @{error = [int64]$_.Exception.HResult}; exit 1 }
 finally { Remove-CimSession $session }
 """
+
+
+# ---- the same reads over WMI directly ----
+
+_VERSION_KEY = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+
+
+@reads(_FACTS)
+def _facts_direct(wmi: Any, _values: Mapping[str, str]) -> dict[str, Any]:
+    from capypanel.core.remote.wmi import HKLM
+
+    system = wmi.first("SELECT Manufacturer, Model, TotalPhysicalMemory FROM Win32_ComputerSystem")
+    bios = wmi.first("SELECT SerialNumber, SMBIOSBIOSVersion FROM Win32_BIOS")
+    os = wmi.first("SELECT Caption, BuildNumber FROM Win32_OperatingSystem")
+    return {
+        "caption": os.Caption, "release": wmi.string(HKLM, _VERSION_KEY, "DisplayVersion"),
+        "build": os.BuildNumber, "patch": wmi.dword(HKLM, _VERSION_KEY, "UBR"),
+        "maker": system.Manufacturer, "model": system.Model,
+        "memory": system.TotalPhysicalMemory,
+        "serial": bios.SerialNumber, "bios": bios.SMBIOSBIOSVersion,
+    }  # fmt: skip
+
+
+@reads(_PROGRAMS)
+def _programs_direct(wmi: Any, _values: Mapping[str, str]) -> list[dict[str, Any]]:
+    from capypanel.core.remote.wmi import HKLM
+
+    found = []
+    for root in (
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+        r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
+    ):
+        for sub in wmi.subkeys(HKLM, root):
+            key = f"{root}\\{sub}"
+            names = wmi.value_names(HKLM, key)[1]
+            if "DisplayName" not in names or "ParentKeyName" in names:
+                continue
+            if "SystemComponent" in names and wmi.dword(HKLM, key, "SystemComponent") == 1:
+                continue
+            entry = {
+                name: wmi.string(HKLM, key, name)
+                for name in ("DisplayName", "DisplayVersion", "Publisher", "InstallDate")
+                if name in names
+            }
+            if entry.get("DisplayName"):
+                found.append(entry)
+    return found
 
 
 _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)

@@ -26,6 +26,7 @@ from capypanel.core.hosts import commands as host_commands
 from capypanel.core.hosts.model import Host
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.access import Reason, RemoteError
+from capypanel.core.remote.inventory import PowerShellBlocked
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_texts
@@ -489,6 +490,9 @@ def facts_error_text(error: BaseException) -> str:
         }[error.reason]
     if isinstance(error, TimeoutError):
         return _("Couldn't read: it took too long to answer")
+    if isinstance(error, PowerShellBlocked):
+        return _("Couldn't read: Windows didn't let PowerShell start on this PC (an antivirus "
+                 "may block it)")  # fmt: skip
     return _("Couldn't read: {error}").format(error=error)
 
 
