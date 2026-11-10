@@ -22,6 +22,7 @@ from capypanel.core.remote.user_profiles import (
     State,
     Why,
 )
+from capypanel.ui import checks
 from capypanel.ui.icons import STATUS_COLORS
 
 MB, GB = 1024**2, 1024**3
@@ -152,7 +153,7 @@ def date_text(when: datetime | None) -> str:
     """A day as the table shows it, in this PC's time: 10/11/2026 (11/10/2026 in English)."""
     if when is None:
         return ""
-    local = when.astimezone()
+    local = checks.local(when)
     language = i18n.language()
     pattern = "MM/dd/yyyy" if language.startswith("en") else "dd/MM/yyyy"
     return QLocale(language).toString(QDate(local.year, local.month, local.day), pattern)

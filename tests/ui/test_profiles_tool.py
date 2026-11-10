@@ -1226,3 +1226,12 @@ def test_a_powershell_blocked_on_this_pc_is_named_as_such(window: CapyWindow, pc
 
     stopped = reason_text(RunError(Problem.BLOCKED), "DESK-03")
     assert stopped.endswith("Security software on DESK-03 may have stopped it.")  # names the host
+
+
+def test_a_date_windows_cant_show_in_local_time_never_breaks_a_view() -> None:
+    from capypanel.ui import checks
+
+    ancient = datetime(1601, 1, 1, tzinfo=UTC)  # what a zeroed registry time reads as
+    assert checks.local(ancient) == ancient  # left as it is, no crash
+    assert rows.date_text(ancient) in ("01/01/1601",)
+    assert rows.date_text(datetime(2025, 3, 11, 12, tzinfo=UTC)) == "03/11/2025"

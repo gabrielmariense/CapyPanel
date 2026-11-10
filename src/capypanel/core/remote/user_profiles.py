@@ -298,8 +298,27 @@ def _filetime(high: object, low: object) -> datetime | None:
         return None
     ticks = (high << 32) | low  # 100 ns steps since 1601
     try:
-        return datetime(1601, 1, 1, tzinfo=UTC) + timedelta(microseconds=ticks // 10)
+        return _plausible(datetime(1601, 1, 1, tzinfo=UTC) + timedelta(microseconds=ticks // 10))
     except OverflowError:
+        return None
+
+
+_EARLIEST = datetime(1980, 1, 1, tzinfo=UTC)  # before any Windows that keeps profiles
+
+
+def _plausible(when: datetime) -> datetime | None:
+    """`when`, or None for a time no profile can have: a half-written registry value reads as
+    1601 or the far future, and Windows can't show a date before 1970 in local time."""
+    if when < _EARLIEST or when > datetime.now(UTC) + timedelta(days=2):
+        return None
+    return when
+
+
+def _modified(seconds: float) -> datetime | None:
+    """A folder's last change, from its file times; None when they make no sense."""
+    try:
+        return _plausible(datetime.fromtimestamp(seconds, UTC))
+    except (OverflowError, OSError, ValueError):
         return None
 
 
@@ -331,7 +350,7 @@ def _look(opened: Opened, path: str) -> _Folder | None:
         return _Folder(None, link=True)
     if not (stat.S_ISDIR(found.st_mode) or _is_link(found)):
         return None
-    return _Folder(datetime.fromtimestamp(found.st_mtime, UTC), _is_link(found))
+    return _Folder(_modified(found.st_mtime), _is_link(found))
 
 
 def _is_link(found: os.stat_result) -> bool:
@@ -348,7 +367,7 @@ def _children(folder: str) -> Iterator[tuple[str, _Folder]]:
             if entry.is_dir(follow_symlinks=False) or _is_link(found):
                 yield (
                     entry.name,
-                    _Folder(datetime.fromtimestamp(found.st_mtime, UTC), _is_link(found)),
+                    _Folder(_modified(found.st_mtime), _is_link(found)),
                 )
 
 

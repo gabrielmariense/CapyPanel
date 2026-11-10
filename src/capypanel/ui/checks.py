@@ -205,6 +205,15 @@ def date_text(day: date) -> str:
     return QLocale(language).toString(QDate(day.year, day.month, day.day), pattern)
 
 
+def local(when: datetime) -> datetime:
+    """`when` in this PC's time zone. Windows can't convert a time before 1970 (or past 3000),
+    and dates read from other PCs can be anything: those stay as they are."""
+    try:
+        return when.astimezone()
+    except (OSError, OverflowError, ValueError):
+        return when
+
+
 def clock_text(when: datetime) -> str:
     """Just the time for today ("10:41"); the date too for an older result."""
     moment = QDateTime.fromSecsSinceEpoch(int(when.timestamp()), QTimeZone.systemTimeZone())

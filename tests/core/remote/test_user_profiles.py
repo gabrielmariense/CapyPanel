@@ -11,7 +11,7 @@ import secrets
 import shutil
 import subprocess
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -558,3 +558,24 @@ def test_a_folder_count_says_how_far_it_is_after_each_folder(tmp_path: Path) -> 
     heard: list[int] = []
     assert user_profiles.folder_size(str(tmp_path), progress=heard.append) == 15
     assert heard == [5, 15]  # the folder itself, then the one inside it
+
+
+def test_a_time_no_profile_can_have_is_unknown_not_a_date(tmp_path: Path) -> None:
+    """A half-written registry value reads as 1601 or the far future, and a date before 1970
+    can't even be shown in local time on Windows: both read as unknown ("—")."""
+    opened = _pc(tmp_path, "ana", "rui", "eva")
+    old = {"load_high": 0, "load_low": 5}  # a few ticks after 1601
+    future = _stamp("load", datetime.now(UTC) + timedelta(days=400))
+    good = _stamp("load", datetime(2025, 3, 11, tzinfo=UTC))
+    found = _combine(
+        _facts([
+            _key(f"{DOMAIN}-1101", "ana", **old),
+            _key(f"{DOMAIN}-1102", "rui", **future),
+            _key(f"{DOMAIN}-1103", "eva", **good),
+        ]),
+        opened,
+    )  # fmt: skip
+    assert found["ana"].last_used is None and found["rui"].last_used is None
+    assert found["eva"].last_used == datetime(2025, 3, 11, tzinfo=UTC)
+    assert user_profiles._modified(-86_400 * 365 * 400) is None  # a folder time before 1980
+    assert user_profiles._modified(1_700_000_000) is not None

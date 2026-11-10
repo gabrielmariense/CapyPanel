@@ -433,7 +433,7 @@ def _folder_user(details: HostDetails) -> str:
 def restart_text(when: datetime | None) -> str | None:
     if when is None:
         return None
-    local = when.astimezone()
+    local = check_texts.local(when)
     if local.date() == datetime.now().astimezone().date():
         return _("Today {time}").format(time=check_texts.clock_text(when))
     return check_texts.when_text(when)
