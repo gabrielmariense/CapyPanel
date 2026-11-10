@@ -43,8 +43,8 @@ def test_the_window_opens_on_home_with_a_tile_per_tool(home: CapyWindow) -> None
     assert not any(t.status_label.isVisible() for t in home.tools.values())
     assert home.windowTitle().startswith("CapyPanel ")
     tiles = home.home.tiles
-    assert [t.tool.tool_id for t in tiles] == ["hosts", "printers"]
-    assert [t.keys.text() for t in tiles] == ["Ctrl+1", "Ctrl+2"]
+    assert [t.tool.tool_id for t in tiles] == ["hosts", "printers", "profiles"]
+    assert [t.keys.text() for t in tiles] == ["Ctrl+1", "Ctrl+2", "Ctrl+3"]
     assert tiles[0].name.text() == "Hosts"
     assert tiles[0].y() == tiles[1].y()  # side by side while they fit
     QTest.mouseClick(tiles[1], Qt.MouseButton.LeftButton, pos=QPoint(20, 20))
@@ -93,7 +93,7 @@ def test_settings_general_sets_open_on_startup(home: CapyWindow) -> None:
     assert dialog.current_page() == "general"  # Settings opens on it
     page = dialog.general
     choices = [page.start.itemText(i) for i in range(page.start.count())]
-    assert choices == ["Home page", "The last used tool", "Hosts", "Printers"]
+    assert choices == ["Home page", "The last used tool", "Hosts", "Printers", "User profiles"]
     page.start.setCurrentIndex(3)
     assert settings.load_settings(home.paths.settings_file)["start"] == "printers"
 
@@ -106,7 +106,7 @@ def test_the_catalog_matches_the_tools_and_the_start_up_imports_none() -> None:
     code = (
         "import sys; import capypanel.ui.app; "
         "loaded = [m for m in sys.modules if m.startswith(('capypanel.ui.hosts_tool', "
-        "'capypanel.ui.printers_tool'))]; print(loaded)"
+        "'capypanel.ui.printers_tool', 'capypanel.ui.profiles_tool'))]; print(loaded)"
     )
     found = subprocess.run(
         [sys.executable, "-c", code], capture_output=True, text=True, check=True

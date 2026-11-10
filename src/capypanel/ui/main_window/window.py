@@ -204,6 +204,9 @@ class MainWindow(QMainWindow):
     def kept_logins(self) -> list[KeptLogin]:
         return [login for tool in self.tools.values() for login in tool.kept_logins()]
 
+    def tool(self, tool_id: str) -> Tool | None:
+        return self.tools.get(tool_id)
+
     def open_saved_credentials(self, parent: QWidget | None = None) -> None:
         run_modal(SavedCredentialsDialog(parent or self, self.kept_logins))
         if isinstance(parent, SettingsDialog):  # its pages show what's kept

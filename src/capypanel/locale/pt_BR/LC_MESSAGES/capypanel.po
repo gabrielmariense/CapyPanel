@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 07:32-0300\n"
+"POT-Creation-Date: 2026-11-10 07:58-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -409,6 +409,9 @@ msgstr "&Ferramenta:"
 msgid "&User name"
 msgstr "&Usuário"
 
+msgid "&User profiles"
+msgstr "&Perfis de usuário"
+
 msgid "&User:"
 msgstr "&Usuário:"
 
@@ -424,11 +427,23 @@ msgstr "&Sim: pergunta antes de cada execução"
 msgid "(password only)"
 msgstr "(só senha)"
 
+msgid ".bak registry entry"
+msgstr "Registro .bak"
+
+msgid "1 year"
+msgstr "1 ano"
+
 #, python-brace-format
 msgid "<b>{n} printer</b> needs attention: {reasons}."
 msgid_plural "<b>{n} printers</b> need attention: {reasons}."
 msgstr[0] "<b>{n} impressora</b> requer atenção: {reasons}."
 msgstr[1] "<b>{n} impressoras</b> requerem atenção: {reasons}."
+
+msgid "A .bak entry: a profile that failed to load. CapyPanel never deletes these; the fix is by hand, in the registry."
+msgstr "Um registro .bak: um perfil que falhou ao carregar. O CapyPanel nunca exclui estes; o conserto é manual, no registro."
+
+msgid "A PC's Windows profiles: see which can be deleted."
+msgstr "Os perfis de um PC: veja quais podem ser excluídos."
 
 msgid "A PC's own account wins over its group's, a group's over a tag's, and those over Every PC. PCs none of them names use your Windows account."
 msgstr "A conta do próprio PC vale mais que a do grupo, a do grupo mais que a da tag, e essas mais que Todos os PCs. PCs que nenhuma delas nomeia usam a sua conta do Windows."
@@ -480,6 +495,9 @@ msgstr "Já existe uma predefinição chamada “{name}”. Substituí-la?"
 
 msgid "A quote in the arguments isn't closed."
 msgstr "Uma aspa nos argumentos não foi fechada."
+
+msgid "A registry entry with .bak in its name, and its folder."
+msgstr "Um registro com .bak no nome e a pasta dele."
 
 #, python-brace-format
 msgid "A shared folder as \\\\server\\share. It runs as {user}, so the drive is theirs; if the letter is taken, Windows says so."
@@ -607,6 +625,9 @@ msgstr "Também suprimento baixo"
 msgid "An item is missing the “{key}” field or has an invalid value for it."
 msgstr "Um item não contém o campo “{key}” ou tem um valor inválido nesse campo."
 
+msgid "Another PC"
+msgstr "Outro PC"
+
 #, python-brace-format
 msgid "Answered a ping at {address}."
 msgstr "Respondeu a um ping em {address}."
@@ -620,6 +641,9 @@ msgstr "Qualquer pasta do PC, como D:\\Logs."
 
 msgid "Any name you like, then the computer's network name or IP address. Separate them with a comma, or copy two columns from Excel."
 msgstr "Um nome à sua escolha, depois o nome do computador na rede ou o endereço IP. Separe com vírgula, ou copie duas colunas do Excel."
+
+msgid "Any time"
+msgstr "Qualquer data"
 
 msgid "Appearance"
 msgstr "Aparência"
@@ -682,6 +706,9 @@ msgstr "Espaço reservado malformado em “{arg}”."
 msgid "Build:"
 msgstr "Build:"
 
+msgid "By the last sign-in or sign-out Windows wrote down; a row that has none goes by its folder's date"
+msgstr "Pela última entrada ou saída que o Windows anotou; uma linha que não tem nenhuma vale pela data da pasta"
+
 msgid "C$ share"
 msgstr "Compartilhamento C$"
 
@@ -699,6 +726,9 @@ msgstr "Arquivos CSV (*.csv)"
 
 msgid "CSV with headers"
 msgstr "CSV com cabeçalho"
+
+msgid "Calculate sizes"
+msgstr "Calcular tamanhos"
 
 msgid "Called as: script <host> <arguments>. Quotes keep spaces together."
 msgstr "Chamado como: script <host> <argumentos>. Aspas mantêm os espaços juntos."
@@ -803,6 +833,9 @@ msgstr "Verifica todos os arquivos do Windows e repara os danificados (DISM e sf
 
 msgid "Checks these hosts again now"
 msgstr "Verifica estes hosts de novo agora"
+
+msgid "Choose a PC"
+msgstr "Escolha um PC"
 
 #, python-brace-format
 msgid "Choose a {tool} settings file"
@@ -1031,6 +1064,10 @@ msgid "Couldn't read the printer's answer at {when}."
 msgstr "Não foi possível ler a resposta da impressora às {when}."
 
 #, python-brace-format
+msgid "Couldn't read {host}'s profiles"
+msgstr "Não deu para ler os perfis de {host}"
+
+#, python-brace-format
 msgid "Couldn't read {host}: {reason}"
 msgstr "Não foi possível ler {host}: {reason}"
 
@@ -1114,6 +1151,9 @@ msgstr "Não foi possível {action} em {host}: uma reinicialização ou desligam
 #, python-brace-format
 msgid "Couldn't {action} on {host}: {reason}"
 msgstr "Não foi possível {action} em {host}: {reason}"
+
+msgid "Count the size of each profile shown; it only reads, and can take minutes"
+msgstr "Conta o tamanho de cada perfil exibido; só lê, e pode levar minutos"
 
 msgid "Created by:"
 msgstr "Criado por:"
@@ -1356,6 +1396,9 @@ msgstr "Todos os comandos"
 msgid "Every computer you look after, in one window."
 msgstr "Todos os computadores sob seus cuidados, em uma só janela."
 
+msgid "Every folder shown is already counted."
+msgstr "Todas as pastas exibidas já foram contadas."
+
 msgid "Every login CapyPanel keeps for you. Passwords never show here."
 msgstr "Todos os logins que o CapyPanel guarda para você. As senhas nunca aparecem aqui."
 
@@ -1404,6 +1447,12 @@ msgstr "Firmware"
 msgid "Folder"
 msgstr "Pasta"
 
+msgid "Folder changed"
+msgstr "Pasta alterada"
+
+msgid "Folder, no registry entry"
+msgstr "Pasta sem registro"
+
 msgid "Folders"
 msgstr "Pastas"
 
@@ -1416,6 +1465,9 @@ msgstr "Seguir as Contas: {user}"
 
 msgid "For Import"
 msgstr "Para importar"
+
+msgid "For a PC that isn't in the list, type its name or address in \"Another PC\"."
+msgstr "Para um PC fora da lista, digite o nome ou endereço em \"Outro PC\"."
 
 msgid "For a script that's already on each PC, in the same place: CapyPanel runs that PC's own copy. A .ps1, .bat, .cmd or .vbs file, by its full path on the PC; %ProgramData% and the like work too."
 msgstr "Para um script que já está em cada PC, no mesmo lugar: o CapyPanel executa a cópia daquele PC. Um arquivo .ps1, .bat, .cmd ou .vbs, pelo caminho completo no PC; %ProgramData% e afins também funcionam."
@@ -1515,6 +1567,9 @@ msgstr "Grupos"
 msgid "Groups and tags are the open list's."
 msgstr "Os grupos e as tags são os da lista aberta."
 
+msgid "Hide Windows' own"
+msgstr "Ocultar os do Windows"
+
 msgid "Hom&e"
 msgstr "I&nício"
 
@@ -1590,6 +1645,9 @@ msgstr "Importar hosts"
 msgid "In the open list it's set on {hosts} and {groups}. They'll use their group's profile, or the default, instead."
 msgstr "Na lista aberta ele está definido em {hosts} e {groups}. Eles passarão a usar o perfil do grupo, ou o padrão."
 
+msgid "In use"
+msgstr "Em uso"
+
 #, python-brace-format
 msgid "In {n} minute"
 msgid_plural "In {n} minutes"
@@ -1621,6 +1679,9 @@ msgstr "Inventário"
 msgid "Is it risky?"
 msgstr "É arriscado?"
 
+msgid "It can be deleted: nobody is signed in to it, it isn't one of Windows' own, and it's in the Users folder."
+msgstr "Pode ser excluído: ninguém está conectado com ele, não é do Windows e fica na pasta Users."
+
 msgid "It changed since it was approved. Read it again before approving."
 msgstr "Ele mudou desde que foi aprovado. Leia de novo antes de aprovar."
 
@@ -1645,6 +1706,13 @@ msgstr "Tem mais de {n} KB, grande demais para um script."
 
 msgid "It's handed to the viewer privately, never on its command line."
 msgstr "Ela é entregue ao visualizador de forma privada, nunca na linha de comando."
+
+msgid "It's one of Windows' own. It's never deleted here."
+msgstr "É do próprio Windows. Nunca é excluído aqui."
+
+#, python-brace-format
+msgid "It's outside the Users folder. CapyPanel only deletes profiles inside {folder}."
+msgstr "Fica fora da pasta Users. O CapyPanel só exclui perfis dentro de {folder}."
 
 msgid "It's passed to the viewer on its command line, which administrators of this PC can see."
 msgstr "Ela é passada ao visualizador na linha de comando, que os administradores deste PC podem ver."
@@ -1679,11 +1747,17 @@ msgstr "Guardada em"
 msgid "Kept: type to change it"
 msgstr "Guardada: digite para alterá-la"
 
+msgid "Kind"
+msgstr "Tipo"
+
 msgid "Last check"
 msgstr "Última verificação"
 
 msgid "Last restart"
 msgstr "Última reinicialização"
+
+msgid "Last used"
+msgstr "Último uso"
 
 msgid "License"
 msgstr "Licença"
@@ -1842,6 +1916,12 @@ msgstr "Nome do novo grupo dentro de “{group}”:"
 msgid "Name of the new group:"
 msgstr "Nome do novo grupo:"
 
+msgid "Name or address"
+msgstr "Nome ou endereço"
+
+msgid "Narrows the PCs to those with this name or address"
+msgstr "Mostra só os PCs com este nome ou endereço"
+
 msgid "Needs attention"
 msgstr "Requer atenção"
 
@@ -1880,6 +1960,9 @@ msgstr "Nova tag"
 
 msgid "No Doc360 MPS account is set."
 msgstr "Nenhuma conta do Doc360 MPS definida."
+
+msgid "No PC scanned"
+msgstr "Nenhum PC escaneado"
 
 msgid "No access: needs an admin account on this PC"
 msgstr "Sem acesso: precisa de uma conta de administrador neste PC"
@@ -2012,6 +2095,9 @@ msgstr "Desconectada"
 msgid "Not connected, this session only"
 msgstr "Desconectada, só nesta sessão"
 
+msgid "Not counted"
+msgstr "Não contado"
+
 msgid "Not mapped now"
 msgstr "Não mapeada agora"
 
@@ -2052,6 +2138,9 @@ msgstr "Nada limpo de {user} em {host}."
 #, python-brace-format
 msgid "Nothing to clear for {user} on {host}: those apps keep no cache there."
 msgstr "Nada para limpar de {user} em {host}: esses apps não guardam cache lá."
+
+msgid "Nothing was read."
+msgstr "Nada foi lido."
 
 #, python-brace-format
 msgid "Nothing was waiting to restart or shut down {host}."
@@ -2100,6 +2189,9 @@ msgstr "Só para você e os administradores: suas configurações e suas listas 
 msgid "Only hosts with all of: {tags} · {shown} of {total} shown"
 msgstr "Só hosts com todas estas tags: {tags} · {shown} de {total} exibidos"
 
+msgid "Only leftovers"
+msgstr "Só sobras"
+
 msgid "Only me (personal)"
 msgstr "Só eu (pessoal)"
 
@@ -2109,6 +2201,9 @@ msgstr "Só ping e portas, nunca usuários logados, então nenhuma conta é usad
 #, python-brace-format
 msgid "Only printers with all of: {tags} · {shown} of {total} shown"
 msgstr "Só impressoras com todas estas tags: {tags} · {shown} de {total} exibidas"
+
+msgid "Only registry entries without a folder and folders without a registry entry"
+msgstr "Só registros sem pasta e pastas sem registro"
 
 #, python-brace-format
 msgid "Only the first {n} open at once."
@@ -2222,6 +2317,9 @@ msgstr "Opcional: pedida na primeira vez que precisar"
 msgid "Options:"
 msgstr "Opções:"
 
+msgid "Or double-click a PC in the list."
+msgstr "Ou dois cliques num PC da lista."
+
 msgid "Or give just a name and an address on each line."
 msgstr "Ou coloque só um nome e um endereço em cada linha."
 
@@ -2248,6 +2346,9 @@ msgstr "Bandeja de saída ausente"
 
 msgid "Output tray nearly full"
 msgstr "Bandeja de saída quase cheia"
+
+msgid "Outside Users"
+msgstr "Fora de Users"
 
 msgid "P&ort:"
 msgstr "P&orta:"
@@ -2316,6 +2417,9 @@ msgstr "Pessoa"
 msgid "Personal"
 msgstr "Pessoal"
 
+msgid "Pick a PC in the list and click Scan, or double-click it."
+msgstr "Marque um PC da lista e clique em Escanear, ou dê dois cliques nele."
+
 #, python-brace-format
 msgid "Picked tags: {tags}"
 msgstr "Tags escolhidas: {tags}"
@@ -2377,8 +2481,14 @@ msgstr "Os perfis que você alterou ou criou continuam como estão."
 msgid "Programs (*.exe)"
 msgstr "Programas (*.exe)"
 
+msgid "Protected"
+msgstr "Protegido"
+
 msgid "PsExec runs scripts on a PC only when WinRM and WMI can't reach it."
 msgstr "O PsExec só roda scripts num PC quando o WinRM e o WMI não conseguem acessá-lo."
+
+msgid "Public, Default, the built-in Administrator and the like: never deleted here"
+msgstr "Public, Default, o Administrador interno e parecidos: nunca são excluídos aqui"
 
 msgid "Publisher"
 msgstr "Fabricante"
@@ -2416,6 +2526,9 @@ msgstr "Ler licença"
 msgid "Read the status and supplies of every printer shown (F5)"
 msgstr "Lê o status e os suprimentos de todas as impressoras exibidas (F5)"
 
+msgid "Read this PC's profiles again"
+msgstr "Lê os perfis deste PC de novo"
+
 msgid "Read-only"
 msgstr "Somente leitura"
 
@@ -2424,6 +2537,10 @@ msgstr "Leitura/gravação"
 
 msgid "Reading the folder…"
 msgstr "Lendo a pasta…"
+
+#, python-brace-format
+msgid "Reading {host}'s profiles…"
+msgstr "Lendo os perfis de {host}…"
 
 #, python-brace-format
 msgid "Reading {host}…"
@@ -2441,6 +2558,10 @@ msgstr "Lê estas impressoras de novo agora"
 
 msgid "Ready"
 msgstr "Pronta"
+
+msgctxt "profile"
+msgid "Ready"
+msgstr "Pronto"
 
 msgid "Recent"
 msgstr "Recentes"
@@ -2484,6 +2605,9 @@ msgstr "Recusada"
 #, python-brace-format
 msgid "Refused at {when}: {why}"
 msgstr "Recusada às {when}: {why}"
+
+msgid "Registry entry, no folder"
+msgstr "Registro sem pasta"
 
 msgid "Reload the list"
 msgstr "Recarregar a lista"
@@ -2631,6 +2755,9 @@ msgstr "Reiniciar…"
 msgid "Restore built-in profiles"
 msgstr "Restaurar os perfis que vêm com o app"
 
+msgid "Review"
+msgstr "Verificar"
+
 #, python-brace-format
 msgid "Review {name}"
 msgstr "Revisar {name}"
@@ -2666,6 +2793,9 @@ msgstr "Executa sem perguntar."
 #, python-brace-format
 msgid "Runs {path} on the PC."
 msgstr "Executa {path} no PC."
+
+msgid "SID"
+msgstr "SID"
 
 msgid "SNMP"
 msgstr "SNMP"
@@ -2733,6 +2863,22 @@ msgstr "Credenciais salvas"
 msgid "Saved in Credential Manager:"
 msgstr "Salvos no Gerenciador de Credenciais:"
 
+msgid "Scan"
+msgstr "Escanear"
+
+msgid "Scan a PC to see its profiles."
+msgstr "Escaneie um PC para ver os perfis dele."
+
+msgid "Scan again"
+msgstr "Escanear de novo"
+
+#, python-brace-format
+msgid "Scan {pc}"
+msgstr "Escanear {pc}"
+
+msgid "Scanning only reads. Nothing is deleted before you tick it, ask for it and confirm."
+msgstr "Escanear só lê. Nada é excluído antes de você marcar, pedir e confirmar."
+
 msgid "Scripts"
 msgstr "Scripts"
 
@@ -2744,6 +2890,9 @@ msgstr "Scripts (*.ps1 *.bat *.cmd *.vbs)"
 
 msgid "Search"
 msgstr "Pesquisa"
+
+msgid "Search PCs"
+msgstr "Pesquisar PCs"
 
 msgid "Search programs"
 msgstr "Pesquisar programas"
@@ -2772,6 +2921,9 @@ msgstr "Selecione um host para ver os detalhes."
 
 msgid "Select a printer to see its details."
 msgstr "Selecione uma impressora para ver os detalhes."
+
+msgid "Select a profile to see its details."
+msgstr "Selecione um perfil para ver os detalhes dele."
 
 msgid "Selected hosts"
 msgstr "Hosts selecionados"
@@ -2905,6 +3057,16 @@ msgstr "Entra como {user}"
 msgid "Signs in with"
 msgstr "Entra com"
 
+msgid "Size"
+msgstr "Tamanho"
+
+msgid "Sizes counted."
+msgstr "Tamanhos contados."
+
+#, python-brace-format
+msgid "Sizes counted; {n} couldn't be read."
+msgstr "Tamanhos contados; {n} não puderam ser lidos."
+
 msgid "Software"
 msgstr "Software"
 
@@ -2957,6 +3119,12 @@ msgstr "Status, usuários conectados e dados do PC, um depois do outro."
 
 msgid "Stop"
 msgstr "Parar"
+
+msgid "Stop at once; sizes already counted stay"
+msgstr "Para na hora; os tamanhos já contados ficam"
+
+msgid "Stop counting"
+msgstr "Parar a contagem"
 
 msgid "Stopped"
 msgstr "Parada"
@@ -3056,6 +3224,12 @@ msgstr "Esse perfil não existe."
 msgid "That's a share, not a place on the PC. A script on a share can go in the scripts folder itself instead."
 msgstr "Isso é um compartilhamento, não um lugar no PC. Um script em um compartilhamento pode ir direto na pasta de scripts."
 
+msgid "The PC answered, but reading took too long and was stopped."
+msgstr "O PC respondeu, mas a leitura demorou demais e foi interrompida."
+
+msgid "The PC answered, but this account isn't an administrator on it, or its password changed."
+msgstr "O PC respondeu, mas esta conta não é administradora nele, ou a senha mudou."
+
 msgid "The PC's C: drive in File Explorer."
 msgstr "A unidade C: do PC no Explorador de Arquivos."
 
@@ -3125,6 +3299,12 @@ msgstr "O arquivo é grande demais para ser de configurações do visualizador."
 
 msgid "The first line names the columns, in any order. Subgroups are separated by /, tags by ;. Exported lists use this format."
 msgstr "A primeira linha dá nome às colunas, em qualquer ordem, em português ou inglês. Subgrupos são separados por /, tags por ;. Listas exportadas usam este formato."
+
+msgid "The folder and the registry entry, as Windows lists it."
+msgstr "A pasta e o registro, como o Windows lista."
+
+msgid "The folder exists, but no registry entry points to it. Deleting removes the folder."
+msgstr "A pasta existe, mas nenhum registro aponta para ela. Excluir remove a pasta."
 
 #, python-brace-format
 msgid "The folder “{folder}” was created by another user, so CapyPanel won't use it. Ask an administrator to delete it; it will be created again."
@@ -3230,6 +3410,9 @@ msgstr "O usuário SNMP v3 somente leitura que suas impressoras conhecem. As sen
 msgid "The read-only community string your printers answer to. Most use \"public\". It's kept in Windows Credential Manager."
 msgstr "A comunidade somente leitura à qual suas impressoras respondem. A maioria usa \"public\". Ela fica guardada no Gerenciador de Credenciais do Windows."
 
+msgid "The registry entry exists, but its folder is gone. Deleting removes only the leftover in the registry."
+msgstr "O registro existe, mas a pasta sumiu. Excluir remove só a sobra no registro."
+
 #, python-brace-format
 msgid "The restart or shutdown of {host} is cancelled."
 msgstr "A reinicialização ou o desligamento de {host} foi cancelado."
@@ -3272,6 +3455,10 @@ msgstr "Cor do tema"
 
 msgid "There are no connection profiles. Create one in Settings › Hosts › Connecting."
 msgstr "Não há perfis de conexão. Crie um em Configurações › Hosts › Conexão."
+
+#, python-brace-format
+msgid "There was no answer at {address}. The PC may be off or not on the network."
+msgstr "Não houve resposta em {address}. O PC pode estar desligado ou fora da rede."
 
 #, python-brace-format
 msgid "There's a mark at {n} % already."
@@ -3345,6 +3532,12 @@ msgstr "Esta lista precisa de uma linha de cabeçalho."
 msgid "This list was saved by a newer version of CapyPanel. Update the app to open it."
 msgstr "Esta lista foi salva por uma versão mais nova do CapyPanel. Atualize o aplicativo para abri-la."
 
+msgid "This only reads. Nothing on the PC changes."
+msgstr "Isto só lê. Nada muda no PC."
+
+msgid "This person is signed in now. It can only be deleted after they sign out."
+msgstr "Esta pessoa está conectada agora. Só pode ser excluído depois que ela sair."
+
 msgid "This printer doesn't report a level for this supply."
 msgstr "Esta impressora não informa o nível deste suprimento."
 
@@ -3388,6 +3581,9 @@ msgstr "Bandeja vazia"
 msgid "Tray missing"
 msgstr "Bandeja ausente"
 
+msgid "Try again"
+msgstr "Tentar de novo"
+
 msgid "Try another account…"
 msgstr "Tentar outra conta…"
 
@@ -3425,6 +3621,9 @@ msgstr "Sem alteração"
 msgid "Unexpected error"
 msgstr "Erro inesperado"
 
+msgid "Unknown"
+msgstr "Desconhecida"
+
 #, python-brace-format
 msgid "Unknown ({source})"
 msgstr "Desconhecida ({source})"
@@ -3450,6 +3649,9 @@ msgstr "Inacessível"
 
 msgid "Unreadable"
 msgstr "Ilegível"
+
+msgid "Unused for:"
+msgstr "Sem uso há:"
 
 msgid "Update group policy"
 msgstr "Atualizar política de grupo"
@@ -3490,6 +3692,9 @@ msgstr "Usada só para ver quem está logado e nos comandos que você executa em
 
 msgid "User"
 msgstr "Usuário"
+
+msgid "User profiles"
+msgstr "Perfis de usuário"
 
 msgid "User's folder"
 msgstr "Pasta do usuário"
@@ -3576,6 +3781,9 @@ msgstr "O compartilhamento de arquivos do Windows (porta 445) não respondeu: o 
 msgid "Windows keeps it in Credential Manager for your Windows account. Otherwise CapyPanel forgets it when it closes and asks once the next time."
 msgstr "O Windows a guarda no Gerenciador de Credenciais para a sua conta do Windows. Senão, o CapyPanel a esquece ao fechar e pede uma vez na próxima."
 
+msgid "Windows no longer knows this account; it was probably deleted."
+msgstr "O Windows não reconhece mais esta conta; provavelmente foi apagada."
+
 msgid "Windows shows the message with a countdown. You can cancel until then."
 msgstr "O Windows mostra a mensagem com uma contagem regressiva. Dá para cancelar até lá."
 
@@ -3647,6 +3855,10 @@ msgid_plural "and {n} more"
 msgstr[0] "e mais {n}"
 msgstr[1] "e mais {n}"
 
+#, python-brace-format
+msgid "as {account}"
+msgstr "como {account}"
+
 msgid "asked by the tool"
 msgstr "a própria ferramenta pede"
 
@@ -3685,6 +3897,9 @@ msgstr "limpar a fila de {printer}"
 
 msgid "couldn't be read"
 msgstr "não foi possível ler"
+
+msgid "counting…"
+msgstr "contando…"
 
 #, python-brace-format
 msgid "disconnect {user}"
@@ -3799,6 +4014,10 @@ msgstr "modo portátil"
 msgid "programs"
 msgstr "programas"
 
+#, python-brace-format
+msgid "read at {time}"
+msgstr "lido às {time}"
+
 msgid "read the PC facts"
 msgstr "ler os dados do PC"
 
@@ -3813,6 +4032,9 @@ msgstr "ler as impressoras"
 
 msgid "read-only"
 msgstr "somente leitura"
+
+msgid "reading…"
+msgstr "lendo…"
 
 msgid "restart it"
 msgstr "reiniciá-lo"
@@ -3894,6 +4116,10 @@ msgstr "não existe {path} nesse PC."
 msgid "too big for a script"
 msgstr "grande demais para um script"
 
+#, python-brace-format
+msgid "tried at {time}"
+msgstr "tentativa às {time}"
+
 msgid "user"
 msgstr "usuário"
 
@@ -3963,6 +4189,10 @@ msgid "{host} didn't accept “{user}”. Type the password again, or use anothe
 msgstr "{host} não aceitou “{user}”. Digite a senha de novo, ou use outra conta."
 
 #, python-brace-format
+msgid "{host} didn't answer"
+msgstr "{host} não respondeu"
+
+#, python-brace-format
 msgid "{host} is back online"
 msgstr "{host} está online de novo"
 
@@ -3975,12 +4205,32 @@ msgid "{host} is shutting down."
 msgstr "{host} está desligando."
 
 #, python-brace-format
+msgid "{host} refused the account {account}"
+msgstr "{host} recusou a conta {account}"
+
+#, python-brace-format
 msgid "{host} restarts at {when}."
 msgstr "{host} reinicia às {when}."
 
 #, python-brace-format
 msgid "{host} shuts down at {when}."
 msgstr "{host} desliga às {when}."
+
+#, python-brace-format
+msgid "{host} · account refused"
+msgstr "{host} · conta recusada"
+
+#, python-brace-format
+msgid "{host} · couldn't be read"
+msgstr "{host} · não foi lido"
+
+#, python-brace-format
+msgid "{host} · didn't answer"
+msgstr "{host} · não respondeu"
+
+#, python-brace-format
+msgid "{host} · reading…"
+msgstr "{host} · lendo…"
 
 #, python-brace-format
 msgid "{kind} from {computer}"
@@ -4020,6 +4270,10 @@ msgstr[1] "{names} não aceitam usuário e senha (podem pedir uma senha VNC ou s
 #, python-brace-format
 msgid "{names} got your message."
 msgstr "{names} recebeu a sua mensagem."
+
+#, python-brace-format
+msgid "{name}  (unknown)"
+msgstr "{name}  (desconhecida)"
 
 #, python-brace-format
 msgid "{name} (in use)"
@@ -4064,6 +4318,12 @@ msgstr "{n} GB"
 #, python-brace-format
 msgid "{n} MB"
 msgstr "{n} MB"
+
+#, python-brace-format
+msgid "{n} can be deleted"
+msgid_plural "{n} can be deleted"
+msgstr[0] "{n} pode ser excluído"
+msgstr[1] "{n} podem ser excluídos"
 
 #, python-brace-format
 msgid "{n} can't be added."
@@ -4173,6 +4433,12 @@ msgstr[0] "{n} com suprimento baixo"
 msgstr[1] "{n} com suprimento baixo"
 
 #, python-brace-format
+msgid "{n} month"
+msgid_plural "{n} months"
+msgstr[0] "{n} mês"
+msgstr[1] "{n} meses"
+
+#, python-brace-format
 msgid "{n} not checked"
 msgid_plural "{n} not checked"
 msgstr[0] "{n} não verificado"
@@ -4231,6 +4497,16 @@ msgid "{n} printer shown"
 msgid_plural "{n} printers shown"
 msgstr[0] "{n} impressora exibida"
 msgstr[1] "{n} impressoras exibidas"
+
+#, python-brace-format
+msgid "{n} profile"
+msgid_plural "{n} profiles"
+msgstr[0] "{n} perfil"
+msgstr[1] "{n} perfis"
+
+#, python-brace-format
+msgid "{n} profiles selected"
+msgstr "{n} perfis selecionados"
 
 #, python-brace-format
 msgid "{n} program"
@@ -4292,6 +4568,14 @@ msgstr "{profile} (não disponível neste PC)"
 #, python-brace-format
 msgid "{shown} of {total} programs"
 msgstr "{shown} de {total} programas"
+
+#, python-brace-format
+msgid "{shown} of {total} shown"
+msgstr "{shown} de {total} exibidos"
+
+#, python-brace-format
+msgid "{size} counted"
+msgstr "{size} contados"
 
 #, python-brace-format
 msgid "{source} · fetched {when}"

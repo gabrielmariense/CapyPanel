@@ -256,7 +256,8 @@ def test_menus_hold_only_what_fits_them(window: CapyWindow) -> None:
     assert list(menus) == ["&File", "&View", "&Help"]  # the same for every tool
     assert menus["&File"] == ["&Settings…", "E&xit"]  # lists are in the list dropdown
     assert menus["&View"] == [
-        "Hom&e", "&Hosts", "&Printers", "&Groups pane", "T&ags pane", "&Details pane",
+        "Hom&e", "&Hosts", "&Printers", "&User profiles", "&Groups pane", "T&ags pane",
+        "&Details pane",
         "Show users' do&main",
         "T&oolbar", "&Status bar",
     ]  # fmt: skip

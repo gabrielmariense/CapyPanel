@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 07:32-0300\n"
+"POT-Creation-Date: 2026-11-10 07:58-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -408,6 +408,9 @@ msgstr ""
 msgid "&User name"
 msgstr ""
 
+msgid "&User profiles"
+msgstr ""
+
 msgid "&User:"
 msgstr ""
 
@@ -423,11 +426,25 @@ msgstr ""
 msgid "(password only)"
 msgstr ""
 
+msgid ".bak registry entry"
+msgstr ""
+
+msgid "1 year"
+msgstr ""
+
 #, python-brace-format
 msgid "<b>{n} printer</b> needs attention: {reasons}."
 msgid_plural "<b>{n} printers</b> need attention: {reasons}."
 msgstr[0] ""
 msgstr[1] ""
+
+msgid ""
+"A .bak entry: a profile that failed to load. CapyPanel never deletes "
+"these; the fix is by hand, in the registry."
+msgstr ""
+
+msgid "A PC's Windows profiles: see which can be deleted."
+msgstr ""
 
 msgid ""
 "A PC's own account wins over its group's, a group's over a tag's, and "
@@ -480,6 +497,9 @@ msgid "A preset named “{name}” already exists. Replace it?"
 msgstr ""
 
 msgid "A quote in the arguments isn't closed."
+msgstr ""
+
+msgid "A registry entry with .bak in its name, and its folder."
 msgstr ""
 
 #, python-brace-format
@@ -612,6 +632,9 @@ msgstr ""
 msgid "An item is missing the “{key}” field or has an invalid value for it."
 msgstr ""
 
+msgid "Another PC"
+msgstr ""
+
 #, python-brace-format
 msgid "Answered a ping at {address}."
 msgstr ""
@@ -626,6 +649,9 @@ msgstr ""
 msgid ""
 "Any name you like, then the computer's network name or IP address. "
 "Separate them with a comma, or copy two columns from Excel."
+msgstr ""
+
+msgid "Any time"
 msgstr ""
 
 msgid "Appearance"
@@ -691,6 +717,11 @@ msgstr ""
 msgid "Build:"
 msgstr ""
 
+msgid ""
+"By the last sign-in or sign-out Windows wrote down; a row that has none "
+"goes by its folder's date"
+msgstr ""
+
 msgid "C$ share"
 msgstr ""
 
@@ -707,6 +738,9 @@ msgid "CSV files (*.csv)"
 msgstr ""
 
 msgid "CSV with headers"
+msgstr ""
+
+msgid "Calculate sizes"
 msgstr ""
 
 msgid "Called as: script <host> <arguments>. Quotes keep spaces together."
@@ -817,6 +851,9 @@ msgid ""
 msgstr ""
 
 msgid "Checks these hosts again now"
+msgstr ""
+
+msgid "Choose a PC"
 msgstr ""
 
 #, python-brace-format
@@ -1048,6 +1085,10 @@ msgid "Couldn't read the printer's answer at {when}."
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't read {host}'s profiles"
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't read {host}: {reason}"
 msgstr ""
 
@@ -1133,6 +1174,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't {action} on {host}: {reason}"
+msgstr ""
+
+msgid "Count the size of each profile shown; it only reads, and can take minutes"
 msgstr ""
 
 msgid "Created by:"
@@ -1387,6 +1431,9 @@ msgstr ""
 msgid "Every computer you look after, in one window."
 msgstr ""
 
+msgid "Every folder shown is already counted."
+msgstr ""
+
 msgid "Every login CapyPanel keeps for you. Passwords never show here."
 msgstr ""
 
@@ -1446,6 +1493,12 @@ msgstr ""
 msgid "Folder"
 msgstr ""
 
+msgid "Folder changed"
+msgstr ""
+
+msgid "Folder, no registry entry"
+msgstr ""
+
 msgid "Folders"
 msgstr ""
 
@@ -1457,6 +1510,11 @@ msgid "Follow Accounts: {user}"
 msgstr ""
 
 msgid "For Import"
+msgstr ""
+
+msgid ""
+"For a PC that isn't in the list, type its name or address in \"Another "
+"PC\"."
 msgstr ""
 
 msgid ""
@@ -1564,6 +1622,9 @@ msgstr ""
 msgid "Groups and tags are the open list's."
 msgstr ""
 
+msgid "Hide Windows' own"
+msgstr ""
+
 msgid "Hom&e"
 msgstr ""
 
@@ -1643,6 +1704,9 @@ msgid ""
 "group's profile, or the default, instead."
 msgstr ""
 
+msgid "In use"
+msgstr ""
+
 #, python-brace-format
 msgid "In {n} minute"
 msgid_plural "In {n} minutes"
@@ -1674,6 +1738,11 @@ msgstr ""
 msgid "Is it risky?"
 msgstr ""
 
+msgid ""
+"It can be deleted: nobody is signed in to it, it isn't one of Windows' "
+"own, and it's in the Users folder."
+msgstr ""
+
 msgid "It changed since it was approved. Read it again before approving."
 msgstr ""
 
@@ -1699,6 +1768,15 @@ msgid "It's bigger than {n} KB, too big for a script."
 msgstr ""
 
 msgid "It's handed to the viewer privately, never on its command line."
+msgstr ""
+
+msgid "It's one of Windows' own. It's never deleted here."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"It's outside the Users folder. CapyPanel only deletes profiles inside "
+"{folder}."
 msgstr ""
 
 msgid ""
@@ -1739,10 +1817,16 @@ msgstr ""
 msgid "Kept: type to change it"
 msgstr ""
 
+msgid "Kind"
+msgstr ""
+
 msgid "Last check"
 msgstr ""
 
 msgid "Last restart"
+msgstr ""
+
+msgid "Last used"
 msgstr ""
 
 msgid "License"
@@ -1911,6 +1995,12 @@ msgstr ""
 msgid "Name of the new group:"
 msgstr ""
 
+msgid "Name or address"
+msgstr ""
+
+msgid "Narrows the PCs to those with this name or address"
+msgstr ""
+
 msgid "Needs attention"
 msgstr ""
 
@@ -1948,6 +2038,9 @@ msgid "New tag"
 msgstr ""
 
 msgid "No Doc360 MPS account is set."
+msgstr ""
+
+msgid "No PC scanned"
 msgstr ""
 
 msgid "No access: needs an admin account on this PC"
@@ -2085,6 +2178,9 @@ msgstr ""
 msgid "Not connected, this session only"
 msgstr ""
 
+msgid "Not counted"
+msgstr ""
+
 msgid "Not mapped now"
 msgstr ""
 
@@ -2128,6 +2224,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Nothing to clear for {user} on {host}: those apps keep no cache there."
+msgstr ""
+
+msgid "Nothing was read."
 msgstr ""
 
 #, python-brace-format
@@ -2188,6 +2287,9 @@ msgstr ""
 msgid "Only hosts with all of: {tags} · {shown} of {total} shown"
 msgstr ""
 
+msgid "Only leftovers"
+msgstr ""
+
 msgid "Only me (personal)"
 msgstr ""
 
@@ -2198,6 +2300,11 @@ msgstr ""
 
 #, python-brace-format
 msgid "Only printers with all of: {tags} · {shown} of {total} shown"
+msgstr ""
+
+msgid ""
+"Only registry entries without a folder and folders without a registry "
+"entry"
 msgstr ""
 
 #, python-brace-format
@@ -2317,6 +2424,9 @@ msgstr ""
 msgid "Options:"
 msgstr ""
 
+msgid "Or double-click a PC in the list."
+msgstr ""
+
 msgid "Or give just a name and an address on each line."
 msgstr ""
 
@@ -2342,6 +2452,9 @@ msgid "Output tray missing"
 msgstr ""
 
 msgid "Output tray nearly full"
+msgstr ""
+
+msgid "Outside Users"
 msgstr ""
 
 msgid "P&ort:"
@@ -2413,6 +2526,9 @@ msgstr ""
 msgid "Personal"
 msgstr ""
 
+msgid "Pick a PC in the list and click Scan, or double-click it."
+msgstr ""
+
 #, python-brace-format
 msgid "Picked tags: {tags}"
 msgstr ""
@@ -2474,7 +2590,15 @@ msgstr ""
 msgid "Programs (*.exe)"
 msgstr ""
 
+msgid "Protected"
+msgstr ""
+
 msgid "PsExec runs scripts on a PC only when WinRM and WMI can't reach it."
+msgstr ""
+
+msgid ""
+"Public, Default, the built-in Administrator and the like: never deleted "
+"here"
 msgstr ""
 
 msgid "Publisher"
@@ -2513,6 +2637,9 @@ msgstr ""
 msgid "Read the status and supplies of every printer shown (F5)"
 msgstr ""
 
+msgid "Read this PC's profiles again"
+msgstr ""
+
 msgid "Read-only"
 msgstr ""
 
@@ -2520,6 +2647,10 @@ msgid "Read/write"
 msgstr ""
 
 msgid "Reading the folder…"
+msgstr ""
+
+#, python-brace-format
+msgid "Reading {host}'s profiles…"
 msgstr ""
 
 #, python-brace-format
@@ -2536,6 +2667,10 @@ msgstr ""
 msgid "Reads these printers again now"
 msgstr ""
 
+msgid "Ready"
+msgstr ""
+
+msgctxt "profile"
 msgid "Ready"
 msgstr ""
 
@@ -2584,6 +2719,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Refused at {when}: {why}"
+msgstr ""
+
+msgid "Registry entry, no folder"
 msgstr ""
 
 msgid "Reload the list"
@@ -2732,6 +2870,9 @@ msgstr ""
 msgid "Restore built-in profiles"
 msgstr ""
 
+msgid "Review"
+msgstr ""
+
 #, python-brace-format
 msgid "Review {name}"
 msgstr ""
@@ -2768,6 +2909,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Runs {path} on the PC."
+msgstr ""
+
+msgid "SID"
 msgstr ""
 
 msgid "SNMP"
@@ -2836,6 +2980,24 @@ msgstr ""
 msgid "Saved in Credential Manager:"
 msgstr ""
 
+msgid "Scan"
+msgstr ""
+
+msgid "Scan a PC to see its profiles."
+msgstr ""
+
+msgid "Scan again"
+msgstr ""
+
+#, python-brace-format
+msgid "Scan {pc}"
+msgstr ""
+
+msgid ""
+"Scanning only reads. Nothing is deleted before you tick it, ask for it "
+"and confirm."
+msgstr ""
+
 msgid "Scripts"
 msgstr ""
 
@@ -2846,6 +3008,9 @@ msgid "Scripts (*.ps1 *.bat *.cmd *.vbs)"
 msgstr ""
 
 msgid "Search"
+msgstr ""
+
+msgid "Search PCs"
 msgstr ""
 
 msgid "Search programs"
@@ -2874,6 +3039,9 @@ msgid "Select a host to see its details."
 msgstr ""
 
 msgid "Select a printer to see its details."
+msgstr ""
+
+msgid "Select a profile to see its details."
 msgstr ""
 
 msgid "Selected hosts"
@@ -3012,6 +3180,16 @@ msgstr ""
 msgid "Signs in with"
 msgstr ""
 
+msgid "Size"
+msgstr ""
+
+msgid "Sizes counted."
+msgstr ""
+
+#, python-brace-format
+msgid "Sizes counted; {n} couldn't be read."
+msgstr ""
+
 msgid "Software"
 msgstr ""
 
@@ -3068,6 +3246,12 @@ msgid "Status, logged-on users and PC facts, one after the other."
 msgstr ""
 
 msgid "Stop"
+msgstr ""
+
+msgid "Stop at once; sizes already counted stay"
+msgstr ""
+
+msgid "Stop counting"
 msgstr ""
 
 msgid "Stopped"
@@ -3170,6 +3354,14 @@ msgid ""
 "scripts folder itself instead."
 msgstr ""
 
+msgid "The PC answered, but reading took too long and was stopped."
+msgstr ""
+
+msgid ""
+"The PC answered, but this account isn't an administrator on it, or its "
+"password changed."
+msgstr ""
+
 msgid "The PC's C: drive in File Explorer."
 msgstr ""
 
@@ -3248,6 +3440,14 @@ msgstr ""
 msgid ""
 "The first line names the columns, in any order. Subgroups are separated "
 "by /, tags by ;. Exported lists use this format."
+msgstr ""
+
+msgid "The folder and the registry entry, as Windows lists it."
+msgstr ""
+
+msgid ""
+"The folder exists, but no registry entry points to it. Deleting removes "
+"the folder."
 msgstr ""
 
 #, python-brace-format
@@ -3367,6 +3567,11 @@ msgid ""
 "\"public\". It's kept in Windows Credential Manager."
 msgstr ""
 
+msgid ""
+"The registry entry exists, but its folder is gone. Deleting removes only "
+"the leftover in the registry."
+msgstr ""
+
 #, python-brace-format
 msgid "The restart or shutdown of {host} is cancelled."
 msgstr ""
@@ -3410,6 +3615,10 @@ msgstr ""
 msgid ""
 "There are no connection profiles. Create one in Settings › Hosts › "
 "Connecting."
+msgstr ""
+
+#, python-brace-format
+msgid "There was no answer at {address}. The PC may be off or not on the network."
 msgstr ""
 
 #, python-brace-format
@@ -3495,6 +3704,12 @@ msgid ""
 "open it."
 msgstr ""
 
+msgid "This only reads. Nothing on the PC changes."
+msgstr ""
+
+msgid "This person is signed in now. It can only be deleted after they sign out."
+msgstr ""
+
 msgid "This printer doesn't report a level for this supply."
 msgstr ""
 
@@ -3538,6 +3753,9 @@ msgstr ""
 msgid "Tray missing"
 msgstr ""
 
+msgid "Try again"
+msgstr ""
+
 msgid "Try another account…"
 msgstr ""
 
@@ -3575,6 +3793,9 @@ msgstr ""
 msgid "Unexpected error"
 msgstr ""
 
+msgid "Unknown"
+msgstr ""
+
 #, python-brace-format
 msgid "Unknown ({source})"
 msgstr ""
@@ -3599,6 +3820,9 @@ msgid "Unreachable"
 msgstr ""
 
 msgid "Unreadable"
+msgstr ""
+
+msgid "Unused for:"
 msgstr ""
 
 msgid "Update group policy"
@@ -3645,6 +3869,9 @@ msgid "Used only to read who is logged on and for the commands you run on a host
 msgstr ""
 
 msgid "User"
+msgstr ""
+
+msgid "User profiles"
 msgstr ""
 
 msgid "User's folder"
@@ -3746,6 +3973,9 @@ msgid ""
 "time."
 msgstr ""
 
+msgid "Windows no longer knows this account; it was probably deleted."
+msgstr ""
+
 msgid "Windows shows the message with a countdown. You can cancel until then."
 msgstr ""
 
@@ -3824,6 +4054,10 @@ msgid_plural "and {n} more"
 msgstr[0] ""
 msgstr[1] ""
 
+#, python-brace-format
+msgid "as {account}"
+msgstr ""
+
 msgid "asked by the tool"
 msgstr ""
 
@@ -3861,6 +4095,9 @@ msgid "clear the queue of {printer}"
 msgstr ""
 
 msgid "couldn't be read"
+msgstr ""
+
+msgid "counting…"
 msgstr ""
 
 #, python-brace-format
@@ -3982,6 +4219,10 @@ msgstr ""
 msgid "programs"
 msgstr ""
 
+#, python-brace-format
+msgid "read at {time}"
+msgstr ""
+
 msgid "read the PC facts"
 msgstr ""
 
@@ -3995,6 +4236,9 @@ msgid "read the printers"
 msgstr ""
 
 msgid "read-only"
+msgstr ""
+
+msgid "reading…"
 msgstr ""
 
 msgid "restart it"
@@ -4077,6 +4321,10 @@ msgstr ""
 msgid "too big for a script"
 msgstr ""
 
+#, python-brace-format
+msgid "tried at {time}"
+msgstr ""
+
 msgid "user"
 msgstr ""
 
@@ -4148,6 +4396,10 @@ msgid ""
 msgstr ""
 
 #, python-brace-format
+msgid "{host} didn't answer"
+msgstr ""
+
+#, python-brace-format
 msgid "{host} is back online"
 msgstr ""
 
@@ -4160,11 +4412,31 @@ msgid "{host} is shutting down."
 msgstr ""
 
 #, python-brace-format
+msgid "{host} refused the account {account}"
+msgstr ""
+
+#, python-brace-format
 msgid "{host} restarts at {when}."
 msgstr ""
 
 #, python-brace-format
 msgid "{host} shuts down at {when}."
+msgstr ""
+
+#, python-brace-format
+msgid "{host} · account refused"
+msgstr ""
+
+#, python-brace-format
+msgid "{host} · couldn't be read"
+msgstr ""
+
+#, python-brace-format
+msgid "{host} · didn't answer"
+msgstr ""
+
+#, python-brace-format
+msgid "{host} · reading…"
 msgstr ""
 
 #, python-brace-format
@@ -4213,6 +4485,10 @@ msgid "{names} got your message."
 msgstr ""
 
 #, python-brace-format
+msgid "{name}  (unknown)"
+msgstr ""
+
+#, python-brace-format
 msgid "{name} (in use)"
 msgstr ""
 
@@ -4255,6 +4531,12 @@ msgstr ""
 #, python-brace-format
 msgid "{n} MB"
 msgstr ""
+
+#, python-brace-format
+msgid "{n} can be deleted"
+msgid_plural "{n} can be deleted"
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-brace-format
 msgid "{n} can't be added."
@@ -4372,6 +4654,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} month"
+msgid_plural "{n} months"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} not checked"
 msgid_plural "{n} not checked"
 msgstr[0] ""
@@ -4432,6 +4720,16 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} profile"
+msgid_plural "{n} profiles"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} profiles selected"
+msgstr ""
+
+#, python-brace-format
 msgid "{n} program"
 msgid_plural "{n} programs"
 msgstr[0] ""
@@ -4490,6 +4788,14 @@ msgstr ""
 
 #, python-brace-format
 msgid "{shown} of {total} programs"
+msgstr ""
+
+#, python-brace-format
+msgid "{shown} of {total} shown"
+msgstr ""
+
+#, python-brace-format
+msgid "{size} counted"
 msgstr ""
 
 #, python-brace-format

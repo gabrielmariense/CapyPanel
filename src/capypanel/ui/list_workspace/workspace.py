@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from dataclasses import replace
 from pathlib import Path
 
-from PySide6.QtCore import QByteArray, QPoint, Qt, QTimer
+from PySide6.QtCore import QByteArray, QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QDialog,
@@ -51,6 +51,7 @@ class ListWorkspace(Tool):
     # Panel widths at a normal font size; a bigger font scales them up.
     PANES_DEFAULT = (220, 340)  # Groups, Details
     PANES_MINIMUM = (180, 300, 260)  # Groups, the table, Details
+    list_changed = Signal()  # another list was opened, or the open one's items changed
 
     def __init__(
         self,
@@ -469,6 +470,22 @@ class ListWorkspace(Tool):
         manage = menu.addAction(self.list_texts().manage)
         manage.triggered.connect(lambda: self._shell.open_settings(self.lists_page()))
 
+    def list_choices(self) -> list[tuple[Path, str, bool]]:
+        """Every list the dropdown offers: its file, its name, and whether it's the open one."""
+        lists = self._available_lists()
+        names = locations.list_names(
+            lists, default=self._default_list, personal=self._personal_list
+        )
+        current = self._doc.path if self._doc else None
+        return [
+            (path, name, current is not None and locations.same_path(path, current))
+            for path, name in zip(lists, names, strict=True)
+        ]
+
+    def pick_list(self, path: Path) -> None:
+        """Opens `path` unless it's the open list already, as the dropdown does."""
+        self._pick_list(path)
+
     def _pick_list(self, path: Path) -> None:
         current = self._doc.path if self._doc else None
         if current is None or not locations.same_path(path, current):
@@ -834,6 +851,7 @@ class ListWorkspace(Tool):
         self.nav.groups.set_editable(editable)
         self.table.set_editable(editable)
         self._show_items()
+        self.list_changed.emit()
 
     def _show_items(self) -> None:
         self._search_timer.stop()

@@ -36,6 +36,11 @@ class Shell(Protocol):
 
     def open_saved_credentials(self, parent: QWidget | None = None) -> None: ...
 
+    def tool(self, tool_id: str) -> "Tool | None":
+        """Another tool of the window, for a tool that builds on it (User profiles reads Hosts'
+        lists); None when the window has no such tool."""
+        ...
+
 
 class ToolKind(Protocol):
     """A tool class, as the tool catalog lists it: made from the shell, and able to prepare its

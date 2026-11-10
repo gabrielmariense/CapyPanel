@@ -48,6 +48,9 @@ class FakeShell:
     def open_saved_credentials(self, parent: Any = None) -> None:
         pass
 
+    def tool(self, tool_id: str) -> None:
+        return None  # no other tool: Printers builds on none
+
 
 @pytest.fixture
 def shell(tmp_path: Path) -> FakeShell:
