@@ -391,7 +391,32 @@ def test_pc_facts_say_which_part_needs_an_admin(
     facts = window.hosts.facts_of(target.key)
     assert facts is not None and not facts.reading and facts.space == DiskSpace(1, 2)
     assert isinstance(facts.pc_error, RemoteError)
-    assert window.hosts.details.shown_value("windows") == ""  # a warning instead of a value
+    details = window.hosts.details
+    assert details.shown_value("windows") == ""  # a warning instead of a value
+    # The warning copies on a click, as a value does, so it can go in a report.
+    assert details.shown_value("windows_error") == "No access: needs an admin account on this PC"
+
+
+def test_pc_facts_show_the_rows_read_when_one_part_of_wmi_is_missing(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    not_found = RemoteError(Reason.OTHER, 0x80041002)
+    monkeypatch.setattr(inventory, "disk_space", lambda *_a: DiskSpace(1, 2))
+    monkeypatch.setattr(inventory, "last_restart", lambda *_a: datetime.now(UTC))
+    monkeypatch.setattr(
+        inventory,
+        "pc_facts",
+        lambda *_a: PcFacts("Windows 11 Pro", "25H2", "26200.9168", "SAMPLE", "Desk 3000", "", "",
+                            8 * 1024**3, unread={"serial": not_found, "bios": not_found}),
+    )  # fmt: skip
+    target = _select(window, "PC-1")
+    window.hosts.runner.read_facts(target)
+    _settle(window)
+    details = window.hosts.details
+    assert details.shown_value("windows") == "Windows 11 Pro 25H2 · 26200.9168"
+    assert details.shown_value("model") == "SAMPLE Desk 3000"
+    assert details.shown_value("serial") == details.shown_value("bios") == ""
+    assert details.shown_value("serial_error") == "Couldn't read: Windows error 0x80041002"
 
 
 def test_open_a_path_shows_where_it_goes_and_keeps_it(

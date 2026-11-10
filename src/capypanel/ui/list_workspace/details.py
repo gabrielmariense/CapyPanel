@@ -48,6 +48,11 @@ class CopyValue(QLabel):
     def copy_text(self) -> str:
         return self._text
 
+    def set_text(self, text: str) -> None:
+        """Another value in the same place: what shows, and what a click copies."""
+        self._text = text
+        self.setText(breakable(text))
+
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
             QGuiApplication.clipboard().setText(self._text)

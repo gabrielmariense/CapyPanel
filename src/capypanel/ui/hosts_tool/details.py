@@ -25,7 +25,7 @@ from capypanel.core import i18n
 from capypanel.core.hosts import commands as host_commands
 from capypanel.core.hosts.model import Host
 from capypanel.core.i18n import _, ngettext
-from capypanel.core.remote.access import Reason, RemoteError
+from capypanel.core.remote.access import Reason, RemoteError, code_text
 from capypanel.core.remote.inventory import PowerShellBlocked
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
@@ -381,12 +381,14 @@ class HostDetailsPanel(DetailsPanel):
                 ("bios", _("BIOS"), facts.pc.bios if facts.pc else None, facts.pc_error,
                  pc_pending),
             ]  # fmt: skip
+            unread = facts.pc.unread if facts.pc is not None else {}
             for key, label, value, error, pending in rows:
+                error = error or unread.get(key)  # this row alone couldn't be read
                 layout.addWidget(self.muted(label))
                 if pending:
                     layout.addWidget(self._indented(self.muted(_("Reading…"))))
                 elif error is not None:
-                    layout.addWidget(self._indented(self._warning(facts_error_text(error))))
+                    layout.addWidget(self._warning(f"{key}_error", facts_error_text(error)))
                 elif value:
                     layout.addWidget(self.value(key, value))
                 else:
@@ -408,11 +410,11 @@ class HostDetailsPanel(DetailsPanel):
         label.setContentsMargins(7, 2, 0, 2)  # where a copy value's text starts
         return label
 
-    @staticmethod
-    def _warning(text: str) -> QLabel:
-        label = QLabel(text)
-        label.setObjectName("warningText")
-        label.setWordWrap(True)
+    def _warning(self, key: str, text: str) -> QLabel:
+        """Why a row couldn't be read, in amber; a click copies it, as any value, so an error
+        can be pasted into a report."""
+        label = self.value(key, text)
+        label.setStyleSheet(f"QLabel#copyValue {{ color: {STATUS_COLORS['attention']}; }}")
         return label
 
 
@@ -486,7 +488,9 @@ def facts_error_text(error: BaseException) -> str:
             Reason.UNREACHABLE: _("Not reached: the PC didn't answer"),
             Reason.NOT_ADMIN: _("No access: needs an admin account on this PC"),
             Reason.REJECTED: _("No access: the PC didn't accept the account"),
-            Reason.OTHER: _("Couldn't read: Windows error {code}").format(code=error.code),
+            Reason.OTHER: _("Couldn't read: Windows error {code}").format(
+                code=code_text(error.code)
+            ),
         }[error.reason]
     if isinstance(error, TimeoutError):
         return _("Couldn't read: it took too long to answer")

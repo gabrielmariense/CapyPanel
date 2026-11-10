@@ -79,7 +79,7 @@ class Wmi:
             self._locator = win32com.client.Dispatch("WbemScripting.SWbemLocator")
         except pywintypes.com_error as e:
             raise Unavailable(message_of(e)) from e
-        self._host = host
+        self._host = self.host = host
         self._user, self._password = (account.user, account.password) if account else ("", "")
         self.cim = self._connect("root\\cimv2")
         self._registry: Any = None

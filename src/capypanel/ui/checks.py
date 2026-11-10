@@ -23,7 +23,7 @@ from capypanel.core import i18n
 from capypanel.core.hosts.accounts import Link
 from capypanel.core.i18n import _
 from capypanel.core.remote import checks
-from capypanel.core.remote.access import Account, Reason, RemoteError
+from capypanel.core.remote.access import Account, Reason, RemoteError, code_text
 from capypanel.core.remote.batch import Batch
 from capypanel.core.remote.checks import Checks, Found
 from capypanel.core.remote.sessions import Session
@@ -311,7 +311,7 @@ def users_tip(error: RemoteError | None, when: datetime) -> str:
             "The computer didn't accept the account: a wrong password, a locked account, or "
             "an account it doesn't trust."
         ),
-        Reason.OTHER: _("Windows error {code}.").format(code=error.code),
+        Reason.OTHER: _("Windows error {code}.").format(code=code_text(error.code)),
     }[error.reason]
     return f"{checked} {why}"
 

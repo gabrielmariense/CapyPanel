@@ -18,7 +18,7 @@ import logging
 import subprocess
 from collections.abc import Callable, Mapping
 from ctypes import wintypes
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
@@ -87,6 +87,9 @@ class PcFacts:
     serial: str
     bios: str
     memory: int  # bytes
+    # Rows that couldn't be read while the others could ("windows", "model", "serial",
+    # "memory", "bios"), each with why: some PCs' WMI lacks one of the classes.
+    unread: Mapping[str, RemoteError] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -141,6 +144,7 @@ def pc_facts(host: str, account: Account | None = None) -> PcFacts:
         serial=str(found["serial"] or "").strip(),
         bios=str(found["bios"] or "").strip(),
         memory=int(found["memory"] or 0),
+        unread=dict(found.get("unread") or {}),
     )  # fmt: skip
 
 
@@ -327,15 +331,45 @@ _VERSION_KEY = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion"
 def _facts_direct(wmi: Any, _values: Mapping[str, str]) -> dict[str, Any]:
     from capypanel.core.remote.wmi import HKLM
 
-    system = wmi.first("SELECT Manufacturer, Model, TotalPhysicalMemory FROM Win32_ComputerSystem")
-    bios = wmi.first("SELECT SerialNumber, SMBIOSBIOSVersion FROM Win32_BIOS")
-    os = wmi.first("SELECT Caption, BuildNumber FROM Win32_OperatingSystem")
+    # Each part by itself: a PC whose WMI lacks one class (a damaged repository answers "not
+    # found") still shows the rest, and the log names the part.
+    failed: dict[str, RemoteError] = {}
+
+    def part(name: str, read: Callable[[], Any]) -> Any:
+        try:
+            return read()
+        except RemoteError as e:
+            if e.reason is not Reason.OTHER:
+                raise  # no access, or it stopped answering: the whole read's own error
+            log.warning("PC facts on %s: %s couldn't be read: %s", wmi.host, name, e)
+            failed[name] = e
+            return None
+
+    system = part("Win32_ComputerSystem", lambda: wmi.first(
+        "SELECT Manufacturer, Model, TotalPhysicalMemory FROM Win32_ComputerSystem"))  # fmt: skip
+    bios = part("Win32_BIOS", lambda: wmi.first(
+        "SELECT SerialNumber, SMBIOSBIOSVersion FROM Win32_BIOS"))  # fmt: skip
+    os = part("Win32_OperatingSystem", lambda: wmi.first(
+        "SELECT Caption, BuildNumber FROM Win32_OperatingSystem"))  # fmt: skip
+    version = part("the registry's Windows version", lambda: (
+        wmi.string(HKLM, _VERSION_KEY, "DisplayVersion"),
+        wmi.dword(HKLM, _VERSION_KEY, "UBR")))  # fmt: skip
+    if len(failed) == 4:
+        raise next(iter(failed.values()))  # nothing at all: the read failed
+    unread: dict[str, RemoteError] = {}
+    for name, rows in (("Win32_OperatingSystem", ("windows",)),
+                       ("Win32_ComputerSystem", ("model", "memory")),
+                       ("Win32_BIOS", ("serial", "bios"))):  # fmt: skip
+        if name in failed:
+            unread.update(dict.fromkeys(rows, failed[name]))
     return {
-        "caption": os.Caption, "release": wmi.string(HKLM, _VERSION_KEY, "DisplayVersion"),
-        "build": os.BuildNumber, "patch": wmi.dword(HKLM, _VERSION_KEY, "UBR"),
-        "maker": system.Manufacturer, "model": system.Model,
-        "memory": system.TotalPhysicalMemory,
-        "serial": bios.SerialNumber, "bios": bios.SMBIOSBIOSVersion,
+        "caption": getattr(os, "Caption", None), "build": getattr(os, "BuildNumber", None),
+        "release": version[0] if version else None, "patch": version[1] if version else None,
+        "maker": getattr(system, "Manufacturer", None), "model": getattr(system, "Model", None),
+        "memory": getattr(system, "TotalPhysicalMemory", None),
+        "serial": getattr(bios, "SerialNumber", None),
+        "bios": getattr(bios, "SMBIOSBIOSVersion", None),
+        "unread": unread,
     }  # fmt: skip
 
 

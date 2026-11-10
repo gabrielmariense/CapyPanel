@@ -28,7 +28,7 @@ from capypanel.core.remote import (
     services,
     sessions,
 )
-from capypanel.core.remote.access import Account, Reason, RemoteError
+from capypanel.core.remote.access import Account, Reason, RemoteError, code_text
 from capypanel.core.remote.inventory import PowerShellBlocked
 from capypanel.core.remote.own_scripts import OwnScript, PcProblem, State
 from capypanel.core.remote.places import Console
@@ -121,7 +121,7 @@ def reason_text(error: BaseException, host: str = "") -> str:
                 "it didn't accept the account: a wrong password, a locked account, or one it "
                 "doesn't trust."
             ),
-            Reason.OTHER: _("Windows error {code}.").format(code=error.code),
+            Reason.OTHER: _("Windows error {code}.").format(code=code_text(error.code)),
         }[error.reason]
     if isinstance(error, RunError):
         return {

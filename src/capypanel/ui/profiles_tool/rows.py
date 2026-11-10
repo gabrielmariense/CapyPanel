@@ -11,7 +11,7 @@ from PySide6.QtCore import QDate, QLocale
 
 from capypanel.core import i18n
 from capypanel.core.i18n import N_, _, ngettext, pgettext
-from capypanel.core.remote.access import Reason, RemoteError
+from capypanel.core.remote.access import Reason, RemoteError, code_text
 from capypanel.core.remote.inventory import PowerShellBlocked
 from capypanel.core.remote.user_profiles import (
     Deleted,
@@ -248,7 +248,7 @@ def failure(error: BaseException, name: str, address: str, account: str) -> Fail
     if isinstance(error, TimeoutError):
         why = _("The PC answered, but reading took too long and was stopped.")
     elif isinstance(error, RemoteError):
-        why = _("Windows error {code}.").format(code=error.code)
+        why = _("Windows error {code}.").format(code=code_text(error.code))
     else:
         why = str(error)
     return Failure(

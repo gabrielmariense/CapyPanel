@@ -30,9 +30,15 @@ _REJECTED = {5, 1326, 1327, 1330, 1331, 1909}
 _UNREACHABLE = {53, 67, 1231, 1237, 1721, 1722, 1723, 1753}
 
 
+def code_text(code: int) -> str:
+    """A Windows error's number as people look it up: 5 or 1722, and 0x80041002 for the long
+    ones (WMI's and COM's), which nobody finds as 2147749890."""
+    return f"0x{code:08X}" if code > 0xFFFF else str(code)
+
+
 class RemoteError(Exception):
     def __init__(self, reason: Reason, code: int = 0) -> None:
-        super().__init__(f"{reason} (Windows error {code})" if code else str(reason))
+        super().__init__(f"{reason} (Windows error {code_text(code)})" if code else str(reason))
         self.reason, self.code = reason, code
 
 

@@ -5,11 +5,12 @@ and each falls back or fails the way its setting says. Nothing here reaches anot
 import secrets
 import subprocess
 from collections.abc import Callable, Iterator
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
 
-from capypanel.core.remote import drives, inventory, run, user_profiles, wmi
+from capypanel.core.remote import access, drives, inventory, run, user_profiles, wmi
 from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.user_profiles import Kind, Outcome, Profile, Scan, State, Why
 
@@ -170,3 +171,56 @@ def test_com_errors_read_as_the_other_ways_errors() -> None:
     other = wmi.error_of(failure(0x80041002 - 2**32))  # not found: WMI's own
     assert (other.reason, other.code) == (Reason.OTHER, 0x80041002)
     assert wmi.error_of(Exception(0x800706BA - 2**32, "x", None, None)).reason is Reason.UNREACHABLE
+
+
+class _PartlyBroken:
+    """A PC whose WMI lacks some classes, as a damaged repository answers: "not found"."""
+
+    host = "DESK-01"
+
+    def __init__(self, missing: tuple[str, ...], error: RemoteError) -> None:
+        self._missing, self._error = missing, error
+
+    def first(self, wql: str) -> Any:
+        if any(name in wql for name in self._missing):
+            raise self._error
+        return SimpleNamespace(
+            Manufacturer="SAMPLE", Model="Desk 3000", TotalPhysicalMemory=8 * 2**30,
+            SerialNumber="SAMPLE123", SMBIOSBIOSVersion="1.2.3",
+            Caption="Microsoft Windows 11 Pro", BuildNumber="26200",
+        )  # fmt: skip
+
+    def string(self, *_a: Any) -> str:
+        if "registry" in self._missing:
+            raise self._error
+        return "25H2"
+
+    def dword(self, *_a: Any) -> int:
+        return 9168
+
+
+def _facts_from(monkeypatch: pytest.MonkeyPatch, pc: _PartlyBroken) -> inventory.PcFacts:
+    monkeypatch.setattr(wmi, "read", lambda reader, _h, _a, values, _t: reader(pc, values))
+    inventory.transport = inventory.DIRECT
+    return inventory.pc_facts("DESK-01")
+
+
+def test_facts_show_what_could_be_read_when_a_class_is_missing(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    not_found = RemoteError(Reason.OTHER, 0x80041002)  # WBEM_E_NOT_FOUND
+    facts = _facts_from(monkeypatch, _PartlyBroken(("Win32_BIOS",), not_found))
+    assert (facts.windows, facts.release, facts.build) == ("Windows 11 Pro", "25H2", "26200.9168")
+    assert (facts.model, facts.memory, facts.serial, facts.bios) == ("Desk 3000", 8 * 2**30, "", "")
+    assert facts.unread == {"serial": not_found, "bios": not_found}
+    # The log names the part and the code as it's looked up.
+    assert "PC facts on DESK-01: Win32_BIOS couldn't be read" in caplog.text
+    assert "0x80041002" in caplog.text and access.code_text(5) == "5"
+
+    every = ("Win32_BIOS", "Win32_ComputerSystem", "Win32_OperatingSystem", "registry")
+    with pytest.raises(RemoteError) as caught:  # nothing at all: the read itself failed
+        _facts_from(monkeypatch, _PartlyBroken(every, not_found))
+    assert caught.value.code == 0x80041002
+    with pytest.raises(RemoteError) as caught:  # no access is never "one row missing"
+        _facts_from(monkeypatch, _PartlyBroken(("Win32_BIOS",), RemoteError(Reason.NOT_ADMIN)))
+    assert caught.value.reason is Reason.NOT_ADMIN
