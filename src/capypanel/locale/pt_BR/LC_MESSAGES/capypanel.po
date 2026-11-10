@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-09 23:14-0300\n"
+"POT-Creation-Date: 2026-11-10 07:32-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -2914,8 +2914,12 @@ msgstr "Outra pessoa alterou o arquivo desde que você o abriu."
 msgid "Someone else saved changes to this list after you opened it. Your change wasn't saved. You can save your version as a separate copy or reload the list with their changes."
 msgstr "Outra pessoa salvou alterações nesta lista depois que você a abriu. A sua alteração não foi salva. Você pode salvar a sua versão como uma cópia separada ou recarregar a lista com as alterações da outra pessoa."
 
-msgid "Something went wrong. The details were saved to the app log."
-msgstr "Algo deu errado. Os detalhes foram salvos no log do aplicativo."
+#, python-brace-format
+msgid "Something went wrong {n} times."
+msgstr "Algo deu errado {n} vezes."
+
+msgid "Something went wrong."
+msgstr "Algo deu errado."
 
 msgid "Somewhere else, e.g. a network share…"
 msgstr "Outro lugar, como uma pasta de rede…"
@@ -3094,6 +3098,9 @@ msgstr "A lista padrão"
 #, python-brace-format
 msgid "The default list was made by another user, so CapyPanel won't open it. An administrator can replace or delete “{path}”."
 msgstr "A lista padrão foi criada por outro usuário, então o CapyPanel não vai abri-la. Um administrador pode substituir ou excluir “{path}”."
+
+msgid "The details were saved to the app log."
+msgstr "Os detalhes foram salvos no log do aplicativo."
 
 msgid "The encryption password needs at least 8 characters."
 msgstr "A senha da criptografia precisa ter pelo menos 8 caracteres."
@@ -3313,6 +3320,10 @@ msgstr "Este perfil de conexão precisa de uma versão mais nova do CapyPanel."
 #, python-brace-format
 msgid "This doesn't look like a viewer settings file: “{line}”."
 msgstr "Isto não parece um arquivo de configurações do visualizador: “{line}”."
+
+#, python-brace-format
+msgid "This error happened {n} times:"
+msgstr "Este erro aconteceu {n} vezes:"
 
 #, python-brace-format
 msgid "This is {path} as {host} has it. Other PCs may have their own copy: it runs where only admins can change it, or where it matches this one."

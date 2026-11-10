@@ -1,12 +1,14 @@
 """Which account signs in to which PC: Settings' Accounts table, the login window's "Use it
 for", Details' Signs in as, and Refresh and the host commands using each PC's own account."""
 
+import sys
 import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 
 import pytest
+import shiboken6
 from capywindow import CapyWindow
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QMenu
 
@@ -370,3 +372,20 @@ def test_right_click_sets_several_pcs_or_a_group(window: CapyWindow) -> None:
     _choose(menu, "Follow Accounts")
     assert accounts.group_row(group.id) is None
     assert _account_used(window, _host(window, "DESK-02")) == [ADMIN]
+
+
+def test_an_account_changed_after_settings_closed_touches_no_page_that_is_gone(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Settings is built anew each time it opens; a closed one's pages are deleted. Changing
+    "Commands run as" from Details afterwards once failed, once for each time Settings had been
+    opened."""
+    errors: list[BaseException] = []
+    monkeypatch.setattr(sys, "excepthook", lambda _kind, error, _tb: errors.append(error))
+    for _time in range(2):
+        shiboken6.delete(window.settings_dialog())
+    window.hosts.accounts.changed.emit()
+    assert errors == []
+    section = _section(window)  # an open Settings still follows
+    window.hosts.accounts.changed.emit()
+    assert errors == [] and _rows(section) == []

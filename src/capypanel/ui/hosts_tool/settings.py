@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import shiboken6
+from PySide6.QtWidgets import QLabel
+
 from capypanel.core.hosts import locations
 from capypanel.core.i18n import N_, _
 from capypanel.ui.hosts_tool.accounts import AccountsSection
@@ -41,6 +44,10 @@ class HostsSettings(SettingsGroup):
         self._tool = tool
         self._building = False  # pages report changes while they're filled
         self._chosen: Path | None = None  # the list picked in the lists table, across a rebuild
+        self._kept: QLabel | None = None  # the open Settings' line saying which logins are kept
+        # Once, for as long as the tool lives. Hooked up in build(), each opening of Settings
+        # added one more listener, all still called after its pages were deleted.
+        tool.accounts.changed.connect(self.credentials_changed)
 
     def build(self) -> list[tuple[str, Page]]:
         tool, prefs, doc = self._tool, self._tool.prefs, self._tool.document
@@ -67,7 +74,7 @@ class HostsSettings(SettingsGroup):
         for section in (self.accounts, self.connections.profiles.passwords_section):
             self.accounts_page.body.addWidget(section)
         self.accounts_page.body.addStretch(1)
-        tool.accounts.changed.connect(self.credentials_changed)
+        self._kept = self.connections.profiles.saved_row.description
         self.general.changed.connect(self._changed)
         profiles = self.connections.profiles
         profiles.manage_button.clicked.connect(
@@ -105,8 +112,10 @@ class HostsSettings(SettingsGroup):
             self._tool.apply_prefs(self.choices())
 
     def credentials_changed(self) -> None:
-        row = self.connections.profiles.saved_row
-        row.description.setText(kept_text(self._tool.every_kept_login()))
+        """An account or a saved login changed: an open Settings says what's kept now. Called
+        with Settings closed too (Details changes accounts), when there's no page to update."""
+        if self._kept is not None and shiboken6.isValid(self._kept):
+            self._kept.setText(kept_text(self._tool.every_kept_login()))
 
     def _open(self, path: Path) -> None:
         """A list opened from the lists table: Settings then shows it as the open one."""

@@ -3,15 +3,12 @@ no tool itself: the tool catalog loads them."""
 
 import logging
 import sys
-import traceback
-from types import TracebackType
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from capypanel import BUILD, __version__
 from capypanel.core import applog, i18n, migration, settings
-from capypanel.core.i18n import _
-from capypanel.ui import branding, language
+from capypanel.ui import branding, error_window, language
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import CATALOG
@@ -25,7 +22,7 @@ def run(argv: list[str] | None = None) -> int:
     app.setApplicationName("CapyPanel")
     app.setWindowIcon(branding.app_icon())
     app.setApplicationVersion(__version__)
-    sys.excepthook = _report_unexpected_error
+    sys.excepthook = error_window.report
 
     # Logging first, so a problem with the user's folder is logged and shown, not lost.
     paths = settings.resolve_paths()
@@ -55,17 +52,3 @@ def run(argv: list[str] | None = None) -> int:
     code = app.exec()
     log.info("CapyPanel exiting (code %s)", code)
     return code
-
-
-def _report_unexpected_error(
-    exc_type: type[BaseException], exc: BaseException, tb: TracebackType | None
-) -> None:
-    # Log first: the dialog is for the user, the log is what a bug report needs.
-    log.critical("Unexpected error", exc_info=(exc_type, exc, tb))
-    box = QMessageBox(
-        QMessageBox.Icon.Critical,
-        _("Unexpected error"),
-        _("Something went wrong. The details were saved to the app log."),
-    )
-    box.setDetailedText("".join(traceback.format_exception(exc_type, exc, tb)))
-    box.exec()

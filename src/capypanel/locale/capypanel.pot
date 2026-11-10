@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-09 23:14-0300\n"
+"POT-Creation-Date: 2026-11-10 07:32-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3024,7 +3024,11 @@ msgid ""
 "list with their changes."
 msgstr ""
 
-msgid "Something went wrong. The details were saved to the app log."
+#, python-brace-format
+msgid "Something went wrong {n} times."
+msgstr ""
+
+msgid "Something went wrong."
 msgstr ""
 
 msgid "Somewhere else, e.g. a network share…"
@@ -3215,6 +3219,9 @@ msgstr ""
 msgid ""
 "The default list was made by another user, so CapyPanel won't open it. An"
 " administrator can replace or delete “{path}”."
+msgstr ""
+
+msgid "The details were saved to the app log."
 msgstr ""
 
 msgid "The encryption password needs at least 8 characters."
@@ -3458,6 +3465,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "This doesn't look like a viewer settings file: “{line}”."
+msgstr ""
+
+#, python-brace-format
+msgid "This error happened {n} times:"
 msgstr ""
 
 #, python-brace-format
