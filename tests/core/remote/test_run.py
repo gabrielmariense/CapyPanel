@@ -1,8 +1,9 @@
+import contextlib
 import json
 import os
 import subprocess
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from pathlib import Path
 
 import pytest
@@ -436,3 +437,32 @@ def test_psexec_that_cant_start_on_this_pc_says_so(monkeypatch: pytest.MonkeyPat
         runs._start_psexec("DESK-01", ["powershell.exe"], None)
     assert str(caught.value).startswith("it couldn't start on this PC (")
     assert "an antivirus here may have blocked it" in str(caught.value)
+
+
+def test_a_long_command_with_an_account_goes_through_a_short_relay_line(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Windows starts a program with an account only from a line of 1024 characters at most;
+    a script's command is thousands. PsExec with a typed account never started."""
+    lines: list[str] = []
+
+    @contextlib.contextmanager
+    def started(_account: Account, line: str) -> Iterator[int]:
+        lines.append(line)  # what Windows would get; run here without the account
+        done = subprocess.run(line, capture_output=True)
+        codes.append(done.returncode & 0xFFFFFFFF)
+        yield 0
+
+    codes: list[int] = []
+    monkeypatch.setattr(run, "_process_as", started)
+    monkeypatch.setattr(run._kernel32, "WaitForSingleObject", lambda *_a: 0)
+    monkeypatch.setattr(run._kernel32, "GetExitCodeProcess", lambda *_a: 1)
+    account = Account(r"EXAMPLE\support", "x")
+    long_argv = ["cmd.exe", "/d", "/c", "exit", "4344", "&", "rem", "a" * 6000]
+    run._spawn(long_argv, account, 30)
+    assert len(lines[0]) < run.LOGON_LINE and "--relay" in lines[0]
+    assert codes == [4344]  # the relay ran the real command and ended with its exit code
+    kept = lines[0].rsplit(" ", 1)[1].strip('"')
+    assert not Path(kept).exists()  # the file with the command is gone
+    run._spawn(["cmd.exe", "/d", "/c", "exit", "8"], account, 30)
+    assert lines[1] == "cmd.exe /d /c exit 8" and codes[1] == 8  # a short one goes as it is

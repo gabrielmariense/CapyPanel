@@ -28,10 +28,12 @@ import ctypes
 import html
 import json
 import logging
+import os
 import re
 import secrets
 import socket
 import subprocess
+import tempfile
 import threading
 import time
 import zlib
@@ -45,7 +47,7 @@ from pathlib import Path
 from typing import Any
 
 from capypanel.core import winsec
-from capypanel.core.remote import inventory
+from capypanel.core.remote import inventory, relay
 from capypanel.core.remote.access import (
     REACH_TIMEOUT,
     Account,
@@ -794,7 +796,7 @@ def _spawn(argv: Sequence[str], account: Account | None, timeout: float) -> int:
         except subprocess.TimeoutExpired as e:
             raise TimeoutError(f"no answer within {timeout:.0f} s") from e
         return done.returncode & 0xFFFFFFFF
-    with _process_as(account, subprocess.list2cmdline(argv)) as process:
+    with _short_line(argv) as line, _process_as(account, line) as process:
         if _kernel32.WaitForSingleObject(process, int(timeout * 1000)) != 0:
             _kernel32.TerminateProcess(process, 1)
             raise TimeoutError(f"no answer within {timeout:.0f} s")
@@ -802,6 +804,28 @@ def _spawn(argv: Sequence[str], account: Account | None, timeout: float) -> int:
         if not _kernel32.GetExitCodeProcess(process, ctypes.byref(code)):
             raise ctypes.WinError(ctypes.get_last_error())
         return code.value
+
+
+LOGON_LINE = 1024  # characters: the longest command line CreateProcessWithLogonW takes
+
+
+@contextlib.contextmanager
+def _short_line(argv: Sequence[str]) -> Iterator[str]:
+    """`argv` as a command line that a start with an account accepts. One that's too long (any
+    script's is) is kept in a file, and the line starts CapyPanel as its relay instead: with a
+    long line, Windows answered "the parameter is incorrect" and PsExec never started."""
+    line = subprocess.list2cmdline(argv)
+    if len(line) < LOGON_LINE:
+        yield line
+        return
+    handle, file = tempfile.mkstemp(prefix="capypanel-run-", suffix=".json")
+    os.close(handle)
+    try:
+        relay.write(file, argv)
+        yield subprocess.list2cmdline(relay.command(file))
+    finally:
+        with contextlib.suppress(OSError):  # the relay deletes it once read; this is the rest
+            os.unlink(file)
 
 
 class _StartupInfo(ctypes.Structure):
