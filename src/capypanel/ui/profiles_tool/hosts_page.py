@@ -1,50 +1,40 @@
-"""The User profiles tool's pinned Hosts tab: the hosts of the group picked on the left, what each
-scan found so far, and on the right the progress across every host's tab, with the host picked
-in its own box under it. It never scans by itself: a double-click, Enter or Scan opens a host."""
+"""The User profiles tool's pinned Hosts tab: the hosts of the group picked on the left and what
+each scan found so far; on the right, its card (side.HostCard): the host picked, or the hosts on
+show. It never scans by itself: a double-click, Enter or Scan opens a host."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
-from PySide6.QtCore import QEvent, QObject, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt, Signal
 from PySide6.QtGui import (
     QColor,
-    QFont,
     QIcon,
     QKeyEvent,
     QMouseEvent,
-    QPainter,
-    QPaintEvent,
     QPalette,
-    QResizeEvent,
 )
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFrame,
-    QGridLayout,
     QHBoxLayout,
     QLabel,
-    QProgressBar,
     QPushButton,
-    QScrollArea,
-    QSizePolicy,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
 from capypanel.core.hosts.model import Host
-from capypanel.core.i18n import _, ngettext, pgettext
-from capypanel.ui.icons import dot_icon, tabler_icon
-from capypanel.ui.list_workspace.details import DetailsPanel
+from capypanel.core.i18n import _, pgettext
+from capypanel.ui.icons import dot_icon
 from capypanel.ui.list_workspace.panels import SearchBox, natural_key
-from capypanel.ui.profiles_tool.host_page import HostPage
 from capypanel.ui.profiles_tool.panels import Squeeze, TabBox, hint
+from capypanel.ui.profiles_tool.side import GroupFacts, HostCard, HostFacts
 from capypanel.ui.tables import grid_table
 
 NAME, ADDRESS, STATUS, PROFILES, DELETABLE, SCAN = range(6)  # the table's columns
 ID_ROLE = Qt.ItemDataRole.UserRole  # the row's host
 SORT_ROLE = Qt.ItemDataRole.UserRole + 1
-HOST_BOX_HEIGHT = 196  # px: the picked host's box; Andamento keeps the rest
 RIGHT_ALIGNED = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
 
 
@@ -60,33 +50,6 @@ class RowFacts:
     scan: str  # "10:41", "scanning…", "didn't answer", or ""
     scan_time: float | None  # what the Scan column sorts by
     scan_color: str  # "" for the text's own colour
-
-
-@dataclass(frozen=True)
-class HostFacts:
-    """The picked host's own box."""
-
-    name: str
-    dot: str  # its status colour; "" for none
-    status: str  # "Offline · checked by Hosts at 10:30"
-    address: str
-    group: str
-    scanned: str  # "10:41", or "—"
-    account: str  # who signs in, or "—"
-
-
-@dataclass(frozen=True)
-class GroupFacts:
-    """The hosts on show, when no single host is picked: how many answer by Hosts' last check,
-    the check under way, and what the scans found so far."""
-
-    name: str  # the group's name, or "All hosts"
-    status: str  # "Refreshing status: 12 of 31…", or when Hosts last checked
-    checked: str  # "28 online · 3 offline"
-    unchecked: int
-    scanned: str  # "4 of 31"
-    deletable: str  # "66", or "—" before any scan
-    empty: bool = False  # no host on show
 
 
 class _Row(QTreeWidgetItem):
@@ -114,6 +77,7 @@ class HostsTable(QWidget):
 
     open_requested = Signal(list, bool)  # host ids, and whether to go to the tab
     picked = Signal()
+    menu_requested = Signal(QPoint)  # a right-click on a host: where (global)
     scan_typed = Signal(str)  # "Scan 192.0.2.50" in the empty table
 
     def __init__(self) -> None:
@@ -132,6 +96,8 @@ class HostsTable(QWidget):
         self.tree.itemDoubleClicked.connect(lambda *_a: self._open(True))
         self.tree.installEventFilter(self)
         self.tree.viewport().installEventFilter(self)
+        self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tree.customContextMenuRequested.connect(self._menu)
         self._fitted = False
         # The empty table's note, when a search finds no host of the list.
         self._empty = QWidget(self.tree.viewport())
@@ -274,6 +240,10 @@ class HostsTable(QWidget):
         if ids:
             self.open_requested.emit(ids, focus)
 
+    def _menu(self, point: QPoint) -> None:
+        if self.tree.itemAt(point) is not None:  # the click picked it already
+            self.menu_requested.emit(self.tree.viewport().mapToGlobal(point))
+
     def _item(self, host_id: str) -> QTreeWidgetItem | None:
         for index in range(self.tree.topLevelItemCount()):
             item = self.tree.topLevelItem(index)
@@ -323,264 +293,6 @@ class HostsTable(QWidget):
         )
 
 
-class _Name(QWidget):
-    """A host's name in Andamento: it takes the room the line leaves and ends in "…" when it
-    can't fit, its whole name in the tooltip, so where the host is always shows beside it."""
-
-    def __init__(self, text: str) -> None:
-        super().__init__()
-        self._text = text
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-
-    def text(self) -> str:
-        return self._text
-
-    def sizeHint(self) -> QSize:
-        metrics = self.fontMetrics()
-        return QSize(metrics.horizontalAdvance(self._text) + 2, metrics.height())
-
-    def minimumSizeHint(self) -> QSize:
-        metrics = self.fontMetrics()
-        return QSize(metrics.horizontalAdvance("…") * 3, metrics.height())
-
-    def shown_text(self) -> str:
-        return self.fontMetrics().elidedText(self._text, Qt.TextElideMode.ElideRight, self.width())
-
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        super().resizeEvent(event)
-        self.setToolTip(self._text if self.shown_text() != self._text else "")
-
-    def paintEvent(self, event: QPaintEvent) -> None:
-        painter = QPainter(self)
-        painter.setPen(self.palette().color(QPalette.ColorRole.Text))
-        align = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
-        painter.drawText(self.rect(), align, self.shown_text())
-        painter.end()
-
-
-class _Line(QWidget):
-    """One host in Andamento: its mark, its name, and where it is on the right. A click goes to
-    its tab."""
-
-    clicked = Signal(str)
-
-    def __init__(self, key: str, icon: QLabel | None, name: str, where: str, color: str) -> None:
-        super().__init__()
-        self._key = key
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        row = QHBoxLayout(self)
-        row.setContentsMargins(0, 1, 0, 1)
-        row.setSpacing(6)
-        if icon is not None:
-            row.addWidget(icon)
-        self.name = _Name(name)
-        self.where = QLabel(where)
-        self.where.setObjectName("" if color else "hint")
-        if color:
-            self.where.setStyleSheet(f"color: {color};")
-        row.addWidget(self.name, 1)
-        row.addWidget(self.where)  # never cut: the name gives way
-
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        if event.button() == Qt.MouseButton.LeftButton:
-            self.clicked.emit(self._key)
-        super().mousePressEvent(event)
-
-
-class ProgressCard(QFrame):
-    """Andamento: how far the hosts in tabs are, the busy ones each on a line, the waiting ones
-    by name, and the ones done with how they ended. A section shows only when it has a host."""
-
-    go_to = Signal(str)  # a host's key: its tab comes to the front
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.setObjectName("card")
-        self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.setBackgroundRole(QPalette.ColorRole.Base)
-        self.setAutoFillBackground(True)
-        self.title = QLabel()
-        font = QFont(self.title.font())
-        font.setBold(True)
-        font.setPointSizeF(font.pointSizeF() * 1.25)
-        self.title.setFont(font)
-        self.summary = DetailsPanel.muted("")
-        self.bar = QProgressBar()
-        self.bar.setObjectName("thin")
-        self.bar.setTextVisible(False)
-        self.bar.setFixedHeight(8)
-        self._lines = QWidget()
-        self._lines_box = QVBoxLayout(self._lines)
-        self._lines_box.setContentsMargins(0, 0, 0, 0)
-        self._lines_box.setSpacing(2)
-        scroll = QScrollArea()
-        scroll.setWidget(self._lines)
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll.viewport().setAutoFillBackground(False)
-        self._lines.setAutoFillBackground(False)
-        column = QVBoxLayout(self)
-        column.setContentsMargins(14, 12, 14, 12)
-        column.setSpacing(3)
-        column.addWidget(self.title)
-        column.addWidget(self.summary)
-        column.addSpacing(6)
-        column.addWidget(self.bar)
-        column.addWidget(scroll, 1)
-
-    def show_pages(self, pages: Sequence[HostPage]) -> None:
-        self.title.setText(_("Progress"))
-        busy = [p for p in pages if p.mark().busy]
-        waiting = [p for p in pages if not p.mark().busy and p.busy()]
-        done = [p for p in pages if not p.busy()]
-        total = len(pages)
-        if total:
-            self.summary.setText(
-                ngettext("{n} host in tabs", "{n} hosts in tabs", total).format(n=total)
-                + " · "
-                + ngettext("{n} done", "{n} done", len(done)).format(n=len(done))
-            )
-        else:
-            self.summary.setText(_("Double-click a host to open it, or pick hosts and click "
-                                   "Scan to scan them here."))  # fmt: skip
-        self.bar.setVisible(bool(total))
-        self.bar.setRange(0, max(total, 1))
-        self.bar.setValue(len(done))
-        while (item := self._lines_box.takeAt(0)) is not None:
-            if (widget := item.widget()) is not None:
-                widget.hide()  # or it's drawn where it was until Qt deletes it
-                widget.deleteLater()
-        if busy:
-            self._section(_("In progress ({n})").format(n=len(busy)))
-            for page in busy:
-                self._line(page, page.mark().short, "")
-        if waiting:
-            self._section(_("Waiting ({n})").format(n=len(waiting)))
-            names = DetailsPanel.muted(", ".join(p.target.name for p in waiting))
-            self._lines_box.addWidget(names)
-        if done:
-            self._section(_("Done ({n})").format(n=len(done)))
-            for page in done:
-                mark = page.mark()
-                self._line(page, mark.short, mark.color if mark.bad else "")
-        self._lines_box.addStretch(1)
-
-    def _section(self, text: str) -> None:
-        rule = QFrame()
-        rule.setObjectName("detailsRule")
-        self._lines_box.addSpacing(10)
-        self._lines_box.addWidget(rule)
-        self._lines_box.addSpacing(6)
-        heading = QLabel(text)
-        heading.setObjectName("detailsSection")
-        self._lines_box.addWidget(heading)
-
-    def _line(self, page: HostPage, where: str, color: str) -> None:
-        mark = page.mark()
-        icon = QLabel()
-        if mark.icon:
-            icon.setPixmap(tabler_icon(mark.icon, QColor(mark.color), 14).pixmap(14, 14))
-        icon.setFixedWidth(14)
-        line = _Line(page.target.key, icon, page.target.name, where, color)
-        line.setToolTip(mark.tip)
-        line.clicked.connect(self.go_to)
-        self._lines_box.addWidget(line)
-
-
-class HostCard(QFrame):
-    """The host picked on the Hosts tab, in its own box under Andamento."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.setObjectName("card")
-        self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.setBackgroundRole(QPalette.ColorRole.Base)
-        self.setAutoFillBackground(True)
-        self.setFixedHeight(HOST_BOX_HEIGHT)
-        self.heading = QLabel()
-        small = QFont(self.heading.font())
-        small.setBold(True)
-        small.setPointSizeF(small.pointSizeF() * 0.85)
-        self.heading.setFont(small)
-        self.dot = QLabel()
-        self.name = QLabel()
-        self.name.setWordWrap(True)  # a long host name goes on two lines, never cut
-        big = QFont(self.name.font())
-        big.setBold(True)
-        big.setPointSizeF(big.pointSizeF() * 1.25)
-        self.name.setFont(big)
-        self.status = DetailsPanel.muted("")
-        top = QHBoxLayout()
-        top.setSpacing(6)
-        top.addWidget(self.dot)
-        top.addWidget(self.name, 1)
-        self._labels = [QLabel() for _n in range(4)]
-        self._values = [QLabel() for _n in range(4)]
-        grid = QGridLayout()
-        grid.setHorizontalSpacing(12)
-        grid.setVerticalSpacing(4)
-        grid.setColumnStretch(1, 1)
-        grid.setColumnMinimumWidth(0, 92)
-        for index, (label, value) in enumerate(zip(self._labels, self._values, strict=True)):
-            label.setObjectName("hint")
-            value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-            grid.addWidget(label, index, 0)
-            grid.addWidget(value, index, 1)
-        column = QVBoxLayout(self)
-        column.setContentsMargins(14, 10, 14, 10)
-        column.setSpacing(3)
-        column.addWidget(self.heading)
-        column.addLayout(top)
-        column.addWidget(self.status)
-        column.addSpacing(6)
-        column.addLayout(grid)
-        column.addStretch(1)
-
-    def show_group(self, facts: GroupFacts) -> None:
-        """No single host picked: the hosts on show as a whole. With none on show (a search
-        that found nothing), it says so and has no rows."""
-        self.heading.setText(_("HOSTS SHOWN"))
-        self.name.setText(facts.name)
-        self.dot.hide()
-        self.status.setText(facts.status)
-        if facts.empty:
-            for widget in (*self._labels, *self._values):
-                widget.hide()
-            return
-        self._show(
-            (
-                (_("Status"), facts.checked),
-                (pgettext("hosts", "Not checked"), str(facts.unchecked)),
-                (_("Scanned"), facts.scanned),
-                (_("Can be deleted"), facts.deletable),
-            )
-        )
-
-    def show_host(self, facts: HostFacts) -> None:
-        self.heading.setText(_("SELECTED HOST"))
-        self.name.setText(facts.name)
-        self.dot.setVisible(bool(facts.dot))
-        if facts.dot:
-            self.dot.setPixmap(dot_icon(facts.dot, 12).pixmap(12, 12))
-        self.status.setText(facts.status)
-        self._show(
-            (
-                (_("Address"), facts.address),
-                (_("Group"), facts.group),
-                (_("Scanned at"), facts.scanned),
-                (_("As"), facts.account),
-            )
-        )
-
-    def _show(self, pairs: Sequence[tuple[str, str]]) -> None:
-        for (label, value), name, shown in zip(pairs, self._labels, self._values, strict=True):
-            name.setText(label)
-            shown.setText(value)
-            name.show()
-            shown.show()
-
-
 class HostsPage(QObject):
     """The pinned Hosts tab: `box` in the middle, `side` on the right."""
 
@@ -589,14 +301,8 @@ class HostsPage(QObject):
         self.search = SearchBox()
         self.table = HostsTable()
         self.box = TabBox(self.search, self.table)
-        self.progress = ProgressCard()
         self.host_card = HostCard()
-        self.side = QWidget()
-        column = QVBoxLayout(self.side)
-        column.setContentsMargins(0, 0, 0, 0)
-        column.setSpacing(6)
-        column.addWidget(self.progress, 1)
-        column.addWidget(self.host_card)
+        self.side = self.host_card  # the right panel's card for this tab
         self.search.to_results.connect(self._to_results)
         self.retranslate()
 
@@ -609,7 +315,7 @@ class HostsPage(QObject):
         self.box.show_title(name, about)
 
     def show_host(self, facts: HostFacts | GroupFacts) -> None:
-        """The box under Progress: the one host picked, or the hosts on show as a whole."""
+        """The card under Progress: the one host picked, or the hosts on show as a whole."""
         if isinstance(facts, HostFacts):
             self.host_card.show_host(facts)
         else:

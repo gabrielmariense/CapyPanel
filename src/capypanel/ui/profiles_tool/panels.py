@@ -1,6 +1,6 @@
 """The parts of a host's tab in the User profiles tool: its box (the host's name, the filters and
-the profiles table, or a card saying what's happening or what went wrong), a profile's details,
-the Delete window and the progress of a delete run."""
+the profiles table, or a card saying what's happening or what went wrong), a profile's details
+and the Delete window. The right panel's cards are in side.py."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -10,16 +10,21 @@ from PySide6.QtCore import (
     QModelIndex,
     QObject,
     QPersistentModelIndex,
+    QPoint,
+    QRect,
     QSize,
     Qt,
+    QTimer,
     Signal,
 )
 from PySide6.QtGui import (
     QBrush,
     QColor,
     QFont,
+    QHelpEvent,
     QIcon,
     QKeyEvent,
+    QMouseEvent,
     QPainter,
     QPaintEvent,
     QPalette,
@@ -34,11 +39,12 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QProgressBar,
+    QMenu,
     QPushButton,
     QSizePolicy,
     QStyledItemDelegate,
     QStyleOptionViewItem,
+    QToolTip,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -47,11 +53,12 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.user_profiles import Deleted, Kind, Outcome, Profile, State
-from capypanel.ui.hosts_tool.command_windows import Question, output_box
+from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.hosts_tool.runner import escape
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import DetailsPanel
 from capypanel.ui.list_workspace.panels import natural_key
+from capypanel.ui.menus import popup
 from capypanel.ui.profiles_tool import rows
 from capypanel.ui.profiles_tool.rows import Filters, Result
 from capypanel.ui.tables import fit_rows, grid_table
@@ -65,6 +72,8 @@ IDENT_ROLE = Qt.ItemDataRole.UserRole  # the row's profile
 CAREFUL_ROLE = Qt.ItemDataRole.UserRole + 2  # ticked: deleted on Delete…
 COUNTING_ROLE = Qt.ItemDataRole.UserRole + 3  # its size is being counted now
 AMBER = STATUS_COLORS["attention"]  # what deletes, everywhere in the app
+INFO = 22  # px: the (i) at the end of the clicked row, which opens the profile's window
+INFO_GAP = 4  # px between it and the row's right edge
 
 
 def card() -> QFrame:
@@ -451,9 +460,16 @@ class _Row(QTreeWidgetItem):
         return bool(mine < theirs)
 
 
+def info_rect(cell: QRect) -> QRect:
+    """Where the (i) sits in a row's last cell."""
+    return QRect(cell.right() - INFO - INFO_GAP + 1, cell.top() + (cell.height() - INFO) // 2,
+                 INFO, INFO)  # fmt: skip
+
+
 class _Careful(QStyledItemDelegate):
     """Draws a 2 px amber outline round a ticked row, inside it so no row grows, over the
-    selection's colour."""
+    selection's colour; and, at the end of the clicked row, the (i) that opens the profile's
+    window."""
 
     def paint(
         self,
@@ -463,9 +479,26 @@ class _Careful(QStyledItemDelegate):
     ) -> None:
         super().paint(painter, option, index)
         model = index.model()
+        rect: QRect = option.rect  # type: ignore[attr-defined]
+        view = self.parent()
+        if (
+            index.column() == STATE
+            and isinstance(view, QTreeWidget)
+            and view.currentIndex().row() == index.row()
+            and view.currentIndex().isValid()
+        ):
+            box = info_rect(rect)
+            palette = view.palette()
+            painter.save()
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setPen(palette.color(QPalette.ColorRole.Mid))
+            painter.setBrush(palette.color(QPalette.ColorRole.Button))
+            painter.drawRoundedRect(box, 4, 4)
+            icon = tabler_icon("info-circle", palette.color(QPalette.ColorRole.ButtonText), 16)
+            icon.paint(painter, box.adjusted(3, 3, -3, -3))
+            painter.restore()
         if model is None or not model.index(index.row(), USER, index.parent()).data(CAREFUL_ROLE):
             return
-        rect = option.rect  # type: ignore[attr-defined]
         painter.save()
         painter.setPen(QPen(QColor(AMBER), 2))
         top, bottom = rect.top() + 1, rect.bottom() - 2  # above the grid's 2 px line
@@ -477,16 +510,37 @@ class _Careful(QStyledItemDelegate):
             painter.drawLine(rect.right(), top, rect.right(), bottom)
         painter.restore()
 
+    def helpEvent(  # type: ignore[override]
+        self,
+        event: QHelpEvent,
+        view: object,
+        option: QStyleOptionViewItem,
+        index: QModelIndex | QPersistentModelIndex,
+    ) -> bool:
+        """Over the (i): what it does, in place of the State cell's own tip."""
+        rect: QRect = option.rect  # type: ignore[attr-defined]
+        if (
+            isinstance(view, QTreeWidget)
+            and index.column() == STATE
+            and view.currentIndex().row() == index.row()
+            and info_rect(rect).contains(event.pos())
+        ):
+            QToolTip.showText(event.globalPos(), _("Details (Enter)"), view)
+            return True
+        return super().helpEvent(event, view, option, index)  # type: ignore[arg-type]
+
 
 class ProfilesTable(QWidget):
     """One row per profile and leftover. Only a row that can be deleted has a tick box; the
     others are greyed, with their state saying why. A ticked row looks like something to be
     careful with: amber text (normal text in a light theme, where amber can't be read), "Will
     be deleted" with the bin, and an amber outline. A row that was in a delete run shows how it
-    ended instead. A click on a column's title sorts by it, except the ticks' column."""
+    ended instead. A click on a column's title sorts by it, except the ticks' column. A row's
+    details open from the (i) at the end of the clicked row, Enter, or its right-click."""
 
     picked = Signal()  # another row has the selection
     ticked_changed = Signal()
+    details_requested = Signal(str)  # a row's ident
 
     def __init__(self) -> None:
         super().__init__()
@@ -509,6 +563,10 @@ class ProfilesTable(QWidget):
         # does a double-click anywhere on a row.
         self.tree.itemDoubleClicked.connect(self._double_clicked)
         self.tree.installEventFilter(self)
+        self.tree.viewport().installEventFilter(self)
+        self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tree.customContextMenuRequested.connect(self._menu)
+        self._info_pressed = ""  # the row whose (i) the mouse went down on
         self._profiles: dict[str, Profile] = {}
         self._ticked: set[str] = set()
         self._results: dict[str, Result] = {}
@@ -631,7 +689,8 @@ class ProfilesTable(QWidget):
         words += [_(name) for name in rows.RESULT_NAMES.values()]
         words += [_("Will be deleted"), _("State")]
         metrics = self.tree.fontMetrics()
-        return max(metrics.horizontalAdvance(word) for word in words) + 16 + 26  # icon, padding
+        widest = max(metrics.horizontalAdvance(word) for word in words)
+        return widest + 16 + 26 + INFO + INFO_GAP  # its icon, the padding, the (i)
 
     def selected(self) -> Profile | None:
         items = self.tree.selectedItems()
@@ -656,18 +715,67 @@ class ProfilesTable(QWidget):
         """Ticks a row, or unticks it; a row without a box stays as it is."""
         self.tick(ident, ident not in self._ticked)
 
+    def profile(self, ident: str) -> Profile | None:
+        return self._profiles.get(ident)
+
+    def is_ticked(self, ident: str) -> bool:
+        return ident in self._ticked
+
+    def can_tick(self, ident: str) -> bool:
+        """The row has a tick box, and it may change now."""
+        return self._tickable(ident) and not self._locked
+
+    def select(self, ident: str) -> None:
+        """The row gets the selection and comes into view."""
+        item = self._item(ident)
+        if item is not None:
+            self.tree.setCurrentItem(item)
+            self.tree.scrollToItem(item)
+
+    def info_at(self, point: QPoint) -> str:
+        """The row whose (i) is at `point` of the table's inside: only the clicked row has one."""
+        item = self.tree.itemAt(point)
+        if item is None or item is not self.tree.currentItem():
+            return ""
+        cell = self.tree.visualItemRect(item)
+        left = self.tree.columnViewportPosition(STATE)
+        cell = QRect(left, cell.top(), self.tree.columnWidth(STATE), cell.height())
+        return item.data(USER, IDENT_ROLE) if info_rect(cell).contains(point) else ""
+
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if (
-            watched is self.tree
-            and event.type() == QEvent.Type.KeyPress
-            and isinstance(event, QKeyEvent)
-            and event.key() == Qt.Key.Key_Space
-        ):
+        if watched is self.tree and event.type() == QEvent.Type.KeyPress:
+            assert isinstance(event, QKeyEvent)
             current = self.tree.currentItem()
-            if current is not None:
-                self.toggle(current.data(USER, IDENT_ROLE))
-            return True  # or Qt ticks it a second time when the box's own cell is current
+            if event.key() == Qt.Key.Key_Space:
+                if current is not None:
+                    self.toggle(current.data(USER, IDENT_ROLE))
+                return True  # or Qt ticks it a second time when the box's own cell is current
+            if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and current is not None:
+                self.details_requested.emit(current.data(USER, IDENT_ROLE))
+                return True
+        if (
+            watched is self.tree.viewport()
+            and isinstance(event, QMouseEvent)
+            and event.button() == Qt.MouseButton.LeftButton
+        ):  # the (i): down and up on it, on the row that was already the clicked one
+            if event.type() == QEvent.Type.MouseButtonPress:
+                self._info_pressed = self.info_at(event.position().toPoint())
+            elif event.type() == QEvent.Type.MouseButtonRelease:
+                pressed, self._info_pressed = self._info_pressed, ""
+                if pressed and pressed == self.info_at(event.position().toPoint()):
+                    # After the table has had its release, or it would think the button is
+                    # still down once the window closes.
+                    QTimer.singleShot(0, self, lambda: self.details_requested.emit(pressed))
         return super().eventFilter(watched, event)
+
+    def _menu(self, point: QPoint) -> None:
+        item = self.tree.itemAt(point)
+        if item is None:
+            return
+        ident = item.data(USER, IDENT_ROLE)
+        menu = QMenu(self)
+        menu.addAction(_("&Details…"), lambda: self.details_requested.emit(ident))
+        popup(menu, self.tree.viewport().mapToGlobal(point))
 
     def _double_clicked(self, item: QTreeWidgetItem, column: int) -> None:
         if column != TICK:  # on the box itself, the two clicks already ticked and unticked
@@ -990,130 +1098,3 @@ class DeleteDialog(Question):
     def accept(self) -> None:
         if rows.confirms(self.word.text()):  # never by a stray Enter on a greyed button
             super().accept()
-
-
-class ProgressPanel(QWidget):
-    """In Details' place while a host's profiles are deleted, and after: where the run is, a
-    line in the history when a profile starts and when it ends, and Cancel the rest. No queue of
-    its own: the profiles table's State column is the queue. Once it's over, Open the history
-    and Close, which brings the details back."""
-
-    cancel_requested = Signal()
-    log_requested = Signal()
-    closed = Signal()
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.title = QLabel()
-        font = QFont(self.title.font())
-        font.setBold(True)
-        font.setPointSizeF(font.pointSizeF() * 1.25)
-        self.title.setFont(font)
-        self.first, self.second = DetailsPanel.muted(""), DetailsPanel.muted("")
-        self.bar = QProgressBar()
-        self.bar.setObjectName("thin")
-        self.bar.setTextVisible(False)
-        self.bar.setFixedHeight(8)
-        self.log = output_box("")
-        self.log.setFont(QFont("Consolas", 8))
-        self.cancel_button = QPushButton()
-        self.log_button = QPushButton()
-        self.close_button = QPushButton()
-        for button in (self.cancel_button, self.log_button, self.close_button):
-            button.setAutoDefault(False)
-        self.note = DetailsPanel.muted("")
-        self.cancel_button.clicked.connect(self._cancel)
-        self.log_button.clicked.connect(self.log_requested)
-        self.close_button.clicked.connect(self.closed)
-        self._log_title = QLabel()
-        box = card()
-        column = QVBoxLayout(box)
-        column.setContentsMargins(14, 12, 14, 12)
-        column.setSpacing(3)
-        for widget in (self.title, self.first, self.second):
-            column.addWidget(widget)
-        column.addSpacing(6)
-        column.addWidget(self.bar)
-        self._section(column, self._log_title)
-        column.addWidget(self.log)
-        column.addSpacing(8)
-        buttons = QHBoxLayout()
-        buttons.addWidget(self.cancel_button)
-        buttons.addWidget(self.log_button)
-        buttons.addStretch(1)
-        buttons.addWidget(self.close_button)
-        column.addLayout(buttons)
-        column.addWidget(self.note)
-        column.addStretch(1)
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(box)
-        self._over = False
-        self._show_buttons()  # or the buttons of both states set the panel's narrowest width
-        self.retranslate()
-
-    @staticmethod
-    def _section(layout: QVBoxLayout, heading: QLabel) -> None:
-        """As Details' sections: a thin line, then the heading in the accent colour."""
-        rule = QFrame()
-        rule.setObjectName("detailsRule")
-        layout.addSpacing(10)
-        layout.addWidget(rule)
-        layout.addSpacing(6)
-        heading.setObjectName("detailsSection")
-        layout.addWidget(heading)
-
-    def retranslate(self) -> None:
-        self._log_title.setText(_("History"))
-        self.cancel_button.setText(_("Cancel the rest"))
-        self.log_button.setText(_("Open the history"))
-        self.close_button.setText(_("Close"))
-        self.note.setText(_("The current profile finishes first; the queued ones don't start."))
-        self._show_title()
-
-    def start(self, total: int) -> None:
-        """A new run of `total` profiles, an empty history."""
-        self._over = False
-        self.log.clear()
-        self.log.setFixedHeight(130)
-        self.bar.setRange(0, total)
-        self.bar.setValue(0)
-        self.second.hide()
-        self.cancel_button.setEnabled(True)
-        self._show_buttons()
-        self._show_title()
-
-    def show_progress(self, text: str, ended: int) -> None:
-        """The grey line under the title, and how many of the queue have ended."""
-        self.first.setText(text)
-        self.bar.setValue(ended)
-
-    def add_line(self, line: str) -> None:
-        self.log.appendPlainText(line)
-
-    def finish(self, first: str, second: str) -> None:
-        """The run is over: what happened in two lines, the bar full, Open the log and Close."""
-        self._over = True
-        self.first.setText(first)
-        self.second.setText(second)
-        self.second.show()
-        self.bar.setValue(self.bar.maximum())
-        self.log.setFixedHeight(170)
-        self._show_buttons()
-        self._show_title()
-
-    def over(self) -> bool:
-        return self._over
-
-    def _cancel(self) -> None:
-        self.cancel_button.setEnabled(False)
-        self.cancel_requested.emit()
-
-    def _show_buttons(self) -> None:
-        for widget in (self.cancel_button, self.note):
-            widget.setVisible(not self._over)
-        for widget in (self.log_button, self.close_button):
-            widget.setVisible(self._over)
-
-    def _show_title(self) -> None:
-        self.title.setText(_("Deletion finished") if self._over else _("Deleting profiles"))

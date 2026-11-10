@@ -9,7 +9,15 @@ from datetime import UTC, datetime
 from typing import Any
 
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QAction, QColor, QKeySequence, QPalette, QShortcut, QShowEvent
+from PySide6.QtGui import (
+    QAction,
+    QColor,
+    QGuiApplication,
+    QKeySequence,
+    QPalette,
+    QShortcut,
+    QShowEvent,
+)
 from PySide6.QtWidgets import (
     QDialog,
     QMenu,
@@ -34,10 +42,11 @@ from capypanel.ui.list_workspace.splitter import PaneSplitter
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar, tool_button
 from capypanel.ui.menus import MenuCombo, popup
-from capypanel.ui.profiles_tool import work
+from capypanel.ui.profiles_tool import rows, work
 from capypanel.ui.profiles_tool.host_page import Context, HostPage, Stage
-from capypanel.ui.profiles_tool.hosts_page import GroupFacts, HostFacts, HostsPage, RowFacts
-from capypanel.ui.profiles_tool.panels import DETAILS, LEFT, RIGHT
+from capypanel.ui.profiles_tool.hosts_page import HostsPage, RowFacts
+from capypanel.ui.profiles_tool.panels import AMBER, DETAILS, LEFT, RIGHT
+from capypanel.ui.profiles_tool.side import Entry, GroupFacts, HostFacts, ProgressCard
 from capypanel.ui.profiles_tool.tabs import HOSTS, TabStrip, mark_icon
 
 PANES_KEY = "pane_widths"  # the side panels' widths (the narrower 0.24 ones aren't kept)
@@ -134,10 +143,19 @@ class ProfilesTool(Tool):
         self.hosts_page = HostsPage()
         self.tabs = TabStrip()
         self.middle = QStackedWidget()
-        self.side = QStackedWidget()
         self.middle.addWidget(self.hosts_page.box)
-        self.side.addWidget(self.hosts_page.side)
         self.inner = PaneSplitter()
+        # The right panel: Progress, the same on every tab, then the tab's own card (and, on
+        # a host's tab, its button at the foot). The gaps are the gap between the panels.
+        self.progress = ProgressCard()
+        self.cards = QStackedWidget()
+        self.cards.addWidget(self.hosts_page.side)
+        self.side = QWidget()
+        cards = QVBoxLayout(self.side)
+        cards.setContentsMargins(0, 0, 0, 0)
+        cards.setSpacing(self.inner.handleWidth())
+        cards.addWidget(self.progress)
+        cards.addWidget(self.cards, 1)
         self.inner.addWidget(self.middle)
         self.inner.addWidget(self.side)
         self.inner.setStretchFactor(0, 1)
@@ -222,7 +240,10 @@ class ProfilesTool(Tool):
         table.open_requested.connect(self.open_hosts)
         table.picked.connect(self._hosts_picked)
         table.scan_typed.connect(self.open_typed)
-        self.hosts_page.progress.go_to.connect(self.switch)
+        table.menu_requested.connect(self._hosts_menu)
+        self.progress.go_to.connect(self.switch)
+        self.hosts_page.host_card.go_to.connect(self.switch)
+        self.hosts_page.host_card.copied.connect(self._copied)
         self.tabs.picked.connect(self.switch)
         self.tabs.close_requested.connect(self.close_tab)
         self.tabs.menu_requested.connect(self._tab_menu)
@@ -541,8 +562,45 @@ class ProfilesTool(Tool):
         if self.tabs.current() == HOSTS:
             self._update()
 
+    def _copied(self, text: str) -> None:
+        self._shell.show_message(_("Copied: {text}").format(text=text), 5000)
+
+    def _hosts_menu(self, where: QPoint) -> None:
+        """A right-click on the Hosts tab's hosts: what the double-click and the toolbar do,
+        and the name and address to paste somewhere else."""
+        ids = self.hosts_page.table.selected_ids()
+        hosts = [h for key in ids if (h := self._host(key)) is not None]
+        if not hosts:
+            return
+        n = len(hosts)
+        menu = QMenu(self)
+        opened = menu.addAction(_("&Open"), lambda: self.open_hosts(ids, True))
+        menu.setDefaultAction(opened)  # bold: what a double-click does
+        scan = (_("&Scan") if n == 1
+                else ngettext("&Scan {n} host", "&Scan {n} hosts", n).format(n=n))  # fmt: skip
+        menu.addAction(scan, self.scan_clicked)
+        refresh = menu.addAction(
+            _("&Refresh host") if n == 1
+            else ngettext("&Refresh {n} host", "&Refresh {n} hosts", n).format(n=n),
+            lambda: self._check(hosts),
+        )  # fmt: skip
+        refresh.setEnabled(not self._checking())
+        menu.addSeparator()
+        clipboard = QGuiApplication.clipboard()
+        names = "\n".join(h.name for h in hosts)
+        addresses = "\n".join(h.connect_address for h in hosts)
+        menu.addAction(
+            ngettext("Copy &name", "Copy &names", n),
+            lambda: (clipboard.setText(names), self._copied(names.replace("\n", ", "))),
+        )
+        menu.addAction(
+            ngettext("Copy &address", "Copy &addresses", n),
+            lambda: (clipboard.setText(addresses), self._copied(addresses.replace("\n", ", "))),
+        )
+        popup(menu, where)
+
     def _show_side(self) -> None:
-        """The box under Progress: the one host picked, or else the hosts on show."""
+        """The Hosts tab's card: the one host picked, or else the hosts on show."""
         ids = self.hosts_page.table.selected_ids()
         host = self._host(ids[0]) if len(ids) == 1 else None
         facts = self._host_facts(host) if host is not None else self._group_facts()
@@ -665,7 +723,7 @@ class ProfilesTool(Tool):
         page = HostPage(target, account, name, context)
         self._pages[target.key] = page
         self.middle.addWidget(page.box)
-        self.side.addWidget(page.side)
+        self.cards.addWidget(page.side)
         self.tabs.add(target.key, target.name)
         page.changed.connect(lambda p=page: self._page_changed(p))
         page.status_changed.connect(lambda p=page: self._page_status(p))
@@ -682,10 +740,10 @@ class ProfilesTool(Tool):
         self.tabs.set_current(key if page is not None else HOSTS)
         if page is not None:
             self.middle.setCurrentWidget(page.box)
-            self.side.setCurrentWidget(page.side)
+            self.cards.setCurrentWidget(page.side)
         else:
             self.middle.setCurrentWidget(self.hosts_page.box)
-            self.side.setCurrentWidget(self.hosts_page.side)
+            self.cards.setCurrentWidget(self.hosts_page.side)
         self._update()
 
     def _step(self, by: int) -> None:
@@ -717,7 +775,7 @@ class ProfilesTool(Tool):
         self.tabs.remove(key)
         del self._pages[key]
         self.middle.removeWidget(page.box)
-        self.side.removeWidget(page.side)
+        self.cards.removeWidget(page.side)
         page.box.deleteLater()
         page.side.deleteLater()
         page.deleteLater()
@@ -773,9 +831,25 @@ class ProfilesTool(Tool):
             self.status_label.setText(page.status_text())
 
     def _overview(self) -> None:
-        """Andamento, the Hosts tab's name and ▾'s list."""
+        """Progress, the tabs with ticks waiting, the Hosts tab's name and ▾'s list."""
         pages = [self._pages[k] for k in self.tabs.host_keys() if k in self._pages]
-        self.hosts_page.progress.show_pages(pages)
+        lines, waiting = [], []
+        for page in sorted(pages, key=lambda p: p.order()):  # the working ones first
+            mark = page.mark()
+            lines.append(
+                Entry(page.target.key, page.target.name, page.progress_words(), mark.icon,
+                      mark.color, mark.color if mark.bad else "", mark.tip,
+                      muted=page.stage is Stage.QUEUED)
+            )  # fmt: skip
+        for page in pages:
+            if page.deleting:
+                waiting.append(Entry(page.target.key, page.target.name, page.mark().short,
+                                     "trash", AMBER, rows.IN_USE_BLUE))  # fmt: skip
+            elif page.ticked():
+                waiting.append(Entry(page.target.key, page.target.name, page.ticked_words(),
+                                     "trash", AMBER))  # fmt: skip
+        self.progress.show_tabs(lines, sum(not p.busy() for p in pages))
+        self.hosts_page.host_card.show_ticked(waiting)
         total = len(self._all_hosts())
         self.tabs.set_hosts_text(_("Hosts ({n})").format(n=total))
         items = [(HOSTS, _("Hosts ({n})").format(n=total), mark_icon("device-desktop", ""))]
@@ -835,22 +909,12 @@ class ProfilesTool(Tool):
             self.align_toolbar_later()
             return
         name = page.target.name
-        ticked = page.ticked()
-        delete = (
-            ngettext("Delete {n} profile…", "Delete {n} profiles…", len(ticked)).format(
-                n=len(ticked)
-            )
-            if ticked
-            else _("Delete profiles…")
-        )
         counting = page.counting()
         bar.show_texts(
             _("Scan again"),
             _("Scans {host}'s profiles again").format(host=name),
-            delete,
-            _("Deletes the profiles ticked on {host}, after a question that lists them").format(
-                host=name
-            ),
+            page.delete_text(),
+            page.delete_tip(),
             _("Stops at once; sizes already counted stay")
             if counting
             else _("Counts the size of each profile shown on {host}; it only reads").format(
@@ -866,7 +930,7 @@ class ProfilesTool(Tool):
         idle = page.stage in (Stage.SCANNED, Stage.FAILED) and not page.deleting
         bar.scan_button.setEnabled(idle)
         bar.sizes_button.setEnabled(page.scan is not None and not page.deleting)
-        bar.show_delete(page.scan is not None and idle and bool(ticked))
+        bar.show_delete(page.can_delete())
         self.status_label.setText(page.status_text())
         self.align_toolbar_later()
 
@@ -893,6 +957,7 @@ class ProfilesTool(Tool):
             pool=self.pool,
             log_file=lambda: self._shell.paths.user_profiles_log_file,
             message=self._shell.show_message,
+            gap=self.inner.handleWidth(),
             another_account=hosts.runner.another_account,
         )
 

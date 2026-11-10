@@ -1,6 +1,7 @@
 """One host's tab in the User profiles tool: its box (the name, the filters, the profiles table),
-and on the right a profile's details, or the progress while it deletes. Each tab keeps its own
-scan, sizes and delete run, so several hosts can be read, counted and cleaned at once."""
+and on the right its card (the profiles ticked, or the delete run) with the Delete button at the
+foot. A profile's details open in a window. Each tab keeps its own scan, sizes and delete run, so
+several hosts can be read, counted and cleaned at once."""
 
 import os
 from collections.abc import Callable
@@ -13,7 +14,7 @@ from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QDialog, QStackedWidget, QVBoxLayout, QWidget
 
-from capypanel.core.i18n import _, ngettext
+from capypanel.core.i18n import N_, _, ngettext
 from capypanel.core.remote import user_profiles
 from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.user_profiles import Deleted, Kind, Outcome, Profile, Scan, Why
@@ -27,13 +28,12 @@ from capypanel.ui.profiles_tool.panels import (
     DeleteDialog,
     FilterRow,
     HintCard,
-    ProfileDetails,
     ProfilesTable,
-    ProgressPanel,
     Shown,
     TabBox,
 )
 from capypanel.ui.profiles_tool.rows import Result
+from capypanel.ui.profiles_tool.side import Entry, Foot, ProfileWindow, RunCard, TickedCard
 
 
 class Stage(Enum):
@@ -59,6 +59,14 @@ class Mark:
 
 
 BLUE = rows.IN_USE_BLUE
+# A run's line on the card: each profile's words on the right, and their colour ("": grey).
+_RUN_WORDS = {
+    Result.QUEUED: (N_("queued"), ""),
+    Result.DELETING: (N_("deleting…"), BLUE),
+    Result.DELETED: (N_("deleted"), ""),
+    Result.SKIPPED: (N_("skipped"), ""),
+    Result.FAILED: (N_("failed"), STATUS_COLORS["stopped"]),
+}
 
 
 @dataclass
@@ -68,11 +76,13 @@ class Context:
     pool: work.Pool
     log_file: Callable[[], Path]  # the history's file
     message: Callable[[str], None]  # a note in the status bar
+    gap: int  # px between the right panel's cards: the gap between the panels
     another_account: Callable[[HostTarget, BaseException, Callable[[], None]], None] | None
 
 
 class HostPage(QObject):
-    """A host's tab: `box` goes in the middle, `side` on the right; the tool shows both."""
+    """A host's tab: `box` goes in the middle, `side` on the right under Progress; the tool
+    shows both."""
 
     changed = Signal()  # the mark, the counts or the toolbar may differ now
     status_changed = Signal()  # the status bar's text
@@ -105,6 +115,10 @@ class HostPage(QObject):
         self.deleting = False
         self._cancelled = False
         self._began = datetime.now().astimezone()
+        self._ended = self._began  # when the last run was over
+        self._run_shown = False  # the card shows a delete run, under way or just over
+        self._window: ProfileWindow | None = None  # a profile's details, while it's open
+        self._window_ident = ""
         self._freed = 0
         self._jobs: set[Job] = set()
 
@@ -118,17 +132,27 @@ class HostPage(QObject):
         self._stack.addWidget(self._card_page)
         self._stack.addWidget(self.table)
         self.box = TabBox(self.filters, self._stack)
-        self.details = ProfileDetails()
-        self.progress = ProgressPanel()
-        self.side = QStackedWidget()
-        self.side.addWidget(self.details)
-        self.side.addWidget(self.progress)
+        self.ticked_card = TickedCard()
+        self.run_card = RunCard()
+        self.cards = QStackedWidget()
+        self.cards.addWidget(self.ticked_card)
+        self.cards.addWidget(self.run_card)
+        self.foot = Foot()
+        self.side = QWidget()
+        column = QVBoxLayout(self.side)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(context.gap)
+        column.addWidget(self.cards, 1)
+        column.addWidget(self.foot)
         self.filters.changed.connect(self._show_rows)
-        self.table.picked.connect(self._show_details)
         self.table.ticked_changed.connect(self._ticks_changed)
-        self.progress.cancel_requested.connect(self.cancel_rest)
-        self.progress.log_requested.connect(self.open_log)
-        self.progress.closed.connect(self.close_progress)
+        self.table.details_requested.connect(self.show_details)
+        self.ticked_card.picked.connect(self.table.select)
+        self.run_card.picked.connect(self.table.select)
+        self.run_card.log_requested.connect(self.open_log)
+        self.run_card.closed.connect(self.close_progress)
+        self.foot.delete_button.clicked.connect(lambda: self.delete_ticked(self.side.window()))
+        self.foot.cancel_button.clicked.connect(self.cancel_rest)
         self._show_waiting()
 
     # ---- what the tab and the Hosts tab show ----
@@ -180,6 +204,26 @@ class HostPage(QObject):
                         busy=False)  # fmt: skip
         when = clock_text(self.read_at) if self.read_at else ""
         return Mark("", "", _("Scanned at {time}").format(time=when), when, busy=False)
+
+    def progress_words(self) -> str:
+        """Its words on Progress's line: where it is, or "scanned at 10:41" once it's read."""
+        scanned = self.stage is Stage.SCANNED and not self.deleting and self._counting is None
+        if scanned and not self._run and self.read_at is not None:
+            return _("scanned at {time}").format(time=clock_text(self.read_at))
+        return self.mark().short
+
+    def order(self) -> int:
+        """Where Progress lists it: deleting, scanning, counting, waiting, then the ones done,
+        the failed ones last."""
+        if self.deleting:
+            return 0
+        if self.stage is Stage.SCANNING:
+            return 1
+        if self._counting is not None:
+            return 2
+        if self.stage is Stage.QUEUED:
+            return 3
+        return 5 if self.stage is Stage.FAILED else 4
 
     def tab_text(self) -> str:
         """The tab's name: the host's, and "· 2/3" while it deletes."""
@@ -315,7 +359,7 @@ class HostPage(QObject):
                 else [_("A few hosts are read at a time; this one starts when one ends.")],
             )
         )  # fmt: skip
-        self.details.show_hint(_("The profiles show once the host is scanned."))
+        self._show_side()
         self._changed()
 
     def _show_scan(self) -> None:
@@ -355,7 +399,7 @@ class HostPage(QObject):
         buttons.append((_("Try again"), self.start_scan))
         color = QColor(STATUS_COLORS["stopped"])
         self._show_card(HintCard("circle-x", color, said.title, said.lines, buttons))
-        self.details.show_hint(_("The profiles show once the host is scanned."))
+        self._show_side()
         self._changed()
 
     def _show_card(self, card: HintCard) -> None:
@@ -372,7 +416,7 @@ class HostPage(QObject):
         """Everything drawn again: another language, or another theme."""
         self.filters.retranslate()
         self.table.retranslate()
-        self.progress.retranslate()
+        self._show_side()
         if self.stage is Stage.SCANNED:
             self._show_scan()
         elif self.stage is Stage.FAILED:
@@ -392,6 +436,7 @@ class HostPage(QObject):
             shown = [p for p in self.scan.profiles if p.ident in seen or p.ident in extra]
         self.table.show_profiles(shown, self._sizes, self._results, self.scan.root)
         self._show_count()
+        self._show_side()
         self.box.show_title(self.title(), self.about())
         self.status_changed.emit()
 
@@ -408,7 +453,7 @@ class HostPage(QObject):
         """Line 2's right end: how many rows show, or, with ticks, how many and their size."""
         if self.scan is None:
             return
-        ticked = self.ticked()
+        ticked = [] if self.deleting else self.ticked()  # a run under way: the State column
         words = short = ""
         if ticked:
             words = short = ngettext("{n} ticked", "{n} ticked", len(ticked)).format(n=len(ticked))
@@ -423,20 +468,118 @@ class HostPage(QObject):
 
     def _ticks_changed(self) -> None:
         self._show_count()
+        self._show_side()
         self.status_changed.emit()
         self.changed.emit()
 
-    def _show_details(self) -> None:
-        profile = self.table.selected() if self.scan is not None else None
-        if profile is None or self.scan is None:
-            self.details.show_hint(
-                "" if self.scan is not None else _("The profiles show once the host is scanned.")
+    # ---- the right panel ----
+
+    def can_delete(self) -> bool:
+        """Scanned, nothing under way, and something ticked."""
+        idle = self.stage in (Stage.SCANNED, Stage.FAILED) and not self.deleting
+        return self.scan is not None and idle and bool(self.ticked())
+
+    def delete_text(self) -> str:
+        """The Delete buttons' words, on the toolbar and at the panel's foot: they count."""
+        n = len(self.ticked())
+        if not n:
+            return _("Delete profiles…")
+        return ngettext("Delete {n} profile…", "Delete {n} profiles…", n).format(n=n)
+
+    def delete_tip(self) -> str:
+        if not self.ticked():
+            return _("Tick profiles in the table to delete")
+        return _("Deletes the profiles ticked on {host}, after a question that lists them").format(
+            host=self.target.name
+        )
+
+    def ticked_words(self) -> str:
+        """ "3 profiles · 12.4 GB": what's ticked here, for the Hosts tab's card."""
+        n = len(self.ticked())
+        words = ngettext("{n} profile", "{n} profiles", n).format(n=n)
+        size = self.ticked_size()
+        return f"{words} · {rows.size_text(size)}" if size else words
+
+    def _show_side(self) -> None:
+        """The card (what's ticked, or the delete run), the button at the foot, and the
+        profile's window when it's open."""
+        if self._run_shown:
+            self._show_run()
+            self.cards.setCurrentWidget(self.run_card)
+        else:
+            self.ticked_card.show_ticked(self.ticked(), self._counted(), self.scan is not None)
+            self.cards.setCurrentWidget(self.ticked_card)
+        if self.deleting:
+            self.foot.show_cancel(not self._cancelled)
+        else:
+            self.foot.show_delete(self.delete_text(), self.can_delete(), self.delete_tip())
+        self._show_window()
+
+    def _show_run(self) -> None:
+        ended, total = self._run_counts()
+        entries = []
+        for profile in self._run:
+            result = self._results.get(profile.ident, Result.QUEUED)
+            icon, color = rows.RESULT_ICONS[result]
+            size, done = self._sizes.get(profile.ident), self._done.get(profile.ident)
+            words, words_color = _RUN_WORDS[result]
+            words = _(words)
+            if result is Result.DELETED and size:
+                words = f"{words} · {rows.size_text(size)}"
+            entries.append(
+                Entry(
+                    profile.ident,
+                    rows.user_text(profile),
+                    words,
+                    icon,
+                    color,
+                    words_color,
+                    tip=rows.ended_text(done, size) if done is not None else "",
+                    muted=result is Result.QUEUED,
+                )
             )
+        if self.deleting:
+            title = ngettext(
+                "{n} of {total} profile", "{n} of {total} profiles", total
+            ).format(n=min(ended + 1, total), total=total)  # fmt: skip
+            second = _("since {time}").format(time=clock_text(self._began))
+        else:
+            results = [self._results[p.ident] for p in self._run if p.ident in self._results]
+            title = rows.counts_text(results) or _("nothing deleted")
+            second = _("{start} to {end}").format(
+                start=clock_text(self._began), end=clock_text(self._ended)
+            )
+            if self._freed:
+                freed = _("{size} freed").format(size=rows.size_text(self._freed))
+                second = f"{freed} · {second}"
+        self.run_card.show_run(not self.deleting, title, second, ended, total, entries)
+
+    def show_details(self, ident: str = "") -> None:
+        """A profile's details in their window: the row asked for, or the one clicked. It
+        follows the row while it's open (its size being counted, its tick)."""
+        profile = self.table.profile(ident) if ident else self.table.selected()
+        if profile is None or self.scan is None:
             return
-        size = self._sizes.get(profile.ident)
-        counting = profile.ident in self._sizes and size is None
-        result, done = self._results.get(profile.ident), self._done.get(profile.ident)
-        self.details.show_item(Shown(profile, self.scan.root, size, counting, result, done), 1)
+        window = ProfileWindow(self.side.window(), self.target.name, profile.user)
+        window.copied.connect(lambda text: self._ctx.message(_("Copied: {text}").format(text=text)))
+        window.tick_toggled.connect(lambda on, i=profile.ident: self.table.tick(i, on))
+        self._window, self._window_ident = window, profile.ident
+        self._show_window()
+        try:
+            run_modal(window)
+        finally:
+            self._window = None
+
+    def _show_window(self) -> None:
+        window, ident = self._window, self._window_ident
+        profile = self.table.profile(ident) if window is not None else None
+        if window is None or profile is None or self.scan is None:
+            return
+        size = self._sizes.get(ident)
+        counting = ident in self._sizes and size is None
+        shown = Shown(profile, self.scan.root, size, counting, self._results.get(ident),
+                      self._done.get(ident))  # fmt: skip
+        window.show_profile(shown, self.table.is_ticked(ident), self.table.can_tick(ident))
 
     # ---- sizes ----
 
@@ -520,15 +663,13 @@ class HostPage(QObject):
         for ident in [i for i, size in self._sizes.items() if size is None]:
             del self._sizes[ident]
             self.table.show_size(ident, self._sizes)
-        self._show_details()
+        self._show_side()
         self._changed()
 
     def _show_size(self, profile: Profile) -> None:
         self.table.show_size(profile.ident, self._sizes)
         self._show_count()
-        picked = self.table.selected()
-        if picked is not None and picked.ident == profile.ident:
-            self._show_details()
+        self._show_side()
 
     def _show_so_far(self) -> None:
         """Each row being counted, with its bytes up to now; the status bar adds them up."""
@@ -568,12 +709,11 @@ class HostPage(QObject):
         self._run, self._queue = list(profiles), list(profiles)
         self._results, self._done, self._freed = {}, {}, 0
         self._began = self._now()
+        self._run_shown = True
         self.table.lock(True)
-        self.progress.start(len(profiles))
         for profile in profiles:
             self._set_result(profile, Result.QUEUED)
         self._show_rows()  # the run's rows show whatever the filters
-        self.side.setCurrentWidget(self.progress)
         self._delete_next()
 
     def cancel_rest(self) -> None:
@@ -585,8 +725,7 @@ class HostPage(QObject):
         for profile in left:
             self._set_result(profile, None)
         self._run = [p for p in self._run if p not in left]
-        if left:
-            self._log(_("cancelled: {n} not started").format(n=len(left)))
+        self._show_side()
         self._changed()
 
     def _run_counts(self) -> tuple[int, int]:
@@ -601,14 +740,6 @@ class HostPage(QObject):
             return
         profile, account = self._queue.pop(0), self._account
         self._set_result(profile, Result.DELETING)
-        ended, total = self._run_counts()
-        self.progress.show_progress(
-            _("{host} · profile {n} of {total} · since {time}").format(
-                host=self.target.name, n=ended + 1, total=total, time=clock_text(self._began)
-            ),
-            ended,
-        )
-        self._log(f"{profile.user}: " + _("deleting…"))
         log_file = self._ctx.log_file()
         self._changed()
 
@@ -617,7 +748,6 @@ class HostPage(QObject):
             self._done[profile.ident] = ended
             if ended.outcome is Outcome.DELETED and size:
                 self._freed += size
-            self._log(f"{profile.user}: " + rows.ended_text(ended, size))
             self._set_result(profile, rows.result_of(ended))
             self._delete_next()
 
@@ -630,17 +760,9 @@ class HostPage(QObject):
 
     def _delete_over(self) -> None:
         self.deleting = False
+        self._ended = self._now()
         self.table.lock(False)
-        results = [self._results[p.ident] for p in self._run if p.ident in self._results]
-        counts = rows.counts_text(results) or _("nothing deleted")
-        times = _("{start} to {end}").format(
-            start=clock_text(self._began), end=clock_text(self._now())
-        )
-        freed = _("{size} freed").format(size=rows.size_text(self._freed)) if self._freed else ""
-        self.progress.finish(
-            f"{self.target.name} · {counts}", f"{freed} · {times}" if freed else times
-        )
-        self._show_details()
+        self._show_side()
         self._changed()
 
     def _set_result(self, profile: Profile, result: Result | None) -> None:
@@ -649,13 +771,8 @@ class HostPage(QObject):
         else:
             self._results[profile.ident] = result
         self.table.show_result(profile.ident, result)
-        picked = self.table.selected()
-        if picked is not None and picked.ident == profile.ident:
-            self._show_details()
-
-    def _log(self, text: str) -> None:
-        """A line in the progress panel's history: the time, then what happened."""
-        self.progress.add_line(f"{self._now():%H:%M}  {text}")
+        self._show_count()  # a row that ended lost its tick
+        self._show_side()
 
     def open_log(self) -> None:
         """The file every delete is written to, in whatever opens text files."""
@@ -666,11 +783,11 @@ class HostPage(QObject):
             self._ctx.message(_("The history has nothing yet."))
 
     def close_progress(self) -> None:
-        """Details again."""
-        if self.deleting or self.side.currentWidget() is self.details:
+        """A run that's over leaves the card: what's ticked shows again."""
+        if self.deleting or not self._run_shown:
             return
-        self.side.setCurrentWidget(self.details)
-        self._show_details()
+        self._run_shown = False
+        self._show_side()
 
     # ---- helpers ----
 

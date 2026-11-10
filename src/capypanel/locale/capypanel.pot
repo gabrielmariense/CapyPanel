@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 17:14-0300\n"
+"POT-Creation-Date: 2026-11-10 18:44-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -105,6 +105,9 @@ msgid "&Delete…"
 msgstr ""
 
 msgid "&Details pane"
+msgstr ""
+
+msgid "&Details…"
 msgstr ""
 
 msgid "&Disconnect"
@@ -309,6 +312,15 @@ msgstr ""
 msgid "&Refresh"
 msgstr ""
 
+msgid "&Refresh host"
+msgstr ""
+
+#, python-brace-format
+msgid "&Refresh {n} host"
+msgid_plural "&Refresh {n} hosts"
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "&Remember it on this computer"
 msgstr ""
 
@@ -353,6 +365,15 @@ msgstr ""
 
 msgid "&Save as preset…"
 msgstr ""
+
+msgid "&Scan"
+msgstr ""
+
+#, python-brace-format
+msgid "&Scan {n} host"
+msgid_plural "&Scan {n} hosts"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "&Send"
 msgstr ""
@@ -458,6 +479,12 @@ msgid "A Refresh is running. Try again once it ends."
 msgstr ""
 
 msgid "A chosen &group"
+msgstr ""
+
+msgid "A click goes to the host's tab."
+msgstr ""
+
+msgid "A click on a line shows the profile in the table."
 msgstr ""
 
 msgid "A connection profile must be a JSON object."
@@ -1062,8 +1089,18 @@ msgstr ""
 msgid "Copies the answer and everything the PC wrote"
 msgstr ""
 
+msgid "Copy &address"
+msgid_plural "Copy &addresses"
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "Copy &list"
 msgstr ""
+
+msgid "Copy &name"
+msgid_plural "Copy &names"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Copy all"
 msgstr ""
@@ -1266,6 +1303,12 @@ msgctxt "the word typed to confirm"
 msgid "DELETE"
 msgstr ""
 
+msgid "DELETING PROFILES"
+msgstr ""
+
+msgid "DELETION FINISHED"
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "DISM and sfc check every Windows file on {host} and repair the damaged "
@@ -1369,16 +1412,13 @@ msgid ""
 "Cancel the rest."
 msgstr ""
 
-msgid "Deleting profiles"
-msgstr ""
-
 msgid "Deleting…"
 msgstr ""
 
-msgid "Deletion finished"
+msgid "Details"
 msgstr ""
 
-msgid "Details"
+msgid "Details (Enter)"
 msgstr ""
 
 msgid "Disconnect"
@@ -1437,10 +1477,6 @@ msgid "Documentation:"
 msgstr ""
 
 msgid "Don't ask again (change it in Settings › CapyPanel › Startup)"
-msgstr ""
-
-#, python-brace-format
-msgid "Done ({n})"
 msgstr ""
 
 msgid "Door open"
@@ -1762,9 +1798,6 @@ msgstr ""
 msgid "Hide Windows' own"
 msgstr ""
 
-msgid "History"
-msgstr ""
-
 msgid "Hom&e"
 msgstr ""
 
@@ -1847,10 +1880,6 @@ msgid "Ignored columns: {names}."
 msgstr ""
 
 msgid "Import hosts"
-msgstr ""
-
-#, python-brace-format
-msgid "In progress ({n})"
 msgstr ""
 
 #, python-brace-format
@@ -2226,6 +2255,9 @@ msgstr ""
 msgid "No group"
 msgstr ""
 
+msgid "No host in tabs"
+msgstr ""
+
 msgid "No host list is open."
 msgstr ""
 
@@ -2297,6 +2329,9 @@ msgid "No printers in this group have all the picked tags."
 msgstr ""
 
 msgid "No printers to refresh"
+msgstr ""
+
+msgid "No profile ticked"
 msgstr ""
 
 msgid ""
@@ -2438,6 +2473,9 @@ msgid "One per user, named after the account."
 msgstr ""
 
 msgid "Online"
+msgstr ""
+
+msgid "Only a profile that can be deleted, outside a delete run"
 msgstr ""
 
 #, python-brace-format
@@ -2642,6 +2680,9 @@ msgstr ""
 msgid "PC facts · {when}"
 msgstr ""
 
+msgid "PROGRESS"
+msgstr ""
+
 msgid "Page &counters:"
 msgstr ""
 
@@ -2759,6 +2800,10 @@ msgstr ""
 msgid "Profile"
 msgstr ""
 
+#, python-brace-format
+msgid "Profile {user} on {host}"
+msgstr ""
+
 msgid "Profiles"
 msgstr ""
 
@@ -2772,9 +2817,6 @@ msgid "Profiles you changed or made yourself stay as they are."
 msgstr ""
 
 msgid "Programs (*.exe)"
-msgstr ""
-
-msgid "Progress"
 msgstr ""
 
 msgid "Protected"
@@ -3572,6 +3614,9 @@ msgstr ""
 msgid "T&oolbar"
 msgstr ""
 
+msgid "TICKED TO DELETE"
+msgstr ""
+
 msgid "Table"
 msgstr ""
 
@@ -3686,7 +3731,9 @@ msgid ""
 "available on this PC."
 msgstr ""
 
-msgid "The current profile finishes first; the queued ones don't start."
+msgid ""
+"The current profile finishes first; the queued ones don't start. Every "
+"delete goes in the history."
 msgstr ""
 
 msgid "The default list"
@@ -4026,7 +4073,19 @@ msgstr ""
 msgid "Tick a column under Last check to read them"
 msgstr ""
 
+msgid "Tick in the table: the box, Space or a double-click on the row."
+msgstr ""
+
+msgid "Tick profiles in the table to delete"
+msgstr ""
+
+msgid "Tick to delete"
+msgstr ""
+
 msgid "Tick to delete: the box, Space, or a double-click on the row"
+msgstr ""
+
+msgid "Ticked in tabs"
 msgstr ""
 
 msgid "Ticked: it's deleted once you click Delete and confirm"
@@ -4212,10 +4271,6 @@ msgid "WMI directly"
 msgstr ""
 
 msgid "WMI through PowerShell"
-msgstr ""
-
-#, python-brace-format
-msgid "Waiting ({n})"
 msgstr ""
 
 msgid "Waiting to scan"
@@ -4410,6 +4465,16 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "and {n} more profile"
+msgid_plural "and {n} more profiles"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "and {n} more…"
+msgstr ""
+
+#, python-brace-format
 msgid "as {account}"
 msgstr ""
 
@@ -4439,10 +4504,6 @@ msgid "can't be read"
 msgstr ""
 
 msgid "cancel the restart"
-msgstr ""
-
-#, python-brace-format
-msgid "cancelled: {n} not started"
 msgstr ""
 
 msgid "changed, review before use"
@@ -4679,6 +4740,10 @@ msgid "signed in to the PC since the scan"
 msgstr ""
 
 #, python-brace-format
+msgid "since {time}"
+msgstr ""
+
+#, python-brace-format
 msgid "since {when}"
 msgstr ""
 
@@ -4876,10 +4941,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "{host} · didn't answer"
-msgstr ""
-
-#, python-brace-format
-msgid "{host} · profile {n} of {total} · since {time}"
 msgstr ""
 
 #, python-brace-format
@@ -5177,6 +5238,12 @@ msgid "{n} of {total}"
 msgstr ""
 
 #, python-brace-format
+msgid "{n} of {total} profile"
+msgid_plural "{n} of {total} profiles"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} offline"
 msgid_plural "{n} offline"
 msgstr[0] ""
@@ -5284,6 +5351,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} with no address is left out"
 msgid_plural "{n} with no address are left out"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} working"
+msgid_plural "{n} working"
 msgstr[0] ""
 msgstr[1] ""
 

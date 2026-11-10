@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 17:14-0300\n"
+"POT-Creation-Date: 2026-11-10 18:44-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -107,6 +107,9 @@ msgstr "E&xcluir…"
 
 msgid "&Details pane"
 msgstr "Painel de &detalhes"
+
+msgid "&Details…"
+msgstr "&Detalhes…"
 
 msgid "&Disconnect"
 msgstr "&Desconectar"
@@ -310,6 +313,15 @@ msgstr "&Ler de novo"
 msgid "&Refresh"
 msgstr "&Atualizar"
 
+msgid "&Refresh host"
+msgstr "A&tualizar host"
+
+#, python-brace-format
+msgid "&Refresh {n} host"
+msgid_plural "&Refresh {n} hosts"
+msgstr[0] "A&tualizar {n} host"
+msgstr[1] "A&tualizar {n} hosts"
+
 msgid "&Remember it on this computer"
 msgstr "Le&mbrar neste computador"
 
@@ -354,6 +366,15 @@ msgstr "&Salvar"
 
 msgid "&Save as preset…"
 msgstr "&Salvar como predefinição…"
+
+msgid "&Scan"
+msgstr "&Escanear"
+
+#, python-brace-format
+msgid "&Scan {n} host"
+msgid_plural "&Scan {n} hosts"
+msgstr[0] "&Escanear {n} host"
+msgstr[1] "&Escanear {n} hosts"
 
 msgid "&Send"
 msgstr "&Enviar"
@@ -456,6 +477,12 @@ msgstr "Uma atualização está em andamento. Tente de novo quando ela terminar.
 
 msgid "A chosen &group"
 msgstr "Um &grupo escolhido"
+
+msgid "A click goes to the host's tab."
+msgstr "Um clique vai para a aba do host."
+
+msgid "A click on a line shows the profile in the table."
+msgstr "Um clique numa linha mostra o perfil na tabela."
 
 msgid "A connection profile must be a JSON object."
 msgstr "Um perfil de conexão deve ser um objeto JSON."
@@ -1036,8 +1063,18 @@ msgstr "Copia todas as linhas, para colar no Excel"
 msgid "Copies the answer and everything the PC wrote"
 msgstr "Copia a resposta e tudo o que o PC escreveu"
 
+msgid "Copy &address"
+msgid_plural "Copy &addresses"
+msgstr[0] "Copiar e&ndereço"
+msgstr[1] "Copiar e&ndereços"
+
 msgid "Copy &list"
 msgstr "Copiar &lista"
+
+msgid "Copy &name"
+msgid_plural "Copy &names"
+msgstr[0] "Copiar &nome"
+msgstr[1] "Copiar &nomes"
 
 msgid "Copy all"
 msgstr "Copiar tudo"
@@ -1236,6 +1273,12 @@ msgctxt "the word typed to confirm"
 msgid "DELETE"
 msgstr "EXCLUIR"
 
+msgid "DELETING PROFILES"
+msgstr "EXCLUINDO PERFIS"
+
+msgid "DELETION FINISHED"
+msgstr "EXCLUSÃO CONCLUÍDA"
+
 #, python-brace-format
 msgid "DISM and sfc check every Windows file on {host} and repair the damaged ones. It takes up to an hour and slows the PC while it runs; whoever uses it can keep working. Nothing restarts."
 msgstr "O DISM e o sfc verificam todos os arquivos do Windows em {host} e reparam os danificados. Leva até uma hora e deixa o PC mais lento enquanto roda; quem estiver usando pode continuar trabalhando. Nada é reiniciado."
@@ -1332,17 +1375,14 @@ msgstr "Excluir move o arquivo para a Lixeira, para todos que o usam:"
 msgid "Deleting profile {n} of {total}. The tab can't close until it ends; use Cancel the rest."
 msgstr "Excluindo o perfil {n} de {total}. A aba não fecha até terminar; use Cancelar o restante."
 
-msgid "Deleting profiles"
-msgstr "Excluindo perfis"
-
 msgid "Deleting…"
 msgstr "Excluindo…"
 
-msgid "Deletion finished"
-msgstr "Exclusão concluída"
-
 msgid "Details"
 msgstr "Detalhes"
+
+msgid "Details (Enter)"
+msgstr "Detalhes (Enter)"
 
 msgid "Disconnect"
 msgstr "Desconectar"
@@ -1401,10 +1441,6 @@ msgstr "Documentação:"
 
 msgid "Don't ask again (change it in Settings › CapyPanel › Startup)"
 msgstr "Não perguntar de novo (altere em Configurações › CapyPanel › Inicialização)"
-
-#, python-brace-format
-msgid "Done ({n})"
-msgstr "Concluídos ({n})"
 
 msgid "Door open"
 msgstr "Porta aberta"
@@ -1697,9 +1733,6 @@ msgstr "HOSTS EXIBIDOS"
 msgid "Hide Windows' own"
 msgstr "Ocultar os do Windows"
 
-msgid "History"
-msgstr "Histórico"
-
 msgid "Hom&e"
 msgstr "I&nício"
 
@@ -1781,10 +1814,6 @@ msgstr "Colunas ignoradas: {names}."
 
 msgid "Import hosts"
 msgstr "Importar hosts"
-
-#, python-brace-format
-msgid "In progress ({n})"
-msgstr "Em andamento ({n})"
 
 #, python-brace-format
 msgid "In the open list it's set on {hosts} and {groups}. They'll use their group's profile, or the default, instead."
@@ -2137,6 +2166,9 @@ msgstr "Nenhuma pasta escolhida ainda."
 msgid "No group"
 msgstr "Sem grupo"
 
+msgid "No host in tabs"
+msgstr "Nenhum host em abas"
+
 msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
 
@@ -2209,6 +2241,9 @@ msgstr "Nenhuma impressora deste grupo tem todas as tags escolhidas."
 
 msgid "No printers to refresh"
 msgstr "Nenhuma impressora para atualizar"
+
+msgid "No profile ticked"
+msgstr "Nenhum perfil marcado"
 
 msgid "No row of Settings › Hosts › Credentials names this PC, so it's the Windows account you're signed in with."
 msgstr "Nenhuma linha de Configurações › Hosts › Credenciais nomeia este PC, então é a conta do Windows com que você entrou."
@@ -2336,6 +2371,9 @@ msgstr "Um por usuário, com o nome da conta."
 
 msgid "Online"
 msgstr "Online"
+
+msgid "Only a profile that can be deleted, outside a delete run"
+msgstr "Só um perfil que pode ser excluído, fora de uma exclusão em andamento"
 
 #, python-brace-format
 msgid "Only cache folders go: passwords, cookies, history and bookmarks stay. An app that's open for {user} is left alone. Teams' whole cache goes, as Microsoft's own steps clear it, so Teams may ask them to sign in again."
@@ -2525,6 +2563,9 @@ msgstr "Dados do PC · lendo…"
 msgid "PC facts · {when}"
 msgstr "Dados do PC · {when}"
 
+msgid "PROGRESS"
+msgstr "ANDAMENTO"
+
 msgid "Page &counters:"
 msgstr "&Contadores de páginas:"
 
@@ -2640,6 +2681,10 @@ msgstr "Imprimindo"
 msgid "Profile"
 msgstr "Perfil"
 
+#, python-brace-format
+msgid "Profile {user} on {host}"
+msgstr "Perfil {user} em {host}"
+
 msgid "Profiles"
 msgstr "Perfis"
 
@@ -2654,9 +2699,6 @@ msgstr "Os perfis que você alterou ou criou continuam como estão."
 
 msgid "Programs (*.exe)"
 msgstr "Programas (*.exe)"
-
-msgid "Progress"
-msgstr "Andamento"
 
 msgid "Protected"
 msgstr "Protegido"
@@ -3432,6 +3474,9 @@ msgstr "Painel de t&ags"
 msgid "T&oolbar"
 msgstr "&Barra de ferramentas"
 
+msgid "TICKED TO DELETE"
+msgstr "MARCADOS PARA EXCLUIR"
+
 msgid "Table"
 msgstr "Tabela"
 
@@ -3536,8 +3581,8 @@ msgstr "O perfil de conexão “{profile}” não está disponível neste PC."
 msgid "The connection profile “{profile}” needs the tool “{tool}”, which isn't available on this PC."
 msgstr "O perfil de conexão “{profile}” precisa da ferramenta “{tool}”, que não está disponível neste PC."
 
-msgid "The current profile finishes first; the queued ones don't start."
-msgstr "O perfil atual termina primeiro; os da fila não começam."
+msgid "The current profile finishes first; the queued ones don't start. Every delete goes in the history."
+msgstr "O perfil atual termina primeiro; os da fila não começam. Cada exclusão fica no histórico."
 
 msgid "The default list"
 msgstr "A lista padrão"
@@ -3838,8 +3883,20 @@ msgstr "Marque Status ou Usuários logados para atualizá-los"
 msgid "Tick a column under Last check to read them"
 msgstr "Marque uma coluna em Última verificação para lê-las"
 
+msgid "Tick in the table: the box, Space or a double-click on the row."
+msgstr "Marque na tabela: a caixa, Espaço ou dois cliques na linha."
+
+msgid "Tick profiles in the table to delete"
+msgstr "Marque perfis na tabela para excluir"
+
+msgid "Tick to delete"
+msgstr "Marcar para excluir"
+
 msgid "Tick to delete: the box, Space, or a double-click on the row"
 msgstr "Marque para excluir: a caixa, Espaço ou dois cliques na linha"
+
+msgid "Ticked in tabs"
+msgstr "Marcados nas abas"
 
 msgid "Ticked: it's deleted once you click Delete and confirm"
 msgstr "Marcado: é excluído quando você clicar em Excluir e confirmar"
@@ -4020,10 +4077,6 @@ msgstr "WMI direto"
 msgid "WMI through PowerShell"
 msgstr "WMI pelo PowerShell"
 
-#, python-brace-format
-msgid "Waiting ({n})"
-msgstr "Na fila ({n})"
-
 msgid "Waiting to scan"
 msgstr "Na fila para escanear"
 
@@ -4193,6 +4246,16 @@ msgstr[0] "e mais {n}"
 msgstr[1] "e mais {n}"
 
 #, python-brace-format
+msgid "and {n} more profile"
+msgid_plural "and {n} more profiles"
+msgstr[0] "e mais {n} perfil"
+msgstr[1] "e mais {n} perfis"
+
+#, python-brace-format
+msgid "and {n} more…"
+msgstr "e mais {n}…"
+
+#, python-brace-format
 msgid "as {account}"
 msgstr "como {account}"
 
@@ -4223,10 +4286,6 @@ msgstr "não pode ser lido"
 
 msgid "cancel the restart"
 msgstr "cancelar a reinicialização"
-
-#, python-brace-format
-msgid "cancelled: {n} not started"
-msgstr "cancelado: {n} não começaram"
 
 msgid "changed, review before use"
 msgstr "alterado, revise antes de usar"
@@ -4456,6 +4515,10 @@ msgid "signed in to the PC since the scan"
 msgstr "entrou no PC depois da leitura"
 
 #, python-brace-format
+msgid "since {time}"
+msgstr "desde {time}"
+
+#, python-brace-format
 msgid "since {when}"
 msgstr "desde {when}"
 
@@ -4650,10 +4713,6 @@ msgstr "{host} · excluindo o perfil {n} de {total}"
 #, python-brace-format
 msgid "{host} · didn't answer"
 msgstr "{host} · não respondeu"
-
-#, python-brace-format
-msgid "{host} · profile {n} of {total} · since {time}"
-msgstr "{host} · perfil {n} de {total} · desde {time}"
 
 #, python-brace-format
 msgid "{host}: sizes counted."
@@ -4936,6 +4995,12 @@ msgid "{n} of {total}"
 msgstr "{n} de {total}"
 
 #, python-brace-format
+msgid "{n} of {total} profile"
+msgid_plural "{n} of {total} profiles"
+msgstr[0] "{n} de {total} perfil"
+msgstr[1] "{n} de {total} perfis"
+
+#, python-brace-format
 msgid "{n} offline"
 msgid_plural "{n} offline"
 msgstr[0] "{n} offline"
@@ -5045,6 +5110,12 @@ msgid "{n} with no address is left out"
 msgid_plural "{n} with no address are left out"
 msgstr[0] "{n} sem endereço fica de fora"
 msgstr[1] "{n} sem endereço ficam de fora"
+
+#, python-brace-format
+msgid "{n} working"
+msgid_plural "{n} working"
+msgstr[0] "{n} trabalhando"
+msgstr[1] "{n} trabalhando"
 
 #, python-brace-format
 msgid "{online} online · {offline} offline"
