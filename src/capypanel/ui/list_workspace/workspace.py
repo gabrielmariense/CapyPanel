@@ -81,6 +81,10 @@ class ListWorkspace(Tool):
         assert isinstance(nav_layout, QVBoxLayout)
         nav_layout.insertWidget(0, self.list_picker)
         self.table = table
+        # Every group A–Z in one step, without opening Manage groups.
+        self.sort_groups_action = QAction(self)
+        self.sort_groups_action.setText(_("&Sort groups A–Z"))
+        self.sort_groups_action.triggered.connect(self.sort_groups)
         self._search_timer = QTimer(self)  # waits for a pause in typing, then filters
         self._search_timer.setSingleShot(True)
         self._search_timer.setInterval(150)
@@ -798,6 +802,41 @@ class ListWorkspace(Tool):
         if run_modal(dialog) == QDialog.DialogCode.Accepted:
             self._arrange(dialog.order())
 
+    def sort_groups(self) -> None:
+        """Every group A–Z, inside other groups too, as Manage groups' Sort A–Z does. There's
+        no undo, so it asks first."""
+        doc = self._writable()
+        if doc is None or not doc.hosts.groups:
+            return
+        hosts = doc.hosts
+        order: list[tuple[str, str | None]] = []
+
+        def walk(parent: str | None) -> None:
+            for group in sorted(hosts.children(parent), key=lambda g: g.name.casefold()):
+                order.append((group.id, parent))
+                walk(group.id)
+
+        walk(None)
+        shown: list[str] = []
+
+        def shown_order(parent: str | None) -> None:
+            for group in hosts.children(parent):
+                shown.append(group.id)
+                shown_order(group.id)
+
+        shown_order(None)
+        if shown == [gid for gid, _parent in order]:
+            self._shell.show_message(_("The groups are already A–Z."))
+            return
+        if confirm(
+            self,
+            _("Sort groups A–Z"),
+            _("Sort every group A–Z?"),
+            _("Sort A–Z"),
+            _("Groups inside other groups are sorted too. The order they're in now isn't kept."),
+        ):
+            self._arrange(order)
+
     def _groups_dragged(self) -> None:
         self._arrange(self.nav.groups.order())
 
@@ -839,6 +878,7 @@ class ListWorkspace(Tool):
 
     def retranslate(self) -> None:
         """Every text the panels show, in the current language."""
+        self.sort_groups_action.setText(_("&Sort groups A–Z"))
         self.nav.retranslate()
         self.table.retranslate()
         self.details.retranslate()
@@ -1123,6 +1163,7 @@ class ListWorkspace(Tool):
         menu = QMenu(self)
         self._add_top_group_item(menu)
         menu.addAction(self._list_commands.manage_groups)
+        self._add_sort_item(menu)
         popup(menu, self.nav.groups_heading.mapToGlobal(position))
 
     def _add_top_group_item(self, menu: QMenu) -> None:
@@ -1130,6 +1171,13 @@ class ListWorkspace(Tool):
         item = menu.addAction(self._list_commands.add_group.text())
         item.setEnabled(self._writable() is not None)
         item.triggered.connect(self.add_top_group)
+
+    def _add_sort_item(self, menu: QMenu) -> None:
+        doc = self._doc
+        self.sort_groups_action.setEnabled(
+            self._writable() is not None and doc is not None and len(doc.hosts.groups) > 1
+        )
+        menu.addAction(self.sort_groups_action)
 
     def _group_menu(self, position: QPoint) -> None:
         a = self._list_commands
@@ -1139,6 +1187,7 @@ class ListWorkspace(Tool):
         if group_id is None:
             self._add_top_group_item(menu)
             menu.addAction(a.manage_groups)
+            self._add_sort_item(menu)
             popup(menu, self.nav.groups.viewport().mapToGlobal(position))
             return
         self.nav.select_group(group_id)

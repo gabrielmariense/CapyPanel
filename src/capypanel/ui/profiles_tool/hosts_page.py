@@ -6,7 +6,17 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from PySide6.QtCore import QEvent, QObject, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QIcon, QKeyEvent, QMouseEvent, QPalette
+from PySide6.QtGui import (
+    QColor,
+    QFont,
+    QIcon,
+    QKeyEvent,
+    QMouseEvent,
+    QPainter,
+    QPaintEvent,
+    QPalette,
+    QResizeEvent,
+)
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFrame,
@@ -16,6 +26,7 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -272,6 +283,41 @@ class HostsTable(QWidget):
         )
 
 
+class _Name(QWidget):
+    """A host's name in Andamento: it takes the room the line leaves and ends in "…" when it
+    can't fit, its whole name in the tooltip, so where the host is always shows beside it."""
+
+    def __init__(self, text: str) -> None:
+        super().__init__()
+        self._text = text
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+
+    def text(self) -> str:
+        return self._text
+
+    def sizeHint(self) -> QSize:
+        metrics = self.fontMetrics()
+        return QSize(metrics.horizontalAdvance(self._text) + 2, metrics.height())
+
+    def minimumSizeHint(self) -> QSize:
+        metrics = self.fontMetrics()
+        return QSize(metrics.horizontalAdvance("…") * 3, metrics.height())
+
+    def shown_text(self) -> str:
+        return self.fontMetrics().elidedText(self._text, Qt.TextElideMode.ElideRight, self.width())
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self.setToolTip(self._text if self.shown_text() != self._text else "")
+
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setPen(self.palette().color(QPalette.ColorRole.Text))
+        align = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        painter.drawText(self.rect(), align, self.shown_text())
+        painter.end()
+
+
 class _Line(QWidget):
     """One host in Andamento: its mark, its name, and where it is on the right. A click goes to
     its tab."""
@@ -287,14 +333,13 @@ class _Line(QWidget):
         row.setSpacing(6)
         if icon is not None:
             row.addWidget(icon)
-        self.name = QLabel(name)
+        self.name = _Name(name)
         self.where = QLabel(where)
         self.where.setObjectName("" if color else "hint")
         if color:
             self.where.setStyleSheet(f"color: {color};")
-        row.addWidget(self.name)
-        row.addStretch(1)
-        row.addWidget(self.where)
+        row.addWidget(self.name, 1)
+        row.addWidget(self.where)  # never cut: the name gives way
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
@@ -420,6 +465,7 @@ class HostCard(QFrame):
         self.heading.setFont(small)
         self.dot = QLabel()
         self.name = QLabel()
+        self.name.setWordWrap(True)  # a long host name goes on two lines, never cut
         big = QFont(self.name.font())
         big.setBold(True)
         big.setPointSizeF(big.pointSizeF() * 1.25)

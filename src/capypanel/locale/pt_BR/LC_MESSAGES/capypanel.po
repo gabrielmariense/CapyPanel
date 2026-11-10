@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 11:30-0300\n"
+"POT-Creation-Date: 2026-11-10 13:04-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -381,6 +381,9 @@ msgstr "&Desligar agora"
 
 msgid "&Sort A–Z"
 msgstr "&Classificar de A a Z"
+
+msgid "&Sort groups A–Z"
+msgstr "&Classificar grupos de A a Z"
 
 msgid "&Status"
 msgstr "&Status"
@@ -853,6 +856,13 @@ msgstr "Verifica todos os arquivos do Windows e repara os danificados (DISM e sf
 
 msgid "Checks these hosts again now"
 msgstr "Verifica estes hosts de novo agora"
+
+msgid "Checks whether each host shown answers, as Hosts' Refresh does; its Status column shows here and in Hosts"
+msgstr "Verifica se cada host exibido responde, como o Atualizar do Hosts; a coluna Status aparece aqui e no Hosts"
+
+#, python-brace-format
+msgid "Checks whether {host} answers, as Hosts' Refresh does"
+msgstr "Verifica se {host} responde, como o Atualizar do Hosts"
 
 #, python-brace-format
 msgid "Choose a {tool} settings file"
@@ -1661,6 +1671,9 @@ msgstr "Grupos"
 
 msgid "Groups and tags are the open list's."
 msgstr "Os grupos e as tags são os da lista aberta."
+
+msgid "Groups inside other groups are sorted too. The order they're in now isn't kept."
+msgstr "Os grupos dentro de outros grupos também são classificados. A ordem atual não é mantida."
 
 msgid "Hide Windows' own"
 msgstr "Ocultar os do Windows"
@@ -2715,11 +2728,17 @@ msgstr "Atualizar &status"
 msgid "Refresh DNS"
 msgstr "Atualizar DNS"
 
+msgid "Refresh all"
+msgstr "Atualizar todos"
+
 msgid "Refresh every host shown"
 msgstr "Atualizar todos os hosts exibidos"
 
 msgid "Refresh every host shown, with the checks ticked on a right-click (also F5)"
 msgstr "Atualiza todos os hosts exibidos, com as verificações marcadas no botão direito (também F5)"
+
+msgid "Refresh host"
+msgstr "Atualizar host"
 
 msgid "Refresh logged-on users"
 msgstr "Atualizar usuários logados"
@@ -3260,6 +3279,15 @@ msgstr "Algo deu errado."
 msgid "Somewhere else, e.g. a network share…"
 msgstr "Outro lugar, como uma pasta de rede…"
 
+msgid "Sort A–Z"
+msgstr "Classificar de A a Z"
+
+msgid "Sort every group A–Z?"
+msgstr "Classificar todos os grupos de A a Z?"
+
+msgid "Sort groups A–Z"
+msgstr "Classificar grupos de A a Z"
+
 msgid "Sorts every level by name, once; you can rearrange them after"
 msgstr "Classifica todos os níveis pelo nome, uma vez; depois você pode reorganizá-los"
 
@@ -3486,6 +3514,9 @@ msgstr "A pasta existe, mas nenhum registro aponta para ela. Excluir remove a pa
 #, python-brace-format
 msgid "The folder “{folder}” was created by another user, so CapyPanel won't use it. Ask an administrator to delete it; it will be created again."
 msgstr "A pasta “{folder}” foi criada por outro usuário, então o CapyPanel não vai usá-la. Peça a um administrador para excluí-la; ela será criada de novo."
+
+msgid "The groups are already A–Z."
+msgstr "Os grupos já estão de A a Z."
 
 msgid "The groups changed meanwhile; try again."
 msgstr "Os grupos mudaram enquanto isso; tente de novo."

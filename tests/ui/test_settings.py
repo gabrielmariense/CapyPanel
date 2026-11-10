@@ -263,7 +263,13 @@ def test_menus_hold_only_what_fits_them(window: CapyWindow) -> None:
     ]  # fmt: skip
     # The tool's own commands are in its toolbar.
     inventory = [label(a) for a in window.hosts.toolbar.inventory_menu.actions() if a.text()]
-    assert inventory == ["Add &host…", "Add &group…", "&Manage groups…", "&Import hosts…"]
+    assert inventory == [
+        "Add &host…",
+        "Add &group…",
+        "&Manage groups…",
+        "&Sort groups A–Z",
+        "&Import hosts…",
+    ]
     window.hosts._fill_connect_menu()  # pyright: ignore[reportPrivateUsage]
     connect = [label(a) for a in window.hosts.toolbar.connect_menu.actions() if a.text()][-3:]
     assert connect == ["&Manual connection…", "Connection &profiles…", "Sa&ved credentials…"]

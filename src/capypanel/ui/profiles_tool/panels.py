@@ -46,7 +46,8 @@ from capypanel.ui.profiles_tool import rows
 from capypanel.ui.profiles_tool.rows import Filters, Result
 from capypanel.ui.tables import fit_rows, grid_table
 
-LEFT, RIGHT = 234, 284  # px: the Groups panel and the right panel, at a normal font size
+LEFT, RIGHT = 234, 284  # px: the narrowest the Groups panel opens at, and the right panel can be
+DETAILS = 340  # px: the right panel's first width, as Hosts' Details
 TICK, USER, USED, SIZE, KIND, STATE = range(6)  # the table's columns
 SORT_ROLE = Qt.ItemDataRole.UserRole + 1  # what a cell sorts by
 ARROW = 16  # px a column title needs for the sort arrow

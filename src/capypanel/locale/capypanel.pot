@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 11:30-0300\n"
+"POT-Creation-Date: 2026-11-10 13:04-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -379,6 +379,9 @@ msgid "&Shut down now"
 msgstr ""
 
 msgid "&Sort A–Z"
+msgstr ""
+
+msgid "&Sort groups A–Z"
 msgstr ""
 
 msgid "&Status"
@@ -871,6 +874,15 @@ msgid ""
 msgstr ""
 
 msgid "Checks these hosts again now"
+msgstr ""
+
+msgid ""
+"Checks whether each host shown answers, as Hosts' Refresh does; its "
+"Status column shows here and in Hosts"
+msgstr ""
+
+#, python-brace-format
+msgid "Checks whether {host} answers, as Hosts' Refresh does"
 msgstr ""
 
 #, python-brace-format
@@ -1715,6 +1727,11 @@ msgid "Groups"
 msgstr ""
 
 msgid "Groups and tags are the open list's."
+msgstr ""
+
+msgid ""
+"Groups inside other groups are sorted too. The order they're in now isn't"
+" kept."
 msgstr ""
 
 msgid "Hide Windows' own"
@@ -2828,12 +2845,18 @@ msgstr ""
 msgid "Refresh DNS"
 msgstr ""
 
+msgid "Refresh all"
+msgstr ""
+
 msgid "Refresh every host shown"
 msgstr ""
 
 msgid ""
 "Refresh every host shown, with the checks ticked on a right-click (also "
 "F5)"
+msgstr ""
+
+msgid "Refresh host"
 msgstr ""
 
 msgid "Refresh logged-on users"
@@ -3388,6 +3411,15 @@ msgstr ""
 msgid "Somewhere else, e.g. a network share…"
 msgstr ""
 
+msgid "Sort A–Z"
+msgstr ""
+
+msgid "Sort every group A–Z?"
+msgstr ""
+
+msgid "Sort groups A–Z"
+msgstr ""
+
 msgid "Sorts every level by name, once; you can rearrange them after"
 msgstr ""
 
@@ -3633,6 +3665,9 @@ msgstr ""
 msgid ""
 "The folder “{folder}” was created by another user, so CapyPanel won't use"
 " it. Ask an administrator to delete it; it will be created again."
+msgstr ""
+
+msgid "The groups are already A–Z."
 msgstr ""
 
 msgid "The groups changed meanwhile; try again."

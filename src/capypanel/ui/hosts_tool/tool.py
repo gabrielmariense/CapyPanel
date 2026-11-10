@@ -172,6 +172,7 @@ class HostsTool(ListWorkspace):
         a = self.commands
         inventory = self.toolbar.inventory_menu
         inventory.addActions([a.add_host, a.add_group, a.manage_groups])
+        inventory.addAction(self.sort_groups_action)
         inventory.addSeparator()
         inventory.addAction(a.import_hosts)
 
@@ -975,6 +976,10 @@ class HostsTool(ListWorkspace):
         accounts = self._accounts_of(targets) if users and targets else {}
         if targets and accounts is not None:
             self._start(targets, Checks(status, users, self._ports()), accounts)
+
+    def checking(self) -> bool:
+        """A Refresh is running (another one waits for it to end)."""
+        return self._run is not None
 
     def auto_status(self) -> tuple[bool, int]:
         saved = self.prefs.get("auto_status")

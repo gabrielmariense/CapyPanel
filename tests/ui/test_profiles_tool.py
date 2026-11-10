@@ -4,14 +4,14 @@ scan says, and the limit on reads and counts shared by every tab. Nothing here r
 scan, the sizes and the deletes are answered by hand."""
 
 from collections.abc import Callable, Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import QEvent, QPointF, Qt
-from PySide6.QtGui import QKeyEvent, QMouseEvent
+from PySide6.QtGui import QKeyEvent, QMouseEvent, QShowEvent
 from PySide6.QtWidgets import QApplication, QDialog
 
 from capypanel.core import settings
@@ -278,6 +278,71 @@ def test_the_search_looks_through_every_host_and_a_group_narrows_them(
     assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]
     window.hosts.open_list(path)
     assert _hosts(tool) == ["ER-01"]
+
+
+def _record_checks(window: CapyWindow, monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
+    """Hosts' status check, recorded instead of run: the host names of each call."""
+    calls: list[list[str]] = []
+
+    def check(hosts: Any, *, status: bool, users: bool) -> None:
+        assert status and not users  # status only: never who's logged on
+        calls.append([h.name for h in hosts])
+
+    monkeypatch.setattr(window.hosts, "check_hosts", check)
+    return calls
+
+
+def test_refresh_checks_the_hosts_shown_or_the_tabs_host_as_hosts_does(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tool = _tool(window)
+    calls = _record_checks(window, monkeypatch)
+    bar = tool.bar
+    assert bar.refresh_button.text().strip() == "Refresh all" and bar.refresh_button.isEnabled()
+    bar.refresh_button.click()
+    assert calls == [["DESK-03", "DESK-10", "LAB-02"]]
+    _open(window)
+    assert bar.refresh_button.text().strip() == "Refresh host"
+    bar.refresh_button.click()
+    assert calls[-1] == ["DESK-03"]
+    monkeypatch.setattr(window.hosts, "checking", lambda: True)  # a Refresh is running
+    window.hosts.checks_changed.emit()
+    assert not bar.refresh_button.isEnabled()
+
+
+def test_picking_a_group_checks_the_hosts_not_checked_lately(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tool = _tool(window)
+    calls = _record_checks(window, monkeypatch)
+    now = datetime.now(UTC)
+    window.hosts._status_found[_id(window, "DESK-03")] = (Status.ONLINE, now, None)
+    window.hosts._status_found[_id(window, "DESK-10")] = (
+        Status.OFFLINE, now - timedelta(minutes=30), None,
+    )  # fmt: skip
+    tool.nav.filter_changed.emit()
+    assert calls == [["DESK-10", "LAB-02"]]  # DESK-03 was checked a moment ago
+    tool.hosts_page.search.setText("desk")  # a search alone checks nothing
+    assert len(calls) == 1
+    tool.showEvent(QShowEvent())  # opening the tool checks once more what's stale
+    assert len(calls) == 2
+
+
+def test_the_panels_open_wide_enough_for_long_names(window: CapyWindow) -> None:
+    tool = _tool(window)
+    assert tool.prefs.get(tool_ui.PANES_KEY) is None  # nothing saved: the first widths
+    assert tool.side.minimumWidth() >= panels.RIGHT
+    assert tool.inner.sizes()[1] >= panels.DETAILS or tool.inner.sizes()[1] == 0
+    progress = tool.hosts_page.progress
+    long_name = "UTI A - Corredor · 000000 - a very long host name indeed"
+    line = hosts_page._Line("@x", None, long_name, "12:57", "")
+    line.resize(220, 24)
+    line.show()
+    QApplication.processEvents()
+    assert line.where.isVisible() and line.where.width() >= line.where.sizeHint().width()
+    assert line.name.shown_text().endswith("…") and line.name.toolTip() == long_name
+    line.close()
+    assert progress is not None
 
 
 def test_a_group_picked_while_a_hosts_tab_is_in_front_brings_the_hosts_tab_back(

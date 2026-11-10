@@ -473,7 +473,7 @@ def test_right_click_acts_on_what_is_under_the_mouse(
     groups.setCurrentItem(pis)  # picked earlier
     empty = groups.viewport().rect().bottomLeft() + QPoint(5, -5)
     assert _menu_on(monkeypatch, lambda: window.hosts._group_menu(empty)) == [
-        "Add &group…", "&Manage groups…"
+        "Add &group…", "&Manage groups…", "&Sort groups A–Z"
     ]  # fmt: skip
     texts = _menu_on(
         monkeypatch, lambda: window.hosts._group_menu(groups.visualItemRect(offices).center())

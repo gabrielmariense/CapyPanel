@@ -5,11 +5,11 @@ so several hosts are read, counted and cleaned at once. It keeps no list of its 
 account that signs in to a host is the one Hosts' Accounts give it. Scanning only reads."""
 
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QAction, QColor, QKeySequence, QPalette, QShortcut
+from PySide6.QtGui import QAction, QColor, QKeySequence, QPalette, QShortcut, QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
     QMenu,
@@ -37,10 +37,11 @@ from capypanel.ui.menus import MenuCombo, popup
 from capypanel.ui.profiles_tool import work
 from capypanel.ui.profiles_tool.host_page import Context, HostPage, Stage
 from capypanel.ui.profiles_tool.hosts_page import HostFacts, HostsPage, RowFacts
-from capypanel.ui.profiles_tool.panels import LEFT, RIGHT
+from capypanel.ui.profiles_tool.panels import DETAILS, LEFT, RIGHT
 from capypanel.ui.profiles_tool.tabs import HOSTS, TabStrip, mark_icon
 
-PANES_KEY = "panes"  # the side panels' widths, in the tool's settings
+PANES_KEY = "pane_widths"  # the side panels' widths (the narrower 0.24 ones aren't kept)
+WIDEST_LEFT = 360  # px: the Groups panel opens as wide as its names, up to this
 VIEWS_KEY = "views"  # the group each host list was left on, by the list's file
 SHOWN_KEY = "shown"  # View's Groups panel and Details panel ticks
 
@@ -51,6 +52,7 @@ class ProfilesToolBar(ToolBar):
 
     def __init__(self) -> None:
         super().__init__()
+        self.refresh_button = tool_button()  # Hosts' status check, without leaving the tool
         self.scan_button = tool_button()
         self.sizes_button = tool_button()
         self.delete_button = tool_button()
@@ -58,6 +60,7 @@ class ProfilesToolBar(ToolBar):
         self._counting = False
         self._scan_text = ""
         self._delete_text = ""
+        self.add_group([self.refresh_button])
         self.add_group([self.scan_button, self.sizes_button])
         self.add_group([self.delete_button])
         self.retranslate()
@@ -74,15 +77,22 @@ class ProfilesToolBar(ToolBar):
         self.sizes_button.setToolTip(sizes_tip)
         self._icons()
 
+    def show_refresh(self, text: str, tip: str, enabled: bool) -> None:
+        self.refresh_button.setText(" " + text)
+        self.refresh_button.setToolTip(tip)
+        self.refresh_button.setEnabled(enabled)
+
     def retranslate(self) -> None:
         self.show_texts(_("Scan"), "", _("Delete profiles…"), "", "", self._counting)
+        self.show_refresh(_("Refresh all"), "", self.refresh_button.isEnabled())
 
     def restyle(self) -> None:
         self._icons()
 
     def _icons(self) -> None:
         color = self.scan_button.palette().color(QPalette.ColorRole.ButtonText)
-        self.scan_button.setIcon(tabler_icon("refresh", color))
+        self.refresh_button.setIcon(tabler_icon("refresh", color))  # as Hosts' Refresh
+        self.scan_button.setIcon(tabler_icon("list-search", color))
         self.sizes_button.setIcon(tabler_icon("x" if self._counting else "report-analytics", color))
         self.show_delete(self.delete_button.isEnabled())
 
@@ -142,9 +152,10 @@ class ProfilesTool(Tool):
         self.splitter.addWidget(area)
         self.splitter.setStretchFactor(1, 1)
         self.splitter.setChildrenCollapsible(False)
-        left, right = _two_widths(self.prefs.get(PANES_KEY)) or (LEFT, RIGHT)
-        self.splitter.setSizes([left, 1100 - left])
-        self.inner.setSizes([max(400, 1100 - left - right), right])
+        scale = max(1.0, self.fontMetrics().height() / 16)  # as Hosts' panels
+        self.nav.setMinimumWidth(round(180 * scale))
+        self.side.setMinimumWidth(round(RIGHT * scale))
+        self._saved_widths = _two_widths(self.prefs.get(PANES_KEY))
         margins = QVBoxLayout(self)
         margins.setContentsMargins(8, 4, 8, 4)  # as the Hosts page
         margins.addWidget(self.splitter)
@@ -167,9 +178,30 @@ class ProfilesTool(Tool):
         self._connect()
         self.retranslate()
         self._show_list()
+        self._first_widths(scale)
+        self._checked_once = False  # the group on show is checked when the tool first shows
+
+    def _first_widths(self, scale: float) -> None:
+        """The widths kept from last time; or the Groups panel as wide as its names (up to
+        WIDEST_LEFT) and the right panel as wide as Hosts' Details."""
+        if self._saved_widths is not None:
+            left, right = self._saved_widths
+        else:
+            least, most = round(LEFT * scale), round(WIDEST_LEFT * scale)
+            left = min(max(self.nav.natural_width(), least), most)
+            right = round(DETAILS * scale)
+        self.splitter.setSizes([left, 1100 - left])
+        self.inner.setSizes([max(400, 1100 - left - right), right])
+
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        if not self._checked_once:
+            self._checked_once = True
+            self.check_stale()
 
     def _connect(self) -> None:
         bar = self.bar
+        bar.refresh_button.clicked.connect(self.refresh_clicked)
         bar.scan_button.clicked.connect(self.scan_clicked)
         bar.sizes_button.clicked.connect(self._toggle_sizes)
         bar.delete_button.clicked.connect(self.delete_ticked)
@@ -195,6 +227,7 @@ class ProfilesTool(Tool):
             self._hosts.list_changed.connect(self._show_list)
             self._hosts.host_changed.connect(self._host_checked)
             self._hosts.checks_changed.connect(self._fill_hosts)
+            self._hosts.checks_changed.connect(self._update)  # Refresh all greys while it runs
 
     @property
     def bar(self) -> ProfilesToolBar:
@@ -327,6 +360,42 @@ class ProfilesTool(Tool):
         search.blockSignals(False)
         self.switch(HOSTS)
         self._fill_hosts()
+        self.check_stale()
+
+    # ---- Hosts' status check ----
+
+    def refresh_clicked(self) -> None:
+        """Hosts' own status check (does it answer), on every host shown, or on the host of
+        the tab in front. Its results show in Hosts too."""
+        page = self._pages.get(self.tabs.current())
+        if page is not None:
+            host = self._host(page.target.key)
+            hosts = [host] if host is not None else []
+        else:
+            hosts = self.visible_hosts()
+        self._check(hosts)
+
+    def check_stale(self) -> None:
+        """The hosts shown that Hosts hasn't checked lately (Hosts' own Refresh-on-its-own
+        interval, 5 minutes unless changed): picking a group shows where they stand without a
+        click. A host checked lately isn't asked again."""
+        hosts = self._hosts
+        if hosts is None or hosts.checking() or self.tabs.current() != HOSTS:
+            return
+        minutes = hosts.auto_status()[1]
+        now = datetime.now(UTC)
+        stale = [
+            h for h in self.visible_hosts()
+            if (found := self._checked(h.id)) is None
+            or (now - found[1]).total_seconds() > minutes * 60
+        ]  # fmt: skip
+        self._check(stale)
+
+    def _check(self, hosts: Sequence[Host]) -> None:
+        if self._hosts is None or not hosts or self._hosts.checking():
+            return
+        self._hosts.check_hosts(hosts, status=True, users=False)
+        self._update()
 
     def _all_hosts(self) -> tuple[Host, ...]:
         doc = self._hosts.document if self._hosts is not None else None
@@ -639,6 +708,13 @@ class ProfilesTool(Tool):
             else:
                 scan, tip = _("Scan"), _("Pick hosts in the list first")
             bar.show_texts(scan, tip, _("Delete profiles…"), "", "", counting=False)
+            shown = len(self.visible_hosts())
+            bar.show_refresh(
+                _("Refresh all"),
+                _("Checks whether each host shown answers, as Hosts' Refresh does; its Status "
+                  "column shows here and in Hosts"),
+                bool(shown) and not self._checking(),
+            )  # fmt: skip
             bar.scan_button.setEnabled(bool(names))
             bar.sizes_button.setEnabled(False)
             bar.show_delete(False)
@@ -669,12 +745,20 @@ class ProfilesTool(Tool):
             ),
             counting,
         )
+        bar.show_refresh(
+            _("Refresh host"),
+            _("Checks whether {host} answers, as Hosts' Refresh does").format(host=name),
+            self._host(page.target.key) is not None and not self._checking(),
+        )
         idle = page.stage in (Stage.SCANNED, Stage.FAILED) and not page.deleting
         bar.scan_button.setEnabled(idle)
         bar.sizes_button.setEnabled(page.scan is not None and not page.deleting)
         bar.show_delete(page.scan is not None and idle and bool(ticked))
         self.status_label.setText(page.status_text())
         self.align_toolbar_later()
+
+    def _checking(self) -> bool:
+        return self._hosts is not None and self._hosts.checking()
 
     def _toggle_sizes(self) -> None:
         page = self._pages.get(self.tabs.current())
