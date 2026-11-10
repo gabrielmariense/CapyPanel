@@ -18,9 +18,12 @@ import ctypes
 import json
 import logging
 import os
+import queue
 import re
 import stat
+import threading
 from collections.abc import Callable, Iterator, Mapping
+from contextlib import AbstractContextManager, nullcontext
 from ctypes import wintypes
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -34,6 +37,7 @@ from capypanel.core.remote.access import (
     RemoteError,
     as_account,
     check_reachable,
+    network_identity,
     reason_of,
 )
 from capypanel.core.remote.run import append_line
@@ -382,49 +386,105 @@ def profile_size(
 ) -> int | None:
     """The bytes in `profile`'s folder, read over the PC's drive share; None when `stop` said
     so first, or when it has no folder. `progress` hears the bytes counted so far, folder by
-    folder (on this thread). Reads only. Raises RemoteError."""
+    folder (from the threads that read them). Reads only. Raises RemoteError."""
     if not profile.path or profile.kind is Kind.ENTRY:
         return None
     opened = opened or (lambda path: share_path(scanned.host, path))
-    with as_account(account):
+    with network_identity(account) as identity, identity():
         try:
-            return folder_size(opened(profile.path), stop, progress)
+            return folder_size(opened(profile.path), stop, progress, identity=identity)
         except OSError as e:
             raise RemoteError(reason_of(e.winerror or 0), e.winerror or 0) from e
+
+
+WALKERS = 8  # folders of one profile read at the same time: each is a wait on the network
 
 
 def folder_size(
     folder: str,
     stop: Callable[[], bool] = lambda: False,
     progress: Callable[[int], None] | None = None,
+    *,
+    walkers: int = WALKERS,
+    identity: Callable[[], AbstractContextManager[None]] = nullcontext,
 ) -> int | None:
     """The bytes in the files under `folder`; None when `stop` said so. Links are never followed
     (AppData has several, and the count would leave the profile), and a folder inside that can't
-    be read counts as empty. `progress` hears the bytes so far after each folder read. Raises
-    OSError when `folder` itself can't be read."""
-    total = 0
-    waiting = [folder]
-    while waiting:
-        if stop():
-            return None
-        current = waiting.pop()
+    be read counts as empty. Raises OSError when `folder` itself can't be read.
+
+    A profile is tens of thousands of folders, and over the network each one is a wait: read
+    one after another, a profile took minutes. So `walkers` threads read folders at the same
+    time, each inside `identity()` (the account that signs in applies per thread). `progress`
+    hears the bytes so far after each folder, from whichever thread read it."""
+    total, inside = _listed(folder)  # the folder itself, here: its error is the caller's
+    if progress is not None:
+        progress(total)
+    if stop():
+        return None
+    if not inside:
+        return total
+    waiting: queue.SimpleQueue[str | None] = queue.SimpleQueue()
+    for path in inside:
+        waiting.put(path)
+    left = len(inside)  # folders not read yet, the ones being read among them
+    lock = threading.Lock()
+    failed: list[BaseException] = []
+
+    def release() -> None:
+        for _walker in range(walkers):
+            waiting.put(None)
+
+    def walk() -> None:
+        nonlocal total, left
         try:
-            with os.scandir(current) as entries:
-                for entry in entries:
-                    with contextlib.suppress(OSError):
-                        found = entry.stat(follow_symlinks=False)
-                        if _is_link(found):
-                            continue
-                        if entry.is_dir(follow_symlinks=False):
-                            waiting.append(entry.path)
-                        else:
-                            total += found.st_size
-        except OSError:
-            if current is folder:
-                raise
-        if progress is not None:
-            progress(total)
-    return total
+            with identity():
+                while (current := waiting.get()) is not None:
+                    size, found = 0, []
+                    if not stop():  # stopped: the folders waiting are let go unread
+                        with contextlib.suppress(OSError):
+                            size, found = _listed(current)
+                    with lock:
+                        total += size
+                        left += len(found) - 1
+                        so_far, over = total, left == 0
+                    for path in found:
+                        waiting.put(path)
+                    if progress is not None:
+                        progress(so_far)
+                    if over:
+                        release()
+        except BaseException as e:  # noqa: BLE001 - told to the caller, on its own thread
+            failed.append(e)
+            release()
+
+    threads = [
+        threading.Thread(target=walk, name="folder-size", daemon=True)
+        for _walker in range(max(1, walkers))
+    ]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    if failed:
+        raise failed[0]
+    return None if stop() else total
+
+
+def _listed(folder: str) -> tuple[int, list[str]]:
+    """The bytes of the files directly in `folder`, and the folders in it that aren't links.
+    One listing: Windows hands each entry's size and kind with its name."""
+    size, folders = 0, []
+    with os.scandir(folder) as entries:
+        for entry in entries:
+            with contextlib.suppress(OSError):
+                found = entry.stat(follow_symlinks=False)
+                if _is_link(found):
+                    continue
+                if entry.is_dir(follow_symlinks=False):
+                    folders.append(entry.path)
+                else:
+                    size += found.st_size
+    return size, folders
 
 
 # ---- deleting ----

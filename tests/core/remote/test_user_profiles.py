@@ -4,13 +4,15 @@ WMI answer written by hand. Deleting a real profile only ever happens on CI's th
 on an account the test makes for it."""
 
 import _winapi
+import contextlib
 import ctypes
 import getpass
 import os
 import secrets
 import shutil
 import subprocess
-from collections.abc import Callable
+import threading
+from collections.abc import Callable, Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -558,6 +560,43 @@ def test_a_folder_count_says_how_far_it_is_after_each_folder(tmp_path: Path) -> 
     heard: list[int] = []
     assert user_profiles.folder_size(str(tmp_path), progress=heard.append) == 15
     assert heard == [5, 15]  # the folder itself, then the one inside it
+
+
+def test_a_folder_is_counted_by_several_threads_each_as_the_account(tmp_path: Path) -> None:
+    expected = 0
+    for a in range(6):
+        for b in range(5):
+            deep = tmp_path / f"a{a}" / f"b{b}" / "c"
+            deep.mkdir(parents=True)
+            (deep / "file.bin").write_bytes(b"x" * (a * 10 + b + 1))
+            expected += a * 10 + b + 1
+    entered: set[int] = set()
+
+    @contextlib.contextmanager
+    def identity() -> Iterator[None]:
+        entered.add(threading.get_ident())
+        yield
+
+    counted = user_profiles.folder_size(str(tmp_path), walkers=4, identity=identity)
+    assert counted == expected == user_profiles.folder_size(str(tmp_path), walkers=1)
+    assert len(entered) == 4 and threading.get_ident() not in entered  # each thread signs in
+
+    seen = 0
+
+    def stop() -> bool:  # stopped part-way: no number, and the threads end
+        nonlocal seen
+        seen += 1
+        return seen > 5
+
+    assert user_profiles.folder_size(str(tmp_path), stop=stop, walkers=4) is None
+
+    @contextlib.contextmanager
+    def refused() -> Iterator[None]:
+        raise RemoteError(Reason.REJECTED, 1326)
+        yield
+
+    with pytest.raises(RemoteError):  # a thread that can't sign in: told, never a hang
+        user_profiles.folder_size(str(tmp_path), identity=refused)
 
 
 def test_a_time_no_profile_can_have_is_unknown_not_a_date(tmp_path: Path) -> None:
