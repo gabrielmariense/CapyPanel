@@ -437,6 +437,23 @@ def test_scan_with_several_hosts_picked_opens_each_behind(window: CapyWindow) ->
     assert _host_row(tool, "DESK-03")[3:] == ["7", "5", _host_row(tool, "DESK-03")[5]]
 
 
+def test_scan_with_one_host_picked_stays_on_the_hosts_tab(window: CapyWindow, pc: Pc) -> None:
+    tool = _tool(window)
+    progress = tool.hosts_page.progress
+    assert progress.summary.text() == ("Double-click a host to open it, or pick hosts and click "
+                                       "Scan to scan them here.")  # fmt: skip
+    key = _id(window, "DESK-03")
+    tool.hosts_page.table.select(key)
+    assert tool.bar.scan_button.toolTip() == (
+        "Reads DESK-03's profiles in a tab behind; you stay on this list"
+    )
+    tool.bar.scan_button.click()
+    assert tool.tabs.current() == HOSTS and tool.tabs.host_keys() == [key]
+    assert progress.summary.text() == "1 host in tabs · 1 done"
+    tool.bar.scan_button.click()  # its tab is open and done: read again, still from here
+    assert tool.tabs.current() == HOSTS and len(pc.scanned) == 2
+
+
 def test_typing_never_scans_and_the_empty_table_offers_the_typed_host(
     window: CapyWindow, pc: Pc
 ) -> None:
@@ -630,11 +647,12 @@ def test_scanning_the_same_host_again_keeps_the_sizes_of_rows_still_there(
 
 
 def test_a_host_that_doesnt_answer_says_so_and_offers_to_try_again(
-    window: CapyWindow, pc: Pc
+    window: CapyWindow, pc: Pc, caplog: pytest.LogCaptureFixture
 ) -> None:
     tool = _tool(window)
     pc.answers["192.0.2.13"] = RemoteError(Reason.UNREACHABLE)
     page = _open(window)
+    assert "User profiles scan on DESK-03 failed: RemoteError" in caplog.text  # in the log too
     card = page.card
     assert card is not None and card.heading.text() == "DESK-03 didn't answer"
     assert card.body.text().endswith("Nothing was read.")

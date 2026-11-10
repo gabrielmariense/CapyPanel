@@ -5,6 +5,7 @@ Printers on this PC and Installed programs. The same window opens from the menus
 panel and the Commands window."""
 
 import html
+import logging
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
@@ -50,6 +51,15 @@ if TYPE_CHECKING:
 def escape(text: str) -> str:
     """Text shown as rich text: <, > and & escaped; quotes stay as they are."""
     return html.escape(text, quote=False)
+
+
+log = logging.getLogger(__name__)
+
+
+def log_failed(read: str, host: str, error: BaseException) -> None:
+    """A read that failed goes in the log too, not only on screen, so a report can quote it:
+    "Installed programs on DESK-03 failed: RemoteError: Access is denied."."""
+    log.warning("%s on %s failed: %s: %s", read, host, type(error).__name__, error)
 
 
 MAX_MESSAGE = 255  # Windows' message box shows about this much
@@ -493,6 +503,8 @@ class ReadList(QDialog):
     """A window that reads a list from the PC on a background thread: "Reading…" until it's
     back, then the rows, or why it couldn't. Read again reads it once more."""
 
+    READ = "A list"  # what it reads, for the log (in English, as the rest of the log)
+
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget") -> None:
         super().__init__(parent)
         self.runner, self.target = runner, target
@@ -538,6 +550,7 @@ class ReadList(QDialog):
     def _failed(self, error: BaseException) -> None:
         from capypanel.ui.hosts_tool.runner import reason_text
 
+        log_failed(self.READ, self.target.name, error)
         if not self._alive():
             return
         self.read_button.setEnabled(True)
@@ -549,6 +562,8 @@ class ReadList(QDialog):
 class PrintersDialog(ReadList):
     """Printers on this PC: name, driver, port, status and documents waiting; Clear queue… for
     the printer picked and Restart Print Spooler… for them all, both asking first."""
+
+    READ = "Printers"
 
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget",
                  report: "Report") -> None:  # fmt: skip
@@ -649,6 +664,8 @@ class PrintersDialog(ReadList):
 class ProgramsDialog(ReadList):
     """Installed programs: a search, the count and when it was read, then Copy list and Export
     CSV… for the rows shown."""
+
+    READ = "Installed programs"
 
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget",
                  folder: Callable[[str | None], str], found: Sequence[Any] | None = None,

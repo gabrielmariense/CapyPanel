@@ -998,6 +998,7 @@ class Runner(QObject):
             self._start(slow, slow_done, slow_failed)
 
         def quick_failed(error: BaseException) -> None:
+            windows.log_failed("Disk space and last restart", target.name, error)
             self._tool.keep_facts(target.key, quick_error=error)
             self.facts_changed.emit(target.key)
             if isinstance(error, RemoteError) and error.reason is Reason.UNREACHABLE:
@@ -1011,6 +1012,7 @@ class Runner(QObject):
             self.facts_changed.emit(target.key)
 
         def slow_failed(error: BaseException) -> None:
+            windows.log_failed("PC facts", target.name, error)
             self._tool.keep_facts(target.key, slow_error=error)
             self.facts_changed.emit(target.key)
             self._facts_failed(target, error, report)

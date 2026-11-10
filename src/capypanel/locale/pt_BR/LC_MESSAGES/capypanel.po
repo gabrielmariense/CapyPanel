@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 16:41-0300\n"
+"POT-Creation-Date: 2026-11-10 17:14-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1412,6 +1412,9 @@ msgstr "Porta aberta"
 msgid "Double-click a cell, or press F2, to change it; the list above follows. Right-click for more."
 msgstr "Clique duas vezes numa célula, ou pressione F2, para alterá-la; a lista acima acompanha. Clique com o botão direito para mais opções."
 
+msgid "Double-click a host to open it, or pick hosts and click Scan to scan them here."
+msgstr "Dê dois cliques num host para abri-lo, ou selecione hosts e clique em Escanear para escaneá-los daqui."
+
 msgid "Download"
 msgstr "Baixar"
 
@@ -2396,9 +2399,6 @@ msgstr "Abrir uma lista de hosts"
 msgid "Open a host list to choose what it shows first."
 msgstr "Abra uma lista de hosts para escolher o que ela mostra primeiro."
 
-msgid "Open a host to scan it: double-click it, or pick it and click Scan."
-msgstr "Abra um host para escaneá-lo: dê dois cliques nele, ou selecione-o e clique em Escanear."
-
 msgid "Open a path…"
 msgstr "Abrir um caminho…"
 
@@ -2458,18 +2458,11 @@ msgstr "Aberto: {path}"
 msgid "Opens a folder on {host} in File Explorer, over file sharing."
 msgstr "Abre uma pasta de {host} no Explorador de Arquivos, pelo compartilhamento de arquivos."
 
-msgid "Opens each in a tab of its own and reads their profiles"
-msgstr "Abre cada um numa aba própria e lê os perfis"
-
 msgid "Opens the host in a new tab. Typing alone never scans."
 msgstr "Abre o host numa aba nova. Digitar sozinho nunca escaneia."
 
 msgid "Opens this PC's C: drive: the path is the same on each PC"
 msgstr "Abre o disco C: deste PC: o caminho é o mesmo em cada PC"
-
-#, python-brace-format
-msgid "Opens {host} in a tab and reads its profiles"
-msgstr "Abre {host} numa aba e lê os perfis dele"
 
 #, python-brace-format
 msgid "Opens {host}'s C: drive, to pick the file there"
@@ -2742,8 +2735,15 @@ msgstr "Lendo {path} em {host}…"
 msgid "Reading…"
 msgstr "Lendo…"
 
+msgid "Reads each in a tab of its own, behind; you stay on this list"
+msgstr "Lê cada um numa aba própria, ao fundo; você continua nesta lista"
+
 msgid "Reads what's ticked in this box again"
 msgstr "Lê de novo o que está marcado nesta caixa"
+
+#, python-brace-format
+msgid "Reads {host}'s profiles in a tab behind; you stay on this list"
+msgstr "Lê os perfis de {host} numa aba ao fundo; você continua nesta lista"
 
 msgid "Ready"
 msgstr "Pronta"

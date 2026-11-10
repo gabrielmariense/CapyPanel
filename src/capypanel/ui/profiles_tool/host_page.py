@@ -19,6 +19,7 @@ from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.user_profiles import Deleted, Kind, Outcome, Profile, Scan, Why
 from capypanel.ui.checks import clock_text
 from capypanel.ui.dialogs import run_modal
+from capypanel.ui.hosts_tool.command_windows import log_failed
 from capypanel.ui.hosts_tool.runner import HostTarget, Job
 from capypanel.ui.icons import STATUS_COLORS
 from capypanel.ui.profiles_tool import rows, work
@@ -286,6 +287,7 @@ class HostPage(QObject):
             self._show_scan()
 
         def failed(error: BaseException) -> None:
+            log_failed("User profiles scan", target.name, error)
             if run != self._scan_run:
                 return
             self.stage, self.error, self.read_at = Stage.FAILED, error, self._now()
@@ -499,7 +501,12 @@ class HostPage(QObject):
                     progress=so_far,
                 )
 
-            self._ctx.pool.count(owner, count, ended, lambda _error, e=ended: e(None))
+            def failed(error: BaseException, ended: Callable[[int | None], None] = ended,
+                       user: str = profile.user) -> None:  # fmt: skip
+                log_failed(f"Size of {user}", self.target.name, error)
+                ended(None)
+
+            self._ctx.pool.count(owner, count, ended, failed)
         self._changed()
 
     def stop_sizes(self) -> None:

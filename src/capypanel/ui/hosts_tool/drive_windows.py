@@ -119,6 +119,8 @@ class DrivesDialog(ReadList):
     """Mapped drives: the drives saved for each person signed in, Check their session for the
     live state, Map a drive…, Copy list."""
 
+    READ = "Mapped drives"
+
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget",
                  map_drive: Callable[[Callable[[], None]], None]) -> None:  # fmt: skip
         """`map_drive(then)`: Map a drive…, calling `then` once it's mapped."""

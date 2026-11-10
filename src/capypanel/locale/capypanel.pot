@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 16:41-0300\n"
+"POT-Creation-Date: 2026-11-10 17:14-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1451,6 +1451,11 @@ msgid ""
 "Right-click for more."
 msgstr ""
 
+msgid ""
+"Double-click a host to open it, or pick hosts and click Scan to scan them"
+" here."
+msgstr ""
+
 msgid "Download"
 msgstr ""
 
@@ -2506,9 +2511,6 @@ msgstr ""
 msgid "Open a host list to choose what it shows first."
 msgstr ""
 
-msgid "Open a host to scan it: double-click it, or pick it and click Scan."
-msgstr ""
-
 msgid "Open a path…"
 msgstr ""
 
@@ -2570,17 +2572,10 @@ msgstr ""
 msgid "Opens a folder on {host} in File Explorer, over file sharing."
 msgstr ""
 
-msgid "Opens each in a tab of its own and reads their profiles"
-msgstr ""
-
 msgid "Opens the host in a new tab. Typing alone never scans."
 msgstr ""
 
 msgid "Opens this PC's C: drive: the path is the same on each PC"
-msgstr ""
-
-#, python-brace-format
-msgid "Opens {host} in a tab and reads its profiles"
 msgstr ""
 
 #, python-brace-format
@@ -2863,7 +2858,14 @@ msgstr ""
 msgid "Reading…"
 msgstr ""
 
+msgid "Reads each in a tab of its own, behind; you stay on this list"
+msgstr ""
+
 msgid "Reads what's ticked in this box again"
+msgstr ""
+
+#, python-brace-format
+msgid "Reads {host}'s profiles in a tab behind; you stay on this list"
 msgstr ""
 
 msgid "Ready"

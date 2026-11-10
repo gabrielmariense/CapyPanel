@@ -442,8 +442,8 @@ class ProgressCard(QFrame):
                 + ngettext("{n} done", "{n} done", len(done)).format(n=len(done))
             )
         else:
-            self.summary.setText(_("Open a host to scan it: double-click it, or pick it and "
-                                   "click Scan."))  # fmt: skip
+            self.summary.setText(_("Double-click a host to open it, or pick hosts and click "
+                                   "Scan to scan them here."))  # fmt: skip
         self.bar.setVisible(bool(total))
         self.bar.setRange(0, max(total, 1))
         self.bar.setValue(len(done))

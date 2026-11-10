@@ -625,13 +625,17 @@ class ProfilesTool(Tool):
     # ---- opening hosts ----
 
     def scan_clicked(self) -> None:
-        """Scan on the Hosts tab opens the hosts picked; on a host's tab, Scan again."""
+        """Scan on the Hosts tab scans the hosts picked and stays there: new ones open behind,
+        open ones that are done read again. On a host's tab, Scan again."""
         page = self._pages.get(self.tabs.current())
         if page is not None:
             page.start_scan()
             return
         ids = self.hosts_page.table.selected_ids()
-        self.open_hosts(ids, len(ids) == 1)  # several open behind, as middle-clicks
+        for key in ids:
+            if (opened := self._pages.get(key)) is not None and not opened.busy():
+                opened.start_scan()
+        self.open_hosts(ids, False)  # behind, as middle-clicks: Progress shows them here
 
     def open_hosts(self, ids: Sequence[str], focus: bool) -> None:
         """Each host in its own tab; a host that has one already isn't read again. `focus`:
@@ -804,10 +808,12 @@ class ProfilesTool(Tool):
             names = [h.name for k in ids if (h := self._host(k)) is not None]
             if len(names) == 1:
                 scan = _("Scan {host}").format(host=names[0])
-                tip = _("Opens {host} in a tab and reads its profiles").format(host=names[0])
+                tip = _("Reads {host}'s profiles in a tab behind; you stay on this list").format(
+                    host=names[0]
+                )
             elif names:
                 scan = ngettext("Scan {n} host", "Scan {n} hosts", len(names)).format(n=len(names))
-                tip = _("Opens each in a tab of its own and reads their profiles")
+                tip = _("Reads each in a tab of its own, behind; you stay on this list")
             else:
                 scan, tip = _("Scan"), _("Pick hosts in the list first")
             bar.show_texts(scan, tip, _("Delete profiles…"), "", "", counting=False)

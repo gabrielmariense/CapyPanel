@@ -455,6 +455,20 @@ def test_installed_programs_search_and_count(
     assert dialog.summary.text().startswith("1 of 2 programs on PC-1")
 
 
+def test_a_list_that_cant_be_read_says_why_and_logs_it(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    def refused(*_a: object) -> None:
+        raise RemoteError(Reason.REJECTED, 5)
+
+    monkeypatch.setattr(inventory, "installed_programs", refused)
+    target = _select(window, "PC-1")
+    dialog = ProgramsDialog(None, window.hosts.runner, target, window.hosts.csv_folder)
+    _settle(window)
+    assert dialog.summary.text().startswith("Couldn't read PC-1: ")
+    assert "Installed programs on PC-1 failed: RemoteError" in caplog.text
+
+
 def test_commands_menu_on_the_toolbar_lists_the_groups(window: CapyWindow) -> None:
     _select(window, "PC-1")
     menu = window.hosts.toolbar.commands_menu
