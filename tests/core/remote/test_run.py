@@ -4,11 +4,12 @@ import os
 import subprocess
 import time
 from collections.abc import Callable, Iterator, Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-from capypanel.core.remote import inventory, run
+from capypanel.core.remote import inventory, run, tasks
 from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.run import Engine, Language, Problem, RunAs, RunError, Runner, Script
 
@@ -26,7 +27,9 @@ class FakePc:
         self.answers: dict[Engine, Callable[[], None]] = {}
 
     def starter(self, engine: Engine) -> run.Starter:
-        def start(host: str, command: Sequence[str], account: Account | None) -> None:
+        def start(
+            host: str, command: Sequence[str], account: Account | None, _job: run.Job
+        ) -> None:
             self.asked.append(engine)
             self.commands.append(command)
             self.answers.get(engine, self.ran)()
@@ -114,13 +117,13 @@ def test_nothing_is_left_on_the_pc_when_the_run_fails_either(pc: FakePc) -> None
     assert list(pc.folder.iterdir()) == []
 
 
-def test_winrm_comes_first_then_wmi_then_psexec(pc: FakePc) -> None:
+def test_winrm_comes_first_then_wmi_then_the_task_scheduler_then_psexec(pc: FakePc) -> None:
     def fails() -> None:
         raise run._NotThisWay("no")
 
-    pc.answers = {Engine.WINRM: fails, Engine.WMI: fails}
+    pc.answers = {Engine.WINRM: fails, Engine.WMI: fails, Engine.TASK: fails}
     assert runner(pc).run("DESK-01", PS).engine is Engine.PSEXEC
-    assert pc.asked == [Engine.WINRM, Engine.WMI, Engine.PSEXEC]
+    assert pc.asked == [Engine.WINRM, Engine.WMI, Engine.TASK, Engine.PSEXEC]
 
 
 def test_winrm_is_skipped_on_a_pc_that_doesn_t_listen_for_it(pc: FakePc) -> None:
@@ -132,7 +135,7 @@ def test_the_way_in_that_worked_is_tried_first_next_time(pc: FakePc) -> None:
     def fails() -> None:
         raise run._NotThisWay("no")
 
-    pc.answers = {Engine.WINRM: fails, Engine.WMI: fails}
+    pc.answers = {Engine.WINRM: fails, Engine.WMI: fails, Engine.TASK: fails}
     runs = runner(pc)
     runs.run("DESK-01", PS)
     pc.asked.clear()
@@ -145,11 +148,12 @@ def test_without_psexec_a_pc_wmi_can_t_reach_has_no_way_in(pc: FakePc) -> None:
     def unreachable() -> None:
         raise RemoteError(Reason.UNREACHABLE, 1722)
 
-    pc.answers = {Engine.WMI: unreachable}
+    pc.answers = {Engine.WMI: unreachable, Engine.TASK: unreachable}
     with pytest.raises(RunError) as caught:
         runner(pc, psexec=None, winrm=False).run("DESK-01", PS)
     assert caught.value.problem is Problem.NO_WAY_IN
-    assert [t.split(":")[0] for t in caught.value.tried] == ["WinRM", "WMI", "PsExec"]
+    tried = [t.split(":")[0] for t in caught.value.tried]
+    assert tried == ["WinRM", "WMI", "Task Scheduler", "PsExec"]
 
 
 @pytest.mark.parametrize("reason", [Reason.REJECTED, Reason.NOT_ADMIN])
@@ -285,7 +289,7 @@ def test_a_big_powershell_script_goes_as_a_file_and_a_utf8_one_gets_its_bom(
 
 
 def _local_runner(folder: Path) -> Runner:
-    def start(host: str, command: Sequence[str], account: Account | None) -> None:
+    def start(host: str, command: Sequence[str], account: Account | None, _job: run.Job) -> None:
         subprocess.Popen(command, creationflags=subprocess.CREATE_NO_WINDOW)  # like WMI: no wait
 
     return Runner(
@@ -357,7 +361,7 @@ def test_running_as_the_signed_in_person_needs_their_name(pc: FakePc) -> None:
 
 def test_as_the_account_the_wrapper_starts_the_script_itself(tmp_path: Path) -> None:
     text = _wrapper_text(_local_runner(tmp_path)._command(tmp_path, "c" * 16, PS))
-    assert "Start-Process" in text and "Schedule.Service" not in text
+    assert "Start-Process" in text and "RegisterTask" not in text
 
 
 def test_as_the_signed_in_person_a_hidden_task_in_their_session_runs_it(tmp_path: Path) -> None:
@@ -420,7 +424,7 @@ def test_a_pc_that_refuses_to_start_a_program_is_reported_as_refused(
     def refuse() -> None:
         raise run._Refused("the PC refused to start a program")
 
-    pc.answers = {Engine.WMI: refuse}
+    pc.answers = {Engine.WMI: refuse, Engine.TASK: refuse}
     with pytest.raises(RunError) as caught:
         runner(pc, psexec=None, winrm=False).run("DESK-01", PS)
     assert caught.value.problem is Problem.REFUSED
@@ -466,3 +470,144 @@ def test_a_long_command_with_an_account_goes_through_a_short_relay_line(
     assert not Path(kept).exists()  # the file with the command is gone
     run._spawn(["cmd.exe", "/d", "/c", "exit", "8"], account, 30)
     assert lines[1] == "cmd.exe /d /c exit 8" and codes[1] == 8  # a short one goes as it is
+
+
+# ---- the PC's Task Scheduler ----
+
+ENCODED = ["powershell.exe", "-NoLogo", "-EncodedCommand", "QQBCAEMA"]
+
+
+def _asked_task(
+    monkeypatch: pytest.MonkeyPatch, run_as: RunAs, account: Account | None
+) -> dict[str, object]:
+    asked: dict[str, object] = {}
+
+    def start(host: str, given: Account | None, task: str, xml: str, who: tasks.Principal) -> None:
+        asked.update(host=host, account=given, task=task, xml=xml, who=who)
+
+    monkeypatch.setattr(tasks, "start", start)
+    run._start_task("DESK-01", ENCODED, account, run.Job("c" * 16, run_as, 600))
+    return asked
+
+
+@pytest.mark.parametrize("run_as", [RunAs.SYSTEM, RunAs.USER])
+def test_the_task_scheduler_starts_the_wrapper_as_system(
+    monkeypatch: pytest.MonkeyPatch, run_as: RunAs
+) -> None:
+    """As SYSTEM and as the person, the wrapper runs as SYSTEM; for the person it makes their
+    task itself, as with every other way in."""
+    account = Account(r"EXAMPLE\support", "x")
+    asked = _asked_task(monkeypatch, run_as, account)
+    who = asked["who"]
+    assert isinstance(who, tasks.Principal) and who.user == "SYSTEM" and who.password is None
+    assert asked["task"] == "CapyPanel-" + "c" * 16 + "-in"
+    assert asked["account"] == account  # it still signs in to the PC with the account
+    xml = str(asked["xml"])
+    assert "<UserId>S-1-5-18</UserId>" in xml
+    assert r"<Command>%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe</Command>" in xml
+    assert "<Arguments>-NoLogo -EncodedCommand QQBCAEMA</Arguments>" in xml
+
+
+def test_the_task_scheduler_runs_the_wrapper_as_the_account_otherwise(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    typed = _asked_task(monkeypatch, RunAs.ACCOUNT, Account(r"EXAMPLE\support", "secret"))
+    who = typed["who"]
+    assert who == tasks.Principal(r"EXAMPLE\support", 1, "secret")  # with its password
+    assert "<LogonType>Password</LogonType>" in str(typed["xml"])
+    assert "secret" not in str(typed["xml"])  # the password goes to Windows, never in the task
+    own = _asked_task(monkeypatch, RunAs.ACCOUNT, None)
+    assert own["who"] == tasks.Principal(tasks.windows_user(), 2)  # S4U: no password needed
+    assert "<LogonType>S4U</LogonType>" in str(own["xml"])
+
+
+def test_a_task_scheduler_that_refuses_is_reported_as_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def refuse(*_a: object) -> None:
+        raise tasks.Refused("the PC's Task Scheduler refused the task (access denied)")
+
+    monkeypatch.setattr(tasks, "start", refuse)
+    with pytest.raises(run._Refused) as refused:
+        run._start_task("DESK-01", ENCODED, None, run.Job("c" * 16, RunAs.SYSTEM, 60))
+    assert "refused the task (access denied)" in str(refused.value)
+    for failure in (tasks.Failed("RPC server unavailable (0x800706BA)"), TimeoutError("late")):
+
+        def fail(*_a: object, error: Exception = failure) -> None:
+            raise error
+
+        monkeypatch.setattr(tasks, "start", fail)
+        with pytest.raises(run._NotThisWay) as other:
+            run._start_task("DESK-01", ENCODED, None, run.Job("c" * 16, RunAs.SYSTEM, 60))
+        assert not isinstance(other.value, run._Refused)
+
+
+def test_the_task_starts_only_when_asked_and_deletes_itself() -> None:
+    now = datetime(2026, 11, 10, 22, 0, tzinfo=UTC)
+    who = tasks.Principal("SYSTEM", 5)
+    xml = tasks.definition("prog.exe", 'a & "b"', who, 600, now)
+    assert "<StartBoundary>2026-11-09T22:00:00Z</StartBoundary>" in xml  # in the past: never fires
+    assert "<EndBoundary>2026-11-10T23:10:00Z</EndBoundary>" in xml  # the run's time, an hour
+    assert "<DeleteExpiredTaskAfter>PT0S</DeleteExpiredTaskAfter>" in xml
+    assert "<ExecutionTimeLimit>PT660S</ExecutionTimeLimit>" in xml
+    assert '<Arguments>a &amp; "b"</Arguments>' in xml
+
+
+def test_task_scheduler_errors_read_as_refused_or_failed() -> None:
+    class ComError(Exception):
+        pass
+
+    denied = ComError(-2147024891, "Acesso negado.", None, None)  # 0x80070005
+    assert isinstance(tasks._error(denied), tasks.Refused)
+    away = ComError(-2147023174, "O servidor RPC não está disponível.", None, None)
+    failed = tasks._error(away)
+    assert isinstance(failed, tasks.Failed)
+    assert str(failed) == "O servidor RPC não está disponível. (0x800706BA)"
+
+
+def test_the_wrapper_deletes_the_task_that_started_it(tmp_path: Path) -> None:
+    text = _wrapper_text(_local_runner(tmp_path)._command(tmp_path, "c" * 16, PS))
+    assert "DeleteTask('CapyPanel-" + "c" * 16 + "-in', 0)" in text
+    assert text.index("DeleteTask") > text.index('"$base.json"')  # after the answer is written
+
+
+def test_psexec_whose_program_the_pc_wont_start_is_reported_as_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """PsExec's service gets in, but the PC won't start the program for it: it ends with 2."""
+    monkeypatch.setattr(run, "_spawn", lambda *_a: 2)
+    with pytest.raises(run._Refused) as caught:
+        Runner(lambda: Path("PsExec64.exe"))._start_psexec("DESK-01", ["powershell.exe"], None)
+    assert "didn't let it start the program (code 2)" in str(caught.value)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("GITHUB_ACTIONS"),
+    reason="makes scheduled tasks on this PC as SYSTEM: only on CI's throwaway machine",
+)
+@pytest.mark.parametrize("run_as", [RunAs.SYSTEM, RunAs.ACCOUNT])
+def test_a_task_made_over_the_network_runs_the_script(tmp_path: Path, run_as: RunAs) -> None:
+    import pythoncom
+    import win32com.client
+
+    runs = Runner(
+        lambda: None,
+        starters={Engine.TASK: run._start_task},
+        folder_of=lambda host: tmp_path,
+        listens=lambda host, port: False,
+        reachable=lambda host: None,
+        remote_folder=str(tmp_path),
+    )
+    script = Script("x", Language.POWERSHELL, b"Write-Output ([Environment]::UserName); exit 4")
+    result = runs.run("localhost", script, timeout=120, run_as=run_as)
+    assert result.engine is Engine.TASK and result.exit_code == 4
+    if run_as is RunAs.SYSTEM:
+        assert result.output.strip().upper() == "SYSTEM"
+    else:
+        assert result.output.strip().casefold() == tasks.windows_user().split("\\")[-1].casefold()
+    time.sleep(2)  # the wrapper deletes its task once it has written the answer
+    pythoncom.CoInitialize()
+    scheduler = win32com.client.Dispatch("Schedule.Service")
+    scheduler.Connect()
+    names = [task.Name for task in scheduler.GetFolder("\\").GetTasks(1)]
+    assert not [name for name in names if name.startswith("CapyPanel-")]

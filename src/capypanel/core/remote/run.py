@@ -1,8 +1,10 @@
 """Running a script on another PC, the same way whichever way in works.
 
-Three ways in, tried in this order: WinRM when the PC listens for it, then WMI (both ask
-Windows' own Win32_Process to start a program, over WinRM's protocol or over DCOM), then PsExec
-when it's set up. The way that worked is tried first next time, until CapyPanel closes.
+Four ways in, tried in this order: WinRM when the PC listens for it, then WMI (both ask
+Windows' own Win32_Process to start a program, over WinRM's protocol or over DCOM), then the PC's
+own Task Scheduler (core/remote/tasks: a task made for the run, where the PC refuses programs
+started the other ways), then PsExec when it's set up. The way that worked is tried first next
+time, until CapyPanel closes.
 
 Every way starts the same small PowerShell wrapper on the PC. It runs the script and keeps its
 output and exit code in C:\\Windows\\Temp\\CapyPanel\\, a folder only administrators and the
@@ -47,7 +49,7 @@ from pathlib import Path
 from typing import Any
 
 from capypanel.core import winsec
-from capypanel.core.remote import inventory, relay
+from capypanel.core.remote import inventory, relay, tasks
 from capypanel.core.remote.access import (
     REACH_TIMEOUT,
     Account,
@@ -99,10 +101,14 @@ class RunAs(StrEnum):
 class Engine(StrEnum):  # in the order they're tried
     WINRM = "winrm"
     WMI = "wmi"
+    TASK = "task"  # the PC's Task Scheduler
     PSEXEC = "psexec"
 
 
-ENGINE_NAMES = {Engine.WINRM: "WinRM", Engine.WMI: "WMI", Engine.PSEXEC: "PsExec"}
+ENGINE_NAMES = {
+    Engine.WINRM: "WinRM", Engine.WMI: "WMI", Engine.TASK: "Task Scheduler",
+    Engine.PSEXEC: "PsExec",
+}  # fmt: skip
 
 
 @dataclass(frozen=True)
@@ -143,8 +149,17 @@ class _Refused(_NotThisWay):
     program for it: what security software does to programs started from another PC."""
 
 
+@dataclass(frozen=True)
+class Job:
+    """What a way in may need to know about the run besides its command."""
+
+    run_id: str
+    run_as: "RunAs"
+    timeout: float
+
+
 # Starts `command` (a program and its arguments, none with spaces) on the PC, or raises.
-Starter = Callable[[str, Sequence[str], Account | None], None]
+Starter = Callable[[str, Sequence[str], Account | None, Job], None]
 
 
 class Runner:
@@ -165,9 +180,10 @@ class Runner:
     ) -> None:
         self._psexec = psexec
         self._starters = dict(starters) if starters is not None else {
-            Engine.WINRM: lambda h, c, a: _start_cim(h, c, a, "Wsman"),
-            Engine.WMI: lambda h, c, a: _start_cim(h, c, a, "Dcom"),
-            Engine.PSEXEC: self._start_psexec,
+            Engine.WINRM: lambda h, c, a, _j: _start_cim(h, c, a, "Wsman"),
+            Engine.WMI: lambda h, c, a, _j: _start_cim(h, c, a, "Dcom"),
+            Engine.TASK: _start_task,
+            Engine.PSEXEC: lambda h, c, a, _j: self._start_psexec(h, c, a),
         }  # fmt: skip
         self._folder_of, self._reachable = folder_of, reachable
         self._listens = listens or _listens
@@ -227,7 +243,8 @@ class Runner:
             try:
                 with identity():
                     command = self._command(folder, run_id, script, run_as, user, timeout)
-                engine = self._start(host, command, account, folder, run_id, identity)
+                job = Job(run_id, run_as, timeout)
+                engine = self._start(host, command, account, folder, job, identity)
                 try:
                     with identity():
                         return self._result(folder, run_id, engine, started, timeout)
@@ -290,7 +307,7 @@ class Runner:
     # ---- starting it ----
 
     def _ways(self, host: str) -> list[Engine]:
-        ways = list(Engine)
+        ways = [engine for engine in Engine if engine in self._starters]
         known = self.way_in(host)
         if known is not None:  # the one that worked last time first
             ways.remove(known)
@@ -303,7 +320,7 @@ class Runner:
         command: Sequence[str],
         account: Account | None,
         folder: Path,
-        run_id: str,
+        job: Job,
         identity: Callable[[], AbstractContextManager[None]],
     ) -> Engine:
         tried: list[str] = []
@@ -322,7 +339,7 @@ class Runner:
                 tried.append(f"{name}: not set up")
                 continue
             try:
-                self._starters[engine](host, command, account)
+                self._starters[engine](host, command, account, job)
             except RemoteError as e:
                 if e.reason in (Reason.REJECTED, Reason.NOT_ADMIN):
                     raise  # the next way would ask with the same account: no lockouts
@@ -333,7 +350,7 @@ class Runner:
                 tried.append(f"{name}: {e}")
                 continue
             with identity():
-                began = self._began(folder, run_id)
+                began = self._began(folder, job.run_id)
             if began:
                 self._worked[host.casefold()] = engine
                 return engine
@@ -371,6 +388,11 @@ class Runner:
             ) from e
         if code > 0 and code % 4 == 0:  # a process ID: Windows' are multiples of 4, its errors not
             return
+        if code == 2:  # its service reached the PC, which wouldn't start the program for it
+            raise _Refused(
+                "PsExec reached the PC, which didn't let it start the program (code 2); "
+                "security software there may block programs started from another PC"
+            )
         reason = reason_of(code)
         if reason is not Reason.OTHER:
             raise RemoteError(reason, code)
@@ -467,6 +489,11 @@ __START__
 } catch { $result.error = $_.Exception.Message }
 [IO.File]::WriteAllText("$base.tmp", (ConvertTo-Json -InputObject $result -Compress))
 Move-Item -LiteralPath "$base.tmp" -Destination "$base.json" -Force
+# Started by the PC's Task Scheduler: its task goes too (none there for the other ways).
+try {
+  $scheduler = New-Object -ComObject Schedule.Service; $scheduler.Connect()
+  $scheduler.GetFolder('\').DeleteTask('CapyPanel-__ID__-in', 0)
+} catch { }
 """
 
 # As the account CapyPanel uses: the wrapper starts the script itself.
@@ -780,6 +807,25 @@ def _start_cim(host: str, command: Sequence[str], account: Account | None, proto
         )
     if code:
         raise _NotThisWay(f"Win32_Process.Create: {_CREATE_ERRORS.get(code, code)}")
+
+
+_POWERSHELL = r"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
+
+
+def _start_task(host: str, command: Sequence[str], account: Account | None, job: Job) -> None:
+    """A task in the PC's own Task Scheduler starts the wrapper: as SYSTEM when the run is as
+    SYSTEM or as the person (the wrapper makes their task itself, as with the other ways), as
+    the account otherwise."""
+    if not command or command[0].casefold() != "powershell.exe":
+        raise _NotThisWay("it starts the PowerShell wrapper only")
+    who = tasks.principal(job.run_as is not RunAs.ACCOUNT, account)
+    xml = tasks.definition(_POWERSHELL, subprocess.list2cmdline(command[1:]), who, job.timeout)
+    try:
+        tasks.start(host, account, tasks.name(job.run_id), xml, who)
+    except tasks.Refused as e:
+        raise _Refused(f"{e}; security software or a policy there may block it") from e
+    except (tasks.Failed, OSError) as e:
+        raise _NotThisWay(str(e)) from e
 
 
 def _spawn(argv: Sequence[str], account: Account | None, timeout: float) -> int:

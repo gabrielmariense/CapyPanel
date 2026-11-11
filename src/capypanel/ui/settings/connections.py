@@ -551,7 +551,10 @@ class ToolsSection(SharedSection):
                     "Where each tool is installed, set once for everyone on this PC. Read-only: "
                     "only people Windows lets write the tools folder can change it."
                 ),
-                _("PsExec runs scripts on a PC only when WinRM and WMI can't reach it."),
+                _(
+                    "PsExec runs scripts on a PC only when WinRM, WMI and the PC's Task Scheduler "
+                    "can't start them."
+                ),
             )
         )
         self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])

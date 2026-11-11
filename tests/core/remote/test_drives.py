@@ -12,13 +12,13 @@ import pytest
 from capypanel.core.remote import drives, inventory
 from capypanel.core.remote.access import Account
 from capypanel.core.remote.drives import App, CacheState, Cleared, Drive, Person
-from capypanel.core.remote.run import Engine, Runner, RunResult, Script
+from capypanel.core.remote.run import Engine, Job, Runner, RunResult, Script
 
 
 def _run_here(folder: Path, script: Script) -> RunResult:
     """Runs `script` through the real wrapper with this PC's own PowerShell, in `folder`."""
 
-    def start(host: str, command: Sequence[str], account: Account | None) -> None:
+    def start(host: str, command: Sequence[str], account: Account | None, _job: Job) -> None:
         subprocess.Popen(command, creationflags=subprocess.CREATE_NO_WINDOW)
 
     runs = Runner(
