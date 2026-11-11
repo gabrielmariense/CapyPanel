@@ -47,6 +47,10 @@ def quiet_default(button: QAbstractButton) -> None:
     button.setObjectName("quietDefault")
     if hasattr(button, "setDefault"):
         button.setDefault(True)  # type: ignore[attr-defined]
+    # Already styled under its old name (a button box sizes its buttons as it adds them):
+    # styled again, or the new look only shows after the next theme switch.
+    button.style().unpolish(button)
+    button.style().polish(button)
 
 
 def fit_screen(window: QWidget, free: QSize | None = None) -> bool:

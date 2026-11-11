@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import MAX_ADDRESS, NO_GROUP, Host, HostList, clean_tags
 from capypanel.core.i18n import _
-from capypanel.ui.dialogs import ok_cancel
+from capypanel.ui.dialogs import ok_cancel, quiet_default
 
 MAX_NAME = 255  # longest host name typed
 MAX_TAG = 64
@@ -166,8 +166,8 @@ def confirm(parent: QWidget, title: str, text: str, action: str, details: str = 
     box.setInformativeText(details)
     yes = box.addButton(action, QMessageBox.ButtonRole.DestructiveRole)
     cancel = box.addButton(QMessageBox.StandardButton.Cancel)
-    cancel.setObjectName("quietDefault")  # Enter's button, drawn plain: not what the box asks
     box.setDefaultButton(cancel)
+    quiet_default(cancel)  # Enter's button, drawn plain: it isn't what the box asks
     box.setEscapeButton(cancel)
     box.exec()
     return box.clickedButton() is yes
