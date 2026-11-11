@@ -124,8 +124,7 @@ class PrintersTool(ListWorkspace):
         self._fill_inventory()
         self._connect()
         self.restore_layout()
-        self.open_startup_list()
-        self.refresh()
+        self.open_first_list()
 
     def status_widgets(self) -> list[QWidget]:
         """Shown on the right of the status bar: a Refresh's progress and Stop."""
