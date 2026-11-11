@@ -594,6 +594,9 @@ msgstr[1] "{n} hosts adicionados."
 msgid "Address"
 msgstr "Endereço"
 
+msgid "Address, group, MAC address"
+msgstr "Endereço, grupo, endereço MAC"
+
 msgid "Address, profile, account"
 msgstr "Endereço, perfil, conta"
 
@@ -627,6 +630,9 @@ msgstr "Também suprimento baixo"
 
 msgid "Always shown: the host's name, its status and a pending restart's warning."
 msgstr "Sempre aparecem: o nome do host, o status e o aviso de reinício pendente."
+
+msgid "Always shown: the printer's name and its status."
+msgstr "Sempre aparecem: o nome da impressora e o status."
 
 #, python-brace-format
 msgid "An item is missing the “{key}” field or has an invalid value for it."
@@ -693,6 +699,9 @@ msgstr "Os dois leem pelo WMI; muda só o que abre neste PC. O Automático lê d
 
 msgid "Brand"
 msgstr "Marca"
+
+msgid "Brand, model, serial number, firmware"
+msgstr "Marca, modelo, nº de série, firmware"
 
 #, python-brace-format
 msgid "Bring back {n} built-in profile: {names}?"
@@ -3459,6 +3468,12 @@ msgstr[1] "As {n} impressoras instaladas em {host}, lidas às {when}."
 msgid "The printer says {value}"
 msgstr "A impressora diz {value}"
 
+msgid "The printer's notes"
+msgstr "As notas da impressora"
+
+msgid "The printer's tags"
+msgstr "As tags da impressora"
+
 msgid "The printers installed on the PC, their queues and problems."
 msgstr "As impressoras instaladas no PC, suas filas e problemas."
 
@@ -3663,11 +3678,17 @@ msgstr "Toner baixo"
 msgid "Toner model"
 msgstr "Modelo do toner"
 
+msgid "Toner, ink and the rest, with their levels"
+msgstr "Toner, tinta e o resto, com os níveis"
+
 msgid "Tool"
 msgstr "Ferramenta"
 
 msgid "Total pages"
 msgstr "Total de páginas"
+
+msgid "Total pages and where they come from"
+msgstr "Total de páginas e de onde vêm"
 
 msgid "Tray empty"
 msgstr "Bandeja vazia"
@@ -3828,6 +3849,10 @@ msgstr "Avisos e suprimentos"
 
 msgid "Waste nearly full"
 msgstr "Coletor quase cheio"
+
+msgctxt "button"
+msgid "Web page"
+msgstr "Página"
 
 msgid "What Connect opens, and the login it uses. Refresh's logged-on users and the commands use the account under it."
 msgstr "O que o Conectar abre, e o login que ele usa. Os usuários logados do Atualizar e os comandos usam a conta abaixo."

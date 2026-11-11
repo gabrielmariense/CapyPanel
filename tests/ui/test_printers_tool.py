@@ -150,6 +150,48 @@ def test_search_covers_the_columns_shown_and_the_notes(printers: PrintersTool) -
     assert _names(printers) == ["2F-OFFICE-01"]
 
 
+def test_details_buttons_refresh_the_printer_and_open_its_page(
+    printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checked: list[list[str]] = []
+    monkeypatch.setattr(printers, "check_printers", lambda ps: checked.append([p.name for p in ps]))
+    opened: list[str] = []
+    monkeypatch.setattr(printers, "open_web_pages", lambda: opened.append("page"))
+    _select(printers, "LOOSE")
+    buttons = printers.details.buttons
+    assert [b.text() for b in buttons.values()] == ["Refresh", "Web page"]
+    assert buttons["refresh"].toolTip() == "Refresh printer"
+    buttons["refresh"].click()
+    buttons["web"].click()
+    assert checked == [["LOOSE"]] and opened == ["page"]
+
+
+def test_details_parts_can_be_hidden_with_information_only(
+    printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from capypanel.ui.list_workspace import customize, workspace
+
+    _select(printers, "2F-OFFICE-01")
+    printers.set_hidden_parts(["notes", "supplies", "nonsense"])
+    assert printers.hidden_parts() == {"notes", "supplies"}
+    labels = [w.text() for w in printers.details.findChildren(QLabel)]
+    assert "Notes" not in labels and "Supplies" not in labels and "Printer" in labels
+    assert any(text.startswith("2 parts hidden") for text in labels)
+    opened: list[customize.CustomizeDialog] = []
+    monkeypatch.setattr(workspace, "run_modal", lambda dialog: opened.append(dialog) or 0)
+    printers.commands.customize_details.trigger()
+    dialog = opened[0]
+    assert [dialog.tabs.tabText(i) for i in range(dialog.tabs.count())] == ["Information"]
+    table = dialog.parts.table
+    rows = [table.topLevelItem(i) for i in range(table.topLevelItemCount())]
+    assert [r.text(0) for r in rows if r is not None] == [
+        "Connection", "Supplies", "Printer", "Page counters", "Tags", "Notes",
+    ]  # fmt: skip
+    dialog.parts.restore.click()  # applies at once
+    assert printers.hidden_parts() == frozenset()
+    assert printers.details.customizable
+
+
 def test_details_show_the_printer_in_sections(printers: PrintersTool) -> None:
     _select(printers, "2F-OFFICE-01")
     details = printers.details

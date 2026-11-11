@@ -1,18 +1,20 @@
-"""The printer Details panel: its status, Connection, Supplies, Printer, Page counters, Tags and
-Notes. What the last Refresh read sits beside what the list says, never over it: a value the
-printer reports differently shows under the list's own, with "Use this"."""
+"""The printer Details panel: its status and two buttons (Refresh, Web page), then Connection,
+Supplies, Printer, Page counters, Tags and Notes, each a part that can be hidden. Labels sit
+beside their values, as in Hosts. What the last Refresh read sits beside what the list says,
+never over it: a value the printer reports differently shows under the list's own, with "Use
+this"."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from html import escape
 
-from PySide6.QtCore import QLocale, QRectF, Qt
+from PySide6.QtCore import QLocale, QRectF, Qt, Signal
 from PySide6.QtGui import QFont, QFontMetrics, QPainter, QPalette
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from capypanel.core import i18n
 from capypanel.core.hosts.model import Host
-from capypanel.core.i18n import _, ngettext
+from capypanel.core.i18n import _, ngettext, pgettext
 from capypanel.core.printers.printer import DOC360, SNMP, info_of
 from capypanel.core.printers.reading import Supply
 from capypanel.ui.checks import clock_text
@@ -35,6 +37,8 @@ class PrinterDetails:
     counted: Counted | None = None  # the last Refresh's Doc360 MPS counters
     set_doc360: Callable[[], None] | None = None  # opens the Doc360 MPS account's window
     marks: tuple[Mark, ...] = ()  # the bars' marks; () is just the low level's
+    web: bool = True  # it has a web page to open
+    hidden: frozenset[str] = frozenset()  # the parts this person chose not to see
 
 
 def source_text(source: str) -> str:
@@ -62,7 +66,15 @@ class Meter(QWidget):
         painter.end()
 
 
+def button_words() -> dict[str, str]:
+    """The buttons' short words (nine letters at most), as on Hosts' Details buttons."""
+    return {"refresh": pgettext("button", "Refresh"), "web": pgettext("button", "Web page")}
+
+
 class PrinterDetailsPanel(DetailsPanel):
+    refresh_clicked = Signal()  # Refresh: this printer
+    web_clicked = Signal()  # Web page: this printer's
+
     def show_printer(
         self, details: PrinterDetails | None, selected: int, summary: str = "", needle: str = ""
     ) -> None:
@@ -81,40 +93,71 @@ class PrinterDetailsPanel(DetailsPanel):
 
     def build_page(self, layout: QVBoxLayout, shown: object, needle: str) -> None:
         assert isinstance(shown, PrinterDetails)
-        printer, info = shown.printer, info_of(shown.printer)
+        printer, info, hidden = shown.printer, info_of(shown.printer), shown.hidden
         self._heading(layout, shown)
-        about = " ".join(p for p in (info.brand, info.model) if p)
-        if about:
-            layout.addWidget(self.muted(about))
+        layout.addSpacing(6)
+        layout.addWidget(self._button_grid(shown))
 
         reading = shown.checked.reading if shown.checked else None
         mac, firmware = (reading.mac, reading.firmware) if reading else ("", "")
-        self.section(layout, _("Connection"))
-        self._fields(layout, (("address", _("Address"), printer.address),
-                              ("group", _("Group"), shown.group),
-                              ("mac", _("MAC address"), mac)))  # fmt: skip
+        if "connection" not in hidden:
+            self.section(layout, _("Connection"))
+            self._fields(layout, (("address", _("Address"), printer.address),
+                                  ("group", _("Group"), shown.group),
+                                  ("mac", _("MAC address"), mac)))  # fmt: skip
 
-        self._supplies(layout, shown)
+        if "supplies" not in hidden:
+            self._supplies(layout, shown)
 
-        self.section(layout, _("Printer"))
-        for key, label, value, read in (
-            ("brand", _("Brand"), info.brand, reading.brand if reading else ""),
-            ("model", _("Model"), info.model, reading.model if reading else ""),
-            ("serial", _("Serial number"), info.serial, reading.serial if reading else ""),
-        ):
-            self._fields(layout, ((key, label, value),))
-            if read and read.casefold() != value.strip().casefold():
-                layout.addWidget(self._printer_says(key, read, shown.use))
-        self._fields(layout, (("asset_tag", _("Asset tag"), info.asset_tag),
-                              ("firmware", _("Firmware"), firmware)))  # fmt: skip
+        if "printer" not in hidden:  # brand and model are said here, once
+            self.section(layout, _("Printer"))
+            grid = self._grid(layout)
+            for key, label, value, read in (
+                ("brand", _("Brand"), info.brand, reading.brand if reading else ""),
+                ("model", _("Model"), info.model, reading.model if reading else ""),
+                ("serial", _("Serial number"), info.serial, reading.serial if reading else ""),
+            ):
+                self._row(grid, key, label, value)
+                if read and read.casefold() != value.strip().casefold():
+                    grid.addWidget(self._printer_says(key, read, shown.use), grid.rowCount(), 1)
+            self._row(grid, "asset_tag", _("Asset tag"), info.asset_tag)
+            self._row(grid, "firmware", _("Firmware"), firmware)
 
-        self._page_counters(layout, shown)
+        if "pages" not in hidden:
+            self._page_counters(layout, shown)
 
-        self.section(layout, _("Tags"))
-        layout.addWidget(self.chips(printer.tags) if printer.tags else self.muted("—"))
+        if "tags" not in hidden:
+            self.section(layout, _("Tags"))
+            layout.addWidget(self.chips(printer.tags) if printer.tags else self.muted("—"))
 
-        self.section(layout, _("Notes"))
-        layout.addWidget(self.notes(printer.notes, needle) if printer.notes else self.muted("—"))
+        if "notes" not in hidden:
+            self.section(layout, _("Notes"))
+            layout.addWidget(
+                self.notes(printer.notes, needle) if printer.notes else self.muted("—")
+            )
+        self.hidden_line(layout, len(hidden))
+
+    def _button_grid(self, shown: PrinterDetails) -> QWidget:
+        """Hosts' grid of worded buttons, with Printers' fixed row: Refresh, Web page."""
+        widget = QWidget()
+        column = QVBoxLayout(widget)
+        column.setContentsMargins(0, 0, 0, 0)
+        text = self.palette().color(QPalette.ColorRole.Text)
+        words = button_words()
+        refresh = self.word_button("refresh", text, words["refresh"], _("Refresh printer"))
+        refresh.clicked.connect(self.refresh_clicked)
+        web = self.word_button("world", text, words["web"], _("Open web page"))
+        web.clicked.connect(self.web_clicked)
+        web.setEnabled(shown.web)
+        self.buttons = {"refresh": refresh, "web": web}
+        column.addLayout(self.button_rows([refresh, web], self._button_width()))
+        return widget
+
+    def _button_width(self) -> int:
+        return self.grid_width(list(button_words().values()))
+
+    def minimum_width(self) -> int:
+        return self.grid_minimum(self._button_width())
 
     def _page_counters(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
         """Total pages from the printer itself, or from Doc360 MPS with when it was fetched
@@ -133,23 +176,21 @@ class PrinterDetailsPanel(DetailsPanel):
         total = QLocale(i18n.language()).toString(pages) if pages is not None else ""
         if error:
             total = _("Error: {why}").format(why=error)
+        grid = self._grid(layout)
         for key, label, value in (("pages", _("Total pages"), total),
                                   ("counter_source", _("Source"), source)):  # fmt: skip
-            layout.addWidget(self.muted(label))
-            shown_value = self.value(key, value) if value else self.muted("—")
-            shown_value.setToolTip(tip)
-            layout.addWidget(shown_value)
-            if key == "pages" and error and shown.counted and shown.counted.account:
-                self._account_button(layout, shown)
-            if key == "pages" and pages is not None and (month := status.older_text(shown.counted)):
-                warning = QLabel(
-                    _("⚠ From {month}: Doc360 MPS has no counts for this month yet. Check the "
-                      "portal before using this number.").format(month=month)
-                )  # fmt: skip
-                warning.setObjectName("doc360Older")
-                warning.setWordWrap(True)
-                warning.setStyleSheet(f"color: {AMBER};")
-                layout.addWidget(warning)
+            self._row(grid, key, label, value).setToolTip(tip)
+        if error and shown.counted and shown.counted.account:
+            self._account_button(layout, shown)
+        if pages is not None and (month := status.older_text(shown.counted)):
+            warning = QLabel(
+                _("⚠ From {month}: Doc360 MPS has no counts for this month yet. Check the "
+                  "portal before using this number.").format(month=month)
+            )  # fmt: skip
+            warning.setObjectName("doc360Older")
+            warning.setWordWrap(True)
+            warning.setStyleSheet(f"color: {AMBER};")
+            layout.addWidget(warning)
 
     def _account_button(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
         """Under a missing or refused Doc360 login: its window, straight from here."""
@@ -252,6 +293,27 @@ class PrinterDetailsPanel(DetailsPanel):
         return label
 
     def _fields(self, layout: QVBoxLayout, fields: tuple[tuple[str, str, str], ...]) -> None:
+        grid = self._grid(layout)
         for key, label, value in fields:
-            layout.addWidget(self.muted(label))
-            layout.addWidget(self.value(key, value) if value else self.muted("—"))
+            self._row(grid, key, label, value)
+
+    @staticmethod
+    def _grid(layout: QVBoxLayout) -> QGridLayout:
+        """Hosts' label-and-value grid: a label on the left, its value on the same line, every
+        value at the same x."""
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(12)
+        grid.setVerticalSpacing(6)
+        grid.setColumnStretch(1, 1)
+        layout.addLayout(grid)
+        return grid
+
+    def _row(self, grid: QGridLayout, key: str, label: str, value: str) -> QWidget:
+        """One label and its value (a dash when there's none), on the grid's next line."""
+        row = grid.rowCount() if grid.count() else 0
+        name = QLabel(label)  # never wraps: the column is as wide as its widest label
+        name.setObjectName("hint")
+        shown = self.value(key, value) if value else self.muted("—")
+        grid.addWidget(name, row, 0, Qt.AlignmentFlag.AlignVCenter)
+        grid.addWidget(shown, row, 1, Qt.AlignmentFlag.AlignVCenter)
+        return shown

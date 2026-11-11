@@ -18,6 +18,7 @@ from capypanel.core.printers.printer import DOC360, info_of, with_info
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.hosts import group_path
+from capypanel.ui.list_workspace.customize import Part
 from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
@@ -149,6 +150,9 @@ class PrintersTool(ListWorkspace):
         self.table.addAction(a.open_web_page)
         a.open_web_page.triggered.connect(self.open_web_pages)
         a.copy_address.triggered.connect(self._copy_address)
+        # Details' buttons act on the one printer it shows: the one selected.
+        self.details.refresh_clicked.connect(lambda: self.check_printers(self.selected_items()))
+        self.details.web_clicked.connect(self.open_web_pages)
         self.attention_strip.show_clicked.connect(self._toggle_attention)
         # Picking a group or a tag, or searching, means browsing again: every printer.
         self.nav.filter_changed.connect(self._leave_attention)
@@ -579,10 +583,25 @@ class PrintersTool(ListWorkspace):
                 self._counted,
                 self._set_doc360_account,
                 self.bar_marks(),
+                web=web_page(printer) is not None,
+                hidden=self.hidden_parts(),
             )
             self.details.show_printer(details, 1, needle=self._needle())
         else:
             self.details.show_printer(None, len(items), summary=self._summary())
+
+    def details_parts(self) -> list[Part]:
+        return [
+            Part("connection", _("Connection"), _("Address, group, MAC address")),
+            Part("supplies", _("Supplies"), _("Toner, ink and the rest, with their levels")),
+            Part("printer", _("Printer"), _("Brand, model, serial number, firmware")),
+            Part("pages", _("Page counters"), _("Total pages and where they come from")),
+            Part("tags", _("Tags"), _("The printer's tags")),
+            Part("notes", _("Notes"), _("The printer's notes")),
+        ]
+
+    def details_always(self) -> str:
+        return _("Always shown: the printer's name and its status.")
 
     def _summary(self) -> str:
         """With nothing selected, the Details panel counts the printers shown."""

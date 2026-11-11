@@ -597,6 +597,9 @@ msgstr[1] ""
 msgid "Address"
 msgstr ""
 
+msgid "Address, group, MAC address"
+msgstr ""
+
 msgid "Address, profile, account"
 msgstr ""
 
@@ -631,6 +634,9 @@ msgid "Also low supplies"
 msgstr ""
 
 msgid "Always shown: the host's name, its status and a pending restart's warning."
+msgstr ""
+
+msgid "Always shown: the printer's name and its status."
 msgstr ""
 
 #, python-brace-format
@@ -701,6 +707,9 @@ msgid ""
 msgstr ""
 
 msgid "Brand"
+msgstr ""
+
+msgid "Brand, model, serial number, firmware"
 msgstr ""
 
 #, python-brace-format
@@ -3589,6 +3598,12 @@ msgstr[1] ""
 msgid "The printer says {value}"
 msgstr ""
 
+msgid "The printer's notes"
+msgstr ""
+
+msgid "The printer's tags"
+msgstr ""
+
 msgid "The printers installed on the PC, their queues and problems."
 msgstr ""
 
@@ -3811,10 +3826,16 @@ msgstr ""
 msgid "Toner model"
 msgstr ""
 
+msgid "Toner, ink and the rest, with their levels"
+msgstr ""
+
 msgid "Tool"
 msgstr ""
 
 msgid "Total pages"
+msgstr ""
+
+msgid "Total pages and where they come from"
 msgstr ""
 
 msgid "Tray empty"
@@ -3984,6 +4005,10 @@ msgstr ""
 msgid ""
 "What Connect opens, and the login it uses. Refresh's logged-on users and "
 "the commands use the account under it."
+msgstr ""
+
+msgctxt "button"
+msgid "Web page"
 msgstr ""
 
 msgid "What the window shows when CapyPanel starts."
