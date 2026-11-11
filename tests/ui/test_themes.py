@@ -418,3 +418,12 @@ def test_no_corner_is_fixed_in_the_stylesheet_but_the_round_ones(theme: themes.T
         "QLabel#stateBadge", "QRadioButton::indicator", "QCheckBox::indicator",
         "QScrollBar::handle",
     }  # fmt: skip
+
+
+def test_tables_draw_a_line_under_each_row_and_none_between_columns() -> None:
+    sheets = [themes.stylesheet(themes.Registry().find(i)) for i in ("capypanel-dark", "paper")]
+    for sheet in (*sheets, themes._NATIVE_QSS):  # the Windows themes' own sheet too
+        assert "border-bottom: 1px solid" in _rule(sheet, "QTreeView#grid::item")
+        rules = re.findall(r"([^{}]+)[{]([^}]*)[}]", sheet)
+        grid = [body for selector, body in rules if "#grid" in selector]
+        assert grid and not any("border-right" in body for body in grid)

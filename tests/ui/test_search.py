@@ -142,10 +142,13 @@ def test_notes_are_always_searched_and_tags_while_their_column_shows(
 
 def test_the_placeholder_names_what_is_searched(window: CapyWindow) -> None:
     table = window.hosts.table
-    assert window.hosts.search.placeholderText() == "Search name, address, user, tags, notes"
+    words = "Search name, address, status, user, tags, notes"
+    assert window.hosts.search.placeholderText() == words
     table._show_column(table.USER, False)
     table._show_column(table.TAGS, False)
+    table._show_column(table.STATUS, False)
     assert window.hosts.search.placeholderText() == "Search name, address, notes"
+    table._show_column(table.STATUS, True)
     table._show_column(table.USER, True)
     table._show_column(table.TAGS, True)
 
@@ -232,3 +235,23 @@ def test_online_count_and_summary(window: CapyWindow) -> None:
     window.hosts.table.clearSelection()
     hint = window.hosts.details._hint.text()
     assert hint.startswith("1 host shown\n1 online")
+
+
+def test_search_reads_the_status_column_not_checked_too(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(checks, "run", lambda address, wanted: Found(Status.ONLINE))
+    lab = [h for h in window.hosts.visible_items() if h.name == "LAB-01"]
+    window.hosts.check_hosts(lab, status=True, users=False)
+    deadline = time.monotonic() + 10  # a deadline, not a count: threads can be slow
+    while time.monotonic() < deadline:
+        QApplication.processEvents()
+        if window.hosts._run is None:
+            break
+    _search(window, "online")
+    assert _rows(window) == ["LAB-01"]
+    _search(window, "not checked")
+    assert _rows(window) == ["RECEP-04", "TRIAGE-01", "TRIAGE-02"]
+    window.hosts.table._show_column(window.hosts.table.STATUS, False)
+    _search(window, "online")  # Status hidden: not searched, like the other columns
+    assert _rows(window) == []

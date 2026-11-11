@@ -53,7 +53,7 @@ from capypanel.ui.hosts_tool.host_state import Facts, PendingPower
 from capypanel.ui.hosts_tool.result_strip import ResultStrip
 from capypanel.ui.hosts_tool.runner import HostTarget, Outcome, Report, Runner, folder_user
 from capypanel.ui.hosts_tool.settings import HostsSettings, SettingsPrefs
-from capypanel.ui.hosts_tool.table import Cells, HostTable
+from capypanel.ui.hosts_tool.table import Cells, HostTable, not_checked
 from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 from capypanel.ui.import_hosts import ImportDialog
@@ -271,11 +271,13 @@ class HostsTool(ListWorkspace):
         return _("Remove hosts"), text
 
     def search_fields(self) -> tuple[list[str], str]:
-        """Address, user, tags: searched only while their columns show. Notes always are."""
+        """Address, status, user, tags: searched only while their columns show. Notes always
+        are."""
         table = self.table
-        # Each a lower-case word in the list "Search name, address, user, tags, notes".
+        # Each a lower-case word in the list "Search name, address, status, user, tags, notes".
         fields = [_("name")]
         fields += [_("address")] if not table.isColumnHidden(table.ADDRESS) else []
+        fields += [_("status")] if not table.isColumnHidden(table.STATUS) else []
         fields += [_("user")] if not table.isColumnHidden(table.USER) else []
         fields += [_("tags")] if not table.isColumnHidden(table.TAGS) else []
         fields.append(_("notes"))  # no column, so always searched
@@ -413,8 +415,8 @@ class HostsTool(ListWorkspace):
         sources, current = self.report_sources(doc.hosts)
 
         def results(host_id: str) -> tuple[str, str]:
-            cells = self._cells(host_id)
-            return cells.status[0], cells.user[0]
+            cells = self._cells(host_id)  # "" when not checked: the file's cell stays empty
+            return ("" if cells.unchecked else cells.status[0]), cells.user[0]
 
         def checked_at(host_id: str) -> tuple[datetime | None, datetime | None]:
             status, users = self._status_found.get(host_id), self._users_found.get(host_id)
@@ -766,13 +768,17 @@ class HostsTool(ListWorkspace):
         self.table.show_hosts(items, {h.id: self._cells(h.id) for h in items})
 
     def matches(self, item: Host, needle: str) -> bool:
-        """The name, plus the address, users and tags when their columns show: only what can be
-        seen. Notes are the exception: they have no column, so they're always searched. Users
-        come from the last logged-on users check (memory only)."""
+        """The name, plus the address, status, users and tags when their columns show: only
+        what can be seen. Notes are the exception: they have no column, so they're always
+        searched. Status ("Not checked" too) and users come from the last Refresh (memory
+        only)."""
         table = self.table
         if super().matches(item, needle):
             return True
         if not table.isColumnHidden(table.ADDRESS) and needle in item.address.casefold():
+            return True
+        shown = not table.isColumnHidden(table.STATUS)
+        if shown and needle in self._cells(item.id).status[0].casefold():
             return True
         if not table.isColumnHidden(table.TAGS) and any(needle in t.casefold() for t in item.tags):
             return True
@@ -1178,8 +1184,9 @@ class HostsTool(ListWorkspace):
     def _cells(self, host_id: str) -> Cells:
         status = self._status_found.get(host_id)
         users = self._users_found.get(host_id)
-        unchecked = ("", _("Not checked: use Refresh"), None, True)
-        status_cell: tuple[str, str, Any, bool] = unchecked
+        blank = not_checked()
+        status_cell: tuple[str, str, Any, bool] = blank.status
+        said = status is not None  # a status was read, or a restart is on its way
         if status is not None:
             state, when, answered = status
             status_cell = (
@@ -1190,6 +1197,7 @@ class HostsTool(ListWorkspace):
             )
         pending = self._pending.get(host_id)
         if pending is not None and pending.at > datetime.now(UTC):
+            said = True
             when = check_texts.clock_text(pending.at)
             status_cell = (
                 _("Restart at {when}").format(when=when)
@@ -1201,14 +1209,14 @@ class HostsTool(ListWorkspace):
                 tabler_icon("clock", QColor(STATUS_COLORS["attention"]), 14),
                 False,
             )
-        user_cell: tuple[str, str, Any, bool] = unchecked
+        user_cell: tuple[str, str, Any, bool] = blank.user
         if users is not None:
             found, error, when = users
             text, tip = check_texts.users_text(found, error), check_texts.users_tip(error, when)
             if found:  # every name, when the column is too narrow; always with the domain
                 tip = f"{check_texts.users_text(found, error, full=True)}\n{tip}"
             user_cell = (text, tip, None, error is not None or not found)
-        return Cells(status_cell, user_cell)
+        return Cells(status_cell, user_cell, unchecked=not said)
 
     def _show_refresh_panel(self, where: QPoint) -> None:
         panel = self.refresh_panel

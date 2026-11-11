@@ -52,7 +52,7 @@ from capypanel.ui.checks import clock_text
 from capypanel.ui.groups import TREE_INDENT
 from capypanel.ui.hosts import confirm
 from capypanel.ui.icons import tabler_icon
-from capypanel.ui.list_workspace.panels import natural_key
+from capypanel.ui.list_workspace.panels import sorted_by
 from capypanel.ui.notes import hint
 from capypanel.ui.tables import fit_menu
 
@@ -73,6 +73,7 @@ SECTIONS = (
     (N_("Last check"), ("status", "users")),
 )
 CHECKED = ("status", "users")  # from the last Refresh, kept in memory only
+SAYS_NOT_CHECKED = frozenset({"status"})  # empty in the file, "Not checked" in the preview
 FOR_IMPORT = ("name", "address", "group", "tags", "notes")  # what Import hosts reads back
 PRESETS_KEY, LAST_KEY, FOLDER_KEY = "export_presets", "export_columns", "export_folder"
 DEPTH = Qt.ItemDataRole.UserRole + 1
@@ -97,6 +98,7 @@ class ExportDialog(QDialog):
     TITLES: Mapping[str, str] = TITLES
     SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = SECTIONS
     CHECKED: tuple[str, ...] = CHECKED
+    SAYS_NOT_CHECKED: frozenset[str] = SAYS_NOT_CHECKED
     FOR_IMPORT: tuple[str, ...] = FOR_IMPORT
     PRESETS_KEY, LAST_KEY, FOLDER_KEY = PRESETS_KEY, LAST_KEY, FOLDER_KEY  # its own choices
     ITEMS_LABEL = N_("&Hosts:")
@@ -386,7 +388,10 @@ class ExportDialog(QDialog):
     def hosts(self) -> tuple[Host, ...]:
         return self._sources[self.source.currentIndex()].hosts
 
-    def rows(self, between_tags: str = ";") -> list[list[str]]:
+    def rows(self, between_tags: str = ";", *, on_screen: bool = False) -> list[list[str]]:
+        """The picked items' cells, in the preview's order. A Status not read yet is an empty
+        cell in a file or a copy; `on_screen` (the preview) says "Not checked" there, as the
+        main table does. Either way it sorts last."""
         columns = self.columns()
         rows = []
         for host in self.hosts():
@@ -396,9 +401,14 @@ class ExportDialog(QDialog):
         if self._sort is not None and self._sort[0] in columns:
             key, descending = self._sort
             at = columns.index(key)
-            # Ties by name A–Z either way; a stable sort keeps that order with reverse too.
-            rows.sort(key=lambda r: natural_key(r[0].name))
-            rows.sort(key=lambda r: natural_key(r[1][at]), reverse=descending)
+            rows = sorted_by(rows, lambda r: r[0].name, lambda r: r[1][at], descending)
+        blank = [i for i, key in enumerate(columns) if key in self.SAYS_NOT_CHECKED]
+        if on_screen and blank:
+            words = _("Not checked")
+            return [
+                [words if i in blank and not cell else cell for i, cell in enumerate(cells)]
+                for _host, cells in rows
+            ]
         return [cells for _host, cells in rows]
 
     def _sort_by(self, index: int) -> None:
@@ -555,7 +565,7 @@ class ExportDialog(QDialog):
         if self._sort is not None and sorted_by:
             order = Qt.SortOrder.DescendingOrder if self._sort[1] else Qt.SortOrder.AscendingOrder
             header.setSortIndicator(columns.index(self._sort[0]), order)
-        for row in self.rows():
+        for row in self.rows(on_screen=True):
             item = QTreeWidgetItem([" ".join(cell.split()) for cell in row])  # one line each
             for column, cell in enumerate(row):
                 item.setToolTip(column, cell)  # in full, when the column cuts it

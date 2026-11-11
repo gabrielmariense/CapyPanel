@@ -477,4 +477,5 @@ def test_columns_sort_naturally_and_ties_go_by_name(printers: PrintersTool) -> N
     printers.table.sortByColumn(printers.table.MODEL, Qt.SortOrder.AscendingOrder)
     assert _names(printers) == ["P2", "P10", "p9", "LOOSE"]  # m2 = M2: ties by name; empty last
     printers.table.sortByColumn(printers.table.MODEL, Qt.SortOrder.DescendingOrder)
-    assert _names(printers) == ["LOOSE", "p9", "P2", "P10"]  # Z–A, ties still by name A–Z
+    # Z–A, ties still by name A–Z; a cell with nothing stays last
+    assert _names(printers) == ["p9", "P2", "P10", "LOOSE"]

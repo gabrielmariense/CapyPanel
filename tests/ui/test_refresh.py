@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtCore import QPoint
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import QApplication, QDialog, QWidgetAction
 
 from capypanel.core import settings
@@ -94,7 +94,7 @@ def test_checking_selected_hosts_fills_the_status_and_user_columns(
     assert _cells(window, "PC-2") == ("Offline", "Unreachable")
     first = window.hosts.table._rows[_ids(window, "PC-1")[0]]
     assert "Answered at 10.0.0.1, port 445." in first.toolTip(window.hosts.table.STATUS)
-    assert _cells(window, "PC-3") == ("", "")  # not selected: not checked
+    assert _cells(window, "PC-3") == ("Not checked", "")  # not selected: not checked
     assert {a for a, *_ in answers["seen"]} == {"10.0.0.1", "10.0.0.2"}  # no address: skipped
     window.hosts.table.select_ids(_ids(window, "PC-1"))
     assert window.hosts.details.shown_value("users") == "CORP\\ana"
@@ -326,3 +326,28 @@ def test_automatic_status_is_off_by_default_and_checks_only_status(
     window.hosts._auto_status_check()  # what the timer does
     _wait(window)
     assert answers["seen"] and all(s and not u for _a, s, u, _acc in answers["seen"])
+
+
+def test_a_host_never_checked_says_so_and_sorts_last_either_way(
+    window: CapyWindow, answers: dict[str, Any]
+) -> None:
+    table = window.hosts.table
+
+    def names() -> list[str]:
+        rows = (table.topLevelItem(i) for i in range(table.topLevelItemCount()))
+        return [row.text(0) for row in rows if row is not None]
+
+    # Status says it in words, greyed; User stays empty until a check.
+    assert _cells(window, "PC-1") == ("Not checked", "")
+    first = table._rows[_ids(window, "PC-1")[0]]
+    assert first.toolTip(table.STATUS) == "Not checked: use Refresh"
+    answers["10.0.0.2"] = Found(Status.OFFLINE)
+    table.select_ids(_ids(window, "PC-1", "PC-2"))
+    window.hosts.check_hosts(window.hosts.selected_items(), status=True, users=False)
+    _wait(window)
+    table.sortByColumn(table.STATUS, Qt.SortOrder.AscendingOrder)
+    assert names() == ["PC-2", "PC-1", "Desk 4", "PC-3"]  # Offline, Online; then the unread
+    assert [h.name for h in table.in_shown_order(window.hosts.visible_items())] == names()
+    table.sortByColumn(table.STATUS, Qt.SortOrder.DescendingOrder)
+    assert names() == ["PC-1", "PC-2", "Desk 4", "PC-3"]  # Z–A: still last, by name A–Z
+    assert [h.name for h in table.in_shown_order(window.hosts.visible_items())] == names()

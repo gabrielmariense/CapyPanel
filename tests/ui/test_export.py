@@ -340,3 +340,20 @@ def test_a_click_on_a_preview_title_sorts_and_copy_follows(
     ]
     lines = QApplication.clipboard().text().splitlines()
     assert [line.split("\t")[0] for line in lines[1:]] == seen[1]
+
+
+def test_a_status_never_read_says_not_checked_in_the_preview_and_stays_empty_in_the_file(
+    rooms: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def look(d: ExportDialog) -> None:
+        for key, box in d.boxes.items():
+            box.setChecked(key in ("name", "status", "users"))
+        top = d.preview.topLevelItem(0)
+        assert top is not None
+        # Status in words, as the main table; who's logged on stays empty until a check.
+        assert [top.text(c) for c in range(3)] == ["Room 1", "Not checked", ""]
+        assert d.rows()[0] == ["Room 1", "", ""]  # what a file or a copy gets
+        d.copy_button.click()
+
+    _run(rooms, monkeypatch, look)
+    assert QApplication.clipboard().text().splitlines()[1] == "Room 1\t\t"

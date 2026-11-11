@@ -18,6 +18,7 @@ from capypanel.core.hosts.model import NO_GROUP, Host, HostList
 from capypanel.ui.hosts import HostDialog, group_choices
 from capypanel.ui.hosts_tool import tool as hosts_module
 from capypanel.ui.hosts_tool.table import HostTable
+from capypanel.ui.icons import dot_icon
 from capypanel.ui.list_workspace import workspace as workspace_module
 
 
@@ -234,8 +235,21 @@ def test_the_first_start_fits_every_column_to_its_full_text(qapp: QApplication) 
     long = "a." * 150 + "example.internal"  # far wider than the old 260 px cap
     table = _table(qapp, _hosts(("Reception 01", long)))
     assert table.columnWidth(table.ADDRESS) >= table.sizeHintForColumn(table.ADDRESS)
-    # Status and User are empty before a check: a starting width with room for one.
+    # User is empty before a check: a starting width with room for one.
     assert table.columnWidth(table.USER) > table.minimum_width(table.USER)
+    table.close()
+
+
+def test_status_starts_wide_enough_for_everything_it_can_say(qapp: QApplication) -> None:
+    table = _table(qapp, _hosts(("Reception 01", "192.0.2.10")))
+    first = table.columnWidth(table.STATUS)
+    row = table.topLevelItem(0)
+    assert row is not None
+    row.setIcon(table.STATUS, dot_icon("#3fb950"))  # the dot takes room too
+    for words in table.longest_texts(table.STATUS):
+        row.setText(table.STATUS, words)
+        assert table.sizeHintForColumn(table.STATUS) <= first, words
+    assert {"Not checked", "Host not found", "Online"} <= set(table.longest_texts(table.STATUS))
     table.close()
 
 

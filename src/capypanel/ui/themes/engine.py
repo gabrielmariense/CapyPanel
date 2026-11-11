@@ -549,13 +549,9 @@ QTreeView::item:selected, QListView::item:selected { background: %(sel_solid)s; 
 QHeaderView { background: %(card)s; border: none; }
 QHeaderView::section { background: %(card)s; color: %(text2)s; border: none;
                        border-bottom: 1px solid %(border)s; padding: 8px 6px; font-weight: 600; }
-/* Tables marked "grid" get lines between rows and columns, like a spreadsheet. */
-QTreeView#grid::item { border-right: 2px solid %(border)s; border-bottom: 2px solid %(border)s; }
-QTreeView#grid QHeaderView::section { border-right: 2px solid %(border)s; }
-/* No line after the last column, as there's none before the first. */
-QTreeView#grid::item:last, QTreeView#grid::item:only-one,
-QTreeView#grid QHeaderView::section:last,
-QTreeView#grid QHeaderView::section:only-one { border-right: none; }
+/* Tables marked "grid": a thin line under each row, none between columns; the table's own
+   border is its one frame. */
+QTreeView#grid::item { border-bottom: 1px solid %(border)s; }
 QHeaderView::section:hover { color: %(text)s; }
 
 QFrame#card { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; }
@@ -721,13 +717,9 @@ QFrame#rowLine { background: %(border)s; border: none; min-height: 1px; max-heig
 QTreeView::item:hover, QListView#pageList::item:hover { background: %(hover)s; }
 QTreeView::item:selected, QListView#pageList::item:selected {
     background: %(sel)s; color: %(text)s; }
-/* Tables marked "grid" get lines between rows and columns, like a spreadsheet. */
-QTreeView#grid::item { border-right: 2px solid %(border)s; border-bottom: 2px solid %(border)s; }
-QTreeView#grid QHeaderView::section { border-right: 2px solid %(border)s; }
-/* No line after the last column, as there's none before the first. */
-QTreeView#grid::item:last, QTreeView#grid::item:only-one,
-QTreeView#grid QHeaderView::section:last,
-QTreeView#grid QHeaderView::section:only-one { border-right: none; }
+/* Tables marked "grid": a thin line under each row, none between columns; the table's own
+   border is its one frame. */
+QTreeView#grid::item { border-bottom: 1px solid %(border)s; }
 /* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
 QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
 QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }

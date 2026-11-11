@@ -1,5 +1,5 @@
-"""The one table design for lists in windows like Settings: lines between rows and columns as
-in the host table, a header, a few rows before it scrolls, the full width of the page, its main
+"""The one table design for lists in windows like Settings: a line under each row as in the
+host table, a header, a few rows before it scrolls, the full width of the page, its main
 actions in a row of buttons under it, and every action of a row on its right-click."""
 
 from collections.abc import Callable
@@ -37,7 +37,7 @@ class _Refit(QObject):
 
 
 def grid_table(headers: list[str]) -> QTreeWidget:
-    """A table in the app's one style: grid lines, resizable columns, one row picked at a time.
+    """A table in the app's one style: row lines, resizable columns, one row picked at a time.
     Every column shows its whole text; when they can't all fit, the table scrolls sideways."""
     table = QTreeWidget()
     table.setObjectName("grid")  # the stylesheet draws the lines

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 14:34-0300\n"
+"POT-Creation-Date: 2026-11-11 15:23-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -4197,6 +4197,9 @@ msgstr "ainda há"
 
 msgid "starting"
 msgstr "iniciando"
+
+msgid "status"
+msgstr "status"
 
 msgid "stopped"
 msgstr "parado"

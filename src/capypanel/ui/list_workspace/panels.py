@@ -24,6 +24,7 @@ from PySide6.QtGui import (
     QKeyEvent,
     QPainter,
     QPalette,
+    QPixmap,
     QResizeEvent,
     QShowEvent,
 )
@@ -441,29 +442,53 @@ class TagStrip(QFrame):
             self.clear_button.setToolTip(_("Clear the picked tags"))
 
 
+# A cell that says nothing was read yet ("Not checked"): it sorts as an empty one.
+ROLE_NOTHING = Qt.ItemDataRole.UserRole + 9
+NOTHING: tuple[tuple[int, int | str], ...] = ((2, ""),)  # natural_key's answer for no text
+
+
 def natural_key(text: str) -> tuple[tuple[int, int | str], ...]:
     """Sorts "Room 2" before "Room 10", and ignores case. Empty cells go last."""
     if not text:
-        return ((2, ""),)
+        return NOTHING
     parts = re.split(r"(\d+)", text.casefold())
     return tuple((0, int(p)) if p.isdigit() else (1, p) for p in parts if p)
 
 
+def sorted_by[T](
+    rows: Sequence[T], name: Callable[[T], str], cell: Callable[[T], str], descending: bool
+) -> list[T]:
+    """Rows by a column's text, A–Z or Z–A; ties by name A–Z; cells with nothing ("" from
+    `cell`) last either way. What the tables show, for anything listing rows in their order."""
+    by_name = sorted(rows, key=lambda r: natural_key(name(r)))  # stable sorts keep it in ties
+    filled = [r for r in by_name if cell(r)]
+    filled.sort(key=lambda r: natural_key(cell(r)), reverse=descending)
+    return filled + [r for r in by_name if not cell(r)]
+
+
 class SortedRow(QTreeWidgetItem):
     """A table row that sorts naturally (A–Z or Z–A by the clicked column), ties by its name,
-    A–Z either way."""
+    A–Z either way. A cell with nothing in it, or marked ROLE_NOTHING, goes last either way."""
+
+    def sort_text(self, column: int) -> str:
+        return "" if self.data(column, ROLE_NOTHING) else self.text(column)
 
     def __lt__(self, other: QTreeWidgetItem) -> bool:
         tree = self.treeWidget()
         column = tree.sortColumn() if tree is not None else 0
-        mine, theirs = natural_key(self.text(column)), natural_key(other.text(column))
-        if mine != theirs:
-            return mine < theirs
-        names = natural_key(self.text(0)), natural_key(other.text(0))
-        # Z–A sorts by asking the other row: so a tie stays A–Z, the names answer the other way.
+        theirs_text = (
+            other.sort_text(column) if isinstance(other, SortedRow) else other.text(column)
+        )
+        mine, theirs = natural_key(self.sort_text(column)), natural_key(theirs_text)
+        # Z–A sorts by asking the other row: what must stay in place answers the other way.
         descending = tree is not None and tree.header().sortIndicatorOrder() == (
             Qt.SortOrder.DescendingOrder
         )
+        if mine != theirs:
+            if NOTHING in (mine, theirs):
+                return (theirs == NOTHING) != descending
+            return mine < theirs
+        names = natural_key(self.text(0)), natural_key(other.text(0))
         return names[0] > names[1] if descending else names[0] < names[1]
 
 
@@ -483,12 +508,13 @@ class ItemTable(QTreeWidget):
     SEARCHED: frozenset[int] = frozenset({0})  # columns where a search's text is marked
     # Empty until something fills them later: a starting width, in average characters.
     EMPTY: dict[int, int] = {}
+    ICONS: frozenset[int] = frozenset()  # columns whose cells start with a dot or an icon
     columns_changed = Signal()  # a column was shown or hidden
 
     def __init__(self) -> None:
         super().__init__()
-        self.setObjectName("grid")  # lines between rows and columns
-        self._rows: dict[str, QTreeWidgetItem] = {}
+        self.setObjectName("grid")  # a line under each row
+        self._rows: dict[str, SortedRow] = {}
         # The user's column widths, by key: saved, shared by every list, changed only by them.
         self._widths: dict[str, int] = {}
         self._sizing = False  # the table is resizing a column, not the user
@@ -534,6 +560,11 @@ class ItemTable(QTreeWidget):
 
     def decorate(self, row: QTreeWidgetItem, item: Host) -> None:
         """Anything a row shows besides its texts (icons, tooltips, colours)."""
+
+    def longest_texts(self, column: int) -> Sequence[str]:
+        """Every text a column filled later can show (Status: each state), when they're known:
+        its first width then fits the longest, in the current language."""
+        return ()
 
     def set_editable(self, editable: bool) -> None:
         self.setDragEnabled(editable)
@@ -592,12 +623,12 @@ class ItemTable(QTreeWidget):
         column = max(self.sortColumn(), 0)
         descending = self.header().sortIndicatorOrder() == Qt.SortOrder.DescendingOrder
         texts = {item.id: self.row_texts(item) for item in items}
-        by_name = sorted(items, key=lambda h: natural_key(texts[h.id][0]))
-        # A stable sort keeps the names' order among ties, also with reverse.
-        by_column = sorted(
-            by_name, key=lambda h: natural_key(texts[h.id][column]), reverse=descending
-        )
-        return tuple(by_column)
+
+        def cell(item: Host) -> str:
+            row = self._rows.get(item.id)  # what it shows now (Status comes with a Refresh)
+            return row.sort_text(column) if row is not None else texts[item.id][column]
+
+        return tuple(sorted_by(items, lambda h: texts[h.id][0], cell, descending))
 
     def show_no_match(self, text: str) -> None:
         """The note in the empty table when the picked tags leave nothing; "" hides it."""
@@ -692,7 +723,8 @@ class ItemTable(QTreeWidget):
         self._sizing = True
         for column in self._shown():
             key = self.COLUMNS[column]
-            if key not in self._widths and (self.topLevelItemCount() or column in self.EMPTY):
+            known = column in self.EMPTY or bool(self.longest_texts(column))
+            if key not in self._widths and (self.topLevelItemCount() or known):
                 self._widths[key] = self._first_width(column)
             header.resizeSection(column, self._widths.get(key, self.minimum_width(column)))
         self._sizing = False
@@ -702,7 +734,20 @@ class ItemTable(QTreeWidget):
         width = self._content_width(column)
         if column in self.EMPTY:
             width = max(width, self.fontMetrics().averageCharWidth() * self.EMPTY[column] + 16)
-        return width
+        return max([width, *(self._cell_width(column, t) for t in self.longest_texts(column))])
+
+    def _cell_width(self, column: int, text: str) -> int:
+        """The width a cell needs to show `text` in full, as the style measures a real one."""
+        option = QStyleOptionViewItem()
+        self.initViewItemOption(option)
+        option.text = text
+        option.features |= QStyleOptionViewItem.ViewItemFeature.HasDisplay
+        if column in self.ICONS:
+            option.features |= QStyleOptionViewItem.ViewItemFeature.HasDecoration
+            # Any icon: only its size counts, and the view's own option already has it.
+            option.icon = QIcon(QPixmap(option.decorationSize))
+        contents = QStyle.ContentsType.CT_ItemViewItem
+        return self.style().sizeFromContents(contents, option, QSize(), self).width()
 
     def _content_width(self, column: int) -> int:
         """Its widest text, in full, and never narrower than its title."""
