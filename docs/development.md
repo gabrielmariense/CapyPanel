@@ -73,5 +73,6 @@ uv run --only-group docs mkdocs serve
 
 Versions are `0.MINOR.PATCH` until 1.0: a merged feature bumps MINOR, a fix-only change bumps
 PATCH. Running from source, the title bar adds a build number and the commit to the version, as
-in `0.24.0 build 1378 (abc1234)`. The build number counts every commit that led to it, so a
-bigger number is always a newer build.
+in `0.24.1 build 1378 (abc1234)`. The build number counts every commit that led to it, so a
+bigger number is always a newer build. The version itself comes from the checkout's own
+`pyproject.toml`, so it's right straight after a pull, even before `uv sync`.

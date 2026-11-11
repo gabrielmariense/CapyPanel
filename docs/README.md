@@ -53,5 +53,5 @@ Getting started, Settings and files and Development are about the whole app. The
 them belong to the **Hosts** tool, the three after those to **Printers**, and the last one to
 **User profiles**.
 
-These pages describe the current version (0.24.0). CapyPanel is in beta, so they grow with each
+These pages describe the current version (0.24.1). CapyPanel is in beta, so they grow with each
 feature.

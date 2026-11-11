@@ -13,7 +13,7 @@ uv run capypanel
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
 The version shows in the title bar. When you run from source it's followed by a build number
-and the commit, e.g. `CapyPanel 0.24.0 build 1378 (abc1234)`; a bigger build number is a newer
+and the commit, e.g. `CapyPanel 0.24.1 build 1378 (abc1234)`; a bigger build number is a newer
 build. Quote it when you report a problem.
 
 Remote Desktop works out of the box, with the client built into Windows. For VNC you also need a

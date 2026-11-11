@@ -13,7 +13,7 @@ uv run capypanel
 
 A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes
 abrem na hora. A versão aparece na barra de título. Quando você roda pelo código-fonte, ela vem
-seguida de um número de build e do commit, por exemplo `CapyPanel 0.24.0 build 1378 (abc1234)`;
+seguida de um número de build e do commit, por exemplo `CapyPanel 0.24.1 build 1378 (abc1234)`;
 um número de build maior é um build mais novo. Informe-a ao relatar um problema.
 
 A Área de Trabalho Remota funciona de cara, com o cliente que já vem no Windows. Para o VNC você
