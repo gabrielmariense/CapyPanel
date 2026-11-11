@@ -156,8 +156,7 @@ class HostsTool(ListWorkspace):
         self._auto_timer = QTimer(self)  # Settings: Status by itself, if switched on
         self._auto_timer.timeout.connect(self._auto_status_check)
         self._apply_auto_status()
-        self.open_startup_list()
-        self.refresh()
+        self.open_first_list()
 
     def status_widgets(self) -> list[QWidget]:
         """Shown on the right of the status bar: a Refresh's progress and Stop."""

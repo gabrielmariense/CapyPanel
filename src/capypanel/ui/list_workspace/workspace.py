@@ -66,6 +66,7 @@ class ListWorkspace(Tool):
         self._paths = shell.paths
         self._list_commands = commands
         self._doc: OpenList | None = None
+        self._hold_fill = False  # at start: the table is filled once, at the end
         self._places = shell.paths.lists(self.TOOL_ID)  # lists\<tool>\, shared and own
         self._default_list = self._places.default
         self._personal_list = self._places.personal
@@ -358,6 +359,16 @@ class ListWorkspace(Tool):
     @property
     def personal_list(self) -> Path:
         return self._personal_list
+
+    def open_first_list(self) -> None:
+        """At start: the startup list, then everything shown. Opening a list fills the table at
+        each of its steps; here they wait for the last one, so a long list is filled once."""
+        self._hold_fill = True
+        try:
+            self.open_startup_list()
+        finally:
+            self._hold_fill = False
+        self.refresh()
 
     def open_startup_list(self) -> None:
         """The chosen list (normally the last used), else the default, else the personal one."""
@@ -894,6 +905,8 @@ class ListWorkspace(Tool):
         self.list_changed.emit()
 
     def _show_items(self) -> None:
+        if self._hold_fill:
+            return
         self._search_timer.stop()
         needle = self._needle()
         before_tags = self._place_items()

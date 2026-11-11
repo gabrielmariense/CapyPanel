@@ -201,8 +201,7 @@ class ProfilesTool(Tool):
         self.show_tags.toggled.connect(self._save_shown)
 
         self._connect()
-        self.retranslate()
-        self._show_list()
+        self.retranslate()  # fills the list too
         self._first_widths(scale)
         self._checked_once = False  # the group on show is checked when the tool first shows
 
