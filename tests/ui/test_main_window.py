@@ -562,6 +562,6 @@ def test_the_groups_panel_uses_outline_icons_in_the_text_colour(window: CapyWind
             image.pixelColor(x, y).rgb()
             for x in range(image.width())
             for y in range(image.height())
-            if image.pixelColor(x, y).alpha() > 200
+            if image.pixelColor(x, y).alpha() == 255  # solid ink: soft edges round the colour
         }
         assert inked == {text.rgb()}  # one colour: an outline, not Windows' coloured picture
