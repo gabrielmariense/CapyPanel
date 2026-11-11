@@ -453,7 +453,7 @@ class HostsPage(ListsGeneralPage):
             refresh.content,
             SettingRow(
                 _("Refresh status &by itself"),
-                _("Only ping and ports, never logged-on users, so no account is needed. "
+                _("Only ping and ports, so no account is needed. "
                   "Refresh in the toolbar always works."),
                 self.auto_every,
             ),
