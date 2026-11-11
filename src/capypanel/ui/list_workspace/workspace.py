@@ -310,7 +310,10 @@ class ListWorkspace(Tool):
     def hidden_parts(self) -> frozenset[str]:
         kept = self.prefs.get(HIDDEN_KEY)
         known = {part.key for part in self.details_parts()}
-        return frozenset(k for k in kept if k in known) if isinstance(kept, list) else frozenset()
+        if not isinstance(kept, list):
+            return frozenset()
+        # A settings file edited by hand can hold anything: only the parts' own keys count.
+        return frozenset(k for k in kept if isinstance(k, str) and k in known)
 
     def set_hidden_parts(self, hidden: Sequence[str]) -> None:
         self.prefs[HIDDEN_KEY] = sorted(set(hidden))

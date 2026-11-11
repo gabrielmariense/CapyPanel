@@ -679,6 +679,8 @@ def test_quick_commands_and_hidden_parts_apply_at_once_and_are_kept(window: Capy
     window.hosts.set_hidden_parts([])
     headings = [w.text() for w in window.hosts.details.findChildren(QLabel)]
     assert "Notes" in headings and not any("hidden" in h for h in headings)
+    window.hosts.prefs["details_hidden"] = ["tags", {"edited": "by hand"}, 7]
+    assert window.hosts.hidden_parts() == {"tags"}  # anything else in the file is skipped
 
 
 def test_the_customize_window_has_two_tabs_and_three_doors(
