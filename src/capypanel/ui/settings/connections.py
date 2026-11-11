@@ -32,7 +32,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.tools import detect, viewer_settings
 from capypanel.core.tools.catalog import Catalogs
-from capypanel.core.tools.definitions import VIEWERS, ToolDefinition
+from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profile_store import UNTRUSTED, make_id
 from capypanel.core.tools.profiles import (
     ConnectionProfile,
@@ -416,7 +416,7 @@ class ProfilesSection(SharedSection):
         add_action(menu, _("&Delete…"), self.delete, picked)
 
     def _dialog(self, title: str, profile: ConnectionProfile | None) -> ProfileDialog:
-        tools = [e.item for e in self.catalogs.tools.all() if e.item.kind in VIEWERS]
+        tools = [e.item for e in self.catalogs.tools.all()]
         installed = {t.id for t in tools if detect.find_executable(t) is not None}
         return ProfileDialog(self, title, tools, installed, profile)
 

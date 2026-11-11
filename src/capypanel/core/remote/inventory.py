@@ -177,41 +177,38 @@ def run_cim(
     script: str,
     host: str,
     account: Account | None,
-    protocol: str = "Dcom",
     values: Mapping[str, str] | None = None,
     timeout: float = WMI_TIMEOUT,
 ) -> Any:
-    """Reads `host` with `script`, or with its twin over WMI directly when it has one and
-    `protocol` is DCOM (the twin starts no program, so no antivirus has a command line to
-    judge). PowerShell is the way when WMI can't be used from this PC at all, and for WinRM.
-    Raises RemoteError, TimeoutError, or PowerShellBlocked when PowerShell was needed and
-    Windows wouldn't start it."""
+    """Reads `host` with `script`, or with its twin over WMI directly when it has one (the twin
+    starts no program, so no antivirus has a command line to judge). PowerShell is the way when
+    WMI can't be used from this PC at all. Raises RemoteError, TimeoutError, or
+    PowerShellBlocked when PowerShell was needed and Windows wouldn't start it."""
     from capypanel.core.remote import wmi
 
     reader = _READERS.get(script)
-    if protocol == "Dcom" and reader is not None and transport != POWERSHELL:
+    if reader is not None and transport != POWERSHELL:
         try:
             return wmi.read(reader, host, account, dict(values or {}), timeout)
         except wmi.Unavailable as e:
             if transport == DIRECT:
                 raise RemoteError(Reason.OTHER) from e
             log.warning("WMI can't be used from this PC (%s); reading %s with PowerShell", e, host)
-    return _powershell(script, host, account, protocol, values, timeout)
+    return _powershell(script, host, account, values, timeout)
 
 
 def _powershell(
     script: str,
     host: str,
     account: Account | None,
-    protocol: str,
     values: Mapping[str, str] | None,
     timeout: float,
 ) -> Any:
-    """Runs a PowerShell script that uses `$session`, a CIM session to `host` over `protocol`
-    ("Dcom" for WMI, "Wsman" for WinRM), and answers with Send. The host, the account and
-    `values` (as `$in.<name>`) go in through standard input, never on the command line, so they
-    can't change the script and the password isn't visible to other programs."""
-    data = {**(values or {}), "host": host, "protocol": protocol, "user": "", "password": ""}
+    """Runs a PowerShell script that uses `$session`, a CIM session to `host` over WMI (DCOM),
+    and answers with Send. The host, the account and `values` (as `$in.<name>`) go in through
+    standard input, never on the command line, so they can't change the script and the
+    password isn't visible to other programs."""
+    data = {**(values or {}), "host": host, "user": "", "password": ""}
     if account:
         data["user"], data["password"] = account.user, account.password
     command = base64.b64encode((_COMMON + script).encode("utf-16-le")).decode()
@@ -267,7 +264,7 @@ function Reg($method, $key, $name) {
     -MethodName $method -Arguments $a
 }
 try {
-  $p = @{ComputerName = $in.host; SessionOption = (New-CimSessionOption -Protocol $in.protocol)
+  $p = @{ComputerName = $in.host; SessionOption = (New-CimSessionOption -Protocol Dcom)
          OperationTimeoutSec = 30}
   if ($in.user) {
     $secret = ConvertTo-SecureString $in.password -AsPlainText -Force

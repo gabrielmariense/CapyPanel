@@ -158,7 +158,7 @@ class Connector:
         return [
             (p.id, p.name)
             for p in self.catalogs.profiles.all()
-            if self.catalogs.tools.viewer(p.tool) is not None
+            if self.catalogs.tools.find(p.tool) is not None
         ]
 
     def inherited_label(self, profile_id: str, source: Group | None) -> str:
@@ -183,7 +183,7 @@ class Connector:
                     profile=profile_id
                 )
             )
-        tool = self.catalogs.tools.viewer(profile.tool)
+        tool = self.catalogs.tools.find(profile.tool)
         if tool is None:
             raise ProfileError(
                 _("The connection profile “{profile}” needs the tool “{tool}”, which isn't "
