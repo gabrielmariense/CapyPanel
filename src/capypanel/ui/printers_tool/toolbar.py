@@ -4,7 +4,7 @@ Refresh is a plain button: printers have one check (one SNMP read), so there's n
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QMenu
 
-from capypanel.core.i18n import _
+from capypanel.core.i18n import _, pgettext
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.main_window.toolbar import ToolBar, tool_button
 from capypanel.ui.printers_tool.actions import PrintersActions
@@ -35,7 +35,7 @@ class PrintersToolBar(ToolBar):
         gap = " "  # the stylesheet drops the gap between icon and text
         self.web_button.setText(gap + _("Open web page"))
         self.web_button.setToolTip(_("Open the selected printers' web pages (Enter)"))
-        self.refresh_button.setText(gap + _("Refresh"))
+        self.refresh_button.setText(gap + pgettext("printers", "Refresh all"))
         self.refresh_button.setToolTip(
             _("Read the status and supplies of every printer shown (F5)")
         )

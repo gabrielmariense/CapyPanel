@@ -12,7 +12,7 @@ from PySide6.QtGui import QAction, QDesktopServices, QGuiApplication
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QVBoxLayout, QWidget
 
 from capypanel.core.hosts.document import starter_list
-from capypanel.core.hosts.model import Host, HostListRuleError
+from capypanel.core.hosts.model import Group, Host, HostListRuleError
 from capypanel.core.i18n import _, ngettext, npgettext
 from capypanel.core.printers.printer import DOC360, info_of, with_info
 from capypanel.ui.dialogs import run_modal
@@ -606,18 +606,34 @@ class PrintersTool(ListWorkspace):
         return self.commands.copy_address if key == "address" else None  # keeps Ctrl+Shift+C
 
     def fill_item_menu(self, menu: QMenu, items: Sequence[Host]) -> None:
+        """Use first, then copy, then managing the printers. Refresh says how many; Edit is
+        for one printer only."""
         a = self.commands
-        # Use first, then copy, then managing the printer: edit, move, remove.
         menu.addAction(a.open_web_page)
         menu.setDefaultAction(a.open_web_page)  # bold: what double-click and Enter do
         menu.addSeparator()
+        one = len(items) == 1
+        a.refresh_selected.setText(
+            _("&Refresh printer") if one else _("&Refresh {n} printers").format(n=len(items))
+        )
         menu.addAction(a.refresh_selected)
         menu.addSeparator()
         self.add_copy_menu(menu)
         menu.addSeparator()
-        menu.addAction(a.edit)
+        if one:
+            menu.addAction(a.edit)
         self.add_move_menu(menu, items)
         menu.addAction(a.remove)
+
+    def fill_group_menu(self, menu: QMenu, group: Group) -> None:
+        """Refresh group last, under a separator, as in Hosts: the group's printers, its
+        subgroups' too."""
+        assert self._doc is not None
+        printers = list(self._doc.hosts.hosts_in(group.id))
+        menu.addSeparator()
+        refresh = menu.addAction(_("&Refresh group"))
+        refresh.setEnabled(bool(printers) and self._run is None)
+        refresh.triggered.connect(lambda: self.check_printers(printers))
 
     # ---- Refresh: status, supplies and page counter ----
 

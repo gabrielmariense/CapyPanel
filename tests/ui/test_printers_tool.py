@@ -285,7 +285,7 @@ def test_the_printer_menu_opens_the_web_page_first(
     assert row is not None
     printers._item_menu(printers.table.visualItemRect(row).center())
     texts = [menus.label(a) for a in shown[-1].actions() if not a.isSeparator()]
-    assert texts == ["Open &web page", "&Refresh", "Co&py", "&Edit…", "&Move to",
+    assert texts == ["Open &web page", "&Refresh printer", "Co&py", "&Edit…", "&Move to",
                      "&Tags", "&Remove"]  # fmt: skip
     assert shown[-1].defaultAction() is printers.commands.open_web_page
     copy = shown[-1].actions()[4].menu()
@@ -299,12 +299,32 @@ def test_the_printer_menu_opens_the_web_page_first(
         "Model",
         "Tags",
     ]
+    _select(printers, "2F-LABELS", "LOOSE")  # several: Refresh counts them, no Edit
+    printers._item_menu(printers.table.visualItemRect(row).center())
+    texts = [menus.label(a) for a in shown[-1].actions() if not a.isSeparator()]
+    assert texts == ["Open &web page", "&Refresh 2 printers", "Co&py", "&Move to", "&Tags",
+                     "&Remove"]  # fmt: skip
 
 
-def test_toolbar_mirrors_hosts_with_a_plain_refresh(printers: PrintersTool) -> None:
+def test_a_groups_menu_refreshes_its_printers_last(
+    printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checked: list[list[str]] = []
+    monkeypatch.setattr(printers, "check_printers", lambda ps: checked.append([p.name for p in ps]))
+    doc = printers.document
+    assert doc is not None
+    menu = QMenu()
+    printers.fill_group_menu(menu, doc.hosts.groups[0])
+    texts = [a.text() for a in menu.actions() if not a.isSeparator()]
+    assert texts == ["&Refresh group"] and menu.actions()[0].isSeparator()
+    menu.actions()[-1].trigger()
+    assert checked == [["2F-LABELS", "2F-OFFICE-01"]]
+
+
+def test_toolbar_mirrors_hosts_with_refresh_all(printers: PrintersTool) -> None:
     bar = printers.toolbar
     buttons = (bar.web_button, bar.refresh_button, bar.inventory_button, bar.report_button)
-    assert [b.text().strip() for b in buttons] == ["Open web page", "Refresh", "Inventory",
+    assert [b.text().strip() for b in buttons] == ["Open web page", "Refresh all", "Inventory",
                                                    "Report"]  # fmt: skip
     assert bar.refresh_button.isEnabled() and bar.refresh_button.menu() is None  # one check
     assert printers.commands.refresh_shown.shortcut().toString() == "F5"
