@@ -188,6 +188,7 @@ class ExportDialog(QDialog):
             inside.setSpacing(TICK_SPACING)
             name = QLabel(_(title))
             name.setObjectName("rowName")
+            name.setProperty("heading", True)  # a box's title: a section's heading
             both = QLabel(f'<a href="all">{escape(_("All"))}</a> · '
                           f'<a href="none">{escape(_("None"))}</a>')  # fmt: skip
             both.setObjectName("hint")

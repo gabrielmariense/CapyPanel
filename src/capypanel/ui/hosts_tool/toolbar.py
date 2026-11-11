@@ -55,7 +55,8 @@ class RefreshPanel(QFrame):
         self.retranslate()
 
     def retranslate(self) -> None:
-        self._check_title.setText(_("Refresh every host shown"))
+        # A small label over the ticks: in capitals, as the Commands window's groups.
+        self._check_title.setText(_("Refresh every host shown").upper())
         self.status_box.setText(_("&Status"))
         self.users_box.setText(_("&Logged-on users"))
         self.run_button.setText(_("&Run"))

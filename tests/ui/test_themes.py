@@ -451,3 +451,21 @@ def test_enabled_disabled_hover_and_focus_read_apart(theme: themes.Theme) -> Non
         "QRadioButton::indicator:focus, QCheckBox::indicator:focus",
     ):
         assert themes._qss_color(c["accent"]) in _rule(sheet, selector), selector
+
+
+def test_headings_come_in_two_styles() -> None:
+    sheets = [themes.stylesheet(themes.Registry().find(i)) for i in ("capypanel-dark", "paper")]
+    for sheet in (*sheets, themes._NATIVE_QSS):  # the Windows themes' own sheet too
+        rules = dict(
+            re.findall(r"([^{}]+)[{]([^}]*)[}]", re.sub(r"/[*].*?[*]/", "", sheet, flags=re.DOTALL))
+        )
+        rules = {" ".join(k.split()): v for k, v in rules.items()}
+        # A section's heading, wherever it is: Settings, Details, Groups and Tags, the Report.
+        sections = next(v for k, v in rules.items() if k.startswith("QLabel#detailsSection,"))
+        names = next(k for k in rules if k.startswith("QLabel#detailsSection,"))
+        for name in ("#sectionTitle", "#paneTitle", '#rowName[heading="true"]'):
+            assert name in names
+        assert "font-weight: bold" in sections and "font-size" not in sections  # the text's size
+        # A small label over a group of lines: the Commands window's groups, a menu's label.
+        for small in ("QLabel#groupHeading", "QLabel#menuSection"):
+            assert "font-size: 8pt" in rules[small] and "font-weight: 600" in rules[small]

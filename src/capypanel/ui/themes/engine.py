@@ -504,7 +504,8 @@ QToolButton::menu-arrow, QToolButton::menu-indicator {
 QToolButton::menu-indicator { subcontrol-position: right center; right: 9px; }
 QToolButton::menu-arrow { subcontrol-origin: padding; subcontrol-position: center; }
 /* Headings inside menus and the Refresh panel. */
-QLabel#menuSection { color: %(text3)s; padding: 6px 12px 2px 12px; font-weight: 600; }
+QLabel#menuSection { color: %(text3)s; padding: 6px 12px 2px 12px; font-size: 8pt;
+                     font-weight: 600; }
 
 QLineEdit, QPlainTextEdit, QSpinBox { background: %(card)s; border: 1px solid %(border)s;
                             border-radius: %(r2)spx; padding: 5px 7px;
@@ -562,12 +563,16 @@ QLineEdit#paneSearch { border-radius: %(r)spx; padding: 6px 8px; }
 /* A cell being edited: the fields' usual padding would cut its text off at the row's height. */
 QTreeView#grid QLineEdit { padding: 0 3px; border-radius: 0; }
 QFrame#divider { background: %(border)s; border: none; }
-/* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
-QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
+/* Headings come in two styles. A section's heading (Settings' sections, the Details
+   panel's, Groups and Tags, the Report's boxes): the accent, bold, at the text's size. A
+   small label over a group of lines (the Commands window's groups, a menu's label): grey,
+   small, semi-bold, in capitals. */
+QLabel#detailsSection, QLabel#sectionTitle, QLabel#paneTitle, QLabel#rowName[heading="true"] {
+    color: %(accent_text)s; font-weight: bold; }
+/* The Details pane: its headings over a thin rule, values that highlight to be copied. */
 QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
-/* Settings: each section's settings on a soft card under a larger title; a line beside the
+/* Settings: each section's settings on a soft card under its title; a line beside the
    page list. */
-QLabel#sectionTitle { color: %(accent_text)s; font-weight: bold; font-size: 12pt; }
 QWidget#sectionCard { background: %(section)s; border: 1px solid %(section_edge)s;
                       border-radius: %(r)spx; }
 /* Home's tool tiles: a card each, the tool's icon on a tinted square; the pointer over
@@ -632,7 +637,7 @@ QLabel#tagValue:hover { background: %(hover)s; }
 QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8px; padding: 0 6px; }
 QLabel#stateBadge[active="true"] { color: #3fae4a; border-color: #3fae4a; }
 QFrame#notesBox { border: 1px solid %(border)s; border-radius: %(r)spx; }
-QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
+QLabel#hint { color: %(text2)s; }
 /* The Groups heading while a group is dragged over it: dropping moves it to the top. */
 QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel_solid)s;
                                      border-radius: %(r2)spx; }
@@ -732,15 +737,16 @@ QTreeView::item:selected, QListView#pageList::item:selected {
 /* Tables marked "grid": a thin line under each row, none between columns; the table's own
    border is its one frame. */
 QTreeView#grid::item { border-bottom: 1px solid %(border)s; }
-/* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
-QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
+/* The two heading styles, as in the CapyPanel themes. */
+QLabel#detailsSection, QLabel#sectionTitle, QLabel#paneTitle, QLabel#rowName[heading="true"] {
+    color: %(accent_text)s; font-weight: bold; }
+/* The Details pane: its headings over a thin rule, values that highlight to be copied. */
 QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
 QPushButton#valuePicker { background: rgba(128, 128, 128, 0.24); border: none;
                           border-radius: 4px; padding: 0; text-align: left; }
 QPushButton#valuePicker:hover { background: %(sel)s; }
-/* Settings: each section's settings on a soft card under a larger title; a line beside the
+/* Settings: each section's settings on a soft card under its title; a line beside the
    page list. */
-QLabel#sectionTitle { color: %(accent_text)s; font-weight: bold; font-size: 12pt; }
 QWidget#sectionCard { background: %(section)s; border: 1px solid %(section_edge)s;
                       border-radius: 10px; }
 /* Home's tool tiles: a card each, the tool's icon on a tinted square; the pointer over
@@ -797,7 +803,7 @@ QLabel#tagValue:hover { background: %(hover)s; }
 QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8px; padding: 0 6px; }
 QLabel#stateBadge[active="true"] { color: #3fae4a; border-color: #3fae4a; }
 QFrame#notesBox { border: 1px solid %(border)s; border-radius: 6px; }
-QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
+QLabel#hint { color: %(text2)s; }
 QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel)s; }
 /* Toolbar buttons like the CapyPanel stylesheet's, square like the panes here.
    Styling them drops the style's own menu arrow, so the theme's arrow is drawn instead. */
@@ -823,7 +829,8 @@ QWidget#toolRail QToolButton:checked { background: %(sel)s; }
 QTreeView#flat { border: none; background: transparent; }
 QLineEdit#paneSearch { background: %(card)s; border: 1px solid %(border)s; padding: 5px 6px; }
 QFrame#divider { background: %(border)s; border: none; }
-QLabel#menuSection { color: %(text2)s; padding: 6px 12px 2px 12px; font-weight: 600; }
+QLabel#menuSection { color: %(text2)s; padding: 6px 12px 2px 12px; font-size: 8pt;
+                     font-weight: 600; }
 QFrame#tagEdit { background: %(card)s; border: 1px solid %(border)s; border-radius: 4px; }
 QFrame#tagEdit[focused="true"] { border-color: %(accent)s; }
 QLineEdit#tagInput { border: none; background: transparent; padding: 3px 2px; }
