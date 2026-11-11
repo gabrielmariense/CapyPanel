@@ -41,7 +41,7 @@ from capypanel.ui.list_workspace.splitter import PaneSplitter
 from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar
-from capypanel.ui.menus import MenuCombo, popup
+from capypanel.ui.menus import popup
 from capypanel.ui.new_list import ask_new_list
 
 log = logging.getLogger(__name__)
@@ -74,13 +74,7 @@ class ListWorkspace(Tool):
         self.search = SearchBox()
         self.nav = NavigationPane(lambda: self.list_texts().everything)
         # The list dropdown, on top of the Groups panel: switch lists, make or open one.
-        self.list_picker = MenuCombo()
-        self.list_picker.setObjectName("listPicker")
-        self.list_picker.menu().setToolTipsVisible(True)  # each list's path
-        self.list_picker.menu().aboutToShow.connect(self._fill_list_menu)
-        nav_layout = self.nav.layout()
-        assert isinstance(nav_layout, QVBoxLayout)
-        nav_layout.insertWidget(0, self.list_picker)
+        self.list_picker = self.nav.add_list_picker(self._fill_list_menu)
         self.table = table
         # Every group A–Z in one step, without opening Manage groups.
         self.sort_groups_action = QAction(self)

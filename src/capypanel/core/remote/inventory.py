@@ -248,7 +248,8 @@ def wmi_error(code: int) -> RemoteError:
 
 
 # Shared by every CIM script: read the input, open one session, send back base64'd UTF-8 JSON
-# (so names in any language survive the console), and turn a failure into its HRESULT.
+# (so names in any language survive the console), and turn a failure into its HRESULT. Reg
+# reads the PC's own registry keys, UReg those of the people signed in.
 _COMMON = r"""
 $ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'
 function Send($value) {
@@ -259,6 +260,13 @@ $in = [Console]::In.ReadToEnd() | ConvertFrom-Json
 $HKLM = [uint32]2147483650
 function Reg($method, $key, $name) {
   $a = @{hDefKey = $HKLM; sSubKeyName = $key}
+  if ($name) { $a.sValueName = $name }
+  Invoke-CimMethod -CimSession $session -Namespace root/default -ClassName StdRegProv `
+    -MethodName $method -Arguments $a
+}
+$HKU = [uint32]2147483651
+function UReg($method, $key, $name) {
+  $a = @{hDefKey = $HKU; sSubKeyName = $key}
   if ($name) { $a.sValueName = $name }
   Invoke-CimMethod -CimSession $session -Namespace root/default -ClassName StdRegProv `
     -MethodName $method -Arguments $a

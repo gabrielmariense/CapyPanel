@@ -58,7 +58,7 @@ from capypanel.ui.groups import (
     hosts_mime,
 )
 from capypanel.ui.icons import tabler_icon
-from capypanel.ui.menus import popup
+from capypanel.ui.menus import MenuCombo, popup
 from capypanel.ui.notes import divider
 
 
@@ -87,6 +87,17 @@ class NavigationPane(QWidget):
     tags, any number of them, then keep only the items that have them all."""
 
     filter_changed = Signal()
+
+    def add_list_picker(self, fill: Callable[[], None]) -> MenuCombo:
+        """The list dropdown, on top of the pane; `fill` fills its menu each time it opens."""
+        picker = MenuCombo()
+        picker.setObjectName("listPicker")
+        picker.menu().setToolTipsVisible(True)  # each list's path
+        picker.menu().aboutToShow.connect(fill)
+        layout = self.layout()
+        assert isinstance(layout, QVBoxLayout)
+        layout.insertWidget(0, picker)
+        return picker
 
     def __init__(self, everything: Callable[[], str]) -> None:
         super().__init__()
