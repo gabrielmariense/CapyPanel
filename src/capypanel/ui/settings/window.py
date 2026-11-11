@@ -25,7 +25,6 @@ from PySide6.QtWidgets import (
 
 from capypanel.core import i18n, settings
 from capypanel.core.i18n import _
-from capypanel.ui.about import AboutPage
 from capypanel.ui.notes import hint
 from capypanel.ui.settings import search
 from capypanel.ui.settings.group import SettingsGroup
@@ -86,6 +85,8 @@ class SettingsDialog(QDialog):
             registry=self._registry,
             theme_id=theme_id,
         )
+        from capypanel.ui.about import AboutPage  # here, not at every start of CapyPanel
+
         self.about = AboutPage(
             self._paths.log_dir, portable=self._paths.portable, paths=self._paths
         )

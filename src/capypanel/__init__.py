@@ -1,12 +1,30 @@
 """CapyPanel: manage the computers on your network from one window."""
 
-from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
-try:
-    __version__ = version("capypanel")
-except PackageNotFoundError:  # running from a copy that was never installed
-    __version__ = "0.0.0+unknown"
+
+def _version() -> str:
+    """A source checkout's own pyproject.toml says it: one small file, and right even when the
+    environment wasn't synced after a pull (the installed package data then still names the
+    version before). An installed copy asks that package data."""
+    try:
+        project = Path(__file__).resolve().parents[2] / "pyproject.toml"
+        lines = project.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        lines = []
+    if 'name = "capypanel"' in lines:
+        for line in lines:
+            if line.startswith('version = "'):
+                return line.split('"')[1]
+    from importlib.metadata import PackageNotFoundError, version
+
+    try:
+        return version("capypanel")
+    except PackageNotFoundError:  # running from a copy that was never installed
+        return "0.0.0+unknown"
+
+
+__version__ = _version()
 
 
 def _commit() -> str:
