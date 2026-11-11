@@ -1184,8 +1184,9 @@ class HostsTool(ListWorkspace):
         # Again: the hosts that refused, and those a rejection kept from being tried.
         again = [t for t in self._targets if t[0] in self._refused or t[0] not in self._reported]
         uses = self.accounts.uses_for([self._target(*t) for t in again or self._targets])
+        saved = account is not None and self.accounts.saved(account.user)
         dialog = AccountDialog(self, text, account.user if account else "",
-                               uses=uses)  # fmt: skip
+                               saved=saved, uses=uses)  # fmt: skip
         if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return
         link = dialog.link()

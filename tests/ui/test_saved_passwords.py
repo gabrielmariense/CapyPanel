@@ -130,3 +130,33 @@ def test_every_login_window_has_remember_unticked(window: CapyWindow) -> None:
     assert profile_login.remember.text() == AccountDialog(None, "Why").remember.text()
     assert "only for hosts with this connection profile" in note(profile_login)
     assert not AccountDialog(None, "Why").remember.isChecked()
+
+
+def test_typing_a_remembered_password_again_keeps_it_remembered(window: CapyWindow) -> None:
+    """A PC rejected the account: its window starts with Remember ticked when Windows
+    already keeps that password, so typing it again doesn't delete the saved one."""
+    hosts = window.hosts
+    admin = Account("CORP\\admin", "old")
+    hosts.accounts.use(Link(admin.user, Scope.ALL), admin, remember=True)
+    assert hosts.accounts.saved(admin.user)
+    again = AccountDialog(None, "Why", admin.user, saved=hosts.accounts.saved(admin.user))
+    assert again.remember.isChecked()
+    again.password.setText("new")
+    hosts.accounts.use(Link(admin.user, Scope.ALL), again.account(),
+                       remember=again.remember.isChecked())  # fmt: skip
+    assert credstore.read("account/corp\\admin") == (admin.user, "new")
+
+    # Another account typed there isn't remembered unless ticked; a tick set by hand stays.
+    other = AccountDialog(None, "Why", admin.user, saved=True)
+    other.user.setText("CORP\\helpdesk")
+    assert not other.remember.isChecked()
+    other.user.setText(admin.user)
+    assert other.remember.isChecked()
+    other.remember.click()  # off, by hand
+    other.password.setText("x")
+    assert not other.remember.isChecked()
+    temporary = Account("CORP\\temp", "t")
+    hosts.accounts.keep(temporary, remember=False)
+    unsaved = AccountDialog(None, "Why", temporary.user,
+                            saved=hosts.accounts.saved(temporary.user))  # fmt: skip
+    assert not unsaved.remember.isChecked()
