@@ -56,7 +56,6 @@ class Outcome:
     text: str  # rich text: names in bold
     error: BaseException | None = None  # None: it worked
     retry: Callable[[], None] | None = None  # run it again once another account is typed
-    output: str = ""  # what a script wrote on the PC
     running: bool = False  # not an answer yet: it was started and is still going
 
     @property
@@ -217,13 +216,12 @@ class Runner(QObject):
         target: HostTarget,
         error: BaseException,
         again: Callable[[], None],
-        output: str = "",
     ) -> None:
         retry = None
         if isinstance(error, RemoteError) and error.reason in RETRY_REASONS:
             retry = lambda: self.another_account(target, error, again)  # noqa: E731
         text = failed_text(action, target.name, error)
-        report(command_id, Outcome(text, error, retry, output=output))
+        report(command_id, Outcome(text, error, retry))
 
     def another_account(
         self, target: HostTarget, error: BaseException | None, again: Callable[[], None]

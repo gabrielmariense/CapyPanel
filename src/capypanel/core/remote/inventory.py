@@ -40,7 +40,6 @@ log = logging.getLogger(__name__)
 AUTO = "auto"  # WMI straight from CapyPanel; PowerShell only when that can't be used here
 DIRECT = "direct"  # only WMI straight from CapyPanel
 POWERSHELL = "powershell"  # only a PowerShell started on this PC, as before 0.24
-TRANSPORTS = (AUTO, DIRECT, POWERSHELL)
 transport = AUTO  # set from Settings
 powershell_blocked = False  # Windows refused to start it here this session
 

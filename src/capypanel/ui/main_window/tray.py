@@ -63,9 +63,6 @@ class Tray(QObject):
     def set_shown(self, shown: bool) -> None:
         self.icon.setVisible(shown and self.available())
 
-    def is_shown(self) -> bool:
-        return self.icon.isVisible()
-
     def set_counts(self, counts: Mapping[str, tuple[int, str]]) -> None:
         """Each tool's count and what it means, in the rail's order."""
         self._counts = {t: c for t, c in counts.items() if c[0] > 0}

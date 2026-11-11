@@ -82,7 +82,6 @@ RESULTS_WIDTH = 400  # px: the rest goes to the commands, whose names are longer
 ROW = 28  # px: a command's line
 APART = 8  # px: the gap above a command set apart, where menus draw a line
 ICON = 16
-RECENT_ADDRESSES = 10
 LISTS = ("printers", "programs", "drives")  # their answer is a table on the right
 TABLE_ROW = 30  # px, about a grid row: a printers table shows every printer
 MOST_TABLE = 330  # px: a longer list (programs) scrolls inside its table
@@ -271,12 +270,8 @@ class Results(HostDetailsPanel):
         if outcome.failed:
             answer.setObjectName("warningText")
         layout.addWidget(answer)
-        if outcome.output:
-            layout.addWidget(windows.output_box(outcome.output))
-        # The answer and the output together, to paste whole into a message or a ticket.
+        # The answer as plain text, to paste into a message or a ticket.
         whole = QTextDocumentFragment.fromHtml(outcome.text).toPlainText()
-        if outcome.output:
-            whole = f"{whole}\n\n{outcome.output.rstrip()}"
         copy = QLabel(f'<a href="copy">{_escape(_("Copy all"))}</a>')
         copy.setTextFormat(Qt.TextFormat.RichText)
         copy.setToolTip(_("Copies the answer and everything the PC wrote"))

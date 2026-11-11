@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 import shiboken6
 from PySide6.QtCore import QStandardPaths, Qt
-from PySide6.QtGui import QColor, QFontDatabase, QGuiApplication
+from PySide6.QtGui import QColor, QGuiApplication
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -167,42 +167,6 @@ def ask_spooler(parent: QWidget | None, host: str) -> bool:
         _("&Restart Print Spooler"),
     )
     return run_modal(box) == QDialog.DialogCode.Accepted
-
-
-class OutputDialog(QDialog):
-    """What a script wrote on the PC, to read and copy."""
-
-    def __init__(self, parent: QWidget | None, title: str, output: str) -> None:
-        super().__init__(parent)
-        self.setWindowTitle(title)
-        self.resize(720, 460)
-        self.text = output_box(output)
-        self.text.setMaximumHeight(16_777_215)  # here it takes the whole window
-        copy = QPushButton(_("&Copy"))
-        copy.clicked.connect(lambda: QGuiApplication.clipboard().setText(output))
-        close = QPushButton(_("Close"))
-        close.setDefault(True)
-        close.clicked.connect(self.accept)
-        buttons = QHBoxLayout()
-        buttons.addWidget(copy)
-        buttons.addStretch(1)
-        buttons.addWidget(close)
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.text, 1)
-        layout.addLayout(buttons)
-
-
-def output_box(output: str) -> QPlainTextEdit:
-    """A script's output as the console showed it: fixed-width, read-only; long lines wrap."""
-    box = QPlainTextEdit(output)
-    box.setReadOnly(True)
-    box.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
-    box.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
-    box.setMaximumHeight(OUTPUT_HEIGHT)
-    return box
-
-
-OUTPUT_HEIGHT = 240  # px in the Commands window; Show output… opens it bigger
 
 
 def ask_clear_queue(parent: QWidget | None, host: str, printer: HostPrinter) -> bool:

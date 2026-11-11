@@ -1,7 +1,7 @@
 """The strip above the host table with a command's answer, in the look of Printers' attention
 strip: a green edge when it worked, closing by itself after a few seconds; a red edge when it
 failed, staying until closed, with the reason and "Try another account…" when another account
-might do. A script's answer has "Show output…" for what it wrote on the PC."""
+might do."""
 
 from collections.abc import Callable
 
@@ -10,8 +10,6 @@ from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QToolButton
 
 from capypanel.core.i18n import _
-from capypanel.ui.dialogs import run_modal
-from capypanel.ui.hosts_tool.command_windows import OutputDialog
 from capypanel.ui.hosts_tool.runner import Outcome
 from capypanel.ui.icons import STATUS_COLORS, tabler_icon
 
@@ -30,10 +28,6 @@ class ResultStrip(QFrame):
         self.retry_button = QPushButton()
         self.retry_button.setAutoDefault(False)
         self.retry_button.clicked.connect(self._retry_clicked)
-        self.output_button = QPushButton()
-        self.output_button.setAutoDefault(False)
-        self.output_button.clicked.connect(self._show_output)
-        self._output = ""
         self.close_button = QToolButton()
         self.close_button.setAutoRaise(True)
         self.close_button.clicked.connect(self.hide)
@@ -41,7 +35,6 @@ class ResultStrip(QFrame):
         row.setContentsMargins(10, 4, 4, 4)
         row.addWidget(self._icon, 0, Qt.AlignmentFlag.AlignTop)
         row.addWidget(self._text, 1)
-        row.addWidget(self.output_button)
         row.addWidget(self.retry_button)
         row.addWidget(self.close_button)
         self._timer = QTimer(self)
@@ -53,7 +46,6 @@ class ResultStrip(QFrame):
 
     def retranslate(self) -> None:
         self.retry_button.setText(_("Try another account…"))
-        self.output_button.setText(_("Show output…"))
         self.close_button.setToolTip(_("Close"))
 
     def text(self) -> str:
@@ -72,19 +64,14 @@ class ResultStrip(QFrame):
         self._text.setText(outcome.text)
         self._retry = outcome.retry
         self.retry_button.setVisible(outcome.retry is not None)
-        self._output = outcome.output
-        self.output_button.setVisible(bool(outcome.output))
         self.setProperty("failed", failed)
         self.style().unpolish(self)  # the edge's colour follows the property
         self.style().polish(self)
         self.show()
-        if failed or outcome.output:
+        if failed:
             self._timer.stop()  # stays until closed: there's something to read
         else:
             self._timer.start(WORKED_FOR)
-
-    def _show_output(self) -> None:
-        run_modal(OutputDialog(self.window(), _("Output"), self._output))
 
     def _retry_clicked(self) -> None:
         retry = self._retry

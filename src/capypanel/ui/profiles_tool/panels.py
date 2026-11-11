@@ -932,11 +932,6 @@ class ProfileDetails(DetailsPanel):
     def item_id(self, shown: object) -> str:
         return shown.profile.ident if isinstance(shown, Shown) else ""
 
-    def show_hint(self, text: str) -> None:
-        """Nothing picked: `text` in the middle of the panel."""
-        self._hint_text = text
-        self.show_item(None, 0)
-
     def build_page(self, layout: QVBoxLayout, shown: object, needle: str) -> None:
         assert isinstance(shown, Shown)
         profile, result = shown.profile, shown.result
