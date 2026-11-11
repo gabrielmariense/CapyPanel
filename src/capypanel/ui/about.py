@@ -17,7 +17,6 @@ from PySide6.QtCore import Qt, QUrl, qVersion
 from PySide6.QtGui import QCursor, QDesktopServices, QFontDatabase, QShowEvent, QTextCursor
 from PySide6.QtWidgets import (
     QDialog,
-    QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -352,13 +351,6 @@ def _rows(rows: list[tuple[str, str]], on_link: Callable[[str], None]) -> QGridL
         grid.addWidget(_text(value, on_link), row, 1)
     grid.setColumnStretch(1, 1)
     return grid
-
-
-def _divider() -> QFrame:
-    line = QFrame()
-    line.setObjectName("divider")
-    line.setFixedHeight(1)
-    return line
 
 
 def _link(url: str, text: str) -> str:

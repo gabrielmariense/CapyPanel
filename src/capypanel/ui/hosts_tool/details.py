@@ -1,7 +1,6 @@
 """The host Details panel: the host's name and status, a row of command buttons, a waiting
 restart, then Connection, Logged on, PC facts, Tags and Notes."""
 
-import html
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -34,12 +33,7 @@ from capypanel.ui.hosts import FlowLayout
 from capypanel.ui.hosts_tool.host_state import Facts, PendingPower
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import DetailsPanel
-
-
-def escape(text: str) -> str:
-    """Text shown as rich text: <, > and & escaped; quotes stay as they are."""
-    return html.escape(text, quote=False)
-
+from capypanel.ui.notes import escape
 
 BUTTON = (34, 30)  # px: the command buttons
 MENU_BUTTON = 48  # px: Users ▾ and Power ▾, room for their arrow

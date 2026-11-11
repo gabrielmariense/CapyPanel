@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import MAX_ADDRESS, NO_GROUP, Host, HostList, clean_tags
 from capypanel.core.i18n import _
+from capypanel.ui.dialogs import ok_cancel
 
 MAX_NAME = 255  # longest host name typed
 MAX_TAG = 64
@@ -131,11 +132,7 @@ class HostDialog(QDialog):
         form.addRow(tags_label, self.tags)
         form.addRow(_("Connection &profile:"), self.profile)
         form.addRow(_("N&otes:"), self.notes)
-        self.buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
+        self.buttons = ok_cancel(self)
         layout = QVBoxLayout(self)
         layout.addLayout(form)
         layout.addWidget(self.buttons)

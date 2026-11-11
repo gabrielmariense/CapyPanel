@@ -4,7 +4,6 @@ and the Commands window beside the command. Reading who is signed in, the accoun
 "Try another account…" are shared by every command."""
 
 import getpass
-import html
 import logging
 import threading
 from collections.abc import Callable, Sequence
@@ -27,14 +26,10 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui.checks import AccountDialog
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.hosts_tool import command_windows as windows
+from capypanel.ui.notes import escape
 
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.tool import HostsTool
-
-
-def escape(text: str) -> str:
-    """Text shown as rich text: <, > and & escaped; quotes stay as they are."""
-    return html.escape(text, quote=False)
 
 
 log = logging.getLogger(__name__)

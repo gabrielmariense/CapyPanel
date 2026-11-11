@@ -1,7 +1,23 @@
-"""Short help under a control: a quieter line of text, or a few bullets in a smaller font, since
-long paragraphs go unread."""
+"""Small pieces every screen uses: short help under a control (a quieter line of text, or a few
+bullets in a smaller font, since long paragraphs go unread), a thin line between parts, and text
+made safe to show as rich text."""
 
-from PySide6.QtWidgets import QLabel
+import html
+
+from PySide6.QtWidgets import QFrame, QLabel
+
+
+def escape(text: str) -> str:
+    """Text shown as rich text: <, > and & escaped; quotes stay as they are."""
+    return html.escape(text, quote=False)
+
+
+def divider() -> QFrame:
+    """A thin line across, between two parts of a panel."""
+    line = QFrame()
+    line.setObjectName("divider")
+    line.setFixedHeight(1)
+    return line
 
 
 def hint(text: str = "") -> QLabel:

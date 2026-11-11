@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.bulk import ImportRow, Plan, Verdict, parse, plan, to_csv
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.i18n import _, ngettext
+from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.groups import TreeMenu, fill_group_menu
 from capypanel.ui.hosts import group_choices, group_path
 from capypanel.ui.icons import STATUS_COLORS, dot_icon
@@ -181,11 +182,7 @@ class ImportDialog(QDialog):
         self.summary = QLabel()
         self.summary.setWordWrap(True)
         self.summary.setTextFormat(Qt.TextFormat.RichText)
-        self.box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self.box.accepted.connect(self.accept)
-        self.box.rejected.connect(self.reject)
+        self.box = ok_cancel(self)
 
         layout = QVBoxLayout(self)
         layout.addLayout(top)

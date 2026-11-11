@@ -59,6 +59,7 @@ from capypanel.ui.groups import (
 )
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.menus import popup
+from capypanel.ui.notes import divider
 
 
 @dataclass(frozen=True)
@@ -133,7 +134,7 @@ class NavigationPane(QWidget):
         # The lists drop their own frames ("flat"): the card around them is the only box.
         for tree in (self.everything, self.groups, self.tags):
             tree.setObjectName("flat")
-        self._tags_line = _divider()
+        self._tags_line = divider()
         card = self._card = QFrame()
         card.setObjectName("card")
         card.setFrameShape(QFrame.Shape.StyledPanel)
@@ -141,7 +142,7 @@ class NavigationPane(QWidget):
         inside.setContentsMargins(4, 4, 4, 4)
         inside.setSpacing(2)
         inside.addWidget(self.everything)
-        inside.addWidget(_divider())
+        inside.addWidget(divider())
         inside.addLayout(header)
         inside.addWidget(self.groups, 3)
         inside.addWidget(self._tags_line)
@@ -349,13 +350,6 @@ class PinnedList(HostDropTree):
 
     def drop_group(self, item: QTreeWidgetItem) -> str | None:
         return NO_GROUP if item.data(0, ROLE_KIND) == "nogroup" else None
-
-
-def _divider() -> QFrame:
-    line = QFrame()
-    line.setObjectName("divider")
-    line.setFixedHeight(1)
-    return line
 
 
 def _walk(root: QTreeWidgetItem) -> Iterable[QTreeWidgetItem]:

@@ -4,7 +4,6 @@ running a script that disturbs the PC, a script's output, and the two lists a PC
 Printers on this PC and Installed programs. The same window opens from the menus, the Details
 panel and the Commands window."""
 
-import html
 import logging
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
@@ -40,16 +39,11 @@ from capypanel.core.remote.sessions import Session
 from capypanel.ui import checks as check_texts
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.icons import STATUS_COLORS, tabler_icon
-from capypanel.ui.notes import hint
+from capypanel.ui.notes import escape, hint
 from capypanel.ui.tables import fit_menu
 
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.runner import HostTarget, Report, Runner
-
-
-def escape(text: str) -> str:
-    """Text shown as rich text: <, > and & escaped; quotes stay as they are."""
-    return html.escape(text, quote=False)
 
 
 log = logging.getLogger(__name__)

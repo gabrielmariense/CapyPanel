@@ -41,6 +41,7 @@ from capypanel.core.tools.profiles import (
     logins_of,
 )
 from capypanel.ui.connect import ask_for_program
+from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import hint, notes
 from capypanel.ui.settings.pages import Page, Section, SettingRow, add_rows
@@ -111,11 +112,7 @@ class ProfileDialog(QDialog):
         form.addRow(_("P&ort:"), self.port)
         form.addRow(self._settings_label, self._settings_box)
         form.addRow("", self.settings_hint)
-        self.buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
+        self.buttons = ok_cancel(self)
         layout = QVBoxLayout(self)
         layout.addLayout(form)
         layout.addWidget(self.buttons)

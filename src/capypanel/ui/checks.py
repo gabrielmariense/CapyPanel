@@ -28,6 +28,7 @@ from capypanel.core.remote.batch import Batch
 from capypanel.core.remote.checks import Checks, Found
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Answer, Status
+from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.notes import hint
 
 MAX_TEXT = 256
@@ -161,11 +162,7 @@ class AccountDialog(QDialog):
             "the others, so the account isn't locked."
         )
         note = hint(f"{used} {stops}")
-        self.buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
+        self.buttons = ok_cancel(self)
         layout = QVBoxLayout(self)
         layout.addWidget(intro)
         layout.addLayout(form)
