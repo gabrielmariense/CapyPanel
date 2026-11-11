@@ -8,7 +8,7 @@ ele nunca altera uma configuração numa impressora.
 Os resultados ficam na memória, nunca no arquivo da lista, e somem quando o CapyPanel fecha. Isso
 também significa que uma lista somente leitura pode ser atualizada como qualquer outra.
 
-![A janela Impressoras depois de uma atualização: um status e um nível de toner em cada impressora, e os suprimentos da selecionada](../images/printers-dark-pt-BR.png)
+![A janela Impressoras depois de uma atualização: o status e o toner de cada impressora lida, uma Não verificada, a faixa de atenção e os suprimentos da selecionada](../images/printers-dark-pt-BR.png)
 
 ## Atualizar
 

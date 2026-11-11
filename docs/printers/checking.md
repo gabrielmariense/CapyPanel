@@ -8,7 +8,7 @@ changes a setting on a printer.
 The results are kept in memory, never in the list file, and they're gone when CapyPanel closes.
 That also means a read-only list can be refreshed like any other.
 
-![The Printers window after a refresh: a status and a toner level on every printer, and the supplies of the selected one](../images/printers-dark.png)
+![The Printers window after a refresh: the status and toner of each printer read, one Not checked, the attention strip, and the supplies of the selected one](../images/printers-dark.png)
 
 ## Refresh
 
