@@ -128,7 +128,7 @@ and **Quit CapyPanel**.
 With something working on its own, the **✕** asks what you meant: "Keep CapyPanel running in the
 tray?", "Refresh on its own and warnings keep working while CapyPanel is in the tray. Quit stops
 them.", with **Keep in tray** as the default button, **Quit**, **Cancel**, and a "Don't ask again
-(change it in Settings › CapyPanel › Startup)" box. **Settings > CapyPanel > General > When
+(change it in Settings › CapyPanel › General)" box. **Settings > CapyPanel > General > When
 closing** answers it for good, with **Ask each time**, **Keep running in the tray** or **Quit**.
 With nothing working on its own, the ✕ quits straight away.
 

@@ -136,7 +136,7 @@ Com algo trabalhando sozinho, o **✕** pergunta o que você quis dizer: "Manter
 na bandeja?", "A atualização sozinha e os avisos continuam funcionando enquanto o CapyPanel estiver
 na bandeja. Sair os interrompe.", com o **Manter na bandeja** como botão padrão, o **Sair**, o
 **Cancelar** e uma caixa "Não perguntar de novo (altere em Configurações › CapyPanel ›
-Inicialização)". Em **Configurações > CapyPanel > Geral > Ao fechar** você responde de vez, com
+Geral)". Em **Configurações > CapyPanel > Geral > Ao fechar** você responde de vez, com
 **Perguntar sempre**, **Manter aberto na bandeja** ou **Sair**. Sem nada trabalhando sozinho, o ✕
 fecha na hora.
 
