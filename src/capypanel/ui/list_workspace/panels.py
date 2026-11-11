@@ -52,6 +52,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import NO_GROUP, Host, HostList
 from capypanel.core.i18n import _
+from capypanel.ui import spacing
 from capypanel.ui.groups import (
     HOSTS_MIME,
     ROLE_ID,
@@ -465,7 +466,7 @@ class TagStrip(QFrame):
         self.clear_button.setAutoDefault(False)
         self.clear_button.clicked.connect(self.clear_clicked)
         row = QHBoxLayout(self)
-        row.setContentsMargins(10, 4, 4, 4)
+        row.setContentsMargins(spacing.CONTROLS, spacing.ICON, spacing.ICON, spacing.ICON)
         row.addWidget(self._text, 1)
         row.addWidget(self.clear_button)
         self.hide()
@@ -809,6 +810,7 @@ class ItemTable(QTreeWidget):
 
     def _cell_width(self, column: int, text: str) -> int:
         """The width a cell needs to show `text` in full, as the style measures a real one."""
+        self.ensurePolished()  # the theme's padding counts, also before the table first shows
         option = QStyleOptionViewItem()
         self.initViewItemOption(option)
         option.text = text

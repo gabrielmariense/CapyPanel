@@ -1,11 +1,11 @@
 import pytest
 import shiboken6
-from PySide6.QtCore import QCoreApplication, QEvent
+from PySide6.QtCore import QCoreApplication, QEvent, QSize
 from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QMessageBox, QPushButton
 
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.ui import hosts as hosts_ui
-from capypanel.ui.dialogs import ok_cancel, quiet_default, run_modal
+from capypanel.ui.dialogs import FRAME, ScreenFit, fit_screen, ok_cancel, quiet_default, run_modal
 from capypanel.ui.groups import ManageGroupsDialog
 from capypanel.ui.hosts import HostDialog
 from capypanel.ui.themes import engine as themes
@@ -85,3 +85,37 @@ def test_only_a_window_s_main_action_is_the_filled_button(
     default = seen[0].defaultButton()
     # A question's Cancel is where Enter goes, and it isn't drawn as the main action.
     assert default is not None and default.objectName() == "quietDefault"
+
+
+def test_no_window_opens_larger_than_the_screen(qapp: QApplication) -> None:
+    laptop = QSize(1366, 728)  # 1366 x 768 with the taskbar
+    scaled = QSize(1093, 575)  # the same laptop at 125 %
+    report = QDialog()
+    report.resize(780, 620)
+    assert not fit_screen(report, laptop) and report.size() == QSize(780, 620)  # it fits
+    settings = QDialog()
+    settings.resize(860, 700)
+    # With its title bar, 700 px is a little more than that laptop has: it takes what there is.
+    assert fit_screen(settings, laptop) and settings.size() == QSize(860, 728 - FRAME.height())
+    assert fit_screen(settings, scaled)  # shorter still at 125 %: its pages scroll
+    assert settings.size() == QSize(860, 575 - FRAME.height())
+    commands = QDialog()
+    commands.setFixedSize(1120, 620)  # a window of a fixed size stays fixed, at what fits
+    assert fit_screen(commands, scaled)
+    assert commands.size() == QSize(1093 - FRAME.width(), 575 - FRAME.height())
+    assert commands.minimumSize() == commands.maximumSize() == commands.size()
+    # Installed on the application, it fits every window as it shows; menus and tips are left.
+    fitter = ScreenFit(qapp)
+    qapp.installEventFilter(fitter)
+    try:
+        screen = qapp.primaryScreen()
+        assert screen is not None
+        free = screen.availableGeometry().size()
+        huge = QDialog()
+        huge.resize(free.width() + 500, free.height() + 500)
+        huge.show()
+        qapp.processEvents()
+        assert huge.width() <= free.width() and huge.height() <= free.height()
+        huge.close()
+    finally:
+        qapp.removeEventFilter(fitter)

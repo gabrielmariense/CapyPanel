@@ -7,6 +7,7 @@ from PySide6.QtGui import QAction, QMouseEvent
 from PySide6.QtWidgets import QLabel, QWidget
 
 from capypanel.core import settings
+from capypanel.ui import spacing
 from capypanel.ui.main_window.toolbar import ToolBar
 from capypanel.ui.settings.group import SettingsGroup
 
@@ -87,7 +88,7 @@ class Tool(QWidget):
         self.toolbar = toolbar  # the shell shows it above the tool
         # The shell shows it in its status bar, on the left.
         self.status_label = StatusLabel()
-        self.status_label.setContentsMargins(6, 0, 6, 0)
+        self.status_label.setContentsMargins(spacing.CONTROLS, 0, spacing.CONTROLS, 0)
 
     @classmethod
     def prepare(cls, paths: settings.Paths) -> None:

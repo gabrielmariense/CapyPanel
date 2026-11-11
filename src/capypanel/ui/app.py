@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 from capypanel import BUILD, __version__
 from capypanel.core import applog, i18n, migration, settings
 from capypanel.ui import branding, error_window, language
+from capypanel.ui.dialogs import ScreenFit
 from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import CATALOG
@@ -111,6 +112,7 @@ def run(argv: list[str] | None = None) -> int:
 
     registry = themes.Registry()
     themes.apply(registry.find(prefs.get("theme")))
+    app.installEventFilter(ScreenFit(app))  # no window opens larger than its screen
     stages.done("language and theme")
     window = MainWindow(paths, prefs, registry=registry, tools=tools)
     stages.done("the window and its lists")

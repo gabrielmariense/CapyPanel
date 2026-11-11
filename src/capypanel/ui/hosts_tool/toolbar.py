@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.i18n import _
+from capypanel.ui import spacing
 from capypanel.ui.hosts_tool.actions import HostsActions
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.main_window.toolbar import ToolBar, tool_button
@@ -40,13 +41,13 @@ class RefreshPanel(QFrame):
         self.run_button = QPushButton()
         self.run_button.setDefault(True)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 10, 12, 12)
+        layout.setContentsMargins(spacing.PANEL, spacing.CONTROLS, spacing.PANEL, spacing.PANEL)
         for widget in (self._check_title, self.status_box, self.users_box):
             layout.addWidget(widget)
         row = QHBoxLayout()
         row.addStretch(1)
         row.addWidget(self.run_button)
-        layout.addSpacing(6)
+        layout.addSpacing(spacing.ICON)
         layout.addLayout(row)
         self.status_box.toggled.connect(self._update)
         self.users_box.toggled.connect(self._update)

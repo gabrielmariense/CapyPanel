@@ -10,6 +10,7 @@ from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QToolButton
 
 from capypanel.core.i18n import _
+from capypanel.ui import spacing
 from capypanel.ui.hosts_tool.runner import Outcome
 from capypanel.ui.icons import STATUS_COLORS, tabler_icon
 
@@ -32,7 +33,7 @@ class ResultStrip(QFrame):
         self.close_button.setAutoRaise(True)
         self.close_button.clicked.connect(self.hide)
         row = QHBoxLayout(self)
-        row.setContentsMargins(10, 4, 4, 4)
+        row.setContentsMargins(spacing.CONTROLS, spacing.ICON, spacing.ICON, spacing.ICON)
         row.addWidget(self._icon, 0, Qt.AlignmentFlag.AlignTop)
         row.addWidget(self._text, 1)
         row.addWidget(self.retry_button)

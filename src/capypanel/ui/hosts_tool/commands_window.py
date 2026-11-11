@@ -5,7 +5,7 @@ line each, the picked one grown to show its description and Run (Enter runs it, 
 move, typing searches); on the right, what the picked command found, in the Details panel's
 parts and with no buttons. Commands that need typing open their small window over this one."""
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from html import escape as _escape
@@ -56,6 +56,7 @@ from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.core.tools.connect import Target
 from capypanel.ui import checks as check_texts
+from capypanel.ui import spacing
 from capypanel.ui.connect import Request
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.hosts_tool import command_windows as windows
@@ -285,10 +286,10 @@ class Results(HostDetailsPanel):
 
 
 class CommandRow(QFrame):
-    """One command: its icon and name on one line; picked, it grows to show its description
-    and Run. Risky ones are amber, with an amber left edge."""
+    """One command: its icon, name and shortcut (in grey) on one line; picked, it grows to
+    show its description and Run. Risky ones are amber, with an amber left edge."""
 
-    def __init__(self, window: "CommandsWindow", command: HostCommand) -> None:
+    def __init__(self, window: "CommandsWindow", command: HostCommand, shortcut: str = "") -> None:
         super().__init__()
         self.command = command
         self.setObjectName("commandRow")
@@ -304,6 +305,9 @@ class CommandRow(QFrame):
         self.name.setObjectName("commandName")
         self.name.setWordWrap(True)  # a long name wraps rather than widen the list
         self.name.setProperty("risky", command.risky)
+        self.keys = QLabel(shortcut)  # its shortcut, when it has one
+        self.keys.setObjectName("hint")
+        self.keys.setVisible(bool(shortcut))
         self.run = QPushButton(_("&Run"))
         self.run.setObjectName("risky" if command.risky else "")
         self.run.clicked.connect(lambda: window.run(command))
@@ -312,11 +316,12 @@ class CommandRow(QFrame):
         self.about.setWordWrap(True)
         grid = QGridLayout(self)
         grid.setContentsMargins(8, 3, 6, 3)
-        grid.setHorizontalSpacing(10)
+        grid.setHorizontalSpacing(spacing.CONTROLS)
         grid.addWidget(icon, 0, 0, Qt.AlignmentFlag.AlignVCenter)
         grid.addWidget(self.name, 0, 1)
-        grid.addWidget(self.run, 0, 2)
-        grid.addWidget(self.about, 1, 1, 1, 2)
+        grid.addWidget(self.keys, 0, 2, Qt.AlignmentFlag.AlignVCenter)
+        grid.addWidget(self.run, 0, 3)
+        grid.addWidget(self.about, 1, 1, 1, 3)
         grid.setColumnStretch(1, 1)
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         self.set_name(_(command.name))
@@ -371,13 +376,7 @@ class CommandsWindow(QDialog):
         if self._choices and recent:
             self._add_heading(_("Recent"))
         self.address.addItems(recent)
-        if target is None:
-            self.address.setCurrentIndex(-1)
-        elif (index := self.address.findData(target.key)) >= 0:
-            self.address.setCurrentIndex(index)
-        else:  # not among what the panel shows (a search changed since): by its name
-            self.address.setCurrentIndex(-1)
-            self.address.setEditText(target.name)
+        self._put_target(target)
         line = self.address.lineEdit()
         assert line is not None
         line.setMaxLength(MAX_ADDRESS)
@@ -439,6 +438,7 @@ class CommandsWindow(QDialog):
         rows = QVBoxLayout(column)
         rows.setContentsMargins(0, 0, 8, 0)
         rows.setSpacing(ROW_SPACING)
+        shortcuts = tool.command_shortcuts()
         for group in CommandGroup:
             commands = host_commands.in_group(group)
             if not commands:
@@ -454,7 +454,7 @@ class CommandsWindow(QDialog):
             item.setData(Qt.ItemDataRole.UserRole, group)
             self.groups.addItem(item)
             for command in commands:
-                row = CommandRow(self, command)
+                row = CommandRow(self, command, shortcuts.get(command.id, ""))
                 if command.apart:
                     row.gap = _gap(APART - ROW_SPACING)  # where menus draw a line
                     rows.addWidget(row.gap)
@@ -482,9 +482,9 @@ class CommandsWindow(QDialog):
         close.clicked.connect(self.close)
 
         grid = QGridLayout(self)
-        grid.setContentsMargins(14, 12, 14, 12)
+        grid.setContentsMargins(spacing.WINDOW, spacing.PANEL, spacing.WINDOW, spacing.PANEL)
         grid.setHorizontalSpacing(12)
-        grid.setVerticalSpacing(10)
+        grid.setVerticalSpacing(spacing.CONTROLS)
         grid.addLayout(left_top, 0, 0, 1, 4)
         grid.addLayout(right_top, 0, 4)
         grid.addLayout(left, 1, 0, 2, 1)
@@ -511,6 +511,28 @@ class CommandsWindow(QDialog):
         (self.address if self._typed else self.search).setFocus()
 
     # ---- the PC ----
+
+    def _put_target(self, target: HostTarget | None) -> None:
+        """Writes the PC into the Host field: picked when the Hosts panel shows it."""
+        if target is None:
+            self.address.setCurrentIndex(-1)
+            self.address.setEditText("")
+        elif (index := self.address.findData(target.key)) >= 0:
+            self.address.setCurrentIndex(index)
+        else:  # not among what the panel shows (a search changed since): by its name
+            self.address.setCurrentIndex(-1)
+            self.address.setEditText(target.name)
+
+    def switch_to(self, target: HostTarget | None, profile: str) -> None:
+        """All commands… or Details' Commands asked for another PC while the window is open:
+        it turns to that PC and keeps every answer it already has (they're kept per PC, so
+        going back shows them again). None: Manual connection, an empty Host field."""
+        self._typed = target is None
+        self._put_target(target)  # the Host field changing shows the PC, its profile, its answers
+        if target is not None and (index := self.profile.findData(profile)) >= 0:
+            self.profile.setCurrentIndex(index)
+        self._show_target()
+        (self.address if self._typed else self.search).setFocus()
 
     def _add_heading(self, text: str) -> None:
         """A muted title in the Host list, between the panel's hosts and the typed addresses:
@@ -617,7 +639,7 @@ class CommandsWindow(QDialog):
         if command.id in LISTS:
             self._read_list(command.id, target)
         else:
-            self._tool.runner.run(command.id, target, self._report, parent=self)
+            self._tool.runner.run(command.id, target, self._reporter(target), parent=self)
         self._show_results()
 
     # ---- printers and programs, as tables on the right ----
@@ -743,13 +765,16 @@ class CommandsWindow(QDialog):
         """Still open: an answer can come back after the window was closed and deleted."""
         return shiboken6.isValid(self) and shiboken6.isValid(self.results)
 
-    def _report(self, command_id: str, outcome: Outcome) -> None:
-        if not self._alive():
-            return
-        target = self.target()
-        if target is not None:
-            self._outcomes[(target.key, command_id)] = outcome
-            self._show_results()
+    def _reporter(self, target: HostTarget) -> Callable[[str, Outcome], None]:
+        """Where a command's answer goes: to the PC it ran on, also when the window has turned
+        to another PC since."""
+
+        def report(command_id: str, outcome: Outcome) -> None:
+            if self._alive():
+                self._outcomes[(target.key, command_id)] = outcome
+                self._show_results()
+
+        return report
 
     def _show_results(self) -> None:
         target, command = self.target(), self.picked()
@@ -774,7 +799,7 @@ class CommandsWindow(QDialog):
     def _session_menu(self, session: Session, where: QPoint) -> None:
         target = self.target()
         if target is not None:
-            self._tool.session_menu(session, where, target, self._report, parent=self)
+            self._tool.session_menu(session, where, target, self._reporter(target), parent=self)
 
     def _visible_rows(self) -> list[CommandRow]:
         return [r for r in self.rows if not r.isHidden()]

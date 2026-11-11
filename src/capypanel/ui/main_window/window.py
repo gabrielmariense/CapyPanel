@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
 from capypanel import BUILD
 from capypanel.core import settings
 from capypanel.core.i18n import _
-from capypanel.ui import language
+from capypanel.ui import language, spacing
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.home import HomePage
@@ -530,7 +530,7 @@ class _StatusGroup(QWidget):
         self._shown = True
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
-        row.setSpacing(6)
+        row.setSpacing(spacing.CONTROLS)
         for widget in widgets:
             row.addWidget(widget)
             widget.installEventFilter(self)

@@ -32,7 +32,7 @@ from PySide6.QtWidgets import (
 from capypanel import _COMMIT, _NUMBER, BUILD, __version__
 from capypanel.core import i18n, settings
 from capypanel.core.i18n import _
-from capypanel.ui import branding
+from capypanel.ui import branding, spacing
 from capypanel.ui.list_workspace.details import CopyValue
 from capypanel.ui.settings.pages import FoldersSection, Page, Section
 from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
@@ -116,14 +116,14 @@ class AboutPage(Page):
         self.version.setWordWrap(False)
         self.version.copied.connect(lambda _text: QToolTip.showText(QCursor.pos(), _("Copied")))
         top = QHBoxLayout()
-        top.setSpacing(10)
+        top.setSpacing(spacing.CONTROLS)
         top.addWidget(icon)
         top.addWidget(name)
         top.addSpacing(-8)  # the version's hover padding is gap enough
         top.addWidget(self.version)
         top.addStretch(1)
         text = QVBoxLayout()
-        text.setSpacing(10)
+        text.setSpacing(spacing.CONTROLS)
         text.addLayout(top)
         text.addWidget(_text(_("Every computer you look after, in one window.")))
         # The GPL's "appropriate legal notices": the ©, no warranty, and the license a click away.
@@ -163,7 +163,7 @@ class AboutPage(Page):
         picture.setPixmap(branding.mascot(96, self.devicePixelRatioF()))
         picture.setAlignment(Qt.AlignmentFlag.AlignTop)
         row = QHBoxLayout()
-        row.setSpacing(18)
+        row.setSpacing(spacing.WINDOW)
         row.addWidget(picture, 0, Qt.AlignmentFlag.AlignTop)
         row.addLayout(text, 1)
         section = Section("CapyPanel")

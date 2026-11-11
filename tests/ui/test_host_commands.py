@@ -708,3 +708,33 @@ def test_the_customize_window_has_two_tabs_and_three_doors(
     panes = [a.text() for a in window.hosts.view_actions()[0]]
     assert panes[-2:] == ["&Details pane", "&Customize the details panel…"]  # right under it
     assert window.hosts.details.customizable
+
+
+def test_the_commands_window_turns_to_another_pc_and_keeps_its_answers(
+    window: CapyWindow,
+) -> None:
+    from capypanel.ui.hosts_tool.commands_window import CommandsWindow
+    from capypanel.ui.hosts_tool.runner import Outcome
+
+    first = _select(window, "PC-1")
+    window.hosts.details.buttons["commands"].click()
+    commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
+    assert isinstance(commands, CommandsWindow) and commands.target() == first
+    answer = commands._reporter(first)  # pyright: ignore[reportPrivateUsage]
+    answer("status", Outcome("<b>PC-1</b> is online"))
+    late = commands._reporter(first)  # pyright: ignore[reportPrivateUsage]  # still running
+    second = _select(window, "PC-2")
+    window.hosts.details.buttons["commands"].click()  # the same window, on the other PC
+    assert window.hosts._commands_window is commands  # pyright: ignore[reportPrivateUsage]
+    assert commands.target() == second and commands.windowTitle() == "Commands · PC-2"
+    late("users", Outcome("Nobody is logged on"))  # it answers after the switch
+    kept = commands._outcomes  # pyright: ignore[reportPrivateUsage]
+    assert set(kept) == {(first.key, "status"), (first.key, "users")}  # on the PC they ran on
+    _select(window, "PC-1")
+    window.hosts.toolbar.commands_button.click()  # back: its answers are still there
+    assert commands.target() == first and kept[(first.key, "status")].text.endswith("online")
+    window.hosts.table.clearSelection()
+    window.hosts.toolbar.commands_button.click()  # no host picked: an address typed in it
+    assert commands.target() is None and commands.windowTitle() == "Manual connection"
+    assert len(kept) == 2
+    commands.close()

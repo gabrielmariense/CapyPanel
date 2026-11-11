@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.bulk import ImportRow, Plan, Verdict, parse, plan, to_csv
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.i18n import _, ngettext
+from capypanel.ui import spacing
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.groups import TreeMenu, fill_group_menu
 from capypanel.ui.hosts import group_choices, group_path
@@ -555,7 +556,7 @@ class FormatsDialog(QDialog):
         """A format: what it is, as a list, and (when it has columns) as a table."""
         page = QWidget()
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(0, 6, 0, 0)
+        layout.setContentsMargins(0, spacing.ICON, 0, 0)
         text = QLabel(about)
         text.setWordWrap(True)
         layout.addWidget(text)

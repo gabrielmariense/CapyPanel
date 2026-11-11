@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core import credstore
 from capypanel.core.i18n import _, ngettext
+from capypanel.ui import spacing
 from capypanel.ui.dialogs import quiet_default
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import notes
@@ -86,8 +87,8 @@ class SavedCredentialsDialog(QDialog):
         self._kept = kept
         self._logins: list[KeptLogin] = []
         column = QVBoxLayout(self)
-        column.setContentsMargins(16, 16, 16, 12)
-        column.setSpacing(10)
+        column.setContentsMargins(spacing.WINDOW, spacing.WINDOW, spacing.WINDOW, spacing.WINDOW)
+        column.setSpacing(spacing.CONTROLS)
         column.addWidget(
             notes(_("Every login CapyPanel keeps for you. Passwords never show here."))
         )

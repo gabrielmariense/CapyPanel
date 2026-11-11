@@ -10,6 +10,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+import shiboken6
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QColor, QGuiApplication, QKeySequence
 from PySide6.QtWidgets import (
@@ -532,12 +533,17 @@ class HostsTool(ListWorkspace):
         self.open_commands(None)
 
     def open_commands(self, target: HostTarget | None) -> None:
-        """The Commands window, for `target` (None: an address typed there). One at a time."""
+        """The Commands window, for `target` (None: an address typed there). One at a time:
+        already open, it turns to that PC and keeps its answers."""
         from capypanel.ui.hosts_tool.commands_window import CommandsWindow
 
-        if self._commands_window is not None:
-            self._commands_window.close()
-            self._commands_window.deleteLater()
+        open_one = self._commands_window
+        if isinstance(open_one, CommandsWindow) and shiboken6.isValid(open_one):
+            open_one.switch_to(target, self.profile_for(target))
+            open_one.show()
+            open_one.raise_()
+            open_one.activateWindow()
+            return
         window = CommandsWindow(self, target, self.profile_for(target))
         window.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         window.destroyed.connect(lambda: setattr(self, "_commands_window", None))
@@ -964,15 +970,19 @@ class HostsTool(ListWorkspace):
     def details_always(self) -> str:
         return _("Always shown: the host's name, its status and a pending restart's warning.")
 
-    def customize_tabs(self) -> list[tuple[str, QWidget]]:
-        from capypanel.ui.hosts_tool.quick_chooser import QuickChooser
-
-        shortcuts = {
+    def command_shortcuts(self) -> dict[str, str]:
+        """Each command's keys as text ("Ctrl+E"), by command id; only those that have some.
+        A shortcut belongs to its command: it reads the same wherever the command is named."""
+        return {
             command_id: shortcut_text(action)
             for command_id, action in self.host_actions.items()
             if not action.shortcut().isEmpty()
         }
-        chooser = QuickChooser(self.quick_commands(), shortcuts)
+
+    def customize_tabs(self) -> list[tuple[str, QWidget]]:
+        from capypanel.ui.hosts_tool.quick_chooser import QuickChooser
+
+        chooser = QuickChooser(self.quick_commands(), self.command_shortcuts())
         chooser.changed.connect(self.set_quick_commands)
         return [(_("Quick commands"), chooser)]
 

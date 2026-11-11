@@ -25,6 +25,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import HostList
 from capypanel.core.i18n import _, ngettext
+from capypanel.ui import spacing
 from capypanel.ui.dialogs import ok_cancel, run_modal
 from capypanel.ui.groups import TreeMenu, fill_host_move_menu
 from capypanel.ui.host_lists import ListsView
@@ -47,7 +48,7 @@ class Page(QWidget):
         self.title = title
         self.body = QVBoxLayout(self)
         self.body.setContentsMargins(0, 0, 0, 0)
-        self.body.setSpacing(22)  # between sections
+        self.body.setSpacing(spacing.WINDOW)  # between sections
 
 
 class Section(QWidget):
@@ -62,8 +63,10 @@ class Section(QWidget):
         self.inner.setObjectName("sectionCard")
         self.inner.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)  # draws the card
         self.content = QVBoxLayout(self.inner)
-        self.content.setContentsMargins(14, 10, 14, 12)
-        self.content.setSpacing(6)
+        self.content.setContentsMargins(
+            spacing.PANEL, spacing.CONTROLS, spacing.PANEL, spacing.PANEL
+        )
+        self.content.setSpacing(spacing.ICON)
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(8)
@@ -91,7 +94,7 @@ class SettingRow(QWidget):
             control.setFixedWidth(self.CONTROL_WIDTH)
         line = QHBoxLayout(self)
         line.setContentsMargins(0, 4, 0, 4)
-        line.setSpacing(16)
+        line.setSpacing(spacing.WINDOW)
         line.addLayout(words, 1)
         line.addWidget(control, 0, Qt.AlignmentFlag.AlignVCenter)
 

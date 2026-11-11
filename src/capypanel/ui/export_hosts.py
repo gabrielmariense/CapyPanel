@@ -48,6 +48,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.bulk import host_fields, list_separator, write_csv
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import N_, _, ngettext
+from capypanel.ui import spacing
 from capypanel.ui.checks import clock_text
 from capypanel.ui.groups import TREE_INDENT
 from capypanel.ui.hosts import confirm
@@ -181,7 +182,9 @@ class ExportDialog(QDialog):
             frame = QFrame()
             frame.setObjectName("reportBox")
             inside = QVBoxLayout(frame)
-            inside.setContentsMargins(12, 8, 12, 10)
+            inside.setContentsMargins(
+                spacing.PANEL, spacing.CONTROLS, spacing.PANEL, spacing.CONTROLS
+            )
             inside.setSpacing(TICK_SPACING)
             name = QLabel(_(title))
             name.setObjectName("rowName")
@@ -191,7 +194,7 @@ class ExportDialog(QDialog):
             both.setTextFormat(Qt.TextFormat.RichText)
             both.linkActivated.connect(lambda href, ks=keys: self._tick_section(ks, href == "all"))
             head = QHBoxLayout()
-            head.setSpacing(6)
+            head.setSpacing(spacing.CONTROLS)
             head.addWidget(name)
             head.addStretch(1)
             checks = bool(self.CHECKED) and index == len(self.SECTIONS) - 1
@@ -212,7 +215,7 @@ class ExportDialog(QDialog):
             inside.addStretch(1)
             if checks:  # at the box's foot, lined up with the other boxes' ends: it never jumps
                 buttons = QHBoxLayout()
-                buttons.setContentsMargins(0, 6, 0, 0)
+                buttons.setContentsMargins(0, spacing.ICON, 0, 0)
                 buttons.addWidget(self.refresh_button)
                 buttons.addWidget(self.stop_button)
                 buttons.addStretch(1)  # its own width, as every other button
@@ -227,8 +230,8 @@ class ExportDialog(QDialog):
         if not self.note.text():
             self.note.hide()
         self._sections = QGridLayout()
-        self._sections.setHorizontalSpacing(10)
-        self._sections.setVerticalSpacing(10)
+        self._sections.setHorizontalSpacing(spacing.CONTROLS)
+        self._sections.setVerticalSpacing(spacing.CONTROLS)
         self._side_by_side: bool | None = None
         self._place_sections(True)
 
