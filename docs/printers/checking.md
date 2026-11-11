@@ -1,6 +1,6 @@
 # Checking printers
 
-**Refresh** asks every printer shown what state it's in and how much toner it has left, and fills
+**Refresh all** asks every printer shown what state it's in and how much toner it has left, and fills
 the **Status** and **Toner** columns, the **Supplies** section of the Details panel, the page
 counter, and the printer's MAC address and firmware version. CapyPanel only ever reads: it never
 changes a setting on a printer.
@@ -12,14 +12,18 @@ That also means a read-only list can be refreshed like any other.
 
 ## Refresh
 
-**Refresh** on the toolbar reads every printer the table shows, which is the group, tag or search
-you have picked. **F5** does the same, and a single printer's right-click menu has **Refresh** for
-that one. Nothing is read until you ask, unless you turn on
+**Refresh all** on the toolbar reads every printer the table shows, which is the group, tag or
+search you have picked. **F5** does the same. To read only some, right-click a printer for
+**Refresh printer**, several selected printers for **Refresh {n} printers**, or a group for
+**Refresh group**, its printers and those of the groups inside it; the Details panel's **Refresh**
+button reads the printer it shows. Nothing is read until you ask, unless you turn on
 [Refresh on its own](#refresh-on-its-own), which is off to begin with.
 
 Eight printers are read at a time. The status bar counts them, "Checking 3 of 12…", with a
 **Stop** button, and says "Checked 12 printers." at the end, or "Stopped: 4 printers weren't
-checked." A printer with no address is asked by its name.
+checked." A printer with no address is asked by its name. From then on the status bar adds how
+many printers answered the last Refresh, as in "9 online"; a printer that refused or answered
+something unreadable counts, since it's on.
 
 ## Refresh on its own
 
@@ -39,8 +43,8 @@ of quitting, so the printers go on being read (see
 ## Status
 
 A coloured dot and a few words, with the time of the check beside them in the Details panel.
-Before the first Refresh both columns are empty and the Status cell's tooltip says "Not checked:
-use Refresh".
+Before the first Refresh the Status column says **Not checked** in grey, with the tooltip "Not
+checked: use Refresh", and Toner is empty.
 
 | Dot | What it means | Examples |
 |---|---|---|
@@ -192,7 +196,7 @@ The count and the strip go away by themselves once nothing needs attention any m
 
 **Settings > Printers > Warnings and supplies > Windows notification** chooses what to notify about: **Off**,
 **Stopped or offline** (the default) or **Also low supplies**. "After a Refresh on its own, for
-printers that stopped or went offline (and with low supplies, if picked) since the one before."
+what changed since the one before."
 
 One notification goes out per Refresh on its own, and only for what changed, so a printer that was
 already offline isn't named again. Its title counts them, "2 printers need attention", and a line

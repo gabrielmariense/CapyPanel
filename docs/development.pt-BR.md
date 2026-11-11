@@ -72,7 +72,7 @@ uv run --only-group docs mkdocs serve
 
 As versões são `0.MENOR.CORREÇÃO` até a 1.0: uma funcionalidade nova aumenta MENOR, uma alteração
 só de correções aumenta CORREÇÃO. Rodando pelo código-fonte, a barra de título acrescenta um
-número de build e o commit à versão, como em `0.24.1 build 1378 (abc1234)`. O número de build
+número de build e o commit à versão, como em `0.25.0 build 1378 (abc1234)`. O número de build
 conta todos os commits que levaram a ele, então um número maior é sempre um build mais novo. A
 versão vem do próprio `pyproject.toml` do repositório, então já está certa logo depois de um pull,
 mesmo antes do `uv sync`.

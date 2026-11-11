@@ -13,7 +13,7 @@ uv run capypanel
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
 The version shows in the title bar. When you run from source it's followed by a build number
-and the commit, e.g. `CapyPanel 0.24.1 build 1378 (abc1234)`; a bigger build number is a newer
+and the commit, e.g. `CapyPanel 0.25.0 build 1378 (abc1234)`; a bigger build number is a newer
 build. Quote it when you report a problem.
 
 Remote Desktop works out of the box, with the client built into Windows. For VNC you also need a
@@ -49,17 +49,18 @@ The rest of this page is about the **Hosts** tool. Printers has its own pages, s
 | Part | What it shows |
 |---|---|
 | **The rail** (left edge) | **Home** (Ctrl+0) at the top, then one icon per tool with its name in a tooltip, **Hosts** (Ctrl+1), **Printers** (Ctrl+2) and **User profiles** (Ctrl+3), and **Settings** (Ctrl+,) at the bottom. Where you are has a tinted square behind its icon |
-| **Toolbar** (top) | The buttons of the tool you're in. For Hosts: **Connect**, **Refresh**, **Commands**, **Inventory** and **Report** |
-| **Groups panel** (left) | The open list's name on top, as a dropdown that switches lists. Then "All hosts" with how many hosts the list has, and "No group" under it with how many are in none. Then **Groups**, with a **+** button to add one, and **Tags** |
+| **Toolbar** (top) | The buttons of the tool you're in. For Hosts: **Connect**, **Refresh all**, **Commands**, **Inventory** and **Report** |
+| **Groups panel** (left) | The open list's name on top, as a dropdown that switches lists. Then "All hosts" with how many hosts the list has, and "No group" under it with how many are in none. Then **Groups**, with a **+** button to add one, and **Tags**; drag the line above Tags to give either more room, and it's remembered |
 | **Hosts panel** (middle) | The search box (see [Searching hosts](hosts/searching.md)) above the hosts in the selected group or tag, with their **Status** and **User** |
-| **Details panel** (right) | The selected host: its name and status, a row of buttons for its [commands](hosts/commands.md), then **Connection** (address, group, what **Connect with** opens and the account **Commands run as**; see [Connecting](hosts/connecting.md#in-the-details-panel)), who's **logged on**, the **PC facts**, its **tags** and its **notes**. Click any value to copy it. With nothing selected, how many hosts are shown, and how many of them are online, offline, not found or not checked |
-| **Status bar** | Which list is open, where it is, how many hosts it has, how many are online once anything has been checked, and how many are selected |
+| **Details panel** (right) | The selected host: its name and status, a grid of buttons for its [commands](hosts/commands.md) (**Refresh**, **Commands**, **Users ▾**, **Power ▾**, then your [quick commands](hosts/commands.md#quick-commands)), then **Connection** (address, group, what **Connect with** opens and the account **Commands run as**; see [Connecting](hosts/connecting.md#in-the-details-panel)), who's **logged on**, the **PC facts**, its **tags** and its **notes**. Click any value to copy it. With nothing selected, how many hosts are shown, and how many of them are online, offline, not found or not checked |
+| **Status bar** | The open list and its counts, as in "Shared · Clinic · 8 hosts · 3 online · 1 selected": its kind (**Default**, **Personal** or **Shared**, with a shared list's name after it), how many hosts it has, how many are online once anything has been refreshed, and how many are selected. Rest the mouse on it to see the list's file path; a click copies the path ("Copied: …") |
 
 The menu bar is the same whichever tool you're in, and holds nothing a tool owns:
 
 - **File** opens **Settings…** (Ctrl+,) and closes CapyPanel with **Exit** (Ctrl+Q).
 - **View** goes to **Home** and to each tool, then shows or hides the panels of the tool you're
-  in, the **Toolbar** and the **Status bar**. In Hosts it also holds **Show users' domain** (see
+  in, the **Toolbar** and the **Status bar**. In Hosts it also holds **Customize the details
+  panel…** (see [below](#customizing-the-details-panel)) and **Show users' domain** (see
   [Checking hosts](hosts/checking.md#logged-on-users)). It stays open while you tick, so several
   parts can be shown or hidden in one go.
 - **Help** has **Documentation**, **Report a problem** and **About CapyPanel**.
@@ -74,6 +75,17 @@ not a Refresh and not switching lists.
 
 To work on another list, use the dropdown on top of the Groups panel: it lists every list CapyPanel
 found, and makes, opens and manages them (see [Host lists](hosts/host-lists.md#the-list-dropdown)).
+
+### Customizing the Details panel
+
+**View > Customize the details panel…**, or a right-click on the Details panel, opens a window with
+two tabs. **Quick commands** picks the buttons under the fixed row (see
+[Commands on a host](hosts/commands.md#quick-commands)). **Information** has one tick per part of
+the panel: **Connection**, **Logged-on users**, **PC facts**, **Tags** and **Notes**. "Untick what
+you don't use. Hiding a part never stops a check." An unticked part hides at once, and the foot of
+the panel then says how many are hidden, as in "2 parts hidden · Customize…", the last word a link
+back to this window. The host's name, its status and a pending restart's warning always show. The
+choice is "Only for you, on this PC."
 
 ## Add your first hosts
 
@@ -92,13 +104,19 @@ The **Inventory** button on the toolbar holds everything that puts hosts in a li
    - **Tags:** type a tag and press Enter; Backspace on an empty box brings the last tag back for
      editing.
    - **Connection profile:** how to reach the host. "From group" follows the group's profile.
+
+   **Add** puts it in the list.
 3. Double-click the host, select it and press Enter, or click **Connect** in the toolbar, to open
    a connection to it with its profile.
 
-Right-click a host to connect, to refresh its status or its logged-on users, to run one of its
-[commands](hosts/commands.md) from **Check ▸**, **Folders ▸**, **Admin tools ▸**, **Users ▸**,
-**Printers ▸** or **Power ▸**, to pick the account its commands run as from **Commands run as ▸**,
-to copy a column through **Copy ▸**, or to edit, move or remove it. **Copy** lists
+A new list says "This list has no hosts yet. Add one, or import several at once." with **Add
+host…** and **Import hosts…** buttons right there, and an empty group says "This group has no
+hosts yet." with **Add host…**.
+
+Right-click a host to connect, to refresh it with **Refresh host**, to run one of your first four
+quick commands or open **All commands…** (see [Commands on a host](hosts/commands.md)), to copy a
+column through **Copy ▸**, or to edit, move or remove it. With several hosts selected, the menu
+also picks the account their commands run as, from **Commands run as ▸**. **Copy** lists
 every column the table shows, one line per selected host, and **Address** keeps Ctrl+Shift+C.
 Right-clicking empty space offers **Add group…** in the groups panel, and **Add host…** and
 **Add group…** in the host list. To move hosts

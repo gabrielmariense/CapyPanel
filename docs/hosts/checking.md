@@ -9,7 +9,7 @@ offers to check the hosts first (see [Importing and exporting hosts](importing.m
 
 ## Refresh
 
-**Refresh**, on the toolbar, checks every host the table shows: the group picked in the Groups
+**Refresh all**, on the toolbar, checks every host the table shows: the group picked in the Groups
 panel with its subgroups, a tag, All hosts, No group, or the results of a search. Nothing needs to
 be selected.
 
@@ -20,9 +20,13 @@ be selected.
 - **F5** does the same as that **Run**, on the hosts shown, without opening the panel. It's
   ignored while a check is already running.
 
-To check only some hosts, select them and right-click > **Refresh status** or **Refresh logged-on
-users**. A group's right-click menu has the same two items, for its hosts and those in the groups
-inside it.
+To check only some hosts, right-click:
+
+- **one host > Refresh host**: its status, logged-on users and PC facts;
+- **several selected hosts > Refresh {n} hosts**: their status and logged-on users (PC facts are
+  read one PC at a time);
+- **a group > Refresh group**: the status and logged-on users of its hosts and those in the groups
+  inside it.
 
 CapyPanel checks 8 hosts at a time; the status bar shows the progress and a **Stop** button.
 Checking who is logged on to more than 50 hosts asks first. A host without an address, whose name
@@ -42,6 +46,13 @@ is tried, cable and Wi-Fi alike. Hover over a status to see when it was checked 
 answered: a PC that answers only on its Wi-Fi address may have its cable out. The Details panel
 says it under the host's name, as "Online · checked 10:41", or "Not checked: use Refresh".
 
+A host nobody has refreshed yet reads **Not checked** in grey in the Status column, and its User
+cell stays empty. Sorting by Status keeps those hosts last whichever way you sort.
+
+When a PC didn't answer, Details says so once, under its name, as "Offline · checked 10:41", and
+**Logged on** and **PC facts** show a single dash or one line with the reason rather than
+repeating it on every row.
+
 Status uses no account and needs no administrator rights.
 
 ### Automatic status
@@ -52,8 +63,8 @@ hosts shown every few minutes: **Every minute**, **Every 5 minutes**, **Every 15
 is checked by itself unless you turn it on, and turning it off again keeps your interval for next
 time.
 
-As the setting says: "Only ping and ports, never logged-on users, so no account is needed. Refresh
-in the toolbar always works."
+As the setting says: "Only ping and ports, so no account is needed. Refresh in the toolbar always
+works."
 
 ## Logged-on users
 
@@ -115,8 +126,9 @@ shows, and a fact that couldn't be read says why in amber in its place, as in "N
 admin account on this PC". Click that line to copy it, as you would any value. The app log names
 the part that failed.
 
-**Check > PC facts** reads them again whenever you want, from the host's right-click menu, the
-Details panel's **…** or the Commands window (see [Commands on a host](commands.md)).
+**PC facts** reads them again whenever you want, from the toolbar's **Commands ▾ > Check** or the
+Commands window, and **Refresh host** reads them with the rest (see
+[Commands on a host](commands.md)).
 
 ## How CapyPanel reads other PCs
 

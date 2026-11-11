@@ -100,8 +100,9 @@ funciona também numa lista somente leitura.
 
 ![A janela Relatório: os hosts, a predefinição, os quadros Host, Tags e notas e Última verificação com Atualizar 3 hosts, e a prévia](../images/report-dark-pt-BR.png)
 
-Essas duas colunas vêm da última verificação (veja [Verificando hosts](checking.pt-BR.md)), então
-um host que ninguém verificou é exportado vazio. O quadro **Última verificação** mostra a hora da
+Essas duas colunas vêm da última verificação (veja [Verificando hosts](checking.pt-BR.md)). Para
+um host que ninguém verificou, a prévia diz **Não verificado**, e o arquivo copiado ou salvo deixa
+essa célula vazia. O quadro **Última verificação** mostra a hora da
 mais recente dessas verificações ao lado do nome, com a data também quando não é de hoje.
 
 Embaixo das marcas, um botão verifica esses hosts de novo agora, com o nome de quantos são:

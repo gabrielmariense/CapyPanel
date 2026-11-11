@@ -60,12 +60,12 @@ um recolhido abre o caminho até ele, para o que você moveu continuar visível.
 Toda mudança é salva na hora. Numa lista somente leitura, arrastar fica desligado.
 
 **Inventário > Gerenciar grupos…** mostra a árvore inteira numa janela, sob uma raiz **Grupos**
-com linhas de árvore, com **Mover para**, **Mover para cima**, **Mover para baixo** e
-**Classificar de A a Z**, uma ordenação única que você pode reorganizar depois. Arrastar também
-funciona lá: solte um grupo sobre **Grupos**, ou abaixo da última linha, para tirá-lo de todos os
-grupos. Nada muda até você clicar em **OK**.
-Listas criadas antes da versão 0.13.0 mostram os grupos na ordem em que foram criados;
-Classificar de A a Z os coloca em ordem uma vez.
+com linhas de árvore. Embaixo dela, numa fileira, ficam **Mover para**, **Mover para cima**,
+**Mover para baixo** e **Classificar de A a Z**, uma ordenação única que você pode reorganizar
+depois. Arrastar também funciona lá: solte um grupo sobre **Grupos**, ou abaixo da última linha,
+para tirá-lo de todos os grupos. "Nada muda até você clicar em Salvar." Listas criadas antes da
+versão 0.13.0 mostram os grupos na ordem em que foram criados; Classificar de A a Z os coloca em
+ordem uma vez.
 
 ## Remover um grupo
 
@@ -154,7 +154,9 @@ As mesmas listas do menu de listas, como uma tabela de **Lista**, **Tipo** e **A
 | **Tipo** | **Compartilhada** (na pasta compartilhada), **Sua** (na sua) ou **Adicionada** (uma lista de outro lugar) |
 | **Acesso** | **Leitura/gravação**, **Somente leitura**, **Criada ao abrir** para uma lista padrão ou pessoal que ainda não existe, **Arquivo não encontrado**, ou **Não usada: criada por outro usuário** |
 
-**Nova…**, **Adicionar existente…** e **Remover** ficam embaixo da tabela. O botão direito numa
+**Nova…**, **Adicionar existente…** e **Remover** ficam embaixo da tabela, e embaixo deles o
+caminho do arquivo da lista escolhida, encurtado no meio para caber; um clique o copia inteiro. O
+botão direito numa
 linha acrescenta **Abrir**, **Salvar uma cópia…** e **Abrir pasta**. Um clique duplo, ou o
 **Abrir**, abre uma lista; adicionar uma ou salvar uma cópia não abre.
 

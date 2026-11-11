@@ -16,7 +16,7 @@ away, and it finds the Windows user profiles nobody uses any more on a PC so you
   - Accounts for other PCs, by PC, group or tag
   - Shared lists, groups and tags
   - Status, logged-on users, PC facts and mapped drives
-  - Commands on a PC: its folders and consoles, its users, power and printers
+  - Commands on a PC: its folders and consoles, its users, power and printers, with your own quick commands
   - Search, import and export
 - Printers
   - Lists with brand, model, serial number and asset tag
@@ -53,5 +53,5 @@ Getting started, Settings and files and Development are about the whole app. The
 them belong to the **Hosts** tool, the three after those to **Printers**, and the last one to
 **User profiles**.
 
-These pages describe the current version (0.24.1). CapyPanel is in beta, so they grow with each
+These pages describe the current version (0.25.0). CapyPanel is in beta, so they grow with each
 feature.

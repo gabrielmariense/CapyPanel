@@ -14,13 +14,13 @@ Ela tem as próprias listas, separadas das da ferramenta Hosts (veja
 
 | Parte | O que mostra |
 |---|---|
-| **Barra de ferramentas** | **Abrir página web**, **Atualizar**, **Inventário** e **Relatório** |
+| **Barra de ferramentas** | **Abrir página web**, **Atualizar todas**, **Inventário** e **Relatório** |
 | **Painel de grupos** (esquerda) | O nome da lista aberta no topo, como um menu, depois "Todas as impressoras" e os grupos e tags da lista |
 | **Painel de impressoras** (meio) | A caixa de pesquisa acima das impressoras do grupo ou da tag que você escolheu |
-| **Painel de detalhes** (direita) | Tudo que se sabe sobre a impressora selecionada. Clique em qualquer valor para copiá-lo |
-| **Barra de status** | Qual lista está aberta, onde ela está, quantas impressoras tem e quantas estão selecionadas |
+| **Painel de detalhes** (direita) | Tudo que se sabe sobre a impressora selecionada, abaixo do nome e do status dela, com um botão **Atualizar** e um **Página web**. Clique em qualquer valor para copiá-lo |
+| **Barra de status** | A lista aberta e as contagens dela, como no Hosts: o tipo, o nome de uma lista compartilhada, quantas impressoras ela tem, quantas estão online depois que alguma foi atualizada e quantas estão selecionadas. Deixe o mouse sobre ela para ver o caminho do arquivo da lista; um clique o copia |
 
-O **Atualizar** lê o status e os suprimentos de todas as impressoras exibidas, por SNMP, e
+O **Atualizar todas** lê o status e os suprimentos de todas as impressoras exibidas, por SNMP, e
 preenche as colunas **Status** e **Toner**. Ele também pode ler por tempo, e uma faixa acima da
 tabela avisa quando impressoras requerem atenção. Ele tem uma página própria:
 [Verificando impressoras](checking.pt-BR.md).
@@ -31,9 +31,15 @@ grupos…**, os mesmos três do Hosts.
 ### A tabela
 
 As colunas são **Nome**, **Endereço**, **Status**, **Toner**, **Marca**, **Modelo**, **Nº de
-série**, **Patrimônio** e **Tags**, nessa ordem. Nº de série e Patrimônio começam escondidas:
-clique com o botão direito nos títulos das colunas para mostrá-las. Status e Toner ficam vazias
-até você atualizar. Esse mesmo menu, e o **Copiar ▸** de uma impressora, listam as
+série**, **Patrimônio** e **Tags**, nessa ordem. Marca, Nº de série e Patrimônio começam
+escondidas: clique com o botão direito nos títulos das colunas para mostrá-las. O **Modelo** põe a
+marca na frente, como em "ZEBRA ZD421", a não ser que o modelo já comece com ela.
+
+Antes de uma atualização, o **Status** diz **Não verificado** em cinza, e essas impressoras ficam
+por último na ordenação; Toner fica vazia. As palavras longas de status são encurtadas só na
+coluna, como **Saída cheia**, **Saída quase cheia**, **Saída ausente**, **Pede assistência**,
+**Coletor quase cheio** e **Suprimento baixo**: a dica, o painel de detalhes e as notificações
+trazem as palavras completas. Esse mesmo menu, e o **Copiar ▸** de uma impressora, listam as
 colunas nessa ordem. As colunas não podem ser arrastadas para outra posição, em nenhuma das duas
 ferramentas.
 
@@ -58,13 +64,38 @@ importam, e impressoras empatadas ficam em ordem de nome.
   lê a contagem da origem que você escolher aqui.
 - **Notas**, para o que mais houver.
 
-**Editar selecionado…** (F2) abre a mesma janela para impressoras que já estão na lista.
+O **Adicionar** põe a impressora na lista. O **Editar selecionado…** (F2) abre a mesma janela
+para uma impressora que já está na lista, com **Salvar** no lugar.
 
-O painel de **detalhes** mostra tudo isso, em **Conexão** (endereço, grupo, endereço MAC),
+Uma lista nova diz "Esta lista ainda não tem impressoras. Adicione uma para começar." com um botão
+**Adicionar impressora…**, e um grupo vazio diz "Este grupo ainda não tem impressoras."
+
+### Menus do botão direito
+
+O menu do botão direito de uma impressora tem **Abrir página web** em negrito, **Atualizar
+impressora** (ou **Atualizar {n} impressoras** com várias selecionadas), **Copiar ▸**, **Editar
+selecionado…** para uma impressora, **Mover para ▸**, **Tags ▸** e **Remover**. O de um grupo termina com
+**Atualizar grupo**, que lê as impressoras dele e as dos grupos de dentro.
+
+### O painel de detalhes
+
+Embaixo do nome da impressora ficam o status, com a hora da última verificação, e dois botões:
+**Atualizar**, para esta impressora, e **Página web**, que abre a página web dela e só fica
+esmaecido quando nem o endereço nem o nome dela formam um endereço web.
+
+O painel mostra tudo isso, em **Conexão** (endereço, grupo, endereço MAC),
 **Suprimentos**, **Impressora** (marca, modelo, nº de série, patrimônio, firmware), **Contadores
 de páginas** (origem e o total da própria impressora), **Tags** e **Notas**. O status, as
 mensagens da impressora e os suprimentos chegam com uma atualização, e com ela também a chance de
-copiar para a sua lista a marca, o modelo ou o nº de série que a impressora informa.
+copiar para a sua lista a marca, o modelo ou o nº de série que a impressora informa. Cada seção
+põe os rótulos à esquerda e os valores alinhados ao lado, como no Hosts.
+
+**Exibir > Personalizar o painel de detalhes…**, ou o botão direito no painel, pode esconder
+qualquer seção, cada uma descrita pelo que mostra: Conexão "Endereço, grupo, MAC", Suprimentos
+"Toner, tinta e o resto, com os níveis", Impressora "Marca, modelo, nº de série, firmware",
+Contadores de páginas "Total de páginas e a origem", e Tags e Notas. "Sempre aparecem: o nome da
+impressora e o status." Veja
+[Primeiros passos](../getting-started.pt-BR.md#personalizando-o-painel-de-detalhes).
 
 ## Abrir a página web de uma impressora
 
@@ -86,8 +117,10 @@ lugar nenhum.
 
 ## Encontrar uma impressora
 
-A caixa de pesquisa acima da tabela cobre todas as colunas à mostra, mais as notas, e o texto dela
-diz quais são, como em "Pesquisar nome, endereço, marca, modelo, tags, notas". O **Ctrl+F** leva
+A caixa de pesquisa acima da tabela cobre todas as colunas à mostra menos Toner, mais as notas, e o
+texto dela diz quais são, como em "Pesquisar nome, endereço, status, modelo, tags, notas". O
+status é pesquisado como a coluna o mostra. Uma pesquisa sem resultado diz "Nenhuma impressora
+corresponde a “…”." O **Ctrl+F** leva
 até ela. Mostrar ou esconder uma coluna muda o que a pesquisa cobre.
 
 As tags filtram o que a tabela mostra, e você pode escolher várias de uma vez: a tabela então

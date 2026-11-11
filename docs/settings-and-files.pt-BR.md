@@ -23,11 +23,13 @@ Um clique numa página mostra só aquela página. As Configurações abrem em **
 Cada página é feita de seções: um título com as configurações dele num cartão arredondado embaixo.
 Uma configuração simples é uma linha: o nome dela, uma descrição de uma linha embaixo e o controle
 na ponta direita. Tudo que guarda várias coisas, de listas de hosts a licenças, é a mesma tabela em
-todo lugar: linhas de grade, um cabeçalho, seis linhas antes de rolar, as ações principais como
+todo lugar: uma linha fina embaixo de cada linha, um cabeçalho cujos divisores finos mostram onde
+arrastar para alargar uma coluna, seis linhas antes de rolar, as ações principais como
 botões embaixo, **todas as ações de uma linha no botão direito dela** e um clique duplo para a mais
 óbvia. Cada coluna mostra o texto inteiro, e quando não cabem todas, a tabela rola para o lado; o
 botão direito nos títulos das colunas oferece **Ajustar colunas ao conteúdo**. A janela abre num
-tamanho fixo, e uma página mais alta que ela rola.
+tamanho fixo, 960 × 700, e uma página mais alta que ela rola. Numa tela menor, como a de um
+notebook em escala de 125 %, ela abre menor para caber.
 
 ### Pesquisar nas configurações
 
@@ -50,8 +52,9 @@ são iguais em todo lugar."
 | CapyPanel — escuro / claro | O visual próprio do CapyPanel, igual em todo computador |
 | Graphite, Paper | Mais dois visuais próprios do CapyPanel |
 
-Os temas mudam só as cores. A fonte, o tamanho dela e os cantos arredondados são os mesmos em
-todos, e um tema nunca muda o que o app faz.
+Os temas mudam as cores e o quanto os cantos são arredondados: Graphite e Paper os arredondam mais
+que os outros. A fonte e o tamanho dela são os mesmos em todos, e um tema nunca muda o que o app
+faz.
 
 Os temas do Windows seguem a cor de destaque do seu Windows (**Configurações > Personalização >
 Cores**), e tudo o que vem dela continua legível com qualquer uma que você escolher: os títulos
@@ -94,9 +97,15 @@ minutos**, **A cada 15 minutos**, **A cada 30 minutos** ou **Personalizado…**,
 minutos e depois mostra esse intervalo entre as opções. Desligar guarda o intervalo para a próxima
 vez.
 
-"Só ping e portas, nunca usuários logados, então nenhuma conta é usada. O Atualizar da barra de
-ferramentas sempre funciona." Vem desligado até você ligar; veja
-[Verificando hosts](hosts/checking.pt-BR.md#status-automatico).
+"Só ping e portas: nenhuma conta é usada. O Atualizar da barra sempre funciona." Vem desligado até
+você ligar; veja [Verificando hosts](hosts/checking.pt-BR.md#status-automatico).
+
+### Painel de detalhes
+
+**Comandos rápidos > Escolher…**: "Os botões no topo do painel de detalhes de um host; os quatro
+primeiros também ficam no menu do botão direito. Seus, neste PC." Ele abre a janela
+**Personalizar o painel de detalhes**; veja
+[Comandos em um host](hosts/commands.pt-BR.md#comandos-rapidos).
 
 ## Hosts > Conexão
 
