@@ -57,9 +57,11 @@ from capypanel.ui.hosts_tool.table import Cells, HostTable
 from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 from capypanel.ui.import_hosts import ImportDialog
+from capypanel.ui.list_workspace.customize import Part
 from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
+from capypanel.ui.menus import shortcut_text
 from capypanel.ui.saved_credentials import KeptLogin
 
 log = logging.getLogger(__name__)
@@ -800,6 +802,7 @@ class HostsTool(ListWorkspace):
                 ),
                 commands_as=self._commands_as(host),
                 quick=self.quick_commands(),
+                hidden=self.hidden_parts(),
             )
             self.details.show_host(details, 1, needle=self._needle())
             if host.connect_address and host.id not in self._facts:
@@ -925,6 +928,35 @@ class HostsTool(ListWorkspace):
     def quick_commands(self) -> tuple[str, ...]:
         """This admin's quick commands, in their order (Details' buttons; the menu's first)."""
         return host_commands.quick_from(self.prefs.get(QUICK_KEY))
+
+    def set_quick_commands(self, picked: Sequence[str]) -> None:
+        self.prefs[QUICK_KEY] = list(host_commands.quick_from(list(picked)))
+        self._save_prefs()
+        self._selection_changed()  # Details' buttons follow at once
+
+    def details_parts(self) -> list[Part]:
+        return [
+            Part("connection", _("Connection"), _("Address, profile, account")),
+            Part("users", _("Logged-on users"), _("Who is signed in now")),
+            Part("facts", _("PC facts"), _("Model, Windows, memory, disk")),
+            Part("tags", _("Tags"), _("The host's tags")),
+            Part("notes", _("Notes"), _("The host's notes")),
+        ]
+
+    def details_always(self) -> str:
+        return _("Always shown: the host's name, its status and a pending restart's warning.")
+
+    def customize_tabs(self) -> list[tuple[str, QWidget]]:
+        from capypanel.ui.hosts_tool.quick_chooser import QuickChooser
+
+        shortcuts = {
+            command_id: shortcut_text(action)
+            for command_id, action in self.host_actions.items()
+            if not action.shortcut().isEmpty()
+        }
+        chooser = QuickChooser(self.quick_commands(), shortcuts)
+        chooser.changed.connect(self.set_quick_commands)
+        return [(_("Quick commands"), chooser)]
 
     def fill_group_menu(self, menu: QMenu, group: Group) -> None:
         assert self._doc is not None

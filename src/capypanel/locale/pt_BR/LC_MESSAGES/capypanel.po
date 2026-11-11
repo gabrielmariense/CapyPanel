@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 02:19-0300\n"
+"POT-Creation-Date: 2026-11-11 14:34-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -66,6 +66,9 @@ msgstr "&Marca:"
 msgid "&Clear queue"
 msgstr "&Limpar fila"
 
+msgid "&Close"
+msgstr "&Fechar"
+
 msgid "&Colour…"
 msgstr "&Cor…"
 
@@ -86,6 +89,9 @@ msgstr "&Criar"
 
 msgid "&Credentials:"
 msgstr "&Credenciais:"
+
+msgid "&Customize the details panel…"
+msgstr "Personali&zar o painel de detalhes…"
 
 msgid "&Delete"
 msgstr "E&xcluir"
@@ -265,6 +271,9 @@ msgstr "&Impressoras"
 msgid "&Profile:"
 msgstr "&Perfil:"
 
+msgid "&Quick commands"
+msgstr "Comandos &rápidos"
+
 msgid "&Quit"
 msgstr "&Sair"
 
@@ -326,6 +335,12 @@ msgstr "&Restaurar"
 
 msgid "&Restore built-in…"
 msgstr "&Restaurar originais…"
+
+msgid "&Restore default"
+msgstr "Restaurar &padrão"
+
+msgid "&Restore default…"
+msgstr "Restaurar &padrão…"
 
 msgid "&Run"
 msgstr "&Executar"
@@ -579,6 +594,9 @@ msgstr[1] "{n} hosts adicionados."
 msgid "Address"
 msgstr "Endereço"
 
+msgid "Address, profile, account"
+msgstr "Endereço, perfil, conta"
+
 msgid "Adds this PC to the open host list"
 msgstr "Adiciona este PC à lista de hosts aberta"
 
@@ -606,6 +624,9 @@ msgstr "Já está na lista, {place}"
 
 msgid "Also low supplies"
 msgstr "Também suprimento baixo"
+
+msgid "Always shown: the host's name, its status and a pending restart's warning."
+msgstr "Sempre aparecem: o nome do host, o status e o aviso de reinício pendente."
 
 #, python-brace-format
 msgid "An item is missing the “{key}” field or has an invalid value for it."
@@ -698,6 +719,9 @@ msgstr "Compartilhamento C$"
 
 msgid "C&hoose file…"
 msgstr "Escol&her arquivo…"
+
+msgid "C&hoose…"
+msgstr "Escol&her…"
 
 msgid "CSV files (*.csv *.txt);;All files (*)"
 msgstr "Arquivos CSV (*.csv *.txt);;Todos os arquivos (*)"
@@ -859,6 +883,9 @@ msgstr "Co&piar"
 
 msgid "Colour"
 msgstr "Cor"
+
+msgid "Command"
+msgstr "Comando"
 
 msgid "Commands"
 msgstr "Comandos"
@@ -1109,6 +1136,12 @@ msgstr "Créditos"
 msgid "Custom"
 msgstr "Personalizado"
 
+msgid "Customize the details panel"
+msgstr "Personalizar o painel de detalhes"
+
+msgid "Customize…"
+msgstr "Personalizar…"
+
 msgid "Custom…"
 msgstr "Personalizado…"
 
@@ -1220,6 +1253,9 @@ msgstr "Detalhes"
 
 msgid "Details (Enter)"
 msgstr "Detalhes (Enter)"
+
+msgid "Details panel"
+msgstr "Painel de detalhes"
 
 msgid "Disconnect"
 msgstr "Desconectar"
@@ -1507,6 +1543,9 @@ msgstr "De “{file}”"
 msgid "General"
 msgstr "Geral"
 
+msgid "Go back to the quick commands CapyPanel starts with?"
+msgstr "Voltar aos comandos rápidos com que o CapyPanel começa?"
+
 msgid "Group"
 msgstr "Grupo"
 
@@ -1635,6 +1674,9 @@ msgid "In {n} minute"
 msgid_plural "In {n} minutes"
 msgstr[0] "Em {n} minuto"
 msgstr[1] "Em {n} minutos"
+
+msgid "Information"
+msgstr "Informações"
 
 msgid "Ink"
 msgstr "Tinta"
@@ -1843,6 +1885,9 @@ msgstr "Mensagem enviada para {names} em {host}."
 
 msgid "Model"
 msgstr "Modelo"
+
+msgid "Model, Windows, memory, disk"
+msgstr "Modelo, Windows, memória, disco"
 
 msgid "Move &down"
 msgstr "Mover para &baixo"
@@ -2093,6 +2138,12 @@ msgstr "Desligado"
 msgid "Offline"
 msgstr "Offline"
 
+msgid "On the button"
+msgstr "No botão"
+
+msgid "On the panel"
+msgstr "No painel"
+
 msgid "One PC"
 msgstr "Um PC"
 
@@ -2110,6 +2161,9 @@ msgstr "Só um perfil que pode ser excluído, fora de uma exclusão em andamento
 
 msgid "Only for you and administrators: your settings, and your lists in “lists”, a folder for each kind of list."
 msgstr "Só para você e os administradores: suas configurações e suas listas em “lists”, uma pasta para cada tipo de lista."
+
+msgid "Only for you, on this PC."
+msgstr "Vale só para você, neste PC."
 
 #, python-brace-format
 msgid "Only hosts with all of: {tags} · {shown} of {total} shown"
@@ -2304,6 +2358,9 @@ msgstr "Pouco papel"
 msgid "Paper problem"
 msgstr "Problema no papel"
 
+msgid "Part of the panel"
+msgstr "Parte do painel"
+
 #, python-brace-format
 msgid "Partner {partner}, user {user}. Kept in Windows Credential Manager."
 msgstr "Parceiro {partner}, usuário {user}. Guardada no Gerenciador de Credenciais do Windows."
@@ -2450,6 +2507,9 @@ msgstr "Na fila"
 msgctxt "button"
 msgid "Queues"
 msgstr "Filas"
+
+msgid "Quick commands"
+msgstr "Comandos rápidos"
 
 msgid "Quit"
 msgstr "Sair"
@@ -2698,6 +2758,9 @@ msgstr "Reiniciar {host}"
 msgid "Restart {host}?"
 msgstr "Reiniciar {host}?"
 
+msgid "Restart, Shut down, Log off and Disconnect can't be quick commands: they cut someone off."
+msgstr "Reiniciar, Desligar, Fazer logoff e Desconectar não podem ser comandos rápidos: eles interrompem alguém."
+
 msgid "Restarts Windows' printing service, which unsticks most queues."
 msgstr "Reinicia o serviço de impressão do Windows, o que destrava a maioria das filas."
 
@@ -2713,6 +2776,9 @@ msgstr "Reiniciar…"
 
 msgid "Restore built-in profiles"
 msgstr "Restaurar os perfis que vêm com o app"
+
+msgid "Restore default"
+msgstr "Restaurar padrão"
 
 msgid "Result"
 msgstr "Resultado"
@@ -2973,6 +3039,9 @@ msgid_plural "Showing the <b>{n} printers</b> that need attention."
 msgstr[0] "Mostrando a <b>{n} impressora</b> que requer atenção."
 msgstr[1] "Mostrando as <b>{n} impressoras</b> que requerem atenção."
 
+msgid "Shows"
+msgstr "Mostra"
+
 #, python-brace-format
 msgid "Shut down {host}"
 msgstr "Desligar {host}"
@@ -3230,6 +3299,12 @@ msgstr "Os argumentos usam uma opção que não está em “options”: “{opti
 msgid "The authentication password needs at least 8 characters."
 msgstr "A senha da autenticação precisa ter pelo menos 8 caracteres."
 
+msgid "The buttons on top of a host's Details panel; the first four are also in its right-click menu. Yours, on this PC."
+msgstr "Os botões no topo do painel de detalhes de um host; os quatro primeiros também ficam no menu do botão direito. Seus, neste PC."
+
+msgid "The choice is yours on this PC; it doesn't go into the list."
+msgstr "A escolha é sua neste PC; não vai para a lista."
+
 msgid "The computer didn't accept the account: a wrong password, a locked account, or an account it doesn't trust."
 msgstr "O computador não aceitou a conta: senha errada, conta bloqueada ou uma conta em que ele não confia."
 
@@ -3296,6 +3371,12 @@ msgstr "O histórico ainda não tem nada."
 
 msgid "The host is checked again before each delete: anyone who signed in since the scan is skipped. Every delete goes in the history."
 msgstr "O host é verificado de novo antes de cada exclusão: quem tiver entrado desde o escaneamento é ignorado. Cada exclusão fica no histórico."
+
+msgid "The host's notes"
+msgstr "As notas do host"
+
+msgid "The host's tags"
+msgstr "As tags do host"
 
 msgid "The hosts' own fields, which Import hosts reads back: to move hosts to a list."
 msgstr "Os campos dos próprios hosts, que Importar hosts lê de volta: para levar hosts a uma lista."
@@ -3532,6 +3613,9 @@ msgstr "Marque na tabela: a caixa, Espaço ou dois cliques na linha."
 msgid "Tick profiles in the table to delete"
 msgstr "Marque perfis na tabela para excluir"
 
+msgid "Tick the ones you want, or none. They sit on top of the Details panel, in this order."
+msgstr "Marque os que quiser, ou nenhum. Ficam no topo do painel de detalhes, nesta ordem."
+
 msgid "Tick to delete"
 msgstr "Marcar para excluir"
 
@@ -3641,6 +3725,9 @@ msgstr "Inacessível"
 
 msgid "Unreadable"
 msgstr "Ilegível"
+
+msgid "Untick what you don't use. Hiding a part never stops a check."
+msgstr "Desmarque o que você não usa. Esconder uma parte não para nenhuma verificação."
 
 msgid "Unused for:"
 msgstr "Sem uso há:"
@@ -3764,6 +3851,9 @@ msgstr "Se o PC responde na rede."
 msgid "Which account signs in to which PCs, for Refresh's logged-on users and the commands you run on a host. PCs no row names use your Windows account."
 msgstr "Qual conta entra em quais PCs, para os usuários logados do Atualizar e os comandos que você executa em um host. PCs que nenhuma linha nomeia usam a sua conta do Windows."
 
+msgid "Who is signed in now"
+msgstr "Quem está conectado agora"
+
 msgid "Who is signed in to the PC, and since when."
 msgstr "Quem está conectado ao PC, e desde quando."
 
@@ -3846,6 +3936,9 @@ msgstr "Sua conta do Windows ({user})"
 
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
+
+msgid "Your picks and their order are replaced."
+msgstr "Suas escolhas e a ordem delas são substituídas."
 
 msgid "Your printers: status and toner, web pages, reports."
 msgstr "Suas impressoras: status e toner, páginas web, relatórios."
@@ -4543,6 +4636,10 @@ msgstr[0] "{n} de {total} perfil"
 msgstr[1] "{n} de {total} perfis"
 
 #, python-brace-format
+msgid "{n} of {total} ticked"
+msgstr "{n} de {total} marcados"
+
+#, python-brace-format
 msgid "{n} offline"
 msgid_plural "{n} offline"
 msgstr[0] "{n} offline"
@@ -4553,6 +4650,12 @@ msgid "{n} online"
 msgid_plural "{n} online"
 msgstr[0] "{n} online"
 msgstr[1] "{n} online"
+
+#, python-brace-format
+msgid "{n} part hidden"
+msgid_plural "{n} parts hidden"
+msgstr[0] "{n} parte oculta"
+msgstr[1] "{n} partes ocultas"
 
 #, python-brace-format
 msgid "{n} printer"
@@ -4599,6 +4702,12 @@ msgid "{n} program"
 msgid_plural "{n} programs"
 msgstr[0] "{n} programa"
 msgstr[1] "{n} programas"
+
+#, python-brace-format
+msgid "{n} row on the panel"
+msgid_plural "{n} rows on the panel"
+msgstr[0] "{n} fileira no painel"
+msgstr[1] "{n} fileiras no painel"
 
 #, python-brace-format
 msgid "{n} scanning"
@@ -4786,6 +4895,9 @@ msgstr "Pasta de {user}"
 #, python-brace-format
 msgid "{what}, in {list}"
 msgstr "{what}, em {list}"
+
+msgid "— the four above are also in the right-click menu —"
+msgstr "— os quatro acima também ficam no menu do botão direito —"
 
 msgid "“account_types” must be a list of numbers from 1 to 255."
 msgstr "“account_types” deve ser uma lista de números de 1 a 255."

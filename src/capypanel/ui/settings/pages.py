@@ -409,7 +409,9 @@ class ListsGeneralPage(Page):
 
 
 class HostsPage(ListsGeneralPage):
-    """The Hosts tool's General page: Host lists, then Refresh."""
+    """The Hosts tool's General page: Host lists, Refresh, then the Details panel."""
+
+    customize_requested = Signal()  # Quick commands' Choose…
 
     def __init__(
         self,
@@ -456,6 +458,21 @@ class HostsPage(ListsGeneralPage):
         )  # fmt: skip
 
         self.add_section(refresh)
+
+        panel = Section(_("Details panel"))
+        self.quick_button = QPushButton(_("C&hoose…"))
+        self.quick_button.setAutoDefault(False)
+        self.quick_button.clicked.connect(self.customize_requested)
+        add_rows(
+            panel.content,
+            SettingRow(
+                _("&Quick commands"),
+                _("The buttons on top of a host's Details panel; the first four are also in "
+                  "its right-click menu. Yours, on this PC."),
+                self.quick_button,
+            ),
+        )  # fmt: skip
+        self.add_section(panel)
 
     def auto_status_choice(self) -> tuple[bool, int]:
         minutes = self.auto_every.currentData()

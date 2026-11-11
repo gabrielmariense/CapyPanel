@@ -19,6 +19,7 @@ class ListActions:
     show_groups: QAction
     show_tags: QAction
     show_details: QAction
+    customize_details: QAction
 
 
 SHORTCUTS = {
@@ -40,3 +41,4 @@ def retranslate_list_actions(a: ListActions) -> None:
     a.show_groups.setText(_("&Groups pane"))
     a.show_tags.setText(_("T&ags pane"))
     a.show_details.setText(_("&Details pane"))
+    a.customize_details.setText(_("&Customize the details panel…"))

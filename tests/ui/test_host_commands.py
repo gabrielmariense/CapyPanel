@@ -11,7 +11,7 @@ import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog, QMenu
+from PySide6.QtWidgets import QApplication, QDialog, QLabel, QMenu
 
 from capypanel.core import settings
 from capypanel.core.hosts import commands as host_commands
@@ -617,3 +617,94 @@ def test_a_group_s_menu_has_one_refresh(window: CapyWindow) -> None:
     window.hosts.fill_group_menu(menu, doc.hosts.groups[0])
     texts = [label(a) for a in menu.actions() if a.text()]
     assert texts[-1] == "&Refresh group" and sum("Refresh" in t for t in texts) == 1
+
+
+# ---- Customize the details panel ----
+
+
+def _rows(table: Any) -> list[Any]:
+    return [table.topLevelItem(i) for i in range(table.topLevelItemCount())]
+
+
+def test_the_chooser_lists_picks_on_top_and_the_rest_by_group(qapp: QApplication) -> None:
+    from capypanel.ui.hosts_tool.quick_chooser import ID, QuickChooser
+
+    chooser = QuickChooser(host_commands.QUICK, {"c-share": "Ctrl+E"})
+    names = [r.text(0) for r in _rows(chooser.table)]
+    assert names[:5] == [
+        "ON THE PANEL", "C$ share", "User's folder", "Computer Management", "Send a message…",
+    ]  # fmt: skip
+    assert names[5:8] == ["CHECK", "Status", "Logged-on users"]  # then by group, unticked
+    assert "Restart…" not in names and "Refresh host" not in names  # can't be quick; fixed
+    assert chooser.count.text() == "4 of 15 ticked · 1 row on the panel"
+    seen: list[list[str]] = []
+    chooser.changed.connect(seen.append)
+    status = next(r for r in _rows(chooser.table) if r.data(0, ID) == "status")
+    status.setCheckState(0, Qt.CheckState.Checked)  # ticking moves it to the end of the picks
+    assert seen[-1] == [*host_commands.QUICK, "status"]
+    names = [r.text(0) for r in _rows(chooser.table)]
+    assert names[5] == "— the four above are also in the right-click menu —"
+    assert names[6] == "Status" and chooser.count.text().endswith("2 rows on the panel")
+    chooser.up.click()  # the row just ticked is picked: it moves up among the picks
+    assert seen[-1] == ["c-share", "user-folder", "computer-management", "status", "message"]
+    first = next(r for r in _rows(chooser.table) if r.data(0, ID) == "c-share")
+    first.setCheckState(0, Qt.CheckState.Unchecked)  # back under its group
+    assert "c-share" not in seen[-1] and chooser.picked() == seen[-1]
+
+
+def test_restoring_the_default_quick_commands_asks_first(
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from capypanel.ui.hosts_tool import quick_chooser
+
+    chooser = quick_chooser.QuickChooser(["services"], {})
+    answers = iter([False, True])
+    monkeypatch.setattr(quick_chooser, "confirm", lambda *_a, **_k: next(answers))
+    chooser.restore.click()
+    assert chooser.picked() == ["services"]  # Cancel: nothing changes
+    chooser.restore.click()
+    assert chooser.picked() == list(host_commands.QUICK) and not chooser.restore.isEnabled()
+
+
+def test_quick_commands_and_hidden_parts_apply_at_once_and_are_kept(window: CapyWindow) -> None:
+    _select(window, "PC-1")
+    window.hosts.set_quick_commands(["services", "restart", "status"])
+    assert window.hosts.prefs["quick_commands"] == ["services", "status"]  # only what can be
+    assert list(window.hosts.details.buttons)[4:] == ["quick:services", "quick:status"]
+    window.hosts.set_hidden_parts(["notes", "tags", "nonsense"])
+    assert window.hosts.hidden_parts() == {"notes", "tags"}
+    headings = [w.text() for w in window.hosts.details.findChildren(QLabel)]
+    assert "Notes" not in headings and "Tags" not in headings and "Connection" in headings
+    assert any(h.startswith("2 parts hidden") for h in headings)  # and the way back
+    window.hosts.set_hidden_parts([])
+    headings = [w.text() for w in window.hosts.details.findChildren(QLabel)]
+    assert "Notes" in headings and not any("hidden" in h for h in headings)
+
+
+def test_the_customize_window_has_two_tabs_and_three_doors(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from capypanel.ui.list_workspace import customize, workspace
+
+    opened: list[customize.CustomizeDialog] = []
+    monkeypatch.setattr(workspace, "run_modal", lambda dialog: opened.append(dialog) or 0)
+    _select(window, "PC-1")
+    window.hosts.commands.customize_details.trigger()  # View's line
+    window.hosts.details.customize_requested.emit()  # the panel's right-click and its link
+    window.hosts.customize_details(1)  # straight to Information
+    assert len(opened) == 3
+    dialog = opened[0]
+    tabs = [dialog.tabs.tabText(i) for i in range(dialog.tabs.count())]
+    assert tabs == ["Quick commands", "Information"] and dialog.tabs.currentIndex() == 0
+    assert opened[2].tabs.currentIndex() == 1
+    assert [r.text(0) for r in _rows(dialog.parts.table)] == [
+        "Connection", "Logged-on users", "PC facts", "Tags", "Notes",
+    ]  # fmt: skip
+    notes = _rows(dialog.parts.table)[4]
+    notes.setCheckState(0, Qt.CheckState.Unchecked)  # applies as you tick
+    assert window.hosts.hidden_parts() == {"notes"}
+    dialog.parts.restore.click()
+    assert window.hosts.hidden_parts() == frozenset()
+    panes = [a.text() for a in window.hosts.view_actions()[0]]
+    assert panes[-2:] == ["&Details pane", "&Customize the details panel…"]  # right under it
+    assert window.hosts.details.customizable

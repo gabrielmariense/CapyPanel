@@ -35,6 +35,7 @@ from capypanel.ui.export_hosts import Source
 from capypanel.ui.groups import ManageGroupsDialog, TreeMenu, fill_host_move_menu, fill_move_menu
 from capypanel.ui.hosts import MAX_TAG, confirm, group_path
 from capypanel.ui.list_workspace.actions import ListActions
+from capypanel.ui.list_workspace.customize import CustomizeDialog, Part, PartsTab
 from capypanel.ui.list_workspace.details import DetailsPanel
 from capypanel.ui.list_workspace.panels import ItemTable, NavigationPane, SearchBox, TagStrip
 from capypanel.ui.list_workspace.splitter import PaneSplitter
@@ -45,6 +46,8 @@ from capypanel.ui.menus import popup
 from capypanel.ui.new_list import ask_new_list
 
 log = logging.getLogger(__name__)
+
+HIDDEN_KEY = "details_hidden"  # the Details parts this person chose not to see
 
 
 class ListWorkspace(Tool):
@@ -122,6 +125,9 @@ class ListWorkspace(Tool):
         a.show_groups.toggled.connect(self.nav.setVisible)
         a.show_tags.toggled.connect(self.nav.set_tags_visible)
         a.show_details.toggled.connect(self.details.setVisible)
+        a.customize_details.triggered.connect(lambda: self.customize_details())
+        self.details.customize_requested.connect(lambda: self.customize_details())
+        self.details.customizable = bool(self.details_parts())
         # The toolbar follows the end of the panels, wherever they are.
         for toggled in (a.show_groups.toggled, a.show_details.toggled):
             toggled.connect(self.align_toolbar_later)
@@ -267,7 +273,42 @@ class ListWorkspace(Tool):
 
     def view_actions(self) -> list[list[QAction]]:
         a = self._list_commands
-        return [[a.show_groups, a.show_tags, a.show_details]]
+        panes = [a.show_groups, a.show_tags, a.show_details]
+        if self.details_parts():  # right under the pane it customizes
+            panes.append(a.customize_details)
+        return [panes]
+
+    # ---- customizing the Details panel: each person's own ----
+
+    def details_parts(self) -> list[Part]:
+        """The parts of this tool's Details panel that can be hidden; none: nothing to choose."""
+        return []
+
+    def details_always(self) -> str:
+        """The line under the parts table: what shows whatever is ticked."""
+        return ""
+
+    def customize_tabs(self) -> list[tuple[str, QWidget]]:
+        """Tabs a tool puts in front of Information."""
+        return []
+
+    def hidden_parts(self) -> frozenset[str]:
+        kept = self.prefs.get(HIDDEN_KEY)
+        known = {part.key for part in self.details_parts()}
+        return frozenset(k for k in kept if k in known) if isinstance(kept, list) else frozenset()
+
+    def set_hidden_parts(self, hidden: Sequence[str]) -> None:
+        self.prefs[HIDDEN_KEY] = sorted(set(hidden))
+        self._save_prefs()
+        self._selection_changed()  # the panel on show follows at once
+
+    def customize_details(self, tab: int = 0, parent: QWidget | None = None) -> None:
+        """The "Customize the details panel" window, on its tab `tab`."""
+        parts = PartsTab(self.details_parts(), sorted(self.hidden_parts()), self.details_always())
+        parts.changed.connect(self.set_hidden_parts)
+        dialog = CustomizeDialog(parent or self, parts, self.customize_tabs())
+        dialog.show_tab(tab)
+        run_modal(dialog)
 
     def _scale(self) -> float:
         return max(1.0, self.fontMetrics().height() / 16)
