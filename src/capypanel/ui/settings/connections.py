@@ -112,7 +112,7 @@ class ProfileDialog(QDialog):
         form.addRow(_("P&ort:"), self.port)
         form.addRow(self._settings_label, self._settings_box)
         form.addRow("", self.settings_hint)
-        self.buttons = ok_cancel(self)
+        self.buttons = ok_cancel(self, _("Save") if profile else _("Add"))
         layout = QVBoxLayout(self)
         layout.addLayout(form)
         layout.addWidget(self.buttons)

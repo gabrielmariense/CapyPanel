@@ -37,7 +37,7 @@ from capypanel.core.remote import host_printers, places
 from capypanel.core.remote.host_printers import HostPrinter
 from capypanel.core.remote.sessions import Session
 from capypanel.ui import checks as check_texts
-from capypanel.ui.dialogs import run_modal
+from capypanel.ui.dialogs import quiet_default, run_modal
 from capypanel.ui.icons import STATUS_COLORS, tabler_icon
 from capypanel.ui.notes import escape, hint
 from capypanel.ui.tables import fit_menu
@@ -115,7 +115,7 @@ class Question(QDialog):
         self.action = risky_button(action)
         self.action.setAutoDefault(True)  # Enter runs it once Tab has put the keyboard on it
         self.cancel = QPushButton(_("Cancel"))
-        self.cancel.setDefault(True)
+        quiet_default(self.cancel)
         self.action.clicked.connect(self.accept)
         self.cancel.clicked.connect(self.reject)
         buttons = QHBoxLayout()
@@ -442,7 +442,7 @@ class ReadList(QDialog):
         self.read_button.setAutoDefault(False)
         self.read_button.clicked.connect(self.read)
         self.close_button = QPushButton(_("Close"))
-        self.close_button.setDefault(True)
+        quiet_default(self.close_button)
         self.close_button.clicked.connect(self.accept)
 
     def read(self) -> None:

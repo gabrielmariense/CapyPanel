@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 15:26-0300\n"
+"POT-Creation-Date: 2026-11-11 15:55-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -539,6 +539,9 @@ msgstr "Contas"
 
 msgid "Active"
 msgstr "Ativo"
+
+msgid "Add"
+msgstr "Adicionar"
 
 msgid "Add &group…"
 msgstr "Adicionar &grupo…"
@@ -1431,6 +1434,9 @@ msgstr "Todos os computadores sob seus cuidados, em uma só janela."
 msgid "Every folder shown is already counted."
 msgstr "Todas as pastas exibidas já foram contadas."
 
+msgid "Every host is in a group."
+msgstr "Todos os hosts estão em algum grupo."
+
 msgid "Every login CapyPanel keeps for you. Passwords never show here."
 msgstr "Todos os logins que o CapyPanel guarda para você. As senhas nunca aparecem aqui."
 
@@ -1991,6 +1997,10 @@ msgid "No host list is open."
 msgstr "Nenhuma lista de hosts está aberta."
 
 #, python-brace-format
+msgid "No host matches “{text}”."
+msgstr "Nenhum host corresponde a “{text}”."
+
+#, python-brace-format
 msgid "No host of the list with “{text}”."
 msgstr "Nenhum host da lista com “{text}”."
 
@@ -2123,8 +2133,15 @@ msgstr "Nada respondeu, nem o ping nem as portas usuais: o computador está desl
 msgid "Nothing changes until you click Add."
 msgstr "Nada muda até você clicar em Adicionar."
 
-msgid "Nothing changes until you click OK."
-msgstr "Nada muda até você clicar em OK."
+msgid "Nothing changes until you click Save."
+msgstr "Nada muda até você clicar em Salvar."
+
+msgid "Nothing is outside a group."
+msgstr "Nada está fora de um grupo."
+
+#, python-brace-format
+msgid "Nothing matches “{text}”."
+msgstr "Nada corresponde a “{text}”."
 
 msgid "Nothing was read."
 msgstr "Nada foi lido."
@@ -2854,6 +2871,9 @@ msgstr "Igual à linha {n}"
 #, python-brace-format
 msgid "Same name as row {n}"
 msgstr "Mesmo nome da linha {n}"
+
+msgid "Save"
+msgstr "Salvar"
 
 msgid "Save a &copy…"
 msgstr "Salvar uma &cópia…"
@@ -3600,6 +3620,12 @@ msgstr "Isto não parece um arquivo de configurações do visualizador: “{line
 msgid "This error happened {n} times:"
 msgstr "Este erro aconteceu {n} vezes:"
 
+msgid "This group has no hosts yet."
+msgstr "Este grupo ainda não tem hosts."
+
+msgid "This group is empty."
+msgstr "Este grupo está vazio."
+
 msgid "This is <b>final</b>. With local profiles, each person's desktop and documents go too: there's no recycle bin and no copy."
 msgstr "Isto é <b>definitivo</b>. Com perfis locais, a área de trabalho e os documentos de cada pessoa vão junto: não há lixeira nem cópia."
 
@@ -3609,6 +3635,26 @@ msgstr "Este não é um arquivo de texto."
 #, python-brace-format
 msgid "This isn't a valid list file ({error})."
 msgstr "Este não é um arquivo de lista válido ({error})."
+
+msgid ""
+"This list has no hosts yet.\n"
+"Add one, or import several at once."
+msgstr ""
+"Esta lista ainda não tem hosts.\n"
+"Adicione um, ou importe vários de uma vez."
+
+msgid "This list has no hosts."
+msgstr "Esta lista não tem hosts."
+
+msgid "This list is empty."
+msgstr "Esta lista está vazia."
+
+msgid ""
+"This list is empty.\n"
+"Add an item to start."
+msgstr ""
+"Esta lista está vazia.\n"
+"Adicione um item para começar."
 
 msgid "This list is read-only."
 msgstr "Esta lista está em modo somente leitura."
@@ -3770,6 +3816,9 @@ msgstr "Sem uso há:"
 
 msgid "Use &defaults"
 msgstr "Usar &padrões"
+
+msgid "Use account"
+msgstr "Usar conta"
 
 msgid "Use an account that is an administrator of these PCs, such as a domain admin."
 msgstr "Use uma conta que seja administradora destes PCs, como um admin do domínio."

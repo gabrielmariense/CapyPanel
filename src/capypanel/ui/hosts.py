@@ -132,7 +132,7 @@ class HostDialog(QDialog):
         form.addRow(tags_label, self.tags)
         form.addRow(_("Connection &profile:"), self.profile)
         form.addRow(_("N&otes:"), self.notes)
-        self.buttons = ok_cancel(self)
+        self.buttons = ok_cancel(self, _("Save") if host else _("Add"))
         layout = QVBoxLayout(self)
         layout.addLayout(form)
         layout.addWidget(self.buttons)
@@ -166,6 +166,7 @@ def confirm(parent: QWidget, title: str, text: str, action: str, details: str = 
     box.setInformativeText(details)
     yes = box.addButton(action, QMessageBox.ButtonRole.DestructiveRole)
     cancel = box.addButton(QMessageBox.StandardButton.Cancel)
+    cancel.setObjectName("quietDefault")  # Enter's button, drawn plain: not what the box asks
     box.setDefaultButton(cancel)
     box.setEscapeButton(cancel)
     box.exec()

@@ -6,6 +6,7 @@ from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 
 from PySide6.QtCore import (
+    QByteArray,
     QEvent,
     QItemSelectionModel,
     QMimeData,
@@ -18,6 +19,7 @@ from PySide6.QtCore import (
     Signal,
 )
 from PySide6.QtGui import (
+    QAction,
     QColor,
     QFontMetrics,
     QIcon,
@@ -37,6 +39,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMenu,
     QPushButton,
+    QSplitter,
     QStyle,
     QStyledItemDelegate,
     QStyleOptionViewItem,
@@ -59,7 +62,7 @@ from capypanel.ui.groups import (
     hosts_mime,
 )
 from capypanel.ui.icons import tabler_icon
-from capypanel.ui.menus import MenuCombo, popup
+from capypanel.ui.menus import MenuCombo, label, popup
 from capypanel.ui.notes import divider
 
 
@@ -100,10 +103,12 @@ class NavigationPane(QWidget):
         layout.insertWidget(0, picker)
         return picker
 
-    def __init__(self, everything: Callable[[], str]) -> None:
+    def __init__(self, everything: Callable[[], str], icon: str = "device-desktop") -> None:
+        """icon: the outline icon beside "All hosts" (the tool's own: a printer for Printers)."""
         super().__init__()
         self._filter = Filter("all")
         self._everything_text = everything  # "All hosts", in the current language
+        self._icon = icon
         self.add_group_button = QToolButton()
         self.add_group_button.setText("+")
         self.groups_heading = GroupsHeading()  # drop a group here: it goes to the top level
@@ -123,14 +128,11 @@ class NavigationPane(QWidget):
         self.everything = PinnedList()
         self._everything_item = QTreeWidgetItem([""])
         self._everything_item.setData(0, ROLE_KIND, "all")
-        self._everything_item.setIcon(
-            0, self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)
-        )
         self.everything.addTopLevelItem(self._everything_item)
         self._no_group_item = QTreeWidgetItem([""])
         self._no_group_item.setData(0, ROLE_KIND, "nogroup")
-        self._no_group_item.setIcon(0, self.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         self.everything.addTopLevelItem(self._no_group_item)
+        self._paint_icons()
         self.groups = GroupTree()
         self.groups.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # A tree like the groups (not QListWidget), so both lists have the same row height.
@@ -150,16 +152,35 @@ class NavigationPane(QWidget):
         card = self._card = QFrame()
         card.setObjectName("card")
         card.setFrameShape(QFrame.Shape.StyledPanel)
+        # Groups above, tags below, and the line between them drags: a long tag list or a deep
+        # group tree gets the room it needs, and the place is kept (saved by the workspace).
+        top, bottom = QWidget(), QWidget()
+        above = QVBoxLayout(top)
+        above.setContentsMargins(0, 0, 0, 0)
+        above.setSpacing(2)
+        above.addWidget(self.everything)
+        above.addWidget(divider())
+        above.addLayout(header)
+        above.addWidget(self.groups, 1)
+        below = QVBoxLayout(bottom)
+        below.setContentsMargins(0, 0, 0, 0)
+        below.setSpacing(2)
+        below.addWidget(self._tags_line)
+        below.addLayout(tags_header)
+        below.addWidget(self.tags, 1)
+        self._tags_part = bottom
+        self.split = QSplitter(Qt.Orientation.Vertical)
+        self.split.setObjectName("navSplit")
+        self.split.setChildrenCollapsible(False)
+        self.split.setHandleWidth(5)
+        self.split.addWidget(top)
+        self.split.addWidget(bottom)
+        self.split.setStretchFactor(0, 3)
+        self.split.setStretchFactor(1, 1)
+        self.split.setSizes([300, 130])  # until the user drags it: about a third for the tags
         inside = QVBoxLayout(card)
         inside.setContentsMargins(4, 4, 4, 4)
-        inside.setSpacing(2)
-        inside.addWidget(self.everything)
-        inside.addWidget(divider())
-        inside.addLayout(header)
-        inside.addWidget(self.groups, 3)
-        inside.addWidget(self._tags_line)
-        inside.addLayout(tags_header)
-        inside.addWidget(self.tags, 1)
+        inside.addWidget(self.split)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(card)
@@ -195,6 +216,7 @@ class NavigationPane(QWidget):
         """View > Tags pane. Hiding it drops the picked tags: nothing filters out of sight."""
         for widget in (self._tags_line, self._tags_title, self.clear_tags_button, self.tags):
             widget.setVisible(visible)
+        self._tags_part.setVisible(visible)  # its half of the split too: no empty room
         if not visible and self._picked_tags:
             self.clear_tags()
 
@@ -274,6 +296,23 @@ class NavigationPane(QWidget):
         super().changeEvent(event)
         if event.type() in (QEvent.Type.StyleChange, QEvent.Type.FontChange):
             self._fit_everything()
+        if event.type() == QEvent.Type.PaletteChange:  # the new theme's text colour
+            self._paint_icons()
+
+    def _paint_icons(self) -> None:
+        """Outline icons in the text's colour, as everywhere else in the app."""
+        color = self.palette().color(QPalette.ColorRole.Text)
+        self._everything_item.setIcon(0, tabler_icon(self._icon, color, 16))
+        self._no_group_item.setIcon(0, tabler_icon("folder", color, 16))
+
+    def split_state(self) -> str:
+        """Where the line between groups and tags sits, to save."""
+        return self.split.saveState().toBase64().toStdString()
+
+    def restore_split(self, saved: object) -> None:
+        if isinstance(saved, str):
+            self.split.restoreState(QByteArray.fromBase64(saved.encode()))
+            self.split.setChildrenCollapsible(False)  # restoring turns collapsing back on
 
     def _fit_everything(self) -> None:
         """Exactly as tall as its two rows, whatever padding the theme gives rows and frames, and
@@ -539,16 +578,23 @@ class ItemTable(QTreeWidget):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         # Selected items can be dragged onto a group in the Groups panel, to move them there.
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
-        # Centred in the empty table when the picked tags leave nothing.
+        # Centred in the table when it has no rows: why, and buttons for what to do next.
         self._empty = QWidget(self.viewport())
         self._empty_text = QLabel()
         self._empty_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._empty_text.setWordWrap(True)
         self.clear_tags_button = QPushButton()
         self.clear_tags_button.setAutoDefault(False)
+        self.note_buttons: list[QPushButton] = []  # one per action of the note shown
+        self._note_row = QHBoxLayout()
+        self._note_row.setSpacing(8)
+        self._note_row.addStretch(1)
+        self._note_row.addWidget(self.clear_tags_button)
+        self._note_row.addStretch(1)
         note = QVBoxLayout(self._empty)
+        note.setSpacing(12)
         note.addWidget(self._empty_text)
-        note.addWidget(self.clear_tags_button, 0, Qt.AlignmentFlag.AlignHCenter)
+        note.addLayout(self._note_row)
         self._empty.hide()
 
     def retranslate(self) -> None:
@@ -632,8 +678,29 @@ class ItemTable(QTreeWidget):
 
     def show_no_match(self, text: str) -> None:
         """The note in the empty table when the picked tags leave nothing; "" hides it."""
+        self.show_note(text, clear_tags=bool(text))
+
+    def show_note(
+        self, text: str, actions: Sequence[QAction] = (), *, clear_tags: bool = False
+    ) -> None:
+        """The note in the table when it has no rows: `text` says why (a second line, what to
+        do), with a button for each action, or Clear tags. "" hides it."""
         self._empty_text.setText(text)
         self.clear_tags_button.setText(_("Clear tags"))
+        self.clear_tags_button.setVisible(clear_tags)
+        for button in self.note_buttons:
+            self._note_row.removeWidget(button)
+            button.hide()  # gone now: deleteLater alone leaves it drawn until Qt gets to it
+            button.deleteLater()
+        self.note_buttons = []
+        for action in actions if text else ():
+            button = QPushButton(label(action).replace("&", ""))
+            button.setAutoDefault(False)
+            button.setEnabled(action.isEnabled())
+            button.clicked.connect(action.trigger)
+            self._note_row.insertWidget(self._note_row.count() - 1, button)
+            button.show()  # added to a note already on screen, it would stay hidden
+            self.note_buttons.append(button)
         self._empty.setVisible(bool(text))
         self._place_empty()
 
@@ -641,13 +708,17 @@ class ItemTable(QTreeWidget):
         if not self._empty.isVisible():
             return
         area = self.viewport().rect()
-        # One line when the table is wide enough, wrapped only when it isn't.
-        line = self._empty_text.fontMetrics().horizontalAdvance(self._empty_text.text())
+        # Each line whole when the table is wide enough, wrapped only when it isn't.
+        metrics = self._empty_text.fontMetrics()
+        line = max(metrics.horizontalAdvance(t) for t in self._empty_text.text().split("\n"))
         layout = self._empty.layout()
-        margins = layout.contentsMargins() if layout is not None else None
-        sides = margins.left() + margins.right() if margins is not None else 0
-        width = min(line + sides + 4, area.width())
-        size = QSize(width, self._empty.heightForWidth(width)).boundedTo(area.size())
+        assert layout is not None
+        layout.activate()  # buttons just added count in the sizes asked for below
+        margins = layout.contentsMargins()
+        sides = margins.left() + margins.right()
+        buttons = self._note_row.sizeHint().width()
+        width = min(max(line + 4, buttons) + sides, area.width())
+        size = QSize(width, layout.totalHeightForWidth(width)).boundedTo(area.size())
         self._empty.setGeometry(
             area.x() + (area.width() - size.width()) // 2,
             area.y() + (area.height() - size.height()) // 2,

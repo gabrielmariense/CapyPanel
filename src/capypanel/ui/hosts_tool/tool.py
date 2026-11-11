@@ -58,7 +58,7 @@ from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.list_workspace.customize import Part
-from capypanel.ui.list_workspace.texts import ListTexts
+from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 from capypanel.ui.menus import shortcut_text
@@ -305,6 +305,18 @@ class HostsTool(ListWorkspace):
 
     def no_match_text(self) -> str:
         return _("No hosts in this group have all the picked tags.")
+
+    def empty_texts(self) -> EmptyTexts:
+        return EmptyTexts(
+            _("This list has no hosts yet.\nAdd one, or import several at once."),
+            _("This list has no hosts."),
+            _("This group has no hosts yet."),
+            _("Every host is in a group."),
+            _("No host matches “{text}”."),
+        )
+
+    def import_action(self) -> QAction | None:
+        return self.commands.import_hosts
 
     def retranslate(self) -> None:
         retranslate_actions(self.commands)

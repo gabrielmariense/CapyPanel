@@ -99,12 +99,14 @@ class HostDetailsPanel(DetailsPanel):
             layout.addWidget(self._pending_strip(shown.pending))
 
         host, hidden = shown.host, shown.hidden
+        # A PC that didn't answer says so once, under its name: the parts below don't repeat it.
+        said = shown.status is not None and shown.status[0] is not Status.ONLINE
         if "connection" not in hidden:
             self._connection(layout, shown)
         if "users" not in hidden:
-            self.users(layout, shown.users)
+            self.users(layout, shown.users, said=said)
         if "facts" not in hidden:
-            self.facts(layout, shown.facts)
+            self.facts(layout, shown.facts, said=said)
         if "tags" not in hidden:
             self.section(layout, _("Tags"))
             layout.addWidget(self.chips(host.tags) if host.tags else self.muted("—"))
@@ -307,8 +309,11 @@ class HostDetailsPanel(DetailsPanel):
         self,
         layout: QVBoxLayout,
         users: tuple[Sequence[Session] | None, RemoteError | None, datetime] | None,
+        *,
+        said: bool = False,
     ) -> None:
-        """Logged on: each person with their session; a right-click offers what can be done."""
+        """Logged on: each person with their session; a right-click offers what can be done.
+        `said`: the panel already says the PC didn't answer, so this part only shows a dash."""
         if users is None:
             self.section(layout, _("Logged on"))
             layout.addWidget(self.muted(_("Not checked")))
@@ -319,7 +324,9 @@ class HostDetailsPanel(DetailsPanel):
         if error is not None or not sessions:
             self.section(layout, _("Logged on · {when}").format(when=clock))
             if error is not None:
-                text = check_texts.users_text(sessions, error)
+                text = (
+                    "—" if said and _unreached(error) else check_texts.users_text(sessions, error)
+                )
                 failed = self.muted(text)
                 failed.setToolTip(check_texts.users_tip(error, when))
                 layout.addWidget(failed)
@@ -367,9 +374,18 @@ class HostDetailsPanel(DetailsPanel):
         grid.setColumnStretch(0, 1)
         return row
 
-    def facts(self, layout: QVBoxLayout, facts: Facts | None, *, button: bool = True) -> None:
+    def facts(
+        self,
+        layout: QVBoxLayout,
+        facts: Facts | None,
+        *,
+        button: bool = True,
+        said: bool = False,
+    ) -> None:
         """PC facts: read once when the host is opened here, with Read again (`button`). While
-        the slow part is still on its way, its rows read "Reading…"."""
+        the slow part is still on its way, its rows read "Reading…". When nothing could be
+        read for one reason, it's said once, not on every row; and not at all when the panel
+        already says the PC didn't answer (`said`)."""
         if facts is None:
             self.section(layout, _("PC facts"))
             layout.addWidget(self.muted(_("Not read yet")))
@@ -395,6 +411,15 @@ class HostDetailsPanel(DetailsPanel):
                  pc_pending),
             ]  # fmt: skip
             unread = facts.pc.unread if facts.pc is not None else {}
+            errors = [error or unread.get(key) for key, _l, _v, error, _p in rows]
+            whys = {facts_error_text(e) for e in errors if e is not None}
+            if all(e is not None for e in errors) and len(whys) == 1:
+                first = next(e for e in errors if e is not None)
+                if said and _unreached(first):
+                    layout.addWidget(self.muted("—"))
+                else:
+                    layout.addWidget(self._warning("facts_error", whys.pop()))
+                rows = []
             for key, label, value, error, pending in rows:
                 error = error or unread.get(key)  # this row alone couldn't be read
                 layout.addWidget(self.muted(label))
@@ -501,6 +526,10 @@ def memory_text(facts: Facts) -> str | None:
     if pc is None or not pc.memory:
         return None
     return _("{n} GB").format(n=round(pc.memory / GB))
+
+
+def _unreached(error: BaseException) -> bool:
+    return isinstance(error, RemoteError) and error.reason is Reason.UNREACHABLE
 
 
 def facts_error_text(error: BaseException) -> str:

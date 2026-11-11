@@ -660,6 +660,8 @@ QRadioButton::indicator:disabled, QCheckBox::indicator:disabled { background: %(
 
 QSplitter::handle { background: %(bg)s; }
 QSplitter::handle:horizontal { width: 8px; }
+/* Inside the Groups panel the divider line is what you drag: its handle shows nothing. */
+QSplitter#navSplit::handle { background: transparent; }
 QPushButton { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx;
               padding: 6px 20px; }
 QPushButton:hover { background: %(raised)s; }
@@ -668,6 +670,11 @@ QPushButton:disabled { color: %(text3)s; background: transparent; }
 QPushButton:default { background: %(button)s; border-color: %(button)s; color: #ffffff; }
 QPushButton:default:hover { background: %(button_hover)s; }
 QPushButton:default:disabled { background: %(raised)s; border-color: %(border)s; color: %(text3)s; }
+/* Enter presses it, but it isn't the window's main action (Cancel before something risky, a
+   lone Close): plain, with the ring that marks where Enter goes. */
+QPushButton#quietDefault:default { background: %(card)s; border-color: %(accent)s;
+                                   color: %(text)s; }
+QPushButton#quietDefault:default:hover { background: %(raised)s; }
 /* A button that stays down while its page shows (Import > Formats…). */
 QPushButton:checked { background: %(sel_solid)s; border-color: %(accent)s; color: %(text)s; }
 QGroupBox { border: 1px solid %(border)s; border-radius: %(r)spx; margin-top: 16px;
@@ -699,6 +706,7 @@ QToolTip { background: %(card)s; color: %(text)s; border: 1px solid %(border)s; 
 
 _NATIVE_QSS = """
 QMainWindow, QDialog, QSplitter::handle { background: %(bg)s; }
+QSplitter#navSplit::handle { background: transparent; }
 QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; }
 QToolBar#main { border: none; border-bottom: 1px solid %(border)s; }
 QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }

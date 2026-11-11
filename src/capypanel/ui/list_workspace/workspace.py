@@ -39,7 +39,7 @@ from capypanel.ui.list_workspace.customize import CustomizeDialog, Part, PartsTa
 from capypanel.ui.list_workspace.details import DetailsPanel
 from capypanel.ui.list_workspace.panels import ItemTable, NavigationPane, SearchBox, TagStrip
 from capypanel.ui.list_workspace.splitter import PaneSplitter
-from capypanel.ui.list_workspace.texts import ListTexts
+from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar
 from capypanel.ui.menus import popup
@@ -75,7 +75,7 @@ class ListWorkspace(Tool):
         self._personal_list = self._places.personal
         self._make_lists_folders()
         self.search = SearchBox()
-        self.nav = NavigationPane(lambda: self.list_texts().everything)
+        self.nav = NavigationPane(lambda: self.list_texts().everything, self.ICON)
         # The list dropdown, on top of the Groups panel: switch lists, make or open one.
         self.list_picker = self.nav.add_list_picker(self._fill_list_menu)
         self.table = table
@@ -199,6 +199,21 @@ class ListWorkspace(Tool):
         all the picked tags."."""
         raise NotImplementedError
 
+    def empty_texts(self) -> EmptyTexts:
+        """What the table says with no rows: an empty list, group or search. A tool says them
+        with its own word ("hosts")."""
+        return EmptyTexts(
+            _("This list is empty.\nAdd an item to start."),
+            _("This list is empty."),
+            _("This group is empty."),
+            _("Nothing is outside a group."),
+            _("Nothing matches “{text}”."),
+        )
+
+    def import_action(self) -> QAction | None:
+        """Offered beside Add in an empty list, when the tool can import many at once."""
+        return None
+
     def lists_page(self) -> str:
         """The Settings page that manages the tool's lists: the list dropdown opens it."""
         raise NotImplementedError
@@ -259,6 +274,7 @@ class ListWorkspace(Tool):
             action.setChecked(bool(view.get(key, True)))
         a = self._list_commands
         self.nav.set_tags_visible(a.show_tags.isChecked())
+        self.nav.restore_split(self.prefs.get("nav_splitter"))
         self.table.set_widths(self.prefs.get("column_widths"))
         self.table.set_hidden_columns(self.prefs.get("hidden_columns"))
         self._columns_shown()
@@ -356,6 +372,7 @@ class ListWorkspace(Tool):
     def save_state(self) -> None:
         self.prefs["view"] = {k: a.isChecked() for k, a in self.view_choices().items()}
         self.prefs["main_splitter"] = self.splitter.saveState().toBase64().toStdString()
+        self.prefs["nav_splitter"] = self.nav.split_state()
         self.prefs["column_widths"] = self.table.widths()
         self._remember_view()
 
@@ -954,7 +971,30 @@ class ListWorkspace(Tool):
         self.table.set_search(needle)
         strip = self.only_tags_text(len(items), len(before_tags)) if tags else ""
         self.tag_strip.show_tags(tags, strip)
-        self.table.show_no_match(self.no_match_text() if tags and before_tags and not items else "")
+        if tags and before_tags and not items:
+            self.table.show_no_match(self.no_match_text())
+        else:
+            self.table.show_note(*self._empty_note(items))
+
+    def _empty_note(self, items: Sequence[Host]) -> tuple[str, list[QAction]]:
+        """Why the table has no rows, and what helps: Add and Import in an empty list, Add in
+        an empty group, the lists' own actions with no list open."""
+        doc, a = self._doc, self._list_commands
+        if items:
+            return "", []
+        if doc is None:
+            return self.list_texts().no_list, [a.new_list, a.open_list]
+        texts, add = self.empty_texts(), self.add_item_action()
+        if typed := self.search.text().strip():
+            return texts.search.format(text=typed), []
+        if not doc.hosts.hosts:
+            if doc.read_only:
+                return texts.read_only_list, []
+            also = self.import_action()
+            return texts.empty_list, [add, *([also] if also is not None else [])]
+        if self.nav.current_filter().kind == "nogroup":
+            return texts.loose, []
+        return texts.group, ([] if doc.read_only else [add])
 
     def fill_table(self, items: Sequence[Host]) -> None:
         self.table.show_items(items)

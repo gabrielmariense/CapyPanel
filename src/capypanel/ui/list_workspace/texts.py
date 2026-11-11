@@ -19,3 +19,14 @@ class ListTexts:
     choose_first: str  # "Open a host list to choose what it shows first."
     not_this_kind: str  # "“{path}” isn't a host list.": another tool's list was opened
     file_filter: str  # "Host lists (*.json);;All files (*)"
+
+
+@dataclass(frozen=True)
+class EmptyTexts:
+    """What the table says when it has no rows, and why. A second line says what to do."""
+
+    empty_list: str = ""  # "This list has no hosts yet.\nAdd one, or import several at once."
+    read_only_list: str = ""  # "This list has no hosts."
+    group: str = ""  # "This group has no hosts yet."
+    loose: str = ""  # "Every host is in a group."
+    search: str = ""  # "No host matches “{text}”."

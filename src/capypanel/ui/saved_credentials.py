@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core import credstore
 from capypanel.core.i18n import _, ngettext
+from capypanel.ui.dialogs import quiet_default
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import notes
 from capypanel.ui.tables import fit_rows, grid_table, with_buttons
@@ -109,7 +110,7 @@ class SavedCredentialsDialog(QDialog):
         buttons = QHBoxLayout()
         buttons.addStretch(1)
         close = QPushButton(_("Close"))
-        close.setDefault(True)
+        quiet_default(close)
         close.clicked.connect(self.accept)
         buttons.addWidget(close)
         column.addLayout(buttons)

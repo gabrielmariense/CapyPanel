@@ -162,7 +162,7 @@ class AccountDialog(QDialog):
             "the others, so the account isn't locked."
         )
         note = hint(f"{used} {stops}")
-        self.buttons = ok_cancel(self)
+        self.buttons = ok_cancel(self, _("Use account"))
         layout = QVBoxLayout(self)
         layout.addWidget(intro)
         layout.addLayout(form)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 15:26-0300\n"
+"POT-Creation-Date: 2026-11-11 15:55-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -541,6 +541,9 @@ msgid "Accounts"
 msgstr ""
 
 msgid "Active"
+msgstr ""
+
+msgid "Add"
 msgstr ""
 
 msgid "Add &group…"
@@ -1457,6 +1460,9 @@ msgstr ""
 msgid "Every folder shown is already counted."
 msgstr ""
 
+msgid "Every host is in a group."
+msgstr ""
+
 msgid "Every login CapyPanel keeps for you. Passwords never show here."
 msgstr ""
 
@@ -2044,6 +2050,10 @@ msgid "No host list is open."
 msgstr ""
 
 #, python-brace-format
+msgid "No host matches “{text}”."
+msgstr ""
+
+#, python-brace-format
 msgid "No host of the list with “{text}”."
 msgstr ""
 
@@ -2182,7 +2192,14 @@ msgstr ""
 msgid "Nothing changes until you click Add."
 msgstr ""
 
-msgid "Nothing changes until you click OK."
+msgid "Nothing changes until you click Save."
+msgstr ""
+
+msgid "Nothing is outside a group."
+msgstr ""
+
+#, python-brace-format
+msgid "Nothing matches “{text}”."
 msgstr ""
 
 msgid "Nothing was read."
@@ -2943,6 +2960,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Same name as row {n}"
+msgstr ""
+
+msgid "Save"
 msgstr ""
 
 msgid "Save a &copy…"
@@ -3742,6 +3762,12 @@ msgstr ""
 msgid "This error happened {n} times:"
 msgstr ""
 
+msgid "This group has no hosts yet."
+msgstr ""
+
+msgid "This group is empty."
+msgstr ""
+
 msgid ""
 "This is <b>final</b>. With local profiles, each person's desktop and "
 "documents go too: there's no recycle bin and no copy."
@@ -3752,6 +3778,22 @@ msgstr ""
 
 #, python-brace-format
 msgid "This isn't a valid list file ({error})."
+msgstr ""
+
+msgid ""
+"This list has no hosts yet.\n"
+"Add one, or import several at once."
+msgstr ""
+
+msgid "This list has no hosts."
+msgstr ""
+
+msgid "This list is empty."
+msgstr ""
+
+msgid ""
+"This list is empty.\n"
+"Add an item to start."
 msgstr ""
 
 msgid "This list is read-only."
@@ -3919,6 +3961,9 @@ msgstr ""
 msgid "Use &defaults"
 msgstr ""
 
+msgid "Use account"
+msgstr ""
+
 msgid ""
 "Use an account that is an administrator of these PCs, such as a domain "
 "admin."
@@ -4002,13 +4047,13 @@ msgstr ""
 msgid "Waste nearly full"
 msgstr ""
 
+msgctxt "button"
+msgid "Web page"
+msgstr ""
+
 msgid ""
 "What Connect opens, and the login it uses. Refresh's logged-on users and "
 "the commands use the account under it."
-msgstr ""
-
-msgctxt "button"
-msgid "Web page"
 msgstr ""
 
 msgid "What the window shows when CapyPanel starts."

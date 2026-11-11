@@ -9,7 +9,6 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
-    QDialogButtonBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -26,7 +25,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import HostList
 from capypanel.core.i18n import _, ngettext
-from capypanel.ui.dialogs import run_modal
+from capypanel.ui.dialogs import ok_cancel, run_modal
 from capypanel.ui.groups import TreeMenu, fill_host_move_menu
 from capypanel.ui.host_lists import ListsView
 from capypanel.ui.hosts import group_path
@@ -525,15 +524,11 @@ def ask_minutes(parent: QWidget, start: int) -> int | None:
     minutes.setRange(1, 120)
     minutes.setValue(start)
     minutes.setSuffix(_(" min"))
-    buttons = QDialogButtonBox(
-        QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-    )
+    buttons = ok_cancel(dialog, _("Save"))
     for button in buttons.buttons():
         if isinstance(button, QPushButton):
             button.setAutoDefault(False)
             button.setDefault(False)
-    buttons.accepted.connect(dialog.accept)
-    buttons.rejected.connect(dialog.reject)
     row = QHBoxLayout()
     row.addWidget(QLabel(_("Every")))
     row.addWidget(minutes, 1)

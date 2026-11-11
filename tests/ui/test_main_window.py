@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
+from PySide6.QtGui import QAction, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QMenu, QSplitter, QWidget
 
@@ -470,3 +471,97 @@ def test_the_status_bar_names_the_list_and_a_click_copies_its_path(
     QTest.mouseClick(bar, Qt.MouseButton.LeftButton)
     assert QApplication.clipboard().text() == str(office)
     assert window.statusBar().currentMessage() == f"Copied: {office}"
+
+
+def test_a_table_with_no_rows_says_why_and_offers_what_helps(
+    window: CapyWindow, office: Path
+) -> None:
+    hosts, table = window.hosts, window.hosts.table
+
+    def note() -> tuple[str, list[str]]:
+        return table._empty_text.text(), [b.text() for b in table.note_buttons]
+
+    # A new list: what goes here, and the two ways to fill it.
+    assert note() == (
+        "This list has no hosts yet.\nAdd one, or import several at once.",
+        ["Add host…", "Import hosts…"],
+    )
+    hosts.open_list(office)
+    assert note() == ("", []) and table._empty.isHidden()  # rows: no note
+    doc = hosts.document
+    assert doc is not None
+    hl, empty = doc.hosts.add_group("Storage")
+    hosts._commit(hl)
+    hosts.nav.select_group(empty.id)
+    hosts._show_items()
+    assert note() == ("This group has no hosts yet.", ["Add host…"])
+    hosts.nav.select_group(NO_GROUP)
+    hosts._show_items()
+    assert note() == ("Every host is in a group.", [])
+    hosts.search.setText("  Laptop ")
+    hosts._show_items()
+    assert note() == ("No host matches “Laptop”.", [])  # as typed, without the spaces around
+    hosts.search.setText("")
+    hosts._show_items()
+    hosts.nav.select_group(empty.id)
+    hosts._show_items()
+    window.show()
+    QApplication.processEvents()
+    button = table.note_buttons[0]
+    # On screen and whole, also when added to a note that was already showing.
+    assert button.isVisible() and table._empty.rect().contains(button.geometry())
+    # A button runs its action, and follows whether it can be used.
+    asked: list[bool] = []
+    go, never = QAction("&Go…", table), QAction("Never", table)
+    go.triggered.connect(lambda: asked.append(True))
+    never.setEnabled(False)
+    table.show_note("Nothing here.", [go, never])
+    assert [(b.text(), b.isEnabled()) for b in table.note_buttons] == [
+        ("Go…", True),
+        ("Never", False),
+    ]
+    table.note_buttons[0].click()
+    assert asked == [True]
+
+
+def test_the_line_between_groups_and_tags_drags_and_is_remembered(
+    window: CapyWindow, office: Path
+) -> None:
+    window.hosts.open_list(office)
+    window.resize(1200, 700)
+    window.show()
+    QApplication.processEvents()
+    split = window.hosts.nav.split
+    assert not split.childrenCollapsible() and split.count() == 2
+    groups, tags = split.sizes()
+    assert groups > tags > 0  # tags show from the first start, under the groups
+    split.setSizes([groups - 60, tags + 60])
+    moved = split.sizes()
+    window.close()  # saved with the rest of the layout
+    again = CapyWindow(window.paths, dict(window.prefs))
+    again.hosts.open_list(office)
+    again.resize(1200, 700)
+    again.show()
+    QApplication.processEvents()
+    assert again.hosts.nav.split.sizes() == moved
+    assert not again.hosts.nav.split.childrenCollapsible()
+    again.hosts.commands.show_tags.setChecked(False)  # View > Tags off: the groups take it all
+    QApplication.processEvents()
+    assert again.hosts.nav.tags.isHidden() and again.hosts.nav.split.sizes()[1] == 0
+    again.close()
+
+
+def test_the_groups_panel_uses_outline_icons_in_the_text_colour(window: CapyWindow) -> None:
+    nav = window.hosts.nav
+    everything, loose = nav.everything.topLevelItem(0), nav.everything.topLevelItem(1)
+    assert everything is not None and loose is not None
+    text = nav.palette().color(QPalette.ColorRole.Text)
+    for item in (everything, loose):
+        image = item.icon(0).pixmap(16, 16).toImage()
+        inked = {
+            image.pixelColor(x, y).rgb()
+            for x in range(image.width())
+            for y in range(image.height())
+            if image.pixelColor(x, y).alpha() > 200
+        }
+        assert inked == {text.rgb()}  # one colour: an outline, not Windows' coloured picture
