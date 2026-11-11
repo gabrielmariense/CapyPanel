@@ -80,7 +80,8 @@ def test_only_a_window_s_main_action_is_the_filled_button(
         return 0
 
     monkeypatch.setattr(QMessageBox, "exec", answer)
-    assert not hosts_ui.confirm(None, "Remove hosts", "Remove “DESK-01”?", "Remove")
+    parent = QDialog()  # kept: the box lives as long as its parent
+    assert not hosts_ui.confirm(parent, "Remove hosts", "Remove “DESK-01”?", "Remove")
     default = seen[0].defaultButton()
     # A question's Cancel is where Enter goes, and it isn't drawn as the main action.
     assert default is not None and default.objectName() == "quietDefault"
