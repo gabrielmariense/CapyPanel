@@ -11,7 +11,7 @@ from PySide6.QtCore import Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QGuiApplication
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QVBoxLayout, QWidget
 
-from capypanel.core.hosts.document import starter_list
+from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.model import Group, Host, HostListRuleError
 from capypanel.core.i18n import _, ngettext, npgettext
 from capypanel.core.printers.printer import DOC360, info_of, with_info
@@ -19,7 +19,7 @@ from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.hosts import group_path
 from capypanel.ui.list_workspace.customize import Part
-from capypanel.ui.list_workspace.texts import ListTexts
+from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 from capypanel.ui.printers_tool import marks, status
@@ -589,6 +589,25 @@ class PrintersTool(ListWorkspace):
             self.details.show_printer(details, 1, needle=self._needle())
         else:
             self.details.show_printer(None, len(items), summary=self._summary())
+
+    def empty_texts(self) -> EmptyTexts:
+        """Printers has no import: an empty list offers Add only."""
+        return EmptyTexts(
+            _("This list has no printers yet.\nAdd one to start."),
+            _("This list has no printers."),
+            _("This group has no printers yet."),
+            _("Every printer is in a group."),
+            _("No printer matches “{text}”."),
+        )
+
+    def status_extras(self, doc: OpenList) -> list[str]:
+        """How many printers answered the last Refresh, once any was checked: a refusal or an
+        unreadable answer still came from a printer that's on."""
+        found = [self._checked[p.id] for p in doc.hosts.hosts if p.id in self._checked]
+        if not found:
+            return []
+        online = sum(1 for checked in found if not checked.offline)
+        return [ngettext("{n} online", "{n} online", online).format(n=online)]
 
     def details_parts(self) -> list[Part]:
         return [

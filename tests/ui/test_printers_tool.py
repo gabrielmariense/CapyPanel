@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 from PySide6.QtCore import Qt, QUrl
-from PySide6.QtWidgets import QApplication, QDialog, QLabel, QMenu
+from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QLabel, QMenu
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -150,6 +150,30 @@ def test_search_covers_the_columns_shown_and_the_notes(printers: PrintersTool) -
     assert _names(printers) == ["2F-OFFICE-01"]
 
 
+def test_the_status_bar_counts_printers_online_once_any_was_checked(
+    printers: PrintersTool,
+) -> None:
+    assert "online" not in printers.status_label.text()  # never "0 online" on a fresh list
+    doc = printers.document
+    assert doc is not None
+    first, second, _third = doc.hosts.hosts
+    printers._checked[first.id] = Checked(datetime(2026, 11, 8, 10, 41), refused="usm")
+    printers._checked[second.id] = Checked(datetime(2026, 11, 8, 10, 41), offline=True)
+    printers._update_state()
+    assert "3 printers · 1 online" in printers.status_label.text()  # a refusal answered
+
+
+def test_an_empty_list_and_the_edit_window_say_printers_words(printers: PrintersTool) -> None:
+    texts = printers.empty_texts()
+    assert texts.empty_list == "This list has no printers yet.\nAdd one to start."
+    assert printers.import_action() is None  # no import: Add only
+    doc = printers.document
+    assert doc is not None
+    dialog = PrinterDialog(None, doc.hosts, doc.hosts.hosts[0])
+    assert dialog.buttons.button(QDialogButtonBox.StandardButton.Ok).text() == "Save"
+    dialog.deleteLater()
+
+
 def test_details_buttons_refresh_the_printer_and_open_its_page(
     printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -217,6 +241,7 @@ def test_adding_a_printer_saves_its_details(
 ) -> None:
     def fill(dialog: QDialog) -> QDialog.DialogCode:
         assert isinstance(dialog, PrinterDialog)
+        assert dialog.buttons.button(QDialogButtonBox.StandardButton.Ok).text() == "Add"
         dialog.name.setText("RECEPTION-01")
         dialog.address.setText("192.0.2.11")
         dialog.brand.setCurrentText("samsung")

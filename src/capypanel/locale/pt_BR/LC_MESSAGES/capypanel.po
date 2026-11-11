@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 15:55-0300\n"
+"POT-Creation-Date: 2026-11-11 15:57-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1449,6 +1449,9 @@ msgstr[1] "A cada {n} minutos"
 msgid "Every printer in the open list, 8 at a time, while CapyPanel is open or in the tray."
 msgstr "Todas as impressoras da lista aberta, 8 por vez, enquanto o CapyPanel estiver aberto ou na bandeja."
 
+msgid "Every printer is in a group."
+msgstr "Todas as impressoras estão em algum grupo."
+
 #, python-brace-format
 msgid "Every printer on {host} stops for a few seconds. Documents waiting in the queues stay and print once it's back."
 msgstr "Todas as impressoras de {host} param por alguns segundos. Os documentos nas filas continuam lá e são impressos quando ele voltar."
@@ -2054,6 +2057,10 @@ msgstr "Saída ausente"
 
 msgid "No printer list is open."
 msgstr "Nenhuma lista de impressoras está aberta."
+
+#, python-brace-format
+msgid "No printer matches “{text}”."
+msgstr "Nenhuma impressora corresponde a “{text}”."
 
 #, python-brace-format
 msgid "No printers are installed on {host}."
@@ -3623,6 +3630,9 @@ msgstr "Este erro aconteceu {n} vezes:"
 msgid "This group has no hosts yet."
 msgstr "Este grupo ainda não tem hosts."
 
+msgid "This group has no printers yet."
+msgstr "Este grupo ainda não tem impressoras."
+
 msgid "This group is empty."
 msgstr "Este grupo está vazio."
 
@@ -3645,6 +3655,16 @@ msgstr ""
 
 msgid "This list has no hosts."
 msgstr "Esta lista não tem hosts."
+
+msgid ""
+"This list has no printers yet.\n"
+"Add one to start."
+msgstr ""
+"Esta lista ainda não tem impressoras.\n"
+"Adicione uma para começar."
+
+msgid "This list has no printers."
+msgstr "Esta lista não tem impressoras."
 
 msgid "This list is empty."
 msgstr "Esta lista está vazia."

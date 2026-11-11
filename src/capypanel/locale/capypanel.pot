@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 15:55-0300\n"
+"POT-Creation-Date: 2026-11-11 15:57-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1477,6 +1477,9 @@ msgid ""
 "in the tray."
 msgstr ""
 
+msgid "Every printer is in a group."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "Every printer on {host} stops for a few seconds. Documents waiting in the"
@@ -2106,6 +2109,10 @@ msgid "No output tray"
 msgstr ""
 
 msgid "No printer list is open."
+msgstr ""
+
+#, python-brace-format
+msgid "No printer matches “{text}”."
 msgstr ""
 
 #, python-brace-format
@@ -3765,6 +3772,9 @@ msgstr ""
 msgid "This group has no hosts yet."
 msgstr ""
 
+msgid "This group has no printers yet."
+msgstr ""
+
 msgid "This group is empty."
 msgstr ""
 
@@ -3786,6 +3796,14 @@ msgid ""
 msgstr ""
 
 msgid "This list has no hosts."
+msgstr ""
+
+msgid ""
+"This list has no printers yet.\n"
+"Add one to start."
+msgstr ""
+
+msgid "This list has no printers."
 msgstr ""
 
 msgid "This list is empty."
