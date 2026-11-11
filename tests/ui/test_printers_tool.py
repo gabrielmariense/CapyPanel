@@ -14,6 +14,7 @@ from capypanel.core.hosts.model import NO_GROUP, Host, HostList
 from capypanel.core.printers.printer import DOC360, PrinterInfo, info_of, with_info
 from capypanel.ui import menus
 from capypanel.ui.checks import clock_text
+from capypanel.ui.list_workspace.panels import ROLE_NOTHING
 from capypanel.ui.printers_tool import tool as tool_module
 from capypanel.ui.printers_tool.dialog import PrinterDialog
 from capypanel.ui.printers_tool.report import PrintersReport
@@ -109,26 +110,33 @@ def test_the_table_shows_name_address_status_toner_brand_model_and_tags(
     table = printers.table
     header = table.headerItem()
     shown = [header.text(i) for i in range(table.columnCount()) if not table.isColumnHidden(i)]
-    # Serial number and asset tag are hidden at first.
-    assert shown == ["Name", "Address", "Status", "Toner", "Brand", "Model", "Tags"]
+    # Brand, serial number and asset tag are hidden at first: Model says the brand.
+    assert shown == ["Name", "Address", "Status", "Toner", "Model", "Tags"]
     assert not table.header().sectionsMovable()  # one fixed order: titles can't be dragged
     assert _names(printers) == ["2F-LABELS", "2F-OFFICE-01", "LOOSE"]
     first = table.topLevelItem(0)
     assert first is not None
-    texts = [first.text(i) for i in (0, 1, table.BRAND, table.MODEL, table.TAGS)]
-    assert texts == ["2F-LABELS", "192.0.2.25", "ZEBRA", "ZD421", "labels"]
+    texts = [first.text(i) for i in (0, 1, table.STATUS, table.BRAND, table.MODEL, table.TAGS)]
+    assert texts == ["2F-LABELS", "192.0.2.25", "Not checked", "ZEBRA", "ZEBRA ZD421", "labels"]
+    assert first.data(table.STATUS, ROLE_NOTHING)  # sorts last, either way
     assert printers.nav.everything.topLevelItem(0).text(0).startswith("All printers")  # type: ignore[union-attr]
 
 
 def test_columns_shown_by_the_user_are_kept(shell: FakeShell, printers: PrintersTool) -> None:
     printers.table._show_column(printers.table.SERIAL, True)
-    assert printers.prefs["hidden_columns"] == ["asset_tag"]
+    assert printers.prefs["hidden_columns"] == ["brand", "asset_tag"]
     printers.table.set_hidden_columns(printers.prefs["hidden_columns"])
     assert not printers.table.isColumnHidden(printers.table.SERIAL)
 
 
 def test_search_covers_the_columns_shown_and_the_notes(printers: PrintersTool) -> None:
-    assert printers.search.placeholderText() == "Search name, address, brand, model, tags, notes"
+    assert printers.search.placeholderText() == "Search name, address, status, model, tags, notes"
+    printers.search.setText("zebra")  # the Model column says the brand
+    printers._show_items()
+    assert _names(printers) == ["2F-LABELS"]
+    printers.search.setText("not checked")  # Status, as it shows
+    printers._show_items()
+    assert _names(printers) == ["2F-LABELS", "2F-OFFICE-01", "LOOSE"]
     printers.search.setText("zebra")
     printers._show_items()
     assert _names(printers) == ["2F-LABELS"]
@@ -295,7 +303,6 @@ def test_the_printer_menu_opens_the_web_page_first(
         "&Address",
         "Status",
         "Toner",
-        "Brand",
         "Model",
         "Tags",
     ]

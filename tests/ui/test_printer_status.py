@@ -53,7 +53,8 @@ def _checked(**reading_args: object) -> Checked:
 
 
 def test_status_says_what_is_wrong_most_first() -> None:
-    assert status.status(None, 10).text == "" and status.status(None, 10).quiet
+    never = status.status(None, 10)
+    assert (never.text, never.quiet, never.nothing) == ("Not checked", True, True)
     offline = status.status(Checked(NOW, offline=True), 10)
     assert (offline.text, offline.color, offline.quiet) == ("Offline", GREY, True)
     assert status.status(Checked(NOW, error="bad"), 10).text == "Unreadable"

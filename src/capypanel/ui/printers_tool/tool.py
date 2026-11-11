@@ -221,6 +221,7 @@ class PrintersTool(ListWorkspace):
         # Each a lower-case word in the list "Search name, address, brand, model, tags, notes".
         words = (
             (table.ADDRESS, _("address")),
+            (table.STATUS, _("status")),
             (table.BRAND, _("brand")),
             (table.MODEL, _("model")),
             (table.SERIAL, _("serial number")),
@@ -551,11 +552,13 @@ class PrintersTool(ListWorkspace):
     # ---- showing ----
 
     def matches(self, item: Host, needle: str) -> bool:
-        """The name and notes, plus every column that shows: only what can be seen."""
+        """The name and notes, plus every column that shows: only what can be seen. Status
+        ("Not checked" too) comes from the last Refresh, in memory only; Toner isn't searched."""
         if super().matches(item, needle):
             return True
         table = self.table
         texts = table.row_texts(item)
+        texts[table.STATUS] = self._cells(item.id)[0].text
         return any(
             needle in texts[column].casefold()
             for column in range(1, len(table.COLUMNS))
@@ -755,7 +758,8 @@ class PrintersTool(ListWorkspace):
                 pages = _("{pages} (from {month})").format(pages=pages, month=month)
         models = status.toner_models(reading) if reading else ""
         mac, firmware = (reading.mac, reading.firmware) if reading else ("", "")
-        return state.text, toner.text, models, pages, mac, firmware
+        said = "" if state.nothing else state.text  # the preview says "Not checked"; files don't
+        return said, toner.text, models, pages, mac, firmware
 
     def use_value(self, printer_id: str, key: str, value: str) -> None:
         """Details' "Use this": the value the printer reports replaces the list's."""

@@ -106,6 +106,7 @@ class Cell:
     warn: bool = False  # in amber: a low supply
     supply: Supply | None = None  # the Toner cell's supply, for its bar
     full: str = ""  # the whole words when `text` says them shorter (the table's Status)
+    nothing: bool = False  # "Not checked": sorts last, and stays empty in a Report's file
 
     def said(self) -> str:
         """The words in full: Details' line and notifications have the room."""
@@ -123,7 +124,7 @@ def status(checked: Checked | None, low: int) -> Cell:
     """The Status cell, and the line under a printer's name in Details: a few words. The
     printer's own messages can be long, so they go in the tip and in Details, in full."""
     if checked is None:
-        return Cell("", _("Not checked: use Refresh"), "", quiet=True)
+        return Cell(_("Not checked"), _("Not checked: use Refresh"), "", quiet=True, nothing=True)
     when = clock_text(checked.when)
     if checked.offline:
         return Cell(_("Offline"), _("No answer at {when}.").format(when=when), GREY, quiet=True)
@@ -168,6 +169,30 @@ def attention(checked: Checked | None, low: int) -> Attention | None:
     if any(is_low(s, low) for s in checked.reading.supplies):
         return Attention.LOW
     return None
+
+
+def status_words() -> list[str]:
+    """Every word the Status column can show, so its first width fits the longest."""
+    problems = [_problem_words(p)[0] for p in (*_STOPS, *_WARNINGS)]
+    states = [said() for said in _STATES.values()]
+    others = (_("Not checked"), _("Offline"), _("Refused"), _("Unreadable"), _("Stopped"),
+              _("Needs attention"), _("Ready"), _("Ink low"), _("Toner low"),
+              _("Waste nearly full"), _("Supply low"))  # fmt: skip
+    return [*problems, *states, *others]
+
+
+def toner_words() -> list[str]:
+    """The Toner column's longest words for each colour, so its first width fits them."""
+    names = (_("Black"), _("Cyan"), _("Magenta"), _("Yellow"), _("Toner"), _("Ink"))
+    words = []
+    for colour in names:
+        for level in (
+            _("{colour} {percent} %").format(colour=colour, percent=100),
+            _("{colour}: some left").format(colour=colour),
+            _("{colour}: not reported").format(colour=colour),
+        ):
+            words += [level, _("{level} · low").format(level=level)]
+    return words
 
 
 def toner_models(reading: Reading) -> str:
