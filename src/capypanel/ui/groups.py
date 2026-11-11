@@ -389,7 +389,8 @@ class TreeMenu(QMenu):
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(themes.menu_mark())
             rect = self.actionGeometry(self.marked)
-            painter.drawRoundedRect(rect.adjusted(1, 0, -1, 0), 6, 6)
+            corner = themes.current().control  # as the menu's own rows
+            painter.drawRoundedRect(rect.adjusted(1, 0, -1, 0), corner, corner)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
             option = QStyleOptionMenuItem()
             self.initStyleOption(option, self.marked)

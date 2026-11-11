@@ -8,7 +8,11 @@ Two engines:
 
 Shipped theme files (this folder, *.json) override some tokens of a base:
     {"name": "Graphite", "base": "dark", "colors": {"accent": "#14b8a6"},
-     "font": {"family": "Georgia", "size": 10.5}, "radius": 6}
+     "font": {"family": "Georgia", "size": 10.5}, "radius": 6, "control_radius": 4}
+
+Corners come in two sizes, both the theme's: "radius" for containers (panels, cards, menus,
+strips) and "control_radius" for what you click or type in (buttons, fields, rows that light
+up). A file with only "radius" gets controls 2 px tighter. Tags and badges stay fully round.
 """
 
 import ctypes
@@ -70,7 +74,14 @@ class Theme:
     name: str = ""  # literal name from a theme file
     colors: dict[str, str] = field(default_factory=dict)
     font: tuple[tuple[str, ...], float] = DEFAULT_FONT
-    radius: int = 8
+    radius: int = 6  # containers: panels, cards, menus, strips
+    control_radius: int | None = None  # what you click or type in; None: radius - 2
+
+    @property
+    def control(self) -> int:
+        if self.control_radius is not None:
+            return self.control_radius
+        return max(0, self.radius - 2)
 
     def title(self) -> str:
         return _(self.label) if self.label else self.name
@@ -112,12 +123,16 @@ def load_theme_file(path: Path) -> Theme:
         if not isinstance(family, str) or not isinstance(size, int | float) or not 6 <= size <= 20:
             raise ValueError('"font" needs a family and a size between 6 and 20')
         font = ((family, *DEFAULT_FONT[0]), float(size))
-    radius = data.get("radius", 8)
-    if not isinstance(radius, int) or not 0 <= radius <= 20:
-        raise ValueError('"radius" must be a whole number from 0 to 20')
+    radius, control = data.get("radius", Theme.radius), data.get("control_radius")
+    for key, value in (("radius", radius), ("control_radius", control)):
+        if value is None and key == "control_radius":
+            continue
+        if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 20:
+            raise ValueError(f'"{key}" must be a whole number from 0 to 20')
     return Theme(
-        path.stem, "custom", base, name=name.strip(), colors=colors, font=font, radius=radius
-    )
+        path.stem, "custom", base, name=name.strip(), colors=colors, font=font, radius=radius,
+        control_radius=control,
+    )  # fmt: skip
 
 
 class Registry:
@@ -445,10 +460,11 @@ def _palette(t: dict[str, str]) -> QPalette:
 _QSS = """
 QMainWindow, QDialog { background: %(bg)s; }
 QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; padding: 4px 8px 2px 8px; }
-QMenuBar::item { padding: 4px 10px; border-radius: 6px; color: %(text2)s; background: transparent; }
+QMenuBar::item { padding: 4px 10px; border-radius: %(r2)spx; color: %(text2)s;
+                 background: transparent; }
 QMenuBar::item:selected { background: %(hover)s; color: %(text)s; }
 QMenu { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; padding: 5px; }
-QMenu::item { padding: 6px 28px 6px 30px; border-radius: 6px; }
+QMenu::item { padding: 6px 28px 6px 30px; border-radius: %(r2)spx; }
 QMenu::item:selected { background: %(hover)s; }
 QMenu::item:disabled { color: %(text3)s; }
 /* In a menu with ticks Qt adds a tick's width before every item's text: take it back, so the
@@ -472,7 +488,7 @@ QToolBar QToolButton:disabled { color: %(text3)s; }
 QFrame#toolDivider { background: %(border)s; border: none; }
 /* The tool rail: its own strip on the left edge; the tool shown sits on a rounded tint. */
 QWidget#toolRail { background: %(chrome)s; border-right: 1px solid %(border)s; }
-QWidget#toolRail QToolButton { border: none; background: transparent; border-radius: 8px;
+QWidget#toolRail QToolButton { border: none; background: transparent; border-radius: %(r2)spx;
                                padding: 0; }
 QWidget#toolRail QToolButton:hover { background: %(hover)s; }
 QWidget#toolRail QToolButton:checked { background: %(sel_solid)s; }
@@ -557,28 +573,29 @@ QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-
    page list. */
 QLabel#sectionTitle { color: %(accent_text)s; font-weight: bold; font-size: 12pt; }
 QWidget#sectionCard { background: %(section)s; border: 1px solid %(section_edge)s;
-                      border-radius: 10px; }
+                      border-radius: %(r)spx; }
 /* Home's tool tiles: a card each, the tool's icon on a tinted square; the pointer over
    one edges it in the accent. */
 QFrame#homeTile { background: %(section)s; border: 1px solid %(section_edge)s;
-                  border-radius: 10px; }
+                  border-radius: %(r)spx; }
 QFrame#homeTile:hover { border-color: %(accent)s; }
 QLabel#tileBadge { background: %(sel_solid)s; border-radius: 8px; }
 QFrame#pagesDivider { background: %(pages_line)s; border: none; }
-QLabel#copyValue { padding: 2px 4px; border-radius: 4px; }
+QLabel#copyValue { padding: 2px 4px; border-radius: %(r2)spx; }
 QLabel#copyValue:hover { background: %(hover)s; }
 /* Tags picked: a tinted strip above the table, so a shorter list never goes unexplained. */
-QFrame#tagStrip { background: %(sel_solid)s; border: 1px solid %(accent)s; border-radius: 6px; }
+QFrame#tagStrip { background: %(sel_solid)s; border: 1px solid %(accent)s;
+                  border-radius: %(r)spx; }
 /* Printers needing attention: the same strip, with an amber edge. */
 QFrame#attentionStrip { background: %(sel_solid)s; border: 1px solid %(accent)s;
-                        border-left: 3px solid %(attention)s; border-radius: 6px; }
+                        border-left: 3px solid %(attention)s; border-radius: %(r)spx; }
 /* A host command's answer above the table: a green edge when it worked, red when it didn't. */
 /* A thin bar for work that counts its steps (deleting profiles): a track a shade darker than
    the card, the accent filling it. */
-QProgressBar#thin { background: %(bg)s; border: none; border-radius: 4px; }
-QProgressBar#thin::chunk { background: %(accent)s; border-radius: 4px; }
+QProgressBar#thin { background: %(bg)s; border: none; border-radius: %(r2)spx; }
+QProgressBar#thin::chunk { background: %(accent)s; border-radius: %(r2)spx; }
 QFrame#resultStrip { background: %(sel_solid)s; border: 1px solid %(accent)s;
-                     border-left: 3px solid %(online)s; border-radius: 6px; }
+                     border-left: 3px solid %(online)s; border-radius: %(r)spx; }
 QFrame#resultStrip[failed="true"] { border-left-color: %(stopped)s; }
 /* Commands that disturb whoever uses the PC are amber, wherever they show. */
 QPushButton#risky, QToolButton[risky="true"] { color: %(attention)s;
@@ -618,7 +635,7 @@ QLabel#tagValue { background: %(sel_solid)s; border-radius: 9px; padding: 2px 9p
 QLabel#tagValue:hover { background: %(hover)s; }
 QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8px; padding: 0 6px; }
 QLabel#stateBadge[active="true"] { color: #3fae4a; border-color: #3fae4a; }
-QFrame#notesBox { border: 1px solid %(border)s; border-radius: 6px; }
+QFrame#notesBox { border: 1px solid %(border)s; border-radius: %(r)spx; }
 QLabel#paneTitle, QLabel#hint { color: %(text2)s; }
 /* The Groups heading while a group is dragged over it: dropping moves it to the top. */
 QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel_solid)s;
@@ -823,7 +840,7 @@ def _status_tokens() -> dict[str, str]:
 
 def stylesheet(theme: Theme) -> str:
     t: dict[str, object] = {k: _qss_color(v) for k, v in theme.colors.items()}
-    t["r"], t["r2"] = theme.radius, max(0, theme.radius - 2)
+    t["r"], t["r2"] = theme.radius, theme.control
     colors = theme.colors
     accent = QColor(colors["accent"])
     t["accent_text"] = readable_on(accent, colors["card"], colors["text"])

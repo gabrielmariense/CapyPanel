@@ -63,6 +63,7 @@ from capypanel.ui.notes import divider, hint
 from capypanel.ui.profiles_tool import rows
 from capypanel.ui.profiles_tool.rows import Filters, Result
 from capypanel.ui.tables import fit_rows, grid_table
+from capypanel.ui.themes import engine as themes
 
 LEFT, RIGHT = 234, 284  # px: the narrowest the Groups panel opens at, and the right panel can be
 DETAILS = 340  # px: the right panel's first width, as Hosts' Details
@@ -482,7 +483,8 @@ class _Careful(QStyledItemDelegate):
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             painter.setPen(palette.color(QPalette.ColorRole.Mid))
             painter.setBrush(palette.color(QPalette.ColorRole.Button))
-            painter.drawRoundedRect(box, 4, 4)
+            corner = themes.current().control  # a small button, drawn by hand
+            painter.drawRoundedRect(box, corner, corner)
             icon = tabler_icon("info-circle", palette.color(QPalette.ColorRole.ButtonText), 16)
             icon.paint(painter, box.adjusted(3, 3, -3, -3))
             painter.restore()

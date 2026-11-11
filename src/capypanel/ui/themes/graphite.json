@@ -1,6 +1,7 @@
 {
   "name": "Graphite",
   "base": "dark",
+  "radius": 8,
   "colors": {
     "bg": "#141518",
     "card": "#282a31",

@@ -1,6 +1,7 @@
 {
   "name": "Paper",
   "base": "light",
+  "radius": 8,
   "colors": {
     "bg": "#d8c7a6",
     "card": "#fffdf8",

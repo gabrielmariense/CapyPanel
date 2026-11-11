@@ -59,6 +59,7 @@ def test_unknown_or_missing_theme_falls_back_to_the_default() -> None:
         ({"name": "X", "base": "dark", "colors": {"sparkle": "#fff"}}, "unknown colour"),
         ({"name": "X", "base": "dark", "colors": {"accent": "not-a-colour"}}, "not a colour"),
         ({"name": "X", "base": "dark", "radius": 99}, "radius"),
+        ({"name": "X", "base": "dark", "control_radius": -1}, "control_radius"),
     ],
 )
 def test_broken_theme_files_are_rejected_and_skipped(
@@ -368,3 +369,52 @@ def test_the_font_is_the_first_family_this_pc_has_alone(
     assert themes.installed(("No Such Font", "Nor This")) == ["No Such Font", "Nor This"]
     themes.apply(themes.Registry().find("capypanel-dark"))
     assert qapp.font().families() == ["Segoe UI"]
+
+
+def _rule(sheet: str, selector: str) -> str:
+    found = re.search(re.escape(selector) + r" \{([^}]*)\}", sheet)
+    assert found is not None, selector
+    return found[1]
+
+
+def test_corners_come_in_two_sizes_from_the_theme(tmp_path: Path) -> None:
+    for theme_id in ("capypanel-dark", "capypanel-light"):
+        theme = themes.Registry().find(theme_id)
+        assert (theme.radius, theme.control) == (6, 4)  # panels and menus; what you click
+        sheet = themes.stylesheet(theme)
+        assert "border-radius: 6px" in _rule(sheet, "QMenu")
+        assert "border-radius: 6px" in _rule(sheet, "QFrame#card")
+        assert "border-radius: 4px" in _rule(sheet, "QMenu::item")
+        assert "border-radius: 4px" in _rule(sheet, "QToolButton#commandButton")
+        assert "border-radius: 4px" in _rule(sheet, "QProgressBar#thin")  # bars: a control
+        assert "border-radius: 6px" in _rule(sheet, "QFrame#attentionStrip")  # strips: a panel
+    path = tmp_path / "one.json"
+    path.write_text(json.dumps({"name": "One", "base": "dark", "radius": 10}), encoding="utf-8")
+    assert themes.load_theme_file(path).control == 8  # only "radius": controls 2 px tighter
+    path.write_text(
+        json.dumps({"name": "Two", "base": "dark", "radius": 10, "control_radius": 3}),
+        encoding="utf-8",
+    )
+    assert themes.load_theme_file(path).control == 3
+    for other in ("graphite", "paper"):  # theirs change in their own round
+        kept = themes.Registry().find(other)
+        assert (kept.radius, kept.control) == (8, 6)
+
+
+@pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
+def test_no_corner_is_fixed_in_the_stylesheet_but_the_round_ones(theme: themes.Theme) -> None:
+    """Tags, badges, the radio button and the scroll bar stay round; a tick box keeps its
+    small corner. Everything else takes one of the theme's two sizes."""
+    odd = themes.Theme("odd", "custom", theme.scheme, colors=theme.colors, radius=17,
+                       control_radius=13)  # fmt: skip
+    sheet = re.sub(r"/\*.*?\*/", "", themes.stylesheet(odd), flags=re.DOTALL)
+    fixed = set()
+    for selector, body in re.findall(r"([^{}]+)\{([^}]*)\}", sheet):
+        for size in re.findall(r"border(?:-[a-z]+)*-radius: (\d+)px", body):
+            if size not in ("17", "13", "0"):
+                fixed.add(selector.strip())
+    assert fixed == {
+        "QFrame#tagChip", "QLabel#tileBadge", "QLabel#railBadge", "QLabel#tagValue",
+        "QLabel#stateBadge", "QRadioButton::indicator", "QCheckBox::indicator",
+        "QScrollBar::handle",
+    }  # fmt: skip
