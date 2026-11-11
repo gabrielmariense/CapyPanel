@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 01:38-0300\n"
+"POT-Creation-Date: 2026-11-11 02:12-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -111,9 +111,6 @@ msgid "&Edit cell"
 msgstr ""
 
 msgid "&Edit host…"
-msgstr ""
-
-msgid "&Edit selected…"
 msgstr ""
 
 msgid "&Edit…"
@@ -279,6 +276,9 @@ msgstr ""
 msgid "&Refresh"
 msgstr ""
 
+msgid "&Refresh group"
+msgstr ""
+
 msgid "&Refresh host"
 msgstr ""
 
@@ -288,6 +288,10 @@ msgid_plural "&Refresh {n} hosts"
 msgstr[0] ""
 msgstr[1] ""
 
+#, python-brace-format
+msgid "&Refresh {n} hosts"
+msgstr ""
+
 msgid "&Remember it on this computer"
 msgstr ""
 
@@ -295,9 +299,6 @@ msgid "&Remove"
 msgstr ""
 
 msgid "&Remove from my lists"
-msgstr ""
-
-msgid "&Remove selected"
 msgstr ""
 
 msgid "&Report a problem"
@@ -2474,9 +2475,6 @@ msgstr ""
 msgid "Queued"
 msgstr ""
 
-msgid "Quick check"
-msgstr ""
-
 msgid "Quit"
 msgstr ""
 
@@ -2538,12 +2536,6 @@ msgstr ""
 msgid "Refresh"
 msgstr ""
 
-msgid "Refresh &logged-on users"
-msgstr ""
-
-msgid "Refresh &status"
-msgstr ""
-
 msgid "Refresh all"
 msgstr ""
 
@@ -2551,8 +2543,8 @@ msgid "Refresh every host shown"
 msgstr ""
 
 msgid ""
-"Refresh every host shown, with the checks ticked on a right-click (also "
-"F5)"
+"Refresh every host shown (a group's, or the ones a search leaves), with "
+"the checks ticked on a right-click (also F5)"
 msgstr ""
 
 msgid "Refresh host"
@@ -4275,6 +4267,14 @@ msgstr ""
 
 #, python-brace-format
 msgid "{colour}: some left"
+msgstr ""
+
+#, python-brace-format
+msgid "{command} (nobody signed in)"
+msgstr ""
+
+#, python-brace-format
+msgid "{command} ({user})"
 msgstr ""
 
 #, python-brace-format

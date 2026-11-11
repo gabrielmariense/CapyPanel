@@ -140,9 +140,9 @@ def test_the_host_menu_has_a_submenu_per_group_greyed_for_several_hosts(
         assert isinstance(submenu, QMenu)
         return [label(a) if a.text() else "—" for a in submenu.actions()]
 
-    # Installed programs is apart: a long table, not part of Quick check; Power comes last.
+    # Installed programs is apart: a long table, not part of Refresh host; Power comes last.
     assert names("Check") == [
-        "Quick check", "Status", "Logged-on users", "PC facts", "—", "Installed programs",
+        "Refresh host", "Status", "Logged-on users", "PC facts", "—", "Installed programs",
     ]  # fmt: skip
     assert names("Folders") == ["C$ share", "User's folder", "Startup folder", "Open a path…"]
     assert names("Admin tools") == ["Computer Management", "Event Viewer", "Services"]
@@ -536,3 +536,52 @@ def test_a_path_to_a_file_is_never_opened(
     _settle(window)
     assert not any(c[0] == "folder" for c in calls)  # a file would have run on this PC
     assert "there's no folder there." in window.hosts.result_strip.text()
+
+
+def _host_menu(window: CapyWindow) -> list[str]:
+    menu = QMenu()
+    window.hosts.fill_item_menu(menu, window.hosts.selected_items())
+    return [label(a) for a in menu.actions() if a.text()]
+
+
+def test_the_host_menu_shows_the_first_four_quick_commands(window: CapyWindow) -> None:
+    _select(window, "PC-1")
+    window.hosts.prefs["quick_commands"] = [
+        "services", "status", "c-share", "path", "event-viewer", "restart",
+    ]  # fmt: skip
+    assert window.hosts.quick_commands() == (
+        "services", "status", "c-share", "path", "event-viewer",
+    )  # fmt: skip
+    texts = _host_menu(window)
+    assert texts[2:7] == ["Services", "Status", "C$ share", "Open a path…", "&All commands…"]
+    window.hosts.prefs["quick_commands"] = []  # none picked: the block isn't there
+    assert _host_menu(window)[:3] == ["&Connect", "&Refresh host", "&All commands…"]
+
+
+def test_commands_for_a_person_say_who_or_that_nobody_is_signed_in(window: CapyWindow) -> None:
+    _select(window, "PC-1")
+    target = window.hosts.selected_target()
+    assert target is not None
+    folder, message = window.hosts.host_actions["user-folder"], window.hosts.host_actions["message"]
+    window.hosts._update_host_actions()  # before any check: plain, and usable
+    assert (folder.text(), folder.isEnabled()) == ("User's folder", True)
+    window.hosts.keep_users(target.key, (ANA,), None)
+    window.hosts._update_host_actions()
+    assert folder.text() == "User's folder (ana)" and message.text() == "Send a message…"
+    window.hosts.keep_users(target.key, (), None)  # a check just found nobody
+    window.hosts._update_host_actions()
+    assert (folder.text(), folder.isEnabled()) == ("User's folder (nobody signed in)", False)
+    assert (message.text(), message.isEnabled()) == ("Send a message (nobody signed in)", False)
+    old = datetime.now(UTC) - timedelta(minutes=11)  # an old check says nothing about now
+    window.hosts._users_found[target.key] = ((), None, old)
+    window.hosts._update_host_actions()
+    assert (folder.text(), folder.isEnabled()) == ("User's folder", True)
+
+
+def test_a_group_s_menu_has_one_refresh(window: CapyWindow) -> None:
+    doc = window.hosts.document
+    assert doc is not None
+    menu = QMenu()
+    window.hosts.fill_group_menu(menu, doc.hosts.groups[0])
+    texts = [label(a) for a in menu.actions() if a.text()]
+    assert texts[-1] == "&Refresh group" and sum("Refresh" in t for t in texts) == 1

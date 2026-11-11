@@ -285,8 +285,8 @@ def test_the_printer_menu_opens_the_web_page_first(
     assert row is not None
     printers._item_menu(printers.table.visualItemRect(row).center())
     texts = [menus.label(a) for a in shown[-1].actions() if not a.isSeparator()]
-    assert texts == ["Open &web page", "&Refresh", "Co&py", "&Edit selected…", "&Move to",
-                     "&Tags", "&Remove selected"]  # fmt: skip
+    assert texts == ["Open &web page", "&Refresh", "Co&py", "&Edit…", "&Move to",
+                     "&Tags", "&Remove"]  # fmt: skip
     assert shown[-1].defaultAction() is printers.commands.open_web_page
     copy = shown[-1].actions()[4].menu()
     assert isinstance(copy, QMenu)

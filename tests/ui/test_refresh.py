@@ -88,7 +88,7 @@ def test_checking_selected_hosts_fills_the_status_and_user_columns(
     answers["10.0.0.2"] = Found(Status.OFFLINE, users_error=RemoteError(Reason.UNREACHABLE))
     answers["10.0.0.1"] = Found(Status.ONLINE, (DESK,), answered=("10.0.0.1", 445))
     window.hosts.table.select_ids(_ids(window, "PC-1", "PC-2", "Desk 4"))
-    window.hosts.commands.check_users.trigger()
+    window.hosts.check_hosts(window.hosts.selected_items(), status=False, users=True)
     _wait(window)
     assert _cells(window, "PC-1") == ("Online", "CORP\\ana")
     assert _cells(window, "PC-2") == ("Offline", "Unreachable")
@@ -103,7 +103,7 @@ def test_checking_selected_hosts_fills_the_status_and_user_columns(
 def test_status_only_doesnt_read_users(window: CapyWindow, answers: dict[str, Any]) -> None:
     answers["10.0.0.1"] = Found(Status.ONLINE)
     window.hosts.table.select_ids(_ids(window, "PC-1"))
-    window.hosts.commands.check_status.trigger()
+    window.hosts.check_hosts(window.hosts.selected_items(), status=True, users=False)
     _wait(window)
     assert answers["seen"] == [("10.0.0.1", True, False, None)]
     assert _cells(window, "PC-1") == ("Online", "")
@@ -113,7 +113,7 @@ def test_a_removed_host_no_longer_counts_as_online(
     window: CapyWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     window.hosts.table.select_ids(_ids(window, "PC-1", "PC-2"))
-    window.hosts.commands.check_status.trigger()
+    window.hosts.check_hosts(window.hosts.selected_items(), status=True, users=False)
     _wait(window)
     assert "2 online" in window.hosts.status_label.text()
     monkeypatch.setattr(workspace_module, "confirm", lambda *_args: True)
@@ -184,7 +184,7 @@ def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
     uses: list[str] = []
     monkeypatch.setattr(check_ui.AccountDialog, "exec", type_account)
     window.hosts.table.select_ids(_ids(window, "PC-1", "PC-3"))
-    window.hosts.commands.check_users.trigger()
+    window.hosts.check_hosts(window.hosts.selected_items(), status=False, users=True)
     _wait(window)
     _wait(window)  # the retry with the typed account
     assert asked == ["Account for other PCs"]
@@ -198,7 +198,7 @@ def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
 
     # The next Refresh: that PC only gets the typed account, the others still Windows'.
     answers["seen"].clear()
-    window.hosts.commands.check_users.trigger()
+    window.hosts.check_hosts(window.hosts.selected_items(), status=False, users=True)
     _wait(window)
     used = {a: acc for a, _s, _u, acc in answers["seen"]}
     assert used == {"10.0.0.1": None, "10.0.0.3": Account("CORP\\admin", "pw")}
@@ -216,7 +216,7 @@ def test_a_rejected_typed_account_is_never_tried_on_the_other_hosts(
         answers[address] = rejected
     monkeypatch.setattr(check_ui.AccountDialog, "exec", lambda _self: QDialog.DialogCode.Rejected)
     window.hosts.table.select_ids(_ids(window, "PC-1", "PC-2", "PC-3"))
-    window.hosts.commands.check_users.trigger()
+    window.hosts.check_hosts(window.hosts.selected_items(), status=False, users=True)
     _wait(window)
     assert len(answers["seen"]) == 1  # one host refused it; the batch stopped
 
@@ -239,12 +239,21 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     assert first is not None
     row = window.hosts.table.visualItemRect(first)
     window.hosts._item_menu(QPoint(row.left() + 10, row.center().y()))  # on the name
+    # One PC: refresh it, the four quick commands, the door to every command, then managing it.
     assert seen == [
-        "&Connect", "Refresh &status", "Refresh &logged-on users",
-        "Check", "Folders", "Admin tools", "Users", "Printers", "Power",
-        "Commands run &as",
+        "&Connect", "&Refresh host",
+        "C$ share", "User's folder", "Computer Management", "Send a message…",
+        "&All commands…",
         "Co&py",
-        "&Edit selected…", "&Move to", "&Tags", "&Remove selected",
+        "&Edit…", "&Move to", "&Tags", "&Remove",
+    ]  # fmt: skip
+    seen.clear()
+    window.hosts.table.select_ids(_ids(window, "PC-1", "PC-2"))
+    window.hosts._item_menu(QPoint(row.left() + 10, row.center().y()))
+    # Several PCs: only what works on all of them; Commands run as stays, Edit goes.
+    assert seen == [
+        "&Connect", "&Refresh 2 hosts", "Commands run &as", "Co&py", "&Move to", "&Tags",
+        "&Remove",
     ]  # fmt: skip
 
 

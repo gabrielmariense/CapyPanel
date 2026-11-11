@@ -117,10 +117,11 @@ class HostsToolBar(ToolBar):
         self.connect_button.setToolTip(
             _("Connect to the selected hosts, once with another profile, or by address")
         )
-        self.refresh_button.setText(gap + _("Refresh"))
+        self.refresh_button.setText(gap + _("Refresh all"))
         self.refresh_button.setToolTip(
-            _("Refresh every host shown, with the checks ticked on a right-click (also F5)")
-        )
+            _("Refresh every host shown (a group's, or the ones a search leaves), with the "
+              "checks ticked on a right-click (also F5)")
+        )  # fmt: skip
         self.commands_button.setText(gap + _("Commands"))
         self.commands_button.setToolTip(
             _("Open the Commands window for the selected host; the arrow lists its commands")

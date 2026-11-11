@@ -199,7 +199,7 @@ def test_a_rejected_account_stops_only_the_pcs_that_use_it(
     doc = window.hosts.document
     assert doc is not None
     window.hosts.table.select_ids([h.id for h in doc.hosts.hosts])
-    window.hosts.commands.check_users.trigger()
+    window.hosts.check_hosts(window.hosts.selected_items(), status=False, users=True)
     _settle(window)
     tried = dict(seen)
     assert tried["192.0.2.13"] is None  # the Windows account's PC still read

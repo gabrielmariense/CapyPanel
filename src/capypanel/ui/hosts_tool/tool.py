@@ -72,6 +72,8 @@ COMMAND_SHORTCUTS = {
     "computer-management": "Ctrl+Shift+M",
 }
 RECENT_PATHS = 10  # Open a path… keeps the last folders opened
+QUICK_KEY = "quick_commands"  # this admin's quick commands, in order
+NOBODY_FOR = timedelta(minutes=10)  # how long "nobody signed in" is believed
 FACTS_AFTER = 1_500  # ms a host stays selected before its PC facts are read
 WATCH_EVERY = 15_000  # ms between checks on a restarting PC, until it answers again
 WATCH_FOR = timedelta(minutes=20)  # after the restart time; then CapyPanel stops watching
@@ -180,12 +182,6 @@ class HostsTool(ListWorkspace):
         self.addActions([a.copy_address, a.refresh_shown, a.add_host, a.manual_connect])
         a.refresh_shown.triggered.connect(self._run_refresh_panel)  # F5
         a.show_domains.toggled.connect(self._show_domains)
-        a.check_status.triggered.connect(
-            lambda: self.check_hosts(self.selected_items(), status=True, users=False)
-        )
-        a.check_users.triggered.connect(
-            lambda: self.check_hosts(self.selected_items(), status=False, users=True)
-        )
         self.toolbar.refresh_panel_requested.connect(self._show_refresh_panel)
         self.refresh_panel.run_clicked.connect(self._run_refresh_panel)
         self.toolbar.connect_menu.aboutToShow.connect(self._fill_connect_menu)
@@ -867,8 +863,6 @@ class HostsTool(ListWorkspace):
         a.export_hosts.setEnabled(doc is not None and bool(doc.hosts.hosts))  # read-only too
         for action in (a.connect_host, a.copy_address):
             action.setEnabled(selected > 0)  # read-only lists can still connect
-        for action in (a.check_status, a.check_users):
-            action.setEnabled(selected > 0 and self._run is None)  # one Refresh at a time
         self._update_host_actions()
         shown = self.table.topLevelItemCount() > 0
         a.refresh_shown.setEnabled(shown and self._run is None)
@@ -888,23 +882,49 @@ class HostsTool(ListWorkspace):
         return self.commands.copy_address if key == "address" else None  # keeps Ctrl+Shift+C
 
     def fill_item_menu(self, menu: QMenu, items: Sequence[Host]) -> None:
+        """One PC: connect, refresh it, the quick commands, the door to every command, then
+        copy and managing the host. Several PCs: only what works on all of them."""
         a = self.commands
-        # Use first, then copy, then managing the host: edit, move, remove.
         menu.addAction(a.connect_host)
         menu.setDefaultAction(a.connect_host)  # bold: what double-click and Enter do
         menu.addSeparator()
-        menu.addActions([a.check_status, a.check_users])
-        menu.addSeparator()
-        self._add_command_menus(menu)
-        account = menu.addMenu(_("Commands run &as"))  # this person's own rows: never read-only
-        self._fill_hosts_account_menu(account, items)
-        account.setEnabled(bool(account.actions()))
+        if len(items) == 1:
+            self._update_host_actions()
+            target = self.selected_target()
+            refresh = menu.addAction(_("&Refresh host"))  # status, logged-on users, PC facts
+            refresh.setEnabled(target is not None)
+            refresh.triggered.connect(lambda: self.run_on_selected("all-checks"))
+            quick = self.quick_commands()[: host_commands.MENU_QUICK]
+            if quick:
+                menu.addSeparator()
+                menu.addActions([self.host_actions[command_id] for command_id in quick])
+            menu.addSeparator()
+            every = menu.addAction(_("&All commands…"))
+            every.setEnabled(target is not None)
+            every.triggered.connect(lambda: self.open_commands(self.selected_target()))
+        else:
+            refresh = menu.addAction(
+                _("&Refresh {n} hosts").format(n=len(items))
+            )  # status and logged-on users; PC facts are read one PC at a time
+            refresh.setEnabled(self._run is None)
+            refresh.triggered.connect(
+                lambda: self.check_hosts(self.selected_items(), status=True, users=True)
+            )
+            menu.addSeparator()
+            account = menu.addMenu(_("Commands run &as"))  # each admin's own: never read-only
+            self._fill_hosts_account_menu(account, items)
+            account.setEnabled(bool(account.actions()))
         menu.addSeparator()
         self.add_copy_menu(menu)
         menu.addSeparator()
-        menu.addAction(a.edit)
+        if len(items) == 1:
+            menu.addAction(a.edit)
         self.add_move_menu(menu, items)
         menu.addAction(a.remove)
+
+    def quick_commands(self) -> tuple[str, ...]:
+        """This admin's quick commands, in their order (Details' buttons; the menu's first)."""
+        return host_commands.quick_from(self.prefs.get(QUICK_KEY))
 
     def fill_group_menu(self, menu: QMenu, group: Group) -> None:
         assert self._doc is not None
@@ -919,15 +939,9 @@ class HostsTool(ListWorkspace):
         # The group's hosts, including those in the groups inside it.
         hosts = list(self._doc.hosts.hosts_in(group.id))
         menu.addSeparator()
-        for text, status, users in (
-            (_("Refresh &status"), True, False),
-            (_("Refresh &logged-on users"), False, True),
-        ):
-            item = menu.addAction(text)
-            item.setEnabled(bool(hosts) and self._run is None)
-            item.triggered.connect(
-                lambda _c=False, s=status, u=users: self.check_hosts(hosts, status=s, users=u)
-            )
+        refresh = menu.addAction(_("&Refresh group"))  # status and logged-on users
+        refresh.setEnabled(bool(hosts) and self._run is None)
+        refresh.triggered.connect(lambda: self.check_hosts(hosts, status=True, users=True))
 
     # ---- Refresh: status and logged-on users ----
 
@@ -1210,10 +1224,31 @@ class HostsTool(ListWorkspace):
             if command_id == "cancel-restart":
                 enabled = enabled and target is not None and target.key in self._pending
             action.setEnabled(enabled)
-        if target is not None:
-            who = folder_user(self._known_sessions(target.key))
-            name = _("{user}'s folder").format(user=who.user) if who else _("User's folder")
-            self.host_actions["user-folder"].setText(name.replace("&", "&&"))
+        if target is None:
+            return
+        # Commands for the person signed in: the line stays in place and says who, or why not.
+        who = folder_user(self._known_sessions(target.key))
+        nobody = self._nobody_signed_in(target.key)
+        for command in host_commands.COMMANDS:
+            if not command.needs_user or command.id not in self.host_actions:
+                continue
+            name = _(command.name)
+            if nobody:
+                name = _("{command} (nobody signed in)").format(command=name.rstrip("…"))
+            elif who is not None and command.id == "user-folder":
+                name = _("{command} ({user})").format(command=name, user=who.user)
+            action = self.host_actions[command.id]
+            action.setText(name.replace("&", "&&"))
+            action.setEnabled(not nobody)
+
+    def _nobody_signed_in(self, key: str) -> bool:
+        """Whether a check from the last few minutes found no one signed in. Before any check,
+        or once it's old, nothing is known: the commands for a person stay usable."""
+        found = self._users_found.get(key)
+        if found is None:
+            return False
+        sessions, error, when = found
+        return error is None and not sessions and datetime.now(UTC) - when < NOBODY_FOR
 
     def selected_target(self) -> HostTarget | None:
         hosts = self.selected_items()

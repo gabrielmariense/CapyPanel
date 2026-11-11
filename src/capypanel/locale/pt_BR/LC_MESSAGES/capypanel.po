@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 01:38-0300\n"
+"POT-Creation-Date: 2026-11-11 02:12-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -113,9 +113,6 @@ msgstr "&Editar célula"
 
 msgid "&Edit host…"
 msgstr "&Editar host…"
-
-msgid "&Edit selected…"
-msgstr "&Editar selecionado…"
 
 msgid "&Edit…"
 msgstr "&Editar…"
@@ -280,6 +277,9 @@ msgstr "&Ler de novo"
 msgid "&Refresh"
 msgstr "&Atualizar"
 
+msgid "&Refresh group"
+msgstr "A&tualizar grupo"
+
 msgid "&Refresh host"
 msgstr "A&tualizar host"
 
@@ -289,6 +289,10 @@ msgid_plural "&Refresh {n} hosts"
 msgstr[0] "A&tualizar {n} host"
 msgstr[1] "A&tualizar {n} hosts"
 
+#, python-brace-format
+msgid "&Refresh {n} hosts"
+msgstr "A&tualizar {n} hosts"
+
 msgid "&Remember it on this computer"
 msgstr "Le&mbrar neste computador"
 
@@ -297,9 +301,6 @@ msgstr "&Remover"
 
 msgid "&Remove from my lists"
 msgstr "&Remover das minhas listas"
-
-msgid "&Remove selected"
-msgstr "&Remover selecionado"
 
 msgid "&Report a problem"
 msgstr "&Relatar um problema"
@@ -2394,9 +2395,6 @@ msgstr "Colocar no &grupo"
 msgid "Queued"
 msgstr "Na fila"
 
-msgid "Quick check"
-msgstr "Verificação rápida"
-
 msgid "Quit"
 msgstr "Sair"
 
@@ -2456,20 +2454,14 @@ msgstr "Recentes"
 msgid "Refresh"
 msgstr "Atualizar"
 
-msgid "Refresh &logged-on users"
-msgstr "Atualizar usuários &logados"
-
-msgid "Refresh &status"
-msgstr "Atualizar &status"
-
 msgid "Refresh all"
 msgstr "Atualizar todos"
 
 msgid "Refresh every host shown"
 msgstr "Atualizar todos os hosts exibidos"
 
-msgid "Refresh every host shown, with the checks ticked on a right-click (also F5)"
-msgstr "Atualiza todos os hosts exibidos, com as verificações marcadas no botão direito (também F5)"
+msgid "Refresh every host shown (a group's, or the ones a search leaves), with the checks ticked on a right-click (also F5)"
+msgstr "Atualiza todos os hosts exibidos (os de um grupo, ou os que uma pesquisa deixa), com as verificações marcadas no botão direito (também F5)"
 
 msgid "Refresh host"
 msgstr "Atualizar host"
@@ -4106,6 +4098,14 @@ msgstr "{colour}: não informado"
 #, python-brace-format
 msgid "{colour}: some left"
 msgstr "{colour}: ainda há"
+
+#, python-brace-format
+msgid "{command} (nobody signed in)"
+msgstr "{command} (ninguém conectado)"
+
+#, python-brace-format
+msgid "{command} ({user})"
+msgstr "{command} ({user})"
 
 #, python-brace-format
 msgid "{counts}. See the history."
