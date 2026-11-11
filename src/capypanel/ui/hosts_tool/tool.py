@@ -1,8 +1,10 @@
 """The Hosts tool: the list workspace with hosts, plus connecting, connection profiles, Refresh
 (status and logged-on users), the host commands (opening a PC's folders, messaging or logging off
-its users, restarting it, its printers and facts), importing and Report."""
+its users, restarting it, its printers and facts, scripts), importing and Report."""
 
+import html
 import logging
+import re
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
@@ -20,8 +22,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.core import credstore, settings
+from capypanel.core import settings
+from capypanel.core.hosts import accounts as account_links
 from capypanel.core.hosts import commands as host_commands
+from capypanel.core.hosts.accounts import WINDOWS, Scope
 from capypanel.core.hosts.commands import GROUP_NAMES
 from capypanel.core.hosts.commands import Group as CommandGroup
 from capypanel.core.hosts.document import OpenList, starter_list
@@ -42,6 +46,7 @@ from capypanel.ui.dialogs import run_modal
 from capypanel.ui.export_hosts import ExportDialog
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, list_file_filter
+from capypanel.ui.hosts_tool.accounts import Accounts, used_for, windows_account
 from capypanel.ui.hosts_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.hosts_tool.details import HostDetails, HostDetailsPanel
 from capypanel.ui.hosts_tool.host_state import Facts, PendingPower
@@ -59,7 +64,6 @@ from capypanel.ui.saved_credentials import KeptLogin, forget_failed
 
 log = logging.getLogger(__name__)
 MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks first
-SAVED_ACCOUNT = "account/logged-on-users"  # in Credential Manager, when passwords are saved
 # Host commands' keys; the rest have none for now (a Keyboard shortcuts page comes later).
 COMMAND_SHORTCUTS = {
     "c-share": "Ctrl+E",
@@ -94,11 +98,14 @@ class HostsTool(ListWorkspace):
         )
         for action in vars(self.commands).values():
             action.setParent(self)
-        credentials = SessionCredentials(saving=self.saves_passwords())
+        credentials = SessionCredentials()
         self.connector = Connector(self, Catalogs.for_paths(shell.paths), credentials)
         self.connector.open_settings = lambda: self._shell.open_settings("connections")
         self.details.profile_menu.aboutToShow.connect(
             lambda: self._fill_details_profile_menu(self.details.profile_menu)
+        )
+        self.details.account_menu.aboutToShow.connect(
+            lambda: self._fill_hosts_account_menu(self.details.account_menu, self.selected_items())
         )
 
         # Refresh results, by host id: in memory only, since the list file is shared.
@@ -107,7 +114,8 @@ class HostsTool(ListWorkspace):
             str, tuple[tuple[Session, ...] | None, RemoteError | None, datetime]
         ] = {}
         self._run: CheckRun | None = None
-        self._account = self._saved_account()  # typed for logged-on users
+        self.accounts = Accounts(self)  # which account signs in to which PC
+        self.accounts.changed.connect(self._accounts_changed)
         self._refused: list[str] = []  # hosts this run that didn't let the account read users
         self._reported: set[str] = set()
         self._targets: list[tuple[str, str]] = []
@@ -159,6 +167,7 @@ class HostsTool(ListWorkspace):
         a = self.commands
         inventory = self.toolbar.inventory_menu
         inventory.addActions([a.add_host, a.add_group, a.manage_groups])
+        inventory.addAction(self.sort_groups_action)
         inventory.addSeparator()
         inventory.addAction(a.import_hosts)
 
@@ -289,7 +298,7 @@ class HostsTool(ListWorkspace):
         return _("Selected hosts"), _("the selected hosts")
 
     def lists_page(self) -> str:
-        return "host_lists"
+        return "hosts"
 
     def only_tags_text(self, shown: int, total: int) -> str:
         return _("Only hosts with all of: {tags} · {shown} of {total} shown").format(
@@ -411,6 +420,10 @@ class HostsTool(ListWorkspace):
             cells = self._cells(host_id)
             return cells.status[0], cells.user[0]
 
+        def checked_at(host_id: str) -> tuple[datetime | None, datetime | None]:
+            status, users = self._status_found.get(host_id), self._users_found.get(host_id)
+            return (status[1] if status else None), (users[2] if users else None)
+
         def progress() -> tuple[int, int] | None:
             return (self._run.done, self._run.total) if self._run is not None else None
 
@@ -428,6 +441,7 @@ class HostsTool(ListWorkspace):
             ),
             stop=self.stop_checks,
             progress=progress,
+            checked_at=checked_at,
         )
         self.checks_changed.connect(dialog.checks_changed)
         try:
@@ -514,15 +528,12 @@ class HostsTool(ListWorkspace):
         if self._commands_window is not None:
             self._commands_window.close()
             self._commands_window.deleteLater()
-        profile = self.connector.default_profile()
-        if target is not None and self._doc is not None:
-            host = self._doc.hosts.host(target.key)
-            if host is not None:
-                profile = self._doc.hosts.profile_of(host, self._profile_exists)[0]
-        window = CommandsWindow(self, target, profile)
+        window = CommandsWindow(self, target, self.profile_for(target))
         window.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         window.destroyed.connect(lambda: setattr(self, "_commands_window", None))
         self._commands_window = window
+        # Over the main window, where it opened from; it isn't owned by it, so Windows wouldn't.
+        window.move(self.window().frameGeometry().center() - window.rect().center())
         window.show()
 
     def _fill_connect_menu(self) -> None:
@@ -569,33 +580,12 @@ class HostsTool(ListWorkspace):
                     lambda p=profile_id: self._forget_kept(p),
                 )
             )
-        try:  # with saving off too: one Windows didn't delete is still kept
-            saved = credstore.read(SAVED_ACCOUNT)
-        except OSError as e:
-            log.warning("Couldn't read the saved account for logged-on users: %s", e)
-            saved = None
-        user = self._account.user if self._account else saved[0] if saved else None
-        if user is not None:
-            logins.append(
-                KeptLogin(
-                    _("Logged-on users"),
-                    _("Hosts › Refresh"),
-                    user,
-                    saved is not None,
-                    lambda: self._forget_kept(None),
-                )
-            )
-        return logins
+        return [*logins, *self.accounts.kept_logins()]
 
-    def _forget_kept(self, profile_id: str | None) -> None:
-        """One profile's password, or (None) the account for logged-on users: from memory and
-        from Credential Manager. Raises OSError."""
+    def _forget_kept(self, profile_id: str) -> None:
+        """One profile's password: from memory and from Credential Manager. Raises OSError."""
         try:
-            if profile_id is None:
-                self._account = None
-                self._delete_account()
-            else:
-                self.connector.credentials.forget(profile_id)
+            self.connector.credentials.forget(profile_id)
         finally:
             self._update_state()
 
@@ -605,47 +595,6 @@ class HostsTool(ListWorkspace):
 
     def open_saved_credentials(self, parent: QWidget) -> None:
         self._shell.open_saved_credentials(parent)
-
-    def saves_passwords(self) -> bool:
-        """Settings: typed passwords are also saved in Windows Credential Manager."""
-        return self.prefs.get("save_passwords") is True
-
-    def _saved_account(self) -> Account | None:
-        if not self.connector.credentials.saving:
-            return None
-        try:
-            found = credstore.read(SAVED_ACCOUNT)
-        except OSError as e:
-            log.warning("Couldn't read the saved account for logged-on users: %s", e)
-            return None
-        return Account(*found) if found is not None else None
-
-    def _save_account(self, account: Account) -> None:
-        if not self.connector.credentials.saving:
-            return
-        try:
-            credstore.save(SAVED_ACCOUNT, account.password, user=account.user)
-        except (OSError, ValueError) as e:
-            log.warning("Couldn't save the account for logged-on users: %s", e)
-            QMessageBox.warning(
-                self,
-                "CapyPanel",
-                _("Couldn't save the password in Windows Credential Manager: {error}\n\n"
-                  "It's kept until CapyPanel closes.").format(error=e),
-            )  # fmt: skip
-
-    def _delete_account(self) -> None:
-        credstore.forget(SAVED_ACCOUNT)  # saving or not, like the profiles' passwords
-
-    def _apply_saving(self, saving: bool) -> None:
-        """Off again deletes every saved password; what was typed this session stays."""
-        credentials = self.connector.credentials
-        if saving == credentials.saving:
-            return
-        if saving:
-            credentials.set_saving(True)  # passwords typed from now on
-        elif self._forgot(lambda: (credentials.set_saving(False), self._delete_account())):
-            self._shell.show_message(_("Saved passwords deleted."), 5000)
 
     # ---- connection profiles ----
 
@@ -720,6 +669,87 @@ class HostsTool(ListWorkspace):
         for action in menu.actions():
             action.setEnabled(self._writable() is not None)
 
+    # ---- which account commands run as: Details' arrow and the right-click menus ----
+
+    def _host_targets(self, hosts: Sequence[Host]) -> list[HostTarget]:
+        return [HostTarget(h.id, h.name, h.connect_address) for h in hosts if h.connect_address]
+
+    def _fill_account_menu(
+        self,
+        menu: QMenu,
+        current: set[str | None],
+        follow_text: str,
+        apply: Callable[[str | None], None],
+        another: Callable[[], None],
+    ) -> None:
+        """Follow Accounts (None), your Windows account, each account in the Accounts table,
+        then Another account…; `current` ticks one when every PC picked has it."""
+        menu.clear()
+        exclusive = QActionGroup(menu)
+        mine = _("Your Windows account ({user})").format(user=windows_account())
+        choices: list[tuple[str | None, str]] = [(None, follow_text), (WINDOWS, mine)]
+        choices += [(user, user) for user in account_links.users(self.accounts.links)]
+        for user, text in choices:
+            item = menu.addAction(text.replace("&", "&&"))
+            item.setCheckable(True)
+            item.setChecked(current == {user})
+            exclusive.addAction(item)
+            item.triggered.connect(lambda _checked=False, u=user: apply(u))
+            if user is None:
+                menu.addSeparator()
+        menu.addSeparator()
+        menu.addAction(_("&Another account…"), another)
+
+    def _follow_text(self, targets: Sequence[HostTarget]) -> str:
+        """ "Follow Accounts", with what it gives for one PC: an account, or Windows'."""
+        if len(targets) != 1:
+            return _("Follow Accounts")
+        own = self.accounts.own(targets[0])
+        rest = [lk for lk in self.accounts.links if lk is not own]
+        link = account_links.pick(rest, self.accounts.place(targets[0]))
+        user = link.user if link is not None and link.user else _("your Windows account")
+        return _("Follow Accounts: {user}").format(user=user)
+
+    def _fill_hosts_account_menu(self, menu: QMenu, hosts: Sequence[Host]) -> None:
+        targets = self._host_targets(hosts)
+        menu.clear()
+        if not targets:
+            return
+        current = {own.user if (own := self.accounts.own(t)) else None for t in targets}
+
+        def another() -> None:
+            account = self._ask_another(targets[0].name if len(targets) == 1 else "")
+            if account is not None:
+                self.accounts.set_pcs(targets, account.user)
+
+        self._fill_account_menu(menu, current, self._follow_text(targets),
+                                lambda u: self.accounts.set_pcs(targets, u), another)  # fmt: skip
+
+    def _fill_group_account_menu(self, menu: QMenu, group: Group) -> None:
+        row = self.accounts.group_row(group.id)
+
+        def another() -> None:
+            account = self._ask_another(group.name)
+            if account is not None:
+                self.accounts.set_group(group.id, account.user)
+
+        current = {row.user if row else None}
+        apply = lambda u: self.accounts.set_group(group.id, u)  # noqa: E731
+        self._fill_account_menu(menu, current, _("Follow Accounts"), apply, another)
+
+    def _ask_another(self, where: str) -> Account | None:
+        """Another account…: the login window, for the PCs the menu was opened on."""
+        text = (_("Use an account that is an administrator of {host}, such as a domain admin.")
+                .format(host=where) if where else
+                _("Use an account that is an administrator of these PCs, such as a domain "
+                  "admin."))  # fmt: skip
+        dialog = AccountDialog(self, text)
+        if run_modal(dialog) != QDialog.DialogCode.Accepted:
+            return None
+        account = dialog.account()
+        self.accounts.keep(account, remember=dialog.remember.isChecked())
+        return account
+
     # ---- settings ----
 
     def settings_group(self) -> HostsSettings:
@@ -737,8 +767,6 @@ class HostsTool(ListWorkspace):
         on, minutes = prefs.auto_status
         self.prefs["auto_status"] = {"on": on, "minutes": minutes}
         self._apply_auto_status()
-        self.prefs["save_passwords"] = prefs.save_passwords
-        self._apply_saving(prefs.save_passwords)
         self._save_prefs()
         self._update_state()  # the list's name may change with the lists kept
 
@@ -784,12 +812,42 @@ class HostsTool(ListWorkspace):
                 users=self._users_found.get(host.id),
                 facts=self._facts.get(host.id),
                 pending=self._pending.get(host.id),
+                profile_user=self._profile_user(
+                    host_list.profile_of(host, self._profile_exists)[0]
+                ),
+                commands_as=self._commands_as(host),
             )
             self.details.show_host(details, 1, needle=self._needle())
             if host.connect_address and host.id not in self._facts:
                 self._facts_timer.start()  # read once it stays selected a moment
         else:
             self.details.show_host(None, len(items), summary=self._summary())
+
+    def _profile_user(self, profile_id: str) -> str:
+        """The login kept for a profile (typed this session or saved); "" when none is."""
+        try:
+            kept = self.connector.credentials.get(profile_id or self._default_profile())
+        except OSError:
+            return ""
+        return kept.user if kept is not None else ""
+
+    def _default_profile(self) -> str:
+        return self.connector.catalogs.profiles.default_id()
+
+    def _commands_as(self, host: Host) -> tuple[str, bool, str]:
+        """Details' Commands run as: the account, whether this PC overrides its group (its own
+        Accounts row), and why that one."""
+        used = _("Used for Refresh's logged-on users and the commands run on this PC, not for "
+                 "Connect.")  # fmt: skip
+        link = self.accounts.link_for(HostTarget(host.id, host.name, host.connect_address))
+        if link is None:
+            why = _("No row of Settings › Hosts › Credentials names this PC, so it's "
+                    "the Windows account you're signed in with.")  # fmt: skip
+            return windows_account(), False, f"{used}\n{why}"
+        own = link.scope is Scope.PC
+        where = _("Settings › Hosts › Credentials: {uses}").format(uses=used_for(link, self._doc))
+        user = windows_account() if link.user == WINDOWS else link.user
+        return user, own, f"{used}\n{where}"
 
     def _summary(self) -> str:
         """With nothing selected, the Details panel sums up the hosts shown."""
@@ -850,6 +908,9 @@ class HostsTool(ListWorkspace):
         menu.addActions([a.check_status, a.check_users])
         menu.addSeparator()
         self._add_command_menus(menu)
+        account = menu.addMenu(_("Commands run &as"))  # this person's own rows: never read-only
+        self._fill_hosts_account_menu(account, items)
+        account.setEnabled(bool(account.actions()))
         menu.addSeparator()
         self.add_copy_menu(menu)
         menu.addSeparator()
@@ -866,6 +927,7 @@ class HostsTool(ListWorkspace):
         self._add_profile_menu(
             menu, {group.profile}, follow, lambda p: self.set_group_profile(group.id, p)
         )
+        self._fill_group_account_menu(menu.addMenu(_("Commands run &as")), group)
         # The group's hosts, including those in the groups inside it.
         hosts = list(self._doc.hosts.hosts_in(group.id))
         menu.addSeparator()
@@ -904,9 +966,17 @@ class HostsTool(ListWorkspace):
             )
         ):
             return
-        if targets:
-            wanted = Checks(status, users, self._ports(), self._account if users else None)
-            self._start(targets, wanted)
+        accounts = self._accounts_of(targets) if users and targets else {}
+        if targets and accounts is not None:
+            self._start(targets, Checks(status, users, self._ports()), accounts)
+
+    def checking(self) -> bool:
+        """A Refresh is running (another one waits for it to end)."""
+        return self._run is not None
+
+    def check_progress(self) -> tuple[int, int] | None:
+        """(hosts checked so far, hosts to check) while a Refresh runs."""
+        return (self._run.done, self._run.total) if self._run is not None else None
 
     def auto_status(self) -> tuple[bool, int]:
         saved = self.prefs.get("auto_status")
@@ -928,8 +998,28 @@ class HostsTool(ListWorkspace):
         if self._run is None and hosts:
             self.check_hosts(hosts, status=True, users=False)
 
-    def _start(self, targets: list[tuple[str, str]], wanted: Checks) -> None:
-        run = CheckRun(targets, wanted)
+    def _accounts_of(self, targets: Sequence[tuple[str, str]]) -> dict[str, Account | None] | None:
+        """Each host's account; a password not typed yet is asked first. None: cancelled."""
+        found: dict[str, Account | None] = {}
+        for key, address in targets:
+            go, account = self.accounts.account_for(self._target(key, address), self)
+            if not go:
+                return None
+            found[key] = account
+        return found
+
+    def _target(self, key: str, address: str) -> HostTarget:
+        host = self._doc.hosts.host(key) if self._doc else None
+        return HostTarget(key, host.name if host else address, address)
+
+    def _start(
+        self,
+        targets: list[tuple[str, str]],
+        wanted: Checks,
+        accounts: dict[str, Account | None] | None = None,
+    ) -> None:
+        accounts = accounts or {}
+        run = CheckRun(targets, wanted, accounts.get)
         run.found.connect(self._found)
         run.finished.connect(self._run_finished)
         self._run, self._refused, self._reported = run, [], set()
@@ -939,8 +1029,8 @@ class HostsTool(ListWorkspace):
         self._update_state()
         self.checks_changed.emit()
         log.info(
-            "Refresh: %d hosts (status=%s, users=%s, account=%s)",
-            len(targets), wanted.status, wanted.users, "typed" if wanted.account else "Windows",
+            "Refresh: %d hosts (status=%s, users=%s, typed accounts=%d)",
+            len(targets), wanted.status, wanted.users, len({a for a in accounts.values() if a}),
         )  # fmt: skip
         run.start()
 
@@ -1003,14 +1093,18 @@ class HostsTool(ListWorkspace):
             self._ask_account(run)
 
     def _ask_account(self, run: CheckRun) -> None:
-        """A host didn't let the account read who is logged on: offer another, once per run."""
-        account = run.wanted.account
+        """A host didn't let its account read who is logged on: offer another, once per run,
+        and the PCs to use it for."""
+        rejected = run.rejected[-1] if run.rejected else None
+        account = rejected or next((a for a in map(run.account_of, self._refused) if a), None)
         first = self._name_of(self._refused[-1]) if self._refused else ""
-        if run.halted and account is not None:
+        if rejected is not None:
+            first = next((self._name_of(k) for k in reversed(self._refused)
+                          if run.account_of(k) == rejected), first)  # fmt: skip
             text = _(
                 "“{host}” rejected the account “{user}”, so CapyPanel stopped before trying it "
                 "on other computers. Type the password again, or use another account."
-            ).format(host=first, user=account.user)
+            ).format(host=first, user=rejected.user)
         elif account is None:
             text = ngettext(
                 "{n} computer didn't let your Windows account see who is logged on. Use another "
@@ -1025,17 +1119,19 @@ class HostsTool(ListWorkspace):
                 "{n} computers didn't let “{user}” see who is logged on. Use another account?",
                 len(self._refused),
             ).format(n=len(self._refused), user=account.user)
-        dialog = AccountDialog(
-            self, text, account.user if account else "", saved=self.connector.credentials.saving
-        )
-        if run_modal(dialog) != QDialog.DialogCode.Accepted:
-            return
-        self._account = dialog.account()
-        self._save_account(self._account)
         # Again: the hosts that refused, and those a rejection kept from being tried.
         again = [t for t in self._targets if t[0] in self._refused or t[0] not in self._reported]
-        if again:
-            self._start(again, Checks(False, True, run.wanted.ports, self._account))
+        uses = self.accounts.uses_for([self._target(*t) for t in again or self._targets])
+        dialog = AccountDialog(self, text, account.user if account else "",
+                               uses=uses)  # fmt: skip
+        if run_modal(dialog) != QDialog.DialogCode.Accepted:
+            return
+        link = dialog.link()
+        assert link is not None  # "Every PC" at least
+        self.accounts.use(link, dialog.account(), remember=dialog.remember.isChecked())
+        accounts = self._accounts_of(again) if again else None
+        if accounts is not None:
+            self._start(again, Checks(False, True, run.wanted.ports), accounts)
 
     def _name_of(self, host_id: str) -> str:
         host = self._doc.hosts.host(host_id) if self._doc else None
@@ -1144,15 +1240,29 @@ class HostsTool(ListWorkspace):
             self.runner.run(command_id, target, self.show_outcome)
 
     def show_outcome(self, _command_id: str, outcome: Outcome) -> None:
+        if outcome.running:  # the answer comes later; meanwhile a line in the status bar
+            self.say(html.unescape(re.sub(r"<[^>]+>", "", outcome.text)))
+            return
         self.result_strip.show_outcome(outcome)
 
+    def save_prefs(self) -> None:
+        self._save_prefs()
+
+    def open_settings(self, page: str) -> None:
+        self._shell.open_settings(page)
+
     def _add_command_menus(self, menu: QMenu) -> None:
-        """Open ▸, Users ▸, Power ▸… with the selected host's commands, in the list's groups."""
+        """Check ▸, Folders ▸… Power ▸ with the selected host's commands, in the list's groups;
+        a line before each command set apart."""
         self._update_host_actions()
+        target = self.selected_target()
         for group in CommandGroup:
             submenu = menu.addMenu(_(GROUP_NAMES[group]))
-            submenu.addActions([self.host_actions[c.id] for c in host_commands.in_group(group)])
-            submenu.setEnabled(self.selected_target() is not None)
+            for command in host_commands.in_group(group):
+                if command.apart:
+                    submenu.addSeparator()
+                submenu.addAction(self.host_actions[command.id])
+            submenu.setEnabled(target is not None)
 
     def _fill_commands_menu(self, menu: QMenu, *, window: bool = False) -> None:
         """Commands ▾ and the Details panel's …: every command, by group; Commands ▾ ends with
@@ -1257,6 +1367,26 @@ class HostsTool(ListWorkspace):
         found = self._status_found.get(key)
         return (found[0], found[1]) if found is not None else None
 
+    def profile_for(self, target: HostTarget | None) -> str:
+        """The connection profile a host of the list uses; the default one for a typed address."""
+        if target is not None and self._doc is not None:
+            host = self._doc.hosts.host(target.key)
+            if host is not None:
+                return self._doc.hosts.profile_of(host, self._profile_exists)[0]
+        return self.connector.default_profile()
+
+    def host_choices(self) -> list[HostTarget]:
+        """The Commands window's host list: what the Hosts panel shows, in its order."""
+        return self._host_targets(self.table.in_shown_order(self.visible_items()))
+
+    def host_named(self, typed: str) -> HostTarget | None:
+        """The open list's host with that name or address, as typed in the Commands window."""
+        wanted = typed.strip().casefold()
+        hosts = self._doc.hosts.hosts if self._doc is not None else ()
+        found = next((h for h in hosts if h.connect_address and wanted in
+                      (h.name.casefold(), h.connect_address.casefold())), None)  # fmt: skip
+        return self._host_targets([found])[0] if found is not None else None
+
     def recent_addresses(self) -> list[str]:
         saved = self.prefs.get("recent_addresses")
         return [a for a in saved if isinstance(a, str)] if isinstance(saved, list) else []
@@ -1285,15 +1415,16 @@ class HostsTool(ListWorkspace):
         """Add to list…: Add host… with the address typed in the Commands window."""
         return self._add_host(address, profile, parent=self._commands_window)
 
-    def account(self) -> Account | None:
-        """The account typed for other PCs (logged-on users and host commands), or None for
-        the Windows account."""
-        return self._account
+    def keep_pref(self, key: str, value: object) -> None:
+        """One of this person's own settings, written at once (the accounts' links)."""
+        self.prefs[key] = value
+        self._save_prefs()
 
-    def use_account(self, account: Account) -> None:
-        self._account = account
-        self._save_account(account)
+    def _accounts_changed(self) -> None:
+        """Details says which account signs in; Settings' Saved credentials row counts them."""
         self._update_state()
+        if len(self.selected_items()) == 1:
+            self._selection_changed()
 
     def users_found(
         self, key: str
@@ -1319,8 +1450,10 @@ class HostsTool(ListWorkspace):
                     ),  # fmt: skip
                 )
             return
-        wanted = Checks(status, users, self._ports(), self._account if users else None)
-        self._start([(target.key, target.address)], wanted)
+        targets = [(target.key, target.address)]
+        accounts = self._accounts_of(targets) if users else {}
+        if accounts is not None:
+            self._start(targets, Checks(status, users, self._ports()), accounts)
 
     def say(self, text: str) -> None:
         self._shell.show_message(text, 5000)

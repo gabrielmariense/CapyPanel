@@ -38,6 +38,7 @@ from capypanel.ui.groups import TreeMenu, fill_group_menu
 from capypanel.ui.hosts import group_choices, group_path
 from capypanel.ui.icons import STATUS_COLORS, dot_icon
 from capypanel.ui.menus import popup
+from capypanel.ui.tables import fit_menu
 from capypanel.ui.themes import engine as themes
 
 # The preview's columns. The dot says what happens to the row; Warning says why.
@@ -72,6 +73,7 @@ class PreviewTable(QTreeWidget):
         self.setObjectName("grid")
         self.setRootIsDecorated(False)
         self.setUniformRowHeights(True)
+        fit_menu(self)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setEditTriggers(
             QAbstractItemView.EditTrigger.DoubleClicked
@@ -573,6 +575,7 @@ class FormatsDialog(QDialog):
             table.setObjectName("grid")
             table.setRootIsDecorated(False)
             table.setHeaderLabels(header)
+            fit_menu(table)
             for row in rows:
                 table.addTopLevelItem(QTreeWidgetItem(row))
             for column in range(len(header)):

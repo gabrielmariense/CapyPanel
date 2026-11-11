@@ -71,7 +71,7 @@ def test_the_language_dropdown_in_appearance_switches_at_once(window: CapyWindow
     dialog = window.settings_dialog()
     assert "language" not in dialog.pages  # just a dropdown on General now
     dialog.language_picked.connect(window.set_language)
-    combo = dialog.appearance.language
+    combo = dialog.general.language
     combo.setCurrentIndex(combo.findData("pt_BR"))  # no Save needed
     QApplication.processEvents()
     assert i18n.language() == "pt_BR" and _menus(window)[0].title() == "&Arquivo"

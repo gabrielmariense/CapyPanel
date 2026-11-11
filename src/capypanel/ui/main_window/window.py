@@ -204,6 +204,9 @@ class MainWindow(QMainWindow):
     def kept_logins(self) -> list[KeptLogin]:
         return [login for tool in self.tools.values() for login in tool.kept_logins()]
 
+    def tool(self, tool_id: str) -> Tool | None:
+        return self.tools.get(tool_id)
+
     def open_saved_credentials(self, parent: QWidget | None = None) -> None:
         run_modal(SavedCredentialsDialog(parent or self, self.kept_logins))
         if isinstance(parent, SettingsDialog):  # its pages show what's kept
@@ -486,10 +489,18 @@ class MainWindow(QMainWindow):
             if choice == settings.CLOSE_TRAY:
                 self.to_tray()
             return
+        if not all(tool.quit_question(self) for tool in self.tools.values()):
+            event.ignore()
+            self._quitting = False
+            return
         if not self._in_tray:  # saved when it went there, as it was shown
             self._save_state()
         self.tray.set_shown(False)
         QApplication.setQuitOnLastWindowClosed(True)
+        # Windows of CapyPanel's own that no window owns, such as Commands: they go too.
+        for other in QApplication.topLevelWidgets():
+            if other is not self and other.isWindow() and other.isVisible():
+                other.close()
         super().closeEvent(event)
 
     def _save_state(self) -> None:

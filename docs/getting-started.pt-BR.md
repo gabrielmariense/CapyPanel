@@ -12,8 +12,9 @@ uv run capypanel
 ```
 
 A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes
-abrem na hora. A versão aparece na barra de título, seguida do commit quando você roda pelo
-código-fonte, por exemplo `CapyPanel 0.23.1 (abc1234)`. Informe-a ao relatar um problema.
+abrem na hora. A versão aparece na barra de título. Quando você roda pelo código-fonte, ela vem
+seguida de um número de build e do commit, por exemplo `CapyPanel 0.24.0 build 1378 (abc1234)`;
+um número de build maior é um build mais novo. Informe-a ao relatar um problema.
 
 A Área de Trabalho Remota funciona de cara, com o cliente que já vem no Windows. Para o VNC você
 também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
@@ -30,28 +31,30 @@ ferramenta.
 |---|---|
 | **Hosts** (Ctrl+1) | "Seus computadores: conecte, veja quem está logado, verifique-os." |
 | **Impressoras** (Ctrl+2) | "Suas impressoras: status e toner, páginas web, relatórios." |
+| **Perfis de usuário** (Ctrl+3) | "Os perfis de um PC: veja quais podem ser excluídos." |
 
 ![A página inicial: a barra lateral à esquerda, a capivara e o nome do app, e um bloco para cada ferramenta](images/home-dark-pt-BR.png)
 
-A página inicial é o botão de cima da barra lateral, o **Exibir > Início** e o **Ctrl+0**. As duas
-ferramentas estão sempre lá; não há nada para ligar. Para começar em outro lugar, defina
-**Configurações > CapyPanel > Inicialização > Abrir ao iniciar** como a última ferramenta usada, ou
-como uma delas pelo nome.
+A página inicial é o botão de cima da barra lateral, o **Exibir > Início** e o **Ctrl+0**. Todas
+as ferramentas estão sempre lá; não há nada para ligar. Para começar em outro lugar, defina
+**Configurações > CapyPanel > Geral > Abrir ao iniciar** como a última ferramenta usada, ou como
+uma delas pelo nome.
 
 O resto desta página é sobre a ferramenta **Hosts**. As Impressoras têm páginas próprias, a partir
-de [A ferramenta Impressoras](printers/printers.pt-BR.md).
+de [A ferramenta Impressoras](printers/printers.pt-BR.md), e os
+[Perfis de usuário](profiles/user-profiles.pt-BR.md) também.
 
 ## A janela do Hosts
 
-![A janela do Hosts: grupos à esquerda, os hosts no meio com status e usuário, os detalhes de um host à direita](images/main-window-dark-pt-BR.png)
+![A janela do Hosts: grupos à esquerda, os hosts no meio, os detalhes de um host à direita](images/main-window-dark-pt-BR.png)
 
 | Parte | O que mostra |
 |---|---|
-| **Barra lateral** (borda esquerda) | Uma faixa estreita com o **Início** (Ctrl+0) no topo, depois um ícone por ferramenta com o nome numa dica, **Hosts** (Ctrl+1) e **Impressoras** (Ctrl+2), e **Configurações** (Ctrl+,) embaixo. Onde você está tem um quadrado colorido atrás do ícone |
+| **Barra lateral** (borda esquerda) | Uma faixa estreita com o **Início** (Ctrl+0) no topo, depois um ícone por ferramenta com o nome numa dica, **Hosts** (Ctrl+1), **Impressoras** (Ctrl+2) e **Perfis de usuário** (Ctrl+3), e **Configurações** (Ctrl+,) embaixo. Onde você está tem um quadrado colorido atrás do ícone |
 | **Barra de ferramentas** (topo) | Os botões da ferramenta aberta. Para o Hosts: **Conectar**, **Atualizar**, **Comandos**, **Inventário** e **Relatório** |
 | **Painel de grupos** (esquerda) | O nome da lista aberta no topo, como um menu que troca de lista. Depois "Todos os hosts", com quantos hosts a lista tem, e "Sem grupo" embaixo dele, com quantos não estão em nenhum. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags** |
 | **Painel de hosts** (meio) | A caixa de pesquisa (veja [Pesquisando hosts](hosts/searching.pt-BR.md)) acima dos hosts do grupo ou da tag selecionada, com **Status** e **Usuário** |
-| **Painel de detalhes** (direita) | O host selecionado: o nome e o status dele, uma fileira de botões para os [comandos](hosts/commands.pt-BR.md) dele, depois **Conexão** (endereço, grupo, perfil), quem está **logado**, os **dados do PC**, as **tags** e as **notas**. Clique em qualquer valor para copiá-lo. Sem nada selecionado, quantos hosts estão exibidos e quantos deles estão online, offline, não encontrados ou não verificados |
+| **Painel de detalhes** (direita) | O host selecionado: o nome e o status dele, uma fileira de botões para os [comandos](hosts/commands.pt-BR.md) dele, depois **Conexão** (endereço, grupo, o que o **Conectar com** abre e a conta de **Comandos como**; veja [Conectando](hosts/connecting.pt-BR.md#no-painel-de-detalhes)), quem está **logado**, os **dados do PC**, as **tags** e as **notas**. Clique em qualquer valor para copiá-lo. Sem nada selecionado, quantos hosts estão exibidos e quantos deles estão online, offline, não encontrados ou não verificados |
 | **Barra de status** | Qual lista está aberta, onde ela está, quantos hosts tem, quantos estão online depois que algo foi verificado e quantos estão selecionados |
 
 A barra de menus é a mesma em qualquer ferramenta, e não guarda nada que seja de uma delas:
@@ -99,8 +102,9 @@ O botão **Inventário** da barra de ferramentas guarda tudo que coloca hosts nu
 
 Clique com o botão direito num host para conectar, para atualizar o status ou os usuários logados
 dele, para executar um dos [comandos](hosts/commands.pt-BR.md) dele em **Verificar ▸**,
-**Abrir ▸**, **Usuários ▸**, **Energia ▸** ou **Impressoras ▸**, para copiar uma coluna em
-**Copiar ▸**, ou para editá-lo, movê-lo ou removê-lo. O **Copiar**
+**Pastas ▸**, **Ferramentas administrativas ▸**, **Usuários ▸**, **Impressoras ▸** ou
+**Energia ▸**, para escolher a conta com que os comandos dele rodam em **Comandos como ▸**, para
+copiar uma coluna em **Copiar ▸**, ou para editá-lo, movê-lo ou removê-lo. O **Copiar**
 lista todas as colunas que a tabela mostra, uma linha por host selecionado, e o **Endereço**
 mantém o Ctrl+Shift+C. O botão direito num espaço vazio oferece **Adicionar grupo…** no painel de
 grupos, e **Adicionar host…** e **Adicionar grupo…** na lista de hosts. Para mover hosts para outro
@@ -132,9 +136,15 @@ Com algo trabalhando sozinho, o **✕** pergunta o que você quis dizer: "Manter
 na bandeja?", "A atualização sozinha e os avisos continuam funcionando enquanto o CapyPanel estiver
 na bandeja. Sair os interrompe.", com o **Manter na bandeja** como botão padrão, o **Sair**, o
 **Cancelar** e uma caixa "Não perguntar de novo (altere em Configurações › CapyPanel ›
-Inicialização)". Em **Configurações > CapyPanel > Inicialização > Ao fechar** você responde de vez,
-com **Perguntar sempre**, **Manter aberto na bandeja** ou **Sair**. Sem nada trabalhando sozinho, o
-✕ fecha na hora.
+Geral)". Em **Configurações > CapyPanel > Geral > Ao fechar** você responde de vez, com
+**Perguntar sempre**, **Manter aberto na bandeja** ou **Sair**. Sem nada trabalhando sozinho, o ✕
+fecha na hora.
+
+Sair enquanto a ferramenta Perfis de usuário exclui perfis pergunta antes, seja qual for o jeito
+de sair pelo próprio CapyPanel: "Sair agora cancela os perfis ainda na fila. O perfil sendo
+excluído em cada host termina primeiro; o CapyPanel sai depois disso." O **Cancelar o restante e
+sair** faz isso; o **Continuar** mantém o CapyPanel aberto e as exclusões seguindo (veja
+[A ferramenta Perfis de usuário](profiles/user-profiles.pt-BR.md#excluindo)).
 
 ## Ajuda e como relatar um problema
 
@@ -148,6 +158,11 @@ O menu **Ajuda** tem três itens:
   com o commit, quem fez o CapyPanel, todas as licenças que vêm com ele, onde ele guarda os
   arquivos, e **Relatar um problema** ao lado de **Abrir pasta de logs**, para um relato sair com
   os logs anexados (veja [Configurações e arquivos](settings-and-files.pt-BR.md#sobre)).
+
+Quando algo dá errado dentro do próprio CapyPanel, uma janela diz "Algo deu errado. Os detalhes
+foram salvos no log do aplicativo.", com os detalhes embaixo e o **Copiar tudo** para colá-los num
+relato. É uma janela só, não importa quantas vezes aconteça: um segundo erro entra nela, e o mesmo
+erro de novo é contado ("Este erro aconteceu 3 vezes:") em vez de aparecer duas vezes.
 
 ## Atalhos de teclado
 
@@ -164,7 +179,7 @@ O menu **Ajuda** tem três itens:
 | Ctrl+Shift+C | Copiar os endereços dos hosts selecionados |
 | Ctrl+N / Ctrl+Shift+N | Adicionar host / Adicionar grupo |
 | F2 / Del | Editar / remover a seleção |
-| Ctrl+0 / Ctrl+1 / Ctrl+2 | Início / a ferramenta Hosts / a ferramenta Impressoras |
+| Ctrl+0 / Ctrl+1 / Ctrl+2 / Ctrl+3 | Início / a ferramenta Hosts / a ferramenta Impressoras / a ferramenta Perfis de usuário |
 | Ctrl+O | Abrir um arquivo de lista de hosts |
 | Ctrl+, | Configurações |
 | Ctrl+Q | Sair |

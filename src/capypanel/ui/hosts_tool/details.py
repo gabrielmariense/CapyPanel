@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from PySide6.QtCore import QLocale, QPoint, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPalette
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPalette, QResizeEvent
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMenu,
     QPushButton,
+    QSizePolicy,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -24,7 +25,8 @@ from capypanel.core import i18n
 from capypanel.core.hosts import commands as host_commands
 from capypanel.core.hosts.model import Host
 from capypanel.core.i18n import _, ngettext
-from capypanel.core.remote.access import Reason, RemoteError
+from capypanel.core.remote.access import Reason, RemoteError, code_text
+from capypanel.core.remote.inventory import PowerShellBlocked
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_texts
@@ -42,6 +44,7 @@ def escape(text: str) -> str:
 BUTTON = (34, 30)  # px: the command buttons
 MENU_BUTTON = 48  # px: Users ▾ and Power ▾, room for their arrow
 ICON = 18
+PICKER_HEIGHT = 28  # px: a changeable value's button, as tall as a dropdown
 GB = 1024**3
 
 
@@ -55,6 +58,10 @@ class HostDetails:
     users: tuple[Sequence[Session] | None, RemoteError | None, datetime] | None = None
     facts: Facts | None = None
     pending: PendingPower | None = None  # a restart or shutdown CapyPanel asked for
+    # Commands run as: the account, whether this PC overrides its group (its own Accounts row),
+    # and the tooltip saying why that one.
+    commands_as: tuple[str, bool, str] = ("", False, "")
+    profile_user: str = ""  # the login kept for that profile, if one was typed or saved
 
 
 class HostDetailsPanel(DetailsPanel):
@@ -67,6 +74,7 @@ class HostDetailsPanel(DetailsPanel):
         super().__init__()
         # Opened by the arrow beside Profile; the tool fills it each time (aboutToShow).
         self.profile_menu = QMenu(self)
+        self.account_menu = QMenu(self)  # the arrow by Commands run as, filled the same way
         # The command buttons' menus: the tool fills them each time they open.
         self.users_menu = QMenu(self)
         self.power_menu = QMenu(self)
@@ -96,16 +104,29 @@ class HostDetailsPanel(DetailsPanel):
             layout.addSpacing(8)
             layout.addWidget(self._pending_strip(shown.pending))
 
+        # Connection: a label on the left, its value on the same line, every value at the same
+        # x. The two logins, each named by what uses it, are buttons filling the value column.
         self.section(layout, _("Connection"))
         host = shown.host
-        for key, label, value in (
-            ("address", _("Address"), host.address),
-            ("group", _("Group"), shown.group),
-        ):
-            layout.addWidget(self.muted(label))
-            layout.addWidget(self.value(key, value) if value else self.muted("—"))
-        layout.addWidget(self.muted(_("Profile")))
-        layout.addLayout(self._profile_row(shown.profile))
+        self.profile_button = self._profile_picker(shown.profile, shown.profile_user)
+        self.account_button = self._account_picker(*shown.commands_as)
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(12)
+        grid.setVerticalSpacing(6)
+        grid.setColumnStretch(1, 1)
+        rows: tuple[tuple[str, QWidget], ...] = (
+            (_("Address"), self.value("address", host.address) if host.address
+             else self.muted("—")),
+            (_("Group"), self.value("group", shown.group) if shown.group else self.muted("—")),
+            (_("Connect with"), self.profile_button),
+            (_("Commands run as"), self.account_button),
+        )  # fmt: skip
+        for row, (label, value) in enumerate(rows):
+            name = QLabel(label)  # never wraps: the column is as wide as its widest label
+            name.setObjectName("hint")
+            grid.addWidget(name, row, 0, Qt.AlignmentFlag.AlignVCenter)
+            grid.addWidget(value, row, 1, Qt.AlignmentFlag.AlignVCenter)
+        layout.addLayout(grid)
 
         self.users(layout, shown.users)
         self.facts(layout, shown.facts)
@@ -208,27 +229,28 @@ class HostDetailsPanel(DetailsPanel):
 
     # ---- the sections ----
 
-    def _profile_row(self, profile: str) -> QHBoxLayout:
-        """The profile, copied by a click like every value, and an arrow to pick another."""
-        row = QHBoxLayout()
-        row.setSpacing(2)
-        row.addWidget(self.value("profile", profile) if profile else self.muted("—"), 1)
-        self.profile_button = QToolButton()
-        self.profile_button.setObjectName("profilePicker")
-        self.profile_button.setToolTip(_("Change the connection profile"))
-        self.profile_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        text = self.palette().color(QPalette.ColorRole.Text)
-        self.profile_button.setIcon(tabler_icon("chevron-down", text, 14))
-        self.profile_button.clicked.connect(self._open_profile_menu)
-        row.addWidget(self.profile_button, 0, Qt.AlignmentFlag.AlignTop)
-        return row
+    def _profile_picker(self, profile: str, user: str) -> "ValuePicker":
+        """The profile; a key when a login is kept for it, which the tooltip names."""
+        tip = _("What Connect opens, and the login it uses. Refresh's logged-on users and the "
+                "commands use the account under it.")  # fmt: skip
+        if user:
+            tip = f"{_('Signs in as {user}').format(user=user)}\n{tip}"
+        picker = ValuePicker(profile or "—", ("key",) if user else (), tip)
+        picker.clicked.connect(lambda: self._open_menu(self.profile_menu, picker))
+        return picker
 
-    def _open_profile_menu(self) -> None:
-        """Under the arrow, its right edge on the arrow's: the panel is at the window's right."""
-        button, menu = self.profile_button, self.profile_menu
-        menu.aboutToShow.emit()  # filled first, so its width is known
-        left = button.width() - menu.sizeHint().width()
-        menu.popup(button.mapToGlobal(QPoint(left, button.height())))
+    def _account_picker(self, account: str, own: bool, tip: str) -> "ValuePicker":
+        """The account; a pin only when this PC overrides its group, which the tooltip says."""
+        if own:
+            tip = f"{_('Only this PC')}\n{tip}"
+        picker = ValuePicker(account, ("pin",) if own else (), tip)
+        picker.clicked.connect(lambda: self._open_menu(self.account_menu, picker))
+        return picker
+
+    def _open_menu(self, menu: QMenu, picker: QWidget) -> None:
+        """Under the value, from its left edge, like a dropdown's list."""
+        menu.aboutToShow.emit()  # filled first
+        menu.popup(picker.mapToGlobal(QPoint(0, picker.height())))
 
     def heading(
         self,
@@ -359,12 +381,14 @@ class HostDetailsPanel(DetailsPanel):
                 ("bios", _("BIOS"), facts.pc.bios if facts.pc else None, facts.pc_error,
                  pc_pending),
             ]  # fmt: skip
+            unread = facts.pc.unread if facts.pc is not None else {}
             for key, label, value, error, pending in rows:
+                error = error or unread.get(key)  # this row alone couldn't be read
                 layout.addWidget(self.muted(label))
                 if pending:
                     layout.addWidget(self._indented(self.muted(_("Reading…"))))
                 elif error is not None:
-                    layout.addWidget(self._indented(self._warning(facts_error_text(error))))
+                    layout.addWidget(self._warning(f"{key}_error", facts_error_text(error)))
                 elif value:
                     layout.addWidget(self.value(key, value))
                 else:
@@ -386,11 +410,11 @@ class HostDetailsPanel(DetailsPanel):
         label.setContentsMargins(7, 2, 0, 2)  # where a copy value's text starts
         return label
 
-    @staticmethod
-    def _warning(text: str) -> QLabel:
-        label = QLabel(text)
-        label.setObjectName("warningText")
-        label.setWordWrap(True)
+    def _warning(self, key: str, text: str) -> QLabel:
+        """Why a row couldn't be read, in amber; a click copies it, as any value, so an error
+        can be pasted into a report."""
+        label = self.value(key, text)
+        label.setStyleSheet(f"QLabel#copyValue {{ color: {STATUS_COLORS['attention']}; }}")
         return label
 
 
@@ -411,7 +435,7 @@ def _folder_user(details: HostDetails) -> str:
 def restart_text(when: datetime | None) -> str | None:
     if when is None:
         return None
-    local = when.astimezone()
+    local = check_texts.local(when)
     if local.date() == datetime.now().astimezone().date():
         return _("Today {time}").format(time=check_texts.clock_text(when))
     return check_texts.when_text(when)
@@ -464,8 +488,65 @@ def facts_error_text(error: BaseException) -> str:
             Reason.UNREACHABLE: _("Not reached: the PC didn't answer"),
             Reason.NOT_ADMIN: _("No access: needs an admin account on this PC"),
             Reason.REJECTED: _("No access: the PC didn't accept the account"),
-            Reason.OTHER: _("Couldn't read: Windows error {code}").format(code=error.code),
+            Reason.OTHER: _("Couldn't read: Windows error {code}").format(
+                code=code_text(error.code)
+            ),
         }[error.reason]
     if isinstance(error, TimeoutError):
         return _("Couldn't read: it took too long to answer")
+    if isinstance(error, PowerShellBlocked):
+        return _("Couldn't read: Windows didn't let PowerShell start on your PC (an antivirus "
+                 "may block it)")  # fmt: skip
     return _("Couldn't read: {error}").format(error=error)
+
+
+class ValuePicker(QPushButton):
+    """A value you can change in Details: a flat button filling the value column, the value on
+    the left, small marks (key, pin) and one chevron at its right edge. A click opens its menu;
+    the tooltip says what the marks mean."""
+
+    def __init__(self, text: str, marks: Sequence[str], tip: str) -> None:
+        super().__init__()
+        self.setObjectName("valuePicker")
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip(tip)
+        self.marks = tuple(marks)
+        self.label = _Elided(text)
+        row = QHBoxLayout(self)
+        row.setContentsMargins(8, 3, 6, 3)
+        row.setSpacing(6)
+        row.addWidget(self.label, 1)
+        muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
+        text_color = self.palette().color(QPalette.ColorRole.Text)
+        for icon, color in [*((m, muted) for m in self.marks), ("chevron-down", text_color)]:
+            mark = QLabel()
+            mark.setPixmap(tabler_icon(icon, color, 14).pixmap(14, 14))
+            row.addWidget(mark)
+        for child in self.findChildren(QLabel):  # the button takes the clicks
+            child.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.setMinimumHeight(PICKER_HEIGHT)
+
+    def value_text(self) -> str:
+        return self.label.full
+
+    def sizeHint(self) -> QSize:
+        hint = super().sizeHint()
+        layout = self.layout()
+        if layout is not None:
+            hint = hint.expandedTo(layout.sizeHint())
+        return QSize(hint.width(), max(hint.height(), PICKER_HEIGHT))
+
+
+class _Elided(QLabel):
+    """One line that ends in "…" when the column is narrower than the text."""
+
+    def __init__(self, text: str) -> None:
+        super().__init__(text)
+        self.full = text
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        shown = self.fontMetrics().elidedText(self.full, Qt.TextElideMode.ElideRight, self.width())
+        if shown != self.text():
+            self.setText(shown)

@@ -118,9 +118,10 @@ class PathLabel(QLabel):
         if path is not None:
             self.set_path(path)
 
-    def set_path(self, path: Path) -> None:
+    def set_path(self, path: Path | str) -> None:
+        """A path, or a word in its place ("None") when there's no path."""
         self._full = str(path)
-        self.setToolTip(self._full)
+        self.setToolTip(self._full if isinstance(path, Path) else "")
         self._elide()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
@@ -136,17 +137,48 @@ def open_folder(folder: Path) -> None:
     QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder)))
 
 
-# ---- CapyPanel: General and Appearance; About's Folders ----
-
-
 class GeneralPage(Page):
-    """What the window shows at start, and what its X does. They apply at once."""
+    """CapyPanel's own page: the theme and language (Appearance), then what the window shows
+    at start and what its X does (Startup and closing). Each applies as soon as it's picked."""
 
     def __init__(
-        self, *, tools: Sequence[tuple[str, str]], start: str, closing: str = settings.CLOSE_ASK
+        self,
+        *,
+        tools: Sequence[tuple[str, str]],
+        start: str,
+        closing: str = settings.CLOSE_ASK,
+        language: str = i18n.DEFAULT_LANGUAGE,
+        registry: themes.Registry,
+        theme_id: str,
     ) -> None:
         """tools: (id, name), in the rail's order."""
         super().__init__(_("General"))
+        # The Windows themes, then the app's own. The window shows the theme picked: no preview.
+        self.theme = QComboBox()
+        previous = None
+        for theme in registry.all():
+            if previous and theme.engine != previous:
+                self.theme.insertSeparator(self.theme.count())
+            previous = theme.engine
+            self.theme.addItem(theme.title(), theme.id)
+        self.theme.setCurrentIndex(max(self.theme.findData(theme_id), 0))
+        # Each language is named in its own language, so anyone can find theirs.
+        self.language = QComboBox()
+        for code, name in i18n.LANGUAGES.items():
+            self.language.addItem(name, code)
+        self.language.setCurrentIndex(max(self.language.findData(language), 0))
+        appearance = Section(_("Appearance"))
+        add_rows(
+            appearance.content,
+            SettingRow(
+                _("&Theme"),
+                _("Windows themes follow Windows' look and accent; CapyPanel themes look the "
+                  "same everywhere."),
+                self.theme,
+            ),
+            SettingRow(_("&Language"), _("The app's language. Changes at once."), self.language),
+        )  # fmt: skip
+        self.body.addWidget(appearance)
         self.start = QComboBox()
         self.start.addItem(_("Home page"), settings.START_HOME)
         self.start.addItem(_("The last used tool"), settings.START_LAST)
@@ -160,7 +192,7 @@ class GeneralPage(Page):
         self.closing.addItem(_("Quit"), settings.CLOSE_QUIT)
         self.closing.setCurrentIndex(max(self.closing.findData(closing), 0))
         self.closing.currentIndexChanged.connect(lambda _i: self.changed.emit())
-        startup = Section(_("Startup"))
+        startup = Section(_("Startup and closing"))
         add_rows(
             startup.content,
             SettingRow(
@@ -181,45 +213,6 @@ class GeneralPage(Page):
 
     def closing_choice(self) -> str:
         return str(self.closing.currentData())
-
-
-class AppearancePage(Page):
-    """The app's language and theme, a section each. Both apply as soon as they're picked."""
-
-    def __init__(self, *, language: str, registry: themes.Registry, theme_id: str) -> None:
-        super().__init__(_("Appearance"))
-        # Each language is named in its own language, so anyone can find theirs.
-        self.language = QComboBox()
-        for code, name in i18n.LANGUAGES.items():
-            self.language.addItem(name, code)
-        self.language.setCurrentIndex(max(self.language.findData(language), 0))
-        # The Windows themes, then the app's own. The window shows the theme picked: no preview.
-        self.theme = QComboBox()
-        previous = None
-        for theme in registry.all():
-            if previous and theme.engine != previous:
-                self.theme.insertSeparator(self.theme.count())
-            previous = theme.engine
-            self.theme.addItem(theme.title(), theme.id)
-        self.theme.setCurrentIndex(max(self.theme.findData(theme_id), 0))
-        language_section = Section(_("Language"))
-        add_rows(
-            language_section.content,
-            SettingRow(_("&Language"), _("The app's language. Changes at once."), self.language),
-        )
-        theme_section = Section(_("Theme"))
-        add_rows(
-            theme_section.content,
-            SettingRow(
-                _("&Theme"),
-                _("Windows themes follow Windows' look and accent; CapyPanel themes look the "
-                  "same everywhere."),
-                self.theme,
-            ),
-        )  # fmt: skip
-        self.body.addWidget(language_section)
-        self.body.addWidget(theme_section)
-        self.body.addStretch(1)
 
     def language_choice(self) -> str:
         return str(self.language.currentData() or i18n.DEFAULT_LANGUAGE)
@@ -274,11 +267,12 @@ class FoldersSection(Section):
             open_folder(Path(item.data(0, Qt.ItemDataRole.UserRole)))
 
 
-# ---- a list tool's General page: Startup ----
+# ---- a list tool's General page: its lists ----
 
 
 class ListsGeneralPage(Page):
-    """A list tool's General page: which list opens and what it shows first (Startup). A tool
+    """A list tool's General page: its lists (the same as the list dropdown; a double-click
+    opens one), then which of them opens at start and what it shows first, on one card. A tool
     adds its own sections below with add_section()."""
 
     def __init__(
@@ -289,6 +283,9 @@ class ListsGeneralPage(Page):
         default_list: Path,
         personal_list: Path,
         added: list[Path],
+        document: OpenList | None = None,
+        found: list[Path] | None = None,
+        hidden: list[Path] | None = None,
         start_view: tuple[str, str] | None = None,
         host_list: HostList | None = None,
     ) -> None:
@@ -296,7 +293,18 @@ class ListsGeneralPage(Page):
         list, for its groups."""
         super().__init__(_("General"))
         self.texts = texts
-        start = Section(_("Startup"))
+        self.view = ListsView(
+            default_list=default_list,
+            personal_list=personal_list,
+            added=added,
+            document=document,
+            found=found,
+            hidden=hidden,
+            texts=texts,
+        )
+        self.view.changed.connect(self.changed.emit)
+        start = Section(texts.lists)
+        start.content.addWidget(self.view)
         self.start_list = QComboBox()
         self.start_list.setSizeAdjustPolicy(
             QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
@@ -356,6 +364,16 @@ class ListsGeneralPage(Page):
 
     def start_choice(self) -> str:
         return str(self.start_list.currentData())
+
+    def chosen(self) -> Path | None:
+        """The list picked in the table."""
+        return self.view.selected()
+
+    def added(self) -> list[Path]:
+        return list(self.view.added)
+
+    def hidden(self) -> list[Path]:
+        return list(self.view.hidden)
 
     def _fill_first_menu(self) -> None:
         menu = self.show_first.menu()
@@ -417,7 +435,7 @@ class ListsGeneralPage(Page):
 
 
 class HostsPage(ListsGeneralPage):
-    """The Hosts tool's General page: Startup, then Refresh."""
+    """The Hosts tool's General page: Host lists, then Refresh."""
 
     def __init__(
         self,
@@ -427,6 +445,9 @@ class HostsPage(ListsGeneralPage):
         default_list: Path,
         personal_list: Path,
         added: list[Path],
+        document: OpenList | None = None,
+        found: list[Path] | None = None,
+        hidden: list[Path] | None = None,
         auto_status: tuple[bool, int] = (False, 5),
         start_view: tuple[str, str] | None = None,
         host_list: HostList | None = None,
@@ -437,6 +458,9 @@ class HostsPage(ListsGeneralPage):
             default_list=default_list,
             personal_list=personal_list,
             added=added,
+            document=document,
+            found=found,
+            hidden=hidden,
             start_view=start_view,
             host_list=host_list,
         )
@@ -527,46 +551,3 @@ def ask_minutes(parent: QWidget, start: int) -> int | None:
     layout.addWidget(buttons)
     accepted = run_modal(dialog) == QDialog.DialogCode.Accepted
     return minutes.value() if accepted else None
-
-
-# ---- a list tool's lists: Host lists, for Hosts ----
-
-
-class ListsPage(Page):
-    """The same lists as the list dropdown; a double-click opens one."""
-
-    def __init__(
-        self,
-        *,
-        default_list: Path,
-        personal_list: Path,
-        document: OpenList | None,
-        added: list[Path],
-        found: list[Path] | None = None,
-        hidden: list[Path] | None = None,
-        texts: ListTexts,
-    ) -> None:
-        super().__init__(texts.lists)
-        self.view = ListsView(
-            default_list=default_list,
-            personal_list=personal_list,
-            added=added,
-            document=document,
-            found=found,
-            hidden=hidden,
-            texts=texts,
-        )
-        box = Section(texts.lists)
-        box.content.addWidget(self.view)
-        self.body.addWidget(box)
-        self.body.addStretch(1)
-        self.view.changed.connect(self.changed.emit)
-
-    def chosen(self) -> Path | None:
-        return self.view.selected()
-
-    def added(self) -> list[Path]:
-        return list(self.view.added)
-
-    def hidden(self) -> list[Path]:
-        return list(self.view.hidden)

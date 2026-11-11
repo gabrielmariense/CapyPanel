@@ -105,7 +105,7 @@ as it does for hosts, so [Importing and exporting hosts](../hosts/importing.md#e
 describes the window in full.
 
 What differs is what goes in it. The columns are grouped as **Printer** (name, address, group,
-brand, model), **Details** (serial number, asset tag, page counters, tags, notes) and **Last
+brand, model, serial number), **Details** (asset tag, page counters, tags, notes) and **Last
 check** (status, toner as text, the toner model, total pages in plain digits so a spreadsheet
 reads them as a number, the MAC address and the firmware version). The built-in preset is **All
 details**.
@@ -114,7 +114,8 @@ details**.
 cartridge, as in "Black Cartridge HP CF258A"; a printer with several of them has them joined
 with "; ".
 
-Ticking any column under Last check lets the window refresh those printers itself, and it says how
+Ticking any column under Last check lets the window refresh those printers itself, with a button
+under the ticks named after how many there are, as in **Refresh 12 printers**, and it says how
 many of them have never been checked. With none ticked the button explains itself: "Tick a column
 under Last check to read them". A printer whose counters come from Doc360 MPS has the portal's
 number, or "Error" when the portal had none for it;

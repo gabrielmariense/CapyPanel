@@ -76,6 +76,13 @@ class ToolTile(QFrame):
         color = self.palette().color(QPalette.ColorRole.Text)
         self.badge.setPixmap(tabler_icon(self.tool.icon, color, ICON_SIZE).pixmap(ICON_SIZE))
 
+    def changeEvent(self, event: QEvent) -> None:
+        super().changeEvent(event)
+        # Its own colours, once they've changed: the page's change came first, while a tile
+        # still had the previous theme's, and its icon kept the old colour.
+        if event.type() == QEvent.Type.PaletteChange:
+            self.restyle()
+
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         super().mouseReleaseEvent(event)
         if event.button() == Qt.MouseButton.LeftButton and self.rect().contains(
@@ -133,7 +140,7 @@ class HomePage(QWidget):
     def restyle(self) -> None:
         self.mascot.setPixmap(branding.mascot(MASCOT_HEIGHT, self.devicePixelRatioF()))
         for tile in self.tiles:
-            tile.restyle()
+            tile.restyle()  # each also redraws on its own colour change
 
     def _place_tiles(self, columns: int) -> None:
         columns = max(1, min(columns, len(self.tiles)))

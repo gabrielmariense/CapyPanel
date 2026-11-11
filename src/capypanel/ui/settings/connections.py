@@ -1,4 +1,4 @@
-"""Settings > Connections: the shared connection profiles (add, edit, duplicate, delete, the
+"""Settings › Hosts › Connecting: the shared connection profiles (add, edit, duplicate, delete, the
 default one), where this user's typed passwords are kept, and where each remote tool was found
 on this PC. Like every other setting, each change is written at once."""
 
@@ -32,7 +32,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.tools import detect, viewer_settings
 from capypanel.core.tools.catalog import Catalogs
-from capypanel.core.tools.definitions import ToolDefinition
+from capypanel.core.tools.definitions import VIEWERS, ToolDefinition
 from capypanel.core.tools.profile_store import UNTRUSTED, make_id
 from capypanel.core.tools.profiles import (
     ConnectionProfile,
@@ -284,14 +284,10 @@ class SharedSection(Section):
 
 
 class ProfilesSection(SharedSection):
-    """The connection profiles everyone on this PC connects with, and where this user's typed
-    passwords are kept."""
+    """The connection profiles everyone on this PC connects with, and this user's saved
+    passwords."""
 
-    passwords_changed = Signal()  # the user's own choice, not a shared file
-
-    def __init__(
-        self, catalogs: Catalogs, document: OpenList | None, *, save_passwords: bool = False
-    ) -> None:
+    def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
         super().__init__(_("Connection profiles"), catalogs)
         self.store = catalogs.profiles
         self.document = document
@@ -341,19 +337,13 @@ class ProfilesSection(SharedSection):
         inner.addWidget(notes(access))
         inner.addWidget(self.builtin_note)
         inner.addWidget(self.profiles_skipped)
-        self.passwords = QComboBox()
-        self.passwords.addItem(_("Temporary credentials"), False)
-        self.passwords.addItem(_("Credential Manager"), True)
-        self._saved_tip = _(
-            "Windows encrypts them for your account, domain accounts too: anyone using your "
-            "Windows session can connect with them."
-        )
-        self.passwords.setItemData(1, self._saved_tip, Qt.ItemDataRole.ToolTipRole)
-        self.passwords.setCurrentIndex(1 if save_passwords else 0)
-        self.passwords_row = SettingRow(_("&Credentials"), "", self.passwords)
-        self._describe_passwords()
-        self.passwords.currentIndexChanged.connect(self._passwords_picked)
         self.manage_button = QPushButton(_("&Manage…"))  # opens Saved credentials
+        # Each login window has "Remember it on this computer": what was ticked is here. The
+        # row's line says how many (Hosts' settings fill it in).
+        self.manage_button.setToolTip(
+            _("Logins you ticked Remember for: Windows encrypts them for your account, so anyone "
+              "using your Windows session can connect with them.")
+        )  # fmt: skip
         self.saved_row = SettingRow(_("Sa&ved credentials"), "", self.manage_button)
         add_rows(
             inner,
@@ -362,27 +352,13 @@ class ProfilesSection(SharedSection):
                 _("The profile a host connects with when it has none of its own."),
                 self.default,
             ),
-            self.passwords_row,
-            self.saved_row,
         )
+        # The passwords' rows are this user's own, so they sit on a card of their own, under
+        # this one; they stay this section's, which handles them.
+        self.passwords_section = Section(_("Passwords"))
+        add_rows(self.passwords_section.content, self.saved_row)
 
         self._fill_profiles(select=None)
-
-    def save_passwords_choice(self) -> bool:
-        return self.passwords.currentData() is True
-
-    def _passwords_picked(self) -> None:
-        self._describe_passwords()
-        self.passwords_changed.emit()
-
-    def _describe_passwords(self) -> None:
-        saving = self.save_passwords_choice()
-        self.passwords_row.description.setText(
-            _("Saved for your Windows account.")
-            if saving
-            else _("Forgotten when CapyPanel closes.")
-        )
-        self.passwords.setToolTip(self._saved_tip if saving else "")
 
     def _written(self) -> None:
         self._show_folder_state()  # the first change makes the folder
@@ -440,7 +416,7 @@ class ProfilesSection(SharedSection):
         add_action(menu, _("&Delete…"), self.delete, picked)
 
     def _dialog(self, title: str, profile: ConnectionProfile | None) -> ProfileDialog:
-        tools = [e.item for e in self.catalogs.tools.all()]
+        tools = [e.item for e in self.catalogs.tools.all() if e.item.kind in VIEWERS]
         installed = {t.id for t in tools if detect.find_executable(t) is not None}
         return ProfileDialog(self, title, tools, installed, profile)
 
@@ -579,8 +555,60 @@ class ToolsSection(SharedSection):
         )
         self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])
         tools_layout.addWidget(self.tools_skipped)
+        tools_layout.addLayout(self._reads_row())
 
         self._fill_tools()
+
+    # ---- how other PCs are read: written at once, for everyone on this PC ----
+
+    def _reads_row(self) -> QHBoxLayout:
+        self.reads_label = QLabel(_("Read PC data with:"))
+        self.reads = QComboBox()
+        for way, text in (
+            ("auto", _("Automatic (recommended)")),
+            ("direct", _("WMI directly")),
+            ("powershell", _("WMI through PowerShell")),
+        ):
+            self.reads.addItem(text, way)
+        self.reads.setToolTip(
+            _("Both read over WMI; only what starts on this PC changes. Automatic reads directly, "
+              "and through PowerShell only when that can't be used here.")
+        )  # fmt: skip
+        self.reads.setCurrentIndex(max(0, self.reads.findData(self.catalogs.tools.reads())))
+        self.reads.setEnabled(self.can_edit_tools)
+        self.reads.activated.connect(self._reads_picked)
+        self.reads_note = QLabel()
+        self.reads_note.setObjectName("hint")
+        row = QHBoxLayout()
+        row.addWidget(self.reads_label)
+        row.addWidget(self.reads)
+        row.addWidget(self.reads_note)
+        row.addStretch(1)
+        self._show_reads_note()
+        return row
+
+    def _reads_picked(self) -> None:
+        from capypanel.core.remote import inventory
+
+        way = str(self.reads.currentData())
+        if self._write(
+            lambda: self.catalogs.tools.set_reads(way),
+            _("Couldn't save how PCs are read: {error}"),
+        ):
+            inventory.transport = way
+        else:
+            self.reads.setCurrentIndex(max(0, self.reads.findData(self.catalogs.tools.reads())))
+        self._show_reads_note()
+
+    def _show_reads_note(self) -> None:
+        """With Automatic, which way it uses now, so nobody needs the log to know."""
+        from capypanel.core.remote import wmi
+
+        if self.reads.currentData() != "auto":
+            self.reads_note.setText("")
+            return
+        way = _("WMI directly") if wmi.available() else _("WMI through PowerShell")
+        self.reads_note.setText(_("in use: {way}").format(way=way))
 
     # ---- tools: a path chosen here is written at once ----
 
@@ -695,15 +723,16 @@ class ToolsSection(SharedSection):
 
 
 class ConnectionsPage(Page):
-    """Settings > Connections: the profiles, and where the tools they open are."""
+    """Settings › Hosts › Connecting: what everyone on this PC shares, the profiles and where
+    the tools the profiles open are. The profiles' Passwords card is this person's own: it
+    shows on Credentials."""
 
-    def __init__(
-        self, catalogs: Catalogs, document: OpenList | None, *, save_passwords: bool = False
-    ) -> None:
-        super().__init__(_("Connections"))
-        self.profiles = ProfilesSection(catalogs, document, save_passwords=save_passwords)
+    def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
+        super().__init__(_("Connecting"))
+        self.profiles = ProfilesSection(catalogs, document)
         self.tools = ToolsSection(catalogs)
         for section in (self.profiles, self.tools):
             self.body.addWidget(section)
-            section.changed.connect(self.changed.emit)
+        for shared in (self.profiles, self.tools):
+            shared.changed.connect(self.changed.emit)
         self.body.addStretch(1)

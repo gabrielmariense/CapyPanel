@@ -14,12 +14,19 @@ Shipped theme files (this folder, *.json) override some tokens of a base:
 import ctypes
 import json
 import logging
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QObject, Qt
-from PySide6.QtGui import QActionEvent, QColor, QFont, QGuiApplication, QPalette
+from PySide6.QtGui import (
+    QActionEvent,
+    QColor,
+    QFont,
+    QFontDatabase,
+    QGuiApplication,
+    QPalette,
+)
 from PySide6.QtWidgets import QApplication, QListView, QMenu, QTreeView, QWidget
 
 from capypanel.core.i18n import N_, _
@@ -138,7 +145,7 @@ _applied_once = False
 _generation = 0  # counts theme switches: a window open across one is never deleted
 _watching_system = False
 _native_font: QFont | None = None
-_watcher: QObject | None = None
+_watcher: "_Watcher | None" = None
 
 
 def current() -> Theme:
@@ -171,7 +178,25 @@ def apply(theme: Theme) -> None:
     # steps (it flashed): lists open at once instead.
     QApplication.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, False)
     _follow_system_changes()
-    _watch_widgets(app)
+    watcher = _watch_widgets(app)
+    # Nothing the watcher fixes happens during a switch, and its Python call on each of the
+    # thousands of events a switch sends only made the switch slower.
+    app.removeEventFilter(watcher)
+    try:
+        _switch(app, theme, scheme, engine_changed=engine_changed)
+    finally:
+        app.installEventFilter(watcher)
+    for widget in app.topLevelWidgets():
+        if widget.isWindow() and widget.isVisible():
+            paint_title_bar(widget)
+
+
+def _switch(
+    app: QApplication, theme: Theme, scheme: Qt.ColorScheme, *, engine_changed: bool
+) -> None:
+    """Every stylesheet, style or palette change makes Qt restyle every widget, the slow part
+    of a switch, so each switch asks for as few as it can."""
+    assert _native_font is not None
     if theme.engine == "native":
         # Windows' default app font is 9 pt; use the same size as the custom themes.
         readable = QFont(_native_font)
@@ -190,25 +215,25 @@ def apply(theme: Theme) -> None:
         links.setColor(QPalette.ColorRole.Link, QColor(tokens["accent_text"]))
         app.setPalette(links)  # only Link is set; every other colour stays the system's
         _refont(app, readable.families())
-    else:
-        if engine_changed:
-            app.setFont(_native_font)
-            # The stylesheet goes first, so widgets remember the native font to go back to.
-            app.setStyleSheet(stylesheet(theme))
-            app.setStyle("Fusion")
-        font = QFont()
-        font.setFamilies(list(theme.font[0]))
-        font.setPointSizeF(theme.font[1])
-        # Lining digits: in fonts like Georgia, old-style digits make "PC01" read as "PCo1".
-        font.setFeature(QFont.Tag("lnum"), 1)
-        app.setFont(font)
-        QGuiApplication.styleHints().setColorScheme(scheme)
-        app.setPalette(_palette(theme.colors))
-        app.setStyleSheet(stylesheet(theme))
-        _refont(app, font.families())
-    for widget in app.topLevelWidgets():
-        if widget.isWindow() and widget.isVisible():
-            paint_title_bar(widget)
+        return
+    font = QFont()
+    font.setFamilies(installed(theme.font[0]))
+    font.setPointSizeF(theme.font[1])
+    # Lining digits: in fonts like Georgia, old-style digits make "PC01" read as "PCo1".
+    font.setFeature(QFont.Tag("lnum"), 1)
+    QGuiApplication.styleHints().setColorScheme(scheme)
+    if engine_changed:
+        # Widgets keep the font they had when a stylesheet first reached them, to go back to
+        # it: give them the native one under an empty stylesheet, which restyles them quickly.
+        # The theme's own stylesheet is then set once, below; setting it here too doubled the
+        # time of a switch from a Windows theme.
+        app.setFont(_native_font)
+        app.setStyleSheet("QWidget { }")
+        app.setStyle("Fusion")
+    app.setFont(font)
+    app.setPalette(_palette(theme.colors))
+    app.setStyleSheet(stylesheet(theme))
+    _refont(app, font.families())
 
 
 def native_tokens(accent: QColor) -> dict[str, str]:
@@ -348,11 +373,21 @@ class _Watcher(QObject):
         return False
 
 
-def _watch_widgets(app: QApplication) -> None:
+def _watch_widgets(app: QApplication) -> "_Watcher":
     global _watcher
     if _watcher is None:
         _watcher = _Watcher(app)
         app.installEventFilter(_watcher)
+    return _watcher
+
+
+def installed(families: Sequence[str]) -> list[str]:
+    """The first of `families` this PC has, alone: the look is the same, and Qt isn't left to
+    walk a list of fallbacks the first time it measures text, which took up to 2.6 s at the
+    start on a PC with many fonts. The whole list when it has none of them."""
+    have = {family.casefold() for family in QFontDatabase.families()}
+    first = next((family for family in families if family.casefold() in have), None)
+    return [first] if first is not None else list(families)
 
 
 def _refont(app: QApplication, families: list[str]) -> None:
@@ -538,6 +573,10 @@ QFrame#tagStrip { background: %(sel_solid)s; border: 1px solid %(accent)s; borde
 QFrame#attentionStrip { background: %(sel_solid)s; border: 1px solid %(accent)s;
                         border-left: 3px solid %(attention)s; border-radius: 6px; }
 /* A host command's answer above the table: a green edge when it worked, red when it didn't. */
+/* A thin bar for work that counts its steps (deleting profiles): a track a shade darker than
+   the card, the accent filling it. */
+QProgressBar#thin { background: %(bg)s; border: none; border-radius: 4px; }
+QProgressBar#thin::chunk { background: %(accent)s; border-radius: 4px; }
 QFrame#resultStrip { background: %(sel_solid)s; border: 1px solid %(accent)s;
                      border-left: 3px solid %(online)s; border-radius: 6px; }
 QFrame#resultStrip[failed="true"] { border-left-color: %(stopped)s; }
@@ -567,6 +606,10 @@ QFrame#commandRow[risky="true"] { border-left: 2px solid %(attention)s; }
 QLabel#commandName[risky="true"] { color: %(attention)s; }
 QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
                             color: %(attention)s; }
+/* With the keyboard on it (Tab), a risky button fills in amber: as plain to see as the blue
+   default it takes over from, where Enter would press it. */
+QPushButton#risky:focus { background: %(attention)s; border-color: %(attention)s;
+                          color: #1b1b1b; }
 /* A tool's count of items needing attention, on its rail icon. */
 QLabel#railBadge { background: %(stopped)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel_solid)s; border-radius: 9px; padding: 2px 9px; }
@@ -615,6 +658,12 @@ QPushButton:checked { background: %(sel_solid)s; border-color: %(accent)s; color
 QGroupBox { border: 1px solid %(border)s; border-radius: %(r)spx; margin-top: 16px;
             padding: 14px 12px 10px 12px; background: %(card)s; }
 QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 4px; color: %(text2)s; }
+/* Report's boxes of ticks: a group box's look, with the title as a line inside it. */
+QFrame#reportBox { border: 1px solid %(border)s; border-radius: %(r)spx; background: %(card)s; }
+/* A value you can change in Details: a flat button a step off the panel, no border. */
+QPushButton#valuePicker { background: rgba(128, 128, 128, 0.24); border: none;
+                          border-radius: %(r2)spx; padding: 0; text-align: left; }
+QPushButton#valuePicker:hover { background: %(sel_solid)s; }
 
 QStatusBar { background: %(chrome)s; color: %(text2)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; padding: 2px 8px; }
@@ -663,6 +712,9 @@ QTreeView#grid QHeaderView::section:only-one { border-right: none; }
 /* The Details pane: accent headings over a thin rule, values that highlight to be copied. */
 QLabel#detailsSection { color: %(accent_text)s; font-weight: bold; }
 QFrame#detailsRule { background: %(border)s; border: none; min-height: 1px; max-height: 1px; }
+QPushButton#valuePicker { background: rgba(128, 128, 128, 0.24); border: none;
+                          border-radius: 4px; padding: 0; text-align: left; }
+QPushButton#valuePicker:hover { background: %(sel)s; }
 /* Settings: each section's settings on a soft card under a larger title; a line beside the
    page list. */
 QLabel#sectionTitle { color: %(accent_text)s; font-weight: bold; font-size: 12pt; }
@@ -682,6 +734,10 @@ QFrame#tagStrip { background: %(sel)s; border: 1px solid %(accent)s; border-radi
 /* Printers needing attention: the same strip, with an amber edge. */
 QFrame#attentionStrip { background: %(sel)s; border: 1px solid %(accent)s;
                         border-left: 3px solid %(attention)s; border-radius: 6px; }
+/* A thin bar for work that counts its steps (deleting profiles): a track a shade darker than
+   the card, the accent filling it. */
+QProgressBar#thin { background: %(bg)s; border: none; border-radius: 4px; }
+QProgressBar#thin::chunk { background: %(accent)s; border-radius: 4px; }
 QFrame#resultStrip { background: %(sel)s; border: 1px solid %(accent)s;
                      border-left: 3px solid %(online)s; border-radius: 6px; }
 QFrame#resultStrip[failed="true"] { border-left-color: %(stopped)s; }
@@ -706,6 +762,10 @@ QFrame#commandRow[risky="true"] { border-left: 2px solid %(attention)s; }
 QLabel#commandName[risky="true"] { color: %(attention)s; }
 QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
                             color: %(attention)s; }
+/* With the keyboard on it (Tab), a risky button fills in amber: as plain to see as the blue
+   default it takes over from, where Enter would press it. */
+QPushButton#risky:focus { background: %(attention)s; border-color: %(attention)s;
+                          color: #1b1b1b; }
 /* A tool's count of items needing attention, on its rail icon. */
 QLabel#railBadge { background: %(stopped)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel)s; border-radius: 9px; padding: 2px 9px; }

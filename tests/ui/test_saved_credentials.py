@@ -7,6 +7,7 @@ from capywindow import CapyWindow
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from capypanel.core import credstore, settings
+from capypanel.core.hosts.accounts import Link, Scope
 from capypanel.core.printers import usm
 from capypanel.core.remote.access import Account
 from capypanel.core.tools.connect import Credential
@@ -24,16 +25,19 @@ from capypanel.ui.saved_credentials import (
 @pytest.fixture
 def window(qapp: QApplication, tmp_path: Path) -> Iterator[CapyWindow]:
     (tmp_path / settings.PORTABLE_MARKER).touch()
-    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1, "save_passwords": True})
+    win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     yield win
     win.close()
 
 
 def _keep_some(win: CapyWindow) -> None:
-    """A saved profile password and an account typed for logged-on users (in memory only)."""
+    """A saved profile password and an account typed for every PC (in memory only)."""
     profile = win.hosts.connector.choices()[0][0]
-    win.hosts.connector.credentials.remember(profile, Credential("EXAMPLE\\ana", "x"))
-    win.hosts._account = Account("EXAMPLE\\svc", "y")  # pyright: ignore[reportPrivateUsage]
+    win.hosts.connector.credentials.remember(
+        profile, Credential("EXAMPLE\\ana", "x"), save=True
+    )  # Remember ticked
+    win.hosts.accounts.use(Link("EXAMPLE\\svc", Scope.ALL), Account("EXAMPLE\\svc", "y"),
+                           remember=False)  # fmt: skip
 
 
 def _rows(dialog: SavedCredentialsDialog) -> list[list[str]]:
@@ -52,13 +56,13 @@ def test_the_window_lists_the_connection_logins_by_what_they_re_used_for(
     rows = _rows(dialog)
     assert len(rows) == 2
     assert [r[0] for r in rows] == sorted((r[0] for r in rows), key=str.casefold)
-    assert ["Logged-on users", "Hosts › Refresh", "EXAMPLE\\svc", "Temporary"] in rows
+    assert ["Every PC", "Hosts › Accounts", "EXAMPLE\\svc", "Temporary"] in rows
     assert any(r[2:] == ["EXAMPLE\\ana", "Credential Manager"] for r in rows)
     assert not any("x" in r or "y" in r for r in rows)  # no password
 
 
 def test_printers_snmp_logins_are_not_listed(window: CapyWindow) -> None:
-    # They're set in Settings › Printers › Refresh, not with the connection logins.
+    # They're set in Settings › Printers › Connecting, not with the connection logins.
     refresh.save_v3_account(usm.Account("snmp-reader", usm.Auth.SHA, "auth-pass"))
     credstore.save(refresh.COMMUNITY, "s3cret")
     assert window.kept_logins() == []
@@ -72,12 +76,12 @@ def test_forget_deletes_the_picked_login_and_forget_all_the_rest(
     [account] = [
         dialog.table.topLevelItem(r)
         for r in range(2)
-        if dialog.table.topLevelItem(r).text(0) == "Logged-on users"  # type: ignore[union-attr]
+        if dialog.table.topLevelItem(r).text(0) == "Every PC"  # type: ignore[union-attr]
     ]
     assert account is not None
     dialog.table.setCurrentItem(account)
     dialog.forget_button.click()
-    assert window.hosts._account is None  # pyright: ignore[reportPrivateUsage]
+    assert window.hosts.accounts.known("EXAMPLE\\svc") is None
     assert len(_rows(dialog)) == 1
     asked: list[str] = []
 

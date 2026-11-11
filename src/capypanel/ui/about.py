@@ -5,6 +5,7 @@ import platform
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
+from importlib import metadata
 from pathlib import Path
 from urllib.parse import quote
 
@@ -29,7 +30,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel import _COMMIT, BUILD, __version__
+from capypanel import _COMMIT, _NUMBER, BUILD, __version__
 from capypanel.core import i18n, settings
 from capypanel.core.i18n import _
 from capypanel.ui import branding
@@ -140,7 +141,8 @@ class AboutPage(Page):
             (_("Documentation:"), _link(docs_url(), DOCS_URL.removeprefix("https://").rstrip("/"))),
             (_("Source code:"), _link(source_url(), REPO_URL.removeprefix("https://"))),
         ]
-        build = [f"commit {_COMMIT}"] if _COMMIT else []  # only what applies
+        build = [f"build {_NUMBER}"] if _NUMBER else []  # only what applies
+        build += [f"commit {_COMMIT}"] if _COMMIT else []
         if self._portable:
             build.append(_("portable mode"))
         if build:
@@ -316,6 +318,13 @@ COMPONENTS = (
     ),
     Component(
         "pycparser", pycparser_version, "© 2008-2027 Eli Bendersky", "BSD-3-Clause", "pycparser.txt"
+    ),
+    Component(
+        "pywin32",
+        metadata.version("pywin32"),
+        "© 1994-2008 Mark Hammond, Greg Stein and contributors",
+        "BSD-3-Clause",
+        "pywin32.txt",
     ),
     Component("Tabler Icons", "", "© 2020-2026 Paweł Kuna", "MIT", "tabler-icons.txt"),
 )

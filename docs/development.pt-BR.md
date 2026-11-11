@@ -8,7 +8,7 @@ Python 3.13 e todas as dependências nas versões exatas do `uv.lock`.
 ```
 uv sync                     # instala exatamente as versões do uv.lock
 uv run capypanel            # abre o app
-uv run pytest               # testes
+uv run pytest -n auto --dist loadgroup   # testes, espalhados por todos os núcleos, como no CI
 uv run ruff check           # lint
 uv run ruff format          # formatação
 uv run pyright              # checagem de tipos
@@ -62,7 +62,7 @@ As páginas em `docs/` também são publicadas como site com o
 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/), sempre que mudam na `main`. Cada
 página em inglês (`nome.md`) tem a versão em português ao lado (`nome.pt-BR.md`); mude as duas
 juntas. As páginas sobre o app inteiro ficam em `docs/`, e as páginas de uma ferramenta numa pasta
-própria, `docs/hosts/`. Para ver o site enquanto escreve:
+própria: `docs/hosts/`, `docs/printers/` e `docs/profiles/`. Para ver o site enquanto escreve:
 
 ```
 uv run --only-group docs mkdocs serve
@@ -71,5 +71,6 @@ uv run --only-group docs mkdocs serve
 ## Versões
 
 As versões são `0.MENOR.CORREÇÃO` até a 1.0: uma funcionalidade nova aumenta MENOR, uma alteração
-só de correções aumenta CORREÇÃO. Rodando pelo código-fonte, a barra de título acrescenta o commit
-à versão.
+só de correções aumenta CORREÇÃO. Rodando pelo código-fonte, a barra de título acrescenta um
+número de build e o commit à versão, como em `0.24.0 build 1378 (abc1234)`. O número de build
+conta todos os commits que levaram a ele, então um número maior é sempre um build mais novo.

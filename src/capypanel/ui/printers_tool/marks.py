@@ -1,6 +1,6 @@
 """The marks on the supply bars (Details and the Toner column): one at the low level, always,
-plus any the user adds in Settings › Printers › Refresh, each with its own colour or the theme's
-text colour. Kept in the tool's settings."""
+plus any the user adds in Settings › Printers › Warnings and supplies, each with its own colour
+or the theme's text colour. Kept in the tool's settings."""
 
 import re
 from collections.abc import Mapping, MutableMapping

@@ -28,7 +28,7 @@ as permissões do Windows decidem.
 O nome da lista aberta fica no topo do painel de grupos. O menu dele traz todas as listas de
 impressoras que o CapyPanel encontrou ou que você adicionou, depois **Nova lista de impressoras**,
 **Abrir uma lista de impressoras** (Ctrl+O) e **Gerenciar listas de impressoras…**, que abre
-**Configurações > Impressoras > Listas de impressoras**.
+**Configurações > Impressoras > Geral**.
 
 ## Grupos e tags
 
@@ -39,14 +39,16 @@ descreve.
 
 ## Configurações
 
-**Configurações > Impressoras** tem três seções:
+**Configurações > Impressoras** tem três páginas:
 
-- **Inicialização > Lista ao iniciar:** qual lista de impressoras abre com a ferramenta, e
+- **Geral:** as **Listas de impressoras**, a tabela de todas as listas com o tipo e o que você pode
+  fazer com cada uma, com **Nova…**, **Adicionar existente…** e **Remover**. É a mesma tabela do
+  Listas de hosts, inclusive no que o **Remover** pergunta, como
+  [Listas de hosts](../hosts/host-lists.pt-BR.md#configuracoes-hosts-geral-listas-de-hosts)
+  explica. Embaixo dela, **Lista ao iniciar**, qual lista de impressoras abre com a ferramenta, e
   **Mostrar primeiro**, o que essa lista mostra quando abre. Cada lista guarda a própria resposta.
-- **Atualizar:** a versão do SNMP e a conta dela, o Atualizar sozinho, a notificação do Windows,
-  o nível baixo de suprimento e como a coluna Toner aparece, tudo em
-  [Verificando impressoras](checking.pt-BR.md).
-- **Listas de impressoras:** a tabela de todas as listas com o tipo e o que você pode fazer com
-  cada uma, com **Nova…**, **Adicionar existente…** e **Remover**. É a mesma página do Listas de
-  hosts, inclusive no que o **Remover** pergunta, como
-  [Listas de hosts](../hosts/host-lists.pt-BR.md#configuracoes-hosts-listas-de-hosts) explica.
+- **Avisos e suprimentos:** o Atualizar sozinho, a notificação do Windows, o nível baixo de
+  suprimento, as marcas das barras e como a coluna Toner aparece.
+- **Conexão:** a versão do SNMP e a conta dela, e a conta do Doc360 MPS.
+
+As duas últimas estão explicadas em [Verificando impressoras](checking.pt-BR.md).

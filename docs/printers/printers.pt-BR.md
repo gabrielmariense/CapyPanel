@@ -109,7 +109,7 @@ arquivo CSV. Ele funciona exatamente como o dos hosts, então
 inteira.
 
 O que muda é o que entra nele. As colunas são agrupadas em **Impressora** (nome, endereço, grupo,
-marca, modelo), **Detalhes** (nº de série, patrimônio, contadores de páginas, tags, notas) e
+marca, modelo, nº de série), **Detalhes** (patrimônio, contadores de páginas, tags, notas) e
 **Última verificação** (status, toner em texto, o modelo do toner, o total de páginas em dígitos
 simples para uma planilha ler como número, o endereço MAC e a versão do firmware). A
 predefinição que vem pronta é **Todos os detalhes**.
@@ -119,7 +119,8 @@ incluir o cartucho, como "Black Cartridge HP CF258A"; quando ela informa vários
 juntos, separados por "; ".
 
 Marcar qualquer coluna em Última verificação deixa a janela atualizar essas impressoras ali
-mesmo, e ela diz quantas nunca foram verificadas. Sem nenhuma marcada o botão se explica:
+mesmo, com um botão embaixo das marcas que diz quantas são, como **Atualizar 12 impressoras**, e
+ela diz quantas nunca foram verificadas. Sem nenhuma marcada o botão se explica:
 "Marque uma coluna em Última verificação para lê-las". Uma impressora cujos contadores vêm do
 Doc360 MPS fica com o número do portal, ou com "Erro" quando o portal não tinha nenhum para
 ela; o [Verificando impressoras](checking.pt-BR.md#contadores-de-paginas-do-doc360-mps) diz o que

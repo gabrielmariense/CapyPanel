@@ -409,3 +409,22 @@ def test_restore_built_in_brings_back_deleted_profiles_after_asking(
     page.restore_button.click()
     assert _names(page) == ["RealVNC", "Remote Desktop", "UltraVNC"]
     assert not page.restore_button.isEnabled()
+
+
+def test_how_pcs_are_read_is_one_line_set_for_everyone_with_the_way_in_use(
+    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from capypanel.core.remote import inventory, wmi
+
+    monkeypatch.setattr(inventory, "transport", inventory.AUTO)
+    monkeypatch.setattr(wmi, "available", lambda: True)
+    page = ToolsSection(catalogs)
+    assert page.reads_label.text() == "Read PC data with:"
+    texts = [page.reads.itemText(i) for i in range(page.reads.count())]
+    assert texts == ["Automatic (recommended)", "WMI directly", "WMI through PowerShell"]
+    assert page.reads.currentData() == "auto" and page.reads_note.text() == "in use: WMI directly"
+    page.reads.setCurrentIndex(page.reads.findData("powershell"))
+    page.reads.activated.emit(page.reads.currentIndex())
+    assert inventory.transport == inventory.POWERSHELL and catalogs.tools.reads() == "powershell"
+    assert page.reads_note.text() == ""  # pinned: nothing to say about Automatic's pick
+    assert ToolsSection(catalogs).reads.currentData() == "powershell"  # kept for everyone

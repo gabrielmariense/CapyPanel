@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 23:54-0300\n"
+"POT-Creation-Date: 2026-11-11 00:24-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -53,6 +53,9 @@ msgstr ""
 msgid "&All commands…"
 msgstr ""
 
+msgid "&Another account…"
+msgstr ""
+
 msgid "&Authentication"
 msgstr ""
 
@@ -80,9 +83,6 @@ msgstr ""
 msgid "&Create"
 msgstr ""
 
-msgid "&Credentials"
-msgstr ""
-
 msgid "&Credentials:"
 msgstr ""
 
@@ -96,6 +96,9 @@ msgid "&Delete…"
 msgstr ""
 
 msgid "&Details pane"
+msgstr ""
+
+msgid "&Details…"
 msgstr ""
 
 msgid "&Disconnect"
@@ -154,6 +157,9 @@ msgid "&Groups pane"
 msgstr ""
 
 msgid "&Help"
+msgstr ""
+
+msgid "&Host:"
 msgstr ""
 
 msgid "&Hosts"
@@ -273,6 +279,18 @@ msgstr ""
 msgid "&Refresh"
 msgstr ""
 
+msgid "&Refresh host"
+msgstr ""
+
+#, python-brace-format
+msgid "&Refresh {n} host"
+msgid_plural "&Refresh {n} hosts"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "&Remember it on this computer"
+msgstr ""
+
 msgid "&Remove"
 msgstr ""
 
@@ -312,6 +330,15 @@ msgstr ""
 msgid "&Save as preset…"
 msgstr ""
 
+msgid "&Scan"
+msgstr ""
+
+#, python-brace-format
+msgid "&Scan {n} host"
+msgid_plural "&Scan {n} hosts"
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "&Send"
 msgstr ""
 
@@ -337,6 +364,9 @@ msgid "&Shut down now"
 msgstr ""
 
 msgid "&Sort A–Z"
+msgstr ""
+
+msgid "&Sort groups A–Z"
 msgstr ""
 
 msgid "&Status"
@@ -366,6 +396,9 @@ msgstr ""
 msgid "&User name"
 msgstr ""
 
+msgid "&User profiles"
+msgstr ""
+
 msgid "&User:"
 msgstr ""
 
@@ -378,11 +411,30 @@ msgstr ""
 msgid "(password only)"
 msgstr ""
 
+msgid ".bak registry entry"
+msgstr ""
+
+msgid "1 year"
+msgstr ""
+
 #, python-brace-format
 msgid "<b>{n} printer</b> needs attention: {reasons}."
 msgid_plural "<b>{n} printers</b> need attention: {reasons}."
 msgstr[0] ""
 msgstr[1] ""
+
+msgid ""
+"A .bak entry: a profile that failed to load. CapyPanel never deletes "
+"these; the fix is by hand, in the registry."
+msgstr ""
+
+msgid "A PC's Windows profiles: see which can be deleted."
+msgstr ""
+
+msgid ""
+"A PC's own account wins over its group's, a group's over a tag's, and "
+"those over Every PC. PCs none of them names use your Windows account."
+msgstr ""
 
 msgid "A Refresh is running. Try again once it ends."
 msgstr ""
@@ -390,7 +442,19 @@ msgstr ""
 msgid "A chosen &group"
 msgstr ""
 
+msgid "A click goes to the host's tab."
+msgstr ""
+
+msgid "A click on a line shows the profile in the table."
+msgstr ""
+
 msgid "A connection profile must be a JSON object."
+msgstr ""
+
+msgid "A few hosts are read at a time; this one starts when one ends."
+msgstr ""
+
+msgid "A group"
 msgstr ""
 
 msgid "A group can't be moved inside itself."
@@ -423,13 +487,19 @@ msgstr ""
 msgid "A preset named “{name}” already exists. Replace it?"
 msgstr ""
 
+msgid "A registry entry with .bak in its name, and its folder."
+msgstr ""
+
+msgid "A tag"
+msgstr ""
+
 msgid "A toner, ink, drum or box at or below this shows as low."
 msgstr ""
 
 msgid "A tool definition must be a JSON object."
 msgstr ""
 
-msgid "A&dd to list…"
+msgid "A&dd to host list…"
 msgstr ""
 
 msgid "About"
@@ -438,10 +508,16 @@ msgstr ""
 msgid "Access"
 msgstr ""
 
+msgid "Account"
+msgstr ""
+
 msgid "Account for other PCs"
 msgstr ""
 
 msgid "Account rejected"
+msgstr ""
+
+msgid "Accounts"
 msgstr ""
 
 msgid "Active"
@@ -466,6 +542,9 @@ msgid "Add a mark"
 msgstr ""
 
 msgid "Add a printer list"
+msgstr ""
+
+msgid "Add an account"
 msgstr ""
 
 msgid "Add group"
@@ -501,9 +580,15 @@ msgstr ""
 msgid "Adds this PC to the open host list"
 msgstr ""
 
+msgid "Admin tools"
+msgstr ""
+
 msgid ""
 "After a Refresh on its own, for printers that stopped or went offline "
 "(and with low supplies, if picked) since the one before."
+msgstr ""
+
+msgid "All"
 msgstr ""
 
 msgid "All details"
@@ -517,10 +602,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Already in the list, {place}"
-msgstr ""
-
-#, python-brace-format
-msgid "Already in this list: {where}"
 msgstr ""
 
 msgid "Also low supplies"
@@ -546,10 +627,19 @@ msgid ""
 "Separate them with a comma, or copy two columns from Excel."
 msgstr ""
 
+msgid "Any time"
+msgstr ""
+
 msgid "Appearance"
 msgstr ""
 
+msgid "As"
+msgstr ""
+
 msgid "Ask each time"
+msgstr ""
+
+msgid "Asked when needed"
 msgstr ""
 
 msgid "Ass&et tag:"
@@ -559,6 +649,9 @@ msgid "Asset tag"
 msgstr ""
 
 msgid "Authentication &password"
+msgstr ""
+
+msgid "Automatic (recommended)"
 msgstr ""
 
 msgid "BIOS"
@@ -574,6 +667,11 @@ msgid "Bar marks"
 msgstr ""
 
 msgid "Black"
+msgstr ""
+
+msgid ""
+"Both read over WMI; only what starts on this PC changes. Automatic reads "
+"directly, and through PowerShell only when that can't be used here."
 msgstr ""
 
 msgid "Brand"
@@ -592,6 +690,11 @@ msgstr ""
 msgid "Build:"
 msgstr ""
 
+msgid ""
+"By the last sign-in or sign-out Windows wrote down; a row that has none "
+"goes by its folder's date"
+msgstr ""
+
 msgid "C$ share"
 msgstr ""
 
@@ -607,6 +710,20 @@ msgstr ""
 msgid "CSV with headers"
 msgstr ""
 
+msgid "Calculate sizes"
+msgstr ""
+
+#, python-brace-format
+msgid "Calculating sizes: {n} of {total}"
+msgstr ""
+
+msgid "Can be deleted"
+msgstr ""
+
+msgctxt "profile"
+msgid "Can be deleted"
+msgstr ""
+
 msgid "Cancel"
 msgstr ""
 
@@ -617,6 +734,12 @@ msgid "Cancel shutdown"
 msgstr ""
 
 msgid "Cancel the pending restart"
+msgstr ""
+
+msgid "Cancel the rest"
+msgstr ""
+
+msgid "Cancel the rest and quit"
 msgstr ""
 
 #, python-brace-format
@@ -650,16 +773,13 @@ msgstr ""
 msgid "Change the account…"
 msgstr ""
 
-msgid "Change the connection profile"
-msgstr ""
-
 msgid "Change…"
 msgstr ""
 
 msgid "Check"
 msgstr ""
 
-msgid "Check the SNMP account in Settings › Printers › Refresh."
+msgid "Check the SNMP account in Settings › Printers › Connecting."
 msgstr ""
 
 #, python-brace-format
@@ -686,7 +806,13 @@ msgstr ""
 msgid "Checking {done} of {total}…"
 msgstr ""
 
-msgid "Checks these hosts again now"
+msgid ""
+"Checks whether each host shown answers, as Hosts' Refresh does; its "
+"Status column shows here and in Hosts"
+msgstr ""
+
+#, python-brace-format
+msgid "Checks whether {host} answers, as Hosts' Refresh does"
 msgstr ""
 
 #, python-brace-format
@@ -731,6 +857,12 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
+msgid "Close the finished ones"
+msgstr ""
+
+msgid "Close the others"
+msgstr ""
+
 msgid "Co&py"
 msgstr ""
 
@@ -738,6 +870,12 @@ msgid "Colour"
 msgstr ""
 
 msgid "Commands"
+msgstr ""
+
+msgid "Commands run &as"
+msgstr ""
+
+msgid "Commands run as"
 msgstr ""
 
 msgid "Computer Management"
@@ -749,8 +887,14 @@ msgstr ""
 msgid "Connect to the selected hosts, once with another profile, or by address"
 msgstr ""
 
+msgid "Connect with"
+msgstr ""
+
 #, python-brace-format
 msgid "Connect with {profile}"
+msgstr ""
+
+msgid "Connecting"
 msgstr ""
 
 #, python-brace-format
@@ -772,10 +916,10 @@ msgstr ""
 msgid "Connection profiles"
 msgstr ""
 
-msgid "Connections"
+msgid "Console"
 msgstr ""
 
-msgid "Console"
+msgid "Continue"
 msgstr ""
 
 msgid "Copied"
@@ -800,11 +944,31 @@ msgstr ""
 msgid "Copies every row, to paste into Excel"
 msgstr ""
 
+msgid "Copies the answer and everything the PC wrote"
+msgstr ""
+
+msgid "Copy &address"
+msgid_plural "Copy &addresses"
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "Copy &list"
+msgstr ""
+
+msgid "Copy &name"
+msgid_plural "Copy &names"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Copy all"
 msgstr ""
 
 #, python-brace-format
 msgid "Couldn't create “{path}”: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't delete its saved password: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -840,11 +1004,20 @@ msgid "Couldn't read the printer's answer at {when}."
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't read {host}'s profiles"
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't read {host}: {reason}"
 msgstr ""
 
 #, python-brace-format
 msgid "Couldn't read “{file}”: {error}"
+msgstr ""
+
+msgid ""
+"Couldn't read: Windows didn't let PowerShell start on your PC (an "
+"antivirus may block it)"
 msgstr ""
 
 #, python-brace-format
@@ -860,6 +1033,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't reload the list: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't save how PCs are read: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -915,6 +1092,10 @@ msgstr ""
 msgid "Couldn't {action} on {host}: {reason}"
 msgstr ""
 
+#, python-brace-format
+msgid "Counts the size of each profile shown on {host}; it only reads"
+msgstr ""
+
 msgid "Created by:"
 msgstr ""
 
@@ -922,6 +1103,9 @@ msgid "Created when opened"
 msgstr ""
 
 msgid "Credential Manager"
+msgstr ""
+
+msgid "Credentials"
 msgstr ""
 
 msgid "Credits"
@@ -942,7 +1126,20 @@ msgstr ""
 msgid "D:\\Logs"
 msgstr ""
 
+msgctxt "the word typed to confirm"
+msgid "DELETE"
+msgstr ""
+
+msgid "DELETING PROFILES"
+msgstr ""
+
+msgid "DELETION FINISHED"
+msgstr ""
+
 msgid "DOMAIN\\user"
+msgstr ""
+
+msgid "DOMAIN\\user, or empty for your Windows account"
 msgstr ""
 
 msgid "Default"
@@ -959,6 +1156,9 @@ msgstr ""
 msgid "Default: {profile}"
 msgstr ""
 
+msgid "Deletable"
+msgstr ""
+
 msgid "Delete"
 msgstr ""
 
@@ -966,13 +1166,66 @@ msgid "Delete connection profile"
 msgstr ""
 
 #, python-brace-format
+msgid "Delete profiles from {host}"
+msgstr ""
+
+msgid "Delete profiles…"
+msgstr ""
+
+#, python-brace-format
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
+msgstr ""
+
+#, python-brace-format
+msgid "Delete {n} profile"
+msgid_plural "Delete {n} profiles"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Delete {n} profile from {host}?"
+msgid_plural "Delete {n} profiles from {host}?"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Delete {n} profile…"
+msgid_plural "Delete {n} profiles…"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Deleted"
+msgstr ""
+
+msgid "Deleted: the folder and the registry entry."
+msgstr ""
+
+msgid "Deleted: the folder."
+msgstr ""
+
+msgid "Deleted: the leftover in the registry."
+msgstr ""
+
+#, python-brace-format
+msgid "Deletes the profiles ticked on {host}, after a question that lists them"
 msgstr ""
 
 msgid "Deleting moves it to the Recycle Bin, for everyone who uses it:"
 msgstr ""
 
+#, python-brace-format
+msgid ""
+"Deleting profile {n} of {total}. The tab can't close until it ends; use "
+"Cancel the rest."
+msgstr ""
+
+msgid "Deleting…"
+msgstr ""
+
 msgid "Details"
+msgstr ""
+
+msgid "Details (Enter)"
 msgstr ""
 
 msgid "Disconnect"
@@ -997,6 +1250,9 @@ msgid "Disconnect…"
 msgstr ""
 
 msgid "Doc360 &MPS account"
+msgstr ""
+
+msgid "Doc360 MPS"
 msgstr ""
 
 msgid "Doc360 MPS account"
@@ -1027,7 +1283,7 @@ msgstr ""
 msgid "Documentation:"
 msgstr ""
 
-msgid "Don't ask again (change it in Settings › CapyPanel › Startup)"
+msgid "Don't ask again (change it in Settings › CapyPanel › General)"
 msgstr ""
 
 msgid "Door open"
@@ -1038,14 +1294,28 @@ msgid ""
 "Right-click for more."
 msgstr ""
 
+msgid ""
+"Double-click a host to open it, or pick hosts and click Scan to scan them"
+" here."
+msgstr ""
+
 msgid "Download"
 msgstr ""
 
 msgid "Drag a group to move it, or drop it onto another group to put it inside."
 msgstr ""
 
+msgid "Drive"
+msgstr ""
+
 msgid "Driver"
 msgstr ""
+
+#, python-brace-format
+msgid "Drives saved for the person signed in to {host}, read at {when}."
+msgid_plural "Drives saved for the {n} people signed in to {host}, read at {when}."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Drop a group here to put it directly under Groups"
 msgstr ""
@@ -1066,6 +1336,9 @@ msgid "Edit host"
 msgstr ""
 
 msgid "Edit printer"
+msgstr ""
+
+msgid "Edit the account"
 msgstr ""
 
 msgid "Edit the list here"
@@ -1095,6 +1368,17 @@ msgstr ""
 msgid "Every"
 msgstr ""
 
+msgid "Every PC"
+msgstr ""
+
+#, python-brace-format
+msgid "Every PC in group {group}"
+msgstr ""
+
+#, python-brace-format
+msgid "Every PC tagged {tag}"
+msgstr ""
+
 msgid "Every column the printers have"
 msgstr ""
 
@@ -1102,6 +1386,9 @@ msgid "Every command"
 msgstr ""
 
 msgid "Every computer you look after, in one window."
+msgstr ""
+
+msgid "Every folder shown is already counted."
 msgstr ""
 
 msgid "Every login CapyPanel keeps for you. Passwords never show here."
@@ -1130,6 +1417,15 @@ msgstr ""
 msgid "Export CSV"
 msgstr ""
 
+msgid "Failed"
+msgstr ""
+
+msgid "Failed: Windows refused, or the PC stopped answering."
+msgstr ""
+
+msgid "Failed: some files couldn't be removed."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "Fetched from Doc360 MPS at {when}. Doc360 reads printers on its own "
@@ -1145,7 +1441,20 @@ msgstr ""
 msgid "Folder"
 msgstr ""
 
+msgid "Folder changed"
+msgstr ""
+
+msgid "Folder, no registry entry"
+msgstr ""
+
 msgid "Folders"
+msgstr ""
+
+msgid "Follow Accounts"
+msgstr ""
+
+#, python-brace-format
+msgid "Follow Accounts: {user}"
 msgstr ""
 
 msgid "For Import"
@@ -1179,11 +1488,8 @@ msgstr[1] ""
 
 msgid ""
 "Forgotten logins are deleted from Credential Manager too; you type them "
-"again the next time. Where new ones are kept: Settings › Connection "
-"profiles › Credentials."
-msgstr ""
-
-msgid "Forgotten when CapyPanel closes."
+"again the next time. A new one is saved only when you tick Remember it on"
+" this computer as you type it."
 msgstr ""
 
 msgid "Formats CapyPanel can import"
@@ -1214,6 +1520,10 @@ msgid "Group"
 msgstr ""
 
 #, python-brace-format
+msgid "Group {group}"
+msgstr ""
+
+#, python-brace-format
 msgid "Group “{name}” is inside a group that doesn't exist."
 msgstr ""
 
@@ -1226,6 +1536,20 @@ msgid "Group: {name}"
 msgstr ""
 
 msgid "Groups"
+msgstr ""
+
+msgid "Groups and tags are the open list's."
+msgstr ""
+
+msgid ""
+"Groups inside other groups are sorted too. The order they're in now isn't"
+" kept."
+msgstr ""
+
+msgid "HOSTS SHOWN"
+msgstr ""
+
+msgid "Hide Windows' own"
 msgstr ""
 
 msgid "Hom&e"
@@ -1246,14 +1570,14 @@ msgstr ""
 msgid "Host lists (*.json);;All files (*)"
 msgstr ""
 
+msgid "Host name or IP address"
+msgstr ""
+
 msgid "Host not found"
 msgstr ""
 
 #, python-brace-format
 msgid "Host “{name}” is in a group that doesn't exist."
-msgstr ""
-
-msgid "Hostname or IP address"
 msgstr ""
 
 msgid "Hostname or IP address; leave blank to use the name"
@@ -1265,13 +1589,24 @@ msgstr ""
 msgid "Hosts"
 msgstr ""
 
+#, python-brace-format
+msgid "Hosts ({n})"
+msgstr ""
+
+msgid "Hosts hasn't checked it yet."
+msgstr ""
+
 msgid "Hosts with no group &go to:"
 msgstr ""
 
 msgid "Hosts with no profile &use"
 msgstr ""
 
-msgid "Hosts › Refresh"
+msgid "Hosts › Accounts"
+msgstr ""
+
+#, python-brace-format
+msgid "Hosts' last check: {when}"
 msgstr ""
 
 msgid "Hover a folder to see what it holds."
@@ -1307,14 +1642,14 @@ msgid ""
 "group's profile, or the default, instead."
 msgstr ""
 
+msgid "In use"
+msgstr ""
+
 #, python-brace-format
 msgid "In {n} minute"
 msgid_plural "In {n} minutes"
 msgstr[0] ""
 msgstr[1] ""
-
-msgid "Includes who was logged on to each PC. Keep the file private."
-msgstr ""
 
 msgid "Ink"
 msgstr ""
@@ -1338,6 +1673,11 @@ msgstr ""
 msgid "Inventory"
 msgstr ""
 
+msgid ""
+"It can be deleted: nobody is signed in to it, it isn't one of Windows' "
+"own, and it's in the Users folder."
+msgstr ""
+
 #, python-brace-format
 msgid "It pops up on their screen on {host} until they click OK."
 msgstr ""
@@ -1349,9 +1689,21 @@ msgstr ""
 msgid "It's handed to the viewer privately, never on its command line."
 msgstr ""
 
+msgid "It's one of Windows' own. It's never deleted here."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"It's outside the Users folder. CapyPanel only deletes profiles inside "
+"{folder}."
+msgstr ""
+
 msgid ""
 "It's passed to the viewer on its command line, which administrators of "
 "this PC can see."
+msgstr ""
+
+msgid "Its address or name, as in the host list"
 msgstr ""
 
 msgid "Its own settings file"
@@ -1372,26 +1724,22 @@ msgstr ""
 msgid "Kept"
 msgstr ""
 
-msgid ""
-"Kept in memory until CapyPanel closes, never saved, and used only for "
-"hosts with this connection profile."
-msgstr ""
-
-msgid ""
-"Kept in memory until CapyPanel closes, never saved, and used only to read"
-" who is logged on and for the commands you run on a host."
+msgid "Kept in"
 msgstr ""
 
 msgid "Kept: type to change it"
 msgstr ""
 
-msgid "Language"
+msgid "Kind"
 msgstr ""
 
 msgid "Last check"
 msgstr ""
 
 msgid "Last restart"
+msgstr ""
+
+msgid "Last used"
 msgstr ""
 
 msgid "License"
@@ -1456,7 +1804,15 @@ msgstr ""
 msgid "Logged-on users"
 msgstr ""
 
+msgid ""
+"Logins you ticked Remember for: Windows encrypts them for your account, "
+"so anyone using your Windows session can connect with them."
+msgstr ""
+
 msgid "Logs"
+msgstr ""
+
+msgid "Looks through every host of the list, whatever the group"
 msgstr ""
 
 msgid "MAC address"
@@ -1472,6 +1828,13 @@ msgid "Manage groups"
 msgstr ""
 
 msgid "Manual connection"
+msgstr ""
+
+msgid "Mapped drives"
+msgstr ""
+
+#, python-brace-format
+msgid "Mapped drives on {host}"
 msgstr ""
 
 msgid "Mark"
@@ -1580,10 +1943,23 @@ msgstr ""
 msgid "No group"
 msgstr ""
 
+msgid "No host in tabs"
+msgstr ""
+
 msgid "No host list is open."
 msgstr ""
 
+#, python-brace-format
+msgid "No host of the list with “{text}”."
+msgstr ""
+
+msgid "No host shown"
+msgstr ""
+
 msgid "No hosts in this group have all the picked tags."
+msgstr ""
+
+msgid "No hosts to refresh"
 msgstr ""
 
 msgid "No list open"
@@ -1603,6 +1979,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "No one is at their screen on {host} right now."
+msgstr ""
+
+#, python-brace-format
+msgid "No one is signed in to {host} (read at {when})."
 msgstr ""
 
 #, python-brace-format
@@ -1628,6 +2008,20 @@ msgstr ""
 msgid "No printers in this group have all the picked tags."
 msgstr ""
 
+msgid "No printers to refresh"
+msgstr ""
+
+msgid "No profile ticked"
+msgstr ""
+
+msgid ""
+"No row of Settings › Hosts › Credentials names this PC, so it's the "
+"Windows account you're signed in with."
+msgstr ""
+
+msgid "No saved drives"
+msgstr ""
+
 #, python-brace-format
 msgid "No settings mention “{text}”."
 msgstr ""
@@ -1644,10 +2038,20 @@ msgstr ""
 msgid "Not checked"
 msgstr ""
 
+msgctxt "hosts"
+msgid "Not checked"
+msgstr ""
+
+msgid "Not checked by Hosts"
+msgstr ""
+
 msgid "Not checked yet: run Status"
 msgstr ""
 
 msgid "Not checked: use Refresh"
+msgstr ""
+
+msgid "Not counted"
 msgstr ""
 
 #, python-brace-format
@@ -1684,6 +2088,9 @@ msgstr ""
 msgid "Nothing changes until you click OK."
 msgstr ""
 
+msgid "Nothing was read."
+msgstr ""
+
 #, python-brace-format
 msgid "Nothing was waiting to restart or shut down {host}."
 msgstr ""
@@ -1712,6 +2119,9 @@ msgstr ""
 msgid "Offline"
 msgstr ""
 
+msgid "One PC"
+msgstr ""
+
 msgid ""
 "One computer per line, by its name on the network. To show another name, "
 "use Name and address."
@@ -1723,6 +2133,9 @@ msgstr ""
 msgid "Online"
 msgstr ""
 
+msgid "Only a profile that can be deleted, outside a delete run"
+msgstr ""
+
 msgid ""
 "Only for you and administrators: your settings, and your lists in "
 "“lists”, a folder for each kind of list."
@@ -1730,6 +2143,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Only hosts with all of: {tags} · {shown} of {total} shown"
+msgstr ""
+
+msgid "Only leftovers"
 msgstr ""
 
 msgid "Only me (personal)"
@@ -1744,11 +2160,16 @@ msgstr ""
 msgid "Only printers with all of: {tags} · {shown} of {total} shown"
 msgstr ""
 
+msgid ""
+"Only registry entries without a folder and folders without a registry "
+"entry"
+msgstr ""
+
 #, python-brace-format
 msgid "Only the first {n} open at once."
 msgstr ""
 
-msgid "Open"
+msgid "Only this PC"
 msgstr ""
 
 msgid "Open &Settings"
@@ -1802,6 +2223,9 @@ msgid ""
 "commands"
 msgstr ""
 
+msgid "Open the history"
+msgstr ""
+
 msgid "Open the selected printers' web pages (Enter)"
 msgstr ""
 
@@ -1834,6 +2258,9 @@ msgstr ""
 msgid "Opens a folder on {host} in File Explorer, over file sharing."
 msgstr ""
 
+msgid "Opens the host in a new tab. Typing alone never scans."
+msgstr ""
+
 #, python-brace-format
 msgid "Opens {path}"
 msgstr ""
@@ -1843,6 +2270,9 @@ msgid ""
 "Optional: a {extension} file saved from {tool}. It's used exactly as "
 "saved, including its encryption plugin; only the host is emptied, since "
 "the address comes from the host you open."
+msgstr ""
+
+msgid "Optional: asked the first time it's needed"
 msgstr ""
 
 msgid "Options:"
@@ -1860,6 +2290,9 @@ msgstr ""
 msgid "Out of toner"
 msgstr ""
 
+msgid "Output"
+msgstr ""
+
 msgid "Output bin full"
 msgstr ""
 
@@ -1870,6 +2303,9 @@ msgid "Output tray missing"
 msgstr ""
 
 msgid "Output tray nearly full"
+msgstr ""
+
+msgid "Outside Users"
 msgstr ""
 
 msgid "P&ort:"
@@ -1883,6 +2319,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "PC facts · {when}"
+msgstr ""
+
+msgid "PROGRESS"
 msgstr ""
 
 msgid "Page &counters:"
@@ -1914,6 +2353,9 @@ msgstr ""
 msgid "Password for {profile}"
 msgstr ""
 
+msgid "Passwords"
+msgstr ""
+
 msgid "Paste a list below, or"
 msgstr ""
 
@@ -1923,10 +2365,22 @@ msgid ""
 "\\\\{host}\\D$\\… path. The list keeps the last {n} folders you opened."
 msgstr ""
 
+msgid "Path"
+msgstr ""
+
 msgid "Paused"
 msgstr ""
 
+msgid "People's names: keep the file private."
+msgstr ""
+
+msgid "Person"
+msgstr ""
+
 msgid "Personal"
+msgstr ""
+
+msgid "Pick hosts in the list first"
 msgstr ""
 
 #, python-brace-format
@@ -1940,6 +2394,9 @@ msgid "Portable mode: everything stays in the app's own folder."
 msgstr ""
 
 msgid "Power"
+msgstr ""
+
+msgid "PowerShell couldn't start on your PC"
 msgstr ""
 
 msgid "Pr&inters:"
@@ -1984,10 +2441,31 @@ msgstr ""
 msgid "Profile"
 msgstr ""
 
+#, python-brace-format
+msgid "Profile {user} on {host}"
+msgstr ""
+
+msgid "Profiles"
+msgstr ""
+
+msgid "Profiles found by the last scan"
+msgstr ""
+
+msgid "Profiles the last scan found that can be deleted"
+msgstr ""
+
 msgid "Profiles you changed or made yourself stay as they are."
 msgstr ""
 
 msgid "Programs (*.exe)"
+msgstr ""
+
+msgid "Protected"
+msgstr ""
+
+msgid ""
+"Public, Default, the built-in Administrator and the like: never deleted "
+"here"
 msgstr ""
 
 msgid "Publisher"
@@ -1996,10 +2474,30 @@ msgstr ""
 msgid "Put in &group"
 msgstr ""
 
+msgid "Queued"
+msgstr ""
+
+msgid "Quick check"
+msgstr ""
+
 msgid "Quit"
 msgstr ""
 
+msgid "Quit CapyPanel"
+msgstr ""
+
+msgid ""
+"Quitting now cancels the profiles still queued. The profile being deleted"
+" on each host finishes first; CapyPanel quits after that."
+msgstr ""
+
+msgid "Re&move"
+msgstr ""
+
 msgid "Read"
+msgstr ""
+
+msgid "Read PC data with:"
 msgstr ""
 
 msgid "Read again"
@@ -2024,10 +2522,20 @@ msgstr ""
 msgid "Reading…"
 msgstr ""
 
-msgid "Reads these printers again now"
+msgid "Reads each in a tab of its own, behind; you stay on this list"
+msgstr ""
+
+msgid "Reads what's ticked in this box again"
+msgstr ""
+
+#, python-brace-format
+msgid "Reads {host}'s profiles in a tab behind; you stay on this list"
 msgstr ""
 
 msgid "Ready"
+msgstr ""
+
+msgid "Recent"
 msgstr ""
 
 msgid "Refresh"
@@ -2039,12 +2547,18 @@ msgstr ""
 msgid "Refresh &status"
 msgstr ""
 
+msgid "Refresh all"
+msgstr ""
+
 msgid "Refresh every host shown"
 msgstr ""
 
 msgid ""
 "Refresh every host shown, with the checks ticked on a right-click (also "
 "F5)"
+msgstr ""
+
+msgid "Refresh host"
 msgstr ""
 
 msgid "Refresh logged-on users"
@@ -2058,10 +2572,33 @@ msgid ""
 "tray. Quit stops them."
 msgstr ""
 
+msgid "Refresh printer"
+msgstr ""
+
 msgid "Refresh status &by itself"
 msgstr ""
 
 msgid "Refresh status by itself"
+msgstr ""
+
+#, python-brace-format
+msgid "Refresh {n} host"
+msgid_plural "Refresh {n} hosts"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Refresh {n} printer"
+msgid_plural "Refresh {n} printers"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Refreshing status: {done} of {total}…"
+msgstr ""
+
+#, python-brace-format
+msgid "Refreshing {done} of {total}…"
 msgstr ""
 
 msgid "Refused"
@@ -2069,6 +2606,13 @@ msgstr ""
 
 #, python-brace-format
 msgid "Refused at {when}: {why}"
+msgstr ""
+
+#, python-brace-format
+msgid "Refused the account {account}"
+msgstr ""
+
+msgid "Registry entry, no folder"
 msgstr ""
 
 msgid "Reload the list"
@@ -2200,6 +2744,12 @@ msgstr ""
 msgid "Restore built-in profiles"
 msgstr ""
 
+msgid "Result"
+msgstr ""
+
+msgid "Review"
+msgstr ""
+
 msgid "Right-click a printer to clear its queue."
 msgstr ""
 
@@ -2208,13 +2758,16 @@ msgid ""
 " window with a search."
 msgstr ""
 
-msgid "Run all checks"
-msgstr ""
-
 msgid "Run checks whether it answers."
 msgstr ""
 
-msgid "S&top"
+msgid "SELECTED HOST"
+msgstr ""
+
+msgid "SID"
+msgstr ""
+
+msgid "SNMP"
 msgstr ""
 
 msgid "SNMP &account"
@@ -2274,27 +2827,54 @@ msgstr ""
 msgid "Saved credentials"
 msgstr ""
 
-msgid "Saved for your Windows account."
-msgstr ""
-
 msgid "Saved in Credential Manager:"
 msgstr ""
 
-msgid ""
-"Saved in Windows Credential Manager for your Windows account (Settings › "
-"Connections), and used only for hosts with this connection profile."
+msgid "Scan"
 msgstr ""
 
-msgid ""
-"Saved in Windows Credential Manager for your Windows account (Settings › "
-"Connections), and used only to read who is logged on and for the commands"
-" you run on a host."
+msgctxt "column"
+msgid "Scan"
 msgstr ""
 
-msgid "Saved passwords deleted."
+msgid "Scan again"
+msgstr ""
+
+#, python-brace-format
+msgid "Scan {host}"
+msgstr ""
+
+#, python-brace-format
+msgid "Scan {n} host"
+msgid_plural "Scan {n} hosts"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Scanned"
+msgstr ""
+
+msgid "Scanned at"
+msgstr ""
+
+#, python-brace-format
+msgid "Scanned at {time}"
+msgstr ""
+
+msgid "Scanning the profiles…"
+msgstr ""
+
+#, python-brace-format
+msgid "Scanning {host}'s profiles…"
+msgstr ""
+
+#, python-brace-format
+msgid "Scans {host}'s profiles again"
 msgstr ""
 
 msgid "Search"
+msgstr ""
+
+msgid "Search name, address"
 msgstr ""
 
 msgid "Search programs"
@@ -2323,6 +2903,9 @@ msgid "Select a host to see its details."
 msgstr ""
 
 msgid "Select a printer to see its details."
+msgstr ""
+
+msgid "Select a profile to see its details."
 msgstr ""
 
 msgid "Selected hosts"
@@ -2363,7 +2946,7 @@ msgstr ""
 msgid "Set tags"
 msgstr ""
 
-msgid "Set the SNMP v3 account in Settings › Printers › Refresh first."
+msgid "Set the SNMP v3 account in Settings › Printers › Connecting first."
 msgstr ""
 
 msgid "Set the account…"
@@ -2373,6 +2956,10 @@ msgid "Settings"
 msgstr ""
 
 msgid "Settings (Ctrl+,)"
+msgstr ""
+
+#, python-brace-format
+msgid "Settings › Hosts › Credentials: {uses}"
 msgstr ""
 
 msgid "Shared"
@@ -2404,6 +2991,9 @@ msgid "Show all"
 msgstr ""
 
 msgid "Show every printer again"
+msgstr ""
+
+msgid "Show output…"
 msgstr ""
 
 msgid "Show this group &first"
@@ -2444,7 +3034,28 @@ msgstr ""
 msgid "Signs a user out; unsaved work is lost."
 msgstr ""
 
+#, python-brace-format
+msgid "Signs in as {user}"
+msgstr ""
+
 msgid "Signs in with"
+msgstr ""
+
+msgid "Size"
+msgstr ""
+
+msgid "Skipped"
+msgstr ""
+
+msgid "Skipped: it was no longer there."
+msgstr ""
+
+msgid "Skipped: it wasn't what the scan saw any more. Scan again."
+msgstr ""
+
+msgid ""
+"Skipped: this person signed in to the PC after the scan. Nothing was "
+"deleted."
 msgstr ""
 
 msgid "Software"
@@ -2459,10 +3070,23 @@ msgid ""
 "list with their changes."
 msgstr ""
 
-msgid "Something went wrong. The details were saved to the app log."
+#, python-brace-format
+msgid "Something went wrong {n} times."
+msgstr ""
+
+msgid "Something went wrong."
 msgstr ""
 
 msgid "Somewhere else, e.g. a network share…"
+msgstr ""
+
+msgid "Sort A–Z"
+msgstr ""
+
+msgid "Sort every group A–Z?"
+msgstr ""
+
+msgid "Sort groups A–Z"
 msgstr ""
 
 msgid "Sorts every level by name, once; you can rearrange them after"
@@ -2483,19 +3107,32 @@ msgstr ""
 msgid "Start it with {header}, in any order."
 msgstr ""
 
-msgid "Startup"
+msgid "Startup and closing"
 msgstr ""
 
 msgid "Startup folder"
 msgstr ""
 
+msgid "State"
+msgstr ""
+
 msgid "Status"
+msgstr ""
+
+#, python-brace-format
+msgid "Status checked by Hosts at {time}"
+msgstr ""
+
+msgid "Status not checked yet: use Refresh all"
 msgstr ""
 
 msgid "Status, logged-on users and PC facts, one after the other."
 msgstr ""
 
 msgid "Stop"
+msgstr ""
+
+msgid "Stop the count"
 msgstr ""
 
 msgid "Stopped"
@@ -2519,6 +3156,9 @@ msgstr[1] ""
 msgid "Stops a restart or shutdown that is still waiting."
 msgstr ""
 
+msgid "Stops at once; sizes already counted stay"
+msgstr ""
+
 msgid "Supplies"
 msgstr ""
 
@@ -2531,10 +3171,17 @@ msgstr ""
 msgid "T&oolbar"
 msgstr ""
 
+msgid "TICKED TO DELETE"
+msgstr ""
+
 msgid "Table"
 msgstr ""
 
 msgid "Tag for the selected items:"
+msgstr ""
+
+#, python-brace-format
+msgid "Tag {tag}"
 msgstr ""
 
 #, python-brace-format
@@ -2564,9 +3211,6 @@ msgstr ""
 msgid "Temporary"
 msgstr ""
 
-msgid "Temporary credentials"
-msgstr ""
-
 msgid "Temporary:"
 msgstr ""
 
@@ -2583,6 +3227,14 @@ msgid "That name is taken."
 msgstr ""
 
 msgid "That profile doesn't exist."
+msgstr ""
+
+msgid "The PC answered, but reading took too long and was stopped."
+msgstr ""
+
+msgid ""
+"The PC answered, but this account isn't an administrator on it, or its "
+"password changed."
 msgstr ""
 
 msgid "The PC's C: drive in File Explorer."
@@ -2627,6 +3279,11 @@ msgid ""
 "available on this PC."
 msgstr ""
 
+msgid ""
+"The current profile finishes first; the queued ones don't start. Every "
+"delete goes in the history."
+msgstr ""
+
 msgid "The default list"
 msgstr ""
 
@@ -2634,6 +3291,9 @@ msgstr ""
 msgid ""
 "The default list was made by another user, so CapyPanel won't open it. An"
 " administrator can replace or delete “{path}”."
+msgstr ""
+
+msgid "The details were saved to the app log."
 msgstr ""
 
 msgid "The encryption password needs at least 8 characters."
@@ -2659,13 +3319,32 @@ msgid ""
 "by /, tags by ;. Exported lists use this format."
 msgstr ""
 
+msgid "The folder and the registry entry, as Windows lists it."
+msgstr ""
+
+msgid ""
+"The folder exists, but no registry entry points to it. Deleting removes "
+"the folder."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "The folder “{folder}” was created by another user, so CapyPanel won't use"
 " it. Ask an administrator to delete it; it will be created again."
 msgstr ""
 
+msgid "The groups are already A–Z."
+msgstr ""
+
 msgid "The groups changed meanwhile; try again."
+msgstr ""
+
+msgid "The history has nothing yet."
+msgstr ""
+
+msgid ""
+"The host is checked again before each delete: anyone who signed in since "
+"the scan is skipped. Every delete goes in the history."
 msgstr ""
 
 msgid ""
@@ -2712,6 +3391,11 @@ msgstr ""
 msgid "The marks show {marks}."
 msgstr ""
 
+msgid ""
+"The network drives of the people signed in: each letter and where it "
+"points."
+msgstr ""
+
 msgid "The parent group doesn't exist."
 msgstr ""
 
@@ -2752,6 +3436,9 @@ msgstr ""
 msgid "The profile's “{key}” must be lowercase letters, digits, - or _."
 msgstr ""
 
+msgid "The profiles show once the host is scanned."
+msgstr ""
+
 msgid "The programs installed for every user of the PC."
 msgstr ""
 
@@ -2766,6 +3453,11 @@ msgstr ""
 msgid ""
 "The read-only community string your printers answer to. Most use "
 "\"public\". It's kept in Windows Credential Manager."
+msgstr ""
+
+msgid ""
+"The registry entry exists, but its folder is gone. Deleting removes only "
+"the leftover in the registry."
 msgstr ""
 
 #, python-brace-format
@@ -2802,13 +3494,16 @@ msgstr ""
 msgid "The “website” must be an https:// address."
 msgstr ""
 
-msgid "Theme"
-msgstr ""
-
 msgid "Theme colour"
 msgstr ""
 
-msgid "There are no connection profiles. Create one in Settings > Connections."
+msgid ""
+"There are no connection profiles. Create one in Settings › Hosts › "
+"Connecting."
+msgstr ""
+
+#, python-brace-format
+msgid "There was no answer at {address}. The PC may be off or not on the network."
 msgstr ""
 
 #, python-brace-format
@@ -2823,6 +3518,9 @@ msgstr ""
 msgid "These are the built-in profiles: the folder isn't there yet."
 msgstr ""
 
+msgid "These are the drives that come back at every sign-in."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "They're signed in {where}. Their programs keep running, and they get back"
@@ -2831,6 +3529,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "They're signed in {where}. Work they haven't saved is lost."
+msgstr ""
+
+#, python-brace-format
+msgid "This PC ({name})"
 msgstr ""
 
 #, python-brace-format
@@ -2852,6 +3554,15 @@ msgstr ""
 msgid "This doesn't look like a viewer settings file: “{line}”."
 msgstr ""
 
+#, python-brace-format
+msgid "This error happened {n} times:"
+msgstr ""
+
+msgid ""
+"This is <b>final</b>. With local profiles, each person's desktop and "
+"documents go too: there's no recycle bin and no copy."
+msgstr ""
+
 msgid "This isn't a text file."
 msgstr ""
 
@@ -2870,16 +3581,44 @@ msgid ""
 "open it."
 msgstr ""
 
+msgid "This only reads. Nothing on the host changes."
+msgstr ""
+
+msgid "This person is signed in now. It can only be deleted after they sign out."
+msgstr ""
+
 msgid "This printer doesn't report a level for this supply."
 msgstr ""
 
 msgid "This tool definition needs a newer version of CapyPanel."
 msgstr ""
 
-msgid "Tick Status or Logged-on users to check them"
+msgid "Tick Status or Logged-on users to refresh them"
 msgstr ""
 
 msgid "Tick a column under Last check to read them"
+msgstr ""
+
+msgid "Tick in the table: the box, Space or a double-click on the row."
+msgstr ""
+
+msgid "Tick profiles in the table to delete"
+msgstr ""
+
+msgid "Tick to delete"
+msgstr ""
+
+msgid "Tick to delete: the box, Space, or a double-click on the row"
+msgstr ""
+
+msgid "Ticked in tabs"
+msgstr ""
+
+msgid "Ticked: it's deleted once you click Delete and confirm"
+msgstr ""
+
+#, python-brace-format
+msgid "To confirm, type <b>{word}</b>:"
 msgstr ""
 
 msgid "To:"
@@ -2910,6 +3649,9 @@ msgstr ""
 msgid "Tray missing"
 msgstr ""
 
+msgid "Try again"
+msgstr ""
+
 msgid "Try another account…"
 msgstr ""
 
@@ -2928,13 +3670,23 @@ msgstr ""
 msgid "Type the partner, as on Doc360's login page."
 msgstr ""
 
+#, python-brace-format
+msgid "Type the password of “{user}”. It signs in to {host} ({uses})."
+msgstr ""
+
 msgid "Type the password."
 msgstr ""
 
 msgid "Type the user name."
 msgstr ""
 
+msgid "Unchanged"
+msgstr ""
+
 msgid "Unexpected error"
+msgstr ""
+
+msgid "Unknown"
 msgstr ""
 
 #, python-brace-format
@@ -2963,11 +3715,22 @@ msgstr ""
 msgid "Unreadable"
 msgstr ""
 
+msgid "Unused for:"
+msgstr ""
+
 msgid "Use &defaults"
+msgstr ""
+
+msgid ""
+"Use an account that is an administrator of these PCs, such as a domain "
+"admin."
 msgstr ""
 
 #, python-brace-format
 msgid "Use an account that is an administrator of {host}, such as a domain admin."
+msgstr ""
+
+msgid "Use it &for:"
 msgstr ""
 
 msgid "Use the &automatic path"
@@ -2979,7 +3742,25 @@ msgstr ""
 msgid "Used for"
 msgstr ""
 
+msgid ""
+"Used for Refresh's logged-on users and the commands run on this PC, not "
+"for Connect."
+msgstr ""
+
+msgid "Used only for hosts with this connection profile."
+msgstr ""
+
+msgid "Used only to read who is logged on and for the commands you run on a host."
+msgstr ""
+
 msgid "User"
+msgstr ""
+
+msgid "User profiles"
+msgstr ""
+
+#, python-brace-format
+msgid "User profiles on {host}"
 msgstr ""
 
 msgid "User's folder"
@@ -2998,10 +3779,27 @@ msgstr ""
 msgid "Viewer settings:"
 msgstr ""
 
+msgid "WMI directly"
+msgstr ""
+
+msgid "WMI through PowerShell"
+msgstr ""
+
+msgid "Waiting to scan"
+msgstr ""
+
 msgid "Warming up"
 msgstr ""
 
 msgid "Warning"
+msgstr ""
+
+msgid "Warnings and supplies"
+msgstr ""
+
+msgid ""
+"What Connect opens, and the login it uses. Refresh's logged-on users and "
+"the commands use the account under it."
 msgstr ""
 
 msgid "What the window shows when CapyPanel starts."
@@ -3013,6 +3811,9 @@ msgid ""
 msgstr ""
 
 msgid "When &closing"
+msgstr ""
+
+msgid "When the host was scanned, or where its scan is"
 msgstr ""
 
 msgid "Where"
@@ -3039,7 +3840,16 @@ msgstr ""
 msgid "Whether the PC answers on the network."
 msgstr ""
 
+msgid ""
+"Which account signs in to which PCs, for Refresh's logged-on users and "
+"the commands you run on a host. PCs no row names use your Windows "
+"account."
+msgstr ""
+
 msgid "Who is signed in to the PC, and since when."
+msgstr ""
+
+msgid "Will be deleted"
 msgstr ""
 
 msgid "Windows"
@@ -3048,13 +3858,20 @@ msgstr ""
 msgid "Windows &notification"
 msgstr ""
 
+msgid "Windows answered:"
+msgstr ""
+
 #, python-brace-format
 msgid "Windows didn't keep it: {error}"
 msgstr ""
 
+#, python-brace-format
 msgid ""
-"Windows encrypts them for your account, domain accounts too: anyone using"
-" your Windows session can connect with them."
+"Windows didn't let CapyPanel start PowerShell on your PC to read {host}. "
+"An antivirus may block it."
+msgstr ""
+
+msgid "Windows didn't let PowerShell start on your PC. An antivirus may block it."
 msgstr ""
 
 #, python-brace-format
@@ -3064,6 +3881,18 @@ msgstr ""
 msgid ""
 "Windows file sharing (port 445) didn't answer: the computer is off, not "
 "on the network, a firewall blocks file sharing, or it isn't Windows."
+msgstr ""
+
+msgid ""
+"Windows keeps it in Credential Manager for your Windows account. "
+"Otherwise CapyPanel forgets it when it closes and asks once the next "
+"time."
+msgstr ""
+
+msgid "Windows no longer knows this account; it was probably deleted."
+msgstr ""
+
+msgid "Windows refused, or the PC stopped answering"
 msgstr ""
 
 msgid "Windows shows the message with a countdown. You can cancel until then."
@@ -3101,6 +3930,13 @@ msgstr ""
 msgid "You asked at {when}."
 msgstr ""
 
+msgid "Your Windows account"
+msgstr ""
+
+#, python-brace-format
+msgid "Your Windows account ({user})"
+msgstr ""
+
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr ""
 
@@ -3110,7 +3946,13 @@ msgstr ""
 msgid "Yours"
 msgstr ""
 
+msgid "Yours only: kept in your own settings, never in the shared host lists."
+msgstr ""
+
 msgid "access denied. It needs an admin account on that PC."
+msgstr ""
+
+msgid "account refused"
 msgstr ""
 
 msgid "active"
@@ -3124,6 +3966,20 @@ msgid "and {n} more"
 msgid_plural "and {n} more"
 msgstr[0] ""
 msgstr[1] ""
+
+#, python-brace-format
+msgid "and {n} more profile"
+msgid_plural "and {n} more profiles"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "and {n} more…"
+msgstr ""
+
+#, python-brace-format
+msgid "as {account}"
+msgstr ""
 
 msgid "asked by the tool"
 msgstr ""
@@ -3144,6 +4000,9 @@ msgstr ""
 msgid "brand"
 msgstr ""
 
+msgid "calculating sizes"
+msgstr ""
+
 msgid "can't be read"
 msgstr ""
 
@@ -3152,6 +4011,29 @@ msgstr ""
 
 #, python-brace-format
 msgid "clear the queue of {printer}"
+msgstr ""
+
+msgid "couldn't be read"
+msgstr ""
+
+msgid "counting…"
+msgstr ""
+
+msgid "deleted"
+msgstr ""
+
+#, python-brace-format
+msgid "deleted, {size}"
+msgstr ""
+
+#, python-brace-format
+msgid "deleting {n} of {total}"
+msgstr ""
+
+msgid "deleting…"
+msgstr ""
+
+msgid "didn't answer"
 msgstr ""
 
 #, python-brace-format
@@ -3164,6 +4046,9 @@ msgstr ""
 msgid "e.g. Branch offices"
 msgstr ""
 
+msgid "failed"
+msgstr ""
+
 #, python-brace-format
 msgid "from {computer}"
 msgstr ""
@@ -3172,11 +4057,17 @@ msgid "idle"
 msgstr ""
 
 #, python-brace-format
-msgid "in {group}, as {name}"
+msgid "in use: {way}"
 msgstr ""
 
 #, python-brace-format
 msgid "in “{group}”"
+msgstr ""
+
+msgid "it can't be deleted"
+msgstr ""
+
+msgid "it changed since the scan; scan again"
 msgstr ""
 
 msgid ""
@@ -3199,6 +4090,12 @@ msgid "it took too long to answer."
 msgstr ""
 
 msgid "it wants authentication or encryption set differently."
+msgstr ""
+
+msgid "it's no longer there"
+msgstr ""
+
+msgid "it's one of Windows' own"
 msgstr ""
 
 msgid "its clock and CapyPanel's didn't agree."
@@ -3226,6 +4123,9 @@ msgstr ""
 msgid "notes"
 msgstr ""
 
+msgid "nothing deleted"
+msgstr ""
+
 #, python-brace-format
 msgid "open {what}"
 msgstr ""
@@ -3239,10 +4139,16 @@ msgstr ""
 msgid "programs"
 msgstr ""
 
+msgid "queued"
+msgstr ""
+
 msgid "read the PC facts"
 msgstr ""
 
 msgid "read the installed programs"
+msgstr ""
+
+msgid "read the mapped drives"
 msgstr ""
 
 msgid "read the printers"
@@ -3260,6 +4166,13 @@ msgstr ""
 msgid "running"
 msgstr ""
 
+#, python-brace-format
+msgid "scanned at {time}"
+msgstr ""
+
+msgid "scanning…"
+msgstr ""
+
 msgid "send a message"
 msgstr ""
 
@@ -3273,8 +4186,21 @@ msgstr ""
 msgid "shut it down"
 msgstr ""
 
+msgid "signed in to the PC since the scan"
+msgstr ""
+
+#, python-brace-format
+msgid "since {time}"
+msgstr ""
+
 #, python-brace-format
 msgid "since {when}"
+msgstr ""
+
+msgid "skipped"
+msgstr ""
+
+msgid "some files couldn't be removed"
 msgstr ""
 
 msgid "some left"
@@ -3296,6 +4222,9 @@ msgstr ""
 msgid "tags"
 msgstr ""
 
+msgid "the answer and its output"
+msgstr ""
+
 msgid "the picked tags"
 msgstr ""
 
@@ -3309,6 +4238,10 @@ msgid "the selected printers"
 msgstr ""
 
 msgid "there's no folder there."
+msgstr ""
+
+#, python-brace-format
+msgid "tried at {time}"
 msgstr ""
 
 msgid "user"
@@ -3342,6 +4275,9 @@ msgstr ""
 msgid "wrong encryption password."
 msgstr ""
 
+msgid "your Windows account"
+msgstr ""
+
 #, python-brace-format
 msgid "{colour} {percent} %"
 msgstr ""
@@ -3352,6 +4288,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{colour}: some left"
+msgstr ""
+
+#, python-brace-format
+msgid "{counts}. See the history."
 msgstr ""
 
 #, python-brace-format
@@ -3373,7 +4313,17 @@ msgid ""
 msgstr ""
 
 #, python-brace-format
+msgid "{host} didn't answer"
+msgstr ""
+
+#, python-brace-format
 msgid "{host} is back online"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"{host} is deleting profiles: its tab closes once it ends. Use Cancel the "
+"rest to stop it sooner."
 msgstr ""
 
 #, python-brace-format
@@ -3385,11 +4335,51 @@ msgid "{host} is shutting down."
 msgstr ""
 
 #, python-brace-format
+msgid "{host} refused the account {account}"
+msgstr ""
+
+#, python-brace-format
 msgid "{host} restarts at {when}."
 msgstr ""
 
 #, python-brace-format
 msgid "{host} shuts down at {when}."
+msgstr ""
+
+#, python-brace-format
+msgid "{host} waits for its turn"
+msgstr ""
+
+#, python-brace-format
+msgid "{host} · PowerShell blocked on your PC"
+msgstr ""
+
+#, python-brace-format
+msgid "{host} · account refused"
+msgstr ""
+
+#, python-brace-format
+msgid "{host} · calculating sizes: {n} of {total}"
+msgstr ""
+
+#, python-brace-format
+msgid "{host} · couldn't be read"
+msgstr ""
+
+#, python-brace-format
+msgid "{host} · deleting profile {n} of {total}"
+msgstr ""
+
+#, python-brace-format
+msgid "{host} · didn't answer"
+msgstr ""
+
+#, python-brace-format
+msgid "{host}: sizes counted."
+msgstr ""
+
+#, python-brace-format
+msgid "{host}: sizes counted; {n} couldn't be read."
 msgstr ""
 
 #, python-brace-format
@@ -3438,6 +4428,10 @@ msgid "{names} got your message."
 msgstr ""
 
 #, python-brace-format
+msgid "{name}  (unknown)"
+msgstr ""
+
+#, python-brace-format
 msgid "{name} (in use)"
 msgstr ""
 
@@ -3464,6 +4458,16 @@ msgstr ""
 #, python-brace-format
 msgid "{n} GB"
 msgstr ""
+
+#, python-brace-format
+msgid "{n} MB"
+msgstr ""
+
+#, python-brace-format
+msgid "{n} can be deleted"
+msgid_plural "{n} can be deleted"
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-brace-format
 msgid "{n} can't be added."
@@ -3494,6 +4498,28 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} couldn't be opened: check its address."
 msgid_plural "{n} couldn't be opened: check their addresses."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} deleted"
+msgid_plural "{n} deleted"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} deleting profiles"
+msgstr ""
+
+#, python-brace-format
+msgid "{n} done"
+msgid_plural "{n} done"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} failed"
+msgid_plural "{n} failed"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -3541,6 +4567,18 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} host in tabs"
+msgid_plural "{n} hosts in tabs"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} host is still deleting profiles"
+msgid_plural "{n} hosts are still deleting profiles"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} host selected"
 msgid_plural "{n} hosts selected"
 msgstr[0] ""
@@ -3563,6 +4601,10 @@ msgid "{n} in Credential Manager"
 msgstr ""
 
 #, python-brace-format
+msgid "{n} in tabs"
+msgstr ""
+
+#, python-brace-format
 msgid "{n} kept: {places}."
 msgid_plural "{n} kept: {places}."
 msgstr[0] ""
@@ -3571,6 +4613,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} low"
 msgid_plural "{n} low"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} month"
+msgid_plural "{n} months"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -3595,6 +4643,16 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} of these printers wasn't checked yet."
 msgid_plural "{n} of these printers weren't checked yet."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} of {total}"
+msgstr ""
+
+#, python-brace-format
+msgid "{n} of {total} profile"
+msgid_plural "{n} of {total} profiles"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -3635,10 +4693,30 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} profile"
+msgid_plural "{n} profiles"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} profile deleted"
+msgid_plural "{n} profiles deleted"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} profiles selected"
+msgstr ""
+
+#, python-brace-format
 msgid "{n} program"
 msgid_plural "{n} programs"
 msgstr[0] ""
 msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} scanning"
+msgstr ""
 
 #, python-brace-format
 msgid "{n} selected"
@@ -3650,6 +4728,12 @@ msgstr[1] ""
 msgctxt "printers"
 msgid "{n} selected"
 msgid_plural "{n} selected"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} skipped"
+msgid_plural "{n} skipped"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -3670,6 +4754,28 @@ msgid "{n} temporary"
 msgid_plural "{n} temporary"
 msgstr[0] ""
 msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} ticked"
+msgid_plural "{n} ticked"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} with no address is left out"
+msgid_plural "{n} with no address are left out"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{n} working"
+msgid_plural "{n} working"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{online} online · {offline} offline"
+msgstr ""
 
 #, python-brace-format
 msgid "{pages} (from {month})"
@@ -3696,7 +4802,31 @@ msgid "{shown} of {total} programs"
 msgstr ""
 
 #, python-brace-format
+msgid "{shown} of {total} shown"
+msgstr ""
+
+#, python-brace-format
+msgid "{size} freed"
+msgstr ""
+
+#, python-brace-format
+msgid "{size} in the {n} counted"
+msgstr ""
+
+#, python-brace-format
+msgid "{size} so far"
+msgstr ""
+
+#, python-brace-format
 msgid "{source} · fetched {when}"
+msgstr ""
+
+#, python-brace-format
+msgid "{start} to {end}"
+msgstr ""
+
+#, python-brace-format
+msgid "{status} · checked by Hosts at {time}"
 msgstr ""
 
 #, python-brace-format
@@ -3721,6 +4851,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{title} · {n} · {when}"
+msgstr ""
+
+#, python-brace-format
+msgid "{title} · {person} · {when}"
 msgstr ""
 
 #, python-brace-format
@@ -3755,7 +4889,7 @@ msgstr ""
 msgid ""
 "{tool} wasn't found on this PC. Install it, or show CapyPanel where it "
 "is. The path is saved for everyone on this PC; you can also change it "
-"later in Settings > Hosts > Connections."
+"later in Settings › Hosts › Connecting."
 msgstr ""
 
 #, python-brace-format
@@ -3764,6 +4898,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{user}'s folder"
+msgstr ""
+
+#, python-brace-format
+msgid "{what}, in {list}"
 msgstr ""
 
 msgid "“account_types” must be a list of numbers from 1 to 255."

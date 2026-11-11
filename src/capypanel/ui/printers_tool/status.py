@@ -109,7 +109,7 @@ def status(checked: Checked | None, low: int) -> Cell:
         return Cell(_("Offline"), _("No answer at {when}.").format(when=when), GREY, quiet=True)
     if checked.refused:
         tip = _("Refused at {when}: {why}").format(when=when, why=refused_text(checked.refused))
-        hint = _("Check the SNMP account in Settings › Printers › Refresh.")
+        hint = _("Check the SNMP account in Settings › Printers › Connecting.")
         return Cell(_("Refused"), "\n".join((tip, hint)), AMBER, quiet=True)
     if checked.reading is None:
         tip = _("Couldn't read the printer's answer at {when}.").format(when=when)

@@ -39,7 +39,7 @@ def _pick(win: CapyWindow) -> str:
 def test_the_profile_in_details_has_an_arrow_with_the_group_s_choices(window: CapyWindow) -> None:
     hosts = window.hosts
     host_id = _pick(window)
-    assert hosts.details.shown_value("profile") == "Offices"  # from its group
+    assert hosts.details.profile_button.value_text() == "Offices"  # from its group
     menu = hosts.details.profile_menu
     menu.aboutToShow.emit()  # what opening it by the arrow does
     texts = [a.text() for a in menu.actions() if not a.isSeparator()]
@@ -49,7 +49,7 @@ def test_the_profile_in_details_has_an_arrow_with_the_group_s_choices(window: Ca
     pis.trigger()
     doc = hosts.document
     assert doc is not None and doc.hosts.host(host_id).profile == "pis"  # type: ignore[union-attr]
-    assert hosts.details.shown_value("profile") == "Pis"
+    assert hosts.details.profile_button.value_text() == "Pis"
     menu.aboutToShow.emit()
     [follow] = [a for a in menu.actions() if a.text().startswith("From group")]
     follow.trigger()  # back to following the group

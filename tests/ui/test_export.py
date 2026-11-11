@@ -1,4 +1,5 @@
 from collections.abc import Callable, Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -10,7 +11,9 @@ from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.bulk import parse
 from capypanel.core.hosts.model import NO_GROUP, HostList
+from capypanel.core.remote.status import Status
 from capypanel.ui import export_hosts
+from capypanel.ui.checks import clock_text
 from capypanel.ui.export_hosts import FOR_IMPORT, ExportDialog
 from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.import_hosts import read_text
@@ -36,12 +39,24 @@ def _run(
 ) -> None:
     """Opens the toolbar's Report and does `use` with the window instead of a person."""
 
+    # The window runs inside Qt's call, which only prints an exception: keep it and raise it
+    # here, or a failed check would pass.
+    failed: list[BaseException] = []
+    opened: list[bool] = []
+
     def run(dialog: ExportDialog) -> int:
-        use(dialog)
+        opened.append(True)
+        try:
+            use(dialog)
+        except BaseException as e:  # noqa: BLE001 - raised again below
+            failed.append(e)
         return 0
 
     monkeypatch.setattr(ExportDialog, "exec", run)
     window.hosts.commands.export_hosts.trigger()
+    assert opened, "Report didn't open"
+    if failed:
+        raise failed[0]
 
 
 def test_it_opens_on_what_is_shown_with_every_row_in_the_preview(
@@ -74,7 +89,7 @@ def test_columns_come_in_groups_and_a_custom_pick_can_be_a_preset(
     )
 
     def pick(d: ExportDialog) -> None:
-        titles = [g.title() for g in d.findChildren(export_hosts.QGroupBox)]
+        titles = [n.text() for n in d.findChildren(export_hosts.QLabel, "rowName")]
         assert titles == ["Host", "Tags and notes", "Last check"]
         for key, box in d.boxes.items():
             box.setChecked(key in ("name", "users"))
@@ -94,7 +109,7 @@ def test_columns_come_in_groups_and_a_custom_pick_can_be_a_preset(
         d.boxes["users"].setChecked(False)
         d.boxes["status"].setChecked(False)
         assert not d.refresh_button.isEnabled()  # nothing from the last check is ticked
-        assert d.refresh_button.toolTip() == "Tick Status or Logged-on users to check them"
+        assert d.refresh_button.toolTip() == "Tick Status or Logged-on users to refresh them"
 
     _run(window, monkeypatch, again)
 
@@ -114,14 +129,74 @@ def test_refresh_runs_on_the_hosts_being_exported_and_holds_export(
 
     def refresh(d: ExportDialog) -> None:
         d.boxes["status"].setChecked(True)
+        # A plain button at the box's foot, saying how many it reads; not on the title line.
+        assert d.refresh_button.text().strip() == "Refresh host"  # one host: the menu's words
+        assert d.refresh_button.toolTip() == "Reads what's ticked in this box again"
+        assert d.refresh_tip(True) and d.refresh_text(31) == "Refresh 31 hosts"
+        assert d.refresh_text(0) == "Refresh" and d.nothing_to_refresh() == "No hosts to refresh"
+        assert d.left_out_text(2) == "2 with no address are left out"
+        assert not d.stop_button.isVisibleTo(d)
         d.refresh_button.click()
         assert asked == [(["LOOSE-1"], True, False)]  # only the ticked check, only these hosts
         d._progress = lambda: (0, 1)  # as while the main window's Refresh runs
         d.checks_changed()
         assert not d.export_button.isEnabled() and not d.copy_button.isEnabled()
-        assert d.stop_button.isVisibleTo(d) and d.checking.text() == "Checking 0 of 1…"
+        assert d.stop_button.isVisibleTo(d) and d.checking.text() == "Refreshing 0 of 1…"
+        assert d.stop_button.text().strip() == "Stop" and not d.refresh_button.isVisibleTo(d)
 
     _run(window, monkeypatch, refresh)
+
+
+def test_last_check_shows_when_and_the_names_note_only_with_its_tick(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window.hosts.nav.select_group(NO_GROUP)
+
+    def look(d: ExportDialog) -> None:
+        assert d.checks_box is not None
+        d.boxes["status"].setChecked(True)
+        d.boxes["users"].setChecked(False)
+        assert d.checks_box.text() == "Last check" and not d.checks_time.text()  # no time yet
+        assert not d.note.isVisibleTo(d)
+        d.boxes["users"].setChecked(True)
+        assert d.note.isVisibleTo(d) and d.note.text() == "People's names: keep the file private."
+        loose = d.hosts()[0]  # LOOSE-1, the only host without a group
+        when = datetime.now(UTC).replace(hour=10, minute=41)
+        window.hosts._status_found[loose.id] = (Status.ONLINE, when, None)
+        d.checks_changed()
+        assert d.checks_box.text() == "Last check" and d.checks_time.text() == clock_text(when)
+        d.boxes["status"].setChecked(False)  # only users ticked, and they weren't read
+        assert not d.checks_time.text()
+
+    _run(window, monkeypatch, look)
+
+
+def test_each_box_has_all_and_none_and_last_check_moves_under_when_narrow(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def look(d: ExportDialog) -> None:
+        links = [label for label in d.findChildren(export_hosts.QLabel)
+                 if 'href="all"' in label.text()]  # fmt: skip
+        assert len(links) == 3  # one per box
+        links[0].linkActivated.emit("none")  # Host: none
+        assert not any(d.boxes[k].isChecked() for k in ("name", "address", "group"))
+        links[2].linkActivated.emit("all")  # Last check: all
+        assert d.boxes["status"].isChecked() and d.boxes["users"].isChecked()
+        grid = d._sections  # pyright: ignore[reportPrivateUsage]
+        last = d._section_boxes[-1]  # pyright: ignore[reportPrivateUsage]
+        d.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
+        d.show()  # a hidden window gets no resize events
+
+        def place() -> tuple[int, int]:
+            row, column, _rows, _columns = grid.getItemPosition(grid.indexOf(last))  # type: ignore[misc]
+            return row, column
+
+        d.resize(2000, 600)
+        assert place() == (0, 2)  # side by side
+        d.resize(200, 600)
+        assert place() == (1, 0)  # under the other two
+
+    _run(window, monkeypatch, look)
 
 
 def test_saving_a_preset_under_a_name_in_use_asks_before_replacing_it(

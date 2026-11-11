@@ -49,7 +49,7 @@ O status não usa conta nenhuma e não precisa de direitos de administrador.
 
 ### Status automático
 
-**Configurações > Hosts > Atualizar > Atualizar o status sozinho** pode verificar o status
+**Configurações > Hosts > Geral > Atualizar o status sozinho** pode verificar o status
 dos hosts exibidos a cada alguns minutos: **A cada minuto**, **A cada 5 minutos**, **A cada 15
 minutos**, **A cada 30 minutos** ou **Personalizado…**, de 1 a 120. Começa **Desligado**, então
 nada é verificado sozinho a menos que você ligue, e desligar de novo guarda o seu intervalo para
@@ -90,22 +90,16 @@ na aba Usuários do Gerenciador de Tarefas. É assim que o Windows informa.
 
 ### Qual conta é usada
 
-Por padrão, a sua própria conta do Windows. Se hosts responderem **Sem direitos de
-administrador** ou **Conta recusada**, o CapyPanel pede outra conta (`DOMÍNIO\usuário` e senha) e
-tenta de novo só nesses hosts. Essa conta:
+Por padrão, a sua própria conta do Windows. As **Configurações > Hosts > Credenciais > Contas**
+podem dar outra conta a um PC, um grupo, uma tag ou a todos os PCs, e o **Comandos como** do
+painel de detalhes diz qual conta cada host acaba usando (veja
+[Contas para outros PCs](connecting.pt-BR.md#contas-para-outros-pcs)).
 
-- é digitada numa janela chamada **Conta para outros PCs**, e fica guardada como as
-  **Configurações > Hosts > Perfis de conexão > Credenciais** dizem: na memória até o CapyPanel
-  fechar, ou salva no Gerenciador de Credenciais do Windows para a sua conta do Windows. Nos dois
-  casos ela só é usada para ler quem está logado e para executar os comandos que você pede num
-  host (veja [Comandos em um host](commands.pt-BR.md));
-- é tentada num host por vez: se um host a recusar, o CapyPanel para e pergunta de novo em vez de
-  tentá-la nos outros, para a conta não ser bloqueada;
-- é esquecida, como a senha de um perfil, no **Conectar ▾ > Credenciais salvas…**, onde ela
-  aparece como **Usuários logados** (veja [Conectando](connecting.pt-BR.md#credenciais-salvas)).
-
-Em PCs fora de um domínio, o Administrador interno é a única conta local que o Windows aceita
-remotamente.
+Se hosts responderem **Sem direitos de administrador** ou **Conta recusada**, o CapyPanel pede
+outra conta quando o Atualizar termina, numa janela chamada **Conta para outros PCs**, e verifica
+de novo só esses hosts. A conta que você digita ali vira uma linha da tabela Contas. Ela é tentada
+num host por vez: se um host a recusar, o CapyPanel para e pergunta de novo em vez de tentá-la nos
+outros, para a conta não ser bloqueada.
 
 ## Dados do PC
 
@@ -117,11 +111,43 @@ novo** embaixo deles.
 ![A seção Dados do PC no painel de detalhes: última reinicialização, espaço livre, Windows, modelo, número de série, memória e BIOS](../images/commands-pc-facts-dark-pt-BR.png)
 
 Eles são lidos uma vez, quando um host fica selecionado por um instante, e nunca pelo Atualizar,
-então uma lista de centenas de hosts fica em paz. O espaço livre e a última reinicialização chegam
-primeiro, enquanto o título diz "Dados do PC · lendo…" e o resto está a caminho, alguns segundos
-pelo WMI. Um dado que a conta não tem permissão de ler diz isso em âmbar no lugar do valor, como
-em "Sem acesso: precisa de uma conta de administrador neste PC".
+então uma lista de centenas de hosts fica em paz. Até lá a seção diz "Ainda não lido", com um
+botão **Ler**. O espaço livre e a última reinicialização chegam primeiro, enquanto o título diz
+"Dados do PC · lendo…" e as outras linhas dizem "Lendo…"; o resto vem alguns segundos depois.
+
+Cada dado é lido à parte, então um que falha não leva os outros junto: o que foi lido aparece, e
+um dado que não pôde ser lido diz o motivo em âmbar no lugar do valor, como em "Sem acesso: precisa
+de uma conta de administrador neste PC". Clique nessa linha para copiá-la, como qualquer valor. O
+log do aplicativo diz qual parte falhou.
 
 O **Verificar > Dados do PC** lê tudo de novo quando você quiser, pelo menu de botão direito do
 host, pelo **…** do painel de detalhes ou pela janela Comandos (veja
 [Comandos em um host](commands.pt-BR.md)).
+
+## Como o CapyPanel lê outros PCs
+
+O status usa ping e portas, e os usuários logados usam o serviço de sessões remotas do Windows. Os
+dados do PC, os programas instalados, as unidades mapeadas e a ferramenta
+[Perfis de usuário](../profiles/user-profiles.pt-BR.md) leem o PC pelo **WMI**, o serviço de
+gerenciamento do próprio Windows, que todo PC com Windows responde. Nada é instalado nem aberto no
+outro PC.
+
+No seu próprio PC, o CapyPanel fala com o WMI sozinho, pelos objetos de script do Windows. Ele só
+abre o PowerShell para isso quando não consegue fazer isso no seu PC de jeito nenhum, e nunca
+porque a leitura de um PC falhou. O log do aplicativo diz, a cada início, de que jeito ele lê.
+
+Alguns antivírus bloqueiam programas que outro programa abre, o PowerShell mais que todos. Se o
+seu faz isso, uma leitura pelo PowerShell falha com "Não foi possível ler: o Windows não deixou o
+PowerShell abrir no seu PC (um antivírus pode bloqueá-lo)". Quem recusou foi o seu PC, não o que
+você estava lendo, então é o seu PC que precisa ser olhado.
+
+As **Configurações > Hosts > Conexão > Ler dados dos PCs com** definem o jeito para todos no seu PC:
+
+| Opção | O que faz |
+|---|---|
+| **Automático (recomendado)** | WMI direto, e pelo PowerShell só quando isso não dá neste PC. O "em uso:" ao lado diz o jeito que ele está usando |
+| **WMI direto** | Sempre fala com o WMI sozinho e nunca abre o PowerShell, mesmo quando não consegue; nesse caso as leituras falham e dizem por quê |
+| **WMI pelo PowerShell** | Abre o PowerShell no seu PC para falar com o WMI, como o CapyPanel fazia antes da 0.24. Um caminho de volta, caso a leitura direta dê problema na sua rede |
+
+Os dois jeitos fazem as mesmas perguntas ao outro PC e recebem as mesmas respostas; só muda o que
+abre no seu próprio PC.

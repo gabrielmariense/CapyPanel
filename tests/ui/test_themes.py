@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtGui import QColor, QFontDatabase, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
     QApplication,
@@ -311,3 +311,60 @@ def test_dropdowns_open_at_once_in_every_theme(qapp: QApplication) -> None:
         themes.apply(theme)
         assert not QApplication.isEffectEnabled(Qt.UIEffect.UI_AnimateCombo)
     themes.apply(themes.DEFAULT_THEME)
+
+
+def test_a_switch_sets_the_theme_s_stylesheet_only_once(
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Each stylesheet set restyles every widget, the slow part of a switch: from a Windows
+    # theme it was set twice.
+    sheets: list[str] = []
+    set_sheet = QApplication.setStyleSheet
+
+    def counting(app: QApplication, sheet: str) -> None:
+        sheets.append(sheet)
+        set_sheet(app, sheet)
+
+    monkeypatch.setattr(QApplication, "setStyleSheet", counting)
+    registry = themes.Registry()
+    paper = registry.find("paper")
+    for start in ("capypanel-dark", "windows-light"):
+        themes.apply(registry.find(start))
+        sheets.clear()
+        themes.apply(paper)
+        assert sheets.count(themes.stylesheet(paper)) == 1, start
+
+
+def test_home_tiles_take_the_new_theme_s_icon_colour(qapp: QApplication, tmp_path: Path) -> None:
+    # Switching between two custom themes left the tiles' icons in the previous theme's colour.
+    (tmp_path / settings.PORTABLE_MARKER).touch()
+    window = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
+    window.set_theme("capypanel-dark")
+    window.set_theme("paper")
+    for tile in window.home.tiles:
+        want = tile.palette().color(QPalette.ColorRole.Text)
+        image = tile.badge.pixmap().toImage()
+        inked = [
+            QColor(image.pixel(x, y))
+            for y in range(image.height())
+            for x in range(image.width())
+            if QColor(image.pixelColor(x, y)).alpha() == 255
+        ]
+        assert inked
+        assert all(
+            abs(c.red() - want.red()) + abs(c.green() - want.green()) + abs(c.blue() - want.blue())
+            < 24
+            for c in inked
+        ), tile.tool.name
+    window.close()
+
+
+def test_the_font_is_the_first_family_this_pc_has_alone(
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(QFontDatabase, "families", lambda *_a: ["Arial", "Segoe UI", "Tahoma"])
+    assert themes.installed(("Segoe UI Variable Text", "Segoe UI")) == ["Segoe UI"]  # Windows 10
+    assert themes.installed(("TAHOMA", "Segoe UI")) == ["TAHOMA"]  # any case
+    assert themes.installed(("No Such Font", "Nor This")) == ["No Such Font", "Nor This"]
+    themes.apply(themes.Registry().find("capypanel-dark"))
+    assert qapp.font().families() == ["Segoe UI"]

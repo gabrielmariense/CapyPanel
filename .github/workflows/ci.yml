@@ -27,4 +27,6 @@ jobs:
       - name: Type check
         run: uv run pyright
       - name: Tests
-        run: uv run pytest
+        # Spread over every core, a few times faster; tests/conftest.py keeps the ones that use
+        # Credential Manager on one worker.
+        run: uv run pytest -n auto --dist loadgroup

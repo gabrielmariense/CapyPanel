@@ -2,11 +2,14 @@
 prompt, and how their results read in the table and the details pane."""
 
 import threading
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from dataclasses import replace
 from datetime import date, datetime
 
 from PySide6.QtCore import QDate, QDateTime, QLocale, QObject, QTimeZone, Signal
 from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
     QDialog,
     QDialogButtonBox,
     QFormLayout,
@@ -17,9 +20,10 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core import i18n
+from capypanel.core.hosts.accounts import Link
 from capypanel.core.i18n import _
 from capypanel.core.remote import checks
-from capypanel.core.remote.access import Account, Reason, RemoteError
+from capypanel.core.remote.access import Account, Reason, RemoteError, code_text
 from capypanel.core.remote.batch import Batch
 from capypanel.core.remote.checks import Checks, Found
 from capypanel.core.remote.sessions import Session
@@ -30,19 +34,43 @@ MAX_TEXT = 256
 
 
 class CheckRun(QObject):
-    """One Refresh over some hosts, on a background thread. `found` arrives once per host."""
+    """One Refresh over some hosts, on a background thread. `found` arrives once per host.
+    `accounts` gives each host's account (by host id); hosts sharing one go together."""
 
     found = Signal(str, object)  # host id, Found
     finished = Signal()
 
-    def __init__(self, targets: Sequence[tuple[str, str]], wanted: Checks) -> None:
+    def __init__(
+        self,
+        targets: Sequence[tuple[str, str]],
+        wanted: Checks,
+        accounts: Callable[[str], Account | None] | None = None,
+    ) -> None:
         super().__init__()
         self.wanted = wanted
         self.total = len(targets)
         self.done = 0
-        typed = wanted.users and wanted.account is not None
-        self._batch = Batch(
-            list(targets),
+        self._accounts = accounts if accounts and wanted.users else lambda _key: wanted.account
+        parts: dict[str, tuple[Account | None, list[tuple[str, str]]]] = {}
+        for target in targets:
+            account = self.account_of(target[0])
+            key = account.user.casefold() if account else ""
+            parts.setdefault(key, (account, []))[1].append(target)
+        self._batches = [self._batch(found, account, wanted) for account, found in parts.values()]
+        self._stop = threading.Event()
+        self.rejected: list[Account] = []  # typed accounts a host rejected: not tried further
+
+    def account_of(self, key: str) -> Account | None:
+        """The account a host's users are read with; None: the Windows account."""
+        return self._accounts(key)
+
+    def _batch(
+        self, targets: list[tuple[str, str]], account: Account | None, wanted: Checks
+    ) -> tuple[Account | None, Batch[tuple[str, str], Found]]:
+        wanted = replace(wanted, account=account)
+        typed = wanted.users and account is not None
+        return account, Batch(
+            targets,
             lambda target: checks.run(target[1], wanted),
             self._report,
             # A typed password goes host by host until one accepts it, and stops at a rejection.
@@ -54,21 +82,28 @@ class CheckRun(QObject):
         threading.Thread(target=self._run, name="refresh", daemon=True).start()
 
     def stop(self) -> None:
-        self._batch.stop()
+        self._stop.set()
+        for _account, batch in self._batches:
+            batch.stop()
 
     @property
     def stopped(self) -> bool:
         """By Stop, or by a rejected account."""
-        return self._batch.stopped
+        return self._stop.is_set() or any(batch.stopped for _a, batch in self._batches)
 
     @property
     def halted(self) -> bool:
-        """Stopped because a host rejected the typed account."""
-        return self._batch.halted
+        """A host rejected a typed account, so the hosts left for it weren't tried."""
+        return bool(self.rejected)
 
     def _run(self) -> None:
         try:
-            self._batch.run()
+            for account, batch in self._batches:
+                if self._stop.is_set():
+                    break
+                batch.run()
+                if batch.halted and account is not None:
+                    self.rejected.append(account)
         finally:
             self.finished.emit()
 
@@ -81,10 +116,18 @@ class CheckRun(QObject):
 
 
 class AccountDialog(QDialog):
-    """Another account for reading who is logged on, when the Windows login can't."""
+    """Another account for other PCs, when the Windows login can't: which PCs it's for (`uses`,
+    most specific first, each a link with no user yet) and whether Windows remembers it."""
 
     def __init__(
-        self, parent: QWidget | None, reason: str, user: str = "", *, saved: bool = False
+        self,
+        parent: QWidget | None,
+        reason: str,
+        user: str = "",
+        *,
+        saved: bool = False,
+        uses: Sequence[tuple[str, Link]] = (),
+        fixed_user: bool = False,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Account for other PCs"))
@@ -93,25 +136,31 @@ class AccountDialog(QDialog):
         self.user = QLineEdit(user)
         self.user.setMaxLength(MAX_TEXT)
         self.user.setPlaceholderText(_("DOMAIN\\user"))
+        self.user.setReadOnly(fixed_user)  # its password only: the account is set in Settings
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
         self.password.setMaxLength(MAX_TEXT)
+        self.use_for = QComboBox()
+        for label, link in uses:
+            self.use_for.addItem(label, link)
+        self.remember = QCheckBox(_("&Remember it on this computer"))
+        self.remember.setChecked(saved)
+        self.remember.setToolTip(
+            _("Windows keeps it in Credential Manager for your Windows account. Otherwise "
+              "CapyPanel forgets it when it closes and asks once the next time.")
+        )  # fmt: skip
         form = QFormLayout()
         form.addRow(_("&User:"), self.user)
         form.addRow(_("&Password:"), self.password)
-        kept = (
-            _("Saved in Windows Credential Manager for your Windows account (Settings › "
-              "Connections), and used only to read who is logged on and for the commands you "
-              "run on a host.")
-            if saved
-            else _("Kept in memory until CapyPanel closes, never saved, and used only to read "
-                   "who is logged on and for the commands you run on a host.")
-        )  # fmt: skip
+        if uses:
+            form.addRow(_("Use it &for:"), self.use_for)
+        form.addRow("", self.remember)
+        used = _("Used only to read who is logged on and for the commands you run on a host.")
         stops = _(
             "If a computer rejects it, CapyPanel stops and asks again instead of trying it on "
             "the others, so the account isn't locked."
         )
-        note = hint(f"{kept} {stops}")
+        note = hint(f"{used} {stops}")
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -135,6 +184,11 @@ class AccountDialog(QDialog):
     def account(self) -> Account:
         return Account(self.user.text().strip(), self.password.text())
 
+    def link(self) -> Link | None:
+        """The PCs picked in Use it for, as a link to this account; None when not asked."""
+        picked = self.use_for.currentData()
+        return replace(picked, user=self.account().user) if isinstance(picked, Link) else None
+
 
 # ---- how results read ----
 
@@ -149,6 +203,15 @@ def date_text(day: date) -> str:
     language = i18n.language()
     pattern = "MMM d, yyyy" if language.startswith("en") else "d MMM yyyy"
     return QLocale(language).toString(QDate(day.year, day.month, day.day), pattern)
+
+
+def local(when: datetime) -> datetime:
+    """`when` in this PC's time zone. Windows can't convert a time before 1970 (or past 3000),
+    and dates read from other PCs can be anything: those stay as they are."""
+    try:
+        return when.astimezone()
+    except (OSError, OverflowError, ValueError):
+        return when
 
 
 def clock_text(when: datetime) -> str:
@@ -248,7 +311,7 @@ def users_tip(error: RemoteError | None, when: datetime) -> str:
             "The computer didn't accept the account: a wrong password, a locked account, or "
             "an account it doesn't trust."
         ),
-        Reason.OTHER: _("Windows error {code}.").format(code=error.code),
+        Reason.OTHER: _("Windows error {code}.").format(code=code_text(error.code)),
     }[error.reason]
     return f"{checked} {why}"
 

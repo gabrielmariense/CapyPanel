@@ -11,6 +11,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
+    QCheckBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
@@ -59,7 +60,6 @@ class CredentialDialog(QDialog):
         target: str,
         *,
         on_command_line: bool,
-        saved: bool = False,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Password for {profile}").format(profile=ready.profile.name))
@@ -76,20 +76,21 @@ class CredentialDialog(QDialog):
         if self.wants_user:
             form.addRow(_("&User:"), self.user)
         form.addRow(_("&Password:"), self.password)
-        remembered = (
-            _("Saved in Windows Credential Manager for your Windows account (Settings › "
-              "Connections), and used only for hosts with this connection profile.")
-            if saved
-            else _("Kept in memory until CapyPanel closes, never saved, and used only for hosts "
-                   "with this connection profile.")
+        # As every login window: you decide here whether Windows keeps it (unticked by default).
+        self.remember = QCheckBox(_("&Remember it on this computer"))
+        self.remember.setToolTip(
+            _("Windows keeps it in Credential Manager for your Windows account. Otherwise "
+              "CapyPanel forgets it when it closes and asks once the next time.")
         )  # fmt: skip
+        form.addRow("", self.remember)
+        used = _("Used only for hosts with this connection profile.")
         how = (
             _("It's passed to the viewer on its command line, which administrators of this PC "
               "can see.")
             if on_command_line
             else _("It's handed to the viewer privately, never on its command line.")
         )  # fmt: skip
-        note = hint(f"{remembered} {how}")
+        note = hint(f"{used} {how}")
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -138,7 +139,7 @@ class Connector:
         self._parent = parent
         self.catalogs = catalogs
         self.credentials = credentials
-        self.open_settings: Callable[[], None] | None = None  # Settings > Connections
+        self.open_settings: Callable[[], None] | None = None  # Settings › Hosts › Connecting
 
     # ---- profiles ----
 
@@ -157,7 +158,7 @@ class Connector:
         return [
             (p.id, p.name)
             for p in self.catalogs.profiles.all()
-            if self.catalogs.tools.find(p.tool) is not None
+            if self.catalogs.tools.viewer(p.tool) is not None
         ]
 
     def inherited_label(self, profile_id: str, source: Group | None) -> str:
@@ -173,7 +174,7 @@ class Connector:
         profile_id = profile_id or self.default_profile()
         if not profile_id:
             raise ProfileError(
-                _("There are no connection profiles. Create one in Settings > Connections.")
+                _("There are no connection profiles. Create one in Settings › Hosts › Connecting.")
             )
         profile = self.catalogs.profiles.find(profile_id)
         if profile is None:
@@ -182,7 +183,7 @@ class Connector:
                     profile=profile_id
                 )
             )
-        tool = self.catalogs.tools.find(profile.tool)
+        tool = self.catalogs.tools.viewer(profile.tool)
         if tool is None:
             raise ProfileError(
                 _("The connection profile “{profile}” needs the tool “{tool}”, which isn't "
@@ -229,13 +230,14 @@ class Connector:
                     ready,
                     label,
                     on_command_line=tool.credentials == "arguments",
-                    saved=self.credentials.saving,
                 )
                 if dialog.exec() != QDialog.DialogCode.Accepted:
                     return 0
                 credential = dialog.credential()
                 try:
-                    self.credentials.remember(profile.id, credential)
+                    self.credentials.remember(
+                        profile.id, credential, save=dialog.remember.isChecked()
+                    )
                 except (OSError, ValueError) as e:
                     log.warning("Couldn't save the password of %s: %s", profile.id, e)
                     self._error(
@@ -318,7 +320,7 @@ class Connector:
             _(
                 "{tool} wasn't found on this PC. Install it, or show CapyPanel where it is. "
                 "The path is saved for everyone on this PC; you can also change it later in "
-                "Settings > Hosts > Connections."
+                "Settings › Hosts › Connecting."
             ).format(tool=tool.name),
             parent=self._parent,
         )

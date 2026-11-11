@@ -8,8 +8,8 @@ rejection instead of trying the same password on every host (account lockout).""
 
 import ctypes
 import socket
-from collections.abc import Iterator
-from contextlib import contextmanager
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from ctypes import wintypes
 from dataclasses import dataclass
 from enum import StrEnum
@@ -30,9 +30,15 @@ _REJECTED = {5, 1326, 1327, 1330, 1331, 1909}
 _UNREACHABLE = {53, 67, 1231, 1237, 1721, 1722, 1723, 1753}
 
 
+def code_text(code: int) -> str:
+    """A Windows error's number as people look it up: 5 or 1722, and 0x80041002 for the long
+    ones (WMI's and COM's), which nobody finds as 2147749890."""
+    return f"0x{code:08X}" if code > 0xFFFF else str(code)
+
+
 class RemoteError(Exception):
     def __init__(self, reason: Reason, code: int = 0) -> None:
-        super().__init__(f"{reason} (Windows error {code})" if code else str(reason))
+        super().__init__(f"{reason} (Windows error {code_text(code)})" if code else str(reason))
         self.reason, self.code = reason, code
 
 
@@ -82,8 +88,19 @@ _kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
 @contextmanager
 def as_account(account: Account | None) -> Iterator[None]:
     """This thread uses `account` for the network calls inside; nothing changes locally."""
-    if account is None:
+    with network_identity(account) as identity, identity():
         yield
+
+
+@contextmanager
+def network_identity(
+    account: Account | None,
+) -> Iterator[Callable[[], AbstractContextManager[None]]]:
+    """Logs `account` on once, for the network only; each `with identity():` block inside then
+    uses it on this thread. One logon means one connection to each PC for all the blocks, and
+    programs started between them run as the user, as usual."""
+    if account is None:
+        yield nullcontext
         return
     domain, _sep, name = account.user.rpartition("\\")  # "DOMAIN\\name", or a UPN
     token = wintypes.HANDLE()
@@ -94,11 +111,16 @@ def as_account(account: Account | None) -> Iterator[None]:
     ):  # fmt: skip
         raise last_error()
     try:
-        if not _advapi32.ImpersonateLoggedOnUser(token):
-            raise RemoteError(Reason.OTHER, ctypes.get_last_error())
-        try:
-            yield
-        finally:
-            _advapi32.RevertToSelf()
+        yield lambda: _impersonating(token)
     finally:
         _kernel32.CloseHandle(token)
+
+
+@contextmanager
+def _impersonating(token: wintypes.HANDLE) -> Iterator[None]:
+    if not _advapi32.ImpersonateLoggedOnUser(token):
+        raise RemoteError(Reason.OTHER, ctypes.get_last_error())
+    try:
+        yield
+    finally:
+        _advapi32.RevertToSelf()

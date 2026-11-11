@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu, QMessageBox
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
+from capypanel.core.hosts.accounts import Link, Scope
 from capypanel.core.hosts.model import HostList
 from capypanel.core.remote.access import Account
 from capypanel.core.tools.connect import Credential, Target
@@ -223,7 +224,7 @@ def _set_profile(window: CapyWindow, name: str, profile: str) -> None:
 
 def test_details_show_the_profile_s_name(window: CapyWindow) -> None:
     _select(window, "PI-1")
-    assert window.hosts.details.shown_value("profile") == "Pis"  # the group's, named plainly
+    assert window.hosts.details.profile_button.value_text() == "Pis"  # the group's, named plainly
 
 
 def test_manual_connection_uses_the_chosen_profile(
@@ -406,7 +407,7 @@ def test_a_profile_this_pc_lacks_falls_back_to_the_group_s(
 ) -> None:
     _set_profile(window, "PC-A", "gone-elsewhere")
     _select(window, "PC-A")
-    assert window.hosts.details.shown_value("profile") == "Offices (SecureVNC)"
+    assert window.hosts.details.profile_button.value_text() == "Offices (SecureVNC)"
     window.hosts.connector.credentials.remember("offices", Credential("ana", "x"))
     window.hosts.connect_selected()
     assert launched[0][0] == "ultravnc" and launched[0][4] == ("securevnc",)
@@ -472,7 +473,7 @@ def test_right_click_acts_on_what_is_under_the_mouse(
     groups.setCurrentItem(pis)  # picked earlier
     empty = groups.viewport().rect().bottomLeft() + QPoint(5, -5)
     assert _menu_on(monkeypatch, lambda: window.hosts._group_menu(empty)) == [
-        "Add &group…", "&Manage groups…"
+        "Add &group…", "&Manage groups…", "&Sort groups A–Z"
     ]  # fmt: skip
     texts = _menu_on(
         monkeypatch, lambda: window.hosts._group_menu(groups.visualItemRect(offices).center())
@@ -503,14 +504,16 @@ def test_hosts_lists_each_typed_password_and_forgets_one(window: CapyWindow) -> 
     credentials = hosts.connector.credentials
     credentials.remember("offices", Credential("ana", "x"))
     credentials.remember("pis", Credential("", "y"))  # a VNC password, no user
-    hosts._account = Account("EXAMPLE\\user", "z")  # pyright: ignore[reportPrivateUsage]
+    hosts.accounts.use(Link("EXAMPLE\\user", Scope.ALL), Account("EXAMPLE\\user", "z"),
+                       remember=False)  # fmt: skip
     kept = {login.used_for: login for login in hosts.kept_logins()}
     assert [(k.user, k.saved) for k in kept.values()] == [
         ("ana", False), ("(password only)", False), ("EXAMPLE\\user", False)
     ]  # fmt: skip
-    assert list(kept) == [names["offices"], names["pis"], "Logged-on users"]
-    assert kept["Logged-on users"].tool == "Hosts › Refresh"
+    assert list(kept) == [names["offices"], names["pis"], "Every PC"]
+    assert kept["Every PC"].tool == "Hosts › Accounts"
     kept[names["pis"]].forget()
     assert "pis" not in credentials and "offices" in credentials  # only that one
-    kept["Logged-on users"].forget()
-    assert hosts._account is None  # pyright: ignore[reportPrivateUsage]
+    kept["Every PC"].forget()
+    assert hosts.accounts.known("EXAMPLE\\user") is None
+    assert hosts.accounts.links == [Link("EXAMPLE\\user", Scope.ALL)]  # asked again when needed

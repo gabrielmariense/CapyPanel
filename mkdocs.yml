@@ -6,7 +6,7 @@ repo_url: https://github.com/gabrielmariense/CapyPanel
 repo_name: gabrielmariense/CapyPanel
 edit_uri: edit/main/docs/
 
-# Two bands: the pages about the whole app, then the Hosts tool's own, in docs/hosts/.
+# A band for the pages about the whole app, then one per tool, each in its own folder of docs/.
 nav:
   - Start:
       - Home: README.md
@@ -24,6 +24,8 @@ nav:
       - The Printers tool: printers/printers.md
       - Checking: printers/checking.md
       - Printer lists: printers/printer-lists.md
+  - User profiles:
+      - The User profiles tool: profiles/user-profiles.md
 
 theme:
   name: material
@@ -77,6 +79,8 @@ plugins:
             Printers: Impressoras
             The Printers tool: A ferramenta Impressoras
             Printer lists: Listas de impressoras
+            User profiles: Perfis de usuário
+            The User profiles tool: A ferramenta Perfis de usuário
 
 # The brand: the navy header, the teal links and the site name's font.
 extra_css:

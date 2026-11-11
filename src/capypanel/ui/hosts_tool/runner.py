@@ -12,13 +12,15 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
+import shiboken6
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QDialog, QWidget
 
 from capypanel.core.hosts import commands as host_commands
 from capypanel.core.i18n import _
 from capypanel.core.remote import access, places, power, services, sessions
-from capypanel.core.remote.access import Account, Reason, RemoteError
+from capypanel.core.remote.access import Account, Reason, RemoteError, code_text
+from capypanel.core.remote.inventory import PowerShellBlocked
 from capypanel.core.remote.places import Console
 from capypanel.core.remote.sessions import Session
 from capypanel.ui import checks as check_texts
@@ -54,6 +56,8 @@ class Outcome:
     text: str  # rich text: names in bold
     error: BaseException | None = None  # None: it worked
     retry: Callable[[], None] | None = None  # run it again once another account is typed
+    output: str = ""  # what a script wrote on the PC
+    running: bool = False  # not an answer yet: it was started and is still going
 
     @property
     def failed(self) -> bool:
@@ -93,8 +97,9 @@ def bold(text: str) -> str:
     return f"<b>{escape(text)}</b>"
 
 
-def reason_text(error: BaseException) -> str:
-    """Why it failed, as the end of "Couldn't … on DESK-02: …"."""
+def reason_text(error: BaseException, host: str = "") -> str:
+    """Why it failed, as the end of "Couldn't … on DESK-02: …". `host` names the other PC where
+    the reason is about it."""
     if isinstance(error, RemoteError):
         return {
             Reason.UNREACHABLE: _(
@@ -105,8 +110,10 @@ def reason_text(error: BaseException) -> str:
                 "it didn't accept the account: a wrong password, a locked account, or one it "
                 "doesn't trust."
             ),
-            Reason.OTHER: _("Windows error {code}.").format(code=error.code),
+            Reason.OTHER: _("Windows error {code}.").format(code=code_text(error.code)),
         }[error.reason]
+    if isinstance(error, PowerShellBlocked):
+        return _("Windows didn't let PowerShell start on your PC. An antivirus may block it.")
     if isinstance(error, TimeoutError):
         return _("it took too long to answer.")
     if isinstance(error, NotADirectoryError):
@@ -117,7 +124,7 @@ def reason_text(error: BaseException) -> str:
 def failed_text(action: str, host: str, error: BaseException) -> str:
     """`action` is rich text already, e.g. "log off <b>ana</b>"."""
     return _("Couldn't {action} on {host}: {reason}").format(
-        action=action, host=escape(host), reason=escape(reason_text(error))
+        action=action, host=escape(host), reason=escape(reason_text(error, host))
     )
 
 
@@ -185,8 +192,22 @@ class Runner(QObject):
     def busy(self) -> bool:
         return bool(self._jobs)
 
-    def account(self) -> Account | None:
-        return self._tool.account()
+    def _start_as(
+        self,
+        target: HostTarget,
+        work: Callable[[Account | None], Any],
+        done: Callable[[Any], None],
+        failed: Callable[[BaseException], None],
+        *,
+        ask: bool = True,
+    ) -> bool:
+        """`work` gets the account that signs in to `target` (Settings' Accounts; None for the
+        Windows account). A password not typed yet this session is asked first, unless not
+        `ask`; False when it wasn't typed, and nothing started."""
+        go, account = self._tool.accounts.account_for(target, self._window() if ask else None)
+        if go:
+            self._start(lambda: work(account), done, failed)
+        return go
 
     def _fail(
         self,
@@ -196,17 +217,21 @@ class Runner(QObject):
         target: HostTarget,
         error: BaseException,
         again: Callable[[], None],
+        output: str = "",
     ) -> None:
         retry = None
         if isinstance(error, RemoteError) and error.reason in RETRY_REASONS:
             retry = lambda: self.another_account(target, error, again)  # noqa: E731
-        report(command_id, Outcome(failed_text(action, target.name, error), error, retry))
+        text = failed_text(action, target.name, error)
+        report(command_id, Outcome(text, error, retry, output=output))
 
     def another_account(
         self, target: HostTarget, error: BaseException | None, again: Callable[[], None]
     ) -> None:
-        """Try another account…: asks for one, keeps it like Refresh's, then runs `again`."""
-        current = self.account()
+        """Try another account…: asks for one and which PCs it's for (Settings' Accounts keeps
+        it), then runs `again`."""
+        accounts = self._tool.accounts
+        current = accounts.link_for(target)
         if isinstance(error, RemoteError) and error.reason is Reason.REJECTED and current:
             text = _("{host} didn't accept “{user}”. Type the password again, or use another "
                      "account.").format(host=target.name, user=current.user)  # fmt: skip
@@ -214,14 +239,21 @@ class Runner(QObject):
             text = _(
                 "Use an account that is an administrator of {host}, such as a domain admin."
             ).format(host=target.name)
+        uses = accounts.uses_for([target])
         dialog = AccountDialog(
             self._parent_widget(),
             text,
             current.user if current else "",
-            saved=self._tool.connector.credentials.saving,
+            uses=uses,
         )
+        if current is not None:  # the PCs it was for, unless a narrower choice is wanted
+            for index, (_label, link) in enumerate(uses):
+                if link.same_place(current):
+                    dialog.use_for.setCurrentIndex(index)
         if run_modal(dialog) == QDialog.DialogCode.Accepted:
-            self._tool.use_account(dialog.account())
+            link = dialog.link()
+            assert link is not None  # "Every PC" at least
+            accounts.use(link, dialog.account(), remember=dialog.remember.isChecked())
             again()
 
     def _parent_widget(self) -> QWidget:
@@ -233,15 +265,18 @@ class Runner(QObject):
         self,
         target: HostTarget,
         then: Callable[[Sequence[Session] | None, BaseException | None], None],
+        *,
+        fresh: bool = False,
     ) -> None:
-        """Who is signed in, from the last check, or read now when there's none."""
-        known = self._tool.users_found(target.key)
+        """Who is signed in, from the last check, or read now when there's none (always now
+        with `fresh`: the last check may be from before someone signed in)."""
+        known = None if fresh else self._tool.users_found(target.key)
         if known is not None and known[0] is not None:
             then(known[0], None)
             return
 
-        def read() -> list[Session]:
-            return sessions.read_sessions(target.address, self.account())
+        def read(account: Account | None) -> list[Session]:
+            return sessions.read_sessions(target.address, account)
 
         def done(found: list[Session]) -> None:
             self._tool.keep_users(target.key, tuple(found), None)
@@ -252,7 +287,7 @@ class Runner(QObject):
                 self._tool.keep_users(target.key, None, error)
             then(None, error)
 
-        self._start(read, done, failed)
+        self._start_as(target, read, done, failed)
 
     # ---- running a command ----
 
@@ -289,6 +324,7 @@ class Runner(QObject):
             "cancel-restart": self._cancel_restart,
             "printers": self._printers,
             "spooler": self._spooler,
+            "drives": self._drives,
         }
         if command_id in ("log-off", "disconnect"):
             if session is not None:
@@ -297,7 +333,9 @@ class Runner(QObject):
         handler[command_id](target, report)
 
     def _window(self) -> QWidget:
-        return self._parent if self._parent is not None else self._parent_widget()
+        if self._parent is not None and shiboken6.isValid(self._parent):  # not closed since
+            return self._parent
+        return self._parent_widget()
 
     def _all_checks(self, target: HostTarget, report: Report) -> None:
         self._tool.check_target(target, status=True, users=True, report=report)
@@ -388,10 +426,9 @@ class Runner(QObject):
         names = ", ".join(bold(person(s)) for s in to)
         title = _("Message from {user}").format(user=_sender())
 
-        def send() -> None:
+        def send(account: Account | None) -> None:
             for session in to:
-                sessions.send_message(target.address, session.session_id, title, text,
-                                      self.account())  # fmt: skip
+                sessions.send_message(target.address, session.session_id, title, text, account)
 
         def done(_value: object) -> None:
             text_ = _("Message sent to {names} on {host}.")
@@ -402,7 +439,7 @@ class Runner(QObject):
             action = _("send the message to {names}").format(names=names)
             self._fail(report, "message", action, target, error, again)
 
-        self._start(send, done, failed)
+        self._start_as(target, send, done, failed)
 
     def _session_action(
         self, command_id: str, target: HostTarget, report: Report, session: Session
@@ -419,8 +456,8 @@ class Runner(QObject):
         call = sessions.log_off if log_off else sessions.disconnect
         who = bold(person(session))
 
-        def act() -> None:
-            call(target.address, session.session_id, self.account())
+        def act(account: Account | None) -> None:
+            call(target.address, session.session_id, account)
 
         def done(_value: object) -> None:
             text = (
@@ -436,7 +473,14 @@ class Runner(QObject):
             again = lambda: self._do_session_action(command_id, target, report, session)  # noqa: E731
             self._fail(report, command_id, action, target, error, again)
 
-        self._start(act, done, failed)
+        self._start_as(target, act, done, failed)
+
+    # ---- Drives and caches ----
+
+    def _drives(self, target: HostTarget, report: Report) -> None:
+        from capypanel.ui.hosts_tool.drive_windows import DrivesDialog
+
+        run_modal(DrivesDialog(self._window(), self, target))
 
     # ---- Power ----
 
@@ -462,8 +506,8 @@ class Runner(QObject):
         call = power.restart if restart else power.shut_down
         asked = datetime.now(UTC)
 
-        def act() -> None:
-            call(target.address, delay, message, self.account())
+        def act(account: Account | None) -> None:
+            call(target.address, delay, message, account)
 
         def done(_value: object) -> None:
             at = asked + timedelta(seconds=delay)
@@ -493,11 +537,11 @@ class Runner(QObject):
             again = lambda: self._shut_down(target, report, restart, delay, message, people)  # noqa: E731
             self._fail(report, command_id, action, target, error, again)
 
-        self._start(act, done, failed)
+        self._start_as(target, act, done, failed)
 
     def _cancel_restart(self, target: HostTarget, report: Report) -> None:
-        def act() -> bool:
-            return power.cancel(target.address, self.account())
+        def act(account: Account | None) -> bool:
+            return power.cancel(target.address, account)
 
         def done(cancelled: bool) -> None:
             host = escape(target.name)
@@ -510,7 +554,7 @@ class Runner(QObject):
             again = lambda: self._cancel_restart(target, report)  # noqa: E731
             self._fail(report, "cancel-restart", _("cancel the restart"), target, error, again)
 
-        self._start(act, done, failed)
+        self._start_as(target, act, done, failed)
 
     # ---- Printers ----
 
@@ -525,8 +569,8 @@ class Runner(QObject):
     def restart_spooler(
         self, target: HostTarget, report: Report, then: Callable[[], None] | None = None
     ) -> None:
-        def act() -> None:
-            services.restart_service(target.address, services.SPOOLER, self.account())
+        def act(account: Account | None) -> None:
+            services.restart_service(target.address, services.SPOOLER, account)
 
         def done(_value: object) -> None:
             text = _("Print Spooler restarted on {host}.").format(host=escape(target.name))
@@ -539,32 +583,42 @@ class Runner(QObject):
             action = _("restart the Print Spooler")
             self._fail(report, "spooler", action, target, error, again)
 
-        self._start(act, done, failed)
+        self._start_as(target, act, done, failed)
 
     def call(
         self,
         work: Callable[[Account | None], Any],
         done: Callable[[Any], None],
         failed: Callable[[BaseException], None],
+        target: HostTarget | None = None,
     ) -> None:
-        """For the command windows: `work` gets the account to use, on a background thread."""
-        self._start(lambda: work(self.account()), done, failed)
+        """For the command windows: `work` runs on a background thread and gets the account
+        that signs in to `target`; with no target, None (nothing on a PC needs one)."""
+        if target is None:
+            self._start(lambda: work(None), done, failed)
+        else:
+            self._start_as(target, work, done, failed)
 
     # ---- Check ----
 
     def read_facts(self, target: HostTarget, *, report: Report | None = None) -> None:
-        """PC facts: free space and the last restart at once, then the rest over WMI."""
+        """PC facts: free space and the last restart at once, then the rest over WMI. Read on
+        its own (no `report`), it never asks for a password: it waits for one typed."""
+        go, account = self._tool.accounts.account_for(
+            target, self._window() if report is not None else None
+        )
+        if not go:
+            return
         self._tool.facts_reading(target.key)
         self.facts_changed.emit(target.key)
         from capypanel.core.remote import inventory  # its PowerShell parts load on first use
 
         def quick() -> tuple[Any, Any]:
-            account = self.account()
             return (inventory.disk_space(target.address, account),
                     inventory.last_restart(target.address, account))  # fmt: skip
 
         def slow() -> Any:
-            return inventory.pc_facts(target.address, self.account())
+            return inventory.pc_facts(target.address, account)
 
         def quick_done(found: tuple[Any, Any]) -> None:
             self._tool.keep_facts(target.key, quick=found)
@@ -572,6 +626,7 @@ class Runner(QObject):
             self._start(slow, slow_done, slow_failed)
 
         def quick_failed(error: BaseException) -> None:
+            windows.log_failed("Disk space and last restart", target.name, error)
             self._tool.keep_facts(target.key, quick_error=error)
             self.facts_changed.emit(target.key)
             if isinstance(error, RemoteError) and error.reason is Reason.UNREACHABLE:
@@ -585,6 +640,7 @@ class Runner(QObject):
             self.facts_changed.emit(target.key)
 
         def slow_failed(error: BaseException) -> None:
+            windows.log_failed("PC facts", target.name, error)
             self._tool.keep_facts(target.key, slow_error=error)
             self.facts_changed.emit(target.key)
             self._facts_failed(target, error, report)

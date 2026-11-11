@@ -86,9 +86,10 @@ read-only list too.
   **selected hosts** when you have more than one selected, **All hosts**, **No group**, every
   group (with the hosts of the groups inside it) and **Tag: {tag}** for each tag. It opens on
   whatever the window is showing, every time.
-- **Columns:** tick what each row should hold, grouped as **Host** (Name, Address, Group), **Tags
-  and notes** (Tags, Notes) and **Last check** (Status, Logged-on users). The ticks are kept as
-  soon as you change them, so closing the window never loses them.
+- **Columns:** tick what each row should hold, in three boxes side by side: **Host** (Name,
+  Address, Group), **Tags and notes** (Tags, Notes) and **Last check** (Status, Logged-on users).
+  Each box has **All · None** under its name. The ticks are kept as soon as you change them, so
+  closing the window never loses them.
 - **Preset:** **For Import** ticks the hosts' own fields, "which Import hosts reads back: to move
   hosts to a list". Keep your own set with **Save as preset…**, and remove one with **Delete**.
   A name already in use asks "A preset named “{name}” already exists. Replace it?", with Cancel as
@@ -96,12 +97,19 @@ read-only list too.
 
 ### Status and logged-on users
 
-Those two columns come from the last check (see [Checking hosts](checking.md)), so a host nobody
-has checked exports empty. Ticking either one offers **Refresh**, which checks these hosts now and
-shows "Checking 3 of 12…" with a **Stop** button while it runs.
+![The Report window: the hosts, the preset, the Host, Tags and notes and Last check boxes with Refresh 3 hosts, and the preview](../images/report-dark.png)
 
-With **Logged-on users** ticked, a warning stays on screen: "Includes who was logged on to each
-PC. Keep the file private."
+Those two columns come from the last check (see [Checking hosts](checking.md)), so a host nobody
+has checked exports empty. The **Last check** box shows the time of the newest of those checks
+beside its name, with the date too when it isn't today.
+
+Under its ticks, a button checks these hosts again now, named after how many there are: **Refresh
+3 hosts**, or **Refresh host** for one. It reads only what's ticked in that box, and is greyed
+with "Tick Status or Logged-on users to refresh them" while neither is. While it runs it shows
+"Refreshing 3 of 12…" with a **Stop** button.
+
+With **Logged-on users** ticked, a note stays under the box: "People's names: keep the file
+private."
 
 ### Copy, or Export… to a file
 

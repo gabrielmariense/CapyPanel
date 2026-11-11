@@ -86,9 +86,10 @@ funciona também numa lista somente leitura.
   enquanto houver alguma, os **hosts selecionados** quando você tem mais de um selecionado,
   **Todos os hosts**, **Sem grupo**, cada grupo (com os hosts dos grupos de dentro dele) e
   **Tag: {tag}** para cada tag. Ela abre no que a janela está mostrando, sempre.
-- **Colunas:** marque o que cada linha deve ter, agrupado em **Host** (Nome, Endereço, Grupo),
-  **Tags e notas** (Tags, Notas) e **Última verificação** (Status, Usuários logados). As marcações
-  são guardadas assim que você as muda, então fechar a janela nunca as perde.
+- **Colunas:** marque o que cada linha deve ter, em três quadros lado a lado: **Host** (Nome,
+  Endereço, Grupo), **Tags e notas** (Tags, Notas) e **Última verificação** (Status, Usuários
+  logados). Cada quadro tem **Todas · Nenhuma** embaixo do nome. As marcações são guardadas assim
+  que você as muda, então fechar a janela nunca as perde.
 - **Predefinição:** **Para importar** marca os campos dos próprios hosts, "que Importar hosts lê
   de volta: para levar hosts a uma lista". Guarde o seu próprio conjunto com **Salvar como
   predefinição…** e tire um com **Excluir**. Um nome já usado pergunta "Já existe uma predefinição
@@ -97,12 +98,19 @@ funciona também numa lista somente leitura.
 
 ### Status e usuários logados
 
-Essas duas colunas vêm da última verificação (veja [Verificando hosts](checking.pt-BR.md)), então
-um host que ninguém verificou é exportado vazio. Marcar uma delas oferece **Atualizar**, que
-verifica esses hosts agora e mostra "Verificando 3 de 12…" com um botão **Parar** enquanto corre.
+![A janela Relatório: os hosts, a predefinição, os quadros Host, Tags e notas e Última verificação com Atualizar 3 hosts, e a prévia](../images/report-dark-pt-BR.png)
 
-Com **Usuários logados** marcado, um aviso fica na tela: "Inclui quem estava logado em cada PC.
-Mantenha o arquivo privado."
+Essas duas colunas vêm da última verificação (veja [Verificando hosts](checking.pt-BR.md)), então
+um host que ninguém verificou é exportado vazio. O quadro **Última verificação** mostra a hora da
+mais recente dessas verificações ao lado do nome, com a data também quando não é de hoje.
+
+Embaixo das marcas, um botão verifica esses hosts de novo agora, com o nome de quantos são:
+**Atualizar 3 hosts**, ou **Atualizar host** para um só. Ele lê só o que está marcado naquele
+quadro, e fica esmaecido com "Marque Status ou Usuários logados para atualizá-los" enquanto nenhum
+dos dois estiver. Enquanto corre, ele mostra "Atualizando 3 de 12…" com um botão **Parar**.
+
+Com **Usuários logados** marcado, um aviso fica embaixo do quadro: "Nomes de pessoas: guarde em
+sigilo."
 
 ### Copiar, ou Exportar… para um arquivo
 

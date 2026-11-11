@@ -128,7 +128,7 @@ menu traz:
 - **Nova lista…**, embaixo delas, e **Abrir lista…** (Ctrl+O), que abre qualquer arquivo de lista
   de qualquer lugar e o mantém no menu desde então;
 - **Gerenciar listas de hosts…**, que abre
-  [Configurações > Hosts > Listas de hosts](#configuracoes-hosts-listas-de-hosts).
+  [Configurações > Hosts > Geral > Listas de hosts](#configuracoes-hosts-geral-listas-de-hosts).
 
 ## Criar uma lista nova
 
@@ -144,7 +144,7 @@ um **Nome** e **Para:**
 Um nome já usado pergunta antes de substituir esse arquivo por uma lista vazia. A lista nova abre
 na hora.
 
-## Configurações > Hosts > Listas de hosts
+## Configurações > Hosts > Geral > Listas de hosts
 
 As mesmas listas do menu de listas, como uma tabela de **Lista**, **Tipo** e **Acesso**:
 
@@ -174,14 +174,14 @@ podem ser removidas.
 
 ## Qual lista abre ao iniciar
 
-Escolha em **Configurações > Hosts > Inicialização > Lista ao iniciar**: a última lista
+Escolha em **Configurações > Hosts > Geral > Lista ao iniciar**: a última lista
 usada (a escolha padrão), a lista padrão, sua lista pessoal ou qualquer outra lista que você tenha.
 Se essa lista não abrir, o CapyPanel abre a próxima que conseguir, a lista padrão e depois a sua
 lista pessoal, e avisa.
 
 ## O que uma lista mostra primeiro
 
-Cada lista guarda a própria resposta, em **Configurações > Hosts > Inicialização > Mostrar
+Cada lista guarda a própria resposta, em **Configurações > Hosts > Geral > Mostrar
 primeiro**:
 
 - **Todos os hosts**, a lista inteira;

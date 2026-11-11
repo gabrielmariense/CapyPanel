@@ -26,7 +26,7 @@ permissions decide.
 
 The open list's name sits on top of the Groups panel. Its menu holds every printer list CapyPanel
 found or you added, then **New printer list**, **Open a printer list** (Ctrl+O) and **Manage
-printer lists…**, which opens **Settings > Printers > Printer lists**.
+printer lists…**, which opens **Settings > Printers > General**.
 
 ## Groups and tags
 
@@ -36,13 +36,16 @@ all behave as they do in Hosts, which [Host lists](../hosts/host-lists.md) descr
 
 ## Settings
 
-**Settings > Printers** has three sections:
+**Settings > Printers** has three pages:
 
-- **Startup > List on startup:** which printer list opens with the tool, and **Show first**, what
-  that list shows when it opens. Each list keeps its own answer.
-- **Refresh:** the SNMP version and its account, Refresh on its own, the Windows notification,
-  the low supply level and how the Toner column shows, all under
-  [Checking printers](checking.md).
-- **Printer lists:** the table of every list with its type and what you can do to it, with
-  **New…**, **Add existing…** and **Remove**. It's the same page as Host lists, down to what
-  **Remove** asks, which [Host lists](../hosts/host-lists.md#settings-hosts-host-lists) covers.
+- **General:** **Printer lists**, the table of every list with its type and what you can do to
+  it, with **New…**, **Add existing…** and **Remove**. It's the same table as Host lists, down to
+  what **Remove** asks, which
+  [Host lists](../hosts/host-lists.md#settings-hosts-general-host-lists) covers. Under it, **List on
+  startup**, which printer list opens with the tool, and **Show first**, what that list shows when
+  it opens. Each list keeps its own answer.
+- **Warnings and supplies:** Refresh on its own, the Windows notification, the low supply level,
+  the bar marks and how the Toner column shows.
+- **Connecting:** the SNMP version and its account, and the Doc360 MPS account.
+
+The last two are explained under [Checking printers](checking.md).

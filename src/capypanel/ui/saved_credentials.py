@@ -1,5 +1,6 @@
 """Saved credentials: every login CapyPanel keeps, from every tool, in one table, with Forget
-and Forget all. It opens from Settings › Connection profiles and from Hosts' Connect menu."""
+and Forget all. It opens from Settings › Hosts › Credentials and
+from Hosts' Connect menu."""
 
 import logging
 from collections.abc import Callable
@@ -100,8 +101,8 @@ class SavedCredentialsDialog(QDialog):
             notes(
                 _(
                     "Forgotten logins are deleted from Credential Manager too; you type them "
-                    "again the next time. Where new ones are kept: Settings › Connection "
-                    "profiles › Credentials."
+                    "again the next time. A new one is saved only when you tick Remember it on "
+                    "this computer as you type it."
                 )
             )
         )

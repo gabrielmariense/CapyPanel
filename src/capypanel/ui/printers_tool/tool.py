@@ -5,6 +5,7 @@ reads each printer's status, supplies and page counter over SNMP."""
 import logging
 from collections.abc import Sequence
 from dataclasses import replace
+from datetime import datetime
 
 from PySide6.QtCore import Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QGuiApplication
@@ -133,6 +134,7 @@ class PrintersTool(ListWorkspace):
     def _fill_inventory(self) -> None:
         a = self.commands
         self.toolbar.inventory_menu.addActions([a.add_printer, a.add_group, a.manage_groups])
+        self.toolbar.inventory_menu.addAction(self.sort_groups_action)  # as in Hosts
 
     def _connect(self) -> None:
         a = self.commands
@@ -204,7 +206,7 @@ class PrintersTool(ListWorkspace):
         return _("Selected printers"), _("the selected printers")
 
     def lists_page(self) -> str:
-        return "printer_lists"
+        return "printers"
 
     def only_tags_text(self, shown: int, total: int) -> str:
         return _("Only printers with all of: {tags} · {shown} of {total} shown").format(
@@ -424,6 +426,7 @@ class PrintersTool(ListWorkspace):
             prefs=self.prefs,
             save_prefs=self._save_prefs,
             results=self._report_cells,
+            checked_at=self._checked_at,
             # Status, Toner and Total pages come from one read: any box ticked reads them all.
             refresh=lambda printers, *wanted: (
                 self.check_printers(printers) if any(wanted) else None
@@ -621,7 +624,7 @@ class PrintersTool(ListWorkspace):
         if secret is None:
             if quiet:
                 return
-            note = _("Set the SNMP v3 account in Settings › Printers › Refresh first.")
+            note = _("Set the SNMP v3 account in Settings › Printers › Connecting first.")
             self._shell.show_message(note, 10_000)
             return
         targets = [(p.id, p.address or p.name) for p in printers]
@@ -711,6 +714,11 @@ class PrintersTool(ListWorkspace):
     def _cells(self, printer_id: str) -> tuple[Cell, Cell]:
         checked, low = self._checked.get(printer_id), self.low_level()
         return status.status(checked, low), status.toner(checked, low)
+
+    def _checked_at(self, printer_id: str) -> tuple[datetime | None, ...]:
+        """When each Last check column was read: one Refresh reads them all."""
+        checked = self._checked.get(printer_id)
+        return (checked.when if checked else None,) * len(PrintersReport.CHECKED)
 
     def _report_cells(self, printer_id: str) -> tuple[str, ...]:
         """The Report's Last check columns, in PrintersReport.CHECKED's order."""

@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QLabel
 
 from capypanel.core import credstore, settings
 from capypanel.core.hosts import listfile
+from capypanel.core.hosts.accounts import Link, Scope
 from capypanel.core.hosts.model import HostList
 from capypanel.core.remote.access import Account
 from capypanel.core.tools.connect import Credential
@@ -69,23 +70,23 @@ def _profiles(win: CapyWindow) -> ProfilesSection:
     return win.settings_dialog().group(HostsSettings).connections.profiles
 
 
-def _type(monkeypatch: pytest.MonkeyPatch, asked: list[str]) -> None:
+def _type(monkeypatch: pytest.MonkeyPatch, asked: list[str], remember: bool = False) -> None:
     def answer(dialog: CredentialDialog) -> int:
         asked.append(dialog.windowTitle())
+        assert not dialog.remember.isChecked()  # unticked until you tick it
         dialog.user.setText("CORP\\ana")
         dialog.password.setText("x")
+        dialog.remember.setChecked(remember)
         return 1  # Accepted
 
     monkeypatch.setattr(CredentialDialog, "exec", answer)
 
 
-def test_passwords_are_kept_in_memory_only_unless_saving_is_chosen(
+def test_passwords_are_kept_in_memory_only_unless_remember_is_ticked(
     window: CapyWindow, launched: list[Credential | None], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     profiles = _profiles(window)
-    assert not profiles.save_passwords_choice()  # the default
-    assert profiles.passwords.currentText() == "Temporary credentials"
-    assert profiles.passwords_row.description.text() == "Forgotten when CapyPanel closes."
+    assert not hasattr(profiles, "passwords")  # no Kept in setting any more
     asked: list[str] = []
     _type(monkeypatch, asked)
     _connect(window)
@@ -93,57 +94,39 @@ def test_passwords_are_kept_in_memory_only_unless_saving_is_chosen(
     assert credstore.names("") == []  # nothing left the memory
 
 
-def test_a_saved_password_is_used_the_next_time_capypanel_opens(
+def test_a_remembered_password_is_used_the_next_time_capypanel_opens(
     qapp: QApplication,
     window: CapyWindow,
     paths: settings.Paths,
     launched: list[Credential | None],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    profiles = _profiles(window)
-    profiles.passwords.setCurrentIndex(1)  # Save in Windows Credential Manager
-    assert window.hosts.prefs["save_passwords"] is True
-    assert profiles.passwords_row.description.text() == "Saved for your Windows account."
-    assert "domain accounts" in profiles.passwords.toolTip()  # the details, for who looks
     asked: list[str] = []
-    _type(monkeypatch, asked)
+    _type(monkeypatch, asked, remember=True)
     _connect(window)
     assert credstore.read("profile/offices") == ("CORP\\ana", "x")
-    window.hosts._save_account(Account("CORP\\admin", "y"))  # pyright: ignore[reportPrivateUsage]
+    admin = Account("CORP\\admin", "y")
+    window.hosts.accounts.use(Link(admin.user, Scope.ALL), admin, remember=True)
 
-    later = _open(qapp, paths, {"save_passwords": True})
+    later = _open(qapp, paths, {"accounts": window.hosts.prefs["accounts"]})
     monkeypatch.setattr(CredentialDialog, "exec", lambda _self: pytest.fail("asked again"))
     _connect(later)
     assert launched[-1] == Credential("CORP\\ana", "x")
-    assert later.hosts._account == Account("CORP\\admin", "y")  # pyright: ignore[reportPrivateUsage]
+    assert later.hosts.accounts.known("CORP\\admin") == admin
     kept = later.hosts.kept_logins()
-    assert [(k.used_for, k.saved) for k in kept] == [("Offices", True), ("Logged-on users", True)]
+    assert [(k.used_for, k.saved) for k in kept] == [("Offices", True), ("Every PC", True)]
     for login in kept:  # saved ones can be forgotten too
         login.forget()
-    assert credstore.names("") == [] and later.hosts._account is None  # pyright: ignore[reportPrivateUsage]
+    assert credstore.names("") == [] and later.hosts.accounts.known("CORP\\admin") is None
 
 
-def test_the_password_boxes_say_where_the_password_goes(window: CapyWindow) -> None:
+def test_every_login_window_has_remember_unticked(window: CapyWindow) -> None:
     def note(dialog: QDialog) -> str:
         return " ".join(label.text() for label in dialog.findChildren(QLabel))
 
     ready = window.hosts.connector.resolve("offices")
-    assert "never saved" in note(CredentialDialog(None, ready, "PC-A", on_command_line=False))
-    saved = CredentialDialog(None, ready, "PC-A", on_command_line=False, saved=True)
-    assert "Windows Credential Manager" in note(saved) and "never saved" not in note(saved)
-    assert "never saved" in note(AccountDialog(None, "Why"))
-    assert "never saved" not in note(AccountDialog(None, "Why", saved=True))
-
-
-def test_keeping_passwords_until_closing_again_deletes_the_saved_ones(
-    window: CapyWindow, launched: list[Credential | None], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    profiles = _profiles(window)
-    profiles.passwords.setCurrentIndex(1)
-    _type(monkeypatch, [])
-    _connect(window)
-    window.hosts._save_account(Account("CORP\\admin", "y"))  # pyright: ignore[reportPrivateUsage]
-    assert len(credstore.names("")) == 2
-    profiles.passwords.setCurrentIndex(0)  # Keep until CapyPanel closes
-    assert window.hosts.prefs["save_passwords"] is False and credstore.names("") == []
-    assert "offices" in window.hosts.connector.credentials  # typed this session: still kept
+    profile_login = CredentialDialog(None, ready, "PC-A", on_command_line=False)
+    assert not profile_login.remember.isChecked()
+    assert profile_login.remember.text() == AccountDialog(None, "Why").remember.text()
+    assert "only for hosts with this connection profile" in note(profile_login)
+    assert not AccountDialog(None, "Why").remember.isChecked()

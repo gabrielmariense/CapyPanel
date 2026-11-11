@@ -88,6 +88,49 @@ def test_dragging_a_group_saves_the_new_place(window: CapyWindow) -> None:
     assert listfile.load(doc.path).hosts == doc.hosts  # saved
 
 
+def test_sort_groups_a_to_z_asks_once_then_sorts_every_level(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    asked: list[str] = []
+    answer = {"yes": False}
+
+    def fake_confirm(_parent: Any, title: str, *_more: Any) -> bool:
+        asked.append(title)
+        return answer["yes"]
+
+    monkeypatch.setattr(workspace_module, "confirm", fake_confirm)
+    hosts = window.hosts
+    assert hosts.sort_groups_action.text() == "&Sort groups A–Z"
+    assert hosts.sort_groups_action in hosts.toolbar.inventory_menu.actions()
+    hosts.sort_groups_action.trigger()  # Cancel: nothing moves
+    doc = hosts.document
+    assert doc is not None and asked == ["Sort groups A–Z"]
+    assert [g.name for g in doc.hosts.children(None)] == ["Zebra wing", "alpha wing"]
+    answer["yes"] = True
+    hosts.sort_groups_action.trigger()
+    doc = hosts.document
+    assert doc is not None
+    assert [g.name for g in doc.hosts.children(None)] == ["alpha wing", "Zebra wing"]
+    assert listfile.load(doc.path).hosts == doc.hosts  # saved
+    hosts.sort_groups_action.trigger()  # already A–Z: no question
+    assert len(asked) == 2
+
+
+def test_the_arrow_keys_go_on_from_the_row_edited_after_the_table_refills(
+    window: CapyWindow,
+) -> None:
+    table = window.hosts.table
+    rows = [table.topLevelItem(i) for i in range(table.topLevelItemCount())]
+    last = rows[-1]
+    assert last is not None and len(rows) == 2
+    table.setCurrentItem(last)  # as a click on it, before Edit
+    picked = last.data(0, ROLE_ID)
+    window.hosts.refresh()  # what saving an edit does
+    current = table.currentItem()
+    assert current is not None and current.data(0, ROLE_ID) == picked
+    assert table.selected_ids() == [picked]
+
+
 def test_hosts_dropped_on_a_group_move_there(window: CapyWindow) -> None:
     doc = window.hosts.document
     assert doc is not None
@@ -265,7 +308,7 @@ def test_right_clicking_the_groups_heading_offers_new_and_manage(
 
     monkeypatch.setattr(workspace_module, "QMenu", Recorded)
     window.hosts.nav.groups_heading.customContextMenuRequested.emit(QPoint(5, 5))
-    assert seen == ["Add &group…", "&Manage groups…"]
+    assert seen == ["Add &group…", "&Manage groups…", "&Sort groups A–Z"]
 
 
 def test_add_group_from_the_heading_goes_to_the_top_level_even_with_a_group_picked(

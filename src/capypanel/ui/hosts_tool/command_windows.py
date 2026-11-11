@@ -1,9 +1,11 @@
 """The small windows host commands open: Open a path…, Send a message…, Restart… and Shut down…,
-the questions before logging someone off, disconnecting them or restarting the Print Spooler,
-and the two lists a PC is read for, Printers on this PC and Installed programs. The same window
-opens from the menus, the Details panel and the Commands window."""
+the questions before logging someone off, disconnecting them, restarting the Print Spooler or
+running a script that disturbs the PC, a script's output, and the two lists a PC is read for,
+Printers on this PC and Installed programs. The same window opens from the menus, the Details
+panel and the Commands window."""
 
 import html
+import logging
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
@@ -11,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 import shiboken6
 from PySide6.QtCore import QStandardPaths, Qt
-from PySide6.QtGui import QColor, QGuiApplication
+from PySide6.QtGui import QColor, QFontDatabase, QGuiApplication
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -39,6 +41,7 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.icons import STATUS_COLORS, tabler_icon
 from capypanel.ui.notes import hint
+from capypanel.ui.tables import fit_menu
 
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.runner import HostTarget, Report, Runner
@@ -49,11 +52,20 @@ def escape(text: str) -> str:
     return html.escape(text, quote=False)
 
 
+log = logging.getLogger(__name__)
+
+
+def log_failed(read: str, host: str, error: BaseException) -> None:
+    """A read that failed goes in the log too, not only on screen, so a report can quote it:
+    "Installed programs on DESK-03 failed: RemoteError: Access is denied."."""
+    log.warning("%s on %s failed: %s: %s", read, host, type(error).__name__, error)
+
+
 MAX_MESSAGE = 255  # Windows' message box shows about this much
 MAX_PATH = 1024
 RECENT_PATHS = 10
 DELAYS = (0, 60, 5 * 60, 15 * 60)  # Restart's When: now, or in 1, 5 or 15 minutes
-DEFAULT_DELAY = 5 * 60
+DEFAULT_DELAY = 0  # When's first pick: now (Cancel stays the default button)
 AMBER = STATUS_COLORS["attention"]
 WIDE = 460  # px: a question names a person, a session and a time; narrower, it wraps badly
 
@@ -107,6 +119,7 @@ class Question(QDialog):
         top.addWidget(sign, 0, Qt.AlignmentFlag.AlignTop)
         top.addLayout(self.body, 1)
         self.action = risky_button(action)
+        self.action.setAutoDefault(True)  # Enter runs it once Tab has put the keyboard on it
         self.cancel = QPushButton(_("Cancel"))
         self.cancel.setDefault(True)
         self.action.clicked.connect(self.accept)
@@ -154,6 +167,42 @@ def ask_spooler(parent: QWidget | None, host: str) -> bool:
         _("&Restart Print Spooler"),
     )
     return run_modal(box) == QDialog.DialogCode.Accepted
+
+
+class OutputDialog(QDialog):
+    """What a script wrote on the PC, to read and copy."""
+
+    def __init__(self, parent: QWidget | None, title: str, output: str) -> None:
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.resize(720, 460)
+        self.text = output_box(output)
+        self.text.setMaximumHeight(16_777_215)  # here it takes the whole window
+        copy = QPushButton(_("&Copy"))
+        copy.clicked.connect(lambda: QGuiApplication.clipboard().setText(output))
+        close = QPushButton(_("Close"))
+        close.setDefault(True)
+        close.clicked.connect(self.accept)
+        buttons = QHBoxLayout()
+        buttons.addWidget(copy)
+        buttons.addStretch(1)
+        buttons.addWidget(close)
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.text, 1)
+        layout.addLayout(buttons)
+
+
+def output_box(output: str) -> QPlainTextEdit:
+    """A script's output as the console showed it: fixed-width, read-only; long lines wrap."""
+    box = QPlainTextEdit(output)
+    box.setReadOnly(True)
+    box.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
+    box.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
+    box.setMaximumHeight(OUTPUT_HEIGHT)
+    return box
+
+
+OUTPUT_HEIGHT = 240  # px in the Commands window; Show output… opens it bigger
 
 
 def ask_clear_queue(parent: QWidget | None, host: str, printer: HostPrinter) -> bool:
@@ -331,6 +380,12 @@ class PowerDialog(Question):
         self.box.textChanged.connect(self._edited)
         self.when.currentIndexChanged.connect(self._update)
         self._update()
+        # The keyboard starts in When: arrows pick, Tab goes to the message (when there is one),
+        # then to the action, where Enter runs it. Enter anywhere else is still Cancel.
+        self.setTabOrder(self.when, self.box)
+        self.setTabOrder(self.box, self.action)
+        self.setTabOrder(self.action, self.cancel)
+        self.when.setFocus()
         self.resize(520, self.sizeHint().height())
 
     def delay(self) -> int:
@@ -410,6 +465,8 @@ class ReadList(QDialog):
     """A window that reads a list from the PC on a background thread: "Reading…" until it's
     back, then the rows, or why it couldn't. Read again reads it once more."""
 
+    READ = "A list"  # what it reads, for the log (in English, as the rest of the log)
+
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget") -> None:
         super().__init__(parent)
         self.runner, self.target = runner, target
@@ -419,6 +476,7 @@ class ReadList(QDialog):
         self.table.setRootIsDecorated(False)
         self.table.setUniformRowHeights(True)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        fit_menu(self.table)
         self.summary = QLabel()
         self.summary.setObjectName("hint")
         self.summary.setWordWrap(True)
@@ -432,7 +490,7 @@ class ReadList(QDialog):
     def read(self) -> None:
         self.read_button.setEnabled(False)
         self.summary.setText(_("Reading {host}…").format(host=self.target.name))
-        self.runner.call(self.work, self._read, self._failed)
+        self.runner.call(self.work, self._read, self._failed, self.target)
 
     def work(self, account: Any) -> Any:
         raise NotImplementedError
@@ -454,17 +512,20 @@ class ReadList(QDialog):
     def _failed(self, error: BaseException) -> None:
         from capypanel.ui.hosts_tool.runner import reason_text
 
+        log_failed(self.READ, self.target.name, error)
         if not self._alive():
             return
         self.read_button.setEnabled(True)
         self.table.clear()
         self.summary.setText(_("Couldn't read {host}: {reason}").format(
-            host=self.target.name, reason=reason_text(error)))  # fmt: skip
+            host=self.target.name, reason=reason_text(error, self.target.name)))  # fmt: skip
 
 
 class PrintersDialog(ReadList):
     """Printers on this PC: name, driver, port, status and documents waiting; Clear queue… for
     the printer picked and Restart Print Spooler… for them all, both asking first."""
+
+    READ = "Printers"
 
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget",
                  report: "Report") -> None:  # fmt: skip
@@ -554,6 +615,7 @@ class PrintersDialog(ReadList):
             lambda account: host_printers.clear_queue(self.target.address, printer.name, account),
             done,
             failed,
+            self.target,
         )
 
     def _spooler(self) -> None:
@@ -564,6 +626,8 @@ class PrintersDialog(ReadList):
 class ProgramsDialog(ReadList):
     """Installed programs: a search, the count and when it was read, then Copy list and Export
     CSV… for the rows shown."""
+
+    READ = "Installed programs"
 
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget",
                  folder: Callable[[str | None], str], found: Sequence[Any] | None = None,

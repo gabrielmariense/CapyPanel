@@ -23,7 +23,7 @@ verificadas." Uma impressora sem endereço é consultada pelo nome dela.
 
 ## Atualizar sozinho
 
-Em **Configurações > Impressoras > Atualizar > Atualizar sozinho** a leitura acontece por tempo:
+Em **Configurações > Impressoras > Avisos e suprimentos > Atualizar sozinho** a leitura acontece por tempo:
 **Desligado**, o padrão, ou a cada **5**, **15**, **30** ou **60 minutos**. A linha dele diz o que
 uma rodada abrange: "Todas as impressoras da lista aberta, 8 por vez, enquanto o CapyPanel estiver
 aberto ou na bandeja."
@@ -64,7 +64,7 @@ padrão, com um quadradinho da cor daquele toner ao lado: "Preto 24 %", ou "Cian
 porcentagem mostra "Preto: ainda há" ou "Preto: não informado", e uma impressora só preto que
 não nomeia cor nenhuma mostra apenas "Toner".
 
-Em **Configurações > Impressoras > Atualizar > Coluna Toner** dá para mostrar uma barra no lugar,
+Em **Configurações > Impressoras > Avisos e suprimentos > Coluna Toner** dá para mostrar uma barra no lugar,
 preenchida até aquele nível e com a porcentagem ao lado. A barra estica junto com a coluna, e numa
 coluna bem estreita aparece só a porcentagem. Copiar uma célula e o relatório sempre usam o texto.
 
@@ -80,7 +80,7 @@ desgastam em vez de acabar. Um suprimento cujo nível a impressora não informa 
 diz isso no lugar: "Esta impressora não informa o nível deste suprimento." Quando a impressora
 não informa nada disso, a seção diz "A impressora não informa seus suprimentos."
 
-Em **Configurações > Impressoras > Atualizar > Nível baixo de suprimento** você define o nível
+Em **Configurações > Impressoras > Avisos e suprimentos > Nível baixo de suprimento** você define o nível
 baixo, de 1 a 50 %, e começa em 10 %. Um nível só vale para todo tipo de suprimento.
 
 ### Os traços nas barras
@@ -89,7 +89,7 @@ Toda barra tem um traço no nível baixo, e a linha embaixo das barras diz onde 
 "O traço marca o nível baixo, 10 %." Cada traço tem um contorno escuro fino e passa um pouco da
 barra, para dar para ver em qualquer preenchimento e em qualquer tema.
 
-As **Configurações > Impressoras > Atualizar > Marcas das barras** listam os traços, e o
+As **Configurações > Impressoras > Avisos e suprimentos > Marcas das barras** listam os traços, e o
 **Alterar…** abre uma janela para mudá-los: o **Adicionar…** põe um traço de 1 a 99 %, até oito
 seus, o **Cor…** dá a um deles uma cor própria e a **Cor do tema** a devolve, o **Remover** tira
 um, e o **Restaurar padrão** volta ao traço do nível baixo sozinho. Esse sempre segue o **Nível
@@ -160,7 +160,7 @@ até o próximo Atualizar, para uma senha errada não ser enviada de novo e de n
 
 ### A conta do Doc360 MPS
 
-As **Configurações > Impressoras > Atualizar > Conta do Doc360 MPS** guardam um login para o
+As **Configurações > Impressoras > Conexão > Conta do Doc360 MPS** guardam um login para o
 portal inteiro. O **Alterar…** abre uma janela para "o login que você usa no portal Doc360 MPS":
 **Parceiro**, **Usuário** e **Senha**, com uma caixa **Mostrar senha**. O parceiro é o código de
 parceiro da própria página de login do Doc360.
@@ -194,7 +194,7 @@ Três coisas então avisam:
 
 A contagem e a faixa somem por conta própria quando nada mais requer atenção.
 
-Em **Configurações > Impressoras > Atualizar > Notificação do Windows** você escolhe o que
+Em **Configurações > Impressoras > Avisos e suprimentos > Notificação do Windows** você escolhe o que
 notificar: **Desligado**, **Parada ou offline** (o padrão) ou **Também suprimento baixo**. "Depois
 de uma atualização sozinha, para as impressoras que pararam ou ficaram offline (e com suprimento
 baixo, se escolhido) desde a anterior."
@@ -228,7 +228,7 @@ A marca vem do número de fabricante que a impressora informa, e o modelo, da de
 ## A conta SNMP
 
 As impressoras só respondem ao SNMP a quem elas já conhecem, e quem é isso depende da versão. Em
-**Configurações > Impressoras > Atualizar > Versão do SNMP** você escolhe, para todas as
+**Configurações > Impressoras > Conexão > Versão do SNMP** você escolhe, para todas as
 impressoras de uma vez: **v2c**, o padrão, ou **v3**. "v2c: uma comunidade. v3: um usuário, com
 senha e criptografia."
 
@@ -238,7 +238,7 @@ guardado no **Gerenciador de Credenciais do Windows**, na sua própria conta do 
 para um arquivo de configurações, um arquivo de lista ou um log, e uma conta só vale para todas as
 impressoras.
 
-![Configurações > Impressoras > Atualizar: a versão e a conta SNMP, a conta do Doc360 MPS, o Atualizar sozinho, a notificação do Windows, o nível baixo de suprimento, as marcas das barras e a coluna Toner](../images/settings-printers-refresh-dark-pt-BR.png)
+![Configurações > Impressoras > Conexão: a versão e a conta SNMP, e a conta do Doc360 MPS](../images/settings-printers-connecting-dark-pt-BR.png)
 
 ### v2c: uma comunidade
 
@@ -277,11 +277,11 @@ guardada.", do mesmo jeito que uma comunidade vazia volta para "public".
 
 Uma impressora que recusa a conta aparece como **Recusada** em âmbar na coluna Status, e a dica
 dela diz por quê, como "Recusada às 14:32: senha ou tipo de autenticação errado.", seguida de
-"Confira a conta SNMP em Configurações › Impressoras › Atualizar." Os motivos que ela distingue são
+"Confira a conta SNMP em Configurações › Impressoras › Conexão." Os motivos que ela distingue são
 um usuário que a impressora não conhece, a senha ou o tipo de autenticação errado, a senha da
 criptografia errada, a autenticação ou a criptografia que ela espera de outro jeito, e um relógio
 longe demais do do CapyPanel.
 
 Com o **v3** escolhido e nenhuma conta ainda, um Atualizar não começa: a barra de status diz
-"Defina antes a conta SNMP v3 em Configurações › Impressoras › Atualizar." O Atualizar sozinho
+"Defina antes a conta SNMP v3 em Configurações › Impressoras › Conexão." O Atualizar sozinho
 apenas espera, sem dizer nada.

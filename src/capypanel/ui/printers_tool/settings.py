@@ -36,7 +36,6 @@ from capypanel.ui.printers_tool.table import swatch
 from capypanel.ui.settings.group import SettingsGroup
 from capypanel.ui.settings.pages import (
     ListsGeneralPage,
-    ListsPage,
     Page,
     Section,
     SettingRow,
@@ -444,8 +443,11 @@ class BarMarksDialog(QDialog):
 
 
 class PrintersPage(ListsGeneralPage):
-    """Startup, then Refresh: the SNMP version, its account behind Change…, Refresh on its own,
-    the low supply level, and the Toner column as text or a bar."""
+    """The Printers tool's General page (its lists, startup). It also builds the rows of the
+    other two pages and lays them out there: Warnings and supplies (Refresh on its own, the
+    notification, the low supply level, the bar marks, the Toner column) and Connecting (the
+    SNMP version and account, the Doc360 MPS account). Every choice fires this page's
+    `changed`."""
 
     def __init__(
         self,
@@ -461,7 +463,6 @@ class PrintersPage(ListsGeneralPage):
         **lists: object,
     ) -> None:
         super().__init__(**lists)  # type: ignore[arg-type]
-        section = Section(_("Refresh"))
         self.version = QComboBox()
         self.version.addItem("v2c", refresh.V2C)
         self.version.addItem("v3", refresh.V3)
@@ -498,15 +499,11 @@ class PrintersPage(ListsGeneralPage):
         self.toner_view.addItem(_("Bar"), BARS)
         self.toner_view.setCurrentIndex(1 if bars else 0)
         self.toner_view.currentIndexChanged.connect(lambda _i: self.changed.emit())
+        self.warnings_page = Page(_("Warnings and supplies"))
+        self.connecting_page = Page(_("Connecting"))
+        own = Section(_("Refresh"))
         add_rows(
-            section.content,
-            SettingRow(
-                _("SNMP &version"),
-                _("v2c: a community string. v3: a user, with a password and encryption."),
-                self.version,
-            ),
-            self.account_row,
-            self.doc360_row,
+            own.content,
             SettingRow(
                 _("Refresh on its &own"),
                 _(
@@ -523,6 +520,10 @@ class PrintersPage(ListsGeneralPage):
                 ),
                 self.notify,
             ),
+        )
+        supplies = Section(_("Supplies"))
+        add_rows(
+            supplies.content,
             SettingRow(
                 _("&Low supply level"),
                 _("A toner, ink, drum or box at or below this shows as low."),
@@ -535,7 +536,25 @@ class PrintersPage(ListsGeneralPage):
                 self.toner_view,
             ),
         )
-        self.add_section(section)
+        snmp = Section(_("SNMP"))
+        add_rows(
+            snmp.content,
+            SettingRow(
+                _("SNMP &version"),
+                _("v2c: a community string. v3: a user, with a password and encryption."),
+                self.version,
+            ),
+            self.account_row,
+        )
+        doc360_section = Section(_("Doc360 MPS"))
+        add_rows(doc360_section.content, self.doc360_row)
+        for page, sections in (
+            (self.warnings_page, (own, supplies)),
+            (self.connecting_page, (snmp, doc360_section)),
+        ):
+            for section in sections:
+                page.body.addWidget(section)
+            page.body.addStretch(1)
 
     def show_account(self, text: str) -> None:
         self.account_row.description.setText(text)
@@ -577,15 +596,14 @@ def account_text(version: str) -> str:
 
 class PrintersSettings(SettingsGroup):
     LABEL = N_("Printers")
-    TITLES = (N_("General"), N_("Printer lists"))
+    TITLES = (N_("General"), N_("Warnings and supplies"), N_("Connecting"))
 
     general: PrintersPage
-    lists: ListsPage
 
     def __init__(self, tool: "PrintersTool") -> None:
         self._tool = tool
         self._building = False  # pages report changes while they're filled
-        self._chosen: Path | None = None  # the list picked in Printer lists, across a rebuild
+        self._chosen: Path | None = None  # the list picked in the lists table, across a rebuild
 
     def build(self) -> list[tuple[str, Page]]:
         tool, prefs, doc = self._tool, self._tool.prefs, self._tool.document
@@ -605,41 +623,38 @@ class PrintersSettings(SettingsGroup):
             default_list=tool.default_list,
             personal_list=tool.personal_list,
             added=locations.added_lists(prefs),
+            document=doc,
+            found=tool.found_lists(hidden=True),
+            hidden=locations.hidden_lists(prefs),
             start_view=tool.start_view(),
             host_list=doc.hosts if doc else None,
         )
-        self.lists = ListsPage(
-            texts=texts,
-            default_list=tool.default_list,
-            personal_list=tool.personal_list,
-            document=doc,
-            added=locations.added_lists(prefs),
-            found=tool.found_lists(hidden=True),
-            hidden=locations.hidden_lists(prefs),
-        )
-        for page in (self.general, self.lists):
-            page.changed.connect(self._changed)
+        self.general.changed.connect(self._changed)
         self.general.change_button.clicked.connect(self._change_account)
         self.general.doc360_button.clicked.connect(self._change_doc360_account)
         self.general.marks_button.clicked.connect(self._change_marks)
-        self.lists.view.open_requested.connect(self._open)
+        self.general.view.open_requested.connect(self._open)
         self._building = False
-        return [("printers", self.general), ("printer_lists", self.lists)]
+        return [
+            ("printers", self.general),
+            ("printer_warnings", self.general.warnings_page),
+            ("printer_connecting", self.general.connecting_page),
+        ]
 
     def before_rebuild(self) -> None:
-        self._chosen = self.lists.chosen()
+        self._chosen = self.general.chosen()
 
     def after_rebuild(self) -> None:
         if self._chosen is not None:
-            self.lists.view.select(self._chosen)
+            self.general.view.select(self._chosen)
 
     def _changed(self) -> None:
         if not self._building:
             self._tool.apply_list_prefs(
                 self.general.start_choice(),
                 self.general.show_first_choice(),
-                self.lists.added(),
-                self.lists.hidden(),
+                self.general.added(),
+                self.general.hidden(),
             )
             self._tool.set_low_level(self.general.low_level.value())
             self._tool.set_toner_bars(self.general.toner_view.currentData() == BARS)
@@ -703,10 +718,10 @@ class PrintersSettings(SettingsGroup):
             return
 
     def _open(self, path: Path) -> None:
-        """A list opened from Printer lists: Settings then shows it as the open one."""
+        """A list opened from the lists table: Settings then shows it as the open one."""
         self._tool.open_list(path)
         doc = self._tool.document
-        self.lists.view.list_opened(doc)
+        self.general.view.list_opened(doc)
         self.general.list_opened(self._tool.start_view(), doc.hosts if doc else None)
 
 

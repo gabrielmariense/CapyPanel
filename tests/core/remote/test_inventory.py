@@ -15,6 +15,13 @@ def reachable(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(inventory, "check_reachable", lambda host: None)
 
 
+@pytest.fixture(autouse=True)
+def through_powershell(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These tests answer for the PowerShell way (a fake powershell.exe); the direct way has its
+    own, in test_wmi.py."""
+    monkeypatch.setattr(inventory, "transport", inventory.POWERSHELL)
+
+
 def test_this_pcs_space_and_last_restart_read_with_the_real_api(reachable: None) -> None:
     space = inventory.disk_space("localhost")
     assert space.total > space.free > 0
@@ -57,7 +64,9 @@ def test_the_host_and_password_go_in_through_standard_input(
     inventory.installed_programs(host, Account("EXAMPLE\\admin", secret))
     command = " ".join(fake.argv)
     assert "192.0.2.10" not in command and "pa'ss" not in command
-    assert json.loads(fake.input) == {"host": host, "user": "EXAMPLE\\admin", "password": secret}
+    assert json.loads(fake.input) == {
+        "host": host, "protocol": "Dcom", "user": "EXAMPLE\\admin", "password": secret,
+    }  # fmt: skip
 
 
 def test_programs_are_cleaned_sorted_and_listed_once(

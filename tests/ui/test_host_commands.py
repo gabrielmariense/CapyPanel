@@ -1,6 +1,7 @@
 """The host commands: menus, the Details panel's buttons, the small windows and the answers in the
 result strip. Every call to another PC is replaced: nothing here reaches the network."""
 
+import time
 from collections.abc import Callable, Iterator
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -8,6 +9,8 @@ from typing import Any
 
 import pytest
 from capywindow import CapyWindow
+from PySide6.QtCore import Qt
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QMenu
 
 from capypanel.core import settings
@@ -29,6 +32,7 @@ from capypanel.ui.hosts_tool.command_windows import (
 )
 from capypanel.ui.hosts_tool.runner import HostTarget
 from capypanel.ui.icons import TABLER_DIR
+from capypanel.ui.menus import label
 
 ANA = Session("ana", "CORP", "console", "active", None, session_id=1)
 BRUNO = Session("bruno", "CORP", "rdp", "disconnected", None, client="LAB-01", session_id=2)
@@ -85,7 +89,8 @@ def _select(win: CapyWindow, name: str) -> HostTarget:
 
 
 def _settle(win: CapyWindow) -> None:
-    for _ in range(500):
+    deadline = time.monotonic() + 10  # a deadline, not a count: threads can be slow
+    while time.monotonic() < deadline:
         QApplication.processEvents()
         if not win.hosts.runner.busy():
             QApplication.processEvents()
@@ -121,14 +126,31 @@ def test_the_host_menu_has_a_submenu_per_group_greyed_for_several_hosts(
     menu = QMenu()
     window.hosts._add_command_menus(menu)
     groups = {a.text(): a.menu() for a in menu.actions()}
-    assert list(groups) == ["Check", "Open", "Users", "Power", "Printers"]
+    assert list(groups) == [
+        "Check", "Folders", "Admin tools", "Users", "Printers", "Power",
+    ]  # fmt: skip
     users = groups["Users"]
     assert isinstance(users, QMenu)
-    assert [a.text() for a in users.actions()] == ["Send a message…"]  # log off: on the person
+    assert [a.text() for a in users.actions()] == [
+        "Send a message…", "", "Mapped drives",
+    ]  # log off: on the person; the drives set apart  # fmt: skip
+
+    def names(group: str) -> list[str]:
+        submenu = groups[group]
+        assert isinstance(submenu, QMenu)
+        return [label(a) if a.text() else "—" for a in submenu.actions()]
+
+    # Installed programs is apart: a long table, not part of Quick check; Power comes last.
+    assert names("Check") == [
+        "Quick check", "Status", "Logged-on users", "PC facts", "—", "Installed programs",
+    ]  # fmt: skip
+    assert names("Folders") == ["C$ share", "User's folder", "Startup folder", "Open a path…"]
+    assert names("Admin tools") == ["Computer Management", "Event Viewer", "Services"]
+    assert names("Power") == ["Restart…", "Shut down…", "—", "Cancel the pending restart"]
     window.hosts.table.select_ids([window.hosts.table.selected_ids()[0], *_ids(window, "PC-2")])
     menu = QMenu()
     window.hosts._add_command_menus(menu)
-    assert not any(a.isEnabled() for a in menu.actions())
+    assert not any(a.isEnabled() for a in menu.actions() if not a.isSeparator())
 
 
 def _ids(win: CapyWindow, *names: str) -> list[str]:
@@ -253,7 +275,8 @@ def test_restart_waits_shows_in_status_and_details_and_cancels(
 ) -> None:
     def answer(dialog: QDialog) -> int:
         assert isinstance(dialog, PowerDialog)
-        assert dialog.delay() == 5 * 60  # the default
+        assert dialog.delay() == 0  # Restart's default: now
+        dialog.when.setCurrentIndex(dialog.when.findData(5 * 60))
         return ACCEPT
 
     _answer(monkeypatch, answer)
@@ -275,8 +298,20 @@ def test_restart_waits_shows_in_status_and_details_and_cancels(
 
 def test_restart_now_has_no_message(qapp: QApplication) -> None:
     dialog = PowerDialog(None, "PC-1", [ANA], restart=True)
-    dialog.when.setCurrentIndex(0)
-    assert dialog.delay() == 0 and dialog.message() == ""
+    assert dialog.delay() == 0 and dialog.message() == ""  # Now, without picking it
+    assert PowerDialog(None, "PC-1", [ANA], restart=False).delay() == 0  # Shut down too
+    dialog.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
+    dialog.show()
+    assert dialog.focusWidget() is dialog.when  # arrows pick at once
+    assert dialog.cancel.isDefault()  # Enter in When cancels
+    QTest.keyClick(dialog.when, Qt.Key.Key_Return)  # Enter in When: Cancel
+    assert dialog.result() == QDialog.DialogCode.Rejected
+    dialog.show()
+    dialog.when.setFocus()
+    dialog.focusNextChild()  # Tab: no message to type for Now, so straight to the action
+    assert dialog.focusWidget() is dialog.action
+    QTest.keyClick(dialog.action, Qt.Key.Key_Return)  # Enter there runs it
+    assert dialog.result() == QDialog.DialogCode.Accepted
     assert not dialog.box.isEnabled()
     assert dialog.action.text() == "&Restart now"
     assert "<b>ana</b>" in dialog.text.text()
@@ -356,7 +391,32 @@ def test_pc_facts_say_which_part_needs_an_admin(
     facts = window.hosts.facts_of(target.key)
     assert facts is not None and not facts.reading and facts.space == DiskSpace(1, 2)
     assert isinstance(facts.pc_error, RemoteError)
-    assert window.hosts.details.shown_value("windows") == ""  # a warning instead of a value
+    details = window.hosts.details
+    assert details.shown_value("windows") == ""  # a warning instead of a value
+    # The warning copies on a click, as a value does, so it can go in a report.
+    assert details.shown_value("windows_error") == "No access: needs an admin account on this PC"
+
+
+def test_pc_facts_show_the_rows_read_when_one_part_of_wmi_is_missing(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    not_found = RemoteError(Reason.OTHER, 0x80041002)
+    monkeypatch.setattr(inventory, "disk_space", lambda *_a: DiskSpace(1, 2))
+    monkeypatch.setattr(inventory, "last_restart", lambda *_a: datetime.now(UTC))
+    monkeypatch.setattr(
+        inventory,
+        "pc_facts",
+        lambda *_a: PcFacts("Windows 11 Pro", "25H2", "26200.9168", "SAMPLE", "Desk 3000", "", "",
+                            8 * 1024**3, unread={"serial": not_found, "bios": not_found}),
+    )  # fmt: skip
+    target = _select(window, "PC-1")
+    window.hosts.runner.read_facts(target)
+    _settle(window)
+    details = window.hosts.details
+    assert details.shown_value("windows") == "Windows 11 Pro 25H2 · 26200.9168"
+    assert details.shown_value("model") == "SAMPLE Desk 3000"
+    assert details.shown_value("serial") == details.shown_value("bios") == ""
+    assert details.shown_value("serial_error") == "Couldn't read: Windows error 0x80041002"
 
 
 def test_open_a_path_shows_where_it_goes_and_keeps_it(
@@ -420,12 +480,26 @@ def test_installed_programs_search_and_count(
     assert dialog.summary.text().startswith("1 of 2 programs on PC-1")
 
 
+def test_a_list_that_cant_be_read_says_why_and_logs_it(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    def refused(*_a: object) -> None:
+        raise RemoteError(Reason.REJECTED, 5)
+
+    monkeypatch.setattr(inventory, "installed_programs", refused)
+    target = _select(window, "PC-1")
+    dialog = ProgramsDialog(None, window.hosts.runner, target, window.hosts.csv_folder)
+    _settle(window)
+    assert dialog.summary.text().startswith("Couldn't read PC-1: ")
+    assert "Installed programs on PC-1 failed: RemoteError" in caplog.text
+
+
 def test_commands_menu_on_the_toolbar_lists_the_groups(window: CapyWindow) -> None:
     _select(window, "PC-1")
     menu = window.hosts.toolbar.commands_menu
     menu.aboutToShow.emit()
     assert [a.text() for a in menu.actions()] == [
-        "Check", "Open", "Users", "Power", "Printers", "", "&All commands…",
+        "Check", "Folders", "Admin tools", "Users", "Printers", "Power", "", "&All commands…",
     ]  # fmt: skip
 
 

@@ -16,7 +16,7 @@ visualizador VNC instalado ele também encontra sozinho: onde o Windows registro
 (qualquer pasta), as pastas de Arquivos de Programas de costume, depois o seu PATH. Uma cópia
 portátil descompactada em outro lugar não é encontrada automaticamente; quando falta um
 visualizador, o CapyPanel pede para instalá-lo ou localizar o `.exe`. O caminho é salvo uma vez
-para todos no PC, como em **Configurações > Hosts > Ferramentas remotas** (veja
+para todos no PC, como em **Configurações > Hosts > Conexão > Ferramentas remotas** (veja
 [Configurações e arquivos](../settings-and-files.pt-BR.md#ferramentas-remotas)).
 
 ## Perfis de conexão
@@ -32,8 +32,8 @@ Raspberry Pis, Área de Trabalho Remota. Um **perfil de conexão** diz qual dela
 
 ### Gerenciar perfis
 
-- Os perfis são gerenciados em **Configurações > Hosts > Perfis de conexão** (também em
-  **Conectar > Perfis de conexão…**): adicionar, editar, duplicar, excluir e restaurar os que vêm
+- Os perfis são gerenciados em **Configurações > Hosts > Conexão > Perfis de conexão** (também
+  em **Conectar > Perfis de conexão…**): adicionar, editar, duplicar, excluir e restaurar os que vêm
   com o CapyPanel. Cada um tem um nome, uma
   ferramenta, um login (só os que essa ferramenta suporta), as opções da ferramenta (como o
   SecureVNC) e uma porta, em branco para a da própria ferramenta.
@@ -82,15 +82,67 @@ compartilhado nunca é alterado.
   **Conectar com Remote Desktop** e assim por diante, um por perfil: os hosts selecionados abrem
   com aquele perfil desta vez, sem serem alterados.
 
-O painel de **detalhes** diz qual perfil cada host acaba usando, em **Conexão**, com uma seta ao
-lado dele, "Trocar o perfil de conexão". Ela abre a mesma lista do submenu **Perfil de conexão**
-do botão direito, o **Do grupo** ou um perfil pelo nome, então o perfil de um host pode ser
-trocado dali sem abrir o **Editar selecionado…**.
-
 Uma lista guarda só o ID do perfil. Quando um host ou grupo cita um perfil que o seu PC não tem,
 ele segue o perfil do grupo (ou o padrão), e o que falta é marcado como "não disponível neste PC"
 onde quer que apareça: no campo **Perfil de conexão** do host e no menu **Perfil de conexão** de
 um grupo.
+
+### No painel de detalhes
+
+![A seção Conexão do painel de detalhes: endereço, grupo, Conectar com e Comandos como](../images/commands-details-dark-pt-BR.png)
+
+A **Conexão**, no painel de detalhes, mostra o **Endereço** e o **Grupo** do host, e depois dois
+menus:
+
+- **Conectar com** é o perfil com que o Conectar o abre. Um clique abre a mesma lista do submenu
+  **Perfil de conexão** do botão direito: a escolha do grupo, como "Do grupo “Front desk”:
+  UltraVNC", ou um perfil pelo nome, então o perfil de um host pode ser trocado sem abrir o
+  **Editar selecionado…**. Uma chavinha ao lado do nome quer dizer que há um login guardado para
+  aquele perfil; a dica dela diz o usuário.
+- **Comandos como** é a conta que lê quem está logado e executa os comandos do host. Um clique
+  oferece **Seguir as Contas**, que diz o que a tabela [Contas](#contas-para-outros-pcs) dá a
+  este PC, como "Seguir as Contas: EXAMPLE\admin", depois **Sua conta do Windows**, cada conta da
+  tabela e **Outra conta…**. Escolher uma a define só para este PC, e um alfinete ao lado do nome
+  diz isso ("Só este PC" na dica). O **Seguir as Contas** tira o alfinete.
+
+O **Comandos como** também está no botão direito de um host, para todos os hosts selecionados, e
+no de um grupo, onde define a conta de todos os PCs do grupo.
+
+## Contas para outros PCs
+
+Ler quem está logado num PC e executar os [comandos](commands.pt-BR.md) dele precisam de uma conta
+que seja administradora lá. Por padrão, é a sua própria conta do Windows. As **Configurações >
+Hosts > Credenciais > Contas** dizem qual outra conta entra em quais PCs:
+
+| Coluna | O que ela mostra |
+|---|---|
+| **Conta** | O usuário, como `DOMÍNIO\usuário` |
+| **Usada para** | **Todos os PCs**, um grupo, como "Grupo Clinic › Front desk", uma tag, ou um PC, como "DESK-02 (198.51.100.20)" |
+| **Guardada em** | Onde a senha está: **Gerenciador de Credenciais**, **Temporária**, ou **Pedida quando precisar** quando ainda não foi digitada |
+
+O **Adicionar…** e o **Editar…** abrem uma janela só: **Usuário** ("DOMÍNIO\usuário, ou vazio
+para a sua conta do Windows"), **Senha** ("Opcional: pedida na primeira vez que precisar"),
+**Usar para**: **Todos os PCs**, **Um PC** (o endereço ou nome, como na lista de hosts), **Um
+grupo** ou **Uma tag**, e **Lembrar neste computador**. O **Remover** tira a linha, e a senha
+salva dela junto.
+
+Quando várias linhas servem para um PC, a mais específica vale: "A conta do próprio PC vale mais
+que a do grupo, a do grupo mais que a da tag, e essas mais que Todos os PCs. PCs que nenhuma delas
+nomeia usam a sua conta do Windows." Os grupos e as tags são os da lista aberta. A tabela é só
+sua, "guardadas nas suas próprias configurações, nunca nas listas de hosts compartilhadas", então
+quem usa a mesma lista mantém as contas próprias.
+
+Quando PCs respondem **Sem direitos de administrador** ou **Conta recusada** enquanto o Atualizar
+lê quem está logado, o CapyPanel pede outra conta quando o Atualizar termina, e verifica esses PCs
+de novo com ela. Um comando que falhou do mesmo jeito oferece o **Tentar outra conta…**. Os dois
+abrem a **Conta para outros PCs**: o usuário, a senha e o **Usar para**: este PC, cada grupo e
+tag que eles têm em comum, ou todos os PCs, do mais específico para o mais geral. O que você
+escolher vira uma linha da tabela. Uma conta é tentada num PC de cada vez: "Se um computador
+recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta
+não ser bloqueada."
+
+Em PCs que não estão num domínio, o Administrador interno é a única conta local que o Windows
+aceita remotamente.
 
 ## Área de Trabalho Remota
 
@@ -110,35 +162,30 @@ Windows guarda esse login por conta própria, como `TERMSRV/<endereço>`; remova
 
 - No VNC, o CapyPanel pede a senha de um perfil na primeira vez que você conecta com ele e **a
   lembra, por perfil**, até fechar. Hosts com outro perfil nunca a recebem.
-- Onde ele guarda essa senha é você que escolhe, em **Configurações > Hosts > Perfis de conexão >
-  Credenciais**: **Credenciais temporárias**, o padrão, "esquecidas quando o CapyPanel fecha", ou
-  **Gerenciador de Credenciais**, "salvas para a sua conta do Windows". Em nenhum dos dois casos o
-  CapyPanel grava uma senha num arquivo próprio.
+- Toda janela que pede uma senha, de um perfil ou de uma conta, tem o **Lembrar neste
+  computador**, desmarcado: "O Windows a guarda no Gerenciador de Credenciais para a sua conta do
+  Windows. Senão, o CapyPanel a esquece ao fechar e pede uma vez na próxima." Em nenhum dos dois
+  casos o CapyPanel grava uma senha num arquivo próprio.
 - Senhas VNC clássicas têm no máximo 8 caracteres, então a caixa de senha de um perfil UltraVNC
   "só senha" para em 8.
 
 ### Credenciais salvas
 
-O **Gerenciador de Credenciais** guarda a senha digitada no **Gerenciador de Credenciais do
-Windows**, na sua própria conta do Windows, para o CapyPanel não pedi-la de novo na próxima vez que
-abrir. A dica dele diz o que isso significa: "O Windows as criptografa para a sua conta, inclusive
-contas de domínio: quem usar a sua sessão do Windows pode se conectar com elas." Voltar para
-**Credenciais temporárias** apaga as que já estavam salvas. A escolha vale também para a conta
-digitada para ler os usuários logados e executar os comandos de um host (veja
-[Verificando hosts](checking.pt-BR.md#qual-conta-e-usada)).
+Um login em que você marcou o **Lembrar neste computador** fica guardado no **Gerenciador de
+Credenciais do Windows**, na sua própria conta do Windows, para o CapyPanel não pedi-lo de novo na
+próxima vez que abrir. Isso quer dizer que "o Windows os criptografa para a sua conta, então quem
+usar a sua sessão do Windows pode se conectar com eles."
 
-O **Conectar ▾ > Credenciais salvas…**, e o **Gerenciar…** da linha **Credenciais salvas** dessa
-mesma seção das configurações, abrem uma janela com todos os logins que o CapyPanel guarda: "Todos
-os logins que o CapyPanel guarda para você. As senhas nunca aparecem aqui." A linha das
-configurações diz quantos são e onde estão, como "2 guardados: 1 no Gerenciador de Credenciais, 1
-temporário.", ou "Nenhum guardado."
-
-![A janela Credenciais salvas: uma linha por login, com para que ela é usada, a ferramenta, o usuário e onde ela fica guardada](../images/saved-credentials-dark-pt-BR.png)
+O **Conectar ▾ > Credenciais salvas…**, e o **Gerenciar…** em **Configurações > Hosts >
+Credenciais > Senhas > Credenciais salvas**, abrem uma janela com todos os logins que o CapyPanel
+guarda: "Todos os logins que o CapyPanel guarda para você. As senhas nunca aparecem aqui." A linha
+das configurações diz quantos são e onde estão, como "2 guardados: 1 no Gerenciador de
+Credenciais, 1 temporário.", ou "Nenhum guardado."
 
 | Coluna | O que ela mostra |
 |---|---|
-| **Usada para** | O perfil de conexão, ou **Usuários logados** |
-| **Ferramenta** | O que entra com ela, como "RealVNC Viewer" ou "Hosts › Atualizar" |
+| **Usada para** | O perfil de conexão, ou os PCs para que uma conta é usada, como "Todos os PCs" |
+| **Ferramenta** | O que entra com ela, como "RealVNC Viewer", ou "Hosts › Contas" para uma conta |
 | **Usuário** | O nome de usuário, ou "(só senha)" num perfil que só recebe senha |
 | **Guardada** | **Gerenciador de Credenciais**, ou **Temporária** até o CapyPanel fechar |
 
@@ -148,8 +195,8 @@ listando cada login em "Salvos no Gerenciador de Credenciais:" e "Temporários:"
 CapyPanel pede de novo quando precisar deles."; o Cancelar é o botão padrão. Um login esquecido
 aqui também é apagado do Gerenciador de Credenciais.
 
-Só os logins de conexão são listados. A comunidade SNMP e a conta v3 das impressoras não: elas são
-gerenciadas em **Configurações > Impressoras > Atualizar**, onde esvaziar o campo as esquece (veja
+Só esses logins são listados. A comunidade SNMP e a conta v3 das impressoras não: elas são
+gerenciadas em **Configurações > Impressoras > Conexão**, onde esvaziar o campo as esquece (veja
 [Verificando impressoras](../printers/checking.pt-BR.md#a-conta-snmp)).
 
 ## A verificação de login
@@ -179,8 +226,7 @@ host.
 ## Conexão manual
 
 **Conectar > Conexão manual…** (Ctrl+M) alcança um endereço que não está na lista. Ele abre a
-janela Comandos com uma caixa **Endereço** no lugar do nome de um host: digite o endereço,
-escolha um **Perfil** e clique em **Conectar**. Um endereço com porta, como `192.0.2.77:5901`, usa
-aquela porta. O **Adicionar à lista…** embaixo põe o PC na lista aberta, e os comandos da janela
-funcionam nele como em qualquer outro host (veja
-[Comandos em um host](commands.pt-BR.md#a-janela-comandos)).
+janela Comandos com a caixa **Host** vazia: digite o endereço, escolha um **Perfil** e clique em
+**Conectar**. Um endereço com porta, como `192.0.2.77:5901`, usa aquela porta. O **Adicionar à
+lista de hosts…**, ao lado da caixa, põe o PC na lista aberta, e os comandos da janela funcionam
+nele como em qualquer outro host (veja [Comandos em um host](commands.pt-BR.md#a-janela-comandos)).

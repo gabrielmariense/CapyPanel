@@ -1,3 +1,4 @@
+import time
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -9,6 +10,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QWidgetAction
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
+from capypanel.core.hosts.accounts import Link, Scope
 from capypanel.core.hosts.model import HostList
 from capypanel.core.remote import checks
 from capypanel.core.remote.access import Account, Reason, RemoteError
@@ -49,7 +51,8 @@ def _ids(win: CapyWindow, *names: str) -> list[str]:
 
 
 def _wait(win: CapyWindow) -> None:
-    for _ in range(500):
+    deadline = time.monotonic() + 10  # a deadline, not a count: threads can be slow
+    while time.monotonic() < deadline:
         QApplication.processEvents()
         if win.hosts._run is None:
             return
@@ -173,29 +176,41 @@ def test_a_refusal_asks_for_an_account_and_retries_only_those_hosts(
 
     def type_account(dialog: check_ui.AccountDialog) -> int:
         asked.append(dialog.windowTitle())
+        uses.extend(dialog.use_for.itemText(i) for i in range(dialog.use_for.count()))
         dialog.user.setText("CORP\\admin")
         dialog.password.setText("pw")
         return QDialog.DialogCode.Accepted
 
+    uses: list[str] = []
     monkeypatch.setattr(check_ui.AccountDialog, "exec", type_account)
     window.hosts.table.select_ids(_ids(window, "PC-1", "PC-3"))
     window.hosts.commands.check_users.trigger()
     _wait(window)
     _wait(window)  # the retry with the typed account
     assert asked == ["Account for other PCs"]
+    assert uses == ["This PC (PC-3)", "Every PC in group Office › Desks",
+                    "Every PC in group Office", "Every PC"]  # fmt: skip
     retried = [(a, acc) for a, _s, _u, acc in answers["seen"] if acc is not None]
     assert retried == [("10.0.0.3", Account("CORP\\admin", "pw"))]
     assert _cells(window, "PC-3")[1] == "CORP\\ana"
     [kept] = window.hosts.kept_logins()
-    assert (kept.used_for, kept.user, kept.saved) == ("Logged-on users", "CORP\\admin", False)
+    assert (kept.used_for, kept.user, kept.saved) == ("PC-3 (10.0.0.3)", "CORP\\admin", False)
+
+    # The next Refresh: that PC only gets the typed account, the others still Windows'.
+    answers["seen"].clear()
+    window.hosts.commands.check_users.trigger()
+    _wait(window)
+    used = {a: acc for a, _s, _u, acc in answers["seen"]}
+    assert used == {"10.0.0.1": None, "10.0.0.3": Account("CORP\\admin", "pw")}
     kept.forget()
-    assert window.hosts._account is None
+    assert window.hosts.accounts.known("CORP\\admin") is None
 
 
 def test_a_rejected_typed_account_is_never_tried_on_the_other_hosts(
     window: CapyWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    window.hosts._account = Account("CORP\\admin", "typo")
+    window.hosts.accounts.use(Link("CORP\\admin", Scope.ALL), Account("CORP\\admin", "typo"),
+                              remember=False)  # fmt: skip
     rejected = Found(Status.ONLINE, users_error=RemoteError(Reason.REJECTED, 1326))
     for address in ("10.0.0.1", "10.0.0.2", "10.0.0.3"):
         answers[address] = rejected
@@ -226,7 +241,9 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     window.hosts._item_menu(QPoint(row.left() + 10, row.center().y()))  # on the name
     assert seen == [
         "&Connect", "Refresh &status", "Refresh &logged-on users",
-        "Check", "Open", "Users", "Power", "Printers", "Co&py",
+        "Check", "Folders", "Admin tools", "Users", "Printers", "Power",
+        "Commands run &as",
+        "Co&py",
         "&Edit selected…", "&Move to", "&Tags", "&Remove selected",
     ]  # fmt: skip
 

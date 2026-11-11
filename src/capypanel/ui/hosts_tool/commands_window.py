@@ -8,11 +8,20 @@ parts and with no buttons. Commands that need typing open their small window ove
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from html import escape as _escape
 from typing import TYPE_CHECKING, Any
 
 import shiboken6
 from PySide6.QtCore import QEvent, QObject, QPoint, Qt, QTimer, Signal
-from PySide6.QtGui import QCloseEvent, QColor, QGuiApplication, QKeyEvent, QPalette
+from PySide6.QtGui import (
+    QCloseEvent,
+    QColor,
+    QGuiApplication,
+    QKeyEvent,
+    QPalette,
+    QStandardItemModel,
+    QTextDocumentFragment,
+)
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -34,13 +43,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from capypanel.core import i18n
 from capypanel.core.hosts import commands as host_commands
 from capypanel.core.hosts.bulk import write_csv
 from capypanel.core.hosts.commands import GROUP_NAMES, HostCommand
 from capypanel.core.hosts.commands import Group as CommandGroup
 from capypanel.core.hosts.model import MAX_ADDRESS
 from capypanel.core.i18n import _
-from capypanel.core.remote import host_printers, services
+from capypanel.core.remote import drives, host_printers, services
 from capypanel.core.remote.access import Account, RemoteError
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
@@ -49,6 +59,7 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui.connect import Request
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.hosts_tool import command_windows as windows
+from capypanel.ui.hosts_tool import drive_windows
 from capypanel.ui.hosts_tool.details import HostDetailsPanel
 from capypanel.ui.hosts_tool.host_state import Facts
 from capypanel.ui.hosts_tool.runner import (
@@ -63,13 +74,16 @@ from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.tool import HostsTool
 
-SIZE = (1000, 620)  # fixed: it never grows as commands are added
-GROUPS_WIDTH = 150
+SIZE = (1120, 620)  # fixed: it never grows as commands are added
+GROUPS_WIDTH = 150  # px, at least
+GROUP_ROOM = 34  # px past a group's name: the rows' padding (10 + 10), the frame and air
+ROW_SPACING = 2  # px between the commands; a gap widget adds one more
 RESULTS_WIDTH = 400  # px: the rest goes to the commands, whose names are longer in pt
 ROW = 28  # px: a command's line
+APART = 8  # px: the gap above a command set apart, where menus draw a line
 ICON = 16
 RECENT_ADDRESSES = 10
-LISTS = ("printers", "programs")  # their answer is a table on the right, not a window
+LISTS = ("printers", "programs", "drives")  # their answer is a table on the right
 TABLE_ROW = 30  # px, about a grid row: a printers table shows every printer
 MOST_TABLE = 330  # px: a longer list (programs) scrolls inside its table
 
@@ -98,12 +112,18 @@ class Shown:
 
 @dataclass(frozen=True)
 class Listed:
-    """Printers or Installed programs as read for the right side: rows, or why not."""
+    """Printers, Installed programs or Mapped drives as read for the right side: rows, or why
+    not."""
 
     reading: bool = True
     when: datetime | None = None
-    rows: Sequence[Any] = field(default_factory=tuple)
+    rows: Sequence[Any] = field(default_factory=tuple)  # for Mapped drives, the people
     spooler: str = ""  # the Print Spooler's state, for printers: "running", "stopped"…
+
+
+def list_title(command_id: str) -> str:
+    return {"printers": _("Printers"), "programs": _("Installed programs"),
+            "drives": _("Mapped drives")}[command_id]  # fmt: skip
 
 
 class Results(HostDetailsPanel):
@@ -146,7 +166,8 @@ class Results(HostDetailsPanel):
         """A read-only grid table under its heading, with a line under it; what can be done
         with a row is on its right-click."""
         listed, printers = shown.listed, shown.command.id == "printers"
-        title = _("Printers") if printers else _("Installed programs")
+        mapped = shown.command.id == "drives"
+        title = list_title(shown.command.id)
         if listed is None or listed.reading or listed.when is None:
             self.section(layout, _("{title} · reading…").format(title=title) if listed
                          else title)  # fmt: skip
@@ -155,7 +176,13 @@ class Results(HostDetailsPanel):
             self._outcome(layout, shown.outcome)
             return
         when = check_texts.clock_text(listed.when)
-        if printers:
+        # Mapped drives for one person: their name goes in the heading, not in a column of its
+        # own repeated on every row, so the path has the room.
+        one_person = mapped and len({p.user for p in listed.rows}) == 1
+        if one_person:
+            self.section(layout, _("{title} · {person} · {when}").format(
+                title=title, person=listed.rows[0].user, when=when))  # fmt: skip
+        elif printers or mapped:
             self.section(layout, _("{title} · {when}").format(title=title, when=when))
         else:
             self.section(layout, _("{title} · {n} · {when}").format(
@@ -173,18 +200,33 @@ class Results(HostDetailsPanel):
                                        str(printer.jobs)])  # fmt: skip
                 row.setIcon(1, dot_icon(STATUS_COLORS[windows.printer_dot(printer)]))
                 table.addTopLevelItem(row)
+        elif mapped:
+            shown_rows = drive_windows.drive_rows(listed.rows)
+            table.setHeaderLabels(drive_windows.drive_header())
+            # A share's last folder tells two paths apart, so a path too long loses its
+            # middle; the whole of it is in the tooltip.
+            table.setTextElideMode(Qt.TextElideMode.ElideMiddle)
+            for drive in shown_rows:
+                texts = drive_windows.row_text(drive)
+                row = QTreeWidgetItem(texts)
+                for column, text in enumerate(texts):
+                    row.setToolTip(column, text)
+                table.addTopLevelItem(row)
+            table.setColumnHidden(0, one_person)
         else:
             table.setHeaderLabels([_("Name"), _("Version")])
             for program in listed.rows:
                 table.addTopLevelItem(QTreeWidgetItem([program.name, program.version]))
         header = table.header()
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(0, header.ResizeMode.Stretch)
-        for column in range(1, table.columnCount()):
-            header.setSectionResizeMode(column, header.ResizeMode.ResizeToContents)
+        stretch = 2 if mapped else 0  # the path, for drives
+        fit, fill = header.ResizeMode.ResizeToContents, header.ResizeMode.Stretch
+        for column in range(table.columnCount()):
+            header.setSectionResizeMode(column, fill if column == stretch else fit)
         # Every row shows, up to MOST_TABLE; a longer list scrolls inside the table.
-        row_height = table.sizeHintForRow(0) if listed.rows else TABLE_ROW
-        rows = max(len(listed.rows), 1) * max(row_height, 1)
+        count = table.topLevelItemCount()
+        row_height = table.sizeHintForRow(0) if count else TABLE_ROW
+        rows = max(count, 1) * max(row_height, 1)
         frame = 2 * table.frameWidth() + 4
         table.setFixedHeight(min(MOST_TABLE, header.sizeHint().height() + rows + frame))
         table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -206,11 +248,17 @@ class Results(HostDetailsPanel):
             line = (_("Print Spooler: {state}. Right-click a printer to clear its queue.")
                     .format(state=spooler) if spooler
                     else _("Right-click a printer to clear its queue."))  # fmt: skip
+        elif mapped:
+            line = _(drive_windows.SAVED_NOTE)
         else:
             line = _("Right-click to copy a row, copy or export the list, or open it in its own "
                      "window with a search.")  # fmt: skip
         layout.addWidget(self.muted(line))
         self._outcome(layout, shown.outcome)
+
+    def _copy_all(self, text: str) -> None:
+        QGuiApplication.clipboard().setText(text)
+        self.copied.emit(_("the answer and its output"))
 
     def _outcome(self, layout: QVBoxLayout, outcome: Outcome | None) -> None:
         """The last answer, and Try another account… when the account was refused."""
@@ -219,9 +267,21 @@ class Results(HostDetailsPanel):
         answer = QLabel(outcome.text)
         answer.setTextFormat(Qt.TextFormat.RichText)
         answer.setWordWrap(True)
+        answer.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         if outcome.failed:
             answer.setObjectName("warningText")
         layout.addWidget(answer)
+        if outcome.output:
+            layout.addWidget(windows.output_box(outcome.output))
+        # The answer and the output together, to paste whole into a message or a ticket.
+        whole = QTextDocumentFragment.fromHtml(outcome.text).toPlainText()
+        if outcome.output:
+            whole = f"{whole}\n\n{outcome.output.rstrip()}"
+        copy = QLabel(f'<a href="copy">{_escape(_("Copy all"))}</a>')
+        copy.setTextFormat(Qt.TextFormat.RichText)
+        copy.setToolTip(_("Copies the answer and everything the PC wrote"))
+        copy.linkActivated.connect(lambda _href: self._copy_all(whole))
+        layout.addWidget(copy)
         if outcome.retry is not None:
             link = QLabel(f'<a href="retry">{_("Try another account…")}</a>')
             link.setTextFormat(Qt.TextFormat.RichText)
@@ -240,6 +300,7 @@ class CommandRow(QFrame):
         self.setProperty("risky", command.risky)
         self.setProperty("picked", False)
         self._window = window
+        self.gap: QWidget | None = None  # above a command set apart
         text = self.palette().color(QPalette.ColorRole.Text)
         color = QColor(STATUS_COLORS["attention"]) if command.risky else text
         icon = QLabel()
@@ -277,8 +338,7 @@ class CommandRow(QFrame):
         self.run.setVisible(picked)
         self.run.setDefault(picked)  # Enter runs the picked one
         self.about.setVisible(picked)
-        self.setMinimumHeight(ROW)
-        self.setMaximumHeight(16_777_215 if picked else ROW)  # picked: as tall as it needs
+        self.setMinimumHeight(ROW)  # one line at least; more when the name wraps or it's picked
         self.style().unpolish(self)
         self.style().polish(self)
 
@@ -291,27 +351,44 @@ class CommandRow(QFrame):
 
 class CommandsWindow(QDialog):
     def __init__(self, tool: "HostsTool", target: HostTarget | None, profile: str) -> None:
-        super().__init__(tool)
+        # A window of its own, not owned by the main one: either can be in front, to work in
+        # the list and here by turns. Quitting CapyPanel closes it (MainWindow.closeEvent).
+        super().__init__(None)
         self._tool = tool
-        self._typed = target is None  # Manual connection: the address is typed here
-        self._target = target
+        self._typed = target is None  # opened as Manual connection: nothing picked yet
+        self._shown_key = target.key if target else ""  # whose profile the dropdown shows
         self._outcomes: dict[tuple[str, str], Outcome] = {}  # (target key, command id)
         self._lists: dict[tuple[str, str], Listed] = {}  # printers and programs, as read
         self.setFixedSize(*SIZE)
 
-        # ---- the top line ----
+        # ---- the top line: the PC, typed or picked from what the Hosts panel shows; the arrows
+        # go host by host. Then the addresses typed here before. ----
         self.address = QComboBox()
         self.address.setEditable(True)
         self.address.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
-        self.address.addItems(tool.recent_addresses())
-        self.address.setCurrentIndex(-1)
+        self.address.setMaxVisibleItems(15)
+        self._choices = {t.key: t for t in tool.host_choices()}
+        for choice in self._choices.values():
+            same = choice.name.casefold() == choice.address.casefold()
+            shown = choice.name if same else f"{choice.name} · {choice.address}"
+            self.address.addItem(shown, choice.key)
+        recent = tool.recent_addresses()
+        if self._choices and recent:
+            self._add_heading(_("Recent"))
+        self.address.addItems(recent)
+        if target is None:
+            self.address.setCurrentIndex(-1)
+        elif (index := self.address.findData(target.key)) >= 0:
+            self.address.setCurrentIndex(index)
+        else:  # not among what the panel shows (a search changed since): by its name
+            self.address.setCurrentIndex(-1)
+            self.address.setEditText(target.name)
         line = self.address.lineEdit()
         assert line is not None
         line.setMaxLength(MAX_ADDRESS)
-        line.setPlaceholderText(_("Hostname or IP address"))
-        address_label = QLabel(_("&Address:"))
+        line.setPlaceholderText(_("Host name or IP address"))
+        address_label = QLabel(_("&Host:"))
         address_label.setBuddy(self.address)
-        self.host_label = QLabel()
         self.profile = QComboBox()
         for profile_id, text in tool.connector.choices():
             self.profile.addItem(text, profile_id)
@@ -321,14 +398,15 @@ class CommandsWindow(QDialog):
         self.connect_button = QPushButton(_("&Connect"))
         self.connect_button.setAutoDefault(False)
         self.connect_button.clicked.connect(self._connect)
+        # Beside the PC it adds, and only when that PC isn't in the open list yet.
+        self.add_button = QPushButton(_("A&dd to host list…"))
+        self.add_button.setAutoDefault(False)
+        self.add_button.setToolTip(_("Adds this PC to the open host list"))
+        self.add_button.clicked.connect(self._add_to_list)
         left_top = QHBoxLayout()
-        if self._typed:
-            left_top.addWidget(address_label)
-            left_top.addWidget(self.address, 1)
-        else:
-            left_top.addWidget(self.host_label)
-            left_top.addStretch(1)
-            self.address.hide()
+        left_top.addWidget(address_label)
+        left_top.addWidget(self.address, 1)
+        left_top.addWidget(self.add_button)
         right_top = QHBoxLayout()
         right_top.addWidget(profile_label)
         right_top.addWidget(self.profile, 1)
@@ -343,25 +421,38 @@ class CommandsWindow(QDialog):
         self.groups.setObjectName("pageList")
         self.groups.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.groups.itemClicked.connect(self._jump)
+        self.groups.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # Wide enough for the longest group name in any language, so none is cut off and the
+        # columns don't move on a language switch.
+        metrics = self.groups.fontMetrics()
+        longest = max(
+            metrics.horizontalAdvance(name)
+            for group in CommandGroup
+            for name in i18n.in_every_language(GROUP_NAMES[group])
+        )
+        groups_width = max(GROUPS_WIDTH, longest + GROUP_ROOM)
         for widget in (self.search, self.groups):
-            widget.setFixedWidth(GROUPS_WIDTH)
+            widget.setFixedWidth(groups_width)
         left = QVBoxLayout()
         left.setSpacing(8)
         left.addWidget(self.search)
         left.addWidget(self.groups, 1)
         self._headings: dict[CommandGroup, QLabel] = {}
+        self._gaps: dict[CommandGroup, QWidget] = {}  # above each heading
         self.rows: list[CommandRow] = []
         column = QWidget()
         rows = QVBoxLayout(column)
         rows.setContentsMargins(0, 0, 8, 0)
-        rows.setSpacing(2)
+        rows.setSpacing(ROW_SPACING)
         for group in CommandGroup:
             commands = host_commands.in_group(group)
             if not commands:
                 continue
             heading = QLabel(_(GROUP_NAMES[group]).upper())
             heading.setObjectName("groupHeading")
-            rows.addSpacing(6 if self._headings else 0)
+            # Gaps are widgets, so they hide with their group or command (a search).
+            self._gaps[group] = _gap(6 - ROW_SPACING)
+            rows.addWidget(self._gaps[group])
             rows.addWidget(heading)
             self._headings[group] = heading
             item = QListWidgetItem(_(GROUP_NAMES[group]))
@@ -369,6 +460,9 @@ class CommandsWindow(QDialog):
             self.groups.addItem(item)
             for command in commands:
                 row = CommandRow(self, command)
+                if command.apart:
+                    row.gap = _gap(APART - ROW_SPACING)  # where menus draw a line
+                    rows.addWidget(row.gap)
                 self.rows.append(row)
                 rows.addWidget(row)
         rows.addStretch(1)
@@ -388,9 +482,6 @@ class CommandsWindow(QDialog):
         hint = QLabel(_("↑ ↓ pick, Enter runs, typing searches. Commands that need more open a "
                         "small window; risky ones ask first."))  # fmt: skip
         hint.setObjectName("hint")
-        self.add_button = QPushButton(_("A&dd to list…"))
-        self.add_button.setAutoDefault(False)
-        self.add_button.clicked.connect(self._add_to_list)
         close = QPushButton(_("Close"))
         close.setAutoDefault(False)
         close.clicked.connect(self.close)
@@ -401,52 +492,77 @@ class CommandsWindow(QDialog):
         grid.setVerticalSpacing(10)
         grid.addLayout(left_top, 0, 0, 1, 4)
         grid.addLayout(right_top, 0, 4)
-        grid.addLayout(left, 1, 0)
-        grid.addWidget(_divider(), 1, 1)
-        grid.addWidget(self.list, 1, 2)
-        grid.addWidget(_divider(), 1, 3)
-        grid.addWidget(self.results, 1, 4)
-        grid.addWidget(hint, 2, 0, 1, 5)
+        grid.addLayout(left, 1, 0, 2, 1)
+        grid.addWidget(_divider(), 1, 1, 2, 1)
+        grid.addWidget(self.list, 1, 2, 2, 1)
+        grid.addWidget(_divider(), 1, 3, 2, 1)
+        grid.addWidget(self.results, 1, 4, 2, 1)
+        grid.addWidget(hint, 3, 0, 1, 5)
         bottom = QHBoxLayout()
-        bottom.addWidget(self.add_button)
         bottom.addStretch(1)
         bottom.addWidget(close)
-        grid.addLayout(bottom, 3, 0, 1, 5)
-        grid.setColumnMinimumWidth(0, GROUPS_WIDTH)
+        grid.addLayout(bottom, 4, 0, 1, 5)
+        grid.setColumnMinimumWidth(0, groups_width)
         grid.setColumnStretch(2, 1)
-        grid.setRowStretch(1, 1)
+        grid.setRowStretch(2, 1)
 
         self._picked: CommandRow | None = None
         tool.host_changed.connect(self._changed)
         tool.runner.facts_changed.connect(self._changed)
         self.address.editTextChanged.connect(self._address_typed)
         self.search.installEventFilter(self)
-        self.pick(self.rows[0])
+        self._filter()
         self._show_target()
         (self.address if self._typed else self.search).setFocus()
 
     # ---- the PC ----
 
+    def _add_heading(self, text: str) -> None:
+        """A muted title in the Host list, between the panel's hosts and the typed addresses:
+        it can't be picked, and the arrows skip it."""
+        self.address.addItem(text.upper())
+        model = self.address.model()
+        assert isinstance(model, QStandardItemModel)
+        item = model.item(self.address.count() - 1)
+        item.setFlags(Qt.ItemFlag.NoItemFlags)
+        font = item.font()
+        font.setBold(True)
+        font.setPointSizeF(font.pointSizeF() * 0.85)
+        item.setFont(font)
+        item.setForeground(self.palette().color(QPalette.ColorRole.PlaceholderText))
+
     def target(self) -> HostTarget | None:
-        if not self._typed:
-            return self._target
+        """The PC in the Host field: a host of the list (picked, or typed by its name or
+        address), else the address typed, which isn't in the list."""
         typed = self.address.currentText().strip()
         if not typed:
             return None
+        index = self.address.findText(typed, Qt.MatchFlag.MatchFixedString)  # any case
+        picked = self._choices.get(self.address.itemData(index)) if index >= 0 else None
+        if picked is not None:
+            return picked
+        found = self._tool.host_named(typed)
+        if found is not None:
+            return found
         address = split_address(typed).address
         return HostTarget("@" + address.casefold(), address, address)
 
     def _address_typed(self) -> None:
+        target = self.target()
+        key = target.key if target else ""
+        if key != self._shown_key and target is not None and not target.key.startswith("@"):
+            # Another host of the list: its own profile, as Connect would use.
+            index = self.profile.findData(self._tool.profile_for(target))
+            if index >= 0:
+                self.profile.setCurrentIndex(index)
+        self._shown_key = key
         self._show_target()
 
     def _show_target(self) -> None:
         target = self.target()
-        title = _("Manual connection") if self._typed else _("Commands")
+        typed = target.key.startswith("@") if target else self._typed
+        title = _("Manual connection") if typed else _("Commands")
         self.setWindowTitle(f"{title} · {target.name}" if target else title)
-        if target is not None and not self._typed:
-            shown = (f"<b>{_escape(target.name)}</b>" if target.name == target.address
-                     else f"<b>{_escape(target.name)}</b> · {_escape(target.address)}")  # fmt: skip
-            self.host_label.setText(shown)
         for row in self.rows:
             row.run.setEnabled(target is not None)
         self.connect_button.setEnabled(target is not None and self.profile.count() > 0)
@@ -455,16 +571,11 @@ class CommandsWindow(QDialog):
         self._show_results()
 
     def _update_add(self) -> None:
+        """Add to host list… shows for an address typed here that the open list doesn't have."""
         target = self.target()
         places = self._tool.where_in_list(target.address) if target else []
-        self.add_button.setEnabled(target is not None and not places and
+        self.add_button.setVisible(target is not None and not places and
                                    self._tool.can_add_hosts())  # fmt: skip
-        if places:
-            where = "; ".join(_("in {group}, as {name}").format(group=g or _("No group"), name=n)
-                              for g, n in places)  # fmt: skip
-            self.add_button.setToolTip(_("Already in this list: {where}").format(where=where))
-        else:
-            self.add_button.setToolTip(_("Adds this PC to the open host list"))
 
     def _update_names(self) -> None:
         """The user's folder row names the person: "ana.admin's folder"."""
@@ -506,7 +617,7 @@ class CommandsWindow(QDialog):
         target = self.target()
         if target is None:
             return
-        if self._typed:
+        if target.key.startswith("@"):  # typed, not in the list: offered again next time
             self._tool.remember_address(self.address.currentText().strip())
         if command.id in LISTS:
             self._read_list(command.id, target)
@@ -524,6 +635,9 @@ class CommandsWindow(QDialog):
         self._outcomes.pop(key, None)
 
         def work(account: Account | None) -> Listed:
+            if command_id == "drives":
+                people = drives.saved_drives(target.address, account)
+                return Listed(False, datetime.now(UTC), people)
             if command_id == "programs":
                 from capypanel.core.remote import inventory
 
@@ -545,11 +659,11 @@ class CommandsWindow(QDialog):
             if not self._alive():
                 return
             self._lists.pop(key, None)
-            action = (
-                _("read the printers")
-                if command_id == "printers"
-                else _("read the installed programs")
-            )
+            action = {
+                "printers": _("read the printers"),
+                "programs": _("read the installed programs"),
+                "drives": _("read the mapped drives"),
+            }[command_id]
             retry = None
             if isinstance(error, RemoteError) and error.reason in RETRY_REASONS:
                 again = lambda: self._read_list(command_id, target)  # noqa: E731
@@ -557,7 +671,7 @@ class CommandsWindow(QDialog):
             self._outcomes[key] = Outcome(failed_text(action, target.name, error), error, retry)
             self._show_results()
 
-        self._tool.runner.call(work, done, failed)
+        self._tool.runner.call(work, done, failed, target)
 
     def _list_menu(self, command_id: str, index: int, where: QPoint) -> None:
         target = self.target()
@@ -565,6 +679,18 @@ class CommandsWindow(QDialog):
         if target is None or listed is None:
             return
         menu = QMenu(self)
+        if command_id == "drives":
+            header = drive_windows.drive_header()
+            rows = [drive_windows.row_text(r) for r in drive_windows.drive_rows(listed.rows)]
+            copy = menu.addAction(_("&Copy row"))
+            copy.setEnabled(0 <= index < len(rows))
+            if 0 <= index < len(rows):
+                text = "\t".join(rows[index])
+                copy.triggered.connect(lambda: QGuiApplication.clipboard().setText(text))
+            menu.addAction(_("Copy &list"), lambda: QGuiApplication.clipboard().setText(
+                write_csv(header, rows, "\t")))  # fmt: skip
+            menu.exec(where)
+            return
         row = listed.rows[index] if 0 <= index < len(listed.rows) else None
         if command_id == "printers":
             clear = menu.addAction(_("Clear &queue…"))
@@ -615,6 +741,7 @@ class CommandsWindow(QDialog):
             lambda account: host_printers.clear_queue(target.address, printer.name, account),
             done,
             failed,
+            target,
         )
 
     def _alive(self) -> bool:
@@ -670,15 +797,21 @@ class CommandsWindow(QDialog):
         for row in self.rows:
             text = f"{row.name.text()} {row.about.text()}".casefold()
             row.setHidden(bool(needle) and needle not in text)
+            if row.gap is not None:
+                row.gap.setHidden(row.isHidden())
+        first = True
         for index in range(self.groups.count()):
             item = self.groups.item(index)
-            group = item.data(Qt.ItemDataRole.UserRole)
+            group = CommandGroup(item.data(Qt.ItemDataRole.UserRole))  # Qt hands back a str
             any_shown = any(not r.isHidden() for r in self.rows if r.command.group == group)
             self._headings[group].setHidden(not any_shown)
+            self._gaps[group].setHidden(not any_shown or first)  # none above the first
+            first = first and not any_shown
             item.setHidden(not any_shown)
         shown = self._visible_rows()
         if shown and self._picked not in shown:
             self.pick(shown[0])
+            self.list.verticalScrollBar().setValue(0)
 
     def _jump(self, item: QListWidgetItem) -> None:
         heading = self._headings[item.data(Qt.ItemDataRole.UserRole)]
@@ -751,7 +884,7 @@ class CommandsWindow(QDialog):
         target = self.target()
         if target is None:
             return
-        if self._typed:
+        if target.key.startswith("@"):  # typed: its port too, as typed
             typed = self.address.currentText().strip()
             self._tool.remember_address(typed)
             where = split_address(typed)
@@ -770,14 +903,14 @@ class CommandsWindow(QDialog):
             self._update_add()
 
 
+def _gap(height: int) -> QWidget:
+    gap = QWidget()
+    gap.setFixedHeight(height)
+    return gap
+
+
 def _divider() -> QFrame:
     line = QFrame()
     line.setObjectName("pagesDivider")
     line.setFixedWidth(1)
     return line
-
-
-def _escape(text: str) -> str:
-    import html
-
-    return html.escape(text, quote=False)
