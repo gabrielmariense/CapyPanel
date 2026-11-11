@@ -127,20 +127,19 @@ def test_auto_falls_back_to_powershell_only_when_wmi_cant_be_used_here(
     assert shell == ["DESK-01"]
 
 
-def test_powershell_only_and_winrm_never_go_straight(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_powershell_only_and_a_script_with_no_twin_never_go_straight(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     shell: list[str] = []
     monkeypatch.setattr(
-        inventory,
-        "_powershell",
-        lambda script, host, account, protocol, *_m: shell.append(protocol),
+        inventory, "_powershell", lambda script, host, *_m: shell.append(script[:6])
     )
     monkeypatch.setattr(wmi, "read", lambda *_a: pytest.fail("went straight"))
     inventory.transport = inventory.POWERSHELL
     inventory.run_cim(inventory._FACTS, "DESK-01", None)
     inventory.transport = inventory.AUTO
-    inventory.run_cim(inventory._FACTS, "DESK-01", None, "Wsman")  # WinRM
     inventory.run_cim("Send 1", "DESK-01", None)  # a script with no twin
-    assert shell == ["Dcom", "Wsman", "Dcom"]
+    assert shell == [inventory._FACTS[:6], "Send 1"]
 
 
 def test_powershell_that_windows_wont_start_says_so(monkeypatch: pytest.MonkeyPatch) -> None:

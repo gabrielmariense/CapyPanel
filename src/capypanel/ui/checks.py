@@ -28,6 +28,7 @@ from capypanel.core.remote.batch import Batch
 from capypanel.core.remote.checks import Checks, Found
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Answer, Status
+from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.notes import hint
 
 MAX_TEXT = 256
@@ -161,11 +162,7 @@ class AccountDialog(QDialog):
             "the others, so the account isn't locked."
         )
         note = hint(f"{used} {stops}")
-        self.buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
+        self.buttons = ok_cancel(self)
         layout = QVBoxLayout(self)
         layout.addWidget(intro)
         layout.addLayout(form)
@@ -314,19 +311,3 @@ def users_tip(error: RemoteError | None, when: datetime) -> str:
         Reason.OTHER: _("Windows error {code}.").format(code=code_text(error.code)),
     }[error.reason]
     return f"{checked} {why}"
-
-
-def session_lines(sessions: Sequence[Session], *, full: bool = False) -> str:
-    """One line per session, active ones first, for the details pane."""
-    kinds = {"console": _("at the computer"), "rdp": _("Remote Desktop")}
-    states = {"active": _("active"), "disconnected": _("disconnected"), "idle": _("idle")}
-    lines = []
-    for session in by_state(sessions):
-        parts = [kinds.get(session.kind, ""), states.get(session.state, session.state)]
-        if session.logon_time is not None:
-            parts.append(_("since {when}").format(when=when_text(session.logon_time)))
-        if session.client:
-            parts.append(_("from {computer}").format(computer=session.client))
-        details = ", ".join(p for p in parts if p)
-        lines.append(f"{user_name(session, full=full)} — {details}")
-    return "\n".join(lines)

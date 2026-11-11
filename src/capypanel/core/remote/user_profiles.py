@@ -710,13 +710,6 @@ def account_of(host: str, sid: str) -> str:
 # ---- the WMI scripts (they run on your PC, with a session to the other) ----
 
 _REG = r"""
-$HKU = [uint32]2147483651
-function UReg($method, $key, $name) {
-  $a = @{hDefKey = $HKU; sSubKeyName = $key}
-  if ($name) { $a.sValueName = $name }
-  Invoke-CimMethod -CimSession $session -Namespace root/default -ClassName StdRegProv `
-    -MethodName $method -Arguments $a
-}
 $list = 'SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
 $guids = 'SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileGuid'
 """

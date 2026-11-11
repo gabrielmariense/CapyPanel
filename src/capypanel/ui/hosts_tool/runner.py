@@ -4,7 +4,6 @@ and the Commands window beside the command. Reading who is signed in, the accoun
 "Try another account…" are shared by every command."""
 
 import getpass
-import html
 import logging
 import threading
 from collections.abc import Callable, Sequence
@@ -27,14 +26,10 @@ from capypanel.ui import checks as check_texts
 from capypanel.ui.checks import AccountDialog
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.hosts_tool import command_windows as windows
+from capypanel.ui.notes import escape
 
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.tool import HostsTool
-
-
-def escape(text: str) -> str:
-    """Text shown as rich text: <, > and & escaped; quotes stay as they are."""
-    return html.escape(text, quote=False)
 
 
 log = logging.getLogger(__name__)
@@ -56,7 +51,6 @@ class Outcome:
     text: str  # rich text: names in bold
     error: BaseException | None = None  # None: it worked
     retry: Callable[[], None] | None = None  # run it again once another account is typed
-    output: str = ""  # what a script wrote on the PC
     running: bool = False  # not an answer yet: it was started and is still going
 
     @property
@@ -217,13 +211,12 @@ class Runner(QObject):
         target: HostTarget,
         error: BaseException,
         again: Callable[[], None],
-        output: str = "",
     ) -> None:
         retry = None
         if isinstance(error, RemoteError) and error.reason in RETRY_REASONS:
             retry = lambda: self.another_account(target, error, again)  # noqa: E731
         text = failed_text(action, target.name, error)
-        report(command_id, Outcome(text, error, retry, output=output))
+        report(command_id, Outcome(text, error, retry))
 
     def another_account(
         self, target: HostTarget, error: BaseException | None, again: Callable[[], None]

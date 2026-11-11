@@ -65,7 +65,7 @@ def test_the_host_and_password_go_in_through_standard_input(
     command = " ".join(fake.argv)
     assert "192.0.2.10" not in command and "pa'ss" not in command
     assert json.loads(fake.input) == {
-        "host": host, "protocol": "Dcom", "user": "EXAMPLE\\admin", "password": secret,
+        "host": host, "user": "EXAMPLE\\admin", "password": secret,
     }  # fmt: skip
 
 

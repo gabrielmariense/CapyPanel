@@ -41,7 +41,7 @@ from capypanel.ui.list_workspace.splitter import PaneSplitter
 from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar
-from capypanel.ui.menus import MenuCombo, popup
+from capypanel.ui.menus import popup
 from capypanel.ui.new_list import ask_new_list
 
 log = logging.getLogger(__name__)
@@ -66,6 +66,7 @@ class ListWorkspace(Tool):
         self._paths = shell.paths
         self._list_commands = commands
         self._doc: OpenList | None = None
+        self._hold_fill = False  # at start: the table is filled once, at the end
         self._places = shell.paths.lists(self.TOOL_ID)  # lists\<tool>\, shared and own
         self._default_list = self._places.default
         self._personal_list = self._places.personal
@@ -73,13 +74,7 @@ class ListWorkspace(Tool):
         self.search = SearchBox()
         self.nav = NavigationPane(lambda: self.list_texts().everything)
         # The list dropdown, on top of the Groups panel: switch lists, make or open one.
-        self.list_picker = MenuCombo()
-        self.list_picker.setObjectName("listPicker")
-        self.list_picker.menu().setToolTipsVisible(True)  # each list's path
-        self.list_picker.menu().aboutToShow.connect(self._fill_list_menu)
-        nav_layout = self.nav.layout()
-        assert isinstance(nav_layout, QVBoxLayout)
-        nav_layout.insertWidget(0, self.list_picker)
+        self.list_picker = self.nav.add_list_picker(self._fill_list_menu)
         self.table = table
         # Every group A–Z in one step, without opening Manage groups.
         self.sort_groups_action = QAction(self)
@@ -358,6 +353,16 @@ class ListWorkspace(Tool):
     @property
     def personal_list(self) -> Path:
         return self._personal_list
+
+    def open_first_list(self) -> None:
+        """At start: the startup list, then everything shown. Opening a list fills the table at
+        each of its steps; here they wait for the last one, so a long list is filled once."""
+        self._hold_fill = True
+        try:
+            self.open_startup_list()
+        finally:
+            self._hold_fill = False
+        self.refresh()
 
     def open_startup_list(self) -> None:
         """The chosen list (normally the last used), else the default, else the personal one."""
@@ -894,6 +899,8 @@ class ListWorkspace(Tool):
         self.list_changed.emit()
 
     def _show_items(self) -> None:
+        if self._hold_fill:
+            return
         self._search_timer.stop()
         needle = self._needle()
         before_tags = self._place_items()

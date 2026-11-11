@@ -40,7 +40,6 @@ log = logging.getLogger(__name__)
 AUTO = "auto"  # WMI straight from CapyPanel; PowerShell only when that can't be used here
 DIRECT = "direct"  # only WMI straight from CapyPanel
 POWERSHELL = "powershell"  # only a PowerShell started on this PC, as before 0.24
-TRANSPORTS = (AUTO, DIRECT, POWERSHELL)
 transport = AUTO  # set from Settings
 powershell_blocked = False  # Windows refused to start it here this session
 
@@ -178,41 +177,38 @@ def run_cim(
     script: str,
     host: str,
     account: Account | None,
-    protocol: str = "Dcom",
     values: Mapping[str, str] | None = None,
     timeout: float = WMI_TIMEOUT,
 ) -> Any:
-    """Reads `host` with `script`, or with its twin over WMI directly when it has one and
-    `protocol` is DCOM (the twin starts no program, so no antivirus has a command line to
-    judge). PowerShell is the way when WMI can't be used from this PC at all, and for WinRM.
-    Raises RemoteError, TimeoutError, or PowerShellBlocked when PowerShell was needed and
-    Windows wouldn't start it."""
+    """Reads `host` with `script`, or with its twin over WMI directly when it has one (the twin
+    starts no program, so no antivirus has a command line to judge). PowerShell is the way when
+    WMI can't be used from this PC at all. Raises RemoteError, TimeoutError, or
+    PowerShellBlocked when PowerShell was needed and Windows wouldn't start it."""
     from capypanel.core.remote import wmi
 
     reader = _READERS.get(script)
-    if protocol == "Dcom" and reader is not None and transport != POWERSHELL:
+    if reader is not None and transport != POWERSHELL:
         try:
             return wmi.read(reader, host, account, dict(values or {}), timeout)
         except wmi.Unavailable as e:
             if transport == DIRECT:
                 raise RemoteError(Reason.OTHER) from e
             log.warning("WMI can't be used from this PC (%s); reading %s with PowerShell", e, host)
-    return _powershell(script, host, account, protocol, values, timeout)
+    return _powershell(script, host, account, values, timeout)
 
 
 def _powershell(
     script: str,
     host: str,
     account: Account | None,
-    protocol: str,
     values: Mapping[str, str] | None,
     timeout: float,
 ) -> Any:
-    """Runs a PowerShell script that uses `$session`, a CIM session to `host` over `protocol`
-    ("Dcom" for WMI, "Wsman" for WinRM), and answers with Send. The host, the account and
-    `values` (as `$in.<name>`) go in through standard input, never on the command line, so they
-    can't change the script and the password isn't visible to other programs."""
-    data = {**(values or {}), "host": host, "protocol": protocol, "user": "", "password": ""}
+    """Runs a PowerShell script that uses `$session`, a CIM session to `host` over WMI (DCOM),
+    and answers with Send. The host, the account and `values` (as `$in.<name>`) go in through
+    standard input, never on the command line, so they can't change the script and the
+    password isn't visible to other programs."""
+    data = {**(values or {}), "host": host, "user": "", "password": ""}
     if account:
         data["user"], data["password"] = account.user, account.password
     command = base64.b64encode((_COMMON + script).encode("utf-16-le")).decode()
@@ -252,7 +248,8 @@ def wmi_error(code: int) -> RemoteError:
 
 
 # Shared by every CIM script: read the input, open one session, send back base64'd UTF-8 JSON
-# (so names in any language survive the console), and turn a failure into its HRESULT.
+# (so names in any language survive the console), and turn a failure into its HRESULT. Reg
+# reads the PC's own registry keys, UReg those of the people signed in.
 _COMMON = r"""
 $ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'
 function Send($value) {
@@ -267,8 +264,15 @@ function Reg($method, $key, $name) {
   Invoke-CimMethod -CimSession $session -Namespace root/default -ClassName StdRegProv `
     -MethodName $method -Arguments $a
 }
+$HKU = [uint32]2147483651
+function UReg($method, $key, $name) {
+  $a = @{hDefKey = $HKU; sSubKeyName = $key}
+  if ($name) { $a.sValueName = $name }
+  Invoke-CimMethod -CimSession $session -Namespace root/default -ClassName StdRegProv `
+    -MethodName $method -Arguments $a
+}
 try {
-  $p = @{ComputerName = $in.host; SessionOption = (New-CimSessionOption -Protocol $in.protocol)
+  $p = @{ComputerName = $in.host; SessionOption = (New-CimSessionOption -Protocol Dcom)
          OperationTimeoutSec = 30}
   if ($in.user) {
     $secret = ConvertTo-SecureString $in.password -AsPlainText -Force

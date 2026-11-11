@@ -54,5 +54,5 @@ Primeiros passos, Configurações e arquivos e Desenvolvimento falam do app inte
 depois deles são da ferramenta **Hosts**, as três seguintes das **Impressoras**, e a última dos
 **Perfis de usuário**.
 
-Estas páginas descrevem a versão atual (0.24.0). O CapyPanel está em beta, então elas crescem a
+Estas páginas descrevem a versão atual (0.24.1). O CapyPanel está em beta, então elas crescem a
 cada funcionalidade.

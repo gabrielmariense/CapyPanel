@@ -55,13 +55,6 @@ def _letter(value: object) -> str:
 # HKEY_USERS holds a hive for everyone signed in (and for services). A signed-in person's hive
 # has Volatile Environment, with their name; their saved drives are under Network\<letter>.
 _SAVED = r"""
-$HKU = [uint32]2147483651
-function UReg($method, $key, $name) {
-  $a = @{hDefKey = $HKU; sSubKeyName = $key}
-  if ($name) { $a.sValueName = $name }
-  Invoke-CimMethod -CimSession $session -Namespace root/default -ClassName StdRegProv `
-    -MethodName $method -Arguments $a
-}
 try {
   $found = New-Object System.Collections.ArrayList
   $sids = (UReg EnumKey '').sNames

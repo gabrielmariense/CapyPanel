@@ -21,14 +21,6 @@ def _tools(tmp_path: Path) -> ToolCatalog:
     return ToolCatalog(tmp_path / "company", tmp_path / "shipped")
 
 
-def test_psexec_is_a_tool_but_never_one_a_profile_opens(tmp_path: Path) -> None:
-    _write(tmp_path / "shipped", "ultravnc", "UltraVNC Viewer")
-    _write(tmp_path / "shipped", "psexec", "PsExec", kind="run")
-    tools = _tools(tmp_path)
-    assert tools.find("psexec") is not None and tools.viewer("psexec") is None
-    assert tools.viewer("ultravnc") is not None
-
-
 def test_the_company_s_definition_wins_for_the_same_tool(tmp_path: Path) -> None:
     _write(tmp_path / "shipped", "viewer", "Shipped viewer")
     _write(tmp_path / "shipped", "other", "Other")

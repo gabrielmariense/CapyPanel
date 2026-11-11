@@ -41,7 +41,7 @@ from capypanel.ui.list_workspace.panels import NavigationPane, natural_key
 from capypanel.ui.list_workspace.splitter import PaneSplitter
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar, tool_button
-from capypanel.ui.menus import MenuCombo, popup
+from capypanel.ui.menus import popup
 from capypanel.ui.profiles_tool import rows, work
 from capypanel.ui.profiles_tool.host_page import Context, HostPage, Stage
 from capypanel.ui.profiles_tool.hosts_page import HostsPage, RowFacts
@@ -132,13 +132,7 @@ class ProfilesTool(Tool):
         self.nav.groups.set_editable(False)
         self.nav.everything.setAcceptDrops(False)
         self.nav.groups_heading.setAcceptDrops(False)
-        self.list_picker = MenuCombo()
-        self.list_picker.setObjectName("listPicker")
-        self.list_picker.menu().setToolTipsVisible(True)  # each list's path
-        self.list_picker.menu().aboutToShow.connect(self._fill_list_menu)
-        nav_layout = self.nav.layout()
-        assert isinstance(nav_layout, QVBoxLayout)
-        nav_layout.insertWidget(0, self.list_picker)
+        self.list_picker = self.nav.add_list_picker(self._fill_list_menu)
 
         self.hosts_page = HostsPage()
         self.tabs = TabStrip()
@@ -201,8 +195,7 @@ class ProfilesTool(Tool):
         self.show_tags.toggled.connect(self._save_shown)
 
         self._connect()
-        self.retranslate()
-        self._show_list()
+        self.retranslate()  # fills the list too
         self._first_widths(scale)
         self._checked_once = False  # the group on show is checked when the tool first shows
 

@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices, QResizeEvent
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -105,32 +105,6 @@ def add_rows(layout: QVBoxLayout, *rows: SettingRow) -> None:
             line.setObjectName("rowLine")
             layout.addWidget(line)
         layout.addWidget(row)
-
-
-class PathLabel(QLabel):
-    """A file path cut in the middle ("C:\\Users\\…\\hosts.json") when it doesn't fit."""
-
-    def __init__(self, path: Path | None = None) -> None:
-        super().__init__()
-        self.setObjectName("hint")
-        self.setMinimumWidth(80)
-        self._full = ""
-        if path is not None:
-            self.set_path(path)
-
-    def set_path(self, path: Path | str) -> None:
-        """A path, or a word in its place ("None") when there's no path."""
-        self._full = str(path)
-        self.setToolTip(self._full if isinstance(path, Path) else "")
-        self._elide()
-
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        super().resizeEvent(event)
-        self._elide()
-
-    def _elide(self) -> None:
-        width = max(self.width(), self.minimumWidth())
-        self.setText(self.fontMetrics().elidedText(self._full, Qt.TextElideMode.ElideMiddle, width))
 
 
 def open_folder(folder: Path) -> None:

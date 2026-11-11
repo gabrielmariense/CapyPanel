@@ -59,6 +59,7 @@ from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import DetailsPanel
 from capypanel.ui.list_workspace.panels import natural_key
 from capypanel.ui.menus import popup
+from capypanel.ui.notes import divider, hint
 from capypanel.ui.profiles_tool import rows
 from capypanel.ui.profiles_tool.rows import Filters, Result
 from capypanel.ui.tables import fit_rows, grid_table
@@ -84,20 +85,6 @@ def card() -> QFrame:
     frame.setBackgroundRole(QPalette.ColorRole.Base)
     frame.setAutoFillBackground(True)
     return frame
-
-
-def hint(text: str = "") -> QLabel:
-    label = QLabel(text)
-    label.setObjectName("hint")
-    label.setWordWrap(True)
-    return label
-
-
-def _divider() -> QFrame:
-    line = QFrame()
-    line.setObjectName("divider")
-    line.setFixedHeight(1)
-    return line
 
 
 def _fold(text: str) -> str:
@@ -148,7 +135,7 @@ class TabBox(QFrame):
         column.setContentsMargins(1, 1, 1, 1)
         column.setSpacing(0)
         column.addLayout(head)
-        column.addWidget(_divider())
+        column.addWidget(divider())
         column.addWidget(body, 1)
 
     def show_title(self, name: str, about: str) -> None:
@@ -931,11 +918,6 @@ class ProfileDetails(DetailsPanel):
 
     def item_id(self, shown: object) -> str:
         return shown.profile.ident if isinstance(shown, Shown) else ""
-
-    def show_hint(self, text: str) -> None:
-        """Nothing picked: `text` in the middle of the panel."""
-        self._hint_text = text
-        self.show_item(None, 0)
 
     def build_page(self, layout: QVBoxLayout, shown: object, needle: str) -> None:
         assert isinstance(shown, Shown)

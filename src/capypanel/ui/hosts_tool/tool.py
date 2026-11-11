@@ -60,7 +60,7 @@ from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
-from capypanel.ui.saved_credentials import KeptLogin, forget_failed
+from capypanel.ui.saved_credentials import KeptLogin
 
 log = logging.getLogger(__name__)
 MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks first
@@ -156,8 +156,7 @@ class HostsTool(ListWorkspace):
         self._auto_timer = QTimer(self)  # Settings: Status by itself, if switched on
         self._auto_timer.timeout.connect(self._auto_status_check)
         self._apply_auto_status()
-        self.open_startup_list()
-        self.refresh()
+        self.open_first_list()
 
     def status_widgets(self) -> list[QWidget]:
         """Shown on the right of the status bar: a Refresh's progress and Stop."""
@@ -552,17 +551,6 @@ class HostsTool(ListWorkspace):
             item.triggered.connect(lambda _c=False, p=profile_id: self.connect_selected(p))
         menu.addSeparator()
         menu.addActions([a.manual_connect, a.connection_profiles, a.saved_credentials])
-
-    def _forgot(self, forget: Callable[[], object]) -> bool:
-        """Runs `forget`; says so when Windows didn't delete a saved password."""
-        try:
-            forget()
-        except OSError as e:
-            forget_failed(self, e)
-            return False
-        return True
-
-    # ---- saved passwords ----
 
     def kept_logins(self) -> list[KeptLogin]:
         """Each profile's typed password, then the account typed for logged-on users."""

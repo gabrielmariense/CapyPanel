@@ -3,7 +3,7 @@ asset tag and where its page counters come from, plus opening their web pages an
 reads each printer's status, supplies and page counter over SNMP."""
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import replace
 from datetime import datetime
 
@@ -124,8 +124,7 @@ class PrintersTool(ListWorkspace):
         self._fill_inventory()
         self._connect()
         self.restore_layout()
-        self.open_startup_list()
-        self.refresh()
+        self.open_first_list()
 
     def status_widgets(self) -> list[QWidget]:
         """Shown on the right of the status bar: a Refresh's progress and Stop."""
@@ -303,9 +302,20 @@ class PrintersTool(ListWorkspace):
         ok = isinstance(saved, int) and not isinstance(saved, bool) and LOWEST <= saved <= HIGHEST
         return saved if ok else status.DEFAULT_LOW  # type: ignore[return-value]
 
+    def _choice[T](self, key: str, allowed: Collection[T], default: T) -> T:
+        """A choice kept from Settings, or `default` when it's missing or not one of `allowed`."""
+        saved = self.prefs.get(key)
+        return saved if saved in allowed else default  # type: ignore[return-value]
+
+    def _change(self, key: str, value: object, current: object) -> bool:
+        """Keeps a choice from Settings when it differs from `current`; True when it did."""
+        if value == current:
+            return False
+        self.prefs[key] = value
+        return True
+
     def set_low_level(self, low: int) -> None:
-        if low != self.low_level():
-            self.prefs["low_level"] = low
+        if self._change("low_level", low, self.low_level()):
             self.table.marks = self.bar_marks()  # the low mark follows it
             self._show_all_cells()
             self._count_attention()
@@ -322,20 +332,17 @@ class PrintersTool(ListWorkspace):
 
     def snmp_version(self) -> str:
         """Settings' SNMP version: V2C (the default) or V3."""
-        return V3 if self.prefs.get(SNMP_VERSION) == V3 else V2C
+        return self._choice(SNMP_VERSION, (V2C, V3), V2C)
 
     def set_snmp_version(self, version: str) -> None:
-        if version != self.snmp_version():
-            self.prefs[SNMP_VERSION] = version
+        self._change(SNMP_VERSION, version, self.snmp_version())
 
     def auto_refresh(self) -> int:
         """Settings' Refresh on its own: minutes between two, 0 when it's off (the default)."""
-        saved = self.prefs.get(AUTO_REFRESH)
-        return saved if saved in AUTO_EVERY else 0  # type: ignore[return-value]
+        return self._choice(AUTO_REFRESH, AUTO_EVERY, 0)
 
     def set_auto_refresh(self, minutes: int) -> None:
-        if minutes != self.auto_refresh():
-            self.prefs[AUTO_REFRESH] = minutes
+        if self._change(AUTO_REFRESH, minutes, self.auto_refresh()):
             self._apply_auto_refresh()
 
     def works_in_background(self) -> bool:
@@ -343,12 +350,10 @@ class PrintersTool(ListWorkspace):
 
     def notify_choice(self) -> str:
         """Settings' Windows notification: NOTIFY_OFF, NOTIFY_STOPS (the default) or NOTIFY_LOW."""
-        saved = self.prefs.get(NOTIFY)
-        return saved if saved in (NOTIFY_OFF, NOTIFY_STOPS, NOTIFY_LOW) else NOTIFY_STOPS  # type: ignore[return-value]
+        return self._choice(NOTIFY, (NOTIFY_OFF, NOTIFY_STOPS, NOTIFY_LOW), NOTIFY_STOPS)
 
     def set_notify_choice(self, choice: str) -> None:
-        if choice != self.notify_choice():
-            self.prefs[NOTIFY] = choice
+        self._change(NOTIFY, choice, self.notify_choice())
 
     def _apply_auto_refresh(self) -> None:
         if minutes := self.auto_refresh():

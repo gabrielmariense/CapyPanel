@@ -32,7 +32,6 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QDialog,
-    QDialogButtonBox,
     QHBoxLayout,
     QLabel,
     QMenu,
@@ -47,6 +46,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.i18n import _
+from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.hosts import group_path
 from capypanel.ui.menus import popup
 from capypanel.ui.notes import notes
@@ -548,11 +548,7 @@ class ManageGroupsDialog(QDialog):
         row = QHBoxLayout()
         row.addWidget(self.tree, 1)
         row.addLayout(buttons)
-        self.box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self.box.accepted.connect(self.accept)
-        self.box.rejected.connect(self.reject)
+        self.box = ok_cancel(self)
         layout = QVBoxLayout(self)
         layout.addLayout(row, 1)
         layout.addWidget(

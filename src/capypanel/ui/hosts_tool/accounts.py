@@ -38,7 +38,7 @@ from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.i18n import _
 from capypanel.core.remote.access import Account
 from capypanel.ui.checks import AccountDialog
-from capypanel.ui.dialogs import run_modal
+from capypanel.ui.dialogs import ok_cancel, run_modal
 from capypanel.ui.hosts import group_path
 from capypanel.ui.notes import notes
 from capypanel.ui.saved_credentials import KeptLogin
@@ -386,11 +386,7 @@ class LinkDialog(QDialog):
         form.addRow(_("Use it &for:"), self.kind)
         form.addRow("", self.value)
         form.addRow("", self.remember)
-        self.buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
+        self.buttons = ok_cancel(self)
         layout = QVBoxLayout(self)
         layout.addLayout(form)
         layout.addWidget(notes(

@@ -30,8 +30,7 @@ from typing import Any
 from capypanel.core.i18n import _
 
 SCHEMA = 1
-VIEWERS = ("vnc", "rdp")  # what a connection profile can open; grows with the features: ssh…
-KINDS = (*VIEWERS, "run")  # "run": starts things on a PC (PsExec), never a profile's tool
+KINDS = ("vnc", "rdp")  # grows with the features: ssh…
 PLACEHOLDERS = ("address", "port", "user", "password", "password_file", "settings_file")
 SECRET = "password"
 PASSWORD_FILE = "password_file"

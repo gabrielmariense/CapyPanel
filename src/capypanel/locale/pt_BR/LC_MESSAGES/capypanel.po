@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 00:24-0300\n"
+"POT-Creation-Date: 2026-11-11 01:38-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -2214,9 +2214,6 @@ msgstr "Sem papel"
 msgid "Out of toner"
 msgstr "Sem toner"
 
-msgid "Output"
-msgstr "Saída"
-
 msgid "Output bin full"
 msgstr "Bandeja de saída cheia"
 
@@ -2900,9 +2897,6 @@ msgstr "Mostrar todas"
 
 msgid "Show every printer again"
 msgstr "Mostrar todas as impressoras de novo"
-
-msgid "Show output…"
-msgstr "Mostrar saída…"
 
 msgid "Show this group &first"
 msgstr "Mostrar este grupo &primeiro"
@@ -3828,9 +3822,6 @@ msgstr "patrimônio"
 msgid "at the PC"
 msgstr "no PC"
 
-msgid "at the computer"
-msgstr "no computador"
-
 msgid "brand"
 msgstr "marca"
 
@@ -3882,10 +3873,6 @@ msgstr "ex.: Filiais"
 
 msgid "failed"
 msgstr "falhou"
-
-#, python-brace-format
-msgid "from {computer}"
-msgstr "de {computer}"
 
 msgid "idle"
 msgstr "inativa"

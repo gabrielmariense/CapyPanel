@@ -13,11 +13,9 @@ def _tool(tool_id: str) -> definitions.ToolDefinition:
     return definitions.load(TOOLS_DIR / f"{tool_id}.json")
 
 
-def test_one_starter_profile_per_viewer_and_each_fits_its_tool() -> None:
+def test_one_starter_profile_per_tool_and_each_fits_its_tool() -> None:
     starters = [profiles.load(path) for path in sorted(PROFILES_DIR.glob("*.json"))]
-    tools = [p.stem for p in TOOLS_DIR.glob("*.json")]
-    viewers = [t for t in tools if _tool(t).kind in definitions.VIEWERS]
-    assert sorted(p.tool for p in starters) == sorted(viewers)
+    assert sorted(p.tool for p in starters) == sorted(p.stem for p in TOOLS_DIR.glob("*.json"))
     for path, profile in zip(sorted(PROFILES_DIR.glob("*.json")), starters, strict=True):
         assert path.stem == profile.id and profile.name
         profiles.check_fits(profile, _tool(profile.tool))

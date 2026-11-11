@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
 from capypanel import BUILD
 from capypanel.core import settings
 from capypanel.core.i18n import _
-from capypanel.ui import about, language
+from capypanel.ui import language
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.home import HomePage
@@ -267,13 +267,22 @@ class MainWindow(QMainWindow):
         a = self.commands
         a.settings.triggered.connect(lambda: self.open_settings())
         a.exit.triggered.connect(self.close)
-        a.documentation.triggered.connect(lambda: about.open_url(about.docs_url()))
-        a.report_problem.triggered.connect(
-            lambda: about.open_url(about.report_url(self.paths.portable))
-        )
+        a.documentation.triggered.connect(self._open_docs)
+        a.report_problem.triggered.connect(self._report_problem)
         a.about.triggered.connect(lambda: self.open_settings("about"))  # About is a page there
         a.show_toolbar.toggled.connect(self._show_toolbars)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
+
+    # About's code is loaded when first needed, not at every start: it looks up each library.
+    def _open_docs(self) -> None:
+        from capypanel.ui import about
+
+        about.open_url(about.docs_url())
+
+    def _report_problem(self) -> None:
+        from capypanel.ui import about
+
+        about.open_url(about.report_url(self.paths.portable))
 
     def _show_toolbars(self, shown: bool) -> None:
         for tool in self.tools.values():

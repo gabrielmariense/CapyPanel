@@ -32,7 +32,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.tools import detect, viewer_settings
 from capypanel.core.tools.catalog import Catalogs
-from capypanel.core.tools.definitions import VIEWERS, ToolDefinition
+from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profile_store import UNTRUSTED, make_id
 from capypanel.core.tools.profiles import (
     ConnectionProfile,
@@ -41,6 +41,7 @@ from capypanel.core.tools.profiles import (
     logins_of,
 )
 from capypanel.ui.connect import ask_for_program
+from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import hint, notes
 from capypanel.ui.settings.pages import Page, Section, SettingRow, add_rows
@@ -111,11 +112,7 @@ class ProfileDialog(QDialog):
         form.addRow(_("P&ort:"), self.port)
         form.addRow(self._settings_label, self._settings_box)
         form.addRow("", self.settings_hint)
-        self.buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
+        self.buttons = ok_cancel(self)
         layout = QVBoxLayout(self)
         layout.addLayout(form)
         layout.addWidget(self.buttons)
@@ -416,7 +413,7 @@ class ProfilesSection(SharedSection):
         add_action(menu, _("&Delete…"), self.delete, picked)
 
     def _dialog(self, title: str, profile: ConnectionProfile | None) -> ProfileDialog:
-        tools = [e.item for e in self.catalogs.tools.all() if e.item.kind in VIEWERS]
+        tools = [e.item for e in self.catalogs.tools.all()]
         installed = {t.id for t in tools if detect.find_executable(t) is not None}
         return ProfileDialog(self, title, tools, installed, profile)
 

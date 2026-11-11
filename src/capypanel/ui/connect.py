@@ -31,6 +31,7 @@ from capypanel.core.tools.connect import Credential, SessionCredentials, Target,
 from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 from capypanel.core.tools.viewer_settings import SettingsFileError
+from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.notes import hint
 
 log = logging.getLogger(__name__)
@@ -91,11 +92,7 @@ class CredentialDialog(QDialog):
             else _("It's handed to the viewer privately, never on its command line.")
         )  # fmt: skip
         note = hint(f"{used} {how}")
-        self.buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
+        self.buttons = ok_cancel(self)
         layout = QVBoxLayout(self)
         layout.addWidget(intro)
         layout.addLayout(form)
@@ -158,7 +155,7 @@ class Connector:
         return [
             (p.id, p.name)
             for p in self.catalogs.profiles.all()
-            if self.catalogs.tools.viewer(p.tool) is not None
+            if self.catalogs.tools.find(p.tool) is not None
         ]
 
     def inherited_label(self, profile_id: str, source: Group | None) -> str:
@@ -183,7 +180,7 @@ class Connector:
                     profile=profile_id
                 )
             )
-        tool = self.catalogs.tools.viewer(profile.tool)
+        tool = self.catalogs.tools.find(profile.tool)
         if tool is None:
             raise ProfileError(
                 _("The connection profile “{profile}” needs the tool “{tool}”, which isn't "
