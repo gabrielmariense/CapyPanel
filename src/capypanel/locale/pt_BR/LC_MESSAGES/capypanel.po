@@ -594,8 +594,8 @@ msgstr[1] "{n} hosts adicionados."
 msgid "Address"
 msgstr "Endereço"
 
-msgid "Address, group, MAC address"
-msgstr "Endereço, grupo, endereço MAC"
+msgid "Address, group, MAC"
+msgstr "Endereço, grupo, MAC"
 
 msgid "Address, profile, account"
 msgstr "Endereço, perfil, conta"
@@ -3687,8 +3687,8 @@ msgstr "Ferramenta"
 msgid "Total pages"
 msgstr "Total de páginas"
 
-msgid "Total pages and where they come from"
-msgstr "Total de páginas e de onde vêm"
+msgid "Total pages and their source"
+msgstr "Total de páginas e a origem"
 
 msgid "Tray empty"
 msgstr "Bandeja vazia"
@@ -3852,7 +3852,7 @@ msgstr "Coletor quase cheio"
 
 msgctxt "button"
 msgid "Web page"
-msgstr "Página"
+msgstr "Página web"
 
 msgid "What Connect opens, and the login it uses. Refresh's logged-on users and the commands use the account under it."
 msgstr "O que o Conectar abre, e o login que ele usa. Os usuários logados do Atualizar e os comandos usam a conta abaixo."
@@ -4876,11 +4876,11 @@ msgstr "{status} · verificado em {when}"
 
 #, python-brace-format
 msgid "{supply} low"
-msgstr "{supply} baixo"
+msgstr "{supply}: nível baixo"
 
 #, python-brace-format
 msgid "{supply} nearly full"
-msgstr "{supply} quase cheio"
+msgstr "{supply}: quase sem espaço"
 
 #, python-brace-format
 msgid "{tag} ({n} of {total})"

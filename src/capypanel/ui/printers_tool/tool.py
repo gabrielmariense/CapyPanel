@@ -592,10 +592,10 @@ class PrintersTool(ListWorkspace):
 
     def details_parts(self) -> list[Part]:
         return [
-            Part("connection", _("Connection"), _("Address, group, MAC address")),
+            Part("connection", _("Connection"), _("Address, group, MAC")),
             Part("supplies", _("Supplies"), _("Toner, ink and the rest, with their levels")),
             Part("printer", _("Printer"), _("Brand, model, serial number, firmware")),
-            Part("pages", _("Page counters"), _("Total pages and where they come from")),
+            Part("pages", _("Page counters"), _("Total pages and their source")),
             Part("tags", _("Tags"), _("The printer's tags")),
             Part("notes", _("Notes"), _("The printer's notes")),
         ]

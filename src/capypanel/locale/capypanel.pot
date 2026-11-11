@@ -597,7 +597,7 @@ msgstr[1] ""
 msgid "Address"
 msgstr ""
 
-msgid "Address, group, MAC address"
+msgid "Address, group, MAC"
 msgstr ""
 
 msgid "Address, profile, account"
@@ -3835,7 +3835,7 @@ msgstr ""
 msgid "Total pages"
 msgstr ""
 
-msgid "Total pages and where they come from"
+msgid "Total pages and their source"
 msgstr ""
 
 msgid "Tray empty"
