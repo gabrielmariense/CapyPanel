@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.model import MAX_ADDRESS, NO_GROUP, Host, HostList
 from capypanel.core.i18n import _
 from capypanel.core.printers.printer import COUNTER_SOURCES, PrinterInfo, info_of
+from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.hosts import MAX_NAME, TagEdit, group_choices
 from capypanel.ui.printers_tool.details import source_text
 
@@ -102,11 +103,7 @@ class PrinterDialog(QDialog):
         form.addRow(_("Ass&et tag:"), self.asset_tag)
         form.addRow(_("Page &counters:"), self.source)
         form.addRow(_("N&otes:"), self.notes)
-        self.buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
+        self.buttons = ok_cancel(self)
         layout = QVBoxLayout(self)
         layout.addLayout(form)
         layout.addWidget(self.buttons)
