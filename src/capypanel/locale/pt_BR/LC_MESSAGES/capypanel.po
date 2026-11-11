@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 02:12-0300\n"
+"POT-Creation-Date: 2026-11-11 02:19-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -274,14 +274,14 @@ msgstr "&Sair do CapyPanel"
 msgid "&Read again"
 msgstr "&Ler de novo"
 
-msgid "&Refresh"
-msgstr "&Atualizar"
-
 msgid "&Refresh group"
 msgstr "A&tualizar grupo"
 
 msgid "&Refresh host"
 msgstr "A&tualizar host"
+
+msgid "&Refresh printer"
+msgstr "A&tualizar impressora"
 
 #, python-brace-format
 msgid "&Refresh {n} host"
@@ -292,6 +292,10 @@ msgstr[1] "A&tualizar {n} hosts"
 #, python-brace-format
 msgid "&Refresh {n} hosts"
 msgstr "A&tualizar {n} hosts"
+
+#, python-brace-format
+msgid "&Refresh {n} printers"
+msgstr "A&tualizar {n} impressoras"
 
 msgid "&Remember it on this computer"
 msgstr "Le&mbrar neste computador"
@@ -685,6 +689,10 @@ msgstr "Build:"
 msgid "By the last sign-in or sign-out Windows wrote down; a row that has none goes by its folder's date"
 msgstr "Pela última entrada ou saída que o Windows anotou; uma linha que não tem nenhuma vale pela data da pasta"
 
+msgctxt "button"
+msgid "C$"
+msgstr "C$"
+
 msgid "C$ share"
 msgstr "Compartilhamento C$"
 
@@ -852,6 +860,10 @@ msgstr "Co&piar"
 msgid "Colour"
 msgstr "Cor"
 
+msgid "Commands"
+msgstr "Comandos"
+
+msgctxt "button"
 msgid "Commands"
 msgstr "Comandos"
 
@@ -1288,6 +1300,10 @@ msgstr "Unidade"
 msgid "Driver"
 msgstr "Driver"
 
+msgctxt "button"
+msgid "Drives"
+msgstr "Unidades"
+
 #, python-brace-format
 msgid "Drives saved for the person signed in to {host}, read at {when}."
 msgid_plural "Drives saved for the {n} people signed in to {host}, read at {when}."
@@ -1340,6 +1356,10 @@ msgstr "Erro: {why}"
 msgid "Event Viewer"
 msgstr "Visualizador de Eventos"
 
+msgctxt "button"
+msgid "Events"
+msgstr "Eventos"
+
 msgid "Every"
 msgstr "A cada"
 
@@ -1357,8 +1377,8 @@ msgstr "Todos os PCs com a tag {tag}"
 msgid "Every column the printers have"
 msgstr "Todas as colunas das impressoras"
 
-msgid "Every command"
-msgstr "Todos os comandos"
+msgid "Every command for this PC, in the Commands window"
+msgstr "Todos os comandos deste PC, na janela de comandos"
 
 msgid "Every computer you look after, in one window."
 msgstr "Todos os computadores sob seus cuidados, em uma só janela."
@@ -1407,6 +1427,10 @@ msgstr "Arquivo não encontrado"
 msgid "Firmware"
 msgstr "Firmware"
 
+msgid "Folder"
+msgstr "Pasta"
+
+msgctxt "button"
 msgid "Folder"
 msgstr "Pasta"
 
@@ -1743,6 +1767,10 @@ msgstr "Logoff de {user} feito em {host}."
 msgid "Logged on"
 msgstr "Logados"
 
+msgctxt "button"
+msgid "Logged on"
+msgstr "Logados"
+
 #, python-brace-format
 msgid "Logged on ({n}) · {when}"
 msgstr "Logados ({n}) · {when}"
@@ -1772,6 +1800,10 @@ msgstr "Magenta"
 msgid "Maintenance due"
 msgstr "Manutenção pendente"
 
+msgctxt "button"
+msgid "Manage"
+msgstr "Gerenciar"
+
 msgid "Manage groups"
 msgstr "Gerenciar grupos"
 
@@ -1796,6 +1828,10 @@ msgstr "Mascote:"
 
 msgid "Memory"
 msgstr "Memória"
+
+msgctxt "button"
+msgid "Message"
+msgstr "Mensagem"
 
 #, python-brace-format
 msgid "Message from {user}"
@@ -2236,6 +2272,10 @@ msgstr "P&orta:"
 msgid "PC facts"
 msgstr "Dados do PC"
 
+msgctxt "button"
+msgid "PC facts"
+msgstr "Dados"
+
 msgid "PC facts · reading…"
 msgstr "Dados do PC · lendo…"
 
@@ -2288,6 +2328,10 @@ msgstr "Cole um caminho como o Explorador de Arquivos copia, com aspas e tudo, o
 msgid "Path"
 msgstr "Caminho"
 
+msgctxt "button"
+msgid "Path"
+msgstr "Caminho"
+
 msgid "Paused"
 msgstr "Pausada"
 
@@ -2313,6 +2357,10 @@ msgstr "Porta"
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
 
+msgid "Power"
+msgstr "Energia"
+
+msgctxt "button"
 msgid "Power"
 msgstr "Energia"
 
@@ -2377,6 +2425,10 @@ msgstr "Perfis do último escaneamento que podem ser excluídos"
 msgid "Profiles you changed or made yourself stay as they are."
 msgstr "Os perfis que você alterou ou criou continuam como estão."
 
+msgctxt "button"
+msgid "Programs"
+msgstr "Programas"
+
 msgid "Programs (*.exe)"
 msgstr "Programas (*.exe)"
 
@@ -2394,6 +2446,10 @@ msgstr "Colocar no &grupo"
 
 msgid "Queued"
 msgstr "Na fila"
+
+msgctxt "button"
+msgid "Queues"
+msgstr "Filas"
 
 msgid "Quit"
 msgstr "Sair"
@@ -2454,8 +2510,16 @@ msgstr "Recentes"
 msgid "Refresh"
 msgstr "Atualizar"
 
+msgctxt "button"
+msgid "Refresh"
+msgstr "Atualizar"
+
 msgid "Refresh all"
 msgstr "Atualizar todos"
+
+msgctxt "printers"
+msgid "Refresh all"
+msgstr "Atualizar todas"
 
 msgid "Refresh every host shown"
 msgstr "Atualizar todos os hosts exibidos"
@@ -2465,6 +2529,9 @@ msgstr "Atualiza todos os hosts exibidos (os de um grupo, ou os que uma pesquisa
 
 msgid "Refresh host"
 msgstr "Atualizar host"
+
+msgid "Refresh host: status, logged-on users and PC facts"
+msgstr "Atualizar host: status, usuários logados e dados do PC"
 
 msgid "Refresh logged-on users"
 msgstr "Atualizar usuários logados"
@@ -2838,6 +2905,10 @@ msgstr "Assistência técnica solicitada"
 msgid "Services"
 msgstr "Serviços"
 
+msgctxt "button"
+msgid "Services"
+msgstr "Serviços"
+
 msgid "Set &tags…"
 msgstr "Definir &tags…"
 
@@ -2987,12 +3058,20 @@ msgstr "Origem"
 msgid "Source code:"
 msgstr "Código-fonte:"
 
+msgctxt "button"
+msgid "Spooler"
+msgstr "Spooler"
+
 msgid "Start it with https:// if the printer's web page needs it; otherwise it opens with http."
 msgstr "Comece com https:// se a página web da impressora precisar; senão ela abre com http."
 
 #, python-brace-format
 msgid "Start it with {header}, in any order."
 msgstr "Comece com {header}, em qualquer ordem."
+
+msgctxt "button"
+msgid "Startup"
+msgstr "Startup"
 
 msgid "Startup and closing"
 msgstr "Inicialização e fechamento"
@@ -3003,6 +3082,10 @@ msgstr "Pasta Inicializar"
 msgid "State"
 msgstr "Estado"
 
+msgid "Status"
+msgstr "Status"
+
+msgctxt "button"
 msgid "Status"
 msgstr "Status"
 
@@ -3606,6 +3689,10 @@ msgstr "Perfis de usuário em {host}"
 msgid "User's folder"
 msgstr "Pasta do usuário"
 
+msgid "Users"
+msgstr "Usuários"
+
+msgctxt "button"
 msgid "Users"
 msgstr "Usuários"
 

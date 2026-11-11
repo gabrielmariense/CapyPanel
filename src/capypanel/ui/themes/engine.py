@@ -591,6 +591,8 @@ QToolButton#commandButton { background: %(card)s; border: 1px solid %(border)s;
                             border-radius: %(r2)spx; padding: 0; }
 QToolButton#commandButton:hover { background: %(raised)s; }
 QToolButton#commandButton:disabled { background: transparent; }
+QToolButton#commandButton[risky="true"] { color: %(attention)s; }
+QToolButton#commandButton[risky="true"]:disabled { color: %(text3)s; }
 QToolButton#commandButton[popupMode="2"] { padding-right: 12px; }
 QToolButton#commandButton::menu-indicator { width: 8px; height: 5px; right: 5px; }
 QToolButton#commandButton[arrow="false"] { padding-right: 0; }
@@ -749,6 +751,7 @@ QLabel#warningText { color: %(attention)s; }
 QToolButton#commandButton { background: %(card)s; border: 1px solid %(border)s; padding: 0; }
 QToolButton#commandButton:hover { background: %(hover)s; }
 QToolButton#commandButton:disabled { background: transparent; }
+QToolButton#commandButton[risky="true"] { color: %(attention)s; }
 QToolButton#commandButton[popupMode="2"] { padding-right: 12px; }
 QToolButton#commandButton::menu-indicator { width: 8px; height: 5px; right: 5px; }
 QToolButton#commandButton[arrow="false"] { padding-right: 0; }

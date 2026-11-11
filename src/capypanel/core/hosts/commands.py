@@ -107,7 +107,7 @@ COMMANDS: tuple[HostCommand, ...] = (
     ),
     HostCommand(
         "services", Group.ADMIN, N_("Services"),
-        N_("The PC's Windows services."), "settings-cog", Need.OPEN_HERE,
+        N_("The PC's Windows services."), "services-play", Need.OPEN_HERE,
     ),
     HostCommand(
         "message", Group.USERS, N_("Send a message…"),
@@ -136,7 +136,7 @@ COMMANDS: tuple[HostCommand, ...] = (
     ),
     HostCommand(
         "spooler", Group.PRINTERS, N_("Restart Print Spooler…"),
-        N_("Restarts Windows' printing service, which unsticks most queues."), "printer-off",
+        N_("Restarts Windows' printing service, which unsticks most queues."), "spooler-restart",
         Need.ASK_WINDOWS, risky=True,
     ),
     HostCommand(

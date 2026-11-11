@@ -278,9 +278,12 @@ class ListWorkspace(Tool):
             (self.nav, self.items_pane, self.details), self.PANES_MINIMUM, strict=True
         ):
             pane.setMinimumWidth(round(width * self._scale()))
+        # Its own parts (Hosts' grid of buttons) may need more, in a wide font or language.
+        self.details.setMinimumWidth(max(self.details.minimumWidth(), self.details.minimum_width()))
 
     def _default_pane_sizes(self, total: int) -> None:
         groups, details = (round(w * self._scale()) for w in self.PANES_DEFAULT)
+        details = max(details, self.details.minimum_width())
         self.splitter.setSizes([groups, max(total - groups - details, 1), details])
 
     def _fit_pane(self, edge: int) -> None:

@@ -31,6 +31,9 @@ def breakable(text: str) -> str:
     )
 
 
+SIDE = 14  # px at each side of a panel's page
+
+
 class CopyValue(QLabel):
     """A value that highlights on hover and copies itself on a click."""
 
@@ -111,6 +114,11 @@ class DetailsPanel(QWidget):
 
     # ---- showing ----
 
+    def minimum_width(self) -> int:
+        """The narrowest the panel may be dragged, when its own parts need more than the
+        workspace's usual minimum; 0 when they don't."""
+        return 0
+
     def retranslate(self) -> None:
         """The hint comes back with the next show_item(); an item on show is drawn again."""
         if self._shown is not None:
@@ -147,7 +155,7 @@ class DetailsPanel(QWidget):
         self._values = {}
         page = QWidget()
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(14, 12, 14, 12)
+        layout.setContentsMargins(SIDE, 12, SIDE, 12)
         layout.setSpacing(3)
         self.build_page(layout, shown, needle)
         layout.addStretch(1)

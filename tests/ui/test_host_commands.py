@@ -158,22 +158,54 @@ def _ids(win: CapyWindow, *names: str) -> list[str]:
     return [h.id for h in win.hosts.document.hosts.hosts if h.name in names]
 
 
-def test_details_shows_the_command_buttons(window: CapyWindow) -> None:
+def test_details_shows_a_grid_of_worded_buttons(window: CapyWindow) -> None:
     _select(window, "PC-1")
     buttons = window.hosts.details.buttons
-    assert list(buttons) == [
-        "c-share", "user-folder", "computer-management", "message", "users", "power", "more",
+    assert list(buttons) == [  # the fixed row, then this admin's quick commands
+        "refresh", "commands", "users", "power",
+        "quick:c-share", "quick:user-folder", "quick:computer-management", "quick:message",
     ]  # fmt: skip
-    assert buttons["c-share"].text() == "C$"
+    words = [b.text() for b in buttons.values()]
+    assert words == ["Refresh", "Commands", "Users ▾", "Power ▾", "C$", "Folder", "Manage",
+                     "Message"]  # fmt: skip
+    assert len({b.size().toTuple() for b in buttons.values()}) == 1  # every button the same size
+    assert buttons["quick:computer-management"].toolTip() == "Computer Management"  # the full name
     assert not buttons["users"].isEnabled()  # nobody checked yet
-    window.hosts.keep_users(window.hosts.selected_target().key, (ANA,), None)  # type: ignore[union-attr]
-    assert window.hosts.details.buttons["users"].isEnabled()
-    assert window.hosts.details.buttons["user-folder"].toolTip() == "ana's folder"
+    target = window.hosts.selected_target()
+    assert target is not None
+    window.hosts.keep_users(target.key, (ANA,), None)
+    buttons = window.hosts.details.buttons
+    assert buttons["users"].isEnabled()
+    assert buttons["quick:user-folder"].toolTip() == "User's folder (ana)"
+    window.hosts.keep_users(target.key, (), None)  # a check just found nobody
+    folder = window.hosts.details.buttons["quick:user-folder"]
+    assert not folder.isEnabled() and folder.toolTip() == "User's folder (nobody signed in)"
+
+
+def test_details_buttons_follow_the_admin_s_quick_commands(window: CapyWindow) -> None:
+    _select(window, "PC-1")
+    window.hosts.prefs["quick_commands"] = ["spooler", "status"]
+    window.hosts._selection_changed()
+    buttons = window.hosts.details.buttons
+    assert list(buttons)[4:] == ["quick:spooler", "quick:status"]
+    assert buttons["quick:spooler"].property("risky") is True  # amber there too
+    window.hosts.prefs["quick_commands"] = []  # none picked: only the fixed row
+    window.hosts._selection_changed()
+    assert list(window.hosts.details.buttons) == ["refresh", "commands", "users", "power"]
+    assert window.hosts.details.minimumWidth() >= window.hosts.details.minimum_width() > 300
+
+
+def test_details_commands_button_opens_the_commands_window(window: CapyWindow) -> None:
+    target = _select(window, "PC-1")
+    window.hosts.details.buttons["commands"].click()
+    commands = window.hosts._commands_window
+    assert commands is not None and commands.target() == target  # type: ignore[attr-defined]
+    commands.close()
 
 
 def test_c_share_opens_once_the_pc_answers(window: CapyWindow, calls: list[Any]) -> None:
     _select(window, "PC-1")
-    window.hosts.details.buttons["c-share"].click()
+    window.hosts.details.buttons["quick:c-share"].click()
     _settle(window)
     assert calls == [("reach", "192.0.2.1"), ("folder", "\\\\192.0.2.1\\C$")]
 

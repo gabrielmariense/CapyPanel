@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 02:12-0300\n"
+"POT-Creation-Date: 2026-11-11 02:19-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -273,13 +273,13 @@ msgstr ""
 msgid "&Read again"
 msgstr ""
 
-msgid "&Refresh"
-msgstr ""
-
 msgid "&Refresh group"
 msgstr ""
 
 msgid "&Refresh host"
+msgstr ""
+
+msgid "&Refresh printer"
 msgstr ""
 
 #, python-brace-format
@@ -290,6 +290,10 @@ msgstr[1] ""
 
 #, python-brace-format
 msgid "&Refresh {n} hosts"
+msgstr ""
+
+#, python-brace-format
+msgid "&Refresh {n} printers"
 msgstr ""
 
 msgid "&Remember it on this computer"
@@ -696,6 +700,10 @@ msgid ""
 "goes by its folder's date"
 msgstr ""
 
+msgctxt "button"
+msgid "C$"
+msgstr ""
+
 msgid "C$ share"
 msgstr ""
 
@@ -870,6 +878,10 @@ msgstr ""
 msgid "Colour"
 msgstr ""
 
+msgid "Commands"
+msgstr ""
+
+msgctxt "button"
 msgid "Commands"
 msgstr ""
 
@@ -1312,6 +1324,10 @@ msgstr ""
 msgid "Driver"
 msgstr ""
 
+msgctxt "button"
+msgid "Drives"
+msgstr ""
+
 #, python-brace-format
 msgid "Drives saved for the person signed in to {host}, read at {when}."
 msgid_plural "Drives saved for the {n} people signed in to {host}, read at {when}."
@@ -1366,6 +1382,10 @@ msgstr ""
 msgid "Event Viewer"
 msgstr ""
 
+msgctxt "button"
+msgid "Events"
+msgstr ""
+
 msgid "Every"
 msgstr ""
 
@@ -1383,7 +1403,7 @@ msgstr ""
 msgid "Every column the printers have"
 msgstr ""
 
-msgid "Every command"
+msgid "Every command for this PC, in the Commands window"
 msgstr ""
 
 msgid "Every computer you look after, in one window."
@@ -1439,6 +1459,10 @@ msgstr ""
 msgid "Firmware"
 msgstr ""
 
+msgid "Folder"
+msgstr ""
+
+msgctxt "button"
 msgid "Folder"
 msgstr ""
 
@@ -1794,6 +1818,10 @@ msgstr ""
 msgid "Logged on"
 msgstr ""
 
+msgctxt "button"
+msgid "Logged on"
+msgstr ""
+
 #, python-brace-format
 msgid "Logged on ({n}) · {when}"
 msgstr ""
@@ -1825,6 +1853,10 @@ msgstr ""
 msgid "Maintenance due"
 msgstr ""
 
+msgctxt "button"
+msgid "Manage"
+msgstr ""
+
 msgid "Manage groups"
 msgstr ""
 
@@ -1848,6 +1880,10 @@ msgid "Mascot:"
 msgstr ""
 
 msgid "Memory"
+msgstr ""
+
+msgctxt "button"
+msgid "Message"
 msgstr ""
 
 #, python-brace-format
@@ -2312,6 +2348,10 @@ msgstr ""
 msgid "PC facts"
 msgstr ""
 
+msgctxt "button"
+msgid "PC facts"
+msgstr ""
+
 msgid "PC facts · reading…"
 msgstr ""
 
@@ -2366,6 +2406,10 @@ msgstr ""
 msgid "Path"
 msgstr ""
 
+msgctxt "button"
+msgid "Path"
+msgstr ""
+
 msgid "Paused"
 msgstr ""
 
@@ -2391,6 +2435,10 @@ msgstr ""
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr ""
 
+msgid "Power"
+msgstr ""
+
+msgctxt "button"
 msgid "Power"
 msgstr ""
 
@@ -2455,6 +2503,10 @@ msgstr ""
 msgid "Profiles you changed or made yourself stay as they are."
 msgstr ""
 
+msgctxt "button"
+msgid "Programs"
+msgstr ""
+
 msgid "Programs (*.exe)"
 msgstr ""
 
@@ -2473,6 +2525,10 @@ msgid "Put in &group"
 msgstr ""
 
 msgid "Queued"
+msgstr ""
+
+msgctxt "button"
+msgid "Queues"
 msgstr ""
 
 msgid "Quit"
@@ -2536,6 +2592,14 @@ msgstr ""
 msgid "Refresh"
 msgstr ""
 
+msgctxt "button"
+msgid "Refresh"
+msgstr ""
+
+msgid "Refresh all"
+msgstr ""
+
+msgctxt "printers"
 msgid "Refresh all"
 msgstr ""
 
@@ -2548,6 +2612,9 @@ msgid ""
 msgstr ""
 
 msgid "Refresh host"
+msgstr ""
+
+msgid "Refresh host: status, logged-on users and PC facts"
 msgstr ""
 
 msgid "Refresh logged-on users"
@@ -2926,6 +2993,10 @@ msgstr ""
 msgid "Services"
 msgstr ""
 
+msgctxt "button"
+msgid "Services"
+msgstr ""
+
 msgid "Set &tags…"
 msgstr ""
 
@@ -3084,6 +3155,10 @@ msgstr ""
 msgid "Source code:"
 msgstr ""
 
+msgctxt "button"
+msgid "Spooler"
+msgstr ""
+
 msgid ""
 "Start it with https:// if the printer's web page needs it; otherwise it "
 "opens with http."
@@ -3091,6 +3166,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Start it with {header}, in any order."
+msgstr ""
+
+msgctxt "button"
+msgid "Startup"
 msgstr ""
 
 msgid "Startup and closing"
@@ -3102,6 +3181,10 @@ msgstr ""
 msgid "State"
 msgstr ""
 
+msgid "Status"
+msgstr ""
+
+msgctxt "button"
 msgid "Status"
 msgstr ""
 
@@ -3752,6 +3835,10 @@ msgstr ""
 msgid "User's folder"
 msgstr ""
 
+msgid "Users"
+msgstr ""
+
+msgctxt "button"
 msgid "Users"
 msgstr ""
 

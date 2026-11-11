@@ -270,7 +270,9 @@ def test_fit_columns_to_content_fits_the_full_text_again(
 
 def test_panes_cant_be_dragged_too_narrow_to_read(window: CapyWindow) -> None:
     scale = window.hosts._scale()
-    assert window.hosts.details.minimumWidth() == round(260 * scale)
+    # Details: the usual minimum, or what its grid of buttons needs in this font.
+    needed = window.hosts.details.minimum_width()
+    assert window.hosts.details.minimumWidth() == max(round(260 * scale), needed)
     assert window.hosts.nav.minimumWidth() == round(180 * scale)
 
 
@@ -394,7 +396,7 @@ def test_double_clicking_the_host_table_s_right_edge_fits_it_to_its_columns(
     window: CapyWindow, office: Path
 ) -> None:
     window.hosts.open_list(office)
-    window.resize(1600, 700)
+    window.resize(1900, 700)  # room for the table's columns beside Details' buttons
     window.show()
     QApplication.processEvents()
     splitter = window.hosts.splitter  # pyright: ignore[reportPrivateUsage]

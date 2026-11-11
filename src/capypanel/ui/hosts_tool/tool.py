@@ -48,7 +48,7 @@ from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, list_file_filter
 from capypanel.ui.hosts_tool.accounts import Accounts, used_for, windows_account
 from capypanel.ui.hosts_tool.actions import create_actions, retranslate_actions
-from capypanel.ui.hosts_tool.details import HostDetails, HostDetailsPanel
+from capypanel.ui.hosts_tool.details import NOBODY_FOR, HostDetails, HostDetailsPanel
 from capypanel.ui.hosts_tool.host_state import Facts, PendingPower
 from capypanel.ui.hosts_tool.result_strip import ResultStrip
 from capypanel.ui.hosts_tool.runner import HostTarget, Outcome, Report, Runner, folder_user
@@ -73,7 +73,6 @@ COMMAND_SHORTCUTS = {
 }
 RECENT_PATHS = 10  # Open a path… keeps the last folders opened
 QUICK_KEY = "quick_commands"  # this admin's quick commands, in order
-NOBODY_FOR = timedelta(minutes=10)  # how long "nobody signed in" is believed
 FACTS_AFTER = 1_500  # ms a host stays selected before its PC facts are read
 WATCH_EVERY = 15_000  # ms between checks on a restarting PC, until it answers again
 WATCH_FOR = timedelta(minutes=20)  # after the restart time; then CapyPanel stops watching
@@ -207,7 +206,7 @@ class HostsTool(ListWorkspace):
         details.cancel_pending.connect(lambda: self.run_on_selected("cancel-restart"))
         details.users_menu.aboutToShow.connect(self._fill_users_menu)
         details.power_menu.aboutToShow.connect(self._fill_power_menu)
-        details.more_menu.aboutToShow.connect(lambda: self._fill_commands_menu(details.more_menu))
+        details.commands_requested.connect(lambda: self.open_commands(self.selected_target()))
 
     def restore_layout(self) -> None:
         super().restore_layout()
@@ -800,6 +799,7 @@ class HostsTool(ListWorkspace):
                     host_list.profile_of(host, self._profile_exists)[0]
                 ),
                 commands_as=self._commands_as(host),
+                quick=self.quick_commands(),
             )
             self.details.show_host(details, 1, needle=self._needle())
             if host.connect_address and host.id not in self._facts:
@@ -1248,7 +1248,7 @@ class HostsTool(ListWorkspace):
         if found is None:
             return False
         sessions, error, when = found
-        return error is None and not sessions and datetime.now(UTC) - when < NOBODY_FOR
+        return error is None and not sessions and datetime.now(when.tzinfo) - when < NOBODY_FOR
 
     def selected_target(self) -> HostTarget | None:
         hosts = self.selected_items()
