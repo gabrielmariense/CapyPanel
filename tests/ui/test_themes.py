@@ -427,3 +427,27 @@ def test_tables_draw_a_line_under_each_row_and_none_between_columns() -> None:
         rules = re.findall(r"([^{}]+)[{]([^}]*)[}]", sheet)
         grid = [body for selector, body in rules if "#grid" in selector]
         assert grid and not any("border-right" in body for body in grid)
+
+
+@pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
+def test_enabled_disabled_hover_and_focus_read_apart(theme: themes.Theme) -> None:
+    c, ratio = theme.colors, themes.contrast_ratio
+    sheet = re.sub(r"/[*].*?[*]/", "", themes.stylesheet(theme), flags=re.DOTALL)
+    # Disabled: fainter words and no fill, so it isn't mistaken for a button that works.
+    assert ratio(c["text"], c["text3"]) >= 1.5, theme.id
+    disabled = _rule(sheet, "QPushButton:disabled")
+    assert "background: transparent" in disabled and "color:" in disabled
+    # Hover: another fill than at rest.
+    rest, hover = _rule(sheet, "QPushButton"), _rule(sheet, "QPushButton:hover")
+    fill = re.search(r"background: ([^;]+);", rest)
+    assert fill is not None and f"background: {fill[1]};" not in hover
+    assert ratio(c["raised"], c["card"]) >= 1.08, theme.id
+    # Focus: the accent ring, which stands out from the border it replaces, on everything Tab
+    # reaches.
+    assert ratio(c["accent"], c["border"]) >= 1.5, theme.id
+    for selector in (
+        "QPushButton:focus, QComboBox:focus",
+        "QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus",
+        "QRadioButton::indicator:focus, QCheckBox::indicator:focus",
+    ):
+        assert themes._qss_color(c["accent"]) in _rule(sheet, selector), selector

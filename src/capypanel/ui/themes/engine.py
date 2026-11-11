@@ -665,6 +665,10 @@ QSplitter#navSplit::handle { background: transparent; }
 QPushButton { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r2)spx;
               padding: 6px 20px; }
 QPushButton:hover { background: %(raised)s; }
+/* Where the keyboard is (Tab): the accent ring that fields have, on buttons, dropdowns and
+   ticks too. */
+QPushButton:focus, QComboBox:focus { border-color: %(accent)s; }
+QRadioButton::indicator:focus, QCheckBox::indicator:focus { border-color: %(accent)s; }
 /* Greyed: faint text on no fill, clearly unlike a button that works. */
 QPushButton:disabled { color: %(text3)s; background: transparent; }
 QPushButton:default { background: %(button)s; border-color: %(button)s; color: #ffffff; }
