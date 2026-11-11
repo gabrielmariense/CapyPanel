@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 15:23-0300\n"
+"POT-Creation-Date: 2026-11-11 15:26-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1920,6 +1920,9 @@ msgstr "Nome do novo grupo:"
 msgid "Needs attention"
 msgstr "Requer atenção"
 
+msgid "Needs service"
+msgstr "Pede assistência"
+
 msgid "Needs someone at the printer"
 msgstr "Precisa de alguém na impressora"
 
@@ -2026,6 +2029,9 @@ msgstr "Ninguém está conectado."
 
 msgid "No one logged on"
 msgstr "Ninguém logado"
+
+msgid "No output tray"
+msgstr "Saída ausente"
 
 msgid "No printer list is open."
 msgstr "Nenhuma lista de impressoras está aberta."
@@ -2307,6 +2313,12 @@ msgstr "Sem toner"
 
 msgid "Output bin full"
 msgstr "Bandeja de saída cheia"
+
+msgid "Output full"
+msgstr "Saída cheia"
+
+msgid "Output nearly full"
+msgstr "Saída quase cheia"
 
 msgid "Output tray full"
 msgstr "Bandeja de saída cheia"
@@ -3201,6 +3213,9 @@ msgstr "Para na hora; os tamanhos já contados ficam"
 msgid "Supplies"
 msgstr "Suprimentos"
 
+msgid "Supply low"
+msgstr "Suprimento baixo"
+
 msgid "Supply missing"
 msgstr "Suprimento ausente"
 
@@ -3810,6 +3825,9 @@ msgstr "Aviso"
 
 msgid "Warnings and supplies"
 msgstr "Avisos e suprimentos"
+
+msgid "Waste nearly full"
+msgstr "Coletor quase cheio"
 
 msgid "What Connect opens, and the login it uses. Refresh's logged-on users and the commands use the account under it."
 msgstr "O que o Conectar abre, e o login que ele usa. Os usuários logados do Atualizar e os comandos usam a conta abaixo."

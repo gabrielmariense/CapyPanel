@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 15:23-0300\n"
+"POT-Creation-Date: 2026-11-11 15:26-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1973,6 +1973,9 @@ msgstr ""
 msgid "Needs attention"
 msgstr ""
 
+msgid "Needs service"
+msgstr ""
+
 msgid "Needs someone at the printer"
 msgstr ""
 
@@ -2078,6 +2081,9 @@ msgid "No one is signed in."
 msgstr ""
 
 msgid "No one logged on"
+msgstr ""
+
+msgid "No output tray"
 msgstr ""
 
 msgid "No printer list is open."
@@ -2382,6 +2388,12 @@ msgid "Out of toner"
 msgstr ""
 
 msgid "Output bin full"
+msgstr ""
+
+msgid "Output full"
+msgstr ""
+
+msgid "Output nearly full"
 msgstr ""
 
 msgid "Output tray full"
@@ -3302,6 +3314,9 @@ msgstr ""
 msgid "Supplies"
 msgstr ""
 
+msgid "Supply low"
+msgstr ""
+
 msgid "Supply missing"
 msgstr ""
 
@@ -3961,6 +3976,9 @@ msgid "Warning"
 msgstr ""
 
 msgid "Warnings and supplies"
+msgstr ""
+
+msgid "Waste nearly full"
 msgstr ""
 
 msgid ""

@@ -78,7 +78,18 @@ def test_status_says_what_is_wrong_most_first() -> None:
     worn = _checked(state=State.IDLE, supplies=(_supply("MP Roller", 3, SupplyKind.OTHER),))
     assert status.status(worn, 10).color == GREEN  # a worn roller isn't a warning here
     waste = _supply("Waste Toner Box", 5, SupplyKind.WASTE, receptacle=True)
-    assert status.status(_checked(supplies=(waste,)), 10).text == "Waste Toner Box nearly full"
+    full = status.status(_checked(supplies=(waste,)), 10)  # the column: short; the rest: full
+    assert (full.text, full.said()) == ("Waste nearly full", "Waste Toner Box nearly full")
+    assert full.tip.startswith("Waste Toner Box nearly full\n")
+
+
+def test_long_status_words_are_shortened_only_in_the_column() -> None:
+    service = status.status(_checked(problems=frozenset({Problem.SERVICE_REQUESTED})), 10)
+    assert (service.text, service.said()) == ("Needs service", "Service requested")
+    output = status.status(_checked(problems=frozenset({Problem.OUTPUT_FULL})), 10)
+    assert (output.text, output.said(), output.color) == ("Output full", "Output tray full", RED)
+    jam = status.status(_checked(problems=frozenset({Problem.JAMMED})), 10)
+    assert jam.text == jam.said() == "Paper jam" and not jam.full  # short already
 
 
 def test_toner_shows_the_lowest_toner_or_ink() -> None:

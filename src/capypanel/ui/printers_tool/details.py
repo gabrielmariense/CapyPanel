@@ -189,7 +189,7 @@ class PrinterDetailsPanel(DetailsPanel):
             words = _("Not checked: use Refresh")
         else:
             words = _("{status} · checked {when}").format(
-                status=cell.text, when=clock_text(shown.checked.when)
+                status=cell.said(), when=clock_text(shown.checked.when)
             )
         under = self.muted(words)
         under.setToolTip(status.plain_tip(cell.tip))
