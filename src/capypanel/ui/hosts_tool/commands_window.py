@@ -5,9 +5,8 @@ line each, the picked one grown to show its description and Run (Enter runs it, 
 move, typing searches); on the right, what the picked command found, in the Details panel's
 parts and with no buttons. Commands that need typing open their small window over this one."""
 
-import subprocess
 from collections.abc import Sequence
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from html import escape as _escape
 from typing import TYPE_CHECKING, Any
@@ -17,7 +16,6 @@ from PySide6.QtCore import QEvent, QObject, QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import (
     QCloseEvent,
     QColor,
-    QContextMenuEvent,
     QGuiApplication,
     QKeyEvent,
     QPalette,
@@ -39,8 +37,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSizePolicy,
-    QTabBar,
-    QToolButton,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -50,15 +46,12 @@ from PySide6.QtWidgets import (
 from capypanel.core import i18n
 from capypanel.core.hosts import commands as host_commands
 from capypanel.core.hosts.bulk import write_csv
-from capypanel.core.hosts.commands import GROUP_NAMES, HostCommand, Need
+from capypanel.core.hosts.commands import GROUP_NAMES, HostCommand
 from capypanel.core.hosts.commands import Group as CommandGroup
 from capypanel.core.hosts.model import MAX_ADDRESS
 from capypanel.core.i18n import _
-from capypanel.core.remote import drives, host_printers, own_scripts, services
+from capypanel.core.remote import drives, host_printers, services
 from capypanel.core.remote.access import Account, RemoteError
-from capypanel.core.remote.drives import Checked
-from capypanel.core.remote.own_scripts import OwnScript, State
-from capypanel.core.remote.run import RunAs
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.core.tools.connect import Target
@@ -75,12 +68,8 @@ from capypanel.ui.hosts_tool.runner import (
     Outcome,
     failed_text,
     folder_user,
-    reason_text,
 )
-from capypanel.ui.hosts_tool.script_review import OnPcDialog, ReviewDialog, state_text
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
-from capypanel.ui.notes import hint as hint_label
-from capypanel.ui.settings.pages import PathLabel, open_folder
 
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.tool import HostsTool
@@ -95,7 +84,6 @@ APART = 8  # px: the gap above a command set apart, where menus draw a line
 ICON = 16
 RECENT_ADDRESSES = 10
 LISTS = ("printers", "programs", "drives")  # their answer is a table on the right
-SCRIPT_GROUPS = (CommandGroup.SCRIPTS, CommandGroup.OWN)  # the Scripts tab
 TABLE_ROW = 30  # px, about a grid row: a printers table shows every printer
 MOST_TABLE = 330  # px: a longer list (programs) scrolls inside its table
 
@@ -131,9 +119,6 @@ class Listed:
     when: datetime | None = None
     rows: Sequence[Any] = field(default_factory=tuple)  # for Mapped drives, the people
     spooler: str = ""  # the Print Spooler's state, for printers: "running", "stopped"…
-    checked: Checked | None = None  # Mapped drives: what their sessions said
-    checking: bool = False
-    check_error: str = ""  # why their sessions couldn't be asked
 
 
 def list_title(command_id: str) -> str:
@@ -145,7 +130,6 @@ class Results(HostDetailsPanel):
     """The right side: the Details panel's heading and parts, for the picked command only."""
 
     list_menu_requested = Signal(str, int, QPoint)  # command id, row (-1: none), where
-    check_drives_requested = Signal()  # Mapped drives' Check their session
 
     def item_id(self, shown: object) -> str:
         return shown.target.key if isinstance(shown, Shown) else ""
@@ -217,7 +201,7 @@ class Results(HostDetailsPanel):
                 row.setIcon(1, dot_icon(STATUS_COLORS[windows.printer_dot(printer)]))
                 table.addTopLevelItem(row)
         elif mapped:
-            shown_rows = drive_windows.drive_rows(listed.rows, listed.checked)
+            shown_rows = drive_windows.drive_rows(listed.rows)
             table.setHeaderLabels(drive_windows.drive_header())
             # A share's last folder tells two paths apart, so a path too long loses its
             # middle; the whole of it is in the tooltip.
@@ -227,11 +211,7 @@ class Results(HostDetailsPanel):
                 row = QTreeWidgetItem(texts)
                 for column, text in enumerate(texts):
                     row.setToolTip(column, text)
-                if drive.problem:
-                    row.setForeground(3, QColor(STATUS_COLORS["attention"]))
                 table.addTopLevelItem(row)
-            if listed.checked is None:
-                table.setColumnHidden(3, True)  # State: only after a check
             table.setColumnHidden(0, one_person)
         else:
             table.setHeaderLabels([_("Name"), _("Version")])
@@ -274,16 +254,6 @@ class Results(HostDetailsPanel):
             line = _("Right-click to copy a row, copy or export the list, or open it in its own "
                      "window with a search.")  # fmt: skip
         layout.addWidget(self.muted(line))
-        if mapped and listed.rows:
-            check = QLabel(drive_windows.check_link(listed.checking))
-            check.setTextFormat(Qt.TextFormat.RichText)
-            check.linkActivated.connect(lambda _href: self.check_drives_requested.emit())
-            layout.addWidget(check)
-            failures = listed.check_error or (
-                drive_windows.checked_text(listed.rows, listed.checked) if listed.checked else ""
-            )
-            if failures:
-                layout.addWidget(self.muted(failures))
         self._outcome(layout, shown.outcome)
 
     def _copy_all(self, text: str) -> None:
@@ -323,12 +293,9 @@ class CommandRow(QFrame):
     """One command: its icon and name on one line; picked, it grows to show its description
     and Run. Risky ones are amber, with an amber left edge."""
 
-    def __init__(
-        self, window: "CommandsWindow", command: HostCommand, script: OwnScript | None = None
-    ) -> None:
+    def __init__(self, window: "CommandsWindow", command: HostCommand) -> None:
         super().__init__()
         self.command = command
-        self.script = script  # one of your own scripts
         self.setObjectName("commandRow")
         self.setProperty("risky", command.risky)
         self.setProperty("picked", False)
@@ -353,67 +320,12 @@ class CommandRow(QFrame):
         grid.setHorizontalSpacing(10)
         grid.addWidget(icon, 0, 0, Qt.AlignmentFlag.AlignVCenter)
         grid.addWidget(self.name, 0, 1)
-        self.buttons = QHBoxLayout()  # Run; your own script's Review… before it
-        self.buttons.setSpacing(6)
-        self.buttons.addWidget(self.run)
-        grid.addLayout(self.buttons, 0, 2)
+        grid.addWidget(self.run, 0, 2)
         grid.addWidget(self.about, 1, 1, 1, 2)
         grid.setColumnStretch(1, 1)
-        self.extra: QWidget | None = None  # your own script's Run as
-        self.review: QPushButton | None = None
-        self.edit: QToolButton | None = None  # your own script, in Notepad
-        self.run_as: QComboBox | None = None
-        name = _(command.name)
-        if script is not None:
-            name = command.name  # a file's name: never translated
-            self.edit = _icon_button("pencil", text, _("Edit in Notepad"))
-            self.edit.clicked.connect(lambda: window.edit(script))
-            self.buttons.insertWidget(0, self.edit)
-            if not script.ready:
-                name = f"{name} · {state_text(script)}"
-                self.run.setText(_("Re&view…"))
-                self.run.setObjectName("")
-            else:
-                self._add_run_as(window, script, grid)
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
-        self.set_name(name)
+        self.set_name(_(command.name))
         self.set_picked(False)
-
-    def _add_run_as(self, window: "CommandsWindow", script: OwnScript, grid: QGridLayout) -> None:
-        """Who it runs as, for this run: as approved, and fixed when it was locked."""
-        approval = script.approval
-        assert approval is not None
-        self.run_as = QComboBox()
-        # It fills its own line, as wide as the column, never wider: the open list shows all.
-        self.run_as.setSizeAdjustPolicy(
-            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
-        )
-        self.run_as.setMinimumContentsLength(8)
-        self.run_as.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        for choice in RunAs:
-            self.run_as.addItem(windows.run_as_text(choice), choice)
-        self.run_as.setCurrentIndex(max(self.run_as.findData(approval.run_as), 0))
-        if approval.locked:
-            self.run_as.setEnabled(False)
-            self.run_as.setToolTip(_("Locked when it was approved"))
-        label = QLabel(_("Run as:"))
-        label.setObjectName("hint")
-        self.review = QPushButton(_("Re&view…"))
-        self.review.setAutoDefault(False)
-        self.review.clicked.connect(lambda: window.review(script))
-        # Just before Run, so Run as has its line to itself; the pencil stays first.
-        self.buttons.insertWidget(self.buttons.indexOf(self.run), self.review)
-        # Its title over the dropdown: side by side, the longest choice doesn't fit the column.
-        self.extra = QWidget()
-        stack = QVBoxLayout(self.extra)
-        stack.setContentsMargins(0, 4, 0, 2)
-        stack.setSpacing(3)
-        stack.addWidget(label)
-        stack.addWidget(self.run_as)
-        grid.addWidget(self.extra, 2, 1, 1, 2)
-
-    def run_as_choice(self) -> RunAs:
-        return RunAs(self.run_as.currentData()) if self.run_as is not None else RunAs.ACCOUNT
 
     def set_name(self, text: str) -> None:
         self.name.setText(text)
@@ -426,9 +338,6 @@ class CommandRow(QFrame):
         self.run.setVisible(picked)
         self.run.setDefault(picked)  # Enter runs the picked one
         self.about.setVisible(picked)
-        for part in (self.extra, self.review, self.edit):
-            if part is not None:
-                part.setVisible(picked)
         self.setMinimumHeight(ROW)  # one line at least; more when the name wraps or it's picked
         self.style().unpolish(self)
         self.style().polish(self)
@@ -436,19 +345,12 @@ class CommandRow(QFrame):
     def mousePressEvent(self, event: object) -> None:
         self._window.pick(self)
 
-    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
-        if self.script is not None:
-            self._window.pick(self)
-            self._window.own_menu(self.script, event.globalPos())
-
     def mouseDoubleClickEvent(self, event: object) -> None:
         self._window.pick(self)  # a double-click doesn't run: risky ones mustn't run by accident
 
 
 class CommandsWindow(QDialog):
-    def __init__(
-        self, tool: "HostsTool", target: HostTarget | None, profile: str, *, scripts: bool = False
-    ) -> None:
+    def __init__(self, tool: "HostsTool", target: HostTarget | None, profile: str) -> None:
         # A window of its own, not owned by the main one: either can be in front, to work in
         # the list and here by turns. Quitting CapyPanel closes it (MainWindow.closeEvent).
         super().__init__(None)
@@ -510,15 +412,6 @@ class CommandsWindow(QDialog):
         right_top.addWidget(self.profile, 1)
         right_top.addWidget(self.connect_button)
 
-        # ---- two tabs: the commands, and the scripts, which change more of the PC ----
-        self.tabs = QTabBar()
-        self.tabs.setDrawBase(False)
-        self.tabs.setExpanding(False)
-        self.tabs.addTab(_("Commands"))
-        self.tabs.addTab(_("Scripts"))
-        self.tabs.setCurrentIndex(1 if scripts else 0)
-        self.tabs.currentChanged.connect(lambda _index: self._filter())
-
         # ---- the groups, the commands, the results ----
         self.search = QLineEdit()
         self.search.setPlaceholderText(_("Search"))
@@ -553,11 +446,11 @@ class CommandsWindow(QDialog):
         rows.setSpacing(ROW_SPACING)
         for group in CommandGroup:
             commands = host_commands.in_group(group)
-            if not commands and group is not CommandGroup.OWN:
+            if not commands:
                 continue
             heading = QLabel(_(GROUP_NAMES[group]).upper())
             heading.setObjectName("groupHeading")
-            # Gaps are widgets, so they hide with their group or command (another tab, a search).
+            # Gaps are widgets, so they hide with their group or command (a search).
             self._gaps[group] = _gap(6 - ROW_SPACING)
             rows.addWidget(self._gaps[group])
             rows.addWidget(heading)
@@ -565,13 +458,6 @@ class CommandsWindow(QDialog):
             item = QListWidgetItem(_(GROUP_NAMES[group]))
             item.setData(Qt.ItemDataRole.UserRole, group)
             self.groups.addItem(item)
-            if group is CommandGroup.OWN:  # filled from the scripts folder, again on a change
-                rows.addWidget(self._own_bar())
-                self._own_box = QWidget()
-                self._own_rows = QVBoxLayout(self._own_box)
-                self._own_rows.setContentsMargins(0, 0, 0, 0)
-                self._own_rows.setSpacing(ROW_SPACING)
-                rows.addWidget(self._own_box)
             for command in commands:
                 row = CommandRow(self, command)
                 if command.apart:
@@ -591,7 +477,6 @@ class CommandsWindow(QDialog):
         self.results.setFixedWidth(RESULTS_WIDTH)
         self.results.session_menu_requested.connect(self._session_menu)
         self.results.list_menu_requested.connect(self._list_menu)
-        self.results.check_drives_requested.connect(self._check_drives)
         self.results.copied.connect(lambda text: tool.say(_("Copied: {text}").format(text=text)))
 
         hint = QLabel(_("↑ ↓ pick, Enter runs, typing searches. Commands that need more open a "
@@ -607,10 +492,9 @@ class CommandsWindow(QDialog):
         grid.setVerticalSpacing(10)
         grid.addLayout(left_top, 0, 0, 1, 4)
         grid.addLayout(right_top, 0, 4)
-        grid.addWidget(self.tabs, 1, 0, 1, 3)
-        grid.addLayout(left, 2, 0)
-        grid.addWidget(_divider(), 2, 1)
-        grid.addWidget(self.list, 2, 2)
+        grid.addLayout(left, 1, 0, 2, 1)
+        grid.addWidget(_divider(), 1, 1, 2, 1)
+        grid.addWidget(self.list, 1, 2, 2, 1)
         grid.addWidget(_divider(), 1, 3, 2, 1)
         grid.addWidget(self.results, 1, 4, 2, 1)
         grid.addWidget(hint, 3, 0, 1, 5)
@@ -623,13 +507,11 @@ class CommandsWindow(QDialog):
         grid.setRowStretch(2, 1)
 
         self._picked: CommandRow | None = None
-        self._fill_own()
-        tool.own_scripts.changed.connect(self._fill_own)
         tool.host_changed.connect(self._changed)
         tool.runner.facts_changed.connect(self._changed)
         self.address.editTextChanged.connect(self._address_typed)
         self.search.installEventFilter(self)
-        self._filter()  # the tab's commands only
+        self._filter()
         self._show_target()
         (self.address if self._typed else self.search).setFocus()
 
@@ -682,8 +564,7 @@ class CommandsWindow(QDialog):
         title = _("Manual connection") if typed else _("Commands")
         self.setWindowTitle(f"{title} · {target.name}" if target else title)
         for row in self.rows:
-            review = row.script is not None and not row.script.ready  # needs no PC
-            row.run.setEnabled(target is not None or review)
+            row.run.setEnabled(target is not None)
         self.connect_button.setEnabled(target is not None and self.profile.count() > 0)
         self._update_add()
         self._update_names()
@@ -733,11 +614,6 @@ class CommandsWindow(QDialog):
         return self._picked.command if self._picked is not None else None
 
     def run(self, command: HostCommand) -> None:
-        row = next((r for r in self.rows if r.command is command), None)
-        script = row.script if row is not None else None
-        if script is not None and not script.ready:
-            self.review(script)
-            return
         target = self.target()
         if target is None:
             return
@@ -745,8 +621,6 @@ class CommandsWindow(QDialog):
             self._tool.remember_address(self.address.currentText().strip())
         if command.id in LISTS:
             self._read_list(command.id, target)
-        elif script is not None and row is not None:
-            self._tool.runner.run_own(script, target, self._report, row.run_as_choice())
         else:
             self._tool.runner.run(command.id, target, self._report, parent=self)
         self._show_results()
@@ -799,36 +673,6 @@ class CommandsWindow(QDialog):
 
         self._tool.runner.call(work, done, failed, target)
 
-    def _check_drives(self) -> None:
-        """Mapped drives' Check their session: each person's session, as them."""
-        target = self.target()
-        key = (target.key, "drives") if target else ("", "")
-        listed = self._lists.get(key)
-        if target is None or listed is None or listed.checking or not listed.rows:
-            return
-        self._lists[key] = replace(listed, checking=True, check_error="")
-        self._show_results()
-        people = list(listed.rows)
-
-        def work(account: Account | None) -> drives.Checked:
-            scripts = self._tool.runner.scripts
-            return drives.check_sessions(scripts, target.address, people, account)
-
-        def done(checked: drives.Checked) -> None:
-            now = self._lists.get(key)
-            if self._alive() and now is not None:
-                self._lists[key] = replace(now, checked=checked, checking=False)
-                self._show_results()
-
-        def failed(error: BaseException) -> None:
-            now = self._lists.get(key)
-            if self._alive() and now is not None:
-                why = _("Couldn't check their session: {reason}").format(reason=reason_text(error))
-                self._lists[key] = replace(now, checking=False, check_error=why)
-                self._show_results()
-
-        self._tool.runner.call(work, done, failed, target)
-
     def _list_menu(self, command_id: str, index: int, where: QPoint) -> None:
         target = self.target()
         listed = self._lists.get((target.key, command_id)) if target else None
@@ -837,8 +681,7 @@ class CommandsWindow(QDialog):
         menu = QMenu(self)
         if command_id == "drives":
             header = drive_windows.drive_header()
-            rows = [drive_windows.row_text(r)
-                    for r in drive_windows.drive_rows(listed.rows, listed.checked)]  # fmt: skip
+            rows = [drive_windows.row_text(r) for r in drive_windows.drive_rows(listed.rows)]
             copy = menu.addAction(_("&Copy row"))
             copy.setEnabled(0 <= index < len(rows))
             if 0 <= index < len(rows):
@@ -948,18 +791,12 @@ class CommandsWindow(QDialog):
         index = shown.index(self._picked) if self._picked in shown else -1
         self.pick(shown[max(0, min(len(shown) - 1, index + step))])
 
-    def showing_scripts(self) -> bool:
-        return self.tabs.currentIndex() == 1
-
     def _filter(self) -> None:
-        """The tab's commands; typing narrows every group to those whose name or description
-        match."""
+        """Typing narrows every group to the commands whose name or description match."""
         needle = self.search.text().strip().casefold()
-        scripts = self.showing_scripts()
         for row in self.rows:
             text = f"{row.name.text()} {row.about.text()}".casefold()
-            in_tab = (row.command.group in SCRIPT_GROUPS) == scripts
-            row.setHidden(not in_tab or (bool(needle) and needle not in text))
+            row.setHidden(bool(needle) and needle not in text)
             if row.gap is not None:
                 row.gap.setHidden(row.isHidden())
         first = True
@@ -967,9 +804,6 @@ class CommandsWindow(QDialog):
             item = self.groups.item(index)
             group = CommandGroup(item.data(Qt.ItemDataRole.UserRole))  # Qt hands back a str
             any_shown = any(not r.isHidden() for r in self.rows if r.command.group == group)
-            if group is CommandGroup.OWN:  # shown even when empty: its folder and Rescan
-                any_shown = scripts and (not needle or any_shown)
-                self._own_line.setHidden(not any_shown)
             self._headings[group].setHidden(not any_shown)
             self._gaps[group].setHidden(not any_shown or first)  # none above the first
             first = first and not any_shown
@@ -978,139 +812,6 @@ class CommandsWindow(QDialog):
         if shown and self._picked not in shown:
             self.pick(shown[0])
             self.list.verticalScrollBar().setValue(0)
-
-    # ---- your own scripts ----
-
-    def _own_bar(self) -> QWidget:
-        """Under Your scripts: where they come from, Rescan, and the folder."""
-        self._own_line = QWidget()
-        self._own_hint = hint_label()  # what's wrong, when something is
-        self._own_path = PathLabel()  # else the folder, cut in the middle
-        color = self.palette().color(QPalette.ColorRole.Text)
-        self._rescan = _icon_button("refresh", color, _("Rescan the scripts folder"))
-        self._rescan.clicked.connect(self._tool.own_scripts.rescan)
-        self._folder_button = _icon_button("folder-search", color, _("Open the scripts folder"))
-        self._folder_button.clicked.connect(lambda: open_folder(self._tool.own_scripts.folder()))
-        self._new_on_pc = _icon_button("file-plus", color, _("New script on the PCs…"))
-        self._new_on_pc.clicked.connect(self._make_on_pc)
-        # The folder and its buttons on one line; under it, what's wrong or what to do, with a
-        # link to Settings when the folder itself is the problem.
-        self._own_hint.setTextFormat(Qt.TextFormat.RichText)
-        self._own_hint.linkActivated.connect(lambda _link: self._tool.open_settings("hosts"))
-        stack = QVBoxLayout(self._own_line)
-        stack.setContentsMargins(8, 0, 6, 2)
-        stack.setSpacing(2)
-        line = QHBoxLayout()
-        line.setSpacing(4)
-        line.addWidget(self._own_path, 1)
-        line.addWidget(self._new_on_pc)
-        line.addWidget(self._rescan)
-        line.addWidget(self._folder_button)
-        stack.addLayout(line)
-        stack.addWidget(self._own_hint)
-        return self._own_line
-
-    def _fill_own(self) -> None:
-        """Your scripts' rows, from what the scripts folder holds now."""
-        if not self._alive():
-            return
-        own = self._tool.own_scripts
-        picked = self._picked.command.id if self._picked is not None else ""
-        for row in [r for r in self.rows if r.script is not None]:
-            self.rows.remove(row)
-            if row is self._picked:
-                self._picked = None
-            row.hide()
-            row.deleteLater()
-        for script in own.scripts:
-            risky = bool(script.ready and script.approval and script.approval.risky)
-            command = HostCommand(script.id, CommandGroup.OWN, script.name,
-                                  _own_description(script), "bolt", Need.RUN,
-                                  risky=risky)  # fmt: skip
-            row = CommandRow(self, command, script)
-            self.rows.append(row)
-            self._own_rows.addWidget(row)
-        folder = own.folder()
-        settings = f'<a href="settings">{_escape(_("Choose another folder in Settings"))}</a>'
-        if own.scanning:
-            text = _escape(_("Reading the folder…"))
-        elif own.error is not None:
-            text = _escape(_("Couldn't read it: {error}").format(error=reason_text(own.error)))
-            text = f"{text} {settings}"
-        elif not own.scripts:
-            empty = _("No scripts here yet. Put .ps1, .bat or .cmd files in this folder, or add "
-                      "a script that's on the PCs with the new-file button.")  # fmt: skip
-            text = _escape(empty)
-        else:
-            text = ""
-        self._own_hint.setText(text)
-        self._own_hint.setVisible(bool(text))
-        self._own_path.set_path(folder)
-        self._rescan.setEnabled(not own.scanning)
-        target = self.target()
-        for row in self.rows:
-            if row.script is not None:
-                row.run.setEnabled(target is not None or not row.script.ready)
-        again = next((r for r in self.rows if r.command.id == picked), None)
-        if again is not None:
-            self.pick(again)
-        self._filter()
-
-    def _make_on_pc(self) -> None:
-        """New script on the PCs…: writes the .onpc file, then reads the folder again; it shows
-        as new, to review on a PC."""
-        folder = self._tool.own_scripts.folder()
-        target = self.target()  # Browse… opens its C: drive
-        dialog = OnPcDialog(self, folder, target.address if target else "")
-        if run_modal(dialog) != QDialog.DialogCode.Accepted:
-            return
-        self._tool.own_scripts.rescan()
-        self._tool.say(_("Made {file}. Review it on a PC before it runs.").format(
-            file=dialog.made.name if dialog.made else ""))  # fmt: skip
-
-    def edit(self, script: OwnScript) -> None:
-        """Opens the file in Notepad. A change makes it "changed, review before use" at once."""
-        try:
-            subprocess.Popen(["notepad.exe", str(script.file)])  # noqa: S603, S607
-        except OSError as e:
-            self._tool.say(_("Couldn't open {file}: {error}").format(file=script.file.name,
-                                                                     error=e))  # fmt: skip
-
-    def review(self, script: OwnScript) -> None:
-        """Review…; a file on the PC is first read from the PC this window is for."""
-        target = self.target()
-        if not script.on_pc or target is None:
-            self._review(script, None, target.name if target else "",
-                         _("there's no PC in this window.") if script.on_pc else "")  # fmt: skip
-            return
-        self._tool.say(_("Reading {path} on {host}…").format(path=script.on_pc, host=target.name))
-
-        def read(account: Account | None) -> bytes:
-            return own_scripts.read_pc_copy(target.address, script.on_pc, account)
-
-        def failed(error: BaseException) -> None:
-            reason = (_("CapyPanel can't tell where that folder is from here.")
-                      if isinstance(error, ValueError) else reason_text(error))  # fmt: skip
-            self._review(script, None, target.name, reason)
-
-        self._tool.runner.call(read, lambda code: self._review(script, code, target.name, ""),
-                               failed, target)  # fmt: skip
-
-    def _review(self, script: OwnScript, code: bytes | None, host: str, error: str) -> None:
-        if not self._alive():
-            return
-        dialog = ReviewDialog(self, script, code, host, error)
-        if run_modal(dialog) == QDialog.DialogCode.Accepted:
-            self._tool.own_scripts.approve(script, dialog.approval())
-
-    def own_menu(self, script: OwnScript, where: QPoint) -> None:
-        menu = QMenu(self)
-        menu.addAction(_("Re&view…"), lambda: self.review(script))
-        menu.addAction(_("&Edit in Notepad"), lambda: self.edit(script))
-        menu.addAction(_("Open &folder"), lambda: open_folder(script.file.parent))
-        menu.addSeparator()
-        menu.addAction(_("Re&scan"), self._tool.own_scripts.rescan)
-        menu.exec(where)
 
     def _jump(self, item: QListWidgetItem) -> None:
         heading = self._headings[item.data(Qt.ItemDataRole.UserRole)]
@@ -1200,37 +901,6 @@ class CommandsWindow(QDialog):
         host_id = self._tool.add_typed_host(target.address, self.profile.currentData() or "")
         if host_id is not None:
             self._update_add()
-
-
-def _own_description(script: OwnScript) -> str:
-    """The line under your own script: its file and whether it asks, or why it can't run."""
-    approval = script.approval
-    if not script.ready or approval is None:
-        return {
-            State.NEW: _("New in the scripts folder. Review it before it can run."),
-            State.CHANGED: _("Changed since it was approved. Review it again before it can run."),
-            State.OPEN: _("Every user can change this file, so it can't run."),
-            State.TOO_BIG: _("Too big for a script, so it can't run."),
-            State.UNREADABLE: _("The file couldn't be read."),
-            State.NO_PATH: _(
-                "It names no .ps1, .bat, .cmd or .vbs file on the PC. Review it to see "
-                "what it should hold."
-            ),
-        }[script.state]
-    asks = _("Asks before every run.") if approval.risky else _("Runs without asking.")
-    where = _("Runs {path} on the PC.").format(path=script.on_pc) if script.on_pc else (
-        script.file.name + ".")  # fmt: skip
-    return f"{where} {asks}"
-
-
-def _icon_button(icon: str, color: QColor, tip: str) -> QToolButton:
-    """A small icon button, as in the Details panel's row."""
-    button = QToolButton()
-    button.setObjectName("commandButton")
-    button.setIcon(tabler_icon(icon, color, ICON))
-    button.setToolTip(tip)
-    button.setCursor(Qt.CursorShape.PointingHandCursor)
-    return button
 
 
 def _gap(height: int) -> QWidget:

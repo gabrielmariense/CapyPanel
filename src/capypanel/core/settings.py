@@ -3,8 +3,7 @@
 Everything lives in one folder per computer, C:\\ProgramData\\CapyPanel (or <app>\\userdata when
 portable). Shared by everyone on the PC: lists\\ (a folder per tool, e.g. lists\\hosts\\, with its
 default list and any shared list), profiles\\ and tools\\ (the company's tool definitions and where
-each tool is installed), scripts\\ (the Hosts tool's scripts folder unless another is chosen).
-users\\<user@DOMAIN>\\ holds each user's settings and lists\\ (again a
+each tool is installed). users\\<user@DOMAIN>\\ holds each user's settings and lists\\ (again a
 folder per tool, with the personal list and their own lists), private to that user and
 administrators; logs\\<user@DOMAIN>.log, one per user."""
 
@@ -71,11 +70,6 @@ class Paths:
         return self.root / "tools"
 
     @property
-    def scripts_dir(self) -> Path:
-        """The Hosts tool's scripts folder until another is chosen: shared, as a team's are."""
-        return self.root / "scripts"
-
-    @property
     def user_dir(self) -> Path:
         return self.root / "users" / self.account
 
@@ -86,11 +80,6 @@ class Paths:
     @property
     def log_file(self) -> Path:
         return self.log_dir / f"{self.account}.log"
-
-    @property
-    def run_log_file(self) -> Path:
-        """Every script this user ran on a PC: when, where, how it got in and how it ended."""
-        return self.log_dir / f"{self.account}.runs.log"
 
     @property
     def user_profiles_log_file(self) -> Path:

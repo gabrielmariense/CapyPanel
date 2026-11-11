@@ -17,22 +17,11 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QDialog, QWidget
 
 from capypanel.core.hosts import commands as host_commands
-from capypanel.core.i18n import _, ngettext
-from capypanel.core.remote import (
-    access,
-    builtin,
-    own_scripts,
-    places,
-    power,
-    run,
-    services,
-    sessions,
-)
+from capypanel.core.i18n import _
+from capypanel.core.remote import access, places, power, services, sessions
 from capypanel.core.remote.access import Account, Reason, RemoteError, code_text
 from capypanel.core.remote.inventory import PowerShellBlocked
-from capypanel.core.remote.own_scripts import OwnScript, PcProblem, State
 from capypanel.core.remote.places import Console
-from capypanel.core.remote.run import Problem, RunAs, RunError, RunResult
 from capypanel.core.remote.sessions import Session
 from capypanel.ui import checks as check_texts
 from capypanel.ui.checks import AccountDialog
@@ -123,112 +112,13 @@ def reason_text(error: BaseException, host: str = "") -> str:
             ),
             Reason.OTHER: _("Windows error {code}.").format(code=code_text(error.code)),
         }[error.reason]
-    if isinstance(error, RunError):
-        return {
-            Problem.NO_WAY_IN: _("CapyPanel found no way to start anything there. What each "
-                                 "way answered is below."),
-            Problem.REFUSED: (
-                _("{host} let the account in but refused to start a program for it. Security "
-                  "software there may block programs started from another PC. What each way "
-                  "answered is below.").format(host=host) if host
-                else _("the PC let the account in but refused to start a program for it. "
-                       "Security software there may block programs started from another PC. "
-                       "What each way answered is below.")
-            ),
-            Problem.BLOCKED: (
-                _("it started but never ran. Security software on {host} may have stopped it.")
-                .format(host=host) if host
-                else _("it started but never ran. Security software on the PC may have stopped "
-                       "it.")
-            ),
-            Problem.NOT_STARTED: _("the PC couldn't start it."),
-            Problem.TIMED_OUT: _("it didn't finish in time. It may still be running there."),
-            Problem.NO_RESULT: _("its answer couldn't be read."),
-        }[error.problem]  # fmt: skip
-    if isinstance(error, ScriptFailed):
-        return _("it ended with code {code}. Its output says why.").format(code=error.code)
     if isinstance(error, PowerShellBlocked):
         return _("Windows didn't let PowerShell start on your PC. An antivirus may block it.")
-    if isinstance(error, OnPcRefused):
-        if error.problem is PcProblem.MISSING:
-            return _("there's no {path} on that PC.").format(path=error.path)
-        return _("every user of that PC can change {path}, and it isn't the copy reviewed, so "
-                 "it only runs as the person signed in.").format(path=error.path)  # fmt: skip
-    if isinstance(error, NotApproved):
-        return (_("it changed since it was approved, so it didn't run. Review it again.")
-                if error.state is State.CHANGED
-                else _("it can't run as it is now. Rescan to see why."))  # fmt: skip
     if isinstance(error, TimeoutError):
         return _("it took too long to answer.")
     if isinstance(error, NotADirectoryError):
         return _("there's no folder there.")
     return _("{error}.").format(error=str(error).rstrip(".") or type(error).__name__)
-
-
-class ScriptFailed(Exception):
-    """A script ran on the PC and ended with an exit code other than 0."""
-
-    def __init__(self, code: int) -> None:
-        super().__init__(f"exit code {code}")
-        self.code = code
-
-
-class OnPcRefused(Exception):
-    """The launcher of a file on the PC didn't run it: missing, or every user can change it."""
-
-    def __init__(self, problem: PcProblem, path: str) -> None:
-        super().__init__(f"{problem}: {path}")
-        self.problem, self.path = problem, path
-
-
-class NotApproved(Exception):
-    """Your own script isn't as it was approved anymore, so it didn't run."""
-
-    def __init__(self, state: State) -> None:
-        super().__init__(str(state))
-        self.state = state
-
-
-def size_text(size: int) -> str:
-    """ "312 MB" under a gigabyte, "1.4 GB" above."""
-    if size < 1024**3:
-        return _("{n} MB").format(n=round(size / 1024**2))
-    return _("{n} GB").format(n=f"{size / 1024**3:.1f}")
-
-
-def script_output(result: RunResult) -> str:
-    """What a script wrote, then what it wrote as errors."""
-    return "\n".join(part.strip("\n") for part in (result.output, result.errors) if part.strip())
-
-
-def script_outcome(command_id: str, host: str, result: RunResult) -> Outcome:
-    """The answer of a built-in script that ran: what it did, or the code it ended with."""
-    where = escape(host)
-    output = script_output(result)
-    if not result.worked:
-        name = bold(_(host_commands.command(command_id).name).rstrip("…"))
-        error = ScriptFailed(result.exit_code)
-        text = failed_text(_("run {name}").format(name=name), host, error)
-        return Outcome(text, error, output=output)
-    if command_id == "clean-temp":
-        found, rest = builtin.cleaned(result.output)
-        output = "\n".join(p.strip("\n") for p in (rest, result.errors) if p.strip())
-        if found is not None:
-            text = ngettext("Freed {size} on {host}: {n} file deleted.",
-                            "Freed {size} on {host}: {n} files deleted.", found.files)  # fmt: skip
-            text = text.format(size=size_text(found.freed), host=where, n=found.files)
-            if found.left:
-                text += " " + ngettext("{n} file in use stayed.", "{n} files in use stayed.",
-                                       found.left).format(n=found.left)  # fmt: skip
-            return Outcome(text, output=output)
-    texts = {
-        "gpupdate": _("Group policy updated on {host}."),
-        "dns": _("DNS refreshed on {host}."),
-        "clock": _("Clock synced on {host}."),
-        "repair": _("Repair Windows files finished on {host}. Its output says what it found."),
-        "clean-temp": _("Temporary files cleaned on {host}."),
-    }
-    return Outcome(texts[command_id].format(host=where), output=output)
 
 
 def failed_text(action: str, host: str, error: BaseException) -> str:
@@ -277,8 +167,6 @@ class Runner(QObject):
         self._tool = tool
         self._jobs: set[Job] = set()
         self._parent: QWidget | None = None  # the window a command's questions open over
-        self.scripts = run.Runner(tool.psexec_path, tool.run_log_file)
-        self._running: set[tuple[str, str]] = set()  # (target key, command id) of scripts going
 
     # ---- the common parts ----
 
@@ -437,12 +325,6 @@ class Runner(QObject):
             "printers": self._printers,
             "spooler": self._spooler,
             "drives": self._drives,
-            "map-drive": lambda t, r: self.map_drive(t, r),
-            "clear-caches": self._clear_caches,
-            **{
-                command_id: lambda t, r, c=command_id: self._built_in(c, t, r)
-                for command_id in builtin.BUILT_IN
-            },
         }
         if command_id in ("log-off", "disconnect"):
             if session is not None:
@@ -598,147 +480,7 @@ class Runner(QObject):
     def _drives(self, target: HostTarget, report: Report) -> None:
         from capypanel.ui.hosts_tool.drive_windows import DrivesDialog
 
-        parent = self._window()
-        dialog = DrivesDialog(
-            parent, self, target, lambda then: self._map_from(dialog, target, report, then)
-        )
-        run_modal(dialog)
-
-    def _map_from(
-        self, dialog: QWidget, target: HostTarget, report: Report, then: Callable[[], None]
-    ) -> None:
-        self._parent = dialog  # its questions open over Mapped drives
-        self.map_drive(target, report, then)
-
-    def _signed_in(
-        self, target: HostTarget, report: Report, command_id: str, go: Callable[[Session], None]
-    ) -> None:
-        """The person a command for "the person signed in" is for: at the PC's screen first."""
-
-        def pick(found: Sequence[Session] | None, error: BaseException | None) -> None:
-            who = folder_user(found)
-            if who is None:
-                name = bold(_(host_commands.command(command_id).name).rstrip("…"))
-                text = _("No one is signed in to {host}, so {name} has no one to act for.")
-                report(command_id, Outcome(text.format(host=escape(target.name), name=name),
-                                           error or RemoteError(Reason.OTHER)))  # fmt: skip
-                return
-            go(who)
-
-        self.with_sessions(target, pick, fresh=True)  # who is there now
-
-    def map_drive(
-        self, target: HostTarget, report: Report, then: Callable[[], None] | None = None
-    ) -> None:
-        """Map a drive…: a letter and a share, mapped as the person signed in."""
-        from capypanel.ui.hosts_tool.drive_windows import MapDriveDialog
-
-        def ask(who: Session) -> None:
-            dialog = MapDriveDialog(self._window(), target.name, person(who))
-            if run_modal(dialog) == QDialog.DialogCode.Accepted:
-                letter, path = dialog.picked()
-                self._run_map(target, report, who, letter, path, then)
-
-        self._signed_in(target, report, "map-drive", ask)
-
-    def _run_map(self, target: HostTarget, report: Report, who: Session, letter: str, path: str,
-                 then: Callable[[], None] | None) -> None:  # fmt: skip
-        from capypanel.core.remote import drives
-
-        go, account = self._tool.accounts.account_for(target, self._window())
-        if not go:
-            return
-        user = f"{who.domain}\\{who.user}" if who.domain else who.user
-        mapped = _("map {letter} for {user}").format(letter=letter, user=bold(person(who)))
-
-        def work() -> RunResult:
-            script = drives.map_script(letter, path)
-            return self.scripts.run(target.address, script, account, run.TIMEOUT, RunAs.USER, user)
-
-        def done(result: RunResult) -> None:
-            if not result.worked:
-                error = ScriptFailed(result.exit_code)
-                report("map-drive", Outcome(failed_text(mapped, target.name, error), error,
-                                            output=script_output(result)))  # fmt: skip
-                return
-            text = _("Mapped {letter} to {path} for {user} on {host}.").format(
-                letter=letter, path=escape(path), user=bold(person(who)),
-                host=escape(target.name))  # fmt: skip
-            report("map-drive", Outcome(text))
-            if then is not None:
-                then()
-
-        def failed(error: BaseException) -> None:
-            again = lambda: self._run_map(target, report, who, letter, path, then)  # noqa: E731
-            output = "\n".join((*error.tried, error.detail)).strip() if isinstance(
-                error, RunError) else ""  # fmt: skip
-            self._fail(report, "map-drive", mapped, target, error, again, output)
-
-        self._start(work, done, failed)
-
-    def _clear_caches(self, target: HostTarget, report: Report) -> None:
-        """Clear caches…: the person signed in, which apps, then a script as CapyPanel's
-        account; never twice at once."""
-        from capypanel.ui.hosts_tool.drive_windows import ClearCachesDialog
-
-        if (target.key, "clear-caches") in self._running:
-            self._tool.say(_("Clear caches is still running on {host}.").format(host=target.name))
-            return
-
-        def ask(who: Session) -> None:
-            dialog = ClearCachesDialog(self._window(), target.name, person(who))
-            if run_modal(dialog) == QDialog.DialogCode.Accepted:
-                self._run_clear(target, report, who, dialog.apps())
-
-        self._signed_in(target, report, "clear-caches", ask)
-
-    def _run_clear(self, target: HostTarget, report: Report, who: Session,
-                   apps: tuple[Any, ...]) -> None:  # fmt: skip
-        from capypanel.core.remote import drives
-        from capypanel.ui.hosts_tool.drive_windows import cleared_text
-
-        go, account = self._tool.accounts.account_for(target, self._window())
-        if not go:
-            return
-        key = (target.key, "clear-caches")
-        self._running.add(key)
-        name = bold(_("Clear caches"))
-        since = check_texts.clock_text(datetime.now(UTC))
-        report("clear-caches", Outcome(_("{name} is running on {host} since {when}…").format(
-            name=name, host=escape(target.name), when=since), running=True))  # fmt: skip
-        owner = drives.Person(who.user, who.domain, ())
-
-        def work() -> RunResult:
-            script = drives.clear_script(owner, apps)
-            return self.scripts.run(target.address, script, account)
-
-        def done(result: RunResult) -> None:
-            self._running.discard(key)
-            if drives.NO_PROFILE in result.output:
-                error: Exception = FileNotFoundError(
-                    _("{user}'s profile isn't there").format(user=person(who))
-                )
-                action = _("clear caches for {user}").format(user=bold(person(who)))
-                report("clear-caches", Outcome(failed_text(action, target.name, error), error))
-                return
-            if not result.worked:
-                error = ScriptFailed(result.exit_code)
-                action = _("clear caches for {user}").format(user=bold(person(who)))
-                report("clear-caches", Outcome(failed_text(action, target.name, error), error,
-                                               output=script_output(result)))  # fmt: skip
-                return
-            found = drives.cleared(result.output)
-            report("clear-caches", Outcome(cleared_text(person(who), target.name, found)))
-
-        def failed(error: BaseException) -> None:
-            self._running.discard(key)
-            again = lambda: self._run_clear(target, report, who, apps)  # noqa: E731
-            action = _("clear caches for {user}").format(user=bold(person(who)))
-            output = "\n".join((*error.tried, error.detail)).strip() if isinstance(
-                error, RunError) else ""  # fmt: skip
-            self._fail(report, "clear-caches", action, target, error, again, output)
-
-        self._start(work, done, failed)
+        run_modal(DrivesDialog(self._window(), self, target))
 
     # ---- Power ----
 
@@ -796,128 +538,6 @@ class Runner(QObject):
             self._fail(report, command_id, action, target, error, again)
 
         self._start_as(target, act, done, failed)
-
-    # ---- Scripts ----
-
-    def _built_in(self, command_id: str, target: HostTarget, report: Report) -> None:
-        """A built-in script: asked first when it disturbs the PC; never twice at once."""
-        command = host_commands.command(command_id)
-        if (target.key, command_id) in self._running:
-            name = _(command.name).rstrip("…")
-            self._tool.say(_("{name} is still running on {host}.").format(
-                name=name, host=target.name))  # fmt: skip
-            return
-        if command.risky and not windows.ask_script(self._window(), command_id, target.name):
-            return
-        self._run_built_in(command_id, target, report)
-
-    def _run_built_in(self, command_id: str, target: HostTarget, report: Report) -> None:
-        go, account = self._tool.accounts.account_for(target, self._window())
-        if not go:
-            return
-        built = builtin.BUILT_IN[command_id]
-        key = (target.key, command_id)
-        self._running.add(key)
-        name = bold(_(host_commands.command(command_id).name).rstrip("…"))
-        since = check_texts.clock_text(datetime.now(UTC))
-        text = _("{name} is running on {host} since {when}…").format(
-            name=name, host=escape(target.name), when=since)  # fmt: skip
-        report(command_id, Outcome(text, running=True))
-
-        def work() -> RunResult:
-            return self.scripts.run(target.address, built.script, account, built.timeout)
-
-        def done(result: RunResult) -> None:
-            self._running.discard(key)
-            report(command_id, script_outcome(command_id, target.name, result))
-
-        def failed(error: BaseException) -> None:
-            self._running.discard(key)
-            again = lambda: self._run_built_in(command_id, target, report)  # noqa: E731
-            output = "\n".join((*error.tried, error.detail)).strip() if isinstance(
-                error, RunError) else ""  # fmt: skip
-            action = _("run {name}").format(name=name)
-            self._fail(report, command_id, action, target, error, again, output)
-
-        self._start(work, done, failed)
-
-    def run_own(self, script: OwnScript, target: HostTarget, report: Report, run_as: RunAs) -> None:
-        """One of your own scripts, approved: asked first when it's risky; as the person
-        signed in at the PC with RunAs.USER; never twice at once."""
-        approval = script.approval
-        if not script.ready or approval is None:
-            return
-        if (target.key, script.id) in self._running:
-            self._tool.say(_("{name} is still running on {host}.").format(
-                name=script.name, host=target.name))  # fmt: skip
-            return
-        if approval.risky and not windows.ask_own_script(self._window(), script.name,
-                                                         target.name, run_as):  # fmt: skip
-            return
-        if run_as is not RunAs.USER:
-            self._run_own(script, target, report, run_as, "")
-            return
-
-        def go(found: Sequence[Session] | None, error: BaseException | None) -> None:
-            who = folder_user([s for s in found or () if s.state == "active"])
-            if who is None:
-                text = _("No one is signed in to {host}, so {name} can't run as them.").format(
-                    host=escape(target.name), name=bold(script.name))  # fmt: skip
-                report(script.id, Outcome(text, error or RemoteError(Reason.OTHER)))
-                return
-            user = f"{who.domain}\\{who.user}" if who.domain else who.user
-            self._run_own(script, target, report, run_as, user)
-
-        self.with_sessions(target, go, fresh=True)  # who is there now, not at the last Refresh
-
-    def _run_own(
-        self, script: OwnScript, target: HostTarget, report: Report, run_as: RunAs, user: str
-    ) -> None:
-        go, account = self._tool.accounts.account_for(target, self._window())
-        if not go:
-            return
-        key = (target.key, script.id)
-        self._running.add(key)
-        name = bold(script.name)
-        since = check_texts.clock_text(datetime.now(UTC))
-        text = _("{name} is running on {host} since {when}…").format(
-            name=name, host=escape(target.name), when=since)  # fmt: skip
-        report(script.id, Outcome(text, running=True))
-        approval = script.approval
-
-        def work() -> RunResult:
-            # Read again on the way: what runs is what was approved, byte for byte.
-            now = own_scripts.read(script.file, approval)
-            if not now.ready:
-                raise NotApproved(now.state)
-            sent = own_scripts.to_script(now, target.name, run_as)
-            return self.scripts.run(target.address, sent, account, run.TIMEOUT, run_as, user)
-
-        def done(result: RunResult) -> None:
-            self._running.discard(key)
-            output = script_output(result)
-            if result.worked:
-                text = _("{name} finished on {host}.").format(name=name, host=escape(target.name))
-                report(script.id, Outcome(text, output=output))
-                return
-            error: Exception = ScriptFailed(result.exit_code)
-            problem = own_scripts.pc_problem(result.output) if script.on_pc else None
-            if problem is not None:
-                error, output = OnPcRefused(problem, script.on_pc), ""
-            text = failed_text(_("run {name}").format(name=name), target.name, error)
-            report(script.id, Outcome(text, error, output=output))
-
-        def failed(error: BaseException) -> None:
-            self._running.discard(key)
-            if isinstance(error, NotApproved):
-                self._tool.own_scripts.rescan()  # shows it as changed, to review again
-            again = lambda: self._run_own(script, target, report, run_as, user)  # noqa: E731
-            output = "\n".join((*error.tried, error.detail)).strip() if isinstance(
-                error, RunError) else ""  # fmt: skip
-            self._fail(report, script.id, _("run {name}").format(name=name), target, error,
-                       again, output)  # fmt: skip
-
-        self._start(work, done, failed)
 
     def _cancel_restart(self, target: HostTarget, report: Report) -> None:
         def act(account: Account | None) -> bool:

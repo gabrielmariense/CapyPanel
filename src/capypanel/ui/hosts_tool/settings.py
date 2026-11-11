@@ -28,7 +28,6 @@ class SettingsPrefs:
     hidden_lists: list[Path]  # lists in a lists folder removed from the lists table
     auto_status: tuple[bool, int] = (False, 5)  # check Status by itself, every N minutes
     start_view: tuple[str, str] | None = None  # the open list's (show, group) first
-    scripts_folder: Path | None = None  # your own scripts, for the Commands window
 
 
 class HostsSettings(SettingsGroup):
@@ -65,8 +64,6 @@ class HostsSettings(SettingsGroup):
             auto_status=tool.auto_status(),
             start_view=tool.start_view(),
             host_list=doc.hosts if doc else None,
-            scripts_folder=tool.own_scripts.folder(),
-            scripts_default=tool.own_scripts.default(),
         )
         self.connections = ConnectionsPage(tool.connector.catalogs, doc)
         self.accounts = AccountsSection(tool.accounts)  # which account signs in to which PCs
@@ -104,7 +101,6 @@ class HostsSettings(SettingsGroup):
             hidden_lists=self.general.hidden(),
             auto_status=self.general.auto_status_choice(),
             start_view=self.general.show_first_choice(),
-            scripts_folder=self.general.scripts_folder_choice(),
         )
 
     def _changed(self) -> None:

@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from capypanel.core.remote import access, drives, inventory, run, user_profiles, wmi
+from capypanel.core.remote import access, drives, inventory, user_profiles, wmi
 from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.user_profiles import Kind, Outcome, Profile, Scan, State, Why
 
@@ -96,10 +96,6 @@ def test_an_account_is_left_out_when_the_pc_is_this_one() -> None:
     assert wmi.read(reader, "localhost", Account("EXAMPLE\\nobody", "x"), {}, 60).isdigit()
 
 
-def test_a_start_goes_straight_over_wmi_too() -> None:
-    assert run._START in inventory._READERS  # Win32_Process.Create, with no PowerShell here
-
-
 # ---- choosing the way ----
 
 
@@ -142,7 +138,7 @@ def test_powershell_only_and_winrm_never_go_straight(monkeypatch: pytest.MonkeyP
     inventory.transport = inventory.POWERSHELL
     inventory.run_cim(inventory._FACTS, "DESK-01", None)
     inventory.transport = inventory.AUTO
-    inventory.run_cim(run._START, "DESK-01", None, "Wsman", {"command": "x"})  # WinRM
+    inventory.run_cim(inventory._FACTS, "DESK-01", None, "Wsman")  # WinRM
     inventory.run_cim("Send 1", "DESK-01", None)  # a script with no twin
     assert shell == ["Dcom", "Wsman", "Dcom"]
 

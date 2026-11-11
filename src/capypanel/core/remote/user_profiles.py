@@ -31,6 +31,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
+from capypanel.core.applog import append_line
 from capypanel.core.remote import inventory
 from capypanel.core.remote.access import (
     Account,
@@ -40,7 +41,6 @@ from capypanel.core.remote.access import (
     network_identity,
     reason_of,
 )
-from capypanel.core.remote.run import append_line
 
 log = logging.getLogger(__name__)
 

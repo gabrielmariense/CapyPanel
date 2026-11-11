@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-10 22:25-0300\n"
+"POT-Creation-Date: 2026-11-10 23:39-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -56,19 +56,10 @@ msgstr ""
 msgid "&Another account…"
 msgstr ""
 
-msgid "&Arguments:"
-msgstr ""
-
 msgid "&Authentication"
 msgstr ""
 
 msgid "&Brand:"
-msgstr ""
-
-msgid "&Browse…"
-msgstr ""
-
-msgid "&Clear caches"
 msgstr ""
 
 msgid "&Clear queue"
@@ -122,9 +113,6 @@ msgstr ""
 msgid "&Edit host…"
 msgstr ""
 
-msgid "&Edit in Notepad"
-msgstr ""
-
 msgid "&Edit selected…"
 msgstr ""
 
@@ -148,9 +136,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "&Folder on {host}:"
-msgstr ""
-
-msgid "&Folder:"
 msgstr ""
 
 msgid "&Forget"
@@ -192,16 +177,10 @@ msgstr ""
 msgid "&Leave out of the import"
 msgstr ""
 
-msgid "&Letter:"
-msgstr ""
-
 msgid "&List on startup"
 msgstr ""
 
 msgid "&Locate…"
-msgstr ""
-
-msgid "&Lock: always run as this"
 msgstr ""
 
 msgid "&Log off"
@@ -226,12 +205,6 @@ msgid "&Manage…"
 msgstr ""
 
 msgid "&Manual connection…"
-msgstr ""
-
-msgid "&Map"
-msgstr ""
-
-msgid "&Map a drive…"
 msgstr ""
 
 msgid "&Message to them:"
@@ -261,9 +234,6 @@ msgstr ""
 msgid "&New…"
 msgstr ""
 
-msgid "&No: it runs at once"
-msgstr ""
-
 msgid "&Open"
 msgstr ""
 
@@ -286,9 +256,6 @@ msgid "&Partner"
 msgstr ""
 
 msgid "&Password:"
-msgstr ""
-
-msgid "&Path on each PC:"
 msgstr ""
 
 msgid "&Preset:"
@@ -331,9 +298,6 @@ msgid "&Remove from my lists"
 msgstr ""
 
 msgid "&Remove selected"
-msgstr ""
-
-msgid "&Repair"
 msgstr ""
 
 msgid "&Report a problem"
@@ -444,9 +408,6 @@ msgstr ""
 msgid "&When:"
 msgstr ""
 
-msgid "&Yes: it asks before every run"
-msgstr ""
-
 msgid "(password only)"
 msgstr ""
 
@@ -513,9 +474,6 @@ msgstr ""
 msgid "A list named “{name}” is already there. Replace it with an empty one?"
 msgstr ""
 
-msgid "A name can't have \\ / : * ? \" < > |."
-msgstr ""
-
 msgid "A name is required."
 msgstr ""
 
@@ -529,16 +487,7 @@ msgstr ""
 msgid "A preset named “{name}” already exists. Replace it?"
 msgstr ""
 
-msgid "A quote in the arguments isn't closed."
-msgstr ""
-
 msgid "A registry entry with .bak in its name, and its folder."
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"A shared folder as \\\\server\\share. It runs as {user}, so the drive is "
-"theirs; if the letter is taken, Windows says so."
 msgstr ""
 
 msgid "A tag"
@@ -551,9 +500,6 @@ msgid "A tool definition must be a JSON object."
 msgstr ""
 
 msgid "A&dd to host list…"
-msgstr ""
-
-msgid "A&pprove"
 msgstr ""
 
 msgid "About"
@@ -687,11 +633,6 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
-msgid ""
-"Applies the PC's group policies again now, without waiting for the next "
-"refresh."
-msgstr ""
-
 msgid "As"
 msgstr ""
 
@@ -699,9 +640,6 @@ msgid "Ask each time"
 msgstr ""
 
 msgid "Asked when needed"
-msgstr ""
-
-msgid "Asks before every run."
 msgstr ""
 
 msgid "Ass&et tag:"
@@ -719,9 +657,6 @@ msgstr ""
 msgid "BIOS"
 msgstr ""
 
-msgid "Back to CapyPanel's own folder"
-msgstr ""
-
 msgid "Bar"
 msgstr ""
 
@@ -729,9 +664,6 @@ msgid "Bar &marks"
 msgstr ""
 
 msgid "Bar marks"
-msgstr ""
-
-msgid "Batch file"
 msgstr ""
 
 msgid "Black"
@@ -769,9 +701,6 @@ msgstr ""
 msgid "C&hoose file…"
 msgstr ""
 
-msgid "C&reate"
-msgstr ""
-
 msgid "CSV files (*.csv *.txt);;All files (*)"
 msgstr ""
 
@@ -786,9 +715,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Calculating sizes: {n} of {total}"
-msgstr ""
-
-msgid "Called as: script <host> <arguments>. Quotes keep spaces together."
 msgstr ""
 
 msgid "Can be deleted"
@@ -829,18 +755,7 @@ msgstr ""
 msgid "CapyPanel asks for them again when it needs them."
 msgstr ""
 
-msgid "CapyPanel can't tell where that folder is from here."
-msgstr ""
-
-msgid "CapyPanel couldn't read the file."
-msgstr ""
-
 msgid "CapyPanel couldn't see who is signed in. Work anyone hasn't saved is lost."
-msgstr ""
-
-msgid ""
-"CapyPanel found no way to start anything there. What each way answered is"
-" below."
 msgstr ""
 
 msgid "CapyPanel is built with the following software:"
@@ -852,16 +767,10 @@ msgstr ""
 msgid "CapyPanel — light"
 msgstr ""
 
-msgid "CapyPanel's account for the PC"
-msgstr ""
-
 msgid "Change path…"
 msgstr ""
 
 msgid "Change the account…"
-msgstr ""
-
-msgid "Changed since it was approved. Review it again before it can run."
 msgstr ""
 
 msgid "Change…"
@@ -871,9 +780,6 @@ msgid "Check"
 msgstr ""
 
 msgid "Check the SNMP account in Settings › Printers › Connecting."
-msgstr ""
-
-msgid "Check their session"
 msgstr ""
 
 #, python-brace-format
@@ -896,16 +802,8 @@ msgstr[1] ""
 msgid "Checked {when}."
 msgstr ""
 
-msgid "Checking their session…"
-msgstr ""
-
 #, python-brace-format
 msgid "Checking {done} of {total}…"
-msgstr ""
-
-msgid ""
-"Checks every Windows file and repairs damaged ones (DISM and sfc); up to "
-"an hour."
 msgstr ""
 
 msgid ""
@@ -921,36 +819,10 @@ msgstr ""
 msgid "Choose a {tool} settings file"
 msgstr ""
 
-msgid "Choose another folder in Settings"
-msgstr ""
-
-msgid "Choose the scripts folder"
-msgstr ""
-
-msgid "Clean temporary files"
-msgstr ""
-
-msgid "Clean temporary files…"
-msgstr ""
-
 msgid "Clear"
 msgstr ""
 
 msgid "Clear &queue…"
-msgstr ""
-
-msgid "Clear caches"
-msgstr ""
-
-#, python-brace-format
-msgid "Clear caches for {user} on {host}?"
-msgstr ""
-
-#, python-brace-format
-msgid "Clear caches is still running on {host}."
-msgstr ""
-
-msgid "Clear caches…"
 msgstr ""
 
 msgid "Clear queue"
@@ -976,18 +848,10 @@ msgstr ""
 msgid "Cleared the queue of {printer} on {host}."
 msgstr ""
 
-#, python-brace-format
-msgid "Cleared {size} of caches for {user} on {host}: {apps}."
-msgstr ""
-
 msgid "Click to copy"
 msgstr ""
 
 msgid "Click to copy, right-click for what you can do"
-msgstr ""
-
-#, python-brace-format
-msgid "Clock synced on {host}."
 msgstr ""
 
 msgid "Close"
@@ -1028,12 +892,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Connect with {profile}"
-msgstr ""
-
-msgid "Connected"
-msgstr ""
-
-msgid "Connected, this session only"
 msgstr ""
 
 msgid "Connecting"
@@ -1105,17 +963,6 @@ msgstr[1] ""
 msgid "Copy all"
 msgstr ""
 
-msgid "Couldn't check"
-msgstr ""
-
-#, python-brace-format
-msgid "Couldn't check their session: {reason}"
-msgstr ""
-
-#, python-brace-format
-msgid "Couldn't check {user}'s session: {reason}"
-msgstr ""
-
 #, python-brace-format
 msgid "Couldn't create “{path}”: {error}"
 msgstr ""
@@ -1142,10 +989,6 @@ msgid "Couldn't open it: {error}"
 msgstr ""
 
 #, python-brace-format
-msgid "Couldn't open {file}: {error}"
-msgstr ""
-
-#, python-brace-format
 msgid "Couldn't open “{path}”: {error}"
 msgstr ""
 
@@ -1154,10 +997,6 @@ msgid "Couldn't open “{wanted}”, so “{opened}” was opened instead."
 msgstr ""
 
 msgid "Couldn't read"
-msgstr ""
-
-#, python-brace-format
-msgid "Couldn't read it: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -1170,12 +1009,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't read {host}: {reason}"
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"Couldn't read {path} on {host}: {error} Without it, a copy runs only "
-"where admins alone can change it, unless it runs as the person signed in."
 msgstr ""
 
 #, python-brace-format
@@ -1227,12 +1060,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't save where the tools are: {error}"
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"Couldn't save {file}: {error} Choose a folder you can write to in "
-"Settings › Hosts › General."
 msgstr ""
 
 #, python-brace-format
@@ -1309,17 +1136,6 @@ msgstr ""
 msgid "DELETION FINISHED"
 msgstr ""
 
-#, python-brace-format
-msgid ""
-"DISM and sfc check every Windows file on {host} and repair the damaged "
-"ones. It takes up to an hour and slows the PC while it runs; whoever uses"
-" it can keep working. Nothing restarts."
-msgstr ""
-
-#, python-brace-format
-msgid "DNS refreshed on {host}."
-msgstr ""
-
 msgid "DOMAIN\\user"
 msgstr ""
 
@@ -1357,10 +1173,6 @@ msgid "Delete profiles…"
 msgstr ""
 
 #, python-brace-format
-msgid "Delete temporary files on {host}?"
-msgstr ""
-
-#, python-brace-format
 msgid "Delete the connection profile “{profile}”? Everyone on this PC loses it."
 msgstr ""
 
@@ -1392,11 +1204,6 @@ msgid "Deleted: the folder."
 msgstr ""
 
 msgid "Deleted: the leftover in the registry."
-msgstr ""
-
-msgid ""
-"Deletes temporary files no one has touched for a day, for Windows and "
-"every user."
 msgstr ""
 
 #, python-brace-format
@@ -1528,9 +1335,6 @@ msgstr ""
 msgid "Edit host"
 msgstr ""
 
-msgid "Edit in Notepad"
-msgstr ""
-
 msgid "Edit printer"
 msgstr ""
 
@@ -1543,14 +1347,6 @@ msgstr ""
 msgid ""
 "Editing in the table rewrites the list above as CSV with a header row "
 "(name, address, group, tags, notes), so the two always match. Continue?"
-msgstr ""
-
-msgid ""
-"Empties Teams' and the browsers' caches for the person signed in; never "
-"passwords, cookies or history. An app that's open is left alone."
-msgstr ""
-
-msgid "Empties the PC's DNS cache and registers its name with DNS again."
 msgstr ""
 
 msgid "Encryption pass&word"
@@ -1615,15 +1411,6 @@ msgid ""
 " queues stay and print once it's back."
 msgstr ""
 
-msgid ""
-"Every user can change this file, so it can't be approved: someone could "
-"change it between your review and a run. Make the file writable by "
-"administrators only, then Rescan."
-msgstr ""
-
-msgid "Every user can change this file, so it can't run."
-msgstr ""
-
 msgid "Everyone on this PC (shared)"
 msgstr ""
 
@@ -1646,15 +1433,6 @@ msgid ""
 msgstr ""
 
 msgid "File not found"
-msgstr ""
-
-msgid "File on the PC"
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"Files in Windows' Temp folder and in every user's Temp folder that no one"
-" has touched for a day are deleted from {host}. Files in use stay."
 msgstr ""
 
 msgid "Firmware"
@@ -1680,12 +1458,6 @@ msgid "Follow Accounts: {user}"
 msgstr ""
 
 msgid "For Import"
-msgstr ""
-
-msgid ""
-"For a script that's already on each PC, in the same place: CapyPanel runs"
-" that PC's own copy. A .ps1, .bat, .cmd or .vbs file, by its full path on"
-" the PC; %ProgramData% and the like work too."
 msgstr ""
 
 msgid ""
@@ -1730,12 +1502,6 @@ msgstr ""
 msgid "Free software under the GPL-3.0, with no warranty: see {licenses}."
 msgstr ""
 
-#, python-brace-format
-msgid "Freed {size} on {host}: {n} file deleted."
-msgid_plural "Freed {size} on {host}: {n} files deleted."
-msgstr[0] ""
-msgstr[1] ""
-
 msgid "From group"
 msgstr ""
 
@@ -1750,19 +1516,7 @@ msgstr ""
 msgid "General"
 msgstr ""
 
-msgid "Give it a name: it's the name in Your scripts."
-msgstr ""
-
-msgid ""
-"Gives the person signed in a network drive; it comes back at every sign-"
-"in."
-msgstr ""
-
 msgid "Group"
-msgstr ""
-
-#, python-brace-format
-msgid "Group policy updated on {host}."
 msgstr ""
 
 #, python-brace-format
@@ -1919,20 +1673,9 @@ msgstr ""
 msgid "Inventory"
 msgstr ""
 
-msgid "Is it risky?"
-msgstr ""
-
 msgid ""
 "It can be deleted: nobody is signed in to it, it isn't one of Windows' "
 "own, and it's in the Users folder."
-msgstr ""
-
-msgid "It changed since it was approved. Read it again before approving."
-msgstr ""
-
-msgid ""
-"It names no .ps1, .bat, .cmd or .vbs file on the PC. Review it to see "
-"what it should hold."
 msgstr ""
 
 #, python-brace-format
@@ -1941,14 +1684,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "It restarted at {at} and answered again at {now}. Click to show it."
-msgstr ""
-
-#, python-brace-format
-msgid "It was approved as risky, so it asks every time. It runs as: {who}."
-msgstr ""
-
-#, python-brace-format
-msgid "It's bigger than {n} KB, too big for a script."
 msgstr ""
 
 msgid "It's handed to the viewer privately, never on its command line."
@@ -1969,12 +1704,6 @@ msgid ""
 msgstr ""
 
 msgid "Its address or name, as in the host list"
-msgstr ""
-
-msgid ""
-"Its first line should be the script's path on the PC, such as "
-"C:\\ProgramData\\Scripts\\printers.cmd or "
-"%ProgramData%\\Scripts\\printers.ps1."
 msgstr ""
 
 msgid "Its own settings file"
@@ -2040,9 +1769,6 @@ msgid ""
 "whether to delete the file too."
 msgstr ""
 
-msgid "Locked when it was approved"
-msgstr ""
-
 msgid "Log off"
 msgstr ""
 
@@ -2092,10 +1818,6 @@ msgstr ""
 msgid "MAC address"
 msgstr ""
 
-#, python-brace-format
-msgid "Made {file}. Review it on a PC before it runs."
-msgstr ""
-
 msgid "Magenta"
 msgstr ""
 
@@ -2108,27 +1830,11 @@ msgstr ""
 msgid "Manual connection"
 msgstr ""
 
-msgid "Map a drive"
-msgstr ""
-
-msgid "Map a drive…"
-msgstr ""
-
 msgid "Mapped drives"
 msgstr ""
 
 #, python-brace-format
 msgid "Mapped drives on {host}"
-msgstr ""
-
-#, python-brace-format
-msgid "Mapped {letter} to {path} for {user} on {host}."
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"Maps a network drive for {user} on {host}. It shows in their File "
-"Explorer at once and comes back at every sign-in."
 msgstr ""
 
 msgid "Mark"
@@ -2200,19 +1906,10 @@ msgstr[1] ""
 msgid "New host list"
 msgstr ""
 
-msgid "New in the scripts folder. Review it before it can run."
-msgstr ""
-
 msgid "New name:"
 msgstr ""
 
 msgid "New printer list"
-msgstr ""
-
-msgid "New script on the PCs"
-msgstr ""
-
-msgid "New script on the PCs…"
 msgstr ""
 
 msgid "New tag"
@@ -2241,15 +1938,6 @@ msgid "No answer at {when}."
 msgstr ""
 
 msgid "No computer by that name or address was found on the network."
-msgstr ""
-
-msgid "No drives"
-msgstr ""
-
-msgid "No folder"
-msgstr ""
-
-msgid "No folder chosen yet."
 msgstr ""
 
 msgid "No group"
@@ -2301,14 +1989,6 @@ msgstr ""
 msgid "No one is signed in to {host}, so there's no user's folder to open."
 msgstr ""
 
-#, python-brace-format
-msgid "No one is signed in to {host}, so {name} can't run as them."
-msgstr ""
-
-#, python-brace-format
-msgid "No one is signed in to {host}, so {name} has no one to act for."
-msgstr ""
-
 msgid "No one is signed in, or no one was checked: use Refresh"
 msgstr ""
 
@@ -2342,11 +2022,6 @@ msgstr ""
 msgid "No saved drives"
 msgstr ""
 
-msgid ""
-"No scripts here yet. Put .ps1, .bat or .cmd files in this folder, or add "
-"a script that's on the PCs with the new-file button."
-msgstr ""
-
 #, python-brace-format
 msgid "No settings mention “{text}”."
 msgstr ""
@@ -2376,16 +2051,7 @@ msgstr ""
 msgid "Not checked: use Refresh"
 msgstr ""
 
-msgid "Not connected"
-msgstr ""
-
-msgid "Not connected, this session only"
-msgstr ""
-
 msgid "Not counted"
-msgstr ""
-
-msgid "Not mapped now"
 msgstr ""
 
 #, python-brace-format
@@ -2420,14 +2086,6 @@ msgid "Nothing changes until you click Add."
 msgstr ""
 
 msgid "Nothing changes until you click OK."
-msgstr ""
-
-#, python-brace-format
-msgid "Nothing cleared for {user} on {host}."
-msgstr ""
-
-#, python-brace-format
-msgid "Nothing to clear for {user} on {host}: those apps keep no cache there."
 msgstr ""
 
 msgid "Nothing was read."
@@ -2476,13 +2134,6 @@ msgid "Online"
 msgstr ""
 
 msgid "Only a profile that can be deleted, outside a delete run"
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"Only cache folders go: passwords, cookies, history and bookmarks stay. An"
-" app that's open for {user} is left alone. Teams' whole cache goes, as "
-"Microsoft's own steps clear it, so Teams may ask them to sign in again."
 msgstr ""
 
 msgid ""
@@ -2575,9 +2226,6 @@ msgstr ""
 msgid "Open the history"
 msgstr ""
 
-msgid "Open the scripts folder"
-msgstr ""
-
 msgid "Open the selected printers' web pages (Enter)"
 msgstr ""
 
@@ -2611,13 +2259,6 @@ msgid "Opens a folder on {host} in File Explorer, over file sharing."
 msgstr ""
 
 msgid "Opens the host in a new tab. Typing alone never scans."
-msgstr ""
-
-msgid "Opens this PC's C: drive: the path is the same on each PC"
-msgstr ""
-
-#, python-brace-format
-msgid "Opens {host}'s C: drive, to pick the file there"
 msgstr ""
 
 #, python-brace-format
@@ -2823,11 +2464,6 @@ msgid "Protected"
 msgstr ""
 
 msgid ""
-"PsExec runs scripts on a PC only when WinRM, WMI and the PC's Task "
-"Scheduler can't start them."
-msgstr ""
-
-msgid ""
 "Public, Default, the built-in Administrator and the like: never deleted "
 "here"
 msgstr ""
@@ -2858,12 +2494,6 @@ msgstr ""
 msgid "Re&move"
 msgstr ""
 
-msgid "Re&scan"
-msgstr ""
-
-msgid "Re&view…"
-msgstr ""
-
 msgid "Read"
 msgstr ""
 
@@ -2871,9 +2501,6 @@ msgid "Read PC data with:"
 msgstr ""
 
 msgid "Read again"
-msgstr ""
-
-msgid "Read it all before approving: once approved, it can run on any PC."
 msgstr ""
 
 msgid "Read license"
@@ -2888,15 +2515,8 @@ msgstr ""
 msgid "Read/write"
 msgstr ""
 
-msgid "Reading the folder…"
-msgstr ""
-
 #, python-brace-format
 msgid "Reading {host}…"
-msgstr ""
-
-#, python-brace-format
-msgid "Reading {path} on {host}…"
 msgstr ""
 
 msgid "Reading…"
@@ -2925,9 +2545,6 @@ msgid "Refresh &logged-on users"
 msgstr ""
 
 msgid "Refresh &status"
-msgstr ""
-
-msgid "Refresh DNS"
 msgstr ""
 
 msgid "Refresh all"
@@ -3062,20 +2679,6 @@ msgstr ""
 msgid "Rename group"
 msgstr ""
 
-msgid "Repair Windows files"
-msgstr ""
-
-#, python-brace-format
-msgid "Repair Windows files finished on {host}. Its output says what it found."
-msgstr ""
-
-#, python-brace-format
-msgid "Repair Windows files on {host}?"
-msgstr ""
-
-msgid "Repair Windows files…"
-msgstr ""
-
 msgid "Replace"
 msgstr ""
 
@@ -3093,9 +2696,6 @@ msgid "Report saved: {n} printer from {source}."
 msgid_plural "Report saved: {n} printers from {source}."
 msgstr[0] ""
 msgstr[1] ""
-
-msgid "Rescan the scripts folder"
-msgstr ""
 
 msgid "Reset to &default"
 msgstr ""
@@ -3150,10 +2750,6 @@ msgstr ""
 msgid "Review"
 msgstr ""
 
-#, python-brace-format
-msgid "Review {name}"
-msgstr ""
-
 msgid "Right-click a printer to clear its queue."
 msgstr ""
 
@@ -3162,30 +2758,7 @@ msgid ""
 " window with a search."
 msgstr ""
 
-msgid "Run &as:"
-msgstr ""
-
-msgid "Run a &script…"
-msgstr ""
-
-msgid "Run as:"
-msgstr ""
-
 msgid "Run checks whether it answers."
-msgstr ""
-
-#, python-brace-format
-msgid "Run {name} on {host}?"
-msgstr ""
-
-msgid "Runs this file, already on each PC, from CapyPanel."
-msgstr ""
-
-msgid "Runs without asking."
-msgstr ""
-
-#, python-brace-format
-msgid "Runs {path} on the PC."
 msgstr ""
 
 msgid "SELECTED HOST"
@@ -3207,9 +2780,6 @@ msgid "SNMP community string"
 msgstr ""
 
 msgid "SNMP v3 account"
-msgstr ""
-
-msgid "SYSTEM"
 msgstr ""
 
 msgid "Sa&ved credentials"
@@ -3301,15 +2871,6 @@ msgstr ""
 msgid "Scans {host}'s profiles again"
 msgstr ""
 
-msgid "Scripts"
-msgstr ""
-
-msgid "Scripts &folder"
-msgstr ""
-
-msgid "Scripts (*.ps1 *.bat *.cmd *.vbs)"
-msgstr ""
-
 msgid "Search"
 msgstr ""
 
@@ -3389,9 +2950,6 @@ msgid "Set the SNMP v3 account in Settings › Printers › Connecting first."
 msgstr ""
 
 msgid "Set the account…"
-msgstr ""
-
-msgid "Sets the PC's clock from its time server now."
 msgstr ""
 
 msgid "Settings"
@@ -3607,9 +3165,6 @@ msgstr ""
 msgid "Supply missing"
 msgstr ""
 
-msgid "Sync the clock"
-msgstr ""
-
 msgid "T&ags pane"
 msgstr ""
 
@@ -3656,10 +3211,6 @@ msgstr ""
 msgid "Temporary"
 msgstr ""
 
-#, python-brace-format
-msgid "Temporary files cleaned on {host}."
-msgstr ""
-
 msgid "Temporary:"
 msgstr ""
 
@@ -3676,11 +3227,6 @@ msgid "That name is taken."
 msgstr ""
 
 msgid "That profile doesn't exist."
-msgstr ""
-
-msgid ""
-"That's a share, not a place on the PC. A script on a share can go in the "
-"scripts folder itself instead."
 msgstr ""
 
 msgid "The PC answered, but reading took too long and was stopped."
@@ -3751,9 +3297,6 @@ msgid "The details were saved to the app log."
 msgstr ""
 
 msgid "The encryption password needs at least 8 characters."
-msgstr ""
-
-msgid "The file couldn't be read."
 msgstr ""
 
 msgid "The file doesn't contain a list."
@@ -3856,9 +3399,6 @@ msgstr ""
 msgid "The parent group doesn't exist."
 msgstr ""
 
-msgid "The person signed in"
-msgstr ""
-
 #, python-brace-format
 msgid "The placeholder “{{{name}}}” goes with the “{method}” credential method."
 msgstr ""
@@ -3924,9 +3464,6 @@ msgstr ""
 msgid "The restart or shutdown of {host} is cancelled."
 msgstr ""
 
-msgid "The script on the PC"
-msgstr ""
-
 msgid "The tool needs a “name”."
 msgstr ""
 
@@ -3973,10 +3510,6 @@ msgstr ""
 msgid "There's a mark at {n} % already."
 msgstr ""
 
-#, python-brace-format
-msgid "There's already a {file} in the scripts folder."
-msgstr ""
-
 msgid ""
 "These are the built-in profiles: the folder is created when you change "
 "one."
@@ -3985,10 +3518,7 @@ msgstr ""
 msgid "These are the built-in profiles: the folder isn't there yet."
 msgstr ""
 
-msgid ""
-"These are the drives that come back at every sign-in. Check their session"
-" shows a drive mapped only for now, and whether each one is connected; it"
-" runs a short hidden task as each person."
+msgid "These are the drives that come back at every sign-in."
 msgstr ""
 
 #, python-brace-format
@@ -4031,12 +3561,6 @@ msgstr ""
 msgid ""
 "This is <b>final</b>. With local profiles, each person's desktop and "
 "documents go too: there's no recycle bin and no copy."
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"This is {path} as {host} has it. Other PCs may have their own copy: it "
-"runs where only admins can change it, or where it matches this one."
 msgstr ""
 
 msgid "This isn't a text file."
@@ -4113,9 +3637,6 @@ msgstr ""
 msgid "Toner model"
 msgstr ""
 
-msgid "Too big for a script, so it can't run."
-msgstr ""
-
 msgid "Tool"
 msgstr ""
 
@@ -4154,9 +3675,6 @@ msgid "Type the password of “{user}”. It signs in to {host} ({uses})."
 msgstr ""
 
 msgid "Type the password."
-msgstr ""
-
-msgid "Type the script's path on each PC."
 msgstr ""
 
 msgid "Type the user name."
@@ -4200,9 +3718,6 @@ msgstr ""
 msgid "Unused for:"
 msgstr ""
 
-msgid "Update group policy"
-msgstr ""
-
 msgid "Use &defaults"
 msgstr ""
 
@@ -4221,11 +3736,6 @@ msgstr ""
 msgid "Use the &automatic path"
 msgstr ""
 
-msgid ""
-"Use the script's full path on the PC: a .ps1, .bat, .cmd or .vbs file, "
-"such as C:\\ProgramData\\Scripts\\printers.cmd."
-msgstr ""
-
 msgid "Use this"
 msgstr ""
 
@@ -4233,8 +3743,8 @@ msgid "Used for"
 msgstr ""
 
 msgid ""
-"Used for Refresh's logged-on users and the commands and scripts run on "
-"this PC, not for Connect."
+"Used for Refresh's logged-on users and the commands run on this PC, not "
+"for Connect."
 msgstr ""
 
 msgid "Used only for hosts with this connection profile."
@@ -4430,16 +3940,7 @@ msgstr ""
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr ""
 
-msgid ""
-"Your own scripts and .onpc files, for the Scripts tab of the Commands "
-"window. CapyPanel's own shared folder until you choose another; only "
-"administrators should be able to change it."
-msgstr ""
-
 msgid "Your printers: status and toner, web pages, reports."
-msgstr ""
-
-msgid "Your scripts"
 msgstr ""
 
 msgid "Yours"
@@ -4508,13 +4009,6 @@ msgstr ""
 msgid "cancel the restart"
 msgstr ""
 
-msgid "changed, review before use"
-msgstr ""
-
-#, python-brace-format
-msgid "clear caches for {user}"
-msgstr ""
-
 #, python-brace-format
 msgid "clear the queue of {printer}"
 msgstr ""
@@ -4552,15 +4046,6 @@ msgstr ""
 msgid "e.g. Branch offices"
 msgstr ""
 
-msgid "every user can change it"
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"every user of that PC can change {path}, and it isn't the copy reviewed, "
-"so it only runs as the person signed in."
-msgstr ""
-
 msgid "failed"
 msgstr ""
 
@@ -4582,12 +4067,6 @@ msgstr ""
 msgid "it can't be deleted"
 msgstr ""
 
-msgid "it can't run as it is now. Rescan to see why."
-msgstr ""
-
-msgid "it changed since it was approved, so it didn't run. Review it again."
-msgstr ""
-
 msgid "it changed since the scan; scan again"
 msgstr ""
 
@@ -4601,24 +4080,10 @@ msgid ""
 " sharing."
 msgstr ""
 
-msgid "it didn't finish in time. It may still be running there."
-msgstr ""
-
 msgid "it doesn't know the SNMP v3 user name."
 msgstr ""
 
-#, python-brace-format
-msgid "it ended with code {code}. Its output says why."
-msgstr ""
-
 msgid "it refused the SNMP v3 request."
-msgstr ""
-
-msgid "it started but never ran. Security software on the PC may have stopped it."
-msgstr ""
-
-#, python-brace-format
-msgid "it started but never ran. Security software on {host} may have stopped it."
 msgstr ""
 
 msgid "it took too long to answer."
@@ -4633,9 +4098,6 @@ msgstr ""
 msgid "it's one of Windows' own"
 msgstr ""
 
-msgid "its answer couldn't be read."
-msgstr ""
-
 msgid "its clock and CapyPanel's didn't agree."
 msgstr ""
 
@@ -4646,10 +4108,6 @@ msgstr ""
 msgid "made by another user"
 msgstr ""
 
-#, python-brace-format
-msgid "map {letter} for {user}"
-msgstr ""
-
 msgid "model"
 msgstr ""
 
@@ -4657,12 +4115,6 @@ msgid "name"
 msgstr ""
 
 msgid "name, address, group, tags, notes"
-msgstr ""
-
-msgid "names no script on the PC"
-msgstr ""
-
-msgid "new, review before use"
 msgstr ""
 
 msgid "not reported"
@@ -4709,10 +4161,6 @@ msgid "restart it"
 msgstr ""
 
 msgid "restart the Print Spooler"
-msgstr ""
-
-#, python-brace-format
-msgid "run {name}"
 msgstr ""
 
 msgid "running"
@@ -4774,15 +4222,6 @@ msgstr ""
 msgid "tags"
 msgstr ""
 
-msgid "the PC couldn't start it."
-msgstr ""
-
-msgid ""
-"the PC let the account in but refused to start a program for it. Security"
-" software there may block programs started from another PC. What each way"
-" answered is below."
-msgstr ""
-
 msgid "the answer and its output"
 msgstr ""
 
@@ -4798,17 +4237,7 @@ msgstr ""
 msgid "the selected printers"
 msgstr ""
 
-msgid "there's no PC in this window."
-msgstr ""
-
 msgid "there's no folder there."
-msgstr ""
-
-#, python-brace-format
-msgid "there's no {path} on that PC."
-msgstr ""
-
-msgid "too big for a script"
 msgstr ""
 
 #, python-brace-format
@@ -4848,12 +4277,6 @@ msgstr ""
 
 msgid "your Windows account"
 msgstr ""
-
-#, python-brace-format
-msgid "{apps} was open, so its cache stayed."
-msgid_plural "{apps} were open, so their caches stayed."
-msgstr[0] ""
-msgstr[1] ""
 
 #, python-brace-format
 msgid "{colour} {percent} %"
@@ -4909,13 +4332,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "{host} is shutting down."
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"{host} let the account in but refused to start a program for it. Security"
-" software there may block programs started from another PC. What each way"
-" answered is below."
 msgstr ""
 
 #, python-brace-format
@@ -5032,19 +4448,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
-msgid "{name} finished on {host}."
-msgstr ""
-
-#, python-brace-format
-msgid "{name} is running on {host} since {when}…"
-msgstr ""
-
-#, python-brace-format
 msgid "{name} is signed in ({where}). Work they haven't saved is lost."
-msgstr ""
-
-#, python-brace-format
-msgid "{name} is still running on {host}."
 msgstr ""
 
 #, python-brace-format
@@ -5116,12 +4520,6 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{n} failed"
 msgid_plural "{n} failed"
-msgstr[0] ""
-msgstr[1] ""
-
-#, python-brace-format
-msgid "{n} file in use stayed."
-msgid_plural "{n} files in use stayed."
 msgstr[0] ""
 msgstr[1] ""
 
@@ -5500,10 +4898,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "{user}'s folder"
-msgstr ""
-
-#, python-brace-format
-msgid "{user}'s profile isn't there"
 msgstr ""
 
 #, python-brace-format

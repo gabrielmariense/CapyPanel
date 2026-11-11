@@ -257,20 +257,6 @@ def test_files_that_arent_used_are_named_with_the_reason(
     assert ToolsSection(catalogs).tools_skipped.isHidden()  # nothing skipped there
 
 
-def test_psexec_is_listed_with_the_remote_tools_but_no_profile_can_use_it(
-    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    assert _tool_row(ToolsSection(catalogs), "psexec")[0].startswith("✗")
-    seen: list[list[str]] = []
-    monkeypatch.setattr(
-        connections,
-        "ProfileDialog",
-        lambda parent, title, tools, *a: seen.append([t.id for t in tools]),
-    )
-    ProfilesSection(catalogs, None)._dialog("New", None)
-    assert seen and "psexec" not in seen[0] and "ultravnc" in seen[0]
-
-
 def test_remote_desktop_says_it_asks_for_the_password_itself(catalogs: Catalogs) -> None:
     # "no password" read as if none were needed; Remote Desktop's own window asks for it.
     page = ProfilesSection(catalogs, None)

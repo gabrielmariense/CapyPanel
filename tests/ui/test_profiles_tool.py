@@ -1465,13 +1465,6 @@ def test_a_powershell_blocked_on_this_pc_is_named_as_such(window: CapyWindow, pc
         "on DESK-03 to read" not in card.body.text()
         and "on your PC to read DESK-03" in card.body.text()
     )
-    from capypanel.core.remote.run import Problem, RunError
-
-    stopped = reason_text(RunError(Problem.BLOCKED), "DESK-03")
-    assert stopped.endswith("Security software on DESK-03 may have stopped it.")  # names the host
-    refused = reason_text(RunError(Problem.REFUSED), "DESK-03")
-    assert refused.startswith("DESK-03 let the account in but refused to start a program")
-    assert "WinRM is off" not in reason_text(RunError(Problem.NO_WAY_IN), "DESK-03")
 
 
 def test_a_date_windows_cant_show_in_local_time_never_breaks_a_view() -> None:

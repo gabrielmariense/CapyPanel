@@ -95,7 +95,7 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
 
     assert titles(dialog.general) == ["Appearance", "Startup and closing"]
     hosts = dialog.group(HostsSettings)
-    assert titles(hosts.general) == ["Host lists", "Refresh", "Scripts"]
+    assert titles(hosts.general) == ["Host lists", "Refresh"]
     assert titles(hosts.connections) == ["Connection profiles", "Remote tools"]  # shared
     assert titles(hosts.accounts_page) == ["Accounts", "Passwords"]  # only yours
     printers = dialog.group(PrintersSettings).general
@@ -567,7 +567,7 @@ def test_the_settings_buttons_are_only_the_main_actions(window: CapyWindow) -> N
     assert folders is not None
     assert [b.text() for b in folders.findChildren(QPushButton)] == ["Open folder"]
     for page_id, wanted in (
-        ("hosts", ["&New…", "&Add existing…", "&Remove", "Change path…"]),
+        ("hosts", ["&New…", "&Add existing…", "&Remove"]),
         (
             "connections",
             [
