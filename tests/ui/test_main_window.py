@@ -410,7 +410,7 @@ def test_double_clicking_the_host_table_s_right_edge_fits_it_to_its_columns(
     window: CapyWindow, office: Path
 ) -> None:
     window.hosts.open_list(office)
-    window.resize(1900, 700)  # room for the table's columns beside Details' buttons
+    window.resize(2400, 700)  # room for the table's columns beside Details' buttons
     window.show()
     QApplication.processEvents()
     splitter = window.hosts.splitter  # pyright: ignore[reportPrivateUsage]
@@ -456,3 +456,17 @@ def test_an_edit_keeps_the_table_where_it_was_scrolled(qapp: QApplication) -> No
     table.show_hosts(hosts, {})
     assert bar.value() == 0
     table.close()
+
+
+def test_the_status_bar_names_the_list_and_a_click_copies_its_path(
+    window: CapyWindow, office: Path
+) -> None:
+    bar = window.hosts.status_label
+    assert bar.text() == "Default · 0 hosts · 0 selected"  # named after its kind: said once
+    window.hosts.open_list(office)
+    assert bar.text() == "Shared · office · 3 hosts · 0 selected"
+    assert str(office.parent) not in bar.text() and "portable" not in bar.text()
+    assert bar.toolTip().splitlines() == [str(office), "Click to copy"]
+    QTest.mouseClick(bar, Qt.MouseButton.LeftButton)
+    assert QApplication.clipboard().text() == str(office)
+    assert window.statusBar().currentMessage() == f"Copied: {office}"

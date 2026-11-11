@@ -6,7 +6,9 @@ from pathlib import Path
 
 import pytest
 from capywindow import CapyWindow
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QDesktopServices, QTextDocumentFragment
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
     QApplication,
     QDialogButtonBox,
@@ -761,4 +763,25 @@ def test_each_page_shows_on_its_own_from_its_top_and_the_list_never_jumps(
     dialog.page_list.setCurrentRow(row("General", "Hosts"))
     dialog.page_list.setCurrentRow(connecting)  # back again: from its top
     assert view.verticalScrollBar().value() == 0
+    dialog.close()
+
+
+def test_the_picked_list_s_path_is_under_the_table_and_a_click_copies_it(
+    window: CapyWindow, paths: settings.Paths
+) -> None:
+    deep = paths.lists("hosts").shared_dir / ("ward " * 30 + "branch.json")
+    listfile.save(deep, HostList(), expected=None)
+    dialog = window.settings_dialog()
+    view = dialog.group(HostsSettings).general.view
+    dialog.resize(860, 700)
+    dialog.show()
+    view.select(deep)
+    QApplication.processEvents()
+    line = view.path_label
+    assert line.full == str(deep) and line.toolTip().splitlines() == [str(deep), "Click to copy"]
+    # Too long for the page: both ends stay, the middle goes.
+    assert "…" in line.text() and line.text().endswith("branch.json")
+    assert line.text().startswith(str(deep)[:6])
+    QTest.mouseClick(line, Qt.MouseButton.LeftButton)
+    assert QApplication.clipboard().text() == str(deep)
     dialog.close()

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from PySide6.QtCore import QLocale, QPoint, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPalette, QResizeEvent
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPalette
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QMenu,
     QPushButton,
-    QSizePolicy,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -33,7 +32,7 @@ from capypanel.ui.hosts_tool import quick
 from capypanel.ui.hosts_tool.host_state import Facts, PendingPower
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import GAP, DetailsPanel
-from capypanel.ui.notes import escape
+from capypanel.ui.notes import Elided, escape
 
 NOBODY_FOR = timedelta(minutes=10)  # how long "nobody signed in" is believed
 ICON = 18
@@ -533,7 +532,7 @@ class ValuePicker(QPushButton):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip(tip)
         self.marks = tuple(marks)
-        self.label = _Elided(text)
+        self.label = Elided(text)
         row = QHBoxLayout(self)
         row.setContentsMargins(8, 3, 6, 3)
         row.setSpacing(6)
@@ -557,18 +556,3 @@ class ValuePicker(QPushButton):
         if layout is not None:
             hint = hint.expandedTo(layout.sizeHint())
         return QSize(hint.width(), max(hint.height(), PICKER_HEIGHT))
-
-
-class _Elided(QLabel):
-    """One line that ends in "…" when the column is narrower than the text."""
-
-    def __init__(self, text: str) -> None:
-        super().__init__(text)
-        self.full = text
-        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        super().resizeEvent(event)
-        shown = self.fontMetrics().elidedText(self.full, Qt.TextElideMode.ElideRight, self.width())
-        if shown != self.text():
-            self.setText(shown)

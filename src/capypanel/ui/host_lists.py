@@ -8,12 +8,13 @@ from collections.abc import Callable
 from pathlib import Path
 
 from PySide6.QtCore import QFile, Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices, QFont, QFontMetrics
+from PySide6.QtGui import QDesktopServices, QFont, QFontMetrics, QGuiApplication, QMouseEvent
 from PySide6.QtWidgets import (
     QFileDialog,
     QMenu,
     QMessageBox,
     QPushButton,
+    QToolTip,
     QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
@@ -26,7 +27,7 @@ from capypanel.core.hosts.locations import Access, ListKind
 from capypanel.core.i18n import _
 from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.new_list import ask_new_list
-from capypanel.ui.notes import notes
+from capypanel.ui.notes import Elided, notes
 from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 
 ROLE_PATH = Qt.ItemDataRole.UserRole
@@ -74,6 +75,28 @@ def ask_remove(parent: QWidget, path: Path, title: str) -> str | None:
     return DELETE if clicked is delete else REMOVE if clicked is remove else None
 
 
+class PathLine(Elided):
+    """A file's path on one line, shortened in the middle to fit; a click copies it whole, as
+    the values in the Details panel do."""
+
+    def __init__(self) -> None:
+        super().__init__(mode=Qt.TextElideMode.ElideMiddle)
+        self.setObjectName("copyValue")
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover)  # the stylesheet's :hover
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def _fit(self) -> None:
+        super()._fit()
+        tip = "\n".join((self.full, _("Click to copy")))
+        self.setToolTip(tip if self.full else "")
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.LeftButton and self.full:
+            QGuiApplication.clipboard().setText(self.full)
+            QToolTip.showText(event.globalPosition().toPoint(), _("Copied"), self)
+        super().mousePressEvent(event)
+
+
 class ListsView(QWidget):
     """The lists, with the one in use in bold and marked, and buttons to add, create or forget.
     `changed` fires when the lists change; `open_requested` asks to open one now: a double-click,
@@ -117,6 +140,9 @@ class ListsView(QWidget):
         buttons = [self.new_button, self.add_button, self.remove_button]
         layout.addWidget(with_buttons(self.tree, buttons))
         row_menu(self.tree, self.fill_row_menu)  # Open, Save a copy and Open folder too
+        # Where the picked list's file is: shortened in the middle, copied whole by a click.
+        self.path_label = PathLine()
+        layout.addWidget(self.path_label)
         layout.addWidget(
             notes(
                 _("Lists saved in a lists folder show up here by themselves; Remove asks "
@@ -230,6 +256,7 @@ class ListsView(QWidget):
     def _selection_changed(self) -> None:
         path = self.selected()
         self.remove_button.setEnabled(self._removable(path))
+        self.path_label.set_full(str(path) if path is not None else "")
 
     def _removable(self, path: Path | None) -> bool:
         return path is not None and self._kind(path) is ListKind.SHARED

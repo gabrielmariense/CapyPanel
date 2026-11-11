@@ -87,9 +87,8 @@ class ListWorkspace(Tool):
         self._search_timer.setSingleShot(True)
         self._search_timer.setInterval(150)
         self.details = details
-        self.details.copied.connect(
-            lambda text: shell.show_message(_("Copied: {text}").format(text=text), 5000)
-        )
+        self.details.copied.connect(self._say_copied)
+        self.status_label.clicked.connect(self.copy_list_path)
         self.splitter = PaneSplitter()
         # The search box is a box of its own above the table, styled like the panels.
         self.tag_strip = TagStrip()  # while tags are picked: which, and how many they leave
@@ -1042,17 +1041,26 @@ class ListWorkspace(Tool):
         if doc is None:
             self.title_changed.emit("")
             self.status_label.setText(self.list_texts().no_list)
+            self.status_label.setToolTip("")
+            self.status_label.unsetCursor()
             self.list_picker.setText(_("No list open"))
             return
         name = self._list_name(doc.path)
         self.title_changed.emit(name)
         self.list_picker.setText(name)
         self.list_picker.setToolTip(str(doc.path))
+        # "Shared · Clinic · 8 hosts · 6 online · 1 selected": the kind, the list's name as the
+        # picker says it (Default and Personal are named after their kind: said once), counts.
+        # The file's path is a click away, and in the tooltip.
+        kind = self._kind(doc.path)
         parts = [
-            f"{self._kind_label(self._kind(doc.path))} — {doc.path}",
+            self._kind_label(kind),
+            *([name] if kind is ListKind.SHARED else []),
             self.items_text(len(doc.hosts.hosts)),
             *self.status_extras(doc),
         ]
+        self.status_label.setToolTip("\n".join((str(doc.path), _("Click to copy"))))
+        self.status_label.setCursor(Qt.CursorShape.PointingHandCursor)
         if self._needle():
             found = self.table.topLevelItemCount()
             parts.append(self.found_text(found))
@@ -1061,9 +1069,16 @@ class ListWorkspace(Tool):
             parts.append(_("Tags: {tags}").format(tags=", ".join(tags)))
         if doc.read_only:
             parts.append(_("read-only"))
-        if self._paths.portable:
-            parts.append(_("portable mode"))
         self.status_label.setText(" · ".join(parts))
+
+    def copy_list_path(self) -> None:
+        """A click on the status bar's text: the open list's path, copied, and said so."""
+        if self._doc is not None:
+            QGuiApplication.clipboard().setText(str(self._doc.path))
+            self._say_copied(str(self._doc.path))
+
+    def _say_copied(self, text: str) -> None:
+        self._shell.show_message(_("Copied: {text}").format(text=text), 5000)
 
     def title(self) -> str:
         """The open list's name, or "" with none open."""
