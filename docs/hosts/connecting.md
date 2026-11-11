@@ -15,8 +15,8 @@ Remote Desktop Connection is built into Windows, so CapyPanel finds it in `Syste
 an installed VNC viewer by itself too: where Windows recorded the install (any folder), the usual
 Program Files folders, then your PATH. A portable copy unzipped somewhere else isn't found
 automatically; when a viewer is missing, CapyPanel asks you to install it or to locate its
-`.exe`. The path is saved once for everyone on the PC, like in **Settings > Hosts > Remote
-tools** (see [Settings and files](../settings-and-files.md#remote-tools)).
+`.exe`. The path is saved once for everyone on the PC, like in **Settings > Hosts > Connecting >
+Remote tools** (see [Settings and files](../settings-and-files.md#remote-tools)).
 
 ## Connection profiles
 
@@ -31,8 +31,8 @@ Remote Desktop. A **connection profile** says which one a host uses:
 
 ### Managing profiles
 
-- Profiles are managed in **Settings > Hosts > Connection profiles** (also **Connect >
-  Connection profiles…**): add, edit, duplicate, delete, and restore the ones CapyPanel ships
+- Profiles are managed in **Settings > Hosts > Connecting > Connection profiles** (also
+  **Connect > Connection profiles…**): add, edit, duplicate, delete, and restore the ones CapyPanel ships
   with. Each has a name, a tool, a login (only the ones
   that tool supports), the tool's options (such as SecureVNC) and a port, blank for the tool's
   own.
@@ -79,15 +79,65 @@ later, and the shared file is never changed.
   with Remote Desktop** and so on, one per profile: the selected hosts open with that profile this
   time, without changing them.
 
-The **Details** panel names the profile each host ends up using, under **Connection**, with an
-arrow beside it, "Change the connection profile". It opens the same list as the right-click
-**Connection profile** submenu, **From group** or a profile by name, so a host's profile can be
-changed from there without opening **Edit selected…**.
-
 A list stores only the profile's ID. When a host or group names a profile your PC doesn't
 have, it follows its group's profile (or the default) instead, and the missing one is marked
 "not available on this PC" wherever it's offered: the host's **Connection profile** field, and a
 group's **Connection profile** menu.
+
+### In the Details panel
+
+![The Details panel's Connection section: address, group, Connect with and Commands run as](../images/commands-details-dark.png)
+
+**Connection**, in the Details panel, shows the host's **Address** and **Group**, then two
+dropdowns:
+
+- **Connect with** is the profile Connect opens it with. A click opens the same list as the
+  right-click **Connection profile** submenu: the group's choice, as in "From group “Front desk”:
+  UltraVNC", or a profile by name, so a host's profile can be changed without opening **Edit
+  selected…**. A small key beside the name means a login is kept for that profile; its tooltip
+  names the user.
+- **Commands run as** is the account that reads who is logged on and runs the host's commands.
+  A click offers **Follow Accounts**, which names what the [Accounts](#accounts-for-other-pcs)
+  table gives this PC, as in "Follow Accounts: EXAMPLE\admin", then **Your Windows account**,
+  each account of the table, and **Another account…**. Picking one sets it for this PC alone, and
+  a small pin beside the name says so ("Only this PC" in its tooltip). **Follow Accounts** takes
+  the pin off.
+
+**Commands run as** is also on a host's right-click, for every host selected, and on a group's,
+where it sets the account for every PC in the group.
+
+## Accounts for other PCs
+
+Reading who is logged on to a PC and running its [commands](commands.md) need an account that's
+an administrator there. By default that's your own Windows account. **Settings > Hosts >
+Credentials > Accounts** says which other account signs in to which PCs:
+
+| Column | What it shows |
+|---|---|
+| **Account** | The user, as `DOMAIN\user` |
+| **Used for** | **Every PC**, a group, as in "Group Clinic › Front desk", a tag, or one PC, as in "DESK-02 (198.51.100.20)" |
+| **Kept in** | Where its password is: **Credential Manager**, **Temporary**, or **Asked when needed** when it hasn't been typed yet |
+
+**Add…** and **Edit…** open one window: **User** ("DOMAIN\user, or empty for your Windows
+account"), **Password** ("Optional: asked the first time it's needed"), **Use it for**: **Every
+PC**, **One PC** (its address or name, as in the host list), **A group** or **A tag**, and
+**Remember it on this computer**. **Remove** takes the row away, and its saved password with it.
+
+When several rows match a PC, the narrowest wins: "A PC's own account wins over its group's, a
+group's over a tag's, and those over Every PC. PCs none of them names use your Windows account."
+Groups and tags are those of the open list. The table is yours only, "kept in your own settings,
+never in the shared host lists", so whoever else uses the same list keeps their own accounts.
+
+When PCs answer **No admin rights** or **Account rejected** while Refresh reads who is logged on,
+CapyPanel asks for another account once the Refresh ends, and checks those PCs again with it. A
+command that failed the same way offers **Try another account…**. Both open **Account for other
+PCs**: the user, the password, and **Use it for**: this PC, each group and tag they all share, or
+every PC, the narrowest first. What you pick becomes a row of the table. An
+account is tried on one PC at a time: "If a computer rejects it, CapyPanel stops and asks again
+instead of trying it on the others, so the account isn't locked."
+
+On PCs that aren't in a domain, the built-in Administrator is the only local account Windows
+accepts remotely.
 
 ## Remote Desktop
 
@@ -105,33 +155,29 @@ below doesn't apply. A Remote Desktop login is never in **Saved credentials** ei
 
 - For VNC, CapyPanel asks for a profile's password the first time you connect with it, and
   **remembers it, per profile**, until it closes. Hosts with another profile never receive it.
-- Where it keeps that password is yours to choose, in **Settings > Hosts > Connection profiles >
-  Credentials**: **Temporary credentials**, the default, "forgotten when CapyPanel closes", or
-  **Credential Manager**, "saved for your Windows account". Neither of them puts a password in a
-  file of CapyPanel's own.
+- Every window that asks for a password, for a profile or for an account, has **Remember it on
+  this computer**, unticked: "Windows keeps it in Credential Manager for your Windows account.
+  Otherwise CapyPanel forgets it when it closes and asks once the next time." Neither way puts a
+  password in a file of CapyPanel's own.
 - Classic VNC passwords are at most 8 characters long, so the password box of an UltraVNC
   "password only" profile stops at 8.
 
 ### Saved credentials
 
-**Credential Manager** keeps a typed password in **Windows Credential Manager**, under your own
-Windows account, so CapyPanel doesn't ask for it again the next time it starts. Its tooltip says
-what that means: "Windows encrypts them for your account, domain accounts too: anyone using your
-Windows session can connect with them." Going back to **Temporary credentials** deletes the ones
-already saved. The choice covers the account typed for reading logged-on users and running
-a host's commands too (see [Checking hosts](checking.md#which-account-is-used)).
+A login you ticked **Remember it on this computer** for is kept in **Windows Credential Manager**,
+under your own Windows account, so CapyPanel doesn't ask for it again the next time it starts.
+That means "Windows encrypts them for your account, so anyone using your Windows session can
+connect with them."
 
-**Connect ▾ > Saved credentials…**, and **Manage…** on the **Saved credentials** row of that same
-settings section, open one window with every login CapyPanel keeps: "Every login CapyPanel keeps
-for you. Passwords never show here." The settings row says how many there are and where, as in
-"2 kept: 1 in Credential Manager, 1 temporary.", or "None kept."
-
-![The Saved credentials window: one row per login, with what it's used for, the tool, the user and where it's kept](../images/saved-credentials-dark.png)
+**Connect ▾ > Saved credentials…**, and **Manage…** on **Settings > Hosts > Credentials >
+Passwords > Saved credentials**, open one window with every login CapyPanel keeps: "Every login
+CapyPanel keeps for you. Passwords never show here." The settings row says how many there are and
+where, as in "2 kept: 1 in Credential Manager, 1 temporary.", or "None kept."
 
 | Column | What it shows |
 |---|---|
-| **Used for** | The connection profile, or **Logged-on users** |
-| **Tool** | What signs in with it, as in "RealVNC Viewer" or "Hosts › Refresh" |
+| **Used for** | The connection profile, or the PCs an account is for, as in "Every PC" |
+| **Tool** | What signs in with it, as in "RealVNC Viewer", or "Hosts › Accounts" for an account |
 | **User** | The user name, or "(password only)" for a profile that takes only a password |
 | **Kept** | **Credential Manager**, or **Temporary** until CapyPanel closes |
 
@@ -140,9 +186,9 @@ viewer rejects a password. **Forget all** asks first, listing every login under 
 Credential Manager:" and "Temporary:", then "CapyPanel asks for them again when it needs them.";
 Cancel is the default button. A login forgotten here is deleted from Credential Manager too.
 
-Only connection logins are listed. The printers' SNMP community string and v3 account are not:
-they're managed in **Settings > Printers > Refresh**, where emptying the field forgets them (see
-[Checking printers](../printers/checking.md#the-snmp-account)).
+Only these logins are listed. The printers' SNMP community string and v3 account are not:
+they're managed in **Settings > Printers > Connecting**, where emptying the field forgets them
+(see [Checking printers](../printers/checking.md#the-snmp-account)).
 
 ## The login check
 
@@ -170,8 +216,7 @@ the host.
 ## Manual connection
 
 **Connect > Manual connection…** (Ctrl+M) reaches an address that isn't in the list. It opens
-the Commands window with an **Address** box instead of a host's name: type the address, pick a
-**Profile** and click **Connect**. An address with a port in it, as in `192.0.2.77:5901`, uses
-that port. **Add to list…** at the bottom puts the PC into the open list, and the commands in the
-window work on it like on any other host (see
-[Commands on a host](commands.md#the-commands-window)).
+the Commands window with its **Host** box empty: type the address, pick a **Profile** and click
+**Connect**. An address with a port in it, as in `192.0.2.77:5901`, uses that port. **Add to host
+list…**, beside the box, puts the PC into the open list, and the commands in the window work on it
+like on any other host (see [Commands on a host](commands.md#the-commands-window)).

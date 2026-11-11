@@ -7,17 +7,19 @@ address you type.
 
 Nothing is installed on the other PC and nothing of yours runs there. Every command uses
 Windows' own remote functions: file sharing, the session service, remote shutdown, the print
-spooler, the service manager, and WMI for the PC's facts and its installed programs. The account
-is your own Windows login, or the one you typed for reading logged-on users (see
-[Which account is used](checking.md#which-account-is-used)).
+spooler, the service manager, and WMI for the PC's facts, its installed programs and its mapped
+drives (see [How CapyPanel reads other PCs](checking.md#how-capypanel-reads-other-pcs)). The
+account is the one the Details panel's **Commands run as** names for the host: your own Windows
+login, unless an account is set for it (see
+[Accounts for other PCs](connecting.md#accounts-for-other-pcs)).
 
 ## Where they are
 
 ![The Hosts window: the Commands button on the toolbar and the command buttons under the host's name in Details](../images/commands-details-dark.png)
 
 - **Right-click a host:** after **Refresh status** and **Refresh logged-on users**, one submenu
-  per group: **Check**, **Open**, **Users**, **Power** and **Printers**. They work on one host
-  with an address, so they're greyed when you selected several or none.
+  per group: **Check**, **Folders**, **Admin tools**, **Users**, **Printers** and **Power**. They
+  work on one host with an address, so they're greyed when you selected several or none.
 - **The toolbar:** **Commands**, beside Refresh, opens the
   [Commands window](#the-commands-window) for the selected host. Its arrow lists the same groups,
   and ends with **All commands…**, which opens that window too.
@@ -37,38 +39,40 @@ always ask first.
 
 | Command | What it does |
 |---|---|
-| **Run all checks** | Status, logged-on users and PC facts, one after the other |
+| **Quick check** | Status, logged-on users and PC facts, one after the other |
 | **Status** | Whether the PC answers on the network (see [Checking hosts](checking.md#status)) |
 | **Logged-on users** | Who is signed in, and since when |
 | **PC facts** | Windows version, model, serial number, memory, free space and last restart (see [PC facts](checking.md#pc-facts)) |
 | **Installed programs** | The programs installed for every user of the PC |
 
-**Open** opens something on *your* PC pointed at the other one:
+**Folders** and **Admin tools** open something on *your* PC pointed at the other one:
 
 | Command | What it opens |
 |---|---|
 | **C$ share** (Ctrl+E) | The PC's C: drive in File Explorer |
+| **{user}'s folder** (Ctrl+Shift+U) | The signed-in user's profile folder |
 | **Startup folder** | The programs that start for every user who signs in |
 | **Open a path…** (Ctrl+Shift+O) | Any folder on the PC, such as `D:\Logs` |
-| **{user}'s folder** (Ctrl+Shift+U) | The signed-in user's profile folder |
 | **Computer Management** (Ctrl+Shift+M) | Windows' Computer Management, pointed at the PC |
 | **Event Viewer** | The PC's event logs |
 | **Services** | The PC's Windows services |
 
-A folder waits for the PC to answer before File Explorer opens, because Explorer itself can hang
-for half a minute on a PC that's off. A path that isn't a folder is refused with "there's no
-folder there.", so that a file is never opened, and so run, on your own PC. The three Windows
-consoles open straight away and show their own error when the PC can't be reached.
+The first four are **Folders**, the last three **Admin tools**. A folder waits for the PC to answer
+before File Explorer opens, because Explorer itself can hang for half a minute on a PC that's off.
+A path that isn't a folder is refused with "there's no folder there.", so that a file is never
+opened, and so run, on your own PC. The three Windows consoles open straight away and show their
+own error when the PC can't be reached.
 
-**Users** holds **Send a message…**. Log off and Disconnect act on one person, so they're offered
-on that person instead: in Details, or under the amber users button, which lists everyone signed
-in as a heading, as in "ana.admin  (at the PC, active, since 8:05 AM)", with **Log off…** and
-**Disconnect…** under each. It's greyed when nobody is signed in, or nobody was checked yet.
+**Users** holds **Send a message…** and **Mapped drives**. Log off and Disconnect act on one
+person, so they're offered on that person instead: in Details, or under the amber users button,
+which lists everyone signed in as a heading, as in "ana.admin  (at the PC, active, since 8:05
+AM)", with **Log off…** and **Disconnect…** under each. It's greyed when nobody is signed in, or
+nobody was checked yet.
+
+**Printers** holds **Printers on this PC** and **Restart Print Spooler…**.
 
 **Power** holds **Restart…**, **Shut down…** and **Cancel the pending restart**, the last one
 greyed unless a restart CapyPanel asked for is still waiting.
-
-**Printers** holds **Printers on this PC** and **Restart Print Spooler…**.
 
 ## The questions and the small windows
 
@@ -86,6 +90,16 @@ tooltip says where each of them is signed in; disconnected sessions, and your ow
 included. It pops up on their screen until they click OK, titled "Message from {your Windows user
 name}", and Windows shows about 255 characters of it.
 
+### Mapped drives
+
+![Mapped drives on a host: each person signed in, their drive letters and where each one points](../images/commands-drives-dark.png)
+
+The network drives saved for each person signed in to the PC: **Person**, **Drive** and **Path**,
+as in "Drives saved for the 2 people signed in to DESK-02, read at 11:56 AM.". "These are the
+drives that come back at every sign-in." A person with none reads "No saved drives". They're read
+from each person's part of the PC's registry over WMI; nothing is run on the PC. **Copy list** puts
+the rows on the clipboard, and **Read again** reads them afresh.
+
 ### Log off… and Disconnect…
 
 Both ask first, naming the person and where they're signed in. Log off warns that "Work they
@@ -94,13 +108,20 @@ next time. Cancel is the button that's ready to press.
 
 ### Restart… and Shut down…
 
-![The Restart question: who is signed in, when it restarts, and the message they get](../images/commands-restart-dark.png)
+![The Restart question: who is signed in, When set to Now, and the message box greyed](../images/commands-restart-dark.png)
 
 This window is the question. It names whoever is signed in and what they stand to lose. **When**
-is **Now**, or **In 1 minute**, **In 5 minutes** (the usual choice) or **In 15 minutes**, each
-with a message Windows shows them with a countdown, prefilled as "This PC restarts in 5 minutes.
-Please save your work." and yours to change. Pick **Now** and the message box greys out, saying
-"No message: it restarts right away.", and the button becomes **Restart now**.
+starts on **Now**: the message box greys out, saying "No message: it restarts right away.", a line
+under it warns "Now restarts DESK-02 at once, with no warning on its screen. Pick a delay to send
+them a message first.", and the button reads **Restart now**.
+
+**In 1 minute**, **In 5 minutes** and **In 15 minutes** each come with a message Windows shows
+them with a countdown, prefilled as "This PC restarts in 5 minutes. Please save your work." and
+yours to change; the button then reads **Restart**.
+
+The keyboard starts on **When**: the arrow keys pick, **Tab** goes to the message (when there is
+one), then to the amber button, where **Enter** runs it. Enter anywhere else is **Cancel**, the
+default button.
 
 ### Printers on this PC
 
@@ -135,8 +156,9 @@ DESK-02.", and the strip closes by itself after a few seconds.
 
 A command that failed says so in red, with Windows' own reason: "Couldn't log off bruno.costa on
 DESK-02: access denied. It needs an admin account on that PC." That strip stays until you close
-it. When the account was the problem, **Try another account…** asks for another one, the same
-account the logged-on users check uses, and runs the command again.
+it. When the account was the problem, **Try another account…** asks for another one, and for which
+PCs to use it (see [Accounts for other PCs](connecting.md#accounts-for-other-pcs)), then runs the
+command again.
 
 Opening a folder is the exception: it says "Opened \\DESK-02\C$" in the status bar, where the
 rest of what you open shows too.
@@ -157,33 +179,30 @@ watching 20 minutes after the restart time.
 
 ## The Commands window
 
-![The Commands window: the groups on the left, every command in the middle, what the picked one found on the right](../images/commands-window-dark.png)
+![The Commands window: the Host box on top, the groups on the left, every command in the middle, what the picked one found on the right](../images/commands-window-dark.png)
 
 The Commands window holds every command for one PC in one place, with its answer beside it. It
 opens from the **Commands** button, from **All commands…**, and from **Connect > Manual
-connection…** (Ctrl+M), which is the same window for an address that isn't in your list.
+connection…** (Ctrl+M), which is the same window for an address that isn't in your list. It's a
+window of its own, beside the main one rather than over it: you can go back to the host list and
+leave it open.
 
-- **On top:** the host's name and address, or an **Address** box when you typed one (`host:port`
-  works), then **Profile** and **Connect**. The window is called "Commands" for a host of yours,
-  "Manual connection" for an address you typed.
-- **On the left:** a **Search** box and the five groups; a click jumps to a group.
+- **On top:** the **Host** box, then **Profile** and **Connect**. The box lists the hosts the
+  Hosts panel shows, as "DESK-02 · 192.0.2.12", and under **Recent** the addresses you typed
+  before; you can also type a name or an address (`host:port` works). Picking another host
+  changes the whole window to it, its profile included. The title says "Commands · DESK-02" for a
+  host of yours, "Manual connection · 198.51.100.40" for an address you typed.
+- **Add to host list…** shows beside the box only for a typed address the open list doesn't have:
+  it puts the PC into the list, with the address already filled in.
+- **On the left:** a **Search** box and the six groups; a click jumps to a group.
 - **In the middle:** every command, one line each. The one you pick grows to show what it does
-  and a **Run** button. The arrow keys move, Enter runs, and typing anywhere searches.
+  and a **Run** button. The arrow keys move, Enter runs, and typing anywhere searches; a
+  double-click only picks, so a risky command never runs by accident.
 - **On the right:** what the command found, laid out as the Details panel lays it out: the
   status, who is logged on, the PC facts, or the last answer with **Try another account…**.
-  Printers on this PC and Installed programs show there as tables: right-click a printer to clear
-  its queue or copy the row, and a program to copy the row, copy or export the whole list, or
-  open the list in its own window with a search. Commands that need you to type something open
-  their small window over this one.
-- **At the bottom:** **Add to list…** puts a typed address into the open host list, with the
-  address already filled in. For a PC that's in the list already it's greyed, and its tooltip
-  says where: "Already in this list: in Front desks, as DESK-02".
-
-## Which account is used
-
-Your own Windows login, and otherwise the account you typed when a host answered **No admin
-rights** or **Account rejected** while reading logged-on users. That one window, **Account for
-other PCs**, covers both: as it says, the account is "used only to read who is logged on and for
-the commands you run on a host". Where it's kept, and how to forget it, is in
-[Checking hosts](checking.md#which-account-is-used) and
-[Connecting](connecting.md#saved-credentials).
+  Printers on this PC, Installed programs and Mapped drives show there as tables: right-click a
+  printer to clear its queue or copy the row, and a program to copy the row, copy or export the
+  whole list, or open the list in its own window with a search. Commands that need you to type
+  something open their small window over this one.
+- **At the bottom:** a line of help, "↑ ↓ pick, Enter runs, typing searches. Commands that need
+  more open a small window; risky ones ask first.", and **Close**.

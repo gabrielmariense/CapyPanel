@@ -12,19 +12,21 @@ O CapyPanel é um app de desktop para Windows feito para equipes de TI: organize
 computadores que você administra, veja quais estão ligados e quem está logado neles, e abra a tela
 remota de qualquer um pela Área de Trabalho Remota ou pelo visualizador VNC que você já usa. Ele
 guarda também as suas impressoras, com os detalhes de que você precisa e a página web delas a um
-clique.
+clique, e encontra num PC os perfis de usuário do Windows que ninguém usa mais, para você
+excluí-los.
 
-> **Situação: beta (0.23.1).** Roda a partir do código-fonte; ainda não há instalador.
+> **Situação: beta (0.24.0).** Roda a partir do código-fonte; ainda não há instalador.
 
-![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts e outro para Impressoras](docs/images/home-dark-pt-BR.png)
+![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts, Impressoras e Perfis de usuário](docs/images/home-dark-pt-BR.png)
 
 ## O que ele faz
 
 - Hosts
   - Conexão remota: UltraVNC, RealVNC, Área de Trabalho Remota
   - Perfis de conexão
+  - Contas para outros PCs, por PC, grupo ou tag
   - Listas compartilhadas, grupos e tags
-  - Status, usuários logados e dados do PC
+  - Status, usuários logados, dados do PC e unidades mapeadas
   - Comandos num PC: as pastas e os consoles dele, os usuários, a energia e as impressoras
   - Pesquisa, importação e exportação
 - Impressoras
@@ -33,6 +35,10 @@ clique.
   - Contadores de páginas do Doc360 MPS
   - Avisos quando uma impressora requer atenção
   - Páginas web e relatórios
+- Perfis de usuário
+  - Os perfis do Windows de um PC: de quem, último uso, tamanho
+  - Quais podem ser excluídos, e por que os outros não
+  - Excluir os que você marcar, em vários PCs ao mesmo tempo
 
 ## Documentação
 
@@ -46,16 +52,19 @@ Também online, com busca: **[gabrielmariense.github.io/CapyPanel/pt-BR](https:/
 - [Importando e exportando hosts](docs/hosts/importing.pt-BR.md): muitos hosts de uma vez, entrando
   e saindo em CSV
 - [Conectando](docs/hosts/connecting.pt-BR.md): visualizadores VNC, Área de Trabalho Remota, perfis
-  de conexão e senhas
-- [Verificando hosts](docs/hosts/checking.pt-BR.md): status, usuários logados e dados do PC
+  de conexão, contas e senhas
+- [Verificando hosts](docs/hosts/checking.pt-BR.md): status, usuários logados, dados do PC e
+  como o CapyPanel lê outros PCs
 - [Comandos em um host](docs/hosts/commands.pt-BR.md): pastas e consoles, mensagens, logoff,
-  reinicialização, impressoras e programas instalados
+  reinicialização, impressoras, programas instalados e unidades mapeadas
 - [Pesquisando hosts](docs/hosts/searching.pt-BR.md): encontrar um host em qualquer lugar da lista
 - [A ferramenta Impressoras](docs/printers/printers.pt-BR.md): impressoras, os detalhes delas e as
   páginas web
 - [Verificando impressoras](docs/printers/checking.pt-BR.md): status, toner e suprimentos por SNMP
 - [Listas de impressoras](docs/printers/printer-lists.pt-BR.md): onde as listas de impressoras
   ficam e as configurações delas
+- [A ferramenta Perfis de usuário](docs/profiles/user-profiles.pt-BR.md): os perfis do Windows
+  de um PC, e excluir os que ninguém usa
 - [Desenvolvimento](docs/development.pt-BR.md): compilar, testar e traduzir
 
 ## Início rápido (pelo código-fonte)

@@ -8,7 +8,7 @@ every dependency at the exact versions in `uv.lock`.
 ```
 uv sync                     # install exactly the versions in uv.lock
 uv run capypanel            # start the app
-uv run pytest               # tests
+uv run pytest -n auto --dist loadgroup   # tests, spread over every CPU core, as CI runs them
 uv run ruff check           # lint
 uv run ruff format          # format
 uv run pyright              # type check
@@ -62,7 +62,8 @@ The pages in `docs/` are also published as a website with
 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/), each time they change on
 `main`. Each English page (`name.md`) has its Portuguese version beside it
 (`name.pt-BR.md`); change both together. Pages about the whole app sit in `docs/`, and a tool's
-own pages in a folder of its own, `docs/hosts/`. To preview the site while writing:
+own pages in a folder of its own: `docs/hosts/`, `docs/printers/` and `docs/profiles/`. To
+preview the site while writing:
 
 ```
 uv run --only-group docs mkdocs serve
@@ -71,4 +72,6 @@ uv run --only-group docs mkdocs serve
 ## Versions
 
 Versions are `0.MINOR.PATCH` until 1.0: a merged feature bumps MINOR, a fix-only change bumps
-PATCH. Running from source, the title bar adds the commit to the version.
+PATCH. Running from source, the title bar adds a build number and the commit to the version, as
+in `0.24.0 build 1378 (abc1234)`. The build number counts every commit that led to it, so a
+bigger number is always a newer build.

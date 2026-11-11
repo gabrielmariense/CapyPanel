@@ -121,7 +121,7 @@ menu holds:
 - **New list…**, below them, and **Open list…** (Ctrl+O), which opens any list file from anywhere
   and keeps it in the dropdown from then on;
 - **Manage host lists…**, which opens
-  [Settings > Hosts > Host lists](#settings-hosts-host-lists).
+  [Settings > Hosts > General > Host lists](#settings-hosts-general-host-lists).
 
 ## Making a new list
 
@@ -136,7 +136,7 @@ menu holds:
 A name already taken asks before replacing that file with an empty list. The new list opens at
 once.
 
-## Settings > Hosts > Host lists
+## Settings > Hosts > General > Host lists
 
 The same lists as the dropdown, as a table of **List**, **Type** and **Access**:
 
@@ -165,14 +165,14 @@ removed.
 
 ## Which list opens at start
 
-Choose it under **Settings > Hosts > Startup > List on startup**: the last used list
+Choose it under **Settings > Hosts > General > List on startup**: the last used list
 (the default choice), the default list, your personal list, or any other list you have. If that
 list can't be opened, CapyPanel opens the next one it can, the default list and then your
 personal list, and says so.
 
 ## What a list shows first
 
-Each list keeps its own answer, in **Settings > Hosts > Startup > Show first**:
+Each list keeps its own answer, in **Settings > Hosts > General > Show first**:
 
 - **All hosts**, the whole list;
 - **Where I left off**, the group, tag or view you had open when you closed it;

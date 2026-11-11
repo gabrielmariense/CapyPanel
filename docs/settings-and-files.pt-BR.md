@@ -4,54 +4,45 @@ As Configurações são a engrenagem embaixo na barra lateral, e **Arquivo > Con
 (Ctrl+,). **Cada escolha vale assim que você a faz.** Não há botão Salvar nem botão Fechar: o **×**
 da janela ou o **Esc** a fecham, e nada nunca pergunta sobre alterações não salvas.
 
+![As Configurações em CapyPanel > Geral: a lista de páginas à esquerda, Aparência e Inicialização e fechamento à direita](images/settings-dark-pt-BR.png)
+
 ## Como a janela funciona
 
-À esquerda ficam uma caixa **Pesquisar configurações** e uma lista de tudo que as Configurações
-guardam, agrupada: **CapyPanel** primeiro, depois um grupo por ferramenta, **Hosts** e
-**Impressoras**. Embaixo do nome de cada grupo ficam as seções dele, recuadas. **Sobre** fica
-sozinha no fim da lista, embaixo dos grupos.
+À esquerda ficam uma caixa **Pesquisar configurações** e a lista de páginas, agrupada:
+**CapyPanel** primeiro, depois um grupo por ferramenta que tem configurações, **Hosts** e
+**Impressoras**. **Sobre** fica sozinha no fim da lista, embaixo dos grupos.
 
-| Grupo | Seções |
+| Grupo | Páginas |
 |---|---|
-| **CapyPanel** | Inicialização, Idioma, Tema |
-| **Hosts** | Inicialização, Atualizar, Listas de hosts, Perfis de conexão, Ferramentas remotas |
-| **Impressoras** | Inicialização, Atualizar, Listas de impressoras |
+| **CapyPanel** | Geral |
+| **Hosts** | Geral, Conexão, Credenciais |
+| **Impressoras** | Geral, Avisos e suprimentos, Conexão |
 
-Um grupo é uma página só, comprida. Clicar numa seção da lista rola a página até ela, e, conforme
-você rola, a lista acompanha e destaca onde você está. As Configurações abrem em **CapyPanel >
-Inicialização**.
+Um clique numa página mostra só aquela página. As Configurações abrem em **CapyPanel > Geral**.
 
-Cada seção é um título com as configurações dele num cartão arredondado embaixo. Uma configuração
-simples é uma linha: o nome dela, uma descrição de uma linha embaixo e o controle na ponta direita.
-Tudo que guarda várias coisas, de listas de hosts a licenças, é a mesma tabela em todo lugar:
-linhas de grade, um cabeçalho, seis linhas antes de rolar, as ações principais como botões embaixo,
-**todas as ações de uma linha no botão direito dela** e um clique duplo para a mais óbvia. A janela
-abre num tamanho fixo, e uma página mais alta que ela rola.
+Cada página é feita de seções: um título com as configurações dele num cartão arredondado embaixo.
+Uma configuração simples é uma linha: o nome dela, uma descrição de uma linha embaixo e o controle
+na ponta direita. Tudo que guarda várias coisas, de listas de hosts a licenças, é a mesma tabela em
+todo lugar: linhas de grade, um cabeçalho, seis linhas antes de rolar, as ações principais como
+botões embaixo, **todas as ações de uma linha no botão direito dela** e um clique duplo para a mais
+óbvia. Cada coluna mostra o texto inteiro, e quando não cabem todas, a tabela rola para o lado; o
+botão direito nos títulos das colunas oferece **Ajustar colunas ao conteúdo**. A janela abre num
+tamanho fixo, e uma página mais alta que ela rola.
 
 ### Pesquisar nas configurações
 
-Digite três letras ou mais e o lado direito mostra todas as seções que as mencionam, de todos os
-grupos, cada uma sob o nome do grupo de onde veio, com as palavras encontradas marcadas em amarelo.
-As palavras são procuradas pelo começo. As configurações funcionam ali, então você pode mudar o que
-procurava sem ir até o grupo dela. Um menu cuja correspondência é uma das opções, e não a que está
-à mostra, recebe a marca na setinha. Clicar num grupo, ou limpar a caixa, põe tudo de volta no
-lugar.
+Digite três letras ou mais e o lado direito mostra todas as seções que as mencionam, de todas as
+páginas, cada uma sob o lugar onde fica, como "Hosts › Conexão", com as palavras encontradas
+marcadas em amarelo. As palavras são procuradas pelo começo. A lista de páginas fica só com as
+páginas que têm alguma correspondência. As configurações funcionam ali, então você pode mudar o que
+procurava sem ir até a página dela. Um menu cuja correspondência é uma das opções, e não a que está
+à mostra, recebe a marca na setinha. Limpar a caixa põe tudo de volta, na página em que você
+estava.
 
-## CapyPanel
+## CapyPanel > Geral
 
-**Inicialização > Abrir ao iniciar** é o que a janela mostra quando o CapyPanel inicia: a **Página
-inicial**, **A última ferramenta usada** ou uma ferramenta pelo nome.
-
-**Inicialização > Ao fechar** é o que o **✕** da janela faz: **Perguntar sempre**, o padrão,
-**Manter aberto na bandeja** ou **Sair**. "O que o ✕ da janela faz. Na bandeja, a atualização
-sozinha e os avisos continuam funcionando." Veja
-[Primeiros passos](getting-started.pt-BR.md#fechando-o-capypanel-e-a-bandeja).
-
-**Idioma** é English ou Português (Brasil). "O idioma do aplicativo. Muda na hora.", e isso vale
-para a própria janela de Configurações, sem reiniciar.
-
-**Tema:** "Os temas do Windows seguem a aparência e a cor do Windows; os do CapyPanel são iguais em
-todo lugar."
+**Aparência > Tema:** "Os temas do Windows seguem a aparência e a cor do Windows; os do CapyPanel
+são iguais em todo lugar."
 
 | Tema | Visual |
 |---|---|
@@ -67,9 +58,28 @@ Cores**), e tudo o que vem dela continua legível com qualquer uma que você esc
 das seções, o botão padrão, os destaques e o título Grupos quando você arrasta um grupo até ele. Os
 visuais próprios do CapyPanel mantêm os destaques deles, iguais em todo computador.
 
-## Hosts
+**Aparência > Idioma** é English ou Português (Brasil). "O idioma do aplicativo. Muda na hora.", e
+isso vale para a própria janela de Configurações, sem reiniciar.
 
-### Inicialização
+**Inicialização e fechamento > Abrir ao iniciar** é o que a janela mostra quando o CapyPanel
+inicia: a **Página inicial**, **A última ferramenta usada** ou uma ferramenta pelo nome.
+
+**Inicialização e fechamento > Ao fechar** é o que o **✕** da janela faz: **Perguntar sempre**, o
+padrão, **Manter aberto na bandeja** ou **Sair**. "O que o ✕ da janela faz. Na bandeja, a
+atualização sozinha e os avisos continuam funcionando." Veja
+[Primeiros passos](getting-started.pt-BR.md#fechando-o-capypanel-e-a-bandeja).
+
+## Hosts > Geral
+
+### Listas de hosts
+
+A tabela de todas as listas que o CapyPanel encontrou ou que você adicionou, com o que você pode
+fazer com cada uma, e os botões que criam, adicionam e removem listas. O menu de listas no topo do
+painel de grupos a abre em **Gerenciar listas de hosts…**.
+[Listas de hosts](hosts/host-lists.pt-BR.md#configuracoes-hosts-geral-listas-de-hosts) descreve a
+tabela, os botões e o que o **Remover** pergunta.
+
+Embaixo dela, duas linhas:
 
 - **Lista ao iniciar:** qual lista de hosts abre com a ferramenta. "Se essa lista não abrir: a
   lista padrão, depois a sua lista pessoal."
@@ -88,13 +98,9 @@ vez.
 ferramentas sempre funciona." Vem desligado até você ligar; veja
 [Verificando hosts](hosts/checking.pt-BR.md#status-automatico).
 
-### Listas de hosts
+## Hosts > Conexão
 
-A tabela de todas as listas que o CapyPanel encontrou ou que você adicionou, com o que você pode
-fazer com cada uma, e os botões que criam, adicionam e removem listas. O menu de listas no topo do
-painel de grupos a abre em **Gerenciar listas de hosts…**.
-[Listas de hosts](hosts/host-lists.pt-BR.md#configuracoes-hosts-listas-de-hosts) descreve a
-tabela, os botões e o que o **Remover** pergunta.
+![Configurações > Hosts > Conexão: os perfis de conexão, as ferramentas remotas e o Ler dados dos PCs com](images/settings-hosts-connecting-dark-pt-BR.png)
 
 ### Perfis de conexão
 
@@ -115,16 +121,7 @@ as faz, e o **Excluir…** pergunta antes. Onde o Windows não deixa você grava
 acrescenta que é somente leitura, e que só quem ele deixa gravar pode alterá-los.
 
 **Hosts sem perfil usam** é a última linha da seção: "O perfil com que um host conecta quando não
-tem um próprio." Duas linhas vêm depois dela, sobre as senhas digitadas ao conectar:
-
-- **Credenciais:** **Credenciais temporárias**, "esquecidas quando o CapyPanel fecha", ou
-  **Gerenciador de Credenciais**, "salvas para a sua conta do Windows". Ela vale também para a
-  conta digitada para outros PCs, a que lê os usuários logados e executa os comandos de um host.
-- **Credenciais salvas:** quantos logins estão guardados e onde, como "2 guardados: 1 no
-  Gerenciador de Credenciais, 1 temporário.", com um **Gerenciar…** para abrir a janela que os
-  lista.
-
-O [Conectando](hosts/connecting.pt-BR.md#credenciais-salvas) explica as duas.
+tem um próprio."
 
 O CapyPanel enche a pasta de perfis no primeiro início com os perfis que vêm com ele (RealVNC,
 Remote Desktop e UltraVNC) e um arquivo de configurações, `_profiles.json`, que registra a escolha
@@ -153,19 +150,46 @@ Embaixo das duas tabelas, uma linha diz quais arquivos o CapyPanel não está us
 Passe o mouse nela para ver os caminhos inteiros e os erros; ela fica escondida quando todos os
 arquivos estão em uso.
 
+A seção termina com **Ler dados dos PCs com**: como o CapyPanel lê os dados do PC, os programas
+instalados, as unidades mapeadas e os perfis de usuário de outros PCs. **Automático
+(recomendado)**, **WMI direto** ou **WMI pelo PowerShell**; com o Automático, o "em uso:" ao lado
+diz o jeito que ele usa neste PC. Como os caminhos das ferramentas, vale para todos neste PC.
+Deixe no Automático, a não ser que
+[Como o CapyPanel lê outros PCs](hosts/checking.pt-BR.md#como-o-capypanel-le-outros-pcs) dê um
+motivo para fixar um deles.
+
+## Hosts > Credenciais
+
+![Configurações > Hosts > Credenciais: a tabela Contas, e Credenciais salvas em Senhas](images/settings-hosts-credentials-dark-pt-BR.png)
+
+**Contas** é a tabela **Conta | Usada para | Guardada em**, com **Adicionar…**, **Editar…** e
+**Remover**: qual conta entra em quais PCs, para os usuários logados do Atualizar e os comandos que
+você executa em um host. Ela é só sua, "guardadas nas suas próprias configurações, nunca nas
+listas de hosts compartilhadas". O
+[Conectando](hosts/connecting.pt-BR.md#contas-para-outros-pcs) explica como um PC encontra a
+conta dele.
+
+**Senhas > Credenciais salvas** diz quantos logins o CapyPanel guarda e onde, como "2 guardados: 1
+no Gerenciador de Credenciais, 1 temporário.", com um **Gerenciar…** para abrir a janela que os
+lista (veja [Conectando](hosts/connecting.pt-BR.md#credenciais-salvas)).
+
 ## Impressoras
 
-**Inicialização > Lista ao iniciar** e **Mostrar primeiro** funcionam como no Hosts, para listas
-de impressoras, e **Listas de impressoras** é a mesma tabela e os mesmos botões do Listas de
-hosts. As duas estão em [Listas de impressoras](printers/printer-lists.pt-BR.md#configuracoes).
+**Impressoras > Geral** guarda as **Listas de impressoras**, a mesma tabela e os mesmos botões do
+Listas de hosts, com **Lista ao iniciar** e **Mostrar primeiro** embaixo, funcionando como no
+Hosts. Eles estão em [Listas de impressoras](printers/printer-lists.pt-BR.md#configuracoes).
 
-O **Atualizar** guarda as oito configurações de leitura das impressoras: a **Versão do SNMP**, v2c
-ou v3, a **Conta SNMP** dela atrás de um botão **Alterar…**, a **Conta do Doc360 MPS** atrás de
-outro, para as impressoras cujos contadores de páginas vêm daquele portal, o **Atualizar
-sozinho**, a **Notificação do Windows** sobre as impressoras que requerem atenção, o **Nível
-baixo de suprimento** entre 1 e 50 %, as **Marcas das barras** de suprimento, e se a **Coluna
-Toner** mostra texto ou uma barra. O [Verificando impressoras](printers/checking.pt-BR.md)
-explica as oito.
+**Impressoras > Avisos e suprimentos** guarda o **Atualizar**: o **Atualizar sozinho** e a
+**Notificação do Windows** sobre as impressoras que requerem atenção; e os **Suprimentos**: o
+**Nível baixo de suprimento** entre 1 e 50 %, as **Marcas das barras** de suprimento, e se a
+**Coluna Toner** mostra texto ou uma barra.
+
+**Impressoras > Conexão** guarda o **SNMP**: a **Versão do SNMP**, v2c ou v3, e a **Conta SNMP**
+dela atrás de um botão **Alterar…**; e o **Doc360 MPS**: a **Conta do Doc360 MPS** atrás de
+outro, para as impressoras cujos contadores de páginas vêm daquele portal.
+
+O [Verificando impressoras](printers/checking.pt-BR.md) explica todas elas. A ferramenta Perfis de
+usuário não tem configurações próprias: ela usa as listas e as contas do Hosts.
 
 ## Sobre
 
@@ -199,10 +223,11 @@ com uma pasta privada por usuário:
 |---|---|
 | Listas compartilhadas com todos no PC, uma pasta por tipo | `lists\hosts\`, `lists\printers\` |
 | Perfis de conexão, seus arquivos de configurações, e qual deles os hosts usam sem um próprio | `profiles\` |
-| Definições de visualizadores adicionadas pela sua empresa, e onde cada visualizador está instalado | `tools\` |
-| Suas configurações | `users\<você@DOMÍNIO>\` |
+| Definições de visualizadores adicionadas pela sua empresa, onde cada visualizador está instalado, e como os outros PCs são lidos | `tools\` |
+| Suas configurações, entre elas as suas contas para outros PCs | `users\<você@DOMÍNIO>\` |
 | Suas próprias listas, uma pasta por tipo | `users\<você@DOMÍNIO>\lists\hosts\`, `…\lists\printers\` |
-| Logs, um arquivo por usuário | `logs\` |
+| Logs, um arquivo por usuário | `logs\<você@DOMÍNIO>.log` |
+| Todo perfil de usuário que você excluiu, ou tentou excluir | `logs\<você@DOMÍNIO>.user-profiles.log` |
 | Definições de visualizadores embutidas e os perfis iniciais | Dentro do app |
 
 - **Sua pasta é privada:** só você, os administradores e o próprio Windows podem abri-la. O
@@ -211,8 +236,10 @@ com uma pasta privada por usuário:
   arquivos no ProgramData, então o CapyPanel ignora um arquivo compartilhado (uma lista, um
   perfil, uma definição de visualizador da empresa) criado por outro usuário que não seja
   administrador, e registra isso no log.
-- **Os logs nunca contêm senhas.** Eles registram qual visualizador abriu para qual endereço e o
-  resultado de cada verificação de login.
+- **Os logs nunca contêm senhas.** Eles registram qual visualizador abriu para qual endereço, o
+  resultado de cada verificação de login e, a cada início, o jeito como o CapyPanel lê outros
+  PCs. O log de perfis de usuário guarda, para cada exclusão, quando, em qual PC, de quem era o
+  perfil e como terminou.
 
 O CapyPanel cria essas pastas no primeiro início. Listas de uma versão anterior são copiadas para
 dentro delas uma vez, sozinhas: os arquivos `hosts.json` de antes da 0.19 e as listas que a 0.19

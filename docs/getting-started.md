@@ -12,8 +12,9 @@ uv run capypanel
 ```
 
 The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
-The version shows in the title bar, followed by the commit when you run from source, e.g.
-`CapyPanel 0.23.1 (abc1234)`. Quote it when you report a problem.
+The version shows in the title bar. When you run from source it's followed by a build number
+and the commit, e.g. `CapyPanel 0.24.0 build 1378 (abc1234)`; a bigger build number is a newer
+build. Quote it when you report a problem.
 
 Remote Desktop works out of the box, with the client built into Windows. For VNC you also need a
 viewer: [UltraVNC](https://uvnc.com) or
@@ -29,27 +30,29 @@ with one line about it and its shortcut. Click a tile to open that tool.
 |---|---|
 | **Hosts** (Ctrl+1) | "Your computers: connect, see who's logged on, check them." |
 | **Printers** (Ctrl+2) | "Your printers: status and toner, web pages, reports." |
+| **User profiles** (Ctrl+3) | "A PC's Windows profiles: see which can be deleted." |
 
 ![The Home page: the rail on the left, the capybara and the app's name, and a tile for each tool](images/home-dark.png)
 
-Home is the top button on the rail, **View > Home**, and **Ctrl+0**. Both tools are always there;
-there's nothing to turn on. To start somewhere else, set **Settings > CapyPanel > Startup > Open on
-startup** to the last used tool, or to one by name.
+Home is the top button on the rail, **View > Home**, and **Ctrl+0**. Every tool is always there;
+there's nothing to turn on. To start somewhere else, set **Settings > CapyPanel > General > Open
+on startup** to the last used tool, or to one by name.
 
 The rest of this page is about the **Hosts** tool. Printers has its own pages, starting at
-[The Printers tool](printers/printers.md).
+[The Printers tool](printers/printers.md), and so has
+[User profiles](profiles/user-profiles.md).
 
 ## The Hosts window
 
-![The Hosts window: groups on the left, the hosts in the middle with their status and user, one host's details on the right](images/main-window-dark.png)
+![The Hosts window: groups on the left, the hosts in the middle, one host's details on the right](images/main-window-dark.png)
 
 | Part | What it shows |
 |---|---|
-| **The rail** (left edge) | **Home** (Ctrl+0) at the top, then one icon per tool with its name in a tooltip, **Hosts** (Ctrl+1) and **Printers** (Ctrl+2), and **Settings** (Ctrl+,) at the bottom. Where you are has a tinted square behind its icon |
+| **The rail** (left edge) | **Home** (Ctrl+0) at the top, then one icon per tool with its name in a tooltip, **Hosts** (Ctrl+1), **Printers** (Ctrl+2) and **User profiles** (Ctrl+3), and **Settings** (Ctrl+,) at the bottom. Where you are has a tinted square behind its icon |
 | **Toolbar** (top) | The buttons of the tool you're in. For Hosts: **Connect**, **Refresh**, **Commands**, **Inventory** and **Report** |
 | **Groups panel** (left) | The open list's name on top, as a dropdown that switches lists. Then "All hosts" with how many hosts the list has, and "No group" under it with how many are in none. Then **Groups**, with a **+** button to add one, and **Tags** |
 | **Hosts panel** (middle) | The search box (see [Searching hosts](hosts/searching.md)) above the hosts in the selected group or tag, with their **Status** and **User** |
-| **Details panel** (right) | The selected host: its name and status, a row of buttons for its [commands](hosts/commands.md), then **Connection** (address, group, profile), who's **logged on**, the **PC facts**, its **tags** and its **notes**. Click any value to copy it. With nothing selected, how many hosts are shown, and how many of them are online, offline, not found or not checked |
+| **Details panel** (right) | The selected host: its name and status, a row of buttons for its [commands](hosts/commands.md), then **Connection** (address, group, what **Connect with** opens and the account **Commands run as**; see [Connecting](hosts/connecting.md#in-the-details-panel)), who's **logged on**, the **PC facts**, its **tags** and its **notes**. Click any value to copy it. With nothing selected, how many hosts are shown, and how many of them are online, offline, not found or not checked |
 | **Status bar** | Which list is open, where it is, how many hosts it has, how many are online once anything has been checked, and how many are selected |
 
 The menu bar is the same whichever tool you're in, and holds nothing a tool owns:
@@ -93,8 +96,9 @@ The **Inventory** button on the toolbar holds everything that puts hosts in a li
    a connection to it with its profile.
 
 Right-click a host to connect, to refresh its status or its logged-on users, to run one of its
-[commands](hosts/commands.md) from **Check ▸**, **Open ▸**, **Users ▸**, **Power ▸** or
-**Printers ▸**, to copy a column through **Copy ▸**, or to edit, move or remove it. **Copy** lists
+[commands](hosts/commands.md) from **Check ▸**, **Folders ▸**, **Admin tools ▸**, **Users ▸**,
+**Printers ▸** or **Power ▸**, to pick the account its commands run as from **Commands run as ▸**,
+to copy a column through **Copy ▸**, or to edit, move or remove it. **Copy** lists
 every column the table shows, one line per selected host, and **Address** keeps Ctrl+Shift+C.
 Right-clicking empty space offers **Add group…** in the groups panel, and **Add host…** and
 **Add group…** in the host list. To move hosts
@@ -124,9 +128,15 @@ and **Quit CapyPanel**.
 With something working on its own, the **✕** asks what you meant: "Keep CapyPanel running in the
 tray?", "Refresh on its own and warnings keep working while CapyPanel is in the tray. Quit stops
 them.", with **Keep in tray** as the default button, **Quit**, **Cancel**, and a "Don't ask again
-(change it in Settings › CapyPanel › Startup)" box. **Settings > CapyPanel > Startup > When
+(change it in Settings › CapyPanel › Startup)" box. **Settings > CapyPanel > General > When
 closing** answers it for good, with **Ask each time**, **Keep running in the tray** or **Quit**.
 With nothing working on its own, the ✕ quits straight away.
+
+Quitting while the User profiles tool is deleting profiles asks first, whichever way you quit
+from CapyPanel itself: "Quitting now cancels the profiles still queued. The profile being deleted
+on each host finishes first; CapyPanel quits after that." **Cancel the rest and quit** does
+that; **Continue** keeps CapyPanel open and the deletes going (see
+[The User profiles tool](profiles/user-profiles.md#deleting)).
 
 ## Help, and reporting a problem
 
@@ -140,6 +150,11 @@ The **Help** menu has three items:
   commit, who made CapyPanel, every license it ships, where it keeps its files, and **Report a
   problem** beside **Open log folder**, so a report can go out with the logs attached (see
   [Settings and files](settings-and-files.md#about)).
+
+When something goes wrong inside CapyPanel itself, a window says "Something went wrong. The
+details were saved to the app log." with the details under it, and **Copy all** to paste them
+into a report. It's one window however many times it happens: a second error is added to it, and
+the same error again is counted ("This error happened 3 times:") instead of shown twice.
 
 ## Keyboard shortcuts
 
@@ -156,7 +171,7 @@ The **Help** menu has three items:
 | Ctrl+Shift+C | Copy the selected hosts' addresses |
 | Ctrl+N / Ctrl+Shift+N | Add host / Add group |
 | F2 / Del | Edit / remove the selection |
-| Ctrl+0 / Ctrl+1 / Ctrl+2 | Home / the Hosts tool / the Printers tool |
+| Ctrl+0 / Ctrl+1 / Ctrl+2 / Ctrl+3 | Home / the Hosts tool / the Printers tool / the User profiles tool |
 | Ctrl+O | Open a host list file |
 | Ctrl+, | Settings |
 | Ctrl+Q | Exit |

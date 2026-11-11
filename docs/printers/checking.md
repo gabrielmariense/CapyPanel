@@ -23,7 +23,7 @@ checked." A printer with no address is asked by its name.
 
 ## Refresh on its own
 
-**Settings > Printers > Refresh > Refresh on its own** reads the printers on a timer: **Off**, the
+**Settings > Printers > Warnings and supplies > Refresh on its own** reads the printers on a timer: **Off**, the
 default, or every **5**, **15**, **30** or **60 minutes**. Its line says what one turn covers:
 "Every printer in the open list, 8 at a time, while CapyPanel is open or in the tray."
 
@@ -62,7 +62,7 @@ at or below the low level. A printer that reports a toner without a percentage s
 "Black: some left" or "Black: not reported", and a black-only printer that names no colour
 simply shows "Toner".
 
-**Settings > Printers > Refresh > Toner column** can show a bar instead, filled to that level with
+**Settings > Printers > Warnings and supplies > Toner column** can show a bar instead, filled to that level with
 the percentage beside it. The bar stretches with the column, and in a very narrow column only the
 percentage shows. Copying a cell and the report always use the text form.
 
@@ -77,7 +77,7 @@ A supply the printer gives no level for has no bar, and says so instead: "This p
 doesn't report a level for this supply." When a printer reports none of this, the section says
 "The printer doesn't report its supplies."
 
-**Settings > Printers > Refresh > Low supply level** sets the low level, anywhere from 1 to 50 %,
+**Settings > Printers > Warnings and supplies > Low supply level** sets the low level, anywhere from 1 to 50 %,
 and 10 % to begin with. One level covers every kind of supply.
 
 ### Marks on the bars
@@ -86,7 +86,7 @@ Every bar carries a mark at the low level, and the line under the bars says wher
 "The mark shows the low level, 10 %." Each mark has a thin dark outline and sticks out a little
 past the bar, so it can be seen on any fill and in any theme.
 
-**Settings > Printers > Refresh > Bar marks** lists them, and **Change…** opens a window to
+**Settings > Printers > Warnings and supplies > Bar marks** lists them, and **Change…** opens a window to
 change them: **Add…** puts a mark anywhere from 1 to 99 %, up to eight of your own, **Colour…**
 gives one a colour of its own and **Theme colour** takes it back, **Remove** drops one, and
 **Reset to default** goes back to the low level's mark alone. That one always follows **Low supply
@@ -156,7 +156,7 @@ alone until the next Refresh, so a wrong password isn't sent over and over.
 
 ### The Doc360 MPS account
 
-**Settings > Printers > Refresh > Doc360 MPS account** holds one login for the whole portal.
+**Settings > Printers > Connecting > Doc360 MPS account** holds one login for the whole portal.
 **Change…** opens a window for "the login you use on the Doc360 MPS portal": **Partner**, **User
 name** and **Password**, with a **Show password** box. The partner is the partner code on
 Doc360's own login page.
@@ -190,7 +190,7 @@ Three things then say so:
 
 The count and the strip go away by themselves once nothing needs attention any more.
 
-**Settings > Printers > Refresh > Windows notification** chooses what to notify about: **Off**,
+**Settings > Printers > Warnings and supplies > Windows notification** chooses what to notify about: **Off**,
 **Stopped or offline** (the default) or **Also low supplies**. "After a Refresh on its own, for
 printers that stopped or went offline (and with low supplies, if picked) since the one before."
 
@@ -223,7 +223,7 @@ The brand comes from the maker number the printer reports, and the model from it
 ## The SNMP account
 
 Printers answer SNMP only to whoever they already know, and which that is depends on the version.
-**Settings > Printers > Refresh > SNMP version** picks it, for every printer at once: **v2c**, the
+**Settings > Printers > Connecting > SNMP version** picks it, for every printer at once: **v2c**, the
 default, or **v3**. "v2c: a community string. v3: a user, with a password and encryption."
 
 Under it, one **SNMP account** row says what is set for the version you picked, and **Change…**
@@ -231,7 +231,7 @@ opens the window that belongs to that version. Either way it's kept in **Windows
 Manager**, under your own Windows account. It never goes into a settings file, a list file or a
 log, and one account covers every printer.
 
-![Settings > Printers > Refresh: the SNMP version and account, the Doc360 MPS account, Refresh on its own, the Windows notification, the low supply level, the bar marks and the Toner column](../images/settings-printers-refresh-dark.png)
+![Settings > Printers > Connecting: the SNMP version and account, and the Doc360 MPS account](../images/settings-printers-connecting-dark.png)
 
 ### v2c: a community string
 
@@ -269,10 +269,10 @@ the saved account.", the same way an empty community string goes back to "public
 
 A printer that refuses the account shows **Refused** in amber in the Status column, and its tooltip
 says why, as in "Refused at 14:32: wrong authentication password or type.", followed by "Check the
-SNMP account in Settings › Printers › Refresh." The reasons it tells apart are a user name the
+SNMP account in Settings › Printers › Connecting." The reasons it tells apart are a user name the
 printer doesn't know, a wrong authentication password or type, a wrong encryption password,
 authentication or encryption it wants set differently, and a clock too far from CapyPanel's.
 
 With **v3** picked and no account yet, a Refresh doesn't start: the status bar says "Set the SNMP
-v3 account in Settings › Printers › Refresh first." A Refresh on its own just waits, without
+v3 account in Settings › Printers › Connecting first." A Refresh on its own just waits, without
 saying anything.

@@ -7,18 +7,21 @@ funcionam em um host por vez: o que você selecionou ou um endereço que você d
 
 Nada é instalado no outro PC e nada seu é executado lá. Todo comando usa as próprias funções
 remotas do Windows: o compartilhamento de arquivos, o serviço de sessões, o desligamento remoto,
-o spooler de impressão, o gerenciador de serviços e o WMI para os dados do PC e os programas
-instalados. A conta é o seu próprio login do Windows, ou a que você digitou para ler os usuários
-logados (veja [Qual conta é usada](checking.pt-BR.md#qual-conta-e-usada)).
+o spooler de impressão, o gerenciador de serviços e o WMI para os dados do PC, os programas
+instalados e as unidades mapeadas (veja
+[Como o CapyPanel lê outros PCs](checking.pt-BR.md#como-o-capypanel-le-outros-pcs)). A conta é a
+que o **Comandos como** do painel de detalhes diz para o host: o seu próprio login do Windows, a
+não ser que uma conta tenha sido definida para ele (veja
+[Contas para outros PCs](connecting.pt-BR.md#contas-para-outros-pcs)).
 
 ## Onde eles estão
 
 ![A janela Hosts: o botão Comandos na barra de ferramentas e os botões de comando abaixo do nome do host nos Detalhes](../images/commands-details-dark-pt-BR.png)
 
 - **Clique com o botão direito num host:** depois de **Atualizar status** e **Atualizar usuários
-  logados**, um submenu por grupo: **Verificar**, **Abrir**, **Usuários**, **Energia** e
-  **Impressoras**. Eles funcionam em um host com endereço, então ficam esmaecidos quando você
-  selecionou vários ou nenhum.
+  logados**, um submenu por grupo: **Verificar**, **Pastas**, **Ferramentas administrativas**,
+  **Usuários**, **Impressoras** e **Energia**. Eles funcionam em um host com endereço, então
+  ficam esmaecidos quando você selecionou vários ou nenhum.
 - **A barra de ferramentas:** **Comandos**, ao lado do Atualizar, abre a
   [janela Comandos](#a-janela-comandos) para o host selecionado. A seta dele lista os mesmos
   grupos e termina com **Todos os comandos…**, que também abre essa janela.
@@ -40,40 +43,40 @@ O **Verificar** lê algo e mostra onde aquela verificação normalmente aparece:
 
 | Comando | O que faz |
 |---|---|
-| **Executar todas as verificações** | Status, usuários logados e dados do PC, um depois do outro |
+| **Verificação rápida** | Status, usuários logados e dados do PC, um depois do outro |
 | **Status** | Se o PC responde na rede (veja [Verificando hosts](checking.pt-BR.md#status)) |
 | **Usuários logados** | Quem está conectado, e desde quando |
 | **Dados do PC** | Versão do Windows, modelo, número de série, memória, espaço livre e última reinicialização (veja [Dados do PC](checking.pt-BR.md#dados-do-pc)) |
 | **Programas instalados** | Os programas instalados para todos os usuários do PC |
 
-O **Abrir** abre algo no *seu* PC apontado para o outro:
+As **Pastas** e as **Ferramentas administrativas** abrem algo no *seu* PC apontado para o outro:
 
 | Comando | O que abre |
 |---|---|
 | **Compartilhamento C$** (Ctrl+E) | O disco C: do PC no Explorador de Arquivos |
+| **Pasta de {usuário}** (Ctrl+Shift+U) | A pasta de perfil do usuário conectado |
 | **Pasta Inicializar** | Os programas que iniciam para todo usuário que entra |
 | **Abrir um caminho…** (Ctrl+Shift+O) | Qualquer pasta do PC, como `D:\Logs` |
-| **Pasta de {usuário}** (Ctrl+Shift+U) | A pasta de perfil do usuário conectado |
 | **Gerenciamento do Computador** (Ctrl+Shift+M) | O Gerenciamento do Computador do Windows, apontado para o PC |
 | **Visualizador de Eventos** | Os logs de eventos do PC |
 | **Serviços** | Os serviços do Windows no PC |
 
-Uma pasta espera o PC responder antes de o Explorador de Arquivos abrir, porque o próprio
-Explorador pode travar por meio minuto num PC desligado. Um caminho que não é uma pasta é
-recusado com "não há uma pasta aí.", para que um arquivo nunca seja aberto, e assim executado,
-no seu próprio PC. Os três consoles do Windows abrem na hora e mostram o erro deles quando o PC
-não pode ser alcançado.
+Os quatro primeiros são as **Pastas**, os três últimos as **Ferramentas administrativas**. Uma
+pasta espera o PC responder antes de o Explorador de Arquivos abrir, porque o próprio Explorador
+pode travar por meio minuto num PC desligado. Um caminho que não é uma pasta é recusado com "não
+há uma pasta aí.", para que um arquivo nunca seja aberto, e assim executado, no seu próprio PC. Os
+três consoles do Windows abrem na hora e mostram o erro deles quando o PC não pode ser alcançado.
 
-O **Usuários** tem o **Enviar uma mensagem…**. Fazer logoff e Desconectar agem sobre uma pessoa,
-então são oferecidos nela: nos Detalhes, ou no botão âmbar de usuários, que lista cada pessoa
-conectada como um título, como em "ana.admin  (no PC, ativa, desde 08:05)", com **Fazer
-logoff…** e **Desconectar…** embaixo de cada uma. Ele fica esmaecido quando ninguém está
-conectado, ou quando ninguém foi verificado ainda.
+O **Usuários** tem o **Enviar uma mensagem…** e as **Unidades mapeadas**. Fazer logoff e
+Desconectar agem sobre uma pessoa, então são oferecidos nela: nos Detalhes, ou no botão âmbar de
+usuários, que lista cada pessoa conectada como um título, como em "ana.admin  (no PC, ativa, desde
+08:05)", com **Fazer logoff…** e **Desconectar…** embaixo de cada uma. Ele fica esmaecido quando
+ninguém está conectado, ou quando ninguém foi verificado ainda.
+
+O **Impressoras** tem o **Impressoras deste PC** e o **Reiniciar o Spooler de Impressão…**.
 
 O **Energia** tem o **Reiniciar…**, o **Desligar…** e o **Cancelar a reinicialização pendente**,
 este esmaecido a menos que uma reinicialização pedida pelo CapyPanel ainda esteja aguardando.
-
-O **Impressoras** tem o **Impressoras deste PC** e o **Reiniciar o Spooler de Impressão…**.
 
 ## As perguntas e as janelas pequenas
 
@@ -92,6 +95,17 @@ A mensagem vai para todos que estão na frente da tela do PC, mostrados como eti
 fora. Ela aparece na tela deles até clicarem em OK, com o título "Mensagem de {seu usuário do
 Windows}", e o Windows mostra cerca de 255 caracteres dela.
 
+### Unidades mapeadas
+
+![As unidades mapeadas de um host: cada pessoa conectada, as letras de unidade dela e para onde cada uma aponta](../images/commands-drives-dark-pt-BR.png)
+
+As unidades de rede salvas para cada pessoa conectada ao PC: **Pessoa**, **Unidade** e
+**Caminho**, como em "Unidades salvas para as 2 pessoas conectadas em DESK-02, lidas às 11:56.".
+"Estas são as unidades que voltam a cada entrada." Uma pessoa sem nenhuma aparece como "Nenhuma
+unidade salva". Elas são lidas da parte de cada pessoa no registro do PC, pelo WMI; nada é
+executado no PC. O **Copiar lista** põe as linhas na área de transferência, e o **Ler de novo** as
+lê outra vez.
+
 ### Fazer logoff… e Desconectar…
 
 Os dois perguntam antes, nomeando a pessoa e onde ela está conectada. O Fazer logoff avisa que "O
@@ -100,14 +114,20 @@ volta a eles quando entrar de novo. O Cancelar é o botão pronto para apertar.
 
 ### Reiniciar… e Desligar…
 
-![A pergunta Reiniciar: quem está conectado, quando ele reinicia e a mensagem que eles recebem](../images/commands-restart-dark-pt-BR.png)
+![A pergunta Reiniciar: quem está conectado, o Quando em Agora e a caixa de mensagem esmaecida](../images/commands-restart-dark-pt-BR.png)
 
 Esta janela é a pergunta. Ela nomeia quem está conectado e o que essa pessoa tem a perder. O
-**Quando** é **Agora**, ou **Em 1 minuto**, **Em 5 minutos** (a escolha de sempre) ou **Em 15
-minutos**, cada um com uma mensagem que o Windows mostra a eles com uma contagem regressiva, já
-preenchida como "Este PC reinicia em 5 minutos. Salve o seu trabalho." e sua para mudar. Escolha
-**Agora** e a caixa de mensagem fica esmaecida, dizendo "Sem mensagem: ele reinicia na hora.", e
-o botão vira **Reiniciar agora**.
+**Quando** começa em **Agora**: a caixa de mensagem fica esmaecida, dizendo "Sem mensagem: ele
+reinicia na hora.", uma linha embaixo avisa "Agora reinicia DESK-02 na hora, sem aviso na tela.
+Escolha um tempo de espera para mandar uma mensagem antes.", e o botão diz **Reiniciar agora**.
+
+**Em 1 minuto**, **Em 5 minutos** e **Em 15 minutos** vêm cada um com uma mensagem que o Windows
+mostra a eles com uma contagem regressiva, já preenchida como "Este PC reinicia em 5 minutos.
+Salve o seu trabalho." e sua para mudar; o botão então diz **Reiniciar**.
+
+O teclado começa no **Quando**: as setas escolhem, o **Tab** vai para a mensagem (quando há uma)
+e depois para o botão âmbar, onde o **Enter** o executa. O Enter em qualquer outro lugar é o
+**Cancelar**, o botão padrão.
 
 ### Impressoras deste PC
 
@@ -144,8 +164,9 @@ para ana.admin em DESK-02.", e a faixa se fecha sozinha depois de alguns segundo
 Um comando que falhou diz isso em vermelho, com o motivo do próprio Windows: "Não foi possível
 fazer logoff de bruno.costa em DESK-02: acesso negado. É preciso uma conta de administrador
 naquele PC." Essa faixa fica até você fechá-la. Quando o problema foi a conta, o **Tentar outra
-conta…** pede outra, a mesma conta que a verificação de usuários logados usa, e executa o
-comando de novo.
+conta…** pede outra, e para quais PCs usá-la (veja
+[Contas para outros PCs](connecting.pt-BR.md#contas-para-outros-pcs)), e executa o comando de
+novo.
 
 Abrir uma pasta é a exceção: ela diz "Aberto: \\DESK-02\C$" na barra de status, onde o resto do
 que você abre também aparece.
@@ -166,36 +187,30 @@ CapyPanel para de procurar 20 minutos depois do horário da reinicialização.
 
 ## A janela Comandos
 
-![A janela Comandos: os grupos à esquerda, todos os comandos no meio, o que o escolhido encontrou à direita](../images/commands-window-dark-pt-BR.png)
+![A janela Comandos: a caixa Host no topo, os grupos à esquerda, todos os comandos no meio, o que o escolhido encontrou à direita](../images/commands-window-dark-pt-BR.png)
 
 A janela Comandos reúne todos os comandos de um PC num lugar só, com a resposta ao lado. Ela abre
 pelo botão **Comandos**, pelo **Todos os comandos…** e pelo **Conectar > Conexão manual…**
-(Ctrl+M), que é a mesma janela para um endereço que não está na sua lista.
+(Ctrl+M), que é a mesma janela para um endereço que não está na sua lista. É uma janela própria,
+ao lado da principal e não por cima dela: você pode voltar à lista de hosts e deixá-la aberta.
 
-- **No topo:** o nome e o endereço do host, ou uma caixa **Endereço** quando você digitou um
-  (`host:porta` funciona), e depois **Perfil** e **Conectar**. A janela se chama "Comandos" para
-  um host seu e "Conexão manual" para um endereço digitado.
-- **À esquerda:** uma caixa **Pesquisa** e os cinco grupos; um clique pula para um grupo.
+- **No topo:** a caixa **Host**, e depois **Perfil** e **Conectar**. A caixa lista os hosts que o
+  painel de hosts mostra, como "DESK-02 · 192.0.2.12", e em **Recentes** os endereços que você
+  digitou antes; você também pode digitar um nome ou um endereço (`host:porta` funciona). Escolher
+  outro host muda a janela inteira para ele, inclusive o perfil. O título diz "Comandos · DESK-02"
+  para um host seu e "Conexão manual · 198.51.100.40" para um endereço digitado.
+- O **Adicionar à lista de hosts…** aparece ao lado da caixa só para um endereço digitado que a
+  lista aberta não tem: ele põe o PC na lista, com o endereço já preenchido.
+- **À esquerda:** uma caixa **Pesquisa** e os seis grupos; um clique pula para um grupo.
 - **No meio:** todos os comandos, um por linha. O que você escolhe cresce para mostrar o que ele
   faz e um botão **Executar**. As setas movem, o Enter executa, e digitar em qualquer lugar
-  pesquisa.
+  pesquisa; um clique duplo só escolhe, para um comando arriscado nunca rodar por acidente.
 - **À direita:** o que o comando encontrou, apresentado como o painel de detalhes apresenta: o
   status, quem está logado, os dados do PC, ou a última resposta com **Tentar outra conta…**. As
-  Impressoras deste PC e os Programas instalados aparecem ali como tabelas: clique numa
-  impressora com o botão direito para limpar a fila dela ou copiar a linha, e num programa para
-  copiar a linha, copiar ou exportar a lista inteira, ou abrir a lista na própria janela com uma
-  pesquisa. Os comandos que precisam que você digite algo abrem a janela pequena deles por cima
-  desta.
-- **Embaixo:** o **Adicionar à lista…** põe um endereço digitado na lista de hosts aberta, com o
-  endereço já preenchido. Para um PC que já está na lista ele fica esmaecido, e a dica dele diz
-  onde: "Já está nesta lista: em Front desks, como DESK-02".
-
-## Qual conta é usada
-
-O seu próprio login do Windows e, fora isso, a conta que você digitou quando um host respondeu
-**Sem direitos de administrador** ou **Conta recusada** ao ler os usuários logados. Aquela
-janela, a **Conta para outros PCs**, cobre as duas coisas: como ela diz, a conta é "usada
-só para ver quem está conectado e nos comandos que você executa em um host". Onde ela fica
-guardada, e como esquecê-la, está em
-[Verificando hosts](checking.pt-BR.md#qual-conta-e-usada) e
-[Conectando](connecting.pt-BR.md#credenciais-salvas).
+  Impressoras deste PC, os Programas instalados e as Unidades mapeadas aparecem ali como tabelas:
+  clique numa impressora com o botão direito para limpar a fila dela ou copiar a linha, e num
+  programa para copiar a linha, copiar ou exportar a lista inteira, ou abrir a lista na própria
+  janela com uma pesquisa. Os comandos que precisam que você digite algo abrem a janela pequena
+  deles por cima desta.
+- **Embaixo:** uma linha de ajuda, "↑ ↓ escolhe, Enter executa, digitar pesquisa. Comandos que
+  precisam de mais abrem uma janela pequena; os arriscados perguntam antes.", e o **Fechar**.

@@ -46,7 +46,7 @@ Status uses no account and needs no administrator rights.
 
 ### Automatic status
 
-**Settings > Hosts > Refresh > Refresh status by itself** can check the status of the
+**Settings > Hosts > General > Refresh status by itself** can check the status of the
 hosts shown every few minutes: **Every minute**, **Every 5 minutes**, **Every 15 minutes**, **Every
 30 minutes**, or **Custom…** for anything from 1 to 120. It's **Off** to begin with, so nothing
 is checked by itself unless you turn it on, and turning it off again keeps your interval for next
@@ -86,21 +86,16 @@ Task Manager's Users tab. That's how Windows reports it.
 
 ### Which account is used
 
-By default, your own Windows account. If hosts answer **No admin rights** or **Account
-rejected**, CapyPanel asks for another account (`DOMAIN\user` and password) and retries only those
-hosts. That account:
+By default, your own Windows account. **Settings > Hosts > Credentials > Accounts** can give a
+PC, a group, a tag or every PC another account, and the Details panel's **Commands run as** names
+the one each host ends up with (see
+[Accounts for other PCs](connecting.md#accounts-for-other-pcs)).
 
-- is typed in a window called **Account for other PCs**, and kept the way **Settings > Hosts >
-  Connection profiles > Credentials** says: in memory until CapyPanel closes, or saved in Windows
-  Credential Manager for your Windows account. Either way it's used only to read who is logged
-  on and to run the commands you ask for on a host (see [Commands on a host](commands.md));
-- is tried on one host at a time: if a host rejects it, CapyPanel stops and asks again instead of
-  trying it on the others, so the account isn't locked out;
-- is forgotten, like a profile's password, in **Connect ▾ > Saved credentials…**, where it's
-  listed as **Logged-on users** (see [Connecting](connecting.md#saved-credentials)).
-
-On PCs that aren't in a domain, the built-in Administrator is the only local account Windows
-accepts remotely.
+If hosts answer **No admin rights** or **Account rejected**, CapyPanel asks for another account
+once the Refresh ends, in a window called **Account for other PCs**, and checks only those hosts
+again. The account you type there becomes a row of the Accounts table. It's tried on one host at a
+time: if a host rejects it, CapyPanel stops and asks again instead of trying it on the others, so
+the account isn't locked out.
 
 ## PC facts
 
@@ -111,10 +106,42 @@ The Details panel ends with what the PC says about itself: **Last restart**, **F
 ![The PC facts section in the Details panel: last restart, free space, Windows, model, serial, memory and BIOS](../images/commands-pc-facts-dark.png)
 
 They're read once, when a host stays selected for a moment, and never by Refresh, so a list of
-hundreds of hosts is left alone. The free space and the last restart come in first, while the
-heading says "PC facts · reading…" and the rest is on its way, a few seconds over WMI. A fact
-the account isn't allowed to read says so in amber in its place, as in "No access: needs an
-admin account on this PC".
+hundreds of hosts is left alone. Until then the section says "Not read yet", with a **Read**
+button. The free space and the last restart come in first, while the heading says "PC facts ·
+reading…" and the other rows say "Reading…"; the rest follows a few seconds later.
+
+Each fact is read on its own, so one that fails doesn't take the others with it: what was read
+shows, and a fact that couldn't be read says why in amber in its place, as in "No access: needs an
+admin account on this PC". Click that line to copy it, as you would any value. The app log names
+the part that failed.
 
 **Check > PC facts** reads them again whenever you want, from the host's right-click menu, the
 Details panel's **…** or the Commands window (see [Commands on a host](commands.md)).
+
+## How CapyPanel reads other PCs
+
+Status uses ping and ports, and logged-on users use Windows' remote session service. The PC
+facts, the installed programs, the mapped drives and the
+[User profiles](../profiles/user-profiles.md) tool read the PC over **WMI**, Windows' own
+management service, which every Windows PC answers. Nothing is installed or started on the other
+PC.
+
+On your own PC, CapyPanel talks WMI itself, through Windows' scripting objects. It starts
+PowerShell for this only when it can't do that on your PC at all, and never because one PC's read
+failed. The app log says at each start which way it reads.
+
+Some antivirus products stop programs that another program starts, PowerShell above all. If
+yours does, a read through PowerShell fails with "Couldn't read: Windows didn't let PowerShell
+start on your PC (an antivirus may block it)". It's your PC that refused, not the one you were
+reading, so that's the PC to look at.
+
+**Settings > Hosts > Connecting > Read PC data with** sets the way for everyone on your PC:
+
+| Choice | What it does |
+|---|---|
+| **Automatic (recommended)** | WMI directly, and through PowerShell only when that can't be used on this PC. "in use:" beside it names the way it's using |
+| **WMI directly** | Always talks WMI itself and never starts PowerShell, even when it can't, in which case the reads fail and say why |
+| **WMI through PowerShell** | Starts PowerShell on your PC to talk WMI, as CapyPanel did before 0.24. A way back, in case reading directly misbehaves on your network |
+
+Both ways ask the other PC the same questions and get the same answers; only what starts on your
+own PC changes.

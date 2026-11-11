@@ -11,19 +11,21 @@
 CapyPanel is a Windows desktop app for IT staff: keep the computers you look after in organized
 lists, see which ones are on and who is logged on to them, and open a remote screen on any of
 them through Remote Desktop or the VNC viewer you already use. It keeps your printers too, with
-the details you need and their web pages a click away.
+the details you need and their web pages a click away, and it finds the Windows user profiles
+nobody uses any more on a PC so you can delete them.
 
-> **Status: beta (0.23.1).** It runs from source; there's no installer yet.
+> **Status: beta (0.24.0).** It runs from source; there's no installer yet.
 
-![CapyPanel's Home page: the tool rail, the capybara, and a tile for Hosts and one for Printers](docs/images/home-dark.png)
+![CapyPanel's Home page: the tool rail, the capybara, and a tile each for Hosts, Printers and User profiles](docs/images/home-dark.png)
 
 ## What it does
 
 - Hosts
   - Remote connection: UltraVNC, RealVNC, Remote Desktop
   - Connection profiles
+  - Accounts for other PCs, by PC, group or tag
   - Shared lists, groups and tags
-  - Status, logged-on users and PC facts
+  - Status, logged-on users, PC facts and mapped drives
   - Commands on a PC: its folders and consoles, its users, power and printers
   - Search, import and export
 - Printers
@@ -32,6 +34,10 @@ the details you need and their web pages a click away.
   - Page counts from Doc360 MPS
   - Warnings when a printer needs attention
   - Web pages and reports
+- User profiles
+  - A PC's Windows profiles: who, when last used, how big
+  - Which can be deleted, and why the others can't
+  - Delete the ones you tick, on several PCs at once
 
 ## Documentation
 
@@ -42,15 +48,18 @@ Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrie
   keeps its files
 - [Host lists](docs/hosts/host-lists.md): groups, tags, and the lists folders
 - [Importing and exporting hosts](docs/hosts/importing.md): many hosts at once, in and out as CSV
-- [Connecting](docs/hosts/connecting.md): VNC viewers, Remote Desktop, connection profiles and
-  passwords
-- [Checking hosts](docs/hosts/checking.md): status, logged-on users and PC facts
+- [Connecting](docs/hosts/connecting.md): VNC viewers, Remote Desktop, connection profiles,
+  accounts and passwords
+- [Checking hosts](docs/hosts/checking.md): status, logged-on users, PC facts, and how
+  CapyPanel reads other PCs
 - [Commands on a host](docs/hosts/commands.md): folders and consoles, messages, log off,
-  restart, printers and installed programs
+  restart, printers, installed programs and mapped drives
 - [Searching hosts](docs/hosts/searching.md): finding a host anywhere in the list
 - [The Printers tool](docs/printers/printers.md): printers, their details and their web pages
 - [Checking printers](docs/printers/checking.md): status, toner and supplies over SNMP
 - [Printer lists](docs/printers/printer-lists.md): where printer lists live, and their settings
+- [The User profiles tool](docs/profiles/user-profiles.md): a PC's Windows profiles, and
+  deleting the ones nobody uses
 - [Development](docs/development.md): building, testing and translating
 
 ## Quick start (from source)
