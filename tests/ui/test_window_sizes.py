@@ -23,6 +23,7 @@ from capypanel.ui.hosts_tool.commands_window import CommandsWindow
 from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.new_list import NewListDialog
 from capypanel.ui.saved_credentials import SavedCredentialsDialog
+from capypanel.ui.settings.window import WIDTH
 from capypanel.ui.themes import engine as themes
 
 # Measured in the CapyPanel dark theme, as people see them. With another font than the theme's
@@ -103,3 +104,16 @@ def test_no_window_is_taller_than_when_the_spacing_scale_came_in(window: CapyWin
     assert set(found) == set(RECORDED)
     taller = {n: (found[n], RECORDED[n]) for n in found if found[n] > RECORDED[n]}
     assert not taller, f"taller than recorded (now, recorded): {taller}"
+
+
+def test_settings_opens_wide_enough_for_its_tables(window: CapyWindow) -> None:
+    """960 px: a row with a domain account, a PC by name and address and "Gerenciador de
+    Credenciais" shows whole, with nothing to scroll sideways (measured in the dark theme with
+    its own font; the test font is twice as wide). A narrower size kept by an older version
+    opens at this width too."""
+    dialog = window.settings_dialog()
+    assert (dialog.width(), dialog.height()) == (WIDTH, 700) and WIDTH == 960
+    dialog.resize(860, 700)
+    assert dialog.width() == WIDTH
+    dialog.resize(1100, 700)  # wider is the person's choice
+    assert dialog.width() == 1100

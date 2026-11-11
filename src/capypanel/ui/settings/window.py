@@ -35,6 +35,7 @@ from capypanel.ui.tool_catalog import ToolInfo
 APP_GROUP = ("CapyPanel", ("general",))
 PINNED = ("about",)  # pages kept at the very bottom of the page list, apart from the groups
 SEARCH_FROM = 3  # letters typed before the search shows its results
+WIDTH = 960  # room for a table row such as a domain account, its PC and where it's kept
 ROOM = 60  # spare width past the widest page: a button row never ends just short of its table
 GUTTER = 16  # right of the pages and under the last one: the columns' gap left of them
 
@@ -71,7 +72,8 @@ class SettingsDialog(QDialog):
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(12, 12, 12, 12)
         self._build(themes.current().id)
-        self.resize(860, 700)  # fixed: taller pages scroll, the window never grows for them
+        self.setMinimumWidth(WIDTH)  # a size kept by an older version was narrower
+        self.resize(WIDTH, 700)  # fixed: taller pages scroll, the window never grows for them
 
     def _build(self, theme_id: str) -> None:
         """The pages, in the current language, showing what's set."""

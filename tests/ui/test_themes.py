@@ -429,6 +429,31 @@ def test_tables_draw_a_line_under_each_row_and_none_between_columns() -> None:
         assert grid and not any("border-right" in body for body in grid)
 
 
+def test_column_titles_have_a_line_between_them_to_drag(qapp: QApplication) -> None:
+    """The rows have no lines between columns, so the titles show where a column ends."""
+    theme = themes.Registry().find("capypanel-dark")
+    themes.apply(theme)
+    table = QTreeWidget()
+    table.setObjectName("grid")
+    table.setHeaderLabels(["Name", "Address", "Status"])
+    table.addTopLevelItem(QTreeWidgetItem(["DESK-01", "192.0.2.11", "Online"]))
+    table.resize(480, 160)
+    table.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
+    table.show()
+    qapp.processEvents()
+    header = table.header()
+    titles = header.grab().toImage()
+    rows = table.viewport().grab().toImage()
+    table.close()
+    line = QColor(theme.colors["border"])
+    middle = header.height() // 2
+    for column in (1, 2):
+        x = header.sectionViewportPosition(column)
+        assert titles.pixelColor(x, middle) == line, column
+        assert rows.pixelColor(x, 8) != line, column  # the rows stay clear
+    assert titles.pixelColor(0, middle) != line  # none before the first title
+
+
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_enabled_disabled_hover_and_focus_read_apart(theme: themes.Theme) -> None:
     c, ratio = theme.colors, themes.contrast_ratio

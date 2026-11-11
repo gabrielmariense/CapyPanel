@@ -553,6 +553,9 @@ QHeaderView::section { background: %(card)s; color: %(text2)s; border: none;
 /* Tables marked "grid": a thin line under each row, none between columns; the table's own
    border is its one frame. */
 QTreeView#grid::item { border-bottom: 1px solid %(border)s; }
+/* A thin line between the column titles shows where to drag to resize a column. */
+QHeaderView::section { border-left: 1px solid %(border)s; }
+QHeaderView::section:first, QHeaderView::section:only-one { border-left: none; }
 QHeaderView::section:hover { color: %(text)s; }
 
 QFrame#card { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; }

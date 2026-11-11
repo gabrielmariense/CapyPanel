@@ -94,11 +94,11 @@ def test_no_window_opens_larger_than_the_screen(qapp: QApplication) -> None:
     report.resize(780, 620)
     assert not fit_screen(report, laptop) and report.size() == QSize(780, 620)  # it fits
     settings = QDialog()
-    settings.resize(860, 700)
+    settings.resize(960, 700)
     # With its title bar, 700 px is a little more than that laptop has: it takes what there is.
-    assert fit_screen(settings, laptop) and settings.size() == QSize(860, 728 - FRAME.height())
+    assert fit_screen(settings, laptop) and settings.size() == QSize(960, 728 - FRAME.height())
     assert fit_screen(settings, scaled)  # shorter still at 125 %: its pages scroll
-    assert settings.size() == QSize(860, 575 - FRAME.height())
+    assert settings.size() == QSize(960, 575 - FRAME.height())
     commands = QDialog()
     commands.setFixedSize(1120, 620)  # a window of a fixed size stays fixed, at what fits
     assert fit_screen(commands, scaled)
