@@ -34,14 +34,25 @@ def community() -> str:
         return DEFAULT_COMMUNITY
 
 
+def _read_login(name: str) -> tuple[str, dict[str, object]] | None:
+    """A login kept as a user name plus JSON fields, or None when there's none. Raises
+    OSError or ValueError."""
+    found = credstore.read(name)
+    if found is None:
+        return None
+    user, kept = found
+    fields = json.loads(kept)
+    if not isinstance(fields, dict):
+        raise ValueError("not a set of fields")
+    return user, fields
+
+
 def v3_account() -> usm.Account | None:
     """The SNMP v3 account set in Settings, or None when there's none (or it can't be read)."""
     try:
-        found = credstore.read(V3_ACCOUNT)
-        if found is None:
+        if (found := _read_login(V3_ACCOUNT)) is None:
             return None
-        user, kept = found
-        fields = json.loads(kept)
+        user, fields = found
         auth = _by_label(usm.Auth, fields.get("auth"))
         privacy = _by_label(usm.Privacy, fields.get("privacy"))
         return usm.Account(
@@ -70,11 +81,9 @@ def save_v3_account(account: usm.Account) -> None:
 def doc360_account() -> doc360.Account | None:
     """The Doc360 MPS login set in Settings, or None when there's none (or it can't be read)."""
     try:
-        found = credstore.read(DOC360_ACCOUNT)
-        if found is None:
+        if (found := _read_login(DOC360_ACCOUNT)) is None:
             return None
-        user, kept = found
-        fields = json.loads(kept)
+        user, fields = found
         return doc360.Account(str(fields["partner"]), user, str(fields["password"]))
     except (OSError, ValueError, KeyError, TypeError) as e:  # not a word of the secret in the log
         log.warning("Couldn't read the Doc360 MPS account: %s", type(e).__name__)
