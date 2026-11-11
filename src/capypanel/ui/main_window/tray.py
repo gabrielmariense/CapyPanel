@@ -124,7 +124,7 @@ def ask_closing(parent: QWidget) -> tuple[str | None, bool]:
           "Quit stops them.")
     )  # fmt: skip
     # Kept in a name: PySide doesn't hand the box ownership, so a bare one is collected.
-    ask_again = QCheckBox(_("Don't ask again (change it in Settings › CapyPanel › Startup)"))
+    ask_again = QCheckBox(_("Don't ask again (change it in Settings › CapyPanel › General)"))
     box.setCheckBox(ask_again)
     keep = box.addButton(_("Keep in &tray"), QMessageBox.ButtonRole.AcceptRole)
     quitter = box.addButton(_("&Quit"), QMessageBox.ButtonRole.DestructiveRole)

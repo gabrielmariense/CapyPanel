@@ -231,8 +231,8 @@ class HostDetailsPanel(DetailsPanel):
 
     def _profile_picker(self, profile: str, user: str) -> "ValuePicker":
         """The profile; a key when a login is kept for it, which the tooltip names."""
-        tip = _("What Connect opens, and the login it uses. Refresh's logged-on users, commands "
-                "and scripts use the account under it.")  # fmt: skip
+        tip = _("What Connect opens, and the login it uses. Refresh's logged-on users and the "
+                "commands use the account under it.")  # fmt: skip
         if user:
             tip = f"{_('Signs in as {user}').format(user=user)}\n{tip}"
         picker = ValuePicker(profile or "—", ("key",) if user else (), tip)

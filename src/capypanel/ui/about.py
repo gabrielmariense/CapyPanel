@@ -5,6 +5,7 @@ import platform
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
+from importlib import metadata
 from pathlib import Path
 from urllib.parse import quote
 
@@ -317,6 +318,13 @@ COMPONENTS = (
     ),
     Component(
         "pycparser", pycparser_version, "© 2008-2027 Eli Bendersky", "BSD-3-Clause", "pycparser.txt"
+    ),
+    Component(
+        "pywin32",
+        metadata.version("pywin32"),
+        "© 1994-2008 Mark Hammond, Greg Stein and contributors",
+        "BSD-3-Clause",
+        "pywin32.txt",
     ),
     Component("Tabler Icons", "", "© 2020-2026 Paweł Kuna", "MIT", "tabler-icons.txt"),
 )
