@@ -497,10 +497,7 @@ class PrintersPage(ListsGeneralPage):
             ),
             SettingRow(
                 _("Windows &notification"),
-                _(
-                    "After a Refresh on its own, for printers that stopped or went offline "
-                    "(and with low supplies, if picked) since the one before."
-                ),
+                _("After a Refresh on its own, for what changed since the one before."),
                 self.notify,
             ),
         )
