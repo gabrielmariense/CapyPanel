@@ -27,8 +27,10 @@ under each row, a header whose thin dividers show where to drag a column wider, 
 scrolls, the main actions as buttons under it, **every action for a row
 on its right-click**, and a double-click for the obvious one. Every column shows its whole text,
 and when they can't all fit, the table scrolls sideways; right-click the column titles for **Fit
-columns to content**. The window opens at a fixed size, 960 × 700, and a page taller than it
-scrolls. On a smaller screen, such as a laptop at 125 % scale, it opens smaller so that it fits.
+columns to content**. The window opens at 960 × 700 the first time, or smaller on a small screen,
+such as a laptop at 125 % scale, so that it fits. You can make it any size, smaller too: a page
+larger than the window scrolls, down and sideways. It opens again at the size and place you left
+it at.
 
 ### Searching the settings
 

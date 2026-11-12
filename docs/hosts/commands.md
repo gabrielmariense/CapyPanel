@@ -219,7 +219,9 @@ connection…** (Ctrl+M), which is the same window for an address that isn't in 
 window of its own, beside the main one rather than over it: you can go back to the host list and
 leave it open. Asking for the Commands of another host while it's open turns the window to that
 host, and each host's answers are kept while the window stays open, so going back shows them
-again.
+again. It opens at 1120 × 620 the first time and can be resized: wider, the commands and the
+answers share the extra room; narrower, the answers keep their width and the command list
+scrolls sideways. It opens again at the size you left it at.
 
 - **On top:** the **Host** box, then **Profile** and **Connect**. The box lists the hosts the
   Hosts panel shows, as "DESK-02 · 192.0.2.12", and under **Recent** the addresses you typed

@@ -229,6 +229,9 @@ pelos botões **Comandos**, pelo **Todos os comandos…** e pelo **Conectar > Co
 ao lado da principal e não por cima dela: você pode voltar à lista de hosts e deixá-la aberta.
 Pedir os Comandos de outro host com ela aberta vira a janela para esse host, e as respostas de
 cada host ficam guardadas enquanto ela continua aberta, então voltar a um host as mostra de novo.
+Ela abre em 1120 × 620 na primeira vez e pode ser redimensionada: mais larga, os comandos e as
+respostas dividem o espaço a mais; mais estreita, as respostas mantêm a largura e a lista de
+comandos rola para o lado. Ela abre de novo no tamanho em que você a deixou.
 
 - **No topo:** a caixa **Host**, e depois **Perfil** e **Conectar**. A caixa lista os hosts que o
   painel de hosts mostra, como "DESK-02 · 192.0.2.12", e em **Recentes** os endereços que você

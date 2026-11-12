@@ -27,9 +27,10 @@ todo lugar: uma linha fina embaixo de cada linha, um cabeçalho cujos divisores 
 arrastar para alargar uma coluna, seis linhas antes de rolar, as ações principais como
 botões embaixo, **todas as ações de uma linha no botão direito dela** e um clique duplo para a mais
 óbvia. Cada coluna mostra o texto inteiro, e quando não cabem todas, a tabela rola para o lado; o
-botão direito nos títulos das colunas oferece **Ajustar colunas ao conteúdo**. A janela abre num
-tamanho fixo, 960 × 700, e uma página mais alta que ela rola. Numa tela menor, como a de um
-notebook em escala de 125 %, ela abre menor para caber.
+botão direito nos títulos das colunas oferece **Ajustar colunas ao conteúdo**. A janela abre em
+960 × 700 na primeira vez, ou menor numa tela pequena, como a de um notebook em escala de 125 %,
+para caber. Você pode deixá-la de qualquer tamanho, menor também: uma página maior que a janela
+rola, para baixo e para o lado. Ela abre de novo no tamanho e no lugar em que você a deixou.
 
 ### Pesquisar nas configurações
 
