@@ -3,12 +3,15 @@ no tool itself: the tool catalog loads them."""
 
 import ctypes
 import logging
+import os
 import sys
 import time
+from collections.abc import Callable
 from ctypes import wintypes
 
-from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QGuiApplication
+from PySide6.QtWidgets import QApplication, QMessageBox, QWidget
 
 from capypanel import BUILD, __version__
 from capypanel.__main__ import close_splash
@@ -55,6 +58,73 @@ class _Stages:
         total = sum(seconds for _name, seconds in self._parts)
         parts = ", ".join(f"{name} {seconds:.2f}" for name, seconds in self._parts)
         return f"Started in {total:.2f} s ({parts})"
+
+
+SPLASH_WATCH_MS, SPLASH_WATCH_FOR_MS = 50, 3000
+
+
+def _splash_on_screen() -> bool:
+    """Whether the splash is still on screen: Tk's window, drawn by the exe's launcher in this
+    same process. pyi_splash.close() only asks it to go, so it goes a moment later."""
+    user32 = ctypes.WinDLL("user32", use_last_error=True)
+    user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+    user32.IsWindowVisible.argtypes = [wintypes.HWND]
+    user32.GetClassNameW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+    pid, found = os.getpid(), []
+
+    @ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    def each(hwnd: int, _extra: int) -> bool:
+        owner = wintypes.DWORD()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(owner))
+        if owner.value == pid and user32.IsWindowVisible(hwnd):
+            name = ctypes.create_unicode_buffer(32)
+            user32.GetClassNameW(hwnd, name, 32)
+            if name.value == "TkTopLevel":
+                found.append(hwnd)
+                return False  # stop looking
+        return True
+
+    user32.EnumWindows(each, 0)
+    return bool(found)
+
+
+def _active() -> bool:
+    return QGuiApplication.applicationState() == Qt.ApplicationState.ApplicationActive
+
+
+class _HandOver:
+    """The main window takes over from the splash. It's made active first, while the splash
+    (this process) still has the focus; then the splash is told to go. Its window closes a
+    moment later, and Windows then activates whichever window comes next, sometimes another
+    program's: once it's gone, a main window left without the focus asks for it once. Windows
+    itself refuses that when the person clicked another program meanwhile."""
+
+    def __init__(self, window: QWidget, on_screen: Callable[[], bool] = _splash_on_screen):
+        self._window, self._on_screen = window, on_screen
+        self._left = SPLASH_WATCH_FOR_MS // SPLASH_WATCH_MS
+        self._forward()
+        close_splash()
+        self._timer = QTimer()
+        self._timer.setInterval(SPLASH_WATCH_MS)
+        self._timer.timeout.connect(self.tick)
+        self._timer.start()
+
+    def _forward(self) -> None:
+        self._window.raise_()
+        self._window.activateWindow()
+
+    def tick(self) -> None:
+        if self._left <= 0:
+            return  # done: a tick already queued does nothing
+        self._left -= 1
+        if self._left > 0 and self._on_screen():
+            return
+        self._left = 0
+        self._timer.stop()
+        window = self._window
+        if not _active() and window.isVisible() and not window.isMinimized():
+            log.info("The window lost the focus when the splash closed: asking for it back")
+            self._forward()
 
 
 def _set_reads(paths: settings.Paths) -> None:
@@ -133,7 +203,7 @@ def run(argv: list[str] | None = None) -> int:
     stages.done("the window and its lists")
     copy.show_requested.connect(window.open_from_tray)
     window.show()
-    close_splash()
+    hand_over = _HandOver(window)  # noqa: F841  # kept until the app ends: its timer runs
     restarted = after_restart(sys.argv if argv is None else argv)
     if restarted is not None:  # the update's helper started this copy
         QTimer.singleShot(0, window, lambda: window.show_restart_note(*restarted))
