@@ -185,6 +185,14 @@ def test_settings_keeps_the_when_closing_choice(window: CapyWindow) -> None:
     closing.setCurrentIndex(closing.findData(settings.CLOSE_QUIT))
     assert window.prefs[settings.CLOSE_KEY] == settings.CLOSE_QUIT
     dialog.close()
+    # Opened again, it shows what's saved, and going back to "Ask each time" is saved too
+    # (it showed "Ask" whatever was saved, so picking it changed nothing).
+    dialog = window.settings_dialog()
+    closing = dialog.general.closing
+    assert closing.currentData() == settings.CLOSE_QUIT
+    closing.setCurrentIndex(closing.findData(settings.CLOSE_ASK))
+    assert window.prefs[settings.CLOSE_KEY] == settings.CLOSE_ASK
+    dialog.close()
 
 
 def test_the_close_question_offers_tray_quit_and_cancel(

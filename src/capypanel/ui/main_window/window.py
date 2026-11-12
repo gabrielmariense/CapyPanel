@@ -349,6 +349,7 @@ class MainWindow(QMainWindow):
         """Settings, wired up: every choice applies as it's made, with no Save."""
         groups = [g for t in self.tools.values() if (g := t.settings_group()) is not None]
         start = self.prefs.get(settings.START_KEY)
+        closing = self.prefs.get(settings.CLOSE_KEY)
         dialog = SettingsDialog(
             self,
             paths=self.paths,
@@ -356,6 +357,8 @@ class MainWindow(QMainWindow):
             groups=groups,
             tools=self._infos(),
             start=start if isinstance(start, str) else settings.START_HOME,
+            # What's saved, so the page shows it, and picking "Ask" again is a change it saves.
+            closing=closing if isinstance(closing, str) else settings.CLOSE_ASK,
         )
         dialog.language_picked.connect(self.set_language)
         dialog.theme_picked.connect(self.set_theme)
