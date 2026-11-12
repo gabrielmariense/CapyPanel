@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox, QWidget
 
 from capypanel import BUILD, __version__
 from capypanel.__main__ import close_splash
-from capypanel.core import applog, i18n, migration, settings
+from capypanel.core import applog, i18n, migration, settings, updates
 from capypanel.ui import branding, error_window, language
 from capypanel.ui.dialogs import ScreenFit
 from capypanel.ui.main_window.window import MainWindow
@@ -213,6 +213,12 @@ def run(argv: list[str] | None = None) -> int:
         close_splash()
         QMessageBox.critical(None, "CapyPanel", str(e))
         return 1
+    if getattr(sys, "frozen", False) and updates.applying(settings.app_dir()):
+        # Clicked while an update swaps this folder's files: its splash says so, and the new
+        # version starts in a moment. Staying would hold files the swap has to move.
+        log.info("An update is being put in place: this start ends")
+        close_splash()
+        return 0
     # One copy per person: started again, the running one comes forward and this one ends,
     # before it reads or writes anything of theirs.
     copy = OneCopy(paths.user_dir, app)

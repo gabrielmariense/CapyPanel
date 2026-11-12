@@ -3,7 +3,9 @@ back. Nothing reaches GitHub: the network is a fake, the folders are temporary."
 
 import hashlib
 import io
+import os
 import ssl
+import time
 import urllib.error
 import urllib.request
 import zipfile
@@ -246,7 +248,7 @@ def test_the_helper_never_lets_an_error_through_and_starts_the_old_copy_again(
     app = _app(tmp_path / "CapyPanel", "0.26.0")
     started: list[list[str]] = []
 
-    def broken(_place: Any, _pid: int) -> None:
+    def broken(_place: Any, _pid: int, **_kwargs: Any) -> None:
         raise RuntimeError("something nobody planned for")
 
     monkeypatch.setattr(updates, "apply", broken)
@@ -254,7 +256,7 @@ def test_the_helper_never_lets_an_error_through_and_starts_the_old_copy_again(
     assert updates.run_helper(app, 1, "0.26.0", "0.26.1") == 1
     assert started == [[str(app.resolve() / "CapyPanel.exe"), "--update-failed", "0.26.1",
                         "RuntimeError: something nobody planned for"]]  # fmt: skip
-    monkeypatch.setattr(updates, "apply", lambda _place, _pid: None)
+    monkeypatch.setattr(updates, "apply", lambda _place, _pid, **_kwargs: None)
     started.clear()
     assert updates.run_helper(app, 1, "0.26.0", "0.26.1") == 0
     assert started == [[str(app.resolve() / "CapyPanel.exe"), "--updated-from", "0.26.0"]]
@@ -332,3 +334,75 @@ def test_the_notes_in_the_app_s_language() -> None:
     assert "English" not in portuguese
     assert updates.notes_in(notes, "Deutsch") == notes  # no such part: all of them
     assert updates.notes_in("- One line, no parts.", "English") == "- One line, no parts."
+
+
+def test_the_exe_goes_out_first_and_comes_in_last(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A start clicked mid-swap finds no exe rather than one with half its files.
+    place = updates.places(_app(tmp_path / "CapyPanel", "0.26.0"))
+    _app(place.new_app, "0.26.1")
+    moved: list[str] = []
+    copied: list[str] = []
+    real_rename, real_copy2, real_copytree = (
+        Path.rename,
+        updates.shutil.copy2,
+        updates.shutil.copytree,
+    )
+
+    def rename(self: Path, target: Path) -> Path:
+        moved.append(self.name)
+        return real_rename(self, target)
+
+    monkeypatch.setattr(Path, "rename", rename)
+    monkeypatch.setattr(
+        updates.shutil, "copy2", lambda s, d: copied.append(Path(s).name) or real_copy2(s, d)
+    )
+    monkeypatch.setattr(
+        updates.shutil, "copytree", lambda s, d: copied.append(Path(s).name) or real_copytree(s, d)
+    )
+    updates.apply(place, 1, wait=lambda _p, _t: True, test=None)  # tested before the restart
+    assert moved[0] == "CapyPanel.exe" and copied[-1] == "CapyPanel.exe"
+    assert (place.app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.1"
+
+
+def test_the_helper_skips_a_self_test_already_passed_and_marks_its_work(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app = _app(tmp_path / "CapyPanel", "0.26.0")
+    place = updates.places(app)
+    _app(place.new_app, "0.26.1")
+    seen: dict[str, Any] = {}
+
+    def apply(_place: Any, _pid: int, *, test: Any) -> None:
+        seen["test"] = test
+        seen["applying"] = updates.applying(app)  # its own marker, its own process
+        seen["marker"] = (place.staging / updates.APPLYING).exists()
+
+    monkeypatch.setattr(updates, "apply", apply)
+    monkeypatch.setattr(updates, "start", lambda exe, *args: None)
+    assert updates.run_helper(app, 1, "0.26.0", "0.26.1") == 0
+    assert seen == {"test": updates.self_test, "applying": False, "marker": True}
+    assert not (place.staging / updates.APPLYING).exists()  # gone before the new start
+    updates.mark_tested(place, "0.26.1")
+    assert updates.was_tested(place, "0.26.1") and not updates.was_tested(place, "0.26.2")
+    assert updates.run_helper(app, 1, "0.26.0", "0.26.1") == 0
+    assert seen["test"] is None
+
+
+def test_a_start_during_the_swap_sees_it_and_a_leftover_marker_never_counts(
+    tmp_path: Path,
+) -> None:
+    app = _app(tmp_path / "CapyPanel", "0.26.0")
+    marker = updates.places(app).staging / updates.APPLYING
+    assert not updates.applying(app)  # no marker
+    marker.parent.mkdir(parents=True)
+    marker.write_text(str(os.getppid()), encoding="utf-8")  # a process that's running
+    assert updates.applying(app)
+    old = time.time() - updates.APPLYING_FOR - 1
+    os.utime(marker, (old, old))
+    assert not updates.applying(app)  # a helper that never cleaned up: never obeyed
+    marker.write_text(str(0x7FFFFFF0), encoding="utf-8")
+    assert not updates.applying(app)  # no such process
+    marker.write_text("not a number", encoding="utf-8")
+    assert not updates.applying(app)

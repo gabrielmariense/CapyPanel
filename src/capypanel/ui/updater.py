@@ -206,6 +206,12 @@ class _Job(QObject):
             self.step.emit(_("Unpacking…"), 0, 0)
             new_app = updates.unpack(archive, place.staging)
             archive.unlink(missing_ok=True)
+            # Its self-test now, while CapyPanel is still open: after the restart only the
+            # files' swap is left, a fraction of a second.
+            self.step.emit(_("Checking the new version…"), 0, 0)
+            if not updates.self_test(new_app / updates.EXE):
+                raise UpdateError(_("The new version didn't pass its self-test"))
+            updates.mark_tested(place, release.version)
         except (UpdateError, OSError) as e:
             shutil.rmtree(place.staging, ignore_errors=True)
             self.ended.emit("", _("Cancelled.") if self.cancel.is_set() else str(e))
@@ -423,13 +429,14 @@ class UpdateWindow(QDialog):
             self._waiting.start()
             return
         self._waiting.stop()
-        self.status.setText(_("Restarting CapyPanel…"))
+        self.status.setText(_("CapyPanel closes now and opens again by itself in a few "
+                              "seconds."))  # fmt: skip
 
         def start_helper() -> None:
             args = updates.helper_args(self._app_dir, updates.own_pid(), __version__,
                                        release.version)  # fmt: skip
             log.info("Update: handing over to %s", args[0])
-            updates.start(Path(args[0]), *args[1:], splash=False)
+            updates.start(Path(args[0]), *args[1:])  # its splash: "Updating to …"
 
         self._updater.remember_install(release)
         if not self._quit_for_update(start_helper):

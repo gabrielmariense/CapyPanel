@@ -8,8 +8,10 @@ The swap is done by the new version's own exe, started from where the zip was un
 (`<folder>.update` beside CapyPanel's folder) with `--apply-update`. It waits for the running
 CapyPanel to end, moves the old version's files aside into `<folder>.previous` one by one (the
 folder itself stays: Windows won't rename a folder Explorer has open), copies the new ones in,
-leaves a portable copy's own data where it is, and runs the new exe's self-test. If any of
-that fails, the old files are put back as they were. Settings, lists and
+leaves a portable copy's own data where it is, and runs the new exe's self-test unless the
+running CapyPanel already ran it on the unpacked copy before closing. If any of
+that fails, the old files are put back as they were. While it works, a marker beside it tells a
+CapyPanel started meanwhile to end at once instead of holding files. Settings, lists and
 saved logins live outside the app's folder (ProgramData and Credential Manager), so they're
 never touched."""
 
@@ -55,6 +57,9 @@ USER_AGENT = "CapyPanel-updater"  # GitHub asks for one; it names the program, n
 KEEP = (PORTABLE_MARKER, "userdata")  # a portable copy's own data: carried over, never replaced
 APPLY_FLAG, UPDATED_FLAG, FAILED_FLAG = "--apply-update", "--updated-from", "--update-failed"
 NO_SPLASH = "PYINSTALLER_SUPPRESS_SPLASH_SCREEN"  # the exe's jobs show no splash, CapyPanel does
+TESTED = "tested"  # in the staging folder: the version whose unpacked copy passed its self-test
+APPLYING = "applying"  # in the staging folder while the helper swaps: its process id
+APPLYING_FOR = 300  # seconds: a marker older than this is a leftover, never obeyed
 
 
 def _env(*, splash: bool) -> dict[str, str]:
@@ -338,6 +343,32 @@ class Places:
         return self.staging / APP
 
 
+def mark_tested(place: Places, version: str) -> None:
+    """The unpacked `version` passed its self-test: the helper needn't run it again."""
+    (place.staging / TESTED).write_text(version, encoding="utf-8")
+
+
+def was_tested(place: Places, version: str) -> bool:
+    try:
+        return (place.staging / TESTED).read_text(encoding="utf-8").strip() == version
+    except OSError:
+        return False
+
+
+def applying(app_dir: Path) -> bool:
+    """Whether an update's helper is swapping this folder's files right now: a CapyPanel
+    started meanwhile ends at once, so it holds no file the swap has to move."""
+    marker = places(app_dir).staging / APPLYING
+    try:
+        pid = int(marker.read_text(encoding="utf-8"))
+        age = time.time() - marker.stat().st_mtime
+    except (OSError, ValueError):
+        return False
+    # A swap takes seconds: an old marker is one a helper never got to remove, and its process
+    # id may belong to something else by now. CapyPanel must never be kept from starting.
+    return age < APPLYING_FOR and pid != os.getpid() and not wait_for_exit(pid, 0)
+
+
 def places(app_dir: Path) -> Places:
     app = app_dir.resolve()
     return Places(app, app.with_name(f"{app.name}.update"), app.with_name(f"{app.name}.previous"))
@@ -424,10 +455,12 @@ def apply(
     pid: int,
     *,
     wait: Callable[[int, float], bool] = wait_for_exit,
-    test: Callable[[Path], bool] = self_test,
+    test: Callable[[Path], bool] | None = self_test,
 ) -> None:
     """The new version (in place.new_app) where the old one was. Raises UpdateError with the old
-    version's files back as they were when anything fails."""
+    version's files back as they were when anything fails. `test`: None when the unpacked copy
+    already passed it. The exe goes out first and comes in last, so for the moment the folder is
+    half there, it can't be started."""
     if not wait(pid, 120):
         raise UpdateError(_("CapyPanel didn't close"))
     if place.previous.exists():
@@ -439,7 +472,7 @@ def apply(
         for item in _ours(place.app):
             _retry(lambda item=item: item.rename(place.previous / item.name), f"moved {item.name}")
             moved.append(item.name)
-        for item in place.new_app.iterdir():
+        for item in sorted(place.new_app.iterdir(), key=lambda item: item.name == EXE):
             if item.name in KEEP:
                 continue  # never shipped, but never let a zip replace a portable copy's data
             copied.append(item.name)
@@ -447,7 +480,7 @@ def apply(
                 shutil.copytree(item, place.app / item.name)
             else:
                 shutil.copy2(item, place.app / item.name)
-        if not test(place.app / EXE):
+        if test is not None and not test(place.app / EXE):
             raise UpdateError(_("The new version didn't pass its self-test"))
     except (OSError, UpdateError) as e:
         _roll_back(place, moved, copied)
@@ -460,8 +493,10 @@ def apply(
 
 
 def _ours(app: Path) -> list[Path]:
-    """What the version owns in its folder: everything but a portable copy's own data."""
-    return [item for item in app.iterdir() if item.name not in KEEP]
+    """What the version owns in its folder, the exe first: everything but a portable copy's
+    own data."""
+    owned = [item for item in app.iterdir() if item.name not in KEEP]
+    return sorted(owned, key=lambda item: item.name != EXE)
 
 
 def _roll_back(place: Places, moved: list[str], copied: list[str]) -> None:
@@ -498,15 +533,23 @@ def run_helper(app_dir: Path, pid: int, old_version: str, new_version: str) -> i
     """`CapyPanel.exe --apply-update <app folder> <pid> <old> <new>`, from the unpacked new
     version: the swap, then CapyPanel started again, new or old. Logs to the person's log."""
     place = places(app_dir)
+    marker = place.staging / APPLYING
     try:
-        apply(place, pid)
+        marker.write_text(str(os.getpid()), encoding="utf-8")
+    except OSError:
+        log.warning("Update: couldn't write %s", marker)
+    tested = was_tested(place, new_version)
+    try:
+        apply(place, pid, test=None if tested else self_test)
     except Exception as e:  # noqa: BLE001 -- whatever it was, CapyPanel starts again
         log.exception("Update to %s failed", new_version)
         why = str(e) if isinstance(e, UpdateError) else f"{type(e).__name__}: {e}"
+        marker.unlink(missing_ok=True)
         if (place.app / EXE).exists():
             start(place.app / EXE, FAILED_FLAG, new_version, why)
         return 1
     log.info("Update: %s replaced %s in %s", new_version, old_version, place.app)
+    marker.unlink(missing_ok=True)
     start(place.app / EXE, UPDATED_FLAG, old_version)
     return 0
 
