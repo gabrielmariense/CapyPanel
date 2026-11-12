@@ -8,6 +8,9 @@ As mudanças de cada versão que você vai notar. As
 - O **Instalar e reiniciar** agora confere a versão nova antes de o CapyPanel fechar, e depois diz
   que o CapyPanel vai abrir de novo sozinho em alguns segundos. Enquanto os arquivos são trocados,
   a tela de abertura diz "Atualizando para a 0.26.4…".
+- Uma atualização guarda os arquivos de trabalho na pasta de dados de apps do Windows, nunca ao
+  lado da pasta do CapyPanel, e os apaga quando termina. As pastas `CapyPanel.update` e
+  `CapyPanel.previous` que atualizações anteriores deixaram ali somem no próximo início.
 
 ## 0.26.3
 

@@ -102,6 +102,13 @@ choice is only yours. While it downloads, **Later** reads **Cancel** and stops t
     When the update comes from a version older than 0.26.4, which doesn't test first, the helper
     runs the self-test itself before the swap.
 
+    The download, the unpacked new version and the copy of the old one kept to go back to are in
+    `%LOCALAPPDATA%\CapyPanel\update`, never in or beside CapyPanel's folder. The old copy is
+    deleted as soon as the new version passes its self-test, and the rest when the new version
+    starts. Every start also clears anything an update left behind, including the
+    `CapyPanel.update` and `CapyPanel.previous` folders that 0.26.0 to 0.26.3 made beside
+    CapyPanel's folder.
+
     Your settings, lists and saved logins are never touched.
 
 ## Run CapyPanel from source
@@ -125,7 +132,7 @@ has the rest.
 |---|---|---|
 | "Couldn't check for updates." | GitHub didn't answer, or the PC isn't online | Try **Help > Check for updates…** later |
 | "The download doesn't match its SHA-256: it was changed or cut short." | The zip that arrived isn't the one GitHub built | Click **Install and restart** again |
-| "CapyPanel can't install it from here (CapyPanel can't write to …). Download the zip from the release page and unpack it in place of this one." | Your account can't write to the folder CapyPanel is in, such as Program Files | Unzip the new version over the old one yourself, or move CapyPanel to a folder you can write to |
+| "CapyPanel can't install it from here (CapyPanel can't write to …). Download the zip from the release page and unpack it in place of this one." | Your account can't write to CapyPanel's own folder, such as one in Program Files | Unzip the new version over the old one yourself, or move CapyPanel to a folder you can write to |
 | "This copy runs from source: update it with git, or download the zip from the release page." | You started CapyPanel with `uv run` | `git pull`, or switch to the zip |
 | "The new version didn't pass its self-test" | The downloaded version failed its own check, so nothing was changed | Try **Install and restart** again later; **Report a problem** if it keeps failing |
 | "The update to 0.26.2 didn't go in" and "This is still CapyPanel 0.26.1: …" | The new version wouldn't start, so the old one was put back | Read the reason after the colon; **Report a problem** if it isn't clear |

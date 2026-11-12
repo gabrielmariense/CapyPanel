@@ -109,6 +109,13 @@ a escolha é só sua. Durante o download, o **Depois** vira **Cancelar** e inter
     Quando a atualização vem de uma versão anterior à 0.26.4, que não testa antes, o ajudante roda
     o autoteste ele mesmo antes da troca.
 
+    O download, a versão nova descompactada e a cópia da antiga guardada para voltar ficam em
+    `%LOCALAPPDATA%\CapyPanel\update`, nunca dentro nem ao lado da pasta do CapyPanel. A cópia
+    antiga é apagada assim que a versão nova passa no autoteste, e o resto quando a versão nova
+    abre. Cada início também limpa o que uma atualização deixou para trás, inclusive as pastas
+    `CapyPanel.update` e `CapyPanel.previous` que as versões 0.26.0 a 0.26.3 criavam ao lado da
+    pasta do CapyPanel.
+
     As suas configurações, listas e logins salvos nunca são mexidos.
 
 ## Rodar o CapyPanel pelo código-fonte
@@ -133,7 +140,7 @@ resto.
 |---|---|---|
 | "Não foi possível procurar uma nova versão." | O GitHub não respondeu, ou o PC está sem internet | Tente o **Ajuda > Procurar nova versão…** mais tarde |
 | "O download não confere com o SHA-256: foi alterado ou veio incompleto." | O zip que chegou não é o que o GitHub gerou | Clique em **Instalar e reiniciar** de novo |
-| "O CapyPanel não consegue instalá-la daqui (O CapyPanel não consegue gravar em …). Baixe o zip na página da versão e descompacte-o no lugar deste." | A sua conta não pode gravar na pasta em que o CapyPanel está, como a Arquivos de Programas | Descompacte a versão nova por cima da antiga você mesmo, ou mova o CapyPanel para uma pasta em que você possa gravar |
+| "O CapyPanel não consegue instalá-la daqui (O CapyPanel não consegue gravar em …). Baixe o zip na página da versão e descompacte-o no lugar deste." | A sua conta não pode gravar na própria pasta do CapyPanel, como uma dentro de Arquivos de Programas | Descompacte a versão nova por cima da antiga você mesmo, ou mova o CapyPanel para uma pasta em que você possa gravar |
 | "Esta cópia roda a partir do código-fonte: atualize com o git, ou baixe o zip na página da versão." | Você abriu o CapyPanel com o `uv run` | `git pull`, ou passe a usar o zip |
 | "A versão nova não passou no autoteste" | A versão baixada falhou na própria conferência, então nada foi mudado | Tente o **Instalar e reiniciar** de novo mais tarde; use o **Relatar um problema** se continuar falhando |
 | "A atualização para a 0.26.2 não foi instalada" e "Este continua sendo o CapyPanel 0.26.1: …" | A versão nova não abriu, então a antiga voltou | Leia o motivo depois dos dois-pontos; use o **Relatar um problema** se não ficar claro |

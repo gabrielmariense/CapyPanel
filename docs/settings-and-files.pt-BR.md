@@ -195,6 +195,10 @@ privada por usuário:
 | Todo perfil de usuário que você excluiu, ou tentou excluir | `logs\<você@DOMÍNIO>.user-profiles.log` |
 | Definições de visualizadores embutidas e os perfis iniciais | Dentro do app |
 
+Enquanto uma atualização roda, os arquivos de trabalho dela ficam em
+`%LOCALAPPDATA%\CapyPanel\update`, e são apagados assim que a versão nova está rodando (veja
+[Atualizar o CapyPanel](download.pt-BR.md#atualizar-o-capypanel)).
+
 ??? note "Quem pode ler o quê"
 
     - **Sua pasta é privada:** só você, os administradores e o próprio Windows podem abri-la. O
