@@ -713,6 +713,11 @@ class PrintersTool(ListWorkspace):
         log.info("Refresh: %d printers", len(targets))
         run.start()
 
+    def working(self) -> bool:
+        """A Refresh is running, the button's or the one on its own (both go through _run):
+        "Install and restart" waits for it."""
+        return self._run is not None
+
     def stop_checks(self) -> None:
         if self._run is not None:
             self._run.stop()

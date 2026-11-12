@@ -228,7 +228,9 @@ def test_refresh_reads_each_printer_and_fills_status_toner_and_details(
         monkeypatch.setattr(reading, "read", partial(reading.read, port=agent.port, timeout=0.2))
         printers.commands.refresh_shown.trigger()
         assert not printers.commands.refresh_shown.isEnabled()  # one Refresh at a time
+        assert printers.working()  # an update waits for it
         _wait(printers)
+    assert not printers.working()
     table = printers.table
     lab = _row(printers, "3F-LAB-01")
     assert lab.text(table.STATUS) == "Toner low"  # cyan at 8 %, as the mockup shows
