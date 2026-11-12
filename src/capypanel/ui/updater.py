@@ -181,6 +181,9 @@ class _Job(QObject):
         self.ended.emit(str(new_app), "")
 
 
+NOTES_HEIGHT = 480  # the window's height with release notes to read
+
+
 class UpdateWindow(QDialog):
     """One window for an update: what's new, then the download's progress in the same place."""
 
@@ -236,12 +239,13 @@ class UpdateWindow(QDialog):
         layout.addWidget(self.page)
         layout.addWidget(self.progress)
         layout.addWidget(self.status)
+        layout.addStretch(0)  # the slack, when there are no notes to take it
         layout.addLayout(buttons)
         self._waiting = QTimer(self)
         self._waiting.setInterval(1000)
         self._waiting.timeout.connect(self._try_restart)
         updater.looked.connect(self._looked)
-        self.resize(620, 480)
+        self.resize(620, NOTES_HEIGHT)
         if updater.offer is not None:
             self._show(updater.offer)
         else:
@@ -304,6 +308,17 @@ class UpdateWindow(QDialog):
         self.status.setVisible(progress)
         self.install.setVisible(install)
         self.skip.setVisible(skip)
+        QTimer.singleShot(0, self, lambda: self._fit(notes))
+
+    def _fit(self, notes: bool) -> None:
+        """Tall enough for the release notes; without them, just its few lines."""
+        layout = self.layout()
+        if notes:
+            height = max(self.height(), NOTES_HEIGHT)
+        else:
+            height = layout.heightForWidth(self.width()) if layout is not None else -1
+            height = max(height, self.minimumSizeHint().height())
+        self.resize(self.width(), height)
 
     def _failed(self, heading: str, why: str) -> None:
         self.heading.setText(heading)

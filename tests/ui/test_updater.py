@@ -15,7 +15,7 @@ from capypanel import __version__
 from capypanel.core import settings, updates
 from capypanel.core.updates import Release, UpdateError
 from capypanel.ui import updater as updater_ui
-from capypanel.ui.updater import UpdateWindow
+from capypanel.ui.updater import NOTES_HEIGHT, UpdateWindow
 
 NEWER = Release(
     version="99.0.0", notes="## What's new\n- Everything.",
@@ -127,6 +127,8 @@ def test_help_asks_and_says_when_it_is_up_to_date(
     assert dialog.heading.text() == "CapyPanel is up to date"
     assert dialog.line.text() == f"{__version__} is the newest release."
     assert dialog.install.isHidden() and dialog.later.text() == "Close"
+    QApplication.processEvents()  # fitted to its few lines, no empty space
+    assert dialog.height() < NOTES_HEIGHT / 2
     dialog.close()
 
 

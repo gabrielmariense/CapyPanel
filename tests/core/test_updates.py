@@ -3,6 +3,7 @@ back. Nothing reaches GitHub: the network is a fake, the folders are temporary."
 
 import hashlib
 import io
+import ssl
 import urllib.error
 import urllib.request
 import zipfile
@@ -99,8 +100,11 @@ def test_downloads_come_only_from_github_and_stop_when_asked(
 ) -> None:
     landed = {"url": "https://objects.githubusercontent.com/file"}
     payload = b"x" * (updates.CHUNK * 3)
-    monkeypatch.setattr(urllib.request, "urlopen",
-                        lambda request, timeout: _Response(payload, landed["url"]))  # fmt: skip
+    monkeypatch.setattr(
+        urllib.request,
+        "urlopen",
+        lambda request, timeout, context: _Response(payload, landed["url"]),
+    )
     seen: list[tuple[int, int]] = []
     updates.download(
         "https://github.com/a", tmp_path / "a.zip", progress=lambda d, t: seen.append((d, t))
@@ -256,7 +260,7 @@ def test_the_helper_never_lets_an_error_through_and_starts_the_old_copy_again(
 def test_no_release_published_yet_means_nothing_new(monkeypatch: pytest.MonkeyPatch) -> None:
 
     def answer(code: int):  # noqa: ANN202
-        def urlopen(request: Any, timeout: float) -> Any:
+        def urlopen(request: Any, timeout: float, context: Any) -> Any:
             raise urllib.error.HTTPError(updates.LATEST_URL, code, "Not Found", {}, None)  # type: ignore[arg-type]
 
         return urlopen
@@ -272,3 +276,20 @@ def test_the_exe_s_own_jobs_start_without_the_splash(monkeypatch: pytest.MonkeyP
     monkeypatch.setenv(updates.NO_SPLASH, "1")  # as in the helper, which shows none
     assert updates._env(splash=False)[updates.NO_SPLASH] == "1"
     assert updates.NO_SPLASH not in updates._env(splash=True)  # CapyPanel itself shows it
+
+
+def test_github_s_certificate_is_checked_without_python_s_strict_mode(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Strict mode refused a chain Windows trusts ("Missing Authority Key Identifier").
+    contexts: list[ssl.SSLContext] = []
+
+    def urlopen(request: Any, timeout: float, context: ssl.SSLContext) -> Any:
+        contexts.append(context)
+        raise urllib.error.HTTPError(updates.LATEST_URL, 404, "Not Found", {}, None)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(urllib.request, "urlopen", urlopen)
+    assert updates.latest() is None
+    (context,) = contexts
+    assert context.verify_mode == ssl.CERT_REQUIRED and context.check_hostname
+    assert not context.verify_flags & ssl.VERIFY_X509_STRICT

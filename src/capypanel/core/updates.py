@@ -20,6 +20,7 @@ import logging
 import os
 import re
 import shutil
+import ssl
 import subprocess
 import tempfile
 import time
@@ -107,6 +108,16 @@ def zip_name(version: str) -> str:
 # ---- asking GitHub ----
 
 
+def _tls() -> ssl.SSLContext:
+    """Python's checks of GitHub's certificate, against the certificates Windows trusts, with
+    the host name. Python 3.13 also turned on X.509 strict mode, which refuses chains that
+    browsers and Windows accept, e.g. a company's own authority missing a key identifier
+    ("Missing Authority Key Identifier"): that mode alone is turned off."""
+    context = ssl.create_default_context()
+    context.verify_flags &= ~ssl.VERIFY_X509_STRICT
+    return context
+
+
 def _open(url: str, timeout: float) -> object:
     """A GET to `url`; refuses anything but https to GitHub, also after redirects."""
     if urllib.parse.urlsplit(url).scheme != "https":
@@ -115,7 +126,9 @@ def _open(url: str, timeout: float) -> object:
         url, headers={"User-Agent": USER_AGENT, "Accept": "application/vnd.github+json"}
     )
     try:
-        response = urllib.request.urlopen(request, timeout=timeout)  # noqa: S310
+        response = urllib.request.urlopen(  # noqa: S310 -- https only, checked above
+            request, timeout=timeout, context=_tls()
+        )
     except urllib.error.HTTPError as e:
         raise UpdateError(
             _("GitHub answered {code} {reason}").format(code=e.code, reason=e.reason), e.code
