@@ -1,6 +1,6 @@
 # Code signing policy
 
-CapyPanel has applied to SignPath Foundation to sign its releases. Once the project is accepted,
+CapyPanel is applying to SignPath Foundation to sign its releases. Once the project is accepted,
 every release will carry this line:
 
 > Free code signing provided by SignPath.io, certificate by SignPath Foundation.

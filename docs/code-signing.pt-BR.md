@@ -1,7 +1,7 @@
 # Política de assinatura de código (Code signing policy)
 
-O CapyPanel se candidatou à SignPath Foundation para assinar as suas versões. Quando o projeto for
-aceito, toda versão vai trazer esta linha:
+O CapyPanel está se candidatando à SignPath Foundation para assinar as suas versões. Quando o
+projeto for aceito, toda versão vai trazer esta linha:
 
 > Free code signing provided by SignPath.io, certificate by SignPath Foundation.
 
