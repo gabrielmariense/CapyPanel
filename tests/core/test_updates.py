@@ -459,3 +459,23 @@ def test_the_helper_works_from_where_an_older_updater_unpacked_it(
     assert (app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.4"
     updates.clean_up(app)
     assert sorted(p.name for p in tmp_path.iterdir()) == ["CapyPanel"]
+
+
+def test_a_folder_still_in_use_is_tried_again_until_it_goes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The helper runs from the download for a moment after starting the new version.
+    app = _app(tmp_path / "CapyPanel", "0.26.4")
+    staging = updates.places(app).staging
+    _app(staging / "CapyPanel", "0.26.4")
+    real_rmtree = updates.shutil.rmtree
+    calls: list[int] = []
+
+    def busy_twice(path: Path, ignore_errors: bool = False) -> None:
+        calls.append(1)
+        if len(calls) > 2:
+            real_rmtree(path, ignore_errors=ignore_errors)
+
+    monkeypatch.setattr(updates.shutil, "rmtree", busy_twice)
+    updates.clean_up(app, pause=0)
+    assert not staging.exists() and len(calls) == 3

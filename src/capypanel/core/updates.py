@@ -408,17 +408,31 @@ def cannot_install(app_dir: Path) -> str:
     return ""
 
 
-def clean_up(app_dir: Path) -> None:
-    """At every start: what an update left (the unpacked download, the old version), in app
-    data and where 0.26.0 to 0.26.3 put it beside CapyPanel's folder. Never while a swap is
-    under way; whatever can't go yet (a helper still ending) goes at the next start."""
+CLEAN_TRIES = 15  # one a second: the helper that started this copy ends within a few
+
+
+def clean_up(app_dir: Path, tries: int = CLEAN_TRIES, pause: float = 1.0) -> None:
+    """At every start, on a thread of its own: what an update left (the unpacked download, the
+    old version), in app data and where 0.26.0 to 0.26.3 put it beside CapyPanel's folder.
+    Never while a swap is under way. Right after an update the helper still runs from the
+    download for a moment, so a folder that won't go yet is tried again."""
     if applying(app_dir):
         return
     place = places(app_dir)
-    for folder in (place.staging, place.previous, *_legacy(place.app)):
-        if folder.is_dir():
+    left = [f for f in (place.staging, place.previous, *_legacy(place.app)) if f.is_dir()]
+    for attempt in range(tries):
+        for folder in left:
             shutil.rmtree(folder, ignore_errors=True)
-            log.info("Update: removed %s%s", folder, " (not all of it)" if folder.exists() else "")
+        gone = [f for f in left if not f.exists()]
+        for folder in gone:
+            log.info("Update: removed %s", folder)
+        left = [f for f in left if f.exists()]
+        if not left:
+            return
+        if attempt < tries - 1:
+            time.sleep(pause)
+    for folder in left:
+        log.info("Update: couldn't remove all of %s yet: at the next start", folder)
 
 
 # ---- the swap, run by the new version's exe ----
