@@ -1,197 +1,252 @@
 # Host lists
 
-A host list is one JSON file holding groups, hosts and their tags. CapyPanel shows one list at a
-time and saves every edit to it right away. To put many hosts in at once, or to take them out as
-a CSV file, see [Importing and exporting hosts](importing.md).
+A host list is one file holding your computers, the groups they sit in and their tags. CapyPanel
+shows one list at a time and saves every change right away. This page covers arranging a list,
+finding a host in it, and moving many hosts in or out at once.
 
-## Groups and tags
+## Arrange hosts in groups
 
-- **Groups** nest as deep as you like ("Headquarters › Finance › Floor 3").
-- **Tags** cut across groups ("kiosk", "floor-3"). Click a tag in the Groups panel and the table
-  keeps only the hosts carrying it. Tags you've used before are suggested as you type, with their
-  spelling kept. See [Picking tags](#picking-tags).
-- **Notes** hold anything else worth knowing about a host. They show in the Details panel, and
-  searching always covers them.
-- **No group** is where a host sits when you haven't put it in one. "No group (4)" shows under
-  "All hosts" in the Groups panel, with however many hosts have no group, and hosts dragged onto it
-  leave the group they were in.
+1. Click **+** beside the **Groups** heading, or use **Inventory > Add group…**, to make a group.
+   Groups nest as deep as you like ("Headquarters › Finance › Floor 3").
+2. Drag selected hosts from the table onto a group to move them there, or right-click them and use
+   **Move to ▸**.
+3. Drag a group up or down to reorder it, onto another group to put it inside, or onto the
+   **Groups** heading to bring it back to the top level.
 
-A new list starts with one group, **Default group**.
+A host you haven't put anywhere sits under **No group**, which shows under "All hosts" with how
+many it holds. A new list starts with one group, **Default group**.
 
-Right-click selected hosts and **Tags ▸** lists the tags the list already has, ticked where every
-selected host carries one and "(1 of 2)" where only some do. Picking a tag gives it to all of
-them, or takes it from all of them when they all had it, and **New tag…** at the bottom asks for
-one and gives it to the selection. Printers has the same menu.
+??? note "More about arranging"
 
-### Picking tags
+    - Right-click a group > **Move to** lists **Groups** (the top level), then every group this one
+      can go into, drawn as a tree; where it is now is ticked. For hosts, **Move to** lists **No
+      group** first, then the same tree.
+    - A group you collapsed stays collapsed, and moving a group into a collapsed one opens the way
+      to it, so what you moved stays in sight.
+    - **Inventory > Manage groups…** shows the whole tree in a window, with **Move to**, **Move
+      up**, **Move down** and **Sort A–Z** (a one-time sort you can rearrange after). Dragging
+      works there too. "Nothing changes until you click Save." Lists made before version 0.13.0
+      show their groups in the order they were created; Sort A–Z puts them in order once.
+    - On a read-only list, dragging is off.
+    - **Notes** hold anything else worth knowing about a host. They show in the Details panel, and
+      searching always covers them.
 
-A tag narrows the group you have picked, rather than reaching across the whole list. To see a tag
-everywhere, pick **All hosts** first.
+??? note "Removing a group"
 
-Several tags can be picked at once, and the table then keeps only the hosts carrying **all** of
-them. While any are picked:
+    Right-click a group > **Remove selected**, or press Del with a group picked. An empty group
+    only asks to confirm. A group with anything in it asks what should happen to what's inside:
 
-- a tinted strip above the table says which, as in "Only hosts with all of: kiosk, floor-3 · 4 of
-  37 shown", with a **Clear** button;
-- the **Tags** heading shows how many are picked and offers a **×** to clear them;
-- the status bar adds "Tags: kiosk, floor-3".
+    - **Move them to ▸** picks where they go: **No group**, or any group that isn't being removed.
+      The group above this one is ticked, so the usual answer is one click. Nothing is deleted;
+      the groups inside move along with their hosts.
+    - **Remove everything:** the group, every group inside it and all their hosts.
 
-Picked tags stay as you move between groups and while you search. When nothing matches, the table
-says "No hosts in this group have all the picked tags." and offers **Clear tags**.
+    Cancel is the default button, so Enter or Esc leaves the list as it is.
 
-## Arranging groups and hosts
+## Tag hosts and filter by tag
 
-Groups keep the order you give them. In the Groups panel:
+1. Select the hosts, right-click them and open **Tags ▸**.
+2. Pick a tag to give it to all of them (or take it from all of them, when they all have it), or
+   **New tag…** to make one.
+3. Click a tag in the Groups panel: the table keeps only the hosts carrying it. Pick several and
+   it keeps only the hosts carrying **all** of them.
 
-- drag a group up or down to move it, or drop it onto another group to put it inside;
-- drag a group onto the **Groups** heading, which lights up as you reach it, to move it to the
-  top level;
-- drag selected hosts from the host table onto a group to move them there.
+Tags cut across groups ("kiosk", "floor-3"). A tag narrows the group you have picked; to see it
+across the whole list, pick **All hosts** first.
 
-Right-click a group > **Move to** lists **Groups**, the top of the panel, inside nothing, then
-every group this one can go into, drawn as a tree; the group itself and its own subgroups aren't
-offered, and where it is now is ticked. For hosts, right-click them > **Move to** lists **No
-group** first, then the same tree. A group you collapsed stays collapsed as you work, and moving a
-group into a collapsed one opens the way to it, so what you moved stays in sight.
+??? note "More about tags"
 
-Every change is saved right away. On a read-only list, dragging is off.
+    - In **Tags ▸**, a tag is ticked where every selected host carries it, and shows "(1 of 2)"
+      where only some do. Tags you've used before are suggested as you type, spelling kept.
+    - While tags are picked, a tinted strip above the table says which, as in "Only hosts with all
+      of: kiosk, floor-3 · 4 of 37 shown", with a **Clear** button; the **Tags** heading shows how
+      many are picked and offers a **×**; the status bar adds "Tags: kiosk, floor-3".
+    - Picked tags stay as you move between groups and while you search.
+    - Printers has the same **Tags ▸** menu.
 
-**Inventory > Manage groups…** shows the whole tree in a window, under a **Groups** root with
-tree lines. Under it, in a row, are **Move to**, **Move up**, **Move down** and **Sort A–Z**, a
-one-time sort you can rearrange after. Dragging works there too: drop a group onto **Groups**, or
-below the last row, to take it out of every group. "Nothing changes until you click Save." Lists
-made before version 0.13.0 show their groups in the order they were created; Sort A–Z puts them in
-order once.
+## Find a host
 
-## Removing a group
+Type in the box above the table (**Ctrl+F** jumps there). It searches the whole open list,
+whatever group or tag is picked, and case doesn't matter. Press **Down** or **Enter** to move to
+the first result, and **Esc** to end the search and go back to the group you had picked.
 
-Right-click a group > **Remove selected**, or press Del with a group picked. An empty group only
-asks to confirm. A group with anything in it asks what should happen first, "“Floor 3” holds 2
-groups and 7 hosts. What should happen to them?", and offers two ways out:
+??? note "What the search covers"
 
-- **Move them to ▸** picks where they go, from the same tree as moving hosts: **No group**, or any
-  group that isn't being removed. The group above this one is ticked, so the usual answer is one
-  click. Nothing is deleted; the groups inside move along with their hosts, and with **No group**
-  they end up directly under **Groups**.
-- **Remove everything:** the group, every group inside it and all their hosts.
+    The box lists what it covers, "Search name, address, status, user, tags, notes" when every
+    column is shown:
 
-Cancel is the default button, so Enter or Esc leaves the list as it is.
+    - the computer **name** and the **notes**, always;
+    - the **address**, the **status**, the logged-on **users** and the **tags**, each while its
+      column is shown. The status is searched as the column says it, so "online" or "not checked"
+      lists the hosts with that status. Status and users come from the last refresh, so a host
+      that hasn't been checked isn't found by who is on it.
 
-## Where lists live
+    While you search:
 
-CapyPanel keeps lists in two folders, made at its first start:
+    - What you typed is marked wherever it matched, in the table and in the notes in Details.
+    - Nothing is picked in the Groups panel; the Details panel says which group the selected host
+      is in, and CapyPanel never jumps there by itself.
+    - The status bar adds **N found**. **Refresh all** checks only the results, and automatic
+      status only the hosts shown. **Report** offers the results as what to export.
+    - **Down** and **Enter** in the box never connect, so a typo can't reach the wrong PC. In the
+      table, a double-click and Enter connect as usual.
+    - The **×** in the box also ends the search, and so does picking a group or tag, or switching
+      host lists.
 
-| Folder | Where | Who it's for |
-|---|---|---|
-| **Shared host lists** | `C:\ProgramData\CapyPanel\lists\hosts` | Everyone on the PC. The **default list** is `default.json` there |
-| **Your host lists** | `C:\ProgramData\CapyPanel\users\<you@DOMAIN>\lists\hosts` | Only you, and administrators. Your **personal list** is `personal.json` there |
+## Add hosts from a spreadsheet
 
-Each kind of list has a folder of its own, so the Printers tool keeps its lists in `lists\printers`
-in the same two places and the two never mix. Every list file records which kind it is, and opening
-the wrong kind is refused with "“{path}” isn't a host list." rather than showing an empty table.
+1. **Inventory > Import hosts…**.
+2. Paste a list into the box at the top, or click **Open a CSV file…** for a `.csv` or `.txt`
+   file. The rows fill the preview below.
+3. Check the preview, and pick where hosts with no group go under **Hosts with no group go to:**.
+4. Click **Add {n} hosts**. Nothing changes in your list before that.
 
-**Every list saved in either folder shows up by itself**, with nothing to add. Drop a file in the
-shared folder and everyone on the PC has it in their dropdown; drop one in yours and it's yours
-alone. In portable mode both folders are inside the app's own `userdata` folder (see
-[Settings and files](../settings-and-files.md#portable-mode)).
+Three shapes are understood, and **Formats…** shows each one with an example:
 
-Lists from an earlier version are copied into these folders once, by themselves: the `hosts.json`
-files of before 0.19, and the lists 0.19 kept directly in `lists`. The older files stay where they
-are.
-
-Lists are named "Default", "Personal", and every other one by its file name without `.json`. Two
-lists with the same name show their folder's name after it, and the full path is always in the
-tooltip.
-
-Windows permissions decide whether a list opens read-only, for every list wherever it lives. A
-read-only list can still be browsed and connected to; only editing is off. A list anywhere else,
-on a network share for instance, is added once and then stays in the dropdown.
-
-Any user can add files to ProgramData, so **a shared list made by another user who isn't an
-administrator isn't opened**: it could send your password to the wrong computer. It's left out of
-the dropdown, named in the log, and shown in Settings as "Not used: made by another user", where an
-administrator can replace or delete it.
-
-## The list dropdown
-
-The open list's name sits on top of the Groups panel, and in the window title. Click it and the
-menu holds:
-
-- **every list CapyPanel found or you added**, the open one ticked, each with its path in the
-  tooltip. Pick one to switch to it;
-- **New list…**, below them, and **Open list…** (Ctrl+O), which opens any list file from anywhere
-  and keeps it in the dropdown from then on;
-- **Manage host lists…**, which opens
-  [Settings > Hosts > General > Host lists](#settings-hosts-general-host-lists).
-
-## Making a new list
-
-**New list…**, in the dropdown or on the Settings page, opens **New host list**: a **Name**, and
-**For:**
-
-- **Everyone on this PC (shared)** saves it in the shared lists folder. Only people Windows lets
-  write that folder can pick this; for everyone else it's greyed out, with a note saying why.
-- **Only me (personal)** saves it in your own lists folder.
-- **Somewhere else, e.g. a network share…** asks where in a file dialog.
-
-A name already taken asks before replacing that file with an empty list. The new list opens at
-once.
-
-## Settings > Hosts > General > Host lists
-
-The same lists as the dropdown, as a table of **List**, **Type** and **Access**:
-
-| Column | What it says |
+| Format | What it looks like |
 |---|---|
-| **List** | The list's name, and "(in use)" on the open one. Its path is in the tooltip |
-| **Type** | **Shared** (in the shared folder), **Yours** (in your own) or **Added** (a list from somewhere else) |
-| **Access** | **Read/write**, **Read-only**, **Created when opened** for a default or personal list that isn't there yet, **File not found**, or **Not used: made by another user** |
+| **Hostnames** | One computer name per line |
+| **Name and address** | A name, then the computer's name or IP address, separated by a comma, or two columns copied from Excel |
+| **CSV with headers** | A first line naming the columns: `name, address, group, tags, notes` |
 
-**New…**, **Add existing…** and **Remove** are under the table, and under them the picked list's
-file path, shortened in the middle to fit; a click copies it whole. A row's right-click adds **Open**,
-**Save a copy…** and **Open folder**. A double-click, or **Open**, opens a list; adding one or
-saving a copy doesn't open it.
+A host already in your list is skipped, never overwritten.
 
-As the page says under the table: "Lists saved in a lists folder show up here by themselves; Remove
-asks whether to delete the file too." **Remove** asks which you meant:
+??? note "More about the columns"
 
-- **Remove from my lists** leaves the file alone. A list that lives in a lists folder is then
-  hidden for you only, and **Add existing…** or **Open list…** brings it back.
-- **Delete the file** moves it to the **Recycle Bin**, for everyone who uses it. The question shows
-  the path on one line first.
-- **Cancel** is the default button.
+    - With headers the columns can come in any order, and their names work in English or in
+      Portuguese (`nome, endereço, grupo, tags, notas`), however their words are joined and
+      whatever their case: `GroupName`, `Group name` and `group_name` are all the group column.
+    - In a group cell, `/` separates the levels ("Headquarters/Front desk"); in a tags cell, `;`
+      separates the tags. Columns CapyPanel has no use for are ignored, and the summary names them.
+    - A table copied with its columns lined up with spaces instead of tabs is read too, as long as
+      the first line is the header row and names at least two columns, one of them the name.
+    - A list with more than a name and an address but no header row can't be read: CapyPanel won't
+      guess which column is which.
 
-A list whose file can't be deleted, or isn't there at all, is simply taken out of your lists.
-Removing the list you have open opens the default list. The default and personal lists can't be
-removed.
+??? note "Fixing rows in the preview"
 
-## Which list opens at start
+    The preview shows **Name**, **Address**, **Group**, **Tags**, **Notes** and a **Warning** for
+    every row. Right-click a row:
 
-Choose it under **Settings > Hosts > General > List on startup**: the last used list
-(the default choice), the default list, your personal list, or any other list you have. If that
-list can't be opened, CapyPanel opens the next one it can, the default list and then your
-personal list, and says so.
+    - **Edit cell** (F2) changes the value under the pointer; a double-click does the same.
+    - **Put in group ▸** puts the selected rows in a group, picked from the tree.
+    - **Set tags…** gives the selected rows the same tags, separated by `;`.
+    - **Leave out of the import** (Del) drops the rows from this import. The file isn't touched.
+    - **Add a row below** types a host in by hand.
 
-## What a list shows first
+    Editing in the table rewrites the pasted text above as CSV with a header row, so the two always
+    agree; CapyPanel asks before doing that the first time. A group named in the file that doesn't
+    exist yet is created by the import, and the preview and summary say so. Tags and notes come in
+    with their hosts. The summary counts what will be added, skipped and can't be added, and each
+    row says why.
 
-Each list keeps its own answer, in **Settings > Hosts > General > Show first**:
+## Export hosts to a spreadsheet
 
-- **All hosts**, the whole list;
-- **Where I left off**, the group, tag or view you had open when you closed it;
-- **A chosen group ▸**, picked from the tree, or No group.
+![The Report window: the hosts, the preset, the Host, Tags and notes and Last check boxes with Refresh 3 hosts, and the preview](../images/report-dark.png)
 
-The setting is for the list open now, and the note under it says so. With no list open it reads
-"Open a host list to choose what it shows first." A group's right-click menu sets the same thing:
-**Show this group first** is a tick, and clicking it again clears it.
+1. Click **Report** on the toolbar.
+2. Pick the **Hosts**: a group, a tag, the selected hosts, the search results, or all of them.
+3. Tick the **Columns**, or pick a **Preset**.
+4. Click **Copy** to paste into Excel, or **Export…** to save a CSV file.
 
-## Shared lists and editing at the same time
+**For Import** ticks the hosts' own fields, which Import hosts reads back: a way to copy hosts to
+another list, or keep a copy before a big change. Report only reads the list, so it works on a
+read-only one too.
 
-When two people edit the same shared list, CapyPanel never overwrites the other person's
-changes. If the file changed since you opened it, your edit isn't saved, and you choose: save
-your version as a copy, or reload the list with their changes.
+??? note "More about the Report"
 
-## The file format
+    - **Columns** come in three boxes: **Host** (Name, Address, Group), **Tags and notes** and
+      **Last check** (Status, Logged-on users). Each has **All · None**. Ticks are kept as soon as
+      you change them. Keep your own set with **Save as preset…**; ticks matching no preset read
+      **Custom**.
+    - **Last check** comes from the last refresh, with its time beside the box's name. A host
+      nobody has checked shows **Not checked** in the preview, and an empty cell in the file. A
+      button under the ticks checks these hosts again now, named after how many there are
+      (**Refresh 3 hosts**, or **Refresh host** for one), with **Stop** while it runs. With
+      **Logged-on users** ticked, a note says "People's names: keep the file private."
+    - **Preview** shows the rows in the list's own order; a click on a column title sorts them
+      there while the window is open. What goes out follows Preview.
+    - **Copy** puts the rows on the clipboard with tabs, and the window stays open. **Export…**
+      saves a CSV named after the list and the part you picked, then offers **Open file** or
+      **Open folder**. **Close** is the only way out: every choice is kept as soon as it's made.
+    - The file uses the column separator your PC's Excel expects, a comma or a semicolon, and
+      opens accented names correctly.
+    - A cell that starts with `=`, `+`, `-` or `@` would run as a formula in Excel, so Report
+      writes it with an apostrophe in front, which keeps it as text. Import hosts takes the
+      apostrophe off again.
 
-Lists are readable JSON with a schema version. Older versions of CapyPanel keep fields they don't
-know about when they save, and a list written by a newer version is refused instead of being
-damaged.
+## Switch, make and share lists
+
+The open list's name sits on top of the Groups panel. Click it to switch to another list, make one
+with **New list…**, open any list file with **Open list…** (Ctrl+O), or go to **Manage host
+lists…** in Settings.
+
+A new list asks for a **Name** and who it's **For:** **Everyone on this PC (shared)**, **Only me
+(personal)**, or **Somewhere else, e.g. a network share…**.
+
+??? note "Where lists are kept"
+
+    | Folder | Where | Who it's for |
+    |---|---|---|
+    | **Shared host lists** | `C:\ProgramData\CapyPanel\lists\hosts` | Everyone on the PC. The **default list** is `default.json` there |
+    | **Your host lists** | `C:\ProgramData\CapyPanel\users\<you@DOMAIN>\lists\hosts` | Only you, and administrators. Your **personal list** is `personal.json` there |
+
+    - **Every list saved in either folder shows up by itself.** Drop a file in the shared folder
+      and everyone on the PC has it; drop one in yours and it's yours alone. In portable mode both
+      folders are inside the app's own `userdata` folder (see
+      [Settings and files](../settings-and-files.md#portable-mode)).
+    - The Printers tool keeps its lists in `lists\printers` in the same two places, and the two
+      never mix: each file records which kind it is.
+    - Lists are named "Default", "Personal", and every other one by its file name without `.json`.
+      Two with the same name show their folder after it; the full path is in the tooltip.
+    - Windows permissions decide whether a list opens read-only. A read-only list can still be
+      browsed and connected to; only editing is off. Sharing a list for everyone needs write
+      access to the shared folder; for anyone else that choice is greyed out, with a note saying
+      why.
+    - A list somewhere else, on a network share for instance, is added once and then stays in the
+      dropdown.
+    - Lists from an earlier version are copied into these folders once, by themselves (the
+      `hosts.json` files of before 0.19, and the lists 0.19 kept directly in `lists`). The older
+      files stay where they are.
+
+??? note "Settings › Hosts › General › Host lists"
+
+    The same lists as a table of **List**, **Type** (**Shared**, **Yours** or **Added**) and
+    **Access** (**Read/write**, **Read-only**, **Created when opened**, **File not found**, or
+    **Not used: made by another user**). **New…**, **Add existing…** and **Remove** are under it,
+    then the picked list's path; a click copies it. A row's right-click adds **Open**, **Save a
+    copy…** and **Open folder**.
+
+    **Remove** asks which you meant: **Remove from my lists** leaves the file alone (a list in a
+    lists folder is then hidden for you only), **Delete the file** moves it to the Recycle Bin for
+    everyone, and **Cancel** is the default. The default and personal lists can't be removed, and
+    removing the open list opens the default one.
+
+    Also on that page: **List on startup** (the last used list by default; if it can't open,
+    CapyPanel tries the default list, then your personal one, and says so) and **Show first**,
+    which each list keeps for itself: **All hosts**, **Where I left off**, or **A chosen group ▸**.
+    A group's right-click **Show this group first** sets the same thing.
+
+??? note "Shared lists, safety and the file format"
+
+    - When two people edit the same shared list, CapyPanel never overwrites the other person's
+      changes. If the file changed since you opened it, your edit isn't saved, and you choose: save
+      your version as a copy, or reload the list with their changes.
+    - Any user can add files to ProgramData, so **a shared list made by another user who isn't an
+      administrator isn't opened**: it could send your password to the wrong computer. It's left
+      out of the dropdown, named in the log, and shown in Settings as "Not used: made by another
+      user", where an administrator can replace or delete it.
+    - Lists are readable JSON with a schema version. Older versions of CapyPanel keep fields they
+      don't know about when they save, and a list written by a newer version is refused instead of
+      being damaged.
+
+## Messages you may see
+
+| Message | What it means | What to do |
+|---|---|---|
+| "“{path}” isn't a host list." | The file you opened is a printer list | Open it in Printers |
+| "This list needs a header row." | The pasted list has more than a name and an address, but no first line naming the columns | Add a header row; **Formats…** shows how |
+| "Already in the list, in “Front desk”" or "Same name as row 7" | The host is already in your list, or twice in the file | Nothing: it's skipped, never overwritten |
+| "No name", "Not a computer name or IP address", "No address: the name must then be the computer's name on the network" | That row can't be added | Fix the row in the preview, or leave it out |
+| "No host matches “…”." | The search found nothing | Check the spelling, or show the column you're searching |
+| **Not used: made by another user** | A shared list made by someone who isn't an administrator | Ask an administrator to replace or delete it |

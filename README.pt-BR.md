@@ -44,28 +44,23 @@ excluí-los.
 
 Também online, com busca: **[gabrielmariense.github.io/CapyPanel/pt-BR](https://gabrielmariense.github.io/CapyPanel/pt-BR/)**.
 
-- [Primeiros passos](docs/getting-started.pt-BR.md): rode o CapyPanel e adicione seus primeiros
-  hosts
-- [Configurações e arquivos](docs/settings-and-files.pt-BR.md): o que cada configuração faz e
-  onde o CapyPanel guarda os arquivos
-- [Listas de hosts](docs/hosts/host-lists.pt-BR.md): grupos, tags e as pastas de listas
-- [Importando e exportando hosts](docs/hosts/importing.pt-BR.md): muitos hosts de uma vez, entrando
-  e saindo em CSV
+- [Primeiros passos](docs/getting-started.pt-BR.md): rode o CapyPanel, adicione seus primeiros
+  hosts, verifique e conecte
+- [Listas de hosts](docs/hosts/host-lists.pt-BR.md): grupos e tags, encontrar um host, e hosts
+  entrando e saindo de uma planilha
 - [Conectando](docs/hosts/connecting.pt-BR.md): visualizadores VNC, Área de Trabalho Remota, perfis
   de conexão, contas e senhas
-- [Verificando hosts](docs/hosts/checking.pt-BR.md): status, usuários logados, dados do PC e
-  como o CapyPanel lê outros PCs
+- [Verificando hosts](docs/hosts/checking.pt-BR.md): status, usuários logados e dados do PC
 - [Comandos em um host](docs/hosts/commands.pt-BR.md): pastas e consoles, mensagens, logoff,
   reinicialização, impressoras, programas instalados e unidades mapeadas
-- [Pesquisando hosts](docs/hosts/searching.pt-BR.md): encontrar um host em qualquer lugar da lista
-- [A ferramenta Impressoras](docs/printers/printers.pt-BR.md): impressoras, os detalhes delas e as
-  páginas web
+- [A ferramenta Impressoras](docs/printers/printers.pt-BR.md): impressoras, as listas delas, os
+  detalhes e as páginas web
 - [Verificando impressoras](docs/printers/checking.pt-BR.md): status, toner e suprimentos por SNMP
-- [Listas de impressoras](docs/printers/printer-lists.pt-BR.md): onde as listas de impressoras
-  ficam e as configurações delas
 - [A ferramenta Perfis de usuário](docs/profiles/user-profiles.pt-BR.md): os perfis do Windows
   de um PC, e excluir os que ninguém usa
-- [Desenvolvimento](docs/development.pt-BR.md): compilar, testar e traduzir
+- [Configurações e arquivos](docs/settings-and-files.pt-BR.md): cada configuração, e onde o
+  CapyPanel guarda os arquivos
+- [Contribuindo](CONTRIBUTING.pt-BR.md): compilar, testar e traduzir
 
 ## Início rápido (pelo código-fonte)
 

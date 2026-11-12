@@ -1,4 +1,6 @@
-# Desenvolvimento
+# Contribuindo com o CapyPanel
+
+Como compilar, testar e traduzir o CapyPanel. In English: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Preparação
 
@@ -62,7 +64,9 @@ As páginas em `docs/` também são publicadas como site com o
 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/), sempre que mudam na `main`. Cada
 página em inglês (`nome.md`) tem a versão em português ao lado (`nome.pt-BR.md`); mude as duas
 juntas. As páginas sobre o app inteiro ficam em `docs/`, e as páginas de uma ferramenta numa pasta
-própria: `docs/hosts/`, `docs/printers/` e `docs/profiles/`. Para ver o site enquanto escreve:
+própria: `docs/hosts/`, `docs/printers/` e `docs/profiles/`. Cada página abre com as tarefas em
+passos numerados curtos, dobra os detalhes em caixas `??? note` e termina com uma tabela "Mensagens
+que você pode ver". Para ver o site enquanto escreve:
 
 ```
 uv run --only-group docs mkdocs serve

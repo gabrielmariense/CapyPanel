@@ -1,4 +1,6 @@
-# Development
+# Contributing to CapyPanel
+
+How to build, test and translate CapyPanel. Em português: [CONTRIBUTING.pt-BR.md](CONTRIBUTING.pt-BR.md).
 
 ## Setup
 
@@ -62,8 +64,9 @@ The pages in `docs/` are also published as a website with
 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/), each time they change on
 `main`. Each English page (`name.md`) has its Portuguese version beside it
 (`name.pt-BR.md`); change both together. Pages about the whole app sit in `docs/`, and a tool's
-own pages in a folder of its own: `docs/hosts/`, `docs/printers/` and `docs/profiles/`. To
-preview the site while writing:
+own pages in a folder of its own: `docs/hosts/`, `docs/printers/` and `docs/profiles/`. Each page
+opens with its tasks as short numbered steps, folds the details into `??? note` boxes, and ends
+with a "Messages you may see" table. To preview the site while writing:
 
 ```
 uv run --only-group docs mkdocs serve

@@ -43,24 +43,22 @@ nobody uses any more on a PC so you can delete them.
 
 Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrielmariense.github.io/CapyPanel/)**.
 
-- [Getting started](docs/getting-started.md): run CapyPanel and add your first hosts
-- [Settings and files](docs/settings-and-files.md): what each setting does, and where CapyPanel
-  keeps its files
-- [Host lists](docs/hosts/host-lists.md): groups, tags, and the lists folders
-- [Importing and exporting hosts](docs/hosts/importing.md): many hosts at once, in and out as CSV
+- [Getting started](docs/getting-started.md): run CapyPanel, add your first hosts, check and
+  connect
+- [Host lists](docs/hosts/host-lists.md): groups and tags, finding a host, and hosts in and out
+  of a spreadsheet
 - [Connecting](docs/hosts/connecting.md): VNC viewers, Remote Desktop, connection profiles,
   accounts and passwords
-- [Checking hosts](docs/hosts/checking.md): status, logged-on users, PC facts, and how
-  CapyPanel reads other PCs
+- [Checking hosts](docs/hosts/checking.md): status, logged-on users and PC facts
 - [Commands on a host](docs/hosts/commands.md): folders and consoles, messages, log off,
   restart, printers, installed programs and mapped drives
-- [Searching hosts](docs/hosts/searching.md): finding a host anywhere in the list
-- [The Printers tool](docs/printers/printers.md): printers, their details and their web pages
+- [The Printers tool](docs/printers/printers.md): printers, their lists, details and web pages
 - [Checking printers](docs/printers/checking.md): status, toner and supplies over SNMP
-- [Printer lists](docs/printers/printer-lists.md): where printer lists live, and their settings
 - [The User profiles tool](docs/profiles/user-profiles.md): a PC's Windows profiles, and
   deleting the ones nobody uses
-- [Development](docs/development.md): building, testing and translating
+- [Settings and files](docs/settings-and-files.md): every setting, and where CapyPanel keeps its
+  files
+- [Contributing](CONTRIBUTING.md): building, testing and translating
 
 ## Quick start (from source)
 

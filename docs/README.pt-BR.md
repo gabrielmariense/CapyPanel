@@ -32,27 +32,20 @@ de usuário do Windows que ninguém usa mais, para você excluí-los.
 
 ## Páginas
 
-Para quem usa o CapyPanel e para quem o configura para uma equipe.
+Cada página abre com as tarefas de sempre em poucos passos curtos. Os detalhes ficam dobrados
+embaixo, e toda página termina com as mensagens que você pode ver e o que fazer com elas.
 
 | Página | O que ela cobre |
 |---|---|
-| [Primeiros passos](getting-started.pt-BR.md) | Rodar o CapyPanel, a janela principal, adicionar hosts |
-| [Configurações e arquivos](settings-and-files.pt-BR.md) | Cada configuração e onde o CapyPanel guarda os arquivos |
-| [Listas de hosts](hosts/host-lists.pt-BR.md) | Grupos, tags e as pastas em que as listas ficam |
-| [Importando e exportando hosts](hosts/importing.pt-BR.md) | Muitos hosts de uma vez, entrando e saindo em CSV |
-| [Conectando](hosts/connecting.pt-BR.md) | Visualizadores VNC, Área de Trabalho Remota, perfis de conexão, contas, senhas e a verificação de login |
-| [Verificando hosts](hosts/checking.pt-BR.md) | Status, usuários logados, dados do PC e como o CapyPanel lê outros PCs |
+| [Primeiros passos](getting-started.pt-BR.md) | Rodar o CapyPanel, adicionar seus primeiros hosts, verificar e conectar |
+| [Listas de hosts](hosts/host-lists.pt-BR.md) | Grupos e tags, encontrar um host, e hosts entrando e saindo de uma planilha |
+| [Conectando](hosts/connecting.pt-BR.md) | Visualizadores VNC, Área de Trabalho Remota, perfis de conexão, contas e senhas |
+| [Verificando hosts](hosts/checking.pt-BR.md) | Status, usuários logados e dados do PC |
 | [Comandos em um host](hosts/commands.pt-BR.md) | As pastas e os consoles de um PC, os usuários, a energia, as impressoras, os programas e as unidades mapeadas |
-| [Pesquisando hosts](hosts/searching.pt-BR.md) | A caixa de pesquisa, o que ela abrange e como encerrar uma pesquisa |
-| [A ferramenta Impressoras](printers/printers.pt-BR.md) | A janela Impressoras, os detalhes de uma impressora e as páginas web |
-| [Verificando impressoras](printers/checking.pt-BR.md) | Status, toner e suprimentos, e como são lidos |
-| [Listas de impressoras](printers/printer-lists.pt-BR.md) | Onde as listas de impressoras ficam e as configurações delas |
+| [A ferramenta Impressoras](printers/printers.pt-BR.md) | Impressoras, as listas delas, os detalhes e as páginas web |
+| [Verificando impressoras](printers/checking.pt-BR.md) | Status, toner e suprimentos, avisos, SNMP e Doc360 MPS |
 | [A ferramenta Perfis de usuário](profiles/user-profiles.pt-BR.md) | Os perfis do Windows de um PC, quais podem ser excluídos, e como excluí-los |
-| [Desenvolvimento](development.pt-BR.md) | Compilar, testar e traduzir o CapyPanel |
-
-Primeiros passos, Configurações e arquivos e Desenvolvimento falam do app inteiro. As seis páginas
-depois deles são da ferramenta **Hosts**, as três seguintes das **Impressoras**, e a última dos
-**Perfis de usuário**.
+| [Configurações e arquivos](settings-and-files.pt-BR.md) | Cada configuração, e onde o CapyPanel guarda os arquivos |
 
 Estas páginas descrevem a versão atual (0.25.0). O CapyPanel está em beta, então elas crescem a
 cada funcionalidade.

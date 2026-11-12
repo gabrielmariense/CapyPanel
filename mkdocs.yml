@@ -11,21 +11,17 @@ nav:
   - Start:
       - Home: README.md
       - Getting started: getting-started.md
-      - Settings and files: settings-and-files.md
-      - Development: development.md
   - Hosts:
       - Host lists: hosts/host-lists.md
-      - Importing and exporting: hosts/importing.md
       - Connecting: hosts/connecting.md
       - Checking: hosts/checking.md
       - Commands: hosts/commands.md
-      - Searching: hosts/searching.md
   - Printers:
       - The Printers tool: printers/printers.md
       - Checking: printers/checking.md
-      - Printer lists: printers/printer-lists.md
   - User profiles:
       - The User profiles tool: profiles/user-profiles.md
+  - Settings and files: settings-and-files.md
 
 theme:
   name: material
@@ -68,17 +64,13 @@ plugins:
             Home: Página inicial
             Getting started: Primeiros passos
             Settings and files: Configurações e arquivos
-            Development: Desenvolvimento
             Hosts: Hosts
             Host lists: Listas de hosts
-            Importing and exporting: Importando e exportando
             Connecting: Conectando
             Checking: Verificando
             Commands: Comandos
-            Searching: Pesquisando
             Printers: Impressoras
             The Printers tool: A ferramenta Impressoras
-            Printer lists: Listas de impressoras
             User profiles: Perfis de usuário
             The User profiles tool: A ferramenta Perfis de usuário
 
@@ -88,6 +80,8 @@ extra_css:
 
 markdown_extensions:
   - admonition
+  - pymdownx.details
+  - pymdownx.superfences
   - tables
   - toc:
       permalink: true
