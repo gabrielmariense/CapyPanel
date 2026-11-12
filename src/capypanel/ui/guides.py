@@ -41,7 +41,6 @@ CARD_WIDTH = 360
 GAP = 12  # px between the outline and the card
 MARGIN = 8  # px a card keeps from the window's edges
 OUTLINE = 4  # px the outline sits outside its control
-FOLLOW_MS = 250  # how often the card and the outline follow what moved under them
 DIM = {"dark": 150, "light": 110}  # the shade's alpha over the rest of the window
 
 
@@ -252,9 +251,6 @@ class GuideRunner(QObject):
         self.card.skip.connect(self._end)
         self._action: Callable[[], None] | None = None  # the step's own button, if it has one
         self.card.action.clicked.connect(lambda: self._action() if self._action else None)
-        self._follow = QTimer(self)  # a scrolled table, a panel that filled in: follow them
-        self._follow.setInterval(FOLLOW_MS)
-        self._follow.timeout.connect(self._follow_up)
         window.installEventFilter(self)
         themes.switches().switched.connect(self._place)
 
@@ -291,7 +287,6 @@ class GuideRunner(QObject):
             app = QApplication.instance()
             if app is not None:
                 app.installEventFilter(self)  # keys and shortcuts, while it runs
-            self._follow.start()
         self._guide, self._steps = guide, steps
         self._go(0)
 
@@ -331,6 +326,9 @@ class GuideRunner(QObject):
         card.show()
         card.raise_()
         card.next_button.setFocus()
+        # Once more after what the card's step showed (another tab, say) is laid out: nothing
+        # else moves while a guide runs, since only the card takes clicks and keys.
+        QTimer.singleShot(0, self, self._place)
 
     def _fit_card(self) -> None:
         """As tall as its words wrapped at its width: the size hint alone left the last line
@@ -358,7 +356,6 @@ class GuideRunner(QObject):
         self._guide, self._steps, self._clickable = None, [], []
         if guide is not None:
             guide.cleanup()
-        self._follow.stop()
         app = QApplication.instance()
         if app is not None:
             app.removeEventFilter(self)
@@ -366,12 +363,6 @@ class GuideRunner(QObject):
         self.shade.hide()
 
     # ---- where the card goes ----
-
-    def _follow_up(self) -> None:
-        """Follows what moved under the card, but never while a mouse button is down: a card
-        moved or raised between the press and the release of a click can lose the click."""
-        if QApplication.mouseButtons() == Qt.MouseButton.NoButton:
-            self._place()
 
     def _place(self) -> None:
         if self._guide is None or not self._steps:
