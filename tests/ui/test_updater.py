@@ -192,7 +192,8 @@ def test_install_waits_for_a_refresh_then_hands_over_and_quits(
     dialog._try_restart()
     assert quits == [True]
     [helper] = started
-    assert helper[0].endswith(str(Path("CapyPanel.update") / "CapyPanel" / "CapyPanel.exe"))
+    assert helper[0].endswith(str(Path("new") / "CapyPanel" / "CapyPanel.exe"))
+    assert not Path(helper[0]).is_relative_to(tmp_path)  # in app data, not beside CapyPanel
     assert helper[1:] == ["--apply-update", str(app_dir.resolve()), str(updates.own_pid()),
                           __version__, "99.0.0"]  # fmt: skip
     dialog.close()
@@ -347,4 +348,4 @@ def test_the_helper_s_splash_says_it_is_updating(
     closed: list[bool] = []
     code = update_splash.run(tmp_path, 7, "0.26.3", "0.26.4", lambda: closed.append(True))
     assert code == 0 and closed == [True]
-    assert swapped == [(tmp_path, 7, "0.26.3", "0.26.4")]
+    assert swapped == [(tmp_path, 7, "0.26.3", "0.26.4", None)]

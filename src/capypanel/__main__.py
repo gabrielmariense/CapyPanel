@@ -56,13 +56,17 @@ def _apply_update(app_dir: Path, pid: int, old_version: str, new_version: str) -
     applog.setup_logging(paths.log_file)
     # Its words show on the splash, and in the new start's window when something goes wrong.
     i18n.set_language(settings.language_of(paths.settings_file))
+    # Where it runs from: an older version's updater may have unpacked it somewhere else.
+    staging = (
+        Path(sys.executable).resolve().parent.parent if getattr(sys, "frozen", False) else None
+    )
     try:
         from capypanel.ui import update_splash
     except Exception:  # noqa: BLE001 -- without its window the swap still has to happen
         logging.getLogger("capypanel").exception("Update: no splash")
         close_splash()
-        return updates.run_helper(app_dir, pid, old_version, new_version)
-    return update_splash.run(app_dir, pid, old_version, new_version, close_splash)
+        return updates.run_helper(app_dir, pid, old_version, new_version, staging)
+    return update_splash.run(app_dir, pid, old_version, new_version, close_splash, staging)
 
 
 if __name__ == "__main__":

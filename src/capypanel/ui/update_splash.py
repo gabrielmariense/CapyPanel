@@ -62,7 +62,12 @@ def picture(text: str, ratio: float) -> QPixmap:
 
 
 def run(
-    app_dir: Path, pid: int, old: str, new: str, close_launcher_splash: Callable[[], None]
+    app_dir: Path,
+    pid: int,
+    old: str,
+    new: str,
+    close_launcher_splash: Callable[[], None],
+    staging: Path | None = None,
 ) -> int:
     """The swap (core/updates.run_helper) on a thread, with the splash on screen meanwhile."""
     app = QApplication.instance() or QApplication([])
@@ -75,7 +80,7 @@ def run(
     close_launcher_splash()  # this one is on screen now, in the same place
     done: dict[str, int] = {}
     worker = threading.Thread(
-        target=lambda: done.update(code=updates.run_helper(app_dir, pid, old, new)),
+        target=lambda: done.update(code=updates.run_helper(app_dir, pid, old, new, staging)),
         name="update-apply",
         daemon=True,
     )

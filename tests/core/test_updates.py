@@ -191,6 +191,7 @@ def test_waiting_for_a_process_that_isn_t_there_returns_at_once() -> None:
 def test_a_folder_that_can_t_take_files_is_said(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    (tmp_path / "CapyPanel").mkdir()
     assert updates.cannot_install(tmp_path / "CapyPanel") == ""
 
     def refused(**_kwargs: Any) -> Any:
@@ -203,7 +204,9 @@ def test_a_folder_that_can_t_take_files_is_said(
 def test_the_helper_is_the_new_version_s_own_exe(tmp_path: Path) -> None:
     app = tmp_path / "CapyPanel"
     args = updates.helper_args(app, 77, "0.26.0", "0.26.1")
-    assert args[0] == str(tmp_path / "CapyPanel.update" / "CapyPanel" / "CapyPanel.exe")
+    root = updates.work_root(app.resolve())
+    assert args[0] == str(root / "new" / "CapyPanel" / "CapyPanel.exe")
+    assert not root.is_relative_to(tmp_path)  # in app data, never beside CapyPanel's folder
     assert args[1:] == ["--apply-update", str(app.resolve()), "77", "0.26.0", "0.26.1"]
 
 
@@ -225,18 +228,18 @@ def test_a_file_that_won_t_move_halfway_puts_everything_back(
     place = updates.places(_app(tmp_path / "CapyPanel", "0.26.0"))
     _portable(place.app)
     _app(place.new_app, "0.26.1")
-    real_rename = Path.rename
+    real_move = updates.shutil.move
 
-    def stubborn(self: Path, target: Path) -> Path:
-        if self.name == "CapyPanel.exe" and self.parent == place.app:
+    def stubborn(source: Path, target: Path) -> object:
+        if Path(source) == place.app / "_internal":  # the exe went first: it comes back too
             raise PermissionError("in use")
-        return real_rename(self, target)
+        return real_move(source, target)
 
-    monkeypatch.setattr(Path, "rename", stubborn)
+    monkeypatch.setattr(updates.shutil, "move", stubborn)
     monkeypatch.setattr(updates.time, "sleep", lambda _s: None)
     with pytest.raises(UpdateError, match="in use"):
         updates.apply(place, 1, wait=lambda _p, _t: True, test=lambda _exe: True)
-    monkeypatch.setattr(Path, "rename", real_rename)
+    monkeypatch.setattr(updates.shutil, "move", real_move)
     assert (place.app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.0"
     assert (place.app / "_internal" / "lib.dll").read_text(encoding="utf-8") == "0.26.0"
     assert (place.app / PORTABLE_MARKER).exists() and not place.previous.exists()
@@ -344,17 +347,14 @@ def test_the_exe_goes_out_first_and_comes_in_last(
     _app(place.new_app, "0.26.1")
     moved: list[str] = []
     copied: list[str] = []
-    real_rename, real_copy2, real_copytree = (
-        Path.rename,
-        updates.shutil.copy2,
-        updates.shutil.copytree,
-    )
+    real_move = updates.shutil.move
+    real_copy2, real_copytree = updates.shutil.copy2, updates.shutil.copytree
 
-    def rename(self: Path, target: Path) -> Path:
-        moved.append(self.name)
-        return real_rename(self, target)
+    def move(source: Path, target: Path) -> object:
+        moved.append(Path(source).name)
+        return real_move(source, target)
 
-    monkeypatch.setattr(Path, "rename", rename)
+    monkeypatch.setattr(updates.shutil, "move", move)
     monkeypatch.setattr(
         updates.shutil, "copy2", lambda s, d: copied.append(Path(s).name) or real_copy2(s, d)
     )
@@ -406,3 +406,56 @@ def test_a_start_during_the_swap_sees_it_and_a_leftover_marker_never_counts(
     assert not updates.applying(app)  # no such process
     marker.write_text("not a number", encoding="utf-8")
     assert not updates.applying(app)
+
+
+def test_after_a_good_update_nothing_is_left_in_or_beside_capypanel_s_folder(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app = _app(tmp_path / "CapyPanel", "0.26.3")
+    place = updates.places(app)
+    _app(place.new_app, "0.26.4")
+    monkeypatch.setattr(updates, "wait_for_exit", lambda _pid, _t: True)
+    monkeypatch.setattr(updates, "self_test", lambda _exe: True)
+    monkeypatch.setattr(updates, "start", lambda exe, *args: None)
+    assert updates.run_helper(app, 1, "0.26.3", "0.26.4") == 0
+    assert (app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.4"
+    assert not place.previous.exists()  # the old version goes as soon as the new one passed
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["CapyPanel"]  # nothing beside it
+    assert sorted(p.name for p in app.iterdir()) == ["CapyPanel.exe", "_internal"]  # nor in it
+    updates.clean_up(app)  # the new version's start: the unpacked download, which ran the helper
+    assert not place.staging.exists()
+
+
+def test_every_start_clears_what_an_update_left_here_and_beside_the_folder(
+    tmp_path: Path,
+) -> None:
+    app = _app(tmp_path / "CapyPanel", "0.26.3")
+    place = updates.places(app)
+    old_update, old_previous = tmp_path / "CapyPanel.update", tmp_path / "CapyPanel.previous"
+    for folder in (place.staging, place.previous, old_update, old_previous):
+        _app(folder / "CapyPanel", "x")
+    (tmp_path / "Other.update").mkdir()  # not ours: stays
+    marker = old_update / updates.APPLYING
+    marker.write_text(str(os.getppid()), encoding="utf-8")  # a swap under way: nothing goes
+    updates.clean_up(app)
+    assert old_update.exists() and place.previous.exists()
+    marker.unlink()
+    updates.clean_up(app)
+    assert not any(f.exists() for f in (place.staging, place.previous, old_update, old_previous))
+    assert (tmp_path / "Other.update").exists() and (app / "CapyPanel.exe").exists()
+
+
+def test_the_helper_works_from_where_an_older_updater_unpacked_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # 0.26.3's window unpacks beside CapyPanel's folder; 0.26.4's helper swaps from there.
+    app = _app(tmp_path / "CapyPanel", "0.26.3")
+    staging = tmp_path / "CapyPanel.update"
+    _app(staging / "CapyPanel", "0.26.4")
+    monkeypatch.setattr(updates, "wait_for_exit", lambda _pid, _t: True)
+    monkeypatch.setattr(updates, "self_test", lambda _exe: True)
+    monkeypatch.setattr(updates, "start", lambda exe, *args: None)
+    assert updates.run_helper(app, 1, "0.26.3", "0.26.4", staging) == 0
+    assert (app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.4"
+    updates.clean_up(app)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["CapyPanel"]

@@ -4,10 +4,13 @@ SHA-256, and swap it in once CapyPanel has closed, keeping the old folder to go 
 Nothing here runs on its own: the UI decides when to look and asks before installing. Only the
 packaged CapyPanel.exe installs updates; a copy run from source is updated with git.
 
-The swap is done by the new version's own exe, started from where the zip was unpacked
-(`<folder>.update` beside CapyPanel's folder) with `--apply-update`. It waits for the running
-CapyPanel to end, moves the old version's files aside into `<folder>.previous` one by one (the
-folder itself stays: Windows won't rename a folder Explorer has open), copies the new ones in,
+The download, the unpacked new version and the old version kept to go back to live in this
+Windows user's own app data (the "CapyPanel/update" folder in %LOCALAPPDATA%, a folder per copy
+of CapyPanel), never in or beside CapyPanel's folder, and they're deleted once the new version is
+running. The swap is done by the new version's own exe, started from where the zip was
+unpacked, with `--apply-update`. It waits for the running CapyPanel to end, moves the old
+version's files out one by one (the folder itself stays: Windows won't rename a folder Explorer
+has open), copies the new ones in,
 leaves a portable copy's own data where it is, and runs the new exe's self-test unless the
 running CapyPanel already ran it on the unpacked copy before closing. If any of
 that fails, the old files are put back as they were. While it works, a marker beside it tells a
@@ -335,8 +338,8 @@ def unpack(archive: Path, into: Path) -> Path:
 @dataclass(frozen=True)
 class Places:
     app: Path  # the folder CapyPanel.exe runs from
-    staging: Path  # beside it: the download and the unpacked new version
-    previous: Path  # beside it: the old version while the new one is checked
+    staging: Path  # in app data: the download and the unpacked new version
+    previous: Path  # in app data: the old version while the new one is checked
 
     @property
     def new_app(self) -> Path:
@@ -358,7 +361,11 @@ def was_tested(place: Places, version: str) -> bool:
 def applying(app_dir: Path) -> bool:
     """Whether an update's helper is swapping this folder's files right now: a CapyPanel
     started meanwhile ends at once, so it holds no file the swap has to move."""
-    marker = places(app_dir).staging / APPLYING
+    app = app_dir.resolve()
+    return any(_marked(folder / APPLYING) for folder in (places(app).staging, _legacy(app)[0]))
+
+
+def _marked(marker: Path) -> bool:
     try:
         pid = int(marker.read_text(encoding="utf-8"))
         age = time.time() - marker.stat().st_mtime
@@ -369,28 +376,47 @@ def applying(app_dir: Path) -> bool:
     return age < APPLYING_FOR and pid != os.getpid() and not wait_for_exit(pid, 0)
 
 
-def places(app_dir: Path) -> Places:
+def work_root(app: Path) -> Path:
+    """This copy of CapyPanel's update folder in the person's app data: one per folder it runs
+    from, so a portable copy and an installed one never share it."""
+    base = os.environ.get("LOCALAPPDATA") or tempfile.gettempdir()
+    key = hashlib.sha256(str(app).lower().encode("utf-8")).hexdigest()[:12]
+    return Path(base) / APP / "update" / key
+
+
+def places(app_dir: Path, staging: Path | None = None) -> Places:
+    """Where an update works. `staging`: where the helper actually runs from, when an older
+    version's updater unpacked it somewhere else (beside CapyPanel's folder until 0.26.3)."""
     app = app_dir.resolve()
-    return Places(app, app.with_name(f"{app.name}.update"), app.with_name(f"{app.name}.previous"))
+    root = work_root(app)
+    return Places(app, staging or root / "new", root / "previous")
+
+
+def _legacy(app: Path) -> tuple[Path, Path]:
+    """Where 0.26.0 to 0.26.3 put the same folders: beside CapyPanel's own."""
+    return app.with_name(f"{app.name}.update"), app.with_name(f"{app.name}.previous")
 
 
 def cannot_install(app_dir: Path) -> str:
-    """Why an update can't be installed here, or "": the folder beside CapyPanel's must take
-    new files (a copy under Program Files, say, can't without admin rights)."""
+    """Why an update can't be installed here, or "": CapyPanel's own folder must take new files
+    (a copy under Program Files, say, can't without admin rights)."""
     try:
-        with tempfile.TemporaryFile(dir=app_dir.resolve().parent):
+        with tempfile.TemporaryFile(dir=app_dir.resolve()):
             pass
     except OSError:
-        return _("CapyPanel can't write to {folder}").format(folder=app_dir.resolve().parent)
+        return _("CapyPanel can't write to {folder}").format(folder=app_dir.resolve())
     return ""
 
 
 def clean_up(app_dir: Path) -> None:
-    """After a new version has started: the unpacked download and the old folder go. Whatever
-    can't go yet (a helper still ending) is tried again at the next start."""
+    """At every start: what an update left (the unpacked download, the old version), in app
+    data and where 0.26.0 to 0.26.3 put it beside CapyPanel's folder. Never while a swap is
+    under way; whatever can't go yet (a helper still ending) goes at the next start."""
+    if applying(app_dir):
+        return
     place = places(app_dir)
-    for folder in (place.staging, place.previous):
-        if folder.exists():
+    for folder in (place.staging, place.previous, *_legacy(place.app)):
+        if folder.is_dir():
             shutil.rmtree(folder, ignore_errors=True)
             log.info("Update: removed %s%s", folder, " (not all of it)" if folder.exists() else "")
 
@@ -465,12 +491,13 @@ def apply(
         raise UpdateError(_("CapyPanel didn't close"))
     if place.previous.exists():
         shutil.rmtree(place.previous)
-    place.previous.mkdir()
+    place.previous.mkdir(parents=True)
     moved: list[str] = []  # the old version's, now in place.previous
     copied: list[str] = []  # the new version's, now in place.app
     try:
         for item in _ours(place.app):
-            _retry(lambda item=item: item.rename(place.previous / item.name), f"moved {item.name}")
+            _retry(lambda item=item: shutil.move(item, place.previous / item.name),
+                   f"moved {item.name}")  # fmt: skip
             moved.append(item.name)
         for item in sorted(place.new_app.iterdir(), key=lambda item: item.name == EXE):
             if item.name in KEEP:
@@ -510,7 +537,8 @@ def _roll_back(place: Places, moved: list[str], copied: list[str]) -> None:
             item.unlink(missing_ok=True)
     for name in moved:
         source = place.previous / name
-        _retry(lambda source=source: source.rename(place.app / source.name), f"put back {name}")
+        _retry(lambda source=source: shutil.move(source, place.app / source.name),
+               f"put back {name}")  # fmt: skip
     shutil.rmtree(place.previous, ignore_errors=True)
 
 
@@ -529,10 +557,13 @@ def start(exe: Path, *args: str, splash: bool = True) -> None:
     )
 
 
-def run_helper(app_dir: Path, pid: int, old_version: str, new_version: str) -> int:
+def run_helper(
+    app_dir: Path, pid: int, old_version: str, new_version: str, staging: Path | None = None
+) -> int:
     """`CapyPanel.exe --apply-update <app folder> <pid> <old> <new>`, from the unpacked new
-    version: the swap, then CapyPanel started again, new or old. Logs to the person's log."""
-    place = places(app_dir)
+    version: the swap, then CapyPanel started again, new or old. Logs to the person's log.
+    `staging`: the folder the helper runs from (its exe's folder's parent)."""
+    place = places(app_dir, staging)
     marker = place.staging / APPLYING
     try:
         marker.write_text(str(os.getpid()), encoding="utf-8")
@@ -549,6 +580,7 @@ def run_helper(app_dir: Path, pid: int, old_version: str, new_version: str) -> i
             start(place.app / EXE, FAILED_FLAG, new_version, why)
         return 1
     log.info("Update: %s replaced %s in %s", new_version, old_version, place.app)
+    shutil.rmtree(place.previous, ignore_errors=True)  # it passed its self-test: no way back needed
     marker.unlink(missing_ok=True)
     start(place.app / EXE, UPDATED_FLAG, old_version)
     return 0
