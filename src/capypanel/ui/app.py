@@ -235,7 +235,10 @@ def run(argv: list[str] | None = None) -> int:
     for tool in tools:
         tool.prepare(paths)  # e.g. the files it starts with
     stages.done("the tools' code")
-    language.apply(prefs.get("language", i18n.DEFAULT_LANGUAGE))  # before any window exists
+    if not isinstance(prefs.get("language"), str):  # the first start: Windows' language
+        prefs["language"] = i18n.windows_language()
+        log.info("Language from Windows: %s", prefs["language"])
+    language.apply(prefs["language"])  # before any window exists
 
     registry = themes.Registry()
     themes.apply(registry.find(prefs.get("theme")))
