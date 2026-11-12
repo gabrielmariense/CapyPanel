@@ -270,7 +270,8 @@ def test_the_printers_guide_points_at_the_real_controls(
     assert [s.title for s in steps] == titles
     assert not any(s.click for s in steps)  # no step asks for a click
     assert steps[1].target() is printers.toolbar.inventory_button
-    assert steps[2].target() == [printers.table, printers.details]
+    assert steps[2].target() is printers.table
+    assert steps[2].keep_clear() is printers.details  # it talks about Details: never on it
     assert steps[3].target() is printers.toolbar.refresh_button
     for step, page in zip(steps[6:], ("printer_warnings", "printer_connecting"), strict=True):
         assert step.action is not None

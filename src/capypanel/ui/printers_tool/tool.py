@@ -264,6 +264,11 @@ class PrintersTool(ListWorkspace):
             rail = getattr(self.window(), "rail", None)
             return getattr(rail, "buttons", {}).get("printers")
 
+        def attention() -> list[QWidget]:  # the rail's count, and the strip while it shows
+            strip = self.attention_strip
+            found = [w for w in (rail_icon(),) if w is not None]
+            return found + ([strip] if strip.isVisibleTo(self) else [])
+
         def settings(page: str) -> tuple[str, Callable[[], None]]:
             return _("Open Settings"), lambda: self._shell.open_settings(page)
 
@@ -280,7 +285,8 @@ class PrintersTool(ListWorkspace):
                 Step(_("Your printers"),
                      _("The printers of the list are here. Pick one to see everything about it "
                        "in Details; a right-click has everything you can do with it, and a "
-                       "double-click opens its web page."), lambda: [table, self.details]),
+                       "double-click opens its web page."),
+                     lambda: table, keep_clear=lambda: self.details),
                 Step(pgettext("printers", "Refresh all"),  # as the button says it
                      _("Reads the status, toner and page count of every printer shown (F5). "
                        "Nothing is read until you press it."), lambda: bar.refresh_button),
@@ -292,7 +298,7 @@ class PrintersTool(ListWorkspace):
                 Step(_("Printers that need attention"),
                      _("When a Refresh finds printers stopped, offline or low, a red count shows "
                        "here, and a strip above the table lists them with Show."),
-                     rail_icon, lambda: table),
+                     attention, lambda: table),
                 Step(_("Refresh on its own"),
                      _("Printers can be read every 5 to 60 minutes, with a Windows notification "
                        "when one stops or runs low. Both stay off until you turn them on in "
