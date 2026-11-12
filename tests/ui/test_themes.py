@@ -587,6 +587,23 @@ def test_tables_draw_a_line_under_each_row_and_none_between_columns() -> None:
         assert grid and not any("border-right" in body for body in grid)
 
 
+@pytest.mark.parametrize("scheme", ["light", "dark"])
+def test_a_ticked_box_in_a_list_keeps_its_box_in_the_windows_themes(
+    qapp: QApplication, scheme: str
+) -> None:
+    """With the Windows themes' own rules on rows, the Windows style drew a ticked box in a
+    list (User profiles, the quick commands) as a bare tick, white on white in light: the
+    stylesheet draws it, filled in a shade of the accent that white reads on."""
+    themes.apply(themes.Registry().find(f"windows-{scheme}"))
+    tokens = themes.native_tokens(QColor("#ffb900"))  # Windows' yellow accent
+    sheet = themes._NATIVE_QSS % {**tokens, **themes._status_tokens(themes.status_colors())}
+    checked = _rule(sheet, "QTreeView::indicator:checked, QListView::indicator:checked")
+    assert f'image: url("{tokens["check"]}")' in checked and Path(tokens["check"]).is_file()
+    assert themes._qss_color(tokens["accent_fill"]) in checked or tokens["accent_fill"] in checked
+    assert themes.contrast_ratio("#ffffff", tokens["accent_fill"]) >= 4.5
+    assert "border-radius" in _rule(sheet, "QTreeView::indicator, QListView::indicator")
+
+
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_row_lines_are_softer_than_the_table_s_frame(theme: themes.Theme) -> None:
     c, ratio = theme.colors, themes.contrast_ratio

@@ -306,8 +306,10 @@ def native_tokens(accent: QColor) -> dict[str, str]:
     tokens["accent"] = accent.name()
     tokens["accent_text"] = readable_on(accent, tokens["card"], tokens["text"])
     tokens["accent_drop"] = readable_on(accent, tokens["sel"], tokens["text"])
+    tokens["accent_fill"] = button_fill(accent)  # behind a white tick: any accent reads
     tokens.update(_card_tokens(tokens))
     tokens["arrow"] = (THEMES_DIR / f"arrow-{native_scheme()}.svg").as_posix()
+    tokens["check"] = (THEMES_DIR / "check.svg").as_posix()
     return tokens
 
 
@@ -861,6 +863,14 @@ QTreeView::item:selected, QListView#pageList::item:selected {
 /* Tables marked "grid": a thin line under each row, none between columns; the table's own
    border is its one frame. */
 QTreeView#grid::item { border-bottom: 1px solid %(row_line)s; }
+/* Tick boxes in a list's rows (User profiles, the quick commands): with the rules above, the
+   Windows style drew a ticked one as a bare tick with no box, white on white in light. Drawn
+   here like Windows' own: a rounded box, filled in the accent with a white tick. */
+QTreeView::indicator, QListView::indicator { width: 14px; height: 14px; border-radius: 4px;
+    border: 1px solid %(text2)s; background: %(card)s; }
+QTreeView::indicator:checked, QListView::indicator:checked { border-color: %(accent_fill)s;
+    background: %(accent_fill)s; image: url("%(check)s"); }
+QTreeView::indicator:disabled, QListView::indicator:disabled { border-color: %(border)s; }
 /* The two heading styles, as in the CapyPanel themes. */
 QLabel#detailsSection, QLabel#sectionTitle, QLabel#paneTitle, QLabel#rowName[heading="true"] {
     color: %(accent_text)s; font-weight: bold; }
