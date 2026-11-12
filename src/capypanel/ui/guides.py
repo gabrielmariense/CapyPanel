@@ -4,24 +4,28 @@ start, each tool's the first time it's shown, never two at once; Help shows the 
 screen you're on again, and Settings › About all of them. Each guide's last card links to its
 docs page: nothing is said only in a guide.
 
-A card whose control is out of sight (a hidden panel, a narrow window) still shows, beside the
-part of the screen it belongs to."""
+While a guide runs the rest of the window is dimmed and takes no clicks or keys: only the
+card's buttons, and the control a step asks you to click. A card whose control is out of sight
+(a hidden panel, a narrow window) still shows, beside the part of the screen it belongs to."""
 
 import contextlib
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
-from PySide6.QtCore import QEvent, QObject, QPoint, QRect, Qt, Signal
+from PySide6.QtCore import QEvent, QObject, QPoint, QRect, Qt, QTimer, Signal
 from PySide6.QtGui import (
     QColor,
     QGuiApplication,
     QKeyEvent,
     QPainter,
+    QPainterPath,
     QPaintEvent,
     QPalette,
     QPen,
+    QRegion,
 )
 from PySide6.QtWidgets import (
+    QApplication,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -38,15 +42,23 @@ CARD_WIDTH = 360
 GAP = 12  # px between the outline and the card
 MARGIN = 8  # px a card keeps from the window's edges
 OUTLINE = 4  # px the outline sits outside its control
+FOLLOW_MS = 250  # how often the card and the outline follow what moved under them
+DIM = {"dark": 150, "light": 110}  # the shade's alpha over the rest of the window
+
+
+Targets = QWidget | Sequence[QWidget] | None
 
 
 @dataclass(frozen=True)
 class Step:
     title: str
     text: str
-    target: Callable[[], QWidget | None]  # the control; None or hidden: `near` instead
+    target: Callable[[], Targets]  # what it talks about, outlined; none shown: `near` instead
     near: Callable[[], QWidget | None] = lambda: None  # the part of the screen it belongs to
     action: tuple[str, Callable[[], None]] | None = None  # a button on the card: (words, does)
+    click: bool = False  # the step asks you to click its target: only then it takes clicks
+    join: bool = False  # several targets outlined as one box (a row of buttons)
+    keep_clear: Callable[[], QWidget | None] = lambda: None  # what the card must not cover
 
 
 @dataclass(frozen=True)
@@ -83,21 +95,67 @@ def _visible(widget: QWidget | None, window: QWidget) -> bool:
     return widget is not None and widget.isVisibleTo(window) and widget.width() > 0
 
 
-class _Outline(QWidget):
-    """The soft outline round the control a card talks about; clicks go through it."""
+def _rect_of(widget: QWidget, window: QWidget) -> QRect:
+    return QRect(widget.mapTo(window, QPoint(0, 0)), widget.size())
+
+
+def _shown(targets: Targets, window: QWidget) -> list[QWidget]:
+    if targets is None:
+        return []
+    many = [targets] if isinstance(targets, QWidget) else list(targets)
+    return [widget for widget in many if _visible(widget, window)]
+
+
+class _Shade(QWidget):
+    """Dims the window round the steps's controls and outlines them. It takes every click and
+    wheel turn on the window, except on a control the step asks you to click."""
 
     def __init__(self, window: QWidget) -> None:
         super().__init__(window)
-        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.holes: list[QRect] = []  # the outlined controls, in the window's coordinates
         self.hide()
+
+    def set_holes(self, holes: list[QRect], passes: bool) -> None:
+        self.holes = holes
+        if passes:  # those controls take clicks; the shade takes the rest
+            region = QRegion(self.rect())
+            for hole in holes:
+                region -= QRegion(hole)
+            self.setMask(region)
+        else:
+            self.clearMask()
+        self.update()
 
     def paintEvent(self, _event: QPaintEvent) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        color = QColor(self.palette().color(QPalette.ColorRole.Accent))
-        painter.setPen(QPen(color, 2))
         corner = themes.current().radius + 2
-        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), corner, corner)
+        cut = QPainterPath()
+        for hole in self.holes:
+            cut.addRoundedRect(hole.adjusted(-OUTLINE, -OUTLINE, OUTLINE, OUTLINE), corner, corner)
+        dim = QPainterPath()
+        dim.addRect(self.rect())
+        light = self.palette().color(QPalette.ColorRole.Window).lightness() >= 128
+        painter.fillPath(dim.subtracted(cut), QColor(0, 0, 0, DIM["light" if light else "dark"]))
+        painter.setPen(QPen(QColor(self.palette().color(QPalette.ColorRole.Accent)), 2))
+        for hole in self.holes:
+            painter.drawRoundedRect(hole.adjusted(-OUTLINE + 1, -OUTLINE + 1, OUTLINE - 1,
+                                                  OUTLINE - 1), corner, corner)  # fmt: skip
+
+    def event(self, event: QEvent) -> bool:
+        if event.type() in _POINTER:
+            event.accept()
+            return True  # eaten: nothing under the shade is clicked
+        return super().event(event)
+
+
+_POINTER = {
+    QEvent.Type.MouseButtonPress,
+    QEvent.Type.MouseButtonRelease,
+    QEvent.Type.MouseButtonDblClick,
+    QEvent.Type.Wheel,
+    QEvent.Type.ContextMenu,
+}
 
 
 class GuideCard(QFrame):
@@ -183,11 +241,15 @@ class GuideRunner(QObject):
         self._guide: Guide | None = None
         self._steps: list[Step] = []
         self._at = 0
-        self.outline = _Outline(window)
+        self._clickable: list[QWidget] = []  # the step's targets, when it asks for a click
+        self.shade = _Shade(window)
         self.card = GuideCard(window)
         self.card.back.connect(lambda: self._go(self._at - 1))
         self.card.next.connect(self._next)
         self.card.skip.connect(self._end)
+        self._follow = QTimer(self)  # a scrolled table, a panel that filled in: follow them
+        self._follow.setInterval(FOLLOW_MS)
+        self._follow.timeout.connect(self._place)
         window.installEventFilter(self)
         themes.switches().switched.connect(self._place)
 
@@ -214,6 +276,11 @@ class GuideRunner(QObject):
         steps = list(guide.steps())
         if not steps:
             return
+        if self._guide is None:
+            app = QApplication.instance()
+            if app is not None:
+                app.installEventFilter(self)  # keys and shortcuts, while it runs
+            self._follow.start()
         self._guide, self._steps = guide, steps
         self._go(0)
 
@@ -249,17 +316,24 @@ class GuideRunner(QObject):
         card.back_button.setVisible(at > 0)
         card.skip_button.setVisible(not last)
         card.next_button.setText(_("Done") if last else _("Next"))
-        card.adjustSize()
+        self._fit_card()
         self._place()
+        self.shade.show()
         card.show()
         card.raise_()
         card.next_button.setFocus()
 
+    def _fit_card(self) -> None:
+        """As tall as its words wrapped at its width: the size hint alone left the last line
+        of a wrapped text cut off."""
+        card, layout = self.card, self.card.layout()
+        if layout is not None:
+            layout.activate()
+            card.setFixedHeight(layout.totalHeightForWidth(CARD_WIDTH))
+
     def _end(self) -> None:
         guide = self._guide
-        self._guide, self._steps = None, []
-        self.card.hide()
-        self.outline.hide()
+        self._close()
         if guide is not None:
             if guide.guide_id not in self._seen:
                 self._seen.append(guide.guide_id)
@@ -268,9 +342,16 @@ class GuideRunner(QObject):
 
     def stop(self) -> None:
         """Hidden without counting as seen (its screen was left): it shows again next time."""
-        self._guide, self._steps = None, []
+        self._close()
+
+    def _close(self) -> None:
+        self._guide, self._steps, self._clickable = None, [], []
+        self._follow.stop()
+        app = QApplication.instance()
+        if app is not None:
+            app.removeEventFilter(self)
         self.card.hide()
-        self.outline.hide()
+        self.shade.hide()
 
     # ---- where the card goes ----
 
@@ -278,43 +359,88 @@ class GuideRunner(QObject):
         if self._guide is None or not self._steps:
             return
         window, step = self._window, self._steps[self._at]
-        target = step.target()
-        if not _visible(target, window):
-            target, outlined = step.near(), False
-        else:
-            outlined = True
-        if _visible(target, window):
-            assert target is not None
-            spot = QRect(target.mapTo(window, QPoint(0, 0)), target.size())
+        shown = _shown(step.target(), window)
+        spots = [_rect_of(widget, window) for widget in shown]
+        if spots and step.join:
+            spots = [_united(spots)]
+        self._clickable = shown if step.click else []
+        self.shade.setGeometry(window.rect())
+        self.shade.set_holes(spots, passes=step.click)
+        self.shade.raise_()
+        near = step.near()
+        if spots:
+            spot = _united(spots)
+        elif near is not None and _visible(near, window):
+            spot = _rect_of(near, window)
         else:  # nothing to point at: the middle of the window
-            spot, outlined = QRect(window.rect().center(), window.rect().center()), False
-        self.outline.setVisible(outlined)
-        if outlined:
-            self.outline.setGeometry(spot.adjusted(-OUTLINE, -OUTLINE, OUTLINE, OUTLINE))
-            self.outline.raise_()
-        self.card.move(_card_spot(spot, self.card.size().width(), self.card.sizeHint().height(),
-                                  window.rect()))  # fmt: skip
+            spot = QRect(window.rect().center(), window.rect().center())
+        avoid = [hole.adjusted(-OUTLINE, -OUTLINE, OUTLINE, OUTLINE) for hole in spots]
+        clear = step.keep_clear()
+        if clear is not None and _visible(clear, window):
+            avoid.append(_rect_of(clear, window))
+        size = self.card.size()
+        self.card.move(_card_spot(spot, size.width(), size.height(), window.rect(), avoid))
         self.card.raise_()
 
+    # ---- what the guide lets through ----
+
+    def _inside(self, obj: QObject) -> bool:
+        """Whether `obj` is the card, in it, or a control the step asks you to click."""
+        if not isinstance(obj, QWidget):
+            return False
+        return any(w is obj or w.isAncestorOf(obj) for w in (self.card, *self._clickable))
+
+    def _ours(self, obj: QObject) -> bool:
+        """Whether `obj` is in the guided window, not a dialog a click on the step opened."""
+        if isinstance(obj, QWidget):
+            return obj.window() is self._window
+        return True  # an action's shortcut: the window's menus and buttons
+
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if watched is self._window and event.type() in (QEvent.Type.Resize, QEvent.Type.Show):
+        kind = event.type()
+        if watched is self._window and kind in (QEvent.Type.Resize, QEvent.Type.Show):
             self._place()
+            return False
+        if self._guide is None:
+            return False
+        blocked = self._ours(watched) and not self._inside(watched)
+        if kind == QEvent.Type.Shortcut:  # Ctrl+, for Settings, a menu's letter…
+            return blocked
+        if kind in (QEvent.Type.KeyPress, QEvent.Type.KeyRelease):
+            return blocked and isinstance(watched, QWidget)
+        if kind == QEvent.Type.FocusIn and blocked and watched is not self.shade:
+            QTimer.singleShot(0, self.card.next_button.setFocus)  # Tab left the card
         return False
 
 
-def _card_spot(spot: QRect, width: int, height: int, room: QRect) -> QPoint:
+def _united(spots: Sequence[QRect]) -> QRect:
+    whole = QRect(spots[0])
+    for spot in spots[1:]:
+        whole = whole.united(spot)
+    return whole
+
+
+def _card_spot(
+    spot: QRect, width: int, height: int, room: QRect, avoid: Sequence[QRect] = ()
+) -> QPoint:
     """Where a card of this size goes beside `spot`: on its right, else under it, on its left,
-    over it; always inside `room`."""
+    over it, then a corner of the window; always inside `room` and off everything in `avoid`
+    (what it points at, a panel it talks about)."""
     gap = GAP + OUTLINE
+    inner = room.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN)
     tries = (
         QPoint(spot.right() + gap, spot.top()),
         QPoint(spot.left(), spot.bottom() + gap),
         QPoint(spot.left() - gap - width, spot.top()),
         QPoint(spot.left(), spot.top() - gap - height),
+        QPoint(inner.right() - width, inner.bottom() - height),
+        QPoint(inner.left(), inner.bottom() - height),
+        QPoint(inner.right() - width, inner.top()),
+        QPoint(inner.left(), inner.top()),
     )
-    inner = room.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN)
     for point in tries:
-        if inner.contains(QRect(point.x(), point.y(), width, height)):
+        card = QRect(point.x(), point.y(), width, height)
+        if inner.contains(card) and not any(card.intersects(a) for a in avoid):
             return point
     # Nowhere fits whole: as close as the window allows, over the spot if need be.
     x = min(max(tries[0].x(), inner.left()), inner.right() - width)

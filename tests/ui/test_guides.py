@@ -7,8 +7,9 @@ from pathlib import Path
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtCore import QPoint, QRect
-from PySide6.QtWidgets import QApplication, QDialog, QLabel
+from PySide6.QtCore import QEvent, QPoint, QRect, Qt
+from PySide6.QtGui import QKeyEvent
+from PySide6.QtWidgets import QApplication, QDialog, QLabel, QPushButton
 
 from capypanel.core import settings
 from capypanel.ui import guides
@@ -57,10 +58,9 @@ def test_home_s_guide_steps_through_and_is_kept_as_seen(window: CapyWindow) -> N
     assert runner.running == "home" and not card.isHidden()
     assert card.title.text() == "Welcome to CapyPanel" and not card.mascot.isHidden()
     assert card.dots.text() == "● ○ ○" and card.back_button.isHidden()
-    assert not runner.outline.isHidden()
-    outline = runner.outline.geometry()
+    assert not runner.shade.isHidden() and runner.shade.geometry() == window.rect()
     rail = QRect(window.rail.mapTo(window, QPoint(0, 0)), window.rail.size())
-    assert outline.contains(rail)  # the outline goes round the rail
+    assert runner.shade.holes == [rail]  # the rail stays bright, outlined
     assert not card.geometry().intersects(rail)  # and the card beside it, not over it
     assert window.rect().contains(card.geometry())
     card.next_button.click()
@@ -93,7 +93,7 @@ def test_a_card_whose_control_is_hidden_shows_beside_its_panel(window: CapyWindo
     hidden.hide()
     window.guides.show(guide)
     _settle()
-    assert not window.guides.card.isHidden() and window.guides.outline.isHidden()
+    assert not window.guides.card.isHidden() and window.guides.shade.holes == []
     assert window.rect().contains(window.guides.card.geometry())
     window.guides.stop()
     hidden.show()
@@ -180,3 +180,56 @@ def test_a_start_on_user_profiles_waits_for_its_warning(qapp: QApplication, tmp_
     win = CapyWindow(settings.resolve_paths(tmp_path), prefs)
     assert win.shown_tool() is None  # Home: the warning comes when the person opens it
     win.close()
+
+
+def _key(kind: QEvent.Type = QEvent.Type.KeyPress) -> QKeyEvent:
+    return QKeyEvent(kind, Qt.Key.Key_A, Qt.KeyboardModifier.NoModifier, "a")
+
+
+def test_while_a_guide_runs_only_the_card_takes_clicks_and_keys(window: CapyWindow) -> None:
+    runner = window.guides
+    runner.show(window._home_guide())
+    _settle()
+    bar = window.statusBar()
+    middle = bar.mapTo(window, bar.rect().center())
+    assert window.childAt(middle) is runner.shade  # under the shade: no click reaches it
+    assert runner.eventFilter(window.hosts.table, _key())  # nor a key
+    assert not runner.eventFilter(runner.card.next_button, _key())  # the card's own do
+    next_button = runner.card.next_button
+    assert window.childAt(next_button.mapTo(window, QPoint(5, 5))) is next_button  # on top
+    runner.card.skip_button.click()
+    assert runner.shade.isHidden() and not runner.eventFilter(window.hosts.table, _key())
+
+
+def test_a_step_that_asks_for_a_click_lets_its_control_take_it(window: CapyWindow) -> None:
+    button = QPushButton("Try me", window.centralWidget())
+    button.move(40, 40)
+    button.show()
+    guide = Guide("test", lambda: [Step("Click it", "Go on.", lambda: button, click=True)])
+    window.guides.show(guide)
+    _settle()
+    centre = button.mapTo(window, button.rect().center())
+    assert window.childAt(centre) is button  # through the shade's hole
+    assert not window.guides.eventFilter(button, _key())
+    window.guides.stop()
+    button.deleteLater()
+
+
+def test_the_card_is_as_tall_as_its_wrapped_words(window: CapyWindow) -> None:
+    long = " ".join(["Every word of this card has to show, the last one too."] * 4)
+    window.guides.show(Guide("test", lambda: [Step("Long", long, lambda: window.rail)]))
+    _settle()
+    card = window.guides.card
+    text = card.text
+    assert text.height() >= text.heightForWidth(text.width())  # no line cut off
+    assert card.geometry().contains(text.geometry().translated(card.pos()))
+    window.guides.stop()
+
+
+def test_a_card_keeps_clear_of_the_panel_it_talks_about() -> None:
+    room = QRect(0, 0, 1000, 700)
+    spot = QRect(200, 100, 300, 400)  # the table
+    details = QRect(520, 0, 480, 700)  # on its right: where the card would go first
+    point = guides._card_spot(spot, 300, 150, room, [spot, details])
+    card = QRect(point.x(), point.y(), 300, 150)
+    assert room.contains(card) and not card.intersects(details) and not card.intersects(spot)
