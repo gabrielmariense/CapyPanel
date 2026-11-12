@@ -30,12 +30,31 @@ em amarelo, e as configurações funcionam ali mesmo.
       em escala de 125 %. Você pode deixá-la de qualquer tamanho: uma página maior que a janela
       rola, para baixo e para o lado. Ela abre de novo no tamanho e no lugar em que você a deixou.
 
+??? note "Configurações para todos neste PC"
+
+    A maioria das configurações é só sua. Algumas são as mesmas para todos que usam o CapyPanel
+    neste PC, e as seções delas dizem **Todos neste PC**, com um pequeno computador, ao lado do
+    título:
+
+    - **CapyPanel > Geral > Novas versões**
+    - **Hosts > Conexão**: **Perfis de conexão** (com **Hosts sem perfil usam**) e **Ferramentas
+      remotas** (com **Ler dados dos PCs com**)
+
+    Embaixo do título, uma linha diz "Uma mudança aqui vale para todos neste PC." Se o Windows não
+    deixa a sua conta alterá-las, a linha diz "Somente leitura para você. Um administrador deste PC
+    pode alterar." e os controles ficam apagados. Elas ficam na pasta compartilhada (veja [Onde o
+    CapyPanel guarda os arquivos](#onde-o-capypanel-guarda-os-arquivos)), que só os
+    administradores e quem a criou podem alterar.
+
+    As listas de hosts e de impressoras compartilhadas também são de todos: as tabelas de listas
+    dizem qual lista é **Compartilhada** e qual é **Pessoal**.
+
 ## CapyPanel > Geral
 
 | Configuração | O que faz | De início |
 |---|---|---|
 | **Tema** | O visual: Windows (seguir o sistema, escuro, claro), CapyPanel (escuro, claro), Graphite ou Paper | Windows, seguir o tema do sistema |
-| **Idioma** | English ou Português (Brasil). "O idioma do aplicativo. Muda na hora.", inclusive nas Configurações | English |
+| **Idioma** | English ou Português (Brasil). "O idioma do aplicativo. Muda na hora.", inclusive nas Configurações | O idioma em que o Windows aparece: Português (Brasil) para qualquer português, English para os outros |
 | **Abrir ao iniciar** | O que a janela mostra ao iniciar: a **Página inicial**, **A última ferramenta usada** ou uma ferramenta pelo nome | Página inicial |
 | **Ao fechar** | O que o **✕** da janela faz: **Perguntar sempre**, **Manter aberto na bandeja** ou **Sair** (veja [Primeiros passos](getting-started.pt-BR.md#fechar-o-capypanel-ou-deixa-lo-na-bandeja)) | Perguntar sempre |
 
@@ -46,6 +65,15 @@ em amarelo, e as configurações funcionam ali mesmo.
     arredondam mais que os outros. A fonte e o tamanho dela são os mesmos em todos, e um tema nunca
     muda o que o app faz. Os temas do Windows seguem a sua cor de destaque (**Configurações >
     Personalização > Cores**), e tudo o que vem dela continua legível.
+
+### Novas versões
+
+**Todos neste PC**: "Uma mudança aqui vale para todos neste PC: uma nova versão substitui o
+CapyPanel para todos eles."
+
+| Configuração | O que faz | De início |
+|---|---|---|
+| **Procurar nova versão** | **A cada início**, **Uma vez por dia**, **Uma vez por semana** ou **Desligado**. "Pergunta ao GitHub (api.github.com) qual é a versão mais nova do CapyPanel. Nada é baixado até você escolher Instalar. Ajuda › Procurar nova versão funciona com qualquer opção." | A cada início |
 
 ## Hosts > Geral
 
@@ -61,11 +89,14 @@ em amarelo, e as configurações funcionam ali mesmo.
 
 ![Configurações > Hosts > Conexão: os perfis de conexão, as ferramentas remotas e o Ler dados dos PCs com em Automático](images/settings-hosts-connecting-dark-pt-BR.png)
 
+**Todos neste PC**: as duas seções, **Perfis de conexão** e **Ferramentas remotas**, têm a marca,
+com "Uma mudança aqui vale para todos neste PC." embaixo do título.
+
 | Configuração | O que faz | De início |
 |---|---|---|
-| **Perfis de conexão** | A tabela **Perfil \| Ferramenta \| Entra com**, com **Adicionar…**, **Editar…**, **Excluir…** e **Restaurar originais…** (veja [Configurar os perfis de conexão](hosts/connecting.pt-BR.md#configurar-os-perfis-de-conexao)). "Compartilhados por todos neste PC." | UltraVNC, RealVNC, Remote Desktop |
+| **Perfis de conexão** | A tabela **Perfil \| Ferramenta \| Entra com**, com **Adicionar…**, **Editar…**, **Excluir…** e **Restaurar originais…** (veja [Configurar os perfis de conexão](hosts/connecting.pt-BR.md#configurar-os-perfis-de-conexao)) | UltraVNC, RealVNC, Remote Desktop |
 | **Hosts sem perfil usam** | "O perfil com que um host conecta quando não tem um próprio." | UltraVNC |
-| **Ferramentas remotas** | A tabela **Ferramenta \| Status \| Onde**, com **Alterar caminho…** e **Baixar**. "Onde cada ferramenta está instalada, definido uma vez para todos neste PC." | Encontradas sozinhas |
+| **Ferramentas remotas** | A tabela **Ferramenta \| Status \| Onde**, com **Alterar caminho…** e **Baixar**: onde cada ferramenta está instalada | Encontradas sozinhas |
 | **Ler dados dos PCs com** | Como o CapyPanel lê os dados do PC, os programas, as unidades mapeadas e os perfis de usuário de outros PCs: **Automático (recomendado)**, **WMI direto** ou **WMI pelo PowerShell** (veja [Como o CapyPanel lê outros PCs](hosts/checking.pt-BR.md#ler-os-dados-de-um-pc)) | Automático |
 
 ??? note "Mais sobre perfis e ferramentas"
@@ -76,7 +107,8 @@ em amarelo, e as configurações funcionam ali mesmo.
       enquanto não falta nenhum. Ele pergunta antes, dizendo os nomes, e acrescenta "Os perfis que
       você alterou ou criou continuam como estão." Cancelar é o botão padrão.
     - As alterações são gravadas para todos no instante em que você as faz. Onde o Windows não deixa
-      você gravar na pasta, o aviso diz que é somente leitura.
+      você alterá-las, a linha embaixo do título diz "Somente leitura para você. Um administrador
+      deste PC pode alterar."
     - O CapyPanel enche a pasta de perfis no primeiro início, com um arquivo de configurações,
       `_profiles.json`, que registra o **Hosts sem perfil usam** e quais perfis de fábrica já foram
       adicionados. Onde a pasta não pôde ser criada, a página mostra os perfis de fábrica e avisa.
@@ -155,7 +187,7 @@ privada por usuário:
 |---|---|
 | Listas compartilhadas com todos no PC, uma pasta por tipo | `lists\hosts\`, `lists\printers\` |
 | Perfis de conexão, seus arquivos de configurações, e qual deles os hosts usam sem um próprio | `profiles\` |
-| Definições de visualizadores adicionadas pela sua empresa, onde cada visualizador está instalado, e como os outros PCs são lidos | `tools\` |
+| Definições de visualizadores adicionadas pela sua empresa, onde cada visualizador está instalado, como os outros PCs são lidos, e de quanto em quanto tempo procurar nova versão | `tools\` |
 | Suas configurações, entre elas as suas contas para outros PCs | `users\<você@DOMÍNIO>\` |
 | Suas próprias listas, uma pasta por tipo | `users\<você@DOMÍNIO>\lists\hosts\`, `…\lists\printers\` |
 | Logs, um arquivo por usuário | `logs\<você@DOMÍNIO>.log` |
@@ -184,3 +216,10 @@ privada por usuário:
 Um arquivo vazio chamado `capypanel.portable` ao lado do app guarda tudo (configurações, listas,
 logs) numa pasta `userdata` ao lado dele, para rodar de um pendrive ou de uma pasta compartilhada.
 Quando você roda pelo código-fonte, "ao lado do app" significa a pasta do repositório.
+
+## Mensagens que você pode ver
+
+| Mensagem | O que significa | O que fazer |
+|---|---|---|
+| "Somente leitura para você. Um administrador deste PC pode alterar." | As configurações dessa seção são as mesmas para todos neste PC, e o Windows não deixa a sua conta alterá-las | Peça a um administrador do PC para alterá-las |
+| "2 arquivos ignorados: broken.json (não pode ser lido), clinicas.json (feito por outro usuário)" | Embaixo da tabela de perfis ou de ferramentas: arquivos na pasta compartilhada que o CapyPanel não está usando. Passe o mouse para ver os caminhos inteiros | Corrija ou remova um arquivo que não pode ser lido. Um arquivo feito por outro usuário que não é administrador é ignorado de propósito: peça a um administrador para colocá-lo lá |

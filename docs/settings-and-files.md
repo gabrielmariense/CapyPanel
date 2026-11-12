@@ -29,12 +29,30 @@ settings work right there.
       at 125 % scale. You can make it any size: a page larger than the window scrolls, down and
       sideways. It opens again at the size and place you left it at.
 
+??? note "Settings for everyone on this PC"
+
+    Most settings are yours alone. A few are the same for everyone who uses CapyPanel on this PC,
+    and their sections say **Everyone on this PC**, with a small computer, beside the title:
+
+    - **CapyPanel > General > Updates**
+    - **Hosts > Connecting**: **Connection profiles** (with **Hosts with no profile use**) and
+      **Remote tools** (with **Read PC data with**)
+
+    Under the title, one line says "A change here reaches everyone on this PC." If Windows doesn't
+    let your account change them, the line reads "Read-only for you. An administrator of this PC
+    can change it." and the controls are greyed. They're kept in the shared folder (see [Where
+    CapyPanel keeps its files](#where-capypanel-keeps-its-files)), which only administrators and
+    whoever created it can change.
+
+    The shared host and printer lists are for everyone too: the lists tables say which list is
+    **Shared** and which is **Personal**.
+
 ## CapyPanel > General
 
 | Setting | What it does | To begin with |
 |---|---|---|
 | **Theme** | The look: Windows (follow system, dark, light), CapyPanel (dark, light), Graphite or Paper | Windows, follow system |
-| **Language** | English or Português (Brasil). "The app's language. Changes at once.", Settings included | English |
+| **Language** | English or Português (Brasil). "The app's language. Changes at once.", Settings included | The language Windows is shown in: Português (Brasil) for any Portuguese, English for the rest |
 | **Open on startup** | What the window shows at start: the **Home page**, **The last used tool**, or a tool by name | Home page |
 | **When closing** | What the window's **✕** does: **Ask each time**, **Keep running in the tray** or **Quit** (see [Getting started](getting-started.md#close-capypanel-or-keep-it-in-the-tray)) | Ask each time |
 
@@ -45,6 +63,15 @@ settings work right there.
     others do. The font and its size are the same in every one, and a theme never changes what the
     app does. The Windows themes follow your accent color (**Settings > Personalization > Colors**),
     and everything built from it stays readable.
+
+### Updates
+
+**Everyone on this PC**: "A change here reaches everyone on this PC: an update replaces CapyPanel
+for all of them."
+
+| Setting | What it does | To begin with |
+|---|---|---|
+| **Check for updates** | **At every start**, **Once a day**, **Once a week** or **Off**. "Asks GitHub (api.github.com) for CapyPanel's newest release. Nothing is downloaded until you choose Install. Help › Check for updates works whatever is set." | At every start |
 
 ## Hosts > General
 
@@ -60,11 +87,14 @@ settings work right there.
 
 ![Settings > Hosts > Connecting: the connection profiles, the remote tools, and Read PC data with set to Automatic](images/settings-hosts-connecting-dark.png)
 
+**Everyone on this PC**: both sections, **Connection profiles** and **Remote tools**, carry the
+mark, with "A change here reaches everyone on this PC." under the title.
+
 | Setting | What it does | To begin with |
 |---|---|---|
-| **Connection profiles** | The table **Profile \| Tool \| Signs in with**, with **Add…**, **Edit…**, **Delete…** and **Restore built-in…** (see [Set up connection profiles](hosts/connecting.md#set-up-connection-profiles)). "Shared by everyone on this PC." | UltraVNC, RealVNC, Remote Desktop |
+| **Connection profiles** | The table **Profile \| Tool \| Signs in with**, with **Add…**, **Edit…**, **Delete…** and **Restore built-in…** (see [Set up connection profiles](hosts/connecting.md#set-up-connection-profiles)) | UltraVNC, RealVNC, Remote Desktop |
 | **Hosts with no profile use** | "The profile a host connects with when it has none of its own." | UltraVNC |
-| **Remote tools** | The table **Tool \| Status \| Where**, with **Change path…** and **Download**. "Where each tool is installed, set once for everyone on this PC." | Found by itself |
+| **Remote tools** | The table **Tool \| Status \| Where**, with **Change path…** and **Download**: where each tool is installed | Found by itself |
 | **Read PC data with** | How CapyPanel reads the PC facts, programs, mapped drives and user profiles of other PCs: **Automatic (recommended)**, **WMI directly** or **WMI through PowerShell** (see [How CapyPanel reads other PCs](hosts/checking.md#read-a-pcs-facts)) | Automatic |
 
 ??? note "More about profiles and tools"
@@ -75,7 +105,8 @@ settings work right there.
       is missing. It asks first, naming them, and adds "Profiles you changed or made yourself stay
       as they are." Cancel is the default button.
     - Changes are written for everyone the moment you make them. Where Windows doesn't let you
-      write the folder, the note says it's read-only.
+      change them, the line under the title says "Read-only for you. An administrator of this PC
+      can change it."
     - CapyPanel fills the profiles folder at its first start, with a settings file,
       `_profiles.json`, that records **Hosts with no profile use** and which shipped profiles were
       added. Where the folder couldn't be created, the page shows the built-in profiles and says
@@ -154,7 +185,7 @@ folder per user:
 |---|---|
 | Lists shared with everyone on the PC, a folder per kind | `lists\hosts\`, `lists\printers\` |
 | Connection profiles, their settings files, and which one hosts fall back to | `profiles\` |
-| Viewer definitions added by your company, where each viewer is installed, and how other PCs are read | `tools\` |
+| Viewer definitions added by your company, where each viewer is installed, how other PCs are read, and how often to check for updates | `tools\` |
 | Your settings, your accounts for other PCs among them | `users\<you@DOMAIN>\` |
 | Your own lists, a folder per kind | `users\<you@DOMAIN>\lists\hosts\`, `…\lists\printers\` |
 | Logs, one file per user | `logs\<you@DOMAIN>.log` |
@@ -181,3 +212,10 @@ folder per user:
 An empty file named `capypanel.portable` next to the app keeps everything (settings, lists, logs)
 in a `userdata` folder beside it instead, for running from a USB stick or a shared folder. When you
 run from source, "next to the app" means the repository folder.
+
+## Messages you may see
+
+| Message | What it means | What to do |
+|---|---|---|
+| "Read-only for you. An administrator of this PC can change it." | The settings in that section are the same for everyone on this PC, and Windows doesn't let your account change them | Ask an administrator of the PC to change them |
+| "2 files skipped: broken.json (can't be read), clinics.json (made by another user)" | Under the profiles or the tools table: files in the shared folder that CapyPanel isn't using. Hover it for the full paths | Fix or remove a file that can't be read. A file made by another user who isn't an administrator is ignored on purpose: have an administrator put it there |
