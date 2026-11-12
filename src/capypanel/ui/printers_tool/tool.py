@@ -15,13 +15,15 @@ from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.model import Group, Host, HostListRuleError
 from capypanel.core.i18n import _, ngettext, npgettext, pgettext
 from capypanel.core.printers.printer import DOC360, info_of, with_info
+from capypanel.core.printers.reading import Device, Problem, Reading, State, Supply, SupplyKind
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.guides import Guide, Step
 from capypanel.ui.hosts import group_path
 from capypanel.ui.list_workspace.customize import Part
+from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
-from capypanel.ui.list_workspace.workspace import SAMPLE_ID, ListWorkspace
+from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 from capypanel.ui.printers_tool import marks, status
 from capypanel.ui.printers_tool.actions import create_actions, retranslate_actions
@@ -291,7 +293,8 @@ class PrintersTool(ListWorkspace):
                      _("The printers of the list are here. Pick one to see everything about it "
                        "in Details; a right-click has everything you can do with it, and a "
                        "double-click opens its web page."),
-                     lambda: table, keep_clear=lambda: self.details),
+                     lambda: None, lambda: table, keep_clear=lambda: self.details,
+                     area=lambda: self.sample_row(self.window())),
                 Step(pgettext("printers", "Refresh all"),  # as the button says it
                      _("Reads the status, toner and page count of every printer shown (F5). "
                        "Nothing is read until you press it."), lambda: bar.refresh_button),
@@ -319,11 +322,49 @@ class PrintersTool(ListWorkspace):
         return Guide("printers", steps, docs="printers/checking/", setup=self.show_sample,
                      cleanup=self.hide_sample)  # fmt: skip
 
-    def sample_item(self, group: str) -> Host:
-        """The guides' sample printer: a documentation address (192.0.2.x) that never answers,
-        and never asked: Refresh and Open web page leave SAMPLE_ID out."""
-        return Host(id=SAMPLE_ID, name=_("PRN-SAMPLE"), group=group, address="192.0.2.20",
-                    tags=(_("sample"),), notes=_("Shown only while a guide is open."))  # fmt: skip
+    def sample_items(self, group: str) -> list[Host]:
+        """The guides' sample printers, one per status: working, needing attention, stopped
+        and not answering. Documentation addresses (192.0.2.x) that never answer, and never
+        asked: Refresh and Open web page leave every sample out (is_sample)."""
+        name, tags, notes = _("PRN-SAMPLE"), (_("sample"),), _("Shown only while a guide is open.")
+        return [
+            Host(id=SAMPLE_ID if n == 1 else f"{SAMPLE_ID}-{n}", name=name if n == 1 else
+                 f"{name}-{n}", group=group, address=f"192.0.2.{19 + n}", tags=tags, notes=notes)
+            for n in range(1, 5)
+        ]  # fmt: skip
+
+    def show_sample(self) -> None:
+        """The samples with made-up results, so the dots, the toner and the warnings show
+        what a Refresh would: made here, never read from anything."""
+        super().show_sample()
+        if not self.sample_shown():
+            return
+        now = datetime.now()
+        toner = SupplyKind.TONER
+
+        def reading(state: State, device: Device, percent: int, jam: bool = False) -> Checked:
+            return Checked(now, Reading(
+                state=state, device=device, supplies=(Supply("Black Toner", toner, percent),),
+                problems=frozenset({Problem.JAMMED}) if jam else frozenset(),
+            ))  # fmt: skip
+
+        made = {
+            SAMPLE_ID: reading(State.IDLE, Device.RUNNING, 64),
+            f"{SAMPLE_ID}-2": reading(State.IDLE, Device.RUNNING, 7),
+            f"{SAMPLE_ID}-3": reading(State.OTHER, Device.DOWN, 46, jam=True),
+            f"{SAMPLE_ID}-4": Checked(now, offline=True),
+        }
+        for printer_id, checked in made.items():
+            self._checked[printer_id] = checked
+            self.table.show_cells(printer_id)
+        self._count_attention()
+        self._selection_changed()
+
+    def hide_sample(self) -> None:
+        for printer_id in [k for k in self._checked if is_sample(k)]:
+            del self._checked[printer_id]
+        super().hide_sample()
+        self._count_attention()
 
     def restyle(self) -> None:
         """After a theme switch: the dots, swatches, bars, Details and the strip were drawn in
@@ -460,6 +501,8 @@ class PrintersTool(ListWorkspace):
         """Every printer in the open list, not only the ones shown: warnings count them all.
         Skipped while a Refresh runs, and quietly when there's no SNMP v3 account yet."""
         doc = self._doc
+        if self.sample_shown():
+            return  # a guide is open: its samples aren't news, and the next turn comes soon
         if self._run is None and doc is not None and doc.hosts.hosts:
             before = dict(self._attention)
             self.check_printers(doc.hosts.hosts, quiet=True)
@@ -615,7 +658,7 @@ class PrintersTool(ListWorkspace):
     def open_web_pages(self) -> None:
         """The selected printers' web pages in the default browser, at most 10 at once. Only
         the address is handed over: nothing is fetched or signed into here."""
-        printers = [p for p in self.selected_items() if p.id != SAMPLE_ID]  # never opened
+        printers = [p for p in self.selected_items() if not is_sample(p.id)]  # never opened
         if not printers:
             return
         pages = [(p, web_page(p)) for p in printers[:WEB_PAGES_AT_ONCE]]
@@ -770,7 +813,7 @@ class PrintersTool(ListWorkspace):
 
     def check_printers(self, printers: Sequence[Host], *, quiet: bool = False) -> None:
         """One SNMP read per printer, a few at a time; a printer with no address uses its name."""
-        printers = [p for p in printers if p.id != SAMPLE_ID]  # a guide's sample: never read
+        printers = [p for p in printers if not is_sample(p.id)]  # a guide's samples: never read
         if self._run is not None or not printers:
             return
         secret = community() if self.snmp_version() == V2C else v3_account()

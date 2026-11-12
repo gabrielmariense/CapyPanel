@@ -15,6 +15,7 @@ from capypanel.core import settings
 from capypanel.ui import guides
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.guides import Guide, Step
+from capypanel.ui.list_workspace.panels import is_sample
 from capypanel.ui.list_workspace.workspace import SAMPLE_ID
 from capypanel.ui.main_window import window as window_module
 from capypanel.ui.printers_tool import tool as printer_tool_module
@@ -309,9 +310,19 @@ def test_the_printers_guide_shows_a_sample_printer_that_is_never_saved_or_read(
     sample = printers.document.hosts.host(SAMPLE_ID)  # type: ignore[union-attr]
     assert sample is not None and sample.address.startswith("192.0.2.") and sample.tags
     assert printers.nav.tags.topLevelItemCount() >= 1  # its tag, for the Tags card
-    printers.check_printers([sample])  # Refresh, the button's or the one on its own
+    samples = [h for h in printers.document.hosts.hosts if is_sample(h.id)]  # type: ignore[union-attr]
+    words = [printers.table._rows[h.id].text(printers.table.STATUS) for h in samples]
+    assert words == ["Idle", "Toner low", "Paper jam", "Offline"]  # one per status, made up
+    top = printers.table.topLevelItem(0)
+    assert top is not None and top.data(0, ROLE_ID) == SAMPLE_ID  # on top of the table
+    assert printers.sample_row(window) is not None  # for "Your printers" to outline
+    assert len(printers._attention) >= 3  # the rail's count and the strip show them
+    printers.check_printers(samples)  # Refresh, the button's or a row's
+    printers._auto_refresh()  # Refresh on its own waits until the guide ends
+    printers.table.select_ids([h.id for h in samples])
     printers.open_web_pages()  # Web page, a double-click, Enter
-    assert runs == [] and opened == []  # nothing ever reaches its address
+    assert runs == [] and opened == []  # nothing ever reaches their addresses
+    printers.table.select_ids([SAMPLE_ID])
     titles = []
     while not window.guides.card.isHidden():
         titles.append(window.guides.card.title.text())
@@ -319,6 +330,8 @@ def test_the_printers_guide_shows_a_sample_printer_that_is_never_saved_or_read(
     assert titles[:2] == ["Your printer lists", "Tags"] and titles[-1] == "View"
     assert not printers.sample_shown()
     assert printers.document.hosts.host(SAMPLE_ID) is None  # type: ignore[union-attr]
+    assert not any(is_sample(k) for k in printers._checked)  # their made-up results go too
+    assert not any(is_sample(k) for k in printers._attention)
     assert doc.path.read_bytes() == saved  # the file never had it
 
 
