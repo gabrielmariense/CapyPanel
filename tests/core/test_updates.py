@@ -424,6 +424,7 @@ def test_after_a_good_update_nothing_is_left_in_or_beside_capypanel_s_folder(
     assert sorted(p.name for p in app.iterdir()) == ["CapyPanel.exe", "_internal"]  # nor in it
     updates.clean_up(app)  # the new version's start: the unpacked download, which ran the helper
     assert not place.staging.exists()
+    assert not updates.work_root(app.resolve()).parent.exists()  # no empty folders left either
 
 
 def test_every_start_clears_what_an_update_left_here_and_beside_the_folder(

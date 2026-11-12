@@ -408,6 +408,15 @@ def cannot_install(app_dir: Path) -> str:
     return ""
 
 
+def _drop_empty(root: Path) -> None:
+    """This copy's update folder and "update" above it, when nothing is left in them."""
+    for folder in (root, root.parent):
+        try:
+            folder.rmdir()  # only an empty folder: anything else stays
+        except OSError:
+            return
+
+
 CLEAN_TRIES = 15  # one a second: the helper that started this copy ends within a few
 
 
@@ -428,6 +437,7 @@ def clean_up(app_dir: Path, tries: int = CLEAN_TRIES, pause: float = 1.0) -> Non
             log.info("Update: removed %s", folder)
         left = [f for f in left if f.exists()]
         if not left:
+            _drop_empty(work_root(place.app))
             return
         if attempt < tries - 1:
             time.sleep(pause)
