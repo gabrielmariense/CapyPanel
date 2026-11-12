@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import shiboken6
 from capywindow import CapyWindow
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
@@ -641,7 +642,11 @@ def test_the_chooser_lists_picks_on_top_and_the_rest_by_group(qapp: QApplication
     chooser.changed.connect(seen.append)
     status = next(r for r in _rows(chooser.table) if r.data(0, ID) == "status")
     status.setCheckState(0, Qt.CheckState.Checked)  # ticking moves it to the end of the picks
-    assert seen[-1] == [*host_commands.QUICK, "status"]
+    assert seen[-1] == [*host_commands.QUICK, "status"]  # applied at once
+    # The row isn't deleted from inside its own change (that crashed now and then): the rows
+    # are rebuilt right after.
+    assert shiboken6.isValid(status) and status.treeWidget() is chooser.table
+    QApplication.processEvents()
     names = [r.text(0) for r in _rows(chooser.table)]
     assert names[5] == "— the four above are also in the right-click menu —"
     assert names[6] == "Status" and chooser.count.text().endswith("2 rows on the panel")
@@ -650,6 +655,9 @@ def test_the_chooser_lists_picks_on_top_and_the_rest_by_group(qapp: QApplication
     first = next(r for r in _rows(chooser.table) if r.data(0, ID) == "c-share")
     first.setCheckState(0, Qt.CheckState.Unchecked)  # back under its group
     assert "c-share" not in seen[-1] and chooser.picked() == seen[-1]
+    QApplication.processEvents()
+    names = [r.text(0) for r in _rows(chooser.table)]
+    assert names.index("C$ share") > names.index("FOLDERS")
 
 
 def test_restoring_the_default_quick_commands_asks_first(

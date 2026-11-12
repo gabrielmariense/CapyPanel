@@ -6,7 +6,7 @@ picks; Move up and Move down act on picks only. It applies as you tick."""
 
 from collections.abc import Mapping, Sequence
 
-from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QRect, Qt, Signal
+from PySide6.QtCore import QModelIndex, QPersistentModelIndex, QRect, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QPainter, QPalette
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -188,7 +188,10 @@ class QuickChooser(QWidget):
                 self._picked.append(command_id)  # at the end of the picks
         elif command_id in self._picked:
             self._picked.remove(command_id)
-        self._changed(command_id)
+        self.changed.emit(self.picked())
+        # The rows are rebuilt once this change is over: Qt is still using the ticked row
+        # here, and deleting it from inside its own change crashed now and then.
+        QTimer.singleShot(0, self, lambda: self._fill(command_id))
 
     def _move(self, step: int) -> None:
         command_id = self._selected_pick()
