@@ -87,7 +87,7 @@ Na ponta direita, quantas linhas aparecem ("12 de 15 exibidos"), ou quantas est�
 | **Em uso** | "Esta pessoa está conectada agora. Só pode ser excluído depois que ela sair." |
 | **Protegido** | "É do próprio Windows. Nunca é excluído aqui." O Administrador interno é um deles |
 | **Fora de Users** | A pasta não fica na pasta Users, e o CapyPanel só exclui perfis lá |
-| **Verificar** | "Um registro .bak: um perfil que falhou ao carregar. O CapyPanel nunca exclui estes; o conserto é manual, no registro." |
+| **Revisar** | "Um registro .bak: um perfil que falhou ao carregar. O CapyPanel nunca exclui estes; o conserto é manual, no registro." |
 
 As linhas que não podem ser excluídas ficam esmaecidas e não têm caixa de marcar.
 
