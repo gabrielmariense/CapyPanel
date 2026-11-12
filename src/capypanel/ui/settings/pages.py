@@ -4,8 +4,8 @@ made (`changed`); the Settings window hands it on, to apply at once."""
 from collections.abc import Sequence
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtCore import QEvent, Qt, QUrl, Signal
+from PySide6.QtGui import QDesktopServices, QPalette
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -51,14 +51,51 @@ class Page(QWidget):
         self.body.setSpacing(spacing.WINDOW)  # between sections
 
 
+class _ScopeTag(QWidget):
+    """ "Everyone on this PC" beside a section's title, with a small computer: the mark of the
+    settings shared by everyone who uses CapyPanel on this PC, the same on every page."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.icon = QLabel()
+        self.words = QLabel(_("Everyone on this PC"))
+        self.words.setObjectName("hint")
+        line = QHBoxLayout(self)
+        line.setContentsMargins(0, 0, 0, 0)
+        line.setSpacing(4)
+        line.addWidget(self.icon)
+        line.addWidget(self.words)
+        self._paint()
+
+    def _paint(self) -> None:
+        from capypanel.ui.icons import tabler_icon  # here: Settings opens long after the start
+
+        color = self.palette().color(QPalette.ColorRole.PlaceholderText)
+        self.icon.setPixmap(tabler_icon("device-desktop", color, 14).pixmap(14, 14))
+
+    def changeEvent(self, event: QEvent) -> None:
+        if event.type() == QEvent.Type.PaletteChange:  # a theme switch: its colour follows
+            self._paint()
+        super().changeEvent(event)
+
+
 class Section(QWidget):
     """A part of a page: its title, then its settings on a soft rounded card. Lay them out in
-    `content`."""
+    `content`. A section shared by everyone on this PC is marked with `for_everyone`."""
 
     def __init__(self, title: str) -> None:
         super().__init__()
         self.heading = heading = QLabel(title)  # also its name in the page list
         heading.setObjectName("sectionTitle")
+        self.scope_tag = _ScopeTag()
+        self.scope_tag.hide()
+        self.scope_line = notes("")  # who can change it, under the title
+        self.scope_line.hide()
+        title_line = QHBoxLayout()
+        title_line.setSpacing(spacing.CONTROLS)
+        title_line.addWidget(heading)
+        title_line.addWidget(self.scope_tag, 0, Qt.AlignmentFlag.AlignVCenter)
+        title_line.addStretch(1)
         self.inner = QWidget()
         self.inner.setObjectName("sectionCard")
         self.inner.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)  # draws the card
@@ -70,8 +107,21 @@ class Section(QWidget):
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(8)
-        column.addWidget(heading)
+        column.addLayout(title_line)
+        column.addWidget(self.scope_line)
         column.addWidget(self.inner, 1)
+
+    def for_everyone(self, can_change: bool, change_line: str = "") -> None:
+        """Marks it as shared by everyone who uses CapyPanel on this PC. The line under the
+        title says what a change does (`change_line` when it has more to say), or, for someone
+        Windows doesn't let change it, why it's greyed and who can."""
+        self.scope_tag.show()
+        self.scope_line.setText(
+            (change_line or _("A change here reaches everyone on this PC."))
+            if can_change
+            else _("Read-only for you. An administrator of this PC can change it.")
+        )
+        self.scope_line.show()
 
 
 class SettingRow(QWidget):
@@ -191,21 +241,19 @@ class GeneralPage(Page):
         self.updates.setCurrentIndex(max(self.updates.findData(updates), 0))
         self.updates.setEnabled(updates_editable)
         self.updates.currentIndexChanged.connect(lambda _i: self.changed.emit())
-        whole_pc = (
-            _("For everyone who uses CapyPanel on this PC: an update replaces it for all of them.")
-            if updates_editable
-            else _("For everyone who uses CapyPanel on this PC: an update replaces it for all of "
-                   "them. Read-only: only people Windows lets write CapyPanel's tools folder can "
-                   "change it.")
-        )  # fmt: skip
         section = Section(_("Updates"))
+        section.for_everyone(
+            updates_editable,
+            _("A change here reaches everyone on this PC: an update replaces CapyPanel for all "
+              "of them."),
+        )  # fmt: skip
         add_rows(
             section.content,
             SettingRow(
                 _("Check for &updates"),
                 _("Asks GitHub (api.github.com) for CapyPanel's newest release. Nothing is "
                   "downloaded until you choose Install. Help › Check for updates works whatever "
-                  "is set.") + " " + whole_pc,
+                  "is set."),
                 self.updates,
             ),
         )  # fmt: skip

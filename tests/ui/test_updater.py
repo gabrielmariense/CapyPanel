@@ -125,9 +125,9 @@ def test_at_every_start_by_default_and_the_other_choices(
     dialog = window.settings_dialog()
     choice = dialog.general.updates
     assert choice.currentData() == updates.OFF and choice.isEnabled()
-    assert "everyone who uses CapyPanel on this PC" in " ".join(
-        label.text() for label in dialog.general.findChildren(QLabel)
-    )
+    words = " ".join(label.text() for label in dialog.general.findChildren(QLabel))
+    assert "Everyone on this PC" in words  # the mark of the settings shared on this PC
+    assert "A change here reaches everyone on this PC: an update replaces" in words
     choice.setCurrentIndex(choice.findData(updates.AT_START))
     assert updater.how_often() == updates.AT_START
     assert not (window.paths.company_tools_dir / updates.CHECK_FILE).exists()  # the default

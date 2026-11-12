@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:42-0300\n"
+"POT-Creation-Date: 2026-11-12 13:59-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -475,6 +475,14 @@ msgid "A Refresh is running. Try again once it ends."
 msgstr ""
 
 msgid "A beta: it works, and it still changes from version to version."
+msgstr ""
+
+msgid "A change here reaches everyone on this PC."
+msgstr ""
+
+msgid ""
+"A change here reaches everyone on this PC: an update replaces CapyPanel "
+"for all of them."
 msgstr ""
 
 msgid "A chosen &group"
@@ -1631,6 +1639,9 @@ msgid ""
 "Settings at the bottom."
 msgstr ""
 
+msgid "Everyone on this PC"
+msgstr ""
+
 msgid "Everyone on this PC (shared)"
 msgstr ""
 
@@ -1690,17 +1701,6 @@ msgstr ""
 msgid ""
 "For everyone on this PC: connection profiles, remote tools, and the "
 "shared lists in “lists”, a folder for each kind of list."
-msgstr ""
-
-msgid ""
-"For everyone who uses CapyPanel on this PC: an update replaces it for all"
-" of them."
-msgstr ""
-
-msgid ""
-"For everyone who uses CapyPanel on this PC: an update replaces it for all"
-" of them. Read-only: only people Windows lets write CapyPanel's tools "
-"folder can change it."
 msgstr ""
 
 msgid ""
@@ -2935,6 +2935,9 @@ msgstr ""
 msgid "Read-only"
 msgstr ""
 
+msgid "Read-only for you. An administrator of this PC can change it."
+msgstr ""
+
 msgid "Read/write"
 msgstr ""
 
@@ -3431,14 +3434,6 @@ msgid "Shared"
 msgstr ""
 
 msgid "Shared and personal lists show up in the list dropdown by themselves."
-msgstr ""
-
-msgid "Shared by everyone on this PC."
-msgstr ""
-
-msgid ""
-"Shared by everyone on this PC. Read-only: only people Windows lets write "
-"this folder can change them."
 msgstr ""
 
 msgid ""
@@ -4531,14 +4526,6 @@ msgid "Where"
 msgstr ""
 
 msgid "Where I left off"
-msgstr ""
-
-msgid "Where each tool is installed, set once for everyone on this PC."
-msgstr ""
-
-msgid ""
-"Where each tool is installed, set once for everyone on this PC. Read-"
-"only: only people Windows lets write the tools folder can change it."
 msgstr ""
 
 #, python-brace-format

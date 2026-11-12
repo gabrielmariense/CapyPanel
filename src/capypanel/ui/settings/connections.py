@@ -297,14 +297,7 @@ class ProfilesSection(SharedSection):
             else _("These are the built-in profiles: the folder isn't there yet.")
         )
         self._show_folder_state()
-        access = (
-            _("Shared by everyone on this PC.")
-            if self.can_edit
-            else _(
-                "Shared by everyone on this PC. Read-only: only people Windows lets write this "
-                "folder can change them."
-            )
-        )
+        self.for_everyone(self.can_edit)  # with Hosts with no profile use, under it
         self.list = grid_table([_("Profile"), _("Tool"), _("Signs in with")])
         self.list.setColumnWidth(0, 190)
         self.list.setColumnWidth(1, 150)
@@ -331,7 +324,6 @@ class ProfilesSection(SharedSection):
         inner = self.content
         inner.addWidget(with_buttons(self.list, profile_buttons))
         self.profiles_skipped = skipped_note(self.store.problems)
-        inner.addWidget(notes(access))
         inner.addWidget(self.builtin_note)
         inner.addWidget(self.profiles_skipped)
         self.manage_button = QPushButton(_("&Manage…"))  # opens Saved credentials
@@ -540,16 +532,7 @@ class ToolsSection(SharedSection):
         tool_buttons = [self.locate_button, self.download_button]
         row_menu(self.tools, self.fill_row_menu)  # Use the automatic path too
         tools_layout.addWidget(with_buttons(self.tools, tool_buttons))
-        tools_layout.addWidget(
-            notes(
-                _("Where each tool is installed, set once for everyone on this PC.")
-                if self.can_edit_tools
-                else _(
-                    "Where each tool is installed, set once for everyone on this PC. Read-only: "
-                    "only people Windows lets write the tools folder can change it."
-                )
-            )
-        )
+        self.for_everyone(self.can_edit_tools)  # with Read PC data with, under the table
         self.tools_skipped = skipped_note([(p.path, p.reason) for p in catalogs.tools.problems])
         tools_layout.addWidget(self.tools_skipped)
         tools_layout.addLayout(self._reads_row())

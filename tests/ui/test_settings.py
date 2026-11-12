@@ -785,3 +785,17 @@ def test_the_picked_list_s_path_is_under_the_table_and_a_click_copies_it(
     QTest.mouseClick(line, Qt.MouseButton.LeftButton)
     assert QApplication.clipboard().text() == str(deep)
     dialog.close()
+
+
+def test_a_section_for_everyone_on_this_pc_says_who_can_change_it(qapp: QApplication) -> None:
+    from capypanel.ui.settings.pages import Section
+
+    shared = Section("Remote tools")
+    assert shared.scope_tag.isHidden() and shared.scope_line.isHidden()  # yours: no mark
+    shared.for_everyone(True)
+    assert not shared.scope_tag.isHidden()
+    assert shared.scope_line.text() == "A change here reaches everyone on this PC."
+    shared.for_everyone(False)  # Windows doesn't let this person write the shared folder
+    assert shared.scope_line.text() == (
+        "Read-only for you. An administrator of this PC can change it."
+    )

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:42-0300\n"
+"POT-Creation-Date: 2026-11-12 13:59-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -473,6 +473,12 @@ msgstr "Uma atualização está em andamento. Tente de novo quando ela terminar.
 
 msgid "A beta: it works, and it still changes from version to version."
 msgstr "Uma versão beta: funciona, e ainda muda de uma versão para outra."
+
+msgid "A change here reaches everyone on this PC."
+msgstr "Uma mudança aqui vale para todos neste PC."
+
+msgid "A change here reaches everyone on this PC: an update replaces CapyPanel for all of them."
+msgstr "Uma mudança aqui vale para todos neste PC: uma nova versão substitui o CapyPanel para todos eles."
 
 msgid "A chosen &group"
 msgstr "Um &grupo escolhido"
@@ -1585,6 +1591,9 @@ msgstr "Todas as impressoras de {host} param por alguns segundos. Os documentos 
 msgid "Every tool is one click away here, from any screen. Home is at the top, Settings at the bottom."
 msgstr "Toda ferramenta fica a um clique daqui, de qualquer tela. O Início fica no topo, e as Configurações, embaixo."
 
+msgid "Everyone on this PC"
+msgstr "Todos neste PC"
+
 msgid "Everyone on this PC (shared)"
 msgstr "Todos neste PC (compartilhada)"
 
@@ -1641,12 +1650,6 @@ msgstr "Para importar"
 
 msgid "For everyone on this PC: connection profiles, remote tools, and the shared lists in “lists”, a folder for each kind of list."
 msgstr "Para todos neste PC: perfis de conexão, ferramentas remotas e as listas compartilhadas em “lists”, uma pasta para cada tipo de lista."
-
-msgid "For everyone who uses CapyPanel on this PC: an update replaces it for all of them."
-msgstr "Vale para todos que usam o CapyPanel neste PC: uma nova versão substitui o CapyPanel para todos eles."
-
-msgid "For everyone who uses CapyPanel on this PC: an update replaces it for all of them. Read-only: only people Windows lets write CapyPanel's tools folder can change it."
-msgstr "Vale para todos que usam o CapyPanel neste PC: uma nova versão substitui o CapyPanel para todos eles. Somente leitura: só quem o Windows deixa gravar na pasta de ferramentas do CapyPanel pode alterar."
 
 msgid ""
 "For example:\n"
@@ -2807,6 +2810,9 @@ msgstr "Lê o status e os suprimentos de todas as impressoras exibidas (F5)"
 msgid "Read-only"
 msgstr "Somente leitura"
 
+msgid "Read-only for you. An administrator of this PC can change it."
+msgstr "Somente leitura para você. Um administrador deste PC pode alterar."
+
 msgid "Read/write"
 msgstr "Leitura/gravação"
 
@@ -3292,12 +3298,6 @@ msgstr "Compartilhada"
 
 msgid "Shared and personal lists show up in the list dropdown by themselves."
 msgstr "Listas compartilhadas e pessoais aparecem sozinhas no menu de listas."
-
-msgid "Shared by everyone on this PC."
-msgstr "Compartilhados por todos neste PC."
-
-msgid "Shared by everyone on this PC. Read-only: only people Windows lets write this folder can change them."
-msgstr "Compartilhados por todos neste PC. Somente leitura: só quem o Windows deixa gravar nesta pasta pode alterá-los."
 
 msgid "Shared lists are in the shared lists folder and show up for everyone; only people Windows lets write that folder can add one."
 msgstr "Listas compartilhadas ficam na pasta de listas compartilhadas e aparecem para todos; só quem o Windows deixa gravar nessa pasta pode criar uma."
@@ -4310,12 +4310,6 @@ msgstr "Onde"
 
 msgid "Where I left off"
 msgstr "Onde parei"
-
-msgid "Where each tool is installed, set once for everyone on this PC."
-msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste PC."
-
-msgid "Where each tool is installed, set once for everyone on this PC. Read-only: only people Windows lets write the tools folder can change it."
-msgstr "Onde cada ferramenta está instalada, definido uma vez para todos neste PC. Somente leitura: só quem o Windows deixa gravar na pasta de ferramentas pode alterar."
 
 #, python-brace-format
 msgid "Where is {tool}?"
