@@ -87,11 +87,16 @@ que seja o idioma deles.
 Por padrão o CapyPanel usa a sua própria conta do Windows. Quando hosts respondem **Sem direitos de
 administrador** ou **Conta recusada**:
 
-1. Quando o Atualizar termina, o CapyPanel pede outra conta em **Conta para outros PCs**.
-2. Digite-a. Ela é tentada num host por vez; se um host a recusar, o CapyPanel para e pergunta de
-   novo, para a conta não ser bloqueada.
+1. Quando o Atualizar termina, o CapyPanel pede outra conta em **Conta para outros PCs**, dizendo
+   os hosts a que ela se refere (os cinco primeiros, e depois quantos mais).
+2. Digite-a. Ela é tentada num host por vez até um aceitar; se um host a recusar antes disso, o
+   CapyPanel para e pergunta de novo, para uma senha digitada errada não bloquear a conta.
 3. Esses hosts são verificados de novo, e a conta vira uma linha de **Configurações > Hosts >
    Credenciais > Contas**.
+
+Depois que um host aceitou a conta, um host que ainda a recusa mostra o erro dele e o Atualizar
+continua. Os hosts que recusaram da última vez são tentados por último, para não pararem o próximo
+Atualizar antes de ele começar.
 
 O **Comandos como** do painel de detalhes diz qual conta cada host acaba usando. Veja
 [Contas para outros PCs](connecting.pt-BR.md#usar-outra-conta-em-alguns-pcs) para dar uma conta própria a um

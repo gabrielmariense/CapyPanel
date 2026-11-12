@@ -14,7 +14,8 @@ them through Remote Desktop or the VNC viewer you already use. It keeps your pri
 the details you need and their web pages a click away, and it finds the Windows user profiles
 nobody uses any more on a PC so you can delete them.
 
-> **Status: beta (0.25.0).** It runs from source; there's no installer yet.
+> **Status: beta (0.26.0).** [Download the zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
+> unzip it and run CapyPanel.exe. It updates itself when you say so.
 
 ![CapyPanel's Home page: the sidebar, the capybara, and a tile each for Hosts, Printers and User profiles](docs/images/home-dark.png)
 
@@ -43,8 +44,11 @@ nobody uses any more on a PC so you can delete them.
 
 Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrielmariense.github.io/CapyPanel/)**.
 
+- [Download and updates](docs/download.md): the zip, checking it, updating, and running from
+  source
 - [Getting started](docs/getting-started.md): run CapyPanel, add your first hosts, check and
   connect
+- [What's new](docs/whats-new.md): the changes in each release
 - [Host lists](docs/hosts/host-lists.md): groups and tags, finding a host, and hosts in and out
   of a spreadsheet
 - [Connecting](docs/hosts/connecting.md): VNC viewers, Remote Desktop, connection profiles,
@@ -60,10 +64,14 @@ Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrie
   files
 - [Contributing](CONTRIBUTING.md): building, testing and translating
 
-## Quick start (from source)
+## Quick start
 
-You need Windows 10 22H2 or 11 and [uv](https://docs.astral.sh/uv/), which installs Python and
-everything else:
+On Windows 10 22H2 or 11, download `CapyPanel-<version>-windows-x64.zip` from the
+[latest release](https://github.com/gabrielmariense/CapyPanel/releases/latest), unzip it anywhere
+and run **CapyPanel.exe**. No installer, no administrator rights. It isn't signed yet, so
+SmartScreen may ask the first time: **More info**, then **Run anyway**.
+
+From source, with [uv](https://docs.astral.sh/uv/), which installs Python and everything else:
 
 ```
 git clone https://github.com/gabrielmariense/CapyPanel.git

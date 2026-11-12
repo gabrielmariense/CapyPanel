@@ -2,7 +2,9 @@
 
 Uma lista de hosts é um arquivo com os seus computadores, os grupos em que eles ficam e as tags
 deles. O CapyPanel mostra uma lista por vez e salva cada mudança na hora. Esta página cobre como
-organizar uma lista, encontrar um host nela e colocar ou tirar muitos hosts de uma vez.
+organizar uma lista, encontrar um host nela e colocar ou tirar muitos hosts de uma vez. O guia que
+aparece na primeira vez que o Hosts abre mostra a lista, os grupos e as tags dela num PC de
+exemplo; o **Ajuda > Guia desta tela** mostra o guia de novo.
 
 ## Organizar os hosts em grupos
 

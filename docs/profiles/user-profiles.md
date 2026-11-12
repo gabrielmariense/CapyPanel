@@ -10,6 +10,14 @@ as** names, which must be an administrator there (see
 [Use another account on some PCs](../hosts/connecting.md#use-another-account-on-some-pcs)). Nothing
 is installed or run on the PCs, and scanning only reads.
 
+![The warning before User profiles' first use: This tool deletes user profiles, the box to tick, and Continue greyed](../images/profiles-warning-dark.png)
+
+The first time you open it, a warning says what it deletes: "each person's folder under C:\Users,
+with every file in it, and the profile's entry in the registry. A deleted profile can't be brought
+back." **Continue** stays greyed until you tick "I understand it deletes user profiles on the PCs I
+pick"; **Cancel** keeps you where you were. Then a guide shows the tool on a sample PC with
+made-up profiles; **Help > Guide to this screen** shows it again.
+
 ## Scan a PC's profiles
 
 ![The Hosts tab: the hosts of the picked group with their status, profiles, how many can be deleted and their scan; Progress and the selected host on the right](../images/profiles-hosts-tab-dark.png)

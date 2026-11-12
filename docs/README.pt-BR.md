@@ -37,7 +37,9 @@ embaixo, e toda página termina com as mensagens que você pode ver e o que faze
 
 | Página | O que ela cobre |
 |---|---|
+| [Baixar e atualizar](download.pt-BR.md) | O zip, como conferi-lo, as novas versões, e rodar pelo código-fonte |
 | [Primeiros passos](getting-started.pt-BR.md) | Rodar o CapyPanel, adicionar seus primeiros hosts, verificar e conectar |
+| [Novidades](whats-new.pt-BR.md) | As mudanças de cada versão |
 | [Listas de hosts](hosts/host-lists.pt-BR.md) | Grupos e tags, encontrar um host, e hosts entrando e saindo de uma planilha |
 | [Conectando](hosts/connecting.pt-BR.md) | Visualizadores VNC, Área de Trabalho Remota, perfis de conexão, contas e senhas |
 | [Verificando hosts](hosts/checking.pt-BR.md) | Status, usuários logados e dados do PC |
@@ -47,5 +49,5 @@ embaixo, e toda página termina com as mensagens que você pode ver e o que faze
 | [A ferramenta Perfis de usuário](profiles/user-profiles.pt-BR.md) | Os perfis do Windows de um PC, quais podem ser excluídos, e como excluí-los |
 | [Configurações e arquivos](settings-and-files.pt-BR.md) | Cada configuração, e onde o CapyPanel guarda os arquivos |
 
-Estas páginas descrevem a versão atual (0.25.0). O CapyPanel está em beta, então elas crescem a
-cada funcionalidade.
+Estas páginas descrevem a versão atual, a 0.26.0; [Novidades](whats-new.pt-BR.md) lista o que
+mudou. O CapyPanel está em beta, então elas crescem a cada funcionalidade.

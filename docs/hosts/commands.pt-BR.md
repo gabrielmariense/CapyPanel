@@ -50,13 +50,15 @@ vêm depois, quatro por fileira.
 
 ## Escolher os seus comandos rápidos
 
-![A janela Personalizar o painel de detalhes na aba Comandos rápidos: os comandos marcados no topo, em ordem, e depois os outros por grupo](../images/customize-dark-pt-BR.png)
+![A janela Personalizar o painel de detalhes na aba Comandos rápidos: todos os comandos por grupo, na ordem da janela Comandos, quatro marcados](../images/customize-dark-pt-BR.png)
 
 1. Abra **Exibir > Personalizar o painel de detalhes…**, ou clique com o botão direito no painel de
    detalhes.
-2. Na aba **Comandos rápidos**, marque os comandos que você quer como botões.
-3. Use **Mover para cima** e **Mover para baixo** para ordená-los. Cada mudança aparece no painel
-   na hora.
+2. Na aba **Comandos rápidos**, marque os comandos que você quer como botões. Cada mudança aparece
+   no painel na hora.
+
+Os botões seguem a ordem da janela Comandos, no painel e no menu do botão direito, então um
+comando fica sempre no mesmo lugar.
 
 Cada administrador escolhe os seus: a escolha fica nas suas configurações neste PC, nunca na lista.
 O CapyPanel começa com **Compartilhamento C$**, **Pasta do usuário**, **Gerenciamento do
@@ -67,10 +69,10 @@ também ficam no menu do botão direito do host.
 
     - **Configurações > Hosts > Geral > Painel de detalhes > Comandos rápidos > Escolher…** abre a
       mesma aba.
-    - A aba lista primeiro os comandos marcados, em **No painel**, e depois os outros por grupo,
-      cada um com o atalho em cinza e a palavra que o botão mostra. Um comando recém-marcado vai
-      para o fim. Uma linha abaixo da tabela os conta, como em "6 de 15 marcados · 2 fileiras no
-      painel".
+    - A aba lista todos os comandos por grupo, na ordem da janela Comandos, cada um com o atalho
+      em cinza e a palavra que o botão mostra; marcar um não o tira do lugar. Uma linha abaixo da
+      tabela os conta, como em "6 de 15 marcados · 2 fileiras no painel", e outra diz "Os quatro
+      primeiros marcados também ficam no menu do botão direito de um host."
     - Qualquer um destes pode ser um comando rápido: Status, Usuários logados, Dados do PC,
       Programas instalados, Compartilhamento C$, Pasta do usuário, Pasta Inicializar, Abrir um
       caminho…, Gerenciamento do Computador, Visualizador de Eventos, Serviços, Enviar uma

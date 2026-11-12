@@ -36,7 +36,9 @@ every page ends with the messages you may see and what to do about them.
 
 | Page | What it covers |
 |---|---|
+| [Download and updates](download.md) | The zip, checking it, updating, and running from source |
 | [Getting started](getting-started.md) | Run CapyPanel, add your first hosts, check and connect |
+| [What's new](whats-new.md) | The changes in each release |
 | [Host lists](hosts/host-lists.md) | Groups and tags, finding a host, and hosts in and out of a spreadsheet |
 | [Connecting](hosts/connecting.md) | VNC viewers, Remote Desktop, connection profiles, accounts and passwords |
 | [Checking hosts](hosts/checking.md) | Status, logged-on users and PC facts |
@@ -46,5 +48,5 @@ every page ends with the messages you may see and what to do about them.
 | [The User profiles tool](profiles/user-profiles.md) | A PC's Windows profiles, which can be deleted, and deleting them |
 | [Settings and files](settings-and-files.md) | Every setting, and where CapyPanel keeps its files |
 
-These pages describe the current version (0.25.0). CapyPanel is in beta, so they grow with each
-feature.
+These pages describe the current version, 0.26.0; [What's new](whats-new.md) lists what changed.
+CapyPanel is in beta, so they grow with each feature.

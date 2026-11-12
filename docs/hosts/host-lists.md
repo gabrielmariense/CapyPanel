@@ -2,7 +2,9 @@
 
 A host list is one file holding your computers, the groups they sit in and their tags. CapyPanel
 shows one list at a time and saves every change right away. This page covers arranging a list,
-finding a host in it, and moving many hosts in or out at once.
+finding a host in it, and moving many hosts in or out at once. The guide that shows the first time
+Hosts opens points out the list, its groups and tags on a sample PC; **Help > Guide to this
+screen** shows it again.
 
 ## Arrange hosts in groups
 

@@ -2,7 +2,9 @@
 
 O Impressoras guarda as impressoras que você administra, mostra em que estado cada uma está e abre
 a página web de qualquer uma. Abra-o pelo bloco **Impressoras** da página inicial, pelo ícone de
-impressora na barra lateral ou com **Ctrl+2**.
+impressora na barra lateral ou com **Ctrl+2**. Na primeira vez que ele abre, um guia mostra as
+partes dele em quatro impressoras de exemplo, uma para cada status; o **Ajuda > Guia desta tela**
+mostra o guia de novo.
 
 ![A janela Impressoras: grupos à esquerda, as impressoras no meio, os detalhes de uma à direita](../images/printers-dark-pt-BR.png)
 

@@ -1,22 +1,16 @@
 # Primeiros passos
 
 Esta página leva você do primeiro início até a sua primeira lista de PCs, verificada e conectada.
-O guia que o CapyPanel mostra na primeira vez que cada ferramenta abre apresenta a própria janela.
+O guia que o CapyPanel mostra na primeira vez que cada tela abre apresenta a própria janela.
 
 ## Rodar o CapyPanel
 
-O CapyPanel roda no Windows 10 22H2 ou no Windows 11. Ainda não há instalador, então ele roda a
-partir do código-fonte com o [uv](https://docs.astral.sh/uv/):
+1. [Baixe o zip](download.pt-BR.md#baixar-o-capypanel) e descompacte.
+2. Rode o **CapyPanel.exe**. Uma tela de abertura com a capivara e a versão aparece enquanto ele
+   carrega.
 
-```
-git clone https://github.com/gabrielmariense/CapyPanel.git
-cd CapyPanel
-uv run capypanel
-```
-
-A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes abrem
-na hora. A Área de Trabalho Remota funciona de cara. Para o VNC você também precisa de um
-visualizador: o [UltraVNC](https://uvnc.com) ou o
+O CapyPanel roda no Windows 10 22H2 ou no Windows 11. A Área de Trabalho Remota funciona de cara.
+Para o VNC você também precisa de um visualizador: o [UltraVNC](https://uvnc.com) ou o
 [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/).
 
 ![A página inicial: a barra lateral à esquerda, a capivara e o nome do app, e um bloco para cada ferramenta](images/home-dark-pt-BR.png)
@@ -24,11 +18,24 @@ visualizador: o [UltraVNC](https://uvnc.com) ou o
 O CapyPanel abre na página inicial, com um bloco para cada ferramenta: **Hosts** (Ctrl+1),
 **Impressoras** (Ctrl+2) e **Perfis de usuário** (Ctrl+3). Clique em **Hosts** para começar.
 
+Na primeira vez que cada tela abre, um guia de poucos cartões mostra o que há nela, num PC ou numa
+impressora de exemplo que some quando ele termina. O resto da janela fica escurecido até você
+terminar ou clicar em **Pular**. O **Ajuda > Guia desta tela** mostra o guia de novo.
+
+![O primeiro cartão do guia do Hosts, Suas listas, ao lado da lista de listas na janela escurecida, com o PC de exemplo escolhido](images/guide-card-dark-pt-BR.png)
+
 ??? note "Mais sobre o início"
 
-    - A versão aparece na barra de título. Quando você roda pelo código-fonte, ela vem seguida de um
-      número de build e do commit, por exemplo `CapyPanel 0.25.0 build 1378 (abc1234)`; um número
-      de build maior é um build mais novo. Informe-a ao relatar um problema.
+    - A versão aparece na barra de título, seguida de um número de build e do commit, por exemplo
+      `CapyPanel 0.26.0 build 514 (abc1234)`; um número de build maior é um build mais novo.
+      Informe-a ao relatar um problema.
+    - O primeiro início fala o idioma em que o Windows aparece: português para qualquer português,
+      inglês para os outros. **Configurações > CapyPanel > Geral > Idioma** muda isso.
+    - Roda uma cópia por usuário do Windows. Abrir o CapyPanel de novo traz a janela aberta para a
+      frente, inclusive da bandeja.
+    - Enquanto um guia roda, só os botões do cartão funcionam, e nada é lido do exemplo nem salvo.
+      Quem usava o CapyPanel antes da 0.26 não recebe os guias sozinho; o **Ajuda > Mostrar todos
+      os guias de novo** traz todos de volta, cada um na próxima vez que a tela dele abrir.
     - A página inicial é o botão de cima da barra lateral, o **Exibir > Início** e o **Ctrl+0**.
       Todas as ferramentas estão sempre lá; não há nada para ligar. Para começar em outro lugar,
       defina **Configurações > CapyPanel > Geral > Abrir ao iniciar** como a última ferramenta usada,
@@ -90,8 +97,10 @@ Veja [Verificando hosts](hosts/checking.pt-BR.md), [Conectando](hosts/connecting
     o **Sair** (Ctrl+Q). **Exibir** leva ao **Início** e a cada ferramenta, e depois mostra ou
     esconde os painéis, a **Barra de ferramentas** e a **Barra de status**; no Hosts ele também
     guarda **Personalizar o painel de detalhes…** e **Mostrar domínio dos usuários**. Ele fica
-    aberto enquanto você marca. **Ajuda** tem **Documentação**, **Relatar um problema** e **Sobre o
-    CapyPanel**.
+    aberto enquanto você marca. **Ajuda** tem **Documentação**, **Guia desta tela**, **Mostrar todos
+    os guias de novo**, **Relatar um problema**, **Procurar nova versão…** e **Sobre o CapyPanel**.
+    Quando sai uma versão mais nova, um botão **Nova versão** aparece na ponta direita da barra de
+    menus (veja [Atualizar o CapyPanel](download.pt-BR.md#atualizar-o-capypanel)).
 
 ??? note "Organizar a janela"
 
@@ -127,10 +136,15 @@ rápidos**, escolhe os seus botões (veja
 
 ## Fechar o CapyPanel, ou deixá-lo na bandeja
 
-O **✕** da janela, o **Arquivo > Sair** (Ctrl+Q) e o Windows fazendo logoff fecham o CapyPanel. Mas
-quando a ferramenta Impressoras
-[atualiza sozinha](printers/checking.pt-BR.md#atualizar-as-impressoras-sozinho), sair interromperia
-isso, então o **✕** pergunta antes: **Manter na bandeja**, **Sair** ou **Cancelar**.
+1. Clique no **✕** da janela. O CapyPanel pergunta "Manter o CapyPanel aberto na bandeja?"
+2. Clique em **Manter na bandeja** para ele continuar trabalhando em segundo plano, ou em **Sair**
+   para fechá-lo.
+3. Para não ver mais a pergunta, marque **Não perguntar de novo**, ou escolha uma resposta em
+   **Configurações > CapyPanel > Geral > Ao fechar**.
+
+O **Arquivo > Sair** (Ctrl+Q) e o Windows fazendo logoff sempre fecham. Na bandeja, a
+[atualização sozinha](printers/checking.pt-BR.md#atualizar-as-impressoras-sozinho) da ferramenta
+Impressoras e os avisos continuam funcionando; sair os interrompe.
 
 Na bandeja, o ícone do CapyPanel tem a mesma contagem vermelha da barra lateral. Um clique abre a
 janela de novo.
@@ -139,11 +153,11 @@ janela de novo.
 
 ??? note "Mais sobre a bandeja e sair"
 
-    - A pergunta diz "Manter o CapyPanel aberto na bandeja?", "A atualização sozinha e os avisos
-      continuam funcionando enquanto o CapyPanel estiver na bandeja. Sair os interrompe.", com o
-      **Manter na bandeja** como padrão e uma caixa "Não perguntar de novo". Em **Configurações >
-      CapyPanel > Geral > Ao fechar** você responde de vez: **Perguntar sempre**, **Manter aberto na
-      bandeja** ou **Sair**. Sem nada trabalhando sozinho, o ✕ fecha na hora.
+    - Embaixo da pergunta: "A atualização sozinha e os avisos continuam funcionando enquanto o
+      CapyPanel estiver na bandeja. Sair os interrompe." O **Manter na bandeja** é o padrão, e o
+      **Cancelar** mantém a janela aberta.
+    - O **Ao fechar** tem **Perguntar sempre** (o padrão, que pergunta a cada ✕), **Manter aberto na
+      bandeja** e **Sair**; os dois últimos nunca perguntam.
     - O menu da bandeja tem o **Abrir o CapyPanel** em negrito, uma linha por ferramenta com algo a
       relatar, como "3 impressoras requerem atenção…", que abre aquela ferramenta com só esses itens
       listados, e o **Sair do CapyPanel**.
@@ -155,6 +169,10 @@ janela de novo.
 ## Pedir ajuda, ou relatar um problema
 
 - **Ajuda > Documentação** abre este site, em português quando o app está em português.
+- **Ajuda > Guia desta tela** mostra o guia da tela atual de novo, e **Ajuda > Mostrar todos os
+  guias de novo** traz todos os guias de volta.
+- **Ajuda > Procurar nova versão…** procura uma versão mais nova (veja
+  [Baixar e atualizar](download.pt-BR.md#atualizar-o-capypanel)).
 - **Ajuda > Relatar um problema** abre uma issue nova no GitHub já com a versão, o Windows, o tema,
   o idioma, o Qt e o Python. Nunca inclui nome de usuário, computador, domínio nem caminho de
   arquivo.
@@ -188,3 +206,4 @@ janela de novo.
 |---|---|---|
 | "Algo deu errado. Os detalhes foram salvos no log do aplicativo." | Algo falhou dentro do próprio CapyPanel | **Copiar tudo** e colar no **Relatar um problema**. Um segundo erro entra na mesma janela, e uma repetição é contada ("Este erro aconteceu 3 vezes:") |
 | "Esta lista ainda não tem hosts. Adicione um, ou importe vários de uma vez." | A lista está vazia | **Adicionar host…** ou **Importar hosts…** |
+| "O CapyPanel já está em execução para EXAMPLE\user, mas não foi possível trazer a janela dele para a frente: …" | A sua outra cópia está aberta em outra sessão do Windows, ou não está respondendo | Feche-a por lá, ou finalize-a no Gerenciador de Tarefas, e abra o CapyPanel de novo |

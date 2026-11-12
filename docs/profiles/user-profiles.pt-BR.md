@@ -11,6 +11,15 @@ diz, que precisa ser administradora lá (veja
 [Usar outra conta em alguns PCs](../hosts/connecting.pt-BR.md#usar-outra-conta-em-alguns-pcs)).
 Nada é instalado nem executado nos PCs, e escanear só lê.
 
+![O aviso antes do primeiro uso do Perfis de usuário: Esta ferramenta exclui perfis de usuário, a caixa para marcar, e o Continuar apagado](../images/profiles-warning-dark-pt-BR.png)
+
+Na primeira vez que você a abre, um aviso diz o que ela exclui: "a pasta de cada pessoa em
+C:\Users, com todos os arquivos dela, e a entrada do perfil no registro. Um perfil excluído não
+pode ser recuperado." O **Continuar** fica apagado até você marcar "Entendo que ela exclui perfis
+de usuário nos PCs que eu escolher"; o **Cancelar** deixa você onde estava. Depois, um guia mostra a
+ferramenta num PC de exemplo com perfis inventados; o **Ajuda > Guia desta tela** mostra o guia de
+novo.
+
 ## Escanear os perfis de um PC
 
 ![A aba Hosts: os hosts do grupo escolhido com status, perfis, quantos podem ser excluídos e o escaneamento; Andamento e o host selecionado à direita](../images/profiles-hosts-tab-dark-pt-BR.png)

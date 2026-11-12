@@ -1,33 +1,40 @@
 # Getting started
 
 This page takes you from a first start to your first list of PCs, checked and connected. The guide
-CapyPanel shows the first time each tool opens points out the window itself.
+CapyPanel shows the first time each screen opens points out the window itself.
 
 ## Run CapyPanel
 
-CapyPanel runs on Windows 10 22H2 or Windows 11. There's no installer yet, so it runs from source
-with [uv](https://docs.astral.sh/uv/):
+1. [Download the zip](download.md#download-capypanel) and unzip it.
+2. Run **CapyPanel.exe**. A splash with the capybara and the version shows while it loads.
 
-```
-git clone https://github.com/gabrielmariense/CapyPanel.git
-cd CapyPanel
-uv run capypanel
-```
-
-The first run downloads Python and the libraries CapyPanel needs; later runs start right away.
-Remote Desktop works out of the box. For VNC you also need a viewer:
-[UltraVNC](https://uvnc.com) or [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/).
+CapyPanel runs on Windows 10 22H2 or Windows 11. Remote Desktop works out of the box. For VNC you
+also need a viewer: [UltraVNC](https://uvnc.com) or
+[RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/).
 
 ![The Home page: the sidebar on the left, the capybara and the app's name, and a tile for each tool](images/home-dark.png)
 
 CapyPanel opens on its Home page, with a tile for each tool: **Hosts** (Ctrl+1), **Printers**
 (Ctrl+2) and **User profiles** (Ctrl+3). Click **Hosts** to start.
 
+The first time each screen opens, a guide of a few cards shows what's on it, on a sample PC or
+printer that goes away when it ends. The rest of the window is dimmed until you finish or click
+**Skip**. **Help > Guide to this screen** shows it again.
+
+![Hosts' first guide card, Your lists, beside the list dropdown on the dimmed window, with the sample PC picked](images/guide-card-dark.png)
+
 ??? note "More about starting"
 
-    - The version shows in the title bar. When you run from source it's followed by a build number
-      and the commit, e.g. `CapyPanel 0.25.0 build 1378 (abc1234)`; a bigger build number is a
-      newer build. Quote it when you report a problem.
+    - The version shows in the title bar, followed by a build number and the commit, e.g.
+      `CapyPanel 0.26.0 build 514 (abc1234)`; a bigger build number is a newer build. Quote it when
+      you report a problem.
+    - The first start speaks the language Windows is shown in: Portuguese for any Portuguese,
+      English for the rest. **Settings > CapyPanel > General > Language** changes it.
+    - One copy runs per Windows user. Starting CapyPanel again brings the open window to the front,
+      out of the tray too.
+    - While a guide runs, only its card's buttons work, and nothing is read from the sample or
+      saved. Someone who used CapyPanel before 0.26 doesn't get the guides on their own; **Help >
+      Show all the guides again** brings them all back, each the next time its screen opens.
     - Home is the top button on the sidebar, **View > Home**, and **Ctrl+0**. Every tool is always
       there; there's nothing to turn on. To start somewhere else, set **Settings > CapyPanel >
       General > Open on startup** to the last used tool, or to one by name.
@@ -86,8 +93,10 @@ See [Checking hosts](hosts/checking.md), [Connecting](hosts/connecting.md) and
     The menu bar is the same in every tool. **File** opens **Settings…** (Ctrl+,) and **Exit**
     (Ctrl+Q). **View** goes to **Home** and each tool, then shows or hides the panels, the
     **Toolbar** and the **Status bar**; in Hosts it also holds **Customize the details panel…** and
-    **Show users' domain**. It stays open while you tick. **Help** has **Documentation**, **Report a
-    problem** and **About CapyPanel**.
+    **Show users' domain**. It stays open while you tick. **Help** has **Documentation**, **Guide to
+    this screen**, **Show all the guides again**, **Report a problem**, **Check for updates…** and
+    **About CapyPanel**. When a newer release is out, an **Update** button shows at the menu bar's
+    right end (see [Update CapyPanel](download.md#update-capypanel)).
 
 ??? note "Arranging the window"
 
@@ -120,9 +129,14 @@ buttons (see [Choose your quick commands](hosts/commands.md#choose-your-quick-co
 
 ## Close CapyPanel, or keep it in the tray
 
-The window's **✕**, **File > Exit** (Ctrl+Q) and Windows logging off all quit CapyPanel. But when
-the Printers tool [refreshes on its own](printers/checking.md#have-printers-checked-on-their-own),
-quitting would stop it, so the **✕** asks first: **Keep in tray**, **Quit** or **Cancel**.
+1. Click the window's **✕**. CapyPanel asks "Keep CapyPanel running in the tray?"
+2. Click **Keep in tray** to keep it working in the background, or **Quit** to close it.
+3. To stop the question, tick **Don't ask again**, or pick an answer in **Settings > CapyPanel >
+   General > When closing**.
+
+**File > Exit** (Ctrl+Q) and Windows logging off always quit. In the tray, the Printers tool's
+[Refresh on its own](printers/checking.md#have-printers-checked-on-their-own) and warnings keep
+working; quitting stops them.
 
 In the tray, CapyPanel's icon carries the same red count as the sidebar. A click opens the window
 again.
@@ -131,11 +145,10 @@ again.
 
 ??? note "More about the tray and quitting"
 
-    - The question reads "Keep CapyPanel running in the tray?", "Refresh on its own and warnings
-      keep working while CapyPanel is in the tray. Quit stops them.", with **Keep in tray** as the
-      default and a "Don't ask again" box. **Settings > CapyPanel > General > When closing**
-      answers it for good: **Ask each time**, **Keep running in the tray** or **Quit**. With nothing
-      working on its own, the ✕ quits straight away.
+    - Under the question: "Refresh on its own and warnings keep working while CapyPanel is in the
+      tray. Quit stops them." **Keep in tray** is the default, and **Cancel** keeps the window open.
+    - **When closing** has **Ask each time** (the default, which asks on every ✕), **Keep running in
+      the tray** and **Quit**; the last two never ask.
     - The tray menu holds **Open CapyPanel** in bold, a line per tool with something to report, as
       in "3 printers need attention…", which opens that tool with just those items listed, and
       **Quit CapyPanel**.
@@ -147,6 +160,10 @@ again.
 ## Get help, or report a problem
 
 - **Help > Documentation** opens this site, in Portuguese when the app is in Portuguese.
+- **Help > Guide to this screen** shows the current screen's guide again, and **Help > Show all the
+  guides again** brings every guide back.
+- **Help > Check for updates…** looks for a newer release (see
+  [Download and updates](download.md#update-capypanel)).
 - **Help > Report a problem** opens a new issue on GitHub with the version, Windows, the theme, the
   language, Qt and Python already in it. It never includes a user name, a computer, a domain or a
   path.
@@ -180,3 +197,4 @@ again.
 |---|---|---|
 | "Something went wrong. The details were saved to the app log." | Something failed inside CapyPanel itself | **Copy all** and paste it into **Report a problem**. A second error joins the same window, and a repeat is counted ("This error happened 3 times:") |
 | "This list has no hosts yet. Add one, or import several at once." | The list is empty | **Add host…** or **Import hosts…** |
+| "CapyPanel is already running for EXAMPLE\user, but its window couldn't be brought forward: …" | Your other copy is open in another Windows session, or isn't answering | Close it there, or end it in Task Manager, then start CapyPanel again |

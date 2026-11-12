@@ -5,7 +5,7 @@ As Configurações são a engrenagem embaixo na barra lateral, e **Arquivo > Con
 **Esc** a fecham. Esta página lista cada configuração, página por página, e onde o CapyPanel guarda
 os arquivos.
 
-![As Configurações em CapyPanel > Geral: a lista de páginas à esquerda, Aparência e Inicialização e fechamento à direita](images/settings-dark-pt-BR.png)
+![As Configurações em CapyPanel > Geral: a lista de páginas à esquerda; Aparência, Inicialização e fechamento, e Novas versões, marcada Todos neste PC, à direita](images/settings-dark-pt-BR.png)
 
 ## Encontrar uma configuração
 
@@ -61,9 +61,10 @@ em amarelo, e as configurações funcionam ali mesmo.
 ??? note "Mais sobre os temas"
 
     "Os temas do Windows seguem a aparência e a cor do Windows; os do CapyPanel são iguais em todo
-    lugar." Os temas mudam as cores e o quanto os cantos são arredondados: Graphite e Paper os
-    arredondam mais que os outros. A fonte e o tamanho dela são os mesmos em todos, e um tema nunca
-    muda o que o app faz. Os temas do Windows seguem a sua cor de destaque (**Configurações >
+    lugar." Os temas mudam as cores. Cada um tem os seus tons das cores de aviso (âmbar, vermelho,
+    verde e cinza), então os avisos e os pontos e as barras de suprimentos do Impressoras ficam
+    legíveis também nos temas claros. A fonte e o tamanho dela são os mesmos em todos, e um tema
+    nunca muda o que o app faz. Os temas do Windows seguem a sua cor de destaque (**Configurações >
     Personalização > Cores**), e tudo o que vem dela continua legível.
 
 ### Novas versões
@@ -87,7 +88,7 @@ CapyPanel para todos eles."
 
 ## Hosts > Conexão
 
-![Configurações > Hosts > Conexão: os perfis de conexão, as ferramentas remotas e o Ler dados dos PCs com em Automático](images/settings-hosts-connecting-dark-pt-BR.png)
+![Configurações > Hosts > Conexão: Perfis de conexão e Ferramentas remotas, cada uma marcada Todos neste PC, e o Ler dados dos PCs com em Automático](images/settings-hosts-connecting-dark-pt-BR.png)
 
 **Todos neste PC**: as duas seções, **Perfis de conexão** e **Ferramentas remotas**, têm a marca,
 com "Uma mudança aqui vale para todos neste PC." embaixo do título.

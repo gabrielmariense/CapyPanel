@@ -83,11 +83,16 @@ whatever their language.
 By default CapyPanel uses your own Windows account. When hosts answer **No admin rights** or
 **Account rejected**:
 
-1. Once the Refresh ends, CapyPanel asks for another account in **Account for other PCs**.
-2. Type it in. It's tried on one host at a time; if a host rejects it, CapyPanel stops and asks
-   again, so the account isn't locked out.
+1. Once the Refresh ends, CapyPanel asks for another account in **Account for other PCs**, naming
+   the hosts it's for (the first five, then how many more).
+2. Type it in. It's tried on one host at a time until one accepts it; if a host rejects it before
+   that, CapyPanel stops and asks again, so a mistyped password can't lock the account out.
 3. Those hosts are checked again, and the account becomes a row of **Settings > Hosts >
    Credentials > Accounts**.
+
+Once one host has accepted the account, a host that still refuses it shows its error and the
+Refresh carries on. Hosts that refused last time are tried last, so they can't stop the next
+Refresh before it starts.
 
 The Details panel's **Commands run as** names the account each host ends up with. See
 [Accounts for other PCs](connecting.md#use-another-account-on-some-pcs) to give a PC, a group, a tag or

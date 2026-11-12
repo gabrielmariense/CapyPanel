@@ -4,7 +4,7 @@ Settings is the gear at the bottom of the sidebar, and **File > Settings…** (C
 applies as soon as you make it**: there's no Save button, and the window's **×** or **Esc** closes
 it. This page lists every setting, page by page, and where CapyPanel keeps its files.
 
-![Settings on CapyPanel > General: the page list on the left, Appearance and Startup and closing on the right](images/settings-dark.png)
+![Settings on CapyPanel > General: the page list on the left; Appearance, Startup and closing, and Updates, marked Everyone on this PC, on the right](images/settings-dark.png)
 
 ## Find a setting
 
@@ -59,9 +59,9 @@ settings work right there.
 ??? note "More about themes"
 
     "Windows themes follow Windows' look and accent; CapyPanel themes look the same everywhere."
-    Themes change colors and how round the corners are: Graphite and Paper round them more than the
-    others do. The font and its size are the same in every one, and a theme never changes what the
-    app does. The Windows themes follow your accent color (**Settings > Personalization > Colors**),
+    Themes change colors. Each one has its own shades of the warning colors (amber, red, green
+    and grey), so warnings and Printers' dots and supply bars read clearly in the light themes too.
+    The font and its size are the same in every one, and a theme never changes what the app does. The Windows themes follow your accent color (**Settings > Personalization > Colors**),
     and everything built from it stays readable.
 
 ### Updates
@@ -85,7 +85,7 @@ for all of them."
 
 ## Hosts > Connecting
 
-![Settings > Hosts > Connecting: the connection profiles, the remote tools, and Read PC data with set to Automatic](images/settings-hosts-connecting-dark.png)
+![Settings > Hosts > Connecting: Connection profiles and Remote tools, each marked Everyone on this PC, and Read PC data with set to Automatic](images/settings-hosts-connecting-dark.png)
 
 **Everyone on this PC**: both sections, **Connection profiles** and **Remote tools**, carry the
 mark, with "A change here reaches everyone on this PC." under the title.

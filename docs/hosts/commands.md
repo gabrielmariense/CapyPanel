@@ -47,11 +47,14 @@ The Details panel's first row is always **Refresh**, **Commands** (the
 
 ## Choose your quick commands
 
-![The Customize the details panel window on its Quick commands tab: the ticked commands on top, in order, then the rest by group](../images/customize-dark.png)
+![The Customize the details panel window on its Quick commands tab: every command by group in the Commands window's order, four ticked](../images/customize-dark.png)
 
 1. Open **View > Customize the details panel…**, or right-click the Details panel.
-2. On the **Quick commands** tab, tick the commands you want as buttons.
-3. Use **Move up** and **Move down** to order them. Every change shows on the panel at once.
+2. On the **Quick commands** tab, tick the commands you want as buttons. Every change shows on the
+   panel at once.
+
+The buttons keep the Commands window's order, on the panel and in the right-click menu, so a
+command is always in the same place.
 
 Each admin picks their own: the choice is kept in your settings on this PC, never in the list.
 CapyPanel starts with **C$ share**, **User's folder**, **Computer Management** and **Send a
@@ -61,9 +64,10 @@ right-click menu.
 ??? note "More about quick commands"
 
     - **Settings > Hosts > General > Details panel > Quick commands > Choose…** opens the same tab.
-    - The tab lists the ticked commands first, under **On the panel**, then the rest by group, each
-      with its shortcut in grey and the word its button shows. A newly ticked command goes to the
-      end. A line under the table counts them, as in "6 of 15 ticked · 2 rows on the panel".
+    - The tab lists every command by group, in the Commands window's order, each with its
+      shortcut in grey and the word its button shows; ticking one doesn't move it. A line under
+      the table counts them, as in "6 of 15 ticked · 2 rows on the panel", and another says "The
+      first four ticked are also in a host's right-click menu."
     - Any of these can be a quick command: Status, Logged-on users, PC facts, Installed programs, C$
       share, User's folder, Startup folder, Open a path…, Computer Management, Event Viewer,
       Services, Send a message…, Mapped drives, Printers on this PC and Restart Print Spooler….
