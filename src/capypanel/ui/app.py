@@ -60,7 +60,10 @@ class _Stages:
         return f"Started in {total:.2f} s ({parts})"
 
 
+SPLASH_AFTER_MS = 200  # the splash stays this long under the window that replaced it
 SPLASH_WATCH_MS, SPLASH_WATCH_FOR_MS = 50, 3000
+HWND_TOPMOST, HWND_NOTOPMOST = -1, -2
+SWP_NOSIZE, SWP_NOMOVE, SWP_NOOWNERZORDER = 0x1, 0x2, 0x200
 
 
 def _splash_on_screen() -> bool:
@@ -92,26 +95,65 @@ def _active() -> bool:
     return QGuiApplication.applicationState() == Qt.ApplicationState.ApplicationActive
 
 
-class _HandOver:
-    """The main window takes over from the splash. It's made active first, while the splash
-    (this process) still has the focus; then the splash is told to go. Its window closes a
-    moment later, and Windows then activates whichever window comes next, sometimes another
-    program's: once it's gone, a main window left without the focus asks for it once. Windows
-    itself refuses that when the person clicked another program meanwhile."""
+def to_front(window: QWidget) -> None:
+    """Brings the window to the front with the focus, as any program someone just started,
+    also when they clicked another program while it loaded. Windows lets only the program in
+    front give the focus away, so for the moment of the switch CapyPanel shares that
+    program's input, the way Qt does for windows set to always activate."""
+    window.raise_()
+    window.activateWindow()
+    user32 = ctypes.WinDLL("user32", use_last_error=True)
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    user32.GetForegroundWindow.restype = wintypes.HWND
+    user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+    user32.GetWindowThreadProcessId.restype = wintypes.DWORD
+    user32.AttachThreadInput.argtypes = [wintypes.DWORD, wintypes.DWORD, wintypes.BOOL]
+    place = [wintypes.HWND, wintypes.HWND, *[ctypes.c_int] * 4, wintypes.UINT]
+    user32.SetWindowPos.argtypes = place
+    user32.SetForegroundWindow.argtypes = [wintypes.HWND]
+    user32.SetFocus.argtypes = [wintypes.HWND]
+    mine = int(window.winId())
+    front = user32.GetForegroundWindow()
+    if front == mine:
+        return
+    theirs = user32.GetWindowThreadProcessId(front, None) if front else 0
+    me = kernel32.GetCurrentThreadId()
+    shared = bool(theirs) and theirs != me and bool(user32.AttachThreadInput(me, theirs, True))
+    try:
+        flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER
+        user32.SetWindowPos(mine, HWND_TOPMOST, 0, 0, 0, 0, flags)  # on top of every window...
+        user32.SetWindowPos(mine, HWND_NOTOPMOST, 0, 0, 0, 0, flags)  # ...without staying there
+        user32.SetForegroundWindow(mine)
+        if shared:
+            user32.SetFocus(mine)
+    finally:
+        if shared:
+            user32.AttachThreadInput(me, theirs, False)
 
-    def __init__(self, window: QWidget, on_screen: Callable[[], bool] = _splash_on_screen):
-        self._window, self._on_screen = window, on_screen
+
+class _HandOver:
+    """The main window takes over from the splash: it comes to the front with the focus, the
+    splash closes SPLASH_AFTER_MS later, under it. Closing only asks the splash's window to go;
+    when it's really gone, Windows activates whichever window comes next, so a main window
+    left without the focus is brought to the front once more."""
+
+    def __init__(
+        self,
+        window: QWidget,
+        on_screen: Callable[[], bool] = _splash_on_screen,
+        front: Callable[[QWidget], None] = to_front,
+    ) -> None:
+        self._window, self._on_screen, self._front = window, on_screen, front
         self._left = SPLASH_WATCH_FOR_MS // SPLASH_WATCH_MS
-        self._forward()
-        close_splash()
         self._timer = QTimer()
         self._timer.setInterval(SPLASH_WATCH_MS)
         self._timer.timeout.connect(self.tick)
-        self._timer.start()
+        front(window)
+        QTimer.singleShot(SPLASH_AFTER_MS, self.close_splash)
 
-    def _forward(self) -> None:
-        self._window.raise_()
-        self._window.activateWindow()
+    def close_splash(self) -> None:
+        close_splash()
+        self._timer.start()
 
     def tick(self) -> None:
         if self._left <= 0:
@@ -123,8 +165,8 @@ class _HandOver:
         self._timer.stop()
         window = self._window
         if not _active() and window.isVisible() and not window.isMinimized():
-            log.info("The window lost the focus when the splash closed: asking for it back")
-            self._forward()
+            log.info("The window lost the focus when the splash closed: brought to the front")
+            self._front(window)
 
 
 def _set_reads(paths: settings.Paths) -> None:
