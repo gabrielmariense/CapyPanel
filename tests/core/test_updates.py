@@ -118,6 +118,9 @@ def test_downloads_come_only_from_github_and_stop_when_asked(
     landed["url"] = "https://example.invalid/file"  # a redirect off GitHub
     with pytest.raises(UpdateError, match="unexpected address"):
         updates.download("https://github.com/a", tmp_path / "d.zip")
+    landed["url"] = "http://objects.githubusercontent.com/file"  # a redirect off https
+    with pytest.raises(UpdateError, match="unexpected address"):
+        updates.download("https://github.com/a", tmp_path / "e.zip")
     with pytest.raises(UpdateError, match="https"):
         updates.download("http://github.com/a", tmp_path / "e.zip")
 

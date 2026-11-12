@@ -175,8 +175,9 @@ def _open(url: str, timeout: float) -> object:
     except (urllib.error.URLError, OSError) as e:
         reason = getattr(e, "reason", e)
         raise UpdateError(_("Couldn't reach GitHub: {reason}").format(reason=reason)) from e
-    host = urllib.parse.urlsplit(response.geturl()).hostname or ""
-    if host not in TRUSTED_HOSTS:
+    landed = urllib.parse.urlsplit(response.geturl())  # after any redirect
+    host = landed.hostname or ""
+    if landed.scheme != "https" or host not in TRUSTED_HOSTS:
         response.close()
         raise UpdateError(_("The download went to an unexpected address: {host}").format(host=host))
     return response
