@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 14:48-0300\n"
+"POT-Creation-Date: 2026-11-12 14:50-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -654,8 +654,8 @@ msgstr "Ferramentas administrativas"
 msgid "After a Refresh on its own, for what changed since the one before."
 msgstr "Depois de uma atualização sozinha, para o que mudou desde a anterior."
 
-msgid "After a Refresh, the dot says whether a printer is working (green), needs attention (amber), has stopped (red) or didn't answer (grey). Toner shows its lowest toner, in amber once it runs low."
-msgstr "Depois de atualizar, o ponto diz se a impressora está funcionando (verde), precisa de atenção (âmbar), parou (vermelho) ou não respondeu (cinza). Toner mostra o toner mais baixo, em âmbar quando estiver acabando."
+msgid "After a Refresh, the dot shows how each printer is: green is working, amber needs attention, red has stopped and grey didn't answer. Toner shows the lowest one, in amber once it runs low."
+msgstr "Depois de atualizar, o ponto mostra como está cada impressora: verde funciona, âmbar precisa de atenção, vermelho parou e cinza não respondeu. Toner mostra o mais baixo, em âmbar quando está acabando."
 
 msgid "All"
 msgstr "Todas"
@@ -844,6 +844,9 @@ msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha 
 msgid "CapyPanel asks for them again when it needs them."
 msgstr "O CapyPanel pede de novo quando precisar deles."
 
+msgid "CapyPanel can refresh your printers by itself: you pick every 5, 15, 30 or 60 minutes in Settings › Printers › Warnings and supplies. It's off until you do. Then, by default, a Windows notification tells you when one stops or goes offline."
+msgstr "O CapyPanel pode atualizar as impressoras sozinho: você escolhe a cada 5, 15, 30 ou 60 minutos em Configurações › Impressoras › Avisos e suprimentos. Fica desligado até lá. Depois, por padrão, uma notificação do Windows avisa quando uma parar ou ficar offline."
+
 #, python-brace-format
 msgid "CapyPanel can't install it from here ({reason}). Download the zip from the release page and unpack it in place of this one."
 msgstr "O CapyPanel não consegue instalá-la daqui ({reason}). Baixe o zip na página da versão e descompacte-o no lugar deste."
@@ -877,8 +880,8 @@ msgstr "Você tem a versão mais nova"
 msgid "CapyPanel keeps the computers and printers you look after in one window. You can see which are on and who's signed in, connect to them, run commands and check the toner. These cards show you around."
 msgstr "O CapyPanel reúne numa janela só os computadores e as impressoras sob seus cuidados. Dá para ver quais estão ligados e quem está conectado, conectar a eles, rodar comandos e conferir o toner. Estes cartões mostram o caminho."
 
-msgid "CapyPanel reads printers over SNMP, and only reads: it never changes anything on them. Most answer to the community \"public\"; if yours use another one, or SNMP v3, set it in Settings › Printers › Connecting."
-msgstr "O CapyPanel lê as impressoras por SNMP e só lê, nunca muda nada nelas. A maioria responde à comunidade \"public\"; se as suas usam outra, ou SNMP v3, coloque em Configurações › Impressoras › Conexão."
+msgid "CapyPanel reads printers over SNMP and never changes anything on them. Most answer to the community \"public\". If yours use another one, or SNMP v3, set it in Settings › Printers › Connecting."
+msgstr "O CapyPanel lê as impressoras por SNMP e nunca muda nada nelas. A maioria responde à comunidade \"public\". Se as suas usam outra, ou SNMP v3, ajuste em Configurações › Impressoras › Conexão."
 
 #, python-brace-format
 msgid "CapyPanel {new} is out"
@@ -1838,6 +1841,9 @@ msgstr "Ícones:"
 msgid "Idle"
 msgstr "Inativo"
 
+msgid "If a Refresh finds printers stopped, offline or low, a red count shows up here. A strip above the table lists them, with Show."
+msgstr "Se uma atualização encontra impressoras paradas, offline ou com pouco toner, aparece aqui um número em vermelho. Uma faixa acima da tabela lista essas impressoras, com Mostrar."
+
 msgid "If nothing shows up"
 msgstr "Se nada aparecer"
 
@@ -1889,8 +1895,8 @@ msgstr "Programas instalados em {host}"
 msgid "Inventory"
 msgstr "Inventário"
 
-msgid "Inventory › Add printer… adds one: a name and its address are enough. The brand, model, serial number and toner are read from the printer."
-msgstr "Inventário › Adicionar impressora… adiciona uma: o nome e o endereço bastam. A marca, o modelo, o número de série e o toner são lidos da impressora."
+msgid "Inventory › Add printer only needs a name and the address. A Refresh reads the toner, and Details shows the brand, model and serial number the printer reports, ready to copy in with Use this."
+msgstr "Em Inventário › Adicionar impressora, basta o nome e o endereço. Uma atualização lê o toner, e Detalhes mostra a marca, o modelo e o número de série que a impressora informa, para copiar com Usar este."
 
 msgid "It can be deleted: nobody is signed in to it, it isn't one of Windows' own, and it's in the Users folder."
 msgstr "Pode ser excluído: ninguém está conectado com ele, não é do Windows e fica na pasta Users."
@@ -2666,11 +2672,11 @@ msgstr "Escolha um PC"
 msgid "Pick a list here: the shared one everyone on this PC sees, your personal one, or one you added. Click a group below it to see just that group's hosts."
 msgstr "Escolha uma lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você adicionou. Clique num grupo embaixo dela para ver só os hosts desse grupo."
 
+msgid "Pick a list here: the shared one everyone on this PC sees, your personal one, or one you added. Click a group below it to see just that group's printers."
+msgstr "Escolha uma lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você adicionou. Clique num grupo embaixo dela para ver só as impressoras desse grupo."
+
 msgid "Pick hosts in the list first"
 msgstr "Selecione hosts na lista primeiro"
-
-msgid "Pick the list here: the shared one everyone on this PC sees, your personal one, or one you add. Its groups are below it: a click on one shows only its printers."
-msgstr "Escolha a lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você criar. Os grupos dela ficam embaixo: um clique num deles mostra só as impressoras dele."
 
 #, python-brace-format
 msgid "Picked tags: {tags}"
@@ -2720,9 +2726,6 @@ msgstr "Listas de impressoras (*.json);;Todos os arquivos (*)"
 
 msgid "Printers"
 msgstr "Impressoras"
-
-msgid "Printers can be read every 5 to 60 minutes, with a Windows notification when one stops or runs low. Both stay off until you turn them on in Settings › Printers › Warnings and supplies."
-msgstr "As impressoras podem ser lidas a cada 5 a 60 minutos, com uma notificação do Windows quando uma parar ou ficar com pouco toner. As duas coisas ficam desligadas até você ligá-las em Configurações › Impressoras › Avisos e suprimentos."
 
 msgid "Printers on this PC"
 msgstr "Impressoras deste PC"
@@ -2834,8 +2837,8 @@ msgstr "Lendo…"
 msgid "Reads each in a tab of its own, behind; you stay on this list"
 msgstr "Lê cada um numa aba própria, ao fundo; você continua nesta lista"
 
-msgid "Reads the status, toner and page count of every printer shown (F5). Nothing is read until you press it."
-msgstr "Lê o status, o toner e a contagem de páginas de cada impressora mostrada (F5). Nada é lido até você apertar."
+msgid "Reads the status, toner and page count of every printer shown. Nothing is read until you press it or F5."
+msgstr "Lê o status, o toner e a contagem de páginas de cada impressora mostrada. Nada é lido até você clicar aqui ou apertar F5."
 
 msgid "Reads what's ticked in this box again"
 msgstr "Lê de novo o que está marcado nesta caixa"
@@ -3553,8 +3556,8 @@ msgid "Tags mark hosts across groups. The sample PC has one, \"{tag}\". Pick a t
 msgstr "As tags marcam hosts de qualquer grupo. O PC de exemplo tem uma, \"{tag}\". Escolha uma tag aqui para ver só os hosts com ela."
 
 #, python-brace-format
-msgid "Tags mark printers across groups, like this sample printer's \"{tag}\". Pick one or several to show only the printers that carry them."
-msgstr "As tags marcam impressoras em qualquer grupo, como a \"{tag}\" desta impressora de exemplo. Escolha uma ou várias para ver só as impressoras que as têm."
+msgid "Tags mark printers across groups. The sample printer has one, \"{tag}\". Pick one or more to see only the printers that have them."
+msgstr "As tags marcam impressoras de qualquer grupo. A impressora de exemplo tem uma, \"{tag}\". Escolha uma ou mais para ver só as impressoras com elas."
 
 #, python-brace-format
 msgid "Tags: {tags}"
@@ -3748,6 +3751,9 @@ msgstr "A lista abre neste grupo"
 msgid "The list “{path}” doesn't exist anymore."
 msgstr "A lista “{path}” não existe mais."
 
+msgid "The list's printers are here. Pick one to see everything about it in Details. A right-click on a printer shows what you can do with it, and a double-click opens its web page."
+msgstr "As impressoras da lista ficam aqui. Escolha uma para ver tudo sobre ela em Detalhes. O botão direito numa impressora mostra o que dá para fazer com ela, e dois cliques abrem a página web dela."
+
 msgid "The logged-on user's profile folder."
 msgstr "A pasta de perfil do usuário logado."
 
@@ -3803,9 +3809,6 @@ msgstr "As tags da impressora"
 
 msgid "The printers installed on the PC, their queues and problems."
 msgstr "As impressoras instaladas no PC, suas filas e problemas."
-
-msgid "The printers of the list are here. Pick one to see everything about it in Details; a right-click has everything you can do with it, and a double-click opens its web page."
-msgstr "As impressoras da lista ficam aqui. Escolha uma para ver tudo sobre ela em Detalhes; o clique direito tem tudo o que dá para fazer com ela, e o clique duplo abre a página web dela."
 
 msgid "The profile a host connects with when it has none of its own."
 msgstr "O perfil com que um host conecta quando não tem um próprio."
@@ -4326,9 +4329,6 @@ msgstr "O que o ✕ da janela faz. Na bandeja, a atualização sozinha e os avis
 msgid "When &closing"
 msgstr "Ao &fechar"
 
-msgid "When a Refresh finds printers stopped, offline or low, a red count shows here, and a strip above the table lists them with Show."
-msgstr "Quando uma atualização encontra impressoras paradas, offline ou com pouco toner, aparece aqui um número em vermelho, e uma faixa acima da tabela as lista com Mostrar."
-
 msgid "When the host was scanned, or where its scan is"
 msgstr "Quando o host foi escaneado, ou em que ponto está o escaneamento"
 
@@ -4670,9 +4670,6 @@ msgstr "reiniciar o Spooler de Impressão"
 
 msgid "running"
 msgstr "em execução"
-
-msgid "sample"
-msgstr "exemplo"
 
 #, python-brace-format
 msgid "scanned at {time}"

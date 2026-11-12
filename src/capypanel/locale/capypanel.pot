@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 14:48-0300\n"
+"POT-Creation-Date: 2026-11-12 14:50-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -660,9 +660,9 @@ msgid "After a Refresh on its own, for what changed since the one before."
 msgstr ""
 
 msgid ""
-"After a Refresh, the dot says whether a printer is working (green), needs"
-" attention (amber), has stopped (red) or didn't answer (grey). Toner "
-"shows its lowest toner, in amber once it runs low."
+"After a Refresh, the dot shows how each printer is: green is working, "
+"amber needs attention, red has stopped and grey didn't answer. Toner "
+"shows the lowest one, in amber once it runs low."
 msgstr ""
 
 msgid "All"
@@ -863,6 +863,13 @@ msgstr ""
 msgid "CapyPanel asks for them again when it needs them."
 msgstr ""
 
+msgid ""
+"CapyPanel can refresh your printers by itself: you pick every 5, 15, 30 "
+"or 60 minutes in Settings › Printers › Warnings and supplies. It's off "
+"until you do. Then, by default, a Windows notification tells you when one"
+" stops or goes offline."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "CapyPanel can't install it from here ({reason}). Download the zip from "
@@ -901,9 +908,9 @@ msgid ""
 msgstr ""
 
 msgid ""
-"CapyPanel reads printers over SNMP, and only reads: it never changes "
-"anything on them. Most answer to the community \"public\"; if yours use "
-"another one, or SNMP v3, set it in Settings › Printers › Connecting."
+"CapyPanel reads printers over SNMP and never changes anything on them. "
+"Most answer to the community \"public\". If yours use another one, or "
+"SNMP v3, set it in Settings › Printers › Connecting."
 msgstr ""
 
 #, python-brace-format
@@ -1900,6 +1907,11 @@ msgstr ""
 msgid "Idle"
 msgstr ""
 
+msgid ""
+"If a Refresh finds printers stopped, offline or low, a red count shows up"
+" here. A strip above the table lists them, with Show."
+msgstr ""
+
 msgid "If nothing shows up"
 msgstr ""
 
@@ -1954,8 +1966,9 @@ msgid "Inventory"
 msgstr ""
 
 msgid ""
-"Inventory › Add printer… adds one: a name and its address are enough. The"
-" brand, model, serial number and toner are read from the printer."
+"Inventory › Add printer only needs a name and the address. A Refresh "
+"reads the toner, and Details shows the brand, model and serial number the"
+" printer reports, ready to copy in with Use this."
 msgstr ""
 
 msgid ""
@@ -2785,13 +2798,13 @@ msgid ""
 "hosts."
 msgstr ""
 
-msgid "Pick hosts in the list first"
+msgid ""
+"Pick a list here: the shared one everyone on this PC sees, your personal "
+"one, or one you added. Click a group below it to see just that group's "
+"printers."
 msgstr ""
 
-msgid ""
-"Pick the list here: the shared one everyone on this PC sees, your "
-"personal one, or one you add. Its groups are below it: a click on one "
-"shows only its printers."
+msgid "Pick hosts in the list first"
 msgstr ""
 
 #, python-brace-format
@@ -2841,12 +2854,6 @@ msgid "Printer lists (*.json);;All files (*)"
 msgstr ""
 
 msgid "Printers"
-msgstr ""
-
-msgid ""
-"Printers can be read every 5 to 60 minutes, with a Windows notification "
-"when one stops or runs low. Both stay off until you turn them on in "
-"Settings › Printers › Warnings and supplies."
 msgstr ""
 
 msgid "Printers on this PC"
@@ -2964,8 +2971,8 @@ msgid "Reads each in a tab of its own, behind; you stay on this list"
 msgstr ""
 
 msgid ""
-"Reads the status, toner and page count of every printer shown (F5). "
-"Nothing is read until you press it."
+"Reads the status, toner and page count of every printer shown. Nothing is"
+" read until you press it or F5."
 msgstr ""
 
 msgid "Reads what's ticked in this box again"
@@ -3704,8 +3711,8 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
-"Tags mark printers across groups, like this sample printer's \"{tag}\". "
-"Pick one or several to show only the printers that carry them."
+"Tags mark printers across groups. The sample printer has one, \"{tag}\". "
+"Pick one or more to see only the printers that have them."
 msgstr ""
 
 #, python-brace-format
@@ -3932,6 +3939,12 @@ msgstr ""
 msgid "The list “{path}” doesn't exist anymore."
 msgstr ""
 
+msgid ""
+"The list's printers are here. Pick one to see everything about it in "
+"Details. A right-click on a printer shows what you can do with it, and a "
+"double-click opens its web page."
+msgstr ""
+
 msgid "The logged-on user's profile folder."
 msgstr ""
 
@@ -3991,12 +4004,6 @@ msgid "The printer's tags"
 msgstr ""
 
 msgid "The printers installed on the PC, their queues and problems."
-msgstr ""
-
-msgid ""
-"The printers of the list are here. Pick one to see everything about it in"
-" Details; a right-click has everything you can do with it, and a double-"
-"click opens its web page."
 msgstr ""
 
 msgid "The profile a host connects with when it has none of its own."
@@ -4554,11 +4561,6 @@ msgstr ""
 msgid "When &closing"
 msgstr ""
 
-msgid ""
-"When a Refresh finds printers stopped, offline or low, a red count shows "
-"here, and a strip above the table lists them with Show."
-msgstr ""
-
 msgid "When the host was scanned, or where its scan is"
 msgstr ""
 
@@ -4919,9 +4921,6 @@ msgid "restart the Print Spooler"
 msgstr ""
 
 msgid "running"
-msgstr ""
-
-msgid "sample"
 msgstr ""
 
 #, python-brace-format

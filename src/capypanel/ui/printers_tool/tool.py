@@ -21,7 +21,7 @@ from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.guides import Guide, Step
 from capypanel.ui.hosts import group_path
 from capypanel.ui.list_workspace.customize import Part
-from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample
+from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, sample_tag
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
@@ -278,44 +278,46 @@ class PrintersTool(ListWorkspace):
         def steps() -> list[Step]:
             return [
                 Step(_("Your printer lists"),
-                     _("Pick the list here: the shared one everyone on this PC sees, your "
-                       "personal one, or one you add. Its groups are below it: a click on one "
-                       "shows only its printers."), lambda: self.nav),
+                     _("Pick a list here: the shared one everyone on this PC sees, your "
+                       "personal one, or one you added. Click a group below it to see just that "
+                       "group's printers."), lambda: self.nav),
                 Step(_("Tags"),
-                     _("Tags mark printers across groups, like this sample printer's \"{tag}\". "
-                       "Pick one or several to show only the printers that carry them.").format(
-                         tag=_("sample")), lambda: self.nav.tags),
+                     _("Tags mark printers across groups. The sample printer has one, \"{tag}\". "
+                       "Pick one or more to see only the printers that have them.").format(
+                         tag=sample_tag()), lambda: self.nav.tags),
                 Step(_("Add printers"),
-                     _("Inventory › Add printer… adds one: a name and its address are enough. "
-                       "The brand, model, serial number and toner are read from the printer."),
+                     _("Inventory › Add printer only needs a name and the address. A Refresh "
+                       "reads the toner, and Details shows the brand, model and serial number the "
+                       "printer reports, ready to copy in with Use this."),
                      lambda: bar.inventory_button),
                 Step(_("Your printers"),
-                     _("The printers of the list are here. Pick one to see everything about it "
-                       "in Details; a right-click has everything you can do with it, and a "
+                     _("The list's printers are here. Pick one to see everything about it in "
+                       "Details. A right-click on a printer shows what you can do with it, and a "
                        "double-click opens its web page."),
                      lambda: None, lambda: table, keep_clear=lambda: self.details,
                      area=lambda: self.sample_row(self.window())),
                 Step(pgettext("printers", "Refresh all"),  # as the button says it
-                     _("Reads the status, toner and page count of every printer shown (F5). "
-                       "Nothing is read until you press it."), lambda: bar.refresh_button),
+                     _("Reads the status, toner and page count of every printer shown. Nothing "
+                       "is read until you press it or F5."), lambda: bar.refresh_button),
                 Step(_("Status and Toner"),
-                     _("After a Refresh, the dot says whether a printer is working (green), needs "
-                       "attention (amber), has stopped (red) or didn't answer (grey). Toner shows "
-                       "its lowest toner, in amber once it runs low."),
+                     _("After a Refresh, the dot shows how each printer is: green is working, "
+                       "amber needs attention, red has stopped and grey didn't answer. Toner shows "
+                       "the lowest one, in amber once it runs low."),
                      lambda: None, lambda: table, area=status_and_toner),
                 Step(_("Printers that need attention"),
-                     _("When a Refresh finds printers stopped, offline or low, a red count shows "
-                       "here, and a strip above the table lists them with Show."),
+                     _("If a Refresh finds printers stopped, offline or low, a red count shows up "
+                       "here. A strip above the table lists them, with Show."),
                      attention, lambda: table),
                 Step(_("Refresh on its own"),
-                     _("Printers can be read every 5 to 60 minutes, with a Windows notification "
-                       "when one stops or runs low. Both stay off until you turn them on in "
-                       "Settings › Printers › Warnings and supplies."),
+                     _("CapyPanel can refresh your printers by itself: you pick every 5, 15, 30 "
+                       "or 60 minutes in Settings › Printers › Warnings and supplies. It's off "
+                       "until you do. Then, by default, a Windows notification tells you when one "
+                       "stops or goes offline."),
                      lambda: None, lambda: table, action=settings("printer_warnings")),
                 Step(_("If nothing shows up"),
-                     _("CapyPanel reads printers over SNMP, and only reads: it never changes "
-                       "anything on them. Most answer to the community \"public\"; if yours use "
-                       "another one, or SNMP v3, set it in Settings › Printers › Connecting."),
+                     _("CapyPanel reads printers over SNMP and never changes anything on them. "
+                       "Most answer to the community \"public\". If yours use another one, or "
+                       "SNMP v3, set it in Settings › Printers › Connecting."),
                      lambda: None, lambda: table, action=settings("printer_connecting")),
             ]  # fmt: skip
 
@@ -326,7 +328,7 @@ class PrintersTool(ListWorkspace):
         """The guides' sample printers, one per status: working, needing attention, stopped
         and not answering. Documentation addresses (192.0.2.x) that never answer, and never
         asked: Refresh and Open web page leave every sample out (is_sample)."""
-        name, tags, notes = _("PRN-SAMPLE"), (_("sample"),), _("Shown only while a guide is open.")
+        name, tags, notes = _("PRN-SAMPLE"), (sample_tag(),), _("Shown only while a guide is open.")
         return [
             Host(id=SAMPLE_ID if n == 1 else f"{SAMPLE_ID}-{n}", name=name if n == 1 else
                  f"{name}-{n}", group=group, address=f"192.0.2.{19 + n}", tags=tags, notes=notes)
