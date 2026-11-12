@@ -76,7 +76,7 @@ def test_home_s_guide_steps_through_and_is_kept_as_seen(window: CapyWindow) -> N
     ]
     assert runner.shade.holes == shown  # every tile outlined, or none: never just one
     card.next_button.click()
-    assert card.title.text() == "The rail"
+    assert card.title.text() == "The sidebar"
     assert card.dots.text() == "○ ○ ● ○" and not card.back_button.isHidden()
     rail = QRect(window.rail.mapTo(window, QPoint(0, 0)), window.rail.size())
     assert runner.shade.holes == [rail]  # the rail stays bright, outlined

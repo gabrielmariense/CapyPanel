@@ -509,6 +509,11 @@ def sorted_by[T](
 SAMPLE_ID = "guide-sample"  # a guide's sample item: never saved, never read from the network
 
 
+def sample_tag() -> str:
+    """The tag every guide sample carries: one that reads like a real one."""
+    return _("2nd floor")
+
+
 def is_sample(item_id: object) -> bool:
     """A guide's sample (SAMPLE_ID, or SAMPLE_ID and a number when a tool shows several)."""
     return isinstance(item_id, str) and item_id.startswith(SAMPLE_ID)

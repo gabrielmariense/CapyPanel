@@ -330,39 +330,39 @@ class ProfilesTool(Tool):
             name = page.target.name if page is not None else _("SAMPLE-PC")
             return [
                 Step(_("Pick a PC"),
-                     _("These are the hosts of your Hosts list. To see a PC's profiles, open it "
-                       "in a tab: double-click it, or pick several and press Scan."),
+                     _("These are the hosts from your Hosts list. To see a PC's profiles, "
+                       "double-click it, or pick several and press Scan."),
                      lambda: hosts.table, lambda: self.middle, enter=on_hosts),
                 Step(_("Progress"),
-                     _("Every PC you open gets a tab, and this card shows how far each one "
-                       "got."), lambda: self.progress, lambda: self.side, enter=on_hosts),
+                     _("This card shows each PC you opened and how far it has got."),
+                     lambda: self.progress, lambda: self.side, enter=on_hosts),
                 Step(_("Nothing is deleted yet"),
-                     _("Each PC opens in a tab up here. Opening and scanning only read its "
-                       "profiles: nothing is deleted until you tick some in its tab and "
+                     _("Each PC you open gets a tab up here. Opening and scanning only read the "
+                       "profiles; nothing is deleted until you tick some in that PC's tab and "
                        "confirm."), lambda: self.tabs, enter=on_hosts),
                 Step(_("The profiles"),
                      _("This is the sample PC's tab. Each row is one user's folder on {host}, "
-                       "with when it was last used and its size.").format(host=name),
+                       "with when it was last used and how big it is.").format(host=name),
                      part("table"), enter=on_sample),
                 Step(_("State"),
-                     _("Says whether a profile can be deleted. Only rows that say Can be deleted "
-                       "have a tick box; the others say why not."),
+                     _("Tells you whether a profile can be deleted. Only rows that say Can be "
+                       "deleted get a tick box, and the others say why not."),
                      lambda: None, part("table"), area=state_column, enter=on_sample),
                 Step(_("A profile's details"),
-                     _("Click the (i) at the end of a row, or press Enter, to see everything "
-                       "about that profile in a window of its own."), part("table"),
+                     _("For everything about a profile, click the (i) at the end of its row or "
+                       "press Enter. It opens in a window of its own."), part("table"),
                      enter=on_sample),
                 Step(_("Filters"),
-                     _("Hide Windows' own, Only leftovers and Unused for narrow the list to the "
-                       "profiles worth a look."), part("filters"), enter=on_sample),
+                     _("Hide Windows' own, Only leftovers and Unused for narrow the list down to "
+                       "the profiles worth a look."), part("filters"), enter=on_sample),
                 Step(_("Ticked to delete"),
-                     _("The profiles you tick are listed here, with how much space they take, "
-                       "so you can check them before anything happens."), part("side"),
+                     _("Every profile you tick is listed here with the space it takes, so you "
+                       "can check them before anything is deleted."), part("side"),
                      enter=on_sample),
                 Step(_("Delete"),
-                     _("Tick the profiles, then Delete profiles… Each person's folder goes with "
-                       "it, with no recycle bin. To confirm, you type DELETE, and the PC is "
-                       "checked again first."),
+                     _("Tick the profiles and click Delete profiles. Each person's folder is "
+                       "deleted with it, and there's no recycle bin. You confirm by typing "
+                       "DELETE, and CapyPanel checks the PC again before it deletes anything."),
                      lambda: getattr(getattr(sample(), "foot", None), "delete_button", None),
                      enter=on_sample),
             ]  # fmt: skip

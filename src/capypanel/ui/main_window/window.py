@@ -575,8 +575,9 @@ class MainWindow(QMainWindow):
             return QRect(bar.mapTo(self, spot.topLeft()), spot.size())
 
         return Step(pgettext("guide", "View"),  # the card's title, without the menu's &
-                    _("View, on the menu bar, shows and hides this screen's panels, such as Tags "
-                      "and Details."), lambda: None, lambda: tool, area=view_title)  # fmt: skip
+                    _("The View menu, on the menu bar, shows and hides this screen's panels, "
+                      "like Tags and Details."), lambda: None, lambda: tool,
+                    area=view_title)  # fmt: skip
 
     def _guide_now(self, *, force: bool = False) -> None:
         """The shown screen's guide: the first time it's shown (once its page is laid out), or
@@ -608,19 +609,20 @@ class MainWindow(QMainWindow):
         def steps() -> list[Step]:
             return [
                 Step(_("Welcome to CapyPanel"),
-                     _("CapyPanel keeps the computers and printers you look after in one window: "
-                       "see which are on and who's signed in, connect to them, run commands and "
-                       "watch the toner. A few cards show you around."), lambda: None),
+                     _("CapyPanel keeps the computers and printers you look after in one window. "
+                       "You can see which are on and who's signed in, connect to them, run "
+                       "commands and check the toner. These cards show you around."),
+                     lambda: None),
                 Step(_("Three tools"),
-                     _("Hosts for your computers, Printers for your printers, and User profiles "
-                       "to clear old Windows profiles off a PC. Each tile opens its tool."),
+                     _("Hosts is for computers, Printers for printers, and User profiles clears "
+                       "old Windows profiles off a PC. Each tile opens its tool."),
                      lambda: home.tiles, lambda: home),
-                Step(_("The rail"),
-                     _("Every tool is one click away here, from any screen. Home is at the top, "
-                       "Settings at the bottom."), lambda: rail),
+                Step(_("The sidebar"),
+                     _("This bar stays here on every screen. Home is at the top, Settings at the "
+                       "bottom, and the tools in between."), lambda: rail),
                 Step(_("Help"),
-                     _("Help › Guide to this screen shows this screen's guide again, and Show "
-                       "all the guides again brings back every guide. Documentation has the "
+                     _("To see this guide again, use Help › Guide to this screen. Show all the "
+                       "guides again brings every guide back, and Documentation opens the "
                        "step-by-step pages."),
                      lambda: None, lambda: home, area=help_title),
             ]  # fmt: skip

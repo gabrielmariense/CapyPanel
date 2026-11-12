@@ -60,7 +60,7 @@ from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
 from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.list_workspace.customize import Part
-from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample
+from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, sample_tag
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
@@ -345,40 +345,41 @@ class HostsTool(ListWorkspace):
         def steps() -> list[Step]:
             buttons_step = [
                 Step(_("Command buttons"),
-                     _("They run a command on the picked host in one click. The top row is "
-                       "always there; the rows under it are your quick commands. To choose "
-                       "them, right-click this panel or go to Settings › Hosts › General."),
+                     _("One click runs a command on the picked host. The top row is always "
+                       "there, and the rows below are your quick commands. Choose them with a "
+                       "right-click on this panel, or in Settings › Hosts › General."),
                      buttons, lambda: self.details, join=True),
             ] if any(b.isVisibleTo(self) for b in buttons()) else []  # fmt: skip
             return [
                 Step(_("Your lists"),
-                     _("Pick the list here: the shared one everyone on this PC sees, your "
-                       "personal one, or one you add. Its groups are below it: a click on one "
-                       "shows only its hosts."), lambda: self.nav),
+                     _("Pick a list here: the shared one everyone on this PC sees, your "
+                       "personal one, or one you added. Click a group below it to see just that "
+                       "group's hosts."), lambda: self.nav),
                 Step(_("Tags"),
-                     _("A tag marks hosts in any group. The sample PC has one called "
-                       "\"{tag}\". Pick a tag here to see only the hosts that have it.").format(
-                         tag=_("sample")), lambda: self.nav.tags),
+                     _("Tags mark hosts across groups. The sample PC has one, \"{tag}\". Pick a "
+                       "tag here to see only the hosts that have it.").format(tag=sample_tag()),
+                     lambda: self.nav.tags),
                 Step(_("Add hosts"),
-                     _("Use Inventory to add hosts one at a time or import many at once. You "
-                       "can also add one from a right-click on the table."),
+                     _("The Inventory menu adds hosts one at a time or imports many at once. A "
+                       "right-click on the table can add one too."),
                      lambda: bar.inventory_button),
                 Step(_("Details"),
-                     _("Pick a host in the table and its details show here. Right-click a host "
-                       "in the table to see everything you can do with it."),
+                     _("The host you pick in the table shows here, with all its details. To see "
+                       "everything you can do with a host, right-click it in the table."),
                      lambda: self.details, area=lambda: self.sample_row(self.window())),
                 Step(_("Connect"),
-                     _("Opens the picked host's screen with its connection profile's tool. "
-                       "Profiles are in Settings › Hosts › Connecting."),
+                     _("Opens the remote screen of the host you picked. The tool it uses comes "
+                       "from the host's connection profile, in Settings › Hosts › Connecting."),
                      lambda: bar.connect_button),
                 Step(_("Refresh all"),
-                     _("Checks whether each host shown is on and who is signed in. Right-click "
-                       "it to choose what it checks."), lambda: bar.refresh_button),
+                     _("Checks every host shown: whether it's on, and who's signed in. "
+                       "Right-click the button to choose what it checks."),
+                     lambda: bar.refresh_button),
                 *buttons_step,
                 Step(_("Commands"),
                      _("Opens every command for the picked host. A right-click on a host has "
-                       "them too, under All commands. They use your Windows account; if a PC "
-                       "refuses it, CapyPanel asks for another, kept in Settings › Hosts › "
+                       "them too, under All commands. They run with your Windows account; if a "
+                       "PC refuses it, CapyPanel asks for another, kept in Settings › Hosts › "
                        "Credentials."), lambda: bar.commands_button),
             ]  # fmt: skip
 
@@ -388,7 +389,7 @@ class HostsTool(ListWorkspace):
     def sample_item(self, group: str) -> Host:
         """The guides' sample PC: a documentation address (192.0.2.x) that never answers."""
         return Host(id=SAMPLE_ID, name=_("SAMPLE-PC"), group=group, address="192.0.2.10",
-                    tags=(_("sample"),), notes=_("Shown only while a guide is open."))  # fmt: skip
+                    tags=(sample_tag(),), notes=_("Shown only while a guide is open."))  # fmt: skip
 
     def retranslate(self) -> None:
         retranslate_actions(self.commands)
