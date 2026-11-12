@@ -40,6 +40,7 @@ embaixo, e toda página termina com as mensagens que você pode ver e o que faze
 | [Baixar e atualizar](download.pt-BR.md) | O zip, como conferi-lo, as novas versões, e rodar pelo código-fonte |
 | [Primeiros passos](getting-started.pt-BR.md) | Rodar o CapyPanel, adicionar seus primeiros hosts, verificar e conectar |
 | [Novidades](whats-new.pt-BR.md) | As mudanças de cada versão |
+| [Política de assinatura de código (Code signing policy)](code-signing.pt-BR.md) | Como as versões são assinadas, quem as aprova, e o que o CapyPanel envia pela rede |
 | [Listas de hosts](hosts/host-lists.pt-BR.md) | Grupos e tags, encontrar um host, e hosts entrando e saindo de uma planilha |
 | [Conectando](hosts/connecting.pt-BR.md) | Visualizadores VNC, Área de Trabalho Remota, perfis de conexão, contas e senhas |
 | [Verificando hosts](hosts/checking.pt-BR.md) | Status, usuários logados e dados do PC |

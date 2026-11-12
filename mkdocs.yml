@@ -15,6 +15,7 @@ nav:
       - Download and updates: download.md
       - Getting started: getting-started.md
       - What's new: whats-new.md
+      - Code signing policy: code-signing.md
   - Hosts:
       - Host lists: hosts/host-lists.md
       - Connecting: hosts/connecting.md
@@ -70,6 +71,7 @@ plugins:
             Download and updates: Baixar e atualizar
             Getting started: Primeiros passos
             What's new: Novidades
+            Code signing policy: Política de assinatura de código
             Settings and files: Configurações e arquivos
             Hosts: Hosts
             Host lists: Listas de hosts
