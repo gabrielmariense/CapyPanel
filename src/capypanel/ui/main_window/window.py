@@ -448,14 +448,13 @@ class MainWindow(QMainWindow):
 
     def _close_choice(self) -> str | None:
         """What the X does now: settings.CLOSE_TRAY, CLOSE_QUIT, or None to stay open. "Ask
-        each time" asks only while there's something to keep running."""
+        each time" asks every time, even with nothing running on its own: from the tray the
+        window comes back at once, where a new start takes seconds."""
         if self._quitting or not self.tray.available():
             return settings.CLOSE_QUIT
         choice = self.prefs.get(settings.CLOSE_KEY, settings.CLOSE_ASK)
         if choice in (settings.CLOSE_TRAY, settings.CLOSE_QUIT):
             return str(choice)
-        if not any(t.works_in_background() for t in self.tools.values()):
-            return settings.CLOSE_QUIT
         answer, remember = ask_closing(self)
         if answer is not None and remember:
             self._set_closing(answer)
