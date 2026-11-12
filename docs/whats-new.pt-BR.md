@@ -3,6 +3,10 @@
 As mudanças de cada versão que você vai notar. As
 [versões no GitHub](https://github.com/gabrielmariense/CapyPanel/releases) têm os downloads.
 
+## 0.26.3
+
+- Nada muda no app: uma versão para testar as janelas de nova versão da 0.26.2.
+
 ## 0.26.2
 
 - Quando o CapyPanel encontra sozinho uma versão mais nova, a janela de nova versão abre sozinha
