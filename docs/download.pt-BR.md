@@ -66,8 +66,9 @@ CapyPanel está na bandeja.
 
 1. Leia o que mudou na janela **Nova versão do CapyPanel**, ou clique no botão **Nova versão**
    para abri-la. As notas aparecem no idioma do CapyPanel.
-2. Clique em **Instalar e reiniciar**. O CapyPanel baixa o zip, fecha e abre de novo na versão
-   nova.
+2. Clique em **Instalar e reiniciar**. A janela mostra cada passo e depois diz "O CapyPanel fecha
+   agora e abre de novo sozinho em alguns segundos." Enquanto os arquivos são trocados, a tela de
+   abertura do CapyPanel diz "Atualizando para a 0.26.4…".
 3. Ele abre com uma janela que diz "O CapyPanel 0.26.2 foi instalado" e "Atualizado a partir da
    0.26.1. Suas configurações, listas e logins salvos continuam como estavam.", com as notas e um
    link para a versão.
@@ -91,14 +92,29 @@ a escolha é só sua. Durante o download, o **Depois** vira **Cancelar** e inter
 
 ??? note "O que o Instalar e reiniciar faz"
 
-    1. Baixa o zip e o confere com o SHA-256 dele.
-    2. Se uma ferramenta está ocupada, como um Atualizar de impressoras ou um perfil sendo excluído,
+    1. **Baixando…** e depois **Conferindo o arquivo…**: baixa o zip e o confere com o SHA-256
+       dele.
+    2. **Descompactando…** e depois **Conferindo a nova versão…**: descompacta a versão nova e roda
+       o autoteste dela, com o CapyPanel ainda aberto. Se o teste falhar, o CapyPanel fica como está
+       e a janela diz "A versão nova não passou no autoteste".
+    3. Se uma ferramenta está ocupada, como um Atualizar de impressoras ou um perfil sendo excluído,
        ele espera ("Esperando o CapyPanel terminar o que está fazendo…") ou pergunta antes.
-    3. O CapyPanel fecha. Um pequeno ajudante troca os arquivos do app pelos novos e abre a versão
-       nova.
-    4. Se a versão nova não abrir, o ajudante põe a antiga de volta. O CapyPanel então abre com
-       uma janela que diz "A atualização para a 0.26.2 não foi instalada", por quê, e um link para
+    4. O CapyPanel fecha. Um pequeno ajudante troca os arquivos do app pelos novos, com a tela de
+       abertura dizendo "Atualizando para a 0.26.4…", e abre a versão nova. Abrir o CapyPanel
+       durante a troca não causa problema: essa abertura simplesmente termina.
+    5. Se a versão nova não abrir, o ajudante põe a antiga de volta. O CapyPanel então abre com
+       uma janela que diz "A atualização para a 0.26.4 não foi instalada", por quê, e um link para
        as versões no GitHub.
+
+    Quando a atualização vem de uma versão anterior à 0.26.4, que não testa antes, o ajudante roda
+    o autoteste ele mesmo antes da troca.
+
+    O download, a versão nova descompactada e a cópia da antiga guardada para voltar ficam em
+    `%LOCALAPPDATA%\CapyPanel\update`, nunca dentro nem ao lado da pasta do CapyPanel. A cópia
+    antiga é apagada assim que a versão nova passa no autoteste, e o resto quando a versão nova
+    abre. Cada início também limpa o que uma atualização deixou para trás, inclusive as pastas
+    `CapyPanel.update` e `CapyPanel.previous` que as versões 0.26.0 a 0.26.3 criavam ao lado da
+    pasta do CapyPanel.
 
     As suas configurações, listas e logins salvos nunca são mexidos.
 
@@ -124,7 +140,8 @@ resto.
 |---|---|---|
 | "Não foi possível procurar uma nova versão." | O GitHub não respondeu, ou o PC está sem internet | Tente o **Ajuda > Procurar nova versão…** mais tarde |
 | "O download não confere com o SHA-256: foi alterado ou veio incompleto." | O zip que chegou não é o que o GitHub gerou | Clique em **Instalar e reiniciar** de novo |
-| "O CapyPanel não consegue instalá-la daqui (O CapyPanel não consegue gravar em …). Baixe o zip na página da versão e descompacte-o no lugar deste." | A sua conta não pode gravar na pasta em que o CapyPanel está, como a Arquivos de Programas | Descompacte a versão nova por cima da antiga você mesmo, ou mova o CapyPanel para uma pasta em que você possa gravar |
+| "O CapyPanel não consegue instalá-la daqui (O CapyPanel não consegue gravar em …). Baixe o zip na página da versão e descompacte-o no lugar deste." | A sua conta não pode gravar na própria pasta do CapyPanel, como uma dentro de Arquivos de Programas | Descompacte a versão nova por cima da antiga você mesmo, ou mova o CapyPanel para uma pasta em que você possa gravar |
 | "Esta cópia roda a partir do código-fonte: atualize com o git, ou baixe o zip na página da versão." | Você abriu o CapyPanel com o `uv run` | `git pull`, ou passe a usar o zip |
+| "A versão nova não passou no autoteste" | A versão baixada falhou na própria conferência, então nada foi mudado | Tente o **Instalar e reiniciar** de novo mais tarde; use o **Relatar um problema** se continuar falhando |
 | "A atualização para a 0.26.2 não foi instalada" e "Este continua sendo o CapyPanel 0.26.1: …" | A versão nova não abriu, então a antiga voltou | Leia o motivo depois dos dois-pontos; use o **Relatar um problema** se não ficar claro |
 | "O CapyPanel já está em execução para EXAMPLE\user, mas não foi possível trazer a janela dele para a frente: …" | A sua outra cópia está aberta em outra sessão do Windows, ou não está respondendo | Feche-a por lá, ou finalize-a no Gerenciador de Tarefas, e abra o CapyPanel de novo |

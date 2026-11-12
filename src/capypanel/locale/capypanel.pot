@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 18:13-0300\n"
+"POT-Creation-Date: 2026-11-12 18:44-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -880,6 +880,9 @@ msgstr ""
 msgid "CapyPanel can't write to {folder}"
 msgstr ""
 
+msgid "CapyPanel closes now and opens again by itself in a few seconds."
+msgstr ""
+
 msgid "CapyPanel couldn't see who is signed in. Work anyone hasn't saved is lost."
 msgstr ""
 
@@ -976,6 +979,9 @@ msgid "Checking for updates…"
 msgstr ""
 
 msgid "Checking the file…"
+msgstr ""
+
+msgid "Checking the new version…"
 msgstr ""
 
 #, python-brace-format
@@ -3203,9 +3209,6 @@ msgid ""
 "cut someone off."
 msgstr ""
 
-msgid "Restarting CapyPanel…"
-msgstr ""
-
 msgid "Restarts Windows' printing service, which unsticks most queues."
 msgstr ""
 
@@ -4463,6 +4466,10 @@ msgid ""
 msgstr ""
 
 msgid "Updates"
+msgstr ""
+
+#, python-brace-format
+msgid "Updating to {version}…"
 msgstr ""
 
 msgid "Use &defaults"

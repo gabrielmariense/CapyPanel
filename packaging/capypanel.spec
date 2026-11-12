@@ -97,7 +97,7 @@ if foreign:
 analysis.datas = [entry for entry in analysis.datas if needed(entry)]
 archive = PYZ(analysis.pure)  # noqa: F821
 splash = Splash(  # noqa: F821
-    str(ROOT / "packaging" / "splash.png"),
+    str(ROOT / "src" / "capypanel" / "ui" / "branding" / "splash.png"),
     binaries=analysis.binaries,
     datas=analysis.datas,
     text_pos=(SPLASH_X, SPLASH_BASELINE),

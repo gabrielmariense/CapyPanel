@@ -192,7 +192,8 @@ def test_install_waits_for_a_refresh_then_hands_over_and_quits(
     dialog._try_restart()
     assert quits == [True]
     [helper] = started
-    assert helper[0].endswith(str(Path("CapyPanel.update") / "CapyPanel" / "CapyPanel.exe"))
+    assert helper[0].endswith(str(Path("new") / "CapyPanel" / "CapyPanel.exe"))
+    assert not Path(helper[0]).is_relative_to(tmp_path)  # in app data, not beside CapyPanel
     assert helper[1:] == ["--apply-update", str(app_dir.resolve()), str(updates.own_pid()),
                           __version__, "99.0.0"]  # fmt: skip
     dialog.close()
@@ -291,3 +292,60 @@ def test_about_shows_beta_and_checks_for_updates(window: CapyWindow) -> None:
     assert dialog.about.beta.text() == "beta"
     assert dialog.about.updates_button.text() == "Check for &updates"
     dialog.close()
+
+
+def _job_world(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, passes: bool) -> list[str]:
+    """Download, check and unpack, faked: nothing reaches the network or runs an exe."""
+    tested: list[str] = []
+
+    def download(url: str, path: Path, **_kwargs: Any) -> None:
+        path.write_text("x", encoding="utf-8")
+
+    def unpack(_archive: Path, into: Path) -> Path:
+        (into / "CapyPanel").mkdir()
+        return into / "CapyPanel"
+
+    monkeypatch.setattr(updates, "download", download)
+    monkeypatch.setattr(updates, "expected_sha256", lambda _text, _name: "same")
+    monkeypatch.setattr(updates, "sha256_of", lambda _path: "same")
+    monkeypatch.setattr(updates, "unpack", unpack)
+    monkeypatch.setattr(updates, "self_test", lambda exe: tested.append(exe.name) or passes)
+    return tested
+
+
+def test_the_new_version_s_self_test_runs_before_capypanel_closes(
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    tested = _job_world(monkeypatch, tmp_path, passes=True)
+    app_dir = tmp_path / "CapyPanel"
+    job = updater_ui._Job(NEWER, app_dir)
+    steps: list[str] = []
+    ended: list[tuple[str, str]] = []
+    job.step.connect(lambda words, _done, _total: steps.append(words))
+    job.ended.connect(lambda folder, why: ended.append((folder, why)))
+    job._run()
+    assert tested == ["CapyPanel.exe"] and "Checking the new version…" in steps
+    assert ended == [(str(updates.places(app_dir).new_app), "")]
+    assert updates.was_tested(updates.places(app_dir), "99.0.0")  # the helper won't run it again
+    _job_world(monkeypatch, tmp_path, passes=False)
+    ended.clear()
+    job._run()
+    assert ended == [("", "The new version didn't pass its self-test")]  # CapyPanel stays open
+
+
+def test_the_helper_s_splash_says_it_is_updating(
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from capypanel.ui import update_splash
+
+    assert update_splash.splash_text("0.26.4") == "Updating to 0.26.4…"
+    picture = update_splash.picture("Updating to 0.26.4…", 1.5)
+    assert picture.devicePixelRatio() == 1.5  # pixel for pixel, like the launcher's
+    assert (picture.width(), picture.height()) == (480, 300)
+    swapped: list[tuple[Any, ...]] = []
+    monkeypatch.setattr(updates, "run_helper", lambda *args: swapped.append(args) or 0)
+    monkeypatch.setattr(update_splash, "HAND_OVER", 0)
+    closed: list[bool] = []
+    code = update_splash.run(tmp_path, 7, "0.26.3", "0.26.4", lambda: closed.append(True))
+    assert code == 0 and closed == [True]
+    assert swapped == [(tmp_path, 7, "0.26.3", "0.26.4", None)]

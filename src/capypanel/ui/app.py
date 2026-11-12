@@ -5,6 +5,7 @@ import ctypes
 import logging
 import os
 import sys
+import threading
 import time
 from collections.abc import Callable
 from ctypes import wintypes
@@ -15,7 +16,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox, QWidget
 
 from capypanel import BUILD, __version__
 from capypanel.__main__ import close_splash
-from capypanel.core import applog, i18n, migration, settings
+from capypanel.core import applog, i18n, migration, settings, updates
 from capypanel.ui import branding, error_window, language
 from capypanel.ui.dialogs import ScreenFit
 from capypanel.ui.main_window.window import MainWindow
@@ -213,6 +214,12 @@ def run(argv: list[str] | None = None) -> int:
         close_splash()
         QMessageBox.critical(None, "CapyPanel", str(e))
         return 1
+    if getattr(sys, "frozen", False) and updates.applying(settings.app_dir()):
+        # Clicked while an update swaps this folder's files: its splash says so, and the new
+        # version starts in a moment. Staying would hold files the swap has to move.
+        log.info("An update is being put in place: this start ends")
+        close_splash()
+        return 0
     # One copy per person: started again, the running one comes forward and this one ends,
     # before it reads or writes anything of theirs.
     copy = OneCopy(paths.user_dir, app)
@@ -249,6 +256,10 @@ def run(argv: list[str] | None = None) -> int:
     copy.show_requested.connect(window.open_from_tray)
     window.show()
     hand_over = _HandOver(window)  # noqa: F841  # kept until the app ends: its timer runs
+    if getattr(sys, "frozen", False):  # what an update left, in app data or beside the folder
+        threading.Thread(
+            target=updates.clean_up, args=(settings.app_dir(),), name="update-clean-up", daemon=True
+        ).start()
     restarted = after_restart(sys.argv if argv is None else argv)
     if restarted is not None:  # the update's helper started this copy
         QTimer.singleShot(0, window, lambda: window.show_restart_note(*restarted))

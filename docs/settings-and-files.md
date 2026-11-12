@@ -192,6 +192,9 @@ folder per user:
 | Every user profile you deleted, or tried to | `logs\<you@DOMAIN>.user-profiles.log` |
 | Built-in viewer definitions, and the starter profiles | Inside the app |
 
+While an update runs, its working files are in `%LOCALAPPDATA%\CapyPanel\update`, and they're
+deleted once the new version is running (see [Update CapyPanel](download.md#update-capypanel)).
+
 ??? note "Who can read what"
 
     - **Your folder is private:** only you, administrators and Windows itself can open it.

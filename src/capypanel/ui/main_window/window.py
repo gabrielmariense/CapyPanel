@@ -4,7 +4,6 @@ and commands. The rail, View's tools, the toolbar, the tool and the status bar's
 the tool shown. With none shown, the Home page fills the window."""
 
 import logging
-import threading
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 from typing import Any
@@ -667,18 +666,12 @@ class MainWindow(QMainWindow):
         return True
 
     def show_restart_note(self, kind: str, version: str, why: str) -> None:
-        """After the update's helper started CapyPanel again: what happened, and its leftovers
-        cleared once the new version is running."""
-        from capypanel.core import updates
+        """After the update's helper started CapyPanel again: what happened. What the update
+        left is cleared at every start (ui/app.py)."""
         from capypanel.ui.updater import RestartWindow, restart_text
 
         log.info("%s", restart_text(kind, version, why))
         run_modal(RestartWindow(self, kind, version, why, self.updater.take_installed()))
-        QTimer.singleShot(
-            30_000, self,
-            lambda: threading.Thread(target=updates.clean_up, args=(settings.app_dir(),),
-                                     daemon=True).start(),
-        )  # fmt: skip
 
     def set_language(self, code: str) -> None:
         """Switches live: Qt then sends every window a LanguageChange event (see changeEvent)."""

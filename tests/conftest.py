@@ -21,6 +21,13 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
 
 
 @pytest.fixture(autouse=True)
+def own_app_data(monkeypatch: pytest.MonkeyPatch, tmp_path_factory: pytest.TempPathFactory) -> None:
+    """An update's folders live in %LOCALAPPDATA%: every test gets its own, never the real one
+    of whoever runs it."""
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path_factory.mktemp("localappdata")))
+
+
+@pytest.fixture(autouse=True)
 def own_credentials(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Every test keeps its secrets under a name of its own, removed after it, so the suite
     never reads or deletes the passwords of whoever runs it."""

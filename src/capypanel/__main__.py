@@ -7,8 +7,8 @@ from pathlib import Path
 
 
 def close_splash() -> None:
-    """The splash CapyPanel.exe's launcher shows (packaging/splash.png), once there's a window
-    to see, or at once for the exe's jobs that show none. From source there is none."""
+    """The splash CapyPanel.exe's launcher shows (ui/branding/splash.png), once there's a window
+    to see, or at once for the self-test, which shows none. From source there is none."""
     try:
         import pyi_splash  # type: ignore[import-not-found]  # only inside CapyPanel.exe
     except ImportError:
@@ -18,7 +18,7 @@ def close_splash() -> None:
 
 
 def main() -> int:
-    if len(sys.argv) > 1 and sys.argv[1] in ("--self-test", "--apply-update"):
+    if len(sys.argv) > 1 and sys.argv[1] == "--self-test":
         close_splash()
     if len(sys.argv) == 3 and sys.argv[1] == "--self-test":  # see ui/selftest.py
         return _quietly(lambda: _self_test(Path(sys.argv[2])))
@@ -48,14 +48,25 @@ def _self_test(report: Path) -> int:
 
 def _apply_update(app_dir: Path, pid: int, old_version: str, new_version: str) -> int:
     """The new version's exe, run from where its zip was unpacked: swaps it in for the old
-    one once CapyPanel has closed. No window; it writes to the person's own log."""
+    one once CapyPanel has closed, with the splash and "Updating to …" on screen meanwhile. It
+    writes to the person's own log."""
     from capypanel.core import applog, i18n, settings, updates
 
     paths = settings.resolve_paths(app_dir)
     applog.setup_logging(paths.log_file)
-    # Its words reach the person in the old version's message when something goes wrong.
+    # Its words show on the splash, and in the new start's window when something goes wrong.
     i18n.set_language(settings.language_of(paths.settings_file))
-    return updates.run_helper(app_dir, pid, old_version, new_version)
+    # Where it runs from: an older version's updater may have unpacked it somewhere else.
+    staging = (
+        Path(sys.executable).resolve().parent.parent if getattr(sys, "frozen", False) else None
+    )
+    try:
+        from capypanel.ui import update_splash
+    except Exception:  # noqa: BLE001 -- without its window the swap still has to happen
+        logging.getLogger("capypanel").exception("Update: no splash")
+        close_splash()
+        return updates.run_helper(app_dir, pid, old_version, new_version, staging)
+    return update_splash.run(app_dir, pid, old_version, new_version, close_splash, staging)
 
 
 if __name__ == "__main__":
