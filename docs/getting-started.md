@@ -25,9 +25,10 @@ printer that goes away when it ends. The rest of the window is dimmed until you 
 
 ??? note "More about starting"
 
-    - The version shows in the title bar, followed by a build number and the commit, e.g.
-      `CapyPanel 0.26.0 build 514 (abc1234)`; a bigger build number is a newer build. Quote it when
-      you report a problem.
+    - The title bar shows the version, as in "Default — CapyPanel 0.26.1". **Help > About
+      CapyPanel** adds the build number and the commit, as in "Build: build 518 · commit abc1234";
+      a bigger build number is a newer build. Click the version there to copy both, and quote it
+      when you report a problem.
     - The first start speaks the language Windows is shown in: Portuguese for any Portuguese,
       English for the rest. **Settings > CapyPanel > General > Language** changes it.
     - One copy runs per Windows user. Starting CapyPanel again brings the open window to the front,

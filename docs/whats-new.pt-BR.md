@@ -3,6 +3,11 @@
 As mudanças de cada versão que você vai notar. As
 [versões no GitHub](https://github.com/gabrielmariense/CapyPanel/releases) têm os downloads.
 
+## 0.26.1
+
+- O título da janela mostra só a versão, como em "Padrão — CapyPanel 0.26.1". O número de build e
+  o commit ficam em **Ajuda > Sobre o CapyPanel**.
+
 ## 0.26.0
 
 A primeira versão que você pode baixar.

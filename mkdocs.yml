@@ -6,7 +6,7 @@ repo_url: https://github.com/gabrielmariense/CapyPanel
 repo_name: gabrielmariense/CapyPanel
 edit_uri: edit/main/docs/
 # In every page's footer, so a reader always knows which version the pages describe.
-copyright: These pages describe CapyPanel 0.26.0.
+copyright: These pages describe CapyPanel 0.26.1.
 
 # A band for the pages about the whole app, then one per tool, each in its own folder of docs/.
 nav:
@@ -63,7 +63,7 @@ plugins:
           name: Português (Brasil)
           build: true
           site_description: Todos os computadores sob seus cuidados, em uma só janela.
-          copyright: Estas páginas descrevem o CapyPanel 0.26.0.
+          copyright: Estas páginas descrevem o CapyPanel 0.26.1.
           nav_translations:
             Start: Início
             Home: Página inicial
