@@ -16,15 +16,28 @@ from capypanel.core.printers import doc360, snmp
 from capypanel.core.printers.printer import PrinterInfo
 from capypanel.core.printers.reading import Device, Problem, Reading, State, Supply, SupplyKind
 from capypanel.ui.checks import clock_text
-from capypanel.ui.icons import STATUS_COLORS
+from capypanel.ui.themes import engine as themes
 
-GREEN, AMBER, RED, GREY = (  # working, needs attention, stopped, offline
-    STATUS_COLORS[k] for k in ("online", "attention", "stopped", "offline")
-)
 DEFAULT_LOW = 10  # %: a supply at or below this shows as low
-# A supply's bar colour, by the colour its name says; drums, boxes and the rest are grey-blue.
-INKS = {"black": "#9aa3b2", "cyan": "#22b8cf", "magenta": "#d6409f", "yellow": "#f2c94c"}
-OTHER_SUPPLY = "#6b7a90"
+
+
+# The current theme's colours, read at each call: a theme switch changes them.
+def green() -> str:  # working
+    return themes.status_color("online")
+
+
+def amber() -> str:  # needs attention
+    return themes.status_color("attention")
+
+
+def red() -> str:  # stopped
+    return themes.status_color("stopped")
+
+
+def grey() -> str:  # offline
+    return themes.status_color("offline")
+
+
 _COLOUR_WORDS = re.compile(r"\b(black|cyan|magenta|yellow)\b", re.IGNORECASE)
 
 # The printer's detected errors: those that stop it, then those that only need attention.
@@ -127,31 +140,31 @@ def status(checked: Checked | None, low: int) -> Cell:
         return Cell(_("Not checked"), _("Not checked: use Refresh"), "", quiet=True, nothing=True)
     when = clock_text(checked.when)
     if checked.offline:
-        return Cell(_("Offline"), _("No answer at {when}.").format(when=when), GREY, quiet=True)
+        return Cell(_("Offline"), _("No answer at {when}.").format(when=when), grey(), quiet=True)
     if checked.refused:
         tip = _("Refused at {when}: {why}").format(when=when, why=refused_text(checked.refused))
         hint = _("Check the SNMP account in Settings › Printers › Connecting.")
-        return Cell(_("Refused"), "\n".join((tip, hint)), AMBER, quiet=True)
+        return Cell(_("Refused"), "\n".join((tip, hint)), amber(), quiet=True)
     if checked.reading is None:
         tip = _("Couldn't read the printer's answer at {when}.").format(when=when)
-        return Cell(_("Unreadable"), f"{tip}\n{checked.error}".strip(), AMBER, quiet=True)
+        return Cell(_("Unreadable"), f"{tip}\n{checked.error}".strip(), amber(), quiet=True)
     reading = checked.reading
     tip = "\n".join((_("Checked {when}.").format(when=when), *reading.messages))
     stops = [problem for problem in _STOPS if problem in reading.problems]
     if stops or reading.device is Device.DOWN:
-        return (
-            _worded(*_problem_words(stops[0]), tip, RED) if stops else Cell(_("Stopped"), tip, RED)
-        )
+        if stops:
+            return _worded(*_problem_words(stops[0]), tip, red())
+        return Cell(_("Stopped"), tip, red())
     warnings = [problem for problem in _WARNINGS if problem in reading.problems]
     lows = [s for s in reading.supplies if is_low(s, low)]
     if warnings or lows or reading.messages or reading.device is Device.WARNING:
         if warnings:
-            return _worded(*_problem_words(warnings[0]), tip, AMBER)
+            return _worded(*_problem_words(warnings[0]), tip, amber())
         if lows:
-            return _worded(short_low_text(lows[0]), low_text(lows[0]), tip, AMBER)
-        return Cell(_("Needs attention"), tip, AMBER)
+            return _worded(short_low_text(lows[0]), low_text(lows[0]), tip, amber())
+        return Cell(_("Needs attention"), tip, amber())
     words = _STATES[reading.state]() if reading.state in _STATES else _("Ready")
-    return Cell(words, tip, GREEN)
+    return Cell(words, tip, green())
 
 
 def attention(checked: Checked | None, low: int) -> Attention | None:
@@ -164,7 +177,7 @@ def attention(checked: Checked | None, low: int) -> Attention | None:
         return Attention.OFFLINE
     if checked.reading is None:
         return None
-    if status(checked, low).color == RED:
+    if status(checked, low).color == red():
         return Attention.STOPPED
     if any(is_low(s, low) for s in checked.reading.supplies):
         return Attention.LOW
@@ -327,10 +340,21 @@ def colour_name(supply: Supply) -> str:
 
 
 def supply_color(supply: Supply) -> str:
+    """A supply's bar colour in the current theme, by the colour its name says; a toner or ink
+    that names none is black, drums, boxes and the rest a grey-blue."""
+    inks = themes.ink_colors()
     found = _COLOUR_WORDS.search(supply.name)
     if found:
-        return INKS[found[1].lower()]
-    return INKS["black"] if supply.kind in (SupplyKind.TONER, SupplyKind.INK) else OTHER_SUPPLY
+        return inks[found[1].lower()]
+    return inks["black"] if supply.kind in (SupplyKind.TONER, SupplyKind.INK) else inks["other"]
+
+
+def supply_edge(supply: Supply) -> str:
+    """The 1 px edge around a supply's bar or swatch: yellow's darker one, so it shows on a light
+    pane; any other supply's own colour (no visible edge)."""
+    color = supply_color(supply)
+    inks = themes.ink_colors()
+    return inks["yellow_edge"] if color == inks["yellow"] else color
 
 
 def level_text(supply: Supply) -> str:

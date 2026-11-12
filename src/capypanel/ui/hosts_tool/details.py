@@ -30,9 +30,10 @@ from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_texts
 from capypanel.ui.hosts_tool import quick
 from capypanel.ui.hosts_tool.host_state import Facts, PendingPower
-from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
+from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import GAP, DetailsPanel
 from capypanel.ui.notes import Elided, escape
+from capypanel.ui.themes import engine as themes
 
 NOBODY_FOR = timedelta(minutes=10)  # how long "nobody signed in" is believed
 ICON = 18
@@ -153,7 +154,7 @@ class HostDetailsPanel(DetailsPanel):
         column.setSpacing(GAP + 4)  # the fixed row stands a little apart
         self.buttons = {}
         text = self.palette().color(QPalette.ColorRole.Text)
-        amber = QColor(STATUS_COLORS["attention"])
+        amber = QColor(themes.status_color("attention"))
         reachable = bool(details.host.connect_address)
         fixed, short = quick.fixed_labels(), quick.short_labels()
         width = self._button_width()
@@ -223,7 +224,8 @@ class HostDetailsPanel(DetailsPanel):
         grid = QGridLayout(strip)
         grid.setContentsMargins(10, 6, 6, 6)
         clock = QLabel()
-        clock.setPixmap(tabler_icon("clock", QColor(STATUS_COLORS["attention"]), 16).pixmap(16, 16))
+        amber = QColor(themes.status_color("attention"))
+        clock.setPixmap(tabler_icon("clock", amber, 16).pixmap(16, 16))
         when = check_texts.clock_text(pending.at)
         heading = _("Restarts at {when}") if pending.restart else _("Shuts down at {when}")
         heading = QLabel(f"<b>{escape(heading.format(when=when))}</b>")
@@ -284,7 +286,7 @@ class HostDetailsPanel(DetailsPanel):
         font.setPointSizeF(font.pointSizeF() * 1.25)
         name.setFont(font)
         status = checked[0] if checked else None
-        color = STATUS_COLORS.get(str(status), STATUS_COLORS["offline"])
+        color = themes.status_color(status if status is not None else "offline")
         line = QFontMetrics(font).height()
         size = round(line * 0.5)
         dot = QLabel()
@@ -452,7 +454,7 @@ class HostDetailsPanel(DetailsPanel):
         """Why a row couldn't be read, in amber; a click copies it, as any value, so an error
         can be pasted into a report."""
         label = self.value(key, text)
-        label.setStyleSheet(f"QLabel#copyValue {{ color: {STATUS_COLORS['attention']}; }}")
+        label.setStyleSheet(f"QLabel#copyValue {{ color: {themes.status_color('attention')}; }}")
         return label
 
 

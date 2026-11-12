@@ -24,7 +24,7 @@ from capypanel.ui.printers_tool import marks as bar_marks
 from capypanel.ui.printers_tool import status
 from capypanel.ui.printers_tool.marks import Mark
 from capypanel.ui.printers_tool.meter import HEIGHT, ROOM, draw_meter
-from capypanel.ui.printers_tool.status import AMBER, GREY, Checked, Counted
+from capypanel.ui.printers_tool.status import Checked, Counted, amber, grey
 
 
 @dataclass(frozen=True)
@@ -189,7 +189,7 @@ class PrinterDetailsPanel(DetailsPanel):
             )  # fmt: skip
             warning.setObjectName("doc360Older")
             warning.setWordWrap(True)
-            warning.setStyleSheet(f"color: {AMBER};")
+            warning.setStyleSheet(f"color: {amber()};")
             layout.addWidget(warning)
 
     def _account_button(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
@@ -220,7 +220,7 @@ class PrinterDetailsPanel(DetailsPanel):
         line = QFontMetrics(font).height()
         size = round(line * 0.5)
         dot = QLabel()
-        dot.setPixmap(dot_icon(cell.color or GREY, size).pixmap(size, size))
+        dot.setPixmap(dot_icon(cell.color or grey(), size).pixmap(size, size))
         dot.setFixedHeight(line + 4)  # centred on the name's first line, even when it wraps
         dot.setAlignment(Qt.AlignmentFlag.AlignCenter)
         row.addWidget(dot, 0, Qt.AlignmentFlag.AlignTop)
@@ -270,7 +270,7 @@ class PrinterDetailsPanel(DetailsPanel):
             if status.is_low(supply, shown.low):
                 words = _("{level} · Low") if not supply.receptacle else _("{level} · Nearly full")
                 level.setText(words.format(level=status.level_text(supply)))
-                level.setStyleSheet(f"color: {AMBER}; font-weight: 600;")
+                level.setStyleSheet(f"color: {amber()}; font-weight: 600;")
             top.addWidget(level)
             layout.addLayout(top)
             layout.addWidget(Meter(supply, marks))
@@ -287,7 +287,7 @@ class PrinterDetailsPanel(DetailsPanel):
         label.setObjectName(f"printerSays_{key}")
         label.setTextFormat(Qt.TextFormat.RichText)
         label.setWordWrap(True)
-        label.setStyleSheet(f"color: {AMBER};")
+        label.setStyleSheet(f"color: {amber()};")
         if use is not None:
             label.linkActivated.connect(lambda _link: use(key, value))
         return label

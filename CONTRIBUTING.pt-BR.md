@@ -1,4 +1,6 @@
-# Desenvolvimento
+# Contribuindo com o CapyPanel
+
+Como compilar, testar e traduzir o CapyPanel. In English: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Preparação
 
@@ -62,7 +64,9 @@ As páginas em `docs/` também são publicadas como site com o
 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/), sempre que mudam na `main`. Cada
 página em inglês (`nome.md`) tem a versão em português ao lado (`nome.pt-BR.md`); mude as duas
 juntas. As páginas sobre o app inteiro ficam em `docs/`, e as páginas de uma ferramenta numa pasta
-própria: `docs/hosts/`, `docs/printers/` e `docs/profiles/`. Para ver o site enquanto escreve:
+própria: `docs/hosts/`, `docs/printers/` e `docs/profiles/`. Cada página abre com as tarefas em
+passos numerados curtos, dobra os detalhes em caixas `??? note` e termina com uma tabela "Mensagens
+que você pode ver". Para ver o site enquanto escreve:
 
 ```
 uv run --only-group docs mkdocs serve
@@ -71,8 +75,24 @@ uv run --only-group docs mkdocs serve
 ## Versões
 
 As versões são `0.MENOR.CORREÇÃO` até a 1.0: uma funcionalidade nova aumenta MENOR, uma alteração
-só de correções aumenta CORREÇÃO. Rodando pelo código-fonte, a barra de título acrescenta um
-número de build e o commit à versão, como em `0.25.0 build 1378 (abc1234)`. O número de build
-conta todos os commits que levaram a ele, então um número maior é sempre um build mais novo. A
-versão vem do próprio `pyproject.toml` do repositório, então já está certa logo depois de um pull,
-mesmo antes do `uv sync`.
+só de correções aumenta CORREÇÃO. A barra de título acrescenta um número de build e o commit à
+versão, como em `0.26.0 build 514 (abc1234)`, tanto pelo código-fonte quanto no exe. O número de
+build conta todos os commits que levaram a ele, então um número maior é sempre um build mais novo.
+Pelo código-fonte, a versão vem do próprio `pyproject.toml` do repositório, então já está certa
+logo depois de um pull, mesmo antes do `uv sync`.
+
+## Gerar o download
+
+```
+uv sync --locked --group build
+uv run python scripts/build_exe.py
+```
+
+Isso gera a `dist/CapyPanel/` (o CapyPanel.exe e as bibliotecas dele) com o PyInstaller, roda o
+autoteste do exe gerado (`CapyPanel.exe --self-test`) e, só se ele passar, grava o
+`dist/CapyPanel-<versão>-windows-x64.zip` com o `.sha256` ao lado.
+
+O GitHub Actions roda o mesmo build em todo pull request que mexe no app ou no empacotamento, e
+guarda o zip com a execução por alguns dias, para testar antes de uma versão. Na tag de uma versão
+(`v0.26.0`) ele também cria um rascunho de release com o zip e o SHA-256; ninguém o vê até alguém
+que mantém o projeto publicá-lo.

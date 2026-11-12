@@ -6,7 +6,7 @@ to them, and open a remote screen on any of them through Remote Desktop or the V
 already use. It keeps your printers too, with the details you need and their web pages a click
 away, and it finds the Windows user profiles nobody uses any more on a PC so you can delete them.
 
-![CapyPanel's Home page: the tool rail, the capybara, and a tile each for Hosts, Printers and User profiles](images/home-dark.png)
+![CapyPanel's Home page: the sidebar, the capybara, and a tile each for Hosts, Printers and User profiles](images/home-dark.png)
 
 ## What it does
 
@@ -31,27 +31,22 @@ away, and it finds the Windows user profiles nobody uses any more on a PC so you
 
 ## Pages
 
-For people who use CapyPanel, and for people who set it up for a team.
+Each page opens with the usual jobs as a few short steps. The details are folded underneath, and
+every page ends with the messages you may see and what to do about them.
 
 | Page | What it covers |
 |---|---|
-| [Getting started](getting-started.md) | Running CapyPanel, the main window, adding hosts |
-| [Settings and files](settings-and-files.md) | Every setting, and where CapyPanel keeps its files |
-| [Host lists](hosts/host-lists.md) | Groups, tags, and the folders lists live in |
-| [Importing and exporting hosts](hosts/importing.md) | Many hosts at once, in and out as CSV |
-| [Connecting](hosts/connecting.md) | VNC viewers, Remote Desktop, connection profiles, accounts, passwords and the login check |
-| [Checking hosts](hosts/checking.md) | Status, logged-on users, PC facts, and how CapyPanel reads other PCs |
+| [Download and updates](download.md) | The zip, checking it, updating, and running from source |
+| [Getting started](getting-started.md) | Run CapyPanel, add your first hosts, check and connect |
+| [What's new](whats-new.md) | The changes in each release |
+| [Host lists](hosts/host-lists.md) | Groups and tags, finding a host, and hosts in and out of a spreadsheet |
+| [Connecting](hosts/connecting.md) | VNC viewers, Remote Desktop, connection profiles, accounts and passwords |
+| [Checking hosts](hosts/checking.md) | Status, logged-on users and PC facts |
 | [Commands on a host](hosts/commands.md) | A PC's folders and consoles, its users, power, printers, programs and mapped drives |
-| [Searching hosts](hosts/searching.md) | The search box, what it covers and how a search ends |
-| [The Printers tool](printers/printers.md) | The Printers window, a printer's details, and web pages |
-| [Checking printers](printers/checking.md) | Status, toner and supplies, and how they're read |
-| [Printer lists](printers/printer-lists.md) | Where printer lists live, and their settings |
+| [The Printers tool](printers/printers.md) | Printers, their lists, details and web pages |
+| [Checking printers](printers/checking.md) | Status, toner and supplies, warnings, SNMP and Doc360 MPS |
 | [The User profiles tool](profiles/user-profiles.md) | A PC's Windows profiles, which can be deleted, and deleting them |
-| [Development](development.md) | Building, testing and translating CapyPanel |
+| [Settings and files](settings-and-files.md) | Every setting, and where CapyPanel keeps its files |
 
-Getting started, Settings and files and Development are about the whole app. The six pages after
-them belong to the **Hosts** tool, the three after those to **Printers**, and the last one to
-**User profiles**.
-
-These pages describe the current version (0.25.0). CapyPanel is in beta, so they grow with each
-feature.
+These pages describe the current version, 0.26.0; [What's new](whats-new.md) lists what changed.
+CapyPanel is in beta, so they grow with each feature.

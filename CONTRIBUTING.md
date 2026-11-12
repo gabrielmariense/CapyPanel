@@ -1,4 +1,6 @@
-# Development
+# Contributing to CapyPanel
+
+How to build, test and translate CapyPanel. Em português: [CONTRIBUTING.pt-BR.md](CONTRIBUTING.pt-BR.md).
 
 ## Setup
 
@@ -62,8 +64,9 @@ The pages in `docs/` are also published as a website with
 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/), each time they change on
 `main`. Each English page (`name.md`) has its Portuguese version beside it
 (`name.pt-BR.md`); change both together. Pages about the whole app sit in `docs/`, and a tool's
-own pages in a folder of its own: `docs/hosts/`, `docs/printers/` and `docs/profiles/`. To
-preview the site while writing:
+own pages in a folder of its own: `docs/hosts/`, `docs/printers/` and `docs/profiles/`. Each page
+opens with its tasks as short numbered steps, folds the details into `??? note` boxes, and ends
+with a "Messages you may see" table. To preview the site while writing:
 
 ```
 uv run --only-group docs mkdocs serve
@@ -72,7 +75,24 @@ uv run --only-group docs mkdocs serve
 ## Versions
 
 Versions are `0.MINOR.PATCH` until 1.0: a merged feature bumps MINOR, a fix-only change bumps
-PATCH. Running from source, the title bar adds a build number and the commit to the version, as
-in `0.25.0 build 1378 (abc1234)`. The build number counts every commit that led to it, so a
-bigger number is always a newer build. The version itself comes from the checkout's own
-`pyproject.toml`, so it's right straight after a pull, even before `uv sync`.
+PATCH. The title bar adds a build number and the commit to the version, as in
+`0.26.0 build 514 (abc1234)`, from source and in the exe alike. The build number counts every
+commit that led to it, so a bigger number is always a newer build. From source, the version comes
+from the checkout's own `pyproject.toml`, so it's right straight after a pull, even before
+`uv sync`.
+
+## Building the download
+
+```
+uv sync --locked --group build
+uv run python scripts/build_exe.py
+```
+
+This builds `dist/CapyPanel/` (CapyPanel.exe and its libraries) with PyInstaller, runs the built
+exe's own self-test (`CapyPanel.exe --self-test`), and only if it passes writes
+`dist/CapyPanel-<version>-windows-x64.zip` with its `.sha256` beside it.
+
+GitHub Actions runs the same build on every pull request that touches the app or its packaging,
+and keeps the zip with the run for a few days, to try before a release. On a version's tag
+(`v0.26.0`) it also makes a draft release with the zip and its SHA-256; nobody sees it until a
+maintainer publishes it.

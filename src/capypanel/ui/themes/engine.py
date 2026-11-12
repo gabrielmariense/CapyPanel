@@ -13,6 +13,11 @@ Shipped theme files (this folder, *.json) override some tokens of a base:
 Corners come in two sizes, both the theme's: "radius" for containers (panels, cards, menus,
 strips) and "control_radius" for what you click or type in (buttons, fields, rows that light
 up). A file with only "radius" gets controls 2 px tighter. Tags and badges stay fully round.
+
+Status colours (online, offline, attention, stopped, working) and the ink colours of Printers'
+supply bars are the theme's too: one hand-picked set for dark themes and one for light ones,
+which a file may override. A status colour the file doesn't set is checked against the file's
+own pane and selection and moved toward its text colour if it would be hard to read there.
 """
 
 import ctypes
@@ -22,7 +27,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QObject, Qt
+from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import (
     QActionEvent,
     QColor,
@@ -35,7 +40,6 @@ from PySide6.QtWidgets import QApplication, QListView, QMenu, QTreeView, QWidget
 
 from capypanel.core.i18n import N_, _
 from capypanel.ui import menus
-from capypanel.ui.icons import STATUS_COLORS
 
 log = logging.getLogger(__name__)
 
@@ -46,15 +50,30 @@ TOKENS = {
         "bg": "#0b0f17", "card": "#1d273d", "raised": "#232e46", "border": "#465c88",
         "chrome": "#1d2638", "text": "#e7eaf1", "text2": "#aab2c3", "text3": "#8590a1",
         "hover": "#1494a3b8", "sel_solid": "#28406d",
-        "accent": "#3b82f6", "accent_hover": "#5b95f7", "danger": "#f87171",
+        "accent": "#3b82f6", "accent_hover": "#5b95f7",
+        "online": "#3fae4a", "offline": "#9a9a9a", "attention": "#e3b341", "stopped": "#f47067",
+        "working": "#60a5fa",
+        "ink_black": "#9aa3b2", "ink_cyan": "#22b8cf", "ink_magenta": "#e85aad",
+        "ink_yellow": "#f2c94c", "ink_yellow_edge": "#f2c94c", "ink_other": "#8592a8",
     },
     "light": {
         "bg": "#d9dfe9", "card": "#ffffff", "raised": "#f1f4f9", "border": "#a1afc6",
-        "chrome": "#c5cedc", "text": "#111827", "text2": "#4b5563", "text3": "#4d5765",
+        "chrome": "#c5cedc", "text": "#111827", "text2": "#4b5563", "text3": "#677080",
         "hover": "#0d0f172a", "sel_solid": "#cfdcf7",
-        "accent": "#2563eb", "accent_hover": "#3b76ee", "danger": "#dc2626",
+        "accent": "#2563eb", "accent_hover": "#3b76ee",
+        "online": "#1a7f37", "offline": "#656d76", "attention": "#7d5a00", "stopped": "#cf222e",
+        "working": "#2563eb",
+        "ink_black": "#374151", "ink_cyan": "#0b7f91", "ink_magenta": "#d22f97",
+        "ink_yellow": "#f2c94c", "ink_yellow_edge": "#8d7100", "ink_other": "#68768c",
     },
 }  # fmt: skip
+# What each status colour says: a PC or printer that answers; one that doesn't, or was never
+# checked; this deletes, is risky or needs attention; a problem; in use or at work.
+STATUS_KEYS = ("online", "offline", "attention", "stopped", "working")
+# A supply bar's fill by the colour its name says; drums and boxes are "other". Yellow gets an
+# edge where it would vanish into a light pane (in dark themes the edge is the fill's colour).
+INK_KEYS = ("ink_black", "ink_cyan", "ink_magenta", "ink_yellow", "ink_yellow_edge", "ink_other")
+TEXT_CONTRAST, MARK_CONTRAST = 4.5, 3.0  # WCAG AA: for text; for dots, icons and bars
 # Native themes keep Windows' own widgets; this light layer only adds visible structure
 # (window background, pane borders, header/footer bars), following the resolved dark/light.
 NATIVE_TOKENS = {
@@ -111,12 +130,18 @@ def load_theme_file(path: Path) -> Theme:
     if base not in TOKENS:
         raise ValueError('"base" must be "dark" or "light"')
     colors = dict(TOKENS[base])
-    for key, value in (data.get("colors") or {}).items():
+    own = data.get("colors") or {}
+    for key, value in own.items():
         if key not in colors:
             raise ValueError(f'unknown colour "{key}"')
         if not isinstance(value, str) or not QColor.isValidColorName(value):
             raise ValueError(f'"{key}": "{value}" is not a colour')
         colors[key] = value
+    for key in STATUS_KEYS:
+        if key not in own:  # the base's, made readable on this file's pane and selection
+            colors[key] = fit_status(
+                key, colors[key], colors["card"], colors["sel_solid"], colors["text"]
+            )
     font = DEFAULT_FONT
     if "font" in data:
         family, size = data["font"].get("family"), data["font"].get("size", DEFAULT_FONT[1])
@@ -161,6 +186,24 @@ _generation = 0  # counts theme switches: a window open across one is never dele
 _watching_system = False
 _native_font: QFont | None = None
 _watcher: "_Watcher | None" = None
+_status: dict[str, str] | None = None  # the current theme's status colours, once worked out
+
+
+class _Switches(QObject):
+    switched = Signal()
+
+
+_switches: _Switches | None = None
+
+
+def switches() -> _Switches:
+    """Its `switched` fires after every theme switch, the one Windows starts under "follow
+    system" too. Connect what is drawn once in the theme's colours (status dots, coloured
+    icons), so it's drawn again."""
+    global _switches
+    if _switches is None:
+        _switches = _Switches()
+    return _switches
 
 
 def current() -> Theme:
@@ -204,6 +247,7 @@ def apply(theme: Theme) -> None:
     for widget in app.topLevelWidgets():
         if widget.isWindow() and widget.isVisible():
             paint_title_bar(widget)
+    switches().switched.emit()
 
 
 def _switch(
@@ -211,6 +255,7 @@ def _switch(
 ) -> None:
     """Every stylesheet, style or palette change makes Qt restyle every widget, the slow part
     of a switch, so each switch asks for as few as it can."""
+    global _status
     assert _native_font is not None
     if theme.engine == "native":
         # Windows' default app font is 9 pt; use the same size as the custom themes.
@@ -224,7 +269,8 @@ def _switch(
         # views with the previous theme's colours.
         app.setStyle("windows11")
         tokens = native_tokens(app.palette().color(QPalette.ColorRole.Accent))
-        app.setStyleSheet(_NATIVE_QSS % {**tokens, **_status_tokens()})  # noqa: UP031
+        _status = _native_status(tokens)
+        app.setStyleSheet(_NATIVE_QSS % {**tokens, **_status_tokens(_status)})  # noqa: UP031
         # Windows' link colour is the accent as is: a deep accent was hard to read on dark.
         links = QPalette()
         links.setColor(QPalette.ColorRole.Link, QColor(tokens["accent_text"]))
@@ -245,6 +291,7 @@ def _switch(
         app.setFont(_native_font)
         app.setStyleSheet("QWidget { }")
         app.setStyle("Fusion")
+    _status = {key: theme.colors[key] for key in STATUS_KEYS}
     app.setFont(font)
     app.setPalette(_palette(theme.colors))
     app.setStyleSheet(stylesheet(theme))
@@ -259,8 +306,10 @@ def native_tokens(accent: QColor) -> dict[str, str]:
     tokens["accent"] = accent.name()
     tokens["accent_text"] = readable_on(accent, tokens["card"], tokens["text"])
     tokens["accent_drop"] = readable_on(accent, tokens["sel"], tokens["text"])
+    tokens["accent_fill"] = button_fill(accent)  # behind a white tick: any accent reads
     tokens.update(_card_tokens(tokens))
     tokens["arrow"] = (THEMES_DIR / f"arrow-{native_scheme()}.svg").as_posix()
+    tokens["check"] = (THEMES_DIR / "check.svg").as_posix()
     return tokens
 
 
@@ -319,13 +368,86 @@ def menu_mark() -> QColor:
 
 def _card_tokens(colors: Mapping[str, str]) -> dict[str, str]:
     """Settings' cards: between the window and a pane, a faint edge, and the line beside the
-    page list. Worked out from each theme's own colours."""
+    page list; and the line under a table's row, softer than the table's frame. Worked out
+    from each theme's own colours."""
     bg = QColor(colors["bg"])
     return {
         "section": _mix(QColor(colors["card"]), bg, 0.6),
         "section_edge": _mix(QColor(colors["border"]), bg, 0.3),
         "pages_line": _mix(QColor(colors["border"]), bg, 0.5),
+        "row_line": _mix(QColor(colors["border"]), QColor(colors["card"]), 0.5),
     }
+
+
+# ---- status and ink colours ----
+
+
+def status_floors(key: str) -> tuple[float, float]:
+    """The contrast a status colour needs on the pane and on a selected row. All of them are
+    words on the pane and at least a dot on a selected row; amber is also a whole row's text
+    (a profile ticked to delete, a low toner), which stays amber when the row is picked."""
+    return TEXT_CONTRAST, TEXT_CONTRAST if key == "attention" else MARK_CONTRAST
+
+
+def fit_status(key: str, color: str, card: str, selection: str, text: str) -> str:
+    """`color` as it is when it reads on this pane and selection, else moved toward the text
+    colour as far as it needs: the net under a theme that brings no status colours of its own,
+    and under the Windows themes, whose selection is a tint of any accent the person picked."""
+    pane, picked = status_floors(key)
+    for step in range(0, 101, 5):
+        fitted = _mix(QColor(text), QColor(color), step / 100)
+        if contrast_ratio(fitted, card) >= pane and contrast_ratio(fitted, selection) >= picked:
+            return fitted
+    return text
+
+
+def _native_status(tokens: Mapping[str, str]) -> dict[str, str]:
+    base = TOKENS[native_scheme()]
+    return {
+        key: fit_status(key, base[key], tokens["card"], tokens["sel"], tokens["text"])
+        for key in STATUS_KEYS
+    }
+
+
+def status_colors() -> Mapping[str, str]:
+    """The current theme's status colours, by STATUS_KEYS; "not-found" (a name with no
+    address) is amber, as "attention". Drawn once with them? Draw again on switches()."""
+    global _status
+    if _status is None:  # before the first theme is applied (tests, mostly)
+        if _current.engine == "custom":
+            _status = {key: _current.colors[key] for key in STATUS_KEYS}
+        elif isinstance(QApplication.instance(), QApplication):
+            accent = QApplication.palette().color(QPalette.ColorRole.Accent)
+            _status = _native_status(native_tokens(accent))
+        else:
+            return _with_alias({key: TOKENS["dark"][key] for key in STATUS_KEYS})
+    return _with_alias(_status)
+
+
+def _with_alias(colors: dict[str, str]) -> dict[str, str]:
+    return {**colors, "not-found": colors["attention"]}
+
+
+def status_color(key: object) -> str:
+    """One of the current theme's status colours; `key` may be a host's Status."""
+    return status_colors()[str(key)]
+
+
+def ink_colors() -> Mapping[str, str]:
+    """The current theme's supply colours: black, cyan, magenta, yellow, yellow_edge, other."""
+    colors = _current.colors if _current.engine == "custom" else TOKENS[native_scheme()]
+    return {key.removeprefix("ink_"): colors[key] for key in INK_KEYS}
+
+
+def text_on(fill: str) -> str:
+    """White or near-black, whichever reads better on `fill` (a button filled in amber)."""
+    return max(("#ffffff", "#1b1b1b"), key=lambda ink: contrast_ratio(ink, fill))
+
+
+def badge_fill() -> str:
+    """The red behind a white count (the rail's and the tray's), darkened as far as white
+    digits need."""
+    return button_fill(QColor(status_colors()["stopped"]))
 
 
 def _mix(color: QColor, base: QColor, amount: float) -> str:
@@ -463,6 +585,8 @@ QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; padding:
 QMenuBar::item { padding: 4px 10px; border-radius: %(r2)spx; color: %(text2)s;
                  background: transparent; }
 QMenuBar::item:selected { background: %(hover)s; color: %(text)s; }
+/* A newer release: a button at the menu bar's right end, in the accent made readable. */
+QToolButton#updateButton { color: %(accent_text)s; font-weight: 600; padding: 2px 10px; }
 QMenu { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; padding: 5px; }
 QMenu::item { padding: 6px 28px 6px 30px; border-radius: %(r2)spx; }
 QMenu::item:selected { background: %(hover)s; }
@@ -552,13 +676,15 @@ QHeaderView::section { background: %(card)s; color: %(text2)s; border: none;
                        border-bottom: 1px solid %(border)s; padding: 8px 6px; font-weight: 600; }
 /* Tables marked "grid": a thin line under each row, none between columns; the table's own
    border is its one frame. */
-QTreeView#grid::item { border-bottom: 1px solid %(border)s; }
+QTreeView#grid::item { border-bottom: 1px solid %(row_line)s; }
 /* A thin line between the column titles shows where to drag to resize a column. */
 QHeaderView::section { border-left: 1px solid %(border)s; }
 QHeaderView::section:first, QHeaderView::section:only-one { border-left: none; }
 QHeaderView::section:hover { color: %(text)s; }
 
 QFrame#card { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; }
+/* A first-run guide's card: a pane edged in the accent, floating beside its control. */
+QFrame#guideCard { background: %(card)s; border: 1px solid %(accent)s; border-radius: %(r)spx; }
 /* Lists inside a card (the groups pane): the card is their only frame. */
 QTreeView#flat { border: none; background: transparent; padding: 0 2px; }
 /* The search box above the host table: a small pane, with the panes' corners. */
@@ -620,7 +746,7 @@ QToolButton#commandButton[arrow="false"] { padding-right: 0; }
 QToolButton#commandButton[arrow="false"]::menu-indicator { image: none; width: 0; }
 /* The Commands window: one line per command under small group headings; the picked one is
    edged in the accent and grows; risky ones have an amber left edge and name. */
-QLabel#groupHeading { color: %(text3)s; font-size: 8pt; font-weight: 600;
+QLabel#groupHeading { color: %(text3_bg)s; font-size: 8pt; font-weight: 600;
                       padding: 4px 2px 2px 2px; }
 QFrame#commandRow { border: 1px solid transparent; border-radius: %(r2)spx; }
 QFrame#commandRow:hover { background: %(hover)s; }
@@ -632,13 +758,14 @@ QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
 /* With the keyboard on it (Tab), a risky button fills in amber: as plain to see as the blue
    default it takes over from, where Enter would press it. */
 QPushButton#risky:focus { background: %(attention)s; border-color: %(attention)s;
-                          color: #1b1b1b; }
+                          color: %(on_attention)s; }
 /* A tool's count of items needing attention, on its rail icon. */
-QLabel#railBadge { background: %(stopped)s; color: white; border-radius: 8px; padding: 0; }
+QLabel#railBadge { background: %(badge)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel_solid)s; border-radius: 9px; padding: 2px 9px; }
 QLabel#tagValue:hover { background: %(hover)s; }
-QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8px; padding: 0 6px; }
-QLabel#stateBadge[active="true"] { color: #3fae4a; border-color: #3fae4a; }
+QLabel#stateBadge { color: %(offline)s; border: 1px solid %(offline)s; border-radius: 8px;
+                    padding: 0 6px; }
+QLabel#stateBadge[active="true"] { color: %(online)s; border-color: %(online)s; }
 QFrame#notesBox { border: 1px solid %(border)s; border-radius: %(r)spx; }
 QLabel#hint { color: %(text2)s; }
 /* The Groups heading while a group is dragged over it: dropping moves it to the top. */
@@ -720,11 +847,15 @@ _NATIVE_QSS = """
 QMainWindow, QDialog, QSplitter::handle { background: %(bg)s; }
 QSplitter#navSplit::handle { background: transparent; }
 QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; }
+QToolButton#updateButton { color: %(accent_text)s; font-weight: 600; padding: 2px 10px;
+                           border: none; background: transparent; }
+QToolButton#updateButton:hover { background: %(hover)s; }
 QToolBar#main { border: none; border-bottom: 1px solid %(border)s; }
 QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; }
 /* Only the settings page list, not every QListView: combo box pop-ups are list views too. */
 QTreeView, QFrame#card { background: %(card)s; border: 1px solid %(border)s; }
+QFrame#guideCard { background: %(card)s; border: 1px solid %(accent)s; border-radius: 6px; }
 /* outline: 0 hides Windows' focus box around the current row; the tint already marks it. */
 QTreeView, QListView#pageList { outline: 0; }
 QTreeView::item { padding: 4px 2px; }
@@ -739,7 +870,15 @@ QTreeView::item:selected, QListView#pageList::item:selected {
     background: %(sel)s; color: %(text)s; }
 /* Tables marked "grid": a thin line under each row, none between columns; the table's own
    border is its one frame. */
-QTreeView#grid::item { border-bottom: 1px solid %(border)s; }
+QTreeView#grid::item { border-bottom: 1px solid %(row_line)s; }
+/* Tick boxes in a list's rows (User profiles, the quick commands): with the rules above, the
+   Windows style drew a ticked one as a bare tick with no box, white on white in light. Drawn
+   here like Windows' own: a rounded box, filled in the accent with a white tick. */
+QTreeView::indicator, QListView::indicator { width: 14px; height: 14px; border-radius: 4px;
+    border: 1px solid %(text2)s; background: %(card)s; }
+QTreeView::indicator:checked, QListView::indicator:checked { border-color: %(accent_fill)s;
+    background: %(accent_fill)s; image: url("%(check)s"); }
+QTreeView::indicator:disabled, QListView::indicator:disabled { border-color: %(border)s; }
 /* The two heading styles, as in the CapyPanel themes. */
 QLabel#detailsSection, QLabel#sectionTitle, QLabel#paneTitle, QLabel#rowName[heading="true"] {
     color: %(accent_text)s; font-weight: bold; }
@@ -798,13 +937,14 @@ QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
 /* With the keyboard on it (Tab), a risky button fills in amber: as plain to see as the blue
    default it takes over from, where Enter would press it. */
 QPushButton#risky:focus { background: %(attention)s; border-color: %(attention)s;
-                          color: #1b1b1b; }
+                          color: %(on_attention)s; }
 /* A tool's count of items needing attention, on its rail icon. */
-QLabel#railBadge { background: %(stopped)s; color: white; border-radius: 8px; padding: 0; }
+QLabel#railBadge { background: %(badge)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel)s; border-radius: 9px; padding: 2px 9px; }
 QLabel#tagValue:hover { background: %(hover)s; }
-QLabel#stateBadge { color: #8a8a8a; border: 1px solid #8a8a8a; border-radius: 8px; padding: 0 6px; }
-QLabel#stateBadge[active="true"] { color: #3fae4a; border-color: #3fae4a; }
+QLabel#stateBadge { color: %(offline)s; border: 1px solid %(offline)s; border-radius: 8px;
+                    padding: 0 6px; }
+QLabel#stateBadge[active="true"] { color: %(online)s; border-color: %(online)s; }
 QFrame#notesBox { border: 1px solid %(border)s; border-radius: 6px; }
 QLabel#hint { color: %(text2)s; }
 QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel)s; }
@@ -843,12 +983,13 @@ QToolButton#tagChipRemove {
 """
 
 
-def _status_tokens() -> dict[str, str]:
-    """Warning colours, the same in every theme (see icons.STATUS_COLORS)."""
+def _status_tokens(status: Mapping[str, str]) -> dict[str, str]:
+    """The stylesheet's status colours, and what goes with them: the text on an amber fill
+    and the fill behind a white count."""
     return {
-        "online": STATUS_COLORS["online"],
-        "stopped": STATUS_COLORS["stopped"],
-        "attention": STATUS_COLORS["attention"],
+        **{key: status[key] for key in ("online", "offline", "stopped", "attention")},
+        "on_attention": text_on(status["attention"]),
+        "badge": button_fill(QColor(status["stopped"])),
     }
 
 
@@ -859,13 +1000,16 @@ def stylesheet(theme: Theme) -> str:
     accent = QColor(colors["accent"])
     t["accent_text"] = readable_on(accent, colors["card"], colors["text"])
     t["accent_drop"] = readable_on(accent, colors["sel_solid"], colors["text"])
+    # The hint grey is picked on the pane; the one small label on the window's own background
+    # (the Commands window's groups) gets it as dark as that background needs.
+    t["text3_bg"] = readable_on(QColor(colors["text3"]), colors["bg"], colors["text"])
     t.update(_card_tokens(colors))
     t["button"] = button_fill(accent)
     t["button_hover"] = button_fill(QColor(colors["accent_hover"]))
     t["check"] = (THEMES_DIR / "check.svg").as_posix()
     t["arrow"] = (THEMES_DIR / f"arrow-{theme.scheme}.svg").as_posix()
     t["arrow_up"] = (THEMES_DIR / f"arrow-up-{theme.scheme}.svg").as_posix()
-    t.update(_status_tokens())
+    t.update(_status_tokens(colors))
     return _QSS % t  # noqa: UP031 -- %-format: CSS braces would all need doubling for .format()
 
 

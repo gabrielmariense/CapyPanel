@@ -12,7 +12,7 @@ from capypanel.core.i18n import _, ngettext
 from capypanel.core.printers.reading import SupplyKind
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.printers_tool import status
-from capypanel.ui.printers_tool.status import AMBER, Attention, Checked
+from capypanel.ui.printers_tool.status import Attention, Checked, amber
 
 MOST_LINES = 5  # printers named in one notification; the rest are counted
 
@@ -66,7 +66,7 @@ class AttentionStrip(QFrame):
         super().__init__()
         self.setObjectName("attentionStrip")
         self._icon = QLabel()
-        self._icon.setPixmap(tabler_icon("alert-triangle", QColor(AMBER), ICON).pixmap(ICON, ICON))
+        self.restyle()
         self._text = QLabel()
         self._text.setTextFormat(Qt.TextFormat.RichText)
         self._text.setWordWrap(True)
@@ -79,6 +79,11 @@ class AttentionStrip(QFrame):
         row.addWidget(self._text, 1)
         row.addWidget(self.button)
         self.hide()
+
+    def restyle(self) -> None:
+        """The warning icon in the current theme's amber, again after a theme switch."""
+        icon = tabler_icon("alert-triangle", QColor(amber()), ICON)
+        self._icon.setPixmap(icon.pixmap(ICON, ICON))
 
     def show_found(self, found: list[Attention], only_them: bool) -> None:
         """Hidden when nothing needs attention."""

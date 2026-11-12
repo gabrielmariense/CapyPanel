@@ -47,6 +47,8 @@ class SettingsDialog(QDialog):
     theme_picked = Signal(str)
     start_picked = Signal(str)
     closing_picked = Signal(str)
+    updates_picked = Signal(str)  # how often to look, for everyone on this PC
+    updates_requested = Signal()  # About's Check for updates
 
     def __init__(
         self,
@@ -58,6 +60,8 @@ class SettingsDialog(QDialog):
         tools: Sequence[ToolInfo] = (),
         start: str = settings.START_HOME,
         closing: str = settings.CLOSE_ASK,
+        updates: str = "start",
+        updates_editable: bool = True,
     ) -> None:
         """tools: the window's tools; start: what the window shows at start; closing: what
         its X does."""
@@ -67,6 +71,7 @@ class SettingsDialog(QDialog):
         self._tools = list(tools)
         self._start = start
         self._closing = closing
+        self._updates, self._updates_editable = updates, updates_editable
         self._groups = list(groups)
         # Contents replaced on a language switch stay alive, hidden: deleting a window part
         # holding a list can crash Qt after a theme switch (see DECISIONS, code cleanup).
@@ -85,6 +90,8 @@ class SettingsDialog(QDialog):
             tools=tools,
             start=self._start,
             closing=self._closing,
+            updates=self._updates,
+            updates_editable=self._updates_editable,
             language=i18n.language(),
             registry=self._registry,
             theme_id=theme_id,
@@ -224,6 +231,9 @@ class SettingsDialog(QDialog):
         if self.general.closing_choice() != self._closing:
             self._closing = self.general.closing_choice()
             self.closing_picked.emit(self._closing)
+        if self.general.updates_choice() != self._updates:
+            self._updates = self.general.updates_choice()
+            self.updates_picked.emit(self._updates)
 
     def _theme_changed(self) -> None:
         # After the dropdown has closed: the switch restyles every widget, which takes a

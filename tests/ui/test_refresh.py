@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtWidgets import QApplication, QDialog, QWidgetAction
+from PySide6.QtWidgets import QApplication, QDialog, QLabel, QWidgetAction
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -219,6 +219,68 @@ def test_a_rejected_typed_account_is_never_tried_on_the_other_hosts(
     window.hosts.check_hosts(window.hosts.selected_items(), status=False, users=True)
     _wait(window)
     assert len(answers["seen"]) == 1  # one host refused it; the batch stopped
+
+
+def _question(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """The texts of the account question, each time it's asked; answered with Cancel."""
+    asked: list[str] = []
+
+    def cancel(dialog: check_ui.AccountDialog) -> int:
+        asked.append(dialog.findChildren(QLabel)[0].text())  # what it's about, on top
+        return QDialog.DialogCode.Rejected
+
+    monkeypatch.setattr(check_ui.AccountDialog, "exec", cancel)
+    return asked
+
+
+def test_a_host_refusing_a_proven_account_never_stops_the_others(
+    window: CapyWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The password is right (PC-1 accepted it), but PC-2 is set up oddly in the domain and
+    # refuses every account: PC-3 is still read, and the question afterwards names PC-2.
+    admin = Account("CORP\\admin", "right")
+    window.hosts.accounts.use(Link(admin.user, Scope.ALL), admin, remember=False)
+    answers["10.0.0.2"] = Found(Status.ONLINE, users_error=RemoteError(Reason.REJECTED, 5))
+    asked = _question(monkeypatch)
+    window.hosts.table.select_ids(_ids(window, "PC-1", "PC-2", "PC-3"))
+    window.hosts.check_hosts(window.hosts.selected_items(), status=False, users=True)
+    _wait(window)
+    assert sorted(a for a, *_ in answers["seen"]) == ["10.0.0.1", "10.0.0.2", "10.0.0.3"]
+    assert _cells(window, "PC-3")[1] == "CORP\\ana"
+    [text] = asked
+    assert "1 computer didn't let “CORP\\admin” see who is logged on" in text
+    assert text.endswith("PC-2")
+
+
+def test_a_host_that_refused_goes_last_next_time(
+    window: CapyWindow, answers: dict[str, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # PC-1 comes first and refuses the account before any host has accepted it: as a wrong
+    # password would, it stops the run. The next Refresh tries it last, after PC-2 has proven
+    # the account, so it no longer stops anything.
+    admin = Account("CORP\\admin", "right")
+    window.hosts.accounts.use(Link(admin.user, Scope.ALL), admin, remember=False)
+    answers["10.0.0.1"] = Found(Status.ONLINE, users_error=RemoteError(Reason.REJECTED, 5))
+    asked = _question(monkeypatch)
+    window.hosts.table.select_ids(_ids(window, "PC-1", "PC-2", "PC-3"))
+    window.hosts.check_hosts(window.hosts.selected_items(), status=False, users=True)
+    _wait(window)
+    assert [a for a, *_ in answers["seen"]] == ["10.0.0.1"]
+    assert "rejected the account “CORP\\admin”" in asked[0]
+    answers["seen"].clear()
+    window.hosts.check_hosts(window.hosts.selected_items(), status=False, users=True)
+    _wait(window)
+    tried = [a for a, *_ in answers["seen"]]
+    assert sorted(tried) == ["10.0.0.1", "10.0.0.2", "10.0.0.3"] and tried[-1] == "10.0.0.1"
+    assert asked[1].endswith("PC-1")
+
+
+def test_the_account_question_names_a_few_hosts_and_counts_the_rest(window: CapyWindow) -> None:
+    ids = _ids(window, "PC-1", "PC-2", "PC-3")
+    assert window.hosts._names_line(ids) == "PC-1, PC-2, PC-3"
+    assert window.hosts._names_line(ids * 3) == "PC-1, PC-2, PC-3"  # each name once
+    many = [*ids, *(f"gone-{n}" for n in range(5))]  # hosts no longer in the list: their ids
+    assert window.hosts._names_line(many).endswith(" and 3 more")
 
 
 def test_host_menu_items_read_on_their_own_with_no_headings(

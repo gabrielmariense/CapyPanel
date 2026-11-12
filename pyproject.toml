@@ -1,6 +1,6 @@
 [project]
 name = "capypanel"
-version = "0.25.0"
+version = "0.26.0"
 description = "Manage the computers on your network from one window."
 readme = "README.md"
 license = "GPL-3.0-only"
@@ -37,8 +37,12 @@ extraPaths = ["tests/helpers"]  # helpers the tests import by name, as pytest's 
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib"]
 pythonpath = ["tests/ui", "tests/helpers"]  # helpers the tests share (capywindow.py, snmp_agent.py)
+faulthandler_timeout = 90  # a test stuck this long prints where it is, here and on CI
 
 [dependency-groups]
+build = [
+    "pyinstaller>=6.22",
+]
 dev = [
     "babel>=2.18.0",
     "pyright>=1.1.414",

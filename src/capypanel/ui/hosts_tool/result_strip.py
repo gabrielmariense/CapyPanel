@@ -12,7 +12,8 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QToolBut
 from capypanel.core.i18n import _
 from capypanel.ui import spacing
 from capypanel.ui.hosts_tool.runner import Outcome
-from capypanel.ui.icons import STATUS_COLORS, tabler_icon
+from capypanel.ui.icons import tabler_icon
+from capypanel.ui.themes import engine as themes
 
 WORKED_FOR = 8_000  # ms a green strip stays
 ICON = 16
@@ -42,6 +43,7 @@ class ResultStrip(QFrame):
         self._timer.setSingleShot(True)
         self._timer.timeout.connect(self.hide)
         self._retry: Callable[[], None] | None = None
+        self._failed = False
         self.retranslate()
         self.hide()
 
@@ -53,15 +55,8 @@ class ResultStrip(QFrame):
         return self._text.text()
 
     def show_outcome(self, outcome: Outcome) -> None:
-        failed = outcome.failed
-        color = STATUS_COLORS["stopped" if failed else "online"]
-        self._icon.setPixmap(
-            tabler_icon("circle-x" if failed else "circle-check", QColor(color), ICON).pixmap(
-                ICON, ICON
-            )
-        )
-        muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
-        self.close_button.setIcon(tabler_icon("x", muted, 14))
+        failed = self._failed = outcome.failed
+        self.restyle()
         self._text.setText(outcome.text)
         self._retry = outcome.retry
         self.retry_button.setVisible(outcome.retry is not None)
@@ -73,6 +68,18 @@ class ResultStrip(QFrame):
             self._timer.stop()  # stays until closed: there's something to read
         else:
             self._timer.start(WORKED_FOR)
+
+    def restyle(self) -> None:
+        """Its icons in the theme's colours: green when it worked, red when it didn't."""
+        failed = self._failed
+        color = themes.status_color("stopped" if failed else "online")
+        self._icon.setPixmap(
+            tabler_icon("circle-x" if failed else "circle-check", QColor(color), ICON).pixmap(
+                ICON, ICON
+            )
+        )
+        muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
+        self.close_button.setIcon(tabler_icon("x", muted, 14))
 
     def _retry_clicked(self) -> None:
         retry = self._retry

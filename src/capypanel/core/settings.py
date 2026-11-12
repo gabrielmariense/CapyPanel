@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from capypanel.core import files, winsec
+from capypanel.core import files, i18n, winsec
 from capypanel.core.i18n import _
 
 log = logging.getLogger(__name__)
@@ -176,8 +176,21 @@ SHELL_KEYS = frozenset(
         TOOLS_KEY,
         START_KEY,
         CLOSE_KEY,
+        "updates",
+        "guides",
     }
 )
+
+
+def language_of(settings_file: Path) -> str:
+    """The language the person chose, read without touching the file (a running copy owns
+    it); Windows' language when the file can't say, as on a first start."""
+    try:
+        kept = json.loads(settings_file.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        kept = None
+    chosen = kept.get("language") if isinstance(kept, dict) else None
+    return chosen if isinstance(chosen, str) else i18n.windows_language()
 
 
 def tool_prefs(prefs: dict[str, Any], tool_id: str, *, inherit: bool = False) -> dict[str, Any]:

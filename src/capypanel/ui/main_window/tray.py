@@ -14,7 +14,7 @@ from capypanel.core import settings
 from capypanel.core.i18n import _
 from capypanel.ui import branding
 from capypanel.ui.dialogs import run_modal
-from capypanel.ui.icons import STATUS_COLORS
+from capypanel.ui.themes import engine as themes
 
 SIZE = 32  # px the icon is drawn at; Windows scales it to the tray
 
@@ -28,7 +28,7 @@ def counted_icon(count: int) -> QIcon:
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
     badge = QRectF(SIZE * 0.42, 0, SIZE * 0.58, SIZE * 0.58)
     painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(QColor(STATUS_COLORS["stopped"]))
+    painter.setBrush(QColor(themes.badge_fill()))
     painter.drawEllipse(badge)
     font = QFont()
     font.setBold(True)

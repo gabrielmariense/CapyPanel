@@ -23,7 +23,7 @@ from capypanel.core.remote.user_profiles import (
     Why,
 )
 from capypanel.ui import checks
-from capypanel.ui.icons import STATUS_COLORS
+from capypanel.ui.themes import engine as themes
 
 MB, GB = 1024**2, 1024**3
 
@@ -50,16 +50,19 @@ STATE_NAMES = {
     State.OUTSIDE: N_("Outside Users"),
     State.REVIEW: N_("Review"),
 }
-IN_USE_BLUE = "#3b82f6"  # as the status dots, the same in every theme
-STATE_COLORS = {
-    State.READY: STATUS_COLORS["online"],
-    State.IN_USE: IN_USE_BLUE,
-    State.PROTECTED: STATUS_COLORS["offline"],
-    State.OUTSIDE: STATUS_COLORS["offline"],
-    State.REVIEW: STATUS_COLORS["attention"],
+_STATE_COLORS = {  # each state in one of the theme's status colours
+    State.READY: "online",
+    State.IN_USE: "working",
+    State.PROTECTED: "offline",
+    State.OUTSIDE: "offline",
+    State.REVIEW: "attention",
 }
 STATE_ORDER = (State.READY, State.REVIEW, State.IN_USE, State.OUTSIDE, State.PROTECTED)
 MONTHS = (0, 1, 3, 6, 12)  # "Unused for": any time, then at least this many months
+
+
+def state_color(state: State) -> str:
+    return themes.status_color(_STATE_COLORS[state])
 
 
 def state_name(state: State) -> str:
@@ -284,12 +287,12 @@ RESULT_NAMES = {
     Result.SKIPPED: N_("Skipped"),
     Result.FAILED: N_("Failed"),
 }
-RESULT_ICONS = {  # an icon and its colour: the status dots' colours
-    Result.QUEUED: ("clock", STATUS_COLORS["offline"]),
-    Result.DELETING: ("refresh", IN_USE_BLUE),
-    Result.DELETED: ("circle-check", STATUS_COLORS["online"]),
-    Result.SKIPPED: ("alert-triangle", STATUS_COLORS["attention"]),
-    Result.FAILED: ("circle-x", STATUS_COLORS["stopped"]),
+_RESULT_ICONS = {  # an icon and its colour: one of the theme's status colours
+    Result.QUEUED: ("clock", "offline"),
+    Result.DELETING: ("refresh", "working"),
+    Result.DELETED: ("circle-check", "online"),
+    Result.SKIPPED: ("alert-triangle", "attention"),
+    Result.FAILED: ("circle-x", "stopped"),
 }
 ENDED = (Result.DELETED, Result.SKIPPED, Result.FAILED)
 _RESULTS = {
@@ -297,6 +300,12 @@ _RESULTS = {
     Outcome.SKIPPED: Result.SKIPPED,
     Outcome.FAILED: Result.FAILED,
 }
+
+
+def result_icon(result: Result) -> tuple[str, str]:
+    """How a delete stands, as an icon's name and its colour in the current theme."""
+    icon, color = _RESULT_ICONS[result]
+    return icon, themes.status_color(color)
 
 
 def result_of(done: Deleted) -> Result:

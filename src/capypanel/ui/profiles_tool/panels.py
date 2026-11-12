@@ -55,7 +55,7 @@ from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.user_profiles import Deleted, Kind, Outcome, Profile, State
 from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.hosts_tool.runner import escape
-from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
+from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import DetailsPanel
 from capypanel.ui.list_workspace.panels import natural_key
 from capypanel.ui.menus import popup
@@ -73,9 +73,13 @@ ARROW = 16  # px a column title needs for the sort arrow
 IDENT_ROLE = Qt.ItemDataRole.UserRole  # the row's profile
 CAREFUL_ROLE = Qt.ItemDataRole.UserRole + 2  # ticked: deleted on Delete…
 COUNTING_ROLE = Qt.ItemDataRole.UserRole + 3  # its size is being counted now
-AMBER = STATUS_COLORS["attention"]  # what deletes, everywhere in the app
 INFO = 22  # px: the (i) at the end of the clicked row, which opens the profile's window
 INFO_GAP = 4  # px between it and the row's right edge
+
+
+def amber() -> str:
+    """What deletes, everywhere in the app: the current theme's amber."""
+    return themes.status_color("attention")
 
 
 def card() -> QFrame:
@@ -290,14 +294,14 @@ class Count(QWidget):
         shown = self.shown_text()
         painter = QPainter(self)
         color = (
-            QColor(AMBER)
+            QColor(amber())
             if self._ticked
             else self.palette().color(QPalette.ColorRole.PlaceholderText)
         )
         width = self.fontMetrics().horizontalAdvance(shown)
         left = self.width() - width
         if self._ticked:
-            icon = tabler_icon("trash", QColor(AMBER), self.BIN)
+            icon = tabler_icon("trash", QColor(amber()), self.BIN)
             left -= self.BIN + self.GAP
             top = (self.height() - self.BIN) // 2
             icon.paint(painter, left, top, self.BIN, self.BIN)
@@ -491,7 +495,7 @@ class _Careful(QStyledItemDelegate):
         if model is None or not model.index(index.row(), USER, index.parent()).data(CAREFUL_ROLE):
             return
         painter.save()
-        painter.setPen(QPen(QColor(AMBER), 2))
+        painter.setPen(QPen(QColor(amber()), 2))
         top, bottom = rect.top() + 1, rect.bottom() - 2  # above the grid's 2 px line
         painter.drawLine(rect.left(), top, rect.right(), top)
         painter.drawLine(rect.left(), bottom, rect.right(), bottom)
@@ -524,10 +528,10 @@ class _Careful(QStyledItemDelegate):
 class ProfilesTable(QWidget):
     """One row per profile and leftover. Only a row that can be deleted has a tick box; the
     others are greyed, with their state saying why. A ticked row looks like something to be
-    careful with: amber text (normal text in a light theme, where amber can't be read), "Will
-    be deleted" with the bin, and an amber outline. A row that was in a delete run shows how it
-    ended instead. A click on a column's title sorts by it, except the ticks' column. A row's
-    details open from the (i) at the end of the clicked row, Enter, or its right-click."""
+    careful with: amber text, "Will be deleted" with the bin, and an amber outline. A row that
+    was in a delete run shows how it ended instead. A click on a column's title sorts by it,
+    except the ticks' column. A row's details open from the (i) at the end of the clicked row,
+    Enter, or its right-click."""
 
     picked = Signal()  # another row has the selection
     ticked_changed = Signal()
@@ -723,6 +727,16 @@ class ProfilesTable(QWidget):
             self.tree.setCurrentItem(item)
             self.tree.scrollToItem(item)
 
+    def info_box(self, ident: str) -> QRect | None:
+        """Where the (i) of `ident`'s row is, in the table's inside; None unless that row is the
+        clicked one, the only one that has it."""
+        item = self._item(ident)
+        if item is None or item is not self.tree.currentItem():
+            return None
+        cell = self.tree.visualItemRect(item)
+        left = self.tree.columnViewportPosition(STATE)
+        return info_rect(QRect(left, cell.top(), self.tree.columnWidth(STATE), cell.height()))
+
     def info_at(self, point: QPoint) -> str:
         """The row whose (i) is at `point` of the table's inside: only the clicked row has one."""
         item = self.tree.itemAt(point)
@@ -823,19 +837,17 @@ class ProfilesTable(QWidget):
         item.setData(USER, CAREFUL_ROLE, careful)
         if careful:
             item.setText(STATE, _("Will be deleted"))
-            item.setIcon(STATE, tabler_icon("trash", QColor(AMBER), 16))
+            item.setIcon(STATE, tabler_icon("trash", QColor(amber()), 16))
             item.setData(STATE, SORT_ROLE, rows.STATE_ORDER.index(profile.state))
             item.setToolTip(STATE, _("Ticked: it's deleted once you click Delete and confirm"))
         elif result is None:
             item.setText(STATE, rows.state_name(profile.state))
             ready = profile.state is State.READY  # plain words: no colour says "fine" here
-            item.setIcon(
-                STATE, QIcon() if ready else dot_icon(rows.STATE_COLORS[profile.state], 10)
-            )
+            item.setIcon(STATE, QIcon() if ready else dot_icon(rows.state_color(profile.state), 10))
             item.setData(STATE, SORT_ROLE, rows.STATE_ORDER.index(profile.state))
             item.setToolTip(STATE, rows.state_why(profile, self._root))
         else:
-            icon, color = rows.RESULT_ICONS[result]
+            icon, color = rows.result_icon(result)
             item.setText(STATE, _(rows.RESULT_NAMES[result]))
             item.setIcon(STATE, tabler_icon(icon, QColor(color), 16))
             item.setData(STATE, SORT_ROLE, 10 + list(Result).index(result))
@@ -854,17 +866,13 @@ class ProfilesTable(QWidget):
         greyed = not profile.ready or result in (Result.DELETED, Result.QUEUED)
         role = QPalette.ColorRole.PlaceholderText if greyed else QPalette.ColorRole.Text
         brush = QBrush(self.palette().color(role))
-        if careful and not self._light():
-            brush = QBrush(QColor(AMBER))
+        if careful:
+            brush = QBrush(QColor(amber()))
         for column in (USER, USED, KIND):
             item.setForeground(column, brush)
-        item.setForeground(STATE, QBrush(QColor(AMBER)) if careful else brush)
+        item.setForeground(STATE, brush)
         if not item.data(SIZE, COUNTING_ROLE):
             item.setForeground(SIZE, brush)
-
-    def _light(self) -> bool:
-        """A light theme: amber is too faint as text there, so rows keep their text colour."""
-        return self.palette().color(QPalette.ColorRole.Base).lightness() > 128
 
     def _fill_size(
         self, item: QTreeWidgetItem, ident: str, sizes: dict[str, int | None], so_far: int = 0
@@ -884,10 +892,10 @@ class ProfilesTable(QWidget):
             item.setData(SIZE, SORT_ROLE, -1)
         else:
             greyed = not profile.ready or self._results.get(ident) is Result.DELETED
-            careful = bool(item.data(USER, CAREFUL_ROLE)) and not self._light()
+            careful = bool(item.data(USER, CAREFUL_ROLE))
             item.setText(SIZE, rows.size_text(size))
             item.setForeground(
-                SIZE, QBrush(QColor(AMBER)) if careful else muted if greyed else normal
+                SIZE, QBrush(QColor(amber())) if careful else muted if greyed else normal
             )
             item.setData(SIZE, SORT_ROLE, size)
 
@@ -929,7 +937,7 @@ class ProfileDetails(DetailsPanel):
         font.setBold(True)
         font.setPointSizeF(font.pointSizeF() * 1.25)
         name.setFont(font)
-        color = rows.RESULT_ICONS[result][1] if result else rows.STATE_COLORS[profile.state]
+        color = rows.result_icon(result)[1] if result else rows.state_color(profile.state)
         dot = QLabel()
         dot.setPixmap(dot_icon(color, 12).pixmap(12, 12))
         top = QHBoxLayout()

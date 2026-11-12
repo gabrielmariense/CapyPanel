@@ -54,6 +54,27 @@ def in_every_language(message: str) -> list[str]:
     ]
 
 
+PORTUGUESE = 0x16  # Windows' primary language id for Portuguese, Brazil's and Portugal's
+
+
+def language_for(windows_id: int) -> str:
+    """The app's language for a Windows language id: Portuguese for any Portuguese (Brazil's
+    is the one we have), English for every other."""
+    return "pt_BR" if windows_id & 0x3FF == PORTUGUESE else DEFAULT_LANGUAGE
+
+
+def windows_language() -> str:
+    """The app's language for the language this person sees Windows in (the display language,
+    not the region's formats). English where Windows doesn't say."""
+    try:
+        import ctypes
+
+        windows_id = ctypes.WinDLL("kernel32").GetUserDefaultUILanguage()
+    except (AttributeError, OSError):
+        return DEFAULT_LANGUAGE
+    return language_for(int(windows_id))
+
+
 def N_(message: str) -> str:
     """Mark a string for extraction without translating it yet."""
     return message

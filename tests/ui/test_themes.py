@@ -1,12 +1,13 @@
 import json
 import re
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QFontDatabase, QPalette
+from PySide6.QtGui import QColor, QFontDatabase, QIcon, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
     QApplication,
@@ -21,6 +22,10 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core import settings
+from capypanel.core.hosts import listfile
+from capypanel.core.hosts.model import NO_GROUP, HostList
+from capypanel.core.remote.status import Status
+from capypanel.ui.main_window.tray import counted_icon
 from capypanel.ui.themes import engine as themes
 
 
@@ -78,11 +83,151 @@ CUSTOM = [t for t in themes.Registry().all() if t.engine == "custom"]
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_text_is_readable_in_every_custom_theme(theme: themes.Theme) -> None:
     # WCAG AA: at least 4.5:1 for normal text, on every surface it's drawn on.
-    # Selected rows always use the main text colour.
-    pairs = [(t, s) for t in ("text", "text2", "text3") for s in ("bg", "card", "chrome")]
-    for text, surface in [*pairs, ("text", "sel_solid")]:
+    # Selected rows always use the main text colour. The hint grey (text3) is drawn on panes;
+    # its one label on the window's own background gets a darker step.
+    pairs = [(t, s) for t in ("text", "text2") for s in ("bg", "card", "chrome")]
+    for text, surface in [*pairs, ("text", "sel_solid"), ("text3", "card")]:
         ratio = themes.contrast_ratio(theme.colors[text], theme.colors[surface])
         assert ratio >= 4.5, f"{theme.id}: {text} on {surface} is only {ratio:.1f}:1"
+    heading = _rule(themes.stylesheet(theme), "QLabel#groupHeading")
+    color = re.search(r"color: rgba[(](\d+), (\d+), (\d+)", heading) or re.search(
+        r"color: #(..)(..)(..)", heading
+    )
+    assert color is not None
+    red, green, blue = (int(c, 16 if "#" in color[0] else 10) for c in color.groups())
+    on_window = themes.contrast_ratio(QColor(red, green, blue).name(), theme.colors["bg"])
+    assert on_window >= 4.5, f"{theme.id}: a group's heading on the window is {on_window:.1f}:1"
+
+
+@pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
+def test_hints_step_back_from_the_text_beside_them(theme: themes.Theme) -> None:
+    # Three real levels of text in every theme: "Nobody" and "Not checked" are a visible step
+    # lighter than the second level, as they always were in the dark themes.
+    c, ratio = theme.colors, themes.contrast_ratio
+    assert ratio(c["text2"], c["card"]) - ratio(c["text3"], c["card"]) >= 1.5, theme.id
+
+
+def _surfaces() -> list[tuple[str, str, str, str, dict[str, str]]]:
+    """Each built-in theme's pane, selection and text, with its status colours. The Windows
+    themes with Windows' default accent; any other accent is the next test's."""
+    found = []
+    for theme in CUSTOM:
+        c = theme.colors
+        status = {key: c[key] for key in themes.STATUS_KEYS}
+        found.append((theme.id, c["card"], c["sel_solid"], c["text"], status))
+    for scheme in ("dark", "light"):
+        c = themes.NATIVE_TOKENS[scheme]
+        tint = themes.selection_tint(QColor("#0078d4"), c["card"], c["text"])
+        status = {key: themes.TOKENS[scheme][key] for key in themes.STATUS_KEYS}
+        found.append((f"windows-{scheme}", c["card"], tint, c["text"], status))
+    return found
+
+
+@pytest.mark.parametrize("surface", _surfaces(), ids=lambda s: s[0])
+def test_status_colours_read_in_every_built_in_theme(
+    surface: tuple[str, str, str, str, dict[str, str]],
+) -> None:
+    """Amber, green, red, grey and blue as each theme has them: words on the pane (4.5:1) and
+    at least a dot on a selected row (3:1); amber is a whole row's text, so 4.5:1 there too.
+    The picked colours pass as written: the fallback doesn't have to move any of them."""
+    theme_id, card, selection, text, status = surface
+    for key, color in status.items():
+        on_pane, on_selection = themes.status_floors(key)
+        got = themes.contrast_ratio(color, card), themes.contrast_ratio(color, selection)
+        assert got[0] >= on_pane, f"{theme_id}: {key} {color} is {got[0]:.2f}:1 on the pane"
+        assert got[1] >= on_selection, f"{theme_id}: {key} {color} is {got[1]:.2f}:1 when picked"
+        assert themes.fit_status(key, color, card, selection, text) == QColor(color).name()
+    # A count on the red, and the words on a button filled in amber.
+    assert themes.contrast_ratio("#ffffff", themes.button_fill(QColor(status["stopped"]))) >= 4.5
+    amber = status["attention"]
+    assert themes.contrast_ratio(themes.text_on(amber), amber) >= 4.5, theme_id
+
+
+def test_amber_is_one_gold_and_paper_keeps_its_own() -> None:
+    registry = themes.Registry()
+    assert registry.find("capypanel-dark").colors["attention"] == "#e3b341"
+    assert registry.find("graphite").colors["attention"] == "#e3b341"
+    assert registry.find("capypanel-light").colors["attention"] == "#7d5a00"
+    paper = registry.find("paper").colors
+    assert paper["attention"] == "#805300"  # further from its orange accent, set in its file
+    assert themes.contrast_ratio(paper["attention"], paper["accent"]) >= 1.25
+
+
+def test_a_theme_file_without_status_colours_gets_readable_ones(tmp_path: Path) -> None:
+    # Its pane is a mid grey, where the dark set's red and green are hard to read.
+    odd = {"card": "#55575e", "sel_solid": "#3d5a80"}
+    path = tmp_path / "odd.json"
+    path.write_text(json.dumps({"name": "Odd", "base": "dark", "colors": odd}), encoding="utf-8")
+    theme = themes.load_theme_file(path)
+    moved = 0
+    for key in themes.STATUS_KEYS:
+        on_pane, on_selection = themes.status_floors(key)
+        assert themes.contrast_ratio(theme.colors[key], odd["card"]) >= on_pane, key
+        assert themes.contrast_ratio(theme.colors[key], odd["sel_solid"]) >= on_selection, key
+        moved += theme.colors[key] != themes.TOKENS["dark"][key]
+    assert moved
+    # A colour the file sets is the file's, as written.
+    own = {**odd, "stopped": "#ff0000"}
+    path.write_text(json.dumps({"name": "Odd", "base": "dark", "colors": own}), encoding="utf-8")
+    assert themes.load_theme_file(path).colors["stopped"] == "#ff0000"
+    path.write_text(
+        json.dumps({"name": "Odd", "base": "dark", "colors": {"danger": "#ff0000"}}),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="unknown colour"):  # one red: "stopped"
+        themes.load_theme_file(path)
+
+
+def test_every_theme_has_its_ink_colours() -> None:
+    for theme in CUSTOM:
+        assert all(QColor.isValidColorName(theme.colors[key]) for key in themes.INK_KEYS)
+    light, dark = themes.TOKENS["light"], themes.TOKENS["dark"]
+    assert themes.contrast_ratio(light["ink_black"], "#ffffff") >= 10  # black toner reads black
+    assert themes.contrast_ratio(light["ink_yellow_edge"], "#ffffff") >= themes.MARK_CONTRAST
+    assert dark["ink_yellow_edge"] == dark["ink_yellow"]  # no edge to see on a dark pane
+
+
+def _dot(icon: object) -> str:
+    """The colour in the middle of a status dot."""
+    assert isinstance(icon, QIcon)
+    image = icon.pixmap(10, 10).toImage()
+    return image.pixelColor(image.width() // 2, image.height() // 2).name()
+
+
+def test_a_theme_switch_redraws_what_was_drawn_in_status_colours(
+    qapp: QApplication, tmp_path: Path
+) -> None:
+    (tmp_path / settings.PORTABLE_MARKER).touch()
+    hosts, host = HostList().add_host("DESK-01", NO_GROUP, address="192.0.2.10")
+    listfile.save(tmp_path / "office.json", hosts, expected=None)
+    window = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
+    window.hosts.open_list(tmp_path / "office.json")
+    window.set_theme("capypanel-dark")
+    tool = window.hosts
+    tool._status_found[host.id] = (Status.ONLINE, datetime.now(UTC), None)
+    tool.table.show_cells(host.id, tool._cells(host.id))
+    row = tool.table._rows[host.id]
+    assert themes.status_color("online") == themes.TOKENS["dark"]["online"]
+    assert _dot(row.icon(tool.table.STATUS)) == themes.TOKENS["dark"]["online"]
+    assert themes.status_color(Status.NOT_FOUND) == themes.TOKENS["dark"]["attention"]
+    badge = counted_icon(3).pixmap(32, 32).toImage().pixelColor(28, 3).name()
+    assert badge == themes.button_fill(QColor(themes.TOKENS["dark"]["stopped"]))
+
+    window.set_theme("paper")
+    assert _dot(row.icon(tool.table.STATUS)) == themes.TOKENS["light"]["online"]
+    assert themes.status_color("attention") == "#805300"
+    assert themes.ink_colors()["black"] == themes.TOKENS["light"]["ink_black"]
+
+    # The Windows themes: the light set on a light Windows, the dark one on a dark Windows.
+    window.set_theme("windows-light")
+    assert _dot(row.icon(tool.table.STATUS)) == themes.TOKENS["light"]["online"]
+    # Windows switching dark and light under "follow system" reaches the tools the same way.
+    seen = []
+    themes.switches().switched.connect(lambda: seen.append(themes.current().id))
+    themes.apply(themes.Registry().find("capypanel-dark"))
+    assert seen == ["capypanel-dark"]
+    assert _dot(row.icon(tool.table.STATUS)) == themes.TOKENS["dark"]["online"]
+    window.close()
 
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
@@ -132,6 +277,19 @@ def test_selection_is_visible_and_readable_with_any_accent(scheme: str, accent: 
     tint = themes.selection_tint(QColor(accent), c["card"], c["text"])
     assert themes.contrast_ratio(tint, c["card"]) >= 1.35
     assert themes.contrast_ratio(c["text"], tint) >= 4.5
+
+
+@pytest.mark.parametrize("scheme", ["light", "dark"])
+@pytest.mark.parametrize("accent", ACCENTS)
+def test_status_colours_read_on_a_selection_of_any_accent(scheme: str, accent: str) -> None:
+    # The Windows themes' selected row is a tint of the accent the person picked in Windows.
+    c = themes.NATIVE_TOKENS[scheme]
+    tint = themes.selection_tint(QColor(accent), c["card"], c["text"])
+    for key in themes.STATUS_KEYS:
+        color = themes.fit_status(key, themes.TOKENS[scheme][key], c["card"], tint, c["text"])
+        on_pane, on_selection = themes.status_floors(key)
+        assert themes.contrast_ratio(color, c["card"]) >= on_pane, key
+        assert themes.contrast_ratio(color, tint) >= on_selection, key
 
 
 @pytest.mark.parametrize("scheme", ["light", "dark"])
@@ -396,9 +554,9 @@ def test_corners_come_in_two_sizes_from_the_theme(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     assert themes.load_theme_file(path).control == 3
-    for other in ("graphite", "paper"):  # theirs change in their own round
-        kept = themes.Registry().find(other)
-        assert (kept.radius, kept.control) == (8, 6)
+    for other in ("graphite", "paper"):  # the same two sizes, set in their files
+        same = themes.Registry().find(other)
+        assert (same.radius, same.control) == (6, 4)
 
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
@@ -427,6 +585,33 @@ def test_tables_draw_a_line_under_each_row_and_none_between_columns() -> None:
         rules = re.findall(r"([^{}]+)[{]([^}]*)[}]", sheet)
         grid = [body for selector, body in rules if "#grid" in selector]
         assert grid and not any("border-right" in body for body in grid)
+
+
+@pytest.mark.parametrize("scheme", ["light", "dark"])
+def test_a_ticked_box_in_a_list_keeps_its_box_in_the_windows_themes(
+    qapp: QApplication, scheme: str
+) -> None:
+    """With the Windows themes' own rules on rows, the Windows style drew a ticked box in a
+    list (User profiles, the quick commands) as a bare tick, white on white in light: the
+    stylesheet draws it, filled in a shade of the accent that white reads on."""
+    themes.apply(themes.Registry().find(f"windows-{scheme}"))
+    tokens = themes.native_tokens(QColor("#ffb900"))  # Windows' yellow accent
+    sheet = themes._NATIVE_QSS % {**tokens, **themes._status_tokens(themes.status_colors())}
+    checked = _rule(sheet, "QTreeView::indicator:checked, QListView::indicator:checked")
+    assert f'image: url("{tokens["check"]}")' in checked and Path(tokens["check"]).is_file()
+    assert themes._qss_color(tokens["accent_fill"]) in checked or tokens["accent_fill"] in checked
+    assert themes.contrast_ratio("#ffffff", tokens["accent_fill"]) >= 4.5
+    assert "border-radius" in _rule(sheet, "QTreeView::indicator, QListView::indicator")
+
+
+@pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
+def test_row_lines_are_softer_than_the_table_s_frame(theme: themes.Theme) -> None:
+    c, ratio = theme.colors, themes.contrast_ratio
+    line = themes._card_tokens(c)["row_line"]
+    frame = _rule(themes.stylesheet(theme), "QTreeView, QListView")
+    assert themes._qss_color(c["border"]) in frame and line not in frame
+    assert line in _rule(themes.stylesheet(theme), "QTreeView#grid::item")
+    assert 1.25 <= ratio(line, c["card"]) < ratio(c["border"], c["card"]) - 0.5, theme.id
 
 
 def test_column_titles_have_a_line_between_them_to_drag(qapp: QApplication) -> None:

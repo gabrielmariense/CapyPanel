@@ -9,15 +9,6 @@ from PySide6.QtGui import QColor, QGuiApplication, QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 
 TABLER_DIR = Path(__file__).resolve().parent / "tabler"
-# Status dots and warnings, the same in every theme: Hosts' states, and Printers' stopped (red)
-# and needs-attention (amber), which the rail's count and the warnings strip use too.
-STATUS_COLORS = {
-    "online": "#3fae4a",
-    "offline": "#8a8a8a",
-    "not-found": "#d29922",
-    "stopped": "#e5534b",
-    "attention": "#d29922",
-}
 
 
 def _pixmap(px: int) -> QPixmap:

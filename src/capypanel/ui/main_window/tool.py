@@ -12,6 +12,7 @@ from capypanel.ui.main_window.toolbar import ToolBar
 from capypanel.ui.settings.group import SettingsGroup
 
 if TYPE_CHECKING:
+    from capypanel.ui.guides import Guide
     from capypanel.ui.saved_credentials import KeptLogin
 
 
@@ -112,6 +113,25 @@ class Tool(QWidget):
 
     def show_attention(self) -> None:
         """Lists just the items that need attention (the tray's menu asks for it)."""
+
+    def guide(self) -> "Guide | None":
+        """Its first-run guide (ui/guides.py), shown the first time the tool is: its own first
+        steps only, never what Home's guide says about every tool."""
+        return None
+
+    def first_use_pending(self) -> bool:
+        """Whether first_use_warning still has something to say."""
+        return False
+
+    def first_use_warning(self, parent: QWidget) -> bool:
+        """Before the tool is shown for the first time ever: False keeps it closed. A tool
+        that can do harm says so here (User profiles)."""
+        return True
+
+    def working(self) -> bool:
+        """Whether it's in the middle of something an update must not cut off (a Refresh):
+        "Install and restart" waits for it to end."""
+        return False
 
     def works_in_background(self) -> bool:
         """Whether it does something on its own (Refresh on its own), worth keeping CapyPanel

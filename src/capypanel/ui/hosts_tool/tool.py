@@ -46,6 +46,7 @@ from capypanel.ui.connect import Connector, Request
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.export_hosts import ExportDialog
 from capypanel.ui.groups import ROLE_ID
+from capypanel.ui.guides import Guide, Step
 from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, list_file_filter
 from capypanel.ui.hosts_tool.accounts import Accounts, used_for, windows_account
 from capypanel.ui.hosts_tool.actions import create_actions, retranslate_actions
@@ -56,17 +57,20 @@ from capypanel.ui.hosts_tool.runner import HostTarget, Outcome, Report, Runner, 
 from capypanel.ui.hosts_tool.settings import HostsSettings, SettingsPrefs
 from capypanel.ui.hosts_tool.table import Cells, HostTable, not_checked
 from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
-from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
+from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.list_workspace.customize import Part
+from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, sample_tag
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 from capypanel.ui.menus import shortcut_text
 from capypanel.ui.saved_credentials import KeptLogin
+from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
 MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks first
+NAMED = 5  # hosts the account question names; the rest are counted
 # Host commands' keys; the rest have none for now (a Keyboard shortcuts page comes later).
 COMMAND_SHORTCUTS = {
     "c-share": "Ctrl+E",
@@ -318,6 +322,74 @@ class HostsTool(ListWorkspace):
 
     def import_action(self) -> QAction | None:
         return self.commands.import_hosts
+
+    def restyle(self) -> None:
+        """After a theme switch: the dots, the Details panel and the strip were drawn in the
+        old theme's colours."""
+        super().restyle()
+        for host_id in self.table.shown_ids():
+            self.table.show_cells(host_id, self._cells(host_id))
+        self.result_strip.restyle()
+        self._selection_changed()
+
+    def guide(self) -> Guide:
+        """Its own first steps: lists, tags, adding hosts, Details with the sample's row,
+        Connect, Refresh, the command buttons (when a picked host shows them) and Commands.
+        No step asks for a click."""
+        bar = self.toolbar
+
+        def buttons() -> list[QWidget]:  # the picked host's command buttons, every row
+            found = getattr(self.details, "buttons", {})
+            return [b for b in found.values() if shiboken6.isValid(b)]
+
+        def steps() -> list[Step]:
+            buttons_step = [
+                Step(_("Command buttons"),
+                     _("One click runs a command on the picked host. The top row is always "
+                       "there, and the rows below are your quick commands. Choose them with a "
+                       "right-click on this panel, or in Settings › Hosts › General."),
+                     buttons, lambda: self.details, join=True),
+            ] if any(b.isVisibleTo(self) for b in buttons()) else []  # fmt: skip
+            return [
+                Step(_("Your lists"),
+                     _("Pick a list here: the shared one everyone on this PC sees, your "
+                       "personal one, or one you added. Click a group below it to see just that "
+                       "group's hosts."), lambda: self.nav),
+                Step(_("Tags"),
+                     _("Tags mark hosts across groups. The sample PC has one, \"{tag}\". Pick a "
+                       "tag here to see only the hosts that have it.").format(tag=sample_tag()),
+                     lambda: self.nav.tags),
+                Step(_("Add hosts"),
+                     _("The Inventory menu adds hosts one at a time or imports many at once. A "
+                       "right-click on the table can add one too."),
+                     lambda: bar.inventory_button),
+                Step(_("Details"),
+                     _("The host you pick in the table shows here, with all its details. To see "
+                       "everything you can do with a host, right-click it in the table."),
+                     lambda: self.details, area=lambda: self.sample_row(self.window())),
+                Step(_("Connect"),
+                     _("Opens the remote screen of the host you picked. The tool it uses comes "
+                       "from the host's connection profile, in Settings › Hosts › Connecting."),
+                     lambda: bar.connect_button),
+                Step(_("Refresh all"),
+                     _("Checks every host shown: whether it's on, and who's signed in. "
+                       "Right-click the button to choose what it checks."),
+                     lambda: bar.refresh_button),
+                *buttons_step,
+                Step(_("Commands"),
+                     _("Opens every command for the picked host. A right-click on a host has "
+                       "them too, under All commands. They run with your Windows account; if a "
+                       "PC refuses it, CapyPanel asks for another, kept in Settings › Hosts › "
+                       "Credentials."), lambda: bar.commands_button),
+            ]  # fmt: skip
+
+        return Guide("hosts", steps, docs="hosts/host-lists/", setup=self.show_sample,
+                     cleanup=self.hide_sample)  # fmt: skip
+
+    def sample_item(self, group: str) -> Host:
+        """The guides' sample PC: a documentation address (192.0.2.x) that never answers."""
+        return Host(id=SAMPLE_ID, name=_("SAMPLE-PC"), group=group, address="192.0.2.10",
+                    tags=(sample_tag(),), notes=_("Shown only while a guide is open."))  # fmt: skip
 
     def retranslate(self) -> None:
         retranslate_actions(self.commands)
@@ -829,7 +901,7 @@ class HostsTool(ListWorkspace):
                 hidden=self.hidden_parts(),
             )
             self.details.show_host(details, 1, needle=self._needle())
-            if host.connect_address and host.id not in self._facts:
+            if host.connect_address and host.id not in self._facts and not is_sample(host.id):
                 self._facts_timer.start()  # read once it stays selected a moment
         else:
             self.details.show_host(None, len(items), summary=self._summary())
@@ -1008,7 +1080,10 @@ class HostsTool(ListWorkspace):
     def check_hosts(self, hosts: Sequence[Host], *, status: bool, users: bool) -> None:
         if self._run is not None or not (status or users):
             return
-        targets = [(h.id, h.connect_address) for h in hosts if h.connect_address]
+        hosts = [h for h in hosts if not is_sample(h.id)]  # a guide's sample: never read
+        targets = self._refusing_last(
+            [(h.id, h.connect_address) for h in hosts if h.connect_address]
+        )
         skipped = len(hosts) - len(targets)
         if skipped:
             note = ngettext(
@@ -1031,6 +1106,19 @@ class HostsTool(ListWorkspace):
         accounts = self._accounts_of(targets) if users and targets else {}
         if targets and accounts is not None:
             self._start(targets, Checks(status, users, self._ports()), accounts)
+
+    def _refusing_last(self, targets: list[tuple[str, str]]) -> list[tuple[str, str]]:
+        """The hosts that refused their account last time go last: a typed password is proven
+        on a host that accepts it before they're tried, so one of them can't stop the rest."""
+        return sorted(targets, key=lambda target: self._refused_before(target[0]))
+
+    def _refused_before(self, host_id: str) -> bool:
+        found = self._users_found.get(host_id)
+        error = found[1] if found is not None else None
+        return error is not None and error.reason is Reason.REJECTED
+
+    def working(self) -> bool:
+        return self.checking()
 
     def checking(self) -> bool:
         """A Refresh is running (another one waits for it to end)."""
@@ -1155,8 +1243,9 @@ class HostsTool(ListWorkspace):
             self._ask_account(run)
 
     def _ask_account(self, run: CheckRun) -> None:
-        """A host didn't let its account read who is logged on: offer another, once per run,
-        and the PCs to use it for."""
+        """Once the run is over, hosts that didn't let their account read who is logged on: one
+        question for all of them, naming them, with another account and the PCs to use it
+        for."""
         rejected = run.rejected[-1] if run.rejected else None
         account = rejected or next((a for a in map(run.account_of, self._refused) if a), None)
         first = self._name_of(self._refused[-1]) if self._refused else ""
@@ -1181,8 +1270,11 @@ class HostsTool(ListWorkspace):
                 "{n} computers didn't let “{user}” see who is logged on. Use another account?",
                 len(self._refused),
             ).format(n=len(self._refused), user=account.user)
-        # Again: the hosts that refused, and those a rejection kept from being tried.
-        again = [t for t in self._targets if t[0] in self._refused or t[0] not in self._reported]
+        if self._refused:
+            text = f"{text}\n\n{self._names_line(self._refused)}"
+        # Again: those a rejection kept from being tried, then the hosts that refused.
+        again = [t for t in self._targets if t[0] not in self._reported]
+        again += [t for t in self._targets if t[0] in self._refused]
         uses = self.accounts.uses_for([self._target(*t) for t in again or self._targets])
         saved = account is not None and self.accounts.saved(account.user)
         dialog = AccountDialog(self, text, account.user if account else "",
@@ -1195,6 +1287,17 @@ class HostsTool(ListWorkspace):
         accounts = self._accounts_of(again) if again else None
         if accounts is not None:
             self._start(again, Checks(False, True, run.wanted.ports), accounts)
+
+    def _names_line(self, host_ids: Sequence[str]) -> str:
+        """ "PC-07, PC-12, PC-31", or the first few "and 4 more": who the question is about."""
+        names = sorted({self._name_of(i) for i in host_ids}, key=str.casefold)
+        shown = ", ".join(names[:NAMED])
+        if len(names) <= NAMED:
+            return shown
+        more = len(names) - NAMED
+        return ngettext("{names} and {n} more", "{names} and {n} more", more).format(
+            names=shown, n=more
+        )
 
     def _name_of(self, host_id: str) -> str:
         host = self._doc.hosts.host(host_id) if self._doc else None
@@ -1215,7 +1318,7 @@ class HostsTool(ListWorkspace):
             status_cell = (
                 check_texts.status_text(state),
                 check_texts.status_tip(state, when, answered),
-                dot_icon(STATUS_COLORS[state]),
+                dot_icon(themes.status_color(state)),
                 state is not Status.ONLINE,
             )
         pending = self._pending.get(host_id)
@@ -1229,7 +1332,7 @@ class HostsTool(ListWorkspace):
                 _("CapyPanel asked for it at {when}.").format(
                     when=check_texts.clock_text(pending.asked)
                 ),
-                tabler_icon("clock", QColor(STATUS_COLORS["attention"]), 14),
+                tabler_icon("clock", QColor(themes.status_color("attention")), 14),
                 False,
             )
         user_cell: tuple[str, str, Any, bool] = blank.user
@@ -1372,7 +1475,7 @@ class HostsTool(ListWorkspace):
         target = self.selected_target()
         if target is None:
             return
-        amber = QColor(STATUS_COLORS["attention"])
+        amber = QColor(themes.status_color("attention"))
         from capypanel.ui.hosts_tool.command_windows import where_text
 
         for index, session in enumerate(check_texts.by_state(self._known_sessions(target.key))):
@@ -1398,7 +1501,7 @@ class HostsTool(ListWorkspace):
         menu = self.details.power_menu
         menu.clear()
         self._update_host_actions()
-        amber = QColor(STATUS_COLORS["attention"])
+        amber = QColor(themes.status_color("attention"))
         text = self.palette().color(self.foregroundRole())
         for command_id, color in (("restart", amber), ("shut-down", amber),
                                   ("cancel-restart", text)):  # fmt: skip

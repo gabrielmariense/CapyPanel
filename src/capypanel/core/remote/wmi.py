@@ -170,8 +170,11 @@ class Wmi:
         return None if value is None else str(value)
 
     def dword(self, hive: int, key: str, name: str) -> int | None:
+        """A DWORD as the unsigned number it is: COM hands one of 2**31 or more over as negative,
+        and half the profiles then had no "last used" (the low half of a time is such a number
+        about half the time)."""
         value = self.reg("GetDWORDValue", hive, key, name).uValue
-        return None if value is None else int(value)
+        return None if value is None else int(value) & 0xFFFF_FFFF
 
 
 def read(

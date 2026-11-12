@@ -4,16 +4,19 @@ and commands. The rail, View's tools, the toolbar, the tool and the status bar's
 the tool shown. With none shown, the Home page fills the window."""
 
 import logging
-from collections.abc import Sequence
+import threading
+from collections.abc import Callable, Sequence
+from dataclasses import replace
 from typing import Any
 
-from PySide6.QtCore import QByteArray, QEvent, QObject
+from PySide6.QtCore import QByteArray, QEvent, QObject, QRect, Qt, QTimer
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
     QCloseEvent,
     QGuiApplication,
     QKeySequence,
+    QPalette,
     QResizeEvent,
     QShowEvent,
 )
@@ -21,16 +24,20 @@ from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QMainWindow,
+    QMessageBox,
     QStackedWidget,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from capypanel import BUILD
 from capypanel.core import settings
-from capypanel.core.i18n import _
+from capypanel.core.i18n import _, pgettext
 from capypanel.ui import language, spacing
 from capypanel.ui.dialogs import run_modal
+from capypanel.ui.guides import Guide, GuideRunner, Step, on_screen, seen_from
+from capypanel.ui.icons import tabler_icon
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.home import HomePage
 from capypanel.ui.main_window.rail import ToolRail
@@ -43,6 +50,7 @@ from capypanel.ui.settings.window import WIDTH as SETTINGS_WIDTH
 from capypanel.ui.settings.window import SettingsDialog
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import CATALOG, ToolInfo
+from capypanel.ui.updater import Updater
 
 log = logging.getLogger(__name__)
 
@@ -102,15 +110,22 @@ class MainWindow(QMainWindow):
         row.addWidget(self._pages, 1)
         self.setCentralWidget(central)
 
+        self.updater = Updater(self.prefs, self.save_prefs, self.paths.company_tools_dir, self)
+        self.guides = GuideRunner(self, seen_from(self.prefs), self.save_prefs, _docs_page)
+        self._tools_agreed = False  # an update asked the tools already: closing asks no more
         self._build_menus()
         self._connect()
         self._connect_tray()
+        themes.switches().switched.connect(self._restyle)
         self._restore_layout()
         # Home, unless the user picked a tool, or the tool shown last, in Settings.
         start = self.prefs.get(settings.START_KEY, settings.START_HOME)
         if start == settings.START_LAST:
             start = self.prefs.get(settings.TOOL_KEY)
-        self._show(start if isinstance(start, str) and start in self.tools else None)
+        start = start if isinstance(start, str) and start in self.tools else None
+        if start is not None and self.tools[start].first_use_pending():
+            start = None  # its warning comes first, from Home, once the window shows
+        self._show(start)
 
     def _add_tool(self, tool: Tool) -> None:
         tool_id = tool.TOOL_ID
@@ -152,7 +167,15 @@ class MainWindow(QMainWindow):
 
     def _show(self, tool_id: str | None) -> None:
         """The rail, View's tools, the toolbar, the tool and the status bar follow. Home has
-        no toolbar and nothing on the status bar."""
+        no toolbar and nothing on the status bar. A tool's first-use warning comes before its
+        first showing; its guide after, the first time."""
+        if tool_id is not None and on_screen(self):
+            tool = self.tools[tool_id]
+            if tool.first_use_pending() and not tool.first_use_warning(self):
+                self.rail.show_tool(self._shown)  # Cancel: where it was
+                return
+        if self.guides.running and self.guides.running != (tool_id or "home"):
+            self.guides.stop()  # left its screen: it shows again the next time
         self._shown = tool_id
         tool = self.shown_tool()
         self._pages.setCurrentWidget(self.home if tool_id is None else self._page_of[tool_id])
@@ -165,6 +188,7 @@ class MainWindow(QMainWindow):
             self._status[other_id].set_shown(other_id == tool_id)
         self._fill_view_menu()
         self._show_title(tool.title() if tool is not None else "")
+        self._guide_now()
         if tool is not None:
             tool.align_toolbar_later()
             self.prefs[settings.TOOL_KEY] = tool_id
@@ -234,9 +258,19 @@ class MainWindow(QMainWindow):
         self._view_menu = StayOpenMenu(self)
         bar.addMenu(self._view_menu)
         self._help_menu = bar.addMenu("")
-        self._help_menu.addActions([a.documentation, a.report_problem])
+        self._help_menu.addActions(
+            [a.show_guide, a.show_all_guides, a.documentation, a.report_problem]
+        )
         self._help_menu.addSeparator()
-        self._help_menu.addAction(a.about)
+        self._help_menu.addActions([a.check_updates, a.about])
+        # A newer release: a button at the menu bar's right end, the same in every tool.
+        self.update_button = QToolButton()
+        self.update_button.setObjectName("updateButton")
+        self.update_button.setAutoRaise(True)
+        self.update_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.update_button.clicked.connect(lambda: self.open_updates())
+        self.update_button.hide()
+        bar.setCornerWidget(self.update_button, Qt.Corner.TopRightCorner)
         self._retranslate_menus()
 
     def _fill_view_menu(self) -> None:
@@ -276,6 +310,10 @@ class MainWindow(QMainWindow):
         a.documentation.triggered.connect(self._open_docs)
         a.report_problem.triggered.connect(self._report_problem)
         a.about.triggered.connect(lambda: self.open_settings("about"))  # About is a page there
+        a.check_updates.triggered.connect(lambda: self.open_updates())
+        a.show_guide.triggered.connect(lambda: self._guide_now(force=True))
+        a.show_all_guides.triggered.connect(self.show_all_guides_again)
+        self.updater.changed.connect(self._show_update_button)
         a.show_toolbar.toggled.connect(self._show_toolbars)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
 
@@ -348,6 +386,7 @@ class MainWindow(QMainWindow):
         """Settings, wired up: every choice applies as it's made, with no Save."""
         groups = [g for t in self.tools.values() if (g := t.settings_group()) is not None]
         start = self.prefs.get(settings.START_KEY)
+        closing = self.prefs.get(settings.CLOSE_KEY)
         dialog = SettingsDialog(
             self,
             paths=self.paths,
@@ -355,12 +394,26 @@ class MainWindow(QMainWindow):
             groups=groups,
             tools=self._infos(),
             start=start if isinstance(start, str) else settings.START_HOME,
+            updates=self.updater.how_often(),
+            updates_editable=self.updater.can_set(),
+            # What's saved, so the page shows it, and picking "Ask" again is a change it saves.
+            closing=closing if isinstance(closing, str) else settings.CLOSE_ASK,
         )
         dialog.language_picked.connect(self.set_language)
         dialog.theme_picked.connect(self.set_theme)
         dialog.start_picked.connect(self._set_start)
         dialog.closing_picked.connect(self._set_closing)
+        dialog.updates_picked.connect(lambda how: self._set_update_checks(how, dialog))
+        dialog.about.updates_button.clicked.connect(lambda: self.open_updates(dialog))
         return dialog
+
+    def _set_update_checks(self, how: str, dialog: SettingsDialog) -> None:
+        try:
+            self.updater.set_how_often(how)
+        except OSError as e:
+            dialog.general.show_updates(self.updater.how_often())
+            text = _("Couldn't save how often to check: {error}").format(error=e)
+            QMessageBox.warning(dialog, _("Settings"), text)
 
     def _set_start(self, start: str) -> None:
         self.prefs[settings.START_KEY] = start
@@ -444,14 +497,13 @@ class MainWindow(QMainWindow):
 
     def _close_choice(self) -> str | None:
         """What the X does now: settings.CLOSE_TRAY, CLOSE_QUIT, or None to stay open. "Ask
-        each time" asks only while there's something to keep running."""
+        each time" asks every time, even with nothing running on its own: from the tray the
+        window comes back at once, where a new start takes seconds."""
         if self._quitting or not self.tray.available():
             return settings.CLOSE_QUIT
         choice = self.prefs.get(settings.CLOSE_KEY, settings.CLOSE_ASK)
         if choice in (settings.CLOSE_TRAY, settings.CLOSE_QUIT):
             return str(choice)
-        if not any(t.works_in_background() for t in self.tools.values()):
-            return settings.CLOSE_QUIT
         answer, remember = ask_closing(self)
         if answer is not None and remember:
             self._set_closing(answer)
@@ -461,12 +513,156 @@ class MainWindow(QMainWindow):
 
     def set_theme(self, theme_id: str) -> None:
         theme = self.registry.find(theme_id)
-        themes.apply(theme)
-        for tool in self.tools.values():
-            tool.restyle()  # icon colours, the font's size, the toolbar's padding
+        themes.apply(theme)  # _restyle follows it
         self.prefs["theme"] = theme.id
         self.save_prefs()
         log.info("Theme: %s", theme.id)
+
+    def _restyle(self) -> None:
+        """After every theme switch, the one Windows starts under "follow system" too."""
+        for tool in self.tools.values():
+            tool.restyle()  # icon colours, the font's size, the toolbar's padding
+        self._tray_counts()  # the count on the tray's icon is in the theme's red
+        self._paint_update_button()
+
+    # ---- updates ----
+
+    def open_updates(self, parent: QWidget | None = None) -> None:
+        """The update window: the release on offer, or a look at GitHub first."""
+        from capypanel.ui.updater import UpdateWindow
+
+        window = UpdateWindow(
+            parent or self, self.updater, app_dir=settings.app_dir(),
+            working=self.tools_working, quit_for_update=self.quit_for_update,
+        )  # fmt: skip
+        run_modal(window)
+
+    def _show_update_button(self) -> None:
+        from capypanel.ui.updater import button_text
+
+        offer = self.updater.offer
+        self.update_button.setVisible(offer is not None)
+        if offer is not None:
+            self.update_button.setText(button_text(offer))
+            self.update_button.setToolTip(_("A newer CapyPanel is out: see what's new"))
+            self._paint_update_button()
+            self.update_button.adjustSize()
+            # The menu bar sizes its corner when it's given one: given again, it fits the words.
+            self.menuBar().setCornerWidget(self.update_button, Qt.Corner.TopRightCorner)
+
+    def _paint_update_button(self) -> None:
+        color = self.update_button.palette().color(QPalette.ColorRole.Link)
+        self.update_button.setIcon(tabler_icon("download", color, 16))
+
+    # ---- first-run guides ----
+
+    def _guide_for(self, tool_id: str | None) -> Guide | None:
+        """The screen's guide; a tool's own ends on the View menu, the same for every tool."""
+        if tool_id is None:
+            return self._home_guide()
+        tool = self.tools[tool_id]
+        guide = tool.guide()
+        if guide is None or guide.guide_id != tool_id or not tool.view_actions():
+            return guide
+        steps = guide.steps
+        return replace(guide, steps=lambda: [*steps(), self._view_step(tool)])
+
+    def _view_step(self, tool: Tool) -> Step:
+        bar = self.menuBar()
+
+        def view_title() -> QRect:  # "View" on the menu bar
+            spot = bar.actionGeometry(self._view_menu.menuAction())
+            return QRect(bar.mapTo(self, spot.topLeft()), spot.size())
+
+        return Step(pgettext("guide", "View"),  # the card's title, without the menu's &
+                    _("The View menu, on the menu bar, shows and hides this screen's panels, "
+                      "like Tags and Details."), lambda: None, lambda: tool,
+                    area=view_title)  # fmt: skip
+
+    def _guide_now(self, *, force: bool = False) -> None:
+        """The shown screen's guide: the first time it's shown (once its page is laid out), or
+        now from Help."""
+        guide = self._guide_for(self._shown)
+        if guide is None:
+            if force:
+                self.statusBar().showMessage(_("This screen has no guide."), 5000)
+            return
+        if force:
+            self.guides.show(guide)
+        elif on_screen(self) and not self.guides.seen(guide.guide_id):
+            QTimer.singleShot(400, self, lambda: self.guides.offer(self._guide_for(self._shown)))
+
+    def show_all_guides_again(self) -> None:
+        self.guides.forget_all()
+        self.statusBar().showMessage(
+            _("Each guide shows again the next time its screen is opened."), 8000
+        )
+
+    def _home_guide(self) -> Guide:
+        """What every tool shares, said once, on the very first start."""
+        home, rail, bar = self.home, self.rail, self.menuBar()
+
+        def help_title() -> QRect:  # "Help" on the menu bar, which has no widget of its own
+            spot = bar.actionGeometry(self._help_menu.menuAction())
+            return QRect(bar.mapTo(self, spot.topLeft()), spot.size())
+
+        def steps() -> list[Step]:
+            return [
+                Step(_("Welcome to CapyPanel"),
+                     _("CapyPanel keeps the computers and printers you look after in one window. "
+                       "You can see which are on and who's signed in, connect to them, run "
+                       "commands and check the toner. These cards show you around."),
+                     lambda: None),
+                Step(_("Three tools"),
+                     _("Hosts is for computers, Printers for printers, and User profiles clears "
+                       "old Windows profiles off a PC. Each tile opens its tool."),
+                     lambda: home.tiles, lambda: home),
+                Step(_("The sidebar"),
+                     _("This bar stays here on every screen. Home is at the top, Settings at the "
+                       "bottom, and the tools in between."), lambda: rail),
+                Step(_("Help"),
+                     _("To see this guide again, use Help › Guide to this screen. Show all the "
+                       "guides again brings every guide back, and Documentation opens the "
+                       "step-by-step pages."),
+                     lambda: None, lambda: home, area=help_title),
+            ]  # fmt: skip
+
+        return Guide("home", steps, docs="getting-started/", mascot=True)
+
+    def tools_working(self) -> bool:
+        return any(tool.working() for tool in self.tools.values())
+
+    def quit_for_update(self, start_helper: Callable[[], None]) -> bool:
+        """Closes CapyPanel for an update, once every tool agrees (a profile being deleted asks
+        first); `start_helper` runs just before, so the new version takes over. False: a tool
+        kept it open and nothing was started."""
+        if not all(tool.quit_question(self) for tool in self.tools.values()):
+            return False
+        start_helper()
+        self._tools_agreed = True
+        self._quitting = True
+        hidden = self._in_tray
+        if self.close() and hidden:
+            QApplication.quit()
+        return True
+
+    def show_restart_note(self, kind: str, version: str, why: str) -> None:
+        """After the update's helper started CapyPanel again: what happened, and its leftovers
+        cleared once the new version is running."""
+        from capypanel.core import updates
+        from capypanel.ui.updater import restart_text
+
+        text = restart_text(kind, version, why)
+        log.info("%s", text)
+        if kind == "updated":
+            self.statusBar().showMessage(text, 15_000)
+        else:
+            QMessageBox.warning(self, "CapyPanel", text)
+        QTimer.singleShot(
+            30_000, self,
+            lambda: threading.Thread(target=updates.clean_up, args=(settings.app_dir(),),
+                                     daemon=True).start(),
+        )  # fmt: skip
 
     def set_language(self, code: str) -> None:
         """Switches live: Qt then sends every window a LanguageChange event (see changeEvent)."""
@@ -490,6 +686,7 @@ class MainWindow(QMainWindow):
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
+        self._guide_now()  # Home's on the very first start
         themes.paint_title_bar(self)  # the window handle only exists once it's shown
         self._align_toolbar()
 
@@ -504,7 +701,9 @@ class MainWindow(QMainWindow):
             if choice == settings.CLOSE_TRAY:
                 self.to_tray()
             return
-        if not all(tool.quit_question(self) for tool in self.tools.values()):
+        if not self._tools_agreed and not all(
+            tool.quit_question(self) for tool in self.tools.values()
+        ):
             event.ignore()
             self._quitting = False
             return
@@ -524,6 +723,12 @@ class MainWindow(QMainWindow):
             tool.save_state()
         self.prefs["view"] = {k: a.isChecked() for k, a in self._view_choices().items()}
         self.save_prefs()
+
+
+def _docs_page(page: str) -> str:
+    from capypanel.ui import about
+
+    return about.docs_url() + page
 
 
 class _StatusGroup(QWidget):

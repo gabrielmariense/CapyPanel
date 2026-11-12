@@ -50,6 +50,26 @@ def test_unproven_items_go_one_by_one_and_a_halt_skips_the_rest() -> None:
     assert tried == [0] and batch.halted and batch.stopped
 
 
+def test_once_proven_a_refusal_is_that_item_s_and_the_rest_still_run() -> None:
+    # A password one host accepted is right: a host refusing it later (a broken trust with the
+    # domain) is reported like any failure, and every other host is still read.
+    reported: list[tuple[int, str | None]] = []
+    lock = threading.Lock()
+
+    def report(item: int, result: str | None, _e: Exception | None) -> None:
+        with lock:
+            reported.append((item, result))
+
+    batch = Batch(
+        range(30), lambda n: "rejected" if n in (4, 17) else "ok", report,
+        halts=lambda r, _e: r == "rejected", proves=lambda r, _e: r == "ok",
+    )  # fmt: skip
+    batch.run()
+    assert sorted(item for item, _r in reported) == list(range(30))
+    assert sorted(i for i, r in reported if r == "rejected") == [4, 17]
+    assert not batch.halted and not batch.stopped
+
+
 def test_once_proven_the_rest_run_together() -> None:
     running, most = 0, 0
     lock = threading.Lock()

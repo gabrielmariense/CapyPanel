@@ -5,27 +5,27 @@ site_url: https://gabrielmariense.github.io/CapyPanel/
 repo_url: https://github.com/gabrielmariense/CapyPanel
 repo_name: gabrielmariense/CapyPanel
 edit_uri: edit/main/docs/
+# In every page's footer, so a reader always knows which version the pages describe.
+copyright: These pages describe CapyPanel 0.26.0.
 
 # A band for the pages about the whole app, then one per tool, each in its own folder of docs/.
 nav:
   - Start:
       - Home: README.md
+      - Download and updates: download.md
       - Getting started: getting-started.md
-      - Settings and files: settings-and-files.md
-      - Development: development.md
+      - What's new: whats-new.md
   - Hosts:
       - Host lists: hosts/host-lists.md
-      - Importing and exporting: hosts/importing.md
       - Connecting: hosts/connecting.md
       - Checking: hosts/checking.md
       - Commands: hosts/commands.md
-      - Searching: hosts/searching.md
   - Printers:
       - The Printers tool: printers/printers.md
       - Checking: printers/checking.md
-      - Printer lists: printers/printer-lists.md
   - User profiles:
       - The User profiles tool: profiles/user-profiles.md
+  - Settings and files: settings-and-files.md
 
 theme:
   name: material
@@ -63,22 +63,21 @@ plugins:
           name: Português (Brasil)
           build: true
           site_description: Todos os computadores sob seus cuidados, em uma só janela.
+          copyright: Estas páginas descrevem o CapyPanel 0.26.0.
           nav_translations:
             Start: Início
             Home: Página inicial
+            Download and updates: Baixar e atualizar
             Getting started: Primeiros passos
+            What's new: Novidades
             Settings and files: Configurações e arquivos
-            Development: Desenvolvimento
             Hosts: Hosts
             Host lists: Listas de hosts
-            Importing and exporting: Importando e exportando
             Connecting: Conectando
             Checking: Verificando
             Commands: Comandos
-            Searching: Pesquisando
             Printers: Impressoras
             The Printers tool: A ferramenta Impressoras
-            Printer lists: Listas de impressoras
             User profiles: Perfis de usuário
             The User profiles tool: A ferramenta Perfis de usuário
 
@@ -88,6 +87,8 @@ extra_css:
 
 markdown_extensions:
   - admonition
+  - pymdownx.details
+  - pymdownx.superfences
   - tables
   - toc:
       permalink: true

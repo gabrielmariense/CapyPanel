@@ -4,11 +4,11 @@ right, tabs: the pinned Hosts tab lists the group's hosts, and each host opened 
 so several hosts are read, counted and cleaned at once. It keeps no list of its own, and the
 account that signs in to a host is the one Hosts' Accounts give it. Scanning only reads."""
 
-from collections.abc import Sequence
-from datetime import UTC, datetime
+from collections.abc import Callable, Sequence
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtGui import (
     QAction,
     QColor,
@@ -29,25 +29,29 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.model import NO_GROUP, Host
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.status import Status
+from capypanel.core.remote.user_profiles import Kind, Profile, Scan, State
 from capypanel.ui import checks as check_texts
 from capypanel.ui.dialogs import run_modal
+from capypanel.ui.guides import Guide, Step
 from capypanel.ui.hosts import group_path
 from capypanel.ui.hosts_tool.accounts import windows_account
 from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.hosts_tool.runner import HostTarget
 from capypanel.ui.hosts_tool.tool import HostsTool
-from capypanel.ui.icons import STATUS_COLORS, tabler_icon
+from capypanel.ui.icons import tabler_icon
 from capypanel.ui.list_workspace.panels import NavigationPane, natural_key
 from capypanel.ui.list_workspace.splitter import PaneSplitter
+from capypanel.ui.list_workspace.workspace import SAMPLE_ID
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar, tool_button
 from capypanel.ui.menus import popup
-from capypanel.ui.profiles_tool import rows, work
+from capypanel.ui.profiles_tool import first_use, work
 from capypanel.ui.profiles_tool.host_page import Context, HostPage, Stage
 from capypanel.ui.profiles_tool.hosts_page import HostsPage, RowFacts
-from capypanel.ui.profiles_tool.panels import AMBER, DETAILS, LEFT, RIGHT
+from capypanel.ui.profiles_tool.panels import DETAILS, LEFT, RIGHT, STATE, TICK, amber
 from capypanel.ui.profiles_tool.side import Entry, GroupFacts, HostFacts, ProgressCard
 from capypanel.ui.profiles_tool.tabs import HOSTS, TabStrip, mark_icon
+from capypanel.ui.themes import engine as themes
 
 PANES_KEY = "pane_widths"  # the side panels' widths (the narrower 0.24 ones aren't kept)
 WIDEST_LEFT = 360  # px: the Groups panel opens as wide as its names, up to this
@@ -109,7 +113,7 @@ class ProfilesToolBar(ToolBar):
         """Amber while it can be pressed, greyed with its icon while it can't."""
         self.delete_button.setEnabled(enabled)
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
-        color = QColor(STATUS_COLORS["attention"]) if enabled else muted
+        color = QColor(themes.status_color("attention")) if enabled else muted
         self.delete_button.setIcon(tabler_icon("trash", color))
 
 
@@ -278,6 +282,166 @@ class ProfilesTool(Tool):
         outer, inner = self.splitter.sizes(), self.inner.sizes()
         if len(outer) == 2 and len(inner) == 2 and outer[0] and inner[1]:
             self.prefs[PANES_KEY] = [outer[0], inner[1]]
+
+    def first_use_pending(self) -> bool:
+        return self.prefs.get(first_use.UNDERSTOOD_KEY) is not True
+
+    def first_use_warning(self, parent: QWidget) -> bool:
+        """What it deletes, once, before it's first shown; ticked and continued, never again."""
+        if not self.first_use_pending():
+            return True
+        if not first_use.ask(parent):
+            return False
+        self.prefs[first_use.UNDERSTOOD_KEY] = True
+        self._shell.save_prefs()
+        return True
+
+    def guide(self) -> Guide:
+        """One guide on a sample: the lists, the Hosts tab with the sample PC, then its own tab
+        with made-up profiles (two of them ticked near the end), so nothing waits for a scan."""
+        hosts = self.hosts_page
+
+        def sample() -> HostPage | None:
+            return self._pages.get(SAMPLE_ID)
+
+        def on_hosts() -> None:
+            self.switch(HOSTS)
+
+        def on_sample(ticked: bool = False) -> None:
+            """The sample's tab, with its profiles that can be deleted ticked or not."""
+            self.switch(SAMPLE_ID)
+            page = sample()
+            if page is not None:
+                for profile in page.table.shown():
+                    if page.table.can_tick(profile.ident):
+                        page.table.tick(profile.ident, ticked)
+
+        def on_details() -> None:  # the first profile picked: its row is the one with the (i)
+            on_sample()
+            page = sample()
+            if page is not None and page.table.shown():
+                page.table.select(page.table.shown()[0].ident)
+
+        def ticked_rows() -> QRect | None:  # the ticked rows, as one box beside their card
+            page = sample()
+            if page is None:
+                return None
+            tree, rows = page.table.tree, QRect()
+            for index in range(tree.topLevelItemCount()):
+                item = tree.topLevelItem(index)
+                if item is not None and item.checkState(TICK) == Qt.CheckState.Checked:
+                    rows = rows.united(tree.visualItemRect(item))
+            if rows.isNull():
+                return None
+            viewport = tree.viewport()
+            rows = QRect(0, rows.top(), viewport.width(), rows.height())
+            return QRect(viewport.mapTo(self.window(), rows.topLeft()), rows.size())
+
+        def info_button() -> QRect | None:
+            page = sample()
+            picked = page.table.selected() if page is not None else None
+            if page is None or picked is None:
+                return None
+            box = page.table.info_box(picked.ident)
+            viewport = page.table.tree.viewport()
+            if box is None:
+                return None
+            return QRect(viewport.mapTo(self.window(), box.topLeft()), box.size())
+
+        def state_column() -> QRect | None:  # its title and its cells, as one box
+            page = sample()
+            if page is None:
+                return None
+            tree = page.table.tree
+            header = tree.header()
+            if header.isSectionHidden(STATE) or not tree.isVisible():
+                return None
+            corner = header.mapTo(self.window(), QPoint(header.sectionViewportPosition(STATE), 0))
+            height = header.height() + tree.viewport().height()
+            return QRect(corner, QSize(header.sectionSize(STATE), height))
+
+        def part(name: str) -> Callable[[], QWidget | None]:
+            return lambda: getattr(sample(), name, None)
+
+        def steps() -> list[Step]:
+            page = sample()
+            name = page.target.name if page is not None else _("SAMPLE-PC")
+            return [
+                Step(_("Your lists"),
+                     _("Pick a list here: these are the same lists as in Hosts, the shared one "
+                       "and your own. Click a group below it to see just that group's hosts."),
+                     lambda: self.nav, enter=on_hosts),
+                Step(_("Pick a PC"),
+                     _("These are the hosts from your Hosts list. To see a PC's profiles, "
+                       "double-click it, or pick several and press Scan."),
+                     lambda: hosts.table, lambda: self.middle, enter=on_hosts),
+                Step(_("Progress"),
+                     _("This card shows each PC you opened and how far it has got."),
+                     lambda: self.progress, lambda: self.side, enter=on_hosts),
+                Step(_("Nothing is deleted yet"),
+                     _("Each PC you open gets a tab up here. Opening and scanning only read the "
+                       "profiles; nothing is deleted until you tick some in that PC's tab and "
+                       "confirm."), lambda: self.tabs, enter=on_hosts),
+                Step(_("The profiles"),
+                     _("This is the sample PC's tab. Each row is one user's folder on {host}, "
+                       "with when it was last used and how big it is.").format(host=name),
+                     part("table"), enter=on_sample),
+                Step(_("State"),
+                     _("Tells you whether a profile can be deleted. Only rows that say Can be "
+                       "deleted get a tick box, and the others say why not."),
+                     lambda: None, part("table"), area=state_column, enter=on_sample),
+                Step(_("A profile's details"),
+                     _("For everything about a profile, click the (i) at the end of its row or "
+                       "press Enter. It opens in a window of its own."),
+                     lambda: None, part("table"), area=info_button, enter=on_details),
+                Step(_("Filters"),
+                     _("Hide Windows' own, Only leftovers and Unused for narrow the list down to "
+                       "the profiles worth a look."), part("filters"), enter=on_sample),
+                Step(_("Ticked to delete"),
+                     _("Every profile you tick is listed here with the space it takes, so you "
+                       "can check them before anything is deleted."), part("ticked_card"),
+                     part("side"), area=ticked_rows, enter=lambda: on_sample(ticked=True)),
+                Step(_("Delete"),
+                     _("Tick the profiles and click Delete profiles. Each person's folder is "
+                       "deleted with it, and there's no recycle bin. You confirm by typing "
+                       "DELETE, and CapyPanel checks the PC again before it deletes anything."),
+                     lambda: getattr(getattr(sample(), "foot", None), "delete_button", None),
+                     enter=lambda: on_sample(ticked=True)),
+            ]  # fmt: skip
+
+        return Guide("profiles", steps, docs="profiles/user-profiles/", setup=self.show_sample,
+                     cleanup=self.hide_sample)  # fmt: skip
+
+    # ---- a sample while the Hosts tab's guide runs ----
+
+    def show_sample(self) -> None:
+        """Hosts' sample PC in the table, and a tab for it with two made-up profiles, so the
+        guide's cards have something to point at. Nothing is read from or deleted on any PC;
+        both go when the guide ends."""
+        if self._hosts is None or SAMPLE_ID in self._pages:
+            return
+        self._hosts.show_sample()
+        host = self._host(SAMPLE_ID)
+        if host is None:
+            return
+        target = _target(host)
+        page = HostPage(target, None, windows_account(), self._context(self._hosts))
+        self._pages[target.key] = page
+        self.middle.addWidget(page.box)
+        self.cards.addWidget(page.side)
+        self.tabs.add(target.key, target.name)
+        page.changed.connect(lambda p=page: self._page_changed(p))
+        scan = _sample_scan(host.name)
+        sizes = dict(zip((p.ident for p in scan.profiles), SAMPLE_SIZES, strict=True))
+        page.show_sample(scan, sizes)
+        self._page_changed(page)
+
+    def hide_sample(self) -> None:
+        if SAMPLE_ID in self._pages:
+            self.close_tab(SAMPLE_ID)
+            self._kept.pop(SAMPLE_ID, None)
+        if self._hosts is not None:
+            self._hosts.hide_sample()
 
     def quit_question(self, parent: QWidget) -> bool:
         """Before CapyPanel quits: while a host deletes, ask. Cancel the rest and quit lets the
@@ -531,7 +695,7 @@ class ProfilesTool(Tool):
             status, color, tip = _("Not checked"), "", _("Hosts hasn't checked it yet.")
         else:
             state, when = checked
-            status, color = check_texts.status_text(state), STATUS_COLORS[state]
+            status, color = check_texts.status_text(state), themes.status_color(state)
             tip = _("Hosts' last check: {when}").format(when=check_texts.when_text(when))
         page = self._pages.get(host.id)
         profiles = deletable = None
@@ -660,7 +824,7 @@ class ProfilesTool(Tool):
             dot, status = "", _("Not checked by Hosts")
         else:
             state, when = checked
-            dot = STATUS_COLORS[state]
+            dot = themes.status_color(state)
             status = _("{status} · checked by Hosts at {time}").format(
                 status=check_texts.status_text(state), time=check_texts.clock_text(when)
             )
@@ -837,10 +1001,10 @@ class ProfilesTool(Tool):
         for page in pages:
             if page.deleting:
                 waiting.append(Entry(page.target.key, page.target.name, page.mark().short,
-                                     "trash", AMBER, rows.IN_USE_BLUE))  # fmt: skip
+                                     "trash", amber(), themes.status_color("working")))  # fmt: skip
             elif page.ticked():
                 waiting.append(Entry(page.target.key, page.target.name, page.ticked_words(),
-                                     "trash", AMBER))  # fmt: skip
+                                     "trash", amber()))  # fmt: skip
         self.progress.show_tabs(lines, sum(not p.busy() for p in pages))
         self.hosts_page.host_card.show_ticked(waiting)
         total = len(self._all_hosts())
@@ -961,6 +1125,36 @@ class ProfilesTool(Tool):
             "details": self.show_details.isChecked(),
         }
         self._shell.save_prefs()
+
+
+SAMPLE_SIZES = (3_400_000_000, 12_800_000_000, 860_000_000)  # bytes, in _sample_scan's order
+
+
+def _sample_scan(host: str) -> Scan:
+    """Three made-up profiles for the guide's sample tab: two that can be deleted (the guide
+    ticks them), one in use."""
+    now = datetime.now(UTC)
+    root = "C:\\Users"
+    people = (
+        ("EXAMPLE\\ana", "ana", State.READY, now - timedelta(days=200)),
+        ("EXAMPLE\\bruno", "bruno", State.IN_USE, now),
+        ("EXAMPLE\\carla", "carla", State.READY, now - timedelta(days=95)),
+    )
+    profiles = tuple(
+        Profile(
+            sid=f"S-1-5-21-0-0-0-{1001 + n}",
+            key=f"S-1-5-21-0-0-0-{1001 + n}",
+            user=user,
+            known=True,
+            path=f"{root}\\{folder}",
+            kind=Kind.PROFILE,
+            state=state,
+            last_used=used,
+            modified=used,
+        )  # fmt: skip
+        for n, (user, folder, state, used) in enumerate(people)
+    )
+    return Scan(host=host, root=root, profiles=profiles)
 
 
 def _target(host: Host) -> HostTarget:

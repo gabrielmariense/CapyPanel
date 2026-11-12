@@ -3,22 +3,25 @@ asset tag and where its page counters come from, plus opening their web pages an
 reads each printer's status, supplies and page counter over SNMP."""
 
 import logging
-from collections.abc import Collection, Sequence
+from collections.abc import Callable, Collection, Sequence
 from dataclasses import replace
 from datetime import datetime
 
-from PySide6.QtCore import Qt, QTimer, QUrl, Signal
+from PySide6.QtCore import QPoint, QRect, QSize, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QGuiApplication
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QVBoxLayout, QWidget
 
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.model import Group, Host, HostListRuleError
-from capypanel.core.i18n import _, ngettext, npgettext
+from capypanel.core.i18n import _, ngettext, npgettext, pgettext
 from capypanel.core.printers.printer import DOC360, info_of, with_info
+from capypanel.core.printers.reading import Device, Problem, Reading, State, Supply, SupplyKind
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
+from capypanel.ui.guides import Guide, Step
 from capypanel.ui.hosts import group_path
 from capypanel.ui.list_workspace.customize import Part
+from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, sample_tag
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
@@ -243,6 +246,136 @@ class PrintersTool(ListWorkspace):
         self.toolbar.retranslate()
         super().retranslate()
 
+    def guide(self) -> Guide:
+        """Its whole guide, every time, with a sample printer to point at: lists, tags, adding,
+        the table and Details, Refresh, what Status and Toner say, the warnings, Refresh on its
+        own and the SNMP account for when nothing shows up (the window adds View last). No step
+        asks for a click."""
+        bar, table = self.toolbar, self.table
+
+        def status_and_toner() -> QRect | None:  # both columns, titles and cells, as one box
+            header = table.header()
+            shown = [c for c in (table.STATUS, table.TONER) if not header.isSectionHidden(c)]
+            if not shown or not table.isVisible():
+                return None
+            left = min(header.sectionViewportPosition(c) for c in shown)
+            right = max(header.sectionViewportPosition(c) + header.sectionSize(c) for c in shown)
+            corner = header.mapTo(self.window(), QPoint(left, 0))
+            return QRect(corner, QSize(right - left, header.height() + table.viewport().height()))
+
+        def rail_icon() -> QWidget | None:  # Printers on the rail, where its red count shows
+            rail = getattr(self.window(), "rail", None)
+            return getattr(rail, "buttons", {}).get("printers")
+
+        def attention() -> list[QWidget]:  # the rail's count, and the strip while it shows
+            strip = self.attention_strip
+            found = [w for w in (rail_icon(),) if w is not None]
+            return found + ([strip] if strip.isVisibleTo(self) else [])
+
+        def settings(page: str) -> tuple[str, Callable[[], None]]:
+            return _("Open Settings"), lambda: self._shell.open_settings(page)
+
+        def steps() -> list[Step]:
+            return [
+                Step(_("Your printer lists"),
+                     _("Pick a list here: the shared one everyone on this PC sees, your "
+                       "personal one, or one you added. Click a group below it to see just that "
+                       "group's printers."), lambda: self.nav),
+                Step(_("Tags"),
+                     _("Tags mark printers across groups. The sample printer has one, \"{tag}\". "
+                       "Pick one or more to see only the printers that have them.").format(
+                         tag=sample_tag()), lambda: self.nav.tags),
+                Step(_("Add printers"),
+                     _("Inventory › Add printer only needs a name and the address. A Refresh "
+                       "reads the toner, and Details shows the brand, model and serial number the "
+                       "printer reports, ready to copy in with Use this."),
+                     lambda: bar.inventory_button),
+                Step(_("Your printers"),
+                     _("The list's printers are here. Pick one to see everything about it in "
+                       "Details. A right-click on a printer shows what you can do with it, and a "
+                       "double-click opens its web page."),
+                     lambda: None, lambda: table, keep_clear=lambda: self.details,
+                     area=lambda: self.sample_row(self.window())),
+                Step(pgettext("printers", "Refresh all"),  # as the button says it
+                     _("Reads the status, toner and page count of every printer shown. Nothing "
+                       "is read until you press it or F5."), lambda: bar.refresh_button),
+                Step(_("Status and Toner"),
+                     _("After a Refresh, the dot shows how each printer is: green is working, "
+                       "amber needs attention, red has stopped and grey didn't answer. Toner shows "
+                       "the lowest one, in amber once it runs low."),
+                     lambda: None, lambda: table, area=status_and_toner),
+                Step(_("Printers that need attention"),
+                     _("If a Refresh finds printers stopped, offline or low, a red count shows up "
+                       "here. A strip above the table lists them, with Show."),
+                     attention, lambda: table),
+                Step(_("Refresh on its own"),
+                     _("CapyPanel can refresh your printers by itself: you pick every 5, 15, 30 "
+                       "or 60 minutes in Settings › Printers › Warnings and supplies. It's off "
+                       "until you do. Then, by default, a Windows notification tells you when one "
+                       "stops or goes offline."),
+                     lambda: None, lambda: table, action=settings("printer_warnings")),
+                Step(_("If nothing shows up"),
+                     _("CapyPanel reads printers over SNMP and never changes anything on them. "
+                       "Most answer to the community \"public\". If yours use another one, or "
+                       "SNMP v3, set it in Settings › Printers › Connecting."),
+                     lambda: None, lambda: table, action=settings("printer_connecting")),
+            ]  # fmt: skip
+
+        return Guide("printers", steps, docs="printers/checking/", setup=self.show_sample,
+                     cleanup=self.hide_sample)  # fmt: skip
+
+    def sample_items(self, group: str) -> list[Host]:
+        """The guides' sample printers, one per status: working, needing attention, stopped
+        and not answering. Documentation addresses (192.0.2.x) that never answer, and never
+        asked: Refresh and Open web page leave every sample out (is_sample)."""
+        name, tags, notes = _("PRN-SAMPLE"), (sample_tag(),), _("Shown only while a guide is open.")
+        return [
+            Host(id=SAMPLE_ID if n == 1 else f"{SAMPLE_ID}-{n}", name=name if n == 1 else
+                 f"{name}-{n}", group=group, address=f"192.0.2.{19 + n}", tags=tags, notes=notes)
+            for n in range(1, 5)
+        ]  # fmt: skip
+
+    def show_sample(self) -> None:
+        """The samples with made-up results, so the dots, the toner and the warnings show
+        what a Refresh would: made here, never read from anything."""
+        super().show_sample()
+        if not self.sample_shown():
+            return
+        now = datetime.now()
+        toner = SupplyKind.TONER
+
+        def reading(state: State, device: Device, percent: int, jam: bool = False) -> Checked:
+            return Checked(now, Reading(
+                state=state, device=device, supplies=(Supply("Black Toner", toner, percent),),
+                problems=frozenset({Problem.JAMMED}) if jam else frozenset(),
+            ))  # fmt: skip
+
+        made = {
+            SAMPLE_ID: reading(State.IDLE, Device.RUNNING, 64),
+            f"{SAMPLE_ID}-2": reading(State.IDLE, Device.RUNNING, 7),
+            f"{SAMPLE_ID}-3": reading(State.OTHER, Device.DOWN, 46, jam=True),
+            f"{SAMPLE_ID}-4": Checked(now, offline=True),
+        }
+        for printer_id, checked in made.items():
+            self._checked[printer_id] = checked
+            self.table.show_cells(printer_id)
+        self._count_attention()
+        self._selection_changed()
+
+    def hide_sample(self) -> None:
+        for printer_id in [k for k in self._checked if is_sample(k)]:
+            del self._checked[printer_id]
+        super().hide_sample()
+        self._count_attention()
+
+    def restyle(self) -> None:
+        """After a theme switch: the dots, swatches, bars, Details and the strip were drawn in
+        the old theme's colours."""
+        super().restyle()
+        self.table.refill()
+        self.attention_strip.restyle()
+        self._selection_changed()
+
     # ---- adding and editing printers ----
 
     def add_item_action(self) -> QAction:
@@ -370,6 +503,8 @@ class PrintersTool(ListWorkspace):
         """Every printer in the open list, not only the ones shown: warnings count them all.
         Skipped while a Refresh runs, and quietly when there's no SNMP v3 account yet."""
         doc = self._doc
+        if self.sample_shown():
+            return  # a guide is open: its samples aren't news, and the next turn comes soon
         if self._run is None and doc is not None and doc.hosts.hosts:
             before = dict(self._attention)
             self.check_printers(doc.hosts.hosts, quiet=True)
@@ -525,7 +660,7 @@ class PrintersTool(ListWorkspace):
     def open_web_pages(self) -> None:
         """The selected printers' web pages in the default browser, at most 10 at once. Only
         the address is handed over: nothing is fetched or signed into here."""
-        printers = self.selected_items()
+        printers = [p for p in self.selected_items() if not is_sample(p.id)]  # never opened
         if not printers:
             return
         pages = [(p, web_page(p)) for p in printers[:WEB_PAGES_AT_ONCE]]
@@ -680,6 +815,7 @@ class PrintersTool(ListWorkspace):
 
     def check_printers(self, printers: Sequence[Host], *, quiet: bool = False) -> None:
         """One SNMP read per printer, a few at a time; a printer with no address uses its name."""
+        printers = [p for p in printers if not is_sample(p.id)]  # a guide's samples: never read
         if self._run is not None or not printers:
             return
         secret = community() if self.snmp_version() == V2C else v3_account()
@@ -704,6 +840,11 @@ class PrintersTool(ListWorkspace):
         self.checks_changed.emit()
         log.info("Refresh: %d printers", len(targets))
         run.start()
+
+    def working(self) -> bool:
+        """A Refresh is running, the button's or the one on its own (both go through _run):
+        "Install and restart" waits for it."""
+        return self._run is not None
 
     def stop_checks(self) -> None:
         if self._run is not None:

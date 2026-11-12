@@ -15,7 +15,8 @@ guarda também as suas impressoras, com os detalhes de que você precisa e a pá
 clique, e encontra num PC os perfis de usuário do Windows que ninguém usa mais, para você
 excluí-los.
 
-> **Situação: beta (0.25.0).** Roda a partir do código-fonte; ainda não há instalador.
+> **Situação: beta (0.26.0).** [Baixe o zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
+> descompacte e rode o CapyPanel.exe. Ele se atualiza quando você manda.
 
 ![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts, Impressoras e Perfis de usuário](docs/images/home-dark-pt-BR.png)
 
@@ -44,33 +45,36 @@ excluí-los.
 
 Também online, com busca: **[gabrielmariense.github.io/CapyPanel/pt-BR](https://gabrielmariense.github.io/CapyPanel/pt-BR/)**.
 
-- [Primeiros passos](docs/getting-started.pt-BR.md): rode o CapyPanel e adicione seus primeiros
-  hosts
-- [Configurações e arquivos](docs/settings-and-files.pt-BR.md): o que cada configuração faz e
-  onde o CapyPanel guarda os arquivos
-- [Listas de hosts](docs/hosts/host-lists.pt-BR.md): grupos, tags e as pastas de listas
-- [Importando e exportando hosts](docs/hosts/importing.pt-BR.md): muitos hosts de uma vez, entrando
-  e saindo em CSV
+- [Baixar e atualizar](docs/download.pt-BR.md): o zip, como conferi-lo, as novas versões, e rodar
+  pelo código-fonte
+- [Primeiros passos](docs/getting-started.pt-BR.md): rode o CapyPanel, adicione seus primeiros
+  hosts, verifique e conecte
+- [Novidades](docs/whats-new.pt-BR.md): as mudanças de cada versão
+- [Listas de hosts](docs/hosts/host-lists.pt-BR.md): grupos e tags, encontrar um host, e hosts
+  entrando e saindo de uma planilha
 - [Conectando](docs/hosts/connecting.pt-BR.md): visualizadores VNC, Área de Trabalho Remota, perfis
   de conexão, contas e senhas
-- [Verificando hosts](docs/hosts/checking.pt-BR.md): status, usuários logados, dados do PC e
-  como o CapyPanel lê outros PCs
+- [Verificando hosts](docs/hosts/checking.pt-BR.md): status, usuários logados e dados do PC
 - [Comandos em um host](docs/hosts/commands.pt-BR.md): pastas e consoles, mensagens, logoff,
   reinicialização, impressoras, programas instalados e unidades mapeadas
-- [Pesquisando hosts](docs/hosts/searching.pt-BR.md): encontrar um host em qualquer lugar da lista
-- [A ferramenta Impressoras](docs/printers/printers.pt-BR.md): impressoras, os detalhes delas e as
-  páginas web
+- [A ferramenta Impressoras](docs/printers/printers.pt-BR.md): impressoras, as listas delas, os
+  detalhes e as páginas web
 - [Verificando impressoras](docs/printers/checking.pt-BR.md): status, toner e suprimentos por SNMP
-- [Listas de impressoras](docs/printers/printer-lists.pt-BR.md): onde as listas de impressoras
-  ficam e as configurações delas
 - [A ferramenta Perfis de usuário](docs/profiles/user-profiles.pt-BR.md): os perfis do Windows
   de um PC, e excluir os que ninguém usa
-- [Desenvolvimento](docs/development.pt-BR.md): compilar, testar e traduzir
+- [Configurações e arquivos](docs/settings-and-files.pt-BR.md): cada configuração, e onde o
+  CapyPanel guarda os arquivos
+- [Contribuindo](CONTRIBUTING.pt-BR.md): compilar, testar e traduzir
 
-## Início rápido (pelo código-fonte)
+## Início rápido
 
-Você precisa do Windows 10 22H2 ou 11 e do [uv](https://docs.astral.sh/uv/), que instala o Python
-e todo o resto:
+No Windows 10 22H2 ou 11, baixe o `CapyPanel-<versão>-windows-x64.zip` da
+[versão mais recente](https://github.com/gabrielmariense/CapyPanel/releases/latest), descompacte
+onde quiser e rode o **CapyPanel.exe**. Sem instalador, sem direitos de administrador. Ele ainda não
+é assinado, então o SmartScreen pode perguntar na primeira vez: **Mais informações**, depois
+**Executar assim mesmo**.
+
+Pelo código-fonte, com o [uv](https://docs.astral.sh/uv/), que instala o Python e todo o resto:
 
 ```
 git clone https://github.com/gabrielmariense/CapyPanel.git

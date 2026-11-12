@@ -4,7 +4,7 @@ foot. A profile's details open in a window. Each tab keeps its own scan, sizes a
 several hosts can be read, counted and cleaned at once."""
 
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -22,7 +22,6 @@ from capypanel.ui.checks import clock_text
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.hosts_tool.command_windows import log_failed
 from capypanel.ui.hosts_tool.runner import HostTarget, Job
-from capypanel.ui.icons import STATUS_COLORS
 from capypanel.ui.profiles_tool import rows, work
 from capypanel.ui.profiles_tool.panels import (
     DeleteDialog,
@@ -34,6 +33,7 @@ from capypanel.ui.profiles_tool.panels import (
 )
 from capypanel.ui.profiles_tool.rows import Result
 from capypanel.ui.profiles_tool.side import Entry, Foot, ProfileWindow, RunCard, TickedCard
+from capypanel.ui.themes import engine as themes
 
 
 class Stage(Enum):
@@ -58,14 +58,14 @@ class Mark:
     bad: bool = False  # it ended badly: red in Andamento
 
 
-BLUE = rows.IN_USE_BLUE
-# A run's line on the card: each profile's words on the right, and their colour ("": grey).
+# A run's line on the card: each profile's words on the right, and their colour: one of
+# the theme's status colours ("": grey).
 _RUN_WORDS = {
     Result.QUEUED: (N_("queued"), ""),
-    Result.DELETING: (N_("deleting…"), BLUE),
+    Result.DELETING: (N_("deleting…"), "working"),
     Result.DELETED: (N_("deleted"), ""),
     Result.SKIPPED: (N_("skipped"), ""),
-    Result.FAILED: (N_("failed"), STATUS_COLORS["stopped"]),
+    Result.FAILED: (N_("failed"), "stopped"),
 }
 
 
@@ -163,7 +163,7 @@ class HostPage(QObject):
             ended, total = self._run_counts()
             return Mark(
                 "trash",
-                STATUS_COLORS["attention"],
+                themes.status_color("attention"),
                 _("Deleting profile {n} of {total}. The tab can't close until it ends; use "
                   "Cancel the rest.").format(n=ended + 1, total=total),
                 _("deleting {n} of {total}").format(n=ended + 1, total=total),
@@ -173,18 +173,24 @@ class HostPage(QObject):
             done = self._count_total - self._count_left
             return Mark(
                 "report-analytics",
-                BLUE,
+                themes.status_color("working"),
                 _("Calculating sizes: {n} of {total}").format(n=done, total=self._count_total),
                 _("calculating sizes"),
                 busy=True,
             )
         if self.stage is Stage.QUEUED:
-            return Mark("clock", STATUS_COLORS["offline"], _("Waiting to scan"), _("queued"),
+            return Mark("clock", themes.status_color("offline"), _("Waiting to scan"), _("queued"),
                         busy=False)  # fmt: skip
         if self.stage is Stage.SCANNING:
-            return Mark("refresh", BLUE, _("Scanning the profiles…"), _("scanning…"), busy=True)
+            return Mark(
+                "refresh",
+                themes.status_color("working"),
+                _("Scanning the profiles…"),
+                _("scanning…"),
+                busy=True,
+            )
         if self.stage is Stage.FAILED:
-            return Mark("circle-x", STATUS_COLORS["stopped"], self._failure_tip(),
+            return Mark("circle-x", themes.status_color("stopped"), self._failure_tip(),
                         self._failure_short(), busy=False, bad=True)  # fmt: skip
         if self._run:
             results = [self._results[p.ident] for p in self._run if p.ident in self._results]
@@ -196,11 +202,11 @@ class HostPage(QObject):
                 tip = ngettext("{n} profile deleted", "{n} profiles deleted", deleted).format(
                     n=deleted
                 )
-                return Mark("circle-check", STATUS_COLORS["online"], tip, freed or tip,
+                return Mark("circle-check", themes.status_color("online"), tip, freed or tip,
                             busy=False)  # fmt: skip
             counts = rows.counts_text(results) or _("nothing deleted")
             tip = _("{counts}. See the history.").format(counts=counts)
-            return Mark("alert-triangle", STATUS_COLORS["attention"], tip, freed or counts,
+            return Mark("alert-triangle", themes.status_color("attention"), tip, freed or counts,
                         busy=False)  # fmt: skip
         when = clock_text(self.read_at) if self.read_at else ""
         return Mark("", "", _("Scanned at {time}").format(time=when), when, busy=False)
@@ -339,6 +345,13 @@ class HostPage(QObject):
 
         self._ctx.pool.read(self, read, done, failed, began)
 
+    def show_sample(self, scan: Scan, sizes: Mapping[str, int]) -> None:
+        """A guide's sample tab: a scan and sizes made up for it, nothing read from or done on
+        any PC."""
+        self.stage, self.scan, self.read_at = Stage.SCANNED, scan, self._now()
+        self._sizes = dict(sizes)
+        self._show_scan()
+
     def close(self) -> None:
         """Its tab closes: sizes stop, waiting work never starts, and a read under way is
         ignored when it ends (its widgets are gone by then)."""
@@ -397,7 +410,7 @@ class HostPage(QObject):
                 (_("Try another account…"), lambda: again(self.target, error, self.start_scan))
             )
         buttons.append((_("Try again"), self.start_scan))
-        color = QColor(STATUS_COLORS["stopped"])
+        color = QColor(themes.status_color("stopped"))
         self._show_card(HintCard("circle-x", color, said.title, said.lines, buttons))
         self._show_side()
         self._changed()
@@ -521,9 +534,10 @@ class HostPage(QObject):
         entries = []
         for profile in self._run:
             result = self._results.get(profile.ident, Result.QUEUED)
-            icon, color = rows.RESULT_ICONS[result]
+            icon, color = rows.result_icon(result)
             size, done = self._sizes.get(profile.ident), self._done.get(profile.ident)
             words, words_color = _RUN_WORDS[result]
+            words_color = themes.status_color(words_color) if words_color else ""
             words = _(words)
             if result is Result.DELETED and size:
                 words = f"{words} · {rows.size_text(size)}"

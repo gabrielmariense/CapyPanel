@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 16:39-0300\n"
+"POT-Creation-Date: 2026-11-12 16:15-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -72,6 +72,9 @@ msgid "&Colour…"
 msgstr ""
 
 msgid "&Connect"
+msgstr ""
+
+msgid "&Continue"
 msgstr ""
 
 msgid "&Copy"
@@ -159,6 +162,9 @@ msgstr ""
 msgid "&Groups pane"
 msgstr ""
 
+msgid "&Guide to this screen"
+msgstr ""
+
 msgid "&Help"
 msgstr ""
 
@@ -174,7 +180,13 @@ msgstr ""
 msgid "&Import hosts…"
 msgstr ""
 
+msgid "&Install and restart"
+msgstr ""
+
 msgid "&Language"
+msgstr ""
+
+msgid "&Later"
 msgstr ""
 
 msgid "&Leave out of the import"
@@ -371,6 +383,9 @@ msgstr ""
 msgid "&Show"
 msgstr ""
 
+msgid "&Show all the guides again"
+msgstr ""
+
 msgid "&Show password"
 msgstr ""
 
@@ -381,6 +396,9 @@ msgid "&Shut down"
 msgstr ""
 
 msgid "&Shut down now"
+msgstr ""
+
+msgid "&Skip this version"
 msgstr ""
 
 msgid "&Sort A–Z"
@@ -437,6 +455,9 @@ msgstr ""
 msgid "1 year"
 msgstr ""
 
+msgid "2nd floor"
+msgstr ""
+
 #, python-brace-format
 msgid "<b>{n} printer</b> needs attention: {reasons}."
 msgid_plural "<b>{n} printers</b> need attention: {reasons}."
@@ -457,6 +478,17 @@ msgid ""
 msgstr ""
 
 msgid "A Refresh is running. Try again once it ends."
+msgstr ""
+
+msgid "A beta: it works, and it still changes from version to version."
+msgstr ""
+
+msgid "A change here reaches everyone on this PC."
+msgstr ""
+
+msgid ""
+"A change here reaches everyone on this PC: an update replaces CapyPanel "
+"for all of them."
 msgstr ""
 
 msgid "A chosen &group"
@@ -500,11 +532,17 @@ msgstr ""
 msgid "A new group: the import creates it"
 msgstr ""
 
+msgid "A newer CapyPanel is out: see what's new"
+msgstr ""
+
 msgid "A pop-up on the screen of everyone signed in."
 msgstr ""
 
 #, python-brace-format
 msgid "A preset named “{name}” already exists. Replace it?"
+msgstr ""
+
+msgid "A profile's details"
 msgstr ""
 
 msgid "A registry entry with .bak in its name, and its folder."
@@ -576,10 +614,16 @@ msgstr ""
 msgid "Add host"
 msgstr ""
 
+msgid "Add hosts"
+msgstr ""
+
 msgid "Add hosts and groups, or import a list of hosts"
 msgstr ""
 
 msgid "Add printer"
+msgstr ""
+
+msgid "Add printers"
 msgstr ""
 
 msgid "Add printers and groups, and manage the groups"
@@ -613,6 +657,12 @@ msgid "Admin tools"
 msgstr ""
 
 msgid "After a Refresh on its own, for what changed since the one before."
+msgstr ""
+
+msgid ""
+"After a Refresh, the dot shows how each printer is: green is working, "
+"amber needs attention, red has stopped and grey didn't answer. Toner "
+"shows the lowest one, in amber once it runs low."
 msgstr ""
 
 msgid "All"
@@ -675,10 +725,19 @@ msgstr ""
 msgid "Asked when needed"
 msgstr ""
 
+msgid ""
+"Asks GitHub (api.github.com) for CapyPanel's newest release. Nothing is "
+"downloaded until you choose Install. Help › Check for updates works "
+"whatever is set."
+msgstr ""
+
 msgid "Ass&et tag:"
 msgstr ""
 
 msgid "Asset tag"
+msgstr ""
+
+msgid "At every start"
 msgstr ""
 
 msgid "Authentication &password"
@@ -688,6 +747,9 @@ msgid "Automatic (recommended)"
 msgstr ""
 
 msgid "BIOS"
+msgstr ""
+
+msgid "Back"
 msgstr ""
 
 msgid "Bar"
@@ -785,6 +847,9 @@ msgstr ""
 msgid "Cancel the rest and quit"
 msgstr ""
 
+msgid "Cancelled."
+msgstr ""
+
 #, python-brace-format
 msgid "CapyPanel asked for it at {when}."
 msgstr ""
@@ -798,10 +863,62 @@ msgstr ""
 msgid "CapyPanel asks for them again when it needs them."
 msgstr ""
 
+msgid ""
+"CapyPanel can refresh your printers by itself: you pick every 5, 15, 30 "
+"or 60 minutes in Settings › Printers › Warnings and supplies. It's off "
+"until you do. Then, by default, a Windows notification tells you when one"
+" stops or goes offline."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"CapyPanel can't install it from here ({reason}). Download the zip from "
+"the release page and unpack it in place of this one."
+msgstr ""
+
+#, python-brace-format
+msgid "CapyPanel can't write to {folder}"
+msgstr ""
+
 msgid "CapyPanel couldn't see who is signed in. Work anyone hasn't saved is lost."
 msgstr ""
 
+msgid "CapyPanel didn't close"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"CapyPanel is already running for {account}, but its window couldn't be "
+"brought forward: it's open in another Windows session, or it isn't "
+"answering.\n"
+"\n"
+"Close it there (or end it in Task Manager), then start CapyPanel again."
+msgstr ""
+
 msgid "CapyPanel is built with the following software:"
+msgstr ""
+
+msgid "CapyPanel is up to date"
+msgstr ""
+
+msgid ""
+"CapyPanel keeps the computers and printers you look after in one window. "
+"You can see which are on and who's signed in, connect to them, run "
+"commands and check the toner. These cards show you around."
+msgstr ""
+
+msgid ""
+"CapyPanel reads printers over SNMP and never changes anything on them. "
+"Most answer to the community \"public\". If yours use another one, or "
+"SNMP v3, set it in Settings › Printers › Connecting."
+msgstr ""
+
+#, python-brace-format
+msgid "CapyPanel {new} is out"
+msgstr ""
+
+#, python-brace-format
+msgid "CapyPanel {version} asks GitHub for its newest release."
 msgstr ""
 
 msgid "CapyPanel — dark"
@@ -820,6 +937,12 @@ msgid "Change…"
 msgstr ""
 
 msgid "Check"
+msgstr ""
+
+msgid "Check for &updates"
+msgstr ""
+
+msgid "Check for &updates…"
 msgstr ""
 
 msgid "Check the SNMP account in Settings › Printers › Connecting."
@@ -845,8 +968,19 @@ msgstr[1] ""
 msgid "Checked {when}."
 msgstr ""
 
+msgid "Checking for updates…"
+msgstr ""
+
+msgid "Checking the file…"
+msgstr ""
+
 #, python-brace-format
 msgid "Checking {done} of {total}…"
+msgstr ""
+
+msgid ""
+"Checks every host shown: whether it's on, and who's signed in. Right-"
+"click the button to choose what it checks."
 msgstr ""
 
 msgid ""
@@ -913,6 +1047,9 @@ msgid "Colour"
 msgstr ""
 
 msgid "Command"
+msgstr ""
+
+msgid "Command buttons"
 msgstr ""
 
 msgid "Commands"
@@ -1013,6 +1150,9 @@ msgstr[1] ""
 msgid "Copy all"
 msgstr ""
 
+msgid "Couldn't check for updates."
+msgstr ""
+
 #, python-brace-format
 msgid "Couldn't create “{path}”: {error}"
 msgstr ""
@@ -1044,6 +1184,14 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't open “{wanted}”, so “{opened}” was opened instead."
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't put the new version in place: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't reach GitHub: {reason}"
 msgstr ""
 
 msgid "Couldn't read"
@@ -1087,6 +1235,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't save how PCs are read: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't save how often to check: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -1345,6 +1497,9 @@ msgstr ""
 msgid "Don't ask again (change it in Settings › CapyPanel › General)"
 msgstr ""
 
+msgid "Done"
+msgstr ""
+
 msgid "Door open"
 msgstr ""
 
@@ -1359,6 +1514,9 @@ msgid ""
 msgstr ""
 
 msgid "Download"
+msgstr ""
+
+msgid "Downloading…"
 msgstr ""
 
 msgid "Drag a group to move it, or drop it onto another group to put it inside."
@@ -1389,7 +1547,16 @@ msgstr ""
 msgid "E&xit"
 msgstr ""
 
+msgid ""
+"Each PC you open gets a tab up here. Opening and scanning only read the "
+"profiles; nothing is deleted until you tick some in that PC's tab and "
+"confirm."
+msgstr ""
+
 msgid "Each argument group must be a list of texts."
+msgstr ""
+
+msgid "Each guide shows again the next time its screen is opened."
 msgstr ""
 
 msgid "Edit connection profile"
@@ -1484,6 +1651,14 @@ msgid ""
 " queues stay and print once it's back."
 msgstr ""
 
+msgid ""
+"Every profile you tick is listed here with the space it takes, so you can"
+" check them before anything is deleted."
+msgstr ""
+
+msgid "Everyone on this PC"
+msgstr ""
+
 msgid "Everyone on this PC (shared)"
 msgstr ""
 
@@ -1506,6 +1681,9 @@ msgid ""
 msgstr ""
 
 msgid "File not found"
+msgstr ""
+
+msgid "Filters"
 msgstr ""
 
 msgid "Firmware"
@@ -1540,6 +1718,11 @@ msgstr ""
 msgid ""
 "For everyone on this PC: connection profiles, remote tools, and the "
 "shared lists in “lists”, a folder for each kind of list."
+msgstr ""
+
+msgid ""
+"For everything about a profile, click the (i) at the end of its row or "
+"press Enter. It opens in a window of its own."
 msgstr ""
 
 msgid ""
@@ -1593,6 +1776,13 @@ msgstr ""
 msgid "General"
 msgstr ""
 
+#, python-brace-format
+msgid "GitHub answered {code} {reason}"
+msgstr ""
+
+msgid "GitHub's answer wasn't readable"
+msgstr ""
+
 msgid "Go back to the quick commands CapyPanel starts with?"
 msgstr ""
 
@@ -1629,7 +1819,15 @@ msgstr ""
 msgid "HOSTS SHOWN"
 msgstr ""
 
+msgid "Help"
+msgstr ""
+
 msgid "Hide Windows' own"
+msgstr ""
+
+msgid ""
+"Hide Windows' own, Only leftovers and Unused for narrow the list down to "
+"the profiles worth a look."
 msgstr ""
 
 msgid "Hom&e"
@@ -1676,6 +1874,11 @@ msgstr ""
 msgid "Hosts hasn't checked it yet."
 msgstr ""
 
+msgid ""
+"Hosts is for computers, Printers for printers, and User profiles clears "
+"old Windows profiles off a PC. Each tile opens its tool."
+msgstr ""
+
 msgid "Hosts with no group &go to:"
 msgstr ""
 
@@ -1692,6 +1895,9 @@ msgstr ""
 msgid "Hover a folder to see what it holds."
 msgstr ""
 
+msgid "I understand it deletes user profiles on the PCs I pick"
+msgstr ""
+
 msgid "IP address or network name"
 msgstr ""
 
@@ -1702,8 +1908,11 @@ msgid "Idle"
 msgstr ""
 
 msgid ""
-"If a computer rejects it, CapyPanel stops and asks again instead of "
-"trying it on the others, so the account isn't locked."
+"If a Refresh finds printers stopped, offline or low, a red count shows up"
+" here. A strip above the table lists them, with Show."
+msgstr ""
+
+msgid "If nothing shows up"
 msgstr ""
 
 msgid "If that list can't be opened: the default list, then your personal list."
@@ -1754,6 +1963,12 @@ msgid "Installed programs on {host}"
 msgstr ""
 
 msgid "Inventory"
+msgstr ""
+
+msgid ""
+"Inventory › Add printer only needs a name and the address. A Refresh "
+"reads the toner, and Details shows the brand, model and serial number the"
+" printer reports, ready to copy in with Use this."
 msgstr ""
 
 msgid ""
@@ -1958,6 +2173,9 @@ msgstr ""
 msgid "Model, Windows, memory, disk"
 msgstr ""
 
+msgid "More in the documentation"
+msgstr ""
+
 msgid "Move &down"
 msgstr ""
 
@@ -2014,6 +2232,9 @@ msgid "New printer list"
 msgstr ""
 
 msgid "New tag"
+msgstr ""
+
+msgid "Next"
 msgstr ""
 
 msgid "No Doc360 MPS account is set."
@@ -2077,6 +2298,9 @@ msgid "No message: it shuts down right away."
 msgstr ""
 
 msgid "No name"
+msgstr ""
+
+msgid "No notes for this release."
 msgstr ""
 
 msgid "No one"
@@ -2147,6 +2371,10 @@ msgstr ""
 msgid "Not a computer name or IP address"
 msgstr ""
 
+#, python-brace-format
+msgid "Not an https address: {url}"
+msgstr ""
+
 msgid "Not checked"
 msgstr ""
 
@@ -2164,6 +2392,9 @@ msgid "Not checked: use Refresh"
 msgstr ""
 
 msgid "Not counted"
+msgstr ""
+
+msgid "Not installed: CapyPanel stays open. Install again when you're ready."
 msgstr ""
 
 #, python-brace-format
@@ -2198,6 +2429,9 @@ msgid "Nothing changes until you click Add."
 msgstr ""
 
 msgid "Nothing changes until you click Save."
+msgstr ""
+
+msgid "Nothing is deleted yet"
 msgstr ""
 
 msgid "Nothing is outside a group."
@@ -2238,13 +2472,28 @@ msgstr ""
 msgid "Offline"
 msgstr ""
 
+msgid ""
+"On the PCs you pick, it deletes Windows user profiles: each person's "
+"folder under C:\\Users, with every file in it, and the profile's entry in"
+" the registry. A deleted profile can't be brought back."
+msgstr ""
+
 msgid "On the button"
 msgstr ""
 
-msgid "On the panel"
+msgid "Once a day"
+msgstr ""
+
+msgid "Once a week"
 msgstr ""
 
 msgid "One PC"
+msgstr ""
+
+msgid ""
+"One click runs a command on the picked host. The top row is always there,"
+" and the rows below are your quick commands. Choose them with a right-"
+"click on this panel, or in Settings › Hosts › General."
 msgstr ""
 
 msgid ""
@@ -2313,6 +2562,9 @@ msgid "Open &log folder"
 msgstr ""
 
 msgid "Open &web page"
+msgstr ""
+
+msgid "Open Settings"
 msgstr ""
 
 msgid "Open a CSV file"
@@ -2386,7 +2638,19 @@ msgstr ""
 msgid "Opens a folder on {host} in File Explorer, over file sharing."
 msgstr ""
 
+msgid ""
+"Opens every command for the picked host. A right-click on a host has them"
+" too, under All commands. They run with your Windows account; if a PC "
+"refuses it, CapyPanel asks for another, kept in Settings › Hosts › "
+"Credentials."
+msgstr ""
+
 msgid "Opens the host in a new tab. Typing alone never scans."
+msgstr ""
+
+msgid ""
+"Opens the remote screen of the host you picked. The tool it uses comes "
+"from the host's connection profile, in Settings › Hosts › Connecting."
 msgstr ""
 
 #, python-brace-format
@@ -2456,6 +2720,9 @@ msgstr ""
 msgid "PC facts · {when}"
 msgstr ""
 
+msgid "PRN-SAMPLE"
+msgstr ""
+
 msgid "PROGRESS"
 msgstr ""
 
@@ -2522,6 +2789,26 @@ msgstr ""
 msgid "Personal"
 msgstr ""
 
+msgid "Pick a PC"
+msgstr ""
+
+msgid ""
+"Pick a list here: the shared one everyone on this PC sees, your personal "
+"one, or one you added. Click a group below it to see just that group's "
+"hosts."
+msgstr ""
+
+msgid ""
+"Pick a list here: the shared one everyone on this PC sees, your personal "
+"one, or one you added. Click a group below it to see just that group's "
+"printers."
+msgstr ""
+
+msgid ""
+"Pick a list here: these are the same lists as in Hosts, the shared one "
+"and your own. Click a group below it to see just that group's hosts."
+msgstr ""
+
 msgid "Pick hosts in the list first"
 msgstr ""
 
@@ -2581,6 +2868,9 @@ msgstr ""
 msgid "Printers on {host}"
 msgstr ""
 
+msgid "Printers that need attention"
+msgstr ""
+
 msgid "Printing"
 msgstr ""
 
@@ -2608,6 +2898,9 @@ msgid "Programs"
 msgstr ""
 
 msgid "Programs (*.exe)"
+msgstr ""
+
+msgid "Progress"
 msgstr ""
 
 msgid "Protected"
@@ -2666,6 +2959,9 @@ msgstr ""
 msgid "Read-only"
 msgstr ""
 
+msgid "Read-only for you. An administrator of this PC can change it."
+msgstr ""
+
 msgid "Read/write"
 msgstr ""
 
@@ -2677,6 +2973,11 @@ msgid "Reading…"
 msgstr ""
 
 msgid "Reads each in a tab of its own, behind; you stay on this list"
+msgstr ""
+
+msgid ""
+"Reads the status, toner and page count of every printer shown. Nothing is"
+" read until you press it or F5."
 msgstr ""
 
 msgid "Reads what's ticked in this box again"
@@ -2726,6 +3027,9 @@ msgstr ""
 msgid "Refresh on its &own"
 msgstr ""
 
+msgid "Refresh on its own"
+msgstr ""
+
 msgid ""
 "Refresh on its own and warnings keep working while CapyPanel is in the "
 "tray. Quit stops them."
@@ -2772,6 +3076,9 @@ msgid "Refused the account {account}"
 msgstr ""
 
 msgid "Registry entry, no folder"
+msgstr ""
+
+msgid "Releases on GitHub"
 msgstr ""
 
 msgid "Reload the list"
@@ -2892,6 +3199,9 @@ msgid ""
 "cut someone off."
 msgstr ""
 
+msgid "Restarting CapyPanel…"
+msgstr ""
+
 msgid "Restarts Windows' printing service, which unsticks most queues."
 msgstr ""
 
@@ -2926,6 +3236,9 @@ msgid ""
 msgstr ""
 
 msgid "Run checks whether it answers."
+msgstr ""
+
+msgid "SAMPLE-PC"
 msgstr ""
 
 msgid "SELECTED HOST"
@@ -3142,14 +3455,6 @@ msgstr ""
 msgid "Shared and personal lists show up in the list dropdown by themselves."
 msgstr ""
 
-msgid "Shared by everyone on this PC."
-msgstr ""
-
-msgid ""
-"Shared by everyone on this PC. Read-only: only people Windows lets write "
-"this folder can change them."
-msgstr ""
-
 msgid ""
 "Shared lists are in the shared lists folder and show up for everyone; "
 "only people Windows lets write that folder can add one."
@@ -3178,6 +3483,9 @@ msgid "Showing the <b>{n} printer</b> that needs attention."
 msgid_plural "Showing the <b>{n} printers</b> that need attention."
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "Shown only while a guide is open."
+msgstr ""
 
 msgid "Shows"
 msgstr ""
@@ -3216,6 +3524,9 @@ msgid "Signs in with"
 msgstr ""
 
 msgid "Size"
+msgstr ""
+
+msgid "Skip"
 msgstr ""
 
 msgid "Skipped"
@@ -3305,6 +3616,9 @@ msgctxt "button"
 msgid "Status"
 msgstr ""
 
+msgid "Status and Toner"
+msgstr ""
+
 #, python-brace-format
 msgid "Status checked by Hosts at {time}"
 msgstr ""
@@ -3313,6 +3627,10 @@ msgid "Status not checked yet: use Refresh all"
 msgstr ""
 
 msgid "Status, logged-on users and PC facts, one after the other."
+msgstr ""
+
+#, python-brace-format
+msgid "Step {n} of {total}"
 msgstr ""
 
 msgid "Stop"
@@ -3391,10 +3709,27 @@ msgid "Tags for the selected rows, separated by ;"
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"Tags mark hosts across groups. The sample PC has one, \"{tag}\". Pick a "
+"tag here to see only the hosts that have it."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Tags mark printers across groups. The sample printer has one, \"{tag}\". "
+"Pick one or more to see only the printers that have them."
+msgstr ""
+
+#, python-brace-format
 msgid "Tags: {tags}"
 msgstr ""
 
 msgid "Takes it out of your lists, or deletes its file too"
+msgstr ""
+
+msgid ""
+"Tells you whether a profile can be deleted. Only rows that say Can be "
+"deleted get a tick box, and the others say why not."
 msgstr ""
 
 msgid "Temporary"
@@ -3418,6 +3753,11 @@ msgstr ""
 msgid "That profile doesn't exist."
 msgstr ""
 
+msgid ""
+"The Inventory menu adds hosts one at a time or imports many at once. A "
+"right-click on the table can add one too."
+msgstr ""
+
 msgid "The PC answered, but reading took too long and was stopped."
 msgstr ""
 
@@ -3433,6 +3773,11 @@ msgid "The PC's Windows services."
 msgstr ""
 
 msgid "The PC's event logs."
+msgstr ""
+
+msgid ""
+"The View menu, on the menu bar, shows and hides this screen's panels, "
+"like Tags and Details."
 msgstr ""
 
 msgid ""
@@ -3493,6 +3838,23 @@ msgstr ""
 msgid "The details were saved to the app log."
 msgstr ""
 
+msgid "The download doesn't match its SHA-256: it was changed or cut short."
+msgstr ""
+
+msgid "The download is far bigger than CapyPanel ever is"
+msgstr ""
+
+msgid "The download isn't a readable zip"
+msgstr ""
+
+#, python-brace-format
+msgid "The download stopped: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "The download went to an unexpected address: {host}"
+msgstr ""
+
 msgid "The encryption password needs at least 8 characters."
 msgstr ""
 
@@ -3509,6 +3871,9 @@ msgid "The file has two items with the same ID."
 msgstr ""
 
 msgid "The file is too big to be viewer settings."
+msgstr ""
+
+msgid "The first four ticked are also in a host's right-click menu."
 msgstr ""
 
 msgid ""
@@ -3544,6 +3909,11 @@ msgid ""
 "the scan is skipped. Every delete goes in the history."
 msgstr ""
 
+msgid ""
+"The host you pick in the table shows here, with all its details. To see "
+"everything you can do with a host, right-click it in the table."
+msgstr ""
+
 msgid "The host's notes"
 msgstr ""
 
@@ -3574,6 +3944,12 @@ msgstr ""
 msgid "The list “{path}” doesn't exist anymore."
 msgstr ""
 
+msgid ""
+"The list's printers are here. Pick one to see everything about it in "
+"Details. A right-click on a printer shows what you can do with it, and a "
+"double-click opens its web page."
+msgstr ""
+
 msgid "The logged-on user's profile folder."
 msgstr ""
 
@@ -3597,6 +3973,9 @@ msgstr ""
 msgid ""
 "The network drives of the people signed in: each letter and where it "
 "points."
+msgstr ""
+
+msgid "The new version didn't pass its self-test"
 msgstr ""
 
 msgid "The parent group doesn't exist."
@@ -3645,6 +4024,9 @@ msgstr ""
 msgid "The profile's “{key}” must be lowercase letters, digits, - or _."
 msgstr ""
 
+msgid "The profiles"
+msgstr ""
+
 msgid "The profiles show once the host is scanned."
 msgstr ""
 
@@ -3669,8 +4051,17 @@ msgid ""
 "the leftover in the registry."
 msgstr ""
 
+msgid "The release on GitHub"
+msgstr ""
+
+msgid "The release's SHA-256 file doesn't name its zip"
+msgstr ""
+
 #, python-brace-format
 msgid "The restart or shutdown of {host} is cancelled."
+msgstr ""
+
+msgid "The sidebar"
 msgstr ""
 
 msgid "The tool needs a “name”."
@@ -3682,7 +4073,19 @@ msgstr ""
 msgid "The tool's “id” must be lowercase letters, digits, - or _."
 msgstr ""
 
+#, python-brace-format
+msgid "The update to {new} didn't go in, so this is still {current}: {why}"
+msgstr ""
+
 msgid "The viewer's defaults"
+msgstr ""
+
+#, python-brace-format
+msgid "The zip has no {exe}"
+msgstr ""
+
+#, python-brace-format
+msgid "The zip holds something unexpected: {name}"
 msgstr ""
 
 #, python-brace-format
@@ -3730,6 +4133,11 @@ msgstr ""
 msgid "These are the drives that come back at every sign-in."
 msgstr ""
 
+msgid ""
+"These are the hosts from your Hosts list. To see a PC's profiles, double-"
+"click it, or pick several and press Scan."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "They're signed in {where}. Their programs keep running, and they get back"
@@ -3756,7 +4164,20 @@ msgid_plural "This PC shuts down in {n} minutes. Please save your work."
 msgstr[0] ""
 msgstr[1] ""
 
+msgid ""
+"This bar stays here on every screen. Home is at the top, Settings at the "
+"bottom, and the tools in between."
+msgstr ""
+
+msgid "This card shows each PC you opened and how far it has got."
+msgstr ""
+
 msgid "This connection profile needs a newer version of CapyPanel."
+msgstr ""
+
+msgid ""
+"This copy runs from source: update it with git, or download the zip from "
+"the release page."
 msgstr ""
 
 #, python-brace-format
@@ -3779,6 +4200,12 @@ msgstr ""
 msgid ""
 "This is <b>final</b>. With local profiles, each person's desktop and "
 "documents go too: there's no recycle bin and no copy."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"This is the sample PC's tab. Each row is one user's folder on {host}, "
+"with when it was last used and how big it is."
 msgstr ""
 
 msgid "This isn't a text file."
@@ -3832,7 +4259,16 @@ msgstr ""
 msgid "This printer doesn't report a level for this supply."
 msgstr ""
 
+msgid "This screen has no guide."
+msgstr ""
+
 msgid "This tool definition needs a newer version of CapyPanel."
+msgstr ""
+
+msgid "This tool deletes user profiles"
+msgstr ""
+
+msgid "Three tools"
 msgstr ""
 
 msgid "Tick Status or Logged-on users to refresh them"
@@ -3852,6 +4288,12 @@ msgid ""
 " this order."
 msgstr ""
 
+msgid ""
+"Tick the profiles and click Delete profiles. Each person's folder is "
+"deleted with it, and there's no recycle bin. You confirm by typing "
+"DELETE, and CapyPanel checks the PC again before it deletes anything."
+msgstr ""
+
 msgid "Tick to delete"
 msgstr ""
 
@@ -3861,11 +4303,20 @@ msgstr ""
 msgid "Ticked in tabs"
 msgstr ""
 
+msgid "Ticked to delete"
+msgstr ""
+
 msgid "Ticked: it's deleted once you click Delete and confirm"
 msgstr ""
 
 #, python-brace-format
 msgid "To confirm, type <b>{word}</b>:"
+msgstr ""
+
+msgid ""
+"To see this guide again, use Help › Guide to this screen. Show all the "
+"guides again brings every guide back, and Documentation opens the step-"
+"by-step pages."
 msgstr ""
 
 msgid "To:"
@@ -3962,6 +4413,9 @@ msgstr ""
 msgid "Unknown tool kind “{kind}”."
 msgstr ""
 
+msgid "Unpacking…"
+msgstr ""
+
 msgid "Unreachable"
 msgstr ""
 
@@ -3971,7 +4425,26 @@ msgstr ""
 msgid "Untick what you don't use. Hiding a part never stops a check."
 msgstr ""
 
+msgid ""
+"Until a computer accepts it, CapyPanel stops at the first that rejects "
+"it, so a typo can't lock the account."
+msgstr ""
+
 msgid "Unused for:"
+msgstr ""
+
+msgid "Update CapyPanel"
+msgstr ""
+
+#, python-brace-format
+msgid "Update {version}"
+msgstr ""
+
+#, python-brace-format
+msgid "Updated from {old} to {new}."
+msgstr ""
+
+msgid "Updates"
 msgstr ""
 
 msgid "Use &defaults"
@@ -4035,6 +4508,10 @@ msgstr ""
 msgid "Version"
 msgstr ""
 
+msgctxt "guide"
+msgid "View"
+msgstr ""
+
 #, python-brace-format
 msgid "Viewer settings (*{extension})"
 msgstr ""
@@ -4046,6 +4523,9 @@ msgid "WMI directly"
 msgstr ""
 
 msgid "WMI through PowerShell"
+msgstr ""
+
+msgid "Waiting for CapyPanel to finish what it's doing…"
 msgstr ""
 
 msgid "Waiting to scan"
@@ -4065,6 +4545,9 @@ msgstr ""
 
 msgctxt "button"
 msgid "Web page"
+msgstr ""
+
+msgid "Welcome to CapyPanel"
 msgstr ""
 
 msgid ""
@@ -4090,14 +4573,6 @@ msgid "Where"
 msgstr ""
 
 msgid "Where I left off"
-msgstr ""
-
-msgid "Where each tool is installed, set once for everyone on this PC."
-msgstr ""
-
-msgid ""
-"Where each tool is installed, set once for everyone on this PC. Read-"
-"only: only people Windows lets write the tools folder can change it."
 msgstr ""
 
 #, python-brace-format
@@ -4203,6 +4678,12 @@ msgstr ""
 msgid "You asked at {when}."
 msgstr ""
 
+#, python-brace-format
+msgid ""
+"You have {current}. Your settings, lists and saved logins stay as they "
+"are."
+msgstr ""
+
 msgid "Your Windows account"
 msgstr ""
 
@@ -4213,7 +4694,16 @@ msgstr ""
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr ""
 
-msgid "Your picks and their order are replaced."
+msgid "Your lists"
+msgstr ""
+
+msgid "Your picks are replaced."
+msgstr ""
+
+msgid "Your printer lists"
+msgstr ""
+
+msgid "Your printers"
 msgstr ""
 
 msgid "Your printers: status and toner, web pages, reports."
@@ -4268,6 +4758,9 @@ msgid "asset tag"
 msgstr ""
 
 msgid "at the PC"
+msgstr ""
+
+msgid "beta"
 msgstr ""
 
 msgid "brand"
@@ -4579,6 +5072,10 @@ msgid "{count} on {host} · read at {when}"
 msgstr ""
 
 #, python-brace-format
+msgid "{done} of {total} MB"
+msgstr ""
+
+#, python-brace-format
 msgid "{error}."
 msgstr ""
 
@@ -4690,6 +5187,12 @@ msgstr ""
 #, python-brace-format
 msgid "{month} {year}"
 msgstr ""
+
+#, python-brace-format
+msgid "{names} and {n} more"
+msgid_plural "{names} and {n} more"
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-brace-format
 msgid ""
@@ -5197,10 +5700,11 @@ msgid "{user}'s folder"
 msgstr ""
 
 #, python-brace-format
-msgid "{what}, in {list}"
+msgid "{version} is the newest release."
 msgstr ""
 
-msgid "— the four above are also in the right-click menu —"
+#, python-brace-format
+msgid "{what}, in {list}"
 msgstr ""
 
 msgid "“account_types” must be a list of numbers from 1 to 255."
