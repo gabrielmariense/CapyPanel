@@ -36,6 +36,17 @@ def _both(read: Callable[[], Any]) -> tuple[Any, Any]:
     return direct, shell
 
 
+def test_a_dword_reads_as_the_unsigned_number_it_is() -> None:
+    # COM hands a DWORD of 2**31 or more over as a negative number; a profile's sign-in time
+    # is two DWORDs, and its low half is such a number about half the time.
+    def answered(value: int | None) -> Any:
+        return SimpleNamespace(reg=lambda *_args: SimpleNamespace(uValue=value))
+
+    assert wmi.Wmi.dword(answered(-2114593173), 0, "key", "name") == 2180374123
+    assert wmi.Wmi.dword(answered(31289989), 0, "key", "name") == 31289989
+    assert wmi.Wmi.dword(answered(None), 0, "key", "name") is None
+
+
 def test_pywin32_is_there_and_this_pc_reads_straight_over_wmi() -> None:
     assert wmi.available()
 
