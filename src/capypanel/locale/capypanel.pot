@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 16:15-0300\n"
+"POT-Creation-Date: 2026-11-12 18:13-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -911,6 +911,10 @@ msgid ""
 "CapyPanel reads printers over SNMP and never changes anything on them. "
 "Most answer to the community \"public\". If yours use another one, or "
 "SNMP v3, set it in Settings › Printers › Connecting."
+msgstr ""
+
+#, python-brace-format
+msgid "CapyPanel {new} is installed"
 msgstr ""
 
 #, python-brace-format
@@ -4074,6 +4078,10 @@ msgid "The tool's “id” must be lowercase letters, digits, - or _."
 msgstr ""
 
 #, python-brace-format
+msgid "The update to {new} didn't go in"
+msgstr ""
+
+#, python-brace-format
 msgid "The update to {new} didn't go in, so this is still {current}: {why}"
 msgstr ""
 
@@ -4200,6 +4208,10 @@ msgstr ""
 msgid ""
 "This is <b>final</b>. With local profiles, each person's desktop and "
 "documents go too: there's no recycle bin and no copy."
+msgstr ""
+
+#, python-brace-format
+msgid "This is still CapyPanel {current}: {why}"
 msgstr ""
 
 #, python-brace-format
@@ -4442,6 +4454,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "Updated from {old} to {new}."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Updated from {old}. Your settings, lists and saved logins are as they "
+"were."
 msgstr ""
 
 msgid "Updates"

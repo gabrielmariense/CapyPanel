@@ -317,3 +317,18 @@ def test_another_user_s_file_doesn_t_turn_checks_off(
     updates.set_check(tmp_path, updates.OFF)
     monkeypatch.setattr(updates.winsec, "made_by_trusted", lambda path: False)
     assert updates.check_of(tmp_path) == updates.AT_START
+
+
+def test_the_notes_in_the_app_s_language() -> None:
+    notes = (
+        "## Português (Brasil)\n\n- O título mostra só a versão.\n\n### Como usar\n\n1. Baixe.\n\n"
+        "## English\n\n- The title shows only the version.\n\n[Docs](https://example.org/)"
+    )
+    assert updates.notes_in(notes, "English") == (
+        "- The title shows only the version.\n\n[Docs](https://example.org/)"
+    )
+    portuguese = updates.notes_in(notes, "Português (Brasil)")
+    assert portuguese.startswith("- O título") and portuguese.endswith("1. Baixe.")  # with ###
+    assert "English" not in portuguese
+    assert updates.notes_in(notes, "Deutsch") == notes  # no such part: all of them
+    assert updates.notes_in("- One line, no parts.", "English") == "- One line, no parts."

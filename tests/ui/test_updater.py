@@ -3,6 +3,7 @@ menu bar's button, the update window and the hand-over to the new version's exe.
 
 import time
 from collections.abc import Callable, Iterator
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -13,10 +14,11 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QLabel
 
 from capypanel import __version__
-from capypanel.core import settings, updates
+from capypanel.core import i18n, settings, updates
 from capypanel.core.updates import Release, UpdateError
 from capypanel.ui import updater as updater_ui
-from capypanel.ui.updater import NOTES_HEIGHT, UpdateWindow
+from capypanel.ui.main_window import window as window_module
+from capypanel.ui.updater import NOTES_HEIGHT, RestartWindow, UpdateWindow
 
 NEWER = Release(
     version="99.0.0", notes="## What's new\n- Everything.",
@@ -216,7 +218,7 @@ def test_a_tool_that_keeps_capypanel_open_stops_the_hand_over(
     assert not started and not window._quitting  # nothing started, CapyPanel stays
 
 
-def test_the_start_after_an_update_says_what_happened(
+def test_the_start_after_an_update_opens_a_window_saying_what_happened(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     assert updater_ui.after_restart(["CapyPanel.exe"]) is None
@@ -224,18 +226,64 @@ def test_the_start_after_an_update_says_what_happened(
         "updated", "0.26.0", "")  # fmt: skip
     assert updater_ui.after_restart(["x", "--update-failed", "0.26.1", "it broke"]) == (
         "failed", "0.26.1", "it broke")  # fmt: skip
+    shown: list[RestartWindow] = []
+    monkeypatch.setattr(window_module, "run_modal", lambda dialog: shown.append(dialog) or 0)
+    this = replace(NEWER, version=__version__, notes="## English\n- Brand new.\n## Other\n- No.")
+    window.updater.remember_install(this)  # kept through the restart
+    assert window.prefs["updates"]["installed"]["version"] == __version__
     window.show_restart_note("updated", "0.26.0", "")
-    assert window.statusBar().currentMessage() == f"Updated from 0.26.0 to {__version__}."
-    shown: list[str] = []
-    monkeypatch.setattr(
-        "capypanel.ui.main_window.window.QMessageBox.warning",
-        lambda parent, title, text: shown.append(text),
-    )
+    [done] = shown
+    assert done.heading.text() == f"CapyPanel {__version__} is installed"
+    assert done.line.text().startswith("Updated from 0.26.0.")
+    assert done.notes.toPlainText().strip() == "Brand new." and not done.notes.isHidden()
+    assert "installed" not in window.prefs["updates"]  # said once
     window.show_restart_note("failed", "0.26.1", "The new version didn't pass its self-test")
-    assert shown == [
-        f"The update to 0.26.1 didn't go in, so this is still {__version__}: "
-        "The new version didn't pass its self-test"
-    ]
+    failed = shown[1]
+    assert failed.heading.text() == "The update to 0.26.1 didn't go in"
+    assert failed.line.text() == (
+        f"This is still CapyPanel {__version__}: The new version didn't pass its self-test"
+    )
+    assert failed.notes.isHidden() and "Releases on GitHub" in failed.page.text()
+
+
+def test_a_release_found_on_its_own_opens_its_window_once(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert updater_ui.FIRST_LOOK <= 1000  # not a long wait after the start
+    opened: list[UpdateWindow] = []
+    monkeypatch.setattr(window_module, "run_modal", lambda dialog: opened.append(dialog) or 0)
+    monkeypatch.setattr(window_module, "on_screen", lambda w: True)
+    guide = ["home"]
+    monkeypatch.setattr(type(window.guides), "running", property(lambda self: guide[0]))
+    window.updater.look(asked=False)
+    _wait(lambda: not window.updater.looking)
+    assert not opened and not window.update_button.isHidden()  # a guide is up: it waits
+    guide[0] = ""
+    window._offer_update()  # the retry, once the guide is gone
+    [dialog] = opened
+    assert dialog.heading.text() == "CapyPanel 99.0.0 is out" and not dialog.notes.isHidden()
+    window.updater.look(asked=False)  # the next look in this run: the button is enough
+    _wait(lambda: not window.updater.looking)
+    window._offer_update()
+    assert len(opened) == 1
+
+
+def test_the_update_window_shows_the_notes_in_the_app_s_language(window: CapyWindow) -> None:
+    window.updater.offer = replace(
+        NEWER, notes="## Português (Brasil)\n- Só a versão.\n\n## English\n- Only the version."
+    )
+    dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
+                          quit_for_update=lambda start: False)  # fmt: skip
+    assert dialog.notes.toPlainText().strip() == "Only the version."
+    dialog.close()
+    i18n.set_language("pt_BR")
+    try:
+        dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
+                              quit_for_update=lambda start: False)  # fmt: skip
+        assert dialog.notes.toPlainText().strip() == "Só a versão."
+        dialog.close()
+    finally:
+        i18n.set_language("en")
 
 
 def test_about_shows_beta_and_checks_for_updates(window: CapyWindow) -> None:
