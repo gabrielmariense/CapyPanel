@@ -95,7 +95,7 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
     def titles(page: pages.Page) -> list[str]:
         return [w.text() for w in page.findChildren(QLabel) if w.objectName() == "sectionTitle"]
 
-    assert titles(dialog.general) == ["Appearance", "Startup and closing"]
+    assert titles(dialog.general) == ["Appearance", "Startup and closing", "Updates"]
     hosts = dialog.group(HostsSettings)
     assert titles(hosts.general) == ["Host lists", "Refresh", "Details panel"]
     assert titles(hosts.connections) == ["Connection profiles", "Remote tools"]  # shared

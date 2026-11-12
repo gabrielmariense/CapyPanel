@@ -2,12 +2,10 @@
 no tool itself: the tool catalog loads them."""
 
 import ctypes
-import json
 import logging
 import sys
 import time
 from ctypes import wintypes
-from pathlib import Path
 
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication, QMessageBox
@@ -20,6 +18,7 @@ from capypanel.ui.main_window.window import MainWindow
 from capypanel.ui.one_copy import OneCopy, already_running_text
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import CATALOG
+from capypanel.ui.updater import after_restart
 
 log = logging.getLogger(__name__)
 
@@ -78,17 +77,6 @@ def _reads_line() -> str:
     return "Reads other PCs over WMI from CapyPanel itself (PowerShell only if that can't be used)"
 
 
-def _language_of(settings_file: Path) -> str:
-    """The language the person chose, read without touching the file: the running copy owns
-    it."""
-    try:
-        kept = json.loads(settings_file.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return i18n.DEFAULT_LANGUAGE
-    chosen = kept.get("language") if isinstance(kept, dict) else None
-    return chosen if isinstance(chosen, str) else i18n.DEFAULT_LANGUAGE
-
-
 def run(argv: list[str] | None = None) -> int:
     stages = _Stages()
     branding.use_own_taskbar_icon()  # before any window exists
@@ -118,7 +106,7 @@ def run(argv: list[str] | None = None) -> int:
         came = copy.ask_running()
         log.info("Already running: %s", "its window was shown" if came else "it didn't show")
         if not came:
-            language.apply(_language_of(paths.settings_file))
+            language.apply(settings.language_of(paths.settings_file))
             QMessageBox.information(None, "CapyPanel", already_running_text(paths.account))
         return 0
     try:
@@ -142,6 +130,9 @@ def run(argv: list[str] | None = None) -> int:
     stages.done("the window and its lists")
     copy.show_requested.connect(window.open_from_tray)
     window.show()
+    restarted = after_restart(sys.argv if argv is None else argv)
+    if restarted is not None:  # the update's helper started this copy
+        QTimer.singleShot(0, window, lambda: window.show_restart_note(*restarted))
 
     def shown() -> None:  # once Qt has drawn it: the wait the person saw
         stages.done("drawing it")

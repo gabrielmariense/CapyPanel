@@ -4,16 +4,18 @@ and commands. The rail, View's tools, the toolbar, the tool and the status bar's
 the tool shown. With none shown, the Home page fills the window."""
 
 import logging
-from collections.abc import Sequence
+import threading
+from collections.abc import Callable, Sequence
 from typing import Any
 
-from PySide6.QtCore import QByteArray, QEvent, QObject
+from PySide6.QtCore import QByteArray, QEvent, QObject, Qt, QTimer
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
     QCloseEvent,
     QGuiApplication,
     QKeySequence,
+    QPalette,
     QResizeEvent,
     QShowEvent,
 )
@@ -21,7 +23,9 @@ from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QMainWindow,
+    QMessageBox,
     QStackedWidget,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -31,6 +35,7 @@ from capypanel.core import settings
 from capypanel.core.i18n import _
 from capypanel.ui import language, spacing
 from capypanel.ui.dialogs import run_modal
+from capypanel.ui.icons import tabler_icon
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.home import HomePage
 from capypanel.ui.main_window.rail import ToolRail
@@ -43,6 +48,7 @@ from capypanel.ui.settings.window import WIDTH as SETTINGS_WIDTH
 from capypanel.ui.settings.window import SettingsDialog
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import CATALOG, ToolInfo
+from capypanel.ui.updater import Updater
 
 log = logging.getLogger(__name__)
 
@@ -102,6 +108,8 @@ class MainWindow(QMainWindow):
         row.addWidget(self._pages, 1)
         self.setCentralWidget(central)
 
+        self.updater = Updater(self.prefs, self.save_prefs, self)
+        self._tools_agreed = False  # an update asked the tools already: closing asks no more
         self._build_menus()
         self._connect()
         self._connect_tray()
@@ -237,7 +245,15 @@ class MainWindow(QMainWindow):
         self._help_menu = bar.addMenu("")
         self._help_menu.addActions([a.documentation, a.report_problem])
         self._help_menu.addSeparator()
-        self._help_menu.addAction(a.about)
+        self._help_menu.addActions([a.check_updates, a.about])
+        # A newer release: a button at the menu bar's right end, the same in every tool.
+        self.update_button = QToolButton()
+        self.update_button.setObjectName("updateButton")
+        self.update_button.setAutoRaise(True)
+        self.update_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.update_button.clicked.connect(lambda: self.open_updates())
+        self.update_button.hide()
+        bar.setCornerWidget(self.update_button, Qt.Corner.TopRightCorner)
         self._retranslate_menus()
 
     def _fill_view_menu(self) -> None:
@@ -277,6 +293,8 @@ class MainWindow(QMainWindow):
         a.documentation.triggered.connect(self._open_docs)
         a.report_problem.triggered.connect(self._report_problem)
         a.about.triggered.connect(lambda: self.open_settings("about"))  # About is a page there
+        a.check_updates.triggered.connect(lambda: self.open_updates())
+        self.updater.changed.connect(self._show_update_button)
         a.show_toolbar.toggled.connect(self._show_toolbars)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
 
@@ -357,6 +375,7 @@ class MainWindow(QMainWindow):
             groups=groups,
             tools=self._infos(),
             start=start if isinstance(start, str) else settings.START_HOME,
+            updates=self.updater.checks(),
             # What's saved, so the page shows it, and picking "Ask" again is a change it saves.
             closing=closing if isinstance(closing, str) else settings.CLOSE_ASK,
         )
@@ -364,6 +383,8 @@ class MainWindow(QMainWindow):
         dialog.theme_picked.connect(self.set_theme)
         dialog.start_picked.connect(self._set_start)
         dialog.closing_picked.connect(self._set_closing)
+        dialog.updates_picked.connect(self.updater.set_checks)
+        dialog.about.updates_button.clicked.connect(lambda: self.open_updates(dialog))
         return dialog
 
     def _set_start(self, start: str) -> None:
@@ -474,6 +495,71 @@ class MainWindow(QMainWindow):
         for tool in self.tools.values():
             tool.restyle()  # icon colours, the font's size, the toolbar's padding
         self._tray_counts()  # the count on the tray's icon is in the theme's red
+        self._paint_update_button()
+
+    # ---- updates ----
+
+    def open_updates(self, parent: QWidget | None = None) -> None:
+        """The update window: the release on offer, or a look at GitHub first."""
+        from capypanel.ui.updater import UpdateWindow
+
+        window = UpdateWindow(
+            parent or self, self.updater, app_dir=settings.app_dir(),
+            working=self.tools_working, quit_for_update=self.quit_for_update,
+        )  # fmt: skip
+        run_modal(window)
+
+    def _show_update_button(self) -> None:
+        from capypanel.ui.updater import button_text
+
+        offer = self.updater.offer
+        self.update_button.setVisible(offer is not None)
+        if offer is not None:
+            self.update_button.setText(button_text(offer))
+            self.update_button.setToolTip(_("A newer CapyPanel is out: see what's new"))
+            self._paint_update_button()
+            self.update_button.adjustSize()
+            # The menu bar sizes its corner when it's given one: given again, it fits the words.
+            self.menuBar().setCornerWidget(self.update_button, Qt.Corner.TopRightCorner)
+
+    def _paint_update_button(self) -> None:
+        color = self.update_button.palette().color(QPalette.ColorRole.Link)
+        self.update_button.setIcon(tabler_icon("download", color, 16))
+
+    def tools_working(self) -> bool:
+        return any(tool.working() for tool in self.tools.values())
+
+    def quit_for_update(self, start_helper: Callable[[], None]) -> bool:
+        """Closes CapyPanel for an update, once every tool agrees (a profile being deleted asks
+        first); `start_helper` runs just before, so the new version takes over. False: a tool
+        kept it open and nothing was started."""
+        if not all(tool.quit_question(self) for tool in self.tools.values()):
+            return False
+        start_helper()
+        self._tools_agreed = True
+        self._quitting = True
+        hidden = self._in_tray
+        if self.close() and hidden:
+            QApplication.quit()
+        return True
+
+    def show_restart_note(self, kind: str, version: str, why: str) -> None:
+        """After the update's helper started CapyPanel again: what happened, and its leftovers
+        cleared once the new version is running."""
+        from capypanel.core import updates
+        from capypanel.ui.updater import restart_text
+
+        text = restart_text(kind, version, why)
+        log.info("%s", text)
+        if kind == "updated":
+            self.statusBar().showMessage(text, 15_000)
+        else:
+            QMessageBox.warning(self, "CapyPanel", text)
+        QTimer.singleShot(
+            30_000, self,
+            lambda: threading.Thread(target=updates.clean_up, args=(settings.app_dir(),),
+                                     daemon=True).start(),
+        )  # fmt: skip
 
     def set_language(self, code: str) -> None:
         """Switches live: Qt then sends every window a LanguageChange event (see changeEvent)."""
@@ -511,7 +597,9 @@ class MainWindow(QMainWindow):
             if choice == settings.CLOSE_TRAY:
                 self.to_tray()
             return
-        if not all(tool.quit_question(self) for tool in self.tools.values()):
+        if not self._tools_agreed and not all(
+            tool.quit_question(self) for tool in self.tools.values()
+        ):
             event.ignore()
             self._quitting = False
             return

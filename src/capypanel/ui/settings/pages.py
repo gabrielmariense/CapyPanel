@@ -123,6 +123,7 @@ class GeneralPage(Page):
         tools: Sequence[tuple[str, str]],
         start: str,
         closing: str = settings.CLOSE_ASK,
+        updates: bool = True,
         language: str = i18n.DEFAULT_LANGUAGE,
         registry: themes.Registry,
         theme_id: str,
@@ -182,7 +183,27 @@ class GeneralPage(Page):
             ),
         )  # fmt: skip
         self.body.addWidget(startup)
+        self.updates = QComboBox()
+        self.updates.addItem(_("Once a day"), True)
+        self.updates.addItem(_("Off"), False)
+        self.updates.setCurrentIndex(0 if updates else 1)
+        self.updates.currentIndexChanged.connect(lambda _i: self.changed.emit())
+        section = Section(_("Updates"))
+        add_rows(
+            section.content,
+            SettingRow(
+                _("Check for &updates"),
+                _("Asks GitHub (api.github.com) for CapyPanel's newest release. Nothing is "
+                  "downloaded until you choose Install. Help › Check for updates works either "
+                  "way."),
+                self.updates,
+            ),
+        )  # fmt: skip
+        self.body.addWidget(section)
         self.body.addStretch(1)
+
+    def updates_choice(self) -> bool:
+        return bool(self.updates.currentData())
 
     def start_choice(self) -> str:
         return str(self.start.currentData())

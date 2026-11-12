@@ -44,3 +44,16 @@ def test_a_missing_part_fails_it_and_the_report_says_which(
     text = report.read_text(encoding="utf-8")
     assert "FAILED bundled files" in text and "themes: 0 of at least 2" in text
     assert text.splitlines()[-1] == "SELF-TEST FAILED"
+
+
+def test_an_error_in_the_exe_s_own_jobs_never_reaches_the_screen(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    # CapyPanel.exe has no console: an error left uncaught opens a Windows box that waits.
+    def broken(_report: Path) -> int:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(entry, "_self_test", broken)
+    monkeypatch.setattr("sys.argv", ["CapyPanel.exe", "--self-test", "report.txt"])
+    assert entry.main() == 1
+    assert "--self-test failed" in caplog.text and "boom" in caplog.text

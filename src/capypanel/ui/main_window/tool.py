@@ -113,6 +113,11 @@ class Tool(QWidget):
     def show_attention(self) -> None:
         """Lists just the items that need attention (the tray's menu asks for it)."""
 
+    def working(self) -> bool:
+        """Whether it's in the middle of something an update must not cut off (a Refresh):
+        "Install and restart" waits for it to end."""
+        return False
+
     def works_in_background(self) -> bool:
         """Whether it does something on its own (Refresh on its own), worth keeping CapyPanel
         running in the tray for when the window closes."""

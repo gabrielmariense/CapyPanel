@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 09:58-0300\n"
+"POT-Creation-Date: 2026-11-12 10:32-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -175,8 +175,14 @@ msgstr "&Hosts:"
 msgid "&Import hosts…"
 msgstr "&Importar hosts…"
 
+msgid "&Install and restart"
+msgstr "&Instalar e reiniciar"
+
 msgid "&Language"
 msgstr "&Idioma"
+
+msgid "&Later"
+msgstr "&Depois"
 
 msgid "&Leave out of the import"
 msgstr "&Deixar fora da importação"
@@ -384,6 +390,9 @@ msgstr "&Desligar"
 msgid "&Shut down now"
 msgstr "&Desligar agora"
 
+msgid "&Skip this version"
+msgstr "&Pular esta versão"
+
 msgid "&Sort A–Z"
 msgstr "&Classificar de A a Z"
 
@@ -456,6 +465,9 @@ msgstr "A conta do próprio PC vale mais que a do grupo, a do grupo mais que a d
 msgid "A Refresh is running. Try again once it ends."
 msgstr "Uma atualização está em andamento. Tente de novo quando ela terminar."
 
+msgid "A beta: it works, and it still changes from version to version."
+msgstr "Uma versão beta: funciona, e ainda muda de uma versão para outra."
+
 msgid "A chosen &group"
 msgstr "Um &grupo escolhido"
 
@@ -496,6 +508,9 @@ msgstr "O nome é obrigatório."
 
 msgid "A new group: the import creates it"
 msgstr "Um grupo novo: a importação o cria"
+
+msgid "A newer CapyPanel is out: see what's new"
+msgstr "Saiu uma versão mais nova do CapyPanel: veja o que mudou"
 
 msgid "A pop-up on the screen of everyone signed in."
 msgstr "Um aviso na tela de todos que estão conectados."
@@ -670,6 +685,9 @@ msgstr "Perguntar sempre"
 msgid "Asked when needed"
 msgstr "Pedida quando precisar"
 
+msgid "Asks GitHub (api.github.com) for CapyPanel's newest release. Nothing is downloaded until you choose Install. Help › Check for updates works either way."
+msgstr "Pergunta ao GitHub (api.github.com) qual é a versão mais nova do CapyPanel. Nada é baixado até você escolher Instalar. Ajuda › Procurar nova versão funciona de qualquer jeito."
+
 msgid "Ass&et tag:"
 msgstr "&Patrimônio:"
 
@@ -776,6 +794,9 @@ msgstr "Cancelar o restante"
 msgid "Cancel the rest and quit"
 msgstr "Cancelar o restante e sair"
 
+msgid "Cancelled."
+msgstr "Cancelado."
+
 #, python-brace-format
 msgid "CapyPanel asked for it at {when}."
 msgstr "O CapyPanel pediu às {when}."
@@ -787,8 +808,19 @@ msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha 
 msgid "CapyPanel asks for them again when it needs them."
 msgstr "O CapyPanel pede de novo quando precisar deles."
 
+#, python-brace-format
+msgid "CapyPanel can't install it from here ({reason}). Download the zip from the release page and unpack it in place of this one."
+msgstr "O CapyPanel não consegue instalá-la daqui ({reason}). Baixe o zip na página da versão e descompacte-o no lugar deste."
+
+#, python-brace-format
+msgid "CapyPanel can't write to {folder}"
+msgstr "O CapyPanel não consegue gravar em {folder}"
+
 msgid "CapyPanel couldn't see who is signed in. Work anyone hasn't saved is lost."
 msgstr "O CapyPanel não conseguiu ver quem está conectado. O que não foi salvo se perde."
+
+msgid "CapyPanel didn't close"
+msgstr "O CapyPanel não fechou"
 
 #, python-brace-format
 msgid ""
@@ -802,6 +834,17 @@ msgstr ""
 
 msgid "CapyPanel is built with the following software:"
 msgstr "O CapyPanel é feito com os seguintes softwares:"
+
+msgid "CapyPanel is up to date"
+msgstr "Você tem a versão mais nova"
+
+#, python-brace-format
+msgid "CapyPanel {new} is out"
+msgstr "Saiu o CapyPanel {new}"
+
+#, python-brace-format
+msgid "CapyPanel {version} asks GitHub for its newest release."
+msgstr "O CapyPanel {version} pergunta ao GitHub qual é a versão mais nova."
 
 msgid "CapyPanel — dark"
 msgstr "CapyPanel — escuro"
@@ -820,6 +863,12 @@ msgstr "Alterar…"
 
 msgid "Check"
 msgstr "Verificar"
+
+msgid "Check for &updates"
+msgstr "Procurar &nova versão"
+
+msgid "Check for &updates…"
+msgstr "Procurar &nova versão…"
 
 msgid "Check the SNMP account in Settings › Printers › Connecting."
 msgstr "Confira a conta SNMP em Configurações › Impressoras › Conexão."
@@ -843,6 +892,12 @@ msgstr[1] "{n} impressoras verificadas."
 #, python-brace-format
 msgid "Checked {when}."
 msgstr "Verificado em {when}."
+
+msgid "Checking for updates…"
+msgstr "Procurando uma nova versão…"
+
+msgid "Checking the file…"
+msgstr "Conferindo o arquivo…"
 
 #, python-brace-format
 msgid "Checking {done} of {total}…"
@@ -1007,6 +1062,9 @@ msgstr[1] "Copiar &nomes"
 msgid "Copy all"
 msgstr "Copiar tudo"
 
+msgid "Couldn't check for updates."
+msgstr "Não foi possível procurar uma nova versão."
+
 #, python-brace-format
 msgid "Couldn't create “{path}”: {error}"
 msgstr "Não foi possível criar “{path}”: {error}"
@@ -1040,6 +1098,14 @@ msgstr "Não foi possível abrir “{path}”: {error}"
 #, python-brace-format
 msgid "Couldn't open “{wanted}”, so “{opened}” was opened instead."
 msgstr "Não foi possível abrir “{wanted}”. A lista “{opened}” foi aberta no lugar."
+
+#, python-brace-format
+msgid "Couldn't put the new version in place: {error}"
+msgstr "Não foi possível colocar a versão nova no lugar: {error}"
+
+#, python-brace-format
+msgid "Couldn't reach GitHub: {reason}"
+msgstr "Não foi possível falar com o GitHub: {reason}"
 
 msgid "Couldn't read"
 msgstr "Não foi possível ler"
@@ -1349,6 +1415,9 @@ msgstr "Dê dois cliques num host para abri-lo, ou selecione hosts e clique em E
 msgid "Download"
 msgstr "Baixar"
 
+msgid "Downloading…"
+msgstr "Baixando…"
+
 msgid "Drag a group to move it, or drop it onto another group to put it inside."
 msgstr "Arraste um grupo para movê-lo, ou solte-o sobre outro grupo para colocá-lo dentro dele."
 
@@ -1570,6 +1639,13 @@ msgstr "De “{file}”"
 
 msgid "General"
 msgstr "Geral"
+
+#, python-brace-format
+msgid "GitHub answered {code} {reason}"
+msgstr "O GitHub respondeu {code} {reason}"
+
+msgid "GitHub's answer wasn't readable"
+msgstr "Não foi possível ler a resposta do GitHub"
 
 msgid "Go back to the quick commands CapyPanel starts with?"
 msgstr "Voltar aos comandos rápidos com que o CapyPanel começa?"
@@ -2035,6 +2111,9 @@ msgstr "Sem mensagem: ele desliga na hora."
 msgid "No name"
 msgstr "Sem nome"
 
+msgid "No notes for this release."
+msgstr "Esta versão não tem notas."
+
 msgid "No one"
 msgstr "Ninguém"
 
@@ -2101,6 +2180,10 @@ msgstr "Nenhum guardado."
 msgid "Not a computer name or IP address"
 msgstr "Não é um nome de computador nem um endereço IP"
 
+#, python-brace-format
+msgid "Not an https address: {url}"
+msgstr "Não é um endereço https: {url}"
+
 msgid "Not checked"
 msgstr "Não verificado"
 
@@ -2119,6 +2202,9 @@ msgstr "Não verificado: use Atualizar"
 
 msgid "Not counted"
 msgstr "Não contado"
+
+msgid "Not installed: CapyPanel stays open. Install again when you're ready."
+msgstr "Não instalada: o CapyPanel continua aberto. Instale de novo quando quiser."
 
 #, python-brace-format
 msgid "Not opened: {names}"
@@ -2186,6 +2272,9 @@ msgstr "Offline"
 
 msgid "On the button"
 msgstr "No botão"
+
+msgid "Once a day"
+msgstr "Uma vez por dia"
 
 msgid "One PC"
 msgstr "Um PC"
@@ -2694,6 +2783,9 @@ msgstr "Recusou a conta {account}"
 msgid "Registry entry, no folder"
 msgstr "Registro sem pasta"
 
+msgid "Releases on GitHub"
+msgstr "Versões no GitHub"
+
 msgid "Reload the list"
 msgstr "Recarregar a lista"
 
@@ -2809,6 +2901,9 @@ msgstr "Reiniciar {host}?"
 
 msgid "Restart, Shut down, Log off and Disconnect can't be quick commands: they cut someone off."
 msgstr "Reiniciar, Desligar, Fazer logoff e Desconectar não podem ser comandos rápidos: eles interrompem alguém."
+
+msgid "Restarting…"
+msgstr "Reiniciando…"
 
 msgid "Restarts Windows' printing service, which unsticks most queues."
 msgstr "Reinicia o serviço de impressão do Windows, o que destrava a maioria das filas."
@@ -3384,6 +3479,23 @@ msgstr "A lista padrão foi criada por outro usuário, então o CapyPanel não v
 msgid "The details were saved to the app log."
 msgstr "Os detalhes foram salvos no log do aplicativo."
 
+msgid "The download doesn't match its SHA-256: it was changed or cut short."
+msgstr "O download não confere com o SHA-256: foi alterado ou veio incompleto."
+
+msgid "The download is far bigger than CapyPanel ever is"
+msgstr "O download é muito maior do que o CapyPanel jamais é"
+
+msgid "The download isn't a readable zip"
+msgstr "O download não é um zip legível"
+
+#, python-brace-format
+msgid "The download stopped: {error}"
+msgstr "O download parou: {error}"
+
+#, python-brace-format
+msgid "The download went to an unexpected address: {host}"
+msgstr "O download foi para um endereço inesperado: {host}"
+
 msgid "The encryption password needs at least 8 characters."
 msgstr "A senha da criptografia precisa ter pelo menos 8 caracteres."
 
@@ -3478,6 +3590,9 @@ msgstr "Os traços marcam {marks}."
 msgid "The network drives of the people signed in: each letter and where it points."
 msgstr "As unidades de rede das pessoas conectadas: cada letra e para onde ela aponta."
 
+msgid "The new version didn't pass its self-test"
+msgstr "A versão nova não passou no autoteste"
+
 msgid "The parent group doesn't exist."
 msgstr "O grupo pai não existe."
 
@@ -3542,6 +3657,12 @@ msgstr "A comunidade somente leitura à qual suas impressoras respondem. A maior
 msgid "The registry entry exists, but its folder is gone. Deleting removes only the leftover in the registry."
 msgstr "O registro existe, mas a pasta sumiu. Excluir remove só a sobra no registro."
 
+msgid "The release on GitHub"
+msgstr "A versão no GitHub"
+
+msgid "The release's SHA-256 file doesn't name its zip"
+msgstr "O arquivo SHA-256 da versão não cita o zip dela"
+
 #, python-brace-format
 msgid "The restart or shutdown of {host} is cancelled."
 msgstr "A reinicialização ou o desligamento de {host} foi cancelado."
@@ -3555,8 +3676,20 @@ msgstr "A ferramenta precisa de “arguments”: uma lista de grupos."
 msgid "The tool's “id” must be lowercase letters, digits, - or _."
 msgstr "O “id” da ferramenta deve ter só letras minúsculas, dígitos, - ou _."
 
+#, python-brace-format
+msgid "The update to {new} didn't go in, so this is still {current}: {why}"
+msgstr "A versão {new} não foi instalada, então esta continua sendo a {current}: {why}"
+
 msgid "The viewer's defaults"
 msgstr "Padrões do visualizador"
+
+#, python-brace-format
+msgid "The zip has no {exe}"
+msgstr "O zip não tem o {exe}"
+
+#, python-brace-format
+msgid "The zip holds something unexpected: {name}"
+msgstr "O zip traz algo inesperado: {name}"
 
 #, python-brace-format
 msgid "The {n} document waiting is deleted, and nobody gets it printed."
@@ -3625,6 +3758,9 @@ msgstr[1] "Este PC desliga em {n} minutos. Salve o seu trabalho."
 
 msgid "This connection profile needs a newer version of CapyPanel."
 msgstr "Este perfil de conexão precisa de uma versão mais nova do CapyPanel."
+
+msgid "This copy runs from source: update it with git, or download the zip from the release page."
+msgstr "Esta cópia roda a partir do código-fonte: atualize com o git, ou baixe o zip na página da versão."
 
 #, python-brace-format
 msgid "This doesn't look like a viewer settings file: “{line}”."
@@ -3829,6 +3965,9 @@ msgstr "Espaço reservado desconhecido “{{{name}}}” nos argumentos."
 msgid "Unknown tool kind “{kind}”."
 msgstr "Tipo de ferramenta desconhecido: “{kind}”."
 
+msgid "Unpacking…"
+msgstr "Descompactando…"
+
 msgid "Unreachable"
 msgstr "Inacessível"
 
@@ -3843,6 +3982,20 @@ msgstr "Até um computador aceitar a conta, o CapyPanel para no primeiro que a r
 
 msgid "Unused for:"
 msgstr "Sem uso há:"
+
+msgid "Update CapyPanel"
+msgstr "Nova versão do CapyPanel"
+
+#, python-brace-format
+msgid "Update {version}"
+msgstr "Nova versão {version}"
+
+#, python-brace-format
+msgid "Updated from {old} to {new}."
+msgstr "Instalada a versão {new} (antes era a {old})."
+
+msgid "Updates"
+msgstr "Novas versões"
 
 msgid "Use &defaults"
 msgstr "Usar &padrões"
@@ -3913,6 +4066,9 @@ msgstr "WMI direto"
 
 msgid "WMI through PowerShell"
 msgstr "WMI pelo PowerShell"
+
+msgid "Waiting for the Refresh to finish…"
+msgstr "Esperando terminar o Atualizar em andamento…"
 
 msgid "Waiting to scan"
 msgstr "Na fila para escanear"
@@ -4049,6 +4205,10 @@ msgstr "Amarelo"
 msgid "You asked at {when}."
 msgstr "Você pediu às {when}."
 
+#, python-brace-format
+msgid "You have {current}. Your settings, lists and saved logins stay as they are."
+msgstr "Você tem a {current}. Suas configurações, listas e logins salvos continuam como estão."
+
 msgid "Your Windows account"
 msgstr "Sua conta do Windows"
 
@@ -4115,6 +4275,9 @@ msgstr "patrimônio"
 
 msgid "at the PC"
 msgstr "no PC"
+
+msgid "beta"
+msgstr "beta"
 
 msgid "brand"
 msgstr "marca"
@@ -4419,6 +4582,10 @@ msgstr "{counts}. Veja o histórico."
 #, python-brace-format
 msgid "{count} on {host} · read at {when}"
 msgstr "{count} em {host} · lido às {when}"
+
+#, python-brace-format
+msgid "{done} of {total} MB"
+msgstr "{done} de {total} MB"
 
 #, python-brace-format
 msgid "{error}."
@@ -5022,6 +5189,10 @@ msgstr "{user} (desconectado)"
 #, python-brace-format
 msgid "{user}'s folder"
 msgstr "Pasta de {user}"
+
+#, python-brace-format
+msgid "{version} is the newest release."
+msgstr "A {version} é a versão mais nova."
 
 #, python-brace-format
 msgid "{what}, in {list}"

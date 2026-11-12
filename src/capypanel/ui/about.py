@@ -121,6 +121,10 @@ class AboutPage(Page):
         top.addWidget(name)
         top.addSpacing(-8)  # the version's hover padding is gap enough
         top.addWidget(self.version)
+        self.beta = QLabel(_("beta"))  # until 1.0
+        self.beta.setObjectName("stateBadge")
+        self.beta.setToolTip(_("A beta: it works, and it still changes from version to version."))
+        top.addWidget(self.beta, 0, Qt.AlignmentFlag.AlignVCenter)
         top.addStretch(1)
         text = QVBoxLayout()
         text.setSpacing(spacing.CONTROLS)
@@ -147,6 +151,7 @@ class AboutPage(Page):
         if build:
             rows.append((_("Build:"), " · ".join(build)))
         text.addLayout(_rows(rows, self._open_link))
+        self.updates_button = QPushButton(_("Check for &updates"))
         self.report_button = QPushButton(_("&Report a problem"))
         self.logs_button = QPushButton(_("Open &log folder"))
         self.logs_button.setToolTip(_("The app's logs, to attach to a problem report"))
@@ -155,6 +160,7 @@ class AboutPage(Page):
             lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(log_dir)))
         )
         buttons = QHBoxLayout()
+        buttons.addWidget(self.updates_button)
         buttons.addWidget(self.report_button)
         buttons.addWidget(self.logs_button)
         buttons.addStretch(1)

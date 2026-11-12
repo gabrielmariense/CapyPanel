@@ -1,0 +1,268 @@
+"""Updates: what counts as a newer release, the download's checks, and the swap with its way
+back. Nothing reaches GitHub: the network is a fake, the folders are temporary."""
+
+import hashlib
+import io
+import urllib.error
+import urllib.request
+import zipfile
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+from capypanel.core import updates
+from capypanel.core.settings import PORTABLE_MARKER
+from capypanel.core.updates import Release, UpdateError
+
+ZIP = updates.zip_name("0.26.1")
+
+
+def _release_json(**more: Any) -> dict[str, Any]:
+    data: dict[str, Any] = {
+        "tag_name": "v0.26.1",
+        "draft": False,
+        "prerelease": False,
+        "body": "## What's new\n- Updates.",
+        "html_url": "https://github.com/gabrielmariense/CapyPanel/releases/tag/v0.26.1",
+        "assets": [
+            {"name": ZIP, "size": 38_000_000,
+             "browser_download_url": f"https://github.com/x/releases/download/v0.26.1/{ZIP}"},
+            {"name": f"{ZIP}.sha256", "size": 100,
+             "browser_download_url": f"https://github.com/x/releases/download/v0.26.1/{ZIP}.sha256"},
+        ],
+    }  # fmt: skip
+    data.update(more)
+    return data
+
+
+def test_a_release_is_offered_only_when_newer_and_complete() -> None:
+    release = updates.release_from(_release_json())
+    assert release is not None and release.version == "0.26.1" and release.zip_name == ZIP
+    assert updates.is_newer(release, "0.26.0") and updates.is_newer(release, "0.25.9")
+    assert not updates.is_newer(release, "0.26.1") and not updates.is_newer(release, "0.27.0")
+    assert updates.parse_version("0.100.2") == (0, 100, 2)  # numbers, not text: 100 > 26
+    assert updates.parse_version("0.27.0-rc1") is None and updates.parse_version("latest") is None
+    assert updates.release_from(_release_json(draft=True)) is None
+    assert updates.release_from(_release_json(prerelease=True)) is None
+    assert updates.release_from(_release_json(assets=[])) is None  # files still uploading
+    assert updates.release_from(_release_json(tag_name="nightly")) is None
+
+
+def test_the_sha256_file_names_its_zip() -> None:
+    digest = "a" * 64
+    assert updates.expected_sha256(f"{digest}  {ZIP}\n", ZIP) == digest
+    assert updates.expected_sha256(f"{digest.upper()} *{ZIP}", ZIP) == digest
+    with pytest.raises(UpdateError):
+        updates.expected_sha256(f"{digest}  other.zip", ZIP)
+    with pytest.raises(UpdateError):
+        updates.expected_sha256(f"not-a-hash  {ZIP}", ZIP)
+
+
+def _zip(path: Path, names: dict[str, bytes]) -> Path:
+    with zipfile.ZipFile(path, "w") as packed:
+        for name, data in names.items():
+            packed.writestr(name, data)
+    return path
+
+
+def test_unpacking_takes_one_capypanel_folder_and_nothing_else(tmp_path: Path) -> None:
+    good = _zip(tmp_path / "good.zip", {"CapyPanel/CapyPanel.exe": b"exe",
+                                        "CapyPanel/_internal/x.dll": b"dll"})  # fmt: skip
+    app = updates.unpack(good, tmp_path / "out")
+    assert (app / "CapyPanel.exe").read_bytes() == b"exe" and (app / "_internal" / "x.dll").exists()
+    for bad in (
+        {"CapyPanel/CapyPanel.exe": b"", "../evil.exe": b""},  # out of the folder
+        {"CapyPanel/CapyPanel.exe": b"", "CapyPanel/../../evil.exe": b""},
+        {"CapyPanel/CapyPanel.exe": b"", "Other/thing.txt": b""},  # a second folder
+        {"CapyPanel/readme.txt": b""},  # no exe
+    ):
+        with pytest.raises(UpdateError):
+            updates.unpack(_zip(tmp_path / "bad.zip", bad), tmp_path / "bad")
+    (tmp_path / "notzip.zip").write_bytes(b"html, not a zip")
+    with pytest.raises(UpdateError):
+        updates.unpack(tmp_path / "notzip.zip", tmp_path / "x")
+
+
+class _Response(io.BytesIO):
+    def __init__(self, data: bytes, url: str) -> None:
+        super().__init__(data)
+        self._url = url
+        self.headers = {"Content-Length": str(len(data))}
+
+    def geturl(self) -> str:
+        return self._url
+
+
+def test_downloads_come_only_from_github_and_stop_when_asked(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    landed = {"url": "https://objects.githubusercontent.com/file"}
+    payload = b"x" * (updates.CHUNK * 3)
+    monkeypatch.setattr(urllib.request, "urlopen",
+                        lambda request, timeout: _Response(payload, landed["url"]))  # fmt: skip
+    seen: list[tuple[int, int]] = []
+    updates.download(
+        "https://github.com/a", tmp_path / "a.zip", progress=lambda d, t: seen.append((d, t))
+    )
+    assert (tmp_path / "a.zip").read_bytes() == payload and seen[-1] == (len(payload), len(payload))
+    with pytest.raises(UpdateError, match="Cancelled"):
+        updates.download("https://github.com/a", tmp_path / "b.zip", cancelled=lambda: True)
+    assert not (tmp_path / "b.zip").exists()  # nothing half-written is left
+    with pytest.raises(UpdateError, match="bigger"):
+        updates.download("https://github.com/a", tmp_path / "c.zip", limit=100)
+    landed["url"] = "https://example.invalid/file"  # a redirect off GitHub
+    with pytest.raises(UpdateError, match="unexpected address"):
+        updates.download("https://github.com/a", tmp_path / "d.zip")
+    with pytest.raises(UpdateError, match="https"):
+        updates.download("http://github.com/a", tmp_path / "e.zip")
+
+
+def _app(folder: Path, version: str) -> Path:
+    (folder / "_internal").mkdir(parents=True)
+    (folder / "CapyPanel.exe").write_text(version, encoding="utf-8")
+    (folder / "_internal" / "lib.dll").write_text(version, encoding="utf-8")
+    return folder
+
+
+def _portable(app: Path) -> None:
+    (app / PORTABLE_MARKER).touch()
+    (app / "userdata" / "users").mkdir(parents=True)
+    (app / "userdata" / "users" / "settings.json").write_text("mine", encoding="utf-8")
+
+
+def test_the_swap_puts_the_new_version_in_and_keeps_a_portable_copy_s_data(
+    tmp_path: Path,
+) -> None:
+    place = updates.places(_app(tmp_path / "CapyPanel", "0.26.0"))
+    _portable(place.app)
+    _app(place.new_app, "0.26.1")
+    waited: list[int] = []
+    updates.apply(place, 4242, wait=lambda pid, _t: waited.append(pid) or True,
+                  test=lambda exe: exe.read_text(encoding="utf-8") == "0.26.1")  # fmt: skip
+    assert waited == [4242]
+    assert (place.app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.1"
+    assert (place.app / "userdata" / "users" / "settings.json").read_text(
+        encoding="utf-8"
+    ) == "mine"
+    assert (place.app / PORTABLE_MARKER).exists()
+    assert (place.previous / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.0"
+    updates.clean_up(place.app)  # the new version, once started
+    assert not place.previous.exists() and not place.staging.exists() and place.app.exists()
+
+
+def test_a_new_version_that_fails_its_self_test_leaves_the_old_one_as_it_was(
+    tmp_path: Path,
+) -> None:
+    place = updates.places(_app(tmp_path / "CapyPanel", "0.26.0"))
+    _portable(place.app)
+    _app(place.new_app, "0.26.1")
+    with pytest.raises(UpdateError, match="self-test"):
+        updates.apply(place, 1, wait=lambda _p, _t: True, test=lambda _exe: False)
+    assert (place.app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.0"
+    assert (place.app / "userdata" / "users" / "settings.json").read_text(
+        encoding="utf-8"
+    ) == "mine"
+    assert (place.app / PORTABLE_MARKER).exists() and not place.previous.exists()
+
+
+def test_nothing_moves_while_the_old_copy_is_still_running(tmp_path: Path) -> None:
+    place = updates.places(_app(tmp_path / "CapyPanel", "0.26.0"))
+    _app(place.new_app, "0.26.1")
+    with pytest.raises(UpdateError, match="didn't close"):
+        updates.apply(place, 1, wait=lambda _p, _t: False, test=lambda _exe: True)
+    assert (place.app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.0"
+    assert not place.previous.exists()
+
+
+def test_waiting_for_a_process_that_isn_t_there_returns_at_once() -> None:
+    assert updates.wait_for_exit(0x7FFFFFF0, 5)  # no such process
+
+
+def test_a_folder_that_can_t_take_files_is_said(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert updates.cannot_install(tmp_path / "CapyPanel") == ""
+
+    def refused(**_kwargs: Any) -> Any:
+        raise PermissionError("denied")
+
+    monkeypatch.setattr(updates.tempfile, "TemporaryFile", refused)
+    assert updates.cannot_install(tmp_path / "CapyPanel").startswith("CapyPanel can't write to")
+
+
+def test_the_helper_is_the_new_version_s_own_exe(tmp_path: Path) -> None:
+    app = tmp_path / "CapyPanel"
+    args = updates.helper_args(app, 77, "0.26.0", "0.26.1")
+    assert args[0] == str(tmp_path / "CapyPanel.update" / "CapyPanel" / "CapyPanel.exe")
+    assert args[1:] == ["--apply-update", str(app.resolve()), "77", "0.26.0", "0.26.1"]
+
+
+def test_the_downloaded_zip_is_checked_against_its_sha256(tmp_path: Path) -> None:
+    archive = _zip(tmp_path / ZIP, {"CapyPanel/CapyPanel.exe": b"exe"})
+    assert updates.sha256_of(archive) == hashlib.sha256(archive.read_bytes()).hexdigest()
+
+
+def test_a_release_object_names_what_it_downloads() -> None:
+    release = updates.release_from(_release_json())
+    assert isinstance(release, Release)
+    assert release.zip_url.endswith(ZIP) and release.sha_url.endswith(f"{ZIP}.sha256")
+
+
+def test_a_file_that_won_t_move_halfway_puts_everything_back(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # An antivirus holding one file: the files already moved aside come back, nothing is lost.
+    place = updates.places(_app(tmp_path / "CapyPanel", "0.26.0"))
+    _portable(place.app)
+    _app(place.new_app, "0.26.1")
+    real_rename = Path.rename
+
+    def stubborn(self: Path, target: Path) -> Path:
+        if self.name == "CapyPanel.exe" and self.parent == place.app:
+            raise PermissionError("in use")
+        return real_rename(self, target)
+
+    monkeypatch.setattr(Path, "rename", stubborn)
+    monkeypatch.setattr(updates.time, "sleep", lambda _s: None)
+    with pytest.raises(UpdateError, match="in use"):
+        updates.apply(place, 1, wait=lambda _p, _t: True, test=lambda _exe: True)
+    monkeypatch.setattr(Path, "rename", real_rename)
+    assert (place.app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.0"
+    assert (place.app / "_internal" / "lib.dll").read_text(encoding="utf-8") == "0.26.0"
+    assert (place.app / PORTABLE_MARKER).exists() and not place.previous.exists()
+
+
+def test_the_helper_never_lets_an_error_through_and_starts_the_old_copy_again(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app = _app(tmp_path / "CapyPanel", "0.26.0")
+    started: list[list[str]] = []
+
+    def broken(_place: Any, _pid: int) -> None:
+        raise RuntimeError("something nobody planned for")
+
+    monkeypatch.setattr(updates, "apply", broken)
+    monkeypatch.setattr(updates, "start", lambda exe, *args: started.append([str(exe), *args]))
+    assert updates.run_helper(app, 1, "0.26.0", "0.26.1") == 1
+    assert started == [[str(app.resolve() / "CapyPanel.exe"), "--update-failed", "0.26.1",
+                        "RuntimeError: something nobody planned for"]]  # fmt: skip
+    monkeypatch.setattr(updates, "apply", lambda _place, _pid: None)
+    started.clear()
+    assert updates.run_helper(app, 1, "0.26.0", "0.26.1") == 0
+    assert started == [[str(app.resolve() / "CapyPanel.exe"), "--updated-from", "0.26.0"]]
+
+
+def test_no_release_published_yet_means_nothing_new(monkeypatch: pytest.MonkeyPatch) -> None:
+
+    def answer(code: int):  # noqa: ANN202
+        def urlopen(request: Any, timeout: float) -> Any:
+            raise urllib.error.HTTPError(updates.LATEST_URL, code, "Not Found", {}, None)  # type: ignore[arg-type]
+
+        return urlopen
+
+    monkeypatch.setattr(urllib.request, "urlopen", answer(404))
+    assert updates.latest() is None
+    monkeypatch.setattr(urllib.request, "urlopen", answer(403))  # rate limited, say
+    with pytest.raises(UpdateError, match="403"):
+        updates.latest()

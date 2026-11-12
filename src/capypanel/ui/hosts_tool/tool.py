@@ -1055,6 +1055,9 @@ class HostsTool(ListWorkspace):
         error = found[1] if found is not None else None
         return error is not None and error.reason is Reason.REJECTED
 
+    def working(self) -> bool:
+        return self.checking()
+
     def checking(self) -> bool:
         """A Refresh is running (another one waits for it to end)."""
         return self._run is not None

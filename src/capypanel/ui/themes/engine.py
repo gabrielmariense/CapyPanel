@@ -585,6 +585,8 @@ QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; padding:
 QMenuBar::item { padding: 4px 10px; border-radius: %(r2)spx; color: %(text2)s;
                  background: transparent; }
 QMenuBar::item:selected { background: %(hover)s; color: %(text)s; }
+/* A newer release: a button at the menu bar's right end, in the accent made readable. */
+QToolButton#updateButton { color: %(accent_text)s; font-weight: 600; padding: 2px 10px; }
 QMenu { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; padding: 5px; }
 QMenu::item { padding: 6px 28px 6px 30px; border-radius: %(r2)spx; }
 QMenu::item:selected { background: %(hover)s; }
@@ -843,6 +845,9 @@ _NATIVE_QSS = """
 QMainWindow, QDialog, QSplitter::handle { background: %(bg)s; }
 QSplitter#navSplit::handle { background: transparent; }
 QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; }
+QToolButton#updateButton { color: %(accent_text)s; font-weight: 600; padding: 2px 10px;
+                           border: none; background: transparent; }
+QToolButton#updateButton:hover { background: %(hover)s; }
 QToolBar#main { border: none; border-bottom: 1px solid %(border)s; }
 QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; }
