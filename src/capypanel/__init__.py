@@ -2,11 +2,25 @@
 
 from pathlib import Path
 
+STAMP = "build.txt"  # in a packaged build, beside this file: "0.26.0 472 0386a6c"
+
+
+def _stamped(package: Path) -> tuple[str, str, str] | None:
+    """A packaged build's version, build number and commit, written into it when it was built
+    (scripts/build_exe.py): it has no pyproject.toml and no git to ask."""
+    try:
+        words = (package / STAMP).read_text(encoding="utf-8").split()
+    except OSError:
+        return None
+    return (words[0], words[1], words[2]) if len(words) == 3 else None
+
 
 def _version() -> str:
     """A source checkout's own pyproject.toml says it: one small file, and right even when the
     environment wasn't synced after a pull (the installed package data then still names the
     version before). An installed copy asks that package data."""
+    if _STAMPED is not None:
+        return _STAMPED[0]
     try:
         project = Path(__file__).resolve().parents[2] / "pyproject.toml"
         lines = project.read_text(encoding="utf-8").splitlines()
@@ -24,6 +38,7 @@ def _version() -> str:
         return "0.0.0+unknown"
 
 
+_STAMPED = _stamped(Path(__file__).resolve().parent)
 __version__ = _version()
 
 
@@ -81,10 +96,13 @@ def _build_number(root: Path, commit: str) -> str:
     return number
 
 
-# What the title bar and the log show: "0.8.1", plus "build 1378 (3b4c3e0)" when run from
-# source: the number to compare with the build a test asks for, and its commit.
-_COMMIT = _commit()
-_NUMBER = _build_number(Path(__file__).resolve().parents[2], _COMMIT) if _COMMIT else ""
+# What the title bar and the log show: "0.8.1", plus "build 1378 (3b4c3e0)" from source and
+# in a packaged build: the number to compare with the build a test asks for, and its commit.
+if _STAMPED is not None:
+    _NUMBER, _COMMIT = _STAMPED[1], _STAMPED[2]
+else:
+    _COMMIT = _commit()
+    _NUMBER = _build_number(Path(__file__).resolve().parents[2], _COMMIT) if _COMMIT else ""
 BUILD = (
     f"{__version__} build {_NUMBER} ({_COMMIT})" if _NUMBER
     else f"{__version__} ({_COMMIT})" if _COMMIT

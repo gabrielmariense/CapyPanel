@@ -40,6 +40,9 @@ pythonpath = ["tests/ui", "tests/helpers"]  # helpers the tests share (capywindo
 faulthandler_timeout = 90  # a test stuck this long prints where it is, here and on CI
 
 [dependency-groups]
+build = [
+    "pyinstaller>=6.22",
+]
 dev = [
     "babel>=2.18.0",
     "pyright>=1.1.414",
