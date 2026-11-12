@@ -5,7 +5,15 @@ from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QMessageB
 
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.ui import hosts as hosts_ui
-from capypanel.ui.dialogs import FRAME, ScreenFit, fit_screen, ok_cancel, quiet_default, run_modal
+from capypanel.ui.dialogs import (
+    FRAME,
+    ScreenFit,
+    fit_screen,
+    kept_size,
+    ok_cancel,
+    quiet_default,
+    run_modal,
+)
 from capypanel.ui.groups import ManageGroupsDialog
 from capypanel.ui.hosts import HostDialog
 from capypanel.ui.themes import engine as themes
@@ -99,11 +107,11 @@ def test_no_window_opens_larger_than_the_screen(qapp: QApplication) -> None:
     assert fit_screen(settings, laptop) and settings.size() == QSize(960, 728 - FRAME.height())
     assert fit_screen(settings, scaled)  # shorter still at 125 %: its pages scroll
     assert settings.size() == QSize(960, 575 - FRAME.height())
-    commands = QDialog()
-    commands.setFixedSize(1120, 620)  # a window of a fixed size stays fixed, at what fits
-    assert fit_screen(commands, scaled)
-    assert commands.size() == QSize(1093 - FRAME.width(), 575 - FRAME.height())
-    assert commands.minimumSize() == commands.maximumSize() == commands.size()
+    box = QDialog()
+    box.setFixedSize(1120, 620)  # one of a fixed size (a question box) stays fixed, at what fits
+    assert fit_screen(box, scaled)
+    assert box.size() == QSize(1093 - FRAME.width(), 575 - FRAME.height())
+    assert box.minimumSize() == box.maximumSize() == box.size()
     # Installed on the application, it fits every window as it shows; menus and tips are left.
     fitter = ScreenFit(qapp)
     qapp.installEventFilter(fitter)
@@ -119,3 +127,12 @@ def test_no_window_opens_larger_than_the_screen(qapp: QApplication) -> None:
         huge.close()
     finally:
         qapp.removeEventFilter(fitter)
+
+
+def test_a_window_s_kept_size_is_read_with_care() -> None:
+    default = (1120, 620)
+    assert kept_size(None, default) == default  # the first time
+    assert kept_size([900, 700], default) == (900, 700)  # as the person left it
+    # The settings file can be edited by hand: anything that isn't a size is skipped.
+    for odd in ([900], [900, "700"], [900, 7.5], [True, 700], [5, 700], [900, 10**6], "900x700"):
+        assert kept_size(odd, default) == default, odd

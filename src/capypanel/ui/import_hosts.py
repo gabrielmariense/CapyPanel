@@ -490,7 +490,8 @@ class FormatsDialog(QDialog):
         layout.addLayout(picker)
         layout.addLayout(self._pages)
         layout.addWidget(box)
-        self.setMinimumWidth(640)
+        hint = self.sizeHint()
+        self.resize(max(640, hint.width()), hint.height())  # as it opens; any size after
 
     def _formats(self) -> list[tuple[str, QWidget]]:
         csv_example = (

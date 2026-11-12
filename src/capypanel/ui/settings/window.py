@@ -6,7 +6,7 @@ window. A tool's pages apply their choices through the tool (see SettingsGroup).
 
 from collections.abc import Sequence
 
-from PySide6.QtCore import QEvent, QSize, Qt, QTimer, Signal
+from PySide6.QtCore import QEvent, Qt, QTimer, Signal
 from PySide6.QtGui import QPalette, QShowEvent
 from PySide6.QtWidgets import (
     QDialog,
@@ -35,7 +35,9 @@ from capypanel.ui.tool_catalog import ToolInfo
 APP_GROUP = ("CapyPanel", ("general",))
 PINNED = ("about",)  # pages kept at the very bottom of the page list, apart from the groups
 SEARCH_FROM = 3  # letters typed before the search shows its results
-WIDTH = 960  # room for a table row such as a domain account, its PC and where it's kept
+# As it opens the first time: room for a table row such as a domain account, its PC and where
+# it's kept. From there the size is the person's: any size, and a page too large for it scrolls.
+WIDTH, HEIGHT = 960, 700
 ROOM = 60  # spare width past the widest page: a button row never ends just short of its table
 GUTTER = 16  # right of the pages and under the last one: the columns' gap left of them
 
@@ -71,9 +73,9 @@ class SettingsDialog(QDialog):
         self._old: list[QWidget] = []
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(12, 12, 12, 12)
+        self.own_size = False  # opened at the size the person left it at: nothing widens it
         self._build(themes.current().id)
-        self.setMinimumWidth(WIDTH)  # a size kept by an older version was narrower
-        self.resize(WIDTH, 700)  # fixed: taller pages scroll, the window never grows for them
+        self.resize(WIDTH, HEIGHT)  # taller pages scroll, the window never grows for them
 
     def _build(self, theme_id: str) -> None:
         """The pages, in the current language, showing what's set."""
@@ -106,7 +108,7 @@ class SettingsDialog(QDialog):
 
         # One scrolling view per page, and one for the search's results.
         self.stack = QStackedWidget()
-        self._views: list[QScrollArea] = []
+        self._views: list[_PageArea] = []
         self._view_of: dict[str, int] = {}  # page id -> its view
         for page_id, page in self.pages.items():
             self._view_of[page_id] = len(self._views)
@@ -416,8 +418,12 @@ class SettingsDialog(QDialog):
         self._no_default_buttons()
 
     def _make_room(self) -> None:
-        """At least ROOM wider than the widest page needs, in this language."""
-        width = self.minimumSizeHint().width() + ROOM
+        """Opening at its own size: at least ROOM wider than the widest page needs, in this
+        language. At a size the person chose it stays as it is, and a page too wide scrolls."""
+        if self.own_size:
+            return
+        around = self.minimumSizeHint().width() - self.stack.minimumSizeHint().width()
+        width = around + max(view.page_width() for view in self._views) + ROOM
         if self.width() < width:
             self.resize(width, self.height())
 
@@ -429,25 +435,23 @@ def _sections(page: Page) -> list[Section]:
 
 
 class _PageArea(QScrollArea):
-    """Never narrower than its page: the window widens instead of cutting off a button row."""
+    """A page's view. It can be any size: the page scrolls, down and sideways, when it's
+    larger."""
 
-    def minimumSizeHint(self) -> QSize:
-        hint = super().minimumSizeHint()
+    def page_width(self) -> int:
+        """What the page needs to show whole, with the scroll bar beside it."""
         page = self.widget()
-        if page is None:
-            return hint
         bar = self.verticalScrollBar().sizeHint().width()
-        return QSize(max(hint.width(), page.minimumSizeHint().width() + bar), hint.height())
+        return (page.minimumSizeHint().width() if page is not None else 0) + bar
 
 
-def _scrolling(widget: QWidget) -> QScrollArea:
-    """A page that scrolls when it's taller than the window, with no frame of its own. A
+def _scrolling(widget: QWidget) -> _PageArea:
+    """A page that scrolls when it's larger than the window, with no frame of its own. A
     gutter keeps the cards off the scroll bar and the bottom edge, as wide as the gap left of
     them."""
     area = _PageArea()
     area.setWidgetResizable(True)
     area.setFrameShape(QFrame.Shape.NoFrame)
-    area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
     holder = QWidget()
     layout = QVBoxLayout(holder)
     layout.setContentsMargins(0, 0, GUTTER, GUTTER)

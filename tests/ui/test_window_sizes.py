@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtGui import QFontMetrics
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtWidgets import QApplication, QScrollArea, QWidget
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -23,7 +23,7 @@ from capypanel.ui.hosts_tool.commands_window import CommandsWindow
 from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.new_list import NewListDialog
 from capypanel.ui.saved_credentials import SavedCredentialsDialog
-from capypanel.ui.settings.window import WIDTH
+from capypanel.ui.settings.window import HEIGHT, WIDTH, SettingsDialog
 from capypanel.ui.themes import engine as themes
 
 # Measured in the CapyPanel dark theme, as people see them. With another font than the theme's
@@ -89,8 +89,8 @@ def heights(win: CapyWindow) -> dict[str, int]:
     found = {}
     for name, widget in made.items():
         widget.ensurePolished()
-        fixed = widget.minimumHeight() == widget.maximumHeight()
-        found[name] = widget.height() if fixed else widget.sizeHint().height()
+        # The Commands window opens at a size of its own, whatever its commands would take.
+        found[name] = widget.height() if name == "commands" else widget.sizeHint().height()
         if name != "settings":  # the window keeps its own
             widget.deleteLater()
     return found
@@ -109,11 +109,52 @@ def test_no_window_is_taller_than_when_the_spacing_scale_came_in(window: CapyWin
 def test_settings_opens_wide_enough_for_its_tables(window: CapyWindow) -> None:
     """960 px: a row with a domain account, a PC by name and address and "Gerenciador de
     Credenciais" shows whole, with nothing to scroll sideways (measured in the dark theme with
-    its own font; the test font is twice as wide). A narrower size kept by an older version
-    opens at this width too."""
+    its own font; the test font is twice as wide). That's how it opens; from there it can be
+    made any size, smaller too."""
     dialog = window.settings_dialog()
-    assert (dialog.width(), dialog.height()) == (WIDTH, 700) and WIDTH == 960
-    dialog.resize(860, 700)
-    assert dialog.width() == WIDTH
-    dialog.resize(1100, 700)  # wider is the person's choice
-    assert dialog.width() == 1100
+    assert (dialog.width(), dialog.height()) == (WIDTH, HEIGHT) == (960, 700)
+    dialog.resize(1100, 800)
+    assert (dialog.width(), dialog.height()) == (1100, 800)
+    dialog.resize(700, 400)
+    assert (dialog.width(), dialog.height()) == (700, 400)
+
+
+def test_a_settings_page_too_wide_for_the_window_scrolls_sideways(window: CapyWindow) -> None:
+    dialog = window.settings_dialog()
+    dialog.show()
+    dialog.show_page("connections")
+    QApplication.processEvents()
+    view = dialog.stack.currentWidget()
+    assert isinstance(view, QScrollArea)
+    assert view.horizontalScrollBar().maximum() == 0  # as it opens, the page shows whole
+    dialog.resize(dialog.minimumWidth(), 400)
+    QApplication.processEvents()
+    assert view.horizontalScrollBar().maximum() > 0 and view.verticalScrollBar().maximum() > 0
+    dialog.close()
+
+
+def test_settings_reopens_at_the_size_it_was_left_at(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[tuple[int, int]] = []
+
+    def run(dialog: SettingsDialog) -> int:
+        dialog.show()
+        QApplication.processEvents()
+        seen.append((dialog.width(), dialog.height()))
+        dialog.resize(700, 500)
+        dialog.hide()
+        return 0
+
+    monkeypatch.setattr(SettingsDialog, "exec", run)
+    window.open_settings()
+    window.open_settings()  # smaller than its pages want: it stays, and they scroll
+    assert seen[1] == (700, 500) and seen[0][1] == HEIGHT
+    # A size kept while Settings opened at another one (0.24's 860 px) isn't used: the new
+    # opening size shows once.
+    window.prefs["settings_opens_at"] = [860, 700]
+    window.open_settings()
+    assert seen[2] == seen[0]
+    del window.prefs["settings_opens_at"]  # as 0.24 kept it: the size alone
+    window.open_settings()
+    assert seen[3] == seen[0]

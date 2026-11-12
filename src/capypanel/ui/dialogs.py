@@ -82,6 +82,16 @@ def fit_screen(window: QWidget, free: QSize | None = None) -> bool:
     return True
 
 
+def kept_size(kept: object, default: tuple[int, int]) -> tuple[int, int]:
+    """A window's size as the person left it, kept in their settings as [width, height];
+    `default` the first time, or when the file holds anything else (it can be edited by hand)."""
+    if isinstance(kept, list) and len(kept) == 2:
+        width, height = kept
+        if all(type(n) is int and 200 <= n <= 20000 for n in (width, height)):
+            return width, height
+    return default
+
+
 class ScreenFit(QObject):
     """Installed on the application: every window and dialog is fitted to its screen as it
     shows, so no screen has to remember to."""

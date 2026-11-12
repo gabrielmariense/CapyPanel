@@ -169,6 +169,7 @@ SHELL_KEYS = frozenset(
         "schema",
         "window_geometry",
         "settings_geometry",
+        "settings_opens_at",
         "theme",
         "language",
         TOOL_KEY,

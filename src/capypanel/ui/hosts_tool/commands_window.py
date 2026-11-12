@@ -58,7 +58,7 @@ from capypanel.core.tools.connect import Target
 from capypanel.ui import checks as check_texts
 from capypanel.ui import spacing
 from capypanel.ui.connect import Request
-from capypanel.ui.dialogs import run_modal
+from capypanel.ui.dialogs import kept_size, run_modal
 from capypanel.ui.hosts_tool import command_windows as windows
 from capypanel.ui.hosts_tool import drive_windows
 from capypanel.ui.hosts_tool.details import HostDetailsPanel
@@ -75,11 +75,12 @@ from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.tool import HostsTool
 
-SIZE = (1120, 620)  # fixed: it never grows as commands are added
+SIZE = (1120, 620)  # as it opens the first time; from there the person's own size is kept
+SIZE_KEY = "commands_size"  # in the person's settings: [width, height]
 GROUPS_WIDTH = 150  # px, at least
 GROUP_ROOM = 34  # px past a group's name: the rows' padding (10 + 10), the frame and air
 ROW_SPACING = 2  # px between the commands; a gap widget adds one more
-RESULTS_WIDTH = 400  # px: the rest goes to the commands, whose names are longer in pt
+RESULTS_WIDTH = 400  # px at least: the rest goes to the commands, whose names are longer in pt
 ROW = 28  # px: a command's line
 APART = 8  # px: the gap above a command set apart, where menus draw a line
 ICON = 16
@@ -359,7 +360,6 @@ class CommandsWindow(QDialog):
         self._shown_key = target.key if target else ""  # whose profile the dropdown shows
         self._outcomes: dict[tuple[str, str], Outcome] = {}  # (target key, command id)
         self._lists: dict[tuple[str, str], Listed] = {}  # printers and programs, as read
-        self.setFixedSize(*SIZE)
 
         # ---- the top line: the PC, typed or picked from what the Hosts panel shows; the arrows
         # go host by host. Then the addresses typed here before. ----
@@ -467,11 +467,10 @@ class CommandsWindow(QDialog):
         self.list.setWidget(column)
         self.list.setWidgetResizable(True)
         self.list.setFrameShape(QFrame.Shape.NoFrame)
-        self.list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.list.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # in a narrow window it scrolls sideways
         self.list.verticalScrollBar().valueChanged.connect(self._follow_scroll)
         self.results = Results()
-        self.results.setFixedWidth(RESULTS_WIDTH)
+        self.results.setMinimumWidth(RESULTS_WIDTH)
         self.results.session_menu_requested.connect(self._session_menu)
         self.results.list_menu_requested.connect(self._list_menu)
         self.results.copied.connect(lambda text: tool.say(_("Copied: {text}").format(text=text)))
@@ -500,8 +499,13 @@ class CommandsWindow(QDialog):
         bottom.addWidget(close)
         grid.addLayout(bottom, 4, 0, 1, 5)
         grid.setColumnMinimumWidth(0, groups_width)
-        grid.setColumnStretch(2, 1)
+        # Wider than it opens, the commands and the results share the width as they do at
+        # first; narrower, the results keep theirs and the commands' names wrap.
+        fixed = 2 * spacing.WINDOW + groups_width + 2 + 4 * grid.horizontalSpacing()
+        grid.setColumnStretch(2, max(SIZE[0] - fixed - RESULTS_WIDTH, 1))
+        grid.setColumnStretch(4, RESULTS_WIDTH)
         grid.setRowStretch(2, 1)
+        self.resize(*kept_size(tool.prefs.get(SIZE_KEY), SIZE))
 
         self._picked: CommandRow | None = None
         tool.host_changed.connect(self._changed)
@@ -883,6 +887,13 @@ class CommandsWindow(QDialog):
         reaches it while its parts are being deleted."""
         self.search.removeEventFilter(self)
         super().closeEvent(event)
+
+    def done(self, result: int) -> None:
+        """Closed (its X, Close or Esc): the size it's left at is how it opens next time."""
+        size = [self.width(), self.height()]
+        if size != self._tool.prefs.get(SIZE_KEY, list(SIZE)):
+            self._tool.keep_pref(SIZE_KEY, size)
+        super().done(result)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() in (Qt.Key.Key_Up, Qt.Key.Key_Down):
