@@ -51,24 +51,28 @@ Remote Desktop works out of the box. For VNC you also need a viewer:
 
 ## Update CapyPanel
 
-When a newer release is out, an **Update 0.26.1** button shows at the right end of the menu bar.
+When CapyPanel finds a newer release on its own, the **Update CapyPanel** window opens by itself,
+once per run, and an **Update 0.26.2** button shows at the right end of the menu bar. The window
+waits while a guide or another window is open, or while CapyPanel is in the tray.
 
 ![The Update CapyPanel window: CapyPanel 0.26.1 is out, its notes, and Skip this version, Later and Install and restart](images/update-window-dark.png)
 
-1. Click it. The **Update CapyPanel** window shows what changed.
+1. Read what changed in the **Update CapyPanel** window, or click the **Update** button to open
+   it. The notes show in CapyPanel's language.
 2. Click **Install and restart**. CapyPanel downloads the zip, closes, and starts again in the new
    version.
-3. The window then says "Updated from 0.26.0 to 0.26.1."
+3. It opens with a window that says "CapyPanel 0.26.2 is installed" and "Updated from 0.26.1. Your
+   settings, lists and saved logins are as they were.", with the notes and a link to the release.
 
-**Later** only closes the window: the button stays, and comes back at the next start while that
-release is the newest. **Skip this version** hides the button until a newer release comes out
-(**Help > Check for updates…** still shows it); the choice is only yours. While it downloads,
-**Later** reads **Cancel** and stops the download.
+**Later** only closes the window: the button stays on the menu bar, and both come back at the next
+start while that release is the newest. **Skip this version** stops the window and the button for
+that version, until a newer release comes out (**Help > Check for updates…** still shows it); the
+choice is only yours. While it downloads, **Later** reads **Cancel** and stops the download.
 
 ??? note "When CapyPanel looks for updates"
 
-    By default CapyPanel asks GitHub (api.github.com) about 15 seconds after every start, then once
-    a day while it stays open. **Settings > CapyPanel > General > Updates** has **At every start**,
+    By default CapyPanel asks GitHub (api.github.com) about a second after every start, then once a
+    day while it stays open. **Settings > CapyPanel > General > Updates** has **At every start**,
     **Once a day**, **Once a week** and **Off**. It's one choice for everyone on this PC (see
     [Settings and files](settings-and-files.md#updates)). **Help > Check for updates…** looks
     right away, whatever is set, and also says when you're up to date.
@@ -83,7 +87,9 @@ release is the newest. **Skip this version** hides the button until a newer rele
        ("Waiting for CapyPanel to finish what it's doing…") or asks you first.
     3. CapyPanel closes. A small helper swaps the app's files for the new ones and starts the new
        version.
-    4. If the new version won't start, the helper puts the old one back, and the window says why.
+    4. If the new version won't start, the helper puts the old one back. CapyPanel then opens with
+       a window that says "The update to 0.26.2 didn't go in", why, and a link to the releases on
+       GitHub.
 
     Your settings, lists and saved logins are never touched.
 
@@ -110,5 +116,5 @@ has the rest.
 | "The download doesn't match its SHA-256: it was changed or cut short." | The zip that arrived isn't the one GitHub built | Click **Install and restart** again |
 | "CapyPanel can't install it from here (CapyPanel can't write to …). Download the zip from the release page and unpack it in place of this one." | Your account can't write to the folder CapyPanel is in, such as Program Files | Unzip the new version over the old one yourself, or move CapyPanel to a folder you can write to |
 | "This copy runs from source: update it with git, or download the zip from the release page." | You started CapyPanel with `uv run` | `git pull`, or switch to the zip |
-| "The update to 0.26.1 didn't go in, so this is still 0.26.0: …" | The new version wouldn't start, so the old one was put back | Read the reason after the colon; **Report a problem** if it isn't clear |
+| "The update to 0.26.2 didn't go in" and "This is still CapyPanel 0.26.1: …" | The new version wouldn't start, so the old one was put back | Read the reason after the colon; **Report a problem** if it isn't clear |
 | "CapyPanel is already running for EXAMPLE\user, but its window couldn't be brought forward: …" | Your other copy is open in another Windows session, or isn't answering | Close it there, or end it in Task Manager, then start CapyPanel again |

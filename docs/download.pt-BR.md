@@ -55,25 +55,30 @@ na [Política de assinatura de código (Code signing policy)](code-signing.pt-BR
 
 ## Atualizar o CapyPanel
 
-Quando sai uma versão mais nova, um botão **Nova versão 0.26.1** aparece na ponta direita da barra
-de menus.
+Quando o CapyPanel encontra sozinho uma versão mais nova, a janela **Nova versão do CapyPanel**
+abre sozinha, uma vez por execução, e um botão **Nova versão 0.26.2** aparece na ponta direita da
+barra de menus. A janela espera enquanto um guia ou outra janela está aberta, ou enquanto o
+CapyPanel está na bandeja.
 
 ![A janela Nova versão do CapyPanel: Saiu o CapyPanel 0.26.1, as notas, e Pular esta versão, Depois e Instalar e reiniciar](images/update-window-dark-pt-BR.png)
 
-1. Clique nele. A janela **Nova versão do CapyPanel** mostra o que mudou.
+1. Leia o que mudou na janela **Nova versão do CapyPanel**, ou clique no botão **Nova versão**
+   para abri-la. As notas aparecem no idioma do CapyPanel.
 2. Clique em **Instalar e reiniciar**. O CapyPanel baixa o zip, fecha e abre de novo na versão
    nova.
-3. A janela então diz "Instalada a versão 0.26.1 (antes era a 0.26.0)."
+3. Ele abre com uma janela que diz "O CapyPanel 0.26.2 foi instalado" e "Atualizado a partir da
+   0.26.1. Suas configurações, listas e logins salvos continuam como estavam.", com as notas e um
+   link para a versão.
 
-O **Depois** só fecha a janela: o botão continua, e volta no próximo início enquanto aquela versão
-for a mais nova. O **Pular esta versão** esconde o botão até sair uma versão mais nova (o **Ajuda >
-Procurar nova versão…** ainda a mostra); a escolha é só sua. Durante o download, o **Depois** vira
-**Cancelar** e interrompe o download.
+O **Depois** só fecha a janela: o botão continua na barra de menus, e os dois voltam no próximo
+início enquanto aquela versão for a mais nova. O **Pular esta versão** para a janela e o botão
+daquela versão, até sair uma versão mais nova (o **Ajuda > Procurar nova versão…** ainda a mostra);
+a escolha é só sua. Durante o download, o **Depois** vira **Cancelar** e interrompe o download.
 
 ??? note "Quando o CapyPanel procura uma nova versão"
 
-    Por padrão o CapyPanel pergunta ao GitHub (api.github.com) uns 15 segundos depois de cada
-    início, e depois uma vez por dia enquanto fica aberto. **Configurações > CapyPanel > Geral >
+    Por padrão o CapyPanel pergunta ao GitHub (api.github.com) mais ou menos um segundo depois de
+    cada início, e depois uma vez por dia enquanto fica aberto. **Configurações > CapyPanel > Geral >
     Novas versões** tem **A cada início**, **Uma vez por dia**, **Uma vez por semana** e
     **Desligado**. É uma escolha só para todos neste PC (veja
     [Configurações e arquivos](settings-and-files.pt-BR.md#novas-versoes)). O **Ajuda > Procurar
@@ -89,7 +94,9 @@ Procurar nova versão…** ainda a mostra); a escolha é só sua. Durante o down
        ele espera ("Esperando o CapyPanel terminar o que está fazendo…") ou pergunta antes.
     3. O CapyPanel fecha. Um pequeno ajudante troca os arquivos do app pelos novos e abre a versão
        nova.
-    4. Se a versão nova não abrir, o ajudante põe a antiga de volta, e a janela diz por quê.
+    4. Se a versão nova não abrir, o ajudante põe a antiga de volta. O CapyPanel então abre com
+       uma janela que diz "A atualização para a 0.26.2 não foi instalada", por quê, e um link para
+       as versões no GitHub.
 
     As suas configurações, listas e logins salvos nunca são mexidos.
 
@@ -117,5 +124,5 @@ resto.
 | "O download não confere com o SHA-256: foi alterado ou veio incompleto." | O zip que chegou não é o que o GitHub gerou | Clique em **Instalar e reiniciar** de novo |
 | "O CapyPanel não consegue instalá-la daqui (O CapyPanel não consegue gravar em …). Baixe o zip na página da versão e descompacte-o no lugar deste." | A sua conta não pode gravar na pasta em que o CapyPanel está, como a Arquivos de Programas | Descompacte a versão nova por cima da antiga você mesmo, ou mova o CapyPanel para uma pasta em que você possa gravar |
 | "Esta cópia roda a partir do código-fonte: atualize com o git, ou baixe o zip na página da versão." | Você abriu o CapyPanel com o `uv run` | `git pull`, ou passe a usar o zip |
-| "A versão 0.26.1 não foi instalada, então esta continua sendo a 0.26.0: …" | A versão nova não abriu, então a antiga voltou | Leia o motivo depois dos dois-pontos; use o **Relatar um problema** se não ficar claro |
+| "A atualização para a 0.26.2 não foi instalada" e "Este continua sendo o CapyPanel 0.26.1: …" | A versão nova não abriu, então a antiga voltou | Leia o motivo depois dos dois-pontos; use o **Relatar um problema** se não ficar claro |
 | "O CapyPanel já está em execução para EXAMPLE\user, mas não foi possível trazer a janela dele para a frente: …" | A sua outra cópia está aberta em outra sessão do Windows, ou não está respondendo | Feche-a por lá, ou finalize-a no Gerenciador de Tarefas, e abra o CapyPanel de novo |

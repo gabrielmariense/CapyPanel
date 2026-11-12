@@ -3,6 +3,13 @@
 As mudanças de cada versão que você vai notar. As
 [versões no GitHub](https://github.com/gabrielmariense/CapyPanel/releases) têm os downloads.
 
+## 0.26.2
+
+- Quando o CapyPanel encontra sozinho uma versão mais nova, a janela de nova versão abre sozinha
+  com as notas, no idioma do CapyPanel. Ele procura mais ou menos um segundo depois de abrir.
+- Depois do **Instalar e reiniciar**, o CapyPanel abre com uma janela dizendo que a atualização
+  foi instalada, ou por que não foi.
+
 ## 0.26.1
 
 - O título da janela mostra só a versão, como em "Padrão — CapyPanel 0.26.1". O número de build e
