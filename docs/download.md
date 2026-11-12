@@ -13,7 +13,8 @@ need administrator rights. It runs on Windows 10 22H2 or Windows 11, 64-bit.
 
 Remote Desktop works out of the box. For VNC you also need a viewer:
 [UltraVNC](https://uvnc.com) or [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/).
-[Getting started](getting-started.md) takes it from there.
+[Getting started](getting-started.md) takes it from there. How releases are signed is in the
+[Code signing policy](code-signing.md).
 
 ??? note "Windows says it protected your PC"
 

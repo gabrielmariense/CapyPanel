@@ -31,7 +31,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel import BUILD
+from capypanel import __version__
 from capypanel.core import settings
 from capypanel.core.i18n import _, pgettext
 from capypanel.ui import language, spacing
@@ -377,7 +377,8 @@ class MainWindow(QMainWindow):
             self._show_title(self.tools[tool_id].title())
 
     def _show_title(self, name: str) -> None:
-        app = f"CapyPanel {BUILD}"
+        """The title, e.g. "Clinic — CapyPanel 0.26.1": the version only; About has the build."""
+        app = f"CapyPanel {__version__}"
         self.setWindowTitle(f"{name} — {app}" if name else app)
 
     # ---- settings ----

@@ -50,6 +50,8 @@ Também online, com busca: **[gabrielmariense.github.io/CapyPanel/pt-BR](https:/
 - [Primeiros passos](docs/getting-started.pt-BR.md): rode o CapyPanel, adicione seus primeiros
   hosts, verifique e conecte
 - [Novidades](docs/whats-new.pt-BR.md): as mudanças de cada versão
+- [Política de assinatura de código (Code signing policy)](docs/code-signing.pt-BR.md): como as
+  versões são assinadas, quem as aprova, e o que o CapyPanel envia pela rede
 - [Listas de hosts](docs/hosts/host-lists.pt-BR.md): grupos e tags, encontrar um host, e hosts
   entrando e saindo de uma planilha
 - [Conectando](docs/hosts/connecting.pt-BR.md): visualizadores VNC, Área de Trabalho Remota, perfis
@@ -72,7 +74,8 @@ No Windows 10 22H2 ou 11, baixe o `CapyPanel-<versão>-windows-x64.zip` da
 [versão mais recente](https://github.com/gabrielmariense/CapyPanel/releases/latest), descompacte
 onde quiser e rode o **CapyPanel.exe**. Sem instalador, sem direitos de administrador. Ele ainda não
 é assinado, então o SmartScreen pode perguntar na primeira vez: **Mais informações**, depois
-**Executar assim mesmo**.
+**Executar assim mesmo**. Veja a
+[Política de assinatura de código (Code signing policy)](docs/code-signing.pt-BR.md).
 
 Pelo código-fonte, com o [uv](https://docs.astral.sh/uv/), que instala o Python e todo o resto:
 

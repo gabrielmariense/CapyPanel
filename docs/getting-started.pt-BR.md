@@ -26,9 +26,10 @@ terminar ou clicar em **Pular**. O **Ajuda > Guia desta tela** mostra o guia de 
 
 ??? note "Mais sobre o início"
 
-    - A versão aparece na barra de título, seguida de um número de build e do commit, por exemplo
-      `CapyPanel 0.26.0 build 514 (abc1234)`; um número de build maior é um build mais novo.
-      Informe-a ao relatar um problema.
+    - A barra de título mostra a versão, como em "Padrão — CapyPanel 0.26.1". O **Ajuda > Sobre o
+      CapyPanel** acrescenta o número de build e o commit, como em "Build: build 518 · commit
+      abc1234"; um número de build maior é um build mais novo. Clique na versão ali para copiar os
+      dois, e informe-a ao relatar um problema.
     - O primeiro início fala o idioma em que o Windows aparece: português para qualquer português,
       inglês para os outros. **Configurações > CapyPanel > Geral > Idioma** muda isso.
     - Roda uma cópia por usuário do Windows. Abrir o CapyPanel de novo traz a janela aberta para a

@@ -96,8 +96,8 @@ def _build_number(root: Path, commit: str) -> str:
     return number
 
 
-# What the title bar and the log show: "0.8.1", plus "build 1378 (3b4c3e0)" from source and
-# in a packaged build: the number to compare with the build a test asks for, and its commit.
+# What About and the log show: "0.8.1", plus "build 1378 (3b4c3e0)" from source and in a
+# packaged build: the number to compare with the build a test asks for, and its commit.
 if _STAMPED is not None:
     _NUMBER, _COMMIT = _STAMPED[1], _STAMPED[2]
 else:

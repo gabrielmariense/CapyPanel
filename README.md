@@ -49,6 +49,8 @@ Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrie
 - [Getting started](docs/getting-started.md): run CapyPanel, add your first hosts, check and
   connect
 - [What's new](docs/whats-new.md): the changes in each release
+- [Code signing policy](docs/code-signing.md): how releases are signed, who approves them, and
+  what CapyPanel sends over the network
 - [Host lists](docs/hosts/host-lists.md): groups and tags, finding a host, and hosts in and out
   of a spreadsheet
 - [Connecting](docs/hosts/connecting.md): VNC viewers, Remote Desktop, connection profiles,
@@ -69,7 +71,8 @@ Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrie
 On Windows 10 22H2 or 11, download `CapyPanel-<version>-windows-x64.zip` from the
 [latest release](https://github.com/gabrielmariense/CapyPanel/releases/latest), unzip it anywhere
 and run **CapyPanel.exe**. No installer, no administrator rights. It isn't signed yet, so
-SmartScreen may ask the first time: **More info**, then **Run anyway**.
+SmartScreen may ask the first time: **More info**, then **Run anyway**. See the
+[Code signing policy](docs/code-signing.md).
 
 From source, with [uv](https://docs.astral.sh/uv/), which installs Python and everything else:
 
