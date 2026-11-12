@@ -39,9 +39,10 @@ from capypanel.core.remote.sessions import Session
 from capypanel.ui import checks as check_texts
 from capypanel.ui import spacing
 from capypanel.ui.dialogs import quiet_default, run_modal
-from capypanel.ui.icons import STATUS_COLORS, tabler_icon
+from capypanel.ui.icons import tabler_icon
 from capypanel.ui.notes import escape, hint
 from capypanel.ui.tables import fit_menu
+from capypanel.ui.themes import engine as themes
 
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.runner import HostTarget, Report, Runner
@@ -61,7 +62,6 @@ MAX_PATH = 1024
 RECENT_PATHS = 10
 DELAYS = (0, 60, 5 * 60, 15 * 60)  # Restart's When: now, or in 1, 5 or 15 minutes
 DEFAULT_DELAY = 0  # When's first pick: now (Cancel stays the default button)
-AMBER = STATUS_COLORS["attention"]
 WIDE = 460  # px: a question names a person, a session and a time; narrower, it wraps badly
 
 
@@ -97,7 +97,11 @@ class Question(QDialog):
         self.setWindowTitle(title)
         self.setMinimumWidth(WIDE)
         sign = QLabel()
-        sign.setPixmap(tabler_icon("alert-triangle", QColor(AMBER), 36).pixmap(36, 36))
+        sign.setPixmap(
+            tabler_icon("alert-triangle", QColor(themes.status_color("attention")), 36).pixmap(
+                36, 36
+            )
+        )
         self.heading = QLabel(f"<b>{escape(question)}</b>")
         font = self.heading.font()
         font.setPointSizeF(font.pointSizeF() * 1.15)

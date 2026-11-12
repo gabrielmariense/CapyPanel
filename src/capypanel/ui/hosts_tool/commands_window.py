@@ -70,7 +70,8 @@ from capypanel.ui.hosts_tool.runner import (
     failed_text,
     folder_user,
 )
-from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
+from capypanel.ui.icons import dot_icon, tabler_icon
+from capypanel.ui.themes import engine as themes
 
 if TYPE_CHECKING:
     from capypanel.ui.hosts_tool.tool import HostsTool
@@ -199,7 +200,7 @@ class Results(HostDetailsPanel):
             for printer in listed.rows:
                 row = QTreeWidgetItem([printer.name, windows.printer_status(printer),
                                        str(printer.jobs)])  # fmt: skip
-                row.setIcon(1, dot_icon(STATUS_COLORS[windows.printer_dot(printer)]))
+                row.setIcon(1, dot_icon(themes.status_color(windows.printer_dot(printer))))
                 table.addTopLevelItem(row)
         elif mapped:
             shown_rows = drive_windows.drive_rows(listed.rows)
@@ -298,10 +299,8 @@ class CommandRow(QFrame):
         self.setProperty("picked", False)
         self._window = window
         self.gap: QWidget | None = None  # above a command set apart
-        text = self.palette().color(QPalette.ColorRole.Text)
-        color = QColor(STATUS_COLORS["attention"]) if command.risky else text
-        icon = QLabel()
-        icon.setPixmap(tabler_icon(command.icon, color, ICON).pixmap(ICON, ICON))
+        icon = self._icon = QLabel()
+        self.restyle()
         self.name = QLabel()
         self.name.setObjectName("commandName")
         self.name.setWordWrap(True)  # a long name wraps rather than widen the list
@@ -327,6 +326,12 @@ class CommandRow(QFrame):
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         self.set_name(_(command.name))
         self.set_picked(False)
+
+    def restyle(self) -> None:
+        """Its icon in the theme's colours: the text's, or amber for a risky command."""
+        text = self.palette().color(QPalette.ColorRole.Text)
+        color = QColor(themes.status_color("attention")) if self.command.risky else text
+        self._icon.setPixmap(tabler_icon(self.command.icon, color, ICON).pixmap(ICON, ICON))
 
     def set_name(self, text: str) -> None:
         self.name.setText(text)
@@ -510,6 +515,7 @@ class CommandsWindow(QDialog):
         self._picked: CommandRow | None = None
         tool.host_changed.connect(self._changed)
         tool.runner.facts_changed.connect(self._changed)
+        themes.switches().switched.connect(self._restyle)
         self.address.editTextChanged.connect(self._address_typed)
         self.search.installEventFilter(self)
         self._filter()
@@ -801,6 +807,12 @@ class CommandsWindow(QDialog):
             ),
             1,
         )
+
+    def _restyle(self) -> None:
+        """After a theme switch: the icons and dots drawn in the old theme's colours."""
+        for row in self.rows:
+            row.restyle()
+        self._show_results()
 
     def _session_menu(self, session: Session, where: QPoint) -> None:
         target = self.target()

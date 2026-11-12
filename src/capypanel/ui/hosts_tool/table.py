@@ -77,6 +77,9 @@ class HostTable(ItemTable):
             for row in self._rows.values():
                 self._tint(row)
 
+    def shown_ids(self) -> list[str]:
+        return list(self._rows)
+
     def show_cells(self, host_id: str, cells: Cells) -> None:
         """New Refresh results for one host, without rebuilding the table."""
         row = self._rows.get(host_id)

@@ -56,7 +56,7 @@ from capypanel.ui.hosts_tool.runner import HostTarget, Outcome, Report, Runner, 
 from capypanel.ui.hosts_tool.settings import HostsSettings, SettingsPrefs
 from capypanel.ui.hosts_tool.table import Cells, HostTable, not_checked
 from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
-from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
+from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.list_workspace.customize import Part
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
@@ -64,6 +64,7 @@ from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 from capypanel.ui.menus import shortcut_text
 from capypanel.ui.saved_credentials import KeptLogin
+from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
 MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks first
@@ -318,6 +319,15 @@ class HostsTool(ListWorkspace):
 
     def import_action(self) -> QAction | None:
         return self.commands.import_hosts
+
+    def restyle(self) -> None:
+        """After a theme switch: the dots, the Details panel and the strip were drawn in the
+        old theme's colours."""
+        super().restyle()
+        for host_id in self.table.shown_ids():
+            self.table.show_cells(host_id, self._cells(host_id))
+        self.result_strip.restyle()
+        self._selection_changed()
 
     def retranslate(self) -> None:
         retranslate_actions(self.commands)
@@ -1215,7 +1225,7 @@ class HostsTool(ListWorkspace):
             status_cell = (
                 check_texts.status_text(state),
                 check_texts.status_tip(state, when, answered),
-                dot_icon(STATUS_COLORS[state]),
+                dot_icon(themes.status_color(state)),
                 state is not Status.ONLINE,
             )
         pending = self._pending.get(host_id)
@@ -1229,7 +1239,7 @@ class HostsTool(ListWorkspace):
                 _("CapyPanel asked for it at {when}.").format(
                     when=check_texts.clock_text(pending.asked)
                 ),
-                tabler_icon("clock", QColor(STATUS_COLORS["attention"]), 14),
+                tabler_icon("clock", QColor(themes.status_color("attention")), 14),
                 False,
             )
         user_cell: tuple[str, str, Any, bool] = blank.user
@@ -1372,7 +1382,7 @@ class HostsTool(ListWorkspace):
         target = self.selected_target()
         if target is None:
             return
-        amber = QColor(STATUS_COLORS["attention"])
+        amber = QColor(themes.status_color("attention"))
         from capypanel.ui.hosts_tool.command_windows import where_text
 
         for index, session in enumerate(check_texts.by_state(self._known_sessions(target.key))):
@@ -1398,7 +1408,7 @@ class HostsTool(ListWorkspace):
         menu = self.details.power_menu
         menu.clear()
         self._update_host_actions()
-        amber = QColor(STATUS_COLORS["attention"])
+        amber = QColor(themes.status_color("attention"))
         text = self.palette().color(self.foregroundRole())
         for command_id, color in (("restart", amber), ("shut-down", amber),
                                   ("cancel-restart", text)):  # fmt: skip

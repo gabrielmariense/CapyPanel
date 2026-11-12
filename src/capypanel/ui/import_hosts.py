@@ -38,7 +38,7 @@ from capypanel.ui import spacing
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.groups import TreeMenu, fill_group_menu
 from capypanel.ui.hosts import group_choices, group_path
-from capypanel.ui.icons import STATUS_COLORS, dot_icon
+from capypanel.ui.icons import dot_icon
 from capypanel.ui.menus import popup
 from capypanel.ui.tables import fit_menu
 from capypanel.ui.themes import engine as themes
@@ -47,7 +47,8 @@ from capypanel.ui.themes import engine as themes
 DOT, NAME, ADDRESS, GROUP, TAGS, NOTES, WARNING = range(7)
 EDITABLE = (NAME, ADDRESS, GROUP, TAGS, NOTES)
 NOTES_WIDTH = 200  # notes can be long: the column stops here, the tooltip has it all
-COLORS = {Verdict.ADD: STATUS_COLORS["online"], Verdict.SKIP: "#d29922", Verdict.BAD: "#d13438"}
+# Each verdict in a status colour of the theme: will be added, skipped, can't be read.
+COLORS = {Verdict.ADD: "online", Verdict.SKIP: "attention", Verdict.BAD: "stopped"}
 
 
 class CellEditor(QStyledItemDelegate):
@@ -267,7 +268,7 @@ class ImportDialog(QDialog):
                 ]  # fmt: skip
             )
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
-            item.setIcon(DOT, dot_icon(COLORS[planned.verdict]))
+            item.setIcon(DOT, dot_icon(themes.status_color(COLORS[planned.verdict])))
             item.setToolTip(NOTES, r.notes)
             item.setToolTip(WARNING, planned.reason)  # in full, when the column cuts it
             if planned.group in new_groups:
@@ -289,7 +290,7 @@ class ImportDialog(QDialog):
         palette = self.palette()
         return QColor(
             themes.readable_on(
-                QColor(COLORS[verdict]),
+                QColor(themes.status_color(COLORS[verdict])),
                 palette.color(QPalette.ColorRole.Base).name(),
                 palette.color(QPalette.ColorRole.Text).name(),
             )

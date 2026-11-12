@@ -1,7 +1,8 @@
 {
   "name": "Paper",
   "base": "light",
-  "radius": 8,
+  "radius": 6,
+  "control_radius": 4,
   "colors": {
     "bg": "#d8c7a6",
     "card": "#fffdf8",
@@ -9,11 +10,12 @@
     "border": "#b89f76",
     "text": "#2b2620",
     "text2": "#4e463b",
-    "text3": "#4c463c",
+    "text3": "#6e6556",
     "hover": "#12604020",
     "sel_solid": "#f0cfb4",
     "accent": "#c2410c",
     "accent_hover": "#dd5a1c",
-    "chrome": "#c9b58f"
+    "chrome": "#c9b58f",
+    "attention": "#805300"
   }
 }

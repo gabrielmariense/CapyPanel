@@ -36,18 +36,19 @@ from capypanel.ui.hosts_tool.accounts import windows_account
 from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.hosts_tool.runner import HostTarget
 from capypanel.ui.hosts_tool.tool import HostsTool
-from capypanel.ui.icons import STATUS_COLORS, tabler_icon
+from capypanel.ui.icons import tabler_icon
 from capypanel.ui.list_workspace.panels import NavigationPane, natural_key
 from capypanel.ui.list_workspace.splitter import PaneSplitter
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar, tool_button
 from capypanel.ui.menus import popup
-from capypanel.ui.profiles_tool import rows, work
+from capypanel.ui.profiles_tool import work
 from capypanel.ui.profiles_tool.host_page import Context, HostPage, Stage
 from capypanel.ui.profiles_tool.hosts_page import HostsPage, RowFacts
-from capypanel.ui.profiles_tool.panels import AMBER, DETAILS, LEFT, RIGHT
+from capypanel.ui.profiles_tool.panels import DETAILS, LEFT, RIGHT, amber
 from capypanel.ui.profiles_tool.side import Entry, GroupFacts, HostFacts, ProgressCard
 from capypanel.ui.profiles_tool.tabs import HOSTS, TabStrip, mark_icon
+from capypanel.ui.themes import engine as themes
 
 PANES_KEY = "pane_widths"  # the side panels' widths (the narrower 0.24 ones aren't kept)
 WIDEST_LEFT = 360  # px: the Groups panel opens as wide as its names, up to this
@@ -109,7 +110,7 @@ class ProfilesToolBar(ToolBar):
         """Amber while it can be pressed, greyed with its icon while it can't."""
         self.delete_button.setEnabled(enabled)
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
-        color = QColor(STATUS_COLORS["attention"]) if enabled else muted
+        color = QColor(themes.status_color("attention")) if enabled else muted
         self.delete_button.setIcon(tabler_icon("trash", color))
 
 
@@ -531,7 +532,7 @@ class ProfilesTool(Tool):
             status, color, tip = _("Not checked"), "", _("Hosts hasn't checked it yet.")
         else:
             state, when = checked
-            status, color = check_texts.status_text(state), STATUS_COLORS[state]
+            status, color = check_texts.status_text(state), themes.status_color(state)
             tip = _("Hosts' last check: {when}").format(when=check_texts.when_text(when))
         page = self._pages.get(host.id)
         profiles = deletable = None
@@ -660,7 +661,7 @@ class ProfilesTool(Tool):
             dot, status = "", _("Not checked by Hosts")
         else:
             state, when = checked
-            dot = STATUS_COLORS[state]
+            dot = themes.status_color(state)
             status = _("{status} · checked by Hosts at {time}").format(
                 status=check_texts.status_text(state), time=check_texts.clock_text(when)
             )
@@ -837,10 +838,10 @@ class ProfilesTool(Tool):
         for page in pages:
             if page.deleting:
                 waiting.append(Entry(page.target.key, page.target.name, page.mark().short,
-                                     "trash", AMBER, rows.IN_USE_BLUE))  # fmt: skip
+                                     "trash", amber(), themes.status_color("working")))  # fmt: skip
             elif page.ticked():
                 waiting.append(Entry(page.target.key, page.target.name, page.ticked_words(),
-                                     "trash", AMBER))  # fmt: skip
+                                     "trash", amber()))  # fmt: skip
         self.progress.show_tabs(lines, sum(not p.busy() for p in pages))
         self.hosts_page.host_card.show_ticked(waiting)
         total = len(self._all_hosts())

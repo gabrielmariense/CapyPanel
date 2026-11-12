@@ -1064,10 +1064,9 @@ def test_a_ticked_row_looks_like_something_to_be_careful_with(window: CapyWindow
     assert rui.text(panels.STATE) == "Will be deleted" and rui.data(
         panels.USER, panels.CAREFUL_ROLE
     )
-    amber = panels.AMBER.lower()
+    amber = panels.amber()  # the theme's: it reads as text in the light themes too
     assert rui.foreground(panels.STATE).color().name() == amber
-    dark = not page.table._light()
-    assert (rui.foreground(panels.USER).color().name() == amber) == dark  # light: normal text
+    assert rui.foreground(panels.USER).color().name() == amber
     assert page.filters.shown.text() == "1 ticked · 3.0 GB" and page.filters.shown.has_bin()
     tree.sortByColumn(panels.TICK, Qt.SortOrder.AscendingOrder)  # a click on its title: nothing
     assert tree.header().sortIndicatorSection() == panels.USED

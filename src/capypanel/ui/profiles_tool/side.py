@@ -30,7 +30,7 @@ from capypanel.ui.hosts_tool.command_windows import risky_button
 from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import CopyValue, DetailsPanel
 from capypanel.ui.profiles_tool import rows
-from capypanel.ui.profiles_tool.panels import AMBER, ProfileDetails, Shown, card
+from capypanel.ui.profiles_tool.panels import ProfileDetails, Shown, amber, card
 
 FOOT = 36  # px: the foot button's height
 MARK = 14  # px: a line's icon
@@ -477,7 +477,7 @@ class TickedCard(QFrame):
         self.caption.setText(_("TICKED TO DELETE"))
         entries = [
             Entry(p.ident, rows.user_text(p),
-                  rows.size_text(sizes[p.ident]) if p.ident in sizes else "", "trash", AMBER)
+                  rows.size_text(sizes[p.ident]) if p.ident in sizes else "", "trash", amber())
             for p in ticked
         ]  # fmt: skip
         self.lines.show_entries(
@@ -498,7 +498,7 @@ class TickedCard(QFrame):
         words = ngettext("{n} profile", "{n} profiles", n).format(n=n)
         size = sum(sizes.get(p.ident, 0) for p in ticked)
         self.title.setText(f"{words} · {rows.size_text(size)}" if size else words)
-        self.title.setStyleSheet(f"color: {AMBER};")
+        self.title.setStyleSheet(f"color: {amber()};")
         self.hint.setText(_("A click on a line shows the profile in the table."))
 
 
@@ -595,7 +595,7 @@ class Foot(QWidget):
         self.delete_button.setText(" " + text)
         self.delete_button.setEnabled(enabled)
         self.delete_button.setToolTip(tip)
-        self.delete_button.setIcon(tabler_icon("trash", QColor(AMBER) if enabled else muted))
+        self.delete_button.setIcon(tabler_icon("trash", QColor(amber()) if enabled else muted))
         self.delete_button.show()
         self.cancel_button.hide()
 

@@ -105,6 +105,7 @@ class MainWindow(QMainWindow):
         self._build_menus()
         self._connect()
         self._connect_tray()
+        themes.switches().switched.connect(self._restyle)
         self._restore_layout()
         # Home, unless the user picked a tool, or the tool shown last, in Settings.
         start = self.prefs.get(settings.START_KEY, settings.START_HOME)
@@ -461,12 +462,16 @@ class MainWindow(QMainWindow):
 
     def set_theme(self, theme_id: str) -> None:
         theme = self.registry.find(theme_id)
-        themes.apply(theme)
-        for tool in self.tools.values():
-            tool.restyle()  # icon colours, the font's size, the toolbar's padding
+        themes.apply(theme)  # _restyle follows it
         self.prefs["theme"] = theme.id
         self.save_prefs()
         log.info("Theme: %s", theme.id)
+
+    def _restyle(self) -> None:
+        """After every theme switch, the one Windows starts under "follow system" too."""
+        for tool in self.tools.values():
+            tool.restyle()  # icon colours, the font's size, the toolbar's padding
+        self._tray_counts()  # the count on the tray's icon is in the theme's red
 
     def set_language(self, code: str) -> None:
         """Switches live: Qt then sends every window a LanguageChange event (see changeEvent)."""

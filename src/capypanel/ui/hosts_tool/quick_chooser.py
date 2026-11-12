@@ -25,10 +25,11 @@ from capypanel.core.hosts.commands import CAN_BE_QUICK, GROUP_NAMES, MENU_QUICK,
 from capypanel.core.i18n import _, ngettext
 from capypanel.ui.hosts import confirm
 from capypanel.ui.hosts_tool import quick
-from capypanel.ui.icons import STATUS_COLORS, tabler_icon
+from capypanel.ui.icons import tabler_icon
 from capypanel.ui.list_workspace.details import COLUMNS
 from capypanel.ui.notes import hint
 from capypanel.ui.tables import grid_table, with_buttons
+from capypanel.ui.themes import engine as themes
 
 ID = Qt.ItemDataRole.UserRole  # a command row's id; headings and the line have none
 SHORTCUT = Qt.ItemDataRole.UserRole + 1  # its shortcut, drawn in grey after the name
@@ -170,7 +171,7 @@ class QuickChooser(QWidget):
         row.setFlags(row.flags() | Qt.ItemFlag.ItemIsUserCheckable)
         row.setCheckState(0, Qt.CheckState.Checked if ticked else Qt.CheckState.Unchecked)
         text = self.palette().color(QPalette.ColorRole.Text)
-        color = QColor(STATUS_COLORS["attention"]) if command.risky else text
+        color = QColor(themes.status_color("attention")) if command.risky else text
         row.setIcon(0, tabler_icon(command.icon, color, ICON))
         if command.risky:  # amber here as everywhere
             row.setForeground(0, color)
