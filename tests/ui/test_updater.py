@@ -163,7 +163,7 @@ def test_install_waits_for_a_refresh_then_hands_over_and_quits(
     assert not dialog.install.isHidden() and dialog.install.isDefault()
     dialog._release = NEWER
     dialog._unpacked(str(updates.places(app_dir).new_app), "")  # downloaded, checked, unpacked
-    assert dialog.status.text() == "Waiting for the Refresh to finish…" and not quits
+    assert dialog.status.text() == "Waiting for CapyPanel to finish what it's doing…" and not quits
     working[0] = False
     dialog._try_restart()
     assert quits == [True]

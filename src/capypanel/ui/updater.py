@@ -363,11 +363,11 @@ class UpdateWindow(QDialog):
         if release is None:
             return
         if self._working():
-            self.status.setText(_("Waiting for the Refresh to finish…"))
+            self.status.setText(_("Waiting for CapyPanel to finish what it's doing…"))
             self._waiting.start()
             return
         self._waiting.stop()
-        self.status.setText(_("Restarting…"))
+        self.status.setText(_("Restarting CapyPanel…"))
 
         def start_helper() -> None:
             args = updates.helper_args(self._app_dir, updates.own_pid(), __version__,
