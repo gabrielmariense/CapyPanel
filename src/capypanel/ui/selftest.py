@@ -42,6 +42,7 @@ def _bundled_files() -> list[str]:
 
 def _compiled_libraries() -> list[str]:
     """What comes as compiled code: imported and used once."""
+    import hashlib
     import ssl
 
     import pythoncom  # noqa: F401
@@ -53,6 +54,8 @@ def _compiled_libraries() -> list[str]:
     from PySide6.QtNetwork import QLocalServer  # noqa: F401
     from PySide6.QtSvg import QSvgRenderer
 
+    from capypanel.core.printers import usm
+
     encryptor = Cipher(algorithms.AES(bytes(16)), CFB(bytes(16))).encryptor()
     if len(encryptor.update(b"capypanel") + encryptor.finalize()) != 9:
         raise RuntimeError("cryptography: AES gave another length")
@@ -61,7 +64,9 @@ def _compiled_libraries() -> list[str]:
         raise RuntimeError("QtSvg can't read an SVG")
     if not ssl.create_default_context().cert_store_stats()["x509_ca"]:
         raise RuntimeError("Python's TLS found no certificate of Windows to trust")
-    return ["pywin32", "cryptography", "QtSvg", "QtNetwork", "TLS"]
+    for auth in usm.Auth:  # SNMP v3 signs with these, by name: an OpenSSL can come without one
+        hashlib.new(auth.hash_name, b"capypanel").digest()
+    return ["pywin32", "cryptography", "QtSvg", "QtNetwork", "TLS", "SNMP v3's hashes"]
 
 
 def _qt_parts() -> list[str]:
