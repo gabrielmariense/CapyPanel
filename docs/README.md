@@ -49,5 +49,5 @@ every page ends with the messages you may see and what to do about them.
 | [The User profiles tool](profiles/user-profiles.md) | A PC's Windows profiles, which can be deleted, and deleting them |
 | [Settings and files](settings-and-files.md) | Every setting, and where CapyPanel keeps its files |
 
-These pages describe the current version, 0.26.2; [What's new](whats-new.md) lists what changed.
+These pages describe the current version, 0.26.3; [What's new](whats-new.md) lists what changed.
 CapyPanel is in beta, so they grow with each feature.
