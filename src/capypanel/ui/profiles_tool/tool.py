@@ -344,8 +344,8 @@ class ProfilesTool(Tool):
                      _("Hide Windows' own, Only leftovers and Unused for narrow the list to the "
                        "profiles worth a look."), lambda: page.filters),
                 Step(_("Delete"),
-                     _("Tick the profiles, then Delete profiles…. Each person's folder goes with "
-                       "it, with no recycle bin: you type DELETE to confirm, and the PC is "
+                     _("Tick the profiles, then Delete profiles… Each person's folder goes with "
+                       "it, with no recycle bin. To confirm, you type DELETE, and the PC is "
                        "checked again first."), lambda: page.foot.delete_button),
             ]  # fmt: skip
 
