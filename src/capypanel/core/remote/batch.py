@@ -2,7 +2,10 @@
 
 While an account isn't proven yet, hosts go one by one, so a mistyped password is rejected by
 one host instead of being tried on many (each rejection counts toward the account's lockout).
-Callbacks run on the worker threads; the UI turns them into Qt signals."""
+Once a host has accepted it, the password is right: a host that still refuses it says
+something about that host (a broken trust with the domain, a local policy), so it's reported
+with the others and the rest carry on. Callbacks run on the worker threads; the UI turns them
+into Qt signals."""
 
 import threading
 from collections.abc import Callable, Sequence
@@ -13,7 +16,8 @@ WORKERS = 8  # hosts read at the same time: quick for a group, light on the netw
 
 class Batch[T, R]:
     """`work(item)` for every item; `report(item, result, error)` after each one. When `halts`
-    says an outcome must stop everything, the items not started yet are skipped."""
+    says an outcome must stop everything, the items not started yet are skipped; with `proves`,
+    only until an item proves the account."""
 
     def __init__(
         self,
@@ -45,26 +49,27 @@ class Batch[T, R]:
         pending = list(self._items)
         if self._proves is not None:
             while pending and not self._stop.is_set():
-                result, error = self._one(pending.pop(0))
+                result, error = self._one(pending.pop(0), halting=True)
                 if self._proves(result, error):
                     break
         if not pending or self._stop.is_set():
             return
+        halting = self._proves is None  # proven: a refusal is that host's, not the account's
         with ThreadPoolExecutor(self._workers) as pool:
             for item in pending:
-                pool.submit(self._guarded, item)
+                pool.submit(self._guarded, item, halting)
 
-    def _guarded(self, item: T) -> None:
+    def _guarded(self, item: T, halting: bool) -> None:
         if not self._stop.is_set():
-            self._one(item)
+            self._one(item, halting=halting)
 
-    def _one(self, item: T) -> tuple[R | None, Exception | None]:
+    def _one(self, item: T, *, halting: bool) -> tuple[R | None, Exception | None]:
         try:
             result: R | None = self._work(item)
             error: Exception | None = None
         except Exception as e:  # reported per host; one host's failure never ends the batch
             result, error = None, e
-        if self._halts(result, error):
+        if halting and self._halts(result, error):
             self.halted = True
             self._stop.set()
         self._report(item, result, error)

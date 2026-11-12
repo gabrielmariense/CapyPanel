@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-11 22:25-0300\n"
+"POT-Creation-Date: 2026-11-12 09:02-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1676,9 +1676,6 @@ msgstr "Ícones:"
 
 msgid "Idle"
 msgstr "Inativo"
-
-msgid "If a computer rejects it, CapyPanel stops and asks again instead of trying it on the others, so the account isn't locked."
-msgstr "Se um computador recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta não ser bloqueada."
 
 msgid "If that list can't be opened: the default list, then your personal list."
 msgstr "Se essa lista não abrir: a lista padrão, depois a sua lista pessoal."
@@ -3841,6 +3838,9 @@ msgstr "Ilegível"
 msgid "Untick what you don't use. Hiding a part never stops a check."
 msgstr "Desmarque o que você não usa. Esconder uma parte não para nenhuma verificação."
 
+msgid "Until a computer accepts it, CapyPanel stops at the first that rejects it, so a typo can't lock the account."
+msgstr "Até um computador aceitar a conta, o CapyPanel para no primeiro que a recusar, para um erro de digitação não bloquear a conta."
+
 msgid "Unused for:"
 msgstr "Sem uso há:"
 
@@ -4528,6 +4528,12 @@ msgstr "{level} · baixo"
 #, python-brace-format
 msgid "{month} {year}"
 msgstr "{month} de {year}"
+
+#, python-brace-format
+msgid "{names} and {n} more"
+msgid_plural "{names} and {n} more"
+msgstr[0] "{names} e mais {n}"
+msgstr[1] "{names} e mais {n}"
 
 #, python-brace-format
 msgid "{names} doesn't take a user and password (it may want a VNC password, or be another kind of VNC server), so CapyPanel didn't send your password. Check its connection profile."

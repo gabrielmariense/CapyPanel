@@ -163,8 +163,8 @@ class AccountDialog(QDialog):
         form.addRow("", self.remember)
         used = _("Used only to read who is logged on and for the commands you run on a host.")
         stops = _(
-            "If a computer rejects it, CapyPanel stops and asks again instead of trying it on "
-            "the others, so the account isn't locked."
+            "Until a computer accepts it, CapyPanel stops at the first that rejects it, so a "
+            "typo can't lock the account."
         )
         note = hint(f"{used} {stops}")
         self.buttons = ok_cancel(self, _("Use account"))
