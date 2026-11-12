@@ -188,7 +188,7 @@ def test_details_buttons_follow_the_admin_s_quick_commands(window: CapyWindow) -
     window.hosts.prefs["quick_commands"] = ["spooler", "status"]
     window.hosts._selection_changed()
     buttons = window.hosts.details.buttons
-    assert list(buttons)[4:] == ["quick:spooler", "quick:status"]
+    assert list(buttons)[4:] == ["quick:status", "quick:spooler"]  # the Commands window's order
     assert buttons["quick:spooler"].property("risky") is True  # amber there too
     window.hosts.prefs["quick_commands"] = []  # none picked: only the fixed row
     window.hosts._selection_changed()
@@ -583,10 +583,14 @@ def test_the_host_menu_shows_the_first_four_quick_commands(window: CapyWindow) -
         "services", "status", "c-share", "path", "event-viewer", "restart",
     ]  # fmt: skip
     assert window.hosts.quick_commands() == (
-        "services", "status", "c-share", "path", "event-viewer",
-    )  # fmt: skip
-    texts = _host_menu(window)
-    assert texts[2:7] == ["Services", "Status", "C$ share", "Open a path…", "&All commands…"]
+        "status",
+        "c-share",
+        "path",
+        "event-viewer",
+        "services",
+    )  # fmt: skip  -- the Commands window's order, whatever order they were kept in
+    texts = _host_menu(window)  # the first four ticked; Services, the fifth, isn't there
+    assert texts[2:7] == ["Status", "C$ share", "Open a path…", "Event Viewer", "&All commands…"]
     window.hosts.prefs["quick_commands"] = []  # none picked: the block isn't there
     assert _host_menu(window)[:3] == ["&Connect", "&Refresh host", "&All commands…"]
 
@@ -627,37 +631,29 @@ def _rows(table: Any) -> list[Any]:
     return [table.topLevelItem(i) for i in range(table.topLevelItemCount())]
 
 
-def test_the_chooser_lists_picks_on_top_and_the_rest_by_group(qapp: QApplication) -> None:
+def test_the_chooser_keeps_one_order_and_nothing_moves_when_ticked(
+    qapp: QApplication,
+) -> None:
     from capypanel.ui.hosts_tool.quick_chooser import ID, QuickChooser
 
     chooser = QuickChooser(host_commands.QUICK, {"c-share": "Ctrl+E"})
     names = [r.text(0) for r in _rows(chooser.table)]
-    assert names[:5] == [
-        "ON THE PANEL", "C$ share", "User's folder", "Computer Management", "Send a message…",
-    ]  # fmt: skip
-    assert names[5:8] == ["CHECK", "Status", "Logged-on users"]  # then by group, unticked
+    assert names[:4] == ["CHECK", "Status", "Logged-on users", "PC facts"]  # the Commands window's
     assert "Restart…" not in names and "Refresh host" not in names  # can't be quick; fixed
     assert chooser.count.text() == "4 of 15 ticked · 1 row on the panel"
+    assert not hasattr(chooser, "up") and not hasattr(chooser, "down")  # no order of its own
     seen: list[list[str]] = []
     chooser.changed.connect(seen.append)
     status = next(r for r in _rows(chooser.table) if r.data(0, ID) == "status")
-    status.setCheckState(0, Qt.CheckState.Checked)  # ticking moves it to the end of the picks
-    assert seen[-1] == [*host_commands.QUICK, "status"]  # applied at once
-    # The row isn't deleted from inside its own change (that crashed now and then): the rows
-    # are rebuilt right after.
-    assert shiboken6.isValid(status) and status.treeWidget() is chooser.table
+    status.setCheckState(0, Qt.CheckState.Checked)
+    assert seen[-1] == ["status", *host_commands.QUICK]  # applied at once, in the list's order
     QApplication.processEvents()
-    names = [r.text(0) for r in _rows(chooser.table)]
-    assert names[5] == "— the four above are also in the right-click menu —"
-    assert names[6] == "Status" and chooser.count.text().endswith("2 rows on the panel")
-    chooser.up.click()  # the row just ticked is picked: it moves up among the picks
-    assert seen[-1] == ["c-share", "user-folder", "computer-management", "status", "message"]
+    assert [r.text(0) for r in _rows(chooser.table)] == names  # nothing moved
+    assert shiboken6.isValid(status) and chooser.count.text().endswith("2 rows on the panel")
     first = next(r for r in _rows(chooser.table) if r.data(0, ID) == "c-share")
-    first.setCheckState(0, Qt.CheckState.Unchecked)  # back under its group
+    first.setCheckState(0, Qt.CheckState.Unchecked)
     assert "c-share" not in seen[-1] and chooser.picked() == seen[-1]
-    QApplication.processEvents()
-    names = [r.text(0) for r in _rows(chooser.table)]
-    assert names.index("C$ share") > names.index("FOLDERS")
+    assert [r.text(0) for r in _rows(chooser.table)] == names
 
 
 def test_restoring_the_default_quick_commands_asks_first(
@@ -677,8 +673,8 @@ def test_restoring_the_default_quick_commands_asks_first(
 def test_quick_commands_and_hidden_parts_apply_at_once_and_are_kept(window: CapyWindow) -> None:
     _select(window, "PC-1")
     window.hosts.set_quick_commands(["services", "restart", "status"])
-    assert window.hosts.prefs["quick_commands"] == ["services", "status"]  # only what can be
-    assert list(window.hosts.details.buttons)[4:] == ["quick:services", "quick:status"]
+    assert window.hosts.prefs["quick_commands"] == ["status", "services"]  # what can be, in order
+    assert list(window.hosts.details.buttons)[4:] == ["quick:status", "quick:services"]
     window.hosts.set_hidden_parts(["notes", "tags", "nonsense"])
     assert window.hosts.hidden_parts() == {"notes", "tags"}
     headings = [w.text() for w in window.hosts.details.findChildren(QLabel)]

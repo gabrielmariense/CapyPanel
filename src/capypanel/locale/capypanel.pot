@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 09:02-0300\n"
+"POT-Creation-Date: 2026-11-12 09:58-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2245,9 +2245,6 @@ msgstr ""
 msgid "On the button"
 msgstr ""
 
-msgid "On the panel"
-msgstr ""
-
 msgid "One PC"
 msgstr ""
 
@@ -3515,6 +3512,9 @@ msgstr ""
 msgid "The file is too big to be viewer settings."
 msgstr ""
 
+msgid "The first four ticked are also in a host's right-click menu."
+msgstr ""
+
 msgid ""
 "The first line names the columns, in any order. Subgroups are separated "
 "by /, tags by ;. Exported lists use this format."
@@ -4222,7 +4222,7 @@ msgstr ""
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr ""
 
-msgid "Your picks and their order are replaced."
+msgid "Your picks are replaced."
 msgstr ""
 
 msgid "Your printers: status and toner, web pages, reports."
@@ -5213,9 +5213,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "{what}, in {list}"
-msgstr ""
-
-msgid "— the four above are also in the right-click menu —"
 msgstr ""
 
 msgid "“account_types” must be a list of numbers from 1 to 255."

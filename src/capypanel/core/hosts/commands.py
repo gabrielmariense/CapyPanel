@@ -166,19 +166,16 @@ CAN_BE_QUICK = (
     "computer-management", "event-viewer", "services", "message", "drives", "printers",
     "spooler",
 )  # fmt: skip
-MENU_QUICK = 4  # the right-click menu shows this many, the first of the order
+MENU_QUICK = 4  # the right-click menu shows this many: the first ticked, in that order
 
 
 def quick_from(kept: object) -> tuple[str, ...]:
-    """The quick commands kept in an admin's settings, in their order, without anything that
-    can't be one; the starting four when nothing was ever chosen. None chosen is a choice."""
+    """The quick commands kept in an admin's settings, always in the Commands window's order
+    (one order everywhere, so ticking never moves anything), without anything that can't be
+    one; the starting four when nothing was ever chosen. None chosen is a choice."""
     if not isinstance(kept, list):
         return QUICK
-    picked: list[str] = []
-    for command_id in kept:
-        if command_id in CAN_BE_QUICK and command_id not in picked:
-            picked.append(command_id)
-    return tuple(picked)
+    return tuple(command_id for command_id in CAN_BE_QUICK if command_id in kept)
 
 
 def command(command_id: str) -> HostCommand:

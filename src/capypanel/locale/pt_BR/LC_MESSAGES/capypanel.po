@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 09:02-0300\n"
+"POT-Creation-Date: 2026-11-12 09:58-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -2187,9 +2187,6 @@ msgstr "Offline"
 msgid "On the button"
 msgstr "No botão"
 
-msgid "On the panel"
-msgstr "No painel"
-
 msgid "One PC"
 msgstr "Um PC"
 
@@ -3405,6 +3402,9 @@ msgstr "O arquivo tem dois itens com o mesmo ID."
 msgid "The file is too big to be viewer settings."
 msgstr "O arquivo é grande demais para ser de configurações do visualizador."
 
+msgid "The first four ticked are also in a host's right-click menu."
+msgstr "Os quatro primeiros marcados também ficam no menu do botão direito de um host."
+
 msgid "The first line names the columns, in any order. Subgroups are separated by /, tags by ;. Exported lists use this format."
 msgstr "A primeira linha dá nome às colunas, em qualquer ordem, em português ou inglês. Subgrupos são separados por /, tags por ;. Listas exportadas usam este formato."
 
@@ -4059,8 +4059,8 @@ msgstr "Sua conta do Windows ({user})"
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
 
-msgid "Your picks and their order are replaced."
-msgstr "Suas escolhas e a ordem delas são substituídas."
+msgid "Your picks are replaced."
+msgstr "Suas escolhas são substituídas."
 
 msgid "Your printers: status and toner, web pages, reports."
 msgstr "Suas impressoras: status e toner, páginas web, relatórios."
@@ -5026,9 +5026,6 @@ msgstr "Pasta de {user}"
 #, python-brace-format
 msgid "{what}, in {list}"
 msgstr "{what}, em {list}"
-
-msgid "— the four above are also in the right-click menu —"
-msgstr "— os quatro acima também ficam no menu do botão direito —"
 
 msgid "“account_types” must be a list of numbers from 1 to 255."
 msgstr "“account_types” deve ser uma lista de números de 1 a 255."

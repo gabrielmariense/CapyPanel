@@ -29,11 +29,14 @@ def test_nothing_runs_a_program_on_the_pc() -> None:
     assert {c.need for c in COMMANDS} <= {Need.READ, Need.OPEN_HERE, Need.ASK_WINDOWS}
 
 
-def test_quick_commands_are_the_admin_s_pick_in_their_order() -> None:
+def test_quick_commands_are_the_admin_s_pick_in_the_commands_window_s_order() -> None:
     assert commands.quick_from(None) == QUICK  # nothing ever chosen: the starting four
     assert commands.quick_from([]) == ()  # none is a choice too
     kept = ["services", "restart", "c-share", "services", "no-such", 7]
-    assert commands.quick_from(kept) == ("services", "c-share")  # only what can be quick, once
+    # Only what can be quick, once, and in one order whatever order it was kept in (a list
+    # saved by 0.25, when the order was the admin's, reads the same way).
+    assert commands.quick_from(kept) == ("c-share", "services")
+    assert commands.quick_from(list(QUICK)) == QUICK  # the starting four are in that order
 
 
 def test_a_quick_command_never_cuts_a_person_off() -> None:
