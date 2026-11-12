@@ -8,7 +8,7 @@ import threading
 from collections.abc import Callable, Sequence
 from typing import Any
 
-from PySide6.QtCore import QByteArray, QEvent, QObject, Qt, QTimer
+from PySide6.QtCore import QByteArray, QEvent, QObject, QRect, Qt, QTimer
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
@@ -568,25 +568,33 @@ class MainWindow(QMainWindow):
 
     def _home_guide(self) -> Guide:
         """What every tool shares, said once, on the very first start."""
-        home, rail = self.home, self.rail
+        home, rail, bar = self.home, self.rail, self.menuBar()
+
+        def help_title() -> QRect:  # "Help" on the menu bar, which has no widget of its own
+            spot = bar.actionGeometry(self._help_menu.menuAction())
+            return QRect(bar.mapTo(self, spot.topLeft()), spot.size())
 
         def steps() -> list[Step]:
-            first = home.tiles[0] if home.tiles else None
             return [
-                Step(_("Welcome to CapyPanel"),
-                     _("Each tool has its place on this rail: Hosts, Printers and User "
-                       "profiles. Settings is at the bottom."), lambda: rail),
-                Step(_("Every tool works the same way"),
-                     _("The Groups panel on the left, with its groups and tags; the items in "
-                       "the middle; the picked one's details on the right. Refresh reads the "
-                       "latest state."), lambda: first, lambda: home),
-                Step(_("Lists"),
-                     _("Each tool keeps lists: a shared one everyone on this PC sees, your "
-                       "personal one, and any you add. Pick one at the top of the Groups "
-                       "panel."), lambda: first, lambda: home),
+                Step(_("Three tools"),
+                     _("Hosts for your computers, Printers for your printers, and User profiles "
+                       "to clear old Windows profiles off a PC. Each tile opens its tool."),
+                     lambda: home.tiles, lambda: home),
+                Step(_("The rail"),
+                     _("Every tool is one click away here, from any screen. Home is at the top, "
+                       "Settings at the bottom."), lambda: rail),
+                Step(_("Help"),
+                     _("Help › Guide to this screen shows a screen's guide again. Help › "
+                       "Documentation has the step-by-step pages."),
+                     lambda: None, lambda: home, area=help_title),
             ]  # fmt: skip
 
         return Guide("home", steps, docs="getting-started/", mascot=True)
+
+    def guide_changed(self) -> None:
+        """A tool showed another part with a guide of its own (a host's tab in User profiles):
+        offered the first time, like a screen's."""
+        self._guide_now()
 
     def tools_working(self) -> bool:
         return any(tool.working() for tool in self.tools.values())

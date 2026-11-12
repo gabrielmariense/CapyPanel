@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from typing import Any
 
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtGui import (
     QAction,
     QColor,
@@ -46,7 +46,7 @@ from capypanel.ui.menus import popup
 from capypanel.ui.profiles_tool import first_use, work
 from capypanel.ui.profiles_tool.host_page import Context, HostPage, Stage
 from capypanel.ui.profiles_tool.hosts_page import HostsPage, RowFacts
-from capypanel.ui.profiles_tool.panels import DETAILS, LEFT, RIGHT, amber
+from capypanel.ui.profiles_tool.panels import DETAILS, LEFT, RIGHT, STATE, amber
 from capypanel.ui.profiles_tool.side import Entry, GroupFacts, HostFacts, ProgressCard
 from capypanel.ui.profiles_tool.tabs import HOSTS, TabStrip, mark_icon
 from capypanel.ui.themes import engine as themes
@@ -295,25 +295,61 @@ class ProfilesTool(Tool):
         return True
 
     def guide(self) -> Guide:
-        bar = self.bar
+        """The Hosts tab's guide, or a host's tab's (the first time one is in front)."""
+        page = self._pages.get(self.tabs.current())
+        if page is not None:
+            return self._host_guide(page)
         hosts = self.hosts_page
 
         def steps() -> list[Step]:
             return [
                 Step(_("Pick a PC"),
-                     _("The hosts of your Hosts list. Double-click one to open it in a tab and "
-                       "read its profiles, or select several and press Scan."),
+                     _("These are the hosts of your Hosts list. To see a PC's profiles, open it "
+                       "in a tab: double-click it, or pick several and press Scan."),
                      lambda: hosts.table, lambda: self.middle),
-                Step(_("Scan"),
-                     _("Reads the profiles on the PCs picked, each in its own tab. Nothing is "
-                       "deleted by a scan."), lambda: bar.scan_button),
-                Step(_("Delete"),
-                     _("In a host's tab, tick the profiles to delete, then Delete profiles…: you "
-                       "type DELETE to confirm, and each PC is checked again before anything "
-                       "goes."), lambda: bar.delete_button),
+                Step(_("Progress"),
+                     _("Every PC you open gets a tab, and this card shows how far each one "
+                       "got."), lambda: self.progress, lambda: self.side),
+                Step(_("Nothing is deleted yet"),
+                     _("Each PC opens in a tab up here. Opening and scanning only read its "
+                       "profiles: nothing is deleted until you tick some in its tab and "
+                       "confirm."), lambda: self.tabs),
             ]  # fmt: skip
 
         return Guide("profiles", steps, docs="profiles/user-profiles/")
+
+    def _host_guide(self, page: HostPage) -> Guide:
+        """A host's tab: what its profiles show, picking them, and deleting."""
+
+        def state_column() -> QRect | None:  # its title and its cells, as one box
+            tree = page.table.tree
+            header = tree.header()
+            if header.isSectionHidden(STATE) or not tree.isVisible():
+                return None
+            corner = header.mapTo(self.window(), QPoint(header.sectionViewportPosition(STATE), 0))
+            height = header.height() + tree.viewport().height()
+            return QRect(corner, QSize(header.sectionSize(STATE), height))
+
+        def steps() -> list[Step]:
+            name = page.target.name
+            return [
+                Step(_("The profiles"),
+                     _("Each row is one user's folder on {host}, with when it was last used and "
+                       "its size.").format(host=name), lambda: page.table),
+                Step(_("State"),
+                     _("Says whether a profile can be deleted. Only rows that say Can be deleted "
+                       "have a tick box; the others say why not."),
+                     lambda: None, lambda: page.table, area=state_column),
+                Step(_("Filters"),
+                     _("Hide Windows' own, Only leftovers and Unused for narrow the list to the "
+                       "profiles worth a look."), lambda: page.filters),
+                Step(_("Delete"),
+                     _("Tick the profiles, then Delete profiles…. Each person's folder goes with "
+                       "it, with no recycle bin: you type DELETE to confirm, and the PC is "
+                       "checked again first."), lambda: page.foot.delete_button),
+            ]  # fmt: skip
+
+        return Guide("profiles-host", steps, docs="profiles/user-profiles/")
 
     def quit_question(self, parent: QWidget) -> bool:
         """Before CapyPanel quits: while a host deletes, ask. Cancel the rest and quit lets the
@@ -774,6 +810,8 @@ class ProfilesTool(Tool):
             self.middle.setCurrentWidget(self.hosts_page.box)
             self.cards.setCurrentWidget(self.hosts_page.side)
         self._update()
+        if page is not None:
+            self._shell.guide_changed()  # a host's tab: its guide, the first time
 
     def _step(self, by: int) -> None:
         """Ctrl+Tab: the next tab, the Hosts tab included, round and round."""

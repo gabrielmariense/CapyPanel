@@ -332,29 +332,47 @@ class HostsTool(ListWorkspace):
         self._selection_changed()
 
     def guide(self) -> Guide:
-        """Its own first steps; lists, panels and Refresh in general are Home's guide's."""
+        """Its own first steps: lists, adding hosts, Details, Connect, Refresh, the quick
+        commands (when a picked host shows them) and Commands. No step asks for a click."""
         bar = self.toolbar
 
+        def quick() -> list[QWidget]:  # the picked host's quick-command buttons, every row
+            buttons = getattr(self.details, "buttons", {})
+            alive = {k: b for k, b in buttons.items() if shiboken6.isValid(b)}
+            return [b for k, b in alive.items() if k.startswith("quick:")]
+
         def steps() -> list[Step]:
+            quick_step = [
+                Step(_("Quick commands"),
+                     _("Your buttons for the commands you use most. Choose them with a "
+                       "right-click on the panel, in Customize the details panel…, or in "
+                       "Settings › Hosts › General."), quick, lambda: self.details, join=True),
+            ] if any(b.isVisibleTo(self) for b in quick()) else []  # fmt: skip
             return [
-                Step(_("Your host lists"),
-                     _("Pick a list here: the shared one everyone on this PC sees, your "
-                       "personal one, or one you add. Inventory adds hosts, or imports many at "
-                       "once."), lambda: self.list_picker, lambda: self.nav),
-                Step(_("Your hosts"),
-                     _("Pick a host to see it in the Details panel on the right. A right-click "
-                       "has everything you can do with it."), lambda: self.table),
+                Step(_("Your lists"),
+                     _("Pick the list here: the shared one everyone on this PC sees, your "
+                       "personal one, or one you add. Groups and tags are below it: a click "
+                       "shows only their hosts."), lambda: self.nav),
+                Step(_("Add hosts"),
+                     _("Inventory › Add host… adds one at a time, and Import hosts… brings in "
+                       "many at once. A right-click on the table has Add host… too."),
+                     lambda: bar.inventory_button),
+                Step(_("Details"),
+                     _("The host you pick in the table shows here. Right-click it for "
+                       "everything you can do."),
+                     lambda: self.details),
                 Step(_("Connect"),
-                     _("Opens the picked PC with the remote tool of its connection profile. "
+                     _("Opens the picked host's screen with its connection profile's tool. "
                        "Profiles are in Settings › Hosts › Connecting."),
                      lambda: bar.connect_button),
                 Step(_("Refresh all"),
-                     _("Checks whether each host shown is on and who is signed in to it. A "
-                       "right-click chooses what it checks."), lambda: bar.refresh_button),
+                     _("Checks whether each host shown is on and who is signed in. Right-click "
+                       "it to choose what it checks."), lambda: bar.refresh_button),
+                *quick_step,
                 Step(_("Commands"),
-                     _("The buttons on top of Details run commands on the PC with your Windows "
-                       "account. A PC that refuses it asks for another one, kept in Settings › "
-                       "Hosts › Credentials."), lambda: self.details),
+                     _("Opens every command for the picked host. They use your Windows "
+                       "account; if a PC refuses it, CapyPanel asks for another one, kept in "
+                       "Settings › Hosts › Credentials."), lambda: bar.commands_button),
             ]  # fmt: skip
 
         return Guide("hosts", steps, docs="hosts/host-lists/")

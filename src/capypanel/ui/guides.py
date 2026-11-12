@@ -59,6 +59,7 @@ class Step:
     click: bool = False  # the step asks you to click its target: only then it takes clicks
     join: bool = False  # several targets outlined as one box (a row of buttons)
     keep_clear: Callable[[], QWidget | None] = lambda: None  # what the card must not cover
+    area: Callable[[], QRect | None] = lambda: None  # a box of its own, in the window's terms
 
 
 @dataclass(frozen=True)
@@ -363,6 +364,9 @@ class GuideRunner(QObject):
         spots = [_rect_of(widget, window) for widget in shown]
         if spots and step.join:
             spots = [_united(spots)]
+        area = step.area()
+        if area is not None and area.isValid():
+            spots.append(area)  # a menu's title, say: no widget of its own
         self._clickable = shown if step.click else []
         self.shade.setGeometry(window.rect())
         self.shade.set_holes(spots, passes=step.click)

@@ -56,17 +56,27 @@ def test_home_s_guide_steps_through_and_is_kept_as_seen(window: CapyWindow) -> N
     _settle()
     card = runner.card
     assert runner.running == "home" and not card.isHidden()
-    assert card.title.text() == "Welcome to CapyPanel" and not card.mascot.isHidden()
+    assert card.title.text() == "Three tools" and not card.mascot.isHidden()
     assert card.dots.text() == "● ○ ○" and card.back_button.isHidden()
     assert not runner.shade.isHidden() and runner.shade.geometry() == window.rect()
+    tiles = [QRect(t.mapTo(window, QPoint(0, 0)), t.size()) for t in window.home.tiles]
+    shown = [
+        t for t, tile in zip(tiles, window.home.tiles, strict=True) if tile.isVisibleTo(window)
+    ]
+    assert runner.shade.holes == shown  # every tile outlined, or none: never just one
+    card.next_button.click()
+    assert card.title.text() == "The rail" and card.mascot.isHidden()
+    assert card.dots.text() == "○ ● ○" and not card.back_button.isHidden()
     rail = QRect(window.rail.mapTo(window, QPoint(0, 0)), window.rail.size())
     assert runner.shade.holes == [rail]  # the rail stays bright, outlined
     assert not card.geometry().intersects(rail)  # and the card beside it, not over it
     assert window.rect().contains(card.geometry())
     card.next_button.click()
-    assert card.title.text() == "Every tool works the same way" and card.mascot.isHidden()
-    assert card.dots.text() == "○ ● ○" and not card.back_button.isHidden()
-    card.next_button.click()
+    assert card.title.text() == "Help"
+    help_title = window.menuBar().actionGeometry(window._help_menu.menuAction())
+    assert runner.shade.holes == [
+        QRect(window.menuBar().mapTo(window, help_title.topLeft()), help_title.size())
+    ]  # just "Help" on the menu bar
     assert card.next_button.text() == "Done" and card.skip_button.isHidden()
     assert "getting-started/" in card.text.text()  # the last card links to its docs page
     card.next_button.click()
@@ -122,7 +132,7 @@ def test_help_shows_this_screen_s_guide_and_about_shows_them_all_again(
     assert texts[0] == "&Guide to this screen"
     window.commands.show_guide.trigger()
     assert window.guides.running == "hosts"
-    assert window.guides.card.title.text() == "Your host lists"
+    assert window.guides.card.title.text() == "Your lists"
     window.guides.card.skip_button.click()
     dialog = window.settings_dialog()
     dialog.about.guides_button.click()

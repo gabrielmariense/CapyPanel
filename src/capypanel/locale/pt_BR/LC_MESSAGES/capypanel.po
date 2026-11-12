@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 11:13-0300\n"
+"POT-Creation-Date: 2026-11-12 12:32-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -597,6 +597,9 @@ msgstr "Adicionar grupo"
 msgid "Add host"
 msgstr "Adicionar host"
 
+msgid "Add hosts"
+msgstr "Adicionar hosts"
+
 msgid "Add hosts and groups, or import a list of hosts"
 msgstr "Adicione hosts e grupos, ou importe uma lista de hosts"
 
@@ -918,8 +921,8 @@ msgstr "Verificando {done} de {total}…"
 msgid "Checks whether each host shown answers, as Hosts' Refresh does; its Status column shows here and in Hosts"
 msgstr "Verifica se cada host exibido responde, como o Atualizar do Hosts; a coluna Status aparece aqui e no Hosts"
 
-msgid "Checks whether each host shown is on and who is signed in to it. A right-click chooses what it checks."
-msgstr "Verifica se cada host exibido está ligado e quem está logado nele. Um clique com o botão direito escolhe o que ele verifica."
+msgid "Checks whether each host shown is on and who is signed in. Right-click it to choose what it checks."
+msgstr "Confere se cada host mostrado está ligado e quem está conectado nele. O botão direito escolhe o que ele confere."
 
 #, python-brace-format
 msgid "Checks whether {host} answers, as Hosts' Refresh does"
@@ -1464,17 +1467,18 @@ msgstr "Duplicar perfil de conexão"
 msgid "E&xit"
 msgstr "&Sair"
 
+msgid "Each PC opens in a tab up here. Opening and scanning only read its profiles: nothing is deleted until you tick some in its tab and confirm."
+msgstr "Cada PC abre numa aba aqui em cima. Abrir e escanear só leem os perfis: nada é excluído até você marcar alguns na aba dele e confirmar."
+
 msgid "Each argument group must be a list of texts."
 msgstr "Cada grupo de argumentos deve ser uma lista de textos."
 
 msgid "Each guide shows again the next time its screen is opened."
 msgstr "Cada guia aparece de novo na próxima vez que a tela dele for aberta."
 
-msgid "Each tool has its place on this rail: Hosts, Printers and User profiles. Settings is at the bottom."
-msgstr "Cada ferramenta tem seu lugar nesta barra: Hosts, Impressoras e Perfis de usuário. As Configurações ficam embaixo."
-
-msgid "Each tool keeps lists: a shared one everyone on this PC sees, your personal one, and any you add. Pick one at the top of the Groups panel."
-msgstr "Cada ferramenta guarda listas: uma compartilhada, que todos neste PC veem, a sua pessoal e as que você adicionar. Escolha uma no topo do painel Grupos."
+#, python-brace-format
+msgid "Each row is one user's folder on {host}, with when it was last used and its size."
+msgstr "Cada linha é a pasta de um usuário em {host}, com o último uso e o tamanho."
 
 msgid "Edit connection profile"
 msgstr "Editar perfil de conexão"
@@ -1528,6 +1532,9 @@ msgstr "Todos os PCs do grupo {group}"
 msgid "Every PC tagged {tag}"
 msgstr "Todos os PCs com a tag {tag}"
 
+msgid "Every PC you open gets a tab, and this card shows how far each one got."
+msgstr "Cada PC que você abre ganha uma aba, e este cartão mostra até onde cada um chegou."
+
 msgid "Every column the printers have"
 msgstr "Todas as colunas das impressoras"
 
@@ -1562,8 +1569,8 @@ msgstr "Todas as impressoras estão em algum grupo."
 msgid "Every printer on {host} stops for a few seconds. Documents waiting in the queues stay and print once it's back."
 msgstr "Todas as impressoras de {host} param por alguns segundos. Os documentos nas filas continuam lá e são impressos quando ele voltar."
 
-msgid "Every tool works the same way"
-msgstr "Toda ferramenta funciona do mesmo jeito"
+msgid "Every tool is one click away here, from any screen. Home is at the top, Settings at the bottom."
+msgstr "Toda ferramenta fica a um clique daqui, de qualquer tela. O Início fica no topo, e as Configurações, embaixo."
 
 msgid "Everyone on this PC (shared)"
 msgstr "Todos neste PC (compartilhada)"
@@ -1586,6 +1593,9 @@ msgstr "Obtido do Doc360 MPS em {when}. O Doc360 lê as impressoras no horário 
 
 msgid "File not found"
 msgstr "Arquivo não encontrado"
+
+msgid "Filters"
+msgstr "Filtros"
 
 msgid "Firmware"
 msgstr "Firmware"
@@ -1711,8 +1721,17 @@ msgstr "Os grupos dentro de outros grupos também são classificados. A ordem at
 msgid "HOSTS SHOWN"
 msgstr "HOSTS EXIBIDOS"
 
+msgid "Help"
+msgstr "Ajuda"
+
+msgid "Help › Guide to this screen shows a screen's guide again. Help › Documentation has the step-by-step pages."
+msgstr "Ajuda › Guia desta tela mostra o guia de uma tela de novo. Ajuda › Documentação tem as páginas passo a passo."
+
 msgid "Hide Windows' own"
 msgstr "Ocultar os do Windows"
+
+msgid "Hide Windows' own, Only leftovers and Unused for narrow the list to the profiles worth a look."
+msgstr "Ocultar os do Windows, Só sobras e Sem uso há deixam na lista só os perfis que valem uma olhada."
 
 msgid "Hom&e"
 msgstr "I&nício"
@@ -1755,6 +1774,9 @@ msgstr "Hosts"
 msgid "Hosts ({n})"
 msgstr "Hosts ({n})"
 
+msgid "Hosts for your computers, Printers for your printers, and User profiles to clear old Windows profiles off a PC. Each tile opens its tool."
+msgstr "Hosts para os seus computadores, Impressoras para as suas impressoras e Perfis de usuário para limpar perfis antigos do Windows de um PC. Cada um abre a sua ferramenta."
+
 msgid "Hosts hasn't checked it yet."
 msgstr "O Hosts ainda não o verificou."
 
@@ -1796,9 +1818,6 @@ msgstr "Colunas ignoradas: {names}."
 msgid "Import hosts"
 msgstr "Importar hosts"
 
-msgid "In a host's tab, tick the profiles to delete, then Delete profiles…: you type DELETE to confirm, and each PC is checked again before anything goes."
-msgstr "Na aba de um host, marque os perfis a excluir e use Excluir perfis…: você digita EXCLUIR para confirmar, e cada PC é verificado de novo antes de qualquer exclusão."
-
 #, python-brace-format
 msgid "In the open list it's set on {hosts} and {groups}. They'll use their group's profile, or the default, instead."
 msgstr "Na lista aberta ele está definido em {hosts} e {groups}. Eles passarão a usar o perfil do grupo, ou o padrão."
@@ -1836,6 +1855,9 @@ msgstr "Programas instalados em {host}"
 
 msgid "Inventory"
 msgstr "Inventário"
+
+msgid "Inventory › Add host… adds one at a time, and Import hosts… brings in many at once. A right-click on the table has Add host… too."
+msgstr "Inventário › Adicionar host… põe um de cada vez, e Importar hosts… traz vários de uma vez. O botão direito na tabela também tem Adicionar host…."
 
 msgid "Inventory › Add printer. Its address is enough: brand, model, serial and toner are read from the printer."
 msgstr "Inventário › Adicionar impressora. O endereço basta: marca, modelo, número de série e toner são lidos da impressora."
@@ -1921,9 +1943,6 @@ msgstr "Lista"
 
 msgid "List only the printers that need attention"
 msgstr "Listar só as impressoras que requerem atenção"
-
-msgid "Lists"
-msgstr "Listas"
 
 msgid "Lists saved in a lists folder show up here by themselves; Remove asks whether to delete the file too."
 msgstr "Listas salvas numa pasta de listas aparecem aqui sozinhas; Remover pergunta se o arquivo também deve ser excluído."
@@ -2287,6 +2306,9 @@ msgstr "Nada muda até você clicar em Adicionar."
 msgid "Nothing changes until you click Save."
 msgstr "Nada muda até você clicar em Salvar."
 
+msgid "Nothing is deleted yet"
+msgstr "Nada é excluído ainda"
+
 msgid "Nothing is outside a group."
 msgstr "Nada está fora de um grupo."
 
@@ -2465,11 +2487,14 @@ msgstr "Aberto: {path}"
 msgid "Opens a folder on {host} in File Explorer, over file sharing."
 msgstr "Abre uma pasta de {host} no Explorador de Arquivos, pelo compartilhamento de arquivos."
 
+msgid "Opens every command for the picked host. They use your Windows account; if a PC refuses it, CapyPanel asks for another one, kept in Settings › Hosts › Credentials."
+msgstr "Abre todos os comandos para o host escolhido. Eles usam a sua conta do Windows; se um PC recusar, o CapyPanel pede outra, guardada em Configurações › Hosts › Credenciais."
+
 msgid "Opens the host in a new tab. Typing alone never scans."
 msgstr "Abre o host numa aba nova. Digitar sozinho nunca escaneia."
 
-msgid "Opens the picked PC with the remote tool of its connection profile. Profiles are in Settings › Hosts › Connecting."
-msgstr "Abre o PC escolhido com a ferramenta remota do perfil de conexão dele. Os perfis ficam em Configurações › Hosts › Conexão."
+msgid "Opens the picked host's screen with its connection profile's tool. Profiles are in Settings › Hosts › Connecting."
+msgstr "Abre a tela do host escolhido com a ferramenta do perfil de conexão dele. Os perfis ficam em Configurações › Hosts › Conexão."
 
 #, python-brace-format
 msgid "Opens {path}"
@@ -2602,14 +2627,11 @@ msgstr "Pessoal"
 msgid "Pick a PC"
 msgstr "Escolha um PC"
 
-msgid "Pick a host to see it in the Details panel on the right. A right-click has everything you can do with it."
-msgstr "Escolha um host para vê-lo no painel de detalhes, à direita. O botão direito tem tudo o que dá para fazer com ele."
-
-msgid "Pick a list here: the shared one everyone on this PC sees, your personal one, or one you add. Inventory adds hosts, or imports many at once."
-msgstr "Escolha uma lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você adicionar. Inventário adiciona hosts, ou importa vários de uma vez."
-
 msgid "Pick hosts in the list first"
 msgstr "Selecione hosts na lista primeiro"
+
+msgid "Pick the list here: the shared one everyone on this PC sees, your personal one, or one you add. Groups and tags are below it: a click shows only their hosts."
+msgstr "Escolha a lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você criar. Os grupos e as tags ficam embaixo: um clique mostra só os hosts deles."
 
 #, python-brace-format
 msgid "Picked tags: {tags}"
@@ -2696,6 +2718,9 @@ msgstr "Programas"
 msgid "Programs (*.exe)"
 msgstr "Programas (*.exe)"
 
+msgid "Progress"
+msgstr "Progresso"
+
 msgid "Protected"
 msgstr "Protegido"
 
@@ -2763,9 +2788,6 @@ msgstr "Lê cada um numa aba própria, ao fundo; você continua nesta lista"
 
 msgid "Reads each printer's status, toner and page count. Refresh on its own and Windows notifications stay off until you turn them on."
 msgstr "Lê o status, o toner e a contagem de páginas de cada impressora. A atualização sozinha e as notificações do Windows ficam desligadas até você ligá-las."
-
-msgid "Reads the profiles on the PCs picked, each in its own tab. Nothing is deleted by a scan."
-msgstr "Lê os perfis dos PCs escolhidos, cada um em sua aba. Escanear não exclui nada."
 
 msgid "Reads what's ticked in this box again"
 msgstr "Lê de novo o que está marcado nesta caixa"
@@ -3085,6 +3107,9 @@ msgstr "Credenciais salvas"
 
 msgid "Saved in Credential Manager:"
 msgstr "Salvos no Gerenciador de Credenciais:"
+
+msgid "Says whether a profile can be deleted. Only rows that say Can be deleted have a tick box; the others say why not."
+msgstr "Diz se o perfil pode ser excluído. Só as linhas com Pode excluir têm caixa de marcar; as outras dizem por quê."
 
 msgid "Scan"
 msgstr "Escanear"
@@ -3503,9 +3528,6 @@ msgstr "Esse nome já está em uso."
 msgid "That profile doesn't exist."
 msgstr "Esse perfil não existe."
 
-msgid "The Groups panel on the left, with its groups and tags; the items in the middle; the picked one's details on the right. Refresh reads the latest state."
-msgstr "O painel Grupos à esquerda, com seus grupos e tags; os itens no meio; os detalhes do escolhido à direita. Atualizar lê o estado mais recente."
-
 msgid "The PC answered, but reading took too long and was stopped."
 msgstr "O PC respondeu, mas a leitura demorou demais e foi interrompida."
 
@@ -3539,9 +3561,6 @@ msgstr "Os argumentos usam uma opção que não está em “options”: “{opti
 
 msgid "The authentication password needs at least 8 characters."
 msgstr "A senha da autenticação precisa ter pelo menos 8 caracteres."
-
-msgid "The buttons on top of Details run commands on the PC with your Windows account. A PC that refuses it asks for another one, kept in Settings › Hosts › Credentials."
-msgstr "Os botões no topo do painel de detalhes rodam comandos no PC com a sua conta do Windows. Um PC que a recusar pede outra, guardada em Configurações › Hosts › Credenciais."
 
 msgid "The buttons on top of a host's Details panel; the first four are also in its right-click menu. Yours, on this PC."
 msgstr "Os botões no topo do painel de detalhes de um host; os quatro primeiros também ficam no menu do botão direito. Seus, neste PC."
@@ -3636,14 +3655,14 @@ msgstr "O histórico ainda não tem nada."
 msgid "The host is checked again before each delete: anyone who signed in since the scan is skipped. Every delete goes in the history."
 msgstr "O host é verificado de novo antes de cada exclusão: quem tiver entrado desde o escaneamento é ignorado. Cada exclusão fica no histórico."
 
+msgid "The host you pick in the table shows here. Right-click it for everything you can do."
+msgstr "O host que você escolher na tabela aparece aqui. O botão direito nele mostra tudo o que dá para fazer."
+
 msgid "The host's notes"
 msgstr "As notas do host"
 
 msgid "The host's tags"
 msgstr "As tags do host"
-
-msgid "The hosts of your Hosts list. Double-click one to open it in a tab and read its profiles, or select several and press Scan."
-msgstr "Os hosts da sua lista do Hosts. Dê dois cliques num host para abri-lo numa aba e ler os perfis dele, ou selecione vários e clique em Escanear."
 
 msgid "The hosts' own fields, which Import hosts reads back: to move hosts to a list."
 msgstr "Os campos dos próprios hosts, que Importar hosts lê de volta: para levar hosts a uma lista."
@@ -3736,6 +3755,9 @@ msgstr "As “options” do perfil devem ser uma lista de ids de opções."
 msgid "The profile's “{key}” must be lowercase letters, digits, - or _."
 msgstr "O “{key}” do perfil deve ter só letras minúsculas, dígitos, - ou _."
 
+msgid "The profiles"
+msgstr "Os perfis"
+
 msgid "The profiles show once the host is scanned."
 msgstr "Os perfis aparecem quando o host for escaneado."
 
@@ -3744,6 +3766,9 @@ msgstr "Os programas instalados para todos os usuários do PC."
 
 msgid "The programs that start for every user who signs in."
 msgstr "Os programas que iniciam para todo usuário que entra."
+
+msgid "The rail"
+msgstr "A barra"
 
 msgid "The read-only SNMP v3 user your printers know. The passwords are kept in Windows Credential Manager."
 msgstr "O usuário SNMP v3 somente leitura que suas impressoras conhecem. As senhas ficam guardadas no Gerenciador de Credenciais do Windows."
@@ -3828,6 +3853,9 @@ msgstr "Estes são os perfis que vêm com o app: a pasta ainda não existe."
 
 msgid "These are the drives that come back at every sign-in."
 msgstr "Estas são as unidades que voltam a cada entrada."
+
+msgid "These are the hosts of your Hosts list. To see a PC's profiles, open it in a tab: double-click it, or pick several and press Scan."
+msgstr "Estes são os hosts da sua lista do Hosts. Para ver os perfis de um PC, abra-o numa aba: dê dois cliques nele, ou escolha vários e clique em Escanear."
 
 #, python-brace-format
 msgid "They're signed in {where}. Their programs keep running, and they get back to them when they sign in again."
@@ -3943,6 +3971,9 @@ msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyP
 msgid "This tool deletes user profiles"
 msgstr "Esta ferramenta exclui perfis de usuário"
 
+msgid "Three tools"
+msgstr "Três ferramentas"
+
 msgid "Tick Status or Logged-on users to refresh them"
 msgstr "Marque Status ou Usuários logados para atualizá-los"
 
@@ -3957,6 +3988,9 @@ msgstr "Marque perfis na tabela para excluir"
 
 msgid "Tick the ones you want, or none. They sit on top of the Details panel, in this order."
 msgstr "Marque os que quiser, ou nenhum. Ficam no topo do painel de detalhes, nesta ordem."
+
+msgid "Tick the profiles, then Delete profiles…. Each person's folder goes with it, with no recycle bin: you type DELETE to confirm, and the PC is checked again first."
+msgstr "Marque os perfis e clique em Excluir perfis…. A pasta de cada pessoa vai junto, sem lixeira: você digita EXCLUIR para confirmar, e o PC é conferido de novo antes."
 
 msgid "Tick to delete"
 msgstr "Marcar para excluir"
@@ -4192,9 +4226,6 @@ msgctxt "button"
 msgid "Web page"
 msgstr "Página web"
 
-msgid "Welcome to CapyPanel"
-msgstr "Bem-vindo ao CapyPanel"
-
 msgid "What Connect opens, and the login it uses. Refresh's logged-on users and the commands use the account under it."
 msgstr "O que o Conectar abre, e o login que ele usa. Os usuários logados do Atualizar e os comandos usam a conta abaixo."
 
@@ -4322,14 +4353,14 @@ msgstr "Sua conta do Windows"
 msgid "Your Windows account ({user})"
 msgstr "Sua conta do Windows ({user})"
 
+msgid "Your buttons for the commands you use most. Choose them with a right-click on the panel, in Customize the details panel…, or in Settings › Hosts › General."
+msgstr "Seus botões para os comandos que você mais usa. Escolha quais aparecem com o botão direito no painel, em Personalizar o painel de detalhes…, ou em Configurações › Hosts › Geral."
+
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
 
-msgid "Your host lists"
-msgstr "Suas listas de hosts"
-
-msgid "Your hosts"
-msgstr "Seus hosts"
+msgid "Your lists"
+msgstr "Suas listas"
 
 msgid "Your picks are replaced."
 msgstr "Suas escolhas são substituídas."
