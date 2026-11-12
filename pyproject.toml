@@ -37,6 +37,7 @@ extraPaths = ["tests/helpers"]  # helpers the tests import by name, as pytest's 
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib"]
 pythonpath = ["tests/ui", "tests/helpers"]  # helpers the tests share (capywindow.py, snmp_agent.py)
+faulthandler_timeout = 90  # a test stuck this long prints where it is, here and on CI
 
 [dependency-groups]
 dev = [
