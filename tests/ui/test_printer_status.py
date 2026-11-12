@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QTreeWidgetItem
 from snmp_agent import Objects, running
 
@@ -31,9 +32,10 @@ from capypanel.ui.printers_tool.settings import (
     SNMP_VERSION,
     TONER_VIEW,
 )
-from capypanel.ui.printers_tool.status import AMBER, GREEN, GREY, RED, Checked
+from capypanel.ui.printers_tool.status import Checked, amber, green, grey, red
 from capypanel.ui.printers_tool.table import BAR_WIDTH, ROLE_SUPPLY
 from capypanel.ui.printers_tool.tool import PrintersTool
+from capypanel.ui.themes import engine as themes
 
 NOW = datetime(2026, 10, 28, 14, 32)
 S = reading.SUPPLIES
@@ -56,14 +58,14 @@ def test_status_says_what_is_wrong_most_first() -> None:
     never = status.status(None, 10)
     assert (never.text, never.quiet, never.nothing) == ("Not checked", True, True)
     offline = status.status(Checked(NOW, offline=True), 10)
-    assert (offline.text, offline.color, offline.quiet) == ("Offline", GREY, True)
+    assert (offline.text, offline.color, offline.quiet) == ("Offline", grey(), True)
     assert status.status(Checked(NOW, error="bad"), 10).text == "Unreadable"
     idle = status.status(_checked(state=State.IDLE, device=Device.RUNNING), 10)
-    assert (idle.text, idle.color) == ("Idle", GREEN)
+    assert (idle.text, idle.color) == ("Idle", green())
     # Many printers call their state "other" while running fine.
     assert status.status(_checked(state=State.OTHER, device=Device.RUNNING), 10).text == "Ready"
     jam = status.status(_checked(problems=frozenset({Problem.JAMMED})), 10)
-    assert (jam.text, jam.color) == ("Paper jam", RED)
+    assert (jam.text, jam.color) == ("Paper jam", red())
     # The printer's own words can be long: they go in the tip (and Details), not the cell.
     said = _checked(problems=frozenset({Problem.JAMMED}), messages=("Jam in tray 2",))
     assert status.status(said, 10).text == "Paper jam"
@@ -72,12 +74,12 @@ def test_status_says_what_is_wrong_most_first() -> None:
     message = _checked(state=State.IDLE, messages=("Bypass tray paper empty(warning)",))
     assert (status.status(message, 10).text, status.status(message, 10).color) == (
         "Needs attention",
-        AMBER,
+        amber(),
     )
     low = status.status(_checked(state=State.IDLE, supplies=(_supply("Cyan Toner", 8),)), 10)
-    assert (low.text, low.color) == ("Toner low", AMBER)
+    assert (low.text, low.color) == ("Toner low", amber())
     worn = _checked(state=State.IDLE, supplies=(_supply("MP Roller", 3, SupplyKind.OTHER),))
-    assert status.status(worn, 10).color == GREEN  # a worn roller isn't a warning here
+    assert status.status(worn, 10).color == green()  # a worn roller isn't a warning here
     waste = _supply("Waste Toner Box", 5, SupplyKind.WASTE, receptacle=True)
     full = status.status(_checked(supplies=(waste,)), 10)  # the column: short; the rest: full
     assert (full.text, full.said()) == ("Waste nearly full", "Waste Toner Box nearly full")
@@ -88,7 +90,7 @@ def test_long_status_words_are_shortened_only_in_the_column() -> None:
     service = status.status(_checked(problems=frozenset({Problem.SERVICE_REQUESTED})), 10)
     assert (service.text, service.said()) == ("Needs service", "Service requested")
     output = status.status(_checked(problems=frozenset({Problem.OUTPUT_FULL})), 10)
-    assert (output.text, output.said(), output.color) == ("Output full", "Output tray full", RED)
+    assert (output.text, output.said(), output.color) == ("Output full", "Output tray full", red())
     jam = status.status(_checked(problems=frozenset({Problem.JAMMED})), 10)
     assert jam.text == jam.said() == "Paper jam" and not jam.full  # short already
 
@@ -99,7 +101,8 @@ def test_toner_shows_the_lowest_toner_or_ink() -> None:
         _supply("Imaging Drum", 2, SupplyKind.DRUM),
     ))  # fmt: skip
     cell = status.toner(colour, 10)
-    assert (cell.text, cell.warn, cell.color) == ("Cyan 8 % · low", True, status.INKS["cyan"])
+    cyan = themes.ink_colors()["cyan"]
+    assert (cell.text, cell.warn, cell.color) == ("Cyan 8 % · low", True, cyan)
     assert "Black Cartridge: 64 %" in cell.tip
     assert not status.toner(colour, 5).warn
     mono = _checked(supplies=(_supply("Toner Cartridge 051", 83),))
@@ -111,6 +114,49 @@ def test_toner_shows_the_lowest_toner_or_ink() -> None:
     assert "This printer doesn't report a level for this supply." in silent.tip
     assert status.toner(_checked(), 10).text == ""  # no toner reported
     assert status.toner(Checked(NOW, offline=True), 10).text == ""
+
+
+def _panes() -> list[tuple[str, str, str, dict[str, str]]]:
+    """Each built-in theme's pane and selected row, with its supply colours; the Windows themes
+    with Windows' default accent."""
+    found = []
+    for theme in themes.Registry().all():
+        if theme.engine == "custom":
+            c = theme.colors
+            found.append((theme.id, c["card"], c["sel_solid"], c))
+    for scheme in ("dark", "light"):
+        c = themes.NATIVE_TOKENS[scheme]
+        tint = themes.selection_tint(QColor("#0078d4"), c["card"], c["text"])
+        found.append((f"windows-{scheme}", c["card"], tint, themes.TOKENS[scheme]))
+    return found
+
+
+@pytest.mark.parametrize("pane", _panes(), ids=lambda p: p[0])
+def test_supply_colours_read_in_every_built_in_theme(pane: tuple[str, str, str, dict]) -> None:
+    """A bar or swatch shows on the pane and on a selected row (3:1). Yellow is too pale for a
+    light pane by nature: there its darker edge carries it, so the edge is what's measured."""
+    theme_id, card, selection, c = pane
+    for key in ("black", "cyan", "magenta", "other"):
+        for back in (card, selection):
+            got = themes.contrast_ratio(c[f"ink_{key}"], back)
+            assert got >= themes.MARK_CONTRAST, f"{theme_id}: {key} is {got:.2f}:1 on {back}"
+    yellow = max(
+        (c["ink_yellow"], c["ink_yellow_edge"]), key=lambda ink: themes.contrast_ratio(ink, card)
+    )
+    for back in (card, selection):
+        got = themes.contrast_ratio(yellow, back)
+        assert got >= themes.MARK_CONTRAST, f"{theme_id}: yellow is {got:.2f}:1 on {back}"
+    # Black stays apart from the drums and boxes' grey-blue, so a toner reads as a toner.
+    assert c["ink_black"] != c["ink_other"]
+
+
+def test_only_yellow_gets_an_edge(monkeypatch: pytest.MonkeyPatch) -> None:
+    inks = {"black": "#374151", "cyan": "#0b7f91", "magenta": "#d22f97", "yellow": "#f2c94c",
+            "yellow_edge": "#8d7100", "other": "#68768c"}  # fmt: skip
+    monkeypatch.setattr(themes, "ink_colors", lambda: inks)
+    assert status.supply_edge(_supply("Yellow Toner", 40)) == "#8d7100"
+    assert status.supply_edge(_supply("Cyan Toner", 40)) == "#0b7f91"
+    assert status.supply_edge(_supply("Imaging Drum", 40, SupplyKind.DRUM)) == "#68768c"
 
 
 # ---- in the tool ----
@@ -216,6 +262,27 @@ def test_the_low_level_comes_from_settings(printers: PrintersTool) -> None:
     printers.set_low_level(20)
     assert printers.prefs["low_level"] == 20
     assert printers.table._rows[lab.id].text(printers.table.TONER) == "Black 15 % · low"
+
+
+def test_a_theme_switch_redraws_printers_in_the_new_colours(
+    printers: PrintersTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
+    printers._checked[lab.id] = _checked(supplies=(_supply("Black Cartridge", 5),))
+    printers.table.show_cells(lab.id)
+    printers.table.select_ids([lab.id])
+    row = printers.table._rows[lab.id]
+    before = row.data(printers.table.TONER, Qt.ItemDataRole.ForegroundRole)
+    assert before.name() == amber()
+    # Another theme's colours, without a real switch (that restyles every window alive).
+    other = {**themes.status_colors(), "attention": "#123456"}
+    monkeypatch.setattr(themes, "status_colors", lambda: other)
+    printers.restyle()
+    assert row.data(printers.table.TONER, Qt.ItemDataRole.ForegroundRole).name() == "#123456"
+    assert status.status(printers._checked[lab.id], 10).color == "#123456"  # "Toner low"
+    assert any(  # Details' low toner, drawn again in the new amber
+        "#123456" in label.styleSheet() for label in printers.details.findChildren(QLabel)
+    )
 
 
 def test_the_report_gets_everything_refresh_read(printers: PrintersTool) -> None:

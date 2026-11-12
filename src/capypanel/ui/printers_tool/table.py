@@ -5,7 +5,7 @@ Status and Toner come from Refresh; they're kept in memory, never in the list fi
 from collections.abc import Callable, Sequence
 
 from PySide6.QtCore import QEvent, QModelIndex, QPersistentModelIndex, QRectF, QSize, Qt
-from PySide6.QtGui import QColor, QIcon, QPainter, QPalette, QPixmap
+from PySide6.QtGui import QColor, QIcon, QPainter, QPalette, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QStyle,
@@ -23,12 +23,13 @@ from capypanel.ui.list_workspace.panels import ROLE_NOTHING, ItemTable
 from capypanel.ui.printers_tool.marks import Mark
 from capypanel.ui.printers_tool.meter import HEIGHT, draw_meter
 from capypanel.ui.printers_tool.status import (
-    AMBER,
     DEFAULT_LOW,
     Cell,
+    amber,
     level_text,
     plain_tip,
     status_words,
+    supply_edge,
     toner_words,
 )
 
@@ -109,6 +110,11 @@ class PrinterTable(ItemTable):
         if row is not None:
             self._fill(row, *self._cells(printer_id))  # columns keep their widths
 
+    def refill(self) -> None:
+        """Every row again, after a theme switch: the dots and swatches had the old colours."""
+        for printer_id, row in self._rows.items():
+            self._fill(row, *self._cells(printer_id))
+
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
         if event.type() == QEvent.Type.PaletteChange:  # the quiet colour of the new theme
@@ -124,7 +130,8 @@ class PrinterTable(ItemTable):
         row.setText(self.TONER, toner.text)  # kept with bars too: it's what Copy and sorting use
         row.setToolTip(self.TONER, plain_tip(toner.tip))
         bar = self.bars and toner.supply is not None
-        row.setIcon(self.TONER, swatch(toner.color) if toner.color and not bar else QIcon())
+        shown = swatch(toner.color, _edge(toner)) if toner.color and not bar else QIcon()
+        row.setIcon(self.TONER, shown)
         row.setData(self.TONER, ROLE_WARN, toner.warn)
         row.setData(self.TONER, ROLE_SUPPLY, toner.supply if bar else None)
         self._tint(row)
@@ -135,7 +142,7 @@ class PrinterTable(ItemTable):
         quiet = bool(row.data(self.STATUS, ROLE_QUIET))
         row.setData(self.STATUS, Qt.ItemDataRole.ForegroundRole, muted if quiet else None)
         warn = bool(row.data(self.TONER, ROLE_WARN))
-        row.setData(self.TONER, Qt.ItemDataRole.ForegroundRole, QColor(AMBER) if warn else None)
+        row.setData(self.TONER, Qt.ItemDataRole.ForegroundRole, QColor(amber()) if warn else None)
 
 
 _EMPTY = Cell("", "", "")
@@ -188,7 +195,7 @@ class TonerBar(QStyledItemDelegate):
             words = area.adjusted(2 + width + GAP, 0, 0, 0)
         warn = bool(index.data(ROLE_WARN))
         painter.save()
-        painter.setPen(QColor(AMBER) if warn else text)
+        painter.setPen(QColor(amber()) if warn else text)
         shown = metrics.elidedText(said, Qt.TextElideMode.ElideRight, words.width())
         painter.drawText(words, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, shown)
         painter.restore()
@@ -213,15 +220,19 @@ def _widest() -> str:
     return _("{percent} %").format(percent=100)
 
 
-def swatch(color: str, px: int = 10) -> QIcon:
-    """A small rounded square in a toner's colour."""
+def _edge(cell: Cell) -> str:
+    return supply_edge(cell.supply) if cell.supply is not None else cell.color
+
+
+def swatch(color: str, edge: str = "", px: int = 10) -> QIcon:
+    """A small rounded square in a toner's colour, with a 1 px `edge` if one is given."""
     pixmap = QPixmap(px * 2, px * 2)
     pixmap.setDevicePixelRatio(2)
     pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setPen(QPen(QColor(edge), 1) if edge and edge != color else Qt.PenStyle.NoPen)
     painter.setBrush(QColor(color))
-    painter.drawRoundedRect(QRectF(1, 1, px - 2, px - 2), 2, 2)
+    painter.drawRoundedRect(QRectF(1.5, 1.5, px - 3, px - 3), 2, 2)
     painter.end()
     return QIcon(pixmap)

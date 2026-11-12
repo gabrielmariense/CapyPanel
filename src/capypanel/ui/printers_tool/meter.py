@@ -5,7 +5,7 @@ same."""
 from collections.abc import Sequence
 
 from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QColor, QPainter
+from PySide6.QtGui import QColor, QPainter, QPen
 
 from capypanel.core.printers.reading import Supply
 from capypanel.ui.printers_tool import status
@@ -36,9 +36,15 @@ def draw_meter(
     painter.drawRoundedRect(bar, corner, corner)
     fill = supply.percent / 100 if supply.percent is not None else 0.5 if supply.some_left else 0
     if fill:
-        painter.setBrush(QColor(status.supply_color(supply)))
+        color, edge = status.supply_color(supply), status.supply_edge(supply)
+        painter.setBrush(QColor(color))
         width = max(4.0, bar.width() * fill)
-        painter.drawRoundedRect(QRectF(bar.x(), bar.y(), width, bar.height()), corner, corner)
+        filled = QRectF(bar.x(), bar.y(), width, bar.height())
+        if edge != color:  # yellow on a light pane: a darker 1 px edge, inside the fill
+            painter.setPen(QPen(QColor(edge), 1))
+            filled.adjust(0.5, 0.5, -0.5, -0.5)
+        painter.drawRoundedRect(filled, corner, corner)
+        painter.setPen(Qt.PenStyle.NoPen)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)  # crisp marks
     top, bottom = round(bar.y()) - REACH, round(bar.bottom()) + REACH
     black = QColor(0, 0, 0)

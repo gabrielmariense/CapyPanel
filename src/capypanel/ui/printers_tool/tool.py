@@ -243,6 +243,14 @@ class PrintersTool(ListWorkspace):
         self.toolbar.retranslate()
         super().retranslate()
 
+    def restyle(self) -> None:
+        """After a theme switch: the dots, swatches, bars, Details and the strip were drawn in
+        the old theme's colours."""
+        super().restyle()
+        self.table.refill()
+        self.attention_strip.restyle()
+        self._selection_changed()
+
     # ---- adding and editing printers ----
 
     def add_item_action(self) -> QAction:

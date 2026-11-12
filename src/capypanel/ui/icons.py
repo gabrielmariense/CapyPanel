@@ -9,15 +9,6 @@ from PySide6.QtGui import QColor, QGuiApplication, QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 
 TABLER_DIR = Path(__file__).resolve().parent / "tabler"
-# The old fixed set, only for Printers until it reads the theme's (themes.engine.status_colors,
-# which everything else uses): then this goes.
-STATUS_COLORS = {
-    "online": "#3fae4a",
-    "offline": "#8a8a8a",
-    "not-found": "#d29922",
-    "stopped": "#e5534b",
-    "attention": "#d29922",
-}
 
 
 def _pixmap(px: int) -> QPixmap:

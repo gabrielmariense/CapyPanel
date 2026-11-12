@@ -63,8 +63,8 @@ TOKENS = {
         "accent": "#2563eb", "accent_hover": "#3b76ee",
         "online": "#1a7f37", "offline": "#656d76", "attention": "#7d5a00", "stopped": "#cf222e",
         "working": "#2563eb",
-        "ink_black": "#374151", "ink_cyan": "#0b7f91", "ink_magenta": "#d6409f",
-        "ink_yellow": "#f2c94c", "ink_yellow_edge": "#9a7b00", "ink_other": "#6b7a90",
+        "ink_black": "#374151", "ink_cyan": "#0b7f91", "ink_magenta": "#d22f97",
+        "ink_yellow": "#f2c94c", "ink_yellow_edge": "#8d7100", "ink_other": "#68768c",
     },
 }  # fmt: skip
 # What each status colour says: a PC or printer that answers; one that doesn't, or was never
