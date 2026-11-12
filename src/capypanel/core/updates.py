@@ -30,8 +30,10 @@ import urllib.request
 import zipfile
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import Path
 
+from capypanel.core import files, winsec
 from capypanel.core.i18n import _
 from capypanel.core.settings import PORTABLE_MARKER
 
@@ -103,6 +105,43 @@ def is_newer(release: Release, current: str) -> bool:
 
 def zip_name(version: str) -> str:
     return f"{APP}-{version}-windows-x64.zip"
+
+
+# ---- how often CapyPanel looks: one choice for everyone on this PC ----
+
+CHECK_FILE = "_updates.json"  # beside _reads.json, in the folder for everyone on this PC
+AT_START, DAILY, WEEKLY, OFF = "start", "daily", "weekly", "off"
+CHECKS = (AT_START, DAILY, WEEKLY, OFF)
+WAIT = {AT_START: timedelta(days=1), DAILY: timedelta(days=1), WEEKLY: timedelta(days=7)}
+
+
+def check_of(folder: Path) -> str:
+    """How often CapyPanel looks for a new version on this PC: at every start unless someone
+    trusted chose otherwise. An update replaces CapyPanel for everyone here, so it's one choice
+    for all of them; another user's file must not turn it off."""
+    path = folder / CHECK_FILE
+    if not path.is_file() or not winsec.made_by_trusted(path):
+        return AT_START
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return AT_START
+    how = data.get("check") if isinstance(data, dict) else None
+    return how if how in CHECKS else AT_START
+
+
+def set_check(folder: Path, how: str) -> None:
+    """Sets it for everyone on this PC; at every start, the default, removes the file. Raises
+    OSError where this user can't write the folder."""
+    if how not in CHECKS:
+        raise ValueError(how)
+    path = folder / CHECK_FILE
+    if how == AT_START:
+        path.unlink(missing_ok=True)
+        return
+    if not folder.is_dir():
+        files.make_shared_folder(folder)
+    files.write_json(path, {"schema": 1, "check": how})
 
 
 # ---- asking GitHub ----

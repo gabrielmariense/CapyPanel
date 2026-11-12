@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 12:37-0300\n"
+"POT-Creation-Date: 2026-11-12 13:30-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -700,14 +700,17 @@ msgstr "Perguntar sempre"
 msgid "Asked when needed"
 msgstr "Pedida quando precisar"
 
-msgid "Asks GitHub (api.github.com) for CapyPanel's newest release. Nothing is downloaded until you choose Install. Help › Check for updates works either way."
-msgstr "Pergunta ao GitHub (api.github.com) qual é a versão mais nova do CapyPanel. Nada é baixado até você escolher Instalar. Ajuda › Procurar nova versão funciona de qualquer jeito."
+msgid "Asks GitHub (api.github.com) for CapyPanel's newest release. Nothing is downloaded until you choose Install. Help › Check for updates works whatever is set."
+msgstr "Pergunta ao GitHub (api.github.com) qual é a versão mais nova do CapyPanel. Nada é baixado até você escolher Instalar. Ajuda › Procurar nova versão funciona com qualquer opção."
 
 msgid "Ass&et tag:"
 msgstr "&Patrimônio:"
 
 msgid "Asset tag"
 msgstr "Patrimônio"
+
+msgid "At every start"
+msgstr "A cada início"
 
 msgid "Authentication &password"
 msgstr "Senha da au&tenticação"
@@ -1173,6 +1176,10 @@ msgid "Couldn't save how PCs are read: {error}"
 msgstr "Não foi possível salvar como os PCs são lidos: {error}"
 
 #, python-brace-format
+msgid "Couldn't save how often to check: {error}"
+msgstr "Não foi possível salvar de quanto em quanto tempo procurar: {error}"
+
+#, python-brace-format
 msgid "Couldn't save the connection profiles: {error}"
 msgstr "Não foi possível salvar os perfis de conexão: {error}"
 
@@ -1634,6 +1641,12 @@ msgstr "Para importar"
 
 msgid "For everyone on this PC: connection profiles, remote tools, and the shared lists in “lists”, a folder for each kind of list."
 msgstr "Para todos neste PC: perfis de conexão, ferramentas remotas e as listas compartilhadas em “lists”, uma pasta para cada tipo de lista."
+
+msgid "For everyone who uses CapyPanel on this PC: an update replaces it for all of them."
+msgstr "Vale para todos que usam o CapyPanel neste PC: uma nova versão substitui o CapyPanel para todos eles."
+
+msgid "For everyone who uses CapyPanel on this PC: an update replaces it for all of them. Read-only: only people Windows lets write CapyPanel's tools folder can change it."
+msgstr "Vale para todos que usam o CapyPanel neste PC: uma nova versão substitui o CapyPanel para todos eles. Somente leitura: só quem o Windows deixa gravar na pasta de ferramentas do CapyPanel pode alterar."
 
 msgid ""
 "For example:\n"
@@ -2357,6 +2370,9 @@ msgstr "No botão"
 
 msgid "Once a day"
 msgstr "Uma vez por dia"
+
+msgid "Once a week"
+msgstr "Uma vez por semana"
 
 msgid "One PC"
 msgstr "Um PC"

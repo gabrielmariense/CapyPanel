@@ -123,7 +123,8 @@ class GeneralPage(Page):
         tools: Sequence[tuple[str, str]],
         start: str,
         closing: str = settings.CLOSE_ASK,
-        updates: bool = True,
+        updates: str = "start",
+        updates_editable: bool = True,
         language: str = i18n.DEFAULT_LANGUAGE,
         registry: themes.Registry,
         theme_id: str,
@@ -184,26 +185,41 @@ class GeneralPage(Page):
         )  # fmt: skip
         self.body.addWidget(startup)
         self.updates = QComboBox()
-        self.updates.addItem(_("Once a day"), True)
-        self.updates.addItem(_("Off"), False)
-        self.updates.setCurrentIndex(0 if updates else 1)
+        for how, text in (("start", _("At every start")), ("daily", _("Once a day")),
+                          ("weekly", _("Once a week")), ("off", _("Off"))):  # fmt: skip
+            self.updates.addItem(text, how)
+        self.updates.setCurrentIndex(max(self.updates.findData(updates), 0))
+        self.updates.setEnabled(updates_editable)
         self.updates.currentIndexChanged.connect(lambda _i: self.changed.emit())
+        whole_pc = (
+            _("For everyone who uses CapyPanel on this PC: an update replaces it for all of them.")
+            if updates_editable
+            else _("For everyone who uses CapyPanel on this PC: an update replaces it for all of "
+                   "them. Read-only: only people Windows lets write CapyPanel's tools folder can "
+                   "change it.")
+        )  # fmt: skip
         section = Section(_("Updates"))
         add_rows(
             section.content,
             SettingRow(
                 _("Check for &updates"),
                 _("Asks GitHub (api.github.com) for CapyPanel's newest release. Nothing is "
-                  "downloaded until you choose Install. Help › Check for updates works either "
-                  "way."),
+                  "downloaded until you choose Install. Help › Check for updates works whatever "
+                  "is set.") + " " + whole_pc,
                 self.updates,
             ),
         )  # fmt: skip
         self.body.addWidget(section)
         self.body.addStretch(1)
 
-    def updates_choice(self) -> bool:
-        return bool(self.updates.currentData())
+    def updates_choice(self) -> str:
+        return str(self.updates.currentData())
+
+    def show_updates(self, how: str) -> None:
+        """Back to what's saved, when saving the choice failed."""
+        self.updates.blockSignals(True)
+        self.updates.setCurrentIndex(max(self.updates.findData(how), 0))
+        self.updates.blockSignals(False)
 
     def start_choice(self) -> str:
         return str(self.start.currentData())

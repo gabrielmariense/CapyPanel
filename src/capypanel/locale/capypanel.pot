@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 12:37-0300\n"
+"POT-Creation-Date: 2026-11-12 13:30-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -711,13 +711,16 @@ msgstr ""
 msgid ""
 "Asks GitHub (api.github.com) for CapyPanel's newest release. Nothing is "
 "downloaded until you choose Install. Help › Check for updates works "
-"either way."
+"whatever is set."
 msgstr ""
 
 msgid "Ass&et tag:"
 msgstr ""
 
 msgid "Asset tag"
+msgstr ""
+
+msgid "At every start"
 msgstr ""
 
 msgid "Authentication &password"
@@ -1202,6 +1205,10 @@ msgid "Couldn't save how PCs are read: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid "Couldn't save how often to check: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid "Couldn't save the connection profiles: {error}"
 msgstr ""
 
@@ -1683,6 +1690,17 @@ msgstr ""
 msgid ""
 "For everyone on this PC: connection profiles, remote tools, and the "
 "shared lists in “lists”, a folder for each kind of list."
+msgstr ""
+
+msgid ""
+"For everyone who uses CapyPanel on this PC: an update replaces it for all"
+" of them."
+msgstr ""
+
+msgid ""
+"For everyone who uses CapyPanel on this PC: an update replaces it for all"
+" of them. Read-only: only people Windows lets write CapyPanel's tools "
+"folder can change it."
 msgstr ""
 
 msgid ""
@@ -2446,6 +2464,9 @@ msgid "On the button"
 msgstr ""
 
 msgid "Once a day"
+msgstr ""
+
+msgid "Once a week"
 msgstr ""
 
 msgid "One PC"

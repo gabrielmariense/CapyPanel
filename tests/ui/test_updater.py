@@ -3,13 +3,14 @@ menu bar's button, the update window and the hand-over to the new version's exe.
 
 import time
 from collections.abc import Callable, Iterator
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QLabel
 
 from capypanel import __version__
 from capypanel.core import settings, updates
@@ -98,21 +99,38 @@ def test_nothing_newer_or_github_out_of_reach_shows_no_button(
     assert window.updater.offer is None
 
 
-def test_once_a_day_and_the_off_switch(window: CapyWindow, github: dict[str, Any]) -> None:
+def test_at_every_start_by_default_and_the_other_choices(
+    window: CapyWindow, github: dict[str, Any]
+) -> None:
     updater = window.updater
-    updater._maybe_look()  # never looked: due
+    assert updater.how_often() == updates.AT_START  # the default, with no file
+    updater._own()["last"] = datetime.now(UTC).isoformat()  # looked a moment ago
+    updater._maybe_look(started=True)  # a new start: looks again all the same
     _wait(lambda: not updater.looking)
     asked = github["asked"]
-    updater._maybe_look()  # just looked: not again today
+    updater._maybe_look(started=False)  # the hourly tick: not again within a day
     assert github["asked"] == asked
+    updater.set_how_often(updates.DAILY)
+    updater._maybe_look(started=True)  # once a day: a start soon after doesn't look
+    assert github["asked"] == asked
+    updater.set_how_often(updates.WEEKLY)
+    updater._own()["last"] = (datetime.now(UTC) - timedelta(days=3)).isoformat()
+    updater._maybe_look(started=True)
+    assert github["asked"] == asked  # three days: not a week yet
+    updater.set_how_often(updates.OFF)
     updater._own()["last"] = "2000-01-01T00:00:00+00:00"
-    updater.set_checks(False)  # Settings › Updates: Off
-    updater._maybe_look()
-    assert github["asked"] == asked and window.prefs["updates"]["check"] is False
+    updater._maybe_look(started=True)
+    assert github["asked"] == asked
+    assert "updates" not in window.prefs or "check" not in window.prefs["updates"]  # not per person
     dialog = window.settings_dialog()
-    assert dialog.general.updates.currentData() is False
-    dialog.general.updates.setCurrentIndex(0)  # Once a day
-    assert updater.checks()
+    choice = dialog.general.updates
+    assert choice.currentData() == updates.OFF and choice.isEnabled()
+    assert "everyone who uses CapyPanel on this PC" in " ".join(
+        label.text() for label in dialog.general.findChildren(QLabel)
+    )
+    choice.setCurrentIndex(choice.findData(updates.AT_START))
+    assert updater.how_often() == updates.AT_START
+    assert not (window.paths.company_tools_dir / updates.CHECK_FILE).exists()  # the default
     dialog.close()
 
 

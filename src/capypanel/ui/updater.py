@@ -1,7 +1,9 @@
-"""Updates in the app: a look at GitHub once a day (Settings can turn it off) and from Help ›
-Check for updates; an "Update 0.26.1" button at the right of the menu bar when there's one;
-and one window with the notes, Install and restart, Later and Skip this version, where the
-download's progress shows too. The download and the swap are core/updates.py's."""
+"""Updates in the app: a look at GitHub at every start by default (Settings › CapyPanel ›
+General › Updates: at every start, once a day, once a week or off, one choice for the whole
+PC) and from Help › Check for updates; an "Update 0.26.1" button at the right of the menu bar
+when there's one; and one window with the notes, Install and restart, Later and Skip this
+version, where the download's progress shows too. The download and the swap are
+core/updates.py's."""
 
 import logging
 import shutil
@@ -26,17 +28,16 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel import __version__
-from capypanel.core import updates
+from capypanel.core import files, updates
 from capypanel.core.i18n import _
 from capypanel.core.updates import Release, UpdateError
 from capypanel.ui import spacing
 
 log = logging.getLogger(__name__)
 
-PREFS_KEY = "updates"  # {"check": bool, "last": ISO time, "skip": "0.26.1"}
-EVERY = timedelta(days=1)
-FIRST_LOOK = 60_000  # ms after the start: the window is drawn and lists are open first
-TICK = 3_600_000  # ms between looks at whether a day has gone by
+PREFS_KEY = "updates"  # this person's: {"last": ISO time, "skip": "0.26.1"}
+FIRST_LOOK = 15_000  # ms after the start: the window is drawn and lists are open first
+TICK = 3_600_000  # ms between looks at whether it's time again
 
 
 def packaged() -> bool:
@@ -45,25 +46,28 @@ def packaged() -> bool:
 
 
 class Updater(QObject):
-    """Whether there's a newer release, kept as `offer`. Looks on its own only in the exe and
-    only when Settings allows, at most once a day."""
+    """Whether there's a newer release, kept as `offer`. Looks on its own only in the exe, as
+    often as this PC's choice says (`folder` holds it): by default soon after every start, then
+    once a day while CapyPanel stays open."""
 
     changed = Signal()  # `offer` changed: the menu bar's button follows
     looked = Signal(object, str)  # after a look: the release or None, and why it failed or ""
     _answer = Signal(object, str)  # from the thread that asked GitHub
 
-    def __init__(self, prefs: dict[str, Any], save: Callable[[], None], parent: QObject) -> None:
+    def __init__(
+        self, prefs: dict[str, Any], save: Callable[[], None], folder: Path, parent: QObject
+    ) -> None:
         super().__init__(parent)
-        self._prefs, self._save = prefs, save
+        self._prefs, self._save, self._folder = prefs, save, folder
         self.offer: Release | None = None
         self.looking = False
         self._answer.connect(self._answered)
         self._timer = QTimer(self)
         self._timer.setInterval(TICK)
-        self._timer.timeout.connect(self._maybe_look)
+        self._timer.timeout.connect(lambda: self._maybe_look(started=False))
         if packaged():
             self._timer.start()
-            QTimer.singleShot(FIRST_LOOK, self, self._maybe_look)
+            QTimer.singleShot(FIRST_LOOK, self, lambda: self._maybe_look(started=True))
 
     def _own(self) -> dict[str, Any]:
         kept = self._prefs.get(PREFS_KEY)
@@ -71,12 +75,18 @@ class Updater(QObject):
             kept = self._prefs[PREFS_KEY] = {}
         return kept
 
-    def checks(self) -> bool:
-        return self._own().get("check", True) is not False
+    def how_often(self) -> str:
+        """updates.AT_START, DAILY, WEEKLY or OFF, as chosen for this PC."""
+        return updates.check_of(self._folder)
 
-    def set_checks(self, on: bool) -> None:
-        self._own()["check"] = on
-        self._save()
+    def set_how_often(self, how: str) -> None:
+        """For everyone on this PC. Raises OSError where this person can't write it."""
+        updates.set_check(self._folder, how)
+        log.info("Update checks for this PC: %s", how)
+
+    def can_set(self) -> bool:
+        """Whether Windows lets this person change the choice for everyone on this PC."""
+        return files.can_create_files(self._folder)
 
     def skipped(self) -> str:
         skip = self._own().get("skip")
@@ -89,16 +99,19 @@ class Updater(QObject):
         self.offer = None
         self.changed.emit()
 
-    def _due(self) -> bool:
+    def _due(self, wait: timedelta) -> bool:
         last = self._own().get("last")
         try:
             when = datetime.fromisoformat(last) if isinstance(last, str) else None
         except ValueError:
             when = None
-        return when is None or datetime.now(UTC) - when >= EVERY
+        return when is None or datetime.now(UTC) - when >= wait
 
-    def _maybe_look(self) -> None:
-        if self.checks() and self._due():
+    def _maybe_look(self, *, started: bool) -> None:
+        how = self.how_often()
+        if how == updates.OFF:
+            return
+        if (started and how == updates.AT_START) or self._due(updates.WAIT[how]):
             self.look(asked=False)
 
     def look(self, *, asked: bool) -> None:

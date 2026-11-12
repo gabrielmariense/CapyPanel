@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
         row.addWidget(self._pages, 1)
         self.setCentralWidget(central)
 
-        self.updater = Updater(self.prefs, self.save_prefs, self)
+        self.updater = Updater(self.prefs, self.save_prefs, self.paths.company_tools_dir, self)
         self.guides = GuideRunner(self, seen_from(self.prefs), self.save_prefs, _docs_page)
         self._tools_agreed = False  # an update asked the tools already: closing asks no more
         self._build_menus()
@@ -390,7 +390,8 @@ class MainWindow(QMainWindow):
             groups=groups,
             tools=self._infos(),
             start=start if isinstance(start, str) else settings.START_HOME,
-            updates=self.updater.checks(),
+            updates=self.updater.how_often(),
+            updates_editable=self.updater.can_set(),
             # What's saved, so the page shows it, and picking "Ask" again is a change it saves.
             closing=closing if isinstance(closing, str) else settings.CLOSE_ASK,
         )
@@ -398,10 +399,18 @@ class MainWindow(QMainWindow):
         dialog.theme_picked.connect(self.set_theme)
         dialog.start_picked.connect(self._set_start)
         dialog.closing_picked.connect(self._set_closing)
-        dialog.updates_picked.connect(self.updater.set_checks)
+        dialog.updates_picked.connect(lambda how: self._set_update_checks(how, dialog))
         dialog.about.updates_button.clicked.connect(lambda: self.open_updates(dialog))
         dialog.about.guides_button.clicked.connect(self.show_all_guides_again)
         return dialog
+
+    def _set_update_checks(self, how: str, dialog: SettingsDialog) -> None:
+        try:
+            self.updater.set_how_often(how)
+        except OSError as e:
+            dialog.general.show_updates(self.updater.how_often())
+            text = _("Couldn't save how often to check: {error}").format(error=e)
+            QMessageBox.warning(dialog, _("Settings"), text)
 
     def _set_start(self, start: str) -> None:
         self.prefs[settings.START_KEY] = start

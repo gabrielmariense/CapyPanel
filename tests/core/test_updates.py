@@ -293,3 +293,24 @@ def test_github_s_certificate_is_checked_without_python_s_strict_mode(
     (context,) = contexts
     assert context.verify_mode == ssl.CERT_REQUIRED and context.check_hostname
     assert not context.verify_flags & ssl.VERIFY_X509_STRICT
+
+
+def test_how_often_is_one_choice_for_the_whole_pc(tmp_path: Path) -> None:
+    folder = tmp_path / "tools"
+    assert updates.check_of(folder) == updates.AT_START  # nothing chosen yet
+    updates.set_check(folder, updates.WEEKLY)
+    assert updates.check_of(folder) == updates.WEEKLY
+    (folder / updates.CHECK_FILE).write_text('{"check": "hourly"}', encoding="utf-8")
+    assert updates.check_of(folder) == updates.AT_START  # nothing it knows: the default
+    updates.set_check(folder, updates.AT_START)
+    assert not (folder / updates.CHECK_FILE).exists()
+    with pytest.raises(ValueError):
+        updates.set_check(folder, "hourly")
+
+
+def test_another_user_s_file_doesn_t_turn_checks_off(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    updates.set_check(tmp_path, updates.OFF)
+    monkeypatch.setattr(updates.winsec, "made_by_trusted", lambda path: False)
+    assert updates.check_of(tmp_path) == updates.AT_START
