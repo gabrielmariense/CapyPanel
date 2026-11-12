@@ -424,6 +424,11 @@ def _united(spots: Sequence[QRect]) -> QRect:
     return whole
 
 
+def _covered(card: QRect, avoid: Sequence[QRect]) -> int:
+    """How much of `avoid` the card would hide, in square pixels."""
+    return sum(card.intersected(a).width() * card.intersected(a).height() for a in avoid)
+
+
 def _card_spot(
     spot: QRect, width: int, height: int, room: QRect, avoid: Sequence[QRect] = ()
 ) -> QPoint:
@@ -442,10 +447,13 @@ def _card_spot(
         QPoint(inner.right() - width, inner.top()),
         QPoint(inner.left(), inner.top()),
     )
-    for point in tries:
+    inside = [p for p in tries if inner.contains(QRect(p.x(), p.y(), width, height))]
+    for point in inside:
         card = QRect(point.x(), point.y(), width, height)
-        if inner.contains(card) and not any(card.intersects(a) for a in avoid):
+        if not any(card.intersects(a) for a in avoid):
             return point
+    if inside and avoid:  # nowhere free: where it covers the least of what it mustn't
+        return min(inside, key=lambda p: _covered(QRect(p.x(), p.y(), width, height), avoid))
     # Nowhere fits whole: as close as the window allows, over the spot if need be.
     x = min(max(tries[0].x(), inner.left()), inner.right() - width)
     y = min(max(spot.top(), inner.top()), inner.bottom() - height)

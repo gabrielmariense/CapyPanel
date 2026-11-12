@@ -243,3 +243,15 @@ def test_a_card_keeps_clear_of_the_panel_it_talks_about() -> None:
     point = guides._card_spot(spot, 300, 150, room, [spot, details])
     card = QRect(point.x(), point.y(), 300, 150)
     assert room.contains(card) and not card.intersects(details) and not card.intersects(spot)
+
+
+def test_with_no_free_place_the_card_hides_the_least_it_can() -> None:
+    room = QRect(0, 0, 1000, 700)
+    table = QRect(300, 80, 400, 600)  # what it points at
+    details = QRect(720, 0, 280, 700)  # a panel it must keep clear of
+    point = guides._card_spot(table, 360, 150, room, [table, details])
+    card = QRect(point.x(), point.y(), 360, 150)
+    beside = QRect(table.right() + guides.GAP + guides.OUTLINE, table.top(), 360, 150)
+    assert room.contains(card)
+    assert guides._covered(card, [table, details]) < guides._covered(beside, [table, details])
+    assert not card.intersects(details)  # the narrow left side, over a corner of the table
