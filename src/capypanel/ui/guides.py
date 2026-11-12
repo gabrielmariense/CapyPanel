@@ -8,7 +8,6 @@ While a guide runs the rest of the window is dimmed and takes no clicks or keys:
 card's buttons, and the control a step asks you to click. A card whose control is out of sight
 (a hidden panel, a narrow window) still shows, beside the part of the screen it belongs to."""
 
-import contextlib
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
@@ -250,6 +249,8 @@ class GuideRunner(QObject):
         self.card.back.connect(lambda: self._go(self._at - 1))
         self.card.next.connect(self._next)
         self.card.skip.connect(self._end)
+        self._action: Callable[[], None] | None = None  # the step's own button, if it has one
+        self.card.action.clicked.connect(lambda: self._action() if self._action else None)
         self._follow = QTimer(self)  # a scrolled table, a panel that filled in: follow them
         self._follow.setInterval(FOLLOW_MS)
         self._follow.timeout.connect(self._place)
@@ -314,12 +315,9 @@ class GuideRunner(QObject):
             text += f'<br><br><a href="{link}">{_("More in the documentation")}</a>'
         card.text.setText(text)
         card.action.setVisible(step.action is not None)
+        self._action = step.action[1] if step.action is not None else None
         if step.action is not None:
-            words, does = step.action
-            card.action.setText(words)
-            with contextlib.suppress(RuntimeError, TypeError):  # nothing connected yet
-                card.action.clicked.disconnect()
-            card.action.clicked.connect(does)
+            card.action.setText(step.action[0])
         card.dots.setText(" ".join("●" if n == at else "○" for n in range(len(self._steps))))
         card.dots.setToolTip(_("Step {n} of {total}").format(n=at + 1, total=len(self._steps)))
         card.back_button.setVisible(at > 0)
