@@ -21,7 +21,7 @@ from capypanel.ui.guides import Guide, Step
 from capypanel.ui.hosts import group_path
 from capypanel.ui.list_workspace.customize import Part
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
-from capypanel.ui.list_workspace.workspace import ListWorkspace
+from capypanel.ui.list_workspace.workspace import SAMPLE_ID, ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 from capypanel.ui.printers_tool import marks, status
 from capypanel.ui.printers_tool.actions import create_actions, retranslate_actions
@@ -245,9 +245,10 @@ class PrintersTool(ListWorkspace):
         super().retranslate()
 
     def guide(self) -> Guide:
-        """Its whole guide, every time: lists, adding, the table and Details, Refresh, what
-        Status and Toner say, the warnings, Refresh on its own and, last, the SNMP account for
-        when nothing shows up. No step asks for a click."""
+        """Its whole guide, every time, with a sample printer to point at: lists, tags, adding,
+        the table and Details, Refresh, what Status and Toner say, the warnings, Refresh on its
+        own and the SNMP account for when nothing shows up (the window adds View last). No step
+        asks for a click."""
         bar, table = self.toolbar, self.table
 
         def status_and_toner() -> QRect | None:  # both columns, titles and cells, as one box
@@ -276,8 +277,12 @@ class PrintersTool(ListWorkspace):
             return [
                 Step(_("Your printer lists"),
                      _("Pick the list here: the shared one everyone on this PC sees, your "
-                       "personal one, or one you add. Groups and tags are below it: a click "
-                       "shows only their printers."), lambda: self.nav),
+                       "personal one, or one you add. Its groups are below it: a click on one "
+                       "shows only its printers."), lambda: self.nav),
+                Step(_("Tags"),
+                     _("Tags mark printers across groups, like this sample printer's \"{tag}\". "
+                       "Pick one or several to show only the printers that carry them.").format(
+                         tag=_("sample")), lambda: self.nav.tags),
                 Step(_("Add printers"),
                      _("Inventory › Add printer… adds one: a name and its address are enough. "
                        "The brand, model, serial number and toner are read from the printer."),
@@ -311,7 +316,14 @@ class PrintersTool(ListWorkspace):
                      lambda: None, lambda: table, action=settings("printer_connecting")),
             ]  # fmt: skip
 
-        return Guide("printers", steps, docs="printers/checking/")
+        return Guide("printers", steps, docs="printers/checking/", setup=self.show_sample,
+                     cleanup=self.hide_sample)  # fmt: skip
+
+    def sample_item(self, group: str) -> Host:
+        """The guides' sample printer: a documentation address (192.0.2.x) that never answers,
+        and never asked: Refresh and Open web page leave SAMPLE_ID out."""
+        return Host(id=SAMPLE_ID, name=_("PRN-SAMPLE"), group=group, address="192.0.2.20",
+                    tags=(_("sample"),), notes=_("Shown only while a guide is open."))  # fmt: skip
 
     def restyle(self) -> None:
         """After a theme switch: the dots, swatches, bars, Details and the strip were drawn in
@@ -603,7 +615,7 @@ class PrintersTool(ListWorkspace):
     def open_web_pages(self) -> None:
         """The selected printers' web pages in the default browser, at most 10 at once. Only
         the address is handed over: nothing is fetched or signed into here."""
-        printers = self.selected_items()
+        printers = [p for p in self.selected_items() if p.id != SAMPLE_ID]  # never opened
         if not printers:
             return
         pages = [(p, web_page(p)) for p in printers[:WEB_PAGES_AT_ONCE]]
@@ -758,6 +770,7 @@ class PrintersTool(ListWorkspace):
 
     def check_printers(self, printers: Sequence[Host], *, quiet: bool = False) -> None:
         """One SNMP read per printer, a few at a time; a printer with no address uses its name."""
+        printers = [p for p in printers if p.id != SAMPLE_ID]  # a guide's sample: never read
         if self._run is not None or not printers:
             return
         secret = community() if self.snmp_version() == V2C else v3_account()

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:37-0300\n"
+"POT-Creation-Date: 2026-11-12 13:42-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2695,6 +2695,9 @@ msgstr ""
 msgid "PC facts · {when}"
 msgstr ""
 
+msgid "PRN-SAMPLE"
+msgstr ""
+
 msgid "PROGRESS"
 msgstr ""
 
@@ -2769,14 +2772,14 @@ msgstr ""
 
 msgid ""
 "Pick the list here: the shared one everyone on this PC sees, your "
-"personal one, or one you add. Groups and tags are below it: a click shows"
-" only their printers."
+"personal one, or one you add. Its groups are below it: a click on one "
+"shows only its hosts."
 msgstr ""
 
 msgid ""
 "Pick the list here: the shared one everyone on this PC sees, your "
 "personal one, or one you add. Its groups are below it: a click on one "
-"shows only its hosts."
+"shows only its printers."
 msgstr ""
 
 #, python-brace-format
@@ -3698,6 +3701,12 @@ msgstr ""
 msgid ""
 "Tags mark hosts across groups, like this sample PC's \"{tag}\". Pick one "
 "or several to show only the hosts that carry them."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Tags mark printers across groups, like this sample printer's \"{tag}\". "
+"Pick one or several to show only the printers that carry them."
 msgstr ""
 
 #, python-brace-format

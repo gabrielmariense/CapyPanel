@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:37-0300\n"
+"POT-Creation-Date: 2026-11-12 13:42-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -2582,6 +2582,9 @@ msgstr "Dados do PC · lendo…"
 msgid "PC facts · {when}"
 msgstr "Dados do PC · {when}"
 
+msgid "PRN-SAMPLE"
+msgstr "PRN-EXEMPLO"
+
 msgid "PROGRESS"
 msgstr "ANDAMENTO"
 
@@ -2652,11 +2655,11 @@ msgstr "Escolha um PC"
 msgid "Pick hosts in the list first"
 msgstr "Selecione hosts na lista primeiro"
 
-msgid "Pick the list here: the shared one everyone on this PC sees, your personal one, or one you add. Groups and tags are below it: a click shows only their printers."
-msgstr "Escolha a lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você criar. Os grupos e as tags ficam embaixo: um clique mostra só as impressoras deles."
-
 msgid "Pick the list here: the shared one everyone on this PC sees, your personal one, or one you add. Its groups are below it: a click on one shows only its hosts."
 msgstr "Escolha a lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você criar. Os grupos dela ficam embaixo: um clique num deles mostra só os hosts dele."
+
+msgid "Pick the list here: the shared one everyone on this PC sees, your personal one, or one you add. Its groups are below it: a click on one shows only its printers."
+msgstr "Escolha a lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você criar. Os grupos dela ficam embaixo: um clique num deles mostra só as impressoras dele."
 
 #, python-brace-format
 msgid "Picked tags: {tags}"
@@ -3546,6 +3549,10 @@ msgstr "Tags das linhas selecionadas, separadas por ;"
 #, python-brace-format
 msgid "Tags mark hosts across groups, like this sample PC's \"{tag}\". Pick one or several to show only the hosts that carry them."
 msgstr "As tags marcam hosts em qualquer grupo, como a \"{tag}\" deste PC de exemplo. Escolha uma ou várias para ver só os hosts que as têm."
+
+#, python-brace-format
+msgid "Tags mark printers across groups, like this sample printer's \"{tag}\". Pick one or several to show only the printers that carry them."
+msgstr "As tags marcam impressoras em qualquer grupo, como a \"{tag}\" desta impressora de exemplo. Escolha uma ou várias para ver só as impressoras que as têm."
 
 #, python-brace-format
 msgid "Tags: {tags}"

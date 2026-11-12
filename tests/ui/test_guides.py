@@ -16,6 +16,8 @@ from capypanel.ui import guides
 from capypanel.ui.guides import Guide, Step
 from capypanel.ui.list_workspace.workspace import SAMPLE_ID
 from capypanel.ui.main_window import window as window_module
+from capypanel.ui.printers_tool import tool as printer_tool_module
+from capypanel.ui.printers_tool.tool import PrintersTool
 from capypanel.ui.profiles_tool import first_use
 from capypanel.ui.profiles_tool.tool import ProfilesTool
 
@@ -283,6 +285,38 @@ def test_the_hosts_guide_shows_a_sample_pc_that_is_never_saved_or_read(
         window.guides.card.next_button.click()
     assert "Tags" in titles and titles[-1] == "View"  # every tool's guide ends on View
     assert not hosts.sample_shown() and hosts.document.hosts.host(SAMPLE_ID) is None  # type: ignore[union-attr]
+    assert doc.path.read_bytes() == saved  # the file never had it
+
+
+def test_the_printers_guide_shows_a_sample_printer_that_is_never_saved_or_read(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    printers = window.tools["printers"]
+    assert isinstance(printers, PrintersTool)
+    window.show_tool("printers")
+    doc = printers.document
+    assert doc is not None
+    saved = doc.path.read_bytes()
+    runs: list[object] = []
+    monkeypatch.setattr(printer_tool_module, "PrinterRun", lambda *a, **k: runs.append(a))
+    opened: list[object] = []
+    monkeypatch.setattr(printer_tool_module.QDesktopServices, "openUrl", opened.append)
+    window.commands.show_guide.trigger()
+    _settle()
+    assert printers.sample_shown() and printers.table.selected_ids() == [SAMPLE_ID]
+    sample = printers.document.hosts.host(SAMPLE_ID)  # type: ignore[union-attr]
+    assert sample is not None and sample.address.startswith("192.0.2.") and sample.tags
+    assert printers.nav.tags.topLevelItemCount() >= 1  # its tag, for the Tags card
+    printers.check_printers([sample])  # Refresh, the button's or the one on its own
+    printers.open_web_pages()  # Web page, a double-click, Enter
+    assert runs == [] and opened == []  # nothing ever reaches its address
+    titles = []
+    while not window.guides.card.isHidden():
+        titles.append(window.guides.card.title.text())
+        window.guides.card.next_button.click()
+    assert titles[:2] == ["Your printer lists", "Tags"] and titles[-1] == "View"
+    assert not printers.sample_shown()
+    assert printers.document.hosts.host(SAMPLE_ID) is None  # type: ignore[union-attr]
     assert doc.path.read_bytes() == saved  # the file never had it
 
 

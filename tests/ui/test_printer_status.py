@@ -263,32 +263,34 @@ def test_the_printers_guide_points_at_the_real_controls(
     assert guide.guide_id == "printers" and guide.docs == "printers/checking/"
     assert (Path("docs") / "printers" / "checking.md").exists()
     titles = [
-        "Your printer lists", "Add printers", "Your printers", "Refresh all", "Status and Toner",
-        "Printers that need attention", "Refresh on its own", "If nothing shows up",
+        "Your printer lists", "Tags", "Add printers", "Your printers", "Refresh all",
+        "Status and Toner", "Printers that need attention", "Refresh on its own",
+        "If nothing shows up",
     ]  # fmt: skip
     steps = list(guide.steps())
     assert [s.title for s in steps] == titles
     assert not any(s.click for s in steps)  # no step asks for a click
-    assert steps[1].target() is printers.toolbar.inventory_button
-    assert steps[2].target() is printers.table
-    assert steps[2].keep_clear() is printers.details  # it talks about Details: never on it
-    assert steps[3].target() is printers.toolbar.refresh_button
-    for step, page in zip(steps[6:], ("printer_warnings", "printer_connecting"), strict=True):
+    assert steps[1].target() is printers.nav.tags
+    assert steps[2].target() is printers.toolbar.inventory_button
+    assert steps[3].target() is printers.table
+    assert steps[3].keep_clear() is printers.details  # it talks about Details: never on it
+    assert steps[4].target() is printers.toolbar.refresh_button
+    for step, page in zip(steps[7:], ("printer_warnings", "printer_connecting"), strict=True):
         assert step.action is not None
         step.action[1]()
         assert printers._shell.settings_pages[-1] == page  # type: ignore[attr-defined]
     printers.resize(1280, 720)
     printers.show()
     QApplication.processEvents()
-    box = steps[4].area()  # the Status and Toner columns, titles and cells
+    box = steps[5].area()  # the Status and Toner columns, titles and cells
     table = printers.table
     assert box is not None
     assert box.width() == table.columnWidth(table.STATUS) + table.columnWidth(table.TONER)
     table.hideColumn(table.STATUS)
-    box = steps[4].area()
+    box = steps[5].area()
     assert box is not None and box.width() == table.columnWidth(table.TONER)
     table.hideColumn(table.TONER)
-    assert steps[4].area() is None  # neither shows: the card sits beside the table instead
+    assert steps[5].area() is None  # neither shows: the card sits beside the table instead
     empty = tmp_path / "empty.json"  # an empty list gets the whole guide too
     listfile.save(empty, HostList(), expected=None, kind="printers")
     assert printers.open_list(empty)
