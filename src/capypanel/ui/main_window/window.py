@@ -53,6 +53,7 @@ from capypanel.ui.tool_catalog import CATALOG, ToolInfo
 from capypanel.ui.updater import Updater
 
 log = logging.getLogger(__name__)
+OFFER_RETRY_MS = 2000  # a found update waits this long between tries while something is in the way
 
 
 class MainWindow(QMainWindow):
@@ -111,6 +112,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
 
         self.updater = Updater(self.prefs, self.save_prefs, self.paths.company_tools_dir, self)
+        self._update_shown = ""  # the version whose window opened in this run: once is enough
         self.guides = GuideRunner(self, seen_from(self.prefs), self.save_prefs, _docs_page)
         self._tools_agreed = False  # an update asked the tools already: closing asks no more
         self._build_menus()
@@ -314,6 +316,7 @@ class MainWindow(QMainWindow):
         a.show_guide.triggered.connect(lambda: self._guide_now(force=True))
         a.show_all_guides.triggered.connect(self.show_all_guides_again)
         self.updater.changed.connect(self._show_update_button)
+        self.updater.found.connect(self._offer_update)
         a.show_toolbar.toggled.connect(self._show_toolbars)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
 
@@ -532,11 +535,27 @@ class MainWindow(QMainWindow):
         """The update window: the release on offer, or a look at GitHub first."""
         from capypanel.ui.updater import UpdateWindow
 
+        if self.updater.offer is not None:
+            self._update_shown = self.updater.offer.version
         window = UpdateWindow(
             parent or self, self.updater, app_dir=settings.app_dir(),
             working=self.tools_working, quit_for_update=self.quit_for_update,
         )  # fmt: skip
         run_modal(window)
+        if window._release is not None:  # found while it was open
+            self._update_shown = window._release.version
+
+    def _offer_update(self) -> None:
+        """A newer release, found on its own: its window opens, once per run, when nothing
+        else is in the way (a guide, another window, CapyPanel in the tray)."""
+        offer = self.updater.offer
+        if offer is None or offer.version == self._update_shown or self._quitting:
+            return
+        busy = bool(self.guides.running) or QApplication.activeModalWidget() is not None
+        if busy or not on_screen(self):
+            QTimer.singleShot(OFFER_RETRY_MS, self, self._offer_update)
+            return
+        self.open_updates()
 
     def _show_update_button(self) -> None:
         from capypanel.ui.updater import button_text
@@ -651,14 +670,10 @@ class MainWindow(QMainWindow):
         """After the update's helper started CapyPanel again: what happened, and its leftovers
         cleared once the new version is running."""
         from capypanel.core import updates
-        from capypanel.ui.updater import restart_text
+        from capypanel.ui.updater import RestartWindow, restart_text
 
-        text = restart_text(kind, version, why)
-        log.info("%s", text)
-        if kind == "updated":
-            self.statusBar().showMessage(text, 15_000)
-        else:
-            QMessageBox.warning(self, "CapyPanel", text)
+        log.info("%s", restart_text(kind, version, why))
+        run_modal(RestartWindow(self, kind, version, why, self.updater.take_installed()))
         QTimer.singleShot(
             30_000, self,
             lambda: threading.Thread(target=updates.clean_up, args=(settings.app_dir(),),

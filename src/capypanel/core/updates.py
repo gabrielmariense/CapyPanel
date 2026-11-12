@@ -107,6 +107,22 @@ def zip_name(version: str) -> str:
     return f"{APP}-{version}-windows-x64.zip"
 
 
+def notes_in(notes: str, language: str) -> str:
+    """The part of a release's notes under "## <language>", the language named in itself as
+    i18n.LANGUAGES has it ("## English", "## Português (Brasil)"), without that heading; all
+    of the notes when they have no such part."""
+    lines = notes.splitlines()
+    start: int | None = None
+    for i, line in enumerate(lines):
+        if not line.startswith("## "):
+            continue
+        if start is not None:  # the next language's part ends this one
+            return "\n".join(lines[start:i]).strip()
+        if line[3:].strip() == language:
+            start = i + 1
+    return "\n".join(lines[start:]).strip() if start is not None else notes
+
+
 # ---- how often CapyPanel looks: one choice for everyone on this PC ----
 
 CHECK_FILE = "_updates.json"  # beside _reads.json, in the folder for everyone on this PC

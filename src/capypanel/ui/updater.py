@@ -1,9 +1,10 @@
 """Updates in the app: a look at GitHub at every start by default (Settings › CapyPanel ›
 General › Updates: at every start, once a day, once a week or off, one choice for the whole
-PC) and from Help › Check for updates; an "Update 0.26.1" button at the right of the menu bar
-when there's one; and one window with the notes, Install and restart, Later and Skip this
-version, where the download's progress shows too. The download and the swap are
-core/updates.py's."""
+PC) and from Help › Check for updates; one window with the notes (in the app's language),
+Install and restart, Later and Skip this version, where the download's progress shows too,
+opened on its own when a look finds a newer release, and an "Update 0.26.1" button at the
+right of the menu bar for later; after the restart, a window saying it's installed or why
+not. The download and the swap are core/updates.py's."""
 
 import logging
 import shutil
@@ -28,15 +29,15 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel import __version__
-from capypanel.core import files, updates
+from capypanel.core import files, i18n, updates
 from capypanel.core.i18n import _
 from capypanel.core.updates import Release, UpdateError
 from capypanel.ui import spacing
 
 log = logging.getLogger(__name__)
 
-PREFS_KEY = "updates"  # this person's: {"last": ISO time, "skip": "0.26.1"}
-FIRST_LOOK = 15_000  # ms after the start: the window is drawn and lists are open first
+PREFS_KEY = "updates"  # this person's: {"last": ISO time, "skip": "0.26.1", "installed": …}
+FIRST_LOOK = 1_000  # ms after the start: the window is drawn first; GitHub answers in a thread
 TICK = 3_600_000  # ms between looks at whether it's time again
 
 
@@ -51,6 +52,7 @@ class Updater(QObject):
     once a day while CapyPanel stays open."""
 
     changed = Signal()  # `offer` changed: the menu bar's button follows
+    found = Signal()  # a look of its own found a newer release: the window opens for it
     looked = Signal(object, str)  # after a look: the release or None, and why it failed or ""
     _answer = Signal(object, str)  # from the thread that asked GitHub
 
@@ -99,6 +101,21 @@ class Updater(QObject):
         self.offer = None
         self.changed.emit()
 
+    def remember_install(self, release: Release) -> None:
+        """Kept through the restart, so the new version can say what it brought."""
+        self._own()["installed"] = {"version": release.version, "notes": release.notes,
+                                    "page": release.page_url}  # fmt: skip
+        self._save()
+
+    def take_installed(self) -> dict[str, str]:
+        """What remember_install kept, once: {} when nothing was."""
+        kept = self._own().pop("installed", None)
+        if kept is not None:
+            self._save()
+        if not isinstance(kept, dict):
+            return {}
+        return {k: v for k, v in kept.items() if isinstance(k, str) and isinstance(v, str)}
+
     def _due(self, wait: timedelta) -> bool:
         last = self._own().get("last")
         try:
@@ -146,6 +163,8 @@ class Updater(QObject):
         if self.offer != before:
             self.changed.emit()
         self.looked.emit(release if newer else None, error)
+        if self.offer is not None and not self._asked:
+            self.found.emit()
 
 
 class _Job(QObject):
@@ -194,7 +213,17 @@ class _Job(QObject):
         self.ended.emit(str(new_app), "")
 
 
-NOTES_HEIGHT = 480  # the window's height with release notes to read
+NOTES_HEIGHT = 480  # the most a window grows to show release notes; longer ones scroll
+
+
+def fit_to_notes(window: QWidget, notes: QTextBrowser) -> None:
+    """Tall enough for the notes it shows, up to NOTES_HEIGHT: short notes leave no empty box.
+    Called once the window is laid out, so the notes' width is known."""
+    page = notes.document()
+    page.setTextWidth(notes.viewport().width())
+    wanted = round(page.size().height()) + 2 * notes.frameWidth() + 4
+    height = window.height() + wanted - notes.height()
+    window.resize(window.width(), max(min(height, NOTES_HEIGHT), window.minimumSizeHint().height()))
 
 
 class UpdateWindow(QDialog):
@@ -222,7 +251,7 @@ class UpdateWindow(QDialog):
         self.line.setWordWrap(True)
         self.notes = QTextBrowser()
         self.notes.setOpenExternalLinks(True)
-        self.notes.setMinimumHeight(160)
+        self.notes.setMinimumHeight(60)
         self.page = QLabel()
         self.page.setOpenExternalLinks(True)
         self.progress = QProgressBar()
@@ -293,7 +322,7 @@ class UpdateWindow(QDialog):
         self.heading.setText(_("CapyPanel {new} is out").format(new=release.version))
         self.line.setText(_("You have {current}. Your settings, lists and saved logins stay as "
                             "they are.").format(current=__version__))  # fmt: skip
-        self.notes.setMarkdown(release.notes or _("No notes for this release."))
+        self.notes.setMarkdown(notes_here(release.notes) or _("No notes for this release."))
         self.page.setText(
             f'<a href="{escape(release.page_url)}">{escape(_("The release on GitHub"))}</a>'
         )
@@ -325,13 +354,12 @@ class UpdateWindow(QDialog):
 
     def _fit(self, notes: bool) -> None:
         """Tall enough for the release notes; without them, just its few lines."""
-        layout = self.layout()
         if notes:
-            height = max(self.height(), NOTES_HEIGHT)
-        else:
-            height = layout.heightForWidth(self.width()) if layout is not None else -1
-            height = max(height, self.minimumSizeHint().height())
-        self.resize(self.width(), height)
+            fit_to_notes(self, self.notes)
+            return
+        layout = self.layout()
+        height = layout.heightForWidth(self.width()) if layout is not None else -1
+        self.resize(self.width(), max(height, self.minimumSizeHint().height()))
 
     def _failed(self, heading: str, why: str) -> None:
         self.heading.setText(heading)
@@ -403,7 +431,9 @@ class UpdateWindow(QDialog):
             log.info("Update: handing over to %s", args[0])
             updates.start(Path(args[0]), *args[1:], splash=False)
 
+        self._updater.remember_install(release)
         if not self._quit_for_update(start_helper):
+            self._updater.take_installed()
             self.status.setText(_("Not installed: CapyPanel stays open. Install again when "
                                   "you're ready."))  # fmt: skip
             self.install.setEnabled(True)
@@ -429,7 +459,79 @@ class UpdateWindow(QDialog):
         super().done(result)
 
 
+def notes_here(notes: str) -> str:
+    """A release's notes in the language CapyPanel is shown in, when they have that part."""
+    return updates.notes_in(notes, i18n.LANGUAGES.get(i18n.language(), ""))
+
+
 # ---- after a restart ----
+
+
+class RestartWindow(QDialog):
+    """After the helper started CapyPanel again: the new version is in, with its notes, or
+    why it didn't go in."""
+
+    def __init__(
+        self, parent: QWidget, kind: str, version: str, why: str, installed: dict[str, str]
+    ) -> None:
+        super().__init__(parent)
+        self.setWindowTitle(_("Update CapyPanel"))
+        self.heading = QLabel()
+        self.heading.setObjectName("sectionTitle")
+        self.heading.setWordWrap(True)
+        self.line = QLabel()
+        self.line.setWordWrap(True)
+        self.notes = QTextBrowser()
+        self.notes.setOpenExternalLinks(True)
+        self.notes.setMinimumHeight(60)
+        self.page = QLabel()
+        self.page.setOpenExternalLinks(True)
+        close = QPushButton(_("Close"))
+        close.setDefault(True)
+        close.clicked.connect(self.accept)
+        buttons = QHBoxLayout()
+        buttons.addStretch(1)
+        buttons.addWidget(close)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(*(spacing.WINDOW,) * 4)
+        layout.setSpacing(spacing.CONTROLS)
+        layout.addWidget(self.heading)
+        layout.addWidget(self.line)
+        layout.addWidget(self.notes, 1)
+        layout.addWidget(self.page)
+        layout.addStretch(0)
+        layout.addLayout(buttons)
+        notes = ""
+        if kind == "updated":
+            self.heading.setText(_("CapyPanel {new} is installed").format(new=__version__))
+            self.line.setText(_("Updated from {old}. Your settings, lists and saved logins are "
+                                "as they were.").format(old=version))  # fmt: skip
+            if installed.get("version") == __version__:
+                notes = notes_here(installed.get("notes", ""))
+                url = installed.get("page", "")
+                if url.startswith("https://"):
+                    link = escape(_("The release on GitHub"))
+                    self.page.setText(f'<a href="{escape(url)}">{link}</a>')
+        else:
+            self.heading.setText(_("The update to {new} didn't go in").format(new=version))
+            self.line.setText(_("This is still CapyPanel {current}: {why}").format(
+                current=__version__, why=why))  # fmt: skip
+            self.page.setText(
+                f'<a href="{updates.RELEASES_URL}">{escape(_("Releases on GitHub"))}</a>'
+            )
+        self.notes.setMarkdown(notes)
+        self.notes.setVisible(bool(notes))
+        self.page.setVisible(bool(self.page.text()))
+        self.resize(620 if notes else 520, NOTES_HEIGHT)
+        QTimer.singleShot(0, self, lambda: self._fit(bool(notes)))
+
+    def _fit(self, notes: bool) -> None:
+        if notes:
+            fit_to_notes(self, self.notes)
+            return
+        layout = self.layout()
+        height = layout.heightForWidth(self.width()) if layout is not None else -1
+        self.resize(self.width(), max(height, self.minimumSizeHint().height()))
 
 
 def after_restart(argv: list[str]) -> tuple[str, str, str] | None:

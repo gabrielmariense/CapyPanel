@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 16:15-0300\n"
+"POT-Creation-Date: 2026-11-12 18:13-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -882,6 +882,10 @@ msgstr "O CapyPanel reúne numa janela só os computadores e as impressoras sob 
 
 msgid "CapyPanel reads printers over SNMP and never changes anything on them. Most answer to the community \"public\". If yours use another one, or SNMP v3, set it in Settings › Printers › Connecting."
 msgstr "O CapyPanel lê as impressoras por SNMP e nunca muda nada nelas. A maioria responde à comunidade \"public\". Se as suas usam outra, ou SNMP v3, ajuste em Configurações › Impressoras › Conexão."
+
+#, python-brace-format
+msgid "CapyPanel {new} is installed"
+msgstr "O CapyPanel {new} foi instalado"
 
 #, python-brace-format
 msgid "CapyPanel {new} is out"
@@ -3870,6 +3874,10 @@ msgid "The tool's “id” must be lowercase letters, digits, - or _."
 msgstr "O “id” da ferramenta deve ter só letras minúsculas, dígitos, - ou _."
 
 #, python-brace-format
+msgid "The update to {new} didn't go in"
+msgstr "A atualização para a {new} não foi instalada"
+
+#, python-brace-format
 msgid "The update to {new} didn't go in, so this is still {current}: {why}"
 msgstr "A versão {new} não foi instalada, então esta continua sendo a {current}: {why}"
 
@@ -3983,6 +3991,10 @@ msgstr "Este grupo está vazio."
 
 msgid "This is <b>final</b>. With local profiles, each person's desktop and documents go too: there's no recycle bin and no copy."
 msgstr "Isto é <b>definitivo</b>. Com perfis locais, a área de trabalho e os documentos de cada pessoa vão junto: não há lixeira nem cópia."
+
+#, python-brace-format
+msgid "This is still CapyPanel {current}: {why}"
+msgstr "Este continua sendo o CapyPanel {current}: {why}"
 
 #, python-brace-format
 msgid "This is the sample PC's tab. Each row is one user's folder on {host}, with when it was last used and how big it is."
@@ -4217,6 +4229,10 @@ msgstr "Nova versão {version}"
 #, python-brace-format
 msgid "Updated from {old} to {new}."
 msgstr "Instalada a versão {new} (antes era a {old})."
+
+#, python-brace-format
+msgid "Updated from {old}. Your settings, lists and saved logins are as they were."
+msgstr "Atualizado a partir da {old}. Suas configurações, listas e logins salvos continuam como estavam."
 
 msgid "Updates"
 msgstr "Novas versões"
