@@ -414,3 +414,31 @@ def test_back_works_with_a_real_click_through_the_window(window: CapyWindow) -> 
     click(card.back_button)
     assert card.title.text() == "Three tools"
     runner.stop()
+
+
+def test_back_still_clicks_when_the_window_gets_the_focus_during_the_press(
+    window: CapyWindow,
+) -> None:
+    from PySide6.QtGui import QFocusEvent
+    from PySide6.QtTest import QTest
+
+    runner = window.guides
+    runner.show(window._home_guide())
+    _settle()
+    card = runner.card
+    card.next_button.click()
+    card.next_button.click()
+    assert card.title.text() == "The sidebar"
+    spot = card.back_button.mapTo(window, card.back_button.rect().center())
+    handle = window.windowHandle()
+    QTest.mousePress(handle, Qt.MouseButton.LeftButton, pos=spot)
+    # On a real screen, Windows gives the window itself the focus as it's clicked: that must
+    # not take the focus from the button being pressed, which would un-press it.
+    QApplication.sendEvent(
+        handle, QFocusEvent(QEvent.Type.FocusIn, Qt.FocusReason.MouseFocusReason)
+    )
+    _settle()
+    QTest.mouseRelease(handle, Qt.MouseButton.LeftButton, pos=spot)  # no move in between
+    _settle()
+    assert card.title.text() == "Three tools"
+    runner.stop()

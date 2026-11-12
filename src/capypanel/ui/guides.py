@@ -446,9 +446,23 @@ class GuideRunner(QObject):
             return blocked
         if kind in (QEvent.Type.KeyPress, QEvent.Type.KeyRelease):
             return blocked and isinstance(watched, QWidget)
-        if kind == QEvent.Type.FocusIn and blocked and watched is not self.shade:
+        if kind == QEvent.Type.FocusIn and self._left_the_card(watched):
             QTimer.singleShot(0, self.card.next_button.setFocus)  # Tab left the card
         return False
+
+    def _left_the_card(self, watched: QObject) -> bool:
+        """Whether the keyboard went to a control of the window outside the card (Tab). Not
+        the window itself getting the focus as it's clicked (a QWindow, no control), and never
+        with a mouse button down: taking the focus from a button being pressed un-presses it,
+        and its click was lost (Back did nothing unless the mouse moved before the release)."""
+        return (
+            isinstance(watched, QWidget)
+            and watched is not self.shade
+            and watched is not self._window
+            and QApplication.mouseButtons() == Qt.MouseButton.NoButton
+            and self._ours(watched)
+            and not self._inside(watched)
+        )
 
 
 def _united(spots: Sequence[QRect]) -> QRect:
