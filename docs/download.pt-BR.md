@@ -14,8 +14,10 @@ precisa de direitos de administrador. Ele roda no Windows 10 22H2 ou no Windows 
 A Área de Trabalho Remota funciona de cara. Para o VNC você também precisa de um visualizador: o
 [UltraVNC](https://uvnc.com) ou o
 [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/).
-Os [Primeiros passos](getting-started.pt-BR.md) seguem daí. Como as versões são assinadas está
-na [Política de assinatura de código (Code signing policy)](code-signing.pt-BR.md).
+Os [Primeiros passos](getting-started.pt-BR.md) seguem daí.
+
+O CapyPanel está se candidatando à SignPath Foundation para assinar as versões de graça; como elas
+serão assinadas está na [Política de assinatura de código (Code signing policy)](code-signing.pt-BR.md).
 
 ??? note "O Windows diz que protegeu o computador"
 
