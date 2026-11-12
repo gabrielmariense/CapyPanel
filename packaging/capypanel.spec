@@ -16,6 +16,12 @@ from capypanel.core.i18n import LANGUAGES
 ROOT = Path(SPECPATH).parent  # noqa: F821 -- PyInstaller gives the spec its own folder
 STAMP = Path(os.environ["CAPYPANEL_STAMP"])  # build.txt: version, build number, commit
 VERSION_INFO = os.environ["CAPYPANEL_VERSION_INFO"]  # what the exe's Properties > Details says
+# The splash: Dante's picture (B, Gabriel's pick), shown by the launcher the moment the exe
+# starts, before Python and Qt load, with the version under the name. The launcher places text
+# by its lower-left corner, so build_exe.py measures it to centre it.
+SPLASH_TEXT = os.environ["CAPYPANEL_SPLASH_TEXT"]
+SPLASH_X = int(os.environ["CAPYPANEL_SPLASH_X"])
+SPLASH_BASELINE = 272
 
 # Everything in the package that isn't code: translations, themes, icons, licenses, presets.
 # Named by kind, so a tool's cache or a stray file in the source folder never comes along.
@@ -90,9 +96,21 @@ if foreign:
     raise SystemExit("Libraries from outside Python, the packages and Windows:\n" + "\n".join(foreign))
 analysis.datas = [entry for entry in analysis.datas if needed(entry)]
 archive = PYZ(analysis.pure)  # noqa: F821
+splash = Splash(  # noqa: F821
+    str(ROOT / "packaging" / "splash.png"),
+    binaries=analysis.binaries,
+    datas=analysis.datas,
+    text_pos=(SPLASH_X, SPLASH_BASELINE),
+    text_size=-16,  # pixels: the picture is drawn at 1:1
+    text_font="{Segoe UI}",  # braced: the launcher's Tcl script reads a bare space as two words
+    text_color="#dde3ee",
+    text_default=SPLASH_TEXT,
+    always_on_top=False,  # never over what someone switched to while it starts
+)
 exe = EXE(  # noqa: F821
     archive,
     analysis.scripts,
+    splash,
     exclude_binaries=True,  # one folder: the libraries sit beside the exe, in _internal
     name="CapyPanel",
     icon=str(ROOT / "src" / "capypanel" / "ui" / "branding" / "capypanel.ico"),
@@ -104,6 +122,7 @@ COLLECT(  # noqa: F821
     exe,
     analysis.binaries,
     analysis.datas,
+    splash.binaries,
     name="CapyPanel",
     upx=False,
 )

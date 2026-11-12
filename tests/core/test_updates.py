@@ -266,3 +266,9 @@ def test_no_release_published_yet_means_nothing_new(monkeypatch: pytest.MonkeyPa
     monkeypatch.setattr(urllib.request, "urlopen", answer(403))  # rate limited, say
     with pytest.raises(UpdateError, match="403"):
         updates.latest()
+
+
+def test_the_exe_s_own_jobs_start_without_the_splash(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(updates.NO_SPLASH, "1")  # as in the helper, which shows none
+    assert updates._env(splash=False)[updates.NO_SPLASH] == "1"
+    assert updates.NO_SPLASH not in updates._env(splash=True)  # CapyPanel itself shows it

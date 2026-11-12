@@ -11,6 +11,7 @@ from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from capypanel import BUILD, __version__
+from capypanel.__main__ import close_splash
 from capypanel.core import applog, i18n, migration, settings
 from capypanel.ui import branding, error_window, language
 from capypanel.ui.dialogs import ScreenFit
@@ -97,6 +98,7 @@ def run(argv: list[str] | None = None) -> int:
         settings.ensure_dirs(paths)
     except settings.UserFolderError as e:
         log.error("%s", e)
+        close_splash()
         QMessageBox.critical(None, "CapyPanel", str(e))
         return 1
     # One copy per person: started again, the running one comes forward and this one ends,
@@ -104,6 +106,7 @@ def run(argv: list[str] | None = None) -> int:
     copy = OneCopy(paths.user_dir, app)
     if not copy.claim():
         came = copy.ask_running()
+        close_splash()  # the open window came forward, or a message says why it couldn't
         log.info("Already running: %s", "its window was shown" if came else "it didn't show")
         if not came:
             language.apply(settings.language_of(paths.settings_file))
@@ -130,6 +133,7 @@ def run(argv: list[str] | None = None) -> int:
     stages.done("the window and its lists")
     copy.show_requested.connect(window.open_from_tray)
     window.show()
+    close_splash()
     restarted = after_restart(sys.argv if argv is None else argv)
     if restarted is not None:  # the update's helper started this copy
         QTimer.singleShot(0, window, lambda: window.show_restart_note(*restarted))

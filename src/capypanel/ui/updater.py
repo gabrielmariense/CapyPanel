@@ -373,7 +373,7 @@ class UpdateWindow(QDialog):
             args = updates.helper_args(self._app_dir, updates.own_pid(), __version__,
                                        release.version)  # fmt: skip
             log.info("Update: handing over to %s", args[0])
-            updates.start(Path(args[0]), *args[1:])
+            updates.start(Path(args[0]), *args[1:], splash=False)
 
         if not self._quit_for_update(start_helper):
             self.status.setText(_("Not installed: CapyPanel stays open. Install again when "

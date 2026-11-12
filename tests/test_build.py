@@ -94,3 +94,14 @@ def test_the_exe_s_version_info_names_capypanel_and_its_build() -> None:
         assert line in text, line
     assert "StringStruct('CompanyName', " in text
     compile(text, "version_info", "eval")  # PyInstaller reads it as one Python expression
+
+
+def test_the_splash_version_is_centred_on_real_letters() -> None:
+    # Its own process, as in the build: a Qt app made earlier would keep its own fonts.
+    scripts = Path(capypanel.__file__).resolve().parents[2] / "scripts"
+    code = f"import sys; sys.path.insert(0, {str(scripts)!r}); import build_exe; "
+    code += "print(build_exe.splash_x('0.26.0'))"
+    done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=60)
+    assert done.returncode == 0, done.stderr
+    # Six empty 16 px boxes (no font found) would start at 192; Segoe UI's digits are narrower.
+    assert 205 <= int(done.stdout) <= 230

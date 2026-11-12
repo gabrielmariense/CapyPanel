@@ -51,6 +51,18 @@ CHUNK = 256 * 1024
 USER_AGENT = "CapyPanel-updater"  # GitHub asks for one; it names the program, nobody's details
 KEEP = (PORTABLE_MARKER, "userdata")  # a portable copy's own data: carried over, never replaced
 APPLY_FLAG, UPDATED_FLAG, FAILED_FLAG = "--apply-update", "--updated-from", "--update-failed"
+NO_SPLASH = "PYINSTALLER_SUPPRESS_SPLASH_SCREEN"  # the exe's jobs show no splash, CapyPanel does
+
+
+def _env(*, splash: bool) -> dict[str, str]:
+    env = dict(os.environ)
+    if splash:
+        env.pop(NO_SPLASH, None)
+    else:
+        env[NO_SPLASH] = "1"
+    return env
+
+
 _VERSION = re.compile(r"v?(\d+)\.(\d+)\.(\d+)")
 
 
@@ -310,6 +322,7 @@ def self_test(exe: Path, timeout: float = 240) -> bool:
         done = subprocess.run(  # noqa: S603 -- our own exe, by full path
             [str(exe), "--self-test", str(report)],
             timeout=timeout,
+            env=_env(splash=False),
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             check=False,
         )
@@ -397,13 +410,18 @@ def _roll_back(place: Places, moved: list[str], copied: list[str]) -> None:
     shutil.rmtree(place.previous, ignore_errors=True)
 
 
-def start(exe: Path, *args: str) -> None:
-    """`exe`, on its own: it outlives the process that starts it."""
+def start(exe: Path, *args: str, splash: bool = True) -> None:
+    """`exe`, on its own: it outlives the process that starts it. `splash`: whether its launcher
+    shows the splash (CapyPanel starting again does; the helper doesn't)."""
     flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(
         subprocess, "CREATE_NEW_PROCESS_GROUP", 0
     )
     subprocess.Popen(  # noqa: S603 -- our own exe, by full path
-        [str(exe), *args], cwd=exe.parent, creationflags=flags, close_fds=True
+        [str(exe), *args],
+        cwd=exe.parent,
+        creationflags=flags,
+        close_fds=True,
+        env=_env(splash=splash),
     )
 
 

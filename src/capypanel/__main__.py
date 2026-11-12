@@ -6,7 +6,20 @@ from collections.abc import Callable
 from pathlib import Path
 
 
+def close_splash() -> None:
+    """The splash CapyPanel.exe's launcher shows (packaging/splash.png), once there's a window
+    to see, or at once for the exe's jobs that show none. From source there is none."""
+    try:
+        import pyi_splash  # type: ignore[import-not-found]  # only inside CapyPanel.exe
+    except ImportError:
+        return
+    if pyi_splash.is_alive():
+        pyi_splash.close()
+
+
 def main() -> int:
+    if len(sys.argv) > 1 and sys.argv[1] in ("--self-test", "--apply-update"):
+        close_splash()
     if len(sys.argv) == 3 and sys.argv[1] == "--self-test":  # see ui/selftest.py
         return _quietly(lambda: _self_test(Path(sys.argv[2])))
     if len(sys.argv) == 6 and sys.argv[1] == "--apply-update":  # see core/updates.py

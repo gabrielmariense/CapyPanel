@@ -56,6 +56,20 @@ def version_info(version: str, number: str, build: str) -> str:
 """
 
 
+def splash_x(text: str, width: int = 480) -> int:
+    """Where the splash's text line starts so it sits centred: the launcher only takes its
+    left edge. Measured in Segoe UI at 16 px, as the launcher draws it."""
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    # Offscreen Qt has no fonts of its own: without Windows' it measures empty boxes.
+    os.environ.setdefault("QT_QPA_FONTDIR", str(Path(os.environ["SYSTEMROOT"]) / "Fonts"))
+    from PySide6.QtGui import QFont, QFontMetrics, QGuiApplication
+
+    _app = QGuiApplication.instance() or QGuiApplication([])
+    font = QFont("Segoe UI")
+    font.setPixelSize(16)
+    return max(0, (width - QFontMetrics(font).horizontalAdvance(text)) // 2)
+
+
 def sha256_of(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as file:
@@ -85,6 +99,8 @@ def main() -> int:
         "PATH": f"{windows / 'System32'}{os.pathsep}{windows}",
         "CAPYPANEL_STAMP": str(stamp),
         "CAPYPANEL_VERSION_INFO": str(info),
+        "CAPYPANEL_SPLASH_TEXT": version,
+        "CAPYPANEL_SPLASH_X": str(splash_x(version)),
     }
     spec = ROOT / "packaging" / "capypanel.spec"
     subprocess.run(
@@ -95,7 +111,13 @@ def main() -> int:
 
     exe, report = DIST / NAME / f"{NAME}.exe", WORK / "self-test.txt"
     report.unlink(missing_ok=True)
-    tested = subprocess.run([str(exe), "--self-test", str(report)], timeout=300, check=False)
+    quiet = {
+        **os.environ,
+        "PYINSTALLER_SUPPRESS_SPLASH_SCREEN": "1",
+    }  # no splash on this PC's screen
+    tested = subprocess.run(
+        [str(exe), "--self-test", str(report)], timeout=300, check=False, env=quiet
+    )
     print(report.read_text(encoding="utf-8") if report.exists() else "The exe wrote no report.")
     if tested.returncode != 0 or not report.exists():
         print(f"The built exe failed its self-test (exit code {tested.returncode}): no zip.")

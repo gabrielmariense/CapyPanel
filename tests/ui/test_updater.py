@@ -146,7 +146,9 @@ def test_install_waits_for_a_refresh_then_hands_over_and_quits(
 ) -> None:
     monkeypatch.setattr(updater_ui, "packaged", lambda: True)
     started: list[list[str]] = []
-    monkeypatch.setattr(updates, "start", lambda exe, *args: started.append([str(exe), *args]))
+    monkeypatch.setattr(
+        updates, "start", lambda exe, *args, splash=True: started.append([str(exe), *args])
+    )
     window.updater.offer = NEWER
     working = [True]
     quits: list[bool] = []
