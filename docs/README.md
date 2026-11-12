@@ -6,7 +6,7 @@ to them, and open a remote screen on any of them through Remote Desktop or the V
 already use. It keeps your printers too, with the details you need and their web pages a click
 away, and it finds the Windows user profiles nobody uses any more on a PC so you can delete them.
 
-![CapyPanel's Home page: the tool rail, the capybara, and a tile each for Hosts, Printers and User profiles](images/home-dark.png)
+![CapyPanel's Home page: the sidebar, the capybara, and a tile each for Hosts, Printers and User profiles](images/home-dark.png)
 
 ## What it does
 

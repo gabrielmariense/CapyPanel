@@ -1,7 +1,7 @@
 # The Printers tool
 
 Printers keeps the printers you look after, tells you what state each one is in, and opens any
-printer's own web page. Open it from the **Printers** tile on Home, the printer icon on the rail,
+printer's own web page. Open it from the **Printers** tile on Home, the printer icon on the sidebar,
 or **Ctrl+2**.
 
 ![The Printers window: groups on the left, the printers in the middle, one printer's details on the right](../images/printers-dark.png)

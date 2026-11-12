@@ -16,7 +16,7 @@ nobody uses any more on a PC so you can delete them.
 
 > **Status: beta (0.25.0).** It runs from source; there's no installer yet.
 
-![CapyPanel's Home page: the tool rail, the capybara, and a tile each for Hosts, Printers and User profiles](docs/images/home-dark.png)
+![CapyPanel's Home page: the sidebar, the capybara, and a tile each for Hosts, Printers and User profiles](docs/images/home-dark.png)
 
 ## What it does
 

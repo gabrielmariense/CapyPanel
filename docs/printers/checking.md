@@ -97,7 +97,7 @@ code and several sentences, is in the cell's tooltip and in full under its name 
 
 - A printer **needs attention** when it has stopped (a red status), didn't answer (**Offline**),
   or has a toner, ink, drum or box at or below the low level.
-- A red count on the Printers icon in the rail and a strip above the table say how many, as in
+- A red count on the Printers icon in the sidebar and a strip above the table say how many, as in
   "3 printers need attention: 1 stopped, 1 offline, 1 low." **Show** lists just those printers;
   **Show all** goes back.
 - Both go away by themselves once nothing needs attention any more.

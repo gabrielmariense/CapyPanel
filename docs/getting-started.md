@@ -18,7 +18,7 @@ The first run downloads Python and the libraries CapyPanel needs; later runs sta
 Remote Desktop works out of the box. For VNC you also need a viewer:
 [UltraVNC](https://uvnc.com) or [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/).
 
-![The Home page: the rail on the left, the capybara and the app's name, and a tile for each tool](images/home-dark.png)
+![The Home page: the sidebar on the left, the capybara and the app's name, and a tile for each tool](images/home-dark.png)
 
 CapyPanel opens on its Home page, with a tile for each tool: **Hosts** (Ctrl+1), **Printers**
 (Ctrl+2) and **User profiles** (Ctrl+3). Click **Hosts** to start.
@@ -28,7 +28,7 @@ CapyPanel opens on its Home page, with a tile for each tool: **Hosts** (Ctrl+1),
     - The version shows in the title bar. When you run from source it's followed by a build number
       and the commit, e.g. `CapyPanel 0.25.0 build 1378 (abc1234)`; a bigger build number is a
       newer build. Quote it when you report a problem.
-    - Home is the top button on the rail, **View > Home**, and **Ctrl+0**. Every tool is always
+    - Home is the top button on the sidebar, **View > Home**, and **Ctrl+0**. Every tool is always
       there; there's nothing to turn on. To start somewhere else, set **Settings > CapyPanel >
       General > Open on startup** to the last used tool, or to one by name.
     - The tiles say what each tool is for: Hosts "Your computers: connect, see who's logged on,
@@ -76,7 +76,7 @@ See [Checking hosts](hosts/checking.md), [Connecting](hosts/connecting.md) and
 
     | Part | What it shows |
     |---|---|
-    | **The rail** (left edge) | **Home** (Ctrl+0) at the top, then one icon per tool, **Hosts** (Ctrl+1), **Printers** (Ctrl+2) and **User profiles** (Ctrl+3), and **Settings** (Ctrl+,) at the bottom. Where you are has a tinted square behind its icon |
+    | **The sidebar** (left edge) | **Home** (Ctrl+0) at the top, then one icon per tool, **Hosts** (Ctrl+1), **Printers** (Ctrl+2) and **User profiles** (Ctrl+3), and **Settings** (Ctrl+,) at the bottom. Where you are has a tinted square behind its icon |
     | **Toolbar** (top) | The buttons of the tool you're in. For Hosts: **Connect**, **Refresh all**, **Commands**, **Inventory** and **Report** |
     | **Groups panel** (left) | The open list's name on top, as a dropdown that switches lists. Then "All hosts" with how many hosts the list has, and "No group" with how many are in none. Then **Groups**, with a **+** button to add one, and **Tags**; drag the line above Tags to give either more room, and it's remembered |
     | **Hosts panel** (middle) | The search box above the hosts in the selected group or tag, with their **Status** and **User** |
@@ -124,7 +124,7 @@ The window's **✕**, **File > Exit** (Ctrl+Q) and Windows logging off all quit 
 the Printers tool [refreshes on its own](printers/checking.md#have-printers-checked-on-their-own),
 quitting would stop it, so the **✕** asks first: **Keep in tray**, **Quit** or **Cancel**.
 
-In the tray, CapyPanel's icon carries the same red count as the rail. A click opens the window
+In the tray, CapyPanel's icon carries the same red count as the sidebar. A click opens the window
 again.
 
 ![The tray menu: Open CapyPanel, the printers that need attention, and Quit CapyPanel](images/tray-menu-dark.png)

@@ -1,6 +1,6 @@
 # Settings and files
 
-Settings is the gear at the bottom of the rail, and **File > Settings…** (Ctrl+,). **Every choice
+Settings is the gear at the bottom of the sidebar, and **File > Settings…** (Ctrl+,). **Every choice
 applies as soon as you make it**: there's no Save button, and the window's **×** or **Esc** closes
 it. This page lists every setting, page by page, and where CapyPanel keeps its files.
 
