@@ -3,6 +3,12 @@
 The changes in each release that you'll notice. The
 [releases on GitHub](https://github.com/gabrielmariense/CapyPanel/releases) have the downloads.
 
+## 0.26.4
+
+- **Install and restart** now checks the new version before CapyPanel closes, then says CapyPanel
+  will open again by itself in a few seconds. While the files are swapped, the splash says
+  "Updating to 0.26.4…".
+
 ## 0.26.3
 
 - No changes in the app: a release to try 0.26.2's update windows.

@@ -61,8 +61,9 @@ waits while a guide or another window is open, or while CapyPanel is in the tray
 
 1. Read what changed in the **Update CapyPanel** window, or click the **Update** button to open
    it. The notes show in CapyPanel's language.
-2. Click **Install and restart**. CapyPanel downloads the zip, closes, and starts again in the new
-   version.
+2. Click **Install and restart**. The window shows each step, then says "CapyPanel closes now and
+   opens again by itself in a few seconds." While the files are swapped, CapyPanel's splash says
+   "Updating to 0.26.4…".
 3. It opens with a window that says "CapyPanel 0.26.2 is installed" and "Updated from 0.26.1. Your
    settings, lists and saved logins are as they were.", with the notes and a link to the release.
 
@@ -84,14 +85,22 @@ choice is only yours. While it downloads, **Later** reads **Cancel** and stops t
 
 ??? note "What Install and restart does"
 
-    1. It downloads the zip and checks it against its SHA-256.
-    2. If a tool is busy, such as a printer Refresh or a profile being deleted, it waits for it
+    1. **Downloading…**, then **Checking the file…**: it downloads the zip and checks it against
+       its SHA-256.
+    2. **Unpacking…**, then **Checking the new version…**: it unpacks the new version and runs its
+       self-test, while CapyPanel is still open. If the test fails, CapyPanel stays as it is and the
+       window says "The new version didn't pass its self-test".
+    3. If a tool is busy, such as a printer Refresh or a profile being deleted, it waits for it
        ("Waiting for CapyPanel to finish what it's doing…") or asks you first.
-    3. CapyPanel closes. A small helper swaps the app's files for the new ones and starts the new
-       version.
-    4. If the new version won't start, the helper puts the old one back. CapyPanel then opens with
-       a window that says "The update to 0.26.2 didn't go in", why, and a link to the releases on
+    4. CapyPanel closes. A small helper swaps the app's files for the new ones, with the splash
+       saying "Updating to 0.26.4…", and starts the new version. Starting CapyPanel during the swap
+       does no harm: that start just ends.
+    5. If the new version won't start, the helper puts the old one back. CapyPanel then opens with
+       a window that says "The update to 0.26.4 didn't go in", why, and a link to the releases on
        GitHub.
+
+    When the update comes from a version older than 0.26.4, which doesn't test first, the helper
+    runs the self-test itself before the swap.
 
     Your settings, lists and saved logins are never touched.
 
@@ -118,5 +127,6 @@ has the rest.
 | "The download doesn't match its SHA-256: it was changed or cut short." | The zip that arrived isn't the one GitHub built | Click **Install and restart** again |
 | "CapyPanel can't install it from here (CapyPanel can't write to …). Download the zip from the release page and unpack it in place of this one." | Your account can't write to the folder CapyPanel is in, such as Program Files | Unzip the new version over the old one yourself, or move CapyPanel to a folder you can write to |
 | "This copy runs from source: update it with git, or download the zip from the release page." | You started CapyPanel with `uv run` | `git pull`, or switch to the zip |
+| "The new version didn't pass its self-test" | The downloaded version failed its own check, so nothing was changed | Try **Install and restart** again later; **Report a problem** if it keeps failing |
 | "The update to 0.26.2 didn't go in" and "This is still CapyPanel 0.26.1: …" | The new version wouldn't start, so the old one was put back | Read the reason after the colon; **Report a problem** if it isn't clear |
 | "CapyPanel is already running for EXAMPLE\user, but its window couldn't be brought forward: …" | Your other copy is open in another Windows session, or isn't answering | Close it there, or end it in Task Manager, then start CapyPanel again |
