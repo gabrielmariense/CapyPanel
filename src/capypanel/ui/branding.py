@@ -3,6 +3,7 @@ branding/ under the same names."""
 
 import ctypes
 import logging
+import sys
 from pathlib import Path
 
 from PySide6.QtCore import QByteArray, QRectF, QSize, Qt
@@ -40,8 +41,15 @@ def mascot(height: int, pixel_ratio: float = 1.0) -> QPixmap:
 
 def use_own_taskbar_icon() -> None:
     """Run from Python, Windows groups the app under python.exe and shows Python's icon on the
-    taskbar; its own app id makes it show CapyPanel's."""
+    taskbar; its own app id makes it show CapyPanel's. CapyPanel.exe keeps Windows' own id
+    (the exe's), so it opens on its pinned taskbar button instead of beside it."""
+    if getattr(sys, "frozen", False):
+        return
+    _set_app_id(APP_ID)
+
+
+def _set_app_id(app_id: str) -> None:
     try:
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
     except (AttributeError, OSError):  # not Windows
         log.debug("No taskbar app id")
