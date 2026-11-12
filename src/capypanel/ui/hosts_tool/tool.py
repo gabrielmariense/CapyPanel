@@ -61,7 +61,7 @@ from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.list_workspace.customize import Part
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
-from capypanel.ui.list_workspace.workspace import ListWorkspace
+from capypanel.ui.list_workspace.workspace import SAMPLE_ID, ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 from capypanel.ui.menus import shortcut_text
 from capypanel.ui.saved_credentials import KeptLogin
@@ -351,8 +351,12 @@ class HostsTool(ListWorkspace):
             return [
                 Step(_("Your lists"),
                      _("Pick the list here: the shared one everyone on this PC sees, your "
-                       "personal one, or one you add. Groups and tags are below it: a click "
-                       "shows only their hosts."), lambda: self.nav),
+                       "personal one, or one you add. Its groups are below it: a click on one "
+                       "shows only its hosts."), lambda: self.nav),
+                Step(_("Tags"),
+                     _("Tags mark hosts across groups, like this sample PC's \"{tag}\". Pick one "
+                       "or several to show only the hosts that carry them.").format(
+                         tag=_("sample")), lambda: self.nav.tags),
                 Step(_("Add hosts"),
                      _("Inventory › Add host… adds one at a time, and Import hosts… brings in "
                        "many at once. A right-click on the table has Add host… too."),
@@ -375,7 +379,13 @@ class HostsTool(ListWorkspace):
                        "Settings › Hosts › Credentials."), lambda: bar.commands_button),
             ]  # fmt: skip
 
-        return Guide("hosts", steps, docs="hosts/host-lists/")
+        return Guide("hosts", steps, docs="hosts/host-lists/", setup=self.show_sample,
+                     cleanup=self.hide_sample)  # fmt: skip
+
+    def sample_item(self, group: str) -> Host:
+        """The guides' sample PC: a documentation address (192.0.2.x) that never answers."""
+        return Host(id=SAMPLE_ID, name=_("SAMPLE-PC"), group=group, address="192.0.2.10",
+                    tags=(_("sample"),), notes=_("Shown only while a guide is open."))  # fmt: skip
 
     def retranslate(self) -> None:
         retranslate_actions(self.commands)
@@ -887,7 +897,7 @@ class HostsTool(ListWorkspace):
                 hidden=self.hidden_parts(),
             )
             self.details.show_host(details, 1, needle=self._needle())
-            if host.connect_address and host.id not in self._facts:
+            if host.connect_address and host.id not in self._facts and host.id != SAMPLE_ID:
                 self._facts_timer.start()  # read once it stays selected a moment
         else:
             self.details.show_host(None, len(items), summary=self._summary())
@@ -1066,6 +1076,7 @@ class HostsTool(ListWorkspace):
     def check_hosts(self, hosts: Sequence[Host], *, status: bool, users: bool) -> None:
         if self._run is not None or not (status or users):
             return
+        hosts = [h for h in hosts if h.id != SAMPLE_ID]  # a guide's sample: never read
         targets = self._refusing_last(
             [(h.id, h.connect_address) for h in hosts if h.connect_address]
         )

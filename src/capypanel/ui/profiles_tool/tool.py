@@ -5,7 +5,7 @@ so several hosts are read, counted and cleaned at once. It keeps no list of its 
 account that signs in to a host is the one Hosts' Accounts give it. Scanning only reads."""
 
 from collections.abc import Sequence
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt
@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.model import NO_GROUP, Host
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.status import Status
+from capypanel.core.remote.user_profiles import Kind, Profile, Scan, State
 from capypanel.ui import checks as check_texts
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.guides import Guide, Step
@@ -40,6 +41,7 @@ from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.list_workspace.panels import NavigationPane, natural_key
 from capypanel.ui.list_workspace.splitter import PaneSplitter
+from capypanel.ui.list_workspace.workspace import SAMPLE_ID
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar, tool_button
 from capypanel.ui.menus import popup
@@ -316,7 +318,37 @@ class ProfilesTool(Tool):
                        "confirm."), lambda: self.tabs),
             ]  # fmt: skip
 
-        return Guide("profiles", steps, docs="profiles/user-profiles/")
+        return Guide("profiles", steps, docs="profiles/user-profiles/", setup=self.show_sample,
+                     cleanup=self.hide_sample)  # fmt: skip
+
+    # ---- a sample while the Hosts tab's guide runs ----
+
+    def show_sample(self) -> None:
+        """Hosts' sample PC in the table, and a tab for it with two made-up profiles, so the
+        guide's cards have something to point at. Nothing is read from or deleted on any PC;
+        both go when the guide ends."""
+        if self._hosts is None or SAMPLE_ID in self._pages:
+            return
+        self._hosts.show_sample()
+        host = self._host(SAMPLE_ID)
+        if host is None:
+            return
+        target = _target(host)
+        page = HostPage(target, None, windows_account(), self._context(self._hosts))
+        self._pages[target.key] = page
+        self.middle.addWidget(page.box)
+        self.cards.addWidget(page.side)
+        self.tabs.add(target.key, target.name)
+        page.changed.connect(lambda p=page: self._page_changed(p))
+        page.show_sample(_sample_scan(host.name))
+        self._page_changed(page)
+
+    def hide_sample(self) -> None:
+        if SAMPLE_ID in self._pages:
+            self.close_tab(SAMPLE_ID)
+            self._kept.pop(SAMPLE_ID, None)
+        if self._hosts is not None:
+            self._hosts.hide_sample()
 
     def _host_guide(self, page: HostPage) -> Guide:
         """A host's tab: what its profiles show, picking them, and deleting."""
@@ -1035,6 +1067,31 @@ class ProfilesTool(Tool):
             "details": self.show_details.isChecked(),
         }
         self._shell.save_prefs()
+
+
+def _sample_scan(host: str) -> Scan:
+    """Two made-up profiles for the guide's sample tab: one that can be deleted, one in use."""
+    now = datetime.now(UTC)
+    root = "C:\\Users"
+    people = (
+        ("EXAMPLE\\ana", "ana", State.READY, now - timedelta(days=200)),
+        ("EXAMPLE\\bruno", "bruno", State.IN_USE, now),
+    )
+    profiles = tuple(
+        Profile(
+            sid=f"S-1-5-21-0-0-0-{1001 + n}",
+            key=f"S-1-5-21-0-0-0-{1001 + n}",
+            user=user,
+            known=True,
+            path=f"{root}\\{folder}",
+            kind=Kind.PROFILE,
+            state=state,
+            last_used=used,
+            modified=used,
+        )  # fmt: skip
+        for n, (user, folder, state, used) in enumerate(people)
+    )
+    return Scan(host=host, root=root, profiles=profiles)
 
 
 def _target(host: Host) -> HostTarget:

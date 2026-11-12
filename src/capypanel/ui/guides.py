@@ -68,6 +68,8 @@ class Guide:
     steps: Callable[[], Sequence[Step]]  # built when shown, in the language of the moment
     docs: str = ""  # its docs page, after the website's address: "hosts/host-lists/"
     mascot: bool = False  # the capybara on its first card: Home's only
+    setup: Callable[[], None] = lambda: None  # before its cards: a sample to point at, say
+    cleanup: Callable[[], None] = lambda: None  # once it ends, however it ends
 
 
 GUIDES_KEY = "guides"  # the shell's settings: the ids of the guides seen
@@ -274,8 +276,14 @@ class GuideRunner(QObject):
 
     def show(self, guide: Guide) -> None:
         """Shows `guide` from its first step, seen or not (Help)."""
+        if self._guide is not None:
+            self._guide.cleanup()
+        guide.setup()
         steps = list(guide.steps())
         if not steps:
+            guide.cleanup()
+            if self._guide is not None:
+                self._close()
             return
         if self._guide is None:
             app = QApplication.instance()
@@ -346,7 +354,10 @@ class GuideRunner(QObject):
         self._close()
 
     def _close(self) -> None:
+        guide = self._guide
         self._guide, self._steps, self._clickable = None, [], []
+        if guide is not None:
+            guide.cleanup()
         self._follow.stop()
         app = QApplication.instance()
         if app is not None:

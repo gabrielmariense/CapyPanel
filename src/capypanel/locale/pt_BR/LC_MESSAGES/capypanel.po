@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:30-0300\n"
+"POT-Creation-Date: 2026-11-12 13:37-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -2652,11 +2652,11 @@ msgstr "Escolha um PC"
 msgid "Pick hosts in the list first"
 msgstr "Selecione hosts na lista primeiro"
 
-msgid "Pick the list here: the shared one everyone on this PC sees, your personal one, or one you add. Groups and tags are below it: a click shows only their hosts."
-msgstr "Escolha a lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você criar. Os grupos e as tags ficam embaixo: um clique mostra só os hosts deles."
-
 msgid "Pick the list here: the shared one everyone on this PC sees, your personal one, or one you add. Groups and tags are below it: a click shows only their printers."
 msgstr "Escolha a lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você criar. Os grupos e as tags ficam embaixo: um clique mostra só as impressoras deles."
+
+msgid "Pick the list here: the shared one everyone on this PC sees, your personal one, or one you add. Its groups are below it: a click on one shows only its hosts."
+msgstr "Escolha a lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você criar. Os grupos dela ficam embaixo: um clique num deles mostra só os hosts dele."
 
 #, python-brace-format
 msgid "Picked tags: {tags}"
@@ -3070,6 +3070,9 @@ msgstr "Clique com o botão direito para copiar uma linha, copiar ou exportar a 
 msgid "Run checks whether it answers."
 msgstr "Executar verifica se ele responde."
 
+msgid "SAMPLE-PC"
+msgstr "EXEMPLO-PC"
+
 msgid "SELECTED HOST"
 msgstr "HOST SELECIONADO"
 
@@ -3323,6 +3326,9 @@ msgid_plural "Showing the <b>{n} printers</b> that need attention."
 msgstr[0] "Mostrando a <b>{n} impressora</b> que requer atenção."
 msgstr[1] "Mostrando as <b>{n} impressoras</b> que requerem atenção."
 
+msgid "Shown only while a guide is open."
+msgstr "Aparece só enquanto um guia está aberto."
+
 msgid "Shows"
 msgstr "Mostra"
 
@@ -3536,6 +3542,10 @@ msgstr "Tags e notas"
 
 msgid "Tags for the selected rows, separated by ;"
 msgstr "Tags das linhas selecionadas, separadas por ;"
+
+#, python-brace-format
+msgid "Tags mark hosts across groups, like this sample PC's \"{tag}\". Pick one or several to show only the hosts that carry them."
+msgstr "As tags marcam hosts em qualquer grupo, como a \"{tag}\" deste PC de exemplo. Escolha uma ou várias para ver só os hosts que as têm."
 
 #, python-brace-format
 msgid "Tags: {tags}"
@@ -4228,6 +4238,13 @@ msgstr "Usuários"
 msgid "Version"
 msgstr "Versão"
 
+msgctxt "guide"
+msgid "View"
+msgstr "Exibir"
+
+msgid "View, on the menu bar, shows and hides this screen's panels, such as Tags and Details."
+msgstr "Exibir, na barra de menus, mostra e oculta os painéis desta tela, como Tags e Detalhes."
+
 #, python-brace-format
 msgid "Viewer settings (*{extension})"
 msgstr "Configurações do visualizador (*{extension})"
@@ -4628,6 +4645,9 @@ msgstr "reiniciar o Spooler de Impressão"
 
 msgid "running"
 msgstr "em execução"
+
+msgid "sample"
+msgstr "exemplo"
 
 #, python-brace-format
 msgid "scanned at {time}"

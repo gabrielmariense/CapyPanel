@@ -48,6 +48,7 @@ from capypanel.ui.new_list import ask_new_list
 log = logging.getLogger(__name__)
 
 HIDDEN_KEY = "details_hidden"  # the Details parts this person chose not to see
+SAMPLE_ID = "guide-sample"  # the item a guide adds while it runs: never saved, never read
 
 
 class ListWorkspace(Tool):
@@ -69,6 +70,7 @@ class ListWorkspace(Tool):
         self._paths = shell.paths
         self._list_commands = commands
         self._doc: OpenList | None = None
+        self._real_doc: OpenList | None = None  # the list as saved, while a guide's sample shows
         self._hold_fill = False  # at start: the table is filled once, at the end
         self._places = shell.paths.lists(self.TOOL_ID)  # lists\<tool>\, shared and own
         self._default_list = self._places.default
@@ -807,8 +809,8 @@ class ListWorkspace(Tool):
     def _commit(self, new: HostList) -> bool:
         """Save an edit. If someone else changed the file meanwhile, ask what to do with ours."""
         doc = self._doc
-        if doc is None:
-            return False
+        if doc is None or self._real_doc is not None:
+            return False  # a guide's sample is showing: nothing is saved with it
         try:
             doc.commit(new)
         except HostListChangedError:
@@ -1324,6 +1326,43 @@ class ListWorkspace(Tool):
 
     def _writable(self) -> OpenList | None:
         return self._doc if self._doc is not None and not self._doc.read_only else None
+
+    # ---- a sample item while a guide runs ----
+
+    def sample_item(self, group: str) -> Host | None:
+        """The tool's sample for its guides (id SAMPLE_ID), in `group`; None: no sample."""
+        return None
+
+    def sample_shown(self) -> bool:
+        return self._real_doc is not None
+
+    def show_sample(self) -> None:
+        """While a guide runs: the list on show gains the tool's sample, picked, so the guide's
+        cards have something to point at. Only in memory: the list is never saved with it, and
+        nothing is read from its address (each tool's checks leave SAMPLE_ID out)."""
+        doc = self._doc
+        if doc is None or self._real_doc is not None:
+            return
+        group = self.nav.selected_group_id()  # where the person is looking
+        sample = self.sample_item(group if group and doc.hosts.group(group) else NO_GROUP)
+        if sample is None:
+            return
+        hosts = replace(doc.hosts, hosts=(*doc.hosts.hosts, sample))
+        self._real_doc = doc
+        self._doc = OpenList(doc.path, hosts, doc.stamp, read_only=doc.read_only, kind=doc.kind)
+        self.refresh()
+        self.table.select_ids([SAMPLE_ID])
+        self._selection_changed()
+
+    def hide_sample(self) -> None:
+        """The guide ended: the list as it was, the sample gone."""
+        real, self._real_doc = self._real_doc, None
+        if real is None:
+            return
+        if self._doc is not None and self._doc.hosts.host(SAMPLE_ID) is not None:
+            self._doc = real  # unless another list was opened meanwhile
+        self.refresh()
+        self._selection_changed()
 
     def _kind(self, path: Path) -> ListKind:
         return locations.list_kind(path, default=self._default_list, personal=self._personal_list)

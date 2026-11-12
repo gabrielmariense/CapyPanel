@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:30-0300\n"
+"POT-Creation-Date: 2026-11-12 13:37-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2770,13 +2770,13 @@ msgstr ""
 msgid ""
 "Pick the list here: the shared one everyone on this PC sees, your "
 "personal one, or one you add. Groups and tags are below it: a click shows"
-" only their hosts."
+" only their printers."
 msgstr ""
 
 msgid ""
 "Pick the list here: the shared one everyone on this PC sees, your "
-"personal one, or one you add. Groups and tags are below it: a click shows"
-" only their printers."
+"personal one, or one you add. Its groups are below it: a click on one "
+"shows only its hosts."
 msgstr ""
 
 #, python-brace-format
@@ -3208,6 +3208,9 @@ msgstr ""
 msgid "Run checks whether it answers."
 msgstr ""
 
+msgid "SAMPLE-PC"
+msgstr ""
+
 msgid "SELECTED HOST"
 msgstr ""
 
@@ -3467,6 +3470,9 @@ msgid_plural "Showing the <b>{n} printers</b> that need attention."
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "Shown only while a guide is open."
+msgstr ""
+
 msgid "Shows"
 msgstr ""
 
@@ -3686,6 +3692,12 @@ msgid "Tags and notes"
 msgstr ""
 
 msgid "Tags for the selected rows, separated by ;"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Tags mark hosts across groups, like this sample PC's \"{tag}\". Pick one "
+"or several to show only the hosts that carry them."
 msgstr ""
 
 #, python-brace-format
@@ -4438,6 +4450,15 @@ msgstr ""
 msgid "Version"
 msgstr ""
 
+msgctxt "guide"
+msgid "View"
+msgstr ""
+
+msgid ""
+"View, on the menu bar, shows and hides this screen's panels, such as Tags"
+" and Details."
+msgstr ""
+
 #, python-brace-format
 msgid "Viewer settings (*{extension})"
 msgstr ""
@@ -4868,6 +4889,9 @@ msgid "restart the Print Spooler"
 msgstr ""
 
 msgid "running"
+msgstr ""
+
+msgid "sample"
 msgstr ""
 
 #, python-brace-format

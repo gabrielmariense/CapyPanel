@@ -14,8 +14,10 @@ from PySide6.QtWidgets import QApplication, QDialog, QLabel, QPushButton
 from capypanel.core import settings
 from capypanel.ui import guides
 from capypanel.ui.guides import Guide, Step
+from capypanel.ui.list_workspace.workspace import SAMPLE_ID
 from capypanel.ui.main_window import window as window_module
 from capypanel.ui.profiles_tool import first_use
+from capypanel.ui.profiles_tool.tool import ProfilesTool
 
 
 @pytest.fixture
@@ -255,3 +257,49 @@ def test_with_no_free_place_the_card_hides_the_least_it_can() -> None:
     assert room.contains(card)
     assert guides._covered(card, [table, details]) < guides._covered(beside, [table, details])
     assert not card.intersects(details)  # the narrow left side, over a corner of the table
+
+
+def test_the_hosts_guide_shows_a_sample_pc_that_is_never_saved_or_read(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    hosts = window.hosts
+    window.show_tool("hosts")
+    doc = hosts.document
+    assert doc is not None
+    saved = doc.path.read_bytes()
+    checked: list[str] = []
+    monkeypatch.setattr(hosts, "_refusing_last", lambda targets: checked.extend(targets) or [])
+    window.commands.show_guide.trigger()
+    _settle()
+    assert hosts.sample_shown() and hosts.table.selected_ids() == [SAMPLE_ID]
+    sample = hosts.document.hosts.host(SAMPLE_ID)  # type: ignore[union-attr]
+    assert sample is not None and sample.address.startswith("192.0.2.") and sample.tags
+    assert hosts.nav.tags.topLevelItemCount() >= 1  # its tag, for the Tags card
+    hosts.check_hosts([sample], status=True, users=False)
+    assert checked == []  # nothing is read from it
+    titles = []
+    while not window.guides.card.isHidden():
+        titles.append(window.guides.card.title.text())
+        window.guides.card.next_button.click()
+    assert "Tags" in titles and titles[-1] == "View"  # every tool's guide ends on View
+    assert not hosts.sample_shown() and hosts.document.hosts.host(SAMPLE_ID) is None  # type: ignore[union-attr]
+    assert doc.path.read_bytes() == saved  # the file never had it
+
+
+def test_the_user_profiles_guide_opens_a_sample_tab_and_closes_it(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    profiles = window.tools["profiles"]
+    assert isinstance(profiles, ProfilesTool)
+    monkeypatch.setattr(profiles, "first_use_pending", lambda: False)
+    window.show_tool("profiles")
+    window.commands.show_guide.trigger()
+    _settle()
+    assert window.guides.running == "profiles"
+    assert SAMPLE_ID in profiles.tabs.host_keys()  # a tab to point at, never read from a PC
+    page = profiles._pages[SAMPLE_ID]
+    assert page.scan is not None and len(page.scan.profiles) == 2
+    assert profiles.tabs.current() != SAMPLE_ID  # the guide stays on the Hosts tab
+    window.guides.card.skip_button.click()
+    assert SAMPLE_ID not in profiles.tabs.host_keys() and SAMPLE_ID not in profiles._kept
+    assert window.hosts.document.hosts.host(SAMPLE_ID) is None  # type: ignore[union-attr]

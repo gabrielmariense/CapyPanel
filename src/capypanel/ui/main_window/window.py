@@ -6,6 +6,7 @@ the tool shown. With none shown, the Home page fills the window."""
 import logging
 import threading
 from collections.abc import Callable, Sequence
+from dataclasses import replace
 from typing import Any
 
 from PySide6.QtCore import QByteArray, QEvent, QObject, QRect, Qt, QTimer
@@ -32,7 +33,7 @@ from PySide6.QtWidgets import (
 
 from capypanel import BUILD
 from capypanel.core import settings
-from capypanel.core.i18n import _
+from capypanel.core.i18n import _, pgettext
 from capypanel.ui import language, spacing
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.guides import Guide, GuideRunner, Step, on_screen, seen_from
@@ -554,7 +555,26 @@ class MainWindow(QMainWindow):
     # ---- first-run guides ----
 
     def _guide_for(self, tool_id: str | None) -> Guide | None:
-        return self.tools[tool_id].guide() if tool_id is not None else self._home_guide()
+        """The screen's guide; a tool's own ends on the View menu, the same for every tool."""
+        if tool_id is None:
+            return self._home_guide()
+        tool = self.tools[tool_id]
+        guide = tool.guide()
+        if guide is None or guide.guide_id != tool_id or not tool.view_actions():
+            return guide
+        steps = guide.steps
+        return replace(guide, steps=lambda: [*steps(), self._view_step(tool)])
+
+    def _view_step(self, tool: Tool) -> Step:
+        bar = self.menuBar()
+
+        def view_title() -> QRect:  # "View" on the menu bar
+            spot = bar.actionGeometry(self._view_menu.menuAction())
+            return QRect(bar.mapTo(self, spot.topLeft()), spot.size())
+
+        return Step(pgettext("guide", "View"),  # the card's title, without the menu's &
+                    _("View, on the menu bar, shows and hides this screen's panels, such as Tags "
+                      "and Details."), lambda: None, lambda: tool, area=view_title)  # fmt: skip
 
     def _guide_now(self, *, force: bool = False) -> None:
         """The shown screen's guide: the first time it's shown (once its page is laid out), or

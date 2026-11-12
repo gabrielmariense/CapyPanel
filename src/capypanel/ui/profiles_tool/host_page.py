@@ -345,6 +345,11 @@ class HostPage(QObject):
 
         self._ctx.pool.read(self, read, done, failed, began)
 
+    def show_sample(self, scan: Scan) -> None:
+        """A guide's sample tab: a scan made up for it, nothing read from or done on any PC."""
+        self.stage, self.scan, self.read_at = Stage.SCANNED, scan, self._now()
+        self._show_scan()
+
     def close(self) -> None:
         """Its tab closes: sizes stop, waiting work never starts, and a read under way is
         ignored when it ends (its widgets are gone by then)."""
