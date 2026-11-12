@@ -107,7 +107,7 @@ window; see [Commands on a host](hosts/commands.md#quick-commands).
 
 ## Hosts > Connecting
 
-![Settings > Hosts > Connecting: the connection profiles, the remote tools, and Read PC data with](images/settings-hosts-connecting-dark.png)
+![Settings > Hosts > Connecting: the connection profiles, the remote tools, and Read PC data with set to Automatic](images/settings-hosts-connecting-dark.png)
 
 ### Connection profiles
 

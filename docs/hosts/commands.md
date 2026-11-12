@@ -183,10 +183,10 @@ program it lists as it goes.
 
 ![The strip above the host table after a command failed, with Try another account](../images/commands-strip-failed-dark.png)
 
-A command that worked says so in green above the host table, as in "Message sent to ana.admin on
+A command that worked says so in green above the host table, as in "Message sent to bruno on
 DESK-02.", and the strip closes by itself after a few seconds.
 
-A command that failed says so in red, with Windows' own reason: "Couldn't log off bruno.costa on
+A command that failed says so in red, with Windows' own reason: "Couldn't log off bruno on
 DESK-02: access denied. It needs an admin account on that PC." That strip stays until you close
 it. When the account was the problem, **Try another account…** asks for another one, and for which
 PCs to use it (see [Accounts for other PCs](connecting.md#accounts-for-other-pcs)), then runs the
@@ -200,7 +200,7 @@ rest of what you open shows too.
 ![A host with a restart waiting: the Status column and the amber strip in Details, with Cancel restart](../images/commands-restart-waiting-dark.png)
 
 A restart or shutdown with a delay shows in the **Status** column, as "Restart at 2:37 PM" with a
-clock, and in Details as an amber strip: "Restarts at 2:37 PM", "You asked at 2:32 PM. ana.admin
+clock, and in Details as an amber strip: "Restarts at 2:37 PM", "You asked at 2:32 PM. bruno
 got your message." and **Cancel restart**. **Power > Cancel the pending restart** does the same
 from the menus.
 

@@ -110,7 +110,7 @@ primeiros também ficam no menu do botão direito. Seus, neste PC." Ele abre a j
 
 ## Hosts > Conexão
 
-![Configurações > Hosts > Conexão: os perfis de conexão, as ferramentas remotas e o Ler dados dos PCs com](images/settings-hosts-connecting-dark-pt-BR.png)
+![Configurações > Hosts > Conexão: os perfis de conexão, as ferramentas remotas e o Ler dados dos PCs com em Automático](images/settings-hosts-connecting-dark-pt-BR.png)
 
 ### Perfis de conexão
 

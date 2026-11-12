@@ -193,10 +193,10 @@ que repara cada programa que lista enquanto passa por eles.
 ![A faixa acima da tabela de hosts depois de um comando falhar, com Tentar outra conta](../images/commands-strip-failed-dark-pt-BR.png)
 
 Um comando que deu certo diz isso em verde acima da tabela de hosts, como em "Mensagem enviada
-para ana.admin em DESK-02.", e a faixa se fecha sozinha depois de alguns segundos.
+para bruno em DESK-02.", e a faixa se fecha sozinha depois de alguns segundos.
 
 Um comando que falhou diz isso em vermelho, com o motivo do próprio Windows: "Não foi possível
-fazer logoff de bruno.costa em DESK-02: acesso negado. É preciso uma conta de administrador
+fazer logoff de bruno em DESK-02: acesso negado. É preciso uma conta de administrador
 naquele PC." Essa faixa fica até você fechá-la. Quando o problema foi a conta, o **Tentar outra
 conta…** pede outra, e para quais PCs usá-la (veja
 [Contas para outros PCs](connecting.pt-BR.md#contas-para-outros-pcs)), e executa o comando de
@@ -211,7 +211,7 @@ que você abre também aparece.
 
 Uma reinicialização ou um desligamento com atraso aparece na coluna **Status**, como "Reinicia às
 14:37" com um relógio, e nos Detalhes como uma faixa âmbar: "Reinicia às 14:37", "Você pediu às
-14:32. ana.admin recebeu a sua mensagem." e **Cancelar reinicialização**. O **Energia > Cancelar
+14:32. bruno recebeu a sua mensagem." e **Cancelar reinicialização**. O **Energia > Cancelar
 a reinicialização pendente** faz o mesmo pelos menus.
 
 Depois que o PC reinicia, o CapyPanel procura por ele a cada 15 segundos. Assim que ele sumiu e
