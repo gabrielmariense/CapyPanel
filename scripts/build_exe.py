@@ -76,7 +76,16 @@ def main() -> int:
     info = WORK / "version_info.txt"
     info.write_text(version_info(version, number, capypanel.BUILD), encoding="utf-8")
 
-    env = {**os.environ, "CAPYPANEL_STAMP": str(stamp), "CAPYPANEL_VERSION_INFO": str(info)}
+    # PyInstaller looks for the libraries a program needs along PATH, and would take Windows'
+    # C runtime or OpenSSL from whichever program's folder comes first there (a Java, a Git).
+    # With only Windows' own folders on it, they come from Python and Windows themselves.
+    windows = Path(os.environ["SYSTEMROOT"])
+    env = {
+        **os.environ,
+        "PATH": f"{windows / 'System32'}{os.pathsep}{windows}",
+        "CAPYPANEL_STAMP": str(stamp),
+        "CAPYPANEL_VERSION_INFO": str(info),
+    }
     spec = ROOT / "packaging" / "capypanel.spec"
     subprocess.run(
         [sys.executable, "-m", "PyInstaller", str(spec), "--noconfirm", "--clean",
