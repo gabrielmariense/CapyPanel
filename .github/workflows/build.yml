@@ -30,6 +30,9 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # the build number counts every commit
+          # A pull request's own last commit, not GitHub's trial merge of it: the exe then
+          # says the build number and commit of what was pushed.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: astral-sh/setup-uv@v10.2.0 # this action publishes exact versions only, no "v10" tag
         with:
           enable-cache: true

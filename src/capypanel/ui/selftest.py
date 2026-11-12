@@ -42,6 +42,8 @@ def _bundled_files() -> list[str]:
 
 def _compiled_libraries() -> list[str]:
     """What comes as compiled code: imported and used once."""
+    import ssl
+
     import pythoncom  # noqa: F401
     import pywintypes  # noqa: F401
     import win32com.client  # noqa: F401
@@ -57,7 +59,9 @@ def _compiled_libraries() -> list[str]:
     svg = QByteArray(b'<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4"/>')
     if not QSvgRenderer(svg).isValid():
         raise RuntimeError("QtSvg can't read an SVG")
-    return ["pywin32", "cryptography", "QtSvg", "QtNetwork"]
+    if not ssl.create_default_context().cert_store_stats()["x509_ca"]:
+        raise RuntimeError("Python's TLS found no certificate of Windows to trust")
+    return ["pywin32", "cryptography", "QtSvg", "QtNetwork", "TLS"]
 
 
 def _qt_parts() -> list[str]:
