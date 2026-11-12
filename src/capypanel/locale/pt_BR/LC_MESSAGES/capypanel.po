@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 14:50-0300\n"
+"POT-Creation-Date: 2026-11-12 15:19-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -2674,6 +2674,9 @@ msgstr "Escolha uma lista aqui: a compartilhada, que todos neste PC veem, a sua 
 
 msgid "Pick a list here: the shared one everyone on this PC sees, your personal one, or one you added. Click a group below it to see just that group's printers."
 msgstr "Escolha uma lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você adicionou. Clique num grupo embaixo dela para ver só as impressoras desse grupo."
+
+msgid "Pick a list here: these are the same lists as in Hosts, the shared one and your own. Click a group below it to see just that group's hosts."
+msgstr "Escolha uma lista aqui: são as mesmas listas do Hosts, a compartilhada e a sua. Clique num grupo embaixo dela para ver só os hosts desse grupo."
 
 msgid "Pick hosts in the list first"
 msgstr "Selecione hosts na lista primeiro"

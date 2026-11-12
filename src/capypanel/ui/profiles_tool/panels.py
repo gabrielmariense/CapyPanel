@@ -727,6 +727,16 @@ class ProfilesTable(QWidget):
             self.tree.setCurrentItem(item)
             self.tree.scrollToItem(item)
 
+    def info_box(self, ident: str) -> QRect | None:
+        """Where the (i) of `ident`'s row is, in the table's inside; None unless that row is the
+        clicked one, the only one that has it."""
+        item = self._item(ident)
+        if item is None or item is not self.tree.currentItem():
+            return None
+        cell = self.tree.visualItemRect(item)
+        left = self.tree.columnViewportPosition(STATE)
+        return info_rect(QRect(left, cell.top(), self.tree.columnWidth(STATE), cell.height()))
+
     def info_at(self, point: QPoint) -> str:
         """The row whose (i) is at `point` of the table's inside: only the clicked row has one."""
         item = self.tree.itemAt(point)

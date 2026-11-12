@@ -4,7 +4,7 @@ foot. A profile's details open in a window. Each tab keeps its own scan, sizes a
 several hosts can be read, counted and cleaned at once."""
 
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -345,9 +345,11 @@ class HostPage(QObject):
 
         self._ctx.pool.read(self, read, done, failed, began)
 
-    def show_sample(self, scan: Scan) -> None:
-        """A guide's sample tab: a scan made up for it, nothing read from or done on any PC."""
+    def show_sample(self, scan: Scan, sizes: Mapping[str, int]) -> None:
+        """A guide's sample tab: a scan and sizes made up for it, nothing read from or done on
+        any PC."""
         self.stage, self.scan, self.read_at = Stage.SCANNED, scan, self._now()
+        self._sizes = dict(sizes)
         self._show_scan()
 
     def close(self) -> None:

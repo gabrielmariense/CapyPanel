@@ -254,7 +254,7 @@ class GuideRunner(QObject):
         self.card.action.clicked.connect(lambda: self._action() if self._action else None)
         self._follow = QTimer(self)  # a scrolled table, a panel that filled in: follow them
         self._follow.setInterval(FOLLOW_MS)
-        self._follow.timeout.connect(self._place)
+        self._follow.timeout.connect(self._follow_up)
         window.installEventFilter(self)
         themes.switches().switched.connect(self._place)
 
@@ -367,6 +367,12 @@ class GuideRunner(QObject):
 
     # ---- where the card goes ----
 
+    def _follow_up(self) -> None:
+        """Follows what moved under the card, but never while a mouse button is down: a card
+        moved or raised between the press and the release of a click can lose the click."""
+        if QApplication.mouseButtons() == Qt.MouseButton.NoButton:
+            self._place()
+
     def _place(self) -> None:
         if self._guide is None or not self._steps:
             return
@@ -379,9 +385,10 @@ class GuideRunner(QObject):
         if area is not None and area.isValid():
             spots.append(area)  # a menu's title, say: no widget of its own
         self._clickable = shown if step.click else []
-        self.shade.setGeometry(window.rect())
-        self.shade.set_holes(spots, passes=step.click)
-        self.shade.raise_()
+        if self.shade.geometry() != window.rect():
+            self.shade.setGeometry(window.rect())
+        if spots != self.shade.holes or self.shade.mask().isEmpty() == step.click:
+            self.shade.set_holes(spots, passes=step.click)
         near = step.near()
         if spots:
             spot = _united(spots)
@@ -395,11 +402,23 @@ class GuideRunner(QObject):
             avoid.append(_rect_of(clear, window))
         size = self.card.size()
         if not spots and (near is None or not _visible(near, window)):  # a card on its own
-            corner = window.rect().center() - QPoint(size.width() // 2, size.height() // 2)
-            self.card.move(corner)  # a welcome, say: in the middle of the window
+            # A welcome, say: in the middle of the window.
+            where = window.rect().center() - QPoint(size.width() // 2, size.height() // 2)
         else:
-            self.card.move(_card_spot(spot, size.width(), size.height(), window.rect(), avoid))
-        self.card.raise_()
+            parts = spots if len(spots) > 1 else []
+            where = _card_spot(spot, size.width(), size.height(), window.rect(), avoid, parts)
+        if self.card.pos() != where:
+            self.card.move(where)
+        self._on_top()
+
+    def _on_top(self) -> None:
+        """The shade over the window's parts, the card over the shade: raised only when
+        something else came above them (a panel shown since), never on every follow-up."""
+        siblings = [w for w in self._window.children() if isinstance(w, QWidget) and
+                    w.isVisible()]  # fmt: skip
+        if siblings[-2:] != [self.shade, self.card]:
+            self.shade.raise_()
+            self.card.raise_()
 
     # ---- what the guide lets through ----
 
@@ -445,18 +464,31 @@ def _covered(card: QRect, avoid: Sequence[QRect]) -> int:
 
 
 def _card_spot(
-    spot: QRect, width: int, height: int, room: QRect, avoid: Sequence[QRect] = ()
+    spot: QRect,
+    width: int,
+    height: int,
+    room: QRect,
+    avoid: Sequence[QRect] = (),
+    parts: Sequence[QRect] = (),
 ) -> QPoint:
-    """Where a card of this size goes beside `spot`: on its right, else under it, on its left,
-    over it, then a corner of the window; always inside `room` and off everything in `avoid`
+    """Where a card of this size goes: beside each of its `parts` first, when it outlines
+    several things apart, then beside `spot` (on its right, else under it, on its left, over
+    it), then a corner of the window. Always inside `room` and off everything in `avoid`
     (what it points at, a panel it talks about)."""
     gap = GAP + OUTLINE
     inner = room.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN)
+
+    def beside(box: QRect) -> list[QPoint]:
+        return [
+            QPoint(box.right() + gap, box.top()),
+            QPoint(box.left(), box.bottom() + gap),
+            QPoint(box.left() - gap - width, box.top()),
+            QPoint(box.left(), box.top() - gap - height),
+        ]
+
     tries = (
-        QPoint(spot.right() + gap, spot.top()),
-        QPoint(spot.left(), spot.bottom() + gap),
-        QPoint(spot.left() - gap - width, spot.top()),
-        QPoint(spot.left(), spot.top() - gap - height),
+        *(point for part in parts for point in beside(part)),
+        *beside(spot),
         QPoint(inner.right() - width, inner.bottom() - height),
         QPoint(inner.left(), inner.bottom() - height),
         QPoint(inner.right() - width, inner.top()),

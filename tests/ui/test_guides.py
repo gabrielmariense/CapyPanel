@@ -347,14 +347,27 @@ def test_the_user_profiles_guide_opens_a_sample_tab_and_closes_it(
     assert window.guides.running == "profiles"
     assert SAMPLE_ID in profiles.tabs.host_keys()  # a tab to point at, never read from a PC
     page = profiles._pages[SAMPLE_ID]
-    assert page.scan is not None and len(page.scan.profiles) == 2
+    assert page.scan is not None and len(page.scan.profiles) == 3
     assert profiles.tabs.current() != SAMPLE_ID  # it starts on the Hosts tab
     card = window.guides.card
+    assert card.title.text() == "Your lists"  # the lists before the hosts in them
     while card.title.text() != "The profiles":
         card.next_button.click()
     assert profiles.tabs.current() == SAMPLE_ID  # then shows the sample's own tab, scanned
     card.back_button.click()
     assert profiles.tabs.current() != SAMPLE_ID  # and Back goes back to the Hosts tab
+    while card.title.text() != "A profile's details":
+        card.next_button.click()
+    picked = page.table.selected()
+    box = page.table.info_box(picked.ident) if picked is not None else None
+    assert box is not None  # the picked row shows its (i), and only the (i) is outlined
+    viewport = page.table.tree.viewport()
+    assert window.guides.shade.holes == [QRect(viewport.mapTo(window, box.topLeft()), box.size())]
+    while card.title.text() != "Ticked to delete":
+        card.next_button.click()
+    assert len(page.table.ticked()) == 2  # the two that can be deleted, as an example
+    card.back_button.click()
+    assert page.table.ticked() == []  # and untick again going back
     window.guides.card.skip_button.click()
     assert SAMPLE_ID not in profiles.tabs.host_keys() and SAMPLE_ID not in profiles._kept
     assert window.hosts.document.hosts.host(SAMPLE_ID) is None  # type: ignore[union-attr]
@@ -379,3 +392,25 @@ def test_a_guide_shows_hidden_panels_and_puts_its_sample_on_top(window: CapyWind
     assert row is not None and row in window.guides.shade.holes  # its row outlined too
     card.skip_button.click()
     assert not tags.isChecked() and not hosts.nav.tags.isVisibleTo(window)  # hidden again
+
+
+def test_back_works_with_a_real_click_through_the_window(window: CapyWindow) -> None:
+    from PySide6.QtTest import QTest
+
+    runner = window.guides
+    runner.show(window._home_guide())
+    _settle()
+    card = runner.card
+
+    def click(button: QPushButton) -> None:
+        spot = button.mapTo(window, button.rect().center())
+        assert window.childAt(spot) is button  # nothing covers it
+        QTest.mouseClick(window.windowHandle(), Qt.MouseButton.LeftButton, pos=spot)
+        _settle()
+
+    click(card.next_button)
+    click(card.next_button)
+    assert card.title.text() == "The sidebar"
+    click(card.back_button)
+    assert card.title.text() == "Three tools"
+    runner.stop()
