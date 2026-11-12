@@ -4,7 +4,7 @@ right, tabs: the pinned Hosts tab lists the group's hosts, and each host opened 
 so several hosts are read, counted and cleaned at once. It keeps no list of its own, and the
 account that signs in to a host is the one Hosts' Accounts give it. Scanning only reads."""
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -297,25 +297,74 @@ class ProfilesTool(Tool):
         return True
 
     def guide(self) -> Guide:
-        """The Hosts tab's guide, or a host's tab's (the first time one is in front)."""
-        page = self._pages.get(self.tabs.current())
-        if page is not None:
-            return self._host_guide(page)
+        """One guide on a sample: the Hosts tab with the sample PC, then the sample PC's own tab
+        with two made-up profiles, so every part of the tool shows without waiting for a scan."""
         hosts = self.hosts_page
 
+        def sample() -> HostPage | None:
+            return self._pages.get(SAMPLE_ID)
+
+        def on_hosts() -> None:
+            self.switch(HOSTS)
+
+        def on_sample() -> None:
+            self.switch(SAMPLE_ID)
+
+        def state_column() -> QRect | None:  # its title and its cells, as one box
+            page = sample()
+            if page is None:
+                return None
+            tree = page.table.tree
+            header = tree.header()
+            if header.isSectionHidden(STATE) or not tree.isVisible():
+                return None
+            corner = header.mapTo(self.window(), QPoint(header.sectionViewportPosition(STATE), 0))
+            height = header.height() + tree.viewport().height()
+            return QRect(corner, QSize(header.sectionSize(STATE), height))
+
+        def part(name: str) -> Callable[[], QWidget | None]:
+            return lambda: getattr(sample(), name, None)
+
         def steps() -> list[Step]:
+            page = sample()
+            name = page.target.name if page is not None else _("SAMPLE-PC")
             return [
                 Step(_("Pick a PC"),
                      _("These are the hosts of your Hosts list. To see a PC's profiles, open it "
                        "in a tab: double-click it, or pick several and press Scan."),
-                     lambda: hosts.table, lambda: self.middle),
+                     lambda: hosts.table, lambda: self.middle, enter=on_hosts),
                 Step(_("Progress"),
                      _("Every PC you open gets a tab, and this card shows how far each one "
-                       "got."), lambda: self.progress, lambda: self.side),
+                       "got."), lambda: self.progress, lambda: self.side, enter=on_hosts),
                 Step(_("Nothing is deleted yet"),
                      _("Each PC opens in a tab up here. Opening and scanning only read its "
                        "profiles: nothing is deleted until you tick some in its tab and "
-                       "confirm."), lambda: self.tabs),
+                       "confirm."), lambda: self.tabs, enter=on_hosts),
+                Step(_("The profiles"),
+                     _("This is the sample PC's tab. Each row is one user's folder on {host}, "
+                       "with when it was last used and its size.").format(host=name),
+                     part("table"), enter=on_sample),
+                Step(_("State"),
+                     _("Says whether a profile can be deleted. Only rows that say Can be deleted "
+                       "have a tick box; the others say why not."),
+                     lambda: None, part("table"), area=state_column, enter=on_sample),
+                Step(_("A profile's details"),
+                     _("Click the (i) at the end of a row, or press Enter, to see everything "
+                       "about that profile in a window of its own."), part("table"),
+                     enter=on_sample),
+                Step(_("Filters"),
+                     _("Hide Windows' own, Only leftovers and Unused for narrow the list to the "
+                       "profiles worth a look."), part("filters"), enter=on_sample),
+                Step(_("Ticked to delete"),
+                     _("The profiles you tick are listed here, with how much space they take, "
+                       "so you can check them before anything happens."), part("side"),
+                     enter=on_sample),
+                Step(_("Delete"),
+                     _("Tick the profiles, then Delete profiles… Each person's folder goes with "
+                       "it, with no recycle bin. To confirm, you type DELETE, and the PC is "
+                       "checked again first."),
+                     lambda: getattr(getattr(sample(), "foot", None), "delete_button", None),
+                     enter=on_sample),
             ]  # fmt: skip
 
         return Guide("profiles", steps, docs="profiles/user-profiles/", setup=self.show_sample,
@@ -349,39 +398,6 @@ class ProfilesTool(Tool):
             self._kept.pop(SAMPLE_ID, None)
         if self._hosts is not None:
             self._hosts.hide_sample()
-
-    def _host_guide(self, page: HostPage) -> Guide:
-        """A host's tab: what its profiles show, picking them, and deleting."""
-
-        def state_column() -> QRect | None:  # its title and its cells, as one box
-            tree = page.table.tree
-            header = tree.header()
-            if header.isSectionHidden(STATE) or not tree.isVisible():
-                return None
-            corner = header.mapTo(self.window(), QPoint(header.sectionViewportPosition(STATE), 0))
-            height = header.height() + tree.viewport().height()
-            return QRect(corner, QSize(header.sectionSize(STATE), height))
-
-        def steps() -> list[Step]:
-            name = page.target.name
-            return [
-                Step(_("The profiles"),
-                     _("Each row is one user's folder on {host}, with when it was last used and "
-                       "its size.").format(host=name), lambda: page.table),
-                Step(_("State"),
-                     _("Says whether a profile can be deleted. Only rows that say Can be deleted "
-                       "have a tick box; the others say why not."),
-                     lambda: None, lambda: page.table, area=state_column),
-                Step(_("Filters"),
-                     _("Hide Windows' own, Only leftovers and Unused for narrow the list to the "
-                       "profiles worth a look."), lambda: page.filters),
-                Step(_("Delete"),
-                     _("Tick the profiles, then Delete profiles… Each person's folder goes with "
-                       "it, with no recycle bin. To confirm, you type DELETE, and the PC is "
-                       "checked again first."), lambda: page.foot.delete_button),
-            ]  # fmt: skip
-
-        return Guide("profiles-host", steps, docs="profiles/user-profiles/")
 
     def quit_question(self, parent: QWidget) -> bool:
         """Before CapyPanel quits: while a host deletes, ask. Cancel the rest and quit lets the
@@ -842,8 +858,6 @@ class ProfilesTool(Tool):
             self.middle.setCurrentWidget(self.hosts_page.box)
             self.cards.setCurrentWidget(self.hosts_page.side)
         self._update()
-        if page is not None:
-            self._shell.guide_changed()  # a host's tab: its guide, the first time
 
     def _step(self, by: int) -> None:
         """Ctrl+Tab: the next tab, the Hosts tab included, round and round."""

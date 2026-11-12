@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:59-0300\n"
+"POT-Creation-Date: 2026-11-12 14:38-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -384,6 +384,9 @@ msgstr "&Configurações…"
 msgid "&Show"
 msgstr "&Mostrar"
 
+msgid "&Show all the guides again"
+msgstr "&Mostrar todos os guias de novo"
+
 msgid "&Show password"
 msgstr "&Mostrar senha"
 
@@ -531,11 +534,18 @@ msgstr "Um aviso na tela de todos que estão conectados."
 msgid "A preset named “{name}” already exists. Replace it?"
 msgstr "Já existe uma predefinição chamada “{name}”. Substituí-la?"
 
+msgid "A profile's details"
+msgstr "Os detalhes de um perfil"
+
 msgid "A registry entry with .bak in its name, and its folder."
 msgstr "Um registro com .bak no nome e a pasta dele."
 
 msgid "A tag"
 msgstr "Uma tag"
+
+#, python-brace-format
+msgid "A tag marks hosts in any group. The sample PC has one called \"{tag}\". Pick a tag here to see only the hosts that have it."
+msgstr "Uma tag marca hosts em qualquer grupo. O PC de exemplo tem uma, a \"{tag}\". Escolha uma tag aqui para ver só os hosts que a têm."
 
 msgid "A toner, ink, drum or box at or below this shows as low."
 msgstr "Um toner, tinta, cilindro ou caixa neste nível ou abaixo aparece como baixo."
@@ -865,6 +875,9 @@ msgstr "O CapyPanel é feito com os seguintes softwares:"
 msgid "CapyPanel is up to date"
 msgstr "Você tem a versão mais nova"
 
+msgid "CapyPanel keeps the computers and printers you look after in one window: see which are on and who's signed in, connect to them, run commands and watch the toner. A few cards show you around."
+msgstr "O CapyPanel reúne numa janela os computadores e as impressoras que você cuida: veja quais estão ligados e quem está conectado, conecte-se a eles, rode comandos e acompanhe o toner. Alguns cartões mostram o caminho."
+
 msgid "CapyPanel reads printers over SNMP, and only reads: it never changes anything on them. Most answer to the community \"public\"; if yours use another one, or SNMP v3, set it in Settings › Printers › Connecting."
 msgstr "O CapyPanel lê as impressoras por SNMP e só lê, nunca muda nada nelas. A maioria responde à comunidade \"public\"; se as suas usam outra, ou SNMP v3, coloque em Configurações › Impressoras › Conexão."
 
@@ -973,6 +986,9 @@ msgstr "Limpar a fila de {printer} em {host}?"
 msgid "Cleared the queue of {printer} on {host}."
 msgstr "Fila de {printer} em {host} limpa."
 
+msgid "Click the (i) at the end of a row, or press Enter, to see everything about that profile in a window of its own."
+msgstr "Clique no (i) no fim de uma linha, ou aperte Enter, para ver tudo sobre aquele perfil numa janela própria."
+
 msgid "Click to copy"
 msgstr "Clique para copiar"
 
@@ -996,6 +1012,9 @@ msgstr "Cor"
 
 msgid "Command"
 msgstr "Comando"
+
+msgid "Command buttons"
+msgstr "Botões de comando"
 
 msgid "Commands"
 msgstr "Comandos"
@@ -1495,10 +1514,6 @@ msgstr "Cada grupo de argumentos deve ser uma lista de textos."
 msgid "Each guide shows again the next time its screen is opened."
 msgstr "Cada guia aparece de novo na próxima vez que a tela dele for aberta."
 
-#, python-brace-format
-msgid "Each row is one user's folder on {host}, with when it was last used and its size."
-msgstr "Cada linha é a pasta de um usuário em {host}, com o último uso e o tamanho."
-
 msgid "Edit connection profile"
 msgstr "Editar perfil de conexão"
 
@@ -1746,8 +1761,8 @@ msgstr "HOSTS EXIBIDOS"
 msgid "Help"
 msgstr "Ajuda"
 
-msgid "Help › Guide to this screen shows a screen's guide again. Help › Documentation has the step-by-step pages."
-msgstr "Ajuda › Guia desta tela mostra o guia de uma tela de novo. Ajuda › Documentação tem as páginas passo a passo."
+msgid "Help › Guide to this screen shows this screen's guide again, and Show all the guides again brings back every guide. Documentation has the step-by-step pages."
+msgstr "Ajuda › Guia desta tela mostra o guia desta tela de novo, e Mostrar todos os guias de novo traz todos de volta. Documentação tem as páginas passo a passo."
 
 msgid "Hide Windows' own"
 msgstr "Ocultar os do Windows"
@@ -1880,9 +1895,6 @@ msgstr "Programas instalados em {host}"
 
 msgid "Inventory"
 msgstr "Inventário"
-
-msgid "Inventory › Add host… adds one at a time, and Import hosts… brings in many at once. A right-click on the table has Add host… too."
-msgstr "Inventário › Adicionar host… põe um de cada vez, e Importar hosts… traz vários de uma vez. O botão direito na tabela também tem Adicionar host…."
 
 msgid "Inventory › Add printer… adds one: a name and its address are enough. The brand, model, serial number and toner are read from the printer."
 msgstr "Inventário › Adicionar impressora… adiciona uma: o nome e o endereço bastam. A marca, o modelo, o número de série e o toner são lidos da impressora."
@@ -2512,8 +2524,8 @@ msgstr "Aberto: {path}"
 msgid "Opens a folder on {host} in File Explorer, over file sharing."
 msgstr "Abre uma pasta de {host} no Explorador de Arquivos, pelo compartilhamento de arquivos."
 
-msgid "Opens every command for the picked host. They use your Windows account; if a PC refuses it, CapyPanel asks for another one, kept in Settings › Hosts › Credentials."
-msgstr "Abre todos os comandos para o host escolhido. Eles usam a sua conta do Windows; se um PC recusar, o CapyPanel pede outra, guardada em Configurações › Hosts › Credenciais."
+msgid "Opens every command for the picked host. A right-click on a host has them too, under All commands. They use your Windows account; if a PC refuses it, CapyPanel asks for another, kept in Settings › Hosts › Credentials."
+msgstr "Abre todos os comandos para o host escolhido. O botão direito num host também tem, em Todos os comandos. Eles usam a sua conta do Windows; se um PC recusar, o CapyPanel pede outra, guardada em Configurações › Hosts › Credenciais."
 
 msgid "Opens the host in a new tab. Typing alone never scans."
 msgstr "Abre o host numa aba nova. Digitar sozinho nunca escaneia."
@@ -2654,6 +2666,9 @@ msgstr "Pessoal"
 
 msgid "Pick a PC"
 msgstr "Escolha um PC"
+
+msgid "Pick a host in the table and its details show here. Right-click a host in the table to see everything you can do with it."
+msgstr "Escolha um host na tabela e os detalhes dele aparecem aqui. Clique com o botão direito num host da tabela para ver tudo o que dá para fazer com ele."
 
 msgid "Pick hosts in the list first"
 msgstr "Selecione hosts na lista primeiro"
@@ -3314,9 +3329,6 @@ msgstr "Mostrar todas"
 msgid "Show every printer again"
 msgstr "Mostrar todas as impressoras de novo"
 
-msgid "Show the &guides again"
-msgstr "Mostrar os &guias de novo"
-
 msgid "Show this group &first"
 msgstr "Mostrar este grupo &primeiro"
 
@@ -3547,10 +3559,6 @@ msgid "Tags for the selected rows, separated by ;"
 msgstr "Tags das linhas selecionadas, separadas por ;"
 
 #, python-brace-format
-msgid "Tags mark hosts across groups, like this sample PC's \"{tag}\". Pick one or several to show only the hosts that carry them."
-msgstr "As tags marcam hosts em qualquer grupo, como a \"{tag}\" deste PC de exemplo. Escolha uma ou várias para ver só os hosts que as têm."
-
-#, python-brace-format
 msgid "Tags mark printers across groups, like this sample printer's \"{tag}\". Pick one or several to show only the printers that carry them."
 msgstr "As tags marcam impressoras em qualquer grupo, como a \"{tag}\" desta impressora de exemplo. Escolha uma ou várias para ver só as impressoras que as têm."
 
@@ -3706,9 +3714,6 @@ msgstr "O histórico ainda não tem nada."
 msgid "The host is checked again before each delete: anyone who signed in since the scan is skipped. Every delete goes in the history."
 msgstr "O host é verificado de novo antes de cada exclusão: quem tiver entrado desde o escaneamento é ignorado. Cada exclusão fica no histórico."
 
-msgid "The host you pick in the table shows here. Right-click it for everything you can do."
-msgstr "O host que você escolher na tabela aparece aqui. O botão direito nele mostra tudo o que dá para fazer."
-
 msgid "The host's notes"
 msgstr "As notas do host"
 
@@ -3815,6 +3820,9 @@ msgstr "Os perfis"
 msgid "The profiles show once the host is scanned."
 msgstr "Os perfis aparecem quando o host for escaneado."
 
+msgid "The profiles you tick are listed here, with how much space they take, so you can check them before anything happens."
+msgstr "Os perfis que você marca aparecem aqui, com o espaço que ocupam, para você conferir antes de qualquer coisa acontecer."
+
 msgid "The programs installed for every user of the PC."
 msgstr "Os programas instalados para todos os usuários do PC."
 
@@ -3911,6 +3919,9 @@ msgstr "Estas são as unidades que voltam a cada entrada."
 msgid "These are the hosts of your Hosts list. To see a PC's profiles, open it in a tab: double-click it, or pick several and press Scan."
 msgstr "Estes são os hosts da sua lista do Hosts. Para ver os perfis de um PC, abra-o numa aba: dê dois cliques nele, ou escolha vários e clique em Escanear."
 
+msgid "They run a command on the picked host in one click. The top row is always there; the rows under it are your quick commands. To choose them, right-click this panel or go to Settings › Hosts › General."
+msgstr "Rodam um comando no host escolhido com um clique. A primeira fileira está sempre ali; as de baixo são os seus comandos rápidos. Para escolhê-los, clique com o botão direito neste painel ou vá em Configurações › Hosts › Geral."
+
 #, python-brace-format
 msgid "They're signed in {where}. Their programs keep running, and they get back to them when they sign in again."
 msgstr "Está conectado {where}. Os programas continuam abertos, e ele volta a eles quando entrar de novo."
@@ -3960,6 +3971,10 @@ msgstr "Este grupo está vazio."
 
 msgid "This is <b>final</b>. With local profiles, each person's desktop and documents go too: there's no recycle bin and no copy."
 msgstr "Isto é <b>definitivo</b>. Com perfis locais, a área de trabalho e os documentos de cada pessoa vão junto: não há lixeira nem cópia."
+
+#, python-brace-format
+msgid "This is the sample PC's tab. Each row is one user's folder on {host}, with when it was last used and its size."
+msgstr "Esta é a aba do PC de exemplo. Cada linha é a pasta de um usuário em {host}, com o último uso e o tamanho."
 
 msgid "This isn't a text file."
 msgstr "Este não é um arquivo de texto."
@@ -4054,6 +4069,9 @@ msgstr "Marque para excluir: a caixa, Espaço ou dois cliques na linha"
 
 msgid "Ticked in tabs"
 msgstr "Marcados nas abas"
+
+msgid "Ticked to delete"
+msgstr "Marcados para excluir"
 
 msgid "Ticked: it's deleted once you click Delete and confirm"
 msgstr "Marcado: é excluído quando você clicar em Excluir e confirmar"
@@ -4191,6 +4209,9 @@ msgstr "Novas versões"
 msgid "Use &defaults"
 msgstr "Usar &padrões"
 
+msgid "Use Inventory to add hosts one at a time or import many at once. You can also add one from a right-click on the table."
+msgstr "Use o Inventário para adicionar hosts um de cada vez ou importar vários de uma vez. O botão direito na tabela também adiciona um."
+
 msgid "Use account"
 msgstr "Usar conta"
 
@@ -4286,6 +4307,9 @@ msgstr "Coletor quase cheio"
 msgctxt "button"
 msgid "Web page"
 msgstr "Página web"
+
+msgid "Welcome to CapyPanel"
+msgstr "Boas-vindas ao CapyPanel"
 
 msgid "What Connect opens, and the login it uses. Refresh's logged-on users and the commands use the account under it."
 msgstr "O que o Conectar abre, e o login que ele usa. Os usuários logados do Atualizar e os comandos usam a conta abaixo."
@@ -4410,9 +4434,6 @@ msgstr "Sua conta do Windows"
 #, python-brace-format
 msgid "Your Windows account ({user})"
 msgstr "Sua conta do Windows ({user})"
-
-msgid "Your buttons for the commands you use most. Choose them with a right-click on the panel, in Customize the details panel…, or in Settings › Hosts › General."
-msgstr "Seus botões para os comandos que você mais usa. Escolha quais aparecem com o botão direito no painel, em Personalizar o painel de detalhes…, ou em Configurações › Hosts › Geral."
 
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."

@@ -59,6 +59,7 @@ class Step:
     join: bool = False  # several targets outlined as one box (a row of buttons)
     keep_clear: Callable[[], QWidget | None] = lambda: None  # what the card must not cover
     area: Callable[[], QRect | None] = lambda: None  # a box of its own, in the window's terms
+    enter: Callable[[], None] = lambda: None  # as its card comes up: show the right tab, say
 
 
 @dataclass(frozen=True)
@@ -306,6 +307,7 @@ class GuideRunner(QObject):
             return
         self._at = at
         step, last = self._steps[at], at == len(self._steps) - 1
+        step.enter()
         card = self.card
         card.mascot.setVisible(guide.mascot and at == 0)
         card.title.setText(step.title)
@@ -392,7 +394,11 @@ class GuideRunner(QObject):
         if clear is not None and _visible(clear, window):
             avoid.append(_rect_of(clear, window))
         size = self.card.size()
-        self.card.move(_card_spot(spot, size.width(), size.height(), window.rect(), avoid))
+        if not spots and (near is None or not _visible(near, window)):  # a card on its own
+            corner = window.rect().center() - QPoint(size.width() // 2, size.height() // 2)
+            self.card.move(corner)  # a welcome, say: in the middle of the window
+        else:
+            self.card.move(_card_spot(spot, size.width(), size.height(), window.rect(), avoid))
         self.card.raise_()
 
     # ---- what the guide lets through ----

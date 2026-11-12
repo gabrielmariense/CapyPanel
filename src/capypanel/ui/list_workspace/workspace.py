@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from dataclasses import replace
 from pathlib import Path
 
-from PySide6.QtCore import QByteArray, QPoint, Qt, QTimer, Signal
+from PySide6.QtCore import QByteArray, QPoint, QRect, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QDialog,
@@ -32,12 +32,25 @@ from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList, HostList
 from capypanel.core.i18n import _, ngettext
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.export_hosts import Source
-from capypanel.ui.groups import ManageGroupsDialog, TreeMenu, fill_host_move_menu, fill_move_menu
+from capypanel.ui.groups import (
+    ROLE_ID,
+    ManageGroupsDialog,
+    TreeMenu,
+    fill_host_move_menu,
+    fill_move_menu,
+)
 from capypanel.ui.hosts import MAX_TAG, confirm, group_path
 from capypanel.ui.list_workspace.actions import ListActions
 from capypanel.ui.list_workspace.customize import CustomizeDialog, Part, PartsTab
 from capypanel.ui.list_workspace.details import DetailsPanel
-from capypanel.ui.list_workspace.panels import ItemTable, NavigationPane, SearchBox, TagStrip
+from capypanel.ui.list_workspace.panels import (
+    SAMPLE_ID,
+    ItemTable,
+    NavigationPane,
+    SearchBox,
+    TagStrip,
+    is_sample,
+)
 from capypanel.ui.list_workspace.splitter import PaneSplitter
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.main_window.tool import Shell, Tool
@@ -48,7 +61,6 @@ from capypanel.ui.new_list import ask_new_list
 log = logging.getLogger(__name__)
 
 HIDDEN_KEY = "details_hidden"  # the Details parts this person chose not to see
-SAMPLE_ID = "guide-sample"  # the item a guide adds while it runs: never saved, never read
 
 
 class ListWorkspace(Tool):
@@ -71,6 +83,7 @@ class ListWorkspace(Tool):
         self._list_commands = commands
         self._doc: OpenList | None = None
         self._real_doc: OpenList | None = None  # the list as saved, while a guide's sample shows
+        self._shown_for_guide: list[QAction] = []  # hidden panels a guide showed
         self._hold_fill = False  # at start: the table is filled once, at the end
         self._places = shell.paths.lists(self.TOOL_ID)  # lists\<tool>\, shared and own
         self._default_list = self._places.default
@@ -1327,42 +1340,71 @@ class ListWorkspace(Tool):
     def _writable(self) -> OpenList | None:
         return self._doc if self._doc is not None and not self._doc.read_only else None
 
-    # ---- a sample item while a guide runs ----
+    # ---- samples while a guide runs ----
 
     def sample_item(self, group: str) -> Host | None:
         """The tool's sample for its guides (id SAMPLE_ID), in `group`; None: no sample."""
         return None
 
+    def sample_items(self, group: str) -> list[Host]:
+        """Every sample the tool shows (ids SAMPLE_ID, then SAMPLE_ID-2…); the first is picked.
+        One, sample_item's, unless a tool shows more (Printers: one per status)."""
+        item = self.sample_item(group)
+        return [item] if item is not None else []
+
     def sample_shown(self) -> bool:
         return self._real_doc is not None
 
     def show_sample(self) -> None:
-        """While a guide runs: the list on show gains the tool's sample, picked, so the guide's
-        cards have something to point at. Only in memory: the list is never saved with it, and
-        nothing is read from its address (each tool's checks leave SAMPLE_ID out)."""
+        """While a guide runs: the list on show gains the tool's samples, on top of the table
+        with the first picked, and hidden panels show, so the guide's cards have something to
+        point at. Only in memory: the list is never saved with them, and nothing is read from
+        their addresses (each tool's checks leave out every is_sample id)."""
         doc = self._doc
         if doc is None or self._real_doc is not None:
             return
         group = self.nav.selected_group_id()  # where the person is looking
-        sample = self.sample_item(group if group and doc.hosts.group(group) else NO_GROUP)
-        if sample is None:
+        samples = self.sample_items(group if group and doc.hosts.group(group) else NO_GROUP)
+        if not samples:
             return
-        hosts = replace(doc.hosts, hosts=(*doc.hosts.hosts, sample))
+        a = self._list_commands
+        self._shown_for_guide = [p for p in (a.show_groups, a.show_tags, a.show_details)
+                                 if not p.isChecked()]  # fmt: skip
+        for panel in self._shown_for_guide:
+            panel.trigger()
+        hosts = replace(doc.hosts, hosts=(*doc.hosts.hosts, *samples))
         self._real_doc = doc
         self._doc = OpenList(doc.path, hosts, doc.stamp, read_only=doc.read_only, kind=doc.kind)
         self.refresh()
-        self.table.select_ids([SAMPLE_ID])
+        self.table.select_ids([samples[0].id])
         self._selection_changed()
 
     def hide_sample(self) -> None:
-        """The guide ended: the list as it was, the sample gone."""
+        """The guide ended: the list as it was, the samples gone, the panels as they were."""
         real, self._real_doc = self._real_doc, None
         if real is None:
             return
-        if self._doc is not None and self._doc.hosts.host(SAMPLE_ID) is not None:
+        if self._doc is not None and any(is_sample(h.id) for h in self._doc.hosts.hosts):
             self._doc = real  # unless another list was opened meanwhile
+        for panel in self._shown_for_guide:
+            if panel.isChecked():
+                panel.trigger()
+        self._shown_for_guide = []
         self.refresh()
         self._selection_changed()
+
+    def sample_row(self, window: QWidget) -> QRect | None:
+        """The first sample's row in the table, in `window`'s terms: for a card to outline it."""
+        for index in range(self.table.topLevelItemCount()):
+            item = self.table.topLevelItem(index)
+            if item is not None and item.data(0, ROLE_ID) == SAMPLE_ID:
+                viewport = self.table.viewport()
+                row = self.table.visualItemRect(item)
+                if not row.isValid() or not viewport.isVisible():
+                    return None
+                row = QRect(0, row.top(), viewport.width(), row.height())
+                return QRect(viewport.mapTo(window, row.topLeft()), row.size())
+        return None
 
     def _kind(self, path: Path) -> ListKind:
         return locations.list_kind(path, default=self._default_list, personal=self._personal_list)

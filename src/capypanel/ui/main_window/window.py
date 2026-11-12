@@ -258,7 +258,9 @@ class MainWindow(QMainWindow):
         self._view_menu = StayOpenMenu(self)
         bar.addMenu(self._view_menu)
         self._help_menu = bar.addMenu("")
-        self._help_menu.addActions([a.show_guide, a.documentation, a.report_problem])
+        self._help_menu.addActions(
+            [a.show_guide, a.show_all_guides, a.documentation, a.report_problem]
+        )
         self._help_menu.addSeparator()
         self._help_menu.addActions([a.check_updates, a.about])
         # A newer release: a button at the menu bar's right end, the same in every tool.
@@ -310,6 +312,7 @@ class MainWindow(QMainWindow):
         a.about.triggered.connect(lambda: self.open_settings("about"))  # About is a page there
         a.check_updates.triggered.connect(lambda: self.open_updates())
         a.show_guide.triggered.connect(lambda: self._guide_now(force=True))
+        a.show_all_guides.triggered.connect(self.show_all_guides_again)
         self.updater.changed.connect(self._show_update_button)
         a.show_toolbar.toggled.connect(self._show_toolbars)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
@@ -402,7 +405,6 @@ class MainWindow(QMainWindow):
         dialog.closing_picked.connect(self._set_closing)
         dialog.updates_picked.connect(lambda how: self._set_update_checks(how, dialog))
         dialog.about.updates_button.clicked.connect(lambda: self.open_updates(dialog))
-        dialog.about.guides_button.clicked.connect(self.show_all_guides_again)
         return dialog
 
     def _set_update_checks(self, how: str, dialog: SettingsDialog) -> None:
@@ -605,6 +607,10 @@ class MainWindow(QMainWindow):
 
         def steps() -> list[Step]:
             return [
+                Step(_("Welcome to CapyPanel"),
+                     _("CapyPanel keeps the computers and printers you look after in one window: "
+                       "see which are on and who's signed in, connect to them, run commands and "
+                       "watch the toner. A few cards show you around."), lambda: None),
                 Step(_("Three tools"),
                      _("Hosts for your computers, Printers for your printers, and User profiles "
                        "to clear old Windows profiles off a PC. Each tile opens its tool."),
@@ -613,17 +619,13 @@ class MainWindow(QMainWindow):
                      _("Every tool is one click away here, from any screen. Home is at the top, "
                        "Settings at the bottom."), lambda: rail),
                 Step(_("Help"),
-                     _("Help › Guide to this screen shows a screen's guide again. Help › "
-                       "Documentation has the step-by-step pages."),
+                     _("Help › Guide to this screen shows this screen's guide again, and Show "
+                       "all the guides again brings back every guide. Documentation has the "
+                       "step-by-step pages."),
                      lambda: None, lambda: home, area=help_title),
             ]  # fmt: skip
 
         return Guide("home", steps, docs="getting-started/", mascot=True)
-
-    def guide_changed(self) -> None:
-        """A tool showed another part with a guide of its own (a host's tab in User profiles):
-        offered the first time, like a screen's."""
-        self._guide_now()
 
     def tools_working(self) -> bool:
         return any(tool.working() for tool in self.tools.values())

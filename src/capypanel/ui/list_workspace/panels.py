@@ -506,9 +506,18 @@ def sorted_by[T](
     return filled + [r for r in by_name if not cell(r)]
 
 
+SAMPLE_ID = "guide-sample"  # a guide's sample item: never saved, never read from the network
+
+
+def is_sample(item_id: object) -> bool:
+    """A guide's sample (SAMPLE_ID, or SAMPLE_ID and a number when a tool shows several)."""
+    return isinstance(item_id, str) and item_id.startswith(SAMPLE_ID)
+
+
 class SortedRow(QTreeWidgetItem):
     """A table row that sorts naturally (A–Z or Z–A by the clicked column), ties by its name,
-    A–Z either way. A cell with nothing in it, or marked ROLE_NOTHING, goes last either way."""
+    A–Z either way. A cell with nothing in it, or marked ROLE_NOTHING, goes last either way.
+    A guide's sample stays on top whatever the order, where the guide's card can find it."""
 
     def sort_text(self, column: int) -> str:
         return "" if self.data(column, ROLE_NOTHING) else self.text(column)
@@ -524,6 +533,9 @@ class SortedRow(QTreeWidgetItem):
         descending = tree is not None and tree.header().sortIndicatorOrder() == (
             Qt.SortOrder.DescendingOrder
         )
+        sample, other_sample = is_sample(self.data(0, ROLE_ID)), is_sample(other.data(0, ROLE_ID))
+        if sample != other_sample:
+            return sample != descending
         if mine != theirs:
             if NOTHING in (mine, theirs):
                 return (theirs == NOTHING) != descending

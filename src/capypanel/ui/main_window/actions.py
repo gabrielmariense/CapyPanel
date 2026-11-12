@@ -32,6 +32,7 @@ class ShellActions:
     documentation: QAction
     report_problem: QAction
     show_guide: QAction
+    show_all_guides: QAction
     check_updates: QAction
     about: QAction
 
@@ -56,6 +57,7 @@ def retranslate_actions(a: ShellActions) -> None:
     a.documentation.setText(_("&Documentation"))
     a.report_problem.setText(_("&Report a problem"))
     a.show_guide.setText(_("&Guide to this screen"))
+    a.show_all_guides.setText(_("&Show all the guides again"))
     a.check_updates.setText(_("Check for &updates…"))
     a.about.setText(_("&About CapyPanel"))
     a.show_toolbar.setText(_("T&oolbar"))

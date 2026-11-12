@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 13:59-0300\n"
+"POT-Creation-Date: 2026-11-12 14:38-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -383,6 +383,9 @@ msgstr ""
 msgid "&Show"
 msgstr ""
 
+msgid "&Show all the guides again"
+msgstr ""
+
 msgid "&Show password"
 msgstr ""
 
@@ -536,10 +539,19 @@ msgstr ""
 msgid "A preset named “{name}” already exists. Replace it?"
 msgstr ""
 
+msgid "A profile's details"
+msgstr ""
+
 msgid "A registry entry with .bak in its name, and its folder."
 msgstr ""
 
 msgid "A tag"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"A tag marks hosts in any group. The sample PC has one called \"{tag}\". "
+"Pick a tag here to see only the hosts that have it."
 msgstr ""
 
 msgid "A toner, ink, drum or box at or below this shows as low."
@@ -886,6 +898,12 @@ msgid "CapyPanel is up to date"
 msgstr ""
 
 msgid ""
+"CapyPanel keeps the computers and printers you look after in one window: "
+"see which are on and who's signed in, connect to them, run commands and "
+"watch the toner. A few cards show you around."
+msgstr ""
+
+msgid ""
 "CapyPanel reads printers over SNMP, and only reads: it never changes "
 "anything on them. Most answer to the community \"public\"; if yours use "
 "another one, or SNMP v3, set it in Settings › Printers › Connecting."
@@ -1003,6 +1021,11 @@ msgstr ""
 msgid "Cleared the queue of {printer} on {host}."
 msgstr ""
 
+msgid ""
+"Click the (i) at the end of a row, or press Enter, to see everything "
+"about that profile in a window of its own."
+msgstr ""
+
 msgid "Click to copy"
 msgstr ""
 
@@ -1025,6 +1048,9 @@ msgid "Colour"
 msgstr ""
 
 msgid "Command"
+msgstr ""
+
+msgid "Command buttons"
 msgstr ""
 
 msgid "Commands"
@@ -1533,12 +1559,6 @@ msgstr ""
 msgid "Each guide shows again the next time its screen is opened."
 msgstr ""
 
-#, python-brace-format
-msgid ""
-"Each row is one user's folder on {host}, with when it was last used and "
-"its size."
-msgstr ""
-
 msgid "Edit connection profile"
 msgstr ""
 
@@ -1801,8 +1821,9 @@ msgid "Help"
 msgstr ""
 
 msgid ""
-"Help › Guide to this screen shows a screen's guide again. Help › "
-"Documentation has the step-by-step pages."
+"Help › Guide to this screen shows this screen's guide again, and Show all"
+" the guides again brings back every guide. Documentation has the step-by-"
+"step pages."
 msgstr ""
 
 msgid "Hide Windows' own"
@@ -1941,11 +1962,6 @@ msgid "Installed programs on {host}"
 msgstr ""
 
 msgid "Inventory"
-msgstr ""
-
-msgid ""
-"Inventory › Add host… adds one at a time, and Import hosts… brings in "
-"many at once. A right-click on the table has Add host… too."
 msgstr ""
 
 msgid ""
@@ -2615,9 +2631,9 @@ msgid "Opens a folder on {host} in File Explorer, over file sharing."
 msgstr ""
 
 msgid ""
-"Opens every command for the picked host. They use your Windows account; "
-"if a PC refuses it, CapyPanel asks for another one, kept in Settings › "
-"Hosts › Credentials."
+"Opens every command for the picked host. A right-click on a host has them"
+" too, under All commands. They use your Windows account; if a PC refuses "
+"it, CapyPanel asks for another, kept in Settings › Hosts › Credentials."
 msgstr ""
 
 msgid "Opens the host in a new tab. Typing alone never scans."
@@ -2765,6 +2781,11 @@ msgid "Personal"
 msgstr ""
 
 msgid "Pick a PC"
+msgstr ""
+
+msgid ""
+"Pick a host in the table and its details show here. Right-click a host in"
+" the table to see everything you can do with it."
 msgstr ""
 
 msgid "Pick hosts in the list first"
@@ -3453,9 +3474,6 @@ msgstr ""
 msgid "Show every printer again"
 msgstr ""
 
-msgid "Show the &guides again"
-msgstr ""
-
 msgid "Show this group &first"
 msgstr ""
 
@@ -3694,12 +3712,6 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
-"Tags mark hosts across groups, like this sample PC's \"{tag}\". Pick one "
-"or several to show only the hosts that carry them."
-msgstr ""
-
-#, python-brace-format
-msgid ""
 "Tags mark printers across groups, like this sample printer's \"{tag}\". "
 "Pick one or several to show only the printers that carry them."
 msgstr ""
@@ -3878,11 +3890,6 @@ msgid ""
 "the scan is skipped. Every delete goes in the history."
 msgstr ""
 
-msgid ""
-"The host you pick in the table shows here. Right-click it for everything "
-"you can do."
-msgstr ""
-
 msgid "The host's notes"
 msgstr ""
 
@@ -3999,6 +4006,11 @@ msgstr ""
 msgid "The profiles show once the host is scanned."
 msgstr ""
 
+msgid ""
+"The profiles you tick are listed here, with how much space they take, so "
+"you can check them before anything happens."
+msgstr ""
+
 msgid "The programs installed for every user of the PC."
 msgstr ""
 
@@ -4107,6 +4119,12 @@ msgid ""
 "in a tab: double-click it, or pick several and press Scan."
 msgstr ""
 
+msgid ""
+"They run a command on the picked host in one click. The top row is always"
+" there; the rows under it are your quick commands. To choose them, right-"
+"click this panel or go to Settings › Hosts › General."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "They're signed in {where}. Their programs keep running, and they get back"
@@ -4161,6 +4179,12 @@ msgstr ""
 msgid ""
 "This is <b>final</b>. With local profiles, each person's desktop and "
 "documents go too: there's no recycle bin and no copy."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"This is the sample PC's tab. Each row is one user's folder on {host}, "
+"with when it was last used and its size."
 msgstr ""
 
 msgid "This isn't a text file."
@@ -4256,6 +4280,9 @@ msgid "Tick to delete: the box, Space, or a double-click on the row"
 msgstr ""
 
 msgid "Ticked in tabs"
+msgstr ""
+
+msgid "Ticked to delete"
 msgstr ""
 
 msgid "Ticked: it's deleted once you click Delete and confirm"
@@ -4396,6 +4423,11 @@ msgstr ""
 msgid "Use &defaults"
 msgstr ""
 
+msgid ""
+"Use Inventory to add hosts one at a time or import many at once. You can "
+"also add one from a right-click on the table."
+msgstr ""
+
 msgid "Use account"
 msgstr ""
 
@@ -4496,6 +4528,9 @@ msgstr ""
 
 msgctxt "button"
 msgid "Web page"
+msgstr ""
+
+msgid "Welcome to CapyPanel"
 msgstr ""
 
 msgid ""
@@ -4642,12 +4677,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Your Windows account ({user})"
-msgstr ""
-
-msgid ""
-"Your buttons for the commands you use most. Choose them with a right-"
-"click on the panel, in Customize the details panel…, or in Settings › "
-"Hosts › General."
 msgstr ""
 
 msgid "Your computers: connect, see who's logged on, check them."

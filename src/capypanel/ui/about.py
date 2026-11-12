@@ -152,9 +152,6 @@ class AboutPage(Page):
             rows.append((_("Build:"), " · ".join(build)))
         text.addLayout(_rows(rows, self._open_link))
         self.updates_button = QPushButton(_("Check for &updates"))
-        self.guides_button = QPushButton(_("Show the &guides again"))
-        self.guides_button.setToolTip(_("Each guide shows again the next time its screen is "
-                                        "opened."))  # fmt: skip
         self.report_button = QPushButton(_("&Report a problem"))
         self.logs_button = QPushButton(_("Open &log folder"))
         self.logs_button.setToolTip(_("The app's logs, to attach to a problem report"))
@@ -165,7 +162,6 @@ class AboutPage(Page):
         buttons = QHBoxLayout()
         buttons.addWidget(self.updates_button)
         buttons.addWidget(self.report_button)
-        buttons.addWidget(self.guides_button)
         buttons.addWidget(self.logs_button)
         buttons.addStretch(1)
         text.addLayout(buttons)

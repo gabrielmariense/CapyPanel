@@ -42,10 +42,6 @@ class Shell(Protocol):
         """Quit CapyPanel with no question (a tool that held the quit lets it go on)."""
         ...
 
-    def guide_changed(self) -> None:
-        """The tool shows another part with a guide of its own: offered if never seen."""
-        ...
-
     def tool(self, tool_id: str) -> "Tool | None":
         """Another tool of the window, for a tool that builds on it (User profiles reads Hosts'
         lists); None when the window has no such tool."""

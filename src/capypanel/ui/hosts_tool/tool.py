@@ -60,8 +60,9 @@ from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
 from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.list_workspace.customize import Part
+from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
-from capypanel.ui.list_workspace.workspace import SAMPLE_ID, ListWorkspace
+from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 from capypanel.ui.menus import shortcut_text
 from capypanel.ui.saved_credentials import KeptLogin
@@ -332,39 +333,40 @@ class HostsTool(ListWorkspace):
         self._selection_changed()
 
     def guide(self) -> Guide:
-        """Its own first steps: lists, adding hosts, Details, Connect, Refresh, the quick
-        commands (when a picked host shows them) and Commands. No step asks for a click."""
+        """Its own first steps: lists, tags, adding hosts, Details with the sample's row,
+        Connect, Refresh, the command buttons (when a picked host shows them) and Commands.
+        No step asks for a click."""
         bar = self.toolbar
 
-        def quick() -> list[QWidget]:  # the picked host's quick-command buttons, every row
-            buttons = getattr(self.details, "buttons", {})
-            alive = {k: b for k, b in buttons.items() if shiboken6.isValid(b)}
-            return [b for k, b in alive.items() if k.startswith("quick:")]
+        def buttons() -> list[QWidget]:  # the picked host's command buttons, every row
+            found = getattr(self.details, "buttons", {})
+            return [b for b in found.values() if shiboken6.isValid(b)]
 
         def steps() -> list[Step]:
-            quick_step = [
-                Step(_("Quick commands"),
-                     _("Your buttons for the commands you use most. Choose them with a "
-                       "right-click on the panel, in Customize the details panel…, or in "
-                       "Settings › Hosts › General."), quick, lambda: self.details, join=True),
-            ] if any(b.isVisibleTo(self) for b in quick()) else []  # fmt: skip
+            buttons_step = [
+                Step(_("Command buttons"),
+                     _("They run a command on the picked host in one click. The top row is "
+                       "always there; the rows under it are your quick commands. To choose "
+                       "them, right-click this panel or go to Settings › Hosts › General."),
+                     buttons, lambda: self.details, join=True),
+            ] if any(b.isVisibleTo(self) for b in buttons()) else []  # fmt: skip
             return [
                 Step(_("Your lists"),
                      _("Pick the list here: the shared one everyone on this PC sees, your "
                        "personal one, or one you add. Its groups are below it: a click on one "
                        "shows only its hosts."), lambda: self.nav),
                 Step(_("Tags"),
-                     _("Tags mark hosts across groups, like this sample PC's \"{tag}\". Pick one "
-                       "or several to show only the hosts that carry them.").format(
+                     _("A tag marks hosts in any group. The sample PC has one called "
+                       "\"{tag}\". Pick a tag here to see only the hosts that have it.").format(
                          tag=_("sample")), lambda: self.nav.tags),
                 Step(_("Add hosts"),
-                     _("Inventory › Add host… adds one at a time, and Import hosts… brings in "
-                       "many at once. A right-click on the table has Add host… too."),
+                     _("Use Inventory to add hosts one at a time or import many at once. You "
+                       "can also add one from a right-click on the table."),
                      lambda: bar.inventory_button),
                 Step(_("Details"),
-                     _("The host you pick in the table shows here. Right-click it for "
-                       "everything you can do."),
-                     lambda: self.details),
+                     _("Pick a host in the table and its details show here. Right-click a host "
+                       "in the table to see everything you can do with it."),
+                     lambda: self.details, area=lambda: self.sample_row(self.window())),
                 Step(_("Connect"),
                      _("Opens the picked host's screen with its connection profile's tool. "
                        "Profiles are in Settings › Hosts › Connecting."),
@@ -372,11 +374,12 @@ class HostsTool(ListWorkspace):
                 Step(_("Refresh all"),
                      _("Checks whether each host shown is on and who is signed in. Right-click "
                        "it to choose what it checks."), lambda: bar.refresh_button),
-                *quick_step,
+                *buttons_step,
                 Step(_("Commands"),
-                     _("Opens every command for the picked host. They use your Windows "
-                       "account; if a PC refuses it, CapyPanel asks for another one, kept in "
-                       "Settings › Hosts › Credentials."), lambda: bar.commands_button),
+                     _("Opens every command for the picked host. A right-click on a host has "
+                       "them too, under All commands. They use your Windows account; if a PC "
+                       "refuses it, CapyPanel asks for another, kept in Settings › Hosts › "
+                       "Credentials."), lambda: bar.commands_button),
             ]  # fmt: skip
 
         return Guide("hosts", steps, docs="hosts/host-lists/", setup=self.show_sample,
@@ -897,7 +900,7 @@ class HostsTool(ListWorkspace):
                 hidden=self.hidden_parts(),
             )
             self.details.show_host(details, 1, needle=self._needle())
-            if host.connect_address and host.id not in self._facts and host.id != SAMPLE_ID:
+            if host.connect_address and host.id not in self._facts and not is_sample(host.id):
                 self._facts_timer.start()  # read once it stays selected a moment
         else:
             self.details.show_host(None, len(items), summary=self._summary())
@@ -1076,7 +1079,7 @@ class HostsTool(ListWorkspace):
     def check_hosts(self, hosts: Sequence[Host], *, status: bool, users: bool) -> None:
         if self._run is not None or not (status or users):
             return
-        hosts = [h for h in hosts if h.id != SAMPLE_ID]  # a guide's sample: never read
+        hosts = [h for h in hosts if not is_sample(h.id)]  # a guide's sample: never read
         targets = self._refusing_last(
             [(h.id, h.connect_address) for h in hosts if h.connect_address]
         )

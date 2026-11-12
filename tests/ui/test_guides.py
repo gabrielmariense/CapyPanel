@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QLabel, QPushButton
 
 from capypanel.core import settings
 from capypanel.ui import guides
+from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.guides import Guide, Step
 from capypanel.ui.list_workspace.workspace import SAMPLE_ID
 from capypanel.ui.main_window import window as window_module
@@ -60,17 +61,22 @@ def test_home_s_guide_steps_through_and_is_kept_as_seen(window: CapyWindow) -> N
     _settle()
     card = runner.card
     assert runner.running == "home" and not card.isHidden()
-    assert card.title.text() == "Three tools" and not card.mascot.isHidden()
-    assert card.dots.text() == "● ○ ○" and card.back_button.isHidden()
+    assert card.title.text() == "Welcome to CapyPanel" and not card.mascot.isHidden()
+    assert card.dots.text() == "● ○ ○ ○" and card.back_button.isHidden()
     assert not runner.shade.isHidden() and runner.shade.geometry() == window.rect()
+    assert runner.shade.holes == []  # a welcome points at nothing: in the middle
+    middle = card.geometry().center() - window.rect().center()
+    assert abs(middle.x()) <= 1 and abs(middle.y()) <= 1
+    card.next_button.click()
+    assert card.title.text() == "Three tools" and card.mascot.isHidden()
     tiles = [QRect(t.mapTo(window, QPoint(0, 0)), t.size()) for t in window.home.tiles]
     shown = [
         t for t, tile in zip(tiles, window.home.tiles, strict=True) if tile.isVisibleTo(window)
     ]
     assert runner.shade.holes == shown  # every tile outlined, or none: never just one
     card.next_button.click()
-    assert card.title.text() == "The rail" and card.mascot.isHidden()
-    assert card.dots.text() == "○ ● ○" and not card.back_button.isHidden()
+    assert card.title.text() == "The rail"
+    assert card.dots.text() == "○ ○ ● ○" and not card.back_button.isHidden()
     rail = QRect(window.rail.mapTo(window, QPoint(0, 0)), window.rail.size())
     assert runner.shade.holes == [rail]  # the rail stays bright, outlined
     assert not card.geometry().intersects(rail)  # and the card beside it, not over it
@@ -128,20 +134,16 @@ def test_a_card_always_fits_in_the_window() -> None:
     assert room.contains(QRect(huge.x(), huge.y(), 300, 150))
 
 
-def test_help_shows_this_screen_s_guide_and_about_shows_them_all_again(
-    window: CapyWindow,
-) -> None:
+def test_help_shows_this_screen_s_guide_and_all_of_them_again(window: CapyWindow) -> None:
     window.show_tool("hosts")
     texts = [a.text() for a in window._help_menu.actions() if a.text()]
-    assert texts[0] == "&Guide to this screen"
+    assert texts[:2] == ["&Guide to this screen", "&Show all the guides again"]
     window.commands.show_guide.trigger()
     assert window.guides.running == "hosts"
     assert window.guides.card.title.text() == "Your lists"
     window.guides.card.skip_button.click()
-    dialog = window.settings_dialog()
-    dialog.about.guides_button.click()
+    window.commands.show_all_guides.trigger()
     assert window.prefs["guides"] == []
-    dialog.close()
 
 
 def test_every_tool_s_guide_ends_on_its_docs_page(window: CapyWindow) -> None:
@@ -333,7 +335,34 @@ def test_the_user_profiles_guide_opens_a_sample_tab_and_closes_it(
     assert SAMPLE_ID in profiles.tabs.host_keys()  # a tab to point at, never read from a PC
     page = profiles._pages[SAMPLE_ID]
     assert page.scan is not None and len(page.scan.profiles) == 2
-    assert profiles.tabs.current() != SAMPLE_ID  # the guide stays on the Hosts tab
+    assert profiles.tabs.current() != SAMPLE_ID  # it starts on the Hosts tab
+    card = window.guides.card
+    while card.title.text() != "The profiles":
+        card.next_button.click()
+    assert profiles.tabs.current() == SAMPLE_ID  # then shows the sample's own tab, scanned
+    card.back_button.click()
+    assert profiles.tabs.current() != SAMPLE_ID  # and Back goes back to the Hosts tab
     window.guides.card.skip_button.click()
     assert SAMPLE_ID not in profiles.tabs.host_keys() and SAMPLE_ID not in profiles._kept
     assert window.hosts.document.hosts.host(SAMPLE_ID) is None  # type: ignore[union-attr]
+
+
+def test_a_guide_shows_hidden_panels_and_puts_its_sample_on_top(window: CapyWindow) -> None:
+    hosts = window.hosts
+    window.show_tool("hosts")
+    tags = hosts._list_commands.show_tags
+    if tags.isChecked():
+        tags.trigger()  # this person hid the Tags panel
+    assert not hosts.nav.tags.isVisibleTo(window)
+    window.commands.show_guide.trigger()
+    _settle()
+    assert hosts.nav.tags.isVisibleTo(window)  # shown for the Tags card
+    top = hosts.table.topLevelItem(0)
+    assert top is not None and top.data(0, ROLE_ID) == SAMPLE_ID  # first, whatever the order
+    card = window.guides.card
+    while card.title.text() != "Details":
+        card.next_button.click()
+    row = hosts.sample_row(window)
+    assert row is not None and row in window.guides.shade.holes  # its row outlined too
+    card.skip_button.click()
+    assert not tags.isChecked() and not hosts.nav.tags.isVisibleTo(window)  # hidden again
