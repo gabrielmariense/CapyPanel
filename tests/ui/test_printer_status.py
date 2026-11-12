@@ -262,19 +262,36 @@ def test_the_printers_guide_points_at_the_real_controls(
     guide = printers.guide()
     assert guide.guide_id == "printers" and guide.docs == "printers/checking/"
     assert (Path("docs") / "printers" / "checking.md").exists()
-    steps = list(guide.steps())  # the list has printers: no "Add a printer"
-    assert [s.title for s in steps] == ["The SNMP account", "Refresh all"]
-    assert steps[1].target() is printers.toolbar.refresh_button
-    for step, page in zip(steps, ("printer_connecting", "printer_warnings"), strict=True):
+    titles = [
+        "Your printer lists", "Add printers", "Your printers", "Refresh all", "Status and Toner",
+        "Printers that need attention", "Refresh on its own", "If nothing shows up",
+    ]  # fmt: skip
+    steps = list(guide.steps())
+    assert [s.title for s in steps] == titles
+    assert not any(s.click for s in steps)  # no step asks for a click
+    assert steps[1].target() is printers.toolbar.inventory_button
+    assert steps[2].target() == [printers.table, printers.details]
+    assert steps[3].target() is printers.toolbar.refresh_button
+    for step, page in zip(steps[6:], ("printer_warnings", "printer_connecting"), strict=True):
         assert step.action is not None
         step.action[1]()
         assert printers._shell.settings_pages[-1] == page  # type: ignore[attr-defined]
-    empty = tmp_path / "empty.json"
+    printers.resize(1280, 720)
+    printers.show()
+    QApplication.processEvents()
+    box = steps[4].area()  # the Status and Toner columns, titles and cells
+    table = printers.table
+    assert box is not None
+    assert box.width() == table.columnWidth(table.STATUS) + table.columnWidth(table.TONER)
+    table.hideColumn(table.STATUS)
+    box = steps[4].area()
+    assert box is not None and box.width() == table.columnWidth(table.TONER)
+    table.hideColumn(table.TONER)
+    assert steps[4].area() is None  # neither shows: the card sits beside the table instead
+    empty = tmp_path / "empty.json"  # an empty list gets the whole guide too
     listfile.save(empty, HostList(), expected=None, kind="printers")
     assert printers.open_list(empty)
-    steps = list(guide.steps())
-    assert steps[0].title == "Add a printer"
-    assert steps[0].target() is printers.toolbar.inventory_button
+    assert [s.title for s in guide.steps()] == titles
 
 
 def test_the_low_level_comes_from_settings(printers: PrintersTool) -> None:

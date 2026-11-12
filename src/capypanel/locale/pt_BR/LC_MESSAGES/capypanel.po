@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 12:32-0300\n"
+"POT-Creation-Date: 2026-11-12 12:36-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -582,9 +582,6 @@ msgstr "Adicionar uma lista de hosts"
 msgid "Add a mark"
 msgstr "Adicionar marca"
 
-msgid "Add a printer"
-msgstr "Adicionar uma impressora"
-
 msgid "Add a printer list"
 msgstr "Adicionar uma lista de impressoras"
 
@@ -605,6 +602,9 @@ msgstr "Adicione hosts e grupos, ou importe uma lista de hosts"
 
 msgid "Add printer"
 msgstr "Adicionar impressora"
+
+msgid "Add printers"
+msgstr "Adicionar impressoras"
 
 msgid "Add printers and groups, and manage the groups"
 msgstr "Adicione impressoras e grupos, e gerencie os grupos"
@@ -638,6 +638,9 @@ msgstr "Ferramentas administrativas"
 
 msgid "After a Refresh on its own, for what changed since the one before."
 msgstr "Depois de uma atualização sozinha, para o que mudou desde a anterior."
+
+msgid "After a Refresh, the dot says whether a printer is working (green), needs attention (amber), has stopped (red) or didn't answer (grey). Toner shows its lowest toner, in amber once it runs low."
+msgstr "Depois de atualizar, o ponto diz se a impressora está funcionando (verde), precisa de atenção (âmbar), parou (vermelho) ou não respondeu (cinza). Toner mostra o toner mais baixo, em âmbar quando estiver acabando."
 
 msgid "All"
 msgstr "Todas"
@@ -852,6 +855,9 @@ msgstr "O CapyPanel é feito com os seguintes softwares:"
 
 msgid "CapyPanel is up to date"
 msgstr "Você tem a versão mais nova"
+
+msgid "CapyPanel reads printers over SNMP, and only reads: it never changes anything on them. Most answer to the community \"public\"; if yours use another one, or SNMP v3, set it in Settings › Printers › Connecting."
+msgstr "O CapyPanel lê as impressoras por SNMP e só lê, nunca muda nada nelas. A maioria responde à comunidade \"public\"; se as suas usam outra, ou SNMP v3, coloque em Configurações › Impressoras › Conexão."
 
 #, python-brace-format
 msgid "CapyPanel {new} is out"
@@ -1808,6 +1814,9 @@ msgstr "Ícones:"
 msgid "Idle"
 msgstr "Inativo"
 
+msgid "If nothing shows up"
+msgstr "Se nada aparecer"
+
 msgid "If that list can't be opened: the default list, then your personal list."
 msgstr "Se essa lista não abrir: a lista padrão, depois a sua lista pessoal."
 
@@ -1859,8 +1868,8 @@ msgstr "Inventário"
 msgid "Inventory › Add host… adds one at a time, and Import hosts… brings in many at once. A right-click on the table has Add host… too."
 msgstr "Inventário › Adicionar host… põe um de cada vez, e Importar hosts… traz vários de uma vez. O botão direito na tabela também tem Adicionar host…."
 
-msgid "Inventory › Add printer. Its address is enough: brand, model, serial and toner are read from the printer."
-msgstr "Inventário › Adicionar impressora. O endereço basta: marca, modelo, número de série e toner são lidos da impressora."
+msgid "Inventory › Add printer… adds one: a name and its address are enough. The brand, model, serial number and toner are read from the printer."
+msgstr "Inventário › Adicionar impressora… adiciona uma: o nome e o endereço bastam. A marca, o modelo, o número de série e o toner são lidos da impressora."
 
 msgid "It can be deleted: nobody is signed in to it, it isn't one of Windows' own, and it's in the Users folder."
 msgstr "Pode ser excluído: ninguém está conectado com ele, não é do Windows e fica na pasta Users."
@@ -2053,9 +2062,6 @@ msgstr "Modelo, Windows, memória, disco"
 
 msgid "More in the documentation"
 msgstr "Mais na documentação"
-
-msgid "Most printers answer to the community \"public\"; for another one or SNMP v3, set it in Settings. CapyPanel only reads printers."
-msgstr "A maioria responde à comunidade \"public\"; para outra ou SNMP v3, defina em Configurações. O CapyPanel só lê as impressoras."
 
 msgid "Move &down"
 msgstr "Mover para &baixo"
@@ -2633,6 +2639,9 @@ msgstr "Selecione hosts na lista primeiro"
 msgid "Pick the list here: the shared one everyone on this PC sees, your personal one, or one you add. Groups and tags are below it: a click shows only their hosts."
 msgstr "Escolha a lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você criar. Os grupos e as tags ficam embaixo: um clique mostra só os hosts deles."
 
+msgid "Pick the list here: the shared one everyone on this PC sees, your personal one, or one you add. Groups and tags are below it: a click shows only their printers."
+msgstr "Escolha a lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você criar. Os grupos e as tags ficam embaixo: um clique mostra só as impressoras deles."
+
 #, python-brace-format
 msgid "Picked tags: {tags}"
 msgstr "Tags escolhidas: {tags}"
@@ -2682,12 +2691,18 @@ msgstr "Listas de impressoras (*.json);;Todos os arquivos (*)"
 msgid "Printers"
 msgstr "Impressoras"
 
+msgid "Printers can be read every 5 to 60 minutes, with a Windows notification when one stops or runs low. Both stay off until you turn them on in Settings › Printers › Warnings and supplies."
+msgstr "As impressoras podem ser lidas a cada 5 a 60 minutos, com uma notificação do Windows quando uma parar ou ficar com pouco toner. As duas coisas ficam desligadas até você ligá-las em Configurações › Impressoras › Avisos e suprimentos."
+
 msgid "Printers on this PC"
 msgstr "Impressoras deste PC"
 
 #, python-brace-format
 msgid "Printers on {host}"
 msgstr "Impressoras em {host}"
+
+msgid "Printers that need attention"
+msgstr "Impressoras que precisam de atenção"
 
 msgid "Printing"
 msgstr "Imprimindo"
@@ -2786,8 +2801,8 @@ msgstr "Lendo…"
 msgid "Reads each in a tab of its own, behind; you stay on this list"
 msgstr "Lê cada um numa aba própria, ao fundo; você continua nesta lista"
 
-msgid "Reads each printer's status, toner and page count. Refresh on its own and Windows notifications stay off until you turn them on."
-msgstr "Lê o status, o toner e a contagem de páginas de cada impressora. A atualização sozinha e as notificações do Windows ficam desligadas até você ligá-las."
+msgid "Reads the status, toner and page count of every printer shown (F5). Nothing is read until you press it."
+msgstr "Lê o status, o toner e a contagem de páginas de cada impressora mostrada (F5). Nada é lido até você apertar."
 
 msgid "Reads what's ticked in this box again"
 msgstr "Lê de novo o que está marcado nesta caixa"
@@ -2833,6 +2848,9 @@ msgstr "Atualizar usuários logados"
 
 msgid "Refresh on its &own"
 msgstr "Atualizar &sozinho"
+
+msgid "Refresh on its own"
+msgstr "Atualizar sozinho"
 
 msgid "Refresh on its own and warnings keep working while CapyPanel is in the tray. Quit stops them."
 msgstr "A atualização sozinha e os avisos continuam funcionando enquanto o CapyPanel estiver na bandeja. Sair os interrompe."
@@ -3411,6 +3429,9 @@ msgctxt "button"
 msgid "Status"
 msgstr "Status"
 
+msgid "Status and Toner"
+msgstr "Status e Toner"
+
 #, python-brace-format
 msgid "Status checked by Hosts at {time}"
 msgstr "Status verificado pelo Hosts às {time}"
@@ -3542,9 +3563,6 @@ msgstr "Os serviços do Windows no PC."
 
 msgid "The PC's event logs."
 msgstr "Os logs de eventos do PC."
-
-msgid "The SNMP account"
-msgstr "A conta SNMP"
 
 msgid "The account was accepted, but only administrators of that computer can see who is logged on."
 msgstr "A conta foi aceita, mas só administradores daquele computador podem ver quem está logado."
@@ -3741,6 +3759,9 @@ msgstr "As tags da impressora"
 
 msgid "The printers installed on the PC, their queues and problems."
 msgstr "As impressoras instaladas no PC, suas filas e problemas."
+
+msgid "The printers of the list are here. Pick one to see everything about it in Details; a right-click has everything you can do with it, and a double-click opens its web page."
+msgstr "As impressoras da lista ficam aqui. Escolha uma para ver tudo sobre ela em Detalhes; o clique direito tem tudo o que dá para fazer com ela, e o clique duplo abre a página web dela."
 
 msgid "The profile a host connects with when it has none of its own."
 msgstr "O perfil com que um host conecta quando não tem um próprio."
@@ -4238,6 +4259,9 @@ msgstr "O que o ✕ da janela faz. Na bandeja, a atualização sozinha e os avis
 msgid "When &closing"
 msgstr "Ao &fechar"
 
+msgid "When a Refresh finds printers stopped, offline or low, a red count shows here, and a strip above the table lists them with Show."
+msgstr "Quando uma atualização encontra impressoras paradas, offline ou com pouco toner, aparece aqui um número em vermelho, e uma faixa acima da tabela as lista com Mostrar."
+
 msgid "When the host was scanned, or where its scan is"
 msgstr "Quando o host foi escaneado, ou em que ponto está o escaneamento"
 
@@ -4364,6 +4388,12 @@ msgstr "Suas listas"
 
 msgid "Your picks are replaced."
 msgstr "Suas escolhas são substituídas."
+
+msgid "Your printer lists"
+msgstr "Suas listas de impressoras"
+
+msgid "Your printers"
+msgstr "Suas impressoras"
 
 msgid "Your printers: status and toner, web pages, reports."
 msgstr "Suas impressoras: status e toner, páginas web, relatórios."

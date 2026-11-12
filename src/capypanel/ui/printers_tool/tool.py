@@ -3,11 +3,11 @@ asset tag and where its page counters come from, plus opening their web pages an
 reads each printer's status, supplies and page counter over SNMP."""
 
 import logging
-from collections.abc import Collection, Sequence
+from collections.abc import Callable, Collection, Sequence
 from dataclasses import replace
 from datetime import datetime
 
-from PySide6.QtCore import Qt, QTimer, QUrl, Signal
+from PySide6.QtCore import QPoint, QRect, QSize, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QGuiApplication
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QVBoxLayout, QWidget
 
@@ -245,30 +245,64 @@ class PrintersTool(ListWorkspace):
         super().retranslate()
 
     def guide(self) -> Guide:
-        """Its own first steps; lists, groups and tags are Home's guide's. A list that already
-        has printers (a colleague's shared one) skips adding one."""
-        bar = self.toolbar
+        """Its whole guide, every time: lists, adding, the table and Details, Refresh, what
+        Status and Toner say, the warnings, Refresh on its own and, last, the SNMP account for
+        when nothing shows up. No step asks for a click."""
+        bar, table = self.toolbar, self.table
+
+        def status_and_toner() -> QRect | None:  # both columns, titles and cells, as one box
+            header = table.header()
+            shown = [c for c in (table.STATUS, table.TONER) if not header.isSectionHidden(c)]
+            if not shown or not table.isVisible():
+                return None
+            left = min(header.sectionViewportPosition(c) for c in shown)
+            right = max(header.sectionViewportPosition(c) + header.sectionSize(c) for c in shown)
+            corner = header.mapTo(self.window(), QPoint(left, 0))
+            return QRect(corner, QSize(right - left, header.height() + table.viewport().height()))
+
+        def rail_icon() -> QWidget | None:  # Printers on the rail, where its red count shows
+            rail = getattr(self.window(), "rail", None)
+            return getattr(rail, "buttons", {}).get("printers")
+
+        def settings(page: str) -> tuple[str, Callable[[], None]]:
+            return _("Open Settings"), lambda: self._shell.open_settings(page)
 
         def steps() -> list[Step]:
-            found = [] if self._doc is not None and self._doc.hosts.hosts else [
-                Step(_("Add a printer"),
-                     _("Inventory › Add printer. Its address is enough: brand, model, serial and "
-                       "toner are read from the printer."), lambda: bar.inventory_button),
-            ]  # fmt: skip
             return [
-                *found,
-                Step(_("The SNMP account"),
-                     _("Most printers answer to the community \"public\"; for another one or "
-                       "SNMP v3, set it in Settings. CapyPanel only reads printers."),
-                     lambda: self.table,
-                     action=(_("Open Settings"),
-                             lambda: self._shell.open_settings("printer_connecting"))),
+                Step(_("Your printer lists"),
+                     _("Pick the list here: the shared one everyone on this PC sees, your "
+                       "personal one, or one you add. Groups and tags are below it: a click "
+                       "shows only their printers."), lambda: self.nav),
+                Step(_("Add printers"),
+                     _("Inventory › Add printer… adds one: a name and its address are enough. "
+                       "The brand, model, serial number and toner are read from the printer."),
+                     lambda: bar.inventory_button),
+                Step(_("Your printers"),
+                     _("The printers of the list are here. Pick one to see everything about it "
+                       "in Details; a right-click has everything you can do with it, and a "
+                       "double-click opens its web page."), lambda: [table, self.details]),
                 Step(pgettext("printers", "Refresh all"),  # as the button says it
-                     _("Reads each printer's status, toner and page count. Refresh on its own "
-                       "and Windows notifications stay off until you turn them on."),
-                     lambda: bar.refresh_button,
-                     action=(_("Open Settings"),
-                             lambda: self._shell.open_settings("printer_warnings"))),
+                     _("Reads the status, toner and page count of every printer shown (F5). "
+                       "Nothing is read until you press it."), lambda: bar.refresh_button),
+                Step(_("Status and Toner"),
+                     _("After a Refresh, the dot says whether a printer is working (green), needs "
+                       "attention (amber), has stopped (red) or didn't answer (grey). Toner shows "
+                       "its lowest toner, in amber once it runs low."),
+                     lambda: None, lambda: table, area=status_and_toner),
+                Step(_("Printers that need attention"),
+                     _("When a Refresh finds printers stopped, offline or low, a red count shows "
+                       "here, and a strip above the table lists them with Show."),
+                     rail_icon, lambda: table),
+                Step(_("Refresh on its own"),
+                     _("Printers can be read every 5 to 60 minutes, with a Windows notification "
+                       "when one stops or runs low. Both stay off until you turn them on in "
+                       "Settings › Printers › Warnings and supplies."),
+                     lambda: None, lambda: table, action=settings("printer_warnings")),
+                Step(_("If nothing shows up"),
+                     _("CapyPanel reads printers over SNMP, and only reads: it never changes "
+                       "anything on them. Most answer to the community \"public\"; if yours use "
+                       "another one, or SNMP v3, set it in Settings › Printers › Connecting."),
+                     lambda: None, lambda: table, action=settings("printer_connecting")),
             ]  # fmt: skip
 
         return Guide("printers", steps, docs="printers/checking/")
