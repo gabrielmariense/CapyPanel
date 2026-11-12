@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 10:37-0300\n"
+"POT-Creation-Date: 2026-11-12 11:03-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -72,6 +72,9 @@ msgid "&Colour…"
 msgstr ""
 
 msgid "&Connect"
+msgstr ""
+
+msgid "&Continue"
 msgstr ""
 
 msgid "&Copy"
@@ -157,6 +160,9 @@ msgid "&Group:"
 msgstr ""
 
 msgid "&Groups pane"
+msgstr ""
+
+msgid "&Guide to this screen"
 msgstr ""
 
 msgid "&Help"
@@ -711,6 +717,9 @@ msgstr ""
 msgid "BIOS"
 msgstr ""
 
+msgid "Back"
+msgstr ""
+
 msgid "Bar"
 msgstr ""
 
@@ -921,6 +930,11 @@ msgstr ""
 msgid ""
 "Checks whether each host shown answers, as Hosts' Refresh does; its "
 "Status column shows here and in Hosts"
+msgstr ""
+
+msgid ""
+"Checks whether each host shown is on and who is signed in to it. A right-"
+"click chooses what it checks."
 msgstr ""
 
 #, python-brace-format
@@ -1425,6 +1439,9 @@ msgstr ""
 msgid "Don't ask again (change it in Settings › CapyPanel › General)"
 msgstr ""
 
+msgid "Done"
+msgstr ""
+
 msgid "Door open"
 msgstr ""
 
@@ -1473,6 +1490,19 @@ msgid "E&xit"
 msgstr ""
 
 msgid "Each argument group must be a list of texts."
+msgstr ""
+
+msgid "Each guide shows again the next time its screen is opened."
+msgstr ""
+
+msgid ""
+"Each tool has its place on this rail: Hosts, Printers and User profiles. "
+"Settings is at the bottom."
+msgstr ""
+
+msgid ""
+"Each tool keeps lists: a shared one everyone on this PC sees, your "
+"personal one, and any you add. Pick one at the top of the Groups panel."
 msgstr ""
 
 msgid "Edit connection profile"
@@ -1565,6 +1595,9 @@ msgstr ""
 msgid ""
 "Every printer on {host} stops for a few seconds. Documents waiting in the"
 " queues stay and print once it's back."
+msgstr ""
+
+msgid "Every tool works the same way"
 msgstr ""
 
 msgid "Everyone on this PC (shared)"
@@ -1782,6 +1815,9 @@ msgstr ""
 msgid "Hover a folder to see what it holds."
 msgstr ""
 
+msgid "I understand it deletes user profiles on the PCs I pick"
+msgstr ""
+
 msgid "IP address or network name"
 msgstr ""
 
@@ -1799,6 +1835,12 @@ msgid "Ignored columns: {names}."
 msgstr ""
 
 msgid "Import hosts"
+msgstr ""
+
+msgid ""
+"In a host's tab, tick the profiles to delete, then Delete profiles…: you "
+"type DELETE to confirm, and each PC is checked again before anything "
+"goes."
 msgstr ""
 
 #, python-brace-format
@@ -1932,6 +1974,9 @@ msgstr ""
 msgid "List only the printers that need attention"
 msgstr ""
 
+msgid "Lists"
+msgstr ""
+
 msgid ""
 "Lists saved in a lists folder show up here by themselves; Remove asks "
 "whether to delete the file too."
@@ -2043,6 +2088,9 @@ msgstr ""
 msgid "Model, Windows, memory, disk"
 msgstr ""
 
+msgid "More in the documentation"
+msgstr ""
+
 msgid "Move &down"
 msgstr ""
 
@@ -2099,6 +2147,9 @@ msgid "New printer list"
 msgstr ""
 
 msgid "New tag"
+msgstr ""
+
+msgid "Next"
 msgstr ""
 
 msgid "No Doc360 MPS account is set."
@@ -2333,6 +2384,12 @@ msgstr ""
 msgid "Offline"
 msgstr ""
 
+msgid ""
+"On the PCs you pick, it deletes Windows user profiles: each person's "
+"folder under C:\\Users, with every file in it, and the profile's entry in"
+" the registry. A deleted profile can't be brought back."
+msgstr ""
+
 msgid "On the button"
 msgstr ""
 
@@ -2484,6 +2541,11 @@ msgstr ""
 msgid "Opens the host in a new tab. Typing alone never scans."
 msgstr ""
 
+msgid ""
+"Opens the picked PC with the remote tool of its connection profile. "
+"Profiles are in Settings › Hosts › Connecting."
+msgstr ""
+
 #, python-brace-format
 msgid "Opens {path}"
 msgstr ""
@@ -2615,6 +2677,19 @@ msgid "Person"
 msgstr ""
 
 msgid "Personal"
+msgstr ""
+
+msgid "Pick a PC"
+msgstr ""
+
+msgid ""
+"Pick a host to see it in the Details panel on the right. A right-click "
+"has everything you can do with it."
+msgstr ""
+
+msgid ""
+"Pick a list here: the shared one everyone on this PC sees, your personal "
+"one, or one you add. Inventory adds hosts, or imports many at once."
 msgstr ""
 
 msgid "Pick hosts in the list first"
@@ -2772,6 +2847,11 @@ msgid "Reading…"
 msgstr ""
 
 msgid "Reads each in a tab of its own, behind; you stay on this list"
+msgstr ""
+
+msgid ""
+"Reads the profiles on the PCs picked, each in its own tab. Nothing is "
+"deleted by a scan."
 msgstr ""
 
 msgid "Reads what's ticked in this box again"
@@ -3268,6 +3348,9 @@ msgstr ""
 msgid "Show every printer again"
 msgstr ""
 
+msgid "Show the &guides again"
+msgstr ""
+
 msgid "Show this group &first"
 msgstr ""
 
@@ -3317,6 +3400,9 @@ msgid "Signs in with"
 msgstr ""
 
 msgid "Size"
+msgstr ""
+
+msgid "Skip"
 msgstr ""
 
 msgid "Skipped"
@@ -3414,6 +3500,10 @@ msgid "Status not checked yet: use Refresh all"
 msgstr ""
 
 msgid "Status, logged-on users and PC facts, one after the other."
+msgstr ""
+
+#, python-brace-format
+msgid "Step {n} of {total}"
 msgstr ""
 
 msgid "Stop"
@@ -3519,6 +3609,12 @@ msgstr ""
 msgid "That profile doesn't exist."
 msgstr ""
 
+msgid ""
+"The Groups panel on the left, with its groups and tags; the items in the "
+"middle; the picked one's details on the right. Refresh reads the latest "
+"state."
+msgstr ""
+
 msgid "The PC answered, but reading took too long and was stopped."
 msgstr ""
 
@@ -3552,6 +3648,12 @@ msgid "The arguments use an option that “options” doesn't list: “{option}�
 msgstr ""
 
 msgid "The authentication password needs at least 8 characters."
+msgstr ""
+
+msgid ""
+"The buttons on top of Details run commands on the PC with your Windows "
+"account. A PC that refuses it asks for another one, kept in Settings › "
+"Hosts › Credentials."
 msgstr ""
 
 msgid ""
@@ -3669,6 +3771,11 @@ msgid "The host's notes"
 msgstr ""
 
 msgid "The host's tags"
+msgstr ""
+
+msgid ""
+"The hosts of your Hosts list. Double-click one to open it in a tab and "
+"read its profiles, or select several and press Scan."
 msgstr ""
 
 msgid ""
@@ -3979,7 +4086,13 @@ msgstr ""
 msgid "This printer doesn't report a level for this supply."
 msgstr ""
 
+msgid "This screen has no guide."
+msgstr ""
+
 msgid "This tool definition needs a newer version of CapyPanel."
+msgstr ""
+
+msgid "This tool deletes user profiles"
 msgstr ""
 
 msgid "Tick Status or Logged-on users to refresh them"
@@ -4239,6 +4352,9 @@ msgctxt "button"
 msgid "Web page"
 msgstr ""
 
+msgid "Welcome to CapyPanel"
+msgstr ""
+
 msgid ""
 "What Connect opens, and the login it uses. Refresh's logged-on users and "
 "the commands use the account under it."
@@ -4389,6 +4505,12 @@ msgid "Your Windows account ({user})"
 msgstr ""
 
 msgid "Your computers: connect, see who's logged on, check them."
+msgstr ""
+
+msgid "Your host lists"
+msgstr ""
+
+msgid "Your hosts"
 msgstr ""
 
 msgid "Your picks are replaced."

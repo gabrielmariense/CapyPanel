@@ -31,6 +31,7 @@ from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_texts
 from capypanel.ui.dialogs import run_modal
+from capypanel.ui.guides import Guide, Step
 from capypanel.ui.hosts import group_path
 from capypanel.ui.hosts_tool.accounts import windows_account
 from capypanel.ui.hosts_tool.command_windows import Question
@@ -42,7 +43,7 @@ from capypanel.ui.list_workspace.splitter import PaneSplitter
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar, tool_button
 from capypanel.ui.menus import popup
-from capypanel.ui.profiles_tool import work
+from capypanel.ui.profiles_tool import first_use, work
 from capypanel.ui.profiles_tool.host_page import Context, HostPage, Stage
 from capypanel.ui.profiles_tool.hosts_page import HostsPage, RowFacts
 from capypanel.ui.profiles_tool.panels import DETAILS, LEFT, RIGHT, amber
@@ -279,6 +280,40 @@ class ProfilesTool(Tool):
         outer, inner = self.splitter.sizes(), self.inner.sizes()
         if len(outer) == 2 and len(inner) == 2 and outer[0] and inner[1]:
             self.prefs[PANES_KEY] = [outer[0], inner[1]]
+
+    def first_use_pending(self) -> bool:
+        return self.prefs.get(first_use.UNDERSTOOD_KEY) is not True
+
+    def first_use_warning(self, parent: QWidget) -> bool:
+        """What it deletes, once, before it's first shown; ticked and continued, never again."""
+        if not self.first_use_pending():
+            return True
+        if not first_use.ask(parent):
+            return False
+        self.prefs[first_use.UNDERSTOOD_KEY] = True
+        self._shell.save_prefs()
+        return True
+
+    def guide(self) -> Guide:
+        bar = self.bar
+        hosts = self.hosts_page
+
+        def steps() -> list[Step]:
+            return [
+                Step(_("Pick a PC"),
+                     _("The hosts of your Hosts list. Double-click one to open it in a tab and "
+                       "read its profiles, or select several and press Scan."),
+                     lambda: hosts.table, lambda: self.middle),
+                Step(_("Scan"),
+                     _("Reads the profiles on the PCs picked, each in its own tab. Nothing is "
+                       "deleted by a scan."), lambda: bar.scan_button),
+                Step(_("Delete"),
+                     _("In a host's tab, tick the profiles to delete, then Delete profiles…: you "
+                       "type DELETE to confirm, and each PC is checked again before anything "
+                       "goes."), lambda: bar.delete_button),
+            ]  # fmt: skip
+
+        return Guide("profiles", steps, docs="profiles/user-profiles/")
 
     def quit_question(self, parent: QWidget) -> bool:
         """Before CapyPanel quits: while a host deletes, ask. Cancel the rest and quit lets the

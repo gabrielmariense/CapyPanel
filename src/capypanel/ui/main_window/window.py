@@ -35,6 +35,7 @@ from capypanel.core import settings
 from capypanel.core.i18n import _
 from capypanel.ui import language, spacing
 from capypanel.ui.dialogs import run_modal
+from capypanel.ui.guides import Guide, GuideRunner, Step, on_screen, seen_from
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.home import HomePage
@@ -109,6 +110,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
 
         self.updater = Updater(self.prefs, self.save_prefs, self)
+        self.guides = GuideRunner(self, seen_from(self.prefs), self.save_prefs, _docs_page)
         self._tools_agreed = False  # an update asked the tools already: closing asks no more
         self._build_menus()
         self._connect()
@@ -119,7 +121,10 @@ class MainWindow(QMainWindow):
         start = self.prefs.get(settings.START_KEY, settings.START_HOME)
         if start == settings.START_LAST:
             start = self.prefs.get(settings.TOOL_KEY)
-        self._show(start if isinstance(start, str) and start in self.tools else None)
+        start = start if isinstance(start, str) and start in self.tools else None
+        if start is not None and self.tools[start].first_use_pending():
+            start = None  # its warning comes first, from Home, once the window shows
+        self._show(start)
 
     def _add_tool(self, tool: Tool) -> None:
         tool_id = tool.TOOL_ID
@@ -161,7 +166,15 @@ class MainWindow(QMainWindow):
 
     def _show(self, tool_id: str | None) -> None:
         """The rail, View's tools, the toolbar, the tool and the status bar follow. Home has
-        no toolbar and nothing on the status bar."""
+        no toolbar and nothing on the status bar. A tool's first-use warning comes before its
+        first showing; its guide after, the first time."""
+        if tool_id is not None and on_screen(self):
+            tool = self.tools[tool_id]
+            if tool.first_use_pending() and not tool.first_use_warning(self):
+                self.rail.show_tool(self._shown)  # Cancel: where it was
+                return
+        if self.guides.running and self.guides.running != (tool_id or "home"):
+            self.guides.stop()  # left its screen: it shows again the next time
         self._shown = tool_id
         tool = self.shown_tool()
         self._pages.setCurrentWidget(self.home if tool_id is None else self._page_of[tool_id])
@@ -174,6 +187,7 @@ class MainWindow(QMainWindow):
             self._status[other_id].set_shown(other_id == tool_id)
         self._fill_view_menu()
         self._show_title(tool.title() if tool is not None else "")
+        self._guide_now()
         if tool is not None:
             tool.align_toolbar_later()
             self.prefs[settings.TOOL_KEY] = tool_id
@@ -243,7 +257,7 @@ class MainWindow(QMainWindow):
         self._view_menu = StayOpenMenu(self)
         bar.addMenu(self._view_menu)
         self._help_menu = bar.addMenu("")
-        self._help_menu.addActions([a.documentation, a.report_problem])
+        self._help_menu.addActions([a.show_guide, a.documentation, a.report_problem])
         self._help_menu.addSeparator()
         self._help_menu.addActions([a.check_updates, a.about])
         # A newer release: a button at the menu bar's right end, the same in every tool.
@@ -294,6 +308,7 @@ class MainWindow(QMainWindow):
         a.report_problem.triggered.connect(self._report_problem)
         a.about.triggered.connect(lambda: self.open_settings("about"))  # About is a page there
         a.check_updates.triggered.connect(lambda: self.open_updates())
+        a.show_guide.triggered.connect(lambda: self._guide_now(force=True))
         self.updater.changed.connect(self._show_update_button)
         a.show_toolbar.toggled.connect(self._show_toolbars)
         a.show_status_bar.toggled.connect(self.statusBar().setVisible)
@@ -385,6 +400,7 @@ class MainWindow(QMainWindow):
         dialog.closing_picked.connect(self._set_closing)
         dialog.updates_picked.connect(self.updater.set_checks)
         dialog.about.updates_button.clicked.connect(lambda: self.open_updates(dialog))
+        dialog.about.guides_button.clicked.connect(self.show_all_guides_again)
         return dialog
 
     def _set_start(self, start: str) -> None:
@@ -526,6 +542,52 @@ class MainWindow(QMainWindow):
         color = self.update_button.palette().color(QPalette.ColorRole.Link)
         self.update_button.setIcon(tabler_icon("download", color, 16))
 
+    # ---- first-run guides ----
+
+    def _guide_for(self, tool_id: str | None) -> Guide | None:
+        return self.tools[tool_id].guide() if tool_id is not None else self._home_guide()
+
+    def _guide_now(self, *, force: bool = False) -> None:
+        """The shown screen's guide: the first time it's shown (once its page is laid out), or
+        now from Help."""
+        guide = self._guide_for(self._shown)
+        if guide is None:
+            if force:
+                self.statusBar().showMessage(_("This screen has no guide."), 5000)
+            return
+        if force:
+            self.guides.show(guide)
+        elif on_screen(self) and not self.guides.seen(guide.guide_id):
+            QTimer.singleShot(400, self, lambda: self.guides.offer(self._guide_for(self._shown)))
+
+    def show_all_guides_again(self) -> None:
+        self.guides.forget_all()
+        self.statusBar().showMessage(
+            _("Each guide shows again the next time its screen is opened."), 8000
+        )
+
+    def _home_guide(self) -> Guide:
+        """What every tool shares, said once, on the very first start."""
+        home, rail = self.home, self.rail
+
+        def steps() -> list[Step]:
+            first = home.tiles[0] if home.tiles else None
+            return [
+                Step(_("Welcome to CapyPanel"),
+                     _("Each tool has its place on this rail: Hosts, Printers and User "
+                       "profiles. Settings is at the bottom."), lambda: rail),
+                Step(_("Every tool works the same way"),
+                     _("The Groups panel on the left, with its groups and tags; the items in "
+                       "the middle; the picked one's details on the right. Refresh reads the "
+                       "latest state."), lambda: first, lambda: home),
+                Step(_("Lists"),
+                     _("Each tool keeps lists: a shared one everyone on this PC sees, your "
+                       "personal one, and any you add. Pick one at the top of the Groups "
+                       "panel."), lambda: first, lambda: home),
+            ]  # fmt: skip
+
+        return Guide("home", steps, docs="getting-started/", mascot=True)
+
     def tools_working(self) -> bool:
         return any(tool.working() for tool in self.tools.values())
 
@@ -583,6 +645,7 @@ class MainWindow(QMainWindow):
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
+        self._guide_now()  # Home's on the very first start
         themes.paint_title_bar(self)  # the window handle only exists once it's shown
         self._align_toolbar()
 
@@ -619,6 +682,12 @@ class MainWindow(QMainWindow):
             tool.save_state()
         self.prefs["view"] = {k: a.isChecked() for k, a in self._view_choices().items()}
         self.save_prefs()
+
+
+def _docs_page(page: str) -> str:
+    from capypanel.ui import about
+
+    return about.docs_url() + page
 
 
 class _StatusGroup(QWidget):

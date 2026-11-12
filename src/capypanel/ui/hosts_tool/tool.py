@@ -46,6 +46,7 @@ from capypanel.ui.connect import Connector, Request
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.export_hosts import ExportDialog
 from capypanel.ui.groups import ROLE_ID
+from capypanel.ui.guides import Guide, Step
 from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, list_file_filter
 from capypanel.ui.hosts_tool.accounts import Accounts, used_for, windows_account
 from capypanel.ui.hosts_tool.actions import create_actions, retranslate_actions
@@ -329,6 +330,34 @@ class HostsTool(ListWorkspace):
             self.table.show_cells(host_id, self._cells(host_id))
         self.result_strip.restyle()
         self._selection_changed()
+
+    def guide(self) -> Guide:
+        """Its own first steps; lists, panels and Refresh in general are Home's guide's."""
+        bar = self.toolbar
+
+        def steps() -> list[Step]:
+            return [
+                Step(_("Your host lists"),
+                     _("Pick a list here: the shared one everyone on this PC sees, your "
+                       "personal one, or one you add. Inventory adds hosts, or imports many at "
+                       "once."), lambda: self.list_picker, lambda: self.nav),
+                Step(_("Your hosts"),
+                     _("Pick a host to see it in the Details panel on the right. A right-click "
+                       "has everything you can do with it."), lambda: self.table),
+                Step(_("Connect"),
+                     _("Opens the picked PC with the remote tool of its connection profile. "
+                       "Profiles are in Settings › Hosts › Connecting."),
+                     lambda: bar.connect_button),
+                Step(_("Refresh all"),
+                     _("Checks whether each host shown is on and who is signed in to it. A "
+                       "right-click chooses what it checks."), lambda: bar.refresh_button),
+                Step(_("Commands"),
+                     _("The buttons on top of Details run commands on the PC with your Windows "
+                       "account. A PC that refuses it asks for another one, kept in Settings › "
+                       "Hosts › Credentials."), lambda: self.details),
+            ]  # fmt: skip
+
+        return Guide("hosts", steps, docs="hosts/host-lists/")
 
     def retranslate(self) -> None:
         retranslate_actions(self.commands)

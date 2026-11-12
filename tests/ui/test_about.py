@@ -34,7 +34,8 @@ def test_the_help_menu_has_the_website_a_problem_report_and_about(
     assert help_menu.title() == "&Help"
     texts = [a.text() for a in help_menu.actions() if a.text()]
     assert texts == [
-        "&Documentation", "&Report a problem", "Check for &updates…", "&About CapyPanel",
+        "&Guide to this screen", "&Documentation", "&Report a problem", "Check for &updates…",
+        "&About CapyPanel",
     ]  # fmt: skip
     opened: list[str] = []
     monkeypatch.setattr(about, "open_url", opened.append)

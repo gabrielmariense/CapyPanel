@@ -683,6 +683,8 @@ QHeaderView::section:first, QHeaderView::section:only-one { border-left: none; }
 QHeaderView::section:hover { color: %(text)s; }
 
 QFrame#card { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; }
+/* A first-run guide's card: a pane edged in the accent, floating beside its control. */
+QFrame#guideCard { background: %(card)s; border: 1px solid %(accent)s; border-radius: %(r)spx; }
 /* Lists inside a card (the groups pane): the card is their only frame. */
 QTreeView#flat { border: none; background: transparent; padding: 0 2px; }
 /* The search box above the host table: a small pane, with the panes' corners. */
@@ -853,6 +855,7 @@ QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; }
 /* Only the settings page list, not every QListView: combo box pop-ups are list views too. */
 QTreeView, QFrame#card { background: %(card)s; border: 1px solid %(border)s; }
+QFrame#guideCard { background: %(card)s; border: 1px solid %(accent)s; border-radius: 6px; }
 /* outline: 0 hides Windows' focus box around the current row; the tint already marks it. */
 QTreeView, QListView#pageList { outline: 0; }
 QTreeView::item { padding: 4px 2px; }

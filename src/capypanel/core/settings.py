@@ -177,6 +177,7 @@ SHELL_KEYS = frozenset(
         START_KEY,
         CLOSE_KEY,
         "updates",
+        "guides",
     }
 )
 
