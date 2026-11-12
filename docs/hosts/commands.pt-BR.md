@@ -16,26 +16,60 @@ não ser que uma conta tenha sido definida para ele (veja
 
 ## Onde eles estão
 
-![A janela Hosts: o botão Comandos na barra de ferramentas e os botões de comando abaixo do nome do host nos Detalhes](../images/commands-details-dark-pt-BR.png)
+![O painel de detalhes: a fileira fixa de botões, os comandos rápidos embaixo dela, e depois Conexão, Logados e Dados do PC](../images/commands-details-dark-pt-BR.png)
 
-- **Clique com o botão direito num host:** depois de **Atualizar status** e **Atualizar usuários
-  logados**, um submenu por grupo: **Verificar**, **Pastas**, **Ferramentas administrativas**,
-  **Usuários**, **Impressoras** e **Energia**. Eles funcionam em um host com endereço, então
-  ficam esmaecidos quando você selecionou vários ou nenhum.
-- **A barra de ferramentas:** **Comandos**, ao lado do Atualizar, abre a
-  [janela Comandos](#a-janela-comandos) para o host selecionado. A seta dele lista os mesmos
-  grupos e termina com **Todos os comandos…**, que também abre essa janela.
-- **O painel de detalhes:** uma fileira de botões abaixo do nome do host. **C$**, a pasta do
-  usuário conectado, o Gerenciamento do Computador e Enviar uma mensagem executam um comando
-  cada; os dois âmbar abrem **Fazer logoff ou desconectar alguém** e **Reiniciar ou desligar**; e
-  **…** guarda todos os comandos. Uma dica nomeia cada um deles. Num painel estreito a fileira
-  quebra numa segunda linha.
+- **O painel de detalhes:** uma grade de botões abaixo do nome do host, cada um com um ícone
+  sobre uma palavra. A primeira fileira é sempre a mesma: **Atualizar** (o status, os usuários
+  logados e os dados do PC do host), **Comandos** (a [janela Comandos](#a-janela-comandos)),
+  **Usuários ▾** (fazer logoff ou desconectar alguém) e **Energia ▾** (reiniciar ou desligar).
+  Embaixo dela, quatro por fileira, ficam os seus [comandos rápidos](#comandos-rapidos). Uma dica
+  dá o nome completo de cada botão.
+- **Clique com o botão direito num host:** **Conectar** em negrito, **Atualizar host**, os seus
+  quatro primeiros comandos rápidos e depois **Todos os comandos…**, que abre a janela Comandos.
+  Depois vêm **Copiar ▸**, **Editar…**, **Mover para ▸**, **Tags ▸** e **Remover**. Com vários hosts
+  selecionados, o menu traz o que funciona em todos eles: **Conectar**, **Atualizar {n} hosts**,
+  **Comandos como ▸**, **Copiar ▸**, **Mover para ▸**, **Tags ▸** e **Remover**.
+- **A barra de ferramentas:** **Comandos**, ao lado do Atualizar, abre a janela Comandos para o
+  host selecionado. A seta dele lista todos os comandos por grupo (**Verificar**, **Pastas**,
+  **Ferramentas administrativas**, **Usuários**, **Impressoras** e **Energia**) e termina com
+  **Todos os comandos…**.
 - **Uma pessoa em Logados:** clique nela com o botão direito nos Detalhes para **Enviar uma
   mensagem para {user}…**, **Desconectar {user}…** e **Fazer logoff de {user}…**, e depois
   **Copiar ▸**.
 
-Os botões e itens de menu em âmbar são os comandos que atrapalham quem está usando o PC. Eles
-sempre perguntam antes.
+Os comandos funcionam em um host com endereço. Os botões e itens de menu em âmbar são os que
+atrapalham quem está usando o PC, e eles sempre perguntam antes.
+
+Um comando feito para a pessoa no PC, como Enviar uma mensagem ou a pasta do usuário, diz
+"… (ninguém conectado)" e fica esmaecido quando a última atualização do host, de menos de 10
+minutos atrás, não encontrou ninguém. Antes de qualquer atualização, ou depois que ela fica mais
+velha, ele continua utilizável.
+
+## Comandos rápidos
+
+![A janela Personalizar o painel de detalhes na aba Comandos rápidos: os comandos marcados no topo, em ordem, e depois os outros por grupo](../images/customize-dark-pt-BR.png)
+
+Os comandos rápidos são os que você mais usa, a um clique. Cada administrador escolhe os seus: a
+escolha fica nas suas configurações neste PC, nunca na lista, então quem compartilha uma lista tem
+cada um os seus. O CapyPanel começa com **Compartilhamento C$**, **Pasta do usuário**,
+**Gerenciamento do Computador** e **Enviar uma mensagem…**.
+
+Para escolhê-los, abra **Exibir > Personalizar o painel de detalhes…**, clique com o botão direito
+no painel de detalhes, ou use **Configurações > Hosts > Geral > Painel de detalhes > Comandos
+rápidos > Escolher…**. A aba **Comandos rápidos** lista primeiro os comandos marcados, em **No
+painel**, na ordem dos botões, e depois os outros por grupo, cada um com o atalho em cinza e a
+palavra que o botão mostra. "Marque os que quiser, ou nenhum." Um comando recém-marcado vai para o
+fim; **Mover para cima** e **Mover para baixo** mudam a ordem, e **Restaurar padrão…** volta aos
+quatro com que o CapyPanel começa. Cada mudança aparece no painel na hora. Uma linha abaixo da
+tabela os conta, como em "6 de 15 marcados · 2 fileiras no painel".
+
+Qualquer um destes pode ser um comando rápido: Status, Usuários logados, Dados do PC, Programas
+instalados, Compartilhamento C$, Pasta do usuário, Pasta Inicializar, Abrir um caminho…,
+Gerenciamento do Computador, Visualizador de Eventos, Serviços, Enviar uma mensagem…, Unidades
+mapeadas, Impressoras deste PC e Reiniciar o Spooler de Impressão…. "Reiniciar, Desligar, Fazer
+logoff e Desconectar não podem ser comandos rápidos: eles interrompem alguém."
+
+Os quatro primeiros também ficam no menu do botão direito do host.
 
 ## O que cada comando faz
 
@@ -43,7 +77,7 @@ O **Verificar** lê algo e mostra onde aquela verificação normalmente aparece:
 
 | Comando | O que faz |
 |---|---|
-| **Verificação rápida** | Status, usuários logados e dados do PC, um depois do outro |
+| **Atualizar host** | Status, usuários logados e dados do PC, um depois do outro |
 | **Status** | Se o PC responde na rede (veja [Verificando hosts](checking.pt-BR.md#status)) |
 | **Usuários logados** | Quem está conectado, e desde quando |
 | **Dados do PC** | Versão do Windows, modelo, número de série, memória, espaço livre e última reinicialização (veja [Dados do PC](checking.pt-BR.md#dados-do-pc)) |
@@ -68,8 +102,8 @@ há uma pasta aí.", para que um arquivo nunca seja aberto, e assim executado, n
 três consoles do Windows abrem na hora e mostram o erro deles quando o PC não pode ser alcançado.
 
 O **Usuários** tem o **Enviar uma mensagem…** e as **Unidades mapeadas**. Fazer logoff e
-Desconectar agem sobre uma pessoa, então são oferecidos nela: nos Detalhes, ou no botão âmbar de
-usuários, que lista cada pessoa conectada como um título, como em "ana.admin  (no PC, ativa, desde
+Desconectar agem sobre uma pessoa, então são oferecidos nela: nos Detalhes, ou no **Usuários ▾**,
+que lista cada pessoa conectada como um título, como em "ana.admin  (no PC, ativa, desde
 08:05)", com **Fazer logoff…** e **Desconectar…** embaixo de cada uma. Ele fica esmaecido quando
 ninguém está conectado, ou quando ninguém foi verificado ainda.
 
@@ -159,10 +193,10 @@ que repara cada programa que lista enquanto passa por eles.
 ![A faixa acima da tabela de hosts depois de um comando falhar, com Tentar outra conta](../images/commands-strip-failed-dark-pt-BR.png)
 
 Um comando que deu certo diz isso em verde acima da tabela de hosts, como em "Mensagem enviada
-para ana.admin em DESK-02.", e a faixa se fecha sozinha depois de alguns segundos.
+para bruno em DESK-02.", e a faixa se fecha sozinha depois de alguns segundos.
 
 Um comando que falhou diz isso em vermelho, com o motivo do próprio Windows: "Não foi possível
-fazer logoff de bruno.costa em DESK-02: acesso negado. É preciso uma conta de administrador
+fazer logoff de bruno em DESK-02: acesso negado. É preciso uma conta de administrador
 naquele PC." Essa faixa fica até você fechá-la. Quando o problema foi a conta, o **Tentar outra
 conta…** pede outra, e para quais PCs usá-la (veja
 [Contas para outros PCs](connecting.pt-BR.md#contas-para-outros-pcs)), e executa o comando de
@@ -177,7 +211,7 @@ que você abre também aparece.
 
 Uma reinicialização ou um desligamento com atraso aparece na coluna **Status**, como "Reinicia às
 14:37" com um relógio, e nos Detalhes como uma faixa âmbar: "Reinicia às 14:37", "Você pediu às
-14:32. ana.admin recebeu a sua mensagem." e **Cancelar reinicialização**. O **Energia > Cancelar
+14:32. bruno recebeu a sua mensagem." e **Cancelar reinicialização**. O **Energia > Cancelar
 a reinicialização pendente** faz o mesmo pelos menus.
 
 Depois que o PC reinicia, o CapyPanel procura por ele a cada 15 segundos. Assim que ele sumiu e
@@ -190,9 +224,14 @@ CapyPanel para de procurar 20 minutos depois do horário da reinicialização.
 ![A janela Comandos: a caixa Host no topo, os grupos à esquerda, todos os comandos no meio, o que o escolhido encontrou à direita](../images/commands-window-dark-pt-BR.png)
 
 A janela Comandos reúne todos os comandos de um PC num lugar só, com a resposta ao lado. Ela abre
-pelo botão **Comandos**, pelo **Todos os comandos…** e pelo **Conectar > Conexão manual…**
+pelos botões **Comandos**, pelo **Todos os comandos…** e pelo **Conectar > Conexão manual…**
 (Ctrl+M), que é a mesma janela para um endereço que não está na sua lista. É uma janela própria,
 ao lado da principal e não por cima dela: você pode voltar à lista de hosts e deixá-la aberta.
+Pedir os Comandos de outro host com ela aberta vira a janela para esse host, e as respostas de
+cada host ficam guardadas enquanto ela continua aberta, então voltar a um host as mostra de novo.
+Ela abre em 1120 × 620 na primeira vez e pode ser redimensionada: mais larga, os comandos e as
+respostas dividem o espaço a mais; mais estreita, as respostas mantêm a largura e a lista de
+comandos rola para o lado. Ela abre de novo no tamanho em que você a deixou.
 
 - **No topo:** a caixa **Host**, e depois **Perfil** e **Conectar**. A caixa lista os hosts que o
   painel de hosts mostra, como "DESK-02 · 192.0.2.12", e em **Recentes** os endereços que você
@@ -202,7 +241,8 @@ ao lado da principal e não por cima dela: você pode voltar à lista de hosts e
 - O **Adicionar à lista de hosts…** aparece ao lado da caixa só para um endereço digitado que a
   lista aberta não tem: ele põe o PC na lista, com o endereço já preenchido.
 - **À esquerda:** uma caixa **Pesquisa** e os seis grupos; um clique pula para um grupo.
-- **No meio:** todos os comandos, um por linha. O que você escolhe cresce para mostrar o que ele
+- **No meio:** todos os comandos, um por linha, com o atalho em cinza quando ele tem um. O que
+  você escolhe cresce para mostrar o que ele
   faz e um botão **Executar**. As setas movem, o Enter executa, e digitar em qualquer lugar
   pesquisa; um clique duplo só escolhe, para um comando arriscado nunca rodar por acidente.
 - **À direita:** o que o comando encontrou, apresentado como o painel de detalhes apresenta: o

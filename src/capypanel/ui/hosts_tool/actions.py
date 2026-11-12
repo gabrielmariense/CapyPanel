@@ -19,8 +19,6 @@ class HostsActions(ListActions):
     connect_host: QAction
     manual_connect: QAction
     copy_address: QAction
-    check_status: QAction
-    check_users: QAction
     refresh_shown: QAction
     connection_profiles: QAction
     saved_credentials: QAction
@@ -52,9 +50,7 @@ def retranslate_actions(a: HostsActions) -> None:
     a.connect_host.setText(_("&Connect"))
     a.manual_connect.setText(_("&Manual connection…"))
     a.copy_address.setText(_("&Address"))  # in the host menu's Copy submenu
-    a.refresh_shown.setText(_("Refresh"))
-    a.check_status.setText(_("Refresh &status"))
-    a.check_users.setText(_("Refresh &logged-on users"))
+    a.refresh_shown.setText(_("Refresh all"))
     a.connection_profiles.setText(_("Connection &profiles…"))
     a.saved_credentials.setText(_("Sa&ved credentials…"))
     a.show_domains.setText(_("Show users' do&main"))

@@ -57,7 +57,7 @@ class HostCommand:
 
 COMMANDS: tuple[HostCommand, ...] = (
     HostCommand(
-        "all-checks", Group.CHECK, N_("Quick check"),
+        "all-checks", Group.CHECK, N_("Refresh host"),
         N_("Status, logged-on users and PC facts, one after the other."), "list-check",
         Need.READ,
     ),
@@ -107,7 +107,7 @@ COMMANDS: tuple[HostCommand, ...] = (
     ),
     HostCommand(
         "services", Group.ADMIN, N_("Services"),
-        N_("The PC's Windows services."), "settings-cog", Need.OPEN_HERE,
+        N_("The PC's Windows services."), "services-play", Need.OPEN_HERE,
     ),
     HostCommand(
         "message", Group.USERS, N_("Send a message…"),
@@ -136,7 +136,7 @@ COMMANDS: tuple[HostCommand, ...] = (
     ),
     HostCommand(
         "spooler", Group.PRINTERS, N_("Restart Print Spooler…"),
-        N_("Restarts Windows' printing service, which unsticks most queues."), "printer-off",
+        N_("Restarts Windows' printing service, which unsticks most queues."), "spooler-restart",
         Need.ASK_WINDOWS, risky=True,
     ),
     HostCommand(
@@ -156,8 +156,29 @@ COMMANDS: tuple[HostCommand, ...] = (
     ),
 )  # fmt: skip
 
-# The Details panel's icon buttons, in order; then Users ▾ and Power ▾, then … for every one.
+# Quick commands: one click away on top of Details and in a host's right-click menu. Each
+# admin picks theirs; these four are what a fresh install starts with.
 QUICK = ("c-share", "user-folder", "computer-management", "message")
+# What can be picked, in the Commands window's order: a quick command shows something, opens
+# something or fixes a service; it never cuts a person off and never deletes their files.
+CAN_BE_QUICK = (
+    "status", "users", "facts", "programs", "c-share", "user-folder", "startup", "path",
+    "computer-management", "event-viewer", "services", "message", "drives", "printers",
+    "spooler",
+)  # fmt: skip
+MENU_QUICK = 4  # the right-click menu shows this many, the first of the order
+
+
+def quick_from(kept: object) -> tuple[str, ...]:
+    """The quick commands kept in an admin's settings, in their order, without anything that
+    can't be one; the starting four when nothing was ever chosen. None chosen is a choice."""
+    if not isinstance(kept, list):
+        return QUICK
+    picked: list[str] = []
+    for command_id in kept:
+        if command_id in CAN_BE_QUICK and command_id not in picked:
+            picked.append(command_id)
+    return tuple(picked)
 
 
 def command(command_id: str) -> HostCommand:

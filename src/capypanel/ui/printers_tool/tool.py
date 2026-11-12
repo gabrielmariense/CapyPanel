@@ -11,14 +11,15 @@ from PySide6.QtCore import Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QGuiApplication
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QVBoxLayout, QWidget
 
-from capypanel.core.hosts.document import starter_list
-from capypanel.core.hosts.model import Host, HostListRuleError
+from capypanel.core.hosts.document import OpenList, starter_list
+from capypanel.core.hosts.model import Group, Host, HostListRuleError
 from capypanel.core.i18n import _, ngettext, npgettext
 from capypanel.core.printers.printer import DOC360, info_of, with_info
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.hosts import group_path
-from capypanel.ui.list_workspace.texts import ListTexts
+from capypanel.ui.list_workspace.customize import Part
+from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 from capypanel.ui.printers_tool import marks, status
@@ -149,6 +150,9 @@ class PrintersTool(ListWorkspace):
         self.table.addAction(a.open_web_page)
         a.open_web_page.triggered.connect(self.open_web_pages)
         a.copy_address.triggered.connect(self._copy_address)
+        # Details' buttons act on the one printer it shows: the one selected.
+        self.details.refresh_clicked.connect(lambda: self.check_printers(self.selected_items()))
+        self.details.web_clicked.connect(self.open_web_pages)
         self.attention_strip.show_clicked.connect(self._toggle_attention)
         # Picking a group or a tag, or searching, means browsing again: every printer.
         self.nav.filter_changed.connect(self._leave_attention)
@@ -221,6 +225,7 @@ class PrintersTool(ListWorkspace):
         # Each a lower-case word in the list "Search name, address, brand, model, tags, notes".
         words = (
             (table.ADDRESS, _("address")),
+            (table.STATUS, _("status")),
             (table.BRAND, _("brand")),
             (table.MODEL, _("model")),
             (table.SERIAL, _("serial number")),
@@ -551,11 +556,13 @@ class PrintersTool(ListWorkspace):
     # ---- showing ----
 
     def matches(self, item: Host, needle: str) -> bool:
-        """The name and notes, plus every column that shows: only what can be seen."""
+        """The name and notes, plus every column that shows: only what can be seen. Status
+        ("Not checked" too) comes from the last Refresh, in memory only; Toner isn't searched."""
         if super().matches(item, needle):
             return True
         table = self.table
         texts = table.row_texts(item)
+        texts[table.STATUS] = self._cells(item.id)[0].text
         return any(
             needle in texts[column].casefold()
             for column in range(1, len(table.COLUMNS))
@@ -576,10 +583,44 @@ class PrintersTool(ListWorkspace):
                 self._counted,
                 self._set_doc360_account,
                 self.bar_marks(),
+                web=web_page(printer) is not None,
+                hidden=self.hidden_parts(),
             )
             self.details.show_printer(details, 1, needle=self._needle())
         else:
             self.details.show_printer(None, len(items), summary=self._summary())
+
+    def empty_texts(self) -> EmptyTexts:
+        """Printers has no import: an empty list offers Add only."""
+        return EmptyTexts(
+            _("This list has no printers yet.\nAdd one to start."),
+            _("This list has no printers."),
+            _("This group has no printers yet."),
+            _("Every printer is in a group."),
+            _("No printer matches “{text}”."),
+        )
+
+    def status_extras(self, doc: OpenList) -> list[str]:
+        """How many printers answered the last Refresh, once any was checked: a refusal or an
+        unreadable answer still came from a printer that's on."""
+        found = [self._checked[p.id] for p in doc.hosts.hosts if p.id in self._checked]
+        if not found:
+            return []
+        online = sum(1 for checked in found if not checked.offline)
+        return [ngettext("{n} online", "{n} online", online).format(n=online)]
+
+    def details_parts(self) -> list[Part]:
+        return [
+            Part("connection", _("Connection"), _("Address, group, MAC")),
+            Part("supplies", _("Supplies"), _("Toner, ink and the rest, with their levels")),
+            Part("printer", _("Printer"), _("Brand, model, serial number, firmware")),
+            Part("pages", _("Page counters"), _("Total pages and their source")),
+            Part("tags", _("Tags"), _("The printer's tags")),
+            Part("notes", _("Notes"), _("The printer's notes")),
+        ]
+
+    def details_always(self) -> str:
+        return _("Always shown: the printer's name and its status.")
 
     def _summary(self) -> str:
         """With nothing selected, the Details panel counts the printers shown."""
@@ -606,18 +647,34 @@ class PrintersTool(ListWorkspace):
         return self.commands.copy_address if key == "address" else None  # keeps Ctrl+Shift+C
 
     def fill_item_menu(self, menu: QMenu, items: Sequence[Host]) -> None:
+        """Use first, then copy, then managing the printers. Refresh says how many; Edit is
+        for one printer only."""
         a = self.commands
-        # Use first, then copy, then managing the printer: edit, move, remove.
         menu.addAction(a.open_web_page)
         menu.setDefaultAction(a.open_web_page)  # bold: what double-click and Enter do
         menu.addSeparator()
+        one = len(items) == 1
+        a.refresh_selected.setText(
+            _("&Refresh printer") if one else _("&Refresh {n} printers").format(n=len(items))
+        )
         menu.addAction(a.refresh_selected)
         menu.addSeparator()
         self.add_copy_menu(menu)
         menu.addSeparator()
-        menu.addAction(a.edit)
+        if one:
+            menu.addAction(a.edit)
         self.add_move_menu(menu, items)
         menu.addAction(a.remove)
+
+    def fill_group_menu(self, menu: QMenu, group: Group) -> None:
+        """Refresh group last, under a separator, as in Hosts: the group's printers, its
+        subgroups' too."""
+        assert self._doc is not None
+        printers = list(self._doc.hosts.hosts_in(group.id))
+        menu.addSeparator()
+        refresh = menu.addAction(_("&Refresh group"))
+        refresh.setEnabled(bool(printers) and self._run is None)
+        refresh.triggered.connect(lambda: self.check_printers(printers))
 
     # ---- Refresh: status, supplies and page counter ----
 
@@ -739,7 +796,8 @@ class PrintersTool(ListWorkspace):
                 pages = _("{pages} (from {month})").format(pages=pages, month=month)
         models = status.toner_models(reading) if reading else ""
         mac, firmware = (reading.mac, reading.firmware) if reading else ("", "")
-        return state.text, toner.text, models, pages, mac, firmware
+        said = "" if state.nothing else state.text  # the preview says "Not checked"; files don't
+        return said, toner.text, models, pages, mac, firmware
 
     def use_value(self, printer_id: str, key: str, value: str) -> None:
         """Details' "Use this": the value the printer reports replaces the list's."""

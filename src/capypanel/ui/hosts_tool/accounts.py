@@ -386,7 +386,7 @@ class LinkDialog(QDialog):
         form.addRow(_("Use it &for:"), self.kind)
         form.addRow("", self.value)
         form.addRow("", self.remember)
-        self.buttons = ok_cancel(self)
+        self.buttons = ok_cancel(self, _("Save") if link else _("Add"))
         layout = QVBoxLayout(self)
         layout.addLayout(form)
         layout.addWidget(notes(

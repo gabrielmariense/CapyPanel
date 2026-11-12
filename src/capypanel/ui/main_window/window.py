@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
 from capypanel import BUILD
 from capypanel.core import settings
 from capypanel.core.i18n import _
-from capypanel.ui import language
+from capypanel.ui import language, spacing
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.main_window.actions import create_actions, retranslate_actions
 from capypanel.ui.main_window.home import HomePage
@@ -38,6 +38,8 @@ from capypanel.ui.main_window.tool import Tool, ToolKind
 from capypanel.ui.main_window.tray import Tray, ask_closing
 from capypanel.ui.menus import StayOpenMenu
 from capypanel.ui.saved_credentials import KeptLogin, SavedCredentialsDialog
+from capypanel.ui.settings.window import HEIGHT as SETTINGS_HEIGHT
+from capypanel.ui.settings.window import WIDTH as SETTINGS_WIDTH
 from capypanel.ui.settings.window import SettingsDialog
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import CATALOG, ToolInfo
@@ -192,12 +194,16 @@ class MainWindow(QMainWindow):
     def open_settings(self, page: str | None = None) -> None:
         dialog = self.settings_dialog()
         geometry = self.prefs.get("settings_geometry")
-        if isinstance(geometry, str):
-            dialog.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
+        opens_at = [SETTINGS_WIDTH, SETTINGS_HEIGHT]
+        # A size kept while Settings opened at another one was never a choice against this
+        # one: the new opening size shows once, and what the person makes of it is kept.
+        if isinstance(geometry, str) and self.prefs.get("settings_opens_at") == opens_at:
+            dialog.own_size = dialog.restoreGeometry(QByteArray.fromBase64(geometry.encode()))
         if page:
             dialog.show_page(page)
         run_modal(dialog)
         self.prefs["settings_geometry"] = dialog.saveGeometry().toBase64().toStdString()
+        self.prefs["settings_opens_at"] = opens_at
         self.save_prefs()
         self._update_tray()  # Refresh on its own may have been switched on or off
 
@@ -530,7 +536,7 @@ class _StatusGroup(QWidget):
         self._shown = True
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
-        row.setSpacing(6)
+        row.setSpacing(spacing.CONTROLS)
         for widget in widgets:
             row.addWidget(widget)
             widget.installEventFilter(self)

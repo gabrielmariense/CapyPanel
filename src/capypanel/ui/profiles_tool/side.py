@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.i18n import _, ngettext, pgettext
 from capypanel.core.remote.user_profiles import Profile
+from capypanel.ui.dialogs import quiet_default
 from capypanel.ui.hosts_tool.command_windows import risky_button
 from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import CopyValue, DetailsPanel
@@ -622,7 +623,7 @@ class ProfileWindow(QDialog):
         self.tick = QCheckBox(_("Tick to delete"))
         self.tick.toggled.connect(self.tick_toggled)
         self.close_button = QPushButton(_("Close"))
-        self.close_button.setDefault(True)
+        quiet_default(self.close_button)
         self.close_button.clicked.connect(self.accept)
         buttons = QHBoxLayout()
         buttons.addWidget(self.tick)

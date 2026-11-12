@@ -1,6 +1,6 @@
 # Verificando impressoras
 
-O **Atualizar** pergunta a cada impressora exibida em que estado ela está e quanto toner ainda
+O **Atualizar todas** pergunta a cada impressora exibida em que estado ela está e quanto toner ainda
 resta, e preenche as colunas **Status** e **Toner**, a seção **Suprimentos** do painel de detalhes,
 o contador de páginas e o endereço MAC e a versão do firmware da impressora. O CapyPanel só lê:
 ele nunca altera uma configuração numa impressora.
@@ -8,18 +8,22 @@ ele nunca altera uma configuração numa impressora.
 Os resultados ficam na memória, nunca no arquivo da lista, e somem quando o CapyPanel fecha. Isso
 também significa que uma lista somente leitura pode ser atualizada como qualquer outra.
 
-![A janela Impressoras depois de uma atualização: um status e um nível de toner em cada impressora, e os suprimentos da selecionada](../images/printers-dark-pt-BR.png)
+![A janela Impressoras depois de uma atualização: o status e o toner de cada impressora lida, uma Não verificada, a faixa de atenção e os suprimentos da selecionada](../images/printers-dark-pt-BR.png)
 
 ## Atualizar
 
-O **Atualizar** da barra de ferramentas lê todas as impressoras que a tabela mostra, ou seja, o
-grupo, a tag ou a pesquisa que você escolheu. O **F5** faz o mesmo, e o menu de botão direito de
-uma impressora tem **Atualizar** só para ela. Nada é lido sem você pedir, a não ser que você
+O **Atualizar todas** da barra de ferramentas lê todas as impressoras que a tabela mostra, ou seja,
+o grupo, a tag ou a pesquisa que você escolheu. O **F5** faz o mesmo. Para ler só algumas, use o
+botão direito numa impressora para **Atualizar impressora**, em várias selecionadas para
+**Atualizar {n} impressoras**, ou num grupo para **Atualizar grupo**, as impressoras dele e as dos
+grupos de dentro; o botão **Atualizar** do painel de detalhes lê a impressora que ele mostra. Nada é lido sem você pedir, a não ser que você
 ligue o [Atualizar sozinho](#atualizar-sozinho), que começa desligado.
 
 São oito impressoras por vez. A barra de status as conta, "Verificando 3 de 12…", com um botão
 **Parar**, e diz "12 impressoras verificadas." no fim, ou "Parado: 4 impressoras não foram
-verificadas." Uma impressora sem endereço é consultada pelo nome dela.
+verificadas." Uma impressora sem endereço é consultada pelo nome dela. Daí em diante a barra de
+status acrescenta quantas impressoras responderam ao último Atualizar, como em "9 online"; uma
+impressora que recusou ou respondeu algo ilegível conta, porque está ligada.
 
 ## Atualizar sozinho
 
@@ -40,8 +44,8 @@ para lá em vez de sair, para as impressoras continuarem sendo lidas (veja
 ## Status
 
 Um ponto colorido e algumas palavras, com a hora da verificação ao lado no painel de detalhes.
-Antes do primeiro Atualizar as duas colunas ficam vazias e a dica da célula de Status diz "Não
-verificado: use Atualizar".
+Antes do primeiro Atualizar a coluna Status diz **Não verificado** em cinza, com a dica "Não
+verificado: use Atualizar", e Toner fica vazia.
 
 | Ponto | O que significa | Exemplos |
 |---|---|---|
@@ -196,8 +200,7 @@ A contagem e a faixa somem por conta própria quando nada mais requer atenção.
 
 Em **Configurações > Impressoras > Avisos e suprimentos > Notificação do Windows** você escolhe o que
 notificar: **Desligado**, **Parada ou offline** (o padrão) ou **Também suprimento baixo**. "Depois
-de uma atualização sozinha, para as impressoras que pararam ou ficaram offline (e com suprimento
-baixo, se escolhido) desde a anterior."
+de uma atualização sozinha, para o que mudou desde a anterior."
 
 Sai uma notificação por Atualizar sozinho, e só do que mudou: uma impressora que já estava offline
 não é citada de novo. O título as conta, "2 impressoras requerem atenção", e uma linha por

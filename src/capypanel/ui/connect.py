@@ -92,7 +92,7 @@ class CredentialDialog(QDialog):
             else _("It's handed to the viewer privately, never on its command line.")
         )  # fmt: skip
         note = hint(f"{used} {how}")
-        self.buttons = ok_cancel(self)
+        self.buttons = ok_cancel(self, _("Connect"))
         layout = QVBoxLayout(self)
         layout.addWidget(intro)
         layout.addLayout(form)

@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import datetime, timedelta
 
 from PySide6.QtCore import QPointF, Qt
@@ -9,6 +10,7 @@ from capypanel.core.remote.access import Reason, RemoteError
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.ui.hosts_tool.details import HostDetails, HostDetailsPanel
+from capypanel.ui.hosts_tool.host_state import Facts
 from capypanel.ui.list_workspace.details import breakable, marked
 
 
@@ -121,3 +123,28 @@ def test_the_same_item_drawn_again_keeps_its_scroll_position(qapp: QApplication)
     qapp.processEvents()
     assert bar.value() == 0
     pane.close()
+
+
+def test_a_pc_that_did_not_answer_says_so_once(qapp: QApplication) -> None:
+    now = datetime.now()
+    gone = RemoteError(Reason.UNREACHABLE)
+    facts = Facts(now, reading=False, quick_error=gone, pc_error=gone)
+    why = "Not reached: the PC didn't answer"
+    pane = HostDetailsPanel()
+    # No status read: each part that failed says why, PC facts once and not on its seven rows.
+    pane.show_host(replace(_details(users=(None, gone, now)), facts=facts), 1)
+    texts = _texts(pane)
+    assert texts.count(why) == 1 and "Unreachable" in texts and "Last restart" not in texts
+    # Offline is said under the name: the parts below only show a dash.
+    offline = _details(status=(Status.OFFLINE, now), users=(None, gone, now))
+    pane.show_host(replace(offline, facts=facts), 1)
+    texts = _texts(pane)
+    assert any(t.startswith("Offline · checked ") for t in texts)
+    assert why not in texts and "Unreachable" not in texts
+    assert texts.count("—") == 4  # logged on, PC facts, no tags, no notes
+    # Online, and only the slow part failed: its rows say why, the rest show what was read.
+    half = Facts(now, reading=False, restarted=now, pc_error=TimeoutError())
+    pane.show_host(replace(_details(status=(Status.ONLINE, now)), facts=half), 1)
+    texts = _texts(pane)
+    assert "Last restart" in texts and "Model" in texts
+    assert texts.count("Couldn't read: it took too long to answer") == 5

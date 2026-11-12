@@ -10,6 +10,7 @@ from PySide6.QtGui import QColor, QPainter
 from capypanel.core.printers.reading import Supply
 from capypanel.ui.printers_tool import status
 from capypanel.ui.printers_tool.marks import Mark
+from capypanel.ui.themes import engine as themes
 
 HEIGHT = 8
 MARK = 2  # px: each mark's width
@@ -31,12 +32,13 @@ def draw_meter(
     track.setAlpha(36)
     painter.setPen(Qt.PenStyle.NoPen)
     painter.setBrush(track)
-    painter.drawRoundedRect(bar, 3, 3)
+    corner = min(themes.current().control, bar.height() / 2)  # a control's corner, as buttons
+    painter.drawRoundedRect(bar, corner, corner)
     fill = supply.percent / 100 if supply.percent is not None else 0.5 if supply.some_left else 0
     if fill:
         painter.setBrush(QColor(status.supply_color(supply)))
         width = max(4.0, bar.width() * fill)
-        painter.drawRoundedRect(QRectF(bar.x(), bar.y(), width, bar.height()), 3, 3)
+        painter.drawRoundedRect(QRectF(bar.x(), bar.y(), width, bar.height()), corner, corner)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)  # crisp marks
     top, bottom = round(bar.y()) - REACH, round(bar.bottom()) + REACH
     black = QColor(0, 0, 0)

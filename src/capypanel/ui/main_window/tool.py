@@ -2,11 +2,12 @@
 
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol
 
-from PySide6.QtCore import QPoint, QTimer, Signal
-from PySide6.QtGui import QAction
+from PySide6.QtCore import QPoint, Qt, QTimer, Signal
+from PySide6.QtGui import QAction, QMouseEvent
 from PySide6.QtWidgets import QLabel, QWidget
 
 from capypanel.core import settings
+from capypanel.ui import spacing
 from capypanel.ui.main_window.toolbar import ToolBar
 from capypanel.ui.settings.group import SettingsGroup
 
@@ -55,6 +56,19 @@ class ToolKind(Protocol):
     def prepare(self, paths: settings.Paths) -> None: ...
 
 
+class StatusLabel(QLabel):
+    """A tool's text in the status bar. `clicked` lets a tool do something with it: the list
+    tools copy their list's path."""
+
+    clicked = Signal()
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        inside = self.rect().contains(event.position().toPoint())
+        if event.button() == Qt.MouseButton.LeftButton and inside:
+            self.clicked.emit()
+        super().mouseReleaseEvent(event)
+
+
 class Tool(QWidget):
     """What a tool gives the shell: its central widget (itself), its toolbar, its rail icon and
     View entry, its View items, its status bar text and its window title. A tool keeps its
@@ -72,8 +86,9 @@ class Tool(QWidget):
         self._shell = shell
         self.prefs = shell.tool_prefs(self.TOOL_ID, inherit=self.INHERITS_TOP_LEVEL)
         self.toolbar = toolbar  # the shell shows it above the tool
-        self.status_label = QLabel()  # the shell shows it in its status bar, on the left
-        self.status_label.setContentsMargins(6, 0, 6, 0)
+        # The shell shows it in its status bar, on the left.
+        self.status_label = StatusLabel()
+        self.status_label.setContentsMargins(spacing.CONTROLS, 0, spacing.CONTROLS, 0)
 
     @classmethod
     def prepare(cls, paths: settings.Paths) -> None:

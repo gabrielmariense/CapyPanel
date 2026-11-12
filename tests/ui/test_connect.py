@@ -478,7 +478,7 @@ def test_right_click_acts_on_what_is_under_the_mouse(
     texts = _menu_on(
         monkeypatch, lambda: window.hosts._group_menu(groups.visualItemRect(offices).center())
     )
-    assert "&Edit selected…" in texts  # the group under the mouse, which is now picked
+    assert "&Edit…" in texts  # the group under the mouse, which is now picked
     assert window.hosts.nav.selected_group_id() == offices.data(0, Qt.ItemDataRole.UserRole + 1)
     table_empty = window.hosts.table.viewport().rect().bottomLeft() + QPoint(5, -5)
     assert _menu_on(monkeypatch, lambda: window.hosts._item_menu(table_empty)) == [

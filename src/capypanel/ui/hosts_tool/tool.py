@@ -10,6 +10,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+import shiboken6
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QColor, QGuiApplication, QKeySequence
 from PySide6.QtWidgets import (
@@ -48,18 +49,20 @@ from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, list_file_filter
 from capypanel.ui.hosts_tool.accounts import Accounts, used_for, windows_account
 from capypanel.ui.hosts_tool.actions import create_actions, retranslate_actions
-from capypanel.ui.hosts_tool.details import HostDetails, HostDetailsPanel
+from capypanel.ui.hosts_tool.details import NOBODY_FOR, HostDetails, HostDetailsPanel
 from capypanel.ui.hosts_tool.host_state import Facts, PendingPower
 from capypanel.ui.hosts_tool.result_strip import ResultStrip
 from capypanel.ui.hosts_tool.runner import HostTarget, Outcome, Report, Runner, folder_user
 from capypanel.ui.hosts_tool.settings import HostsSettings, SettingsPrefs
-from capypanel.ui.hosts_tool.table import Cells, HostTable
+from capypanel.ui.hosts_tool.table import Cells, HostTable, not_checked
 from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
 from capypanel.ui.import_hosts import ImportDialog
-from capypanel.ui.list_workspace.texts import ListTexts
+from capypanel.ui.list_workspace.customize import Part
+from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
+from capypanel.ui.menus import shortcut_text
 from capypanel.ui.saved_credentials import KeptLogin
 
 log = logging.getLogger(__name__)
@@ -72,6 +75,7 @@ COMMAND_SHORTCUTS = {
     "computer-management": "Ctrl+Shift+M",
 }
 RECENT_PATHS = 10  # Open a path… keeps the last folders opened
+QUICK_KEY = "quick_commands"  # this admin's quick commands, in order
 FACTS_AFTER = 1_500  # ms a host stays selected before its PC facts are read
 WATCH_EVERY = 15_000  # ms between checks on a restarting PC, until it answers again
 WATCH_FOR = timedelta(minutes=20)  # after the restart time; then CapyPanel stops watching
@@ -180,12 +184,6 @@ class HostsTool(ListWorkspace):
         self.addActions([a.copy_address, a.refresh_shown, a.add_host, a.manual_connect])
         a.refresh_shown.triggered.connect(self._run_refresh_panel)  # F5
         a.show_domains.toggled.connect(self._show_domains)
-        a.check_status.triggered.connect(
-            lambda: self.check_hosts(self.selected_items(), status=True, users=False)
-        )
-        a.check_users.triggered.connect(
-            lambda: self.check_hosts(self.selected_items(), status=False, users=True)
-        )
         self.toolbar.refresh_panel_requested.connect(self._show_refresh_panel)
         self.refresh_panel.run_clicked.connect(self._run_refresh_panel)
         self.toolbar.connect_menu.aboutToShow.connect(self._fill_connect_menu)
@@ -211,7 +209,7 @@ class HostsTool(ListWorkspace):
         details.cancel_pending.connect(lambda: self.run_on_selected("cancel-restart"))
         details.users_menu.aboutToShow.connect(self._fill_users_menu)
         details.power_menu.aboutToShow.connect(self._fill_power_menu)
-        details.more_menu.aboutToShow.connect(lambda: self._fill_commands_menu(details.more_menu))
+        details.commands_requested.connect(lambda: self.open_commands(self.selected_target()))
 
     def restore_layout(self) -> None:
         super().restore_layout()
@@ -274,11 +272,13 @@ class HostsTool(ListWorkspace):
         return _("Remove hosts"), text
 
     def search_fields(self) -> tuple[list[str], str]:
-        """Address, user, tags: searched only while their columns show. Notes always are."""
+        """Address, status, user, tags: searched only while their columns show. Notes always
+        are."""
         table = self.table
-        # Each a lower-case word in the list "Search name, address, user, tags, notes".
+        # Each a lower-case word in the list "Search name, address, status, user, tags, notes".
         fields = [_("name")]
         fields += [_("address")] if not table.isColumnHidden(table.ADDRESS) else []
+        fields += [_("status")] if not table.isColumnHidden(table.STATUS) else []
         fields += [_("user")] if not table.isColumnHidden(table.USER) else []
         fields += [_("tags")] if not table.isColumnHidden(table.TAGS) else []
         fields.append(_("notes"))  # no column, so always searched
@@ -306,6 +306,18 @@ class HostsTool(ListWorkspace):
 
     def no_match_text(self) -> str:
         return _("No hosts in this group have all the picked tags.")
+
+    def empty_texts(self) -> EmptyTexts:
+        return EmptyTexts(
+            _("This list has no hosts yet.\nAdd one, or import several at once."),
+            _("This list has no hosts."),
+            _("This group has no hosts yet."),
+            _("Every host is in a group."),
+            _("No host matches “{text}”."),
+        )
+
+    def import_action(self) -> QAction | None:
+        return self.commands.import_hosts
 
     def retranslate(self) -> None:
         retranslate_actions(self.commands)
@@ -416,8 +428,8 @@ class HostsTool(ListWorkspace):
         sources, current = self.report_sources(doc.hosts)
 
         def results(host_id: str) -> tuple[str, str]:
-            cells = self._cells(host_id)
-            return cells.status[0], cells.user[0]
+            cells = self._cells(host_id)  # "" when not checked: the file's cell stays empty
+            return ("" if cells.unchecked else cells.status[0]), cells.user[0]
 
         def checked_at(host_id: str) -> tuple[datetime | None, datetime | None]:
             status, users = self._status_found.get(host_id), self._users_found.get(host_id)
@@ -521,12 +533,17 @@ class HostsTool(ListWorkspace):
         self.open_commands(None)
 
     def open_commands(self, target: HostTarget | None) -> None:
-        """The Commands window, for `target` (None: an address typed there). One at a time."""
+        """The Commands window, for `target` (None: an address typed there). One at a time:
+        already open, it turns to that PC and keeps its answers."""
         from capypanel.ui.hosts_tool.commands_window import CommandsWindow
 
-        if self._commands_window is not None:
-            self._commands_window.close()
-            self._commands_window.deleteLater()
+        open_one = self._commands_window
+        if isinstance(open_one, CommandsWindow) and shiboken6.isValid(open_one):
+            open_one.switch_to(target, self.profile_for(target))
+            open_one.show()
+            open_one.raise_()
+            open_one.activateWindow()
+            return
         window = CommandsWindow(self, target, self.profile_for(target))
         window.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         window.destroyed.connect(lambda: setattr(self, "_commands_window", None))
@@ -769,13 +786,17 @@ class HostsTool(ListWorkspace):
         self.table.show_hosts(items, {h.id: self._cells(h.id) for h in items})
 
     def matches(self, item: Host, needle: str) -> bool:
-        """The name, plus the address, users and tags when their columns show: only what can be
-        seen. Notes are the exception: they have no column, so they're always searched. Users
-        come from the last logged-on users check (memory only)."""
+        """The name, plus the address, status, users and tags when their columns show: only
+        what can be seen. Notes are the exception: they have no column, so they're always
+        searched. Status ("Not checked" too) and users come from the last Refresh (memory
+        only)."""
         table = self.table
         if super().matches(item, needle):
             return True
         if not table.isColumnHidden(table.ADDRESS) and needle in item.address.casefold():
+            return True
+        shown = not table.isColumnHidden(table.STATUS)
+        if shown and needle in self._cells(item.id).status[0].casefold():
             return True
         if not table.isColumnHidden(table.TAGS) and any(needle in t.casefold() for t in item.tags):
             return True
@@ -804,6 +825,8 @@ class HostsTool(ListWorkspace):
                     host_list.profile_of(host, self._profile_exists)[0]
                 ),
                 commands_as=self._commands_as(host),
+                quick=self.quick_commands(),
+                hidden=self.hidden_parts(),
             )
             self.details.show_host(details, 1, needle=self._needle())
             if host.connect_address and host.id not in self._facts:
@@ -867,8 +890,6 @@ class HostsTool(ListWorkspace):
         a.export_hosts.setEnabled(doc is not None and bool(doc.hosts.hosts))  # read-only too
         for action in (a.connect_host, a.copy_address):
             action.setEnabled(selected > 0)  # read-only lists can still connect
-        for action in (a.check_status, a.check_users):
-            action.setEnabled(selected > 0 and self._run is None)  # one Refresh at a time
         self._update_host_actions()
         shown = self.table.topLevelItemCount() > 0
         a.refresh_shown.setEnabled(shown and self._run is None)
@@ -888,23 +909,82 @@ class HostsTool(ListWorkspace):
         return self.commands.copy_address if key == "address" else None  # keeps Ctrl+Shift+C
 
     def fill_item_menu(self, menu: QMenu, items: Sequence[Host]) -> None:
+        """One PC: connect, refresh it, the quick commands, the door to every command, then
+        copy and managing the host. Several PCs: only what works on all of them."""
         a = self.commands
-        # Use first, then copy, then managing the host: edit, move, remove.
         menu.addAction(a.connect_host)
         menu.setDefaultAction(a.connect_host)  # bold: what double-click and Enter do
         menu.addSeparator()
-        menu.addActions([a.check_status, a.check_users])
-        menu.addSeparator()
-        self._add_command_menus(menu)
-        account = menu.addMenu(_("Commands run &as"))  # this person's own rows: never read-only
-        self._fill_hosts_account_menu(account, items)
-        account.setEnabled(bool(account.actions()))
+        if len(items) == 1:
+            self._update_host_actions()
+            target = self.selected_target()
+            refresh = menu.addAction(_("&Refresh host"))  # status, logged-on users, PC facts
+            refresh.setEnabled(target is not None)
+            refresh.triggered.connect(lambda: self.run_on_selected("all-checks"))
+            quick = self.quick_commands()[: host_commands.MENU_QUICK]
+            if quick:
+                menu.addSeparator()
+                menu.addActions([self.host_actions[command_id] for command_id in quick])
+            menu.addSeparator()
+            every = menu.addAction(_("&All commands…"))
+            every.setEnabled(target is not None)
+            every.triggered.connect(lambda: self.open_commands(self.selected_target()))
+        else:
+            refresh = menu.addAction(
+                _("&Refresh {n} hosts").format(n=len(items))
+            )  # status and logged-on users; PC facts are read one PC at a time
+            refresh.setEnabled(self._run is None)
+            refresh.triggered.connect(
+                lambda: self.check_hosts(self.selected_items(), status=True, users=True)
+            )
+            menu.addSeparator()
+            account = menu.addMenu(_("Commands run &as"))  # each admin's own: never read-only
+            self._fill_hosts_account_menu(account, items)
+            account.setEnabled(bool(account.actions()))
         menu.addSeparator()
         self.add_copy_menu(menu)
         menu.addSeparator()
-        menu.addAction(a.edit)
+        if len(items) == 1:
+            menu.addAction(a.edit)
         self.add_move_menu(menu, items)
         menu.addAction(a.remove)
+
+    def quick_commands(self) -> tuple[str, ...]:
+        """This admin's quick commands, in their order (Details' buttons; the menu's first)."""
+        return host_commands.quick_from(self.prefs.get(QUICK_KEY))
+
+    def set_quick_commands(self, picked: Sequence[str]) -> None:
+        self.prefs[QUICK_KEY] = list(host_commands.quick_from(list(picked)))
+        self._save_prefs()
+        self._selection_changed()  # Details' buttons follow at once
+
+    def details_parts(self) -> list[Part]:
+        return [
+            Part("connection", _("Connection"), _("Address, profile, account")),
+            Part("users", _("Logged-on users"), _("Who is signed in now")),
+            Part("facts", _("PC facts"), _("Model, Windows, memory, disk")),
+            Part("tags", _("Tags"), _("The host's tags")),
+            Part("notes", _("Notes"), _("The host's notes")),
+        ]
+
+    def details_always(self) -> str:
+        return _("Always shown: the host's name, its status and a pending restart's warning.")
+
+    def command_shortcuts(self) -> dict[str, str]:
+        """Each command's keys as text ("Ctrl+E"), by command id; only those that have some.
+        A shortcut belongs to its command: it reads the same wherever the command is named."""
+        return {
+            command_id: shortcut_text(action)
+            for command_id, action in self.host_actions.items()
+            if not action.shortcut().isEmpty()
+        }
+
+    def customize_tabs(self) -> list[tuple[str, QWidget]]:
+        from capypanel.ui.hosts_tool.quick_chooser import QuickChooser
+
+        chooser = QuickChooser(self.quick_commands(), self.command_shortcuts())
+        chooser.changed.connect(self.set_quick_commands)
+        return [(_("Quick commands"), chooser)]
 
     def fill_group_menu(self, menu: QMenu, group: Group) -> None:
         assert self._doc is not None
@@ -919,15 +999,9 @@ class HostsTool(ListWorkspace):
         # The group's hosts, including those in the groups inside it.
         hosts = list(self._doc.hosts.hosts_in(group.id))
         menu.addSeparator()
-        for text, status, users in (
-            (_("Refresh &status"), True, False),
-            (_("Refresh &logged-on users"), False, True),
-        ):
-            item = menu.addAction(text)
-            item.setEnabled(bool(hosts) and self._run is None)
-            item.triggered.connect(
-                lambda _c=False, s=status, u=users: self.check_hosts(hosts, status=s, users=u)
-            )
+        refresh = menu.addAction(_("&Refresh group"))  # status and logged-on users
+        refresh.setEnabled(bool(hosts) and self._run is None)
+        refresh.triggered.connect(lambda: self.check_hosts(hosts, status=True, users=True))
 
     # ---- Refresh: status and logged-on users ----
 
@@ -1110,8 +1184,9 @@ class HostsTool(ListWorkspace):
         # Again: the hosts that refused, and those a rejection kept from being tried.
         again = [t for t in self._targets if t[0] in self._refused or t[0] not in self._reported]
         uses = self.accounts.uses_for([self._target(*t) for t in again or self._targets])
+        saved = account is not None and self.accounts.saved(account.user)
         dialog = AccountDialog(self, text, account.user if account else "",
-                               uses=uses)  # fmt: skip
+                               saved=saved, uses=uses)  # fmt: skip
         if run_modal(dialog) != QDialog.DialogCode.Accepted:
             return
         link = dialog.link()
@@ -1132,8 +1207,9 @@ class HostsTool(ListWorkspace):
     def _cells(self, host_id: str) -> Cells:
         status = self._status_found.get(host_id)
         users = self._users_found.get(host_id)
-        unchecked = ("", _("Not checked: use Refresh"), None, True)
-        status_cell: tuple[str, str, Any, bool] = unchecked
+        blank = not_checked()
+        status_cell: tuple[str, str, Any, bool] = blank.status
+        said = status is not None  # a status was read, or a restart is on its way
         if status is not None:
             state, when, answered = status
             status_cell = (
@@ -1144,6 +1220,7 @@ class HostsTool(ListWorkspace):
             )
         pending = self._pending.get(host_id)
         if pending is not None and pending.at > datetime.now(UTC):
+            said = True
             when = check_texts.clock_text(pending.at)
             status_cell = (
                 _("Restart at {when}").format(when=when)
@@ -1155,14 +1232,14 @@ class HostsTool(ListWorkspace):
                 tabler_icon("clock", QColor(STATUS_COLORS["attention"]), 14),
                 False,
             )
-        user_cell: tuple[str, str, Any, bool] = unchecked
+        user_cell: tuple[str, str, Any, bool] = blank.user
         if users is not None:
             found, error, when = users
             text, tip = check_texts.users_text(found, error), check_texts.users_tip(error, when)
             if found:  # every name, when the column is too narrow; always with the domain
                 tip = f"{check_texts.users_text(found, error, full=True)}\n{tip}"
             user_cell = (text, tip, None, error is not None or not found)
-        return Cells(status_cell, user_cell)
+        return Cells(status_cell, user_cell, unchecked=not said)
 
     def _show_refresh_panel(self, where: QPoint) -> None:
         panel = self.refresh_panel
@@ -1210,10 +1287,31 @@ class HostsTool(ListWorkspace):
             if command_id == "cancel-restart":
                 enabled = enabled and target is not None and target.key in self._pending
             action.setEnabled(enabled)
-        if target is not None:
-            who = folder_user(self._known_sessions(target.key))
-            name = _("{user}'s folder").format(user=who.user) if who else _("User's folder")
-            self.host_actions["user-folder"].setText(name.replace("&", "&&"))
+        if target is None:
+            return
+        # Commands for the person signed in: the line stays in place and says who, or why not.
+        who = folder_user(self._known_sessions(target.key))
+        nobody = self._nobody_signed_in(target.key)
+        for command in host_commands.COMMANDS:
+            if not command.needs_user or command.id not in self.host_actions:
+                continue
+            name = _(command.name)
+            if nobody:
+                name = _("{command} (nobody signed in)").format(command=name.rstrip("…"))
+            elif who is not None and command.id == "user-folder":
+                name = _("{command} ({user})").format(command=name, user=who.user)
+            action = self.host_actions[command.id]
+            action.setText(name.replace("&", "&&"))
+            action.setEnabled(not nobody)
+
+    def _nobody_signed_in(self, key: str) -> bool:
+        """Whether a check from the last few minutes found no one signed in. Before any check,
+        or once it's old, nothing is known: the commands for a person stay usable."""
+        found = self._users_found.get(key)
+        if found is None:
+            return False
+        sessions, error, when = found
+        return error is None and not sessions and datetime.now(when.tzinfo) - when < NOBODY_FOR
 
     def selected_target(self) -> HostTarget | None:
         hosts = self.selected_items()

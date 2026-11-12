@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
+from PySide6.QtGui import QAction, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QMenu, QSplitter, QWidget
 
@@ -18,6 +19,7 @@ from capypanel.core.hosts.model import NO_GROUP, Host, HostList
 from capypanel.ui.hosts import HostDialog, group_choices
 from capypanel.ui.hosts_tool import tool as hosts_module
 from capypanel.ui.hosts_tool.table import HostTable
+from capypanel.ui.icons import dot_icon
 from capypanel.ui.list_workspace import workspace as workspace_module
 
 
@@ -234,8 +236,21 @@ def test_the_first_start_fits_every_column_to_its_full_text(qapp: QApplication) 
     long = "a." * 150 + "example.internal"  # far wider than the old 260 px cap
     table = _table(qapp, _hosts(("Reception 01", long)))
     assert table.columnWidth(table.ADDRESS) >= table.sizeHintForColumn(table.ADDRESS)
-    # Status and User are empty before a check: a starting width with room for one.
+    # User is empty before a check: a starting width with room for one.
     assert table.columnWidth(table.USER) > table.minimum_width(table.USER)
+    table.close()
+
+
+def test_status_starts_wide_enough_for_everything_it_can_say(qapp: QApplication) -> None:
+    table = _table(qapp, _hosts(("Reception 01", "192.0.2.10")))
+    first = table.columnWidth(table.STATUS)
+    row = table.topLevelItem(0)
+    assert row is not None
+    row.setIcon(table.STATUS, dot_icon("#3fb950"))  # the dot takes room too
+    for words in table.longest_texts(table.STATUS):
+        row.setText(table.STATUS, words)
+        assert table.sizeHintForColumn(table.STATUS) <= first, words
+    assert {"Not checked", "Host not found", "Online"} <= set(table.longest_texts(table.STATUS))
     table.close()
 
 
@@ -270,7 +285,9 @@ def test_fit_columns_to_content_fits_the_full_text_again(
 
 def test_panes_cant_be_dragged_too_narrow_to_read(window: CapyWindow) -> None:
     scale = window.hosts._scale()
-    assert window.hosts.details.minimumWidth() == round(260 * scale)
+    # Details: the usual minimum, or what its grid of buttons needs in this font.
+    needed = window.hosts.details.minimum_width()
+    assert window.hosts.details.minimumWidth() == max(round(260 * scale), needed)
     assert window.hosts.nav.minimumWidth() == round(180 * scale)
 
 
@@ -394,7 +411,7 @@ def test_double_clicking_the_host_table_s_right_edge_fits_it_to_its_columns(
     window: CapyWindow, office: Path
 ) -> None:
     window.hosts.open_list(office)
-    window.resize(1600, 700)
+    window.resize(2400, 700)  # room for the table's columns beside Details' buttons
     window.show()
     QApplication.processEvents()
     splitter = window.hosts.splitter  # pyright: ignore[reportPrivateUsage]
@@ -440,3 +457,111 @@ def test_an_edit_keeps_the_table_where_it_was_scrolled(qapp: QApplication) -> No
     table.show_hosts(hosts, {})
     assert bar.value() == 0
     table.close()
+
+
+def test_the_status_bar_names_the_list_and_a_click_copies_its_path(
+    window: CapyWindow, office: Path
+) -> None:
+    bar = window.hosts.status_label
+    assert bar.text() == "Default · 0 hosts · 0 selected"  # named after its kind: said once
+    window.hosts.open_list(office)
+    assert bar.text() == "Shared · office · 3 hosts · 0 selected"
+    assert str(office.parent) not in bar.text() and "portable" not in bar.text()
+    assert bar.toolTip().splitlines() == [str(office), "Click to copy"]
+    QTest.mouseClick(bar, Qt.MouseButton.LeftButton)
+    assert QApplication.clipboard().text() == str(office)
+    assert window.statusBar().currentMessage() == f"Copied: {office}"
+
+
+def test_a_table_with_no_rows_says_why_and_offers_what_helps(
+    window: CapyWindow, office: Path
+) -> None:
+    hosts, table = window.hosts, window.hosts.table
+
+    def note() -> tuple[str, list[str]]:
+        return table._empty_text.text(), [b.text() for b in table.note_buttons]
+
+    # A new list: what goes here, and the two ways to fill it.
+    assert note() == (
+        "This list has no hosts yet.\nAdd one, or import several at once.",
+        ["Add host…", "Import hosts…"],
+    )
+    hosts.open_list(office)
+    assert note() == ("", []) and table._empty.isHidden()  # rows: no note
+    doc = hosts.document
+    assert doc is not None
+    hl, empty = doc.hosts.add_group("Storage")
+    hosts._commit(hl)
+    hosts.nav.select_group(empty.id)
+    hosts._show_items()
+    assert note() == ("This group has no hosts yet.", ["Add host…"])
+    hosts.nav.select_group(NO_GROUP)
+    hosts._show_items()
+    assert note() == ("Every host is in a group.", [])
+    hosts.search.setText("  Laptop ")
+    hosts._show_items()
+    assert note() == ("No host matches “Laptop”.", [])  # as typed, without the spaces around
+    hosts.search.setText("")
+    hosts._show_items()
+    hosts.nav.select_group(empty.id)
+    hosts._show_items()
+    window.show()
+    QApplication.processEvents()
+    button = table.note_buttons[0]
+    # On screen and whole, also when added to a note that was already showing.
+    assert button.isVisible() and table._empty.rect().contains(button.geometry())
+    # A button runs its action, and follows whether it can be used.
+    asked: list[bool] = []
+    go, never = QAction("&Go…", table), QAction("Never", table)
+    go.triggered.connect(lambda: asked.append(True))
+    never.setEnabled(False)
+    table.show_note("Nothing here.", [go, never])
+    assert [(b.text(), b.isEnabled()) for b in table.note_buttons] == [
+        ("Go…", True),
+        ("Never", False),
+    ]
+    table.note_buttons[0].click()
+    assert asked == [True]
+
+
+def test_the_line_between_groups_and_tags_drags_and_is_remembered(
+    window: CapyWindow, office: Path
+) -> None:
+    window.hosts.open_list(office)
+    window.resize(1200, 700)
+    window.show()
+    QApplication.processEvents()
+    split = window.hosts.nav.split
+    assert not split.childrenCollapsible() and split.count() == 2
+    groups, tags = split.sizes()
+    assert groups > tags > 0  # tags show from the first start, under the groups
+    split.setSizes([groups - 60, tags + 60])
+    moved = split.sizes()
+    window.close()  # saved with the rest of the layout
+    again = CapyWindow(window.paths, dict(window.prefs))
+    again.hosts.open_list(office)
+    again.resize(1200, 700)
+    again.show()
+    QApplication.processEvents()
+    assert again.hosts.nav.split.sizes() == moved
+    assert not again.hosts.nav.split.childrenCollapsible()
+    again.hosts.commands.show_tags.setChecked(False)  # View > Tags off: the groups take it all
+    QApplication.processEvents()
+    assert again.hosts.nav.tags.isHidden() and again.hosts.nav.split.sizes()[1] == 0
+    again.close()
+
+
+def test_the_groups_panel_uses_outline_icons_in_the_text_colour(window: CapyWindow) -> None:
+    nav = window.hosts.nav
+    everything, loose = nav.everything.topLevelItem(0), nav.everything.topLevelItem(1)
+    assert everything is not None and loose is not None
+    text = nav.palette().color(QPalette.ColorRole.Text)
+    for item in (everything, loose):
+        image = item.icon(0).pixmap(16, 16).toImage()
+        inked = {
+            image.pixelColor(x, y).rgb()
+            for x in range(image.width())
+            for y in range(image.height())
+            if image.pixelColor(x, y).alpha() == 255  # solid ink: soft edges round the colour
+        }
+        assert inked == {text.rgb()}  # one colour: an outline, not Windows' coloured picture

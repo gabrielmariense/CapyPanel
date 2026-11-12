@@ -65,6 +65,9 @@ class HostsSettings(SettingsGroup):
             start_view=tool.start_view(),
             host_list=doc.hosts if doc else None,
         )
+        self.general.customize_requested.connect(
+            lambda: tool.customize_details(0, parent=self.general.window())
+        )
         self.connections = ConnectionsPage(tool.connector.catalogs, doc)
         self.accounts = AccountsSection(tool.accounts)  # which account signs in to which PCs
         self.accounts_page = Page(_("Credentials"))

@@ -15,23 +15,55 @@ login, unless an account is set for it (see
 
 ## Where they are
 
-![The Hosts window: the Commands button on the toolbar and the command buttons under the host's name in Details](../images/commands-details-dark.png)
+![The Details panel: the fixed row of buttons, the quick commands under it, then Connection, Logged on and PC facts](../images/commands-details-dark.png)
 
-- **Right-click a host:** after **Refresh status** and **Refresh logged-on users**, one submenu
-  per group: **Check**, **Folders**, **Admin tools**, **Users**, **Printers** and **Power**. They
-  work on one host with an address, so they're greyed when you selected several or none.
-- **The toolbar:** **Commands**, beside Refresh, opens the
-  [Commands window](#the-commands-window) for the selected host. Its arrow lists the same groups,
-  and ends with **All commands…**, which opens that window too.
-- **The Details panel:** a row of buttons under the host's name. **C$**, the signed-in user's
-  folder, Computer Management and Send a message run one command each; the two amber ones open
-  **Log off or disconnect someone** and **Restart or shut down**; and **…** holds every command.
-  A tooltip names each of them. In a narrow panel the row wraps onto a second line.
+- **The Details panel:** a grid of buttons under the host's name, each an icon over a word. The
+  first row is always the same: **Refresh** (the host's status, logged-on users and PC facts),
+  **Commands** (the [Commands window](#the-commands-window)), **Users ▾** (log off or disconnect
+  someone) and **Power ▾** (restart or shut down). Under it, four to a row, are your
+  [quick commands](#quick-commands). A tooltip gives each button's full name.
+- **Right-click a host:** **Connect** in bold, **Refresh host**, your first four quick commands,
+  then **All commands…**, which opens the Commands window. **Copy ▸**, **Edit…**, **Move to ▸**,
+  **Tags ▸** and **Remove** come after. With several hosts selected the menu holds what works on all of
+  them: **Connect**, **Refresh {n} hosts**, **Commands run as ▸**, **Copy ▸**, **Move to ▸**, **Tags ▸**
+  and **Remove**.
+- **The toolbar:** **Commands**, beside Refresh, opens the Commands window for the selected host.
+  Its arrow lists every command by group (**Check**, **Folders**, **Admin tools**, **Users**,
+  **Printers** and **Power**) and ends with **All commands…**.
 - **A person under Logged on:** right-click them in Details for **Send a message to {user}…**,
   **Disconnect {user}…** and **Log off {user}…**, then **Copy ▸**.
 
-The amber buttons and menu items are the commands that disturb whoever is using the PC. They
-always ask first.
+Commands work on one host with an address. The amber buttons and menu items are the ones that
+disturb whoever is using the PC, and they always ask first.
+
+A command meant for the person at the PC, such as Send a message or the user's folder, reads
+"… (nobody signed in)" and is greyed when the host's last refresh, less than 10 minutes old, found
+nobody. Before any refresh, or once it's older, it stays usable.
+
+## Quick commands
+
+![The Customize the details panel window on its Quick commands tab: the ticked commands on top, in order, then the rest by group](../images/customize-dark.png)
+
+Quick commands are the commands you use most, one click away. Each admin picks their own: the
+choice is kept in your settings on this PC, never in the list, so the people sharing a list each
+have theirs. CapyPanel starts with **C$ share**, **User's folder**, **Computer Management** and
+**Send a message…**.
+
+To choose them, open **View > Customize the details panel…**, right-click the Details panel, or
+use **Settings > Hosts > General > Details panel > Quick commands > Choose…**. The **Quick
+commands** tab lists the ticked commands first, under **On the panel**, in the order of their
+buttons, then the rest by group, each with its shortcut in grey and the word its button shows.
+"Tick the ones you want, or none." A newly ticked command goes to the end; **Move up** and **Move
+down** change the order, and **Restore default…** goes back to the four CapyPanel starts with.
+Every change shows on the panel at once. A line under the table counts them, as in "6 of 15
+ticked · 2 rows on the panel".
+
+Any of these can be a quick command: Status, Logged-on users, PC facts, Installed programs, C$
+share, User's folder, Startup folder, Open a path…, Computer Management, Event Viewer, Services,
+Send a message…, Mapped drives, Printers on this PC and Restart Print Spooler…. "Restart, Shut
+down, Log off and Disconnect can't be quick commands: they cut someone off."
+
+The first four are also in the host's right-click menu.
 
 ## What each command does
 
@@ -39,7 +71,7 @@ always ask first.
 
 | Command | What it does |
 |---|---|
-| **Quick check** | Status, logged-on users and PC facts, one after the other |
+| **Refresh host** | Status, logged-on users and PC facts, one after the other |
 | **Status** | Whether the PC answers on the network (see [Checking hosts](checking.md#status)) |
 | **Logged-on users** | Who is signed in, and since when |
 | **PC facts** | Windows version, model, serial number, memory, free space and last restart (see [PC facts](checking.md#pc-facts)) |
@@ -64,7 +96,7 @@ opened, and so run, on your own PC. The three Windows consoles open straight awa
 own error when the PC can't be reached.
 
 **Users** holds **Send a message…** and **Mapped drives**. Log off and Disconnect act on one
-person, so they're offered on that person instead: in Details, or under the amber users button,
+person, so they're offered on that person instead: in Details, or under **Users ▾**,
 which lists everyone signed in as a heading, as in "ana.admin  (at the PC, active, since 8:05
 AM)", with **Log off…** and **Disconnect…** under each. It's greyed when nobody is signed in, or
 nobody was checked yet.
@@ -151,10 +183,10 @@ program it lists as it goes.
 
 ![The strip above the host table after a command failed, with Try another account](../images/commands-strip-failed-dark.png)
 
-A command that worked says so in green above the host table, as in "Message sent to ana.admin on
+A command that worked says so in green above the host table, as in "Message sent to bruno on
 DESK-02.", and the strip closes by itself after a few seconds.
 
-A command that failed says so in red, with Windows' own reason: "Couldn't log off bruno.costa on
+A command that failed says so in red, with Windows' own reason: "Couldn't log off bruno on
 DESK-02: access denied. It needs an admin account on that PC." That strip stays until you close
 it. When the account was the problem, **Try another account…** asks for another one, and for which
 PCs to use it (see [Accounts for other PCs](connecting.md#accounts-for-other-pcs)), then runs the
@@ -168,7 +200,7 @@ rest of what you open shows too.
 ![A host with a restart waiting: the Status column and the amber strip in Details, with Cancel restart](../images/commands-restart-waiting-dark.png)
 
 A restart or shutdown with a delay shows in the **Status** column, as "Restart at 2:37 PM" with a
-clock, and in Details as an amber strip: "Restarts at 2:37 PM", "You asked at 2:32 PM. ana.admin
+clock, and in Details as an amber strip: "Restarts at 2:37 PM", "You asked at 2:32 PM. bruno
 got your message." and **Cancel restart**. **Power > Cancel the pending restart** does the same
 from the menus.
 
@@ -182,10 +214,14 @@ watching 20 minutes after the restart time.
 ![The Commands window: the Host box on top, the groups on the left, every command in the middle, what the picked one found on the right](../images/commands-window-dark.png)
 
 The Commands window holds every command for one PC in one place, with its answer beside it. It
-opens from the **Commands** button, from **All commands…**, and from **Connect > Manual
+opens from the **Commands** buttons, from **All commands…**, and from **Connect > Manual
 connection…** (Ctrl+M), which is the same window for an address that isn't in your list. It's a
 window of its own, beside the main one rather than over it: you can go back to the host list and
-leave it open.
+leave it open. Asking for the Commands of another host while it's open turns the window to that
+host, and each host's answers are kept while the window stays open, so going back shows them
+again. It opens at 1120 × 620 the first time and can be resized: wider, the commands and the
+answers share the extra room; narrower, the answers keep their width and the command list
+scrolls sideways. It opens again at the size you left it at.
 
 - **On top:** the **Host** box, then **Profile** and **Connect**. The box lists the hosts the
   Hosts panel shows, as "DESK-02 · 192.0.2.12", and under **Recent** the addresses you typed
@@ -195,7 +231,8 @@ leave it open.
 - **Add to host list…** shows beside the box only for a typed address the open list doesn't have:
   it puts the PC into the list, with the address already filled in.
 - **On the left:** a **Search** box and the six groups; a click jumps to a group.
-- **In the middle:** every command, one line each. The one you pick grows to show what it does
+- **In the middle:** every command, one line each, with its shortcut in grey when it has one.
+  The one you pick grows to show what it does
   and a **Run** button. The arrow keys move, Enter runs, and typing anywhere searches; a
   double-click only picks, so a risky command never runs by accident.
 - **On the right:** what the command found, laid out as the Details panel lays it out: the

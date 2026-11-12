@@ -57,10 +57,11 @@ group into a collapsed one opens the way to it, so what you moved stays in sight
 Every change is saved right away. On a read-only list, dragging is off.
 
 **Inventory > Manage groups…** shows the whole tree in a window, under a **Groups** root with
-tree lines, with **Move to**, **Move up**, **Move down** and **Sort A–Z**, a one-time sort you can
-rearrange after. Dragging works there too: drop a group onto **Groups**, or below the last row, to
-take it out of every group. Nothing changes until you click **OK**. Lists made before version
-0.13.0 show their groups in the order they were created; Sort A–Z puts them in order once.
+tree lines. Under it, in a row, are **Move to**, **Move up**, **Move down** and **Sort A–Z**, a
+one-time sort you can rearrange after. Dragging works there too: drop a group onto **Groups**, or
+below the last row, to take it out of every group. "Nothing changes until you click Save." Lists
+made before version 0.13.0 show their groups in the order they were created; Sort A–Z puts them in
+order once.
 
 ## Removing a group
 
@@ -146,7 +147,8 @@ The same lists as the dropdown, as a table of **List**, **Type** and **Access**:
 | **Type** | **Shared** (in the shared folder), **Yours** (in your own) or **Added** (a list from somewhere else) |
 | **Access** | **Read/write**, **Read-only**, **Created when opened** for a default or personal list that isn't there yet, **File not found**, or **Not used: made by another user** |
 
-**New…**, **Add existing…** and **Remove** are under the table. A row's right-click adds **Open**,
+**New…**, **Add existing…** and **Remove** are under the table, and under them the picked list's
+file path, shortened in the middle to fit; a click copies it whole. A row's right-click adds **Open**,
 **Save a copy…** and **Open folder**. A double-click, or **Open**, opens a list; adding one or
 saving a copy doesn't open it.
 

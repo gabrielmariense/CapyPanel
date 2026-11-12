@@ -15,7 +15,7 @@ guarda também as suas impressoras, com os detalhes de que você precisa e a pá
 clique, e encontra num PC os perfis de usuário do Windows que ninguém usa mais, para você
 excluí-los.
 
-> **Situação: beta (0.24.1).** Roda a partir do código-fonte; ainda não há instalador.
+> **Situação: beta (0.25.0).** Roda a partir do código-fonte; ainda não há instalador.
 
 ![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts, Impressoras e Perfis de usuário](docs/images/home-dark-pt-BR.png)
 
@@ -27,7 +27,7 @@ excluí-los.
   - Contas para outros PCs, por PC, grupo ou tag
   - Listas compartilhadas, grupos e tags
   - Status, usuários logados, dados do PC e unidades mapeadas
-  - Comandos num PC: as pastas e os consoles dele, os usuários, a energia e as impressoras
+  - Comandos num PC: as pastas e os consoles dele, os usuários, a energia e as impressoras, com os seus comandos rápidos
   - Pesquisa, importação e exportação
 - Impressoras
   - Listas com marca, modelo, nº de série e patrimônio

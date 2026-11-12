@@ -334,3 +334,33 @@ def test_an_answer_after_the_window_closed_is_dropped(window: CapyWindow, calls:
     commands.close()  # deleted on close, while the command is still on its way
     _settle(window)  # its answer comes back to nothing, quietly
     assert ("folder", "\\\\192.0.2.12\\C$") in calls
+
+
+def test_the_window_can_be_made_any_size_and_reopens_as_it_was_left(window: CapyWindow) -> None:
+    commands = _open(window, "DESK-01")
+    QApplication.processEvents()
+    least = commands.minimumWidth()  # what its parts need; the test font is a wide one
+    opens = (max(commands_module.SIZE[0], least), commands_module.SIZE[1])
+    assert (commands.width(), commands.height()) == opens  # the first time
+    commands.resize(least, 400)  # as small as it goes: the results keep what they need
+    QApplication.processEvents()
+    assert (commands.width(), commands.height()) == (least, 400)
+    results, listed = commands.results.width(), commands.list.width()
+    assert results >= commands_module.RESULTS_WIDTH
+    commands.resize(least + 800, 900)  # wider, the commands and the results both gain
+    QApplication.processEvents()
+    assert commands.results.width() > results and commands.list.width() > listed
+    commands.resize(least + 180, 800)
+    commands.close()
+    QApplication.processEvents()
+    assert window.hosts.prefs[commands_module.SIZE_KEY] == [least + 180, 800]
+    again = _open(window, "DESK-02")
+    assert again is not commands and (again.width(), again.height()) == (least + 180, 800)
+    again.resize(least + 200, 700)
+    again.reject()  # Esc keeps the size too
+    assert window.hosts.prefs[commands_module.SIZE_KEY] == [least + 200, 700]
+    QApplication.processEvents()
+    window.hosts.prefs[commands_module.SIZE_KEY] = "wide"  # a settings file edited by hand
+    typed = _open(window, None)
+    QApplication.processEvents()
+    assert (typed.width(), typed.height()) == opens

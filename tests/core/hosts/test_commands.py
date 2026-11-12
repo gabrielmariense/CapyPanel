@@ -27,3 +27,18 @@ def test_risky_commands_ask_first() -> None:
 
 def test_nothing_runs_a_program_on_the_pc() -> None:
     assert {c.need for c in COMMANDS} <= {Need.READ, Need.OPEN_HERE, Need.ASK_WINDOWS}
+
+
+def test_quick_commands_are_the_admin_s_pick_in_their_order() -> None:
+    assert commands.quick_from(None) == QUICK  # nothing ever chosen: the starting four
+    assert commands.quick_from([]) == ()  # none is a choice too
+    kept = ["services", "restart", "c-share", "services", "no-such", 7]
+    assert commands.quick_from(kept) == ("services", "c-share")  # only what can be quick, once
+
+
+def test_a_quick_command_never_cuts_a_person_off() -> None:
+    assert set(QUICK) <= set(commands.CAN_BE_QUICK)
+    for command_id in commands.CAN_BE_QUICK:
+        command = commands.command(command_id)  # each one exists
+        assert not command.per_person and command.group is not Group.POWER, command_id
+    assert "all-checks" not in commands.CAN_BE_QUICK  # it's the fixed Refresh host

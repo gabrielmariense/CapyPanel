@@ -35,16 +35,19 @@ from capypanel.ui.export_hosts import Source
 from capypanel.ui.groups import ManageGroupsDialog, TreeMenu, fill_host_move_menu, fill_move_menu
 from capypanel.ui.hosts import MAX_TAG, confirm, group_path
 from capypanel.ui.list_workspace.actions import ListActions
+from capypanel.ui.list_workspace.customize import CustomizeDialog, Part, PartsTab
 from capypanel.ui.list_workspace.details import DetailsPanel
 from capypanel.ui.list_workspace.panels import ItemTable, NavigationPane, SearchBox, TagStrip
 from capypanel.ui.list_workspace.splitter import PaneSplitter
-from capypanel.ui.list_workspace.texts import ListTexts
+from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar
 from capypanel.ui.menus import popup
 from capypanel.ui.new_list import ask_new_list
 
 log = logging.getLogger(__name__)
+
+HIDDEN_KEY = "details_hidden"  # the Details parts this person chose not to see
 
 
 class ListWorkspace(Tool):
@@ -72,7 +75,7 @@ class ListWorkspace(Tool):
         self._personal_list = self._places.personal
         self._make_lists_folders()
         self.search = SearchBox()
-        self.nav = NavigationPane(lambda: self.list_texts().everything)
+        self.nav = NavigationPane(lambda: self.list_texts().everything, self.ICON)
         # The list dropdown, on top of the Groups panel: switch lists, make or open one.
         self.list_picker = self.nav.add_list_picker(self._fill_list_menu)
         self.table = table
@@ -84,9 +87,8 @@ class ListWorkspace(Tool):
         self._search_timer.setSingleShot(True)
         self._search_timer.setInterval(150)
         self.details = details
-        self.details.copied.connect(
-            lambda text: shell.show_message(_("Copied: {text}").format(text=text), 5000)
-        )
+        self.details.copied.connect(self._say_copied)
+        self.status_label.clicked.connect(self.copy_list_path)
         self.splitter = PaneSplitter()
         # The search box is a box of its own above the table, styled like the panels.
         self.tag_strip = TagStrip()  # while tags are picked: which, and how many they leave
@@ -122,6 +124,9 @@ class ListWorkspace(Tool):
         a.show_groups.toggled.connect(self.nav.setVisible)
         a.show_tags.toggled.connect(self.nav.set_tags_visible)
         a.show_details.toggled.connect(self.details.setVisible)
+        a.customize_details.triggered.connect(lambda: self.customize_details())
+        self.details.customize_requested.connect(lambda: self.customize_details())
+        self.details.customizable = bool(self.details_parts())
         # The toolbar follows the end of the panels, wherever they are.
         for toggled in (a.show_groups.toggled, a.show_details.toggled):
             toggled.connect(self.align_toolbar_later)
@@ -194,6 +199,21 @@ class ListWorkspace(Tool):
         all the picked tags."."""
         raise NotImplementedError
 
+    def empty_texts(self) -> EmptyTexts:
+        """What the table says with no rows: an empty list, group or search. A tool says them
+        with its own word ("hosts")."""
+        return EmptyTexts(
+            _("This list is empty.\nAdd an item to start."),
+            _("This list is empty."),
+            _("This group is empty."),
+            _("Nothing is outside a group."),
+            _("Nothing matches “{text}”."),
+        )
+
+    def import_action(self) -> QAction | None:
+        """Offered beside Add in an empty list, when the tool can import many at once."""
+        return None
+
     def lists_page(self) -> str:
         """The Settings page that manages the tool's lists: the list dropdown opens it."""
         raise NotImplementedError
@@ -254,6 +274,7 @@ class ListWorkspace(Tool):
             action.setChecked(bool(view.get(key, True)))
         a = self._list_commands
         self.nav.set_tags_visible(a.show_tags.isChecked())
+        self.nav.restore_split(self.prefs.get("nav_splitter"))
         self.table.set_widths(self.prefs.get("column_widths"))
         self.table.set_hidden_columns(self.prefs.get("hidden_columns"))
         self._columns_shown()
@@ -267,7 +288,45 @@ class ListWorkspace(Tool):
 
     def view_actions(self) -> list[list[QAction]]:
         a = self._list_commands
-        return [[a.show_groups, a.show_tags, a.show_details]]
+        panes = [a.show_groups, a.show_tags, a.show_details]
+        if self.details_parts():  # right under the pane it customizes
+            panes.append(a.customize_details)
+        return [panes]
+
+    # ---- customizing the Details panel: each person's own ----
+
+    def details_parts(self) -> list[Part]:
+        """The parts of this tool's Details panel that can be hidden; none: nothing to choose."""
+        return []
+
+    def details_always(self) -> str:
+        """The line under the parts table: what shows whatever is ticked."""
+        return ""
+
+    def customize_tabs(self) -> list[tuple[str, QWidget]]:
+        """Tabs a tool puts in front of Information."""
+        return []
+
+    def hidden_parts(self) -> frozenset[str]:
+        kept = self.prefs.get(HIDDEN_KEY)
+        known = {part.key for part in self.details_parts()}
+        if not isinstance(kept, list):
+            return frozenset()
+        # A settings file edited by hand can hold anything: only the parts' own keys count.
+        return frozenset(k for k in kept if isinstance(k, str) and k in known)
+
+    def set_hidden_parts(self, hidden: Sequence[str]) -> None:
+        self.prefs[HIDDEN_KEY] = sorted(set(hidden))
+        self._save_prefs()
+        self._selection_changed()  # the panel on show follows at once
+
+    def customize_details(self, tab: int = 0, parent: QWidget | None = None) -> None:
+        """The "Customize the details panel" window, on its tab `tab`."""
+        parts = PartsTab(self.details_parts(), sorted(self.hidden_parts()), self.details_always())
+        parts.changed.connect(self.set_hidden_parts)
+        dialog = CustomizeDialog(parent or self, parts, self.customize_tabs())
+        dialog.show_tab(tab)
+        run_modal(dialog)
 
     def _scale(self) -> float:
         return max(1.0, self.fontMetrics().height() / 16)
@@ -278,9 +337,12 @@ class ListWorkspace(Tool):
             (self.nav, self.items_pane, self.details), self.PANES_MINIMUM, strict=True
         ):
             pane.setMinimumWidth(round(width * self._scale()))
+        # Its own parts (Hosts' grid of buttons) may need more, in a wide font or language.
+        self.details.setMinimumWidth(max(self.details.minimumWidth(), self.details.minimum_width()))
 
     def _default_pane_sizes(self, total: int) -> None:
         groups, details = (round(w * self._scale()) for w in self.PANES_DEFAULT)
+        details = max(details, self.details.minimum_width())
         self.splitter.setSizes([groups, max(total - groups - details, 1), details])
 
     def _fit_pane(self, edge: int) -> None:
@@ -313,6 +375,7 @@ class ListWorkspace(Tool):
     def save_state(self) -> None:
         self.prefs["view"] = {k: a.isChecked() for k, a in self.view_choices().items()}
         self.prefs["main_splitter"] = self.splitter.saveState().toBase64().toStdString()
+        self.prefs["nav_splitter"] = self.nav.split_state()
         self.prefs["column_widths"] = self.table.widths()
         self._remember_view()
 
@@ -911,7 +974,30 @@ class ListWorkspace(Tool):
         self.table.set_search(needle)
         strip = self.only_tags_text(len(items), len(before_tags)) if tags else ""
         self.tag_strip.show_tags(tags, strip)
-        self.table.show_no_match(self.no_match_text() if tags and before_tags and not items else "")
+        if tags and before_tags and not items:
+            self.table.show_no_match(self.no_match_text())
+        else:
+            self.table.show_note(*self._empty_note(items))
+
+    def _empty_note(self, items: Sequence[Host]) -> tuple[str, list[QAction]]:
+        """Why the table has no rows, and what helps: Add and Import in an empty list, Add in
+        an empty group, the lists' own actions with no list open."""
+        doc, a = self._doc, self._list_commands
+        if items:
+            return "", []
+        if doc is None:
+            return self.list_texts().no_list, [a.new_list, a.open_list]
+        texts, add = self.empty_texts(), self.add_item_action()
+        if typed := self.search.text().strip():
+            return texts.search.format(text=typed), []
+        if not doc.hosts.hosts:
+            if doc.read_only:
+                return texts.read_only_list, []
+            also = self.import_action()
+            return texts.empty_list, [add, *([also] if also is not None else [])]
+        if self.nav.current_filter().kind == "nogroup":
+            return texts.loose, []
+        return texts.group, ([] if doc.read_only else [add])
 
     def fill_table(self, items: Sequence[Host]) -> None:
         self.table.show_items(items)
@@ -998,17 +1084,26 @@ class ListWorkspace(Tool):
         if doc is None:
             self.title_changed.emit("")
             self.status_label.setText(self.list_texts().no_list)
+            self.status_label.setToolTip("")
+            self.status_label.unsetCursor()
             self.list_picker.setText(_("No list open"))
             return
         name = self._list_name(doc.path)
         self.title_changed.emit(name)
         self.list_picker.setText(name)
         self.list_picker.setToolTip(str(doc.path))
+        # "Shared · Clinic · 8 hosts · 6 online · 1 selected": the kind, the list's name as the
+        # picker says it (Default and Personal are named after their kind: said once), counts.
+        # The file's path is a click away, and in the tooltip.
+        kind = self._kind(doc.path)
         parts = [
-            f"{self._kind_label(self._kind(doc.path))} — {doc.path}",
+            self._kind_label(kind),
+            *([name] if kind is ListKind.SHARED else []),
             self.items_text(len(doc.hosts.hosts)),
             *self.status_extras(doc),
         ]
+        self.status_label.setToolTip("\n".join((str(doc.path), _("Click to copy"))))
+        self.status_label.setCursor(Qt.CursorShape.PointingHandCursor)
         if self._needle():
             found = self.table.topLevelItemCount()
             parts.append(self.found_text(found))
@@ -1017,9 +1112,16 @@ class ListWorkspace(Tool):
             parts.append(_("Tags: {tags}").format(tags=", ".join(tags)))
         if doc.read_only:
             parts.append(_("read-only"))
-        if self._paths.portable:
-            parts.append(_("portable mode"))
         self.status_label.setText(" · ".join(parts))
+
+    def copy_list_path(self) -> None:
+        """A click on the status bar's text: the open list's path, copied, and said so."""
+        if self._doc is not None:
+            QGuiApplication.clipboard().setText(str(self._doc.path))
+            self._say_copied(str(self._doc.path))
+
+    def _say_copied(self, text: str) -> None:
+        self._shell.show_message(_("Copied: {text}").format(text=text), 5000)
 
     def title(self) -> str:
         """The open list's name, or "" with none open."""

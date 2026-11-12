@@ -237,6 +237,7 @@ class Runner(QObject):
             self._parent_widget(),
             text,
             current.user if current else "",
+            saved=current is not None and accounts.saved(current.user),
             uses=uses,
         )
         if current is not None:  # the PCs it was for, unless a narrower choice is wanted

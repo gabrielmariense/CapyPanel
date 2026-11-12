@@ -103,7 +103,7 @@ class PrinterDialog(QDialog):
         form.addRow(_("Ass&et tag:"), self.asset_tag)
         form.addRow(_("Page &counters:"), self.source)
         form.addRow(_("N&otes:"), self.notes)
-        self.buttons = ok_cancel(self)
+        self.buttons = ok_cancel(self, _("Save") if printer else _("Add"))  # ends in its verb
         layout = QVBoxLayout(self)
         layout.addLayout(form)
         layout.addWidget(self.buttons)

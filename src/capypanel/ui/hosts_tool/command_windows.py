@@ -37,7 +37,8 @@ from capypanel.core.remote import host_printers, places
 from capypanel.core.remote.host_printers import HostPrinter
 from capypanel.core.remote.sessions import Session
 from capypanel.ui import checks as check_texts
-from capypanel.ui.dialogs import run_modal
+from capypanel.ui import spacing
+from capypanel.ui.dialogs import quiet_default, run_modal
 from capypanel.ui.icons import STATUS_COLORS, tabler_icon
 from capypanel.ui.notes import escape, hint
 from capypanel.ui.tables import fit_menu
@@ -109,13 +110,13 @@ class Question(QDialog):
         self.body.addWidget(self.heading)
         self.body.addWidget(self.text)
         top = QHBoxLayout()
-        top.setSpacing(14)
+        top.setSpacing(spacing.PANEL)
         top.addWidget(sign, 0, Qt.AlignmentFlag.AlignTop)
         top.addLayout(self.body, 1)
         self.action = risky_button(action)
         self.action.setAutoDefault(True)  # Enter runs it once Tab has put the keyboard on it
         self.cancel = QPushButton(_("Cancel"))
-        self.cancel.setDefault(True)
+        quiet_default(self.cancel)
         self.action.clicked.connect(self.accept)
         self.cancel.clicked.connect(self.reject)
         buttons = QHBoxLayout()
@@ -123,9 +124,9 @@ class Question(QDialog):
         buttons.addWidget(self.action)
         buttons.addWidget(self.cancel)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(18, 16, 18, 14)
+        layout.setContentsMargins(spacing.WINDOW, spacing.WINDOW, spacing.WINDOW, spacing.WINDOW)
         layout.addLayout(top)
-        layout.addSpacing(6)
+        layout.addSpacing(spacing.ICON)
         layout.addLayout(buttons)
         self.cancel.setFocus()
 
@@ -257,7 +258,7 @@ class MessageDialog(QDialog):
         )
         intro.setWordWrap(True)
         chips = QHBoxLayout()
-        chips.setSpacing(6)
+        chips.setSpacing(spacing.ICON)
         chips.addWidget(QLabel(_("To:")))
         for session in to:
             chip = QLabel(session.user)
@@ -442,7 +443,7 @@ class ReadList(QDialog):
         self.read_button.setAutoDefault(False)
         self.read_button.clicked.connect(self.read)
         self.close_button = QPushButton(_("Close"))
-        self.close_button.setDefault(True)
+        quiet_default(self.close_button)
         self.close_button.clicked.connect(self.accept)
 
     def read(self) -> None:

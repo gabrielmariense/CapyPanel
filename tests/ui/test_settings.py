@@ -6,7 +6,9 @@ from pathlib import Path
 
 import pytest
 from capywindow import CapyWindow
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QDesktopServices, QTextDocumentFragment
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
     QApplication,
     QDialogButtonBox,
@@ -95,7 +97,7 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
 
     assert titles(dialog.general) == ["Appearance", "Startup and closing"]
     hosts = dialog.group(HostsSettings)
-    assert titles(hosts.general) == ["Host lists", "Refresh"]
+    assert titles(hosts.general) == ["Host lists", "Refresh", "Details panel"]
     assert titles(hosts.connections) == ["Connection profiles", "Remote tools"]  # shared
     assert titles(hosts.accounts_page) == ["Accounts", "Passwords"]  # only yours
     printers = dialog.group(PrintersSettings).general
@@ -257,7 +259,7 @@ def test_menus_hold_only_what_fits_them(window: CapyWindow) -> None:
     assert menus["&File"] == ["&Settings…", "E&xit"]  # lists are in the list dropdown
     assert menus["&View"] == [
         "Hom&e", "&Hosts", "&Printers", "&User profiles", "&Groups pane", "T&ags pane",
-        "&Details pane",
+        "&Details pane", "&Customize the details panel…",
         "Show users' do&main",
         "T&oolbar", "&Status bar",
     ]  # fmt: skip
@@ -567,7 +569,7 @@ def test_the_settings_buttons_are_only_the_main_actions(window: CapyWindow) -> N
     assert folders is not None
     assert [b.text() for b in folders.findChildren(QPushButton)] == ["Open folder"]
     for page_id, wanted in (
-        ("hosts", ["&New…", "&Add existing…", "&Remove"]),
+        ("hosts", ["&New…", "&Add existing…", "&Remove", "C&hoose…"]),
         (
             "connections",
             [
@@ -761,4 +763,25 @@ def test_each_page_shows_on_its_own_from_its_top_and_the_list_never_jumps(
     dialog.page_list.setCurrentRow(row("General", "Hosts"))
     dialog.page_list.setCurrentRow(connecting)  # back again: from its top
     assert view.verticalScrollBar().value() == 0
+    dialog.close()
+
+
+def test_the_picked_list_s_path_is_under_the_table_and_a_click_copies_it(
+    window: CapyWindow, paths: settings.Paths
+) -> None:
+    deep = paths.lists("hosts").shared_dir / ("ward " * 30 + "branch.json")
+    listfile.save(deep, HostList(), expected=None)
+    dialog = window.settings_dialog()
+    view = dialog.group(HostsSettings).general.view
+    dialog.resize(860, 700)
+    dialog.show()
+    view.select(deep)
+    QApplication.processEvents()
+    line = view.path_label
+    assert line.full == str(deep) and line.toolTip().splitlines() == [str(deep), "Click to copy"]
+    # Too long for the page: both ends stay, the middle goes.
+    assert "…" in line.text() and line.text().endswith("branch.json")
+    assert line.text().startswith(str(deep)[:6])
+    QTest.mouseClick(line, Qt.MouseButton.LeftButton)
+    assert QApplication.clipboard().text() == str(deep)
     dialog.close()

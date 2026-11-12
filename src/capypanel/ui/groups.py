@@ -389,7 +389,8 @@ class TreeMenu(QMenu):
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(themes.menu_mark())
             rect = self.actionGeometry(self.marked)
-            painter.drawRoundedRect(rect.adjusted(1, 0, -1, 0), 6, 6)
+            corner = themes.current().control  # as the menu's own rows
+            painter.drawRoundedRect(rect.adjusted(1, 0, -1, 0), corner, corner)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
             option = QStyleOptionMenuItem()
             self.initStyleOption(option, self.marked)
@@ -523,7 +524,7 @@ def _tick(menu: TreeMenu, exclusive: QActionGroup | None, item: QAction, ticked:
 
 
 class ManageGroupsDialog(QDialog):
-    """Inventory > Manage groups…: reorder and nest every group at once, then OK."""
+    """Inventory > Manage groups…: reorder and nest every group at once, then Save."""
 
     def __init__(self, parent: QWidget | None, host_list: HostList) -> None:
         super().__init__(parent)
@@ -540,21 +541,20 @@ class ManageGroupsDialog(QDialog):
         self.sort_button.setToolTip(
             _("Sorts every level by name, once; you can rearrange them after")
         )
-        buttons = QVBoxLayout()
+        # As every list screen: the buttons in a row under the list, from the left.
+        buttons = QHBoxLayout()
         for button in (self.up_button, self.down_button, self.move_button, self.sort_button):
             button.setAutoDefault(False)
             buttons.addWidget(button)
         buttons.addStretch(1)
-        row = QHBoxLayout()
-        row.addWidget(self.tree, 1)
-        row.addLayout(buttons)
-        self.box = ok_cancel(self)
+        self.box = ok_cancel(self, _("Save"))
         layout = QVBoxLayout(self)
-        layout.addLayout(row, 1)
+        layout.addWidget(self.tree, 1)
+        layout.addLayout(buttons)
         layout.addWidget(
             notes(
                 _("Drag a group to move it, or drop it onto another group to put it inside."),
-                _("Nothing changes until you click OK."),
+                _("Nothing changes until you click Save."),
             )
         )
         layout.addWidget(self.box)
@@ -564,7 +564,7 @@ class ManageGroupsDialog(QDialog):
         self.sort_button.clicked.connect(self._sort)
         self.tree.itemSelectionChanged.connect(self._update)
         self._update()
-        self.resize(460, 480)
+        self.resize(max(460, self.sizeHint().width()), 480)
 
     def order(self) -> list[tuple[str, str | None]]:
         return self.tree.order()

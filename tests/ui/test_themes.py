@@ -59,6 +59,7 @@ def test_unknown_or_missing_theme_falls_back_to_the_default() -> None:
         ({"name": "X", "base": "dark", "colors": {"sparkle": "#fff"}}, "unknown colour"),
         ({"name": "X", "base": "dark", "colors": {"accent": "not-a-colour"}}, "not a colour"),
         ({"name": "X", "base": "dark", "radius": 99}, "radius"),
+        ({"name": "X", "base": "dark", "control_radius": -1}, "control_radius"),
     ],
 )
 def test_broken_theme_files_are_rejected_and_skipped(
@@ -368,3 +369,128 @@ def test_the_font_is_the_first_family_this_pc_has_alone(
     assert themes.installed(("No Such Font", "Nor This")) == ["No Such Font", "Nor This"]
     themes.apply(themes.Registry().find("capypanel-dark"))
     assert qapp.font().families() == ["Segoe UI"]
+
+
+def _rule(sheet: str, selector: str) -> str:
+    found = re.search(re.escape(selector) + r" \{([^}]*)\}", sheet)
+    assert found is not None, selector
+    return found[1]
+
+
+def test_corners_come_in_two_sizes_from_the_theme(tmp_path: Path) -> None:
+    for theme_id in ("capypanel-dark", "capypanel-light"):
+        theme = themes.Registry().find(theme_id)
+        assert (theme.radius, theme.control) == (6, 4)  # panels and menus; what you click
+        sheet = themes.stylesheet(theme)
+        assert "border-radius: 6px" in _rule(sheet, "QMenu")
+        assert "border-radius: 6px" in _rule(sheet, "QFrame#card")
+        assert "border-radius: 4px" in _rule(sheet, "QMenu::item")
+        assert "border-radius: 4px" in _rule(sheet, "QToolButton#commandButton")
+        assert "border-radius: 4px" in _rule(sheet, "QProgressBar#thin")  # bars: a control
+        assert "border-radius: 6px" in _rule(sheet, "QFrame#attentionStrip")  # strips: a panel
+    path = tmp_path / "one.json"
+    path.write_text(json.dumps({"name": "One", "base": "dark", "radius": 10}), encoding="utf-8")
+    assert themes.load_theme_file(path).control == 8  # only "radius": controls 2 px tighter
+    path.write_text(
+        json.dumps({"name": "Two", "base": "dark", "radius": 10, "control_radius": 3}),
+        encoding="utf-8",
+    )
+    assert themes.load_theme_file(path).control == 3
+    for other in ("graphite", "paper"):  # theirs change in their own round
+        kept = themes.Registry().find(other)
+        assert (kept.radius, kept.control) == (8, 6)
+
+
+@pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
+def test_no_corner_is_fixed_in_the_stylesheet_but_the_round_ones(theme: themes.Theme) -> None:
+    """Tags, badges, the radio button and the scroll bar stay round; a tick box keeps its
+    small corner. Everything else takes one of the theme's two sizes."""
+    odd = themes.Theme("odd", "custom", theme.scheme, colors=theme.colors, radius=17,
+                       control_radius=13)  # fmt: skip
+    sheet = re.sub(r"/\*.*?\*/", "", themes.stylesheet(odd), flags=re.DOTALL)
+    fixed = set()
+    for selector, body in re.findall(r"([^{}]+)\{([^}]*)\}", sheet):
+        for size in re.findall(r"border(?:-[a-z]+)*-radius: (\d+)px", body):
+            if size not in ("17", "13", "0"):
+                fixed.add(selector.strip())
+    assert fixed == {
+        "QFrame#tagChip", "QLabel#tileBadge", "QLabel#railBadge", "QLabel#tagValue",
+        "QLabel#stateBadge", "QRadioButton::indicator", "QCheckBox::indicator",
+        "QScrollBar::handle",
+    }  # fmt: skip
+
+
+def test_tables_draw_a_line_under_each_row_and_none_between_columns() -> None:
+    sheets = [themes.stylesheet(themes.Registry().find(i)) for i in ("capypanel-dark", "paper")]
+    for sheet in (*sheets, themes._NATIVE_QSS):  # the Windows themes' own sheet too
+        assert "border-bottom: 1px solid" in _rule(sheet, "QTreeView#grid::item")
+        rules = re.findall(r"([^{}]+)[{]([^}]*)[}]", sheet)
+        grid = [body for selector, body in rules if "#grid" in selector]
+        assert grid and not any("border-right" in body for body in grid)
+
+
+def test_column_titles_have_a_line_between_them_to_drag(qapp: QApplication) -> None:
+    """The rows have no lines between columns, so the titles show where a column ends."""
+    theme = themes.Registry().find("capypanel-dark")
+    themes.apply(theme)
+    table = QTreeWidget()
+    table.setObjectName("grid")
+    table.setHeaderLabels(["Name", "Address", "Status"])
+    table.addTopLevelItem(QTreeWidgetItem(["DESK-01", "192.0.2.11", "Online"]))
+    table.resize(480, 160)
+    table.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
+    table.show()
+    qapp.processEvents()
+    header = table.header()
+    titles = header.grab().toImage()
+    rows = table.viewport().grab().toImage()
+    table.close()
+    line = QColor(theme.colors["border"])
+    middle = header.height() // 2
+    for column in (1, 2):
+        x = header.sectionViewportPosition(column)
+        assert titles.pixelColor(x, middle) == line, column
+        assert rows.pixelColor(x, 8) != line, column  # the rows stay clear
+    assert titles.pixelColor(0, middle) != line  # none before the first title
+
+
+@pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
+def test_enabled_disabled_hover_and_focus_read_apart(theme: themes.Theme) -> None:
+    c, ratio = theme.colors, themes.contrast_ratio
+    sheet = re.sub(r"/[*].*?[*]/", "", themes.stylesheet(theme), flags=re.DOTALL)
+    # Disabled: fainter words and no fill, so it isn't mistaken for a button that works.
+    assert ratio(c["text"], c["text3"]) >= 1.5, theme.id
+    disabled = _rule(sheet, "QPushButton:disabled")
+    assert "background: transparent" in disabled and "color:" in disabled
+    # Hover: another fill than at rest.
+    rest, hover = _rule(sheet, "QPushButton"), _rule(sheet, "QPushButton:hover")
+    fill = re.search(r"background: ([^;]+);", rest)
+    assert fill is not None and f"background: {fill[1]};" not in hover
+    assert ratio(c["raised"], c["card"]) >= 1.08, theme.id
+    # Focus: the accent ring, which stands out from the border it replaces, on everything Tab
+    # reaches.
+    assert ratio(c["accent"], c["border"]) >= 1.5, theme.id
+    for selector in (
+        "QPushButton:focus, QComboBox:focus",
+        "QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus",
+        "QRadioButton::indicator:focus, QCheckBox::indicator:focus",
+    ):
+        assert themes._qss_color(c["accent"]) in _rule(sheet, selector), selector
+
+
+def test_headings_come_in_two_styles() -> None:
+    sheets = [themes.stylesheet(themes.Registry().find(i)) for i in ("capypanel-dark", "paper")]
+    for sheet in (*sheets, themes._NATIVE_QSS):  # the Windows themes' own sheet too
+        rules = dict(
+            re.findall(r"([^{}]+)[{]([^}]*)[}]", re.sub(r"/[*].*?[*]/", "", sheet, flags=re.DOTALL))
+        )
+        rules = {" ".join(k.split()): v for k, v in rules.items()}
+        # A section's heading, wherever it is: Settings, Details, Groups and Tags, the Report.
+        sections = next(v for k, v in rules.items() if k.startswith("QLabel#detailsSection,"))
+        names = next(k for k in rules if k.startswith("QLabel#detailsSection,"))
+        for name in ("#sectionTitle", "#paneTitle", '#rowName[heading="true"]'):
+            assert name in names
+        assert "font-weight: bold" in sections and "font-size" not in sections  # the text's size
+        # A small label over a group of lines: the Commands window's groups, a menu's label.
+        for small in ("QLabel#groupHeading", "QLabel#menuSection"):
+            assert "font-size: 8pt" in rules[small] and "font-weight: 600" in rules[small]

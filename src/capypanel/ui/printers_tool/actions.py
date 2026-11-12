@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from PySide6.QtCore import QObject
 from PySide6.QtGui import QAction
 
-from capypanel.core.i18n import _
+from capypanel.core.i18n import _, pgettext
 from capypanel.ui.list_workspace import actions as list_actions
 from capypanel.ui.list_workspace.actions import ListActions, retranslate_list_actions
 from capypanel.ui.main_window.actions import make_actions
@@ -44,5 +44,5 @@ def retranslate_actions(a: PrintersActions) -> None:
     a.export_printers.setText(_("&Report…"))
     a.open_web_page.setText(_("Open &web page"))
     a.copy_address.setText(_("&Address"))  # in the printer menu's Copy submenu
-    a.refresh_shown.setText(_("Refresh"))
-    a.refresh_selected.setText(_("&Refresh"))
+    a.refresh_shown.setText(pgettext("printers", "Refresh all"))  # pt: "todas", not "todos"
+    a.refresh_selected.setText(_("&Refresh printer"))  # the menu says how many (fill_item_menu)

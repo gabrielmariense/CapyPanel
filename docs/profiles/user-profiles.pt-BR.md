@@ -30,7 +30,7 @@ fechada enquanto o host dela ainda está sendo escaneado, mas não enquanto ele 
 
 ## A aba Hosts
 
-![A aba Hosts: os hosts do grupo escolhido com status, perfis, quantos podem ser excluídos e o escaneamento; Andamento e Hosts exibidos à direita](../images/profiles-hosts-tab-dark-pt-BR.png)
+![A aba Hosts: os hosts do grupo escolhido com status, perfis, quantos podem ser excluídos e o escaneamento; Andamento e o host selecionado à direita](../images/profiles-hosts-tab-dark-pt-BR.png)
 
 Os hosts do grupo escolhido à esquerda, com **Nome**, **Endereço**, **Status**, **Perfis**,
 **Podem ser excluídos** (**Excluíveis** quando a tabela está estreita) e **Escaneamento**, que diz

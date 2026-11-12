@@ -17,7 +17,7 @@ de usuário do Windows que ninguém usa mais, para você excluí-los.
   - Contas para outros PCs, por PC, grupo ou tag
   - Listas compartilhadas, grupos e tags
   - Status, usuários logados, dados do PC e unidades mapeadas
-  - Comandos num PC: as pastas e os consoles dele, os usuários, a energia e as impressoras
+  - Comandos num PC: as pastas e os consoles dele, os usuários, a energia e as impressoras, com os seus comandos rápidos
   - Pesquisa, importação e exportação
 - Impressoras
   - Listas com marca, modelo, nº de série e patrimônio
@@ -54,5 +54,5 @@ Primeiros passos, Configurações e arquivos e Desenvolvimento falam do app inte
 depois deles são da ferramenta **Hosts**, as três seguintes das **Impressoras**, e a última dos
 **Perfis de usuário**.
 
-Estas páginas descrevem a versão atual (0.24.1). O CapyPanel está em beta, então elas crescem a
+Estas páginas descrevem a versão atual (0.25.0). O CapyPanel está em beta, então elas crescem a
 cada funcionalidade.

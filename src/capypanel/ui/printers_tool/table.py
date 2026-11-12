@@ -1,8 +1,8 @@
-"""The printer table: name, address, Status, Toner, brand, model and tags; serial number and
-asset tag can be shown from the column titles' right-click menu. Status and Toner come from
-Refresh; they're kept in memory, never in the list file."""
+"""The printer table: name, address, Status, Toner, model (with the brand in it) and tags;
+brand, serial number and asset tag can be shown from the column titles' right-click menu.
+Status and Toner come from Refresh; they're kept in memory, never in the list file."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from PySide6.QtCore import QEvent, QModelIndex, QPersistentModelIndex, QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QPainter, QPalette, QPixmap
@@ -19,10 +19,18 @@ from capypanel.core.i18n import _
 from capypanel.core.printers.printer import info_of
 from capypanel.core.printers.reading import Supply
 from capypanel.ui.icons import dot_icon
-from capypanel.ui.list_workspace.panels import ItemTable
+from capypanel.ui.list_workspace.panels import ROLE_NOTHING, ItemTable
 from capypanel.ui.printers_tool.marks import Mark
 from capypanel.ui.printers_tool.meter import HEIGHT, draw_meter
-from capypanel.ui.printers_tool.status import AMBER, DEFAULT_LOW, Cell, level_text, plain_tip
+from capypanel.ui.printers_tool.status import (
+    AMBER,
+    DEFAULT_LOW,
+    Cell,
+    level_text,
+    plain_tip,
+    status_words,
+    toner_words,
+)
 
 ROLE_QUIET = Qt.ItemDataRole.UserRole + 2  # a Status cell to show greyed
 ROLE_WARN = Qt.ItemDataRole.UserRole + 3  # a Toner cell to show in amber
@@ -36,10 +44,10 @@ class PrinterTable(ItemTable):
     ADDRESS, STATUS, TONER, BRAND, MODEL, SERIAL, ASSET_TAG, TAGS = 1, 2, 3, 4, 5, 6, 7, 8
     COLUMNS = ("name", "address", "status", "toner", "brand", "model", "serial", "asset_tag",
                "tags")  # fmt: skip
-    HIDDEN = ("serial", "asset_tag")  # until the user shows them
-    # What a search marks and finds: every column but the ones Refresh fills.
-    SEARCHED = frozenset({0, ADDRESS, BRAND, MODEL, SERIAL, ASSET_TAG, TAGS})
-    EMPTY = {STATUS: 14, TONER: 16}  # empty until a Refresh: room for what it brings
+    HIDDEN = ("brand", "serial", "asset_tag")  # until the user shows them; Model has the brand
+    # What a search marks and finds: every column but Toner, which Refresh fills.
+    SEARCHED = frozenset({0, ADDRESS, STATUS, BRAND, MODEL, SERIAL, ASSET_TAG, TAGS})
+    ICONS = frozenset({STATUS})  # the coloured dot
 
     def __init__(self) -> None:
         self._cells: Callable[[str], tuple[Cell, Cell]] = lambda _id: (_EMPTY, _EMPTY)
@@ -71,11 +79,19 @@ class PrinterTable(ItemTable):
             "",
             "",
             info.brand,
-            info.model,
+            model_text(info.brand, info.model),
             info.serial,
             info.asset_tag,
             ", ".join(item.tags),
         ]
+
+    def longest_texts(self, column: int) -> Sequence[str]:
+        """Status and Toner: every word they can show, so the first width cuts none of them."""
+        if column == self.STATUS:
+            return status_words()
+        if column == self.TONER:
+            return toner_words()
+        return ()
 
     def set_hidden_columns(self, keys: object) -> None:
         super().set_hidden_columns(keys if isinstance(keys, list) else list(self.HIDDEN))
@@ -104,6 +120,7 @@ class PrinterTable(ItemTable):
         row.setToolTip(self.STATUS, plain_tip(status.tip))
         row.setIcon(self.STATUS, dot_icon(status.color) if status.color else QIcon())
         row.setData(self.STATUS, ROLE_QUIET, status.quiet)
+        row.setData(self.STATUS, ROLE_NOTHING, status.nothing)  # "Not checked" sorts last
         row.setText(self.TONER, toner.text)  # kept with bars too: it's what Copy and sorting use
         row.setToolTip(self.TONER, plain_tip(toner.tip))
         bar = self.bars and toner.supply is not None
@@ -122,6 +139,13 @@ class PrinterTable(ItemTable):
 
 
 _EMPTY = Cell("", "", "")
+
+
+def model_text(brand: str, model: str) -> str:
+    """The Model column: the brand, then the model, unless the model already starts with it."""
+    if not brand or model.casefold().startswith(brand.casefold()):
+        return model
+    return f"{brand} {model}".strip()
 
 
 class TonerBar(QStyledItemDelegate):

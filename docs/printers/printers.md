@@ -13,13 +13,13 @@ It has its own lists, kept apart from the Hosts tool's (see
 
 | Part | What it shows |
 |---|---|
-| **Toolbar** | **Open web page**, **Refresh**, **Inventory** and **Report** |
+| **Toolbar** | **Open web page**, **Refresh all**, **Inventory** and **Report** |
 | **Groups panel** (left) | The open list's name on top, as a dropdown, then "All printers" and the groups and tags of the list |
 | **Printers panel** (middle) | The search box above the printers in the group or tag you picked |
-| **Details panel** (right) | Everything known about the printer you selected. Click any value to copy it |
-| **Status bar** | Which list is open, where it is, how many printers it holds and how many are selected |
+| **Details panel** (right) | Everything known about the printer you selected, under its name and status with a **Refresh** and a **Web page** button. Click any value to copy it |
+| **Status bar** | The open list and its counts, as in Hosts: its kind, a shared list's name, how many printers it holds, how many are online once any has been refreshed, and how many are selected. Rest the mouse on it for the list's file path; a click copies it |
 
-**Refresh** reads the status and the supplies of every printer shown, over SNMP, and fills the
+**Refresh all** reads the status and the supplies of every printer shown, over SNMP, and fills the
 **Status** and **Toner** columns. It can also read on a timer, and a strip above the table says
 when printers need attention. It has a page of its own:
 [Checking printers](checking.md).
@@ -30,9 +30,14 @@ three as in Hosts.
 ### The table
 
 The columns are **Name**, **Address**, **Status**, **Toner**, **Brand**, **Model**, **Serial
-number**, **Asset tag** and **Tags**, in that order. Serial number and Asset tag start hidden:
-right-click the column titles to show them. Status and Toner stay empty until you refresh. The
-same right-click menu, and **Copy ▸** on a printer, list the columns in that order. Columns can't
+number**, **Asset tag** and **Tags**, in that order. Brand, Serial number and Asset tag start
+hidden: right-click the column titles to show them. **Model** puts the brand in front, as in "ZEBRA
+ZD421", unless the model already starts with it.
+
+Before a refresh, **Status** reads **Not checked** in grey, and those printers sort last; Toner
+stays empty. Long status words are shortened in the column only, as **Output full**, **Output
+nearly full**, **No output tray**, **Needs service**, **Waste nearly full** and **Supply low**: the
+tooltip, the Details panel and the notifications give the full words. The same right-click menu, and **Copy ▸** on a printer, list the columns in that order. Columns can't
 be dragged into another order, in either tool.
 
 Click a column title to sort by it, and again to reverse it. Numbers inside names sort as numbers,
@@ -56,13 +61,37 @@ name.
   source you pick here.
 - **Notes**, for anything else.
 
-**Edit selected…** (F2) opens the same window for printers already in the list.
+**Add** puts the printer in the list. **Edit selected…** (F2) opens the same window for a printer
+already in the list, with **Save** instead.
 
-The **Details** panel shows all of it, under **Connection** (address, group, MAC address),
+A new list says "This list has no printers yet. Add one to start." with an **Add printer…**
+button, and an empty group says "This group has no printers yet."
+
+### Right-click menus
+
+A printer's right-click menu holds **Open web page** in bold, **Refresh printer** (or **Refresh {n}
+printers** with several selected), **Copy ▸**, **Edit selected…** for one printer, **Move to ▸**,
+**Tags ▸** and **Remove**. A group's ends with **Refresh group**, which reads its printers and those of the
+groups inside it.
+
+### The Details panel
+
+Under the printer's name are its status, with the time of the last check, and two buttons:
+**Refresh**, for this printer, and **Web page**, which opens its web page and is greyed only when
+neither its address nor its name makes a web address.
+
+The panel shows all of it, under **Connection** (address, group, MAC address),
 **Supplies**, **Printer** (brand, model, serial number, asset tag, firmware), **Page counters**
 (source and the printer's own total), **Tags** and **Notes**. The status, the printer's messages
 and the supplies arrive with a refresh, and so does the chance to copy the brand, model or serial
-number the printer reports into your list.
+number the printer reports into your list. Each section lays out its labels on the left and their
+values lined up beside them, as in Hosts.
+
+**View > Customize the details panel…**, or a right-click on the panel, can hide any section,
+each named with what it shows: Connection "Address, group, MAC", Supplies "Toner, ink and the
+rest, with their levels", Printer "Brand, model, serial number, firmware", Page counters "Total
+pages and their source", and Tags and Notes. "Always shown: the printer's name and its status."
+See [Getting started](../getting-started.md#customizing-the-details-panel).
 
 ## Opening a printer's web page
 
@@ -84,8 +113,9 @@ to nothing.
 
 ## Finding a printer
 
-The search box above the table covers every column on show, plus the notes, and its own text names
-them, as in "Search name, address, brand, model, tags, notes". **Ctrl+F** jumps to it. Showing or
+The search box above the table covers every column on show except Toner, plus the notes, and its
+own text names them, as in "Search name, address, status, model, tags, notes". The status is
+searched as the column shows it. A search with no match says "No printer matches “…”." **Ctrl+F** jumps to it. Showing or
 hiding a column changes what the search covers.
 
 Tags narrow what the table shows, and you can pick several at once: the table then keeps only the

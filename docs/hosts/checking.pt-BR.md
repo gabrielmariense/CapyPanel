@@ -10,7 +10,7 @@ ferramentas grava a última verificação num CSV e oferece verificar os hosts a
 
 ## Atualizar
 
-**Atualizar**, na barra de ferramentas, verifica todos os hosts que a tabela mostra: o grupo
+**Atualizar todos**, na barra de ferramentas, verifica todos os hosts que a tabela mostra: o grupo
 escolhido no painel de grupos com seus subgrupos, uma tag, Todos os hosts, Sem grupo ou os
 resultados de uma pesquisa. Não é preciso selecionar nada.
 
@@ -22,9 +22,13 @@ resultados de uma pesquisa. Não é preciso selecionar nada.
 - **F5** faz o mesmo que esse **Executar**, nos hosts exibidos, sem abrir o painel. Ele é ignorado
   enquanto uma verificação já está rodando.
 
-Para verificar só alguns hosts, selecione-os e use o botão direito > **Atualizar status** ou
-**Atualizar usuários logados**. O menu de botão direito de um grupo tem os mesmos dois itens, para
-os hosts dele e os dos grupos de dentro.
+Para verificar só alguns hosts, use o botão direito:
+
+- **num host > Atualizar host**: o status, os usuários logados e os dados do PC dele;
+- **em vários hosts selecionados > Atualizar {n} hosts**: o status e os usuários logados deles
+  (os dados do PC são lidos um PC por vez);
+- **num grupo > Atualizar grupo**: o status e os usuários logados dos hosts dele e dos grupos de
+  dentro.
 
 O CapyPanel verifica 8 hosts por vez; a barra de status mostra o andamento e um botão **Parar**.
 Verificar quem está logado em mais de 50 hosts pergunta antes. Um host sem endereço, cujo nome não
@@ -45,6 +49,13 @@ status para ver quando ele foi verificado e qual endereço respondeu: um PC que 
 endereço do Wi-Fi pode estar com o cabo solto. O painel de detalhes diz isso embaixo do nome do
 host, como "Online · verificado em 10:41", ou "Não verificado: use Atualizar".
 
+Um host que ninguém atualizou ainda diz **Não verificado** em cinza na coluna Status, e a célula
+Usuário dele fica vazia. Ordenar por Status deixa esses hosts por último, nos dois sentidos.
+
+Quando um PC não respondeu, os Detalhes dizem isso uma vez, embaixo do nome, como "Offline ·
+verificado em 10:41", e **Logados** e **Dados do PC** mostram um só traço ou uma linha com o
+motivo, em vez de repeti-lo em cada linha.
+
 O status não usa conta nenhuma e não precisa de direitos de administrador.
 
 ### Status automático
@@ -55,8 +66,8 @@ minutos**, **A cada 30 minutos** ou **Personalizado…**, de 1 a 120. Começa **
 nada é verificado sozinho a menos que você ligue, e desligar de novo guarda o seu intervalo para
 a próxima vez.
 
-Como a própria configuração diz: "Só ping e portas, nunca usuários logados, então nenhuma conta é
-usada. O Atualizar da barra de ferramentas sempre funciona."
+Como a própria configuração diz: "Só ping e portas: nenhuma conta é usada. O Atualizar da barra
+sempre funciona."
 
 ## Usuários logados
 
@@ -120,8 +131,8 @@ um dado que não pôde ser lido diz o motivo em âmbar no lugar do valor, como e
 de uma conta de administrador neste PC". Clique nessa linha para copiá-la, como qualquer valor. O
 log do aplicativo diz qual parte falhou.
 
-O **Verificar > Dados do PC** lê tudo de novo quando você quiser, pelo menu de botão direito do
-host, pelo **…** do painel de detalhes ou pela janela Comandos (veja
+O **Dados do PC** lê tudo de novo quando você quiser, pelo **Comandos ▾ > Verificar** da barra de
+ferramentas ou pela janela Comandos, e o **Atualizar host** os lê junto com o resto (veja
 [Comandos em um host](commands.pt-BR.md)).
 
 ## Como o CapyPanel lê outros PCs

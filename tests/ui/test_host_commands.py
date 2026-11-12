@@ -11,7 +11,7 @@ import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog, QMenu
+from PySide6.QtWidgets import QApplication, QDialog, QLabel, QMenu
 
 from capypanel.core import settings
 from capypanel.core.hosts import commands as host_commands
@@ -140,9 +140,9 @@ def test_the_host_menu_has_a_submenu_per_group_greyed_for_several_hosts(
         assert isinstance(submenu, QMenu)
         return [label(a) if a.text() else "—" for a in submenu.actions()]
 
-    # Installed programs is apart: a long table, not part of Quick check; Power comes last.
+    # Installed programs is apart: a long table, not part of Refresh host; Power comes last.
     assert names("Check") == [
-        "Quick check", "Status", "Logged-on users", "PC facts", "—", "Installed programs",
+        "Refresh host", "Status", "Logged-on users", "PC facts", "—", "Installed programs",
     ]  # fmt: skip
     assert names("Folders") == ["C$ share", "User's folder", "Startup folder", "Open a path…"]
     assert names("Admin tools") == ["Computer Management", "Event Viewer", "Services"]
@@ -158,22 +158,54 @@ def _ids(win: CapyWindow, *names: str) -> list[str]:
     return [h.id for h in win.hosts.document.hosts.hosts if h.name in names]
 
 
-def test_details_shows_the_command_buttons(window: CapyWindow) -> None:
+def test_details_shows_a_grid_of_worded_buttons(window: CapyWindow) -> None:
     _select(window, "PC-1")
     buttons = window.hosts.details.buttons
-    assert list(buttons) == [
-        "c-share", "user-folder", "computer-management", "message", "users", "power", "more",
+    assert list(buttons) == [  # the fixed row, then this admin's quick commands
+        "refresh", "commands", "users", "power",
+        "quick:c-share", "quick:user-folder", "quick:computer-management", "quick:message",
     ]  # fmt: skip
-    assert buttons["c-share"].text() == "C$"
+    words = [b.text() for b in buttons.values()]
+    assert words == ["Refresh", "Commands", "Users ▾", "Power ▾", "C$", "Folder", "Manage",
+                     "Message"]  # fmt: skip
+    assert len({b.size().toTuple() for b in buttons.values()}) == 1  # every button the same size
+    assert buttons["quick:computer-management"].toolTip() == "Computer Management"  # the full name
     assert not buttons["users"].isEnabled()  # nobody checked yet
-    window.hosts.keep_users(window.hosts.selected_target().key, (ANA,), None)  # type: ignore[union-attr]
-    assert window.hosts.details.buttons["users"].isEnabled()
-    assert window.hosts.details.buttons["user-folder"].toolTip() == "ana's folder"
+    target = window.hosts.selected_target()
+    assert target is not None
+    window.hosts.keep_users(target.key, (ANA,), None)
+    buttons = window.hosts.details.buttons
+    assert buttons["users"].isEnabled()
+    assert buttons["quick:user-folder"].toolTip() == "User's folder (ana)"
+    window.hosts.keep_users(target.key, (), None)  # a check just found nobody
+    folder = window.hosts.details.buttons["quick:user-folder"]
+    assert not folder.isEnabled() and folder.toolTip() == "User's folder (nobody signed in)"
+
+
+def test_details_buttons_follow_the_admin_s_quick_commands(window: CapyWindow) -> None:
+    _select(window, "PC-1")
+    window.hosts.prefs["quick_commands"] = ["spooler", "status"]
+    window.hosts._selection_changed()
+    buttons = window.hosts.details.buttons
+    assert list(buttons)[4:] == ["quick:spooler", "quick:status"]
+    assert buttons["quick:spooler"].property("risky") is True  # amber there too
+    window.hosts.prefs["quick_commands"] = []  # none picked: only the fixed row
+    window.hosts._selection_changed()
+    assert list(window.hosts.details.buttons) == ["refresh", "commands", "users", "power"]
+    assert window.hosts.details.minimumWidth() >= window.hosts.details.minimum_width() > 300
+
+
+def test_details_commands_button_opens_the_commands_window(window: CapyWindow) -> None:
+    target = _select(window, "PC-1")
+    window.hosts.details.buttons["commands"].click()
+    commands = window.hosts._commands_window
+    assert commands is not None and commands.target() == target  # type: ignore[attr-defined]
+    commands.close()
 
 
 def test_c_share_opens_once_the_pc_answers(window: CapyWindow, calls: list[Any]) -> None:
     _select(window, "PC-1")
-    window.hosts.details.buttons["c-share"].click()
+    window.hosts.details.buttons["quick:c-share"].click()
     _settle(window)
     assert calls == [("reach", "192.0.2.1"), ("folder", "\\\\192.0.2.1\\C$")]
 
@@ -536,3 +568,175 @@ def test_a_path_to_a_file_is_never_opened(
     _settle(window)
     assert not any(c[0] == "folder" for c in calls)  # a file would have run on this PC
     assert "there's no folder there." in window.hosts.result_strip.text()
+
+
+def _host_menu(window: CapyWindow) -> list[str]:
+    menu = QMenu()
+    window.hosts.fill_item_menu(menu, window.hosts.selected_items())
+    return [label(a) for a in menu.actions() if a.text()]
+
+
+def test_the_host_menu_shows_the_first_four_quick_commands(window: CapyWindow) -> None:
+    _select(window, "PC-1")
+    window.hosts.prefs["quick_commands"] = [
+        "services", "status", "c-share", "path", "event-viewer", "restart",
+    ]  # fmt: skip
+    assert window.hosts.quick_commands() == (
+        "services", "status", "c-share", "path", "event-viewer",
+    )  # fmt: skip
+    texts = _host_menu(window)
+    assert texts[2:7] == ["Services", "Status", "C$ share", "Open a path…", "&All commands…"]
+    window.hosts.prefs["quick_commands"] = []  # none picked: the block isn't there
+    assert _host_menu(window)[:3] == ["&Connect", "&Refresh host", "&All commands…"]
+
+
+def test_commands_for_a_person_say_who_or_that_nobody_is_signed_in(window: CapyWindow) -> None:
+    _select(window, "PC-1")
+    target = window.hosts.selected_target()
+    assert target is not None
+    folder, message = window.hosts.host_actions["user-folder"], window.hosts.host_actions["message"]
+    window.hosts._update_host_actions()  # before any check: plain, and usable
+    assert (folder.text(), folder.isEnabled()) == ("User's folder", True)
+    window.hosts.keep_users(target.key, (ANA,), None)
+    window.hosts._update_host_actions()
+    assert folder.text() == "User's folder (ana)" and message.text() == "Send a message…"
+    window.hosts.keep_users(target.key, (), None)  # a check just found nobody
+    window.hosts._update_host_actions()
+    assert (folder.text(), folder.isEnabled()) == ("User's folder (nobody signed in)", False)
+    assert (message.text(), message.isEnabled()) == ("Send a message (nobody signed in)", False)
+    old = datetime.now(UTC) - timedelta(minutes=11)  # an old check says nothing about now
+    window.hosts._users_found[target.key] = ((), None, old)
+    window.hosts._update_host_actions()
+    assert (folder.text(), folder.isEnabled()) == ("User's folder", True)
+
+
+def test_a_group_s_menu_has_one_refresh(window: CapyWindow) -> None:
+    doc = window.hosts.document
+    assert doc is not None
+    menu = QMenu()
+    window.hosts.fill_group_menu(menu, doc.hosts.groups[0])
+    texts = [label(a) for a in menu.actions() if a.text()]
+    assert texts[-1] == "&Refresh group" and sum("Refresh" in t for t in texts) == 1
+
+
+# ---- Customize the details panel ----
+
+
+def _rows(table: Any) -> list[Any]:
+    return [table.topLevelItem(i) for i in range(table.topLevelItemCount())]
+
+
+def test_the_chooser_lists_picks_on_top_and_the_rest_by_group(qapp: QApplication) -> None:
+    from capypanel.ui.hosts_tool.quick_chooser import ID, QuickChooser
+
+    chooser = QuickChooser(host_commands.QUICK, {"c-share": "Ctrl+E"})
+    names = [r.text(0) for r in _rows(chooser.table)]
+    assert names[:5] == [
+        "ON THE PANEL", "C$ share", "User's folder", "Computer Management", "Send a message…",
+    ]  # fmt: skip
+    assert names[5:8] == ["CHECK", "Status", "Logged-on users"]  # then by group, unticked
+    assert "Restart…" not in names and "Refresh host" not in names  # can't be quick; fixed
+    assert chooser.count.text() == "4 of 15 ticked · 1 row on the panel"
+    seen: list[list[str]] = []
+    chooser.changed.connect(seen.append)
+    status = next(r for r in _rows(chooser.table) if r.data(0, ID) == "status")
+    status.setCheckState(0, Qt.CheckState.Checked)  # ticking moves it to the end of the picks
+    assert seen[-1] == [*host_commands.QUICK, "status"]
+    names = [r.text(0) for r in _rows(chooser.table)]
+    assert names[5] == "— the four above are also in the right-click menu —"
+    assert names[6] == "Status" and chooser.count.text().endswith("2 rows on the panel")
+    chooser.up.click()  # the row just ticked is picked: it moves up among the picks
+    assert seen[-1] == ["c-share", "user-folder", "computer-management", "status", "message"]
+    first = next(r for r in _rows(chooser.table) if r.data(0, ID) == "c-share")
+    first.setCheckState(0, Qt.CheckState.Unchecked)  # back under its group
+    assert "c-share" not in seen[-1] and chooser.picked() == seen[-1]
+
+
+def test_restoring_the_default_quick_commands_asks_first(
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from capypanel.ui.hosts_tool import quick_chooser
+
+    chooser = quick_chooser.QuickChooser(["services"], {})
+    answers = iter([False, True])
+    monkeypatch.setattr(quick_chooser, "confirm", lambda *_a, **_k: next(answers))
+    chooser.restore.click()
+    assert chooser.picked() == ["services"]  # Cancel: nothing changes
+    chooser.restore.click()
+    assert chooser.picked() == list(host_commands.QUICK) and not chooser.restore.isEnabled()
+
+
+def test_quick_commands_and_hidden_parts_apply_at_once_and_are_kept(window: CapyWindow) -> None:
+    _select(window, "PC-1")
+    window.hosts.set_quick_commands(["services", "restart", "status"])
+    assert window.hosts.prefs["quick_commands"] == ["services", "status"]  # only what can be
+    assert list(window.hosts.details.buttons)[4:] == ["quick:services", "quick:status"]
+    window.hosts.set_hidden_parts(["notes", "tags", "nonsense"])
+    assert window.hosts.hidden_parts() == {"notes", "tags"}
+    headings = [w.text() for w in window.hosts.details.findChildren(QLabel)]
+    assert "Notes" not in headings and "Tags" not in headings and "Connection" in headings
+    assert any(h.startswith("2 parts hidden") for h in headings)  # and the way back
+    window.hosts.set_hidden_parts([])
+    headings = [w.text() for w in window.hosts.details.findChildren(QLabel)]
+    assert "Notes" in headings and not any("hidden" in h for h in headings)
+    window.hosts.prefs["details_hidden"] = ["tags", {"edited": "by hand"}, 7]
+    assert window.hosts.hidden_parts() == {"tags"}  # anything else in the file is skipped
+
+
+def test_the_customize_window_has_two_tabs_and_three_doors(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from capypanel.ui.list_workspace import customize, workspace
+
+    opened: list[customize.CustomizeDialog] = []
+    monkeypatch.setattr(workspace, "run_modal", lambda dialog: opened.append(dialog) or 0)
+    _select(window, "PC-1")
+    window.hosts.commands.customize_details.trigger()  # View's line
+    window.hosts.details.customize_requested.emit()  # the panel's right-click and its link
+    window.hosts.customize_details(1)  # straight to Information
+    assert len(opened) == 3
+    dialog = opened[0]
+    tabs = [dialog.tabs.tabText(i) for i in range(dialog.tabs.count())]
+    assert tabs == ["Quick commands", "Information"] and dialog.tabs.currentIndex() == 0
+    assert opened[2].tabs.currentIndex() == 1
+    assert [r.text(0) for r in _rows(dialog.parts.table)] == [
+        "Connection", "Logged-on users", "PC facts", "Tags", "Notes",
+    ]  # fmt: skip
+    notes = _rows(dialog.parts.table)[4]
+    notes.setCheckState(0, Qt.CheckState.Unchecked)  # applies as you tick
+    assert window.hosts.hidden_parts() == {"notes"}
+    dialog.parts.restore.click()
+    assert window.hosts.hidden_parts() == frozenset()
+    panes = [a.text() for a in window.hosts.view_actions()[0]]
+    assert panes[-2:] == ["&Details pane", "&Customize the details panel…"]  # right under it
+    assert window.hosts.details.customizable
+
+
+def test_the_commands_window_turns_to_another_pc_and_keeps_its_answers(
+    window: CapyWindow,
+) -> None:
+    from capypanel.ui.hosts_tool.commands_window import CommandsWindow
+    from capypanel.ui.hosts_tool.runner import Outcome
+
+    first = _select(window, "PC-1")
+    window.hosts.details.buttons["commands"].click()
+    commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
+    assert isinstance(commands, CommandsWindow) and commands.target() == first
+    answer = commands._reporter(first)  # pyright: ignore[reportPrivateUsage]
+    answer("status", Outcome("<b>PC-1</b> is online"))
+    late = commands._reporter(first)  # pyright: ignore[reportPrivateUsage]  # still running
+    second = _select(window, "PC-2")
+    window.hosts.details.buttons["commands"].click()  # the same window, on the other PC
+    assert window.hosts._commands_window is commands  # pyright: ignore[reportPrivateUsage]
+    assert commands.target() == second and commands.windowTitle() == "Commands · PC-2"
+    late("users", Outcome("Nobody is logged on"))  # it answers after the switch
+    kept = commands._outcomes  # pyright: ignore[reportPrivateUsage]
+    assert set(kept) == {(first.key, "status"), (first.key, "users")}  # on the PC they ran on
+    _select(window, "PC-1")
+    window.hosts.toolbar.commands_button.click()  # back: its answers are still there
+    assert commands.target() == first and kept[(first.key, "status")].text.endswith("online")
+    window.hosts.table.clearSelection()
+    window.hosts.toolbar.commands_button.click()  # no host picked: an address typed in it
+    assert commands.target() is None and commands.windowTitle() == "Manual connection"
+    assert len(kept) == 2
+    commands.close()

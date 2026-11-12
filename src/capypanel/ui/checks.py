@@ -145,7 +145,12 @@ class AccountDialog(QDialog):
         for label, link in uses:
             self.use_for.addItem(label, link)
         self.remember = QCheckBox(_("&Remember it on this computer"))
+        # `saved`: Windows already remembers `user`'s password, so the tick starts on and
+        # typing it again doesn't un-save it; it goes off when another account is typed.
         self.remember.setChecked(saved)
+        self._saved_user = user.strip().casefold() if saved else None
+        self._ticked_by_hand = False
+        self.remember.clicked.connect(self._tick_clicked)
         self.remember.setToolTip(
             _("Windows keeps it in Credential Manager for your Windows account. Otherwise "
               "CapyPanel forgets it when it closes and asks once the next time.")
@@ -162,7 +167,7 @@ class AccountDialog(QDialog):
             "the others, so the account isn't locked."
         )
         note = hint(f"{used} {stops}")
-        self.buttons = ok_cancel(self)
+        self.buttons = ok_cancel(self, _("Use account"))
         layout = QVBoxLayout(self)
         layout.addWidget(intro)
         layout.addLayout(form)
@@ -177,6 +182,11 @@ class AccountDialog(QDialog):
     def _update_ok(self) -> None:
         ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)
         ok.setEnabled(bool(self.user.text().strip()) and bool(self.password.text()))
+        if self._saved_user is not None and not self._ticked_by_hand:
+            self.remember.setChecked(self.user.text().strip().casefold() == self._saved_user)
+
+    def _tick_clicked(self) -> None:
+        self._ticked_by_hand = True  # the person's own choice stays
 
     def account(self) -> Account:
         return Account(self.user.text().strip(), self.password.text())

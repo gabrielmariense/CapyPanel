@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.i18n import _
+from capypanel.ui.dialogs import quiet_default
 from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
@@ -43,7 +44,7 @@ class ErrorWindow(QDialog):
         self.copy_button = QPushButton(_("Copy all"))
         self.copy_button.clicked.connect(self.copy)
         self.close_button = QPushButton(_("Close"))
-        self.close_button.setDefault(True)
+        quiet_default(self.close_button)
         self.close_button.clicked.connect(self.accept)
         buttons = QHBoxLayout()
         buttons.addWidget(self.copy_button)

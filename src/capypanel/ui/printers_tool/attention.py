@@ -41,7 +41,7 @@ def why_text(checked: Checked, why: Attention, low: int) -> str:
     """A notification's reason for one printer: "Paper jam", "Offline", "Black 7 %"."""
     reading = checked.reading
     if why is not Attention.LOW or reading is None:
-        return status.status(checked, low).text
+        return status.status(checked, low).said()
     lows = [s for s in reading.supplies if status.is_low(s, low)]
     lowest = min(lows, key=lambda s: s.percent or 0)
     if lowest.kind in (SupplyKind.TONER, SupplyKind.INK) and lowest.percent is not None:

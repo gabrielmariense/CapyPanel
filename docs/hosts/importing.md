@@ -99,8 +99,9 @@ read-only list too.
 
 ![The Report window: the hosts, the preset, the Host, Tags and notes and Last check boxes with Refresh 3 hosts, and the preview](../images/report-dark.png)
 
-Those two columns come from the last check (see [Checking hosts](checking.md)), so a host nobody
-has checked exports empty. The **Last check** box shows the time of the newest of those checks
+Those two columns come from the last check (see [Checking hosts](checking.md)). For a host nobody
+has checked, the preview says **Not checked**, and the copied or saved file leaves that cell
+empty. The **Last check** box shows the time of the newest of those checks
 beside its name, with the date too when it isn't today.
 
 Under its ticks, a button checks these hosts again now, named after how many there are: **Refresh

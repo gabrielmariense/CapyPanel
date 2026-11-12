@@ -13,7 +13,7 @@ uv run capypanel
 
 A primeira execução baixa o Python e as bibliotecas de que o CapyPanel precisa; as seguintes
 abrem na hora. A versão aparece na barra de título. Quando você roda pelo código-fonte, ela vem
-seguida de um número de build e do commit, por exemplo `CapyPanel 0.24.1 build 1378 (abc1234)`;
+seguida de um número de build e do commit, por exemplo `CapyPanel 0.25.0 build 1378 (abc1234)`;
 um número de build maior é um build mais novo. Informe-a ao relatar um problema.
 
 A Área de Trabalho Remota funciona de cara, com o cliente que já vem no Windows. Para o VNC você
@@ -51,18 +51,19 @@ de [A ferramenta Impressoras](printers/printers.pt-BR.md), e os
 | Parte | O que mostra |
 |---|---|
 | **Barra lateral** (borda esquerda) | Uma faixa estreita com o **Início** (Ctrl+0) no topo, depois um ícone por ferramenta com o nome numa dica, **Hosts** (Ctrl+1), **Impressoras** (Ctrl+2) e **Perfis de usuário** (Ctrl+3), e **Configurações** (Ctrl+,) embaixo. Onde você está tem um quadrado colorido atrás do ícone |
-| **Barra de ferramentas** (topo) | Os botões da ferramenta aberta. Para o Hosts: **Conectar**, **Atualizar**, **Comandos**, **Inventário** e **Relatório** |
-| **Painel de grupos** (esquerda) | O nome da lista aberta no topo, como um menu que troca de lista. Depois "Todos os hosts", com quantos hosts a lista tem, e "Sem grupo" embaixo dele, com quantos não estão em nenhum. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags** |
+| **Barra de ferramentas** (topo) | Os botões da ferramenta aberta. Para o Hosts: **Conectar**, **Atualizar todos**, **Comandos**, **Inventário** e **Relatório** |
+| **Painel de grupos** (esquerda) | O nome da lista aberta no topo, como um menu que troca de lista. Depois "Todos os hosts", com quantos hosts a lista tem, e "Sem grupo" embaixo dele, com quantos não estão em nenhum. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags**; arraste a linha acima de Tags para dar mais espaço a um dos dois, e isso fica guardado |
 | **Painel de hosts** (meio) | A caixa de pesquisa (veja [Pesquisando hosts](hosts/searching.pt-BR.md)) acima dos hosts do grupo ou da tag selecionada, com **Status** e **Usuário** |
-| **Painel de detalhes** (direita) | O host selecionado: o nome e o status dele, uma fileira de botões para os [comandos](hosts/commands.pt-BR.md) dele, depois **Conexão** (endereço, grupo, o que o **Conectar com** abre e a conta de **Comandos como**; veja [Conectando](hosts/connecting.pt-BR.md#no-painel-de-detalhes)), quem está **logado**, os **dados do PC**, as **tags** e as **notas**. Clique em qualquer valor para copiá-lo. Sem nada selecionado, quantos hosts estão exibidos e quantos deles estão online, offline, não encontrados ou não verificados |
-| **Barra de status** | Qual lista está aberta, onde ela está, quantos hosts tem, quantos estão online depois que algo foi verificado e quantos estão selecionados |
+| **Painel de detalhes** (direita) | O host selecionado: o nome e o status dele, uma grade de botões para os [comandos](hosts/commands.pt-BR.md) dele (**Atualizar**, **Comandos**, **Usuários ▾**, **Energia ▾** e depois os seus [comandos rápidos](hosts/commands.pt-BR.md#comandos-rapidos)), depois **Conexão** (endereço, grupo, o que o **Conectar com** abre e a conta de **Comandos como**; veja [Conectando](hosts/connecting.pt-BR.md#no-painel-de-detalhes)), quem está **logado**, os **dados do PC**, as **tags** e as **notas**. Clique em qualquer valor para copiá-lo. Sem nada selecionado, quantos hosts estão exibidos e quantos deles estão online, offline, não encontrados ou não verificados |
+| **Barra de status** | A lista aberta e as contagens dela, como em "Compartilhada · Clínica · 8 hosts · 3 online · 1 selecionado": o tipo (**Padrão**, **Pessoal** ou **Compartilhada**, com o nome de uma lista compartilhada depois), quantos hosts ela tem, quantos estão online depois que algo foi atualizado e quantos estão selecionados. Deixe o mouse sobre ela para ver o caminho do arquivo da lista; um clique copia o caminho ("Copiado: …") |
 
 A barra de menus é a mesma em qualquer ferramenta, e não guarda nada que seja de uma delas:
 
 - **Arquivo** abre as **Configurações…** (Ctrl+,) e fecha o CapyPanel com **Sair** (Ctrl+Q).
 - **Exibir** leva ao **Início** e a cada ferramenta, e depois mostra ou esconde os painéis da
   ferramenta em que você está, a **Barra de ferramentas** e a **Barra de status**. No Hosts ele
-  também guarda **Mostrar domínio dos usuários** (veja
+  também guarda **Personalizar o painel de detalhes…** (veja
+  [abaixo](#personalizando-o-painel-de-detalhes)) e **Mostrar domínio dos usuários** (veja
   [Verificando hosts](hosts/checking.pt-BR.md#usuarios-logados)). Ele fica aberto enquanto você
   marca, então várias partes podem aparecer ou sumir de uma vez.
 - **Ajuda** tem **Documentação**, **Relatar um problema** e **Sobre o CapyPanel**.
@@ -79,6 +80,18 @@ trocar de lista.
 Para trabalhar em outra lista, use o menu no topo do painel de grupos: ele mostra todas as listas
 que o CapyPanel encontrou, e também cria, abre e gerencia listas (veja
 [Listas de hosts](hosts/host-lists.pt-BR.md#o-menu-de-listas)).
+
+### Personalizando o painel de detalhes
+
+**Exibir > Personalizar o painel de detalhes…**, ou o botão direito no painel de detalhes, abre
+uma janela com duas abas. **Comandos rápidos** escolhe os botões abaixo da fileira fixa (veja
+[Comandos em um host](hosts/commands.pt-BR.md#comandos-rapidos)). **Informações** tem uma marca
+por parte do painel: **Conexão**, **Usuários logados**, **Dados do PC**, **Tags** e **Notas**.
+"Desmarque o que você não usa. Esconder uma parte não para nenhuma verificação." Uma parte
+desmarcada some na hora, e o pé do painel passa a dizer quantas estão ocultas, como em "2 partes
+ocultas · Personalizar…", a última palavra um link de volta para essa janela. O nome do host, o
+status dele e o aviso de reinício pendente sempre aparecem. A escolha "Vale só para você, neste
+PC."
 
 ## Adicione seus primeiros hosts
 
@@ -97,14 +110,20 @@ O botão **Inventário** da barra de ferramentas guarda tudo que coloca hosts nu
    - **Tags:** digite uma tag e pressione Enter; Backspace numa caixa vazia traz a última tag de
      volta para edição.
    - **Perfil de conexão:** como acessar o host. "Do grupo" segue o perfil do grupo.
+
+   O **Adicionar** o coloca na lista.
 3. Dê um clique duplo no host, selecione-o e pressione Enter, ou clique em **Conectar** na barra
    de ferramentas, para abrir uma conexão com ele pelo perfil dele.
 
-Clique com o botão direito num host para conectar, para atualizar o status ou os usuários logados
-dele, para executar um dos [comandos](hosts/commands.pt-BR.md) dele em **Verificar ▸**,
-**Pastas ▸**, **Ferramentas administrativas ▸**, **Usuários ▸**, **Impressoras ▸** ou
-**Energia ▸**, para escolher a conta com que os comandos dele rodam em **Comandos como ▸**, para
-copiar uma coluna em **Copiar ▸**, ou para editá-lo, movê-lo ou removê-lo. O **Copiar**
+Uma lista nova diz "Esta lista ainda não tem hosts. Adicione um, ou importe vários de uma vez."
+com os botões **Adicionar host…** e **Importar hosts…** ali mesmo, e um grupo vazio diz "Este grupo
+ainda não tem hosts." com **Adicionar host…**.
+
+Clique com o botão direito num host para conectar, para atualizá-lo com **Atualizar host**, para
+executar um dos seus quatro primeiros comandos rápidos ou abrir **Todos os comandos…** (veja
+[Comandos em um host](hosts/commands.pt-BR.md)), para copiar uma coluna em **Copiar ▸**, ou para
+editá-lo, movê-lo ou removê-lo. Com vários hosts selecionados, o menu também escolhe a conta com
+que os comandos deles rodam, em **Comandos como ▸**. O **Copiar**
 lista todas as colunas que a tabela mostra, uma linha por host selecionado, e o **Endereço**
 mantém o Ctrl+Shift+C. O botão direito num espaço vazio oferece **Adicionar grupo…** no painel de
 grupos, e **Adicionar host…** e **Adicionar grupo…** na lista de hosts. Para mover hosts para outro

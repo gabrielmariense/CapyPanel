@@ -22,11 +22,15 @@ A click on a page shows that page alone. Settings opens on **CapyPanel > General
 
 Each page is made of sections: a title with its settings on a soft card under it. A simple setting
 is a row: its name, a one-line description under it, and its control at the right end. Anything
-that holds several things, from host lists to licenses, is the same table everywhere: grid lines, a
-header, six rows before it scrolls, the main actions as buttons under it, **every action for a row
+that holds several things, from host lists to licenses, is the same table everywhere: a thin line
+under each row, a header whose thin dividers show where to drag a column wider, six rows before it
+scrolls, the main actions as buttons under it, **every action for a row
 on its right-click**, and a double-click for the obvious one. Every column shows its whole text,
 and when they can't all fit, the table scrolls sideways; right-click the column titles for **Fit
-columns to content**. The window opens at a fixed size, and a page taller than it scrolls.
+columns to content**. The window opens at 960 × 700 the first time, or smaller on a small screen,
+such as a laptop at 125 % scale, so that it fits. You can make it any size, smaller too: a page
+larger than the window scrolls, down and sideways. It opens again at the size and place you left
+it at.
 
 ### Searching the settings
 
@@ -48,8 +52,9 @@ same everywhere."
 | CapyPanel — dark / light | CapyPanel's own look, the same on every computer |
 | Graphite, Paper | Two more of CapyPanel's own looks |
 
-Themes change colors only. The font, its size and the rounded corners are the same in every one,
-and a theme never changes what the app does.
+Themes change colors and how round the corners are: Graphite and Paper round them more than the
+others do. The font and its size are the same in every one, and a theme never changes what the app
+does.
 
 The Windows themes follow your Windows accent color (**Settings > Personalization > Colors**), and
 everything built from it stays readable whichever one you pick: section headings, the default
@@ -91,12 +96,18 @@ Under it, two rows:
 minutes and then shows that interval among the choices. Turning it **Off** keeps the interval for
 next time.
 
-"Only ping and ports, never logged-on users, so no account is needed. Refresh in the toolbar always
-works." It's off until you turn it on; see [Checking hosts](hosts/checking.md#automatic-status).
+"Only ping and ports, so no account is needed. Refresh in the toolbar always works." It's off
+until you turn it on; see [Checking hosts](hosts/checking.md#automatic-status).
+
+### Details panel
+
+**Quick commands > Choose…**: "The buttons on top of a host's Details panel; the first four are
+also in its right-click menu. Yours, on this PC." It opens the **Customize the details panel**
+window; see [Commands on a host](hosts/commands.md#quick-commands).
 
 ## Hosts > Connecting
 
-![Settings > Hosts > Connecting: the connection profiles, the remote tools, and Read PC data with](images/settings-hosts-connecting-dark.png)
+![Settings > Hosts > Connecting: the connection profiles, the remote tools, and Read PC data with set to Automatic](images/settings-hosts-connecting-dark.png)
 
 ### Connection profiles
 

@@ -9,7 +9,6 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
-    QDialogButtonBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -26,7 +25,8 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import HostList
 from capypanel.core.i18n import _, ngettext
-from capypanel.ui.dialogs import run_modal
+from capypanel.ui import spacing
+from capypanel.ui.dialogs import ok_cancel, run_modal
 from capypanel.ui.groups import TreeMenu, fill_host_move_menu
 from capypanel.ui.host_lists import ListsView
 from capypanel.ui.hosts import group_path
@@ -48,7 +48,7 @@ class Page(QWidget):
         self.title = title
         self.body = QVBoxLayout(self)
         self.body.setContentsMargins(0, 0, 0, 0)
-        self.body.setSpacing(22)  # between sections
+        self.body.setSpacing(spacing.WINDOW)  # between sections
 
 
 class Section(QWidget):
@@ -63,8 +63,10 @@ class Section(QWidget):
         self.inner.setObjectName("sectionCard")
         self.inner.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)  # draws the card
         self.content = QVBoxLayout(self.inner)
-        self.content.setContentsMargins(14, 10, 14, 12)
-        self.content.setSpacing(6)
+        self.content.setContentsMargins(
+            spacing.PANEL, spacing.CONTROLS, spacing.PANEL, spacing.PANEL
+        )
+        self.content.setSpacing(spacing.ICON)
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(8)
@@ -92,7 +94,7 @@ class SettingRow(QWidget):
             control.setFixedWidth(self.CONTROL_WIDTH)
         line = QHBoxLayout(self)
         line.setContentsMargins(0, 4, 0, 4)
-        line.setSpacing(16)
+        line.setSpacing(spacing.WINDOW)
         line.addLayout(words, 1)
         line.addWidget(control, 0, Qt.AlignmentFlag.AlignVCenter)
 
@@ -409,7 +411,9 @@ class ListsGeneralPage(Page):
 
 
 class HostsPage(ListsGeneralPage):
-    """The Hosts tool's General page: Host lists, then Refresh."""
+    """The Hosts tool's General page: Host lists, Refresh, then the Details panel."""
+
+    customize_requested = Signal()  # Quick commands' Choose…
 
     def __init__(
         self,
@@ -449,13 +453,28 @@ class HostsPage(ListsGeneralPage):
             refresh.content,
             SettingRow(
                 _("Refresh status &by itself"),
-                _("Only ping and ports, never logged-on users, so no account is needed. "
+                _("Only ping and ports, so no account is needed. "
                   "Refresh in the toolbar always works."),
                 self.auto_every,
             ),
         )  # fmt: skip
 
         self.add_section(refresh)
+
+        panel = Section(_("Details panel"))
+        self.quick_button = QPushButton(_("C&hoose…"))
+        self.quick_button.setAutoDefault(False)
+        self.quick_button.clicked.connect(self.customize_requested)
+        add_rows(
+            panel.content,
+            SettingRow(
+                _("&Quick commands"),
+                _("The buttons on top of a host's Details panel; the first four are also in "
+                  "its right-click menu. Yours, on this PC."),
+                self.quick_button,
+            ),
+        )  # fmt: skip
+        self.add_section(panel)
 
     def auto_status_choice(self) -> tuple[bool, int]:
         minutes = self.auto_every.currentData()
@@ -508,15 +527,11 @@ def ask_minutes(parent: QWidget, start: int) -> int | None:
     minutes.setRange(1, 120)
     minutes.setValue(start)
     minutes.setSuffix(_(" min"))
-    buttons = QDialogButtonBox(
-        QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-    )
+    buttons = ok_cancel(dialog, _("Save"))
     for button in buttons.buttons():
         if isinstance(button, QPushButton):
             button.setAutoDefault(False)
             button.setDefault(False)
-    buttons.accepted.connect(dialog.accept)
-    buttons.rejected.connect(dialog.reject)
     row = QHBoxLayout()
     row.addWidget(QLabel(_("Every")))
     row.addWidget(minutes, 1)

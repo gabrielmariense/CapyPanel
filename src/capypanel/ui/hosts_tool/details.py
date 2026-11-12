@@ -3,10 +3,10 @@ restart, then Connection, Logged on, PC facts, Tags and Notes."""
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from PySide6.QtCore import QLocale, QPoint, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPalette, QResizeEvent
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPalette
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QMenu,
     QPushButton,
-    QSizePolicy,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -29,14 +28,13 @@ from capypanel.core.remote.inventory import PowerShellBlocked
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.ui import checks as check_texts
-from capypanel.ui.hosts import FlowLayout
+from capypanel.ui.hosts_tool import quick
 from capypanel.ui.hosts_tool.host_state import Facts, PendingPower
 from capypanel.ui.icons import STATUS_COLORS, dot_icon, tabler_icon
-from capypanel.ui.list_workspace.details import DetailsPanel
-from capypanel.ui.notes import escape
+from capypanel.ui.list_workspace.details import GAP, DetailsPanel
+from capypanel.ui.notes import Elided, escape
 
-BUTTON = (34, 30)  # px: the command buttons
-MENU_BUTTON = 48  # px: Users ▾ and Power ▾, room for their arrow
+NOBODY_FOR = timedelta(minutes=10)  # how long "nobody signed in" is believed
 ICON = 18
 PICKER_HEIGHT = 28  # px: a changeable value's button, as tall as a dropdown
 GB = 1024**3
@@ -56,10 +54,13 @@ class HostDetails:
     # and the tooltip saying why that one.
     commands_as: tuple[str, bool, str] = ("", False, "")
     profile_user: str = ""  # the login kept for that profile, if one was typed or saved
+    quick: tuple[str, ...] = host_commands.QUICK  # this admin's quick commands, in order
+    hidden: frozenset[str] = frozenset()  # the parts this admin chose not to see
 
 
 class HostDetailsPanel(DetailsPanel):
     command_clicked = Signal(str)  # a command button: the command's id
+    commands_requested = Signal()  # the Commands button: the Commands window
     session_menu_requested = Signal(object, QPoint)  # a right-click on a person: Session, where
     read_facts = Signal()  # PC facts' Read again
     cancel_pending = Signal()  # the waiting restart's Cancel restart
@@ -72,7 +73,6 @@ class HostDetailsPanel(DetailsPanel):
         # The command buttons' menus: the tool fills them each time they open.
         self.users_menu = QMenu(self)
         self.power_menu = QMenu(self)
-        self.more_menu = QMenu(self)
         self.buttons: dict[str, QToolButton] = {}
 
     def show_host(
@@ -93,13 +93,31 @@ class HostDetailsPanel(DetailsPanel):
         assert isinstance(shown, HostDetails)
         self.heading(layout, shown.host.name, shown.status)
         layout.addSpacing(6)
-        layout.addWidget(self._command_row(shown))
+        layout.addWidget(self._command_grid(shown))
         if shown.pending is not None and shown.pending.at > datetime.now(UTC):
             layout.addSpacing(8)
             layout.addWidget(self._pending_strip(shown.pending))
 
-        # Connection: a label on the left, its value on the same line, every value at the same
-        # x. The two logins, each named by what uses it, are buttons filling the value column.
+        host, hidden = shown.host, shown.hidden
+        # A PC that didn't answer says so once, under its name: the parts below don't repeat it.
+        said = shown.status is not None and shown.status[0] is not Status.ONLINE
+        if "connection" not in hidden:
+            self._connection(layout, shown)
+        if "users" not in hidden:
+            self.users(layout, shown.users, said=said)
+        if "facts" not in hidden:
+            self.facts(layout, shown.facts, said=said)
+        if "tags" not in hidden:
+            self.section(layout, _("Tags"))
+            layout.addWidget(self.chips(host.tags) if host.tags else self.muted("—"))
+        if "notes" not in hidden:
+            self.section(layout, _("Notes"))
+            layout.addWidget(self.notes(host.notes, needle) if host.notes else self.muted("—"))
+        self.hidden_line(layout, len(hidden))
+
+    def _connection(self, layout: QVBoxLayout, shown: HostDetails) -> None:
+        """A label on the left, its value on the same line, every value at the same x. The two
+        logins, each named by what uses it, are buttons filling the value column."""
         self.section(layout, _("Connection"))
         host = shown.host
         self.profile_button = self._profile_picker(shown.profile, shown.profile_user)
@@ -122,78 +140,81 @@ class HostDetailsPanel(DetailsPanel):
             grid.addWidget(value, row, 1, Qt.AlignmentFlag.AlignVCenter)
         layout.addLayout(grid)
 
-        self.users(layout, shown.users)
-        self.facts(layout, shown.facts)
-
-        self.section(layout, _("Tags"))
-        layout.addWidget(self.chips(host.tags) if host.tags else self.muted("—"))
-
-        self.section(layout, _("Notes"))
-        layout.addWidget(self.notes(host.notes, needle) if host.notes else self.muted("—"))
-
     # ---- the command buttons ----
 
-    def _command_row(self, details: HostDetails) -> QWidget:
-        """C$, the user's folder, Computer Management and Send a message as icons, then Users ▾
-        and Power ▾ in amber, then … with every command. A tooltip names each. In a narrow
-        panel they wrap onto a second line rather than push the panel's text out of sight."""
+    def _command_grid(self, details: HostDetails) -> QWidget:
+        """Four columns of equal buttons, an icon over its word. The fixed row first: Refresh
+        (this PC), Commands (the Commands window), Users ▾ and Power ▾ in amber. Under it the
+        admin's quick commands in rows of four, in their order; a row that isn't full keeps its
+        buttons on the left, and with none picked only the fixed row shows."""
         widget = QWidget()
-        row = FlowLayout(widget, 6, stretch_last=False)
-        row.setContentsMargins(0, 0, 0, 0)
+        column = QVBoxLayout(widget)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(GAP + 4)  # the fixed row stands a little apart
         self.buttons = {}
         text = self.palette().color(QPalette.ColorRole.Text)
         amber = QColor(STATUS_COLORS["attention"])
         reachable = bool(details.host.connect_address)
-        icons = {"c-share": "", "user-folder": "folder-person", "computer-management": "settings",
-                 "message": "message"}  # fmt: skip
-        for command_id in host_commands.QUICK:
-            command = host_commands.command(command_id)
-            button = self._button(icons[command_id], text, _(command.name).rstrip("…"))
-            if command_id == "c-share":
-                button.setText("C$")  # the share's name is the clearest icon
-                font = QFont(button.font())
-                font.setBold(True)
-                button.setFont(font)
-            if command_id == "user-folder":
-                who = _folder_user(details)
-                if who:
-                    button.setToolTip(_("{user}'s folder").format(user=who))
-            button.setEnabled(reachable)
-            button.clicked.connect(lambda _c=False, c=command_id: self.command_clicked.emit(c))
-            self.buttons[command_id] = button
-            row.addWidget(button)
+        fixed, short = quick.fixed_labels(), quick.short_labels()
+        width = self._button_width()
+
+        refresh = self.word_button("refresh", text, fixed["refresh"],
+                               _("Refresh host: status, logged-on users and PC facts"))  # fmt: skip
+        refresh.clicked.connect(lambda: self.command_clicked.emit("all-checks"))
+        commands = self.word_button("bolt", text, fixed["commands"],
+                                _("Every command for this PC, in the Commands window"))  # fmt: skip
+        commands.clicked.connect(self.commands_requested)
         people = _people(details)
-        users = self._button("user-x", amber, _("Log off or disconnect someone"), risky=True)
+        users = self.word_button("user-x", amber, f"{fixed['users']} ▾",
+                             _("Log off or disconnect someone"), risky=True)  # fmt: skip
         users.setMenu(self.users_menu)
         users.setEnabled(reachable and bool(people))
         if reachable and not people:
             users.setToolTip(_("No one is signed in, or no one was checked: use Refresh"))
-        power = self._button("power", amber, _("Restart or shut down"), risky=True)
+        power = self.word_button("power", amber, f"{fixed['power']} ▾",
+                             _("Restart or shut down"), risky=True)  # fmt: skip
         power.setMenu(self.power_menu)
-        power.setEnabled(reachable)
-        more = self._button("dots", text, _("Every command"))
-        more.setMenu(self.more_menu)
-        more.setProperty("arrow", False)  # … says there's more already
-        for key, button in (("users", users), ("power", power), ("more", more)):
+        for button in (refresh, commands, power):
+            button.setEnabled(reachable)
+        for key, button in (("refresh", refresh), ("commands", commands), ("users", users),
+                            ("power", power)):  # fmt: skip
             if button.menu() is not None:
                 button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+                button.setProperty("arrow", False)  # the ▾ is in its word
             self.buttons[key] = button
-            row.addWidget(button)
-        for button in (users, power):
-            button.setFixedWidth(MENU_BUTTON)
+        column.addLayout(self.button_rows([refresh, commands, users, power], width))
+
+        who, nobody = _folder_user(details), _nobody(details)
+        picked: list[QToolButton] = []
+        for command_id in details.quick:
+            command = host_commands.command(command_id)
+            name = _(command.name)
+            enabled = reachable
+            if command.needs_user and nobody:  # the reason has no room on the button
+                name = _("{command} (nobody signed in)").format(command=name.rstrip("…"))
+                enabled = False
+            elif command_id == "user-folder" and who:
+                name = _("{command} ({user})").format(command=name, user=who)
+            color = amber if command.risky else text
+            button = self.word_button(command.icon, color, short[command_id],
+                                      name.rstrip("…"), risky=command.risky)  # fmt: skip
+            button.setEnabled(enabled)
+            button.clicked.connect(lambda _c=False, c=command_id: self.command_clicked.emit(c))
+            self.buttons[f"quick:{command_id}"] = button
+            picked.append(button)
+        if picked:
+            column.addLayout(self.button_rows(picked, width))
         return widget
 
-    def _button(self, icon: str, color: QColor, tip: str, *, risky: bool = False) -> QToolButton:
-        button = QToolButton()
-        button.setObjectName("commandButton")
-        button.setProperty("risky", risky)
-        button.setFixedSize(*BUTTON)
-        button.setToolTip(tip)
-        button.setCursor(Qt.CursorShape.PointingHandCursor)
-        if icon:
-            button.setIcon(tabler_icon(icon, color, ICON))
-            button.setIconSize(QSize(ICON, ICON))
-        return button
+    def _button_width(self) -> int:
+        """Every button as wide as the widest word any of them can have in this font and
+        language, so the grid never changes width with what's picked."""
+        fixed = quick.fixed_labels()
+        words = [f"{fixed[k]} ▾" if k in ("users", "power") else fixed[k] for k in fixed]
+        return self.grid_width([*words, *quick.short_labels().values()])
+
+    def minimum_width(self) -> int:
+        return self.grid_minimum(self._button_width())
 
     def _pending_strip(self, pending: PendingPower) -> QFrame:
         """A restart waiting: when, when it was asked and who saw the message; Cancel restart."""
@@ -288,8 +309,11 @@ class HostDetailsPanel(DetailsPanel):
         self,
         layout: QVBoxLayout,
         users: tuple[Sequence[Session] | None, RemoteError | None, datetime] | None,
+        *,
+        said: bool = False,
     ) -> None:
-        """Logged on: each person with their session; a right-click offers what can be done."""
+        """Logged on: each person with their session; a right-click offers what can be done.
+        `said`: the panel already says the PC didn't answer, so this part only shows a dash."""
         if users is None:
             self.section(layout, _("Logged on"))
             layout.addWidget(self.muted(_("Not checked")))
@@ -300,7 +324,9 @@ class HostDetailsPanel(DetailsPanel):
         if error is not None or not sessions:
             self.section(layout, _("Logged on · {when}").format(when=clock))
             if error is not None:
-                text = check_texts.users_text(sessions, error)
+                text = (
+                    "—" if said and _unreached(error) else check_texts.users_text(sessions, error)
+                )
                 failed = self.muted(text)
                 failed.setToolTip(check_texts.users_tip(error, when))
                 layout.addWidget(failed)
@@ -348,9 +374,18 @@ class HostDetailsPanel(DetailsPanel):
         grid.setColumnStretch(0, 1)
         return row
 
-    def facts(self, layout: QVBoxLayout, facts: Facts | None, *, button: bool = True) -> None:
+    def facts(
+        self,
+        layout: QVBoxLayout,
+        facts: Facts | None,
+        *,
+        button: bool = True,
+        said: bool = False,
+    ) -> None:
         """PC facts: read once when the host is opened here, with Read again (`button`). While
-        the slow part is still on its way, its rows read "Reading…"."""
+        the slow part is still on its way, its rows read "Reading…". When nothing could be
+        read for one reason, it's said once, not on every row; and not at all when the panel
+        already says the PC didn't answer (`said`)."""
         if facts is None:
             self.section(layout, _("PC facts"))
             layout.addWidget(self.muted(_("Not read yet")))
@@ -376,6 +411,15 @@ class HostDetailsPanel(DetailsPanel):
                  pc_pending),
             ]  # fmt: skip
             unread = facts.pc.unread if facts.pc is not None else {}
+            errors = [error or unread.get(key) for key, _l, _v, error, _p in rows]
+            whys = {facts_error_text(e) for e in errors if e is not None}
+            if all(e is not None for e in errors) and len(whys) == 1:
+                first = next(e for e in errors if e is not None)
+                if said and _unreached(first):
+                    layout.addWidget(self.muted("—"))
+                else:
+                    layout.addWidget(self._warning("facts_error", whys.pop()))
+                rows = []
             for key, label, value, error, pending in rows:
                 error = error or unread.get(key)  # this row alone couldn't be read
                 layout.addWidget(self.muted(label))
@@ -417,6 +461,14 @@ class HostDetailsPanel(DetailsPanel):
 
 def _people(details: HostDetails) -> list[Session]:
     return list(details.users[0] or ()) if details.users is not None else []
+
+
+def _nobody(details: HostDetails) -> bool:
+    """Whether a check from the last few minutes found no one signed in."""
+    if details.users is None:
+        return False
+    sessions, error, when = details.users
+    return error is None and not sessions and datetime.now(when.tzinfo) - when < NOBODY_FOR
 
 
 def _folder_user(details: HostDetails) -> str:
@@ -476,6 +528,10 @@ def memory_text(facts: Facts) -> str | None:
     return _("{n} GB").format(n=round(pc.memory / GB))
 
 
+def _unreached(error: BaseException) -> bool:
+    return isinstance(error, RemoteError) and error.reason is Reason.UNREACHABLE
+
+
 def facts_error_text(error: BaseException) -> str:
     if isinstance(error, RemoteError):
         return {
@@ -505,7 +561,7 @@ class ValuePicker(QPushButton):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip(tip)
         self.marks = tuple(marks)
-        self.label = _Elided(text)
+        self.label = Elided(text)
         row = QHBoxLayout(self)
         row.setContentsMargins(8, 3, 6, 3)
         row.setSpacing(6)
@@ -529,18 +585,3 @@ class ValuePicker(QPushButton):
         if layout is not None:
             hint = hint.expandedTo(layout.sizeHint())
         return QSize(hint.width(), max(hint.height(), PICKER_HEIGHT))
-
-
-class _Elided(QLabel):
-    """One line that ends in "…" when the column is narrower than the text."""
-
-    def __init__(self, text: str) -> None:
-        super().__init__(text)
-        self.full = text
-        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        super().resizeEvent(event)
-        shown = self.fontMetrics().elidedText(self.full, Qt.TextElideMode.ElideRight, self.width())
-        if shown != self.text():
-            self.setText(shown)

@@ -61,7 +61,7 @@ everything else the viewer offers (quality, scaling, view-only, full screen and 
 2. In the profile editor, **Viewer settings > Choose file…** and pick it. **Use defaults** goes
    back to the viewer's own settings.
 
-When you click OK, CapyPanel copies the file beside the profile (`profiles\<id>.vnc`). It's
+When you click **Add**, or **Save** for a profile you're editing, CapyPanel copies the file beside the profile (`profiles\<id>.vnc`). It's
 used **exactly as saved**, encryption plugin included; only the `host` is emptied, since the
 address comes from the host you open. While a profile has a file, its options (such as SecureVNC)
 are off: the file decides. When you connect, the viewer gets a temporary copy, deleted a minute
@@ -103,8 +103,8 @@ dropdowns:
   a small pin beside the name says so ("Only this PC" in its tooltip). **Follow Accounts** takes
   the pin off.
 
-**Commands run as** is also on a host's right-click, for every host selected, and on a group's,
-where it sets the account for every PC in the group.
+**Commands run as** is also on the right-click menu of several selected hosts, where it sets the
+account for each of them, and on a group's, where it sets it for every PC in the group.
 
 ## Accounts for other PCs
 
@@ -132,7 +132,7 @@ When PCs answer **No admin rights** or **Account rejected** while Refresh reads 
 CapyPanel asks for another account once the Refresh ends, and checks those PCs again with it. A
 command that failed the same way offers **Try another account…**. Both open **Account for other
 PCs**: the user, the password, and **Use it for**: this PC, each group and tag they all share, or
-every PC, the narrowest first. What you pick becomes a row of the table. An
+every PC, the narrowest first. **Use account** makes what you picked a row of the table. An
 account is tried on one PC at a time: "If a computer rejects it, CapyPanel stops and asks again
 instead of trying it on the others, so the account isn't locked."
 
@@ -158,7 +158,9 @@ below doesn't apply. A Remote Desktop login is never in **Saved credentials** ei
 - Every window that asks for a password, for a profile or for an account, has **Remember it on
   this computer**, unticked: "Windows keeps it in Credential Manager for your Windows account.
   Otherwise CapyPanel forgets it when it closes and asks once the next time." Neither way puts a
-  password in a file of CapyPanel's own.
+  password in a file of CapyPanel's own. One window starts ticked: when a PC rejects an account
+  whose password you had remembered and CapyPanel asks for it again, so that typing it again
+  keeps it saved. Typing another account there unticks it.
 - Classic VNC passwords are at most 8 characters long, so the password box of an UltraVNC
   "password only" profile stops at 8.
 

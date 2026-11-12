@@ -14,7 +14,7 @@ them through Remote Desktop or the VNC viewer you already use. It keeps your pri
 the details you need and their web pages a click away, and it finds the Windows user profiles
 nobody uses any more on a PC so you can delete them.
 
-> **Status: beta (0.24.1).** It runs from source; there's no installer yet.
+> **Status: beta (0.25.0).** It runs from source; there's no installer yet.
 
 ![CapyPanel's Home page: the tool rail, the capybara, and a tile each for Hosts, Printers and User profiles](docs/images/home-dark.png)
 
@@ -26,7 +26,7 @@ nobody uses any more on a PC so you can delete them.
   - Accounts for other PCs, by PC, group or tag
   - Shared lists, groups and tags
   - Status, logged-on users, PC facts and mapped drives
-  - Commands on a PC: its folders and consoles, its users, power and printers
+  - Commands on a PC: its folders and consoles, its users, power and printers, with your own quick commands
   - Search, import and export
 - Printers
   - Lists with brand, model, serial number and asset tag

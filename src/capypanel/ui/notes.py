@@ -4,7 +4,9 @@ made safe to show as rich text."""
 
 import html
 
-from PySide6.QtWidgets import QFrame, QLabel
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QResizeEvent
+from PySide6.QtWidgets import QFrame, QLabel, QSizePolicy
 
 
 def escape(text: str) -> str:
@@ -18,6 +20,32 @@ def divider() -> QFrame:
     line.setObjectName("divider")
     line.setFixedHeight(1)
     return line
+
+
+class Elided(QLabel):
+    """One line that takes the width it's given and puts "…" where its text doesn't fit: at
+    the end, or in the middle for a path (both ends stay). Cut, its tooltip says it in full."""
+
+    def __init__(
+        self, text: str = "", mode: Qt.TextElideMode = Qt.TextElideMode.ElideRight
+    ) -> None:
+        super().__init__(text)
+        self.full, self._mode = text, mode
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+
+    def set_full(self, text: str) -> None:
+        self.full = text
+        self._fit()
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._fit()
+
+    def _fit(self) -> None:
+        shown = self.fontMetrics().elidedText(self.full, self._mode, self.width())
+        if shown != self.text():
+            self.setText(shown)
+        self.setToolTip(self.full if shown != self.full else "")
 
 
 def hint(text: str = "") -> QLabel:

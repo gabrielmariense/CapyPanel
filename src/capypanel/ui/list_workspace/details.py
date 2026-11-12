@@ -4,19 +4,24 @@ several items selected, a summary instead. A tool says what the sections are (bu
 import html
 from collections.abc import Sequence
 
-from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QGuiApplication, QMouseEvent, QPalette
+from PySide6.QtCore import QSize, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QContextMenuEvent, QGuiApplication, QMouseEvent, QPalette
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QMenu,
     QScrollArea,
     QStackedLayout,
+    QStyle,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
-from capypanel.core.i18n import _
+from capypanel.core.i18n import _, ngettext
+from capypanel.ui.icons import tabler_icon
+from capypanel.ui.menus import popup
 
 LONG_WORD = 24  # longer runs of letters may break anywhere, so they never widen the panel
 MARK = "rgba(255, 196, 0, 0.38)"  # the search's mark, as in the items table
@@ -29,6 +34,14 @@ def breakable(text: str) -> str:
     return " ".join(
         zero_width.join(word) if len(word) > LONG_WORD else word for word in text.split(" ")
     )
+
+
+SIDE = 14  # px at each side of a panel's page
+BUTTON_HEIGHT = 44  # px: a button on top of the panel, its icon over its word
+BUTTON_ROOM = 16  # px beside the widest word: every button is that wide
+COLUMNS = 4  # the buttons' grid: rows of four
+GAP = 8  # px between buttons
+BUTTON_ICON = 18
 
 
 class CopyValue(QLabel):
@@ -64,6 +77,8 @@ class DetailsPanel(QWidget):
     """Details of the selected item, or a summary when none or several are selected."""
 
     copied = Signal(str)  # a value was copied: the window says so in its status bar
+    customize_requested = Signal()  # the panel's right-click, or its hidden-parts line
+    customizable = False  # a tool with parts that can be hidden sets it
 
     def __init__(self) -> None:
         super().__init__()
@@ -111,6 +126,77 @@ class DetailsPanel(QWidget):
 
     # ---- showing ----
 
+    def minimum_width(self) -> int:
+        """The narrowest the panel may be dragged, when its own parts need more than the
+        workspace's usual minimum; 0 when they don't."""
+        return 0
+
+    # ---- the buttons on top: an icon over one short word, in rows of four ----
+
+    def word_button(self, icon: str, color: QColor, word: str, tip: str, *,
+                    risky: bool = False) -> QToolButton:  # fmt: skip
+        """One button of the grid; `tip` is its full name. Risky ones are amber."""
+        button = QToolButton()
+        button.setObjectName("commandButton")
+        button.setProperty("risky", risky)
+        button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        button.setText(word.replace("&", "&&"))
+        button.setToolTip(tip)
+        button.setCursor(Qt.CursorShape.PointingHandCursor)
+        button.setIcon(tabler_icon(icon, color, BUTTON_ICON))
+        button.setIconSize(QSize(BUTTON_ICON, BUTTON_ICON))
+        return button
+
+    def grid_width(self, words: Sequence[str]) -> int:
+        """How wide every button is: what the widest of `words` needs in this font and language.
+        Give it every word a button can have, so the grid never changes width."""
+        metrics = self.fontMetrics()
+        return max(metrics.horizontalAdvance(word) for word in words) + BUTTON_ROOM
+
+    def grid_minimum(self, width: int) -> int:
+        """Room for four columns of `width`, the page's sides and a scroll bar beside them."""
+        bar = self.style().pixelMetric(QStyle.PixelMetric.PM_ScrollBarExtent)
+        return COLUMNS * width + (COLUMNS - 1) * GAP + 2 * SIDE + bar + 4
+
+    @staticmethod
+    def button_rows(buttons: Sequence[QToolButton], width: int) -> QVBoxLayout:
+        """`buttons` in rows of four, each `width` wide. A row that isn't full keeps its buttons
+        on the left: nothing stretches."""
+        rows = QVBoxLayout()
+        rows.setSpacing(GAP)
+        for start in range(0, len(buttons), COLUMNS):
+            row = QHBoxLayout()
+            row.setSpacing(GAP)
+            for button in buttons[start : start + COLUMNS]:
+                button.setFixedSize(width, BUTTON_HEIGHT)
+                row.addWidget(button)
+            row.addStretch(1)
+            rows.addLayout(row)
+        return rows
+
+    # ---- parts the person chose to hide ----
+
+    def hidden_line(self, layout: QVBoxLayout, hidden: int) -> None:
+        """At the foot of the page, when parts are hidden: how many, and the way back."""
+        if not hidden:
+            return
+        text = ngettext("{n} part hidden", "{n} parts hidden", hidden).format(n=hidden)
+        line = QLabel(
+            f'{html.escape(text)} · <a href="customize">{html.escape(_("Customize…"))}</a>'
+        )
+        line.setObjectName("hint")
+        line.setTextFormat(Qt.TextFormat.RichText)
+        line.linkActivated.connect(lambda _href: self.customize_requested.emit())
+        layout.addSpacing(8)
+        layout.addWidget(line)
+
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        if not self.customizable:
+            return
+        menu = QMenu(self)
+        menu.addAction(_("&Customize the details panel…"), self.customize_requested.emit)
+        popup(menu, event.globalPos())
+
     def retranslate(self) -> None:
         """The hint comes back with the next show_item(); an item on show is drawn again."""
         if self._shown is not None:
@@ -147,7 +233,7 @@ class DetailsPanel(QWidget):
         self._values = {}
         page = QWidget()
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(14, 12, 14, 12)
+        layout.setContentsMargins(SIDE, 12, SIDE, 12)
         layout.setSpacing(3)
         self.build_page(layout, shown, needle)
         layout.addStretch(1)

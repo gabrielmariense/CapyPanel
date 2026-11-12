@@ -30,7 +30,7 @@ scanned, but not while it's deleting.
 
 ## The Hosts tab
 
-![The Hosts tab: the hosts of the picked group with their status, profiles, how many can be deleted and their scan; Progress and Hosts shown on the right](../images/profiles-hosts-tab-dark.png)
+![The Hosts tab: the hosts of the picked group with their status, profiles, how many can be deleted and their scan; Progress and the selected host on the right](../images/profiles-hosts-tab-dark.png)
 
 The hosts of the group picked on the left, with **Name**, **Address**, **Status**, **Profiles**,
 **Can be deleted** (**Deletable** when the table is narrow) and **Scan**, which says when a host

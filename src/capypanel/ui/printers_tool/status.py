@@ -47,6 +47,14 @@ _WARNINGS = {
     Problem.SERVICE_REQUESTED: lambda: _("Service requested"),
     Problem.MAINTENANCE_OVERDUE: lambda: _("Maintenance due"),
 }
+# The table's Status column fits about 16 letters in either language; these say the longer
+# ones shorter there. The full words stay in the tip, Details and notifications.
+_SHORT = {
+    Problem.OUTPUT_FULL: lambda: _("Output full"),
+    Problem.OUTPUT_NEAR_FULL: lambda: _("Output nearly full"),
+    Problem.OUTPUT_TRAY_MISSING: lambda: _("No output tray"),
+    Problem.SERVICE_REQUESTED: lambda: _("Needs service"),
+}
 _STATES = {
     State.IDLE: lambda: _("Idle"),
     State.PRINTING: lambda: _("Printing"),
@@ -97,13 +105,26 @@ class Cell:
     quiet: bool = False  # greyed: not checked, offline
     warn: bool = False  # in amber: a low supply
     supply: Supply | None = None  # the Toner cell's supply, for its bar
+    full: str = ""  # the whole words when `text` says them shorter (the table's Status)
+    nothing: bool = False  # "Not checked": sorts last, and stays empty in a Report's file
+
+    def said(self) -> str:
+        """The words in full: Details' line and notifications have the room."""
+        return self.full or self.text
+
+
+def _worded(short: str, full: str, tip: str, color: str) -> Cell:
+    """A Status cell whose words may be shortened; the tip then starts with the full words."""
+    if short == full:
+        return Cell(full, tip, color)
+    return Cell(short, "\n".join((full, tip)), color, full=full)
 
 
 def status(checked: Checked | None, low: int) -> Cell:
     """The Status cell, and the line under a printer's name in Details: a few words. The
     printer's own messages can be long, so they go in the tip and in Details, in full."""
     if checked is None:
-        return Cell("", _("Not checked: use Refresh"), "", quiet=True)
+        return Cell(_("Not checked"), _("Not checked: use Refresh"), "", quiet=True, nothing=True)
     when = clock_text(checked.when)
     if checked.offline:
         return Cell(_("Offline"), _("No answer at {when}.").format(when=when), GREY, quiet=True)
@@ -116,19 +137,19 @@ def status(checked: Checked | None, low: int) -> Cell:
         return Cell(_("Unreadable"), f"{tip}\n{checked.error}".strip(), AMBER, quiet=True)
     reading = checked.reading
     tip = "\n".join((_("Checked {when}.").format(when=when), *reading.messages))
-    stops = [text() for problem, text in _STOPS.items() if problem in reading.problems]
+    stops = [problem for problem in _STOPS if problem in reading.problems]
     if stops or reading.device is Device.DOWN:
-        return Cell(stops[0] if stops else _("Stopped"), tip, RED)
-    warnings = [text() for problem, text in _WARNINGS.items() if problem in reading.problems]
+        return (
+            _worded(*_problem_words(stops[0]), tip, RED) if stops else Cell(_("Stopped"), tip, RED)
+        )
+    warnings = [problem for problem in _WARNINGS if problem in reading.problems]
     lows = [s for s in reading.supplies if is_low(s, low)]
     if warnings or lows or reading.messages or reading.device is Device.WARNING:
         if warnings:
-            words = warnings[0]
-        elif lows:
-            words = low_text(lows[0])
-        else:
-            words = _("Needs attention")
-        return Cell(words, tip, AMBER)
+            return _worded(*_problem_words(warnings[0]), tip, AMBER)
+        if lows:
+            return _worded(short_low_text(lows[0]), low_text(lows[0]), tip, AMBER)
+        return Cell(_("Needs attention"), tip, AMBER)
     words = _STATES[reading.state]() if reading.state in _STATES else _("Ready")
     return Cell(words, tip, GREEN)
 
@@ -148,6 +169,30 @@ def attention(checked: Checked | None, low: int) -> Attention | None:
     if any(is_low(s, low) for s in checked.reading.supplies):
         return Attention.LOW
     return None
+
+
+def status_words() -> list[str]:
+    """Every word the Status column can show, so its first width fits the longest."""
+    problems = [_problem_words(p)[0] for p in (*_STOPS, *_WARNINGS)]
+    states = [said() for said in _STATES.values()]
+    others = (_("Not checked"), _("Offline"), _("Refused"), _("Unreadable"), _("Stopped"),
+              _("Needs attention"), _("Ready"), _("Ink low"), _("Toner low"),
+              _("Waste nearly full"), _("Supply low"))  # fmt: skip
+    return [*problems, *states, *others]
+
+
+def toner_words() -> list[str]:
+    """The Toner column's longest words for each colour, so its first width fits them."""
+    names = (_("Black"), _("Cyan"), _("Magenta"), _("Yellow"), _("Toner"), _("Ink"))
+    words = []
+    for colour in names:
+        for level in (
+            _("{colour} {percent} %").format(colour=colour, percent=100),
+            _("{colour}: some left").format(colour=colour),
+            _("{colour}: not reported").format(colour=colour),
+        ):
+            words += [level, _("{level} · low").format(level=level)]
+    return words
 
 
 def toner_models(reading: Reading) -> str:
@@ -228,6 +273,21 @@ def low_text(supply: Supply) -> str:
     if supply.kind is SupplyKind.TONER:
         return _("Toner low")
     return _("{supply} low").format(supply=supply.name)
+
+
+def short_low_text(supply: Supply) -> str:
+    """low_text for the Status column: a supply's own name can be long, so it's left out."""
+    if supply.receptacle:
+        return _("Waste nearly full")
+    if supply.kind in (SupplyKind.INK, SupplyKind.TONER):
+        return low_text(supply)
+    return _("Supply low")
+
+
+def _problem_words(problem: Problem) -> tuple[str, str]:
+    """(the table's words, the full words) for a problem the printer reports."""
+    full = (_STOPS | _WARNINGS)[problem]()
+    return (_SHORT[problem]() if problem in _SHORT else full), full
 
 
 def toner(checked: Checked | None, low: int) -> Cell:

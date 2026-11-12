@@ -63,7 +63,7 @@ assim por diante), um perfil do **UltraVNC** pode levar um arquivo de configura�
 2. No editor de perfil, **Configurações do visualizador > Escolher arquivo…** e selecione-o.
    **Usar padrões** volta às configurações do próprio visualizador.
 
-Quando você clica em OK, o CapyPanel copia o arquivo para junto do perfil
+Quando você clica em **Adicionar**, ou em **Salvar** num perfil que está editando, o CapyPanel copia o arquivo para junto do perfil
 (`profiles\<id>.vnc`). Ele é usado **exatamente como foi salvo**, inclusive o plugin de
 criptografia; só o `host` é esvaziado, já que o endereço vem do host que você abre. Enquanto um
 perfil tem arquivo, as opções dele (como o SecureVNC) ficam desligadas: quem decide é o arquivo.
@@ -105,8 +105,8 @@ menus:
   tabela e **Outra conta…**. Escolher uma a define só para este PC, e um alfinete ao lado do nome
   diz isso ("Só este PC" na dica). O **Seguir as Contas** tira o alfinete.
 
-O **Comandos como** também está no botão direito de um host, para todos os hosts selecionados, e
-no de um grupo, onde define a conta de todos os PCs do grupo.
+O **Comandos como** também está no menu do botão direito de vários hosts selecionados, onde define
+a conta de cada um deles, e no de um grupo, onde a define para todos os PCs do grupo.
 
 ## Contas para outros PCs
 
@@ -136,8 +136,8 @@ Quando PCs respondem **Sem direitos de administrador** ou **Conta recusada** enq
 lê quem está logado, o CapyPanel pede outra conta quando o Atualizar termina, e verifica esses PCs
 de novo com ela. Um comando que falhou do mesmo jeito oferece o **Tentar outra conta…**. Os dois
 abrem a **Conta para outros PCs**: o usuário, a senha e o **Usar para**: este PC, cada grupo e
-tag que eles têm em comum, ou todos os PCs, do mais específico para o mais geral. O que você
-escolher vira uma linha da tabela. Uma conta é tentada num PC de cada vez: "Se um computador
+tag que eles têm em comum, ou todos os PCs, do mais específico para o mais geral. O **Usar conta**
+transforma o que você escolheu numa linha da tabela. Uma conta é tentada num PC de cada vez: "Se um computador
 recusar a conta, o CapyPanel para e pergunta de novo em vez de tentá-la nos outros, para a conta
 não ser bloqueada."
 
@@ -165,7 +165,9 @@ Windows guarda esse login por conta própria, como `TERMSRV/<endereço>`; remova
 - Toda janela que pede uma senha, de um perfil ou de uma conta, tem o **Lembrar neste
   computador**, desmarcado: "O Windows a guarda no Gerenciador de Credenciais para a sua conta do
   Windows. Senão, o CapyPanel a esquece ao fechar e pede uma vez na próxima." Em nenhum dos dois
-  casos o CapyPanel grava uma senha num arquivo próprio.
+  casos o CapyPanel grava uma senha num arquivo próprio. Uma janela começa marcada: quando um PC
+  recusa uma conta cuja senha você tinha lembrado e o CapyPanel a pede de novo, para que digitá-la
+  de novo a mantenha salva. Digitar outra conta ali desmarca a caixa.
 - Senhas VNC clássicas têm no máximo 8 caracteres, então a caixa de senha de um perfil UltraVNC
   "só senha" para em 8.
 
