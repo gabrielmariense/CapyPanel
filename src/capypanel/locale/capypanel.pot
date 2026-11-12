@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 11:03-0300\n"
+"POT-Creation-Date: 2026-11-12 11:13-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -583,6 +583,9 @@ msgid "Add a host list"
 msgstr ""
 
 msgid "Add a mark"
+msgstr ""
+
+msgid "Add a printer"
 msgstr ""
 
 msgid "Add a printer list"
@@ -1884,6 +1887,11 @@ msgid "Inventory"
 msgstr ""
 
 msgid ""
+"Inventory › Add printer. Its address is enough: brand, model, serial and "
+"toner are read from the printer."
+msgstr ""
+
+msgid ""
 "It can be deleted: nobody is signed in to it, it isn't one of Windows' "
 "own, and it's in the Users folder."
 msgstr ""
@@ -2089,6 +2097,11 @@ msgid "Model, Windows, memory, disk"
 msgstr ""
 
 msgid "More in the documentation"
+msgstr ""
+
+msgid ""
+"Most printers answer to the community \"public\"; for another one or SNMP"
+" v3, set it in Settings. CapyPanel only reads printers."
 msgstr ""
 
 msgid "Move &down"
@@ -2465,6 +2478,9 @@ msgid "Open &log folder"
 msgstr ""
 
 msgid "Open &web page"
+msgstr ""
+
+msgid "Open Settings"
 msgstr ""
 
 msgid "Open a CSV file"
@@ -2847,6 +2863,11 @@ msgid "Reading…"
 msgstr ""
 
 msgid "Reads each in a tab of its own, behind; you stay on this list"
+msgstr ""
+
+msgid ""
+"Reads each printer's status, toner and page count. Refresh on its own and"
+" Windows notifications stay off until you turn them on."
 msgstr ""
 
 msgid ""
@@ -3630,6 +3651,9 @@ msgid "The PC's Windows services."
 msgstr ""
 
 msgid "The PC's event logs."
+msgstr ""
+
+msgid "The SNMP account"
 msgstr ""
 
 msgid ""

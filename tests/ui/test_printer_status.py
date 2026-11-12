@@ -256,6 +256,27 @@ def test_use_this_copies_the_printer_s_value_into_the_list(printers: PrintersToo
     assert after is not None and info_of(after).serial == "SAMPLE0099"  # capitals, as typed ones
 
 
+def test_the_printers_guide_points_at_the_real_controls(
+    printers: PrintersTool, tmp_path: Path
+) -> None:
+    guide = printers.guide()
+    assert guide.guide_id == "printers" and guide.docs == "printers/checking/"
+    assert (Path("docs") / "printers" / "checking.md").exists()
+    steps = list(guide.steps())  # the list has printers: no "Add a printer"
+    assert [s.title for s in steps] == ["The SNMP account", "Refresh all"]
+    assert steps[1].target() is printers.toolbar.refresh_button
+    for step, page in zip(steps, ("printer_connecting", "printer_warnings"), strict=True):
+        assert step.action is not None
+        step.action[1]()
+        assert printers._shell.settings_pages[-1] == page  # type: ignore[attr-defined]
+    empty = tmp_path / "empty.json"
+    listfile.save(empty, HostList(), expected=None, kind="printers")
+    assert printers.open_list(empty)
+    steps = list(guide.steps())
+    assert steps[0].title == "Add a printer"
+    assert steps[0].target() is printers.toolbar.inventory_button
+
+
 def test_the_low_level_comes_from_settings(printers: PrintersTool) -> None:
     lab = next(h for h in printers.document.hosts.hosts if h.name == "3F-LAB-01")  # type: ignore[union-attr]
     printers._checked[lab.id] = _checked(supplies=(_supply("Black Cartridge", 15),))

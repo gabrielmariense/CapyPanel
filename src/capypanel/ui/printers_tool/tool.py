@@ -13,10 +13,11 @@ from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QVBoxLayout, 
 
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.model import Group, Host, HostListRuleError
-from capypanel.core.i18n import _, ngettext, npgettext
+from capypanel.core.i18n import _, ngettext, npgettext, pgettext
 from capypanel.core.printers.printer import DOC360, info_of, with_info
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
+from capypanel.ui.guides import Guide, Step
 from capypanel.ui.hosts import group_path
 from capypanel.ui.list_workspace.customize import Part
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
@@ -242,6 +243,35 @@ class PrintersTool(ListWorkspace):
         self._stop_button.setText(_("Stop"))
         self.toolbar.retranslate()
         super().retranslate()
+
+    def guide(self) -> Guide:
+        """Its own first steps; lists, groups and tags are Home's guide's. A list that already
+        has printers (a colleague's shared one) skips adding one."""
+        bar = self.toolbar
+
+        def steps() -> list[Step]:
+            found = [] if self._doc is not None and self._doc.hosts.hosts else [
+                Step(_("Add a printer"),
+                     _("Inventory › Add printer. Its address is enough: brand, model, serial and "
+                       "toner are read from the printer."), lambda: bar.inventory_button),
+            ]  # fmt: skip
+            return [
+                *found,
+                Step(_("The SNMP account"),
+                     _("Most printers answer to the community \"public\"; for another one or "
+                       "SNMP v3, set it in Settings. CapyPanel only reads printers."),
+                     lambda: self.table,
+                     action=(_("Open Settings"),
+                             lambda: self._shell.open_settings("printer_connecting"))),
+                Step(pgettext("printers", "Refresh all"),  # as the button says it
+                     _("Reads each printer's status, toner and page count. Refresh on its own "
+                       "and Windows notifications stay off until you turn them on."),
+                     lambda: bar.refresh_button,
+                     action=(_("Open Settings"),
+                             lambda: self._shell.open_settings("printer_warnings"))),
+            ]  # fmt: skip
+
+        return Guide("printers", steps, docs="printers/checking/")
 
     def restyle(self) -> None:
         """After a theme switch: the dots, swatches, bars, Details and the strip were drawn in

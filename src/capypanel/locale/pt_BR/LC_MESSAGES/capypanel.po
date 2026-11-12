@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 11:03-0300\n"
+"POT-Creation-Date: 2026-11-12 11:13-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -581,6 +581,9 @@ msgstr "Adicionar uma lista de hosts"
 
 msgid "Add a mark"
 msgstr "Adicionar marca"
+
+msgid "Add a printer"
+msgstr "Adicionar uma impressora"
 
 msgid "Add a printer list"
 msgstr "Adicionar uma lista de impressoras"
@@ -1834,6 +1837,9 @@ msgstr "Programas instalados em {host}"
 msgid "Inventory"
 msgstr "Inventário"
 
+msgid "Inventory › Add printer. Its address is enough: brand, model, serial and toner are read from the printer."
+msgstr "Inventário › Adicionar impressora. O endereço basta: marca, modelo, número de série e toner são lidos da impressora."
+
 msgid "It can be deleted: nobody is signed in to it, it isn't one of Windows' own, and it's in the Users folder."
 msgstr "Pode ser excluído: ninguém está conectado com ele, não é do Windows e fica na pasta Users."
 
@@ -2028,6 +2034,9 @@ msgstr "Modelo, Windows, memória, disco"
 
 msgid "More in the documentation"
 msgstr "Mais na documentação"
+
+msgid "Most printers answer to the community \"public\"; for another one or SNMP v3, set it in Settings. CapyPanel only reads printers."
+msgstr "A maioria responde à comunidade \"public\"; para outra ou SNMP v3, defina em Configurações. O CapyPanel só lê as impressoras."
 
 msgid "Move &down"
 msgstr "Mover para &baixo"
@@ -2383,6 +2392,9 @@ msgstr "Abrir pasta de &logs"
 
 msgid "Open &web page"
 msgstr "Abrir página &web"
+
+msgid "Open Settings"
+msgstr "Abrir Configurações"
 
 msgid "Open a CSV file"
 msgstr "Abrir um arquivo CSV"
@@ -2748,6 +2760,9 @@ msgstr "Lendo…"
 
 msgid "Reads each in a tab of its own, behind; you stay on this list"
 msgstr "Lê cada um numa aba própria, ao fundo; você continua nesta lista"
+
+msgid "Reads each printer's status, toner and page count. Refresh on its own and Windows notifications stay off until you turn them on."
+msgstr "Lê o status, o toner e a contagem de páginas de cada impressora. A atualização sozinha e as notificações do Windows ficam desligadas até você ligá-las."
 
 msgid "Reads the profiles on the PCs picked, each in its own tab. Nothing is deleted by a scan."
 msgstr "Lê os perfis dos PCs escolhidos, cada um em sua aba. Escanear não exclui nada."
@@ -3505,6 +3520,9 @@ msgstr "Os serviços do Windows no PC."
 
 msgid "The PC's event logs."
 msgstr "Os logs de eventos do PC."
+
+msgid "The SNMP account"
+msgstr "A conta SNMP"
 
 msgid "The account was accepted, but only administrators of that computer can see who is logged on."
 msgstr "A conta foi aceita, mas só administradores daquele computador podem ver quem está logado."
