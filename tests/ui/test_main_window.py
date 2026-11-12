@@ -12,6 +12,7 @@ from PySide6.QtGui import QAction, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QMenu, QSplitter, QWidget
 
+from capypanel import __version__
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.locations import recent_lists
@@ -93,7 +94,7 @@ def test_first_start_creates_the_personal_list_with_a_hosts_group(window: CapyWi
     doc = window.hosts.document
     assert doc is not None and doc.path.name == "default.json" and doc.path.exists()
     assert [g.name for g in doc.hosts.groups] == ["Default group"]
-    assert window.windowTitle().startswith("Default —")
+    assert window.windowTitle() == f"Default — CapyPanel {__version__}"  # no build: About has it
     assert [a.text() for a in window.menuBar().actions()] == [
         "&File",
         "&View",
