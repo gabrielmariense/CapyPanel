@@ -116,6 +116,8 @@ code and several sentences, is in the cell's tooltip and in full under its name 
 
 ## Choose which problems warn
 
+![The Warnings section in Settings: a row per reason, ticked under In CapyPanel and Windows notification, at the defaults](../images/settings-printers-warnings-dark.png)
+
 1. Open **Settings > Printers > Warnings and supplies**. The **Warnings** section has a row for
    each reason: **Offline**, **Out of paper**, **Out of toner**, **Paper jam**, **Stopped** and
    **Supply low**.

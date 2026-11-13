@@ -120,6 +120,8 @@ detalhes.
 
 ## Escolher quais problemas avisam
 
+![A seção Avisos nas Configurações: uma linha por motivo, marcada em No CapyPanel e Notificação do Windows, no padrão](../images/settings-printers-warnings-dark-pt-BR.png)
+
 1. Abra **Configurações > Impressoras > Avisos e suprimentos**. A seção **Avisos** tem uma linha
    para cada motivo: **Offline**, **Papel atolado**, **Parada**, **Sem papel**, **Sem toner** e
    **Suprimento baixo**.
