@@ -1,6 +1,6 @@
-"""The Printers tool's part of Settings: Startup, Refresh (the SNMP version and its account, the
-Doc360 MPS account, Refresh on its own, the low supply level and how the Toner column shows) and
-Printer lists."""
+"""The Printers tool's part of Settings: General (Printer lists, Startup), Warnings and supplies
+(Refresh on its own, which reasons warn, the low supply level, the bar marks, how the Toner column
+shows) and Connecting (the SNMP version and its account, the Doc360 MPS account)."""
 
 from collections.abc import Callable
 from pathlib import Path
@@ -33,7 +33,9 @@ from capypanel.ui.notes import notes
 from capypanel.ui.printers_tool import marks as bar_marks
 from capypanel.ui.printers_tool import refresh
 from capypanel.ui.printers_tool.marks import Mark
+from capypanel.ui.printers_tool.status import Reason
 from capypanel.ui.printers_tool.table import swatch
+from capypanel.ui.printers_tool.warnings_table import WarningsTable
 from capypanel.ui.settings.group import SettingsGroup
 from capypanel.ui.settings.pages import (
     ListsGeneralPage,
@@ -56,9 +58,11 @@ LOWEST, HIGHEST = 1, 50  # the low supply level's range, in %
 TONER_VIEW, TEXT, BARS = "toner_view", "text", "bars"  # the Toner column: "Black 24 %", or a bar
 AUTO_REFRESH = "auto_refresh"  # minutes between Refreshes on its own; 0 is off
 AUTO_EVERY = (5, 15, 30, 60)
-# Windows notifications after a Refresh on its own, for what's new: none, a printer stopping or
-# going offline (the default), or that and a supply getting low.
-NOTIFY, NOTIFY_OFF, NOTIFY_STOPS, NOTIFY_LOW = "notify", "off", "stops", "low"
+# The Warnings table's ticks, as lists of status.Reason values: In CapyPanel, and the Windows
+# notification after a Refresh on its own.
+WARN_HERE, WARN_NOTIFY = "warn_here", "warn_notify"
+# Until 0.27 the notification was one choice; it's carried over once (PrintersTool.notify_reasons).
+NOTIFY, NOTIFY_OFF, NOTIFY_LOW = "notify", "off", "low"
 
 
 class _SecretWindow(QDialog):
@@ -428,7 +432,7 @@ class BarMarksDialog(QDialog):
 class PrintersPage(ListsGeneralPage):
     """The Printers tool's General page (its lists, startup). It also builds the rows of the
     other two pages and lays them out there: Warnings and supplies (Refresh on its own, the
-    notification, the low supply level, the bar marks, the Toner column) and Connecting (the
+    Warnings table, the low supply level, the bar marks, the Toner column) and Connecting (the
     SNMP version and account, the Doc360 MPS account). Every choice fires this page's
     `changed`."""
 
@@ -442,7 +446,8 @@ class PrintersPage(ListsGeneralPage):
         doc360_text: str,
         marks_text: str,
         auto: int,
-        notify: str,
+        warn_here: frozenset[Reason],
+        warn_notify: frozenset[Reason],
         **lists: object,
     ) -> None:
         super().__init__(**lists)  # type: ignore[arg-type]
@@ -463,12 +468,8 @@ class PrintersPage(ListsGeneralPage):
             self.auto_every.addItem(every_text(minutes), minutes)
         self.auto_every.setCurrentIndex(max(self.auto_every.findData(auto), 0))
         self.auto_every.currentIndexChanged.connect(lambda _i: self.changed.emit())
-        self.notify = QComboBox()
-        self.notify.addItem(_("Off"), NOTIFY_OFF)
-        self.notify.addItem(_("Stopped or offline"), NOTIFY_STOPS)
-        self.notify.addItem(_("Also low supplies"), NOTIFY_LOW)
-        self.notify.setCurrentIndex(max(self.notify.findData(notify), 0))
-        self.notify.currentIndexChanged.connect(lambda _i: self.changed.emit())
+        self.warnings = WarningsTable(warn_here, warn_notify)
+        self.warnings.changed.connect(self.changed)
         self.low_level = QSpinBox()
         self.low_level.setRange(LOWEST, HIGHEST)
         self.low_level.setValue(low)
@@ -495,12 +496,9 @@ class PrintersPage(ListsGeneralPage):
                 ),
                 self.auto_every,
             ),
-            SettingRow(
-                _("Windows &notification"),
-                _("After a Refresh on its own, for what changed since the one before."),
-                self.notify,
-            ),
         )
+        warnings = Section(_("Warnings"))
+        warnings.content.addWidget(self.warnings)
         supplies = Section(_("Supplies"))
         add_rows(
             supplies.content,
@@ -529,7 +527,7 @@ class PrintersPage(ListsGeneralPage):
         doc360_section = Section(_("Doc360 MPS"))
         add_rows(doc360_section.content, self.doc360_row)
         for page, sections in (
-            (self.warnings_page, (own, supplies)),
+            (self.warnings_page, (own, warnings, supplies)),
             (self.connecting_page, (snmp, doc360_section)),
         ):
             for section in sections:
@@ -597,7 +595,8 @@ class PrintersSettings(SettingsGroup):
             doc360_text=doc360_text(),
             marks_text=marks_text(tool.bar_marks()),
             auto=tool.auto_refresh(),
-            notify=tool.notify_choice(),
+            warn_here=tool.warn_reasons(),
+            warn_notify=tool.notify_reasons(),
             texts=texts,
             start_list=prefs.get(locations.START_KEY, locations.START_LAST),
             default_list=tool.default_list,
@@ -640,7 +639,7 @@ class PrintersSettings(SettingsGroup):
             self._tool.set_toner_bars(self.general.toner_view.currentData() == BARS)
             self._tool.set_snmp_version(str(self.general.version.currentData()))
             self._tool.set_auto_refresh(int(self.general.auto_every.currentData()))
-            self._tool.set_notify_choice(str(self.general.notify.currentData()))
+            self._tool.set_warnings(self.general.warnings.here(), self.general.warnings.notify())
             self.general.show_account(account_text(self._tool.snmp_version()))
             self.general.marks_row.description.setText(marks_text(self._tool.bar_marks()))
             self._tool.prefs_applied()

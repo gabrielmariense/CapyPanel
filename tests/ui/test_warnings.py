@@ -16,7 +16,7 @@ from capypanel.core.printers.reading import Device, Problem, Reading, Supply, Su
 from capypanel.ui.main_window import window as window_module
 from capypanel.ui.printers_tool import refresh, status
 from capypanel.ui.printers_tool.attention import reasons_text
-from capypanel.ui.printers_tool.status import Attention, Checked
+from capypanel.ui.printers_tool.status import DEFAULT_REASONS, Checked, Reason
 from capypanel.ui.printers_tool.tool import PrintersTool
 
 NOW = datetime(2026, 10, 30, 14, 32)
@@ -26,17 +26,37 @@ LOW = Checked(NOW, Reading(supplies=(Supply("Black Cartridge", SupplyKind.TONER,
 FINE = Checked(NOW, Reading(device=Device.RUNNING))
 
 
-def test_attention_is_stopped_offline_or_low() -> None:
+def test_attention_is_the_first_reason_that_is_ticked() -> None:
     assert status.attention(None, 10) is None
-    assert status.attention(JAMMED, 10) is Attention.STOPPED
-    assert status.attention(OFFLINE, 10) is Attention.OFFLINE
-    assert status.attention(LOW, 10) is Attention.LOW
+    assert status.attention(JAMMED, 10) is Reason.JAMMED
+    assert status.attention(OFFLINE, 10) is Reason.OFFLINE
+    assert status.attention(LOW, 10) is Reason.LOW
     assert status.attention(LOW, 5) is None  # above the low level
     assert status.attention(FINE, 10) is None
     assert status.attention(Checked(NOW, error="bad"), 10) is None  # unreadable isn't a warning
     assert status.attention(Checked(NOW, refused="user"), 10) is None
-    found = [Attention.LOW, Attention.STOPPED, Attention.OFFLINE, Attention.LOW]
-    assert reasons_text(found) == "1 stopped, 1 offline, 2 low"
+    found = [Reason.LOW, Reason.JAMMED, Reason.OFFLINE, Reason.LOW, Reason.NO_PAPER]
+    assert reasons_text(found) == "2 stopped, 1 offline, 2 low"
+
+    # Out of paper isn't ticked by default: a printer with only that never counts.
+    no_paper = Checked(NOW, Reading(device=Device.DOWN, problems=frozenset({Problem.NO_PAPER})))
+    assert status.reasons(no_paper, 10) == [Reason.NO_PAPER]
+    assert status.attention(no_paper, 10) is None
+    assert status.attention(no_paper, 10, frozenset({Reason.NO_PAPER})) is Reason.NO_PAPER
+    # Down with a reason that has no row (a door open) never falls back into Stopped.
+    door = Checked(NOW, Reading(device=Device.DOWN, problems=frozenset({Problem.DOOR_OPEN})))
+    assert status.reasons(door, 10) == []
+    down = Checked(NOW, Reading(device=Device.DOWN))  # a service error: no reason given
+    assert status.reasons(down, 10) == [Reason.STOPPED]
+    assert status.attention(down, 10) is None  # Stopped isn't ticked by default
+    # Any ticked reason counts, not only the first: a jam unticked, out of paper ticked.
+    both = Checked(NOW, Reading(problems=frozenset({Problem.JAMMED, Problem.NO_PAPER})))
+    assert status.attention(both, 10, frozenset({Reason.NO_PAPER})) is Reason.NO_PAPER
+    # Stopped for an unticked reason, and a supply low: it counts as low.
+    low_too = Checked(NOW, Reading(problems=frozenset({Problem.NO_PAPER}),
+                                   supplies=(Supply("Black", SupplyKind.TONER, 4),)))  # fmt: skip
+    assert status.attention(low_too, 10) is Reason.LOW
+    assert {Reason.OFFLINE, Reason.JAMMED, Reason.NO_TONER, Reason.LOW} == DEFAULT_REASONS
 
 
 @pytest.fixture

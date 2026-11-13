@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 18:44-0300\n"
+"POT-Creation-Date: 2026-11-13 15:04-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -681,9 +681,6 @@ msgstr ""
 msgid "Already in the list, {place}"
 msgstr ""
 
-msgid "Also low supplies"
-msgstr ""
-
 msgid "Always shown: the host's name, its status and a pending restart's warning."
 msgstr ""
 
@@ -738,6 +735,9 @@ msgid "Asset tag"
 msgstr ""
 
 msgid "At every start"
+msgstr ""
+
+msgid "At or below the Low supply level, under Supplies."
 msgstr ""
 
 msgid "Authentication &password"
@@ -1449,6 +1449,9 @@ msgstr ""
 msgid "Details panel"
 msgstr ""
 
+msgid "Didn't answer the Refresh."
+msgstr ""
+
 msgid "Disconnect"
 msgstr ""
 
@@ -1933,6 +1936,9 @@ msgid "Ignored columns: {names}."
 msgstr ""
 
 msgid "Import hosts"
+msgstr ""
+
+msgid "In CapyPanel"
 msgstr ""
 
 #, python-brace-format
@@ -3000,6 +3006,9 @@ msgstr ""
 msgid "Ready"
 msgstr ""
 
+msgid "Reason"
+msgstr ""
+
 msgid "Recent"
 msgstr ""
 
@@ -3649,7 +3658,7 @@ msgstr ""
 msgid "Stopped"
 msgstr ""
 
-msgid "Stopped or offline"
+msgid "Stopped without saying why."
 msgstr ""
 
 #, python-brace-format
@@ -4051,6 +4060,9 @@ msgstr ""
 msgid ""
 "The read-only community string your printers answer to. Most use "
 "\"public\". It's kept in Windows Credential Manager."
+msgstr ""
+
+msgid "The red count on the Printers icon and the strip above the table."
 msgstr ""
 
 msgid ""
@@ -4562,6 +4574,9 @@ msgstr ""
 msgid "Warning"
 msgstr ""
 
+msgid "Warnings"
+msgstr ""
+
 msgid "Warnings and supplies"
 msgstr ""
 
@@ -4616,6 +4631,11 @@ msgid ""
 "account."
 msgstr ""
 
+msgid ""
+"Which reasons count as a warning. The table's Status always shows every "
+"one."
+msgstr ""
+
 msgid "Who is signed in now"
 msgstr ""
 
@@ -4626,9 +4646,6 @@ msgid "Will be deleted"
 msgstr ""
 
 msgid "Windows"
-msgstr ""
-
-msgid "Windows &notification"
 msgstr ""
 
 msgid "Windows answered:"
@@ -4663,6 +4680,9 @@ msgid ""
 msgstr ""
 
 msgid "Windows no longer knows this account; it was probably deleted."
+msgstr ""
+
+msgid "Windows notification"
 msgstr ""
 
 msgid "Windows refused, or the PC stopped answering"

@@ -12,16 +12,17 @@ from capypanel.core.i18n import _, ngettext
 from capypanel.core.printers.reading import SupplyKind
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.printers_tool import status
-from capypanel.ui.printers_tool.status import Attention, Checked, amber
+from capypanel.ui.printers_tool.status import Attention, Checked, Reason, amber
 
 MOST_LINES = 5  # printers named in one notification; the rest are counted
 
 ICON = 16
 
 
-def reasons_text(found: Iterable[Attention]) -> str:
-    """Why they need it, "1 stopped, 1 offline, 1 low", in that order, leaving out the ones at 0."""
-    counts = Counter(found)
+def reasons_text(found: Iterable[Reason]) -> str:
+    """Why they need it, "1 stopped, 1 offline, 1 low", in that order, leaving out the ones at 0.
+    A jam, no paper and no toner count as stopped."""
+    counts = Counter(reason.kind for reason in found)
     texts = {
         Attention.STOPPED: lambda n: ngettext("{n} stopped", "{n} stopped", n),
         Attention.OFFLINE: lambda n: ngettext("{n} offline", "{n} offline", n),
@@ -37,11 +38,11 @@ def attention_text(n: int) -> str:
     return ngettext("{n} printer needs attention", "{n} printers need attention", n).format(n=n)
 
 
-def why_text(checked: Checked, why: Attention, low: int) -> str:
+def why_text(checked: Checked, why: Reason, low: int) -> str:
     """A notification's reason for one printer: "Paper jam", "Offline", "Black 7 %"."""
     reading = checked.reading
-    if why is not Attention.LOW or reading is None:
-        return status.status(checked, low).said()
+    if why is not Reason.LOW or reading is None:
+        return why.words()
     lows = [s for s in reading.supplies if status.is_low(s, low)]
     lowest = min(lows, key=lambda s: s.percent or 0)
     if lowest.kind in (SupplyKind.TONER, SupplyKind.INK) and lowest.percent is not None:
@@ -85,7 +86,7 @@ class AttentionStrip(QFrame):
         icon = tabler_icon("alert-triangle", QColor(amber()), ICON)
         self._icon.setPixmap(icon.pixmap(ICON, ICON))
 
-    def show_found(self, found: list[Attention], only_them: bool) -> None:
+    def show_found(self, found: list[Reason], only_them: bool) -> None:
         """Hidden when nothing needs attention."""
         n = len(found)
         self.setVisible(bool(n))
