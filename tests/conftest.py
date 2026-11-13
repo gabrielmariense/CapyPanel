@@ -6,6 +6,10 @@ import pytest
 
 from capypanel.core import credstore
 
+# Never the real prefix, even where a test undoes its monkeypatches: an undo goes back to this,
+# so nothing can reach the passwords of whoever runs the tests.
+credstore.PREFIX = "CapyPanelTest/unpatched/"
+
 
 @pytest.hookimpl(tryfirst=True)  # before xdist reads the groups
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
@@ -34,5 +38,10 @@ def own_credentials(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     folder = f"CapyPanelTest/{uuid.uuid4()}/"
     monkeypatch.setattr(credstore, "PREFIX", folder)
     yield
-    for name in credstore.names(""):
-        credstore.forget(name)
+    # Its own folder, whatever PREFIX says now (a test may have undone its monkeypatches).
+    kept, credstore.PREFIX = credstore.PREFIX, folder
+    try:
+        for name in credstore.names(""):
+            credstore.forget(name)
+    finally:
+        credstore.PREFIX = kept

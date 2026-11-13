@@ -26,6 +26,7 @@ import os
 import re
 import shutil
 import ssl
+import stat
 import subprocess
 import tempfile
 import time
@@ -34,7 +35,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import timedelta
 from pathlib import Path
 
@@ -428,10 +429,11 @@ def clean_up(app_dir: Path, tries: int = CLEAN_TRIES, pause: float = 1.0) -> Non
     if applying(app_dir):
         return
     place = places(app_dir)
-    left = [f for f in (place.staging, place.previous, *_legacy(place.app)) if f.is_dir()]
+    olds = sorted(place.previous.parent.glob(f"{place.previous.name}*"))
+    left = [f for f in (place.staging, *olds, *_legacy(place.app)) if f.is_dir()]
     for attempt in range(tries):
         for folder in left:
-            shutil.rmtree(folder, ignore_errors=True)
+            remove(folder)
         gone = [f for f in left if not f.exists()]
         for folder in gone:
             log.info("Update: removed %s", folder)
@@ -443,6 +445,34 @@ def clean_up(app_dir: Path, tries: int = CLEAN_TRIES, pause: float = 1.0) -> Non
             time.sleep(pause)
     for folder in left:
         log.info("Update: couldn't remove all of %s yet: at the next start", folder)
+
+
+def _writable(function: Callable[[str], object], path: str, _error: BaseException) -> None:
+    """rmtree's second try on a read-only file: Windows won't delete one until it's writable."""
+    try:
+        os.chmod(path, stat.S_IWRITE)
+        function(path)
+    except OSError:
+        pass  # held by another program: it stays, and the next start tries again
+
+
+def remove(folder: Path) -> None:
+    """`folder` and what's in it, as far as Windows lets: never raises."""
+    shutil.rmtree(folder, onexc=_writable)
+
+
+def _empty_folder(folder: Path) -> Path:
+    """`folder`, empty, for the old version. When an earlier update left a file in it that
+    won't go (held by another program, say), a new folder beside it instead: a leftover must
+    never stop an update. The next start clears both."""
+    if folder.exists():
+        remove(folder)
+    fresh, n = folder, 1
+    while fresh.exists():
+        n += 1
+        fresh = folder.with_name(f"{folder.name}-{n}")
+    fresh.mkdir(parents=True)
+    return fresh
 
 
 # ---- the swap, run by the new version's exe ----
@@ -506,16 +536,19 @@ def apply(
     *,
     wait: Callable[[int, float], bool] = wait_for_exit,
     test: Callable[[Path], bool] | None = self_test,
-) -> None:
-    """The new version (in place.new_app) where the old one was. Raises UpdateError with the old
-    version's files back as they were when anything fails. `test`: None when the unpacked copy
-    already passed it. The exe goes out first and comes in last, so for the moment the folder is
-    half there, it can't be started."""
+) -> Path:
+    """The new version (in place.new_app) where the old one was; returns the folder the old
+    version went to. Raises UpdateError with the old version's files back as they were when
+    anything fails. `test`: None when the unpacked copy already passed it. The exe goes out
+    first and comes in last, so for the moment the folder is half there, it can't be started."""
     if not wait(pid, 120):
         raise UpdateError(_("CapyPanel didn't close"))
-    if place.previous.exists():
-        shutil.rmtree(place.previous)
-    place.previous.mkdir(parents=True)
+    try:
+        place = replace(place, previous=_empty_folder(place.previous))
+    except OSError as e:
+        raise UpdateError(
+            _("Couldn't put the new version in place: {error}").format(error=e)
+        ) from e
     moved: list[str] = []  # the old version's, now in place.previous
     copied: list[str] = []  # the new version's, now in place.app
     try:
@@ -541,6 +574,7 @@ def apply(
             _("Couldn't put the new version in place: {error}").format(error=e)
         ) from e
     log.info("Update: the new version is in place and passed its self-test")
+    return place.previous
 
 
 def _ours(app: Path) -> list[Path]:
@@ -563,7 +597,7 @@ def _roll_back(place: Places, moved: list[str], copied: list[str]) -> None:
         source = place.previous / name
         _retry(lambda source=source: shutil.move(source, place.app / source.name),
                f"put back {name}")  # fmt: skip
-    shutil.rmtree(place.previous, ignore_errors=True)
+    remove(place.previous)
 
 
 def start(exe: Path, *args: str, splash: bool = True) -> None:
@@ -595,7 +629,7 @@ def run_helper(
         log.warning("Update: couldn't write %s", marker)
     tested = was_tested(place, new_version)
     try:
-        apply(place, pid, test=None if tested else self_test)
+        previous = apply(place, pid, test=None if tested else self_test)
     except Exception as e:  # noqa: BLE001 -- whatever it was, CapyPanel starts again
         log.exception("Update to %s failed", new_version)
         why = str(e) if isinstance(e, UpdateError) else f"{type(e).__name__}: {e}"
@@ -604,7 +638,7 @@ def run_helper(
             start(place.app / EXE, FAILED_FLAG, new_version, why)
         return 1
     log.info("Update: %s replaced %s in %s", new_version, old_version, place.app)
-    shutil.rmtree(place.previous, ignore_errors=True)  # it passed its self-test: no way back needed
+    remove(previous)  # it passed its self-test: no way back needed
     marker.unlink(missing_ok=True)
     start(place.app / EXE, UPDATED_FLAG, old_version)
     return 0

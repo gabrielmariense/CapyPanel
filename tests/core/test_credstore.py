@@ -35,8 +35,12 @@ def test_a_secret_keeps_its_user_and_a_folder_lists_its_names() -> None:
     assert credstore.names("nothing/") == []
 
 
-def test_tests_never_touch_the_real_entries() -> None:
+def test_tests_never_touch_the_real_entries(monkeypatch: pytest.MonkeyPatch) -> None:
     assert credstore.PREFIX.startswith("CapyPanelTest/")  # tests/conftest.py
+    # A test that undoes its monkeypatches once put the real prefix back, and the cleanup after
+    # it then deleted the saved passwords of whoever ran the tests.
+    monkeypatch.undo()
+    assert credstore.PREFIX.startswith("CapyPanelTest/")
 
 
 def test_a_secret_too_long_for_windows_is_refused(name: str) -> None:
