@@ -112,14 +112,9 @@ class WarningsTable(QWidget):
             QAbstractItemView.SelectionBehavior.SelectItems
         )  # Space ticks a cell
         head = table.headerItem()
-        tips = (
-            _("The red count on the Printers icon and the strip above the table."),
-            _("After a Refresh on its own, for what changed since the one before."),
-        )
         delegate = CentredTick(table)
-        for column, tip in zip((HERE, NOTIFY), tips, strict=True):
+        for column in (HERE, NOTIFY):  # no tips on the titles (Gabriel, 2026-11-13)
             head.setTextAlignment(column, Qt.AlignmentFlag.AlignCenter)
-            head.setToolTip(column, tip)
             table.setItemDelegateForColumn(column, delegate)
         words = {reason: reason.words() for reason in Reason}
         for reason in sorted(Reason, key=lambda r: words[r].casefold()):
