@@ -128,9 +128,9 @@ def test_a_settings_file_is_kept_beside_its_profile_and_goes_with_it(
     assert path.read_bytes() == b"[options]\r\nviewonly=1\r\n"
     store.save(clinics)  # no new content: the file stays
     assert path.exists()
-    monkeypatch.setattr(winsec, "made_by_trusted", lambda p: p != path)
-    assert store.settings_path(clinics) is None  # another user's file isn't used
-    monkeypatch.undo()
+    with monkeypatch.context() as m:
+        m.setattr(winsec, "made_by_trusted", lambda p: p != path)
+        assert store.settings_path(clinics) is None  # another user's file isn't used
     store.save(ConnectionProfile("clinics", "ultravnc", name="Clinics"))  # back to defaults
     assert not path.exists()
     store.save(clinics, b"[options]\r\na=1\r\n")

@@ -188,9 +188,9 @@ def test_host_dialog_cleans_values_and_shows_group_paths(qapp: QApplication) -> 
 
 def _drag(monkeypatch: pytest.MonkeyPatch, table: HostTable, column: int, width: int) -> None:
     """A column's edge dragged with the mouse (a plain resize isn't a drag)."""
-    monkeypatch.setattr(QApplication, "mouseButtons", lambda: Qt.MouseButton.LeftButton)
-    table.header().resizeSection(column, width)
-    monkeypatch.undo()
+    with monkeypatch.context() as m:
+        m.setattr(QApplication, "mouseButtons", lambda: Qt.MouseButton.LeftButton)
+        table.header().resizeSection(column, width)
 
 
 def test_columns_keep_their_title_visible_and_can_be_hidden(

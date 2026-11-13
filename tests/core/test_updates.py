@@ -5,6 +5,7 @@ import hashlib
 import io
 import os
 import ssl
+import stat
 import time
 import urllib.error
 import urllib.request
@@ -259,7 +260,7 @@ def test_the_helper_never_lets_an_error_through_and_starts_the_old_copy_again(
     assert updates.run_helper(app, 1, "0.26.0", "0.26.1") == 1
     assert started == [[str(app.resolve() / "CapyPanel.exe"), "--update-failed", "0.26.1",
                         "RuntimeError: something nobody planned for"]]  # fmt: skip
-    monkeypatch.setattr(updates, "apply", lambda _place, _pid, **_kwargs: None)
+    monkeypatch.setattr(updates, "apply", lambda place, _pid, **_kwargs: place.previous)
     started.clear()
     assert updates.run_helper(app, 1, "0.26.0", "0.26.1") == 0
     assert started == [[str(app.resolve() / "CapyPanel.exe"), "--updated-from", "0.26.0"]]
@@ -374,10 +375,11 @@ def test_the_helper_skips_a_self_test_already_passed_and_marks_its_work(
     _app(place.new_app, "0.26.1")
     seen: dict[str, Any] = {}
 
-    def apply(_place: Any, _pid: int, *, test: Any) -> None:
+    def apply(_place: Any, _pid: int, *, test: Any) -> Path:
         seen["test"] = test
         seen["applying"] = updates.applying(app)  # its own marker, its own process
         seen["marker"] = (place.staging / updates.APPLYING).exists()
+        return place.previous
 
     monkeypatch.setattr(updates, "apply", apply)
     monkeypatch.setattr(updates, "start", lambda exe, *args: None)
@@ -472,11 +474,53 @@ def test_a_folder_still_in_use_is_tried_again_until_it_goes(
     real_rmtree = updates.shutil.rmtree
     calls: list[int] = []
 
-    def busy_twice(path: Path, ignore_errors: bool = False) -> None:
+    def busy_twice(path: Path, **kwargs: Any) -> None:
         calls.append(1)
         if len(calls) > 2:
-            real_rmtree(path, ignore_errors=ignore_errors)
+            real_rmtree(path, **kwargs)
 
     monkeypatch.setattr(updates.shutil, "rmtree", busy_twice)
     updates.clean_up(app, pause=0)
     assert not staging.exists() and len(calls) == 3
+
+
+def test_a_file_an_earlier_update_left_that_wont_go_never_stops_the_next_one(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # 0.26.4 on a PC where a DLL in the old version's folder stayed held: 0.27.0 stopped with
+    # "Access denied" before moving anything, every time.
+    app = _app(tmp_path / "CapyPanel", "0.26.4")
+    place = updates.places(app)
+    stuck = place.previous / "_internal" / "MSVCP140_1.dll"
+    stuck.parent.mkdir(parents=True)
+    stuck.write_bytes(b"held")
+    _app(place.new_app, "0.27.0")
+    real_rmtree = updates.shutil.rmtree
+
+    def held(folder: Any, *args: Any, **kwargs: Any) -> None:
+        if Path(folder) == place.previous:
+            return  # Windows says Access denied: nothing goes
+        real_rmtree(folder, *args, **kwargs)
+
+    monkeypatch.setattr(updates.shutil, "rmtree", held)
+    monkeypatch.setattr(updates, "wait_for_exit", lambda _pid, _t: True)
+    monkeypatch.setattr(updates, "self_test", lambda _exe: True)
+    monkeypatch.setattr(updates, "start", lambda exe, *args: None)
+    assert updates.run_helper(app, 1, "0.26.4", "0.27.0") == 0
+    assert (app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.27.0"
+    assert stuck.exists()  # still held, so it stays for now
+    assert not (place.previous.parent / "previous-2").exists()  # the one it used is gone
+    monkeypatch.setattr(updates.shutil, "rmtree", real_rmtree)
+    updates.clean_up(app)  # the next start, once nothing holds it
+    assert not place.previous.exists()
+
+
+def test_read_only_files_in_the_old_version_go_too(tmp_path: Path) -> None:
+    app = _app(tmp_path / "CapyPanel", "0.27.0")
+    place = updates.places(app)
+    dll = place.previous / "_internal" / "MSVCP140_1.dll"
+    dll.parent.mkdir(parents=True)
+    dll.write_bytes(b"dll")
+    dll.chmod(stat.S_IREAD)
+    updates.clean_up(app)
+    assert not place.previous.exists()
