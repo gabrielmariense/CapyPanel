@@ -313,7 +313,7 @@ class PrintersTool(ListWorkspace):
                      _("CapyPanel can refresh your printers by itself: you pick every 5, 15, 30 "
                        "or 60 minutes in Settings › Printers › Warnings and supplies. It's off "
                        "until you do. Then, by default, a Windows notification tells you when one "
-                       "stops or goes offline."),
+                       "goes offline, jams, runs out of toner or runs low."),
                      lambda: None, lambda: table, action=settings("printer_warnings")),
                 Step(_("If nothing shows up"),
                      _("CapyPanel reads printers over SNMP and never changes anything on them. "

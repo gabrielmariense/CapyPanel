@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-13 15:04-0300\n"
+"POT-Creation-Date: 2026-11-13 15:10-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -844,8 +844,8 @@ msgstr "O CapyPanel não pede nada: o próprio {tool} pede o usuário e a senha 
 msgid "CapyPanel asks for them again when it needs them."
 msgstr "O CapyPanel pede de novo quando precisar deles."
 
-msgid "CapyPanel can refresh your printers by itself: you pick every 5, 15, 30 or 60 minutes in Settings › Printers › Warnings and supplies. It's off until you do. Then, by default, a Windows notification tells you when one stops or goes offline."
-msgstr "O CapyPanel pode atualizar as impressoras sozinho: você escolhe a cada 5, 15, 30 ou 60 minutos em Configurações › Impressoras › Avisos e suprimentos. Fica desligado até lá. Depois, por padrão, uma notificação do Windows avisa quando uma parar ou ficar offline."
+msgid "CapyPanel can refresh your printers by itself: you pick every 5, 15, 30 or 60 minutes in Settings › Printers › Warnings and supplies. It's off until you do. Then, by default, a Windows notification tells you when one goes offline, jams, runs out of toner or runs low."
+msgstr "O CapyPanel pode atualizar as impressoras sozinho: você escolhe a cada 5, 15, 30 ou 60 minutos em Configurações › Impressoras › Avisos e suprimentos. Fica desligado até lá. Depois, por padrão, uma notificação do Windows avisa quando uma ficar offline, atolar o papel, ficar sem toner ou com suprimento baixo."
 
 #, python-brace-format
 msgid "CapyPanel can't install it from here ({reason}). Download the zip from the release page and unpack it in place of this one."
