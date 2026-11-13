@@ -95,8 +95,10 @@ code and several sentences, is in the cell's tooltip and in full under its name 
 
 ![The strip above the printer table: how many printers need attention and why, with a Show button](../images/printers-warnings-dark.png)
 
-- A printer **needs attention** when it has stopped (a red status), didn't answer (**Offline**),
-  or has a toner, ink, drum or box at or below the low level.
+- A printer **needs attention** when one of the reasons ticked under **In CapyPanel** applies
+  (see [Choose which problems warn](#choose-which-problems-warn)). To begin with that's
+  **Offline**, a **Paper jam**, **Out of toner**, or **Supply low**: a toner, ink, drum or box at
+  or below the low level.
 - A red count on the Printers icon in the sidebar and a strip above the table say how many, as in
   "3 printers need attention: 1 stopped, 1 offline, 1 low." **Show** lists just those printers;
   **Show all** goes back.
@@ -106,17 +108,40 @@ code and several sentences, is in the cell's tooltip and in full under its name 
 
     A printer's own "Needs attention" message doesn't count, and neither do **Refused** and
     **Unreadable**: those say CapyPanel couldn't read the printer, not that something is wrong
-    with it.
+    with it. In the strip, a paper jam, out of paper and out of toner count as "stopped".
 
     **Show** picks the printers out of the whole list: any group, tag or search is cleared first,
     so none of them stays hidden. The strip then reads "Showing the 3 printers that need
     attention." Picking a group or a tag, or searching, brings every printer back too.
 
-??? note "Windows notifications"
+## Choose which problems warn
 
-    **Settings > Printers > Warnings and supplies > Windows notification** chooses what to notify
-    about: **Off**, **Stopped or offline** (the default) or **Also low supplies**. "After a Refresh
-    on its own, for what changed since the one before."
+1. Open **Settings > Printers > Warnings and supplies**. The **Warnings** section has a row for
+   each reason: **Offline**, **Out of paper**, **Out of toner**, **Paper jam**, **Stopped** and
+   **Supply low**.
+2. Tick a reason under **In CapyPanel** to have it counted by the red count and the strip, and
+   under **Windows notification** to be told about it after a Refresh on its own.
+3. Click **Save**.
+
+To begin with, **Offline**, **Paper jam**, **Out of toner** and **Supply low** are ticked in both
+columns. **Restore default** goes back to them; it's greyed while they're what's ticked. The ticks
+only choose what warns: the table's **Status** column and Details always show every problem.
+
+??? note "More about the reasons"
+
+    - **Stopped** is a printer that's down without saying why, such as a service error.
+      **Offline** is one that didn't answer the Refresh. **Supply low** is a supply at or below
+      **Low supply level**, under **Supplies** on the same page.
+    - A printer counts when any of its ticked reasons applies, and the strip and the notification
+      name that reason.
+    - A door open, a tray missing, a full output tray, a paused printer or a missing supply show in
+      Status and Details but never warn: they only happen while someone is at the printer. A
+      printer stopped by one of them doesn't count as **Stopped** either.
+    - Before 0.27, Settings had a single **Windows notification** choice. It carries over once:
+      **Off** ticks no notifications, **Also low supplies** ticks every reason, and **Stopped or
+      offline** gets the ticks above.
+
+??? note "Windows notifications"
 
     One notification goes out per Refresh on its own, and only for what changed, so a printer that
     was already offline isn't named again. Its title counts them, "2 printers need attention", and

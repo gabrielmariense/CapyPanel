@@ -138,7 +138,7 @@ com "Uma mudança aqui vale para todos neste PC." embaixo do título.
 |---|---|---|---|
 | Geral | **Listas de impressoras**, **Lista ao iniciar**, **Mostrar primeiro** | Como no Hosts (veja [Manter impressoras em listas, grupos e tags](printers/printers.pt-BR.md#manter-impressoras-em-listas-grupos-e-tags)) | Como no Hosts |
 | Avisos e suprimentos | **Atualizar sozinho** | Lê todas as impressoras da lista aberta a cada **5**, **15**, **30** ou **60 minutos** (veja [Verificando impressoras](printers/checking.pt-BR.md#atualizar-as-impressoras-sozinho)) | Desligado |
-| Avisos e suprimentos | **Notificação do Windows** | **Desligado**, **Parada ou offline** ou **Também suprimento baixo** | Parada ou offline |
+| Avisos e suprimentos | **Avisos** | Uma linha por motivo (Offline, Papel atolado, Parada, Sem papel, Sem toner, Suprimento baixo), marcada para **No CapyPanel** e para **Notificação do Windows** (veja [Escolher quais problemas avisam](printers/checking.pt-BR.md#escolher-quais-problemas-avisam)) | Offline, Papel atolado, Sem toner e Suprimento baixo, nas duas |
 | Avisos e suprimentos | **Nível baixo de suprimento** | Quando um suprimento conta como baixo, de 1 a 50 % | 10 % |
 | Avisos e suprimentos | **Marcas das barras** | Traços nas barras de suprimento, com **Alterar…** | O traço do nível baixo |
 | Avisos e suprimentos | **Coluna Toner** | Texto ou uma barra | Texto |

@@ -3,6 +3,15 @@
 As mudanças de cada versão que você vai notar. As
 [versões no GitHub](https://github.com/gabrielmariense/CapyPanel/releases) têm os downloads.
 
+## 0.27.0
+
+- **Configurações > Impressoras > Avisos e suprimentos** tem uma tabela **Avisos** nova: marque
+  quais problemas contam nos avisos do CapyPanel e quais mandam uma notificação do Windows, motivo
+  por motivo. Ela substitui a escolha **Notificação do Windows**, que é levada para a tabela.
+- O que avisa por padrão mudou. Uma impressora sem papel ou parada sem dizer o motivo não avisa mais
+  (marque **Sem papel** ou **Parada** para trazê-las de volta), uma porta aberta ou uma bandeja
+  retirada nunca avisa, e um suprimento no nível baixo agora também manda notificação.
+
 ## 0.26.4
 
 - O **Instalar e reiniciar** agora confere a versão nova antes de o CapyPanel fechar, e depois diz

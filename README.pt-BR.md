@@ -15,7 +15,7 @@ guarda também as suas impressoras, com os detalhes de que você precisa e a pá
 clique, e encontra num PC os perfis de usuário do Windows que ninguém usa mais, para você
 excluí-los.
 
-> **Situação: beta (0.26.0).** [Baixe o zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
+> **Situação: beta (0.27.0).** [Baixe o zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
 > descompacte e rode o CapyPanel.exe. Ele se atualiza quando você manda.
 
 ![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts, Impressoras e Perfis de usuário](docs/images/home-dark-pt-BR.png)
