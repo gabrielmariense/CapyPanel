@@ -135,7 +135,7 @@ mark, with "A change here reaches everyone on this PC." under the title.
 |---|---|---|---|
 | General | **Printer lists**, **List on startup**, **Show first** | As for Hosts (see [Keep printers in lists, groups and tags](printers/printers.md#keep-printers-in-lists-groups-and-tags)) | As for Hosts |
 | Warnings and supplies | **Refresh on its own** | Reads every printer of the open list every **5**, **15**, **30** or **60 minutes** (see [Checking printers](printers/checking.md#have-printers-checked-on-their-own)) | Off |
-| Warnings and supplies | **Windows notification** | **Off**, **Stopped or offline** or **Also low supplies** | Stopped or offline |
+| Warnings and supplies | **Warnings** | A row per reason (Offline, Out of paper, Out of toner, Paper jam, Stopped, Supply low), ticked for **In CapyPanel** and for **Windows notification** (see [Choose which problems warn](printers/checking.md#choose-which-problems-warn)) | Offline, Paper jam, Out of toner and Supply low, in both |
 | Warnings and supplies | **Low supply level** | When a supply counts as low, 1 to 50 % | 10 % |
 | Warnings and supplies | **Bar marks** | Marks on the supply bars, with **Change…** | The low level's mark |
 | Warnings and supplies | **Toner column** | Text or a bar | Text |

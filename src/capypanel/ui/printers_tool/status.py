@@ -110,6 +110,45 @@ class Attention(Enum):
     LOW = "low"
 
 
+class Reason(Enum):
+    """A reason Settings' Warnings table lets you warn about. The rest of the printer's problems
+    (a door open, a tray pulled out...) only last while someone is at it: they show in Status and
+    Details but never warn."""
+
+    JAMMED = "jammed"
+    NO_PAPER = "no_paper"
+    NO_TONER = "no_toner"
+    STOPPED = "stopped"  # down with no stop reason given, such as a service error
+    OFFLINE = "offline"  # no answer
+    LOW = "low"  # a supply at the low level
+
+    @property
+    def kind(self) -> Attention:
+        """How the strip counts it: stopped, offline or low."""
+        return {Reason.OFFLINE: Attention.OFFLINE, Reason.LOW: Attention.LOW}.get(
+            self, Attention.STOPPED
+        )
+
+    def words(self) -> str:
+        """The row's name, the Status column's own words."""
+        return {
+            Reason.JAMMED: lambda: _("Paper jam"),
+            Reason.NO_PAPER: lambda: _("Out of paper"),
+            Reason.NO_TONER: lambda: _("Out of toner"),
+            Reason.STOPPED: lambda: _("Stopped"),
+            Reason.OFFLINE: lambda: _("Offline"),
+            Reason.LOW: lambda: _("Supply low"),
+        }[self]()
+
+
+DEFAULT_REASONS = frozenset({Reason.OFFLINE, Reason.JAMMED, Reason.NO_TONER, Reason.LOW})
+_STOP_REASONS = {
+    Problem.JAMMED: Reason.JAMMED,
+    Problem.NO_PAPER: Reason.NO_PAPER,
+    Problem.NO_TONER: Reason.NO_TONER,
+}
+
+
 @dataclass(frozen=True)
 class Cell:
     text: str
@@ -167,21 +206,33 @@ def status(checked: Checked | None, low: int) -> Cell:
     return Cell(words, tip, green())
 
 
-def attention(checked: Checked | None, low: int) -> Attention | None:
-    """A stopped printer (the red Status), one that didn't answer, or one with a toner, ink,
-    drum or box at the low level; None for the rest. "Needs attention" from the printer's own
-    messages, a refused account or an unreadable answer don't count: they're not warnings."""
+def reasons(checked: Checked | None, low: int) -> list[Reason]:
+    """Every warning reason a printer has, most pressing first: no answer; its stop reasons in
+    Status' order, or Stopped when it's down without one; then a supply at the low level.
+    "Needs attention" from the printer's own messages, a refused account or an unreadable answer
+    aren't reasons: they're not warnings."""
     if checked is None:
-        return None
+        return []
     if checked.offline:
-        return Attention.OFFLINE
-    if checked.reading is None:
-        return None
-    if status(checked, low).color == red():
-        return Attention.STOPPED
-    if any(is_low(s, low) for s in checked.reading.supplies):
-        return Attention.LOW
-    return None
+        return [Reason.OFFLINE]
+    reading = checked.reading
+    if reading is None:
+        return []
+    stops = [problem for problem in _STOPS if problem in reading.problems]
+    # A stop reason with no row (a door open) still means it isn't "Stopped" for no reason.
+    found = [_STOP_REASONS[p] for p in stops if p in _STOP_REASONS]
+    if not stops and reading.device is Device.DOWN:
+        found.append(Reason.STOPPED)
+    if any(is_low(s, low) for s in reading.supplies):
+        found.append(Reason.LOW)
+    return found
+
+
+def attention(
+    checked: Checked | None, low: int, wanted: frozenset[Reason] = DEFAULT_REASONS
+) -> Reason | None:
+    """The printer's most pressing reason among the `wanted` ones; None when it has none."""
+    return next((reason for reason in reasons(checked, low) if reason in wanted), None)
 
 
 def status_words() -> list[str]:

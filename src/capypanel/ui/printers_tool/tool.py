@@ -54,14 +54,15 @@ from capypanel.ui.printers_tool.settings import (
     NOTIFY,
     NOTIFY_LOW,
     NOTIFY_OFF,
-    NOTIFY_STOPS,
     SNMP_VERSION,
     TEXT,
     TONER_VIEW,
+    WARN_HERE,
+    WARN_NOTIFY,
     PrintersSettings,
     change_doc360_account,
 )
-from capypanel.ui.printers_tool.status import Attention, Cell, Checked, Counted
+from capypanel.ui.printers_tool.status import DEFAULT_REASONS, Cell, Checked, Counted, Reason
 from capypanel.ui.printers_tool.table import PrinterTable
 from capypanel.ui.printers_tool.toolbar import PrintersToolBar
 
@@ -97,9 +98,9 @@ class PrintersTool(ListWorkspace):
         self._checked: dict[str, Checked] = {}  # each printer's last Refresh, in memory only
         self._counted: Counted | None = None  # the last Refresh's Doc360 MPS counters
         self.attention_strip = AttentionStrip()
-        self._attention: dict[str, Attention] = {}  # the open list's printers that need it
+        self._attention: dict[str, Reason] = {}  # the open list's printers that need it
         self._only_attention = False  # the strip's Show: the table lists just those
-        self._before_auto: dict[str, Attention] | None = None  # while a Refresh on its own runs
+        self._before_auto: dict[str, Reason] | None = None  # while a Refresh on its own runs
         super().__init__(
             shell,
             commands=self.commands,
@@ -312,7 +313,7 @@ class PrintersTool(ListWorkspace):
                      _("CapyPanel can refresh your printers by itself: you pick every 5, 15, 30 "
                        "or 60 minutes in Settings › Printers › Warnings and supplies. It's off "
                        "until you do. Then, by default, a Windows notification tells you when one "
-                       "stops or goes offline."),
+                       "goes offline, jams, runs out of toner or runs low."),
                      lambda: None, lambda: table, action=settings("printer_warnings")),
                 Step(_("If nothing shows up"),
                      _("CapyPanel reads printers over SNMP and never changes anything on them. "
@@ -486,12 +487,32 @@ class PrintersTool(ListWorkspace):
     def works_in_background(self) -> bool:
         return self.auto_refresh() > 0
 
-    def notify_choice(self) -> str:
-        """Settings' Windows notification: NOTIFY_OFF, NOTIFY_STOPS (the default) or NOTIFY_LOW."""
-        return self._choice(NOTIFY, (NOTIFY_OFF, NOTIFY_STOPS, NOTIFY_LOW), NOTIFY_STOPS)
+    def warn_reasons(self) -> frozenset[Reason]:
+        """Settings' Warnings, In CapyPanel: the reasons the rail's count and the strip count."""
+        return self._reasons(WARN_HERE, DEFAULT_REASONS)
 
-    def set_notify_choice(self, choice: str) -> None:
-        self._change(NOTIFY, choice, self.notify_choice())
+    def notify_reasons(self) -> frozenset[Reason]:
+        """Settings' Warnings, Windows notification. Until 0.27 it was one choice: Off, stopped
+        or offline (now the defaults), or that and low supplies (now every reason)."""
+        old = {NOTIFY_OFF: frozenset[Reason](), NOTIFY_LOW: frozenset(Reason)}
+        return self._reasons(WARN_NOTIFY, old.get(str(self.prefs.get(NOTIFY)), DEFAULT_REASONS))
+
+    def _reasons(self, key: str, default: frozenset[Reason]) -> frozenset[Reason]:
+        saved = self.prefs.get(key)
+        if not isinstance(saved, list):
+            return default
+        return frozenset(reason for reason in Reason if reason.value in saved)
+
+    def set_warnings(self, here: frozenset[Reason], notify: frozenset[Reason]) -> None:
+        """Keeps Settings' Warnings ticks; the count and the strip follow at once."""
+
+        def kept(chosen: frozenset[Reason]) -> list[str]:
+            return [reason.value for reason in Reason if reason in chosen]
+
+        if self._change(WARN_NOTIFY, kept(notify), kept(self.notify_reasons())):
+            self.prefs.pop(NOTIFY, None)  # the old choice, now carried over
+        if self._change(WARN_HERE, kept(here), kept(self.warn_reasons())):
+            self._count_attention()
 
     def _apply_auto_refresh(self) -> None:
         if minutes := self.auto_refresh():
@@ -506,28 +527,23 @@ class PrintersTool(ListWorkspace):
         if self.sample_shown():
             return  # a guide is open: its samples aren't news, and the next turn comes soon
         if self._run is None and doc is not None and doc.hosts.hosts:
-            before = dict(self._attention)
+            before = self._with_reasons(self.notify_reasons())
             self.check_printers(doc.hosts.hosts, quiet=True)
             if self._run is not None:
                 self._before_auto = before
 
-    def _notify_new(self, before: dict[str, Attention]) -> None:
-        """One notification for the printers that need attention now and didn't before (or
-        for another reason), as Settings asks."""
-        wanted = {
-            NOTIFY_OFF: (),
-            NOTIFY_STOPS: (Attention.STOPPED, Attention.OFFLINE),
-            NOTIFY_LOW: tuple(Attention),
-        }[self.notify_choice()]
+    def _notify_new(self, before: dict[str, Reason]) -> None:
+        """One notification for the printers with a reason ticked for it now that they didn't
+        have before (or another one)."""
         doc, low = self._doc, self.low_level()
-        if doc is None or not wanted:
+        if doc is None:
             return
+        now = self._with_reasons(self.notify_reasons())
         lines = []
         for printer in sorted(doc.hosts.hosts, key=lambda p: p.name.casefold()):
-            why = self._attention.get(printer.id)
+            why = now.get(printer.id)
             checked = self._checked.get(printer.id)
-            if why in wanted and checked is not None and before.get(printer.id) != why:
-                assert why is not None
+            if why is not None and checked is not None and before.get(printer.id) != why:
                 reason = why_text(checked, why, low)
                 lines.append(_("{name}: {why}").format(name=printer.name, why=reason))
         if lines:
@@ -596,16 +612,22 @@ class PrintersTool(ListWorkspace):
     def attention_text(self, n: int) -> str:
         return attention_text(n)
 
-    def attention(self) -> dict[str, Attention]:
+    def attention(self) -> dict[str, Reason]:
         """The open list's printers that need attention, by id, from their last Refresh."""
         return dict(self._attention)
 
-    def _count_attention(self) -> None:
+    def _with_reasons(self, wanted: frozenset[Reason]) -> dict[str, Reason]:
+        """The open list's printers with one of the `wanted` reasons: the first one, by id."""
         doc, low = self._doc, self.low_level()
-        found: dict[str, Attention] = {}
+        found: dict[str, Reason] = {}
         for printer in doc.hosts.hosts if doc else ():
-            if (why := status.attention(self._checked.get(printer.id), low)) is not None:
+            checked = self._checked.get(printer.id)
+            if (why := status.attention(checked, low, wanted)) is not None:
                 found[printer.id] = why
+        return found
+
+    def _count_attention(self) -> None:
+        found = self._with_reasons(self.warn_reasons())
         changed = found != self._attention
         self._attention = found
         if self._only_attention and not found:

@@ -99,8 +99,10 @@ detalhes.
 
 ![A faixa acima da tabela de impressoras: quantas requerem atenção e por quê, com um botão Mostrar](../images/printers-warnings-dark-pt-BR.png)
 
-- Uma impressora **requer atenção** quando parou (status vermelho), não respondeu (**Offline**) ou
-  tem um toner, tinta, cilindro ou caixa no nível baixo ou abaixo dele.
+- Uma impressora **requer atenção** quando um dos motivos marcados em **No CapyPanel** vale para
+  ela (veja [Escolher quais problemas avisam](#escolher-quais-problemas-avisam)). Para começar, são
+  **Offline**, **Papel atolado**, **Sem toner** ou **Suprimento baixo**: um toner, tinta, cilindro
+  ou caixa no nível baixo ou abaixo dele.
 - Uma contagem vermelha no ícone de Impressoras na barra lateral e uma faixa acima da tabela dizem
   quantas, como em "3 impressoras requerem atenção: 1 parada, 1 offline, 1 com suprimento baixo." O
   **Mostrar** lista só essas impressoras; o **Mostrar todas** volta.
@@ -110,17 +112,43 @@ detalhes.
 
     A mensagem "Requer atenção" da própria impressora não conta, e nem a **Recusada** e a
     **Ilegível**: essas dizem que o CapyPanel não conseguiu ler a impressora, não que ela está com
-    problema.
+    problema. Na faixa, papel atolado, sem papel e sem toner contam como "parada".
 
     O **Mostrar** tira as impressoras da lista inteira: qualquer grupo, tag ou pesquisa é limpo
     antes, para nenhuma delas ficar escondida. A faixa passa a dizer "Mostrando as 3 impressoras que
     requerem atenção." Escolher um grupo ou uma tag, ou pesquisar, também traz todas de volta.
 
-??? note "Notificações do Windows"
+## Escolher quais problemas avisam
 
-    Em **Configurações > Impressoras > Avisos e suprimentos > Notificação do Windows** você escolhe
-    o que notificar: **Desligado**, **Parada ou offline** (o padrão) ou **Também suprimento
-    baixo**. "Depois de uma atualização sozinha, para o que mudou desde a anterior."
+![A seção Avisos nas Configurações: uma linha por motivo, marcada em No CapyPanel e Notificação do Windows, no padrão](../images/settings-printers-warnings-dark-pt-BR.png)
+
+1. Abra **Configurações > Impressoras > Avisos e suprimentos**. A seção **Avisos** tem uma linha
+   para cada motivo: **Offline**, **Papel atolado**, **Parada**, **Sem papel**, **Sem toner** e
+   **Suprimento baixo**.
+2. Marque um motivo em **No CapyPanel** para ele entrar na contagem vermelha e na faixa, e em
+   **Notificação do Windows** para ser avisado dele depois de um Atualizar sozinho.
+3. Clique em **Salvar**.
+
+Para começar, **Offline**, **Papel atolado**, **Sem toner** e **Suprimento baixo** vêm marcados nas
+duas colunas. O **Restaurar padrão** volta para eles; fica apagado enquanto são eles os marcados. As
+marcas só escolhem o que avisa: a coluna **Status** da tabela e os Detalhes sempre mostram todos os
+problemas.
+
+??? note "Mais sobre os motivos"
+
+    - **Parada** é uma impressora parada sem dizer o motivo, como num erro de serviço. **Offline**
+      é uma que não respondeu ao Atualizar. **Suprimento baixo** é um suprimento no **Nível baixo de
+      suprimento**, em **Suprimentos** na mesma página, ou abaixo dele.
+    - Uma impressora conta quando qualquer um dos motivos marcados vale para ela, e a faixa e a
+      notificação dizem qual.
+    - Porta aberta, bandeja faltando, bandeja de saída cheia, impressora pausada ou suprimento
+      faltando aparecem no Status e nos Detalhes, mas nunca avisam: só acontecem enquanto alguém
+      está na impressora. Uma impressora parada por um deles também não conta como **Parada**.
+    - Antes da 0.27, as Configurações tinham uma única escolha de **Notificação do Windows**. Ela
+      passa uma vez para a tabela: **Desligado** não marca nenhuma notificação, **Também suprimento
+      baixo** marca todos os motivos, e **Parada ou offline** fica com as marcas acima.
+
+??? note "Notificações do Windows"
 
     Sai uma notificação por Atualizar sozinho, e só do que mudou: uma impressora que já estava
     offline não é citada de novo. O título as conta, "2 impressoras requerem atenção", e uma linha

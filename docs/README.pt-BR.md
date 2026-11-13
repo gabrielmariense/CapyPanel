@@ -50,5 +50,5 @@ embaixo, e toda página termina com as mensagens que você pode ver e o que faze
 | [A ferramenta Perfis de usuário](profiles/user-profiles.pt-BR.md) | Os perfis do Windows de um PC, quais podem ser excluídos, e como excluí-los |
 | [Configurações e arquivos](settings-and-files.pt-BR.md) | Cada configuração, e onde o CapyPanel guarda os arquivos |
 
-Estas páginas descrevem a versão atual, a 0.26.4; [Novidades](whats-new.pt-BR.md) lista o que
+Estas páginas descrevem a versão atual, a 0.27.0; [Novidades](whats-new.pt-BR.md) lista o que
 mudou. O CapyPanel está em beta, então elas crescem a cada funcionalidade.

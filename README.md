@@ -14,7 +14,7 @@ them through Remote Desktop or the VNC viewer you already use. It keeps your pri
 the details you need and their web pages a click away, and it finds the Windows user profiles
 nobody uses any more on a PC so you can delete them.
 
-> **Status: beta (0.26.0).** [Download the zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
+> **Status: beta (0.27.0).** [Download the zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
 > unzip it and run CapyPanel.exe. It updates itself when you say so.
 
 ![CapyPanel's Home page: the sidebar, the capybara, and a tile each for Hosts, Printers and User profiles](docs/images/home-dark.png)

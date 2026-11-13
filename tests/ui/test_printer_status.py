@@ -9,8 +9,9 @@ from functools import partial
 from pathlib import Path
 
 import pytest
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QColor
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QTreeWidgetItem
 from snmp_agent import Objects, running
 
@@ -27,12 +28,21 @@ from capypanel.ui.printers_tool.attention import notice_text
 from capypanel.ui.printers_tool.settings import (
     AUTO_REFRESH,
     BARS,
+    NOTIFY,
     NOTIFY_LOW,
-    NOTIFY_STOPS,
+    NOTIFY_OFF,
     SNMP_VERSION,
     TONER_VIEW,
 )
-from capypanel.ui.printers_tool.status import Checked, amber, green, grey, red
+from capypanel.ui.printers_tool.status import (
+    DEFAULT_REASONS,
+    Checked,
+    Reason,
+    amber,
+    green,
+    grey,
+    red,
+)
 from capypanel.ui.printers_tool.table import BAR_WIDTH, ROLE_SUPPLY
 from capypanel.ui.printers_tool.tool import PrintersTool
 from capypanel.ui.themes import engine as themes
@@ -524,25 +534,79 @@ def test_refresh_on_its_own_notifies_what_is_new(
 ) -> None:
     sent: list[tuple[str, str]] = []
     printers.notify_requested.connect(lambda title, text: sent.append((title, text)))
-    assert printers.notify_choice() == NOTIFY_STOPS  # the default
+    assert printers.notify_reasons() == DEFAULT_REASONS  # offline, jam, no toner, low
     with running(COLOUR) as agent:
         monkeypatch.setattr(reading, "read", partial(reading.read, port=agent.port, timeout=0.2))
         printers._auto_refresh()
         _wait(printers)
-        # Stopped or offline only: the lab printer's low cyan isn't in it.
-        assert sent == [("1 printer needs attention", "NO-ANSWER: Offline")]
+        assert sent == [(
+            "2 printers need attention", "3F-LAB-01: Cyan 8 %\nNO-ANSWER: Offline"
+        )]  # fmt: skip
         printers._auto_refresh()  # nothing new since the last one: no notification
         _wait(printers)
         assert len(sent) == 1
         printers.check_printers(printers.document.hosts.hosts)  # type: ignore[union-attr]
         _wait(printers)  # F5 doesn't notify: the window is in front of you
         assert len(sent) == 1
-        printers.set_notify_choice(NOTIFY_LOW)
+        # Only Offline ticked for notifications; the count above the table keeps its own.
+        printers.set_warnings(printers.warn_reasons(), frozenset({Reason.OFFLINE}))
         printers._checked.clear()
         printers._count_attention()
         printers._auto_refresh()
         _wait(printers)
-    assert sent[-1] == (
-        "2 printers need attention", "3F-LAB-01: Cyan 8 %\nNO-ANSWER: Offline"
-    )  # fmt: skip
+    assert sent[-1] == ("1 printer needs attention", "NO-ANSWER: Offline")
+    assert len(printers.attention()) == 2
     assert notice_text([f"P{n}" for n in range(7)]).splitlines()[-1] == "and 2 more"
+
+
+def test_the_old_notification_choice_carries_over_once(printers: PrintersTool) -> None:
+    for old, now in ((NOTIFY_OFF, frozenset()), (NOTIFY_LOW, frozenset(Reason)),
+                     ("stops", DEFAULT_REASONS), (None, DEFAULT_REASONS)):  # fmt: skip
+        printers.prefs.pop(settings_module.WARN_NOTIFY, None)
+        printers.prefs[NOTIFY] = old
+        assert printers.notify_reasons() == now
+    printers.prefs[NOTIFY] = NOTIFY_OFF
+    printers.set_warnings(DEFAULT_REASONS, frozenset({Reason.OFFLINE}))
+    assert NOTIFY not in printers.prefs  # carried over: the old choice goes
+    assert printers.prefs[settings_module.WARN_NOTIFY] == ["offline"]
+    assert printers.notify_reasons() == {Reason.OFFLINE}
+
+
+def test_the_warnings_table_ticks_what_warns(printers: PrintersTool) -> None:
+    group = printers.settings_group()
+    group.build()
+    table = group.general.warnings
+    rows = [table.table.topLevelItem(i) for i in range(table.table.topLevelItemCount())]
+    row = {r.text(0): r for r in rows if r is not None}
+    assert list(row) == ["Offline", "Out of paper", "Out of toner", "Paper jam", "Stopped",
+                         "Supply low"]  # fmt: skip
+    assert table.here() == table.notify() == DEFAULT_REASONS
+    assert not table.restore.isEnabled()  # the defaults are what's ticked
+    assert table.table.verticalScrollBarPolicy() == Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+    assert row["Stopped"].toolTip(0) == "Stopped without saying why."
+
+    lab = printers.document.hosts.hosts[0]  # type: ignore[union-attr]
+    printers._checked[lab.id] = Checked(NOW, offline=True)
+    printers._count_attention()
+    assert printers.attention() == {lab.id: Reason.OFFLINE}
+    row["Offline"].setCheckState(1, Qt.CheckState.Unchecked)  # In CapyPanel
+    assert printers.warn_reasons() == DEFAULT_REASONS - {Reason.OFFLINE}
+    assert printers.notify_reasons() == DEFAULT_REASONS  # its own column
+    assert printers.attention() == {} and printers.attention_strip.isHidden()
+    assert table.restore.isEnabled()
+    table.restore.click()
+    assert printers.warn_reasons() == DEFAULT_REASONS
+    assert printers.attention() == {lab.id: Reason.OFFLINE}
+    assert not table.restore.isEnabled()
+
+    # A click anywhere on a tick's cell ticks it: the box sits in the middle.
+    table.resize(700, 500)
+    table.show()
+    QApplication.processEvents()
+    cell = table.table.visualItemRect(row["Out of paper"])
+    left = table.table.header().sectionViewportPosition(2) + 4
+    QTest.mouseClick(table.table.viewport(), Qt.MouseButton.LeftButton,
+                     pos=QPoint(left, cell.center().y()))  # fmt: skip
+    assert printers.notify_reasons() == DEFAULT_REASONS | {Reason.NO_PAPER}
+    assert printers.warn_reasons() == DEFAULT_REASONS
+    table.hide()

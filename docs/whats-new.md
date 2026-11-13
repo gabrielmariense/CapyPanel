@@ -3,6 +3,15 @@
 The changes in each release that you'll notice. The
 [releases on GitHub](https://github.com/gabrielmariense/CapyPanel/releases) have the downloads.
 
+## 0.27.0
+
+- **Settings > Printers > Warnings and supplies** has a new **Warnings** table: tick which
+  problems count in CapyPanel's warnings and which send a Windows notification, reason by reason.
+  It replaces the **Windows notification** choice, which carries over.
+- What warns by default changed. A printer out of paper or stopped without saying why no longer
+  warns (tick **Out of paper** or **Stopped** to bring them back), a door open or a tray pulled out
+  never does, and a supply at the low level now also sends a notification.
+
 ## 0.26.4
 
 - **Install and restart** now checks the new version before CapyPanel closes, then says CapyPanel
