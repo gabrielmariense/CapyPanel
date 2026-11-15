@@ -1956,6 +1956,9 @@ msgstr "Manter aberto na bandeja"
 msgid "Kept"
 msgstr "Guardada"
 
+msgid "Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches and Tab moves between fields."
+msgstr "Reservada ao próprio CapyPanel: F1 é da ajuda, Esc fecha, Ctrl+F busca e Tab passa de um campo a outro."
+
 msgid "Kept in"
 msgstr "Guardada em"
 
@@ -4956,10 +4959,6 @@ msgstr "{key} já é a tecla de {other}. Passar para {command}?"
 #, python-brace-format
 msgid "{key} is for typing in names and searches: use it with Ctrl or Alt."
 msgstr "{key} serve para digitar em nomes e buscas: use com Ctrl ou Alt."
-
-#, python-brace-format
-msgid "{key} is kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches and Tab moves between fields."
-msgstr "{key} fica reservada ao próprio CapyPanel: F1 é da ajuda, Esc fecha, Ctrl+F busca e Tab passa de um campo a outro."
 
 #, python-brace-format
 msgid "{kind} from {computer}"

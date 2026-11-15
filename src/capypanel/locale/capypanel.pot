@@ -2036,6 +2036,11 @@ msgstr ""
 msgid "Kept"
 msgstr ""
 
+msgid ""
+"Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches "
+"and Tab moves between fields."
+msgstr ""
+
 msgid "Kept in"
 msgstr ""
 
@@ -5216,12 +5221,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "{key} is for typing in names and searches: use it with Ctrl or Alt."
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"{key} is kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F "
-"searches and Tab moves between fields."
 msgstr ""
 
 #, python-brace-format

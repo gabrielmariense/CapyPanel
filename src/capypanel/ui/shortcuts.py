@@ -74,8 +74,9 @@ def refused(keys: str) -> str:
     if sequence.isEmpty() or sequence.count() != 1:
         return _("Press one key, with Ctrl, Alt or Shift if you like.")
     if portable(sequence) in {portable(r) for r in RESERVED}:
-        return _("{key} is kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F "
-                 "searches and Tab moves between fields.").format(key=shown(keys))  # fmt: skip
+        # Shown right after the key is pressed, so it isn't named again (F1 would read twice).
+        return _("Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches and "
+                 "Tab moves between fields.")  # fmt: skip
     combo = sequence[0]  # type: ignore[index]  # PySide6 has [], its stubs lack it
     mods = combo.keyboardModifiers()
     typed = Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier
