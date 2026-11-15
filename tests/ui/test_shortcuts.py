@@ -86,6 +86,7 @@ def test_every_command_is_listed_with_today_s_key_and_power_never_is(window: Cap
     assert [item.text(c) for c in range(3)] == ["Edit…", "Hosts, Printers", "F2"]
     assert page.item_of("app.settings").text(1) == "Everywhere"
     assert page.item_of("hosts.connect_host").text(KEY) == "Enter"  # Windows' name for Return
+    assert page.table.property("mostRows") == shortcuts_page.ROWS  # a long list, a tall table
 
 
 def test_a_new_key_is_kept_and_works_at_once_in_every_tool(window: CapyWindow) -> None:

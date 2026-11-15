@@ -23,6 +23,7 @@ MOST_ROWS = 6  # taller lists scroll
 FEWEST_ROWS = 3  # a short list still looks like a list
 WIDEST = 480  # px: only a paragraph (a license notice) is cut, its whole text in the tooltip
 _FITS = "fitWidths"  # property: each column's width for its text, set by fit_rows
+_MOST = "mostRows"  # property: the rows it shows before it scrolls, set by fit_rows
 
 
 class _Refit(QObject):
@@ -77,8 +78,8 @@ def fit_columns(table: QTreeWidget) -> None:
             table.resizeColumnToContents(column)
 
 
-def fit_rows(table: QTreeWidget) -> None:
-    """As tall as its rows, between FEWEST_ROWS and MOST_ROWS: no empty space under a short
+def fit_rows(table: QTreeWidget, most: int = MOST_ROWS) -> None:
+    """As tall as its rows, between FEWEST_ROWS and `most`: no empty space under a short
     list, a scroll bar on a long one. Each column fits its text (up to WIDEST), the last one
     stretching into the room left. Call it after filling the table."""
     fits = []
@@ -86,6 +87,7 @@ def fit_rows(table: QTreeWidget) -> None:
         table.resizeColumnToContents(column)
         fits.append(min(table.columnWidth(column) + 12, WIDEST))
     table.setProperty(_FITS, fits)
+    table.setProperty(_MOST, most)
     _fit_width(table)
 
 
@@ -97,7 +99,10 @@ def _fit_width(table: QTreeWidget) -> None:
         table.setColumnWidth(column, width)
     room = table.viewport().width() - sum(fits[:-1])
     table.setColumnWidth(len(fits) - 1, max(fits[-1], room))
-    rows = min(max(table.topLevelItemCount(), FEWEST_ROWS), MOST_ROWS)
+    most = table.property(_MOST)
+    rows = min(
+        max(table.topLevelItemCount(), FEWEST_ROWS), most if isinstance(most, int) else MOST_ROWS
+    )
     first = table.topLevelItem(0)
     row = table.sizeHintForRow(0) if first is not None else -1
     if row <= 0:

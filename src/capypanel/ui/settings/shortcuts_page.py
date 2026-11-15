@@ -15,6 +15,7 @@ from capypanel.ui.shortcuts import Keys, Row
 from capypanel.ui.tables import fit_rows, grid_table, with_buttons
 
 COMMAND, WHERE, KEY = range(3)  # the table's columns
+ROWS = 14  # shown before it scrolls: about sixty commands, a page that's mostly this list
 ROW_ROLE = Qt.ItemDataRole.UserRole  # the row's command id
 MODIFIERS = (Qt.Key.Key_Shift, Qt.Key.Key_Control, Qt.Key.Key_Alt, Qt.Key.Key_Meta,
              Qt.Key.Key_AltGr, Qt.Key.Key_unknown)  # fmt: skip
@@ -103,7 +104,7 @@ class ShortcutsPage(Page):
             item.setData(COMMAND, ROW_ROLE, row.id)
             self.table.addTopLevelItem(item)
             self._show_key(item)
-        fit_rows(self.table)
+        fit_rows(self.table, ROWS)
         self._enable()
 
     def _show_key(self, item: QTreeWidgetItem) -> None:
