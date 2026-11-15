@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-13 15:13-0300\n"
+"POT-Creation-Date: 2026-11-14 22:00-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -898,9 +898,6 @@ msgstr ""
 msgid "CapyPanel is built with the following software:"
 msgstr ""
 
-msgid "CapyPanel is up to date"
-msgstr ""
-
 msgid ""
 "CapyPanel keeps the computers and printers you look after in one window. "
 "You can see which are on and who's signed in, connect to them, run "
@@ -914,15 +911,7 @@ msgid ""
 msgstr ""
 
 #, python-brace-format
-msgid "CapyPanel {new} is installed"
-msgstr ""
-
-#, python-brace-format
-msgid "CapyPanel {new} is out"
-msgstr ""
-
-#, python-brace-format
-msgid "CapyPanel {version} asks GitHub for its newest release."
+msgid "CapyPanel {version}"
 msgstr ""
 
 msgid "CapyPanel — dark"
@@ -2313,9 +2302,6 @@ msgstr ""
 msgid "No name"
 msgstr ""
 
-msgid "No notes for this release."
-msgstr ""
-
 msgid "No one"
 msgstr ""
 
@@ -2431,6 +2417,9 @@ msgid "Not used: made by another user"
 msgstr ""
 
 msgid "Notes"
+msgstr ""
+
+msgid "Notes on GitHub"
 msgstr ""
 
 msgid ""
@@ -4064,9 +4053,6 @@ msgid ""
 "the leftover in the registry."
 msgstr ""
 
-msgid "The release on GitHub"
-msgstr ""
-
 msgid "The release's SHA-256 file doesn't name its zip"
 msgstr ""
 
@@ -4454,7 +4440,10 @@ msgstr ""
 msgid "Unused for:"
 msgstr ""
 
-msgid "Update CapyPanel"
+msgid "Update available"
+msgstr ""
+
+msgid "Update installed"
 msgstr ""
 
 #, python-brace-format
@@ -4463,12 +4452,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Updated from {old} to {new}."
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"Updated from {old}. Your settings, lists and saved logins are as they "
-"were."
 msgstr ""
 
 msgid "Updates"
@@ -4713,14 +4696,11 @@ msgstr ""
 msgid "Yellow"
 msgstr ""
 
-#, python-brace-format
-msgid "You asked at {when}."
+msgid "You already have the newest version."
 msgstr ""
 
 #, python-brace-format
-msgid ""
-"You have {current}. Your settings, lists and saved logins stay as they "
-"are."
+msgid "You asked at {when}."
 msgstr ""
 
 msgid "Your Windows account"
@@ -4746,6 +4726,12 @@ msgid "Your printers"
 msgstr ""
 
 msgid "Your printers: status and toner, web pages, reports."
+msgstr ""
+
+msgid "Your settings, lists and saved logins are as they were."
+msgstr ""
+
+msgid "Your settings, lists and saved logins stay as they are."
 msgstr ""
 
 msgid "Yours"
@@ -5736,10 +5722,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "{user}'s folder"
-msgstr ""
-
-#, python-brace-format
-msgid "{version} is the newest release."
 msgstr ""
 
 #, python-brace-format

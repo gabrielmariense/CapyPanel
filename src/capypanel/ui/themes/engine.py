@@ -587,6 +587,20 @@ QMenuBar::item { padding: 4px 10px; border-radius: %(r2)spx; color: %(text2)s;
 QMenuBar::item:selected { background: %(hover)s; color: %(text)s; }
 /* A newer release: a button at the menu bar's right end, in the accent made readable. */
 QToolButton#updateButton { color: %(accent_text)s; font-weight: 600; padding: 2px 10px; }
+/* The update windows, Windows 11's dialog look: a soft body over a footer band; the version
+   in a chip; each change with a check mark; the download's words and bar in the footer. */
+QWidget#updateBody { background: %(section)s; }
+QWidget#updateFooter { background: %(bg)s; border-top: 1px solid %(section_edge)s; }
+QWidget#updateFooter QProgressBar { background: %(section)s; }
+QScrollArea#updateChanges, QWidget#updateRows { background: transparent; border: none; }
+QLabel#updateTitle { color: %(text)s; font-size: 20px; font-weight: 600; }
+QLabel#updateLine { color: %(text2)s; font-size: 13px; }
+QLabel#updateChange { color: %(text)s; font-size: 13px; }
+QLabel#updateMark { color: %(accent_hover)s; font-size: 13px; }
+QLabel#updateChip { color: %(text)s; background: %(sel_solid)s; font-size: 12px; font-weight: 600;
+                    border-radius: 10px; padding: 3px 10px; }
+QLabel#updateLink, QLabel#updateStatus { font-size: 12px; }
+QLabel#updateStatus { color: %(text2)s; }
 QMenu { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; padding: 5px; }
 QMenu::item { padding: 6px 28px 6px 30px; border-radius: %(r2)spx; }
 QMenu::item:selected { background: %(hover)s; }
@@ -850,6 +864,20 @@ QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; }
 QToolButton#updateButton { color: %(accent_text)s; font-weight: 600; padding: 2px 10px;
                            border: none; background: transparent; }
 QToolButton#updateButton:hover { background: %(hover)s; }
+/* The update windows, Windows 11's dialog look: a soft body over a footer band; the version
+   in a chip; each change with a check mark; the download's words and bar in the footer. */
+QWidget#updateBody { background: %(section)s; }
+QWidget#updateFooter { background: %(bg)s; border-top: 1px solid %(section_edge)s; }
+QWidget#updateFooter QProgressBar { background: %(section)s; }
+QScrollArea#updateChanges, QWidget#updateRows { background: transparent; border: none; }
+QLabel#updateTitle { color: %(text)s; font-size: 20px; font-weight: 600; }
+QLabel#updateLine { color: %(text2)s; font-size: 13px; }
+QLabel#updateChange { color: %(text)s; font-size: 13px; }
+QLabel#updateMark { color: %(accent_text)s; font-size: 13px; }
+QLabel#updateChip { color: %(text)s; background: %(sel)s; font-size: 12px; font-weight: 600;
+                    border-radius: 10px; padding: 3px 10px; }
+QLabel#updateLink, QLabel#updateStatus { font-size: 12px; }
+QLabel#updateStatus { color: %(text2)s; }
 QToolBar#main { border: none; border-bottom: 1px solid %(border)s; }
 QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; }

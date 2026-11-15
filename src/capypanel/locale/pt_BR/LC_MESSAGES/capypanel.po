@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-13 15:13-0300\n"
+"POT-Creation-Date: 2026-11-14 22:00-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -874,9 +874,6 @@ msgstr ""
 msgid "CapyPanel is built with the following software:"
 msgstr "O CapyPanel é feito com os seguintes softwares:"
 
-msgid "CapyPanel is up to date"
-msgstr "Você tem a versão mais nova"
-
 msgid "CapyPanel keeps the computers and printers you look after in one window. You can see which are on and who's signed in, connect to them, run commands and check the toner. These cards show you around."
 msgstr "O CapyPanel reúne numa janela só os computadores e as impressoras sob seus cuidados. Dá para ver quais estão ligados e quem está conectado, conectar a eles, rodar comandos e conferir o toner. Estes cartões mostram o caminho."
 
@@ -884,16 +881,8 @@ msgid "CapyPanel reads printers over SNMP and never changes anything on them. Mo
 msgstr "O CapyPanel lê as impressoras por SNMP e nunca muda nada nelas. A maioria responde à comunidade \"public\". Se as suas usam outra, ou SNMP v3, ajuste em Configurações › Impressoras › Conexão."
 
 #, python-brace-format
-msgid "CapyPanel {new} is installed"
-msgstr "O CapyPanel {new} foi instalado"
-
-#, python-brace-format
-msgid "CapyPanel {new} is out"
-msgstr "Saiu o CapyPanel {new}"
-
-#, python-brace-format
-msgid "CapyPanel {version} asks GitHub for its newest release."
-msgstr "O CapyPanel {version} pergunta ao GitHub qual é a versão mais nova."
+msgid "CapyPanel {version}"
+msgstr "CapyPanel {version}"
 
 msgid "CapyPanel — dark"
 msgstr "CapyPanel — escuro"
@@ -2227,9 +2216,6 @@ msgstr "Sem mensagem: ele desliga na hora."
 msgid "No name"
 msgstr "Sem nome"
 
-msgid "No notes for this release."
-msgstr "Esta versão não tem notas."
-
 msgid "No one"
 msgstr "Ninguém"
 
@@ -2342,6 +2328,9 @@ msgstr "Não usada: criada por outro usuário"
 
 msgid "Notes"
 msgstr "Notas"
+
+msgid "Notes on GitHub"
+msgstr "Notas no GitHub"
 
 msgid "Nothing answered, neither ping nor the usual ports: the computer is off, not on the network, or a firewall blocks everything."
 msgstr "Nada respondeu, nem o ping nem as portas usuais: o computador está desligado, fora da rede ou um firewall bloqueia tudo."
@@ -3860,9 +3849,6 @@ msgstr "A comunidade somente leitura à qual suas impressoras respondem. A maior
 msgid "The registry entry exists, but its folder is gone. Deleting removes only the leftover in the registry."
 msgstr "O registro existe, mas a pasta sumiu. Excluir remove só a sobra no registro."
 
-msgid "The release on GitHub"
-msgstr "A versão no GitHub"
-
 msgid "The release's SHA-256 file doesn't name its zip"
 msgstr "O arquivo SHA-256 da versão não cita o zip dela"
 
@@ -4228,8 +4214,11 @@ msgstr "Até um computador aceitar a conta, o CapyPanel para no primeiro que a r
 msgid "Unused for:"
 msgstr "Sem uso há:"
 
-msgid "Update CapyPanel"
-msgstr "Nova versão do CapyPanel"
+msgid "Update available"
+msgstr "Atualização disponível"
+
+msgid "Update installed"
+msgstr "Atualização instalada"
 
 #, python-brace-format
 msgid "Update {version}"
@@ -4238,10 +4227,6 @@ msgstr "Nova versão {version}"
 #, python-brace-format
 msgid "Updated from {old} to {new}."
 msgstr "Instalada a versão {new} (antes era a {old})."
-
-#, python-brace-format
-msgid "Updated from {old}. Your settings, lists and saved logins are as they were."
-msgstr "Atualizado a partir da {old}. Suas configurações, listas e logins salvos continuam como estavam."
 
 msgid "Updates"
 msgstr "Novas versões"
@@ -4461,13 +4446,12 @@ msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
 msgid "Yellow"
 msgstr "Amarelo"
 
+msgid "You already have the newest version."
+msgstr "Você já tem a versão mais nova."
+
 #, python-brace-format
 msgid "You asked at {when}."
 msgstr "Você pediu às {when}."
-
-#, python-brace-format
-msgid "You have {current}. Your settings, lists and saved logins stay as they are."
-msgstr "Você tem a {current}. Suas configurações, listas e logins salvos continuam como estão."
 
 msgid "Your Windows account"
 msgstr "Sua conta do Windows"
@@ -4493,6 +4477,12 @@ msgstr "Suas impressoras"
 
 msgid "Your printers: status and toner, web pages, reports."
 msgstr "Suas impressoras: status e toner, páginas web, relatórios."
+
+msgid "Your settings, lists and saved logins are as they were."
+msgstr "Suas configurações, listas e logins salvos continuam como estavam."
+
+msgid "Your settings, lists and saved logins stay as they are."
+msgstr "Suas configurações, listas e logins salvos continuam como estão."
 
 msgid "Yours"
 msgstr "Sua"
@@ -5458,10 +5448,6 @@ msgstr "{user} (desconectado)"
 #, python-brace-format
 msgid "{user}'s folder"
 msgstr "Pasta de {user}"
-
-#, python-brace-format
-msgid "{version} is the newest release."
-msgstr "A {version} é a versão mais nova."
 
 #, python-brace-format
 msgid "{what}, in {list}"
