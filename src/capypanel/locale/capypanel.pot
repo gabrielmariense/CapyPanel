@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 22:14-0300\n"
+"POT-Creation-Date: 2026-11-14 22:22-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -154,6 +154,9 @@ msgstr[0] ""
 msgstr[1] ""
 
 msgid "&Formats…"
+msgstr ""
+
+msgid "&Give it"
 msgstr ""
 
 msgid "&Group:"
@@ -801,6 +804,9 @@ msgid "C&hoose file…"
 msgstr ""
 
 msgid "C&hoose…"
+msgstr ""
+
+msgid "C&lear"
 msgstr ""
 
 msgid "CSV files (*.csv *.txt);;All files (*)"
@@ -1502,6 +1508,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Double-click a command, then press its new key. A command Hosts and "
+"Printers share has one key for both. F1 and Esc stay free for help and "
+"closing."
+msgstr ""
+
+msgid ""
 "Double-click a host to open it, or pick hosts and click Scan to scan them"
 " here."
 msgstr ""
@@ -1653,6 +1665,9 @@ msgid "Everyone on this PC"
 msgstr ""
 
 msgid "Everyone on this PC (shared)"
+msgstr ""
+
+msgid "Everywhere"
 msgstr ""
 
 msgid "Export CSV"
@@ -2022,6 +2037,12 @@ msgid "Kept in"
 msgstr ""
 
 msgid "Kept: type to change it"
+msgstr ""
+
+msgid "Key"
+msgstr ""
+
+msgid "Keyboard shortcuts"
 msgstr ""
 
 msgid "Kind"
@@ -2834,6 +2855,12 @@ msgstr ""
 msgid "Preset name:"
 msgstr ""
 
+msgid "Press one key, with Ctrl, Alt or Shift if you like."
+msgstr ""
+
+msgid "Press the new key…"
+msgstr ""
+
 msgid "Preview"
 msgstr ""
 
@@ -3209,6 +3236,9 @@ msgid "Restarts at {when}"
 msgstr ""
 
 msgid "Restart…"
+msgstr ""
+
+msgid "Restore &default"
 msgstr ""
 
 msgid "Restore built-in profiles"
@@ -5181,6 +5211,20 @@ msgid "{host}: sizes counted; {n} couldn't be read."
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"{key} is kept for CapyPanel itself: F1 for help, Esc to close, Ctrl+F to "
+"search, Tab to move around."
+msgstr ""
+
+#, python-brace-format
+msgid "{key} is typed as text in names and searches: add Ctrl or Alt."
+msgstr ""
+
+#, python-brace-format
+msgid "{key} runs {other} now. Give it to {command} instead?"
+msgstr ""
+
+#, python-brace-format
 msgid "{kind} from {computer}"
 msgstr ""
 
@@ -5595,6 +5639,10 @@ msgstr[1] ""
 
 #, python-brace-format
 msgid "{online} online · {offline} offline"
+msgstr ""
+
+#, python-brace-format
+msgid "{other} is left with no key."
 msgstr ""
 
 #, python-brace-format

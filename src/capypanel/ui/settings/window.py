@@ -29,6 +29,8 @@ from capypanel.ui.notes import hint
 from capypanel.ui.settings import search
 from capypanel.ui.settings.group import SettingsGroup
 from capypanel.ui.settings.pages import GeneralPage, Page, Section
+from capypanel.ui.settings.shortcuts_page import ShortcutsPage
+from capypanel.ui.shortcuts import Keys
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import ToolInfo
 
@@ -62,9 +64,11 @@ class SettingsDialog(QDialog):
         closing: str = settings.CLOSE_ASK,
         updates: str = "start",
         updates_editable: bool = True,
+        keys: Keys | None = None,
+        place_names: dict[str, str] | None = None,
     ) -> None:
         """tools: the window's tools; start: what the window shows at start; closing: what
-        its X does."""
+        its X does; keys: the keyboard shortcuts (place_names: each tool's name, by its id)."""
         super().__init__(parent)
         self._paths = paths
         self._registry = registry
@@ -73,6 +77,7 @@ class SettingsDialog(QDialog):
         self._closing = closing
         self._updates, self._updates_editable = updates, updates_editable
         self._groups = list(groups)
+        self._keys, self._place_names = keys, dict(place_names or {})
         # Contents replaced on a language switch stay alive, hidden: deleting a window part
         # holding a list can crash Qt after a theme switch (see DECISIONS, code cleanup).
         self._old: list[QWidget] = []
@@ -102,8 +107,13 @@ class SettingsDialog(QDialog):
             self._paths.log_dir, portable=self._paths.portable, paths=self._paths
         )
         self.pages: dict[str, Page] = {"general": self.general}
-        # CapyPanel's page, then each tool's group: its label, then its pages.
-        self._layout_groups: list[tuple[str, tuple[str, ...]]] = [APP_GROUP]
+        app_pages = list(APP_GROUP[1])
+        if self._keys is not None:
+            self.shortcuts = ShortcutsPage(self._keys, self._place_names)
+            self.pages["shortcuts"] = self.shortcuts
+            app_pages.append("shortcuts")
+        # CapyPanel's pages, then each tool's group: its label, then its pages.
+        self._layout_groups: list[tuple[str, tuple[str, ...]]] = [(APP_GROUP[0], tuple(app_pages))]
         for group in self._groups:
             built = group.build()
             self.pages.update(built)
@@ -152,7 +162,13 @@ class SettingsDialog(QDialog):
             [metrics.horizontalAdvance(name) for name in names]
             + [
                 metrics.horizontalAdvance("   " + title)
-                for message in (*self._labels(), *self._tool_titles(), "General", "About")
+                for message in (
+                    *self._labels(),
+                    *self._tool_titles(),
+                    "General",
+                    "About",
+                    "Keyboard shortcuts",
+                )  # fmt: skip
                 for title in i18n.in_every_language(message)
             ]
         )

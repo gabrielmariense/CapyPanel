@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 22:14-0300\n"
+"POT-Creation-Date: 2026-11-14 22:22-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -156,6 +156,9 @@ msgstr[1] "&Esquecer {n} logins"
 
 msgid "&Formats…"
 msgstr "&Formatos…"
+
+msgid "&Give it"
+msgstr "&Passar"
 
 msgid "&Group:"
 msgstr "&Grupo:"
@@ -785,6 +788,9 @@ msgstr "Escol&her arquivo…"
 
 msgid "C&hoose…"
 msgstr "Escol&her…"
+
+msgid "C&lear"
+msgstr "&Limpar"
 
 msgid "CSV files (*.csv *.txt);;All files (*)"
 msgstr "Arquivos CSV (*.csv *.txt);;Todos os arquivos (*)"
@@ -1462,6 +1468,9 @@ msgstr "Porta aberta"
 msgid "Double-click a cell, or press F2, to change it; the list above follows. Right-click for more."
 msgstr "Clique duas vezes numa célula, ou pressione F2, para alterá-la; a lista acima acompanha. Clique com o botão direito para mais opções."
 
+msgid "Double-click a command, then press its new key. A command Hosts and Printers share has one key for both. F1 and Esc stay free for help and closing."
+msgstr "Dê dois cliques num comando e pressione a nova tecla. Um comando que Hosts e Impressoras compartilham tem uma tecla só para os dois. F1 e Esc ficam livres para a ajuda e para fechar."
+
 msgid "Double-click a host to open it, or pick hosts and click Scan to scan them here."
 msgstr "Dê dois cliques num host para abri-lo, ou selecione hosts e clique em Escanear para escaneá-los daqui."
 
@@ -1602,6 +1611,9 @@ msgstr "Todos neste PC"
 
 msgid "Everyone on this PC (shared)"
 msgstr "Todos neste PC (compartilhada)"
+
+msgid "Everywhere"
+msgstr "Em todo lugar"
 
 msgid "Export CSV"
 msgstr "Exportar CSV"
@@ -1946,6 +1958,12 @@ msgstr "Guardada em"
 
 msgid "Kept: type to change it"
 msgstr "Guardada: digite para alterá-la"
+
+msgid "Key"
+msgstr "Tecla"
+
+msgid "Keyboard shortcuts"
+msgstr "Atalhos de teclado"
 
 msgid "Kind"
 msgstr "Tipo"
@@ -2705,6 +2723,12 @@ msgstr "&Impressoras:"
 msgid "Preset name:"
 msgstr "Nome da predefinição:"
 
+msgid "Press one key, with Ctrl, Alt or Shift if you like."
+msgstr "Pressione uma tecla, com Ctrl, Alt ou Shift se quiser."
+
+msgid "Press the new key…"
+msgstr "Pressione a nova tecla…"
+
 msgid "Preview"
 msgstr "Prévia"
 
@@ -3069,6 +3093,9 @@ msgstr "Reinicia às {when}"
 
 msgid "Restart…"
 msgstr "Reiniciar…"
+
+msgid "Restore &default"
+msgstr "Restaurar &padrão"
 
 msgid "Restore built-in profiles"
 msgstr "Restaurar os perfis que vêm com o app"
@@ -4923,6 +4950,18 @@ msgid "{host}: sizes counted; {n} couldn't be read."
 msgstr "{host}: tamanhos contados; {n} não puderam ser lidos."
 
 #, python-brace-format
+msgid "{key} is kept for CapyPanel itself: F1 for help, Esc to close, Ctrl+F to search, Tab to move around."
+msgstr "{key} fica reservada ao próprio CapyPanel: F1 para a ajuda, Esc para fechar, Ctrl+F para buscar, Tab para andar pela janela."
+
+#, python-brace-format
+msgid "{key} is typed as text in names and searches: add Ctrl or Alt."
+msgstr "{key} é digitada como texto em nomes e buscas: junte Ctrl ou Alt."
+
+#, python-brace-format
+msgid "{key} runs {other} now. Give it to {command} instead?"
+msgstr "{key} executa {other} agora. Passar para {command}?"
+
+#, python-brace-format
 msgid "{kind} from {computer}"
 msgstr "{kind} de {computer}"
 
@@ -5324,6 +5363,10 @@ msgstr[1] "{n} trabalhando"
 #, python-brace-format
 msgid "{online} online · {offline} offline"
 msgstr "{online} online · {offline} offline"
+
+#, python-brace-format
+msgid "{other} is left with no key."
+msgstr "{other} fica sem tecla."
 
 #, python-brace-format
 msgid "{pages} (from {month})"

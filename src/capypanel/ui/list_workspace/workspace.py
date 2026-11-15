@@ -4,7 +4,7 @@ table, Details panel, texts, add and edit dialog, search fields and right-click 
 
 import logging
 from collections.abc import Sequence
-from dataclasses import replace
+from dataclasses import fields, replace
 from pathlib import Path
 
 from PySide6.QtCore import QByteArray, QPoint, QRect, Qt, QTimer, Signal
@@ -57,8 +57,10 @@ from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar
 from capypanel.ui.menus import popup
 from capypanel.ui.new_list import ask_new_list
+from capypanel.ui.shortcuts import KeyCommand, portable
 
 log = logging.getLogger(__name__)
+SHARED_COMMANDS = {"copy_address", "refresh_shown"}  # in every list tool, beyond ListActions
 
 HIDDEN_KEY = "details_hidden"  # the Details parts this person chose not to see
 
@@ -307,6 +309,21 @@ class ListWorkspace(Tool):
         if self.details_parts():  # right under the pane it customizes
             panes.append(a.customize_details)
         return [panes]
+
+    def key_commands(self) -> list[KeyCommand]:
+        """Every command in its menus. One every list tool has (Edit, Refresh, Copy address…)
+        is named the same in each, so Settings shows it once, with one key for all of them."""
+        a = self._list_commands
+        shared = {f.name for f in fields(ListActions)} | SHARED_COMMANDS
+        return [
+            KeyCommand(
+                f"list.{f.name}" if f.name in shared else f"{self.TOOL_ID}.{f.name}",
+                getattr(a, f.name),
+                self.TOOL_ID,
+                portable(getattr(a, f.name).shortcut()),
+            )
+            for f in fields(a)
+        ]
 
     # ---- customizing the Details panel: each person's own ----
 
