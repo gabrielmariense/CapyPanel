@@ -224,6 +224,7 @@ class _Job(QObject):
 NOTES_HEIGHT = 480  # the most a window grows to show release notes; longer ones scroll
 WIDE, NARROW = 620, 480  # with a list of changes; just a message (nothing new, checking, failed)
 BUSY_WIDTH = 256  # the bar under "Checking for updates…"
+ZERO_WIDTH_SPACE = "​"  # a place a line may break, drawn as nothing
 BODY = (24, 22, 24, 18)  # the body's margins: left, top, right, bottom
 SHORT_BODY = (24, 36, 24, 32)  # just a message: more room above and below, so it sits centred
 GAPS = {"links": 16, "busy": 16}  # above the links, above the busy bar
@@ -563,7 +564,7 @@ class UpdateWindow(_Frame):
                   _("Your settings, lists and saved logins stay as they are."),
                   notes_here(release.notes), release.page_url)  # fmt: skip
         why = self._cannot_install()
-        self.reason.setText(why)
+        self.reason.setText(breakable(why))  # a long folder wraps instead of widening it
         self.reason.setVisible(bool(why))
         self.skip.setVisible(True)
         self.skip.setEnabled(True)
@@ -579,8 +580,8 @@ class UpdateWindow(_Frame):
                      "the release page.")  # fmt: skip
         reason = updates.cannot_install(self._app_dir)
         if reason:
-            text = _("CapyPanel can't install it from here ({reason}). Download the zip from "
-                     "the release page and unpack it in place of this one.")  # fmt: skip
+            text = _("{reason}, so the update can't be installed from here. Open Notes on "
+                     "GitHub, download the zip and unpack it in place of this copy.")  # fmt: skip
             return text.format(reason=reason)
         return ""
 
@@ -710,9 +711,9 @@ class RestartWindow(_Frame):
                       notes_here(installed.get("notes", "")) if kept else "",
                       installed.get("page", "") if kept else "")  # fmt: skip
         else:
-            self.short(_("The update to {new} didn't go in").format(new=version),
-                       _("This is still CapyPanel {current}: {why}").format(
-                           current=__version__, why=why),
+            self.short(_("The update to {new} wasn't installed").format(new=version),
+                       _("You still have CapyPanel {current}. {why}.").format(
+                           current=__version__, why=sentence(why)),
                        (_("Releases on GitHub"), updates.RELEASES_URL))  # fmt: skip
 
 
@@ -729,9 +730,21 @@ def after_restart(argv: list[str]) -> tuple[str, str, str] | None:
 def restart_text(kind: str, version: str, why: str) -> str:
     if kind == "updated":
         return _("Updated from {old} to {new}.").format(old=version, new=__version__)
-    return _("The update to {new} didn't go in, so this is still {current}: {why}").format(
-        new=version, current=__version__, why=why
-    )
+    return _("The update to {new} wasn't installed. You still have CapyPanel {current}. "
+             "{why}.").format(new=version, current=__version__, why=sentence(why))  # fmt: skip
+
+
+def breakable(text: str) -> str:
+    """`text` with a place to break the line after each backslash of a folder: a label wraps
+    only at spaces, so a long path would otherwise widen the window or run past its edge."""
+    return text.replace("\\", "\\" + ZERO_WIDTH_SPACE)
+
+
+def sentence(why: str) -> str:
+    """Why an update failed, as a sentence of its own: a capital first, and no closing period,
+    which the text around it adds (a Windows error can bring its own)."""
+    why = why.strip().rstrip(".")
+    return why[:1].upper() + why[1:]
 
 
 def button_text(release: Release) -> str:

@@ -267,10 +267,12 @@ def test_the_start_after_an_update_opens_a_window_saying_what_happened(
     assert "installed" not in window.prefs["updates"]  # said once
     window.show_restart_note("failed", "0.26.1", "The new version didn't pass its self-test")
     failed = shown[1]
-    assert failed.heading.text() == "The update to 0.26.1 didn't go in"
+    assert failed.heading.text() == "The update to 0.26.1 wasn't installed"
     assert failed.line.text() == (
-        f"This is still CapyPanel {__version__}: The new version didn't pass its self-test"
+        f"You still have CapyPanel {__version__}. The new version didn't pass its self-test."
     )
+    # Its own sentence: a capital first, one closing period even when Windows brought one.
+    assert updater_ui.sentence("access is denied.") == "Access is denied"
     assert failed.changes.isHidden() and failed.chip.isHidden()
     assert "Releases on GitHub" in failed.links.text()
 
@@ -342,6 +344,32 @@ def test_the_notes_become_one_change_each_and_their_links(window: CapyWindow) ->
     assert "Code signing" not in " ".join(words)  # a link line isn't a change
     QApplication.processEvents()
     assert dialog.width() == WIDE and dialog.height() <= NOTES_HEIGHT
+    dialog.close()
+
+
+def test_a_long_folder_in_the_reason_wraps_instead_of_widening_the_window(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    folder = "C:\\Users\\EXAMPLE\\AppData\\Local\\Programs\\CapyPanel-portable\\0.28.0\\app"
+    monkeypatch.setattr(updater_ui, "packaged", lambda: True)
+    monkeypatch.setattr(
+        updates, "cannot_install", lambda app_dir: f"CapyPanel can't write to {folder}"
+    )
+    window.updater.offer = NEWER
+    dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
+                          quit_for_update=lambda start: False)  # fmt: skip
+    assert dialog.reason.text().startswith(
+        f"CapyPanel can't write to C:\\{updater_ui.ZERO_WIDTH_SPACE}"
+    )
+    assert dialog.reason.text().endswith(
+        ", so the update can't be installed from here. Open Notes on GitHub, download the zip "
+        "and unpack it in place of this copy."
+    )
+    assert dialog.install.isHidden()
+    dialog.show()
+    _wait(lambda: dialog.width() == WIDE)
+    QApplication.processEvents()
+    assert dialog.width() == WIDE and dialog.reason.width() <= WIDE - 48
     dialog.close()
 
 

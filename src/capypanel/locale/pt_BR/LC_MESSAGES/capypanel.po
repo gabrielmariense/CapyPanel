@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 22:05-0300\n"
+"POT-Creation-Date: 2026-11-14 22:12-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -843,10 +843,6 @@ msgstr "O CapyPanel pede de novo quando precisar deles."
 
 msgid "CapyPanel can refresh your printers by itself: you pick every 5, 15, 30 or 60 minutes in Settings › Printers › Warnings and supplies. It's off until you do. Then, by default, a Windows notification tells you when one goes offline, jams, runs out of toner or runs low."
 msgstr "O CapyPanel pode atualizar as impressoras sozinho: você escolhe a cada 5, 15, 30 ou 60 minutos em Configurações › Impressoras › Avisos e suprimentos. Fica desligado até lá. Depois, por padrão, uma notificação do Windows avisa quando uma ficar offline, atolar o papel, ficar sem toner ou com suprimento baixo."
-
-#, python-brace-format
-msgid "CapyPanel can't install it from here ({reason}). Download the zip from the release page and unpack it in place of this one."
-msgstr "O CapyPanel não consegue instalá-la daqui ({reason}). Baixe o zip na página da versão e descompacte-o no lugar deste."
 
 #, python-brace-format
 msgid "CapyPanel can't write to {folder}"
@@ -3869,12 +3865,12 @@ msgid "The tool's “id” must be lowercase letters, digits, - or _."
 msgstr "O “id” da ferramenta deve ter só letras minúsculas, dígitos, - ou _."
 
 #, python-brace-format
-msgid "The update to {new} didn't go in"
+msgid "The update to {new} wasn't installed"
 msgstr "A atualização para a {new} não foi instalada"
 
 #, python-brace-format
-msgid "The update to {new} didn't go in, so this is still {current}: {why}"
-msgstr "A versão {new} não foi instalada, então esta continua sendo a {current}: {why}"
+msgid "The update to {new} wasn't installed. You still have CapyPanel {current}. {why}."
+msgstr "A atualização para a {new} não foi instalada. Você continua com o CapyPanel {current}. {why}."
 
 msgid "The viewer's defaults"
 msgstr "Padrões do visualizador"
@@ -3986,10 +3982,6 @@ msgstr "Este grupo está vazio."
 
 msgid "This is <b>final</b>. With local profiles, each person's desktop and documents go too: there's no recycle bin and no copy."
 msgstr "Isto é <b>definitivo</b>. Com perfis locais, a área de trabalho e os documentos de cada pessoa vão junto: não há lixeira nem cópia."
-
-#, python-brace-format
-msgid "This is still CapyPanel {current}: {why}"
-msgstr "Este continua sendo o CapyPanel {current}: {why}"
 
 #, python-brace-format
 msgid "This is the sample PC's tab. Each row is one user's folder on {host}, with when it was last used and how big it is."
@@ -4452,6 +4444,10 @@ msgstr "Você já tem a versão mais nova."
 #, python-brace-format
 msgid "You asked at {when}."
 msgstr "Você pediu às {when}."
+
+#, python-brace-format
+msgid "You still have CapyPanel {current}. {why}."
+msgstr "Você continua com o CapyPanel {current}. {why}."
 
 msgid "Your Windows account"
 msgstr "Sua conta do Windows"
@@ -5348,6 +5344,10 @@ msgstr "{profile} (cópia)"
 #, python-brace-format
 msgid "{profile} (not available on this PC)"
 msgstr "{profile} (não disponível neste PC)"
+
+#, python-brace-format
+msgid "{reason}, so the update can't be installed from here. Open Notes on GitHub, download the zip and unpack it in place of this copy."
+msgstr "{reason}, então a atualização não pode ser instalada daqui. Abra Notas no GitHub, baixe o zip e descompacte-o no lugar desta cópia."
 
 #, python-brace-format
 msgid "{shown} of {total} programs"

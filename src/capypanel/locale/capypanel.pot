@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 22:05-0300\n"
+"POT-Creation-Date: 2026-11-14 22:12-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -865,12 +865,6 @@ msgid ""
 "or 60 minutes in Settings › Printers › Warnings and supplies. It's off "
 "until you do. Then, by default, a Windows notification tells you when one"
 " goes offline, jams, runs out of toner or runs low."
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"CapyPanel can't install it from here ({reason}). Download the zip from "
-"the release page and unpack it in place of this one."
 msgstr ""
 
 #, python-brace-format
@@ -4073,11 +4067,13 @@ msgid "The tool's “id” must be lowercase letters, digits, - or _."
 msgstr ""
 
 #, python-brace-format
-msgid "The update to {new} didn't go in"
+msgid "The update to {new} wasn't installed"
 msgstr ""
 
 #, python-brace-format
-msgid "The update to {new} didn't go in, so this is still {current}: {why}"
+msgid ""
+"The update to {new} wasn't installed. You still have CapyPanel {current}."
+" {why}."
 msgstr ""
 
 msgid "The viewer's defaults"
@@ -4203,10 +4199,6 @@ msgstr ""
 msgid ""
 "This is <b>final</b>. With local profiles, each person's desktop and "
 "documents go too: there's no recycle bin and no copy."
-msgstr ""
-
-#, python-brace-format
-msgid "This is still CapyPanel {current}: {why}"
 msgstr ""
 
 #, python-brace-format
@@ -4701,6 +4693,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "You asked at {when}."
+msgstr ""
+
+#, python-brace-format
+msgid "You still have CapyPanel {current}. {why}."
 msgstr ""
 
 msgid "Your Windows account"
@@ -5619,6 +5615,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "{profile} (not available on this PC)"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"{reason}, so the update can't be installed from here. Open Notes on "
+"GitHub, download the zip and unpack it in place of this copy."
 msgstr ""
 
 #, python-brace-format
