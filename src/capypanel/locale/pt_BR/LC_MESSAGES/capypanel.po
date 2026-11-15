@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 22:29-0300\n"
+"POT-Creation-Date: 2026-11-14 22:31-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1472,7 +1472,7 @@ msgid "Double-click a cell, or press F2, to change it; the list above follows. R
 msgstr "Clique duas vezes numa célula, ou pressione F2, para alterá-la; a lista acima acompanha. Clique com o botão direito para mais opções."
 
 msgid "Double-click a command, then press its new key. A command Hosts and Printers share has one key for both. F1 is kept for help and Esc always closes."
-msgstr "Dê dois cliques num comando e pressione a nova tecla. Um comando que Hosts e Impressoras compartilham tem uma tecla só para os dois. F1 fica guardada para a ajuda e Esc sempre fecha."
+msgstr "Dê dois cliques num comando e pressione a nova tecla. Um comando que Hosts e Impressoras compartilham tem uma tecla só para os dois. F1 fica reservada para a ajuda e Esc sempre fecha."
 
 msgid "Double-click a host to open it, or pick hosts and click Scan to scan them here."
 msgstr "Dê dois cliques num host para abri-lo, ou selecione hosts e clique em Escanear para escaneá-los daqui."
