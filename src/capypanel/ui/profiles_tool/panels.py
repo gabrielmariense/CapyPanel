@@ -52,7 +52,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.i18n import _, ngettext
-from capypanel.core.remote.user_profiles import Deleted, Kind, Outcome, Profile, State
+from capypanel.core.remote.user_profiles import Deleted, Outcome, Profile, State
 from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.hosts_tool.runner import escape
 from capypanel.ui.icons import dot_icon, tabler_icon
@@ -67,7 +67,7 @@ from capypanel.ui.themes import engine as themes
 
 LEFT, RIGHT = 234, 284  # px: the narrowest the Groups panel opens at, and the right panel can be
 DETAILS = 340  # px: the right panel's first width, as Hosts' Details
-TICK, USER, USED, SIZE, KIND, STATE = range(6)  # the table's columns
+TICK, USER, USED, SIZE, STATE = range(5)  # the table's columns; a profile's kind is in its details
 SORT_ROLE = Qt.ItemDataRole.UserRole + 1  # what a cell sorts by
 ARROW = 16  # px a column title needs for the sort arrow
 IDENT_ROLE = Qt.ItemDataRole.UserRole  # the row's profile
@@ -539,12 +539,12 @@ class ProfilesTable(QWidget):
 
     def __init__(self) -> None:
         super().__init__()
-        self.tree = grid_table([""] * 6)
+        self.tree = grid_table([""] * 5)
         self.tree.setFrameShape(QFrame.Shape.NoFrame)  # flush to its box's edges
         self.tree.setUniformRowHeights(True)
         self.tree.header().setStretchLastSection(True)
-        # At a narrow width User gives up room first, then Kind; the ticks and State stay.
-        self.squeeze = Squeeze(self.tree, ((USER, 110), (KIND, 70)), self._state_least)
+        # At a narrow width User gives up room; the ticks and State stay.
+        self.squeeze = Squeeze(self.tree, ((USER, 110),), self._state_least)
         self.tree.setSortingEnabled(True)
         # Newest first, as people scan the list for who still uses the PC; a click on Last used
         # turns it round, the oldest on top.
@@ -575,7 +575,7 @@ class ProfilesTable(QWidget):
 
     def retranslate(self) -> None:
         """The titles, and the bin over the ticks in the theme's muted colour."""
-        self.tree.setHeaderLabels(["", _("User"), _("Last used"), _("Size"), _("Kind"), _("State")])
+        self.tree.setHeaderLabels(["", _("User"), _("Last used"), _("Size"), _("State")])
         header = self.tree.headerItem()
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
         header.setIcon(TICK, tabler_icon("trash", muted, 14))
@@ -823,8 +823,6 @@ class ProfilesTable(QWidget):
         item.setText(USED, rows.date_text(profile.last_used) or "—")
         used = profile.last_used.timestamp() if profile.last_used else float("-inf")
         item.setData(USED, SORT_ROLE, used)
-        item.setText(KIND, _(rows.KIND_NAMES[profile.kind]))
-        item.setData(KIND, SORT_ROLE, list(Kind).index(profile.kind))
         item.setTextAlignment(SIZE, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self._fill_state(item, profile)
         self._fill_size(item, profile.ident, sizes)
@@ -868,7 +866,7 @@ class ProfilesTable(QWidget):
         brush = QBrush(self.palette().color(role))
         if careful:
             brush = QBrush(QColor(amber()))
-        for column in (USER, USED, KIND):
+        for column in (USER, USED):
             item.setForeground(column, brush)
         item.setForeground(STATE, brush)
         if not item.data(SIZE, COUNTING_ROLE):
