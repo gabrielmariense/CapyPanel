@@ -154,6 +154,7 @@ def test_help_asks_and_says_when_it_is_up_to_date(
     assert dialog.later.text() == "Close" and dialog.later.isDefault()
     QApplication.processEvents()  # fitted to its few lines, no empty space
     assert dialog.width() == NARROW and dialog.height() < NOTES_HEIGHT / 2
+    assert dialog._body.contentsMargins().top() == updater_ui.SHORT_BODY[1]  # centred, as drawn
     dialog.close()
 
 

@@ -224,6 +224,10 @@ class _Job(QObject):
 NOTES_HEIGHT = 480  # the most a window grows to show release notes; longer ones scroll
 WIDE, NARROW = 620, 480  # with a list of changes; just a message (nothing new, checking, failed)
 BUSY_WIDTH = 256  # the bar under "Checking for updates…"
+BODY = (24, 22, 24, 18)  # the body's margins: left, top, right, bottom
+SHORT_BODY = (24, 36, 24, 32)  # just a message: more room above and below, so it sits centred
+GAPS = {"links": 16, "busy": 16}  # above the links, above the busy bar
+SHORT_GAPS = {"links": 10, "busy": 6}  # closer under a centred message (the bar: with no line)
 
 _LINK = re.compile(r"\[([^\]]+)\]\((https://[^)\s]+)\)")
 
@@ -341,16 +345,16 @@ class _Frame(QDialog):
         self.links.setObjectName("updateLink")
         self.links.setOpenExternalLinks(True)
         self._body = QVBoxLayout(body)
-        self._body.setContentsMargins(24, 22, 24, 18)
+        self._body.setContentsMargins(*BODY)
         self._body.setSpacing(0)
         self._body.addLayout(head)
         self._body.addSpacing(10)
         self._body.addWidget(self.line)
         self._gap_changes = self._spacer(18)
         self._body.addWidget(self.changes, 1)
-        self._gap_links = self._spacer(16)
+        self._gap_links = self._spacer(GAPS["links"])
         self._body.addWidget(self.links)
-        self._gap_busy = self._spacer(16)
+        self._gap_busy = self._spacer(GAPS["busy"])
         self._body.addWidget(self.busy, 0, Qt.AlignmentFlag.AlignHCenter)
         self._body.addStretch(0)  # the slack, when there are no changes to take it
         footer = QWidget()
@@ -395,11 +399,14 @@ class _Frame(QDialog):
         self.chip.setVisible(False)
         self._gap_changes.setVisible(False)
         self.changes.setVisible(False)
+        self._gap_busy.setFixedHeight(SHORT_GAPS["busy"] if not line else GAPS["busy"])
         self._gap_busy.setVisible(busy)
         self.busy.setVisible(busy)
 
     def _shape(self, *, full: bool, heading: str, line: str, links: list[tuple[str, str]]) -> None:
         self.icon.setVisible(full)
+        self._body.setContentsMargins(*(BODY if full else SHORT_BODY))
+        self._gap_links.setFixedHeight((GAPS if full else SHORT_GAPS)["links"])
         self.changes.width_for_rows = (WIDE if full else NARROW) - 48  # less the body's margins
         centre = Qt.AlignmentFlag.AlignHCenter if not full else Qt.AlignmentFlag.AlignLeft
         for label in (self.heading, self.line, self.links):
