@@ -122,7 +122,7 @@ def test_a_key_another_command_runs_moves_only_when_you_say_so(
     page = _page(window)
     asked = _answer(monkeypatch, give=False)
     _press(page, "command.services", Qt.Key.Key_E, Qt.KeyboardModifier.ControlModifier)
-    assert asked == ["Ctrl+E runs C$ share now. Give it to Services instead? "
+    assert asked == ["Ctrl+E is already the key for C$ share. Give it to Services instead? "
                      "C$ share is left with no key."]  # fmt: skip
     assert window.keys.key(window.keys.row("command.c-share")) == "Ctrl+E"  # unchanged
     assert window.keys.key(window.keys.row("command.services")) == ""
@@ -152,7 +152,10 @@ def test_keys_kept_for_capypanel_and_typed_text_are_refused(window: CapyWindow) 
         _press(page, "command.services", key, mods)
         assert not page.problem.isHidden() and page.problem.text()
         assert window.keys.key(window.keys.row("command.services")) == ""
-    assert page.problem.text() == "Shift+A is typed as text in names and searches: add Ctrl or Alt."
+    assert (
+        page.problem.text()
+        == "Shift+A is for typing in names and searches: use it with Ctrl or Alt."
+    )
     _press(page, "command.services", Qt.Key.Key_Escape)  # Esc leaves it as it was
     assert page.table.itemWidget(page.item_of("command.services"), KEY) is None
     assert window.keys.key(window.keys.row("command.services")) == ""

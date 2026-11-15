@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 22:22-0300\n"
+"POT-Creation-Date: 2026-11-14 22:29-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1048,6 +1048,9 @@ msgstr ""
 msgid "Command buttons"
 msgstr ""
 
+msgid "Command keys"
+msgstr ""
+
 msgid "Commands"
 msgstr ""
 
@@ -1509,8 +1512,8 @@ msgstr ""
 
 msgid ""
 "Double-click a command, then press its new key. A command Hosts and "
-"Printers share has one key for both. F1 and Esc stay free for help and "
-"closing."
+"Printers share has one key for both. F1 is kept for help and Esc always "
+"closes."
 msgstr ""
 
 msgid ""
@@ -3236,9 +3239,6 @@ msgid "Restarts at {when}"
 msgstr ""
 
 msgid "Restart…"
-msgstr ""
-
-msgid "Restore &default"
 msgstr ""
 
 msgid "Restore built-in profiles"
@@ -5211,17 +5211,17 @@ msgid "{host}: sizes counted; {n} couldn't be read."
 msgstr ""
 
 #, python-brace-format
+msgid "{key} is already the key for {other}. Give it to {command} instead?"
+msgstr ""
+
+#, python-brace-format
+msgid "{key} is for typing in names and searches: use it with Ctrl or Alt."
+msgstr ""
+
+#, python-brace-format
 msgid ""
-"{key} is kept for CapyPanel itself: F1 for help, Esc to close, Ctrl+F to "
-"search, Tab to move around."
-msgstr ""
-
-#, python-brace-format
-msgid "{key} is typed as text in names and searches: add Ctrl or Alt."
-msgstr ""
-
-#, python-brace-format
-msgid "{key} runs {other} now. Give it to {command} instead?"
+"{key} is kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F "
+"searches and Tab moves between fields."
 msgstr ""
 
 #, python-brace-format

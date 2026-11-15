@@ -70,18 +70,18 @@ class ShortcutsPage(Page):
         super().__init__(_("Keyboard shortcuts"))
         self.keys = keys
         self._names = place_names
-        self.section = Section(_("Keyboard shortcuts"))
+        self.section = Section(_("Command keys"))  # not the page's name again: what its list holds
         self.about = hint(
             _(
                 "Double-click a command, then press its new key. A command Hosts and Printers "
-                "share has one key for both. F1 and Esc stay free for help and closing."
+                "share has one key for both. F1 is kept for help and Esc always closes."
             )  # fmt: skip
         )
         self.table = grid_table([_("Command"), _("Where"), _("Key")])
         self.table.itemActivated.connect(lambda item, _c: self.change(item))
         self.table.itemSelectionChanged.connect(self._enable)
         self.clear = QPushButton(_("C&lear"))
-        self.restore = QPushButton(_("Restore &default"))
+        self.restore = QPushButton(_("&Restore default"))
         self.clear.clicked.connect(lambda: self._set_picked(""))
         self.restore.clicked.connect(self._restore_picked)
         self.problem = hint()  # why a key wasn't taken
@@ -176,10 +176,9 @@ class ShortcutsPage(Page):
         self.changed.emit()
 
     def _move_asked(self, row: Row, other: Row, keys: str) -> bool:
-        box = QMessageBox(QMessageBox.Icon.Question, _("Keyboard shortcuts"),
-                          _("{key} runs {other} now. Give it to {command} instead?").format(
-                              key=shortcuts.shown(keys), other=other.name(),
-                              command=row.name()),
+        question = _("{key} is already the key for {other}. Give it to {command} instead?")
+        words = question.format(key=shortcuts.shown(keys), other=other.name(), command=row.name())
+        box = QMessageBox(QMessageBox.Icon.Question, _("Keyboard shortcuts"), words,
                           QMessageBox.StandardButton.Cancel, self)  # fmt: skip
         move = box.addButton(_("&Give it"), QMessageBox.ButtonRole.AcceptRole)
         box.setDefaultButton(move)
