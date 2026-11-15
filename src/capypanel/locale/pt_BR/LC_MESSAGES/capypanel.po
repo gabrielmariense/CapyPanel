@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 22:12-0300\n"
+"POT-Creation-Date: 2026-11-14 22:14-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -3865,8 +3865,8 @@ msgid "The tool's “id” must be lowercase letters, digits, - or _."
 msgstr "O “id” da ferramenta deve ter só letras minúsculas, dígitos, - ou _."
 
 #, python-brace-format
-msgid "The update to {new} wasn't installed"
-msgstr "A atualização para a {new} não foi instalada"
+msgid "The update to {new} wasn't installed."
+msgstr "A atualização para a {new} não foi instalada."
 
 #, python-brace-format
 msgid "The update to {new} wasn't installed. You still have CapyPanel {current}. {why}."

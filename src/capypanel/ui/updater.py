@@ -225,6 +225,7 @@ NOTES_HEIGHT = 480  # the most a window grows to show release notes; longer ones
 WIDE, NARROW = 620, 480  # with a list of changes; just a message (nothing new, checking, failed)
 BUSY_WIDTH = 256  # the bar under "Checking for updates…"
 ZERO_WIDTH_SPACE = "​"  # a place a line may break, drawn as nothing
+REASON_MARK = "\x00"  # where a translation puts the reason, so it can start a line
 BODY = (24, 22, 24, 18)  # the body's margins: left, top, right, bottom
 SHORT_BODY = (24, 36, 24, 32)  # just a message: more room above and below, so it sits centred
 GAPS = {"links": 16, "busy": 16}  # above the links, above the busy bar
@@ -711,9 +712,13 @@ class RestartWindow(_Frame):
                       notes_here(installed.get("notes", "")) if kept else "",
                       installed.get("page", "") if kept else "")  # fmt: skip
         else:
-            self.short(_("The update to {new} wasn't installed").format(new=version),
-                       _("You still have CapyPanel {current}. {why}.").format(
-                           current=__version__, why=sentence(why)),
+            # The reason starts its own line: two short sentences, never one word left alone.
+            line = _("You still have CapyPanel {current}. {why}.").format(
+                current=__version__, why=REASON_MARK
+            )
+            before, _mark, after = line.partition(REASON_MARK)
+            line = f"{before.rstrip()}\n{sentence(why)}{after}" if _mark else line
+            self.short(_("The update to {new} wasn't installed.").format(new=version), line,
                        (_("Releases on GitHub"), updates.RELEASES_URL))  # fmt: skip
 
 

@@ -267,9 +267,9 @@ def test_the_start_after_an_update_opens_a_window_saying_what_happened(
     assert "installed" not in window.prefs["updates"]  # said once
     window.show_restart_note("failed", "0.26.1", "The new version didn't pass its self-test")
     failed = shown[1]
-    assert failed.heading.text() == "The update to 0.26.1 wasn't installed"
-    assert failed.line.text() == (
-        f"You still have CapyPanel {__version__}. The new version didn't pass its self-test."
+    assert failed.heading.text() == "The update to 0.26.1 wasn't installed."
+    assert failed.line.text() == (  # the reason on its own line, never one word left alone
+        f"You still have CapyPanel {__version__}.\nThe new version didn't pass its self-test."
     )
     # Its own sentence: a capital first, one closing period even when Windows brought one.
     assert updater_ui.sentence("access is denied.") == "Access is denied"
