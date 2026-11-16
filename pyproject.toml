@@ -9,6 +9,7 @@ dependencies = [
     "cryptography>=50",
     "pyside6>=6.11.2",
     "pywin32>=311",
+    "truststore>=0.10.5",
 ]
 
 [project.gui-scripts]

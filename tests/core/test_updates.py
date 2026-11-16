@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import truststore
 
 from capypanel.core import updates
 from capypanel.core.settings import PORTABLE_MARKER
@@ -287,10 +288,12 @@ def test_the_exe_s_own_jobs_start_without_the_splash(monkeypatch: pytest.MonkeyP
     assert updates.NO_SPLASH not in updates._env(splash=True)  # CapyPanel itself shows it
 
 
-def test_github_s_certificate_is_checked_without_python_s_strict_mode(
+def test_github_s_certificate_is_checked_by_windows_with_the_host_name(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Strict mode refused a chain Windows trusts ("Missing Authority Key Identifier").
+    # Python's own check trusted only the roots already stored on the PC ("unable to get local
+    # issuer certificate" where none was), and its strict mode refused a chain Windows trusts
+    # ("Missing Authority Key Identifier"). Windows checks it now, as Edge does.
     contexts: list[ssl.SSLContext] = []
 
     def urlopen(request: Any, timeout: float, context: ssl.SSLContext) -> Any:
@@ -300,8 +303,8 @@ def test_github_s_certificate_is_checked_without_python_s_strict_mode(
     monkeypatch.setattr(urllib.request, "urlopen", urlopen)
     assert updates.latest() is None
     (context,) = contexts
+    assert isinstance(context, truststore.SSLContext)
     assert context.verify_mode == ssl.CERT_REQUIRED and context.check_hostname
-    assert not context.verify_flags & ssl.VERIFY_X509_STRICT
 
 
 def test_how_often_is_one_choice_for_the_whole_pc(tmp_path: Path) -> None:
