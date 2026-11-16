@@ -3,6 +3,11 @@
 The changes in each release that you'll notice. The
 [releases on GitHub](https://github.com/gabrielmariense/CapyPanel/releases) have the downloads.
 
+## 0.27.1
+
+- An update no longer stops on a file an earlier update left behind. Copies that couldn't update
+  from 0.26.4, with "Access denied", update straight to 0.27.1, with nothing to clean up by hand.
+
 ## 0.27.0
 
 - **Settings > Printers > Warnings and supplies** has a new **Warnings** table: tick which

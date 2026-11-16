@@ -3,6 +3,12 @@
 As mudanças de cada versão que você vai notar. As
 [versões no GitHub](https://github.com/gabrielmariense/CapyPanel/releases) têm os downloads.
 
+## 0.27.1
+
+- Uma atualização não para mais num arquivo que uma atualização anterior deixou para trás. Cópias
+  que não conseguiam sair da 0.26.4, com "Acesso negado", atualizam direto para a 0.27.1, sem nada
+  para limpar à mão.
+
 ## 0.27.0
 
 - **Configurações > Impressoras > Avisos e suprimentos** tem uma tabela **Avisos** nova: marque
