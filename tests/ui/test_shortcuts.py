@@ -126,6 +126,14 @@ def _headings(page: ShortcutsPage) -> list[tuple[QTreeWidgetItem, list[QTreeWidg
     return found
 
 
+def test_no_waiting_field_is_left_in_the_list_when_the_page_opens(window: CapyWindow) -> None:
+    """The Key column's width is measured on a waiting field; it must be gone at once, since
+    Settings runs in its own loop (exec) where a deleteLater never comes, and the field showed
+    across the list's top row (Gabriel's test of build 576)."""
+    page = _page(window)  # no events run between building the page and this check
+    assert page.table.viewport().findChildren(KeyCatcher) == []
+
+
 def test_every_command_has_its_place_in_the_order_you_meet_it(window: CapyWindow) -> None:
     ids = {row.id for row in window.keys.rows}
     assert ids == set(shortcuts_page.ORDER)  # a new command needs its place in ORDER
@@ -146,6 +154,10 @@ def test_the_commands_sit_under_their_menu_or_tool_in_app_order(window: CapyWind
     # Every heading but the first has empty space above it.
     first, second = headings[0][0], headings[1][0]
     assert second.sizeHint(0).height() == first.sizeHint(0).height() + shortcuts_page.HEADING_GAP
+    # A double-click on a heading waits for nothing (Qt's tree activates even a disabled row).
+    page.table.itemActivated.emit(first, 0)
+    assert page.table.itemWidget(first, KEY) is None
+    assert not any(isinstance(page.table.itemWidget(i, KEY), KeyCatcher) for i in page._items())
     # The arrow keys go past a heading.
     last_of_file = headings[0][1][-1]
     page.table.setCurrentItem(last_of_file)

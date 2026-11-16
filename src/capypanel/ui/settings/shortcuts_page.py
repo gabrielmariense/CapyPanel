@@ -7,6 +7,7 @@ has no card: the list fills it (Dante's redo, 2026-11-16)."""
 
 from typing import cast
 
+import shiboken6
 from PySide6.QtCore import QKeyCombination, QRect, QSize, Qt, Signal
 from PySide6.QtGui import (
     QAction,
@@ -206,6 +207,7 @@ class ShortcutsPage(Page):
         self.section.content.addWidget(self.problem)
         self.body.addWidget(self.section, 1)  # the table scrolls; the page never does
         self._catcher: KeyCatcher | None = None
+        self._catching: QTreeWidgetItem | None = None  # the row it waits in
         self._fill()
         themes.switches().switched.connect(self._restyle)
 
@@ -306,7 +308,10 @@ class ShortcutsPage(Page):
         )
         around = catcher.width() - inside.width() + 2 * LINE_EDIT_MARGIN
         width = catcher.fontMetrics().horizontalAdvance(catcher.placeholderText()) + around
-        catcher.deleteLater()
+        # Out of the table at once: deleteLater waits for the loop it was called from, and
+        # Settings runs in its own (exec), so the field showed across the list's top row.
+        catcher.setParent(None)
+        shiboken6.delete(catcher)
         # The field sits in the cell's text area, inside the row's padding.
         self.table.ensurePolished()
         cell = QStyleOptionViewItem()
@@ -369,11 +374,15 @@ class ShortcutsPage(Page):
     # ---- changing a key ----
 
     def change(self, item: QTreeWidgetItem) -> None:
-        """Waits in the command's Key cell for its new key."""
+        """Waits in the command's Key cell for its new key. A heading has none: Qt's tree still
+        activates a disabled row on a double-click, which put the field across a heading."""
+        if not item.data(COMMAND, ROW_ROLE):
+            return
         self._stop_catching()
         self.table.setCurrentItem(item)
         self.problem.setText(reserved_line())
         catcher = self._catcher = KeyCatcher()
+        self._catching = item
         catcher.picked.connect(lambda keys: self._caught(item, keys))
         catcher.cancelled.connect(self._stop_catching)
         self.table.setItemWidget(item, KEY, catcher)
@@ -383,6 +392,9 @@ class ShortcutsPage(Page):
         if self._catcher is None:
             return
         self._catcher = None
+        if self._catching is not None:  # off whatever row it was in, never left behind
+            self.table.removeItemWidget(self._catching, KEY)
+            self._catching = None
         for item in self._items():
             self._show_key(item)  # the catcher leaves; the key (and its note) come back
         self.table.setFocus()
