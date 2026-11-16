@@ -82,6 +82,7 @@ GROUPS_WIDTH = 150  # px, at least
 GROUP_ROOM = 34  # px past a group's name: the rows' padding (10 + 10), the frame and air
 ROW_SPACING = 2  # px between the commands; a gap widget adds one more
 RESULTS_WIDTH = 400  # px at least: the rest goes to the commands, whose names are longer in pt
+PROFILE_WIDTH = 220  # the profile list under Host: room for a long profile name
 ROW = 28  # px: a command's line
 APART = 8  # px: the gap above a command set apart, where menus draw a line
 ICON = 16
@@ -403,16 +404,26 @@ class CommandsWindow(QDialog):
         self.add_button.setAutoDefault(False)
         self.add_button.setToolTip(_("Adds this PC to the open host list"))
         self.add_button.clicked.connect(self._add_to_list)
-        left_top = QHBoxLayout()
-        left_top.setSpacing(spacing.CONTROLS)
-        left_top.addWidget(address_label)
-        left_top.addWidget(self.address, 1)
-        left_top.addWidget(self.add_button)
-        right_top = QHBoxLayout()
-        right_top.setSpacing(spacing.CONTROLS)
-        right_top.addWidget(profile_label)
-        right_top.addWidget(self.profile, 1)
-        right_top.addWidget(self.connect_button)
+        # The PC, then right under it how to connect and Connect: read in that order, and
+        # Connect where the eye already is (at the far right it was missed; Gabriel, 2026-11-16).
+        top = QGridLayout()
+        top.setHorizontalSpacing(spacing.CONTROLS)
+        top.setVerticalSpacing(spacing.CONTROLS)
+        top.addWidget(address_label, 0, 0)
+        top.addWidget(self.address, 0, 1)
+        top.addWidget(self.add_button, 0, 2)
+        top.addWidget(profile_label, 1, 0)
+        how = QHBoxLayout()
+        how.setSpacing(spacing.CONTROLS)
+        self.profile.setMinimumWidth(PROFILE_WIDTH)
+        how.addWidget(self.profile)
+        how.addWidget(self.connect_button)
+        how.addStretch(1)
+        top.addLayout(how, 1, 1, 1, 2)
+        top.setColumnStretch(1, 1)
+        for before, after in ((self.address, self.add_button), (self.add_button, self.profile),
+                              (self.profile, self.connect_button)):  # fmt: skip
+            QWidget.setTabOrder(before, after)
 
         # ---- the groups, the commands, the results ----
         self.search = QLineEdit()
@@ -492,13 +503,12 @@ class CommandsWindow(QDialog):
         grid.setContentsMargins(spacing.WINDOW, spacing.PANEL, spacing.WINDOW, spacing.PANEL)
         grid.setHorizontalSpacing(12)
         grid.setVerticalSpacing(spacing.CONTROLS)
-        grid.addLayout(left_top, 0, 0, 1, 4)
-        grid.addLayout(right_top, 0, 4)
+        grid.addLayout(top, 0, 0, 1, 4)
         grid.addLayout(left, 1, 0, 2, 1)
         grid.addWidget(_divider(), 1, 1, 2, 1)
         grid.addWidget(self.list, 1, 2, 2, 1)
         grid.addWidget(_divider(), 1, 3, 2, 1)
-        grid.addWidget(self.results, 1, 4, 2, 1)
+        grid.addWidget(self.results, 0, 4, 3, 1)  # from the top: nothing above it now
         grid.addWidget(hint, 3, 0, 1, 5)
         bottom = QHBoxLayout()
         bottom.addStretch(1)
