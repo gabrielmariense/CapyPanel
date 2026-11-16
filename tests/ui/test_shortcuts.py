@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core import settings
 from capypanel.ui import shortcuts
+from capypanel.ui.printers_tool.tool import PrintersTool, refresh_words
 from capypanel.ui.settings import shortcuts_page
 from capypanel.ui.settings.shortcuts_page import KEY, KeyCatcher, ShortcutsPage
 
@@ -333,6 +334,26 @@ def test_a_refused_key_s_row_stays_whole_in_a_narrow_window(window: CapyWindow) 
     assert view.rect().contains(table.visualItemRect(last))
     assert table.itemWidget(last, KEY) is catcher  # still waiting, in its row
     dialog.close()
+
+
+def test_printers_tips_and_guide_show_the_key_set_here(window: CapyWindow) -> None:
+    printers = window.tools["printers"]
+    assert isinstance(printers, PrintersTool)
+    bar, a = printers.toolbar, printers.commands
+    assert bar.web_button.toolTip() == "Open the selected printers' web pages (Enter)"
+    assert bar.refresh_button.toolTip().endswith(" every printer shown (F5)")
+    assert refresh_words(a.refresh_shown).endswith(" until you press it or F5.")
+    keys = window.keys
+    keys.set(next(r for r in keys.rows if a.refresh_shown in r.actions), "F6")
+    assert bar.refresh_button.toolTip().endswith(" every printer shown (F6)")
+    assert refresh_words(a.refresh_shown).endswith(" until you press it or F6.")
+    web = next(r for r in keys.rows if a.open_web_page in r.actions)
+    keys.set(web, "")  # no key: just the words
+    assert bar.web_button.toolTip() == "Open the selected printers' web pages"
+    keys.set(next(r for r in keys.rows if a.refresh_shown in r.actions), "")
+    assert refresh_words(a.refresh_shown).endswith(" until you press it.")
+    keys.restore(web)
+    assert bar.web_button.toolTip().endswith(" web pages (Enter)")
 
 
 def test_a_key_another_command_runs_moves_only_when_you_say_so(

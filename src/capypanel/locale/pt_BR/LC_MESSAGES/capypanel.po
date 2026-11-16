@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 16:21-0300\n"
+"POT-Creation-Date: 2026-11-16 16:47-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -2522,8 +2522,8 @@ msgstr "Abre a janela Comandos para o host selecionado; a seta lista os comandos
 msgid "Open the history"
 msgstr "Abrir o histórico"
 
-msgid "Open the selected printers' web pages (Enter)"
-msgstr "Abre a página web das impressoras selecionadas (Enter)"
+msgid "Open the selected printers' web pages"
+msgstr "Abre a página web das impressoras selecionadas"
 
 msgid "Open web page"
 msgstr "Abrir página web"
@@ -2852,8 +2852,8 @@ msgstr "Ler de novo"
 msgid "Read license"
 msgstr "Ler licença"
 
-msgid "Read the status and supplies of every printer shown (F5)"
-msgstr "Lê o status e os suprimentos de todas as impressoras exibidas (F5)"
+msgid "Read the status and supplies of every printer shown"
+msgstr "Lê o status e os suprimentos de todas as impressoras exibidas"
 
 msgid "Read-only"
 msgstr "Somente leitura"
@@ -2874,8 +2874,12 @@ msgstr "Lendo…"
 msgid "Reads each in a tab of its own, behind; you stay on this list"
 msgstr "Lê cada um numa aba própria, ao fundo; você continua nesta lista"
 
-msgid "Reads the status, toner and page count of every printer shown. Nothing is read until you press it or F5."
-msgstr "Lê o status, o toner e a contagem de páginas de cada impressora mostrada. Nada é lido até você clicar aqui ou apertar F5."
+#, python-brace-format
+msgid "Reads the status, toner and page count of every printer shown. Nothing is read until you press it or {key}."
+msgstr "Lê o status, o toner e a contagem de páginas de cada impressora mostrada. Nada é lido até você clicar aqui ou apertar {key}."
+
+msgid "Reads the status, toner and page count of every printer shown. Nothing is read until you press it."
+msgstr "Lê o status, o toner e a contagem de páginas de cada impressora mostrada. Nada é lido até você clicar aqui."
 
 msgid "Reads what's ticked in this box again"
 msgstr "Lê de novo o que está marcado nesta caixa"

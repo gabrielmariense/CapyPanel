@@ -90,8 +90,4 @@ def test_no_text_writes_a_key_a_person_can_change_into_its_words() -> None:
     key = re.compile(r"\((?:also )?(?:F\d{1,2}|Enter|Del|(?:Ctrl|Alt|Shift)\+(?!F\)).+)\)$")
     named = {text for _context, texts in _in_code() for text in texts if key.search(text)}
     fixed = {"Details (Enter)"}  # the User profiles tool's: not on the Keyboard shortcuts page
-    not_yet = {  # Printers' two, changed before 0.28.1 is merged
-        "Open the selected printers' web pages (Enter)",
-        "Read the status and supplies of every printer shown (F5)",
-    }
-    assert named == fixed | not_yet
+    assert named == fixed

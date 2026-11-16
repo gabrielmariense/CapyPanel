@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 16:21-0300\n"
+"POT-Creation-Date: 2026-11-16 16:47-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2634,7 +2634,7 @@ msgstr ""
 msgid "Open the history"
 msgstr ""
 
-msgid "Open the selected printers' web pages (Enter)"
+msgid "Open the selected printers' web pages"
 msgstr ""
 
 msgid "Open web page"
@@ -2987,7 +2987,7 @@ msgstr ""
 msgid "Read license"
 msgstr ""
 
-msgid "Read the status and supplies of every printer shown (F5)"
+msgid "Read the status and supplies of every printer shown"
 msgstr ""
 
 msgid "Read-only"
@@ -3009,9 +3009,15 @@ msgstr ""
 msgid "Reads each in a tab of its own, behind; you stay on this list"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Reads the status, toner and page count of every printer shown. Nothing is"
-" read until you press it or F5."
+" read until you press it or {key}."
+msgstr ""
+
+msgid ""
+"Reads the status, toner and page count of every printer shown. Nothing is"
+" read until you press it."
 msgstr ""
 
 msgid "Reads what's ticked in this box again"

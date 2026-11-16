@@ -25,6 +25,7 @@ from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, sample_tag
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
+from capypanel.ui.menus import shortcut_text
 from capypanel.ui.printers_tool import marks, status
 from capypanel.ui.printers_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.printers_tool.attention import (
@@ -84,6 +85,17 @@ def web_page(printer: Host) -> QUrl | None:
         target = f"[{target}]"
     url = QUrl(f"{scheme}://{target}")
     return url if url.isValid() and url.host() else None
+
+
+def refresh_words(refresh: QAction) -> str:
+    """The guide's words on Refresh all, with the key it has now: one changed in Settings ›
+    Keyboard shortcuts, or none."""
+    keys = shortcut_text(refresh)
+    if not keys:
+        return _("Reads the status, toner and page count of every printer shown. Nothing is read "
+                 "until you press it.")  # fmt: skip
+    return _("Reads the status, toner and page count of every printer shown. Nothing is read "
+             "until you press it or {key}.").format(key=keys)  # fmt: skip
 
 
 class PrintersTool(ListWorkspace):
@@ -308,8 +320,7 @@ class PrintersTool(ListWorkspace):
                      lambda: None, lambda: table, keep_clear=lambda: self.details,
                      area=lambda: self.sample_row(self.window())),
                 Step(pgettext("printers", "Refresh all"),  # as the button says it
-                     _("Reads the status, toner and page count of every printer shown. Nothing "
-                       "is read until you press it or F5."), lambda: bar.refresh_button),
+                     refresh_words(self.commands.refresh_shown), lambda: bar.refresh_button),
                 Step(_("Status and Toner"),
                      _("After a Refresh, the dot shows how each printer is: green is working, "
                        "amber needs attention, red has stopped and grey didn't answer. Toner shows "
