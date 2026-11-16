@@ -97,7 +97,7 @@ o **Restaurar padrão** devolve a que ele tinha de início.
       outro comando fica sem tecla.
     - F1, Esc, Ctrl+F e Tab ficam reservadas ao próprio CapyPanel, como diz a linha embaixo da
       lista. Uma tecla que sozinha digita texto, como uma letra, um número ou o Ç, também: use-a
-      com Ctrl ou Alt. Pressione uma delas e o campo fica vermelho e diz "Reservada: tente outra",
+      com Ctrl ou Alt. Pressione uma delas e o campo fica vermelho e diz "Tecla não aceita",
       o motivo aparece em vermelho embaixo da lista, e ele continua esperando outra tecla.
     - Hosts e Impressoras têm linhas próprias, mesmo para um comando que os dois têm, como
       **Editar…** ou **Remover**: uma tecla dada a um deixa a do outro como estava.

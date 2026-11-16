@@ -93,7 +93,7 @@ and **Restore default** gives back the one it came with.
       other command is left with no key.
     - F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself, as the line under the list says. So is
       a key that types text on its own, such as a letter, a digit or Ç: use it with Ctrl or Alt.
-      Press one and the field turns red and reads "Reserved: try another", the reason shows in red
+      Press one and the field turns red and reads "Key not allowed", the reason shows in red
       under the list, and it keeps waiting for another key.
     - Hosts and Printers have their own rows, even for a command both have, such as **Edit…** or
       **Remove**: a key given to one leaves the other's as it was.
