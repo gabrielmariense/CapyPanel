@@ -101,6 +101,9 @@ def test_the_list_goes_by_where_then_a_to_z(window: CapyWindow) -> None:
         names = [i.text(0) for i in rows if i is not None and i.text(1) == group]
         assert names == sorted(names, key=shortcuts_page.alphabetical), group
     assert shortcuts_page.alphabetical("Área…") == shortcuts_page.alphabetical("area")
+    # The page's one instruction reads as body text, a point up; the refusal line stays a hint.
+    assert page.about.objectName() == "lead" and page.problem.objectName() == "hint"
+    assert page.about.font().pointSizeF() == page.table.font().pointSizeF() + 1
 
 
 def test_a_new_key_is_kept_and_works_at_once_in_every_tool(window: CapyWindow) -> None:

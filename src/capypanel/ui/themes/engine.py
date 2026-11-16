@@ -782,6 +782,8 @@ QLabel#stateBadge { color: %(offline)s; border: 1px solid %(offline)s; border-ra
 QLabel#stateBadge[active="true"] { color: %(online)s; border-color: %(online)s; }
 QFrame#notesBox { border: 1px solid %(border)s; border-radius: %(r)spx; }
 QLabel#hint { color: %(text2)s; }
+/* A page's one instruction, where the page is only a list (Keyboard shortcuts): body text. */
+QLabel#lead { color: %(text)s; }
 /* The Groups heading while a group is dragged over it: dropping moves it to the top. */
 QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel_solid)s;
                                      border-radius: %(r2)spx; }
@@ -975,6 +977,8 @@ QLabel#stateBadge { color: %(offline)s; border: 1px solid %(offline)s; border-ra
 QLabel#stateBadge[active="true"] { color: %(online)s; border-color: %(online)s; }
 QFrame#notesBox { border: 1px solid %(border)s; border-radius: 6px; }
 QLabel#hint { color: %(text2)s; }
+/* A page's one instruction, where the page is only a list (Keyboard shortcuts): body text. */
+QLabel#lead { color: %(text)s; }
 QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel)s; }
 /* Toolbar buttons like the CapyPanel stylesheet's, square like the panes here.
    Styling them drops the style's own menu arrow, so the theme's arrow is drawn instead. */

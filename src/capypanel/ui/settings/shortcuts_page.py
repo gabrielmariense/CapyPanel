@@ -7,10 +7,10 @@ import unicodedata
 
 from PySide6.QtCore import QKeyCombination, Qt, Signal
 from PySide6.QtGui import QFocusEvent, QKeyEvent, QKeySequence
-from PySide6.QtWidgets import QLineEdit, QMessageBox, QPushButton, QTreeWidgetItem
+from PySide6.QtWidgets import QLabel, QLineEdit, QMessageBox, QPushButton, QTreeWidgetItem
 
 from capypanel.core.i18n import _
-from capypanel.ui import shortcuts
+from capypanel.ui import shortcuts, spacing
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.notes import hint
 from capypanel.ui.settings.pages import Page, Section
@@ -30,6 +30,18 @@ def alphabetical(name: str) -> str:
     """A command's name as A–Z sorts it in any language: no accents, no case, no "…"."""
     plain = unicodedata.normalize("NFD", name.replace("…", ""))
     return "".join(c for c in plain if not unicodedata.combining(c)).casefold()
+
+
+def lead(text: str) -> QLabel:
+    """The page's one instruction: this page is only the list, so its line reads as body text,
+    one point up from the app's font, not as a grey hint (Dante, 2026-11-16)."""
+    label = QLabel(text)
+    label.setObjectName("lead")
+    label.setWordWrap(True)
+    font = label.font()
+    font.setPointSizeF(font.pointSizeF() + 1)  # follows a larger Windows font
+    label.setFont(font)
+    return label
 
 
 class KeyCatcher(QLineEdit):
@@ -80,7 +92,7 @@ class ShortcutsPage(Page):
         self.keys = keys
         self._names = place_names
         self.section = Section(_("Command keys"))  # not the page's name again: what its list holds
-        self.about = hint(
+        self.about = lead(
             _(
                 "Double-click a command and press the key you want for it. If a command is in "
                 "both Hosts and Printers, its key works in both. F1, Esc, Ctrl+F and Tab are "
@@ -97,6 +109,7 @@ class ShortcutsPage(Page):
         self.problem = hint()  # why a key wasn't taken
         self.problem.hide()
         self.section.content.addWidget(self.about)
+        self.section.content.addSpacing(spacing.CONTROLS - self.section.content.spacing())
         self.section.content.addWidget(with_buttons(self.table, [self.clear, self.restore]))
         self.section.content.addWidget(self.problem)
         self.body.addWidget(self.section)
