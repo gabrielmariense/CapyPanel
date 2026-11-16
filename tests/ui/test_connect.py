@@ -263,9 +263,19 @@ def test_manual_connection_opens_the_profiles_and_lists_them_as_changed(
     assert isinstance(commands, CommandsWindow)
     commands.profiles_button.click()
     assert opened == ["connections"]
-    # Add hides with no host typed, and keeps its room: nothing changes width on typing.
-    assert commands.add_button.isHidden()
-    assert commands.add_button.sizePolicy().retainSizeWhenHidden()
+    # A square button beside Profile, its name in the tooltip; Add waits in the footer.
+    button = commands.profiles_button
+    assert button.text() == "" and button.toolTip() == "Connection profiles…"
+    assert button.width() == button.height() == commands.profile.sizeHint().height()
+    assert commands.add_button.isHidden()  # nothing typed yet
+    # Tab: Host, Profile, the profiles button, Connect.
+    order = [commands.address, commands.profile, button, commands.connect_button]
+    seen, widget = [], commands.address.nextInFocusChain()
+    while widget is not commands.address and len(seen) < len(order) - 1:
+        if widget in order:
+            seen.append(widget)
+        widget = widget.nextInFocusChain()
+    assert seen == order[1:]
     commands.profile.setCurrentIndex(commands.profile.findData("pis-password"))
     before = window.hosts.connector.choices()
     monkeypatch.setattr(
