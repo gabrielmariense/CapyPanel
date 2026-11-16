@@ -174,6 +174,10 @@ again.
 
 ## Keyboard shortcuts
 
+These are the keys CapyPanel starts with. **Settings > CapyPanel > Keyboard shortcuts** changes
+them, except F1, Esc, Ctrl+F and Tab, which are kept for CapyPanel itself (see
+[Settings and files](settings-and-files.md#capypanel-keyboard-shortcuts)).
+
 | Shortcut | Action |
 |---|---|
 | Enter (in the host list) | Open a connection to the selected hosts |

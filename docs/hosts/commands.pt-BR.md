@@ -199,13 +199,14 @@ um servidor de impressão, nem as impressoras de rede da
 
 ## A janela Comandos
 
-![A janela Comandos: a caixa Host no topo, os grupos à esquerda, todos os comandos no meio, o que o escolhido encontrou à direita](../images/commands-window-dark-pt-BR.png)
+![A janela Comandos: Host, Perfil, a engrenagem e Conectar na linha de cima, os grupos à esquerda, todos os comandos no meio, o que o escolhido encontrou à direita](../images/commands-window-dark-pt-BR.png)
 
 A janela Comandos reúne todos os comandos de um PC, com a resposta ao lado. Abra-a pelo botão
 **Comandos**, pelo **Todos os comandos…**, ou pelo **Conectar > Conexão manual…** (Ctrl+M) para um
 endereço que não está na sua lista.
 
-1. Escolha ou digite o PC na caixa **Host**, no topo.
+1. Escolha ou digite o PC na caixa **Host**, no topo. O **Perfil** e o **Conectar**, na mesma
+   linha, abrem uma conexão com ele.
 2. Escolha um comando no meio (setas, ou digite para pesquisar) e aperte **Enter** ou
    **Executar**.
 3. Leia a resposta à direita.
@@ -219,8 +220,11 @@ clique duplo só escolhe, para um comando arriscado nunca rodar por acidente.
       em **Recentes** os endereços que você digitou antes; `host:porta` funciona. Escolher outro
       host muda a janela inteira para ele, inclusive o **Perfil**. O título diz "Comandos ·
       DESK-02", ou "Conexão manual · 198.51.100.40" para um endereço digitado. O **Adicionar à
-      lista de hosts…** aparece ao lado da caixa para um endereço digitado que a lista aberta não
-      tem.
+      lista de hosts…** aparece embaixo, à esquerda, para um endereço digitado que a lista aberta
+      não tem.
+    - A engrenagem entre o **Perfil** e o **Conectar** ("Perfis de conexão…") abre
+      **Configurações > Hosts > Conexão**, onde os perfis são criados. O **Conectar** fica azul quando há um host
+      para conectar; com a caixa vazia, um clique nele põe o cursor no **Host**.
     - À esquerda, uma caixa **Pesquisa** e os seis grupos. No meio, cada comando com o atalho em
       cinza; o escolhido cresce para mostrar o que faz.
     - À direita, a resposta apresentada como o painel de detalhes a apresenta. Impressoras,

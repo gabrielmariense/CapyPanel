@@ -5,7 +5,7 @@ As Configurações são a engrenagem embaixo na barra lateral, e **Arquivo > Con
 **Esc** a fecham. Esta página lista cada configuração, página por página, e onde o CapyPanel guarda
 os arquivos.
 
-![As Configurações em CapyPanel > Geral: a lista de páginas à esquerda; Aparência, Inicialização e fechamento, e Novas versões, marcada Todos neste PC, à direita](images/settings-dark-pt-BR.png)
+![As Configurações em CapyPanel > Geral: a lista de páginas à esquerda, com Atalhos de teclado embaixo de Geral; Aparência, Inicialização e fechamento, e Novas versões, marcada Todos neste PC, à direita](images/settings-dark-pt-BR.png)
 
 ## Encontrar uma configuração
 
@@ -15,9 +15,9 @@ em amarelo, e as configurações funcionam ali mesmo.
 
 ??? note "Mais sobre a janela"
 
-    - As páginas são agrupadas: **CapyPanel** (Geral), **Hosts** (Geral, Conexão, Credenciais) e
-      **Impressoras** (Geral, Avisos e suprimentos, Conexão). **Sobre** fica à parte, no fim da
-      lista. As Configurações abrem em **CapyPanel > Geral**.
+    - As páginas são agrupadas: **CapyPanel** (Geral, Atalhos de teclado), **Hosts** (Geral,
+      Conexão, Credenciais) e **Impressoras** (Geral, Avisos e suprimentos, Conexão). **Sobre**
+      fica à parte, no fim da lista. As Configurações abrem em **CapyPanel > Geral**.
     - Cada página é feita de seções: um título com as configurações dele num cartão arredondado. Uma
       tabela é igual em todo lugar: uma linha fina embaixo de cada linha, divisores para arrastar e
       alargar uma coluna, as ações principais como botões embaixo, **todas as ações de uma linha no
@@ -75,6 +75,38 @@ CapyPanel para todos eles."
 | Configuração | O que faz | De início |
 |---|---|---|
 | **Procurar nova versão** | **A cada início**, **Uma vez por dia**, **Uma vez por semana** ou **Desligado**. "Pergunta ao GitHub (api.github.com) qual é a versão mais nova do CapyPanel. Nada é baixado até você escolher Instalar. Ajuda › Procurar nova versão funciona com qualquer opção." | A cada início |
+
+## CapyPanel > Atalhos de teclado
+
+![As Configurações em CapyPanel > Atalhos de teclado: os comandos sob Arquivo, Exibir e Ajuda, cada um com a tecla dele, e Limpar e Restaurar padrão embaixo da lista](images/settings-shortcuts-dark-pt-BR.png)
+
+Aqui está cada comando que uma tecla pode rodar, sob **Arquivo**, **Exibir**, **Ajuda**, **Hosts**
+e **Impressoras**, na ordem em que você os encontra no app. **Tecla** mostra a tecla que ele tem
+agora; a maioria dos comandos começa sem nenhuma.
+
+1. Dê dois cliques num comando, ou escolha-o e aperte **Enter**. A tecla dele passa a dizer
+   "Pressione a nova tecla…".
+2. Pressione a nova tecla, com Ctrl, Alt ou Shift se quiser. O **Esc** deixa a tecla como estava.
+
+A tecla nova vale na hora, e os menus a mostram. O **Limpar** tira a tecla do comando escolhido, e
+o **Restaurar padrão** devolve a que ele tinha de início.
+
+??? note "Mais sobre as teclas"
+
+    - Uma tecla que outro comando já tem só muda depois de uma pergunta: o **Passar** a move, e o
+      outro comando fica sem tecla.
+    - F1, Esc, Ctrl+F e Tab ficam reservadas ao próprio CapyPanel, como diz a linha embaixo da
+      lista. Uma tecla que sozinha digita texto, como uma letra, um número ou o Ç, também: use-a
+      com Ctrl ou Alt. Pressione uma delas e o campo fica vermelho e diz "Reservada: tente outra",
+      o motivo aparece em vermelho embaixo da lista, e ele continua esperando outra tecla.
+    - Hosts e Impressoras têm linhas próprias, mesmo para um comando que os dois têm, como
+      **Editar…** ou **Remover**: uma tecla dada a um deixa a do outro como estava.
+    - **Conectar** e **Abrir página web** dizem "Enter (na lista)": a tecla deles só vale na lista
+      de hosts ou de impressoras.
+    - Reiniciar, Desligar, Cancelar a reinicialização pendente, Reiniciar o Spooler de Impressão,
+      e fazer logoff ou desconectar alguém não estão na lista.
+    - As suas teclas são só suas, guardadas no seu arquivo de configurações. Outra pessoa neste PC
+      guarda as dela.
 
 ## Hosts > Geral
 
@@ -165,7 +197,8 @@ Hosts.
     for Python (LGPL-3.0), Python (PSF License), cryptography (BSD-3-Clause, e a licença do OpenSSL,
     Apache-2.0, no mesmo aviso, porque o build dela para Windows leva o OpenSSL), cffi (MIT-0) e
     pycparser (BSD-3-Clause), de que a cryptography precisa, pywin32 (BSD-3-Clause), pelo qual o
-    CapyPanel lê outros PCs, e Tabler Icons (MIT). O **Ler licença** também funciona num clique
+    CapyPanel lê outros PCs, truststore (MIT), que faz o Windows conferir o certificado do GitHub,
+    e Tabler Icons (MIT). O **Ler licença** também funciona num clique
     duplo ou no botão direito da linha, e o **Abrir pasta** abre a pasta em que todas vêm. O
     "Software livre sob a GPL-3.0, sem garantia: veja Licenças." do cartão CapyPanel rola até elas.
 

@@ -3,6 +3,23 @@
 As mudanças de cada versão que você vai notar. As
 [versões no GitHub](https://github.com/gabrielmariense/CapyPanel/releases) têm os downloads.
 
+## 0.28.0
+
+- **Configurações > CapyPanel > Atalhos de teclado** é nova: dê a um comando a tecla que você
+  quiser, ou tire a tecla dele. Hosts e Impressoras guardam teclas próprias, mesmo para um comando
+  que os dois têm, e os menus mostram as suas teclas na hora.
+- A janela de atualização é nova. Ela mostra a sua versão e a nova lado a lado, cada mudança na
+  sua linha, e o andamento do download embaixo; depois do reinício ela diz **Atualização
+  instalada**.
+- Procurar uma nova versão funciona nos PCs em que falhava com "CERTIFICATE_VERIFY_FAILED": agora
+  o próprio Windows confere o certificado do GitHub, como o Edge faz. Na 0.27.1 com esse erro,
+  abra https://api.github.com no Edge uma vez e depois atualize do jeito de sempre.
+- Na janela Comandos, o **Perfil**, uma engrenagem para os perfis de conexão e o **Conectar**
+  ficam na linha de cima, ao lado do **Host**, e o **Adicionar à lista de hosts…** foi para baixo,
+  à esquerda.
+- A tabela de Perfis de usuário não tem mais a coluna **Tipo**. O tipo de um perfil continua nos
+  detalhes dele.
+
 ## 0.27.1
 
 - Uma atualização não para mais num arquivo que uma atualização anterior deixou para trás. Cópias
