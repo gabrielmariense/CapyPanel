@@ -5,6 +5,7 @@ The commands sit under headings, the menu bar's menus first, then each tool, Aâ€
 (War Room topic-shortcuts-page, 2026-11-16: the Where column read as a wall of text)."""
 
 import unicodedata
+from typing import cast
 
 from PySide6.QtCore import QKeyCombination, QRect, QSize, Qt, Signal
 from PySide6.QtGui import (
@@ -79,17 +80,16 @@ def reserved_line() -> str:
 
 def top_menu(action: QAction) -> tuple[int, QMenu] | None:
     """The menu bar's menu `action` is in (through a submenu too) and its place on the bar,
-    or None. A menu elsewhere, the tray's, doesn't count."""
-    for menu in (o for o in action.associatedObjects() if isinstance(o, QMenu)):
-        while True:
-            owners = menu.menuAction().associatedObjects()
-            bars = [o for o in owners if isinstance(o, QMenuBar)]
+    or None. A menu elsewhere, the tray's, doesn't count. Qt's own class names, not Python's
+    isinstance, so a QMenu subclass made anywhere still counts."""
+    for menu in action.associatedObjects():
+        while isinstance(menu, QWidget) and menu.inherits("QMenu"):
+            owners = cast(QMenu, menu).menuAction().associatedObjects()
+            bars = [o for o in owners if o.inherits("QMenuBar")]
             if bars:
-                return bars[0].actions().index(menu.menuAction()), menu
-            parents = [o for o in owners if isinstance(o, QMenu)]
-            if not parents:
-                break
-            menu = parents[0]
+                place = cast(QMenuBar, bars[0]).actions().index(cast(QMenu, menu).menuAction())
+                return place, cast(QMenu, menu)
+            menu = next((o for o in owners if o.inherits("QMenu")), None)
     return None
 
 
