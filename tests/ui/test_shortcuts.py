@@ -7,10 +7,18 @@ from typing import Any
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtCore import QKeyCombination, Qt
-from PySide6.QtGui import QKeySequence
+from PySide6.QtCore import QKeyCombination, QRect, Qt
+from PySide6.QtGui import QColor, QKeySequence, QPalette
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QTreeWidgetItem
+from PySide6.QtWidgets import (
+    QApplication,
+    QLabel,
+    QMessageBox,
+    QStyle,
+    QStyleOptionFrame,
+    QTreeWidgetItem,
+    QWidget,
+)
 
 from capypanel.core import settings
 from capypanel.ui import shortcuts
@@ -251,6 +259,77 @@ def test_a_tip_that_names_a_key_shows_the_key_set_here_at_once(window: CapyWindo
     assert rail.home_button.toolTip() == "Home"
     keys.restore(keys.row("go.home"))
     assert rail.home_button.toolTip() == "Home (Ctrl+0)"
+
+
+def _ink_rows(widget: QWidget, ink: QColor, inside: QRect) -> list[int]:
+    """The rows inside `inside` where `widget` shows something close to `ink`."""
+    image = widget.grab().toImage()
+
+    def near(x: int, y: int) -> bool:
+        c = image.pixelColor(x, y)
+        apart = abs(c.red() - ink.red()) + abs(c.green() - ink.green()) + abs(c.blue() - ink.blue())
+        return apart < 150
+
+    columns = range(inside.left(), inside.right() + 1)
+    return [y for y in range(inside.top(), inside.bottom() + 1) if any(near(x, y) for x in columns)]
+
+
+@pytest.mark.parametrize(
+    ("inside", "caps"),
+    [
+        (QRect(1, 1, 238, 14), QRect(0, -8, 7, 9)),  # Segoe UI 9 pt in the list's field
+        (QRect(1, 1, 238, 15), QRect(0, -8, 7, 9)),
+        (QRect(2, 3, 238, 22), QRect(0, -10, 9, 11)),  # a bigger font in a taller field
+    ],
+)
+def test_the_waiting_field_s_capitals_sit_in_its_middle(inside: QRect, caps: QRect) -> None:
+    """As much room over the capitals as under them. Qt centres a line's whole height: with
+    Segoe UI in the list's field that left 4 px over them and 1 px under (Dante, 0.28.1)."""
+    baseline = shortcuts_page.caps_baseline(inside, caps)
+    top, bottom = baseline + caps.top(), baseline + caps.top() + caps.height() - 1  # its rows
+    over, under = top - inside.top(), inside.bottom() - bottom
+    assert abs(over - under) <= 1, (over, under)
+
+
+def test_the_waiting_field_draws_its_words_inside_its_edges(window: CapyWindow) -> None:
+    dialog = window.settings_dialog()
+    dialog.show_page("shortcuts")
+    dialog.show()
+    QApplication.processEvents()
+    page = dialog.shortcuts
+    _press(page, "command.services", Qt.Key.Key_F1)  # refused: red words, a red edge
+    catcher = page.table.itemWidget(page.item_of("command.services"), KEY)
+    assert isinstance(catcher, KeyCatcher)
+    frame = QStyleOptionFrame()
+    catcher.initStyleOption(frame)
+    inside = catcher.style().subElementRect(QStyle.SubElement.SE_LineEditContents, frame, catcher)
+    ink = catcher.palette().color(QPalette.ColorRole.PlaceholderText)
+    assert _ink_rows(catcher, ink, inside)  # drawn, in the refusal's red
+    dialog.close()
+
+
+def test_a_refused_key_s_row_stays_whole_in_a_narrow_window(window: CapyWindow) -> None:
+    """Under about 960 px the reason takes two lines and the list gets shorter: the waiting
+    row on the list's last line scrolls back into view (Dante, 0.28.1)."""
+    dialog = window.settings_dialog()
+    dialog.show_page("shortcuts")
+    dialog.resize(dialog.minimumSizeHint().width(), 600)
+    dialog.show()
+    QApplication.processEvents()
+    page = dialog.shortcuts
+    table, view = page.table, page.table.viewport()
+    whole = [i for i in page._items() if view.rect().contains(table.visualItemRect(i))]  # pyright: ignore[reportPrivateUsage]
+    last = whole[-1]  # the last row showing whole, with more under it
+    height = view.height()
+    page.change(last)
+    catcher = table.itemWidget(last, KEY)
+    assert isinstance(catcher, KeyCatcher)
+    QTest.keyClick(catcher, Qt.Key.Key_F1)
+    QApplication.processEvents()
+    assert view.height() < height, "the reason fit on one line: make the window narrower"
+    assert view.rect().contains(table.visualItemRect(last))
+    assert table.itemWidget(last, KEY) is catcher  # still waiting, in its row
+    dialog.close()
 
 
 def test_a_key_another_command_runs_moves_only_when_you_say_so(
