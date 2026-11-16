@@ -88,9 +88,9 @@ def test_no_text_writes_a_key_a_person_can_change_into_its_words() -> None:
     shortcuts: a tip adds its command's key as it is now (shortcuts.key_tip), and a sentence
     takes it from the command (Printers' first-run guide said "press it or F5" until 0.28.1).
     Anywhere in a text, then. Keys no command can take may be written: those kept for
-    CapyPanel itself (shortcuts.RESERVED) and F2, Qt's own key to edit a table's cell. As
-    words, Enter and Del are mostly verbs and buttons: only a bracketed one at the end counts."""
-    fixed_keys = {"F1", "Esc", "Ctrl+F", "Tab", "Shift+Tab", "Ctrl+Tab", "Ctrl+Shift+Tab", "F2"}
+    CapyPanel itself (shortcuts.RESERVED). As words, Enter and Del are mostly verbs and
+    buttons: only a bracketed one at the end counts."""
+    fixed_keys = {"F1", "Esc", "Ctrl+F", "Tab", "Shift+Tab", "Ctrl+Tab", "Ctrl+Shift+Tab"}
     anywhere = re.compile(r"(?<![\w+])(?:F\d{1,2}|(?:Ctrl|Alt|Shift)\+\S+)")
     at_end = re.compile(r"\((?:also )?(?:Enter|Del)\)$")
 
@@ -99,7 +99,13 @@ def test_no_text_writes_a_key_a_person_can_change_into_its_words() -> None:
         return bool(keys - fixed_keys) or at_end.search(text) is not None
 
     named = {text for _context, texts in _in_code() for text in texts if names_one(text)}
-    fixed = {"Details (Enter)"}  # the User profiles tool's: not on the Keyboard shortcuts page
+    fixed = {
+        "Details (Enter)",  # the User profiles tool's: not on the Keyboard shortcuts page
+        # Import hosts' own table, where F2 is Qt's key to edit a cell. Hosts' and Printers'
+        # Edit take F2 too, and a person can change theirs: F2 elsewhere is caught.
+        "Double-click a cell, or press F2, to change it; the list above follows. Right-click "
+        "for more.",
+    }
     assert named == fixed
     old = "Reads the status, toner and page count of every printer shown. Nothing is read until"
     assert names_one(f"{old} you press it or F5.")  # the guide's words before 0.28.1
