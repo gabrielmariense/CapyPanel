@@ -82,8 +82,9 @@ class ShortcutsPage(Page):
         self.section = Section(_("Command keys"))  # not the page's name again: what its list holds
         self.about = hint(
             _(
-                "Double-click a command, then press its new key. A command Hosts and Printers "
-                "share has one key for both. F1 is kept for help and Esc always closes."
+                "Double-click a command and press the key you want for it. If a command is in "
+                "both Hosts and Printers, its key works in both. F1, Esc, Ctrl+F and Tab are "
+                "kept for CapyPanel itself."
             )  # fmt: skip
         )
         self.table = grid_table([_("Command"), _("Where"), _("Key")])

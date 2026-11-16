@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-14 22:31-0300\n"
+"POT-Creation-Date: 2026-11-16 10:21-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1511,9 +1511,9 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Double-click a command, then press its new key. A command Hosts and "
-"Printers share has one key for both. F1 is kept for help and Esc always "
-"closes."
+"Double-click a command and press the key you want for it. If a command is"
+" in both Hosts and Printers, its key works in both. F1, Esc, Ctrl+F and "
+"Tab are kept for CapyPanel itself."
 msgstr ""
 
 msgid ""
@@ -1668,9 +1668,6 @@ msgid "Everyone on this PC"
 msgstr ""
 
 msgid "Everyone on this PC (shared)"
-msgstr ""
-
-msgid "Everywhere"
 msgstr ""
 
 msgid "Export CSV"
@@ -2178,6 +2175,9 @@ msgid "Mascot:"
 msgstr ""
 
 msgid "Memory"
+msgstr ""
+
+msgid "Menu bar"
 msgstr ""
 
 msgctxt "button"

@@ -84,7 +84,7 @@ def test_every_command_is_listed_with_today_s_key_and_power_never_is(window: Cap
     page = _page(window)
     item = page.item_of("list.edit")
     assert [item.text(c) for c in range(3)] == ["Edit…", "Hosts, Printers", "F2"]
-    assert page.item_of("app.settings").text(1) == "Everywhere"
+    assert page.item_of("app.settings").text(1) == "Menu bar"
     assert page.item_of("hosts.connect_host").text(KEY) == "Enter"  # Windows' name for Return
     assert page.table.property("mostRows") == shortcuts_page.ROWS  # a long list, a tall table
 
@@ -95,7 +95,7 @@ def test_the_list_goes_by_where_then_a_to_z(window: CapyWindow) -> None:
     rows = [table.topLevelItem(i) for i in range(table.topLevelItemCount())]
     wheres = [item.text(1) for item in rows if item is not None]
     groups = list(dict.fromkeys(wheres))  # each place once, in the order the list shows them
-    assert groups[:4] == ["Everywhere", "Hosts", "Hosts, Printers", "Printers"]
+    assert groups[:4] == ["Menu bar", "Hosts", "Hosts, Printers", "Printers"]
     assert wheres == sorted(wheres, key=groups.index)  # each place's commands together
     for group in groups:
         names = [i.text(0) for i in rows if i is not None and i.text(1) == group]

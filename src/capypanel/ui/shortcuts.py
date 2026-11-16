@@ -15,7 +15,7 @@ from capypanel.core.i18n import _
 from capypanel.ui import menus
 
 PREFS_KEY = "shortcuts"  # this person's: {command id: "Ctrl+E", or "" for no key}
-EVERYWHERE = ""  # a command of the window itself, not of one tool
+EVERYWHERE = ""  # a command of the window itself (its menu bar), not of one tool
 # Keys no command can take: F1 is help's (0.30), Esc closes and ends a search, Ctrl+F searches
 # every list, and the Tab keys move around a window and between tabs.
 RESERVED = ("F1", "Esc", "Ctrl+F", "Tab", "Shift+Tab", "Ctrl+Tab", "Ctrl+Shift+Tab")
@@ -169,7 +169,8 @@ class Keys:
 
 
 def places_text(places: Sequence[str], names: dict[str, str]) -> str:
-    """Where a command runs, in words: "Hosts, Printers", or "Everywhere"."""
+    """Where a command runs, in words: "Hosts, Printers", or "Menu bar" for the window's own
+    (File, View, Help), which work whichever tool is open."""
     if EVERYWHERE in places:
-        return _("Everywhere")
+        return _("Menu bar")
     return ", ".join(names.get(p, p) for p in places)
