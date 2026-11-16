@@ -270,8 +270,9 @@ def test_manual_connection_opens_the_profiles_and_lists_them_as_changed(
     assert commands.add_button.isHidden()  # nothing typed yet
     # Tab: Host, Profile, the profiles button, Connect.
     order = [commands.address, commands.profile, button, commands.connect_button]
-    seen, widget = [], commands.address.nextInFocusChain()
-    while widget is not commands.address and len(seen) < len(order) - 1:
+    seen: list[object] = []
+    widget = commands.address.nextInFocusChain()
+    while widget is not None and widget is not commands.address and len(seen) < 3:
         if widget in order:
             seen.append(widget)
         widget = widget.nextInFocusChain()
