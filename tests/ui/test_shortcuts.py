@@ -10,7 +10,7 @@ from capywindow import CapyWindow
 from PySide6.QtCore import QKeyCombination, Qt
 from PySide6.QtGui import QKeySequence
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QTreeWidgetItem
 
 from capypanel.core import settings
 from capypanel.ui import shortcuts
@@ -76,51 +76,100 @@ def test_every_command_is_listed_with_today_s_key_and_power_never_is(window: Cap
     assert keys.key(keys.row("command.services")) == ""  # most have none, for you to fill
     for never in ("restart", "shut-down", "cancel-restart", "spooler"):  # disturb the PC's user
         assert f"command.{never}" not in ids
-    edit = keys.row("list.edit")  # one row, one key, for Hosts and Printers
-    assert edit.places == ["hosts", "printers"] and len(edit.actions) == 2
-    assert keys.key(edit) == "F2"
+    hosts_edit, printers_edit = keys.row("hosts.edit"), keys.row("printers.edit")
+    # Each tool's own row, even for a command both have (Gabriel, 2026-11-16).
+    assert hosts_edit.places == ["hosts"] and printers_edit.places == ["printers"]
+    assert keys.key(hosts_edit) == keys.key(printers_edit) == "F2"
     assert keys.row("hosts.add_host").places == ["hosts"]
     assert keys.row("printers.add_printer").places == ["printers"]
     page = _page(window)
-    item = page.item_of("list.edit")
-    assert [item.text(c) for c in range(3)] == ["Edit…", "Hosts, Printers", "F2"]
-    assert page.item_of("app.settings").text(1) == "Menu bar"
-    assert page.item_of("hosts.connect_host").text(KEY) == "Enter"  # Windows' name for Return
+    assert page.table.columnCount() == 2  # Command and Key: the place is the heading
+    item = page.item_of("hosts.edit")
+    assert [item.text(c) for c in range(2)] == ["Edit…", "F2"]
+    assert page.item_of("hosts.copy_address").text(0) == "Copy address"  # not a bare "Address"
+    # Connect's key works only in the host list, whatever key it is, and the page says so.
+    connect = page.item_of("hosts.connect_host")
+    cell = page.table.itemWidget(connect, KEY)
+    assert connect.text(KEY) == "" and cell is not None
+    assert [w.text() for w in cell.findChildren(QLabel)] == ["Enter", "(in the list)"]
+    assert page.item_of("hosts.add_host").text(KEY) == "Ctrl+N"  # the others: just the key
+    assert page.table.itemWidget(page.item_of("hosts.add_host"), KEY) is None
     assert page.table.property("mostRows") == shortcuts_page.ROWS  # a long list, a tall table
 
 
-def test_the_list_goes_by_where_then_a_to_z(window: CapyWindow) -> None:
-    page = _page(window)
+def _headings(page: ShortcutsPage) -> list[tuple[QTreeWidgetItem, list[QTreeWidgetItem]]]:
+    """Each heading row with the command rows under it."""
     table = page.table
-    rows = [table.topLevelItem(i) for i in range(table.topLevelItemCount())]
-    wheres = [item.text(1) for item in rows if item is not None]
-    groups = list(dict.fromkeys(wheres))  # each place once, in the order the list shows them
-    assert groups[:4] == ["Menu bar", "Hosts", "Hosts, Printers", "Printers"]
-    assert wheres == sorted(wheres, key=groups.index)  # each place's commands together
-    for group in groups:
-        names = [i.text(0) for i in rows if i is not None and i.text(1) == group]
-        assert names == sorted(names, key=shortcuts_page.alphabetical), group
+    found: list[tuple[QTreeWidgetItem, list[QTreeWidgetItem]]] = []
+    for i in range(table.topLevelItemCount()):
+        item = table.topLevelItem(i)
+        assert item is not None
+        if item.data(0, shortcuts_page.ROW_ROLE):
+            found[-1][1].append(item)
+        else:
+            found.append((item, []))
+    return found
+
+
+def test_the_commands_sit_under_their_menu_or_tool_then_a_to_z(window: CapyWindow) -> None:
+    page = _page(window)
+    headings = _headings(page)
+    assert [h.text(0) for h, _rows in headings] == ["FILE", "VIEW", "HELP", "HOSTS", "PRINTERS"]
+    for heading, rows in headings:
+        assert heading.flags() == Qt.ItemFlag.NoItemFlags  # can't be picked
+        names = [row.text(0) for row in rows]
+        assert names == sorted(names, key=shortcuts_page.alphabetical), heading.text(0)
+    file_rows = [row.data(0, shortcuts_page.ROW_ROLE) for row in headings[0][1]]
+    assert file_rows == ["app.exit", "app.settings"]  # Exit, Settings…: A–Z
+    assert "go.hosts" in [row.data(0, shortcuts_page.ROW_ROLE) for row in headings[1][1]]
     assert shortcuts_page.alphabetical("Área…") == shortcuts_page.alphabetical("area")
-    # The page's one instruction reads as body text, a point up; the refusal line stays a hint.
+    # The arrow keys go past a heading.
+    last_of_file = headings[0][1][-1]
+    page.table.setCurrentItem(last_of_file)
+    QTest.keyClick(page.table, Qt.Key.Key_Down)
+    assert page.table.currentItem() is headings[1][1][0]
+    # One line on top, as body text a point up; the reserved keys under the buttons.
+    assert page.about.text() == "Double-click a command and press its new key."
     assert page.about.objectName() == "lead" and page.problem.objectName() == "hint"
     assert page.about.font().pointSizeF() == page.table.font().pointSizeF() + 1
+    assert page.problem.text() == "F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself."
 
 
-def test_a_new_key_is_kept_and_works_at_once_in_every_tool(window: CapyWindow) -> None:
+def test_a_new_key_is_kept_and_works_at_once_in_its_own_tool_only(window: CapyWindow) -> None:
     page = _page(window)
-    _press(page, "list.edit", Qt.Key.Key_K, Qt.KeyboardModifier.ControlModifier)
-    assert page.item_of("list.edit").text(KEY) == "Ctrl+K"
-    row = window.keys.row("list.edit")
-    assert all(a.shortcut() == QKeySequence("Ctrl+K") for a in row.actions)
-    assert window.prefs["shortcuts"] == {"list.edit": "Ctrl+K"}  # only what differs
-    page.table.setCurrentItem(page.item_of("list.edit"))
+    _press(page, "hosts.edit", Qt.Key.Key_K, Qt.KeyboardModifier.ControlModifier)
+    assert page.item_of("hosts.edit").text(KEY) == "Ctrl+K"
+    row = window.keys.row("hosts.edit")
+    assert [a.shortcut() for a in row.actions] == [QKeySequence("Ctrl+K")]
+    assert window.keys.key(window.keys.row("printers.edit")) == "F2"  # the other tool's stays
+    assert page.item_of("printers.edit").text(KEY) == "F2"
+    assert window.prefs["shortcuts"] == {"hosts.edit": "Ctrl+K"}  # only what differs
+    page.table.setCurrentItem(page.item_of("hosts.edit"))
     assert page.restore.isEnabled() and page.clear.isEnabled()
     page.restore.click()
     assert window.prefs["shortcuts"] == {} and row.actions[0].shortcut() == QKeySequence("F2")
     assert not page.restore.isEnabled()
     page.clear.click()  # no key at all
-    assert window.prefs["shortcuts"] == {"list.edit": ""} and row.actions[1].shortcut().isEmpty()
-    assert page.item_of("list.edit").text(KEY) == ""
+    assert window.prefs["shortcuts"] == {"hosts.edit": ""} and row.actions[0].shortcut().isEmpty()
+    assert page.item_of("hosts.edit").text(KEY) == ""
+
+
+def test_a_key_kept_for_both_tools_before_goes_to_each(
+    qapp: QApplication, paths: settings.Paths
+) -> None:
+    prefs: dict[str, Any] = {"schema": 1, "shortcuts": {"list.edit": "Ctrl+K", "list.remove": ""}}
+    win = CapyWindow(paths, prefs)
+    try:
+        keys = win.keys
+        for tool in ("hosts", "printers"):
+            assert keys.key(keys.row(f"{tool}.edit")) == "Ctrl+K", tool
+            assert keys.key(keys.row(f"{tool}.remove")) == "", tool
+        assert prefs["shortcuts"] == {
+            "hosts.edit": "Ctrl+K", "printers.edit": "Ctrl+K",
+            "hosts.remove": "", "printers.remove": "",
+        }  # fmt: skip
+    finally:
+        win.close()
 
 
 def test_keys_kept_from_before_apply_at_start(qapp: QApplication, paths: settings.Paths) -> None:
@@ -176,6 +225,8 @@ def test_keys_kept_for_capypanel_and_typed_text_are_refused(window: CapyWindow) 
     _press(page, "command.services", Qt.Key.Key_Escape)  # Esc leaves it as it was
     assert page.table.itemWidget(page.item_of("command.services"), KEY) is None
     assert window.keys.key(window.keys.row("command.services")) == ""
+    _press(page, "command.services", Qt.Key.Key_F6)  # a key taken: the reserved keys again
+    assert page.problem.text() == "F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself."
     assert shortcuts.refused("Ctrl+Shift+S") == "" and shortcuts.refused("F6") == ""
     # Typed text past ASCII too: Ç and é are keys of their own on a Brazilian keyboard, and ´
     # (a dead key) starts an accented letter.

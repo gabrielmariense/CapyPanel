@@ -1,10 +1,11 @@
 """Keyboard shortcuts: which key runs which command, as each person sets them in Settings ›
 CapyPanel › Keyboard shortcuts. Every command a key can run is a row; today's keys are its
-defaults, and a person's changes are kept in their settings file (only what differs). A command
-Hosts and Printers share (Edit, Refresh…) is one row and one key for both. Restart, Shut down and
-the other Power commands, and every command that disturbs whoever uses a PC, never get a key."""
+defaults, and a person's changes are kept in their settings file (only what differs). Each tool's
+commands are its own rows, even one Hosts and Printers both have (Edit, Refresh…): a key set for
+one tool's leaves the other's as it was. Restart, Shut down and the other Power commands, and
+every command that disturbs whoever uses a PC, never get a key."""
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -16,6 +17,7 @@ from capypanel.ui import menus
 
 PREFS_KEY = "shortcuts"  # this person's: {command id: "Ctrl+E", or "" for no key}
 EVERYWHERE = ""  # a command of the window itself (its menu bar), not of one tool
+OLD_SHARED = "list."  # before 0.28's last builds, one id for a command every list tool has
 # Keys no command can take: F1 is help's (0.30), Esc closes and ends a search, Ctrl+F searches
 # every list, and the Tab keys move around a window and between tabs.
 RESERVED = ("F1", "Esc", "Ctrl+F", "Tab", "Shift+Tab", "Ctrl+Tab", "Ctrl+Shift+Tab")
@@ -27,7 +29,7 @@ DEAD_KEYS_END = 0x01001293  # the last of Qt's dead-key codes
 @dataclass(frozen=True)
 class KeyCommand:
     """A command a key can run, as a tool or the window offers it: `id` names it in the
-    settings file ("list.edit" is the same command in every list tool), `where` is the tool's
+    settings file ("hosts.edit", "app.settings"), `where` is the tool's
     id or EVERYWHERE, and `default` is today's key in portable text ("Ctrl+E"), or ""."""
 
     id: str
@@ -118,7 +120,22 @@ class Keys:
                 row.places.append(command.where)
             row.actions.append(command.action)
         self.rows = list(rows.values())
+        if self._split_old_shared(rows):
+            self._save()
         self.apply()
+
+    def _split_old_shared(self, rows: dict[str, Row]) -> bool:
+        """A key kept under an old shared id ("list.edit") goes to each tool's own row
+        ("hosts.edit", "printers.edit"), so nobody loses a key they set. Whether any moved."""
+        own = self._own()
+        old = [kept for kept in own if kept.startswith(OLD_SHARED) and kept not in rows]
+        for kept in old:
+            name = kept.removeprefix(OLD_SHARED)
+            for row in rows.values():
+                if row.id == f"{row.places[0]}.{name}":
+                    own.setdefault(row.id, own[kept])
+            del own[kept]
+        return bool(old)
 
     def row(self, row_id: str) -> Row:
         return next(row for row in self.rows if row.id == row_id)
@@ -166,11 +183,3 @@ class Keys:
                 if action.shortcut() != sequence:
                     action.setShortcut(sequence)
                     action.setText(menus.label(action))  # its old key's room goes
-
-
-def places_text(places: Sequence[str], names: dict[str, str]) -> str:
-    """Where a command runs, in words: "Hosts, Printers", or "Menu bar" for the window's own
-    (File, View, Help), which work whichever tool is open."""
-    if EVERYWHERE in places:
-        return _("Menu bar")
-    return ", ".join(names.get(p, p) for p in places)

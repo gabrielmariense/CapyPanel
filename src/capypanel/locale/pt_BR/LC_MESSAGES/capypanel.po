@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 11:55-0300\n"
+"POT-Creation-Date: 2026-11-16 12:30-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -449,6 +449,9 @@ msgstr "E&xibir"
 
 msgid "&When:"
 msgstr "&Quando:"
+
+msgid "(in the list)"
+msgstr "(na lista)"
 
 msgid "(password only)"
 msgstr "(só senha)"
@@ -1474,8 +1477,8 @@ msgstr "Porta aberta"
 msgid "Double-click a cell, or press F2, to change it; the list above follows. Right-click for more."
 msgstr "Clique duas vezes numa célula, ou pressione F2, para alterá-la; a lista acima acompanha. Clique com o botão direito para mais opções."
 
-msgid "Double-click a command and press the key you want for it. If a command is in both Hosts and Printers, its key works in both. F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself."
-msgstr "Dê dois cliques num comando e pressione a tecla que você quer para ele. Se um comando está em Hosts e em Impressoras, a tecla dele vale nos dois. F1, Esc, Ctrl+F e Tab ficam reservadas ao próprio CapyPanel."
+msgid "Double-click a command and press its new key."
+msgstr "Dê dois cliques num comando e pressione a nova tecla."
 
 msgid "Double-click a host to open it, or pick hosts and click Scan to scan them here."
 msgstr "Dê dois cliques num host para abri-lo, ou selecione hosts e clique em Escanear para escaneá-los daqui."
@@ -1620,6 +1623,9 @@ msgstr "Todos neste PC (compartilhada)"
 
 msgid "Export CSV"
 msgstr "Exportar CSV"
+
+msgid "F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself."
+msgstr "F1, Esc, Ctrl+F e Tab ficam reservadas ao próprio CapyPanel."
 
 msgid "Failed"
 msgstr "Falhou"

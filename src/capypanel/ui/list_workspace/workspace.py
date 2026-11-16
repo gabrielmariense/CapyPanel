@@ -60,7 +60,6 @@ from capypanel.ui.new_list import ask_new_list
 from capypanel.ui.shortcuts import KeyCommand, portable
 
 log = logging.getLogger(__name__)
-SHARED_COMMANDS = {"copy_address", "refresh_shown"}  # in every list tool, beyond ListActions
 
 HIDDEN_KEY = "details_hidden"  # the Details parts this person chose not to see
 
@@ -311,13 +310,12 @@ class ListWorkspace(Tool):
         return [panes]
 
     def key_commands(self) -> list[KeyCommand]:
-        """Every command in its menus. One every list tool has (Edit, Refresh, Copy address…)
-        is named the same in each, so Settings shows it once, with one key for all of them."""
+        """Every command in its menus, each this tool's own: one every list tool has (Edit,
+        Refresh, Copy address…) gets its own row and key in each (Gabriel, 2026-11-16)."""
         a = self._list_commands
-        shared = {f.name for f in fields(ListActions)} | SHARED_COMMANDS
         return [
             KeyCommand(
-                f"list.{f.name}" if f.name in shared else f"{self.TOOL_ID}.{f.name}",
+                f"{self.TOOL_ID}.{f.name}",
                 getattr(a, f.name),
                 self.TOOL_ID,
                 portable(getattr(a, f.name).shortcut()),
