@@ -137,7 +137,7 @@ def waiting_text() -> str:
 
 def refused_text() -> str:
     """In the waiting field after a key it can't take; the reason is under the list."""
-    return _("Reserved: try another")
+    return _("Key not allowed")
 
 
 def place_in_order(row: Row) -> int:

@@ -278,7 +278,7 @@ def test_keys_kept_for_capypanel_and_typed_text_are_refused(window: CapyWindow) 
     services = page.item_of("command.services")
     catcher = page.table.itemWidget(services, KEY)
     assert isinstance(catcher, KeyCatcher) and catcher.property("refused") is True
-    assert catcher.placeholderText() == "Reserved: try another"
+    assert catcher.placeholderText() == "Key not allowed"
     assert page.problem.objectName() == "refusal" and not page.problem_icon.isHidden()
     QTest.keyClick(catcher, Qt.Key.Key_F6)  # the next key, in the same field, just works
     assert window.keys.key(window.keys.row("command.services")) == "F6"

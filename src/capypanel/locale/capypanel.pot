@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 14:36-0300\n"
+"POT-Creation-Date: 2026-11-16 15:47-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2050,6 +2050,9 @@ msgstr ""
 msgid "Key"
 msgstr ""
 
+msgid "Key not allowed"
+msgstr ""
+
 msgid "Keyboard shortcuts"
 msgstr ""
 
@@ -3199,9 +3202,6 @@ msgid "Report saved: {n} printer from {source}."
 msgid_plural "Report saved: {n} printers from {source}."
 msgstr[0] ""
 msgstr[1] ""
-
-msgid "Reserved: try another"
-msgstr ""
 
 msgid "Reset to &default"
 msgstr ""

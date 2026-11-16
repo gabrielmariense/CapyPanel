@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 14:36-0300\n"
+"POT-Creation-Date: 2026-11-16 15:47-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1971,6 +1971,9 @@ msgstr "Guardada: digite para alterá-la"
 msgid "Key"
 msgstr "Tecla"
 
+msgid "Key not allowed"
+msgstr "Tecla não aceita"
+
 msgid "Keyboard shortcuts"
 msgstr "Atalhos de teclado"
 
@@ -3058,9 +3061,6 @@ msgid "Report saved: {n} printer from {source}."
 msgid_plural "Report saved: {n} printers from {source}."
 msgstr[0] "Relatório salvo: {n} impressora de {source}."
 msgstr[1] "Relatório salvo: {n} impressoras de {source}."
-
-msgid "Reserved: try another"
-msgstr "Reservada: tente outra"
 
 msgid "Reset to &default"
 msgstr "Restaurar &padrão"
