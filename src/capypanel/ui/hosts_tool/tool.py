@@ -8,11 +8,11 @@ import re
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 import shiboken6
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QActionGroup, QColor, QGuiApplication, QKeySequence
+from PySide6.QtGui import QAction, QActionGroup, QColor, QGuiApplication, QKeySequence, QPalette
 from PySide6.QtWidgets import (
     QDialog,
     QLabel,
@@ -84,6 +84,14 @@ QUICK_KEY = "quick_commands"  # this admin's quick commands, in order
 FACTS_AFTER = 1_500  # ms a host stays selected before its PC facts are read
 WATCH_EVERY = 15_000  # ms between checks on a restarting PC, until it answers again
 WATCH_FOR = timedelta(minutes=20)  # after the restart time; then CapyPanel stops watching
+PROFILE_CLEANUP = "profiles"  # the tool's id: it imports this one, so the id stands in for it
+
+
+@runtime_checkable
+class OpensHosts(Protocol):
+    """A tool that opens hosts of Hosts' list in tabs of its own (Profile cleanup)."""
+
+    def open_hosts(self, ids: Sequence[str], focus: bool) -> None: ...
 
 
 class HostsTool(ListWorkspace):
@@ -764,6 +772,10 @@ class HostsTool(ListWorkspace):
         )
         for action in menu.actions():
             action.setEnabled(self._writable() is not None)
+        # Last, under a line, with its "…" and no tick: a command that opens Settings, never
+        # one more profile. Enabled as the Connect menu has it, even on a list it can't write.
+        menu.addSeparator()
+        menu.addAction(self.commands.connection_profiles)
 
     # ---- which account commands run as: Details' arrow and the right-click menus ----
 
@@ -1025,6 +1037,7 @@ class HostsTool(ListWorkspace):
             every = menu.addAction(_("&All commands…"))
             every.setEnabled(target is not None)
             every.triggered.connect(lambda: self.open_commands(self.selected_target()))
+            self._add_open_in_profile_cleanup(menu, items)
         else:
             refresh = menu.addAction(
                 _("&Refresh {n} hosts").format(n=len(items))
@@ -1033,6 +1046,7 @@ class HostsTool(ListWorkspace):
             refresh.triggered.connect(
                 lambda: self.check_hosts(self.selected_items(), status=True, users=True)
             )
+            self._add_open_in_profile_cleanup(menu, items)  # with the work, before the submenu
             menu.addSeparator()
             account = menu.addMenu(_("Commands run &as"))  # each admin's own: never read-only
             self._fill_hosts_account_menu(account, items)
@@ -1044,6 +1058,29 @@ class HostsTool(ListWorkspace):
             menu.addAction(a.edit)
         self.add_move_menu(menu, items)
         menu.addAction(a.remove)
+
+    def _add_open_in_profile_cleanup(self, menu: QMenu, items: Sequence[Host]) -> None:
+        """The line that opens the hosts in Profile cleanup, with that tool's rail icon: it goes
+        to another tool. None in a window without it."""
+        tool = self._shell.tool(PROFILE_CLEANUP)
+        if not isinstance(tool, OpensHosts):
+            return
+        if len(items) == 1:
+            text = _("&Open in Profile cleanup")
+        else:  # always two or more: no plural form needed
+            text = _("&Open {n} hosts in Profile cleanup").format(n=len(items))
+        line = menu.addAction(text)
+        line.setIcon(tabler_icon(tool.ICON, menu.palette().color(QPalette.ColorRole.Text)))
+        ids = [host.id for host in items]
+        line.triggered.connect(lambda: self.open_in_profile_cleanup(ids))
+
+    def open_in_profile_cleanup(self, ids: Sequence[str]) -> None:
+        """Profile cleanup, then each host in a tab of its own there, scanned (a scan only reads;
+        a host with a tab already isn't read again). Its first-use warning comes first, and
+        cancelled, nothing opens."""
+        tool = self._shell.tool(PROFILE_CLEANUP)
+        if isinstance(tool, OpensHosts) and self._shell.show_tool(PROFILE_CLEANUP):
+            tool.open_hosts(ids, True)
 
     def quick_commands(self) -> tuple[str, ...]:
         """This admin's quick commands, in their order (Details' buttons; the menu's first)."""

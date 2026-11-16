@@ -1,4 +1,4 @@
-"""The User profiles tool's tab bar: the pinned Hosts tab first, then a gap with a short line,
+"""The Profile cleanup tool's tab bar: the pinned Hosts tab first, then a gap with a short line,
 then a tab per host, which scroll when they don't fit while the Hosts tab stays. A ▾ at the end
 lists every tab. Tabs never reorder themselves: a new one opens at the right end."""
 

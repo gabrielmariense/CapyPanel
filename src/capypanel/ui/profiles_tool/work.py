@@ -1,4 +1,4 @@
-"""Work off the main thread for the User profiles tool. Reads and size counts share one limit
+"""Work off the main thread for the Profile cleanup tool. Reads and size counts share one limit
 across every tab, so many hosts open at once never walk a whole ward of PCs together; reads go
 before counts. Deletes don't wait here: each host deletes one profile at a time on its own."""
 

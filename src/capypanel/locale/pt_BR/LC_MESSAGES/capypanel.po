@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 16:47-0300\n"
+"POT-Creation-Date: 2026-11-16 18:55-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -262,6 +262,9 @@ msgstr "&Abrir o CapyPanel"
 msgid "&Open a CSV file…"
 msgstr "A&brir um arquivo CSV…"
 
+msgid "&Open in Profile cleanup"
+msgstr "&Abrir na Limpeza de perfis"
+
 msgid "&Open in its own window…"
 msgstr "&Abrir na própria janela…"
 
@@ -270,6 +273,10 @@ msgstr "&Abrir lista…"
 
 msgid "&Open on startup"
 msgstr "&Abrir ao iniciar"
+
+#, python-brace-format
+msgid "&Open {n} hosts in Profile cleanup"
+msgstr "&Abrir {n} hosts na Limpeza de perfis"
 
 msgid "&Partner"
 msgstr "&Parceiro"
@@ -437,9 +444,6 @@ msgstr "&Ferramenta:"
 
 msgid "&User name"
 msgstr "&Usuário"
-
-msgid "&User profiles"
-msgstr "&Perfis de usuário"
 
 msgid "&User:"
 msgstr "&Usuário:"
@@ -1820,8 +1824,8 @@ msgstr "Hosts ({n})"
 msgid "Hosts hasn't checked it yet."
 msgstr "O Hosts ainda não o verificou."
 
-msgid "Hosts is for computers, Printers for printers, and User profiles clears old Windows profiles off a PC. Each tile opens its tool."
-msgstr "Hosts é para computadores, Impressoras para impressoras, e Perfis de usuário limpa perfis antigos do Windows de um PC. Cada bloco abre a sua ferramenta."
+msgid "Hosts is for computers, Printers for printers, and Profile cleanup clears old Windows profiles off a PC. Each tile opens its tool."
+msgstr "Hosts é para computadores, Impressoras para impressoras, e a Limpeza de perfis exclui perfis antigos do Windows de um PC. Cada bloco abre a sua ferramenta."
 
 msgid "Hosts with no group &go to:"
 msgstr "Hosts sem grupo &vão para:"
@@ -2779,6 +2783,12 @@ msgstr "Imprimindo"
 
 msgid "Profile"
 msgstr "Perfil"
+
+msgid "Profile clean&up"
+msgstr "Limpeza de &perfis"
+
+msgid "Profile cleanup"
+msgstr "Limpeza de perfis"
 
 #, python-brace-format
 msgid "Profile {user} on {host}"
@@ -4300,9 +4310,6 @@ msgstr "Usada só para ver quem está logado e nos comandos que você executa em
 
 msgid "User"
 msgstr "Usuário"
-
-msgid "User profiles"
-msgstr "Perfis de usuário"
 
 #, python-brace-format
 msgid "User profiles on {host}"

@@ -301,11 +301,12 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     assert first is not None
     row = window.hosts.table.visualItemRect(first)
     window.hosts._item_menu(QPoint(row.left() + 10, row.center().y()))  # on the name
-    # One PC: refresh it, the four quick commands, the door to every command, then managing it.
+    # One PC: refresh it, the four quick commands, the door to every command and to Profile
+    # cleanup, then managing it.
     assert seen == [
         "&Connect", "&Refresh host",
         "C$ share", "User's folder", "Computer Management", "Send a message…",
-        "&All commands…",
+        "&All commands…", "&Open in Profile cleanup",
         "Co&py",
         "&Edit…", "&Move to", "&Tags", "&Remove",
     ]  # fmt: skip
@@ -314,8 +315,8 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     window.hosts._item_menu(QPoint(row.left() + 10, row.center().y()))
     # Several PCs: only what works on all of them; Commands run as stays, Edit goes.
     assert seen == [
-        "&Connect", "&Refresh 2 hosts", "Commands run &as", "Co&py", "&Move to", "&Tags",
-        "&Remove",
+        "&Connect", "&Refresh 2 hosts", "&Open 2 hosts in Profile cleanup", "Commands run &as",
+        "Co&py", "&Move to", "&Tags", "&Remove",
     ]  # fmt: skip
 
 

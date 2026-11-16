@@ -52,6 +52,9 @@ class FakeShell:
     def tool(self, tool_id: str) -> None:
         return None  # no other tool: Printers builds on none
 
+    def show_tool(self, tool_id: str) -> bool:
+        return False
+
     def guide_changed(self) -> None:
         pass
 

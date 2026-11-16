@@ -914,7 +914,7 @@ QTreeView::item:selected, QListView#pageList::item:selected {
 /* Tables marked "grid": a thin line under each row, none between columns; the table's own
    border is its one frame. */
 QTreeView#grid::item { border-bottom: 1px solid %(row_line)s; }
-/* Tick boxes in a list's rows (User profiles, the quick commands): with the rules above, the
+/* Tick boxes in a list's rows (Profile cleanup, the quick commands): with the rules above, the
    Windows style drew a ticked one as a bare tick with no box, white on white in light. Drawn
    here like Windows' own: a rounded box, filled in the accent with a white tick. */
 QTreeView::indicator, QListView::indicator { width: 14px; height: 14px; border-radius: 4px;

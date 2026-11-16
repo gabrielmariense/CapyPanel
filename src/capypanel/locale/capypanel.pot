@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 16:47-0300\n"
+"POT-Creation-Date: 2026-11-16 18:55-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -261,6 +261,9 @@ msgstr ""
 msgid "&Open a CSV file…"
 msgstr ""
 
+msgid "&Open in Profile cleanup"
+msgstr ""
+
 msgid "&Open in its own window…"
 msgstr ""
 
@@ -268,6 +271,10 @@ msgid "&Open list…"
 msgstr ""
 
 msgid "&Open on startup"
+msgstr ""
+
+#, python-brace-format
+msgid "&Open {n} hosts in Profile cleanup"
 msgstr ""
 
 msgid "&Partner"
@@ -435,9 +442,6 @@ msgid "&Tool:"
 msgstr ""
 
 msgid "&User name"
-msgstr ""
-
-msgid "&User profiles"
 msgstr ""
 
 msgid "&User:"
@@ -1883,8 +1887,8 @@ msgid "Hosts hasn't checked it yet."
 msgstr ""
 
 msgid ""
-"Hosts is for computers, Printers for printers, and User profiles clears "
-"old Windows profiles off a PC. Each tile opens its tool."
+"Hosts is for computers, Printers for printers, and Profile cleanup clears"
+" old Windows profiles off a PC. Each tile opens its tool."
 msgstr ""
 
 msgid "Hosts with no group &go to:"
@@ -2909,6 +2913,12 @@ msgid "Printing"
 msgstr ""
 
 msgid "Profile"
+msgstr ""
+
+msgid "Profile clean&up"
+msgstr ""
+
+msgid "Profile cleanup"
 msgstr ""
 
 #, python-brace-format
@@ -4533,9 +4543,6 @@ msgid "Used only to read who is logged on and for the commands you run on a host
 msgstr ""
 
 msgid "User"
-msgstr ""
-
-msgid "User profiles"
 msgstr ""
 
 #, python-brace-format

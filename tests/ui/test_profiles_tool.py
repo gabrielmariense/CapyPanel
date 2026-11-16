@@ -1,7 +1,8 @@
-"""The User profiles tool: the Hosts tab with the hosts of Hosts' open list, a tab per host opened,
-the profiles table with its filters and order, a profile's details, sizes, deletes, what a failed
-scan says, and the limit on reads and counts shared by every tab. Nothing here reaches a PC: the
-scan, the sizes and the deletes are answered by hand."""
+"""The Profile cleanup tool: the Hosts tab with the hosts of Hosts' open list, a tab per host
+opened (from here or Hosts' right-click), the profiles table with its filters and order, a
+profile's details, sizes, deletes, what a failed scan says, and the limit on reads and counts
+shared by every tab. Nothing here reaches a PC: the scan, the sizes and the deletes are answered
+by hand."""
 
 from collections.abc import Callable, Iterator
 from datetime import UTC, datetime, timedelta
@@ -13,7 +14,7 @@ from capywindow import CapyWindow
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, QPointF, QRect, QSize, Qt
 from PySide6.QtGui import QIcon, QKeyEvent, QMouseEvent, QShowEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog, QToolButton, QWidget
+from PySide6.QtWidgets import QApplication, QDialog, QMenu, QToolButton, QWidget
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -30,7 +31,8 @@ from capypanel.core.remote.user_profiles import (
     State,
     Why,
 )
-from capypanel.ui.profiles_tool import host_page, hosts_page, panels, rows, side, work
+from capypanel.ui.main_window import window as window_module
+from capypanel.ui.profiles_tool import first_use, host_page, hosts_page, panels, rows, side, work
 from capypanel.ui.profiles_tool import tool as tool_ui
 from capypanel.ui.profiles_tool.host_page import HostPage, Stage
 from capypanel.ui.profiles_tool.panels import DeleteDialog
@@ -208,7 +210,7 @@ def test_it_is_the_third_tool_and_its_hosts_tab_lists_hosts_open_list(
 ) -> None:
     tool = _tool(window)
     assert list(window.tools) == ["hosts", "printers", "profiles"]
-    assert (tool.tool_name(), tool.ICON) == ("User profiles", "profile-card")
+    assert (tool.tool_name(), tool.ICON) == ("Profile cleanup", "profile-card")
     assert tool.list_picker.text() == "clinic"
     assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]  # natural order; reachable ones
     assert tool.tabs.current() == HOSTS and tool.tabs.pinned.tabText(0) == "Hosts (3)"
@@ -420,6 +422,56 @@ def test_a_double_click_or_enter_opens_a_hosts_tab_and_goes_to_it(
     QApplication.sendEvent(table.tree, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Return,
                                                  Qt.KeyboardModifier.NoModifier))  # fmt: skip
     assert tool.tabs.current() == key and len(pc.scanned) == 1  # its tab: never a second read
+
+
+def _hosts_menu(win: CapyWindow, *names: str) -> QMenu:
+    """Hosts' right-click menu on these hosts."""
+    win.hosts.table.select_ids([_id(win, name) for name in names])
+    menu = QMenu()
+    win.hosts.fill_item_menu(menu, win.hosts.selected_items())
+    return menu
+
+
+def test_hosts_right_click_opens_them_here_each_in_its_own_tab_and_scanned(
+    window: CapyWindow, pc: Pc
+) -> None:
+    """His idea from the 0.28 test (topic-0281-ideas, D2): one host, the commands' last line;
+    several, with the count, before the submenu. The tool's own icon: the line goes there."""
+    tool = _tool(window)
+    window.show_tool("hosts")
+    menu = _hosts_menu(window, "DESK-03")
+    texts = [a.text() for a in menu.actions()]
+    at = texts.index("&Open in Profile cleanup")
+    assert texts[at - 1] == "&All commands…" and menu.actions()[at + 1].isSeparator()
+    assert not menu.actions()[at].icon().isNull()
+    menu.actions()[at].trigger()
+    key = _id(window, "DESK-03")
+    assert window.shown_tool() is tool and tool.tabs.current() == key
+    assert pc.scanned == [("192.0.2.13", None)]
+
+    window.show_tool("hosts")
+    menu = _hosts_menu(window, "DESK-03", "DESK-10")
+    texts = [a.text() for a in menu.actions()]
+    at = texts.index("&Open 2 hosts in Profile cleanup")
+    assert texts[at - 1] == "&Refresh 2 hosts" and texts[at + 2] == "Commands run &as"
+    menu.actions()[at].trigger()
+    assert window.shown_tool() is tool and tool.tabs.host_keys() == [key, _id(window, "DESK-10")]
+    assert [a for a, _b in pc.scanned] == ["192.0.2.13", "192.0.2.20"]  # DESK-03 isn't read again
+
+
+def test_from_hosts_its_first_use_warning_comes_first_and_cancelled_opens_nothing(
+    window: CapyWindow, pc: Pc, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tool = _tool(window)
+    window.show_tool("hosts")
+    monkeypatch.setattr(window_module, "on_screen", lambda _window: True)  # as for a person
+    answers = iter([QDialog.DialogCode.Rejected, QDialog.DialogCode.Accepted])
+    monkeypatch.setattr(first_use, "run_modal", lambda _dialog: next(answers))
+    assert tool.first_use_pending()
+    window.hosts.open_in_profile_cleanup([_id(window, "DESK-03")])  # Cancel
+    assert window.shown_tool() is window.hosts and tool.tabs.host_keys() == [] and not pc.scanned
+    window.hosts.open_in_profile_cleanup([_id(window, "DESK-03")])  # ticked and continued
+    assert window.shown_tool() is tool and tool.tabs.host_keys() == [_id(window, "DESK-03")]
 
 
 def test_a_middle_click_or_ctrl_enter_opens_it_behind(window: CapyWindow, pc: Pc) -> None:

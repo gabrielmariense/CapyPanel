@@ -1,4 +1,4 @@
-"""The parts of a host's tab in the User profiles tool: its box (the host's name, the filters and
+"""The parts of a host's tab in the Profile cleanup tool: its box (the host's name, the filters and
 the profiles table, or a card saying what's happening or what went wrong), a profile's details
 and the Delete window. The right panel's cards are in side.py."""
 

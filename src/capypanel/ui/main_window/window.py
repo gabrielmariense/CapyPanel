@@ -166,8 +166,10 @@ class MainWindow(QMainWindow):
         """None while Home is shown."""
         return None if self._shown is None else self.tools[self._shown]
 
-    def show_tool(self, tool_id: str) -> None:
+    def show_tool(self, tool_id: str) -> bool:
+        """False when the tool's first-use warning was cancelled: the window stays where it was."""
         self._show(tool_id)
+        return self._shown == tool_id
 
     def show_home(self) -> None:
         self._show(None)
@@ -666,8 +668,8 @@ class MainWindow(QMainWindow):
                        "commands and check the toner. These cards show you around."),
                      lambda: None),
                 Step(_("Three tools"),
-                     _("Hosts is for computers, Printers for printers, and User profiles clears "
-                       "old Windows profiles off a PC. Each tile opens its tool."),
+                     _("Hosts is for computers, Printers for printers, and Profile cleanup "
+                       "clears old Windows profiles off a PC. Each tile opens its tool."),
                      lambda: home.tiles, lambda: home),
                 Step(_("The sidebar"),
                      _("This bar stays here on every screen. Home is at the top, Settings at the "

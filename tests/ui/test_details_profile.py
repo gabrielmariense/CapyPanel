@@ -55,3 +55,25 @@ def test_the_profile_in_details_has_an_arrow_with_the_group_s_choices(window: Ca
     follow.trigger()  # back to following the group
     doc = hosts.document
     assert doc is not None and doc.hosts.host(host_id).profile == ""  # type: ignore[union-attr]
+
+
+def test_the_arrow_ends_with_connection_profiles_which_opens_settings(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """His idea from the 0.28 test (topic-0281-ideas, B1): the Connect menu's own command, with
+    its words, under a line and never ticked, so it doesn't read as one more profile."""
+    hosts = window.hosts
+    host_id = _pick(window)
+    opened: list[str | None] = []
+    monkeypatch.setattr(window, "open_settings", lambda page=None: opened.append(page))
+    monkeypatch.setattr(hosts, "_writable", lambda: None)  # a list it can't write
+    menu = hosts.details.profile_menu
+    menu.aboutToShow.emit()
+    *profiles, line, last = menu.actions()
+    assert line.isSeparator() and last is hosts.commands.connection_profiles
+    assert last.text() == "Connection &profiles…" and not last.isCheckable()
+    assert last.isEnabled() and not any(a.isEnabled() for a in profiles if not a.isSeparator())
+    last.trigger()
+    assert opened == ["connections"]
+    doc = hosts.document
+    assert doc is not None and doc.hosts.host(host_id).profile == ""  # type: ignore[union-attr]

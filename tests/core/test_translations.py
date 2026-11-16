@@ -100,7 +100,7 @@ def test_no_text_writes_a_key_a_person_can_change_into_its_words() -> None:
 
     named = {text for _context, texts in _in_code() for text in texts if names_one(text)}
     fixed = {
-        "Details (Enter)",  # the User profiles tool's: not on the Keyboard shortcuts page
+        "Details (Enter)",  # the Profile cleanup tool's: not on the Keyboard shortcuts page
         # Import hosts' own table, where F2 is Qt's key to edit a cell. Hosts' and Printers'
         # Edit take F2 too, and a person can change theirs: F2 elsewhere is caught.
         "Double-click a cell, or press F2, to change it; the list above follows. Right-click "

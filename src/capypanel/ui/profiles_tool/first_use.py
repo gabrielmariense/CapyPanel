@@ -1,4 +1,4 @@
-"""User profiles, the first time it's opened: a real warning naming what it deletes, with
+"""Profile cleanup, the first time it's opened: a real warning naming what it deletes, with
 Continue greyed until "I understand…" is ticked and Cancel the default (a tick has to be read to
 be clicked, where a countdown gets waited out). Then its guide: pick a PC, scan, delete. The
 delete keeps its own safety: typing DELETE, and each PC checked again before anything goes."""
@@ -27,7 +27,7 @@ UNDERSTOOD_KEY = "warning_understood"  # in the tool's settings, once ticked and
 class FirstUseWarning(QDialog):
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
-        self.setWindowTitle(_("User profiles"))
+        self.setWindowTitle(_("Profile cleanup"))
         sign = QLabel()
         amber = themes.status_color("attention")
         sign.setPixmap(tabler_icon("alert-triangle", QColor(amber), 36).pixmap(36, 36))

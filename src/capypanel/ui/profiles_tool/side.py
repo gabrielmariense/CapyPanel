@@ -1,4 +1,4 @@
-"""The User profiles tool's right panel: cards from top to bottom, the same on every tab, and
+"""The Profile cleanup tool's right panel: cards from top to bottom, the same on every tab, and
 never a scrollbar. Progress first, at one fixed height, so nothing under it jumps between tabs.
 Then the tab's own card: the hosts on show (the Hosts tab), or a host's ticked profiles, or its
 delete run. Then, on a host's tab, the Delete button at the foot, always in sight. A profile's

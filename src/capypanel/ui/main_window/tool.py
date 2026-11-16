@@ -44,8 +44,12 @@ class Shell(Protocol):
         ...
 
     def tool(self, tool_id: str) -> "Tool | None":
-        """Another tool of the window, for a tool that builds on it (User profiles reads Hosts'
+        """Another tool of the window, for a tool that builds on it (Profile cleanup reads Hosts'
         lists); None when the window has no such tool."""
+        ...
+
+    def show_tool(self, tool_id: str) -> bool:
+        """Show another tool, its first-use warning first: False when that was cancelled."""
         ...
 
 
@@ -126,7 +130,7 @@ class Tool(QWidget):
 
     def first_use_warning(self, parent: QWidget) -> bool:
         """Before the tool is shown for the first time ever: False keeps it closed. A tool
-        that can do harm says so here (User profiles)."""
+        that can do harm says so here (Profile cleanup)."""
         return True
 
     def working(self) -> bool:

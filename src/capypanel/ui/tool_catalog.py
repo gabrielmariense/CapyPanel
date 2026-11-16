@@ -41,7 +41,7 @@ CATALOG = (
     ToolInfo(
         "profiles",
         "profile-card",
-        N_("User profiles"),
+        N_("Profile cleanup"),
         N_("A PC's Windows profiles: see which can be deleted."),
         "capypanel.ui.profiles_tool.tool",
         "ProfilesTool",

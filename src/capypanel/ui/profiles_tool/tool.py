@@ -1,4 +1,4 @@
-"""The User profiles tool: the Windows profiles on the hosts of Hosts' open list, which can be
+"""The Profile cleanup tool: the Windows profiles on the hosts of Hosts' open list, which can be
 deleted, how big they are. Hosts' Groups panel on the left (read only); in the middle and on the
 right, tabs: the pinned Hosts tab lists the group's hosts, and each host opened gets its own tab,
 so several hosts are read, counted and cleaned at once. It keeps no list of its own, and the
@@ -268,10 +268,10 @@ class ProfilesTool(Tool):
     # ---- what the shell asks ----
 
     def tool_name(self) -> str:
-        return _("User profiles")
+        return _("Profile cleanup")
 
     def menu_name(self) -> str:
-        return _("&User profiles")
+        return _("Profile clean&up")
 
     def toolbar_anchor(self) -> QWidget:
         return self.nav if self.nav.isVisible() else self.middle

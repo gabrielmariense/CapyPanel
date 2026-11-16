@@ -1,4 +1,4 @@
-"""The User profiles tool's pinned Hosts tab: the hosts of the group picked on the left and what
+"""The Profile cleanup tool's pinned Hosts tab: the hosts of the group picked on the left and what
 each scan found so far; on the right, its card (side.HostCard): the host picked, or the hosts on
 show. It never scans by itself: a double-click, Enter or Scan opens a host."""
 
