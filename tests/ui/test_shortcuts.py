@@ -273,11 +273,23 @@ def test_keys_kept_for_capypanel_and_typed_text_are_refused(window: CapyWindow) 
         page.problem.text()
         == "Shift+A is for typing in names and searches: use it with Ctrl or Alt."
     )
-    _press(page, "command.services", Qt.Key.Key_Escape)  # Esc leaves it as it was
-    assert page.table.itemWidget(page.item_of("command.services"), KEY) is None
-    assert window.keys.key(window.keys.row("command.services")) == ""
-    _press(page, "command.services", Qt.Key.Key_F6)  # a key taken: the reserved keys again
+    # A refused key is an error where you're looking: the field stays, red, saying so, and the
+    # reason shows under the list in red with its icon (Gabriel's pick, Luna Q1).
+    services = page.item_of("command.services")
+    catcher = page.table.itemWidget(services, KEY)
+    assert isinstance(catcher, KeyCatcher) and catcher.property("refused") is True
+    assert catcher.placeholderText() == "Reserved: try another"
+    assert page.problem.objectName() == "refusal" and not page.problem_icon.isHidden()
+    QTest.keyClick(catcher, Qt.Key.Key_F6)  # the next key, in the same field, just works
+    assert window.keys.key(window.keys.row("command.services")) == "F6"
+    assert page.table.itemWidget(services, KEY) is None
     assert page.problem.text() == "F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself."
+    assert page.problem.objectName() == "hint" and page.problem_icon.isHidden()
+    _press(page, "command.services", Qt.Key.Key_F1)
+    _press(page, "command.services", Qt.Key.Key_Escape)  # Esc leaves it as it was
+    assert page.table.itemWidget(services, KEY) is None
+    assert window.keys.key(window.keys.row("command.services")) == "F6"
+    assert page.problem.objectName() == "hint"  # the refusal leaves with its field
     assert shortcuts.refused("Ctrl+Shift+S") == "" and shortcuts.refused("F6") == ""
     # Typed text past ASCII too: Ç and é are keys of their own on a Brazilian keyboard, and ´
     # (a dead key) starts an accented letter.

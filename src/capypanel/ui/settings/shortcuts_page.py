@@ -11,6 +11,7 @@ import shiboken6
 from PySide6.QtCore import QKeyCombination, QRect, QSize, Qt, Signal
 from PySide6.QtGui import (
     QAction,
+    QColor,
     QFocusEvent,
     QFont,
     QFontMetrics,
@@ -37,6 +38,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.i18n import _, ngettext
 from capypanel.ui import shortcuts, spacing
 from capypanel.ui.dialogs import run_modal
+from capypanel.ui.icons import tabler_icon
 from capypanel.ui.notes import hint
 from capypanel.ui.settings.pages import Page, Section
 from capypanel.ui.shortcuts import Keys, Row
@@ -129,6 +131,15 @@ def plain(text: str) -> str:
     return text.replace("&&", "\0").replace("&", "").replace("\0", "&")
 
 
+def waiting_text() -> str:
+    return _("Press the new key…")
+
+
+def refused_text() -> str:
+    """In the waiting field after a key it can't take; the reason is under the list."""
+    return _("Reserved: try another")
+
+
 def place_in_order(row: Row) -> int:
     """Its place in ORDER; one missing goes last (a test makes sure none is)."""
     return ORDER.index(row.id) if row.id in ORDER else len(ORDER)
@@ -143,8 +154,21 @@ class KeyCatcher(QLineEdit):
 
     def __init__(self) -> None:
         super().__init__()
-        self.setPlaceholderText(_("Press the new key…"))
+        self.setPlaceholderText(waiting_text())
         self._done = False
+
+    def refuse(self) -> None:
+        """A key it can't take: red, saying so, and waiting for another (Gabriel's pick, Luna
+        Q1: the error shows where you're looking, and the next key just works)."""
+        self._done = False
+        self.setProperty("refused", True)
+        self.setPlaceholderText(refused_text())
+        self.style().unpolish(self)
+        self.style().polish(self)  # the red edge; polishing resets the palette, so it goes first
+        palette = self.palette()
+        red = QColor(themes.status_colors()["stopped"])
+        palette.setColor(QPalette.ColorRole.PlaceholderText, red)
+        self.setPalette(palette)
 
     def focusNextPrevChild(self, next: bool) -> bool:  # noqa: A002, N802 -- Qt's names
         return False  # Tab is a key pressed here, not a move to the next control
@@ -201,10 +225,17 @@ class ShortcutsPage(Page):
         self.clear.clicked.connect(lambda: self._set_picked(""))
         self.restore.clicked.connect(self._restore_picked)
         self.problem = hint(reserved_line())  # the reserved keys, or why a key wasn't taken
+        self.problem_icon = QLabel()  # shown with a refusal only
+        self.problem_icon.hide()
+        problem_line = QHBoxLayout()
+        problem_line.setContentsMargins(0, 0, 0, 0)
+        problem_line.setSpacing(spacing.CONTROLS // 2)
+        problem_line.addWidget(self.problem_icon, 0, Qt.AlignmentFlag.AlignTop)
+        problem_line.addWidget(self.problem, 1)
         self.section.content.addWidget(self.about)
         self.section.content.addSpacing(spacing.CONTROLS - self.section.content.spacing())
         self.section.content.addWidget(with_buttons(self.table, [self.clear, self.restore]), 1)
-        self.section.content.addWidget(self.problem)
+        self.section.content.addLayout(problem_line)
         self.body.addWidget(self.section, 1)  # the table scrolls; the page never does
         self._catcher: KeyCatcher | None = None
         self._catching: QTreeWidgetItem | None = None  # the row it waits in
@@ -307,7 +338,10 @@ class ShortcutsPage(Page):
             QStyle.SubElement.SE_LineEditContents, frame, catcher
         )
         around = catcher.width() - inside.width() + 2 * LINE_EDIT_MARGIN
-        width = catcher.fontMetrics().horizontalAdvance(catcher.placeholderText()) + around
+        words = max(
+            catcher.fontMetrics().horizontalAdvance(t) for t in (waiting_text(), refused_text())
+        )
+        width = words + around
         # Out of the table at once: deleteLater waits for the loop it was called from, and
         # Settings runs in its own (exec), so the field showed across the list's top row.
         catcher.setParent(None)
@@ -380,7 +414,7 @@ class ShortcutsPage(Page):
             return
         self._stop_catching()
         self.table.setCurrentItem(item)
-        self.problem.setText(reserved_line())
+        self._show_problem("")
         catcher = self._catcher = KeyCatcher()
         self._catching = item
         catcher.picked.connect(lambda keys: self._caught(item, keys))
@@ -395,16 +429,18 @@ class ShortcutsPage(Page):
         if self._catching is not None:  # off whatever row it was in, never left behind
             self.table.removeItemWidget(self._catching, KEY)
             self._catching = None
+        self._show_problem("")  # a refusal goes with the field that waited
         for item in self._items():
             self._show_key(item)  # the catcher leaves; the key (and its note) come back
         self.table.setFocus()
 
     def _caught(self, item: QTreeWidgetItem, keys: str) -> None:
-        self._stop_catching()
         why = shortcuts.refused(keys)
-        if why:
-            self._say(why)
+        if why and self._catcher is not None:
+            self._catcher.refuse()  # it keeps waiting, red, in the row you're looking at
+            self._show_problem(why)
             return
+        self._stop_catching()
         self._give(self._row(item), keys)
 
     def _give(self, row: Row, keys: str) -> None:
@@ -413,7 +449,7 @@ class ShortcutsPage(Page):
         if other is not None and not self._move_asked(row, other, keys):
             return
         self.keys.set(row, keys)
-        self.problem.setText(reserved_line())
+        self._show_problem("")
         self._refresh()
         self.changed.emit()
 
@@ -430,12 +466,22 @@ class ShortcutsPage(Page):
         run_modal(box)
         return box.clickedButton() is move
 
-    def _say(self, why: str) -> None:
-        self.problem.setText(why)  # in the reserved keys' place, until the next key is set
+    def _show_problem(self, why: str) -> None:
+        """Why a key wasn't taken, in the theme's red at the text's size with an error icon;
+        with no reason, the reserved keys in the grey hint."""
+        self.problem.setText(why or reserved_line())
+        self.problem.setObjectName("refusal" if why else "hint")
+        self.problem.style().unpolish(self.problem)
+        self.problem.style().polish(self.problem)
+        if why:
+            red = QColor(themes.status_colors()["stopped"])
+            side = self.problem.fontMetrics().height()
+            self.problem_icon.setPixmap(tabler_icon("circle-x", red, side).pixmap(side, side))
+        self.problem_icon.setVisible(bool(why))
 
     def hideEvent(self, event: QHideEvent) -> None:  # noqa: N802 -- Qt's name
         super().hideEvent(event)
-        self.problem.setText(reserved_line())  # a reason shows only while you're on the page
+        self._show_problem("")  # a reason shows only while you're on the page
 
     def _set_picked(self, keys: str) -> None:
         row = self._picked()
