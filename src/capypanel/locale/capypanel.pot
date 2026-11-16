@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 15:47-0300\n"
+"POT-Creation-Date: 2026-11-16 16:21-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1844,9 +1844,6 @@ msgstr ""
 msgid "Hom&e"
 msgstr ""
 
-msgid "Home (Ctrl+0)"
-msgstr ""
-
 msgid "Home page"
 msgstr ""
 
@@ -3052,7 +3049,7 @@ msgstr ""
 
 msgid ""
 "Refresh every host shown (a group's, or the ones a search leaves), with "
-"the checks ticked on a right-click (also F5)"
+"the checks ticked on a right-click"
 msgstr ""
 
 msgid "Refresh host"
@@ -3477,9 +3474,6 @@ msgid "Set the account…"
 msgstr ""
 
 msgid "Settings"
-msgstr ""
-
-msgid "Settings (Ctrl+,)"
 msgstr ""
 
 #, python-brace-format

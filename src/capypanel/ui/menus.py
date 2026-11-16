@@ -38,6 +38,11 @@ def label(action: QAction) -> str:
     return action.text().partition("\t")[0]
 
 
+def plain(text: str) -> str:
+    """Menu text as it reads outside a menu: "Hom&e" is "Home", and "&&" one "&"."""
+    return text.replace("&&", "\0").replace("&", "").replace("\0", "&")
+
+
 def keep_room_for_shortcut(menu: QMenu, action: QAction) -> None:
     """Qt draws a shortcut right after the text, in the text's colour, where it reads as part of
     the name. Its text ends in a tab and blank space instead: Qt keeps the room, and the menu's

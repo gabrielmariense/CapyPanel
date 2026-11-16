@@ -42,12 +42,12 @@ from capypanel.ui.main_window.home import HomePage
 from capypanel.ui.main_window.rail import ToolRail
 from capypanel.ui.main_window.tool import Tool, ToolKind
 from capypanel.ui.main_window.tray import Tray, ask_closing
-from capypanel.ui.menus import StayOpenMenu
+from capypanel.ui.menus import StayOpenMenu, label, plain
 from capypanel.ui.saved_credentials import KeptLogin, SavedCredentialsDialog
 from capypanel.ui.settings.window import HEIGHT as SETTINGS_HEIGHT
 from capypanel.ui.settings.window import WIDTH as SETTINGS_WIDTH
 from capypanel.ui.settings.window import SettingsDialog
-from capypanel.ui.shortcuts import EVERYWHERE, KeyCommand, Keys, portable
+from capypanel.ui.shortcuts import EVERYWHERE, KeyCommand, Keys, key_tip, portable
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import CATALOG, ToolInfo
 from capypanel.ui.updater import Updater
@@ -116,6 +116,8 @@ class MainWindow(QMainWindow):
         self.guides = GuideRunner(self, seen_from(self.prefs), self.save_prefs, _docs_page)
         self._tools_agreed = False  # an update asked the tools already: closing asks no more
         self._build_menus()
+        for action in (self._home_action, self.commands.settings):
+            action.changed.connect(self._rail_tips)  # a new key shows in its tip
         self.keys = Keys(self.prefs, self.save_prefs)
         self.keys.load(self._key_commands())  # this person's keys, over today's defaults
         self._connect()
@@ -149,6 +151,7 @@ class MainWindow(QMainWindow):
         if len(self.tools) <= 9:
             action.setShortcut(QKeySequence(f"Ctrl+{len(self.tools)}"))
         action.triggered.connect(lambda _c=False: self.show_tool(tool_id))
+        action.changed.connect(lambda t=tool_id: self._rail_tip(t))  # a new key shows in its tip
         self._tool_actions.addAction(action)
         self.addAction(action)  # its shortcut works wherever the focus is
         self.statusBar().addWidget(tool.status_label, 1)
@@ -204,6 +207,10 @@ class MainWindow(QMainWindow):
     def _tool_list_actions(self) -> list[QAction]:
         """View's tools, without Home."""
         return [a for a in self._tool_actions.actions() if a is not self._home_action]
+
+    def _tool_action(self, tool_id: str) -> QAction:
+        """View's action that shows the tool."""
+        return next(a for a in self._tool_list_actions() if a.data() == tool_id)
 
     # ---- what tools ask of the shell ----
 
@@ -297,12 +304,10 @@ class MainWindow(QMainWindow):
 
     def _retranslate_menus(self) -> None:
         retranslate_actions(self.commands)
-        self.rail.retranslate()
-        for tool_id in self.tools:
-            self._rail_tip(tool_id)
         self._home_action.setText(_("Hom&e"))
         for action in self._tool_list_actions():
             action.setText(self.tools[str(action.data())].menu_name())
+        self._rail_tips()
         self._file_menu.setTitle(_("&File"))
         self._view_menu.setTitle(_("&View"))
         self._help_menu.setTitle(_("&Help"))
@@ -367,11 +372,20 @@ class MainWindow(QMainWindow):
         self._rail_tip(tool_id)
         self._tray_counts()
 
+    def _rail_tips(self) -> None:
+        """The rail's tips, each with its command's key as it is now (Settings › Keyboard
+        shortcuts changes them): Home's, Settings' and each tool's."""
+        home = self._home_action
+        self.rail.home_button.setToolTip(key_tip(plain(label(home)), home))
+        self.rail.settings_button.setToolTip(key_tip(_("Settings"), self.commands.settings))
+        for tool_id in self.tools:
+            self._rail_tip(tool_id)
+
     def _rail_tip(self, tool_id: str) -> None:
-        """The rail icon's tip, "Printers (Ctrl+2)", and under it what the red count means,
-        while there's one."""
-        tool, index = self.tools[tool_id], list(self.tools).index(tool_id) + 1
-        tip = f"{tool.tool_name()} (Ctrl+{index})"
+        """The rail icon's tip, "Printers (Ctrl+2)" with the key View's Printers has now, and
+        under it what the red count means, while there's one."""
+        tool = self.tools[tool_id]
+        tip = key_tip(tool.tool_name(), self._tool_action(tool_id))
         count = self._badges.get(tool_id, 0)
         if count and (meaning := tool.attention_text(count)):
             tip = "\n".join((tip, meaning))

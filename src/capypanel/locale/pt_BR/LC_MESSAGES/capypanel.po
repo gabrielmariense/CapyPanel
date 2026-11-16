@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 15:47-0300\n"
+"POT-Creation-Date: 2026-11-16 16:21-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1782,9 +1782,6 @@ msgstr "Ocultar os do Windows, Só sobras e Sem uso há deixam na lista só os p
 msgid "Hom&e"
 msgstr "I&nício"
 
-msgid "Home (Ctrl+0)"
-msgstr "Início (Ctrl+0)"
-
 msgid "Home page"
 msgstr "Página inicial"
 
@@ -2913,8 +2910,8 @@ msgstr "Atualizar todas"
 msgid "Refresh every host shown"
 msgstr "Atualizar todos os hosts exibidos"
 
-msgid "Refresh every host shown (a group's, or the ones a search leaves), with the checks ticked on a right-click (also F5)"
-msgstr "Atualiza todos os hosts exibidos (os de um grupo, ou os que uma pesquisa deixa), com as verificações marcadas no botão direito (também F5)"
+msgid "Refresh every host shown (a group's, or the ones a search leaves), with the checks ticked on a right-click"
+msgstr "Atualiza todos os hosts exibidos (os de um grupo, ou os que uma pesquisa deixa), com as verificações marcadas no botão direito"
 
 msgid "Refresh host"
 msgstr "Atualizar host"
@@ -3333,9 +3330,6 @@ msgstr "Definir a conta…"
 
 msgid "Settings"
 msgstr "Configurações"
-
-msgid "Settings (Ctrl+,)"
-msgstr "Configurações (Ctrl+,)"
 
 #, python-brace-format
 msgid "Settings › Hosts › Credentials: {uses}"

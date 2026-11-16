@@ -233,6 +233,26 @@ def test_keys_kept_from_before_apply_at_start(qapp: QApplication, paths: setting
         win.close()
 
 
+def test_a_tip_that_names_a_key_shows_the_key_set_here_at_once(window: CapyWindow) -> None:
+    rail, refresh = window.rail, window.hosts.toolbar.refresh_button
+    assert rail.home_button.toolTip() == "Home (Ctrl+0)"
+    assert rail.settings_button.toolTip() == "Settings (Ctrl+,)"
+    assert rail.buttons["hosts"].toolTip() == "Hosts (Ctrl+1)"
+    assert refresh.toolTip().endswith(" ticked on a right-click (F5)")
+    _press(_page(window), "go.hosts", Qt.Key.Key_7, Qt.KeyboardModifier.ControlModifier)
+    assert rail.buttons["hosts"].toolTip() == "Hosts (Ctrl+7)"
+    keys = window.keys
+    refresh_all = next(r for r in keys.rows if window.hosts.commands.refresh_shown in r.actions)
+    keys.set(refresh_all, "F6")
+    assert refresh.toolTip().endswith(" ticked on a right-click (F6)")
+    keys.set(keys.row("app.settings"), "F9")
+    assert rail.settings_button.toolTip() == "Settings (F9)"
+    keys.set(keys.row("go.home"), "")  # no key: just the words
+    assert rail.home_button.toolTip() == "Home"
+    keys.restore(keys.row("go.home"))
+    assert rail.home_button.toolTip() == "Home (Ctrl+0)"
+
+
 def test_a_key_another_command_runs_moves_only_when_you_say_so(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:

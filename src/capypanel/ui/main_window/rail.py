@@ -5,7 +5,6 @@ from PySide6.QtCore import QEvent, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QButtonGroup, QFrame, QLabel, QToolButton, QVBoxLayout, QWidget
 
-from capypanel.core.i18n import _
 from capypanel.ui.icons import tabler_icon
 
 RAIL_WIDTH = 52
@@ -14,8 +13,9 @@ BADGE = 16  # px: the count's height, and its narrowest width
 
 
 class ToolRail(QWidget):
-    """Icons only, each with a tooltip. The tool shown, or Home, has a tinted square behind
-    its icon. A tool with items needing attention shows their count on its icon, in red."""
+    """Icons only, each with a tooltip, which the window sets: it has their commands and keys.
+    The tool shown, or Home, has a tinted square behind its icon. A tool with items needing
+    attention shows their count on its icon, in red."""
 
     home_requested = Signal()
     settings_requested = Signal()
@@ -48,7 +48,6 @@ class ToolRail(QWidget):
         self._layout.addWidget(line, 0, Qt.AlignmentFlag.AlignHCenter)
         self._layout.addStretch(1)
         self._layout.addWidget(self.settings_button, 0, Qt.AlignmentFlag.AlignHCenter)
-        self.retranslate()
         self.restyle()
 
     def add_tool(self, tool_id: str, icon: str) -> QToolButton:
@@ -91,10 +90,6 @@ class ToolRail(QWidget):
     def show_tool(self, tool_id: str | None) -> None:
         """None: Home."""
         (self.home_button if tool_id is None else self.buttons[tool_id]).setChecked(True)
-
-    def retranslate(self) -> None:
-        self.home_button.setToolTip(_("Home (Ctrl+0)"))
-        self.settings_button.setToolTip(_("Settings (Ctrl+,)"))
 
     def restyle(self) -> None:
         """Icons in the theme's colours: the tool shown in the text colour, the rest dimmer."""

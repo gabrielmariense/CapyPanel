@@ -57,7 +57,7 @@ class Row:
             text = self.named()
         else:
             text = menus.label(self.actions[0]) if self.actions else self.id
-        return text.replace("&&", "\0").replace("&", "").replace("\0", "&")
+        return menus.plain(text)
 
     def meets(self, other: "Row") -> bool:
         """Whether a key could reach both at once: the window's commands meet every tool's."""
@@ -75,6 +75,14 @@ def portable(keys: QKeySequence | str) -> str:
 def shown(keys: str) -> str:
     """A key as a person reads it, Windows' way: "Ctrl+Shift+O", "Enter", "Del"."""
     return QKeySequence(keys).toString(NATIVE).replace("Return", "Enter")
+
+
+def key_tip(words: str, action: QAction) -> str:
+    """A tooltip's words and the key `action` has now: "Refresh all (F5)". Its words never
+    name the key, so a key changed here shows in the tip, once the tip is set again on the
+    action's `changed`; a command with no key gets just its words."""
+    keys = menus.shortcut_text(action)
+    return f"{words} ({keys})" if keys else words
 
 
 def refused(keys: str) -> str:
