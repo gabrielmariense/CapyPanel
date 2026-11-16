@@ -404,6 +404,11 @@ class CommandsWindow(QDialog):
         self.add_button.setAutoDefault(False)
         self.add_button.setToolTip(_("Adds this PC to the open host list"))
         self.add_button.clicked.connect(self._add_to_list)
+        # Hidden, it keeps its room: Host and the button under it don't change width as the
+        # first letter is typed (in Portuguese, Add is the wider of the two).
+        policy = self.add_button.sizePolicy()
+        policy.setRetainSizeWhenHidden(True)
+        self.add_button.setSizePolicy(policy)
         # Where the profiles are made, from where one is picked; under Add, at the same edge.
         self.profiles_button = QPushButton(_("Connection pro&files…"))
         self.profiles_button.setAutoDefault(False)

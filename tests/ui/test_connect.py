@@ -263,6 +263,9 @@ def test_manual_connection_opens_the_profiles_and_lists_them_as_changed(
     assert isinstance(commands, CommandsWindow)
     commands.profiles_button.click()
     assert opened == ["connections"]
+    # Add hides with no host typed, and keeps its room: nothing changes width on typing.
+    assert commands.add_button.isHidden()
+    assert commands.add_button.sizePolicy().retainSizeWhenHidden()
     commands.profile.setCurrentIndex(commands.profile.findData("pis-password"))
     before = window.hosts.connector.choices()
     monkeypatch.setattr(
