@@ -21,6 +21,7 @@ EVERYWHERE = ""  # a command of the window itself, not of one tool
 RESERVED = ("F1", "Esc", "Ctrl+F", "Tab", "Shift+Tab", "Ctrl+Tab", "Ctrl+Shift+Tab")
 PORTABLE = QKeySequence.SequenceFormat.PortableText
 NATIVE = QKeySequence.SequenceFormat.NativeText
+DEAD_KEYS_END = 0x01001293  # the last of Qt's dead-key codes
 
 
 @dataclass(frozen=True)
@@ -82,7 +83,10 @@ def refused(keys: str) -> str:
     typed = Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier
     key = combo.key()
     if not mods & typed and (
-        Qt.Key.Key_Space <= key <= Qt.Key.Key_AsciiTilde  # letters, digits, punctuation
+        # Below Esc, Qt's key codes are the characters themselves: letters, digits and
+        # punctuation, Ç and é included. The dead keys (´ ~ ^ on a Brazilian keyboard) start
+        # an accented letter, so they're typed text too.
+        key < Qt.Key.Key_Escape or Qt.Key.Key_Dead_Grave <= key <= DEAD_KEYS_END
     ):
         return _("{key} is for typing in names and searches: use it with Ctrl or Alt.").format(
             key=shown(keys)

@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QKeyCombination, Qt
 from PySide6.QtGui import QKeySequence
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QMessageBox
@@ -160,3 +160,15 @@ def test_keys_kept_for_capypanel_and_typed_text_are_refused(window: CapyWindow) 
     assert page.table.itemWidget(page.item_of("command.services"), KEY) is None
     assert window.keys.key(window.keys.row("command.services")) == ""
     assert shortcuts.refused("Ctrl+Shift+S") == "" and shortcuts.refused("F6") == ""
+    # Typed text past ASCII too: Ç and é are keys of their own on a Brazilian keyboard, and ´
+    # (a dead key) starts an accented letter.
+    for key, mods in (
+        (Qt.Key.Key_Ccedilla, Qt.KeyboardModifier.NoModifier),
+        (Qt.Key.Key_Ccedilla, Qt.KeyboardModifier.ShiftModifier),
+        (Qt.Key.Key_Eacute, Qt.KeyboardModifier.NoModifier),
+        (Qt.Key.Key_Dead_Acute, Qt.KeyboardModifier.NoModifier),
+    ):
+        typed = shortcuts.portable(QKeySequence(QKeyCombination(mods, key)))
+        assert "is for typing" in shortcuts.refused(typed), typed
+    ctrl_c_cedilla = QKeyCombination(Qt.KeyboardModifier.ControlModifier, Qt.Key.Key_Ccedilla)
+    assert shortcuts.refused(shortcuts.portable(QKeySequence(ctrl_c_cedilla))) == ""  # a shortcut
