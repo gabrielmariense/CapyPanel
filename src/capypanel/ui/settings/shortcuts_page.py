@@ -8,7 +8,7 @@ has no card: the list fills it (Dante's redo, 2026-11-16)."""
 from typing import cast
 
 import shiboken6
-from PySide6.QtCore import QKeyCombination, QPoint, QRect, QSize, Qt, Signal
+from PySide6.QtCore import QKeyCombination, QMargins, QPoint, QRect, QSize, Qt, Signal
 from PySide6.QtGui import (
     QAction,
     QColor,
@@ -165,11 +165,18 @@ class KeyCatcher(QLineEdit):
         super().__init__()
         self.setPlaceholderText(waiting_text())
         self._done = False
+        self._room: QMargins | None = None  # its words' room while it waited, once refused
 
     def refuse(self) -> None:
         """A key it can't take: red, saying so, and waiting for another (Gabriel's pick, Luna
-        Q1: the error shows where you're looking, and the next key just works)."""
+        Q1: the error shows where you're looking, and the next key just works). Its words stay
+        where they waited: a theme may style the red field alone, with less padding (the
+        Windows themes, where they moved to 1 px from the red edge: Dante, 0.28.1)."""
         self._done = False
+        if self._room is None:
+            words = self.words_rect()
+            right, bottom = self.width() - 1 - words.right(), self.height() - 1 - words.bottom()
+            self._room = QMargins(words.left(), words.top(), right, bottom)
         self.setProperty("refused", True)
         self.setPlaceholderText(refused_text())
         self.style().unpolish(self)
@@ -204,7 +211,10 @@ class KeyCatcher(QLineEdit):
 
     def words_rect(self) -> QRect:
         """Where its words go, as in Qt's own fields: inside the frame and padding, less the
-        margin Qt keeps on each side. The Key column is measured for them to fit here."""
+        margin Qt keeps on each side. The Key column is measured for them to fit here. Once a
+        key is refused, the same room as while it waited."""
+        if self._room is not None:
+            return self.rect().marginsRemoved(self._room)
         frame = QStyleOptionFrame()
         self.initStyleOption(frame)
         inside = self.style().subElementRect(QStyle.SubElement.SE_LineEditContents, frame, self)

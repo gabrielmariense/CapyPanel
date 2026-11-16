@@ -312,6 +312,30 @@ def test_the_waiting_field_draws_its_words_inside_its_edges(window: CapyWindow) 
     dialog.close()
 
 
+def test_a_refused_key_s_words_stay_where_they_waited(qapp: QApplication) -> None:
+    """A theme may style the refused field alone: the Windows themes draw the waiting field
+    natively and give the refused one its red edge from the stylesheet, with less padding, so
+    the words moved to 1 px from the red edge (Dante, 0.28.1). They keep the room they had."""
+    catcher = KeyCatcher()
+    catcher.setStyleSheet(
+        'QLineEdit { padding: 0 6px; } QLineEdit[refused="true"] { border: 1px solid red;'
+        " padding: 0; }"
+    )
+    catcher.resize(240, 22)
+    catcher.show()
+    QApplication.processEvents()
+    waiting = catcher.words_rect()
+    catcher.refuse()
+    catcher.refuse()  # a second refused key: still the room it had while waiting
+    QApplication.processEvents()
+    frame = QStyleOptionFrame()
+    catcher.initStyleOption(frame)
+    red = catcher.style().subElementRect(QStyle.SubElement.SE_LineEditContents, frame, catcher)
+    assert red.left() < waiting.left() - shortcuts_page.LINE_EDIT_MARGIN  # the red style's own
+    assert catcher.words_rect() == waiting
+    catcher.close()
+
+
 def test_a_refused_key_s_row_stays_whole_in_a_narrow_window(window: CapyWindow) -> None:
     """Under about 960 px the reason takes two lines and the list gets shorter: the waiting
     row on the list's last line scrolls back into view (Dante, 0.28.1)."""
