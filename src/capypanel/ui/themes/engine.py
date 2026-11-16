@@ -976,8 +976,11 @@ QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
    default it takes over from, where Enter would press it. */
 QPushButton#risky:focus { background: %(attention)s; border-color: %(attention)s;
                           color: %(on_attention)s; }
-QPushButton#primary { background: %(accent_fill)s; border-color: %(accent_fill)s; color: #ffffff; }
-QPushButton#primary[waiting="true"] { background: %(card)s; border-color: %(accent)s;
+/* This sheet sets no button border of its own, so these give a whole one: a colour alone
+   would be drawn over by the native frame (Connect's waiting outline came out grey). */
+QPushButton#primary { background: %(accent_fill)s; border: 1px solid %(accent_fill)s;
+                      border-radius: 4px; color: #ffffff; padding: 4px 12px; }
+QPushButton#primary[waiting="true"] { background: %(card)s; border: 1px solid %(accent)s;
                                       color: %(accent_text)s; }
 /* A tool's count of items needing attention, on its rail icon. */
 QLabel#railBadge { background: %(badge)s; color: white; border-radius: 8px; padding: 0; }
