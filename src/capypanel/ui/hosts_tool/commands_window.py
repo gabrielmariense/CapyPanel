@@ -409,6 +409,7 @@ class CommandsWindow(QDialog):
         self.profiles_button.clicked.connect(lambda: tool.open_settings("connections"))
         side = self.profile.sizeHint().height()
         self.profiles_button.setFixedSize(side, side)
+        self.connect_button.setFixedHeight(side)  # the Windows themes pad the main button more
         # One line: the PC, how to connect, Connect (Gabriel, 2026-11-16: "holy that
         # connection 1 is amazing, please do that"). Connect ends where the command list ends.
         top = QHBoxLayout()

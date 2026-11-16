@@ -977,9 +977,10 @@ QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
 QPushButton#risky:focus { background: %(attention)s; border-color: %(attention)s;
                           color: %(on_attention)s; }
 /* This sheet sets no button border of its own, so these give a whole one: a colour alone
-   would be drawn over by the native frame (Connect's waiting outline came out grey). */
+   would be drawn over by the native frame (Connect's waiting outline came out grey). The
+   1 px margin: Windows draws its own buttons and fields 1 px inside their edges. */
 QPushButton#primary { background: %(accent_fill)s; border: 1px solid %(accent_fill)s;
-                      border-radius: 4px; color: #ffffff; padding: 4px 12px; }
+                      border-radius: 4px; color: #ffffff; padding: 4px 12px; margin: 1px; }
 QPushButton#primary[waiting="true"] { background: %(card)s; border: 1px solid %(accent)s;
                                       color: %(accent_text)s; }
 /* A tool's count of items needing attention, on its rail icon. */
