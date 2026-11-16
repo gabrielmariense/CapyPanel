@@ -89,6 +89,20 @@ def test_every_command_is_listed_with_today_s_key_and_power_never_is(window: Cap
     assert page.table.property("mostRows") == shortcuts_page.ROWS  # a long list, a tall table
 
 
+def test_the_list_goes_by_where_then_a_to_z(window: CapyWindow) -> None:
+    page = _page(window)
+    table = page.table
+    rows = [table.topLevelItem(i) for i in range(table.topLevelItemCount())]
+    wheres = [item.text(1) for item in rows if item is not None]
+    groups = list(dict.fromkeys(wheres))  # each place once, in the order the list shows them
+    assert groups[:4] == ["Everywhere", "Hosts", "Hosts, Printers", "Printers"]
+    assert wheres == sorted(wheres, key=groups.index)  # each place's commands together
+    for group in groups:
+        names = [i.text(0) for i in rows if i is not None and i.text(1) == group]
+        assert names == sorted(names, key=shortcuts_page.alphabetical), group
+    assert shortcuts_page.alphabetical("Área…") == shortcuts_page.alphabetical("area")
+
+
 def test_a_new_key_is_kept_and_works_at_once_in_every_tool(window: CapyWindow) -> None:
     page = _page(window)
     _press(page, "list.edit", Qt.Key.Key_K, Qt.KeyboardModifier.ControlModifier)

@@ -1,6 +1,9 @@
 """Settings › CapyPanel › Keyboard shortcuts: every command a key can run, with its key. A
 double-click (or Enter) on a command waits for its new key; Clear and Restore default under the
-list act on the picked command. A key another command runs is moved only after a question."""
+list act on the picked command. A key another command runs is moved only after a question.
+The list goes by where, then A–Z (Gabriel, 2026-11-16)."""
+
+import unicodedata
 
 from PySide6.QtCore import QKeyCombination, Qt, Signal
 from PySide6.QtGui import QFocusEvent, QKeyEvent, QKeySequence
@@ -21,6 +24,12 @@ MODIFIERS = (Qt.Key.Key_Shift, Qt.Key.Key_Control, Qt.Key.Key_Alt, Qt.Key.Key_Me
              Qt.Key.Key_AltGr, Qt.Key.Key_unknown)  # fmt: skip
 HELD = (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier
         | Qt.KeyboardModifier.ShiftModifier | Qt.KeyboardModifier.MetaModifier)  # fmt: skip
+
+
+def alphabetical(name: str) -> str:
+    """A command's name as A–Z sorts it in any language: no accents, no case, no "…"."""
+    plain = unicodedata.normalize("NFD", name.replace("…", ""))
+    return "".join(c for c in plain if not unicodedata.combining(c)).casefold()
 
 
 class KeyCatcher(QLineEdit):
@@ -96,9 +105,21 @@ class ShortcutsPage(Page):
 
     # ---- the table ----
 
+    def _order(self, row: Row) -> tuple[int, str]:
+        """By where, then A–Z: the window's own commands first, then each tool's in the tools'
+        order, a command two tools share right after the first of them (Hosts, then Hosts and
+        Printers, then Printers)."""
+        tools = list(self._names)
+        if shortcuts.EVERYWHERE in row.places:
+            where = 0
+        else:
+            first = min(tools.index(p) if p in tools else len(tools) for p in row.places)
+            where = 1 + 2 * first + (1 if len(row.places) > 1 else 0)
+        return where, alphabetical(row.name())
+
     def _fill(self) -> None:
         self.table.clear()
-        for row in self.keys.rows:
+        for row in sorted(self.keys.rows, key=self._order):
             item = QTreeWidgetItem([row.name(), shortcuts.places_text(row.places, self._names),
                                     ""])  # fmt: skip
             item.setData(COMMAND, ROW_ROLE, row.id)
