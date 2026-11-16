@@ -94,7 +94,9 @@ def test_every_command_is_listed_with_today_s_key_and_power_never_is(window: Cap
     assert [w.text() for w in cell.findChildren(QLabel)] == ["Enter", "(in the list)"]
     assert page.item_of("hosts.add_host").text(KEY) == "Ctrl+N"  # the others: just the key
     assert page.table.itemWidget(page.item_of("hosts.add_host"), KEY) is None
-    assert page.table.property("mostRows") == shortcuts_page.ROWS  # a long list, a tall table
+    # No card and no fixed height: the list fills the page, which never scrolls (Dante's redo).
+    assert page.section.heading.isHidden() and page.section.inner.objectName() == ""
+    assert page.table.maximumHeight() == 16777215
     # Each tool's row runs that tool's own action, so it has its own word ("Atualizar todas"
     # in Printers, "Atualizar todos" in Hosts).
     hosts_refresh, printers_refresh = (
@@ -124,18 +126,26 @@ def _headings(page: ShortcutsPage) -> list[tuple[QTreeWidgetItem, list[QTreeWidg
     return found
 
 
-def test_the_commands_sit_under_their_menu_or_tool_then_a_to_z(window: CapyWindow) -> None:
+def test_every_command_has_its_place_in_the_order_you_meet_it(window: CapyWindow) -> None:
+    ids = {row.id for row in window.keys.rows}
+    assert ids == set(shortcuts_page.ORDER)  # a new command needs its place in ORDER
+    assert len(shortcuts_page.ORDER) == len(ids)  # and only one
+
+
+def test_the_commands_sit_under_their_menu_or_tool_in_app_order(window: CapyWindow) -> None:
     page = _page(window)
     headings = _headings(page)
-    assert [h.text(0) for h, _rows in headings] == ["FILE", "VIEW", "HELP", "HOSTS", "PRINTERS"]
+    assert [h.text(0) for h, _rows in headings] == ["File", "View", "Help", "Hosts", "Printers"]
+    shown: list[str] = []
     for heading, rows in headings:
         assert heading.flags() == Qt.ItemFlag.NoItemFlags  # can't be picked
-        names = [row.text(0) for row in rows]
-        assert names == sorted(names, key=shortcuts_page.alphabetical), heading.text(0)
+        shown += [row.data(0, shortcuts_page.ROW_ROLE) for row in rows]
+    assert shown == list(shortcuts_page.ORDER)  # as you meet them on screen, never A–Z
     file_rows = [row.data(0, shortcuts_page.ROW_ROLE) for row in headings[0][1]]
-    assert file_rows == ["app.exit", "app.settings"]  # Exit, Settings…: A–Z
-    assert "go.hosts" in [row.data(0, shortcuts_page.ROW_ROLE) for row in headings[1][1]]
-    assert shortcuts_page.alphabetical("Área…") == shortcuts_page.alphabetical("area")
+    assert file_rows == ["app.settings", "app.exit"]  # the File menu's order
+    # Every heading but the first has empty space above it.
+    first, second = headings[0][0], headings[1][0]
+    assert second.sizeHint(0).height() == first.sizeHint(0).height() + shortcuts_page.HEADING_GAP
     # The arrow keys go past a heading.
     last_of_file = headings[0][1][-1]
     page.table.setCurrentItem(last_of_file)
@@ -146,6 +156,22 @@ def test_the_commands_sit_under_their_menu_or_tool_then_a_to_z(window: CapyWindo
     assert page.about.objectName() == "lead" and page.problem.objectName() == "hint"
     assert page.about.font().pointSizeF() == page.table.font().pointSizeF() + 1
     assert page.problem.text() == "F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself."
+
+
+def test_a_command_whose_menu_text_changes_keeps_its_plain_name(window: CapyWindow) -> None:
+    """The right-click menu counts the printers ("Refresh 3 printers") and the host menu names
+    who's signed in; the page names the command, never what was last picked."""
+    keys = window.keys
+    refresh = keys.row("printers.refresh_selected")
+    refresh.actions[0].setText("&Refresh 3 printers")
+    folder = keys.row("command.user-folder")
+    plain = folder.name()
+    folder.actions[0].setText(f"{plain} (ana)")
+    assert refresh.name() == "Refresh printer"
+    assert folder.name() == plain
+    page = _page(window)
+    assert page.item_of("printers.refresh_selected").text(0) == "Refresh printer"
+    assert page.item_of("command.user-folder").text(0) == plain
 
 
 def test_a_new_key_is_kept_and_works_at_once_in_its_own_tool_only(window: CapyWindow) -> None:

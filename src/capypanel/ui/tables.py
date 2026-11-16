@@ -87,9 +87,9 @@ def fit_rows(
     least: dict[int, int] | None = None,
 ) -> None:
     """As tall as its rows, between FEWEST_ROWS and `most`: no empty space under a short
-    list, a scroll bar on a long one. Each column fits its text (up to WIDEST, and at least
-    its `least` width), the `stretch` one (the last by default) taking the room left. Call it
-    after filling the table."""
+    list, a scroll bar on a long one (`most` 0: as tall as its layout makes it). Each column
+    fits its text (up to WIDEST, and at least its `least` width), the `stretch` one (the last
+    by default) taking the room left. Call it after filling the table."""
     fits = []
     for column in range(table.columnCount()):
         table.resizeColumnToContents(column)
@@ -113,6 +113,8 @@ def _fit_width(table: QTreeWidget) -> None:
     room = table.viewport().width() - sum(w for c, w in enumerate(fits) if c != stretch)
     table.setColumnWidth(stretch, max(fits[stretch], room))
     most = table.property(_MOST)
+    if most == 0:  # it fills the height its layout gives it
+        return
     rows = min(
         max(table.topLevelItemCount(), FEWEST_ROWS), most if isinstance(most, int) else MOST_ROWS
     )

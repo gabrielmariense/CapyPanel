@@ -30,12 +30,15 @@ DEAD_KEYS_END = 0x01001293  # the last of Qt's dead-key codes
 class KeyCommand:
     """A command a key can run, as a tool or the window offers it: `id` names it in the
     settings file ("hosts.edit", "app.settings"), `where` is the tool's
-    id or EVERYWHERE, and `default` is today's key in portable text ("Ctrl+E"), or ""."""
+    id or EVERYWHERE, and `default` is today's key in portable text ("Ctrl+E"), or "".
+    `name` gives its name on the Keyboard shortcuts page when the action's own text changes
+    with what's picked ("Refresh 3 printers", "User's folder (ana)")."""
 
     id: str
     action: QAction
     where: str
     default: str = ""
+    name: Callable[[], str] | None = None
 
 
 @dataclass
@@ -46,10 +49,14 @@ class Row:
     default: str
     places: list[str] = field(default_factory=list)  # tool ids, or EVERYWHERE
     actions: list[QAction] = field(default_factory=list)
+    named: Callable[[], str] | None = None  # its fixed name, when its action's text changes
 
     def name(self) -> str:
         """The command's name as its menus have it, without the access key's &."""
-        text = menus.label(self.actions[0]) if self.actions else self.id
+        if self.named is not None:
+            text = self.named()
+        else:
+            text = menus.label(self.actions[0]) if self.actions else self.id
         return text.replace("&&", "\0").replace("&", "").replace("\0", "&")
 
     def meets(self, other: "Row") -> bool:
@@ -119,6 +126,7 @@ class Keys:
             if command.where not in row.places:
                 row.places.append(command.where)
             row.actions.append(command.action)
+            row.named = row.named or command.name
         self.rows = list(rows.values())
         if self._split_old_shared(rows):
             self._save()

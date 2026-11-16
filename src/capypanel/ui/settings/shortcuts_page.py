@@ -1,16 +1,17 @@
 """Settings › CapyPanel › Keyboard shortcuts: every command a key can run, with its key. A
 double-click (or Enter) on a command waits for its new key; Clear and Restore default under the
 list act on the picked command. A key another command runs is moved only after a question.
-The commands sit under headings, the menu bar's menus first, then each tool, A–Z under each
-(War Room topic-shortcuts-page, 2026-11-16: the Where column read as a wall of text)."""
+The commands sit under headings, the menu bar's menus first, then each tool, each in the order
+you meet it on screen: ORDER (Gabriel, 2026-11-16: "go with 1 app order"), never A–Z. The page
+has no card: the list fills it (Dante's redo, 2026-11-16)."""
 
-import unicodedata
 from typing import cast
 
 from PySide6.QtCore import QKeyCombination, QRect, QSize, Qt, Signal
 from PySide6.QtGui import (
     QAction,
     QFocusEvent,
+    QFont,
     QFontMetrics,
     QHideEvent,
     QKeyEvent,
@@ -42,23 +43,16 @@ from capypanel.ui.tables import fit_rows, grid_table, with_buttons
 from capypanel.ui.themes import engine as themes
 
 COMMAND, KEY = range(2)  # the table's columns
-ROWS = 14  # shown before it scrolls: about sixty commands, a page that's mostly this list
 ROW_ROLE = Qt.ItemDataRole.UserRole  # the row's command id; a heading has none
 KEY_WIDTH = 120  # the Key column at least; wider when "Ctrl+Shift+O (in the list)" needs it
 LINE_EDIT_MARGIN = 2  # Qt keeps this much inside a field's contents on each side
-HEADING_GAP = 6  # above each heading but the first, as the Commands window's groups have
-HEADING_PADDING = 5  # above and under a heading's text, as the rows' cells have
+HEADING_GAP = 20  # empty space above each heading but the first (Gabriel: "add some empty space")
+HEADING_PADDING = 8  # above and under a heading's text
 GAP_ROLE = Qt.ItemDataRole.UserRole + 1  # a heading's: whether it has the gap above
 MODIFIERS = (Qt.Key.Key_Shift, Qt.Key.Key_Control, Qt.Key.Key_Alt, Qt.Key.Key_Meta,
              Qt.Key.Key_AltGr, Qt.Key.Key_unknown)  # fmt: skip
 HELD = (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier
         | Qt.KeyboardModifier.ShiftModifier | Qt.KeyboardModifier.MetaModifier)  # fmt: skip
-
-
-def alphabetical(name: str) -> str:
-    """A command's name as A–Z sorts it in any language: no accents, no case, no "…"."""
-    plain = unicodedata.normalize("NFD", name.replace("…", ""))
-    return "".join(c for c in plain if not unicodedata.combining(c)).casefold()
 
 
 def lead(text: str) -> QLabel:
@@ -71,6 +65,42 @@ def lead(text: str) -> QLabel:
     font.setPointSizeF(font.pointSizeF() + 1)  # follows a larger Windows font
     label.setFont(font)
     return label
+
+
+# Every command on the page, in the order you meet it: the menu bar's menus as they read top to
+# bottom; then each tool's screen, top to bottom and left to right: its toolbar button by button
+# (a dropdown's items in its menu's order), its item right-click menu, its part of View, its
+# list dropdown, and for Hosts the host commands in the Commands window's order. A command on
+# two of its screens sits at the first. A test fails when a command has no place here.
+ORDER = (
+    # File
+    "app.settings", "app.exit",
+    # View
+    "go.home", "go.hosts", "go.printers", "go.profiles", "app.show_toolbar", "app.show_status_bar",
+    # Help
+    "app.show_guide", "app.show_all_guides", "app.documentation", "app.report_problem",
+    "app.check_updates", "app.about",
+    # Hosts: Connect's menu, Refresh all, Inventory's menu, Report
+    "hosts.connect_host", "hosts.manual_connect", "hosts.connection_profiles",
+    "hosts.saved_credentials", "hosts.refresh_shown", "hosts.add_host", "hosts.add_group",
+    "hosts.manage_groups", "hosts.import_hosts", "hosts.export_hosts",
+    # Hosts: a host's right-click menu, View, the list dropdown
+    "hosts.copy_address", "hosts.edit", "hosts.remove",
+    "hosts.show_groups", "hosts.show_tags", "hosts.show_details", "hosts.customize_details",
+    "hosts.show_domains", "hosts.new_list", "hosts.open_list",
+    # Hosts: the Commands window's order
+    "command.all-checks", "command.status", "command.users", "command.facts", "command.programs",
+    "command.c-share", "command.user-folder", "command.startup", "command.path",
+    "command.computer-management", "command.event-viewer", "command.services",
+    "command.message", "command.drives", "command.printers",
+    # Printers: Open web page, Refresh all, Inventory's menu, Report
+    "printers.open_web_page", "printers.refresh_shown", "printers.add_printer",
+    "printers.add_group", "printers.manage_groups", "printers.export_printers",
+    # Printers: a printer's right-click menu, View, the list dropdown
+    "printers.refresh_selected", "printers.copy_address", "printers.edit", "printers.remove",
+    "printers.show_groups", "printers.show_tags", "printers.show_details",
+    "printers.customize_details", "printers.new_list", "printers.open_list",
+)  # fmt: skip
 
 
 def reserved_line() -> str:
@@ -96,6 +126,11 @@ def top_menu(action: QAction) -> tuple[int, QMenu] | None:
 def plain(text: str) -> str:
     """A menu's words without the access key's &."""
     return text.replace("&&", "\0").replace("&", "").replace("\0", "&")
+
+
+def place_in_order(row: Row) -> int:
+    """Its place in ORDER; one missing goes last (a test makes sure none is)."""
+    return ORDER.index(row.id) if row.id in ORDER else len(ORDER)
 
 
 class KeyCatcher(QLineEdit):
@@ -146,7 +181,16 @@ class ShortcutsPage(Page):
         super().__init__(_("Keyboard shortcuts"))
         self.keys = keys
         self._names = place_names
-        self.section = Section(_("Command keys"))  # not the page's name again: what its list holds
+        # A Section, so Settings' search still finds the page, drawn with no card and no title:
+        # the page list names the page, and the list fills it (Dante's redo).
+        self.section = Section(_("Command keys"))
+        self.section.heading.hide()
+        self.section.inner.setObjectName("")
+        self.section.inner.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, False)
+        self.section.content.setContentsMargins(0, 0, 0, 0)
+        column = self.section.layout()
+        if column is not None:
+            column.setSpacing(0)
         self.about = lead(_("Double-click a command and press its new key."))
         self.table = grid_table([_("Command"), _("Key")])
         self.table.itemActivated.connect(lambda item, _c: self.change(item))
@@ -158,10 +202,9 @@ class ShortcutsPage(Page):
         self.problem = hint(reserved_line())  # the reserved keys, or why a key wasn't taken
         self.section.content.addWidget(self.about)
         self.section.content.addSpacing(spacing.CONTROLS - self.section.content.spacing())
-        self.section.content.addWidget(with_buttons(self.table, [self.clear, self.restore]))
+        self.section.content.addWidget(with_buttons(self.table, [self.clear, self.restore]), 1)
         self.section.content.addWidget(self.problem)
-        self.body.addWidget(self.section)
-        self.body.addStretch(1)
+        self.body.addWidget(self.section, 1)  # the table scrolls; the page never does
         self._catcher: KeyCatcher | None = None
         self._fill()
         themes.switches().switched.connect(self._restyle)
@@ -197,21 +240,22 @@ class ShortcutsPage(Page):
         for index, where in enumerate(sorted(groups)):
             text, rows = groups[where]
             self._add_heading(text, gap=index > 0)
-            for row in sorted(rows, key=lambda r: alphabetical(self.name(r))):
+            for row in sorted(rows, key=place_in_order):
                 item = QTreeWidgetItem([self.name(row), ""])
                 item.setData(COMMAND, ROW_ROLE, row.id)
                 self.table.addTopLevelItem(item)
                 self._show_key(item)
         # The key in a narrow column at the right edge, the commands taking the rest (Dante).
-        fit_rows(self.table, ROWS, stretch=COMMAND, least={KEY: self._key_width()})
+        fit_rows(self.table, 0, stretch=COMMAND, least={KEY: self._key_width()})
         self._enable()
 
     def _add_heading(self, text: str, *, gap: bool) -> None:
-        """A heading row over its commands, in the Commands window's group look; it can't be
-        picked, and the arrow keys go past it."""
-        item = QTreeWidgetItem([text.upper()])
+        """A heading row over its commands, as written ("File", "Hosts"); it can't be picked,
+        and the arrow keys go past it."""
+        item = QTreeWidgetItem([text])
         item.setFlags(Qt.ItemFlag.NoItemFlags)
-        item.setTextAlignment(COMMAND, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignBottom)
+        down = Qt.AlignmentFlag.AlignBottom if gap else Qt.AlignmentFlag.AlignVCenter
+        item.setTextAlignment(COMMAND, Qt.AlignmentFlag.AlignLeft | down)
         item.setData(COMMAND, GAP_ROLE, gap)
         self.table.addTopLevelItem(item)
         item.setFirstColumnSpanned(True)
@@ -222,14 +266,17 @@ class ShortcutsPage(Page):
         return [i for i in found if i is not None and not i.data(COMMAND, ROW_ROLE)]
 
     def _style_heading(self, item: QTreeWidgetItem) -> None:
-        """The groupHeading label's font and colour, as the theme's stylesheet sets them, and
-        6 px more height above every heading but the first."""
+        """The table's font a point up and semi-bold, in a section title's colour as the theme
+        sets it, with room above and under, and the gap above every heading but the first."""
         look = QLabel()
-        look.setObjectName("groupHeading")
+        look.setObjectName("sectionTitle")
         look.ensurePolished()
-        item.setFont(COMMAND, look.font())
+        font = self.table.font()
+        font.setPointSizeF(font.pointSizeF() + 1)
+        font.setWeight(QFont.Weight.DemiBold)
+        item.setFont(COMMAND, font)
         item.setForeground(COMMAND, look.palette().color(QPalette.ColorRole.WindowText))
-        height = QFontMetrics(look.font()).height() + 2 * HEADING_PADDING
+        height = QFontMetrics(font).height() + 2 * HEADING_PADDING
         gap = HEADING_GAP if item.data(COMMAND, GAP_ROLE) else 0
         item.setSizeHint(COMMAND, QSize(0, height + gap))
 

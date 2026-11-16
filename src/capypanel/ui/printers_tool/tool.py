@@ -65,6 +65,7 @@ from capypanel.ui.printers_tool.settings import (
 from capypanel.ui.printers_tool.status import DEFAULT_REASONS, Cell, Checked, Counted, Reason
 from capypanel.ui.printers_tool.table import PrinterTable
 from capypanel.ui.printers_tool.toolbar import PrintersToolBar
+from capypanel.ui.shortcuts import KeyCommand
 
 log = logging.getLogger(__name__)
 WEB_PAGES_AT_ONCE = 10  # more selected open only the first ones: a browser tab each
@@ -240,6 +241,15 @@ class PrintersTool(ListWorkspace):
         fields += [word for column, word in words if not table.isColumnHidden(column)]
         fields.append(_("notes"))  # no column, so always searched
         return fields, _("Searches every printer in the list (Ctrl+F)")
+
+    def key_commands(self) -> list[KeyCommand]:
+        """Its menus' commands; Refresh printer keeps its one-printer name on the Keyboard
+        shortcuts page, as the right-click menu counts the printers it'll refresh."""
+        fixed = f"{self.TOOL_ID}.refresh_selected"
+        return [
+            replace(c, name=lambda: _("&Refresh printer")) if c.id == fixed else c
+            for c in super().key_commands()
+        ]
 
     def retranslate(self) -> None:
         retranslate_actions(self.commands)

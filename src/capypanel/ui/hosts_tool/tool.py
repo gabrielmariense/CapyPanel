@@ -230,7 +230,14 @@ class HostsTool(ListWorkspace):
         """Its menus' commands, then the host commands, but never one that disturbs whoever
         uses the PC (Restart, Shut down, the rest of Power, Restart Print Spooler)."""
         own = [
-            KeyCommand(f"command.{command_id}", action, self.TOOL_ID, portable(action.shortcut()))
+            KeyCommand(
+                f"command.{command_id}",
+                action,
+                self.TOOL_ID,
+                portable(action.shortcut()),
+                # Its plain name: the menu adds who's signed in ("User's folder (ana)").
+                name=lambda c=command: _(c.name),
+            )
             for command_id, action in self.host_actions.items()
             if (command := host_commands.command(command_id)).group is not host_commands.Group.POWER
             and not command.risky
