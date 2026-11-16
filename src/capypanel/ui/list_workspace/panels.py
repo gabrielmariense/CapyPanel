@@ -205,6 +205,20 @@ class NavigationPane(QWidget):
         ]
         return max([card, *above])
 
+    def card_top(self) -> int:
+        """How far below the pane's top its card starts, as the layout places it: what's above
+        the card (the list dropdown), each with the layout's gap under it. Known before the
+        pane is shown, so a panel beside it can line up with the card from the start."""
+        layout = self.layout()
+        assert isinstance(layout, QVBoxLayout)
+        top = 0
+        for index in range(layout.indexOf(self._card)):
+            item = layout.itemAt(index)
+            widget = item.widget() if item is not None else None
+            if widget is not None and not widget.isHidden():
+                top += widget.sizeHint().height() + layout.spacing()
+        return top
+
     def retranslate(self) -> None:
         """Titles only; the lists' own texts come back with the next show_list()."""
         self.add_group_button.setToolTip(_("Add group"))

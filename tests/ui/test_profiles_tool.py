@@ -13,7 +13,7 @@ from capywindow import CapyWindow
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, QPointF, QRect, QSize, Qt
 from PySide6.QtGui import QIcon, QKeyEvent, QMouseEvent, QShowEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog, QToolButton
+from PySide6.QtWidgets import QApplication, QDialog, QToolButton, QWidget
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -860,6 +860,40 @@ def test_the_arrows_that_scroll_the_tabs_can_be_seen(window: CapyWindow) -> None
         size = QSize(16, 16)
         normal = button.icon().pixmap(size, QIcon.Mode.Normal).toImage()
         assert button.icon().pixmap(size, QIcon.Mode.Disabled).toImage() != normal
+
+
+def test_the_list_and_the_right_panel_start_on_the_groups_panel_s_top(
+    window: CapyWindow,
+) -> None:
+    """The tabs are as tall as the list dropdown and the gap under it: a tab's top meets the
+    dropdown's, and the list and the right panel start where the Groups panel does. They sat
+    9 px higher in 0.27 and 0.28 (Dante Q1, Gabriel's pick 1)."""
+    tool = _tool(window)
+    _open(window, focus=False)  # a host's tab beside the Hosts tab, which stays in front
+    window.resize(1280, 760)
+    window.show()
+    QApplication.processEvents()
+
+    def top(widget: QWidget) -> int:
+        return widget.mapTo(window, QPoint(0, 0)).y()
+
+    groups = top(tool.nav._card)
+    assert tool.nav.card_top() == groups - top(tool.nav) > 0  # known before it's shown
+    assert top(tool.middle) == groups and top(tool.side) == groups
+    assert top(tool.tabs) == top(tool.list_picker)
+    for bar in (tool.tabs.pinned, tool.tabs.bar):  # every tab fills the strip, top to bottom
+        tab = bar.tabRect(0).translated(bar.mapTo(window, QPoint(0, 0)))
+        assert (tab.top(), tab.height()) == (top(tool.list_picker), tool.tabs.height())
+    # The ▾ and the line between the Hosts tab and the hosts' tabs stay in the middle.
+    for part in (tool.tabs.more, tool.tabs.line):
+        middle = part.mapTo(tool.tabs, part.rect().center()).y()
+        assert abs(middle - tool.tabs.rect().center().y()) <= 1
+
+    tool.list_picker.setStyleSheet("QComboBox { min-height: 40px; }")  # a theme's taller one
+    tool.restyle()  # as after every theme switch
+    QApplication.processEvents()
+    assert top(tool.nav._card) > groups
+    assert top(tool.middle) == top(tool.side) == top(tool.nav._card)
 
 
 def test_a_tab_closed_while_its_scan_runs_ignores_the_answer(

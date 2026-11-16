@@ -176,6 +176,7 @@ class ProfilesTool(Tool):
         margins = QVBoxLayout(self)
         margins.setContentsMargins(8, 4, 8, 4)  # as the Hosts page
         margins.addWidget(self.splitter)
+        self._fit_tabs()
 
         self.show_groups = QAction(self)
         self.show_tags = QAction(self)
@@ -481,9 +482,15 @@ class ProfilesTool(Tool):
         self._show_list()
         self._update()
 
+    def _fit_tabs(self) -> None:
+        """The tabs as tall as the list dropdown and the gap under it, so the list and the
+        right panel start on the Groups panel's top line: they sat 9 px higher (Dante)."""
+        self.tabs.set_height(self.nav.card_top())
+
     def restyle(self) -> None:
         super().restyle()
         self.tabs.restyle()
+        self._fit_tabs()  # a theme's dropdown is taller or shorter
         for page in self._pages.values():
             page.show_again()
         self._fill_hosts()
