@@ -331,6 +331,13 @@ COMPONENTS = (
         "BSD-3-Clause",
         "pywin32.txt",
     ),
+    Component(
+        "truststore",
+        metadata.version("truststore"),
+        "© 2022 Seth Michael Larson",
+        "MIT",
+        "truststore.txt",
+    ),
     Component("Tabler Icons", "", "© 2020-2026 Paweł Kuna", "MIT", "tabler-icons.txt"),
 )
 

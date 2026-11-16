@@ -80,6 +80,7 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
     assert rows == [  # each group's label, then one row per page
         "CapyPanel",
         "General",
+        "Keyboard shortcuts",
         "Hosts",
         "General",
         "Connecting",

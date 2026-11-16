@@ -3,6 +3,27 @@
 The changes in each release that you'll notice. The
 [releases on GitHub](https://github.com/gabrielmariense/CapyPanel/releases) have the downloads.
 
+## 0.28.0
+
+- **Settings > CapyPanel > Keyboard shortcuts** is new: give a command the key you want, or take
+  its key away. Hosts and Printers keep their own keys, even for a command both have, and the
+  menus show your keys at once.
+- The update window is new. It shows your version and the new one side by side, each change on
+  its own line, and the download's progress at the bottom; after the restart it says **Update
+  installed**.
+- Checking for updates works on PCs where it failed with "CERTIFICATE_VERIFY_FAILED": Windows now
+  checks GitHub's certificate itself, as Edge does. On 0.27.1 with that error, open
+  https://api.github.com in Edge once, then update the usual way.
+- In the Commands window, **Profile**, a gear for the connection profiles and **Connect** sit on
+  the top line beside **Host**, and **Add to host list…** moved to the bottom left.
+- The User profiles table no longer has a **Kind** column. A profile's kind is still in its
+  details.
+
+## 0.27.1
+
+- An update no longer stops on a file an earlier update left behind. Copies that couldn't update
+  from 0.26.4, with "Access denied", update straight to 0.27.1, with nothing to clean up by hand.
+
 ## 0.27.0
 
 - **Settings > Printers > Warnings and supplies** has a new **Warnings** table: tick which

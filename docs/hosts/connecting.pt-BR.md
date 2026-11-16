@@ -196,8 +196,8 @@ um erro de digitação. Um login esquecido aqui também é apagado do Gerenciado
 
 **Conectar > Conexão manual…** (Ctrl+M) abre a janela Comandos com a caixa **Host** vazia: digite o
 endereço, escolha um **Perfil** e clique em **Conectar**. Um endereço com porta, como
-`192.0.2.77:5901`, usa aquela porta. O **Adicionar à lista de hosts…** põe o PC na lista aberta
-(veja [A janela Comandos](commands.pt-BR.md#a-janela-comandos)).
+`192.0.2.77:5901`, usa aquela porta. O **Adicionar à lista de hosts…**, embaixo à esquerda, põe o
+PC na lista aberta (veja [A janela Comandos](commands.pt-BR.md#a-janela-comandos)).
 
 ## Mensagens que você pode ver
 

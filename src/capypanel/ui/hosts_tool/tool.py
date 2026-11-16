@@ -66,12 +66,13 @@ from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
 from capypanel.ui.menus import shortcut_text
 from capypanel.ui.saved_credentials import KeptLogin
+from capypanel.ui.shortcuts import KeyCommand, portable
 from capypanel.ui.themes import engine as themes
 
 log = logging.getLogger(__name__)
 MANY_USER_CHECKS = 50  # reading logged-on users on more hosts than this asks first
 NAMED = 5  # hosts the account question names; the rest are counted
-# Host commands' keys; the rest have none for now (a Keyboard shortcuts page comes later).
+# Host commands' default keys; Settings › Keyboard shortcuts gives any of the others one.
 COMMAND_SHORTCUTS = {
     "c-share": "Ctrl+E",
     "path": "Ctrl+Shift+O",
@@ -224,6 +225,24 @@ class HostsTool(ListWorkspace):
 
     def view_actions(self) -> list[list[QAction]]:
         return [*super().view_actions(), [self.commands.show_domains]]
+
+    def key_commands(self) -> list[KeyCommand]:
+        """Its menus' commands, then the host commands, but never one that disturbs whoever
+        uses the PC (Restart, Shut down, the rest of Power, Restart Print Spooler)."""
+        own = [
+            KeyCommand(
+                f"command.{command_id}",
+                action,
+                self.TOOL_ID,
+                portable(action.shortcut()),
+                # Its plain name: the menu adds who's signed in ("User's folder (ana)").
+                name=lambda c=command: _(c.name),
+            )
+            for command_id, action in self.host_actions.items()
+            if (command := host_commands.command(command_id)).group is not host_commands.Group.POWER
+            and not command.risky
+        ]
+        return [*super().key_commands(), *own]
 
     def save_state(self) -> None:
         super().save_state()
@@ -835,6 +854,11 @@ class HostsTool(ListWorkspace):
     def profiles_changed(self) -> None:
         """Settings changed the connection profiles or tool paths."""
         self._selection_changed()  # the Details panel names the profile; Connect's menu follows
+        from capypanel.ui.hosts_tool.commands_window import CommandsWindow
+
+        window = self._commands_window
+        if isinstance(window, CommandsWindow) and shiboken6.isValid(window):
+            window.profiles_changed()  # its Profile dropdown
 
     def apply_prefs(self, prefs: SettingsPrefs) -> None:
         """A choice made in Settings, kept and applied at once."""

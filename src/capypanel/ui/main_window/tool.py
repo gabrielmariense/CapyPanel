@@ -14,6 +14,7 @@ from capypanel.ui.settings.group import SettingsGroup
 if TYPE_CHECKING:
     from capypanel.ui.guides import Guide
     from capypanel.ui.saved_credentials import KeptLogin
+    from capypanel.ui.shortcuts import KeyCommand
 
 
 class Shell(Protocol):
@@ -153,6 +154,11 @@ class Tool(QWidget):
     def settings_group(self) -> SettingsGroup | None:
         """Its part of Settings, under its name in the page list."""
         return None
+
+    def key_commands(self) -> list["KeyCommand"]:
+        """The commands of its own a key can run, in menu order, for Settings › Keyboard
+        shortcuts; each with the key it has now as its default."""
+        return []
 
     def save_state(self) -> None:
         """When the window closes."""

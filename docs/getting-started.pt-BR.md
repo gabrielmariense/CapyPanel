@@ -183,6 +183,10 @@ janela de novo.
 
 ## Atalhos de teclado
 
+Estas são as teclas com que o CapyPanel começa. O **Configurações > CapyPanel > Atalhos de
+teclado** as muda, menos F1, Esc, Ctrl+F e Tab, que ficam reservadas ao próprio CapyPanel (veja
+[Configurações e arquivos](settings-and-files.pt-BR.md#capypanel-atalhos-de-teclado)).
+
 | Atalho | Ação |
 |---|---|
 | Enter (na lista de hosts) | Abrir uma conexão com os hosts selecionados |

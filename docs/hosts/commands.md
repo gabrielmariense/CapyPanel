@@ -181,13 +181,14 @@ not the network printers of the [Printers tool](../printers/printers.md).
 
 ## The Commands window
 
-![The Commands window: the Host box on top, the groups on the left, every command in the middle, what the picked one found on the right](../images/commands-window-dark.png)
+![The Commands window: Host, Profile, the gear and Connect on the top line, the groups on the left, every command in the middle, what the picked one found on the right](../images/commands-window-dark.png)
 
 The Commands window holds every command for one PC, with its answer beside it. Open it with the
 **Commands** button, **All commands…**, or **Connect > Manual connection…** (Ctrl+M) for an address
 that isn't in your list.
 
-1. Pick or type the PC in the **Host** box on top.
+1. Pick or type the PC in the **Host** box on top. **Profile** and **Connect**, on the same line,
+   open a connection to it.
 2. Pick a command in the middle (arrow keys, or type to search) and press **Enter** or **Run**.
 3. Read the answer on the right.
 
@@ -199,8 +200,11 @@ A double-click only picks, so a risky command never runs by accident.
     - The **Host** box lists the hosts the Hosts panel shows, as "DESK-02 · 192.0.2.12", and under
       **Recent** the addresses you typed before; `host:port` works. Picking another host changes the
       whole window to it, its **Profile** included. The title says "Commands · DESK-02", or "Manual
-      connection · 198.51.100.40" for a typed address. **Add to host list…** shows beside the box
-      for a typed address the open list doesn't have.
+      connection · 198.51.100.40" for a typed address. **Add to host list…** shows at the bottom
+      left for a typed address the open list doesn't have.
+    - The gear between **Profile** and **Connect** ("Connection profiles…") opens **Settings >
+      Hosts > Connecting**, where the profiles are made. **Connect** is blue once there's a host to
+      connect to; with the box empty, a click on it puts the cursor in **Host**.
     - On the left, a **Search** box and the six groups. In the middle, each command with its
       shortcut in grey; the picked one grows to show what it does.
     - On the right, the answer laid out as the Details panel lays it out. Printers, programs and

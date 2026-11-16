@@ -187,7 +187,8 @@ forgotten here is deleted from Credential Manager too.
 
 **Connect > Manual connection…** (Ctrl+M) opens the Commands window with its **Host** box empty:
 type the address, pick a **Profile** and click **Connect**. An address with a port, as in
-`192.0.2.77:5901`, uses that port. **Add to host list…** puts the PC into the open list (see
+`192.0.2.77:5901`, uses that port. **Add to host list…**, at the bottom left, puts the PC into
+the open list (see
 [The Commands window](commands.md#the-commands-window)).
 
 ## Messages you may see

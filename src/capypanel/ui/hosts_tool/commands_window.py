@@ -82,6 +82,7 @@ GROUPS_WIDTH = 150  # px, at least
 GROUP_ROOM = 34  # px past a group's name: the rows' padding (10 + 10), the frame and air
 ROW_SPACING = 2  # px between the commands; a gap widget adds one more
 RESULTS_WIDTH = 400  # px at least: the rest goes to the commands, whose names are longer in pt
+PROFILE_WIDTH = 160  # the profile list beside Host: room for a long profile name
 ROW = 28  # px: a command's line
 APART = 8  # px: the gap above a command set apart, where menus draw a line
 ICON = 16
@@ -395,23 +396,35 @@ class CommandsWindow(QDialog):
         profile_label = QLabel(_("&Profile:"))
         profile_label.setBuddy(self.profile)
         self.connect_button = QPushButton(_("&Connect"))
+        self.connect_button.setObjectName("primary")  # the main action; Enter stays Run's
         self.connect_button.setAutoDefault(False)
         self.connect_button.clicked.connect(self._connect)
-        # Beside the PC it adds, and only when that PC isn't in the open list yet.
-        self.add_button = QPushButton(_("A&dd to host list…"))
-        self.add_button.setAutoDefault(False)
-        self.add_button.setToolTip(_("Adds this PC to the open host list"))
-        self.add_button.clicked.connect(self._add_to_list)
-        left_top = QHBoxLayout()
-        left_top.setSpacing(spacing.CONTROLS)
-        left_top.addWidget(address_label)
-        left_top.addWidget(self.address, 1)
-        left_top.addWidget(self.add_button)
-        right_top = QHBoxLayout()
-        right_top.setSpacing(spacing.CONTROLS)
-        right_top.addWidget(profile_label)
-        right_top.addWidget(self.profile, 1)
-        right_top.addWidget(self.connect_button)
+        # Where the profiles are made, beside the one picked: a square button, its name in
+        # the tooltip (Dante's redo, Gabriel, 2026-11-16).
+        profiles_name = _("Connection &profiles…").replace("&", "")
+        self.profiles_button = QPushButton()
+        self.profiles_button.setAutoDefault(False)
+        self.profiles_button.setToolTip(profiles_name)
+        self.profiles_button.setAccessibleName(profiles_name)
+        self.profiles_button.clicked.connect(lambda: tool.open_settings("connections"))
+        side = self.profile.sizeHint().height()
+        self.profiles_button.setFixedSize(side, side)
+        self.connect_button.setFixedHeight(side)  # the Windows themes pad the main button more
+        # One line: the PC, how to connect, Connect (Gabriel, 2026-11-16: "holy that
+        # connection 1 is amazing, please do that"). Connect ends where the command list ends.
+        top = QHBoxLayout()
+        top.setSpacing(spacing.CONTROLS)
+        top.addWidget(address_label)
+        top.addWidget(self.address, 1)
+        top.addSpacing(spacing.CONTROLS)  # the PC, then how to reach it
+        top.addWidget(profile_label)
+        self.profile.setMinimumWidth(PROFILE_WIDTH)
+        top.addWidget(self.profile)
+        top.addWidget(self.profiles_button)
+        top.addWidget(self.connect_button)
+        for before, after in ((self.address, self.profile), (self.profile, self.profiles_button),
+                              (self.profiles_button, self.connect_button)):  # fmt: skip
+            QWidget.setTabOrder(before, after)
 
         # ---- the groups, the commands, the results ----
         self.search = QLineEdit()
@@ -483,6 +496,12 @@ class CommandsWindow(QDialog):
         hint = QLabel(_("↑ ↓ pick, Enter runs, typing searches. Commands that need more open a "
                         "small window; risky ones ask first."))  # fmt: skip
         hint.setObjectName("hint")
+        # In the footer, only for a PC typed here that the open list doesn't have; last but
+        # Close in the Tab order.
+        self.add_button = QPushButton(_("A&dd to host list…"))
+        self.add_button.setAutoDefault(False)
+        self.add_button.setToolTip(_("Adds this PC to the open host list"))
+        self.add_button.clicked.connect(self._add_to_list)
         close = QPushButton(_("Close"))
         close.setAutoDefault(False)
         close.clicked.connect(self.close)
@@ -491,15 +510,15 @@ class CommandsWindow(QDialog):
         grid.setContentsMargins(spacing.WINDOW, spacing.PANEL, spacing.WINDOW, spacing.PANEL)
         grid.setHorizontalSpacing(12)
         grid.setVerticalSpacing(spacing.CONTROLS)
-        grid.addLayout(left_top, 0, 0, 1, 4)
-        grid.addLayout(right_top, 0, 4)
+        grid.addLayout(top, 0, 0, 1, 4)
         grid.addLayout(left, 1, 0, 2, 1)
         grid.addWidget(_divider(), 1, 1, 2, 1)
         grid.addWidget(self.list, 1, 2, 2, 1)
         grid.addWidget(_divider(), 1, 3, 2, 1)
-        grid.addWidget(self.results, 1, 4, 2, 1)
+        grid.addWidget(self.results, 0, 4, 3, 1)  # from the top: nothing above it now
         grid.addWidget(hint, 3, 0, 1, 5)
         bottom = QHBoxLayout()
+        bottom.addWidget(self.add_button)
         bottom.addStretch(1)
         bottom.addWidget(close)
         grid.addLayout(bottom, 4, 0, 1, 5)
@@ -594,7 +613,10 @@ class CommandsWindow(QDialog):
         self.setWindowTitle(f"{title} · {target.name}" if target else title)
         for row in self.rows:
             row.run.setEnabled(target is not None)
-        self.connect_button.setEnabled(target is not None and self.profile.count() > 0)
+        # Enabled while it waits for a host too: a click then goes to Host. Greyed, it was
+        # missed (Gabriel, 2026-11-16: a coworker couldn't find it).
+        self.connect_button.setEnabled(self.profile.count() > 0)
+        self._style_connect(waiting=target is None)
         self._update_add()
         self._update_names()
         self._show_results()
@@ -808,11 +830,36 @@ class CommandsWindow(QDialog):
             1,
         )
 
+    def _style_connect(self, *, waiting: bool) -> None:
+        """Connect in the main button's fill, or an accent outline while no host is typed; its
+        plug icon in its text's colour, white on the fill."""
+        button = self.connect_button
+        if button.property("waiting") != waiting:
+            button.setProperty("waiting", waiting)
+            style = button.style()
+            style.unpolish(button)
+            style.polish(button)
+        color = button.palette().color(QPalette.ColorRole.Link) if waiting else QColor("#ffffff")
+        button.setIcon(tabler_icon("plug-connected", color))
+        text = self.profiles_button.palette().color(QPalette.ColorRole.ButtonText)
+        self.profiles_button.setIcon(tabler_icon("settings", text))
+
     def _restyle(self) -> None:
         """After a theme switch: the icons and dots drawn in the old theme's colours."""
         for row in self.rows:
             row.restyle()
+        self._style_connect(waiting=self.target() is None)
         self._show_results()
+
+    def profiles_changed(self) -> None:
+        """Settings changed the connection profiles: the dropdown lists them as they are now,
+        on the one it showed while that one is still there."""
+        shown = self.profile.currentData()
+        self.profile.clear()
+        for profile_id, text in self._tool.connector.choices():
+            self.profile.addItem(text, profile_id)
+        self.profile.setCurrentIndex(max(self.profile.findData(shown), 0))
+        self.connect_button.setEnabled(self.profile.count() > 0)
 
     def _session_menu(self, session: Session, where: QPoint) -> None:
         target = self.target()
@@ -927,7 +974,8 @@ class CommandsWindow(QDialog):
 
     def _connect(self) -> None:
         target = self.target()
-        if target is None:
+        if target is None:  # nothing typed yet: where the host goes
+            self.address.setFocus(Qt.FocusReason.OtherFocusReason)
             return
         if target.key.startswith("@"):  # typed: its port too, as typed
             typed = self.address.currentText().strip()

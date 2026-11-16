@@ -23,6 +23,8 @@ MOST_ROWS = 6  # taller lists scroll
 FEWEST_ROWS = 3  # a short list still looks like a list
 WIDEST = 480  # px: only a paragraph (a license notice) is cut, its whole text in the tooltip
 _FITS = "fitWidths"  # property: each column's width for its text, set by fit_rows
+_MOST = "mostRows"  # property: the rows it shows before it scrolls, set by fit_rows
+_STRETCH = "stretchColumn"  # property: the column that takes the room left, set by fit_rows
 
 
 class _Refit(QObject):
@@ -77,15 +79,25 @@ def fit_columns(table: QTreeWidget) -> None:
             table.resizeColumnToContents(column)
 
 
-def fit_rows(table: QTreeWidget) -> None:
-    """As tall as its rows, between FEWEST_ROWS and MOST_ROWS: no empty space under a short
-    list, a scroll bar on a long one. Each column fits its text (up to WIDEST), the last one
-    stretching into the room left. Call it after filling the table."""
+def fit_rows(
+    table: QTreeWidget,
+    most: int = MOST_ROWS,
+    *,
+    stretch: int = -1,
+    least: dict[int, int] | None = None,
+) -> None:
+    """As tall as its rows, between FEWEST_ROWS and `most`: no empty space under a short
+    list, a scroll bar on a long one (`most` 0: as tall as its layout makes it). Each column
+    fits its text (up to WIDEST, and at least its `least` width), the `stretch` one (the last
+    by default) taking the room left. Call it after filling the table."""
     fits = []
     for column in range(table.columnCount()):
         table.resizeColumnToContents(column)
-        fits.append(min(table.columnWidth(column) + 12, WIDEST))
+        width = min(table.columnWidth(column) + 12, WIDEST)
+        fits.append(max(width, (least or {}).get(column, 0)))
     table.setProperty(_FITS, fits)
+    table.setProperty(_MOST, most)
+    table.setProperty(_STRETCH, stretch % table.columnCount())
     _fit_width(table)
 
 
@@ -93,18 +105,26 @@ def _fit_width(table: QTreeWidget) -> None:
     fits = table.property(_FITS)
     if not isinstance(fits, list) or len(fits) != table.columnCount():
         return
-    for column, width in enumerate(fits[:-1]):
-        table.setColumnWidth(column, width)
-    room = table.viewport().width() - sum(fits[:-1])
-    table.setColumnWidth(len(fits) - 1, max(fits[-1], room))
-    rows = min(max(table.topLevelItemCount(), FEWEST_ROWS), MOST_ROWS)
+    stretch = table.property(_STRETCH)
+    stretch = stretch if isinstance(stretch, int) else len(fits) - 1
+    for column, width in enumerate(fits):
+        if column != stretch:
+            table.setColumnWidth(column, width)
+    room = table.viewport().width() - sum(w for c, w in enumerate(fits) if c != stretch)
+    table.setColumnWidth(stretch, max(fits[stretch], room))
+    most = table.property(_MOST)
+    if most == 0:  # it fills the height its layout gives it
+        return
+    rows = min(
+        max(table.topLevelItemCount(), FEWEST_ROWS), most if isinstance(most, int) else MOST_ROWS
+    )
     first = table.topLevelItem(0)
     row = table.sizeHintForRow(0) if first is not None else -1
     if row <= 0:
         row = table.fontMetrics().height() + 16  # the stylesheet pads each row
     # The header, exactly `rows` rows (a 7th never peeks in), the frame, and the sideways
     # scroll bar when the columns are wider than the table.
-    across = table.horizontalScrollBar().sizeHint().height() if room < fits[-1] else 0
+    across = table.horizontalScrollBar().sizeHint().height() if room < fits[stretch] else 0
     height = table.header().sizeHint().height() + rows * row + 2 * table.frameWidth() + across
     if table.height() != height or table.minimumHeight() != height:
         table.setFixedHeight(height)

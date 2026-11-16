@@ -502,13 +502,16 @@ def test_a_scan_shows_the_host_its_profiles_and_fills_the_hosts_tab(
     assert about.startswith("192.0.2.13 · scanned at ") and about.endswith(" · as EXAMPLE\\support")
     assert page.filters.shown.text() == "6 of 7 shown"  # Windows' own is hidden at first
     assert page.table.texts() == [  # the newest use first; rows with no date last
-        ["", "EXAMPLE\\ana", "11/10/2026", "", "Profile", "In use"],
-        ["", "EXAMPLE\\rui", "11/03/2026", "", "Profile", "Can be deleted"],
-        ["", "EXAMPLE\\bia", "08/14/2026", "", "Profile", "Can be deleted"],
-        ["", "marta.old  (unknown)", "03/11/2025", "", "Profile", "Can be deleted"],
-        ["", "pedro  (unknown)", "—", "", "Registry entry, no folder", "Can be deleted"],
-        ["", "temp.joao  (unknown)", "—", "", "Folder, no registry entry", "Can be deleted"],
+        ["", "EXAMPLE\\ana", "11/10/2026", "", "In use"],
+        ["", "EXAMPLE\\rui", "11/03/2026", "", "Can be deleted"],
+        ["", "EXAMPLE\\bia", "08/14/2026", "", "Can be deleted"],
+        ["", "marta.old  (unknown)", "03/11/2025", "", "Can be deleted"],
+        ["", "pedro  (unknown)", "—", "", "Can be deleted"],
+        ["", "temp.joao  (unknown)", "—", "", "Can be deleted"],
     ]
+    titles = page.table.tree.headerItem()  # a profile's kind is in its details window only
+    assert [titles.text(c) for c in range(titles.columnCount())] == [
+        "", "User", "Last used", "Size", "State"]  # fmt: skip
     assert tool.status_label.text() == "DESK-03 · 7 profiles · 5 can be deleted"
     bar = tool.bar
     assert bar.scan_button.text().strip() == "Scan again" and bar.scan_button.isEnabled()
@@ -1336,9 +1339,9 @@ def test_at_a_narrow_width_the_tables_fit_their_box_and_the_last_column_stays(
     page = _open(window)
     page.table.squeeze.apply(1200)
     ptree = page.table.tree
-    user, kind = ptree.columnWidth(panels.USER), ptree.columnWidth(panels.KIND)
+    user = ptree.columnWidth(panels.USER)
     page.table.squeeze.apply(430)
-    assert ptree.columnWidth(panels.USER) == 110 and ptree.columnWidth(panels.KIND) <= kind
+    assert ptree.columnWidth(panels.USER) == 110
     assert ptree.columnWidth(panels.USER) < user
     assert ptree.columnWidth(panels.TICK) == 34  # the ticks never shrink
     assert ptree.columnWidth(panels.STATE) >= page.table._state_least()

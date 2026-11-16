@@ -561,8 +561,9 @@ def test_corners_come_in_two_sizes_from_the_theme(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_no_corner_is_fixed_in_the_stylesheet_but_the_round_ones(theme: themes.Theme) -> None:
-    """Tags, badges, the radio button and the scroll bar stay round; a tick box keeps its
-    small corner. Everything else takes one of the theme's two sizes."""
+    """Tags, badges, the update windows' version chip, the radio button and the scroll bar
+    stay round; a tick box keeps its small corner. Everything else takes one of the theme's
+    two sizes."""
     odd = themes.Theme("odd", "custom", theme.scheme, colors=theme.colors, radius=17,
                        control_radius=13)  # fmt: skip
     sheet = re.sub(r"/\*.*?\*/", "", themes.stylesheet(odd), flags=re.DOTALL)
@@ -573,8 +574,8 @@ def test_no_corner_is_fixed_in_the_stylesheet_but_the_round_ones(theme: themes.T
                 fixed.add(selector.strip())
     assert fixed == {
         "QFrame#tagChip", "QLabel#tileBadge", "QLabel#railBadge", "QLabel#tagValue",
-        "QLabel#stateBadge", "QRadioButton::indicator", "QCheckBox::indicator",
-        "QScrollBar::handle",
+        "QLabel#stateBadge", "QLabel#updateChip", "QRadioButton::indicator",
+        "QCheckBox::indicator", "QScrollBar::handle",
     }  # fmt: skip
 
 

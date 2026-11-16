@@ -18,7 +18,7 @@ from capypanel.core import i18n, settings, updates
 from capypanel.core.updates import Release, UpdateError
 from capypanel.ui import updater as updater_ui
 from capypanel.ui.main_window import window as window_module
-from capypanel.ui.updater import NOTES_HEIGHT, RestartWindow, UpdateWindow
+from capypanel.ui.updater import NARROW, NOTES_HEIGHT, WIDE, RestartWindow, UpdateWindow
 
 NEWER = Release(
     version="99.0.0", notes="## What's new\n- Everything.",
@@ -142,13 +142,34 @@ def test_help_asks_and_says_when_it_is_up_to_date(
     github["latest"] = None
     dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
                           quit_for_update=lambda start: False)  # fmt: skip
-    assert dialog.heading.text() == "Checking for updates…"
+    assert dialog.windowTitle() == "CapyPanel"
+    assert dialog.heading.text() == "Checking for updates…" and not dialog.busy.isHidden()
     _wait(lambda: not window.updater.looking)
-    assert dialog.heading.text() == "CapyPanel is up to date"
-    assert dialog.line.text() == f"{__version__} is the newest release."
-    assert dialog.install.isHidden() and dialog.later.text() == "Close"
+    # Just the message, in the middle of a narrower window: no icon, chip or list.
+    assert dialog.heading.text() == "You already have the newest version."
+    assert dialog.line.text() == f"CapyPanel {__version__}"
+    assert dialog.icon.isHidden() and dialog.chip.isHidden() and dialog.changes.isHidden()
+    assert dialog.busy.isHidden() and dialog.heading.alignment() & Qt.AlignmentFlag.AlignHCenter
+    assert dialog.install.isHidden() and dialog.skip.isHidden()
+    assert dialog.later.text() == "Close" and dialog.later.isDefault()
     QApplication.processEvents()  # fitted to its few lines, no empty space
-    assert dialog.height() < NOTES_HEIGHT / 2
+    assert dialog.width() == NARROW and dialog.height() < NOTES_HEIGHT / 2
+    assert dialog._body.contentsMargins().top() == updater_ui.SHORT_BODY[1]  # centred, as drawn
+    dialog.close()
+
+
+def test_a_failed_check_says_why_with_the_releases_link(
+    window: CapyWindow, github: dict[str, Any]
+) -> None:
+    github["latest"] = UpdateError("GitHub didn't answer.")
+    dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
+                          quit_for_update=lambda start: False)  # fmt: skip
+    _wait(lambda: not window.updater.looking)
+    assert dialog.heading.text() == "Couldn't check for updates."
+    assert dialog.line.text() == "GitHub didn't answer."
+    links = dialog.links.text()
+    assert "Releases on GitHub ↗" in links and updates.RELEASES_URL in links
+    assert dialog.later.text() == "Close" and dialog.install.isHidden()
     dialog.close()
 
 
@@ -156,9 +177,13 @@ def test_from_source_the_window_shows_the_notes_but_installs_nothing(window: Cap
     window.updater.offer = NEWER
     dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
                           quit_for_update=lambda start: False)  # fmt: skip
-    assert dialog.heading.text() == "CapyPanel 99.0.0 is out"
-    assert "Everything" in dialog.notes.toPlainText() and not dialog.notes.isHidden()
-    assert dialog.install.isHidden() and "runs from source" in dialog.status.text()
+    assert dialog.heading.text() == "Update available"
+    assert dialog.chip.text() == f"{__version__} → 99.0.0" and not dialog.icon.isHidden()
+    assert dialog.line.text() == "Your settings, lists and saved logins stay as they are."
+    assert dialog.changes_text() == ["Everything."] and not dialog.changes.isHidden()
+    assert "Notes on GitHub ↗" in dialog.links.text() and NEWER.page_url in dialog.links.text()
+    assert dialog.install.isHidden() and "runs from source" in dialog.reason.text()
+    assert not dialog.skip.isHidden() and dialog.later.isDefault()
     dialog.skip.click()
     assert window.updater.offer is None and window.prefs["updates"]["skip"] == "99.0.0"
 
@@ -234,17 +259,22 @@ def test_the_start_after_an_update_opens_a_window_saying_what_happened(
     assert window.prefs["updates"]["installed"]["version"] == __version__
     window.show_restart_note("updated", "0.26.0", "")
     [done] = shown
-    assert done.heading.text() == f"CapyPanel {__version__} is installed"
-    assert done.line.text().startswith("Updated from 0.26.0.")
-    assert done.notes.toPlainText().strip() == "Brand new." and not done.notes.isHidden()
+    assert done.windowTitle() == "CapyPanel" and done.heading.text() == "Update installed"
+    assert done.chip.text() == f"0.26.0 → {__version__}"
+    assert done.line.text() == "Your settings, lists and saved logins are as they were."
+    assert done.changes_text() == ["Brand new."] and not done.changes.isHidden()
+    assert done.close_button.isDefault()
     assert "installed" not in window.prefs["updates"]  # said once
     window.show_restart_note("failed", "0.26.1", "The new version didn't pass its self-test")
     failed = shown[1]
-    assert failed.heading.text() == "The update to 0.26.1 didn't go in"
-    assert failed.line.text() == (
-        f"This is still CapyPanel {__version__}: The new version didn't pass its self-test"
+    assert failed.heading.text() == "The update to 0.26.1 wasn't installed."
+    assert failed.line.text() == (  # the reason on its own line, never one word left alone
+        f"You still have CapyPanel {__version__}.\nThe new version didn't pass its self-test."
     )
-    assert failed.notes.isHidden() and "Releases on GitHub" in failed.page.text()
+    # Its own sentence: a capital first, one closing period even when Windows brought one.
+    assert updater_ui.sentence("access is denied.") == "Access is denied"
+    assert failed.changes.isHidden() and failed.chip.isHidden()
+    assert "Releases on GitHub" in failed.links.text()
 
 
 def test_a_release_found_on_its_own_opens_its_window_once(
@@ -262,7 +292,7 @@ def test_a_release_found_on_its_own_opens_its_window_once(
     guide[0] = ""
     window._offer_update()  # the retry, once the guide is gone
     [dialog] = opened
-    assert dialog.heading.text() == "CapyPanel 99.0.0 is out" and not dialog.notes.isHidden()
+    assert dialog.heading.text() == "Update available" and not dialog.changes.isHidden()
     window.updater.look(asked=False)  # the next look in this run: the button is enough
     _wait(lambda: not window.updater.looking)
     window._offer_update()
@@ -275,16 +305,106 @@ def test_the_update_window_shows_the_notes_in_the_app_s_language(window: CapyWin
     )
     dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
                           quit_for_update=lambda start: False)  # fmt: skip
-    assert dialog.notes.toPlainText().strip() == "Only the version."
+    assert dialog.changes_text() == ["Only the version."]
     dialog.close()
     i18n.set_language("pt_BR")
     try:
         dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
                               quit_for_update=lambda start: False)  # fmt: skip
-        assert dialog.notes.toPlainText().strip() == "Só a versão."
+        assert dialog.changes_text() == ["Só a versão."]
         dialog.close()
     finally:
         i18n.set_language("en")
+
+
+def test_the_notes_become_one_change_each_and_their_links(window: CapyWindow) -> None:
+    notes = (
+        "- An update no longer stops.\n  It goes on, wrapped.\n"
+        "* **Bold** and `code` and [a page](https://example.com/a).\n\n"
+        "A paragraph of its own.\n\n"
+        "[Code signing policy](https://example.com/signing/)\n"
+    )
+    changes, links = updater_ui.changes_and_links(notes)
+    assert changes == [
+        "An update no longer stops. It goes on, wrapped.",
+        "**Bold** and `code` and [a page](https://example.com/a).",
+        "A paragraph of its own.",
+    ]
+    assert links == [("Code signing policy", "https://example.com/signing/")]
+    window.updater.offer = replace(NEWER, notes=notes)
+    dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
+                          quit_for_update=lambda start: False)  # fmt: skip
+    marks = dialog.findChildren(QLabel, "updateMark")
+    assert [mark.text() for mark in marks] == ["✓"] * 3
+    words = [label.text() for label in dialog.findChildren(QLabel, "updateChange")]
+    assert "<b>Bold</b>" in words[1] and "<code>code</code>" in words[1]
+    assert '<a href="https://example.com/a">a page</a>' in words[1]
+    shown = dialog.links.text()  # the release page first, then the notes' own link
+    assert shown.index("Notes on GitHub ↗") < shown.index("Code signing policy ↗")
+    assert "Code signing" not in " ".join(words)  # a link line isn't a change
+    QApplication.processEvents()
+    assert dialog.width() == WIDE and dialog.height() <= NOTES_HEIGHT
+    dialog.close()
+
+
+def test_a_long_folder_in_the_reason_wraps_instead_of_widening_the_window(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    folder = "C:\\Users\\EXAMPLE\\AppData\\Local\\Programs\\CapyPanel-portable\\0.28.0\\app"
+    monkeypatch.setattr(updater_ui, "packaged", lambda: True)
+    monkeypatch.setattr(
+        updates, "cannot_install", lambda app_dir: f"CapyPanel can't write to {folder}"
+    )
+    window.updater.offer = NEWER
+    dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
+                          quit_for_update=lambda start: False)  # fmt: skip
+    assert dialog.reason.text().startswith(
+        f"CapyPanel can't write to C:\\{updater_ui.ZERO_WIDTH_SPACE}"
+    )
+    assert dialog.reason.text().endswith(
+        ", so the update can't be installed from here. Open Notes on GitHub, download the zip "
+        "and unpack it in place of this copy."
+    )
+    assert dialog.install.isHidden()
+    dialog.show()
+    _wait(lambda: dialog.width() == WIDE)
+    QApplication.processEvents()
+    assert dialog.width() == WIDE and dialog.reason.width() <= WIDE - 48
+    dialog.close()
+
+
+def test_long_notes_scroll_inside_the_tallest_window(window: CapyWindow) -> None:
+    many = "\n".join(f"- Change number {n} with a few words to wrap." for n in range(40))
+    window.updater.offer = replace(NEWER, notes=many)
+    dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
+                          quit_for_update=lambda start: False)  # fmt: skip
+    dialog.show()
+    _wait(lambda: dialog.height() == NOTES_HEIGHT)
+    assert dialog.changes.verticalScrollBar().maximum() > 0  # the rest is a scroll away
+    dialog.close()
+
+
+def test_the_download_shows_in_the_footer_in_skip_s_place(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(updater_ui, "packaged", lambda: True)
+    monkeypatch.setattr(updates, "cannot_install", lambda app_dir: "")
+    monkeypatch.setattr(updater_ui._Job, "start", lambda self: None)  # nothing downloads
+    window.updater.offer = NEWER
+    dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
+                          quit_for_update=lambda start: False)  # fmt: skip
+    assert not dialog.skip.isHidden() and dialog._going.isHidden()
+    assert dialog.install.isDefault()
+    dialog.install.click()
+    assert dialog.skip.isHidden() and not dialog._going.isHidden()
+    assert not dialog.install.isEnabled() and not dialog.install.isHidden()
+    assert dialog.later.text() == "Cancel" and dialog.later.isDefault()
+    dialog._step("Downloading…", 12_400_000, 48_000_000)
+    words = dialog.status.text()  # the decimal mark is the PC's own
+    assert words.startswith("Downloading… 12") and "of 48" in words and words.endswith(" MB")
+    assert dialog.progress.maximum() == 48_000_000 and not dialog.progress.isHidden()
+    dialog._job = None
+    dialog.close()
 
 
 def test_about_shows_beta_and_checks_for_updates(window: CapyWindow) -> None:

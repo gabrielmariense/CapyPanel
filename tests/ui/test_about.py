@@ -86,9 +86,9 @@ def test_licenses_list_each_part_with_a_link_to_its_shipped_text(qapp: QApplicat
 
 
 def test_every_library_cryptography_brings_has_a_license_row() -> None:
-    # What ships with CapyPanel through cryptography (cffi, and pycparser through cffi), and
-    # pywin32, which reads other PCs over WMI.
-    names, todo = set(), ["cryptography", "pywin32"]
+    # What ships with CapyPanel through cryptography (cffi, and pycparser through cffi),
+    # pywin32, which reads other PCs over WMI, and truststore, which checks GitHub's certificate.
+    names, todo = set(), ["cryptography", "pywin32", "truststore"]
     while todo:
         dist = metadata.distribution(todo.pop())
         names.add(dist.metadata["Name"].casefold())

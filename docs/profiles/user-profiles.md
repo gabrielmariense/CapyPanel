@@ -53,7 +53,7 @@ offers **Scan** with it.
 
 ![A host's tab: the filters, the profiles table with three ticked rows outlined in amber, and Ticked to delete on the right](../images/profiles-host-tab-dark.png)
 
-A host's tab lists its profiles with **User**, **Last used**, **Size**, **Kind** and **State**:
+A host's tab lists its profiles with **User**, **Last used**, **Size** and **State**:
 
 | State | What it means |
 |---|---|
@@ -77,8 +77,8 @@ for:** to 3 or 6 months, or a year.
       or how many are ticked.
     - **User** is the account, as `DOMAIN\user`; one Windows no longer knows shows its folder's name
       and "(unknown)". **Last used** is when the person last signed in or out, or the folder's own
-      date when Windows wrote none. **Kind** is **Profile**, **Registry entry, no folder**,
-      **Folder, no registry entry** or **.bak registry entry**.
+      date when Windows wrote none. Its **Kind**, in its details, is **Profile**, **Registry
+      entry, no folder**, **Folder, no registry entry** or **.bak registry entry**.
     - The tab's header names the host, as "User profiles on DESK-03", with its address, when it was
       scanned and the account it was read as. **Scan again** reads the host afresh.
 

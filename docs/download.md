@@ -53,19 +53,21 @@ in the [Code signing policy](code-signing.md).
 
 ## Update CapyPanel
 
-When CapyPanel finds a newer release on its own, the **Update CapyPanel** window opens by itself,
-once per run, and an **Update 0.26.2** button shows at the right end of the menu bar. The window
-waits while a guide or another window is open, or while CapyPanel is in the tray.
+When CapyPanel finds a newer release on its own, a window titled **CapyPanel** opens by itself,
+once per run, headed **Update available**, and an **Update 0.28.1** button shows at the right end
+of the menu bar. The window waits while a guide or another window is open, or while CapyPanel is in
+the tray.
 
-![The Update CapyPanel window: CapyPanel 0.26.1 is out, its notes, and Skip this version, Later and Install and restart](images/update-window-dark.png)
+![The update window: Update available, 0.28.0 → 0.28.1, each change with a ✓, Notes on GitHub, and Skip this version, Later and Install and restart](images/update-window-dark.png)
 
-1. Read what changed in the **Update CapyPanel** window, or click the **Update** button to open
-   it. The notes show in CapyPanel's language.
-2. Click **Install and restart**. The window shows each step, then says "CapyPanel closes now and
-   opens again by itself in a few seconds." While the files are swapped, CapyPanel's splash says
-   "Updating to 0.26.4…".
-3. It opens with a window that says "CapyPanel 0.26.2 is installed" and "Updated from 0.26.1. Your
-   settings, lists and saved logins are as they were.", with the notes and a link to the release.
+1. Read what changed. The window shows your version and the new one ("0.28.0 → 0.28.1"), each
+   change on its own line with a ✓, and **Notes on GitHub** under them, in CapyPanel's language.
+   The **Update** button on the menu bar opens it again.
+2. Click **Install and restart**. Each step and the download's bar show at the bottom left, where
+   **Skip this version** was, then "CapyPanel closes now and opens again by itself in a few
+   seconds." While the files are swapped, CapyPanel's splash says "Updating to 0.28.1…".
+3. CapyPanel opens again with **Update installed**, "0.28.0 → 0.28.1" and "Your settings, lists
+   and saved logins are as they were.", the changes, and **Close**.
 
 **Later** only closes the window: the button stays on the menu bar, and both come back at the next
 start while that release is the newest. **Skip this version** stops the window and the button for
@@ -78,7 +80,8 @@ choice is only yours. While it downloads, **Later** reads **Cancel** and stops t
     day while it stays open. **Settings > CapyPanel > General > Updates** has **At every start**,
     **Once a day**, **Once a week** and **Off**. It's one choice for everyone on this PC (see
     [Settings and files](settings-and-files.md#updates)). **Help > Check for updates…** looks
-    right away, whatever is set, and also says when you're up to date.
+    right away, whatever is set, and says "You already have the newest version." when there's
+    nothing newer.
 
     Only the question goes to GitHub. Nothing is downloaded until you click **Install and
     restart**.
@@ -96,8 +99,8 @@ choice is only yours. While it downloads, **Later** reads **Cancel** and stops t
        saying "Updating to 0.26.4…", and starts the new version. Starting CapyPanel during the swap
        does no harm: that start just ends.
     5. If the new version won't start, the helper puts the old one back. CapyPanel then opens with
-       a window that says "The update to 0.26.4 didn't go in", why, and a link to the releases on
-       GitHub.
+       a window that says "The update to 0.28.1 wasn't installed.", why, and **Releases on
+       GitHub**.
 
     When the update comes from a version older than 0.26.4, which doesn't test first, the helper
     runs the self-test itself before the swap.
@@ -131,9 +134,10 @@ has the rest.
 | Message | What it means | What to do |
 |---|---|---|
 | "Couldn't check for updates." | GitHub didn't answer, or the PC isn't online | Try **Help > Check for updates…** later |
+| "Couldn't check for updates." with "Couldn't reach GitHub: [SSL: CERTIFICATE_VERIFY_FAILED] … unable to get local issuer certificate", in 0.27.1 or older | Those versions trust only the root certificates Windows has already stored on the PC, and this PC hadn't stored the one GitHub's certificate needs. From 0.28.0 on, Windows checks GitHub's certificate itself, as Edge does | Open https://api.github.com in Edge once, then **Help > Check for updates…** again |
 | "The download doesn't match its SHA-256: it was changed or cut short." | The zip that arrived isn't the one GitHub built | Click **Install and restart** again |
-| "CapyPanel can't install it from here (CapyPanel can't write to …). Download the zip from the release page and unpack it in place of this one." | Your account can't write to CapyPanel's own folder, such as one in Program Files | Unzip the new version over the old one yourself, or move CapyPanel to a folder you can write to |
+| "CapyPanel can't write to …, so the update can't be installed from here. Open Notes on GitHub, download the zip and unpack it in place of this copy.", in grey under the links, with no **Install and restart** | Your account can't write to CapyPanel's own folder, such as one in Program Files | Unzip the new version over the old one yourself, or move CapyPanel to a folder you can write to |
 | "This copy runs from source: update it with git, or download the zip from the release page." | You started CapyPanel with `uv run` | `git pull`, or switch to the zip |
 | "The new version didn't pass its self-test" | The downloaded version failed its own check, so nothing was changed | Try **Install and restart** again later; **Report a problem** if it keeps failing |
-| "The update to 0.26.2 didn't go in" and "This is still CapyPanel 0.26.1: …" | The new version wouldn't start, so the old one was put back | Read the reason after the colon; **Report a problem** if it isn't clear |
+| "The update to 0.28.1 wasn't installed." and "You still have CapyPanel 0.28.0.", then the reason | The new version wouldn't start, so the old one was put back | Read the reason; **Report a problem** if it isn't clear |
 | "CapyPanel is already running for EXAMPLE\user, but its window couldn't be brought forward: …" | Your other copy is open in another Windows session, or isn't answering | Close it there, or end it in Task Manager, then start CapyPanel again |

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-13 15:13-0300\n"
+"POT-Creation-Date: 2026-11-16 15:47-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -156,6 +156,9 @@ msgstr[1] "&Esquecer {n} logins"
 
 msgid "&Formats…"
 msgstr "&Formatos…"
+
+msgid "&Give it"
+msgstr "&Passar"
 
 msgid "&Group:"
 msgstr "&Grupo:"
@@ -446,6 +449,9 @@ msgstr "E&xibir"
 
 msgid "&When:"
 msgstr "&Quando:"
+
+msgid "(in the list)"
+msgstr "(na lista)"
 
 msgid "(password only)"
 msgstr "(só senha)"
@@ -786,6 +792,9 @@ msgstr "Escol&her arquivo…"
 msgid "C&hoose…"
 msgstr "Escol&her…"
 
+msgid "C&lear"
+msgstr "&Limpar"
+
 msgid "CSV files (*.csv *.txt);;All files (*)"
 msgstr "Arquivos CSV (*.csv *.txt);;Todos os arquivos (*)"
 
@@ -845,10 +854,6 @@ msgid "CapyPanel can refresh your printers by itself: you pick every 5, 15, 30 o
 msgstr "O CapyPanel pode atualizar as impressoras sozinho: você escolhe a cada 5, 15, 30 ou 60 minutos em Configurações › Impressoras › Avisos e suprimentos. Fica desligado até lá. Depois, por padrão, uma notificação do Windows avisa quando uma ficar offline, atolar o papel, ficar sem toner ou com suprimento baixo."
 
 #, python-brace-format
-msgid "CapyPanel can't install it from here ({reason}). Download the zip from the release page and unpack it in place of this one."
-msgstr "O CapyPanel não consegue instalá-la daqui ({reason}). Baixe o zip na página da versão e descompacte-o no lugar deste."
-
-#, python-brace-format
 msgid "CapyPanel can't write to {folder}"
 msgstr "O CapyPanel não consegue gravar em {folder}"
 
@@ -874,9 +879,6 @@ msgstr ""
 msgid "CapyPanel is built with the following software:"
 msgstr "O CapyPanel é feito com os seguintes softwares:"
 
-msgid "CapyPanel is up to date"
-msgstr "Você tem a versão mais nova"
-
 msgid "CapyPanel keeps the computers and printers you look after in one window. You can see which are on and who's signed in, connect to them, run commands and check the toner. These cards show you around."
 msgstr "O CapyPanel reúne numa janela só os computadores e as impressoras sob seus cuidados. Dá para ver quais estão ligados e quem está conectado, conectar a eles, rodar comandos e conferir o toner. Estes cartões mostram o caminho."
 
@@ -884,16 +886,8 @@ msgid "CapyPanel reads printers over SNMP and never changes anything on them. Mo
 msgstr "O CapyPanel lê as impressoras por SNMP e nunca muda nada nelas. A maioria responde à comunidade \"public\". Se as suas usam outra, ou SNMP v3, ajuste em Configurações › Impressoras › Conexão."
 
 #, python-brace-format
-msgid "CapyPanel {new} is installed"
-msgstr "O CapyPanel {new} foi instalado"
-
-#, python-brace-format
-msgid "CapyPanel {new} is out"
-msgstr "Saiu o CapyPanel {new}"
-
-#, python-brace-format
-msgid "CapyPanel {version} asks GitHub for its newest release."
-msgstr "O CapyPanel {version} pergunta ao GitHub qual é a versão mais nova."
+msgid "CapyPanel {version}"
+msgstr "CapyPanel {version}"
 
 msgid "CapyPanel — dark"
 msgstr "CapyPanel — escuro"
@@ -1021,6 +1015,9 @@ msgstr "Comando"
 
 msgid "Command buttons"
 msgstr "Botões de comando"
+
+msgid "Command keys"
+msgstr "Teclas dos comandos"
 
 msgid "Commands"
 msgstr "Comandos"
@@ -1477,6 +1474,9 @@ msgstr "Porta aberta"
 msgid "Double-click a cell, or press F2, to change it; the list above follows. Right-click for more."
 msgstr "Clique duas vezes numa célula, ou pressione F2, para alterá-la; a lista acima acompanha. Clique com o botão direito para mais opções."
 
+msgid "Double-click a command and press its new key."
+msgstr "Dê dois cliques num comando e pressione a nova tecla."
+
 msgid "Double-click a host to open it, or pick hosts and click Scan to scan them here."
 msgstr "Dê dois cliques num host para abri-lo, ou selecione hosts e clique em Escanear para escaneá-los daqui."
 
@@ -1620,6 +1620,9 @@ msgstr "Todos neste PC (compartilhada)"
 
 msgid "Export CSV"
 msgstr "Exportar CSV"
+
+msgid "F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself."
+msgstr "F1, Esc, Ctrl+F e Tab ficam reservadas ao próprio CapyPanel."
 
 msgid "Failed"
 msgstr "Falhou"
@@ -1956,11 +1959,23 @@ msgstr "Manter aberto na bandeja"
 msgid "Kept"
 msgstr "Guardada"
 
+msgid "Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches and Tab moves between fields."
+msgstr "Reservada ao próprio CapyPanel: F1 é da ajuda, Esc fecha, Ctrl+F busca e Tab passa de um campo a outro."
+
 msgid "Kept in"
 msgstr "Guardada em"
 
 msgid "Kept: type to change it"
 msgstr "Guardada: digite para alterá-la"
+
+msgid "Key"
+msgstr "Tecla"
+
+msgid "Key not allowed"
+msgstr "Tecla não aceita"
+
+msgid "Keyboard shortcuts"
+msgstr "Atalhos de teclado"
 
 msgid "Kind"
 msgstr "Tipo"
@@ -2081,6 +2096,9 @@ msgstr "Mascote:"
 
 msgid "Memory"
 msgstr "Memória"
+
+msgid "Menu bar"
+msgstr "Barra de menus"
 
 msgctxt "button"
 msgid "Message"
@@ -2227,9 +2245,6 @@ msgstr "Sem mensagem: ele desliga na hora."
 msgid "No name"
 msgstr "Sem nome"
 
-msgid "No notes for this release."
-msgstr "Esta versão não tem notas."
-
 msgid "No one"
 msgstr "Ninguém"
 
@@ -2342,6 +2357,9 @@ msgstr "Não usada: criada por outro usuário"
 
 msgid "Notes"
 msgstr "Notas"
+
+msgid "Notes on GitHub"
+msgstr "Notas no GitHub"
 
 msgid "Nothing answered, neither ping nor the usual ports: the computer is off, not on the network, or a firewall blocks everything."
 msgstr "Nada respondeu, nem o ping nem as portas usuais: o computador está desligado, fora da rede ou um firewall bloqueia tudo."
@@ -2719,6 +2737,12 @@ msgstr "&Impressoras:"
 
 msgid "Preset name:"
 msgstr "Nome da predefinição:"
+
+msgid "Press one key, with Ctrl, Alt or Shift if you like."
+msgstr "Pressione uma tecla, com Ctrl, Alt ou Shift se quiser."
+
+msgid "Press the new key…"
+msgstr "Pressione a nova tecla…"
 
 msgid "Preview"
 msgstr "Prévia"
@@ -3860,9 +3884,6 @@ msgstr "A comunidade somente leitura à qual suas impressoras respondem. A maior
 msgid "The registry entry exists, but its folder is gone. Deleting removes only the leftover in the registry."
 msgstr "O registro existe, mas a pasta sumiu. Excluir remove só a sobra no registro."
 
-msgid "The release on GitHub"
-msgstr "A versão no GitHub"
-
 msgid "The release's SHA-256 file doesn't name its zip"
 msgstr "O arquivo SHA-256 da versão não cita o zip dela"
 
@@ -3883,12 +3904,12 @@ msgid "The tool's “id” must be lowercase letters, digits, - or _."
 msgstr "O “id” da ferramenta deve ter só letras minúsculas, dígitos, - ou _."
 
 #, python-brace-format
-msgid "The update to {new} didn't go in"
-msgstr "A atualização para a {new} não foi instalada"
+msgid "The update to {new} wasn't installed."
+msgstr "A atualização para a {new} não foi instalada."
 
 #, python-brace-format
-msgid "The update to {new} didn't go in, so this is still {current}: {why}"
-msgstr "A versão {new} não foi instalada, então esta continua sendo a {current}: {why}"
+msgid "The update to {new} wasn't installed. You still have CapyPanel {current}. {why}."
+msgstr "A atualização para a {new} não foi instalada. Você continua com o CapyPanel {current}. {why}."
 
 msgid "The viewer's defaults"
 msgstr "Padrões do visualizador"
@@ -4000,10 +4021,6 @@ msgstr "Este grupo está vazio."
 
 msgid "This is <b>final</b>. With local profiles, each person's desktop and documents go too: there's no recycle bin and no copy."
 msgstr "Isto é <b>definitivo</b>. Com perfis locais, a área de trabalho e os documentos de cada pessoa vão junto: não há lixeira nem cópia."
-
-#, python-brace-format
-msgid "This is still CapyPanel {current}: {why}"
-msgstr "Este continua sendo o CapyPanel {current}: {why}"
 
 #, python-brace-format
 msgid "This is the sample PC's tab. Each row is one user's folder on {host}, with when it was last used and how big it is."
@@ -4228,8 +4245,11 @@ msgstr "Até um computador aceitar a conta, o CapyPanel para no primeiro que a r
 msgid "Unused for:"
 msgstr "Sem uso há:"
 
-msgid "Update CapyPanel"
-msgstr "Nova versão do CapyPanel"
+msgid "Update available"
+msgstr "Atualização disponível"
+
+msgid "Update installed"
+msgstr "Atualização instalada"
 
 #, python-brace-format
 msgid "Update {version}"
@@ -4238,10 +4258,6 @@ msgstr "Nova versão {version}"
 #, python-brace-format
 msgid "Updated from {old} to {new}."
 msgstr "Instalada a versão {new} (antes era a {old})."
-
-#, python-brace-format
-msgid "Updated from {old}. Your settings, lists and saved logins are as they were."
-msgstr "Atualizado a partir da {old}. Suas configurações, listas e logins salvos continuam como estavam."
 
 msgid "Updates"
 msgstr "Novas versões"
@@ -4461,13 +4477,16 @@ msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
 msgid "Yellow"
 msgstr "Amarelo"
 
+msgid "You already have the newest version."
+msgstr "Você já tem a versão mais nova."
+
 #, python-brace-format
 msgid "You asked at {when}."
 msgstr "Você pediu às {when}."
 
 #, python-brace-format
-msgid "You have {current}. Your settings, lists and saved logins stay as they are."
-msgstr "Você tem a {current}. Suas configurações, listas e logins salvos continuam como estão."
+msgid "You still have CapyPanel {current}. {why}."
+msgstr "Você continua com o CapyPanel {current}. {why}."
 
 msgid "Your Windows account"
 msgstr "Sua conta do Windows"
@@ -4493,6 +4512,12 @@ msgstr "Suas impressoras"
 
 msgid "Your printers: status and toner, web pages, reports."
 msgstr "Suas impressoras: status e toner, páginas web, relatórios."
+
+msgid "Your settings, lists and saved logins are as they were."
+msgstr "Suas configurações, listas e logins salvos continuam como estavam."
+
+msgid "Your settings, lists and saved logins stay as they are."
+msgstr "Suas configurações, listas e logins salvos continuam como estão."
 
 msgid "Yours"
 msgstr "Sua"
@@ -4937,6 +4962,14 @@ msgid "{host}: sizes counted; {n} couldn't be read."
 msgstr "{host}: tamanhos contados; {n} não puderam ser lidos."
 
 #, python-brace-format
+msgid "{key} is already the key for {other}. Give it to {command} instead?"
+msgstr "{key} já é a tecla de {other}. Passar para {command}?"
+
+#, python-brace-format
+msgid "{key} is for typing in names and searches: use it with Ctrl or Alt."
+msgstr "{key} serve para digitar em nomes e buscas: use com Ctrl ou Alt."
+
+#, python-brace-format
 msgid "{kind} from {computer}"
 msgstr "{kind} de {computer}"
 
@@ -5340,6 +5373,10 @@ msgid "{online} online · {offline} offline"
 msgstr "{online} online · {offline} offline"
 
 #, python-brace-format
+msgid "{other} is left with no key."
+msgstr "{other} fica sem tecla."
+
+#, python-brace-format
 msgid "{pages} (from {month})"
 msgstr "{pages} (de {month})"
 
@@ -5358,6 +5395,10 @@ msgstr "{profile} (cópia)"
 #, python-brace-format
 msgid "{profile} (not available on this PC)"
 msgstr "{profile} (não disponível neste PC)"
+
+#, python-brace-format
+msgid "{reason}, so the update can't be installed from here. Open Notes on GitHub, download the zip and unpack it in place of this copy."
+msgstr "{reason}, então a atualização não pode ser instalada daqui. Abra Notas no GitHub, baixe o zip e descompacte-o no lugar desta cópia."
 
 #, python-brace-format
 msgid "{shown} of {total} programs"
@@ -5458,10 +5499,6 @@ msgstr "{user} (desconectado)"
 #, python-brace-format
 msgid "{user}'s folder"
 msgstr "Pasta de {user}"
-
-#, python-brace-format
-msgid "{version} is the newest release."
-msgstr "A {version} é a versão mais nova."
 
 #, python-brace-format
 msgid "{what}, in {list}"

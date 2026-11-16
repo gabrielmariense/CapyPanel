@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-13 15:13-0300\n"
+"POT-Creation-Date: 2026-11-16 15:47-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -154,6 +154,9 @@ msgstr[0] ""
 msgstr[1] ""
 
 msgid "&Formats…"
+msgstr ""
+
+msgid "&Give it"
 msgstr ""
 
 msgid "&Group:"
@@ -444,6 +447,9 @@ msgid "&View"
 msgstr ""
 
 msgid "&When:"
+msgstr ""
+
+msgid "(in the list)"
 msgstr ""
 
 msgid "(password only)"
@@ -803,6 +809,9 @@ msgstr ""
 msgid "C&hoose…"
 msgstr ""
 
+msgid "C&lear"
+msgstr ""
+
 msgid "CSV files (*.csv *.txt);;All files (*)"
 msgstr ""
 
@@ -868,12 +877,6 @@ msgid ""
 msgstr ""
 
 #, python-brace-format
-msgid ""
-"CapyPanel can't install it from here ({reason}). Download the zip from "
-"the release page and unpack it in place of this one."
-msgstr ""
-
-#, python-brace-format
 msgid "CapyPanel can't write to {folder}"
 msgstr ""
 
@@ -898,9 +901,6 @@ msgstr ""
 msgid "CapyPanel is built with the following software:"
 msgstr ""
 
-msgid "CapyPanel is up to date"
-msgstr ""
-
 msgid ""
 "CapyPanel keeps the computers and printers you look after in one window. "
 "You can see which are on and who's signed in, connect to them, run "
@@ -914,15 +914,7 @@ msgid ""
 msgstr ""
 
 #, python-brace-format
-msgid "CapyPanel {new} is installed"
-msgstr ""
-
-#, python-brace-format
-msgid "CapyPanel {new} is out"
-msgstr ""
-
-#, python-brace-format
-msgid "CapyPanel {version} asks GitHub for its newest release."
+msgid "CapyPanel {version}"
 msgstr ""
 
 msgid "CapyPanel — dark"
@@ -1057,6 +1049,9 @@ msgid "Command"
 msgstr ""
 
 msgid "Command buttons"
+msgstr ""
+
+msgid "Command keys"
 msgstr ""
 
 msgid "Commands"
@@ -1518,6 +1513,9 @@ msgid ""
 "Right-click for more."
 msgstr ""
 
+msgid "Double-click a command and press its new key."
+msgstr ""
+
 msgid ""
 "Double-click a host to open it, or pick hosts and click Scan to scan them"
 " here."
@@ -1673,6 +1671,9 @@ msgid "Everyone on this PC (shared)"
 msgstr ""
 
 msgid "Export CSV"
+msgstr ""
+
+msgid "F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself."
 msgstr ""
 
 msgid "Failed"
@@ -2035,10 +2036,24 @@ msgstr ""
 msgid "Kept"
 msgstr ""
 
+msgid ""
+"Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches "
+"and Tab moves between fields."
+msgstr ""
+
 msgid "Kept in"
 msgstr ""
 
 msgid "Kept: type to change it"
+msgstr ""
+
+msgid "Key"
+msgstr ""
+
+msgid "Key not allowed"
+msgstr ""
+
+msgid "Keyboard shortcuts"
 msgstr ""
 
 msgid "Kind"
@@ -2166,6 +2181,9 @@ msgid "Mascot:"
 msgstr ""
 
 msgid "Memory"
+msgstr ""
+
+msgid "Menu bar"
 msgstr ""
 
 msgctxt "button"
@@ -2313,9 +2331,6 @@ msgstr ""
 msgid "No name"
 msgstr ""
 
-msgid "No notes for this release."
-msgstr ""
-
 msgid "No one"
 msgstr ""
 
@@ -2431,6 +2446,9 @@ msgid "Not used: made by another user"
 msgstr ""
 
 msgid "Notes"
+msgstr ""
+
+msgid "Notes on GitHub"
 msgstr ""
 
 msgid ""
@@ -2849,6 +2867,12 @@ msgid "Pr&inters:"
 msgstr ""
 
 msgid "Preset name:"
+msgstr ""
+
+msgid "Press one key, with Ctrl, Alt or Shift if you like."
+msgstr ""
+
+msgid "Press the new key…"
 msgstr ""
 
 msgid "Preview"
@@ -4064,9 +4088,6 @@ msgid ""
 "the leftover in the registry."
 msgstr ""
 
-msgid "The release on GitHub"
-msgstr ""
-
 msgid "The release's SHA-256 file doesn't name its zip"
 msgstr ""
 
@@ -4087,11 +4108,13 @@ msgid "The tool's “id” must be lowercase letters, digits, - or _."
 msgstr ""
 
 #, python-brace-format
-msgid "The update to {new} didn't go in"
+msgid "The update to {new} wasn't installed."
 msgstr ""
 
 #, python-brace-format
-msgid "The update to {new} didn't go in, so this is still {current}: {why}"
+msgid ""
+"The update to {new} wasn't installed. You still have CapyPanel {current}."
+" {why}."
 msgstr ""
 
 msgid "The viewer's defaults"
@@ -4217,10 +4240,6 @@ msgstr ""
 msgid ""
 "This is <b>final</b>. With local profiles, each person's desktop and "
 "documents go too: there's no recycle bin and no copy."
-msgstr ""
-
-#, python-brace-format
-msgid "This is still CapyPanel {current}: {why}"
 msgstr ""
 
 #, python-brace-format
@@ -4454,7 +4473,10 @@ msgstr ""
 msgid "Unused for:"
 msgstr ""
 
-msgid "Update CapyPanel"
+msgid "Update available"
+msgstr ""
+
+msgid "Update installed"
 msgstr ""
 
 #, python-brace-format
@@ -4463,12 +4485,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Updated from {old} to {new}."
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"Updated from {old}. Your settings, lists and saved logins are as they "
-"were."
 msgstr ""
 
 msgid "Updates"
@@ -4713,14 +4729,15 @@ msgstr ""
 msgid "Yellow"
 msgstr ""
 
+msgid "You already have the newest version."
+msgstr ""
+
 #, python-brace-format
 msgid "You asked at {when}."
 msgstr ""
 
 #, python-brace-format
-msgid ""
-"You have {current}. Your settings, lists and saved logins stay as they "
-"are."
+msgid "You still have CapyPanel {current}. {why}."
 msgstr ""
 
 msgid "Your Windows account"
@@ -4746,6 +4763,12 @@ msgid "Your printers"
 msgstr ""
 
 msgid "Your printers: status and toner, web pages, reports."
+msgstr ""
+
+msgid "Your settings, lists and saved logins are as they were."
+msgstr ""
+
+msgid "Your settings, lists and saved logins stay as they are."
 msgstr ""
 
 msgid "Yours"
@@ -5199,6 +5222,14 @@ msgid "{host}: sizes counted; {n} couldn't be read."
 msgstr ""
 
 #, python-brace-format
+msgid "{key} is already the key for {other}. Give it to {command} instead?"
+msgstr ""
+
+#, python-brace-format
+msgid "{key} is for typing in names and searches: use it with Ctrl or Alt."
+msgstr ""
+
+#, python-brace-format
 msgid "{kind} from {computer}"
 msgstr ""
 
@@ -5616,6 +5647,10 @@ msgid "{online} online · {offline} offline"
 msgstr ""
 
 #, python-brace-format
+msgid "{other} is left with no key."
+msgstr ""
+
+#, python-brace-format
 msgid "{pages} (from {month})"
 msgstr ""
 
@@ -5633,6 +5668,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "{profile} (not available on this PC)"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"{reason}, so the update can't be installed from here. Open Notes on "
+"GitHub, download the zip and unpack it in place of this copy."
 msgstr ""
 
 #, python-brace-format
@@ -5736,10 +5777,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "{user}'s folder"
-msgstr ""
-
-#, python-brace-format
-msgid "{version} is the newest release."
 msgstr ""
 
 #, python-brace-format

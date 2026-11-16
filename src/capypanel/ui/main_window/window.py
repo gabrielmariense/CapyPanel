@@ -5,7 +5,7 @@ the tool shown. With none shown, the Home page fills the window."""
 
 import logging
 from collections.abc import Callable, Sequence
-from dataclasses import replace
+from dataclasses import fields, replace
 from typing import Any
 
 from PySide6.QtCore import QByteArray, QEvent, QObject, QRect, Qt, QTimer
@@ -47,6 +47,7 @@ from capypanel.ui.saved_credentials import KeptLogin, SavedCredentialsDialog
 from capypanel.ui.settings.window import HEIGHT as SETTINGS_HEIGHT
 from capypanel.ui.settings.window import WIDTH as SETTINGS_WIDTH
 from capypanel.ui.settings.window import SettingsDialog
+from capypanel.ui.shortcuts import EVERYWHERE, KeyCommand, Keys, portable
 from capypanel.ui.themes import engine as themes
 from capypanel.ui.tool_catalog import CATALOG, ToolInfo
 from capypanel.ui.updater import Updater
@@ -115,6 +116,8 @@ class MainWindow(QMainWindow):
         self.guides = GuideRunner(self, seen_from(self.prefs), self.save_prefs, _docs_page)
         self._tools_agreed = False  # an update asked the tools already: closing asks no more
         self._build_menus()
+        self.keys = Keys(self.prefs, self.save_prefs)
+        self.keys.load(self._key_commands())  # this person's keys, over today's defaults
         self._connect()
         self._connect_tray()
         themes.switches().switched.connect(self._restyle)
@@ -401,6 +404,8 @@ class MainWindow(QMainWindow):
             updates_editable=self.updater.can_set(),
             # What's saved, so the page shows it, and picking "Ask" again is a change it saves.
             closing=closing if isinstance(closing, str) else settings.CLOSE_ASK,
+            keys=self.keys,
+            place_names={tool_id: tool.tool_name() for tool_id, tool in self.tools.items()},
         )
         dialog.language_picked.connect(self.set_language)
         dialog.theme_picked.connect(self.set_theme)
@@ -409,6 +414,20 @@ class MainWindow(QMainWindow):
         dialog.updates_picked.connect(lambda how: self._set_update_checks(how, dialog))
         dialog.about.updates_button.clicked.connect(lambda: self.open_updates(dialog))
         return dialog
+
+    def _key_commands(self) -> list[KeyCommand]:
+        """Every command a key can run, in menu order: the window's own (File, View's tools,
+        Help…), then each tool's."""
+        a = self.commands
+        own = [getattr(a, f.name) for f in fields(a)]
+        made = [KeyCommand(f"app.{f.name}", action, EVERYWHERE, portable(action.shortcut()))
+                for f, action in zip(fields(a), own, strict=True)]  # fmt: skip
+        for action in [self._home_action, *self._tool_list_actions()]:
+            place = "home" if action is self._home_action else str(action.data())
+            made.append(KeyCommand(f"go.{place}", action, EVERYWHERE, portable(action.shortcut())))
+        for tool in self.tools.values():
+            made.extend(tool.key_commands())
+        return made
 
     def _set_update_checks(self, how: str, dialog: SettingsDialog) -> None:
         try:

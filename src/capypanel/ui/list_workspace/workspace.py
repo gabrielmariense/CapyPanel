@@ -4,7 +4,7 @@ table, Details panel, texts, add and edit dialog, search fields and right-click 
 
 import logging
 from collections.abc import Sequence
-from dataclasses import replace
+from dataclasses import fields, replace
 from pathlib import Path
 
 from PySide6.QtCore import QByteArray, QPoint, QRect, Qt, QTimer, Signal
@@ -57,6 +57,7 @@ from capypanel.ui.main_window.tool import Shell, Tool
 from capypanel.ui.main_window.toolbar import ToolBar
 from capypanel.ui.menus import popup
 from capypanel.ui.new_list import ask_new_list
+from capypanel.ui.shortcuts import KeyCommand, portable
 
 log = logging.getLogger(__name__)
 
@@ -307,6 +308,20 @@ class ListWorkspace(Tool):
         if self.details_parts():  # right under the pane it customizes
             panes.append(a.customize_details)
         return [panes]
+
+    def key_commands(self) -> list[KeyCommand]:
+        """Every command in its menus, each this tool's own: one every list tool has (Edit,
+        Refresh, Copy address…) gets its own row and key in each (Gabriel, 2026-11-16)."""
+        a = self._list_commands
+        return [
+            KeyCommand(
+                f"{self.TOOL_ID}.{f.name}",
+                getattr(a, f.name),
+                self.TOOL_ID,
+                portable(getattr(a, f.name).shortcut()),
+            )
+            for f in fields(a)
+        ]
 
     # ---- customizing the Details panel: each person's own ----
 

@@ -587,6 +587,20 @@ QMenuBar::item { padding: 4px 10px; border-radius: %(r2)spx; color: %(text2)s;
 QMenuBar::item:selected { background: %(hover)s; color: %(text)s; }
 /* A newer release: a button at the menu bar's right end, in the accent made readable. */
 QToolButton#updateButton { color: %(accent_text)s; font-weight: 600; padding: 2px 10px; }
+/* The update windows, Windows 11's dialog look: a soft body over a footer band; the version
+   in a chip; each change with a check mark; the download's words and bar in the footer. */
+QWidget#updateBody { background: %(section)s; }
+QWidget#updateFooter { background: %(bg)s; border-top: 1px solid %(section_edge)s; }
+QWidget#updateFooter QProgressBar { background: %(section)s; }
+QScrollArea#updateChanges, QWidget#updateRows { background: transparent; border: none; }
+QLabel#updateTitle { color: %(text)s; font-size: 20px; font-weight: 600; }
+QLabel#updateLine { color: %(text2)s; font-size: 13px; }
+QLabel#updateChange { color: %(text)s; font-size: 13px; }
+QLabel#updateMark { color: %(accent_hover)s; font-size: 13px; }
+QLabel#updateChip { color: %(text)s; background: %(sel_solid)s; font-size: 12px; font-weight: 600;
+                    border-radius: 10px; padding: 3px 10px; }
+QLabel#updateLink, QLabel#updateStatus { font-size: 12px; }
+QLabel#updateStatus { color: %(text2)s; }
 QMenu { background: %(card)s; border: 1px solid %(border)s; border-radius: %(r)spx; padding: 5px; }
 QMenu::item { padding: 6px 28px 6px 30px; border-radius: %(r2)spx; }
 QMenu::item:selected { background: %(hover)s; }
@@ -768,6 +782,13 @@ QLabel#stateBadge { color: %(offline)s; border: 1px solid %(offline)s; border-ra
 QLabel#stateBadge[active="true"] { color: %(online)s; border-color: %(online)s; }
 QFrame#notesBox { border: 1px solid %(border)s; border-radius: %(r)spx; }
 QLabel#hint { color: %(text2)s; }
+/* Why a key wasn't taken (Keyboard shortcuts): an error, so the red, not the grey hint;
+   the field that waits for the key turns red with it. */
+QLabel#refusal { color: %(stopped)s; font-weight: 600; }
+QTreeView#grid QLineEdit[refused="true"], QTreeView#grid QLineEdit[refused="true"]:focus {
+    border: 1px solid %(stopped)s; }
+/* A page's one instruction, where the page is only a list (Keyboard shortcuts): body text. */
+QLabel#lead { color: %(text)s; }
 /* The Groups heading while a group is dragged over it: dropping moves it to the top. */
 QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel_solid)s;
                                      border-radius: %(r2)spx; }
@@ -814,6 +835,14 @@ QPushButton:default:disabled { background: %(raised)s; border-color: %(border)s;
 QPushButton#quietDefault:default { background: %(card)s; border-color: %(accent)s;
                                    color: %(text)s; }
 QPushButton#quietDefault:default:hover { background: %(raised)s; }
+/* The window's main action where Enter belongs to something else (Manual connection's
+   Connect): the default's fill without being the default; an accent outline while it waits for
+   what it needs, so it reads as the button to press, not as a greyed one. */
+QPushButton#primary { background: %(button)s; border-color: %(button)s; color: #ffffff; }
+QPushButton#primary:hover { background: %(button_hover)s; }
+QPushButton#primary[waiting="true"] { background: %(card)s; border-color: %(accent)s;
+                                      color: %(accent_text)s; }
+QPushButton#primary[waiting="true"]:hover { background: %(raised)s; }
 /* A button that stays down while its page shows (Import > Formats…). */
 QPushButton:checked { background: %(sel_solid)s; border-color: %(accent)s; color: %(text)s; }
 QGroupBox { border: 1px solid %(border)s; border-radius: %(r)spx; margin-top: 16px;
@@ -850,6 +879,20 @@ QMenuBar { background: %(chrome)s; border-bottom: 1px solid %(border)s; }
 QToolButton#updateButton { color: %(accent_text)s; font-weight: 600; padding: 2px 10px;
                            border: none; background: transparent; }
 QToolButton#updateButton:hover { background: %(hover)s; }
+/* The update windows, Windows 11's dialog look: a soft body over a footer band; the version
+   in a chip; each change with a check mark; the download's words and bar in the footer. */
+QWidget#updateBody { background: %(section)s; }
+QWidget#updateFooter { background: %(bg)s; border-top: 1px solid %(section_edge)s; }
+QWidget#updateFooter QProgressBar { background: %(section)s; }
+QScrollArea#updateChanges, QWidget#updateRows { background: transparent; border: none; }
+QLabel#updateTitle { color: %(text)s; font-size: 20px; font-weight: 600; }
+QLabel#updateLine { color: %(text2)s; font-size: 13px; }
+QLabel#updateChange { color: %(text)s; font-size: 13px; }
+QLabel#updateMark { color: %(accent_text)s; font-size: 13px; }
+QLabel#updateChip { color: %(text)s; background: %(sel)s; font-size: 12px; font-weight: 600;
+                    border-radius: 10px; padding: 3px 10px; }
+QLabel#updateLink, QLabel#updateStatus { font-size: 12px; }
+QLabel#updateStatus { color: %(text2)s; }
 QToolBar#main { border: none; border-bottom: 1px solid %(border)s; }
 QStatusBar { background: %(chrome)s; border-top: 1px solid %(border)s; }
 QStatusBar QLabel { color: %(text2)s; }
@@ -938,6 +981,13 @@ QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
    default it takes over from, where Enter would press it. */
 QPushButton#risky:focus { background: %(attention)s; border-color: %(attention)s;
                           color: %(on_attention)s; }
+/* This sheet sets no button border of its own, so these give a whole one: a colour alone
+   would be drawn over by the native frame (Connect's waiting outline came out grey). The
+   1 px margin: Windows draws its own buttons and fields 1 px inside their edges. */
+QPushButton#primary { background: %(accent_fill)s; border: 1px solid %(accent_fill)s;
+                      border-radius: 4px; color: #ffffff; padding: 4px 12px; margin: 1px; }
+QPushButton#primary[waiting="true"] { background: %(card)s; border: 1px solid %(accent)s;
+                                      color: %(accent_text)s; }
 /* A tool's count of items needing attention, on its rail icon. */
 QLabel#railBadge { background: %(badge)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel)s; border-radius: 9px; padding: 2px 9px; }
@@ -947,6 +997,13 @@ QLabel#stateBadge { color: %(offline)s; border: 1px solid %(offline)s; border-ra
 QLabel#stateBadge[active="true"] { color: %(online)s; border-color: %(online)s; }
 QFrame#notesBox { border: 1px solid %(border)s; border-radius: 6px; }
 QLabel#hint { color: %(text2)s; }
+/* Why a key wasn't taken (Keyboard shortcuts): an error, so the red, not the grey hint;
+   the field that waits for the key turns red with it. */
+QLabel#refusal { color: %(stopped)s; font-weight: 600; }
+QTreeView#grid QLineEdit[refused="true"], QTreeView#grid QLineEdit[refused="true"]:focus {
+    border: 1px solid %(stopped)s; }
+/* A page's one instruction, where the page is only a list (Keyboard shortcuts): body text. */
+QLabel#lead { color: %(text)s; }
 QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel)s; }
 /* Toolbar buttons like the CapyPanel stylesheet's, square like the panes here.
    Styling them drops the style's own menu arrow, so the theme's arrow is drawn instead. */

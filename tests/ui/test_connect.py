@@ -235,8 +235,15 @@ def test_manual_connection_uses_the_chosen_profile(
     window.hosts.commands.manual_connect.trigger()  # Ctrl+M: the Commands window, typed
     commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
     assert isinstance(commands, CommandsWindow)
-    assert not commands.connect_button.isEnabled()  # nothing typed yet
+    # Nothing typed yet: Connect still shows as the main button, waiting, and a click only goes
+    # to Host (greyed, it was missed).
+    button = commands.connect_button
+    assert button.objectName() == "primary" and button.isEnabled()
+    assert button.property("waiting") is True
+    button.click()
+    assert asked == []
     commands.address.setEditText(" 10.9.9.9 ")
+    assert button.property("waiting") is False
     commands.profile.setCurrentIndex(commands.profile.findData("pis-password"))
     commands.connect_button.click()
     assert asked[-1] == [Request("10.9.9.9", connect_ui.Target("10.9.9.9", None), "pis-password")]
@@ -244,6 +251,44 @@ def test_manual_connection_uses_the_chosen_profile(
     commands.connect_button.click()
     assert asked[-1][0].target == connect_ui.Target("10.9.9.9", 5901)
     assert window.hosts.recent_addresses()[0] == "10.9.9.9:5901"
+
+
+def test_manual_connection_opens_the_profiles_and_lists_them_as_changed(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    opened: list[str] = []
+    monkeypatch.setattr(window.hosts, "open_settings", opened.append)
+    window.hosts.commands.manual_connect.trigger()
+    commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
+    assert isinstance(commands, CommandsWindow)
+    commands.profiles_button.click()
+    assert opened == ["connections"]
+    # A square button beside Profile, its name in the tooltip; Add waits in the footer.
+    button = commands.profiles_button
+    assert button.text() == "" and button.toolTip() == "Connection profiles…"
+    assert button.width() == button.height() == commands.profile.sizeHint().height()
+    assert commands.connect_button.height() == button.height()  # one line, one height
+    assert commands.add_button.isHidden()  # nothing typed yet
+    # Tab: Host, Profile, the profiles button, Connect.
+    order = [commands.address, commands.profile, button, commands.connect_button]
+    seen: list[object] = []
+    widget = commands.address.nextInFocusChain()
+    while widget is not None and widget is not commands.address and len(seen) < 3:
+        if widget in order:
+            seen.append(widget)
+        widget = widget.nextInFocusChain()
+    assert seen == order[1:]
+    commands.profile.setCurrentIndex(commands.profile.findData("pis-password"))
+    before = window.hosts.connector.choices()
+    monkeypatch.setattr(
+        window.hosts.connector, "choices", lambda: [*before, ("new-one", "New one")]
+    )
+    window.hosts.profiles_changed()  # what Settings' Connections page sends
+    assert commands.profile.findData("new-one") >= 0
+    assert commands.profile.currentData() == "pis-password"  # still the one picked
+    monkeypatch.setattr(window.hosts.connector, "choices", lambda: [("new-one", "New one")])
+    window.hosts.profiles_changed()  # the picked one deleted: the first left
+    assert commands.profile.currentData() == "new-one"
 
 
 def test_copy_lists_every_column_shown_wherever_the_menu_opens(window: CapyWindow) -> None:

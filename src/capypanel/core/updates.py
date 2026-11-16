@@ -39,6 +39,8 @@ from dataclasses import dataclass, replace
 from datetime import timedelta
 from pathlib import Path
 
+import truststore
+
 from capypanel.core import files, winsec
 from capypanel.core.i18n import _
 from capypanel.core.settings import PORTABLE_MARKER
@@ -173,13 +175,13 @@ def set_check(folder: Path, how: str) -> None:
 
 
 def _tls() -> ssl.SSLContext:
-    """Python's checks of GitHub's certificate, against the certificates Windows trusts, with
-    the host name. Python 3.13 also turned on X.509 strict mode, which refuses chains that
-    browsers and Windows accept, e.g. a company's own authority missing a key identifier
-    ("Missing Authority Key Identifier"): that mode alone is turned off."""
-    context = ssl.create_default_context()
-    context.verify_flags &= ~ssl.VERIFY_X509_STRICT
-    return context
+    """GitHub's certificate checked by Windows itself (truststore), as Edge checks it, with the
+    host name. Python's own check trusts only the root certificates already stored on this PC,
+    and Windows stores one only when its own checker asks for it: a PC that never reached GitHub
+    through Windows failed with "unable to get local issuer certificate". Windows also trusts
+    a company's own authorities, and it doesn't apply Python 3.13's X.509 strict mode, which
+    refused chains browsers accept ("Missing Authority Key Identifier")."""
+    return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
 
 def _open(url: str, timeout: float) -> object:

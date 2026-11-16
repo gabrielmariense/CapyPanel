@@ -60,8 +60,7 @@ a tabela oferece o **Escanear** com ele.
 
 ![A aba de um host: os filtros, a tabela de perfis com três linhas marcadas contornadas em âmbar, e Marcados para excluir à direita](../images/profiles-host-tab-dark-pt-BR.png)
 
-A aba de um host lista os perfis dele com **Usuário**, **Último uso**, **Tamanho**, **Tipo** e
-**Estado**:
+A aba de um host lista os perfis dele com **Usuário**, **Último uso**, **Tamanho** e **Estado**:
 
 | Estado | O que quer dizer |
 |---|---|
@@ -84,8 +83,8 @@ antigos primeiro, ponha o **Sem uso há:** em 3 ou 6 meses, ou um ano.
       de 15 exibidos"), ou quantas estão marcadas.
     - **Usuário** é a conta, como `DOMÍNIO\usuário`; uma que o Windows não reconhece mais mostra o
       nome da pasta e "(desconhecida)". **Último uso** é quando a pessoa entrou ou saiu pela última
-      vez, ou a data da própria pasta quando o Windows não anotou nenhuma. **Tipo** é **Perfil**,
-      **Registro sem pasta**, **Pasta sem registro** ou **Registro .bak**.
+      vez, ou a data da própria pasta quando o Windows não anotou nenhuma. O **Tipo**, nos detalhes,
+      é **Perfil**, **Registro sem pasta**, **Pasta sem registro** ou **Registro .bak**.
     - O cabeçalho da aba nomeia o host, como "Perfis de usuário em DESK-03", com o endereço, quando
       ele foi escaneado e a conta com que foi lido. O **Escanear de novo** lê o host outra vez.
 
