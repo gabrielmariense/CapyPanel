@@ -395,6 +395,7 @@ class CommandsWindow(QDialog):
         profile_label = QLabel(_("&Profile:"))
         profile_label.setBuddy(self.profile)
         self.connect_button = QPushButton(_("&Connect"))
+        self.connect_button.setObjectName("primary")  # the main action; Enter stays Run's
         self.connect_button.setAutoDefault(False)
         self.connect_button.clicked.connect(self._connect)
         # Beside the PC it adds, and only when that PC isn't in the open list yet.
@@ -594,7 +595,10 @@ class CommandsWindow(QDialog):
         self.setWindowTitle(f"{title} · {target.name}" if target else title)
         for row in self.rows:
             row.run.setEnabled(target is not None)
-        self.connect_button.setEnabled(target is not None and self.profile.count() > 0)
+        # Enabled while it waits for a host too: a click then goes to Host. Greyed, it was
+        # missed (Gabriel, 2026-11-16: a coworker couldn't find it).
+        self.connect_button.setEnabled(self.profile.count() > 0)
+        self._style_connect(waiting=target is None)
         self._update_add()
         self._update_names()
         self._show_results()
@@ -808,10 +812,23 @@ class CommandsWindow(QDialog):
             1,
         )
 
+    def _style_connect(self, *, waiting: bool) -> None:
+        """Connect in the main button's fill, or an accent outline while no host is typed; its
+        plug icon in its text's colour, white on the fill."""
+        button = self.connect_button
+        if button.property("waiting") != waiting:
+            button.setProperty("waiting", waiting)
+            style = button.style()
+            style.unpolish(button)
+            style.polish(button)
+        color = button.palette().color(QPalette.ColorRole.Link) if waiting else QColor("#ffffff")
+        button.setIcon(tabler_icon("plug-connected", color))
+
     def _restyle(self) -> None:
         """After a theme switch: the icons and dots drawn in the old theme's colours."""
         for row in self.rows:
             row.restyle()
+        self._style_connect(waiting=self.target() is None)
         self._show_results()
 
     def _session_menu(self, session: Session, where: QPoint) -> None:
@@ -927,7 +944,8 @@ class CommandsWindow(QDialog):
 
     def _connect(self) -> None:
         target = self.target()
-        if target is None:
+        if target is None:  # nothing typed yet: where the host goes
+            self.address.setFocus(Qt.FocusReason.OtherFocusReason)
             return
         if target.key.startswith("@"):  # typed: its port too, as typed
             typed = self.address.currentText().strip()

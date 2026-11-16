@@ -235,8 +235,15 @@ def test_manual_connection_uses_the_chosen_profile(
     window.hosts.commands.manual_connect.trigger()  # Ctrl+M: the Commands window, typed
     commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
     assert isinstance(commands, CommandsWindow)
-    assert not commands.connect_button.isEnabled()  # nothing typed yet
+    # Nothing typed yet: Connect still shows as the main button, waiting, and a click only goes
+    # to Host (greyed, it was missed).
+    button = commands.connect_button
+    assert button.objectName() == "primary" and button.isEnabled()
+    assert button.property("waiting") is True
+    button.click()
+    assert asked == []
     commands.address.setEditText(" 10.9.9.9 ")
+    assert button.property("waiting") is False
     commands.profile.setCurrentIndex(commands.profile.findData("pis-password"))
     commands.connect_button.click()
     assert asked[-1] == [Request("10.9.9.9", connect_ui.Target("10.9.9.9", None), "pis-password")]

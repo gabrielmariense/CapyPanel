@@ -830,6 +830,14 @@ QPushButton:default:disabled { background: %(raised)s; border-color: %(border)s;
 QPushButton#quietDefault:default { background: %(card)s; border-color: %(accent)s;
                                    color: %(text)s; }
 QPushButton#quietDefault:default:hover { background: %(raised)s; }
+/* The window's main action where Enter belongs to something else (Manual connection's
+   Connect): the default's fill without being the default; an accent outline while it waits for
+   what it needs, so it reads as the button to press, not as a greyed one. */
+QPushButton#primary { background: %(button)s; border-color: %(button)s; color: #ffffff; }
+QPushButton#primary:hover { background: %(button_hover)s; }
+QPushButton#primary[waiting="true"] { background: %(card)s; border-color: %(accent)s;
+                                      color: %(accent_text)s; }
+QPushButton#primary[waiting="true"]:hover { background: %(raised)s; }
 /* A button that stays down while its page shows (Import > Formats…). */
 QPushButton:checked { background: %(sel_solid)s; border-color: %(accent)s; color: %(text)s; }
 QGroupBox { border: 1px solid %(border)s; border-radius: %(r)spx; margin-top: 16px;
@@ -968,6 +976,9 @@ QPushButton#risky:default { background: %(card)s; border-color: %(attention)s;
    default it takes over from, where Enter would press it. */
 QPushButton#risky:focus { background: %(attention)s; border-color: %(attention)s;
                           color: %(on_attention)s; }
+QPushButton#primary { background: %(accent_fill)s; border-color: %(accent_fill)s; color: #ffffff; }
+QPushButton#primary[waiting="true"] { background: %(card)s; border-color: %(accent)s;
+                                      color: %(accent_text)s; }
 /* A tool's count of items needing attention, on its rail icon. */
 QLabel#railBadge { background: %(badge)s; color: white; border-radius: 8px; padding: 0; }
 QLabel#tagValue { background: %(sel)s; border-radius: 9px; padding: 2px 9px; }
