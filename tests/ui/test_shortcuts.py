@@ -95,6 +95,19 @@ def test_every_command_is_listed_with_today_s_key_and_power_never_is(window: Cap
     assert page.item_of("hosts.add_host").text(KEY) == "Ctrl+N"  # the others: just the key
     assert page.table.itemWidget(page.item_of("hosts.add_host"), KEY) is None
     assert page.table.property("mostRows") == shortcuts_page.ROWS  # a long list, a tall table
+    # Each tool's row runs that tool's own action, so it has its own word ("Atualizar todas"
+    # in Printers, "Atualizar todos" in Hosts).
+    hosts_refresh, printers_refresh = (
+        keys.row("hosts.refresh_shown"),
+        keys.row("printers.refresh_shown"),
+    )
+    assert hosts_refresh.actions[0] is not printers_refresh.actions[0]
+    # The key column fits the waiting field's "Press the new key…" in full.
+    page.change(page.item_of("command.services"))
+    catcher = page.table.itemWidget(page.item_of("command.services"), KEY)
+    assert isinstance(catcher, KeyCatcher)
+    text = catcher.fontMetrics().horizontalAdvance(catcher.placeholderText())
+    assert page.table.columnWidth(KEY) >= text
 
 
 def _headings(page: ShortcutsPage) -> list[tuple[QTreeWidgetItem, list[QTreeWidgetItem]]]:

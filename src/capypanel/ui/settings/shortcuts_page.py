@@ -6,7 +6,7 @@ The commands sit under headings, the menu bar's menus first, then each tool, Aâ€
 
 import unicodedata
 
-from PySide6.QtCore import QKeyCombination, QSize, Qt, Signal
+from PySide6.QtCore import QKeyCombination, QRect, QSize, Qt, Signal
 from PySide6.QtGui import (
     QAction,
     QFocusEvent,
@@ -24,6 +24,9 @@ from PySide6.QtWidgets import (
     QMenuBar,
     QMessageBox,
     QPushButton,
+    QStyle,
+    QStyleOptionFrame,
+    QStyleOptionViewItem,
     QTreeWidgetItem,
     QWidget,
 )
@@ -41,6 +44,7 @@ COMMAND, KEY = range(2)  # the table's columns
 ROWS = 14  # shown before it scrolls: about sixty commands, a page that's mostly this list
 ROW_ROLE = Qt.ItemDataRole.UserRole  # the row's command id; a heading has none
 KEY_WIDTH = 120  # the Key column at least; wider when "Ctrl+Shift+O (in the list)" needs it
+LINE_EDIT_MARGIN = 2  # Qt keeps this much inside a field's contents on each side
 HEADING_GAP = 6  # above each heading but the first, as the Commands window's groups have
 HEADING_PADDING = 5  # above and under a heading's text, as the rows' cells have
 GAP_ROLE = Qt.ItemDataRole.UserRole + 1  # a heading's: whether it has the gap above
@@ -235,9 +239,36 @@ class ShortcutsPage(Page):
             self._style_heading(item)
 
     def _key_width(self) -> int:
-        """KEY_WIDTH, or wider for a key with "(in the list)" after it, so it's never cut."""
+        """KEY_WIDTH, or wider for a key with "(in the list)" after it, or for the waiting
+        field's "Press the new keyâ€¦" in this language, so neither is ever cut (Dante)."""
         cells = (self.table.itemWidget(i, KEY) for i in self._items())
-        return max([KEY_WIDTH, *(c.sizeHint().width() + 12 for c in cells if c is not None)])
+        return max([KEY_WIDTH, self._catcher_width(),
+                    *(c.sizeHint().width() + 12 for c in cells if c is not None)])  # fmt: skip
+
+    def _catcher_width(self) -> int:
+        """The waiting field's placeholder in full, with the field's own frame and padding (as
+        this theme's style draws them) and the text margin Qt keeps inside them."""
+        catcher = KeyCatcher()
+        catcher.setParent(self.table.viewport())  # the table's stylesheet rules for its fields
+        catcher.ensurePolished()
+        catcher.resize(1000, catcher.sizeHint().height())
+        frame = QStyleOptionFrame()
+        catcher.initStyleOption(frame)
+        inside = catcher.style().subElementRect(
+            QStyle.SubElement.SE_LineEditContents, frame, catcher
+        )
+        around = catcher.width() - inside.width() + 2 * LINE_EDIT_MARGIN
+        width = catcher.fontMetrics().horizontalAdvance(catcher.placeholderText()) + around
+        catcher.deleteLater()
+        # The field sits in the cell's text area, inside the row's padding.
+        self.table.ensurePolished()
+        cell = QStyleOptionViewItem()
+        cell.initFrom(self.table)
+        cell.rect = QRect(0, 0, 1000, 30)
+        cell.features = QStyleOptionViewItem.ViewItemFeature.HasDisplay
+        style = self.table.style()
+        text = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, cell, self.table)
+        return width + cell.rect.width() - text.width()
 
     def _items(self) -> list[QTreeWidgetItem]:
         """The commands' rows, not the headings."""
