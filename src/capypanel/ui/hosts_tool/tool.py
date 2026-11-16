@@ -847,6 +847,11 @@ class HostsTool(ListWorkspace):
     def profiles_changed(self) -> None:
         """Settings changed the connection profiles or tool paths."""
         self._selection_changed()  # the Details panel names the profile; Connect's menu follows
+        from capypanel.ui.hosts_tool.commands_window import CommandsWindow
+
+        window = self._commands_window
+        if isinstance(window, CommandsWindow) and shiboken6.isValid(window):
+            window.profiles_changed()  # its Profile dropdown
 
     def apply_prefs(self, prefs: SettingsPrefs) -> None:
         """A choice made in Settings, kept and applied at once."""

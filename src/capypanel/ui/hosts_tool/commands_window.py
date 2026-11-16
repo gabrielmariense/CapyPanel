@@ -404,6 +404,11 @@ class CommandsWindow(QDialog):
         self.add_button.setAutoDefault(False)
         self.add_button.setToolTip(_("Adds this PC to the open host list"))
         self.add_button.clicked.connect(self._add_to_list)
+        # Where the profiles are made, from where one is picked; under Add, at the same edge.
+        self.profiles_button = QPushButton(_("Connection pro&files…"))
+        self.profiles_button.setAutoDefault(False)
+        self.profiles_button.setToolTip(_("Opens Settings at the connection profiles"))
+        self.profiles_button.clicked.connect(lambda: tool.open_settings("connections"))
         # The PC, then right under it how to connect and Connect: read in that order, and
         # Connect where the eye already is (at the far right it was missed; Gabriel, 2026-11-16).
         top = QGridLayout()
@@ -419,10 +424,12 @@ class CommandsWindow(QDialog):
         how.addWidget(self.profile)
         how.addWidget(self.connect_button)
         how.addStretch(1)
-        top.addLayout(how, 1, 1, 1, 2)
+        top.addLayout(how, 1, 1)
+        top.addWidget(self.profiles_button, 1, 2)
         top.setColumnStretch(1, 1)
         for before, after in ((self.address, self.add_button), (self.add_button, self.profile),
-                              (self.profile, self.connect_button)):  # fmt: skip
+                              (self.profile, self.connect_button),
+                              (self.connect_button, self.profiles_button)):  # fmt: skip
             QWidget.setTabOrder(before, after)
 
         # ---- the groups, the commands, the results ----
@@ -840,6 +847,16 @@ class CommandsWindow(QDialog):
             row.restyle()
         self._style_connect(waiting=self.target() is None)
         self._show_results()
+
+    def profiles_changed(self) -> None:
+        """Settings changed the connection profiles: the dropdown lists them as they are now,
+        on the one it showed while that one is still there."""
+        shown = self.profile.currentData()
+        self.profile.clear()
+        for profile_id, text in self._tool.connector.choices():
+            self.profile.addItem(text, profile_id)
+        self.profile.setCurrentIndex(max(self.profile.findData(shown), 0))
+        self.connect_button.setEnabled(self.profile.count() > 0)
 
     def _session_menu(self, session: Session, where: QPoint) -> None:
         target = self.target()

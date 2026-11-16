@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 10:21-0300\n"
+"POT-Creation-Date: 2026-11-16 11:55-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1097,6 +1097,9 @@ msgid "Connection &profile:"
 msgstr ""
 
 msgid "Connection &profiles…"
+msgstr ""
+
+msgid "Connection pro&files…"
 msgstr ""
 
 msgid "Connection profiles"
@@ -2657,6 +2660,9 @@ msgstr[1] ""
 
 #, python-brace-format
 msgid "Opened {path}"
+msgstr ""
+
+msgid "Opens Settings at the connection profiles"
 msgstr ""
 
 #, python-brace-format
