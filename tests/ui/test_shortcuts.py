@@ -305,6 +305,9 @@ def test_the_waiting_field_draws_its_words_inside_its_edges(window: CapyWindow) 
     inside = catcher.style().subElementRect(QStyle.SubElement.SE_LineEditContents, frame, catcher)
     ink = catcher.palette().color(QPalette.ColorRole.PlaceholderText)
     assert _ink_rows(catcher, ink, inside)  # drawn, in the refusal's red
+    room, metrics = catcher.words_rect().width(), catcher.fontMetrics()
+    for words in (shortcuts_page.waiting_text(), shortcuts_page.refused_text()):
+        assert metrics.horizontalAdvance(words) <= room, words  # in full, never cut (Dante)
     dialog.close()
 
 

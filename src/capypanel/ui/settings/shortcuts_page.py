@@ -193,17 +193,22 @@ class KeyCatcher(QLineEdit):
         painter = QPainter(self)
         frame = QStyleOptionFrame()
         self.initStyleOption(frame)
-        style = self.style()
-        style.drawPrimitive(QStyle.PrimitiveElement.PE_PanelLineEdit, frame, painter, self)
-        inside = style.subElementRect(QStyle.SubElement.SE_LineEditContents, frame, self)
-        metrics = self.fontMetrics()
-        bearing = max(0, -metrics.minLeftBearing())  # as Qt's own placeholder
-        room = inside.width() - 2 * LINE_EDIT_MARGIN - bearing
-        words = metrics.elidedText(self.placeholderText(), Qt.TextElideMode.ElideRight, room)
-        baseline = caps_baseline(inside, metrics.tightBoundingRect("H"))
-        painter.setClipRect(inside)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_PanelLineEdit, frame, painter, self)
+        room, metrics = self.words_rect(), self.fontMetrics()
+        elide = Qt.TextElideMode.ElideRight
+        words = metrics.elidedText(self.placeholderText(), elide, room.width())
+        baseline = caps_baseline(room, metrics.tightBoundingRect("H"))
+        painter.setClipRect(room.adjusted(-LINE_EDIT_MARGIN, 0, LINE_EDIT_MARGIN, 0))  # inside
         painter.setPen(self.palette().color(QPalette.ColorRole.PlaceholderText))
-        painter.drawText(QPoint(inside.left() + LINE_EDIT_MARGIN + bearing, baseline), words)
+        painter.drawText(QPoint(room.left(), baseline), words)
+
+    def words_rect(self) -> QRect:
+        """Where its words go, as in Qt's own fields: inside the frame and padding, less the
+        margin Qt keeps on each side. The Key column is measured for them to fit here."""
+        frame = QStyleOptionFrame()
+        self.initStyleOption(frame)
+        inside = self.style().subElementRect(QStyle.SubElement.SE_LineEditContents, frame, self)
+        return inside.adjusted(LINE_EDIT_MARGIN, 0, -LINE_EDIT_MARGIN, 0)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         key = event.key()
