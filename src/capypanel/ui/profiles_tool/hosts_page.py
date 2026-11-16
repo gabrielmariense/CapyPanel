@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt, Signal
 from PySide6.QtGui import (
+    QAction,
     QColor,
     QIcon,
     QKeyEvent,
@@ -27,7 +28,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.model import Host
 from capypanel.core.i18n import _, pgettext
 from capypanel.ui.icons import dot_icon
-from capypanel.ui.list_workspace.panels import SearchBox, natural_key
+from capypanel.ui.list_workspace.panels import RowsOffer, SearchBox, natural_key
 from capypanel.ui.profiles_tool.panels import Squeeze, TabBox, hint
 from capypanel.ui.profiles_tool.side import GroupFacts, HostCard, HostFacts
 from capypanel.ui.tables import grid_table
@@ -78,7 +79,7 @@ class HostsTable(QWidget):
     open_requested = Signal(list, bool)  # host ids, and whether to go to the tab
     picked = Signal()
     menu_requested = Signal(QPoint)  # a right-click on a host: where (global)
-    scan_typed = Signal(str)  # "Scan 192.0.2.50" in the empty table
+    scan_typed = Signal(str)  # "Scan 192.0.2.50": in the empty table, or under the rows
 
     def __init__(self) -> None:
         super().__init__()
@@ -118,6 +119,11 @@ class HostsTable(QWidget):
         column.addWidget(self._empty_hint)
         self._empty.hide()
         self._typed = ""
+        self._offered = False
+        # The same Scan {host}, as the list's last line while the search has rows.
+        self._offer = RowsOffer(self.tree)
+        self._scan_action = QAction(self)
+        self._scan_action.triggered.connect(lambda: self.scan_typed.emit(self._typed))
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.tree)
@@ -140,7 +146,7 @@ class HostsTable(QWidget):
         header.setToolTip(DELETABLE, _("Profiles the last scan found that can be deleted"))
         header.setToolTip(SCAN, _("When the host was scanned, or where its scan is"))
         self._empty_hint.setText(_("Opens the host in a new tab. Typing alone never scans."))
-        self.show_typed(self._typed)
+        self.show_typed(self._typed, self._offered)
 
     def _title_deletable(self) -> None:
         """ "Can be deleted", or one short word while the columns don't fit at full width;
@@ -187,14 +193,26 @@ class HostsTable(QWidget):
         if item is not None:
             self._fill(item, facts)
 
-    def show_typed(self, typed: str) -> None:
-        """The empty table's note for a search that found nothing; "" hides it."""
-        self._typed = typed
+    def show_typed(self, typed: str, offer: bool) -> None:
+        """What a search says and offers for the text typed. With no rows, the note ("No host
+        of the list with …") and, when `offer`, Scan {host}; with rows, Scan {host} alone as
+        the list's last line, when `offer` (no row is that host). "" hides both."""
+        self._typed, self._offered = typed, offer
+        offer = offer and bool(typed)
+        rows = self.tree.topLevelItemCount() > 0
         if typed:
             self._empty_text.setText(_("No host of the list with “{text}”.").format(text=typed))
             self.scan_button.setText(_("Scan {host}").format(host=typed))
-        self._empty.setVisible(bool(typed))
+            self._scan_action.setText(self.scan_button.text().replace("&", "&&"))
+        self.scan_button.setVisible(offer)
+        self._empty_hint.setVisible(offer)  # it says what the button does
+        self._empty.setVisible(bool(typed) and not rows)
         self._place_empty()
+        self._offer.show_actions([self._scan_action] if offer and rows else [])
+
+    def offer_buttons(self) -> list[QPushButton]:
+        """The buttons under the rows, while shown (for tests)."""
+        return self._offer.buttons
 
     def selected_ids(self) -> list[str]:
         """The rows picked, in the order on screen."""

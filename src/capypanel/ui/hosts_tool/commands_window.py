@@ -357,7 +357,9 @@ class CommandRow(QFrame):
 
 
 class CommandsWindow(QDialog):
-    def __init__(self, tool: "HostsTool", target: HostTarget | None, profile: str) -> None:
+    def __init__(
+        self, tool: "HostsTool", target: HostTarget | None, profile: str, typed: str = ""
+    ) -> None:
         # A window of its own, not owned by the main one: either can be in front, to work in
         # the list and here by turns. Quitting CapyPanel closes it (MainWindow.closeEvent).
         super().__init__(None)
@@ -382,7 +384,7 @@ class CommandsWindow(QDialog):
         if self._choices and recent:
             self._add_heading(_("Recent"))
         self.address.addItems(recent)
-        self._put_target(target)
+        self._put_target(target, typed)
         line = self.address.lineEdit()
         assert line is not None
         line.setMaxLength(MAX_ADDRESS)
@@ -543,23 +545,24 @@ class CommandsWindow(QDialog):
 
     # ---- the PC ----
 
-    def _put_target(self, target: HostTarget | None) -> None:
-        """Writes the PC into the Host field: picked when the Hosts panel shows it."""
+    def _put_target(self, target: HostTarget | None, typed: str = "") -> None:
+        """Writes the PC into the Host field: picked when the Hosts panel shows it. None: what
+        was typed (a search's Connect to {host}…), or nothing."""
         if target is None:
             self.address.setCurrentIndex(-1)
-            self.address.setEditText("")
+            self.address.setEditText(typed)
         elif (index := self.address.findData(target.key)) >= 0:
             self.address.setCurrentIndex(index)
         else:  # not among what the panel shows (a search changed since): by its name
             self.address.setCurrentIndex(-1)
             self.address.setEditText(target.name)
 
-    def switch_to(self, target: HostTarget | None, profile: str) -> None:
+    def switch_to(self, target: HostTarget | None, profile: str, typed: str = "") -> None:
         """All commands… or Details' Commands asked for another PC while the window is open:
         it turns to that PC and keeps every answer it already has (they're kept per PC, so
-        going back shows them again). None: Manual connection, an empty Host field."""
+        going back shows them again). None: Manual connection, with `typed` in Host."""
         self._typed = target is None
-        self._put_target(target)  # the Host field changing shows the PC, its profile, its answers
+        self._put_target(target, typed)  # the Host field changing shows the PC and its answers
         if target is not None and (index := self.profile.findData(profile)) >= 0:
             self.profile.setCurrentIndex(index)
         self._show_target()

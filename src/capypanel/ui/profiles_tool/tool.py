@@ -39,7 +39,7 @@ from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.hosts_tool.runner import HostTarget
 from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.icons import tabler_icon
-from capypanel.ui.list_workspace.panels import NavigationPane, natural_key
+from capypanel.ui.list_workspace.panels import NavigationPane, natural_key, offers_typed
 from capypanel.ui.list_workspace.splitter import PaneSplitter
 from capypanel.ui.list_workspace.workspace import SAMPLE_ID
 from capypanel.ui.main_window.tool import Shell, Tool
@@ -672,7 +672,8 @@ class ProfilesTool(Tool):
         hosts = self._shown = self.visible_hosts()
         typed = self.hosts_page.search.text().strip()
         self.hosts_page.table.show_hosts(hosts, self._row_facts)
-        self.hosts_page.table.show_typed(typed if typed and not hosts else "")
+        # Scan {host} while no row is the host typed, as Hosts' Connect to {host}…
+        self.hosts_page.table.show_typed(typed, offers_typed(typed, hosts))
         if typed:
             about = _("{shown} of {total} shown").format(
                 shown=len(hosts), total=len(self._all_hosts())

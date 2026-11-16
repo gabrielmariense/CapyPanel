@@ -541,6 +541,31 @@ def test_typing_never_scans_and_the_empty_table_offers_the_typed_host(
     assert typed is not None and typed.box.name.text() == "User profiles on 192.0.2.50"
 
 
+def test_the_typed_host_is_offered_under_the_rows_while_no_row_is_it(
+    window: CapyWindow, pc: Pc
+) -> None:
+    """As Hosts' Connect to {host}… (his idea from the 0.28 test): DESK-1 among DESK-10's row
+    still offers Scan DESK-1, as the list's last line. A row that is it, in any case, offers
+    nothing, and a text with a space isn't a PC: its empty table says so with no button."""
+    tool = _tool(window)
+    page, table = tool.hosts_page, tool.hosts_page.table
+    page.search.setText("DESK-1")
+    page.search.returnPressed.emit()
+    assert _hosts(tool) == ["DESK-10"] and not table._empty.isVisibleTo(table)
+    [under] = table.offer_buttons()
+    assert under.text() == "Scan DESK-1" and pc.scanned == []
+    under.click()
+    assert pc.scanned == [("DESK-1", None)] and tool.tabs.current() == "@DESK-1"
+    for typed in ("desk-10", "192.0.2.13"):  # its name in another case; DESK-03's address
+        page.search.setText(typed)
+        page.search.returnPressed.emit()
+        assert _hosts(tool) and not table.offer_buttons(), typed
+    page.search.setText("front desk")
+    page.search.returnPressed.emit()
+    assert _hosts(tool) == [] and table._empty.isVisibleTo(table)
+    assert table.scan_button.isHidden() and not table.offer_buttons()
+
+
 # ---- a host's tab ----
 
 

@@ -11,6 +11,7 @@ from PySide6.QtCore import (
     QItemSelectionModel,
     QMimeData,
     QModelIndex,
+    QObject,
     QPersistentModelIndex,
     QPoint,
     QRect,
@@ -570,6 +571,94 @@ def _tree_width(tree: QTreeWidget) -> int:
     return tree.sizeHintForColumn(0) + 2 * tree.frameWidth() + extra
 
 
+def offers_typed(typed: str, rows: Iterable[Host]) -> bool:
+    """Whether a search offers to reach the PC typed (Hosts' Connect to {host}…, Profile
+    cleanup's Scan {host}): while no row is it, by its name or address in any case. A typed
+    PC-01 among PC-010's rows still offers it; a text with a space (a group, a note) can't be a
+    PC's name or address."""
+    wanted = typed.strip().casefold()
+    if not wanted or any(c.isspace() for c in wanted):
+        return False
+    return not any(wanted in (row.name.casefold(), row.address.casefold()) for row in rows)
+
+
+class RowsOffer(QObject):
+    """Buttons as a table's own last line, under its rows and lined up with their text: what a
+    search offers while it has rows but none is what was typed. They scroll with the rows and
+    never take height from the table or move them, so they can come and go as you type; past a
+    full table they're out of sight, and show once the rows are fewer."""
+
+    GAP = 6  # px between the last row and the buttons
+
+    def __init__(self, tree: QTreeWidget) -> None:
+        super().__init__(tree)
+        self._tree = tree
+        self.box = QWidget(tree.viewport())
+        self._row = QHBoxLayout(self.box)
+        self._row.setContentsMargins(0, 0, 0, 0)
+        self._row.setSpacing(8)
+        self.buttons: list[QPushButton] = []
+        self.box.hide()
+        tree.installEventFilter(self)
+        tree.viewport().installEventFilter(self)
+        tree.verticalScrollBar().valueChanged.connect(self.place)
+        tree.horizontalScrollBar().valueChanged.connect(self.place)
+
+    def show_actions(self, actions: Sequence[QAction]) -> None:
+        """A button for each action, under the rows; () hides them."""
+        for button in self.buttons:
+            self._row.removeWidget(button)
+            button.hide()  # gone now: deleteLater alone leaves it drawn until Qt gets to it
+            button.deleteLater()
+        self.buttons = []
+        for action in actions:
+            button = QPushButton(label(action).replace("&", ""))
+            button.setAutoDefault(False)
+            button.setEnabled(action.isEnabled())
+            button.clicked.connect(action.trigger)
+            self._row.addWidget(button)
+            button.show()  # added to a box already on screen, it would stay hidden
+            self.buttons.append(button)
+        self.place()
+
+    def place(self) -> None:
+        """Under the last row, where it is now; shown only when it fits whole."""
+        tree = self._tree
+        count = tree.topLevelItemCount()
+        last = tree.topLevelItem(count - 1) if count and self.buttons else None
+        if last is None:
+            self.box.hide()
+            return
+        layout = self.box.layout()
+        assert layout is not None
+        layout.activate()  # buttons just added count in the size asked for below
+        size = self.box.sizeHint()
+        top = tree.visualItemRect(last).bottom() + 1 + self.GAP
+        self.box.setGeometry(self._text_left(last), top, size.width(), size.height())
+        self.box.setVisible(top + size.height() <= tree.viewport().height())
+
+    def _text_left(self, item: QTreeWidgetItem) -> int:
+        """Where the first column's text starts, as the table draws it (after a row's icon)."""
+        tree = self._tree
+        index = tree.indexFromItem(item, 0)
+        option = QStyleOptionViewItem()
+        tree.initViewItemOption(option)
+        option.rect = tree.visualRect(index)
+        delegate = tree.itemDelegateForIndex(index)
+        if isinstance(delegate, QStyledItemDelegate):
+            delegate.initStyleOption(option, index)
+        style = tree.style()
+        cell = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, option, tree)
+        # Qt draws a cell's text this far inside it (QCommonStyle's item text margin).
+        margin = style.pixelMetric(QStyle.PixelMetric.PM_FocusFrameHMargin, None, tree) + 1
+        return cell.left() + margin
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() in (QEvent.Type.Resize, QEvent.Type.StyleChange, QEvent.Type.FontChange):
+            self.place()
+        return False
+
+
 class ItemTable(QTreeWidget):
     """A list tool's items as a table. A QTreeView-based widget: it selects whole rows in
     Windows 11. A tool says its columns (COLUMNS, saved by those keys; the first always shows),
@@ -628,6 +717,7 @@ class ItemTable(QTreeWidget):
         note.addWidget(self._empty_text)
         note.addLayout(self._note_row)
         self._empty.hide()
+        self.offer = RowsOffer(self)  # a search's offer while it has rows: show_offer
 
     def retranslate(self) -> None:
         """The column titles, in the current language."""
@@ -693,6 +783,7 @@ class ItemTable(QTreeWidget):
         self.updateGeometries()  # the scroll bars' new range, before going back
         self.verticalScrollBar().setValue(down)
         self.horizontalScrollBar().setValue(across)
+        self.offer.place()  # under the new last row
         self.itemSelectionChanged.emit()
 
     def in_shown_order(self, items: Sequence[Host]) -> tuple[Host, ...]:
@@ -735,6 +826,12 @@ class ItemTable(QTreeWidget):
             self.note_buttons.append(button)
         self._empty.setVisible(bool(text))
         self._place_empty()
+
+    def show_offer(self, actions: Sequence[QAction]) -> None:
+        """A button for each action as the table's last line, under its rows: what a search
+        offers while it has rows but none is what was typed. With no rows, the note carries
+        them (show_note). () hides them."""
+        self.offer.show_actions(actions if self.topLevelItemCount() else ())
 
     def _place_empty(self) -> None:
         if not self._empty.isVisible():

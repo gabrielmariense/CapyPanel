@@ -60,7 +60,7 @@ from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
 from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.list_workspace.customize import Part
-from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, sample_tag
+from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, offers_typed, sample_tag
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
@@ -150,6 +150,9 @@ class HostsTool(ListWorkspace):
         column.insertWidget(1, self.result_strip)  # right under the search box
         self.host_actions = self._make_host_actions()
         self._commands_window: QDialog | None = None
+        self._typed_host = ""  # the PC a search offers to connect to, while no row is it
+        self._connect_typed = QAction(self)  # Connect to {host}…: typed_offer words it
+        self._connect_typed.triggered.connect(lambda: self.manual_connect_to(self._typed_host))
         self._facts_timer = QTimer(self)
         self._facts_timer.setSingleShot(True)
         self._facts_timer.setInterval(FACTS_AFTER)
@@ -349,6 +352,15 @@ class HostsTool(ListWorkspace):
 
     def import_action(self) -> QAction | None:
         return self.commands.import_hosts
+
+    def typed_offer(self, typed: str, rows: Sequence[Host]) -> list[QAction]:
+        """Connect to {host}…, while no row is the PC typed: in the empty table under its note,
+        or as the list's last line under the rows. It opens Manual connection with it."""
+        if not offers_typed(typed, rows):
+            return []
+        self._typed_host = typed
+        self._connect_typed.setText(_("Connect to {host}…").format(host=typed.replace("&", "&&")))
+        return [self._connect_typed]
 
     def restyle(self) -> None:
         """After a theme switch: the dots, the Details panel and the strip were drawn in the
@@ -631,19 +643,24 @@ class HostsTool(ListWorkspace):
         """Manual connection: the Commands window, for an address typed there."""
         self.open_commands(None)
 
-    def open_commands(self, target: HostTarget | None) -> None:
-        """The Commands window, for `target` (None: an address typed there). One at a time:
-        already open, it turns to that PC and keeps its answers."""
+    def manual_connect_to(self, typed: str) -> None:
+        """Manual connection with `typed` already in Host (a search's Connect to {host}…).
+        Nothing connects until Connect is pressed there."""
+        self.open_commands(None, typed.strip())
+
+    def open_commands(self, target: HostTarget | None, typed: str = "") -> None:
+        """The Commands window, for `target` (None: an address typed there, `typed` already
+        in it). One at a time: already open, it turns to that PC and keeps its answers."""
         from capypanel.ui.hosts_tool.commands_window import CommandsWindow
 
         open_one = self._commands_window
         if isinstance(open_one, CommandsWindow) and shiboken6.isValid(open_one):
-            open_one.switch_to(target, self.profile_for(target))
+            open_one.switch_to(target, self.profile_for(target), typed)
             open_one.show()
             open_one.raise_()
             open_one.activateWindow()
             return
-        window = CommandsWindow(self, target, self.profile_for(target))
+        window = CommandsWindow(self, target, self.profile_for(target), typed)
         window.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         window.destroyed.connect(lambda: setattr(self, "_commands_window", None))
         self._commands_window = window

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 18:55-0300\n"
+"POT-Creation-Date: 2026-11-16 19:04-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1078,6 +1078,10 @@ msgid "Connect"
 msgstr ""
 
 msgid "Connect to the selected hosts, once with another profile, or by address"
+msgstr ""
+
+#, python-brace-format
+msgid "Connect to {host}…"
 msgstr ""
 
 msgid "Connect with"
