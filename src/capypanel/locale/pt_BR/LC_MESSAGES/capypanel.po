@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 15:47-0300\n"
+"POT-Creation-Date: 2026-11-16 19:04-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -262,6 +262,9 @@ msgstr "&Abrir o CapyPanel"
 msgid "&Open a CSV file…"
 msgstr "A&brir um arquivo CSV…"
 
+msgid "&Open in Profile cleanup"
+msgstr "&Abrir na Limpeza de perfis"
+
 msgid "&Open in its own window…"
 msgstr "&Abrir na própria janela…"
 
@@ -270,6 +273,10 @@ msgstr "&Abrir lista…"
 
 msgid "&Open on startup"
 msgstr "&Abrir ao iniciar"
+
+#, python-brace-format
+msgid "&Open {n} hosts in Profile cleanup"
+msgstr "&Abrir {n} hosts na Limpeza de perfis"
 
 msgid "&Partner"
 msgstr "&Parceiro"
@@ -437,9 +444,6 @@ msgstr "&Ferramenta:"
 
 msgid "&User name"
 msgstr "&Usuário"
-
-msgid "&User profiles"
-msgstr "&Perfis de usuário"
 
 msgid "&User:"
 msgstr "&Usuário:"
@@ -1040,6 +1044,10 @@ msgstr "Conectar"
 
 msgid "Connect to the selected hosts, once with another profile, or by address"
 msgstr "Conecta aos hosts selecionados, uma vez com outro perfil, ou por endereço"
+
+#, python-brace-format
+msgid "Connect to {host}…"
+msgstr "Conectar a {host}…"
 
 msgid "Connect with"
 msgstr "Conectar com"
@@ -1782,9 +1790,6 @@ msgstr "Ocultar os do Windows, Só sobras e Sem uso há deixam na lista só os p
 msgid "Hom&e"
 msgstr "I&nício"
 
-msgid "Home (Ctrl+0)"
-msgstr "Início (Ctrl+0)"
-
 msgid "Home page"
 msgstr "Página inicial"
 
@@ -1823,8 +1828,8 @@ msgstr "Hosts ({n})"
 msgid "Hosts hasn't checked it yet."
 msgstr "O Hosts ainda não o verificou."
 
-msgid "Hosts is for computers, Printers for printers, and User profiles clears old Windows profiles off a PC. Each tile opens its tool."
-msgstr "Hosts é para computadores, Impressoras para impressoras, e Perfis de usuário limpa perfis antigos do Windows de um PC. Cada bloco abre a sua ferramenta."
+msgid "Hosts is for computers, Printers for printers, and Profile cleanup clears old Windows profiles off a PC. Each tile opens its tool."
+msgstr "Hosts é para computadores, Impressoras para impressoras, e a Limpeza de perfis exclui perfis antigos do Windows de um PC. Cada bloco abre a sua ferramenta."
 
 msgid "Hosts with no group &go to:"
 msgstr "Hosts sem grupo &vão para:"
@@ -2525,8 +2530,8 @@ msgstr "Abre a janela Comandos para o host selecionado; a seta lista os comandos
 msgid "Open the history"
 msgstr "Abrir o histórico"
 
-msgid "Open the selected printers' web pages (Enter)"
-msgstr "Abre a página web das impressoras selecionadas (Enter)"
+msgid "Open the selected printers' web pages"
+msgstr "Abre a página web das impressoras selecionadas"
 
 msgid "Open web page"
 msgstr "Abrir página web"
@@ -2783,6 +2788,12 @@ msgstr "Imprimindo"
 msgid "Profile"
 msgstr "Perfil"
 
+msgid "Profile clean&up"
+msgstr "Limpeza de &perfis"
+
+msgid "Profile cleanup"
+msgstr "Limpeza de perfis"
+
 #, python-brace-format
 msgid "Profile {user} on {host}"
 msgstr "Perfil {user} em {host}"
@@ -2855,8 +2866,8 @@ msgstr "Ler de novo"
 msgid "Read license"
 msgstr "Ler licença"
 
-msgid "Read the status and supplies of every printer shown (F5)"
-msgstr "Lê o status e os suprimentos de todas as impressoras exibidas (F5)"
+msgid "Read the status and supplies of every printer shown"
+msgstr "Lê o status e os suprimentos de todas as impressoras exibidas"
 
 msgid "Read-only"
 msgstr "Somente leitura"
@@ -2877,8 +2888,12 @@ msgstr "Lendo…"
 msgid "Reads each in a tab of its own, behind; you stay on this list"
 msgstr "Lê cada um numa aba própria, ao fundo; você continua nesta lista"
 
-msgid "Reads the status, toner and page count of every printer shown. Nothing is read until you press it or F5."
-msgstr "Lê o status, o toner e a contagem de páginas de cada impressora mostrada. Nada é lido até você clicar aqui ou apertar F5."
+#, python-brace-format
+msgid "Reads the status, toner and page count of every printer shown. Nothing is read until you press it or {key}."
+msgstr "Lê o status, o toner e a contagem de páginas de cada impressora mostrada. Nada é lido até você clicar aqui ou apertar {key}."
+
+msgid "Reads the status, toner and page count of every printer shown. Nothing is read until you press it."
+msgstr "Lê o status, o toner e a contagem de páginas de cada impressora mostrada. Nada é lido até você clicar aqui."
 
 msgid "Reads what's ticked in this box again"
 msgstr "Lê de novo o que está marcado nesta caixa"
@@ -2913,8 +2928,8 @@ msgstr "Atualizar todas"
 msgid "Refresh every host shown"
 msgstr "Atualizar todos os hosts exibidos"
 
-msgid "Refresh every host shown (a group's, or the ones a search leaves), with the checks ticked on a right-click (also F5)"
-msgstr "Atualiza todos os hosts exibidos (os de um grupo, ou os que uma pesquisa deixa), com as verificações marcadas no botão direito (também F5)"
+msgid "Refresh every host shown (a group's, or the ones a search leaves), with the checks ticked on a right-click"
+msgstr "Atualiza todos os hosts exibidos (os de um grupo, ou os que uma pesquisa deixa), com as verificações marcadas no botão direito"
 
 msgid "Refresh host"
 msgstr "Atualizar host"
@@ -3333,9 +3348,6 @@ msgstr "Definir a conta…"
 
 msgid "Settings"
 msgstr "Configurações"
-
-msgid "Settings (Ctrl+,)"
-msgstr "Configurações (Ctrl+,)"
 
 #, python-brace-format
 msgid "Settings › Hosts › Credentials: {uses}"
@@ -4302,9 +4314,6 @@ msgstr "Usada só para ver quem está logado e nos comandos que você executa em
 
 msgid "User"
 msgstr "Usuário"
-
-msgid "User profiles"
-msgstr "Perfis de usuário"
 
 #, python-brace-format
 msgid "User profiles on {host}"

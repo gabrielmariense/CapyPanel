@@ -1,7 +1,8 @@
-"""The User profiles tool: the Hosts tab with the hosts of Hosts' open list, a tab per host opened,
-the profiles table with its filters and order, a profile's details, sizes, deletes, what a failed
-scan says, and the limit on reads and counts shared by every tab. Nothing here reaches a PC: the
-scan, the sizes and the deletes are answered by hand."""
+"""The Profile cleanup tool: the Hosts tab with the hosts of Hosts' open list, a tab per host
+opened (from here or Hosts' right-click), the profiles table with its filters and order, a
+profile's details, sizes, deletes, what a failed scan says, and the limit on reads and counts
+shared by every tab. Nothing here reaches a PC: the scan, the sizes and the deletes are answered
+by hand."""
 
 from collections.abc import Callable, Iterator
 from datetime import UTC, datetime, timedelta
@@ -13,7 +14,7 @@ from capywindow import CapyWindow
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, QPointF, QRect, QSize, Qt
 from PySide6.QtGui import QIcon, QKeyEvent, QMouseEvent, QShowEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog, QToolButton
+from PySide6.QtWidgets import QApplication, QDialog, QMenu, QToolButton, QWidget
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -30,7 +31,8 @@ from capypanel.core.remote.user_profiles import (
     State,
     Why,
 )
-from capypanel.ui.profiles_tool import host_page, hosts_page, panels, rows, side, work
+from capypanel.ui.main_window import window as window_module
+from capypanel.ui.profiles_tool import first_use, host_page, hosts_page, panels, rows, side, work
 from capypanel.ui.profiles_tool import tool as tool_ui
 from capypanel.ui.profiles_tool.host_page import HostPage, Stage
 from capypanel.ui.profiles_tool.panels import DeleteDialog
@@ -208,7 +210,7 @@ def test_it_is_the_third_tool_and_its_hosts_tab_lists_hosts_open_list(
 ) -> None:
     tool = _tool(window)
     assert list(window.tools) == ["hosts", "printers", "profiles"]
-    assert (tool.tool_name(), tool.ICON) == ("User profiles", "profile-card")
+    assert (tool.tool_name(), tool.ICON) == ("Profile cleanup", "profile-card")
     assert tool.list_picker.text() == "clinic"
     assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]  # natural order; reachable ones
     assert tool.tabs.current() == HOSTS and tool.tabs.pinned.tabText(0) == "Hosts (3)"
@@ -422,6 +424,56 @@ def test_a_double_click_or_enter_opens_a_hosts_tab_and_goes_to_it(
     assert tool.tabs.current() == key and len(pc.scanned) == 1  # its tab: never a second read
 
 
+def _hosts_menu(win: CapyWindow, *names: str) -> QMenu:
+    """Hosts' right-click menu on these hosts."""
+    win.hosts.table.select_ids([_id(win, name) for name in names])
+    menu = QMenu()
+    win.hosts.fill_item_menu(menu, win.hosts.selected_items())
+    return menu
+
+
+def test_hosts_right_click_opens_them_here_each_in_its_own_tab_and_scanned(
+    window: CapyWindow, pc: Pc
+) -> None:
+    """His idea from the 0.28 test (topic-0281-ideas, D2): one host, the commands' last line;
+    several, with the count, before the submenu. The tool's own icon: the line goes there."""
+    tool = _tool(window)
+    window.show_tool("hosts")
+    menu = _hosts_menu(window, "DESK-03")
+    texts = [a.text() for a in menu.actions()]
+    at = texts.index("&Open in Profile cleanup")
+    assert texts[at - 1] == "&All commands…" and menu.actions()[at + 1].isSeparator()
+    assert not menu.actions()[at].icon().isNull()
+    menu.actions()[at].trigger()
+    key = _id(window, "DESK-03")
+    assert window.shown_tool() is tool and tool.tabs.current() == key
+    assert pc.scanned == [("192.0.2.13", None)]
+
+    window.show_tool("hosts")
+    menu = _hosts_menu(window, "DESK-03", "DESK-10")
+    texts = [a.text() for a in menu.actions()]
+    at = texts.index("&Open 2 hosts in Profile cleanup")
+    assert texts[at - 1] == "&Refresh 2 hosts" and texts[at + 2] == "Commands run &as"
+    menu.actions()[at].trigger()
+    assert window.shown_tool() is tool and tool.tabs.host_keys() == [key, _id(window, "DESK-10")]
+    assert [a for a, _b in pc.scanned] == ["192.0.2.13", "192.0.2.20"]  # DESK-03 isn't read again
+
+
+def test_from_hosts_its_first_use_warning_comes_first_and_cancelled_opens_nothing(
+    window: CapyWindow, pc: Pc, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tool = _tool(window)
+    window.show_tool("hosts")
+    monkeypatch.setattr(window_module, "on_screen", lambda _window: True)  # as for a person
+    answers = iter([QDialog.DialogCode.Rejected, QDialog.DialogCode.Accepted])
+    monkeypatch.setattr(first_use, "run_modal", lambda _dialog: next(answers))
+    assert tool.first_use_pending()
+    window.hosts.open_in_profile_cleanup([_id(window, "DESK-03")])  # Cancel
+    assert window.shown_tool() is window.hosts and tool.tabs.host_keys() == [] and not pc.scanned
+    window.hosts.open_in_profile_cleanup([_id(window, "DESK-03")])  # ticked and continued
+    assert window.shown_tool() is tool and tool.tabs.host_keys() == [_id(window, "DESK-03")]
+
+
 def test_a_middle_click_or_ctrl_enter_opens_it_behind(window: CapyWindow, pc: Pc) -> None:
     tool = _tool(window)
     table = tool.hosts_page.table
@@ -487,6 +539,31 @@ def test_typing_never_scans_and_the_empty_table_offers_the_typed_host(
     assert pc.scanned == [("192.0.2.50", None)] and tool.tabs.current() == "@192.0.2.50"
     typed = tool.page("@192.0.2.50")
     assert typed is not None and typed.box.name.text() == "User profiles on 192.0.2.50"
+
+
+def test_the_typed_host_is_offered_under_the_rows_while_no_row_is_it(
+    window: CapyWindow, pc: Pc
+) -> None:
+    """As Hosts' Connect to {host}… (his idea from the 0.28 test): DESK-1 among DESK-10's row
+    still offers Scan DESK-1, as the list's last line. A row that is it, in any case, offers
+    nothing, and a text with a space isn't a PC: its empty table says so with no button."""
+    tool = _tool(window)
+    page, table = tool.hosts_page, tool.hosts_page.table
+    page.search.setText("DESK-1")
+    page.search.returnPressed.emit()
+    assert _hosts(tool) == ["DESK-10"] and not table._empty.isVisibleTo(table)
+    [under] = table.offer_buttons()
+    assert under.text() == "Scan DESK-1" and pc.scanned == []
+    under.click()
+    assert pc.scanned == [("DESK-1", None)] and tool.tabs.current() == "@DESK-1"
+    for typed in ("desk-10", "192.0.2.13"):  # its name in another case; DESK-03's address
+        page.search.setText(typed)
+        page.search.returnPressed.emit()
+        assert _hosts(tool) and not table.offer_buttons(), typed
+    page.search.setText("front desk")
+    page.search.returnPressed.emit()
+    assert _hosts(tool) == [] and table._empty.isVisibleTo(table)
+    assert table.scan_button.isHidden() and not table.offer_buttons()
 
 
 # ---- a host's tab ----
@@ -860,6 +937,40 @@ def test_the_arrows_that_scroll_the_tabs_can_be_seen(window: CapyWindow) -> None
         size = QSize(16, 16)
         normal = button.icon().pixmap(size, QIcon.Mode.Normal).toImage()
         assert button.icon().pixmap(size, QIcon.Mode.Disabled).toImage() != normal
+
+
+def test_the_list_and_the_right_panel_start_on_the_groups_panel_s_top(
+    window: CapyWindow,
+) -> None:
+    """The tabs are as tall as the list dropdown and the gap under it: a tab's top meets the
+    dropdown's, and the list and the right panel start where the Groups panel does. They sat
+    9 px higher in 0.27 and 0.28 (Dante Q1, Gabriel's pick 1)."""
+    tool = _tool(window)
+    _open(window, focus=False)  # a host's tab beside the Hosts tab, which stays in front
+    window.resize(1280, 760)
+    window.show()
+    QApplication.processEvents()
+
+    def top(widget: QWidget) -> int:
+        return widget.mapTo(window, QPoint(0, 0)).y()
+
+    groups = top(tool.nav._card)
+    assert tool.nav.card_top() == groups - top(tool.nav) > 0  # known before it's shown
+    assert top(tool.middle) == groups and top(tool.side) == groups
+    assert top(tool.tabs) == top(tool.list_picker)
+    for bar in (tool.tabs.pinned, tool.tabs.bar):  # every tab fills the strip, top to bottom
+        tab = bar.tabRect(0).translated(bar.mapTo(window, QPoint(0, 0)))
+        assert (tab.top(), tab.height()) == (top(tool.list_picker), tool.tabs.height())
+    # The ▾ and the line between the Hosts tab and the hosts' tabs stay in the middle.
+    for part in (tool.tabs.more, tool.tabs.line):
+        middle = part.mapTo(tool.tabs, part.rect().center()).y()
+        assert abs(middle - tool.tabs.rect().center().y()) <= 1
+
+    tool.list_picker.setStyleSheet("QComboBox { min-height: 40px; }")  # a theme's taller one
+    tool.restyle()  # as after every theme switch
+    QApplication.processEvents()
+    assert top(tool.nav._card) > groups
+    assert top(tool.middle) == top(tool.side) == top(tool.nav._card)
 
 
 def test_a_tab_closed_while_its_scan_runs_ignores_the_answer(

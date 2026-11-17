@@ -1,4 +1,4 @@
-"""What the User profiles page says about a profile, with no window involved: the names of
+"""What the Profile cleanup page says about a profile, with no window involved: the names of
 kinds and states, why a row can or can't be deleted, the filters above the table, and how dates
 and sizes read."""
 

@@ -914,7 +914,7 @@ QTreeView::item:selected, QListView#pageList::item:selected {
 /* Tables marked "grid": a thin line under each row, none between columns; the table's own
    border is its one frame. */
 QTreeView#grid::item { border-bottom: 1px solid %(row_line)s; }
-/* Tick boxes in a list's rows (User profiles, the quick commands): with the rules above, the
+/* Tick boxes in a list's rows (Profile cleanup, the quick commands): with the rules above, the
    Windows style drew a ticked one as a bare tick with no box, white on white in light. Drawn
    here like Windows' own: a rounded box, filled in the accent with a white tick. */
 QTreeView::indicator, QListView::indicator { width: 14px; height: 14px; border-radius: 4px;
@@ -998,10 +998,11 @@ QLabel#stateBadge[active="true"] { color: %(online)s; border-color: %(online)s; 
 QFrame#notesBox { border: 1px solid %(border)s; border-radius: 6px; }
 QLabel#hint { color: %(text2)s; }
 /* Why a key wasn't taken (Keyboard shortcuts): an error, so the red, not the grey hint;
-   the field that waits for the key turns red with it. */
+   the field that waits for the key turns red with it, 1 px inside its edges as Windows drew
+   it while it waited: the red box drawn at the edges was bigger than the field. */
 QLabel#refusal { color: %(stopped)s; font-weight: 600; }
 QTreeView#grid QLineEdit[refused="true"], QTreeView#grid QLineEdit[refused="true"]:focus {
-    border: 1px solid %(stopped)s; }
+    border: 1px solid %(stopped)s; margin: 1px; }
 /* A page's one instruction, where the page is only a list (Keyboard shortcuts): body text. */
 QLabel#lead { color: %(text)s; }
 QLabel#paneTitle[dropTarget="true"] { color: %(accent_drop)s; background: %(sel)s; }

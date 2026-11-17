@@ -101,6 +101,8 @@ and **Restore default** gives back the one it came with.
       host or printer list.
     - Restart, Shut down, Cancel the pending restart, Restart Print Spooler, and logging off or
       disconnecting someone aren't listed.
+    - Tooltips and first-run guides name a command's key as it is now, so a key you change shows
+      there at once, and a command with no key shows none.
     - Your keys are yours alone, kept in your settings file. Someone else on this PC keeps theirs.
 
 ## Hosts > General
@@ -172,7 +174,7 @@ mark, with "A change here reaches everyone on this PC." under the title.
 | Connecting | **SNMP version** and **SNMP account** | v2c or v3, and the account for it (see [Set the SNMP account](printers/checking.md#set-the-snmp-account)) | v2c, "public" |
 | Connecting | **Doc360 MPS account** | The portal login for printers whose page counters come from it (see [Get page counts from Doc360 MPS](printers/checking.md#get-page-counts-from-doc360-mps)) | Not set |
 
-The User profiles tool has no settings of its own: it uses Hosts' lists and accounts.
+Profile cleanup has no settings of its own: it uses Hosts' lists and accounts.
 
 ## About
 

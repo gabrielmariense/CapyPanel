@@ -8,7 +8,7 @@ has no card: the list fills it (Dante's redo, 2026-11-16)."""
 from typing import cast
 
 import shiboken6
-from PySide6.QtCore import QKeyCombination, QRect, QSize, Qt, Signal
+from PySide6.QtCore import QKeyCombination, QMargins, QPoint, QRect, QSize, Qt, Signal
 from PySide6.QtGui import (
     QAction,
     QColor,
@@ -18,9 +18,12 @@ from PySide6.QtGui import (
     QHideEvent,
     QKeyEvent,
     QKeySequence,
+    QPainter,
+    QPaintEvent,
     QPalette,
 )
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -145,6 +148,12 @@ def place_in_order(row: Row) -> int:
     return ORDER.index(row.id) if row.id in ORDER else len(ORDER)
 
 
+def caps_baseline(inside: QRect, caps: QRect) -> int:
+    """The baseline that puts a capital's ink (`caps`, an H's tight box from its baseline) in
+    the middle of `inside`: as much room over it as under it."""
+    return inside.top() + (inside.height() - caps.height()) // 2 - caps.top()
+
+
 class KeyCatcher(QLineEdit):
     """In a command's Key cell while it waits: the next key pressed, with Ctrl, Alt or Shift,
     is its new key. Esc, or a click elsewhere, leaves the key as it was."""
@@ -156,11 +165,18 @@ class KeyCatcher(QLineEdit):
         super().__init__()
         self.setPlaceholderText(waiting_text())
         self._done = False
+        self._room: QMargins | None = None  # its words' room while it waited, once refused
 
     def refuse(self) -> None:
         """A key it can't take: red, saying so, and waiting for another (Gabriel's pick, Luna
-        Q1: the error shows where you're looking, and the next key just works)."""
+        Q1: the error shows where you're looking, and the next key just works). Its words stay
+        where they waited: a theme may style the red field alone, with less padding (the
+        Windows themes, where they moved to 1 px from the red edge: Dante, 0.28.1)."""
         self._done = False
+        if self._room is None:
+            words = self.words_rect()
+            right, bottom = self.width() - 1 - words.right(), self.height() - 1 - words.bottom()
+            self._room = QMargins(words.left(), words.top(), right, bottom)
         self.setProperty("refused", True)
         self.setPlaceholderText(refused_text())
         self.style().unpolish(self)
@@ -172,6 +188,37 @@ class KeyCatcher(QLineEdit):
 
     def focusNextPrevChild(self, next: bool) -> bool:  # noqa: A002, N802 -- Qt's names
         return False  # Tab is a key pressed here, not a move to the next control
+
+    def paintEvent(self, event: QPaintEvent) -> None:  # noqa: N802 -- Qt's name
+        """The frame as the theme draws it, then the words with their capitals in the middle.
+        Qt centres a line's whole height, with the room over capitals kept for accents, in a
+        field no taller than a row's text, so the words sat low: 4 px over them, 1 px under
+        (Dante, 0.28.1). Nothing is typed here; text that got in some other way is Qt's."""
+        if self.text():
+            super().paintEvent(event)
+            return
+        painter = QPainter(self)
+        frame = QStyleOptionFrame()
+        self.initStyleOption(frame)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_PanelLineEdit, frame, painter, self)
+        room, metrics = self.words_rect(), self.fontMetrics()
+        elide = Qt.TextElideMode.ElideRight
+        words = metrics.elidedText(self.placeholderText(), elide, room.width())
+        baseline = caps_baseline(room, metrics.tightBoundingRect("H"))
+        painter.setClipRect(room.adjusted(-LINE_EDIT_MARGIN, 0, LINE_EDIT_MARGIN, 0))  # inside
+        painter.setPen(self.palette().color(QPalette.ColorRole.PlaceholderText))
+        painter.drawText(QPoint(room.left(), baseline), words)
+
+    def words_rect(self) -> QRect:
+        """Where its words go, as in Qt's own fields: inside the frame and padding, less the
+        margin Qt keeps on each side. The Key column is measured for them to fit here. Once a
+        key is refused, the same room as while it waited."""
+        if self._room is not None:
+            return self.rect().marginsRemoved(self._room)
+        frame = QStyleOptionFrame()
+        self.initStyleOption(frame)
+        inside = self.style().subElementRect(QStyle.SubElement.SE_LineEditContents, frame, self)
+        return inside.adjusted(LINE_EDIT_MARGIN, 0, -LINE_EDIT_MARGIN, 0)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         key = event.key()
@@ -220,6 +267,8 @@ class ShortcutsPage(Page):
         self.table = grid_table([_("Command"), _("Key")])
         self.table.itemActivated.connect(lambda item, _c: self.change(item))
         self.table.itemSelectionChanged.connect(self._enable)
+        # The list got shorter or longer: a row waiting for its key stays in view, whole.
+        self.table.verticalScrollBar().rangeChanged.connect(lambda _a, _b: self._show_catching())
         self.clear = QPushButton(_("C&lear"))
         self.restore = QPushButton(_("&Restore default"))
         self.clear.clicked.connect(lambda: self._set_picked(""))
@@ -433,6 +482,20 @@ class ShortcutsPage(Page):
         for item in self._items():
             self._show_key(item)  # the catcher leaves; the key (and its note) come back
         self.table.setFocus()
+
+    def _show_catching(self) -> None:
+        """The row waiting for its key, scrolled into view whole. A refused key's reason may
+        take two lines in a narrow Settings window, and the list loses their height: a field
+        on the last row showing was cut in half (Dante, 0.28.1)."""
+        if self._catching is None:
+            return
+        # By the row's place, not scrollToItem's own check: scrolling a row at a time, Qt
+        # counts the rows that fit at the list's end, and the headings are taller.
+        row, view = self.table.visualItemRect(self._catching), self.table.viewport().rect()
+        if row.bottom() > view.bottom():
+            self.table.scrollToItem(self._catching, QAbstractItemView.ScrollHint.PositionAtBottom)
+        elif row.top() < view.top():
+            self.table.scrollToItem(self._catching, QAbstractItemView.ScrollHint.PositionAtTop)
 
     def _caught(self, item: QTreeWidgetItem, keys: str) -> None:
         why = shortcuts.refused(keys)

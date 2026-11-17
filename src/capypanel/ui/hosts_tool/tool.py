@@ -8,11 +8,11 @@ import re
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 import shiboken6
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QActionGroup, QColor, QGuiApplication, QKeySequence
+from PySide6.QtGui import QAction, QActionGroup, QColor, QGuiApplication, QKeySequence, QPalette
 from PySide6.QtWidgets import (
     QDialog,
     QLabel,
@@ -60,7 +60,7 @@ from capypanel.ui.hosts_tool.toolbar import HostsToolBar, RefreshPanel
 from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.import_hosts import ImportDialog
 from capypanel.ui.list_workspace.customize import Part
-from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, sample_tag
+from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, offers_typed, sample_tag
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
@@ -84,6 +84,14 @@ QUICK_KEY = "quick_commands"  # this admin's quick commands, in order
 FACTS_AFTER = 1_500  # ms a host stays selected before its PC facts are read
 WATCH_EVERY = 15_000  # ms between checks on a restarting PC, until it answers again
 WATCH_FOR = timedelta(minutes=20)  # after the restart time; then CapyPanel stops watching
+PROFILE_CLEANUP = "profiles"  # the tool's id: it imports this one, so the id stands in for it
+
+
+@runtime_checkable
+class OpensHosts(Protocol):
+    """A tool that opens hosts of Hosts' list in tabs of its own (Profile cleanup)."""
+
+    def open_hosts(self, ids: Sequence[str], focus: bool) -> None: ...
 
 
 class HostsTool(ListWorkspace):
@@ -142,6 +150,9 @@ class HostsTool(ListWorkspace):
         column.insertWidget(1, self.result_strip)  # right under the search box
         self.host_actions = self._make_host_actions()
         self._commands_window: QDialog | None = None
+        self._typed_host = ""  # the PC a search offers to connect to, while no row is it
+        self._connect_typed = QAction(self)  # Connect to {host}…: typed_offer words it
+        self._connect_typed.triggered.connect(lambda: self.manual_connect_to(self._typed_host))
         self._facts_timer = QTimer(self)
         self._facts_timer.setSingleShot(True)
         self._facts_timer.setInterval(FACTS_AFTER)
@@ -341,6 +352,15 @@ class HostsTool(ListWorkspace):
 
     def import_action(self) -> QAction | None:
         return self.commands.import_hosts
+
+    def typed_offer(self, typed: str, rows: Sequence[Host]) -> list[QAction]:
+        """Connect to {host}…, while no row is the PC typed: in the empty table under its note,
+        or as the list's last line under the rows. It opens Manual connection with it."""
+        if not offers_typed(typed, rows):
+            return []
+        self._typed_host = typed
+        self._connect_typed.setText(_("Connect to {host}…").format(host=typed.replace("&", "&&")))
+        return [self._connect_typed]
 
     def restyle(self) -> None:
         """After a theme switch: the dots, the Details panel and the strip were drawn in the
@@ -623,19 +643,24 @@ class HostsTool(ListWorkspace):
         """Manual connection: the Commands window, for an address typed there."""
         self.open_commands(None)
 
-    def open_commands(self, target: HostTarget | None) -> None:
-        """The Commands window, for `target` (None: an address typed there). One at a time:
-        already open, it turns to that PC and keeps its answers."""
+    def manual_connect_to(self, typed: str) -> None:
+        """Manual connection with `typed` already in Host (a search's Connect to {host}…).
+        Nothing connects until Connect is pressed there."""
+        self.open_commands(None, typed.strip())
+
+    def open_commands(self, target: HostTarget | None, typed: str = "") -> None:
+        """The Commands window, for `target` (None: an address typed there, `typed` already
+        in it). One at a time: already open, it turns to that PC and keeps its answers."""
         from capypanel.ui.hosts_tool.commands_window import CommandsWindow
 
         open_one = self._commands_window
         if isinstance(open_one, CommandsWindow) and shiboken6.isValid(open_one):
-            open_one.switch_to(target, self.profile_for(target))
+            open_one.switch_to(target, self.profile_for(target), typed)
             open_one.show()
             open_one.raise_()
             open_one.activateWindow()
             return
-        window = CommandsWindow(self, target, self.profile_for(target))
+        window = CommandsWindow(self, target, self.profile_for(target), typed)
         window.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         window.destroyed.connect(lambda: setattr(self, "_commands_window", None))
         self._commands_window = window
@@ -764,6 +789,10 @@ class HostsTool(ListWorkspace):
         )
         for action in menu.actions():
             action.setEnabled(self._writable() is not None)
+        # Last, under a line, with its "…" and no tick: a command that opens Settings, never
+        # one more profile. Enabled as the Connect menu has it, even on a list it can't write.
+        menu.addSeparator()
+        menu.addAction(self.commands.connection_profiles)
 
     # ---- which account commands run as: Details' arrow and the right-click menus ----
 
@@ -1025,6 +1054,7 @@ class HostsTool(ListWorkspace):
             every = menu.addAction(_("&All commands…"))
             every.setEnabled(target is not None)
             every.triggered.connect(lambda: self.open_commands(self.selected_target()))
+            self._add_open_in_profile_cleanup(menu, items)
         else:
             refresh = menu.addAction(
                 _("&Refresh {n} hosts").format(n=len(items))
@@ -1033,6 +1063,7 @@ class HostsTool(ListWorkspace):
             refresh.triggered.connect(
                 lambda: self.check_hosts(self.selected_items(), status=True, users=True)
             )
+            self._add_open_in_profile_cleanup(menu, items)  # with the work, before the submenu
             menu.addSeparator()
             account = menu.addMenu(_("Commands run &as"))  # each admin's own: never read-only
             self._fill_hosts_account_menu(account, items)
@@ -1044,6 +1075,29 @@ class HostsTool(ListWorkspace):
             menu.addAction(a.edit)
         self.add_move_menu(menu, items)
         menu.addAction(a.remove)
+
+    def _add_open_in_profile_cleanup(self, menu: QMenu, items: Sequence[Host]) -> None:
+        """The line that opens the hosts in Profile cleanup, with that tool's rail icon: it goes
+        to another tool. None in a window without it."""
+        tool = self._shell.tool(PROFILE_CLEANUP)
+        if not isinstance(tool, OpensHosts):
+            return
+        if len(items) == 1:
+            text = _("&Open in Profile cleanup")
+        else:  # always two or more: no plural form needed
+            text = _("&Open {n} hosts in Profile cleanup").format(n=len(items))
+        line = menu.addAction(text)
+        line.setIcon(tabler_icon(tool.ICON, menu.palette().color(QPalette.ColorRole.Text)))
+        ids = [host.id for host in items]
+        line.triggered.connect(lambda: self.open_in_profile_cleanup(ids))
+
+    def open_in_profile_cleanup(self, ids: Sequence[str]) -> None:
+        """Profile cleanup, then each host in a tab of its own there, scanned (a scan only reads;
+        a host with a tab already isn't read again). Its first-use warning comes first, and
+        cancelled, nothing opens."""
+        tool = self._shell.tool(PROFILE_CLEANUP)
+        if isinstance(tool, OpensHosts) and self._shell.show_tool(PROFILE_CLEANUP):
+            tool.open_hosts(ids, True)
 
     def quick_commands(self) -> tuple[str, ...]:
         """This admin's quick commands, in their order (Details' buttons; the menu's first)."""

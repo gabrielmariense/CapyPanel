@@ -98,6 +98,10 @@ ao grupo que estava escolhido.
       como o que exportar.
     - A **Seta para baixo** e o **Enter** na caixa nunca conectam, então um erro de digitação não
       chega ao PC errado. Na tabela, o clique duplo e o Enter conectam como sempre.
+    - Enquanto nenhum host tiver como nome ou endereço o que você digitou, sem contar maiúsculas, o
+      **Conectar a {host}…** aparece na tabela vazia ou como a última linha da lista (veja
+      [Conectar a um endereço que não está na lista](connecting.pt-BR.md#conectar-a-um-endereco-que-nao-esta-na-lista)).
+      Um texto com espaço, como o nome de um grupo, nunca o oferece.
     - O **×** na caixa também encerra a pesquisa, e escolher um grupo ou uma tag, ou trocar de lista
       de hosts, também.
 
@@ -262,5 +266,5 @@ Uma lista nova pede um **Nome** e para quem ela é, em **Para:** **Todos neste P
 | "Esta lista precisa de uma linha de cabeçalho." | A lista colada tem mais do que um nome e um endereço, mas nenhuma primeira linha dando nome às colunas | Acrescente um cabeçalho; o **Formatos…** mostra como |
 | "Já está na lista, em “Recepção”" ou "Mesmo nome da linha 7" | O host já está na sua lista, ou aparece duas vezes no arquivo | Nada: ele é ignorado, nunca sobrescrito |
 | "Sem nome", "Não é um nome de computador nem um endereço IP", "Sem endereço: o nome precisa ser o nome do computador na rede" | Essa linha não pode ser adicionada | Corrija a linha na prévia, ou deixe-a de fora |
-| "Nenhum host corresponde a “…”." | A pesquisa não achou nada | Confira a grafia, ou mostre a coluna que você está pesquisando |
+| "Nenhum host corresponde a “…”." | A pesquisa não achou nada | Confira a grafia, ou mostre a coluna que você está pesquisando. Para um PC que não está na lista, **Conectar a {host}…** |
 | **Não usada: criada por outro usuário** | Uma lista compartilhada criada por alguém que não é administrador | Peça a um administrador para substituí-la ou excluí-la |

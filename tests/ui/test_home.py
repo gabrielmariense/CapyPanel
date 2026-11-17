@@ -93,7 +93,7 @@ def test_settings_general_sets_open_on_startup(home: CapyWindow) -> None:
     assert dialog.current_page() == "general"  # Settings opens on it
     page = dialog.general
     choices = [page.start.itemText(i) for i in range(page.start.count())]
-    assert choices == ["Home page", "The last used tool", "Hosts", "Printers", "User profiles"]
+    assert choices == ["Home page", "The last used tool", "Hosts", "Printers", "Profile cleanup"]
     page.start.setCurrentIndex(3)
     assert settings.load_settings(home.paths.settings_file)["start"] == "printers"
 

@@ -1,4 +1,4 @@
-"""The User profiles tool: the Windows profiles on the hosts of Hosts' open list, which can be
+"""The Profile cleanup tool: the Windows profiles on the hosts of Hosts' open list, which can be
 deleted, how big they are. Hosts' Groups panel on the left (read only); in the middle and on the
 right, tabs: the pinned Hosts tab lists the group's hosts, and each host opened gets its own tab,
 so several hosts are read, counted and cleaned at once. It keeps no list of its own, and the
@@ -39,7 +39,7 @@ from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.hosts_tool.runner import HostTarget
 from capypanel.ui.hosts_tool.tool import HostsTool
 from capypanel.ui.icons import tabler_icon
-from capypanel.ui.list_workspace.panels import NavigationPane, natural_key
+from capypanel.ui.list_workspace.panels import NavigationPane, natural_key, offers_typed
 from capypanel.ui.list_workspace.splitter import PaneSplitter
 from capypanel.ui.list_workspace.workspace import SAMPLE_ID
 from capypanel.ui.main_window.tool import Shell, Tool
@@ -176,6 +176,7 @@ class ProfilesTool(Tool):
         margins = QVBoxLayout(self)
         margins.setContentsMargins(8, 4, 8, 4)  # as the Hosts page
         margins.addWidget(self.splitter)
+        self._fit_tabs()
 
         self.show_groups = QAction(self)
         self.show_tags = QAction(self)
@@ -267,10 +268,10 @@ class ProfilesTool(Tool):
     # ---- what the shell asks ----
 
     def tool_name(self) -> str:
-        return _("User profiles")
+        return _("Profile cleanup")
 
     def menu_name(self) -> str:
-        return _("&User profiles")
+        return _("Profile clean&up")
 
     def toolbar_anchor(self) -> QWidget:
         return self.nav if self.nav.isVisible() else self.middle
@@ -481,9 +482,15 @@ class ProfilesTool(Tool):
         self._show_list()
         self._update()
 
+    def _fit_tabs(self) -> None:
+        """The tabs as tall as the list dropdown and the gap under it, so the list and the
+        right panel start on the Groups panel's top line: they sat 9 px higher (Dante)."""
+        self.tabs.set_height(self.nav.card_top())
+
     def restyle(self) -> None:
         super().restyle()
         self.tabs.restyle()
+        self._fit_tabs()  # a theme's dropdown is taller or shorter
         for page in self._pages.values():
             page.show_again()
         self._fill_hosts()
@@ -665,7 +672,8 @@ class ProfilesTool(Tool):
         hosts = self._shown = self.visible_hosts()
         typed = self.hosts_page.search.text().strip()
         self.hosts_page.table.show_hosts(hosts, self._row_facts)
-        self.hosts_page.table.show_typed(typed if typed and not hosts else "")
+        # Scan {host} while no row is the host typed, as Hosts' Connect to {host}…
+        self.hosts_page.table.show_typed(typed, offers_typed(typed, hosts))
         if typed:
             about = _("{shown} of {total} shown").format(
                 shown=len(hosts), total=len(self._all_hosts())

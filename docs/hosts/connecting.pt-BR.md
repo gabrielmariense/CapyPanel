@@ -78,6 +78,9 @@ em lugar nenhum usam o padrão.
     - O **Conectar com** abre a mesma lista do menu **Perfil de conexão** de um grupo: a escolha do
       grupo, como "Do grupo “Front desk”: UltraVNC", ou um perfil pelo nome. Uma chavinha ao lado do
       nome quer dizer que há um login guardado para aquele perfil; a dica dela diz o usuário.
+    - A lista termina, depois de uma linha, com **Perfis de conexão…**: ele abre **Configurações >
+      Hosts > Conexão** nos perfis, como o comando do menu **Conectar**, e nunca muda o perfil do
+      host.
     - O **Comandos como** é a conta que lê quem está logado e executa os comandos do host. Ele
       oferece **Seguir as Contas** (o que a tabela Contas dá a este PC), **Sua conta do Windows**,
       cada conta da tabela e **Outra conta…**. Escolher uma a define só para este PC, com um
@@ -198,6 +201,11 @@ um erro de digitação. Um login esquecido aqui também é apagado do Gerenciado
 endereço, escolha um **Perfil** e clique em **Conectar**. Um endereço com porta, como
 `192.0.2.77:5901`, usa aquela porta. O **Adicionar à lista de hosts…**, embaixo à esquerda, põe o
 PC na lista aberta (veja [A janela Comandos](commands.pt-BR.md#a-janela-comandos)).
+
+Ou digite-o na caixa de pesquisa acima da tabela de hosts. Enquanto nenhum host da lista tiver
+esse nome ou endereço, o **Conectar a {host}…** aparece, na tabela vazia ou como a última linha
+da lista, embaixo das linhas. Ele abre a mesma janela com o PC já em **Host**; nada se conecta até
+você clicar em **Conectar** lá.
 
 ## Mensagens que você pode ver
 

@@ -1,8 +1,8 @@
-# The User profiles tool
+# The Profile cleanup tool
 
 Every person who signs in to a Windows PC leaves a profile behind: a folder under `C:\Users` and an
-entry in the registry. On shared PCs they pile up for years and fill the disk. The **User
-profiles** tool (**Ctrl+3**) shows a PC's profiles, says which can be deleted and why the others
+entry in the registry. On shared PCs they pile up for years and fill the disk. **Profile
+cleanup** (**Ctrl+3**) shows a PC's profiles, says which can be deleted and why the others
 can't, counts their size, and deletes the ones you tick, on several PCs at once.
 
 It uses the hosts of the list open in Hosts, and reads each PC with the account its **Commands run
@@ -10,7 +10,7 @@ as** names, which must be an administrator there (see
 [Use another account on some PCs](../hosts/connecting.md#use-another-account-on-some-pcs)). Nothing
 is installed or run on the PCs, and scanning only reads.
 
-![The warning before User profiles' first use: This tool deletes user profiles, the box to tick, and Continue greyed](../images/profiles-warning-dark.png)
+![The warning before Profile cleanup's first use: This tool deletes user profiles, the box to tick, and Continue greyed](../images/profiles-warning-dark.png)
 
 The first time you open it, a warning says what it deletes: "each person's folder under C:\Users,
 with every file in it, and the profile's entry in the registry. A deleted profile can't be brought
@@ -27,8 +27,15 @@ made-up profiles; **Help > Guide to this screen** shows it again.
 3. To scan several, pick them and click **Scan** on the toolbar ("Scan 3 hosts"): each opens in a
    tab behind.
 
-A host that isn't in the list can be scanned too: type its name in the search box, and the table
-offers **Scan** with it.
+From Hosts, right-click a host for **Open in Profile cleanup**, or several for **Open {n} hosts in
+Profile cleanup**: CapyPanel comes here and opens each in a tab of its own, scanned. A host that
+already has a tab isn't read again. If the warning above hasn't been agreed to yet, it comes
+first, and cancelling it opens nothing.
+
+A host that isn't in the list can be scanned too: type its name or address in the search box.
+While no host of the list has that name or address, the table offers **Scan** with it, as in
+**Scan DESK-09**: under the rows when some match (DESK-1 shows DESK-10), or alone when none do.
+Case doesn't matter.
 
 ??? note "More about the Hosts tab and tabs"
 

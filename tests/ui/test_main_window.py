@@ -501,7 +501,8 @@ def test_a_table_with_no_rows_says_why_and_offers_what_helps(
     assert note() == ("Every host is in a group.", [])
     hosts.search.setText("  Laptop ")
     hosts._show_items()
-    assert note() == ("No host matches “Laptop”.", [])  # as typed, without the spaces around
+    # As typed, without the spaces around; it may be a PC that isn't in the list.
+    assert note() == ("No host matches “Laptop”.", ["Connect to Laptop…"])
     hosts.search.setText("")
     hosts._show_items()
     hosts.nav.select_group(empty.id)

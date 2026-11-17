@@ -593,7 +593,7 @@ def test_a_ticked_box_in_a_list_keeps_its_box_in_the_windows_themes(
     qapp: QApplication, scheme: str
 ) -> None:
     """With the Windows themes' own rules on rows, the Windows style drew a ticked box in a
-    list (User profiles, the quick commands) as a bare tick, white on white in light: the
+    list (Profile cleanup, the quick commands) as a bare tick, white on white in light: the
     stylesheet draws it, filled in a shade of the accent that white reads on."""
     themes.apply(themes.Registry().find(f"windows-{scheme}"))
     tokens = themes.native_tokens(QColor("#ffb900"))  # Windows' yellow accent

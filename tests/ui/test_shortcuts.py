@@ -7,13 +7,22 @@ from typing import Any
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtCore import QKeyCombination, Qt
-from PySide6.QtGui import QKeySequence
+from PySide6.QtCore import QKeyCombination, QRect, Qt
+from PySide6.QtGui import QColor, QKeySequence, QPalette
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QTreeWidgetItem
+from PySide6.QtWidgets import (
+    QApplication,
+    QLabel,
+    QMessageBox,
+    QStyle,
+    QStyleOptionFrame,
+    QTreeWidgetItem,
+    QWidget,
+)
 
 from capypanel.core import settings
 from capypanel.ui import shortcuts
+from capypanel.ui.printers_tool.tool import PrintersTool, refresh_words
 from capypanel.ui.settings import shortcuts_page
 from capypanel.ui.settings.shortcuts_page import KEY, KeyCatcher, ShortcutsPage
 
@@ -231,6 +240,144 @@ def test_keys_kept_from_before_apply_at_start(qapp: QApplication, paths: setting
         assert win.hosts.host_actions["c-share"].shortcut().isEmpty()
     finally:
         win.close()
+
+
+def test_a_tip_that_names_a_key_shows_the_key_set_here_at_once(window: CapyWindow) -> None:
+    rail, refresh = window.rail, window.hosts.toolbar.refresh_button
+    assert rail.home_button.toolTip() == "Home (Ctrl+0)"
+    assert rail.settings_button.toolTip() == "Settings (Ctrl+,)"
+    assert rail.buttons["hosts"].toolTip() == "Hosts (Ctrl+1)"
+    assert refresh.toolTip().endswith(" ticked on a right-click (F5)")
+    _press(_page(window), "go.hosts", Qt.Key.Key_7, Qt.KeyboardModifier.ControlModifier)
+    assert rail.buttons["hosts"].toolTip() == "Hosts (Ctrl+7)"
+    keys = window.keys
+    refresh_all = next(r for r in keys.rows if window.hosts.commands.refresh_shown in r.actions)
+    keys.set(refresh_all, "F6")
+    assert refresh.toolTip().endswith(" ticked on a right-click (F6)")
+    keys.set(keys.row("app.settings"), "F9")
+    assert rail.settings_button.toolTip() == "Settings (F9)"
+    keys.set(keys.row("go.home"), "")  # no key: just the words
+    assert rail.home_button.toolTip() == "Home"
+    keys.restore(keys.row("go.home"))
+    assert rail.home_button.toolTip() == "Home (Ctrl+0)"
+
+
+def _ink_rows(widget: QWidget, ink: QColor, inside: QRect) -> list[int]:
+    """The rows inside `inside` where `widget` shows something close to `ink`."""
+    image = widget.grab().toImage()
+
+    def near(x: int, y: int) -> bool:
+        c = image.pixelColor(x, y)
+        apart = abs(c.red() - ink.red()) + abs(c.green() - ink.green()) + abs(c.blue() - ink.blue())
+        return apart < 150
+
+    columns = range(inside.left(), inside.right() + 1)
+    return [y for y in range(inside.top(), inside.bottom() + 1) if any(near(x, y) for x in columns)]
+
+
+@pytest.mark.parametrize(
+    ("inside", "caps"),
+    [
+        (QRect(1, 1, 238, 14), QRect(0, -8, 7, 9)),  # Segoe UI 9 pt in the list's field
+        (QRect(1, 1, 238, 15), QRect(0, -8, 7, 9)),
+        (QRect(2, 3, 238, 22), QRect(0, -10, 9, 11)),  # a bigger font in a taller field
+    ],
+)
+def test_the_waiting_field_s_capitals_sit_in_its_middle(inside: QRect, caps: QRect) -> None:
+    """As much room over the capitals as under them. Qt centres a line's whole height: with
+    Segoe UI in the list's field that left 4 px over them and 1 px under (Dante, 0.28.1)."""
+    baseline = shortcuts_page.caps_baseline(inside, caps)
+    top, bottom = baseline + caps.top(), baseline + caps.top() + caps.height() - 1  # its rows
+    over, under = top - inside.top(), inside.bottom() - bottom
+    assert abs(over - under) <= 1, (over, under)
+
+
+def test_the_waiting_field_draws_its_words_inside_its_edges(window: CapyWindow) -> None:
+    dialog = window.settings_dialog()
+    dialog.show_page("shortcuts")
+    dialog.show()
+    QApplication.processEvents()
+    page = dialog.shortcuts
+    _press(page, "command.services", Qt.Key.Key_F1)  # refused: red words, a red edge
+    catcher = page.table.itemWidget(page.item_of("command.services"), KEY)
+    assert isinstance(catcher, KeyCatcher)
+    frame = QStyleOptionFrame()
+    catcher.initStyleOption(frame)
+    inside = catcher.style().subElementRect(QStyle.SubElement.SE_LineEditContents, frame, catcher)
+    ink = catcher.palette().color(QPalette.ColorRole.PlaceholderText)
+    assert _ink_rows(catcher, ink, inside)  # drawn, in the refusal's red
+    room, metrics = catcher.words_rect().width(), catcher.fontMetrics()
+    for words in (shortcuts_page.waiting_text(), shortcuts_page.refused_text()):
+        assert metrics.horizontalAdvance(words) <= room, words  # in full, never cut (Dante)
+    dialog.close()
+
+
+def test_a_refused_key_s_words_stay_where_they_waited(qapp: QApplication) -> None:
+    """A theme may style the refused field alone: the Windows themes draw the waiting field
+    natively and give the refused one its red edge from the stylesheet, with less padding, so
+    the words moved to 1 px from the red edge (Dante, 0.28.1). They keep the room they had."""
+    catcher = KeyCatcher()
+    catcher.setStyleSheet(
+        'QLineEdit { padding: 0 6px; } QLineEdit[refused="true"] { border: 1px solid red;'
+        " padding: 0; }"
+    )
+    catcher.resize(240, 22)
+    catcher.show()
+    QApplication.processEvents()
+    waiting = catcher.words_rect()
+    catcher.refuse()
+    catcher.refuse()  # a second refused key: still the room it had while waiting
+    QApplication.processEvents()
+    frame = QStyleOptionFrame()
+    catcher.initStyleOption(frame)
+    red = catcher.style().subElementRect(QStyle.SubElement.SE_LineEditContents, frame, catcher)
+    assert red.left() < waiting.left() - shortcuts_page.LINE_EDIT_MARGIN  # the red style's own
+    assert catcher.words_rect() == waiting
+    catcher.close()
+
+
+def test_a_refused_key_s_row_stays_whole_in_a_narrow_window(window: CapyWindow) -> None:
+    """Under about 960 px the reason takes two lines and the list gets shorter: the waiting
+    row on the list's last line scrolls back into view (Dante, 0.28.1)."""
+    dialog = window.settings_dialog()
+    dialog.show_page("shortcuts")
+    dialog.resize(dialog.minimumSizeHint().width(), 600)
+    dialog.show()
+    QApplication.processEvents()
+    page = dialog.shortcuts
+    table, view = page.table, page.table.viewport()
+    whole = [i for i in page._items() if view.rect().contains(table.visualItemRect(i))]  # pyright: ignore[reportPrivateUsage]
+    last = whole[-1]  # the last row showing whole, with more under it
+    height = view.height()
+    page.change(last)
+    catcher = table.itemWidget(last, KEY)
+    assert isinstance(catcher, KeyCatcher)
+    QTest.keyClick(catcher, Qt.Key.Key_F1)
+    QApplication.processEvents()
+    assert view.height() < height, "the reason fit on one line: make the window narrower"
+    assert view.rect().contains(table.visualItemRect(last))
+    assert table.itemWidget(last, KEY) is catcher  # still waiting, in its row
+    dialog.close()
+
+
+def test_printers_tips_and_guide_show_the_key_set_here(window: CapyWindow) -> None:
+    printers = window.tools["printers"]
+    assert isinstance(printers, PrintersTool)
+    bar, a = printers.toolbar, printers.commands
+    assert bar.web_button.toolTip() == "Open the selected printers' web pages (Enter)"
+    assert bar.refresh_button.toolTip().endswith(" every printer shown (F5)")
+    assert refresh_words(a.refresh_shown).endswith(" until you press it or F5.")
+    keys = window.keys
+    keys.set(next(r for r in keys.rows if a.refresh_shown in r.actions), "F6")
+    assert bar.refresh_button.toolTip().endswith(" every printer shown (F6)")
+    assert refresh_words(a.refresh_shown).endswith(" until you press it or F6.")
+    web = next(r for r in keys.rows if a.open_web_page in r.actions)
+    keys.set(web, "")  # no key: just the words
+    assert bar.web_button.toolTip() == "Open the selected printers' web pages"
+    keys.set(next(r for r in keys.rows if a.refresh_shown in r.actions), "")
+    assert refresh_words(a.refresh_shown).endswith(" until you press it.")
+    keys.restore(web)
+    assert bar.web_button.toolTip().endswith(" web pages (Enter)")
 
 
 def test_a_key_another_command_runs_moves_only_when_you_say_so(

@@ -14,10 +14,10 @@ them through Remote Desktop or the VNC viewer you already use. It keeps your pri
 the details you need and their web pages a click away, and it finds the Windows user profiles
 nobody uses any more on a PC so you can delete them.
 
-> **Status: beta (0.28.0).** [Download the zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
+> **Status: beta (0.28.1).** [Download the zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
 > unzip it and run CapyPanel.exe. It updates itself when you say so.
 
-![CapyPanel's Home page: the sidebar, the capybara, and a tile each for Hosts, Printers and User profiles](docs/images/home-dark.png)
+![CapyPanel's Home page: the sidebar, the capybara, and a tile each for Hosts, Printers and Profile cleanup](docs/images/home-dark.png)
 
 ## What it does
 
@@ -35,7 +35,7 @@ nobody uses any more on a PC so you can delete them.
   - Page counts from Doc360 MPS
   - Warnings when a printer needs attention
   - Web pages and reports
-- User profiles
+- Profile cleanup
   - A PC's Windows profiles: who, when last used, how big
   - Which can be deleted, and why the others can't
   - Delete the ones you tick, on several PCs at once
@@ -60,7 +60,7 @@ Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrie
   restart, printers, installed programs and mapped drives
 - [The Printers tool](docs/printers/printers.md): printers, their lists, details and web pages
 - [Checking printers](docs/printers/checking.md): status, toner and supplies over SNMP
-- [The User profiles tool](docs/profiles/user-profiles.md): a PC's Windows profiles, and
+- [The Profile cleanup tool](docs/profiles/user-profiles.md): a PC's Windows profiles, and
   deleting the ones nobody uses
 - [Settings and files](docs/settings-and-files.md): every setting, and where CapyPanel keeps its
   files

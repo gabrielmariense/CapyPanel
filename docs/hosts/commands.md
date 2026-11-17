@@ -21,10 +21,12 @@ The Details panel's first row is always **Refresh**, **Commands** (the
 ??? note "Every place a command can start"
 
     - **Right-click a host:** **Connect** in bold, **Refresh host**, your first four quick
-      commands, then **All commands…**, **Copy ▸**, **Edit…**, **Move to ▸**, **Tags ▸** and
-      **Remove**. With several hosts selected the menu holds what works on all of them:
-      **Connect**, **Refresh {n} hosts**, **Commands run as ▸**, **Copy ▸**, **Move to ▸**, **Tags
-      ▸** and **Remove**.
+      commands, **All commands…** and **Open in Profile cleanup**, then **Copy ▸**, **Edit…**,
+      **Move to ▸**, **Tags ▸** and **Remove**. With several hosts selected the menu holds what
+      works on all of them: **Connect**, **Refresh {n} hosts**, **Open {n} hosts in Profile
+      cleanup**, **Commands run as ▸**, **Copy ▸**, **Move to ▸**, **Tags ▸** and **Remove**.
+      **Open in Profile cleanup** scans the hosts in
+      [Profile cleanup](../profiles/user-profiles.md#scan-a-pcs-profiles).
     - **The toolbar:** **Commands** opens the Commands window for the selected host. Its arrow
       lists every command by group (**Check**, **Folders**, **Admin tools**, **Users**,
       **Printers** and **Power**) and ends with **All commands…**.
@@ -184,8 +186,8 @@ not the network printers of the [Printers tool](../printers/printers.md).
 ![The Commands window: Host, Profile, the gear and Connect on the top line, the groups on the left, every command in the middle, what the picked one found on the right](../images/commands-window-dark.png)
 
 The Commands window holds every command for one PC, with its answer beside it. Open it with the
-**Commands** button, **All commands…**, or **Connect > Manual connection…** (Ctrl+M) for an address
-that isn't in your list.
+**Commands** button, **All commands…**, or, for an address that isn't in your list, **Connect >
+Manual connection…** (Ctrl+M) or a search's **Connect to {host}…**.
 
 1. Pick or type the PC in the **Host** box on top. **Profile** and **Connect**, on the same line,
    open a connection to it.

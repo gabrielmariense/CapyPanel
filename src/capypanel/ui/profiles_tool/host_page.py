@@ -1,4 +1,4 @@
-"""One host's tab in the User profiles tool: its box (the name, the filters, the profiles table),
+"""One host's tab in the Profile cleanup tool: its box (the name, the filters, the profiles table),
 and on the right its card (the profiles ticked, or the delete run) with the Delete button at the
 foot. A profile's details open in a window. Each tab keeps its own scan, sizes and delete run, so
 several hosts can be read, counted and cleaned at once."""

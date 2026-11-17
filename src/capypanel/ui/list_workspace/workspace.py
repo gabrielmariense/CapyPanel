@@ -230,6 +230,11 @@ class ListWorkspace(Tool):
         """Offered beside Add in an empty list, when the tool can import many at once."""
         return None
 
+    def typed_offer(self, typed: str, rows: Sequence[Host]) -> list[QAction]:
+        """What a search offers for the text typed, beside its rows or in their place (Hosts:
+        Connect to {host}…, while no row is that PC). Nothing by default."""
+        return []
+
     def lists_page(self) -> str:
         """The Settings page that manages the tool's lists: the list dropdown opens it."""
         raise NotImplementedError
@@ -1008,6 +1013,7 @@ class ListWorkspace(Tool):
             self.table.show_no_match(self.no_match_text())
         else:
             self.table.show_note(*self._empty_note(items))
+        self.table.show_offer(self.typed_offer(self.search.text().strip(), items) if items else [])
 
     def _empty_note(self, items: Sequence[Host]) -> tuple[str, list[QAction]]:
         """Why the table has no rows, and what helps: Add and Import in an empty list, Add in
@@ -1019,7 +1025,7 @@ class ListWorkspace(Tool):
             return self.list_texts().no_list, [a.new_list, a.open_list]
         texts, add = self.empty_texts(), self.add_item_action()
         if typed := self.search.text().strip():
-            return texts.search.format(text=typed), []
+            return texts.search.format(text=typed), self.typed_offer(typed, items)
         if not doc.hosts.hosts:
             if doc.read_only:
                 return texts.read_only_list, []

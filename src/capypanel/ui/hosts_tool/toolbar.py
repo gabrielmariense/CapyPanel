@@ -22,6 +22,7 @@ from capypanel.ui import spacing
 from capypanel.ui.hosts_tool.actions import HostsActions
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.main_window.toolbar import ToolBar, tool_button
+from capypanel.ui.shortcuts import key_tip
 
 
 class RefreshPanel(QFrame):
@@ -90,6 +91,8 @@ class HostsToolBar(ToolBar):
         self.connect_button.setMenu(self.connect_menu)
         self.refresh_button = tool_button()
         self.refresh_button.clicked.connect(commands.refresh_shown.trigger)
+        self._refresh = commands.refresh_shown
+        self._refresh.changed.connect(self._key_tips)  # a key set in Settings shows at once
         self.refresh_button.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.refresh_button.customContextMenuRequested.connect(
             lambda _pos: self.refresh_panel_requested.emit(
@@ -120,10 +123,7 @@ class HostsToolBar(ToolBar):
             _("Connect to the selected hosts, once with another profile, or by address")
         )
         self.refresh_button.setText(gap + _("Refresh all"))
-        self.refresh_button.setToolTip(
-            _("Refresh every host shown (a group's, or the ones a search leaves), with the "
-              "checks ticked on a right-click (also F5)")
-        )  # fmt: skip
+        self._key_tips()
         self.commands_button.setText(gap + _("Commands"))
         self.commands_button.setToolTip(
             _("Open the Commands window for the selected host; the arrow lists its commands")
@@ -134,6 +134,12 @@ class HostsToolBar(ToolBar):
         self.report_button.setToolTip(
             _("Save the hosts you pick, with the columns you pick, as a CSV file")
         )
+
+    def _key_tips(self) -> None:
+        """The tips that name a key, with the key as it is now."""
+        words = _("Refresh every host shown (a group's, or the ones a search leaves), with the "
+                  "checks ticked on a right-click")  # fmt: skip
+        self.refresh_button.setToolTip(key_tip(words, self._refresh))
 
     def restyle(self) -> None:
         """Icons in the theme's text colour."""

@@ -7,7 +7,7 @@ Trabalho Remota ou pelo visualizador VNC que você já usa. Ele guarda também a
 com os detalhes de que você precisa e a página web delas a um clique, e encontra num PC os perfis
 de usuário do Windows que ninguém usa mais, para você excluí-los.
 
-![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts, Impressoras e Perfis de usuário](images/home-dark-pt-BR.png)
+![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts, Impressoras e Limpeza de perfis](images/home-dark-pt-BR.png)
 
 ## O que ele faz
 
@@ -25,7 +25,7 @@ de usuário do Windows que ninguém usa mais, para você excluí-los.
   - Contadores de páginas do Doc360 MPS
   - Avisos quando uma impressora requer atenção
   - Páginas web e relatórios
-- Perfis de usuário
+- Limpeza de perfis
   - Os perfis do Windows de um PC: de quem, último uso, tamanho
   - Quais podem ser excluídos, e por que os outros não
   - Excluir os que você marcar, em vários PCs ao mesmo tempo
@@ -47,8 +47,8 @@ embaixo, e toda página termina com as mensagens que você pode ver e o que faze
 | [Comandos em um host](hosts/commands.pt-BR.md) | As pastas e os consoles de um PC, os usuários, a energia, as impressoras, os programas e as unidades mapeadas |
 | [A ferramenta Impressoras](printers/printers.pt-BR.md) | Impressoras, as listas delas, os detalhes e as páginas web |
 | [Verificando impressoras](printers/checking.pt-BR.md) | Status, toner e suprimentos, avisos, SNMP e Doc360 MPS |
-| [A ferramenta Perfis de usuário](profiles/user-profiles.pt-BR.md) | Os perfis do Windows de um PC, quais podem ser excluídos, e como excluí-los |
+| [A ferramenta Limpeza de perfis](profiles/user-profiles.pt-BR.md) | Os perfis do Windows de um PC, quais podem ser excluídos, e como excluí-los |
 | [Configurações e arquivos](settings-and-files.pt-BR.md) | Cada configuração, e onde o CapyPanel guarda os arquivos |
 
-Estas páginas descrevem a versão atual, a 0.28.0; [Novidades](whats-new.pt-BR.md) lista o que
+Estas páginas descrevem a versão atual, a 0.28.1; [Novidades](whats-new.pt-BR.md) lista o que
 mudou. O CapyPanel está em beta, então elas crescem a cada funcionalidade.

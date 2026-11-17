@@ -1,4 +1,4 @@
-"""The User profiles tool's tab bar: the pinned Hosts tab first, then a gap with a short line,
+"""The Profile cleanup tool's tab bar: the pinned Hosts tab first, then a gap with a short line,
 then a tab per host, which scroll when they don't fit while the Hosts tab stays. A ▾ at the end
 lists every tab. Tabs never reorder themselves: a new one opens at the right end."""
 
@@ -36,6 +36,24 @@ class _Bar(QTabBar):
         self.setUsesScrollButtons(True)
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._height = 0  # every tab's, once the strip gives one; until then the style's
+
+    def set_tab_height(self, height: int) -> None:
+        self._height = height
+        self.setElideMode(self.elideMode())  # Qt lays the tabs out again; the mode is ours
+        self.updateGeometry()  # hidden, Qt only marks them: the strip asks again on its own
+
+    def tabSizeHint(self, index: int) -> QSize:  # noqa: N802 -- Qt's name
+        size = super().tabSizeHint(index)
+        if self._height:
+            size.setHeight(self._height)
+        return size
+
+    def minimumTabSizeHint(self, index: int) -> QSize:  # noqa: N802 -- Qt's name
+        size = super().minimumTabSizeHint(index)
+        if self._height:
+            size.setHeight(self._height)
+        return size
 
     def set_active(self, active: bool) -> None:
         self.active = active
@@ -136,12 +154,20 @@ class TabStrip(QWidget):
         row.addWidget(self.pinned, 0, Qt.AlignmentFlag.AlignBottom)
         row.addWidget(gap)
         row.addWidget(self.bar, 1, Qt.AlignmentFlag.AlignBottom)
-        row.addWidget(self.more)
+        row.addWidget(self.more, 0, Qt.AlignmentFlag.AlignVCenter)
         self.pinned.tabBarClicked.connect(lambda _i: self.picked.emit(HOSTS))
         self.bar.tabBarClicked.connect(self._clicked)
         self.bar.middle_clicked.connect(lambda i: self.close_requested.emit(self.key_at(i)))
         self.bar.customContextMenuRequested.connect(self._menu)
         self.restyle()
+
+    def set_height(self, height: int) -> None:
+        """As tall as `height`, its tabs filling it. The tool gives it the list dropdown's
+        height and the gap under it: a tab's top meets the dropdown's, and the panels under the
+        tabs start where the Groups panel does (Dante Q1, Gabriel's pick 1, 2026-11-16)."""
+        for bar in (self.pinned, self.bar):
+            bar.set_tab_height(height)
+        self.setFixedHeight(height)
 
     def restyle(self) -> None:
         color = self.palette().color(QPalette.ColorRole.ButtonText)

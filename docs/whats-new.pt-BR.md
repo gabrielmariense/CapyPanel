@@ -3,6 +3,25 @@
 As mudanças de cada versão que você vai notar. As
 [versões no GitHub](https://github.com/gabrielmariense/CapyPanel/releases) têm os downloads.
 
+## 0.28.1
+
+- A ferramenta Perfis de usuário agora se chama **Limpeza de perfis**, um nome que diz para que ela
+  serve. A tecla dela, Ctrl+3, continua a mesma.
+- No Hosts, o botão direito num ou em vários hosts oferece **Abrir na Limpeza de perfis**: cada um
+  abre lá numa aba própria, escaneado.
+- Digite na caixa de pesquisa do Hosts um PC que não está na lista, e o **Conectar a {host}…** abre
+  a conexão manual com ele preenchido. O botão **Escanear** da Limpeza de perfis agora aparece do
+  mesmo jeito, mesmo quando outros hosts correspondem a parte do nome.
+- O **Conectar com**, no painel de detalhes, termina com **Perfis de conexão…**, que abre as
+  configurações deles.
+- As dicas e o guia do Impressoras mostram a tecla que o comando tem agora, então uma tecla que
+  você trocou também aparece ali.
+- Na Limpeza de perfis, a lista de hosts e os painéis da direita começam na altura do painel de
+  grupos.
+- O campo onde você aperta uma nova tecla mantém as palavras centralizadas e no lugar quando uma
+  tecla é recusada, e numa janela de Configurações estreita a linha que você está mudando continua
+  à vista.
+
 ## 0.28.0
 
 - **Configurações > CapyPanel > Atalhos de teclado** é nova: dê a um comando a tecla que você

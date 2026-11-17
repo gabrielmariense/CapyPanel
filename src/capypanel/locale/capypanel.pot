@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 15:47-0300\n"
+"POT-Creation-Date: 2026-11-16 19:04-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -261,6 +261,9 @@ msgstr ""
 msgid "&Open a CSV file…"
 msgstr ""
 
+msgid "&Open in Profile cleanup"
+msgstr ""
+
 msgid "&Open in its own window…"
 msgstr ""
 
@@ -268,6 +271,10 @@ msgid "&Open list…"
 msgstr ""
 
 msgid "&Open on startup"
+msgstr ""
+
+#, python-brace-format
+msgid "&Open {n} hosts in Profile cleanup"
 msgstr ""
 
 msgid "&Partner"
@@ -435,9 +442,6 @@ msgid "&Tool:"
 msgstr ""
 
 msgid "&User name"
-msgstr ""
-
-msgid "&User profiles"
 msgstr ""
 
 msgid "&User:"
@@ -1074,6 +1078,10 @@ msgid "Connect"
 msgstr ""
 
 msgid "Connect to the selected hosts, once with another profile, or by address"
+msgstr ""
+
+#, python-brace-format
+msgid "Connect to {host}…"
 msgstr ""
 
 msgid "Connect with"
@@ -1844,9 +1852,6 @@ msgstr ""
 msgid "Hom&e"
 msgstr ""
 
-msgid "Home (Ctrl+0)"
-msgstr ""
-
 msgid "Home page"
 msgstr ""
 
@@ -1886,8 +1891,8 @@ msgid "Hosts hasn't checked it yet."
 msgstr ""
 
 msgid ""
-"Hosts is for computers, Printers for printers, and User profiles clears "
-"old Windows profiles off a PC. Each tile opens its tool."
+"Hosts is for computers, Printers for printers, and Profile cleanup clears"
+" old Windows profiles off a PC. Each tile opens its tool."
 msgstr ""
 
 msgid "Hosts with no group &go to:"
@@ -2637,7 +2642,7 @@ msgstr ""
 msgid "Open the history"
 msgstr ""
 
-msgid "Open the selected printers' web pages (Enter)"
+msgid "Open the selected printers' web pages"
 msgstr ""
 
 msgid "Open web page"
@@ -2914,6 +2919,12 @@ msgstr ""
 msgid "Profile"
 msgstr ""
 
+msgid "Profile clean&up"
+msgstr ""
+
+msgid "Profile cleanup"
+msgstr ""
+
 #, python-brace-format
 msgid "Profile {user} on {host}"
 msgstr ""
@@ -2990,7 +3001,7 @@ msgstr ""
 msgid "Read license"
 msgstr ""
 
-msgid "Read the status and supplies of every printer shown (F5)"
+msgid "Read the status and supplies of every printer shown"
 msgstr ""
 
 msgid "Read-only"
@@ -3012,9 +3023,15 @@ msgstr ""
 msgid "Reads each in a tab of its own, behind; you stay on this list"
 msgstr ""
 
+#, python-brace-format
 msgid ""
 "Reads the status, toner and page count of every printer shown. Nothing is"
-" read until you press it or F5."
+" read until you press it or {key}."
+msgstr ""
+
+msgid ""
+"Reads the status, toner and page count of every printer shown. Nothing is"
+" read until you press it."
 msgstr ""
 
 msgid "Reads what's ticked in this box again"
@@ -3052,7 +3069,7 @@ msgstr ""
 
 msgid ""
 "Refresh every host shown (a group's, or the ones a search leaves), with "
-"the checks ticked on a right-click (also F5)"
+"the checks ticked on a right-click"
 msgstr ""
 
 msgid "Refresh host"
@@ -3477,9 +3494,6 @@ msgid "Set the account…"
 msgstr ""
 
 msgid "Settings"
-msgstr ""
-
-msgid "Settings (Ctrl+,)"
 msgstr ""
 
 #, python-brace-format
@@ -4533,9 +4547,6 @@ msgid "Used only to read who is logged on and for the commands you run on a host
 msgstr ""
 
 msgid "User"
-msgstr ""
-
-msgid "User profiles"
 msgstr ""
 
 #, python-brace-format

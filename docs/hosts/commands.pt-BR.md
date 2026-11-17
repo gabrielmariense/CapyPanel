@@ -22,10 +22,12 @@ vêm depois, quatro por fileira.
 ??? note "Todos os lugares onde um comando começa"
 
     - **Botão direito num host:** **Conectar** em negrito, **Atualizar host**, os seus quatro
-      primeiros comandos rápidos, e depois **Todos os comandos…**, **Copiar ▸**, **Editar…**,
-      **Mover para ▸**, **Tags ▸** e **Remover**. Com vários hosts selecionados, o menu traz o que
-      funciona em todos eles: **Conectar**, **Atualizar {n} hosts**, **Comandos como ▸**, **Copiar
-      ▸**, **Mover para ▸**, **Tags ▸** e **Remover**.
+      primeiros comandos rápidos, **Todos os comandos…** e **Abrir na Limpeza de perfis**, e depois
+      **Copiar ▸**, **Editar…**, **Mover para ▸**, **Tags ▸** e **Remover**. Com vários hosts
+      selecionados, o menu traz o que funciona em todos eles: **Conectar**, **Atualizar {n}
+      hosts**, **Abrir {n} hosts na Limpeza de perfis**, **Comandos como ▸**, **Copiar ▸**,
+      **Mover para ▸**, **Tags ▸** e **Remover**. O **Abrir na Limpeza de perfis** escaneia os
+      hosts na [Limpeza de perfis](../profiles/user-profiles.pt-BR.md#escanear-os-perfis-de-um-pc).
     - **A barra de ferramentas:** o **Comandos** abre a janela Comandos para o host selecionado. A
       seta dele lista todos os comandos por grupo (**Verificar**, **Pastas**, **Ferramentas
       administrativas**, **Usuários**, **Impressoras** e **Energia**) e termina com **Todos os
@@ -202,8 +204,8 @@ um servidor de impressão, nem as impressoras de rede da
 ![A janela Comandos: Host, Perfil, a engrenagem e Conectar na linha de cima, os grupos à esquerda, todos os comandos no meio, o que o escolhido encontrou à direita](../images/commands-window-dark-pt-BR.png)
 
 A janela Comandos reúne todos os comandos de um PC, com a resposta ao lado. Abra-a pelo botão
-**Comandos**, pelo **Todos os comandos…**, ou pelo **Conectar > Conexão manual…** (Ctrl+M) para um
-endereço que não está na sua lista.
+**Comandos**, pelo **Todos os comandos…**, ou, para um endereço que não está na sua lista, pelo
+**Conectar > Conexão manual…** (Ctrl+M) ou pelo **Conectar a {host}…** de uma pesquisa.
 
 1. Escolha ou digite o PC na caixa **Host**, no topo. O **Perfil** e o **Conectar**, na mesma
    linha, abrem uma conexão com ele.

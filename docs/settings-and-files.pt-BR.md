@@ -105,6 +105,8 @@ o **Restaurar padrão** devolve a que ele tinha de início.
       de hosts ou de impressoras.
     - Reiniciar, Desligar, Cancelar a reinicialização pendente, Reiniciar o Spooler de Impressão,
       e fazer logoff ou desconectar alguém não estão na lista.
+    - As dicas e os guias de primeiro uso dizem a tecla que o comando tem agora: uma tecla que
+      você troca aparece ali na hora, e um comando sem tecla não mostra nenhuma.
     - As suas teclas são só suas, guardadas no seu arquivo de configurações. Outra pessoa neste PC
       guarda as dela.
 
@@ -177,7 +179,7 @@ com "Uma mudança aqui vale para todos neste PC." embaixo do título.
 | Conexão | **Versão do SNMP** e **Conta SNMP** | v2c ou v3, e a conta dela (veja [Definir a conta SNMP](printers/checking.pt-BR.md#definir-a-conta-snmp)) | v2c, "public" |
 | Conexão | **Conta do Doc360 MPS** | O login do portal para as impressoras cujos contadores de páginas vêm dele (veja [Contar páginas pelo Doc360 MPS](printers/checking.pt-BR.md#contar-paginas-pelo-doc360-mps)) | Não definida |
 
-A ferramenta Perfis de usuário não tem configurações próprias: ela usa as listas e as contas do
+A Limpeza de perfis não tem configurações próprias: ela usa as listas e as contas do
 Hosts.
 
 ## Sobre

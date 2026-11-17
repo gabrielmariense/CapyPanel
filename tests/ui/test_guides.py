@@ -1,4 +1,4 @@
-"""First-run guides: the cards beside real controls, when they show, and the User profiles
+"""First-run guides: the cards beside real controls, when they show, and the Profile cleanup
 warning before its first use. Tests have no screen, so nothing shows on its own here: each
 test starts what it checks."""
 
