@@ -1,8 +1,8 @@
-# A ferramenta Perfis de usuário
+# A ferramenta Limpeza de perfis
 
 Cada pessoa que entra num PC com Windows deixa um perfil para trás: uma pasta em `C:\Users` e uma
 entrada no registro do Windows. Em PCs compartilhados eles se acumulam por anos e enchem o disco. A
-ferramenta **Perfis de usuário** (**Ctrl+3**) mostra os perfis de um PC, diz quais podem ser
+**Limpeza de perfis** (**Ctrl+3**) mostra os perfis de um PC, diz quais podem ser
 excluídos e por que os outros não, calcula o tamanho deles e exclui os que você marcar, em vários
 PCs ao mesmo tempo.
 
@@ -11,7 +11,7 @@ diz, que precisa ser administradora lá (veja
 [Usar outra conta em alguns PCs](../hosts/connecting.pt-BR.md#usar-outra-conta-em-alguns-pcs)).
 Nada é instalado nem executado nos PCs, e escanear só lê.
 
-![O aviso antes do primeiro uso do Perfis de usuário: Esta ferramenta exclui perfis de usuário, a caixa para marcar, e o Continuar apagado](../images/profiles-warning-dark-pt-BR.png)
+![O aviso antes do primeiro uso da Limpeza de perfis: Esta ferramenta exclui perfis de usuário, a caixa para marcar, e o Continuar apagado](../images/profiles-warning-dark-pt-BR.png)
 
 Na primeira vez que você a abre, um aviso diz o que ela exclui: "a pasta de cada pessoa em
 C:\Users, com todos os arquivos dela, e a entrada do perfil no registro. Um perfil excluído não
@@ -29,8 +29,16 @@ novo.
 3. Para escanear vários, escolha-os e clique em **Escanear** na barra de ferramentas ("Escanear 3
    hosts"): cada um abre numa aba por trás.
 
-Um host que não está na lista também pode ser escaneado: digite o nome dele na caixa de pesquisa, e
-a tabela oferece o **Escanear** com ele.
+No Hosts, o botão direito num host oferece **Abrir na Limpeza de perfis**, e com vários
+selecionados, **Abrir {n} hosts na Limpeza de perfis**: o CapyPanel vem para cá e abre cada um numa
+aba própria, escaneado. Um host que já tem aba não é lido de novo. Se o aviso acima ainda não foi
+aceito, ele vem antes, e cancelá-lo não abre nada.
+
+Um host que não está na lista também pode ser escaneado: digite o nome ou o endereço dele na caixa
+de pesquisa. Enquanto nenhum host da lista tiver esse nome ou endereço, a tabela oferece o
+**Escanear** com ele, como em **Escanear DESK-09**: embaixo das linhas quando algumas correspondem
+(DESK-1 mostra DESK-10), ou sozinho quando nenhuma corresponde. Maiúsculas e minúsculas não
+contam.
 
 ??? note "Mais sobre a aba Hosts e as abas"
 

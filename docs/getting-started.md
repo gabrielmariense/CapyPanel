@@ -15,7 +15,7 @@ also need a viewer: [UltraVNC](https://uvnc.com) or
 ![The Home page: the sidebar on the left, the capybara and the app's name, and a tile for each tool](images/home-dark.png)
 
 CapyPanel opens on its Home page, with a tile for each tool: **Hosts** (Ctrl+1), **Printers**
-(Ctrl+2) and **User profiles** (Ctrl+3). Click **Hosts** to start.
+(Ctrl+2) and **Profile cleanup** (Ctrl+3). Click **Hosts** to start.
 
 The first time each screen opens, a guide of a few cards shows what's on it, on a sample PC or
 printer that goes away when it ends. The rest of the window is dimmed until you finish or click
@@ -40,8 +40,8 @@ printer that goes away when it ends. The rest of the window is dimmed until you 
       there; there's nothing to turn on. To start somewhere else, set **Settings > CapyPanel >
       General > Open on startup** to the last used tool, or to one by name.
     - The tiles say what each tool is for: Hosts "Your computers: connect, see who's logged on,
-      check them.", Printers "Your printers: status and toner, web pages, reports.", User profiles
-      "A PC's Windows profiles: see which can be deleted."
+      check them.", Printers "Your printers: status and toner, web pages, reports.",
+      Profile cleanup "A PC's Windows profiles: see which can be deleted."
 
 ## Add your first hosts
 
@@ -84,7 +84,7 @@ See [Checking hosts](hosts/checking.md), [Connecting](hosts/connecting.md) and
 
     | Part | What it shows |
     |---|---|
-    | **The sidebar** (left edge) | **Home** (Ctrl+0) at the top, then one icon per tool, **Hosts** (Ctrl+1), **Printers** (Ctrl+2) and **User profiles** (Ctrl+3), and **Settings** (Ctrl+,) at the bottom. Where you are has a tinted square behind its icon |
+    | **The sidebar** (left edge) | **Home** (Ctrl+0) at the top, then one icon per tool, **Hosts** (Ctrl+1), **Printers** (Ctrl+2) and **Profile cleanup** (Ctrl+3), and **Settings** (Ctrl+,) at the bottom. Where you are has a tinted square behind its icon |
     | **Toolbar** (top) | The buttons of the tool you're in. For Hosts: **Connect**, **Refresh all**, **Commands**, **Inventory** and **Report** |
     | **Groups panel** (left) | The open list's name on top, as a dropdown that switches lists. Then "All hosts" with how many hosts the list has, and "No group" with how many are in none. Then **Groups**, with a **+** button to add one, and **Tags**; drag the line above Tags to give either more room, and it's remembered |
     | **Hosts panel** (middle) | The search box above the hosts in the selected group or tag, with their **Status** and **User** |
@@ -153,7 +153,7 @@ again.
     - The tray menu holds **Open CapyPanel** in bold, a line per tool with something to report, as
       in "3 printers need attention…", which opens that tool with just those items listed, and
       **Quit CapyPanel**.
-    - Quitting while the User profiles tool is deleting profiles asks first: "Quitting now cancels
+    - Quitting while Profile cleanup is deleting profiles asks first: "Quitting now cancels
       the profiles still queued. The profile being deleted on each host finishes first; CapyPanel
       quits after that." **Cancel the rest and quit** does that; **Continue** keeps CapyPanel open
       (see [Delete profiles](profiles/user-profiles.md#delete-profiles)).
@@ -191,7 +191,7 @@ them, except F1, Esc, Ctrl+F and Tab, which are kept for CapyPanel itself (see
 | Ctrl+Shift+C | Copy the selected hosts' addresses |
 | Ctrl+N / Ctrl+Shift+N | Add host / Add group |
 | F2 / Del | Edit / remove the selection |
-| Ctrl+0 / Ctrl+1 / Ctrl+2 / Ctrl+3 | Home / the Hosts tool / the Printers tool / the User profiles tool |
+| Ctrl+0 / Ctrl+1 / Ctrl+2 / Ctrl+3 | Home / the Hosts tool / the Printers tool / Profile cleanup |
 | Ctrl+O | Open a host list file |
 | Ctrl+, | Settings |
 | Ctrl+Q | Exit |

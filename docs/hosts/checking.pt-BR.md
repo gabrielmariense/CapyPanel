@@ -127,8 +127,8 @@ Eles nunca são lidos pelo **Atualizar todos**, então uma lista de centenas de 
 ??? note "Como o CapyPanel lê outros PCs"
 
     O status usa ping e portas, e os usuários logados usam o serviço de sessões remotas do Windows.
-    Os dados do PC, os programas instalados, as unidades mapeadas e a ferramenta
-    [Perfis de usuário](../profiles/user-profiles.pt-BR.md) leem o PC pelo **WMI**, o serviço de
+    Os dados do PC, os programas instalados, as unidades mapeadas e a
+    [Limpeza de perfis](../profiles/user-profiles.pt-BR.md) leem o PC pelo **WMI**, o serviço de
     gerenciamento do próprio Windows, que todo PC com Windows responde. Nada é instalado nem aberto
     no outro PC.
 

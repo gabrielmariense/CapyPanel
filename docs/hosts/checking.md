@@ -122,8 +122,8 @@ They're never read by **Refresh all**, so a list of hundreds of hosts is left al
 ??? note "How CapyPanel reads other PCs"
 
     Status uses ping and ports, and logged-on users use Windows' remote session service. The PC
-    facts, the installed programs, the mapped drives and the
-    [User profiles](../profiles/user-profiles.md) tool read the PC over **WMI**, Windows' own
+    facts, the installed programs, the mapped drives and
+    [Profile cleanup](../profiles/user-profiles.md) read the PC over **WMI**, Windows' own
     management service, which every Windows PC answers. Nothing is installed or started on the other
     PC.
 

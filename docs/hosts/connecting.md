@@ -75,6 +75,9 @@ anywhere use the default.
     - **Connect with** opens the same list as a group's **Connection profile** menu: the group's
       choice, as in "From group “Front desk”: UltraVNC", or a profile by name. A small key beside
       the name means a login is kept for that profile; its tooltip names the user.
+    - The list ends, under a line, with **Connection profiles…**: it opens **Settings > Hosts >
+      Connecting** at the profiles, as the **Connect** menu's command does, and never changes the
+      host's profile.
     - **Commands run as** is the account that reads who is logged on and runs the host's commands.
       It offers **Follow Accounts** (what the Accounts table gives this PC), **Your Windows
       account**, each account of the table, and **Another account…**. Picking one sets it for this
@@ -190,6 +193,11 @@ type the address, pick a **Profile** and click **Connect**. An address with a po
 `192.0.2.77:5901`, uses that port. **Add to host list…**, at the bottom left, puts the PC into
 the open list (see
 [The Commands window](commands.md#the-commands-window)).
+
+Or type it in the search box above the host table. While no host of the list has that name or
+address, **Connect to {host}…** shows, in the empty table or as the list's last line under the
+rows. It opens the same window with the PC already in **Host**; nothing connects until you click
+**Connect** there.
 
 ## Messages you may see
 

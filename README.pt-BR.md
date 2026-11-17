@@ -15,10 +15,10 @@ guarda também as suas impressoras, com os detalhes de que você precisa e a pá
 clique, e encontra num PC os perfis de usuário do Windows que ninguém usa mais, para você
 excluí-los.
 
-> **Situação: beta (0.28.0).** [Baixe o zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
+> **Situação: beta (0.28.1).** [Baixe o zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
 > descompacte e rode o CapyPanel.exe. Ele se atualiza quando você manda.
 
-![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts, Impressoras e Perfis de usuário](docs/images/home-dark-pt-BR.png)
+![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts, Impressoras e Limpeza de perfis](docs/images/home-dark-pt-BR.png)
 
 ## O que ele faz
 
@@ -36,7 +36,7 @@ excluí-los.
   - Contadores de páginas do Doc360 MPS
   - Avisos quando uma impressora requer atenção
   - Páginas web e relatórios
-- Perfis de usuário
+- Limpeza de perfis
   - Os perfis do Windows de um PC: de quem, último uso, tamanho
   - Quais podem ser excluídos, e por que os outros não
   - Excluir os que você marcar, em vários PCs ao mesmo tempo
@@ -62,7 +62,7 @@ Também online, com busca: **[gabrielmariense.github.io/CapyPanel/pt-BR](https:/
 - [A ferramenta Impressoras](docs/printers/printers.pt-BR.md): impressoras, as listas delas, os
   detalhes e as páginas web
 - [Verificando impressoras](docs/printers/checking.pt-BR.md): status, toner e suprimentos por SNMP
-- [A ferramenta Perfis de usuário](docs/profiles/user-profiles.pt-BR.md): os perfis do Windows
+- [A ferramenta Limpeza de perfis](docs/profiles/user-profiles.pt-BR.md): os perfis do Windows
   de um PC, e excluir os que ninguém usa
 - [Configurações e arquivos](docs/settings-and-files.pt-BR.md): cada configuração, e onde o
   CapyPanel guarda os arquivos

@@ -6,7 +6,7 @@ to them, and open a remote screen on any of them through Remote Desktop or the V
 already use. It keeps your printers too, with the details you need and their web pages a click
 away, and it finds the Windows user profiles nobody uses any more on a PC so you can delete them.
 
-![CapyPanel's Home page: the sidebar, the capybara, and a tile each for Hosts, Printers and User profiles](images/home-dark.png)
+![CapyPanel's Home page: the sidebar, the capybara, and a tile each for Hosts, Printers and Profile cleanup](images/home-dark.png)
 
 ## What it does
 
@@ -24,7 +24,7 @@ away, and it finds the Windows user profiles nobody uses any more on a PC so you
   - Page counts from Doc360 MPS
   - Warnings when a printer needs attention
   - Web pages and reports
-- User profiles
+- Profile cleanup
   - A PC's Windows profiles: who, when last used, how big
   - Which can be deleted, and why the others can't
   - Delete the ones you tick, on several PCs at once
@@ -46,8 +46,8 @@ every page ends with the messages you may see and what to do about them.
 | [Commands on a host](hosts/commands.md) | A PC's folders and consoles, its users, power, printers, programs and mapped drives |
 | [The Printers tool](printers/printers.md) | Printers, their lists, details and web pages |
 | [Checking printers](printers/checking.md) | Status, toner and supplies, warnings, SNMP and Doc360 MPS |
-| [The User profiles tool](profiles/user-profiles.md) | A PC's Windows profiles, which can be deleted, and deleting them |
+| [The Profile cleanup tool](profiles/user-profiles.md) | A PC's Windows profiles, which can be deleted, and deleting them |
 | [Settings and files](settings-and-files.md) | Every setting, and where CapyPanel keeps its files |
 
-These pages describe the current version, 0.28.0; [What's new](whats-new.md) lists what changed.
+These pages describe the current version, 0.28.1; [What's new](whats-new.md) lists what changed.
 CapyPanel is in beta, so they grow with each feature.

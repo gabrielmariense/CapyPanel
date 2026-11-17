@@ -3,6 +3,23 @@
 The changes in each release that you'll notice. The
 [releases on GitHub](https://github.com/gabrielmariense/CapyPanel/releases) have the downloads.
 
+## 0.28.1
+
+- User profiles is now **Profile cleanup**, a name that says what it's for. Its key, Ctrl+3,
+  stays.
+- In Hosts, right-click one or more hosts for **Open in Profile cleanup**: each opens there in a
+  tab of its own, scanned.
+- Type a PC that isn't in Hosts' list into the search box, and **Connect to {host}…** opens the
+  manual connection with it filled in. Profile cleanup's **Scan** button now shows the same way,
+  even while other hosts match part of the name.
+- **Connect with**, in the Details panel, ends with **Connection profiles…**, which opens their
+  settings.
+- Tooltips and the Printers guide show a command's key as it is now, so a key you changed shows
+  there too.
+- In Profile cleanup, the host list and the panels on the right start level with the Groups panel.
+- The field where you press a new key keeps its words centred and in place when a key is refused,
+  and in a narrow Settings window the row you're changing stays in view.
+
 ## 0.28.0
 
 - **Settings > CapyPanel > Keyboard shortcuts** is new: give a command the key you want, or take

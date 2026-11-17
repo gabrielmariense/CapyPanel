@@ -92,6 +92,10 @@ the first result, and **Esc** to end the search and go back to the group you had
       status only the hosts shown. **Report** offers the results as what to export.
     - **Down** and **Enter** in the box never connect, so a typo can't reach the wrong PC. In the
       table, a double-click and Enter connect as usual.
+    - While no host's name or address is what you typed, case aside, **Connect to {host}…** shows
+      in the empty table or as the list's last line under the rows (see
+      [Connect to an address that isn't in the list](connecting.md#connect-to-an-address-that-isnt-in-the-list)).
+      A text with a space, such as a group's name, never offers it.
     - The **×** in the box also ends the search, and so does picking a group or tag, or switching
       host lists.
 
@@ -250,5 +254,5 @@ A new list asks for a **Name** and who it's **For:** **Everyone on this PC (shar
 | "This list needs a header row." | The pasted list has more than a name and an address, but no first line naming the columns | Add a header row; **Formats…** shows how |
 | "Already in the list, in “Front desk”" or "Same name as row 7" | The host is already in your list, or twice in the file | Nothing: it's skipped, never overwritten |
 | "No name", "Not a computer name or IP address", "No address: the name must then be the computer's name on the network" | That row can't be added | Fix the row in the preview, or leave it out |
-| "No host matches “…”." | The search found nothing | Check the spelling, or show the column you're searching |
+| "No host matches “…”." | The search found nothing | Check the spelling, or show the column you're searching. For a PC that isn't in the list, **Connect to {host}…** |
 | **Not used: made by another user** | A shared list made by someone who isn't an administrator | Ask an administrator to replace or delete it |
