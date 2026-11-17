@@ -27,6 +27,15 @@ class Status(StrEnum):
     NOT_FOUND = "not-found"  # the name or address couldn't be resolved
 
 
+class PortState(StrEnum):
+    """What one port of a computer said when connected to: the SSH tool's Status."""
+
+    OPEN = "open"  # it took the connection
+    CLOSED = "closed"  # the computer answered, refusing it: nothing listens on that port
+    NO_ANSWER = "no-answer"  # nothing answered in time
+    NOT_FOUND = "not-found"  # the name or address couldn't be resolved
+
+
 Answer = tuple[str, int | None]  # the address that answered, and its port (None: a ping)
 
 
@@ -96,6 +105,56 @@ def _any_port_answers(
                     return key.data
                 selector.unregister(sock)
         return None
+    finally:
+        selector.close()
+        for sock in sockets:
+            sock.close()
+
+
+def port_state(host: str, port: int) -> tuple[PortState, str | None]:
+    """Whether `port` takes a connection on any of the computer's addresses, and the address
+    that answered. No ping: only the port counts. It connects and closes at once, sending
+    nothing, so the program on that port is never spoken to."""
+    try:
+        addresses = _resolve(host)
+    except OSError:
+        return PortState.NOT_FOUND, None
+    state, ip = _port_answers(addresses, port)
+    log.info("Port %d of %s: %s%s", port, host, state.value, f" ({ip})" if ip else "")
+    return state, ip
+
+
+def _port_answers(addresses: list[tuple[int, str]], port: int) -> tuple[PortState, str | None]:
+    """OPEN as soon as one address takes the connection; CLOSED when none did and one refused
+    it; NO_ANSWER after TIMEOUT otherwise."""
+    deadline = time.monotonic() + TIMEOUT
+    selector = selectors.DefaultSelector()
+    sockets: list[socket.socket] = []
+    refused: str | None = None  # the first address that refused
+    try:
+        for family, ip in addresses:
+            sock = socket.socket(family, socket.SOCK_STREAM)
+            sock.setblocking(False)
+            sockets.append(sock)
+            code = sock.connect_ex((ip, port))
+            if code == 0:
+                return PortState.OPEN, ip
+            if code in _REFUSED:
+                refused = refused or ip
+                continue
+            selector.register(sock, selectors.EVENT_WRITE, ip)
+        while selector.get_map() and (left := deadline - time.monotonic()) > 0:
+            # A finished connect, taken or refused, shows as writable (or as an error).
+            for key, _events in selector.select(min(left, _SLICE)):
+                sock = key.fileobj
+                assert isinstance(sock, socket.socket)
+                code = sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+                if code == 0:
+                    return PortState.OPEN, key.data
+                if code in _REFUSED:
+                    refused = refused or key.data
+                selector.unregister(sock)
+        return (PortState.CLOSED, refused) if refused else (PortState.NO_ANSWER, None)
     finally:
         selector.close()
         for sock in sockets:
