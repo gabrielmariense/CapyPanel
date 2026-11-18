@@ -51,6 +51,9 @@ class Style(NamedTuple):
 DEFAULT_STYLE = Style()
 _DEFAULT_KEY = tuple(DEFAULT_STYLE)
 _styles: dict[tuple[Any, ...], Style] = {_DEFAULT_KEY: DEFAULT_STYLE}
+# Styles kept for lines to share. Full, it starts over: a server printing every cell in a 24-bit
+# colour of its own once grew it to 1.15 million styles (328 MB) that outlived the tab.
+MAX_STYLES = 4096
 _KEY = itemgetter(1, 2, 3, 4, 5, 6, 7)  # a pyte Char's fg .. reverse, read in C
 _DATA = itemgetter(0)
 
@@ -58,6 +61,9 @@ _DATA = itemgetter(0)
 def _style(key: tuple[Any, ...]) -> Style:
     style = _styles.get(key)
     if style is None:
+        if len(_styles) >= MAX_STYLES:  # lines keep the styles they hold
+            _styles.clear()
+            _styles[_DEFAULT_KEY] = DEFAULT_STYLE
         style = _styles[key] = Style(*key)
     return style
 

@@ -83,6 +83,9 @@ CHUNK = 1024  # the first chunk; each next one is resized towards CHUNK_TARGET_S
 CHUNK_MIN, CHUNK_MAX = 128, 16384
 CHUNK_TARGET_S = 0.001
 CHUNK_LOG = 10_000  # the last chunks' parse times kept: a tab left on tail -f for days
+# Colours, colour pairs and character fits kept per tab. Full, a cache starts over, so a flood
+# of 24-bit colours or of every character there is can't grow it for as long as the tab is open.
+MAX_CACHED = 16_384
 MAX_PENDING = 131072  # bytes the reader holds before ssh.exe waits: Ctrl+C shows at once
 COPY_PASTE = (int(Qt.Key.Key_C), int(Qt.Key.Key_V))  # with Ctrl+Shift
 SIZE_KEYS = (int(Qt.Key.Key_Equal), int(Qt.Key.Key_Plus), int(Qt.Key.Key_Minus))  # with Ctrl
@@ -331,6 +334,8 @@ class TerminalView(QAbstractScrollArea):
     def _qcolor(self, hex_value: str) -> QColor:
         c = self._colors.get(hex_value)
         if c is None:
+            if len(self._colors) >= MAX_CACHED:
+                self._colors.clear()
             c = self._colors[hex_value] = QColor(hex_value)
         return c
 
@@ -761,6 +766,8 @@ class TerminalView(QAbstractScrollArea):
                 st = styles[x]
                 pair = pairs.get(st)
                 if pair is None:
+                    if len(pairs) >= MAX_CACHED:
+                        pairs.clear()
                     pair = pairs[st] = pal.cell_colors(
                         st.fg, st.bg, bold=st.bold, reverse=st.reverse
                     )
@@ -855,6 +862,8 @@ class TerminalView(QAbstractScrollArea):
                 # An accent in a cell of its own (e + U+0301 through the console): drawn over a
                 # no-break space, as Unicode shows a mark alone, so it has a width to centre.
                 text = " " + text
+            if len(self._fit_cache) >= MAX_CACHED:
+                self._fit_cache.clear()
             fit = self._fit_cache[key] = (*self._fit_text(text, st, cells), text)
         scale, dx, dy, font, text = fit
         p.setFont(font)

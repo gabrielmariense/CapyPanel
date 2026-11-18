@@ -467,6 +467,24 @@ def test_a_server_s_bad_sequence_never_reaches_the_error_window_or_the_log(
     assert MARKER not in caplog.text
 
 
+def test_a_flood_of_colours_and_characters_keeps_each_cache_within_its_limit(
+    view: TerminalView, consoles: list[FakeConsole], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Each cell its own 24-bit colour on a background of its own, and a character of its own:
+    # the colours, pairs and fits a tab keeps start over when full, instead of growing for as
+    # long as the tab is open.
+    monkeypatch.setattr(view_module, "MAX_CACHED", 50)
+    view.start(["ssh.exe"])
+    last = chr(0x4E00 + 199)
+    consoles[-1].prints(
+        "".join(f"\x1b[38;2;{n};0;0;48;2;0;{n};0m{chr(0x4E00 + n)}" for n in range(200)).encode()
+    )
+    _until(lambda: any(last in row for row in view.term.screen_text()))
+    view.grab()
+    for cache in (view._colors, view._pairs, view._fit_cache):
+        assert 0 < len(cache) <= 50
+
+
 def test_typed_pasted_and_shown_text_never_reaches_the_log(
     view: TerminalView, consoles: list[FakeConsole], caplog: pytest.LogCaptureFixture
 ) -> None:

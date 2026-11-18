@@ -4,6 +4,7 @@ not do."""
 
 import pytest
 
+from capypanel.core.ssh import screen as screen_module
 from capypanel.core.ssh.screen import (
     DEFAULT_STYLE,
     TermScreen,
@@ -151,6 +152,20 @@ def test_the_scrollback_keeps_its_last_lines_only() -> None:
     assert screen.lines_scrolled == 8
     stream.feed(b"\x1b[3J")
     assert screen.scrollback_text() == []
+
+
+def test_a_flood_of_colours_keeps_the_shared_styles_within_their_limit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Every cell in a 24-bit colour of its own: the styles lines share start over when full,
+    # instead of outliving the tab, and every cell keeps its own colour.
+    monkeypatch.setattr(screen_module, "MAX_STYLES", 64)
+    screen, stream = screen_and_stream(columns=10, lines=2, scrollback=100)
+    for n in range(300):
+        stream.feed(f"\x1b[38;2;0;{n // 256};{n % 256}mx".encode())
+    assert len(screen_module._styles) <= 64
+    colours = [style.fg for row in range(screen.total_rows) for style in screen.row(row)[1]]
+    assert colours == [f"#00{n // 256:02x}{n % 256:02x}" for n in range(300)]
 
 
 def test_a_packed_line_comes_back_as_it_was() -> None:
