@@ -264,7 +264,7 @@ class PrintersTool(ListWorkspace):
         shortcuts page, as the right-click menu counts the printers it'll refresh."""
         fixed = f"{self.TOOL_ID}.refresh_selected"
         return [
-            replace(c, name=lambda: _("&Refresh printer")) if c.id == fixed else c
+            replace(c, name=lambda: _("Re&fresh printer")) if c.id == fixed else c
             for c in super().key_commands()
         ]
 
@@ -855,7 +855,7 @@ class PrintersTool(ListWorkspace):
         menu.addSeparator()
         one = len(items) == 1
         a.refresh_selected.setText(
-            _("&Refresh printer") if one else _("&Refresh {n} printers").format(n=len(items))
+            _("Re&fresh printer") if one else _("Re&fresh {n} printers").format(n=len(items))
         )
         menu.addAction(a.refresh_selected)
         menu.addSeparator()
@@ -872,7 +872,7 @@ class PrintersTool(ListWorkspace):
         assert self._doc is not None
         printers = list(self._doc.hosts.hosts_in(group.id))
         menu.addSeparator()
-        refresh = menu.addAction(_("&Refresh group"))
+        refresh = menu.addAction(_("Re&fresh group"))
         refresh.setEnabled(bool(printers) and self._run is None)
         refresh.triggered.connect(lambda: self.check_printers(printers))
 

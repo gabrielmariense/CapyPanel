@@ -1,7 +1,8 @@
 """No right-click menu on hosts gives one access key to two items, in either language: Alt and
-that letter would only ever reach the first. Hosts, SSH and Profile cleanup's Hosts tab, with
-one host picked and with two, and Hosts' and SSH's group menus, each with the menus inside it
-(Satya's keys, build 618: Re&fresh, At&ualizar, Commands run a&s, To&dos, Sho&w, en&dereço)."""
+that letter would only ever reach the first. Hosts, SSH, Printers and Profile cleanup's Hosts
+tab, with one host picked and with two, and Hosts', SSH's and Printers' group menus, each with
+the menus inside it (Satya's keys, build 618: Re&fresh, At&ualizar, Commands run a&s, To&dos,
+Sho&w, en&dereço)."""
 
 import re
 from collections.abc import Iterator
@@ -15,6 +16,8 @@ from PySide6.QtWidgets import QApplication, QMenu
 from capypanel.core import i18n, settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import HostList
+from capypanel.core.printers.printer import PrinterInfo
+from capypanel.core.printers.printer import with_info as with_printer_info
 from capypanel.core.ssh.host import SshInfo, with_info
 from capypanel.ui import language, menus
 from capypanel.ui.list_workspace import workspace as workspace_module
@@ -41,10 +44,18 @@ def window(
         servers, host = servers.add_host(name, racks.id, address=address)
         servers = servers.update_host(with_info(host, SshInfo(login="admin")))
     listfile.save(tmp_path / "servers.json", servers, expected=None, kind="ssh")
+    printers, floor = HostList().add_group("Second floor")
+    for name, address in (("2F-LABELS", "192.0.2.25"), ("2F-OFFICE-01", "192.0.2.21")):
+        printers, printer = printers.add_host(name, floor.id, address=address)
+        printers = printers.update_host(with_printer_info(printer, PrinterInfo(brand="ZEBRA")))
+    listfile.save(tmp_path / "printers.json", printers, expected=None, kind="printers")
     win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     win.hosts.open_list(tmp_path / "office.json")
     ssh = win.tools["ssh"]
     assert isinstance(ssh, ListWorkspace) and ssh.open_list(tmp_path / "servers.json")
+    printers_tool = win.tools["printers"]
+    assert isinstance(printers_tool, ListWorkspace)
+    assert printers_tool.open_list(tmp_path / "printers.json")
     yield win
     win.close()
     language.apply(i18n.DEFAULT_LANGUAGE)
@@ -71,7 +82,11 @@ def _repeats(menu: QMenu, where: str) -> dict[str, dict[str, list[str]]]:
     return found
 
 
-def _list_menus(tool: ListWorkspace, name: str) -> dict[str, QMenu]:
+def _list_menus(
+    tool: ListWorkspace, name: str, found: dict[str, dict[str, list[str]]]
+) -> dict[str, QMenu]:
+    """Each is checked as soon as it's filled, into `found`: the menus share one Refresh action,
+    whose words the next menu changes ("Re&fresh printer", then "Re&fresh 2 printers")."""
     doc = tool.document
     assert doc is not None
     ids = [h.id for h in doc.hosts.hosts]
@@ -81,6 +96,7 @@ def _list_menus(tool: ListWorkspace, name: str) -> dict[str, QMenu]:
         menu = QMenu()
         tool.fill_item_menu(menu, tool.selected_items())
         made[f"{name}, {len(picked)} picked"] = menu
+        found.update(_repeats(menu, f"{name}, {len(picked)} picked"))
     return made
 
 
@@ -88,7 +104,11 @@ def _group_menus(win: CapyWindow, monkeypatch: pytest.MonkeyPatch) -> dict[str, 
     shown: list[QMenu] = []
     monkeypatch.setattr(workspace_module, "popup", lambda menu, _where: shown.append(menu))
     made: dict[str, QMenu] = {}
-    for name, tool in (("Hosts", win.hosts), ("SSH", win.tools["ssh"])):
+    for name, tool in (
+        ("Hosts", win.hosts),
+        ("SSH", win.tools["ssh"]),
+        ("Printers", win.tools["printers"]),
+    ):
         assert isinstance(tool, ListWorkspace) and tool.document is not None
         group = tool.document.hosts.groups[0].id
         monkeypatch.setattr(tool.nav, "group_at", lambda _where, g=group: g)  # the one clicked
@@ -122,16 +142,17 @@ def test_no_host_menu_gives_one_access_key_to_two_items(
 ) -> None:
     window.set_language(code)
     QApplication.processEvents()
-    ssh = window.tools["ssh"]
-    assert isinstance(ssh, ListWorkspace)
-    made = {
-        **_list_menus(window.hosts, "Hosts"),
-        **_list_menus(ssh, "SSH"),
-        **_group_menus(window, monkeypatch),
-        **_profiles_menus(window, monkeypatch),
-    }
-    assert len(made) == 8 and all(menu.actions() for menu in made.values())
+    ssh, printers = window.tools["ssh"], window.tools["printers"]
+    assert isinstance(ssh, ListWorkspace) and isinstance(printers, ListWorkspace)
     repeats: dict[str, dict[str, list[str]]] = {}
-    for name, menu in made.items():
+    listed = {
+        **_list_menus(window.hosts, "Hosts", repeats),
+        **_list_menus(ssh, "SSH", repeats),
+        **_list_menus(printers, "Printers", repeats),
+    }
+    others = {**_group_menus(window, monkeypatch), **_profiles_menus(window, monkeypatch)}
+    made = {**listed, **others}
+    assert len(made) == 11 and all(menu.actions() for menu in made.values())
+    for name, menu in others.items():
         repeats.update(_repeats(menu, name))
     assert repeats == {}

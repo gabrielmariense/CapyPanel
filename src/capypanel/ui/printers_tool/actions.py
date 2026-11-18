@@ -47,4 +47,4 @@ def retranslate_actions(a: PrintersActions) -> None:
     a.open_web_page.setText(_("Open &web page"))
     a.copy_address.setText(_("&Address"))  # in the printer menu's Copy submenu
     a.refresh_shown.setText(pgettext("printers", "Refresh all"))  # pt: "todas", not "todos"
-    a.refresh_selected.setText(_("&Refresh printer"))  # the menu says how many (fill_item_menu)
+    a.refresh_selected.setText(_("Re&fresh printer"))  # the menu says how many (fill_item_menu)

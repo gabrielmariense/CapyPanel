@@ -367,7 +367,7 @@ def test_the_printer_menu_opens_the_web_page_first(
     assert row is not None
     printers._item_menu(printers.table.visualItemRect(row).center())
     texts = [menus.label(a) for a in shown[-1].actions() if not a.isSeparator()]
-    assert texts == ["Open &web page", "&Refresh printer", "Co&py", "&Edit…", "&Move to",
+    assert texts == ["Open &web page", "Re&fresh printer", "Co&py", "&Edit…", "&Move to",
                      "&Tags", "&Remove"]  # fmt: skip
     assert shown[-1].defaultAction() is printers.commands.open_web_page
     copy = shown[-1].actions()[4].menu()
@@ -383,7 +383,7 @@ def test_the_printer_menu_opens_the_web_page_first(
     _select(printers, "2F-LABELS", "LOOSE")  # several: Refresh counts them, no Edit
     printers._item_menu(printers.table.visualItemRect(row).center())
     texts = [menus.label(a) for a in shown[-1].actions() if not a.isSeparator()]
-    assert texts == ["Open &web page", "&Refresh 2 printers", "Co&py", "&Move to", "&Tags",
+    assert texts == ["Open &web page", "Re&fresh 2 printers", "Co&py", "&Move to", "&Tags",
                      "&Remove"]  # fmt: skip
 
 
@@ -397,7 +397,7 @@ def test_a_groups_menu_refreshes_its_printers_last(
     menu = QMenu()
     printers.fill_group_menu(menu, doc.hosts.groups[0])
     texts = [a.text() for a in menu.actions() if not a.isSeparator()]
-    assert texts == ["&Refresh group"] and menu.actions()[0].isSeparator()
+    assert texts == ["Re&fresh group"] and menu.actions()[0].isSeparator()
     menu.actions()[-1].trigger()
     assert checked == [["2F-LABELS", "2F-OFFICE-01"]]
 
