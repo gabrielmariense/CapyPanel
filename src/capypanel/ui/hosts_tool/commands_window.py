@@ -989,7 +989,7 @@ class CommandsWindow(QDialog):
         else:
             where = Target(target.address)
         self._tool.connector.connect(
-            [Request(target.name, where, self.profile.currentData() or "")]
+            [Request(target.name, where, self.profile.currentData() or "")], parent=self
         )
 
     def _add_to_list(self) -> None:

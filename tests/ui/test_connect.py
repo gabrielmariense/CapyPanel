@@ -231,7 +231,9 @@ def test_manual_connection_uses_the_chosen_profile(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     asked: list[list[Request]] = []
-    monkeypatch.setattr(window.hosts.connector, "connect", lambda requests: asked.append(requests))
+    monkeypatch.setattr(
+        window.hosts.connector, "connect", lambda requests, parent=None: asked.append(requests)
+    )
     window.hosts.commands.manual_connect.trigger()  # Ctrl+M: the Commands window, typed
     commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
     assert isinstance(commands, CommandsWindow)
@@ -251,6 +253,34 @@ def test_manual_connection_uses_the_chosen_profile(
     commands.connect_button.click()
     assert asked[-1][0].target == connect_ui.Target("10.9.9.9", 5901)
     assert window.hosts.recent_addresses()[0] == "10.9.9.9:5901"
+
+
+def test_manual_connection_s_questions_show_over_it_so_it_stays_in_front(
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Manual connection is a window of its own. A box owned by the main window brought the main
+    window over it, and it had to be found again on the taskbar after every one."""
+    window.hosts.commands.manual_connect.trigger()
+    commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
+    assert isinstance(commands, CommandsWindow)
+    commands.address.setEditText("10.9.9.9")
+    commands.profile.setCurrentIndex(commands.profile.findData("ultravnc"))
+    owners: list[object] = []
+    # A server that only wants a VNC password: the warning that the password wasn't sent.
+    monkeypatch.setattr(connect_ui.rfb, "security_types", lambda *a, **k: (2,))
+    monkeypatch.setattr(QMessageBox, "warning", lambda parent, _t, _text: owners.append(parent))
+    commands.connect_button.click()
+    # One that takes an account: the password prompt.
+    monkeypatch.setattr(connect_ui.rfb, "security_types", lambda *a, **k: (113,))
+    monkeypatch.setattr(
+        CredentialDialog, "exec", lambda dialog: owners.append(dialog.parentWidget()) or 0
+    )
+    commands.connect_button.click()
+    # A viewer this PC doesn't have: where is it?
+    monkeypatch.setattr(connect_ui.detect, "find_executable", lambda tool: None)
+    monkeypatch.setattr(QMessageBox, "exec", lambda box: owners.append(box.parentWidget()) or 0)
+    commands.connect_button.click()
+    assert owners == [commands, commands, commands] and launched == []
 
 
 def test_manual_connection_opens_the_profiles_and_lists_them_as_changed(
