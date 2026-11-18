@@ -561,18 +561,40 @@ def test_a_flood_lands_whole_and_in_order(cmd: TerminalView) -> None:
 # ---- the terminal loads at the first connection, never at start ----
 
 
-def test_starting_capypanel_loads_none_of_the_terminal() -> None:
-    probe = (
-        "import sys\n"
-        "import capypanel.ui.app, capypanel.ui.ssh_tool.tool\n"
-        "late = ('capypanel.ui.ssh_tool.terminal', 'capypanel.core.ssh.screen',"
-        " 'capypanel.core.ssh.conpty', 'capypanel.vendor.pyte')\n"
-        "print(sorted(m for m in sys.modules if m.startswith(late)))\n"
-    )
+LOADS_NOTHING_EARLY = """
+import shutil, sys, tempfile
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])  # tests/helpers: the suite's own Credential Manager
+from fake_credman import FakeCredentialManager
+from capypanel.core import credstore
+credstore.PREFIX, credstore._advapi32 = "CapyPanelTest/", FakeCredentialManager()
+import capypanel.ui.app
+from capypanel.ui import selftest
+from capypanel.ui.hosts_tool.tool import HostsTool
+HostsTool._read_shown_facts = lambda self: None  # never the network
+root = Path(tempfile.mkdtemp(dir=sys.argv[2]))
+selftest._whole_window(root)  # every tool, theme and language, and every Settings page
+shutil.rmtree(root)
+late = ("capypanel.ui.ssh_tool.terminal", "capypanel.core.ssh.screen",
+        "capypanel.core.ssh.conpty", "capypanel.vendor.pyte")
+print(sorted(m for m in sys.modules if m.startswith(late)))
+"""
+
+
+def test_opening_every_tool_and_settings_page_loads_none_of_the_terminal(
+    tmp_path: Path,
+) -> None:
+    """The terminal's modules load with the first connection, never before: not when CapyPanel
+    starts, nor when Hosts, Printers, Profile cleanup, SSH or any Settings page opens (Kerrigan's
+    line 18). Its own process: this one has loaded them all by now."""
+    helpers = Path(__file__).resolve().parent.parent / "helpers"
+    env = {**os.environ, "LOCALAPPDATA": str(tmp_path)}
     found = subprocess.run(  # noqa: S603 -- this Python, with a probe of our own
-        [sys.executable, "-c", probe], capture_output=True, text=True, timeout=120, check=True
-    )
-    assert found.stdout.strip() == "[]"
+        [sys.executable, "-c", LOADS_NOTHING_EARLY, str(helpers), str(tmp_path)],
+        capture_output=True, text=True, timeout=120, check=False, env=env,
+    )  # fmt: skip
+    assert found.returncode == 0, found.stderr[-2000:]
+    assert found.stdout.strip().splitlines()[-1] == "[]"
 
 
 # ---- the colours ----
