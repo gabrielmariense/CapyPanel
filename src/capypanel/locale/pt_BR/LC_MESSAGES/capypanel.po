@@ -2884,7 +2884,7 @@ msgid "Pick a list here: the shared one everyone on this PC sees, your personal 
 msgstr "Escolha uma lista aqui: a compartilhada, que todos neste PC veem, a sua pessoal ou uma que você adicionou. Clique num grupo embaixo dela para ver só as impressoras desse grupo."
 
 msgid "Pick a list here: these are the same lists as in Hosts, the shared one and your own. Click a group below it to see just that group's hosts."
-msgstr "Escolha uma lista aqui: são as mesmas listas do Hosts, a compartilhada e a sua. Clique num grupo embaixo dela para ver só os hosts desse grupo."
+msgstr "Escolha uma lista aqui: são as mesmas listas do Hosts, a compartilhada e as suas. Clique num grupo embaixo dela para ver só os hosts desse grupo."
 
 msgid "Pick hosts in the list first"
 msgstr "Selecione hosts na lista primeiro"
