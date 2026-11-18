@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 00:43-0300\n"
+"POT-Creation-Date: 2026-11-18 01:07-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -5535,6 +5535,13 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgctxt "printers"
+msgid "{n} can't be added."
+msgid_plural "{n} can't be added."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid ""
 "{n} computer didn't let your Windows account see who is logged on. Use "
 "another account, such as an administrator of those computers?"
@@ -5819,6 +5826,13 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} skipped."
+msgid_plural "{n} skipped."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgctxt "printers"
 msgid "{n} skipped."
 msgid_plural "{n} skipped."
 msgstr[0] ""

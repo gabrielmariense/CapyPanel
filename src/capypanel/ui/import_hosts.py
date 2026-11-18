@@ -133,14 +133,16 @@ class ImportDialog(QDialog):
         "Editing in the table rewrites the list above as CSV with a header row "
         "(name, address, group, tags, notes), so the two always match. Continue?"
     )
-    MORE: tuple[tuple[str, str], ...] = ()  # the list's own columns, after Address: (key, title)
+    MORE: tuple[tuple[str, str], ...] = ()  # the list's own columns, after Notes: (key, title)
     WIDTH = 1100  # room for warnings, which name the host they repeat
 
     def __init__(self, parent: QWidget | None, host_list: HostList, group_id: str) -> None:
         super().__init__(parent)
         self.setWindowTitle(_(self.TITLE))
         more = [key for key, _title in self.MORE]
-        self.keys = ["dot", "name", "address", "warning", *more, "group", "tags", "notes"]
+        # A list's own columns go last, so the import windows share their first seven slot by
+        # slot, and a narrow window cuts one of them, never Group, Tags or Notes (Dante).
+        self.keys = ["dot", "name", "address", "warning", "group", "tags", "notes", *more]
         self.col = {key: index for index, key in enumerate(self.keys)}
         self.editable = tuple(i for i, key in enumerate(self.keys) if key not in _FIXED)
         self._hosts = host_list
@@ -233,6 +235,12 @@ class ImportDialog(QDialog):
 
     def adding_text(self, n: int) -> str:
         return ngettext("{n} host will be added.", "{n} hosts will be added.", n).format(n=n)
+
+    def skipped_text(self, n: int) -> str:
+        return ngettext("{n} skipped.", "{n} skipped.", n).format(n=n)
+
+    def bad_text(self, n: int) -> str:
+        return ngettext("{n} can't be added.", "{n} can't be added.", n).format(n=n)
 
     def needs_header(self) -> str:
         return needs_header_text()
@@ -361,9 +369,9 @@ class ImportDialog(QDialog):
         skipped = sum(1 for i in items if i.verdict is Verdict.SKIP)
         bad = sum(1 for i in items if i.verdict is Verdict.BAD)
         if skipped:
-            parts.append(ngettext("{n} skipped.", "{n} skipped.", skipped).format(n=skipped))
+            parts.append(self.skipped_text(skipped))
         if bad:
-            parts.append(ngettext("{n} can't be added.", "{n} can't be added.", bad).format(n=bad))
+            parts.append(self.bad_text(bad))
         if self._plan.new_groups:
             names = ", ".join(" › ".join(p) for p in self._plan.new_groups)
             parts.append(

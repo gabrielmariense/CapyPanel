@@ -6,7 +6,7 @@ and nothing contacts a printer: the first Refresh does."""
 from PySide6.QtWidgets import QDialog, QWidget
 
 from capypanel.core.hosts.bulk import ImportRow, Parsed, Plan
-from capypanel.core.i18n import N_, _, ngettext
+from capypanel.core.i18n import N_, _, ngettext, npgettext
 from capypanel.core.printers import bulk
 from capypanel.ui.import_hosts import FormatsDialog, ImportDialog, needs_header_text
 
@@ -27,7 +27,7 @@ class ImportPrintersDialog(ImportDialog):
         ("asset_tag", N_("Asset tag")),
         ("counter_source", N_("Page counters")),
     )
-    WIDTH = 1300  # five more columns than Import hosts
+    WIDTH = 1300  # five more columns than Import hosts, after Notes
 
     def add_text(self, n: int) -> str:
         if not n:
@@ -36,6 +36,13 @@ class ImportPrintersDialog(ImportDialog):
 
     def adding_text(self, n: int) -> str:
         return ngettext("{n} printer will be added.", "{n} printers will be added.", n).format(n=n)
+
+    # Printers' own context: pt-BR words them for "impressoras" (Dante, Satya).
+    def skipped_text(self, n: int) -> str:
+        return npgettext("printers", "{n} skipped.", "{n} skipped.", n).format(n=n)
+
+    def bad_text(self, n: int) -> str:
+        return npgettext("printers", "{n} can't be added.", "{n} can't be added.", n).format(n=n)
 
     def needs_header(self) -> str:
         return needs_header_text(

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 00:43-0300\n"
+"POT-Creation-Date: 2026-11-18 01:07-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -5248,6 +5248,13 @@ msgstr[0] "{n} não pode ser adicionado."
 msgstr[1] "{n} não podem ser adicionados."
 
 #, python-brace-format
+msgctxt "printers"
+msgid "{n} can't be added."
+msgid_plural "{n} can't be added."
+msgstr[0] "{n} não pode ser adicionada."
+msgstr[1] "{n} não podem ser adicionadas."
+
+#, python-brace-format
 msgid "{n} computer didn't let your Windows account see who is logged on. Use another account, such as an administrator of those computers?"
 msgid_plural "{n} computers didn't let your Windows account see who is logged on. Use another account, such as an administrator of those computers?"
 msgstr[0] "{n} computador não deixou sua conta do Windows ver quem está logado. Usar outra conta, como um administrador desses computadores?"
@@ -5528,6 +5535,13 @@ msgid "{n} skipped."
 msgid_plural "{n} skipped."
 msgstr[0] "{n} ignorado."
 msgstr[1] "{n} ignorados."
+
+#, python-brace-format
+msgctxt "printers"
+msgid "{n} skipped."
+msgid_plural "{n} skipped."
+msgstr[0] "{n} ignorada."
+msgstr[1] "{n} ignoradas."
 
 #, python-brace-format
 msgid "{n} stopped"
