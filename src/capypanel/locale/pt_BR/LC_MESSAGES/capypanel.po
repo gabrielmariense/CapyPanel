@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 01:07-0300\n"
+"POT-Creation-Date: 2026-11-18 05:24-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -2870,6 +2870,9 @@ msgstr "&Impressoras:"
 msgid "Preset name:"
 msgstr "Nome da predefinição:"
 
+msgid "Press any key to close this window."
+msgstr "Pressione qualquer tecla para fechar esta janela."
+
 msgid "Press one key, with Ctrl, Alt or Shift if you like."
 msgstr "Pressione uma tecla, com Ctrl, Alt ou Shift se quiser."
 
@@ -3838,6 +3841,14 @@ msgstr "O perfil de conexão “{profile}” não está disponível neste PC."
 msgid "The connection profile “{profile}” needs the tool “{tool}”, which isn't available on this PC."
 msgstr "O perfil de conexão “{profile}” precisa da ferramenta “{tool}”, que não está disponível neste PC."
 
+#, python-brace-format
+msgid "The connection to {host} ended with an error (exit code {code})."
+msgstr "A conexão com {host} terminou com um erro (código de saída {code})."
+
+#, python-brace-format
+msgid "The connection to {host} ended with an error. ssh.exe's message is above."
+msgstr "A conexão com {host} terminou com um erro. A mensagem do ssh.exe está acima."
+
 msgid "The current profile finishes first; the queued ones don't start. Every delete goes in the history."
 msgstr "O perfil atual termina primeiro; os da fila não começam. Cada exclusão fica no histórico."
 
@@ -4632,8 +4643,8 @@ msgstr "Windows — claro"
 msgid "Windows' Computer Management, pointed at the PC."
 msgstr "O Gerenciamento do Computador do Windows, apontado para o PC."
 
-msgid "Windows' SSH client (ssh.exe) isn't installed on this PC. Add it in Optional features: “OpenSSH Client”."
-msgstr "O cliente SSH do Windows (ssh.exe) não está instalado neste PC. Adicione em Recursos opcionais: “Cliente OpenSSH”."
+msgid "Windows' SSH client (ssh.exe) isn't installed on this PC. To add it, search Start for “Optional features” and add “OpenSSH Client”. Adding it needs an administrator."
+msgstr "O cliente SSH do Windows (ssh.exe) não está instalado neste PC. Para adicioná-lo, pesquise “Recursos opcionais” no Iniciar e adicione “Cliente OpenSSH”. Adicionar exige um administrador."
 
 msgid "Windows' printer list"
 msgstr "Lista de impressoras do Windows"
@@ -5234,6 +5245,12 @@ msgstr "{n} GB"
 #, python-brace-format
 msgid "{n} MB"
 msgstr "{n} MB"
+
+#, python-brace-format
+msgid "{n} SSH connection is still open in a separate window. Close it, then install the update."
+msgid_plural "{n} SSH connections are still open in separate windows. Close them, then install the update."
+msgstr[0] "{n} conexão SSH ainda está aberta numa janela separada. Feche-a e depois instale a atualização."
+msgstr[1] "{n} conexões SSH ainda estão abertas em janelas separadas. Feche-as e depois instale a atualização."
 
 #, python-brace-format
 msgid "{n} can be deleted"

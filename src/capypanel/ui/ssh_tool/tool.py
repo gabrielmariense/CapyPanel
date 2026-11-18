@@ -42,9 +42,10 @@ AUTO_STATUS = "auto_status"  # Settings' Refresh status by itself: {"on": bool, 
 
 def missing_text() -> str:
     """When Windows' SSH client isn't installed. Its page moved between Windows versions, so
-    only its name is given."""
-    return _("Windows' SSH client (ssh.exe) isn't installed on this PC. Add it in Optional "
-             "features: “OpenSSH Client”.")  # fmt: skip
+    Start's search leads there instead, as Microsoft's own steps do for both."""
+    return _("Windows' SSH client (ssh.exe) isn't installed on this PC. To add it, search Start "
+             "for “Optional features” and add “OpenSSH Client”. Adding it needs an "
+             "administrator.")  # fmt: skip
 
 
 class SshTool(ListWorkspace):
@@ -361,7 +362,7 @@ class SshTool(ListWorkspace):
     def _open_ssh(self, destination: str, info: SshInfo, name: str) -> bool:
         """False when ssh.exe isn't installed, after saying so."""
         try:
-            launch.connect(destination, info)
+            launch.connect(destination, info, name)
         except launch.SshMissing:
             QMessageBox.warning(self, "CapyPanel", missing_text())
             return False

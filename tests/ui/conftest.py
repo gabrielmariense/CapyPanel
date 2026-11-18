@@ -63,7 +63,9 @@ def no_ssh(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, object]]:
     from capypanel.ui.ssh_tool import refresh
 
     started: list[tuple[str, object]] = []
-    monkeypatch.setattr(launch, "connect", lambda address, info: started.append((address, info)))
+    monkeypatch.setattr(
+        launch, "connect", lambda address, info, name="": started.append((address, info))
+    )
     monkeypatch.setattr(refresh, "port_state", lambda _host, _port: (PortState.NO_ANSWER, None))
     return started
 

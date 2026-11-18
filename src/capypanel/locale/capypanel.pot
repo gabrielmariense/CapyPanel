@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 01:07-0300\n"
+"POT-Creation-Date: 2026-11-18 05:24-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3013,6 +3013,9 @@ msgstr ""
 msgid "Preset name:"
 msgstr ""
 
+msgid "Press any key to close this window."
+msgstr ""
+
 msgid "Press one key, with Ctrl, Alt or Shift if you like."
 msgstr ""
 
@@ -4026,6 +4029,14 @@ msgid ""
 "available on this PC."
 msgstr ""
 
+#, python-brace-format
+msgid "The connection to {host} ended with an error (exit code {code})."
+msgstr ""
+
+#, python-brace-format
+msgid "The connection to {host} ended with an error. ssh.exe's message is above."
+msgstr ""
+
 msgid ""
 "The current profile finishes first; the queued ones don't start. Every "
 "delete goes in the history."
@@ -4902,8 +4913,9 @@ msgid "Windows' Computer Management, pointed at the PC."
 msgstr ""
 
 msgid ""
-"Windows' SSH client (ssh.exe) isn't installed on this PC. Add it in "
-"Optional features: “OpenSSH Client”."
+"Windows' SSH client (ssh.exe) isn't installed on this PC. To add it, "
+"search Start for “Optional features” and add “OpenSSH Client”. Adding it "
+"needs an administrator."
 msgstr ""
 
 msgid "Windows' printer list"
@@ -5521,6 +5533,16 @@ msgstr ""
 #, python-brace-format
 msgid "{n} MB"
 msgstr ""
+
+#, python-brace-format
+msgid ""
+"{n} SSH connection is still open in a separate window. Close it, then "
+"install the update."
+msgid_plural ""
+"{n} SSH connections are still open in separate windows. Close them, then "
+"install the update."
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-brace-format
 msgid "{n} can be deleted"

@@ -209,7 +209,7 @@ def test_a_server_typed_in_the_search_is_offered_and_connected_at_once(
 def test_without_ssh_exe_it_says_where_to_add_it(
     ssh: SshTool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def missing(_address: str, _info: SshInfo) -> None:
+    def missing(_address: str, _info: SshInfo, _name: str = "") -> None:
         raise launch.SshMissing
 
     warned: list[str] = []
@@ -220,9 +220,19 @@ def test_without_ssh_exe_it_says_where_to_add_it(
     _select(ssh, "core-sw-01", "web-01")
     ssh.connect_selected()
     assert warned == [  # once, not once per host
-        "Windows' SSH client (ssh.exe) isn't installed on this PC. Add it in Optional features: "
-        "“OpenSSH Client”."
+        "Windows' SSH client (ssh.exe) isn't installed on this PC. To add it, search Start for "
+        "“Optional features” and add “OpenSSH Client”. Adding it needs an administrator."
     ]
+
+
+def test_the_separate_window_is_told_the_host_s_name(
+    ssh: SshTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    names: list[str] = []
+    monkeypatch.setattr(launch, "connect", lambda _address, _info, name="": names.append(name))
+    _select(ssh, "web-01")
+    ssh.connect_selected()
+    assert names == ["web-01"]  # its words say "The connection to web-01 ended…"
 
 
 def test_an_address_ssh_exe_would_read_as_an_option_is_never_handed_over(
