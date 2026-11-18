@@ -209,7 +209,7 @@ def test_it_is_the_third_tool_and_its_hosts_tab_lists_hosts_open_list(
     window: CapyWindow, tmp_path: Path
 ) -> None:
     tool = _tool(window)
-    assert list(window.tools) == ["hosts", "printers", "profiles"]
+    assert list(window.tools) == ["hosts", "printers", "profiles", "ssh"]
     assert (tool.tool_name(), tool.ICON) == ("Profile cleanup", "profile-card")
     assert tool.list_picker.text() == "clinic"
     assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]  # natural order; reachable ones

@@ -492,13 +492,12 @@ class ListsGeneralPage(Page):
         return self._first if self.show_first.isEnabled() else None
 
 
-# ---- Hosts: General ----
+# ---- Hosts and SSH: General ----
 
 
-class HostsPage(ListsGeneralPage):
-    """The Hosts tool's General page: Host lists, Refresh, then the Details panel."""
-
-    customize_requested = Signal()  # Quick commands' Choose…
+class AutoStatusPage(ListsGeneralPage):
+    """A list tool's General page with Refresh status by itself under its lists: Hosts' and
+    SSH's. `auto_line` says what the check does, under the setting's name."""
 
     def __init__(
         self,
@@ -508,6 +507,7 @@ class HostsPage(ListsGeneralPage):
         default_list: Path,
         personal_list: Path,
         added: list[Path],
+        auto_line: str,
         document: OpenList | None = None,
         found: list[Path] | None = None,
         hidden: list[Path] | None = None,
@@ -536,30 +536,9 @@ class HostsPage(ListsGeneralPage):
         self.auto_every.activated.connect(self._every_picked)
         add_rows(
             refresh.content,
-            SettingRow(
-                _("Refresh status &by itself"),
-                _("Only ping and ports, so no account is needed. "
-                  "Refresh in the toolbar always works."),
-                self.auto_every,
-            ),
-        )  # fmt: skip
-
+            SettingRow(_("Refresh status &by itself"), auto_line, self.auto_every),
+        )
         self.add_section(refresh)
-
-        panel = Section(_("Details panel"))
-        self.quick_button = QPushButton(_("C&hoose…"))
-        self.quick_button.setAutoDefault(False)
-        self.quick_button.clicked.connect(self.customize_requested)
-        add_rows(
-            panel.content,
-            SettingRow(
-                _("&Quick commands"),
-                _("The buttons on top of a host's Details panel; the first four are also in "
-                  "its right-click menu. Yours, on this PC."),
-                self.quick_button,
-            ),
-        )  # fmt: skip
-        self.add_section(panel)
 
     def auto_status_choice(self) -> tuple[bool, int]:
         minutes = self.auto_every.currentData()
@@ -598,6 +577,58 @@ class HostsPage(ListsGeneralPage):
 
     def _ask_minutes(self) -> int | None:
         return ask_minutes(self, self._auto_minutes)
+
+
+class HostsPage(AutoStatusPage):
+    """The Hosts tool's General page: Host lists, Refresh, then the Details panel."""
+
+    customize_requested = Signal()  # Quick commands' Choose…
+
+    def __init__(
+        self,
+        *,
+        texts: ListTexts,
+        start_list: object,
+        default_list: Path,
+        personal_list: Path,
+        added: list[Path],
+        document: OpenList | None = None,
+        found: list[Path] | None = None,
+        hidden: list[Path] | None = None,
+        auto_status: tuple[bool, int] = (False, 5),
+        start_view: tuple[str, str] | None = None,
+        host_list: HostList | None = None,
+    ) -> None:
+        line = _("Only ping and ports, so no account is needed. "
+                 "Refresh in the toolbar always works.")  # fmt: skip
+        super().__init__(
+            texts=texts,
+            start_list=start_list,
+            default_list=default_list,
+            personal_list=personal_list,
+            added=added,
+            auto_line=line,
+            document=document,
+            found=found,
+            hidden=hidden,
+            auto_status=auto_status,
+            start_view=start_view,
+            host_list=host_list,
+        )
+        panel = Section(_("Details panel"))
+        self.quick_button = QPushButton(_("C&hoose…"))
+        self.quick_button.setAutoDefault(False)
+        self.quick_button.clicked.connect(self.customize_requested)
+        add_rows(
+            panel.content,
+            SettingRow(
+                _("&Quick commands"),
+                _("The buttons on top of a host's Details panel; the first four are also in "
+                  "its right-click menu. Yours, on this PC."),
+                self.quick_button,
+            ),
+        )  # fmt: skip
+        self.add_section(panel)
 
 
 def every_text(minutes: int) -> str:

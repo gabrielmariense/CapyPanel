@@ -82,7 +82,8 @@ ORDER = (
     # File
     "app.settings", "app.exit",
     # View
-    "go.home", "go.hosts", "go.printers", "go.profiles", "app.show_toolbar", "app.show_status_bar",
+    "go.home", "go.hosts", "go.printers", "go.profiles", "go.ssh", "app.show_toolbar",
+    "app.show_status_bar",
     # Help
     "app.show_guide", "app.show_all_guides", "app.documentation", "app.report_problem",
     "app.check_updates", "app.about",
@@ -106,6 +107,11 @@ ORDER = (
     "printers.refresh_selected", "printers.copy_address", "printers.edit", "printers.remove",
     "printers.show_groups", "printers.show_tags", "printers.show_details",
     "printers.customize_details", "printers.new_list", "printers.open_list",
+    # SSH: Connect, Refresh all, Inventory's menu
+    "ssh.connect_host", "ssh.refresh_shown", "ssh.add_host", "ssh.add_group", "ssh.manage_groups",
+    # SSH: a host's right-click menu, View, the list dropdown
+    "ssh.refresh_selected", "ssh.copy_address", "ssh.edit", "ssh.remove", "ssh.show_groups",
+    "ssh.show_tags", "ssh.show_details", "ssh.customize_details", "ssh.new_list", "ssh.open_list",
 )  # fmt: skip
 
 

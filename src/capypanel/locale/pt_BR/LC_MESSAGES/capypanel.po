@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 19:04-0300\n"
+"POT-Creation-Date: 2026-11-17 20:58-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -202,6 +202,9 @@ msgstr "&Lista ao iniciar"
 msgid "&Locate…"
 msgstr "&Localizar…"
 
+msgid "&Log in as:"
+msgstr "Entrar &como:"
+
 msgid "&Log off"
 msgstr "Fazer &logoff"
 
@@ -210,6 +213,9 @@ msgstr "Usuários &logados"
 
 msgid "&Low supply level"
 msgstr "Nível &baixo de suprimento"
+
+msgid "&Manage SSH lists…"
+msgstr "&Gerenciar listas SSH…"
 
 msgid "&Manage groups…"
 msgstr "Ge&renciar grupos…"
@@ -283,6 +289,9 @@ msgstr "&Parceiro"
 
 msgid "&Password:"
 msgstr "&Senha:"
+
+msgid "&Port:"
+msgstr "&Porta:"
 
 msgid "&Preset:"
 msgstr "&Predefinição:"
@@ -610,6 +619,9 @@ msgstr "Adicionar marca"
 msgid "Add a printer list"
 msgstr "Adicionar uma lista de impressoras"
 
+msgid "Add an SSH list"
+msgstr "Adicionar uma lista SSH"
+
 msgid "Add an account"
 msgstr "Adicionar uma conta"
 
@@ -621,6 +633,9 @@ msgstr "Adicionar host"
 
 msgid "Add hosts"
 msgstr "Adicionar hosts"
+
+msgid "Add hosts and groups, and manage the groups"
+msgstr "Adicione hosts e grupos, e gerencie os grupos"
 
 msgid "Add hosts and groups, or import a list of hosts"
 msgstr "Adicione hosts e grupos, ou importe uma lista de hosts"
@@ -652,6 +667,9 @@ msgstr "Endereço"
 msgid "Address, group, MAC"
 msgstr "Endereço, grupo, MAC"
 
+msgid "Address, port, Log in as, group"
+msgstr "Endereço, porta, Entrar como, grupo"
+
 msgid "Address, profile, account"
 msgstr "Endereço, perfil, conta"
 
@@ -680,6 +698,9 @@ msgstr "Todas as impressoras"
 msgid "Already in the list, {place}"
 msgstr "Já está na lista, {place}"
 
+msgid "Always shown: the host's name and its status."
+msgstr "Sempre aparecem: o nome do host e o status."
+
 msgid "Always shown: the host's name, its status and a pending restart's warning."
 msgstr "Sempre aparecem: o nome do host, o status e o aviso de reinício pendente."
 
@@ -693,6 +714,10 @@ msgstr "Um item não contém o campo “{key}” ou tem um valor inválido nesse
 #, python-brace-format
 msgid "Answered a ping at {address}."
 msgstr "Respondeu a um ping em {address}."
+
+#, python-brace-format
+msgid "Answered at {address}, but port {port} is closed: ssh.exe would fail with “Connection refused”."
+msgstr "Respondeu em {address}, mas a porta {port} está fechada: o ssh.exe falharia com “Connection refused”."
 
 #, python-brace-format
 msgid "Answered at {address}, port {port}."
@@ -822,6 +847,10 @@ msgctxt "profile"
 msgid "Can be deleted"
 msgstr "Pode excluir"
 
+#, python-brace-format
+msgid "Can't connect to “{host}”: its address or Log in as has a space or starts with “-”."
+msgstr "Não é possível conectar a “{host}”: o endereço ou o Entrar como tem um espaço ou começa com “-”."
+
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -919,6 +948,9 @@ msgstr "Procurar &nova versão…"
 
 msgid "Check the SNMP account in Settings › Printers › Connecting."
 msgstr "Confira a conta SNMP em Configurações › Impressoras › Conexão."
+
+msgid "Check the SSH port of every host shown"
+msgstr "Verifica a porta SSH de todos os hosts exibidos"
 
 #, python-brace-format
 msgid "Check who is logged on to {n} hosts?"
@@ -1042,8 +1074,19 @@ msgstr "Gerenciamento do Computador"
 msgid "Connect"
 msgstr "Conectar"
 
+msgctxt "button"
+msgid "Connect"
+msgstr "Conectar"
+
+msgid "Connect to the selected hosts with Windows' ssh.exe"
+msgstr "Conecta aos hosts selecionados com o ssh.exe do Windows"
+
 msgid "Connect to the selected hosts, once with another profile, or by address"
 msgstr "Conecta aos hosts selecionados, uma vez com outro perfil, ou por endereço"
+
+#, python-brace-format
+msgid "Connect to {host}"
+msgstr "Conectar a {host}"
 
 #, python-brace-format
 msgid "Connect to {host}…"
@@ -1248,6 +1291,10 @@ msgstr "Não foi possível salvar {path}: {error}"
 #, python-brace-format
 msgid "Couldn't save “{path}”: {error}"
 msgstr "Não foi possível salvar “{path}”: {error}"
+
+#, python-brace-format
+msgid "Couldn't start ssh.exe: {error}"
+msgstr "Não foi possível iniciar o ssh.exe: {error}"
 
 #, python-brace-format
 msgid "Couldn't start {tool} for {target}: {error}"
@@ -1548,6 +1595,9 @@ msgstr "Editar a lista aqui"
 
 msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, tags, notes), so the two always match. Continue?"
 msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes), para que as duas sempre coincidam. Continuar?"
+
+msgid "Empty: your SSH config, then your Windows user name"
+msgstr "Vazio: sua configuração do SSH e depois seu usuário do Windows"
 
 msgid "Encryption pass&word"
 msgstr "Senha da cri&ptografia"
@@ -2016,6 +2066,9 @@ msgstr "Listar só as impressoras que requerem atenção"
 msgid "Lists saved in a lists folder show up here by themselves; Remove asks whether to delete the file too."
 msgstr "Listas salvas numa pasta de listas aparecem aqui sozinhas; Remover pergunta se o arquivo também deve ser excluído."
 
+msgid "Log in as"
+msgstr "Entrar como"
+
 msgid "Log off"
 msgstr "Fazer logoff"
 
@@ -2163,6 +2216,9 @@ msgstr "Pede assistência"
 msgid "Needs someone at the printer"
 msgstr "Precisa de alguém na impressora"
 
+msgid "New SSH list"
+msgstr "Nova lista SSH"
+
 msgid "New connection profile"
 msgstr "Novo perfil de conexão"
 
@@ -2189,6 +2245,9 @@ msgstr "Avançar"
 
 msgid "No Doc360 MPS account is set."
 msgstr "Nenhuma conta do Doc360 MPS definida."
+
+msgid "No SSH list is open."
+msgstr "Nenhuma lista SSH está aberta."
 
 msgid "No access: needs an admin account on this PC"
 msgstr "Sem acesso: precisa de uma conta de administrador neste PC"
@@ -2468,6 +2527,13 @@ msgstr "Só impressoras com todas estas tags: {tags} · {shown} de {total} exibi
 msgid "Only registry entries without a folder and folders without a registry entry"
 msgstr "Só registros sem pasta e pastas sem registro"
 
+msgid "Only the SSH port, so nothing logs in. A server running fail2ban in a strict mode may count each check as a failed login and block this PC."
+msgstr "Só a porta SSH, sem fazer login. Um servidor com fail2ban num modo rígido pode contar cada verificação como uma tentativa de login que falhou e bloquear este PC."
+
+#, python-brace-format
+msgid "Only the first {n} connect at once."
+msgstr "Só os {n} primeiros conectam de uma vez."
+
 #, python-brace-format
 msgid "Only the first {n} open at once."
 msgstr "Só as {n} primeiras abrem de uma vez."
@@ -2514,6 +2580,12 @@ msgstr "Abrir uma lista de impressoras"
 
 msgid "Open a printer list to choose what it shows first."
 msgstr "Abra uma lista de impressoras para escolher o que ela mostra primeiro."
+
+msgid "Open an SSH list"
+msgstr "Abrir uma lista SSH"
+
+msgid "Open an SSH list to choose what it shows first."
+msgstr "Abra uma lista SSH para escolher o que ela mostra primeiro."
 
 msgid "Open f&older"
 msgstr "Abrir &pasta"
@@ -2723,6 +2795,9 @@ msgstr "Tags escolhidas: {tags}"
 
 msgid "Port"
 msgstr "Porta"
+
+msgid "Port closed"
+msgstr "Porta fechada"
 
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr "Modo portátil: tudo fica na própria pasta do aplicativo."
@@ -3007,6 +3082,9 @@ msgstr "Ferramentas remotas"
 msgid "Remove"
 msgstr "Remover"
 
+msgid "Remove SSH list"
+msgstr "Remover lista SSH"
+
 msgid "Remove everything"
 msgstr "Remover tudo"
 
@@ -3168,6 +3246,15 @@ msgstr "Comunidade SNMP"
 
 msgid "SNMP v3 account"
 msgstr "Conta SNMP v3"
+
+msgid "SSH"
+msgstr "SSH"
+
+msgid "SSH lists"
+msgstr "Listas SSH"
+
+msgid "SSH lists (*.json);;All files (*)"
+msgstr "Listas SSH (*.json);;Todos os arquivos (*)"
 
 msgid "Sa&ved credentials"
 msgstr "Credenciais sal&vas"
@@ -4047,6 +4134,13 @@ msgstr "Este não é um arquivo de lista válido ({error})."
 
 msgid ""
 "This list has no hosts yet.\n"
+"Add one to start."
+msgstr ""
+"Esta lista ainda não tem hosts.\n"
+"Adicione um para começar."
+
+msgid ""
+"This list has no hosts yet.\n"
 "Add one, or import several at once."
 msgstr ""
 "Esta lista ainda não tem hosts.\n"
@@ -4480,6 +4574,9 @@ msgstr "Windows — claro"
 msgid "Windows' Computer Management, pointed at the PC."
 msgstr "O Gerenciamento do Computador do Windows, apontado para o PC."
 
+msgid "Windows' SSH client (ssh.exe) isn't installed on this PC. Add it in Optional features: “OpenSSH Client”."
+msgstr "O cliente SSH do Windows (ssh.exe) não está instalado neste PC. Adicione em Recursos opcionais: “Cliente OpenSSH”."
+
 msgid "With No group, the groups inside it go directly under Groups."
 msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
 
@@ -4521,6 +4618,9 @@ msgstr "Suas impressoras"
 
 msgid "Your printers: status and toner, web pages, reports."
 msgstr "Suas impressoras: status e toner, páginas web, relatórios."
+
+msgid "Your servers and switches: connect over SSH, see which answer."
+msgstr "Seus servidores e switches: conecte por SSH, veja quais respondem."
 
 msgid "Your settings, lists and saved logins are as they were."
 msgstr "Suas configurações, listas e logins salvos continuam como estavam."
@@ -4678,6 +4778,9 @@ msgstr "é do próprio Windows"
 msgid "its clock and CapyPanel's didn't agree."
 msgstr "o relógio dela e o do CapyPanel não bateram."
 
+msgid "log in as"
+msgstr "entrar como"
+
 #, python-brace-format
 msgid "log off {user}"
 msgstr "fazer logoff de {user}"
@@ -4709,6 +4812,9 @@ msgstr "abrir {what}"
 
 msgid "password only"
 msgstr "só senha"
+
+msgid "port"
+msgstr "porta"
 
 msgid "portable mode"
 msgstr "modo portátil"
@@ -5562,6 +5668,10 @@ msgstr "“{path}” não é uma lista de hosts."
 #, python-brace-format
 msgid "“{path}” isn't a printer list."
 msgstr "“{path}” não é uma lista de impressoras."
+
+#, python-brace-format
+msgid "“{path}” isn't an SSH list."
+msgstr "“{path}” não é uma lista SSH."
 
 msgid "↑ ↓ pick, Enter runs, typing searches. Commands that need more open a small window; risky ones ask first."
 msgstr "↑ ↓ escolhe, Enter executa, digitar pesquisa. Comandos que precisam de mais abrem uma janela pequena; os arriscados perguntam antes."

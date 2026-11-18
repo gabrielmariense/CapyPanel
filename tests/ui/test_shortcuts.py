@@ -152,7 +152,9 @@ def test_every_command_has_its_place_in_the_order_you_meet_it(window: CapyWindow
 def test_the_commands_sit_under_their_menu_or_tool_in_app_order(window: CapyWindow) -> None:
     page = _page(window)
     headings = _headings(page)
-    assert [h.text(0) for h, _rows in headings] == ["File", "View", "Help", "Hosts", "Printers"]
+    assert [h.text(0) for h, _rows in headings] == [
+        "File", "View", "Help", "Hosts", "Printers", "SSH",
+    ]  # fmt: skip
     shown: list[str] = []
     for heading, rows in headings:
         assert heading.flags() == Qt.ItemFlag.NoItemFlags  # can't be picked
@@ -221,12 +223,12 @@ def test_a_key_kept_for_both_tools_before_goes_to_each(
     win = CapyWindow(paths, prefs)
     try:
         keys = win.keys
-        for tool in ("hosts", "printers"):
+        for tool in ("hosts", "printers", "ssh"):  # every list tool, SSH too
             assert keys.key(keys.row(f"{tool}.edit")) == "Ctrl+K", tool
             assert keys.key(keys.row(f"{tool}.remove")) == "", tool
         assert prefs["shortcuts"] == {
-            "hosts.edit": "Ctrl+K", "printers.edit": "Ctrl+K",
-            "hosts.remove": "", "printers.remove": "",
+            "hosts.edit": "Ctrl+K", "printers.edit": "Ctrl+K", "ssh.edit": "Ctrl+K",
+            "hosts.remove": "", "printers.remove": "", "ssh.remove": "",
         }  # fmt: skip
     finally:
         win.close()

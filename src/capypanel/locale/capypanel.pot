@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 19:04-0300\n"
+"POT-Creation-Date: 2026-11-17 20:58-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -201,6 +201,9 @@ msgstr ""
 msgid "&Locate…"
 msgstr ""
 
+msgid "&Log in as:"
+msgstr ""
+
 msgid "&Log off"
 msgstr ""
 
@@ -208,6 +211,9 @@ msgid "&Logged-on users"
 msgstr ""
 
 msgid "&Low supply level"
+msgstr ""
+
+msgid "&Manage SSH lists…"
 msgstr ""
 
 msgid "&Manage groups…"
@@ -281,6 +287,9 @@ msgid "&Partner"
 msgstr ""
 
 msgid "&Password:"
+msgstr ""
+
+msgid "&Port:"
 msgstr ""
 
 msgid "&Preset:"
@@ -615,6 +624,9 @@ msgstr ""
 msgid "Add a printer list"
 msgstr ""
 
+msgid "Add an SSH list"
+msgstr ""
+
 msgid "Add an account"
 msgstr ""
 
@@ -625,6 +637,9 @@ msgid "Add host"
 msgstr ""
 
 msgid "Add hosts"
+msgstr ""
+
+msgid "Add hosts and groups, and manage the groups"
 msgstr ""
 
 msgid "Add hosts and groups, or import a list of hosts"
@@ -655,6 +670,9 @@ msgid "Address"
 msgstr ""
 
 msgid "Address, group, MAC"
+msgstr ""
+
+msgid "Address, port, Log in as, group"
 msgstr ""
 
 msgid "Address, profile, account"
@@ -688,6 +706,9 @@ msgstr ""
 msgid "Already in the list, {place}"
 msgstr ""
 
+msgid "Always shown: the host's name and its status."
+msgstr ""
+
 msgid "Always shown: the host's name, its status and a pending restart's warning."
 msgstr ""
 
@@ -700,6 +721,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "Answered a ping at {address}."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Answered at {address}, but port {port} is closed: ssh.exe would fail with"
+" “Connection refused”."
 msgstr ""
 
 #, python-brace-format
@@ -839,6 +866,12 @@ msgctxt "profile"
 msgid "Can be deleted"
 msgstr ""
 
+#, python-brace-format
+msgid ""
+"Can't connect to “{host}”: its address or Log in as has a space or starts"
+" with “-”."
+msgstr ""
+
 msgid "Cancel"
 msgstr ""
 
@@ -946,6 +979,9 @@ msgid "Check for &updates…"
 msgstr ""
 
 msgid "Check the SNMP account in Settings › Printers › Connecting."
+msgstr ""
+
+msgid "Check the SSH port of every host shown"
 msgstr ""
 
 #, python-brace-format
@@ -1077,7 +1113,18 @@ msgstr ""
 msgid "Connect"
 msgstr ""
 
+msgctxt "button"
+msgid "Connect"
+msgstr ""
+
+msgid "Connect to the selected hosts with Windows' ssh.exe"
+msgstr ""
+
 msgid "Connect to the selected hosts, once with another profile, or by address"
+msgstr ""
+
+#, python-brace-format
+msgid "Connect to {host}"
 msgstr ""
 
 #, python-brace-format
@@ -1280,6 +1327,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't save “{path}”: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't start ssh.exe: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -1593,6 +1644,9 @@ msgstr ""
 msgid ""
 "Editing in the table rewrites the list above as CSV with a header row "
 "(name, address, group, tags, notes), so the two always match. Continue?"
+msgstr ""
+
+msgid "Empty: your SSH config, then your Windows user name"
 msgstr ""
 
 msgid "Encryption pass&word"
@@ -2100,6 +2154,9 @@ msgid ""
 "whether to delete the file too."
 msgstr ""
 
+msgid "Log in as"
+msgstr ""
+
 msgid "Log off"
 msgstr ""
 
@@ -2249,6 +2306,9 @@ msgstr ""
 msgid "Needs someone at the printer"
 msgstr ""
 
+msgid "New SSH list"
+msgstr ""
+
 msgid "New connection profile"
 msgstr ""
 
@@ -2274,6 +2334,9 @@ msgid "Next"
 msgstr ""
 
 msgid "No Doc360 MPS account is set."
+msgstr ""
+
+msgid "No SSH list is open."
 msgstr ""
 
 msgid "No access: needs an admin account on this PC"
@@ -2578,6 +2641,15 @@ msgid ""
 "entry"
 msgstr ""
 
+msgid ""
+"Only the SSH port, so nothing logs in. A server running fail2ban in a "
+"strict mode may count each check as a failed login and block this PC."
+msgstr ""
+
+#, python-brace-format
+msgid "Only the first {n} connect at once."
+msgstr ""
+
 #, python-brace-format
 msgid "Only the first {n} open at once."
 msgstr ""
@@ -2623,6 +2695,12 @@ msgid "Open a printer list"
 msgstr ""
 
 msgid "Open a printer list to choose what it shows first."
+msgstr ""
+
+msgid "Open an SSH list"
+msgstr ""
+
+msgid "Open an SSH list to choose what it shows first."
 msgstr ""
 
 msgid "Open f&older"
@@ -2853,6 +2931,9 @@ msgid "Picked tags: {tags}"
 msgstr ""
 
 msgid "Port"
+msgstr ""
+
+msgid "Port closed"
 msgstr ""
 
 msgid "Portable mode: everything stays in the app's own folder."
@@ -3150,6 +3231,9 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
+msgid "Remove SSH list"
+msgstr ""
+
 msgid "Remove everything"
 msgstr ""
 
@@ -3314,6 +3398,15 @@ msgid "SNMP community string"
 msgstr ""
 
 msgid "SNMP v3 account"
+msgstr ""
+
+msgid "SSH"
+msgstr ""
+
+msgid "SSH lists"
+msgstr ""
+
+msgid "SSH lists (*.json);;All files (*)"
 msgstr ""
 
 msgid "Sa&ved credentials"
@@ -4271,6 +4364,11 @@ msgstr ""
 
 msgid ""
 "This list has no hosts yet.\n"
+"Add one to start."
+msgstr ""
+
+msgid ""
+"This list has no hosts yet.\n"
 "Add one, or import several at once."
 msgstr ""
 
@@ -4734,6 +4832,11 @@ msgstr ""
 msgid "Windows' Computer Management, pointed at the PC."
 msgstr ""
 
+msgid ""
+"Windows' SSH client (ssh.exe) isn't installed on this PC. Add it in "
+"Optional features: “OpenSSH Client”."
+msgstr ""
+
 msgid "With No group, the groups inside it go directly under Groups."
 msgstr ""
 
@@ -4774,6 +4877,9 @@ msgid "Your printers"
 msgstr ""
 
 msgid "Your printers: status and toner, web pages, reports."
+msgstr ""
+
+msgid "Your servers and switches: connect over SSH, see which answer."
 msgstr ""
 
 msgid "Your settings, lists and saved logins are as they were."
@@ -4936,6 +5042,9 @@ msgstr ""
 msgid "its clock and CapyPanel's didn't agree."
 msgstr ""
 
+msgid "log in as"
+msgstr ""
+
 #, python-brace-format
 msgid "log off {user}"
 msgstr ""
@@ -4966,6 +5075,9 @@ msgid "open {what}"
 msgstr ""
 
 msgid "password only"
+msgstr ""
+
+msgid "port"
 msgstr ""
 
 msgid "portable mode"
@@ -5849,6 +5961,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "“{path}” isn't a printer list."
+msgstr ""
+
+#, python-brace-format
+msgid "“{path}” isn't an SSH list."
 msgstr ""
 
 msgid ""

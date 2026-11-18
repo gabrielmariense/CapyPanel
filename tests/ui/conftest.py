@@ -53,6 +53,21 @@ def no_facts_on_their_own(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(HostsTool, "_read_shown_facts", lambda _self: None)
 
 
+@pytest.fixture(autouse=True)
+def no_ssh(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, object]]:
+    """The SSH tool never starts ssh.exe in tests, and its Refresh never knocks on a real port:
+    Connect lands here as (address, SshInfo), and every port says nothing until a test gives
+    its own answers."""
+    from capypanel.core.remote.status import PortState
+    from capypanel.core.ssh import launch
+    from capypanel.ui.ssh_tool import refresh
+
+    started: list[tuple[str, object]] = []
+    monkeypatch.setattr(launch, "connect", lambda address, info: started.append((address, info)))
+    monkeypatch.setattr(refresh, "port_state", lambda _host, _port: (PortState.NO_ANSWER, None))
+    return started
+
+
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     """Theme tests first. A theme switch restyles every window still alive, and closed windows
     from earlier tests pile up, so the theme tests took minutes at the end of the run."""
