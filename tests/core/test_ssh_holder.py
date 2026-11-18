@@ -4,6 +4,7 @@ program. Line 12 runs the real one, with a stand-in in ssh.exe's place."""
 import ctypes
 import sys
 from collections.abc import Iterator, Sequence
+from types import SimpleNamespace
 
 import pytest
 
@@ -43,8 +44,8 @@ class FakeConsole:
     def write(self, text: str) -> None:
         self.written += text
 
-    def wait_for_key(self) -> None:
-        self.steps.append("key")
+    def wait_for_key(self, grace: float) -> None:
+        self.steps.append(("key", grace))
 
 
 @pytest.fixture(autouse=True)
@@ -89,7 +90,7 @@ def test_after_255_it_points_at_ssh_exe_s_message_and_waits_for_a_key() -> None:
         "\r\nThe connection to nas-01 ended with an error. ssh.exe's message is above."
         "\r\nPress any key to close this window.\r\n"
     )
-    assert console.steps == [*STARTED, "key"]
+    assert console.steps == [*STARTED, ("key", holder.KEY_GRACE)]
     assert exit_code == 0  # after the key: Windows Terminal closes a tab that ends with 0
 
 
@@ -98,7 +99,7 @@ def test_above_255_it_gives_the_code_in_hex() -> None:
     assert "The connection to nas-01 ended with an error (exit code 0xC0000005)." in (
         console.written
     )
-    assert console.steps[-1] == "key"
+    assert console.steps[-1] == ("key", holder.KEY_GRACE)
 
 
 def test_its_words_come_in_capypanel_s_language() -> None:
@@ -115,7 +116,7 @@ def test_when_ssh_exe_can_t_start_it_says_why_and_waits() -> None:
         "\r\nCouldn't start ssh.exe: The system cannot find the file specified"
         "\r\nPress any key to close this window.\r\n"
     )
-    assert console.steps[-1] == "key" and exit_code == 0
+    assert console.steps[-1] == ("key", holder.KEY_GRACE) and exit_code == 0
 
 
 def test_with_no_console_nothing_starts() -> None:
@@ -128,6 +129,32 @@ def test_a_probe_s_start_keeps_the_console_it_was_given() -> None:
     console = FakeConsole(130)
     holder.run([holder.ATTACH, "--", *SSH], console)
     assert console.steps[0] == ("open", True)
+
+
+def test_a_quick_second_enter_never_closes_the_window_unread() -> None:
+    # At the host key question a bare Enter refuses and ssh.exe ends at once with 255; a second
+    # Enter close behind it must not close the window before the words are read.
+    assert holder.KEY_GRACE >= 1.0
+
+
+def test_the_key_wait_drops_what_was_pressed_during_the_grace(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str] = []
+
+    class FakeKernel:
+        def __getattr__(self, name: str) -> object:
+            def call(*_args: object) -> bool:
+                calls.append(name)
+                return False  # ReadConsoleInputW: the console went away, so the wait ends
+
+            return call
+
+    monkeypatch.setattr(holder, "_k32", FakeKernel())
+    monkeypatch.setattr(holder, "time", SimpleNamespace(sleep=lambda s: calls.append(f"sleep {s}")))
+    holder.WindowsConsole().wait_for_key(holder.KEY_GRACE)
+    # The grace first, then everything pressed in it dropped, then the wait.
+    assert calls == ["sleep 1.0", "FlushConsoleInputBuffer", "GetConsoleMode", "ReadConsoleInputW"]
 
 
 @pytest.mark.parametrize(

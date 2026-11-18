@@ -17,6 +17,7 @@ check and the tray. It writes no settings and no log."""
 
 import ctypes
 import subprocess
+import time
 from collections.abc import Sequence
 from ctypes import wintypes as wt
 from dataclasses import dataclass
@@ -33,6 +34,11 @@ LANGUAGE, HOST = "--lang=", "--host="
 # The holder's own exit codes. After ssh.exe's end, and after the key, it's always 0: Windows
 # Terminal closes a tab whose program ends with 0, and keeps one open that ends otherwise.
 DONE, NOT_STARTED_BY_CAPYPANEL, NO_CONSOLE = 0, 2, 3
+# Seconds after the words show in which a key doesn't close the window. At the host key
+# question a bare Enter refuses and ssh.exe ends at once, so a quick second Enter, pressed
+# because nothing seemed to happen, would close it before "Host key verification failed." was
+# read (Kerrigan).
+KEY_GRACE = 1.0
 
 
 @dataclass(frozen=True)
@@ -76,7 +82,7 @@ class Console(Protocol):
     def let_ctrl_c_through(self) -> None: ...
     def run(self, argv: Sequence[str]) -> int: ...
     def write(self, text: str) -> None: ...
-    def wait_for_key(self) -> None: ...
+    def wait_for_key(self, grace: float) -> None: ...
 
 
 def run(args: Sequence[str], console: Console | None = None) -> int:
@@ -104,7 +110,7 @@ def run(args: Sequence[str], console: Console | None = None) -> int:
 def _say_and_wait(console: Console, line: str) -> None:
     """`line` under what ssh.exe printed, then waits for a key."""
     console.write(f"\r\n{line}\r\n{_('Press any key to close this window.')}\r\n")
-    console.wait_for_key()
+    console.wait_for_key(KEY_GRACE)
 
 
 # ---- Windows ----
@@ -392,9 +398,11 @@ class WindowsConsole:
         written = wt.DWORD()
         _k32.WriteConsoleW(self._out, buffer, len(buffer) - 1, ctypes.byref(written), None)
 
-    def wait_for_key(self) -> None:
-        """Until a key is pressed. Shift, Ctrl, Alt, Windows and the lock keys alone don't
-        count, keys pressed before this are dropped, and Ctrl+C counts as a key here."""
+    def wait_for_key(self, grace: float) -> None:
+        """Until a key is pressed, `grace` seconds on: keys pressed before then are dropped.
+        Shift, Ctrl, Alt, Windows and the lock keys alone don't count, and Ctrl+C counts as a
+        key here."""
+        time.sleep(grace)
         _k32.FlushConsoleInputBuffer(self._in)
         mode = wt.DWORD()
         if _k32.GetConsoleMode(self._in, ctypes.byref(mode)):
