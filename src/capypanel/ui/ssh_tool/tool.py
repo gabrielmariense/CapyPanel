@@ -760,8 +760,8 @@ class SshTool(TabbedListWorkspace):
         return self.commands.copy_address if key == "address" else None  # keeps Ctrl+Shift+C
 
     def fill_item_menu(self, menu: QMenu, items: Sequence[Host]) -> None:
-        """Connect first, then Refresh, copy, then managing the hosts. Refresh says how many;
-        Edit is for one host only."""
+        """Connect first, then Refresh, then Log in as under its own line (as Hosts has Commands
+        run as), copy, then managing the hosts. Refresh says how many; Edit is for one host."""
         a = self.commands
         menu.addAction(a.connect_host)
         menu.setDefaultAction(a.connect_host)  # bold: what double-click and Enter do
@@ -777,6 +777,7 @@ class SshTool(TabbedListWorkspace):
             )
         )
         menu.addAction(a.refresh_selected)
+        menu.addSeparator()
         logins = menu.addMenu(_("&Log in as"))
         self._fill_host_login_menu(logins, items)
         menu.addSeparator()
@@ -788,11 +789,13 @@ class SshTool(TabbedListWorkspace):
         menu.addAction(a.remove)
 
     def fill_group_menu(self, menu: QMenu, group: Group) -> None:
-        """Refresh group last, under a separator, as in Hosts: its hosts, its subgroups' too."""
+        """Log in as, then Refresh group under its own line, as Hosts has Commands run as then
+        Refresh group (Dante's check of build 630): its hosts, its subgroups' too."""
         assert self._doc is not None
         hosts = list(self._doc.hosts.hosts_in(group.id))
         menu.addSeparator()
         self._fill_group_login_menu(menu.addMenu(_("&Log in as")), group)
+        menu.addSeparator()
         refresh = menu.addAction(_("Re&fresh group"))  # R is Remove's (Satya)
         refresh.setEnabled(bool(hosts) and self._run is None)
         refresh.triggered.connect(lambda: self.check_hosts(hosts))

@@ -618,6 +618,22 @@ def test_a_group_s_log_in_as_is_taken_by_its_hosts_without_a_name_of_their_own(
     ]  # fmt: skip
 
 
+def test_log_in_as_has_a_section_of_its_own_in_both_menus(ssh: SshTool) -> None:
+    """As Hosts has Commands run as: a line before it and one after (Dante, build 630's check)."""
+    _select(ssh, "nas-01", "web-01")
+    menu = QMenu()
+    ssh.fill_item_menu(menu, ssh.selected_items())
+    words = [menus.label(a) if not a.isSeparator() else "-" for a in menu.actions()]
+    at = words.index("&Log in as")
+    assert words[at - 2 : at + 3] == ["Re&fresh 2 hosts", "-", "&Log in as", "-", "Co&py"]
+    doc = ssh.document
+    assert doc is not None
+    menu = QMenu()
+    ssh.fill_group_menu(menu, doc.hosts.groups[0])
+    words = [menus.label(a) if not a.isSeparator() else "-" for a in menu.actions()]
+    assert words == ["-", "&Log in as", "-", "Re&fresh group"]
+
+
 def test_the_edit_window_s_hint_says_what_an_empty_log_in_as_takes(ssh: SshTool) -> None:
     doc = ssh.document
     assert doc is not None
