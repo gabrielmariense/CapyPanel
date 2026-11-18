@@ -60,6 +60,19 @@ def test_the_window_opens_on_home_with_a_tile_per_tool(home: CapyWindow) -> None
     assert home.shown_tool() is None
 
 
+@pytest.mark.parametrize("width", [1300, 1700])  # room for three tiles, and for all four
+def test_four_tools_go_two_by_two_however_wide_the_window(qapp: QApplication, width: int) -> None:
+    """His pick (18 Nov): three and one left SSH alone on its row."""
+    page = HomePage(CATALOG)
+    page.resize(width, 700)
+    page.show()
+    QApplication.processEvents()
+    a, b, c, d = (tile.geometry() for tile in page.tiles)
+    assert a.y() == b.y() < c.y() == d.y()
+    assert a.x() == c.x() < b.x() == d.x()
+    page.close()
+
+
 def test_tiles_wrap_into_rows_when_they_don_t_fit(qapp: QApplication) -> None:
     page = HomePage(CATALOG)
     page.resize(500, 700)
