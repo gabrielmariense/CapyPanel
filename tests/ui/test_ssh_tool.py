@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+import shiboken6
+from PySide6.QtCore import QCoreApplication, QEvent
 from PySide6.QtGui import QKeySequence, QValidator
 from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QMenu, QTreeWidgetItem
 from test_printers_tool import FakeShell  # the same pretend shell as Printers' tests
@@ -123,6 +125,17 @@ def test_it_is_the_fourth_tool_on_the_rail_with_ctrl_4(qapp: QApplication, tmp_p
         assert ctrl_4.data() == "ssh"
     finally:
         window.close()
+
+
+def test_a_tool_built_alone_takes_its_toolbar_with_it(shell: FakeShell) -> None:
+    """In the window, the tool's page holds its toolbar. Built alone, the toolbar outlived the
+    tool and its commands, and the next theme switch broke on a deleted command's key (CI on
+    build 623)."""
+    tool = SshTool(shell)
+    toolbar = tool.toolbar
+    tool.deleteLater()
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    assert not shiboken6.isValid(toolbar)  # at once: a theme switch can come next
 
 
 def test_refresh_checks_only_the_ssh_port_of_every_host_shown(

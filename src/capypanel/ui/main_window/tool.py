@@ -1,7 +1,9 @@
 """A tool the shell shows (Hosts, Printers…), and what a tool can ask of the shell."""
 
+import functools
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol
 
+import shiboken6
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QMouseEvent
 from PySide6.QtWidgets import QLabel, QWidget
@@ -75,6 +77,15 @@ class StatusLabel(QLabel):
         super().mouseReleaseEvent(event)
 
 
+def _take_along(toolbar: ToolBar) -> None:
+    """Connected to a tool's `destroyed`: its toolbar goes with it, at once. In the window the
+    tool's page deletes the toolbar first. A tool built alone (the tests) left it behind, with
+    the tool's commands gone, and the next theme switch broke on reading a deleted one's key.
+    Deleting it later instead still left that gap open."""
+    if shiboken6.isValid(toolbar):
+        shiboken6.delete(toolbar)
+
+
 class Tool(QWidget):
     """What a tool gives the shell: its central widget (itself), its toolbar, its rail icon and
     View entry, its View items, its status bar text and its window title. A tool keeps its
@@ -92,6 +103,7 @@ class Tool(QWidget):
         self._shell = shell
         self.prefs = shell.tool_prefs(self.TOOL_ID, inherit=self.INHERITS_TOP_LEVEL)
         self.toolbar = toolbar  # the shell shows it above the tool
+        self.destroyed.connect(functools.partial(_take_along, toolbar))
         # The shell shows it in its status bar, on the left.
         self.status_label = StatusLabel()
         self.status_label.setContentsMargins(spacing.CONTROLS, 0, spacing.CONTROLS, 0)
