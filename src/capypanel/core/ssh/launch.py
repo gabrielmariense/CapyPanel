@@ -1,9 +1,10 @@
-"""Connecting to an SSH host with Windows' own client, ssh.exe, in a console window of its own.
+"""Connecting to an SSH host with Windows' own client, ssh.exe: in a tab of the SSH tool (its
+command line here, its pseudo console in conpty.py) or in a console window of its own.
 CapyPanel hands it the address, the port and the name to log in as, nothing more: ssh.exe asks
 for the password itself, or uses a key, so no password ever passes through CapyPanel.
 
-The window is the holder's (holder.py): CapyPanel's own exe, which runs ssh.exe in it and keeps
-it open after an error, so ssh.exe's message can be read there.
+The separate window is the holder's (holder.py): CapyPanel's own exe, which runs ssh.exe in it
+and keeps it open after an error, so ssh.exe's message can be read there.
 
 What reaches ssh.exe comes from a list file anyone who can write to it could edit, so it's
 checked first: an address or a name that starts with "-" would be read as an option (ssh's
@@ -65,6 +66,17 @@ def command_line(exe: Path, destination: str, info: SshInfo) -> list[str]:
             raise ValueError("not a name ssh.exe can take")
         argv += ["-l", info.login]
     return [*argv, "--", destination]
+
+
+def tab_command(destination: str, info: SshInfo) -> list[str]:
+    """ssh.exe's command line for a connection in a tab, which runs it on a pseudo console.
+    Raises SshMissing or ValueError, as connect does."""
+    exe = ssh_exe()
+    if exe is None:
+        raise SshMissing
+    argv = command_line(exe, destination, info)
+    log.info("Starting ssh.exe %s in a tab", subprocess.list2cmdline(argv[1:]))  # no secret
+    return argv
 
 
 def connect(destination: str, info: SshInfo, name: str = "") -> subprocess.Popen[bytes]:

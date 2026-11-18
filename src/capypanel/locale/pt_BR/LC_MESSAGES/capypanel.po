@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 05:24-0300\n"
+"POT-Creation-Date: 2026-11-18 10:12-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -302,6 +302,9 @@ msgstr "&Parceiro"
 msgid "&Password:"
 msgstr "&Senha:"
 
+msgid "&Paste"
+msgstr "C&olar"
+
 msgid "&Port:"
 msgstr "&Porta:"
 
@@ -325,6 +328,9 @@ msgstr "&Sair do CapyPanel"
 
 msgid "&Read again"
 msgstr "&Ler de novo"
+
+msgid "&Reconnect"
+msgstr "&Reconectar"
 
 msgid "&Refresh group"
 msgstr "A&tualizar grupo"
@@ -759,6 +765,12 @@ msgstr "Um nome à sua escolha, depois o endereço IP da impressora ou o nome de
 msgid "Any time"
 msgstr "Qualquer data"
 
+msgid "Anything still running in it on the server may stop."
+msgstr "O que ainda estiver rodando nela no servidor pode parar."
+
+msgid "Anything still running in them on the servers may stop."
+msgstr "O que ainda estiver rodando nelas nos servidores pode parar."
+
 msgid "Appearance"
 msgstr "Aparência"
 
@@ -806,6 +818,9 @@ msgstr "&Marcas das barras"
 
 msgid "Bar marks"
 msgstr "Marcas das barras"
+
+msgid "Bigger text"
+msgstr "Texto maior"
 
 msgid "Black"
 msgstr "Preto"
@@ -1015,6 +1030,9 @@ msgstr "Verificando {done} de {total}…"
 msgid "Checks every host shown: whether it's on, and who's signed in. Right-click the button to choose what it checks."
 msgstr "Confere cada host mostrado: se está ligado e quem está conectado. Com o botão direito nele, você escolhe o que ele confere."
 
+msgid "Checks whether each host shown answers on its SSH port. Nothing logs in."
+msgstr "Confere se cada host mostrado responde na porta SSH. Nenhum login é feito."
+
 msgid "Checks whether each host shown answers, as Hosts' Refresh does; its Status column shows here and in Hosts"
 msgstr "Verifica se cada host exibido responde, como o Atualizar do Hosts; a coluna Status aparece aqui e no Hosts"
 
@@ -1031,6 +1049,9 @@ msgstr "Limpar"
 
 msgid "Clear &queue…"
 msgstr "Limpar &fila…"
+
+msgid "Clear &scrollback"
+msgstr "&Limpar histórico de rolagem"
 
 msgid "Clear queue"
 msgstr "Limpar fila"
@@ -1061,11 +1082,27 @@ msgstr "Clique para copiar, botão direito para ver o que dá para fazer"
 msgid "Close"
 msgstr "Fechar"
 
+msgid "Close &tab"
+msgstr "Fechar &aba"
+
+#, python-brace-format
+msgid "Close the connection to {host}?"
+msgstr "Fechar a conexão com {host}?"
+
+msgid "Close the ended ones"
+msgstr "Fechar as que terminaram"
+
 msgid "Close the finished ones"
 msgstr "Fechar as concluídas"
 
 msgid "Close the others"
 msgstr "Fechar as outras"
+
+#, python-brace-format
+msgid "Close {n} open connection?"
+msgid_plural "Close {n} open connections?"
+msgstr[0] "Fechar {n} conexão aberta?"
+msgstr[1] "Fechar {n} conexões abertas?"
 
 msgid "Co&py"
 msgstr "Co&piar"
@@ -1104,6 +1141,9 @@ msgstr "Conectar"
 msgctxt "button"
 msgid "Connect"
 msgstr "Conectar"
+
+msgid "Connect in a separate &window"
+msgstr "Conectar numa janela &separada"
 
 msgid "Connect to the selected hosts with Windows' ssh.exe"
 msgstr "Conecta aos hosts selecionados com o ssh.exe do Windows"
@@ -1145,8 +1185,14 @@ msgstr "&Perfil de conexão:"
 msgid "Connection &profiles…"
 msgstr "&Perfis de conexão…"
 
+msgid "Connection open"
+msgstr "Conexão aberta"
+
 msgid "Connection profiles"
 msgstr "Perfis de conexão"
+
+msgid "Connects to the host you picked, in a tab of its own beside the list. The first time, ssh.exe asks whether you trust the server."
+msgstr "Conecta ao host escolhido, numa aba própria ao lado da lista. Na primeira vez, o ssh.exe pergunta se você confia no servidor."
 
 msgid "Console"
 msgstr "Console"
@@ -1194,6 +1240,9 @@ msgstr[1] "Copiar &nomes"
 
 msgid "Copy all"
 msgstr "Copiar tudo"
+
+msgid "Copy, with text selected"
+msgstr "Copiar, com texto selecionado"
 
 msgid "Couldn't check for updates."
 msgstr "Não foi possível procurar uma nova versão."
@@ -1605,6 +1654,9 @@ msgstr "Cada grupo de argumentos deve ser uma lista de textos."
 msgid "Each guide shows again the next time its screen is opened."
 msgstr "Cada guia aparece de novo na próxima vez que a tela dele for aberta."
 
+msgid "Each line may run as a command."
+msgstr "Cada linha pode ser executada como um comando."
+
 msgid "Edit connection profile"
 msgstr "Editar perfil de conexão"
 
@@ -1631,6 +1683,12 @@ msgstr "Vazio: config do SSH ou seu usuário do Windows"
 
 msgid "Encryption pass&word"
 msgstr "Senha da cri&ptografia"
+
+msgid "Ended"
+msgstr "Terminou"
+
+msgid "Ended with an error"
+msgstr "Terminou com um erro"
 
 msgid "Ends a user's session connection; their programs keep running."
 msgstr "Encerra a conexão da sessão de um usuário; os programas dele continuam abertos."
@@ -1709,8 +1767,8 @@ msgstr "Todos neste PC (compartilhada)"
 msgid "Export CSV"
 msgstr "Exportar CSV"
 
-msgid "F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself."
-msgstr "F1, Esc, Ctrl+F e Tab ficam reservadas ao próprio CapyPanel."
+msgid "F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself. In an SSH terminal, F1, Esc, Ctrl+F and Tab go to the server."
+msgstr "F1, Esc, Ctrl+F, Tab e Ctrl+Shift+W ficam reservadas ao próprio CapyPanel. Num terminal SSH, F1, Esc, Ctrl+F e Tab vão para o servidor."
 
 msgid "Failed"
 msgstr "Falhou"
@@ -1970,6 +2028,9 @@ msgstr "Importar impressoras"
 msgid "In CapyPanel"
 msgstr "No CapyPanel"
 
+msgid "In a separate window"
+msgstr "Numa janela separada"
+
 #, python-brace-format
 msgid "In the open list it's set on {hosts} and {groups}. They'll use their group's profile, or the default, instead."
 msgstr "Na lista aberta ele está definido em {hosts} e {groups}. Eles passarão a usar o perfil do grupo, ou o padrão."
@@ -1992,6 +2053,9 @@ msgstr "Tinta"
 msgid "Ink low"
 msgstr "Tinta baixa"
 
+msgid "Inside a terminal, every key goes to the server except the ones below and the keys that change tools or open Settings."
+msgstr "Dentro de um terminal, todas as teclas vão para o servidor, menos as abaixo e as que trocam de ferramenta ou abrem as Configurações."
+
 msgid "Install it, or locate its .exe."
 msgstr "Instale-o ou localize o .exe dele."
 
@@ -2008,11 +2072,22 @@ msgstr "Programas instalados em {host}"
 msgid "Inventory"
 msgstr "Inventário"
 
+msgid "Inventory › Add host needs a name and an address. The port and Log in as are optional: without them, ssh.exe uses port 22 and its own settings."
+msgstr "Inventário › Adicionar host pede um nome e um endereço. A porta e Entrar como são opcionais: sem eles, o ssh.exe usa a porta 22 e as configurações dele."
+
 msgid "Inventory › Add printer only needs a name and the address. A Refresh reads the toner, and Details shows the brand, model and serial number the printer reports, ready to copy in with Use this."
 msgstr "Em Inventário › Adicionar impressora, basta o nome e o endereço. Uma atualização lê o toner, e Detalhes mostra a marca, o modelo e o número de série que a impressora informa, para copiar com Usar este."
 
 msgid "It can be deleted: nobody is signed in to it, it isn't one of Windows' own, and it's in the Users folder."
 msgstr "Pode ser excluído: ninguém está conectado com ele, não é do Windows e fica na pasta Users."
+
+msgid "It closes, and anything still running in it on the server may stop."
+msgid_plural "They all close, and anything still running in them on the servers may stop."
+msgstr[0] "Ela é fechada, e o que ainda estiver rodando nela no servidor pode parar."
+msgstr[1] "Todas são fechadas, e o que ainda estiver rodando nelas nos servidores pode parar."
+
+msgid "It may run as a command."
+msgstr "Ela pode ser executada como um comando."
 
 #, python-brace-format
 msgid "It pops up on their screen on {host} until they click OK."
@@ -2056,8 +2131,8 @@ msgstr "Manter aberto na bandeja"
 msgid "Kept"
 msgstr "Guardada"
 
-msgid "Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches and Tab moves between fields."
-msgstr "Reservada ao próprio CapyPanel: F1 é da ajuda, Esc fecha, Ctrl+F busca e Tab passa de um campo a outro."
+msgid "Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches, Tab moves between fields and Ctrl+Shift+W closes a tab."
+msgstr "Reservada ao próprio CapyPanel: F1 é da ajuda, Esc fecha, Ctrl+F busca, Tab passa de um campo a outro e Ctrl+Shift+W fecha uma aba."
 
 msgid "Kept in"
 msgstr "Guardada em"
@@ -2284,6 +2359,9 @@ msgstr "Nova tag"
 
 msgid "Next"
 msgstr "Avançar"
+
+msgid "Next tab"
+msgstr "Próxima aba"
 
 msgid "No Doc360 MPS account is set."
 msgstr "Nenhuma conta do Doc360 MPS definida."
@@ -2689,6 +2767,9 @@ msgstr "Abre uma pasta de {host} no Explorador de Arquivos, pelo compartilhament
 msgid "Opens every command for the picked host. A right-click on a host has them too, under All commands. They run with your Windows account; if a PC refuses it, CapyPanel asks for another, kept in Settings › Hosts › Credentials."
 msgstr "Abre todos os comandos do host escolhido. O botão direito num host também tem, em Todos os comandos. Eles usam a sua conta do Windows; se um PC recusar, o CapyPanel pede outra, guardada em Configurações › Hosts › Credenciais."
 
+msgid "Opens ssh.exe in a window of its own, outside CapyPanel"
+msgstr "Abre o ssh.exe numa janela própria, fora do CapyPanel"
+
 msgid "Opens the host in a new tab. Typing alone never scans."
 msgstr "Abre o host numa aba nova. Digitar sozinho nunca escaneia."
 
@@ -2800,12 +2881,21 @@ msgstr "Senha para {profile}"
 msgid "Passwords"
 msgstr "Senhas"
 
+msgid "Paste"
+msgstr "Colar"
+
 msgid "Paste a list below, or"
 msgstr "Cole uma lista abaixo, ou"
 
 #, python-brace-format
 msgid "Paste a path as File Explorer copies it, quotes and all, or a full \\\\{host}\\D$\\… path. The list keeps the last {n} folders you opened."
 msgstr "Cole um caminho como o Explorador de Arquivos copia, com aspas e tudo, ou um caminho completo \\\\{host}\\D$\\…. A lista guarda as últimas {n} pastas que você abriu."
+
+#, python-brace-format
+msgid "Paste {n} line into {host}?"
+msgid_plural "Paste {n} lines into {host}?"
+msgstr[0] "Colar {n} linha em {host}?"
+msgstr[1] "Colar {n} linhas em {host}?"
 
 msgid "Path"
 msgstr "Caminho"
@@ -2881,6 +2971,9 @@ msgstr "Pressione a nova tecla…"
 
 msgid "Preview"
 msgstr "Prévia"
+
+msgid "Previous tab"
+msgstr "Aba anterior"
 
 #, python-brace-format
 msgid "Print Spooler restarted on {host}."
@@ -2980,6 +3073,12 @@ msgstr "Sair"
 
 msgid "Quit CapyPanel"
 msgstr "Sair do CapyPanel"
+
+#, python-brace-format
+msgid "Quit CapyPanel with {n} connection open?"
+msgid_plural "Quit CapyPanel with {n} connections open?"
+msgstr[0] "Sair do CapyPanel com {n} conexão aberta?"
+msgstr[1] "Sair do CapyPanel com {n} conexões abertas?"
 
 msgid "Quitting now cancels the profiles still queued. The profile being deleted on each host finishes first; CapyPanel quits after that."
 msgstr "Sair agora cancela os perfis ainda na fila. O perfil sendo excluído em cada host termina primeiro; o CapyPanel sai depois disso."
@@ -3305,6 +3404,9 @@ msgstr "Comunidade SNMP"
 msgid "SNMP v3 account"
 msgstr "Conta SNMP v3"
 
+msgid "SRV-SAMPLE"
+msgstr "SRV-EXEMPLO"
+
 msgid "SSH"
 msgstr "SSH"
 
@@ -3313,6 +3415,9 @@ msgstr "Listas SSH"
 
 msgid "SSH lists (*.json);;All files (*)"
 msgstr "Listas SSH (*.json);;Todos os arquivos (*)"
+
+msgid "SSH terminal"
+msgstr "Terminal SSH"
 
 msgid "Sa&ved credentials"
 msgstr "Credenciais sal&vas"
@@ -3433,6 +3538,9 @@ msgstr "Pesquisa todas as impressoras da lista (Ctrl+F)"
 
 msgid "See examples in Formats…"
 msgstr "Veja exemplos em Formatos…"
+
+msgid "Select &all"
+msgstr "Selecionar &tudo"
 
 msgid "Select a host to see its details."
 msgstr "Selecione um host para ver os detalhes."
@@ -3587,6 +3695,9 @@ msgstr "Ignorado: ele já não era o que a leitura viu. Escaneie de novo."
 
 msgid "Skipped: this person signed in to the PC after the scan. Nothing was deleted."
 msgstr "Ignorado: esta pessoa entrou no PC depois da leitura. Nada foi excluído."
+
+msgid "Smaller text"
+msgstr "Texto menor"
 
 msgid "Software"
 msgstr "Software"
@@ -3849,6 +3960,10 @@ msgstr "A conexão com {host} terminou com um erro (código de saída {code})."
 msgid "The connection to {host} ended with an error. ssh.exe's message is above."
 msgstr "A conexão com {host} terminou com um erro. A mensagem do ssh.exe está acima."
 
+#, python-brace-format
+msgid "The connection to {host} ended."
+msgstr "A conexão com {host} terminou."
+
 msgid "The current profile finishes first; the queued ones don't start. Every delete goes in the history."
 msgstr "O perfil atual termina primeiro; os da fila não começam. Cada exclusão fica no histórico."
 
@@ -3956,6 +4071,9 @@ msgstr "A lista abre neste grupo"
 msgid "The list “{path}” doesn't exist anymore."
 msgstr "A lista “{path}” não existe mais."
 
+msgid "The list's hosts are here. A double-click connects, and a right-click shows everything you can do with one."
+msgstr "Os hosts da lista ficam aqui. Dois cliques conectam, e o botão direito num host mostra tudo o que dá para fazer com ele."
+
 msgid "The list's printers are here. Pick one to see everything about it in Details. A right-click on a printer shows what you can do with it, and a double-click opens its web page."
 msgstr "As impressoras da lista ficam aqui. Escolha uma para ver tudo sobre ela em Detalhes. O botão direito numa impressora mostra o que dá para fazer com ela, e dois cliques abrem a página web dela."
 
@@ -4058,6 +4176,9 @@ msgstr "A reinicialização ou o desligamento de {host} foi cancelado."
 
 msgid "The sidebar"
 msgstr "A barra lateral"
+
+msgid "The terminal's own keys can't be changed."
+msgstr "As teclas do próprio terminal não podem ser alteradas."
 
 msgid "The tool needs a “name”."
 msgstr "A ferramenta precisa de um “name”."
@@ -4302,6 +4423,9 @@ msgstr "Marcado: é excluído quando você clicar em Excluir e confirmar"
 msgid "To confirm, type <b>{word}</b>:"
 msgstr "Para confirmar, digite <b>{word}</b>:"
 
+msgid "To keep a connection outside CapyPanel, right-click a host and pick Connect in a separate window."
+msgstr "Para manter uma conexão fora do CapyPanel, clique com o botão direito num host e escolha Conectar numa janela separada."
+
 msgid "To see this guide again, use Help › Guide to this screen. Show all the guides again brings every guide back, and Documentation opens the step-by-step pages."
 msgstr "Para ver este guia de novo, use Ajuda › Guia desta tela. Mostrar todos os guias de novo traz todos de volta, e Documentação abre as páginas passo a passo."
 
@@ -4369,6 +4493,9 @@ msgstr "Digite a senha."
 
 msgid "Type the user name."
 msgstr "Digite o nome do usuário."
+
+msgid "Type yes, then press Enter."
+msgstr "Digite yes (em inglês) e pressione Enter."
 
 msgid "Unchanged"
 msgstr "Sem alteração"
@@ -4675,6 +4802,9 @@ msgstr "Sua conta do Windows ({user})"
 
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr "Seus computadores: conecte, veja quem está logado, verifique-os."
+
+msgid "Your hosts"
+msgstr "Seus hosts"
 
 msgid "Your lists"
 msgstr "Suas listas"
@@ -5779,6 +5909,12 @@ msgstr "“{path}” não é uma lista de impressoras."
 #, python-brace-format
 msgid "“{path}” isn't an SSH list."
 msgstr "“{path}” não é uma lista SSH."
+
+#, python-brace-format
+msgid "…and {n} more line"
+msgid_plural "…and {n} more lines"
+msgstr[0] "…e mais {n} linha"
+msgstr[1] "…e mais {n} linhas"
 
 msgid "↑ ↓ pick, Enter runs, typing searches. Commands that need more open a small window; risky ones ask first."
 msgstr "↑ ↓ escolhe, Enter executa, digitar pesquisa. Comandos que precisam de mais abrem uma janela pequena; os arriscados perguntam antes."

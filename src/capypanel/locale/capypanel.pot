@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 05:24-0300\n"
+"POT-Creation-Date: 2026-11-18 10:12-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -301,6 +301,9 @@ msgstr ""
 msgid "&Password:"
 msgstr ""
 
+msgid "&Paste"
+msgstr ""
+
 msgid "&Port:"
 msgstr ""
 
@@ -323,6 +326,9 @@ msgid "&Quit CapyPanel"
 msgstr ""
 
 msgid "&Read again"
+msgstr ""
+
+msgid "&Reconnect"
 msgstr ""
 
 msgid "&Refresh group"
@@ -775,6 +781,12 @@ msgstr ""
 msgid "Any time"
 msgstr ""
 
+msgid "Anything still running in it on the server may stop."
+msgstr ""
+
+msgid "Anything still running in them on the servers may stop."
+msgstr ""
+
 msgid "Appearance"
 msgstr ""
 
@@ -824,6 +836,9 @@ msgid "Bar &marks"
 msgstr ""
 
 msgid "Bar marks"
+msgstr ""
+
+msgid "Bigger text"
 msgstr ""
 
 msgid "Black"
@@ -1053,6 +1068,9 @@ msgid ""
 "click the button to choose what it checks."
 msgstr ""
 
+msgid "Checks whether each host shown answers on its SSH port. Nothing logs in."
+msgstr ""
+
 msgid ""
 "Checks whether each host shown answers, as Hosts' Refresh does; its "
 "Status column shows here and in Hosts"
@@ -1070,6 +1088,9 @@ msgid "Clear"
 msgstr ""
 
 msgid "Clear &queue…"
+msgstr ""
+
+msgid "Clear &scrollback"
 msgstr ""
 
 msgid "Clear queue"
@@ -1104,11 +1125,27 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
+msgid "Close &tab"
+msgstr ""
+
+#, python-brace-format
+msgid "Close the connection to {host}?"
+msgstr ""
+
+msgid "Close the ended ones"
+msgstr ""
+
 msgid "Close the finished ones"
 msgstr ""
 
 msgid "Close the others"
 msgstr ""
+
+#, python-brace-format
+msgid "Close {n} open connection?"
+msgid_plural "Close {n} open connections?"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Co&py"
 msgstr ""
@@ -1146,6 +1183,9 @@ msgstr ""
 
 msgctxt "button"
 msgid "Connect"
+msgstr ""
+
+msgid "Connect in a separate &window"
 msgstr ""
 
 msgid "Connect to the selected hosts with Windows' ssh.exe"
@@ -1188,7 +1228,15 @@ msgstr ""
 msgid "Connection &profiles…"
 msgstr ""
 
+msgid "Connection open"
+msgstr ""
+
 msgid "Connection profiles"
+msgstr ""
+
+msgid ""
+"Connects to the host you picked, in a tab of its own beside the list. The"
+" first time, ssh.exe asks whether you trust the server."
 msgstr ""
 
 msgid "Console"
@@ -1236,6 +1284,9 @@ msgstr[0] ""
 msgstr[1] ""
 
 msgid "Copy all"
+msgstr ""
+
+msgid "Copy, with text selected"
 msgstr ""
 
 msgid "Couldn't check for updates."
@@ -1657,6 +1708,9 @@ msgstr ""
 msgid "Each guide shows again the next time its screen is opened."
 msgstr ""
 
+msgid "Each line may run as a command."
+msgstr ""
+
 msgid "Edit connection profile"
 msgstr ""
 
@@ -1687,6 +1741,12 @@ msgid "Empty: your SSH config, then your Windows user name"
 msgstr ""
 
 msgid "Encryption pass&word"
+msgstr ""
+
+msgid "Ended"
+msgstr ""
+
+msgid "Ended with an error"
 msgstr ""
 
 msgid "Ends a user's session connection; their programs keep running."
@@ -1772,7 +1832,9 @@ msgstr ""
 msgid "Export CSV"
 msgstr ""
 
-msgid "F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself."
+msgid ""
+"F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself. In "
+"an SSH terminal, F1, Esc, Ctrl+F and Tab go to the server."
 msgstr ""
 
 msgid "Failed"
@@ -2044,6 +2106,9 @@ msgstr ""
 msgid "In CapyPanel"
 msgstr ""
 
+msgid "In a separate window"
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "In the open list it's set on {hosts} and {groups}. They'll use their "
@@ -2068,6 +2133,11 @@ msgstr ""
 msgid "Ink low"
 msgstr ""
 
+msgid ""
+"Inside a terminal, every key goes to the server except the ones below and"
+" the keys that change tools or open Settings."
+msgstr ""
+
 msgid "Install it, or locate its .exe."
 msgstr ""
 
@@ -2085,6 +2155,11 @@ msgid "Inventory"
 msgstr ""
 
 msgid ""
+"Inventory › Add host needs a name and an address. The port and Log in as "
+"are optional: without them, ssh.exe uses port 22 and its own settings."
+msgstr ""
+
+msgid ""
 "Inventory › Add printer only needs a name and the address. A Refresh "
 "reads the toner, and Details shows the brand, model and serial number the"
 " printer reports, ready to copy in with Use this."
@@ -2093,6 +2168,16 @@ msgstr ""
 msgid ""
 "It can be deleted: nobody is signed in to it, it isn't one of Windows' "
 "own, and it's in the Users folder."
+msgstr ""
+
+msgid "It closes, and anything still running in it on the server may stop."
+msgid_plural ""
+"They all close, and anything still running in them on the servers may "
+"stop."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "It may run as a command."
 msgstr ""
 
 #, python-brace-format
@@ -2142,8 +2227,8 @@ msgid "Kept"
 msgstr ""
 
 msgid ""
-"Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches "
-"and Tab moves between fields."
+"Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches, "
+"Tab moves between fields and Ctrl+Shift+W closes a tab."
 msgstr ""
 
 msgid "Kept in"
@@ -2377,6 +2462,9 @@ msgid "New tag"
 msgstr ""
 
 msgid "Next"
+msgstr ""
+
+msgid "Next tab"
 msgstr ""
 
 msgid "No Doc360 MPS account is set."
@@ -2817,6 +2905,9 @@ msgid ""
 "Credentials."
 msgstr ""
 
+msgid "Opens ssh.exe in a window of its own, outside CapyPanel"
+msgstr ""
+
 msgid "Opens the host in a new tab. Typing alone never scans."
 msgstr ""
 
@@ -2933,6 +3024,9 @@ msgstr ""
 msgid "Passwords"
 msgstr ""
 
+msgid "Paste"
+msgstr ""
+
 msgid "Paste a list below, or"
 msgstr ""
 
@@ -2941,6 +3035,12 @@ msgid ""
 "Paste a path as File Explorer copies it, quotes and all, or a full "
 "\\\\{host}\\D$\\… path. The list keeps the last {n} folders you opened."
 msgstr ""
+
+#, python-brace-format
+msgid "Paste {n} line into {host}?"
+msgid_plural "Paste {n} lines into {host}?"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Path"
 msgstr ""
@@ -3023,6 +3123,9 @@ msgid "Press the new key…"
 msgstr ""
 
 msgid "Preview"
+msgstr ""
+
+msgid "Previous tab"
 msgstr ""
 
 #, python-brace-format
@@ -3125,6 +3228,12 @@ msgstr ""
 
 msgid "Quit CapyPanel"
 msgstr ""
+
+#, python-brace-format
+msgid "Quit CapyPanel with {n} connection open?"
+msgid_plural "Quit CapyPanel with {n} connections open?"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid ""
 "Quitting now cancels the profiles still queued. The profile being deleted"
@@ -3464,6 +3573,9 @@ msgstr ""
 msgid "SNMP v3 account"
 msgstr ""
 
+msgid "SRV-SAMPLE"
+msgstr ""
+
 msgid "SSH"
 msgstr ""
 
@@ -3471,6 +3583,9 @@ msgid "SSH lists"
 msgstr ""
 
 msgid "SSH lists (*.json);;All files (*)"
+msgstr ""
+
+msgid "SSH terminal"
 msgstr ""
 
 msgid "Sa&ved credentials"
@@ -3591,6 +3706,9 @@ msgid "Searches every printer in the list (Ctrl+F)"
 msgstr ""
 
 msgid "See examples in Formats…"
+msgstr ""
+
+msgid "Select &all"
 msgstr ""
 
 msgid "Select a host to see its details."
@@ -3749,6 +3867,9 @@ msgstr ""
 msgid ""
 "Skipped: this person signed in to the PC after the scan. Nothing was "
 "deleted."
+msgstr ""
+
+msgid "Smaller text"
 msgstr ""
 
 msgid "Software"
@@ -4037,6 +4158,10 @@ msgstr ""
 msgid "The connection to {host} ended with an error. ssh.exe's message is above."
 msgstr ""
 
+#, python-brace-format
+msgid "The connection to {host} ended."
+msgstr ""
+
 msgid ""
 "The current profile finishes first; the queued ones don't start. Every "
 "delete goes in the history."
@@ -4161,6 +4286,11 @@ msgid "The list “{path}” doesn't exist anymore."
 msgstr ""
 
 msgid ""
+"The list's hosts are here. A double-click connects, and a right-click "
+"shows everything you can do with one."
+msgstr ""
+
+msgid ""
 "The list's printers are here. Pick one to see everything about it in "
 "Details. A right-click on a printer shows what you can do with it, and a "
 "double-click opens its web page."
@@ -4275,6 +4405,9 @@ msgid "The restart or shutdown of {host} is cancelled."
 msgstr ""
 
 msgid "The sidebar"
+msgstr ""
+
+msgid "The terminal's own keys can't be changed."
 msgstr ""
 
 msgid "The tool needs a “name”."
@@ -4538,6 +4671,11 @@ msgid "To confirm, type <b>{word}</b>:"
 msgstr ""
 
 msgid ""
+"To keep a connection outside CapyPanel, right-click a host and pick "
+"Connect in a separate window."
+msgstr ""
+
+msgid ""
 "To see this guide again, use Help › Guide to this screen. Show all the "
 "guides again brings every guide back, and Documentation opens the step-"
 "by-step pages."
@@ -4606,6 +4744,9 @@ msgid "Type the password."
 msgstr ""
 
 msgid "Type the user name."
+msgstr ""
+
+msgid "Type yes, then press Enter."
 msgstr ""
 
 msgid "Unchanged"
@@ -4946,6 +5087,9 @@ msgid "Your Windows account ({user})"
 msgstr ""
 
 msgid "Your computers: connect, see who's logged on, check them."
+msgstr ""
+
+msgid "Your hosts"
 msgstr ""
 
 msgid "Your lists"
@@ -6091,6 +6235,12 @@ msgstr ""
 #, python-brace-format
 msgid "“{path}” isn't an SSH list."
 msgstr ""
+
+#, python-brace-format
+msgid "…and {n} more line"
+msgid_plural "…and {n} more lines"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid ""
 "↑ ↓ pick, Enter runs, typing searches. Commands that need more open a "

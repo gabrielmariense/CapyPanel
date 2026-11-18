@@ -30,7 +30,10 @@ def test_it_passes_from_source_and_says_what_it_checked(
     lines = report.read_text(encoding="utf-8").splitlines()
     assert lines[0].startswith("CapyPanel ") and lines[-1] == "SELF-TEST PASSED"
     passed = [line for line in lines if line.startswith("ok ")]
-    assert len(passed) == 4 and "themes 7" in passed[-1] and "languages 2" in passed[-1]
+    assert len(passed) == 5
+    window = next(line for line in passed if line.startswith("ok    the window: "))
+    assert "themes 7" in window and "languages 2" in window
+    assert passed[-1].startswith("ok    the SSH terminal: pseudo console, screen, drawing")
     assert not own.exists()  # the folder it worked in is gone
 
 
@@ -44,6 +47,17 @@ def test_a_missing_part_fails_it_and_the_report_says_which(
     text = report.read_text(encoding="utf-8")
     assert "FAILED bundled files" in text and "themes: 0 of at least 2" in text
     assert text.splitlines()[-1] == "SELF-TEST FAILED"
+
+
+def test_a_build_without_pyte_s_notices_fails_the_terminal_check(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(selftest, "_whole_window", lambda root: ["skipped here"])
+    monkeypatch.setattr(selftest, "PYTE_NOTICES", ("LICENSE", "NOTICE-LEFT-OUT"))
+    report = tmp_path / "report.txt"
+    assert selftest.run(report) == 1
+    text = report.read_text(encoding="utf-8")
+    assert "FAILED the SSH terminal" in text and "pyte's NOTICE-LEFT-OUT missing" in text
 
 
 def test_an_error_in_the_exe_s_own_jobs_never_reaches_the_screen(

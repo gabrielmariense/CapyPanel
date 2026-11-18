@@ -20,20 +20,20 @@ from capypanel.vendor.pyte._widths import wcwidth
 CONSOLE_CELLS = [
     ("abc", 3),
     ("ção", 3),  # pt-BR accents, precomposed
-    ("é", 2),  # e and a combining acute: a cell each
+    ("e\u0301", 2),  # e and a combining acute: a cell each
     ("中文", 4),  # CJK
     ("한", 2),  # Hangul
     ("Ａ", 2),  # fullwidth A
     ("\U0001f44d", 2),  # thumbs up
-    ("❤️", 2),  # heart and VS16: a cell each
+    ("❤\ufe0f", 2),  # heart and VS16: a cell each
     ("⚠", 1),  # warning sign
     ("\U0001f1e7\U0001f1f7", 4),  # the Brazilian flag: two wide regional indicators
-    ("\U0001f469‍\U0001f4bb", 5),  # woman technologist: 2, the joiner 1, 2
+    ("\U0001f469\u200d\U0001f4bb", 5),  # woman technologist: 2, the joiner 1, 2
     ("─│", 2),  # box drawing
     ("→", 1),  # arrow
-    ("⚠️", 2),  # warning and VS16
-    ("", 1),  # a Powerline separator (private use)
-    ("a​b", 3),  # a zero-width space takes a cell
+    ("⚠\ufe0f", 2),  # warning and VS16
+    ("\ue0b0", 1),  # a Powerline separator (private use)
+    ("a\u200bb", 3),  # a zero-width space takes a cell
     ("\U0001fae8", 2),  # a Unicode 15 emoji
     ("±", 1),  # plus-minus (ambiguous width)
     ("❤", 1),  # heart alone
@@ -56,14 +56,14 @@ def test_each_sample_takes_the_cells_the_console_gives_it(sample: str, cells: in
 def test_the_widths_are_wcwidths_from_pythons_own_tables() -> None:
     assert wcwidth("\x07") == -1
     assert wcwidth("\x9b") == -1
-    assert wcwidth("́") == 0  # combining
-    assert wcwidth("゙") == 0  # combining, though East Asian Wide
-    assert wcwidth("‍") == 0  # a joiner
-    assert wcwidth("­") == 1  # the soft hyphen shows, as in wcwidth
+    assert wcwidth("\u0301") == 0  # combining
+    assert wcwidth("\u3099") == 0  # combining, though East Asian Wide
+    assert wcwidth("\u200d") == 0  # a joiner
+    assert wcwidth("\u00ad") == 1  # the soft hyphen shows, as in wcwidth
     assert wcwidth("\U0001f1e6") == 2  # a regional indicator
     assert wcwidth("Ａ") == 2
     assert wcwidth("a") == 1
-    assert [cells_for(c) for c in "́‍\x07"] == [1, 1, 1]  # never less than one
+    assert [cells_for(c) for c in "\u0301\u200d\x07"] == [1, 1, 1]  # never less than one
 
 
 def test_a_wide_character_that_no_longer_fits_goes_whole_to_the_next_row() -> None:
@@ -106,8 +106,8 @@ def test_a_sequence_the_screen_cant_take_costs_that_sequence_only() -> None:
 
 def test_an_enq_or_a_variation_selector_never_drops_the_text_after_it() -> None:
     screen, stream = screen_and_stream()
-    stream.feed("\x05<SENT> ❤️]".encode())
-    assert screen.row_text(0) == "<SENT> ❤️]"
+    stream.feed("\x05<SENT> ❤\ufe0f]".encode())
+    assert screen.row_text(0) == "<SENT> ❤\ufe0f]"
 
 
 def test_colours_stay_palette_numbers_so_a_theme_switch_recolours_them() -> None:

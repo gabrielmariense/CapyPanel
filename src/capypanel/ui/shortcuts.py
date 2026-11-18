@@ -19,8 +19,13 @@ PREFS_KEY = "shortcuts"  # this person's: {command id: "Ctrl+E", or "" for no ke
 EVERYWHERE = ""  # a command of the window itself (its menu bar), not of one tool
 OLD_SHARED = "list."  # before 0.28's last builds, one id for a command every list tool has
 # Keys no command can take: F1 is help's (0.30), Esc closes and ends a search, Ctrl+F searches
-# every list, and the Tab keys move around a window and between tabs.
-RESERVED = ("F1", "Esc", "Ctrl+F", "Tab", "Shift+Tab", "Ctrl+Tab", "Ctrl+Shift+Tab")
+# every list, the Tab keys move around a window and between tabs, and Ctrl+Shift+W closes the
+# tab in front (Profile cleanup's and the SSH tool's): a command with it would leave neither.
+RESERVED = ("F1", "Esc", "Ctrl+F", "Tab", "Shift+Tab", "Ctrl+Tab", "Ctrl+Shift+Tab", "Ctrl+Shift+W")
+# The window's commands whose keys reach CapyPanel from inside an SSH terminal, whatever keys
+# they have now: those that change tools (Home too) and open Settings. Every other key in a
+# terminal goes to the server (topic-027).
+PAST_TERMINAL = ("app.settings", "go.")  # an id, or the start of the ids
 PORTABLE = QKeySequence.SequenceFormat.PortableText
 NATIVE = QKeySequence.SequenceFormat.NativeText
 DEAD_KEYS_END = 0x01001293  # the last of Qt's dead-key codes
@@ -93,8 +98,8 @@ def refused(keys: str) -> str:
         return _("Press one key, with Ctrl, Alt or Shift if you like.")
     if portable(sequence) in {portable(r) for r in RESERVED}:
         # Shown right after the key is pressed, so it isn't named again (F1 would read twice).
-        return _("Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches and "
-                 "Tab moves between fields.")  # fmt: skip
+        return _("Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches, "
+                 "Tab moves between fields and Ctrl+Shift+W closes a tab.")  # fmt: skip
     combo = sequence[0]  # type: ignore[index]  # PySide6 has [], its stubs lack it
     mods = combo.keyboardModifiers()
     typed = Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier
@@ -118,6 +123,7 @@ class Keys:
     def __init__(self, prefs: dict[str, Any], save: Callable[[], None]) -> None:
         self._prefs, self._save = prefs, save
         self.rows: list[Row] = []
+        self.past_terminal: frozenset[str] = frozenset()  # PAST_TERMINAL's keys now, portable
 
     def _own(self) -> dict[str, str]:
         kept = self._prefs.get(PREFS_KEY)
@@ -199,3 +205,8 @@ class Keys:
                 if action.shortcut() != sequence:
                     action.setShortcut(sequence)
                     action.setText(menus.label(action))  # its old key's room goes
+        self.past_terminal = frozenset(
+            keys
+            for row in self.rows
+            if row.id.startswith(PAST_TERMINAL) and (keys := self.key(row))
+        )

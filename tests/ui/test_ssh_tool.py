@@ -16,6 +16,7 @@ from capypanel.core.remote.status import PortState
 from capypanel.core.ssh import launch
 from capypanel.core.ssh.host import SshInfo, info_of, with_info
 from capypanel.core.ssh.launch import connect as real_connect  # before no_ssh stands in for it
+from capypanel.core.ssh.launch import tab_command as real_tab_command
 from capypanel.ui import menus
 from capypanel.ui.list_workspace.panels import ROLE_NOTHING
 from capypanel.ui.settings.pages import AutoStatusPage, SettingRow
@@ -53,6 +54,8 @@ def ssh(qapp: QApplication, shell: FakeShell, servers: Path) -> Iterator[SshTool
     tool = SshTool(shell)
     assert tool.open_list(servers)
     yield tool
+    for tab in tool.connections():  # its cmd.exe ends now, not when Qt gets round to it
+        tab.close_connection()
     tool.close()
     tool.deleteLater()
 
@@ -187,8 +190,11 @@ def test_the_right_click_menu_starts_with_connect_in_bold(ssh: SshTool) -> None:
     menu = QMenu()
     ssh.fill_item_menu(menu, ssh.selected_items())
     words = [menus.label(a) for a in menu.actions() if not a.isSeparator()]  # no shortcut room
-    assert words[:2] == ["&Connect", "&Refresh host"]
+    assert words[:3] == ["&Connect", "Connect in a separate &window", "&Refresh host"]
     assert menu.defaultAction() is ssh.commands.connect_host
+    assert menu.toolTipsVisible()
+    tip = ssh.commands.connect_window.toolTip()
+    assert tip == "Opens ssh.exe in a window of its own, outside CapyPanel"
     _select(ssh, "nas-01", "web-01")
     menu = QMenu()
     ssh.fill_item_menu(menu, ssh.selected_items())
@@ -209,20 +215,24 @@ def test_a_server_typed_in_the_search_is_offered_and_connected_at_once(
 def test_without_ssh_exe_it_says_where_to_add_it(
     ssh: SshTool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def missing(_address: str, _info: SshInfo, _name: str = "") -> None:
+    def missing(*_args: object) -> None:
         raise launch.SshMissing
 
     warned: list[str] = []
     monkeypatch.setattr(launch, "connect", missing)
+    monkeypatch.setattr(launch, "tab_command", missing)
     monkeypatch.setattr(
         tool_module.QMessageBox, "warning", lambda _parent, _title, text: warned.append(text)
     )
     _select(ssh, "core-sw-01", "web-01")
-    ssh.connect_selected()
-    assert warned == [  # once, not once per host
+    ssh.connect_selected()  # in tabs
+    ssh.connect_selected(window=True)
+    words = (
         "Windows' SSH client (ssh.exe) isn't installed on this PC. To add it, search Start for "
         "“Optional features” and add “OpenSSH Client”. Adding it needs an administrator."
-    ]
+    )
+    assert warned == [words, words]  # once each time, not once per host
+    assert ssh.connections() == []
 
 
 def test_the_separate_window_is_told_the_host_s_name(
@@ -231,16 +241,19 @@ def test_the_separate_window_is_told_the_host_s_name(
     names: list[str] = []
     monkeypatch.setattr(launch, "connect", lambda _address, _info, name="": names.append(name))
     _select(ssh, "web-01")
-    ssh.connect_selected()
+    ssh.commands.connect_window.trigger()
     assert names == ["web-01"]  # its words say "The connection to web-01 ended…"
+    assert ssh.connections() == []  # a window, not a tab
 
 
 def test_an_address_ssh_exe_would_read_as_an_option_is_never_handed_over(
     ssh: SshTool, shell: FakeShell, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # A list file edited by hand: the real launch.connect checks it before starting anything.
+    # A list file edited by hand: the real checks run before anything starts, in a tab or in a
+    # separate window.
     started: list[object] = []
     monkeypatch.setattr(launch, "connect", real_connect)
+    monkeypatch.setattr(launch, "tab_command", real_tab_command)
     monkeypatch.setattr(launch, "ssh_exe", lambda: Path("C:/Windows/System32/OpenSSH/ssh.exe"))
     monkeypatch.setattr(launch.subprocess, "Popen", lambda *a, **k: started.append(a))
     doc = ssh.document
@@ -248,11 +261,13 @@ def test_an_address_ssh_exe_would_read_as_an_option_is_never_handed_over(
     nas = next(h for h in doc.hosts.hosts if h.name == "nas-01")
     assert ssh._commit(doc.hosts.update_host(replace(nas, address="-oProxyCommand=calc")))
     _select(ssh, "nas-01")
-    ssh.connect_selected()
-    assert started == []
-    assert shell.messages[-1] == (
-        "Can't connect to “nas-01”: its address or Log in as has a space or starts with “-”."
-    )
+    for window in (False, True):
+        shell.messages.clear()
+        ssh.connect_selected(window=window)
+        assert shell.messages == [
+            "Can't connect to “nas-01”: its address or Log in as has a space or starts with “-”."
+        ]
+    assert started == [] and ssh.connections() == []
 
 
 def test_adding_a_host_saves_its_port_and_login(

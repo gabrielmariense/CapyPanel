@@ -121,6 +121,12 @@ def test_every_command_is_listed_with_today_s_key_and_power_never_is(window: Cap
     assert page.table.columnWidth(KEY) >= text
 
 
+RESERVED_LINE = (
+    "F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself. In an SSH terminal, "
+    "F1, Esc, Ctrl+F and Tab go to the server."
+)
+
+
 def _headings(page: ShortcutsPage) -> list[tuple[QTreeWidgetItem, list[QTreeWidgetItem]]]:
     """Each heading row with the command rows under it."""
     table = page.table
@@ -128,6 +134,8 @@ def _headings(page: ShortcutsPage) -> list[tuple[QTreeWidgetItem, list[QTreeWidg
     for i in range(table.topLevelItemCount()):
         item = table.topLevelItem(i)
         assert item is not None
+        if item.data(0, shortcuts_page.FIXED_ROLE):
+            continue  # the SSH terminal's own keys: never a command, never a heading
         if item.data(0, shortcuts_page.ROW_ROLE):
             found[-1][1].append(item)
         else:
@@ -153,7 +161,7 @@ def test_the_commands_sit_under_their_menu_or_tool_in_app_order(window: CapyWind
     page = _page(window)
     headings = _headings(page)
     assert [h.text(0) for h, _rows in headings] == [
-        "File", "View", "Help", "Hosts", "Printers", "SSH",
+        "File", "View", "Help", "Hosts", "Printers", "SSH", "SSH terminal",
     ]  # fmt: skip
     shown: list[str] = []
     for heading, rows in headings:
@@ -178,7 +186,69 @@ def test_the_commands_sit_under_their_menu_or_tool_in_app_order(window: CapyWind
     assert page.about.text() == "Double-click a command and press its new key."
     assert page.about.objectName() == "lead" and page.problem.objectName() == "hint"
     assert page.about.font().pointSizeF() == page.table.font().pointSizeF() + 1
-    assert page.problem.text() == "F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself."
+    assert page.problem.text() == RESERVED_LINE
+
+
+def test_the_ssh_terminal_s_own_keys_follow_the_ssh_tool_greyed_and_say_where_the_rest_go(
+    window: CapyWindow,
+) -> None:
+    page = _page(window)
+    table = page.table
+    items = [table.topLevelItem(i) for i in range(table.topLevelItemCount())]
+    heading = next(i for i in items if i is not None and i.text(0) == "SSH terminal")
+    start = items.index(heading)
+    before = items[start - 1]
+    assert before is not None and before.data(0, shortcuts_page.ROW_ROLE) == "ssh.open_list"
+    line = items[start + 1]
+    assert line is not None and table.itemWidget(line, 0) is page.terminal_words
+    assert page.terminal_words.text() == (
+        "Inside a terminal, every key goes to the server except the ones below and the keys "
+        "that change tools or open Settings."
+    )
+    assert page.terminal_words.wordWrap()  # never "…"
+    rows = [i for i in items[start + 2 :] if i is not None]
+    assert [(i.text(0), i.text(1)) for i in rows] == [
+        ("Copy", "Ctrl+Shift+C"),
+        ("Copy, with text selected", "Ctrl+C"),
+        ("Paste", "Ctrl+Shift+V"),
+        ("Bigger text", "Ctrl+="),
+        ("Smaller text", "Ctrl+-"),
+        ("Next tab", "Ctrl+Tab"),
+        ("Previous tab", "Ctrl+Shift+Tab"),
+        ("Close tab", "Ctrl+Shift+W"),
+    ]
+    for item in [line, *rows]:
+        assert item.flags() == Qt.ItemFlag.NoItemFlags  # greyed: nobody changes them
+    assert {i.toolTip(0) for i in rows} == {"The terminal's own keys can't be changed."}
+    assert all(i not in page._items() for i in rows)  # pyright: ignore[reportPrivateUsage]
+    # A double-click waits for no key there.
+    table.itemActivated.emit(rows[0], 0)
+    assert table.itemWidget(rows[0], KEY) is None
+
+
+def test_the_terminal_s_line_is_as_tall_as_its_words_at_the_list_s_width(
+    window: CapyWindow,
+) -> None:
+    dialog = window.settings_dialog()
+    dialog.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
+    dialog.show_page("shortcuts")
+    dialog.show()
+    page = dialog.shortcuts
+    line = next(
+        item
+        for i in range(page.table.topLevelItemCount())
+        if (item := page.table.topLevelItem(i)) is not None
+        and page.table.itemWidget(item, 0) is page.terminal_words
+    )
+    heights = []
+    for width in (1400, 500):
+        dialog.resize(max(width, dialog.minimumSizeHint().width()), 700)
+        QApplication.processEvents()
+        heights.append(line.sizeHint(0).height())
+        words = page.terminal_words.heightForWidth(page.table.viewport().width())
+        assert line.sizeHint(0).height() >= words  # all of it shows
+    assert heights[1] > heights[0]  # narrower: more lines
+    dialog.close()
 
 
 def test_a_command_whose_menu_text_changes_keeps_its_plain_name(window: CapyWindow) -> None:
@@ -339,8 +409,9 @@ def test_a_refused_key_s_words_stay_where_they_waited(qapp: QApplication) -> Non
 
 
 def test_a_refused_key_s_row_stays_whole_in_a_narrow_window(window: CapyWindow) -> None:
-    """Under about 960 px the reason takes two lines and the list gets shorter: the waiting
-    row on the list's last line scrolls back into view (Dante, 0.28.1)."""
+    """A refusal's reason can take more lines than the line it replaces, and the list gets
+    shorter: the waiting row on the list's last line scrolls back into view (Dante, 0.28.1).
+    How many lines depends on the fonts, so the list is made shorter here by the window."""
     dialog = window.settings_dialog()
     dialog.show_page("shortcuts")
     dialog.resize(dialog.minimumSizeHint().width(), 600)
@@ -355,8 +426,9 @@ def test_a_refused_key_s_row_stays_whole_in_a_narrow_window(window: CapyWindow) 
     catcher = table.itemWidget(last, KEY)
     assert isinstance(catcher, KeyCatcher)
     QTest.keyClick(catcher, Qt.Key.Key_F1)
+    dialog.resize(dialog.width(), dialog.height() - 3 * table.sizeHintForRow(0))
     QApplication.processEvents()
-    assert view.height() < height, "the reason fit on one line: make the window narrower"
+    assert view.height() < height
     assert view.rect().contains(table.visualItemRect(last))
     assert table.itemWidget(last, KEY) is catcher  # still waiting, in its row
     dialog.close()
@@ -432,7 +504,7 @@ def test_keys_kept_for_capypanel_and_typed_text_are_refused(window: CapyWindow) 
     QTest.keyClick(catcher, Qt.Key.Key_F6)  # the next key, in the same field, just works
     assert window.keys.key(window.keys.row("command.services")) == "F6"
     assert page.table.itemWidget(services, KEY) is None
-    assert page.problem.text() == "F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself."
+    assert page.problem.text() == RESERVED_LINE
     assert page.problem.objectName() == "hint" and page.problem_icon.isHidden()
     _press(page, "command.services", Qt.Key.Key_F1)
     _press(page, "command.services", Qt.Key.Key_Escape)  # Esc leaves it as it was

@@ -114,9 +114,7 @@ class ListWorkspace(Tool):
         column.addWidget(self.search)
         column.addWidget(self.tag_strip)
         column.addWidget(self.table)
-        for pane in (self.nav, self.items_pane, self.details):
-            self.splitter.addWidget(pane)
-        self.splitter.setStretchFactor(1, 1)
+        self._lay_out()
         # Dragged all the way, a panel would vanish; View hides panels on purpose instead.
         self.splitter.setChildrenCollapsible(False)
         self._size_panes()
@@ -283,12 +281,25 @@ class ListWorkspace(Tool):
 
     # ---- layout ----
 
-    def restore_layout(self) -> None:
+    def _lay_out(self) -> None:
+        """The panels side by side: Groups, the items, Details."""
+        for pane in (self.nav, self.items_pane, self.details):
+            self.splitter.addWidget(pane)
+        self.splitter.setStretchFactor(1, 1)
+
+    def _restore_panes(self) -> None:
+        """The panels' widths as they were left."""
         splitter = self.prefs.get("main_splitter")
         if isinstance(splitter, str):
             self.splitter.restoreState(QByteArray.fromBase64(splitter.encode()))
             # Restoring turns collapsing back on: a panel dragged to the edge vanished.
             self.splitter.setChildrenCollapsible(False)
+
+    def _save_panes(self) -> None:
+        self.prefs["main_splitter"] = self.splitter.saveState().toBase64().toStdString()
+
+    def restore_layout(self) -> None:
+        self._restore_panes()
         view = self.prefs.get("view")
         view = view if isinstance(view, dict) else {}
         for key, action in self.view_choices().items():
@@ -380,10 +391,12 @@ class ListWorkspace(Tool):
         details = max(details, self.details.minimum_width())
         self.splitter.setSizes([groups, max(total - groups - details, 1), details])
 
-    def _fit_pane(self, edge: int) -> None:
+    def _fit_pane(self, edge: int, splitter: PaneSplitter | None = None) -> None:
         """A double-click on the Groups panel's or the items panel's right edge: that panel as
-        wide as its content, the panel on its right taking the rest, never below its minimum."""
-        left, right = self.splitter.widget(edge - 1), self.splitter.widget(edge)
+        wide as its content, the panel on its right taking the rest, never below its minimum.
+        `splitter` is the one double-clicked, when the tool has more than its main one."""
+        splitter = splitter or self.splitter
+        left, right = splitter.widget(edge - 1), splitter.widget(edge)
         if left is None or right is None:
             return
         if left is self.nav:
@@ -392,11 +405,11 @@ class ListWorkspace(Tool):
             natural = self.table.natural_width()
         else:
             return
-        sizes = self.splitter.sizes()
+        sizes = splitter.sizes()
         total = sizes[edge - 1] + sizes[edge]
         wanted = min(max(natural, left.minimumWidth()), total - right.minimumWidth())
         sizes[edge - 1], sizes[edge] = wanted, total - wanted
-        self.splitter.setSizes(sizes)
+        splitter.setSizes(sizes)
         self.align_toolbar_later()
 
     def restyle(self) -> None:
@@ -409,7 +422,7 @@ class ListWorkspace(Tool):
 
     def save_state(self) -> None:
         self.prefs["view"] = {k: a.isChecked() for k, a in self.view_choices().items()}
-        self.prefs["main_splitter"] = self.splitter.saveState().toBase64().toStdString()
+        self._save_panes()
         self.prefs["nav_splitter"] = self.nav.split_state()
         self.prefs["column_widths"] = self.table.widths()
         self._remember_view()

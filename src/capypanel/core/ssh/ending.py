@@ -1,6 +1,5 @@
-"""How an ssh.exe connection ended (topic-029 E): what counts as an error, and the words that
-say so. The separate window's holder uses them now; the terminal tab's strip will too, so the
-two always agree."""
+"""How an ssh.exe connection ended: what counts as an error, and the words that say so. The
+separate window's holder and the terminal tab's strip both use them, so the two always agree."""
 
 from capypanel.core.i18n import _
 
@@ -30,3 +29,12 @@ def error_line(host: str, code: int) -> str:
     return _("The connection to {host} ended with an error (exit code {code}).").format(
         host=host, code=code_text(code)
     )
+
+
+def ended_line(host: str, code: int, *, by_us: bool = False) -> str:
+    """The terminal tab's strip: the error line, or that the connection ended. A connection
+    CapyPanel closed (Reconnect, closing the tab) is never an error, whatever its code: Windows
+    gives it 0xC000013A or 0 as it likes."""
+    if by_us or not is_error(code):
+        return _("The connection to {host} ended.").format(host=host)
+    return error_line(host, code)

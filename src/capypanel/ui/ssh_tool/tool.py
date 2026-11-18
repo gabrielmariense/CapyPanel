@@ -1,13 +1,16 @@
 """The SSH tool: the list workspace with servers and switches, each with its port and the name to
-log in as. Refresh checks each one's SSH port, and Connect opens Windows' ssh.exe on it in a
-console window of its own; CapyPanel never sees a password."""
+log in as. Refresh checks each one's SSH port. Connect opens Windows' ssh.exe on it in a tab
+beside the list, its terminal drawn by CapyPanel (ui/ssh_tool/terminal); Connect in a separate
+window opens it in a console window of its own. CapyPanel never sees a password: ssh.exe asks
+for it, or uses a key."""
 
 import logging
 from collections.abc import Sequence
 from dataclasses import replace
+from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QGuiApplication
+from PySide6.QtCore import QPoint, Qt, QTimer, Signal
+from PySide6.QtGui import QAction, QGuiApplication, QIcon
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QMessageBox, QToolButton, QWidget
 
 from capypanel.core.hosts.document import OpenList, starter_list
@@ -18,12 +21,15 @@ from capypanel.core.ssh import launch
 from capypanel.core.ssh.host import SshInfo, info_of, with_info
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
+from capypanel.ui.guides import Guide, Step
 from capypanel.ui.hosts import group_path
+from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.list_workspace.customize import Part
-from capypanel.ui.list_workspace.panels import is_sample, offers_typed
+from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, offers_typed, sample_tag
+from capypanel.ui.list_workspace.tabbed import TabbedListWorkspace
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
-from capypanel.ui.list_workspace.workspace import ListWorkspace
 from capypanel.ui.main_window.tool import Shell
+from capypanel.ui.menus import popup
 from capypanel.ui.shortcuts import KeyCommand
 from capypanel.ui.ssh_tool import status
 from capypanel.ui.ssh_tool.actions import create_actions, retranslate_actions
@@ -34,10 +40,17 @@ from capypanel.ui.ssh_tool.settings import SshSettings
 from capypanel.ui.ssh_tool.status import Cell, Checked
 from capypanel.ui.ssh_tool.table import SshTable
 from capypanel.ui.ssh_tool.toolbar import SshToolBar
+from capypanel.ui.tab_strip import PINNED, mark_icon
+from capypanel.ui.themes import engine as themes
+
+if TYPE_CHECKING:  # loaded at the first connection, never at CapyPanel's start
+    from capypanel.ui.ssh_tool.terminal.tab import TerminalTab
 
 log = logging.getLogger(__name__)
-AT_ONCE = 10  # more selected connect only the first ones: a window each
+AT_ONCE = 10  # more selected connect only the first ones: a tab or a window each
 AUTO_STATUS = "auto_status"  # Settings' Refresh status by itself: {"on": bool, "minutes": int}
+POINTS = "terminal_points"  # the terminal's text size, as Ctrl+= and Ctrl+- left it
+MIN_POINTS, MAX_POINTS, DEFAULT_POINTS = 8, 20, 10  # as the terminal's view takes them
 
 
 def missing_text() -> str:
@@ -48,9 +61,10 @@ def missing_text() -> str:
              "administrator.")  # fmt: skip
 
 
-class SshTool(ListWorkspace):
+class SshTool(TabbedListWorkspace):
     TOOL_ID = "ssh"
     ICON = "terminal-2"
+    TABS_ICON = "server-2"  # the list's tab
     checks_changed = Signal()  # a Refresh started, found something, or ended
 
     def __init__(self, shell: Shell):
@@ -59,6 +73,11 @@ class SshTool(ListWorkspace):
         self.details: SshDetailsPanel = SshDetailsPanel()
         self.toolbar: SshToolBar = SshToolBar(self.commands)
         self._checked: dict[str, Checked] = {}  # each host's last check, in memory only
+        # The connections' tabs, by key, left to right, and each one's name on its tab
+        # ("srv-01 (2)" for a second one). Never saved: a restart opens none.
+        self._connections: dict[str, TerminalTab] = {}
+        self._tab_names: dict[str, str] = {}
+        self._opened = 0  # connections opened so far: each tab's key
         super().__init__(
             shell,
             commands=self.commands,
@@ -109,6 +128,7 @@ class SshTool(ListWorkspace):
         a.connect_host.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.table.addAction(a.connect_host)
         a.connect_host.triggered.connect(self.connect_selected)
+        a.connect_window.triggered.connect(lambda: self.connect_selected(window=True))
         a.copy_address.triggered.connect(self._copy_address)
         # Details' buttons act on the one host it shows: the one selected.
         self.details.connect_clicked.connect(self.connect_selected)
@@ -225,12 +245,19 @@ class SshTool(ListWorkspace):
         self._stop_button.setText(_("Stop"))
         self.toolbar.retranslate()
         super().retranslate()
+        for key, tab in self._connections.items():
+            tab.retranslate()
+            self._show_tab(key)
+        self._show_more()
 
     def restyle(self) -> None:
-        """After a theme switch: the dots and Details were drawn in the old theme's colours."""
+        """After a theme switch: the dots, Details and the tabs' marks were drawn in the old
+        theme's colours."""
         super().restyle()
         self.table.refill()
         self._selection_changed()
+        for key in self._connections:
+            self._show_tab(key)
 
     # ---- adding and editing hosts ----
 
@@ -326,20 +353,74 @@ class SshTool(ListWorkspace):
         self._save_prefs()
         self._update_state()
 
+    # ---- the guide ----
+
+    def guide(self) -> Guide:
+        """Its own first steps: lists, adding hosts, the table, Connect with what the first
+        connection asks, Refresh all and a separate window (the window adds View last). No step
+        asks for a click, and the sample is never connected or checked (is_sample)."""
+        bar = self.toolbar
+
+        def steps() -> list[Step]:
+            first_time = _(
+                "Connects to the host you picked, in a tab of its own beside the list. "
+                "The first time, ssh.exe asks whether you trust the server."
+            )
+            # Satya's line on its own, after it: ssh.exe asks in English (ssh-words.md).
+            type_yes = _("Type yes, then press Enter.")
+            return [
+                Step(_("Your lists"),
+                     _("Pick a list here: the shared one everyone on this PC sees, your "
+                       "personal one, or one you added. Click a group below it to see just that "
+                       "group's hosts."), lambda: self.nav),
+                Step(_("Add hosts"),
+                     _("Inventory › Add host needs a name and an address. The port and Log in "
+                       "as are optional: without them, ssh.exe uses port 22 and its own "
+                       "settings."), lambda: bar.inventory_button),
+                Step(_("Your hosts"),
+                     _("The list's hosts are here. A double-click connects, and a right-click "
+                       "shows everything you can do with one."),
+                     lambda: None, lambda: self.table, keep_clear=lambda: self.details,
+                     area=lambda: self.sample_row(self.window())),
+                Step(_("Connect"), f"{first_time} {type_yes}", lambda: bar.connect_button),
+                Step(_("Refresh all"),
+                     _("Checks whether each host shown answers on its SSH port. Nothing logs "
+                       "in."), lambda: bar.refresh_button),
+                Step(_("In a separate window"),
+                     _("To keep a connection outside CapyPanel, right-click a host and pick "
+                       "Connect in a separate window."), lambda: None, lambda: self.table),
+            ]  # fmt: skip
+
+        return Guide("ssh", steps, setup=self.show_sample, cleanup=self.hide_sample)
+
+    def sample_item(self, group: str) -> Host:
+        """The guide's sample server: a documentation address (192.0.2.x) that never answers,
+        and never asked: Connect and Refresh leave every sample out (is_sample)."""
+        host = Host(id=SAMPLE_ID, name=_("SRV-SAMPLE"), group=group, address="192.0.2.30",
+                    tags=(sample_tag(),), notes=_("Shown only while a guide is open."))  # fmt: skip
+        return with_info(host, SshInfo(login="admin"))
+
     # ---- Connect ----
 
     def activate_selected(self) -> None:
         self.connect_selected()
 
-    def connect_selected(self) -> None:
-        """ssh.exe on each selected host, at most 10 at once: a console window each."""
+    def connect_selected(self, *, window: bool = False) -> None:
+        """ssh.exe on each selected host, at most 10 at once: a tab each, the first one in
+        front; or with `window`, a console window each."""
         hosts = [h for h in self.selected_items() if not is_sample(h.id)]  # never connected
         if not hosts:
             return
         reachable = [h for h in hosts if h.connect_address]
         notes = []
-        for host in reachable[:AT_ONCE]:
-            if not self._open_ssh(host.connect_address, info_of(host), host.name):
+        for index, host in enumerate(reachable[:AT_ONCE]):
+            if window:
+                opened = self._open_ssh(host.connect_address, info_of(host), host.name)
+            else:
+                opened = self.open_connection(
+                    host.connect_address, info_of(host), host.name, front=index == 0
+                )
+            if not opened:
                 return  # ssh.exe is missing: the rest can't connect either
         if len(reachable) > AT_ONCE:
             notes.append(_("Only the first {n} connect at once.").format(n=AT_ONCE))
@@ -357,28 +438,229 @@ class SshTool(ListWorkspace):
     def _connect_to_typed(self) -> None:
         """The search's Connect to {host}: the server typed, on port 22, as ssh.exe chooses."""
         if self._typed_host:
-            self._open_ssh(self._typed_host, SshInfo(), self._typed_host)
+            self.open_connection(self._typed_host, SshInfo(), self._typed_host)
 
     def _open_ssh(self, destination: str, info: SshInfo, name: str) -> bool:
-        """False when ssh.exe isn't installed, after saying so."""
+        """In a separate window. False when ssh.exe isn't installed, after saying so."""
         try:
             launch.connect(destination, info, name)
         except launch.SshMissing:
             QMessageBox.warning(self, "CapyPanel", missing_text())
             return False
         except ValueError:
-            log.warning("Not connecting to %s: an address or login ssh.exe would misread", name)
-            self._shell.show_message(
-                _("Can't connect to “{host}”: its address or Log in as has a space or starts "
-                  "with “-”.").format(host=name),
-                10_000,
-            )  # fmt: skip
+            self._cant_connect(name)
         except OSError as e:
-            log.warning("Couldn't start ssh.exe for %s: %s", name, e)
-            self._shell.show_message(
-                _("Couldn't start ssh.exe: {error}").format(error=e.strerror or e), 10_000
-            )
+            self._couldnt_start(name, e)
         return True
+
+    def open_connection(
+        self, destination: str, info: SshInfo, name: str, *, front: bool = True
+    ) -> bool:
+        """ssh.exe in a tab of its own, at the right end; `front` brings it to the front with
+        the keys going to it. False when ssh.exe isn't installed, after saying so."""
+        try:
+            argv = launch.tab_command(destination, info)
+        except launch.SshMissing:
+            QMessageBox.warning(self, "CapyPanel", missing_text())
+            return False
+        except ValueError:
+            self._cant_connect(name)
+            return True
+        from capypanel.ui.ssh_tool.terminal.tab import TerminalTab  # the first connection's
+
+        self._opened += 1
+        key = f"connection-{self._opened}"
+        tab = TerminalTab(host=name, point_size=self.terminal_points())
+        tab.changed.connect(lambda: self._show_tab(key))
+        tab.close_asked.connect(lambda: self.close_tab(key))
+        tab.view.size_picked.connect(self._size_picked)
+        self._connections[key] = tab
+        self._tab_names[key] = self._tab_name(name)
+        self.add_page(key, tab, self._tab_names[key])
+        try:
+            tab.start(argv)
+        except OSError as e:
+            self._drop(key)
+            self._couldnt_start(name, e)
+            return True
+        if front:
+            self.switch(key)
+        self._show_tab(key)
+        return True
+
+    def _cant_connect(self, name: str) -> None:
+        log.warning("Not connecting to %s: an address or login ssh.exe would misread", name)
+        self._shell.show_message(
+            _("Can't connect to “{host}”: its address or Log in as has a space or starts "
+              "with “-”.").format(host=name),
+            10_000,
+        )  # fmt: skip
+
+    def _couldnt_start(self, name: str, e: OSError) -> None:
+        log.warning("Couldn't start ssh.exe for %s: %s", name, e)
+        self._shell.show_message(
+            _("Couldn't start ssh.exe: {error}").format(error=e.strerror or e), 10_000
+        )
+
+    # ---- the connections' tabs ----
+
+    def _tab_name(self, host: str) -> str:
+        """The host's name, and from its second tab on its number: "srv-01 (2)". A number
+        freed by a closed tab is used again."""
+        taken = set(self._tab_names.values())
+        n = 1
+        while (host if n == 1 else f"{host} ({n})") in taken:
+            n += 1
+        return host if n == 1 else f"{host} ({n})"
+
+    def page_of(self, key: str) -> QWidget | None:
+        return self._connections.get(key)
+
+    def connections(self) -> list["TerminalTab"]:
+        """The connections' tabs, left to right."""
+        return [self._connections[k] for k in self.tabs.tab_keys() if k in self._connections]
+
+    def switch(self, key: str) -> None:
+        super().switch(key)
+        tab = self._connections.get(key)
+        if tab is not None:
+            tab.view.setFocus()  # typing goes to the server at once
+
+    def _mark(self, tab: "TerminalTab") -> tuple[QIcon, str]:
+        """A tab's mark and its words: the plug while the connection is open, then the strip's
+        own icon and colour once it has ended."""
+        if tab.running:
+            icon = mark_icon("plug-connected", themes.status_color("online"))
+            return icon, _("Connection open")
+        if tab.ended:
+            icon = mark_icon(tab.bar.icon_name(), tab.bar.colour())
+            return icon, _("Ended with an error") if tab.bar.error else _("Ended")
+        return QIcon(), ""
+
+    def _show_tab(self, key: str) -> None:
+        tab = self._connections.get(key)
+        if tab is not None:
+            icon, tip = self._mark(tab)
+            self.tabs.show_tab(key, self._tab_names[key], icon, tip, closable=True)
+            self._show_more()
+
+    def _show_more(self) -> None:
+        """The list's tab and ▾'s list of every tab."""
+        doc = self.document
+        n = len(doc.hosts.hosts) if doc is not None else 0
+        text = _("Hosts ({n})").format(n=n)
+        self.tabs.set_pinned_text(text)
+        items = [(PINNED, text, QIcon())]
+        for key in self.tabs.tab_keys():
+            tab = self._connections.get(key)
+            if tab is not None:
+                items.append((key, self._tab_names[key], self._mark(tab)[0]))
+        self.tabs.set_more(items)
+
+    def close_tab(self, key: str) -> bool:
+        tab = self._connections.get(key)
+        if tab is None:
+            return False  # the list's tab
+        if tab.running and not self._close_asked([tab]):
+            return False
+        self._drop(key)
+        return True
+
+    def close_tabs(self, keys: Sequence[str]) -> None:
+        """Several tabs; one question for the connections still open among them."""
+        tabs = [self._connections[k] for k in keys if k in self._connections]
+        live = [t for t in tabs if t.running]
+        if live and not self._close_asked(live):
+            return
+        for key in keys:
+            if key in self._connections:
+                self._drop(key)
+
+    def _close_asked(self, live: Sequence["TerminalTab"]) -> bool:
+        """Before closing open connections: what runs on the server from them may stop. The
+        words are Satya's (ssh-words.md); the title is the action's, as Hosts' Log off."""
+        n = len(live)
+        if n == 1:
+            heading = _("Close the connection to {host}?").format(host=live[0].host)
+            text = _("Anything still running in it on the server may stop.")
+        else:
+            heading = ngettext(
+                "Close {n} open connection?", "Close {n} open connections?", n
+            ).format(n=n)
+            text = _("Anything still running in them on the servers may stop.")
+        question = Question(self, _("Close"), heading, text, _("&Close"))
+        return run_modal(question) == QDialog.DialogCode.Accepted
+
+    def _drop(self, key: str) -> None:
+        """Ends the connection and takes its tab away."""
+        tab = self._connections.pop(key)
+        del self._tab_names[key]
+        tab.close_connection()
+        self.remove_page(key, tab)
+        tab.deleteLater()
+        self._show_more()
+
+    def tab_menu(self, key: str, where: QPoint) -> None:
+        tab = self._connections.get(key)
+        if tab is None:
+            return
+        menu = QMenu(self)
+        reconnect = menu.addAction(_("&Reconnect"), tab.view.restart)
+        reconnect.setEnabled(tab.ended)
+        menu.addSeparator()
+        menu.addAction(_("Close"), lambda: self.close_tab(key))
+        others = [k for k in self.tabs.tab_keys() if k != key]
+        menu.addAction(_("Close the others"), lambda: self.close_tabs(others)).setEnabled(
+            bool(others)
+        )
+        ended = [k for k, t in self._connections.items() if t.ended]
+        menu.addAction(_("Close the ended ones"), lambda: self.close_tabs(ended)).setEnabled(
+            bool(ended)
+        )
+        popup(menu, where)
+
+    def quit_question(self, parent: QWidget) -> bool:
+        """Before CapyPanel quits, or closes for an update: open connections ask once, and
+        quitting closes them."""
+        live = [t for t in self._connections.values() if t.running]
+        if not live:
+            return True
+        n = len(live)
+        question = Question(
+            parent,
+            _("Quit CapyPanel"),
+            ngettext(
+                "Quit CapyPanel with {n} connection open?",
+                "Quit CapyPanel with {n} connections open?",
+                n,
+            ).format(n=n),
+            ngettext(
+                "It closes, and anything still running in it on the server may stop.",
+                "They all close, and anything still running in them on the servers may stop.",
+                n,
+            ),
+            _("&Quit"),
+        )
+        if run_modal(question) != QDialog.DialogCode.Accepted:
+            return False
+        for tab in self._connections.values():
+            tab.close_connection()
+        return True
+
+    # ---- the terminal's text size ----
+
+    def terminal_points(self) -> int:
+        """The text size Ctrl+= and Ctrl+- left, for every tab, kept after a restart."""
+        points = self.prefs.get(POINTS)
+        if isinstance(points, int) and not isinstance(points, bool):
+            return max(MIN_POINTS, min(MAX_POINTS, points))
+        return DEFAULT_POINTS
+
+    def _size_picked(self, points: int) -> None:
+        self.prefs[POINTS] = points
+        self._save_prefs()
+        for tab in self._connections.values():
+            tab.view.set_point_size(points)
 
     def _copy_address(self) -> None:
         hosts = self.selected_items()
@@ -444,8 +726,9 @@ class SshTool(ListWorkspace):
     def update_tool_state(self, writable: bool, selected: int) -> None:
         a = self.commands
         a.add_host.setEnabled(writable)
-        for action in (a.connect_host, a.copy_address):
+        for action in (a.connect_host, a.connect_window, a.copy_address):
             action.setEnabled(selected > 0)  # read-only lists can still connect
+        self._show_more()  # the list's tab counts its hosts
         idle = self._run is None
         a.refresh_shown.setEnabled(idle and bool(self.visible_items()))  # read-only lists too
         a.refresh_selected.setEnabled(idle and selected > 0)
@@ -461,6 +744,8 @@ class SshTool(ListWorkspace):
         a = self.commands
         menu.addAction(a.connect_host)
         menu.setDefaultAction(a.connect_host)  # bold: what double-click and Enter do
+        menu.addAction(a.connect_window)
+        menu.setToolTipsVisible(True)  # says the separate window is outside CapyPanel
         menu.addSeparator()
         one = len(items) == 1
         a.refresh_selected.setText(
