@@ -1,9 +1,9 @@
 """An SSH host's own details: the port and the name to log in as.
 
-They live in the host entry under one key, "ssh", so an SSH list is a normal host list, as a
-printer list is. Odd values are read as the defaults and the original is kept as found, so
-opening and saving a list never loses anything. Nothing secret is kept: Windows' ssh.exe asks
-for the password, or uses a key, itself."""
+They live in the host entry under one key, "ssh", in the host lists Hosts and Profile cleanup
+show too: Hosts keeps the key as found when it saves. Odd values are read as the defaults and the
+original is kept as found, so opening and saving a list never loses anything. Nothing secret is
+kept: Windows' ssh.exe asks for the password, or uses a key, itself."""
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace

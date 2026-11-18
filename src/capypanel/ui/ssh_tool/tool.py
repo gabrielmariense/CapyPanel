@@ -1,5 +1,6 @@
-"""The SSH tool: the list workspace with servers and switches, each with its port and the name to
-log in as. Refresh checks each one's SSH port. Connect opens Windows' ssh.exe on it in a tab
+"""The SSH tool: the list workspace on the host list open in Hosts, the same one Hosts and Profile
+cleanup show, each host with its port and the name to log in as. Refresh checks each one's SSH
+port. Connect opens Windows' ssh.exe on it in a tab
 beside the list, its terminal drawn by CapyPanel (ui/ssh_tool/terminal); Connect in a separate
 window opens it in a console window of its own. CapyPanel never sees a password: ssh.exe asks
 for it, or uses a key."""
@@ -13,6 +14,7 @@ from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QGuiApplication, QIcon
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QMessageBox, QToolButton, QWidget
 
+from capypanel.core.hosts import listfile
 from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.model import Group, Host, HostListRuleError
 from capypanel.core.i18n import _, ngettext
@@ -22,7 +24,7 @@ from capypanel.core.ssh.host import SshInfo, info_of, with_info
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.guides import Guide, Step
-from capypanel.ui.hosts import group_path
+from capypanel.ui.hosts import group_path, host_list_texts
 from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.list_workspace.customize import Part
 from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, offers_typed, sample_tag
@@ -65,6 +67,7 @@ class SshTool(TabbedListWorkspace):
     TOOL_ID = "ssh"
     ICON = "terminal-2"
     TABS_ICON = "server-2"  # the list's tab
+    LISTS_FROM = listfile.HOSTS  # Hosts' open list: one list for every host (his words, 2026-11-18)
     checks_changed = Signal()  # a Refresh started, found something, or ended
 
     def __init__(self, shell: Shell):
@@ -144,20 +147,7 @@ class SshTool(TabbedListWorkspace):
         return _("SSH")
 
     def list_texts(self) -> ListTexts:
-        return ListTexts(
-            kind=self.TOOL_ID,
-            everything=_("All hosts"),
-            lists=_("SSH lists"),
-            new=_("New SSH list"),
-            add=_("Add an SSH list"),
-            open=_("Open an SSH list"),
-            remove=_("Remove SSH list"),
-            manage=_("&Manage SSH lists…"),
-            no_list=_("No SSH list is open."),
-            choose_first=_("Open an SSH list to choose what it shows first."),
-            not_this_kind=_("“{path}” isn't an SSH list."),
-            file_filter=_("SSH lists (*.json);;All files (*)"),
-        )
+        return host_list_texts()  # Hosts' lists, so Hosts' words
 
     def items_text(self, n: int) -> str:
         return ngettext("{n} host", "{n} hosts", n).format(n=n)
@@ -184,7 +174,7 @@ class SshTool(TabbedListWorkspace):
         return _("Selected hosts"), _("the selected hosts")
 
     def lists_page(self) -> str:
-        return "ssh"
+        return "hosts"  # Hosts' General page manages the host lists it shows
 
     def only_tags_text(self, shown: int, total: int) -> str:
         return _("Only hosts with all of: {tags} · {shown} of {total} shown").format(
@@ -349,7 +339,7 @@ class SshTool(TabbedListWorkspace):
             self.check_hosts(hosts, quiet=True)
 
     def prefs_applied(self) -> None:
-        """A choice made in Settings was kept: save it, and show the list's new name."""
+        """A choice made in Settings was kept: save it."""
         self._save_prefs()
         self._update_state()
 
@@ -369,10 +359,10 @@ class SshTool(TabbedListWorkspace):
             # Satya's line on its own, after it: ssh.exe asks in English (ssh-words.md).
             type_yes = _("Type yes, then press Enter.")
             return [
-                Step(_("Your lists"),
-                     _("Pick a list here: the shared one everyone on this PC sees, your "
-                       "personal one, or one you added. Click a group below it to see just that "
-                       "group's hosts."), lambda: self.nav),
+                Step(_("Your lists"),  # Profile cleanup's words: the same lists, Hosts'
+                     _("Pick a list here: these are the same lists as in Hosts, the shared one "
+                       "and your own. Click a group below it to see just that group's hosts."),
+                     lambda: self.nav),
                 Step(_("Add hosts"),
                      _("Inventory › Add host needs a name and an address. The port and Log in "
                        "as are optional: without them, ssh.exe uses port 22 and its own "

@@ -226,9 +226,6 @@ msgstr "Usuários &logados"
 msgid "&Low supply level"
 msgstr "Nível &baixo de suprimento"
 
-msgid "&Manage SSH lists…"
-msgstr "&Gerenciar listas SSH…"
-
 msgid "&Manage groups…"
 msgstr "Ge&renciar grupos…"
 
@@ -619,9 +616,6 @@ msgstr "Adicionar marca"
 
 msgid "Add a printer list"
 msgstr "Adicionar uma lista de impressoras"
-
-msgid "Add an SSH list"
-msgstr "Adicionar uma lista SSH"
 
 msgid "Add an account"
 msgstr "Adicionar uma conta"
@@ -2309,9 +2303,6 @@ msgstr "Pede assistência"
 msgid "Needs someone at the printer"
 msgstr "Precisa de alguém na impressora"
 
-msgid "New SSH list"
-msgstr "Nova lista SSH"
-
 msgid "New connection profile"
 msgstr "Novo perfil de conexão"
 
@@ -2341,9 +2332,6 @@ msgstr "Próxima aba"
 
 msgid "No Doc360 MPS account is set."
 msgstr "Nenhuma conta do Doc360 MPS definida."
-
-msgid "No SSH list is open."
-msgstr "Nenhuma lista SSH está aberta."
 
 msgid "No access: needs an admin account on this PC"
 msgstr "Sem acesso: precisa de uma conta de administrador neste PC"
@@ -2686,12 +2674,6 @@ msgstr "Abrir uma lista de impressoras"
 
 msgid "Open a printer list to choose what it shows first."
 msgstr "Abra uma lista de impressoras para escolher o que ela mostra primeiro."
-
-msgid "Open an SSH list"
-msgstr "Abrir uma lista SSH"
-
-msgid "Open an SSH list to choose what it shows first."
-msgstr "Abra uma lista SSH para escolher o que ela mostra primeiro."
 
 msgid "Open f&older"
 msgstr "Abrir &pasta"
@@ -3238,9 +3220,6 @@ msgstr "Ferramentas remotas"
 msgid "Remove"
 msgstr "Remover"
 
-msgid "Remove SSH list"
-msgstr "Remover lista SSH"
-
 msgid "Remove everything"
 msgstr "Remover tudo"
 
@@ -3408,12 +3387,6 @@ msgstr "SRV-EXEMPLO"
 
 msgid "SSH"
 msgstr "SSH"
-
-msgid "SSH lists"
-msgstr "Listas SSH"
-
-msgid "SSH lists (*.json);;All files (*)"
-msgstr "Listas SSH (*.json);;Todos os arquivos (*)"
 
 msgid "SSH terminal"
 msgstr "Terminal SSH"
@@ -5904,10 +5877,6 @@ msgstr "“{path}” não é uma lista de hosts."
 #, python-brace-format
 msgid "“{path}” isn't a printer list."
 msgstr "“{path}” não é uma lista de impressoras."
-
-#, python-brace-format
-msgid "“{path}” isn't an SSH list."
-msgstr "“{path}” não é uma lista SSH."
 
 #, python-brace-format
 msgid "…and {n} more line"

@@ -38,12 +38,11 @@ def window(
     office, group = HostList().add_group("Office")
     for name, address in (("DESK-01", "192.0.2.11"), ("DESK-02", "192.0.2.12")):
         office, _host = office.add_host(name, group.id, address=address)
-    listfile.save(tmp_path / "office.json", office, expected=None)
-    servers, racks = HostList().add_group("Racks")
+    office, racks = office.add_group("Racks")  # SSH shows the same list: its servers are in it
     for name, address in (("core-sw-01", "192.0.2.40"), ("nas-01", "192.0.2.41")):
-        servers, host = servers.add_host(name, racks.id, address=address)
-        servers = servers.update_host(with_info(host, SshInfo(login="admin")))
-    listfile.save(tmp_path / "servers.json", servers, expected=None, kind="ssh")
+        office, host = office.add_host(name, racks.id, address=address)
+        office = office.update_host(with_info(host, SshInfo(login="admin")))
+    listfile.save(tmp_path / "office.json", office, expected=None)
     printers, floor = HostList().add_group("Second floor")
     for name, address in (("2F-LABELS", "192.0.2.25"), ("2F-OFFICE-01", "192.0.2.21")):
         printers, printer = printers.add_host(name, floor.id, address=address)
@@ -52,7 +51,7 @@ def window(
     win = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
     win.hosts.open_list(tmp_path / "office.json")
     ssh = win.tools["ssh"]
-    assert isinstance(ssh, ListWorkspace) and ssh.open_list(tmp_path / "servers.json")
+    assert isinstance(ssh, ListWorkspace) and ssh.document is win.hosts.document
     printers_tool = win.tools["printers"]
     assert isinstance(printers_tool, ListWorkspace)
     assert printers_tool.open_list(tmp_path / "printers.json")

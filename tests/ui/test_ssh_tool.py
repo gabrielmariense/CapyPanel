@@ -2,7 +2,7 @@ import time
 from collections.abc import Iterator
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 import shiboken6
@@ -21,13 +21,16 @@ from capypanel.core.ssh.launch import connect as real_connect  # before no_ssh s
 from capypanel.core.ssh.launch import tab_command as real_tab_command
 from capypanel.ui import menus
 from capypanel.ui.list_workspace.panels import ROLE_NOTHING
-from capypanel.ui.settings.pages import AutoStatusPage, SettingRow
+from capypanel.ui.settings.pages import AutoStatusOnlyPage, SettingRow
 from capypanel.ui.ssh_tool import refresh
 from capypanel.ui.ssh_tool import tool as tool_module
 from capypanel.ui.ssh_tool.dialog import SshHostDialog
 from capypanel.ui.ssh_tool.table import ROLE_QUIET
 from capypanel.ui.ssh_tool.tool import SshTool
 from capypanel.ui.themes import engine as themes
+
+if TYPE_CHECKING:
+    from capywindow import CapyWindow
 
 
 @pytest.fixture
@@ -48,7 +51,7 @@ def servers(tmp_path: Path) -> Path:
     hl = _host(hl, "nas-01", racks.id, "192.0.2.41", port=2222, login="root")
     hl = _host(hl, "web-01", NO_GROUP, "198.51.100.42")
     path = tmp_path / "servers.json"
-    listfile.save(path, hl, expected=None, kind="ssh")
+    listfile.save(path, hl, expected=None)  # a host list: SSH shows Hosts' lists
     return path
 
 
@@ -136,6 +139,109 @@ def test_a_tool_built_alone_takes_its_toolbar_with_it(shell: FakeShell) -> None:
     tool.deleteLater()
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
     assert not shiboken6.isValid(toolbar)  # at once: a theme switch can come next
+
+
+@pytest.fixture
+def capy(qapp: QApplication, tmp_path: Path) -> Iterator["CapyWindow"]:
+    """The whole window on a host list with a PC and a server: SSH shows Hosts' open list."""
+    from capywindow import CapyWindow
+
+    (tmp_path / settings.PORTABLE_MARKER).touch()
+    hl, desks = HostList().add_group("Front desks")
+    hl, _desk = hl.add_host("DESK-01", desks.id, address="192.0.2.11")
+    hl, racks = hl.add_group("Racks")
+    hl = _host(hl, "nas-01", racks.id, "192.0.2.41", port=2222, login="root")
+    listfile.save(tmp_path / "clinic.json", hl, expected=None)
+    window = CapyWindow(settings.resolve_paths(tmp_path), {"schema": 1})
+    assert window.hosts.open_list(tmp_path / "clinic.json")
+    yield window
+    window.close()
+
+
+def _ssh(window: "CapyWindow") -> SshTool:
+    tool = window.tools["ssh"]
+    assert isinstance(tool, SshTool)
+    return tool
+
+
+def test_ssh_shows_the_list_open_in_hosts_and_an_edit_in_either_shows_in_both(
+    capy: "CapyWindow", tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One list for every host (his words, 2026-11-18): a host added in SSH is in Hosts at
+    once, and one edited in Hosts keeps its port and Log in as."""
+    from capypanel.ui.hosts import HostDialog
+    from capypanel.ui.hosts_tool import tool as hosts_module
+
+    ssh = _ssh(capy)
+    assert ssh.document is capy.hosts.document and set(_rows(ssh)) == {"DESK-01", "nas-01"}
+
+    def add(dialog: QDialog) -> QDialog.DialogCode:
+        assert isinstance(dialog, SshHostDialog)
+        dialog.name.setText("backup-01")
+        dialog.address.setText("192.0.2.45")
+        dialog.login.setText("admin")
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(tool_module, "run_modal", add)
+    ssh.add_item()
+    table = capy.hosts.table
+    rows = (table.topLevelItem(i) for i in range(table.topLevelItemCount()))
+    shown = {row.text(0) for row in rows if row is not None}
+    assert shown == {"DESK-01", "nas-01", "backup-01"}  # Hosts' table, at once
+
+    def rename(dialog: QDialog) -> QDialog.DialogCode:
+        assert isinstance(dialog, HostDialog)
+        dialog.name.setText("nas-02")
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(hosts_module, "run_modal", rename)
+    doc = capy.hosts.document
+    assert doc is not None
+    capy.hosts.edit_item(next(h for h in doc.hosts.hosts if h.name == "nas-01"))
+    assert set(_rows(ssh)) == {"DESK-01", "nas-02", "backup-01"}  # SSH's table, at once
+    saved = {h.name: h for h in listfile.load(tmp_path / "clinic.json").hosts.hosts}
+    assert info_of(saved["nas-02"]) == SshInfo(port=2222, login="root")  # Hosts kept them
+    assert info_of(saved["backup-01"]) == SshInfo(login="admin")
+
+
+def test_a_list_picked_or_made_in_ssh_opens_in_hosts_and_profile_cleanup(
+    capy: "CapyWindow", tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from capypanel.ui.list_workspace import workspace
+    from capypanel.ui.profiles_tool.tool import ProfilesTool
+
+    ssh = _ssh(capy)
+    assert ssh.document is capy.hosts.document  # else picking a host list asks, and waits
+    servers, racks = HostList().add_group("Racks")
+    servers = _host(servers, "core-sw-01", racks.id, "192.0.2.40")
+    listfile.save(tmp_path / "servers.json", servers, expected=None)
+    ssh.pick_list(tmp_path / "servers.json")
+    doc = capy.hosts.document
+    assert doc is not None and doc.path == tmp_path / "servers.json"
+    assert ssh.document is doc and set(_rows(ssh)) == {"core-sw-01"}
+    assert ssh.list_choices() == capy.hosts.list_choices()  # one dropdown's lists
+    profiles = capy.tools["profiles"]
+    assert isinstance(profiles, ProfilesTool) and profiles.list_picker.text() == "servers"
+    made = tmp_path / "linux.json"
+    monkeypatch.setattr(workspace, "ask_new_list", lambda *_a, **_k: made)
+    ssh.new_list()  # New list… in SSH's dropdown makes a host list
+    doc = capy.hosts.document
+    assert doc is not None and doc.path == made and ssh.document is doc
+    assert listfile.load(made).hosts.hosts == ()
+
+
+def test_ssh_keeps_no_lists_of_its_own(capy: "CapyWindow", monkeypatch: pytest.MonkeyPatch) -> None:
+    """No SSH lists folder; Manage host lists… opens Hosts' page, which manages them."""
+    places = capy.paths.lists("ssh")
+    assert not places.shared_dir.exists() and not places.user_dir.exists()
+    opened: list[str | None] = []
+    monkeypatch.setattr(capy, "open_settings", lambda page=None: opened.append(page))
+    ssh = _ssh(capy)
+    menu = ssh.list_picker.menu()
+    menu.aboutToShow.emit()
+    [manage] = [a for a in menu.actions() if a.text() == "&Manage host lists…"]
+    manage.trigger()
+    assert opened == ["hosts"]
 
 
 def test_refresh_checks_only_the_ssh_port_of_every_host_shown(
@@ -317,7 +423,7 @@ def test_adding_a_host_saves_its_port_and_login(
 
     monkeypatch.setattr(tool_module, "run_modal", fill)
     ssh.add_item()
-    saved = {h.name: h for h in listfile.load(servers, "ssh").hosts.hosts}
+    saved = {h.name: h for h in listfile.load(servers).hosts.hosts}  # a host list
     assert info_of(saved["backup-01"]) == SshInfo(port=2200, login="EXAMPLE\\user")
     assert ssh.table.selected_ids() == [saved["backup-01"].id]
 
@@ -387,7 +493,7 @@ def test_refresh_status_by_itself_is_off_until_picked_and_warns_about_fail2ban(
 ) -> None:
     group = ssh.settings_group()
     [(page_id, page)] = group.build()
-    assert page_id == "ssh" and isinstance(page, AutoStatusPage)
+    assert page_id == "ssh" and isinstance(page, AutoStatusOnlyPage)  # its lists are Hosts'
     assert page.auto_every.currentText() == "Off"
     assert ssh.auto_status() == (False, 5) and not ssh._auto_timer.isActive()
     [row] = [

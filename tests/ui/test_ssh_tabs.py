@@ -46,7 +46,7 @@ def servers(tmp_path: Path) -> Path:
         hl = hl.update_host(with_info(host, SshInfo(login="admin")))
     hl, _web = hl.add_host("web-01", NO_GROUP, address="198.51.100.42")
     path = tmp_path / "servers.json"
-    listfile.save(path, hl, expected=None, kind="ssh")
+    listfile.save(path, hl, expected=None)  # a host list: SSH shows Hosts' lists
     return path
 
 

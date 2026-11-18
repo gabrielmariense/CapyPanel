@@ -407,8 +407,8 @@ def test_the_search_shows_every_matching_section_on_one_page(window: CapyWindow)
     assert results()[:2] == ["CapyPanel › General", "Appearance"]  # under its page's name
     marks = dialog._marks  # pyright: ignore[reportPrivateUsage]
     assert [w.objectName() for w in marks.marked_labels()][:1] == ["rowName"]  # Theme's row
-    dialog.search.setText("folder")  # each lists section's note, Connection profiles, About
-    assert listed() == ["Hosts", "General", "Connecting", "Printers", "General", "SSH", "General"]
+    dialog.search.setText("folder")  # each lists section's note (SSH's lists are Hosts'), …
+    assert listed() == ["Hosts", "General", "Connecting", "Printers", "General"]
     assert not dialog.pinned_list.isRowHidden(0)  # About, with its Folders and Open folder
     assert "About" in results() and "Folders" in results()  # its sections, under its name
     dialog.search.setText("syst")  # "follow system theme"; not a tool path's "System32"

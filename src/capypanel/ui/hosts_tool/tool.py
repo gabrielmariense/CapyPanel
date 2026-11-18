@@ -48,7 +48,7 @@ from capypanel.ui.dialogs import run_modal
 from capypanel.ui.export_hosts import ExportDialog
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.guides import Guide, Step
-from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, list_file_filter
+from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, host_list_texts
 from capypanel.ui.hosts_tool.accounts import Accounts, used_for, windows_account
 from capypanel.ui.hosts_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.hosts_tool.details import NOBODY_FOR, HostDetails, HostDetailsPanel
@@ -279,20 +279,7 @@ class HostsTool(ListWorkspace):
         return _("&Hosts")
 
     def list_texts(self) -> ListTexts:
-        return ListTexts(
-            kind=self.TOOL_ID,
-            everything=_("All hosts"),
-            lists=_("Host lists"),
-            new=_("New host list"),
-            add=_("Add a host list"),
-            open=_("Open a host list"),
-            remove=_("Remove host list"),
-            manage=_("&Manage host lists…"),
-            no_list=_("No host list is open."),
-            choose_first=_("Open a host list to choose what it shows first."),
-            not_this_kind=_("“{path}” isn't a host list."),
-            file_filter=list_file_filter(),
-        )
+        return host_list_texts()
 
     def items_text(self, n: int) -> str:
         return ngettext("{n} host", "{n} hosts", n).format(n=n)

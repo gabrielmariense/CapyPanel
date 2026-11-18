@@ -225,9 +225,6 @@ msgstr ""
 msgid "&Low supply level"
 msgstr ""
 
-msgid "&Manage SSH lists…"
-msgstr ""
-
 msgid "&Manage groups…"
 msgstr ""
 
@@ -625,9 +622,6 @@ msgid "Add a mark"
 msgstr ""
 
 msgid "Add a printer list"
-msgstr ""
-
-msgid "Add an SSH list"
 msgstr ""
 
 msgid "Add an account"
@@ -2413,9 +2407,6 @@ msgstr ""
 msgid "Needs someone at the printer"
 msgstr ""
 
-msgid "New SSH list"
-msgstr ""
-
 msgid "New connection profile"
 msgstr ""
 
@@ -2444,9 +2435,6 @@ msgid "Next tab"
 msgstr ""
 
 msgid "No Doc360 MPS account is set."
-msgstr ""
-
-msgid "No SSH list is open."
 msgstr ""
 
 msgid "No access: needs an admin account on this PC"
@@ -2817,12 +2805,6 @@ msgid "Open a printer list"
 msgstr ""
 
 msgid "Open a printer list to choose what it shows first."
-msgstr ""
-
-msgid "Open an SSH list"
-msgstr ""
-
-msgid "Open an SSH list to choose what it shows first."
 msgstr ""
 
 msgid "Open f&older"
@@ -3403,9 +3385,6 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
-msgid "Remove SSH list"
-msgstr ""
-
 msgid "Remove everything"
 msgstr ""
 
@@ -3576,12 +3555,6 @@ msgid "SRV-SAMPLE"
 msgstr ""
 
 msgid "SSH"
-msgstr ""
-
-msgid "SSH lists"
-msgstr ""
-
-msgid "SSH lists (*.json);;All files (*)"
 msgstr ""
 
 msgid "SSH terminal"
@@ -6229,10 +6202,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "“{path}” isn't a printer list."
-msgstr ""
-
-#, python-brace-format
-msgid "“{path}” isn't an SSH list."
 msgstr ""
 
 #, python-brace-format
