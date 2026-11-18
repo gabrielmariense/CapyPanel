@@ -56,7 +56,7 @@ def _near(a: QColor, b: QColor) -> bool:
 
 
 def test_one_line_beside_the_button_brings_the_icon_down_with_it(qapp: QApplication) -> None:
-    strip = _strip(qapp, SHORT, 900)
+    strip = _strip(qapp, SHORT, 1600)  # one line in any font the earlier tests leave
     line = strip._text.fontMetrics().lineSpacing()  # noqa: SLF001
     assert strip._text.heightForWidth(strip._text.width()) == line  # noqa: SLF001  one line
     assert strip.retry_button.height() > line  # so the line sits lower than the strip's top
