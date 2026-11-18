@@ -39,6 +39,51 @@ The other fields are optional:
     - **Edit selected…** (F2) opens the same window for a printer already in the list, with
       **Save** instead of **Add**.
 
+## Import many printers at once
+
+1. **Inventory > Import printers…**. An empty printer list offers the same button beside **Add
+   printer…**.
+2. Paste a list into the box at the top, or click **Open a CSV file…**. The rows fill the preview
+   below.
+3. Check the preview, and pick where printers with no group go under **Printers with no group go
+   to:**.
+4. Click **Add {n} printers**. Nothing changes in your list before that, and nothing contacts a
+   printer: the first Refresh does.
+
+![Import printers with Windows' printer list pasted in: two printers ready to add, and two in red whose Windows port isn't an address](../images/import-printers-dark.png)
+
+Three kinds of list are understood, and **Formats…** shows each one:
+
+| Format | What it is |
+|---|---|
+| **Name and address** | "Any name you like, then the printer's IP address or network name." Separated by a comma, or two columns copied from Excel |
+| **A Printers Report** | A [Report](#export-printers-to-a-spreadsheet) saved with the **For Import** or **All details** columns, in English or Portuguese |
+| **Windows' printer list** | What Windows PowerShell saves with the command below |
+
+```
+Get-Printer | Export-Csv printers.csv -Encoding UTF8
+```
+
+Run it in Windows PowerShell on a PC to save that PC's printers; add `-ComputerName` and a print
+server's name for the server's printers. A printer already in your list is skipped, never
+overwritten.
+
+??? note "More about importing printers"
+
+    - The window is the one [Import hosts](../hosts/host-lists.md#add-hosts-from-a-spreadsheet)
+      uses, with five more columns after **Notes**: **Brand**, **Model**, **Serial number**,
+      **Asset tag** and **Page counters**. Editing rows, leaving them out and the summary work the
+      same.
+    - A Report comes back as it was, every printer column included. Brand and serial number come
+      in in capitals, as **Add printer…** saves them, and an address that starts with `https://` is
+      kept as typed.
+    - From Windows' list, the printer's name comes in, and its port becomes the address, without
+      the "IP_" Windows puts before it or the "_1" of a second port. **Location** and **Comment**
+      go into the notes, and the summary names the rest as "the other 36 columns Windows exports".
+    - A port that isn't an address, such as a WSD port, USB001 or a terminal server's, comes in
+      red: "No address: type the printer's address. Its Windows port, USB001, isn't one." Type the
+      address in the preview, or leave the row out.
+
 ## Open a printer's web page
 
 Almost every printer has a web page of its own for settings, counters and supplies. Click **Open
@@ -150,8 +195,8 @@ details**.
     | **Details panel** (right) | Everything known about the printer you selected, under its name and status with a **Refresh** and a **Web page** button. Click any value to copy it |
     | **Status bar** | The open list and its counts, as in Hosts: its kind, a shared list's name, how many printers it holds, how many are online once any has been refreshed, and how many are selected. Rest the mouse on it for the list's file path; a click copies it |
 
-    **Inventory** holds **Add printer…** (Ctrl+N), **Add group…** and **Manage groups…**, the same
-    three as in Hosts.
+    **Inventory** holds **Add printer…** (Ctrl+N), **Add group…**, **Manage groups…** and **Sort
+    groups A–Z**, then, under a line, **Import printers…**, as Hosts has with **Import hosts…**.
 
 ??? note "The table's columns"
 
@@ -200,3 +245,6 @@ details**.
 | "“{path}” isn't a printer list." | The file you opened is a host list | Open it in Hosts |
 | "Opened 10 web pages. Only the first 10 open at once." | More than ten printers were selected | Open the rest in a second go |
 | "Tick a column under Last check to read them" | The Report's refresh button has nothing to read | Tick a column under Last check |
+| "This list has no printers yet. Add one, or import several at once." | The printer list is empty | **Add printer…** or **Import printers…** |
+| "No address: type the printer's address. Its Windows port, USB001, isn't one." | In an import from Windows' printer list, that printer's port isn't a network address | Type its address in the preview, or leave it out |
+| "Not a printer name or IP address", "No address: the name must then be the printer's name on the network" | That row of an import can't be added | Fix the row in the preview, or leave it out |

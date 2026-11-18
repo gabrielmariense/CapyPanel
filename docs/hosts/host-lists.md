@@ -131,7 +131,7 @@ A host already in your list is skipped, never overwritten.
 
 ??? note "Fixing rows in the preview"
 
-    The preview shows **Name**, **Address**, **Group**, **Tags**, **Notes** and a **Warning** for
+    The preview shows **Name**, **Address**, a **Warning**, **Group**, **Tags** and **Notes** for
     every row. Right-click a row:
 
     - **Edit cell** (F2) changes the value under the pointer; a double-click does the same.
@@ -186,6 +186,9 @@ read-only one too.
 The open list's name sits on top of the Groups panel. Click it to switch to another list, make one
 with **New list…**, open any list file with **Open list…** (Ctrl+O), or go to **Manage host
 lists…** in Settings.
+
+Profile cleanup and the SSH tool show the same list as Hosts: a host added in one is in all three,
+and a list picked or made in any of them opens in the other two.
 
 A new list asks for a **Name** and who it's **For:** **Everyone on this PC (shared)**, **Only me
 (personal)**, or **Somewhere else, e.g. a network share…**.

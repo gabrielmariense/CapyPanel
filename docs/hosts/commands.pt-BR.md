@@ -222,8 +222,9 @@ clique duplo só escolhe, para um comando arriscado nunca rodar por acidente.
       em **Recentes** os endereços que você digitou antes; `host:porta` funciona. Escolher outro
       host muda a janela inteira para ele, inclusive o **Perfil**. O título diz "Comandos ·
       DESK-02", ou "Conexão manual · 198.51.100.40" para um endereço digitado. O **Adicionar à
-      lista de hosts…** aparece embaixo, à esquerda, para um endereço digitado que a lista aberta
-      não tem.
+      lista de hosts…**, embaixo à esquerda, está sempre ali. Ele fica cinza quando não há nada
+      para adicionar, e a dica dele diz o motivo: para um PC que a lista aberta já tem, onde ele
+      está, como em "Já está na lista, em “Recepção”".
     - A engrenagem entre o **Perfil** e o **Conectar** ("Perfis de conexão…") abre
       **Configurações > Hosts > Conexão**, onde os perfis são criados. O **Conectar** fica azul quando há um host
       para conectar; com a caixa vazia, um clique nele põe o cursor no **Host**.

@@ -94,13 +94,18 @@ choice is only yours. While it downloads, **Later** reads **Cancel** and stops t
        self-test, while CapyPanel is still open. If the test fails, CapyPanel stays as it is and the
        window says "The new version didn't pass its self-test".
     3. If a tool is busy, such as a printer Refresh or a profile being deleted, it waits for it
-       ("Waiting for CapyPanel to finish what it's doing…") or asks you first.
+       ("Waiting for CapyPanel to finish what it's doing…") or asks you first. An SSH connection
+       open in a separate window stops it: "1 SSH connection is still open in a separate window.
+       Close it, then install the update." Nothing is installed until it's closed, and CapyPanel
+       checks again just before it closes.
     4. CapyPanel closes. A small helper swaps the app's files for the new ones, with the splash
        saying "Updating to 0.26.4…", and starts the new version. Starting CapyPanel during the swap
        does no harm: that start just ends.
-    5. If the new version won't start, the helper puts the old one back. CapyPanel then opens with
-       a window that says "The update to 0.28.1 wasn't installed.", why, and **Releases on
-       GitHub**.
+    5. If another program holds one of CapyPanel's files open, such as a CapyPanel in another
+       Windows session or an antivirus in the middle of a scan, the helper stops before anything
+       moves. If the new version won't start, the helper puts the old one back. Either way,
+       CapyPanel opens as it was, with a window that says "The update to 0.28.1 wasn't
+       installed.", why, and **Releases on GitHub**.
 
     When the update comes from a version older than 0.26.4, which doesn't test first, the helper
     runs the self-test itself before the swap.
@@ -140,4 +145,6 @@ has the rest.
 | "This copy runs from source: update it with git, or download the zip from the release page." | You started CapyPanel with `uv run` | `git pull`, or switch to the zip |
 | "The new version didn't pass its self-test" | The downloaded version failed its own check, so nothing was changed | Try **Install and restart** again later; **Report a problem** if it keeps failing |
 | "The update to 0.28.1 wasn't installed." and "You still have CapyPanel 0.28.0.", then the reason | The new version wouldn't start, so the old one was put back | Read the reason; **Report a problem** if it isn't clear |
+| "Couldn't put the new version in place: …" as that reason | Another program held one of CapyPanel's files open, so the update stopped with nothing changed | Close what holds it, such as a CapyPanel in another Windows session, and update again |
+| "1 SSH connection is still open in a separate window. Close it, then install the update." | That window runs from CapyPanel's folder, so its files can't be replaced while it's open | Close the window, then **Install and restart** again |
 | "CapyPanel is already running for EXAMPLE\user, but its window couldn't be brought forward: …" | Your other copy is open in another Windows session, or isn't answering | Close it there, or end it in Task Manager, then start CapyPanel again |

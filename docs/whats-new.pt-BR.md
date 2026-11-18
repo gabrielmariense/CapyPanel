@@ -3,6 +3,31 @@
 As mudanças de cada versão que você vai notar. As
 [versões no GitHub](https://github.com/gabrielmariense/CapyPanel/releases) têm os downloads.
 
+## 0.29.0
+
+- O **SSH** é uma quarta ferramenta (Ctrl+4), para os servidores, switches e outros aparelhos que
+  você acessa por SSH. Ele mostra a lista de hosts aberta no Hosts, verifica quais hosts respondem
+  na porta SSH e abre um terminal em qualquer um deles numa aba ao lado da lista, pelo próprio
+  ssh.exe do Windows. Veja [A ferramenta SSH](ssh/ssh.pt-BR.md).
+- O **Entrar como** define a conta com que o ssh.exe entra, para um host ou um grupo inteiro, pelo
+  painel de detalhes ou pelo botão direito.
+- O **Conectar numa janela separada** abre o ssh.exe fora do CapyPanel. Depois de um erro, a
+  janela fica aberta até você pressionar uma tecla, para você ler o motivo.
+- O **Inventário > Importar impressoras…** adiciona muitas impressoras de uma vez: de uma lista de
+  nomes e endereços, de um Relatório de Impressoras ou da própria lista de impressoras do Windows
+  (`Get-Printer`). Uma lista de impressoras vazia também oferece o botão.
+- Os quatro blocos da página inicial ficam em duas fileiras iguais.
+- A Limpeza de perfis também fecha uma aba com Ctrl+Shift+W, como o SSH.
+- Na janela Comandos, o **Adicionar à lista de hosts…** está sempre ali. Quando não há nada para
+  adicionar, ele fica cinza e a dica diz o motivo, como onde o PC já está na lista.
+- Nos menus do Hosts e do Impressoras, os itens de Atualizar usam o U como letra sublinhada, então
+  o R continua sendo do Remover.
+- As caixas que a Conexão manual abre, como a da senha, aparecem por cima dela, então ela não fica
+  mais atrás da janela principal.
+- Uma atualização que encontra um arquivo do CapyPanel em uso, por um CapyPanel em outra sessão do
+  Windows ou por uma verificação de antivírus, por exemplo, agora para sem mudar nada, e o
+  CapyPanel abre como estava. Antes, uma atualização assim podia deixar o CapyPanel sem abrir.
+
 ## 0.28.1
 
 - A ferramenta Perfis de usuário agora se chama **Limpeza de perfis**, um nome que diz para que ela

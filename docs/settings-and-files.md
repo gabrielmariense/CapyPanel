@@ -15,7 +15,8 @@ settings work right there.
 ??? note "More about the window"
 
     - The pages are grouped: **CapyPanel** (General, Keyboard shortcuts), **Hosts** (General,
-      Connecting, Credentials) and **Printers** (General, Warnings and supplies, Connecting).
+      Connecting, Credentials), **Printers** (General, Warnings and supplies, Connecting) and
+      **SSH** (General).
       **About** sits apart at the very bottom. Settings opens on **CapyPanel > General**.
     - Each page is made of sections: a title with its settings on a soft card. A table looks the
       same everywhere: a thin line under each row, dividers to drag a column wider, the main
@@ -77,9 +78,9 @@ for all of them."
 
 ![Settings on CapyPanel > Keyboard shortcuts: the commands under File, View and Help, each with its key, and Clear and Restore default under the list](images/settings-shortcuts-dark.png)
 
-Every command a key can run is listed here, under **File**, **View**, **Help**, **Hosts** and
-**Printers**, in the order you meet them in the app. **Key** shows the key it has now; most
-commands start with none.
+Every command a key can run is listed here, under **File**, **View**, **Help**, **Hosts**,
+**Printers** and **SSH**, in the order you meet them in the app. **Key** shows the key it has now;
+most commands start with none.
 
 1. Double-click a command, or pick it and press **Enter**. Its key reads "Press the new key…".
 2. Press the new key, with Ctrl, Alt or Shift if you like. **Esc** leaves the key as it was.
@@ -91,14 +92,20 @@ and **Restore default** gives back the one it came with.
 
     - A key another command already has moves only after a question: **Give it** moves it, and the
       other command is left with no key.
-    - F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself, as the line under the list says. So is
+    - F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself, as the line under the
+      list says: "In an SSH terminal, all but Ctrl+Shift+W go to the server." So is
       a key that types text on its own, such as a letter, a digit or Ç: use it with Ctrl or Alt.
       Press one and the field turns red and reads "Key not allowed", the reason shows in red
       under the list, and it keeps waiting for another key.
-    - Hosts and Printers have their own rows, even for a command both have, such as **Edit…** or
-      **Remove**: a key given to one leaves the other's as it was.
+    - Each tool has its own rows, even for a command another has too, such as **Edit…** or
+      **Remove**: a key given to one leaves the others' as they were.
     - **Connect** and **Open web page** read "Enter (in the list)": their key works only in the
       host or printer list.
+    - The list ends with **SSH terminal**, under "Inside a terminal, every key goes to the server
+      except the ones below and the keys that change tools or open Settings.": the terminal's own
+      keys (Copy, Copy with text selected, Paste, Bigger and Smaller text, Next and Previous tab,
+      Close tab), greyed, since "The terminal's own keys can't be changed." (see
+      [Work in the terminal](ssh/ssh.md#work-in-the-terminal)).
     - Restart, Shut down, Cancel the pending restart, Restart Print Spooler, and logging off or
       disconnecting someone aren't listed.
     - Tooltips and first-run guides name a command's key as it is now, so a key you change shows
@@ -176,6 +183,15 @@ mark, with "A change here reaches everyone on this PC." under the title.
 
 Profile cleanup has no settings of its own: it uses Hosts' lists and accounts.
 
+## SSH > General
+
+| Setting | What it does | To begin with |
+|---|---|---|
+| **Refresh status by itself** | Checks the SSH port of the hosts shown every **minute**, **5**, **15** or **30 minutes**, or a **Custom…** interval. "Only the SSH port, so nothing logs in. A server running fail2ban in a strict mode may count each check as a failed login and block this PC." (see [Check which hosts answer](ssh/ssh.md#check-which-hosts-answer)) | Off |
+
+SSH uses Hosts' lists, so they're set on **Hosts > General**. The terminal's text size is kept in
+your settings file when you change it with Ctrl+= and Ctrl+-.
+
 ## About
 
 **Help > About CapyPanel** opens this page, at the bottom of the list. It has four cards:
@@ -194,8 +210,9 @@ Profile cleanup has no settings of its own: it uses Hosts' lists and accounts.
     license, Apache-2.0, in the same notice, because its Windows build carries OpenSSL), cffi
     (MIT-0) and pycparser (BSD-3-Clause), which cryptography needs, pywin32 (BSD-3-Clause), which
     CapyPanel reads other PCs through, truststore (MIT), which has Windows check GitHub's
-    certificate, and Tabler Icons (MIT). **Read license** also works on a
-    double-click or the row's right-click, and **Open folder** opens the folder they all ship in.
+    certificate, pyte (LGPL-3.0), which the SSH terminal is built on, and Tabler Icons (MIT).
+    **Read license** also works on a double-click or the row's right-click, and **Open folder**
+    opens the folder they all ship in.
     The CapyPanel card's "Free software under the GPL-3.0, with no warranty: see Licenses." scrolls
     down to them.
 

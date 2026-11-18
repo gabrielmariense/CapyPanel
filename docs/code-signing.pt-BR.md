@@ -35,7 +35,7 @@ O CapyPanel não envia dados de uso para lugar nenhum.
   padrão, ou uma vez por dia, uma vez por semana ou nunca, como diz **Configurações > CapyPanel >
   Geral > Novas versões**. Ele só baixa uma versão do GitHub quando você clica em **Instalar e
   reiniciar**.
-- Todo o resto que ele contata é o que você configura: os PCs e as impressoras das suas listas, e
-  o Doc360 MPS (mps.doc360.com.br) se você adicionar a sua conta dele.
+- Todo o resto que ele contata é o que você configura: os PCs, os servidores e as impressoras das
+  suas listas, e o Doc360 MPS (mps.doc360.com.br) se você adicionar a sua conta dele.
 - Os links de documentação, código-fonte e **Relatar um problema** no menu Ajuda e no Sobre abrem
   no seu navegador.

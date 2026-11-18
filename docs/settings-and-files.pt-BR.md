@@ -16,7 +16,8 @@ em amarelo, e as configurações funcionam ali mesmo.
 ??? note "Mais sobre a janela"
 
     - As páginas são agrupadas: **CapyPanel** (Geral, Atalhos de teclado), **Hosts** (Geral,
-      Conexão, Credenciais) e **Impressoras** (Geral, Avisos e suprimentos, Conexão). **Sobre**
+      Conexão, Credenciais), **Impressoras** (Geral, Avisos e suprimentos, Conexão) e **SSH**
+      (Geral). **Sobre**
       fica à parte, no fim da lista. As Configurações abrem em **CapyPanel > Geral**.
     - Cada página é feita de seções: um título com as configurações dele num cartão arredondado. Uma
       tabela é igual em todo lugar: uma linha fina embaixo de cada linha, divisores para arrastar e
@@ -80,9 +81,9 @@ CapyPanel para todos eles."
 
 ![As Configurações em CapyPanel > Atalhos de teclado: os comandos sob Arquivo, Exibir e Ajuda, cada um com a tecla dele, e Limpar e Restaurar padrão embaixo da lista](images/settings-shortcuts-dark-pt-BR.png)
 
-Aqui está cada comando que uma tecla pode rodar, sob **Arquivo**, **Exibir**, **Ajuda**, **Hosts**
-e **Impressoras**, na ordem em que você os encontra no app. **Tecla** mostra a tecla que ele tem
-agora; a maioria dos comandos começa sem nenhuma.
+Aqui está cada comando que uma tecla pode rodar, sob **Arquivo**, **Exibir**, **Ajuda**, **Hosts**,
+**Impressoras** e **SSH**, na ordem em que você os encontra no app. **Tecla** mostra a tecla que
+ele tem agora; a maioria dos comandos começa sem nenhuma.
 
 1. Dê dois cliques num comando, ou escolha-o e aperte **Enter**. A tecla dele passa a dizer
    "Pressione a nova tecla…".
@@ -95,14 +96,21 @@ o **Restaurar padrão** devolve a que ele tinha de início.
 
     - Uma tecla que outro comando já tem só muda depois de uma pergunta: o **Passar** a move, e o
       outro comando fica sem tecla.
-    - F1, Esc, Ctrl+F e Tab ficam reservadas ao próprio CapyPanel, como diz a linha embaixo da
-      lista. Uma tecla que sozinha digita texto, como uma letra, um número ou o Ç, também: use-a
-      com Ctrl ou Alt. Pressione uma delas e o campo fica vermelho e diz "Tecla não aceita",
-      o motivo aparece em vermelho embaixo da lista, e ele continua esperando outra tecla.
-    - Hosts e Impressoras têm linhas próprias, mesmo para um comando que os dois têm, como
-      **Editar…** ou **Remover**: uma tecla dada a um deixa a do outro como estava.
+    - F1, Esc, Ctrl+F, Tab e Ctrl+Shift+W ficam reservadas ao próprio CapyPanel, como diz a linha
+      embaixo da lista: "Num terminal SSH, todas menos Ctrl+Shift+W vão para o servidor." Uma tecla
+      que sozinha digita texto, como uma letra, um número ou o Ç, também: use-a com Ctrl ou Alt.
+      Pressione uma delas e o campo fica vermelho e diz "Tecla não aceita", o motivo aparece em
+      vermelho embaixo da lista, e ele continua esperando outra tecla.
+    - Cada ferramenta tem linhas próprias, mesmo para um comando que outra também tem, como
+      **Editar…** ou **Remover**: uma tecla dada a uma deixa a das outras como estava.
     - **Conectar** e **Abrir página web** dizem "Enter (na lista)": a tecla deles só vale na lista
       de hosts ou de impressoras.
+    - A lista termina com **Terminal SSH**, embaixo de "Dentro de um terminal, todas as teclas vão
+      para o servidor, menos as abaixo e as que trocam de ferramenta ou abrem as Configurações.":
+      as teclas do próprio terminal (Copiar, Copiar com texto selecionado, Colar, Texto maior e
+      menor, Próxima aba e Aba anterior, Fechar aba), em cinza, porque "As teclas do próprio
+      terminal não podem ser alteradas." (veja
+      [Trabalhar no terminal](ssh/ssh.pt-BR.md#trabalhar-no-terminal)).
     - Reiniciar, Desligar, Cancelar a reinicialização pendente, Reiniciar o Spooler de Impressão,
       e fazer logoff ou desconectar alguém não estão na lista.
     - As dicas e os guias de primeiro uso dizem a tecla que o comando tem agora: uma tecla que
@@ -182,6 +190,15 @@ com "Uma mudança aqui vale para todos neste PC." embaixo do título.
 A Limpeza de perfis não tem configurações próprias: ela usa as listas e as contas do
 Hosts.
 
+## SSH > Geral
+
+| Configuração | O que faz | De início |
+|---|---|---|
+| **Atualizar o status sozinho** | Verifica a porta SSH dos hosts exibidos **a cada minuto**, a cada **5**, **15** ou **30 minutos**, ou num intervalo **Personalizado…**. "Só a porta SSH, sem fazer login. Um servidor com fail2ban num modo rígido pode contar cada verificação como uma tentativa de login que falhou e bloquear este PC." (veja [Ver quais hosts respondem](ssh/ssh.pt-BR.md#ver-quais-hosts-respondem)) | Desligado |
+
+O SSH usa as listas do Hosts, então elas são configuradas em **Hosts > Geral**. O tamanho do texto
+do terminal fica guardado no seu arquivo de configurações quando você o muda com Ctrl+= e Ctrl+-.
+
 ## Sobre
 
 **Ajuda > Sobre o CapyPanel** abre esta página, no fim da lista. Ela tem quatro cartões:
@@ -200,8 +217,9 @@ Hosts.
     Apache-2.0, no mesmo aviso, porque o build dela para Windows leva o OpenSSL), cffi (MIT-0) e
     pycparser (BSD-3-Clause), de que a cryptography precisa, pywin32 (BSD-3-Clause), pelo qual o
     CapyPanel lê outros PCs, truststore (MIT), que faz o Windows conferir o certificado do GitHub,
-    e Tabler Icons (MIT). O **Ler licença** também funciona num clique
-    duplo ou no botão direito da linha, e o **Abrir pasta** abre a pasta em que todas vêm. O
+    pyte (LGPL-3.0), sobre o qual o terminal SSH é construído, e Tabler Icons (MIT). O **Ler
+    licença** também funciona num clique duplo ou no botão direito da linha, e o **Abrir pasta**
+    abre a pasta em que todas vêm. O
     "Software livre sob a GPL-3.0, sem garantia: veja Licenças." do cartão CapyPanel rola até elas.
 
     **Pastas** é a versão curta da seção abaixo:

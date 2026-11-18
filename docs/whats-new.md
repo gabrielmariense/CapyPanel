@@ -3,6 +3,31 @@
 The changes in each release that you'll notice. The
 [releases on GitHub](https://github.com/gabrielmariense/CapyPanel/releases) have the downloads.
 
+## 0.29.0
+
+- **SSH** is a fourth tool (Ctrl+4), for the servers, switches and other devices you reach over
+  SSH. It shows the host list open in Hosts, checks which hosts answer on their SSH port, and
+  opens a terminal on any of them in a tab beside the list, through Windows' own ssh.exe. See
+  [The SSH tool](ssh/ssh.md).
+- **Log in as** sets the account ssh.exe signs in with, for one host or a whole group, from the
+  Details panel or a right-click.
+- **Connect in a separate window** opens ssh.exe outside CapyPanel. After an error, the window
+  stays open until you press a key, so you can read why.
+- **Inventory > Import printers…** adds many printers at once: from a list of names and
+  addresses, a Printers Report, or Windows' own printer list (`Get-Printer`). An empty printer list
+  offers it too.
+- Home's four tiles sit in two even rows.
+- Profile cleanup also closes a tab with Ctrl+Shift+W, as SSH does.
+- In the Commands window, **Add to host list…** is always there. When there's nothing to add, it's
+  greyed and its tooltip says why, such as where the PC already is in the list.
+- In Hosts' and Printers' menus, the Refresh items use F as their underlined letter, so R stays
+  Remove's.
+- The boxes Manual connection opens, such as its password prompt, show over it, so it no longer
+  falls behind the main window.
+- An update that finds one of CapyPanel's files in use, by a CapyPanel in another Windows session
+  or an antivirus scan for instance, now stops with nothing changed, and CapyPanel opens as it
+  was. Before, such an update could leave CapyPanel unable to start.
+
 ## 0.28.1
 
 - User profiles is now **Profile cleanup**, a name that says what it's for. Its key, Ctrl+3,

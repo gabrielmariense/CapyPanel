@@ -202,8 +202,9 @@ A double-click only picks, so a risky command never runs by accident.
     - The **Host** box lists the hosts the Hosts panel shows, as "DESK-02 · 192.0.2.12", and under
       **Recent** the addresses you typed before; `host:port` works. Picking another host changes the
       whole window to it, its **Profile** included. The title says "Commands · DESK-02", or "Manual
-      connection · 198.51.100.40" for a typed address. **Add to host list…** shows at the bottom
-      left for a typed address the open list doesn't have.
+      connection · 198.51.100.40" for a typed address. **Add to host list…**, at the bottom left,
+      is always there. It's greyed when there's nothing to add, and its tooltip then says why: for
+      a PC the open list already has, where it is, as in "Already in the list, in “Front desk”".
     - The gear between **Profile** and **Connect** ("Connection profiles…") opens **Settings >
       Hosts > Connecting**, where the profiles are made. **Connect** is blue once there's a host to
       connect to; with the box empty, a click on it puts the cursor in **Host**.

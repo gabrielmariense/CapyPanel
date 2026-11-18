@@ -53,7 +53,8 @@ Case doesn't matter.
     - The Groups panel is read only here: groups are made in Hosts.
     - Tabs never reorder themselves: a new one opens at the right end, and the **▾** at the end of
       the tab bar lists them all. Right-click a tab for **Close**, **Close the others** and **Close
-      the finished ones**; a middle-click closes one too. A tab can't be closed while it's deleting.
+      the finished ones**; a middle-click closes one too, and so do **Ctrl+W** and **Ctrl+Shift+W**
+      for the tab in front, as in SSH. A tab can't be closed while it's deleting.
     - Up to four hosts are read or counted at a time, across every tab; the others wait their turn.
 
 ## See which profiles can be deleted
