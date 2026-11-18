@@ -88,6 +88,16 @@ CHUNK_LOG = 10_000  # the last chunks' parse times kept: a tab left on tail -f f
 MAX_CACHED = 16_384
 MAX_PENDING = 131072  # bytes the reader holds before ssh.exe waits: Ctrl+C shows at once
 COPY_PASTE = (int(Qt.Key.Key_C), int(Qt.Key.Key_V))  # with Ctrl+Shift
+# Keys that only hold others down or switch a lock. They still reach the program, as every key
+# does, but keep the selection and the scroll: Ctrl goes down before the C of Ctrl+C.
+HELD_KEYS = frozenset(
+    int(k)
+    for k in (
+        Qt.Key.Key_Shift, Qt.Key.Key_Control, Qt.Key.Key_Alt, Qt.Key.Key_AltGr, Qt.Key.Key_Meta,
+        Qt.Key.Key_Super_L, Qt.Key.Key_Super_R, Qt.Key.Key_CapsLock, Qt.Key.Key_NumLock,
+        Qt.Key.Key_ScrollLock,
+    )
+)  # fmt: skip
 SIZE_KEYS = (int(Qt.Key.Key_Equal), int(Qt.Key.Key_Plus), int(Qt.Key.Key_Minus))  # with Ctrl
 _Fit = tuple[float, float, float, QFont, str]  # scale, dx, dy, the font, the text drawn
 
@@ -704,6 +714,8 @@ class TerminalView(QAbstractScrollArea):
             self.stats["keys_sent"] += 1
             if not event.isAutoRepeat():
                 self._sent_down.add(event.nativeVirtualKey())
+            if int(event.key()) in HELD_KEYS:
+                return
             self._sel = None
             self._blink_on = True
             if not self._at_bottom():

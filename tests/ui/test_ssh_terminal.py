@@ -284,6 +284,34 @@ def test_ctrl_c_copies_a_selection_and_the_next_one_reaches_the_program(
     assert console.written == [b"\x1b[67;46;3;1;8;1_"]
 
 
+def test_ctrl_and_shift_going_down_first_keep_the_selection_for_the_copy(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    """As a hand types them: Ctrl, and Shift, go down before the C, each a key of its own that
+    reaches the program. They used to drop the selection, so neither copy key copied anything."""
+    view.start(["ssh.exe"])
+    console = consoles[-1]
+    console.prints(b"selected 5521 ok")
+    _until(lambda: view.term.row_text(0) == "selected 5521 ok")
+    both = keys.Q_CTRL_L | keys.Q_SHIFT_L
+
+    def ctrl() -> QKeyEvent:
+        return _key(K.Key_Control, 0x11, 0x1D, native=keys.Q_CTRL_L, mods=CTRL)
+
+    QGuiApplication.clipboard().clear()
+    view.select_cells((0, 0), (0, 7))
+    QApplication.sendEvent(view, ctrl())
+    QApplication.sendEvent(view, _key(K.Key_Shift, 0x10, 0x2A, native=both, mods=CTRL | SHIFT))
+    QApplication.sendEvent(view, _key(K.Key_C, 0x43, 0x2E, native=both, mods=CTRL | SHIFT))
+    assert QGuiApplication.clipboard().text() == "selected"
+    view.select_cells((0, 9), (0, 12))
+    QApplication.sendEvent(view, ctrl())
+    QApplication.sendEvent(view, _ctrl_c())
+    assert QGuiApplication.clipboard().text() == "5521"
+    # Ctrl, Shift and Ctrl went down to the program; neither C did.
+    assert [w.split(b";")[0] for w in console.written] == [b"\x1b[17", b"\x1b[16", b"\x1b[17"]
+
+
 def test_ctrl_equals_and_ctrl_minus_change_the_text_size_and_send_nothing(
     view: TerminalView, consoles: list[FakeConsole]
 ) -> None:
