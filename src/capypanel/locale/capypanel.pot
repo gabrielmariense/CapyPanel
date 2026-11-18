@@ -65,6 +65,9 @@ msgstr ""
 msgid "&Another account…"
 msgstr ""
 
+msgid "&Another name…"
+msgstr ""
+
 msgid "&Authentication"
 msgstr ""
 
@@ -211,6 +214,9 @@ msgid "&List on startup"
 msgstr ""
 
 msgid "&Locate…"
+msgstr ""
+
+msgid "&Log in as"
 msgstr ""
 
 msgid "&Log in as:"
@@ -1917,6 +1923,9 @@ msgstr ""
 msgid "From group “{group}”: {profile}"
 msgstr ""
 
+msgid "From their groups"
+msgstr ""
+
 #, python-brace-format
 msgid "From “{file}”"
 msgstr ""
@@ -2017,6 +2026,10 @@ msgid "Hosts ({n})"
 msgstr ""
 
 msgid "Hosts hasn't checked it yet."
+msgstr ""
+
+#, python-brace-format
+msgid "Hosts in “{group}” without a name of their own log in with this one."
 msgstr ""
 
 msgid ""
@@ -2571,6 +2584,9 @@ msgstr ""
 msgid "None kept."
 msgstr ""
 
+msgid "None: your SSH config, then your Windows user name"
+msgstr ""
+
 msgid "Not a computer name or IP address"
 msgstr ""
 
@@ -2765,6 +2781,9 @@ msgid "Only the first {n} open at once."
 msgstr ""
 
 msgid "Only this PC"
+msgstr ""
+
+msgid "Only this host"
 msgstr ""
 
 msgid "Open &Settings"

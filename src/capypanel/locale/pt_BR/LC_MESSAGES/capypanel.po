@@ -66,6 +66,9 @@ msgstr "To&dos os comandos…"
 msgid "&Another account…"
 msgstr "&Outra conta…"
 
+msgid "&Another name…"
+msgstr "&Outro nome…"
+
 msgid "&Authentication"
 msgstr "&Autenticação"
 
@@ -213,6 +216,9 @@ msgstr "&Lista ao iniciar"
 
 msgid "&Locate…"
 msgstr "&Localizar…"
+
+msgid "&Log in as"
+msgstr "Entrar c&omo"
 
 msgid "&Log in as:"
 msgstr "Entrar &como:"
@@ -1847,6 +1853,9 @@ msgstr "Do grupo"
 msgid "From group “{group}”: {profile}"
 msgstr "Do grupo “{group}”: {profile}"
 
+msgid "From their groups"
+msgstr "Do grupo de cada um"
+
 #, python-brace-format
 msgid "From “{file}”"
 msgstr "De “{file}”"
@@ -1944,6 +1953,10 @@ msgstr "Hosts ({n})"
 
 msgid "Hosts hasn't checked it yet."
 msgstr "O Hosts ainda não o verificou."
+
+#, python-brace-format
+msgid "Hosts in “{group}” without a name of their own log in with this one."
+msgstr "Os hosts de “{group}” sem um nome próprio entram com este."
 
 msgid "Hosts is for computers, Printers for printers, and Profile cleanup clears old Windows profiles off a PC. Each tile opens its tool."
 msgstr "Hosts é para computadores, Impressoras para impressoras, e a Limpeza de perfis exclui perfis antigos do Windows de um PC. Cada bloco abre a sua ferramenta."
@@ -2463,6 +2476,9 @@ msgstr "Nenhuma"
 msgid "None kept."
 msgstr "Nenhum guardado."
 
+msgid "None: your SSH config, then your Windows user name"
+msgstr "Nenhum: config do SSH ou seu usuário do Windows"
+
 msgid "Not a computer name or IP address"
 msgstr "Não é um nome de computador nem um endereço IP"
 
@@ -2634,6 +2650,9 @@ msgstr "Só as {n} primeiras abrem de uma vez."
 
 msgid "Only this PC"
 msgstr "Só este PC"
+
+msgid "Only this host"
+msgstr "Só este host"
 
 msgid "Open &Settings"
 msgstr "Abrir &Configurações"

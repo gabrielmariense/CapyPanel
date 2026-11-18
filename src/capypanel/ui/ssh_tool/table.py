@@ -1,6 +1,6 @@
-"""The SSH host table: name, address, the name to log in as, Status and tags; Port can be shown
-from the column titles' right-click menu. Status comes from Refresh; it's kept in memory, never
-in the list file."""
+"""The SSH host table: name, address, the name to log in as (its own or its group's), Status and
+tags; Port can be shown from the column titles' right-click menu. Status comes from Refresh; it's
+kept in memory, never in the list file."""
 
 from collections.abc import Callable, Sequence
 
@@ -28,6 +28,7 @@ class SshTable(ItemTable):
 
     def __init__(self) -> None:
         self._cells: Callable[[str], Cell] = lambda _id: not_checked()
+        self._login: Callable[[Host], str] = lambda host: info_of(host).login
         super().__init__()
 
     def retranslate(self) -> None:
@@ -36,8 +37,12 @@ class SshTable(ItemTable):
         )
 
     def row_texts(self, item: Host) -> list[str]:
-        info = info_of(item)
-        return [item.name, item.address, str(info.port), info.login, "", ", ".join(item.tags)]
+        port, login = str(info_of(item).port), self._login(item)
+        return [item.name, item.address, port, login, "", ", ".join(item.tags)]
+
+    def set_logins(self, login: Callable[[Host], str]) -> None:
+        """Where each host's Log in as comes from: its own name, or its group's."""
+        self._login = login
 
     def longest_texts(self, column: int) -> Sequence[str]:
         return status_words() if column == self.STATUS else ()

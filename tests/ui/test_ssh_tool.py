@@ -16,7 +16,7 @@ from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.remote.status import PortState
 from capypanel.core.ssh import launch
-from capypanel.core.ssh.host import SshInfo, info_of, with_info
+from capypanel.core.ssh.host import SshInfo, group_login, info_of, with_info
 from capypanel.core.ssh.launch import connect as real_connect  # before no_ssh stands in for it
 from capypanel.core.ssh.launch import tab_command as real_tab_command
 from capypanel.ui import menus
@@ -24,7 +24,7 @@ from capypanel.ui.list_workspace.panels import ROLE_NOTHING
 from capypanel.ui.settings.pages import AutoStatusOnlyPage, SettingRow
 from capypanel.ui.ssh_tool import refresh
 from capypanel.ui.ssh_tool import tool as tool_module
-from capypanel.ui.ssh_tool.dialog import SshHostDialog
+from capypanel.ui.ssh_tool.dialog import LoginDialog, SshHostDialog
 from capypanel.ui.ssh_tool.table import ROLE_QUIET
 from capypanel.ui.ssh_tool.tool import SshTool
 from capypanel.ui.themes import engine as themes
@@ -484,8 +484,163 @@ def test_details_show_the_status_connect_and_the_connection(ssh: SshTool) -> Non
     assert details.buttons["connect"].isEnabled()
     assert details.shown_value("address") == "192.0.2.41"
     assert details.shown_value("port") == "2222"
-    assert details.shown_value("login") == "root"
+    assert details.login_button is not None and details.login_button.value_text() == "root"
     assert details.shown_value("group") == "Racks"
+
+
+def _items(menu: QMenu) -> list[tuple[str, bool]]:
+    """Each item's words and tick, "-" for a line."""
+    return [("-", False) if a.isSeparator() else (menus.label(a), a.isChecked())
+            for a in menu.actions()]  # fmt: skip
+
+
+def _pick(menu: QMenu, words: str) -> None:
+    [action] = [a for a in menu.actions() if menus.label(a) == words]
+    assert action.isEnabled()
+    action.trigger()
+
+
+def _submenu(menu: QMenu, words: str) -> QMenu:
+    [found] = [a.menu() for a in menu.actions() if menus.label(a) == words]
+    assert isinstance(found, QMenu)
+    return found
+
+
+def _saved_logins(path: Path) -> dict[str, str]:
+    hosts = listfile.load(path).hosts
+    names = {h.name: info_of(h).login for h in hosts.hosts}
+    return names | {g.name: group_login(g) for g in hosts.groups}
+
+
+NONE = "None: your SSH config, then your Windows user name"
+
+
+def test_details_log_in_as_is_a_picker_of_the_names_the_list_uses(
+    ssh: SshTool, servers: Path
+) -> None:
+    """His 16:48 ask: picking it only in the host's edit window was too far away."""
+    _select(ssh, "nas-01")
+    picker = ssh.details.login_button
+    assert picker is not None and picker.marks == ("pin",)  # its own name, as Hosts pins one
+    assert picker.toolTip() == "Only this host"
+    menu = ssh.details.login_menu
+    menu.aboutToShow.emit()  # what a click on the picker fills it with
+    assert _items(menu) == [
+        (NONE, False), ("-", False), ("admin", False), ("root", True), ("-", False),
+        ("&Another name…", False),
+    ]  # fmt: skip
+    _pick(menu, "admin")
+    assert _saved_logins(servers)["nas-01"] == "admin"
+    picker = ssh.details.login_button
+    assert picker is not None and picker.value_text() == "admin"  # Details shows it at once
+    menu.aboutToShow.emit()
+    _pick(menu, NONE)
+    assert _saved_logins(servers)["nas-01"] == ""
+    picker = ssh.details.login_button
+    assert picker is not None and (picker.value_text(), picker.marks) == ("—", ())
+    assert picker.toolTip() == "Empty: your SSH config, then your Windows user name"
+    assert _rows(ssh)["nas-01"][ssh.table.LOGIN] == ""
+
+
+def test_the_host_menu_s_log_in_as_sets_every_host_picked(
+    ssh: SshTool, servers: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _select(ssh, "core-sw-01", "web-01")
+    menu = QMenu()
+    ssh.fill_item_menu(menu, ssh.selected_items())
+    logins = _submenu(menu, "&Log in as")
+    # One has admin, the other none: neither is ticked.
+    assert _items(logins) == [
+        (NONE, False), ("-", False), ("admin", False), ("root", False), ("-", False),
+        ("&Another name…", False),
+    ]  # fmt: skip
+    _pick(logins, "root")
+    saved = _saved_logins(servers)
+    assert (saved["core-sw-01"], saved["web-01"], saved["nas-01"]) == ("root", "root", "root")
+
+    def another(dialog: QDialog) -> QDialog.DialogCode:
+        assert isinstance(dialog, LoginDialog) and dialog.windowTitle() == "Log in as"
+        assert dialog.about.text() == "2 hosts selected"
+        assert dialog.login.text() == "root"  # what both have now
+        assert dialog.login.placeholderText().startswith("Empty: your SSH config")
+        assert not _accepts(cast(QValidator, dialog.login.validator()), "-oProxyCommand=calc")
+        dialog.login.setText("EXAMPLE\\user")
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(tool_module, "run_modal", another)
+    menu = QMenu()
+    ssh.fill_item_menu(menu, ssh.selected_items())
+    _pick(_submenu(menu, "&Log in as"), "&Another name…")
+    saved = _saved_logins(servers)
+    assert (saved["core-sw-01"], saved["web-01"]) == ("EXAMPLE\\user", "EXAMPLE\\user")
+
+
+def test_a_group_s_log_in_as_is_taken_by_its_hosts_without_a_name_of_their_own(
+    ssh: SshTool, servers: Path, monkeypatch: pytest.MonkeyPatch, no_ssh: list[tuple[str, object]]
+) -> None:
+    doc = ssh.document
+    assert doc is not None
+    [racks] = doc.hosts.groups
+
+    def pi(dialog: QDialog) -> QDialog.DialogCode:
+        assert isinstance(dialog, LoginDialog)
+        assert dialog.about.text() == (
+            "Hosts in “Racks” without a name of their own log in with this one."
+        )
+        assert dialog.login.text() == ""
+        dialog.login.setText("pi")
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(tool_module, "run_modal", pi)
+    menu = QMenu()
+    ssh.fill_group_menu(menu, racks)
+    _pick(_submenu(menu, "&Log in as"), "&Another name…")
+    assert _saved_logins(servers)["Racks"] == "pi"
+    core = next(h for h in ssh.document.hosts.hosts if h.name == "core-sw-01")  # type: ignore[union-attr]
+    ssh.set_hosts_login([core.id], "")  # follows Racks now
+    rows = _rows(ssh)
+    assert (rows["core-sw-01"][ssh.table.LOGIN], rows["nas-01"][ssh.table.LOGIN]) == ("pi", "root")
+    assert rows["web-01"][ssh.table.LOGIN] == ""  # in no group
+    _select(ssh, "core-sw-01")
+    picker = ssh.details.login_button
+    assert picker is not None and (picker.value_text(), picker.marks) == ("pi", ())
+    assert picker.toolTip() == "From group “Racks”: pi"
+    ssh.details.login_menu.aboutToShow.emit()
+    assert _items(ssh.details.login_menu)[0] == ("From group “Racks”: pi", True)
+    ssh.commands.connect_host.trigger()
+    assert no_ssh == [("192.0.2.40", SshInfo(login="pi"))]  # the group's name reaches ssh.exe
+    menu = QMenu()
+    now = ssh.document.hosts.group(racks.id)  # type: ignore[union-attr]  # as the menu reads it
+    assert now is not None
+    ssh.fill_group_menu(menu, now)
+    assert _items(_submenu(menu, "&Log in as"))[:4] == [
+        (NONE, False), ("-", False), ("pi", True), ("root", False)
+    ]  # fmt: skip
+
+
+def test_the_edit_window_s_hint_says_what_an_empty_log_in_as_takes(ssh: SshTool) -> None:
+    doc = ssh.document
+    assert doc is not None
+    [racks] = doc.hosts.groups
+    ssh.set_group_login(racks.id, "pi")
+    hosts = ssh.document.hosts  # type: ignore[union-attr]
+    dialog = SshHostDialog(None, hosts, next(h for h in hosts.hosts if h.name == "web-01"))
+    assert dialog.login.placeholderText().startswith("Empty: your SSH config")
+    dialog.group.setCurrentIndex(dialog.group.findData(racks.id))  # moving it into Racks
+    assert dialog.login.placeholderText() == "From group “Racks”: pi"
+    dialog.deleteLater()
+
+
+def test_log_in_as_is_greyed_on_a_list_that_can_t_be_saved(
+    ssh: SshTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(ssh, "_writable", lambda: None)  # read-only: Connect still works
+    _select(ssh, "nas-01")
+    menu = QMenu()
+    ssh.fill_item_menu(menu, ssh.selected_items())
+    logins = _submenu(menu, "&Log in as")
+    assert logins.actions() and not any(a.isEnabled() for a in logins.actions())
+    assert ssh.commands.connect_host.isEnabled()
 
 
 def test_refresh_status_by_itself_is_off_until_picked_and_warns_about_fail2ban(

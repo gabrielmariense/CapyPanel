@@ -1,26 +1,38 @@
 """The SSH tool: the list workspace on the host list open in Hosts, the same one Hosts and Profile
-cleanup show, each host with its port and the name to log in as. Refresh checks each one's SSH
-port. Connect opens Windows' ssh.exe on it in a tab
+cleanup show, each host with its port and the name to log in as: its own, or its group's, picked
+in Details or from the right-click menus. Refresh checks each one's SSH port. Connect opens
+Windows' ssh.exe on it in a tab
 beside the list, its terminal drawn by CapyPanel (ui/ssh_tool/terminal); Connect in a separate
 window opens it in a console window of its own. CapyPanel never sees a password: ssh.exe asks
 for it, or uses a key."""
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QGuiApplication, QIcon
+from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QIcon
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QMessageBox, QToolButton, QWidget
 
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.document import OpenList, starter_list
-from capypanel.core.hosts.model import Group, Host, HostListRuleError
+from capypanel.core.hosts.model import Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.status import PortState
 from capypanel.core.ssh import launch
-from capypanel.core.ssh.host import SshInfo, info_of, with_info
+from capypanel.core.ssh.host import (
+    SshInfo,
+    connect_info,
+    group_login,
+    group_login_of,
+    info_of,
+    login_of,
+    logins_in,
+    with_group_login,
+    with_info,
+    with_login,
+)
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.guides import Guide, Step
@@ -36,7 +48,7 @@ from capypanel.ui.shortcuts import KeyCommand
 from capypanel.ui.ssh_tool import status
 from capypanel.ui.ssh_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.ssh_tool.details import SshDetails, SshDetailsPanel
-from capypanel.ui.ssh_tool.dialog import SshHostDialog
+from capypanel.ui.ssh_tool.dialog import LoginDialog, SshHostDialog, empty_text, follow_text
 from capypanel.ui.ssh_tool.refresh import SshRun, Target
 from capypanel.ui.ssh_tool.settings import SshSettings
 from capypanel.ui.ssh_tool.status import Cell, Checked
@@ -61,6 +73,12 @@ def missing_text() -> str:
     return _("Windows' SSH client (ssh.exe) isn't installed on this PC. To add it, search Start "
              "for “Optional features” and add “OpenSSH Client”. Adding it needs an "
              "administrator.")  # fmt: skip
+
+
+def _named(found: tuple[str, Group | None]) -> tuple[str, str]:
+    """A group's name to log in as and the group's own name: comparable, as a Group isn't."""
+    login, source = found
+    return login, source.name if source is not None else ""
 
 
 class SshTool(TabbedListWorkspace):
@@ -104,6 +122,7 @@ class SshTool(TabbedListWorkspace):
         self._connect_typed = QAction(self)
         self._connect_typed.triggered.connect(self._connect_to_typed)
         self.table.set_cells(self._cell)
+        self.table.set_logins(self._login_shown)
         self.settings_pages = SshSettings(self)  # its part of Settings
         self._fill_inventory()
         self._connect()
@@ -136,6 +155,8 @@ class SshTool(TabbedListWorkspace):
         # Details' buttons act on the one host it shows: the one selected.
         self.details.connect_clicked.connect(self.connect_selected)
         self.details.refresh_clicked.connect(lambda: self.check_hosts(self.selected_items()))
+        menu = self.details.login_menu
+        menu.aboutToShow.connect(lambda: self._fill_host_login_menu(menu, self.selected_items()))
 
     # ---- texts ----
 
@@ -404,11 +425,12 @@ class SshTool(TabbedListWorkspace):
         reachable = [h for h in hosts if h.connect_address]
         notes = []
         for index, host in enumerate(reachable[:AT_ONCE]):
+            info = connect_info(self._doc.hosts, host) if self._doc else info_of(host)
             if window:
-                opened = self._open_ssh(host.connect_address, info_of(host), host.name)
+                opened = self._open_ssh(host.connect_address, info, host.name)
             else:
                 opened = self.open_connection(
-                    host.connect_address, info_of(host), host.name, front=index == 0
+                    host.connect_address, info, host.name, front=index == 0
                 )
             if not opened:
                 return  # ssh.exe is missing: the rest can't connect either
@@ -682,12 +704,15 @@ class SshTool(TabbedListWorkspace):
     def show_details(self, items: Sequence[Host]) -> None:
         if len(items) == 1 and self._doc is not None:
             host = items[0]
+            login, source = login_of(self._doc.hosts, host)
             details = SshDetails(
                 host,
                 group_path(self._doc.hosts, host.group),
                 self._checked.get(host.id),
                 reachable=bool(host.connect_address),
                 hidden=self.hidden_parts(),
+                login=login,
+                login_group=source.name if source is not None else "",
             )
             self.details.show_host(details, 1, needle=self._needle())
         else:
@@ -752,6 +777,8 @@ class SshTool(TabbedListWorkspace):
             )
         )
         menu.addAction(a.refresh_selected)
+        logins = menu.addMenu(_("&Log in as"))
+        self._fill_host_login_menu(logins, items)
         menu.addSeparator()
         self.add_copy_menu(menu)
         menu.addSeparator()
@@ -765,9 +792,117 @@ class SshTool(TabbedListWorkspace):
         assert self._doc is not None
         hosts = list(self._doc.hosts.hosts_in(group.id))
         menu.addSeparator()
+        self._fill_group_login_menu(menu.addMenu(_("&Log in as")), group)
         refresh = menu.addAction(_("Re&fresh group"))  # R is Remove's (Satya)
         refresh.setEnabled(bool(hosts) and self._run is None)
         refresh.triggered.connect(lambda: self.check_hosts(hosts))
+
+    # ---- Log in as: Details' picker and the right-click menus ----
+
+    def _login_shown(self, host: Host) -> str:
+        """The table's Log in as: the host's own name, or its group's."""
+        return login_of(self._doc.hosts, host)[0] if self._doc is not None else info_of(host).login
+
+    def _fill_host_login_menu(self, menu: QMenu, hosts: Sequence[Host]) -> None:
+        """Follow the group (with no name there, ssh.exe's own choice), each name the list
+        uses, then Another name…; one is ticked when every host picked has it."""
+        menu.clear()
+        doc = self._doc
+        hosts = [h for h in hosts if not is_sample(h.id)]  # a guide's sample is never changed
+        if doc is None or not hosts:
+            return
+        follows = {_named(group_login_of(doc.hosts, h.group)) for h in hosts}
+        if len(follows) == 1:
+            login, group = next(iter(follows))
+            follow, empty = follow_text(login, group), empty_text(login, group)
+        else:
+            follow = empty = _("From their groups")
+        about = hosts[0].name if len(hosts) == 1 else self.details.selected_text(len(hosts))
+        ids = [h.id for h in hosts]
+        self._fill_login_menu(
+            menu,
+            {info_of(h).login for h in hosts},
+            (follow, empty),
+            about,
+            lambda name: self.set_hosts_login(ids, name),
+        )
+
+    def _fill_group_login_menu(self, menu: QMenu, group: Group) -> None:
+        """The name the group gives its hosts, as a host's menu: following its parent first."""
+        doc = self._doc
+        if doc is None:
+            return
+        login, parent = _named(group_login_of(doc.hosts, group.parent))
+        about = _("Hosts in “{group}” without a name of their own log in with this one.")
+        self._fill_login_menu(
+            menu,
+            {group_login(group)},
+            (follow_text(login, parent), empty_text(login, parent)),
+            about.format(group=group.name),
+            lambda name: self.set_group_login(group.id, name),
+        )
+
+    def _fill_login_menu(
+        self,
+        menu: QMenu,
+        current: set[str],
+        follow: tuple[str, str],
+        about: str,
+        apply: Callable[[str], None],
+    ) -> None:
+        """`current`: the names picked now ("" follows); `follow`: the first choice's words and
+        what Another name… says leaving its box empty gives."""
+        doc = self._doc
+        names = logins_in(doc.hosts) if doc is not None else []
+        exclusive = QActionGroup(menu)
+        for login, text in (("", follow[0]), *((name, name) for name in names)):
+            item = menu.addAction(text.replace("&", "&&"))
+            item.setCheckable(True)
+            item.setChecked(current == {login})  # several that differ: none ticked
+            exclusive.addAction(item)
+            item.triggered.connect(lambda _checked=False, name=login: apply(name))
+            if not login:
+                menu.addSeparator()
+        if names:
+            menu.addSeparator()
+        another = menu.addAction(_("&Another name…"))
+        mine = next(iter(current)) if len(current) == 1 else ""
+        another.triggered.connect(lambda: self._another_login(about, mine, follow[1], apply))
+        writable = self._writable() is not None
+        for action in menu.actions():
+            action.setEnabled(writable)
+
+    def _another_login(
+        self, about: str, login: str, empty: str, apply: Callable[[str], None]
+    ) -> None:
+        dialog = LoginDialog(self, about, login, empty)
+        if run_modal(dialog) == QDialog.DialogCode.Accepted:
+            apply(dialog.value())
+
+    def set_hosts_login(self, host_ids: Sequence[str], login: str) -> None:
+        """Their own name to log in as; "" follows their group again."""
+        doc = self._writable()
+        if doc is None:
+            return
+        wanted = set(host_ids)
+        hosts = doc.hosts
+        for host in hosts.hosts:
+            if host.id in wanted:
+                hosts = hosts.update_host(with_login(host, login))
+        self._save_logins(hosts)
+
+    def set_group_login(self, group_id: str, login: str) -> None:
+        """The name the group gives its hosts that have none of their own."""
+        doc = self._writable()
+        if doc is not None and doc.hosts.group(group_id) is not None:
+            self._save_logins(with_group_login(doc.hosts, group_id, login))
+
+    def _save_logins(self, new: HostList) -> None:
+        """Saved only when it changed (a ticked name picked again writes nothing); Details then
+        shows the new name, as Hosts does after a profile is picked."""
+        doc = self._doc
+        if doc is not None and new != doc.hosts and self._commit(new):
+            self._selection_changed()
 
     # ---- Refresh: the SSH port ----
 

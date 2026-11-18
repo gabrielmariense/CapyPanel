@@ -1,20 +1,23 @@
 """The SSH host Details panel: its status, two buttons (Connect first, then Refresh), then
 Connection (address, port, the name to log in as, group), Tags and Notes; each part can be
-hidden. Labels sit beside their values, as in Hosts and Printers."""
+hidden. Labels sit beside their values, as in Hosts and Printers. Log in as is a picker, as
+Hosts' Commands run as is: a click opens its menu, which the tool fills."""
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QFont, QFontMetrics, QPalette
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QMenu, QVBoxLayout, QWidget
 
 from capypanel.core.hosts.model import Host
 from capypanel.core.i18n import _, ngettext, pgettext
 from capypanel.core.ssh.host import info_of
 from capypanel.ui.checks import clock_text
+from capypanel.ui.hosts_tool.details import ValuePicker
 from capypanel.ui.icons import dot_icon
 from capypanel.ui.list_workspace.details import DetailsPanel
 from capypanel.ui.ssh_tool import status
+from capypanel.ui.ssh_tool.dialog import empty_text
 from capypanel.ui.ssh_tool.status import Checked
 from capypanel.ui.themes import engine as themes
 
@@ -26,6 +29,8 @@ class SshDetails:
     checked: Checked | None = None  # its last check
     reachable: bool = True  # it has an address, or a name ssh.exe can take
     hidden: frozenset[str] = frozenset()  # the parts this person chose not to see
+    login: str = ""  # the name it logs in with: its own, or its group's
+    login_group: str = ""  # the group that name comes from; "" when it's the host's own
 
 
 def button_words() -> dict[str, str]:
@@ -36,6 +41,11 @@ def button_words() -> dict[str, str]:
 class SshDetailsPanel(DetailsPanel):
     connect_clicked = Signal()  # Connect: this host
     refresh_clicked = Signal()  # Refresh: this host's status
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.login_menu = QMenu(self)  # Log in as's choices, filled by the tool as it opens
+        self.login_button: ValuePicker | None = None
 
     def show_host(
         self, details: SshDetails | None, selected: int, summary: str = "", needle: str = ""
@@ -61,13 +71,11 @@ class SshDetailsPanel(DetailsPanel):
         if "connection" not in hidden:
             self.section(layout, _("Connection"))
             grid = self._grid(layout)
-            for key, label, value in (
-                ("address", _("Address"), host.address),
-                ("port", _("Port"), str(info.port)),
-                ("login", _("Log in as"), info.login),
-                ("group", _("Group"), shown.group),
-            ):
-                self._row(grid, key, label, value)
+            self._row(grid, "address", _("Address"), host.address)
+            self._row(grid, "port", _("Port"), str(info.port))
+            self.login_button = self._login_picker(shown)
+            self._place(grid, _("Log in as"), self.login_button)
+            self._row(grid, "group", _("Group"), shown.group)
 
         if "tags" not in hidden:
             self.section(layout, _("Tags"))
@@ -142,10 +150,28 @@ class SshDetailsPanel(DetailsPanel):
 
     def _row(self, grid: QGridLayout, key: str, label: str, value: str) -> QWidget:
         """One label and its value (a dash when there's none), on the grid's next line."""
+        return self._place(grid, label, self.value(key, value) if value else self.muted("—"))
+
+    @staticmethod
+    def _place(grid: QGridLayout, label: str, shown: QWidget) -> QWidget:
         row = grid.rowCount() if grid.count() else 0
         name = QLabel(label)  # never wraps: the column is as wide as its widest label
         name.setObjectName("hint")
-        shown = self.value(key, value) if value else self.muted("—")
         grid.addWidget(name, row, 0, Qt.AlignmentFlag.AlignVCenter)
         grid.addWidget(shown, row, 1, Qt.AlignmentFlag.AlignVCenter)
         return shown
+
+    def _login_picker(self, shown: SshDetails) -> ValuePicker:
+        """The name it logs in with, and where that comes from in the tooltip; a pin when it's
+        the host's own, as Hosts pins an account only this PC uses."""
+        own = bool(info_of(shown.host).login)
+        tip = _("Only this host") if own else empty_text(shown.login, shown.login_group)
+        picker = ValuePicker(shown.login or "—", ("pin",) if own else (), tip)
+        picker.clicked.connect(lambda: self._open_menu(self.login_menu, picker))
+        return picker
+
+    @staticmethod
+    def _open_menu(menu: QMenu, picker: QWidget) -> None:
+        """Under the value, from its left edge, like a dropdown's list (as in Hosts)."""
+        menu.aboutToShow.emit()  # filled first
+        menu.popup(picker.mapToGlobal(QPoint(0, picker.height())))

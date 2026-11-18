@@ -1,7 +1,8 @@
 """Adding and editing an SSH host: what the host dialog asks (name, address, group, tags, notes),
 plus its port and the name to log in as. Neither field takes a space or a leading "-", which
 ssh.exe would read as an option, nor the characters ssh.exe refuses there (launch.py). No
-password: ssh.exe asks for it, or uses a key."""
+password: ssh.exe asks for it, or uses a key. Log in as left empty follows the host's group
+(core/ssh/host.py); its hint says what that gives."""
 
 from dataclasses import dataclass
 
@@ -22,7 +23,14 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import MAX_ADDRESS, NO_GROUP, Host, HostList
 from capypanel.core.i18n import _
-from capypanel.core.ssh.host import MAX_LOGIN, MAX_PORT, REFUSED_IN_LOGIN, SshInfo, info_of
+from capypanel.core.ssh.host import (
+    MAX_LOGIN,
+    MAX_PORT,
+    REFUSED_IN_LOGIN,
+    SshInfo,
+    group_login_of,
+    info_of,
+)
 from capypanel.core.ssh.launch import REFUSED_IN_ADDRESS
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.hosts import MAX_NAME, TagEdit, group_choices
@@ -50,6 +58,7 @@ class SshHostDialog(QDialog):
         self.setWindowTitle(_("Edit host") if host else _("Add host"))
         info = info_of(host) if host else SshInfo()
         self._extra = info.extra  # values this version can't read, kept as they are
+        self._hosts = hosts
 
         self.name = QLineEdit(host.name if host else "")
         self.name.setMaxLength(MAX_NAME)
@@ -70,7 +79,6 @@ class SshHostDialog(QDialog):
         self.port.setValue(info.port)
         self.login = QLineEdit(info.login)
         self.login.setMaxLength(MAX_LOGIN)
-        self.login.setPlaceholderText(_("Empty: your SSH config, then your Windows user name"))
         self.login.setValidator(_as_ssh_takes(self.login, REFUSED_IN_LOGIN))
         self.notes = QPlainTextEdit(host.notes if host else "")
         self.notes.setTabChangesFocus(True)
@@ -90,8 +98,16 @@ class SshHostDialog(QDialog):
         layout.addLayout(form)
         layout.addWidget(self.buttons)
         self.name.textChanged.connect(self._update_ok)
+        self.group.currentIndexChanged.connect(self._update_login_hint)
         self._update_ok()
+        self._update_login_hint()
         self.resize(460, self.sizeHint().height())
+
+    def _update_login_hint(self) -> None:
+        """Left empty, it takes the picked group's name: the hint says which."""
+        group = self.group.currentData()
+        login, source = group_login_of(self._hosts, group if isinstance(group, str) else None)
+        self.login.setPlaceholderText(empty_text(login, source.name if source else ""))
 
     def _update_ok(self) -> None:
         ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)
@@ -108,6 +124,47 @@ class SshHostDialog(QDialog):
             notes=self.notes.toPlainText().strip(),
             info=info,
         )
+
+
+def follow_text(login: str, group: str) -> str:
+    """Log in as menus' first choice: the name the group gives (`login`, from `group`), or none,
+    which leaves it to ssh.exe."""
+    if login:
+        return _("From group “{group}”: {profile}").format(group=group, profile=login)
+    return _("None: your SSH config, then your Windows user name")
+
+
+def empty_text(login: str, group: str) -> str:
+    """What a Log in as left empty gives, as its box's hint: the group's name, or ssh.exe's."""
+    if login:
+        return follow_text(login, group)
+    return _("Empty: your SSH config, then your Windows user name")
+
+
+class LoginDialog(QDialog):
+    """Another name… under Log in as: one name, taken as the host window takes it. `about` says
+    whom it is for; `empty` what leaving it empty gives (empty_text): their group's again."""
+
+    def __init__(self, parent: QWidget | None, about: str, login: str, empty: str) -> None:
+        super().__init__(parent)
+        self.setWindowTitle(_("Log in as"))
+        self.login = QLineEdit(login)
+        self.login.setMaxLength(MAX_LOGIN)
+        self.login.setPlaceholderText(empty)
+        self.login.setValidator(_as_ssh_takes(self.login, REFUSED_IN_LOGIN))
+        self.about = QLabel(about)
+        self.about.setWordWrap(True)
+        form = QFormLayout()
+        form.addRow(_("&Log in as:"), self.login)
+        self.buttons = ok_cancel(self, _("Save"))
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.about)
+        layout.addLayout(form)
+        layout.addWidget(self.buttons)
+        self.resize(420, self.sizeHint().height())
+
+    def value(self) -> str:
+        return self.login.text().strip()
 
 
 def _as_ssh_takes(field: QLineEdit, refused: frozenset[str]) -> QRegularExpressionValidator:
