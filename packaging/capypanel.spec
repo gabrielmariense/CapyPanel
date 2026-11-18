@@ -23,11 +23,12 @@ SPLASH_TEXT = os.environ["CAPYPANEL_SPLASH_TEXT"]
 SPLASH_X = int(os.environ["CAPYPANEL_SPLASH_X"])
 SPLASH_BASELINE = 272
 
-# Everything in the package that isn't code: translations, themes, icons, licenses, presets.
-# Named by kind, so a tool's cache or a stray file in the source folder never comes along.
+# Everything in the package that isn't code: translations, themes, icons, licenses, presets,
+# and the authors of the code it carries (capypanel/vendor). Named by kind, so a tool's cache or
+# a stray file in the source folder never comes along.
 KINDS = ("mo", "json", "svg", "png", "ico", "txt")
 datas = collect_data_files("capypanel", includes=[f"**/*.{kind}" for kind in KINDS])
-datas += collect_data_files("capypanel", includes=["**/LICENSE"])
+datas += collect_data_files("capypanel", includes=["**/LICENSE", "**/AUTHORS"])
 datas += [(str(STAMP), "capypanel")]
 # About names the version of each library that came along.
 datas += copy_metadata("pywin32")

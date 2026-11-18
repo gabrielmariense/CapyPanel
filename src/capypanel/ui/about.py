@@ -338,6 +338,13 @@ COMPONENTS = (
         "MIT",
         "truststore.txt",
     ),
+    Component(  # carried in capypanel/vendor/pyte: the version is that folder's
+        "pyte",
+        "0.8.2",
+        "© 2011-2012 Selectel, 2012-2017 pyte authors and contributors",
+        "LGPL-3.0",
+        "lgpl-3.0.txt",
+    ),
     Component("Tabler Icons", "", "© 2020-2026 Paweł Kuna", "MIT", "tabler-icons.txt"),
 )
 

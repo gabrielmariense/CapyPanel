@@ -1,5 +1,6 @@
 import getpass
 import platform
+import re
 from collections.abc import Iterator
 from importlib import metadata
 from pathlib import Path
@@ -10,11 +11,13 @@ from capywindow import CapyWindow
 from packaging.requirements import Requirement
 from PySide6.QtWidgets import QApplication, QLabel, QMenu, QPushButton
 
-from capypanel import BUILD, __version__
+from capypanel import BUILD, __version__, vendor
 from capypanel.core import i18n, settings
 from capypanel.ui import about, branding, language
 from capypanel.ui.about import COMPONENTS, LICENSES_DIR, AboutPage
 from capypanel.ui.main_window import window as window_module
+
+VENDOR_DIR = Path(vendor.__file__).parent
 
 
 @pytest.fixture
@@ -99,6 +102,20 @@ def test_every_library_cryptography_brings_has_a_license_row() -> None:
             if requirement.marker is None or requirement.marker.evaluate():
                 todo.append(requirement.name)
     assert names <= {c.name.casefold() for c in COMPONENTS}, names
+
+
+def test_every_library_carried_in_vendor_has_a_license_row_with_its_version() -> None:
+    """Carried code has no package metadata to read a version from: each folder's
+    CHANGES-CAPYPANEL.txt names the release it holds, and About must name the same."""
+    rows = {(c.name, c.version) for c in COMPONENTS}
+    carried = [p for p in VENDOR_DIR.iterdir() if (p / "__init__.py").is_file()]
+    assert carried  # pyte at least
+    for folder in carried:
+        changes = (folder / "CHANGES-CAPYPANEL.txt").read_text(encoding="utf-8")
+        release = re.search(rf"^{re.escape(folder.name)} (\S+) \(", changes, re.MULTILINE)
+        assert release, folder.name
+        assert (folder.name, release[1]) in rows, folder.name
+        assert (folder / "LICENSE").is_file(), folder.name  # its own text ships beside it
 
 
 def test_a_problem_report_carries_no_user_or_computer_name(qapp: QApplication) -> None:

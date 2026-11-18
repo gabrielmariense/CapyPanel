@@ -22,6 +22,8 @@ build-backend = "uv_build"
 [tool.ruff]
 line-length = 100
 target-version = "py313"
+# Open-source code carried as released (src/capypanel/vendor/__init__.py).
+extend-exclude = ["src/capypanel/vendor"]
 
 [tool.ruff.lint]
 # E/W/F: errors and pyflakes, I: import order, UP: modern syntax, B: likely bugs,
@@ -30,6 +32,7 @@ select = ["E", "W", "F", "I", "UP", "B", "SIM", "TID"]
 
 [tool.pyright]
 include = ["src", "tests", "scripts"]
+exclude = ["src/capypanel/vendor"]  # carried as released; its types are still read
 typeCheckingMode = "standard"
 pythonVersion = "3.13"
 extraPaths = ["tests/helpers"]  # helpers the tests import by name, as pytest's pythonpath does
