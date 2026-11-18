@@ -44,12 +44,16 @@ from capypanel.ui.menus import popup
 from capypanel.ui.tables import fit_menu
 from capypanel.ui.themes import engine as themes
 
-# The preview's columns in Import hosts. The dot says what happens to the row; Warning says why.
-# A window with more columns (Import printers) has its own indexes: ImportDialog.col.
-DOT, NAME, ADDRESS, GROUP, TAGS, NOTES, WARNING = range(7)
+# The preview's columns in Import hosts. The dot says what happens to the row; Warning says why,
+# right after the address, so it's never off to the side (Dante). A window with more columns
+# (Import printers) has its own indexes: ImportDialog.col.
+DOT, NAME, ADDRESS, WARNING, GROUP, TAGS, NOTES = range(7)
 EDITABLE = (NAME, ADDRESS, GROUP, TAGS, NOTES)
 _FIXED = ("dot", "warning")  # the columns that can't be edited
 NOTES_WIDTH = 200  # notes can be long: the column stops here, the tooltip has it all
+# Warnings too: Import hosts' longest ("No address: the name must then be…") fits in full, and a
+# Windows port's long WSD name is cut, so the columns after it stay in view at the window's width.
+WARNING_WIDTH = 400
 # Each verdict in a status colour of the theme: will be added, skipped, can't be read.
 COLORS = {Verdict.ADD: "online", Verdict.SKIP: "attention", Verdict.BAD: "stopped"}
 
@@ -136,7 +140,7 @@ class ImportDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(_(self.TITLE))
         more = [key for key, _title in self.MORE]
-        self.keys = ["dot", "name", "address", *more, "group", "tags", "notes", "warning"]
+        self.keys = ["dot", "name", "address", "warning", *more, "group", "tags", "notes"]
         self.col = {key: index for index, key in enumerate(self.keys)}
         self.editable = tuple(i for i, key in enumerate(self.keys) if key not in _FIXED)
         self._hosts = host_list
@@ -180,11 +184,17 @@ class ImportDialog(QDialog):
         )  # fmt: skip
         self.hint.setObjectName("hint")
         self.table = PreviewTable(self)
-        self.table.setHeaderLabels(
-            ["", _("Name"), _("Address")]
-            + [_(title) for _key, title in self.MORE]
-            + [_("Group"), _("Tags"), _("Notes"), _("Warning")]
-        )
+        titles = {
+            **{key: _(title) for key, title in self.MORE},
+            "dot": "",
+            "name": _("Name"),
+            "address": _("Address"),
+            "warning": _("Warning"),
+            "group": _("Group"),
+            "tags": _("Tags"),
+            "notes": _("Notes"),
+        }
+        self.table.setHeaderLabels([titles[key] for key in self.keys])  # the cells' own order
         self.table.itemChanged.connect(self._edited)
         self.table.customContextMenuRequested.connect(self._row_menu)
         self.problem = QLabel()
@@ -320,8 +330,8 @@ class ImportDialog(QDialog):
             self.table.addTopLevelItem(item)
         for column_ in range(self.table.columnCount()):
             self.table.resizeColumnToContents(column_)
-        notes = col["notes"]
-        self.table.setColumnWidth(notes, min(self.table.columnWidth(notes), NOTES_WIDTH))
+        for key, cap in (("notes", NOTES_WIDTH), ("warning", WARNING_WIDTH)):
+            self.table.setColumnWidth(col[key], min(self.table.columnWidth(col[key]), cap))
         self.table.blockSignals(False)
         if 0 <= row < self.table.topLevelItemCount():
             self.table.setCurrentIndex(self.table.model().index(row, max(column, 0)))
