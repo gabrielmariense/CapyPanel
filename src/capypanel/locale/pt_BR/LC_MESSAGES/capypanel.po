@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 00:28-0300\n"
+"POT-Creation-Date: 2026-11-18 00:37-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -36,11 +36,20 @@ msgstr "&Adicionar existente…"
 msgid "&Add hosts"
 msgstr "&Adicionar hosts"
 
+msgid "&Add printers"
+msgstr "&Adicionar impressoras"
+
 #, python-brace-format
 msgid "&Add {n} host"
 msgid_plural "&Add {n} hosts"
 msgstr[0] "&Adicionar {n} host"
 msgstr[1] "&Adicionar {n} hosts"
+
+#, python-brace-format
+msgid "&Add {n} printer"
+msgid_plural "&Add {n} printers"
+msgstr[0] "&Adicionar {n} impressora"
+msgstr[1] "&Adicionar {n} impressoras"
 
 msgid "&Address"
 msgstr "&Endereço"
@@ -183,6 +192,9 @@ msgstr "&Hosts:"
 
 msgid "&Import hosts…"
 msgstr "&Importar hosts…"
+
+msgid "&Import printers…"
+msgstr "&Importar impressoras…"
 
 msgid "&Install and restart"
 msgstr "&Instalar e reiniciar"
@@ -493,8 +505,14 @@ msgstr "Os perfis de um PC: veja quais podem ser excluídos."
 msgid "A PC's own account wins over its group's, a group's over a tag's, and those over Every PC. PCs none of them names use your Windows account."
 msgstr "A conta do próprio PC vale mais que a do grupo, a do grupo mais que a da tag, e essas mais que Todos os PCs. PCs que nenhuma delas nomeia usam a sua conta do Windows."
 
+msgid "A Printers Report"
+msgstr "Um Relatório de Impressoras"
+
 msgid "A Refresh is running. Try again once it ends."
 msgstr "Uma atualização está em andamento. Tente de novo quando ela terminar."
+
+msgid "A Report saved with the For Import or All details columns comes back as it was, in English or Portuguese. Columns it doesn't use are ignored."
+msgstr "Um Relatório salvo com as colunas Para importar ou Todos os detalhes volta como estava, em inglês ou português. As colunas que ele não usa são ignoradas."
 
 msgid "A beta: it works, and it still changes from version to version."
 msgstr "Uma versão beta: funciona, e ainda muda de uma versão para outra."
@@ -661,6 +679,12 @@ msgid_plural "Added {n} hosts."
 msgstr[0] "{n} host adicionado."
 msgstr[1] "{n} hosts adicionados."
 
+#, python-brace-format
+msgid "Added {n} printer."
+msgid_plural "Added {n} printers."
+msgstr[0] "{n} impressora adicionada."
+msgstr[1] "{n} impressoras adicionadas."
+
 msgid "Address"
 msgstr "Endereço"
 
@@ -728,6 +752,9 @@ msgstr "Qualquer pasta do PC, como D:\\Logs."
 
 msgid "Any name you like, then the computer's network name or IP address. Separate them with a comma, or copy two columns from Excel."
 msgstr "Um nome à sua escolha, depois o nome do computador na rede ou o endereço IP. Separe com vírgula, ou copie duas colunas do Excel."
+
+msgid "Any name you like, then the printer's IP address or network name. Separate them with a comma, or copy two columns from Excel."
+msgstr "Um nome à sua escolha, depois o endereço IP da impressora ou o nome dela na rede. Separe com vírgula, ou copie duas colunas do Excel."
 
 msgid "Any time"
 msgstr "Qualquer data"
@@ -1593,6 +1620,9 @@ msgstr "Editar a conta"
 msgid "Edit the list here"
 msgstr "Editar a lista aqui"
 
+msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, tags, notes and the printers' own columns), so the two always match. Continue?"
+msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes e as colunas das impressoras), para que as duas sempre coincidam. Continuar?"
+
 msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, tags, notes), so the two always match. Continue?"
 msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes), para que as duas sempre coincidam. Continuar?"
 
@@ -1744,6 +1774,15 @@ msgstr ""
 "Por exemplo:\n"
 "nome,endereço\n"
 "PC-0142,10.0.0.42"
+
+msgid ""
+"For example:\n"
+"name,address,brand\n"
+"Reception,192.0.2.10,HP"
+msgstr ""
+"Por exemplo:\n"
+"nome,endereço,marca\n"
+"Recepção,192.0.2.10,HP"
 
 msgid "For the list open now; each list keeps its own."
 msgstr "Para a lista aberta agora; cada lista guarda a sua."
@@ -1924,6 +1963,9 @@ msgstr "Colunas ignoradas: {names}."
 
 msgid "Import hosts"
 msgstr "Importar hosts"
+
+msgid "Import printers"
+msgstr "Importar impressoras"
 
 msgid "In CapyPanel"
 msgstr "No CapyPanel"
@@ -2866,6 +2908,9 @@ msgstr "Impressoras em {host}"
 
 msgid "Printers that need attention"
 msgstr "Impressoras que precisam de atenção"
+
+msgid "Printers with no group &go to:"
+msgstr "Impressoras sem grupo &vão para:"
 
 msgid "Printing"
 msgstr "Imprimindo"
@@ -4530,6 +4575,9 @@ msgstr "Será excluído"
 msgid "Windows"
 msgstr "Windows"
 
+msgid "Windows PowerShell saves a PC's printers to a file with the command below (UTF8 keeps accents); add -ComputerName and a print server's name for its printers. The name and the port come in, and the location and comment go into the notes. A port that isn't an address (WSD, USB) comes in to be typed here."
+msgstr "O Windows PowerShell salva as impressoras de um PC em um arquivo com o comando abaixo (UTF8 mantém os acentos); acrescente -ComputerName e o nome de um servidor de impressão para as impressoras dele. O nome e a porta entram, e o local e o comentário vão para as notas. Uma porta que não é um endereço (WSD, USB) entra para ser digitada aqui."
+
 msgid "Windows answered:"
 msgstr "O Windows respondeu:"
 
@@ -4586,6 +4634,9 @@ msgstr "O Gerenciamento do Computador do Windows, apontado para o PC."
 
 msgid "Windows' SSH client (ssh.exe) isn't installed on this PC. Add it in Optional features: “OpenSSH Client”."
 msgstr "O cliente SSH do Windows (ssh.exe) não está instalado neste PC. Adicione em Recursos opcionais: “Cliente OpenSSH”."
+
+msgid "Windows' printer list"
+msgstr "Lista de impressoras do Windows"
 
 msgid "With No group, the groups inside it go directly under Groups."
 msgstr "Com Sem grupo, os grupos dentro dele vão direto para Grupos."
@@ -4804,6 +4855,9 @@ msgstr "modelo"
 msgid "name"
 msgstr "nome"
 
+msgid "name, address, group, brand, model, serial number, asset tag, page counters"
+msgstr "nome, endereço, grupo, marca, modelo, nº de série, patrimônio, contadores de páginas"
+
 msgid "name, address, group, tags, notes"
 msgstr "nome, endereço, grupo, tags, notas"
 
@@ -4922,8 +4976,10 @@ msgid "the answer and its output"
 msgstr "a resposta e a saída"
 
 #, python-brace-format
-msgid "the other {n} columns Windows exports"
-msgstr "as outras {n} colunas que o Windows exporta"
+msgid "the other {n} column Windows exports"
+msgid_plural "the other {n} columns Windows exports"
+msgstr[0] "a outra {n} coluna que o Windows exporta"
+msgstr[1] "as outras {n} colunas que o Windows exporta"
 
 msgid "the picked tags"
 msgstr "as tags escolhidas"
@@ -5409,6 +5465,12 @@ msgid "{n} printer shown"
 msgid_plural "{n} printers shown"
 msgstr[0] "{n} impressora exibida"
 msgstr[1] "{n} impressoras exibidas"
+
+#, python-brace-format
+msgid "{n} printer will be added."
+msgid_plural "{n} printers will be added."
+msgstr[0] "{n} impressora será adicionada."
+msgstr[1] "{n} impressoras serão adicionadas."
 
 #, python-brace-format
 msgid "{n} profile"

@@ -17,7 +17,7 @@ from collections.abc import Iterable, Mapping
 from capypanel.core.hosts import bulk
 from capypanel.core.hosts.bulk import ImportRow, Parsed, Plan, Verdict
 from capypanel.core.hosts.model import HostList, is_hostname
-from capypanel.core.i18n import _
+from capypanel.core.i18n import _, ngettext
 from capypanel.core.printers.printer import COUNTER_SOURCES, DOC360, SNMP, PrinterInfo, with_info
 from capypanel.core.printers.reading import snmp_host
 
@@ -73,7 +73,10 @@ def read_windows_export(text: str) -> Parsed | None:
         more = () if address or not port else ((PORT, port),)
         rows.append(ImportRow(cells.get("Name", ""), address, notes=notes, more=more))
     ignored = sum(1 for c in columns if c not in _WINDOWS_USED)
-    said = (_("the other {n} columns Windows exports").format(n=ignored),) if ignored else ()
+    other = ngettext(
+        "the other {n} column Windows exports", "the other {n} columns Windows exports", ignored
+    )
+    said = (other.format(n=ignored),) if ignored else ()
     return Parsed(tuple(rows), said)
 
 

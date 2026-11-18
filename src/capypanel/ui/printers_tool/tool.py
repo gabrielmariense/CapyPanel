@@ -12,7 +12,7 @@ from PySide6.QtGui import QAction, QDesktopServices, QGuiApplication
 from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QVBoxLayout, QWidget
 
 from capypanel.core.hosts.document import OpenList, starter_list
-from capypanel.core.hosts.model import Group, Host, HostListRuleError
+from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostListRuleError
 from capypanel.core.i18n import _, ngettext, npgettext, pgettext
 from capypanel.core.printers.printer import DOC360, info_of, with_info
 from capypanel.core.printers.reading import Device, Problem, Reading, State, Supply, SupplyKind
@@ -36,6 +36,7 @@ from capypanel.ui.printers_tool.attention import (
 )
 from capypanel.ui.printers_tool.details import PrinterDetails, PrinterDetailsPanel
 from capypanel.ui.printers_tool.dialog import PrinterDialog
+from capypanel.ui.printers_tool.import_printers import ImportPrintersDialog
 from capypanel.ui.printers_tool.marks import Mark
 from capypanel.ui.printers_tool.refresh import (
     V2C,
@@ -150,12 +151,16 @@ class PrintersTool(ListWorkspace):
 
     def _fill_inventory(self) -> None:
         a = self.commands
-        self.toolbar.inventory_menu.addActions([a.add_printer, a.add_group, a.manage_groups])
-        self.toolbar.inventory_menu.addAction(self.sort_groups_action)  # as in Hosts
+        inventory = self.toolbar.inventory_menu
+        inventory.addActions([a.add_printer, a.add_group, a.manage_groups])
+        inventory.addAction(self.sort_groups_action)  # as in Hosts
+        inventory.addSeparator()
+        inventory.addAction(a.import_printers)
 
     def _connect(self) -> None:
         a = self.commands
         a.add_printer.triggered.connect(self.add_item)
+        a.import_printers.triggered.connect(self.import_printers)
         a.export_printers.triggered.connect(self.export_printers)
         # Not in any menu bar menu, so their shortcuts (Ctrl+Shift+C, Ctrl+N, F5) live here:
         # toolbar menus only take keys while they're open.
@@ -427,6 +432,20 @@ class PrintersTool(ListWorkspace):
             return
         if self._commit(new):
             self.table.select_ids([printer.id])
+
+    def import_printers(self) -> None:
+        """Inventory > Import printers…: many printers at once; nothing is saved until Add, and
+        nothing is read from them until Refresh."""
+        doc = self._writable()
+        if doc is None:
+            return
+        # Printers without a group of their own get none, unless a group is picked.
+        dialog = ImportPrintersDialog(self, doc.hosts, self.nav.selected_group_id() or NO_GROUP)
+        new = dialog.imported_list() if run_modal(dialog) == QDialog.DialogCode.Accepted else None
+        if new is not None and self._commit(new):
+            added = dialog.added()
+            note = ngettext("Added {n} printer.", "Added {n} printers.", added).format(n=added)
+            self._shell.show_message(note, 10_000)
 
     def edit_item(self, item: Host) -> None:
         doc = self._writable()
@@ -812,6 +831,7 @@ class PrintersTool(ListWorkspace):
         doc = self._doc
         a = self.commands
         a.add_printer.setEnabled(writable)
+        a.import_printers.setEnabled(writable)
         a.export_printers.setEnabled(doc is not None and bool(doc.hosts.hosts))  # read-only too
         for action in (a.open_web_page, a.copy_address):
             action.setEnabled(selected > 0)  # read-only lists can still open them

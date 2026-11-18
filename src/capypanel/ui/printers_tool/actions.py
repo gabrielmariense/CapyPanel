@@ -15,6 +15,7 @@ from capypanel.ui.main_window.actions import make_actions
 @dataclass(frozen=True)
 class PrintersActions(ListActions):
     add_printer: QAction
+    import_printers: QAction
     export_printers: QAction
     open_web_page: QAction
     copy_address: QAction
@@ -41,6 +42,7 @@ def create_actions(parent: QObject | None) -> PrintersActions:
 def retranslate_actions(a: PrintersActions) -> None:
     retranslate_list_actions(a)
     a.add_printer.setText(_("Add &printer…"))
+    a.import_printers.setText(_("&Import printers…"))
     a.export_printers.setText(_("&Report…"))
     a.open_web_page.setText(_("Open &web page"))
     a.copy_address.setText(_("&Address"))  # in the printer menu's Copy submenu

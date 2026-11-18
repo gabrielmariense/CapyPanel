@@ -102,7 +102,8 @@ ORDER = (
     "command.message", "command.drives", "command.printers",
     # Printers: Open web page, Refresh all, Inventory's menu, Report
     "printers.open_web_page", "printers.refresh_shown", "printers.add_printer",
-    "printers.add_group", "printers.manage_groups", "printers.export_printers",
+    "printers.add_group", "printers.manage_groups", "printers.import_printers",
+    "printers.export_printers",
     # Printers: a printer's right-click menu, View, the list dropdown
     "printers.refresh_selected", "printers.copy_address", "printers.edit", "printers.remove",
     "printers.show_groups", "printers.show_tags", "printers.show_details",
