@@ -23,6 +23,7 @@ from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
 from capypanel.core.ssh.screen import TermScreen, TermStream
 from capypanel.ui import error_window
+from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.shortcuts import EVERYWHERE, KeyCommand, Keys
 from capypanel.ui.ssh_tool.terminal import glyphs, keys, palette
 from capypanel.ui.ssh_tool.terminal import view as view_module
@@ -367,20 +368,19 @@ def test_the_paste_question_shows_the_first_lines_and_cancel_is_the_default(
     qapp: QApplication,
 ) -> None:
     many = PasteQuestion(None, ["ls", "cd /srv", "rm notes.txt", "df -h", "exit"], "web-01")
+    assert isinstance(many, Question)  # the house question: the sign, bold words, amber action
     assert many.windowTitle() == "Paste"
-    assert [label.text() for label in many.findChildren(QLabel)] == [
-        "Paste 5 lines into web-01?",
-        "Each line may run as a command.",
-        "…and 2 more lines",
-    ]
+    assert many.heading.text() == "<b>Paste 5 lines into web-01?</b>"
+    assert many.text.text() == "Each line may run as a command."
     assert many.preview.toPlainText() == "ls\ncd /srv\nrm notes.txt"
-    assert many.cancel_button.isDefault() and not many.paste_button.isDefault()
-    assert many.paste_button.text() == "&Paste"
+    assert "…and 2 more lines" in [label.text() for label in many.findChildren(QLabel)]
+    assert many.cancel.isDefault() and not many.action.isDefault()
+    assert many.action.text() == "&Paste"
     one = PasteQuestion(None, ["ls"], "web-01")  # "ls" and a line break: it runs as it lands
-    assert [label.text() for label in one.findChildren(QLabel)] == [
-        "Paste 1 line into web-01?",
-        "It may run as a command.",
-    ]
+    assert one.heading.text() == "<b>Paste 1 line into web-01?</b>"
+    assert one.text.text() == "It may run as a command."
+    assert not any("more line" in label.text() for label in one.findChildren(QLabel))
+    assert one.preview.maximumHeight() < many.preview.maximumHeight()  # one line's room
 
 
 def test_enter_on_an_ended_connection_connects_again(

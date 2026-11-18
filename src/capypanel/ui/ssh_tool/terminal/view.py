@@ -48,12 +48,10 @@ from PySide6.QtWidgets import (
     QAbstractScrollArea,
     QApplication,
     QDialog,
-    QDialogButtonBox,
     QFrame,
     QLabel,
     QMenu,
     QPlainTextEdit,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -61,6 +59,7 @@ from capypanel.core.i18n import _, ngettext
 from capypanel.core.ssh.conpty import PseudoConsole
 from capypanel.core.ssh.screen import SCROLLBACK, Style, TermScreen, TermStream
 from capypanel.ui.dialogs import run_modal
+from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.menus import popup
 from capypanel.ui.shortcuts import Keys, portable
 from capypanel.ui.ssh_tool.terminal import glyphs, keys
@@ -137,37 +136,28 @@ def _close_left(live: _Live) -> None:
         session.close()
 
 
-class PasteQuestion(QDialog):
+class PasteQuestion(Question):
     """Before text with a line break is pasted into a program that didn't ask for bracketed
-    paste: each line may run as it lands. Cancel is the default, so Enter pastes nothing."""
+    paste: each line may run as it lands. The house question, as for closing a connection, with
+    the first three lines under its words; Cancel is the default, so Enter pastes nothing."""
 
     def __init__(self, parent: QWidget | None, lines: Sequence[str], host: str) -> None:
-        super().__init__(parent)
         n = len(lines)
-        self.setWindowTitle(_("Paste"))
-        layout = QVBoxLayout(self)
         question = ngettext("Paste {n} line into {host}?", "Paste {n} lines into {host}?", n)
-        self.question = QLabel(question.format(n=n, host=host))
-        self.question.setWordWrap(True)
-        layout.addWidget(self.question)
         risk = _("It may run as a command.") if n == 1 else _("Each line may run as a command.")
-        layout.addWidget(QLabel(risk))
+        super().__init__(parent, _("Paste"), question.format(n=n, host=host), risk, _("&Paste"))
         self.preview = QPlainTextEdit("\n".join(lines[:3]))
         self.preview.setReadOnly(True)
-        layout.addWidget(self.preview)
+        self.preview.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)  # a line as it runs
+        frame = 2 * (self.preview.frameWidth() + int(self.preview.document().documentMargin()))
+        shown = min(n, 3) * self.preview.fontMetrics().lineSpacing()
+        scroll_bar = self.preview.horizontalScrollBar().sizeHint().height()
+        self.preview.setFixedHeight(shown + frame + scroll_bar)  # room for a long line's bar
+        self.body.addWidget(self.preview)
         if n > 3:
             more = ngettext("…and {n} more line", "…and {n} more lines", n - 3)
-            layout.addWidget(QLabel(more.format(n=n - 3)))
-        buttons = QDialogButtonBox()
-        role = QDialogButtonBox.ButtonRole
-        self.paste_button = buttons.addButton(_("&Paste"), role.AcceptRole)
-        self.cancel_button = buttons.addButton(_("Cancel"), role.RejectRole)
-        self.paste_button.setAutoDefault(False)
-        self.cancel_button.setDefault(True)  # Enter pastes nothing
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
-        self.cancel_button.setFocus()
+            self.body.addWidget(QLabel(more.format(n=n - 3)))
+        self.cancel.setFocus()
 
 
 def ask_paste(parent: QWidget, lines: Sequence[str], host: str) -> bool:
