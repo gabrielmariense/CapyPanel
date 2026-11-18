@@ -29,7 +29,7 @@ from capypanel.ui.list_workspace.panels import SAMPLE_ID, is_sample, offers_type
 from capypanel.ui.list_workspace.tabbed import TabbedListWorkspace
 from capypanel.ui.list_workspace.texts import EmptyTexts, ListTexts
 from capypanel.ui.main_window.tool import Shell
-from capypanel.ui.menus import popup
+from capypanel.ui.menus import plain, popup
 from capypanel.ui.shortcuts import KeyCommand
 from capypanel.ui.ssh_tool import status
 from capypanel.ui.ssh_tool.actions import create_actions, retranslate_actions
@@ -605,7 +605,8 @@ class SshTool(TabbedListWorkspace):
         if tab is None:
             return
         menu = QMenu(self)
-        reconnect = menu.addAction(_("&Reconnect"), tab.view.restart)
+        # No access keys, as in Profile cleanup's tab menu; the strip's button has one.
+        reconnect = menu.addAction(plain(_("&Reconnect")), tab.view.restart)
         reconnect.setEnabled(tab.ended)
         menu.addSeparator()
         menu.addAction(_("Close"), lambda: self.close_tab(key))

@@ -291,12 +291,12 @@ def test_the_tab_menu_reconnects_an_ended_one_and_closes_others_with_one_questio
         return [(menus.label(a), a.isEnabled()) for a in shown[-1].actions() if not a.isSeparator()]
 
     assert menu_of("connection-1") == [
-        ("&Reconnect", False),  # it's open
+        ("Reconnect", False),  # it's open; no access keys, as in Profile cleanup's tab menu
         ("Close", True),
         ("Close the others", True),
         ("Close the ended ones", True),
     ]
-    assert menu_of("connection-2")[0] == ("&Reconnect", True)  # it has ended
+    assert menu_of("connection-2")[0] == ("Reconnect", True)  # it has ended
     shown[-1].actions()[0].trigger()
     assert len(consoles) == 4 and ssh.connections()[1].running
     assert ("Close the ended ones", False) in menu_of("connection-2")
