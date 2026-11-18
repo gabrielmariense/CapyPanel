@@ -23,12 +23,13 @@ from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.ssh.host import SshInfo, with_info
 from capypanel.ui import menus
-from capypanel.ui.hosts_tool.command_windows import Question
+from capypanel.ui.hosts_tool.command_windows import WIDE, Question
 from capypanel.ui.ssh_tool import tool as tool_module
 from capypanel.ui.ssh_tool.terminal import keys
 from capypanel.ui.ssh_tool.terminal import view as view_module
 from capypanel.ui.ssh_tool.tool import POINTS, SshTool
 from capypanel.ui.tab_strip import PINNED
+from capypanel.ui.themes import engine as themes
 
 
 @pytest.fixture
@@ -176,6 +177,55 @@ def test_closing_an_open_connection_asks_and_cancel_keeps_it(
     assert ssh.tabs.tab_keys() == [] and consoles[0].closed
     assert ssh.tabs.current() == PINNED and ssh.pages.currentWidget() is ssh.inner
     assert not ssh.close_tab(PINNED)  # the list's tab never closes
+
+
+def test_a_pick_on_the_left_brings_the_list_forward_over_a_connection(ssh: SshTool) -> None:
+    """Groups and the list dropdown stay beside a connection: what they pick shows at once, the
+    group already picked and Ctrl+F's search box too (Dante, build 618; as in Profile cleanup)."""
+    _connect(ssh, "nas-01")
+    doc = ssh.document
+    assert doc is not None and ssh.tabs.current() == "connection-1"
+    ssh.nav.select_group(doc.hosts.groups[0].id)  # Racks, clicked or reached with the arrows
+    assert ssh.tabs.current() == PINNED and ssh.pages.currentWidget() is ssh.inner
+    picked = ssh.nav.groups.currentItem()
+    assert picked is not None
+    lists = ssh.list_picker.menu()
+    lists.aboutToShow.emit()  # filled as it opens
+    find = QKeySequence(QKeySequence.StandardKey.Find)
+    for again in (
+        lambda: ssh.nav.groups.itemClicked.emit(picked, 0),  # the group already picked
+        next(a for a in lists.actions() if a.isChecked()).trigger,  # the list open already
+        next(s for s in ssh.findChildren(QShortcut) if s.key() == find).activated.emit,
+    ):
+        ssh.switch("connection-1")
+        again()
+        assert ssh.tabs.current() == PINNED and ssh.pages.currentWidget() is ssh.inner
+
+
+@pytest.mark.parametrize(
+    ("heading", "text"),
+    [
+        ("Close 2 open connections?", "Anything still running in them on the servers may stop."),
+        (
+            "Fechar 2 conexões abertas?",
+            "O que ainda estiver rodando nelas nos servidores pode parar.",
+        ),
+        ("Close?", "Anything still running in them on the servers may stop."),  # any font
+    ],
+)
+def test_a_question_is_as_tall_as_its_words_at_its_own_width(
+    qapp: QApplication, heading: str, text: str
+) -> None:
+    """Qt measured the height at the wrapped line's own narrow width, then widened the window to
+    WIDE: the lines too many stayed as a gap (the question for two open tabs, 17 px in English
+    and 34 in pt-BR at 460; Dante saw pt-BR's, build 618)."""
+    themes.apply(themes.DEFAULT_THEME)  # the theme's fonts, as in the app
+    question = Question(None, "Close", heading, text, "&Close")
+    question.adjustSize()  # as showing it does
+    layout = question.layout()
+    assert layout is not None and question.width() >= WIDE
+    assert question.height() == layout.totalHeightForWidth(question.width())
+    question.deleteLater()
 
 
 def test_closing_the_tab_in_front_brings_its_left_neighbour_forward(

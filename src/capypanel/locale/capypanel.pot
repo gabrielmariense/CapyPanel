@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 10:12-0300\n"
+"POT-Creation-Date: 2026-11-18 11:11-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -329,29 +329,6 @@ msgid "&Read again"
 msgstr ""
 
 msgid "&Reconnect"
-msgstr ""
-
-msgid "&Refresh group"
-msgstr ""
-
-msgid "&Refresh host"
-msgstr ""
-
-msgid "&Refresh printer"
-msgstr ""
-
-#, python-brace-format
-msgid "&Refresh {n} host"
-msgid_plural "&Refresh {n} hosts"
-msgstr[0] ""
-msgstr[1] ""
-
-#, python-brace-format
-msgid "&Refresh {n} hosts"
-msgstr ""
-
-#, python-brace-format
-msgid "&Refresh {n} printers"
 msgstr ""
 
 msgid "&Remember it on this computer"
@@ -782,10 +759,9 @@ msgid "Any time"
 msgstr ""
 
 msgid "Anything still running in it on the server may stop."
-msgstr ""
-
-msgid "Anything still running in them on the servers may stop."
-msgstr ""
+msgid_plural "Anything still running in them on the servers may stop."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Appearance"
 msgstr ""
@@ -1169,7 +1145,7 @@ msgctxt "button"
 msgid "Commands"
 msgstr ""
 
-msgid "Commands run &as"
+msgid "Commands run a&s"
 msgstr ""
 
 msgid "Commands run as"
@@ -1834,7 +1810,7 @@ msgstr ""
 
 msgid ""
 "F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself. In "
-"an SSH terminal, F1, Esc, Ctrl+F and Tab go to the server."
+"an SSH terminal, all but Ctrl+Shift+W go to the server."
 msgstr ""
 
 msgid "Failed"
@@ -3240,6 +3216,29 @@ msgid ""
 " on each host finishes first; CapyPanel quits after that."
 msgstr ""
 
+msgid "Re&fresh group"
+msgstr ""
+
+msgid "Re&fresh host"
+msgstr ""
+
+msgid "Re&fresh printer"
+msgstr ""
+
+#, python-brace-format
+msgid "Re&fresh {n} host"
+msgid_plural "Re&fresh {n} hosts"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Re&fresh {n} hosts"
+msgstr ""
+
+#, python-brace-format
+msgid "Re&fresh {n} printers"
+msgstr ""
+
 msgid "Re&move"
 msgstr ""
 
@@ -3786,6 +3785,9 @@ msgid ""
 "only people Windows lets write that folder can add one."
 msgstr ""
 
+msgid "Sho&w this group first"
+msgstr ""
+
 msgid "Show"
 msgstr ""
 
@@ -3796,9 +3798,6 @@ msgid "Show all"
 msgstr ""
 
 msgid "Show every printer again"
-msgstr ""
-
-msgid "Show this group &first"
 msgstr ""
 
 msgid "Show users' do&main"

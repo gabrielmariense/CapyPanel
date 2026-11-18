@@ -236,7 +236,7 @@ class SshTool(TabbedListWorkspace):
         page, as the right-click menu counts the hosts it'll refresh."""
         fixed = f"{self.TOOL_ID}.refresh_selected"
         return [
-            replace(c, name=lambda: _("&Refresh host")) if c.id == fixed else c
+            replace(c, name=lambda: _("Re&fresh host")) if c.id == fixed else c
             for c in super().key_commands()
         ]
 
@@ -582,12 +582,17 @@ class SshTool(TabbedListWorkspace):
         n = len(live)
         if n == 1:
             heading = _("Close the connection to {host}?").format(host=live[0].host)
-            text = _("Anything still running in it on the server may stop.")
         else:
             heading = ngettext(
                 "Close {n} open connection?", "Close {n} open connections?", n
             ).format(n=n)
-            text = _("Anything still running in them on the servers may stop.")
+        # One ngettext for both: a language whose singular covers more than 1 (21 in some) still
+        # gets "it on the server" with "{n} open connection" (Satya, build 618).
+        text = ngettext(
+            "Anything still running in it on the server may stop.",
+            "Anything still running in them on the servers may stop.",
+            n,
+        )
         question = Question(self, _("Close"), heading, text, _("&Close"))
         return run_modal(question) == QDialog.DialogCode.Accepted
 
@@ -750,9 +755,9 @@ class SshTool(TabbedListWorkspace):
         menu.addSeparator()
         one = len(items) == 1
         a.refresh_selected.setText(
-            _("&Refresh host")
+            _("Re&fresh host")
             if one
-            else ngettext("&Refresh {n} host", "&Refresh {n} hosts", len(items)).format(
+            else ngettext("Re&fresh {n} host", "Re&fresh {n} hosts", len(items)).format(
                 n=len(items)
             )
         )
@@ -770,7 +775,7 @@ class SshTool(TabbedListWorkspace):
         assert self._doc is not None
         hosts = list(self._doc.hosts.hosts_in(group.id))
         menu.addSeparator()
-        refresh = menu.addAction(_("&Refresh group"))
+        refresh = menu.addAction(_("Re&fresh group"))  # R is Remove's (Satya)
         refresh.setEnabled(bool(hosts) and self._run is None)
         refresh.triggered.connect(lambda: self.check_hosts(hosts))
 

@@ -382,7 +382,7 @@ def test_a_card_never_scrolls_it_counts_what_doesnt_fit(qapp: QApplication) -> N
     assert [name for name, _w in own.shown()] == ["PC-0", "PC-1", "and 5 more"]
 
 
-def test_a_group_picked_while_a_hosts_tab_is_in_front_brings_the_hosts_tab_back(
+def test_a_group_or_list_picked_while_a_hosts_tab_is_in_front_brings_the_hosts_tab_back(
     window: CapyWindow,
 ) -> None:
     tool = _tool(window)
@@ -399,6 +399,11 @@ def test_a_group_picked_while_a_hosts_tab_is_in_front_brings_the_hosts_tab_back(
     tool.hosts_page.search.setText("desk-10")  # and it ends a search, as picking one does
     tool.nav.everything.itemClicked.emit(item, 0)
     assert tool.hosts_page.search.text() == "" and len(_hosts(tool)) == 3
+    tool.switch(_id(window, "DESK-03"))  # a list picked in the dropdown (Dante, build 618)
+    lists = tool.list_picker.menu()
+    lists.aboutToShow.emit()  # filled as it opens
+    next(a for a in lists.actions() if a.isChecked()).trigger()  # the list open already
+    assert tool.tabs.current() == HOSTS
 
 
 # ---- opening hosts ----
@@ -453,7 +458,7 @@ def test_hosts_right_click_opens_them_here_each_in_its_own_tab_and_scanned(
     menu = _hosts_menu(window, "DESK-03", "DESK-10")
     texts = [a.text() for a in menu.actions()]
     at = texts.index("&Open 2 hosts in Profile cleanup")
-    assert texts[at - 1] == "&Refresh 2 hosts" and texts[at + 2] == "Commands run &as"
+    assert texts[at - 1] == "Re&fresh 2 hosts" and texts[at + 2] == "Commands run a&s"
     menu.actions()[at].trigger()
     assert window.shown_tool() is tool and tool.tabs.tab_keys() == [key, _id(window, "DESK-10")]
     assert [a for a, _b in pc.scanned] == ["192.0.2.13", "192.0.2.20"]  # DESK-03 isn't read again
@@ -1077,7 +1082,7 @@ def test_a_right_click_on_hosts_opens_scans_refreshes_and_copies(
     tool._hosts_menu(QPoint(0, 0))
     actions = menus[-1].actions()
     assert [a.text() for a in actions] == [
-        "&Open", "&Scan", "&Refresh host", "", "Copy &name", "Copy &address",
+        "&Open", "&Scan", "Re&fresh host", "", "Copy &name", "Copy &address",
     ]  # fmt: skip
     actions[4].trigger()
     assert QApplication.clipboard().text() == "DESK-03"
@@ -1094,7 +1099,7 @@ def test_a_right_click_on_hosts_opens_scans_refreshes_and_copies(
         assert item is not None
         item.setSelected(True)
     tool._hosts_menu(QPoint(0, 0))
-    assert [a.text() for a in menus[-1].actions()][1:3] == ["&Scan 3 hosts", "&Refresh 3 hosts"]
+    assert [a.text() for a in menus[-1].actions()][1:3] == ["&Scan 3 hosts", "Re&fresh 3 hosts"]
     menus[-1].actions()[4].trigger()
     assert QApplication.clipboard().text().split("\n") == ["DESK-03", "DESK-10", "LAB-02"]
 

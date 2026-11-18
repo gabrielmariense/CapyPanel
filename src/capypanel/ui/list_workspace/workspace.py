@@ -148,6 +148,11 @@ class ListWorkspace(Tool):
         self.splitter.edge_double_clicked.connect(self._fit_pane)
         self.nav.add_group_button.clicked.connect(self.add_top_group)  # on the Groups heading
         self.nav.filter_changed.connect(self._filter_picked)
+        # A click on the group already picked changes no pick but still means the list, as in
+        # Profile cleanup; so does a list picked in the dropdown (list_to_front).
+        for tree in (self.nav.everything, self.nav.groups):
+            tree.itemClicked.connect(lambda *_a: self.list_to_front())
+        self.list_picker.menu().triggered.connect(lambda *_a: self.list_to_front())
         self.tag_strip.clear_clicked.connect(self.nav.clear_tags)
         self.table.clear_tags_button.clicked.connect(self.nav.clear_tags)
         self.search.textChanged.connect(self._search_timer.start)
@@ -271,6 +276,10 @@ class ListWorkspace(Tool):
 
     def list_switched(self) -> None:
         """Another list was opened: anything kept about the last one's items is stale."""
+
+    def list_to_front(self) -> None:
+        """A pick on the left, a list picked in the dropdown or Ctrl+F: the list is wanted. It's
+        always in front here; TabbedListWorkspace brings its tab forward over a connection's."""
 
     def update_tool_state(self, writable: bool, selected: int) -> None:
         """Enables the tool's own commands."""
@@ -1079,6 +1088,7 @@ class ListWorkspace(Tool):
         return self.search.text().strip().casefold()
 
     def _focus_search(self) -> None:
+        self.list_to_front()  # the box sits over the list
         self.search.setFocus(Qt.FocusReason.ShortcutFocusReason)
         self.search.selectAll()
 
@@ -1091,6 +1101,7 @@ class ListWorkspace(Tool):
         """Picking a group or a tag on the left ends a search: it means browsing again."""
         self._clear_search()
         self._show_items()
+        self.list_to_front()
 
     def _end_search(self) -> None:
         if self.search.text():
@@ -1349,13 +1360,14 @@ class ListWorkspace(Tool):
             popup(menu, self.nav.groups.viewport().mapToGlobal(position))
             return
         self.nav.select_group(group_id)
+        self.list_to_front()  # the group already picked too: its commands act on the list
         menu.addAction(a.add_group)  # inside the group under the mouse
         group = self._doc.hosts.group(group_id) if self._doc else None
         if group is not None and self._doc is not None:
             self.fill_group_menu(menu, group)
             menu.addSeparator()
             view = locations.list_view(self.prefs, self._doc.path)
-            first = menu.addAction(_("Show this group &first"))
+            first = menu.addAction(_("Sho&w this group first"))  # F is Refresh group's
             first.setToolTip(_("The list opens on this group"))
             first.setCheckable(True)
             first.setChecked(view.show == locations.SHOW_GROUP and view.group == group.id)

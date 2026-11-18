@@ -1044,7 +1044,7 @@ class HostsTool(ListWorkspace):
         if len(items) == 1:
             self._update_host_actions()
             target = self.selected_target()
-            refresh = menu.addAction(_("&Refresh host"))  # status, logged-on users, PC facts
+            refresh = menu.addAction(_("Re&fresh host"))  # status, logged-on users, PC facts
             refresh.setEnabled(target is not None)
             refresh.triggered.connect(lambda: self.run_on_selected("all-checks"))
             quick = self.quick_commands()[: host_commands.MENU_QUICK]
@@ -1058,7 +1058,7 @@ class HostsTool(ListWorkspace):
             self._add_open_in_profile_cleanup(menu, items)
         else:
             refresh = menu.addAction(
-                _("&Refresh {n} hosts").format(n=len(items))
+                _("Re&fresh {n} hosts").format(n=len(items))
             )  # status and logged-on users; PC facts are read one PC at a time
             refresh.setEnabled(self._run is None)
             refresh.triggered.connect(
@@ -1066,7 +1066,7 @@ class HostsTool(ListWorkspace):
             )
             self._add_open_in_profile_cleanup(menu, items)  # with the work, before the submenu
             menu.addSeparator()
-            account = menu.addMenu(_("Commands run &as"))  # each admin's own: never read-only
+            account = menu.addMenu(_("Commands run a&s"))  # each admin's own: never read-only
             self._fill_hosts_account_menu(account, items)
             account.setEnabled(bool(account.actions()))
         menu.addSeparator()
@@ -1146,11 +1146,11 @@ class HostsTool(ListWorkspace):
         self._add_profile_menu(
             menu, {group.profile}, follow, lambda p: self.set_group_profile(group.id, p)
         )
-        self._fill_group_account_menu(menu.addMenu(_("Commands run &as")), group)
+        self._fill_group_account_menu(menu.addMenu(_("Commands run a&s")), group)
         # The group's hosts, including those in the groups inside it.
         hosts = list(self._doc.hosts.hosts_in(group.id))
         menu.addSeparator()
-        refresh = menu.addAction(_("&Refresh group"))  # status and logged-on users
+        refresh = menu.addAction(_("Re&fresh group"))  # status and logged-on users
         refresh.setEnabled(bool(hosts) and self._run is None)
         refresh.triggered.connect(lambda: self.check_hosts(hosts, status=True, users=True))
 

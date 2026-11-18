@@ -379,6 +379,24 @@ def test_the_ssh_guide_shows_a_sample_server_that_is_never_connected_or_checked(
     assert doc.path.read_bytes() == saved  # the file never had it
 
 
+def test_the_guide_card_s_buttons_follow_a_language_switch(window: CapyWindow) -> None:
+    """The card is made with the window, in its language then; a switch in Settings later must
+    reach Skip and Back as it reaches Next (Skip and Back stayed English until a restart,
+    0.26.0 to build 618; Kerrigan found it in the SSH guide's shots)."""
+    window.set_language("pt_BR")
+    try:
+        window.commands.show_guide.trigger()
+        _settle()
+        card = window.guides.card
+        assert (card.skip_button.text(), card.next_button.text()) == ("Pular", "Avançar")
+        card.next_button.click()
+        assert (card.skip_button.text(), card.back_button.text()) == ("Pular", "Voltar")
+        card.skip_button.click()
+    finally:
+        language.apply(i18n.DEFAULT_LANGUAGE)
+        QApplication.processEvents()
+
+
 def test_the_ssh_guide_says_to_type_yes_in_english_in_portuguese_too(
     window: CapyWindow,
 ) -> None:

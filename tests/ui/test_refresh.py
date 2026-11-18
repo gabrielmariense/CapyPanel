@@ -304,7 +304,7 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     # One PC: refresh it, the four quick commands, the door to every command and to Profile
     # cleanup, then managing it.
     assert seen == [
-        "&Connect", "&Refresh host",
+        "&Connect", "Re&fresh host",
         "C$ share", "User's folder", "Computer Management", "Send a message…",
         "&All commands…", "&Open in Profile cleanup",
         "Co&py",
@@ -315,7 +315,7 @@ def test_host_menu_items_read_on_their_own_with_no_headings(
     window.hosts._item_menu(QPoint(row.left() + 10, row.center().y()))
     # Several PCs: only what works on all of them; Commands run as stays, Edit goes.
     assert seen == [
-        "&Connect", "&Refresh 2 hosts", "&Open 2 hosts in Profile cleanup", "Commands run &as",
+        "&Connect", "Re&fresh 2 hosts", "&Open 2 hosts in Profile cleanup", "Commands run a&s",
         "Co&py", "&Move to", "&Tags", "&Remove",
     ]  # fmt: skip
 

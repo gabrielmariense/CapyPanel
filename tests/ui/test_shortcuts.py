@@ -123,7 +123,7 @@ def test_every_command_is_listed_with_today_s_key_and_power_never_is(window: Cap
 
 RESERVED_LINE = (
     "F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself. In an SSH terminal, "
-    "F1, Esc, Ctrl+F and Tab go to the server."
+    "all but Ctrl+Shift+W go to the server."
 )
 
 

@@ -118,6 +118,12 @@ class TabbedListWorkspace(ListWorkspace):
         index = keys.index(self.tabs.current()) if self.tabs.current() in keys else 0
         self.switch(keys[(index + by) % len(keys)])
 
+    def list_to_front(self) -> None:
+        """A pick on the left changes the list, so the list comes forward to show it, whichever
+        tab was in front (Dante, build 618)."""
+        if self.tabs.current() != PINNED:
+            self.switch(PINNED)
+
     def page_of(self, key: str) -> QWidget | None:
         """A tab's page; None for the pinned tab and for a key with no tab."""
         raise NotImplementedError

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from PySide6.QtGui import QValidator
+from PySide6.QtGui import QKeySequence, QValidator
 from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QMenu, QTreeWidgetItem
 from test_printers_tool import FakeShell  # the same pretend shell as Printers' tests
 
@@ -25,6 +25,7 @@ from capypanel.ui.ssh_tool import tool as tool_module
 from capypanel.ui.ssh_tool.dialog import SshHostDialog
 from capypanel.ui.ssh_tool.table import ROLE_QUIET
 from capypanel.ui.ssh_tool.tool import SshTool
+from capypanel.ui.themes import engine as themes
 
 
 @pytest.fixture
@@ -190,7 +191,7 @@ def test_the_right_click_menu_starts_with_connect_in_bold(ssh: SshTool) -> None:
     menu = QMenu()
     ssh.fill_item_menu(menu, ssh.selected_items())
     words = [menus.label(a) for a in menu.actions() if not a.isSeparator()]  # no shortcut room
-    assert words[:3] == ["&Connect", "Connect in a separate &window", "&Refresh host"]
+    assert words[:3] == ["&Connect", "Connect in a separate &window", "Re&fresh host"]
     assert menu.defaultAction() is ssh.commands.connect_host
     assert menu.toolTipsVisible()
     tip = ssh.commands.connect_window.toolTip()
@@ -198,7 +199,21 @@ def test_the_right_click_menu_starts_with_connect_in_bold(ssh: SshTool) -> None:
     _select(ssh, "nas-01", "web-01")
     menu = QMenu()
     ssh.fill_item_menu(menu, ssh.selected_items())
-    assert menus.label(ssh.commands.refresh_selected) == "&Refresh 2 hosts"
+    assert menus.label(ssh.commands.refresh_selected) == "Re&fresh 2 hosts"
+
+
+def test_connect_s_key_reads_enter_in_the_host_menu(ssh: SshTool) -> None:
+    """Qt would draw its own "Return" after Connect: the theme keeps that room blank, and the
+    menu's ShortcutLayer draws "Enter" there, as Windows names the key."""
+    themes.apply(themes.DEFAULT_THEME)  # its watcher keeps the room in every menu
+    _select(ssh, "nas-01")
+    menu = QMenu()
+    ssh.fill_item_menu(menu, ssh.selected_items())
+    connect = ssh.commands.connect_host
+    assert connect in menu.actions() and connect.shortcut() == QKeySequence("Return")
+    _name, tab, room = connect.text().partition("\t")
+    assert tab and room and not room.strip()  # Qt draws blanks there, never "Return"
+    assert menus.shortcut_text(connect) == "Enter"
 
 
 def test_a_server_typed_in_the_search_is_offered_and_connected_at_once(

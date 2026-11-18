@@ -134,7 +134,7 @@ def reserved_line() -> str:
     """The line under the buttons, read in the language shown now."""
     return _(
         "F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself. In an SSH "
-        "terminal, F1, Esc, Ctrl+F and Tab go to the server."
+        "terminal, all but Ctrl+Shift+W go to the server."
     )
 
 

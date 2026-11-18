@@ -46,4 +46,4 @@ def retranslate_actions(a: SshActions) -> None:
     a.connect_window.setToolTip(_("Opens ssh.exe in a window of its own, outside CapyPanel"))
     a.copy_address.setText(_("&Address"))  # in the host menu's Copy submenu
     a.refresh_shown.setText(_("Refresh all"))
-    a.refresh_selected.setText(_("&Refresh host"))  # the menu says how many (fill_item_menu)
+    a.refresh_selected.setText(_("Re&fresh host"))  # the menu says how many (fill_item_menu)

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 10:12-0300\n"
+"POT-Creation-Date: 2026-11-18 11:11-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -61,7 +61,7 @@ msgid "&Add…"
 msgstr "&Adicionar…"
 
 msgid "&All commands…"
-msgstr "&Todos os comandos…"
+msgstr "To&dos os comandos…"
 
 msgid "&Another account…"
 msgstr "&Outra conta…"
@@ -331,29 +331,6 @@ msgstr "&Ler de novo"
 
 msgid "&Reconnect"
 msgstr "&Reconectar"
-
-msgid "&Refresh group"
-msgstr "A&tualizar grupo"
-
-msgid "&Refresh host"
-msgstr "A&tualizar host"
-
-msgid "&Refresh printer"
-msgstr "A&tualizar impressora"
-
-#, python-brace-format
-msgid "&Refresh {n} host"
-msgid_plural "&Refresh {n} hosts"
-msgstr[0] "A&tualizar {n} host"
-msgstr[1] "A&tualizar {n} hosts"
-
-#, python-brace-format
-msgid "&Refresh {n} hosts"
-msgstr "A&tualizar {n} hosts"
-
-#, python-brace-format
-msgid "&Refresh {n} printers"
-msgstr "A&tualizar {n} impressoras"
 
 msgid "&Remember it on this computer"
 msgstr "Le&mbrar neste computador"
@@ -766,10 +743,9 @@ msgid "Any time"
 msgstr "Qualquer data"
 
 msgid "Anything still running in it on the server may stop."
-msgstr "O que ainda estiver rodando nela no servidor pode parar."
-
-msgid "Anything still running in them on the servers may stop."
-msgstr "O que ainda estiver rodando nelas nos servidores pode parar."
+msgid_plural "Anything still running in them on the servers may stop."
+msgstr[0] "O que ainda estiver rodando nela no servidor pode parar."
+msgstr[1] "O que ainda estiver rodando nelas nos servidores pode parar."
 
 msgid "Appearance"
 msgstr "Aparência"
@@ -1031,7 +1007,7 @@ msgid "Checks every host shown: whether it's on, and who's signed in. Right-clic
 msgstr "Confere cada host mostrado: se está ligado e quem está conectado. Com o botão direito nele, você escolhe o que ele confere."
 
 msgid "Checks whether each host shown answers on its SSH port. Nothing logs in."
-msgstr "Confere se cada host mostrado responde na porta SSH. Nenhum login é feito."
+msgstr "Confere se cada host mostrado responde na porta SSH, sem fazer login."
 
 msgid "Checks whether each host shown answers, as Hosts' Refresh does; its Status column shows here and in Hosts"
 msgstr "Verifica se cada host exibido responde, como o Atualizar do Hosts; a coluna Status aparece aqui e no Hosts"
@@ -1126,7 +1102,7 @@ msgctxt "button"
 msgid "Commands"
 msgstr "Comandos"
 
-msgid "Commands run &as"
+msgid "Commands run a&s"
 msgstr "Comandos c&omo"
 
 msgid "Commands run as"
@@ -1227,8 +1203,8 @@ msgstr "Copia a resposta e tudo o que o PC escreveu"
 
 msgid "Copy &address"
 msgid_plural "Copy &addresses"
-msgstr[0] "Copiar e&ndereço"
-msgstr[1] "Copiar e&ndereços"
+msgstr[0] "Copiar en&dereço"
+msgstr[1] "Copiar en&dereços"
 
 msgid "Copy &list"
 msgstr "Copiar &lista"
@@ -1767,8 +1743,8 @@ msgstr "Todos neste PC (compartilhada)"
 msgid "Export CSV"
 msgstr "Exportar CSV"
 
-msgid "F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself. In an SSH terminal, F1, Esc, Ctrl+F and Tab go to the server."
-msgstr "F1, Esc, Ctrl+F, Tab e Ctrl+Shift+W ficam reservadas ao próprio CapyPanel. Num terminal SSH, F1, Esc, Ctrl+F e Tab vão para o servidor."
+msgid "F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself. In an SSH terminal, all but Ctrl+Shift+W go to the server."
+msgstr "F1, Esc, Ctrl+F, Tab e Ctrl+Shift+W ficam reservadas ao próprio CapyPanel. Num terminal SSH, todas menos Ctrl+Shift+W vão para o servidor."
 
 msgid "Failed"
 msgstr "Falhou"
@@ -2073,7 +2049,7 @@ msgid "Inventory"
 msgstr "Inventário"
 
 msgid "Inventory › Add host needs a name and an address. The port and Log in as are optional: without them, ssh.exe uses port 22 and its own settings."
-msgstr "Inventário › Adicionar host pede um nome e um endereço. A porta e Entrar como são opcionais: sem eles, o ssh.exe usa a porta 22 e as configurações dele."
+msgstr "Inventário › Adicionar host pede um nome e um endereço. A porta e o campo Entrar como são opcionais: sem eles, o ssh.exe usa a porta 22 e as configurações dele."
 
 msgid "Inventory › Add printer only needs a name and the address. A Refresh reads the toner, and Details shows the brand, model and serial number the printer reports, ready to copy in with Use this."
 msgstr "Em Inventário › Adicionar impressora, basta o nome e o endereço. Uma atualização lê o toner, e Detalhes mostra a marca, o modelo e o número de série que a impressora informa, para copiar com Usar este."
@@ -3083,6 +3059,29 @@ msgstr[1] "Sair do CapyPanel com {n} conexões abertas?"
 msgid "Quitting now cancels the profiles still queued. The profile being deleted on each host finishes first; CapyPanel quits after that."
 msgstr "Sair agora cancela os perfis ainda na fila. O perfil sendo excluído em cada host termina primeiro; o CapyPanel sai depois disso."
 
+msgid "Re&fresh group"
+msgstr "At&ualizar grupo"
+
+msgid "Re&fresh host"
+msgstr "At&ualizar host"
+
+msgid "Re&fresh printer"
+msgstr "At&ualizar impressora"
+
+#, python-brace-format
+msgid "Re&fresh {n} host"
+msgid_plural "Re&fresh {n} hosts"
+msgstr[0] "At&ualizar {n} host"
+msgstr[1] "At&ualizar {n} hosts"
+
+#, python-brace-format
+msgid "Re&fresh {n} hosts"
+msgstr "At&ualizar {n} hosts"
+
+#, python-brace-format
+msgid "Re&fresh {n} printers"
+msgstr "At&ualizar {n} impressoras"
+
 msgid "Re&move"
 msgstr "Re&mover"
 
@@ -3615,6 +3614,9 @@ msgstr "Listas compartilhadas e pessoais aparecem sozinhas no menu de listas."
 msgid "Shared lists are in the shared lists folder and show up for everyone; only people Windows lets write that folder can add one."
 msgstr "Listas compartilhadas ficam na pasta de listas compartilhadas e aparecem para todos; só quem o Windows deixa gravar nessa pasta pode criar uma."
 
+msgid "Sho&w this group first"
+msgstr "Mo&strar este grupo primeiro"
+
 msgid "Show"
 msgstr "Mostrar"
 
@@ -3626,9 +3628,6 @@ msgstr "Mostrar todas"
 
 msgid "Show every printer again"
 msgstr "Mostrar todas as impressoras de novo"
-
-msgid "Show this group &first"
-msgstr "Mostrar este grupo &primeiro"
 
 msgid "Show users' do&main"
 msgstr "Mostrar do&mínio dos usuários"

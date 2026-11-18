@@ -512,8 +512,10 @@ class ProfilesTool(Tool):
             item.triggered.connect(lambda _c=False, p=path: self._pick_list(p))
 
     def _pick_list(self, path: Any) -> None:
+        """The dropdown's list, on the Hosts tab: it shows what was picked, as a group does."""
         if self._hosts is not None:
             self._hosts.pick_list(path)
+        self.switch(HOSTS)
 
     def _show_list(self) -> None:
         """Hosts opened another list, or the open one changed."""
@@ -747,8 +749,8 @@ class ProfilesTool(Tool):
                 else ngettext("&Scan {n} host", "&Scan {n} hosts", n).format(n=n))  # fmt: skip
         menu.addAction(scan, self.scan_clicked)
         refresh = menu.addAction(
-            _("&Refresh host") if n == 1
-            else ngettext("&Refresh {n} host", "&Refresh {n} hosts", n).format(n=n),
+            _("Re&fresh host") if n == 1
+            else ngettext("Re&fresh {n} host", "Re&fresh {n} hosts", n).format(n=n),
             lambda: self._check(hosts),
         )  # fmt: skip
         refresh.setEnabled(not self._checking())
