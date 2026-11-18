@@ -20,6 +20,7 @@ from fake_console import FakeConsole
 from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QAction, QColor, QGuiApplication, QImage, QKeyEvent, QPainter
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
+from test_themes import ACCENTS  # every Windows accent, and the dark purple of Dante's PC
 
 from capypanel.core.ssh.screen import TermScreen, TermStream
 from capypanel.ui import error_window
@@ -650,6 +651,19 @@ def test_a_terminal_follows_the_theme_unless_given_colours_of_its_own(
         assert follows.term_palette.name == theme_id
         assert follows.term_palette.background == themes.current().colors["card"]
         assert fixed.term_palette is given
+
+
+@pytest.mark.parametrize("scheme", ["light", "dark"])
+@pytest.mark.parametrize("accent", ACCENTS)
+def test_the_cursor_shows_on_the_terminal_with_any_accent(scheme: str, accent: str) -> None:
+    """The accent while it shows on the terminal's background (3:1, WCAG's for a graphic), the
+    text colour otherwise: the Windows themes take the PC's own accent, and a dark purple read
+    1.37:1 in Windows dark (Dante, build 619)."""
+    roles = {**themes.TOKENS[scheme], **themes.NATIVE_TOKENS[scheme], "accent": accent}
+    pal = palette.from_roles(f"windows-{scheme}", {**roles, "sel": accent}, scheme == "dark")
+    assert palette.contrast(pal.cursor, pal.background) >= palette.SHOWS
+    shows = palette.contrast(accent, roles["card"]) >= palette.SHOWS
+    assert pal.cursor == (accent if shows else roles["text"])
 
 
 def test_colours_from_the_256_or_24_bit_ones_are_drawn_as_asked(qapp: QApplication) -> None:

@@ -12,6 +12,9 @@
   16 or the defaults: a colour from the 256 table or 24-bit was picked on purpose. Where neither
   reads (magenta at full strength as a reversed cell's background, in three themes), black or
   white does: one of the two always reaches 4.58:1.
+- The cursor is the accent while it shows on the background (3:1, WCAG's for a graphic), the
+  text colour otherwise: the Windows themes take the PC's own accent, and a dark one read 1.37:1
+  in Windows dark.
 
 Cells keep palette numbers (core/ssh/screen.py), so switching the palette recolours everything
 already printed, the scrollback too."""
@@ -27,6 +30,7 @@ from capypanel.ui.themes import engine
 
 _CUBE = (0, 95, 135, 175, 215, 255)
 READS = 4.5  # WCAG AA for text
+SHOWS = 3.0  # WCAG AA for a graphic: the cursor
 LAST_RESORT = ("#000000", "#ffffff")  # one of them reads on any colour
 
 
@@ -77,7 +81,7 @@ class TermPalette:
     name: str
     background: str  # the card colour
     foreground: str  # text
-    cursor: str  # the accent
+    cursor: str  # the accent, or the text colour where the accent wouldn't show
     selection: str
     ansi: tuple[str, ...]  # the 16 as text
     back: tuple[str, ...]  # the 16 as backgrounds
@@ -147,7 +151,7 @@ def from_roles(name: str, r: Mapping[str, str], dark: bool) -> TermPalette:
         name=name,
         background=r["card"],
         foreground=r["text"],
-        cursor=r["accent"],
+        cursor=r["accent"] if contrast(r["accent"], r["card"]) >= SHOWS else r["text"],
         selection=r["sel"],
         ansi=tuple(ansi),
         back=tuple(back),
