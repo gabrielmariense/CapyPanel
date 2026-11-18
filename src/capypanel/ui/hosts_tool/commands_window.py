@@ -498,8 +498,8 @@ class CommandsWindow(QDialog):
         hint = QLabel(_("↑ ↓ pick, Enter runs, typing searches. Commands that need more open a "
                         "small window; risky ones ask first."))  # fmt: skip
         hint.setObjectName("hint")
-        # In the footer, only for a PC typed here that the open list doesn't have; last but
-        # Close in the Tab order.
+        # Always in the footer, greyed when there's nothing to add (_update_add); last but Close
+        # in the Tab order.
         self.add_button = QPushButton(_("A&dd to host list…"))
         self.add_button.setAutoDefault(False)
         self.add_button.setToolTip(_("Adds this PC to the open host list"))
@@ -625,11 +625,13 @@ class CommandsWindow(QDialog):
         self._show_results()
 
     def _update_add(self) -> None:
-        """Add to host list… shows for an address typed here that the open list doesn't have."""
+        """Add to host list… keeps its place, greyed when there's nothing to add, and its tooltip
+        then says why: for a PC the list has, where it already is. Hidden, the window looked like
+        it was missing something (Gabriel, 2026-11-04, kept 2026-11-17)."""
         target = self.target()
-        places = self._tool.where_in_list(target.address) if target else []
-        self.add_button.setVisible(target is not None and not places and
-                                   self._tool.can_add_hosts())  # fmt: skip
+        why = self._tool.why_not_add(target.name, target.address) if target else ""
+        self.add_button.setEnabled(target is not None and not why)
+        self.add_button.setToolTip(why or _("Adds this PC to the open host list"))
 
     def _update_names(self) -> None:
         """The user's folder row names the person: "ana.admin's folder"."""

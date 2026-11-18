@@ -27,6 +27,7 @@ from capypanel.core import settings
 from capypanel.core.hosts import accounts as account_links
 from capypanel.core.hosts import commands as host_commands
 from capypanel.core.hosts.accounts import WINDOWS, Scope
+from capypanel.core.hosts.bulk import listed_at
 from capypanel.core.hosts.commands import GROUP_NAMES
 from capypanel.core.hosts.commands import Group as CommandGroup
 from capypanel.core.hosts.document import OpenList, starter_list
@@ -1663,20 +1664,18 @@ class HostsTool(ListWorkspace):
         self.prefs["recent_addresses"] = kept[:RECENT_PATHS]
         self._save_prefs()
 
-    def where_in_list(self, address: str) -> list[tuple[str, str]]:
-        """Each host of the open list reached at `address`: its group's path and its name."""
+    def why_not_add(self, name: str, address: str) -> str:
+        """Why Add to host list… can't add the PC in the Commands window, "" when it can: no list
+        is open, the list has hosts at that address (each with where it sits, a line each), or
+        the list is read-only."""
         doc = self._doc
         if doc is None:
-            return []
+            return _("No host list is open.")
         wanted = address.strip().casefold()
-        return [
-            (group_path(doc.hosts, h.group), h.name)
-            for h in doc.hosts.hosts
-            if h.connect_address.casefold() == wanted
-        ]
-
-    def can_add_hosts(self) -> bool:
-        return self._doc is not None and not self._doc.read_only
+        listed = [h for h in doc.hosts.hosts if h.connect_address.casefold() == wanted]
+        if listed:
+            return "\n".join(listed_at(doc.hosts, h, name) for h in listed)
+        return _("This list is read-only.") if doc.read_only else ""
 
     def add_typed_host(self, address: str, profile: str) -> str | None:
         """Add to list…: Add host… with the address typed in the Commands window."""

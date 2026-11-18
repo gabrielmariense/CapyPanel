@@ -224,26 +224,37 @@ def plan(host_list: HostList, rows: Iterable[ImportRow], default_group: str) -> 
     return Plan(tuple(items), tuple(new_groups), result)
 
 
+def place(host_list: HostList, host: Host) -> str:
+    """Where a host sits, said in a sentence: "in “Clinic A › Floor 2”", or "with no group"."""
+    path = " › ".join(_names(host_list, host.group))
+    return _("in “{group}”").format(group=path) if path else _("with no group")
+
+
+def listed_at(host_list: HostList, host: Host, typed: str) -> str:
+    """A host of the list at the address of the PC `typed` (by its name or its address), and where
+    it is: "Already in the list, in “Clinic A”", or "“DESK-01” has this address, …"."""
+    if host.name.casefold() == typed.strip().casefold():
+        return _("Already in the list, {place}").format(place=place(host_list, host))
+    return _("“{name}” has this address, {place}").format(
+        name=host.name, place=place(host_list, host)
+    )
+
+
 def _in_list(host_list: HostList, same_name: Host | None, same_address: Host | None) -> str:
     """Which hosts already in the list a row matches, and where they are."""
-
-    def where(host: Host) -> str:
-        path = " › ".join(_names(host_list, host.group))
-        return _("in “{group}”").format(group=path) if path else _("with no group")
-
     if same_name is not None and same_name is same_address:
-        return _("Already in the list, {place}").format(place=where(same_name))
+        return _("Already in the list, {place}").format(place=place(host_list, same_name))
     found = []
     if same_name is not None:
         found.append(
             _("A host with this name is already in the list, {place}").format(
-                place=where(same_name)
+                place=place(host_list, same_name)
             )
         )
     if same_address is not None:
         found.append(
             _("“{name}” has this address, {place}").format(
-                name=same_address.name, place=where(same_address)
+                name=same_address.name, place=place(host_list, same_address)
             )
         )
     return "; ".join(found)
