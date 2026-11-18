@@ -788,14 +788,16 @@ class PrintersTool(ListWorkspace):
             self.details.show_printer(None, len(items), summary=self._summary())
 
     def empty_texts(self) -> EmptyTexts:
-        """Printers has no import: an empty list offers Add only."""
         return EmptyTexts(
-            _("This list has no printers yet.\nAdd one to start."),
+            _("This list has no printers yet.\nAdd one, or import several at once."),
             _("This list has no printers."),
             _("This group has no printers yet."),
             _("Every printer is in a group."),
             _("No printer matches “{text}”."),
         )
+
+    def import_action(self) -> QAction | None:
+        return self.commands.import_printers  # an empty list offers it beside Add printer…
 
     def status_extras(self, doc: OpenList) -> list[str]:
         """How many printers answered the last Refresh, once any was checked: a refusal or an

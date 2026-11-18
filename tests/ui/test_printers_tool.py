@@ -172,8 +172,8 @@ def test_the_status_bar_counts_printers_online_once_any_was_checked(
 
 def test_an_empty_list_and_the_edit_window_say_printers_words(printers: PrintersTool) -> None:
     texts = printers.empty_texts()
-    assert texts.empty_list == "This list has no printers yet.\nAdd one to start."
-    assert printers.import_action() is None  # no import: Add only
+    assert texts.empty_list == "This list has no printers yet.\nAdd one, or import several at once."
+    assert printers.import_action() is printers.commands.import_printers  # beside Add, as Hosts
     doc = printers.document
     assert doc is not None
     dialog = PrinterDialog(None, doc.hosts, doc.hosts.hosts[0])
