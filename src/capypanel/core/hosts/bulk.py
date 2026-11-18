@@ -14,7 +14,7 @@ import ctypes
 import io
 import re
 import unicodedata
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -39,6 +39,13 @@ class ImportRow:
     group: str = ""  # a path as typed; "" = the group picked for the import
     tags: tuple[str, ...] = ()
     notes: str = ""
+    # A caller's own columns (parse's `more`), as (key, cell) pairs; empty cells left out.
+    more: tuple[tuple[str, str], ...] = ()
+
+
+# A caller's own columns: each key and the header names it's read under (its key among them,
+# so to_csv's header reads back).
+More = Mapping[str, Iterable[str]]
 
 
 @dataclass(frozen=True)
@@ -78,17 +85,19 @@ class Plan:
 # ---- reading ----
 
 
-def parse(text: str, *, file: bool = False) -> Parsed:
+def parse(text: str, *, file: bool = False, more: More | None = None) -> Parsed:
     """file: read from a CSV file, which must start with a header row. Pasted text may also be
-    plain "name, address" lines."""
+    plain "name, address" lines. more: columns of the caller's own, read into ImportRow.more
+    (Printers' brand, model and so on); without it, other columns are ignored."""
     lines = [line for line in text.splitlines() if line.strip()]
     if not lines:
         return Parsed(())
-    header = _header(lines[0])
+    more = more or {}
+    header = _header(lines[0], more)
     if header is not None:
         delimiter, columns = header
-        return _read((_split(line, delimiter) for line in lines[1:]), columns, delimiter)
-    aligned = _aligned(lines)
+        return _read((_split(line, delimiter) for line in lines[1:]), columns, delimiter, more)
+    aligned = _aligned(lines, more)
     if aligned is not None:
         return aligned
     if file:
@@ -97,7 +106,7 @@ def parse(text: str, *, file: bool = False) -> Parsed:
     if any(len(_split(line, delimiter)) > 2 for line in lines):
         # Without a header, a third column could be anything: say so rather than guess.
         return Parsed((), needs_header=True)
-    return _read((_split(line, delimiter) for line in lines), ["name", "address"], delimiter)
+    return _read((_split(line, delimiter) for line in lines), ["name", "address"], delimiter, more)
 
 
 def _fold(text: str) -> str:
@@ -107,18 +116,19 @@ def _fold(text: str) -> str:
     return "".join(c for c in plain if not unicodedata.combining(c) and c not in " \t_-")
 
 
-def _columns(cells: Sequence[str]) -> list[str]:
+def _columns(cells: Sequence[str], more: More) -> list[str]:
     """Each header cell's meaning: a known column's key, or the cell as typed."""
-    known = {key: {_fold(name) for name in names} for key, names in _HEADERS.items()}
+    named = {**_HEADERS, **more}
+    known = {key: {_fold(name) for name in names} for key, names in named.items()}
     return [
         next((key for key, names in known.items() if _fold(cell) in names), cell) for cell in cells
     ]
 
 
-def _header(line: str) -> tuple[str, list[str]] | None:
+def _header(line: str, more: More) -> tuple[str, list[str]] | None:
     """The delimiter and each column's meaning, when the first line names a "name" column."""
     for delimiter in ("\t", ";", ","):
-        columns = _columns(_split(line, delimiter))
+        columns = _columns(_split(line, delimiter), more)
         if "name" in columns:
             return delimiter, columns
     return None
@@ -136,11 +146,11 @@ def _split(line: str, delimiter: str) -> list[str]:
 _ALIGNED_CELL = re.compile(r"\S+(?: \S+)*")
 
 
-def _aligned(lines: Sequence[str]) -> Parsed | None:
+def _aligned(lines: Sequence[str], more: More) -> Parsed | None:
     """A table whose columns are lined up with spaces, as some programs copy one: the header
     row's titles mark where each column starts. None when the first line isn't such a header."""
     titles = list(_ALIGNED_CELL.finditer(lines[0]))
-    columns = _columns([t.group() for t in titles])
+    columns = _columns([t.group() for t in titles], more)
     if len(titles) < 2 or "name" not in columns:
         return None
     starts = [t.start() for t in titles]
@@ -152,11 +162,11 @@ def _aligned(lines: Sequence[str]) -> Parsed | None:
         # An empty cell, or one that runs into the next: cut where the titles start.
         return [line[a:b] for a, b in zip(starts, [*starts[1:], None], strict=True)]
 
-    return _read((cells(line) for line in lines[1:]), columns, " ")
+    return _read((cells(line) for line in lines[1:]), columns, " ", more)
 
 
-def _read(rows: Iterable[Sequence[str]], columns: list[str], delimiter: str) -> Parsed:
-    known = set(_HEADERS)
+def _read(rows: Iterable[Sequence[str]], columns: list[str], delimiter: str, more: More) -> Parsed:
+    known = set(_HEADERS) | set(more)
     ignored = tuple(c for c in columns if c not in known and c.strip())
     tag_split = "," if delimiter == ";" else ";"
     parsed = []
@@ -170,6 +180,7 @@ def _read(rows: Iterable[Sequence[str]], columns: list[str], delimiter: str) -> 
                 group=cells.get("group", "").strip(PATH + " "),
                 tags=tuple(t for t in tags if t),
                 notes=cells.get("notes", ""),
+                more=tuple((key, cells[key]) for key in more if cells.get(key)),
             )
         )
     return Parsed(tuple(parsed), ignored)
@@ -184,10 +195,18 @@ def _unguarded(cell: str) -> str:
 # ---- planning ----
 
 
-def plan(host_list: HostList, rows: Iterable[ImportRow], default_group: str) -> Plan:
+def plan(
+    host_list: HostList,
+    rows: Iterable[ImportRow],
+    default_group: str,
+    *,
+    problem: Callable[[ImportRow], str | None] | None = None,
+) -> Plan:
     # default_group: where rows without a group go; NO_GROUP leaves them out of every group.
     """What the import would do, row by row, and the list it would make. Nothing is changed:
-    the caller saves `result` only when the user confirms."""
+    the caller saves `result` only when the user confirms. problem: the caller's own check of a
+    row, in place of the hosts' one: why it can't be added, "" when it can, None for the hosts'
+    check (Printers allows https:// addresses)."""
     result, items, new_groups = host_list, [], []
     names: dict[str, Host] = {}
     targets: dict[str, Host] = {}
@@ -200,9 +219,10 @@ def plan(host_list: HostList, rows: Iterable[ImportRow], default_group: str) -> 
         name, address = row.name.strip(), row.address.strip()
         target = (address or name).casefold()
         path = _path(result, row.group) or _names(host_list, default_group)
-        problem = _problem(name, address)
-        if problem:
-            items.append(Planned(row, Verdict.BAD, problem, path))
+        said = problem(row) if problem is not None else None
+        bad = _problem(name, address) if said is None else said
+        if bad:
+            items.append(Planned(row, Verdict.BAD, bad, path))
             continue
         known = _in_list(host_list, names.get(name.casefold()), targets.get(target))
         repeated = _repeated(seen_names.get(name.casefold()), seen_targets.get(target))
@@ -352,13 +372,18 @@ def write_csv(
     return out.getvalue()
 
 
-def to_csv(rows: Iterable[ImportRow], delimiter: str = ",") -> str:
+def to_csv(rows: Iterable[ImportRow], delimiter: str = ",", more: Sequence[str] = ()) -> str:
     """Rows as CSV with a header row: what the import window shows once its table is edited.
-    With ";" between columns, tags are joined by "," (the import reads both ways)."""
+    With ";" between columns, tags are joined by "," (the import reads both ways). more: the
+    caller's own columns, by key, after the hosts' ones."""
     between_tags = "," if delimiter == ";" else ";"
     return write_csv(
-        ["name", "address", "group", "tags", "notes"],
-        ([r.name, r.address, r.group, between_tags.join(r.tags), r.notes] for r in rows),
+        ["name", "address", "group", "tags", "notes", *more],
+        (
+            [r.name, r.address, r.group, between_tags.join(r.tags), r.notes]
+            + [dict(r.more).get(key, "") for key in more]
+            for r in rows
+        ),
         delimiter,
         guard=False,  # read back by the import window itself
     )

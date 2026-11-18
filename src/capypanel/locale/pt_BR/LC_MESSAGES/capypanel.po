@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-17 21:11-0300\n"
+"POT-Creation-Date: 2026-11-18 00:28-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -2258,8 +2258,15 @@ msgstr "Sem acesso: o PC não aceitou a conta"
 msgid "No address"
 msgstr "Sem endereço"
 
+#, python-brace-format
+msgid "No address: its Windows port, {port}, isn't one. Type the printer's address."
+msgstr "Sem endereço: a porta do Windows, {port}, não é um. Digite o endereço da impressora."
+
 msgid "No address: the name must then be the computer's name on the network"
 msgstr "Sem endereço: o nome precisa ser o nome do computador na rede"
+
+msgid "No address: the name must then be the printer's name on the network"
+msgstr "Sem endereço: o nome precisa ser o nome da impressora na rede"
 
 msgid "No admin rights"
 msgstr "Sem direitos de administrador"
@@ -2374,6 +2381,9 @@ msgstr "Nenhum guardado."
 
 msgid "Not a computer name or IP address"
 msgstr "Não é um nome de computador nem um endereço IP"
+
+msgid "Not a printer name or IP address"
+msgstr "Não é um nome de impressora nem um endereço IP"
 
 #, python-brace-format
 msgid "Not an https address: {url}"
@@ -4910,6 +4920,10 @@ msgstr "tags"
 
 msgid "the answer and its output"
 msgstr "a resposta e a saída"
+
+#, python-brace-format
+msgid "the other {n} columns Windows exports"
+msgstr "as outras {n} colunas que o Windows exporta"
 
 msgid "the picked tags"
 msgstr "as tags escolhidas"

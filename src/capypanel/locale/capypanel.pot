@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-17 21:11-0300\n"
+"POT-Creation-Date: 2026-11-18 00:28-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2348,7 +2348,16 @@ msgstr ""
 msgid "No address"
 msgstr ""
 
+#, python-brace-format
+msgid ""
+"No address: its Windows port, {port}, isn't one. Type the printer's "
+"address."
+msgstr ""
+
 msgid "No address: the name must then be the computer's name on the network"
+msgstr ""
+
+msgid "No address: the name must then be the printer's name on the network"
 msgstr ""
 
 msgid "No admin rights"
@@ -2465,6 +2474,9 @@ msgid "None kept."
 msgstr ""
 
 msgid "Not a computer name or IP address"
+msgstr ""
+
+msgid "Not a printer name or IP address"
 msgstr ""
 
 #, python-brace-format
@@ -5173,6 +5185,10 @@ msgid "tags"
 msgstr ""
 
 msgid "the answer and its output"
+msgstr ""
+
+#, python-brace-format
+msgid "the other {n} columns Windows exports"
 msgstr ""
 
 msgid "the picked tags"
