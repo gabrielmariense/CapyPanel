@@ -491,8 +491,8 @@ class SshTool(TabbedListWorkspace):
     def _cant_connect(self, name: str) -> None:
         log.warning("Not connecting to %s: an address or login ssh.exe would misread", name)
         self._shell.show_message(
-            _("Can't connect to “{host}”: its address or Log in as has a space or starts "
-              "with “-”.").format(host=name),
+            _("Can't connect to “{host}”: its address or Log in as has a space, starts with "
+              "“-”, or has a character such as ; & | or quotes.").format(host=name),
             10_000,
         )  # fmt: skip
 

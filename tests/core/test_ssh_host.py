@@ -58,9 +58,23 @@ def test_a_new_value_replaces_an_odd_one() -> None:
     assert edited.extra["ssh"] == {"port": 2200}
 
 
-@pytest.mark.parametrize("login", ["root", "admin@corp.example", "EXAMPLE\\user", "ana.souza"])
+@pytest.mark.parametrize(
+    "login", ["root", "admin@corp.example", "EXAMPLE\\user", "ana.souza", "svc$"]
+)
 def test_a_login_ssh_exe_can_take(login: str) -> None:
     assert is_login(login)
+
+
+@pytest.mark.parametrize("char", "\"&'();<>`{|}")
+def test_a_login_with_a_character_ssh_exe_9_5_refuses_is_refused(char: str) -> None:
+    # Windows' own ssh.exe 9.5 refuses these in a user name; an older one passes them on to a
+    # ProxyCommand that names the user (%r), which runs in a shell. Read from a file, such a
+    # login is odd: ssh.exe's own default then, and the value kept as found.
+    assert not is_login(f"root{char}calc")
+    _hosts, host = HostList().add_host("srv", NO_GROUP)
+    host = replace(host, extra={"ssh": {"login": f"root{char}calc"}})
+    assert info_of(host).login == ""
+    assert with_info(host, info_of(host)).extra["ssh"] == {"login": f"root{char}calc"}
 
 
 @pytest.mark.parametrize("login", ["", "-l", "two words", "tab\there", "x" * 101, "nul\x00"])

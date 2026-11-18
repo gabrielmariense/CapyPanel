@@ -1,6 +1,7 @@
 """Adding and editing an SSH host: what the host dialog asks (name, address, group, tags, notes),
 plus its port and the name to log in as. Neither field takes a space or a leading "-", which
-ssh.exe would read as an option. No password: ssh.exe asks for it, or uses a key."""
+ssh.exe would read as an option, nor the characters ssh.exe refuses there (launch.py). No
+password: ssh.exe asks for it, or uses a key."""
 
 from dataclasses import dataclass
 
@@ -21,11 +22,10 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import MAX_ADDRESS, NO_GROUP, Host, HostList
 from capypanel.core.i18n import _
-from capypanel.core.ssh.host import MAX_LOGIN, MAX_PORT, SshInfo, info_of
+from capypanel.core.ssh.host import MAX_LOGIN, MAX_PORT, REFUSED_IN_LOGIN, SshInfo, info_of
+from capypanel.core.ssh.launch import REFUSED_IN_ADDRESS
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.hosts import MAX_NAME, TagEdit, group_choices
-
-NO_OPTION = r"[^\s-]\S*"  # no spaces, and no "-" first: what ssh.exe takes as an address or name
 
 
 @dataclass(frozen=True)
@@ -56,7 +56,7 @@ class SshHostDialog(QDialog):
         self.address = QLineEdit(host.address if host else "")
         self.address.setMaxLength(MAX_ADDRESS)
         self.address.setPlaceholderText(_("IP address or network name"))
-        self.address.setValidator(_no_option(self.address))
+        self.address.setValidator(_as_ssh_takes(self.address, REFUSED_IN_ADDRESS))
         self.group = QComboBox()
         for group_id, label in group_choices(hosts):
             self.group.addItem(label, group_id)
@@ -71,7 +71,7 @@ class SshHostDialog(QDialog):
         self.login = QLineEdit(info.login)
         self.login.setMaxLength(MAX_LOGIN)
         self.login.setPlaceholderText(_("Empty: your SSH config, then your Windows user name"))
-        self.login.setValidator(_no_option(self.login))
+        self.login.setValidator(_as_ssh_takes(self.login, REFUSED_IN_LOGIN))
         self.notes = QPlainTextEdit(host.notes if host else "")
         self.notes.setTabChangesFocus(True)
 
@@ -110,5 +110,8 @@ class SshHostDialog(QDialog):
         )
 
 
-def _no_option(field: QLineEdit) -> QRegularExpressionValidator:
-    return QRegularExpressionValidator(QRegularExpression(NO_OPTION), field)
+def _as_ssh_takes(field: QLineEdit, refused: frozenset[str]) -> QRegularExpressionValidator:
+    """No spaces, no "-" first and none of `refused`: a key that would make one does nothing."""
+    bad = "".join("\\" + c for c in sorted(refused))  # each one escaped, inside a class
+    pattern = QRegularExpression(rf"[^\s{bad}-][^\s{bad}]*")
+    return QRegularExpressionValidator(pattern, field)

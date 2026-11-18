@@ -39,7 +39,19 @@ def test_a_login_or_port_ssh_exe_would_misread_is_refused(info: SshInfo) -> None
         launch.command_line(EXE, "srv-01", info)
 
 
-@pytest.mark.parametrize("address", ["srv-01", "192.0.2.40", "2001:db8::40", "srv.corp.example"])
+@pytest.mark.parametrize("char", "\"$&'(),;<>\\`{|}")
+def test_an_address_with_a_character_ssh_exe_9_5_refuses_is_refused(char: str) -> None:
+    # Windows' own ssh.exe 9.5 refuses these in a host name; an older one (Windows 10's 8.1)
+    # passes them on to a ProxyCommand that names the host (%h), which runs in a shell.
+    assert not launch.is_destination(f"srv{char}calc")
+    with pytest.raises(ValueError):
+        launch.command_line(EXE, f"srv{char}calc", SshInfo())
+
+
+@pytest.mark.parametrize(
+    "address",
+    ["srv-01", "192.0.2.40", "2001:db8::40", "srv.corp.example", "user@srv-01", "fe80::1%3"],
+)
 def test_names_and_addresses_ssh_exe_takes(address: str) -> None:
     assert launch.is_destination(address)
 

@@ -15,6 +15,9 @@ KEY = "ssh"
 DEFAULT_PORT = 22
 MAX_PORT = 65535
 MAX_LOGIN = 100  # a domain account's user@domain fits
+# What Windows' own ssh.exe 9.5 refuses in a name to log in with (see REFUSED_IN_ADDRESS in
+# launch.py): DOMAIN\user, user@domain and a name ending in $ still pass.
+REFUSED_IN_LOGIN = frozenset("\"&'();<>`{|}")
 
 
 @dataclass(frozen=True)
@@ -30,12 +33,12 @@ def is_port(value: object) -> bool:
 
 
 def is_login(text: str) -> bool:
-    """A name ssh.exe can be given to log in with: no spaces or control characters, and no
-    leading "-", which ssh.exe would read as an option."""
+    """A name ssh.exe can be given to log in with: no spaces or control characters, no leading
+    "-", which ssh.exe would read as an option, and none of REFUSED_IN_LOGIN."""
     return (
         0 < len(text) <= MAX_LOGIN
         and not text.startswith("-")
-        and all(c.isprintable() and not c.isspace() for c in text)
+        and all(c.isprintable() and not c.isspace() and c not in REFUSED_IN_LOGIN for c in text)
     )
 
 

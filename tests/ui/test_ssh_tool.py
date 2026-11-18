@@ -261,11 +261,12 @@ def test_the_separate_window_is_told_the_host_s_name(
     assert ssh.connections() == []  # a window, not a tab
 
 
-def test_an_address_ssh_exe_would_read_as_an_option_is_never_handed_over(
-    ssh: SshTool, shell: FakeShell, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize("address", ["-oProxyCommand=calc", "srv;calc", "srv&calc"])
+def test_an_address_ssh_exe_would_misread_is_never_handed_over(
+    ssh: SshTool, shell: FakeShell, monkeypatch: pytest.MonkeyPatch, address: str
 ) -> None:
     # A list file edited by hand: the real checks run before anything starts, in a tab or in a
-    # separate window.
+    # separate window. A leading "-" is an option; ; and & would reach a ProxyCommand's shell.
     started: list[object] = []
     monkeypatch.setattr(launch, "connect", real_connect)
     monkeypatch.setattr(launch, "tab_command", real_tab_command)
@@ -274,13 +275,14 @@ def test_an_address_ssh_exe_would_read_as_an_option_is_never_handed_over(
     doc = ssh.document
     assert doc is not None
     nas = next(h for h in doc.hosts.hosts if h.name == "nas-01")
-    assert ssh._commit(doc.hosts.update_host(replace(nas, address="-oProxyCommand=calc")))
+    assert ssh._commit(doc.hosts.update_host(replace(nas, address=address)))
     _select(ssh, "nas-01")
     for window in (False, True):
         shell.messages.clear()
         ssh.connect_selected(window=window)
         assert shell.messages == [
-            "Can't connect to “nas-01”: its address or Log in as has a space or starts with “-”."
+            "Can't connect to “nas-01”: its address or Log in as has a space, starts with “-”, "
+            "or has a character such as ; & | or quotes."
         ]
     assert started == [] and ssh.connections() == []
 
@@ -319,6 +321,19 @@ def test_the_fields_take_no_space_nor_a_leading_dash(qapp: QApplication) -> None
         assert validator is not None
         assert not any(_accepts(validator, bad) for bad in ("-l", "two words", " root"))
         assert _accepts(validator, "root")
+    dialog.deleteLater()
+
+
+def test_the_fields_take_none_of_the_characters_ssh_exe_refuses(qapp: QApplication) -> None:
+    # Windows' own ssh.exe 9.5 refuses them; an older one would pass them on to a ProxyCommand
+    # that names the host or the user, in a shell. A key that would type one does nothing.
+    dialog = SshHostDialog(None, HostList())
+    address, login = dialog.address.validator(), dialog.login.validator()
+    assert address is not None and login is not None
+    assert not any(_accepts(address, f"srv{c}x") for c in "\"$&'(),;<>\\`{|}")
+    assert not any(_accepts(login, f"us{c}er") for c in "\"&'();<>`{|}")
+    assert all(_accepts(address, ok) for ok in ("srv-01", "user@srv-01", "fe80::1%3"))
+    assert all(_accepts(login, ok) for ok in ("EXAMPLE\\user", "admin@corp.example", "svc$"))
     dialog.deleteLater()
 
 

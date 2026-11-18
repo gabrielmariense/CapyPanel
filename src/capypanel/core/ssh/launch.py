@@ -8,7 +8,10 @@ and keeps it open after an error, so ssh.exe's message can be read there.
 
 What reaches ssh.exe comes from a list file anyone who can write to it could edit, so it's
 checked first: an address or a name that starts with "-" would be read as an option (ssh's
--oProxyCommand= runs a program), and "--" ends ssh.exe's options before the address anyway."""
+-oProxyCommand= runs a program), and "--" ends ssh.exe's options before the address anyway.
+Nor does either take the characters ssh.exe 9.5 refuses: a ProxyCommand in someone's own ssh
+config that names the host (%h) runs in a shell, and older ssh.exe builds (Windows 10's 8.1)
+pass them on to it."""
 
 import ctypes
 import logging
@@ -26,6 +29,9 @@ from capypanel.core.ssh.host import DEFAULT_PORT, SshInfo, is_login, is_port
 from capypanel.core.updates import NO_SPLASH
 
 log = logging.getLogger(__name__)
+# What Windows' own ssh.exe 9.5 refuses in a host name on its command line (OpenSSH 9.6's fix
+# for CVE-2023-51385), and so CapyPanel too, whichever ssh.exe the PC has.
+REFUSED_IN_ADDRESS = frozenset("\"$&'(),;<>\\`{|}")
 
 
 class SshMissing(Exception):
@@ -41,12 +47,12 @@ def ssh_exe() -> Path | None:
 
 
 def is_destination(text: str) -> bool:
-    """An address or a computer name ssh.exe can be given: no spaces or control characters,
-    and no leading "-", which ssh.exe would read as an option."""
+    """An address or a computer name ssh.exe can be given: no spaces or control characters, no
+    leading "-", which ssh.exe would read as an option, and none of REFUSED_IN_ADDRESS."""
     return (
         0 < len(text) <= MAX_ADDRESS
         and not text.startswith("-")
-        and all(c.isprintable() and not c.isspace() for c in text)
+        and all(c.isprintable() and not c.isspace() and c not in REFUSED_IN_ADDRESS for c in text)
     )
 
 
