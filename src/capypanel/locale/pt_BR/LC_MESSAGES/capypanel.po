@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-17 20:58-0300\n"
+"POT-Creation-Date: 2026-11-17 21:11-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -849,7 +849,7 @@ msgstr "Pode excluir"
 
 #, python-brace-format
 msgid "Can't connect to “{host}”: its address or Log in as has a space or starts with “-”."
-msgstr "Não é possível conectar a “{host}”: o endereço ou o Entrar como tem um espaço ou começa com “-”."
+msgstr "Não é possível conectar a “{host}”: o endereço ou o campo Entrar como tem um espaço ou começa com “-”."
 
 msgid "Cancel"
 msgstr "Cancelar"
@@ -1597,7 +1597,7 @@ msgid "Editing in the table rewrites the list above as CSV with a header row (na
 msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes), para que as duas sempre coincidam. Continuar?"
 
 msgid "Empty: your SSH config, then your Windows user name"
-msgstr "Vazio: sua configuração do SSH e depois seu usuário do Windows"
+msgstr "Vazio: config do SSH ou seu usuário do Windows"
 
 msgid "Encryption pass&word"
 msgstr "Senha da cri&ptografia"
