@@ -580,6 +580,14 @@ def _discard(path: Path) -> None:
             path.unlink(missing_ok=True)
 
 
+def _clear(item: Path) -> None:
+    """`item` gone, or OSError while any of it is still there (an antivirus scanning a file just
+    copied in, say), for _retry to try again."""
+    _discard(item)
+    if item.exists() or item.is_symlink():
+        raise OSError(errno.EBUSY, "Still in use", str(item))
+
+
 def _strict(function: Callable[[str], object], path: str, error: BaseException) -> None:
     """rmtree's second try on a read-only file; anything else stops the delete there."""
     if not isinstance(error, PermissionError):
@@ -714,8 +722,11 @@ def _roll_back(place: Places, moved: list[str], copied: list[str]) -> None:
     The old version's folder goes only once it's empty: whatever couldn't come back stays in
     it, never deleted, and the log says where."""
     log.warning("Update: going back to the old version")
-    for name in copied:
-        _discard(place.app / name)
+    for name in copied:  # tried again, as the moves are: a held new file keeps the old one out
+        try:
+            _retry(lambda item=place.app / name: _clear(item), f"took out the new {name}")
+        except OSError:
+            log.exception("Update: couldn't take out the new %s", name)
     for name in reversed(moved):
         source, target = place.previous / name, place.app / name
         if target.exists():  # a new file that wouldn't go: the old one can't come back over it

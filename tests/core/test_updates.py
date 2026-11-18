@@ -380,10 +380,39 @@ def test_an_old_item_never_comes_back_over_a_new_one_that_wouldn_t_go(
     monkeypatch.setattr(
         updates, "_discard", lambda path: None if path.name == "_internal" else real_discard(path)
     )
+    monkeypatch.setattr(updates.time, "sleep", lambda _s: None)
     with pytest.raises(UpdateError, match="self-test"):
         updates.apply(place, 1, wait=lambda _p, _t: True, test=lambda _exe: False)
     assert (place.previous / "_internal" / "lib.dll").read_text(encoding="utf-8") == "0.28.1"
     assert (place.app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.28.1"
+
+
+def test_a_new_file_held_for_a_moment_still_lets_the_old_version_back(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The new version failed its self-test while an antivirus was still scanning a file just
+    # copied in: taking the new _internal out is tried again until it goes (Alice), and then the
+    # old one comes back. Tried once, the old one stayed in app data and the folder couldn't start.
+    place = updates.places(_app(tmp_path / "CapyPanel", "0.28.1"))
+    _app(place.new_app, "0.29.0")
+    before = _files(place.app)
+    scan = contextlib.ExitStack()
+    pauses: list[float] = []
+
+    def fails_while_scanned(_exe: Path) -> bool:
+        scan.enter_context((place.app / "_internal" / "lib.dll").open("rb"))
+        return False
+
+    def pause(seconds: float) -> None:
+        pauses.append(seconds)
+        if len(pauses) == 2:
+            scan.close()  # the scan is over
+
+    monkeypatch.setattr(updates.time, "sleep", pause)
+    with scan, pytest.raises(UpdateError, match="self-test"):
+        updates.apply(place, 1, wait=lambda _p, _t: True, test=fails_while_scanned)
+    assert _files(place.app) == before
+    assert not place.previous.exists() and len(pauses) == 2
 
 
 def test_the_helper_never_lets_an_error_through_and_starts_the_old_copy_again(
