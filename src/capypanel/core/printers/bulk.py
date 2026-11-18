@@ -74,7 +74,7 @@ def read_windows_export(text: str) -> Parsed | None:
         rows.append(ImportRow(cells.get("Name", ""), address, notes=notes, more=more))
     ignored = sum(1 for c in columns if c not in _WINDOWS_USED)
     other = ngettext(
-        "the other {n} column Windows exports", "the other {n} columns Windows exports", ignored
+        "the other column Windows exports", "the other {n} columns Windows exports", ignored
     )
     said = (other.format(n=ignored),) if ignored else ()
     return Parsed(tuple(rows), said)
@@ -106,7 +106,8 @@ def problem(row: ImportRow) -> str | None:
     if not name:
         return None
     if not address and port:
-        return _("No address: its Windows port, {port}, isn't one. Type the printer's address.") \
+        # The action first: a long WSD port name runs past the column's edge (Satya).
+        return _("No address: type the printer's address. Its Windows port, {port}, isn't one.") \
             .format(port=port)  # fmt: skip
     if not address and not is_hostname(name):
         return _("No address: the name must then be the printer's name on the network")

@@ -61,7 +61,7 @@ def test_windows_printer_list_says_which_ports_need_an_address(qapp: QApplicatio
     assert "USB001" in _row(dialog, 0)["warning"]
     assert _row(dialog, 1)["notes"] == "Ward 2"
     assert _add_button(dialog) == "&Add 1 printer"
-    assert "Ignored columns: the other 1 column Windows exports." in dialog.summary.text()
+    assert "Ignored columns: the other column Windows exports." in dialog.summary.text()
 
 
 def test_editing_a_printer_column_rewrites_the_list_with_it(
