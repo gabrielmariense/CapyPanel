@@ -10,6 +10,8 @@ that waited for the exit before the end never ended: the real one's two threads 
 
 from collections.abc import Callable, Mapping, Sequence
 
+from capypanel.core.ssh.conpty import WINDOWS, Engine
+
 CTRL_C_EXIT = 0xC000013A  # what Windows gives a program its closed console ends
 
 
@@ -26,8 +28,10 @@ class FakeConsole:
         cwd: str | None = None,
         max_pending: int = 1 << 20,
         flags: int = 0,
+        engine: Engine | None = None,
     ) -> None:
         self.argv = list(argv)
+        self.engine = engine or WINDOWS  # named only: nothing of it runs
         self.size = (cols, rows)
         self.env = env
         self._on_ready = on_ready

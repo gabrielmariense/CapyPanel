@@ -391,6 +391,8 @@ class TerminalView(QAbstractScrollArea):
             on_exit=lambda code: bridge.exited.emit(number, code),
             max_pending=MAX_PENDING,
         )
+        # Before its output: the engine that runs it counts half a flag as it does.
+        self.term.regional_indicator_cells = self.session.engine.regional_indicator_cells
         self._live.session = self.session
         self._sync_scrollbar(at_bottom=True)
         self.viewport().update()

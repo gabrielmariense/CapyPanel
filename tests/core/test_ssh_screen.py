@@ -3,6 +3,7 @@ colours kept as palette numbers, the alternate screen, the scrollback, and what 
 not do."""
 
 import pytest
+from console_cells import CONSOLE_CELLS  # as Windows' own console counted them
 
 from capypanel.core.ssh import screen as screen_module
 from capypanel.core.ssh.screen import (
@@ -14,31 +15,6 @@ from capypanel.core.ssh.screen import (
     unpack,
 )
 from capypanel.vendor.pyte._widths import wcwidth
-
-# Each sample's cells as Windows' own console gave them (its cursor column, read with
-# GetConsoleScreenBufferInfo, on Windows 11 build 26300, 2026-11-18). The screen must place
-# everything where the console does, or a row ends a cell off.
-CONSOLE_CELLS = [
-    ("abc", 3),
-    ("ção", 3),  # pt-BR accents, precomposed
-    ("e\u0301", 2),  # e and a combining acute: a cell each
-    ("中文", 4),  # CJK
-    ("한", 2),  # Hangul
-    ("Ａ", 2),  # fullwidth A
-    ("\U0001f44d", 2),  # thumbs up
-    ("❤\ufe0f", 2),  # heart and VS16: a cell each
-    ("⚠", 1),  # warning sign
-    ("\U0001f1e7\U0001f1f7", 4),  # the Brazilian flag: two wide regional indicators
-    ("\U0001f469\u200d\U0001f4bb", 5),  # woman technologist: 2, the joiner 1, 2
-    ("─│", 2),  # box drawing
-    ("→", 1),  # arrow
-    ("⚠\ufe0f", 2),  # warning and VS16
-    ("\ue0b0", 1),  # a Powerline separator (private use)
-    ("a\u200bb", 3),  # a zero-width space takes a cell
-    ("\U0001fae8", 2),  # a Unicode 15 emoji
-    ("±", 1),  # plus-minus (ambiguous width)
-    ("❤", 1),  # heart alone
-]
 
 
 def screen_and_stream(columns: int = 40, lines: int = 5, **kw) -> tuple[TermScreen, TermStream]:
@@ -52,6 +28,17 @@ def test_each_sample_takes_the_cells_the_console_gives_it(sample: str, cells: in
     stream.feed(("[" + sample + "]").encode())
     assert screen.cursor.x == cells + 2
     assert screen.row_text(0).endswith("]")  # nothing after the sample was lost
+
+
+def test_half_a_flag_takes_the_cells_its_console_engine_gives_it() -> None:
+    """2 in Windows' own console, 1 in the engine CapyPanel carries for Windows 10, which the
+    terminal tells its screen (test_ssh_conpty.py measures both)."""
+    for cells, flag_cells in ((2, 4), (1, 2)):
+        screen, stream = screen_and_stream()
+        screen.regional_indicator_cells = cells
+        stream.feed("[\U0001f1e7\U0001f1f7]".encode())
+        assert screen.cursor.x == flag_cells + 2
+        assert screen.row_text(0).endswith("]")
 
 
 def test_the_widths_are_wcwidths_from_pythons_own_tables() -> None:

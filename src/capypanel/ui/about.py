@@ -345,6 +345,8 @@ COMPONENTS = (
         "LGPL-3.0",
         "lgpl-3.0.txt",
     ),
+    # Carried in capypanel/vendor/conpty, for Windows 10's terminal: the version is that folder's.
+    Component("ConPTY", "1.25.261109001", "© Microsoft Corporation", "MIT", "conpty.txt"),
     Component("Tabler Icons", "", "© 2020-2026 Paweł Kuna", "MIT", "tabler-icons.txt"),
 )
 

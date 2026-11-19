@@ -12,6 +12,7 @@ import time
 from collections import deque
 from collections.abc import Callable, Iterator, Sequence
 from ctypes import wintypes as wt
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +23,7 @@ from PySide6.QtGui import QAction, QColor, QGuiApplication, QImage, QKeyEvent, Q
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 from test_themes import ACCENTS  # every Windows accent, and the dark purple of Dante's PC
 
+from capypanel.core.ssh import conpty
 from capypanel.core.ssh.screen import TermScreen, TermStream
 from capypanel.ui import error_window
 from capypanel.ui.hosts_tool.command_windows import Question
@@ -659,9 +661,14 @@ def _all_rows(view: TerminalView) -> list[str]:
     return view.term.scrollback_text() + view.term.screen_text()
 
 
-@pytest.fixture
-def cmd(qapp: QApplication) -> Iterator[TerminalView]:
-    """cmd.exe on a real pseudo console: no AutoRun, and ">" for a prompt."""
+@pytest.fixture(params=["Windows' own", "carried"])
+def cmd(
+    qapp: QApplication, request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[TerminalView]:
+    """cmd.exe on a real pseudo console from each engine: no AutoRun, and ">" for a prompt."""
+    engine = conpty.carried_engine() if request.param == "carried" else conpty.WINDOWS
+    assert engine is not None  # vendor/conpty comes with CapyPanel
+    monkeypatch.setattr(conpty, "default_engine", lambda: engine)
     terminal = TerminalView(host="web-01")
     _shown(terminal)
     terminal.start([CMD, "/d"], env={**os.environ, "PROMPT": "$G"})
@@ -677,12 +684,40 @@ def test_typed_keys_reach_cmd_and_its_answer_is_drawn(cmd: TerminalView) -> None
     cmd.grab()
 
 
-def test_keys_as_text_reach_cmd_through_windows_own_console(cmd: TerminalView) -> None:
-    """The form Windows 10's console gets, read by a real pseudo console."""
+def test_keys_as_text_reach_cmd_on_a_real_pseudo_console(cmd: TerminalView) -> None:
+    """The form a console that never asks for key events gets, as Windows 10's own."""
     cmd.term.win32_input = False  # as a console that never asked
     _typed(cmd, "echo capy 43\r")
     _until(lambda: "capy 43" in cmd.term.screen_text())
     assert ">echo capy 43" in cmd.term.screen_text()
+
+
+@pytest.mark.parametrize("cmd", ["carried"], indirect=True)
+def test_the_carried_engine_asks_for_key_events_first_thing(cmd: TerminalView) -> None:
+    """So on Windows 10 too, keys go as key events: the form ssh.exe reads after the login."""
+    assert cmd.session is not None and cmd.session.engine is conpty.carried_engine()
+    _until(lambda: cmd.term.win32_input)
+    assert cmd.term.regional_indicator_cells == 1  # its count for half a flag
+
+
+def test_the_screen_counts_half_a_flag_as_the_console_engine_does(
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    narrow = replace(conpty.WINDOWS, name="like the carried one", regional_indicator_cells=1)
+    made: list[FakeConsole] = []
+
+    def start(*args: Any, **kwargs: Any) -> FakeConsole:
+        made.append(FakeConsole(*args, engine=narrow, **kwargs))
+        return made[-1]
+
+    monkeypatch.setattr(view_module, "PseudoConsole", start)
+    terminal = TerminalView(host="web-01")
+    _shown(terminal)
+    terminal.start(["ssh.exe", "--", "web-01"])
+    made[-1].prints("[\U0001f1e7\U0001f1f7]".encode())
+    _until(lambda: terminal.term.screen_text()[0] == "[\U0001f1e7\U0001f1f7]")
+    assert terminal.term.cursor.x == 4  # 2 + 2: the flag's two halves, a cell each
+    terminal.close_connection()
 
 
 def test_enter_on_an_ended_cmd_runs_it_again(cmd: TerminalView) -> None:

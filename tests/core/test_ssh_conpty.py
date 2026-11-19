@@ -1,25 +1,40 @@
-"""One program on a pseudo console (core/ssh/conpty.py): what it prints comes back, typed keys
-reach it, Ctrl+C stops what it runs, closing ends it and everything it started, and a flood
-waits for the reader. Windows' own cmd.exe and timeout.exe only, cmd started with /d (no
-AutoRun) and the standard prompt; nothing reaches the network."""
+"""One program on a pseudo console (core/ssh/conpty.py), from each engine: Windows' own and the
+one CapyPanel carries for Windows 10. What it prints comes back, typed keys reach it, Ctrl+C
+stops what it runs, closing ends it and everything it started, and a flood waits for the
+reader. Windows' own cmd.exe and timeout.exe, cmd started with /d (no AutoRun) and the standard
+prompt, and this Python measuring the console's cells; nothing reaches the network."""
 
 import ctypes
+import json
+import logging
 import os
 import re
+import sys
 import threading
 import time
 from collections.abc import Callable, Iterator
 from ctypes import wintypes as wt
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from console_cells import CONSOLE_CELLS
 
-from capypanel.core.ssh.conpty import PseudoConsole
+from capypanel.core.ssh import conpty
+from capypanel.core.ssh.conpty import Engine, PseudoConsole
 from capypanel.core.ssh.screen import TermScreen, TermStream
 
 CMD = str(Path(os.environ.get("SYSTEMROOT") or r"C:\Windows") / "System32" / "cmd.exe")
 CMD_ENV = {**os.environ, "PROMPT": "$P$G"}  # each prompt line ends with ">"
 VERSION = re.compile(r"Windows.*\d+\.\d+\.\d+")  # what ver prints, in any language
+CELLS_CHILD = Path(__file__).resolve().parent.parent / "helpers" / "console_cells.py"
+FLAGS = ["\U0001f1e7", "\U0001f1e7\U0001f1f7\U0001f1e7", "x\U0001f1e7y"]  # halves of flags
+
+
+def _carried() -> Engine:
+    engine = conpty.carried_engine()
+    assert engine is not None  # vendor/conpty comes with CapyPanel
+    return engine
 
 
 class Run:
@@ -56,14 +71,20 @@ class Run:
         return sum(1 for line in self.lines() if line.endswith(">"))
 
 
+@pytest.fixture(params=["Windows' own", "carried"])
+def engine(request: pytest.FixtureRequest) -> Engine:
+    return _carried() if request.param == "carried" else conpty.WINDOWS
+
+
 @pytest.fixture
-def runs() -> Iterator[Callable[..., Run]]:
-    """Starts programs and closes every one at the end, whatever the test found."""
+def runs(engine: Engine) -> Iterator[Callable[..., Run]]:
+    """Starts programs on the engine and closes every one at the end, whatever the test found."""
     started: list[Run] = []
 
     def start(argv: list[str], **kw) -> Run:
-        run = Run(argv, **kw)
+        run = Run(argv, engine=engine, **kw)
         started.append(run)
+        assert run.console.engine is engine  # it started: nothing took over
         return run
 
     yield start
@@ -95,19 +116,27 @@ def test_ctrl_c_stops_what_cmd_runs_and_cmd_carries_on(runs: Callable[..., Run])
     run = runs([CMD, "/d"], env=CMD_ENV)
     assert run.until(lambda: run.prompts() == 1)
     run.console.write(b"timeout /t 60 /nobreak\r")
-    assert run.until(lambda: bool(_children(run.console.pid)))
+    assert run.until(lambda: bool(_children(run.console.pid, "timeout.exe")))
     time.sleep(0.3)  # timeout reads its arguments and starts counting
     run.console.write(b"\x03")
-    assert run.until(lambda: not _children(run.console.pid) and run.prompts() == 1, seconds=10)
+    assert run.until(
+        lambda: not _children(run.console.pid, "timeout.exe") and run.prompts() == 1, seconds=10
+    )
     assert run.console.running
 
 
-def test_closing_ends_the_program_and_everything_it_started(runs: Callable[..., Run]) -> None:
+def test_closing_ends_the_program_and_everything_it_started(
+    runs: Callable[..., Run], engine: Engine
+) -> None:
+    """The carried engine's own OpenConsole.exe, which runs beside CapyPanel, ends too."""
+    hosts_before = set(_children(os.getpid(), "openconsole.exe"))
     run = runs([CMD, "/d"], env=CMD_ENV)
     assert run.until(lambda: run.prompts() == 1)
     run.console.write(b"timeout /t 60 /nobreak\r")
-    assert run.until(lambda: bool(_children(run.console.pid)))
-    started = [run.console.pid, *_children(run.console.pid)]
+    assert run.until(lambda: bool(_children(run.console.pid, "timeout.exe")))
+    hosts = [p for p in _children(os.getpid(), "openconsole.exe") if p not in hosts_before]
+    assert len(hosts) == (0 if engine is conpty.WINDOWS else 1)
+    started = [run.console.pid, *_children(run.console.pid, "timeout.exe"), *hosts]
     run.console.close()
     end = time.monotonic() + 5
     while any(map(_alive, started)) and time.monotonic() < end:
@@ -135,6 +164,81 @@ def test_a_flood_waits_for_its_reader(runs: Callable[..., Run]) -> None:
     numbers = [int(line[5:]) for line in run.lines() if line.startswith("line ")]
     assert numbers[-1] == 20000
     assert numbers == list(range(numbers[0], 20001))
+
+
+# ---- which engine ----
+
+
+def test_windows_before_11_gets_the_carried_engine_and_windows_11_its_own(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(conpty, "_windows_build", lambda: 19045)  # Windows 10 22H2, the test VM
+    assert conpty.default_engine() is _carried()
+    monkeypatch.setattr(conpty, "_windows_build", lambda: 22000)
+    assert conpty.default_engine() is conpty.WINDOWS
+
+
+def test_a_carried_engine_left_out_or_broken_leaves_windows_own(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setattr(conpty, "_windows_build", lambda: 19045)
+    monkeypatch.setattr(conpty, "CARRIED_DIR", tmp_path)  # empty: a build that left it out
+    monkeypatch.setattr(conpty, "_carried", [])
+    with caplog.at_level(logging.WARNING, logger=conpty.__name__):
+        assert conpty.default_engine() is conpty.WINDOWS
+        (tmp_path / "OpenConsole.exe").write_bytes(b"")
+        (tmp_path / "conpty.dll").write_bytes(b"not a library")
+        monkeypatch.setattr(conpty, "_carried", [])
+        assert conpty.default_engine() is conpty.WINDOWS
+    assert "is missing from" in caplog.text and "won't load" in caplog.text
+
+
+def test_an_engine_that_wont_start_hands_over_to_windows_own(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """As when something on a company PC stops OpenConsole.exe: the terminal still runs."""
+    e_fail = -0x7FFFBFFB  # 0x80004005 as the signed number ctypes returns
+    broken = replace(_carried(), name="a broken engine", create=lambda *_args: e_fail)
+    with caplog.at_level(logging.INFO, logger=conpty.__name__):
+        run = Run([CMD, "/d", "/c", "exit 5"], engine=broken)
+    try:
+        assert run.console.engine is conpty.WINDOWS
+        assert run.until(run.ended.is_set)
+        assert run.console.exit_code == 5
+    finally:
+        run.console.close()
+    assert "a broken engine didn't start (0x80004005)" in caplog.text
+    assert "Pseudo console from Windows' own engine" in caplog.text
+
+
+# ---- cells ----
+
+
+def test_the_carried_engine_counts_cells_as_the_screen_does_on_it(tmp_path: Path) -> None:
+    """Every sample takes the cells Windows' own console gives it, measured on Windows 11
+    (test_ssh_screen.py), except half a flag: one cell here, which the engine tells the
+    screen. Measured live, as the console itself counts them."""
+    carried = _carried()
+    samples = [sample for sample, _cells in CONSOLE_CELLS] + FLAGS
+    (tmp_path / "samples.json").write_text(json.dumps(samples), encoding="utf-8")
+    answer = tmp_path / "cells.json"
+    argv = [sys.executable, "-I", str(CELLS_CHILD), str(tmp_path / "samples.json"), str(answer)]
+    run = Run(argv, columns=120, engine=carried)
+    try:
+        assert run.until(run.ended.is_set, seconds=30)
+        assert run.console.exit_code == 0
+    finally:
+        run.console.close()
+    measured = json.loads(answer.read_text(encoding="utf-8"))
+    on_screen = []
+    for sample in samples:
+        screen = TermScreen(40, 3)
+        screen.regional_indicator_cells = carried.regional_indicator_cells
+        TermStream(screen).feed(sample.encode())
+        on_screen.append(screen.cursor.x)
+    assert on_screen == measured
+    flag = samples.index("\U0001f1e7\U0001f1f7")
+    assert measured[flag] == 2 and dict(CONSOLE_CELLS)[samples[flag]] == 4  # 4 on Windows' own
 
 
 # ---- Windows' list of processes ----
@@ -166,7 +270,8 @@ _k32.WaitForSingleObject.argtypes = (wt.HANDLE, wt.DWORD)
 _k32.CloseHandle.argtypes = (wt.HANDLE,)
 
 
-def _children(pid: int) -> list[int]:
+def _children(pid: int, name: str) -> list[int]:
+    """The programs called `name` (in lower case) that `pid` started."""
     snapshot = _k32.CreateToolhelp32Snapshot(_SNAPPROCESS, 0)
     found = []
     try:
@@ -174,7 +279,7 @@ def _children(pid: int) -> list[int]:
         entry.dwSize = ctypes.sizeof(_Entry)
         more = _k32.Process32FirstW(snapshot, ctypes.byref(entry))
         while more:
-            if entry.th32ParentProcessID == pid and entry.szExeFile.lower() == "timeout.exe":
+            if entry.th32ParentProcessID == pid and entry.szExeFile.lower() == name:
                 found.append(int(entry.th32ProcessID))
             more = _k32.Process32NextW(snapshot, ctypes.byref(entry))
     finally:

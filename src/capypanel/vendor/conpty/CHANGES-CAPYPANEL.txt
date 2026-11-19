@@ -1,0 +1,23 @@
+CapyPanel's copy of ConPTY
+==========================
+
+conpty 1.25.261109001 (https://www.nuget.org/packages/Microsoft.Windows.Console.ConPTY), the
+console engine of Windows Terminal (https://github.com/microsoft/terminal), as Microsoft
+publishes it for programs to carry. Windows Terminal v1.25.3131.0's release carries the same
+package. Under the MIT license (LICENSE); NOTICE.md names the third-party code in Windows
+Terminal and the license of each. Both come from that release's source, unchanged, and
+CapyPanel's licenses/conpty.txt holds them for Settings > About.
+
+CapyPanel's terminal starts it on Windows before Windows 11 (capypanel/core/ssh/conpty.py):
+there Windows' own console never asks for keys as key events and, once ssh.exe logs in, takes
+no key at all. VS Code ships the same engine.
+
+The 64-bit files, as they are in the package and signed by Microsoft (SHA-256):
+- conpty.dll, from runtimes/win-x64/native:
+  e971856f89748dc3b458125e9afdd79b5e9574a7c937676116d3cbbd3b71f492
+- OpenConsole.exe, from build/native/runtimes/x64:
+  b17e48b07ef153b420f0a6e178bacd31fb4c3390e21ae746586213fc0719a775
+conpty.dll starts the OpenConsole.exe beside it.
+
+What CapyPanel changed: nothing. Left out: the 32-bit and ARM64 files, conpty.h, conpty.lib
+and the package's build files.

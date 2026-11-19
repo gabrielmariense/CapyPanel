@@ -6,6 +6,12 @@ when the buffer goes from empty to not empty; the window takes the bytes with `t
 own thread. A full buffer stops the reader, so a flood waits for the screen instead of piling up
 in memory, and Ctrl+C takes effect at once.
 
+Two engines can make the pseudo console. Windows 11's own works. Windows 10's never asks for
+keys as key events and, once ssh.exe logs in, takes no key at all (the Windows 10 test of build
+633), so before Windows 11 the terminal starts the engine CapyPanel carries in vendor/conpty:
+Windows Terminal's, Microsoft's own build, as VS Code does. When that one won't start, Windows'
+own takes over.
+
 What it relies on, each measured on the pseudo console:
 - STARTF_USESTDHANDLES with empty handles: otherwise a program started from a process whose own
   std handles are redirected writes there instead of into the pseudo console;
@@ -15,18 +21,23 @@ What it relies on, each measured on the pseudo console:
 - started suspended, put in a job that ends its programs when closed, then resumed, so closing
   a tab never leaves ssh.exe running.
 
-Never anything typed or printed in a log: this module logs nothing."""
+Never anything typed or printed in a log: all this module logs is which engine it uses."""
 
 from __future__ import annotations
 
 import ctypes
+import logging
 import queue
 import subprocess
+import sys
 import threading
 import time
 from collections.abc import Callable, Mapping, Sequence
 from ctypes import wintypes as wt
+from dataclasses import dataclass
+from pathlib import Path
 
+log = logging.getLogger(__name__)
 k32 = ctypes.WinDLL("kernel32", use_last_error=True)
 
 
@@ -212,6 +223,81 @@ def _environment_block(env: Mapping[str, str]) -> ctypes.Array[ctypes.c_wchar]:
     return ctypes.create_unicode_buffer("".join(f"{k}={v}\0" for k, v in items) + "\0")
 
 
+# The engines ----------------------------------------------------------------------------------
+
+CARRIED_DIR = Path(__file__).resolve().parents[2] / "vendor" / "conpty"
+WINDOWS_11 = 22000  # Windows 11's first build: from it on, Windows' own engine is enough
+_GLYPH_WIDTH_CONSOLE = 0x18  # the carried engine counts cells as Windows' own console does
+
+
+@dataclass(frozen=True)
+class Engine:
+    """What makes, resizes and closes a pseudo console. The carried engine's functions take
+    what Windows' own take."""
+
+    name: str  # for the log
+    create: Callable[..., int]
+    resize: Callable[..., int]
+    close: Callable[..., None]
+    flags: int = 0  # added to every pseudo console it makes
+    # The cells it gives a regional indicator, half of a flag: every other character takes the
+    # cells Windows' own console gives it in both (tests/core/test_ssh_conpty.py).
+    regional_indicator_cells: int = 2
+
+
+WINDOWS = Engine(
+    "Windows' own engine", k32.CreatePseudoConsole, k32.ResizePseudoConsole, k32.ClosePseudoConsole
+)
+_carried: list[Engine | None] = []  # loaded once, by the first pseudo console that needs it
+
+
+def carried_engine() -> Engine | None:
+    """The engine in vendor/conpty, loaded on first use; None when it isn't there or won't
+    load."""
+    if not _carried:
+        _carried.append(_load_carried())
+    return _carried[0]
+
+
+def _load_carried() -> Engine | None:
+    if not (CARRIED_DIR / "OpenConsole.exe").is_file():  # conpty.dll would run Windows' own
+        log.warning("The console engine CapyPanel carries is missing from %s", CARRIED_DIR)
+        return None
+    try:
+        dll = ctypes.WinDLL(str(CARRIED_DIR / "conpty.dll"))
+        functions = (
+            dll.ConptyCreatePseudoConsole,
+            dll.ConptyResizePseudoConsole,
+            dll.ConptyClosePseudoConsole,
+        )
+    except (OSError, AttributeError) as error:
+        log.warning("The console engine CapyPanel carries won't load: %s", error)
+        return None
+    windows = (k32.CreatePseudoConsole, k32.ResizePseudoConsole, k32.ClosePseudoConsole)
+    for carried, own in zip(functions, windows, strict=True):
+        carried.argtypes, carried.restype = own.argtypes, own.restype
+    return Engine(
+        "the engine CapyPanel carries",
+        *functions,
+        flags=_GLYPH_WIDTH_CONSOLE,
+        regional_indicator_cells=1,
+    )
+
+
+def _windows_build() -> int:
+    return sys.getwindowsversion().build
+
+
+def default_engine() -> Engine:
+    """Windows before 11 gets the carried engine; Windows 11, or a carried engine that won't
+    load, Windows' own."""
+    if _windows_build() < WINDOWS_11:
+        carried = carried_engine()
+        if carried is not None:
+            return carried
+    return WINDOWS
+
+
 class PseudoConsole:
     """One program on its own pseudo console. `on_ready()` and `on_exit(code)` are called on this
     class's own threads: whoever receives them must hand the work to its own thread."""
@@ -228,9 +314,12 @@ class PseudoConsole:
         cwd: str | None = None,
         max_pending: int = 1 << 20,
         flags: int = 0,
+        engine: Engine | None = None,
     ) -> None:
-        """`flags` go to CreatePseudoConsole as they are (0 by default)."""
+        """`flags` go to the engine as they are (0 by default), with its own added. `engine`:
+        default_engine()'s, unless given."""
         self.argv = list(argv)
+        self.engine = engine or default_engine()
         self._on_ready = on_ready
         self._on_exit = on_exit
         self._max_pending = max_pending
@@ -251,14 +340,20 @@ class PseudoConsole:
             and k32.CreatePipe(ctypes.byref(out_r), ctypes.byref(out_w), None, 0)
         ):
             raise ctypes.WinError(ctypes.get_last_error())
-        self._hpc = wt.HANDLE()
-        hr = k32.CreatePseudoConsole(COORD(cols, rows), in_r, out_w, flags, ctypes.byref(self._hpc))
+        hr = self._create(cols, rows, in_r, out_w, flags)
+        if hr != 0 and self.engine is not WINDOWS:
+            log.warning(
+                "%s didn't start (%#x): Windows' own instead", self.engine.name, hr & 0xFFFFFFFF
+            )
+            self.engine = WINDOWS
+            hr = self._create(cols, rows, in_r, out_w, flags)
         k32.CloseHandle(in_r)  # the pseudo console keeps its own copies
         k32.CloseHandle(out_w)
         if hr != 0:
             k32.CloseHandle(in_w)
             k32.CloseHandle(out_r)
             raise OSError(f"CreatePseudoConsole failed: {hr & 0xFFFFFFFF:#x}")
+        log.info("Pseudo console from %s", self.engine.name)
         self._in, self._out = in_w, out_r
 
         size = ctypes.c_size_t()
@@ -333,6 +428,11 @@ class PseudoConsole:
         k32.ResumeThread(self._pi.hThread)
         self._waiter.start()
 
+    def _create(self, cols: int, rows: int, in_r: wt.HANDLE, out_w: wt.HANDLE, flags: int) -> int:
+        self._hpc = wt.HANDLE()
+        size, flags = COORD(cols, rows), flags | self.engine.flags
+        return self.engine.create(size, in_r, out_w, flags, ctypes.byref(self._hpc))
+
     # Output -----------------------------------------------------------------------------------
 
     def _read(self) -> None:
@@ -393,7 +493,7 @@ class PseudoConsole:
         """A start that failed part way: frees the pseudo console, its pipes and the attribute
         list (a failed job assignment left them open). close() never runs."""
         self._closed = True
-        k32.ClosePseudoConsole(self._hpc)
+        self.engine.close(self._hpc)
         k32.CloseHandle(self._in)
         k32.CloseHandle(self._out)
         if getattr(self, "_attrs_ready", False):
@@ -412,7 +512,7 @@ class PseudoConsole:
 
     def resize(self, cols: int, rows: int) -> None:
         if not self._closed:
-            k32.ResizePseudoConsole(self._hpc, COORD(max(1, cols), max(1, rows)))
+            self.engine.resize(self._hpc, COORD(max(1, cols), max(1, rows)))
 
     def close(self) -> float:
         """Ends the program (if it still runs) and everything it started, and frees the pseudo
@@ -424,7 +524,7 @@ class PseudoConsole:
             self._closing = True
             self._cond.notify_all()
         start = time.perf_counter()
-        k32.ClosePseudoConsole(self._hpc)
+        self.engine.close(self._hpc)
         took = time.perf_counter() - start
         self._writes.put(None)
         self._writer.join(2)

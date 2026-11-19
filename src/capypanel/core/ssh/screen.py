@@ -34,7 +34,7 @@ from typing import Any, NamedTuple
 from capypanel.vendor import pyte
 from capypanel.vendor.pyte import charsets as cs
 from capypanel.vendor.pyte import modes as mo
-from capypanel.vendor.pyte._widths import wcwidth
+from capypanel.vendor.pyte._widths import REGIONAL_INDICATORS, wcwidth
 from capypanel.vendor.pyte.screens import Margins, StaticDefaultDict
 
 SCROLLBACK = 10_000  # lines
@@ -154,6 +154,9 @@ class TermScreen(pyte.Screen):
         self.scrollback: deque[PackedLine] = deque(maxlen=scrollback)
         self.in_alt = False
         self.win32_input = False  # the console asked for key events (ESC[?9001h)
+        # A regional indicator's cells (half a flag): 2 in Windows' own console, 1 in the
+        # engine CapyPanel carries for Windows 10. The terminal sets the console's own.
+        self.regional_indicator_cells = 2
         self._main_buffer: Any = None
         self._reply = reply or (lambda data: None)
         self.titles_seen = 0
@@ -244,8 +247,11 @@ class TermScreen(pyte.Screen):
         cursor, columns = self.cursor, self.columns
         autowrap = mo.DECAWM in self.mode
         insert = mo.IRM in self.mode
+        narrow_flags = self.regional_indicator_cells == 1
         for ch in data:
             width = cells_for(ch)
+            if width == 2 and narrow_flags and ord(ch) in REGIONAL_INDICATORS:
+                width = 1
             if cursor.x + width > columns:
                 if autowrap:
                     self.dirty.add(cursor.y)

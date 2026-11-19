@@ -107,9 +107,9 @@ def test_every_library_cryptography_brings_has_a_license_row() -> None:
 def test_every_library_carried_in_vendor_has_a_license_row_with_its_version() -> None:
     """Carried code has no package metadata to read a version from: each folder's
     CHANGES-CAPYPANEL.txt names the release it holds, and About must name the same."""
-    rows = {(c.name, c.version) for c in COMPONENTS}
-    carried = [p for p in VENDOR_DIR.iterdir() if (p / "__init__.py").is_file()]
-    assert carried  # pyte at least
+    rows = {(c.name.casefold(), c.version) for c in COMPONENTS}
+    carried = [p for p in VENDOR_DIR.iterdir() if p.is_dir() and p.name != "__pycache__"]
+    assert {p.name for p in carried} >= {"pyte", "conpty"}  # code, and the console engine
     for folder in carried:
         changes = (folder / "CHANGES-CAPYPANEL.txt").read_text(encoding="utf-8")
         release = re.search(rf"^{re.escape(folder.name)} (\S+) \(", changes, re.MULTILINE)
