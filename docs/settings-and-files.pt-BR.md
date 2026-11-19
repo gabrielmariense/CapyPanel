@@ -217,7 +217,8 @@ do terminal fica guardado no seu arquivo de configurações quando você o muda 
     Apache-2.0, no mesmo aviso, porque o build dela para Windows leva o OpenSSL), cffi (MIT-0) e
     pycparser (BSD-3-Clause), de que a cryptography precisa, pywin32 (BSD-3-Clause), pelo qual o
     CapyPanel lê outros PCs, truststore (MIT), que faz o Windows conferir o certificado do GitHub,
-    pyte (LGPL-3.0), sobre o qual o terminal SSH é construído, e Tabler Icons (MIT). O **Ler
+    pyte (LGPL-3.0), sobre o qual o terminal SSH é construído, ConPTY (MIT), o motor de console do
+    Windows Terminal, em que o terminal SSH roda antes do Windows 11, e Tabler Icons (MIT). O **Ler
     licença** também funciona num clique duplo ou no botão direito da linha, e o **Abrir pasta**
     abre a pasta em que todas vêm. O
     "Software livre sob a GPL-3.0, sem garantia: veja Licenças." do cartão CapyPanel rola até elas.

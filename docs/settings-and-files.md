@@ -210,9 +210,10 @@ your settings file when you change it with Ctrl+= and Ctrl+-.
     license, Apache-2.0, in the same notice, because its Windows build carries OpenSSL), cffi
     (MIT-0) and pycparser (BSD-3-Clause), which cryptography needs, pywin32 (BSD-3-Clause), which
     CapyPanel reads other PCs through, truststore (MIT), which has Windows check GitHub's
-    certificate, pyte (LGPL-3.0), which the SSH terminal is built on, and Tabler Icons (MIT).
-    **Read license** also works on a double-click or the row's right-click, and **Open folder**
-    opens the folder they all ship in.
+    certificate, pyte (LGPL-3.0), which the SSH terminal is built on, ConPTY (MIT), Windows
+    Terminal's console engine, which the SSH terminal runs on before Windows 11, and Tabler Icons
+    (MIT). **Read license** also works on a double-click or the row's right-click, and **Open
+    folder** opens the folder they all ship in.
     The CapyPanel card's "Free software under the GPL-3.0, with no warranty: see Licenses." scrolls
     down to them.
 
