@@ -592,7 +592,7 @@ def test_the_host_menu_shows_the_first_four_quick_commands(window: CapyWindow) -
     texts = _host_menu(window)  # the first four ticked; Services, the fifth, isn't there
     assert texts[2:7] == ["Status", "C$ share", "Open a path…", "Event Viewer", "&All commands…"]
     window.hosts.prefs["quick_commands"] = []  # none picked: the block isn't there
-    assert _host_menu(window)[:3] == ["&Connect", "&Refresh host", "&All commands…"]
+    assert _host_menu(window)[:3] == ["&Connect", "Re&fresh host", "&All commands…"]
 
 
 def test_commands_for_a_person_say_who_or_that_nobody_is_signed_in(window: CapyWindow) -> None:
@@ -621,7 +621,7 @@ def test_a_group_s_menu_has_one_refresh(window: CapyWindow) -> None:
     menu = QMenu()
     window.hosts.fill_group_menu(menu, doc.hosts.groups[0])
     texts = [label(a) for a in menu.actions() if a.text()]
-    assert texts[-1] == "&Refresh group" and sum("Refresh" in t for t in texts) == 1
+    assert texts[-1] == "Re&fresh group" and sum("fresh" in t for t in texts) == 1
 
 
 # ---- Customize the details panel ----

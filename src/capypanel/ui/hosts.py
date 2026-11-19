@@ -26,9 +26,11 @@ from PySide6.QtWidgets import (
     QWidgetItem,
 )
 
+from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import MAX_ADDRESS, NO_GROUP, Host, HostList, clean_tags
 from capypanel.core.i18n import _
 from capypanel.ui.dialogs import ok_cancel, quiet_default
+from capypanel.ui.list_workspace.texts import ListTexts
 
 MAX_NAME = 255  # longest host name typed
 MAX_TAG = 64
@@ -56,6 +58,24 @@ class ProfilePicker:
 def list_file_filter() -> str:
     """The file-type filter for choosing host list files in file dialogs."""
     return _("Host lists (*.json);;All files (*)")
+
+
+def host_list_texts() -> ListTexts:
+    """The words for host lists: Hosts' own, and SSH's, which shows the same lists."""
+    return ListTexts(
+        kind=listfile.HOSTS,
+        everything=_("All hosts"),
+        lists=_("Host lists"),
+        new=_("New host list"),
+        add=_("Add a host list"),
+        open=_("Open a host list"),
+        remove=_("Remove host list"),
+        manage=_("&Manage host lists…"),
+        no_list=_("No host list is open."),
+        choose_first=_("Open a host list to choose what it shows first."),
+        not_this_kind=_("“{path}” isn't a host list."),
+        file_filter=list_file_filter(),
+    )
 
 
 def group_path(host_list: HostList, group_id: str) -> str:

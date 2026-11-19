@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-16 19:04-0300\n"
+"POT-Creation-Date: 2026-11-18 11:56-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -35,9 +35,18 @@ msgstr ""
 msgid "&Add hosts"
 msgstr ""
 
+msgid "&Add printers"
+msgstr ""
+
 #, python-brace-format
 msgid "&Add {n} host"
 msgid_plural "&Add {n} hosts"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "&Add {n} printer"
+msgid_plural "&Add {n} printers"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -54,6 +63,9 @@ msgid "&All commands…"
 msgstr ""
 
 msgid "&Another account…"
+msgstr ""
+
+msgid "&Another name…"
 msgstr ""
 
 msgid "&Authentication"
@@ -183,6 +195,9 @@ msgstr ""
 msgid "&Import hosts…"
 msgstr ""
 
+msgid "&Import printers…"
+msgstr ""
+
 msgid "&Install and restart"
 msgstr ""
 
@@ -199,6 +214,12 @@ msgid "&List on startup"
 msgstr ""
 
 msgid "&Locate…"
+msgstr ""
+
+msgid "&Log in as"
+msgstr ""
+
+msgid "&Log in as:"
 msgstr ""
 
 msgid "&Log off"
@@ -283,6 +304,12 @@ msgstr ""
 msgid "&Password:"
 msgstr ""
 
+msgid "&Paste"
+msgstr ""
+
+msgid "&Port:"
+msgstr ""
+
 msgid "&Preset:"
 msgstr ""
 
@@ -304,27 +331,7 @@ msgstr ""
 msgid "&Read again"
 msgstr ""
 
-msgid "&Refresh group"
-msgstr ""
-
-msgid "&Refresh host"
-msgstr ""
-
-msgid "&Refresh printer"
-msgstr ""
-
-#, python-brace-format
-msgid "&Refresh {n} host"
-msgid_plural "&Refresh {n} hosts"
-msgstr[0] ""
-msgstr[1] ""
-
-#, python-brace-format
-msgid "&Refresh {n} hosts"
-msgstr ""
-
-#, python-brace-format
-msgid "&Refresh {n} printers"
+msgid "&Reconnect"
 msgstr ""
 
 msgid "&Remember it on this computer"
@@ -487,7 +494,15 @@ msgid ""
 "those over Every PC. PCs none of them names use your Windows account."
 msgstr ""
 
+msgid "A Printers Report"
+msgstr ""
+
 msgid "A Refresh is running. Try again once it ends."
+msgstr ""
+
+msgid ""
+"A Report saved with the For Import or All details columns comes back as "
+"it was, in English or Portuguese. Columns it doesn't use are ignored."
 msgstr ""
 
 msgid "A beta: it works, and it still changes from version to version."
@@ -627,6 +642,9 @@ msgstr ""
 msgid "Add hosts"
 msgstr ""
 
+msgid "Add hosts and groups, and manage the groups"
+msgstr ""
+
 msgid "Add hosts and groups, or import a list of hosts"
 msgstr ""
 
@@ -651,10 +669,19 @@ msgid_plural "Added {n} hosts."
 msgstr[0] ""
 msgstr[1] ""
 
+#, python-brace-format
+msgid "Added {n} printer."
+msgid_plural "Added {n} printers."
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "Address"
 msgstr ""
 
 msgid "Address, group, MAC"
+msgstr ""
+
+msgid "Address, port, Log in as, group"
 msgstr ""
 
 msgid "Address, profile, account"
@@ -688,6 +715,9 @@ msgstr ""
 msgid "Already in the list, {place}"
 msgstr ""
 
+msgid "Always shown: the host's name and its status."
+msgstr ""
+
 msgid "Always shown: the host's name, its status and a pending restart's warning."
 msgstr ""
 
@@ -703,6 +733,12 @@ msgid "Answered a ping at {address}."
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"Answered at {address}, but port {port} is closed: ssh.exe would fail with"
+" “Connection refused”."
+msgstr ""
+
+#, python-brace-format
 msgid "Answered at {address}, port {port}."
 msgstr ""
 
@@ -714,8 +750,18 @@ msgid ""
 "Separate them with a comma, or copy two columns from Excel."
 msgstr ""
 
+msgid ""
+"Any name you like, then the printer's IP address or network name. "
+"Separate them with a comma, or copy two columns from Excel."
+msgstr ""
+
 msgid "Any time"
 msgstr ""
+
+msgid "Anything still running in it on the server may stop."
+msgid_plural "Anything still running in them on the servers may stop."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Appearance"
 msgstr ""
@@ -766,6 +812,9 @@ msgid "Bar &marks"
 msgstr ""
 
 msgid "Bar marks"
+msgstr ""
+
+msgid "Bigger text"
 msgstr ""
 
 msgid "Black"
@@ -837,6 +886,12 @@ msgstr ""
 
 msgctxt "profile"
 msgid "Can be deleted"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Can't connect to “{host}”: its address or Log in as has a space, starts "
+"with “-”, or has a character such as ; & | or quotes."
 msgstr ""
 
 msgid "Cancel"
@@ -948,6 +1003,9 @@ msgstr ""
 msgid "Check the SNMP account in Settings › Printers › Connecting."
 msgstr ""
 
+msgid "Check the SSH port of every host shown"
+msgstr ""
+
 #, python-brace-format
 msgid "Check who is logged on to {n} hosts?"
 msgstr ""
@@ -986,6 +1044,9 @@ msgid ""
 "click the button to choose what it checks."
 msgstr ""
 
+msgid "Checks whether each host shown answers on its SSH port. Nothing logs in."
+msgstr ""
+
 msgid ""
 "Checks whether each host shown answers, as Hosts' Refresh does; its "
 "Status column shows here and in Hosts"
@@ -1003,6 +1064,9 @@ msgid "Clear"
 msgstr ""
 
 msgid "Clear &queue…"
+msgstr ""
+
+msgid "Clear &scrollback"
 msgstr ""
 
 msgid "Clear queue"
@@ -1037,11 +1101,27 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
+msgid "Close &tab"
+msgstr ""
+
+#, python-brace-format
+msgid "Close the connection to {host}?"
+msgstr ""
+
+msgid "Close the ended ones"
+msgstr ""
+
 msgid "Close the finished ones"
 msgstr ""
 
 msgid "Close the others"
 msgstr ""
+
+#, python-brace-format
+msgid "Close {n} open connection?"
+msgid_plural "Close {n} open connections?"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Co&py"
 msgstr ""
@@ -1065,7 +1145,7 @@ msgctxt "button"
 msgid "Commands"
 msgstr ""
 
-msgid "Commands run &as"
+msgid "Commands run a&s"
 msgstr ""
 
 msgid "Commands run as"
@@ -1077,7 +1157,21 @@ msgstr ""
 msgid "Connect"
 msgstr ""
 
+msgctxt "button"
+msgid "Connect"
+msgstr ""
+
+msgid "Connect in a separate &window"
+msgstr ""
+
+msgid "Connect to the selected hosts with Windows' ssh.exe"
+msgstr ""
+
 msgid "Connect to the selected hosts, once with another profile, or by address"
+msgstr ""
+
+#, python-brace-format
+msgid "Connect to {host}"
 msgstr ""
 
 #, python-brace-format
@@ -1110,7 +1204,15 @@ msgstr ""
 msgid "Connection &profiles…"
 msgstr ""
 
+msgid "Connection open"
+msgstr ""
+
 msgid "Connection profiles"
+msgstr ""
+
+msgid ""
+"Connects to the host you picked, in a tab of its own beside the list. The"
+" first time, ssh.exe asks whether you trust the server."
 msgstr ""
 
 msgid "Console"
@@ -1158,6 +1260,9 @@ msgstr[0] ""
 msgstr[1] ""
 
 msgid "Copy all"
+msgstr ""
+
+msgid "Copy, with text selected"
 msgstr ""
 
 msgid "Couldn't check for updates."
@@ -1280,6 +1385,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't save “{path}”: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Couldn't start ssh.exe: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -1575,6 +1684,9 @@ msgstr ""
 msgid "Each guide shows again the next time its screen is opened."
 msgstr ""
 
+msgid "Each line may run as a command."
+msgstr ""
+
 msgid "Edit connection profile"
 msgstr ""
 
@@ -1592,10 +1704,25 @@ msgstr ""
 
 msgid ""
 "Editing in the table rewrites the list above as CSV with a header row "
+"(name, address, group, tags, notes and the printers' own columns), so the"
+" two always match. Continue?"
+msgstr ""
+
+msgid ""
+"Editing in the table rewrites the list above as CSV with a header row "
 "(name, address, group, tags, notes), so the two always match. Continue?"
 msgstr ""
 
+msgid "Empty: your SSH config, then your Windows user name"
+msgstr ""
+
 msgid "Encryption pass&word"
+msgstr ""
+
+msgid "Ended"
+msgstr ""
+
+msgid "Ended with an error"
 msgstr ""
 
 msgid "Ends a user's session connection; their programs keep running."
@@ -1681,7 +1808,9 @@ msgstr ""
 msgid "Export CSV"
 msgstr ""
 
-msgid "F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself."
+msgid ""
+"F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself. In "
+"an SSH terminal, all but Ctrl+Shift+W go to the server."
 msgstr ""
 
 msgid "Failed"
@@ -1750,6 +1879,12 @@ msgid ""
 "PC-0142,10.0.0.42"
 msgstr ""
 
+msgid ""
+"For example:\n"
+"name,address,brand\n"
+"Reception,192.0.2.10,HP"
+msgstr ""
+
 msgid "For the list open now; each list keeps its own."
 msgstr ""
 
@@ -1786,6 +1921,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "From group “{group}”: {profile}"
+msgstr ""
+
+msgid "From their groups"
 msgstr ""
 
 #, python-brace-format
@@ -1890,6 +2028,10 @@ msgstr ""
 msgid "Hosts hasn't checked it yet."
 msgstr ""
 
+#, python-brace-format
+msgid "Hosts in “{group}” without a name of their own log in with this one."
+msgstr ""
+
 msgid ""
 "Hosts is for computers, Printers for printers, and Profile cleanup clears"
 " old Windows profiles off a PC. Each tile opens its tool."
@@ -1941,7 +2083,13 @@ msgstr ""
 msgid "Import hosts"
 msgstr ""
 
+msgid "Import printers"
+msgstr ""
+
 msgid "In CapyPanel"
+msgstr ""
+
+msgid "In a separate window"
 msgstr ""
 
 #, python-brace-format
@@ -1968,6 +2116,11 @@ msgstr ""
 msgid "Ink low"
 msgstr ""
 
+msgid ""
+"Inside a terminal, every key goes to the server except the ones below and"
+" the keys that change tools or open Settings."
+msgstr ""
+
 msgid "Install it, or locate its .exe."
 msgstr ""
 
@@ -1985,6 +2138,11 @@ msgid "Inventory"
 msgstr ""
 
 msgid ""
+"Inventory › Add host needs a name and an address. The port and Log in as "
+"are optional: without them, ssh.exe uses port 22 and its own settings."
+msgstr ""
+
+msgid ""
 "Inventory › Add printer only needs a name and the address. A Refresh "
 "reads the toner, and Details shows the brand, model and serial number the"
 " printer reports, ready to copy in with Use this."
@@ -1993,6 +2151,16 @@ msgstr ""
 msgid ""
 "It can be deleted: nobody is signed in to it, it isn't one of Windows' "
 "own, and it's in the Users folder."
+msgstr ""
+
+msgid "It closes, and anything still running in it on the server may stop."
+msgid_plural ""
+"They all close, and anything still running in them on the servers may "
+"stop."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "It may run as a command."
 msgstr ""
 
 #, python-brace-format
@@ -2042,8 +2210,8 @@ msgid "Kept"
 msgstr ""
 
 msgid ""
-"Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches "
-"and Tab moves between fields."
+"Kept for CapyPanel itself: F1 is for help, Esc closes, Ctrl+F searches, "
+"Tab moves between fields and Ctrl+Shift+W closes a tab."
 msgstr ""
 
 msgid "Kept in"
@@ -2098,6 +2266,9 @@ msgstr ""
 msgid ""
 "Lists saved in a lists folder show up here by themselves; Remove asks "
 "whether to delete the file too."
+msgstr ""
+
+msgid "Log in as"
 msgstr ""
 
 msgid "Log off"
@@ -2273,6 +2444,9 @@ msgstr ""
 msgid "Next"
 msgstr ""
 
+msgid "Next tab"
+msgstr ""
+
 msgid "No Doc360 MPS account is set."
 msgstr ""
 
@@ -2286,6 +2460,15 @@ msgid "No address"
 msgstr ""
 
 msgid "No address: the name must then be the computer's name on the network"
+msgstr ""
+
+msgid "No address: the name must then be the printer's name on the network"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"No address: type the printer's address. Its Windows port, {port}, isn't "
+"one."
 msgstr ""
 
 msgid "No admin rights"
@@ -2401,7 +2584,13 @@ msgstr ""
 msgid "None kept."
 msgstr ""
 
+msgid "None: your SSH config, then your Windows user name"
+msgstr ""
+
 msgid "Not a computer name or IP address"
+msgstr ""
+
+msgid "Not a printer name or IP address"
 msgstr ""
 
 #, python-brace-format
@@ -2578,11 +2767,23 @@ msgid ""
 "entry"
 msgstr ""
 
+msgid ""
+"Only the SSH port, so nothing logs in. A server running fail2ban in a "
+"strict mode may count each check as a failed login and block this PC."
+msgstr ""
+
+#, python-brace-format
+msgid "Only the first {n} connect at once."
+msgstr ""
+
 #, python-brace-format
 msgid "Only the first {n} open at once."
 msgstr ""
 
 msgid "Only this PC"
+msgstr ""
+
+msgid "Only this host"
 msgstr ""
 
 msgid "Open &Settings"
@@ -2679,6 +2880,9 @@ msgid ""
 " too, under All commands. They run with your Windows account; if a PC "
 "refuses it, CapyPanel asks for another, kept in Settings › Hosts › "
 "Credentials."
+msgstr ""
+
+msgid "Opens ssh.exe in a window of its own, outside CapyPanel"
 msgstr ""
 
 msgid "Opens the host in a new tab. Typing alone never scans."
@@ -2797,6 +3001,9 @@ msgstr ""
 msgid "Passwords"
 msgstr ""
 
+msgid "Paste"
+msgstr ""
+
 msgid "Paste a list below, or"
 msgstr ""
 
@@ -2805,6 +3012,12 @@ msgid ""
 "Paste a path as File Explorer copies it, quotes and all, or a full "
 "\\\\{host}\\D$\\… path. The list keeps the last {n} folders you opened."
 msgstr ""
+
+#, python-brace-format
+msgid "Paste {n} line into {host}?"
+msgid_plural "Paste {n} lines into {host}?"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Path"
 msgstr ""
@@ -2855,6 +3068,9 @@ msgstr ""
 msgid "Port"
 msgstr ""
 
+msgid "Port closed"
+msgstr ""
+
 msgid "Portable mode: everything stays in the app's own folder."
 msgstr ""
 
@@ -2874,6 +3090,9 @@ msgstr ""
 msgid "Preset name:"
 msgstr ""
 
+msgid "Press any key to close this window."
+msgstr ""
+
 msgid "Press one key, with Ctrl, Alt or Shift if you like."
 msgstr ""
 
@@ -2881,6 +3100,9 @@ msgid "Press the new key…"
 msgstr ""
 
 msgid "Preview"
+msgstr ""
+
+msgid "Previous tab"
 msgstr ""
 
 #, python-brace-format
@@ -2911,6 +3133,9 @@ msgid "Printers on {host}"
 msgstr ""
 
 msgid "Printers that need attention"
+msgstr ""
+
+msgid "Printers with no group &go to:"
 msgstr ""
 
 msgid "Printing"
@@ -2981,9 +3206,38 @@ msgstr ""
 msgid "Quit CapyPanel"
 msgstr ""
 
+#, python-brace-format
+msgid "Quit CapyPanel with {n} connection open?"
+msgid_plural "Quit CapyPanel with {n} connections open?"
+msgstr[0] ""
+msgstr[1] ""
+
 msgid ""
 "Quitting now cancels the profiles still queued. The profile being deleted"
 " on each host finishes first; CapyPanel quits after that."
+msgstr ""
+
+msgid "Re&fresh group"
+msgstr ""
+
+msgid "Re&fresh host"
+msgstr ""
+
+msgid "Re&fresh printer"
+msgstr ""
+
+#, python-brace-format
+msgid "Re&fresh {n} host"
+msgid_plural "Re&fresh {n} hosts"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Re&fresh {n} hosts"
+msgstr ""
+
+#, python-brace-format
+msgid "Re&fresh {n} printers"
 msgstr ""
 
 msgid "Re&move"
@@ -3316,6 +3570,15 @@ msgstr ""
 msgid "SNMP v3 account"
 msgstr ""
 
+msgid "SRV-SAMPLE"
+msgstr ""
+
+msgid "SSH"
+msgstr ""
+
+msgid "SSH terminal"
+msgstr ""
+
 msgid "Sa&ved credentials"
 msgstr ""
 
@@ -3436,6 +3699,9 @@ msgstr ""
 msgid "See examples in Formats…"
 msgstr ""
 
+msgid "Select &all"
+msgstr ""
+
 msgid "Select a host to see its details."
 msgstr ""
 
@@ -3511,6 +3777,9 @@ msgid ""
 "only people Windows lets write that folder can add one."
 msgstr ""
 
+msgid "Sho&w this group first"
+msgstr ""
+
 msgid "Show"
 msgstr ""
 
@@ -3521,9 +3790,6 @@ msgid "Show all"
 msgstr ""
 
 msgid "Show every printer again"
-msgstr ""
-
-msgid "Show this group &first"
 msgstr ""
 
 msgid "Show users' do&main"
@@ -3592,6 +3858,9 @@ msgstr ""
 msgid ""
 "Skipped: this person signed in to the PC after the scan. Nothing was "
 "deleted."
+msgstr ""
+
+msgid "Smaller text"
 msgstr ""
 
 msgid "Software"
@@ -3872,6 +4141,18 @@ msgid ""
 "available on this PC."
 msgstr ""
 
+#, python-brace-format
+msgid "The connection to {host} ended with an error (exit code {code})."
+msgstr ""
+
+#, python-brace-format
+msgid "The connection to {host} ended with an error. ssh.exe's message is above."
+msgstr ""
+
+#, python-brace-format
+msgid "The connection to {host} ended."
+msgstr ""
+
 msgid ""
 "The current profile finishes first; the queued ones don't start. Every "
 "delete goes in the history."
@@ -3996,6 +4277,11 @@ msgid "The list “{path}” doesn't exist anymore."
 msgstr ""
 
 msgid ""
+"The list's hosts are here. A double-click connects, and a right-click "
+"shows everything you can do with one."
+msgstr ""
+
+msgid ""
 "The list's printers are here. Pick one to see everything about it in "
 "Details. A right-click on a printer shows what you can do with it, and a "
 "double-click opens its web page."
@@ -4110,6 +4396,9 @@ msgid "The restart or shutdown of {host} is cancelled."
 msgstr ""
 
 msgid "The sidebar"
+msgstr ""
+
+msgid "The terminal's own keys can't be changed."
 msgstr ""
 
 msgid "The tool needs a “name”."
@@ -4271,6 +4560,11 @@ msgstr ""
 
 msgid ""
 "This list has no hosts yet.\n"
+"Add one to start."
+msgstr ""
+
+msgid ""
+"This list has no hosts yet.\n"
 "Add one, or import several at once."
 msgstr ""
 
@@ -4279,7 +4573,7 @@ msgstr ""
 
 msgid ""
 "This list has no printers yet.\n"
-"Add one to start."
+"Add one, or import several at once."
 msgstr ""
 
 msgid "This list has no printers."
@@ -4368,6 +4662,11 @@ msgid "To confirm, type <b>{word}</b>:"
 msgstr ""
 
 msgid ""
+"To keep a connection outside CapyPanel, right-click a host and pick "
+"Connect in a separate window."
+msgstr ""
+
+msgid ""
 "To see this guide again, use Help › Guide to this screen. Show all the "
 "guides again brings every guide back, and Documentation opens the step-"
 "by-step pages."
@@ -4436,6 +4735,9 @@ msgid "Type the password."
 msgstr ""
 
 msgid "Type the user name."
+msgstr ""
+
+msgid "Type yes, then press Enter."
 msgstr ""
 
 msgid "Unchanged"
@@ -4669,6 +4971,14 @@ msgstr ""
 msgid "Windows"
 msgstr ""
 
+msgid ""
+"Windows PowerShell saves a PC's printers to a file with the command below"
+" (UTF8 keeps accents); add -ComputerName and a print server's name for "
+"its printers. The name and the port come in, and the location and comment"
+" go into the notes. A port that isn't an address (WSD, USB) comes in to "
+"be typed here."
+msgstr ""
+
 msgid "Windows answered:"
 msgstr ""
 
@@ -4734,6 +5044,15 @@ msgstr ""
 msgid "Windows' Computer Management, pointed at the PC."
 msgstr ""
 
+msgid ""
+"Windows' SSH client (ssh.exe) isn't installed on this PC. To add it, "
+"search Start for “Optional features” and add “OpenSSH Client”. Adding it "
+"needs an administrator."
+msgstr ""
+
+msgid "Windows' printer list"
+msgstr ""
+
 msgid "With No group, the groups inside it go directly under Groups."
 msgstr ""
 
@@ -4761,6 +5080,9 @@ msgstr ""
 msgid "Your computers: connect, see who's logged on, check them."
 msgstr ""
 
+msgid "Your hosts"
+msgstr ""
+
 msgid "Your lists"
 msgstr ""
 
@@ -4774,6 +5096,9 @@ msgid "Your printers"
 msgstr ""
 
 msgid "Your printers: status and toner, web pages, reports."
+msgstr ""
+
+msgid "Your servers and switches: connect over SSH, see which answer."
 msgstr ""
 
 msgid "Your settings, lists and saved logins are as they were."
@@ -4936,6 +5261,9 @@ msgstr ""
 msgid "its clock and CapyPanel's didn't agree."
 msgstr ""
 
+msgid "log in as"
+msgstr ""
+
 #, python-brace-format
 msgid "log off {user}"
 msgstr ""
@@ -4947,6 +5275,11 @@ msgid "model"
 msgstr ""
 
 msgid "name"
+msgstr ""
+
+msgid ""
+"name, address, group, brand, model, serial number, asset tag, page "
+"counters"
 msgstr ""
 
 msgid "name, address, group, tags, notes"
@@ -4966,6 +5299,9 @@ msgid "open {what}"
 msgstr ""
 
 msgid "password only"
+msgstr ""
+
+msgid "port"
 msgstr ""
 
 msgid "portable mode"
@@ -5062,6 +5398,12 @@ msgstr ""
 
 msgid "the answer and its output"
 msgstr ""
+
+#, python-brace-format
+msgid "the other column Windows exports"
+msgid_plural "the other {n} columns Windows exports"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "the picked tags"
 msgstr ""
@@ -5328,12 +5670,29 @@ msgid "{n} MB"
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"{n} SSH connection is still open in a separate window. Close it, then "
+"install the update."
+msgid_plural ""
+"{n} SSH connections are still open in separate windows. Close them, then "
+"install the update."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} can be deleted"
 msgid_plural "{n} can be deleted"
 msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} can't be added."
+msgid_plural "{n} can't be added."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgctxt "printers"
 msgid "{n} can't be added."
 msgid_plural "{n} can't be added."
 msgstr[0] ""
@@ -5567,6 +5926,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} printer will be added."
+msgid_plural "{n} printers will be added."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{n} profile"
 msgid_plural "{n} profiles"
 msgstr[0] ""
@@ -5618,6 +5983,13 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{n} skipped."
+msgid_plural "{n} skipped."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgctxt "printers"
 msgid "{n} skipped."
 msgid_plural "{n} skipped."
 msgstr[0] ""
@@ -5850,6 +6222,12 @@ msgstr ""
 #, python-brace-format
 msgid "“{path}” isn't a printer list."
 msgstr ""
+
+#, python-brace-format
+msgid "…and {n} more line"
+msgid_plural "…and {n} more lines"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid ""
 "↑ ↓ pick, Enter runs, typing searches. Commands that need more open a "

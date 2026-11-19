@@ -184,9 +184,9 @@ class GuideCard(QFrame):
         self.action.setAutoDefault(False)
         self.dots = QLabel()
         self.dots.setObjectName("hint")
-        self.skip_button = QPushButton(_("Skip"))
+        self.skip_button = QPushButton()  # its words, and Back's and Next's: GuideRunner._go
         self.skip_button.setObjectName("quietDefault")
-        self.back_button = QPushButton(_("Back"))
+        self.back_button = QPushButton()
         self.next_button = QPushButton()
         for button in (self.skip_button, self.back_button, self.next_button):
             button.setAutoDefault(False)
@@ -317,7 +317,11 @@ class GuideRunner(QObject):
             card.action.setText(step.action[0])
         card.dots.setText(" ".join("●" if n == at else "○" for n in range(len(self._steps))))
         card.dots.setToolTip(_("Step {n} of {total}").format(n=at + 1, total=len(self._steps)))
+        # Every button's words at every step: the card is made with the window, and the language
+        # can change in Settings since (Skip and Back stayed in the first one until 0.29).
+        card.back_button.setText(_("Back"))
         card.back_button.setVisible(at > 0)
+        card.skip_button.setText(_("Skip"))
         card.skip_button.setVisible(not last)
         card.next_button.setText(_("Done") if last else _("Next"))
         self._fit_card()

@@ -17,6 +17,7 @@ from capypanel.ui.checks import clock_text
 from capypanel.ui.list_workspace.panels import ROLE_NOTHING
 from capypanel.ui.printers_tool import tool as tool_module
 from capypanel.ui.printers_tool.dialog import PrinterDialog
+from capypanel.ui.printers_tool.import_printers import ImportPrintersDialog
 from capypanel.ui.printers_tool.report import PrintersReport
 from capypanel.ui.printers_tool.status import Checked
 from capypanel.ui.printers_tool.tool import PrintersTool, web_page
@@ -171,8 +172,8 @@ def test_the_status_bar_counts_printers_online_once_any_was_checked(
 
 def test_an_empty_list_and_the_edit_window_say_printers_words(printers: PrintersTool) -> None:
     texts = printers.empty_texts()
-    assert texts.empty_list == "This list has no printers yet.\nAdd one to start."
-    assert printers.import_action() is None  # no import: Add only
+    assert texts.empty_list == "This list has no printers yet.\nAdd one, or import several at once."
+    assert printers.import_action() is printers.commands.import_printers  # beside Add, as Hosts
     doc = printers.document
     assert doc is not None
     dialog = PrinterDialog(None, doc.hosts, doc.hosts.hosts[0])
@@ -366,7 +367,7 @@ def test_the_printer_menu_opens_the_web_page_first(
     assert row is not None
     printers._item_menu(printers.table.visualItemRect(row).center())
     texts = [menus.label(a) for a in shown[-1].actions() if not a.isSeparator()]
-    assert texts == ["Open &web page", "&Refresh printer", "Co&py", "&Edit…", "&Move to",
+    assert texts == ["Open &web page", "Re&fresh printer", "Co&py", "&Edit…", "&Move to",
                      "&Tags", "&Remove"]  # fmt: skip
     assert shown[-1].defaultAction() is printers.commands.open_web_page
     copy = shown[-1].actions()[4].menu()
@@ -382,7 +383,7 @@ def test_the_printer_menu_opens_the_web_page_first(
     _select(printers, "2F-LABELS", "LOOSE")  # several: Refresh counts them, no Edit
     printers._item_menu(printers.table.visualItemRect(row).center())
     texts = [menus.label(a) for a in shown[-1].actions() if not a.isSeparator()]
-    assert texts == ["Open &web page", "&Refresh 2 printers", "Co&py", "&Move to", "&Tags",
+    assert texts == ["Open &web page", "Re&fresh 2 printers", "Co&py", "&Move to", "&Tags",
                      "&Remove"]  # fmt: skip
 
 
@@ -396,7 +397,7 @@ def test_a_groups_menu_refreshes_its_printers_last(
     menu = QMenu()
     printers.fill_group_menu(menu, doc.hosts.groups[0])
     texts = [a.text() for a in menu.actions() if not a.isSeparator()]
-    assert texts == ["&Refresh group"] and menu.actions()[0].isSeparator()
+    assert texts == ["Re&fresh group"] and menu.actions()[0].isSeparator()
     menu.actions()[-1].trigger()
     assert checked == [["2F-LABELS", "2F-OFFICE-01"]]
 
@@ -413,7 +414,8 @@ def test_toolbar_mirrors_hosts_with_refresh_all(printers: PrintersTool) -> None:
     _select(printers, "LOOSE")
     assert bar.web_button.isEnabled()
     assert [menus.label(a) for a in bar.inventory_menu.actions()] == [
-        "Add &printer…", "Add &group…", "&Manage groups…", "&Sort groups A–Z",
+        "Add &printer…", "Add &group…", "&Manage groups…", "&Sort groups A–Z", "",
+        "&Import printers…",
     ]  # fmt: skip
 
 
@@ -559,3 +561,24 @@ def test_columns_sort_naturally_and_ties_go_by_name(printers: PrintersTool) -> N
     printers.table.sortByColumn(printers.table.MODEL, Qt.SortOrder.DescendingOrder)
     # Z–A, ties still by name A–Z; a cell with nothing stays last
     assert _names(printers) == ["p9", "P2", "P10", "LOOSE"]
+
+
+def test_inventory_imports_printers_and_says_how_many(
+    shell: FakeShell, printers: PrintersTool, office: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def paste(dialog: QDialog) -> QDialog.DialogCode:
+        assert isinstance(dialog, ImportPrintersDialog)
+        dialog.set_text(
+            "Name,Address,Brand,Serial number\n"
+            "RECEPTION-02,192.0.2.12,samsung,sample0012\n"
+            "2F-LABELS,192.0.2.25,ZEBRA,\n"  # already in the list: left alone
+        )
+        return QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(tool_module, "run_modal", paste)
+    printers.commands.import_printers.trigger()
+    saved = {h.name: h for h in listfile.load(office, "printers").hosts.hosts}
+    assert set(saved) == {"2F-LABELS", "2F-OFFICE-01", "LOOSE", "RECEPTION-02"}
+    info = info_of(saved["RECEPTION-02"])
+    assert (info.brand, info.serial) == ("SAMSUNG", "SAMPLE0012")
+    assert shell.messages[-1] == "Added 1 printer."

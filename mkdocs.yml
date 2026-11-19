@@ -6,7 +6,7 @@ repo_url: https://github.com/gabrielmariense/CapyPanel
 repo_name: gabrielmariense/CapyPanel
 edit_uri: edit/main/docs/
 # In every page's footer, so a reader always knows which version the pages describe.
-copyright: These pages describe CapyPanel 0.28.1.
+copyright: These pages describe CapyPanel 0.29.0.
 
 # A band for the pages about the whole app, then one per tool, each in its own folder of docs/.
 nav:
@@ -26,6 +26,8 @@ nav:
       - Checking: printers/checking.md
   - Profile cleanup:
       - The Profile cleanup tool: profiles/user-profiles.md
+  - SSH:
+      - The SSH tool: ssh/ssh.md
   - Settings and files: settings-and-files.md
 
 theme:
@@ -64,7 +66,7 @@ plugins:
           name: Português (Brasil)
           build: true
           site_description: Todos os computadores sob seus cuidados, em uma só janela.
-          copyright: Estas páginas descrevem o CapyPanel 0.28.1.
+          copyright: Estas páginas descrevem o CapyPanel 0.29.0.
           nav_translations:
             Start: Início
             Home: Página inicial
@@ -82,6 +84,8 @@ plugins:
             The Printers tool: A ferramenta Impressoras
             Profile cleanup: Limpeza de perfis
             The Profile cleanup tool: A ferramenta Limpeza de perfis
+            SSH: SSH
+            The SSH tool: A ferramenta SSH
 
 # The brand: the navy header, the teal links and the site name's font.
 extra_css:

@@ -16,7 +16,8 @@ Para o VNC você também precisa de um visualizador: o [UltraVNC](https://uvnc.c
 ![A página inicial: a barra lateral à esquerda, a capivara e o nome do app, e um bloco para cada ferramenta](images/home-dark-pt-BR.png)
 
 O CapyPanel abre na página inicial, com um bloco para cada ferramenta: **Hosts** (Ctrl+1),
-**Impressoras** (Ctrl+2) e **Limpeza de perfis** (Ctrl+3). Clique em **Hosts** para começar.
+**Impressoras** (Ctrl+2), **Limpeza de perfis** (Ctrl+3) e **SSH** (Ctrl+4). Clique em **Hosts**
+para começar.
 
 Na primeira vez que cada tela abre, um guia de poucos cartões mostra o que há nela, num PC ou numa
 impressora de exemplo que some quando ele termina. O resto da janela fica escurecido até você
@@ -43,7 +44,10 @@ terminar ou clicar em **Pular**. O **Ajuda > Guia desta tela** mostra o guia de 
       ou como uma delas pelo nome.
     - Os blocos dizem para que serve cada ferramenta: Hosts "Seus computadores: conecte, veja quem
       está logado, verifique-os.", Impressoras "Suas impressoras: status e toner, páginas web,
-      relatórios.", Limpeza de perfis "Os perfis de um PC: veja quais podem ser excluídos."
+      relatórios.", Limpeza de perfis "Os perfis de um PC: veja quais podem ser excluídos.", SSH
+      "Seus servidores e switches: conecte por SSH, veja quais respondem." Os blocos ficam em duas
+      fileiras iguais, Hosts e Impressoras em cima de Limpeza de perfis e SSH; uma janela estreita
+      os distribui em mais fileiras.
 
 ## Adicionar os seus primeiros hosts
 
@@ -87,7 +91,7 @@ Veja [Verificando hosts](hosts/checking.pt-BR.md), [Conectando](hosts/connecting
 
     | Parte | O que mostra |
     |---|---|
-    | **Barra lateral** (borda esquerda) | O **Início** (Ctrl+0) no topo, depois um ícone por ferramenta, **Hosts** (Ctrl+1), **Impressoras** (Ctrl+2) e **Limpeza de perfis** (Ctrl+3), e **Configurações** (Ctrl+,) embaixo. Onde você está tem um quadrado colorido atrás do ícone |
+    | **Barra lateral** (borda esquerda) | O **Início** (Ctrl+0) no topo, depois um ícone por ferramenta, **Hosts** (Ctrl+1), **Impressoras** (Ctrl+2), **Limpeza de perfis** (Ctrl+3) e **SSH** (Ctrl+4), e **Configurações** (Ctrl+,) embaixo. Onde você está tem um quadrado colorido atrás do ícone |
     | **Barra de ferramentas** (topo) | Os botões da ferramenta aberta. Para o Hosts: **Conectar**, **Atualizar todos**, **Comandos**, **Inventário** e **Relatório** |
     | **Painel de grupos** (esquerda) | O nome da lista aberta no topo, como um menu que troca de lista. Depois "Todos os hosts", com quantos hosts a lista tem, e "Sem grupo", com quantos não estão em nenhum. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags**; arraste a linha acima de Tags para dar mais espaço a um dos dois, e isso fica guardado |
     | **Painel de hosts** (meio) | A caixa de pesquisa acima dos hosts do grupo ou da tag selecionada, com **Status** e **Usuário** |
@@ -166,6 +170,8 @@ janela de novo.
       os perfis ainda na fila. O perfil sendo excluído em cada host termina primeiro; o CapyPanel
       sai depois disso." O **Cancelar o restante e sair** faz isso; o **Continuar** mantém o
       CapyPanel aberto (veja [Excluir perfis](profiles/user-profiles.pt-BR.md#excluir-perfis)).
+    - Sair com conexões SSH abertas pergunta uma vez, como em "Sair do CapyPanel com 2 conexões
+      abertas?" (veja [Quando uma conexão termina](ssh/ssh.pt-BR.md#quando-uma-conexao-termina)).
 
 ## Pedir ajuda, ou relatar um problema
 
@@ -184,7 +190,8 @@ janela de novo.
 ## Atalhos de teclado
 
 Estas são as teclas com que o CapyPanel começa. O **Configurações > CapyPanel > Atalhos de
-teclado** as muda, menos F1, Esc, Ctrl+F e Tab, que ficam reservadas ao próprio CapyPanel (veja
+teclado** as muda, menos F1, Esc, Ctrl+F, Tab e Ctrl+Shift+W, que ficam reservadas ao próprio
+CapyPanel (veja
 [Configurações e arquivos](settings-and-files.pt-BR.md#capypanel-atalhos-de-teclado)).
 
 | Atalho | Ação |
@@ -200,7 +207,7 @@ teclado** as muda, menos F1, Esc, Ctrl+F e Tab, que ficam reservadas ao próprio
 | Ctrl+Shift+C | Copiar os endereços dos hosts selecionados |
 | Ctrl+N / Ctrl+Shift+N | Adicionar host / Adicionar grupo |
 | F2 / Del | Editar / remover a seleção |
-| Ctrl+0 / Ctrl+1 / Ctrl+2 / Ctrl+3 | Início / a ferramenta Hosts / a ferramenta Impressoras / a Limpeza de perfis |
+| Ctrl+0 / Ctrl+1 / Ctrl+2 / Ctrl+3 / Ctrl+4 | Início / a ferramenta Hosts / a ferramenta Impressoras / a Limpeza de perfis / a ferramenta SSH |
 | Ctrl+O | Abrir um arquivo de lista de hosts |
 | Ctrl+, | Configurações |
 | Ctrl+Q | Sair |

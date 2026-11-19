@@ -1,5 +1,5 @@
 """The Commands window: picking and running commands, the keyboard, search, the results side and
-Add to list…. Every call to another PC is replaced: nothing here reaches the network."""
+Add to host list…. Every call to another PC is replaced: nothing here reaches the network."""
 
 import time
 from collections.abc import Iterator
@@ -10,9 +10,9 @@ from typing import Any
 import pytest
 import shiboken6
 from capywindow import CapyWindow
-from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QApplication, QDialog, QLabel, QMenu, QTreeWidget
+from PySide6.QtCore import QEvent, QPoint, Qt
+from PySide6.QtGui import QHelpEvent, QKeyEvent
+from PySide6.QtWidgets import QApplication, QDialog, QLabel, QMenu, QToolTip, QTreeWidget
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -86,13 +86,37 @@ def test_a_port_after_the_address_is_the_connection_s_port() -> None:
     assert split_address("fe80::1") == Target("fe80::1")  # IPv6 keeps its colons
 
 
-def test_from_a_selected_host_it_names_the_host_and_hides_add_to_host_list(
+def test_from_a_selected_host_it_names_the_host_and_greys_add_to_host_list(
     window: CapyWindow,
 ) -> None:
     commands = _open(window, "DESK-02")
     assert commands.windowTitle() == "Commands · DESK-02"
     assert commands.address.currentText() == "DESK-02 · 192.0.2.12"
-    assert commands.add_button.isHidden()  # already in the list: nothing to add
+    add = commands.add_button  # already in the list: it keeps its place, greyed, saying where
+    assert not add.isHidden() and not add.isEnabled()
+    assert add.toolTip() == "Already in the list, in “Front desks”"
+
+
+def test_add_to_host_list_names_the_host_an_address_typed_already_reaches(
+    window: CapyWindow,
+) -> None:
+    commands = _open(window, None)
+    commands.address.setEditText("192.0.2.11:5901")  # DESK-01's address, with a port
+    target = commands.target()
+    assert target is not None and target.key == "@192.0.2.11"  # a manual connection
+    assert not commands.add_button.isEnabled()
+    assert commands.add_button.toolTip() == "“DESK-01” has this address, in “Front desks”"
+
+
+def test_the_greyed_add_to_host_list_still_shows_its_tooltip(window: CapyWindow) -> None:
+    add = _open(window, "DESK-02").add_button
+    assert not add.isEnabled()
+    at = QPoint(4, 4)
+    QApplication.sendEvent(add, QHelpEvent(QEvent.Type.ToolTip, at, add.mapToGlobal(at)))
+    try:
+        assert QToolTip.text() == "Already in the list, in “Front desks”"
+    finally:
+        QToolTip.hideText()
 
 
 def test_the_host_can_be_picked_from_the_list_typed_or_stepped_with_the_arrows(
@@ -115,7 +139,7 @@ def test_the_host_can_be_picked_from_the_list_typed_or_stepped_with_the_arrows(
     target = commands.target()
     assert target is not None and target.key == "@192.0.2.99"
     assert commands.windowTitle() == "Manual connection · 192.0.2.99"
-    assert not commands.add_button.isHidden()
+    assert commands.add_button.isEnabled()
 
 
 def test_typed_addresses_come_under_a_recent_heading_the_arrows_skip(window: CapyWindow) -> None:
@@ -225,19 +249,20 @@ def test_a_typed_address_can_be_added_to_the_list(
 ) -> None:
     commands = _open(window, None)
     assert commands.windowTitle() == "Manual connection"
-    assert commands.add_button.isHidden()  # nothing typed
+    add = commands.add_button
+    assert not add.isHidden() and not add.isEnabled()  # nothing typed: greyed, never hidden
     commands.address.setEditText("192.0.2.77")
     assert commands.windowTitle() == "Manual connection · 192.0.2.77"
-    assert not commands.add_button.isHidden()
+    assert add.isEnabled() and add.toolTip() == "Adds this PC to the open host list"
 
     def accept(dialog: QDialog) -> int:
         assert dialog.address.text() == "192.0.2.77"  # type: ignore[attr-defined]
         return QDialog.DialogCode.Accepted
 
     monkeypatch.setattr(tool_module, "run_modal", accept)
-    commands.add_button.click()
-    assert window.hosts.where_in_list("192.0.2.77") == [("No group", "192.0.2.77")]
-    assert commands.add_button.isHidden()  # in the list now
+    add.click()
+    assert not add.isEnabled()  # in the list now
+    assert add.toolTip() == "Already in the list, with no group"
 
 
 def test_typing_anywhere_goes_to_the_search(window: CapyWindow) -> None:

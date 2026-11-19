@@ -43,8 +43,8 @@ def test_the_window_opens_on_home_with_a_tile_per_tool(home: CapyWindow) -> None
     assert not any(t.status_label.isVisible() for t in home.tools.values())
     assert home.windowTitle().startswith("CapyPanel ")
     tiles = home.home.tiles
-    assert [t.tool.tool_id for t in tiles] == ["hosts", "printers", "profiles"]
-    assert [t.keys.text() for t in tiles] == ["Ctrl+1", "Ctrl+2", "Ctrl+3"]
+    assert [t.tool.tool_id for t in tiles] == ["hosts", "printers", "profiles", "ssh"]
+    assert [t.keys.text() for t in tiles] == ["Ctrl+1", "Ctrl+2", "Ctrl+3", "Ctrl+4"]
     assert tiles[0].name.text() == "Hosts"
     assert tiles[0].y() == tiles[1].y()  # side by side while they fit
     QTest.mouseClick(tiles[1], Qt.MouseButton.LeftButton, pos=QPoint(20, 20))
@@ -58,6 +58,19 @@ def test_the_window_opens_on_home_with_a_tile_per_tool(home: CapyWindow) -> None
     assert not home.rail.home_button.isChecked()
     home.rail.home_button.click()
     assert home.shown_tool() is None
+
+
+@pytest.mark.parametrize("width", [1300, 1700])  # room for three tiles, and for all four
+def test_four_tools_go_two_by_two_however_wide_the_window(qapp: QApplication, width: int) -> None:
+    """His pick (18 Nov): three and one left SSH alone on its row."""
+    page = HomePage(CATALOG)
+    page.resize(width, 700)
+    page.show()
+    QApplication.processEvents()
+    a, b, c, d = (tile.geometry() for tile in page.tiles)
+    assert a.y() == b.y() < c.y() == d.y()
+    assert a.x() == c.x() < b.x() == d.x()
+    page.close()
 
 
 def test_tiles_wrap_into_rows_when_they_don_t_fit(qapp: QApplication) -> None:
@@ -93,7 +106,9 @@ def test_settings_general_sets_open_on_startup(home: CapyWindow) -> None:
     assert dialog.current_page() == "general"  # Settings opens on it
     page = dialog.general
     choices = [page.start.itemText(i) for i in range(page.start.count())]
-    assert choices == ["Home page", "The last used tool", "Hosts", "Printers", "Profile cleanup"]
+    assert choices == [
+        "Home page", "The last used tool", "Hosts", "Printers", "Profile cleanup", "SSH",
+    ]  # fmt: skip
     page.start.setCurrentIndex(3)
     assert settings.load_settings(home.paths.settings_file)["start"] == "printers"
 

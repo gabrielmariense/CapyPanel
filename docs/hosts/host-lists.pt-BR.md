@@ -139,7 +139,7 @@ Um host que já está na sua lista é ignorado, nunca sobrescrito.
 
 ??? note "Corrigir linhas na prévia"
 
-    A prévia mostra **Nome**, **Endereço**, **Grupo**, **Tags**, **Notas** e um **Aviso** para cada
+    A prévia mostra **Nome**, **Endereço**, um **Aviso**, **Grupo**, **Tags** e **Notas** para cada
     linha. Clique com o botão direito numa linha:
 
     - **Editar célula** (F2) altera o valor sob o ponteiro; dois cliques fazem o mesmo.
@@ -197,6 +197,9 @@ só lê a lista, então funciona também numa somente leitura.
 O nome da lista aberta fica no topo do painel de grupos. Clique nele para trocar de lista, criar
 uma com **Nova lista…**, abrir qualquer arquivo de lista com **Abrir lista…** (Ctrl+O), ou ir a
 **Gerenciar listas de hosts…** nas Configurações.
+
+A Limpeza de perfis e a ferramenta SSH mostram a mesma lista do Hosts: um host adicionado numa
+delas está nas três, e uma lista escolhida ou criada em qualquer uma abre nas outras duas.
 
 Uma lista nova pede um **Nome** e para quem ela é, em **Para:** **Todos neste PC
 (compartilhada)**, **Só eu (pessoal)** ou **Outro lugar, como uma pasta de rede…**.

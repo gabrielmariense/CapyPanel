@@ -1,6 +1,8 @@
 """Updates: what counts as a newer release, the download's checks, and the swap with its way
 back. Nothing reaches GitHub: the network is a fake, the folders are temporary."""
 
+import contextlib
+import errno
 import hashlib
 import io
 import os
@@ -10,6 +12,7 @@ import time
 import urllib.error
 import urllib.request
 import zipfile
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -226,25 +229,190 @@ def test_a_release_object_names_what_it_downloads() -> None:
 def test_a_file_that_won_t_move_halfway_puts_everything_back(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # An antivirus holding one file: the files already moved aside come back, nothing is lost.
+    # An antivirus holding one file after the check: what already moved aside comes back.
     place = updates.places(_app(tmp_path / "CapyPanel", "0.26.0"))
     _portable(place.app)
     _app(place.new_app, "0.26.1")
-    real_move = updates.shutil.move
+    real_rename = os.rename
 
-    def stubborn(source: Path, target: Path) -> object:
-        if Path(source) == place.app / "_internal":  # the exe went first: it comes back too
-            raise PermissionError("in use")
-        return real_move(source, target)
+    def stubborn(source: Any, target: Any) -> None:
+        if Path(source) == place.app / "_internal" and Path(target).parent == place.previous:
+            raise PermissionError("in use")  # the exe went first: it comes back too
+        real_rename(source, target)
 
-    monkeypatch.setattr(updates.shutil, "move", stubborn)
+    monkeypatch.setattr(updates.os, "rename", stubborn)
     monkeypatch.setattr(updates.time, "sleep", lambda _s: None)
     with pytest.raises(UpdateError, match="in use"):
         updates.apply(place, 1, wait=lambda _p, _t: True, test=lambda _exe: True)
-    monkeypatch.setattr(updates.shutil, "move", real_move)
     assert (place.app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.26.0"
     assert (place.app / "_internal" / "lib.dll").read_text(encoding="utf-8") == "0.26.0"
     assert (place.app / PORTABLE_MARKER).exists() and not place.previous.exists()
+
+
+def _files(folder: Path) -> dict[str, bytes]:
+    return {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob("*") if p.is_file()}
+
+
+def _held_app(place: updates.Places) -> Path:
+    """The old version as a built one has it: a folder under _internal, and base_library.zip,
+    which a running CapyPanel.exe keeps open without delete sharing (Python's open() does too)."""
+    _app(place.app, "0.28.1")
+    (place.app / "_internal" / "PySide6" / "plugins").mkdir(parents=True)
+    (place.app / "_internal" / "PySide6" / "plugins" / "qgif.dll").write_bytes(b"0.28.1")
+    held = place.app / "_internal" / "base_library.zip"
+    held.write_bytes(b"0.28.1")
+    _app(place.new_app, "0.29.0")
+    return held
+
+
+def test_a_file_held_open_in_the_old_version_stops_the_swap_and_nothing_is_lost(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A separate SSH window, a CapyPanel in another Windows session or an antivirus mid-scan
+    # holds _internal\base_library.zip: Windows won't rename _internal. Until 0.29 the swap then
+    # copied it out, deleted what it could (subfolders first) and dropped the copy (Alice).
+    place = updates.places(tmp_path / "CapyPanel")
+    held = _held_app(place)
+    before = _files(place.app)
+    monkeypatch.setattr(updates.time, "sleep", lambda _s: None)
+    with held.open("rb"), pytest.raises(UpdateError, match="_internal"):
+        updates.apply(place, 1, wait=lambda _p, _t: True, test=lambda _exe: True)
+    assert _files(place.app) == before
+    assert sorted(p.name for p in place.app.iterdir()) == ["CapyPanel.exe", "_internal"]
+    assert not place.previous.exists()
+
+
+def test_a_name_the_check_left_never_stops_the_next_update(tmp_path: Path) -> None:
+    place = updates.places(_app(tmp_path / "CapyPanel", "0.28.1"))
+    (place.app / f"_internal{updates.CHECKING}").mkdir()
+    _app(place.new_app, "0.29.0")
+    updates.apply(place, 1, wait=lambda _p, _t: True, test=lambda _exe: True)
+    assert sorted(p.name for p in place.app.iterdir()) == ["CapyPanel.exe", "_internal"]
+    assert (place.app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.29.0"
+
+
+def _on_another_drive(monkeypatch: pytest.MonkeyPatch, place: updates.Places) -> None:
+    """CapyPanel's folder on D: and app data on C:: Windows refuses a rename between them
+    (WinError 17), so the swap copies."""
+    real_rename = os.rename
+
+    def rename(source: Any, target: Any) -> None:
+        if Path(source).is_relative_to(place.app) != Path(target).is_relative_to(place.app):
+            raise OSError(errno.EXDEV, "The system cannot move the file to a different disk drive")
+        real_rename(source, target)
+
+    monkeypatch.setattr(updates.os, "rename", rename)
+
+
+@contextlib.contextmanager
+def _held_after_the_check(monkeypatch: pytest.MonkeyPatch, held: Path) -> Iterator[None]:
+    """An antivirus opening `held` just after the check let _internal through."""
+    real_check = updates._check
+    with contextlib.ExitStack() as handles:
+
+        def check_then_hold(item: Path) -> None:
+            real_check(item)
+            if item.name == "_internal":
+                handles.enter_context(held.open("rb"))
+
+        monkeypatch.setattr(updates, "_check", check_then_hold)
+        yield
+
+
+def test_on_another_drive_the_old_version_is_copied_out_and_the_new_one_goes_in(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    place = updates.places(tmp_path / "CapyPanel")
+    _held_app(place)  # nothing holds it this time
+    old = _files(place.app)
+    _on_another_drive(monkeypatch, place)
+    updates.apply(place, 1, wait=lambda _p, _t: True, test=lambda _exe: True)
+    assert _files(place.app) == _files(place.new_app)
+    assert _files(place.previous) == old
+
+
+def test_on_another_drive_a_delete_stopped_partway_gives_back_what_it_took(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The copy is made, the delete takes _internal's subfolders first and stops at the held file;
+    # what it took comes back from the copy, then the exe, and nothing is left in app data.
+    place = updates.places(tmp_path / "CapyPanel")
+    held = _held_app(place)
+    before = _files(place.app)
+    _on_another_drive(monkeypatch, place)
+    with (
+        _held_after_the_check(monkeypatch, held),
+        pytest.raises(UpdateError, match="base_library.zip"),
+    ):
+        updates.apply(place, 1, wait=lambda _p, _t: True, test=lambda _exe: True)
+    assert _files(place.app) == before
+    assert not place.previous.exists()
+
+
+def test_the_old_version_s_only_whole_copy_is_never_deleted(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # As above, but what the delete took can't come back (a full disk, say): the copy in app
+    # data is then the only whole _internal, so it stays there and the log says where.
+    place = updates.places(tmp_path / "CapyPanel")
+    held = _held_app(place)
+    internal = _files(place.app / "_internal")
+    _on_another_drive(monkeypatch, place)
+
+    def no_room(_copy: Path, _original: Path) -> None:
+        raise OSError(errno.ENOSPC, "There is not enough space on the disk")
+
+    monkeypatch.setattr(updates, "_fill_in", no_room)
+    with _held_after_the_check(monkeypatch, held), pytest.raises(UpdateError):
+        updates.apply(place, 1, wait=lambda _p, _t: True, test=lambda _exe: True)
+    assert _files(place.previous / "_internal") == internal
+    assert (place.app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.28.1"
+
+
+def test_an_old_item_never_comes_back_over_a_new_one_that_wouldn_t_go(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The new version failed its self-test and its _internal won't go (held, say): the old
+    # _internal stays whole where it waited, never mixed into the new one nor deleted.
+    place = updates.places(_app(tmp_path / "CapyPanel", "0.28.1"))
+    _app(place.new_app, "0.29.0")
+    real_discard = updates._discard
+    monkeypatch.setattr(
+        updates, "_discard", lambda path: None if path.name == "_internal" else real_discard(path)
+    )
+    monkeypatch.setattr(updates.time, "sleep", lambda _s: None)
+    with pytest.raises(UpdateError, match="self-test"):
+        updates.apply(place, 1, wait=lambda _p, _t: True, test=lambda _exe: False)
+    assert (place.previous / "_internal" / "lib.dll").read_text(encoding="utf-8") == "0.28.1"
+    assert (place.app / "CapyPanel.exe").read_text(encoding="utf-8") == "0.28.1"
+
+
+def test_a_new_file_held_for_a_moment_still_lets_the_old_version_back(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The new version failed its self-test while an antivirus was still scanning a file just
+    # copied in: taking the new _internal out is tried again until it goes (Alice), and then the
+    # old one comes back. Tried once, the old one stayed in app data and the folder couldn't start.
+    place = updates.places(_app(tmp_path / "CapyPanel", "0.28.1"))
+    _app(place.new_app, "0.29.0")
+    before = _files(place.app)
+    scan = contextlib.ExitStack()
+    pauses: list[float] = []
+
+    def fails_while_scanned(_exe: Path) -> bool:
+        scan.enter_context((place.app / "_internal" / "lib.dll").open("rb"))
+        return False
+
+    def pause(seconds: float) -> None:
+        pauses.append(seconds)
+        if len(pauses) == 2:
+            scan.close()  # the scan is over
+
+    monkeypatch.setattr(updates.time, "sleep", pause)
+    with scan, pytest.raises(UpdateError, match="self-test"):
+        updates.apply(place, 1, wait=lambda _p, _t: True, test=fails_while_scanned)
+    assert _files(place.app) == before
+    assert not place.previous.exists() and len(pauses) == 2
 
 
 def test_the_helper_never_lets_an_error_through_and_starts_the_old_copy_again(
@@ -351,14 +519,15 @@ def test_the_exe_goes_out_first_and_comes_in_last(
     _app(place.new_app, "0.26.1")
     moved: list[str] = []
     copied: list[str] = []
-    real_move = updates.shutil.move
+    real_rename = os.rename
     real_copy2, real_copytree = updates.shutil.copy2, updates.shutil.copytree
 
-    def move(source: Path, target: Path) -> object:
-        moved.append(Path(source).name)
-        return real_move(source, target)
+    def rename(source: Any, target: Any) -> None:
+        if Path(target).parent == place.previous:
+            moved.append(Path(source).name)
+        real_rename(source, target)
 
-    monkeypatch.setattr(updates.shutil, "move", move)
+    monkeypatch.setattr(updates.os, "rename", rename)
     monkeypatch.setattr(
         updates.shutil, "copy2", lambda s, d: copied.append(Path(s).name) or real_copy2(s, d)
     )

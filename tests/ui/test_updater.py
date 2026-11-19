@@ -11,10 +11,11 @@ from typing import Any
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QLabel
+from PySide6.QtWidgets import QApplication, QLabel, QMessageBox
 
 from capypanel import __version__
 from capypanel.core import i18n, settings, updates
+from capypanel.core.ssh import launch as ssh_launch
 from capypanel.core.updates import Release, UpdateError
 from capypanel.ui import updater as updater_ui
 from capypanel.ui.main_window import window as window_module
@@ -221,6 +222,49 @@ def test_install_waits_for_a_refresh_then_hands_over_and_quits(
     assert not Path(helper[0]).is_relative_to(tmp_path)  # in app data, not beside CapyPanel
     assert helper[1:] == ["--apply-update", str(app_dir.resolve()), str(updates.own_pid()),
                           __version__, "99.0.0"]  # fmt: skip
+    dialog.close()
+
+
+def test_install_waits_for_the_separate_ssh_windows_to_close(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # They run CapyPanel's own exe, so its files stay in use and the swap would roll back.
+    monkeypatch.setattr(updater_ui, "packaged", lambda: True)
+    monkeypatch.setattr(updates, "cannot_install", lambda app_dir: "")
+    monkeypatch.setattr(updater_ui._Job, "start", lambda self: pytest.fail("it downloaded"))
+    monkeypatch.setattr(ssh_launch, "open_windows", lambda: 2)
+    said: list[QMessageBox] = []
+    monkeypatch.setattr(updater_ui, "run_modal", lambda box: said.append(box) or 0)
+    window.updater.offer = NEWER
+    dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
+                          quit_for_update=lambda start: pytest.fail("it quit"))  # fmt: skip
+    dialog.install.click()
+    [box] = said
+    assert box.text() == (
+        "2 SSH connections are still open in separate windows. Close them, then install the update."
+    )
+    assert box.standardButtons() == QMessageBox.StandardButton.Ok  # no choice to offer
+    assert dialog.install.isEnabled() and dialog._job is None
+    dialog.close()
+
+
+def test_a_separate_window_opened_during_the_download_stops_the_hand_over(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(updater_ui, "packaged", lambda: True)
+    monkeypatch.setattr(ssh_launch, "open_windows", lambda: 1)
+    said: list[str] = []
+    monkeypatch.setattr(updater_ui, "run_modal", lambda box: said.append(box.text()) or 0)
+    app_dir = tmp_path / "CapyPanel"
+    app_dir.mkdir()
+    window.updater.offer = NEWER
+    dialog = UpdateWindow(window, window.updater, app_dir=app_dir, working=lambda: False,
+                          quit_for_update=lambda start: pytest.fail("it quit"))  # fmt: skip
+    dialog._release = NEWER
+    dialog._unpacked(str(updates.places(app_dir).new_app), "")  # downloaded and unpacked
+    one = "1 SSH connection is still open in a separate window. Close it, then install the update."
+    assert said == [one]
+    assert dialog.status.text() == one and dialog.install.isEnabled()  # Install again later
     dialog.close()
 
 

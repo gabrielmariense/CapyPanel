@@ -59,8 +59,9 @@ contam.
     - O painel de grupos aqui é só leitura: os grupos são criados no Hosts.
     - As abas nunca se reordenam sozinhas: uma nova abre na ponta direita, e o **▾** no fim da barra
       de abas lista todas. O botão direito numa aba oferece **Fechar**, **Fechar as outras** e
-      **Fechar as concluídas**; um clique do meio também fecha uma. Uma aba não pode ser fechada
-      enquanto está excluindo.
+      **Fechar as concluídas**; um clique do meio também fecha uma, e o **Ctrl+W** e o
+      **Ctrl+Shift+W** fecham a aba da frente, como no SSH. Uma aba não pode ser fechada enquanto
+      está excluindo.
     - Até quatro hosts são lidos ou calculados ao mesmo tempo, somando todas as abas; os outros
       aguardam a vez.
 

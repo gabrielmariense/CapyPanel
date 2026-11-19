@@ -1,5 +1,6 @@
 """Inventory > Import hosts…: paste a list or open a CSV file, check and edit the preview, then
-add. Nothing changes in the host list until "Add N hosts" is clicked."""
+add. Nothing changes in the host list until "Add N hosts" is clicked. Import printers is the same
+window with the printers' columns (ui/printers_tool/import_printers.py)."""
 
 import html
 from dataclasses import replace
@@ -31,9 +32,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from capypanel.core.hosts.bulk import ImportRow, Plan, Verdict, parse, plan, to_csv
+from capypanel.core.hosts.bulk import ImportRow, Parsed, Plan, Verdict, parse, plan, to_csv
 from capypanel.core.hosts.model import NO_GROUP, HostList
-from capypanel.core.i18n import _, ngettext
+from capypanel.core.i18n import N_, _, ngettext
 from capypanel.ui import spacing
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.groups import TreeMenu, fill_group_menu
@@ -43,10 +44,16 @@ from capypanel.ui.menus import popup
 from capypanel.ui.tables import fit_menu
 from capypanel.ui.themes import engine as themes
 
-# The preview's columns. The dot says what happens to the row; Warning says why.
-DOT, NAME, ADDRESS, GROUP, TAGS, NOTES, WARNING = range(7)
+# The preview's columns in Import hosts. The dot says what happens to the row; Warning says why,
+# right after the address, so it's never off to the side (Dante). A window with more columns
+# (Import printers) has its own indexes: ImportDialog.col.
+DOT, NAME, ADDRESS, WARNING, GROUP, TAGS, NOTES = range(7)
 EDITABLE = (NAME, ADDRESS, GROUP, TAGS, NOTES)
+_FIXED = ("dot", "warning")  # the columns that can't be edited
 NOTES_WIDTH = 200  # notes can be long: the column stops here, the tooltip has it all
+# Warnings too: Import hosts' longest ("No address: the name must then be…") fits in full, and a
+# Windows port's long WSD name is cut, so the columns after it stay in view at the window's width.
+WARNING_WIDTH = 400
 # Each verdict in a status colour of the theme: will be added, skipped, can't be read.
 COLORS = {Verdict.ADD: "online", Verdict.SKIP: "attention", Verdict.BAD: "stopped"}
 
@@ -95,7 +102,7 @@ class PreviewTable(QTreeWidget):
                 trigger & self.editTriggers()  # type: ignore[operator]
             )
             if starts and (
-                index.column() not in EDITABLE  # type: ignore[attr-defined]
+                index.column() not in self._dialog.editable  # type: ignore[attr-defined]
                 or not self._may_edit()
             ):
                 return False
@@ -110,21 +117,34 @@ class PreviewTable(QTreeWidget):
         if not self.unlocked:
             self.asked = True
             answer = QMessageBox.question(
-                self,
-                _("Edit the list here"),
-                _(
-                    "Editing in the table rewrites the list above as CSV with a header row "
-                    "(name, address, group, tags, notes), so the two always match. Continue?"
-                ),
+                self, _("Edit the list here"), _(self._dialog.EDIT_QUESTION)
             )
             self.unlocked = answer == QMessageBox.StandardButton.Yes
         return self.unlocked
 
 
 class ImportDialog(QDialog):
+    # What another list's import changes (Import printers). Texts are marked with N_ and
+    # translated when shown: the language is set after this module is imported.
+    TITLE = N_("Import hosts")
+    GROUP_LABEL = N_("Hosts with no group &go to:")
+    PLACEHOLDER = N_("For example:\nname,address\nPC-0142,10.0.0.42")
+    EDIT_QUESTION = N_(
+        "Editing in the table rewrites the list above as CSV with a header row "
+        "(name, address, group, tags, notes), so the two always match. Continue?"
+    )
+    MORE: tuple[tuple[str, str], ...] = ()  # the list's own columns, after Notes: (key, title)
+    WIDTH = 1100  # room for warnings, which name the host they repeat
+
     def __init__(self, parent: QWidget | None, host_list: HostList, group_id: str) -> None:
         super().__init__(parent)
-        self.setWindowTitle(_("Import hosts"))
+        self.setWindowTitle(_(self.TITLE))
+        more = [key for key, _title in self.MORE]
+        # A list's own columns go last, so the import windows share their first seven slot by
+        # slot, and a narrow window cuts one of them, never Group, Tags or Notes (Dante).
+        self.keys = ["dot", "name", "address", "warning", "group", "tags", "notes", *more]
+        self.col = {key: index for index, key in enumerate(self.keys)}
+        self.editable = tuple(i for i, key in enumerate(self.keys) if key not in _FIXED)
         self._hosts = host_list
         self._rows: list[ImportRow] = []
         self._from_file = False  # a file must start with a header row
@@ -140,11 +160,11 @@ class ImportDialog(QDialog):
         top.addStretch(1)
         formats = QPushButton(_("&Formats…"))
         formats.setAutoDefault(False)
-        formats.clicked.connect(lambda: FormatsDialog(self).exec())
+        formats.clicked.connect(lambda: self.formats().exec())
         top.addWidget(formats)
 
         self.text = QPlainTextEdit()
-        self.text.setPlaceholderText(_("For example:\nname,address\nPC-0142,10.0.0.42"))
+        self.text.setPlaceholderText(_(self.PLACEHOLDER))
         self.text.setFixedHeight(self.fontMetrics().lineSpacing() * 7 + 12)
         self.text.textChanged.connect(self._typed)
         self._parse_timer = QTimer(self)  # waits for a pause in typing
@@ -158,7 +178,7 @@ class ImportDialog(QDialog):
         self.group.setCurrentIndex(max(self.group.findData(group_id), 0))
         self.group.currentIndexChanged.connect(self._replan)
         form = QFormLayout()
-        form.addRow(_("Hosts with no group &go to:"), self.group)
+        form.addRow(_(self.GROUP_LABEL), self.group)
 
         self.hint = QLabel(
             _("Double-click a cell, or press F2, to change it; the list above follows. "
@@ -166,16 +186,24 @@ class ImportDialog(QDialog):
         )  # fmt: skip
         self.hint.setObjectName("hint")
         self.table = PreviewTable(self)
-        self.table.setHeaderLabels(
-            ["", _("Name"), _("Address"), _("Group"), _("Tags"), _("Notes"), _("Warning")]
-        )
+        titles = {
+            **{key: _(title) for key, title in self.MORE},
+            "dot": "",
+            "name": _("Name"),
+            "address": _("Address"),
+            "warning": _("Warning"),
+            "group": _("Group"),
+            "tags": _("Tags"),
+            "notes": _("Notes"),
+        }
+        self.table.setHeaderLabels([titles[key] for key in self.keys])  # the cells' own order
         self.table.itemChanged.connect(self._edited)
         self.table.customContextMenuRequested.connect(self._row_menu)
         self.problem = QLabel()
         self.problem.setWordWrap(True)
         self.problem.setTextFormat(Qt.TextFormat.RichText)
         self.problem.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.problem.linkActivated.connect(lambda _link: FormatsDialog(self).exec())
+        self.problem.linkActivated.connect(lambda _link: self.formats().exec())
         holder = QWidget()
         self._views = QStackedLayout(holder)
         self._views.addWidget(self.table)
@@ -195,7 +223,36 @@ class ImportDialog(QDialog):
         layout.addWidget(self.summary)
         layout.addWidget(self.box)
         self._parse()
-        self.resize(1100, 640)  # room for warnings, which name the host they repeat
+        self.resize(self.WIDTH, 640)
+
+    # ---- what another list's import changes ----
+
+    def add_text(self, n: int) -> str:
+        """The Add button: what it adds."""
+        if not n:
+            return _("&Add hosts")
+        return ngettext("&Add {n} host", "&Add {n} hosts", n).format(n=n)
+
+    def adding_text(self, n: int) -> str:
+        return ngettext("{n} host will be added.", "{n} hosts will be added.", n).format(n=n)
+
+    def skipped_text(self, n: int) -> str:
+        return ngettext("{n} skipped.", "{n} skipped.", n).format(n=n)
+
+    def bad_text(self, n: int) -> str:
+        return ngettext("{n} can't be added.", "{n} can't be added.", n).format(n=n)
+
+    def needs_header(self) -> str:
+        return needs_header_text()
+
+    def formats(self) -> QDialog:
+        return FormatsDialog(self)
+
+    def read_rows(self, text: str, *, file: bool) -> Parsed:
+        return parse(text, file=file)
+
+    def plan_rows(self, rows: list[ImportRow], group_id: str) -> Plan:
+        return plan(self._hosts, rows, group_id)
 
     # ---- what the window holds ----
 
@@ -228,11 +285,11 @@ class ImportDialog(QDialog):
 
     def _parse(self) -> None:
         self._parse_timer.stop()
-        parsed = parse(self.text.toPlainText(), file=self._from_file)
+        parsed = self.read_rows(self.text.toPlainText(), file=self._from_file)
         self._rows = list(parsed.rows)
         self._ignored = parsed.ignored
         if parsed.needs_header:
-            self.problem.setText(needs_header_text())
+            self.problem.setText(self.needs_header())
             self._views.setCurrentIndex(1)
         else:
             self._views.setCurrentIndex(0)
@@ -240,7 +297,7 @@ class ImportDialog(QDialog):
         self._replan()
 
     def _replan(self) -> None:
-        self._plan = plan(self._hosts, self._rows, self.group.currentData() or NO_GROUP)
+        self._plan = self.plan_rows(self._rows, self.group.currentData() or NO_GROUP)
         self._fill()
         self._summarize()
 
@@ -254,33 +311,35 @@ class ImportDialog(QDialog):
         items = self._plan.items if self._plan else ()
         new_groups = set(self._plan.new_groups) if self._plan else set()
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
+        col = self.col
         for number, planned in enumerate(items, 1):
             r = planned.row
-            item = QTreeWidgetItem(
-                [
-                    str(number),  # "Same as row 2" points here
-                    r.name,
-                    r.address,
-                    " › ".join(planned.group) or _("No group"),
-                    "; ".join(r.tags),
-                    " ".join(r.notes.split()),
-                    planned.reason,
-                ]  # fmt: skip
-            )
+            cells = {
+                **dict(r.more),
+                "dot": str(number),  # "Same as row 2" points here
+                "name": r.name,
+                "address": r.address,
+                "group": " › ".join(planned.group) or _("No group"),
+                "tags": "; ".join(r.tags),
+                "notes": " ".join(r.notes.split()),
+                "warning": planned.reason,
+            }
+            item = QTreeWidgetItem([cells.get(key, "") for key in self.keys])
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
-            item.setIcon(DOT, dot_icon(themes.status_color(COLORS[planned.verdict])))
-            item.setToolTip(NOTES, r.notes)
-            item.setToolTip(WARNING, planned.reason)  # in full, when the column cuts it
+            item.setIcon(col["dot"], dot_icon(themes.status_color(COLORS[planned.verdict])))
+            item.setToolTip(col["notes"], r.notes)
+            item.setToolTip(col["warning"], planned.reason)  # in full, when the column cuts it
             if planned.group in new_groups:
-                item.setToolTip(GROUP, _("A new group: the import creates it"))
+                item.setToolTip(col["group"], _("A new group: the import creates it"))
             if planned.verdict is not Verdict.ADD:
-                for column_ in EDITABLE:
+                for column_ in self.editable:
                     item.setForeground(column_, muted)
-                item.setForeground(WARNING, self._warning_color(planned.verdict))
+                item.setForeground(col["warning"], self._warning_color(planned.verdict))
             self.table.addTopLevelItem(item)
         for column_ in range(self.table.columnCount()):
             self.table.resizeColumnToContents(column_)
-        self.table.setColumnWidth(NOTES, min(self.table.columnWidth(NOTES), NOTES_WIDTH))
+        for key, cap in (("notes", NOTES_WIDTH), ("warning", WARNING_WIDTH)):
+            self.table.setColumnWidth(col[key], min(self.table.columnWidth(col[key]), cap))
         self.table.blockSignals(False)
         if 0 <= row < self.table.topLevelItemCount():
             self.table.setCurrentIndex(self.table.model().index(row, max(column, 0)))
@@ -300,29 +359,19 @@ class ImportDialog(QDialog):
         ok = self.box.button(QDialogButtonBox.StandardButton.Ok)
         assert ok is not None
         adding = self.added()
-        ok.setText(
-            ngettext("&Add {n} host", "&Add {n} hosts", adding).format(n=adding)
-            if adding
-            else _("&Add hosts")
-        )
+        ok.setText(self.add_text(adding))
         ok.setEnabled(adding > 0)
         if self._plan is None or not self._plan.items:
             self.summary.setText(_("Nothing changes until you click Add."))
             return
         items = self._plan.items
-        parts = [
-            "<b>"
-            + ngettext("{n} host will be added.", "{n} hosts will be added.", adding).format(
-                n=adding
-            )
-            + "</b>"
-        ]
+        parts = ["<b>" + self.adding_text(adding) + "</b>"]
         skipped = sum(1 for i in items if i.verdict is Verdict.SKIP)
         bad = sum(1 for i in items if i.verdict is Verdict.BAD)
         if skipped:
-            parts.append(ngettext("{n} skipped.", "{n} skipped.", skipped).format(n=skipped))
+            parts.append(self.skipped_text(skipped))
         if bad:
-            parts.append(ngettext("{n} can't be added.", "{n} can't be added.", bad).format(n=bad))
+            parts.append(self.bad_text(bad))
         if self._plan.new_groups:
             names = ", ".join(" › ".join(p) for p in self._plan.new_groups)
             parts.append(
@@ -342,24 +391,28 @@ class ImportDialog(QDialog):
             return
         text = item.text(column).strip()
         row = self._rows[index]
-        if column == NAME:
+        key = self.keys[column]
+        if key == "name":
             row = replace(row, name=text)
-        elif column == ADDRESS:
+        elif key == "address":
             row = replace(row, address=text)
-        elif column == GROUP:
+        elif key == "group":
             row = replace(row, group="/".join(p.strip() for p in text.replace("›", "/").split("/")))
-        elif column == TAGS:
+        elif key == "tags":
             row = replace(row, tags=tuple(t.strip() for t in text.replace(",", ";").split(";")
                                           if t.strip()))  # fmt: skip
-        elif column == NOTES:
+        elif key == "notes":
             row = replace(row, notes=text)
+        elif key in dict(self.MORE):
+            cells = {**dict(row.more), key: text}
+            row = replace(row, more=tuple((k, cells[k]) for k, _t in self.MORE if cells.get(k)))
         self._rows[index] = row
         self._write_back()
 
     def _write_back(self) -> None:
         """The table changed: the list above becomes its CSV, and the preview is planned again."""
         self.text.blockSignals(True)
-        self.text.setPlainText(to_csv(self._rows))
+        self.text.setPlainText(to_csv(self._rows, more=[key for key, _t in self.MORE]))
         self.text.blockSignals(False)
         self._from_file = False
         # After the editor has closed: rebuilding the table under it would end the edit badly.
@@ -374,7 +427,7 @@ class ImportDialog(QDialog):
         if clicked is not None:
             edit = menu.addAction(_("&Edit cell") + "\tF2")
             column = self.table.columnAt(position.x())
-            edit.setEnabled(column in EDITABLE)
+            edit.setEnabled(column in self.editable)
             edit.triggered.connect(lambda: self.table.editItem(clicked, column))
             if not clicked.isSelected():
                 self.table.setCurrentItem(clicked)
@@ -427,8 +480,8 @@ class ImportDialog(QDialog):
     def _start_typing(self, at: int) -> None:
         item = self.table.topLevelItem(at)
         if item is not None:
-            self.table.setCurrentItem(item, NAME)
-            self.table.editItem(item, NAME)
+            self.table.setCurrentItem(item, self.col["name"])
+            self.table.editItem(item, self.col["name"])
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Delete and self.table.hasFocus():
@@ -439,9 +492,10 @@ class ImportDialog(QDialog):
         super().keyPressEvent(event)
 
 
-def needs_header_text() -> str:
-    """What a list without a header row needs, one point a line."""
-    header = "<b>" + html.escape(_("name, address, group, tags, notes")) + "</b>"
+def needs_header_text(columns: str = "") -> str:
+    """What a list without a header row needs, one point a line. columns: the header row's
+    names, translated; Import hosts' by default."""
+    header = "<b>" + html.escape(columns or _("name, address, group, tags, notes")) + "</b>"
     lines = [
         "<b>" + html.escape(_("This list needs a header row.")) + "</b>",
         html.escape(_("Start it with {header}, in any order.")).replace("{header}", header),
@@ -554,15 +608,18 @@ class FormatsDialog(QDialog):
         typed: str,
         header: list[str] | None = None,
         rows: list[list[str]] | None = None,
+        *,
+        typed_title: str = "",
     ) -> QWidget:
-        """A format: what it is, as a list, and (when it has columns) as a table."""
+        """A format: what it is, as a list, and (when it has columns) as a table. typed_title:
+        the heading over the typed text when it isn't the list itself (a command that makes it)."""
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, spacing.ICON, 0, 0)
         text = QLabel(about)
         text.setWordWrap(True)
         layout.addWidget(text)
-        layout.addWidget(self._heading(_("List")))
+        layout.addWidget(self._heading(typed_title or _("List")))
         listed = QPlainTextEdit(typed)
         listed.setReadOnly(True)
         listed.setFont(QFont("Consolas"))

@@ -12,12 +12,13 @@ CapyPanel is a Windows desktop app for IT staff: keep the computers you look aft
 lists, see which ones are on and who is logged on to them, and open a remote screen on any of
 them through Remote Desktop or the VNC viewer you already use. It keeps your printers too, with
 the details you need and their web pages a click away, and it finds the Windows user profiles
-nobody uses any more on a PC so you can delete them.
+nobody uses any more on a PC so you can delete them. For your servers and switches, it opens an
+SSH terminal right beside their list.
 
-> **Status: beta (0.28.1).** [Download the zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
+> **Status: beta (0.29.0).** [Download the zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
 > unzip it and run CapyPanel.exe. It updates itself when you say so.
 
-![CapyPanel's Home page: the sidebar, the capybara, and a tile each for Hosts, Printers and Profile cleanup](docs/images/home-dark.png)
+![CapyPanel's Home page: the sidebar, the capybara, and a tile each for Hosts, Printers, Profile cleanup and SSH](docs/images/home-dark.png)
 
 ## What it does
 
@@ -35,10 +36,15 @@ nobody uses any more on a PC so you can delete them.
   - Page counts from Doc360 MPS
   - Warnings when a printer needs attention
   - Web pages and reports
+  - Import from a Report or Windows' printer list
 - Profile cleanup
   - A PC's Windows profiles: who, when last used, how big
   - Which can be deleted, and why the others can't
   - Delete the ones you tick, on several PCs at once
+- SSH
+  - Servers, switches and other devices, in the same lists as Hosts
+  - Which ones answer on their SSH port
+  - A terminal in a tab, through Windows' own ssh.exe, or in a window of its own
 
 ## Documentation
 
@@ -58,10 +64,13 @@ Also online, with search: **[gabrielmariense.github.io/CapyPanel](https://gabrie
 - [Checking hosts](docs/hosts/checking.md): status, logged-on users and PC facts
 - [Commands on a host](docs/hosts/commands.md): folders and consoles, messages, log off,
   restart, printers, installed programs and mapped drives
-- [The Printers tool](docs/printers/printers.md): printers, their lists, details and web pages
+- [The Printers tool](docs/printers/printers.md): printers, their lists, importing them, details
+  and web pages
 - [Checking printers](docs/printers/checking.md): status, toner and supplies over SNMP
 - [The Profile cleanup tool](docs/profiles/user-profiles.md): a PC's Windows profiles, and
   deleting the ones nobody uses
+- [The SSH tool](docs/ssh/ssh.md): servers and switches, which ones answer, and a terminal on any
+  of them
 - [Settings and files](docs/settings-and-files.md): every setting, and where CapyPanel keeps its
   files
 - [Contributing](CONTRIBUTING.md): building, testing and translating

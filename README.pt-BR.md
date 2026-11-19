@@ -13,12 +13,12 @@ computadores que você administra, veja quais estão ligados e quem está logado
 remota de qualquer um pela Área de Trabalho Remota ou pelo visualizador VNC que você já usa. Ele
 guarda também as suas impressoras, com os detalhes de que você precisa e a página web delas a um
 clique, e encontra num PC os perfis de usuário do Windows que ninguém usa mais, para você
-excluí-los.
+excluí-los. Para os seus servidores e switches, abre um terminal SSH ao lado da lista deles.
 
-> **Situação: beta (0.28.1).** [Baixe o zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
+> **Situação: beta (0.29.0).** [Baixe o zip](https://github.com/gabrielmariense/CapyPanel/releases/latest),
 > descompacte e rode o CapyPanel.exe. Ele se atualiza quando você manda.
 
-![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts, Impressoras e Limpeza de perfis](docs/images/home-dark-pt-BR.png)
+![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts, Impressoras, Limpeza de perfis e SSH](docs/images/home-dark-pt-BR.png)
 
 ## O que ele faz
 
@@ -36,10 +36,15 @@ excluí-los.
   - Contadores de páginas do Doc360 MPS
   - Avisos quando uma impressora requer atenção
   - Páginas web e relatórios
+  - Importação de um Relatório ou da lista de impressoras do Windows
 - Limpeza de perfis
   - Os perfis do Windows de um PC: de quem, último uso, tamanho
   - Quais podem ser excluídos, e por que os outros não
   - Excluir os que você marcar, em vários PCs ao mesmo tempo
+- SSH
+  - Servidores, switches e outros aparelhos, nas mesmas listas do Hosts
+  - Quais respondem na porta SSH
+  - Um terminal numa aba, pelo próprio ssh.exe do Windows, ou numa janela própria
 
 ## Documentação
 
@@ -59,11 +64,13 @@ Também online, com busca: **[gabrielmariense.github.io/CapyPanel/pt-BR](https:/
 - [Verificando hosts](docs/hosts/checking.pt-BR.md): status, usuários logados e dados do PC
 - [Comandos em um host](docs/hosts/commands.pt-BR.md): pastas e consoles, mensagens, logoff,
   reinicialização, impressoras, programas instalados e unidades mapeadas
-- [A ferramenta Impressoras](docs/printers/printers.pt-BR.md): impressoras, as listas delas, os
-  detalhes e as páginas web
+- [A ferramenta Impressoras](docs/printers/printers.pt-BR.md): impressoras, as listas delas, como
+  importá-las, os detalhes e as páginas web
 - [Verificando impressoras](docs/printers/checking.pt-BR.md): status, toner e suprimentos por SNMP
 - [A ferramenta Limpeza de perfis](docs/profiles/user-profiles.pt-BR.md): os perfis do Windows
   de um PC, e excluir os que ninguém usa
+- [A ferramenta SSH](docs/ssh/ssh.pt-BR.md): servidores e switches, quais respondem, e um
+  terminal em qualquer um deles
 - [Configurações e arquivos](docs/settings-and-files.pt-BR.md): cada configuração, e onde o
   CapyPanel guarda os arquivos
 - [Contribuindo](CONTRIBUTING.pt-BR.md): compilar, testar e traduzir

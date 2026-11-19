@@ -179,3 +179,54 @@ def test_an_export_split_by_semicolons_imports_back_too() -> None:
 
 def test_the_list_separator_is_one_excel_splits_on() -> None:
     assert list_separator() in (",", ";", "\t")
+
+
+# A caller's own columns (Printers' brand, model and so on) and its own check of a row.
+MORE = {"brand": {"brand", "marca"}, "asset_tag": {"asset tag", "patrimônio"}}
+
+
+def test_a_callers_own_columns_come_in_and_are_not_ignored() -> None:
+    text = "Name;Marca;Patrimônio;Sala\nLab;RICOH;PAT-1;12\nDesk;;PAT-2;\n"
+    parsed = parse(text, more=MORE)
+    assert [r.more for r in parsed.rows] == [
+        (("brand", "RICOH"), ("asset_tag", "PAT-1")),
+        (("asset_tag", "PAT-2"),),  # an empty cell isn't kept
+    ]
+    assert parsed.ignored == ("Sala",)
+    # Without `more`, the same list reads exactly as Hosts always read it.
+    plain = parse(text)
+    assert all(r.more == () for r in plain.rows)
+    assert plain.ignored == ("Marca", "Patrimônio", "Sala")
+
+
+def test_a_callers_own_columns_in_a_table_lined_up_with_spaces() -> None:
+    text = "Name    Brand    Asset tag\nLab     RICOH    PAT-1\n"
+    [row] = parse(text, more=MORE).rows
+    assert (row.name, row.more) == ("Lab", (("brand", "RICOH"), ("asset_tag", "PAT-1")))
+
+
+def test_a_callers_own_columns_read_back_from_the_tables_csv() -> None:
+    rows = (ImportRow("Lab", "192.0.2.11", more=(("brand", "RICOH"), ("asset_tag", "PAT-1"))),)
+    text = to_csv(rows, more=list(MORE))
+    assert text.splitlines()[0] == "name,address,group,tags,notes,brand,asset_tag"
+    assert parse(text, more=MORE).rows == rows
+
+
+def test_a_callers_own_check_takes_the_place_of_the_hosts_one() -> None:
+    rows = (
+        ImportRow("Web", "https://192.0.2.10"),  # not a computer address; fine for the caller
+        ImportRow("USB-01"),  # a fine network name; the caller says why it can't come in
+        ImportRow("Lab 07"),  # the caller leaves it to the hosts' check
+    )
+
+    def check(row: ImportRow) -> str | None:
+        return {"Web": "", "USB-01": "Its port is USB001"}.get(row.name)
+
+    items = plan(HostList(), rows, NO_GROUP, problem=check).items
+    assert [(i.verdict, i.reason) for i in items] == [
+        (Verdict.ADD, ""),
+        (Verdict.BAD, "Its port is USB001"),
+        (Verdict.BAD, "No address: the name must then be the computer's name on the network"),
+    ]
+    # Without a check, the hosts' own: the first can't be added.
+    assert plan(HostList(), rows, NO_GROUP).items[0].verdict is Verdict.BAD

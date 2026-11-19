@@ -23,12 +23,20 @@ SPLASH_TEXT = os.environ["CAPYPANEL_SPLASH_TEXT"]
 SPLASH_X = int(os.environ["CAPYPANEL_SPLASH_X"])
 SPLASH_BASELINE = 272
 
-# Everything in the package that isn't code: translations, themes, icons, licenses, presets.
-# Named by kind, so a tool's cache or a stray file in the source folder never comes along.
+# Everything in the package that isn't code: translations, themes, icons, licenses, presets,
+# and the authors of the code it carries (capypanel/vendor). Named by kind, so a tool's cache or
+# a stray file in the source folder never comes along.
 KINDS = ("mo", "json", "svg", "png", "ico", "txt")
 datas = collect_data_files("capypanel", includes=[f"**/*.{kind}" for kind in KINDS])
-datas += collect_data_files("capypanel", includes=["**/LICENSE"])
+datas += collect_data_files("capypanel", includes=["**/LICENSE", "**/AUTHORS"])
 datas += [(str(STAMP), "capypanel")]
+# The console engine the terminal starts on Windows 10, Microsoft's signed files as they are
+# (capypanel/vendor/conpty): its LICENSE and record come with the patterns above.
+CONPTY = ROOT / "src" / "capypanel" / "vendor" / "conpty"
+datas += [
+    (str(CONPTY / name), "capypanel/vendor/conpty")
+    for name in ("conpty.dll", "OpenConsole.exe", "NOTICE.md")
+]
 # About names the version of each library that came along.
 datas += copy_metadata("pywin32")
 
@@ -82,11 +90,14 @@ def needed(entry: tuple[str, str, str]) -> bool:
 
 analysis.binaries = [entry for entry in analysis.binaries if needed(entry)]
 
-# Every library in the folder comes from Python itself, a package in uv.lock or Windows: never
-# from another program that happens to be on the building PC's PATH (a Java or Git folder
-# gave this build its C runtime and its OpenSSL once). build_exe.py runs this with a PATH of
-# Windows' own folders only; this stops the build if one still slips in.
-TRUSTED = [Path(p).resolve() for p in (sys.base_prefix, sys.prefix, os.environ["SYSTEMROOT"])]
+# Every library in the folder comes from Python itself, a package in uv.lock, Windows or the
+# console engine CapyPanel carries: never from another program that happens to be on the
+# building PC's PATH (a Java or Git folder gave this build its C runtime and its OpenSSL once).
+# build_exe.py runs this with a PATH of Windows' own folders only; this stops the build if one
+# still slips in.
+TRUSTED = [
+    Path(p).resolve() for p in (sys.base_prefix, sys.prefix, os.environ["SYSTEMROOT"], CONPTY)
+]
 foreign = [
     f"{dest} <- {source}"
     for dest, source, _kind in analysis.binaries

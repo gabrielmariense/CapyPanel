@@ -1,6 +1,7 @@
 """The Home page: what the window shows when no tool is. The mascot, the app's name and tagline,
 then a tile per tool (a click opens it), all centred."""
 
+import math
 from collections.abc import Sequence
 
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
@@ -108,7 +109,8 @@ class HomePage(QWidget):
         self.tiles = [ToolTile(tool, f"Ctrl+{index}") for index, tool in enumerate(tools, start=1)]
         for tile in self.tiles:
             tile.clicked.connect(lambda t=tile: self.tool_picked.emit(t.tool.tool_id))
-        # More tools than fit side by side wrap into rows, still centred (see resizeEvent).
+        # From four tools on, two even rows; a narrow window wraps them into more, still centred
+        # (see _place_tiles and resizeEvent).
         self._grid = QGridLayout()
         self._grid.setSpacing(TILE_GAP)
         self._columns = 0
@@ -142,8 +144,17 @@ class HomePage(QWidget):
         for tile in self.tiles:
             tile.restyle()  # each also redraws on its own colour change
 
-    def _place_tiles(self, columns: int) -> None:
-        columns = max(1, min(columns, len(self.tiles)))
+    def _place_tiles(self, fit: int) -> None:
+        """`fit`: how many tiles the width has room for side by side. Up to three tools share one
+        row; from four on they take two even rows, so four go two by two (his pick, 2026-11-18:
+        three and one left SSH alone on its row). A narrower window wraps them into more rows,
+        as even as they go."""
+        count = len(self.tiles)
+        if not count:
+            return
+        widest = count if count < 4 else math.ceil(count / 2)
+        columns = max(1, min(fit, widest))
+        columns = math.ceil(count / math.ceil(count / columns))  # 3 + 3 + 3, never 4 + 4 + 1
         if columns == self._columns:
             return
         self._columns = columns

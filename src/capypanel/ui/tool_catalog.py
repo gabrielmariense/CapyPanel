@@ -46,4 +46,12 @@ CATALOG = (
         "capypanel.ui.profiles_tool.tool",
         "ProfilesTool",
     ),
+    ToolInfo(
+        "ssh",
+        "terminal-2",
+        N_("SSH"),
+        N_("Your servers and switches: connect over SSH, see which answer."),
+        "capypanel.ui.ssh_tool.tool",
+        "SshTool",
+    ),
 )

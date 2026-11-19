@@ -32,7 +32,7 @@ CapyPanel sends no usage data anywhere.
 - On its own, it only asks GitHub (api.github.com) for the newest release: at every start by
   default, or once a day, once a week or never, as **Settings > CapyPanel > General > Updates**
   says. It downloads a release from GitHub only when you click **Install and restart**.
-- Everything else it contacts is what you set up: the PCs and printers in your lists, and Doc360
-  MPS (mps.doc360.com.br) if you add your account for it.
+- Everything else it contacts is what you set up: the PCs, servers and printers in your lists, and
+  Doc360 MPS (mps.doc360.com.br) if you add your account for it.
 - The documentation, source code and **Report a problem** links in the Help menu and in About
   open in your browser.

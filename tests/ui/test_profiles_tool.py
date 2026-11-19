@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 from capywindow import CapyWindow
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, QPointF, QRect, QSize, Qt
-from PySide6.QtGui import QIcon, QKeyEvent, QMouseEvent, QShowEvent
+from PySide6.QtGui import QIcon, QKeyEvent, QMouseEvent, QShortcut, QShowEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QDialog, QMenu, QToolButton, QWidget
 
@@ -37,8 +37,8 @@ from capypanel.ui.profiles_tool import tool as tool_ui
 from capypanel.ui.profiles_tool.host_page import HostPage, Stage
 from capypanel.ui.profiles_tool.panels import DeleteDialog
 from capypanel.ui.profiles_tool.rows import Filters
-from capypanel.ui.profiles_tool.tabs import HOSTS
 from capypanel.ui.profiles_tool.tool import ProfilesTool
+from capypanel.ui.tab_strip import PINNED as HOSTS
 
 SID = "S-1-5-21-1004336348-1177238915-682003330-"
 GB = 1024**3
@@ -209,7 +209,7 @@ def test_it_is_the_third_tool_and_its_hosts_tab_lists_hosts_open_list(
     window: CapyWindow, tmp_path: Path
 ) -> None:
     tool = _tool(window)
-    assert list(window.tools) == ["hosts", "printers", "profiles"]
+    assert list(window.tools) == ["hosts", "printers", "profiles", "ssh"]
     assert (tool.tool_name(), tool.ICON) == ("Profile cleanup", "profile-card")
     assert tool.list_picker.text() == "clinic"
     assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]  # natural order; reachable ones
@@ -382,7 +382,7 @@ def test_a_card_never_scrolls_it_counts_what_doesnt_fit(qapp: QApplication) -> N
     assert [name for name, _w in own.shown()] == ["PC-0", "PC-1", "and 5 more"]
 
 
-def test_a_group_picked_while_a_hosts_tab_is_in_front_brings_the_hosts_tab_back(
+def test_a_group_or_list_picked_while_a_hosts_tab_is_in_front_brings_the_hosts_tab_back(
     window: CapyWindow,
 ) -> None:
     tool = _tool(window)
@@ -399,6 +399,11 @@ def test_a_group_picked_while_a_hosts_tab_is_in_front_brings_the_hosts_tab_back(
     tool.hosts_page.search.setText("desk-10")  # and it ends a search, as picking one does
     tool.nav.everything.itemClicked.emit(item, 0)
     assert tool.hosts_page.search.text() == "" and len(_hosts(tool)) == 3
+    tool.switch(_id(window, "DESK-03"))  # a list picked in the dropdown (Dante, build 618)
+    lists = tool.list_picker.menu()
+    lists.aboutToShow.emit()  # filled as it opens
+    next(a for a in lists.actions() if a.isChecked()).trigger()  # the list open already
+    assert tool.tabs.current() == HOSTS
 
 
 # ---- opening hosts ----
@@ -416,7 +421,7 @@ def test_a_double_click_or_enter_opens_a_hosts_tab_and_goes_to_it(
     assert item is not None
     table.tree.itemDoubleClicked.emit(item, 0)
     assert pc.scanned == [("192.0.2.13", None)] and tool.tabs.current() == key
-    assert tool.tabs.host_keys() == [key]
+    assert tool.tabs.tab_keys() == [key]
     tool.switch(HOSTS)
     table.select(key)
     QApplication.sendEvent(table.tree, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Return,
@@ -453,9 +458,9 @@ def test_hosts_right_click_opens_them_here_each_in_its_own_tab_and_scanned(
     menu = _hosts_menu(window, "DESK-03", "DESK-10")
     texts = [a.text() for a in menu.actions()]
     at = texts.index("&Open 2 hosts in Profile cleanup")
-    assert texts[at - 1] == "&Refresh 2 hosts" and texts[at + 2] == "Commands run &as"
+    assert texts[at - 1] == "Re&fresh 2 hosts" and texts[at + 2] == "Commands run a&s"
     menu.actions()[at].trigger()
-    assert window.shown_tool() is tool and tool.tabs.host_keys() == [key, _id(window, "DESK-10")]
+    assert window.shown_tool() is tool and tool.tabs.tab_keys() == [key, _id(window, "DESK-10")]
     assert [a for a, _b in pc.scanned] == ["192.0.2.13", "192.0.2.20"]  # DESK-03 isn't read again
 
 
@@ -469,9 +474,9 @@ def test_from_hosts_its_first_use_warning_comes_first_and_cancelled_opens_nothin
     monkeypatch.setattr(first_use, "run_modal", lambda _dialog: next(answers))
     assert tool.first_use_pending()
     window.hosts.open_in_profile_cleanup([_id(window, "DESK-03")])  # Cancel
-    assert window.shown_tool() is window.hosts and tool.tabs.host_keys() == [] and not pc.scanned
+    assert window.shown_tool() is window.hosts and tool.tabs.tab_keys() == [] and not pc.scanned
     window.hosts.open_in_profile_cleanup([_id(window, "DESK-03")])  # ticked and continued
-    assert window.shown_tool() is tool and tool.tabs.host_keys() == [_id(window, "DESK-03")]
+    assert window.shown_tool() is tool and tool.tabs.tab_keys() == [_id(window, "DESK-03")]
 
 
 def test_a_middle_click_or_ctrl_enter_opens_it_behind(window: CapyWindow, pc: Pc) -> None:
@@ -480,7 +485,7 @@ def test_a_middle_click_or_ctrl_enter_opens_it_behind(window: CapyWindow, pc: Pc
     table.select(_id(window, "DESK-10"))
     QApplication.sendEvent(table.tree, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Return,
                                                  Qt.KeyboardModifier.ControlModifier))  # fmt: skip
-    assert tool.tabs.current() == HOSTS and tool.tabs.host_keys() == [_id(window, "DESK-10")]
+    assert tool.tabs.current() == HOSTS and tool.tabs.tab_keys() == [_id(window, "DESK-10")]
     item = table.tree.topLevelItem(0)  # DESK-03
     assert item is not None
     where = QPointF(table.tree.visualItemRect(item).center())
@@ -488,7 +493,7 @@ def test_a_middle_click_or_ctrl_enter_opens_it_behind(window: CapyWindow, pc: Pc
                           Qt.MouseButton.MiddleButton, Qt.MouseButton.NoButton,
                           Qt.KeyboardModifier.NoModifier)  # fmt: skip
     QApplication.sendEvent(table.tree.viewport(), release)
-    assert tool.tabs.current() == HOSTS and len(tool.tabs.host_keys()) == 2
+    assert tool.tabs.current() == HOSTS and len(tool.tabs.tab_keys()) == 2
     assert [a for a, _b in pc.scanned] == ["192.0.2.20", "192.0.2.13"]
 
 
@@ -501,7 +506,7 @@ def test_scan_with_several_hosts_picked_opens_each_behind(window: CapyWindow) ->
         item.setSelected(True)
     assert tool.bar.scan_button.text().strip() == "Scan 3 hosts"
     tool.bar.scan_button.click()
-    assert tool.tabs.current() == HOSTS and len(tool.tabs.host_keys()) == 3
+    assert tool.tabs.current() == HOSTS and len(tool.tabs.tab_keys()) == 3
     assert _host_row(tool, "DESK-03")[3:] == ["7", "5", _host_row(tool, "DESK-03")[5]]
 
 
@@ -517,7 +522,7 @@ def test_scan_with_one_host_picked_stays_on_the_hosts_tab(window: CapyWindow, pc
         "Reads DESK-03's profiles in a tab behind; you stay on this list"
     )
     tool.bar.scan_button.click()
-    assert tool.tabs.current() == HOSTS and tool.tabs.host_keys() == [key]
+    assert tool.tabs.current() == HOSTS and tool.tabs.tab_keys() == [key]
     assert (progress.title.text(), progress.summary.text()) == (
         "1 host in tabs", "0 working · 1 done",
     )  # fmt: skip
@@ -893,7 +898,7 @@ def test_tabs_open_at_the_right_end_and_close_in_every_way(window: CapyWindow) -
     tool = _tool(window)
     desk, other = _open(window), _open(window, "DESK-10", focus=False)
     keys = [desk.target.key, other.target.key]
-    assert tool.tabs.host_keys() == keys and tool.tabs.current() == keys[0]
+    assert tool.tabs.tab_keys() == keys and tool.tabs.current() == keys[0]
     tool._step(1)
     assert tool.tabs.current() == keys[1]
     tool._step(1)  # round to the Hosts tab
@@ -904,11 +909,30 @@ def test_tabs_open_at_the_right_end_and_close_in_every_way(window: CapyWindow) -
     assert not tool.close_tab(HOSTS)  # pinned
     _open(window, "DESK-10", focus=False)
     tool.close_others(keys[0])
-    assert tool.tabs.host_keys() == [keys[0]]
+    assert tool.tabs.tab_keys() == [keys[0]]
     tool.close_finished()
-    assert tool.tabs.host_keys() == [] and tool.tabs.current() == HOSTS
+    assert tool.tabs.tab_keys() == [] and tool.tabs.current() == HOSTS
     # A closed tab's counts stay on the Hosts tab.
     assert _host_row(tool, "DESK-03")[hosts_page.PROFILES : hosts_page.DELETABLE + 1] == ["7", "5"]
+
+
+def test_ctrl_w_and_ctrl_shift_w_each_close_the_tab_in_front(window: CapyWindow) -> None:
+    """Ctrl+Shift+W is the SSH tool's, where Ctrl+W goes to the server: both work here, so the
+    docs name one key for both tools."""
+    tool = _tool(window)
+    keys = [_open(window).target.key, _open(window, "DESK-10").target.key]
+    closers = {
+        s.key().toString(): s
+        for s in tool.findChildren(QShortcut)
+        if s.key().toString() in ("Ctrl+W", "Ctrl+Shift+W")
+    }
+    assert len(closers) == 2
+    for name, key in zip(("Ctrl+Shift+W", "Ctrl+W"), reversed(keys), strict=True):
+        assert closers[name].context() == Qt.ShortcutContext.WidgetWithChildrenShortcut
+        assert tool.tabs.current() == key
+        closers[name].activated.emit()
+        assert key not in tool.tabs.tab_keys()
+    assert tool.tabs.current() == HOSTS
 
 
 def test_a_middle_click_closes_a_tab_without_going_to_it(window: CapyWindow) -> None:
@@ -919,7 +943,7 @@ def test_a_middle_click_closes_a_tab_without_going_to_it(window: CapyWindow) -> 
     went: list[str] = []
     tool.tabs.picked.connect(went.append)
     QTest.mouseClick(bar, Qt.MouseButton.MiddleButton, pos=where)
-    assert tool.tabs.host_keys() == [desk.target.key] and went == []
+    assert tool.tabs.tab_keys() == [desk.target.key] and went == []
     assert tool.tabs.current() == desk.target.key
 
 
@@ -985,7 +1009,7 @@ def test_a_tab_closed_while_its_scan_runs_ignores_the_answer(
     assert _host_row(tool, "DESK-03")[hosts_page.SCAN] == ""  # no "scanning…" left on its row
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)  # its widgets are gone
     worker.end()  # the read ends after: dropped, not shown in a deleted tab
-    assert tool.tabs.host_keys() == [] and tool.pool.waiting(page) == 0
+    assert tool.tabs.tab_keys() == [] and tool.pool.waiting(page) == 0
 
 
 def test_progress_lists_the_hosts_in_tabs_by_where_they_are(
@@ -1058,7 +1082,7 @@ def test_a_right_click_on_hosts_opens_scans_refreshes_and_copies(
     tool._hosts_menu(QPoint(0, 0))
     actions = menus[-1].actions()
     assert [a.text() for a in actions] == [
-        "&Open", "&Scan", "&Refresh host", "", "Copy &name", "Copy &address",
+        "&Open", "&Scan", "Re&fresh host", "", "Copy &name", "Copy &address",
     ]  # fmt: skip
     actions[4].trigger()
     assert QApplication.clipboard().text() == "DESK-03"
@@ -1066,7 +1090,7 @@ def test_a_right_click_on_hosts_opens_scans_refreshes_and_copies(
     actions[5].trigger()
     assert QApplication.clipboard().text() == "192.0.2.13"
     actions[1].trigger()  # Scan: behind, as the toolbar's
-    assert tool.tabs.current() == HOSTS and tool.tabs.host_keys() == [key]
+    assert tool.tabs.current() == HOSTS and tool.tabs.tab_keys() == [key]
     actions[0].trigger()  # Open: as a double-click
     assert tool.tabs.current() == key and len(pc.scanned) == 1
     tool.switch(HOSTS)
@@ -1075,7 +1099,7 @@ def test_a_right_click_on_hosts_opens_scans_refreshes_and_copies(
         assert item is not None
         item.setSelected(True)
     tool._hosts_menu(QPoint(0, 0))
-    assert [a.text() for a in menus[-1].actions()][1:3] == ["&Scan 3 hosts", "&Refresh 3 hosts"]
+    assert [a.text() for a in menus[-1].actions()][1:3] == ["&Scan 3 hosts", "Re&fresh 3 hosts"]
     menus[-1].actions()[4].trigger()
     assert QApplication.clipboard().text().split("\n") == ["DESK-03", "DESK-10", "LAB-02"]
 
@@ -1350,10 +1374,10 @@ def test_while_a_host_deletes_its_tab_wont_close_and_its_rows_always_show(
     assert not tool.bar.sizes_button.isEnabled()
     page.table.tick(BIA.ident, on=False)
     assert BIA in page.ticked()
-    assert not tool.close_tab(page.target.key) and tool.tabs.host_keys() == [page.target.key]
+    assert not tool.close_tab(page.target.key) and tool.tabs.tab_keys() == [page.target.key]
     assert window.statusBar().currentMessage().startswith("DESK-03 is deleting profiles")
     tool.close_finished()
-    assert tool.tabs.host_keys() == [page.target.key]
+    assert tool.tabs.tab_keys() == [page.target.key]
     page.filters.leftovers.setChecked(True)  # the run's rows show whatever the filters
     assert {"EXAMPLE\\rui", "EXAMPLE\\bia", "marta.old  (unknown)"} <= set(_users(page))
 

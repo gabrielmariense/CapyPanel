@@ -242,9 +242,11 @@ def test_windows_shutting_down_quits_without_asking(
     monkeypatch.setattr(window.tray, "available", lambda: True)
     asked: list[object] = []
     monkeypatch.setattr(window_module, "ask_closing", lambda parent: asked.append(parent))
+    for tool in window.tools.values():  # as an open SSH connection would (Debora, build 618)
+        monkeypatch.setattr(tool, "quit_question", lambda parent: asked.append(parent) or False)
     window.prefs[settings.CLOSE_KEY] = settings.CLOSE_TRAY  # even with the tray picked
     _printers(window).set_auto_refresh(15)
     window.show()
-    window._session_ending(None)  # what QGuiApplication.commitDataRequest calls
+    window._session_ending()  # what aboutToQuit calls when Windows ends the session
     window.close()
     assert asked == [] and not window.isVisible() and not window._in_tray

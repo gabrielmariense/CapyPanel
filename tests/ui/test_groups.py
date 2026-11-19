@@ -551,7 +551,7 @@ def test_a_list_opens_on_all_hosts_where_it_was_left_or_its_chosen_group(
 
     class Ticking(QMenu):
         def exec(self, *_args: Any) -> None:  # type: ignore[override]
-            _choose(self, "Show this group &first")
+            _choose(self, "Sho&w this group first")
 
     monkeypatch.setattr(workspace_module, "QMenu", Ticking)
     zebra = _id(third, "Zebra wing")

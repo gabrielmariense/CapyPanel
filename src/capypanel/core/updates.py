@@ -8,17 +8,23 @@ The download, the unpacked new version and the old version kept to go back to li
 Windows user's own app data (the "CapyPanel/update" folder in %LOCALAPPDATA%, a folder per copy
 of CapyPanel), never in or beside CapyPanel's folder, and they're deleted once the new version is
 running. The swap is done by the new version's own exe, started from where the zip was
-unpacked, with `--apply-update`. It waits for the running CapyPanel to end, moves the old
-version's files out one by one (the folder itself stays: Windows won't rename a folder Explorer
-has open), copies the new ones in,
-leaves a portable copy's own data where it is, and runs the new exe's self-test unless the
-running CapyPanel already ran it on the unpacked copy before closing. If any of
-that fails, the old files are put back as they were. While it works, a marker beside it tells a
-CapyPanel started meanwhile to end at once instead of holding files. Settings, lists and
-saved logins live outside the app's folder (ProgramData and Credential Manager), so they're
+unpacked, with `--apply-update`. It waits for the running CapyPanel to end and first checks that
+each of the old version's files and folders can move: each is renamed beside itself and back,
+which Windows refuses while another program holds a file in it open without delete sharing (a
+separate SSH window, a CapyPanel in another Windows session, an antivirus mid-scan). Then the
+update stops with nothing changed. Otherwise it moves them out one by one, each whole or not at
+all (the folder itself stays: Windows won't rename a folder Explorer has open), copies the new
+ones in, leaves a portable copy's own data where it is, and runs the new exe's self-test unless
+the running CapyPanel already ran it on the unpacked copy before closing. If any of that fails,
+the old files are put back as they were, and the folder they waited in goes only once it's
+empty: an old file is never deleted while it has no other copy. While it works, a marker beside
+it tells a CapyPanel started meanwhile to end at once instead of holding files. Settings, lists
+and saved logins live outside the app's folder (ProgramData and Credential Manager), so they're
 never touched."""
 
+import contextlib
 import ctypes
+import errno
 import hashlib
 import json
 import logging
@@ -519,7 +525,8 @@ def self_test(exe: Path, timeout: float = 240) -> bool:
 
 
 def _retry(action: Callable[[], object], what: str, attempts: int = 20) -> None:
-    """A move Windows can refuse for a moment (an antivirus scanning the folder): tried again."""
+    """A move Windows can refuse for a moment (an antivirus scanning the folder): tried again.
+    `what` goes to the log once it worked ("" for nothing)."""
     for attempt in range(attempts):
         try:
             action()
@@ -528,8 +535,133 @@ def _retry(action: Callable[[], object], what: str, attempts: int = 20) -> None:
                 raise
             time.sleep(0.5)
         else:
-            log.info("Update: %s", what)
+            if what:
+                log.info("Update: %s", what)
             return
+
+
+CHECKING = ".update-check"  # what an item of the old version is renamed to, for a moment
+
+
+def _not_moved(error: OSError) -> UpdateError:
+    return UpdateError(_("Couldn't put the new version in place: {error}").format(error=error))
+
+
+def _check(item: Path) -> None:
+    """Raises OSError when Windows won't let `item` move whole: a file in it held open without
+    delete sharing refuses a rename of it and of every folder above it (a separate SSH window
+    keeps _internal's base_library.zip so). Renamed beside itself and straight back, so nothing
+    has changed when it raises."""
+    beside, n = item.with_name(item.name + CHECKING), 1
+    while beside.exists():  # a leftover never stops an update
+        n += 1
+        beside = item.with_name(f"{item.name}{CHECKING}-{n}")
+    os.rename(item, beside)
+    try:
+        _retry(lambda: os.rename(beside, item), "")
+    except OSError as e:  # all but impossible: it can't be renamed back
+        log.error("Update: %s is still named %s", item, beside)
+        raise _not_moved(e) from e
+
+
+def _copy(source: Path, target: Path) -> None:
+    if source.is_dir():
+        shutil.copytree(source, target, symlinks=True)
+    else:
+        shutil.copy2(source, target)
+
+
+def _discard(path: Path) -> None:
+    """A copy nothing needs any more, as far as Windows lets: never raises."""
+    if path.is_dir():
+        remove(path)
+    else:
+        with contextlib.suppress(OSError):
+            path.unlink(missing_ok=True)
+
+
+def _clear(item: Path) -> None:
+    """`item` gone, or OSError while any of it is still there (an antivirus scanning a file just
+    copied in, say), for _retry to try again."""
+    _discard(item)
+    if item.exists() or item.is_symlink():
+        raise OSError(errno.EBUSY, "Still in use", str(item))
+
+
+def _strict(function: Callable[[str], object], path: str, error: BaseException) -> None:
+    """rmtree's second try on a read-only file; anything else stops the delete there."""
+    if not isinstance(error, PermissionError):
+        raise error
+    os.chmod(path, stat.S_IWRITE)
+    function(path)  # raises again when another program holds it
+
+
+def _delete(item: Path) -> None:
+    """`item`, deleted up to the first file Windows won't let go."""
+    if item.is_dir() and not item.is_symlink():
+        shutil.rmtree(item, onexc=_strict)
+        return
+    try:
+        item.unlink()
+    except PermissionError:
+        os.chmod(item, stat.S_IWRITE)
+        item.unlink()
+
+
+def _fill_in(copy: Path, original: Path) -> None:
+    """What a stopped delete took from `original` back from `copy`; what it left stays."""
+    if not copy.is_dir():
+        if not original.exists():
+            shutil.copy2(copy, original)
+        return
+    for folder, _folders, names in os.walk(copy):
+        here = original / Path(folder).relative_to(copy)
+        here.mkdir(parents=True, exist_ok=True)
+        for name in names:
+            if not (here / name).exists():
+                shutil.copy2(Path(folder) / name, here / name)
+
+
+def _move_out(item: Path, target: Path) -> None:
+    """One item of the old version to `target`, whole or not at all. On the same drive it's a
+    rename, which Windows does at once or refuses: that OSError is for _retry. On another drive
+    it's a copy, and then the original is deleted; when Windows stops the delete partway, what
+    went comes back from the copy before the copy goes (UpdateError, not tried again). Until
+    0.29 a refused rename fell back to that copy and delete, and a stopped delete lost files."""
+    try:
+        os.rename(item, target)
+        return
+    except OSError as e:
+        if e.errno != errno.EXDEV:
+            raise
+    try:
+        _copy(item, target)
+    except OSError as e:
+        _discard(target)  # only our part copy: the original hasn't been touched
+        raise _not_moved(e) from e
+    try:
+        _delete(item)
+    except OSError as e:
+        try:
+            _fill_in(target, item)
+        except OSError:
+            log.exception("Update: %s is missing files; all of them are in %s", item, target)
+            raise _not_moved(e) from e  # the copy stays: it's the only whole one
+        _discard(target)
+        raise _not_moved(e) from e
+
+
+def _put_back(source: Path, target: Path) -> None:
+    """An item of the old version back where it was: a rename on the same drive; on another
+    drive a copy, and then the one in the old version's folder goes, as far as Windows lets."""
+    try:
+        os.rename(source, target)
+        return
+    except OSError as e:
+        if e.errno != errno.EXDEV:
+            raise
+    _copy(source, target)
+    _discard(source)
 
 
 def apply(
@@ -548,14 +680,15 @@ def apply(
     try:
         place = replace(place, previous=_empty_folder(place.previous))
     except OSError as e:
-        raise UpdateError(
-            _("Couldn't put the new version in place: {error}").format(error=e)
-        ) from e
+        raise _not_moved(e) from e
     moved: list[str] = []  # the old version's, now in place.previous
     copied: list[str] = []  # the new version's, now in place.app
     try:
-        for item in _ours(place.app):
-            _retry(lambda item=item: shutil.move(item, place.previous / item.name),
+        ours = _ours(place.app)
+        for item in ours:  # a file held open stops the update here, with nothing changed
+            _retry(lambda item=item: _check(item), f"{item.name} can move")
+        for item in ours:
+            _retry(lambda item=item: _move_out(item, place.previous / item.name),
                    f"moved {item.name}")  # fmt: skip
             moved.append(item.name)
         for item in sorted(place.new_app.iterdir(), key=lambda item: item.name == EXE):
@@ -572,9 +705,7 @@ def apply(
         _roll_back(place, moved, copied)
         if isinstance(e, UpdateError):
             raise
-        raise UpdateError(
-            _("Couldn't put the new version in place: {error}").format(error=e)
-        ) from e
+        raise _not_moved(e) from e
     log.info("Update: the new version is in place and passed its self-test")
     return place.previous
 
@@ -587,19 +718,29 @@ def _ours(app: Path) -> list[Path]:
 
 
 def _roll_back(place: Places, moved: list[str], copied: list[str]) -> None:
-    """Exactly what the swap did, undone: the new files out, the old ones back."""
+    """Exactly what the swap did, undone: the new files out, the old ones back, the exe last.
+    The old version's folder goes only once it's empty: whatever couldn't come back stays in
+    it, never deleted, and the log says where."""
     log.warning("Update: going back to the old version")
-    for name in copied:
-        item = place.app / name
-        if item.is_dir():
-            shutil.rmtree(item, ignore_errors=True)
-        else:
-            item.unlink(missing_ok=True)
-    for name in moved:
-        source = place.previous / name
-        _retry(lambda source=source: shutil.move(source, place.app / source.name),
-               f"put back {name}")  # fmt: skip
-    remove(place.previous)
+    for name in copied:  # tried again, as the moves are: a held new file keeps the old one out
+        try:
+            _retry(lambda item=place.app / name: _clear(item), f"took out the new {name}")
+        except OSError:
+            log.exception("Update: couldn't take out the new %s", name)
+    for name in reversed(moved):
+        source, target = place.previous / name, place.app / name
+        if target.exists():  # a new file that wouldn't go: the old one can't come back over it
+            log.error("Update: %s couldn't be cleared; the old one stays in %s", target, source)
+            continue
+        try:
+            _retry(lambda source=source, target=target: _put_back(source, target),
+                   f"put back {name}")  # fmt: skip
+        except OSError:
+            log.exception("Update: couldn't put back %s; it stays in %s", name, source)
+    try:
+        place.previous.rmdir()  # only an empty folder
+    except OSError:
+        log.error("Update: %s isn't empty, so it stays", place.previous)
 
 
 def start(exe: Path, *args: str, splash: bool = True) -> None:

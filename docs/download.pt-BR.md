@@ -99,13 +99,18 @@ a escolha é só sua. Durante o download, o **Depois** vira **Cancelar** e inter
        o autoteste dela, com o CapyPanel ainda aberto. Se o teste falhar, o CapyPanel fica como está
        e a janela diz "A versão nova não passou no autoteste".
     3. Se uma ferramenta está ocupada, como um Atualizar de impressoras ou um perfil sendo excluído,
-       ele espera ("Esperando o CapyPanel terminar o que está fazendo…") ou pergunta antes.
+       ele espera ("Esperando o CapyPanel terminar o que está fazendo…") ou pergunta antes. Uma
+       conexão SSH aberta numa janela separada impede a atualização: "1 conexão SSH ainda está
+       aberta numa janela separada. Feche-a e depois instale a atualização." Nada é instalado até
+       ela ser fechada, e o CapyPanel confere de novo logo antes de fechar.
     4. O CapyPanel fecha. Um pequeno ajudante troca os arquivos do app pelos novos, com a tela de
        abertura dizendo "Atualizando para a 0.26.4…", e abre a versão nova. Abrir o CapyPanel
        durante a troca não causa problema: essa abertura simplesmente termina.
-    5. Se a versão nova não abrir, o ajudante põe a antiga de volta. O CapyPanel então abre com
-       uma janela que diz "A atualização para a 0.28.1 não foi instalada.", por quê, e **Versões
-       no GitHub**.
+    5. Se outro programa estiver com um arquivo do CapyPanel aberto, como um CapyPanel em outra
+       sessão do Windows ou um antivírus no meio de uma verificação, o ajudante para antes de mover
+       qualquer coisa. Se a versão nova não abrir, o ajudante põe a antiga de volta. Nos dois
+       casos, o CapyPanel abre como estava, com uma janela que diz "A atualização para a 0.28.1 não
+       foi instalada.", por quê, e **Versões no GitHub**.
 
     Quando a atualização vem de uma versão anterior à 0.26.4, que não testa antes, o ajudante roda
     o autoteste ele mesmo antes da troca.
@@ -146,4 +151,6 @@ resto.
 | "Esta cópia roda a partir do código-fonte: atualize com o git, ou baixe o zip na página da versão." | Você abriu o CapyPanel com o `uv run` | `git pull`, ou passe a usar o zip |
 | "A versão nova não passou no autoteste" | A versão baixada falhou na própria conferência, então nada foi mudado | Tente o **Instalar e reiniciar** de novo mais tarde; use o **Relatar um problema** se continuar falhando |
 | "A atualização para a 0.28.1 não foi instalada." e "Você continua com o CapyPanel 0.28.0.", e depois o motivo | A versão nova não abriu, então a antiga voltou | Leia o motivo; use o **Relatar um problema** se não ficar claro |
+| "Não foi possível colocar a versão nova no lugar: …" como motivo | Outro programa estava com um arquivo do CapyPanel aberto, então a atualização parou sem mudar nada | Feche o que estiver com o arquivo, como um CapyPanel em outra sessão do Windows, e atualize de novo |
+| "1 conexão SSH ainda está aberta numa janela separada. Feche-a e depois instale a atualização." | Essa janela roda da pasta do CapyPanel, então os arquivos não podem ser trocados enquanto ela estiver aberta | Feche a janela e clique em **Instalar e reiniciar** de novo |
 | "O CapyPanel já está em execução para EXAMPLE\user, mas não foi possível trazer a janela dele para a frente: …" | A sua outra cópia está aberta em outra sessão do Windows, ou não está respondendo | Feche-a por lá, ou finalize-a no Gerenciador de Tarefas, e abra o CapyPanel de novo |

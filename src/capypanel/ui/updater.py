@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QProgressBar,
     QPushButton,
     QScrollArea,
@@ -32,9 +33,11 @@ from PySide6.QtWidgets import (
 
 from capypanel import __version__
 from capypanel.core import files, i18n, updates
-from capypanel.core.i18n import _
+from capypanel.core.i18n import _, ngettext
+from capypanel.core.ssh import launch as ssh_launch
 from capypanel.core.updates import Release, UpdateError
 from capypanel.ui import branding
+from capypanel.ui.dialogs import run_modal
 
 log = logging.getLogger(__name__)
 
@@ -599,6 +602,9 @@ class UpdateWindow(_Frame):
         release = self._release
         if release is None:
             return
+        if open_ssh := self._ssh_windows_open():
+            self._say(open_ssh)
+            return
         self.install.setEnabled(False)
         self.later.setText(_("Cancel"))
         self._default(self.later)
@@ -644,6 +650,11 @@ class UpdateWindow(_Frame):
         release = self._release
         if release is None:
             return
+        if open_ssh := self._ssh_windows_open():  # one opened while it downloaded
+            self._waiting.stop()
+            self._say(open_ssh)
+            self._stays_open(open_ssh)
+            return
         if self._working():
             self._footer_says(_("Waiting for CapyPanel to finish what it's doing…"), bar=False)
             self._waiting.start()
@@ -663,6 +674,27 @@ class UpdateWindow(_Frame):
             self._updater.take_installed()
             self._stays_open(_("Not installed: CapyPanel stays open. Install again when "
                                "you're ready."))  # fmt: skip
+
+    def _ssh_windows_open(self) -> str:
+        """Separate SSH windows run from CapyPanel's folder and keep its files in use, so the
+        swap couldn't replace them: how many are open, in words; "" when none is."""
+        n = ssh_launch.open_windows()
+        if not n:
+            return ""
+        return ngettext(
+            "{n} SSH connection is still open in a separate window. Close it, then install the "
+            "update.",
+            "{n} SSH connections are still open in separate windows. Close them, then install "
+            "the update.",
+            n,
+        ).format(n=n)
+
+    def _say(self, text: str) -> None:
+        """OK is its only button: installing anyway isn't a choice, the swap would roll back."""
+        box = QMessageBox(
+            QMessageBox.Icon.Information, "CapyPanel", text, QMessageBox.StandardButton.Ok, self
+        )
+        run_modal(box)
 
     def _later(self) -> None:
         if self._job is not None:

@@ -11,8 +11,8 @@ from PySide6.QtCore import QEvent, QPoint, QRect, Qt
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QPushButton
 
-from capypanel.core import settings
-from capypanel.ui import guides
+from capypanel.core import i18n, settings
+from capypanel.ui import guides, language
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.guides import Guide, Step
 from capypanel.ui.list_workspace.panels import is_sample
@@ -22,6 +22,8 @@ from capypanel.ui.printers_tool import tool as printer_tool_module
 from capypanel.ui.printers_tool.tool import PrintersTool
 from capypanel.ui.profiles_tool import first_use
 from capypanel.ui.profiles_tool.tool import ProfilesTool
+from capypanel.ui.ssh_tool import tool as ssh_tool_module
+from capypanel.ui.ssh_tool.tool import SshTool
 
 
 @pytest.fixture
@@ -335,6 +337,82 @@ def test_the_printers_guide_shows_a_sample_printer_that_is_never_saved_or_read(
     assert doc.path.read_bytes() == saved  # the file never had it
 
 
+def _cards(window: CapyWindow) -> list[tuple[str, str]]:
+    """Each card's title and words, Next after Next, to the guide's end."""
+    card, seen = window.guides.card, []
+    while not card.isHidden():
+        seen.append((card.title.text(), card.text.text()))
+        card.next_button.click()
+    return seen
+
+
+def test_the_ssh_guide_shows_a_sample_server_that_is_never_connected_or_checked(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, no_ssh: list[tuple[str, object]]
+) -> None:
+    ssh = window.tools["ssh"]
+    assert isinstance(ssh, SshTool)
+    window.show_tool("ssh")
+    doc = ssh.document
+    assert doc is not None
+    saved = doc.path.read_bytes()
+    checked: list[object] = []
+    monkeypatch.setattr(ssh_tool_module, "SshRun", lambda *a, **k: checked.append(a))
+    window.commands.show_guide.trigger()
+    _settle()
+    assert window.guides.running == "ssh"
+    assert ssh.sample_shown() and ssh.table.selected_ids() == [SAMPLE_ID]
+    sample = ssh.document.hosts.host(SAMPLE_ID)  # type: ignore[union-attr]
+    assert sample is not None and sample.address.startswith("192.0.2.")
+    ssh.connect_selected()  # the sample is the one picked
+    ssh.connect_selected(window=True)
+    ssh.check_hosts([sample])
+    assert no_ssh == [] and ssh.connections() == [] and checked == []
+    cards = _cards(window)
+    assert [title for title, _words in cards] == [
+        "Your lists", "Add hosts", "Your hosts", "Connect", "Refresh all",
+        "In a separate window", "View",
+    ]  # fmt: skip
+    assert dict(cards)["Connect"].endswith(
+        " The first time, ssh.exe asks whether you trust the server. Type yes, then press Enter."
+    )
+    assert not ssh.sample_shown() and ssh.document.hosts.host(SAMPLE_ID) is None  # type: ignore[union-attr]
+    assert doc.path.read_bytes() == saved  # the file never had it
+
+
+def test_the_guide_card_s_buttons_follow_a_language_switch(window: CapyWindow) -> None:
+    """The card is made with the window, in its language then; a switch in Settings later must
+    reach Skip and Back as it reaches Next (Skip and Back stayed English until a restart,
+    0.26.0 to build 618; Kerrigan found it in the SSH guide's shots)."""
+    window.set_language("pt_BR")
+    try:
+        window.commands.show_guide.trigger()
+        _settle()
+        card = window.guides.card
+        assert (card.skip_button.text(), card.next_button.text()) == ("Pular", "Avançar")
+        card.next_button.click()
+        assert (card.skip_button.text(), card.back_button.text()) == ("Pular", "Voltar")
+        card.skip_button.click()
+    finally:
+        language.apply(i18n.DEFAULT_LANGUAGE)
+        QApplication.processEvents()
+
+
+def test_the_ssh_guide_says_to_type_yes_in_english_in_portuguese_too(
+    window: CapyWindow,
+) -> None:
+    """ssh.exe asks in English, so the answer stays "yes" in every language (Satya)."""
+    window.set_language("pt_BR")
+    try:
+        window.show_tool("ssh")
+        window.commands.show_guide.trigger()
+        _settle()
+        words = dict(_cards(window))
+        assert words["Conectar"].endswith(" Digite yes (em inglês) e pressione Enter.")
+    finally:
+        language.apply(i18n.DEFAULT_LANGUAGE)
+        QApplication.processEvents()
+
+
 def test_the_user_profiles_guide_opens_a_sample_tab_and_closes_it(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -345,7 +423,7 @@ def test_the_user_profiles_guide_opens_a_sample_tab_and_closes_it(
     window.commands.show_guide.trigger()
     _settle()
     assert window.guides.running == "profiles"
-    assert SAMPLE_ID in profiles.tabs.host_keys()  # a tab to point at, never read from a PC
+    assert SAMPLE_ID in profiles.tabs.tab_keys()  # a tab to point at, never read from a PC
     page = profiles._pages[SAMPLE_ID]
     assert page.scan is not None and len(page.scan.profiles) == 3
     assert profiles.tabs.current() != SAMPLE_ID  # it starts on the Hosts tab
@@ -369,7 +447,7 @@ def test_the_user_profiles_guide_opens_a_sample_tab_and_closes_it(
     card.back_button.click()
     assert page.table.ticked() == []  # and untick again going back
     window.guides.card.skip_button.click()
-    assert SAMPLE_ID not in profiles.tabs.host_keys() and SAMPLE_ID not in profiles._kept
+    assert SAMPLE_ID not in profiles.tabs.tab_keys() and SAMPLE_ID not in profiles._kept
     assert window.hosts.document.hosts.host(SAMPLE_ID) is None  # type: ignore[union-attr]
 
 

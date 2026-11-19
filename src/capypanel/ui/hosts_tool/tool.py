@@ -27,6 +27,7 @@ from capypanel.core import settings
 from capypanel.core.hosts import accounts as account_links
 from capypanel.core.hosts import commands as host_commands
 from capypanel.core.hosts.accounts import WINDOWS, Scope
+from capypanel.core.hosts.bulk import listed_at
 from capypanel.core.hosts.commands import GROUP_NAMES
 from capypanel.core.hosts.commands import Group as CommandGroup
 from capypanel.core.hosts.document import OpenList, starter_list
@@ -47,7 +48,7 @@ from capypanel.ui.dialogs import run_modal
 from capypanel.ui.export_hosts import ExportDialog
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.guides import Guide, Step
-from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, list_file_filter
+from capypanel.ui.hosts import HostDialog, ProfilePicker, confirm, group_path, host_list_texts
 from capypanel.ui.hosts_tool.accounts import Accounts, used_for, windows_account
 from capypanel.ui.hosts_tool.actions import create_actions, retranslate_actions
 from capypanel.ui.hosts_tool.details import NOBODY_FOR, HostDetails, HostDetailsPanel
@@ -278,20 +279,7 @@ class HostsTool(ListWorkspace):
         return _("&Hosts")
 
     def list_texts(self) -> ListTexts:
-        return ListTexts(
-            kind=self.TOOL_ID,
-            everything=_("All hosts"),
-            lists=_("Host lists"),
-            new=_("New host list"),
-            add=_("Add a host list"),
-            open=_("Open a host list"),
-            remove=_("Remove host list"),
-            manage=_("&Manage host lists…"),
-            no_list=_("No host list is open."),
-            choose_first=_("Open a host list to choose what it shows first."),
-            not_this_kind=_("“{path}” isn't a host list."),
-            file_filter=list_file_filter(),
-        )
+        return host_list_texts()
 
     def items_text(self, n: int) -> str:
         return ngettext("{n} host", "{n} hosts", n).format(n=n)
@@ -1043,7 +1031,7 @@ class HostsTool(ListWorkspace):
         if len(items) == 1:
             self._update_host_actions()
             target = self.selected_target()
-            refresh = menu.addAction(_("&Refresh host"))  # status, logged-on users, PC facts
+            refresh = menu.addAction(_("Re&fresh host"))  # status, logged-on users, PC facts
             refresh.setEnabled(target is not None)
             refresh.triggered.connect(lambda: self.run_on_selected("all-checks"))
             quick = self.quick_commands()[: host_commands.MENU_QUICK]
@@ -1057,7 +1045,7 @@ class HostsTool(ListWorkspace):
             self._add_open_in_profile_cleanup(menu, items)
         else:
             refresh = menu.addAction(
-                _("&Refresh {n} hosts").format(n=len(items))
+                _("Re&fresh {n} hosts").format(n=len(items))
             )  # status and logged-on users; PC facts are read one PC at a time
             refresh.setEnabled(self._run is None)
             refresh.triggered.connect(
@@ -1065,7 +1053,7 @@ class HostsTool(ListWorkspace):
             )
             self._add_open_in_profile_cleanup(menu, items)  # with the work, before the submenu
             menu.addSeparator()
-            account = menu.addMenu(_("Commands run &as"))  # each admin's own: never read-only
+            account = menu.addMenu(_("Commands run a&s"))  # each admin's own: never read-only
             self._fill_hosts_account_menu(account, items)
             account.setEnabled(bool(account.actions()))
         menu.addSeparator()
@@ -1145,11 +1133,11 @@ class HostsTool(ListWorkspace):
         self._add_profile_menu(
             menu, {group.profile}, follow, lambda p: self.set_group_profile(group.id, p)
         )
-        self._fill_group_account_menu(menu.addMenu(_("Commands run &as")), group)
+        self._fill_group_account_menu(menu.addMenu(_("Commands run a&s")), group)
         # The group's hosts, including those in the groups inside it.
         hosts = list(self._doc.hosts.hosts_in(group.id))
         menu.addSeparator()
-        refresh = menu.addAction(_("&Refresh group"))  # status and logged-on users
+        refresh = menu.addAction(_("Re&fresh group"))  # status and logged-on users
         refresh.setEnabled(bool(hosts) and self._run is None)
         refresh.triggered.connect(lambda: self.check_hosts(hosts, status=True, users=True))
 
@@ -1663,20 +1651,18 @@ class HostsTool(ListWorkspace):
         self.prefs["recent_addresses"] = kept[:RECENT_PATHS]
         self._save_prefs()
 
-    def where_in_list(self, address: str) -> list[tuple[str, str]]:
-        """Each host of the open list reached at `address`: its group's path and its name."""
+    def why_not_add(self, name: str, address: str) -> str:
+        """Why Add to host list… can't add the PC in the Commands window, "" when it can: no list
+        is open, the list has hosts at that address (each with where it sits, a line each), or
+        the list is read-only."""
         doc = self._doc
         if doc is None:
-            return []
+            return _("No host list is open.")
         wanted = address.strip().casefold()
-        return [
-            (group_path(doc.hosts, h.group), h.name)
-            for h in doc.hosts.hosts
-            if h.connect_address.casefold() == wanted
-        ]
-
-    def can_add_hosts(self) -> bool:
-        return self._doc is not None and not self._doc.read_only
+        listed = [h for h in doc.hosts.hosts if h.connect_address.casefold() == wanted]
+        if listed:
+            return "\n".join(listed_at(doc.hosts, h, name) for h in listed)
+        return _("This list is read-only.") if doc.read_only else ""
 
     def add_typed_host(self, address: str, profile: str) -> str | None:
         """Add to list…: Add host… with the address typed in the Commands window."""

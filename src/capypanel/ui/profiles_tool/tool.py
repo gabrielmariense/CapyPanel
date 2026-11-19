@@ -50,7 +50,8 @@ from capypanel.ui.profiles_tool.host_page import Context, HostPage, Stage
 from capypanel.ui.profiles_tool.hosts_page import HostsPage, RowFacts
 from capypanel.ui.profiles_tool.panels import DETAILS, LEFT, RIGHT, STATE, TICK, amber
 from capypanel.ui.profiles_tool.side import Entry, GroupFacts, HostFacts, ProgressCard
-from capypanel.ui.profiles_tool.tabs import HOSTS, TabStrip, mark_icon
+from capypanel.ui.tab_strip import PINNED as HOSTS
+from capypanel.ui.tab_strip import TabStrip, mark_icon
 from capypanel.ui.themes import engine as themes
 
 PANES_KEY = "pane_widths"  # the side panels' widths (the narrower 0.24 ones aren't kept)
@@ -139,7 +140,7 @@ class ProfilesTool(Tool):
         self.list_picker = self.nav.add_list_picker(self._fill_list_menu)
 
         self.hosts_page = HostsPage()
-        self.tabs = TabStrip()
+        self.tabs = TabStrip("device-desktop")
         self.middle = QStackedWidget()
         self.middle.addWidget(self.hosts_page.box)
         self.inner = PaneSplitter()
@@ -252,6 +253,7 @@ class ProfilesTool(Tool):
             ("Ctrl+Tab", lambda: self._step(1)),
             ("Ctrl+Shift+Tab", lambda: self._step(-1)),
             ("Ctrl+W", lambda: self.close_tab(self.tabs.current())),
+            ("Ctrl+Shift+W", lambda: self.close_tab(self.tabs.current())),  # as SSH's tabs
         ):
             shortcut = QShortcut(QKeySequence(keys), self, run)
             shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
@@ -510,8 +512,10 @@ class ProfilesTool(Tool):
             item.triggered.connect(lambda _c=False, p=path: self._pick_list(p))
 
     def _pick_list(self, path: Any) -> None:
+        """The dropdown's list, on the Hosts tab: it shows what was picked, as a group does."""
         if self._hosts is not None:
             self._hosts.pick_list(path)
+        self.switch(HOSTS)
 
     def _show_list(self) -> None:
         """Hosts opened another list, or the open one changed."""
@@ -745,8 +749,8 @@ class ProfilesTool(Tool):
                 else ngettext("&Scan {n} host", "&Scan {n} hosts", n).format(n=n))  # fmt: skip
         menu.addAction(scan, self.scan_clicked)
         refresh = menu.addAction(
-            _("&Refresh host") if n == 1
-            else ngettext("&Refresh {n} host", "&Refresh {n} hosts", n).format(n=n),
+            _("Re&fresh host") if n == 1
+            else ngettext("Re&fresh {n} host", "Re&fresh {n} hosts", n).format(n=n),
             lambda: self._check(hosts),
         )  # fmt: skip
         refresh.setEnabled(not self._checking())
@@ -913,7 +917,7 @@ class ProfilesTool(Tool):
 
     def _step(self, by: int) -> None:
         """Ctrl+Tab: the next tab, the Hosts tab included, round and round."""
-        keys = [HOSTS, *self.tabs.host_keys()]
+        keys = [HOSTS, *self.tabs.tab_keys()]
         index = keys.index(self.tabs.current()) if self.tabs.current() in keys else 0
         self.switch(keys[(index + by) % len(keys)])
 
@@ -934,7 +938,7 @@ class ProfilesTool(Tool):
         if page.scan is not None and page.read_at is not None:
             total, deletable = page.counts() or (0, 0)
             self._kept[key] = (total, deletable, page.read_at)
-        keys = self.tabs.host_keys()
+        keys = self.tabs.tab_keys()
         index = keys.index(key)
         was_current = self.tabs.current() == key
         self.tabs.remove(key)
@@ -945,7 +949,7 @@ class ProfilesTool(Tool):
         page.side.deleteLater()
         page.deleteLater()
         if was_current:  # the tab on its left, or the Hosts tab
-            left = self.tabs.host_keys()
+            left = self.tabs.tab_keys()
             self.switch(left[index - 1] if index > 0 and left else HOSTS)
         host = self._host(key)
         if host is not None:  # its row: the last scan kept, never a "scanning…" left behind
@@ -955,7 +959,7 @@ class ProfilesTool(Tool):
         return True
 
     def close_others(self, key: str) -> None:
-        for other in [k for k in self.tabs.host_keys() if k != key]:
+        for other in [k for k in self.tabs.tab_keys() if k != key]:
             self.close_tab(other)
 
     def close_finished(self) -> None:
@@ -997,7 +1001,7 @@ class ProfilesTool(Tool):
 
     def _overview(self) -> None:
         """Progress, the tabs with ticks waiting, the Hosts tab's name and ▾'s list."""
-        pages = [self._pages[k] for k in self.tabs.host_keys() if k in self._pages]
+        pages = [self._pages[k] for k in self.tabs.tab_keys() if k in self._pages]
         lines, waiting = [], []
         for page in sorted(pages, key=lambda p: p.order()):  # the working ones first
             mark = page.mark()
@@ -1016,7 +1020,7 @@ class ProfilesTool(Tool):
         self.progress.show_tabs(lines, sum(not p.busy() for p in pages))
         self.hosts_page.host_card.show_ticked(waiting)
         total = len(self._all_hosts())
-        self.tabs.set_hosts_text(_("Hosts ({n})").format(n=total))
+        self.tabs.set_pinned_text(_("Hosts ({n})").format(n=total))
         items = [(HOSTS, _("Hosts ({n})").format(n=total), mark_icon("device-desktop", ""))]
         for page in pages:
             mark = page.mark()

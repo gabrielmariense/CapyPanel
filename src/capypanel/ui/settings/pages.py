@@ -492,42 +492,19 @@ class ListsGeneralPage(Page):
         return self._first if self.show_first.isEnabled() else None
 
 
-# ---- Hosts: General ----
+# ---- Hosts and SSH: General ----
 
 
-class HostsPage(ListsGeneralPage):
-    """The Hosts tool's General page: Host lists, Refresh, then the Details panel."""
+class AutoStatusSection(Section):
+    """Refresh status by itself, on a card of its own: Off, a few common intervals, or Custom….
+    `auto_line` says what the check does, under the setting's name."""
 
-    customize_requested = Signal()  # Quick commands' Choose…
+    changed = Signal()
+    EVERY = (1, 5, 15, 30)  # minutes offered in the dropdown, besides Custom…
+    CUSTOM = -1
 
-    def __init__(
-        self,
-        *,
-        texts: ListTexts,
-        start_list: object,
-        default_list: Path,
-        personal_list: Path,
-        added: list[Path],
-        document: OpenList | None = None,
-        found: list[Path] | None = None,
-        hidden: list[Path] | None = None,
-        auto_status: tuple[bool, int] = (False, 5),
-        start_view: tuple[str, str] | None = None,
-        host_list: HostList | None = None,
-    ) -> None:
-        super().__init__(
-            texts=texts,
-            start_list=start_list,
-            default_list=default_list,
-            personal_list=personal_list,
-            added=added,
-            document=document,
-            found=found,
-            hidden=hidden,
-            start_view=start_view,
-            host_list=host_list,
-        )
-        refresh = Section(_("Refresh"))
+    def __init__(self, auto_line: str, auto_status: tuple[bool, int]) -> None:
+        super().__init__(_("Refresh"))
         # One dropdown: Off, a few common intervals, and Custom… for any other.
         self.auto_every = QComboBox()
         self._auto_minutes = auto_status[1]  # kept while it's off, for when it's on again
@@ -535,38 +512,13 @@ class HostsPage(ListsGeneralPage):
         self._fill_every(self._shown_minutes)
         self.auto_every.activated.connect(self._every_picked)
         add_rows(
-            refresh.content,
-            SettingRow(
-                _("Refresh status &by itself"),
-                _("Only ping and ports, so no account is needed. "
-                  "Refresh in the toolbar always works."),
-                self.auto_every,
-            ),
-        )  # fmt: skip
-
-        self.add_section(refresh)
-
-        panel = Section(_("Details panel"))
-        self.quick_button = QPushButton(_("C&hoose…"))
-        self.quick_button.setAutoDefault(False)
-        self.quick_button.clicked.connect(self.customize_requested)
-        add_rows(
-            panel.content,
-            SettingRow(
-                _("&Quick commands"),
-                _("The buttons on top of a host's Details panel; the first four are also in "
-                  "its right-click menu. Yours, on this PC."),
-                self.quick_button,
-            ),
-        )  # fmt: skip
-        self.add_section(panel)
+            self.content,
+            SettingRow(_("Refresh status &by itself"), auto_line, self.auto_every),
+        )
 
     def auto_status_choice(self) -> tuple[bool, int]:
         minutes = self.auto_every.currentData()
         return (minutes > 0, minutes) if minutes else (False, self._auto_minutes)
-
-    EVERY = (1, 5, 15, 30)  # minutes offered in the dropdown, besides Custom…
-    CUSTOM = -1
 
     def _fill_every(self, minutes: int) -> None:
         """Off, the common intervals, any other interval in use, then Custom…."""
@@ -598,6 +550,123 @@ class HostsPage(ListsGeneralPage):
 
     def _ask_minutes(self) -> int | None:
         return ask_minutes(self, self._auto_minutes)
+
+
+class AutoStatusOnlyPage(Page):
+    """A General page with only Refresh status by itself: SSH's, whose lists are Hosts' and
+    are managed on Hosts' General page."""
+
+    def __init__(self, *, auto_line: str, auto_status: tuple[bool, int] = (False, 5)) -> None:
+        super().__init__(_("General"))
+        self.refresh_section = AutoStatusSection(auto_line, auto_status)
+        self.refresh_section.changed.connect(self.changed)
+        self.auto_every = self.refresh_section.auto_every
+        self.body.addWidget(self.refresh_section)
+        self.body.addStretch(1)
+
+    def auto_status_choice(self) -> tuple[bool, int]:
+        return self.refresh_section.auto_status_choice()
+
+    def pick_every(self, minutes: int) -> None:
+        """Refresh by itself every `minutes`; 0 is off."""
+        self.refresh_section.pick_every(minutes)
+
+
+class AutoStatusPage(ListsGeneralPage):
+    """A list tool's General page with Refresh status by itself under its lists: Hosts'.
+    `auto_line` says what the check does, under the setting's name."""
+
+    def __init__(
+        self,
+        *,
+        texts: ListTexts,
+        start_list: object,
+        default_list: Path,
+        personal_list: Path,
+        added: list[Path],
+        auto_line: str,
+        document: OpenList | None = None,
+        found: list[Path] | None = None,
+        hidden: list[Path] | None = None,
+        auto_status: tuple[bool, int] = (False, 5),
+        start_view: tuple[str, str] | None = None,
+        host_list: HostList | None = None,
+    ) -> None:
+        super().__init__(
+            texts=texts,
+            start_list=start_list,
+            default_list=default_list,
+            personal_list=personal_list,
+            added=added,
+            document=document,
+            found=found,
+            hidden=hidden,
+            start_view=start_view,
+            host_list=host_list,
+        )
+        self.refresh_section = AutoStatusSection(auto_line, auto_status)
+        self.refresh_section.changed.connect(self.changed)
+        self.auto_every = self.refresh_section.auto_every
+        self.add_section(self.refresh_section)
+
+    def auto_status_choice(self) -> tuple[bool, int]:
+        return self.refresh_section.auto_status_choice()
+
+    def pick_every(self, minutes: int) -> None:
+        """Refresh by itself every `minutes`; 0 is off."""
+        self.refresh_section.pick_every(minutes)
+
+
+class HostsPage(AutoStatusPage):
+    """The Hosts tool's General page: Host lists, Refresh, then the Details panel."""
+
+    customize_requested = Signal()  # Quick commands' Choose…
+
+    def __init__(
+        self,
+        *,
+        texts: ListTexts,
+        start_list: object,
+        default_list: Path,
+        personal_list: Path,
+        added: list[Path],
+        document: OpenList | None = None,
+        found: list[Path] | None = None,
+        hidden: list[Path] | None = None,
+        auto_status: tuple[bool, int] = (False, 5),
+        start_view: tuple[str, str] | None = None,
+        host_list: HostList | None = None,
+    ) -> None:
+        line = _("Only ping and ports, so no account is needed. "
+                 "Refresh in the toolbar always works.")  # fmt: skip
+        super().__init__(
+            texts=texts,
+            start_list=start_list,
+            default_list=default_list,
+            personal_list=personal_list,
+            added=added,
+            auto_line=line,
+            document=document,
+            found=found,
+            hidden=hidden,
+            auto_status=auto_status,
+            start_view=start_view,
+            host_list=host_list,
+        )
+        panel = Section(_("Details panel"))
+        self.quick_button = QPushButton(_("C&hoose…"))
+        self.quick_button.setAutoDefault(False)
+        self.quick_button.clicked.connect(self.customize_requested)
+        add_rows(
+            panel.content,
+            SettingRow(
+                _("&Quick commands"),
+                _("The buttons on top of a host's Details panel; the first four are also in "
+                  "its right-click menu. Yours, on this PC."),
+                self.quick_button,
+            ),
+        )  # fmt: skip
+        self.add_section(panel)
 
 
 def every_text(minutes: int) -> str:

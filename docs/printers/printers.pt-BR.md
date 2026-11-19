@@ -41,6 +41,51 @@ Os outros campos são opcionais:
     - O **Editar selecionado…** (F2) abre a mesma janela para uma impressora que já está na lista,
       com **Salvar** no lugar de **Adicionar**.
 
+## Importar muitas impressoras de uma vez
+
+1. **Inventário > Importar impressoras…**. Uma lista de impressoras vazia oferece o mesmo botão ao
+   lado de **Adicionar impressora…**.
+2. Cole uma lista na caixa de cima, ou clique em **Abrir um arquivo CSV…**. As linhas preenchem a
+   prévia logo abaixo.
+3. Confira a prévia e escolha para onde vão as impressoras sem grupo em **Impressoras sem grupo vão
+   para:**.
+4. Clique em **Adicionar {n} impressoras**. Nada muda na sua lista antes disso, e nenhuma
+   impressora é contatada: quem faz isso é o primeiro Atualizar.
+
+![O Importar impressoras com a lista de impressoras do Windows colada: duas impressoras prontas para adicionar e duas em vermelho, cuja porta do Windows não é um endereço](../images/import-printers-dark-pt-BR.png)
+
+Três tipos de lista são entendidos, e o **Formatos…** mostra cada um:
+
+| Formato | O que é |
+|---|---|
+| **Nome e endereço** | "Um nome à sua escolha, depois o endereço IP da impressora ou o nome dela na rede." Separados por vírgula, ou duas colunas copiadas do Excel |
+| **Um Relatório de Impressoras** | Um [Relatório](#exportar-impressoras-para-uma-planilha) salvo com as colunas **Para importar** ou **Todos os detalhes**, em inglês ou português |
+| **Lista de impressoras do Windows** | O que o Windows PowerShell salva com o comando abaixo |
+
+```
+Get-Printer | Export-Csv printers.csv -Encoding UTF8
+```
+
+Rode-o no Windows PowerShell de um PC para salvar as impressoras desse PC; acrescente
+`-ComputerName` e o nome de um servidor de impressão para as impressoras do servidor. Uma
+impressora que já está na sua lista é ignorada, nunca sobrescrita.
+
+??? note "Mais sobre importar impressoras"
+
+    - A janela é a mesma do
+      [Importar hosts](../hosts/host-lists.pt-BR.md#adicionar-hosts-de-uma-planilha), com cinco
+      colunas a mais depois de **Notas**: **Marca**, **Modelo**, **Nº de série**, **Patrimônio** e
+      **Contadores de páginas**. Editar linhas, deixá-las de fora e o resumo funcionam igual.
+    - Um Relatório volta como estava, com todas as colunas de impressora. A marca e o número de
+      série entram em maiúsculas, como o **Adicionar impressora…** salva, e um endereço que começa
+      com `https://` fica como foi digitado.
+    - Da lista do Windows entra o nome da impressora, e a porta vira o endereço, sem o "IP_" que o
+      Windows põe na frente nem o "_1" de uma segunda porta. **Location** e **Comment** vão para as
+      notas, e o resumo cita o resto como "as outras 36 colunas que o Windows exporta".
+    - Uma porta que não é um endereço, como uma porta WSD, USB001 ou a de um servidor de terminal,
+      entra em vermelho: "Sem endereço: digite o endereço da impressora. A porta do Windows,
+      USB001, não é um endereço." Digite o endereço na prévia, ou deixe a linha de fora.
+
 ## Abrir a página web de uma impressora
 
 Quase toda impressora tem uma página web própria, com configurações, contadores e suprimentos.
@@ -154,8 +199,9 @@ predefinição que vem pronta é **Todos os detalhes**.
     | **Painel de detalhes** (direita) | Tudo que se sabe sobre a impressora selecionada, abaixo do nome e do status dela, com um botão **Atualizar** e um **Página web**. Clique em qualquer valor para copiá-lo |
     | **Barra de status** | A lista aberta e as contagens dela, como no Hosts: o tipo, o nome de uma lista compartilhada, quantas impressoras ela tem, quantas estão online depois que alguma foi atualizada e quantas estão selecionadas. Deixe o mouse sobre ela para ver o caminho do arquivo da lista; um clique o copia |
 
-    O **Inventário** guarda **Adicionar impressora…** (Ctrl+N), **Adicionar grupo…** e
-    **Gerenciar grupos…**, os mesmos três do Hosts.
+    O **Inventário** guarda **Adicionar impressora…** (Ctrl+N), **Adicionar grupo…**, **Gerenciar
+    grupos…** e **Classificar grupos de A a Z**, e, depois de uma linha, **Importar impressoras…**,
+    como o Hosts tem o **Importar hosts…**.
 
 ??? note "As colunas da tabela"
 
@@ -208,3 +254,6 @@ predefinição que vem pronta é **Todos os detalhes**.
 | "“{path}” não é uma lista de impressoras." | O arquivo que você abriu é uma lista de hosts | Abra-o no Hosts |
 | "10 páginas web abertas. Só as 10 primeiras abrem de uma vez." | Havia mais de dez impressoras selecionadas | Abra as outras numa segunda vez |
 | "Marque uma coluna em Última verificação para lê-las" | O botão de atualizar do Relatório não tem nada para ler | Marque uma coluna em Última verificação |
+| "Esta lista ainda não tem impressoras. Adicione uma, ou importe várias de uma vez." | A lista de impressoras está vazia | **Adicionar impressora…** ou **Importar impressoras…** |
+| "Sem endereço: digite o endereço da impressora. A porta do Windows, USB001, não é um endereço." | Numa importação da lista de impressoras do Windows, a porta dessa impressora não é um endereço de rede | Digite o endereço dela na prévia, ou deixe-a de fora |
+| "Não é um nome de impressora nem um endereço IP", "Sem endereço: o nome precisa ser o nome da impressora na rede" | Essa linha de uma importação não pode ser adicionada | Corrija a linha na prévia, ou deixe-a de fora |

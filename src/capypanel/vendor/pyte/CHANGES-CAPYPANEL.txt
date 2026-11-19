@@ -1,0 +1,18 @@
+CapyPanel's copy of pyte
+========================
+
+pyte 0.8.2 (https://github.com/selectel/pyte), the files of its 0.8.2 release, under its own
+license, the LGPL-3.0 (LICENSE, the same text as CapyPanel's licenses/lgpl-3.0.txt). Its authors
+are in AUTHORS. CapyPanel's terminal runs on it: it reads what ssh.exe prints, and CapyPanel's
+own code (capypanel/core/ssh/screen.py) builds on its Screen and ByteStream.
+
+What CapyPanel changed, and when:
+
+2026-11-18
+- screens.py: the character widths come from _widths.py instead of the wcwidth package, so no
+  other package joins CapyPanel. The import line and the module's notice say so.
+- _widths.py: new. wcwidth's answers from Python's own Unicode tables (see its notice).
+- Left out: __main__.py (pyte's command-line demo) and py.typed.
+
+Every other file is as released. Fixes for what pyte gets wrong live in CapyPanel's own code
+(capypanel/core/ssh/screen.py), each with its reason, so they can go back to pyte's authors.

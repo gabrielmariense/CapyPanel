@@ -6,6 +6,7 @@ import logging
 from collections.abc import Sequence
 from dataclasses import fields, replace
 from pathlib import Path
+from typing import ClassVar
 
 from PySide6.QtCore import QByteArray, QPoint, QRect, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QKeySequence, QShortcut
@@ -68,6 +69,11 @@ class ListWorkspace(Tool):
     # Panel widths at a normal font size; a bigger font scales them up.
     PANES_DEFAULT = (220, 340)  # Groups, Details
     PANES_MINIMUM = (180, 300, 260)  # Groups, the table, Details
+    # Another list tool's TOOL_ID: this one shows and edits that tool's open list, as SSH does
+    # Hosts' (his words, 2026-11-18). Opening, making and managing lists is then that tool's,
+    # and an edit made here shows there at once. With no such tool in the window (a test), it
+    # keeps lists of that kind itself.
+    LISTS_FROM: ClassVar[str] = ""
     list_changed = Signal()  # another list was opened, or the open one's items changed
 
     def __init__(
@@ -86,10 +92,13 @@ class ListWorkspace(Tool):
         self._real_doc: OpenList | None = None  # the list as saved, while a guide's sample shows
         self._shown_for_guide: list[QAction] = []  # hidden panels a guide showed
         self._hold_fill = False  # at start: the table is filled once, at the end
-        self._places = shell.paths.lists(self.TOOL_ID)  # lists\<tool>\, shared and own
+        leader = shell.tool(self.LISTS_FROM) if self.LISTS_FROM else None
+        self._leader = leader if isinstance(leader, ListWorkspace) else None
+        self._places = shell.paths.lists(self.list_kind())  # lists\<kind>\, shared and own
         self._default_list = self._places.default
         self._personal_list = self._places.personal
-        self._make_lists_folders()
+        if self._leader is None:  # the tool it takes lists from made them
+            self._make_lists_folders()
         self.search = SearchBox()
         self.nav = NavigationPane(lambda: self.list_texts().everything, self.ICON)
         # The list dropdown, on top of the Groups panel: switch lists, make or open one.
@@ -114,9 +123,7 @@ class ListWorkspace(Tool):
         column.addWidget(self.search)
         column.addWidget(self.tag_strip)
         column.addWidget(self.table)
-        for pane in (self.nav, self.items_pane, self.details):
-            self.splitter.addWidget(pane)
-        self.splitter.setStretchFactor(1, 1)
+        self._lay_out()
         # Dragged all the way, a panel would vanish; View hides panels on purpose instead.
         self.splitter.setChildrenCollapsible(False)
         self._size_panes()
@@ -125,6 +132,8 @@ class ListWorkspace(Tool):
         margins.setContentsMargins(8, 4, 8, 4)  # the same gap above and below the panels
         margins.addWidget(self.splitter)
         self._connect_list()
+        if self._leader is not None:
+            self._leader.list_changed.connect(self._follow)
 
     def _connect_list(self) -> None:
         a = self._list_commands
@@ -150,6 +159,11 @@ class ListWorkspace(Tool):
         self.splitter.edge_double_clicked.connect(self._fit_pane)
         self.nav.add_group_button.clicked.connect(self.add_top_group)  # on the Groups heading
         self.nav.filter_changed.connect(self._filter_picked)
+        # A click on the group already picked changes no pick but still means the list, as in
+        # Profile cleanup; so does a list picked in the dropdown (list_to_front).
+        for tree in (self.nav.everything, self.nav.groups):
+            tree.itemClicked.connect(lambda *_a: self.list_to_front())
+        self.list_picker.menu().triggered.connect(lambda *_a: self.list_to_front())
         self.tag_strip.clear_clicked.connect(self.nav.clear_tags)
         self.table.clear_tags_button.clicked.connect(self.nav.clear_tags)
         self.search.textChanged.connect(self._search_timer.start)
@@ -274,6 +288,10 @@ class ListWorkspace(Tool):
     def list_switched(self) -> None:
         """Another list was opened: anything kept about the last one's items is stale."""
 
+    def list_to_front(self) -> None:
+        """A pick on the left, a list picked in the dropdown or Ctrl+F: the list is wanted. It's
+        always in front here; TabbedListWorkspace brings its tab forward over a connection's."""
+
     def update_tool_state(self, writable: bool, selected: int) -> None:
         """Enables the tool's own commands."""
 
@@ -283,12 +301,25 @@ class ListWorkspace(Tool):
 
     # ---- layout ----
 
-    def restore_layout(self) -> None:
+    def _lay_out(self) -> None:
+        """The panels side by side: Groups, the items, Details."""
+        for pane in (self.nav, self.items_pane, self.details):
+            self.splitter.addWidget(pane)
+        self.splitter.setStretchFactor(1, 1)
+
+    def _restore_panes(self) -> None:
+        """The panels' widths as they were left."""
         splitter = self.prefs.get("main_splitter")
         if isinstance(splitter, str):
             self.splitter.restoreState(QByteArray.fromBase64(splitter.encode()))
             # Restoring turns collapsing back on: a panel dragged to the edge vanished.
             self.splitter.setChildrenCollapsible(False)
+
+    def _save_panes(self) -> None:
+        self.prefs["main_splitter"] = self.splitter.saveState().toBase64().toStdString()
+
+    def restore_layout(self) -> None:
+        self._restore_panes()
         view = self.prefs.get("view")
         view = view if isinstance(view, dict) else {}
         for key, action in self.view_choices().items():
@@ -380,10 +411,12 @@ class ListWorkspace(Tool):
         details = max(details, self.details.minimum_width())
         self.splitter.setSizes([groups, max(total - groups - details, 1), details])
 
-    def _fit_pane(self, edge: int) -> None:
+    def _fit_pane(self, edge: int, splitter: PaneSplitter | None = None) -> None:
         """A double-click on the Groups panel's or the items panel's right edge: that panel as
-        wide as its content, the panel on its right taking the rest, never below its minimum."""
-        left, right = self.splitter.widget(edge - 1), self.splitter.widget(edge)
+        wide as its content, the panel on its right taking the rest, never below its minimum.
+        `splitter` is the one double-clicked, when the tool has more than its main one."""
+        splitter = splitter or self.splitter
+        left, right = splitter.widget(edge - 1), splitter.widget(edge)
         if left is None or right is None:
             return
         if left is self.nav:
@@ -392,11 +425,11 @@ class ListWorkspace(Tool):
             natural = self.table.natural_width()
         else:
             return
-        sizes = self.splitter.sizes()
+        sizes = splitter.sizes()
         total = sizes[edge - 1] + sizes[edge]
         wanted = min(max(natural, left.minimumWidth()), total - right.minimumWidth())
         sizes[edge - 1], sizes[edge] = wanted, total - wanted
-        self.splitter.setSizes(sizes)
+        splitter.setSizes(sizes)
         self.align_toolbar_later()
 
     def restyle(self) -> None:
@@ -409,7 +442,7 @@ class ListWorkspace(Tool):
 
     def save_state(self) -> None:
         self.prefs["view"] = {k: a.isChecked() for k, a in self.view_choices().items()}
-        self.prefs["main_splitter"] = self.splitter.saveState().toBase64().toStdString()
+        self._save_panes()
         self.prefs["nav_splitter"] = self.nav.split_state()
         self.prefs["column_widths"] = self.table.widths()
         self._remember_view()
@@ -445,6 +478,31 @@ class ListWorkspace(Tool):
         return self._doc
 
     @property
+    def saved_document(self) -> OpenList | None:
+        """The open list as saved: without the samples a guide may be showing."""
+        return self._real_doc if self._real_doc is not None else self._doc
+
+    def list_kind(self) -> str:
+        """The kind of list it opens: its own, or that of the tool it takes lists from."""
+        return self.LISTS_FROM or self.TOOL_ID
+
+    def _owner(self) -> "ListWorkspace":
+        """The tool that opens, saves and manages the list shown here: itself, or the one it
+        takes lists from."""
+        return self._leader or self
+
+    def _follow(self) -> None:
+        """The tool it takes lists from opened another list, or its open one changed."""
+        doc = self._leader.saved_document if self._leader is not None else None
+        if self._real_doc is not None:  # this tool's guide shows samples: theirs till it ends
+            self._real_doc = doc if doc is not None else self._real_doc
+            return
+        switched = self._swap(doc)
+        self.refresh()
+        if switched and doc is not None:
+            self._show_first(doc)
+
+    @property
     def default_list(self) -> Path:
         return self._default_list
 
@@ -455,6 +513,9 @@ class ListWorkspace(Tool):
     def open_first_list(self) -> None:
         """At start: the startup list, then everything shown. Opening a list fills the table at
         each of its steps; here they wait for the last one, so a long list is filled once."""
+        if self._leader is not None:  # its list is open already: the window made it first
+            self._follow()
+            return
         self._hold_fill = True
         try:
             self.open_startup_list()
@@ -481,6 +542,8 @@ class ListWorkspace(Tool):
                 return
 
     def open_list(self, path: Path, *, quiet: bool = False) -> bool:
+        if self._leader is not None:  # opened there, and shown here as it follows
+            return self._leader.open_list(path, quiet=quiet)
         kind = self._kind(path)
         if kind is not ListKind.SHARED and not path.exists():
             return self._create_list(path, replace_existing=False, quiet=quiet)
@@ -492,7 +555,7 @@ class ListWorkspace(Tool):
             self._error(note.format(path=path), quiet)
             return False
         try:
-            doc = OpenList.open(path, kind=self.TOOL_ID)
+            doc = OpenList.open(path, kind=self.list_kind())
         except FileNotFoundError:
             locations.forget_list(self.prefs, path)
             self._error(_("The list “{path}” doesn't exist anymore.").format(path=path), quiet)
@@ -508,6 +571,9 @@ class ListWorkspace(Tool):
 
     def new_list(self) -> None:
         """The list dropdown's New list…: shared, personal or elsewhere, as in Settings."""
+        if self._leader is not None:
+            self._leader.new_list()
+            return
         path = ask_new_list(
             self,
             shared_dir=self._places.shared_dir,
@@ -520,6 +586,9 @@ class ListWorkspace(Tool):
     def open_list_file(self) -> None:
         """The list dropdown's Open list… (Ctrl+O): any list file, which then stays in the
         dropdown."""
+        if self._leader is not None:
+            self._leader.open_list_file()
+            return
         shared = self._places.shared_dir
         start = shared if shared.is_dir() else self._personal_list.parent
         name, _filter = QFileDialog.getOpenFileName(
@@ -532,10 +601,14 @@ class ListWorkspace(Tool):
 
     def found_lists(self, *, hidden: bool = False) -> list[Path]:
         """The lists in the lists folders; the ones removed in Settings only when `hidden`."""
+        if self._leader is not None:
+            return self._leader.found_lists(hidden=hidden)
         found = locations.found_lists(self._places.shared_dir, self._places.user_dir)
         return found if hidden else locations.without_hidden(self.prefs, found)
 
     def _available_lists(self) -> list[Path]:
+        if self._leader is not None:  # the same dropdown: its lists, added and removed there
+            return self._leader._available_lists()
         return locations.available_lists(
             self.prefs,
             default=self._default_list,
@@ -575,7 +648,7 @@ class ListWorkspace(Tool):
         menu.addActions([a.new_list, a.open_list])
         menu.addSeparator()
         manage = menu.addAction(self.list_texts().manage)
-        manage.triggered.connect(lambda: self._shell.open_settings(self.lists_page()))
+        manage.triggered.connect(lambda: self._shell.open_settings(self._owner().lists_page()))
 
     def list_choices(self) -> list[tuple[Path, str, bool]]:
         """Every list the dropdown offers: its file, its name, and whether it's the open one."""
@@ -602,20 +675,28 @@ class ListWorkspace(Tool):
         try:
             if self._kind(path) is ListKind.DEFAULT and not path.parent.exists():
                 files.make_shared_folder(path.parent)  # read by all, changed only by admins
-            doc = OpenList.create(path, replace_existing=replace_existing, kind=self.TOOL_ID)
+            doc = OpenList.create(path, replace_existing=replace_existing, kind=self.list_kind())
         except (HostListFileError, OSError) as e:
             self._error(_("Couldn't create “{path}”: {error}").format(path=path, error=e), quiet)
             return False
         self._use(doc)
         return True
 
-    def _use(self, doc: OpenList) -> None:
-        switched = self._doc is None or not locations.same_path(self._doc.path, doc.path)
+    def _swap(self, doc: OpenList | None) -> bool:
+        """Shows `doc` from now on; whether it's another list than the one shown."""
+        old = self._doc
+        switched = (old is None) != (doc is None) or (
+            old is not None and doc is not None and not locations.same_path(old.path, doc.path)
+        )
         if switched:
             self._remember_view()  # where the list being left was
             self.list_switched()
             self._clear_search()
         self._doc = doc
+        return switched
+
+    def _use(self, doc: OpenList) -> None:
+        switched = self._swap(doc)
         locations.remember_list(self.prefs, doc.path)
         hidden = locations.hidden_lists(self.prefs)
         if any(locations.same_path(doc.path, p) for p in hidden):  # opened again: listed again
@@ -852,7 +933,7 @@ class ListWorkspace(Tool):
         except (HostListFileError, OSError) as e:
             self._error(_("Couldn't save the list: {error}").format(error=e))
             return False
-        self.refresh()
+        self._owner().refresh()  # a tool taking its lists shows the edit as it follows
         return True
 
     def _resolve_conflict(self, mine: HostList) -> None:
@@ -884,9 +965,9 @@ class ListWorkspace(Tool):
                 path = Path(name)
                 try:
                     copy = OpenList.save_as(
-                        path, mine, replace_existing=path.exists(), kind=self.TOOL_ID
+                        path, mine, replace_existing=path.exists(), kind=self.list_kind()
                     )
-                    self._use(copy)
+                    self._owner()._use(copy)
                     return
                 except (HostListFileError, OSError) as e:
                     self._error(_("Couldn't save the copy: {error}").format(error=e))
@@ -894,7 +975,7 @@ class ListWorkspace(Tool):
             doc.reload()
         except (HostListFileError, OSError) as e:
             self._error(_("Couldn't reload the list: {error}").format(error=e))
-        self.refresh()
+        self._owner().refresh()
 
     def manage_groups(self) -> None:
         """Inventory > Manage groups…: reorder and nest every group at once."""
@@ -1066,6 +1147,7 @@ class ListWorkspace(Tool):
         return self.search.text().strip().casefold()
 
     def _focus_search(self) -> None:
+        self.list_to_front()  # the box sits over the list
         self.search.setFocus(Qt.FocusReason.ShortcutFocusReason)
         self.search.selectAll()
 
@@ -1078,6 +1160,7 @@ class ListWorkspace(Tool):
         """Picking a group or a tag on the left ends a search: it means browsing again."""
         self._clear_search()
         self._show_items()
+        self.list_to_front()
 
     def _end_search(self) -> None:
         if self.search.text():
@@ -1336,13 +1419,14 @@ class ListWorkspace(Tool):
             popup(menu, self.nav.groups.viewport().mapToGlobal(position))
             return
         self.nav.select_group(group_id)
+        self.list_to_front()  # the group already picked too: its commands act on the list
         menu.addAction(a.add_group)  # inside the group under the mouse
         group = self._doc.hosts.group(group_id) if self._doc else None
         if group is not None and self._doc is not None:
             self.fill_group_menu(menu, group)
             menu.addSeparator()
             view = locations.list_view(self.prefs, self._doc.path)
-            first = menu.addAction(_("Show this group &first"))
+            first = menu.addAction(_("Sho&w this group first"))  # F is Refresh group's
             first.setToolTip(_("The list opens on this group"))
             first.setCheckable(True)
             first.setChecked(view.show == locations.SHOW_GROUP and view.group == group.id)

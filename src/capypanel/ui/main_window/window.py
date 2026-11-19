@@ -114,7 +114,9 @@ class MainWindow(QMainWindow):
         self.updater = Updater(self.prefs, self.save_prefs, self.paths.company_tools_dir, self)
         self._update_shown = ""  # the version whose window opened in this run: once is enough
         self.guides = GuideRunner(self, seen_from(self.prefs), self.save_prefs, _docs_page)
-        self._tools_agreed = False  # an update asked the tools already: closing asks no more
+        # An update asked the tools already, or Windows is ending the session: closing asks no
+        # more.
+        self._tools_agreed = False
         self._build_menus()
         for action in (self._home_action, self.commands.settings):
             action.changed.connect(self._rail_tips)  # a new key shows in its tip
@@ -470,13 +472,18 @@ class MainWindow(QMainWindow):
         self.tray.message_clicked.connect(self._notification_clicked)
         app = QGuiApplication.instance()
         if isinstance(app, QGuiApplication):
-            app.commitDataRequest.connect(self._session_ending)
+            # When Windows ends the session, Qt says aboutToQuit, then closes the windows, all
+            # within WM_ENDSESSION. commitDataRequest comes earlier, and also when the end is
+            # then cancelled, so it's no sign (checked on Qt 6.11).
+            app.aboutToQuit.connect(self._session_ending)
         self._update_tray()
 
-    def _session_ending(self, _manager: object) -> None:
-        """Windows is logging off or shutting down: the X then quits, with no question and no
-        tray, so CapyPanel never holds the shutdown up."""
+    def _session_ending(self) -> None:
+        """Windows is logging off or shutting down: the X then quits with no question, neither
+        its own nor a tool's (open SSH connections), and no tray, so CapyPanel never holds the
+        shutdown up. Every other quit says aboutToQuit after the window has closed."""
         self._quitting = True
+        self._tools_agreed = True
 
     def _update_tray(self) -> None:
         """The tray icon shows while the window is in the tray, or while a tool works on its

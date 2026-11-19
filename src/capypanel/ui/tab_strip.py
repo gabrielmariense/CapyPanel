@@ -1,6 +1,7 @@
-"""The Profile cleanup tool's tab bar: the pinned Hosts tab first, then a gap with a short line,
-then a tab per host, which scroll when they don't fit while the Hosts tab stays. A ▾ at the end
-lists every tab. Tabs never reorder themselves: a new one opens at the right end."""
+"""A tool's tab bar: the pinned tab first (the list), then a gap with a short line, then a tab
+per thing opened (a host in Profile cleanup, a connection in SSH), which scroll when they don't
+fit while the pinned tab stays. A ▾ at the end lists every tab. Tabs never reorder themselves: a
+new one opens at the right end."""
 
 from PySide6.QtCore import QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QMouseEvent, QPalette
@@ -17,13 +18,13 @@ from PySide6.QtWidgets import (
 
 from capypanel.ui.icons import tabler_icon
 
-HOSTS = ""  # the Hosts tab's key; a host's tab has the host's key
-GAP = 14  # px between the Hosts tab and the hosts' tabs
+PINNED = ""  # the pinned tab's key; every other tab has a key of its own
+GAP = 14  # px between the pinned tab and the others
 
 
 class _Bar(QTabBar):
-    """A tab bar that can show none of its tabs as the current one: the Hosts tab and the hosts'
-    tabs are two bars, and only one of them holds the tab in front."""
+    """A tab bar that can show none of its tabs as the current one: the pinned tab and the
+    others are two bars, and only one of them holds the tab in front."""
 
     middle_clicked = Signal(int)
 
@@ -120,15 +121,17 @@ class _Bar(QTabBar):
 
 
 class TabStrip(QWidget):
-    """Which tab is in front is a key: HOSTS, or a host's key."""
+    """Which tab is in front is a key: PINNED, or another tab's key. `pinned_icon` is the
+    pinned tab's Tabler icon."""
 
     picked = Signal(str)  # a tab was clicked: its key
     close_requested = Signal(str)  # its ×, or a middle-click
     menu_requested = Signal(str, QPoint)  # a right-click on a tab: its key, where (global)
 
-    def __init__(self) -> None:
+    def __init__(self, pinned_icon: str) -> None:
         super().__init__()
-        self._current = HOSTS
+        self._current = PINNED
+        self._pinned_icon = pinned_icon
         self.pinned = _Bar()
         self.pinned.addTab("")
         self.pinned.setUsesScrollButtons(False)
@@ -155,7 +158,7 @@ class TabStrip(QWidget):
         row.addWidget(gap)
         row.addWidget(self.bar, 1, Qt.AlignmentFlag.AlignBottom)
         row.addWidget(self.more, 0, Qt.AlignmentFlag.AlignVCenter)
-        self.pinned.tabBarClicked.connect(lambda _i: self.picked.emit(HOSTS))
+        self.pinned.tabBarClicked.connect(lambda _i: self.picked.emit(PINNED))
         self.bar.tabBarClicked.connect(self._clicked)
         self.bar.middle_clicked.connect(lambda i: self.close_requested.emit(self.key_at(i)))
         self.bar.customContextMenuRequested.connect(self._menu)
@@ -173,7 +176,7 @@ class TabStrip(QWidget):
         color = self.palette().color(QPalette.ColorRole.ButtonText)
         self.more.setIcon(tabler_icon("chevron-down", color))
         self.bar.restyle()
-        self.pinned.setTabIcon(0, tabler_icon("device-desktop", color))
+        self.pinned.setTabIcon(0, tabler_icon(self._pinned_icon, color))
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
         for index in range(self.bar.count()):
             button = self.bar.tabButton(index, QTabBar.ButtonPosition.RightSide)
@@ -182,12 +185,12 @@ class TabStrip(QWidget):
 
     # ---- the tabs ----
 
-    def set_hosts_text(self, text: str, tip: str = "") -> None:
+    def set_pinned_text(self, text: str, tip: str = "") -> None:
         self.pinned.setTabText(0, text)
         self.pinned.setTabToolTip(0, tip)
 
-    def host_keys(self) -> list[str]:
-        """The hosts' tabs, left to right."""
+    def tab_keys(self) -> list[str]:
+        """The tabs after the pinned one, left to right."""
         return [self.key_at(i) for i in range(self.bar.count())]
 
     def key_at(self, index: int) -> str:
@@ -198,7 +201,7 @@ class TabStrip(QWidget):
         return next((i for i in range(self.bar.count()) if self.key_at(i) == key), -1)
 
     def add(self, key: str, text: str) -> None:
-        """A host's tab at the right end."""
+        """A tab at the right end."""
         self.bar.blockSignals(True)
         index = self.bar.addTab(text)
         self.bar.setTabData(index, key)
@@ -212,7 +215,7 @@ class TabStrip(QWidget):
         )
         close.clicked.connect(lambda _c=False, k=key: self.close_requested.emit(k))
         self.bar.setTabButton(index, QTabBar.ButtonPosition.RightSide, close)
-        if self._current == HOSTS:  # adding a first tab makes it current in Qt's eyes
+        if self._current == PINNED:  # adding a first tab makes it current in Qt's eyes
             self.bar.set_active(False)
         self.bar.blockSignals(False)
 
@@ -224,8 +227,8 @@ class TabStrip(QWidget):
             self.bar.blockSignals(False)
 
     def show_tab(self, key: str, text: str, icon: QIcon, tip: str, closable: bool) -> None:
-        """A host's tab as it stands: its name, its mark and the mark's words, and its × only
-        while it may close."""
+        """A tab as it stands: its name, its mark and the mark's words, and its × only while it
+        may close."""
         index = self.index_of(key)
         if index < 0:
             return
@@ -240,10 +243,10 @@ class TabStrip(QWidget):
         return self._current
 
     def set_current(self, key: str) -> None:
-        self._current = key if key == HOSTS or self.index_of(key) >= 0 else HOSTS
-        self.pinned.set_active(self._current == HOSTS)
-        self.bar.set_active(self._current != HOSTS)
-        if self._current != HOSTS:
+        self._current = key if key == PINNED or self.index_of(key) >= 0 else PINNED
+        self.pinned.set_active(self._current == PINNED)
+        self.bar.set_active(self._current != PINNED)
+        if self._current != PINNED:
             self.bar.blockSignals(True)
             self.bar.setCurrentIndex(self.index_of(self._current))
             self.bar.blockSignals(False)
@@ -274,5 +277,5 @@ class TabStrip(QWidget):
 
 
 def mark_icon(name: str, color: str) -> QIcon:
-    """A tab's mark; none for a host simply scanned."""
+    """A tab's mark; none when `name` is "" (a host simply scanned)."""
     return tabler_icon(name, QColor(color), 16) if name else QIcon()

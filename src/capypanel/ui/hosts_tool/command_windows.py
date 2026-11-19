@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import shiboken6
-from PySide6.QtCore import QStandardPaths, Qt
+from PySide6.QtCore import QSize, QStandardPaths, Qt
 from PySide6.QtGui import QColor, QGuiApplication
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -133,6 +133,17 @@ class Question(QDialog):
         layout.addSpacing(spacing.ICON)
         layout.addLayout(buttons)
         self.cancel.setFocus()
+
+    def sizeHint(self) -> QSize:
+        """WIDE at least, and as tall as the words wrap at that width. Qt measures the height at
+        a wrapped label's own narrow width, then widens the window to WIDE: the line too many
+        stayed as a gap under the question (pt-BR's Close 2 open connections, Dante)."""
+        hint = super().sizeHint()
+        width = max(hint.width(), self.minimumWidth())
+        layout = self.layout()
+        if layout is None or not layout.hasHeightForWidth():
+            return QSize(width, hint.height())
+        return QSize(width, layout.totalHeightForWidth(width))
 
 
 def ask_session_action(parent: QWidget | None, host: str, session: Session, *,

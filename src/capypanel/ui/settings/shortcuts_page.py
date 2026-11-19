@@ -8,7 +8,17 @@ has no card: the list fills it (Dante's redo, 2026-11-16)."""
 from typing import cast
 
 import shiboken6
-from PySide6.QtCore import QKeyCombination, QMargins, QPoint, QRect, QSize, Qt, Signal
+from PySide6.QtCore import (
+    QEvent,
+    QKeyCombination,
+    QMargins,
+    QObject,
+    QPoint,
+    QRect,
+    QSize,
+    Qt,
+    Signal,
+)
 from PySide6.QtGui import (
     QAction,
     QColor,
@@ -55,6 +65,9 @@ LINE_EDIT_MARGIN = 2  # Qt keeps this much inside a field's contents on each sid
 HEADING_GAP = 20  # empty space above each heading but the first (Gabriel: "add some empty space")
 HEADING_PADDING = 8  # above and under a heading's text
 GAP_ROLE = Qt.ItemDataRole.UserRole + 1  # a heading's: whether it has the gap above
+FIXED_ROLE = Qt.ItemDataRole.UserRole + 2  # the SSH terminal's rows: shown, never changed
+TERMINAL_TOOL = "ssh"  # the tool whose terminal's own keys follow its commands
+LINE_PADDING = 6  # above and under the terminal's line, and at its sides
 MODIFIERS = (Qt.Key.Key_Shift, Qt.Key.Key_Control, Qt.Key.Key_Alt, Qt.Key.Key_Meta,
              Qt.Key.Key_AltGr, Qt.Key.Key_unknown)  # fmt: skip
 HELD = (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier
@@ -82,7 +95,8 @@ ORDER = (
     # File
     "app.settings", "app.exit",
     # View
-    "go.home", "go.hosts", "go.printers", "go.profiles", "app.show_toolbar", "app.show_status_bar",
+    "go.home", "go.hosts", "go.printers", "go.profiles", "go.ssh", "app.show_toolbar",
+    "app.show_status_bar",
     # Help
     "app.show_guide", "app.show_all_guides", "app.documentation", "app.report_problem",
     "app.check_updates", "app.about",
@@ -101,17 +115,50 @@ ORDER = (
     "command.message", "command.drives", "command.printers",
     # Printers: Open web page, Refresh all, Inventory's menu, Report
     "printers.open_web_page", "printers.refresh_shown", "printers.add_printer",
-    "printers.add_group", "printers.manage_groups", "printers.export_printers",
+    "printers.add_group", "printers.manage_groups", "printers.import_printers",
+    "printers.export_printers",
     # Printers: a printer's right-click menu, View, the list dropdown
     "printers.refresh_selected", "printers.copy_address", "printers.edit", "printers.remove",
     "printers.show_groups", "printers.show_tags", "printers.show_details",
     "printers.customize_details", "printers.new_list", "printers.open_list",
+    # SSH: Connect, Refresh all, Inventory's menu
+    "ssh.connect_host", "ssh.connect_window", "ssh.refresh_shown", "ssh.add_host",
+    "ssh.add_group", "ssh.manage_groups",
+    # SSH: a host's right-click menu, View, the list dropdown
+    "ssh.refresh_selected", "ssh.copy_address", "ssh.edit", "ssh.remove", "ssh.show_groups",
+    "ssh.show_tags", "ssh.show_details", "ssh.customize_details", "ssh.new_list", "ssh.open_list",
 )  # fmt: skip
 
 
 def reserved_line() -> str:
     """The line under the buttons, read in the language shown now."""
-    return _("F1, Esc, Ctrl+F and Tab are kept for CapyPanel itself.")
+    return _(
+        "F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself. In an SSH "
+        "terminal, all but Ctrl+Shift+W go to the server."
+    )
+
+
+def terminal_line() -> str:
+    """Under the SSH terminal's heading (Satya's words, ssh-words.md)."""
+    return _(
+        "Inside a terminal, every key goes to the server except the ones below and the keys "
+        "that change tools or open Settings."
+    )
+
+
+def terminal_keys() -> list[tuple[str, str]]:
+    """The SSH terminal's own keys, which nobody changes (topic-027): each one's name in the
+    language shown now, and its key in portable text."""
+    return [
+        (plain(_("&Copy")), "Ctrl+Shift+C"),
+        (_("Copy, with text selected"), "Ctrl+C"),
+        (plain(_("&Paste")), "Ctrl+Shift+V"),
+        (_("Bigger text"), "Ctrl+="),
+        (_("Smaller text"), "Ctrl+-"),
+        (_("Next tab"), "Ctrl+Tab"),
+        (_("Previous tab"), "Ctrl+Shift+Tab"),
+        (plain(_("Close &tab")), "Ctrl+Shift+W"),
+    ]
 
 
 def top_menu(action: QAction) -> tuple[int, QMenu] | None:
@@ -288,6 +335,9 @@ class ShortcutsPage(Page):
         self.body.addWidget(self.section, 1)  # the table scrolls; the page never does
         self._catcher: KeyCatcher | None = None
         self._catching: QTreeWidgetItem | None = None  # the row it waits in
+        self._terminal_item: QTreeWidgetItem | None = None  # the SSH terminal's line, its row
+        self.terminal_words = hint(terminal_line())  # the line itself, in that row
+        self.table.viewport().installEventFilter(self)  # the line's height follows the width
         self._fill()
         themes.switches().switched.connect(self._restyle)
 
@@ -319,6 +369,7 @@ class ShortcutsPage(Page):
         for row in self.keys.rows:
             where, text = self._heading(row)
             groups.setdefault(where, (text, []))[1].append(row)
+        self._terminal_item = None
         for index, where in enumerate(sorted(groups)):
             text, rows = groups[where]
             self._add_heading(text, gap=index > 0)
@@ -327,6 +378,8 @@ class ShortcutsPage(Page):
                 item.setData(COMMAND, ROW_ROLE, row.id)
                 self.table.addTopLevelItem(item)
                 self._show_key(item)
+            if any(TERMINAL_TOOL in row.places for row in rows):
+                self._add_terminal_keys()
         # The key in a narrow column at the right edge, the commands taking the rest (Dante).
         fit_rows(self.table, 0, stretch=COMMAND, least={KEY: self._key_width()})
         self._enable()
@@ -343,9 +396,50 @@ class ShortcutsPage(Page):
         item.setFirstColumnSpanned(True)
         self._style_heading(item)
 
+    def _add_terminal_keys(self) -> None:
+        """The SSH terminal's own keys under a heading of their own, after the SSH tool's
+        commands, with the line that says where every other key goes. Greyed, as nobody
+        changes them, and the tip says so."""
+        self._add_heading(_("SSH terminal"), gap=True)
+        line = QTreeWidgetItem()
+        line.setFlags(Qt.ItemFlag.NoItemFlags)
+        line.setData(COMMAND, FIXED_ROLE, True)
+        self.table.addTopLevelItem(line)
+        line.setFirstColumnSpanned(True)
+        self.terminal_words = hint(terminal_line())  # wraps, never "…"
+        self.terminal_words.setContentsMargins(LINE_PADDING, 0, LINE_PADDING, 0)
+        self.table.setItemWidget(line, COMMAND, self.terminal_words)
+        self._terminal_item = line
+        tip = _("The terminal's own keys can't be changed.")
+        for name, keys in terminal_keys():
+            item = QTreeWidgetItem([name, shortcuts.shown(keys)])
+            item.setFlags(Qt.ItemFlag.NoItemFlags)  # greyed, and the arrow keys go past it
+            item.setData(COMMAND, FIXED_ROLE, True)
+            item.setToolTip(COMMAND, tip)
+            item.setToolTip(KEY, tip)
+            self.table.addTopLevelItem(item)
+        self._fit_terminal_line()
+
+    def _fit_terminal_line(self) -> None:
+        """The terminal's line as tall as its words need at the list's width now."""
+        if self._terminal_item is None:
+            return
+        width = max(self.table.viewport().width(), 200)
+        height = self.terminal_words.heightForWidth(width)
+        self._terminal_item.setSizeHint(COMMAND, QSize(0, height + 2 * LINE_PADDING))
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 -- Qt's name
+        if watched is self.table.viewport() and event.type() == QEvent.Type.Resize:
+            self._fit_terminal_line()
+        return super().eventFilter(watched, event)
+
     def _headings(self) -> list[QTreeWidgetItem]:
         found = (self.table.topLevelItem(i) for i in range(self.table.topLevelItemCount()))
-        return [i for i in found if i is not None and not i.data(COMMAND, ROW_ROLE)]
+        return [
+            i
+            for i in found
+            if i is not None and not i.data(COMMAND, ROW_ROLE) and not i.data(COMMAND, FIXED_ROLE)
+        ]
 
     def _style_heading(self, item: QTreeWidgetItem) -> None:
         """The table's font a point up and semi-bold, in a section title's colour as the theme

@@ -15,6 +15,11 @@ import traceback
 from collections.abc import Callable
 from pathlib import Path
 
+PYTE_NOTICES = ("LICENSE", "AUTHORS", "CHANGES-CAPYPANEL.txt")  # its license asks for them
+# The console engine CapyPanel carries for Windows 10, its license and Microsoft's notices
+CONPTY_FILES = ("conpty.dll", "OpenConsole.exe", "LICENSE", "NOTICE.md", "CHANGES-CAPYPANEL.txt")
+TERMINAL_WORDS = "self-test ─┼█"  # ─┼█: CapyPanel draws those itself
+
 
 def _bundled_files() -> list[str]:
     from capypanel.core import i18n
@@ -159,6 +164,101 @@ def _whole_window(root: Path) -> list[str]:
     ]
 
 
+def _terminal(root: Path) -> list[str]:
+    """The SSH tool's terminal in a tab of its own: Windows' pseudo console runs cmd.exe (never
+    ssh.exe, which would reach the network), our copy of pyte keeps what it wrote, and the tab
+    draws it, line and block characters and the strip after the end included."""
+    import os
+    import time
+
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QApplication
+
+    from capypanel.ui.ssh_tool.terminal.tab import TerminalTab
+    from capypanel.vendor import pyte
+
+    folder = Path(pyte.__file__).parent
+    missing = [name for name in PYTE_NOTICES if not (folder / name).is_file()]
+    if missing:
+        raise RuntimeError(f"pyte's {', '.join(missing)} missing from {folder}")
+    app = QApplication.instance() or QApplication([])
+    tab = TerminalTab(host="self-test")
+    tab.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
+    tab.resize(640, 320)
+    tab.show()
+    ended: list[object] = []
+    tab.view.ended.connect(ended.append)
+    try:
+        cmd = os.environ.get("COMSPEC", "cmd.exe")
+        tab.start([cmd, "/d", "/c", f"echo {TERMINAL_WORDS}& exit 7"], cwd=str(root))
+        deadline = time.monotonic() + 30
+        while not ended:
+            if time.monotonic() > deadline:
+                raise RuntimeError("cmd.exe on the pseudo console never ended")
+            app.processEvents()
+            time.sleep(0.01)
+        rows = tab.view.term.screen_text()  # each row's text, without its trailing blanks
+        if ended != [7] or TERMINAL_WORDS not in rows:
+            shown = [row for row in rows if row]
+            raise RuntimeError(f"cmd.exe ended with {ended}; the screen shows {shown}")
+        if tab.grab().isNull() or not tab.ended:
+            raise RuntimeError("the tab drew nothing, or showed no strip after the end")
+    finally:
+        tab.close_connection()
+        tab.close()
+        app.processEvents()
+    return ["pseudo console", "screen", "drawing", "pyte's notices"]
+
+
+def _console_engine(root: Path) -> list[str]:
+    """The console engine the terminal starts on Windows 10 (vendor/conpty), checked on any
+    Windows: its files and notices are there, and cmd.exe runs on it, as in _terminal."""
+    import os
+    import time
+
+    from capypanel.core.ssh import conpty
+    from capypanel.core.ssh.screen import TermScreen, TermStream
+
+    folder = conpty.CARRIED_DIR
+    missing = [name for name in CONPTY_FILES if not (folder / name).is_file()]
+    if missing:
+        raise RuntimeError(f"{', '.join(missing)} missing from {folder}")
+    engine = conpty.carried_engine()
+    if engine is None:
+        raise RuntimeError(f"the console engine in {folder} won't load")
+    screen = TermScreen(80, 25)
+    stream = TermStream(screen)
+    ended: list[int] = []
+    cmd = os.environ.get("COMSPEC", "cmd.exe")
+    console = conpty.PseudoConsole(
+        [cmd, "/d", "/c", f"echo {TERMINAL_WORDS}& exit 7"],
+        80,
+        25,
+        on_ready=lambda: None,
+        on_exit=ended.append,
+        cwd=str(root),
+        engine=engine,
+    )
+    deadline = time.monotonic() + 30
+    try:
+        while not ended:
+            if time.monotonic() > deadline:
+                raise RuntimeError("cmd.exe on the console engine never ended")
+            stream.feed(console.take(1 << 20))
+            time.sleep(0.01)
+    finally:
+        console.close()
+    while not console.at_eof and time.monotonic() < deadline:
+        stream.feed(console.take(1 << 20))
+        time.sleep(0.01)
+    if console.engine is not engine:
+        raise RuntimeError("the console engine didn't start: Windows' own ran instead")
+    if ended != [7] or TERMINAL_WORDS not in screen.screen_text():
+        shown = [row for row in screen.screen_text() if row]
+        raise RuntimeError(f"cmd.exe ended with {ended}; the screen shows {shown}")
+    return ["cmd.exe", "its notices"]
+
+
 def run(report: Path) -> int:
     """Every check, each one's outcome a line of `report`. 0: all of them worked."""
     from capypanel import BUILD
@@ -171,6 +271,8 @@ def run(report: Path) -> int:
         ("compiled libraries", _compiled_libraries),
         ("Qt's parts", _qt_parts),
         ("the window", lambda: _whole_window(root)),
+        ("the SSH terminal", lambda: _terminal(root)),
+        ("Windows 10's console engine", lambda: _console_engine(root)),
     )
     for name, check in checks:
         try:

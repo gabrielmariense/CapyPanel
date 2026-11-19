@@ -89,6 +89,8 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
         "General",
         "Warnings and supplies",
         "Connecting",
+        "SSH",
+        "General",
     ]
     assert [dialog.pinned_list.item(0).text().strip()] == ["About"]  # type: ignore[union-attr]
     assert dialog.current_page() == "general"
@@ -259,7 +261,7 @@ def test_menus_hold_only_what_fits_them(window: CapyWindow) -> None:
     assert list(menus) == ["&File", "&View", "&Help"]  # the same for every tool
     assert menus["&File"] == ["&Settings…", "E&xit"]  # lists are in the list dropdown
     assert menus["&View"] == [
-        "Hom&e", "&Hosts", "&Printers", "Profile clean&up", "&Groups pane", "T&ags pane",
+        "Hom&e", "&Hosts", "&Printers", "Profile clean&up", "SSH", "&Groups pane", "T&ags pane",
         "&Details pane", "&Customize the details panel…",
         "Show users' do&main",
         "T&oolbar", "&Status bar",
@@ -405,7 +407,7 @@ def test_the_search_shows_every_matching_section_on_one_page(window: CapyWindow)
     assert results()[:2] == ["CapyPanel › General", "Appearance"]  # under its page's name
     marks = dialog._marks  # pyright: ignore[reportPrivateUsage]
     assert [w.objectName() for w in marks.marked_labels()][:1] == ["rowName"]  # Theme's row
-    dialog.search.setText("folder")  # each lists section's note, Connection profiles, About
+    dialog.search.setText("folder")  # each lists section's note (SSH's lists are Hosts'), …
     assert listed() == ["Hosts", "General", "Connecting", "Printers", "General"]
     assert not dialog.pinned_list.isRowHidden(0)  # About, with its Folders and Open folder
     assert "About" in results() and "Folders" in results()  # its sections, under its name

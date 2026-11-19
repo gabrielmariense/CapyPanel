@@ -30,7 +30,7 @@ MARK = "rgba(255, 196, 0, 0.38)"  # the search's mark, as in the items table
 def breakable(text: str) -> str:
     """Lets long words (an address, a path) wrap at any character: a word too wide for the panel
     would otherwise make it wider."""
-    zero_width = "​"
+    zero_width = "\u200b"
     return " ".join(
         zero_width.join(word) if len(word) > LONG_WORD else word for word in text.split(" ")
     )

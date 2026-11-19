@@ -191,30 +191,33 @@ class Connector:
 
     # ---- connecting ----
 
-    def connect(self, requests: list[Request]) -> int:
-        """Returns how many connections were started."""
-        if len(requests) > MANY_CONNECTIONS and not self._confirm_many(len(requests)):
+    def connect(self, requests: list[Request], parent: QWidget | None = None) -> int:
+        """Returns how many connections were started. `parent`: the window it was asked from,
+        when that's a window of its own (Manual connection). Its questions show over it, so it
+        stays in front once they close, instead of the main window coming over it."""
+        owner = parent or self._parent
+        if len(requests) > MANY_CONNECTIONS and not self._confirm_many(len(requests), owner):
             return 0
         by_profile: dict[str, list[Request]] = {}
         for request in requests:
             by_profile.setdefault(request.profile or self.default_profile(), []).append(request)
         started = 0
         for profile_id, group in by_profile.items():
-            started += self._connect_profile(profile_id, group)
+            started += self._connect_profile(profile_id, group, owner)
         return started
 
-    def _connect_profile(self, profile_id: str, requests: list[Request]) -> int:
+    def _connect_profile(self, profile_id: str, requests: list[Request], owner: QWidget) -> int:
         try:
             ready = self.resolve(profile_id)
         except ProfileError as e:
-            self._error(f"{e}\n\n{self._names(requests)}")
+            self._error(f"{e}\n\n{self._names(requests)}", owner)
             return 0
         tool, profile = ready.tool, ready.profile
-        executable = detect.find_executable(tool) or self._locate(tool)
+        executable = detect.find_executable(tool) or self._locate(tool, owner)
         if executable is None:
             return 0
         if profile.login == "account" and tool.account_types:
-            requests = self._only_account_servers(ready, requests)
+            requests = self._only_account_servers(ready, requests, owner)
             if not requests:
                 return 0
         credential = None
@@ -223,7 +226,7 @@ class Connector:
             if credential is None:
                 label = requests[0].label if len(requests) == 1 else _("the selected hosts")
                 dialog = CredentialDialog(
-                    self._parent,
+                    owner,
                     ready,
                     label,
                     on_command_line=tool.credentials == "arguments",
@@ -239,7 +242,8 @@ class Connector:
                     log.warning("Couldn't save the password of %s: %s", profile.id, e)
                     self._error(
                         _("Couldn't save the password in Windows Credential Manager: {error}\n\n"
-                          "It's kept until CapyPanel closes.").format(error=e)
+                          "It's kept until CapyPanel closes.").format(error=e),
+                        owner,
                     )  # fmt: skip
         settings = self.catalogs.profiles.settings_path(profile)
         started = 0
@@ -255,12 +259,15 @@ class Connector:
                 self._error(
                     _("Couldn't start {tool} for {target}: {error}").format(
                         tool=tool.name, target=request.label, error=e
-                    )
+                    ),
+                    owner,
                 )
                 break
         return started
 
-    def _only_account_servers(self, ready: Ready, requests: list[Request]) -> list[Request]:
+    def _only_account_servers(
+        self, ready: Ready, requests: list[Request], owner: QWidget
+    ) -> list[Request]:
         """Drops the hosts whose server offers no user-and-password login (e.g. it only wants a
         VNC password, which would get the first 8 characters through a login cracked offline)."""
         tool, profile = ready.tool, ready.profile
@@ -298,7 +305,8 @@ class Connector:
                     "another kind of VNC server), so CapyPanel didn't send your password. Check "
                     "their connection profile.",
                     len(refused),
-                ).format(names=", ".join(r.label for r in refused))
+                ).format(names=", ".join(r.label for r in refused)),
+                owner,
             )
         return [r for r, ok in zip(requests, fits, strict=True) if ok]
 
@@ -310,7 +318,7 @@ class Connector:
             n=len(requests), names=names
         )
 
-    def _locate(self, tool: ToolDefinition) -> Path | None:
+    def _locate(self, tool: ToolDefinition, owner: QWidget) -> Path | None:
         box = QMessageBox(
             QMessageBox.Icon.Warning,
             _("{tool} not found").format(tool=tool.name),
@@ -319,7 +327,7 @@ class Connector:
                 "The path is saved for everyone on this PC; you can also change it later in "
                 "Settings › Hosts › Connecting."
             ).format(tool=tool.name),
-            parent=self._parent,
+            parent=owner,
         )
         locate = box.addButton(_("&Locate…"), QMessageBox.ButtonRole.AcceptRole)
         settings = None
@@ -333,7 +341,7 @@ class Connector:
             return None
         if box.clickedButton() is not locate:
             return None
-        name = ask_for_program(self._parent, tool)
+        name = ask_for_program(owner, tool)
         if not name:
             return None
         try:
@@ -342,9 +350,9 @@ class Connector:
             log.warning("Couldn't save the path of %s: %s", tool.id, e)  # still used this time
         return Path(name)
 
-    def _confirm_many(self, count: int) -> bool:
+    def _confirm_many(self, count: int, owner: QWidget) -> bool:
         answer = QMessageBox.question(
-            self._parent,
+            owner,
             _("Open many remote screens?"),
             ngettext(
                 "Open {n} remote screen at once?", "Open {n} remote screens at once?", count
@@ -352,5 +360,5 @@ class Connector:
         )
         return answer == QMessageBox.StandardButton.Yes
 
-    def _error(self, message: str) -> None:
-        QMessageBox.warning(self._parent, "CapyPanel", message)
+    def _error(self, message: str, owner: QWidget) -> None:
+        QMessageBox.warning(owner, "CapyPanel", message)
