@@ -24,8 +24,11 @@ from capypanel.core.ssh import conpty
 from capypanel.core.ssh.conpty import Engine, PseudoConsole
 from capypanel.core.ssh.screen import TermScreen, TermStream
 
-CMD = str(Path(os.environ.get("SYSTEMROOT") or r"C:\Windows") / "System32" / "cmd.exe")
+SYSTEM32 = Path(os.environ.get("SYSTEMROOT") or r"C:\Windows") / "System32"
+CMD = str(SYSTEM32 / "cmd.exe")
 CMD_ENV = {**os.environ, "PROMPT": "$P$G"}  # each prompt line ends with ">"
+# Windows' own timeout.exe by its whole path: one earlier on PATH (Git's) refuses /t and ends
+WAIT_A_MINUTE = f'"{SYSTEM32 / "timeout.exe"}" /t 60 /nobreak\r'.encode()
 VERSION = re.compile(r"Windows.*\d+\.\d+\.\d+")  # what ver prints, in any language
 CELLS_CHILD = Path(__file__).resolve().parent.parent / "helpers" / "console_cells.py"
 FLAGS = ["\U0001f1e7", "\U0001f1e7\U0001f1f7\U0001f1e7", "x\U0001f1e7y"]  # halves of flags
@@ -115,9 +118,10 @@ def test_ctrl_c_stops_what_cmd_runs_and_cmd_carries_on(runs: Callable[..., Run])
     stopping the program: the pseudo console clears it first."""
     run = runs([CMD, "/d"], env=CMD_ENV)
     assert run.until(lambda: run.prompts() == 1)
-    run.console.write(b"timeout /t 60 /nobreak\r")
+    run.console.write(WAIT_A_MINUTE)
     assert run.until(lambda: bool(_children(run.console.pid, "timeout.exe")))
     time.sleep(0.3)  # timeout reads its arguments and starts counting
+    assert _children(run.console.pid, "timeout.exe")  # it counts: nothing stopped it yet
     run.console.write(b"\x03")
     assert run.until(
         lambda: not _children(run.console.pid, "timeout.exe") and run.prompts() == 1, seconds=10
@@ -132,7 +136,7 @@ def test_closing_ends_the_program_and_everything_it_started(
     hosts_before = set(_children(os.getpid(), "openconsole.exe"))
     run = runs([CMD, "/d"], env=CMD_ENV)
     assert run.until(lambda: run.prompts() == 1)
-    run.console.write(b"timeout /t 60 /nobreak\r")
+    run.console.write(WAIT_A_MINUTE)
     assert run.until(lambda: bool(_children(run.console.pid, "timeout.exe")))
     hosts = [p for p in _children(os.getpid(), "openconsole.exe") if p not in hosts_before]
     assert len(hosts) == (0 if engine is conpty.WINDOWS else 1)
@@ -164,6 +168,36 @@ def test_a_flood_waits_for_its_reader(runs: Callable[..., Run]) -> None:
     numbers = [int(line[5:]) for line in run.lines() if line.startswith("line ")]
     assert numbers[-1] == 20000
     assert numbers == list(range(numbers[0], 20001))
+
+
+def test_a_resize_reaches_the_program(runs: Callable[..., Run]) -> None:
+    run = runs([CMD, "/d"], env=CMD_ENV)
+    assert run.until(lambda: run.prompts() == 1)
+    run.console.resize(70, 20)
+    run.screen.resize(20, 70)
+    size = f'"{sys.executable}" -I -c "import os; print(*os.get_terminal_size())"\r'
+    run.console.write(size.encode())
+    assert run.until(lambda: "70 20" in run.lines())
+
+
+def test_the_carried_engine_takes_ctrl_c_as_key_events() -> None:
+    """It asks for keys as key events first thing, as Windows 11's own does, so the terminal
+    sends Ctrl+C as Ctrl down, C down and up, Ctrl up (ESC [ Vk ; Sc ; Uc ; Kd ; Cs ; Rc _)."""
+    ctrl_c = b"\x1b[17;29;0;1;8;1_\x1b[67;46;3;1;8;1_\x1b[67;46;3;0;8;1_\x1b[17;29;0;0;0;1_"
+    run = Run([CMD, "/d"], env=CMD_ENV, engine=_carried())
+    try:
+        assert run.until(lambda: run.prompts() == 1)
+        assert run.screen.win32_input
+        run.console.write(WAIT_A_MINUTE)
+        assert run.until(lambda: bool(_children(run.console.pid, "timeout.exe")))
+        time.sleep(0.3)  # timeout reads its arguments and starts counting
+        run.console.write(ctrl_c)
+        assert run.until(
+            lambda: not _children(run.console.pid, "timeout.exe") and run.prompts() == 1,
+            seconds=10,
+        )
+    finally:
+        run.console.close()
 
 
 # ---- which engine ----
