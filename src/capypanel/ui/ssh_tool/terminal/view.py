@@ -88,8 +88,9 @@ CHUNK_LOG = 10_000  # the last chunks' parse times kept: a tab left on tail -f f
 MAX_CACHED = 16_384
 MAX_PENDING = 131072  # bytes the reader holds before ssh.exe waits: Ctrl+C shows at once
 COPY_PASTE = (int(Qt.Key.Key_C), int(Qt.Key.Key_V))  # with Ctrl+Shift
-# Keys that only hold others down or switch a lock. They still reach the program, as every key
-# does, but keep the selection and the scroll: Ctrl goes down before the C of Ctrl+C.
+# Keys that only hold others down or switch a lock. As key events they still reach the program,
+# as every key does, but keep the selection and the scroll: Ctrl goes down before the C of
+# Ctrl+C. As text they send nothing.
 HELD_KEYS = frozenset(
     int(k)
     for k in (
@@ -708,12 +709,15 @@ class TerminalView(QAbstractScrollArea):
             if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and self._ended_sent:
                 self.restart()  # Enter reconnects an ended tab
             return
-        data = keys.encode(event, True)
+        if self.term.win32_input:
+            data = keys.encode(event, True)
+        else:  # a console that never asked for key events, as Windows 10's
+            data = keys.encode_text(event, app_cursor=self.term.app_cursor_keys)
         if data:
             self.session.write(data)
             self.stats["keys_sent"] += 1
-            if not event.isAutoRepeat():
-                self._sent_down.add(event.nativeVirtualKey())
+            if self.term.win32_input and not event.isAutoRepeat():
+                self._sent_down.add(event.nativeVirtualKey())  # its release goes too
             if int(event.key()) in HELD_KEYS:
                 return
             self._sel = None

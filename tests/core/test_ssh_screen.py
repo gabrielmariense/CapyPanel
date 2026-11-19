@@ -203,6 +203,26 @@ def test_bracketed_paste_follows_the_program() -> None:
     assert not screen.bracketed_paste
 
 
+def test_the_console_s_ask_for_key_events_outlasts_a_reset_from_the_server() -> None:
+    screen, stream = screen_and_stream()
+    assert not screen.win32_input  # Windows 10's console never asks
+    stream.feed(b"\x1b[?9001h\x1b[?1004h")  # Windows 11's, first thing
+    assert screen.win32_input
+    stream.feed(b"\x1bc")  # the console still reads key events after the server's reset
+    assert screen.win32_input
+    stream.feed(b"\x1b[?9001l")
+    assert not screen.win32_input
+
+
+def test_application_cursor_keys_follow_the_program() -> None:
+    screen, stream = screen_and_stream()
+    assert not screen.app_cursor_keys
+    stream.feed(b"\x1b[?1h")
+    assert screen.app_cursor_keys
+    stream.feed(b"\x1b[?1l")
+    assert not screen.app_cursor_keys
+
+
 def test_copied_text_joins_rows_with_crlf_without_trailing_blanks() -> None:
     screen, stream = screen_and_stream(columns=10)
     stream.feed(b"first\r\nsecond   \r\nthird")

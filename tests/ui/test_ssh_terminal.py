@@ -36,6 +36,7 @@ CMD = str(Path(os.environ.get("SYSTEMROOT") or r"C:\Windows") / "System32" / "cm
 CTRL = Qt.KeyboardModifier.ControlModifier
 SHIFT = Qt.KeyboardModifier.ShiftModifier
 ALT = Qt.KeyboardModifier.AltModifier
+KEYPAD = Qt.KeyboardModifier.KeypadModifier
 NONE = Qt.KeyboardModifier.NoModifier
 K = Qt.Key
 MARKER = "capy7731"  # typed, pasted and printed: it must never reach a log
@@ -124,6 +125,52 @@ def test_text_a_key_event_has_no_room_for_goes_as_text() -> None:
     assert keys.encode(_key(K.Key_unknown, 0, 0), True) == b""  # a key Windows doesn't name
 
 
+def test_without_key_events_a_key_goes_as_its_text() -> None:
+    """For a console that never asked for key events, as Windows 10's: text, and the control
+    characters xterm sends. Alt sends ESC first; AltGr's text goes as it is."""
+    text = keys.encode_text
+    assert text(_key(K.Key_Y, 0x59, 0x15, text="y")) == b"y"
+    assert text(_key(K.Key_A, 0x41, 0x1E, text="ã")) == "ã".encode()  # after a dead tilde
+    assert text(_key(K.Key_Dead_Tilde, 0xDE, 0x28)) == b""
+    assert text(_key(K.Key_unknown, 0, 0, text="\U0001f600")) == "\U0001f600".encode()
+    assert text(_key(K.Key_Return, 0x0D, 0x1C, text="\r")) == b"\r"
+    assert text(_key(K.Key_Enter, 0x0D, 0x1C, text="\r", mods=KEYPAD)) == b"\r"
+    assert text(_key(K.Key_Backspace, 0x08, 0x0E, text="\b")) == b"\x7f"
+    ctrl_back = _key(K.Key_Backspace, 0x08, 0x0E, native=keys.Q_CTRL_L, text="\x7f", mods=CTRL)
+    assert text(ctrl_back) == b"\x08"
+    assert text(_key(K.Key_Tab, 0x09, 0x0F, text="\t")) == b"\t"
+    assert text(_key(K.Key_Backtab, 0x09, 0x0F, native=keys.Q_SHIFT_L, mods=SHIFT)) == b"\x1b[Z"
+    assert text(_key(K.Key_Escape, 0x1B, 0x01, text="\x1b")) == b"\x1b"
+    assert text(_ctrl_c()) == b"\x03"
+    assert text(_key(K.Key_C, 0x43, 0x2E, native=keys.Q_CTRL_L, mods=CTRL)) == b"\x03"  # no text
+    ctrl_space = _key(K.Key_Space, 0x20, 0x39, native=keys.Q_CTRL_L, text=" ", mods=CTRL)
+    assert text(ctrl_space) == b"\x00"
+    alt_b = _key(K.Key_B, 0x42, 0x30, native=keys.Q_ALT_L, text="b", mods=ALT)
+    assert text(alt_b) == b"\x1bb"
+    altgr = keys.Q_CTRL_L | keys.Q_ALT_R
+    assert text(_key(K.Key_Q, 0x51, 0x10, native=altgr, text="/", mods=CTRL | ALT)) == b"/"
+    assert text(_key(K.Key_Shift, 0x10, 0x2A, native=keys.Q_SHIFT_L, mods=SHIFT)) == b""
+
+
+def test_without_key_events_a_key_with_no_text_goes_as_xterm_s_sequence() -> None:
+    up = _key(K.Key_Up, 0x26, 0x48, native=keys.Q_EXTENDED)
+    assert keys.encode_text(up) == b"\x1b[A"
+    assert keys.encode_text(up, app_cursor=True) == b"\x1bOA"  # after the program's ESC[?1h
+    ctrl = keys.Q_EXTENDED | keys.Q_CTRL_L
+    ctrl_left = _key(K.Key_Left, 0x25, 0x4B, native=ctrl, mods=CTRL)
+    assert keys.encode_text(ctrl_left, app_cursor=True) == b"\x1b[1;5D"
+    assert keys.encode_text(_key(K.Key_Home, 0x24, 0x47, native=keys.Q_EXTENDED)) == b"\x1b[H"
+    delete = _key(K.Key_Delete, 0x2E, 0x53, native=keys.Q_EXTENDED, text="\x7f")
+    assert keys.encode_text(delete) == b"\x1b[3~"  # the key, not the DEL Qt gives it as text
+    assert keys.encode_text(_key(K.Key_PageDown, 0x22, 0x51)) == b"\x1b[6~"
+    assert keys.encode_text(_key(K.Key_F1, 0x70, 0x3B)) == b"\x1bOP"
+    assert keys.encode_text(_key(K.Key_F5, 0x74, 0x3F)) == b"\x1b[15~"
+    shift_f5 = _key(K.Key_F5, 0x74, 0x3F, native=keys.Q_SHIFT_L, mods=SHIFT)
+    assert keys.encode_text(shift_f5) == b"\x1b[15;2~"
+    alt_f1 = _key(K.Key_F1, 0x70, 0x3B, native=keys.Q_ALT_L, mods=ALT)
+    assert keys.encode_text(alt_f1) == b"\x1b[1;3P"
+
+
 # ---- the view, on a stand-in pseudo console ----
 
 # The main window's own commands and today's keys: Settings, Exit, Home and the four tools.
@@ -169,6 +216,13 @@ def view(qapp: QApplication, consoles: list[FakeConsole]) -> Iterator[TerminalVi
     _shown(window)
     yield terminal
     terminal.close_connection()
+
+
+def _asks_for_key_events(view: TerminalView, console: FakeConsole) -> None:
+    """The console asks for keys as key events, as Windows 11's does first thing (the trial's
+    probe of it, 18 Nov). Windows 10's never asks."""
+    console.prints(b"\x1b[?9001h\x1b[?1004h")
+    _until(lambda: view.term.win32_input)
 
 
 @pytest.mark.parametrize(
@@ -241,6 +295,7 @@ def test_a_key_s_release_follows_its_press_and_a_release_alone_sends_nothing(
 ) -> None:
     view.start(["ssh.exe"])
     console = consoles[-1]
+    _asks_for_key_events(view, console)
     # Pressed before the terminal had the keys: its release isn't the program's.
     QApplication.sendEvent(view, _key(K.Key_B, 0x42, 0x30, text="b", press=False))
     assert console.written == []
@@ -256,6 +311,7 @@ def test_the_tool_s_keys_never_reach_the_program_and_tab_completes(
 ) -> None:
     view.start(["ssh.exe"])
     console = consoles[-1]
+    _asks_for_key_events(view, console)
     for key, vk, mods, native in (
         (K.Key_Tab, 0x09, CTRL, keys.Q_CTRL_L),
         (K.Key_W, 0x57, CTRL | SHIFT, keys.Q_CTRL_L | keys.Q_SHIFT_L),
@@ -274,6 +330,7 @@ def test_ctrl_c_copies_a_selection_and_the_next_one_reaches_the_program(
 ) -> None:
     view.start(["ssh.exe"])
     console = consoles[-1]
+    _asks_for_key_events(view, console)
     console.prints(b"uptime: 3 days")
     _until(lambda: view.term.row_text(0) == "uptime: 3 days")
     view.select_cells((0, 0), (0, 5))
@@ -291,6 +348,7 @@ def test_ctrl_and_shift_going_down_first_keep_the_selection_for_the_copy(
     reaches the program. They used to drop the selection, so neither copy key copied anything."""
     view.start(["ssh.exe"])
     console = consoles[-1]
+    _asks_for_key_events(view, console)
     console.prints(b"selected 5521 ok")
     _until(lambda: view.term.row_text(0) == "selected 5521 ok")
     both = keys.Q_CTRL_L | keys.Q_SHIFT_L
@@ -338,6 +396,7 @@ def test_altgr_plus_types_its_tilde_and_leaves_the_text_size_alone(
     """A German keyboard types ~ with AltGr and +, and AltGr is Ctrl+Alt: never Ctrl++."""
     view.start(["ssh.exe"])
     console = consoles[-1]
+    _asks_for_key_events(view, console)
     size = view.point_size
     altgr = keys.Q_CTRL_L | keys.Q_ALT_R
     QApplication.sendEvent(
@@ -345,6 +404,39 @@ def test_altgr_plus_types_its_tilde_and_leaves_the_text_size_alone(
     )
     assert view.point_size == size
     assert console.written == [b"\x1b[187;27;126;1;0;1_"]
+
+
+def test_a_console_that_never_asks_for_key_events_gets_each_key_as_text(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    """Windows 10's console never asks, and drops a key event it gets: ssh.exe's "(yes/no)?"
+    took nothing typed there (his Windows 10 test, build 631)."""
+    view.start(["ssh.exe"])
+    console = consoles[-1]
+    console.prints(b"Continue connecting (yes/no)? ")
+    _until(lambda: "(yes/no)?" in view.term.row_text(0))
+    typed = (
+        (K.Key_Y, 0x59, 0x15, "y"),
+        (K.Key_E, 0x45, 0x12, "e"),
+        (K.Key_S, 0x53, 0x1F, "s"),
+        (K.Key_Return, 0x0D, 0x1C, "\r"),
+    )
+    for key, vk, sc, ch in typed:
+        QApplication.sendEvent(view, _key(key, vk, sc, text=ch))
+        QApplication.sendEvent(view, _key(key, vk, sc, text=ch, press=False))  # sends nothing
+    QApplication.sendEvent(view, _ctrl_c())
+    assert console.written == [b"y", b"e", b"s", b"\r", b"\x03"]
+
+
+def test_keys_go_as_key_events_from_the_console_s_ask_on(
+    view: TerminalView, consoles: list[FakeConsole]
+) -> None:
+    view.start(["ssh.exe"])
+    console = consoles[-1]
+    QApplication.sendEvent(view, _key(K.Key_A, 0x41, 0x1E, text="a"))  # before the ask
+    _asks_for_key_events(view, console)
+    QApplication.sendEvent(view, _key(K.Key_A, 0x41, 0x1E, text="a"))
+    assert console.written == [b"a", b"\x1b[65;30;97;1;0;1_"]
 
 
 def test_a_paste_goes_in_brackets_when_the_program_asked_and_nothing_in_it_ends_them_early(
@@ -513,12 +605,18 @@ def test_a_flood_of_colours_and_characters_keeps_each_cache_within_its_limit(
         assert 0 < len(cache) <= 50
 
 
+@pytest.mark.parametrize("key_events", [True, False], ids=["key events", "text"])
 def test_typed_pasted_and_shown_text_never_reaches_the_log(
-    view: TerminalView, consoles: list[FakeConsole], caplog: pytest.LogCaptureFixture
+    view: TerminalView,
+    consoles: list[FakeConsole],
+    caplog: pytest.LogCaptureFixture,
+    key_events: bool,
 ) -> None:
     caplog.set_level(logging.DEBUG)
     view.start(["ssh.exe"])
     console = consoles[-1]
+    if key_events:
+        _asks_for_key_events(view, console)
     for ch in MARKER:
         vk = ord(ch.upper())
         QApplication.sendEvent(view, _key(Qt.Key(vk), vk, 0, text=ch))
@@ -527,7 +625,7 @@ def test_typed_pasted_and_shown_text_never_reaches_the_log(
     console.prints(MARKER.encode())
     _until(lambda: MARKER in view.term.row_text(0))
     view.grab()
-    assert len(console.written) == 2 * len(MARKER) + 1
+    assert len(console.written) == (2 if key_events else 1) * len(MARKER) + 1  # up and down
     assert MARKER not in caplog.text.casefold()
     assert all(isinstance(value, int | float) for value in view.stats.values())  # counts only
 
@@ -577,6 +675,14 @@ def test_typed_keys_reach_cmd_and_its_answer_is_drawn(cmd: TerminalView) -> None
     _until(lambda: "capy 42" in cmd.term.screen_text())
     assert ">echo capy 42" in cmd.term.screen_text()
     cmd.grab()
+
+
+def test_keys_as_text_reach_cmd_through_windows_own_console(cmd: TerminalView) -> None:
+    """The form Windows 10's console gets, read by a real pseudo console."""
+    cmd.term.win32_input = False  # as a console that never asked
+    _typed(cmd, "echo capy 43\r")
+    _until(lambda: "capy 43" in cmd.term.screen_text())
+    assert ">echo capy 43" in cmd.term.screen_text()
 
 
 def test_enter_on_an_ended_cmd_runs_it_again(cmd: TerminalView) -> None:

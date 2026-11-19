@@ -15,6 +15,10 @@ pyte's authors.
   cell, so nothing combines (a combining accent, a joiner or a variation selector takes a cell
   of its own), and a wide character that doesn't fit the row wraps whole. The console positions
   everything by its own widths, so the screen must too, or a row ends a cell off.
+- Whether the console asked for keys as Windows key events (win32-input-mode, ESC[?9001h) is
+  kept apart from pyte's modes, so a reset the server sends (ESC c) can't drop it: Windows 11's
+  console asks at its start and still reads key events after. Windows 10's never asks, and its
+  keys go as text (ui/ssh_tool/terminal/keys.py).
 
 Never anything typed or printed in a log: this module logs nothing."""
 
@@ -36,6 +40,8 @@ from capypanel.vendor.pyte.screens import Margins, StaticDefaultDict
 SCROLLBACK = 10_000  # lines
 ALT_SCREEN_MODES = (1049, 1047, 47)
 BRACKETED_PASTE = 2004 << 5  # pyte keeps private modes shifted left by 5
+APP_CURSOR_KEYS = 1 << 5  # DECCKM, which pyte doesn't name
+WIN32_INPUT = 9001  # private mode: keys as Windows key events
 
 
 class Style(NamedTuple):
@@ -147,6 +153,7 @@ class TermScreen(pyte.Screen):
     ) -> None:
         self.scrollback: deque[PackedLine] = deque(maxlen=scrollback)
         self.in_alt = False
+        self.win32_input = False  # the console asked for key events (ESC[?9001h)
         self._main_buffer: Any = None
         self._reply = reply or (lambda data: None)
         self.titles_seen = 0
@@ -172,6 +179,11 @@ class TermScreen(pyte.Screen):
     @property
     def bracketed_paste(self) -> bool:
         return BRACKETED_PASTE in self.mode
+
+    @property
+    def app_cursor_keys(self) -> bool:
+        """The program's ESC[?1h, if the console passes it on: Up is then ESC O A."""
+        return APP_CURSOR_KEYS in self.mode
 
     # ---- drawing ----
 
@@ -310,6 +322,8 @@ class TermScreen(pyte.Screen):
     def set_mode(self, *modes: int, **kwargs: Any) -> None:
         if kwargs.get("private"):
             for m in modes:
+                if m == WIN32_INPUT:
+                    self.win32_input = True
                 if m in ALT_SCREEN_MODES and not self.in_alt:
                     if m == 1049:
                         self.save_cursor()
@@ -322,6 +336,8 @@ class TermScreen(pyte.Screen):
     def reset_mode(self, *modes: int, **kwargs: Any) -> None:
         if kwargs.get("private"):
             for m in modes:
+                if m == WIN32_INPUT:
+                    self.win32_input = False
                 if m in ALT_SCREEN_MODES and self.in_alt:
                     self.buffer = self._main_buffer
                     self._main_buffer = None

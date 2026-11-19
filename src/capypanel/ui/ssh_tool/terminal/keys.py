@@ -1,10 +1,16 @@
-r"""Keys as Windows key events, in win32-input-mode: ESC [ Vk ; Sc ; Uc ; Kd ; Cs ; Rc _
+r"""Keys for the pseudo console, in the form the console asked for.
 
-The pseudo console asks for this mode at start (ESC[?9001h) and then encodes each key by the
+Windows 11's console asks for win32-input-mode at start (ESC[?9001h): each key goes as a Windows
+key event, ESC [ Vk ; Sc ; Uc ; Kd ; Cs ; Rc _ (`encode`), and the console encodes it by the
 program's own modes: Up is ESC[A normally and ESC O A after the program's ESC[?1h. The console
 doesn't pass that mode on to us, so sending plain text for keys would give vim and less the
 wrong arrows. Qt hands over each key's virtual key, scan code, text and modifiers; Windows' own
 tables do the rest.
+
+Windows 10's console is older and never asks. It reads a key event as a sequence it doesn't know
+and drops it, so nothing typed reached ssh.exe there (his Windows 10 test, build 631). For a
+console that never asked, each key goes down as text and xterm's sequences (`encode_text`),
+which that console reads into key events of its own; a key going up sends nothing.
 
 Rules of our own, each for a reason:
 - A dead key sends nothing; the key after it brings the composed text (~ then a gives "ã").
@@ -81,3 +87,65 @@ def encode(event: QKeyEvent, down: bool) -> bytes:
     if vk == 0 and uc == 0:
         return b""
     return f"\x1b[{vk};{sc};{uc};{1 if down else 0};{state};1_".encode("ascii")
+
+
+# Keys with no text, as xterm sends them. Cursor keys: CSI and a letter, or SS3 and the letter in
+# the program's application mode. F1 to F4: SS3 and a letter. The rest: CSI, a number and ~.
+# A modifier makes them CSI 1 ; m letter or CSI n ; m ~, m being 1 + Shift 1 + Alt 2 + Ctrl 4.
+_CURSOR = {int(k): c for k, c in ((Qt.Key.Key_Up, "A"), (Qt.Key.Key_Down, "B"),
+           (Qt.Key.Key_Right, "C"), (Qt.Key.Key_Left, "D"), (Qt.Key.Key_Home, "H"),
+           (Qt.Key.Key_End, "F"))}  # fmt: skip
+_SS3 = {int(k): c for k, c in ((Qt.Key.Key_F1, "P"), (Qt.Key.Key_F2, "Q"), (Qt.Key.Key_F3, "R"),
+        (Qt.Key.Key_F4, "S"))}  # fmt: skip
+_TILDE = {int(k): n for k, n in ((Qt.Key.Key_Insert, 2), (Qt.Key.Key_Delete, 3),
+          (Qt.Key.Key_PageUp, 5), (Qt.Key.Key_PageDown, 6), (Qt.Key.Key_F5, 15),
+          (Qt.Key.Key_F6, 17), (Qt.Key.Key_F7, 18), (Qt.Key.Key_F8, 19), (Qt.Key.Key_F9, 20),
+          (Qt.Key.Key_F10, 21), (Qt.Key.Key_F11, 23), (Qt.Key.Key_F12, 24))}  # fmt: skip
+_KEY_A, _KEY_Z = int(Qt.Key.Key_A), int(Qt.Key.Key_Z)
+
+
+def encode_text(event: QKeyEvent, *, app_cursor: bool = False) -> bytes:
+    """The bytes for one key going down, as text and xterm's sequences, for a console that never
+    asked for key events; b"" for a key that sends nothing. `app_cursor`: the program's ESC[?1h
+    reached the screen."""
+    if is_dead_key(event):
+        return b""
+    key = int(event.key())
+    mods = event.modifiers()
+    shift = bool(mods & Qt.KeyboardModifier.ShiftModifier)
+    alt = bool(mods & Qt.KeyboardModifier.AltModifier)
+    ctrl = bool(mods & Qt.KeyboardModifier.ControlModifier)
+    m = 1 + shift + 2 * alt + 4 * ctrl
+    if key in _CURSOR:
+        if m > 1:
+            return f"\x1b[1;{m}{_CURSOR[key]}".encode("ascii")
+        return f"\x1b{'O' if app_cursor else '['}{_CURSOR[key]}".encode("ascii")
+    if key in _SS3:
+        return (f"\x1b[1;{m}{_SS3[key]}" if m > 1 else f"\x1bO{_SS3[key]}").encode("ascii")
+    if key in _TILDE:
+        return (f"\x1b[{_TILDE[key]};{m}~" if m > 1 else f"\x1b[{_TILDE[key]}~").encode("ascii")
+    if key == int(Qt.Key.Key_Backtab):
+        return b"\x1b[Z"
+    text = event.text()
+    printable = bool(text) and text.isprintable()
+    if ctrl and alt and printable:
+        return text.encode("utf-8")  # AltGr's text, never Ctrl+Alt
+    if ctrl and key == int(Qt.Key.Key_Space):
+        body = b"\x00"
+    elif ctrl and _KEY_A <= key <= _KEY_Z:
+        body = bytes([key - _KEY_A + 1])  # Ctrl+C is 3, as Windows gives it in the key's text
+    elif printable:
+        body = text.encode("utf-8")
+    elif key == int(Qt.Key.Key_Backspace):
+        body = b"\x08" if ctrl else b"\x7f"  # as xterm: DEL, and Ctrl+Backspace deletes a word
+    elif key in (int(Qt.Key.Key_Return), int(Qt.Key.Key_Enter)):
+        body = b"\r"
+    elif key == int(Qt.Key.Key_Tab):
+        body = b"\t"
+    elif key == int(Qt.Key.Key_Escape):
+        body = b"\x1b"
+    elif len(text) == 1 and ord(text) < 0x20:
+        body = text.encode("ascii")  # another control character Windows gave the key
+    else:
+        return b""
+    return b"\x1b" + body if alt else body  # Alt sends ESC first: Alt+B, Alt+F in bash
