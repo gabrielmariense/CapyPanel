@@ -9,7 +9,7 @@ For your servers and switches, it opens an SSH terminal right beside their list.
 
 ![CapyPanel's Home page: the sidebar, the capybara, and a tile each for Hosts, Printers, Profile cleanup and SSH](images/home-dark.png)
 
-## What it does
+## What it does <a id="home-what-it-does"></a>
 
 - Hosts
   - Remote connection: UltraVNC, RealVNC, Remote Desktop
@@ -35,7 +35,7 @@ For your servers and switches, it opens an SSH terminal right beside their list.
   - Which ones answer on their SSH port
   - A terminal in a tab, through Windows' own ssh.exe, or in a window of its own
 
-## Pages
+## Pages <a id="home-pages"></a>
 
 Each page opens with the usual jobs as a few short steps. The details are folded underneath, and
 every page ends with the messages you may see and what to do about them.

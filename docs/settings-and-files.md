@@ -6,7 +6,7 @@ it. This page lists every setting, page by page, and where CapyPanel keeps its f
 
 ![Settings on CapyPanel > General: the page list on the left, with Keyboard shortcuts under General; Appearance, Startup and closing, and Updates, marked Everyone on this PC, on the right](images/settings-dark.png)
 
-## Find a setting
+## Find a setting <a id="settings-find-a-setting"></a>
 
 Type three letters or more in **Search settings**, at the top left. The right side shows every
 section that mentions them, from every page, with the matching words marked in yellow, and the
@@ -26,7 +26,7 @@ settings work right there.
     - Search matches words from their start, and the page list keeps only the pages with a match.
       A dropdown whose match is one of its choices gets the mark on its arrow. Clearing the box
       puts everything back.
-    - The window opens at 960 × 700 the first time, or smaller on a small screen, such as a laptop
+    - The window opens at 960 × 740 the first time, or smaller on a small screen, such as a laptop
       at 125 % scale. You can make it any size: a page larger than the window scrolls, down and
       sideways. It opens again at the size and place you left it at.
 
@@ -48,7 +48,7 @@ settings work right there.
     The shared host and printer lists are for everyone too: the lists tables say which list is
     **Shared** and which is **Personal**.
 
-## CapyPanel > General
+## CapyPanel > General <a id="settings-capypanel-general"></a>
 
 | Setting | What it does | To begin with |
 |---|---|---|
@@ -65,7 +65,7 @@ settings work right there.
     The font and its size are the same in every one, and a theme never changes what the app does. The Windows themes follow your accent color (**Settings > Personalization > Colors**),
     and everything built from it stays readable.
 
-### Updates
+### Updates <a id="settings-updates"></a>
 
 **Everyone on this PC**: "A change here reaches everyone on this PC: an update replaces CapyPanel
 for all of them."
@@ -74,7 +74,7 @@ for all of them."
 |---|---|---|
 | **Check for updates** | **At every start**, **Once a day**, **Once a week** or **Off**. "Asks GitHub (api.github.com) for CapyPanel's newest release. Nothing is downloaded until you choose Install. Help › Check for updates works whatever is set." | At every start |
 
-## CapyPanel > Keyboard shortcuts
+## CapyPanel > Keyboard shortcuts <a id="settings-capypanel-keyboard-shortcuts"></a>
 
 ![Settings on CapyPanel > Keyboard shortcuts: the commands under File, View and Help, each with its key, and Clear and Restore default under the list](images/settings-shortcuts-dark.png)
 
@@ -93,7 +93,8 @@ and **Restore default** gives back the one it came with.
     - A key another command already has moves only after a question: **Give it** moves it, and the
       other command is left with no key.
     - F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself, as the line under the
-      list says: "In an SSH terminal, all but Ctrl+Shift+W go to the server." So is
+      list says: "In an SSH terminal, all but Ctrl+Shift+W go to the server." **Help for this
+      screen** shows F1 greyed: "F1 is kept for help and can't be changed." So is
       a key that types text on its own, such as a letter, a digit or Ç: use it with Ctrl or Alt.
       Press one and the field turns red and reads "Key not allowed", the reason shows in red
       under the list, and it keeps waiting for another key.
@@ -112,7 +113,7 @@ and **Restore default** gives back the one it came with.
       there at once, and a command with no key shows none.
     - Your keys are yours alone, kept in your settings file. Someone else on this PC keeps theirs.
 
-## Hosts > General
+## Hosts > General <a id="settings-hosts-general"></a>
 
 | Setting | What it does | To begin with |
 |---|---|---|
@@ -122,7 +123,7 @@ and **Restore default** gives back the one it came with.
 | **Refresh status by itself** | Checks the status of the hosts shown every **minute**, **5**, **15** or **30 minutes**, or a **Custom…** interval from 1 to 120 (see [Checking hosts](hosts/checking.md#have-status-checked-on-its-own)) | Off |
 | **Quick commands > Choose…** | "The buttons on top of a host's Details panel; the first four are also in its right-click menu. Yours, on this PC." (see [Choose your quick commands](hosts/commands.md#choose-your-quick-commands)) | C$ share, User's folder, Computer Management, Send a message… |
 
-## Hosts > Connecting
+## Hosts > Connecting <a id="settings-hosts-connecting"></a>
 
 ![Settings > Hosts > Connecting: Connection profiles and Remote tools, each marked Everyone on this PC, and Read PC data with set to Automatic](images/settings-hosts-connecting-dark.png)
 
@@ -159,7 +160,7 @@ mark, with "A change here reaches everyone on this PC." under the title.
       full paths.
     - With **Automatic**, "in use:" beside it names the way it uses on this PC.
 
-## Hosts > Credentials
+## Hosts > Credentials <a id="settings-hosts-credentials"></a>
 
 ![Settings > Hosts > Credentials: the Accounts table, and Saved credentials under Passwords](images/settings-hosts-credentials-dark.png)
 
@@ -168,7 +169,7 @@ mark, with "A change here reaches everyone on this PC." under the title.
 | **Accounts** | The table **Account \| Used for \| Kept in**: which account signs in to which PCs, for logged-on users and commands. "kept in your own settings, never in the shared host lists" (see [Use another account on some PCs](hosts/connecting.md#use-another-account-on-some-pcs)) | Empty: your Windows account everywhere |
 | **Saved credentials** | How many logins CapyPanel keeps and where, as in "2 kept: 1 in Credential Manager, 1 temporary.", with **Manage…** (see [Forget a saved password](hosts/connecting.md#forget-a-saved-password)) | None kept |
 
-## Printers
+## Printers <a id="settings-printers"></a>
 
 | Page | Setting | What it does | To begin with |
 |---|---|---|---|
@@ -183,7 +184,7 @@ mark, with "A change here reaches everyone on this PC." under the title.
 
 Profile cleanup has no settings of its own: it uses Hosts' lists and accounts.
 
-## SSH > General
+## SSH > General <a id="settings-ssh-general"></a>
 
 | Setting | What it does | To begin with |
 |---|---|---|
@@ -192,7 +193,7 @@ Profile cleanup has no settings of its own: it uses Hosts' lists and accounts.
 SSH uses Hosts' lists, so they're set on **Hosts > General**. The terminal's text size is kept in
 your settings file when you change it with Ctrl+= and Ctrl+-.
 
-## About
+## About <a id="settings-about"></a>
 
 **Help > About CapyPanel** opens this page, at the bottom of the list. It has four cards:
 
@@ -227,7 +228,7 @@ your settings file when you change it with Ctrl+= and Ctrl+-.
 
     In portable mode it adds "Portable mode: everything stays in the app's own folder."
 
-## Where CapyPanel keeps its files
+## Where CapyPanel keeps its files <a id="settings-where-capypanel-keeps-its-files"></a>
 
 Everything for all users of a PC is in one folder, `C:\ProgramData\CapyPanel`, with one private
 folder per user:
@@ -261,15 +262,16 @@ deleted once the new version is running (see [Update CapyPanel](download.md#upda
       kept directly in `lists\`. The older files are left where they are, so an older version still
       runs.
 
-### Portable mode
+### Portable mode <a id="settings-portable-mode"></a>
 
 An empty file named `capypanel.portable` next to the app keeps everything (settings, lists, logs)
 in a `userdata` folder beside it instead, for running from a USB stick or a shared folder. When you
 run from source, "next to the app" means the repository folder.
 
-## Messages you may see
+## Messages you may see <a id="settings-messages-you-may-see"></a>
 
 | Message | What it means | What to do |
 |---|---|---|
-| "Read-only for you. An administrator of this PC can change it." | The settings in that section are the same for everyone on this PC, and Windows doesn't let your account change them | Ask an administrator of the PC to change them |
-| "2 files skipped: broken.json (can't be read), clinics.json (made by another user)" | Under the profiles or the tools table: files in the shared folder that CapyPanel isn't using. Hover it for the full paths | Fix or remove a file that can't be read. A file made by another user who isn't an administrator is ignored on purpose: have an administrator put it there |
+| <a id="settings-read-only"></a>"Read-only for you. An administrator of this PC can change it." | The settings in that section are the same for everyone on this PC, and Windows doesn't let your account change them | Ask an administrator of the PC to change them |
+| <a id="settings-files-skipped"></a>"2 files skipped: broken.json (can't be read), clinics.json (made by another user)" | Under the profiles or the tools table: files in the shared folder that CapyPanel isn't using. Hover it for the full paths | Fix or remove a file that can't be read. A file made by another user who isn't an administrator is ignored on purpose: have an administrator put it there |
+| <a id="settings-updates-not-saved"></a>"Couldn't save how often to check: …" | Windows refused to write the Updates setting, which is for everyone on this PC. Its reason follows the colon | Fix what the reason names, or ask an administrator to change it |

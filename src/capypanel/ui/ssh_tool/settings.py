@@ -29,7 +29,9 @@ class SshSettings(SettingsGroup):
 
     def build(self) -> list[tuple[str, Page]]:
         self.general = AutoStatusOnlyPage(
-            auto_line=auto_line(), auto_status=self._tool.auto_status()
+            auto_line=auto_line(),
+            auto_status=self._tool.auto_status(),
+            place="settings-ssh-general",
         )
         self.general.changed.connect(self._changed)
         return [("ssh", self.general)]

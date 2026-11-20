@@ -10,9 +10,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from functools import lru_cache
 
-from cryptography.hazmat.decrepit.ciphers.modes import CFB  # RFC 3826 names this mode
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms
-
 MIN_PASSWORD = 8  # RFC 3414: shorter passwords are refused
 _STRETCH = 1_048_576  # bytes of repeated password hashed into a key (RFC 3414 A.2)
 
@@ -130,6 +127,10 @@ def decrypt(keys: Keys, boots: int, time: int, salt: bytes, data: bytes) -> byte
 def _cipher(
     keys: Keys, boots: int, time: int, salt: bytes, data: bytes, *, encrypting: bool
 ) -> bytes:
+    # Loaded by the first encrypted Refresh, not at CapyPanel's start (about 10 ms).
+    from cryptography.hazmat.decrepit.ciphers.modes import CFB  # RFC 3826 names this mode
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms
+
     iv = boots.to_bytes(4, "big") + time.to_bytes(4, "big") + salt
     cipher = Cipher(algorithms.AES(keys.privacy_key), CFB(iv))
     worker = cipher.encryptor() if encrypting else cipher.decryptor()

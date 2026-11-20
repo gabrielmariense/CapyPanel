@@ -1,6 +1,5 @@
-"""Asking a VNC server which login types it offers, without logging in: read its greeting,
-answer with a protocol version, read the list, hang up. One short connection, nothing sent
-that could count as a login attempt."""
+"""Asking a VNC server which login types it offers, without logging in. UltraVNC up to 1.6.1
+still counts that as a failed login, so the Connector asks each server once per run."""
 
 import re
 import socket

@@ -173,7 +173,8 @@ def test_ssh_shows_the_list_open_in_hosts_and_an_edit_in_either_shows_in_both(
     from capypanel.ui.hosts_tool import tool as hosts_module
 
     ssh = _ssh(capy)
-    assert ssh.document is capy.hosts.document and set(_rows(ssh)) == {"DESK-01", "nas-01"}
+    assert ssh.document is capy.hosts.document and _rows(ssh) == {}  # behind Hosts: waits
+    assert capy.show_tool("ssh") and set(_rows(ssh)) == {"DESK-01", "nas-01"}
 
     def add(dialog: QDialog) -> QDialog.DialogCode:
         assert isinstance(dialog, SshHostDialog)
@@ -184,10 +185,11 @@ def test_ssh_shows_the_list_open_in_hosts_and_an_edit_in_either_shows_in_both(
 
     monkeypatch.setattr(tool_module, "run_modal", add)
     ssh.add_item()
+    assert capy.show_tool("hosts")
     table = capy.hosts.table
     rows = (table.topLevelItem(i) for i in range(table.topLevelItemCount()))
     shown = {row.text(0) for row in rows if row is not None}
-    assert shown == {"DESK-01", "nas-01", "backup-01"}  # Hosts' table, at once
+    assert shown == {"DESK-01", "nas-01", "backup-01"}  # Hosts' table, once it's shown
 
     def rename(dialog: QDialog) -> QDialog.DialogCode:
         assert isinstance(dialog, HostDialog)
@@ -198,7 +200,9 @@ def test_ssh_shows_the_list_open_in_hosts_and_an_edit_in_either_shows_in_both(
     doc = capy.hosts.document
     assert doc is not None
     capy.hosts.edit_item(next(h for h in doc.hosts.hosts if h.name == "nas-01"))
-    assert set(_rows(ssh)) == {"DESK-01", "nas-02", "backup-01"}  # SSH's table, at once
+    assert set(_rows(ssh)) == {"DESK-01", "nas-01", "backup-01"}  # behind Hosts: not refilled
+    assert capy.show_tool("ssh")
+    assert set(_rows(ssh)) == {"DESK-01", "nas-02", "backup-01"}  # SSH's table, once shown
     saved = {h.name: h for h in listfile.load(tmp_path / "clinic.json").hosts.hosts}
     assert info_of(saved["nas-02"]) == SshInfo(port=2222, login="root")  # Hosts kept them
     assert info_of(saved["backup-01"]) == SshInfo(login="admin")
@@ -212,6 +216,7 @@ def test_a_list_picked_or_made_in_ssh_opens_in_hosts_and_profile_cleanup(
 
     ssh = _ssh(capy)
     assert ssh.document is capy.hosts.document  # else picking a host list asks, and waits
+    assert capy.show_tool("ssh")  # its dropdown is picked from SSH itself
     servers, racks = HostList().add_group("Racks")
     servers = _host(servers, "core-sw-01", racks.id, "192.0.2.40")
     listfile.save(tmp_path / "servers.json", servers, expected=None)
@@ -347,17 +352,13 @@ def test_a_server_typed_in_the_search_is_offered_and_connected_at_once(
 
 
 def test_without_ssh_exe_it_says_where_to_add_it(
-    ssh: SshTool, monkeypatch: pytest.MonkeyPatch
+    ssh: SshTool, monkeypatch: pytest.MonkeyPatch, help_boxes: list[tuple[str, str]]
 ) -> None:
     def missing(*_args: object) -> None:
         raise launch.SshMissing
 
-    warned: list[str] = []
     monkeypatch.setattr(launch, "connect", missing)
     monkeypatch.setattr(launch, "tab_command", missing)
-    monkeypatch.setattr(
-        tool_module.QMessageBox, "warning", lambda _parent, _title, text: warned.append(text)
-    )
     _select(ssh, "core-sw-01", "web-01")
     ssh.connect_selected()  # in tabs
     ssh.connect_selected(window=True)
@@ -365,7 +366,8 @@ def test_without_ssh_exe_it_says_where_to_add_it(
         "Windows' SSH client (ssh.exe) isn't installed on this PC. To add it, search Start for "
         "“Optional features” and add “OpenSSH Client”. Adding it needs an administrator."
     )
-    assert warned == [words, words]  # once each time, not once per host
+    box = (words, "ssh-not-installed")
+    assert help_boxes == [box, box]  # once each time, not once per host
     assert ssh.connections() == []
 
 

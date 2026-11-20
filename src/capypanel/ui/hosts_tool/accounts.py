@@ -22,8 +22,8 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QLineEdit,
     QMenu,
-    QMessageBox,
     QPushButton,
+    QSizePolicy,
     QStackedWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -37,11 +37,12 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.i18n import _
 from capypanel.core.remote.access import Account
+from capypanel.ui import help_links
 from capypanel.ui.checks import AccountDialog
 from capypanel.ui.dialogs import ok_cancel, run_modal
 from capypanel.ui.hosts import group_path
 from capypanel.ui.notes import notes
-from capypanel.ui.saved_credentials import KeptLogin
+from capypanel.ui.saved_credentials import KeptLogin, forget_failed
 from capypanel.ui.settings.pages import Section
 from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 
@@ -239,11 +240,12 @@ class Accounts(QObject):
         except (OSError, ValueError) as e:
             log.warning("Couldn't save or delete a saved account: %s", e)
             if remember:
-                QMessageBox.warning(
+                help_links.warning(
                     self._tool,
                     "CapyPanel",
                     _("Couldn't save the password in Windows Credential Manager: {error}\n\n"
                       "It's kept until CapyPanel closes.").format(error=e),
+                    place="connect-password-not-saved",
                 )  # fmt: skip
         self._typed[account.user.casefold()] = (account, saved)
         self.changed.emit()
@@ -371,10 +373,14 @@ class LinkDialog(QDialog):
                 self.group.addItem(path, group_id)
             self.tag.addItems(sorted(doc.hosts.all_tags(), key=str.casefold))
         self.tag.setCurrentText("")
-        empty = QWidget()
+        self.every_pc = QLineEdit()  # Every PC names nothing; the greyed field keeps its row
+        self.every_pc.setEnabled(False)
+        self.every_pc.setPlaceholderText(_("Nothing to name: it's used on every PC"))
+        self.every_pc.setToolTip(_("Nothing to name: it's used on every PC"))
         self.value = QStackedWidget()
-        for widget in (empty, self.address, self.group, self.tag):
+        for widget in (self.every_pc, self.address, self.group, self.tag):
             self.value.addWidget(widget)
+        self.value.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         for index in (2, 3):  # a group or a tag belongs to the open list
             if doc is None:
                 self.kind.model().item(index).setEnabled(False)  # type: ignore[attr-defined]
@@ -394,7 +400,8 @@ class LinkDialog(QDialog):
               "over Every PC. PCs none of them names use your Windows account."),
             _("Groups and tags are the open list's."),
         ))  # fmt: skip
-        layout.addWidget(self.buttons)
+        self.help_button = help_links.HelpButton("connecting-use-another-account-on-some-pcs")
+        layout.addLayout(help_links.row(self.help_button, self.buttons))
         self.kind.currentIndexChanged.connect(self._kind_picked)
         for edit in (self.user, self.address):
             edit.textChanged.connect(self._update_ok)
@@ -423,7 +430,6 @@ class LinkDialog(QDialog):
 
     def _kind_picked(self) -> None:
         self.value.setCurrentIndex(max(self.kind.currentIndex(), 0))
-        self.value.setVisible(self.scope() is not Scope.ALL)
         self._update_ok()
 
     def _update_ok(self) -> None:
@@ -560,5 +566,4 @@ class AccountsSection(Section):
         try:
             self._manager.remove(link)
         except OSError as e:
-            text = _("Couldn't delete its saved password: {error}").format(error=e)
-            QMessageBox.warning(self, "CapyPanel", text)
+            forget_failed(self, e)  # where to delete it by hand, as Saved credentials says

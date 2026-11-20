@@ -14,7 +14,17 @@ from capywindow import CapyWindow
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, QPointF, QRect, QSize, Qt
 from PySide6.QtGui import QIcon, QKeyEvent, QMouseEvent, QShortcut, QShowEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog, QMenu, QToolButton, QWidget
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QMenu,
+    QStyle,
+    QStyleOptionViewItem,
+    QToolButton,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QWidget,
+)
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -234,6 +244,22 @@ def test_it_is_the_third_tool_and_its_hosts_tab_lists_hosts_open_list(
     assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]
 
 
+def test_its_hosts_wait_behind_another_tool_and_fill_when_it_comes_to_the_front(
+    window: CapyWindow, tmp_path: Path
+) -> None:
+    # Rows nobody sees cost a tenth of a second at every start with 480 hosts, SSH's included.
+    tool = _tool(window)
+    assert window.show_tool("hosts")
+    hl, group = HostList().add_group("Lab")
+    hl, _host = hl.add_host("LAB-07", group.id, address="198.51.100.7")
+    other = tmp_path / "lab.json"
+    listfile.save(other, hl, expected=None)
+    window.hosts.open_list(other)
+    assert tool.list_picker.text() == "lab"  # it follows at once...
+    assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]  # ...but its rows wait
+    assert window.show_tool("profiles") and _hosts(tool) == ["LAB-07"]
+
+
 def test_the_status_column_is_hosts_own_last_check(window: CapyWindow) -> None:
     tool = _tool(window)
     key = _id(window, "DESK-03")
@@ -380,6 +406,26 @@ def test_a_card_never_scrolls_it_counts_what_doesnt_fit(qapp: QApplication) -> N
     own = side.Lines(2, own_more=True)  # the count has a line of its own under the others
     own.show_entries(entries, lambda n: f"and {n} more")
     assert [name for name, _w in own.shown()] == ["PC-0", "PC-1", "and 5 more"]
+
+
+def test_the_rest_is_a_link_whose_menu_does_what_their_lines_do(
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    entries = [side.Entry(str(n), f"PC-{n}", "queued" if n % 2 else "") for n in range(7)]
+    lines = side.Lines(4, own_more=False)
+    lines.show_entries(entries, lambda n: f"and {n} more…")
+    assert lines.more.text().startswith("<a href") and "and 4 more…</a>" in lines.more.text()
+    shown: list[QMenu] = []
+    monkeypatch.setattr(side, "popup", lambda menu, _where: shown.append(menu))
+    lines.more.linkActivated.emit("#rest")  # a click on it, or Tab then Enter
+    texts = [action.text() for action in shown[0].actions()]
+    assert texts == ["PC-3 · queued", "PC-4", "PC-5 · queued", "PC-6"]
+    went: list[str] = []
+    lines.clicked.connect(went.append)
+    shown[0].actions()[2].trigger()
+    assert went == ["5"]  # as a click on PC-5's line would say
+    lines.show_entries(entries[:4], lambda n: f"and {n} more…")
+    assert lines.more.isHidden() and lines.more.text() == ""
 
 
 def test_a_group_or_list_picked_while_a_hosts_tab_is_in_front_brings_the_hosts_tab_back(
@@ -788,8 +834,12 @@ def test_reads_and_counts_share_one_limit_across_every_tab_and_reads_go_first(
     assert (progress.title.text(), progress.summary.text()) == (
         "6 hosts in tabs", "0 working · 6 done",
     )  # fmt: skip
-    shown = progress.lines.shown()  # more tabs than lines: three, then the rest as a count
+    shown = progress.lines.shown()  # more tabs than lines: three, then the rest as a link
     assert len(shown) == 4 and shown[-1] == ("and 3 more…", "")
+    rest = progress.lines.rest_menu().actions()
+    assert len(rest) == 3
+    rest[0].trigger()  # its tab comes to the front, as from a line
+    assert tool.tabs.current() == _id(window, rest[0].text().partition(" · ")[0])
 
 
 def test_scanning_the_same_host_again_keeps_the_sizes_of_rows_still_there(
@@ -954,11 +1004,10 @@ def test_the_arrows_that_scroll_the_tabs_can_be_seen(window: CapyWindow) -> None
     found = {b.objectName(): b for b in tool.tabs.bar.findChildren(QToolButton)
              if b.objectName().startswith("Scroll")}  # fmt: skip
     assert set(found) == {"ScrollLeftButton", "ScrollRightButton"}
-    for button in found.values():  # a chevron on the window's colour, never see-through
-        assert not button.icon().isNull() and "padding: 0px" in button.styleSheet()
-        assert "background: #" in button.styleSheet()
+    for button in found.values():  # buttons the theme draws: tests/ui/test_tab_strip.py
+        assert not button.icon().isNull()
         # At the end the bar is already at, its arrow is drawn muted, not just left to the style.
-        size = QSize(16, 16)
+        size = QSize(18, 18)
         normal = button.icon().pixmap(size, QIcon.Mode.Normal).toImage()
         assert button.icon().pixmap(size, QIcon.Mode.Disabled).toImage() != normal
 
@@ -1043,7 +1092,9 @@ def test_the_right_panel_lists_what_is_ticked_and_deletes_from_its_foot(
     card, foot = page.ticked_card, page.foot
     assert tool.cards.currentWidget() is page.side and page.cards.currentWidget() is card
     assert (card.caption.text(), card.title.text()) == ("TICKED TO DELETE", "No profile ticked")
-    assert card.hint.text() == "Tick in the table: the box, Space or a double-click on the row."
+    assert card.hint.text() == (
+        "Tick in the table: the box, a double-click on the row, or Space on the selected rows."
+    )
     assert foot.delete_button.text().strip() == "Delete profiles…"
     assert not foot.delete_button.isEnabled() and foot.delete_button.height() == side.FOOT
     assert foot.delete_button.toolTip() == "Tick profiles in the table to delete"
@@ -1582,6 +1633,74 @@ def test_space_and_a_double_click_tick_the_row_the_keyboard_is_on(window: CapyWi
     _pick_row(page, "EXAMPLE\\ana")  # in use: no box, so nothing to tick
     QApplication.sendEvent(tree, space)
     assert page.ticked() == [RUI]
+
+
+def _row_item(page: HostPage, user: str) -> QTreeWidgetItem:
+    tree = page.table.tree
+    found = (tree.topLevelItem(i) for i in range(tree.topLevelItemCount()))
+    return next(item for item in found if item is not None and item.text(panels.USER) == user)
+
+
+def _box(tree: QTreeWidget, item: QTreeWidgetItem) -> QPoint:
+    """The middle of a row's tick box, as the table's style places it."""
+    option = QStyleOptionViewItem()
+    option.initFrom(tree)
+    row = tree.visualItemRect(item)
+    left, width = tree.columnViewportPosition(panels.TICK), tree.columnWidth(panels.TICK)
+    option.rect = QRect(left, row.top(), width, row.height())
+    option.features |= QStyleOptionViewItem.ViewItemFeature.HasCheckIndicator
+    style = tree.style()
+    return style.subElementRect(
+        QStyle.SubElement.SE_ItemViewItemCheckIndicator, option, tree
+    ).center()
+
+
+def test_a_click_on_a_tick_box_picks_its_row_so_the_arrows_go_on_from_it(
+    window: CapyWindow,
+) -> None:
+    page = _open(window)
+    tree = page.table.tree
+    tree.resize(1100, 446)
+    QApplication.processEvents()
+    _pick_row(page, "EXAMPLE\\rui")
+    bia = _row_item(page, "EXAMPLE\\bia")
+    below = tree.itemBelow(bia)
+    QTest.mouseClick(tree.viewport(), Qt.MouseButton.LeftButton, pos=_box(tree, bia))
+    assert page.ticked() == [BIA]
+    assert tree.currentItem() is bia and tree.selectedItems() == [bia]
+    QTest.keyClick(tree, Qt.Key.Key_Down)
+    assert below is not None and tree.currentItem() is below
+
+
+def test_space_ticks_every_selected_row_or_unticks_them_when_all_are_ticked(
+    window: CapyWindow,
+) -> None:
+    page = _open(window)
+    tree = page.table.tree
+    heard: list[bool] = []
+    page.table.ticked_changed.connect(lambda: heard.append(True))
+    _pick_row(page, "EXAMPLE\\rui")
+    QTest.keyClick(tree, Qt.Key.Key_Down, Qt.KeyboardModifier.ShiftModifier)
+    assert len(tree.selectedItems()) == 2  # Shift and the arrows pick several rows
+    for user in ("EXAMPLE\\ana", "marta.old  (unknown)"):  # in use, so no box; and one more
+        _row_item(page, user).setSelected(True)
+    space = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space, Qt.KeyboardModifier.NoModifier)
+    QApplication.sendEvent(tree, space)
+    assert page.ticked() == [RUI, BIA, MARTA] and heard == [True]  # one signal for the three
+    page.table.tick(BIA.ident, False)
+    QApplication.sendEvent(tree, space)  # one of them unticked: all three ticked again
+    assert page.ticked() == [RUI, BIA, MARTA]
+    QApplication.sendEvent(tree, space)  # all ticked: all unticked
+    assert page.ticked() == []
+    picked = {item.text(panels.USER) for item in tree.selectedItems()}
+    current = page.table.selected()
+    page.filters.hide_own.setChecked(not page.filters.hide_own.isChecked())  # the rows again
+    assert {item.text(panels.USER) for item in tree.selectedItems()} == picked
+    assert current is not None and page.table.selected() == current
+    control = Qt.KeyboardModifier.ControlModifier
+    QApplication.sendEvent(tree, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space, control, " "))
+    assert page.ticked() == []  # Ctrl+Space only takes the row out of the selection
+    assert len(tree.selectedItems()) == len(picked) - 1
 
 
 def test_a_powershell_blocked_on_this_pc_is_named_as_such(window: CapyWindow, pc: Pc) -> None:

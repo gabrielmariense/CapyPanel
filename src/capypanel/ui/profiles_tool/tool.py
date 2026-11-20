@@ -121,6 +121,7 @@ class ProfilesToolBar(ToolBar):
 class ProfilesTool(Tool):
     TOOL_ID = "profiles"
     ICON = "profile-card"
+    HELP_PLACE = "profiles/user-profiles/"
 
     def __init__(self, shell: Shell) -> None:
         super().__init__(shell, ProfilesToolBar())
@@ -130,6 +131,7 @@ class ProfilesTool(Tool):
         self._pages: dict[str, HostPage] = {}  # by host key, as the tabs are
         self._kept: dict[str, tuple[int, int, datetime]] = {}  # closed tabs' counts and time
         self._shown: list[Host] = []  # the Hosts tab's rows
+        self._hosts_waiting = False  # behind another tool: its rows fill when it's shown
         self._quitting = False  # quit asked while a host deletes: quit once they're done
 
         self.nav = NavigationPane(lambda: _("All hosts"))
@@ -464,6 +466,7 @@ class ProfilesTool(Tool):
                 "each host finishes first; CapyPanel quits after that."
             ),  # fmt: skip
             _("Cancel the rest and quit"),
+            place="profiles-delete-profiles",
         )
         question.cancel.setText(_("Continue"))
         if run_modal(question) != QDialog.DialogCode.Accepted:
@@ -672,7 +675,14 @@ class ProfilesTool(Tool):
             return _("No group")
         return _("All hosts")
 
+    def came_to_front(self) -> None:
+        if self._hosts_waiting:
+            self._fill_hosts()
+
     def _fill_hosts(self) -> None:
+        self._hosts_waiting = not self._shell.fills_now(self.TOOL_ID)
+        if self._hosts_waiting:
+            return
         hosts = self._shown = self.visible_hosts()
         typed = self.hosts_page.search.text().strip()
         self.hosts_page.table.show_hosts(hosts, self._row_facts)

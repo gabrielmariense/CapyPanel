@@ -54,6 +54,11 @@ class Shell(Protocol):
         """Show another tool, its first-use warning first: False when that was cancelled."""
         ...
 
+    def fills_now(self, tool_id: str) -> bool:
+        """Whether the tool fills its lists now: not while the window is being built, nor while
+        another tool is shown. One that waited fills them in came_to_front()."""
+        ...
+
 
 class ToolKind(Protocol):
     """A tool class, as the tool catalog lists it: made from the shell, and able to prepare its
@@ -93,6 +98,7 @@ class Tool(QWidget):
 
     TOOL_ID: ClassVar[str] = ""  # its settings section and Settings pages are named after it
     ICON: ClassVar[str] = ""  # a Tabler icon, for the rail
+    HELP_PLACE: ClassVar[str] = ""  # where F1 opens the docs while it's shown (help_links)
     INHERITS_TOP_LEVEL: ClassVar[bool] = False  # Hosts: 0.19 kept its settings at the top
     title_changed = Signal(str)  # the window title's first part, or "" for none
     badge_changed = Signal(int)  # how many items need attention: the rail's count; 0 hides it
@@ -115,6 +121,10 @@ class Tool(QWidget):
     def tool_name(self) -> str:
         """Its name on the rail: "Hosts"."""
         raise NotImplementedError
+
+    def help_place(self) -> str:
+        """Where F1 opens the docs while it's shown: its HELP_PLACE, a place in help_links."""
+        return self.HELP_PLACE
 
     def menu_name(self) -> str:
         """Its name in View, with an access key: "&Hosts"."""
@@ -144,6 +154,9 @@ class Tool(QWidget):
         """Before the tool is shown for the first time ever: False keeps it closed. A tool
         that can do harm says so here (Profile cleanup)."""
         return True
+
+    def came_to_front(self) -> None:
+        """Shown now: the lists it left unfilled meanwhile (the shell's fills_now) get filled."""
 
     def working(self) -> bool:
         """Whether it's in the middle of something an update must not cut off (a Refresh):

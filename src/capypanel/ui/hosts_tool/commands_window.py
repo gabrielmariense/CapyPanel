@@ -56,7 +56,7 @@ from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.core.tools.connect import Target
 from capypanel.ui import checks as check_texts
-from capypanel.ui import spacing
+from capypanel.ui import help_links, spacing
 from capypanel.ui.connect import Request
 from capypanel.ui.dialogs import kept_size, run_modal
 from capypanel.ui.hosts_tool import command_windows as windows
@@ -69,6 +69,7 @@ from capypanel.ui.hosts_tool.runner import (
     Outcome,
     failed_text,
     folder_user,
+    reason_place,
 )
 from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.themes import engine as themes
@@ -87,6 +88,30 @@ ROW = 28  # px: a command's line
 APART = 8  # px: the gap above a command set apart, where menus draw a line
 ICON = 16
 LISTS = ("printers", "programs", "drives")  # their answer is a table on the right
+# Each command's part of the docs, for the window's ? and F1 while it's picked.
+COMMAND_PLACES = {
+    "all-checks": "hosts-checking-check-your-hosts",
+    "status": "hosts-checking-check-your-hosts",
+    "users": "hosts-checking-see-who-is-logged-on",
+    "facts": "hosts-checking-read-a-pcs-facts",
+    "programs": "commands-see-whats-installed-and-mapped",
+    "drives": "commands-see-whats-installed-and-mapped",
+    "c-share": "commands-open-a-pcs-folders-and-admin-tools",
+    "user-folder": "commands-open-a-pcs-folders-and-admin-tools",
+    "startup": "commands-open-a-pcs-folders-and-admin-tools",
+    "path": "commands-open-a-pcs-folders-and-admin-tools",
+    "computer-management": "commands-open-a-pcs-folders-and-admin-tools",
+    "event-viewer": "commands-open-a-pcs-folders-and-admin-tools",
+    "services": "commands-open-a-pcs-folders-and-admin-tools",
+    "message": "commands-message-log-off-or-disconnect-someone",
+    "disconnect": "commands-message-log-off-or-disconnect-someone",
+    "log-off": "commands-message-log-off-or-disconnect-someone",
+    "printers": "commands-fix-a-pcs-printing",
+    "spooler": "commands-fix-a-pcs-printing",
+    "restart": "commands-restart-or-shut-down-a-pc",
+    "shut-down": "commands-restart-or-shut-down-a-pc",
+    "cancel-restart": "commands-restart-or-shut-down-a-pc",
+}
 TABLE_ROW = 30  # px, about a grid row: a printers table shows every printer
 MOST_TABLE = 330  # px: a longer list (programs) scrolls inside its table
 
@@ -274,6 +299,16 @@ class Results(HostDetailsPanel):
         if outcome.failed:
             answer.setObjectName("warningText")
         layout.addWidget(answer)
+        place = reason_place(outcome.error) if outcome.error is not None else ""
+        if place:  # "What does this mean?" inside the answer, as in Hosts' strip
+            link = help_links.anchor(place, answer.palette(), help_links.CARD)
+            answer.setText(f"{outcome.text}&nbsp;&nbsp;{link}")
+            answer.setOpenExternalLinks(False)
+            answer.setTextInteractionFlags(
+                Qt.TextInteractionFlag.TextSelectableByMouse | help_links.LINK_KEYS
+            )
+            answer.linkActivated.connect(lambda _href: help_links.open_place(place))
+            answer.setToolTip(help_links.url(place))
         # The answer as plain text, to paste into a message or a ticket.
         whole = QTextDocumentFragment.fromHtml(outcome.text).toPlainText()
         copy = QLabel(f'<a href="copy">{_escape(_("Copy all"))}</a>')
@@ -519,7 +554,9 @@ class CommandsWindow(QDialog):
         grid.addWidget(_divider(), 1, 3, 2, 1)
         grid.addWidget(self.results, 0, 4, 3, 1)  # from the top: nothing above it now
         grid.addWidget(hint, 3, 0, 1, 5)
+        self.help_button = help_links.HelpButton(self.help_place)
         bottom = QHBoxLayout()
+        bottom.addWidget(self.help_button)
         bottom.addWidget(self.add_button)
         bottom.addStretch(1)
         bottom.addWidget(close)
@@ -665,6 +702,12 @@ class CommandsWindow(QDialog):
         """Up or down to the row; never sideways, which cut the group headings off."""
         self.list.ensureWidgetVisible(row, 0, 4)
         self.list.horizontalScrollBar().setValue(0)
+
+    def help_place(self) -> str:
+        """Where its ? and F1 open the docs: the picked command's part, or the window's."""
+        command = self.picked()
+        window = "commands-the-commands-window"
+        return COMMAND_PLACES.get(command.id, window) if command else window
 
     def picked(self) -> HostCommand | None:
         return self._picked.command if self._picked is not None else None

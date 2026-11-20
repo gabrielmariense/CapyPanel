@@ -3,7 +3,7 @@
 Esta página leva você do primeiro início até a sua primeira lista de PCs, verificada e conectada.
 O guia que o CapyPanel mostra na primeira vez que cada tela abre apresenta a própria janela.
 
-## Rodar o CapyPanel
+## Rodar o CapyPanel <a id="start-run-capypanel"></a>
 
 1. [Baixe o zip](download.pt-BR.md#baixar-o-capypanel) e descompacte.
 2. Rode o **CapyPanel.exe**. Uma tela de abertura com a capivara e a versão aparece enquanto ele
@@ -49,7 +49,7 @@ terminar ou clicar em **Pular**. O **Ajuda > Guia desta tela** mostra o guia de 
       fileiras iguais, Hosts e Impressoras em cima de Limpeza de perfis e SSH; uma janela estreita
       os distribui em mais fileiras.
 
-## Adicionar os seus primeiros hosts
+## Adicionar os seus primeiros hosts <a id="start-add-your-first-hosts"></a>
 
 ![A janela do Hosts: grupos à esquerda, os hosts no meio, os detalhes de um host à direita](images/main-window-dark-pt-BR.png)
 
@@ -76,7 +76,7 @@ criar grupos, veja [Listas de hosts](hosts/host-lists.pt-BR.md).
     - Na caixa Tags, Backspace numa caixa vazia traz a última tag de volta para edição.
     - Uma lista vazia mostra os botões **Adicionar host…** e **Importar hosts…** ali mesmo.
 
-## Verificar e conectar
+## Verificar e conectar <a id="start-check-them-and-connect"></a>
 
 1. Clique em **Atualizar todos** na barra de ferramentas (F5). A coluna **Status** diz quais hosts
    estão online, e **Usuário** quem está logado.
@@ -91,7 +91,7 @@ Veja [Verificando hosts](hosts/checking.pt-BR.md), [Conectando](hosts/connecting
 
     | Parte | O que mostra |
     |---|---|
-    | **Barra lateral** (borda esquerda) | O **Início** (Ctrl+0) no topo, depois um ícone por ferramenta, **Hosts** (Ctrl+1), **Impressoras** (Ctrl+2), **Limpeza de perfis** (Ctrl+3) e **SSH** (Ctrl+4), e **Configurações** (Ctrl+,) embaixo. Onde você está tem um quadrado colorido atrás do ícone |
+    | **Barra lateral** (borda esquerda) | O **Início** (Ctrl+0) no topo, depois um ícone por ferramenta, **Hosts** (Ctrl+1), **Impressoras** (Ctrl+2), **Limpeza de perfis** (Ctrl+3) e **SSH** (Ctrl+4), e o **?** da ajuda (F1) e as **Configurações** (Ctrl+,) embaixo. Onde você está tem um quadrado colorido atrás do ícone |
     | **Barra de ferramentas** (topo) | Os botões da ferramenta aberta. Para o Hosts: **Conectar**, **Atualizar todos**, **Comandos**, **Inventário** e **Relatório** |
     | **Painel de grupos** (esquerda) | O nome da lista aberta no topo, como um menu que troca de lista. Depois "Todos os hosts", com quantos hosts a lista tem, e "Sem grupo", com quantos não estão em nenhum. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags**; arraste a linha acima de Tags para dar mais espaço a um dos dois, e isso fica guardado |
     | **Painel de hosts** (meio) | A caixa de pesquisa acima dos hosts do grupo ou da tag selecionada, com **Status** e **Usuário** |
@@ -102,10 +102,11 @@ Veja [Verificando hosts](hosts/checking.pt-BR.md), [Conectando](hosts/connecting
     o **Sair** (Ctrl+Q). **Exibir** leva ao **Início** e a cada ferramenta, e depois mostra ou
     esconde os painéis, a **Barra de ferramentas** e a **Barra de status**; no Hosts ele também
     guarda **Personalizar o painel de detalhes…** e **Mostrar domínio dos usuários**. Ele fica
-    aberto enquanto você marca. **Ajuda** tem **Documentação**, **Guia desta tela**, **Mostrar todos
-    os guias de novo**, **Relatar um problema**, **Procurar nova versão…** e **Sobre o CapyPanel**.
-    Quando sai uma versão mais nova, um botão **Nova versão** aparece na ponta direita da barra de
-    menus (veja [Atualizar o CapyPanel](download.pt-BR.md#atualizar-o-capypanel)).
+    aberto enquanto você marca. **Ajuda** tem **Guia desta tela**, **Mostrar todos os guias de
+    novo**, **Ajuda desta tela**, **Documentação**, **Relatar um problema**, **Procurar nova
+    versão…** e **Sobre o CapyPanel**. Quando sai uma versão mais nova, um botão **Nova versão**
+    aparece na ponta direita da barra de menus (veja [Atualizar o
+    CapyPanel](download.pt-BR.md#atualizar-o-capypanel)).
 
 ??? note "Organizar a janela"
 
@@ -127,7 +128,7 @@ Veja [Verificando hosts](hosts/checking.pt-BR.md), [Conectando](hosts/connecting
     o **Endereço** mantém o Ctrl+Shift+C. O botão direito num espaço vazio oferece **Adicionar
     grupo…** no painel de grupos, e **Adicionar host…** e **Adicionar grupo…** na lista de hosts.
 
-## Esconder partes do painel de detalhes
+## Esconder partes do painel de detalhes <a id="start-hide-parts-of-the-details-panel"></a>
 
 1. **Exibir > Personalizar o painel de detalhes…**, ou o botão direito no painel de detalhes.
 2. Na aba **Informações**, desmarque o que você não usa: **Conexão**, **Usuários logados**, **Dados
@@ -139,7 +140,7 @@ reinício pendente sempre aparecem. A escolha "Vale só para você, neste PC." A
 rápidos**, escolhe os seus botões (veja
 [Escolher os seus comandos rápidos](hosts/commands.pt-BR.md#escolher-os-seus-comandos-rapidos)).
 
-## Fechar o CapyPanel, ou deixá-lo na bandeja
+## Fechar o CapyPanel, ou deixá-lo na bandeja <a id="start-close-capypanel-or-keep-it-in-the-tray"></a>
 
 1. Clique no **✕** da janela. O CapyPanel pergunta "Manter o CapyPanel aberto na bandeja?"
 2. Clique em **Manter na bandeja** para ele continuar trabalhando em segundo plano, ou em **Sair**
@@ -173,8 +174,15 @@ janela de novo.
     - Sair com conexões SSH abertas pergunta uma vez, como em "Sair do CapyPanel com 2 conexões
       abertas?" (veja [Quando uma conexão termina](ssh/ssh.pt-BR.md#quando-uma-conexao-termina)).
 
-## Pedir ajuda, ou relatar um problema
+## Pedir ajuda, ou relatar um problema <a id="start-get-help-or-report-a-problem"></a>
 
+- **Ajuda > Ajuda desta tela** (F1), ou o **?** embaixo na barra lateral, abre este site na parte do
+  que está na tela: Primeiros passos a partir do Início, a página da ferramenta a partir dela.
+  Nas Configurações, o **?** embaixo da lista de páginas e a F1 abrem a parte da página exibida, e
+  a maioria das janelas tem um **?** no começo da fileira de botões, para a parte dela.
+- Um aviso ou um erro tem **O que isso significa?** embaixo do texto, e a F1 faz o mesmo: abre a
+  linha da mensagem em "Mensagens que podem aparecer", destacada, com o que ela quer dizer e o que
+  fazer. A faixa vermelha de um comando que falhou também tem o link.
 - **Ajuda > Documentação** abre este site, em português quando o app está em português.
 - **Ajuda > Guia desta tela** mostra o guia da tela atual de novo, e **Ajuda > Mostrar todos os
   guias de novo** traz todos os guias de volta.
@@ -187,7 +195,7 @@ janela de novo.
   as licenças, onde o CapyPanel guarda os arquivos e o **Abrir pasta de logs** (veja
   [Configurações e arquivos](settings-and-files.pt-BR.md#sobre)).
 
-## Atalhos de teclado
+## Atalhos de teclado <a id="start-keyboard-shortcuts"></a>
 
 Estas são as teclas com que o CapyPanel começa. O **Configurações > CapyPanel > Atalhos de
 teclado** as muda, menos F1, Esc, Ctrl+F, Tab e Ctrl+Shift+W, que ficam reservadas ao próprio
@@ -209,13 +217,15 @@ CapyPanel (veja
 | F2 / Del | Editar / remover a seleção |
 | Ctrl+0 / Ctrl+1 / Ctrl+2 / Ctrl+3 / Ctrl+4 | Início / a ferramenta Hosts / a ferramenta Impressoras / a Limpeza de perfis / a ferramenta SSH |
 | Ctrl+O | Abrir um arquivo de lista de hosts |
+| F1 | Ajuda da tela em que você está |
 | Ctrl+, | Configurações |
 | Ctrl+Q | Sair |
 
-## Mensagens que você pode ver
+## Mensagens que você pode ver <a id="start-messages-you-may-see"></a>
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| "Algo deu errado. Os detalhes foram salvos no log do aplicativo." | Algo falhou dentro do próprio CapyPanel | **Copiar tudo** e colar no **Relatar um problema**. Um segundo erro entra na mesma janela, e uma repetição é contada ("Este erro aconteceu 3 vezes:") |
-| "Esta lista ainda não tem hosts. Adicione um, ou importe vários de uma vez." | A lista está vazia | **Adicionar host…** ou **Importar hosts…** |
-| "O CapyPanel já está em execução para EXAMPLE\user, mas não foi possível trazer a janela dele para a frente: …" | A sua outra cópia está aberta em outra sessão do Windows, ou não está respondendo | Feche-a por lá, ou finalize-a no Gerenciador de Tarefas, e abra o CapyPanel de novo |
+| <a id="app-error-logged"></a>"Algo deu errado. Os detalhes foram salvos no log do aplicativo." | Algo falhou dentro do próprio CapyPanel | **Copiar tudo** e colar no **Relatar um problema**. Um segundo erro entra na mesma janela, e uma repetição é contada ("Este erro aconteceu 3 vezes:") |
+| <a id="hosts-list-empty"></a>"Esta lista ainda não tem hosts. Adicione um, ou importe vários de uma vez." | A lista está vazia | **Adicionar host…** ou **Importar hosts…** |
+| <a id="already-running"></a>"O CapyPanel já está em execução para EXAMPLE\user, mas não foi possível trazer a janela dele para a frente: …" | A sua outra cópia está aberta em outra sessão do Windows, ou não está respondendo | Feche-a por lá, ou finalize-a no Gerenciador de Tarefas, e abra o CapyPanel de novo |
+| <a id="start-folder-other-user"></a>"A pasta “…” foi criada por outro usuário, então o CapyPanel não vai usá-la. Peça a um administrador para excluí-la; ela será criada de novo." | Uma pasta em que o CapyPanel guarda os seus arquivos foi criada por outra pessoa, então não dá para confiar nos arquivos dela | Peça a um administrador para excluir a pasta que a mensagem cita. O CapyPanel a cria de novo |

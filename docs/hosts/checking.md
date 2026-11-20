@@ -6,7 +6,7 @@ only, never in the list file, and are gone when CapyPanel closes; editing a host
 them. To keep them, export them with **Report** (see
 [Export hosts to a spreadsheet](host-lists.md#export-hosts-to-a-spreadsheet)).
 
-## Check your hosts
+## Check your hosts <a id="hosts-checking-check-your-hosts"></a>
 
 1. Click **Refresh all** on the toolbar (**F5**). It checks every host the table shows: the group
    you picked with its subgroups, a tag, All hosts, No group, or a search's results.
@@ -26,7 +26,7 @@ them. To keep them, export them with **Report** (see
     - A host without an address, whose name isn't a computer name, is skipped with a note in the
       status bar.
 
-## Read a host's status
+## Read a host's status <a id="hosts-checking-read-a-hosts-status"></a>
 
 | Status | What it means |
 |---|---|
@@ -41,22 +41,23 @@ administrator rights.
 
 ??? note "How status is checked"
 
-    The ports are 445 (Windows file sharing), 22 (SSH) and each tool's own port, such as 5900 for
-    VNC and 3389 for Remote Desktop. A refused connection counts as an answer. Every address the
-    name has is tried, cable and Wi-Fi alike: a PC that answers only on its Wi-Fi address may have
-    its cable out.
+    The ports are 445 (Windows file sharing), 22 (SSH) and each tool's own port, such as 3389 for
+    Remote Desktop, but never a VNC tool's: UltraVNC servers up to 1.6.1 count each connection that
+    doesn't log in as a failed login, and refuse the PC after six. A refused connection counts as an
+    answer. Every address the name has is tried, cable and Wi-Fi alike: a PC that answers only on
+    its Wi-Fi address may have its cable out.
 
     When a PC didn't answer, Details says so once under its name, as "Offline · checked 10:41",
     and **Logged on** and **PC facts** show a single dash or one line with the reason.
 
-## Have status checked on its own
+## Have status checked on its own <a id="hosts-checking-have-status-checked-on-its-own"></a>
 
 **Settings > Hosts > General > Refresh status by itself** checks the status of the hosts shown
 every **minute**, **5**, **15** or **30 minutes**, or a **Custom…** interval from 1 to 120. It's
 **Off** to begin with. "Only ping and ports, so no account is needed. Refresh in the toolbar always
 works."
 
-## See who is logged on
+## See who is logged on <a id="hosts-checking-see-who-is-logged-on"></a>
 
 The **User** column shows who is logged on, as `DOMAIN\user`, with "(disconnected)" for a
 disconnected session, or **No one**. The Details panel lists each session under **Logged on**: the
@@ -78,7 +79,7 @@ whatever their language.
       in Task Manager's Users tab. That's how Windows reports it.
     - CapyPanel reads this through Windows' own remote session service.
 
-## When a host refuses your account
+## When a host refuses your account <a id="hosts-checking-when-a-host-refuses-your-account"></a>
 
 By default CapyPanel uses your own Windows account. When hosts answer **No admin rights** or
 **Account rejected**:
@@ -98,7 +99,7 @@ The Details panel's **Commands run as** names the account each host ends up with
 [Accounts for other PCs](connecting.md#use-another-account-on-some-pcs) to give a PC, a group, a tag or
 every PC its own account.
 
-## Read a PC's facts
+## Read a PC's facts <a id="hosts-checking-read-a-pcs-facts"></a>
 
 ![The PC facts section in the Details panel: last restart, free space, Windows, model, serial, memory and BIOS](../images/commands-pc-facts-dark.png)
 
@@ -142,13 +143,13 @@ They're never read by **Refresh all**, so a list of hundreds of hosts is left al
     Both ways ask the other PC the same questions and get the same answers; only what starts on
     your own PC changes.
 
-## Messages you may see
+## Messages you may see <a id="hosts-checking-messages-you-may-see"></a>
 
 | Message | What it means | What to do |
 |---|---|---|
-| **Unreachable** | Port 445 (Windows file sharing) didn't answer: the PC is off, off the network, blocks file sharing, or isn't Windows | Check the PC is on and on the network |
-| **No admin rights** | The account isn't an administrator on that host | Use another account (see above) |
-| **Account rejected** | The host refused the account | Check the account, or use another one |
-| **Couldn't read** | The host answered, but the sessions couldn't be read | Hover for the reason; try again later |
-| "No access: needs an admin account on this PC" | A PC fact needs an administrator account | Use an administrator account for that host |
-| "Couldn't read: Windows didn't let PowerShell start on your PC (an antivirus may block it)" | Your own PC refused to start PowerShell, not the one you were reading | Check your PC's antivirus, or set **Read PC data with** to **WMI directly** |
+| <a id="pc-unreachable"></a>**Unreachable**, or after a command: "it didn't answer. It's off, not on the network, or a firewall blocks file sharing." | Port 445 (Windows file sharing) didn't answer: the PC is off, off the network, blocks file sharing, or isn't Windows | Check the PC is on and on the network |
+| <a id="pc-no-admin-rights"></a>**No admin rights** | The account isn't an administrator on that host | Use another account (see above) |
+| <a id="pc-account-rejected"></a>**Account rejected**, or after a command: "it didn't accept the account: a wrong password, a locked account, or one it doesn't trust." | The host refused the account | Check the account, or use another one |
+| <a id="pc-couldnt-read"></a>**Couldn't read** | The host answered, but the sessions couldn't be read | Hover for the reason; try again later |
+| <a id="pc-no-access"></a>"No access: needs an admin account on this PC" | A PC fact needs an administrator account | Use an administrator account for that host |
+| <a id="pc-powershell-blocked"></a>"Couldn't read: Windows didn't let PowerShell start on your PC (an antivirus may block it)", or after a command: "Windows didn't let PowerShell start on your PC. An antivirus may block it." | Your own PC refused to start PowerShell, not the one you were reading | Check your PC's antivirus, or set **Read PC data with** to **WMI directly** |

@@ -7,7 +7,7 @@ os arquivos.
 
 ![As Configurações em CapyPanel > Geral: a lista de páginas à esquerda, com Atalhos de teclado embaixo de Geral; Aparência, Inicialização e fechamento, e Novas versões, marcada Todos neste PC, à direita](images/settings-dark-pt-BR.png)
 
-## Encontrar uma configuração
+## Encontrar uma configuração <a id="settings-find-a-setting"></a>
 
 Digite três letras ou mais em **Pesquisar configurações**, no alto à esquerda. O lado direito
 mostra todas as seções que as mencionam, de todas as páginas, com as palavras encontradas marcadas
@@ -27,7 +27,7 @@ em amarelo, e as configurações funcionam ali mesmo.
     - A pesquisa procura as palavras pelo começo, e a lista de páginas fica só com as que têm alguma
       correspondência. Um menu cuja correspondência é uma das opções recebe a marca na setinha.
       Limpar a caixa põe tudo de volta.
-    - A janela abre em 960 × 700 na primeira vez, ou menor numa tela pequena, como a de um notebook
+    - A janela abre em 960 × 740 na primeira vez, ou menor numa tela pequena, como a de um notebook
       em escala de 125 %. Você pode deixá-la de qualquer tamanho: uma página maior que a janela
       rola, para baixo e para o lado. Ela abre de novo no tamanho e no lugar em que você a deixou.
 
@@ -50,7 +50,7 @@ em amarelo, e as configurações funcionam ali mesmo.
     As listas de hosts e de impressoras compartilhadas também são de todos: as tabelas de listas
     dizem qual lista é **Compartilhada** e qual é **Pessoal**.
 
-## CapyPanel > Geral
+## CapyPanel > Geral <a id="settings-capypanel-general"></a>
 
 | Configuração | O que faz | De início |
 |---|---|---|
@@ -68,7 +68,7 @@ em amarelo, e as configurações funcionam ali mesmo.
     nunca muda o que o app faz. Os temas do Windows seguem a sua cor de destaque (**Configurações >
     Personalização > Cores**), e tudo o que vem dela continua legível.
 
-### Novas versões
+### Novas versões <a id="settings-updates"></a>
 
 **Todos neste PC**: "Uma mudança aqui vale para todos neste PC: uma nova versão substitui o
 CapyPanel para todos eles."
@@ -77,7 +77,7 @@ CapyPanel para todos eles."
 |---|---|---|
 | **Procurar nova versão** | **A cada início**, **Uma vez por dia**, **Uma vez por semana** ou **Desligado**. "Pergunta ao GitHub (api.github.com) qual é a versão mais nova do CapyPanel. Nada é baixado até você escolher Instalar. Ajuda › Procurar nova versão funciona com qualquer opção." | A cada início |
 
-## CapyPanel > Atalhos de teclado
+## CapyPanel > Atalhos de teclado <a id="settings-capypanel-keyboard-shortcuts"></a>
 
 ![As Configurações em CapyPanel > Atalhos de teclado: os comandos sob Arquivo, Exibir e Ajuda, cada um com a tecla dele, e Limpar e Restaurar padrão embaixo da lista](images/settings-shortcuts-dark-pt-BR.png)
 
@@ -97,9 +97,10 @@ o **Restaurar padrão** devolve a que ele tinha de início.
     - Uma tecla que outro comando já tem só muda depois de uma pergunta: o **Passar** a move, e o
       outro comando fica sem tecla.
     - F1, Esc, Ctrl+F, Tab e Ctrl+Shift+W ficam reservadas ao próprio CapyPanel, como diz a linha
-      embaixo da lista: "Num terminal SSH, todas menos Ctrl+Shift+W vão para o servidor." Uma tecla
-      que sozinha digita texto, como uma letra, um número ou o Ç, também: use-a com Ctrl ou Alt.
-      Pressione uma delas e o campo fica vermelho e diz "Tecla não aceita", o motivo aparece em
+      embaixo da lista: "Num terminal SSH, todas menos Ctrl+Shift+W vão para o servidor." O **Ajuda
+      desta tela** mostra a F1 em cinza: "F1 fica reservada à ajuda e não pode ser alterada." Uma
+      tecla que sozinha digita texto, como uma letra, um número ou o Ç, também: use-a com Ctrl ou
+      Alt. Pressione uma delas e o campo fica vermelho e diz "Tecla não aceita", o motivo aparece em
       vermelho embaixo da lista, e ele continua esperando outra tecla.
     - Cada ferramenta tem linhas próprias, mesmo para um comando que outra também tem, como
       **Editar…** ou **Remover**: uma tecla dada a uma deixa a das outras como estava.
@@ -118,7 +119,7 @@ o **Restaurar padrão** devolve a que ele tinha de início.
     - As suas teclas são só suas, guardadas no seu arquivo de configurações. Outra pessoa neste PC
       guarda as dela.
 
-## Hosts > Geral
+## Hosts > Geral <a id="settings-hosts-general"></a>
 
 | Configuração | O que faz | De início |
 |---|---|---|
@@ -128,7 +129,7 @@ o **Restaurar padrão** devolve a que ele tinha de início.
 | **Atualizar o status sozinho** | Verifica o status dos hosts exibidos **a cada minuto**, a cada **5**, **15** ou **30 minutos**, ou num intervalo **Personalizado…** de 1 a 120 (veja [Verificando hosts](hosts/checking.pt-BR.md#verificar-o-status-sozinho)) | Desligado |
 | **Comandos rápidos > Escolher…** | "Os botões no topo do painel de detalhes de um host; os quatro primeiros também ficam no menu do botão direito. Seus, neste PC." (veja [Escolher os seus comandos rápidos](hosts/commands.pt-BR.md#escolher-os-seus-comandos-rapidos)) | Compartilhamento C$, Pasta do usuário, Gerenciamento do Computador, Enviar uma mensagem… |
 
-## Hosts > Conexão
+## Hosts > Conexão <a id="settings-hosts-connecting"></a>
 
 ![Configurações > Hosts > Conexão: Perfis de conexão e Ferramentas remotas, cada uma marcada Todos neste PC, e o Ler dados dos PCs com em Automático](images/settings-hosts-connecting-dark-pt-BR.png)
 
@@ -165,7 +166,7 @@ com "Uma mudança aqui vale para todos neste PC." embaixo do título.
       usuário)"; passe o mouse para ver os caminhos inteiros.
     - Com o **Automático**, o "em uso:" ao lado diz o jeito que ele usa neste PC.
 
-## Hosts > Credenciais
+## Hosts > Credenciais <a id="settings-hosts-credentials"></a>
 
 ![Configurações > Hosts > Credenciais: a tabela Contas, e Credenciais salvas em Senhas](images/settings-hosts-credentials-dark-pt-BR.png)
 
@@ -174,7 +175,7 @@ com "Uma mudança aqui vale para todos neste PC." embaixo do título.
 | **Contas** | A tabela **Conta \| Usada para \| Guardada em**: qual conta entra em quais PCs, para os usuários logados e os comandos. "guardadas nas suas próprias configurações, nunca nas listas de hosts compartilhadas" (veja [Usar outra conta em alguns PCs](hosts/connecting.pt-BR.md#usar-outra-conta-em-alguns-pcs)) | Vazia: a sua conta do Windows em todo lugar |
 | **Credenciais salvas** | Quantos logins o CapyPanel guarda e onde, como "2 guardados: 1 no Gerenciador de Credenciais, 1 temporário.", com **Gerenciar…** (veja [Esquecer uma senha salva](hosts/connecting.pt-BR.md#esquecer-uma-senha-salva)) | Nenhum guardado |
 
-## Impressoras
+## Impressoras <a id="settings-printers"></a>
 
 | Página | Configuração | O que faz | De início |
 |---|---|---|---|
@@ -190,7 +191,7 @@ com "Uma mudança aqui vale para todos neste PC." embaixo do título.
 A Limpeza de perfis não tem configurações próprias: ela usa as listas e as contas do
 Hosts.
 
-## SSH > Geral
+## SSH > Geral <a id="settings-ssh-general"></a>
 
 | Configuração | O que faz | De início |
 |---|---|---|
@@ -199,7 +200,7 @@ Hosts.
 O SSH usa as listas do Hosts, então elas são configuradas em **Hosts > Geral**. O tamanho do texto
 do terminal fica guardado no seu arquivo de configurações quando você o muda com Ctrl+= e Ctrl+-.
 
-## Sobre
+## Sobre <a id="settings-about"></a>
 
 **Ajuda > Sobre o CapyPanel** abre esta página, no fim da lista. Ela tem quatro cartões:
 
@@ -233,7 +234,7 @@ do terminal fica guardado no seu arquivo de configurações quando você o muda 
 
     No modo portátil ela acrescenta "Modo portátil: tudo fica na própria pasta do aplicativo."
 
-## Onde o CapyPanel guarda os arquivos
+## Onde o CapyPanel guarda os arquivos <a id="settings-where-capypanel-keeps-its-files"></a>
 
 Tudo de todos os usuários de um PC fica numa só pasta, `C:\ProgramData\CapyPanel`, com uma pasta
 privada por usuário:
@@ -270,15 +271,16 @@ Enquanto uma atualização roda, os arquivos de trabalho dela ficam em
       a 0.19 guardava direto em `lists\`. Os arquivos antigos ficam onde estão, para uma versão mais
       antiga ainda rodar.
 
-### Modo portátil
+### Modo portátil <a id="settings-portable-mode"></a>
 
 Um arquivo vazio chamado `capypanel.portable` ao lado do app guarda tudo (configurações, listas,
 logs) numa pasta `userdata` ao lado dele, para rodar de um pendrive ou de uma pasta compartilhada.
 Quando você roda pelo código-fonte, "ao lado do app" significa a pasta do repositório.
 
-## Mensagens que você pode ver
+## Mensagens que você pode ver <a id="settings-messages-you-may-see"></a>
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| "Somente leitura para você. Um administrador deste PC pode alterar." | As configurações dessa seção são as mesmas para todos neste PC, e o Windows não deixa a sua conta alterá-las | Peça a um administrador do PC para alterá-las |
-| "2 arquivos ignorados: broken.json (não pode ser lido), clinicas.json (feito por outro usuário)" | Embaixo da tabela de perfis ou de ferramentas: arquivos na pasta compartilhada que o CapyPanel não está usando. Passe o mouse para ver os caminhos inteiros | Corrija ou remova um arquivo que não pode ser lido. Um arquivo feito por outro usuário que não é administrador é ignorado de propósito: peça a um administrador para colocá-lo lá |
+| <a id="settings-read-only"></a>"Somente leitura para você. Um administrador deste PC pode alterar." | As configurações dessa seção são as mesmas para todos neste PC, e o Windows não deixa a sua conta alterá-las | Peça a um administrador do PC para alterá-las |
+| <a id="settings-files-skipped"></a>"2 arquivos ignorados: broken.json (não pode ser lido), clinicas.json (feito por outro usuário)" | Embaixo da tabela de perfis ou de ferramentas: arquivos na pasta compartilhada que o CapyPanel não está usando. Passe o mouse para ver os caminhos inteiros | Corrija ou remova um arquivo que não pode ser lido. Um arquivo feito por outro usuário que não é administrador é ignorado de propósito: peça a um administrador para colocá-lo lá |
+| <a id="settings-updates-not-saved"></a>"Não foi possível salvar de quanto em quanto tempo procurar: …" | O Windows recusou gravar a configuração de Novas versões, que vale para todos neste PC. O motivo vem depois dos dois-pontos | Resolva o que o motivo diz, ou peça a um administrador para alterá-la |

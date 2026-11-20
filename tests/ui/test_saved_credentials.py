@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication
 
 from capypanel.core import credstore, settings
 from capypanel.core.hosts.accounts import Link, Scope
@@ -99,18 +99,17 @@ def test_forget_deletes_the_picked_login_and_forget_all_the_rest(
 
 
 def test_a_login_windows_wont_delete_is_said_once(
-    qapp: QApplication, monkeypatch: pytest.MonkeyPatch
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch, help_boxes: list[tuple[str, str]]
 ) -> None:
     def refuse() -> None:
         raise OSError("access denied")
 
     logins = [KeptLogin(name, "Tool", "user", True, refuse) for name in ("A", "B")]
-    warned: list[str] = []
-    monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: warned.append(text))
     monkeypatch.setattr(saved_credentials, "confirm", lambda *_a: True)
     dialog = SavedCredentialsDialog(None, lambda: logins)
     dialog.forget_all_button.click()
-    assert len(warned) == 1 and "access denied" in warned[0]
+    [(text, place)] = help_boxes
+    assert "access denied" in text and place == "connect-password-not-deleted"
 
 
 def test_settings_counts_what_s_kept_and_opens_the_window(

@@ -46,6 +46,16 @@ def free_windows(qapp: QApplication) -> Iterator[None]:
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
 
 
+@pytest.fixture
+def default_theme_after(qapp: QApplication) -> Iterator[None]:
+    """For a test that switches themes: the default one again after it."""
+    from capypanel.ui.themes import engine as themes
+
+    yield
+    if themes.current() is not themes.DEFAULT_THEME:  # a theme switch restyles every window
+        themes.apply(themes.DEFAULT_THEME)
+
+
 @pytest.fixture(autouse=True)
 def no_facts_on_their_own(monkeypatch: pytest.MonkeyPatch) -> None:
     """A host shown in Details has its PC facts read after a moment: never in tests, which would
@@ -53,6 +63,39 @@ def no_facts_on_their_own(monkeypatch: pytest.MonkeyPatch) -> None:
     from capypanel.ui.hosts_tool.tool import HostsTool
 
     monkeypatch.setattr(HostsTool, "_read_shown_facts", lambda _self: None)
+
+
+@pytest.fixture(autouse=True)
+def no_browser(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Help, Documentation and the other web links land here, never in the browser: an F1 a
+    test presses for something else would open the real website. Tests of a link read this
+    list or patch open_url themselves."""
+    from capypanel.ui import about
+
+    opened: list[str] = []
+    monkeypatch.setattr(about, "open_url", opened.append)
+    return opened
+
+
+@pytest.fixture(autouse=True)
+def help_boxes(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]:
+    """Warnings and errors shown with their "What does this mean?" (help_links.warning and
+    critical) land here as (text, place), instead of waiting for a click that never comes. A
+    test that wants the box itself patches dialogs.run_modal over this."""
+    from message_boxes import help_place
+    from PySide6.QtWidgets import QMessageBox
+
+    from capypanel.ui import dialogs
+
+    shown: list[tuple[str, str]] = []
+
+    def run(box: QMessageBox) -> int:
+        shown.append((box.text(), help_place(box)))
+        box.deleteLater()
+        return 0
+
+    monkeypatch.setattr(dialogs, "run_modal", run)
+    return shown
 
 
 @pytest.fixture(autouse=True)

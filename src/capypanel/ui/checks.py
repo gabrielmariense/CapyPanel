@@ -28,6 +28,7 @@ from capypanel.core.remote.batch import Batch
 from capypanel.core.remote.checks import Checks, Found
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Answer, Status
+from capypanel.ui import help_links
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.notes import hint
 
@@ -172,7 +173,8 @@ class AccountDialog(QDialog):
         layout.addWidget(intro)
         layout.addLayout(form)
         layout.addWidget(note)
-        layout.addWidget(self.buttons)
+        self.help_button = help_links.HelpButton("hosts-checking-when-a-host-refuses-your-account")
+        layout.addLayout(help_links.row(self.help_button, self.buttons))
         self.user.textChanged.connect(self._update_ok)
         self.password.textChanged.connect(self._update_ok)
         self._update_ok()

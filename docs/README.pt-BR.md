@@ -10,7 +10,7 @@ switches, abre um terminal SSH ao lado da lista deles.
 
 ![A página inicial do CapyPanel: a barra lateral, a capivara e um bloco para Hosts, Impressoras, Limpeza de perfis e SSH](images/home-dark-pt-BR.png)
 
-## O que ele faz
+## O que ele faz <a id="home-what-it-does"></a>
 
 - Hosts
   - Conexão remota: UltraVNC, RealVNC, Área de Trabalho Remota
@@ -36,7 +36,7 @@ switches, abre um terminal SSH ao lado da lista deles.
   - Quais respondem na porta SSH
   - Um terminal numa aba, pelo próprio ssh.exe do Windows, ou numa janela própria
 
-## Páginas
+## Páginas <a id="home-pages"></a>
 
 Cada página abre com as tarefas de sempre em poucos passos curtos. Os detalhes ficam dobrados
 embaixo, e toda página termina com as mensagens que você pode ver e o que fazer com elas.

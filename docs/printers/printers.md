@@ -9,7 +9,7 @@ each status; **Help > Guide to this screen** shows it again.
 
 How a Refresh reads status and toner has a page of its own: [Checking printers](checking.md).
 
-## Add a printer
+## Add a printer <a id="printers-add-a-printer"></a>
 
 1. **Inventory > Add printer…** (Ctrl+N).
 2. Type a **Name** and the **Address**, an IP address or a network name. That's enough: a Refresh
@@ -39,7 +39,7 @@ The other fields are optional:
     - **Edit selected…** (F2) opens the same window for a printer already in the list, with
       **Save** instead of **Add**.
 
-## Import many printers at once
+## Import many printers at once <a id="printers-import-many-printers-at-once"></a>
 
 1. **Inventory > Import printers…**. An empty printer list offers the same button beside **Add
    printer…**.
@@ -84,7 +84,7 @@ overwritten.
       red: "No address: type the printer's address. Its Windows port, USB001, isn't one." Type the
       address in the preview, or leave the row out.
 
-## Open a printer's web page
+## Open a printer's web page <a id="printers-open-a-printers-web-page"></a>
 
 Almost every printer has a web page of its own for settings, counters and supplies. Click **Open
 web page** on the toolbar, double-click the printer, or press **Enter**. It opens in your default
@@ -102,7 +102,7 @@ http.
     - Only the address is handed to the browser. CapyPanel fetches nothing from the printer and
       signs in to nothing.
 
-## Find a printer
+## Find a printer <a id="printers-find-a-printer"></a>
 
 Type in the search box above the table (**Ctrl+F**). To narrow the group you're in, pick a tag on
 the left; pick several to keep only the printers that carry all of them. To see a tag across the
@@ -118,7 +118,7 @@ whole list, pick **All printers** first.
       many are picked and offers a **×** to clear them. Picked tags stay as you move between groups
       and while you search.
 
-## Keep printers in lists, groups and tags
+## Keep printers in lists, groups and tags <a id="printers-keep-printers-in-lists-groups-and-tags"></a>
 
 Printers has its own lists, kept apart from the Hosts tool's. The open list's name sits on top of
 the Groups panel; its menu switches lists and holds **New printer list**, **Open a printer list**
@@ -154,7 +154,7 @@ see [Host lists](../hosts/host-lists.md).
     The other two Printers pages, **Warnings and supplies** and **Connecting**, are explained in
     [Checking printers](checking.md).
 
-## Export printers to a spreadsheet
+## Export printers to a spreadsheet <a id="printers-export-printers-to-a-spreadsheet"></a>
 
 1. Click **Report** on the toolbar.
 2. Pick the printers and the columns.
@@ -183,7 +183,7 @@ details**.
       printer, those in no group, each group with its subgroups, and each tag, every one of them
       counted.
 
-## The window in detail
+## The window in detail <a id="printers-the-window-in-detail"></a>
 
 ??? note "The window, part by part"
 
@@ -238,13 +238,13 @@ details**.
     rest, with their levels", Printer "Brand, model, serial number, firmware", Page counters "Total
     pages and their source", and Tags and Notes. "Always shown: the printer's name and its status."
 
-## Messages you may see
+## Messages you may see <a id="printers-messages-you-may-see"></a>
 
 | Message | What it means | What to do |
 |---|---|---|
-| "“{path}” isn't a printer list." | The file you opened is a host list | Open it in Hosts |
-| "Opened 10 web pages. Only the first 10 open at once." | More than ten printers were selected | Open the rest in a second go |
-| "Tick a column under Last check to read them" | The Report's refresh button has nothing to read | Tick a column under Last check |
-| "This list has no printers yet. Add one, or import several at once." | The printer list is empty | **Add printer…** or **Import printers…** |
-| "No address: type the printer's address. Its Windows port, USB001, isn't one." | In an import from Windows' printer list, that printer's port isn't a network address | Type its address in the preview, or leave it out |
-| "Not a printer name or IP address", "No address: the name must then be the printer's name on the network" | That row of an import can't be added | Fix the row in the preview, or leave it out |
+| <a id="printers-not-a-list"></a>"“{path}” isn't a printer list." | The file you opened is a host list | Open it in Hosts |
+| <a id="printers-web-pages-limit"></a>"Opened 10 web pages. Only the first 10 open at once." | More than ten printers were selected | Open the rest in a second go |
+| <a id="printers-column-unticked"></a>"Tick a column under Last check to read them" | The Report's refresh button has nothing to read | Tick a column under Last check |
+| <a id="printers-list-empty"></a>"This list has no printers yet. Add one, or import several at once." | The printer list is empty | **Add printer…** or **Import printers…** |
+| <a id="printers-import-usb-port"></a>"No address: type the printer's address. Its Windows port, USB001, isn't one." | In an import from Windows' printer list, that printer's port isn't a network address | Type its address in the preview, or leave it out |
+| <a id="printers-import-bad-row"></a>"Not a printer name or IP address", "No address: the name must then be the printer's name on the network" | That row of an import can't be added | Fix the row in the preview, or leave it out |

@@ -6,7 +6,7 @@ na memória, nunca no arquivo da lista, e somem quando o CapyPanel fecha; editar
 host as apaga. Para guardá-las, exporte-as pelo **Relatório** (veja
 [Exportar hosts para uma planilha](host-lists.pt-BR.md#exportar-hosts-para-uma-planilha)).
 
-## Verificar os seus hosts
+## Verificar os seus hosts <a id="hosts-checking-check-your-hosts"></a>
 
 1. Clique em **Atualizar todos** na barra de ferramentas (**F5**). Ele verifica todos os hosts que
    a tabela mostra: o grupo escolhido com seus subgrupos, uma tag, Todos os hosts, Sem grupo ou os
@@ -28,7 +28,7 @@ host as apaga. Para guardá-las, exporte-as pelo **Relatório** (veja
     - Um host sem endereço, cujo nome não é um nome de computador, é pulado com um aviso na barra de
       status.
 
-## Ler o status de um host
+## Ler o status de um host <a id="hosts-checking-read-a-hosts-status"></a>
 
 | Status | O que significa |
 |---|---|
@@ -44,22 +44,24 @@ conta nenhuma e não precisa de direitos de administrador.
 ??? note "Como o status é verificado"
 
     As portas são a 445 (compartilhamento de arquivos do Windows), a 22 (SSH) e a porta de cada
-    ferramenta, como a 5900 do VNC e a 3389 da Área de Trabalho Remota. Uma conexão recusada conta
-    como resposta. Todos os endereços do nome são tentados, cabo e Wi-Fi: um PC que só responde no
-    endereço do Wi-Fi pode estar com o cabo solto.
+    ferramenta, como a 3389 da Área de Trabalho Remota, mas nunca a de uma ferramenta VNC:
+    servidores UltraVNC até a 1.6.1 contam cada conexão que não faz login como um login que falhou,
+    e recusam o PC depois de seis. Uma conexão recusada conta como resposta. Todos os endereços do
+    nome são tentados, cabo e Wi-Fi: um PC que só responde no endereço do Wi-Fi pode estar com o
+    cabo solto.
 
     Quando um PC não respondeu, os detalhes dizem isso uma vez embaixo do nome, como "Offline ·
     verificado em 10:41", e **Logados** e **Dados do PC** mostram um só traço ou uma linha com o
     motivo.
 
-## Verificar o status sozinho
+## Verificar o status sozinho <a id="hosts-checking-have-status-checked-on-its-own"></a>
 
 **Configurações > Hosts > Geral > Atualizar o status sozinho** verifica o status dos hosts exibidos
 **a cada minuto**, a cada **5**, **15** ou **30 minutos**, ou num intervalo **Personalizado…** de 1 a
 120. Começa **Desligado**. "Só ping e portas: nenhuma conta é usada. O Atualizar da barra sempre
 funciona."
 
-## Ver quem está logado
+## Ver quem está logado <a id="hosts-checking-see-who-is-logged-on"></a>
 
 A coluna **Usuário** mostra quem está logado, como `DOMÍNIO\usuário`, com "(desconectado)" para
 uma sessão desconectada, ou **Ninguém**. O painel de detalhes lista cada sessão em **Logados**: o
@@ -82,7 +84,7 @@ que seja o idioma deles.
       como na aba Usuários do Gerenciador de Tarefas. É assim que o Windows informa.
     - O CapyPanel lê isso pelo próprio serviço de sessões remotas do Windows.
 
-## Quando um host recusa a sua conta
+## Quando um host recusa a sua conta <a id="hosts-checking-when-a-host-refuses-your-account"></a>
 
 Por padrão o CapyPanel usa a sua própria conta do Windows. Quando hosts respondem **Sem direitos de
 administrador** ou **Conta recusada**:
@@ -102,7 +104,7 @@ O **Comandos como** do painel de detalhes diz qual conta cada host acaba usando.
 [Contas para outros PCs](connecting.pt-BR.md#usar-outra-conta-em-alguns-pcs) para dar uma conta própria a um
 PC, um grupo, uma tag ou a todos os PCs.
 
-## Ler os dados de um PC
+## Ler os dados de um PC <a id="hosts-checking-read-a-pcs-facts"></a>
 
 ![A seção Dados do PC no painel de detalhes: última reinicialização, espaço livre, Windows, modelo, número de série, memória e BIOS](../images/commands-pc-facts-dark-pt-BR.png)
 
@@ -148,13 +150,13 @@ Eles nunca são lidos pelo **Atualizar todos**, então uma lista de centenas de 
     Os dois jeitos fazem as mesmas perguntas ao outro PC e recebem as mesmas respostas; só muda o que
     abre no seu próprio PC.
 
-## Mensagens que você pode ver
+## Mensagens que você pode ver <a id="hosts-checking-messages-you-may-see"></a>
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| **Inacessível** | A porta 445 (compartilhamento de arquivos do Windows) não respondeu: o PC está desligado, fora da rede, bloqueia o compartilhamento de arquivos ou não é Windows | Confira se o PC está ligado e na rede |
-| **Sem direitos de administrador** | A conta não é administradora nesse host | Use outra conta (veja acima) |
-| **Conta recusada** | O host recusou a conta | Confira a conta, ou use outra |
-| **Não foi possível ler** | O host respondeu, mas as sessões não puderam ser lidas | Passe o mouse para ver o motivo; tente de novo mais tarde |
-| "Sem acesso: precisa de uma conta de administrador neste PC" | Um dado do PC precisa de uma conta de administrador | Use uma conta de administrador para esse host |
-| "Não foi possível ler: o Windows não deixou o PowerShell abrir no seu PC (um antivírus pode bloqueá-lo)" | Foi o seu próprio PC que recusou abrir o PowerShell, não o que você estava lendo | Confira o antivírus do seu PC, ou ponha o **Ler dados dos PCs com** em **WMI direto** |
+| <a id="pc-unreachable"></a>**Inacessível**, ou depois de um comando: "ele não respondeu. Está desligado, fora da rede, ou um firewall bloqueia o compartilhamento de arquivos." | A porta 445 (compartilhamento de arquivos do Windows) não respondeu: o PC está desligado, fora da rede, bloqueia o compartilhamento de arquivos ou não é Windows | Confira se o PC está ligado e na rede |
+| <a id="pc-no-admin-rights"></a>**Sem direitos de administrador** | A conta não é administradora nesse host | Use outra conta (veja acima) |
+| <a id="pc-account-rejected"></a>**Conta recusada**, ou depois de um comando: "ele não aceitou a conta: senha errada, conta bloqueada ou uma conta em que ele não confia." | O host recusou a conta | Confira a conta, ou use outra |
+| <a id="pc-couldnt-read"></a>**Não foi possível ler** | O host respondeu, mas as sessões não puderam ser lidas | Passe o mouse para ver o motivo; tente de novo mais tarde |
+| <a id="pc-no-access"></a>"Sem acesso: precisa de uma conta de administrador neste PC" | Um dado do PC precisa de uma conta de administrador | Use uma conta de administrador para esse host |
+| <a id="pc-powershell-blocked"></a>"Não foi possível ler: o Windows não deixou o PowerShell abrir no seu PC (um antivírus pode bloqueá-lo)", ou depois de um comando: "o Windows não deixou o PowerShell abrir no seu PC. Um antivírus pode bloqueá-lo." | Foi o seu próprio PC que recusou abrir o PowerShell, não o que você estava lendo | Confira o antivírus do seu PC, ou ponha o **Ler dados dos PCs com** em **WMI direto** |

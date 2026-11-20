@@ -6,7 +6,7 @@ organizar uma lista, encontrar um host nela e colocar ou tirar muitos hosts de u
 aparece na primeira vez que o Hosts abre mostra a lista, os grupos e as tags dela num PC de
 exemplo; o **Ajuda > Guia desta tela** mostra o guia de novo.
 
-## Organizar os hosts em grupos
+## Organizar os hosts em grupos <a id="host-lists-arrange-hosts-in-groups"></a>
 
 1. Clique no **+** ao lado do título **Grupos**, ou use **Inventário > Adicionar grupo…**, para
    criar um grupo. Os grupos se aninham o quanto você quiser ("Matriz › Financeiro › 3º andar").
@@ -46,7 +46,7 @@ os hosts" com quantos ele tem. Uma lista nova começa com um grupo, **Grupo padr
 
     Cancelar é o botão padrão, então Enter ou Esc deixa a lista como está.
 
-## Pôr tags nos hosts e filtrar por tag
+## Pôr tags nos hosts e filtrar por tag <a id="host-lists-tag-hosts-and-filter-by-tag"></a>
 
 1. Selecione os hosts, clique com o botão direito neles e abra **Tags ▸**.
 2. Escolha uma tag para dá-la a todos eles (ou tirá-la de todos, quando todos a têm), ou **Nova
@@ -69,7 +69,7 @@ escolheu; para vê-la na lista inteira, escolha **Todos os hosts** primeiro.
     - As tags escolhidas continuam quando você troca de grupo e enquanto você pesquisa.
     - As Impressoras têm o mesmo menu **Tags ▸**.
 
-## Encontrar um host
+## Encontrar um host <a id="host-lists-find-a-host"></a>
 
 Digite na caixa acima da tabela (o **Ctrl+F** leva até ela). Ela pesquisa a lista aberta inteira,
 seja qual for o grupo ou a tag escolhida, e maiúsculas e minúsculas não importam. Aperte **Seta
@@ -105,7 +105,7 @@ ao grupo que estava escolhido.
     - O **×** na caixa também encerra a pesquisa, e escolher um grupo ou uma tag, ou trocar de lista
       de hosts, também.
 
-## Adicionar hosts de uma planilha
+## Adicionar hosts de uma planilha <a id="host-lists-add-hosts-from-a-spreadsheet"></a>
 
 1. **Inventário > Importar hosts…**.
 2. Cole uma lista na caixa de cima, ou clique em **Abrir um arquivo CSV…** para um arquivo `.csv`
@@ -154,7 +154,7 @@ Um host que já está na sua lista é ignorado, nunca sobrescrito.
     As tags e as notas entram junto com os hosts. O resumo conta o que será adicionado, ignorado e
     o que não pode ser adicionado, e cada linha diz por quê.
 
-## Exportar hosts para uma planilha
+## Exportar hosts para uma planilha <a id="host-lists-export-hosts-to-a-spreadsheet"></a>
 
 ![A janela Relatório: os hosts, a predefinição, os quadros Host, Tags e notas e Última verificação com Atualizar 3 hosts, e a prévia](../images/report-dark-pt-BR.png)
 
@@ -192,7 +192,7 @@ só lê a lista, então funciona também numa somente leitura.
       Relatório a grava com um apóstrofo na frente, o que a mantém como texto. O Importar hosts tira
       o apóstrofo de novo.
 
-## Trocar, criar e compartilhar listas
+## Trocar, criar e compartilhar listas <a id="host-lists-switch-make-and-share-lists"></a>
 
 O nome da lista aberta fica no topo do painel de grupos. Clique nele para trocar de lista, criar
 uma com **Nova lista…**, abrir qualquer arquivo de lista com **Abrir lista…** (Ctrl+O), ou ir a
@@ -261,13 +261,22 @@ Uma lista nova pede um **Nome** e para quem ela é, em **Para:** **Todos neste P
       os campos que não conhecem ao salvar, e uma lista gravada por uma versão mais nova é recusada
       em vez de ser danificada.
 
-## Mensagens que você pode ver
+## Mensagens que você pode ver <a id="host-lists-messages-you-may-see"></a>
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| "“{path}” não é uma lista de hosts." | O arquivo que você abriu é uma lista de impressoras | Abra-o no Impressoras |
-| "Esta lista precisa de uma linha de cabeçalho." | A lista colada tem mais do que um nome e um endereço, mas nenhuma primeira linha dando nome às colunas | Acrescente um cabeçalho; o **Formatos…** mostra como |
-| "Já está na lista, em “Recepção”" ou "Mesmo nome da linha 7" | O host já está na sua lista, ou aparece duas vezes no arquivo | Nada: ele é ignorado, nunca sobrescrito |
-| "Sem nome", "Não é um nome de computador nem um endereço IP", "Sem endereço: o nome precisa ser o nome do computador na rede" | Essa linha não pode ser adicionada | Corrija a linha na prévia, ou deixe-a de fora |
-| "Nenhum host corresponde a “…”." | A pesquisa não achou nada | Confira a grafia, ou mostre a coluna que você está pesquisando. Para um PC que não está na lista, **Conectar a {host}…** |
-| **Não usada: criada por outro usuário** | Uma lista compartilhada criada por alguém que não é administrador | Peça a um administrador para substituí-la ou excluí-la |
+| <a id="hosts-not-a-list"></a>"“{path}” não é uma lista de hosts." | O arquivo que você abriu é uma lista de impressoras | Abra-o no Impressoras |
+| <a id="hosts-no-header-row"></a>"Esta lista precisa de uma linha de cabeçalho." | A lista colada tem mais do que um nome e um endereço, mas nenhuma primeira linha dando nome às colunas | Acrescente um cabeçalho; o **Formatos…** mostra como |
+| <a id="hosts-import-duplicate"></a>"Já está na lista, em “Recepção”" ou "Mesmo nome da linha 7" | O host já está na sua lista, ou aparece duas vezes no arquivo | Nada: ele é ignorado, nunca sobrescrito |
+| <a id="hosts-import-bad-row"></a>"Sem nome", "Não é um nome de computador nem um endereço IP", "Sem endereço: o nome precisa ser o nome do computador na rede" | Essa linha não pode ser adicionada | Corrija a linha na prévia, ou deixe-a de fora |
+| <a id="hosts-search-no-match"></a>"Nenhum host corresponde a “…”." | A pesquisa não achou nada | Confira a grafia, ou mostre a coluna que você está pesquisando. Para um PC que não está na lista, **Conectar a {host}…** |
+| <a id="hosts-list-other-user"></a>**Não usada: criada por outro usuário** | Uma lista compartilhada criada por alguém que não é administrador | Peça a um administrador para substituí-la ou excluí-la |
+| <a id="hosts-list-gone"></a>"A lista “…” não existe mais, então saiu das suas listas." | O arquivo dela foi movido, renomeado ou excluído fora do CapyPanel | Se ela foi movida, abra-a onde está agora com **Abrir lista…** |
+| <a id="hosts-list-file-error"></a>"Não foi possível abrir “…”: …", "Não foi possível criar “…”: …", "Não foi possível gravar “…”: …", "Não foi possível salvar a lista: …", "Não foi possível salvar a cópia: …" ou "Não foi possível recarregar a lista: …" | O Windows recusou o arquivo da lista. O motivo vem depois dos dois-pontos: sem direitos na pasta, disco cheio, ou o arquivo aberto em outro programa | Resolva o que o motivo diz e tente de novo |
+| <a id="hosts-list-cant-open"></a>"Não dá para abrir “…”: …" | A janela das listas não consegue abrir essa lista. O motivo é o status dela lá | Faça o que o status pede. Uma lista criada por outro usuário tem a sua própria linha acima |
+| <a id="hosts-default-list-other-user"></a>"A lista padrão foi criada por outro usuário, então o CapyPanel não vai abri-la. Um administrador pode substituir ou excluir “…”." | A lista padrão compartilhada foi criada por alguém que não é administrador, então o CapyPanel não confia nela | Peça a um administrador para substituir ou excluir o arquivo que a mensagem cita |
+| <a id="hosts-list-changed"></a>"Outra pessoa salvou alterações nesta lista depois que você a abriu. A sua alteração não foi salva…" | Alguém que compartilha a lista a salvou enquanto ela estava aberta com você, e o CapyPanel nunca grava por cima das alterações dessa pessoa | **Salvar minha versão como cópia…** guarda a sua num arquivo novo. **Recarregar a lista** fica com a da outra pessoa, e você faz a sua alteração de novo |
+| <a id="hosts-list-not-recycled"></a>"Não foi possível mover “…” para a Lixeira, então nada mudou." | O Windows recusou mover o arquivo da lista compartilhada, muitas vezes porque ele está aberto em outro programa ou você não tem direitos sobre ele | Feche-o onde estiver aberto e tente de novo, ou peça a um administrador para excluí-lo |
+| <a id="hosts-list-rule"></a>"Um grupo não pode ser movido para dentro dele mesmo.", "Esse grupo não existe.", "O grupo pai não existe.", "Os grupos mudaram enquanto isso; tente de novo.", "Esse host não está mais na lista." ou "O nome é obrigatório." | A alteração quebra uma regra dos grupos, ou a lista mudou enquanto isso, em outra janela ou por alguém que a compartilha | Faça o que a mensagem diz. Se a lista mudou, confira-a de novo e refaça a alteração |
+| <a id="hosts-file-not-saved"></a>"Não foi possível salvar “…”: …", e depois "Se o arquivo estiver aberto em outro programa, como o Excel, feche-o lá e salve de novo." | O Windows recusou gravar o arquivo exportado pelo Relatório ou pela janela Comandos, em geral porque ele está aberto em outro programa | Feche o arquivo lá e exporte de novo |
+| <a id="hosts-preset-name-taken"></a>"Esse nome já está em uso. Escolha outro." | Outra predefinição do Relatório já tem esse nome | Escolha outro nome |

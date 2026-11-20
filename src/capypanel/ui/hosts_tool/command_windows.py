@@ -22,7 +22,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QTreeWidget,
@@ -37,7 +36,7 @@ from capypanel.core.remote import host_printers, places
 from capypanel.core.remote.host_printers import HostPrinter
 from capypanel.core.remote.sessions import Session
 from capypanel.ui import checks as check_texts
-from capypanel.ui import spacing
+from capypanel.ui import help_links, spacing
 from capypanel.ui.dialogs import quiet_default, run_modal
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.notes import escape, hint
@@ -89,10 +88,11 @@ def risky_button(text: str) -> QPushButton:
 class Question(QDialog):
     """A question before something that disturbs whoever uses the PC: the warning sign, the
     question in bold, what happens, then the amber action and Cancel (the default, so Enter or a
-    stray click never confirms)."""
+    stray click never confirms). It has no ?: F1 opens `place`, the part of the window that
+    asked."""
 
     def __init__(self, parent: QWidget | None, title: str, question: str, text: str,
-                 action: str) -> None:  # fmt: skip
+                 action: str, *, place: str = "") -> None:  # fmt: skip
         super().__init__(parent)
         self.setWindowTitle(title)
         self.setMinimumWidth(WIDE)
@@ -133,6 +133,8 @@ class Question(QDialog):
         layout.addSpacing(spacing.ICON)
         layout.addLayout(buttons)
         self.cancel.setFocus()
+        if place:
+            help_links.key(self, lambda: place)
 
     def sizeHint(self) -> QSize:
         """WIDE at least, and as tall as the words wrap at that width. Qt measures the height at
@@ -159,7 +161,14 @@ def ask_session_action(parent: QWidget | None, host: str, session: Session, *,
         text = _("They're signed in {where}. Their programs keep running, and they get back to "
                  "them when they sign in again.")  # fmt: skip
         title, action = _("Disconnect"), _("&Disconnect")
-    box = Question(parent, title, question, escape(text.format(where=where)), action)
+    box = Question(
+        parent,
+        title,
+        question,
+        escape(text.format(where=where)),
+        action,
+        place="commands-message-log-off-or-disconnect-someone",
+    )
     return run_modal(box) == QDialog.DialogCode.Accepted
 
 
@@ -175,6 +184,7 @@ def ask_spooler(parent: QWidget | None, host: str) -> bool:
             ).format(host=host)
         ),  # fmt: skip
         _("&Restart Print Spooler"),
+        place="commands-fix-a-pcs-printing",
     )
     return run_modal(box) == QDialog.DialogCode.Accepted
 
@@ -191,6 +201,7 @@ def ask_clear_queue(parent: QWidget | None, host: str, printer: HostPrinter) -> 
         _("Clear the queue of {printer} on {host}?").format(printer=printer.name, host=host),
         escape(jobs),
         _("&Clear queue"),
+        place="commands-fix-a-pcs-printing",
     )
     return run_modal(box) == QDialog.DialogCode.Accepted
 
@@ -231,7 +242,9 @@ class OpenPathDialog(QDialog):
         cancel = QPushButton(_("Cancel"))
         self.open_button.clicked.connect(self.accept)
         cancel.clicked.connect(self.reject)
+        self.help_button = help_links.HelpButton("commands-open-a-pcs-folders-and-admin-tools")
         buttons = QHBoxLayout()
+        buttons.addWidget(self.help_button)
         buttons.addStretch(1)
         buttons.addWidget(self.open_button)
         buttons.addWidget(cancel)
@@ -291,7 +304,9 @@ class MessageDialog(QDialog):
         cancel = QPushButton(_("Cancel"))
         self.send.clicked.connect(self.accept)
         cancel.clicked.connect(self.reject)
+        self.help_button = help_links.HelpButton("commands-message-log-off-or-disconnect-someone")
         buttons = QHBoxLayout()
+        buttons.addWidget(self.help_button)
         buttons.addStretch(1)
         buttons.addWidget(self.send)
         buttons.addWidget(cancel)
@@ -332,7 +347,14 @@ class PowerDialog(Question):
         else:
             title = _("Shut down {host}").format(host=host)
             question = _("Shut down {host}?").format(host=host)
-        super().__init__(parent, title, question, self._people(found), "")
+        super().__init__(
+            parent,
+            title,
+            question,
+            self._people(found),
+            "",
+            place="commands-restart-or-shut-down-a-pc",
+        )
         self.when = QComboBox()
         for delay in DELAYS:
             self.when.addItem(_delay_text(delay), delay)
@@ -440,6 +462,7 @@ class ReadList(QDialog):
     back, then the rows, or why it couldn't. Read again reads it once more."""
 
     READ = "A list"  # what it reads, for the log (in English, as the rest of the log)
+    HELP_PLACE = ""  # its command's part of the docs, for its ? and F1
 
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget") -> None:
         super().__init__(parent)
@@ -460,6 +483,7 @@ class ReadList(QDialog):
         self.close_button = QPushButton(_("Close"))
         quiet_default(self.close_button)
         self.close_button.clicked.connect(self.accept)
+        self.help_button = help_links.HelpButton(self.HELP_PLACE)
 
     def read(self) -> None:
         self.read_button.setEnabled(False)
@@ -500,6 +524,7 @@ class PrintersDialog(ReadList):
     the printer picked and Restart Print Spooler… for them all, both asking first."""
 
     READ = "Printers"
+    HELP_PLACE = "commands-fix-a-pcs-printing"
 
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget",
                  report: "Report") -> None:  # fmt: skip
@@ -521,6 +546,7 @@ class PrintersDialog(ReadList):
                       "Print Spooler stops every printer on this PC for a few seconds. Both ask "
                       "first."))  # fmt: skip
         bottom = QHBoxLayout()
+        bottom.addWidget(self.help_button)
         bottom.addStretch(1)
         bottom.addWidget(self.close_button)
         layout = QVBoxLayout(self)
@@ -602,6 +628,7 @@ class ProgramsDialog(ReadList):
     CSV… for the rows shown."""
 
     READ = "Installed programs"
+    HELP_PLACE = "commands-see-whats-installed-and-mapped"
 
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget",
                  folder: Callable[[str | None], str], found: Sequence[Any] | None = None,
@@ -634,6 +661,7 @@ class ProgramsDialog(ReadList):
             actions.addWidget(button)
         actions.addStretch(1)
         bottom = QHBoxLayout()
+        bottom.addWidget(self.help_button)
         bottom.addStretch(1)
         bottom.addWidget(self.close_button)
         layout = QVBoxLayout(self)
@@ -746,8 +774,10 @@ def export_csv(
     try:
         path.write_text(text, encoding="utf-8-sig")  # the BOM: Excel reads accents right
     except OSError as e:
-        text = _("Couldn't save {path}: {error}").format(path=path, error=e)
-        QMessageBox.warning(parent, _("Export CSV"), text)
+        text = _("Couldn't save “{path}”: {error}\n\nIf the file is open in another "
+                 "program, such as Excel, close it there and save again.")  # fmt: skip
+        text = text.format(path=path, error=e)
+        help_links.warning(parent, _("Export CSV"), text, place="hosts-file-not-saved")
         return
     folder(str(path.parent))
 

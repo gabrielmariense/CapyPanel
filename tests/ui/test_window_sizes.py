@@ -41,7 +41,7 @@ RECORDED = {
     "send a message": 242,
     "saved credentials": 335,
     "commands": 620,
-    "settings": 336,
+    "settings": 346,  # 336 until 0.30's ? under the page list, on a line of its own
 }
 
 
@@ -112,7 +112,7 @@ def test_settings_opens_wide_enough_for_its_tables(window: CapyWindow) -> None:
     its own font; the test font is twice as wide). That's how it opens; from there it can be
     made any size, smaller too."""
     dialog = window.settings_dialog()
-    assert (dialog.width(), dialog.height()) == (WIDTH, HEIGHT) == (960, 700)
+    assert (dialog.width(), dialog.height()) == (WIDTH, HEIGHT) == (960, 740)
     dialog.resize(1100, 800)
     assert (dialog.width(), dialog.height()) == (1100, 800)
     dialog.resize(700, 400)

@@ -2,7 +2,8 @@
 buttons: the window's X or Esc closes it, and every choice applies as soon as it's made. The
 page list names each group (CapyPanel, then each tool) with its pages under it, and About at the
 very bottom; a click shows that one page, which scrolls on its own when it's taller than the
-window. A tool's pages apply their choices through the tool (see SettingsGroup)."""
+window. A tool's pages apply their choices through the tool (see SettingsGroup). The ? under
+the page list, and F1, open the docs at the part about the page shown."""
 
 from collections.abc import Sequence
 
@@ -25,6 +26,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core import i18n, settings
 from capypanel.core.i18n import _
+from capypanel.ui import help_links
 from capypanel.ui.notes import hint
 from capypanel.ui.settings import search
 from capypanel.ui.settings.group import SettingsGroup
@@ -38,8 +40,10 @@ APP_GROUP = ("CapyPanel", ("general",))
 PINNED = ("about",)  # pages kept at the very bottom of the page list, apart from the groups
 SEARCH_FROM = 3  # letters typed before the search shows its results
 # As it opens the first time: room for a table row such as a domain account, its PC and where
-# it's kept. From there the size is the person's: any size, and a page too large for it scrolls.
-WIDTH, HEIGHT = 960, 700
+# it's kept, and in Windows' own themes, whose rows are taller, for every page in the list with
+# About apart from the last one, under which the ? takes its own line (700 until 0.30). From
+# there the size is the person's: any size, and a page too large for it scrolls.
+WIDTH, HEIGHT = 960, 740
 ROOM = 60  # spare width past the widest page: a button row never ends just short of its table
 GUTTER = 16  # right of the pages and under the last one: the columns' gap left of them
 
@@ -82,7 +86,7 @@ class SettingsDialog(QDialog):
         # holding a list can crash Qt after a theme switch (see DECISIONS, code cleanup).
         self._old: list[QWidget] = []
         self._layout = QVBoxLayout(self)
-        self._layout.setContentsMargins(12, 12, 12, 12)
+        self._layout.setContentsMargins(0, 0, 0, 0)  # the contents' own margin, which the ? uses
         self.own_size = False  # opened at the size the person left it at: nothing widens it
         self._build(themes.current().id)
         self.resize(WIDTH, HEIGHT)  # taller pages scroll, the window never grows for them
@@ -131,7 +135,7 @@ class SettingsDialog(QDialog):
             self._view_of[page_id] = len(self._views)
             self._add_view(page)
         # Search results: the matching sections of every page, lent here while searching.
-        self._results = Page(_("Search"))
+        self._results = Page(_("Search"), place="settings-find-a-setting")
         self._results_view = len(self._views)
         self._add_view(self._results)
         self._lent: list[tuple[QVBoxLayout, int, QWidget]] = []  # where each came from
@@ -199,6 +203,9 @@ class SettingsDialog(QDialog):
         side.addWidget(self.search)
         side.addWidget(self.page_list, 1)
         side.addWidget(self.pinned_list)
+        # Help on its own line under the pages, at the search's left edge (topic-030).
+        self.help_button = help_links.HelpButton(self.help_place)
+        side.addWidget(self.help_button, 0, Qt.AlignmentFlag.AlignLeft)
         columns.addLayout(side)
         divider = QFrame()  # a thin line between the page list and the pages
         divider.setObjectName("pagesDivider")
@@ -206,7 +213,8 @@ class SettingsDialog(QDialog):
         columns.addWidget(divider)
         columns.addWidget(self.stack, 1)
         inside = QVBoxLayout(content)
-        inside.setContentsMargins(0, 0, 0, 0)
+        # The window's margin, inside its contents: the ?'s hover box reaches into it.
+        inside.setContentsMargins(12, 12, 12, 12)
         inside.addLayout(columns, 1)
         self._layout.addWidget(content)
         self._content = content
@@ -250,6 +258,11 @@ class SettingsDialog(QDialog):
         if self.general.updates_choice() != self._updates:
             self._updates = self.general.updates_choice()
             self.updates_picked.emit(self._updates)
+
+    def show_updates(self, how: str) -> None:
+        """Back to what's saved when saving the choice failed, so picking it again tries again."""
+        self._updates = how
+        self.general.show_updates(how)
 
     def _theme_changed(self) -> None:
         # After the dropdown has closed: the switch restyles every widget, which takes a
@@ -416,6 +429,13 @@ class SettingsDialog(QDialog):
             self.pinned_list.setCurrentRow(PINNED.index(page_id))
         else:
             self.page_list.setCurrentRow(self.row_of(page_id))
+
+    def help_place(self) -> str:
+        """Where F1 and the ? open the docs: the part about the page shown, Find a setting
+        while the search's results are, or the Settings page's top for a page with no part."""
+        page = self.current_page()
+        shown = self._results if page == "search" else self.pages.get(page)
+        return (shown.place if shown is not None else "") or "settings-and-files/"
 
     def row_of(self, page_id: str) -> int:
         """The page's row in the page list."""

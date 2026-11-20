@@ -36,7 +36,7 @@ from capypanel.core import files, i18n, updates
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.ssh import launch as ssh_launch
 from capypanel.core.updates import Release, UpdateError
-from capypanel.ui import branding
+from capypanel.ui import branding, help_links
 from capypanel.ui.dialogs import run_modal
 
 log = logging.getLogger(__name__)
@@ -368,6 +368,8 @@ class _Frame(QDialog):
         self.buttons = QHBoxLayout(footer)
         self.buttons.setContentsMargins(24, 16, 24, 16)
         self.buttons.setSpacing(8)
+        self.help_button = help_links.HelpButton("download-update-capypanel")
+        self.buttons.addWidget(self.help_button)  # first, on the footer's left
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)

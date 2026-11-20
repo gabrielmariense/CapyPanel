@@ -16,6 +16,7 @@ from capypanel.core import i18n, settings
 from capypanel.ui import about, branding, language
 from capypanel.ui.about import COMPONENTS, LICENSES_DIR, AboutPage
 from capypanel.ui.main_window import window as window_module
+from capypanel.ui.menus import label
 
 VENDOR_DIR = Path(vendor.__file__).parent
 
@@ -35,10 +36,10 @@ def test_the_help_menu_has_the_website_a_problem_report_and_about(
     menus = [m for a in window.menuBar().actions() if isinstance(m := a.menu(), QMenu)]
     help_menu = menus[-1]
     assert help_menu.title() == "&Help"
-    texts = [a.text() for a in help_menu.actions() if a.text()]
+    texts = [label(a) for a in help_menu.actions() if a.text()]  # F1's room left out
     assert texts == [
-        "&Guide to this screen", "&Show all the guides again", "&Documentation",
-        "&Report a problem", "Check for &updates…", "&About CapyPanel",
+        "&Guide to this screen", "&Show all the guides again", "&Help for this screen",
+        "&Documentation", "&Report a problem", "Check for &updates…", "&About CapyPanel",
     ]  # fmt: skip
     opened: list[str] = []
     monkeypatch.setattr(about, "open_url", opened.append)

@@ -3,5 +3,6 @@
   "id": "ultravnc",
   "name": "UltraVNC",
   "tool": "ultravnc",
-  "login": "account"
+  "login": "account",
+  "options": ["securevnc"]
 }

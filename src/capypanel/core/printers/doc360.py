@@ -5,17 +5,14 @@ memory (cookies too), and the log gets only the outcome and the number of rows."
 
 import contextlib
 import csv
-import http.cookiejar
 import io
 import logging
 import re
-import urllib.error
-import urllib.parse
-import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 from html.parser import HTMLParser
+from urllib.parse import urlencode
 
 log = logging.getLogger(__name__)
 
@@ -97,15 +94,24 @@ def _is_login(page: str) -> bool:
 
 
 class _Session:
+    """Its network modules load with the first Doc360 read, not at CapyPanel's start (about
+    50 ms: urllib.request and http.cookiejar)."""
+
     def __init__(self, base: str, timeout: float) -> None:
+        import http.cookiejar
+        import urllib.request
+
         self.base, self.timeout = base.rstrip("/"), timeout
         self._opener = urllib.request.build_opener(
             urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())  # memory only
         )
 
     def ask(self, path: str, fields: list[tuple[str, str]] | None = None, referer: str = "") -> str:
+        import urllib.error
+        import urllib.request
+
         url = f"{self.base}/{path}"
-        data = urllib.parse.urlencode(fields).encode() if fields is not None else None
+        data = urlencode(fields).encode() if fields is not None else None
         headers = {"User-Agent": "CapyPanel", "Accept-Language": "pt-BR,pt;q=0.9"}
         if data is not None:
             headers |= {"Content-Type": "application/x-www-form-urlencoded", "Origin": self.base}

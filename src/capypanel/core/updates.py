@@ -31,25 +31,23 @@ import logging
 import os
 import re
 import shutil
-import ssl
 import stat
 import subprocess
 import tempfile
 import time
-import urllib.error
-import urllib.parse
-import urllib.request
 import zipfile
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import timedelta
 from pathlib import Path
-
-import truststore
+from typing import TYPE_CHECKING
 
 from capypanel.core import files, winsec
 from capypanel.core.i18n import _
 from capypanel.core.settings import PORTABLE_MARKER
+
+if TYPE_CHECKING:
+    import ssl
 
 log = logging.getLogger(__name__)
 
@@ -180,18 +178,28 @@ def set_check(folder: Path, how: str) -> None:
 # ---- asking GitHub ----
 
 
-def _tls() -> ssl.SSLContext:
+def _tls() -> "ssl.SSLContext":
     """GitHub's certificate checked by Windows itself (truststore), as Edge checks it, with the
     host name. Python's own check trusts only the root certificates already stored on this PC,
     and Windows stores one only when its own checker asks for it: a PC that never reached GitHub
     through Windows failed with "unable to get local issuer certificate". Windows also trusts
     a company's own authorities, and it doesn't apply Python 3.13's X.509 strict mode, which
     refused chains browsers accept ("Missing Authority Key Identifier")."""
+    # Loaded here, not with the module: importing truststore asks Windows (WMI) which system
+    # it runs on, about 50 ms of every start otherwise.
+    import ssl
+
+    import truststore
+
     return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
 
 def _open(url: str, timeout: float) -> object:
     """A GET to `url`; refuses anything but https to GitHub, also after redirects."""
+    import urllib.error  # with urllib.request: only when CapyPanel asks GitHub something
+    import urllib.parse
+    import urllib.request
+
     if urllib.parse.urlsplit(url).scheme != "https":
         raise UpdateError(_("Not an https address: {url}").format(url=url))
     request = urllib.request.Request(  # noqa: S310 -- https only, checked above

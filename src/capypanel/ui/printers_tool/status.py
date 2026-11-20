@@ -96,6 +96,7 @@ class Counted:
     error: str = ""
     account: str = ""  # NO_ACCOUNT or REFUSED: Details offers the account's window
     older: tuple[int, int] | None = None  # (year, month) when these aren't this month's
+    place: str = ""  # the error's line in the docs (help_links.PLACES); "" for none
 
 
 NO_ACCOUNT, REFUSED = "none", "refused"  # Counted.account
@@ -283,19 +284,47 @@ def doc360_pages(
 ) -> tuple[int | None, str]:
     """A Doc360 MPS printer's total pages, or why there's none; (None, "") before a Refresh.
     Doc360 lists printers by serial: the list's own, or else the one the printer reports."""
+    pages, error, _place = _doc360(info, reading, counted)
+    return pages, error
+
+
+def doc360_place(info: PrinterInfo, reading: Reading | None, counted: Counted | None) -> str:
+    """doc360_pages' error's line in the docs, for its "What does this mean?"; "" for none."""
+    return _doc360(info, reading, counted)[2]
+
+
+def _doc360(
+    info: PrinterInfo, reading: Reading | None, counted: Counted | None
+) -> tuple[int | None, str, str]:
     if counted is None:
-        return None, ""
+        return None, "", ""
     if counted.error:
-        return None, counted.error
+        return None, counted.error, counted.place
     serial = info.serial or (reading.serial if reading else "")
     if not serial:
-        return None, _("Add the printer's serial number: Doc360 MPS lists printers by serial.")
+        words = _("Add the printer's serial number: Doc360 MPS lists printers by serial.")
+        return None, words, "doc360-serial-missing"
     found = counted.counters.get(doc360.key(serial))
     if found is None:
-        return None, _("Doc360 MPS doesn't list serial {serial}.").format(serial=serial)
+        words = _("Doc360 MPS doesn't list serial {serial}.").format(serial=serial)
+        return None, words, "doc360-serial-not-listed"
     if found.life is None:
-        return None, _("Doc360 MPS has no total for this printer.")
-    return found.life, ""
+        return None, _("Doc360 MPS has no total for this printer."), "doc360-no-total"
+    return found.life, "", ""
+
+
+def status_place(checked: Checked | None) -> str:
+    """The line in the docs for a printer that didn't answer or couldn't be read, for the
+    "What does this mean?" after Details' status line; "" for a printer that was read."""
+    if checked is None:
+        return ""
+    if checked.offline:
+        return "printer-offline"
+    if checked.refused:
+        return "printer-refused"
+    if checked.reading is None:
+        return "printer-unreadable"
+    return ""
 
 
 def older_text(counted: Counted | None) -> str:

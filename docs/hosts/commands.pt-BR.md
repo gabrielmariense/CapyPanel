@@ -7,7 +7,7 @@ instalado no outro PC: todo comando usa as próprias funções remotas do Window
 
 ![O painel de detalhes: a fileira fixa de botões, os comandos rápidos embaixo dela, e depois Conexão, Logados e Dados do PC](../images/commands-details-dark-pt-BR.png)
 
-## Executar um comando num host
+## Executar um comando num host <a id="commands-run-a-command-on-a-host"></a>
 
 1. Selecione o host.
 2. Clique num botão do painel de detalhes, use o botão direito no host, ou abra o **Comandos ▾** da
@@ -50,7 +50,7 @@ vêm depois, quatro por fileira.
     minutos atrás, não encontrou ninguém. Antes de qualquer atualização, ou depois que ela fica mais
     velha, ele continua utilizável.
 
-## Escolher os seus comandos rápidos
+## Escolher os seus comandos rápidos <a id="commands-choose-your-quick-commands"></a>
 
 ![A janela Personalizar o painel de detalhes na aba Comandos rápidos: todos os comandos por grupo, na ordem da janela Comandos, quatro marcados](../images/customize-dark-pt-BR.png)
 
@@ -82,7 +82,7 @@ também ficam no menu do botão direito do host.
       "Reiniciar, Desligar, Fazer logoff e Desconectar não podem ser comandos rápidos: eles
       interrompem alguém."
 
-## Abrir as pastas e as ferramentas administrativas de um PC
+## Abrir as pastas e as ferramentas administrativas de um PC <a id="commands-open-a-pcs-folders-and-admin-tools"></a>
 
 Estes abrem algo no *seu* PC, apontado para o outro:
 
@@ -110,7 +110,7 @@ Estes abrem algo no *seu* PC, apontado para o outro:
       executado, no seu próprio PC.
     - Abrir uma pasta diz "Aberto: \\DESK-02\C$" na barra de status.
 
-## Mandar mensagem, fazer logoff ou desconectar alguém
+## Mandar mensagem, fazer logoff ou desconectar alguém <a id="commands-message-log-off-or-disconnect-someone"></a>
 
 - O **Enviar uma mensagem…** aparece na tela de todos que estão conectados no PC até clicarem em
   OK, com o título "Mensagem de {seu usuário do Windows}". O Windows mostra cerca de 255 caracteres
@@ -130,7 +130,7 @@ que não foi salvo se perde."; o Desconectar mantém os programas dela abertos p
       verificado ainda.
     - O **Cancelar** é o botão pronto para apertar nas duas perguntas.
 
-## Reiniciar ou desligar um PC
+## Reiniciar ou desligar um PC <a id="commands-restart-or-shut-down-a-pc"></a>
 
 ![A pergunta Reiniciar: quem está conectado, o Quando em Agora e a caixa de mensagem esmaecida](../images/commands-restart-dark-pt-BR.png)
 
@@ -163,7 +163,7 @@ notificação do Windows diz "{host} está online de novo".
       clique seleciona o host. O CapyPanel para de procurar 20 minutos depois do horário da
       reinicialização.
 
-## Consertar a impressão de um PC
+## Consertar a impressão de um PC <a id="commands-fix-a-pcs-printing"></a>
 
 ![As impressoras instaladas num host: impressora, driver, porta, status e trabalhos, com Limpar fila e Reiniciar o Spooler de Impressão](../images/commands-printers-dark-pt-BR.png)
 
@@ -178,7 +178,7 @@ Os dois perguntam antes. Estas são as impressoras do próprio PC, não as que u
 um servidor de impressão, nem as impressoras de rede da
 [ferramenta Impressoras](../printers/printers.pt-BR.md).
 
-## Ver o que está instalado e mapeado
+## Ver o que está instalado e mapeado <a id="commands-see-whats-installed-and-mapped"></a>
 
 - O **Programas instalados** lista os programas instalados para todos os usuários do PC: **Nome**,
   **Fabricante**, **Versão** e **Instalado em**, com **Pesquisar programas**, **Copiar lista**,
@@ -199,7 +199,7 @@ um servidor de impressão, nem as impressoras de rede da
       executado no PC. Uma pessoa sem nenhuma aparece como "Nenhuma unidade salva". O **Copiar
       lista** põe as linhas na área de transferência.
 
-## A janela Comandos
+## A janela Comandos <a id="commands-the-commands-window"></a>
 
 ![A janela Comandos: Host, Perfil, a engrenagem e Conectar na linha de cima, os grupos à esquerda, todos os comandos no meio, o que o escolhido encontrou à direita](../images/commands-window-dark-pt-BR.png)
 
@@ -240,7 +240,7 @@ clique duplo só escolhe, para um comando arriscado nunca rodar por acidente.
       respostas dividem o espaço a mais; mais estreita, as respostas mantêm a largura e a lista de
       comandos rola para o lado. Ela abre de novo no tamanho em que você a deixou.
 
-## Mensagens que você pode ver
+## Mensagens que você pode ver <a id="commands-messages-you-may-see"></a>
 
 ![A faixa acima da tabela de hosts depois de um comando falhar, com Tentar outra conta](../images/commands-strip-failed-dark-pt-BR.png)
 
@@ -250,6 +250,8 @@ próprio Windows, e fica até você fechá-la.
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| "Não foi possível fazer logoff de bruno em DESK-02: acesso negado. É preciso uma conta de administrador naquele PC." | A conta não é administradora lá | O **Tentar outra conta…** pede uma, e para quais PCs, e executa o comando de novo |
-| "… (ninguém conectado)" num comando esmaecido | A última atualização, de menos de 10 minutos atrás, não achou ninguém no PC | Atualize o host se alguém entrou desde então |
-| "não há uma pasta aí." | O caminho em **Abrir um caminho…** não é uma pasta | Confira o caminho |
+| <a id="command-access-denied"></a>"Não foi possível fazer logoff de bruno em DESK-02: acesso negado. É preciso uma conta de administrador naquele PC." | A conta não é administradora lá | O **Tentar outra conta…** pede uma, e para quais PCs, e executa o comando de novo |
+| <a id="command-nobody-signed-in"></a>"… (ninguém conectado)" num comando esmaecido | A última atualização, de menos de 10 minutos atrás, não achou ninguém no PC | Atualize o host se alguém entrou desde então |
+| <a id="command-no-folder"></a>"não há uma pasta aí." | O caminho em **Abrir um caminho…** não é uma pasta | Confira o caminho |
+| <a id="command-timed-out"></a>"Não foi possível … em DESK-02: demorou demais para responder." | A resposta não chegou a tempo: o PC está ocupado, a rede está lenta, ou o comando travou lá | Tente de novo. Se continuar acontecendo, confira o PC |
+| <a id="command-windows-error"></a>"Não foi possível … em DESK-02: Erro do Windows …." | O Windows daquele PC recusou o comando com um código para o qual o CapyPanel não tem palavras | Tente de novo. O código é um dos códigos de erro de sistema do Windows, que a Microsoft lista por número |

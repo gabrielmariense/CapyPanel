@@ -71,7 +71,7 @@ def test_home_s_guide_steps_through_and_is_kept_as_seen(window: CapyWindow) -> N
     middle = card.geometry().center() - window.rect().center()
     assert abs(middle.x()) <= 1 and abs(middle.y()) <= 1
     card.next_button.click()
-    assert card.title.text() == "Three tools" and card.mascot.isHidden()
+    assert card.title.text() == "Four tools" and card.mascot.isHidden()
     tiles = [QRect(t.mapTo(window, QPoint(0, 0)), t.size()) for t in window.home.tiles]
     shown = [
         t for t, tile in zip(tiles, window.home.tiles, strict=True) if tile.isVisibleTo(window)
@@ -490,7 +490,7 @@ def test_back_works_with_a_real_click_through_the_window(window: CapyWindow) -> 
     click(card.next_button)
     assert card.title.text() == "The sidebar"
     click(card.back_button)
-    assert card.title.text() == "Three tools"
+    assert card.title.text() == "Four tools"
     runner.stop()
 
 
@@ -518,5 +518,5 @@ def test_back_still_clicks_when_the_window_gets_the_focus_during_the_press(
     _settle()
     QTest.mouseRelease(handle, Qt.MouseButton.LeftButton, pos=spot)  # no move in between
     _settle()
-    assert card.title.text() == "Three tools"
+    assert card.title.text() == "Four tools"
     runner.stop()

@@ -3,7 +3,7 @@
 CapyPanel opens a host's screen in a VNC viewer you install yourself (UltraVNC or RealVNC), or in
 Windows' own Remote Desktop client. It never ships, bundles or downloads them.
 
-## Connect to a host
+## Connect to a host <a id="connecting-connect-to-a-host"></a>
 
 1. Double-click the host, press **Enter**, or click **Connect** on the toolbar.
 2. The first time, CapyPanel finds the viewer by itself. If it isn't installed, it asks you to
@@ -44,7 +44,8 @@ asked at most once, and more than five at once asks first.
     Classic VNC password login uses only the first 8 characters of a password, and its exchange can
     be cracked offline. So before an UltraVNC **user-and-password** profile connects, CapyPanel
     asks each server which kinds of login it offers: it reads the server's greeting and hangs up
-    without logging in. A server that doesn't take a user and password is skipped, with a message,
+    without logging in. Each server is asked once while CapyPanel runs, and again only when it
+    couldn't be read. A server that doesn't take a user and password is skipped, with a message,
     and is never sent your password.
 
     - The check takes a few milliseconds per host on a local network.
@@ -52,8 +53,12 @@ asked at most once, and more than five at once asks first.
       viewer, which shows the real error.
     - A server using the SecureVNC plugin announces only the plugin, so the check can't tell the
       two kinds of login apart there.
+    - UltraVNC servers up to 1.6.1 refuse a PC after six connections that don't log in, saying the
+      connection was rejected after too many attempts. The block lifts at the first connection that
+      logs in after a quiet minute: wait a minute and open the host once from UltraVNC Viewer
+      itself, or restart its UltraVNC service.
 
-## Choose how a host connects
+## Choose how a host connects <a id="connecting-choose-how-a-host-connects"></a>
 
 A **connection profile** says how a host connects: the **tool**, the **login** (user and password,
 or password only) and the tool's **options**, such as UltraVNC's **SecureVNC plugin**.
@@ -87,15 +92,18 @@ anywhere use the default.
       follows its group's profile, or the default, and the missing one is marked "not available on
       this PC".
 
-## Set up connection profiles
+## Set up connection profiles <a id="connecting-set-up-connection-profiles"></a>
 
 Open **Settings > Hosts > Connecting > Connection profiles** (or **Connect > Connection
 profiles…**) to add, edit, duplicate, delete, or restore the ones CapyPanel ships with. Each
-profile has a name, a tool, a login, the tool's options and a port (blank for the tool's own).
+profile has a name, a tool, a login, the tool's options and a port (blank for the tool's own). The
+window has the same rows for every tool: a row the tool doesn't use is greyed, and its tooltip
+says why.
 
 CapyPanel starts with **UltraVNC** and **RealVNC**, both with "user and password", and **Remote
-Desktop**. **Hosts with no profile use**, the last row, is the profile for hosts with none of their
-own.
+Desktop**. UltraVNC's has **SecureVNC plugin** ticked: a server without the plugin still connects,
+after UltraVNC Viewer asks whether to go on unencrypted. **Hosts with no profile use**, the last
+row, is the profile for hosts with none of their own.
 
 ??? note "Where profiles are kept, and who can change them"
 
@@ -116,7 +124,7 @@ own.
     UltraVNC profile can carry a settings file:
 
     1. In UltraVNC Viewer, set the options and save the connection as a `.vnc` file.
-    2. In the profile editor, **Viewer settings > Choose file…** and pick it. **Use defaults** goes
+    2. In the profile editor, **Settings > Choose file…** and pick it. **Use defaults** goes
        back to the viewer's own settings.
 
     On **Add** or **Save**, CapyPanel copies the file beside the profile (`profiles\<id>.vnc`).
@@ -132,7 +140,7 @@ own.
     password: the client asks for it. If you tick **Remember me** there, Windows keeps that login
     itself, as `TERMSRV/<address>`; remove it in **Control Panel > Credential Manager**.
 
-## Use another account on some PCs
+## Use another account on some PCs <a id="connecting-use-another-account-on-some-pcs"></a>
 
 Reading who is logged on and running [commands](commands.md) need an account that's an
 administrator on that PC. By default that's your own Windows account. To use another one:
@@ -165,7 +173,7 @@ settings, never in the shared host lists".
     - On PCs that aren't in a domain, the built-in Administrator is the only local account Windows
       accepts remotely.
 
-## Forget a saved password
+## Forget a saved password <a id="connecting-forget-a-saved-password"></a>
 
 1. **Connect ▾ > Saved credentials…** (or **Manage…** on **Settings > Hosts > Credentials**).
 2. Pick the login and click **Forget**, or **Forget all**.
@@ -186,7 +194,7 @@ forgotten here is deleted from Credential Manager too.
     (see [Set the SNMP account](../printers/checking.md#set-the-snmp-account)). Remote Desktop
     logins aren't either.
 
-## Connect to an address that isn't in the list
+## Connect to an address that isn't in the list <a id="connecting-connect-to-an-address-that-isnt-in-the-list"></a>
 
 **Connect > Manual connection…** (Ctrl+M) opens the Commands window with its **Host** box empty:
 type the address, pick a **Profile** and click **Connect**. An address with a port, as in
@@ -199,11 +207,16 @@ address, **Connect to {host}…** shows, in the empty table or as the list's las
 rows. It opens the same window with the PC already in **Host**; nothing connects until you click
 **Connect** there.
 
-## Messages you may see
+## Messages you may see <a id="connecting-messages-you-may-see"></a>
 
 | Message | What it means | What to do |
 |---|---|---|
-| A host's name can't be used as an address | It has no address, and a name like "Ward 2A - Desk" isn't a computer name | Edit the host and add its address; CapyPanel offers to |
-| A server skipped by the login check | It doesn't take a user and password, so it was never sent yours | Use a "password only" profile for it |
-| "not available on this PC" | A host or group names a profile this PC doesn't have | Pick another profile, or add that one |
-| The viewer asks to be installed or located | The VNC viewer wasn't found | Install it, or point CapyPanel to its `.exe` |
+| <a id="connect-name-not-address"></a>A host's name can't be used as an address | It has no address, and a name like "Ward 2A - Desk" isn't a computer name | Edit the host and add its address; CapyPanel offers to |
+| <a id="connect-login-check-skipped"></a>A server skipped by the login check | It doesn't take a user and password, so it was never sent yours | Use a "password only" profile for it |
+| <a id="connect-profile-not-available"></a>"not available on this PC" | A host or group names a profile this PC doesn't have | Pick another profile, or add that one |
+| <a id="connect-viewer-not-found"></a>The viewer asks to be installed or located | The VNC viewer wasn't found | Install it, or point CapyPanel to its `.exe` |
+| <a id="connect-password-not-saved"></a>"Couldn't save the password in Windows Credential Manager: …", then "It's kept until CapyPanel closes." | Windows refused to save it, so CapyPanel remembers it only until it closes | Nothing for now. If it keeps happening, look for CapyPanel's entries in Control Panel › **Credential Manager** › **Windows Credentials** |
+| <a id="connect-password-not-deleted"></a>"Couldn't delete the password saved in Windows Credential Manager: …" | Windows refused to delete it, so it's still saved | Delete it there yourself: Control Panel › **Credential Manager** › **Windows Credentials**, under "CapyPanel/" |
+| <a id="connect-couldnt-start"></a>"Couldn't start … for …: …" | Windows couldn't run the remote tool, such as Remote Desktop or the VNC viewer. Its reason follows the colon | Check the tool's path under **Remote tools** in Settings › Hosts › Connecting |
+| <a id="connect-settings-file-unusable"></a>"Couldn't use “…”: …" | A connection profile names a viewer settings file that can't be read | Pick another file in the profile, or fix that one |
+| <a id="connect-settings-not-saved"></a>"Couldn't save the connection profiles: …", "Couldn't save how PCs are read: …" or "Couldn't save where the tools are: …" | Windows refused to write that part of Settings › Hosts › Connecting. Its reason follows the colon. A part for everyone on this PC needs an administrator | Fix what the reason names, then make the change again |

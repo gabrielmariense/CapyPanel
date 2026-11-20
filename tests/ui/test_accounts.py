@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 import shiboken6
 from capywindow import CapyWindow
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QMenu
 
 from capypanel.core import credstore, settings
@@ -23,6 +24,7 @@ from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
 from capypanel.core.tools.connect import Credential
 from capypanel.ui import checks as check_ui
+from capypanel.ui.dialogs import ScreenFit
 from capypanel.ui.hosts_tool import accounts as accounts_ui
 from capypanel.ui.hosts_tool.accounts import AccountsSection, LinkDialog
 from capypanel.ui.hosts_tool.runner import HostTarget
@@ -262,6 +264,31 @@ def test_a_group_or_tag_needs_the_list_it_belongs_to(window: CapyWindow) -> None
     dialog.tag.setCurrentText("VPN")
     assert ok.isEnabled()
     assert dialog.link() == Link(ADMIN.user, Scope.TAG, "VPN", _list(window))
+
+
+def test_every_pc_keeps_the_pc_group_or_tag_field_in_place_greyed(
+    qapp: QApplication, window: CapyWindow
+) -> None:
+    fitter = ScreenFit(qapp)  # the app's own dialog fitting, as in the real app
+    qapp.installEventFilter(fitter)
+    dialog = LinkDialog(None, "Add", window.hosts.accounts, None)
+    dialog.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
+    try:
+        dialog.show()
+        QApplication.processEvents()
+        assert dialog.value.isVisible() and not dialog.every_pc.isEnabled()
+        assert dialog.every_pc.toolTip() == "Nothing to name: it's used on every PC"
+        dialog.resize(dialog.width(), dialog.height() + 60)  # spare height, as some themes give
+        QApplication.processEvents()
+        assert dialog.value.height() == dialog.user.height()  # as tall as the fields above
+        opened = (dialog.size(), dialog.value.geometry())
+        for scope in (Scope.PC, Scope.GROUP, Scope.TAG, Scope.ALL):
+            dialog.kind.setCurrentIndex(dialog.kind.findData(scope))
+            QApplication.processEvents()
+            assert (dialog.size(), dialog.value.geometry()) == opened, scope
+    finally:
+        dialog.close()
+        qapp.removeEventFilter(fitter)
 
 
 def test_the_account_an_older_capypanel_saved_becomes_every_pc(

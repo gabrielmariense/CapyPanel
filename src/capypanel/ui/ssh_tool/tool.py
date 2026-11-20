@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QIcon
-from PySide6.QtWidgets import QDialog, QLabel, QMenu, QMessageBox, QToolButton, QWidget
+from PySide6.QtWidgets import QDialog, QLabel, QMenu, QToolButton, QWidget
 
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.document import OpenList, starter_list
@@ -33,6 +33,7 @@ from capypanel.core.ssh.host import (
     with_info,
     with_login,
 )
+from capypanel.ui import help_links
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.groups import ROLE_ID
 from capypanel.ui.guides import Guide, Step
@@ -84,6 +85,7 @@ def _named(found: tuple[str, Group | None]) -> tuple[str, str]:
 class SshTool(TabbedListWorkspace):
     TOOL_ID = "ssh"
     ICON = "terminal-2"
+    HELP_PLACE = "ssh/ssh/"
     TABS_ICON = "server-2"  # the list's tab
     LISTS_FROM = listfile.HOSTS  # Hosts' open list: one list for every host (his words, 2026-11-18)
     checks_changed = Signal()  # a Refresh started, found something, or ended
@@ -295,7 +297,7 @@ class SshTool(TabbedListWorkspace):
             )
             new = added.update_host(with_info(host, values.info))
         except HostListRuleError as e:
-            self._error(str(e))
+            self._error(str(e), place="hosts-list-rule")
             return
         if self._commit(new):
             self.table.select_ids([host.id])
@@ -319,7 +321,7 @@ class SshTool(TabbedListWorkspace):
         try:
             new = doc.hosts.update_host(with_info(edited, values.info))
         except HostListRuleError as e:
-            self._error(str(e))
+            self._error(str(e), place="hosts-list-rule")
             return
         if self._commit(new) and (values.address, values.info.port) != (
             item.address,
@@ -457,7 +459,7 @@ class SshTool(TabbedListWorkspace):
         try:
             launch.connect(destination, info, name)
         except launch.SshMissing:
-            QMessageBox.warning(self, "CapyPanel", missing_text())
+            help_links.warning(self, "CapyPanel", missing_text(), place="ssh-not-installed")
             return False
         except ValueError:
             self._cant_connect(name)
@@ -473,7 +475,7 @@ class SshTool(TabbedListWorkspace):
         try:
             argv = launch.tab_command(destination, info)
         except launch.SshMissing:
-            QMessageBox.warning(self, "CapyPanel", missing_text())
+            help_links.warning(self, "CapyPanel", missing_text(), place="ssh-not-installed")
             return False
         except ValueError:
             self._cant_connect(name)
@@ -605,7 +607,9 @@ class SshTool(TabbedListWorkspace):
             "Anything still running in them on the servers may stop.",
             n,
         )
-        question = Question(self, _("Close"), heading, text, _("&Close"))
+        question = Question(
+            self, _("Close"), heading, text, _("&Close"), place="ssh-work-in-the-terminal"
+        )
         return run_modal(question) == QDialog.DialogCode.Accepted
 
     def _drop(self, key: str) -> None:
@@ -658,6 +662,7 @@ class SshTool(TabbedListWorkspace):
                 n,
             ),
             _("&Quit"),
+            place="ssh-work-in-the-terminal",
         )
         if run_modal(question) != QDialog.DialogCode.Accepted:
             return False

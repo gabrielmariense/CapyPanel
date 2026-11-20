@@ -35,7 +35,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.bulk import ImportRow, Parsed, Plan, Verdict, parse, plan, to_csv
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.i18n import N_, _, ngettext
-from capypanel.ui import spacing
+from capypanel.ui import help_links, spacing
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.groups import TreeMenu, fill_group_menu
 from capypanel.ui.hosts import group_choices, group_path
@@ -127,6 +127,7 @@ class ImportDialog(QDialog):
     # What another list's import changes (Import printers). Texts are marked with N_ and
     # translated when shown: the language is set after this module is imported.
     TITLE = N_("Import hosts")
+    HELP_PLACE = "host-lists-add-hosts-from-a-spreadsheet"  # its ? and F1
     GROUP_LABEL = N_("Hosts with no group &go to:")
     PLACEHOLDER = N_("For example:\nname,address\nPC-0142,10.0.0.42")
     EDIT_QUESTION = N_(
@@ -221,7 +222,8 @@ class ImportDialog(QDialog):
         layout.addWidget(self.hint)
         layout.addWidget(holder, 1)
         layout.addWidget(self.summary)
-        layout.addWidget(self.box)
+        self.help_button = help_links.HelpButton(self.HELP_PLACE)
+        layout.addLayout(help_links.row(self.help_button, self.box))
         self._parse()
         self.resize(self.WIDTH, 640)
 
@@ -521,6 +523,8 @@ def read_text(path: Path) -> str:
 class FormatsDialog(QDialog):
     """The formats the import reads, one page each: as a list, and as a table."""
 
+    HELP_PLACE = "host-lists-add-hosts-from-a-spreadsheet"  # its ? and F1
+
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Formats CapyPanel can import"))
@@ -544,7 +548,8 @@ class FormatsDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.addLayout(picker)
         layout.addLayout(self._pages)
-        layout.addWidget(box)
+        self.help_button = help_links.HelpButton(self.HELP_PLACE)
+        layout.addLayout(help_links.row(self.help_button, box))
         hint = self.sizeHint()
         self.resize(max(640, hint.width()), hint.height())  # as it opens; any size after
 

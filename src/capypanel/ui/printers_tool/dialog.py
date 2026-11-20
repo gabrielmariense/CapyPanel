@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFormLayout,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QPlainTextEdit,
@@ -19,6 +20,7 @@ from capypanel.core.hosts.model import MAX_ADDRESS, NO_GROUP, Host, HostList
 from capypanel.core.i18n import _
 from capypanel.core.printers.printer import COUNTER_SOURCES, PrinterInfo, info_of
 from capypanel.ui.dialogs import ok_cancel
+from capypanel.ui.help_links import HelpButton
 from capypanel.ui.hosts import MAX_NAME, TagEdit, group_choices
 from capypanel.ui.printers_tool.details import source_text
 
@@ -106,7 +108,11 @@ class PrinterDialog(QDialog):
         self.buttons = ok_cancel(self, _("Save") if printer else _("Add"))  # ends in its verb
         layout = QVBoxLayout(self)
         layout.addLayout(form)
-        layout.addWidget(self.buttons)
+        row = QHBoxLayout()  # the ? first, on the left of the button row
+        self.help_button = HelpButton(place="printers-add-a-printer")
+        row.addWidget(self.help_button)
+        row.addWidget(self.buttons, 1)
+        layout.addLayout(row)
         self.name.textChanged.connect(self._update_ok)
         self._update_ok()
         self.resize(460, self.sizeHint().height())

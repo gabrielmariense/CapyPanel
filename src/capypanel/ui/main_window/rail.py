@@ -1,5 +1,5 @@
-"""The rail on the window's left edge: Home on top, one icon per tool, and Settings at the
-bottom."""
+"""The rail on the window's left edge: Home on top, one icon per tool, and at the bottom the ?
+for help, then Settings."""
 
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QPalette
@@ -39,6 +39,10 @@ class ToolRail(QWidget):
         line = QFrame()  # between Home and the tools
         line.setObjectName("toolDivider")
         line.setFixedSize(28, 1)
+        # Help for what's shown: an action like the gear, never a place, so it takes no tile. It
+        # sits where every other window has its ?, at the bottom left (topic-030-help).
+        self.help_button = _button(checkable=False)
+        self.help_button.setObjectName("railHelp")
         self.settings_button = _button(checkable=False)
         self.settings_button.clicked.connect(self.settings_requested)
         self._layout = QVBoxLayout(self)
@@ -47,6 +51,7 @@ class ToolRail(QWidget):
         self._layout.addWidget(self.home_button, 0, Qt.AlignmentFlag.AlignHCenter)
         self._layout.addWidget(line, 0, Qt.AlignmentFlag.AlignHCenter)
         self._layout.addStretch(1)
+        self._layout.addWidget(self.help_button, 0, Qt.AlignmentFlag.AlignHCenter)
         self._layout.addWidget(self.settings_button, 0, Qt.AlignmentFlag.AlignHCenter)
         self.restyle()
 
@@ -107,6 +112,7 @@ class ToolRail(QWidget):
             button.setIcon(tabler_icon(self._icons[tool_id], color, ICON_SIZE))
         home = text if self.home_button.isChecked() else dim
         self.home_button.setIcon(tabler_icon("home", home, ICON_SIZE))
+        self.help_button.setIcon(tabler_icon("help", dim, ICON_SIZE))
         self.settings_button.setIcon(tabler_icon("settings", dim, ICON_SIZE))
         for tool_id, badge in self.badges.items():
             if not badge.isHidden():

@@ -65,7 +65,7 @@ LINE_EDIT_MARGIN = 2  # Qt keeps this much inside a field's contents on each sid
 HEADING_GAP = 20  # empty space above each heading but the first (Gabriel: "add some empty space")
 HEADING_PADDING = 8  # above and under a heading's text
 GAP_ROLE = Qt.ItemDataRole.UserRole + 1  # a heading's: whether it has the gap above
-FIXED_ROLE = Qt.ItemDataRole.UserRole + 2  # the SSH terminal's rows: shown, never changed
+FIXED_ROLE = Qt.ItemDataRole.UserRole + 2  # shown, never changed: the terminal's keys and F1's
 TERMINAL_TOOL = "ssh"  # the tool whose terminal's own keys follow its commands
 LINE_PADDING = 6  # above and under the terminal's line, and at its sides
 MODIFIERS = (Qt.Key.Key_Shift, Qt.Key.Key_Control, Qt.Key.Key_Alt, Qt.Key.Key_Meta,
@@ -98,7 +98,8 @@ ORDER = (
     "go.home", "go.hosts", "go.printers", "go.profiles", "go.ssh", "app.show_toolbar",
     "app.show_status_bar",
     # Help
-    "app.show_guide", "app.show_all_guides", "app.documentation", "app.report_problem",
+    "app.show_guide", "app.show_all_guides", "app.help_screen", "app.documentation",
+    "app.report_problem",
     "app.check_updates", "app.about",
     # Hosts: Connect's menu, Refresh all, Inventory's menu, Report
     "hosts.connect_host", "hosts.manual_connect", "hosts.connection_profiles",
@@ -236,6 +237,12 @@ class KeyCatcher(QLineEdit):
     def focusNextPrevChild(self, next: bool) -> bool:  # noqa: A002, N802 -- Qt's names
         return False  # Tab is a key pressed here, not a move to the next control
 
+    def event(self, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.ShortcutOverride:
+            event.accept()  # every key is its answer, F1 too: refused here, not Settings' help
+            return True
+        return super().event(event)
+
     def paintEvent(self, event: QPaintEvent) -> None:  # noqa: N802 -- Qt's name
         """The frame as the theme draws it, then the words with their capitals in the middle.
         Qt centres a line's whole height, with the room over capitals kept for accents, in a
@@ -295,6 +302,8 @@ class KeyCatcher(QLineEdit):
 class ShortcutsPage(Page):
     """The commands under their headings, each with its key; `keys` keeps and applies every
     change."""
+
+    HELP_PLACE = "settings-capypanel-keyboard-shortcuts"
 
     def __init__(self, keys: Keys, place_names: dict[str, str]) -> None:
         super().__init__(_("Keyboard shortcuts"))
@@ -376,6 +385,12 @@ class ShortcutsPage(Page):
             for row in sorted(rows, key=place_in_order):
                 item = QTreeWidgetItem([self.name(row), ""])
                 item.setData(COMMAND, ROW_ROLE, row.id)
+                if row.fixed:  # F1, help's: greyed like the terminal's keys, with why
+                    item.setFlags(Qt.ItemFlag.NoItemFlags)
+                    item.setData(COMMAND, FIXED_ROLE, True)
+                    tip = _("F1 is kept for help and can't be changed.")
+                    item.setToolTip(COMMAND, tip)
+                    item.setToolTip(KEY, tip)
                 self.table.addTopLevelItem(item)
                 self._show_key(item)
             if any(TERMINAL_TOOL in row.places for row in rows):
@@ -553,7 +568,7 @@ class ShortcutsPage(Page):
     def change(self, item: QTreeWidgetItem) -> None:
         """Waits in the command's Key cell for its new key. A heading has none: Qt's tree still
         activates a disabled row on a double-click, which put the field across a heading."""
-        if not item.data(COMMAND, ROW_ROLE):
+        if not item.data(COMMAND, ROW_ROLE) or item.data(COMMAND, FIXED_ROLE):
             return
         self._stop_catching()
         self.table.setCurrentItem(item)

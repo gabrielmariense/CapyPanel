@@ -28,7 +28,9 @@ from capypanel.core import credstore
 from capypanel.core.hosts import locations
 from capypanel.core.i18n import N_, _
 from capypanel.core.printers import doc360, usm
+from capypanel.ui import help_links
 from capypanel.ui.dialogs import run_modal
+from capypanel.ui.help_links import HelpButton
 from capypanel.ui.notes import notes
 from capypanel.ui.printers_tool import marks as bar_marks
 from capypanel.ui.printers_tool import refresh
@@ -70,6 +72,8 @@ class _SecretWindow(QDialog):
     a Show tick for the secret ones, then Save and Cancel. Save keeps what's typed in Windows
     Credential Manager."""
 
+    HELP_PLACE = "printers-checking-set-the-snmp-account"
+
     def __init__(self, parent: QWidget | None, title: str, note: str) -> None:
         super().__init__(parent)
         self.setWindowTitle(title)
@@ -100,6 +104,8 @@ class _SecretWindow(QDialog):
 
     def _add_buttons(self) -> None:
         buttons = QHBoxLayout()
+        self.help_button = HelpButton(self.HELP_PLACE)
+        buttons.addWidget(self.help_button)
         buttons.addStretch(1)
         self.save_button = QPushButton(_("&Save"))
         self.save_button.setDefault(True)
@@ -260,6 +266,8 @@ class Doc360AccountDialog(_LoginWindow[doc360.Account]):
     for printers whose page counters come from Doc360. A password already kept isn't shown;
     an empty user name forgets the kept login."""
 
+    HELP_PLACE = "printers-checking-get-page-counts-from-doc360-mps"
+
     def __init__(self, parent: QWidget | None, kept: doc360.Account | None) -> None:
         super().__init__(
             parent,
@@ -342,6 +350,8 @@ class BarMarksDialog(QDialog):
                    self.reset_button]  # fmt: skip
         column.addWidget(with_buttons(self.table, buttons))
         row = QHBoxLayout()
+        self.help_button = HelpButton(place="printers-checking-see-how-much-toner-is-left")
+        row.addWidget(self.help_button)
         row.addStretch(1)
         self.save_button = QPushButton(_("&Save"))
         self.save_button.setDefault(True)
@@ -436,6 +446,8 @@ class PrintersPage(ListsGeneralPage):
     SNMP version and account, the Doc360 MPS account). Every choice fires this page's
     `changed`."""
 
+    HELP_PLACE = "settings-printers"
+
     def __init__(
         self,
         *,
@@ -483,8 +495,11 @@ class PrintersPage(ListsGeneralPage):
         self.toner_view.addItem(_("Bar"), BARS)
         self.toner_view.setCurrentIndex(1 if bars else 0)
         self.toner_view.currentIndexChanged.connect(lambda _i: self.changed.emit())
-        self.warnings_page = Page(_("Warnings and supplies"))
-        self.connecting_page = Page(_("Connecting"))
+        # Their ? and F1 open the part of Checking printers that says what each page sets.
+        self.warnings_page = Page(
+            _("Warnings and supplies"), place="printers-checking-choose-which-problems-warn"
+        )
+        self.connecting_page = Page(_("Connecting"), place="printers-checking-set-the-snmp-account")
         own = Section(_("Refresh"))
         add_rows(
             own.content,
@@ -717,7 +732,10 @@ def _kept_by_windows(parent: QWidget, title: str, keep: Callable[[], None]) -> b
     try:
         keep()
     except (OSError, ValueError) as e:
-        QMessageBox.warning(parent, title, _("Windows didn't keep it: {error}").format(error=e))
+        # One Credential Manager write or delete, which changes nothing when it fails.
+        text = _("Couldn't save the change in Windows Credential Manager: {error}\n\n"
+                 "Nothing was changed.").format(error=e)  # fmt: skip
+        help_links.warning(parent, title, text, place="printers-credential-not-saved")
         return False
     return True
 

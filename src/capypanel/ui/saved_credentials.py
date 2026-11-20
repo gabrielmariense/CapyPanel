@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
-    QMessageBox,
     QPushButton,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -18,7 +17,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core import credstore
 from capypanel.core.i18n import _, ngettext
-from capypanel.ui import spacing
+from capypanel.ui import help_links, spacing
 from capypanel.ui.dialogs import quiet_default
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import notes
@@ -56,12 +55,13 @@ def kept_text(logins: list[KeptLogin]) -> str:
 
 def forget_failed(parent: QWidget, error: OSError) -> None:
     log.warning("Couldn't delete a saved password: %s", error)
-    QMessageBox.warning(
+    help_links.warning(
         parent,
         "CapyPanel",
         _("Couldn't delete the password saved in Windows Credential Manager: {error}\n\n"
           "You can delete it in Control Panel › Credential Manager › Windows "
           "Credentials, under “{prefix}”.").format(error=error, prefix=credstore.PREFIX),
+        place="connect-password-not-deleted",
     )  # fmt: skip
 
 
@@ -108,7 +108,9 @@ class SavedCredentialsDialog(QDialog):
                 )
             )
         )
+        self.help_button = help_links.HelpButton("connecting-forget-a-saved-password")
         buttons = QHBoxLayout()
+        buttons.addWidget(self.help_button)
         buttons.addStretch(1)
         close = QPushButton(_("Close"))
         quiet_default(close)

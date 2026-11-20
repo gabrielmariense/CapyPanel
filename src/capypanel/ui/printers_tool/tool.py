@@ -102,6 +102,7 @@ def refresh_words(refresh: QAction) -> str:
 class PrintersTool(ListWorkspace):
     TOOL_ID = "printers"
     ICON = "printer"
+    HELP_PLACE = "printers/printers/"  # F1 and the rail's ?: the Printers page's top
     checks_changed = Signal()  # a Refresh started, found something, or ended
 
     def __init__(self, shell: Shell):
@@ -201,6 +202,7 @@ class PrintersTool(ListWorkspace):
             no_list=_("No printer list is open."),
             choose_first=_("Open a printer list to choose what it shows first."),
             not_this_kind=_("“{path}” isn't a printer list."),
+            not_this_kind_place="printers-not-a-list",
             file_filter=_("Printer lists (*.json);;All files (*)"),
         )
 

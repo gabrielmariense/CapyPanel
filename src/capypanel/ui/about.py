@@ -32,7 +32,7 @@ from PySide6.QtWidgets import (
 from capypanel import _COMMIT, _NUMBER, BUILD, __version__
 from capypanel.core import i18n, settings
 from capypanel.core.i18n import _
-from capypanel.ui import branding, spacing
+from capypanel.ui import branding, help_links, spacing
 from capypanel.ui.list_workspace.details import CopyValue
 from capypanel.ui.settings.pages import FoldersSection, Page, Section
 from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
@@ -84,6 +84,8 @@ class AboutPage(Page):
     """Settings > About: the app (icon, name, version, what it is, its notices and links),
     Credits, Licenses as the one table design, then where CapyPanel keeps its files (with
     `paths`). Help > About opens it."""
+
+    HELP_PLACE = "settings-about"
 
     def __init__(
         self, log_dir: Path, *, portable: bool, paths: settings.Paths | None = None
@@ -246,7 +248,9 @@ class LicenseReader(QDialog):
         close = QPushButton(_("Close"))
         close.setAutoDefault(False)
         close.clicked.connect(self.close)
+        self.help_button = help_links.HelpButton("settings-about")
         buttons = QHBoxLayout()
+        buttons.addWidget(self.help_button)
         buttons.addStretch(1)
         buttons.addWidget(close)
         layout = QVBoxLayout(self)

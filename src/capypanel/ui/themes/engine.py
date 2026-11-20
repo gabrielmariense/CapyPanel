@@ -210,6 +210,13 @@ def current() -> Theme:
     return _current
 
 
+def background() -> str:
+    """The colour the stylesheet paints behind the panes."""
+    if _current.engine == "native":
+        return NATIVE_TOKENS[native_scheme()]["bg"]
+    return _current.colors["bg"]
+
+
 def generation() -> int:
     return _generation
 
@@ -623,6 +630,22 @@ QToolBar QToolButton { padding: 3px 9px; border: 1px solid %(border)s; backgroun
                        color: %(text2)s; }
 QToolBar QToolButton:hover { background: %(hover)s; color: %(text)s; }
 QToolBar QToolButton:disabled { color: %(text3)s; }
+/* A tool's tab bar: its two scroll arrows as one pair of buttons, and ▾ after them, edged like
+   the toolbar's. Qt splits the scroller's width between the two arrows. */
+QTabBar#toolTabs::scroller { width: 56px; }
+QTabBar#toolTabs QToolButton#ScrollLeftButton, QTabBar#toolTabs QToolButton#ScrollRightButton,
+QToolButton#tabsMenu { padding: 0; margin: 0; background: %(raised)s;
+                       border: 1px solid %(border)s; border-radius: %(r2)spx; }
+QTabBar#toolTabs QToolButton#ScrollLeftButton:hover,
+QTabBar#toolTabs QToolButton#ScrollRightButton:hover,
+QToolButton#tabsMenu:hover { background: %(hover)s; }
+QTabBar#toolTabs QToolButton#ScrollLeftButton:disabled,
+QTabBar#toolTabs QToolButton#ScrollRightButton:disabled { background: %(raised)s; }
+QTabBar#toolTabs QToolButton#ScrollLeftButton { border-top-right-radius: 0;
+                                                border-bottom-right-radius: 0; }
+QTabBar#toolTabs QToolButton#ScrollRightButton { border-left: none; border-top-left-radius: 0;
+                                                 border-bottom-left-radius: 0; }
+QToolButton#tabsMenu::menu-indicator { image: none; width: 0; }
 QFrame#toolDivider { background: %(border)s; border: none; }
 /* The tool rail: its own strip on the left edge; the tool shown sits on a rounded tint. */
 QWidget#toolRail { background: %(chrome)s; border-right: 1px solid %(border)s; }
@@ -1024,6 +1047,18 @@ QToolBar#main QToolButton::menu-arrow, QToolBar#main QToolButton::menu-indicator
 QToolBar#main QToolButton::menu-indicator { subcontrol-position: right center; right: 9px; }
 QToolBar#main QToolButton::menu-arrow { subcontrol-origin: padding;
                                         subcontrol-position: center; }
+/* A tool's tab bar: its scroll arrows and ▾ as buttons. Windows' style puts ‹ at the bar's left
+   end and › at its right, so each is a whole button. */
+QTabBar#toolTabs::scroller { width: 56px; }
+QTabBar#toolTabs QToolButton#ScrollLeftButton, QTabBar#toolTabs QToolButton#ScrollRightButton,
+QToolButton#tabsMenu { padding: 0; margin: 0; background: %(card)s;
+                       border: 1px solid %(border)s; border-radius: 4px; }
+QTabBar#toolTabs QToolButton#ScrollLeftButton:hover,
+QTabBar#toolTabs QToolButton#ScrollRightButton:hover,
+QToolButton#tabsMenu:hover { background: %(hover)s; }
+QTabBar#toolTabs QToolButton#ScrollLeftButton:disabled,
+QTabBar#toolTabs QToolButton#ScrollRightButton:disabled { background: %(card)s; }
+QToolButton#tabsMenu::menu-indicator { image: none; width: 0; }
 QFrame#toolDivider { background: %(border)s; border: none; }
 /* The tool rail: its own strip on the left edge; the tool shown sits on a rounded tint. */
 QWidget#toolRail { background: %(chrome)s; border-right: 1px solid %(border)s; }

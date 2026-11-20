@@ -8,6 +8,7 @@ from capypanel.core.remote import sessions, status
 from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import BASE_PORTS, Answer, Status
+from capypanel.core.tools.definitions import ToolDefinition
 
 
 @dataclass(frozen=True)
@@ -58,5 +59,8 @@ def account_proven(found: Found | None, error: Exception | None) -> bool:
     return found.users_error is not None and found.users_error.reason is Reason.NOT_ADMIN
 
 
-def tool_ports(ports: Iterable[int | None]) -> tuple[int, ...]:
-    return tuple(sorted({*status.BASE_PORTS, *(p for p in ports if p)}))
+def tool_ports(tools: Iterable[ToolDefinition]) -> tuple[int, ...]:
+    """The usual ports and each tool's own, VNC's aside: UltraVNC up to 1.6.1 counts a
+    connection that doesn't log in as a wrong password, and turns the PC away after six."""
+    ports = {tool.port for tool in tools if tool.port and tool.kind != "vnc"}
+    return tuple(sorted({*status.BASE_PORTS, *ports}))

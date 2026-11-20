@@ -6,7 +6,9 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from PySide6.QtCore import (
+    QAbstractItemModel,
     QEvent,
+    QItemSelectionModel,
     QModelIndex,
     QObject,
     QPersistentModelIndex,
@@ -32,6 +34,7 @@ from PySide6.QtGui import (
     QResizeEvent,
 )
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QCheckBox,
     QComboBox,
     QFrame,
@@ -505,6 +508,19 @@ class _Careful(QStyledItemDelegate):
             painter.drawLine(rect.right(), top, rect.right(), bottom)
         painter.restore()
 
+    def editorEvent(
+        self,
+        event: QEvent,
+        model: QAbstractItemModel,
+        option: QStyleOptionViewItem,
+        index: QModelIndex | QPersistentModelIndex,
+    ) -> bool:
+        """A press on a tick box picks its row like a press anywhere on it; the box changes on
+        the release. Space is the table's own (ProfilesTable.eventFilter)."""
+        if event.type() in (QEvent.Type.MouseButtonPress, QEvent.Type.KeyPress):
+            return False
+        return super().editorEvent(event, model, option, index)
+
     def helpEvent(  # type: ignore[override]
         self,
         event: QHelpEvent,
@@ -540,6 +556,7 @@ class ProfilesTable(QWidget):
     def __init__(self) -> None:
         super().__init__()
         self.tree = grid_table([""] * 5)
+        self.tree.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.tree.setFrameShape(QFrame.Shape.NoFrame)  # flush to its box's edges
         self.tree.setUniformRowHeights(True)
         self.tree.header().setStretchLastSection(True)
@@ -554,8 +571,7 @@ class ProfilesTable(QWidget):
         self.tree.setItemDelegate(_Careful(self.tree))
         self.tree.itemSelectionChanged.connect(self.picked)
         self.tree.itemChanged.connect(self._changed)
-        # Going down the list with the keyboard: Space ticks the row the arrows are on, and so
-        # does a double-click anywhere on a row.
+        # Space ticks the selected rows, a double-click the row clicked.
         self.tree.itemDoubleClicked.connect(self._double_clicked)
         self.tree.installEventFilter(self)
         self.tree.viewport().installEventFilter(self)
@@ -579,7 +595,10 @@ class ProfilesTable(QWidget):
         header = self.tree.headerItem()
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
         header.setIcon(TICK, tabler_icon("trash", muted, 14))
-        header.setToolTip(TICK, _("Tick to delete: the box, Space, or a double-click on the row"))
+        header.setToolTip(
+            TICK,
+            _("Tick to delete: the box, a double-click on the row, or Space on the selected rows"),
+        )
 
     def _sort_picked(self, column: int, order: Qt.SortOrder) -> None:
         """A click on the ticks' title does nothing: no sort, no tick-all."""
@@ -602,7 +621,8 @@ class ProfilesTable(QWidget):
         the rows of a delete run stand. `root`: the host's Users folder, for the State tips. A
         tick on a row no longer shown is dropped: what's ticked is always in sight."""
         self._root = root
-        kept = self.selected()
+        kept = {item.data(USER, IDENT_ROLE) for item in self.tree.selectedItems()}
+        current = self.selected()
         self._profiles = {p.ident: p for p in profiles}
         self._results = dict(results or {})
         before = set(self._ticked)
@@ -615,8 +635,9 @@ class ProfilesTable(QWidget):
             item.setData(USER, IDENT_ROLE, profile.ident)
             self.tree.addTopLevelItem(item)
             self._fill(item, profile, sizes)
-            if kept is not None and profile.ident == kept.ident:
-                self.tree.setCurrentItem(item)
+            item.setSelected(profile.ident in kept)
+            if current is not None and profile.ident == current.ident:
+                self.tree.setCurrentItem(item, TICK, QItemSelectionModel.SelectionFlag.NoUpdate)
         self.tree.blockSignals(False)
         self.tree.setSortingEnabled(True)
         if not self._fitted and profiles:  # once: widths the admin drags afterwards stay
@@ -688,8 +709,9 @@ class ProfilesTable(QWidget):
         return widest + 16 + 26 + INFO + INFO_GAP  # its icon, the padding, the (i)
 
     def selected(self) -> Profile | None:
-        items = self.tree.selectedItems()
-        return self._profiles.get(items[0].data(USER, IDENT_ROLE)) if items else None
+        """The clicked row, the one with the (i)."""
+        item = self.tree.currentItem()
+        return self._profiles.get(item.data(USER, IDENT_ROLE)) if item is not None else None
 
     def shown(self) -> list[Profile]:
         """The rows, in the order on screen."""
@@ -702,9 +724,22 @@ class ProfilesTable(QWidget):
 
     def tick(self, ident: str, on: bool = True) -> None:
         """Ticks a row as a click on its box does; a row without a box stays as it is."""
-        item = self._item(ident)
-        if item is not None and self._tickable(ident) and not self._locked:
-            item.setCheckState(TICK, Qt.CheckState.Checked if on else Qt.CheckState.Unchecked)
+        self.tick_rows([ident], on)
+
+    def tick_rows(self, idents: Sequence[str], on: bool) -> None:
+        """Ticks or unticks rows, with one ticked_changed for them all."""
+        changed = False
+        self.tree.blockSignals(True)
+        for ident in idents:
+            item = self._item(ident)
+            if item is None or not self.can_tick(ident) or (ident in self._ticked) == on:
+                continue
+            (self._ticked.add if on else self._ticked.discard)(ident)
+            self._fill_state(item, self._profiles[ident])
+            changed = True
+        self.tree.blockSignals(False)
+        if changed:
+            self.ticked_changed.emit()
 
     def toggle(self, ident: str) -> None:
         """Ticks a row, or unticks it; a row without a box stays as it is."""
@@ -751,10 +786,10 @@ class ProfilesTable(QWidget):
         if watched is self.tree and event.type() == QEvent.Type.KeyPress:
             assert isinstance(event, QKeyEvent)
             current = self.tree.currentItem()
-            if event.key() == Qt.Key.Key_Space:
-                if current is not None:
-                    self.toggle(current.data(USER, IDENT_ROLE))
-                return True  # or Qt ticks it a second time when the box's own cell is current
+            control = event.modifiers() & Qt.KeyboardModifier.ControlModifier
+            if event.key() == Qt.Key.Key_Space and not control:  # Ctrl+Space selects, as in Qt
+                self._tick_picked()
+                return True
             if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and current is not None:
                 self.details_requested.emit(current.data(USER, IDENT_ROLE))
                 return True
@@ -781,6 +816,14 @@ class ProfilesTable(QWidget):
         menu = QMenu(self)
         menu.addAction(_("&Details…"), lambda: self.details_requested.emit(ident))
         popup(menu, self.tree.viewport().mapToGlobal(point))
+
+    def _tick_picked(self) -> None:
+        """Space: ticks the selected rows (or the clicked one), or unticks them if all are."""
+        items = self.tree.selectedItems() or [self.tree.currentItem()]
+        idents = [item.data(USER, IDENT_ROLE) for item in items if item is not None]
+        idents = [ident for ident in idents if self.can_tick(ident)]
+        if idents:
+            self.tick_rows(idents, not all(ident in self._ticked for ident in idents))
 
     def _double_clicked(self, item: QTreeWidgetItem, column: int) -> None:
         if column != TICK:  # on the box itself, the two clicks already ticked and unticked
@@ -1037,6 +1080,7 @@ class DeleteDialog(Question):
                 "go too: there's no recycle bin and no copy."
             ),
             ngettext("Delete {n} profile", "Delete {n} profiles", n).format(n=n),
+            place="profiles-delete-profiles",
         )
         self.table = grid_table([_("User"), _("Last used"), _("Size")])
         for profile in profiles:

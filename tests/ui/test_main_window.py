@@ -70,17 +70,14 @@ def test_add_host_keeps_every_host_of_a_list_with_no_groups(
 
 
 def test_another_tool_s_list_isn_t_opened_as_a_host_list(
-    window: CapyWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, tmp_path: Path, help_boxes: list[tuple[str, str]]
 ) -> None:
     path = tmp_path / "printers.json"
     listfile.save(path, HostList().add_group("Lab")[0], expected=None, kind="printers")
-    shown: list[str] = []
-    monkeypatch.setattr(
-        workspace_module.QMessageBox, "warning", lambda _p, _t, text: shown.append(text)
-    )
     before = window.hosts.document
     assert not window.hosts.open_list(path)
-    assert shown == [f"“{path}” isn't a host list."] and window.hosts.document is before
+    assert help_boxes == [(f"“{path}” isn't a host list.", "hosts-not-a-list")]
+    assert window.hosts.document is before
     doc = window.hosts.document
     assert doc is not None and listfile.load(doc.path).kind == "hosts"  # saved with its kind
 

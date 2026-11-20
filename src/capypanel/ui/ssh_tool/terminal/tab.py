@@ -1,6 +1,6 @@
 """A connection's tab: the terminal and, once the connection ends, a message strip at its foot
 that says so, with Reconnect and Close tab. The strip is Hosts' result strip after a command:
-red with a cross after an error, grey after a normal end."""
+red with a cross and "What does this mean?" after an error, grey after a normal end."""
 
 from collections.abc import Mapping, Sequence
 
@@ -10,11 +10,14 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLay
 
 from capypanel.core.i18n import _
 from capypanel.core.ssh.ending import ended_line, is_error
-from capypanel.ui import spacing
+from capypanel.ui import help_links, spacing
 from capypanel.ui.hosts_tool.result_strip import IconBesideText
 from capypanel.ui.icons import tabler_icon
+from capypanel.ui.notes import escape
 from capypanel.ui.ssh_tool.terminal.view import DEFAULT_PT, TerminalView
 from capypanel.ui.themes import engine as themes
+
+HELP_PLACE = "ssh-when-a-connection-ends"  # after an error: what each ending means
 
 
 class EndedBar(QFrame):
@@ -31,6 +34,11 @@ class EndedBar(QFrame):
         self._icon = QLabel()
         self.label = QLabel()
         self.label.setWordWrap(True)  # wraps, never "…"
+        # After an error, "What does this mean?" inside the words, as in Hosts' strip.
+        self.label.setTextFormat(Qt.TextFormat.RichText)
+        self.label.setOpenExternalLinks(False)
+        self.label.setTextInteractionFlags(help_links.LINK_KEYS)
+        self.label.linkActivated.connect(lambda _href: help_links.open_place(HELP_PLACE))
         self.reconnect_button = QPushButton()
         self.reconnect_button.setDefault(True)
         self.close_button = QPushButton()
@@ -55,16 +63,27 @@ class EndedBar(QFrame):
         # asked for is known by `by_us`, never by the code.
         self.error = not by_us and is_error(code)
         self._end = (host, code, by_us)
-        self.label.setText(ended_line(host, code, by_us=by_us))
-        self._restyle()
+        self._restyle()  # its words too
         self.show()
 
     def retranslate(self) -> None:
         self.reconnect_button.setText(_("&Reconnect"))
         self.close_button.setText(_("Close &tab"))
-        if self._end is not None:
-            host, code, by_us = self._end
-            self.label.setText(ended_line(host, code, by_us=by_us))
+        self._show_words()
+
+    def words(self) -> str:
+        """What it says, without its link."""
+        if self._end is None:
+            return ""
+        host, code, by_us = self._end
+        return ended_line(host, code, by_us=by_us)
+
+    def _show_words(self) -> None:
+        text = escape(self.words())
+        if self.error:
+            text += "&nbsp;&nbsp;" + help_links.strip_anchor(HELP_PLACE, self)
+        self.label.setText(text)
+        self.label.setToolTip(help_links.url(HELP_PLACE) if self.error else "")
 
     def colour(self) -> str:
         """The strip's role colour, which the tab's mark takes too."""
@@ -82,6 +101,7 @@ class EndedBar(QFrame):
         self.setProperty("ended", not self.error)  # the theme's grey edge
         self.style().unpolish(self)
         self.style().polish(self)
+        self._show_words()  # its link in the theme's link colour
 
 
 class TerminalTab(QWidget):

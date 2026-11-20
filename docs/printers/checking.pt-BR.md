@@ -7,7 +7,7 @@ então uma lista somente leitura pode ser atualizada como qualquer outra.
 
 ![A janela Impressoras depois de uma atualização: o status e o toner de cada impressora lida, uma Não verificada, a faixa de atenção e os suprimentos da selecionada](../images/printers-dark-pt-BR.png)
 
-## Verificar as suas impressoras
+## Verificar as suas impressoras <a id="printers-checking-check-your-printers"></a>
 
 1. Clique em **Atualizar todas** na barra de ferramentas (**F5**). Ele lê todas as impressoras que
    a tabela mostra, ou seja, o grupo, a tag ou a pesquisa que você escolheu.
@@ -40,7 +40,7 @@ Nada é lido sem você pedir, a não ser que você ligue o
     - Depois de um Atualizar, a barra de status acrescenta quantas impressoras responderam, como em
       "9 online". Uma impressora que recusou ou respondeu algo ilegível conta, porque está ligada.
 
-## Ler o status de uma impressora
+## Ler o status de uma impressora <a id="printers-checking-read-a-printers-status"></a>
 
 Cada impressora ganha um ponto colorido e algumas palavras:
 
@@ -56,7 +56,7 @@ Antes do primeiro Atualizar ela diz **Não verificado** em cinza. A mensagem da 
 que pode ser um código e várias frases, fica na dica da célula e inteira embaixo do nome dela, nos
 detalhes.
 
-## Ver quanto toner resta
+## Ver quanto toner resta <a id="printers-checking-see-how-much-toner-is-left"></a>
 
 ![A seção Suprimentos: uma barra para cada toner, o cilindro, a caixa de resíduos e o fusor, com o traço explicado embaixo](../images/printer-details-dark-pt-BR.png)
 
@@ -95,7 +95,7 @@ detalhes.
 
     ![A janela Marcas das barras: o traço do nível baixo e mais três, cada um com a cor dele](../images/marks-window-dark-pt-BR.png)
 
-## Ver quais impressoras requerem atenção
+## Ver quais impressoras requerem atenção <a id="printers-checking-see-which-printers-need-attention"></a>
 
 ![A faixa acima da tabela de impressoras: quantas requerem atenção e por quê, com um botão Mostrar](../images/printers-warnings-dark-pt-BR.png)
 
@@ -118,7 +118,7 @@ detalhes.
     antes, para nenhuma delas ficar escondida. A faixa passa a dizer "Mostrando as 3 impressoras que
     requerem atenção." Escolher um grupo ou uma tag, ou pesquisar, também traz todas de volta.
 
-## Escolher quais problemas avisam
+## Escolher quais problemas avisam <a id="printers-checking-choose-which-problems-warn"></a>
 
 ![A seção Avisos nas Configurações: uma linha por motivo, marcada em No CapyPanel e Notificação do Windows, no padrão](../images/settings-printers-warnings-dark-pt-BR.png)
 
@@ -156,7 +156,7 @@ problemas.
     máximo cinco delas e então "e mais 3". Um clique nela abre as Impressoras com só essas
     listadas, e o **✕** descarta a notificação. Um Atualizar que você aperta nunca notifica.
 
-## Atualizar as impressoras sozinho
+## Atualizar as impressoras sozinho <a id="printers-checking-have-printers-checked-on-their-own"></a>
 
 **Configurações > Impressoras > Avisos e suprimentos > Atualizar sozinho**: **Desligado** (o
 padrão), ou a cada **5**, **15**, **30** ou **60 minutos**. Ele lê a lista aberta inteira, não só o
@@ -170,7 +170,7 @@ lidas (veja [Primeiros passos](../getting-started.pt-BR.md#fechar-o-capypanel-ou
     sem conta definida. A linha dele nas configurações diz o que uma rodada abrange: "Todas as
     impressoras da lista aberta, 8 por vez, enquanto o CapyPanel estiver aberto ou na bandeja."
 
-## Definir a conta SNMP
+## Definir a conta SNMP <a id="printers-checking-set-the-snmp-account"></a>
 
 ![Configurações > Impressoras > Conexão: a versão e a conta SNMP, e a conta do Doc360 MPS](../images/settings-printers-connecting-dark-pt-BR.png)
 
@@ -234,7 +234,7 @@ vale para todas as impressoras.
     uma a uma, quando uma impressora real mostra a lacuna. A marca vem do número de fabricante que a
     impressora informa, e o modelo, da descrição dela.
 
-## Contar páginas pelo Doc360 MPS
+## Contar páginas pelo Doc360 MPS <a id="printers-checking-get-page-counts-from-doc360-mps"></a>
 
 Se as suas impressoras estão no portal Doc360 MPS, ponha os **Contadores de páginas** de uma
 impressora em **Doc360 MPS** e adicione a conta do portal em **Configurações > Impressoras >
@@ -276,22 +276,25 @@ Conexão > Conta do Doc360 MPS**. Um Atualizar então pega a contagem de página
     conta. Quando um login falta ou é recusado, um botão embaixo do erro nos detalhes abre esta
     janela na hora: **Definir a conta…**, ou **Alterar a conta…** quando já existe uma.
 
-## Mensagens que você pode ver
+## Mensagens que você pode ver <a id="printers-checking-messages-you-may-see"></a>
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| **Não verificado** | Nenhum Atualizar leu a impressora ainda | Atualize-a |
-| **Offline** | Nada respondeu | Confira se a impressora está ligada e o endereço está certo |
-| **Recusada** (âmbar), com uma dica como "Recusada às 14:32: senha ou tipo de autenticação errado." | A impressora recusou a conta SNMP. A dica diz o motivo: um usuário que ela não conhece, a senha ou o tipo de autenticação errado, a senha da criptografia errada, a autenticação ou a criptografia que ela espera de outro jeito, ou um relógio longe demais do do CapyPanel | Corrija essa parte em **Configurações > Impressoras > Conexão**, ou o relógio da impressora |
-| **Ilegível** (âmbar) | Ela respondeu, mas de um jeito que o CapyPanel não conseguiu ler | Abra a página web dela |
-| "Defina antes a conta SNMP v3 em Configurações › Impressoras › Conexão." | O **v3** está escolhido sem conta, então um Atualizar não começa | Defina a conta |
-| "Parado: 4 impressoras não foram verificadas." | Você apertou **Parar** | Atualize de novo |
-| "Esta impressora não informa o nível deste suprimento." | A impressora não dá nível para esse suprimento | Confira a página web dela |
-| "A impressora não informa seus suprimentos." | Nenhum dado de suprimento | Confira a página web dela |
-| "Nenhuma conta do Doc360 MPS definida." | Ainda não há com o que entrar | **Definir a conta…** |
-| "O Doc360 MPS recusou o login." | O parceiro, o usuário ou a senha está errado | **Alterar a conta…** |
-| "O Doc360 MPS não respondeu." | Sem rede, ou o portal está fora do ar | Tente de novo mais tarde |
-| "As páginas do Doc360 MPS mudaram, então o CapyPanel não conseguiu ler os contadores." | O portal foi refeito | O CapyPanel precisa de uma atualização para as páginas novas |
-| "O Doc360 MPS não tem o número de série SAMPLE0011." | O portal não tem nenhuma impressora com esse número | Confira o nº de série |
-| "Adicione o número de série da impressora: o Doc360 MPS identifica as impressoras pelo número de série." | A sua lista não tem o número de série desta impressora | Adicione-o com **Editar selecionado…** |
-| "⚠ De outubro de 2026: o Doc360 MPS ainda não tem contadores deste mês. Confira o portal antes de usar este número." | No começo de um mês, a contagem é a do mês passado | Confira o portal antes de usar o número |
+| <a id="printer-not-checked"></a>**Não verificado** | Nenhum Atualizar leu a impressora ainda | Atualize-a |
+| <a id="printer-offline"></a>**Offline** | Nada respondeu | Confira se a impressora está ligada e o endereço está certo |
+| <a id="printer-refused"></a>**Recusada** (âmbar), com uma dica como "Recusada às 14:32: senha ou tipo de autenticação errado." | A impressora recusou a conta SNMP. A dica diz o motivo: um usuário que ela não conhece, a senha ou o tipo de autenticação errado, a senha da criptografia errada, a autenticação ou a criptografia que ela espera de outro jeito, ou um relógio longe demais do do CapyPanel | Corrija essa parte em **Configurações > Impressoras > Conexão**, ou o relógio da impressora |
+| <a id="printer-unreadable"></a>**Ilegível** (âmbar) | Ela respondeu, mas de um jeito que o CapyPanel não conseguiu ler | Abra a página web dela |
+| <a id="printer-snmpv3-not-set"></a>"Defina antes a conta SNMP v3 em Configurações › Impressoras › Conexão." | O **v3** está escolhido sem conta, então um Atualizar não começa | Defina a conta |
+| <a id="printers-credential-not-saved"></a>"Não foi possível salvar a mudança no Gerenciador de Credenciais do Windows: …", e depois "Nada foi alterado." | O Windows recusou salvar ou remover a comunidade SNMP, a conta SNMP v3 ou o login do Doc360 MPS, então o CapyPanel continua usando o que já tinha | Tente **Salvar** de novo. Se continuar falhando, procure as entradas do CapyPanel em Painel de Controle › **Gerenciador de Credenciais** › **Credenciais do Windows** |
+| <a id="printer-check-stopped"></a>"Parado: 4 impressoras não foram verificadas." | Você apertou **Parar** | Atualize de novo |
+| <a id="supply-no-level"></a>"Esta impressora não informa o nível deste suprimento." | A impressora não dá nível para esse suprimento | Confira a página web dela |
+| <a id="supplies-not-reported"></a>"A impressora não informa seus suprimentos." | Nenhum dado de suprimento | Confira a página web dela |
+| <a id="doc360-no-account"></a>"Nenhuma conta do Doc360 MPS definida." | Ainda não há com o que entrar | **Definir a conta…** |
+| <a id="doc360-login-refused"></a>"O Doc360 MPS recusou o login." | O parceiro, o usuário ou a senha está errado | **Alterar a conta…** |
+| <a id="doc360-no-answer"></a>"O Doc360 MPS não respondeu." | Sem rede, ou o portal está fora do ar | Tente de novo mais tarde |
+| <a id="doc360-error-answer"></a>"O Doc360 MPS respondeu com um erro." | O portal respondeu, mas com um erro em vez das páginas dele | Atualize mais tarde. Se continuar, entre no portal pelo navegador para ver se ele funciona |
+| <a id="doc360-pages-changed"></a>"As páginas do Doc360 MPS mudaram, então o CapyPanel não conseguiu ler os contadores." | O portal foi refeito | O CapyPanel precisa de uma atualização para as páginas novas |
+| <a id="doc360-serial-not-listed"></a>"O Doc360 MPS não tem o número de série SAMPLE0011." | O portal não tem nenhuma impressora com esse número | Confira o nº de série |
+| <a id="doc360-no-total"></a>"O Doc360 MPS não tem o total desta impressora." | O portal lista a impressora, mas ainda não tem o total de páginas dela | Confira a impressora no portal: o Doc360 MPS preenche as contagens no próprio ritmo |
+| <a id="doc360-serial-missing"></a>"Adicione o número de série da impressora: o Doc360 MPS identifica as impressoras pelo número de série." | A sua lista não tem o número de série desta impressora | Adicione-o com **Editar selecionado…** |
+| <a id="doc360-month-not-counted"></a>"⚠ De outubro de 2026: o Doc360 MPS ainda não tem contadores deste mês. Confira o portal antes de usar este número." | No começo de um mês, a contagem é a do mês passado | Confira o portal antes de usar o número |

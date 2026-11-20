@@ -3,7 +3,54 @@
 As mudanças de cada versão que você vai notar. As
 [versões no GitHub](https://github.com/gabrielmariense/CapyPanel/releases) têm os downloads.
 
-## 0.29.0
+## 0.30.0 <a id="whats-new-0300"></a>
+
+- A F1, o **Ajuda > Ajuda desta tela** ou o novo **?** embaixo na barra lateral abre estas páginas
+  na parte da tela em que você está. As Configurações têm um **?** embaixo da lista de páginas, e a
+  maioria das janelas tem um no começo da fileira de botões. A F1 fica reservada à ajuda, então não
+  pode ir para outro comando. Veja [Pedir ajuda, ou relatar um
+  problema](getting-started.pt-BR.md#start-get-help-or-report-a-problem).
+- Avisos e erros têm **O que isso significa?** embaixo do texto. Ele abre a linha da mensagem nestas
+  páginas, com o que ela quer dizer e o que fazer. A faixa vermelha de um comando que falhou, no
+  Hosts e na janela Comandos, também leva ao motivo, e a do SSH também, quando uma conexão termina
+  com erro.
+- O CapyPanel abre mais rápido com uma lista grande de hosts: com 480 hosts, abriu em cerca de 30%
+  menos tempo nos nossos testes. Uma ferramenta que você ainda não abriu preenche a lista quando
+  você a abre.
+- Na Limpeza de perfis, selecione vários perfis com Ctrl ou Shift e um clique, Shift e as setas, ou
+  Ctrl+A, e o **Espaço** marca todos. Um clique na caixa de marcar também faz da linha dela a
+  atual, então as setas seguem dali.
+- No painel da direita da Limpeza de perfis, a última linha de um cartão, como **e mais 7…**, agora
+  é um link: o menu dele lista o resto, e escolher um vai até ele.
+- Na Limpeza de perfis e no SSH, as setas de rolagem da barra de abas e o **▾** são botões da altura
+  das abas, e nenhuma aba aparece cortada embaixo deles. Com só a lista aberta, a linha curta depois
+  da aba dela sumiu.
+- A janela de um perfil de conexão mantém um tamanho e as mesmas linhas seja qual for a ferramenta.
+  Uma linha que a ferramenta não usa fica cinza, e a dica dela diz o motivo. **Configurações do
+  visualizador** agora é **Ajustes**.
+- O **Adicionar uma conta** mantém o campo de PC, grupo ou tag no lugar, cinza enquanto **Todos os
+  PCs** está escolhido, então escolher onde a conta vale não move nada.
+- O perfil inicial do UltraVNC agora vem com o **SecureVNC plugin** marcado. Os perfis iniciais são
+  gravados no primeiro início de um PC e pelo **Restaurar originais…**; os perfis que já estão num
+  PC ficam como estão.
+- Verificar se um PC está ligado não conecta mais na porta do VNC, e o CapyPanel pergunta a cada
+  servidor UltraVNC os tipos de login dele uma vez enquanto está aberto. Servidores UltraVNC até a
+  1.6.1 recusam um PC depois de seis conexões que não fazem login, então um host que você verificava
+  muito e abria pouco podia passar a recusar o seu. Se um ainda recusar, espere um minuto e abra-o
+  uma vez pelo UltraVNC Viewer, ou reinicie o serviço do UltraVNC nele.
+- As janelas crescem até caber o texto quebrado em linhas quando abrem e quando as linhas delas
+  mudam. **Abrir uma pasta** com um caminho longo, **Reiniciar** e **Desligar** abriam cortadas
+  antes.
+- As Configurações abrem em 960 × 740 na primeira vez, então a lista de páginas cabe inteira também
+  nos temas do próprio Windows.
+- Mensagens mais claras: um salvamento que falha diz para fechar o arquivo no Excel ou em outro
+  programa e salvar de novo, e uma lista que sumiu diz que saiu das suas listas. Quando o
+  Gerenciador de Credenciais do Windows recusa uma mudança nas configurações do Impressoras, a caixa
+  diz que nada foi alterado.
+- Quando salvar de quanto em quanto tempo procurar nova versão falhava, escolher a mesma opção de
+  novo não fazia nada. Agora tenta de novo.
+
+## 0.29.0 <a id="whats-new-0290"></a>
 
 - O **SSH** é uma quarta ferramenta (Ctrl+4), para os servidores, switches e outros aparelhos que
   você acessa por SSH. Ele mostra a lista de hosts aberta no Hosts, verifica quais hosts respondem
@@ -28,7 +75,7 @@ As mudanças de cada versão que você vai notar. As
   Windows ou por uma verificação de antivírus, por exemplo, agora para sem mudar nada, e o
   CapyPanel abre como estava. Antes, uma atualização assim podia deixar o CapyPanel sem abrir.
 
-## 0.28.1
+## 0.28.1 <a id="whats-new-0281"></a>
 
 - A ferramenta Perfis de usuário agora se chama **Limpeza de perfis**, um nome que diz para que ela
   serve. A tecla dela, Ctrl+3, continua a mesma.
@@ -47,7 +94,7 @@ As mudanças de cada versão que você vai notar. As
   tecla é recusada, e numa janela de Configurações estreita a linha que você está mudando continua
   à vista.
 
-## 0.28.0
+## 0.28.0 <a id="whats-new-0280"></a>
 
 - **Configurações > CapyPanel > Atalhos de teclado** é nova: dê a um comando a tecla que você
   quiser, ou tire a tecla dele. Hosts e Impressoras guardam teclas próprias, mesmo para um comando
@@ -64,13 +111,13 @@ As mudanças de cada versão que você vai notar. As
 - A tabela de Perfis de usuário não tem mais a coluna **Tipo**. O tipo de um perfil continua nos
   detalhes dele.
 
-## 0.27.1
+## 0.27.1 <a id="whats-new-0271"></a>
 
 - Uma atualização não para mais num arquivo que uma atualização anterior deixou para trás. Cópias
   que não conseguiam sair da 0.26.4, com "Acesso negado", atualizam direto para a 0.27.1, sem nada
   para limpar à mão.
 
-## 0.27.0
+## 0.27.0 <a id="whats-new-0270"></a>
 
 - **Configurações > Impressoras > Avisos e suprimentos** tem uma tabela **Avisos** nova: marque
   quais problemas contam nos avisos do CapyPanel e quais mandam uma notificação do Windows, motivo
@@ -79,7 +126,7 @@ As mudanças de cada versão que você vai notar. As
   (marque **Sem papel** ou **Parada** para trazê-las de volta), uma porta aberta ou uma bandeja
   retirada nunca avisa, e um suprimento no nível baixo agora também manda notificação.
 
-## 0.26.4
+## 0.26.4 <a id="whats-new-0264"></a>
 
 - O **Instalar e reiniciar** agora confere a versão nova antes de o CapyPanel fechar, e depois diz
   que o CapyPanel vai abrir de novo sozinho em alguns segundos. Enquanto os arquivos são trocados,
@@ -88,23 +135,23 @@ As mudanças de cada versão que você vai notar. As
   lado da pasta do CapyPanel, e os apaga quando termina. As pastas `CapyPanel.update` e
   `CapyPanel.previous` que atualizações anteriores deixaram ali somem no próximo início.
 
-## 0.26.3
+## 0.26.3 <a id="whats-new-0263"></a>
 
 - Nada muda no app: uma versão para testar as janelas de nova versão da 0.26.2.
 
-## 0.26.2
+## 0.26.2 <a id="whats-new-0262"></a>
 
 - Quando o CapyPanel encontra sozinho uma versão mais nova, a janela de nova versão abre sozinha
   com as notas, no idioma do CapyPanel. Ele procura mais ou menos um segundo depois de abrir.
 - Depois do **Instalar e reiniciar**, o CapyPanel abre com uma janela dizendo que a atualização
   foi instalada, ou por que não foi.
 
-## 0.26.1
+## 0.26.1 <a id="whats-new-0261"></a>
 
 - O título da janela mostra só a versão, como em "Padrão — CapyPanel 0.26.1". O número de build e
   o commit ficam em **Ajuda > Sobre o CapyPanel**.
 
-## 0.26.0
+## 0.26.0 <a id="whats-new-0260"></a>
 
 A primeira versão que você pode baixar.
 

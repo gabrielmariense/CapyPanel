@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 11:56-0300\n"
+"POT-Creation-Date: 2026-11-20 01:58-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -183,6 +183,9 @@ msgstr "&Guia desta tela"
 
 msgid "&Help"
 msgstr "Aj&uda"
+
+msgid "&Help for this screen"
+msgstr "&Ajuda desta tela"
 
 msgid "&Host:"
 msgstr "&Host:"
@@ -1228,10 +1231,6 @@ msgid "Couldn't create “{path}”: {error}"
 msgstr "Não foi possível criar “{path}”: {error}"
 
 #, python-brace-format
-msgid "Couldn't delete its saved password: {error}"
-msgstr "Não foi possível apagar a senha salva: {error}"
-
-#, python-brace-format
 msgid ""
 "Couldn't delete the password saved in Windows Credential Manager: {error}\n"
 "\n"
@@ -1242,8 +1241,8 @@ msgstr ""
 "Você pode apagá-la em Painel de Controle › Gerenciador de Credenciais › Credenciais do Windows, em “{prefix}”."
 
 #, python-brace-format
-msgid "Couldn't move “{path}” to the Recycle Bin."
-msgstr "Não foi possível mover “{path}” para a Lixeira."
+msgid "Couldn't move “{path}” to the Recycle Bin, so nothing changed."
+msgstr "Não foi possível mover “{path}” para a Lixeira, então nada mudou."
 
 #, python-brace-format
 msgid "Couldn't open it: {error}"
@@ -1311,6 +1310,16 @@ msgid "Couldn't save how often to check: {error}"
 msgstr "Não foi possível salvar de quanto em quanto tempo procurar: {error}"
 
 #, python-brace-format
+msgid ""
+"Couldn't save the change in Windows Credential Manager: {error}\n"
+"\n"
+"Nothing was changed."
+msgstr ""
+"Não foi possível salvar a mudança no Gerenciador de Credenciais do Windows: {error}\n"
+"\n"
+"Nada foi alterado."
+
+#, python-brace-format
 msgid "Couldn't save the connection profiles: {error}"
 msgstr "Não foi possível salvar os perfis de conexão: {error}"
 
@@ -1337,12 +1346,14 @@ msgid "Couldn't save where the tools are: {error}"
 msgstr "Não foi possível salvar onde as ferramentas estão: {error}"
 
 #, python-brace-format
-msgid "Couldn't save {path}: {error}"
-msgstr "Não foi possível salvar {path}: {error}"
-
-#, python-brace-format
-msgid "Couldn't save “{path}”: {error}"
-msgstr "Não foi possível salvar “{path}”: {error}"
+msgid ""
+"Couldn't save “{path}”: {error}\n"
+"\n"
+"If the file is open in another program, such as Excel, close it there and save again."
+msgstr ""
+"Não foi possível salvar “{path}”: {error}\n"
+"\n"
+"Se o arquivo estiver aberto em outro programa, como o Excel, feche-o lá e salve de novo."
 
 #, python-brace-format
 msgid "Couldn't start ssh.exe: {error}"
@@ -1743,8 +1754,14 @@ msgstr "Todos neste PC (compartilhada)"
 msgid "Export CSV"
 msgstr "Exportar CSV"
 
+msgid "F1 is kept for help and can't be changed."
+msgstr "F1 fica reservada à ajuda e não pode ser alterada."
+
 msgid "F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself. In an SSH terminal, all but Ctrl+Shift+W go to the server."
 msgstr "F1, Esc, Ctrl+F, Tab e Ctrl+Shift+W ficam reservadas ao próprio CapyPanel. Num terminal SSH, todas menos Ctrl+Shift+W vão para o servidor."
+
+msgid "F1, or the ? in the sidebar, opens help for the screen you're on. To see this guide again, use Help › Guide to this screen. Show all the guides again brings every guide back, and Documentation opens the step-by-step pages."
+msgstr "F1, ou o ? da barra lateral, abre a ajuda da tela em que você está. Para ver este guia de novo, use Ajuda › Guia desta tela. Mostrar todos os guias de novo traz todos de volta, e Documentação abre as páginas passo a passo."
 
 msgid "Failed"
 msgstr "Falhou"
@@ -1839,6 +1856,9 @@ msgstr "Logins esquecidos também são apagados do Gerenciador de Credenciais; v
 msgid "Formats CapyPanel can import"
 msgstr "Formatos que o CapyPanel importa"
 
+msgid "Four tools"
+msgstr "Quatro ferramentas"
+
 msgid "Free on C:"
 msgstr "Livre em C:"
 
@@ -1907,6 +1927,12 @@ msgstr "HOSTS EXIBIDOS"
 msgid "Help"
 msgstr "Ajuda"
 
+msgid "Help for this screen"
+msgstr "Ajuda desta tela"
+
+msgid "Help for this screen (F1)"
+msgstr "Ajuda desta tela (F1)"
+
 msgid "Hide Windows' own"
 msgstr "Ocultar os do Windows"
 
@@ -1958,8 +1984,8 @@ msgstr "O Hosts ainda não o verificou."
 msgid "Hosts in “{group}” without a name of their own log in with this one."
 msgstr "Os hosts de “{group}” sem um nome próprio entram com este."
 
-msgid "Hosts is for computers, Printers for printers, and Profile cleanup clears old Windows profiles off a PC. Each tile opens its tool."
-msgstr "Hosts é para computadores, Impressoras para impressoras, e a Limpeza de perfis exclui perfis antigos do Windows de um PC. Cada bloco abre a sua ferramenta."
+msgid "Hosts is for computers, Printers for printers, Profile cleanup clears old Windows profiles off a PC, and SSH opens a terminal on your servers and switches. Each tile opens its tool."
+msgstr "Hosts é para computadores, Impressoras para impressoras, a Limpeza de perfis exclui perfis antigos do Windows de um PC, e o SSH abre um terminal nos seus servidores e switches. Cada bloco abre a sua ferramenta."
 
 msgid "Hosts with no group &go to:"
 msgstr "Hosts sem grupo &vão para:"
@@ -2553,6 +2579,9 @@ msgstr "Nada está fora de um grupo."
 #, python-brace-format
 msgid "Nothing matches “{text}”."
 msgstr "Nada corresponde a “{text}”."
+
+msgid "Nothing to name: it's used on every PC"
+msgstr "Nada a indicar: vale para todos os PCs"
 
 msgid "Nothing was read."
 msgstr "Nada foi lido."
@@ -3597,6 +3626,9 @@ msgstr "Configurações"
 msgid "Settings › Hosts › Credentials: {uses}"
 msgstr "Configurações › Hosts › Credenciais: {uses}"
 
+msgid "Settings:"
+msgstr "Ajustes:"
+
 msgid "Shared"
 msgstr "Compartilhada"
 
@@ -3883,8 +3915,8 @@ msgstr "Esse grupo não existe."
 msgid "That host is no longer in the list."
 msgstr "Esse host não está mais na lista."
 
-msgid "That name is taken."
-msgstr "Esse nome já está em uso."
+msgid "That name is taken. Pick another one."
+msgstr "Esse nome já está em uso. Escolha outro."
 
 msgid "That profile doesn't exist."
 msgstr "Esse perfil não existe."
@@ -4059,8 +4091,8 @@ msgid "The list opens on this group"
 msgstr "A lista abre neste grupo"
 
 #, python-brace-format
-msgid "The list “{path}” doesn't exist anymore."
-msgstr "A lista “{path}” não existe mais."
+msgid "The list “{path}” doesn't exist anymore, so it's no longer among your lists."
+msgstr "A lista “{path}” não existe mais, então saiu das suas listas."
 
 msgid "The list's hosts are here. A double-click connects, and a right-click shows everything you can do with one."
 msgstr "Os hosts da lista ficam aqui. Dois cliques conectam, e o botão direito num host mostra tudo o que dá para fazer com ele."
@@ -4267,8 +4299,8 @@ msgid_plural "This PC shuts down in {n} minutes. Please save your work."
 msgstr[0] "Este PC desliga em {n} minuto. Salve o seu trabalho."
 msgstr[1] "Este PC desliga em {n} minutos. Salve o seu trabalho."
 
-msgid "This bar stays here on every screen. Home is at the top, Settings at the bottom, and the tools in between."
-msgstr "Esta barra fica aqui em todas as telas. O Início fica no topo, as Configurações embaixo e as ferramentas no meio."
+msgid "This bar stays here on every screen. Home is at the top, the ? for help and Settings at the bottom, and the tools in between."
+msgstr "Esta barra fica aqui em todas as telas. O Início fica no topo, o ? da ajuda e as Configurações embaixo, e as ferramentas no meio."
 
 msgid "This card shows each PC you opened and how far it has got."
 msgstr "Este cartão mostra em que ponto está cada PC que você abriu."
@@ -4365,6 +4397,9 @@ msgstr "Esta pessoa está conectada agora. Só pode ser excluído depois que ela
 msgid "This printer doesn't report a level for this supply."
 msgstr "Esta impressora não informa o nível deste suprimento."
 
+msgid "This profile already uses the viewer's defaults."
+msgstr "Este perfil já usa os padrões do visualizador."
+
 msgid "This screen has no guide."
 msgstr "Esta tela não tem guia."
 
@@ -4374,17 +4409,14 @@ msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyP
 msgid "This tool deletes user profiles"
 msgstr "Esta ferramenta exclui perfis de usuário"
 
-msgid "Three tools"
-msgstr "Três ferramentas"
-
 msgid "Tick Status or Logged-on users to refresh them"
 msgstr "Marque Status ou Usuários logados para atualizá-los"
 
 msgid "Tick a column under Last check to read them"
 msgstr "Marque uma coluna em Última verificação para lê-las"
 
-msgid "Tick in the table: the box, Space or a double-click on the row."
-msgstr "Marque na tabela: a caixa, Espaço ou dois cliques na linha."
+msgid "Tick in the table: the box, a double-click on the row, or Space on the selected rows."
+msgstr "Marque na tabela: a caixa, dois cliques na linha ou a tecla Espaço nas linhas selecionadas."
 
 msgid "Tick profiles in the table to delete"
 msgstr "Marque perfis na tabela para excluir"
@@ -4398,8 +4430,8 @@ msgstr "Marque os perfis e clique em Excluir perfis. A pasta de cada pessoa vai 
 msgid "Tick to delete"
 msgstr "Marcar para excluir"
 
-msgid "Tick to delete: the box, Space, or a double-click on the row"
-msgstr "Marque para excluir: a caixa, Espaço ou dois cliques na linha"
+msgid "Tick to delete: the box, a double-click on the row, or Space on the selected rows"
+msgstr "Marque para excluir: a caixa, dois cliques na linha ou a tecla Espaço nas linhas selecionadas"
 
 msgid "Ticked in tabs"
 msgstr "Marcados nas abas"
@@ -4416,9 +4448,6 @@ msgstr "Para confirmar, digite <b>{word}</b>:"
 
 msgid "To keep a connection outside CapyPanel, right-click a host and pick Connect in a separate window."
 msgstr "Para manter uma conexão fora do CapyPanel, clique com o botão direito num host e escolha Conectar numa janela separada."
-
-msgid "To see this guide again, use Help › Guide to this screen. Show all the guides again brings every guide back, and Documentation opens the step-by-step pages."
-msgstr "Para ver este guia de novo, use Ajuda › Guia desta tela. Mostrar todos os guias de novo traz todos de volta, e Documentação abre as páginas passo a passo."
 
 msgid "To:"
 msgstr "Para:"
@@ -4618,9 +4647,6 @@ msgstr "Exibir"
 msgid "Viewer settings (*{extension})"
 msgstr "Configurações do visualizador (*{extension})"
 
-msgid "Viewer settings:"
-msgstr "Configurações do visualizador:"
-
 msgid "WMI directly"
 msgstr "WMI direto"
 
@@ -4657,6 +4683,9 @@ msgstr "Boas-vindas ao CapyPanel"
 
 msgid "What Connect opens, and the login it uses. Refresh's logged-on users and the commands use the account under it."
 msgstr "O que o Conectar abre, e o login que ele usa. Os usuários logados do Atualizar e os comandos usam a conta abaixo."
+
+msgid "What does this mean?"
+msgstr "O que isso significa?"
 
 msgid "What the window shows when CapyPanel starts."
 msgstr "O que a janela mostra quando o CapyPanel inicia."
@@ -4709,10 +4738,6 @@ msgstr "O Windows PowerShell salva as impressoras de um PC em um arquivo com o c
 
 msgid "Windows answered:"
 msgstr "O Windows respondeu:"
-
-#, python-brace-format
-msgid "Windows didn't keep it: {error}"
-msgstr "O Windows não a guardou: {error}"
 
 #, python-brace-format
 msgid "Windows didn't let CapyPanel start PowerShell on your PC to read {host}. An antivirus may block it."
@@ -5823,9 +5848,18 @@ msgstr "O {tool} não aceita receber um arquivo de configurações."
 msgid "{tool} can't be given a user name."
 msgstr "O {tool} não aceita receber um nome de usuário."
 
+msgid "{tool} doesn't use a settings file."
+msgstr "{tool} não usa arquivo de configurações."
+
 #, python-brace-format
 msgid "{tool} has no option “{option}”."
 msgstr "O {tool} não tem a opção “{option}”."
+
+msgid "{tool} has no options to set here."
+msgstr "{tool} não tem opções para definir aqui."
+
+msgid "{tool} has no other way to log in."
+msgstr "{tool} não tem outra forma de entrar."
 
 #, python-brace-format
 msgid "{tool} not found"

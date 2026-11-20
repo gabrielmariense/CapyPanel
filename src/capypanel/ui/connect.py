@@ -31,6 +31,7 @@ from capypanel.core.tools.connect import Credential, SessionCredentials, Target,
 from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 from capypanel.core.tools.viewer_settings import SettingsFileError
+from capypanel.ui import help_links
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.notes import hint
 
@@ -97,7 +98,8 @@ class CredentialDialog(QDialog):
         layout.addWidget(intro)
         layout.addLayout(form)
         layout.addWidget(note)
-        layout.addWidget(self.buttons)
+        self.help_button = help_links.HelpButton("connecting-connect-to-a-host")
+        layout.addLayout(help_links.row(self.help_button, self.buttons))
         self.user.textChanged.connect(self._update_ok)
         self.password.textChanged.connect(self._update_ok)
         self._update_ok()
@@ -137,6 +139,9 @@ class Connector:
         self.catalogs = catalogs
         self.credentials = credentials
         self.open_settings: Callable[[], None] | None = None  # Settings › Hosts › Connecting
+        # Each server's login types, asked once per run: UltraVNC up to 1.6.1 counts every
+        # asking as a failed login, and turns this PC away after six.
+        self._offered: dict[tuple[str, int], tuple[int, ...]] = {}
 
     # ---- profiles ----
 
@@ -210,7 +215,8 @@ class Connector:
         try:
             ready = self.resolve(profile_id)
         except ProfileError as e:
-            self._error(f"{e}\n\n{self._names(requests)}", owner)
+            place = self._profile_place(profile_id)
+            self._error(f"{e}\n\n{self._names(requests)}", owner, place=place)
             return 0
         tool, profile = ready.tool, ready.profile
         executable = detect.find_executable(tool) or self._locate(tool, owner)
@@ -244,6 +250,7 @@ class Connector:
                         _("Couldn't save the password in Windows Credential Manager: {error}\n\n"
                           "It's kept until CapyPanel closes.").format(error=e),
                         owner,
+                        place="connect-password-not-saved",
                     )  # fmt: skip
         settings = self.catalogs.profiles.settings_path(profile)
         started = 0
@@ -261,6 +268,7 @@ class Connector:
                         tool=tool.name, target=request.label, error=e
                     ),
                     owner,
+                    place="connect-couldnt-start",
                 )
                 break
         return started
@@ -274,17 +282,25 @@ class Connector:
 
         def offers_account(request: Request) -> bool:
             port = request.target.port or profile.port or tool.port or DEFAULT_PORT
+            server = (request.target.address.casefold(), port)
             began = time.perf_counter()
-            try:
-                offered = rfb.security_types(request.target.address, port)
-            except rfb.ProbeError as e:
-                log.info("Login check for %s: couldn't ask (%s); opening anyway", request.label, e)
-                return True  # can't tell: the viewer will say what's wrong
+            offered = self._offered.get(server)
+            if offered is None:
+                try:
+                    offered = rfb.security_types(request.target.address, port)
+                except rfb.ProbeError as e:
+                    log.info(
+                        "Login check for %s: couldn't ask (%s); opening anyway", request.label, e
+                    )
+                    return True  # can't tell: the viewer will say what's wrong
+                self._offered[server] = offered
+                how = f"asked in {(time.perf_counter() - began) * 1000:.0f} ms"
+            else:
+                how = "asked before"
             fits = any(t in tool.account_types for t in offered)
             log.info(
-                "Login check for %s: login types %s in %d ms, %s",
-                request.label, list(offered), (time.perf_counter() - began) * 1000,
-                "fits" if fits else "refused",
+                "Login check for %s: login types %s, %s, %s",
+                request.label, list(offered), how, "fits" if fits else "refused",
             )  # fmt: skip
             return fits
 
@@ -307,6 +323,7 @@ class Connector:
                     len(refused),
                 ).format(names=", ".join(r.label for r in refused)),
                 owner,
+                place="connect-login-check-skipped",
             )
         return [r for r, ok in zip(requests, fits, strict=True) if ok]
 
@@ -335,6 +352,7 @@ class Connector:
             settings = box.addButton(_("Open &Settings"), QMessageBox.ButtonRole.ActionRole)
         box.addButton(QMessageBox.StandardButton.Cancel)
         box.setDefaultButton(locate)
+        help_links.add_link(box, "connect-viewer-not-found")
         box.exec()
         if settings is not None and box.clickedButton() is settings and self.open_settings:
             self.open_settings()
@@ -360,5 +378,15 @@ class Connector:
         )
         return answer == QMessageBox.StandardButton.Yes
 
-    def _error(self, message: str, owner: QWidget) -> None:
-        QMessageBox.warning(owner, "CapyPanel", message)
+    def _error(self, message: str, owner: QWidget, *, place: str) -> None:
+        """A warning box, with its line in the docs for "What does this mean?"."""
+        help_links.warning(owner, "CapyPanel", message, place=place)
+
+    def _profile_place(self, profile_id: str) -> str:
+        """The docs' line for a profile that can't be used: one this PC lacks, or how profiles
+        are set up (there are none, or one doesn't fit its tool)."""
+        wanted = profile_id or self.default_profile()
+        profile = self.catalogs.profiles.find(wanted) if wanted else None
+        if wanted and (profile is None or self.catalogs.tools.find(profile.tool) is None):
+            return "connect-profile-not-available"
+        return "connecting-set-up-connection-profiles"

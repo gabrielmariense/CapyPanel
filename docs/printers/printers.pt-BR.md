@@ -11,7 +11,7 @@ mostra o guia de novo.
 Como um Atualizar lê o status e o toner tem uma página própria:
 [Verificando impressoras](checking.pt-BR.md).
 
-## Adicionar uma impressora
+## Adicionar uma impressora <a id="printers-add-a-printer"></a>
 
 1. **Inventário > Adicionar impressora…** (Ctrl+N).
 2. Digite um **Nome** e o **Endereço**, um IP ou um nome de rede. Isso basta: um Atualizar lê a
@@ -41,7 +41,7 @@ Os outros campos são opcionais:
     - O **Editar selecionado…** (F2) abre a mesma janela para uma impressora que já está na lista,
       com **Salvar** no lugar de **Adicionar**.
 
-## Importar muitas impressoras de uma vez
+## Importar muitas impressoras de uma vez <a id="printers-import-many-printers-at-once"></a>
 
 1. **Inventário > Importar impressoras…**. Uma lista de impressoras vazia oferece o mesmo botão ao
    lado de **Adicionar impressora…**.
@@ -86,7 +86,7 @@ impressora que já está na sua lista é ignorada, nunca sobrescrita.
       entra em vermelho: "Sem endereço: digite o endereço da impressora. A porta do Windows,
       USB001, não é um endereço." Digite o endereço na prévia, ou deixe a linha de fora.
 
-## Abrir a página web de uma impressora
+## Abrir a página web de uma impressora <a id="printers-open-a-printers-web-page"></a>
 
 Quase toda impressora tem uma página web própria, com configurações, contadores e suprimentos.
 Clique em **Abrir página web** na barra de ferramentas, dê um clique duplo na impressora ou aperte
@@ -104,7 +104,7 @@ com http.
     - Só o endereço é passado ao navegador. O CapyPanel não busca nada na impressora e não faz
       login em lugar nenhum.
 
-## Encontrar uma impressora
+## Encontrar uma impressora <a id="printers-find-a-printer"></a>
 
 Digite na caixa de pesquisa acima da tabela (**Ctrl+F**). Para filtrar dentro do grupo em que você
 está, escolha uma tag à esquerda; escolha várias para manter só as impressoras que têm todas elas.
@@ -121,7 +121,7 @@ Para ver uma tag na lista inteira, escolha **Todas as impressoras** primeiro.
       título **Tags** mostra quantas estão escolhidas e oferece um **×** para limpá-las. As tags
       escolhidas continuam quando você troca de grupo e enquanto você pesquisa.
 
-## Manter impressoras em listas, grupos e tags
+## Manter impressoras em listas, grupos e tags <a id="printers-keep-printers-in-lists-groups-and-tags"></a>
 
 O Impressoras tem as próprias listas, separadas das da ferramenta Hosts. O nome da lista aberta
 fica no topo do painel de grupos; o menu dele troca de lista e traz **Nova lista de impressoras**,
@@ -158,7 +158,7 @@ como no Hosts: veja [Listas de hosts](../hosts/host-lists.pt-BR.md).
     As outras duas páginas do Impressoras, **Avisos e suprimentos** e **Conexão**, estão explicadas
     em [Verificando impressoras](checking.pt-BR.md).
 
-## Exportar impressoras para uma planilha
+## Exportar impressoras para uma planilha <a id="printers-export-printers-to-a-spreadsheet"></a>
 
 1. Clique em **Relatório** na barra de ferramentas.
 2. Escolha as impressoras e as colunas.
@@ -187,7 +187,7 @@ predefinição que vem pronta é **Todos os detalhes**.
       você tem mais de uma, todas as impressoras, as que não estão em grupo nenhum, cada grupo com
       os subgrupos dele e cada tag, todas elas contadas.
 
-## A janela em detalhe
+## A janela em detalhe <a id="printers-the-window-in-detail"></a>
 
 ??? note "A janela, parte por parte"
 
@@ -247,13 +247,13 @@ predefinição que vem pronta é **Todos os detalhes**.
     Contadores de páginas "Total de páginas e a origem", e Tags e Notas. "Sempre aparecem: o nome
     da impressora e o status."
 
-## Mensagens que você pode ver
+## Mensagens que você pode ver <a id="printers-messages-you-may-see"></a>
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| "“{path}” não é uma lista de impressoras." | O arquivo que você abriu é uma lista de hosts | Abra-o no Hosts |
-| "10 páginas web abertas. Só as 10 primeiras abrem de uma vez." | Havia mais de dez impressoras selecionadas | Abra as outras numa segunda vez |
-| "Marque uma coluna em Última verificação para lê-las" | O botão de atualizar do Relatório não tem nada para ler | Marque uma coluna em Última verificação |
-| "Esta lista ainda não tem impressoras. Adicione uma, ou importe várias de uma vez." | A lista de impressoras está vazia | **Adicionar impressora…** ou **Importar impressoras…** |
-| "Sem endereço: digite o endereço da impressora. A porta do Windows, USB001, não é um endereço." | Numa importação da lista de impressoras do Windows, a porta dessa impressora não é um endereço de rede | Digite o endereço dela na prévia, ou deixe-a de fora |
-| "Não é um nome de impressora nem um endereço IP", "Sem endereço: o nome precisa ser o nome da impressora na rede" | Essa linha de uma importação não pode ser adicionada | Corrija a linha na prévia, ou deixe-a de fora |
+| <a id="printers-not-a-list"></a>"“{path}” não é uma lista de impressoras." | O arquivo que você abriu é uma lista de hosts | Abra-o no Hosts |
+| <a id="printers-web-pages-limit"></a>"10 páginas web abertas. Só as 10 primeiras abrem de uma vez." | Havia mais de dez impressoras selecionadas | Abra as outras numa segunda vez |
+| <a id="printers-column-unticked"></a>"Marque uma coluna em Última verificação para lê-las" | O botão de atualizar do Relatório não tem nada para ler | Marque uma coluna em Última verificação |
+| <a id="printers-list-empty"></a>"Esta lista ainda não tem impressoras. Adicione uma, ou importe várias de uma vez." | A lista de impressoras está vazia | **Adicionar impressora…** ou **Importar impressoras…** |
+| <a id="printers-import-usb-port"></a>"Sem endereço: digite o endereço da impressora. A porta do Windows, USB001, não é um endereço." | Numa importação da lista de impressoras do Windows, a porta dessa impressora não é um endereço de rede | Digite o endereço dela na prévia, ou deixe-a de fora |
+| <a id="printers-import-bad-row"></a>"Não é um nome de impressora nem um endereço IP", "Sem endereço: o nome precisa ser o nome da impressora na rede" | Essa linha de uma importação não pode ser adicionada | Corrija a linha na prévia, ou deixe-a de fora |

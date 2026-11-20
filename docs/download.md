@@ -3,7 +3,7 @@
 CapyPanel comes as a zip: unzip it and run **CapyPanel.exe**. There's no installer and you don't
 need administrator rights. It runs on Windows 10 22H2 or Windows 11, 64-bit.
 
-## Download CapyPanel
+## Download CapyPanel <a id="download-get-capypanel"></a>
 
 1. Open the [latest release](https://github.com/gabrielmariense/CapyPanel/releases/latest) on
    GitHub.
@@ -51,7 +51,7 @@ in the [Code signing policy](code-signing.md).
     the taskbar, brings the open window to the front, out of the tray too. Each person signed in to
     the PC can run their own.
 
-## Update CapyPanel
+## Update CapyPanel <a id="download-update-capypanel"></a>
 
 When CapyPanel finds a newer release on its own, a window titled **CapyPanel** opens by itself,
 once per run, headed **Update available**, and an **Update 0.28.1** button shows at the right end
@@ -119,7 +119,7 @@ choice is only yours. While it downloads, **Later** reads **Cancel** and stops t
 
     Your settings, lists and saved logins are never touched.
 
-## Run CapyPanel from source
+## Run CapyPanel from source <a id="download-run-capypanel-from-source"></a>
 
 For developers, or to try a change before it's released, you need
 [uv](https://docs.astral.sh/uv/), which installs Python and everything else:
@@ -134,17 +134,17 @@ The first run downloads Python and the libraries; later runs start right away. A
 source doesn't update itself: use `git pull`. [Contributing](https://github.com/gabrielmariense/CapyPanel/blob/main/CONTRIBUTING.md)
 has the rest.
 
-## Messages you may see
+## Messages you may see <a id="download-messages-you-may-see"></a>
 
 | Message | What it means | What to do |
 |---|---|---|
-| "Couldn't check for updates." | GitHub didn't answer, or the PC isn't online | Try **Help > Check for updates…** later |
-| "Couldn't check for updates." with "Couldn't reach GitHub: [SSL: CERTIFICATE_VERIFY_FAILED] … unable to get local issuer certificate", in 0.27.1 or older | Those versions trust only the root certificates Windows has already stored on the PC, and this PC hadn't stored the one GitHub's certificate needs. From 0.28.0 on, Windows checks GitHub's certificate itself, as Edge does | Open https://api.github.com in Edge once, then **Help > Check for updates…** again |
-| "The download doesn't match its SHA-256: it was changed or cut short." | The zip that arrived isn't the one GitHub built | Click **Install and restart** again |
-| "CapyPanel can't write to …, so the update can't be installed from here. Open Notes on GitHub, download the zip and unpack it in place of this copy.", in grey under the links, with no **Install and restart** | Your account can't write to CapyPanel's own folder, such as one in Program Files | Unzip the new version over the old one yourself, or move CapyPanel to a folder you can write to |
-| "This copy runs from source: update it with git, or download the zip from the release page." | You started CapyPanel with `uv run` | `git pull`, or switch to the zip |
-| "The new version didn't pass its self-test" | The downloaded version failed its own check, so nothing was changed | Try **Install and restart** again later; **Report a problem** if it keeps failing |
-| "The update to 0.28.1 wasn't installed." and "You still have CapyPanel 0.28.0.", then the reason | The new version wouldn't start, so the old one was put back | Read the reason; **Report a problem** if it isn't clear |
-| "Couldn't put the new version in place: …" as that reason | Another program held one of CapyPanel's files open, so the update stopped with nothing changed | Close what holds it, such as a CapyPanel in another Windows session, and update again |
-| "1 SSH connection is still open in a separate window. Close it, then install the update." | That window runs from CapyPanel's folder, so its files can't be replaced while it's open | Close the window, then **Install and restart** again |
-| "CapyPanel is already running for EXAMPLE\user, but its window couldn't be brought forward: …" | Your other copy is open in another Windows session, or isn't answering | Close it there, or end it in Task Manager, then start CapyPanel again |
+| <a id="update-check-failed"></a>"Couldn't check for updates." | GitHub didn't answer, or the PC isn't online | Try **Help > Check for updates…** later |
+| <a id="update-certificate-error"></a>"Couldn't check for updates." with "Couldn't reach GitHub: [SSL: CERTIFICATE_VERIFY_FAILED] … unable to get local issuer certificate", in 0.27.1 or older | Those versions trust only the root certificates Windows has already stored on the PC, and this PC hadn't stored the one GitHub's certificate needs. From 0.28.0 on, Windows checks GitHub's certificate itself, as Edge does | Open https://api.github.com in Edge once, then **Help > Check for updates…** again |
+| <a id="update-sha256-mismatch"></a>"The download doesn't match its SHA-256: it was changed or cut short." | The zip that arrived isn't the one GitHub built | Click **Install and restart** again |
+| <a id="update-folder-not-writable"></a>"CapyPanel can't write to …, so the update can't be installed from here. Open Notes on GitHub, download the zip and unpack it in place of this copy.", in grey under the links, with no **Install and restart** | Your account can't write to CapyPanel's own folder, such as one in Program Files | Unzip the new version over the old one yourself, or move CapyPanel to a folder you can write to |
+| <a id="update-from-source"></a>"This copy runs from source: update it with git, or download the zip from the release page." | You started CapyPanel with `uv run` | `git pull`, or switch to the zip |
+| <a id="update-self-test-failed"></a>"The new version didn't pass its self-test" | The downloaded version failed its own check, so nothing was changed | Try **Install and restart** again later; **Report a problem** if it keeps failing |
+| <a id="update-not-installed"></a>"The update to 0.28.1 wasn't installed." and "You still have CapyPanel 0.28.0.", then the reason | The new version wouldn't start, so the old one was put back | Read the reason; **Report a problem** if it isn't clear |
+| <a id="update-swap-failed"></a>"Couldn't put the new version in place: …" as that reason | Another program held one of CapyPanel's files open, so the update stopped with nothing changed | Close what holds it, such as a CapyPanel in another Windows session, and update again |
+| <a id="update-ssh-windows-open"></a>"1 SSH connection is still open in a separate window. Close it, then install the update." | That window runs from CapyPanel's folder, so its files can't be replaced while it's open | Close the window, then **Install and restart** again |
+| <a id="update-already-running"></a>"CapyPanel is already running for EXAMPLE\user, but its window couldn't be brought forward: …" | Your other copy is open in another Windows session, or isn't answering | Close it there, or end it in Task Manager, then start CapyPanel again |

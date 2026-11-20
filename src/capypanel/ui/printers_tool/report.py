@@ -11,6 +11,7 @@ from capypanel.ui.printers_tool.details import source_text
 
 
 class PrintersReport(ExportDialog):
+    HELP_PLACE = "printers-export-printers-to-a-spreadsheet"  # its ? and F1
     TITLES = {
         "name": N_("Name"),
         "address": N_("Address"),

@@ -48,7 +48,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.bulk import host_fields, list_separator, write_csv
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import N_, _, ngettext
-from capypanel.ui import spacing
+from capypanel.ui import help_links, spacing
 from capypanel.ui.checks import clock_text
 from capypanel.ui.groups import TREE_INDENT
 from capypanel.ui.hosts import confirm
@@ -101,6 +101,7 @@ class ExportDialog(QDialog):
     CHECKED: tuple[str, ...] = CHECKED
     SAYS_NOT_CHECKED: frozenset[str] = SAYS_NOT_CHECKED
     FOR_IMPORT: tuple[str, ...] = FOR_IMPORT
+    HELP_PLACE = "host-lists-export-hosts-to-a-spreadsheet"  # its ? and F1
     PRESETS_KEY, LAST_KEY, FOLDER_KEY = PRESETS_KEY, LAST_KEY, FOLDER_KEY  # its own choices
     ITEMS_LABEL = N_("&Hosts:")
     PRESET_NAME = N_("For Import")  # the built-in preset, with the FOR_IMPORT columns
@@ -266,7 +267,8 @@ class ExportDialog(QDialog):
         layout.addLayout(self._sections)
         layout.addWidget(preview_title)
         layout.addWidget(self.preview, 1)
-        layout.addWidget(self.buttons)
+        self.help_button = help_links.HelpButton(self.HELP_PLACE)
+        layout.addLayout(help_links.row(self.help_button, self.buttons))
 
         self._fill_presets()
         last = prefs.get(self.LAST_KEY)
@@ -475,7 +477,8 @@ class ExportDialog(QDialog):
         if not ok or not name:
             return
         if name.casefold() == _(self.PRESET_NAME).casefold():
-            QMessageBox.warning(self, _("Save as preset"), _("That name is taken."))
+            text = _("That name is taken. Pick another one.")
+            help_links.warning(self, _("Save as preset"), text, place="hosts-preset-name-taken")
             return
         presets = self._presets()
         # The same name, whatever its case: replacing it is asked first, Cancel the default.
@@ -629,11 +632,10 @@ class ExportDialog(QDialog):
         try:
             path.write_text(text, encoding="utf-8-sig")  # the BOM: Excel reads accents right
         except OSError as e:
-            QMessageBox.warning(
-                self,
-                _("Report"),
-                _("Couldn't save “{path}”: {error}").format(path=path, error=e),
-            )
+            text = _("Couldn't save “{path}”: {error}\n\nIf the file is open in another "
+                     "program, such as Excel, close it there and save again.")  # fmt: skip
+            text = text.format(path=path, error=e)
+            help_links.warning(self, _("Report"), text, place="hosts-file-not-saved")
             return
         self._prefs[self.FOLDER_KEY] = str(path.parent)
         self._remember()

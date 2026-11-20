@@ -121,28 +121,33 @@ def count(account: doc360.Account | None) -> Counted:
     """Every printer's latest counters from Doc360 MPS, or why there are none. Never raises."""
     when = datetime.now()
     if account is None:
-        return Counted(when, error=_("No Doc360 MPS account is set."), account=NO_ACCOUNT)
+        words = _("No Doc360 MPS account is set.")
+        return Counted(when, error=words, account=NO_ACCOUNT, place="doc360-no-account")
     try:
         found = doc360.read_counters(account)
         older = None if found.this_month else (found.year, found.month)
         return Counted(when, found.counters, older=older)
     except doc360.Refused:
         log.info("Doc360 MPS: the login was refused")
-        return Counted(when, error=_("Doc360 MPS refused the login."), account=REFUSED)
+        words = _("Doc360 MPS refused the login.")
+        return Counted(when, error=words, account=REFUSED, place="doc360-login-refused")
     except doc360.Doc360Error as e:
         log.info("Doc360 MPS: %s", e)  # its own few words: never a page, a login or a serial
-        return Counted(when, error=_doc360_error(e))
+        words, place = _doc360_error(e)
+        return Counted(when, error=words, place=place)
     except Exception as e:  # a bug here mustn't stop the printers' Refresh
         log.exception("Reading Doc360 MPS failed")
         return Counted(when, error=type(e).__name__)
 
 
-def _doc360_error(error: doc360.Doc360Error) -> str:
+def _doc360_error(error: doc360.Doc360Error) -> tuple[str, str]:
+    """Its words, and its line in the docs."""
     if isinstance(error, doc360.NoAnswer):
-        return _("Doc360 MPS didn't answer.")
+        return _("Doc360 MPS didn't answer."), "doc360-no-answer"
     if isinstance(error, doc360.Changed):
-        return _("Doc360 MPS's pages changed, so CapyPanel couldn't read the counters.")
-    return _("Doc360 MPS answered with an error.")
+        words = _("Doc360 MPS's pages changed, so CapyPanel couldn't read the counters.")
+        return words, "doc360-pages-changed"
+    return _("Doc360 MPS answered with an error."), "doc360-error-answer"
 
 
 class PrinterRun(QObject):

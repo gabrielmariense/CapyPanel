@@ -7,7 +7,7 @@ refreshed like any other.
 
 ![The Printers window after a refresh: the status and toner of each printer read, one Not checked, the attention strip, and the supplies of the selected one](../images/printers-dark.png)
 
-## Check your printers
+## Check your printers <a id="printers-checking-check-your-printers"></a>
 
 1. Click **Refresh all** on the toolbar (**F5**). It reads every printer the table shows, which is
    the group, tag or search you have picked.
@@ -39,7 +39,7 @@ Nothing is read until you ask, unless you turn on
     - After a Refresh the status bar adds how many printers answered, as in "9 online". A printer
       that refused or answered something unreadable counts, since it's on.
 
-## Read a printer's status
+## Read a printer's status <a id="printers-checking-read-a-printers-status"></a>
 
 Each printer gets a coloured dot and a few words:
 
@@ -54,7 +54,7 @@ Each printer gets a coloured dot and a few words:
 Before the first Refresh it says **Not checked** in grey. The printer's own message, which can be a
 code and several sentences, is in the cell's tooltip and in full under its name in Details.
 
-## See how much toner is left
+## See how much toner is left <a id="printers-checking-see-how-much-toner-is-left"></a>
 
 ![The Supplies section: a bar for each toner, the drum, the waste box and the fuser, with the mark explained under them](../images/printer-details-dark.png)
 
@@ -91,7 +91,7 @@ code and several sentences, is in the cell's tooltip and in full under its name 
 
     ![The Bar marks window: the low level's mark and three more, each with its colour](../images/marks-window-dark.png)
 
-## See which printers need attention
+## See which printers need attention <a id="printers-checking-see-which-printers-need-attention"></a>
 
 ![The strip above the printer table: how many printers need attention and why, with a Show button](../images/printers-warnings-dark.png)
 
@@ -114,7 +114,7 @@ code and several sentences, is in the cell's tooltip and in full under its name 
     so none of them stays hidden. The strip then reads "Showing the 3 printers that need
     attention." Picking a group or a tag, or searching, brings every printer back too.
 
-## Choose which problems warn
+## Choose which problems warn <a id="printers-checking-choose-which-problems-warn"></a>
 
 ![The Warnings section in Settings: a row per reason, ticked under In CapyPanel and Windows notification, at the defaults](../images/settings-printers-warnings-dark.png)
 
@@ -151,7 +151,7 @@ only choose what warns: the table's **Status** column and Details always show ev
     most five of them and then "and 3 more". Clicking it opens Printers with just those printers
     listed, and its **✕** dismisses it. A Refresh you press yourself never notifies.
 
-## Have printers checked on their own
+## Have printers checked on their own <a id="printers-checking-have-printers-checked-on-their-own"></a>
 
 **Settings > Printers > Warnings and supplies > Refresh on its own**: **Off** (the default), or
 every **5**, **15**, **30** or **60 minutes**. It reads the whole open list, not only what the table
@@ -165,7 +165,7 @@ tray and the window can close to it, so the printers go on being read (see
     account set yet. Its line in Settings says what one turn covers: "Every printer in the open
     list, 8 at a time, while CapyPanel is open or in the tray."
 
-## Set the SNMP account
+## Set the SNMP account <a id="printers-checking-set-the-snmp-account"></a>
 
 ![Settings > Printers > Connecting: the SNMP version and account, and the Doc360 MPS account](../images/settings-printers-connecting-dark.png)
 
@@ -225,7 +225,7 @@ into a settings file, a list file or a log, and one account covers every printer
     are added one at a time, when a real printer shows the gap. The brand comes from the maker
     number the printer reports, and the model from its own description.
 
-## Get page counts from Doc360 MPS
+## Get page counts from Doc360 MPS <a id="printers-checking-get-page-counts-from-doc360-mps"></a>
 
 If your printers are on the Doc360 MPS portal, set a printer's **Page counters** to **Doc360 MPS**
 and add the portal account in **Settings > Printers > Connecting > Doc360 MPS account**. A Refresh
@@ -266,22 +266,25 @@ then takes that printer's page count from the portal.
     missing or refused, a button under the error in Details opens this window straight away: **Set
     the account…**, or **Change the account…** once there is one.
 
-## Messages you may see
+## Messages you may see <a id="printers-checking-messages-you-may-see"></a>
 
 | Message | What it means | What to do |
 |---|---|---|
-| **Not checked** | No Refresh has read the printer yet | Refresh it |
-| **Offline** | Nothing answered | Check the printer is on and its address is right |
-| **Refused** (amber), with a tooltip such as "Refused at 14:32: wrong authentication password or type." | The printer rejected the SNMP account. The tooltip names the reason: a user name it doesn't know, a wrong authentication password or type, a wrong encryption password, authentication or encryption it wants set differently, or a clock too far from CapyPanel's | Fix that part in **Settings > Printers > Connecting**, or the printer's clock |
-| **Unreadable** (amber) | It answered, but not in a way CapyPanel could read | Open its web page |
-| "Set the SNMP v3 account in Settings › Printers › Connecting first." | **v3** is picked with no account, so a Refresh doesn't start | Set the account |
-| "Stopped: 4 printers weren't checked." | You pressed **Stop** | Refresh again |
-| "This printer doesn't report a level for this supply." | The printer gives no level for that supply | Check its web page |
-| "The printer doesn't report its supplies." | No supply data at all | Check its web page |
-| "No Doc360 MPS account is set." | Nothing to sign in with yet | **Set the account…** |
-| "Doc360 MPS refused the login." | The partner, user name or password is wrong | **Change the account…** |
-| "Doc360 MPS didn't answer." | No network, or the portal is down | Try again later |
-| "Doc360 MPS's pages changed, so CapyPanel couldn't read the counters." | The portal was rebuilt | CapyPanel needs an update for the new pages |
-| "Doc360 MPS doesn't list serial SAMPLE0011." | The portal has no printer with that serial | Check the serial number |
-| "Add the printer's serial number: Doc360 MPS lists printers by serial." | Your list has no serial for this printer | Add it with **Edit selected…** |
-| "⚠ From October 2026: Doc360 MPS has no counts for this month yet. Check the portal before using this number." | Early in a month, the count is last month's | Check the portal before using the number |
+| <a id="printer-not-checked"></a>**Not checked** | No Refresh has read the printer yet | Refresh it |
+| <a id="printer-offline"></a>**Offline** | Nothing answered | Check the printer is on and its address is right |
+| <a id="printer-refused"></a>**Refused** (amber), with a tooltip such as "Refused at 14:32: wrong authentication password or type." | The printer rejected the SNMP account. The tooltip names the reason: a user name it doesn't know, a wrong authentication password or type, a wrong encryption password, authentication or encryption it wants set differently, or a clock too far from CapyPanel's | Fix that part in **Settings > Printers > Connecting**, or the printer's clock |
+| <a id="printer-unreadable"></a>**Unreadable** (amber) | It answered, but not in a way CapyPanel could read | Open its web page |
+| <a id="printer-snmpv3-not-set"></a>"Set the SNMP v3 account in Settings › Printers › Connecting first." | **v3** is picked with no account, so a Refresh doesn't start | Set the account |
+| <a id="printers-credential-not-saved"></a>"Couldn't save the change in Windows Credential Manager: …", then "Nothing was changed." | Windows refused to save or remove the SNMP community, the SNMP v3 account or the Doc360 MPS login, so CapyPanel still uses the one it had | Try **Save** again. If it keeps failing, look for CapyPanel's entries in Control Panel › **Credential Manager** › **Windows Credentials** |
+| <a id="printer-check-stopped"></a>"Stopped: 4 printers weren't checked." | You pressed **Stop** | Refresh again |
+| <a id="supply-no-level"></a>"This printer doesn't report a level for this supply." | The printer gives no level for that supply | Check its web page |
+| <a id="supplies-not-reported"></a>"The printer doesn't report its supplies." | No supply data at all | Check its web page |
+| <a id="doc360-no-account"></a>"No Doc360 MPS account is set." | Nothing to sign in with yet | **Set the account…** |
+| <a id="doc360-login-refused"></a>"Doc360 MPS refused the login." | The partner, user name or password is wrong | **Change the account…** |
+| <a id="doc360-no-answer"></a>"Doc360 MPS didn't answer." | No network, or the portal is down | Try again later |
+| <a id="doc360-error-answer"></a>"Doc360 MPS answered with an error." | The portal answered, but with an error rather than its pages | Refresh later. If it keeps coming, sign in to the portal in a browser to see whether it works |
+| <a id="doc360-pages-changed"></a>"Doc360 MPS's pages changed, so CapyPanel couldn't read the counters." | The portal was rebuilt | CapyPanel needs an update for the new pages |
+| <a id="doc360-serial-not-listed"></a>"Doc360 MPS doesn't list serial SAMPLE0011." | The portal has no printer with that serial | Check the serial number |
+| <a id="doc360-no-total"></a>"Doc360 MPS has no total for this printer." | The portal lists the printer, but has no total page count for it yet | Check the printer in the portal: Doc360 MPS fills in its counts on its own schedule |
+| <a id="doc360-serial-missing"></a>"Add the printer's serial number: Doc360 MPS lists printers by serial." | Your list has no serial for this printer | Add it with **Edit selected…** |
+| <a id="doc360-month-not-counted"></a>"⚠ From October 2026: Doc360 MPS has no counts for this month yet. Check the portal before using this number." | Early in a month, the count is last month's | Check the portal before using the number |

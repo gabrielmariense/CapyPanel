@@ -20,7 +20,7 @@ de usuário nos PCs que eu escolher"; o **Cancelar** deixa você onde estava. De
 ferramenta num PC de exemplo com perfis inventados; o **Ajuda > Guia desta tela** mostra o guia de
 novo.
 
-## Escanear os perfis de um PC
+## Escanear os perfis de um PC <a id="profiles-scan-a-pcs-profiles"></a>
 
 ![A aba Hosts: os hosts do grupo escolhido com status, perfis, quantos podem ser excluídos e o escaneamento; Andamento e o host selecionado à direita](../images/profiles-hosts-tab-dark-pt-BR.png)
 
@@ -53,19 +53,21 @@ contam.
       como no Hosts.
     - À direita, o **Andamento** acompanha cada host numa aba, como em "4 hosts em abas · 2
       trabalhando · 2 concluídos". Embaixo dele, **Hosts exibidos** resume o grupo escolhido, e
-      **Marcados nas abas** lista os hosts com perfis marcados; um clique vai para a aba dele. Com um
-      host escolhido, o cartão mostra o **Endereço**, o **Grupo**, o **Escaneado às** e o **Como**,
-      a conta.
+      **Marcados nas abas** lista os hosts com perfis marcados; um clique vai para a aba dele.
+      Quando um cartão tem mais linhas do que cabem, a última, como **e mais 3…**, é um link: o menu
+      dele lista o resto com a situação de cada um, e escolher um faz o mesmo que um clique na linha
+      dele. Com um host escolhido, o cartão mostra o **Endereço**, o **Grupo**, o **Escaneado às** e
+      o **Como**, a conta.
     - O painel de grupos aqui é só leitura: os grupos são criados no Hosts.
     - As abas nunca se reordenam sozinhas: uma nova abre na ponta direita, e o **▾** no fim da barra
-      de abas lista todas. O botão direito numa aba oferece **Fechar**, **Fechar as outras** e
-      **Fechar as concluídas**; um clique do meio também fecha uma, e o **Ctrl+W** e o
-      **Ctrl+Shift+W** fecham a aba da frente, como no SSH. Uma aba não pode ser fechada enquanto
-      está excluindo.
+      de abas lista todas; quando elas não cabem, as setas ao lado rolam a barra. O botão direito
+      numa aba oferece **Fechar**, **Fechar as outras** e **Fechar as concluídas**; um clique do
+      meio também fecha uma, e o **Ctrl+W** e o **Ctrl+Shift+W** fecham a aba da frente, como no
+      SSH. Uma aba não pode ser fechada enquanto está excluindo.
     - Até quatro hosts são lidos ou calculados ao mesmo tempo, somando todas as abas; os outros
       aguardam a vez.
 
-## Ver quais perfis podem ser excluídos
+## Ver quais perfis podem ser excluídos <a id="profiles-see-which-profiles-can-be-deleted"></a>
 
 ![A aba de um host: os filtros, a tabela de perfis com três linhas marcadas contornadas em âmbar, e Marcados para excluir à direita](../images/profiles-host-tab-dark-pt-BR.png)
 
@@ -107,14 +109,16 @@ antigos primeiro, ponha o **Sem uso há:** em 3 ou 6 meses, ou um ano.
     conta; provavelmente foi apagada." avisa quando a conta não existe mais. O **Marcar para
     excluir**, no pé dela, marca a linha dali mesmo.
 
-## Calcular o tamanho deles
+## Calcular o tamanho deles <a id="profiles-count-their-size"></a>
 
 Clique em **Calcular tamanhos** na barra de ferramentas: ele calcula o tamanho de cada perfil
 exibido, e só lê. O **Parar o cálculo** para na hora, mantendo os tamanhos já calculados.
 
-## Excluir perfis
+## Excluir perfis <a id="profiles-delete-profiles"></a>
 
-1. **Marque** os perfis a excluir: a caixa, o **Espaço**, ou um clique duplo na linha. Uma linha
+1. **Marque** os perfis a excluir: a caixa, dois cliques na linha ou o **Espaço** nas linhas
+   selecionadas. Selecione várias com Ctrl ou Shift e um clique, Shift e as setas, ou Ctrl+A; o
+   Espaço então marca todas, ou desmarca quando todas já estão marcadas. Uma linha
    marcada fica contornada em âmbar e diz **Será excluído**; o cartão **Marcados para excluir** à
    direita os lista com o total, como "3 perfis · 12,4 GB".
 2. Clique em **Excluir 3 perfis…**, no pé do painel da direita ou na barra de ferramentas.
@@ -152,14 +156,14 @@ junto: não há lixeira nem cópia."
     pedida também pelo WMI (veja
     [Como o CapyPanel lê outros PCs](../hosts/checking.pt-BR.md#ler-os-dados-de-um-pc)).
 
-## Mensagens que você pode ver
+## Mensagens que você pode ver <a id="profiles-messages-you-may-see"></a>
 
 Quando um host não pode ser lido, a aba dele diz o motivo em vermelho, com o **Tentar de novo**.
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| "{host} não respondeu" | O PC está desligado ou inacessível | Confira se está ligado, e **Tentar de novo** |
-| "{host} recusou a conta {account}" | A conta não é aceita lá | **Tentar outra conta…** |
-| "O PowerShell não abriu no seu PC" | O seu próprio PC barrou o PowerShell, muitas vezes um antivírus | Veja [Como o CapyPanel lê outros PCs](../hosts/checking.pt-BR.md#ler-os-dados-de-um-pc) |
-| "{host} aguarda a vez" | Quatro hosts já estão sendo lidos ou calculados | Nada: ele começa sozinho |
-| "Nenhum host da lista com “…”." | O nome que você digitou não está na lista | **Escanear** assim mesmo, com o botão oferecido |
+| <a id="profiles-host-no-answer"></a>"{host} não respondeu" | O PC está desligado ou inacessível | Confira se está ligado, e **Tentar de novo** |
+| <a id="profiles-account-refused"></a>"{host} recusou a conta {account}" | A conta não é aceita lá | **Tentar outra conta…** |
+| <a id="profiles-powershell-blocked"></a>"O PowerShell não abriu no seu PC" | O seu próprio PC barrou o PowerShell, muitas vezes um antivírus | Veja [Como o CapyPanel lê outros PCs](../hosts/checking.pt-BR.md#ler-os-dados-de-um-pc) |
+| <a id="profiles-host-waiting"></a>"{host} aguarda a vez" | Quatro hosts já estão sendo lidos ou calculados | Nada: ele começa sozinho |
+| <a id="profiles-search-no-match"></a>"Nenhum host da lista com “…”." | O nome que você digitou não está na lista | **Escanear** assim mesmo, com o botão oferecido |

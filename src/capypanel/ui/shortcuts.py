@@ -44,6 +44,7 @@ class KeyCommand:
     where: str
     default: str = ""
     name: Callable[[], str] | None = None
+    fixed: bool = False  # its key never changes: Help for this screen's F1
 
 
 @dataclass
@@ -55,6 +56,7 @@ class Row:
     places: list[str] = field(default_factory=list)  # tool ids, or EVERYWHERE
     actions: list[QAction] = field(default_factory=list)
     named: Callable[[], str] | None = None  # its fixed name, when its action's text changes
+    fixed: bool = False  # shown with its key, greyed; nobody changes it
 
     def name(self) -> str:
         """The command's name as its menus have it, without the access key's &."""
@@ -141,6 +143,7 @@ class Keys:
                 row.places.append(command.where)
             row.actions.append(command.action)
             row.named = row.named or command.name
+            row.fixed = row.fixed or command.fixed
         self.rows = list(rows.values())
         if self._split_old_shared(rows):
             self._save()
@@ -164,7 +167,7 @@ class Keys:
 
     def key(self, row: Row) -> str:
         """Its key now, in portable text, or ""."""
-        own = self._own().get(row.id)
+        own = None if row.fixed else self._own().get(row.id)
         return own if isinstance(own, str) else row.default
 
     def clash(self, row: Row, keys: str) -> Row | None:
@@ -178,6 +181,8 @@ class Keys:
 
     def set(self, row: Row, keys: str) -> None:
         """Gives `row` the key `keys` ("" for none); a command that had it loses it."""
+        if row.fixed:
+            return
         keys = portable(keys) if keys else ""
         other = self.clash(row, keys) if keys else None
         if other is not None:

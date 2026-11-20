@@ -23,7 +23,6 @@ from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QMainWindow,
-    QMessageBox,
     QStackedWidget,
     QToolButton,
     QVBoxLayout,
@@ -33,11 +32,11 @@ from PySide6.QtWidgets import (
 from capypanel import __version__
 from capypanel.core import settings
 from capypanel.core.i18n import _, pgettext
-from capypanel.ui import language, spacing
+from capypanel.ui import help_links, language, spacing
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.guides import Guide, GuideRunner, Step, on_screen, seen_from
 from capypanel.ui.icons import tabler_icon
-from capypanel.ui.main_window.actions import create_actions, retranslate_actions
+from capypanel.ui.main_window.actions import FIXED, create_actions, retranslate_actions
 from capypanel.ui.main_window.home import HomePage
 from capypanel.ui.main_window.rail import ToolRail
 from capypanel.ui.main_window.tool import Tool, ToolKind
@@ -95,14 +94,10 @@ class MainWindow(QMainWindow):
         self._quitting = False  # Quit CapyPanel: the X's choice isn't asked
         self._notified_by: str | None = None  # the tool behind the last notification
         self._page_of: dict[str, QWidget] = {}  # each tool's page: its toolbar and the tool
-        for make in tools:
-            self._add_tool(make(self))
-        self._shown: str | None = None  # the tool shown; None: Home
-        self.home = HomePage(self._infos())
-        self.home.tool_picked.connect(self.show_tool)
-        self._pages.insertWidget(0, self.home)
 
         # The rail runs down the left edge; the tool shown, its toolbar on top, fills the rest.
+        # This frame comes before the tools: a widget put into a styled one is restyled whole,
+        # so each tool goes in once, into its place, not up through four layers (0.09 s).
         central = QWidget()
         row = QHBoxLayout(central)
         row.setContentsMargins(0, 0, 0, 0)
@@ -110,6 +105,14 @@ class MainWindow(QMainWindow):
         row.addWidget(self.rail)
         row.addWidget(self._pages, 1)
         self.setCentralWidget(central)
+
+        self._building = True  # the tools' lists wait to be filled until one is shown
+        for make in tools:
+            self._add_tool(make(self))
+        self._shown: str | None = None  # the tool shown; None: Home
+        self.home = HomePage(self._infos())
+        self.home.tool_picked.connect(self.show_tool)
+        self._pages.insertWidget(0, self.home)
 
         self.updater = Updater(self.prefs, self.save_prefs, self.paths.company_tools_dir, self)
         self._update_shown = ""  # the version whose window opened in this run: once is enough
@@ -133,18 +136,19 @@ class MainWindow(QMainWindow):
         start = start if isinstance(start, str) and start in self.tools else None
         if start is not None and self.tools[start].first_use_pending():
             start = None  # its warning comes first, from Home, once the window shows
+        self._building = False
         self._show(start)
 
     def _add_tool(self, tool: Tool) -> None:
         tool_id = tool.TOOL_ID
         self.tools[tool_id] = tool
         page = QWidget()
+        self._pages.addWidget(page)  # in place first: the tool is restyled once, going in
         column = QVBoxLayout(page)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(0)
         column.addWidget(tool.toolbar)
         column.addWidget(tool, 1)
-        self._pages.addWidget(page)
         self._page_of[tool_id] = page
         self.rail.add_tool(tool_id, tool.ICON)
         action = QAction(self)
@@ -168,6 +172,13 @@ class MainWindow(QMainWindow):
         """None while Home is shown."""
         return None if self._shown is None else self.tools[self._shown]
 
+    def help_place(self) -> str:
+        """Where F1, the rail's ? and Help › Help for this screen open the docs: the shown
+        tool's part, or Home's in Getting started."""
+        tool = self.shown_tool()
+        # A tool with no place of its own yet opens the nearest: Getting started's Home part.
+        return (tool.help_place() if tool is not None else "") or "start-run-capypanel"
+
     def show_tool(self, tool_id: str) -> bool:
         """False when the tool's first-use warning was cancelled: the window stays where it was."""
         self._show(tool_id)
@@ -190,6 +201,8 @@ class MainWindow(QMainWindow):
         self._shown = tool_id
         tool = self.shown_tool()
         self._pages.setCurrentWidget(self.home if tool_id is None else self._page_of[tool_id])
+        if tool is not None:
+            tool.came_to_front()  # its lists, if they waited while another tool was shown
         self.rail.show_tool(tool_id)
         self._home_action.setChecked(tool_id is None)
         for action in self._tool_list_actions():
@@ -217,6 +230,11 @@ class MainWindow(QMainWindow):
         return next(a for a in self._tool_list_actions() if a.data() == tool_id)
 
     # ---- what tools ask of the shell ----
+
+    def fills_now(self, tool_id: str) -> bool:
+        # Lists behind another tool wait: with 480 hosts, SSH's and Profile cleanup's cost about
+        # a tenth of a second at every start, and again at every change made in Hosts.
+        return not self._building and self._shown == tool_id
 
     def tool_prefs(self, tool_id: str, *, inherit: bool = False) -> dict[str, Any]:
         return settings.tool_prefs(self.prefs, tool_id, inherit=inherit)
@@ -274,7 +292,7 @@ class MainWindow(QMainWindow):
         bar.addMenu(self._view_menu)
         self._help_menu = bar.addMenu("")
         self._help_menu.addActions(
-            [a.show_guide, a.show_all_guides, a.documentation, a.report_problem]
+            [a.show_guide, a.show_all_guides, a.help_screen, a.documentation, a.report_problem]
         )
         self._help_menu.addSeparator()
         self._help_menu.addActions([a.check_updates, a.about])
@@ -321,6 +339,8 @@ class MainWindow(QMainWindow):
         a.settings.triggered.connect(lambda: self.open_settings())
         a.exit.triggered.connect(self.close)
         a.documentation.triggered.connect(self._open_docs)
+        a.help_screen.triggered.connect(lambda: help_links.open_place(self.help_place()))
+        self.rail.help_button.clicked.connect(a.help_screen.trigger)
         a.report_problem.triggered.connect(self._report_problem)
         a.about.triggered.connect(lambda: self.open_settings("about"))  # About is a page there
         a.check_updates.triggered.connect(lambda: self.open_updates())
@@ -378,9 +398,11 @@ class MainWindow(QMainWindow):
 
     def _rail_tips(self) -> None:
         """The rail's tips, each with its command's key as it is now (Settings › Keyboard
-        shortcuts changes them): Home's, Settings' and each tool's."""
-        home = self._home_action
+        shortcuts changes them): Home's, the ?'s, Settings' and each tool's."""
+        home, help_words = self._home_action, _("Help for this screen")
         self.rail.home_button.setToolTip(key_tip(plain(label(home)), home))
+        self.rail.help_button.setToolTip(key_tip(help_words, self.commands.help_screen))
+        self.rail.help_button.setAccessibleName(help_words)  # no &, so it isn't read aloud
         self.rail.settings_button.setToolTip(key_tip(_("Settings"), self.commands.settings))
         for tool_id in self.tools:
             self._rail_tip(tool_id)
@@ -438,7 +460,8 @@ class MainWindow(QMainWindow):
         Help…), then each tool's."""
         a = self.commands
         own = [getattr(a, f.name) for f in fields(a)]
-        made = [KeyCommand(f"app.{f.name}", action, EVERYWHERE, portable(action.shortcut()))
+        made = [KeyCommand(f"app.{f.name}", action, EVERYWHERE, portable(action.shortcut()),
+                           fixed=f.name in FIXED)
                 for f, action in zip(fields(a), own, strict=True)]  # fmt: skip
         for action in [self._home_action, *self._tool_list_actions()]:
             place = "home" if action is self._home_action else str(action.data())
@@ -451,9 +474,9 @@ class MainWindow(QMainWindow):
         try:
             self.updater.set_how_often(how)
         except OSError as e:
-            dialog.general.show_updates(self.updater.how_often())
+            dialog.show_updates(self.updater.how_often())
             text = _("Couldn't save how often to check: {error}").format(error=e)
-            QMessageBox.warning(dialog, _("Settings"), text)
+            help_links.warning(dialog, _("Settings"), text, place="settings-updates-not-saved")
 
     def _set_start(self, start: str) -> None:
         self.prefs[settings.START_KEY] = start
@@ -674,17 +697,19 @@ class MainWindow(QMainWindow):
                        "You can see which are on and who's signed in, connect to them, run "
                        "commands and check the toner. These cards show you around."),
                      lambda: None),
-                Step(_("Three tools"),
-                     _("Hosts is for computers, Printers for printers, and Profile cleanup "
-                       "clears old Windows profiles off a PC. Each tile opens its tool."),
+                Step(_("Four tools"),
+                     _("Hosts is for computers, Printers for printers, Profile cleanup clears "
+                       "old Windows profiles off a PC, and SSH opens a terminal on your servers "
+                       "and switches. Each tile opens its tool."),
                      lambda: home.tiles, lambda: home),
                 Step(_("The sidebar"),
-                     _("This bar stays here on every screen. Home is at the top, Settings at the "
-                       "bottom, and the tools in between."), lambda: rail),
+                     _("This bar stays here on every screen. Home is at the top, the ? for help "
+                       "and Settings at the bottom, and the tools in between."), lambda: rail),
                 Step(_("Help"),
-                     _("To see this guide again, use Help › Guide to this screen. Show all the "
-                       "guides again brings every guide back, and Documentation opens the "
-                       "step-by-step pages."),
+                     _("F1, or the ? in the sidebar, opens help for the screen you're on. To see "
+                       "this guide again, use Help › Guide to this screen. Show all the guides "
+                       "again brings every guide back, and Documentation opens the step-by-step "
+                       "pages."),
                      lambda: None, lambda: home, area=help_title),
             ]  # fmt: skip
 

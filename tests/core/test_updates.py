@@ -8,6 +8,8 @@ import io
 import os
 import ssl
 import stat
+import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -473,6 +475,16 @@ def test_github_s_certificate_is_checked_by_windows_with_the_host_name(
     (context,) = contexts
     assert isinstance(context, truststore.SSLContext)
     assert context.verify_mode == ssl.CERT_REQUIRED and context.check_hostname
+
+
+def test_a_start_leaves_truststore_for_the_first_question_to_github() -> None:
+    # Importing it asks Windows (WMI) which system it runs on: about 50 ms of every start when
+    # it came with the module. Its own process, as at start: this one imported it long ago.
+    code = "import sys, capypanel.ui.app; from capypanel.ui.tool_catalog import CATALOG; "
+    code += "[info.load() for info in CATALOG]; print('truststore' in sys.modules)"
+    done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=60)
+    assert done.returncode == 0, done.stderr
+    assert done.stdout.strip() == "False"
 
 
 def test_how_often_is_one_choice_for_the_whole_pc(tmp_path: Path) -> None:

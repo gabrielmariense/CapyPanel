@@ -3,7 +3,7 @@
 O CapyPanel vem num zip: descompacte e rode o **CapyPanel.exe**. Não há instalador e você não
 precisa de direitos de administrador. Ele roda no Windows 10 22H2 ou no Windows 11, de 64 bits.
 
-## Baixar o CapyPanel
+## Baixar o CapyPanel <a id="download-get-capypanel"></a>
 
 1. Abra a [versão mais recente](https://github.com/gabrielmariense/CapyPanel/releases/latest) no
    GitHub.
@@ -55,7 +55,7 @@ serão assinadas está na [Política de assinatura de código (Code signing poli
     ou pela barra de tarefas, traz a janela aberta para a frente, inclusive da bandeja. Cada pessoa
     conectada ao PC pode rodar a sua.
 
-## Atualizar o CapyPanel
+## Atualizar o CapyPanel <a id="download-update-capypanel"></a>
 
 Quando o CapyPanel encontra sozinho uma versão mais nova, uma janela com o título **CapyPanel**
 abre sozinha, uma vez por execução, com **Atualização disponível** no topo, e um botão **Nova
@@ -124,7 +124,7 @@ a escolha é só sua. Durante o download, o **Depois** vira **Cancelar** e inter
 
     As suas configurações, listas e logins salvos nunca são mexidos.
 
-## Rodar o CapyPanel pelo código-fonte
+## Rodar o CapyPanel pelo código-fonte <a id="download-run-capypanel-from-source"></a>
 
 Para quem desenvolve, ou para testar uma mudança antes de ela sair numa versão, você precisa do
 [uv](https://docs.astral.sh/uv/), que instala o Python e todo o resto:
@@ -140,17 +140,17 @@ pelo código-fonte não se atualiza sozinha: use `git pull`. O
 [Contribuindo](https://github.com/gabrielmariense/CapyPanel/blob/main/CONTRIBUTING.pt-BR.md) tem o
 resto.
 
-## Mensagens que você pode ver
+## Mensagens que você pode ver <a id="download-messages-you-may-see"></a>
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| "Não foi possível procurar uma nova versão." | O GitHub não respondeu, ou o PC está sem internet | Tente o **Ajuda > Procurar nova versão…** mais tarde |
-| "Não foi possível procurar uma nova versão." com "Não foi possível falar com o GitHub: [SSL: CERTIFICATE_VERIFY_FAILED] … unable to get local issuer certificate", na 0.27.1 ou anterior | Essas versões só confiam nos certificados raiz que o Windows já guardou no PC, e este PC ainda não tinha guardado o de que o certificado do GitHub precisa. Da 0.28.0 em diante, o próprio Windows confere o certificado do GitHub, como o Edge faz | Abra https://api.github.com no Edge uma vez, e depois o **Ajuda > Procurar nova versão…** de novo |
-| "O download não confere com o SHA-256: foi alterado ou veio incompleto." | O zip que chegou não é o que o GitHub gerou | Clique em **Instalar e reiniciar** de novo |
-| "O CapyPanel não consegue gravar em …, então a atualização não pode ser instalada daqui. Abra Notas no GitHub, baixe o zip e descompacte-o no lugar desta cópia.", em cinza embaixo dos links, sem o **Instalar e reiniciar** | A sua conta não pode gravar na própria pasta do CapyPanel, como uma dentro de Arquivos de Programas | Descompacte a versão nova por cima da antiga você mesmo, ou mova o CapyPanel para uma pasta em que você possa gravar |
-| "Esta cópia roda a partir do código-fonte: atualize com o git, ou baixe o zip na página da versão." | Você abriu o CapyPanel com o `uv run` | `git pull`, ou passe a usar o zip |
-| "A versão nova não passou no autoteste" | A versão baixada falhou na própria conferência, então nada foi mudado | Tente o **Instalar e reiniciar** de novo mais tarde; use o **Relatar um problema** se continuar falhando |
-| "A atualização para a 0.28.1 não foi instalada." e "Você continua com o CapyPanel 0.28.0.", e depois o motivo | A versão nova não abriu, então a antiga voltou | Leia o motivo; use o **Relatar um problema** se não ficar claro |
-| "Não foi possível colocar a versão nova no lugar: …" como motivo | Outro programa estava com um arquivo do CapyPanel aberto, então a atualização parou sem mudar nada | Feche o que estiver com o arquivo, como um CapyPanel em outra sessão do Windows, e atualize de novo |
-| "1 conexão SSH ainda está aberta numa janela separada. Feche-a e depois instale a atualização." | Essa janela roda da pasta do CapyPanel, então os arquivos não podem ser trocados enquanto ela estiver aberta | Feche a janela e clique em **Instalar e reiniciar** de novo |
-| "O CapyPanel já está em execução para EXAMPLE\user, mas não foi possível trazer a janela dele para a frente: …" | A sua outra cópia está aberta em outra sessão do Windows, ou não está respondendo | Feche-a por lá, ou finalize-a no Gerenciador de Tarefas, e abra o CapyPanel de novo |
+| <a id="update-check-failed"></a>"Não foi possível procurar uma nova versão." | O GitHub não respondeu, ou o PC está sem internet | Tente o **Ajuda > Procurar nova versão…** mais tarde |
+| <a id="update-certificate-error"></a>"Não foi possível procurar uma nova versão." com "Não foi possível falar com o GitHub: [SSL: CERTIFICATE_VERIFY_FAILED] … unable to get local issuer certificate", na 0.27.1 ou anterior | Essas versões só confiam nos certificados raiz que o Windows já guardou no PC, e este PC ainda não tinha guardado o de que o certificado do GitHub precisa. Da 0.28.0 em diante, o próprio Windows confere o certificado do GitHub, como o Edge faz | Abra https://api.github.com no Edge uma vez, e depois o **Ajuda > Procurar nova versão…** de novo |
+| <a id="update-sha256-mismatch"></a>"O download não confere com o SHA-256: foi alterado ou veio incompleto." | O zip que chegou não é o que o GitHub gerou | Clique em **Instalar e reiniciar** de novo |
+| <a id="update-folder-not-writable"></a>"O CapyPanel não consegue gravar em …, então a atualização não pode ser instalada daqui. Abra Notas no GitHub, baixe o zip e descompacte-o no lugar desta cópia.", em cinza embaixo dos links, sem o **Instalar e reiniciar** | A sua conta não pode gravar na própria pasta do CapyPanel, como uma dentro de Arquivos de Programas | Descompacte a versão nova por cima da antiga você mesmo, ou mova o CapyPanel para uma pasta em que você possa gravar |
+| <a id="update-from-source"></a>"Esta cópia roda a partir do código-fonte: atualize com o git, ou baixe o zip na página da versão." | Você abriu o CapyPanel com o `uv run` | `git pull`, ou passe a usar o zip |
+| <a id="update-self-test-failed"></a>"A versão nova não passou no autoteste" | A versão baixada falhou na própria conferência, então nada foi mudado | Tente o **Instalar e reiniciar** de novo mais tarde; use o **Relatar um problema** se continuar falhando |
+| <a id="update-not-installed"></a>"A atualização para a 0.28.1 não foi instalada." e "Você continua com o CapyPanel 0.28.0.", e depois o motivo | A versão nova não abriu, então a antiga voltou | Leia o motivo; use o **Relatar um problema** se não ficar claro |
+| <a id="update-swap-failed"></a>"Não foi possível colocar a versão nova no lugar: …" como motivo | Outro programa estava com um arquivo do CapyPanel aberto, então a atualização parou sem mudar nada | Feche o que estiver com o arquivo, como um CapyPanel em outra sessão do Windows, e atualize de novo |
+| <a id="update-ssh-windows-open"></a>"1 conexão SSH ainda está aberta numa janela separada. Feche-a e depois instale a atualização." | Essa janela roda da pasta do CapyPanel, então os arquivos não podem ser trocados enquanto ela estiver aberta | Feche a janela e clique em **Instalar e reiniciar** de novo |
+| <a id="update-already-running"></a>"O CapyPanel já está em execução para EXAMPLE\user, mas não foi possível trazer a janela dele para a frente: …" | A sua outra cópia está aberta em outra sessão do Windows, ou não está respondendo | Feche-a por lá, ou finalize-a no Gerenciador de Tarefas, e abra o CapyPanel de novo |
