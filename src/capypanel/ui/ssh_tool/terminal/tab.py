@@ -1,6 +1,5 @@
-"""A connection's tab: the terminal and, once the connection ends, a message strip at its foot
-that says so, with Reconnect and Close tab. The strip is Hosts' result strip after a command:
-red with a cross and "What does this mean?" after an error, grey after a normal end."""
+"""A connection's tab: the terminal and, once the connection ends, a strip at its foot saying so,
+with Reconnect and Close tab: Hosts' result strip, red after an error, grey after a clean end."""
 
 from collections.abc import Mapping, Sequence
 
@@ -21,9 +20,8 @@ HELP_PLACE = "ssh-when-a-connection-ends"  # after an error: what each ending me
 
 
 class EndedBar(QFrame):
-    """CapyPanel's message strip (#resultStrip, drawn by the theme), with the words, Reconnect
-    (the default, Enter) and Close tab. Its colours come from the theme's roles, never the
-    terminal's palette. It stays at the tab's foot, never a window, and its words wrap."""
+    """CapyPanel's message strip (#resultStrip) with the words, Reconnect (the default, Enter) and
+    Close tab, in the theme's colours, never the terminal's; at the tab's foot, words wrapping."""
 
     reconnect = Signal()
     close_tab = Signal()
@@ -105,9 +103,8 @@ class EndedBar(QFrame):
 
 
 class TerminalTab(QWidget):
-    """The terminal and, once its connection ends, the strip at its foot. `changed` comes when
-    the connection starts or ends, for the tab's mark; `close_asked` when the strip's Close tab
-    is pressed."""
+    """The terminal and, once its connection ends, the strip at its foot. `changed`: the connection
+    started or ended, for the tab's mark; `close_asked`: the strip's Close tab was pressed."""
 
     changed = Signal()
     close_asked = Signal()

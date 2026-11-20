@@ -1,7 +1,5 @@
-"""The SSH host Details panel: its status, two buttons (Connect first, then Refresh), then
-Connection (address, port, the name to log in as, group), Tags and Notes; each part can be
-hidden. Labels sit beside their values, as in Hosts and Printers. Log in as is a picker, as
-Hosts' Commands run as is: a click opens its menu, which the tool fills."""
+"""The SSH host Details panel: status, Connect and Refresh, then Connection (address, port, Log
+in as, group), Tags and Notes, each part hideable. Log in as is a picker the tool fills."""
 
 from dataclasses import dataclass
 

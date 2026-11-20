@@ -1,22 +1,5 @@
-r"""Keys for the pseudo console, in the form the console asked for.
-
-Windows 11's console asks for win32-input-mode at start (ESC[?9001h): each key goes as a Windows
-key event, ESC [ Vk ; Sc ; Uc ; Kd ; Cs ; Rc _ (`encode`), and the console encodes it by the
-program's own modes: Up is ESC[A normally and ESC O A after the program's ESC[?1h. The console
-doesn't pass that mode on to us, so sending plain text for keys would give vim and less the
-wrong arrows. Qt hands over each key's virtual key, scan code, text and modifiers; Windows' own
-tables do the rest.
-
-Windows 10's console is older and never asks. It reads a key event as a sequence it doesn't know
-and drops it, so nothing typed reached ssh.exe there (his Windows 10 test, build 631). For a
-console that never asked, each key goes down as text and xterm's sequences (`encode_text`),
-which that console reads into key events of its own; a key going up sends nothing.
-
-Rules of our own, each for a reason:
-- A dead key sends nothing; the key after it brings the composed text (~ then a gives "ã").
-- AltGr is Ctrl+Alt to Windows. When a key with both down gives printable text, the Ctrl and Alt
-  bits are dropped, so AltGr+Q's "/" isn't read as Ctrl+Alt+/.
-- Alt alone keeps its bit, so the console sends ESC and the letter (Alt+B, Alt+F in bash)."""
+"""Keys for the pseudo console, as it asked: Windows key events (win32-input-mode, `encode`) on
+Windows 11; text and xterm's sequences (`encode_text`) where it never asks (Windows 10)."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent
@@ -71,7 +54,7 @@ def is_dead_key(event: QKeyEvent) -> bool:
 
 def encode(event: QKeyEvent, down: bool) -> bytes:
     """The bytes for one key going down or up; b"" for a key that sends nothing."""
-    if is_dead_key(event):
+    if is_dead_key(event):  # the next key brings the composed text: ~ then a gives "ã"
         return b""
     vk = event.nativeVirtualKey()
     sc = event.nativeScanCode()
@@ -89,9 +72,8 @@ def encode(event: QKeyEvent, down: bool) -> bytes:
     return f"\x1b[{vk};{sc};{uc};{1 if down else 0};{state};1_".encode("ascii")
 
 
-# Keys with no text, as xterm sends them. Cursor keys: CSI and a letter, or SS3 and the letter in
-# the program's application mode. F1 to F4: SS3 and a letter. The rest: CSI, a number and ~.
-# A modifier makes them CSI 1 ; m letter or CSI n ; m ~, m being 1 + Shift 1 + Alt 2 + Ctrl 4.
+# Keys with no text, as xterm sends them: cursor keys CSI or (application mode) SS3 and a letter,
+# F1 to F4 SS3 and a letter, the rest CSI n ~; a modifier m goes in as CSI 1 ; m x or CSI n ; m ~.
 _CURSOR = {int(k): c for k, c in ((Qt.Key.Key_Up, "A"), (Qt.Key.Key_Down, "B"),
            (Qt.Key.Key_Right, "C"), (Qt.Key.Key_Left, "D"), (Qt.Key.Key_Home, "H"),
            (Qt.Key.Key_End, "F"))}  # fmt: skip
@@ -106,8 +88,7 @@ _KEY_A, _KEY_Z = int(Qt.Key.Key_A), int(Qt.Key.Key_Z)
 
 def encode_text(event: QKeyEvent, *, app_cursor: bool = False) -> bytes:
     """The bytes for one key going down, as text and xterm's sequences, for a console that never
-    asked for key events; b"" for a key that sends nothing. `app_cursor`: the program's ESC[?1h
-    reached the screen."""
+    asked for key events; b"" when it sends nothing. `app_cursor`: the program sent ESC[?1h."""
     if is_dead_key(event):
         return b""
     key = int(event.key())
