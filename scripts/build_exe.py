@@ -1,15 +1,5 @@
-"""Builds the download: dist/CapyPanel/ (CapyPanel.exe and its libraries), then
-dist/CapyPanel-<version>-windows-x64.zip and the zip's SHA-256 beside it.
-
-    uv sync --locked --group build
-    uv run python scripts/build_exe.py
-
-The GitHub Actions release job runs exactly this from the version's tag. The steps:
-1. write build.txt (version, build number, commit) and the exe's Windows version info;
-2. PyInstaller, by packaging/capypanel.spec;
-3. the built exe's own self-test (`CapyPanel.exe --self-test`): no zip unless it passes;
-4. the zip, with one folder "CapyPanel" inside, and its SHA-256.
-"""
+"""Builds the download: dist/CapyPanel/, then its zip and the zip's SHA-256 beside it.
+`uv run python scripts/build_exe.py`; no zip unless the built exe's self-test passes."""
 
 import hashlib
 import os
@@ -90,9 +80,8 @@ def main() -> int:
     info = WORK / "version_info.txt"
     info.write_text(version_info(version, number, capypanel.BUILD), encoding="utf-8")
 
-    # PyInstaller looks for the libraries a program needs along PATH, and would take Windows'
-    # C runtime or OpenSSL from whichever program's folder comes first there (a Java, a Git).
-    # With only Windows' own folders on it, they come from Python and Windows themselves.
+    # PyInstaller looks for libraries along PATH and would take a C runtime or OpenSSL from any
+    # program's folder there; with only Windows' own folders, they come from Python and Windows.
     windows = Path(os.environ["SYSTEMROOT"])
     env = {
         **os.environ,
@@ -114,7 +103,7 @@ def main() -> int:
     quiet = {
         **os.environ,
         "PYINSTALLER_SUPPRESS_SPLASH_SCREEN": "1",
-    }  # no splash on this PC's screen
+    }
     tested = subprocess.run(
         [str(exe), "--self-test", str(report)], timeout=300, check=False, env=quiet
     )

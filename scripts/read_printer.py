@@ -30,7 +30,7 @@ number per line, to find which one matches the version on the printer's web page
 which number matches: the lines are printed as the printer gives them (its own serial number is
 replaced by <serial>), so keep them on this PC."""
 
-# Brand data areas checked by --brand-data (the brand's own objects, outside the standard ones).
+# For --brand-data: each brand's own objects, outside the standard ones.
 RICOH_TONER = "1.3.6.1.4.1.367.3.2.1.2.24.1"  # ricohEngTonerTable, every column
 RICOH_SERIAL = reading.RICOH_SERIAL
 BROTHER_MAINTENANCE = reading.BROTHER_MAINTENANCE.removesuffix(".0")  # and anything beside it

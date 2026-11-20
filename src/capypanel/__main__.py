@@ -57,9 +57,8 @@ def _self_test(report: Path) -> int:
 
 
 def _apply_update(app_dir: Path, pid: int, old_version: str, new_version: str) -> int:
-    """The new version's exe, run from where its zip was unpacked: swaps it in for the old
-    one once CapyPanel has closed, with the splash and "Updating to …" on screen meanwhile. It
-    writes to the person's own log."""
+    """The new version's exe, run from where its zip was unpacked: swaps it in for the old one once
+    CapyPanel has closed, with "Updating to …" on the splash. It writes to the person's own log."""
     from capypanel.core import applog, i18n, settings, updates
 
     paths = settings.resolve_paths(app_dir)

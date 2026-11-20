@@ -1,8 +1,5 @@
-# PyInstaller's recipe for CapyPanel.exe. Run through scripts/build_exe.py, which makes the two
-# files named by the environment variables below and zips what comes out.
-#
-# One folder, not one file: a one-file exe unpacks itself into Temp on every start, which is
-# slower and what antivirus on company PCs flags most. No UPX either, for the same reason.
+# PyInstaller's recipe for CapyPanel.exe, run by scripts/build_exe.py. One folder and no UPX:
+# a one-file exe unpacks into Temp at every start, slower and what antivirus flags most.
 
 import os
 import sys
@@ -15,23 +12,20 @@ from capypanel.core.i18n import LANGUAGES
 
 ROOT = Path(SPECPATH).parent  # noqa: F821 -- PyInstaller gives the spec its own folder
 STAMP = Path(os.environ["CAPYPANEL_STAMP"])  # build.txt: version, build number, commit
-VERSION_INFO = os.environ["CAPYPANEL_VERSION_INFO"]  # what the exe's Properties > Details says
-# The splash: Dante's picture (B, Gabriel's pick), shown by the launcher the moment the exe
-# starts, before Python and Qt load, with the version under the name. The launcher places text
-# by its lower-left corner, so build_exe.py measures it to centre it.
+VERSION_INFO = os.environ["CAPYPANEL_VERSION_INFO"]
+# The splash shows before Python and Qt load. Its launcher places text by its lower-left
+# corner, so build_exe.py measures the version line to centre it.
 SPLASH_TEXT = os.environ["CAPYPANEL_SPLASH_TEXT"]
 SPLASH_X = int(os.environ["CAPYPANEL_SPLASH_X"])
 SPLASH_BASELINE = 272
 
-# Everything in the package that isn't code: translations, themes, icons, licenses, presets,
-# and the authors of the code it carries (capypanel/vendor). Named by kind, so a tool's cache or
-# a stray file in the source folder never comes along.
+# The package's data files, named by kind so a tool's cache or a stray file in the source
+# folder never comes along.
 KINDS = ("mo", "json", "svg", "png", "ico", "txt")
 datas = collect_data_files("capypanel", includes=[f"**/*.{kind}" for kind in KINDS])
 datas += collect_data_files("capypanel", includes=["**/LICENSE", "**/AUTHORS"])
 datas += [(str(STAMP), "capypanel")]
-# The console engine the terminal starts on Windows 10, Microsoft's signed files as they are
-# (capypanel/vendor/conpty): its LICENSE and record come with the patterns above.
+# The console engine the terminal uses on Windows 10: Microsoft's signed files, as they are.
 CONPTY = ROOT / "src" / "capypanel" / "vendor" / "conpty"
 datas += [
     (str(CONPTY / name), "capypanel/vendor/conpty")
@@ -50,11 +44,8 @@ analysis = Analysis(  # noqa: F821
     excludes=["tkinter", "unittest", "pydoc", "doctest", "win32ui", "dde"],
     noarchive=False,
 )
-# Parts of Qt that come along and CapyPanel never loads, a third of the folder: the software
-# OpenGL driver, the on-screen keyboard with the QML engine it brings, the PDF reader, Qt's
-# OpenSSL plugin (CapyPanel's web requests are Python's) and Qt's own words in the languages
-# CapyPanel doesn't have. The built exe's self-test (ui/selftest.py) checks that what it does
-# need is still there.
+# Qt parts CapyPanel never loads, a third of the folder (its web requests are Python's, so
+# Qt's OpenSSL plugin goes too). The exe's self-test checks that what it needs is still there.
 UNUSED = (
     "opengl32sw.dll", "Qt6Quick", "Qt6Qml", "Qt6VirtualKeyboard", "qtvirtualkeyboardplugin",
     "Qt6Pdf", "qpdf.dll", "qopensslbackend", "mfc140u.dll",
@@ -90,11 +81,8 @@ def needed(entry: tuple[str, str, str]) -> bool:
 
 analysis.binaries = [entry for entry in analysis.binaries if needed(entry)]
 
-# Every library in the folder comes from Python itself, a package in uv.lock, Windows or the
-# console engine CapyPanel carries: never from another program that happens to be on the
-# building PC's PATH (a Java or Git folder gave this build its C runtime and its OpenSSL once).
-# build_exe.py runs this with a PATH of Windows' own folders only; this stops the build if one
-# still slips in.
+# Every library comes from Python, uv.lock's packages, Windows or the bundled console engine,
+# never from another program on the building PC's PATH: this stops the build if one slips in.
 TRUSTED = [
     Path(p).resolve() for p in (sys.base_prefix, sys.prefix, os.environ["SYSTEMROOT"], CONPTY)
 ]
@@ -122,7 +110,7 @@ exe = EXE(  # noqa: F821
     archive,
     analysis.scripts,
     splash,
-    exclude_binaries=True,  # one folder: the libraries sit beside the exe, in _internal
+    exclude_binaries=True,
     name="CapyPanel",
     icon=str(ROOT / "src" / "capypanel" / "ui" / "branding" / "capypanel.ico"),
     version=VERSION_INFO,
