@@ -1,7 +1,5 @@
-"""The window for an error nobody planned for. There is only ever one: an error that happens
-while it's open joins it, and the same error again is counted instead of shown again, so a
-fault that fires five times in a row is one window to close. The details are the point of the
-window, so they're shown at once, in a box big enough to read."""
+"""The window for an error nobody planned for: only one, which later errors join, the same one
+counted, not shown again. Its details show at once, in a box big enough to read."""
 
 import logging
 import traceback

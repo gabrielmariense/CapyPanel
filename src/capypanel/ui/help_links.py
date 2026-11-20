@@ -1,12 +1,5 @@
-"""Help from where you are (0.30). F1, or the ? at a window's bottom left (the main window's is
-in the rail, above the gear), opens the docs at that window's own part. Every warning and error
-says "What does this mean?": a link to its own line under its page's "Messages you may see",
-and a message box stays open while it's read.
-
-Every place help opens is in PLACES or TOPS, never a bare address anywhere else: the docs check
-(tests/docs/test_help_places.py, a CI job of its own) reads them and both languages' pages, and
-fails when one isn't there. The ids are the docs': an <a id> in the page source, the same in
-English and Portuguese, never changed or reused once a published CapyPanel links it."""
+"""Help from where you are: F1 or a window's ?, at its own part of the docs, and "What does this
+mean?" on every warning and error. Every place is in PLACES or TOPS, which the docs check reads."""
 
 from collections.abc import Callable
 from html import escape
@@ -35,8 +28,8 @@ LINK_KEYS = (
     Qt.TextInteractionFlag.LinksAccessibleByMouse | Qt.TextInteractionFlag.LinksAccessibleByKeyboard
 )
 
-# Each id with its page, after the docs' address. Pages open at their top when the window has no
-# part of its own: those are in TOPS.
+# Each id (an <a id> in both languages' page source, never changed or reused once released) with
+# its page, after the docs' address. A window with no part of its own opens its page's top: TOPS.
 PLACES: dict[str, str] = {
     # Home's part of Getting started
     "start-run-capypanel": "getting-started/",
@@ -167,11 +160,8 @@ def open_place(place: str) -> None:
 
 
 def link_color(palette: QPalette, on: QPalette.ColorRole = QPalette.ColorRole.Window) -> QColor:
-    """The theme's link colour where it reads on what's behind the link (`on`: the window, or
-    CARD; a strip's palette has its tint as its window, strip_anchor), else the text colour: a
-    link is underlined either way. Windows' own dark theme takes the PC's accent for links,
-    which can be a dark purple that hardly shows; the light theme's blue reads on a card (5.2:1)
-    but not on its window or a strip (3.8:1)."""
+    """The theme's link colour where it reads on what's behind it (`on`: the window or CARD; a
+    strip's palette has its tint as its window), else the text colour: links are underlined."""
     link = palette.color(QPalette.ColorRole.Link)
     if contrast_ratio(link.name(), palette.color(on).name()) >= READABLE:
         return link
@@ -182,26 +172,22 @@ def anchor(
     place: str, palette: QPalette, on: QPalette.ColorRole = QPalette.ColorRole.Window
 ) -> str:
     """ "What does this mean?" as rich text, coloured to read on `on` (link_color). A strip puts
-    it in its message's own label, so the link reads straight after the message and wraps with
-    it (Printers' warnings strip: a link label of its own beside the message squeezed it); the
-    label opens it with open_place on linkActivated."""
+    it in its message's label, to read right after it and wrap with it; open_place opens it."""
     style = f"color: {link_color(palette, on).name()}; text-decoration: underline;"
     words = escape(_("What does this mean?"))
     return f'<a href="{escape(url(place))}" style="{style}">{words}</a>'
 
 
 def strip_anchor(place: str, strip: QWidget) -> str:
-    """anchor() for a strip's message, judged on the tint the theme draws behind it: once
-    polished, the strip's own palette has that tint as its window, while its label keeps the
-    window's colour, where CapyPanel dark's blue reads though it's 3.1:1 on the strip."""
+    """anchor() for a strip's message, judged on the tint the theme draws behind it: once polished,
+    the strip's palette has that tint as its window, while its label keeps the window's colour."""
     strip.ensurePolished()
     return anchor(place, strip.palette())
 
 
 def add_link(box: QMessageBox, place: str) -> None:
-    """A warning's or error's "What does this mean?" under its text, and F1 for the same line.
-    The box stays open when it's clicked. Call it last: informative text set after it would
-    replace the link."""
+    """A warning's or error's "What does this mean?" under its text, and F1 for the same line. The
+    box stays open when it's clicked. Call it last: informative text set later replaces it."""
     before = box.informativeText()
     link = anchor(place, box.palette(), CARD)  # a box is drawn on the card colour
     if before:
@@ -246,11 +232,8 @@ def key(window: QWidget, place: Callable[[], str]) -> QShortcut:
 
 
 class HelpButton(QToolButton):
-    """The ? at a window's bottom left, first in its button row: help for this window at
-    `place()`'s part, and F1 while the window is in front. Flat and icon only, so it's the same
-    size in both languages; it never hides or greys (a window with no part of its own opens its
-    page). Its ink starts at the window's text edge, its hover box reaching into the margin:
-    on its first show it takes its place in its row (_InkOnEdge)."""
+    """The ? at a window's bottom left, first in its button row: help at `place()`'s part, and F1
+    while the window is in front: flat, icon only, never hidden or greyed. _InkOnEdge places it."""
 
     def __init__(self, place: Callable[[], str] | str, *, icon_size: int = 18) -> None:
         super().__init__()
@@ -297,9 +280,8 @@ class HelpButton(QToolButton):
 
 
 class _InkOnEdge(QWidgetItem):
-    """The ?'s place in its row, moved left by its ink's inset: the ink starts where the row
-    does, as the window's text does above it, and the hover box reaches into the margin. Never
-    past its parent's edge, which would cut the box off."""
+    """The ?'s place in its row, moved left by its ink's inset: the ink starts where the row does,
+    the hover box reaching into the margin, never past its parent's edge, which would cut it."""
 
     def setGeometry(self, rect: QRect) -> None:
         super().setGeometry(rect)
@@ -351,10 +333,8 @@ def row(help_button: HelpButton, buttons: QWidget) -> QHBoxLayout:
 
 
 class HelpLink(QLabel):
-    """ "What does this mean?" as a link to a message's line, for a strip: after the message,
-    before the strip's buttons. Tab reaches it and Enter opens it. With no place (a message that
-    worked, which has no line) it's hidden. `on`: what's behind it, CARD on a card (link_color).
-    """
+    """ "What does this mean?" linking a message's line, for a strip: after the message, before its
+    buttons; Tab reaches it, Enter opens it; hidden with no place. `on`: what's behind it."""
 
     def __init__(self, on: QPalette.ColorRole = QPalette.ColorRole.Window) -> None:
         super().__init__()

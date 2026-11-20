@@ -199,9 +199,6 @@ class AccountDialog(QDialog):
         return replace(picked, user=self.account().user) if isinstance(picked, Link) else None
 
 
-# ---- how results read ----
-
-
 def when_text(when: datetime) -> str:
     moment = QDateTime.fromSecsSinceEpoch(int(when.timestamp()), QTimeZone.systemTimeZone())
     return QLocale(i18n.language()).toString(moment, QLocale.FormatType.ShortFormat)

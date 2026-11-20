@@ -1,12 +1,5 @@
-"""First-run guides: a few small cards, each beside the real control it talks about, with a
-soft outline on that control; step dots, Back, Next, Skip. Home's guide on the very first
-start, each tool's the first time it's shown, never two at once; Help shows the one for the
-screen you're on again, and Settings › About all of them. Each guide's last card links to its
-docs page: nothing is said only in a guide.
-
-While a guide runs the rest of the window is dimmed and takes no clicks or keys: only the
-card's buttons, and the control a step asks you to click. A card whose control is out of sight
-(a hidden panel, a narrow window) still shows, beside the part of the screen it belongs to."""
+"""First-run guides: small cards beside the controls they talk about, each outlined, step dots,
+Back, Next, Skip; the rest of the window dims and takes nothing. The last card links the docs."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -318,7 +311,7 @@ class GuideRunner(QObject):
         card.dots.setText(" ".join("●" if n == at else "○" for n in range(len(self._steps))))
         card.dots.setToolTip(_("Step {n} of {total}").format(n=at + 1, total=len(self._steps)))
         # Every button's words at every step: the card is made with the window, and the language
-        # can change in Settings since (Skip and Back stayed in the first one until 0.29).
+        # can change in Settings since.
         card.back_button.setText(_("Back"))
         card.back_button.setVisible(at > 0)
         card.skip_button.setText(_("Skip"))
@@ -446,10 +439,8 @@ class GuideRunner(QObject):
         return False
 
     def _left_the_card(self, watched: QObject) -> bool:
-        """Whether the keyboard went to a control of the window outside the card (Tab). Not
-        the window itself getting the focus as it's clicked (a QWindow, no control), and never
-        with a mouse button down: taking the focus from a button being pressed un-presses it,
-        and its click was lost (Back did nothing unless the mouse moved before the release)."""
+        """Whether Tab took the keyboard to a control outside the card (not a clicked window).
+        Never with a mouse button down: taking the focus from a pressed button loses its click."""
         return (
             isinstance(watched, QWidget)
             and watched is not self.shade
@@ -480,10 +471,8 @@ def _card_spot(
     avoid: Sequence[QRect] = (),
     parts: Sequence[QRect] = (),
 ) -> QPoint:
-    """Where a card of this size goes: beside each of its `parts` first, when it outlines
-    several things apart, then beside `spot` (on its right, else under it, on its left, over
-    it), then a corner of the window. Always inside `room` and off everything in `avoid`
-    (what it points at, a panel it talks about)."""
+    """Where a card this size goes: by each of its `parts`, then by `spot` (right, under, left,
+    over), then a window corner; always inside `room` and off everything in `avoid`."""
     gap = GAP + OUTLINE
     inner = room.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN)
 

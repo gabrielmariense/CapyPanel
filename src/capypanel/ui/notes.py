@@ -1,6 +1,5 @@
-"""Small pieces every screen uses: short help under a control (a quieter line of text, or a few
-bullets in a smaller font, since long paragraphs go unread), a thin line between parts, and text
-made safe to show as rich text."""
+"""Small pieces every screen uses: short help under a control (a quieter line, or a few bullets
+in a smaller font: long paragraphs go unread), a thin line between parts, safe rich text."""
 
 import html
 

@@ -1,6 +1,5 @@
-"""Inventory > Import hosts…: paste a list or open a CSV file, check and edit the preview, then
-add. Nothing changes in the host list until "Add N hosts" is clicked. Import printers is the same
-window with the printers' columns (ui/printers_tool/import_printers.py)."""
+"""Inventory > Import hosts…: paste a list or open a CSV, check and edit the preview, then add;
+nothing changes until "Add N hosts". Import printers is the same window with its own columns."""
 
 import html
 from dataclasses import replace
@@ -44,9 +43,8 @@ from capypanel.ui.menus import popup
 from capypanel.ui.tables import fit_menu
 from capypanel.ui.themes import engine as themes
 
-# The preview's columns in Import hosts. The dot says what happens to the row; Warning says why,
-# right after the address, so it's never off to the side (Dante). A window with more columns
-# (Import printers) has its own indexes: ImportDialog.col.
+# Import hosts' preview columns: the dot says what happens to the row, Warning why, right after
+# the address. A window with more columns (Import printers) has its own indexes: ImportDialog.col.
 DOT, NAME, ADDRESS, WARNING, GROUP, TAGS, NOTES = range(7)
 EDITABLE = (NAME, ADDRESS, GROUP, TAGS, NOTES)
 _FIXED = ("dot", "warning")  # the columns that can't be edited
@@ -142,7 +140,7 @@ class ImportDialog(QDialog):
         self.setWindowTitle(_(self.TITLE))
         more = [key for key, _title in self.MORE]
         # A list's own columns go last, so the import windows share their first seven slot by
-        # slot, and a narrow window cuts one of them, never Group, Tags or Notes (Dante).
+        # slot, and a narrow window cuts one of them, never Group, Tags or Notes.
         self.keys = ["dot", "name", "address", "warning", "group", "tags", "notes", *more]
         self.col = {key: index for index, key in enumerate(self.keys)}
         self.editable = tuple(i for i, key in enumerate(self.keys) if key not in _FIXED)

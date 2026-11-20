@@ -143,8 +143,6 @@ class Connector:
         # asking as a failed login, and turns this PC away after six.
         self._offered: dict[tuple[str, int], tuple[int, ...]] = {}
 
-    # ---- profiles ----
-
     def default_profile(self) -> str:
         return self.catalogs.profiles.default_id()
 
@@ -194,12 +192,9 @@ class Connector:
         profiles.check_fits(profile, tool.item)
         return Ready(profile, tool.item)
 
-    # ---- connecting ----
-
     def connect(self, requests: list[Request], parent: QWidget | None = None) -> int:
-        """Returns how many connections were started. `parent`: the window it was asked from,
-        when that's a window of its own (Manual connection). Its questions show over it, so it
-        stays in front once they close, instead of the main window coming over it."""
+        """How many connections started. `parent`: the window that asked, when it's one of its own
+        (Manual connection): questions show over it, so it stays in front once they close."""
         owner = parent or self._parent
         if len(requests) > MANY_CONNECTIONS and not self._confirm_many(len(requests), owner):
             return 0

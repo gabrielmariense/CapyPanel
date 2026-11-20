@@ -16,9 +16,8 @@ FRAME = QSize(16, 40)  # px Windows adds around a window: its borders and title 
 
 
 def run_modal(dialog: QDialog | QMessageBox) -> int:
-    """exec(), then deletes the window: kept alive, every closed one was restyled again on each
-    theme switch, and switching got slower the longer CapyPanel ran. A window that was open
-    during a theme switch stays, hidden: deleting it can crash inside Qt."""
+    """exec(), then deletes the window: kept alive, every closed one is restyled on each theme
+    switch. One open during a switch stays, hidden: deleting it can crash inside Qt."""
     before = themes.generation()
     result = dialog.exec()
     if themes.generation() == before:
@@ -27,9 +26,8 @@ def run_modal(dialog: QDialog | QMessageBox) -> int:
 
 
 def ok_cancel(dialog: QDialog, verb: str = "") -> QDialogButtonBox:
-    """The main button and Cancel for `dialog`: the first accepts it, Cancel rejects it. A
-    window ends in what it does, so `verb` names the main button ("Add", "Save", "Connect");
-    it's still found as StandardButton.Ok."""
+    """The main button and Cancel for `dialog`: the first accepts, Cancel rejects. `verb` names the
+    main button ("Add", "Save", "Connect"): a window ends in what it does. Still found as Ok."""
     box = QDialogButtonBox(
         QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
     )
@@ -42,8 +40,7 @@ def ok_cancel(dialog: QDialog, verb: str = "") -> QDialogButtonBox:
 
 def quiet_default(button: QAbstractButton) -> None:
     """Enter presses `button`, but it isn't the window's main action (Cancel before something
-    risky, a lone Close): the default button drawn plain with a ring, where the filled one
-    would say "this is what the window is for"."""
+    risky, a lone Close): drawn plain with a ring, as a filled one says "this is what it's for"."""
     button.setObjectName("quietDefault")
     if hasattr(button, "setDefault"):
         button.setDefault(True)  # type: ignore[attr-defined]
@@ -54,10 +51,8 @@ def quiet_default(button: QAbstractButton) -> None:
 
 
 def fit_screen(window: QWidget, free: QSize | None = None) -> bool:
-    """A window never opens larger than the screen's free area (a small laptop, a big text
-    scale): it takes what there is, and its panes shrink and scroll. One of a fixed size
-    stays fixed, at what fits. `free`: that area, when it isn't the window's own screen's.
-    True when the window was made smaller."""
+    """A window never opens larger than the screen's free area: it takes what there is, its panes
+    shrinking; a fixed one stays fixed. `free`: another screen's. True when it was made smaller."""
     if free is None:
         screen = window.screen()
         if screen is None:
