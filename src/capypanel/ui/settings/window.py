@@ -40,8 +40,10 @@ APP_GROUP = ("CapyPanel", ("general",))
 PINNED = ("about",)  # pages kept at the very bottom of the page list, apart from the groups
 SEARCH_FROM = 3  # letters typed before the search shows its results
 # As it opens the first time: room for a table row such as a domain account, its PC and where
-# it's kept. From there the size is the person's: any size, and a page too large for it scrolls.
-WIDTH, HEIGHT = 960, 700
+# it's kept, and in Windows' own themes, whose rows are taller, for every page in the list with
+# About apart from the last one, under which the ? takes its own line (700 until 0.30). From
+# there the size is the person's: any size, and a page too large for it scrolls.
+WIDTH, HEIGHT = 960, 740
 ROOM = 60  # spare width past the widest page: a button row never ends just short of its table
 GUTTER = 16  # right of the pages and under the last one: the columns' gap left of them
 
@@ -84,7 +86,7 @@ class SettingsDialog(QDialog):
         # holding a list can crash Qt after a theme switch (see DECISIONS, code cleanup).
         self._old: list[QWidget] = []
         self._layout = QVBoxLayout(self)
-        self._layout.setContentsMargins(12, 12, 12, 12)
+        self._layout.setContentsMargins(0, 0, 0, 0)  # the contents' own margin, which the ? uses
         self.own_size = False  # opened at the size the person left it at: nothing widens it
         self._build(themes.current().id)
         self.resize(WIDTH, HEIGHT)  # taller pages scroll, the window never grows for them
@@ -211,7 +213,8 @@ class SettingsDialog(QDialog):
         columns.addWidget(divider)
         columns.addWidget(self.stack, 1)
         inside = QVBoxLayout(content)
-        inside.setContentsMargins(0, 0, 0, 0)
+        # The window's margin, inside its contents: the ?'s hover box reaches into it.
+        inside.setContentsMargins(12, 12, 12, 12)
         inside.addLayout(columns, 1)
         self._layout.addWidget(content)
         self._content = content

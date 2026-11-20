@@ -790,13 +790,6 @@ def test_opening_every_tool_and_settings_page_loads_none_of_the_terminal(
 OURS: list[int | str] = [*range(16), "default"]
 
 
-@pytest.fixture
-def default_theme_after(qapp: QApplication) -> Iterator[None]:
-    yield
-    if themes.current() is not themes.DEFAULT_THEME:  # a theme switch restyles every window
-        themes.apply(themes.DEFAULT_THEME)
-
-
 def test_in_every_shipped_theme_the_16_and_the_defaults_read_on_each_other(
     default_theme_after: None,
 ) -> None:

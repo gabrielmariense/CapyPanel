@@ -81,7 +81,7 @@ class EndedBar(QFrame):
     def _show_words(self) -> None:
         text = escape(self.words())
         if self.error:
-            text += "&nbsp;&nbsp;" + help_links.anchor(HELP_PLACE, self.label.palette())
+            text += "&nbsp;&nbsp;" + help_links.strip_anchor(HELP_PLACE, self)
         self.label.setText(text)
         self.label.setToolTip(help_links.url(HELP_PLACE) if self.error else "")
 

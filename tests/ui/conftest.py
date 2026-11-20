@@ -46,6 +46,16 @@ def free_windows(qapp: QApplication) -> Iterator[None]:
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
 
 
+@pytest.fixture
+def default_theme_after(qapp: QApplication) -> Iterator[None]:
+    """For a test that switches themes: the default one again after it."""
+    from capypanel.ui.themes import engine as themes
+
+    yield
+    if themes.current() is not themes.DEFAULT_THEME:  # a theme switch restyles every window
+        themes.apply(themes.DEFAULT_THEME)
+
+
 @pytest.fixture(autouse=True)
 def no_facts_on_their_own(monkeypatch: pytest.MonkeyPatch) -> None:
     """A host shown in Details has its PC facts read after a moment: never in tests, which would

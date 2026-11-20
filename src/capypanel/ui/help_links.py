@@ -11,9 +11,18 @@ English and Portuguese, never changed or reused once a published CapyPanel links
 from collections.abc import Callable
 from html import escape
 
-from PySide6.QtCore import QEvent, QSize, Qt
-from PySide6.QtGui import QColor, QKeySequence, QPalette, QShortcut
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QMessageBox, QToolButton, QWidget
+from PySide6.QtCore import QEvent, QRect, QSize, Qt
+from PySide6.QtGui import QColor, QKeySequence, QPalette, QShortcut, QShowEvent
+from PySide6.QtWidgets import (
+    QBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QLayout,
+    QMessageBox,
+    QToolButton,
+    QWidget,
+    QWidgetItem,
+)
 
 from capypanel.core.i18n import _
 from capypanel.ui.icons import tabler_icon
@@ -158,11 +167,11 @@ def open_place(place: str) -> None:
 
 
 def link_color(palette: QPalette, on: QPalette.ColorRole = QPalette.ColorRole.Window) -> QColor:
-    """The theme's link colour where it reads on what's behind the link (`on`: the window, whose
-    colour a strip's tint is close to, or CARD), else the text colour: a link is underlined
-    either way. Windows' own dark theme takes the PC's accent for links, which can be a dark
-    purple that hardly shows; the light theme's blue reads on a card (5.2:1) but not on its
-    window or a strip (3.8:1)."""
+    """The theme's link colour where it reads on what's behind the link (`on`: the window, or
+    CARD; a strip's palette has its tint as its window, strip_anchor), else the text colour: a
+    link is underlined either way. Windows' own dark theme takes the PC's accent for links,
+    which can be a dark purple that hardly shows; the light theme's blue reads on a card (5.2:1)
+    but not on its window or a strip (3.8:1)."""
     link = palette.color(QPalette.ColorRole.Link)
     if contrast_ratio(link.name(), palette.color(on).name()) >= READABLE:
         return link
@@ -179,6 +188,14 @@ def anchor(
     style = f"color: {link_color(palette, on).name()}; text-decoration: underline;"
     words = escape(_("What does this mean?"))
     return f'<a href="{escape(url(place))}" style="{style}">{words}</a>'
+
+
+def strip_anchor(place: str, strip: QWidget) -> str:
+    """anchor() for a strip's message, judged on the tint the theme draws behind it: once
+    polished, the strip's own palette has that tint as its window, while its label keeps the
+    window's colour, where CapyPanel dark's blue reads though it's 3.1:1 on the strip."""
+    strip.ensurePolished()
+    return anchor(place, strip.palette())
 
 
 def add_link(box: QMessageBox, place: str) -> None:
@@ -232,11 +249,13 @@ class HelpButton(QToolButton):
     """The ? at a window's bottom left, first in its button row: help for this window at
     `place()`'s part, and F1 while the window is in front. Flat and icon only, so it's the same
     size in both languages; it never hides or greys (a window with no part of its own opens its
-    page)."""
+    page). Its ink starts at the window's text edge, its hover box reaching into the margin:
+    on its first show it takes its place in its row (_InkOnEdge)."""
 
     def __init__(self, place: Callable[[], str] | str, *, icon_size: int = 18) -> None:
         super().__init__()
         self._place = place if callable(place) else (lambda: place)
+        self._seated = False
         self.setObjectName("helpButton")
         self.setAutoRaise(True)
         self.setIconSize(QSize(icon_size, icon_size))
@@ -248,6 +267,18 @@ class HelpButton(QToolButton):
 
     def place(self) -> str:
         return self._place()
+
+    def ink_inset(self) -> int:
+        """How far in from its left edge the ? is drawn: the icon sits in the middle, and the
+        circle's ink starts 2 of the icon's 24 units in."""
+        icon = self.iconSize().width()
+        return int((self.width() - icon) / 2 + icon / 12 + 0.5)
+
+    def showEvent(self, event: QShowEvent) -> None:
+        if not self._seated:
+            self._seated = True
+            _seat(self)
+        super().showEvent(event)
 
     def _retranslate(self) -> None:
         self.setToolTip(_("Help for this screen (F1)"))
@@ -263,6 +294,52 @@ class HelpButton(QToolButton):
             self._restyle()
         elif event.type() == QEvent.Type.LanguageChange:
             self._retranslate()
+
+
+class _InkOnEdge(QWidgetItem):
+    """The ?'s place in its row, moved left by its ink's inset: the ink starts where the row
+    does, as the window's text does above it, and the hover box reaches into the margin. Never
+    past its parent's edge, which would cut the box off."""
+
+    def setGeometry(self, rect: QRect) -> None:
+        super().setGeometry(rect)
+        button = self.widget()
+        if isinstance(button, HelpButton) and not button.isRightToLeft():
+            at = button.pos()
+            button.move(at.x() - min(button.ink_inset(), at.x()), at.y())
+
+
+def _seat(button: HelpButton) -> None:
+    """Its row's item swapped for _InkOnEdge, in the same place, with the same alignment and
+    stretch. In a layout other than a row or a column it stays as it is."""
+    parent = button.parentWidget()
+    layout = _holding(parent.layout() if parent is not None else None, button)
+    if not isinstance(layout, QBoxLayout):
+        return
+    index = layout.indexOf(button)
+    old = layout.itemAt(index)
+    if old is None:
+        return
+    stretch = layout.stretch(index)
+    item = _InkOnEdge(button)
+    item.setAlignment(old.alignment())
+    layout.takeAt(index)
+    layout.insertItem(index, item)
+    layout.setStretch(index, stretch)
+    if old.geometry().isValid():
+        item.setGeometry(old.geometry())  # moved now, before it's first drawn
+
+
+def _holding(layout: QLayout | None, widget: QWidget) -> QLayout | None:
+    """`layout`, or the one inside it, that has `widget` as one of its items."""
+    if layout is None or layout.indexOf(widget) >= 0:
+        return layout
+    for index in range(layout.count()):
+        item = layout.itemAt(index)
+        found = _holding(item.layout() if item is not None else None, widget)
+        if found is not None:
+            return found
+    return None
 
 
 def row(help_button: HelpButton, buttons: QWidget) -> QHBoxLayout:

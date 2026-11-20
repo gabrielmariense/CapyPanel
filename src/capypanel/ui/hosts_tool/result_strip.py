@@ -126,7 +126,7 @@ class ResultStrip(QFrame):
     def _show_words(self) -> None:
         text, place = self._words, self._place
         if place:
-            text += "&nbsp;&nbsp;" + help_links.anchor(place, self._text.palette())
+            text += "&nbsp;&nbsp;" + help_links.strip_anchor(place, self)
         self._text.setText(text)
         self._text.setToolTip(help_links.url(place) if place else "")
 

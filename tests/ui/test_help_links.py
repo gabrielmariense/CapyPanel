@@ -11,11 +11,16 @@ from capywindow import CapyWindow
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QWidget
+from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QVBoxLayout, QWidget
 
 from capypanel.core import i18n, settings
+from capypanel.core.remote.access import Reason, RemoteError
 from capypanel.ui import about, help_links
+from capypanel.ui.hosts_tool.result_strip import ResultStrip
+from capypanel.ui.hosts_tool.runner import Outcome
 from capypanel.ui.settings.shortcuts_page import FIXED_ROLE, KEY, KeyCatcher
+from capypanel.ui.ssh_tool.terminal.tab import EndedBar
+from capypanel.ui.themes import engine as themes
 
 SITE = "https://gabrielmariense.github.io/CapyPanel/"
 SRC = Path(__file__).resolve().parents[2] / "src" / "capypanel"
@@ -79,6 +84,32 @@ def test_a_link_is_judged_on_what_s_behind_it() -> None:
     assert "#2563eb" in help_links.anchor("ssh-not-installed", palette, help_links.CARD)
 
 
+def test_in_every_shipped_theme_a_strip_s_link_reads_on_the_strip_drawn_behind_it(
+    qapp: QApplication, default_theme_after: None
+) -> None:
+    """Checked on the colours drawn: CapyPanel dark's blue reads on its window but is 3.1:1 on
+    a strip, so there it takes the text colour, underlined (Dante, build 659). Windows' own
+    themes take Windows' colours, which Qt without a screen doesn't have (their text stays
+    black on the dark strip): the design check's shots, taken on Windows, cover those."""
+    hosts = ResultStrip()
+    hosts.show_outcome(Outcome("Couldn't log off bruno on PC-1.", RemoteError(Reason.NOT_ADMIN)))
+    ssh = EndedBar()
+    ssh.show_end("web-01", 255)
+    strips = [(hosts, hosts._text), (ssh, ssh.label)]  # noqa: SLF001
+    for theme in themes.Registry().all():
+        if theme.engine == "native":
+            continue
+        themes.apply(theme)  # the SSH strip restyles itself; the Hosts tool restyles its strip
+        hosts.restyle()
+        for strip, label in strips:
+            strip.resize(900, strip.heightForWidth(900))
+            behind = strip.grab().toImage().pixelColor(strip.width() - 3, strip.height() // 2)
+            link = re.search(r'style="color: (#[0-9a-f]{6});', label.text())
+            assert link is not None, theme.id
+            ratio = themes.contrast_ratio(link[1], behind.name())
+            assert ratio >= help_links.READABLE, (theme.id, type(strip).__name__, link[1])
+
+
 def _box(place: str) -> QMessageBox:
     box = QMessageBox(QMessageBox.Icon.Warning, "CapyPanel", "Couldn't save “a.csv”: in use.")
     help_links.add_link(box, place)
@@ -139,6 +170,43 @@ def test_the_question_mark_opens_its_window_s_part_by_click_and_by_f1(
         f"{SITE}settings-and-files/#settings-ssh-general",
     ]
     window.close()
+
+
+def test_the_question_mark_s_ink_starts_at_the_text_edge_its_hover_box_in_the_margin(
+    qapp: QApplication,
+) -> None:
+    """Its ink was about 10 px in from the labels and fields above it (Dante, build 659)."""
+    window = QWidget()
+    column = QVBoxLayout(window)
+    label = QLabel("Name")
+    column.addWidget(label)
+    button = help_links.HelpButton("start-add-your-first-hosts")
+    column.addLayout(help_links.row(button, QWidget()))
+    window.show()
+    QApplication.processEvents()
+    assert button.x() < label.x()  # its hover box reaches into the margin
+    assert abs(_ink(window, button) - label.x()) <= 1
+    window.resize(window.width() + 40, window.height() + 20)  # laid out again: it stays put
+    QApplication.processEvents()
+    assert abs(_ink(window, button) - label.x()) <= 1
+    window.close()
+
+
+def _ink(window: QWidget, button: QWidget) -> int:
+    """Where the ?'s ink starts in `window`: the first column, from the left, where its rows
+    differ from the window's own colour."""
+    image = window.grab().toImage()
+    top = button.mapTo(window, QPoint(0, 0)).y()
+    back = image.pixelColor(0, top + button.height() // 2)
+    return next(
+        x
+        for x in range(image.width())
+        if any(_far(image.pixelColor(x, y), back) for y in range(top, top + button.height()))
+    )
+
+
+def _far(a: QColor, b: QColor) -> bool:
+    return abs(a.red() - b.red()) + abs(a.green() - b.green()) + abs(a.blue() - b.blue()) > 60
 
 
 def test_a_strip_s_link_shows_only_with_a_message_that_has_a_line(
@@ -251,10 +319,12 @@ def test_settings_question_mark_sits_under_the_pages_and_opens_the_page_shown(
     dialog.activateWindow()
     QApplication.processEvents()
     button, pinned = dialog.help_button, dialog.pinned_list
-    # On its own line under the page list (About is its last row), at the search's left edge.
+    # On its own line under the page list (About is its last row), its ink at the search's left
+    # edge and its hover box in the margin, as in every window.
     top_left = button.mapTo(dialog, QPoint(0, 0))
     assert top_left.y() >= pinned.mapTo(dialog, QPoint(0, pinned.height())).y()
-    assert top_left.x() == dialog.search.mapTo(dialog, QPoint(0, 0)).x()
+    search = dialog.search.mapTo(dialog, QPoint(0, 0)).x()
+    assert top_left.x() < search and abs(_ink(dialog, button) - search) <= 1
     button.click()  # General, as Settings opens
     dialog.show_page("ssh")
     QTest.keyClick(dialog, Qt.Key.Key_F1)
