@@ -100,6 +100,7 @@ PLACES: dict[str, str] = {
     "printers-checking-set-the-snmp-account": "printers/checking/",
     "printers-checking-get-page-counts-from-doc360-mps": "printers/checking/",
     # Printers: its messages
+    "printers-not-a-list": "printers/printers/",
     "printer-offline": "printers/checking/",
     "printer-refused": "printers/checking/",
     "printer-unreadable": "printers/checking/",

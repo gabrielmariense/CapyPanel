@@ -4,12 +4,15 @@ link and the boxes, is tests/ui/test_help_links.py; the docs' side, every place 
 both languages, is tests/docs/test_help_places.py."""
 
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QMessageBox
 from test_printer_doc360 import _from_doc360
 from test_printer_status import _checked, lab, printers  # noqa: F401  (fixtures)
 
+from capypanel.core.hosts import listfile
+from capypanel.core.hosts.model import HostList
 from capypanel.core.printers import doc360
 from capypanel.core.printers.doc360 import Account, Counter
 from capypanel.core.printers.printer import PrinterInfo
@@ -182,3 +185,15 @@ def test_credential_manager_s_refusal_links_its_line(
     )
     label = box.findChild(QLabel, "qt_msgbox_informativelabel")
     assert label is not None and "printers-credential-not-saved" in label.toolTip()
+
+
+def test_a_host_list_opened_in_printers_links_its_line(
+    printers: PrintersTool,  # noqa: F811
+    tmp_path: Path,
+    help_boxes: list[tuple[str, str]],
+) -> None:
+    path = tmp_path / "hosts.json"
+    listfile.save(path, HostList().add_group("Lab")[0], expected=None, kind="hosts")
+    assert not printers.open_list(path)
+    assert help_boxes == [(f"“{path}” isn't a printer list.", "printers-not-a-list")]
+    help_links.url("printers-not-a-list")
