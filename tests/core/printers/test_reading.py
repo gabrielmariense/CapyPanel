@@ -113,7 +113,7 @@ def test_a_running_printer_that_calls_its_state_other_and_keeps_its_serial_elsew
     assert (found.firmware, found.mac) == ("SAMPLE 1.07", "")
 
 
-# Shaped like what real Samsung, Ricoh, Brother and Canon printers answer (checked 2026-11-04).
+# Shaped like what real Samsung, Ricoh, Brother and Canon printers answer.
 @pytest.mark.parametrize(
     ("objects", "firmware"),
     [

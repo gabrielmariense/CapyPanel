@@ -1,7 +1,4 @@
-"""Page counters from Doc360 MPS, the managed-print portal: one login without a browser, the
-"latest counters" export (CSV, one line per printer), then a logout. Only reads: it opens the
-login page, the export page and the export itself, never another link. Everything stays in
-memory (cookies too), and the log gets only the outcome and the number of rows."""
+"""Page counters from Doc360 MPS: one login, the "latest counters" CSV export, a logout."""
 
 import contextlib
 import csv
@@ -137,6 +134,7 @@ class _Session:
             return body.decode("cp1252", errors="replace")
 
 
+# Only reads: the login page, the export page and the export, never another link.
 LOGIN_PAGE = "login/index.php"
 LOGIN_ACTION = "login/acao.php"
 EXPORT_PAGE = "docmps/index.php?menu=fechamento&secao=fechamento&modulo=porperiodo"
@@ -164,8 +162,8 @@ def read_counters(
             raise Changed("Doc360's export page changed.")
         hidden = [(name, value) for name, kind, value in form if kind == "hidden"]
         clients = [value for name, _kind, value in form if name == "clientes[]"]
-        # The export gives the counters as of the month asked for: this month's are the newest.
-        # Early in a month it may have none yet, so then last month's.
+        # The export gives the month asked for: this month's are the newest, but early in a
+        # month there may be none yet, so then last month's.
         now = today()
         last = (now.year - 1, 12) if now.month == 1 else (now.year, now.month - 1)
         counters: dict[str, Counter] = {}
@@ -185,6 +183,7 @@ def read_counters(
             counters = parse_counters(session.ask(EXPORT_ACTION, fields, referer=EXPORT_PAGE))
             if counters:
                 break
+        # The outcome and a count only: the log never gets the account or the counters.
         log.info("Doc360: counters for %d printers, %d/%d", len(counters), month, year)
         return Latest(counters, year, month, (year, month) == (now.year, now.month))
     finally:

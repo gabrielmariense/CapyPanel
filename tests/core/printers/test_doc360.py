@@ -233,9 +233,8 @@ def test_parse_counters_without_its_columns() -> None:
 
 
 def test_a_start_leaves_the_network_and_cipher_code_for_their_first_use() -> None:
-    # Doc360's urllib.request and http.cookiejar (about 50 ms) load with the first Doc360 read,
-    # and SNMP v3's cipher (about 10 ms) with the first encrypted Refresh. Its own process, as at
-    # start: this one imported them long ago.
+    # Doc360's network code and SNMP v3's cipher load on first use, not at start; checked in
+    # a process of its own, since this one imported them long ago.
     code = "import sys, capypanel.ui.app; from capypanel.ui.tool_catalog import CATALOG; "
     code += "[info.load() for info in CATALOG]; "
     code += "print(sorted(m for m in ('urllib.request', 'http.cookiejar', 'cryptography') "
