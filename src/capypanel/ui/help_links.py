@@ -87,6 +87,12 @@ PLACES: dict[str, str] = {
     "connect-couldnt-start": "hosts/connecting/",
     "connect-settings-file-unusable": "hosts/connecting/",
     "connect-settings-not-saved": "hosts/connecting/",
+    # Hosts: why a command failed (its strip, the Commands window's answer)
+    "command-access-denied": "hosts/commands/",
+    "command-no-folder": "hosts/commands/",
+    "pc-unreachable": "hosts/checking/",
+    "pc-account-rejected": "hosts/checking/",
+    "pc-powershell-blocked": "hosts/checking/",
     # Profile cleanup
     "profiles-see-which-profiles-can-be-deleted": "profiles/user-profiles/",
     "profiles-delete-profiles": "profiles/user-profiles/",

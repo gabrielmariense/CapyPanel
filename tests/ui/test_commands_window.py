@@ -199,7 +199,7 @@ def test_a_command_set_apart_has_a_small_gap_above_it(window: CapyWindow) -> Non
 
 
 def test_run_opens_and_the_answer_stays_on_the_right(
-    window: CapyWindow, calls: list[Any], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, calls: list[Any], monkeypatch: pytest.MonkeyPatch, no_browser: list[str]
 ) -> None:
     commands = _open(window, "DESK-02")
     row = next(r for r in commands.rows if r.command.id == "c-share")
@@ -218,6 +218,14 @@ def test_run_opens_and_the_answer_stays_on_the_right(
     _settle(window)
     outcome = _shown(commands).outcome
     assert outcome is not None and "access denied" in outcome.text and outcome.retry is not None
+    [answer] = [
+        label
+        for label in commands.results.findChildren(QLabel)
+        if label.objectName() == "warningText" and label.isVisibleTo(commands)
+    ]
+    assert answer.text().startswith(outcome.text) and "What does this mean?" in answer.text()
+    answer.linkActivated.emit("")
+    assert no_browser[-1].endswith("hosts/commands/#command-access-denied")
     commands.pick(row)  # back to C$: nothing failed there
     assert _shown(commands).outcome is None  # opening shows in the status bar
 

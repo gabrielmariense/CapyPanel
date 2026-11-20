@@ -25,7 +25,7 @@ from test_themes import ACCENTS  # every Windows accent, and the dark purple of 
 
 from capypanel.core.ssh import conpty
 from capypanel.core.ssh.screen import TermScreen, TermStream
-from capypanel.ui import error_window
+from capypanel.ui import error_window, help_links
 from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.shortcuts import EVERYWHERE, KeyCommand, Keys
 from capypanel.ui.ssh_tool.terminal import glyphs, keys, palette
@@ -894,12 +894,18 @@ def test_bold_text_in_the_first_eight_takes_the_bright_ones(qapp: QApplication) 
     ],
 )
 def test_the_strip_after_an_end_is_red_with_a_cross_only_after_an_error(
-    qapp: QApplication, code: int, by_us: bool, error: bool, words: str
+    qapp: QApplication, code: int, by_us: bool, error: bool, words: str, no_browser: list[str]
 ) -> None:
     holder = QWidget()
     bar = EndedBar(holder)
     bar.show_end("web-01", code, by_us=by_us)
-    assert bar.label.text() == words and bar.label.wordWrap()  # wraps, never "…"
+    assert bar.words() == words and bar.label.wordWrap()  # wraps, never "…"
+    assert bar.label.text().startswith(words)
+    # After an error, "What does this mean?" in its words: the part on how connections end.
+    assert ("What does this mean?" in bar.label.text()) == error
+    if error:
+        bar.label.linkActivated.emit("")
+        assert no_browser == [help_links.url("ssh-when-a-connection-ends")]
     assert (bar.error, bar.property("failed"), bar.property("ended")) == (error, error, not error)
     assert bar.icon_name() == ("circle-x" if error else "plug-connected-x")
     assert bar.colour() == themes.status_color("stopped" if error else "offline")

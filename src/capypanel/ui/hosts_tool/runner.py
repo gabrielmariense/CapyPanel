@@ -115,6 +115,22 @@ def reason_text(error: BaseException, host: str = "") -> str:
     return _("{error}.").format(error=str(error).rstrip(".") or type(error).__name__)
 
 
+def reason_place(error: BaseException) -> str:
+    """The line in the docs that explains `error`, for the "What does this mean?" after a failed
+    command; "" where the docs have none, so no link promises an answer that isn't there."""
+    if isinstance(error, RemoteError):
+        return {
+            Reason.UNREACHABLE: "pc-unreachable",
+            Reason.NOT_ADMIN: "command-access-denied",
+            Reason.REJECTED: "pc-account-rejected",
+        }.get(error.reason, "")
+    if isinstance(error, PowerShellBlocked):
+        return "pc-powershell-blocked"
+    if isinstance(error, NotADirectoryError):
+        return "command-no-folder"
+    return ""
+
+
 def failed_text(action: str, host: str, error: BaseException) -> str:
     """`action` is rich text already, e.g. "log off <b>ana</b>"."""
     return _("Couldn't {action} on {host}: {reason}").format(

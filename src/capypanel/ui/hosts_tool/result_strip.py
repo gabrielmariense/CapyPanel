@@ -1,8 +1,8 @@
 """The strip above the host table with a command's answer, in the look of Printers' attention
 strip: a green edge when it worked, closing by itself after a few seconds; a red edge when it
-failed, staying until closed, with the reason and "Try another account…" when another account
-might do. Its icon sits on the middle of the text's first line (IconBesideText), as in the SSH
-tool's strip."""
+failed, staying until closed, with the reason, "What does this mean?" when the docs explain it,
+and "Try another account…" when another account might do. Its icon sits on the middle of the
+text's first line (IconBesideText), as in the SSH tool's strip."""
 
 from collections.abc import Callable
 
@@ -11,8 +11,8 @@ from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QToolButton, QWidget
 
 from capypanel.core.i18n import _
-from capypanel.ui import spacing
-from capypanel.ui.hosts_tool.runner import Outcome
+from capypanel.ui import help_links, spacing
+from capypanel.ui.hosts_tool.runner import Outcome, reason_place
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.themes import engine as themes
 
@@ -53,6 +53,11 @@ class ResultStrip(QFrame):
         self._text = QLabel()
         self._text.setTextFormat(Qt.TextFormat.RichText)
         self._text.setWordWrap(True)
+        # "What does this mean?" goes inside the message, so it reads straight after it and
+        # wraps with it, as in Printers' warnings strip.
+        self._text.setOpenExternalLinks(False)
+        self._text.setTextInteractionFlags(help_links.LINK_KEYS)
+        self._text.linkActivated.connect(lambda _href: help_links.open_place(self._place))
         self.retry_button = QPushButton()
         self.retry_button.setAutoDefault(False)
         self.retry_button.clicked.connect(self._retry_clicked)
@@ -70,20 +75,29 @@ class ResultStrip(QFrame):
         self._timer.timeout.connect(self.hide)
         self._retry: Callable[[], None] | None = None
         self._failed = False
+        self._words = ""
+        self._place = ""  # the docs' line that explains the failure, or ""
         self.retranslate()
         self.hide()
 
     def retranslate(self) -> None:
         self.retry_button.setText(_("Try another account…"))
         self.close_button.setToolTip(_("Close"))
+        self._show_words()
 
     def text(self) -> str:
-        return self._text.text()
+        """What it says, without its link."""
+        return self._words
+
+    def help_place(self) -> str:
+        """Where its "What does this mean?" goes: "" when it has none."""
+        return self._place
 
     def show_outcome(self, outcome: Outcome) -> None:
         failed = self._failed = outcome.failed
+        self._words = outcome.text
+        self._place = reason_place(outcome.error) if outcome.error is not None else ""
         self.restyle()
-        self._text.setText(outcome.text)
         self._retry = outcome.retry
         self.retry_button.setVisible(outcome.retry is not None)
         self.setProperty("failed", failed)
@@ -107,6 +121,14 @@ class ResultStrip(QFrame):
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
         self.close_button.setIcon(tabler_icon("x", muted, 14))
         self._lead.fit_icon()
+        self._show_words()  # its link in the theme's link colour
+
+    def _show_words(self) -> None:
+        text, place = self._words, self._place
+        if place:
+            text += "&nbsp;&nbsp;" + help_links.anchor(place, self._text.palette())
+        self._text.setText(text)
+        self._text.setToolTip(help_links.url(place) if place else "")
 
     def _retry_clicked(self) -> None:
         retry = self._retry

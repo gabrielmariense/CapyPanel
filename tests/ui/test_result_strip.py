@@ -1,13 +1,17 @@
 """Hosts' result strip: its icon sits on the middle of the text's first line, whether the text
-takes one line beside the taller "Try another account…" button or wraps."""
+takes one line beside the taller "Try another account…" button or wraps; a failure the docs
+explain gets "What does this mean?"."""
 
 import pytest
 from PySide6.QtCore import QPoint
 from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import QApplication
 
+from capypanel.core.remote.access import Reason, RemoteError
+from capypanel.core.remote.inventory import PowerShellBlocked
+from capypanel.ui import help_links
 from capypanel.ui.hosts_tool.result_strip import ResultStrip
-from capypanel.ui.hosts_tool.runner import Outcome
+from capypanel.ui.hosts_tool.runner import Outcome, reason_place
 from capypanel.ui.themes import engine as themes
 
 SHORT = "Couldn't log off <b>bruno</b> on PC-1: access denied."
@@ -78,3 +82,32 @@ def test_a_bigger_font_keeps_the_icon_on_the_line(qapp: QApplication) -> None:
     strip.resize(900, strip.heightForWidth(900))
     qapp.processEvents()
     assert _icon_middle(strip) == pytest.approx(_first_line_middle(strip), abs=1)
+
+
+def test_a_failure_the_docs_explain_links_its_line_and_one_that_worked_links_nothing(
+    qapp: QApplication, no_browser: list[str]
+) -> None:
+    strip = ResultStrip()
+    strip.show_outcome(Outcome(SHORT, RemoteError(Reason.NOT_ADMIN), retry=lambda: None))
+    label = strip._text  # noqa: SLF001
+    assert strip.text() == SHORT and strip.help_place() == "command-access-denied"
+    assert label.text().startswith(SHORT) and "What does this mean?" in label.text()
+    label.linkActivated.emit("")
+    assert no_browser == [help_links.url("command-access-denied")]
+    strip.show_outcome(Outcome("Logged off <b>bruno</b> on PC-1."))
+    assert strip.help_place() == "" and label.text() == "Logged off <b>bruno</b> on PC-1."
+
+
+def test_each_reason_links_a_line_the_docs_have_or_nothing() -> None:
+    linked = [
+        (RemoteError(Reason.UNREACHABLE), "pc-unreachable"),
+        (RemoteError(Reason.NOT_ADMIN), "command-access-denied"),
+        (RemoteError(Reason.REJECTED), "pc-account-rejected"),
+        (PowerShellBlocked(OSError(1260, "blocked")), "pc-powershell-blocked"),
+        (NotADirectoryError(), "command-no-folder"),
+    ]
+    for error, place in linked:
+        assert reason_place(error) == place and place in help_links.PLACES
+    # No line explains these yet: no link that promises one.
+    for error in (RemoteError(Reason.OTHER, 1722), TimeoutError(), RuntimeError("busy")):
+        assert reason_place(error) == ""

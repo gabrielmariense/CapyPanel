@@ -69,6 +69,7 @@ from capypanel.ui.hosts_tool.runner import (
     Outcome,
     failed_text,
     folder_user,
+    reason_place,
 )
 from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.themes import engine as themes
@@ -298,6 +299,16 @@ class Results(HostDetailsPanel):
         if outcome.failed:
             answer.setObjectName("warningText")
         layout.addWidget(answer)
+        place = reason_place(outcome.error) if outcome.error is not None else ""
+        if place:  # "What does this mean?" inside the answer, as in Hosts' strip
+            link = help_links.anchor(place, answer.palette())
+            answer.setText(f"{outcome.text}&nbsp;&nbsp;{link}")
+            answer.setOpenExternalLinks(False)
+            answer.setTextInteractionFlags(
+                Qt.TextInteractionFlag.TextSelectableByMouse | help_links.LINK_KEYS
+            )
+            answer.linkActivated.connect(lambda _href: help_links.open_place(place))
+            answer.setToolTip(help_links.url(place))
         # The answer as plain text, to paste into a message or a ticket.
         whole = QTextDocumentFragment.fromHtml(outcome.text).toPlainText()
         copy = QLabel(f'<a href="copy">{_escape(_("Copy all"))}</a>')
