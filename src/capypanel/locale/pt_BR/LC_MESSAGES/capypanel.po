@@ -4407,7 +4407,7 @@ msgid "Tick a column under Last check to read them"
 msgstr "Marque uma coluna em Última verificação para lê-las"
 
 msgid "Tick in the table: the box, a double-click on the row, or Space on the selected rows."
-msgstr "Marque na tabela: a caixa, dois cliques na linha ou Espaço nas linhas selecionadas."
+msgstr "Marque na tabela: a caixa, dois cliques na linha ou a tecla Espaço nas linhas selecionadas."
 
 msgid "Tick profiles in the table to delete"
 msgstr "Marque perfis na tabela para excluir"
@@ -4422,7 +4422,7 @@ msgid "Tick to delete"
 msgstr "Marcar para excluir"
 
 msgid "Tick to delete: the box, a double-click on the row, or Space on the selected rows"
-msgstr "Marque para excluir: a caixa, dois cliques na linha ou Espaço nas linhas selecionadas"
+msgstr "Marque para excluir: a caixa, dois cliques na linha ou a tecla Espaço nas linhas selecionadas"
 
 msgid "Ticked in tabs"
 msgstr "Marcados nas abas"
