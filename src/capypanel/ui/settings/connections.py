@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QUrl, Signal
+from PySide6.QtCore import QSize, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -56,6 +56,20 @@ def asked_by_tool(tool: str) -> str:
     return _(
         "CapyPanel asks for nothing: {tool} asks for the user and password itself when it connects."
     ).format(tool=tool)
+
+
+class _RowLabel(QLabel):
+    """A form label as tall as its field: Qt caps a label at 7/4 of its text line, at the
+    row's top, so beside a taller field it would sit above the field's line."""
+
+    def __init__(self, text: str, field: QWidget) -> None:
+        super().__init__(text)
+        self._field = field
+        self.setBuddy(field)
+
+    def sizeHint(self) -> QSize:
+        hint = super().sizeHint()
+        return QSize(hint.width(), max(hint.height(), self._field.sizeHint().height()))
 
 
 class ProfileDialog(QDialog):
@@ -136,7 +150,7 @@ class ProfileDialog(QDialog):
         form.addRow(_("P&ort:"), self.port)
         form.addRow(_("Settings:"), self.settings_state)
         form.addRow("", settings_buttons)
-        form.addRow(_("Options:"), self.options_area)
+        form.addRow(_RowLabel(_("Options:"), self.options_area), self.options_area)
         if len(self._option_places) > 1:
             form.addRow("", more_options)
         self.buttons = ok_cancel(self, _("Save") if profile else _("Add"))

@@ -148,6 +148,24 @@ def test_every_tool_keeps_the_profile_window_s_size_and_places(
         qapp.removeEventFilter(fitter)
 
 
+def test_the_options_label_stays_on_the_first_option_s_line_beside_a_tall_tick_box(
+    qapp: QApplication, catalogs: Catalogs
+) -> None:
+    tools = [e.item for e in catalogs.tools.all()]
+    dialog = ProfileDialog(None, "New", tools, {tool.id for tool in tools})
+    dialog.setStyleSheet("QCheckBox::indicator { height: 40px; }")  # past 7/4 of a text line
+    try:
+        dialog.tool.setCurrentIndex(dialog.tool.findData("mstsc"))
+        _shown(dialog)
+        form = dialog.findChild(QFormLayout)
+        label = form.labelForField(dialog.options_area) if form else None
+        assert label is not None
+        first = next(iter(dialog.option_boxes.values()))
+        assert first.mapTo(dialog, first.rect().center()).y() == label.geometry().center().y()
+    finally:
+        dialog.close()
+
+
 def test_a_row_the_tool_doesnt_use_is_greyed_with_its_reason(catalogs: Catalogs) -> None:
     tools = [e.item for e in catalogs.tools.all()]
     dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
