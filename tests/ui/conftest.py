@@ -67,9 +67,8 @@ def no_facts_on_their_own(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture(autouse=True)
 def no_browser(monkeypatch: pytest.MonkeyPatch) -> list[str]:
-    """Help, Documentation and the other web links land here, never in the browser: an F1 a
-    test presses for something else would open the real website. Tests of a link read this
-    list or patch open_url themselves."""
+    """Help and the other web links land here, never in the browser: an F1 pressed for something
+    else would open the real website. A test of a link reads this list or patches open_url."""
     from capypanel.ui import about
 
     opened: list[str] = []
@@ -79,9 +78,8 @@ def no_browser(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 
 @pytest.fixture(autouse=True)
 def help_boxes(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]:
-    """Warnings and errors shown with their "What does this mean?" (help_links.warning and
-    critical) land here as (text, place), instead of waiting for a click that never comes. A
-    test that wants the box itself patches dialogs.run_modal over this."""
+    """Warnings and errors with "What does this mean?" land here as (text, place), not waiting for
+    a click that never comes; a test wanting the box itself patches dialogs.run_modal over this."""
     from message_boxes import help_place
     from PySide6.QtWidgets import QMessageBox
 
@@ -100,11 +98,8 @@ def help_boxes(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]:
 
 @pytest.fixture(autouse=True)
 def no_ssh(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, object]]:
-    """The SSH tool never starts ssh.exe in tests, and its Refresh never knocks on a real port:
-    Connect lands here as (address, SshInfo), in a tab or a separate window, and every port
-    says nothing until a test gives its own answers. A tab runs Windows' own cmd.exe in place
-    of ssh.exe, so it has a live program on its pseudo console that never reaches the network
-    and ends when the tab closes."""
+    """The SSH tool never starts ssh.exe or knocks on a real port in tests: Connect lands here as
+    (address, SshInfo), and a tab runs Windows' own cmd.exe in ssh.exe's place, off the network."""
     from capypanel.core.remote.status import PortState
     from capypanel.core.ssh import launch
     from capypanel.ui.ssh_tool import refresh

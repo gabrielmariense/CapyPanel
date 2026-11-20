@@ -271,8 +271,7 @@ def test_a_file_held_open_in_the_old_version_stops_the_swap_and_nothing_is_lost(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # A separate SSH window, a CapyPanel in another Windows session or an antivirus mid-scan
-    # holds _internal\base_library.zip: Windows won't rename _internal. Until 0.29 the swap then
-    # copied it out, deleted what it could (subfolders first) and dropped the copy (Alice).
+    # holds _internal\base_library.zip: Windows won't rename _internal.
     place = updates.places(tmp_path / "CapyPanel")
     held = _held_app(place)
     before = _files(place.app)
@@ -392,9 +391,8 @@ def test_an_old_item_never_comes_back_over_a_new_one_that_wouldn_t_go(
 def test_a_new_file_held_for_a_moment_still_lets_the_old_version_back(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # The new version failed its self-test while an antivirus was still scanning a file just
-    # copied in: taking the new _internal out is tried again until it goes (Alice), and then the
-    # old one comes back. Tried once, the old one stayed in app data and the folder couldn't start.
+    # The new version failed its self-test while an antivirus scanned a file just copied in: taking
+    # the new _internal out is tried until it goes, then the old one comes back.
     place = updates.places(_app(tmp_path / "CapyPanel", "0.28.1"))
     _app(place.new_app, "0.29.0")
     before = _files(place.app)
@@ -461,9 +459,8 @@ def test_the_exe_s_own_jobs_start_without_the_splash(monkeypatch: pytest.MonkeyP
 def test_github_s_certificate_is_checked_by_windows_with_the_host_name(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Python's own check trusted only the roots already stored on the PC ("unable to get local
-    # issuer certificate" where none was), and its strict mode refused a chain Windows trusts
-    # ("Missing Authority Key Identifier"). Windows checks it now, as Edge does.
+    # Python's own check trusted only roots already stored ("unable to get local issuer
+    # certificate") and its strict mode refused chains Windows trusts, so Windows checks it.
     contexts: list[ssl.SSLContext] = []
 
     def urlopen(request: Any, timeout: float, context: ssl.SSLContext) -> Any:
@@ -671,8 +668,7 @@ def test_a_folder_still_in_use_is_tried_again_until_it_goes(
 def test_a_file_an_earlier_update_left_that_wont_go_never_stops_the_next_one(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # 0.26.4 on a PC where a DLL in the old version's folder stayed held: 0.27.0 stopped with
-    # "Access denied" before moving anything, every time.
+    # A DLL in the old version's folder stays held ("Access denied"): the swap must not stop for it.
     app = _app(tmp_path / "CapyPanel", "0.26.4")
     place = updates.places(app)
     stuck = place.previous / "_internal" / "MSVCP140_1.dll"

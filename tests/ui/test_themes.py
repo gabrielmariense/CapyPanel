@@ -82,9 +82,8 @@ CUSTOM = [t for t in themes.Registry().all() if t.engine == "custom"]
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_text_is_readable_in_every_custom_theme(theme: themes.Theme) -> None:
-    # WCAG AA: at least 4.5:1 for normal text, on every surface it's drawn on.
-    # Selected rows always use the main text colour. The hint grey (text3) is drawn on panes;
-    # its one label on the window's own background gets a darker step.
+    # WCAG AA, 4.5:1 for normal text on every surface it's on; selected rows use the main text
+    # colour. The hint grey (text3) is for panes; its one label on the window is a step darker.
     pairs = [(t, s) for t in ("text", "text2") for s in ("bg", "card", "chrome")]
     for text, surface in [*pairs, ("text", "sel_solid"), ("text3", "card")]:
         ratio = themes.contrast_ratio(theme.colors[text], theme.colors[surface])
@@ -127,9 +126,6 @@ def _surfaces() -> list[tuple[str, str, str, str, dict[str, str]]]:
 def test_status_colours_read_in_every_built_in_theme(
     surface: tuple[str, str, str, str, dict[str, str]],
 ) -> None:
-    """Amber, green, red, grey and blue as each theme has them: words on the pane (4.5:1) and
-    at least a dot on a selected row (3:1); amber is a whole row's text, so 4.5:1 there too.
-    The picked colours pass as written: the fallback doesn't have to move any of them."""
     theme_id, card, selection, text, status = surface
     for key, color in status.items():
         on_pane, on_selection = themes.status_floors(key)
@@ -561,9 +557,6 @@ def test_corners_come_in_two_sizes_from_the_theme(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("theme", CUSTOM, ids=lambda t: t.id)
 def test_no_corner_is_fixed_in_the_stylesheet_but_the_round_ones(theme: themes.Theme) -> None:
-    """Tags, badges, the update windows' version chip, the radio button and the scroll bar
-    stay round; a tick box keeps its small corner. Everything else takes one of the theme's
-    two sizes."""
     odd = themes.Theme("odd", "custom", theme.scheme, colors=theme.colors, radius=17,
                        control_radius=13)  # fmt: skip
     sheet = re.sub(r"/\*.*?\*/", "", themes.stylesheet(odd), flags=re.DOTALL)
@@ -592,9 +585,6 @@ def test_tables_draw_a_line_under_each_row_and_none_between_columns() -> None:
 def test_a_ticked_box_in_a_list_keeps_its_box_in_the_windows_themes(
     qapp: QApplication, scheme: str
 ) -> None:
-    """With the Windows themes' own rules on rows, the Windows style drew a ticked box in a
-    list (Profile cleanup, the quick commands) as a bare tick, white on white in light: the
-    stylesheet draws it, filled in a shade of the accent that white reads on."""
     themes.apply(themes.Registry().find(f"windows-{scheme}"))
     tokens = themes.native_tokens(QColor("#ffb900"))  # Windows' yellow accent
     sheet = themes._NATIVE_QSS % {**tokens, **themes._status_tokens(themes.status_colors())}
@@ -616,7 +606,6 @@ def test_row_lines_are_softer_than_the_table_s_frame(theme: themes.Theme) -> Non
 
 
 def test_column_titles_have_a_line_between_them_to_drag(qapp: QApplication) -> None:
-    """The rows have no lines between columns, so the titles show where a column ends."""
     theme = themes.Registry().find("capypanel-dark")
     themes.apply(theme)
     table = QTreeWidget()

@@ -1,6 +1,5 @@
-"""Help from where you are (ui/help_links.py): F1 and the ? open the docs at a window's own part,
-and a warning or error links its own line, in CapyPanel's language. The docs' side, every place
-on its page in both languages, is tests/docs/test_help_places.py."""
+"""Help from where you are (ui/help_links.py): F1 and the ? open a window's part of the docs, and a
+warning or error links its own line, in CapyPanel's language; tests/docs checks the docs' side."""
 
 import re
 from collections.abc import Iterator
@@ -75,7 +74,6 @@ def test_a_link_takes_the_text_colour_where_the_theme_s_own_hardly_shows() -> No
 
 
 def test_a_link_is_judged_on_what_s_behind_it() -> None:
-    """CapyPanel light's blue is 3.8:1 on its window and a strip, 5.2:1 on a card or a box."""
     palette = QPalette()
     palette.setColor(QPalette.ColorRole.Window, QColor("#d9dfe9"))
     palette.setColor(QPalette.ColorRole.Base, QColor("#ffffff"))
@@ -89,10 +87,6 @@ def test_a_link_is_judged_on_what_s_behind_it() -> None:
 def test_in_every_shipped_theme_a_strip_s_link_reads_on_the_strip_drawn_behind_it(
     qapp: QApplication, default_theme_after: None
 ) -> None:
-    """Checked on the colours drawn: CapyPanel dark's blue reads on its window but is 3.1:1 on
-    a strip, so there it takes the text colour, underlined (Dante, build 659). Windows' own
-    themes take Windows' colours, which Qt without a screen doesn't have (their text stays
-    black on the dark strip): the design check's shots, taken on Windows, cover those."""
     hosts = ResultStrip()
     hosts.show_outcome(Outcome("Couldn't log off bruno on PC-1.", RemoteError(Reason.NOT_ADMIN)))
     ssh = EndedBar()
@@ -180,7 +174,6 @@ def test_the_question_mark_opens_its_window_s_part_by_click_and_by_f1(
 def test_the_question_mark_s_ink_starts_at_the_text_edge_its_hover_box_in_the_margin(
     qapp: QApplication,
 ) -> None:
-    """Its ink was about 10 px in from the labels and fields above it (Dante, build 659)."""
     window = QWidget()
     column = QVBoxLayout(window)
     label = QLabel("Name")
@@ -228,8 +221,6 @@ def test_a_strip_s_link_shows_only_with_a_message_that_has_a_line(
 
 
 def test_every_place_the_code_names_is_in_the_list() -> None:
-    """Places are written where they're used (place="…", HELP_PLACE = "…", a box's
-    add_link(box, "…")): each must be in help_links' list, which the docs check reads."""
     named = re.compile(
         r'(?:place=|HELP_PLACE = |help_links\.\w+\(|help_links\.add_link\(\w+, )"([^"]+)"'
     )

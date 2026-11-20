@@ -168,9 +168,8 @@ def test_a_login_ssh_exe_can_take(login: str) -> None:
 
 @pytest.mark.parametrize("char", "\"&'();<>`{|}")
 def test_a_login_with_a_character_ssh_exe_9_5_refuses_is_refused(char: str) -> None:
-    # Windows' own ssh.exe 9.5 refuses these in a user name; an older one passes them on to a
-    # ProxyCommand that names the user (%r), which runs in a shell. Read from a file, such a
-    # login is odd: ssh.exe's own default then, and the value kept as found.
+    # Windows' ssh.exe 9.5 refuses these in a user name; an older one passes them to a ProxyCommand
+    # naming the user (%r), run in a shell. Read from a file, such a login falls back to ssh's own.
     assert not is_login(f"root{char}calc")
     _hosts, host = HostList().add_host("srv", NO_GROUP)
     host = replace(host, extra={"ssh": {"login": f"root{char}calc"}})

@@ -62,7 +62,6 @@ def test_the_window_opens_on_home_with_a_tile_per_tool(home: CapyWindow) -> None
 
 @pytest.mark.parametrize("width", [1300, 1700])  # room for three tiles, and for all four
 def test_four_tools_go_two_by_two_however_wide_the_window(qapp: QApplication, width: int) -> None:
-    """His pick (18 Nov): three and one left SSH alone on its row."""
     page = HomePage(CATALOG)
     page.resize(width, 700)
     page.show()

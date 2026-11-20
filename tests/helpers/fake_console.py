@@ -1,12 +1,5 @@
-"""A stand-in for core/ssh/conpty.py's PseudoConsole, driven by the test: what the program prints
-is queued with `prints`, its own end comes with `ends`, and what the terminal writes is kept in
-`written`. It runs no program and reaches no network.
-
-It signals as the real one does, only on the test's own thread: `on_ready` when output arrives
-on an empty queue and once more at the output's end; `on_exit(code)` when the program ends. The
-output ends only when the console is closed, as a real pseudo console's does. A close while the
-program runs sends the output's end first and the exit after it, the order in which a terminal
-that waited for the exit before the end never ended: the real one's two threads send either."""
+"""A stand-in for conpty.py's PseudoConsole the test drives: `prints` queues output, `ends` the
+program's end, `written` what the terminal wrote; it runs nothing and signals as the real one."""
 
 from collections.abc import Callable, Mapping, Sequence
 
@@ -42,8 +35,6 @@ class FakeConsole:
         self.exit_code: int | None = None
         self.closed = False
 
-    # ---- the test's side ----
-
     def prints(self, data: bytes) -> None:
         """The program prints `data`."""
         was_empty = not self._out
@@ -55,8 +46,6 @@ class FakeConsole:
         """The program ends by itself, with `code`."""
         self.exit_code = code
         self._on_exit(code)
-
-    # ---- the terminal's side, as PseudoConsole's ----
 
     def take(self, limit: int) -> bytes:
         data = bytes(self._out[:limit])

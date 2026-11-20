@@ -84,12 +84,6 @@ def test_portuguese_zero_is_plural() -> None:
 
 
 def test_no_text_writes_a_key_a_person_can_change_into_its_words() -> None:
-    """A key written into a text stays there after someone changes it in Settings › Keyboard
-    shortcuts: a tip adds its command's key as it is now (shortcuts.key_tip), and a sentence
-    takes it from the command (Printers' first-run guide said "press it or F5" until 0.28.1).
-    Anywhere in a text, then. Keys no command can take may be written: those kept for
-    CapyPanel itself (shortcuts.RESERVED). As words, Enter and Del are mostly verbs and
-    buttons: only a bracketed one at the end counts."""
     fixed_keys = {
         "F1", "Esc", "Ctrl+F", "Tab", "Shift+Tab", "Ctrl+Tab", "Ctrl+Shift+Tab", "Ctrl+Shift+W",
     }  # fmt: skip
@@ -110,5 +104,5 @@ def test_no_text_writes_a_key_a_person_can_change_into_its_words() -> None:
     }
     assert named == fixed
     old = "Reads the status, toner and page count of every printer shown. Nothing is read until"
-    assert names_one(f"{old} you press it or F5.")  # the guide's words before 0.28.1
+    assert names_one(f"{old} you press it or F5.")  # the guide's older words
     assert names_one("Open Settings (Ctrl+,)") and names_one("Home (Ctrl+0)")

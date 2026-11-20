@@ -1,8 +1,5 @@
-"""The Profile cleanup tool: the Hosts tab with the hosts of Hosts' open list, a tab per host
-opened (from here or Hosts' right-click), the profiles table with its filters and order, a
-profile's details, sizes, deletes, what a failed scan says, and the limit on reads and counts
-shared by every tab. Nothing here reaches a PC: the scan, the sizes and the deletes are answered
-by hand."""
+"""The Profile cleanup tool: the Hosts tab, a tab per host, the profiles table, details, sizes,
+deletes, failed scans, the shared limit on reads; nothing reaches a PC, all answered by hand."""
 
 from collections.abc import Callable, Iterator
 from datetime import UTC, datetime, timedelta
@@ -445,7 +442,7 @@ def test_a_group_or_list_picked_while_a_hosts_tab_is_in_front_brings_the_hosts_t
     tool.hosts_page.search.setText("desk-10")  # and it ends a search, as picking one does
     tool.nav.everything.itemClicked.emit(item, 0)
     assert tool.hosts_page.search.text() == "" and len(_hosts(tool)) == 3
-    tool.switch(_id(window, "DESK-03"))  # a list picked in the dropdown (Dante, build 618)
+    tool.switch(_id(window, "DESK-03"))  # a list picked in the dropdown
     lists = tool.list_picker.menu()
     lists.aboutToShow.emit()  # filled as it opens
     next(a for a in lists.actions() if a.isChecked()).trigger()  # the list open already
@@ -486,8 +483,6 @@ def _hosts_menu(win: CapyWindow, *names: str) -> QMenu:
 def test_hosts_right_click_opens_them_here_each_in_its_own_tab_and_scanned(
     window: CapyWindow, pc: Pc
 ) -> None:
-    """His idea from the 0.28 test (topic-0281-ideas, D2): one host, the commands' last line;
-    several, with the count, before the submenu. The tool's own icon: the line goes there."""
     tool = _tool(window)
     window.show_tool("hosts")
     menu = _hosts_menu(window, "DESK-03")
@@ -595,9 +590,6 @@ def test_typing_never_scans_and_the_empty_table_offers_the_typed_host(
 def test_the_typed_host_is_offered_under_the_rows_while_no_row_is_it(
     window: CapyWindow, pc: Pc
 ) -> None:
-    """As Hosts' Connect to {host}… (his idea from the 0.28 test): DESK-1 among DESK-10's row
-    still offers Scan DESK-1, as the list's last line. A row that is it, in any case, offers
-    nothing, and a text with a space isn't a PC: its empty table says so with no button."""
     tool = _tool(window)
     page, table = tool.hosts_page, tool.hosts_page.table
     page.search.setText("DESK-1")
@@ -967,8 +959,6 @@ def test_tabs_open_at_the_right_end_and_close_in_every_way(window: CapyWindow) -
 
 
 def test_ctrl_w_and_ctrl_shift_w_each_close_the_tab_in_front(window: CapyWindow) -> None:
-    """Ctrl+Shift+W is the SSH tool's, where Ctrl+W goes to the server: both work here, so the
-    docs name one key for both tools."""
     tool = _tool(window)
     keys = [_open(window).target.key, _open(window, "DESK-10").target.key]
     closers = {
@@ -1015,9 +1005,6 @@ def test_the_arrows_that_scroll_the_tabs_can_be_seen(window: CapyWindow) -> None
 def test_the_list_and_the_right_panel_start_on_the_groups_panel_s_top(
     window: CapyWindow,
 ) -> None:
-    """The tabs are as tall as the list dropdown and the gap under it: a tab's top meets the
-    dropdown's, and the list and the right panel start where the Groups panel does. They sat
-    9 px higher in 0.27 and 0.28 (Dante Q1, Gabriel's pick 1)."""
     tool = _tool(window)
     _open(window, focus=False)  # a host's tab beside the Hosts tab, which stays in front
     window.resize(1280, 760)
@@ -1733,7 +1720,6 @@ def test_a_date_windows_cant_show_in_local_time_never_breaks_a_view() -> None:
 
 
 def test_every_icon_the_code_names_has_its_file() -> None:
-    """An icon drawn only while painting (the row's (i)) has no other test that would miss it."""
     import re
 
     from capypanel.ui.icons import TABLER_DIR

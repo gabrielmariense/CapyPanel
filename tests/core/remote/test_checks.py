@@ -68,8 +68,6 @@ def test_which_outcomes_prove_or_reject_an_account() -> None:
 
 
 def test_the_tools_ports_join_the_usual_ones_but_never_a_vnc_port() -> None:
-    """UltraVNC up to 1.6.1 counts a connection that doesn't log in as a wrong password."""
-
     def tool(kind: str, port: int | None) -> ToolDefinition:
         return ToolDefinition(f"{kind}-{port}", "Viewer", kind, (), port=port)
 

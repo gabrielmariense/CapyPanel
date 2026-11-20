@@ -60,8 +60,6 @@ def test_the_profile_in_details_has_an_arrow_with_the_group_s_choices(window: Ca
 def test_the_arrow_ends_with_connection_profiles_which_opens_settings(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """His idea from the 0.28 test (topic-0281-ideas, B1): the Connect menu's own command, with
-    its words, under a line and never ticked, so it doesn't read as one more profile."""
     hosts = window.hosts
     host_id = _pick(window)
     opened: list[str | None] = []

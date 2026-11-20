@@ -404,9 +404,6 @@ def test_right_click_sets_several_pcs_or_a_group(window: CapyWindow) -> None:
 def test_an_account_changed_after_settings_closed_touches_no_page_that_is_gone(
     window: CapyWindow, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Settings is built anew each time it opens; a closed one's pages are deleted. Changing
-    "Commands run as" from Details afterwards once failed, once for each time Settings had been
-    opened."""
     errors: list[BaseException] = []
     monkeypatch.setattr(sys, "excepthook", lambda _kind, error, _tb: errors.append(error))
     for _time in range(2):
