@@ -95,6 +95,7 @@ class MainWindow(QMainWindow):
         self._quitting = False  # Quit CapyPanel: the X's choice isn't asked
         self._notified_by: str | None = None  # the tool behind the last notification
         self._page_of: dict[str, QWidget] = {}  # each tool's page: its toolbar and the tool
+        self._building = True  # the tools' lists wait to be filled until one is shown
         for make in tools:
             self._add_tool(make(self))
         self._shown: str | None = None  # the tool shown; None: Home
@@ -133,6 +134,7 @@ class MainWindow(QMainWindow):
         start = start if isinstance(start, str) and start in self.tools else None
         if start is not None and self.tools[start].first_use_pending():
             start = None  # its warning comes first, from Home, once the window shows
+        self._building = False
         self._show(start)
 
     def _add_tool(self, tool: Tool) -> None:
@@ -190,6 +192,8 @@ class MainWindow(QMainWindow):
         self._shown = tool_id
         tool = self.shown_tool()
         self._pages.setCurrentWidget(self.home if tool_id is None else self._page_of[tool_id])
+        if tool is not None:
+            tool.came_to_front()  # its lists, if they waited while another tool was shown
         self.rail.show_tool(tool_id)
         self._home_action.setChecked(tool_id is None)
         for action in self._tool_list_actions():
@@ -217,6 +221,11 @@ class MainWindow(QMainWindow):
         return next(a for a in self._tool_list_actions() if a.data() == tool_id)
 
     # ---- what tools ask of the shell ----
+
+    def fills_now(self, tool_id: str) -> bool:
+        # Lists behind another tool wait: with 480 hosts, SSH's and Profile cleanup's cost about
+        # a tenth of a second at every start, and again at every change made in Hosts.
+        return not self._building and self._shown == tool_id
 
     def tool_prefs(self, tool_id: str, *, inherit: bool = False) -> dict[str, Any]:
         return settings.tool_prefs(self.prefs, tool_id, inherit=inherit)

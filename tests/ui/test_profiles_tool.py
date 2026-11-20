@@ -234,6 +234,22 @@ def test_it_is_the_third_tool_and_its_hosts_tab_lists_hosts_open_list(
     assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]
 
 
+def test_its_hosts_wait_behind_another_tool_and_fill_when_it_comes_to_the_front(
+    window: CapyWindow, tmp_path: Path
+) -> None:
+    # Rows nobody sees cost a tenth of a second at every start with 480 hosts, SSH's included.
+    tool = _tool(window)
+    assert window.show_tool("hosts")
+    hl, group = HostList().add_group("Lab")
+    hl, _host = hl.add_host("LAB-07", group.id, address="198.51.100.7")
+    other = tmp_path / "lab.json"
+    listfile.save(other, hl, expected=None)
+    window.hosts.open_list(other)
+    assert tool.list_picker.text() == "lab"  # it follows at once...
+    assert _hosts(tool) == ["DESK-03", "DESK-10", "LAB-02"]  # ...but its rows wait
+    assert window.show_tool("profiles") and _hosts(tool) == ["LAB-07"]
+
+
 def test_the_status_column_is_hosts_own_last_check(window: CapyWindow) -> None:
     tool = _tool(window)
     key = _id(window, "DESK-03")

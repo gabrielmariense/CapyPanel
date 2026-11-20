@@ -56,6 +56,9 @@ class FakeShell:
     def show_tool(self, tool_id: str) -> bool:
         return False
 
+    def fills_now(self, tool_id: str) -> bool:
+        return True  # the only tool, always shown
+
     def guide_changed(self) -> None:
         pass
 

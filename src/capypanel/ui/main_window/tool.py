@@ -54,6 +54,11 @@ class Shell(Protocol):
         """Show another tool, its first-use warning first: False when that was cancelled."""
         ...
 
+    def fills_now(self, tool_id: str) -> bool:
+        """Whether the tool fills its lists now: not while the window is being built, nor while
+        another tool is shown. One that waited fills them in came_to_front()."""
+        ...
+
 
 class ToolKind(Protocol):
     """A tool class, as the tool catalog lists it: made from the shell, and able to prepare its
@@ -144,6 +149,9 @@ class Tool(QWidget):
         """Before the tool is shown for the first time ever: False keeps it closed. A tool
         that can do harm says so here (Profile cleanup)."""
         return True
+
+    def came_to_front(self) -> None:
+        """Shown now: the lists it left unfilled meanwhile (the shell's fills_now) get filled."""
 
     def working(self) -> bool:
         """Whether it's in the middle of something an update must not cut off (a Refresh):

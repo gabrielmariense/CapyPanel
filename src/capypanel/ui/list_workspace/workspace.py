@@ -92,6 +92,7 @@ class ListWorkspace(Tool):
         self._real_doc: OpenList | None = None  # the list as saved, while a guide's sample shows
         self._shown_for_guide: list[QAction] = []  # hidden panels a guide showed
         self._hold_fill = False  # at start: the table is filled once, at the end
+        self._fill_waiting = False  # behind another tool: filled when it comes to the front
         leader = shell.tool(self.LISTS_FROM) if self.LISTS_FROM else None
         self._leader = leader if isinstance(leader, ListWorkspace) else None
         self._places = shell.paths.lists(self.list_kind())  # lists\<kind>\, shared and own
@@ -1077,8 +1078,15 @@ class ListWorkspace(Tool):
         self._show_items()
         self.list_changed.emit()
 
+    def came_to_front(self) -> None:
+        if self._fill_waiting:
+            self._show_items()
+
     def _show_items(self) -> None:
         if self._hold_fill:
+            return
+        self._fill_waiting = not self._shell.fills_now(self.TOOL_ID)
+        if self._fill_waiting:
             return
         self._search_timer.stop()
         needle = self._needle()

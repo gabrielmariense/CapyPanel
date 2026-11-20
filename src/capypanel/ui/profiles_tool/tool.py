@@ -130,6 +130,7 @@ class ProfilesTool(Tool):
         self._pages: dict[str, HostPage] = {}  # by host key, as the tabs are
         self._kept: dict[str, tuple[int, int, datetime]] = {}  # closed tabs' counts and time
         self._shown: list[Host] = []  # the Hosts tab's rows
+        self._hosts_waiting = False  # behind another tool: its rows fill when it's shown
         self._quitting = False  # quit asked while a host deletes: quit once they're done
 
         self.nav = NavigationPane(lambda: _("All hosts"))
@@ -672,7 +673,14 @@ class ProfilesTool(Tool):
             return _("No group")
         return _("All hosts")
 
+    def came_to_front(self) -> None:
+        if self._hosts_waiting:
+            self._fill_hosts()
+
     def _fill_hosts(self) -> None:
+        self._hosts_waiting = not self._shell.fills_now(self.TOOL_ID)
+        if self._hosts_waiting:
+            return
         hosts = self._shown = self.visible_hosts()
         typed = self.hosts_page.search.text().strip()
         self.hosts_page.table.show_hosts(hosts, self._row_facts)
