@@ -301,7 +301,7 @@ class Results(HostDetailsPanel):
         layout.addWidget(answer)
         place = reason_place(outcome.error) if outcome.error is not None else ""
         if place:  # "What does this mean?" inside the answer, as in Hosts' strip
-            link = help_links.anchor(place, answer.palette())
+            link = help_links.anchor(place, answer.palette(), help_links.CARD)
             answer.setText(f"{outcome.text}&nbsp;&nbsp;{link}")
             answer.setOpenExternalLinks(False)
             answer.setTextInteractionFlags(

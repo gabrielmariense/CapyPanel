@@ -67,6 +67,18 @@ def test_a_link_takes_the_text_colour_where_the_theme_s_own_hardly_shows() -> No
     assert help_links.link_color(palette).name() == "#8ab4f8"
 
 
+def test_a_link_is_judged_on_what_s_behind_it() -> None:
+    """CapyPanel light's blue is 3.8:1 on its window and a strip, 5.2:1 on a card or a box."""
+    palette = QPalette()
+    palette.setColor(QPalette.ColorRole.Window, QColor("#d9dfe9"))
+    palette.setColor(QPalette.ColorRole.Base, QColor("#ffffff"))
+    palette.setColor(QPalette.ColorRole.WindowText, QColor("#111827"))
+    palette.setColor(QPalette.ColorRole.Link, QColor("#2563eb"))
+    assert help_links.link_color(palette).name() == "#111827"
+    assert help_links.link_color(palette, help_links.CARD).name() == "#2563eb"
+    assert "#2563eb" in help_links.anchor("ssh-not-installed", palette, help_links.CARD)
+
+
 def _box(place: str) -> QMessageBox:
     box = QMessageBox(QMessageBox.Icon.Warning, "CapyPanel", "Couldn't save “a.csv”: in use.")
     help_links.add_link(box, place)

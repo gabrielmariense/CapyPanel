@@ -20,7 +20,8 @@ from capypanel.ui.icons import tabler_icon
 from capypanel.ui.themes.engine import contrast_ratio
 
 KEY = "F1"  # kept for help: no command can take it (shortcuts.RESERVED)
-READABLE = 4.5  # a link's least contrast with the window, as for any text
+READABLE = 4.5  # a link's least contrast with what's behind it, as for any text
+CARD = QPalette.ColorRole.Base  # behind a link on a card or in a message box
 LINK_KEYS = (
     Qt.TextInteractionFlag.LinksAccessibleByMouse | Qt.TextInteractionFlag.LinksAccessibleByKeyboard
 )
@@ -154,22 +155,26 @@ def open_place(place: str) -> None:
     about.open_url(url(place))
 
 
-def link_color(palette: QPalette) -> QColor:
-    """The theme's link colour where it reads on the window, else the text colour: a link is
-    underlined either way. Windows' own dark theme takes the PC's accent for links, which can be
-    a dark purple that hardly shows."""
+def link_color(palette: QPalette, on: QPalette.ColorRole = QPalette.ColorRole.Window) -> QColor:
+    """The theme's link colour where it reads on what's behind the link (`on`: the window, whose
+    colour a strip's tint is close to, or CARD), else the text colour: a link is underlined
+    either way. Windows' own dark theme takes the PC's accent for links, which can be a dark
+    purple that hardly shows; the light theme's blue reads on a card (5.2:1) but not on its
+    window or a strip (3.8:1)."""
     link = palette.color(QPalette.ColorRole.Link)
-    if contrast_ratio(link.name(), palette.color(QPalette.ColorRole.Window).name()) >= READABLE:
+    if contrast_ratio(link.name(), palette.color(on).name()) >= READABLE:
         return link
     return palette.color(QPalette.ColorRole.WindowText)
 
 
-def anchor(place: str, palette: QPalette) -> str:
-    """ "What does this mean?" as rich text. A strip puts it in its message's own label, so the
-    link reads straight after the message and wraps with it (Printers' warnings strip: a link
-    label of its own beside the message squeezed it); the label opens it with open_place on
-    linkActivated."""
-    style = f"color: {link_color(palette).name()}; text-decoration: underline;"
+def anchor(
+    place: str, palette: QPalette, on: QPalette.ColorRole = QPalette.ColorRole.Window
+) -> str:
+    """ "What does this mean?" as rich text, coloured to read on `on` (link_color). A strip puts
+    it in its message's own label, so the link reads straight after the message and wraps with
+    it (Printers' warnings strip: a link label of its own beside the message squeezed it); the
+    label opens it with open_place on linkActivated."""
+    style = f"color: {link_color(palette, on).name()}; text-decoration: underline;"
     words = escape(_("What does this mean?"))
     return f'<a href="{escape(url(place))}" style="{style}">{words}</a>'
 
@@ -179,7 +184,7 @@ def add_link(box: QMessageBox, place: str) -> None:
     The box stays open when it's clicked. Call it last: informative text set after it would
     replace the link."""
     before = box.informativeText()
-    link = anchor(place, box.palette())
+    link = anchor(place, box.palette(), CARD)  # a box is drawn on the card colour
     if before:
         link = escape(before).replace("\n", "<br>") + "<br><br>" + link
     box.setInformativeText(link)
@@ -269,11 +274,12 @@ def row(help_button: HelpButton, buttons: QWidget) -> QHBoxLayout:
 class HelpLink(QLabel):
     """ "What does this mean?" as a link to a message's line, for a strip: after the message,
     before the strip's buttons. Tab reaches it and Enter opens it. With no place (a message that
-    worked, which has no line) it's hidden."""
+    worked, which has no line) it's hidden. `on`: what's behind it, CARD on a card (link_color).
+    """
 
-    def __init__(self) -> None:
+    def __init__(self, on: QPalette.ColorRole = QPalette.ColorRole.Window) -> None:
         super().__init__()
-        self._place = ""
+        self._place, self._on = "", on
         self.setObjectName("helpLink")
         self.setTextFormat(Qt.TextFormat.RichText)
         self.setOpenExternalLinks(False)
@@ -288,7 +294,7 @@ class HelpLink(QLabel):
 
     def _show(self) -> None:
         if self._place:
-            self.setText(anchor(self._place, self.palette()))
+            self.setText(anchor(self._place, self.palette(), self._on))
             self.setToolTip(url(self._place))
 
     def changeEvent(self, event: QEvent) -> None:
