@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton
 
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.printers.reading import SupplyKind
+from capypanel.ui import help_links
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.printers_tool import status
 from capypanel.ui.printers_tool.status import Attention, Checked, Reason, amber
@@ -60,6 +61,10 @@ def notice_text(lines: list[str]) -> str:
     return "\n".join(shown)
 
 
+# The strip's "What does this mean?": the part on which printers need attention, and why.
+HELP_PLACE = "printers-checking-see-which-printers-need-attention"
+
+
 class AttentionStrip(QFrame):
     show_clicked = Signal()  # Show, or Show all once only those are listed
 
@@ -68,9 +73,15 @@ class AttentionStrip(QFrame):
         self.setObjectName("attentionStrip")
         self._icon = QLabel()
         self.restyle()
+        self._words = ""
+        # One "What does this mean?" for the whole line, inside its text, so it reads straight
+        # after the message and wraps with it: the warnings' part of the docs.
         self._text = QLabel()
         self._text.setTextFormat(Qt.TextFormat.RichText)
         self._text.setWordWrap(True)
+        self._text.setOpenExternalLinks(False)
+        self._text.setTextInteractionFlags(help_links.LINK_KEYS)
+        self._text.linkActivated.connect(lambda _href: help_links.open_place(HELP_PLACE))
         self.button = QPushButton()
         self.button.setAutoDefault(False)
         self.button.clicked.connect(self.show_clicked)
@@ -82,9 +93,17 @@ class AttentionStrip(QFrame):
         self.hide()
 
     def restyle(self) -> None:
-        """The warning icon in the current theme's amber, again after a theme switch."""
+        """The warning icon in the current theme's amber, and the link in its link colour,
+        again after a theme switch."""
         icon = tabler_icon("alert-triangle", QColor(amber()), ICON)
         self._icon.setPixmap(icon.pixmap(ICON, ICON))
+        if getattr(self, "_words", ""):
+            self._show_words()
+
+    def _show_words(self) -> None:
+        link = help_links.anchor(HELP_PLACE, self._text.palette())
+        self._text.setText(f"{self._words}&nbsp;&nbsp;{link}")
+        self._text.setToolTip(help_links.url(HELP_PLACE))
 
     def show_found(self, found: list[Reason], only_them: bool) -> None:
         """Hidden when nothing needs attention."""
@@ -108,4 +127,5 @@ class AttentionStrip(QFrame):
             ).format(n=n, reasons=reasons_text(found))
             self.button.setText(_("Show"))
             self.button.setToolTip(_("List only the printers that need attention"))
-        self._text.setText(text)
+        self._words = text
+        self._show_words()

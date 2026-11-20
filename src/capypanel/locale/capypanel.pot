@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 01:01-0300\n"
+"POT-Creation-Date: 2026-11-20 01:07-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1354,6 +1354,13 @@ msgstr ""
 
 #, python-brace-format
 msgid "Couldn't save how often to check: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Couldn't save the change in Windows Credential Manager: {error}\n"
+"\n"
+"Nothing was changed."
 msgstr ""
 
 #, python-brace-format
@@ -4989,10 +4996,6 @@ msgid ""
 msgstr ""
 
 msgid "Windows answered:"
-msgstr ""
-
-#, python-brace-format
-msgid "Windows didn't keep it: {error}"
 msgstr ""
 
 #, python-brace-format

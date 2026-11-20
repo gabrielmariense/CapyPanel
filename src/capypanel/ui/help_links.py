@@ -66,6 +66,29 @@ PLACES: dict[str, str] = {
     "commands-the-commands-window": "hosts/commands/",
     # Profile cleanup
     "profiles-see-which-profiles-can-be-deleted": "profiles/user-profiles/",
+    # Printers: its windows
+    "printers-add-a-printer": "printers/printers/",
+    "printers-import-many-printers-at-once": "printers/printers/",
+    "printers-export-printers-to-a-spreadsheet": "printers/printers/",
+    "printers-checking-see-how-much-toner-is-left": "printers/checking/",
+    "printers-checking-see-which-printers-need-attention": "printers/checking/",
+    "printers-checking-choose-which-problems-warn": "printers/checking/",
+    "printers-checking-set-the-snmp-account": "printers/checking/",
+    "printers-checking-get-page-counts-from-doc360-mps": "printers/checking/",
+    # Printers: its messages
+    "printer-offline": "printers/checking/",
+    "printer-refused": "printers/checking/",
+    "printer-unreadable": "printers/checking/",
+    "printers-credential-not-saved": "printers/checking/",
+    "doc360-no-account": "printers/checking/",
+    "doc360-login-refused": "printers/checking/",
+    "doc360-no-answer": "printers/checking/",
+    "doc360-error-answer": "printers/checking/",
+    "doc360-no-total": "printers/checking/",
+    "doc360-pages-changed": "printers/checking/",
+    "doc360-serial-not-listed": "printers/checking/",
+    "doc360-serial-missing": "printers/checking/",
+    "doc360-month-not-counted": "printers/checking/",
     # SSH
     "ssh-add-a-host": "ssh/ssh/",
     "ssh-choose-the-name-to-log-in-as": "ssh/ssh/",
@@ -111,6 +134,13 @@ def _anchor(place: str, palette: QPalette) -> str:
     style = f"color: {link_color(palette).name()}; text-decoration: underline;"
     words = escape(_("What does this mean?"))
     return f'<a href="{escape(url(place))}" style="{style}">{words}</a>'
+
+
+def anchor(place: str, palette: QPalette) -> str:
+    """ "What does this mean?" as rich text, for a label that holds its message too (Printers'
+    warnings strip), so the link wraps with the message rather than sitting apart from it. The
+    label opens it with open_place on linkActivated."""
+    return _anchor(place, palette)
 
 
 def add_link(box: QMessageBox, place: str) -> None:

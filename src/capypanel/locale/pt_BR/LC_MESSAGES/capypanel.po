@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 01:01-0300\n"
+"POT-Creation-Date: 2026-11-20 01:07-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1309,6 +1309,16 @@ msgstr "Não foi possível salvar como os PCs são lidos: {error}"
 #, python-brace-format
 msgid "Couldn't save how often to check: {error}"
 msgstr "Não foi possível salvar de quanto em quanto tempo procurar: {error}"
+
+#, python-brace-format
+msgid ""
+"Couldn't save the change in Windows Credential Manager: {error}\n"
+"\n"
+"Nothing was changed."
+msgstr ""
+"Não foi possível salvar a mudança no Gerenciador de Credenciais do Windows: {error}\n"
+"\n"
+"Nada foi alterado."
 
 #, python-brace-format
 msgid "Couldn't save the connection profiles: {error}"
@@ -4718,10 +4728,6 @@ msgstr "O Windows PowerShell salva as impressoras de um PC em um arquivo com o c
 
 msgid "Windows answered:"
 msgstr "O Windows respondeu:"
-
-#, python-brace-format
-msgid "Windows didn't keep it: {error}"
-msgstr "O Windows não a guardou: {error}"
 
 #, python-brace-format
 msgid "Windows didn't let CapyPanel start PowerShell on your PC to read {host}. An antivirus may block it."

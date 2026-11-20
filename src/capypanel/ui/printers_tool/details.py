@@ -18,6 +18,7 @@ from capypanel.core.i18n import _, ngettext, pgettext
 from capypanel.core.printers.printer import DOC360, SNMP, info_of
 from capypanel.core.printers.reading import Supply
 from capypanel.ui.checks import clock_text
+from capypanel.ui.help_links import HelpLink
 from capypanel.ui.icons import dot_icon
 from capypanel.ui.list_workspace.details import DetailsPanel, breakable
 from capypanel.ui.printers_tool import marks as bar_marks
@@ -180,6 +181,8 @@ class PrinterDetailsPanel(DetailsPanel):
         for key, label, value in (("pages", _("Total pages"), total),
                                   ("counter_source", _("Source"), source)):  # fmt: skip
             self._row(grid, key, label, value).setToolTip(tip)
+        if error:
+            layout.addWidget(_link(status.doc360_place(info, reading, shown.counted)))
         if error and shown.counted and shown.counted.account:
             self._account_button(layout, shown)
         if pages is not None and (month := status.older_text(shown.counted)):
@@ -191,6 +194,7 @@ class PrinterDetailsPanel(DetailsPanel):
             warning.setWordWrap(True)
             warning.setStyleSheet(f"color: {amber()};")
             layout.addWidget(warning)
+            layout.addWidget(_link("doc360-month-not-counted"))
 
     def _account_button(self, layout: QVBoxLayout, shown: PrinterDetails) -> None:
         """Under a missing or refused Doc360 login: its window, straight from here."""
@@ -234,7 +238,17 @@ class PrinterDetailsPanel(DetailsPanel):
             )
         under = self.muted(words)
         under.setToolTip(status.plain_tip(cell.tip))
-        layout.addWidget(under)
+        # A printer that didn't answer or couldn't be read: its line in the docs, after the
+        # status (the table's cell is a tooltip, which can't hold a link).
+        if place := status.status_place(shown.checked):
+            line_row = QHBoxLayout()
+            line_row.setSpacing(8)
+            line_row.addWidget(under)
+            line_row.addWidget(_link(place))
+            line_row.addStretch(1)
+            layout.addLayout(line_row)
+        else:
+            layout.addWidget(under)
         reading = shown.checked.reading if shown.checked else None
         for message in reading.messages if reading else ():  # the printer's own words, in full
             said = QLabel(breakable(message))
@@ -317,3 +331,10 @@ class PrinterDetailsPanel(DetailsPanel):
         grid.addWidget(name, row, 0, Qt.AlignmentFlag.AlignVCenter)
         grid.addWidget(shown, row, 1, Qt.AlignmentFlag.AlignVCenter)
         return shown
+
+
+def _link(place: str) -> HelpLink:
+    """ "What does this mean?" for a line Details shows; hidden with no place."""
+    link = HelpLink()
+    link.set_place(place)
+    return link

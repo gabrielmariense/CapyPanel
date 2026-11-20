@@ -100,7 +100,7 @@ def test_the_strip_and_the_rail_count_show_what_needs_attention(window: CapyWind
         tool._checked[ids[name]] = checked
     tool._count_attention()
     assert not strip.isHidden() and not badge.isHidden() and badge.text() == "3"
-    assert strip._text.text() == "<b>3 printers</b> need attention: 1 stopped, 1 offline, 1 low."
+    assert strip._words == "<b>3 printers</b> need attention: 1 stopped, 1 offline, 1 low."
     assert (
         window.rail.buttons["printers"].toolTip() == "Printers (Ctrl+2)\n3 printers need attention"
     )
@@ -109,7 +109,7 @@ def test_the_strip_and_the_rail_count_show_what_needs_attention(window: CapyWind
     tool._show_items()
     strip.button.click()
     assert _shown(tool) == ["PRN-1F-02", "PRN-2F-01", "PRN-2F-02"] and tool.search.text() == ""
-    assert strip._text.text() == "Showing the <b>3 printers</b> that need attention."
+    assert strip._words == "Showing the <b>3 printers</b> that need attention."
     assert strip.button.text() == "Show all"
     assert len(tool.visible_items()) == 3  # F5 checks just these three
 
