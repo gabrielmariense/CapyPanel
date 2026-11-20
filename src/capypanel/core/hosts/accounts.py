@@ -1,8 +1,5 @@
-"""Which account signs in to which PCs. Each link says "use this account for" one PC, a group,
-a tag or every PC, and lives in the person's own settings, never in the shared host list: each
-admin has their own accounts. Passwords never go in here (Credential Manager, or typed once per
-session). A PC's own link wins over its group's (the nearest group first), a group's over a
-tag's, and those over "every PC"; with none, the Windows account signs in."""
+"""Which account signs in to which PCs: links kept in the person's own settings, never in the
+shared list, with no passwords. The nearest link wins (PC, group, tag, every PC), else Windows'."""
 
 import os
 from collections.abc import Iterable, Mapping, Sequence

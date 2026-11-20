@@ -20,7 +20,7 @@ class HostListFileError(Exception):
 
 
 class HostListFormatError(HostListFileError):
-    """The file isn't a valid host list."""
+    pass
 
 
 class HostListTooNewError(HostListFileError):
@@ -82,11 +82,8 @@ def kind_of(data: object) -> str:
 def save(
     path: Path, host_list: HostList, *, expected: FileStamp | None, kind: str = HOSTS
 ) -> FileStamp:
-    """Save atomically, only if the file is still what was loaded (`expected`; None = new file).
-
-    The check never silently overwrites someone else's changes. What to do instead is
-    the caller's choice, e.g. offer to save a copy.
-    """
+    """Saves atomically, only if the file is still what was loaded (`expected`; None: a new file),
+    so someone else's changes are never overwritten; the caller decides what to do instead."""
     if stamp_of(path) != expected:
         raise HostListChangedError(_("Someone else has changed the file since you opened it."))
     text = json.dumps(to_data(host_list, kind), indent=2, ensure_ascii=False) + "\n"
@@ -108,8 +105,6 @@ def can_write(path: Path) -> bool:
         return False
     return True
 
-
-# ---- JSON <-> records ----
 
 _LIST_KEYS = ("schema", "kind", "groups", "hosts")
 _GROUP_KEYS = ("id", "name", "parent", "profile")

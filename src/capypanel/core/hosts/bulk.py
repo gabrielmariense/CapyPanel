@@ -1,13 +1,5 @@
-"""Many hosts at once: reading a pasted list or a CSV file, planning what an import would do
-(nothing changes until it's applied), and writing hosts out as CSV.
-
-A list is either a header row naming its columns (name, address, group, tags, notes, in any order,
-in English or Portuguese; other columns are ignored), or lines of "name, address" without one,
-where the address may be left out when the name is the computer's name on the network. A CSV file
-must have the header row. Columns are split by a tab (as Excel copies), a semicolon (Excel's CSV
-in pt-BR) or a comma; a pasted table whose columns are lined up with spaces works too, with its
-header row. A group is a path, its levels joined by "/"; tags are joined by ";" (or ","
-in a ";" list)."""
+"""Many hosts at once: reading a pasted list or a CSV file (header names in English or
+Portuguese; tab, ";" or "," between columns), planning an import, and writing hosts as CSV."""
 
 import csv
 import ctypes
@@ -82,13 +74,9 @@ class Plan:
         return sum(1 for i in self.items if i.verdict is Verdict.ADD)
 
 
-# ---- reading ----
-
-
 def parse(text: str, *, file: bool = False, more: More | None = None) -> Parsed:
-    """file: read from a CSV file, which must start with a header row. Pasted text may also be
-    plain "name, address" lines. more: columns of the caller's own, read into ImportRow.more
-    (Printers' brand, model and so on); without it, other columns are ignored."""
+    """file: a CSV file, which needs a header row; pasted text may be plain "name, address" lines.
+    more: the caller's own columns (Printers' brand, model…), read into ImportRow.more."""
     lines = [line for line in text.splitlines() if line.strip()]
     if not lines:
         return Parsed(())
@@ -192,9 +180,6 @@ def _unguarded(cell: str) -> str:
     return cell[len(GUARD) :] if guarded else cell
 
 
-# ---- planning ----
-
-
 def plan(
     host_list: HostList,
     rows: Iterable[ImportRow],
@@ -202,11 +187,8 @@ def plan(
     *,
     problem: Callable[[ImportRow], str | None] | None = None,
 ) -> Plan:
-    # default_group: where rows without a group go; NO_GROUP leaves them out of every group.
-    """What the import would do, row by row, and the list it would make. Nothing is changed:
-    the caller saves `result` only when the user confirms. problem: the caller's own check of a
-    row, in place of the hosts' one: why it can't be added, "" when it can, None for the hosts'
-    check (Printers allows https:// addresses)."""
+    """What the import would do, row by row, and the list it would make; nothing is saved here.
+    default_group: for rows without one (NO_GROUP: none). problem: the caller's own row check."""
     result, items, new_groups = host_list, [], []
     names: dict[str, Host] = {}
     targets: dict[str, Host] = {}
@@ -343,9 +325,6 @@ def _group(
     return host_list, parent, made
 
 
-# ---- writing ----
-
-
 # A spreadsheet runs a cell that starts with one of these as a formula.
 FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
 GUARD = "'"  # put before such a cell, so it's shown as text; the import takes it off again
@@ -373,9 +352,8 @@ def write_csv(
 
 
 def to_csv(rows: Iterable[ImportRow], delimiter: str = ",", more: Sequence[str] = ()) -> str:
-    """Rows as CSV with a header row: what the import window shows once its table is edited.
-    With ";" between columns, tags are joined by "," (the import reads both ways). more: the
-    caller's own columns, by key, after the hosts' ones."""
+    """Rows as CSV with a header row, for the import window's edited table; with ";" between
+    columns, tags are joined by ",". more: the caller's own columns, after the hosts' ones."""
     between_tags = "," if delimiter == ";" else ";"
     return write_csv(
         ["name", "address", "group", "tags", "notes", *more],
