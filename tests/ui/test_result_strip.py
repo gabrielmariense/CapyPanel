@@ -103,11 +103,13 @@ def test_each_reason_links_a_line_the_docs_have_or_nothing() -> None:
         (RemoteError(Reason.UNREACHABLE), "pc-unreachable"),
         (RemoteError(Reason.NOT_ADMIN), "command-access-denied"),
         (RemoteError(Reason.REJECTED), "pc-account-rejected"),
+        (RemoteError(Reason.OTHER, 1722), "command-windows-error"),
         (PowerShellBlocked(OSError(1260, "blocked")), "pc-powershell-blocked"),
+        (TimeoutError(), "command-timed-out"),
         (NotADirectoryError(), "command-no-folder"),
     ]
     for error, place in linked:
         assert reason_place(error) == place and place in help_links.PLACES
-    # No line explains these yet: no link that promises one.
-    for error in (RemoteError(Reason.OTHER, 1722), TimeoutError(), RuntimeError("busy")):
-        assert reason_place(error) == ""
+    # No line explains the rest (a Refresh still running, a reason Windows wrote): no link that
+    # promises one.
+    assert reason_place(RuntimeError("busy")) == "" and reason_place(OSError("odd")) == ""

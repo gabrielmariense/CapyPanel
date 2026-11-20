@@ -123,9 +123,12 @@ def reason_place(error: BaseException) -> str:
             Reason.UNREACHABLE: "pc-unreachable",
             Reason.NOT_ADMIN: "command-access-denied",
             Reason.REJECTED: "pc-account-rejected",
-        }.get(error.reason, "")
+            Reason.OTHER: "command-windows-error",
+        }[error.reason]
     if isinstance(error, PowerShellBlocked):
         return "pc-powershell-blocked"
+    if isinstance(error, TimeoutError):
+        return "command-timed-out"
     if isinstance(error, NotADirectoryError):
         return "command-no-folder"
     return ""

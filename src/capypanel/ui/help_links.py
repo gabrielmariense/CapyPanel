@@ -91,6 +91,8 @@ PLACES: dict[str, str] = {
     # Hosts: why a command failed (its strip, the Commands window's answer)
     "command-access-denied": "hosts/commands/",
     "command-no-folder": "hosts/commands/",
+    "command-timed-out": "hosts/commands/",
+    "command-windows-error": "hosts/commands/",
     "pc-unreachable": "hosts/checking/",
     "pc-account-rejected": "hosts/checking/",
     "pc-powershell-blocked": "hosts/checking/",
