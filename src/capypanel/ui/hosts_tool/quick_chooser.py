@@ -71,6 +71,7 @@ class _Name(QStyledItemDelegate):
 
 
 class QuickChooser(QWidget):
+    HELP_PLACE = "commands-choose-your-quick-commands"  # Customize's ?, on this tab
     changed = Signal(list)  # the picked commands' ids, in order
 
     def __init__(self, picked: Sequence[str], shortcuts: Mapping[str, str]) -> None:

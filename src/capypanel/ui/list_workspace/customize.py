@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.i18n import _
+from capypanel.ui import help_links
 from capypanel.ui.notes import hint
 from capypanel.ui.tables import fit_rows, grid_table, with_buttons
 
@@ -36,6 +37,7 @@ class Part:
 class PartsTab(QWidget):
     """The Information tab: every part with a tick. Unticking one hides it in the panel."""
 
+    HELP_PLACE = "start-hide-parts-of-the-details-panel"
     changed = Signal(list)  # the hidden parts' keys
 
     def __init__(self, parts: Sequence[Part], hidden: Sequence[str], always: str) -> None:
@@ -112,7 +114,9 @@ class CustomizeDialog(QDialog):
         close.clicked.connect(self.accept)
         own = QLabel(_("Only for you, on this PC."))
         own.setObjectName("hint")
+        self.help_button = help_links.HelpButton(self.help_place)
         bottom = QHBoxLayout()
+        bottom.addWidget(self.help_button)
         bottom.addWidget(own)
         bottom.addStretch(1)
         bottom.addWidget(close)
@@ -120,6 +124,10 @@ class CustomizeDialog(QDialog):
         layout.addWidget(self.tabs, 1)
         layout.addLayout(bottom)
         self.resize(*SIZE)
+
+    def help_place(self) -> str:
+        """The tab shown's part of the docs: each tab names its own HELP_PLACE."""
+        return getattr(self.tabs.currentWidget(), "HELP_PLACE", "") or (PartsTab.HELP_PLACE)
 
     def show_tab(self, index: int) -> None:
         self.tabs.setCurrentIndex(max(0, min(index, self.tabs.count() - 1)))

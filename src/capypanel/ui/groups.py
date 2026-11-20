@@ -46,6 +46,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.i18n import _
+from capypanel.ui import help_links
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.hosts import group_path
 from capypanel.ui.menus import popup
@@ -557,7 +558,8 @@ class ManageGroupsDialog(QDialog):
                 _("Nothing changes until you click Save."),
             )
         )
-        layout.addWidget(self.box)
+        self.help_button = help_links.HelpButton("host-lists-arrange-hosts-in-groups")
+        layout.addLayout(help_links.row(self.help_button, self.box))
         self.up_button.clicked.connect(lambda: self._move(-1))
         self.down_button.clicked.connect(lambda: self._move(1))
         self.move_button.clicked.connect(self._show_move_menu)

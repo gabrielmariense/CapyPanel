@@ -13,7 +13,7 @@ from html import escape
 
 from PySide6.QtCore import QEvent, QSize, Qt
 from PySide6.QtGui import QColor, QKeySequence, QPalette, QShortcut
-from PySide6.QtWidgets import QLabel, QMessageBox, QToolButton, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QMessageBox, QToolButton, QWidget
 
 from capypanel.core.i18n import _
 from capypanel.ui.icons import tabler_icon
@@ -34,6 +34,7 @@ PLACES: dict[str, str] = {
     "start-hide-parts-of-the-details-panel": "getting-started/",
     "start-get-help-or-report-a-problem": "getting-started/",
     # Settings: the page shown
+    "settings-find-a-setting": "settings-and-files/",
     "settings-capypanel-general": "settings-and-files/",
     "settings-capypanel-keyboard-shortcuts": "settings-and-files/",
     "settings-hosts-general": "settings-and-files/",
@@ -66,6 +67,7 @@ PLACES: dict[str, str] = {
     "commands-the-commands-window": "hosts/commands/",
     # Profile cleanup
     "profiles-see-which-profiles-can-be-deleted": "profiles/user-profiles/",
+    "profiles-delete-profiles": "profiles/user-profiles/",
     # Printers: its windows
     "printers-add-a-printer": "printers/printers/",
     "printers-import-many-printers-at-once": "printers/printers/",
@@ -92,6 +94,8 @@ PLACES: dict[str, str] = {
     # SSH
     "ssh-add-a-host": "ssh/ssh/",
     "ssh-choose-the-name-to-log-in-as": "ssh/ssh/",
+    "ssh-work-in-the-terminal": "ssh/ssh/",
+    "ssh-when-a-connection-ends": "ssh/ssh/",
 }
 TOPS = (
     "hosts/host-lists/",
@@ -130,17 +134,14 @@ def link_color(palette: QPalette) -> QColor:
     return palette.color(QPalette.ColorRole.WindowText)
 
 
-def _anchor(place: str, palette: QPalette) -> str:
+def anchor(place: str, palette: QPalette) -> str:
+    """ "What does this mean?" as rich text. A strip puts it in its message's own label, so the
+    link reads straight after the message and wraps with it (Printers' warnings strip: a link
+    label of its own beside the message squeezed it); the label opens it with open_place on
+    linkActivated."""
     style = f"color: {link_color(palette).name()}; text-decoration: underline;"
     words = escape(_("What does this mean?"))
     return f'<a href="{escape(url(place))}" style="{style}">{words}</a>'
-
-
-def anchor(place: str, palette: QPalette) -> str:
-    """ "What does this mean?" as rich text, for a label that holds its message too (Printers'
-    warnings strip), so the link wraps with the message rather than sitting apart from it. The
-    label opens it with open_place on linkActivated."""
-    return _anchor(place, palette)
 
 
 def add_link(box: QMessageBox, place: str) -> None:
@@ -148,7 +149,7 @@ def add_link(box: QMessageBox, place: str) -> None:
     The box stays open when it's clicked. Call it last: informative text set after it would
     replace the link."""
     before = box.informativeText()
-    link = _anchor(place, box.palette())
+    link = anchor(place, box.palette())
     if before:
         link = escape(before).replace("\n", "<br>") + "<br><br>" + link
     box.setInformativeText(link)
@@ -227,6 +228,14 @@ class HelpButton(QToolButton):
             self._retranslate()
 
 
+def row(help_button: HelpButton, buttons: QWidget) -> QHBoxLayout:
+    """A window's button row: its ? first, on the left, then its buttons at the right."""
+    line = QHBoxLayout()
+    line.addWidget(help_button)
+    line.addWidget(buttons, 1)
+    return line
+
+
 class HelpLink(QLabel):
     """ "What does this mean?" as a link to a message's line, for a strip: after the message,
     before the strip's buttons. Tab reaches it and Enter opens it. With no place (a message that
@@ -249,7 +258,7 @@ class HelpLink(QLabel):
 
     def _show(self) -> None:
         if self._place:
-            self.setText(_anchor(self._place, self.palette()))
+            self.setText(anchor(self._place, self.palette()))
             self.setToolTip(url(self._place))
 
     def changeEvent(self, event: QEvent) -> None:

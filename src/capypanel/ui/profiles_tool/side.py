@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.i18n import _, ngettext, pgettext
 from capypanel.core.remote.user_profiles import Profile
+from capypanel.ui import help_links
 from capypanel.ui.dialogs import quiet_default
 from capypanel.ui.hosts_tool.command_windows import risky_button
 from capypanel.ui.icons import dot_icon, tabler_icon
@@ -625,7 +626,9 @@ class ProfileWindow(QDialog):
         self.close_button = QPushButton(_("Close"))
         quiet_default(self.close_button)
         self.close_button.clicked.connect(self.accept)
+        self.help_button = help_links.HelpButton("profiles-see-which-profiles-can-be-deleted")
         buttons = QHBoxLayout()
+        buttons.addWidget(self.help_button)
         buttons.addWidget(self.tick)
         buttons.addStretch(1)
         buttons.addWidget(self.close_button)

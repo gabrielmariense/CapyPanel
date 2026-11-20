@@ -466,6 +466,7 @@ class ProfilesTool(Tool):
                 "each host finishes first; CapyPanel quits after that."
             ),  # fmt: skip
             _("Cancel the rest and quit"),
+            place="profiles-delete-profiles",
         )
         question.cancel.setText(_("Continue"))
         if run_modal(question) != QDialog.DialogCode.Accepted:

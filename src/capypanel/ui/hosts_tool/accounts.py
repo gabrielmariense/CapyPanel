@@ -37,6 +37,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.i18n import _
 from capypanel.core.remote.access import Account
+from capypanel.ui import help_links
 from capypanel.ui.checks import AccountDialog
 from capypanel.ui.dialogs import ok_cancel, run_modal
 from capypanel.ui.hosts import group_path
@@ -394,7 +395,8 @@ class LinkDialog(QDialog):
               "over Every PC. PCs none of them names use your Windows account."),
             _("Groups and tags are the open list's."),
         ))  # fmt: skip
-        layout.addWidget(self.buttons)
+        self.help_button = help_links.HelpButton("connecting-use-another-account-on-some-pcs")
+        layout.addLayout(help_links.row(self.help_button, self.buttons))
         self.kind.currentIndexChanged.connect(self._kind_picked)
         for edit in (self.user, self.address):
             edit.textChanged.connect(self._update_ok)

@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core import credstore
 from capypanel.core.i18n import _, ngettext
-from capypanel.ui import spacing
+from capypanel.ui import help_links, spacing
 from capypanel.ui.dialogs import quiet_default
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import notes
@@ -108,7 +108,9 @@ class SavedCredentialsDialog(QDialog):
                 )
             )
         )
+        self.help_button = help_links.HelpButton("connecting-forget-a-saved-password")
         buttons = QHBoxLayout()
+        buttons.addWidget(self.help_button)
         buttons.addStretch(1)
         close = QPushButton(_("Close"))
         quiet_default(close)

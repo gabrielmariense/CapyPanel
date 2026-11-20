@@ -193,6 +193,7 @@ def test_password_prompt_asks_for_a_user_only_for_account_profiles(window: CapyW
     password_only.password.setText("x")
     assert ok.isEnabled()
     account = CredentialDialog(None, connector.resolve("pis"), "PI-1", on_command_line=False)
+    assert account.help_button.place() == "connecting-connect-to-a-host"  # its ? and F1
     ok = account.buttons.button(QDialogButtonBox.StandardButton.Ok)
     account.password.setText("x")
     assert not ok.isEnabled()  # the user is needed too

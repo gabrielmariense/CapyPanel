@@ -606,7 +606,9 @@ class SshTool(TabbedListWorkspace):
             "Anything still running in them on the servers may stop.",
             n,
         )
-        question = Question(self, _("Close"), heading, text, _("&Close"))
+        question = Question(
+            self, _("Close"), heading, text, _("&Close"), place="ssh-work-in-the-terminal"
+        )
         return run_modal(question) == QDialog.DialogCode.Accepted
 
     def _drop(self, key: str) -> None:
@@ -659,6 +661,7 @@ class SshTool(TabbedListWorkspace):
                 n,
             ),
             _("&Quit"),
+            place="ssh-work-in-the-terminal",
         )
         if run_modal(question) != QDialog.DialogCode.Accepted:
             return False

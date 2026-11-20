@@ -31,6 +31,7 @@ from capypanel.core.tools.connect import Credential, SessionCredentials, Target,
 from capypanel.core.tools.definitions import ToolDefinition
 from capypanel.core.tools.profiles import ConnectionProfile, ProfileError
 from capypanel.core.tools.viewer_settings import SettingsFileError
+from capypanel.ui import help_links
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.notes import hint
 
@@ -97,7 +98,8 @@ class CredentialDialog(QDialog):
         layout.addWidget(intro)
         layout.addLayout(form)
         layout.addWidget(note)
-        layout.addWidget(self.buttons)
+        self.help_button = help_links.HelpButton("connecting-connect-to-a-host")
+        layout.addLayout(help_links.row(self.help_button, self.buttons))
         self.user.textChanged.connect(self._update_ok)
         self.password.textChanged.connect(self._update_ok)
         self._update_ok()

@@ -40,6 +40,7 @@ from capypanel.core.tools.profiles import (
     login_label,
     logins_of,
 )
+from capypanel.ui import help_links
 from capypanel.ui.connect import ask_for_program
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.hosts import confirm
@@ -115,7 +116,8 @@ class ProfileDialog(QDialog):
         self.buttons = ok_cancel(self, _("Save") if profile else _("Add"))
         layout = QVBoxLayout(self)
         layout.addLayout(form)
-        layout.addWidget(self.buttons)
+        self.help_button = help_links.HelpButton("connecting-set-up-connection-profiles")
+        layout.addLayout(help_links.row(self.help_button, self.buttons))
 
         self.tool.currentIndexChanged.connect(lambda _i: self._tool_changed(None))
         self._tool_changed(profile)
@@ -706,6 +708,8 @@ class ConnectionsPage(Page):
     """Settings › Hosts › Connecting: what everyone on this PC shares, the profiles and where
     the tools the profiles open are. The profiles' Passwords card is this person's own: it
     shows on Credentials."""
+
+    HELP_PLACE = "settings-hosts-connecting"
 
     def __init__(self, catalogs: Catalogs, document: OpenList | None) -> None:
         super().__init__(_("Connecting"))

@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import MAX_ADDRESS, NO_GROUP, Host, HostList, clean_tags
 from capypanel.core.i18n import _
+from capypanel.ui import help_links
 from capypanel.ui.dialogs import ok_cancel, quiet_default
 from capypanel.ui.list_workspace.texts import ListTexts
 
@@ -155,7 +156,8 @@ class HostDialog(QDialog):
         self.buttons = ok_cancel(self, _("Save") if host else _("Add"))
         layout = QVBoxLayout(self)
         layout.addLayout(form)
-        layout.addWidget(self.buttons)
+        self.help_button = help_links.HelpButton("start-add-your-first-hosts")
+        layout.addLayout(help_links.row(self.help_button, self.buttons))
 
         self.name.textChanged.connect(self._update_ok)
         self._update_ok()

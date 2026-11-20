@@ -144,6 +144,7 @@ def test_help_asks_and_says_when_it_is_up_to_date(
     dialog = UpdateWindow(window, window.updater, app_dir=Path("."), working=lambda: False,
                           quit_for_update=lambda start: False)  # fmt: skip
     assert dialog.windowTitle() == "CapyPanel"
+    assert dialog.help_button.place() == "download-update-capypanel"  # first in the footer
     assert dialog.heading.text() == "Checking for updates…" and not dialog.busy.isHidden()
     _wait(lambda: not window.updater.looking)
     # Just the message, in the middle of a narrower window: no icon, chip or list.

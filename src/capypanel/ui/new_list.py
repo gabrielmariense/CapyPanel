@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 
 from capypanel.core.files import can_create_files
 from capypanel.core.i18n import _
+from capypanel.ui import help_links
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.hosts import confirm
 from capypanel.ui.list_workspace.texts import ListTexts
@@ -72,7 +73,8 @@ class NewListDialog(QDialog):
         self.buttons.rejected.connect(self.reject)
         layout = QVBoxLayout(self)
         layout.addLayout(form)
-        layout.addWidget(self.buttons)
+        self.help_button = help_links.HelpButton("host-lists-switch-make-and-share-lists")
+        layout.addLayout(help_links.row(self.help_button, self.buttons))
         self.name.textChanged.connect(self._update)
         self.elsewhere.toggled.connect(self._update)
         self._update()

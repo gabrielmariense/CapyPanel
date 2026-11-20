@@ -70,7 +70,7 @@ class HostsSettings(SettingsGroup):
         )
         self.connections = ConnectionsPage(tool.connector.catalogs, doc)
         self.accounts = AccountsSection(tool.accounts)  # which account signs in to which PCs
-        self.accounts_page = Page(_("Credentials"))
+        self.accounts_page = Page(_("Credentials"), place="settings-hosts-credentials")
         for section in (self.accounts, self.connections.profiles.passwords_section):
             self.accounts_page.body.addWidget(section)
         self.accounts_page.body.addStretch(1)

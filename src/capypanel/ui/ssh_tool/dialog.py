@@ -32,6 +32,7 @@ from capypanel.core.ssh.host import (
     info_of,
 )
 from capypanel.core.ssh.launch import REFUSED_IN_ADDRESS
+from capypanel.ui import help_links
 from capypanel.ui.dialogs import ok_cancel
 from capypanel.ui.hosts import MAX_NAME, TagEdit, group_choices
 
@@ -96,7 +97,8 @@ class SshHostDialog(QDialog):
         self.buttons = ok_cancel(self, _("Save") if host else _("Add"))  # ends in its verb
         layout = QVBoxLayout(self)
         layout.addLayout(form)
-        layout.addWidget(self.buttons)
+        self.help_button = help_links.HelpButton("ssh-add-a-host")
+        layout.addLayout(help_links.row(self.help_button, self.buttons))
         self.name.textChanged.connect(self._update_ok)
         self.group.currentIndexChanged.connect(self._update_login_hint)
         self._update_ok()
@@ -160,7 +162,8 @@ class LoginDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.addWidget(self.about)
         layout.addLayout(form)
-        layout.addWidget(self.buttons)
+        self.help_button = help_links.HelpButton("ssh-choose-the-name-to-log-in-as")
+        layout.addLayout(help_links.row(self.help_button, self.buttons))
         self.resize(420, self.sizeHint().height())
 
     def value(self) -> str:

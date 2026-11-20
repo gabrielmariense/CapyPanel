@@ -48,7 +48,7 @@ from PySide6.QtWidgets import (
 from capypanel.core.hosts.bulk import host_fields, list_separator, write_csv
 from capypanel.core.hosts.model import Host, HostList
 from capypanel.core.i18n import N_, _, ngettext
-from capypanel.ui import spacing
+from capypanel.ui import help_links, spacing
 from capypanel.ui.checks import clock_text
 from capypanel.ui.groups import TREE_INDENT
 from capypanel.ui.hosts import confirm
@@ -101,6 +101,7 @@ class ExportDialog(QDialog):
     CHECKED: tuple[str, ...] = CHECKED
     SAYS_NOT_CHECKED: frozenset[str] = SAYS_NOT_CHECKED
     FOR_IMPORT: tuple[str, ...] = FOR_IMPORT
+    HELP_PLACE = "host-lists-export-hosts-to-a-spreadsheet"  # its ? and F1
     PRESETS_KEY, LAST_KEY, FOLDER_KEY = PRESETS_KEY, LAST_KEY, FOLDER_KEY  # its own choices
     ITEMS_LABEL = N_("&Hosts:")
     PRESET_NAME = N_("For Import")  # the built-in preset, with the FOR_IMPORT columns
@@ -266,7 +267,8 @@ class ExportDialog(QDialog):
         layout.addLayout(self._sections)
         layout.addWidget(preview_title)
         layout.addWidget(self.preview, 1)
-        layout.addWidget(self.buttons)
+        self.help_button = help_links.HelpButton(self.HELP_PLACE)
+        layout.addLayout(help_links.row(self.help_button, self.buttons))
 
         self._fill_presets()
         last = prefs.get(self.LAST_KEY)

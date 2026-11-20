@@ -1037,6 +1037,7 @@ class DeleteDialog(Question):
                 "go too: there's no recycle bin and no copy."
             ),
             ngettext("Delete {n} profile", "Delete {n} profiles", n).format(n=n),
+            place="profiles-delete-profiles",
         )
         self.table = grid_table([_("User"), _("Last used"), _("Size")])
         for profile in profiles:

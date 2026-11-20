@@ -56,6 +56,18 @@ def no_facts_on_their_own(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
+def no_browser(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Help, Documentation and the other web links land here, never in the browser: an F1 a
+    test presses for something else would open the real website. Tests of a link read this
+    list or patch open_url themselves."""
+    from capypanel.ui import about
+
+    opened: list[str] = []
+    monkeypatch.setattr(about, "open_url", opened.append)
+    return opened
+
+
+@pytest.fixture(autouse=True)
 def no_ssh(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, object]]:
     """The SSH tool never starts ssh.exe in tests, and its Refresh never knocks on a real port:
     Connect lands here as (address, SshInfo), in a tab or a separate window, and every port

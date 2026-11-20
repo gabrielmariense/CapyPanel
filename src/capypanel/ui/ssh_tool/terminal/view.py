@@ -159,7 +159,14 @@ class PasteQuestion(Question):
         n = len(lines)
         question = ngettext("Paste {n} line into {host}?", "Paste {n} lines into {host}?", n)
         risk = _("It may run as a command.") if n == 1 else _("Each line may run as a command.")
-        super().__init__(parent, _("Paste"), question.format(n=n, host=host), risk, _("&Paste"))
+        super().__init__(
+            parent,
+            _("Paste"),
+            question.format(n=n, host=host),
+            risk,
+            _("&Paste"),
+            place="ssh-work-in-the-terminal",
+        )
         self.preview = QPlainTextEdit("\n".join(lines[:3]))
         self.preview.setReadOnly(True)
         self.preview.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)  # a line as it runs

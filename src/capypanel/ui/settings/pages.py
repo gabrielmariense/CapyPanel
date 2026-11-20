@@ -3,6 +3,7 @@ made (`changed`); the Settings window hands it on, to apply at once."""
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import ClassVar
 
 from PySide6.QtCore import QEvent, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QPalette
@@ -39,13 +40,16 @@ from capypanel.ui.themes import engine as themes
 
 class Page(QWidget):
     """A settings page: its sections, one under the other. Its title shows in the page list
-    only. `changed` fires on every choice made on it."""
+    only. `changed` fires on every choice made on it. Its place is where F1 and the ? open the
+    docs while it's shown (help_links): its class's HELP_PLACE, or the one it's made with."""
 
+    HELP_PLACE: ClassVar[str] = ""
     changed = Signal()
 
-    def __init__(self, title: str) -> None:
+    def __init__(self, title: str, *, place: str = "") -> None:
         super().__init__()
         self.title = title
+        self.place = place or self.HELP_PLACE
         self.body = QVBoxLayout(self)
         self.body.setContentsMargins(0, 0, 0, 0)
         self.body.setSpacing(spacing.WINDOW)  # between sections
@@ -166,6 +170,8 @@ def open_folder(folder: Path) -> None:
 class GeneralPage(Page):
     """CapyPanel's own page: the theme and language (Appearance), then what the window shows
     at start and what its X does (Startup and closing). Each applies as soon as it's picked."""
+
+    HELP_PLACE = "settings-capypanel-general"
 
     def __init__(
         self,
@@ -556,8 +562,10 @@ class AutoStatusOnlyPage(Page):
     """A General page with only Refresh status by itself: SSH's, whose lists are Hosts' and
     are managed on Hosts' General page."""
 
-    def __init__(self, *, auto_line: str, auto_status: tuple[bool, int] = (False, 5)) -> None:
-        super().__init__(_("General"))
+    def __init__(
+        self, *, auto_line: str, auto_status: tuple[bool, int] = (False, 5), place: str = ""
+    ) -> None:
+        super().__init__(_("General"), place=place)
         self.refresh_section = AutoStatusSection(auto_line, auto_status)
         self.refresh_section.changed.connect(self.changed)
         self.auto_every = self.refresh_section.auto_every
@@ -620,6 +628,7 @@ class AutoStatusPage(ListsGeneralPage):
 class HostsPage(AutoStatusPage):
     """The Hosts tool's General page: Host lists, Refresh, then the Details panel."""
 
+    HELP_PLACE = "settings-hosts-general"
     customize_requested = Signal()  # Quick commands' Choose…
 
     def __init__(

@@ -237,6 +237,12 @@ class KeyCatcher(QLineEdit):
     def focusNextPrevChild(self, next: bool) -> bool:  # noqa: A002, N802 -- Qt's names
         return False  # Tab is a key pressed here, not a move to the next control
 
+    def event(self, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.ShortcutOverride:
+            event.accept()  # every key is its answer, F1 too: refused here, not Settings' help
+            return True
+        return super().event(event)
+
     def paintEvent(self, event: QPaintEvent) -> None:  # noqa: N802 -- Qt's name
         """The frame as the theme draws it, then the words with their capitals in the middle.
         Qt centres a line's whole height, with the room over capitals kept for accents, in a
@@ -296,6 +302,8 @@ class KeyCatcher(QLineEdit):
 class ShortcutsPage(Page):
     """The commands under their headings, each with its key; `keys` keeps and applies every
     change."""
+
+    HELP_PLACE = "settings-capypanel-keyboard-shortcuts"
 
     def __init__(self, keys: Keys, place_names: dict[str, str]) -> None:
         super().__init__(_("Keyboard shortcuts"))

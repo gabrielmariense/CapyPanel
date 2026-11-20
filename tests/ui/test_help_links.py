@@ -8,14 +8,14 @@ from pathlib import Path
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QWidget
 
 from capypanel.core import i18n, settings
 from capypanel.ui import about, help_links
-from capypanel.ui.settings.shortcuts_page import FIXED_ROLE, KEY
+from capypanel.ui.settings.shortcuts_page import FIXED_ROLE, KEY, KeyCatcher
 
 SITE = "https://gabrielmariense.github.io/CapyPanel/"
 SRC = Path(__file__).resolve().parents[2] / "src" / "capypanel"
@@ -205,4 +205,79 @@ def test_f1_s_row_is_greyed_and_a_kept_key_never_takes_its_place(
     assert item.data(0, FIXED_ROLE) and "can't be changed" in item.toolTip(KEY)
     page.change(item)  # a double-click on it waits for no key
     assert page.table.itemWidget(item, KEY) is None
+    window.close()
+
+
+def test_each_of_settings_pages_opens_its_own_part(
+    qapp: QApplication, paths: settings.Paths
+) -> None:
+    window = CapyWindow(paths, {"schema": 1})
+    pages = window.settings_dialog().pages
+    assert {page_id: pages[page_id].place for page_id in MY_SETTINGS_PAGES} == MY_SETTINGS_PAGES
+    window.close()
+
+
+MY_SETTINGS_PAGES = {
+    "general": "settings-capypanel-general",
+    "shortcuts": "settings-capypanel-keyboard-shortcuts",
+    "hosts": "settings-hosts-general",
+    "connections": "settings-hosts-connecting",
+    "accounts": "settings-hosts-credentials",
+    "ssh": "settings-ssh-general",
+    "about": "settings-about",
+}
+
+
+def test_settings_question_mark_sits_under_the_pages_and_opens_the_page_shown(
+    qapp: QApplication, paths: settings.Paths, opened: list[str]
+) -> None:
+    window = CapyWindow(paths, {"schema": 1})
+    dialog = window.settings_dialog()
+    dialog.show()
+    dialog.activateWindow()
+    QApplication.processEvents()
+    button, pinned = dialog.help_button, dialog.pinned_list
+    # On its own line under the page list (About is its last row), at the search's left edge.
+    top_left = button.mapTo(dialog, QPoint(0, 0))
+    assert top_left.y() >= pinned.mapTo(dialog, QPoint(0, pinned.height())).y()
+    assert top_left.x() == dialog.search.mapTo(dialog, QPoint(0, 0)).x()
+    button.click()  # General, as Settings opens
+    dialog.show_page("ssh")
+    QTest.keyClick(dialog, Qt.Key.Key_F1)
+    QTest.qWait(250)  # a button's key clicks it a moment later
+    dialog.search.setText("theme")  # the search's results
+    button.click()
+    dialog.search.clear()
+    dialog.show_page("about")
+    dialog.pages["about"].place = ""  # a page with no part of its own: the page's top
+    button.click()
+    assert opened == [
+        f"{SITE}settings-and-files/#settings-capypanel-general",
+        f"{SITE}settings-and-files/#settings-ssh-general",
+        f"{SITE}settings-and-files/#settings-find-a-setting",
+        f"{SITE}settings-and-files/",
+    ]
+    dialog.close()
+    window.close()
+
+
+def test_f1_while_a_key_is_awaited_is_that_key_refused_not_help(
+    qapp: QApplication, paths: settings.Paths, opened: list[str]
+) -> None:
+    window = CapyWindow(paths, {"schema": 1})
+    dialog = window.settings_dialog()
+    dialog.show_page("shortcuts")
+    dialog.show()
+    dialog.activateWindow()
+    QApplication.processEvents()
+    page = dialog.shortcuts
+    item = page.item_of("command.services")
+    page.change(item)
+    catcher = page.table.itemWidget(item, KEY)
+    assert isinstance(catcher, KeyCatcher)
+    QTest.keyClick(catcher, Qt.Key.Key_F1)
+    QTest.qWait(250)
+    assert catcher.property("refused") is True  # "Kept for CapyPanel itself: F1 is for help…"
+    assert opened == []
+    dialog.close()
     window.close()

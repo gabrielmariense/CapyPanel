@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.i18n import _
-from capypanel.ui import spacing
+from capypanel.ui import help_links, spacing
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.icons import tabler_icon
 from capypanel.ui.themes import engine as themes
@@ -63,7 +63,9 @@ class FirstUseWarning(QDialog):
         text.addSpacing(spacing.CONTROLS)
         text.addWidget(self.understood)
         top.addLayout(text, 1)
+        self.help_button = help_links.HelpButton("profiles/user-profiles/")
         buttons = QHBoxLayout()
+        buttons.addWidget(self.help_button)
         buttons.addStretch(1)
         buttons.addWidget(self.go_on)
         buttons.addWidget(self.cancel)

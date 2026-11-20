@@ -53,6 +53,7 @@ class DrivesDialog(ReadList):
     """Mapped drives: the drives saved for each person signed in, and Copy list."""
 
     READ = "Mapped drives"
+    HELP_PLACE = "commands-see-whats-installed-and-mapped"
 
     def __init__(self, parent: QWidget | None, runner: "Runner", target: "HostTarget") -> None:
         super().__init__(parent, runner, target)
@@ -68,6 +69,7 @@ class DrivesDialog(ReadList):
             actions.addWidget(button)
         actions.addStretch(1)
         bottom = QHBoxLayout()
+        bottom.addWidget(self.help_button)
         bottom.addStretch(1)
         bottom.addWidget(self.close_button)
         layout = QVBoxLayout(self)

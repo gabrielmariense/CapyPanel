@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from capypanel.core.i18n import _
+from capypanel.ui import help_links
 from capypanel.ui.dialogs import quiet_default
 from capypanel.ui.themes import engine as themes
 
@@ -46,7 +47,9 @@ class ErrorWindow(QDialog):
         self.close_button = QPushButton(_("Close"))
         quiet_default(self.close_button)
         self.close_button.clicked.connect(self.accept)
+        self.help_button = help_links.HelpButton("start-get-help-or-report-a-problem")
         buttons = QHBoxLayout()
+        buttons.addWidget(self.help_button)
         buttons.addWidget(self.copy_button)
         buttons.addStretch(1)
         buttons.addWidget(self.close_button)

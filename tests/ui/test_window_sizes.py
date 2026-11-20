@@ -41,7 +41,7 @@ RECORDED = {
     "send a message": 242,
     "saved credentials": 335,
     "commands": 620,
-    "settings": 336,
+    "settings": 346,  # 336 until 0.30's ? under the page list, on a line of its own
 }
 
 
