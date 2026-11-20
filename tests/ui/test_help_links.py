@@ -18,6 +18,8 @@ from capypanel.core.remote.access import Reason, RemoteError
 from capypanel.ui import about, help_links
 from capypanel.ui.hosts_tool.result_strip import ResultStrip
 from capypanel.ui.hosts_tool.runner import Outcome
+from capypanel.ui.printers_tool.attention import AttentionStrip
+from capypanel.ui.printers_tool.status import Reason as PrinterReason
 from capypanel.ui.settings.shortcuts_page import FIXED_ROLE, KEY, KeyCatcher
 from capypanel.ui.ssh_tool.terminal.tab import EndedBar
 from capypanel.ui.themes import engine as themes
@@ -95,12 +97,15 @@ def test_in_every_shipped_theme_a_strip_s_link_reads_on_the_strip_drawn_behind_i
     hosts.show_outcome(Outcome("Couldn't log off bruno on PC-1.", RemoteError(Reason.NOT_ADMIN)))
     ssh = EndedBar()
     ssh.show_end("web-01", 255)
-    strips = [(hosts, hosts._text), (ssh, ssh.label)]  # noqa: SLF001
+    printers = AttentionStrip()
+    printers.show_found([PrinterReason.OFFLINE, PrinterReason.LOW], only_them=False)
+    strips = [(hosts, hosts._text), (ssh, ssh.label), (printers, printers._text)]  # noqa: SLF001
     for theme in themes.Registry().all():
         if theme.engine == "native":
             continue
         themes.apply(theme)  # the SSH strip restyles itself; the Hosts tool restyles its strip
         hosts.restyle()
+        printers.restyle()  # as the Printers tool does on a theme switch
         for strip, label in strips:
             strip.resize(900, strip.heightForWidth(900))
             behind = strip.grab().toImage().pixelColor(strip.width() - 3, strip.height() // 2)

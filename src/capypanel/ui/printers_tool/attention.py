@@ -101,7 +101,9 @@ class AttentionStrip(QFrame):
             self._show_words()
 
     def _show_words(self) -> None:
-        link = help_links.anchor(HELP_PLACE, self._text.palette())
+        # Judged on the strip's own tint, not the window's colour the label keeps: in CapyPanel
+        # dark the blue reads on the window but is 3.1:1 on the strip (Dante, build 659).
+        link = help_links.strip_anchor(HELP_PLACE, self)
         self._text.setText(f"{self._words}&nbsp;&nbsp;{link}")
         self._text.setToolTip(help_links.url(HELP_PLACE))
 
