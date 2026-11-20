@@ -1,5 +1,5 @@
-"""What every window shares: its main button and Cancel, running it modally, and never
-opening larger than the screen."""
+"""What every window shares: its main button and Cancel, running it modally, never opening
+larger than the screen, and room for its wrapped text."""
 
 from PySide6.QtCore import QEvent, QObject, QSize, Qt
 from PySide6.QtWidgets import (
@@ -82,6 +82,25 @@ def fit_screen(window: QWidget, free: QSize | None = None) -> bool:
     return True
 
 
+def fit_height(window: QWidget, shrink: bool = False) -> None:
+    """Gives a window the height its rows and wrapped text need at its width, as dragging its
+    edge would: Qt counts wrapped lines only then. Taller only, unless `shrink`."""
+    layout = window.layout()
+    if layout is None:
+        return
+    layout.activate()
+    need = window.heightForWidth(window.width())
+    if need < 0:  # no wrapped text
+        if not shrink:
+            return
+        need = window.sizeHint().height()
+    screen = window.screen()
+    if screen is not None:
+        need = min(need, screen.availableGeometry().height() - FRAME.height())
+    if need > window.height() or (shrink and need < window.height()):
+        window.resize(window.width(), need)
+
+
 def kept_size(kept: object, default: tuple[int, int]) -> tuple[int, int]:
     """A window's size as the person left it, kept in their settings as [width, height];
     `default` the first time, or when the file holds anything else (it can be edited by hand)."""
@@ -93,12 +112,19 @@ def kept_size(kept: object, default: tuple[int, int]) -> tuple[int, int]:
 
 
 class ScreenFit(QObject):
-    """Installed on the application: every window and dialog is fitted to its screen as it
-    shows, so no screen has to remember to."""
+    """Installed on the application: every window fits its screen as it shows, and a dialog
+    grows to its wrapped text as it shows and whenever its rows change."""
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.Show and isinstance(watched, QWidget):
+        kind = event.type()
+        if kind == QEvent.Type.Show and isinstance(watched, QWidget):
             kinds = (Qt.WindowType.Window, Qt.WindowType.Dialog)
             if watched.isWindow() and watched.windowType() in kinds:
+                if watched.windowType() == Qt.WindowType.Dialog:
+                    fit_height(watched)
                 fit_screen(watched)
+        elif kind == QEvent.Type.LayoutRequest and isinstance(watched, QWidget):
+            dialog = watched.isWindow() and watched.windowType() == Qt.WindowType.Dialog
+            if dialog and watched.isVisible():
+                fit_height(watched)
         return False

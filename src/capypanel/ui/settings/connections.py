@@ -6,8 +6,8 @@ from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QUrl, Signal
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtCore import QEvent, Qt, QUrl, Signal
+from PySide6.QtGui import QDesktopServices, QShowEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -41,7 +41,7 @@ from capypanel.core.tools.profiles import (
 )
 from capypanel.ui import help_links
 from capypanel.ui.connect import ask_for_program
-from capypanel.ui.dialogs import ok_cancel
+from capypanel.ui.dialogs import fit_height, ok_cancel
 from capypanel.ui.hosts import confirm
 from capypanel.ui.notes import hint, notes
 from capypanel.ui.settings.pages import Page, Section, SettingRow, add_rows
@@ -123,6 +123,16 @@ class ProfileDialog(QDialog):
         self.name.textChanged.connect(self._update_ok)
         self._update_ok()
         self.resize(440, self.sizeHint().height())
+
+    def event(self, event: QEvent) -> bool:
+        handled = super().event(event)
+        if event.type() == QEvent.Type.LayoutRequest:  # rows come and go with the tool
+            fit_height(self, shrink=True)
+        return handled
+
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        fit_height(self, shrink=True)  # at the width its rows need
 
     def _current_tool(self) -> ToolDefinition | None:
         return self._tools.get(self.tool.currentData() or "")

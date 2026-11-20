@@ -1,7 +1,15 @@
 import pytest
 import shiboken6
 from PySide6.QtCore import QCoreApplication, QEvent, QSize
-from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QMessageBox, QPushButton
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QDialogButtonBox,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+)
 
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.ui import hosts as hosts_ui
@@ -125,6 +133,47 @@ def test_no_window_opens_larger_than_the_screen(qapp: QApplication) -> None:
         qapp.processEvents()
         assert huge.width() <= free.width() and huge.height() <= free.height()
         huge.close()
+    finally:
+        qapp.removeEventFilter(fitter)
+
+
+def test_a_dialog_grows_to_its_wrapped_text_as_it_shows_and_as_its_rows_change(
+    qapp: QApplication,
+) -> None:
+    """Qt counts wrapped lines only when a window's edge is dragged: until then a dialog that
+    opened short, gained a row or got a longer text squeezed its rows."""
+
+    def window() -> tuple[QDialog, QLabel, QLabel]:
+        dialog = QDialog()
+        layout = QVBoxLayout(dialog)
+        note, extra = QLabel("Wraps at this width. " * 12), QLabel("A row that comes later. " * 8)
+        for label in (note, extra):
+            label.setWordWrap(True)
+            layout.addWidget(label)
+        layout.addWidget(QPushButton("Choose file…"))
+        extra.hide()
+        dialog.resize(320, 60)
+        return dialog, note, extra
+
+    def room(dialog: QDialog) -> bool:
+        qapp.processEvents()
+        return dialog.height() >= dialog.heightForWidth(dialog.width())
+
+    alone, _note, _extra = window()
+    alone.show()
+    assert not room(alone)  # what Qt does by itself
+    alone.close()
+    fitter = ScreenFit(qapp)
+    qapp.installEventFilter(fitter)
+    try:
+        dialog, note, extra = window()
+        dialog.show()
+        assert room(dialog)  # as it shows
+        extra.show()
+        assert room(dialog)  # a row that appears
+        note.setText(note.text() * 2)
+        assert room(dialog)  # a longer text
+        dialog.close()
     finally:
         qapp.removeEventFilter(fitter)
 
