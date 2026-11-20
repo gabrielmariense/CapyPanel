@@ -81,8 +81,8 @@ def _texts(win: CapyWindow) -> list[str]:
             header = widget.headerItem()
             found += [header.text(c) for c in range(header.columnCount())]
             for row in range(widget.topLevelItemCount()):
-                item = widget.topLevelItem(row)
-                found += [item.text(c) for c in range(item.columnCount())]
+                if (item := widget.topLevelItem(row)) is not None:
+                    found += [item.text(c) for c in range(item.columnCount())]
     for action in win.findChildren(QAction):
         found += [action.text(), action.toolTip()]
     return found
