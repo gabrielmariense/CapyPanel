@@ -33,6 +33,7 @@ class ShellActions:
     report_problem: QAction
     show_guide: QAction
     show_all_guides: QAction
+    help_screen: QAction
     check_updates: QAction
     about: QAction
 
@@ -40,8 +41,10 @@ class ShellActions:
 SHORTCUTS = {
     "settings": "Ctrl+,",
     "exit": "Ctrl+Q",
+    "help_screen": "F1",
 }
 CHECKABLE = {"show_toolbar", "show_status_bar"}
+FIXED = {"help_screen"}  # F1 is help's: shown on the Keyboard shortcuts page, never changed
 
 
 def create_actions(parent: QObject) -> ShellActions:
@@ -58,6 +61,7 @@ def retranslate_actions(a: ShellActions) -> None:
     a.report_problem.setText(_("&Report a problem"))
     a.show_guide.setText(_("&Guide to this screen"))
     a.show_all_guides.setText(_("&Show all the guides again"))
+    a.help_screen.setText(_("&Help for this screen"))
     a.check_updates.setText(_("Check for &updates…"))
     a.about.setText(_("&About CapyPanel"))
     a.show_toolbar.setText(_("T&oolbar"))

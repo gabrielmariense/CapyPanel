@@ -7,16 +7,24 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from capywindow import CapyWindow
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QWidget
 
-from capypanel.core import i18n
+from capypanel.core import i18n, settings
 from capypanel.ui import about, help_links
+from capypanel.ui.settings.shortcuts_page import FIXED_ROLE, KEY
 
 SITE = "https://gabrielmariense.github.io/CapyPanel/"
 SRC = Path(__file__).resolve().parents[2] / "src" / "capypanel"
+
+
+@pytest.fixture
+def paths(tmp_path: Path) -> settings.Paths:
+    (tmp_path / settings.PORTABLE_MARKER).touch()
+    return settings.resolve_paths(tmp_path)
 
 
 @pytest.fixture
@@ -146,3 +154,55 @@ def test_every_place_the_code_names_is_in_the_list() -> None:
         if place not in known
     ]
     assert unknown == []
+
+
+def test_f1_and_the_rail_s_question_mark_open_the_part_for_what_s_shown(
+    qapp: QApplication, paths: settings.Paths, opened: list[str]
+) -> None:
+    window = CapyWindow(paths, {"schema": 1})
+    window.show()
+    window.activateWindow()
+    QApplication.processEvents()
+    rail = window.rail
+    # Bottom left like every window's ?: above the gear, an action that takes no tile.
+    assert rail.help_button.y() < rail.settings_button.y() and not rail.help_button.isCheckable()
+    assert rail.help_button.toolTip() == "Help for this screen (F1)"
+    assert rail.help_button.accessibleName() == "Help for this screen"
+    window.show_home()
+    window.commands.help_screen.trigger()
+    assert window.show_tool("hosts")
+    QTest.keyClick(window, Qt.Key.Key_F1)
+    assert window.show_tool("ssh")
+    rail.help_button.click()
+    assert opened == [
+        f"{SITE}getting-started/#start-run-capypanel",
+        f"{SITE}hosts/host-lists/",
+        f"{SITE}ssh/ssh/",
+    ]
+    window.close()
+
+
+def test_the_help_menu_s_new_line_sits_above_documentation_with_f1(
+    qapp: QApplication, paths: settings.Paths
+) -> None:
+    window = CapyWindow(paths, {"schema": 1})
+    a = window.commands
+    lines = window._help_menu.actions()
+    assert lines.index(a.help_screen) == lines.index(a.documentation) - 1
+    assert a.help_screen.text().startswith("&Help for this screen")
+    assert a.help_screen.shortcut().toString() == "F1"
+    window.close()
+
+
+def test_f1_s_row_is_greyed_and_a_kept_key_never_takes_its_place(
+    qapp: QApplication, paths: settings.Paths
+) -> None:
+    window = CapyWindow(paths, {"schema": 1, "shortcuts": {"app.help_screen": "Ctrl+H"}})
+    assert window.commands.help_screen.shortcut().toString() == "F1"  # a hand-edited file
+    page = window.settings_dialog().shortcuts
+    item = page.item_of("app.help_screen")
+    assert item.text(KEY) == "F1" and item.flags() == Qt.ItemFlag.NoItemFlags
+    assert item.data(0, FIXED_ROLE) and "can't be changed" in item.toolTip(KEY)
+    page.change(item)  # a double-click on it waits for no key
+    assert page.table.itemWidget(item, KEY) is None
+    window.close()

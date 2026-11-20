@@ -134,9 +134,10 @@ def _headings(page: ShortcutsPage) -> list[tuple[QTreeWidgetItem, list[QTreeWidg
     for i in range(table.topLevelItemCount()):
         item = table.topLevelItem(i)
         assert item is not None
-        if item.data(0, shortcuts_page.FIXED_ROLE):
+        command = item.data(0, shortcuts_page.ROW_ROLE)
+        if item.data(0, shortcuts_page.FIXED_ROLE) and not command:
             continue  # the SSH terminal's own keys: never a command, never a heading
-        if item.data(0, shortcuts_page.ROW_ROLE):
+        if command:  # F1's row too, greyed but a command
             found[-1][1].append(item)
         else:
             found.append((item, []))

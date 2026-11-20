@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 01:07-0300\n"
+"POT-Creation-Date: 2026-11-20 01:16-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -181,6 +181,9 @@ msgid "&Guide to this screen"
 msgstr ""
 
 msgid "&Help"
+msgstr ""
+
+msgid "&Help for this screen"
 msgstr ""
 
 msgid "&Host:"
@@ -1815,9 +1818,19 @@ msgstr ""
 msgid "Export CSV"
 msgstr ""
 
+msgid "F1 is kept for help and can't be changed."
+msgstr ""
+
 msgid ""
 "F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself. In "
 "an SSH terminal, all but Ctrl+Shift+W go to the server."
+msgstr ""
+
+msgid ""
+"F1, or the ? in the sidebar, opens help for the screen you're on. To see "
+"this guide again, use Help › Guide to this screen. Show all the guides "
+"again brings every guide back, and Documentation opens the step-by-step "
+"pages."
 msgstr ""
 
 msgid "Failed"
@@ -1914,6 +1927,9 @@ msgid ""
 msgstr ""
 
 msgid "Formats CapyPanel can import"
+msgstr ""
+
+msgid "Four tools"
 msgstr ""
 
 msgid "Free on C:"
@@ -2046,8 +2062,9 @@ msgid "Hosts in “{group}” without a name of their own log in with this one."
 msgstr ""
 
 msgid ""
-"Hosts is for computers, Printers for printers, and Profile cleanup clears"
-" old Windows profiles off a PC. Each tile opens its tool."
+"Hosts is for computers, Printers for printers, Profile cleanup clears old"
+" Windows profiles off a PC, and SSH opens a terminal on your servers and "
+"switches. Each tile opens its tool."
 msgstr ""
 
 msgid "Hosts with no group &go to:"
@@ -4521,8 +4538,8 @@ msgstr[0] ""
 msgstr[1] ""
 
 msgid ""
-"This bar stays here on every screen. Home is at the top, Settings at the "
-"bottom, and the tools in between."
+"This bar stays here on every screen. Home is at the top, the ? for help "
+"and Settings at the bottom, and the tools in between."
 msgstr ""
 
 msgid "This card shows each PC you opened and how far it has got."
@@ -4629,9 +4646,6 @@ msgstr ""
 msgid "This tool deletes user profiles"
 msgstr ""
 
-msgid "Three tools"
-msgstr ""
-
 msgid "Tick Status or Logged-on users to refresh them"
 msgstr ""
 
@@ -4677,12 +4691,6 @@ msgstr ""
 msgid ""
 "To keep a connection outside CapyPanel, right-click a host and pick "
 "Connect in a separate window."
-msgstr ""
-
-msgid ""
-"To see this guide again, use Help › Guide to this screen. Show all the "
-"guides again brings every guide back, and Documentation opens the step-"
-"by-step pages."
 msgstr ""
 
 msgid "To:"

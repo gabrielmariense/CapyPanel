@@ -121,6 +121,7 @@ class ProfilesToolBar(ToolBar):
 class ProfilesTool(Tool):
     TOOL_ID = "profiles"
     ICON = "profile-card"
+    HELP_PLACE = "profiles/user-profiles/"
 
     def __init__(self, shell: Shell) -> None:
         super().__init__(shell, ProfilesToolBar())

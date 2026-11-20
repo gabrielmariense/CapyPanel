@@ -98,6 +98,7 @@ class OpensHosts(Protocol):
 class HostsTool(ListWorkspace):
     TOOL_ID = "hosts"
     ICON = "device-desktop"
+    HELP_PLACE = "hosts/host-lists/"
     INHERITS_TOP_LEVEL = True  # 0.19 kept the Hosts settings at the top level
     checks_changed = Signal()  # a Refresh started, found something, or ended
     host_changed = Signal(str)  # new results for one host (its id, or "@" and an address)

@@ -98,6 +98,7 @@ class Tool(QWidget):
 
     TOOL_ID: ClassVar[str] = ""  # its settings section and Settings pages are named after it
     ICON: ClassVar[str] = ""  # a Tabler icon, for the rail
+    HELP_PLACE: ClassVar[str] = ""  # where F1 opens the docs while it's shown (help_links)
     INHERITS_TOP_LEVEL: ClassVar[bool] = False  # Hosts: 0.19 kept its settings at the top
     title_changed = Signal(str)  # the window title's first part, or "" for none
     badge_changed = Signal(int)  # how many items need attention: the rail's count; 0 hides it
@@ -120,6 +121,10 @@ class Tool(QWidget):
     def tool_name(self) -> str:
         """Its name on the rail: "Hosts"."""
         raise NotImplementedError
+
+    def help_place(self) -> str:
+        """Where F1 opens the docs while it's shown: its HELP_PLACE, a place in help_links."""
+        return self.HELP_PLACE
 
     def menu_name(self) -> str:
         """Its name in View, with an access key: "&Hosts"."""

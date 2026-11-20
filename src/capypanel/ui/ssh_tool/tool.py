@@ -84,6 +84,7 @@ def _named(found: tuple[str, Group | None]) -> tuple[str, str]:
 class SshTool(TabbedListWorkspace):
     TOOL_ID = "ssh"
     ICON = "terminal-2"
+    HELP_PLACE = "ssh/ssh/"
     TABS_ICON = "server-2"  # the list's tab
     LISTS_FROM = listfile.HOSTS  # Hosts' open list: one list for every host (his words, 2026-11-18)
     checks_changed = Signal()  # a Refresh started, found something, or ended

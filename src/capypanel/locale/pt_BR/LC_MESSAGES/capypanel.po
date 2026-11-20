@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 01:07-0300\n"
+"POT-Creation-Date: 2026-11-20 01:16-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -183,6 +183,9 @@ msgstr "&Guia desta tela"
 
 msgid "&Help"
 msgstr "Aj&uda"
+
+msgid "&Help for this screen"
+msgstr "&Ajuda desta tela"
 
 msgid "&Host:"
 msgstr "&Host:"
@@ -1753,8 +1756,14 @@ msgstr "Todos neste PC (compartilhada)"
 msgid "Export CSV"
 msgstr "Exportar CSV"
 
+msgid "F1 is kept for help and can't be changed."
+msgstr "F1 fica reservada à ajuda e não pode ser alterada."
+
 msgid "F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself. In an SSH terminal, all but Ctrl+Shift+W go to the server."
 msgstr "F1, Esc, Ctrl+F, Tab e Ctrl+Shift+W ficam reservadas ao próprio CapyPanel. Num terminal SSH, todas menos Ctrl+Shift+W vão para o servidor."
+
+msgid "F1, or the ? in the sidebar, opens help for the screen you're on. To see this guide again, use Help › Guide to this screen. Show all the guides again brings every guide back, and Documentation opens the step-by-step pages."
+msgstr "F1, ou o ? da barra lateral, abre a ajuda da tela em que você está. Para ver este guia de novo, use Ajuda › Guia desta tela. Mostrar todos os guias de novo traz todos de volta, e Documentação abre as páginas passo a passo."
 
 msgid "Failed"
 msgstr "Falhou"
@@ -1848,6 +1857,9 @@ msgstr "Logins esquecidos também são apagados do Gerenciador de Credenciais; v
 
 msgid "Formats CapyPanel can import"
 msgstr "Formatos que o CapyPanel importa"
+
+msgid "Four tools"
+msgstr "Quatro ferramentas"
 
 msgid "Free on C:"
 msgstr "Livre em C:"
@@ -1974,8 +1986,8 @@ msgstr "O Hosts ainda não o verificou."
 msgid "Hosts in “{group}” without a name of their own log in with this one."
 msgstr "Os hosts de “{group}” sem um nome próprio entram com este."
 
-msgid "Hosts is for computers, Printers for printers, and Profile cleanup clears old Windows profiles off a PC. Each tile opens its tool."
-msgstr "Hosts é para computadores, Impressoras para impressoras, e a Limpeza de perfis exclui perfis antigos do Windows de um PC. Cada bloco abre a sua ferramenta."
+msgid "Hosts is for computers, Printers for printers, Profile cleanup clears old Windows profiles off a PC, and SSH opens a terminal on your servers and switches. Each tile opens its tool."
+msgstr "Hosts é para computadores, Impressoras para impressoras, a Limpeza de perfis exclui perfis antigos do Windows de um PC, e o SSH abre um terminal nos seus servidores e switches. Cada bloco abre a sua ferramenta."
 
 msgid "Hosts with no group &go to:"
 msgstr "Hosts sem grupo &vão para:"
@@ -4283,8 +4295,8 @@ msgid_plural "This PC shuts down in {n} minutes. Please save your work."
 msgstr[0] "Este PC desliga em {n} minuto. Salve o seu trabalho."
 msgstr[1] "Este PC desliga em {n} minutos. Salve o seu trabalho."
 
-msgid "This bar stays here on every screen. Home is at the top, Settings at the bottom, and the tools in between."
-msgstr "Esta barra fica aqui em todas as telas. O Início fica no topo, as Configurações embaixo e as ferramentas no meio."
+msgid "This bar stays here on every screen. Home is at the top, the ? for help and Settings at the bottom, and the tools in between."
+msgstr "Esta barra fica aqui em todas as telas. O Início fica no topo, o ? da ajuda e as Configurações embaixo, e as ferramentas no meio."
 
 msgid "This card shows each PC you opened and how far it has got."
 msgstr "Este cartão mostra em que ponto está cada PC que você abriu."
@@ -4390,9 +4402,6 @@ msgstr "Esta definição de ferramenta precisa de uma versão mais nova do CapyP
 msgid "This tool deletes user profiles"
 msgstr "Esta ferramenta exclui perfis de usuário"
 
-msgid "Three tools"
-msgstr "Três ferramentas"
-
 msgid "Tick Status or Logged-on users to refresh them"
 msgstr "Marque Status ou Usuários logados para atualizá-los"
 
@@ -4432,9 +4441,6 @@ msgstr "Para confirmar, digite <b>{word}</b>:"
 
 msgid "To keep a connection outside CapyPanel, right-click a host and pick Connect in a separate window."
 msgstr "Para manter uma conexão fora do CapyPanel, clique com o botão direito num host e escolha Conectar numa janela separada."
-
-msgid "To see this guide again, use Help › Guide to this screen. Show all the guides again brings every guide back, and Documentation opens the step-by-step pages."
-msgstr "Para ver este guia de novo, use Ajuda › Guia desta tela. Mostrar todos os guias de novo traz todos de volta, e Documentação abre as páginas passo a passo."
 
 msgid "To:"
 msgstr "Para:"
