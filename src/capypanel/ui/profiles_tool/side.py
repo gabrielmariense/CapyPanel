@@ -6,9 +6,19 @@ details open in a window of their own. A card shows what fits and ends with "and
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from html import escape
 
-from PySide6.QtCore import QSize, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPaintEvent, QPalette, QResizeEvent
+from PySide6.QtCore import QEvent, QPoint, QSize, Qt, Signal
+from PySide6.QtGui import (
+    QColor,
+    QFont,
+    QIcon,
+    QMouseEvent,
+    QPainter,
+    QPaintEvent,
+    QPalette,
+    QResizeEvent,
+)
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -16,6 +26,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QMenu,
     QProgressBar,
     QPushButton,
     QSizePolicy,
@@ -30,6 +41,7 @@ from capypanel.ui.dialogs import quiet_default
 from capypanel.ui.hosts_tool.command_windows import risky_button
 from capypanel.ui.icons import dot_icon, tabler_icon
 from capypanel.ui.list_workspace.details import CopyValue, DetailsPanel
+from capypanel.ui.menus import popup
 from capypanel.ui.profiles_tool import rows
 from capypanel.ui.profiles_tool.panels import ProfileDetails, Shown, amber, card
 
@@ -202,18 +214,21 @@ class Line(QWidget):
 
 
 class Lines(QWidget):
-    """A fixed number of lines, so a card never needs a scrollbar. More entries than lines: the
-    rest is a count in grey. With `own_more` that count has a line of its own under the others;
-    without, it takes the last line's place, and the widget's height never changes."""
+    """A fixed number of lines, so a card never scrolls. The rest is a link, "and 3 more…", whose
+    menu lists them; with `own_more` it gets a line of its own, else the last line's place."""
 
     clicked = Signal(str)
 
     def __init__(self, slots: int, own_more: bool) -> None:
         super().__init__()
         self._own_more = own_more
+        self._rest: list[Entry] = []
+        self._more_words = ""
         self.slots = [Line() for _slot in range(slots)]
         self.more = QLabel()
-        self.more.setObjectName("hint")
+        self.more.setTextFormat(Qt.TextFormat.RichText)
+        self.more.setTextInteractionFlags(help_links.LINK_KEYS)  # Tab reaches it, Enter opens it
+        self.more.linkActivated.connect(lambda _href: self.show_rest())
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(2)
@@ -238,14 +253,41 @@ class Lines(QWidget):
             line.setVisible(index < len(shown))
             if index < len(shown):
                 line.show_entry(shown[index])
-        left = len(entries) - len(shown)
-        self.more.setText(more(left) if left else "")
-        self.more.setVisible(bool(left))
+        self._rest = list(entries[len(shown) :])
+        self._more_words = more(len(self._rest)) if self._rest else ""
+        self._show_more()
+        self.more.setVisible(bool(self._rest))
+
+    def rest_menu(self) -> QMenu:
+        """The entries that don't fit; picking one acts as a click on its line."""
+        menu = QMenu(self)
+        for entry in self._rest:
+            text = f"{entry.name} · {entry.words}" if entry.words else entry.name
+            mark = tabler_icon(entry.icon, QColor(entry.color), MARK) if entry.icon else QIcon()
+            action = menu.addAction(mark, text.replace("&", "&&"))
+            action.triggered.connect(lambda _c=False, key=entry.key: self.clicked.emit(key))
+        return menu
+
+    def show_rest(self) -> None:
+        popup(self.rest_menu(), self.more.mapToGlobal(QPoint(0, self.more.height())))
+
+    def _show_more(self) -> None:
+        if not self._more_words:
+            self.more.setText("")
+            return
+        color = help_links.link_color(self.palette(), help_links.CARD).name()
+        style = f"color: {color}; text-decoration: underline;"
+        self.more.setText(f'<a href="#rest" style="{style}">{escape(self._more_words)}</a>')
+
+    def changeEvent(self, event: QEvent) -> None:
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.PaletteChange:  # a new theme's link colour
+            self._show_more()
 
     def shown(self) -> list[tuple[str, str]]:
-        """Each line on show, as (name, words), then the count of the rest (for tests)."""
+        """Each line on show, as (name, words), then the link to the rest (for tests)."""
         found = [(s.name.text(), s.words.text()) for s in self.slots if not s.isHidden()]
-        return found + ([(self.more.text(), "")] if not self.more.isHidden() else [])
+        return found + ([(self._more_words, "")] if not self.more.isHidden() else [])
 
     def full_height(self) -> int:
         """Its height with every line on show."""

@@ -398,6 +398,26 @@ def test_a_card_never_scrolls_it_counts_what_doesnt_fit(qapp: QApplication) -> N
     assert [name for name, _w in own.shown()] == ["PC-0", "PC-1", "and 5 more"]
 
 
+def test_the_rest_is_a_link_whose_menu_does_what_their_lines_do(
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    entries = [side.Entry(str(n), f"PC-{n}", "queued" if n % 2 else "") for n in range(7)]
+    lines = side.Lines(4, own_more=False)
+    lines.show_entries(entries, lambda n: f"and {n} more…")
+    assert lines.more.text().startswith("<a href") and "and 4 more…</a>" in lines.more.text()
+    shown: list[QMenu] = []
+    monkeypatch.setattr(side, "popup", lambda menu, _where: shown.append(menu))
+    lines.more.linkActivated.emit("#rest")  # a click on it, or Tab then Enter
+    texts = [action.text() for action in shown[0].actions()]
+    assert texts == ["PC-3 · queued", "PC-4", "PC-5 · queued", "PC-6"]
+    went: list[str] = []
+    lines.clicked.connect(went.append)
+    shown[0].actions()[2].trigger()
+    assert went == ["5"]  # as a click on PC-5's line would say
+    lines.show_entries(entries[:4], lambda n: f"and {n} more…")
+    assert lines.more.isHidden() and lines.more.text() == ""
+
+
 def test_a_group_or_list_picked_while_a_hosts_tab_is_in_front_brings_the_hosts_tab_back(
     window: CapyWindow,
 ) -> None:
@@ -804,8 +824,12 @@ def test_reads_and_counts_share_one_limit_across_every_tab_and_reads_go_first(
     assert (progress.title.text(), progress.summary.text()) == (
         "6 hosts in tabs", "0 working · 6 done",
     )  # fmt: skip
-    shown = progress.lines.shown()  # more tabs than lines: three, then the rest as a count
+    shown = progress.lines.shown()  # more tabs than lines: three, then the rest as a link
     assert len(shown) == 4 and shown[-1] == ("and 3 more…", "")
+    rest = progress.lines.rest_menu().actions()
+    assert len(rest) == 3
+    rest[0].trigger()  # its tab comes to the front, as from a line
+    assert tool.tabs.current() == _id(window, rest[0].text().partition(" · ")[0])
 
 
 def test_scanning_the_same_host_again_keeps_the_sizes_of_rows_still_there(
@@ -970,11 +994,10 @@ def test_the_arrows_that_scroll_the_tabs_can_be_seen(window: CapyWindow) -> None
     found = {b.objectName(): b for b in tool.tabs.bar.findChildren(QToolButton)
              if b.objectName().startswith("Scroll")}  # fmt: skip
     assert set(found) == {"ScrollLeftButton", "ScrollRightButton"}
-    for button in found.values():  # a chevron on the window's colour, never see-through
-        assert not button.icon().isNull() and "padding: 0px" in button.styleSheet()
-        assert "background: #" in button.styleSheet()
+    for button in found.values():  # buttons the theme draws: tests/ui/test_tab_strip.py
+        assert not button.icon().isNull()
         # At the end the bar is already at, its arrow is drawn muted, not just left to the style.
-        size = QSize(16, 16)
+        size = QSize(18, 18)
         normal = button.icon().pixmap(size, QIcon.Mode.Normal).toImage()
         assert button.icon().pixmap(size, QIcon.Mode.Disabled).toImage() != normal
 

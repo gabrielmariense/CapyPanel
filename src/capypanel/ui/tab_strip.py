@@ -21,6 +21,7 @@ from capypanel.ui.icons import tabler_icon
 
 PINNED = ""  # the pinned tab's key; every other tab has a key of its own
 GAP = 14  # px between the pinned tab and the others
+ARROW = 18  # px: the chevrons of the scroll arrows and ▾, buttons the theme draws (toolTabs)
 
 
 class _Bar(QTabBar):
@@ -31,6 +32,7 @@ class _Bar(QTabBar):
 
     def __init__(self) -> None:
         super().__init__()
+        self.setObjectName("toolTabs")
         self.active = True
         self.setDrawBase(False)
         self.setExpanding(False)
@@ -75,31 +77,23 @@ class _Bar(QTabBar):
                 button.setArrowType(Qt.ArrowType.NoArrow)
 
     def restyle(self) -> None:
-        """The two arrows that scroll the tabs when they don't fit. Qt's own are tool buttons,
-        and the theme's padding for tool buttons left them see-through with no arrow: the
-        last tab just looked cut. They get a chevron and the window's own background."""
+        """The scroll arrows' chevrons; the end the bar is at gets a faded one."""
         color = self.palette().color(QPalette.ColorRole.ButtonText)
         window = self.palette().color(QPalette.ColorRole.Window)
-        # The end the bar is already at: its arrow faded towards the background, drawn so by
-        # us (the style's own greying of an icon barely showed). Mixed from the two colours,
-        # so it's fainter in every theme.
         muted = QColor(
             round(color.red() * 0.4 + window.red() * 0.6),
             round(color.green() * 0.4 + window.green() * 0.6),
             round(color.blue() * 0.4 + window.blue() * 0.6),
         )
-        back = window.name()
         names = ("chevron-left", "chevron-right")
         for button, name in zip(self._scrollers(), names, strict=False):
-            icon = tabler_icon(name, color, 16)
-            icon.addPixmap(tabler_icon(name, muted, 16).pixmap(16, 16), QIcon.Mode.Disabled)
+            icon = tabler_icon(name, color, ARROW)
+            icon.addPixmap(
+                tabler_icon(name, muted, ARROW).pixmap(ARROW, ARROW), QIcon.Mode.Disabled
+            )
             button.setArrowType(Qt.ArrowType.NoArrow)
             button.setIcon(icon)
-            button.setIconSize(QSize(16, 16))
-            button.setStyleSheet(
-                f"QToolButton {{ padding: 0px; border: none; border-radius: 0px;"
-                f" background: {back}; }}"
-            )
+            button.setIconSize(QSize(ARROW, ARROW))
 
     def initStyleOption(self, option: QStyleOptionTab, index: int) -> None:
         super().initStyleOption(option, index)
@@ -147,9 +141,9 @@ class TabStrip(QWidget):
         inside.addWidget(self.line, 0, Qt.AlignmentFlag.AlignCenter)
         self.bar = _Bar()
         self.more = QToolButton()
-        self.more.setAutoRaise(True)
+        self.more.setObjectName("tabsMenu")
+        self.more.setFixedWidth(28)  # as each scroll arrow
         self.more.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-        self.more.setStyleSheet("QToolButton::menu-indicator { image: none; width: 0px; }")
         self.more.setMenu(QMenu(self.more))
         self.more.menu().aboutToShow.connect(self._fill_more)
         self._more_items: list[tuple[str, str, QIcon]] = []  # every tab: key, text, mark
@@ -159,7 +153,8 @@ class TabStrip(QWidget):
         row.addWidget(self.pinned, 0, Qt.AlignmentFlag.AlignBottom)
         row.addWidget(gap)
         row.addWidget(self.bar, 1, Qt.AlignmentFlag.AlignBottom)
-        row.addWidget(self.more, 0, Qt.AlignmentFlag.AlignVCenter)
+        row.addSpacing(4)
+        row.addWidget(self.more, 0, Qt.AlignmentFlag.AlignBottom)
         self.pinned.tabBarClicked.connect(lambda _i: self.picked.emit(PINNED))
         self.bar.tabBarClicked.connect(self._clicked)
         self.bar.middle_clicked.connect(lambda i: self.close_requested.emit(self.key_at(i)))
@@ -172,11 +167,13 @@ class TabStrip(QWidget):
         tabs start where the Groups panel does (Dante Q1, Gabriel's pick 1, 2026-11-16)."""
         for bar in (self.pinned, self.bar):
             bar.set_tab_height(height)
+        self.more.setFixedHeight(height)
         self.setFixedHeight(height)
 
     def restyle(self) -> None:
         color = self.palette().color(QPalette.ColorRole.ButtonText)
-        self.more.setIcon(tabler_icon("chevron-down", color))
+        self.more.setIcon(tabler_icon("chevron-down", color, ARROW))
+        self.more.setIconSize(QSize(ARROW, ARROW))
         self.bar.restyle()
         self.pinned.setTabIcon(0, tabler_icon(self._pinned_icon, color))
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
