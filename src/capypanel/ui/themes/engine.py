@@ -210,6 +210,13 @@ def current() -> Theme:
     return _current
 
 
+def background() -> str:
+    """The colour the stylesheet paints behind the panes."""
+    if _current.engine == "native":
+        return NATIVE_TOKENS[native_scheme()]["bg"]
+    return _current.colors["bg"]
+
+
 def generation() -> int:
     return _generation
 
