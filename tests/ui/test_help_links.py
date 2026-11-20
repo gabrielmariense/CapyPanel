@@ -185,10 +185,10 @@ def test_the_question_mark_s_ink_starts_at_the_text_edge_its_hover_box_in_the_ma
     window.show()
     QApplication.processEvents()
     assert button.x() < label.x()  # its hover box reaches into the margin
-    assert abs(_ink(window, button) - label.x()) <= 1
+    assert _ink(window, button) == label.x()
     window.resize(window.width() + 40, window.height() + 20)  # laid out again: it stays put
     QApplication.processEvents()
-    assert abs(_ink(window, button) - label.x()) <= 1
+    assert _ink(window, button) == label.x()
     window.close()
 
 
@@ -324,7 +324,7 @@ def test_settings_question_mark_sits_under_the_pages_and_opens_the_page_shown(
     top_left = button.mapTo(dialog, QPoint(0, 0))
     assert top_left.y() >= pinned.mapTo(dialog, QPoint(0, pinned.height())).y()
     search = dialog.search.mapTo(dialog, QPoint(0, 0)).x()
-    assert top_left.x() < search and abs(_ink(dialog, button) - search) <= 1
+    assert top_left.x() < search and _ink(dialog, button) == search
     button.click()  # General, as Settings opens
     dialog.show_page("ssh")
     QTest.keyClick(dialog, Qt.Key.Key_F1)

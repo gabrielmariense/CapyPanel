@@ -269,10 +269,10 @@ class HelpButton(QToolButton):
         return self._place()
 
     def ink_inset(self) -> int:
-        """How far in from its left edge the ? is drawn: the icon sits in the middle, and the
-        circle's ink starts 2 of the icon's 24 units in."""
+        """Where the ?'s ink starts, from its left edge: the icon sits in the middle (rounded
+        down, as Qt places it), and the circle's ink starts 2 of the icon's 24 units in."""
         icon = self.iconSize().width()
-        return int((self.width() - icon) / 2 + icon / 12 + 0.5)
+        return (self.width() - icon) // 2 + icon // 12
 
     def showEvent(self, event: QShowEvent) -> None:
         if not self._seated:
