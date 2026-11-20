@@ -1,8 +1,4 @@
-"""The printer Details panel: its status and two buttons (Refresh, Web page), then Connection,
-Supplies, Printer, Page counters, Tags and Notes, each a part that can be hidden. Labels sit
-beside their values, as in Hosts. What the last Refresh read sits beside what the list says,
-never over it: a value the printer reports differently shows under the list's own, with "Use
-this"."""
+"""The printer Details panel; what Refresh read shows beside the list's value, never over it."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -240,9 +236,8 @@ class PrinterDetailsPanel(DetailsPanel):
         under = self.muted(words)
         under.setToolTip(status.plain_tip(cell.tip))
         layout.addWidget(under)
-        # A printer that didn't answer or couldn't be read: its line in the docs, on a line of its
-        # own under the status, as Doc360's is under Source, so the status keeps its date beside
-        # it (the table's cell is a tooltip, which can't hold a link).
+        # Its docs line goes on a line of its own, so the status keeps its date beside it
+        # (the table's cell is a tooltip, which can't hold a link).
         if place := status.status_place(shown.checked):
             layout.addWidget(_link(place))
         reading = shown.checked.reading if shown.checked else None

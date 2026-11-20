@@ -1,5 +1,4 @@
-"""What a printer's last Refresh says, in words and colours: the Status and Toner cells, and the
-heading of its Details. One place, so the table, Details and Report always agree."""
+"""A printer's last Refresh in words and colours: one place, so table, Details and Report agree."""
 
 import html
 import re
@@ -112,9 +111,8 @@ class Attention(Enum):
 
 
 class Reason(Enum):
-    """A reason Settings' Warnings table lets you warn about. The rest of the printer's problems
-    (a door open, a tray pulled out...) only last while someone is at it: they show in Status and
-    Details but never warn."""
+    """A reason Settings' Warnings table can warn about. Passing problems (a door open, a tray
+    pulled out) show in Status and Details but never warn."""
 
     JAMMED = "jammed"
     NO_PAPER = "no_paper"
@@ -208,10 +206,8 @@ def status(checked: Checked | None, low: int) -> Cell:
 
 
 def reasons(checked: Checked | None, low: int) -> list[Reason]:
-    """Every warning reason a printer has, most pressing first: no answer; its stop reasons in
-    Status' order, or Stopped when it's down without one; then a supply at the low level.
-    "Needs attention" from the printer's own messages, a refused account or an unreadable answer
-    aren't reasons: they're not warnings."""
+    """Every warning reason a printer has, most pressing first: no answer, its stop reasons (or
+    Stopped), then a low supply. Its own messages, refusals and unreadable answers never warn."""
     if checked is None:
         return []
     if checked.offline:

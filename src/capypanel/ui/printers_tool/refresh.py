@@ -1,7 +1,4 @@
-"""Refresh on printers: one SNMP read each, a few at a time on a background thread, and when
-some printers' page counters come from Doc360 MPS, one Doc360 download beside them. `found`
-arrives once per printer and `counted` once per Refresh, on the UI thread through Qt's queued
-signals."""
+"""Refresh on printers: an SNMP read each on a background thread, and one Doc360 download."""
 
 import json
 import logging

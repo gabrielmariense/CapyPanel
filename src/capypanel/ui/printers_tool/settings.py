@@ -1,6 +1,4 @@
-"""The Printers tool's part of Settings: General (Printer lists, Startup), Warnings and supplies
-(Refresh on its own, which reasons warn, the low supply level, the bar marks, how the Toner column
-shows) and Connecting (the SNMP version and its account, the Doc360 MPS account)."""
+"""The Printers tool's part of Settings: General, Warnings and supplies, and Connecting."""
 
 from collections.abc import Callable
 from pathlib import Path
@@ -68,9 +66,8 @@ NOTIFY, NOTIFY_OFF, NOTIFY_LOW = "notify", "off", "low"
 
 
 class _SecretWindow(QDialog):
-    """The frame the Printers' account windows share: a note on top, the window's own boxes,
-    a Show tick for the secret ones, then Save and Cancel. Save keeps what's typed in Windows
-    Credential Manager."""
+    """The frame the Printers' account windows share: a note, their boxes, a Show tick, Save
+    and Cancel. Save keeps what's typed in Windows Credential Manager."""
 
     HELP_PLACE = "printers-checking-set-the-snmp-account"
 
@@ -173,9 +170,8 @@ class CommunityDialog(_SecretWindow):
 
 
 class V3AccountDialog(_LoginWindow[usm.Account]):
-    """The SNMP v3 account's own small window (Save keeps it in Windows Credential Manager).
-    A password already kept isn't shown: its box stays empty and keeps it unless typed over.
-    An empty user name forgets the kept account, as an empty community string does."""
+    """The SNMP v3 account's own window: a kept password isn't shown, and an empty user name
+    forgets the kept account, as an empty community string does."""
 
     def __init__(self, parent: QWidget | None, kept: usm.Account | None) -> None:
         super().__init__(
@@ -262,9 +258,8 @@ class V3AccountDialog(_LoginWindow[usm.Account]):
 
 
 class Doc360AccountDialog(_LoginWindow[doc360.Account]):
-    """The Doc360 MPS login's own small window (Save keeps it in Windows Credential Manager),
-    for printers whose page counters come from Doc360. A password already kept isn't shown;
-    an empty user name forgets the kept login."""
+    """The Doc360 MPS login's own window, for printers whose counters come from Doc360; a kept
+    password isn't shown, and an empty user name forgets it."""
 
     HELP_PLACE = "printers-checking-get-page-counts-from-doc360-mps"
 
@@ -440,11 +435,8 @@ class BarMarksDialog(QDialog):
 
 
 class PrintersPage(ListsGeneralPage):
-    """The Printers tool's General page (its lists, startup). It also builds the rows of the
-    other two pages and lays them out there: Warnings and supplies (Refresh on its own, the
-    Warnings table, the low supply level, the bar marks, the Toner column) and Connecting (the
-    SNMP version and account, the Doc360 MPS account). Every choice fires this page's
-    `changed`."""
+    """The Printers tool's General page. It also builds and lays out the other two pages' rows
+    (Warnings and supplies, Connecting); every choice fires this page's `changed`."""
 
     HELP_PLACE = "settings-printers"
 
