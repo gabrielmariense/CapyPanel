@@ -6,6 +6,7 @@ import pytest
 from PySide6.QtCore import QPoint, QRect, Qt, QUrl
 from PySide6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QDialogButtonBox,
     QFileDialog,
     QFormLayout,
@@ -114,22 +115,33 @@ def test_every_tool_keeps_the_profile_window_s_size_and_places(
         _shown(dialog)
         form = dialog.findChild(QFormLayout)
         label = form.labelForField(dialog.settings_state) if form else None
-        assert label is not None  # lines up with the state, not between it and the buttons
+        options_label = form.labelForField(dialog.options_area) if form else None
+        assert label is not None and options_label is not None
         assert label.geometry().center().y() == dialog.settings_state.geometry().center().y()
         controls: list[QWidget] = [
             dialog.name, dialog.tool, dialog.login, dialog.port, dialog.settings_state,
             dialog.choose_settings, dialog.default_settings, dialog.options_area,
         ]  # fmt: skip
+
+        def places() -> list[QRect]:
+            shown = [*controls, *dialog.findChildren(QCheckBox)]
+            return [QRect(c.mapTo(dialog, QPoint(0, 0)), c.size()) for c in shown]
+
         seen = []
         for tool in ("mstsc", "realvnc", "ultravnc", "mstsc"):
             dialog.tool.setCurrentIndex(dialog.tool.findData(tool))
             QApplication.processEvents()
             assert all(c.isVisible() for c in controls), tool
-            places = [QRect(c.mapTo(dialog, QPoint(0, 0)), c.size()) for c in controls]
-            seen.append((dialog.size(), places))
-        assert all(s == seen[0] for s in seen)
+            first = next(iter(dialog.option_boxes.values()), dialog.no_options)  # or None
+            line = first.mapTo(dialog, first.rect().center()).y()
+            assert line == options_label.geometry().center().y(), tool  # on the label's line
+            seen.append((dialog.size(), dialog.sizeHint(), places()))
+        assert seen == [seen[0]] * len(seen)
+        dialog.resize(dialog.width(), dialog.height() + 60)  # the room to spare goes below
+        QApplication.processEvents()
+        assert places() == seen[0][2]
         _shown(editing)  # opens on UltraVNC
-        assert editing.size() == dialog.size()
+        assert editing.size() == seen[0][0]
     finally:
         dialog.close()
         editing.close()

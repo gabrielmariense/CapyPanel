@@ -109,27 +109,24 @@ class ProfileDialog(QDialog):
         # A place for each option of the tool with the most, as tall as a used one while unused
         # and never widening the window, so switching tools moves no row and keeps its size.
         self._option_places: list[QCheckBox] = []
-        places = QWidget()
-        places_column = QVBoxLayout(places)
-        places_column.setContentsMargins(0, 0, 0, 0)
-        for _place in range(max(max((len(t.options) for t in tools), default=0), 1)):
+        more_options = QWidget()  # the places after the first, in a column that keeps their room
+        more_column = QVBoxLayout(more_options)
+        more_column.setContentsMargins(0, 0, 0, 0)
+        for place in range(max(max((len(t.options) for t in tools), default=0), 1)):
             box = QCheckBox(" ")
             policy = box.sizePolicy()
             policy.setRetainSizeWhenHidden(True)
             policy.setHorizontalPolicy(QSizePolicy.Policy.Ignored)
             box.setSizePolicy(policy)
-            places_column.addWidget(box)
+            if place:
+                more_column.addWidget(box)
             self._option_places.append(box)
         self.no_options = QLabel(_("None"))
         self.no_options.setEnabled(False)
-        none = QWidget()
-        none_column = QVBoxLayout(none)
-        none_column.setContentsMargins(0, 0, 0, 0)
-        none_column.addWidget(self.no_options)
-        none_column.addStretch(1)
-        self.options_area = QStackedWidget()
-        self.options_area.addWidget(places)
-        self.options_area.addWidget(none)
+        self.options_area = QStackedWidget()  # the first option or None, on the label's line
+        self.options_area.addWidget(self._option_places[0])
+        self.options_area.addWidget(self.no_options)
+        self.options_area.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         self.option_boxes: dict[str, QCheckBox] = {}
 
         form = QFormLayout()
@@ -140,6 +137,8 @@ class ProfileDialog(QDialog):
         form.addRow(_("Settings:"), self.settings_state)
         form.addRow("", settings_buttons)
         form.addRow(_("Options:"), self.options_area)
+        if len(self._option_places) > 1:
+            form.addRow("", more_options)
         self.buttons = ok_cancel(self, _("Save") if profile else _("Add"))
         layout = QVBoxLayout(self)
         layout.addLayout(form)
@@ -181,7 +180,8 @@ class ProfileDialog(QDialog):
                 box.setText(tool.option_name(options[index], i18n.language()))
                 box.setChecked(options[index] in ticked)
                 self.option_boxes[options[index]] = box
-            box.setVisible(index < len(options))
+            if index:  # the first is the stack's page, shown with it
+                box.setVisible(index < len(options))
         self.options_area.setCurrentIndex(0 if options else 1)
         self.no_options.setToolTip(_("{tool} has no options to set here.").format(tool=tool.name))
         self.port.setSpecialValueText(
