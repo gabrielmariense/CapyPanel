@@ -86,7 +86,7 @@ See [Checking hosts](hosts/checking.md), [Connecting](hosts/connecting.md) and
 
     | Part | What it shows |
     |---|---|
-    | **The sidebar** (left edge) | **Home** (Ctrl+0) at the top, then one icon per tool, **Hosts** (Ctrl+1), **Printers** (Ctrl+2), **Profile cleanup** (Ctrl+3) and **SSH** (Ctrl+4), and **Settings** (Ctrl+,) at the bottom. Where you are has a tinted square behind its icon |
+    | **The sidebar** (left edge) | **Home** (Ctrl+0) at the top, then one icon per tool, **Hosts** (Ctrl+1), **Printers** (Ctrl+2), **Profile cleanup** (Ctrl+3) and **SSH** (Ctrl+4), and the **?** for help (F1) and **Settings** (Ctrl+,) at the bottom. Where you are has a tinted square behind its icon |
     | **Toolbar** (top) | The buttons of the tool you're in. For Hosts: **Connect**, **Refresh all**, **Commands**, **Inventory** and **Report** |
     | **Groups panel** (left) | The open list's name on top, as a dropdown that switches lists. Then "All hosts" with how many hosts the list has, and "No group" with how many are in none. Then **Groups**, with a **+** button to add one, and **Tags**; drag the line above Tags to give either more room, and it's remembered |
     | **Hosts panel** (middle) | The search box above the hosts in the selected group or tag, with their **Status** and **User** |
@@ -96,10 +96,11 @@ See [Checking hosts](hosts/checking.md), [Connecting](hosts/connecting.md) and
     The menu bar is the same in every tool. **File** opens **Settings…** (Ctrl+,) and **Exit**
     (Ctrl+Q). **View** goes to **Home** and each tool, then shows or hides the panels, the
     **Toolbar** and the **Status bar**; in Hosts it also holds **Customize the details panel…** and
-    **Show users' domain**. It stays open while you tick. **Help** has **Documentation**, **Guide to
-    this screen**, **Show all the guides again**, **Report a problem**, **Check for updates…** and
-    **About CapyPanel**. When a newer release is out, an **Update** button shows at the menu bar's
-    right end (see [Update CapyPanel](download.md#update-capypanel)).
+    **Show users' domain**. It stays open while you tick. **Help** has **Guide to this screen**,
+    **Show all the guides again**, **Help for this screen**, **Documentation**, **Report a
+    problem**, **Check for updates…** and **About CapyPanel**. When a newer release is out, an
+    **Update** button shows at the menu bar's right end (see [Update
+    CapyPanel](download.md#update-capypanel)).
 
 ??? note "Arranging the window"
 
@@ -164,6 +165,13 @@ again.
 
 ## Get help, or report a problem <a id="start-get-help-or-report-a-problem"></a>
 
+- **Help > Help for this screen** (F1), or the **?** at the bottom of the sidebar, opens this site
+  at the part for what's shown: Getting started from Home, a tool's page from the tool. In Settings,
+  the **?** under the page list and F1 open the part for the page shown, and most windows have a
+  **?** first in their button row for their own part.
+- A warning or an error has **What does this mean?** under its text, and F1 does the same: it opens
+  the message's row under "Messages you may see", tinted, with what it means and what to do. A
+  failed command's red strip has the link too.
 - **Help > Documentation** opens this site, in Portuguese when the app is in Portuguese.
 - **Help > Guide to this screen** shows the current screen's guide again, and **Help > Show all the
   guides again** brings every guide back.
@@ -197,6 +205,7 @@ them, except F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W, which are kept for CapyPanel
 | F2 / Del | Edit / remove the selection |
 | Ctrl+0 / Ctrl+1 / Ctrl+2 / Ctrl+3 / Ctrl+4 | Home / the Hosts tool / the Printers tool / Profile cleanup / the SSH tool |
 | Ctrl+O | Open a host list file |
+| F1 | Help for the screen you're on |
 | Ctrl+, | Settings |
 | Ctrl+Q | Exit |
 

@@ -53,15 +53,17 @@ contam.
       como no Hosts.
     - À direita, o **Andamento** acompanha cada host numa aba, como em "4 hosts em abas · 2
       trabalhando · 2 concluídos". Embaixo dele, **Hosts exibidos** resume o grupo escolhido, e
-      **Marcados nas abas** lista os hosts com perfis marcados; um clique vai para a aba dele. Com um
-      host escolhido, o cartão mostra o **Endereço**, o **Grupo**, o **Escaneado às** e o **Como**,
-      a conta.
+      **Marcados nas abas** lista os hosts com perfis marcados; um clique vai para a aba dele.
+      Quando um cartão tem mais linhas do que cabem, a última, como **e mais 3…**, é um link: o menu
+      dele lista o resto com a situação de cada um, e escolher um faz o mesmo que um clique na linha
+      dele. Com um host escolhido, o cartão mostra o **Endereço**, o **Grupo**, o **Escaneado às** e
+      o **Como**, a conta.
     - O painel de grupos aqui é só leitura: os grupos são criados no Hosts.
     - As abas nunca se reordenam sozinhas: uma nova abre na ponta direita, e o **▾** no fim da barra
-      de abas lista todas. O botão direito numa aba oferece **Fechar**, **Fechar as outras** e
-      **Fechar as concluídas**; um clique do meio também fecha uma, e o **Ctrl+W** e o
-      **Ctrl+Shift+W** fecham a aba da frente, como no SSH. Uma aba não pode ser fechada enquanto
-      está excluindo.
+      de abas lista todas; quando elas não cabem, as setas ao lado rolam a barra. O botão direito
+      numa aba oferece **Fechar**, **Fechar as outras** e **Fechar as concluídas**; um clique do
+      meio também fecha uma, e o **Ctrl+W** e o **Ctrl+Shift+W** fecham a aba da frente, como no
+      SSH. Uma aba não pode ser fechada enquanto está excluindo.
     - Até quatro hosts são lidos ou calculados ao mesmo tempo, somando todas as abas; os outros
       aguardam a vez.
 
@@ -114,7 +116,9 @@ exibido, e só lê. O **Parar o cálculo** para na hora, mantendo os tamanhos j�
 
 ## Excluir perfis <a id="profiles-delete-profiles"></a>
 
-1. **Marque** os perfis a excluir: a caixa, o **Espaço**, ou um clique duplo na linha. Uma linha
+1. **Marque** os perfis a excluir: a caixa, dois cliques na linha ou o **Espaço** nas linhas
+   selecionadas. Selecione várias com Ctrl ou Shift e um clique, Shift e as setas, ou Ctrl+A; o
+   Espaço então marca todas, ou desmarca quando todas já estão marcadas. Uma linha
    marcada fica contornada em âmbar e diz **Será excluído**; o cartão **Marcados para excluir** à
    direita os lista com o total, como "3 perfis · 12,4 GB".
 2. Clique em **Excluir 3 perfis…**, no pé do painel da direita ou na barra de ferramentas.

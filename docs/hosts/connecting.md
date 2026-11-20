@@ -44,7 +44,8 @@ asked at most once, and more than five at once asks first.
     Classic VNC password login uses only the first 8 characters of a password, and its exchange can
     be cracked offline. So before an UltraVNC **user-and-password** profile connects, CapyPanel
     asks each server which kinds of login it offers: it reads the server's greeting and hangs up
-    without logging in. A server that doesn't take a user and password is skipped, with a message,
+    without logging in. Each server is asked once while CapyPanel runs, and again only when it
+    couldn't be read. A server that doesn't take a user and password is skipped, with a message,
     and is never sent your password.
 
     - The check takes a few milliseconds per host on a local network.
@@ -52,6 +53,10 @@ asked at most once, and more than five at once asks first.
       viewer, which shows the real error.
     - A server using the SecureVNC plugin announces only the plugin, so the check can't tell the
       two kinds of login apart there.
+    - UltraVNC servers up to 1.6.1 refuse a PC after six connections that don't log in, saying the
+      connection was rejected after too many attempts. The block lifts at the first connection that
+      logs in after a quiet minute: wait a minute and open the host once from UltraVNC Viewer
+      itself, or restart its UltraVNC service.
 
 ## Choose how a host connects <a id="connecting-choose-how-a-host-connects"></a>
 
@@ -91,11 +96,14 @@ anywhere use the default.
 
 Open **Settings > Hosts > Connecting > Connection profiles** (or **Connect > Connection
 profiles…**) to add, edit, duplicate, delete, or restore the ones CapyPanel ships with. Each
-profile has a name, a tool, a login, the tool's options and a port (blank for the tool's own).
+profile has a name, a tool, a login, the tool's options and a port (blank for the tool's own). The
+window has the same rows for every tool: a row the tool doesn't use is greyed, and its tooltip
+says why.
 
 CapyPanel starts with **UltraVNC** and **RealVNC**, both with "user and password", and **Remote
-Desktop**. **Hosts with no profile use**, the last row, is the profile for hosts with none of their
-own.
+Desktop**. UltraVNC's has **SecureVNC plugin** ticked: a server without the plugin still connects,
+after UltraVNC Viewer asks whether to go on unencrypted. **Hosts with no profile use**, the last
+row, is the profile for hosts with none of their own.
 
 ??? note "Where profiles are kept, and who can change them"
 
@@ -116,7 +124,7 @@ own.
     UltraVNC profile can carry a settings file:
 
     1. In UltraVNC Viewer, set the options and save the connection as a `.vnc` file.
-    2. In the profile editor, **Viewer settings > Choose file…** and pick it. **Use defaults** goes
+    2. In the profile editor, **Settings > Choose file…** and pick it. **Use defaults** goes
        back to the viewer's own settings.
 
     On **Add** or **Save**, CapyPanel copies the file beside the profile (`profiles\<id>.vnc`).

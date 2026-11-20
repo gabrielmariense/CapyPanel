@@ -39,7 +39,7 @@
 
 /* A help link from CapyPanel lands on one row of a Messages table: tint that row so it's clear
    which line you were sent to. The theme already keeps any target clear of the header. The tint
-   is the page's accent until the design check names its colour. */
+   is the page's accent at 14 %, checked in 0.30's design check. */
 .md-typeset tr:has(> td > a:target) {
   background-color: color-mix(in srgb, var(--md-accent-fg-color) 14%, transparent);
 }

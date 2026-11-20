@@ -26,7 +26,7 @@ settings work right there.
     - Search matches words from their start, and the page list keeps only the pages with a match.
       A dropdown whose match is one of its choices gets the mark on its arrow. Clearing the box
       puts everything back.
-    - The window opens at 960 × 700 the first time, or smaller on a small screen, such as a laptop
+    - The window opens at 960 × 740 the first time, or smaller on a small screen, such as a laptop
       at 125 % scale. You can make it any size: a page larger than the window scrolls, down and
       sideways. It opens again at the size and place you left it at.
 
@@ -93,7 +93,8 @@ and **Restore default** gives back the one it came with.
     - A key another command already has moves only after a question: **Give it** moves it, and the
       other command is left with no key.
     - F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W are kept for CapyPanel itself, as the line under the
-      list says: "In an SSH terminal, all but Ctrl+Shift+W go to the server." So is
+      list says: "In an SSH terminal, all but Ctrl+Shift+W go to the server." **Help for this
+      screen** shows F1 greyed: "F1 is kept for help and can't be changed." So is
       a key that types text on its own, such as a letter, a digit or Ç: use it with Ctrl or Alt.
       Press one and the field turns red and reads "Key not allowed", the reason shows in red
       under the list, and it keeps waiting for another key.

@@ -3,6 +3,53 @@
 As mudanças de cada versão que você vai notar. As
 [versões no GitHub](https://github.com/gabrielmariense/CapyPanel/releases) têm os downloads.
 
+## 0.30.0 <a id="whats-new-0300"></a>
+
+- A F1, o **Ajuda > Ajuda desta tela** ou o novo **?** embaixo na barra lateral abre estas páginas
+  na parte da tela em que você está. As Configurações têm um **?** embaixo da lista de páginas, e a
+  maioria das janelas tem um no começo da fileira de botões. A F1 fica reservada à ajuda, então não
+  pode ir para outro comando. Veja [Pedir ajuda, ou relatar um
+  problema](getting-started.pt-BR.md#start-get-help-or-report-a-problem).
+- Avisos e erros têm **O que isso significa?** embaixo do texto. Ele abre a linha da mensagem nestas
+  páginas, com o que ela quer dizer e o que fazer. A faixa vermelha de um comando que falhou, no
+  Hosts e na janela Comandos, também leva ao motivo, e a do SSH também, quando uma conexão termina
+  com erro.
+- O CapyPanel abre mais rápido com uma lista grande de hosts: com 480 hosts, abriu em cerca de 30%
+  menos tempo nos nossos testes. Uma ferramenta que você ainda não abriu preenche a lista quando
+  você a abre.
+- Na Limpeza de perfis, selecione vários perfis com Ctrl ou Shift e um clique, Shift e as setas, ou
+  Ctrl+A, e o **Espaço** marca todos. Um clique na caixa de marcar também faz da linha dela a
+  atual, então as setas seguem dali.
+- No painel da direita da Limpeza de perfis, a última linha de um cartão, como **e mais 7…**, agora
+  é um link: o menu dele lista o resto, e escolher um vai até ele.
+- Na Limpeza de perfis e no SSH, as setas de rolagem da barra de abas e o **▾** são botões da altura
+  das abas, e nenhuma aba aparece cortada embaixo deles. Com só a lista aberta, a linha curta depois
+  da aba dela sumiu.
+- A janela de um perfil de conexão mantém um tamanho e as mesmas linhas seja qual for a ferramenta.
+  Uma linha que a ferramenta não usa fica cinza, e a dica dela diz o motivo. **Configurações do
+  visualizador** agora é **Ajustes**.
+- O **Adicionar uma conta** mantém o campo de PC, grupo ou tag no lugar, cinza enquanto **Todos os
+  PCs** está escolhido, então escolher onde a conta vale não move nada.
+- O perfil inicial do UltraVNC agora vem com o **SecureVNC plugin** marcado. Os perfis iniciais são
+  gravados no primeiro início de um PC e pelo **Restaurar originais…**; os perfis que já estão num
+  PC ficam como estão.
+- Verificar se um PC está ligado não conecta mais na porta do VNC, e o CapyPanel pergunta a cada
+  servidor UltraVNC os tipos de login dele uma vez enquanto está aberto. Servidores UltraVNC até a
+  1.6.1 recusam um PC depois de seis conexões que não fazem login, então um host que você verificava
+  muito e abria pouco podia passar a recusar o seu. Se um ainda recusar, espere um minuto e abra-o
+  uma vez pelo UltraVNC Viewer, ou reinicie o serviço do UltraVNC nele.
+- As janelas crescem até caber o texto quebrado em linhas quando abrem e quando as linhas delas
+  mudam. **Abrir uma pasta** com um caminho longo, **Reiniciar** e **Desligar** abriam cortadas
+  antes.
+- As Configurações abrem em 960 × 740 na primeira vez, então a lista de páginas cabe inteira também
+  nos temas do próprio Windows.
+- Mensagens mais claras: um salvamento que falha diz para fechar o arquivo no Excel ou em outro
+  programa e salvar de novo, e uma lista que sumiu diz que saiu das suas listas. Quando o
+  Gerenciador de Credenciais do Windows recusa uma mudança nas configurações do Impressoras, a caixa
+  diz que nada foi alterado.
+- Quando salvar de quanto em quanto tempo procurar nova versão falhava, escolher a mesma opção de
+  novo não fazia nada. Agora tenta de novo.
+
 ## 0.29.0 <a id="whats-new-0290"></a>
 
 - O **SSH** é uma quarta ferramenta (Ctrl+4), para os servidores, switches e outros aparelhos que

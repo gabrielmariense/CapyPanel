@@ -3,6 +3,47 @@
 The changes in each release that you'll notice. The
 [releases on GitHub](https://github.com/gabrielmariense/CapyPanel/releases) have the downloads.
 
+## 0.30.0 <a id="whats-new-0300"></a>
+
+- F1, **Help > Help for this screen** or the new **?** at the bottom of the sidebar opens these
+  pages at the part for the screen you're on. Settings has a **?** under its page list, and most
+  windows have one first in their button row. F1 is kept for help, so it can't be given to another
+  command. See [Get help, or report a
+  problem](getting-started.md#start-get-help-or-report-a-problem).
+- Warnings and errors have **What does this mean?** under their text. It opens the message's row on
+  these pages, with what it means and what to do. A failed command's red strip, in Hosts and the
+  Commands window, links its reason too, and so does SSH's when a connection ends with an error.
+- CapyPanel starts faster with a long host list: with 480 hosts, it opened in about 30% less time in
+  our tests. A tool you haven't opened yet fills its list when you open it.
+- In Profile cleanup, select several profiles with Ctrl or Shift and a click, Shift and the arrows,
+  or Ctrl+A, and **Space** ticks them all. A click on a tick box also makes its row the current
+  one, so the arrows go on from there.
+- In Profile cleanup's right panel, a card's last line, as in **and 7 more…**, is now a link: its
+  menu lists the rest, and picking one goes to it.
+- In Profile cleanup and SSH, the tab bar's scroll arrows and **▾** are buttons as tall as the tabs,
+  and no tab shows cut off under them. With only the list open, the short line after its tab is
+  gone.
+- A connection profile's window keeps one size and the same rows whatever tool you pick. A row the
+  tool doesn't use is greyed, and its tooltip says why. **Viewer settings** is now **Settings**.
+- **Add an account** keeps its PC, group or tag field in place, greyed while **Every PC** is picked,
+  so picking where it's used moves nothing.
+- The UltraVNC starter profile now has **SecureVNC plugin** ticked. Starters are written on a PC's
+  first start and by **Restore built-in…**; profiles already on a PC keep theirs.
+- Checking whether a PC is on no longer connects to VNC's port, and CapyPanel asks each UltraVNC
+  server its kinds of login once while it runs. UltraVNC servers up to 1.6.1 refuse a PC after six
+  connections that don't log in, so a host you checked often and opened rarely could start refusing
+  yours. If one still does, wait a minute and open it once from UltraVNC Viewer, or restart its
+  UltraVNC service.
+- Windows grow to fit their wrapped text when they open and when their rows change. **Open a
+  folder** with a long path, **Restart** and **Shut down** were cut short before.
+- Settings opens at 960 × 740 the first time, so its page list fits whole in Windows' own themes
+  too.
+- Clearer messages: a failed save says to close the file in Excel or another program and save again,
+  and a list that's gone says it's no longer among your lists. When Windows Credential Manager
+  refuses a change in Printers' settings, the box says nothing was changed.
+- When saving how often to check for updates failed, picking the same choice again did nothing. Now
+  it tries again.
+
 ## 0.29.0 <a id="whats-new-0290"></a>
 
 - **SSH** is a fourth tool (Ctrl+4), for the servers, switches and other devices you reach over

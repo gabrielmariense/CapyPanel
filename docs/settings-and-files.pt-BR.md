@@ -27,7 +27,7 @@ em amarelo, e as configurações funcionam ali mesmo.
     - A pesquisa procura as palavras pelo começo, e a lista de páginas fica só com as que têm alguma
       correspondência. Um menu cuja correspondência é uma das opções recebe a marca na setinha.
       Limpar a caixa põe tudo de volta.
-    - A janela abre em 960 × 700 na primeira vez, ou menor numa tela pequena, como a de um notebook
+    - A janela abre em 960 × 740 na primeira vez, ou menor numa tela pequena, como a de um notebook
       em escala de 125 %. Você pode deixá-la de qualquer tamanho: uma página maior que a janela
       rola, para baixo e para o lado. Ela abre de novo no tamanho e no lugar em que você a deixou.
 
@@ -97,9 +97,10 @@ o **Restaurar padrão** devolve a que ele tinha de início.
     - Uma tecla que outro comando já tem só muda depois de uma pergunta: o **Passar** a move, e o
       outro comando fica sem tecla.
     - F1, Esc, Ctrl+F, Tab e Ctrl+Shift+W ficam reservadas ao próprio CapyPanel, como diz a linha
-      embaixo da lista: "Num terminal SSH, todas menos Ctrl+Shift+W vão para o servidor." Uma tecla
-      que sozinha digita texto, como uma letra, um número ou o Ç, também: use-a com Ctrl ou Alt.
-      Pressione uma delas e o campo fica vermelho e diz "Tecla não aceita", o motivo aparece em
+      embaixo da lista: "Num terminal SSH, todas menos Ctrl+Shift+W vão para o servidor." O **Ajuda
+      desta tela** mostra a F1 em cinza: "F1 fica reservada à ajuda e não pode ser alterada." Uma
+      tecla que sozinha digita texto, como uma letra, um número ou o Ç, também: use-a com Ctrl ou
+      Alt. Pressione uma delas e o campo fica vermelho e diz "Tecla não aceita", o motivo aparece em
       vermelho embaixo da lista, e ele continua esperando outra tecla.
     - Cada ferramenta tem linhas próprias, mesmo para um comando que outra também tem, como
       **Editar…** ou **Remover**: uma tecla dada a uma deixa a das outras como estava.

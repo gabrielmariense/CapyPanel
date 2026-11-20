@@ -46,14 +46,19 @@ perfil é pedida no máximo uma vez, e mais de cinco de uma vez pergunta antes.
     O login VNC clássico por senha usa só os 8 primeiros caracteres da senha, e sua troca pode ser
     quebrada offline. Por isso, antes de um perfil UltraVNC de **usuário e senha** conectar, o
     CapyPanel pergunta a cada servidor quais tipos de login ele oferece: ele lê a saudação do
-    servidor e desliga sem fazer login. Um servidor que não aceita usuário e senha é pulado, com uma
-    mensagem, e nunca recebe sua senha.
+    servidor e desliga sem fazer login. Cada servidor é consultado uma vez enquanto o CapyPanel está
+    aberto, e de novo só quando não deu para ler. Um servidor que não aceita usuário e senha é
+    pulado, com uma mensagem, e nunca recebe sua senha.
 
     - A verificação leva poucos milissegundos por host numa rede local.
     - Um servidor que não pode ser consultado (inacessível, ou recusando conexões) ainda abre no
       visualizador, que mostra o erro real.
     - Um servidor com o plugin SecureVNC anuncia só o plugin, então a verificação não consegue
       distinguir os dois tipos de login nesse caso.
+    - Servidores UltraVNC até a 1.6.1 recusam um PC depois de seis conexões que não fazem login,
+      dizendo que a conexão foi rejeitada depois de tentativas demais. O bloqueio sai na primeira
+      conexão que faz login depois de um minuto sem tentativas: espere um minuto e abra o host uma
+      vez pelo próprio UltraVNC Viewer, ou reinicie o serviço do UltraVNC nele.
 
 ## Escolher como um host conecta <a id="connecting-choose-how-a-host-connects"></a>
 
@@ -92,13 +97,16 @@ em lugar nenhum usam o padrão.
 
 ## Configurar os perfis de conexão <a id="connecting-set-up-connection-profiles"></a>
 
-Abra **Configurações > Hosts > Conexão > Perfis de conexão** (ou **Conectar > Perfis de
-conexão…**) para adicionar, editar, duplicar, excluir ou restaurar os que vêm com o CapyPanel. Cada
-perfil tem um nome, uma ferramenta, um login, as opções da ferramenta e uma porta (em branco para a
-da própria ferramenta).
+Abra **Configurações > Hosts > Conexão > Perfis de conexão** (ou **Conectar > Perfis de conexão…**)
+para adicionar, editar, duplicar, excluir ou restaurar os que vêm com o CapyPanel. Cada perfil tem
+um nome, uma ferramenta, um login, as opções da ferramenta e uma porta (em branco para a da própria
+ferramenta). A janela tem as mesmas linhas para toda ferramenta: uma linha que a ferramenta não usa
+fica cinza, e a dica dela diz o motivo.
 
 O CapyPanel começa com **UltraVNC** e **RealVNC**, ambos com "usuário e senha", e **Remote
-Desktop**. **Hosts sem perfil usam**, a última linha, é o perfil dos hosts que não têm um próprio.
+Desktop**. O do UltraVNC vem com o **SecureVNC plugin** marcado: um servidor sem o plugin conecta
+mesmo assim, depois de o UltraVNC Viewer perguntar se segue sem criptografia. **Hosts sem perfil
+usam**, a última linha, é o perfil dos hosts que não têm um próprio.
 
 ??? note "Onde os perfis ficam, e quem pode alterá-los"
 
@@ -119,7 +127,7 @@ Desktop**. **Hosts sem perfil usam**, a última linha, é o perfil dos hosts que
     assim por diante), um perfil do UltraVNC pode levar um arquivo de configurações:
 
     1. No UltraVNC Viewer, ajuste as opções e salve a conexão como um arquivo `.vnc`.
-    2. No editor de perfil, **Configurações do visualizador > Escolher arquivo…** e selecione-o.
+    2. No editor de perfil, **Ajustes > Escolher arquivo…** e selecione-o.
        **Usar padrões** volta às configurações do próprio visualizador.
 
     No **Adicionar** ou no **Salvar**, o CapyPanel copia o arquivo para junto do perfil

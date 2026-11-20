@@ -91,7 +91,7 @@ Veja [Verificando hosts](hosts/checking.pt-BR.md), [Conectando](hosts/connecting
 
     | Parte | O que mostra |
     |---|---|
-    | **Barra lateral** (borda esquerda) | O **Início** (Ctrl+0) no topo, depois um ícone por ferramenta, **Hosts** (Ctrl+1), **Impressoras** (Ctrl+2), **Limpeza de perfis** (Ctrl+3) e **SSH** (Ctrl+4), e **Configurações** (Ctrl+,) embaixo. Onde você está tem um quadrado colorido atrás do ícone |
+    | **Barra lateral** (borda esquerda) | O **Início** (Ctrl+0) no topo, depois um ícone por ferramenta, **Hosts** (Ctrl+1), **Impressoras** (Ctrl+2), **Limpeza de perfis** (Ctrl+3) e **SSH** (Ctrl+4), e o **?** da ajuda (F1) e as **Configurações** (Ctrl+,) embaixo. Onde você está tem um quadrado colorido atrás do ícone |
     | **Barra de ferramentas** (topo) | Os botões da ferramenta aberta. Para o Hosts: **Conectar**, **Atualizar todos**, **Comandos**, **Inventário** e **Relatório** |
     | **Painel de grupos** (esquerda) | O nome da lista aberta no topo, como um menu que troca de lista. Depois "Todos os hosts", com quantos hosts a lista tem, e "Sem grupo", com quantos não estão em nenhum. Depois **Grupos**, com um botão **+** para adicionar um, e **Tags**; arraste a linha acima de Tags para dar mais espaço a um dos dois, e isso fica guardado |
     | **Painel de hosts** (meio) | A caixa de pesquisa acima dos hosts do grupo ou da tag selecionada, com **Status** e **Usuário** |
@@ -102,10 +102,11 @@ Veja [Verificando hosts](hosts/checking.pt-BR.md), [Conectando](hosts/connecting
     o **Sair** (Ctrl+Q). **Exibir** leva ao **Início** e a cada ferramenta, e depois mostra ou
     esconde os painéis, a **Barra de ferramentas** e a **Barra de status**; no Hosts ele também
     guarda **Personalizar o painel de detalhes…** e **Mostrar domínio dos usuários**. Ele fica
-    aberto enquanto você marca. **Ajuda** tem **Documentação**, **Guia desta tela**, **Mostrar todos
-    os guias de novo**, **Relatar um problema**, **Procurar nova versão…** e **Sobre o CapyPanel**.
-    Quando sai uma versão mais nova, um botão **Nova versão** aparece na ponta direita da barra de
-    menus (veja [Atualizar o CapyPanel](download.pt-BR.md#atualizar-o-capypanel)).
+    aberto enquanto você marca. **Ajuda** tem **Guia desta tela**, **Mostrar todos os guias de
+    novo**, **Ajuda desta tela**, **Documentação**, **Relatar um problema**, **Procurar nova
+    versão…** e **Sobre o CapyPanel**. Quando sai uma versão mais nova, um botão **Nova versão**
+    aparece na ponta direita da barra de menus (veja [Atualizar o
+    CapyPanel](download.pt-BR.md#atualizar-o-capypanel)).
 
 ??? note "Organizar a janela"
 
@@ -175,6 +176,13 @@ janela de novo.
 
 ## Pedir ajuda, ou relatar um problema <a id="start-get-help-or-report-a-problem"></a>
 
+- **Ajuda > Ajuda desta tela** (F1), ou o **?** embaixo na barra lateral, abre este site na parte do
+  que está na tela: Primeiros passos a partir do Início, a página da ferramenta a partir dela.
+  Nas Configurações, o **?** embaixo da lista de páginas e a F1 abrem a parte da página exibida, e
+  a maioria das janelas tem um **?** no começo da fileira de botões, para a parte dela.
+- Um aviso ou um erro tem **O que isso significa?** embaixo do texto, e a F1 faz o mesmo: abre a
+  linha da mensagem em "Mensagens que podem aparecer", destacada, com o que ela quer dizer e o que
+  fazer. A faixa vermelha de um comando que falhou também tem o link.
 - **Ajuda > Documentação** abre este site, em português quando o app está em português.
 - **Ajuda > Guia desta tela** mostra o guia da tela atual de novo, e **Ajuda > Mostrar todos os
   guias de novo** traz todos os guias de volta.
@@ -209,6 +217,7 @@ CapyPanel (veja
 | F2 / Del | Editar / remover a seleção |
 | Ctrl+0 / Ctrl+1 / Ctrl+2 / Ctrl+3 / Ctrl+4 | Início / a ferramenta Hosts / a ferramenta Impressoras / a Limpeza de perfis / a ferramenta SSH |
 | Ctrl+O | Abrir um arquivo de lista de hosts |
+| F1 | Ajuda da tela em que você está |
 | Ctrl+, | Configurações |
 | Ctrl+Q | Sair |
 

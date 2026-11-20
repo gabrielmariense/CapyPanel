@@ -44,9 +44,11 @@ conta nenhuma e não precisa de direitos de administrador.
 ??? note "Como o status é verificado"
 
     As portas são a 445 (compartilhamento de arquivos do Windows), a 22 (SSH) e a porta de cada
-    ferramenta, como a 5900 do VNC e a 3389 da Área de Trabalho Remota. Uma conexão recusada conta
-    como resposta. Todos os endereços do nome são tentados, cabo e Wi-Fi: um PC que só responde no
-    endereço do Wi-Fi pode estar com o cabo solto.
+    ferramenta, como a 3389 da Área de Trabalho Remota, mas nunca a de uma ferramenta VNC:
+    servidores UltraVNC até a 1.6.1 contam cada conexão que não faz login como um login que falhou,
+    e recusam o PC depois de seis. Uma conexão recusada conta como resposta. Todos os endereços do
+    nome são tentados, cabo e Wi-Fi: um PC que só responde no endereço do Wi-Fi pode estar com o
+    cabo solto.
 
     Quando um PC não respondeu, os detalhes dizem isso uma vez embaixo do nome, como "Offline ·
     verificado em 10:41", e **Logados** e **Dados do PC** mostram um só traço ou uma linha com o

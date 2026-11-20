@@ -41,10 +41,11 @@ administrator rights.
 
 ??? note "How status is checked"
 
-    The ports are 445 (Windows file sharing), 22 (SSH) and each tool's own port, such as 5900 for
-    VNC and 3389 for Remote Desktop. A refused connection counts as an answer. Every address the
-    name has is tried, cable and Wi-Fi alike: a PC that answers only on its Wi-Fi address may have
-    its cable out.
+    The ports are 445 (Windows file sharing), 22 (SSH) and each tool's own port, such as 3389 for
+    Remote Desktop, but never a VNC tool's: UltraVNC servers up to 1.6.1 count each connection that
+    doesn't log in as a failed login, and refuse the PC after six. A refused connection counts as an
+    answer. Every address the name has is tried, cable and Wi-Fi alike: a PC that answers only on
+    its Wi-Fi address may have its cable out.
 
     When a PC didn't answer, Details says so once under its name, as "Offline · checked 10:41",
     and **Logged on** and **PC facts** show a single dash or one line with the reason.

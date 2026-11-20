@@ -48,13 +48,16 @@ Case doesn't matter.
       address**. **Refresh all** checks whether each host shown answers, as in Hosts.
     - On the right, **Progress** follows every host in a tab, as in "4 hosts in tabs · 2 working ·
       2 done". Under it, **Hosts shown** sums up the picked group, and **Ticked in tabs** lists the
-      hosts with profiles ticked; a click goes to its tab. With a host picked, the card shows its
+      hosts with profiles ticked; a click goes to its tab. When a card has more lines than fit, its
+      last one, as in **and 3 more…**, is a link: its menu lists the rest with how each stands, and
+      picking one does what a click on its line does. With a host picked, the card shows its
       **Address**, **Group**, **Scanned at** and **As**, the account.
     - The Groups panel is read only here: groups are made in Hosts.
     - Tabs never reorder themselves: a new one opens at the right end, and the **▾** at the end of
-      the tab bar lists them all. Right-click a tab for **Close**, **Close the others** and **Close
-      the finished ones**; a middle-click closes one too, and so do **Ctrl+W** and **Ctrl+Shift+W**
-      for the tab in front, as in SSH. A tab can't be closed while it's deleting.
+      the tab bar lists them all; when they don't fit, the arrows beside it scroll the bar.
+      Right-click a tab for **Close**, **Close the others** and **Close the finished ones**; a
+      middle-click closes one too, and so do **Ctrl+W** and **Ctrl+Shift+W** for the tab in front,
+      as in SSH. A tab can't be closed while it's deleting.
     - Up to four hosts are read or counted at a time, across every tab; the others wait their turn.
 
 ## See which profiles can be deleted <a id="profiles-see-which-profiles-can-be-deleted"></a>
@@ -107,9 +110,11 @@ Click **Calculate sizes** on the toolbar: it counts the size of each profile sho
 
 ## Delete profiles <a id="profiles-delete-profiles"></a>
 
-1. **Tick** the profiles to delete: the box, **Space**, or a double-click on the row. A ticked row
-   is outlined in amber and reads **Will be deleted**; the **Ticked to delete** card on the right
-   lists them with the total, as in "3 profiles · 12.4 GB".
+1. **Tick** the profiles to delete: the box, a double-click on the row, or **Space** on the selected
+   rows. Select several with Ctrl or Shift and a click, Shift and the arrows, or Ctrl+A; Space then
+   ticks them all, or unticks them when all are ticked. A ticked row is outlined in amber and reads
+   **Will be deleted**; the **Ticked to delete** card on the right lists them with the total, as in
+   "3 profiles · 12.4 GB".
 2. Click **Delete 3 profiles…**, at the foot of the right panel or on the toolbar.
 3. Read the list, type **DELETE** in the box, and click the amber button.
 
