@@ -1,7 +1,5 @@
-"""Running a host command: the work goes to a background thread, the answer comes back as one
-Outcome (a sentence, and the error when it failed), which the Hosts tool shows in its result strip
-and the Commands window beside the command. Reading who is signed in, the account to use and
-"Try another account…" are shared by every command."""
+"""Running a host command: the work goes to a background thread and the answer comes back as one
+Outcome (a sentence, and the error when it failed), for the result strip or Commands window."""
 
 import getpass
 import logging
@@ -214,9 +212,8 @@ class Runner(QObject):
         *,
         ask: bool = True,
     ) -> bool:
-        """`work` gets the account that signs in to `target` (Settings' Accounts; None for the
-        Windows account). A password not typed yet this session is asked first, unless not
-        `ask`; False when it wasn't typed, and nothing started."""
+        """`work` gets `target`'s account (Accounts; None: the Windows account). A password not
+        typed yet is asked first, unless not `ask`; False when it wasn't, and nothing started."""
         go, account = self._tool.accounts.account_for(target, self._window() if ask else None)
         if go:
             self._start(lambda: work(account), done, failed)

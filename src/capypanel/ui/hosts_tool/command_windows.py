@@ -1,8 +1,5 @@
 """The small windows host commands open: Open a path…, Send a message…, Restart… and Shut down…,
-the questions before logging someone off, disconnecting them, restarting the Print Spooler or
-running a script that disturbs the PC, a script's output, and the two lists a PC is read for,
-Printers on this PC and Installed programs. The same window opens from the menus, the Details
-panel and the Commands window."""
+the questions before what disturbs a PC, a script's output, and a PC's printers and programs."""
 
 import logging
 from collections.abc import Callable, Sequence
@@ -86,10 +83,8 @@ def risky_button(text: str) -> QPushButton:
 
 
 class Question(QDialog):
-    """A question before something that disturbs whoever uses the PC: the warning sign, the
-    question in bold, what happens, then the amber action and Cancel (the default, so Enter or a
-    stray click never confirms). It has no ?: F1 opens `place`, the part of the window that
-    asked."""
+    """A question before what disturbs whoever uses the PC: warning sign, bold question, what
+    happens, the amber action and Cancel, the default so Enter never confirms. F1 opens `place`."""
 
     def __init__(self, parent: QWidget | None, title: str, question: str, text: str,
                  action: str, *, place: str = "") -> None:  # fmt: skip
@@ -137,9 +132,8 @@ class Question(QDialog):
             help_links.key(self, lambda: place)
 
     def sizeHint(self) -> QSize:
-        """WIDE at least, and as tall as the words wrap at that width. Qt measures the height at
-        a wrapped label's own narrow width, then widens the window to WIDE: the line too many
-        stayed as a gap under the question (pt-BR's Close 2 open connections, Dante)."""
+        """WIDE at least, as tall as its words wrap at that width: Qt measures a wrapped label's
+        height at its own narrow width, leaving a line's gap under the question once widened."""
         hint = super().sizeHint()
         width = max(hint.width(), self.minimumWidth())
         layout = self.layout()
