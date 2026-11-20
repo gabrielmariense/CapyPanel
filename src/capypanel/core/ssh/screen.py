@@ -1,26 +1,5 @@
-"""The terminal's screen: pyte's parser and cell grid (our copy, capypanel/vendor/pyte), with what
-the terminal needs on top. Each fix for what pyte gets wrong says why, so it can go back to
-pyte's authors.
-
-- Colours are kept as palette numbers (0 to 255) or "#rrggbb", never turned into fixed values,
-  so a theme switch recolours the scrollback too. pyte itself turns 256 colours into hex.
-- The alternate screen (1049, 1047, 47) is ours: pyte keeps the mode but doesn't act on it.
-  Nothing drawn there reaches the scrollback.
-- The scrollback is ours, 10,000 lines, each line packed as its text and style runs: pyte's
-  HistoryScreen keeps whole cell objects and wraps every attribute access.
-- Titles and icon names are counted and dropped: nothing the server prints renames the tab.
-  pyte's parser already drops OSC 52 (the clipboard) and OSC 8 (links). Replies are pyte's
-  standard ones only (device attributes, status, cursor position), sent through `reply`.
-- Character widths are Windows' console's: every character takes its width and at least one
-  cell, so nothing combines (a combining accent, a joiner or a variation selector takes a cell
-  of its own), and a wide character that doesn't fit the row wraps whole. The console positions
-  everything by its own widths, so the screen must too, or a row ends a cell off.
-- Whether the console asked for keys as Windows key events (win32-input-mode, ESC[?9001h) is
-  kept apart from pyte's modes, so a reset the server sends (ESC c) can't drop it: Windows 11's
-  console asks at its start and still reads key events after. Windows 10's never asks, and its
-  keys go as text (ui/ssh_tool/terminal/keys.py).
-
-Never anything typed or printed in a log: this module logs nothing."""
+"""The terminal's screen: pyte's parser and grid (our copy in vendor/pyte) with what the terminal
+needs on top; each fix for pyte says why. Nothing typed or printed is ever logged."""
 
 from __future__ import annotations
 
@@ -57,8 +36,8 @@ class Style(NamedTuple):
 DEFAULT_STYLE = Style()
 _DEFAULT_KEY = tuple(DEFAULT_STYLE)
 _styles: dict[tuple[Any, ...], Style] = {_DEFAULT_KEY: DEFAULT_STYLE}
-# Styles kept for lines to share. Full, it starts over: a server printing every cell in a 24-bit
-# colour of its own once grew it to 1.15 million styles (328 MB) that outlived the tab.
+# Styles kept for lines to share. Full, it starts over: every cell in its own 24-bit colour
+# would otherwise grow it without end, and it outlives the tab.
 MAX_STYLES = 4096
 _KEY = itemgetter(1, 2, 3, 4, 5, 6, 7)  # a pyte Char's fg .. reverse, read in C
 _DATA = itemgetter(0)
@@ -80,9 +59,8 @@ def cells_for(char: str) -> int:
 
 
 class PackedLine(NamedTuple):
-    """One scrollback line: its cells' text and style runs [(start, end, style)]. `cells` is a
-    str with one character per cell ("" stubs after wide characters become "\\0"), or a tuple
-    when a cell holds more than one character."""
+    """One scrollback line: its cells' text and style runs [(start, end, style)]. `cells` has a
+    character per cell ("\\0" after a wide one), or is a tuple when a cell holds more than one."""
 
     cells: str | tuple[str, ...]
     runs: tuple[tuple[int, int, Style], ...]
@@ -153,7 +131,7 @@ class TermScreen(pyte.Screen):
     ) -> None:
         self.scrollback: deque[PackedLine] = deque(maxlen=scrollback)
         self.in_alt = False
-        self.win32_input = False  # the console asked for key events (ESC[?9001h)
+        self.win32_input = False  # ESC[?9001h, kept apart from pyte's modes: ESC c can't drop it
         # A regional indicator's cells (half a flag): 2 in Windows' own console, 1 in the
         # engine CapyPanel carries for Windows 10. The terminal sets the console's own.
         self.regional_indicator_cells = 2
@@ -165,7 +143,7 @@ class TermScreen(pyte.Screen):
         self._cell_cache: dict[Any, dict[str, Any]] = {}
         super().__init__(columns, lines)
 
-    # ---- what the server may not do: rename the tab, ring, or be answered beyond the standard
+    # What the server may not do: rename the tab, ring, or get answers beyond the standard ones.
 
     def set_title(self, param: str) -> None:
         self.titles_seen += 1
@@ -188,14 +166,9 @@ class TermScreen(pyte.Screen):
         """The program's ESC[?1h, if the console passes it on: Up is then ESC O A."""
         return APP_CURSOR_KEYS in self.mode
 
-    # ---- drawing ----
-
     def draw(self, data: str) -> None:
-        """pyte's draw stops at the first character with no width that isn't a combining mark,
-        and drops the rest of the text: an ENQ right before other text, or the "]" after a
-        heart's variation selector. Here control characters are skipped (the console never
-        draws them) and everything else takes the console's cells (`_draw_cells`). Printable
-        ASCII takes a fast path that reuses one cell object per style and character."""
+        """pyte's stops at the first zero-width character that isn't combining and drops the rest;
+        here control characters are skipped and the rest takes the console's cells."""
         if not data.isprintable():
             data = "".join(ch for ch in data if unicodedata.category(ch) != "Cc")
             if not data:
@@ -239,10 +212,8 @@ class TermScreen(pyte.Screen):
         self.dirty.add(cursor.y)
 
     def _draw_cells(self, data: str) -> None:
-        """pyte's draw with the console's widths: at least one cell each, so a combining accent,
-        a joiner or a variation selector takes a cell of its own, as Windows' console gives it
-        (pyte merges accents and stops at the others). A wide character that no longer fits the
-        row goes whole to the next one, as in the console (pyte cuts it at the edge)."""
+        """The console's widths: a cell at least each, so a combining accent, joiner or variation
+        selector gets its own, and a wide character that won't fit the row wraps whole."""
         data = data.translate(self.g1_charset if self.charset else self.g0_charset)
         cursor, columns = self.cursor, self.columns
         autowrap = mo.DECAWM in self.mode
@@ -270,7 +241,7 @@ class TermScreen(pyte.Screen):
             _unpair_after(line, cursor.x, columns)
         self.dirty.add(cursor.y)
 
-    # ---- colours as palette numbers ----
+    # Colours stay palette numbers or "#rrggbb", so a theme switch recolours the scrollback too.
 
     def select_graphic_rendition(self, *attrs: int, **kwargs: Any) -> None:
         if kwargs.get("private"):
@@ -323,7 +294,7 @@ class TermScreen(pyte.Screen):
                     i = len(rest)
         self.cursor.attrs = self.cursor.attrs._replace(**replace)
 
-    # ---- the alternate screen ----
+    # The alternate screen (1049, 1047, 47) is ours: pyte keeps the mode but doesn't act on it.
 
     def set_mode(self, *modes: int, **kwargs: Any) -> None:
         if kwargs.get("private"):
@@ -353,7 +324,7 @@ class TermScreen(pyte.Screen):
                     self.dirty.update(range(self.lines))
         super().reset_mode(*modes, **kwargs)
 
-    # ---- the scrollback ----
+    # The scrollback is ours, packed lines: pyte's HistoryScreen keeps whole cell objects.
 
     def index(self) -> None:
         top, bottom = self.margins or Margins(0, self.lines - 1)
@@ -368,11 +339,8 @@ class TermScreen(pyte.Screen):
             self.scrollback.clear()
 
     def resize(self, lines: int | None = None, columns: int | None = None) -> None:
-        """pyte's resize deletes lines from the top of the screen wherever the cursor is, so a
-        failed connection's message on the first row was lost when the ended strip took room.
-        Here blank rows go from the bottom first; lines go off the top, into the scrollback,
-        only as far as the cursor needs to stay on screen. An ended tab has no console left to
-        repaint it, so this is all it gets."""
+        """Blank rows go from the bottom first; lines leave the top, into the scrollback, only as
+        far as the cursor needs. pyte's cuts the top, where a failed connection's message is."""
         lines = lines or self.lines
         columns = columns or self.columns
         if lines == self.lines and columns == self.columns:
@@ -401,8 +369,6 @@ class TermScreen(pyte.Screen):
 
     def clear_scrollback(self) -> None:
         self.scrollback.clear()
-
-    # ---- reading it back ----
 
     def row(self, index: int) -> tuple[list[str], list[Style]]:
         """Row `index` of scrollback plus screen (0 is the oldest scrollback line)."""
@@ -441,10 +407,8 @@ class TermScreen(pyte.Screen):
 
 
 class TermStream(pyte.ByteStream):
-    """pyte's ByteStream, except that a sequence its screen can't take costs that sequence only.
-    pyte hands any CSI with "?" to its handler with private=True, and most handlers don't take
-    it: in pyte, one ESC[?4m (vim asks it at start) raised and lost the rest of the read, which
-    was vim's whole first frame."""
+    """pyte's ByteStream, but a sequence its screen can't take costs only that sequence. pyte
+    raised on a CSI with "?" most handlers refuse (vim's ESC[?4m), losing the rest of the read."""
 
     dropped = 0
 
