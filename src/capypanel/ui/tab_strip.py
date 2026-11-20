@@ -1,7 +1,8 @@
 """A tool's tab bar: the pinned tab first (the list), then a gap with a short line, then a tab
 per thing opened (a host in Profile cleanup, a connection in SSH), which scroll when they don't
-fit while the pinned tab stays. A ▾ at the end lists every tab. Tabs never reorder themselves: a
-new one opens at the right end."""
+fit while the pinned tab stays. The line parts the pinned tab from the others, so it shows only
+while one is open. A ▾ at the end lists every tab. Tabs never reorder themselves: a new one opens
+at the right end."""
 
 from PySide6.QtCore import QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QMouseEvent, QPalette
@@ -138,6 +139,7 @@ class TabStrip(QWidget):
         self.line = QFrame()
         self.line.setFrameShape(QFrame.Shape.VLine)
         self.line.setFixedHeight(16)
+        self.line.hide()  # with the list alone it parted nothing, and looked like a text cursor
         gap = QWidget()
         gap.setFixedWidth(GAP)
         inside = QHBoxLayout(gap)
@@ -218,6 +220,7 @@ class TabStrip(QWidget):
         if self._current == PINNED:  # adding a first tab makes it current in Qt's eyes
             self.bar.set_active(False)
         self.bar.blockSignals(False)
+        self.line.show()
 
     def remove(self, key: str) -> None:
         index = self.index_of(key)
@@ -225,6 +228,7 @@ class TabStrip(QWidget):
             self.bar.blockSignals(True)
             self.bar.removeTab(index)
             self.bar.blockSignals(False)
+            self.line.setVisible(self.bar.count() > 0)
 
     def show_tab(self, key: str, text: str, icon: QIcon, tip: str, closable: bool) -> None:
         """A tab as it stands: its name, its mark and the mark's words, and its × only while it
