@@ -30,3 +30,18 @@ jobs:
         # Spread over every core, a few times faster; tests/conftest.py keeps the ones that use
         # Credential Manager on one worker.
         run: uv run pytest -n auto --dist loadgroup
+
+  help-links:
+    # Every place the app's help opens is on its docs page, in English and Portuguese. A job of
+    # its own: a new message's docs line is written after the code freeze, so this one can be
+    # red while the checks above are green, and a merge waits for both.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+      - name: Install (exactly the versions in uv.lock)
+        run: uv sync --locked
+      - name: Help links
+        run: uv run pytest tests/docs -m docs_links

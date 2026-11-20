@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 11:56-0300\n"
+"POT-Creation-Date: 2026-11-20 01:01-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1977,6 +1977,12 @@ msgid "HOSTS SHOWN"
 msgstr ""
 
 msgid "Help"
+msgstr ""
+
+msgid "Help for this screen"
+msgstr ""
+
+msgid "Help for this screen (F1)"
 msgstr ""
 
 msgid "Hide Windows' own"
@@ -4916,6 +4922,9 @@ msgstr ""
 msgid ""
 "What Connect opens, and the login it uses. Refresh's logged-on users and "
 "the commands use the account under it."
+msgstr ""
+
+msgid "What does this mean?"
 msgstr ""
 
 msgid "What the window shows when CapyPanel starts."

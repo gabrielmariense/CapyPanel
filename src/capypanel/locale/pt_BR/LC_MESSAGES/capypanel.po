@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-18 11:56-0300\n"
+"POT-Creation-Date: 2026-11-20 01:01-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1906,6 +1906,12 @@ msgstr "HOSTS EXIBIDOS"
 
 msgid "Help"
 msgstr "Ajuda"
+
+msgid "Help for this screen"
+msgstr "Ajuda desta tela"
+
+msgid "Help for this screen (F1)"
+msgstr "Ajuda desta tela (F1)"
 
 msgid "Hide Windows' own"
 msgstr "Ocultar os do Windows"
@@ -4657,6 +4663,9 @@ msgstr "Boas-vindas ao CapyPanel"
 
 msgid "What Connect opens, and the login it uses. Refresh's logged-on users and the commands use the account under it."
 msgstr "O que o Conectar abre, e o login que ele usa. Os usuários logados do Atualizar e os comandos usam a conta abaixo."
+
+msgid "What does this mean?"
+msgstr "O que isso significa?"
 
 msgid "What the window shows when CapyPanel starts."
 msgstr "O que a janela mostra quando o CapyPanel inicia."

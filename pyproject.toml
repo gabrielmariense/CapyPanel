@@ -39,7 +39,9 @@ extraPaths = ["tests/helpers"]  # helpers the tests import by name, as pytest's 
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = ["--import-mode=importlib"]
+# Help's links against the docs run as a CI job of their own (tests/docs): -m docs_links.
+addopts = ["--import-mode=importlib", "-m", "not docs_links"]
+markers = ["docs_links: help's links against the docs, both languages (the help-links job)"]
 pythonpath = ["tests/ui", "tests/helpers"]  # helpers the tests share (capywindow.py, snmp_agent.py)
 faulthandler_timeout = 90  # a test stuck this long prints where it is, here and on CI
 
