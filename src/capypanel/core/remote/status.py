@@ -1,4 +1,4 @@
-"""Is a computer up? A ping and the ports CapyPanel connects to, all at the same time: many
+"""Is a computer up? A ping and the ports it's given (checks.tool_ports), all at once: many
 Windows PCs block ping, and a port that answers, even with a refusal, proves the PC is on.
 Every address the name has is tried (a PC on cable and Wi-Fi has two). No account is used and
 nothing runs on the target."""

@@ -100,6 +100,24 @@ def test_checking_selected_hosts_fills_the_status_and_user_columns(
     assert window.hosts.details.shown_value("users") == "CORP\\ana"
 
 
+def test_status_never_connects_to_a_vnc_port(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """UltraVNC up to 1.6.1 counts a connection that doesn't log in as a wrong password and
+    turns this PC away after six, so Refresh would lock people out of the PCs it checks."""
+    asked: list[tuple[int, ...]] = []
+    monkeypatch.setattr(
+        checks, "run", lambda _address, wanted: asked.append(wanted.ports) or Found(Status.ONLINE)
+    )
+    window.hosts.table.select_ids(_ids(window, "PC-1"))
+    window.hosts.check_hosts(window.hosts.selected_items(), status=True, users=False)
+    _wait(window)
+    tools = [entry.item for entry in window.hosts.connector.catalogs.tools.all()]
+    vnc = {tool.port for tool in tools if tool.kind == "vnc"}
+    assert 5900 in vnc and len(asked) == 1
+    assert not vnc & set(asked[0]) and {445, 3389} <= set(asked[0])
+
+
 def test_status_only_doesnt_read_users(window: CapyWindow, answers: dict[str, Any]) -> None:
     answers["10.0.0.1"] = Found(Status.ONLINE)
     window.hosts.table.select_ids(_ids(window, "PC-1"))

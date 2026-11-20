@@ -415,6 +415,30 @@ def test_when_the_server_cannot_be_asked_the_viewer_still_opens(
     assert [call[1] for call in launched] == ["10.0.0.1"]  # the viewer reports what's wrong
 
 
+def test_each_server_is_asked_its_login_types_once_per_run(
+    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """UltraVNC up to 1.6.1 counts each asking as a failed login and turns this PC away after
+    six. One that couldn't be asked is asked again the next time."""
+    probed: list[str] = []
+    down = {"PC-B"}
+
+    def probe(address: str, port: int, timeout: float = 3.0) -> tuple[int, ...]:
+        probed.append(address)
+        if address in down:
+            down.discard(address)
+            raise connect_ui.rfb.ProbeError("timed out")
+        return (17, 117, 113)
+
+    monkeypatch.setattr(connect_ui.rfb, "security_types", probe)
+    window.hosts.connector.credentials.remember("offices", Credential("ana", "x"))
+    for _round in range(3):
+        _select(window, "PC-A", "PC-B")
+        window.hosts.connect_selected()
+    assert sorted(probed) == ["10.0.0.1", "PC-B", "PC-B"]
+    assert len(launched) == 6  # every time, both
+
+
 def test_password_only_profiles_never_check_and_vnc_passwords_stop_at_8(
     window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
 ) -> None:

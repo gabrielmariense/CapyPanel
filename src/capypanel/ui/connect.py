@@ -139,6 +139,9 @@ class Connector:
         self.catalogs = catalogs
         self.credentials = credentials
         self.open_settings: Callable[[], None] | None = None  # Settings › Hosts › Connecting
+        # Each server's login types, asked once per run: UltraVNC up to 1.6.1 counts every
+        # asking as a failed login, and turns this PC away after six.
+        self._offered: dict[tuple[str, int], tuple[int, ...]] = {}
 
     # ---- profiles ----
 
@@ -279,17 +282,25 @@ class Connector:
 
         def offers_account(request: Request) -> bool:
             port = request.target.port or profile.port or tool.port or DEFAULT_PORT
+            server = (request.target.address.casefold(), port)
             began = time.perf_counter()
-            try:
-                offered = rfb.security_types(request.target.address, port)
-            except rfb.ProbeError as e:
-                log.info("Login check for %s: couldn't ask (%s); opening anyway", request.label, e)
-                return True  # can't tell: the viewer will say what's wrong
+            offered = self._offered.get(server)
+            if offered is None:
+                try:
+                    offered = rfb.security_types(request.target.address, port)
+                except rfb.ProbeError as e:
+                    log.info(
+                        "Login check for %s: couldn't ask (%s); opening anyway", request.label, e
+                    )
+                    return True  # can't tell: the viewer will say what's wrong
+                self._offered[server] = offered
+                how = f"asked in {(time.perf_counter() - began) * 1000:.0f} ms"
+            else:
+                how = "asked before"
             fits = any(t in tool.account_types for t in offered)
             log.info(
-                "Login check for %s: login types %s in %d ms, %s",
-                request.label, list(offered), (time.perf_counter() - began) * 1000,
-                "fits" if fits else "refused",
+                "Login check for %s: login types %s, %s, %s",
+                request.label, list(offered), how, "fits" if fits else "refused",
             )  # fmt: skip
             return fits
 

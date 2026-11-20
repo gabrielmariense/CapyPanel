@@ -1374,8 +1374,8 @@ class HostsTool(ListWorkspace):
         return host.name if host else host_id
 
     def _ports(self) -> tuple[int, ...]:
-        """The ports CapyPanel's tools connect to: one answering proves the computer is on."""
-        return checks.tool_ports(e.item.port for e in self.connector.catalogs.tools.all())
+        """The ports CapyPanel's tools use, VNC's aside: one answering proves the PC is on."""
+        return checks.tool_ports(e.item for e in self.connector.catalogs.tools.all())
 
     def _cells(self, host_id: str) -> Cells:
         status = self._status_found.get(host_id)

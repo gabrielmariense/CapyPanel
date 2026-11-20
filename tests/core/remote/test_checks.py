@@ -5,6 +5,7 @@ from capypanel.core.remote.access import Account, Reason, RemoteError
 from capypanel.core.remote.checks import Checks, Found
 from capypanel.core.remote.sessions import Session
 from capypanel.core.remote.status import Status
+from capypanel.core.tools.definitions import ToolDefinition
 
 DESK = Session("ana", "CORP", "console", "active", None)
 UP = Status.ONLINE
@@ -66,5 +67,11 @@ def test_which_outcomes_prove_or_reject_an_account() -> None:
     assert not checks.account_rejected(failed(Reason.NOT_ADMIN))
 
 
-def test_the_tools_ports_join_the_usual_ones() -> None:
-    assert checks.tool_ports([5900, None, 3389, 5900]) == (22, 445, 3389, 5900)
+def test_the_tools_ports_join_the_usual_ones_but_never_a_vnc_port() -> None:
+    """UltraVNC up to 1.6.1 counts a connection that doesn't log in as a wrong password."""
+
+    def tool(kind: str, port: int | None) -> ToolDefinition:
+        return ToolDefinition(f"{kind}-{port}", "Viewer", kind, (), port=port)
+
+    tools = [tool("vnc", 5900), tool("rdp", 3389), tool("vnc", 5901), tool("rdp", None)]
+    assert checks.tool_ports([*tools, tool("rdp", 3389)]) == (22, 445, 3389)
