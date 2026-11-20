@@ -1,7 +1,5 @@
-"""A list workspace whose list is the first of its tabs, as Profile cleanup's hosts are: the
-Groups panel on the left; on its right a tab strip over the list and the Details panel (the
-pinned tab), or over another tab's page, which takes the room of both. The SSH tool opens its
-connections here."""
+"""A list workspace whose list is the first of its tabs, as in Profile cleanup and SSH: the Groups
+panel on the left, and on its right tabs over the list and Details, or over another tab's page."""
 
 from typing import ClassVar
 
@@ -88,8 +86,6 @@ class TabbedListWorkspace(ListWorkspace):
         self.tabs.restyle()
         self.fit_tabs()  # a theme's dropdown is taller or shorter
 
-    # ---- the tabs ----
-
     def add_page(self, key: str, page: QWidget, text: str) -> None:
         """A tab at the right end, behind the one in front."""
         self.pages.addWidget(page)
@@ -120,7 +116,7 @@ class TabbedListWorkspace(ListWorkspace):
 
     def list_to_front(self) -> None:
         """A pick on the left changes the list, so the list comes forward to show it, whichever
-        tab was in front (Dante, build 618)."""
+        tab was in front."""
         if self.tabs.current() != PINNED:
             self.switch(PINNED)
 

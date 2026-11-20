@@ -1,6 +1,5 @@
-"""The Profile cleanup tool's pinned Hosts tab: the hosts of the group picked on the left and what
-each scan found so far; on the right, its card (side.HostCard): the host picked, or the hosts on
-show. It never scans by itself: a double-click, Enter or Scan opens a host."""
+"""Profile cleanup's pinned Hosts tab: the picked group's hosts and what each scan found; on the
+right, its card (side.HostCard). It never scans by itself: a double-click, Enter or Scan does."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -194,9 +193,8 @@ class HostsTable(QWidget):
             self._fill(item, facts)
 
     def show_typed(self, typed: str, offer: bool) -> None:
-        """What a search says and offers for the text typed. With no rows, the note ("No host
-        of the list with …") and, when `offer`, Scan {host}; with rows, Scan {host} alone as
-        the list's last line, when `offer` (no row is that host). "" hides both."""
+        """With no rows, the note ("No host of the list with …") and, if `offer`, Scan {host}; with
+        rows, Scan {host} alone as the list's last line, if `offer`. "" hides both."""
         self._typed, self._offered = typed, offer
         offer = offer and bool(typed)
         rows = self.tree.topLevelItemCount() > 0

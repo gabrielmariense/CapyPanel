@@ -1,8 +1,5 @@
-"""The Profile cleanup tool's right panel: cards from top to bottom, the same on every tab, and
-never a scrollbar. Progress first, at one fixed height, so nothing under it jumps between tabs.
-Then the tab's own card: the hosts on show (the Hosts tab), or a host's ticked profiles, or its
-delete run. Then, on a host's tab, the Delete button at the foot, always in sight. A profile's
-details open in a window of their own. A card shows what fits and ends with "and 3 more…"."""
+"""Profile cleanup's right panel, the same on every tab and never scrolling: Progress at a fixed
+height, then the tab's own card, then on a host's tab the Delete button at the foot, in sight."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -302,9 +299,8 @@ def _column(frame: QFrame) -> QVBoxLayout:
 
 
 class ProgressCard(QFrame):
-    """Progress, the same card on every tab: how many hosts have a tab and how many are done,
-    then a line per tab, the working ones first. A click on a line goes to its tab. Its height
-    is fixed, whatever it shows."""
+    """Progress, the same on every tab: how many hosts have a tab and are done, then a line per
+    tab, the working ones first; a click goes to that tab. Its height never changes."""
 
     go_to = Signal(str)  # a host's key: its tab comes to the front
 
@@ -549,9 +545,8 @@ class TickedCard(QFrame):
 
 
 class RunCard(QFrame):
-    """A host's card while its profiles are deleted, and after: where the run is, the bar, a
-    line per profile with how it stands. Once it's over: Open the history, and Close, which
-    brings the ticked profiles' card back."""
+    """A host's card during and after a delete run: where it is, the bar, a line per profile; once
+    over, Open the history, and Close, which brings the ticked profiles' card back."""
 
     picked = Signal(str)  # a profile's ident
     log_requested = Signal()

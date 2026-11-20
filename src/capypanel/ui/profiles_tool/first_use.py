@@ -1,7 +1,5 @@
-"""Profile cleanup, the first time it's opened: a real warning naming what it deletes, with
-Continue greyed until "I understand…" is ticked and Cancel the default (a tick has to be read to
-be clicked, where a countdown gets waited out). Then its guide: pick a PC, scan, delete. The
-delete keeps its own safety: typing DELETE, and each PC checked again before anything goes."""
+"""Profile cleanup's first opening: a real warning naming what it deletes, Continue greyed until
+"I understand…" is ticked (a tick is read, a countdown waited out), Cancel the default."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor

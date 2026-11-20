@@ -1,6 +1,5 @@
-"""The "Customize the details panel" window: which parts of the Details panel show, one tick per
-part, and any tab a tool adds in front (Hosts: its quick commands). It applies as you tick and
-ends in a plain Close; the choice is each person's own, on this PC."""
+"""The "Customize the details panel" window: one tick per part of the Details panel, and any tab
+a tool adds in front (Hosts' quick commands). It applies as you tick, for this person only."""
 
 from collections.abc import Sequence
 from dataclasses import dataclass

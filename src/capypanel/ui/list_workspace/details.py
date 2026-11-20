@@ -106,8 +106,6 @@ class DetailsPanel(QWidget):
         outer.addWidget(card)
         self.show_item(None, 0)
 
-    # ---- what a tool says ----
-
     def build_page(self, layout: QVBoxLayout, shown: object, needle: str) -> None:
         """The sections for one item, added to `layout` with the helpers below."""
         raise NotImplementedError
@@ -124,14 +122,10 @@ class DetailsPanel(QWidget):
         """Which item a page is about. The same item drawn again keeps its scroll position."""
         return ""
 
-    # ---- showing ----
-
     def minimum_width(self) -> int:
         """The narrowest the panel may be dragged, when its own parts need more than the
         workspace's usual minimum; 0 when they don't."""
         return 0
-
-    # ---- the buttons on top: an icon over one short word, in rows of four ----
 
     def word_button(self, icon: str, color: QColor, word: str, tip: str, *,
                     risky: bool = False) -> QToolButton:  # fmt: skip
@@ -173,8 +167,6 @@ class DetailsPanel(QWidget):
             row.addStretch(1)
             rows.addLayout(row)
         return rows
-
-    # ---- parts the person chose to hide ----
 
     def hidden_line(self, layout: QVBoxLayout, hidden: int) -> None:
         """At the foot of the page, when parts are hidden: how many, and the way back."""
@@ -241,8 +233,6 @@ class DetailsPanel(QWidget):
         if old is not None:
             old.deleteLater()
         self._scroll.setWidget(page)
-
-    # ---- the parts a page is built from ----
 
     def chips(self, tags: Sequence[str]) -> QWidget:
         row = QWidget()

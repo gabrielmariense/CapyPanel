@@ -1,7 +1,5 @@
-"""One host's tab in the Profile cleanup tool: its box (the name, the filters, the profiles table),
-and on the right its card (the profiles ticked, or the delete run) with the Delete button at the
-foot. A profile's details open in a window. Each tab keeps its own scan, sizes and delete run, so
-several hosts can be read, counted and cleaned at once."""
+"""One host's tab in Profile cleanup: its box (name, filters, profiles table) and its card on the
+right with Delete at the foot. Each tab keeps its own scan, sizes and delete run, all at once."""
 
 import os
 from collections.abc import Callable, Mapping
@@ -54,8 +52,8 @@ class Mark:
     color: str
     tip: str  # "Deleting the 2nd of 3 profiles…"
     short: str  # "deleting 2 of 3"
-    busy: bool  # it's working: Andamento's "In progress"
-    bad: bool = False  # it ended badly: red in Andamento
+    busy: bool  # it's working: Progress's "In progress"
+    bad: bool = False  # it ended badly: red in Progress
 
 
 # A run's line on the card: each profile's words on the right, and their colour: one of
