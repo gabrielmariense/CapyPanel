@@ -4650,7 +4650,7 @@ msgstr ""
 msgid "Tick a column under Last check to read them"
 msgstr ""
 
-msgid "Tick in the table: the box, Space or a double-click on the row."
+msgid "Tick in the table: the box, a double-click on the row, or Space on the selected rows."
 msgstr ""
 
 msgid "Tick profiles in the table to delete"
@@ -4670,7 +4670,7 @@ msgstr ""
 msgid "Tick to delete"
 msgstr ""
 
-msgid "Tick to delete: the box, Space, or a double-click on the row"
+msgid "Tick to delete: the box, a double-click on the row, or Space on the selected rows"
 msgstr ""
 
 msgid "Ticked in tabs"

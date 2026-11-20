@@ -14,7 +14,17 @@ from capywindow import CapyWindow
 from PySide6.QtCore import QCoreApplication, QEvent, QPoint, QPointF, QRect, QSize, Qt
 from PySide6.QtGui import QIcon, QKeyEvent, QMouseEvent, QShortcut, QShowEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QDialog, QMenu, QToolButton, QWidget
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QMenu,
+    QStyle,
+    QStyleOptionViewItem,
+    QToolButton,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QWidget,
+)
 
 from capypanel.core import settings
 from capypanel.core.hosts import listfile
@@ -1082,7 +1092,9 @@ def test_the_right_panel_lists_what_is_ticked_and_deletes_from_its_foot(
     card, foot = page.ticked_card, page.foot
     assert tool.cards.currentWidget() is page.side and page.cards.currentWidget() is card
     assert (card.caption.text(), card.title.text()) == ("TICKED TO DELETE", "No profile ticked")
-    assert card.hint.text() == "Tick in the table: the box, Space or a double-click on the row."
+    assert card.hint.text() == (
+        "Tick in the table: the box, a double-click on the row, or Space on the selected rows."
+    )
     assert foot.delete_button.text().strip() == "Delete profiles…"
     assert not foot.delete_button.isEnabled() and foot.delete_button.height() == side.FOOT
     assert foot.delete_button.toolTip() == "Tick profiles in the table to delete"
@@ -1621,6 +1633,74 @@ def test_space_and_a_double_click_tick_the_row_the_keyboard_is_on(window: CapyWi
     _pick_row(page, "EXAMPLE\\ana")  # in use: no box, so nothing to tick
     QApplication.sendEvent(tree, space)
     assert page.ticked() == [RUI]
+
+
+def _row_item(page: HostPage, user: str) -> QTreeWidgetItem:
+    tree = page.table.tree
+    found = (tree.topLevelItem(i) for i in range(tree.topLevelItemCount()))
+    return next(item for item in found if item is not None and item.text(panels.USER) == user)
+
+
+def _box(tree: QTreeWidget, item: QTreeWidgetItem) -> QPoint:
+    """The middle of a row's tick box, as the table's style places it."""
+    option = QStyleOptionViewItem()
+    option.initFrom(tree)
+    row = tree.visualItemRect(item)
+    left, width = tree.columnViewportPosition(panels.TICK), tree.columnWidth(panels.TICK)
+    option.rect = QRect(left, row.top(), width, row.height())
+    option.features |= QStyleOptionViewItem.ViewItemFeature.HasCheckIndicator
+    style = tree.style()
+    return style.subElementRect(
+        QStyle.SubElement.SE_ItemViewItemCheckIndicator, option, tree
+    ).center()
+
+
+def test_a_click_on_a_tick_box_picks_its_row_so_the_arrows_go_on_from_it(
+    window: CapyWindow,
+) -> None:
+    page = _open(window)
+    tree = page.table.tree
+    tree.resize(1100, 446)
+    QApplication.processEvents()
+    _pick_row(page, "EXAMPLE\\rui")
+    bia = _row_item(page, "EXAMPLE\\bia")
+    below = tree.itemBelow(bia)
+    QTest.mouseClick(tree.viewport(), Qt.MouseButton.LeftButton, pos=_box(tree, bia))
+    assert page.ticked() == [BIA]
+    assert tree.currentItem() is bia and tree.selectedItems() == [bia]
+    QTest.keyClick(tree, Qt.Key.Key_Down)
+    assert below is not None and tree.currentItem() is below
+
+
+def test_space_ticks_every_selected_row_or_unticks_them_when_all_are_ticked(
+    window: CapyWindow,
+) -> None:
+    page = _open(window)
+    tree = page.table.tree
+    heard: list[bool] = []
+    page.table.ticked_changed.connect(lambda: heard.append(True))
+    _pick_row(page, "EXAMPLE\\rui")
+    QTest.keyClick(tree, Qt.Key.Key_Down, Qt.KeyboardModifier.ShiftModifier)
+    assert len(tree.selectedItems()) == 2  # Shift and the arrows pick several rows
+    for user in ("EXAMPLE\\ana", "marta.old  (unknown)"):  # in use, so no box; and one more
+        _row_item(page, user).setSelected(True)
+    space = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space, Qt.KeyboardModifier.NoModifier)
+    QApplication.sendEvent(tree, space)
+    assert page.ticked() == [RUI, BIA, MARTA] and heard == [True]  # one signal for the three
+    page.table.tick(BIA.ident, False)
+    QApplication.sendEvent(tree, space)  # one of them unticked: all three ticked again
+    assert page.ticked() == [RUI, BIA, MARTA]
+    QApplication.sendEvent(tree, space)  # all ticked: all unticked
+    assert page.ticked() == []
+    picked = {item.text(panels.USER) for item in tree.selectedItems()}
+    current = page.table.selected()
+    page.filters.hide_own.setChecked(not page.filters.hide_own.isChecked())  # the rows again
+    assert {item.text(panels.USER) for item in tree.selectedItems()} == picked
+    assert current is not None and page.table.selected() == current
+    control = Qt.KeyboardModifier.ControlModifier
+    QApplication.sendEvent(tree, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Space, control, " "))
+    assert page.ticked() == []  # Ctrl+Space only takes the row out of the selection
+    assert len(tree.selectedItems()) == len(picked) - 1
 
 
 def test_a_powershell_blocked_on_this_pc_is_named_as_such(window: CapyWindow, pc: Pc) -> None:

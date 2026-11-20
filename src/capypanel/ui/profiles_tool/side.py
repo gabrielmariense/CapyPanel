@@ -532,7 +532,10 @@ class TickedCard(QFrame):
             self.title.setText(_("No profile ticked"))
             self.title.setStyleSheet("")
             self.hint.setText(
-                _("Tick in the table: the box, Space or a double-click on the row.")
+                _(
+                    "Tick in the table: the box, a double-click on the row, "
+                    "or Space on the selected rows."
+                )
                 if scanned
                 else _("The profiles show once the host is scanned.")
             )
