@@ -3,7 +3,7 @@
 This page takes you from a first start to your first list of PCs, checked and connected. The guide
 CapyPanel shows the first time each screen opens points out the window itself.
 
-## Run CapyPanel
+## Run CapyPanel <a id="start-run-capypanel"></a>
 
 1. [Download the zip](download.md#download-capypanel) and unzip it.
 2. Run **CapyPanel.exe**. A splash with the capybara and the version shows while it loads.
@@ -45,7 +45,7 @@ printer that goes away when it ends. The rest of the window is dimmed until you 
       switches: connect over SSH, see which answer." The tiles sit in two even rows, Hosts and
       Printers above Profile cleanup and SSH; a narrow window wraps them into more rows.
 
-## Add your first hosts
+## Add your first hosts <a id="start-add-your-first-hosts"></a>
 
 ![The Hosts window: groups on the left, the hosts in the middle, one host's details on the right](images/main-window-dark.png)
 
@@ -71,7 +71,7 @@ see [Host lists](hosts/host-lists.md).
     - In the Tags box, Backspace on an empty box brings the last tag back for editing.
     - An empty list shows **Add host…** and **Import hosts…** buttons right there.
 
-## Check them and connect
+## Check them and connect <a id="start-check-them-and-connect"></a>
 
 1. Click **Refresh all** on the toolbar (F5). The **Status** column says which hosts are online,
    and **User** who is logged on.
@@ -119,7 +119,7 @@ See [Checking hosts](hosts/checking.md), [Connecting](hosts/connecting.md) and
     selected host, and **Address** keeps Ctrl+Shift+C. Right-clicking empty space offers **Add
     group…** in the groups panel, and **Add host…** and **Add group…** in the host list.
 
-## Hide parts of the Details panel
+## Hide parts of the Details panel <a id="start-hide-parts-of-the-details-panel"></a>
 
 1. **View > Customize the details panel…**, or right-click the Details panel.
 2. On the **Information** tab, untick what you don't use: **Connection**, **Logged-on users**, **PC
@@ -130,7 +130,7 @@ See [Checking hosts](hosts/checking.md), [Connecting](hosts/connecting.md) and
 show. The choice is "Only for you, on this PC." The other tab, **Quick commands**, picks your
 buttons (see [Choose your quick commands](hosts/commands.md#choose-your-quick-commands)).
 
-## Close CapyPanel, or keep it in the tray
+## Close CapyPanel, or keep it in the tray <a id="start-close-capypanel-or-keep-it-in-the-tray"></a>
 
 1. Click the window's **✕**. CapyPanel asks "Keep CapyPanel running in the tray?"
 2. Click **Keep in tray** to keep it working in the background, or **Quit** to close it.
@@ -162,7 +162,7 @@ again.
     - Quitting with SSH connections open asks once, as in "Quit CapyPanel with 2 connections
       open?" (see [When a connection ends](ssh/ssh.md#when-a-connection-ends)).
 
-## Get help, or report a problem
+## Get help, or report a problem <a id="start-get-help-or-report-a-problem"></a>
 
 - **Help > Documentation** opens this site, in Portuguese when the app is in Portuguese.
 - **Help > Guide to this screen** shows the current screen's guide again, and **Help > Show all the
@@ -176,7 +176,7 @@ again.
   licenses, where CapyPanel keeps its files, and **Open log folder** (see
   [Settings and files](settings-and-files.md#about)).
 
-## Keyboard shortcuts
+## Keyboard shortcuts <a id="start-keyboard-shortcuts"></a>
 
 These are the keys CapyPanel starts with. **Settings > CapyPanel > Keyboard shortcuts** changes
 them, except F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W, which are kept for CapyPanel itself (see
@@ -200,10 +200,10 @@ them, except F1, Esc, Ctrl+F, Tab and Ctrl+Shift+W, which are kept for CapyPanel
 | Ctrl+, | Settings |
 | Ctrl+Q | Exit |
 
-## Messages you may see
+## Messages you may see <a id="start-messages-you-may-see"></a>
 
 | Message | What it means | What to do |
 |---|---|---|
-| "Something went wrong. The details were saved to the app log." | Something failed inside CapyPanel itself | **Copy all** and paste it into **Report a problem**. A second error joins the same window, and a repeat is counted ("This error happened 3 times:") |
-| "This list has no hosts yet. Add one, or import several at once." | The list is empty | **Add host…** or **Import hosts…** |
-| "CapyPanel is already running for EXAMPLE\user, but its window couldn't be brought forward: …" | Your other copy is open in another Windows session, or isn't answering | Close it there, or end it in Task Manager, then start CapyPanel again |
+| <a id="app-error-logged"></a>"Something went wrong. The details were saved to the app log." | Something failed inside CapyPanel itself | **Copy all** and paste it into **Report a problem**. A second error joins the same window, and a repeat is counted ("This error happened 3 times:") |
+| <a id="hosts-list-empty"></a>"This list has no hosts yet. Add one, or import several at once." | The list is empty | **Add host…** or **Import hosts…** |
+| <a id="already-running"></a>"CapyPanel is already running for EXAMPLE\user, but its window couldn't be brought forward: …" | Your other copy is open in another Windows session, or isn't answering | Close it there, or end it in Task Manager, then start CapyPanel again |

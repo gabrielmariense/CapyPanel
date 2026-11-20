@@ -20,7 +20,7 @@ de usuário nos PCs que eu escolher"; o **Cancelar** deixa você onde estava. De
 ferramenta num PC de exemplo com perfis inventados; o **Ajuda > Guia desta tela** mostra o guia de
 novo.
 
-## Escanear os perfis de um PC
+## Escanear os perfis de um PC <a id="profiles-scan-a-pcs-profiles"></a>
 
 ![A aba Hosts: os hosts do grupo escolhido com status, perfis, quantos podem ser excluídos e o escaneamento; Andamento e o host selecionado à direita](../images/profiles-hosts-tab-dark-pt-BR.png)
 
@@ -65,7 +65,7 @@ contam.
     - Até quatro hosts são lidos ou calculados ao mesmo tempo, somando todas as abas; os outros
       aguardam a vez.
 
-## Ver quais perfis podem ser excluídos
+## Ver quais perfis podem ser excluídos <a id="profiles-see-which-profiles-can-be-deleted"></a>
 
 ![A aba de um host: os filtros, a tabela de perfis com três linhas marcadas contornadas em âmbar, e Marcados para excluir à direita](../images/profiles-host-tab-dark-pt-BR.png)
 
@@ -107,12 +107,12 @@ antigos primeiro, ponha o **Sem uso há:** em 3 ou 6 meses, ou um ano.
     conta; provavelmente foi apagada." avisa quando a conta não existe mais. O **Marcar para
     excluir**, no pé dela, marca a linha dali mesmo.
 
-## Calcular o tamanho deles
+## Calcular o tamanho deles <a id="profiles-count-their-size"></a>
 
 Clique em **Calcular tamanhos** na barra de ferramentas: ele calcula o tamanho de cada perfil
 exibido, e só lê. O **Parar o cálculo** para na hora, mantendo os tamanhos já calculados.
 
-## Excluir perfis
+## Excluir perfis <a id="profiles-delete-profiles"></a>
 
 1. **Marque** os perfis a excluir: a caixa, o **Espaço**, ou um clique duplo na linha. Uma linha
    marcada fica contornada em âmbar e diz **Será excluído**; o cartão **Marcados para excluir** à
@@ -152,14 +152,14 @@ junto: não há lixeira nem cópia."
     pedida também pelo WMI (veja
     [Como o CapyPanel lê outros PCs](../hosts/checking.pt-BR.md#ler-os-dados-de-um-pc)).
 
-## Mensagens que você pode ver
+## Mensagens que você pode ver <a id="profiles-messages-you-may-see"></a>
 
 Quando um host não pode ser lido, a aba dele diz o motivo em vermelho, com o **Tentar de novo**.
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| "{host} não respondeu" | O PC está desligado ou inacessível | Confira se está ligado, e **Tentar de novo** |
-| "{host} recusou a conta {account}" | A conta não é aceita lá | **Tentar outra conta…** |
-| "O PowerShell não abriu no seu PC" | O seu próprio PC barrou o PowerShell, muitas vezes um antivírus | Veja [Como o CapyPanel lê outros PCs](../hosts/checking.pt-BR.md#ler-os-dados-de-um-pc) |
-| "{host} aguarda a vez" | Quatro hosts já estão sendo lidos ou calculados | Nada: ele começa sozinho |
-| "Nenhum host da lista com “…”." | O nome que você digitou não está na lista | **Escanear** assim mesmo, com o botão oferecido |
+| <a id="profiles-host-no-answer"></a>"{host} não respondeu" | O PC está desligado ou inacessível | Confira se está ligado, e **Tentar de novo** |
+| <a id="profiles-account-refused"></a>"{host} recusou a conta {account}" | A conta não é aceita lá | **Tentar outra conta…** |
+| <a id="profiles-powershell-blocked"></a>"O PowerShell não abriu no seu PC" | O seu próprio PC barrou o PowerShell, muitas vezes um antivírus | Veja [Como o CapyPanel lê outros PCs](../hosts/checking.pt-BR.md#ler-os-dados-de-um-pc) |
+| <a id="profiles-host-waiting"></a>"{host} aguarda a vez" | Quatro hosts já estão sendo lidos ou calculados | Nada: ele começa sozinho |
+| <a id="profiles-search-no-match"></a>"Nenhum host da lista com “…”." | O nome que você digitou não está na lista | **Escanear** assim mesmo, com o botão oferecido |

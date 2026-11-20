@@ -4,7 +4,7 @@ O CapyPanel abre a tela de um host num visualizador VNC que você mesmo instala 
 RealVNC), ou no cliente de Área de Trabalho Remota do próprio Windows. Ele nunca os distribui,
 empacota ou baixa.
 
-## Conectar a um host
+## Conectar a um host <a id="connecting-connect-to-a-host"></a>
 
 1. Dê um clique duplo no host, aperte **Enter** ou clique em **Conectar** na barra de ferramentas.
 2. Na primeira vez, o CapyPanel encontra o visualizador sozinho. Se ele não estiver instalado, o
@@ -55,7 +55,7 @@ perfil é pedida no máximo uma vez, e mais de cinco de uma vez pergunta antes.
     - Um servidor com o plugin SecureVNC anuncia só o plugin, então a verificação não consegue
       distinguir os dois tipos de login nesse caso.
 
-## Escolher como um host conecta
+## Escolher como um host conecta <a id="connecting-choose-how-a-host-connects"></a>
 
 Um **perfil de conexão** diz como um host conecta: a **ferramenta**, o **login** (usuário e senha,
 ou só senha) e as **opções** da ferramenta, como o **plugin SecureVNC** do UltraVNC.
@@ -90,7 +90,7 @@ em lugar nenhum usam o padrão.
       tem segue o perfil do grupo, ou o padrão, e o que falta aparece como "não disponível neste
       PC".
 
-## Configurar os perfis de conexão
+## Configurar os perfis de conexão <a id="connecting-set-up-connection-profiles"></a>
 
 Abra **Configurações > Hosts > Conexão > Perfis de conexão** (ou **Conectar > Perfis de
 conexão…**) para adicionar, editar, duplicar, excluir ou restaurar os que vêm com o CapyPanel. Cada
@@ -137,7 +137,7 @@ Desktop**. **Hosts sem perfil usam**, a última linha, é o perfil dos hosts que
     lá, o Windows guarda esse login por conta própria, como `TERMSRV/<endereço>`; remova-o no
     **Painel de Controle > Gerenciador de Credenciais**.
 
-## Usar outra conta em alguns PCs
+## Usar outra conta em alguns PCs <a id="connecting-use-another-account-on-some-pcs"></a>
 
 Ler quem está logado e executar [comandos](commands.pt-BR.md) precisam de uma conta que seja
 administradora naquele PC. Por padrão, é a sua própria conta do Windows. Para usar outra:
@@ -172,7 +172,7 @@ que a do grupo, a do grupo mais que a da tag, e essas mais que Todos os PCs." A 
     - Em PCs que não estão num domínio, o Administrador interno é a única conta local que o
       Windows aceita remotamente.
 
-## Esquecer uma senha salva
+## Esquecer uma senha salva <a id="connecting-forget-a-saved-password"></a>
 
 1. **Conectar ▾ > Credenciais salvas…** (ou **Gerenciar…** em **Configurações > Hosts >
    Credenciais**).
@@ -195,7 +195,7 @@ um erro de digitação. Um login esquecido aqui também é apagado do Gerenciado
     [Definir a conta SNMP](../printers/checking.pt-BR.md#definir-a-conta-snmp)). Os logins da Área
     de Trabalho Remota também não.
 
-## Conectar a um endereço que não está na lista
+## Conectar a um endereço que não está na lista <a id="connecting-connect-to-an-address-that-isnt-in-the-list"></a>
 
 **Conectar > Conexão manual…** (Ctrl+M) abre a janela Comandos com a caixa **Host** vazia: digite o
 endereço, escolha um **Perfil** e clique em **Conectar**. Um endereço com porta, como
@@ -207,11 +207,11 @@ esse nome ou endereço, o **Conectar a {host}…** aparece, na tabela vazia ou c
 da lista, embaixo das linhas. Ele abre a mesma janela com o PC já em **Host**; nada se conecta até
 você clicar em **Conectar** lá.
 
-## Mensagens que você pode ver
+## Mensagens que você pode ver <a id="connecting-messages-you-may-see"></a>
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| O nome de um host não pode ser usado como endereço | Ele não tem endereço, e um nome como "Ala 2A - Posto" não é um nome de computador | Edite o host e acrescente o endereço; o CapyPanel oferece isso |
-| Um servidor pulado pela verificação de login | Ele não aceita usuário e senha, então nunca recebeu a sua | Use um perfil "só senha" para ele |
-| "não disponível neste PC" | Um host ou grupo cita um perfil que este PC não tem | Escolha outro perfil, ou adicione esse |
-| O visualizador pede para ser instalado ou localizado | O visualizador VNC não foi encontrado | Instale-o, ou mostre ao CapyPanel onde está o `.exe` |
+| <a id="connect-name-not-address"></a>O nome de um host não pode ser usado como endereço | Ele não tem endereço, e um nome como "Ala 2A - Posto" não é um nome de computador | Edite o host e acrescente o endereço; o CapyPanel oferece isso |
+| <a id="connect-login-check-skipped"></a>Um servidor pulado pela verificação de login | Ele não aceita usuário e senha, então nunca recebeu a sua | Use um perfil "só senha" para ele |
+| <a id="connect-profile-not-available"></a>"não disponível neste PC" | Um host ou grupo cita um perfil que este PC não tem | Escolha outro perfil, ou adicione esse |
+| <a id="connect-viewer-not-found"></a>O visualizador pede para ser instalado ou localizado | O visualizador VNC não foi encontrado | Instale-o, ou mostre ao CapyPanel onde está o `.exe` |

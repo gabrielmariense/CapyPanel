@@ -3,7 +3,7 @@
 The changes in each release that you'll notice. The
 [releases on GitHub](https://github.com/gabrielmariense/CapyPanel/releases) have the downloads.
 
-## 0.29.0
+## 0.29.0 <a id="whats-new-0290"></a>
 
 - **SSH** is a fourth tool (Ctrl+4), for the servers, switches and other devices you reach over
   SSH. It shows the host list open in Hosts, checks which hosts answer on their SSH port, and
@@ -28,7 +28,7 @@ The changes in each release that you'll notice. The
   or an antivirus scan for instance, now stops with nothing changed, and CapyPanel opens as it
   was. Before, such an update could leave CapyPanel unable to start.
 
-## 0.28.1
+## 0.28.1 <a id="whats-new-0281"></a>
 
 - User profiles is now **Profile cleanup**, a name that says what it's for. Its key, Ctrl+3,
   stays.
@@ -45,7 +45,7 @@ The changes in each release that you'll notice. The
 - The field where you press a new key keeps its words centred and in place when a key is refused,
   and in a narrow Settings window the row you're changing stays in view.
 
-## 0.28.0
+## 0.28.0 <a id="whats-new-0280"></a>
 
 - **Settings > CapyPanel > Keyboard shortcuts** is new: give a command the key you want, or take
   its key away. Hosts and Printers keep their own keys, even for a command both have, and the
@@ -61,12 +61,12 @@ The changes in each release that you'll notice. The
 - The User profiles table no longer has a **Kind** column. A profile's kind is still in its
   details.
 
-## 0.27.1
+## 0.27.1 <a id="whats-new-0271"></a>
 
 - An update no longer stops on a file an earlier update left behind. Copies that couldn't update
   from 0.26.4, with "Access denied", update straight to 0.27.1, with nothing to clean up by hand.
 
-## 0.27.0
+## 0.27.0 <a id="whats-new-0270"></a>
 
 - **Settings > Printers > Warnings and supplies** has a new **Warnings** table: tick which
   problems count in CapyPanel's warnings and which send a Windows notification, reason by reason.
@@ -75,7 +75,7 @@ The changes in each release that you'll notice. The
   warns (tick **Out of paper** or **Stopped** to bring them back), a door open or a tray pulled out
   never does, and a supply at the low level now also sends a notification.
 
-## 0.26.4
+## 0.26.4 <a id="whats-new-0264"></a>
 
 - **Install and restart** now checks the new version before CapyPanel closes, then says CapyPanel
   will open again by itself in a few seconds. While the files are swapped, the splash says
@@ -84,23 +84,23 @@ The changes in each release that you'll notice. The
   and deletes them once it's done. The `CapyPanel.update` and `CapyPanel.previous` folders that
   earlier updates left there are removed at the next start.
 
-## 0.26.3
+## 0.26.3 <a id="whats-new-0263"></a>
 
 - No changes in the app: a release to try 0.26.2's update windows.
 
-## 0.26.2
+## 0.26.2 <a id="whats-new-0262"></a>
 
 - When CapyPanel finds a newer release on its own, the update window opens by itself with the
   release notes, in CapyPanel's language. It looks about a second after it starts.
 - After **Install and restart**, CapyPanel opens with a window saying the update went in, or why
   it didn't.
 
-## 0.26.1
+## 0.26.1 <a id="whats-new-0261"></a>
 
 - The window title shows only the version, as in "Default — CapyPanel 0.26.1". The build number
   and the commit are in **Help > About CapyPanel**.
 
-## 0.26.0
+## 0.26.0 <a id="whats-new-0260"></a>
 
 The first release you can download.
 

@@ -15,7 +15,7 @@ kept.
 SSH shows the host list that's open in Hosts, the same lists Profile cleanup shows. A host you add
 here is in Hosts at once, and the other way round.
 
-## Add a host
+## Add a host <a id="ssh-add-a-host"></a>
 
 1. **Inventory > Add host…** (Ctrl+N).
 2. Type a **Name** and the **Address**, an IP address or a network name.
@@ -43,7 +43,7 @@ Hosts tool; they show here too, on port 22.
       column titles. The Details panel always shows it.
     - A list that can't be written to can still be checked and connected to; only editing is off.
 
-## Choose the name to log in as
+## Choose the name to log in as <a id="ssh-choose-the-name-to-log-in-as"></a>
 
 **Log in as** is the account ssh.exe signs in to the server with. Empty, ssh.exe decides: your own
 SSH config first, then your Windows user name.
@@ -67,7 +67,7 @@ group with none takes the nearest group above it that has one.
     - The table's **Log in as** column shows the name each host logs in with, its group's included.
     - The name is kept in the host list file, beside the host or the group.
 
-## Check which hosts answer
+## Check which hosts answer <a id="ssh-check-which-hosts-answer"></a>
 
 Click **Refresh all** on the toolbar (F5). CapyPanel checks the SSH port of every host shown,
 eight at a time, and logs in to nothing.
@@ -93,7 +93,7 @@ checks its subgroups too.
     that way: "Only the SSH port, so nothing logs in. A server running fail2ban in a strict mode
     may count each check as a failed login and block this PC."
 
-## Connect
+## Connect <a id="ssh-connect"></a>
 
 1. Select a host, or several.
 2. Click **Connect** on the toolbar, double-click the host, or press **Enter**.
@@ -120,7 +120,7 @@ own settings.
       [Old devices and your SSH config](#old-devices-and-your-ssh-config)).
     - CapyPanel connects over SSH only, not over Telnet or a serial cable.
 
-## Work in the terminal
+## Work in the terminal <a id="ssh-work-in-the-terminal"></a>
 
 Every key you type goes to the server, apart from these:
 
@@ -172,7 +172,7 @@ Select text with the mouse to copy it. A right-click opens **Copy**, **Paste**, 
     For any of these, [Connect in a separate window](#connect-in-a-separate-window) opens the host
     in Windows' own terminal.
 
-## When a connection ends
+## When a connection ends <a id="ssh-when-a-connection-ends"></a>
 
 The tab stays, with the last screen, so you can read how it ended. A strip at its foot says it and
 offers **Reconnect** (the default: **Enter** does it too) and **Close tab**.
@@ -197,7 +197,7 @@ offers **Reconnect** (the default: **Enter** does it too) and **Close tab**.
     - Quitting CapyPanel with connections open asks once, as in "Quit CapyPanel with 2 connections
       open?" and "They all close, and anything still running in them on the servers may stop."
 
-## Connect in a separate window
+## Connect in a separate window <a id="ssh-connect-in-a-separate-window"></a>
 
 Right-click a host and pick **Connect in a separate window**. It "Opens ssh.exe in a window of its
 own, outside CapyPanel": there your keys never pass through CapyPanel, and the window does
@@ -212,7 +212,7 @@ closes by itself, and closing the window ends ssh.exe.
 To install an update, close these windows first (see
 [Update CapyPanel](../download.md#update-capypanel)).
 
-## Old devices and your SSH config
+## Old devices and your SSH config <a id="ssh-old-devices-and-your-ssh-config"></a>
 
 ssh.exe reads your own SSH config, `%USERPROFILE%\.ssh\config`. That's the place for what a host
 needs beyond a name and a port: a key file, a jump host, or an older algorithm that the newest
@@ -229,7 +229,7 @@ The same message with "key exchange method", "cipher" or "MAC" needs `KexAlgorit
 `MACs` with `+` and the name from "Their offer". Keys go in `%USERPROFILE%\.ssh`, where ssh.exe
 looks for them, or in Windows' OpenSSH agent.
 
-## The window in detail
+## The window in detail <a id="ssh-the-window-in-detail"></a>
 
 ??? note "The window, part by part"
 
@@ -257,29 +257,29 @@ looks for them, or in Windows' OpenSSH agent.
       "Address, port, Log in as, group", Tags or Notes. "Always shown: the host's name and its
       status."
 
-## Messages you may see
+## Messages you may see <a id="ssh-messages-you-may-see"></a>
 
 CapyPanel's own messages:
 
 | Message | What it means | What to do |
 |---|---|---|
-| "Windows' SSH client (ssh.exe) isn't installed on this PC. To add it, search Start for “Optional features” and add “OpenSSH Client”. Adding it needs an administrator." | Windows' SSH client is an optional part of Windows, and this PC doesn't have it | Add **OpenSSH Client** from **Optional features**, or ask whoever manages the PC |
-| "Can't connect to “{host}”: its address or Log in as has a space, starts with “-”, or has a character such as ; & \| or quotes." | The list holds an address or name ssh.exe must not get | Fix it with **Edit selected…** |
-| "Only the first 10 connect at once." | More than ten hosts were selected | Connect the rest in a second go |
-| "2 hosts have no address and were skipped." | Those hosts have only a name | Add their address |
-| **Port closed** | The host is on, but its SSH server is off or listens on another port | Check the port, or start the server's SSH service |
+| <a id="ssh-not-installed"></a>"Windows' SSH client (ssh.exe) isn't installed on this PC. To add it, search Start for “Optional features” and add “OpenSSH Client”. Adding it needs an administrator." | Windows' SSH client is an optional part of Windows, and this PC doesn't have it | Add **OpenSSH Client** from **Optional features**, or ask whoever manages the PC |
+| <a id="ssh-bad-address"></a>"Can't connect to “{host}”: its address or Log in as has a space, starts with “-”, or has a character such as ; & \| or quotes." | The list holds an address or name ssh.exe must not get | Fix it with **Edit selected…** |
+| <a id="ssh-connect-limit"></a>"Only the first 10 connect at once." | More than ten hosts were selected | Connect the rest in a second go |
+| <a id="ssh-no-address-skipped"></a>"2 hosts have no address and were skipped." | Those hosts have only a name | Add their address |
+| <a id="ssh-port-closed"></a>**Port closed** | The host is on, but its SSH server is off or listens on another port | Check the port, or start the server's SSH service |
 
 ssh.exe's messages come in English, as it prints them, since that's what you'd search for:
 
 | Message | What it means | What to do |
 |---|---|---|
-| "The authenticity of host … can't be established." and "Are you sure you want to continue connecting (yes/no/[fingerprint])?" | The first connection to this server | Type **yes**, then press **Enter**. To be sure it's the right server, compare the fingerprint with the one its administrator gives you |
-| "Warning: Permanently added … to the list of known hosts." | ssh.exe saved the server's key after your yes | Nothing: it's normal |
-| "Permission denied, please try again." | Wrong password | Type it again; ssh.exe gives three tries |
-| "Permission denied (publickey,password)." | The server turned down every way of logging in | Check **Log in as** and the password or key |
-| "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!" then "Host key verification failed." | The server's key isn't the one ssh.exe saved: the server was reinstalled, or it isn't the same machine | Check with whoever runs the server first. If the change is expected, the line "Offending … key in …:3" names the file and line of the old key; remove it with `ssh-keygen -R` and the host's name or address, then connect again |
-| "ssh: connect to host … port 22: Connection refused" | The host answered, but nothing listens on that port | As for **Port closed** above |
-| "ssh: connect to host … port 22: Connection timed out" | Nothing answered | Check that the host is on and reachable |
-| "ssh: Could not resolve hostname …" | The name isn't known | Check the spelling, or use the IP address |
-| "Unable to negotiate with … no matching host key type found. Their offer: …" | An old device that only offers what the newest ssh.exe turns off | See [Old devices and your SSH config](#old-devices-and-your-ssh-config) |
-| "Connection closed by …" or "Connection reset by …" | The server or the network ended the connection | **Reconnect** |
+| <a id="sshexe-unknown-host-key"></a>"The authenticity of host … can't be established." and "Are you sure you want to continue connecting (yes/no/[fingerprint])?" | The first connection to this server | Type **yes**, then press **Enter**. To be sure it's the right server, compare the fingerprint with the one its administrator gives you |
+| <a id="sshexe-host-key-added"></a>"Warning: Permanently added … to the list of known hosts." | ssh.exe saved the server's key after your yes | Nothing: it's normal |
+| <a id="sshexe-password-denied"></a>"Permission denied, please try again." | Wrong password | Type it again; ssh.exe gives three tries |
+| <a id="sshexe-login-denied"></a>"Permission denied (publickey,password)." | The server turned down every way of logging in | Check **Log in as** and the password or key |
+| <a id="sshexe-host-key-changed"></a>"WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!" then "Host key verification failed." | The server's key isn't the one ssh.exe saved: the server was reinstalled, or it isn't the same machine | Check with whoever runs the server first. If the change is expected, the line "Offending … key in …:3" names the file and line of the old key; remove it with `ssh-keygen -R` and the host's name or address, then connect again |
+| <a id="sshexe-connection-refused"></a>"ssh: connect to host … port 22: Connection refused" | The host answered, but nothing listens on that port | As for **Port closed** above |
+| <a id="sshexe-connection-timed-out"></a>"ssh: connect to host … port 22: Connection timed out" | Nothing answered | Check that the host is on and reachable |
+| <a id="sshexe-hostname-unresolved"></a>"ssh: Could not resolve hostname …" | The name isn't known | Check the spelling, or use the IP address |
+| <a id="sshexe-no-matching-host-key"></a>"Unable to negotiate with … no matching host key type found. Their offer: …" | An old device that only offers what the newest ssh.exe turns off | See [Old devices and your SSH config](#old-devices-and-your-ssh-config) |
+| <a id="sshexe-connection-closed"></a>"Connection closed by …" or "Connection reset by …" | The server or the network ended the connection | **Reconnect** |

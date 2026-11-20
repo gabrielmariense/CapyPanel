@@ -7,7 +7,7 @@ Windows' own remote functions.
 
 ![The Details panel: the fixed row of buttons, the quick commands under it, then Connection, Logged on and PC facts](../images/commands-details-dark.png)
 
-## Run a command on a host
+## Run a command on a host <a id="commands-run-a-command-on-a-host"></a>
 
 1. Select the host.
 2. Click a button in the Details panel, or right-click the host, or open **Commands ▾** on the
@@ -47,7 +47,7 @@ The Details panel's first row is always **Refresh**, **Commands** (the
     "… (nobody signed in)" and is greyed when the host's last refresh, less than 10 minutes old,
     found nobody. Before any refresh, or once it's older, it stays usable.
 
-## Choose your quick commands
+## Choose your quick commands <a id="commands-choose-your-quick-commands"></a>
 
 ![The Customize the details panel window on its Quick commands tab: every command by group in the Commands window's order, four ticked](../images/customize-dark.png)
 
@@ -75,7 +75,7 @@ right-click menu.
       Services, Send a message…, Mapped drives, Printers on this PC and Restart Print Spooler….
       "Restart, Shut down, Log off and Disconnect can't be quick commands: they cut someone off."
 
-## Open a PC's folders and admin tools
+## Open a PC's folders and admin tools <a id="commands-open-a-pcs-folders-and-admin-tools"></a>
 
 These open something on *your* PC, pointed at the other one:
 
@@ -101,7 +101,7 @@ These open something on *your* PC, pointed at the other one:
     - A path that isn't a folder is refused, so a file is never opened, and so run, on your own PC.
     - Opening a folder says "Opened \\DESK-02\C$" in the status bar.
 
-## Message, log off or disconnect someone
+## Message, log off or disconnect someone <a id="commands-message-log-off-or-disconnect-someone"></a>
 
 - **Send a message…** pops up on the screen of everyone signed in at the PC until they click OK,
   titled "Message from {your Windows user name}". Windows shows about 255 characters of it.
@@ -118,7 +118,7 @@ haven't saved is lost."; Disconnect keeps their programs running for next time.
     - **Users ▾** is greyed when nobody is signed in, or nobody was checked yet.
     - **Cancel** is the button that's ready to press in both questions.
 
-## Restart or shut down a PC
+## Restart or shut down a PC <a id="commands-restart-or-shut-down-a-pc"></a>
 
 ![The Restart question: who is signed in, When set to Now, and the message box greyed](../images/commands-restart-dark.png)
 
@@ -148,7 +148,7 @@ Details with **Cancel restart**. Once the PC answers again, a Windows notificati
       restarted at 2:37 PM and answered again at 2:39 PM. Click to show it."; the click selects
       the host. CapyPanel stops watching 20 minutes after the restart time.
 
-## Fix a PC's printing
+## Fix a PC's printing <a id="commands-fix-a-pcs-printing"></a>
 
 ![The printers installed on a host: printer, driver, port, status and jobs, with Clear queue and Restart Print Spooler](../images/commands-printers-dark.png)
 
@@ -161,7 +161,7 @@ Details with **Cancel restart**. Once the PC answers again, a Windows notificati
 Both ask first. These are the PC's own printers, not the ones a user added from a print server, and
 not the network printers of the [Printers tool](../printers/printers.md).
 
-## See what's installed and mapped
+## See what's installed and mapped <a id="commands-see-whats-installed-and-mapped"></a>
 
 - **Installed programs** lists the programs installed for every user of the PC: **Name**,
   **Publisher**, **Version** and **Installed on**, with **Search programs**, **Copy list**, **Export
@@ -181,7 +181,7 @@ not the network printers of the [Printers tool](../printers/printers.md).
       on the PC. A person with none reads "No saved drives". **Copy list** puts the rows on the
       clipboard.
 
-## The Commands window
+## The Commands window <a id="commands-the-commands-window"></a>
 
 ![The Commands window: Host, Profile, the gear and Connect on the top line, the groups on the left, every command in the middle, what the picked one found on the right](../images/commands-window-dark.png)
 
@@ -219,7 +219,7 @@ A double-click only picks, so a risky command never runs by accident.
       share the extra room; narrower, the answers keep their width and the command list scrolls
       sideways. It opens again at the size you left it at.
 
-## Messages you may see
+## Messages you may see <a id="commands-messages-you-may-see"></a>
 
 ![The strip above the host table after a command failed, with Try another account](../images/commands-strip-failed-dark.png)
 
@@ -229,6 +229,6 @@ and stays until you close it.
 
 | Message | What it means | What to do |
 |---|---|---|
-| "Couldn't log off bruno on DESK-02: access denied. It needs an admin account on that PC." | The account isn't an administrator there | **Try another account…** asks for one, and for which PCs, then runs the command again |
-| "… (nobody signed in)" on a greyed command | The last refresh, under 10 minutes old, found nobody at the PC | Refresh the host if someone has signed in since |
-| "there's no folder there." | The path in **Open a path…** isn't a folder | Check the path |
+| <a id="command-access-denied"></a>"Couldn't log off bruno on DESK-02: access denied. It needs an admin account on that PC." | The account isn't an administrator there | **Try another account…** asks for one, and for which PCs, then runs the command again |
+| <a id="command-nobody-signed-in"></a>"… (nobody signed in)" on a greyed command | The last refresh, under 10 minutes old, found nobody at the PC | Refresh the host if someone has signed in since |
+| <a id="command-no-folder"></a>"there's no folder there." | The path in **Open a path…** isn't a folder | Check the path |

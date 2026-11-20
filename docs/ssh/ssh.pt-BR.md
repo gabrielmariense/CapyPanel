@@ -16,7 +16,7 @@ caminho do ssh.exe, e nenhuma fica guardada.
 O SSH mostra a lista de hosts aberta no Hosts, as mesmas listas que a Limpeza de perfis mostra. Um
 host que você adiciona aqui já aparece no Hosts, e vice-versa.
 
-## Adicionar um host
+## Adicionar um host <a id="ssh-add-a-host"></a>
 
 1. **Inventário > Adicionar host…** (Ctrl+N).
 2. Digite um **Nome** e o **Endereço**, um endereço IP ou um nome na rede.
@@ -46,7 +46,7 @@ Grupos, tags, **Mover para ▸**, **Tags ▸** e encontrar um host funcionam com
     - Uma lista em que não dá para gravar ainda pode ser verificada e usada para conectar; só a
       edição fica desligada.
 
-## Escolher com que nome entrar
+## Escolher com que nome entrar <a id="ssh-choose-the-name-to-log-in-as"></a>
 
 O **Entrar como** é a conta com que o ssh.exe entra no servidor. Vazio, quem decide é o ssh.exe:
 primeiro a sua config do SSH, depois o seu usuário do Windows.
@@ -71,7 +71,7 @@ do grupo, e um grupo sem nome usa o do grupo mais próximo acima dele que tenha 
       do grupo.
     - O nome fica no arquivo da lista de hosts, junto do host ou do grupo.
 
-## Ver quais hosts respondem
+## Ver quais hosts respondem <a id="ssh-check-which-hosts-answer"></a>
 
 Clique em **Atualizar todos** na barra de ferramentas (F5). O CapyPanel verifica a porta SSH de
 todos os hosts exibidos, oito de cada vez, e não faz login em nada.
@@ -98,7 +98,7 @@ verificar menos hosts, clique com o botão direito num host para **Atualizar hos
     rígido pode contar cada verificação como uma tentativa de login que falhou e bloquear este
     PC."
 
-## Conectar
+## Conectar <a id="ssh-connect"></a>
 
 1. Selecione um host, ou vários.
 2. Clique em **Conectar** na barra de ferramentas, dê dois cliques no host ou pressione **Enter**.
@@ -127,7 +127,7 @@ porta 22 e as configurações do próprio ssh.exe.
       [Aparelhos antigos e a sua config do SSH](#aparelhos-antigos-e-a-sua-config-do-ssh)).
     - O CapyPanel conecta só por SSH, não por Telnet nem por cabo serial.
 
-## Trabalhar no terminal
+## Trabalhar no terminal <a id="ssh-work-in-the-terminal"></a>
 
 Toda tecla que você digita vai para o servidor, menos estas:
 
@@ -182,7 +182,7 @@ Selecione texto com o mouse para copiá-lo. O botão direito abre **Copiar**, **
     Para qualquer um desses, o [Conectar numa janela separada](#conectar-numa-janela-separada) abre
     o host no terminal do próprio Windows.
 
-## Quando uma conexão termina
+## Quando uma conexão termina <a id="ssh-when-a-connection-ends"></a>
 
 A aba fica, com a última tela, para você ler como terminou. Uma faixa no pé dela diz isso e oferece
 **Reconectar** (o padrão: o **Enter** também reconecta) e **Fechar aba**.
@@ -208,7 +208,7 @@ A aba fica, com a última tela, para você ler como terminou. Uma faixa no pé d
       conexões abertas?" e "Todas são fechadas, e o que ainda estiver rodando nelas nos servidores
       pode parar."
 
-## Conectar numa janela separada
+## Conectar numa janela separada <a id="ssh-connect-in-a-separate-window"></a>
 
 Clique com o botão direito num host e escolha **Conectar numa janela separada**. Ele "Abre o
 ssh.exe numa janela própria, fora do CapyPanel": ali as suas teclas nunca passam pelo CapyPanel, e
@@ -224,7 +224,7 @@ encerra o ssh.exe.
 Para instalar uma atualização, feche essas janelas antes (veja
 [Atualizar o CapyPanel](../download.pt-BR.md#atualizar-o-capypanel)).
 
-## Aparelhos antigos e a sua config do SSH
+## Aparelhos antigos e a sua config do SSH <a id="ssh-old-devices-and-your-ssh-config"></a>
 
 O ssh.exe lê a sua própria config do SSH, `%USERPROFILE%\.ssh\config`. É ali que fica o que um host
 precisa além de um nome e uma porta: um arquivo de chave, um host de salto ou um algoritmo mais
@@ -241,7 +241,7 @@ A mesma mensagem com "key exchange method", "cipher" ou "MAC" pede `KexAlgorithm
 `MACs` com `+` e o nome que vem em "Their offer". As chaves ficam em `%USERPROFILE%\.ssh`, onde o
 ssh.exe procura, ou no agente OpenSSH do Windows.
 
-## A janela em detalhe
+## A janela em detalhe <a id="ssh-the-window-in-detail"></a>
 
 ??? note "A janela, parte por parte"
 
@@ -270,29 +270,29 @@ ssh.exe procura, ou no agente OpenSSH do Windows.
       Conexão "Endereço, porta, Entrar como, grupo", Tags ou Notas. "Sempre aparecem: o nome do
       host e o status."
 
-## Mensagens que você pode ver
+## Mensagens que você pode ver <a id="ssh-messages-you-may-see"></a>
 
 As mensagens do próprio CapyPanel:
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| "O cliente SSH do Windows (ssh.exe) não está instalado neste PC. Para adicioná-lo, pesquise “Recursos opcionais” no Iniciar e adicione “Cliente OpenSSH”. Adicionar exige um administrador." | O cliente SSH é uma parte opcional do Windows, e este PC não tem | Adicione o **Cliente OpenSSH** em **Recursos opcionais**, ou peça a quem administra o PC |
-| "Não é possível conectar a “{host}”: o endereço ou o campo Entrar como tem um espaço, começa com “-” ou tem um caractere como ; & \| ou aspas." | A lista tem um endereço ou nome que o ssh.exe não pode receber | Corrija com o **Editar selecionado…** |
-| "Só os 10 primeiros conectam de uma vez." | Mais de dez hosts estavam selecionados | Conecte o resto numa segunda vez |
-| "2 hosts não têm endereço e foram ignorados." | Esses hosts só têm um nome | Acrescente o endereço deles |
-| **Porta fechada** | O host está ligado, mas o servidor SSH dele está desligado ou escuta em outra porta | Confira a porta, ou ligue o serviço SSH do servidor |
+| <a id="ssh-not-installed"></a>"O cliente SSH do Windows (ssh.exe) não está instalado neste PC. Para adicioná-lo, pesquise “Recursos opcionais” no Iniciar e adicione “Cliente OpenSSH”. Adicionar exige um administrador." | O cliente SSH é uma parte opcional do Windows, e este PC não tem | Adicione o **Cliente OpenSSH** em **Recursos opcionais**, ou peça a quem administra o PC |
+| <a id="ssh-bad-address"></a>"Não é possível conectar a “{host}”: o endereço ou o campo Entrar como tem um espaço, começa com “-” ou tem um caractere como ; & \| ou aspas." | A lista tem um endereço ou nome que o ssh.exe não pode receber | Corrija com o **Editar selecionado…** |
+| <a id="ssh-connect-limit"></a>"Só os 10 primeiros conectam de uma vez." | Mais de dez hosts estavam selecionados | Conecte o resto numa segunda vez |
+| <a id="ssh-no-address-skipped"></a>"2 hosts não têm endereço e foram ignorados." | Esses hosts só têm um nome | Acrescente o endereço deles |
+| <a id="ssh-port-closed"></a>**Porta fechada** | O host está ligado, mas o servidor SSH dele está desligado ou escuta em outra porta | Confira a porta, ou ligue o serviço SSH do servidor |
 
 As mensagens do ssh.exe vêm em inglês, como ele escreve, porque é isso que você pesquisaria:
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| "The authenticity of host … can't be established." e "Are you sure you want to continue connecting (yes/no/[fingerprint])?" | A primeira conexão a esse servidor | Digite **yes**, em inglês, e pressione **Enter**. Para ter certeza de que é o servidor certo, compare a impressão digital com a que o administrador dele passar |
-| "Warning: Permanently added … to the list of known hosts." | O ssh.exe guardou a chave do servidor depois do seu yes | Nada: é normal |
-| "Permission denied, please try again." | Senha errada | Digite de novo; o ssh.exe dá três tentativas |
-| "Permission denied (publickey,password)." | O servidor recusou todas as formas de login | Confira o **Entrar como** e a senha ou a chave |
-| "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!" e depois "Host key verification failed." | A chave do servidor não é a que o ssh.exe guardou: o servidor foi reinstalado, ou não é a mesma máquina | Confirme antes com quem cuida do servidor. Se a mudança era esperada, a linha "Offending … key in …:3" diz o arquivo e a linha da chave antiga; apague-a com `ssh-keygen -R` e o nome ou endereço do host, e conecte de novo |
-| "ssh: connect to host … port 22: Connection refused" | O host respondeu, mas nada escuta nessa porta | Como em **Porta fechada**, acima |
-| "ssh: connect to host … port 22: Connection timed out" | Nada respondeu | Confira se o host está ligado e acessível |
-| "ssh: Could not resolve hostname …" | O nome não é conhecido | Confira a grafia, ou use o endereço IP |
-| "Unable to negotiate with … no matching host key type found. Their offer: …" | Um aparelho antigo que só oferece o que o ssh.exe mais novo desliga | Veja [Aparelhos antigos e a sua config do SSH](#aparelhos-antigos-e-a-sua-config-do-ssh) |
-| "Connection closed by …" ou "Connection reset by …" | O servidor ou a rede encerrou a conexão | **Reconectar** |
+| <a id="sshexe-unknown-host-key"></a>"The authenticity of host … can't be established." e "Are you sure you want to continue connecting (yes/no/[fingerprint])?" | A primeira conexão a esse servidor | Digite **yes**, em inglês, e pressione **Enter**. Para ter certeza de que é o servidor certo, compare a impressão digital com a que o administrador dele passar |
+| <a id="sshexe-host-key-added"></a>"Warning: Permanently added … to the list of known hosts." | O ssh.exe guardou a chave do servidor depois do seu yes | Nada: é normal |
+| <a id="sshexe-password-denied"></a>"Permission denied, please try again." | Senha errada | Digite de novo; o ssh.exe dá três tentativas |
+| <a id="sshexe-login-denied"></a>"Permission denied (publickey,password)." | O servidor recusou todas as formas de login | Confira o **Entrar como** e a senha ou a chave |
+| <a id="sshexe-host-key-changed"></a>"WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!" e depois "Host key verification failed." | A chave do servidor não é a que o ssh.exe guardou: o servidor foi reinstalado, ou não é a mesma máquina | Confirme antes com quem cuida do servidor. Se a mudança era esperada, a linha "Offending … key in …:3" diz o arquivo e a linha da chave antiga; apague-a com `ssh-keygen -R` e o nome ou endereço do host, e conecte de novo |
+| <a id="sshexe-connection-refused"></a>"ssh: connect to host … port 22: Connection refused" | O host respondeu, mas nada escuta nessa porta | Como em **Porta fechada**, acima |
+| <a id="sshexe-connection-timed-out"></a>"ssh: connect to host … port 22: Connection timed out" | Nada respondeu | Confira se o host está ligado e acessível |
+| <a id="sshexe-hostname-unresolved"></a>"ssh: Could not resolve hostname …" | O nome não é conhecido | Confira a grafia, ou use o endereço IP |
+| <a id="sshexe-no-matching-host-key"></a>"Unable to negotiate with … no matching host key type found. Their offer: …" | Um aparelho antigo que só oferece o que o ssh.exe mais novo desliga | Veja [Aparelhos antigos e a sua config do SSH](#aparelhos-antigos-e-a-sua-config-do-ssh) |
+| <a id="sshexe-connection-closed"></a>"Connection closed by …" ou "Connection reset by …" | O servidor ou a rede encerrou a conexão | **Reconectar** |

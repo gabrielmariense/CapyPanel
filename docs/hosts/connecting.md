@@ -3,7 +3,7 @@
 CapyPanel opens a host's screen in a VNC viewer you install yourself (UltraVNC or RealVNC), or in
 Windows' own Remote Desktop client. It never ships, bundles or downloads them.
 
-## Connect to a host
+## Connect to a host <a id="connecting-connect-to-a-host"></a>
 
 1. Double-click the host, press **Enter**, or click **Connect** on the toolbar.
 2. The first time, CapyPanel finds the viewer by itself. If it isn't installed, it asks you to
@@ -53,7 +53,7 @@ asked at most once, and more than five at once asks first.
     - A server using the SecureVNC plugin announces only the plugin, so the check can't tell the
       two kinds of login apart there.
 
-## Choose how a host connects
+## Choose how a host connects <a id="connecting-choose-how-a-host-connects"></a>
 
 A **connection profile** says how a host connects: the **tool**, the **login** (user and password,
 or password only) and the tool's **options**, such as UltraVNC's **SecureVNC plugin**.
@@ -87,7 +87,7 @@ anywhere use the default.
       follows its group's profile, or the default, and the missing one is marked "not available on
       this PC".
 
-## Set up connection profiles
+## Set up connection profiles <a id="connecting-set-up-connection-profiles"></a>
 
 Open **Settings > Hosts > Connecting > Connection profiles** (or **Connect > Connection
 profiles…**) to add, edit, duplicate, delete, or restore the ones CapyPanel ships with. Each
@@ -132,7 +132,7 @@ own.
     password: the client asks for it. If you tick **Remember me** there, Windows keeps that login
     itself, as `TERMSRV/<address>`; remove it in **Control Panel > Credential Manager**.
 
-## Use another account on some PCs
+## Use another account on some PCs <a id="connecting-use-another-account-on-some-pcs"></a>
 
 Reading who is logged on and running [commands](commands.md) need an account that's an
 administrator on that PC. By default that's your own Windows account. To use another one:
@@ -165,7 +165,7 @@ settings, never in the shared host lists".
     - On PCs that aren't in a domain, the built-in Administrator is the only local account Windows
       accepts remotely.
 
-## Forget a saved password
+## Forget a saved password <a id="connecting-forget-a-saved-password"></a>
 
 1. **Connect ▾ > Saved credentials…** (or **Manage…** on **Settings > Hosts > Credentials**).
 2. Pick the login and click **Forget**, or **Forget all**.
@@ -186,7 +186,7 @@ forgotten here is deleted from Credential Manager too.
     (see [Set the SNMP account](../printers/checking.md#set-the-snmp-account)). Remote Desktop
     logins aren't either.
 
-## Connect to an address that isn't in the list
+## Connect to an address that isn't in the list <a id="connecting-connect-to-an-address-that-isnt-in-the-list"></a>
 
 **Connect > Manual connection…** (Ctrl+M) opens the Commands window with its **Host** box empty:
 type the address, pick a **Profile** and click **Connect**. An address with a port, as in
@@ -199,11 +199,11 @@ address, **Connect to {host}…** shows, in the empty table or as the list's las
 rows. It opens the same window with the PC already in **Host**; nothing connects until you click
 **Connect** there.
 
-## Messages you may see
+## Messages you may see <a id="connecting-messages-you-may-see"></a>
 
 | Message | What it means | What to do |
 |---|---|---|
-| A host's name can't be used as an address | It has no address, and a name like "Ward 2A - Desk" isn't a computer name | Edit the host and add its address; CapyPanel offers to |
-| A server skipped by the login check | It doesn't take a user and password, so it was never sent yours | Use a "password only" profile for it |
-| "not available on this PC" | A host or group names a profile this PC doesn't have | Pick another profile, or add that one |
-| The viewer asks to be installed or located | The VNC viewer wasn't found | Install it, or point CapyPanel to its `.exe` |
+| <a id="connect-name-not-address"></a>A host's name can't be used as an address | It has no address, and a name like "Ward 2A - Desk" isn't a computer name | Edit the host and add its address; CapyPanel offers to |
+| <a id="connect-login-check-skipped"></a>A server skipped by the login check | It doesn't take a user and password, so it was never sent yours | Use a "password only" profile for it |
+| <a id="connect-profile-not-available"></a>"not available on this PC" | A host or group names a profile this PC doesn't have | Pick another profile, or add that one |
+| <a id="connect-viewer-not-found"></a>The viewer asks to be installed or located | The VNC viewer wasn't found | Install it, or point CapyPanel to its `.exe` |

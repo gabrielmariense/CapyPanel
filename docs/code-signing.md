@@ -9,13 +9,13 @@ Until then, releases aren't signed, and Windows may say the publisher is unknown
 run CapyPanel (see [Download and updates](download.md#download-capypanel)). The SHA-256 beside each
 zip lets you check the download either way.
 
-## What gets signed
+## What gets signed <a id="signing-what-gets-signed"></a>
 
 - Only CapyPanel's own release files, built from this repository's source code by GitHub Actions.
   Nothing built on anyone's own PC is signed.
 - Each release is signed only after the project's approver approves that signing request.
 
-## Team roles
+## Team roles <a id="signing-team-roles"></a>
 
 | Role | What it means | Members |
 |---|---|---|
@@ -25,7 +25,7 @@ zip lets you check the download either way.
 
 Everyone with access to the repository signs in to GitHub with two-factor authentication.
 
-## Privacy
+## Privacy <a id="signing-privacy"></a>
 
 CapyPanel sends no usage data anywhere.
 

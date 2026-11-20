@@ -18,7 +18,7 @@ back." **Continue** stays greyed until you tick "I understand it deletes user pr
 pick"; **Cancel** keeps you where you were. Then a guide shows the tool on a sample PC with
 made-up profiles; **Help > Guide to this screen** shows it again.
 
-## Scan a PC's profiles
+## Scan a PC's profiles <a id="profiles-scan-a-pcs-profiles"></a>
 
 ![The Hosts tab: the hosts of the picked group with their status, profiles, how many can be deleted and their scan; Progress and the selected host on the right](../images/profiles-hosts-tab-dark.png)
 
@@ -57,7 +57,7 @@ Case doesn't matter.
       for the tab in front, as in SSH. A tab can't be closed while it's deleting.
     - Up to four hosts are read or counted at a time, across every tab; the others wait their turn.
 
-## See which profiles can be deleted
+## See which profiles can be deleted <a id="profiles-see-which-profiles-can-be-deleted"></a>
 
 ![A host's tab: the filters, the profiles table with three ticked rows outlined in amber, and Ticked to delete on the right](../images/profiles-host-tab-dark.png)
 
@@ -100,12 +100,12 @@ for:** to 3 or 6 months, or a year.
     account; it was probably deleted." says so for an account that's gone. **Tick to delete**, at
     its foot, ticks the row from there.
 
-## Count their size
+## Count their size <a id="profiles-count-their-size"></a>
 
 Click **Calculate sizes** on the toolbar: it counts the size of each profile shown, and only reads.
 **Stop the count** stops it at once, keeping the sizes already counted.
 
-## Delete profiles
+## Delete profiles <a id="profiles-delete-profiles"></a>
 
 1. **Tick** the profiles to delete: the box, **Space**, or a double-click on the row. A ticked row
    is outlined in amber and reads **Will be deleted**; the **Ticked to delete** card on the right
@@ -143,14 +143,14 @@ recycle bin and no copy."
     Profiles are read over WMI, and deleted by Windows' own profile removal on that PC, asked
     through WMI too (see [How CapyPanel reads other PCs](../hosts/checking.md#read-a-pcs-facts)).
 
-## Messages you may see
+## Messages you may see <a id="profiles-messages-you-may-see"></a>
 
 When a host can't be read, its tab says why in red, with **Try again**.
 
 | Message | What it means | What to do |
 |---|---|---|
-| "{host} didn't answer" | The PC is off or unreachable | Check it's on, then **Try again** |
-| "{host} refused the account {account}" | The account isn't accepted there | **Try another account…** |
-| "PowerShell couldn't start on your PC" | Your own PC stopped PowerShell, often an antivirus | See [How CapyPanel reads other PCs](../hosts/checking.md#read-a-pcs-facts) |
-| "{host} waits for its turn" | Four hosts are already being read or counted | Nothing: it starts by itself |
-| "No host of the list with “…”." | The name you typed isn't in the list | **Scan** it anyway with the button offered |
+| <a id="profiles-host-no-answer"></a>"{host} didn't answer" | The PC is off or unreachable | Check it's on, then **Try again** |
+| <a id="profiles-account-refused"></a>"{host} refused the account {account}" | The account isn't accepted there | **Try another account…** |
+| <a id="profiles-powershell-blocked"></a>"PowerShell couldn't start on your PC" | Your own PC stopped PowerShell, often an antivirus | See [How CapyPanel reads other PCs](../hosts/checking.md#read-a-pcs-facts) |
+| <a id="profiles-host-waiting"></a>"{host} waits for its turn" | Four hosts are already being read or counted | Nothing: it starts by itself |
+| <a id="profiles-search-no-match"></a>"No host of the list with “…”." | The name you typed isn't in the list | **Scan** it anyway with the button offered |

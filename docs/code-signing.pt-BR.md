@@ -11,13 +11,13 @@ Até lá, as versões não são assinadas, e o Windows pode dizer que o editor �
 primeira vez que você roda o CapyPanel (veja [Baixar e atualizar](download.pt-BR.md#baixar-o-capypanel)).
 O SHA-256 ao lado de cada zip permite conferir o download de qualquer jeito.
 
-## O que é assinado
+## O que é assinado <a id="signing-what-gets-signed"></a>
 
 - Só os arquivos da própria versão do CapyPanel, gerados a partir do código-fonte deste
   repositório pelo GitHub Actions. Nada gerado no PC de alguém é assinado.
 - Cada versão só é assinada depois que o aprovador do projeto aprova aquele pedido de assinatura.
 
-## Papéis da equipe
+## Papéis da equipe <a id="signing-team-roles"></a>
 
 | Papel | O que significa | Membros |
 |---|---|---|
@@ -27,7 +27,7 @@ O SHA-256 ao lado de cada zip permite conferir o download de qualquer jeito.
 
 Todos com acesso ao repositório entram no GitHub com autenticação em dois fatores.
 
-## Privacidade
+## Privacidade <a id="signing-privacy"></a>
 
 O CapyPanel não envia dados de uso para lugar nenhum.
 

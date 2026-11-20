@@ -6,7 +6,7 @@ finding a host in it, and moving many hosts in or out at once. The guide that sh
 Hosts opens points out the list, its groups and tags on a sample PC; **Help > Guide to this
 screen** shows it again.
 
-## Arrange hosts in groups
+## Arrange hosts in groups <a id="host-lists-arrange-hosts-in-groups"></a>
 
 1. Click **+** beside the **Groups** heading, or use **Inventory > Add group…**, to make a group.
    Groups nest as deep as you like ("Headquarters › Finance › Floor 3").
@@ -45,7 +45,7 @@ many it holds. A new list starts with one group, **Default group**.
 
     Cancel is the default button, so Enter or Esc leaves the list as it is.
 
-## Tag hosts and filter by tag
+## Tag hosts and filter by tag <a id="host-lists-tag-hosts-and-filter-by-tag"></a>
 
 1. Select the hosts, right-click them and open **Tags ▸**.
 2. Pick a tag to give it to all of them (or take it from all of them, when they all have it), or
@@ -66,7 +66,7 @@ across the whole list, pick **All hosts** first.
     - Picked tags stay as you move between groups and while you search.
     - Printers has the same **Tags ▸** menu.
 
-## Find a host
+## Find a host <a id="host-lists-find-a-host"></a>
 
 Type in the box above the table (**Ctrl+F** jumps there). It searches the whole open list,
 whatever group or tag is picked, and case doesn't matter. Press **Down** or **Enter** to move to
@@ -99,7 +99,7 @@ the first result, and **Esc** to end the search and go back to the group you had
     - The **×** in the box also ends the search, and so does picking a group or tag, or switching
       host lists.
 
-## Add hosts from a spreadsheet
+## Add hosts from a spreadsheet <a id="host-lists-add-hosts-from-a-spreadsheet"></a>
 
 1. **Inventory > Import hosts…**.
 2. Paste a list into the box at the top, or click **Open a CSV file…** for a `.csv` or `.txt`
@@ -146,7 +146,7 @@ A host already in your list is skipped, never overwritten.
     with their hosts. The summary counts what will be added, skipped and can't be added, and each
     row says why.
 
-## Export hosts to a spreadsheet
+## Export hosts to a spreadsheet <a id="host-lists-export-hosts-to-a-spreadsheet"></a>
 
 ![The Report window: the hosts, the preset, the Host, Tags and notes and Last check boxes with Refresh 3 hosts, and the preview](../images/report-dark.png)
 
@@ -181,7 +181,7 @@ read-only one too.
       writes it with an apostrophe in front, which keeps it as text. Import hosts takes the
       apostrophe off again.
 
-## Switch, make and share lists
+## Switch, make and share lists <a id="host-lists-switch-make-and-share-lists"></a>
 
 The open list's name sits on top of the Groups panel. Click it to switch to another list, make one
 with **New list…**, open any list file with **Open list…** (Ctrl+O), or go to **Manage host
@@ -249,13 +249,13 @@ A new list asks for a **Name** and who it's **For:** **Everyone on this PC (shar
       don't know about when they save, and a list written by a newer version is refused instead of
       being damaged.
 
-## Messages you may see
+## Messages you may see <a id="host-lists-messages-you-may-see"></a>
 
 | Message | What it means | What to do |
 |---|---|---|
-| "“{path}” isn't a host list." | The file you opened is a printer list | Open it in Printers |
-| "This list needs a header row." | The pasted list has more than a name and an address, but no first line naming the columns | Add a header row; **Formats…** shows how |
-| "Already in the list, in “Front desk”" or "Same name as row 7" | The host is already in your list, or twice in the file | Nothing: it's skipped, never overwritten |
-| "No name", "Not a computer name or IP address", "No address: the name must then be the computer's name on the network" | That row can't be added | Fix the row in the preview, or leave it out |
-| "No host matches “…”." | The search found nothing | Check the spelling, or show the column you're searching. For a PC that isn't in the list, **Connect to {host}…** |
-| **Not used: made by another user** | A shared list made by someone who isn't an administrator | Ask an administrator to replace or delete it |
+| <a id="hosts-not-a-list"></a>"“{path}” isn't a host list." | The file you opened is a printer list | Open it in Printers |
+| <a id="hosts-no-header-row"></a>"This list needs a header row." | The pasted list has more than a name and an address, but no first line naming the columns | Add a header row; **Formats…** shows how |
+| <a id="hosts-import-duplicate"></a>"Already in the list, in “Front desk”" or "Same name as row 7" | The host is already in your list, or twice in the file | Nothing: it's skipped, never overwritten |
+| <a id="hosts-import-bad-row"></a>"No name", "Not a computer name or IP address", "No address: the name must then be the computer's name on the network" | That row can't be added | Fix the row in the preview, or leave it out |
+| <a id="hosts-search-no-match"></a>"No host matches “…”." | The search found nothing | Check the spelling, or show the column you're searching. For a PC that isn't in the list, **Connect to {host}…** |
+| <a id="hosts-list-other-user"></a>**Not used: made by another user** | A shared list made by someone who isn't an administrator | Ask an administrator to replace or delete it |
