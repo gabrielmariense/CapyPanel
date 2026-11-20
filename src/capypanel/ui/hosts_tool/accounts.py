@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMenu,
     QPushButton,
+    QSizePolicy,
     QStackedWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -374,11 +375,12 @@ class LinkDialog(QDialog):
         self.tag.setCurrentText("")
         self.every_pc = QLineEdit()  # Every PC names nothing; the greyed field keeps its row
         self.every_pc.setEnabled(False)
-        self.every_pc.setPlaceholderText(_("Every PC: no PC, group or tag to name"))
-        self.every_pc.setToolTip(_("Every PC: no PC, group or tag to name"))
+        self.every_pc.setPlaceholderText(_("Nothing to name: it's used on every PC"))
+        self.every_pc.setToolTip(_("Nothing to name: it's used on every PC"))
         self.value = QStackedWidget()
         for widget in (self.every_pc, self.address, self.group, self.tag):
             self.value.addWidget(widget)
+        self.value.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         for index in (2, 3):  # a group or a tag belongs to the open list
             if doc is None:
                 self.kind.model().item(index).setEnabled(False)  # type: ignore[attr-defined]

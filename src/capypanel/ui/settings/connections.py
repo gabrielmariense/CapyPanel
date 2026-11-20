@@ -100,15 +100,12 @@ class ProfileDialog(QDialog):
         self.default_settings = QPushButton(_("Use &defaults"))
         self.choose_settings.clicked.connect(self._choose_settings)
         self.default_settings.clicked.connect(self._use_default_settings)
-        settings_buttons = QHBoxLayout()
-        settings_buttons.addWidget(self.choose_settings)
-        settings_buttons.addWidget(self.default_settings)
-        settings_buttons.addStretch(1)
-        settings_box = QWidget()
-        settings_column = QVBoxLayout(settings_box)
-        settings_column.setContentsMargins(0, 0, 0, 0)
-        settings_column.addWidget(self.settings_state)
-        settings_column.addLayout(settings_buttons)
+        settings_buttons = QWidget()  # a row of its own, so the label lines up with the state
+        buttons_row = QHBoxLayout(settings_buttons)
+        buttons_row.setContentsMargins(0, 0, 0, 0)
+        buttons_row.addWidget(self.choose_settings)
+        buttons_row.addWidget(self.default_settings)
+        buttons_row.addStretch(1)
         # A place for each option of the tool with the most, as tall as a used one while unused
         # and never widening the window, so switching tools moves no row and keeps its size.
         self._option_places: list[QCheckBox] = []
@@ -140,7 +137,8 @@ class ProfileDialog(QDialog):
         form.addRow(_("&Tool:"), self.tool)
         form.addRow(_("&Credentials:"), self.login)
         form.addRow(_("P&ort:"), self.port)
-        form.addRow(_("Settings:"), settings_box)
+        form.addRow(_("Settings:"), self.settings_state)
+        form.addRow("", settings_buttons)
         form.addRow(_("Options:"), self.options_area)
         self.buttons = ok_cancel(self, _("Save") if profile else _("Add"))
         layout = QVBoxLayout(self)
@@ -211,7 +209,7 @@ class ProfileDialog(QDialog):
             self.settings_state.setToolTip(note)
             self.choose_settings.setToolTip(note)
             self.default_settings.setToolTip(
-                "" if self._has_settings else _("It already uses the viewer's defaults.")
+                "" if self._has_settings else _("This profile already uses the viewer's defaults.")
             )
             reads = True
         else:

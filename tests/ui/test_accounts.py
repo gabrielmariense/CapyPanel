@@ -277,7 +277,8 @@ def test_every_pc_keeps_the_pc_group_or_tag_field_in_place_greyed(
         dialog.show()
         QApplication.processEvents()
         assert dialog.value.isVisible() and not dialog.every_pc.isEnabled()
-        assert dialog.every_pc.toolTip() == "Every PC: no PC, group or tag to name"
+        assert dialog.every_pc.toolTip() == "Nothing to name: it's used on every PC"
+        assert dialog.value.height() == dialog.user.height()  # as tall as the fields above
         opened = (dialog.size(), dialog.value.geometry())
         for scope in (Scope.PC, Scope.GROUP, Scope.TAG, Scope.ALL):
             dialog.kind.setCurrentIndex(dialog.kind.findData(scope))

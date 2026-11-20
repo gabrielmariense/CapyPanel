@@ -1708,9 +1708,6 @@ msgstr "Todos os PCs do grupo {group}"
 msgid "Every PC tagged {tag}"
 msgstr "Todos os PCs com a tag {tag}"
 
-msgid "Every PC: no PC, group or tag to name"
-msgstr "Todos os PCs: não há PC, grupo ou tag a indicar"
-
 msgid "Every column the printers have"
 msgstr "Todas as colunas das impressoras"
 
@@ -2089,9 +2086,6 @@ msgstr "Inventário › Adicionar host pede um nome e um endereço. A porta e o 
 
 msgid "Inventory › Add printer only needs a name and the address. A Refresh reads the toner, and Details shows the brand, model and serial number the printer reports, ready to copy in with Use this."
 msgstr "Em Inventário › Adicionar impressora, basta o nome e o endereço. Uma atualização lê o toner, e Detalhes mostra a marca, o modelo e o número de série que a impressora informa, para copiar com Usar este."
-
-msgid "It already uses the viewer's defaults."
-msgstr "Já usa os padrões do visualizador."
 
 msgid "It can be deleted: nobody is signed in to it, it isn't one of Windows' own, and it's in the Users folder."
 msgstr "Pode ser excluído: ninguém está conectado com ele, não é do Windows e fica na pasta Users."
@@ -2585,6 +2579,9 @@ msgstr "Nada está fora de um grupo."
 #, python-brace-format
 msgid "Nothing matches “{text}”."
 msgstr "Nada corresponde a “{text}”."
+
+msgid "Nothing to name: it's used on every PC"
+msgstr "Nada a indicar: vale para todos os PCs"
 
 msgid "Nothing was read."
 msgstr "Nada foi lido."
@@ -4399,6 +4396,9 @@ msgstr "Esta pessoa está conectada agora. Só pode ser excluído depois que ela
 
 msgid "This printer doesn't report a level for this supply."
 msgstr "Esta impressora não informa o nível deste suprimento."
+
+msgid "This profile already uses the viewer's defaults."
+msgstr "Este perfil já usa os padrões do visualizador."
 
 msgid "This screen has no guide."
 msgstr "Esta tela não tem guia."

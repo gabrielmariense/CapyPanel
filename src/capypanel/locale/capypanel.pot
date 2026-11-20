@@ -1762,9 +1762,6 @@ msgstr ""
 msgid "Every PC tagged {tag}"
 msgstr ""
 
-msgid "Every PC: no PC, group or tag to name"
-msgstr ""
-
 msgid "Every column the printers have"
 msgstr ""
 
@@ -2175,9 +2172,6 @@ msgid ""
 "Inventory › Add printer only needs a name and the address. A Refresh "
 "reads the toner, and Details shows the brand, model and serial number the"
 " printer reports, ready to copy in with Use this."
-msgstr ""
-
-msgid "It already uses the viewer's defaults."
 msgstr ""
 
 msgid ""
@@ -2696,6 +2690,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Nothing matches “{text}”."
+msgstr ""
+
+msgid "Nothing to name: it's used on every PC"
 msgstr ""
 
 msgid "Nothing was read."
@@ -4642,6 +4639,9 @@ msgid "This person is signed in now. It can only be deleted after they sign out.
 msgstr ""
 
 msgid "This printer doesn't report a level for this supply."
+msgstr ""
+
+msgid "This profile already uses the viewer's defaults."
 msgstr ""
 
 msgid "This screen has no guide."

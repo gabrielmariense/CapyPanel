@@ -4,7 +4,14 @@ from typing import Any
 
 import pytest
 from PySide6.QtCore import QPoint, QRect, Qt, QUrl
-from PySide6.QtWidgets import QApplication, QDialogButtonBox, QFileDialog, QMenu, QWidget
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialogButtonBox,
+    QFileDialog,
+    QFormLayout,
+    QMenu,
+    QWidget,
+)
 
 from capypanel.core import i18n, settings, winsec
 from capypanel.core.hosts.document import OpenList
@@ -105,6 +112,10 @@ def test_every_tool_keeps_the_profile_window_s_size_and_places(
     editing = ProfileDialog(None, "Edit", tools, names, vnc)
     try:
         _shown(dialog)
+        form = dialog.findChild(QFormLayout)
+        label = form.labelForField(dialog.settings_state) if form else None
+        assert label is not None  # lines up with the state, not between it and the buttons
+        assert label.geometry().center().y() == dialog.settings_state.geometry().center().y()
         controls: list[QWidget] = [
             dialog.name, dialog.tool, dialog.login, dialog.port, dialog.settings_state,
             dialog.choose_settings, dialog.default_settings, dialog.options_area,
@@ -131,7 +142,7 @@ def test_a_row_the_tool_doesnt_use_is_greyed_with_its_reason(catalogs: Catalogs)
     settings_row = (dialog.settings_state, dialog.choose_settings, dialog.default_settings)
     assert dialog.choose_settings.isEnabled() and not dialog.default_settings.isEnabled()
     assert dialog.choose_settings.toolTip().startswith("Optional: a .vnc file saved from Ultra")
-    assert dialog.default_settings.toolTip() == "It already uses the viewer's defaults."
+    assert dialog.default_settings.toolTip() == "This profile already uses the viewer's defaults."
     dialog.tool.setCurrentIndex(dialog.tool.findData("realvnc"))
     assert not any(w.isEnabled() for w in settings_row)
     assert {w.toolTip() for w in settings_row} == {"RealVNC Viewer doesn't use a settings file."}
