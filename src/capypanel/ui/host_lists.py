@@ -25,6 +25,7 @@ from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.listfile import HostListFileError
 from capypanel.core.hosts.locations import Access, ListKind
 from capypanel.core.i18n import _
+from capypanel.ui import help_links
 from capypanel.ui.list_workspace.texts import ListTexts
 from capypanel.ui.new_list import ask_new_list
 from capypanel.ui.notes import Elided, notes
@@ -194,7 +195,7 @@ class ListsView(QWidget):
                 name=path.name,
                 why=self.tree.currentItem().text(2).lower(),  # type: ignore[union-attr]
             )
-            QMessageBox.warning(self, "CapyPanel", message)
+            help_links.warning(self, "CapyPanel", message, place="hosts-list-cant-open")
             return
         self.open_requested.emit(path)
 
@@ -321,7 +322,7 @@ class ListsView(QWidget):
             )
         except (HostListFileError, OSError) as e:
             message = _("Couldn't open “{path}”: {error}").format(path=source, error=e)
-            QMessageBox.warning(self, "CapyPanel", message)
+            help_links.warning(self, "CapyPanel", message, place="hosts-list-file-error")
             return
         path = self._ask_path(_("Save a copy of the list"))
         if path is not None and self._write(
@@ -343,8 +344,9 @@ class ListsView(QWidget):
             return
         if answer == DELETE:
             if not QFile.moveToTrash(str(path)):
-                message = _("Couldn't move “{path}” to the Recycle Bin.").format(path=path)
-                QMessageBox.warning(self, "CapyPanel", message)
+                message = _("Couldn't move “{path}” to the Recycle Bin, so nothing "
+                            "changed.").format(path=path)  # fmt: skip
+                help_links.warning(self, "CapyPanel", message, place="hosts-list-not-recycled")
                 return
             log.info("Host list moved to the Recycle Bin: %s", path)
             self._all_found = [p for p in self._all_found if not locations.same_path(p, path)]
@@ -377,6 +379,6 @@ class ListsView(QWidget):
             write()
         except (HostListFileError, OSError) as e:
             message = _("Couldn't write “{path}”: {error}").format(path=path, error=e)
-            QMessageBox.warning(self, "CapyPanel", message)
+            help_links.warning(self, "CapyPanel", message, place="hosts-list-file-error")
             return False
         return True

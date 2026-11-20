@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 from capywindow import CapyWindow
+from message_boxes import help_place
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QApplication, QDialogButtonBox, QMenu, QMessageBox, QToolButton
@@ -18,6 +19,7 @@ from capypanel.core.remote.access import Account
 from capypanel.core.tools.connect import Credential, Target
 from capypanel.core.tools.profiles import ConnectionProfile
 from capypanel.ui import connect as connect_ui
+from capypanel.ui import dialogs
 from capypanel.ui.connect import CredentialDialog, Request
 from capypanel.ui.hosts import HostDialog
 from capypanel.ui.hosts_tool.commands_window import CommandsWindow
@@ -137,19 +139,25 @@ def test_hosts_with_different_profiles_open_together(
 
 
 def test_a_host_without_a_usable_address_is_not_sent_to_the_viewer(
-    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow,
+    launched: list[Launch],
+    monkeypatch: pytest.MonkeyPatch,
+    help_boxes: list[tuple[str, str]],
 ) -> None:
-    shown: list[str] = []
-    monkeypatch.setattr(QMessageBox, "exec", lambda box: shown.append(box.text()) or 0)
+    asked: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        QMessageBox, "exec", lambda box: asked.append((box.text(), help_place(box))) or 0
+    )
     _select(window, "Ward 2A - Desk")
     window.hosts.connect_selected()
-    assert launched == [] and "Ward 2A - Desk" in shown[0]
-    monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: shown.append(text))
+    text, place = asked[0]
+    assert launched == [] and "Ward 2A - Desk" in text and place == "connect-name-not-address"
     window.hosts.connector.credentials.remember("pis", Credential("pi", "y"))
     _select(window, "Ward 2A - Desk", "PI-1")
     window.hosts.connect_selected()
     assert [call[1] for call in launched] == ["10.0.1.1"]  # the other one still opens
-    assert "skipped" in shown[-1]
+    text, place = help_boxes[-1]
+    assert "skipped" in text and place == "connect-name-not-address"
 
 
 def test_cancelling_the_password_starts_nothing(
@@ -162,15 +170,29 @@ def test_cancelling_the_password_starts_nothing(
 
 
 def test_a_profile_this_pc_lacks_is_reported(
-    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, launched: list[Launch], help_boxes: list[tuple[str, str]]
 ) -> None:
-    shown: list[str] = []
-    monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: shown.append(text))
     started = window.hosts.connector.connect(
         [Request("PC-X", connect_ui.Target("x"), "from-elsewhere")]
     )
     assert started == 0 and launched == []
-    assert "from-elsewhere" in shown[0] and "PC-X" in shown[0]
+    text, place = help_boxes[0]
+    assert "from-elsewhere" in text and "PC-X" in text
+    assert place == "connect-profile-not-available"
+
+
+def test_with_no_profile_at_all_the_box_links_how_to_make_one(
+    window: CapyWindow,
+    launched: list[Launch],
+    monkeypatch: pytest.MonkeyPatch,
+    help_boxes: list[tuple[str, str]],
+) -> None:
+    monkeypatch.setattr(window.hosts.connector, "default_profile", lambda: "")
+    window.hosts.connector.connect([Request("PC-X", connect_ui.Target("x"), "")])
+    assert launched == []
+    text, place = help_boxes[0]
+    assert text.startswith("There are no connection profiles.") and "PC-X" in text
+    assert place == "connecting-set-up-connection-profiles"
 
 
 def test_many_hosts_at_once_are_confirmed_first(
@@ -269,7 +291,7 @@ def test_manual_connection_s_questions_show_over_it_so_it_stays_in_front(
     owners: list[object] = []
     # A server that only wants a VNC password: the warning that the password wasn't sent.
     monkeypatch.setattr(connect_ui.rfb, "security_types", lambda *a, **k: (2,))
-    monkeypatch.setattr(QMessageBox, "warning", lambda parent, _t, _text: owners.append(parent))
+    monkeypatch.setattr(dialogs, "run_modal", lambda box: owners.append(box.parentWidget()) or 0)
     commands.connect_button.click()
     # One that takes an account: the password prompt.
     monkeypatch.setattr(connect_ui.rfb, "security_types", lambda *a, **k: (113,))
@@ -351,7 +373,10 @@ def test_connect_commands_follow_the_selection(window: CapyWindow) -> None:
 
 
 def test_a_windows_password_is_never_sent_to_a_server_that_wants_a_vnc_password(
-    window: CapyWindow, launched: list[Launch], monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow,
+    launched: list[Launch],
+    monkeypatch: pytest.MonkeyPatch,
+    help_boxes: list[tuple[str, str]],
 ) -> None:
     offered = {"10.0.0.1": (17, 117, 2), "PC-B": (17, 117, 113)}
     probed: list[tuple[str, int]] = []
@@ -361,15 +386,15 @@ def test_a_windows_password_is_never_sent_to_a_server_that_wants_a_vnc_password(
         return offered[address]
 
     monkeypatch.setattr(connect_ui.rfb, "security_types", fake_probe)
-    shown: list[str] = []
-    monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: shown.append(text))
     asked: list[str] = []
     _answer_with(monkeypatch, "ana", "domain-pass", asked)
     _select(window, "PC-A", "PC-B")
     window.hosts.connect_selected()
     assert sorted(probed) == [("10.0.0.1", 5900), ("PC-B", 5900)]
     assert [call[1] for call in launched] == ["PC-B"]  # only the one that asks for an account
-    assert "PC-A" in shown[0] and "user and password" in shown[0]
+    text, place = help_boxes[0]
+    assert "PC-A" in text and "user and password" in text
+    assert place == "connect-login-check-skipped"
     _select(window, "PC-A")
     launched.clear()
     asked.clear()
@@ -453,8 +478,10 @@ def test_a_missing_viewer_offers_to_open_settings(
     opened: list[str] = []
     monkeypatch.setattr(window, "open_settings", lambda page=None: opened.append(page or ""))
     monkeypatch.setattr(connect_ui.detect, "find_executable", lambda tool: None)
+    places: list[str] = []
 
     def click_settings(box: QMessageBox) -> int:
+        places.append(help_place(box))
         button = next(b for b in box.buttons() if b.text() == "Open &Settings")
         button.click()
         return 0
@@ -463,7 +490,7 @@ def test_a_missing_viewer_offers_to_open_settings(
     window.hosts.connector.credentials.remember("offices", Credential("ana", "x"))
     _select(window, "PC-A")
     window.hosts.connect_selected()
-    assert opened == ["connections"]
+    assert opened == ["connections"] and places == ["connect-viewer-not-found"]
 
 
 def test_a_host_s_own_unavailable_profile_shows_checked_in_the_menu(window: CapyWindow) -> None:

@@ -212,7 +212,8 @@ class Connector:
         try:
             ready = self.resolve(profile_id)
         except ProfileError as e:
-            self._error(f"{e}\n\n{self._names(requests)}", owner)
+            place = self._profile_place(profile_id)
+            self._error(f"{e}\n\n{self._names(requests)}", owner, place=place)
             return 0
         tool, profile = ready.tool, ready.profile
         executable = detect.find_executable(tool) or self._locate(tool, owner)
@@ -246,6 +247,7 @@ class Connector:
                         _("Couldn't save the password in Windows Credential Manager: {error}\n\n"
                           "It's kept until CapyPanel closes.").format(error=e),
                         owner,
+                        place="connect-password-not-saved",
                     )  # fmt: skip
         settings = self.catalogs.profiles.settings_path(profile)
         started = 0
@@ -263,6 +265,7 @@ class Connector:
                         tool=tool.name, target=request.label, error=e
                     ),
                     owner,
+                    place="connect-couldnt-start",
                 )
                 break
         return started
@@ -309,6 +312,7 @@ class Connector:
                     len(refused),
                 ).format(names=", ".join(r.label for r in refused)),
                 owner,
+                place="connect-login-check-skipped",
             )
         return [r for r, ok in zip(requests, fits, strict=True) if ok]
 
@@ -337,6 +341,7 @@ class Connector:
             settings = box.addButton(_("Open &Settings"), QMessageBox.ButtonRole.ActionRole)
         box.addButton(QMessageBox.StandardButton.Cancel)
         box.setDefaultButton(locate)
+        help_links.add_link(box, "connect-viewer-not-found")
         box.exec()
         if settings is not None and box.clickedButton() is settings and self.open_settings:
             self.open_settings()
@@ -362,5 +367,15 @@ class Connector:
         )
         return answer == QMessageBox.StandardButton.Yes
 
-    def _error(self, message: str, owner: QWidget) -> None:
-        QMessageBox.warning(owner, "CapyPanel", message)
+    def _error(self, message: str, owner: QWidget, *, place: str) -> None:
+        """A warning box, with its line in the docs for "What does this mean?"."""
+        help_links.warning(owner, "CapyPanel", message, place=place)
+
+    def _profile_place(self, profile_id: str) -> str:
+        """The docs' line for a profile that can't be used: one this PC lacks, or how profiles
+        are set up (there are none, or one doesn't fit its tool)."""
+        wanted = profile_id or self.default_profile()
+        profile = self.catalogs.profiles.find(wanted) if wanted else None
+        if wanted and (profile is None or self.catalogs.tools.find(profile.tool) is None):
+            return "connect-profile-not-available"
+        return "connecting-set-up-connection-profiles"

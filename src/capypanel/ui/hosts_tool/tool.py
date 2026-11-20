@@ -42,6 +42,7 @@ from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.connect import SessionCredentials, Target
 from capypanel.core.tools.profile_store import ProfileStore
 from capypanel.ui import checks as check_texts
+from capypanel.ui import help_links
 from capypanel.ui.checks import AccountDialog, CheckRun
 from capypanel.ui.connect import Connector, Request
 from capypanel.ui.dialogs import run_modal
@@ -471,7 +472,7 @@ class HostsTool(ListWorkspace):
                 profile=values.profile,
             )
         except HostListRuleError as e:
-            self._error(str(e))
+            self._error(str(e), place="hosts-list-rule")
             return None
         if not self._commit(new):
             return None
@@ -498,7 +499,7 @@ class HostsTool(ListWorkspace):
         try:
             new = doc.hosts.update_host(edited)
         except HostListRuleError as e:
-            self._error(str(e))
+            self._error(str(e), place="hosts-list-rule")
             return
         if edited.connect_address != item.connect_address:  # results were for the old address
             self._status_found.pop(item.id, None)
@@ -607,7 +608,8 @@ class HostsTool(ListWorkspace):
                     "{n} host has no address and was skipped: {names}",
                     "{n} hosts have no address and were skipped: {names}",
                     len(missing),
-                ).format(n=len(missing), names=names)
+                ).format(n=len(missing), names=names),
+                place="connect-name-not-address",
             )
 
     def _ask_for_address(self, host: Host) -> None:
@@ -623,6 +625,7 @@ class HostsTool(ListWorkspace):
         edit = box.addButton(_("&Edit host…"), QMessageBox.ButtonRole.AcceptRole)
         box.addButton(QMessageBox.StandardButton.Cancel)
         box.setDefaultButton(edit)
+        help_links.add_link(box, "connect-name-not-address")
         edit.setEnabled(self._writable() is not None)
         run_modal(box)
         if box.clickedButton() is edit:

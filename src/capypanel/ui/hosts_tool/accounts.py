@@ -22,7 +22,6 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QLineEdit,
     QMenu,
-    QMessageBox,
     QPushButton,
     QStackedWidget,
     QTreeWidgetItem,
@@ -42,7 +41,7 @@ from capypanel.ui.checks import AccountDialog
 from capypanel.ui.dialogs import ok_cancel, run_modal
 from capypanel.ui.hosts import group_path
 from capypanel.ui.notes import notes
-from capypanel.ui.saved_credentials import KeptLogin
+from capypanel.ui.saved_credentials import KeptLogin, forget_failed
 from capypanel.ui.settings.pages import Section
 from capypanel.ui.tables import add_action, fit_rows, grid_table, row_menu, with_buttons
 
@@ -240,11 +239,12 @@ class Accounts(QObject):
         except (OSError, ValueError) as e:
             log.warning("Couldn't save or delete a saved account: %s", e)
             if remember:
-                QMessageBox.warning(
+                help_links.warning(
                     self._tool,
                     "CapyPanel",
                     _("Couldn't save the password in Windows Credential Manager: {error}\n\n"
                       "It's kept until CapyPanel closes.").format(error=e),
+                    place="connect-password-not-saved",
                 )  # fmt: skip
         self._typed[account.user.casefold()] = (account, saved)
         self.changed.emit()
@@ -562,5 +562,4 @@ class AccountsSection(Section):
         try:
             self._manager.remove(link)
         except OSError as e:
-            text = _("Couldn't delete its saved password: {error}").format(error=e)
-            QMessageBox.warning(self, "CapyPanel", text)
+            forget_failed(self, e)  # where to delete it by hand, as Saved credentials says

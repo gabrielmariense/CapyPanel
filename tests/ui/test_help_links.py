@@ -143,9 +143,11 @@ def test_a_strip_s_link_shows_only_with_a_message_that_has_a_line(
 
 
 def test_every_place_the_code_names_is_in_the_list() -> None:
-    """Places are written where they're used (place="…", HELP_PLACE = "…"): each must be in
-    help_links' list, which the docs check reads."""
-    named = re.compile(r'(?:place=|HELP_PLACE = |help_links\.\w+\()"([^"]+)"')
+    """Places are written where they're used (place="…", HELP_PLACE = "…", a box's
+    add_link(box, "…")): each must be in help_links' list, which the docs check reads."""
+    named = re.compile(
+        r'(?:place=|HELP_PLACE = |help_links\.\w+\(|help_links\.add_link\(\w+, )"([^"]+)"'
+    )
     known = set(help_links.PLACES) | set(help_links.TOPS)
     unknown = [
         f"{path.relative_to(SRC)}: {place}"

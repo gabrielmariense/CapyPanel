@@ -212,7 +212,9 @@ def run(argv: list[str] | None = None) -> int:
     except settings.UserFolderError as e:
         log.error("%s", e)
         close_splash()
-        QMessageBox.critical(None, "CapyPanel", str(e))
+        from capypanel.ui import help_links  # only for this rare stop
+
+        help_links.critical(None, "CapyPanel", str(e), place="start-folder-other-user")
         return 1
     if getattr(sys, "frozen", False) and updates.applying(settings.app_dir()):
         # Clicked while an update swaps this folder's files: its splash says so, and the new

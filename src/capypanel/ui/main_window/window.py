@@ -23,7 +23,6 @@ from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QMainWindow,
-    QMessageBox,
     QStackedWidget,
     QToolButton,
     QVBoxLayout,
@@ -475,9 +474,9 @@ class MainWindow(QMainWindow):
         try:
             self.updater.set_how_often(how)
         except OSError as e:
-            dialog.general.show_updates(self.updater.how_often())
+            dialog.show_updates(self.updater.how_often())
             text = _("Couldn't save how often to check: {error}").format(error=e)
-            QMessageBox.warning(dialog, _("Settings"), text)
+            help_links.warning(dialog, _("Settings"), text, place="settings-updates-not-saved")
 
     def _set_start(self, start: str) -> None:
         self.prefs[settings.START_KEY] = start

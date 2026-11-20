@@ -33,6 +33,7 @@ PLACES: dict[str, str] = {
     "start-add-your-first-hosts": "getting-started/",
     "start-hide-parts-of-the-details-panel": "getting-started/",
     "start-get-help-or-report-a-problem": "getting-started/",
+    "start-folder-other-user": "getting-started/",
     # Settings: the page shown
     "settings-find-a-setting": "settings-and-files/",
     "settings-capypanel-general": "settings-and-files/",
@@ -43,6 +44,7 @@ PLACES: dict[str, str] = {
     "settings-printers": "settings-and-files/",
     "settings-ssh-general": "settings-and-files/",
     "settings-about": "settings-and-files/",
+    "settings-updates-not-saved": "settings-and-files/",
     # Updates
     "download-update-capypanel": "download/",
     # Hosts
@@ -65,6 +67,26 @@ PLACES: dict[str, str] = {
     "commands-fix-a-pcs-printing": "hosts/commands/",
     "commands-see-whats-installed-and-mapped": "hosts/commands/",
     "commands-the-commands-window": "hosts/commands/",
+    # Hosts: its messages
+    "hosts-not-a-list": "hosts/host-lists/",
+    "hosts-list-gone": "hosts/host-lists/",
+    "hosts-list-file-error": "hosts/host-lists/",
+    "hosts-list-cant-open": "hosts/host-lists/",
+    "hosts-default-list-other-user": "hosts/host-lists/",
+    "hosts-list-changed": "hosts/host-lists/",
+    "hosts-list-not-recycled": "hosts/host-lists/",
+    "hosts-list-rule": "hosts/host-lists/",
+    "hosts-file-not-saved": "hosts/host-lists/",
+    "hosts-preset-name-taken": "hosts/host-lists/",
+    "connect-name-not-address": "hosts/connecting/",
+    "connect-login-check-skipped": "hosts/connecting/",
+    "connect-profile-not-available": "hosts/connecting/",
+    "connect-viewer-not-found": "hosts/connecting/",
+    "connect-password-not-saved": "hosts/connecting/",
+    "connect-password-not-deleted": "hosts/connecting/",
+    "connect-couldnt-start": "hosts/connecting/",
+    "connect-settings-file-unusable": "hosts/connecting/",
+    "connect-settings-not-saved": "hosts/connecting/",
     # Profile cleanup
     "profiles-see-which-profiles-can-be-deleted": "profiles/user-profiles/",
     "profiles-delete-profiles": "profiles/user-profiles/",
@@ -96,6 +118,7 @@ PLACES: dict[str, str] = {
     "ssh-choose-the-name-to-log-in-as": "ssh/ssh/",
     "ssh-work-in-the-terminal": "ssh/ssh/",
     "ssh-when-a-connection-ends": "ssh/ssh/",
+    "ssh-not-installed": "ssh/ssh/",
 }
 TOPS = (
     "hosts/host-lists/",

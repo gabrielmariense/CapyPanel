@@ -150,19 +150,19 @@ def test_only_tools_that_read_a_settings_file_offer_one(catalogs: Catalogs) -> N
 
 
 def test_a_file_that_isnt_viewer_settings_is_refused(
-    catalogs: Catalogs, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    catalogs: Catalogs,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    help_boxes: list[tuple[str, str]],
 ) -> None:
     junk = tmp_path / "notes.vnc"
     junk.write_text("just some notes", encoding="utf-8")
     _choose_settings_file(monkeypatch, junk)
-    warnings: list[str] = []
-    monkeypatch.setattr(
-        connections.QMessageBox, "warning", lambda _parent, _title, text: warnings.append(text)
-    )
     tools = [e.item for e in catalogs.tools.all()]
     dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
     dialog.choose_settings.click()
-    assert warnings and dialog.new_settings is None
+    assert [place for _text, place in help_boxes] == ["connect-settings-file-unusable"]
+    assert dialog.new_settings is None
     assert dialog.settings_state.text() == "The viewer's defaults"
 
 

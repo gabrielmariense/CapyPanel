@@ -68,6 +68,27 @@ def no_browser(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 
 
 @pytest.fixture(autouse=True)
+def help_boxes(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]:
+    """Warnings and errors shown with their "What does this mean?" (help_links.warning and
+    critical) land here as (text, place), instead of waiting for a click that never comes. A
+    test that wants the box itself patches dialogs.run_modal over this."""
+    from message_boxes import help_place
+    from PySide6.QtWidgets import QMessageBox
+
+    from capypanel.ui import dialogs
+
+    shown: list[tuple[str, str]] = []
+
+    def run(box: QMessageBox) -> int:
+        shown.append((box.text(), help_place(box)))
+        box.deleteLater()
+        return 0
+
+    monkeypatch.setattr(dialogs, "run_modal", run)
+    return shown
+
+
+@pytest.fixture(autouse=True)
 def no_ssh(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, object]]:
     """The SSH tool never starts ssh.exe in tests, and its Refresh never knocks on a real port:
     Connect lands here as (address, SshInfo), in a tab or a separate window, and every port

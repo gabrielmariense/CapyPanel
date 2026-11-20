@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 01:16-0300\n"
+"POT-Creation-Date: 2026-11-20 01:58-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1231,10 +1231,6 @@ msgid "Couldn't create “{path}”: {error}"
 msgstr "Não foi possível criar “{path}”: {error}"
 
 #, python-brace-format
-msgid "Couldn't delete its saved password: {error}"
-msgstr "Não foi possível apagar a senha salva: {error}"
-
-#, python-brace-format
 msgid ""
 "Couldn't delete the password saved in Windows Credential Manager: {error}\n"
 "\n"
@@ -1245,8 +1241,8 @@ msgstr ""
 "Você pode apagá-la em Painel de Controle › Gerenciador de Credenciais › Credenciais do Windows, em “{prefix}”."
 
 #, python-brace-format
-msgid "Couldn't move “{path}” to the Recycle Bin."
-msgstr "Não foi possível mover “{path}” para a Lixeira."
+msgid "Couldn't move “{path}” to the Recycle Bin, so nothing changed."
+msgstr "Não foi possível mover “{path}” para a Lixeira, então nada mudou."
 
 #, python-brace-format
 msgid "Couldn't open it: {error}"
@@ -1350,12 +1346,14 @@ msgid "Couldn't save where the tools are: {error}"
 msgstr "Não foi possível salvar onde as ferramentas estão: {error}"
 
 #, python-brace-format
-msgid "Couldn't save {path}: {error}"
-msgstr "Não foi possível salvar {path}: {error}"
-
-#, python-brace-format
-msgid "Couldn't save “{path}”: {error}"
-msgstr "Não foi possível salvar “{path}”: {error}"
+msgid ""
+"Couldn't save “{path}”: {error}\n"
+"\n"
+"If the file is open in another program, such as Excel, close it there and save again."
+msgstr ""
+"Não foi possível salvar “{path}”: {error}\n"
+"\n"
+"Se o arquivo estiver aberto em outro programa, como o Excel, feche-o lá e salve de novo."
 
 #, python-brace-format
 msgid "Couldn't start ssh.exe: {error}"
@@ -3911,8 +3909,8 @@ msgstr "Esse grupo não existe."
 msgid "That host is no longer in the list."
 msgstr "Esse host não está mais na lista."
 
-msgid "That name is taken."
-msgstr "Esse nome já está em uso."
+msgid "That name is taken. Pick another one."
+msgstr "Esse nome já está em uso. Escolha outro."
 
 msgid "That profile doesn't exist."
 msgstr "Esse perfil não existe."
@@ -4087,8 +4085,8 @@ msgid "The list opens on this group"
 msgstr "A lista abre neste grupo"
 
 #, python-brace-format
-msgid "The list “{path}” doesn't exist anymore."
-msgstr "A lista “{path}” não existe mais."
+msgid "The list “{path}” doesn't exist anymore, so it's no longer among your lists."
+msgstr "A lista “{path}” não existe mais, então saiu das suas listas."
 
 msgid "The list's hosts are here. A double-click connects, and a right-click shows everything you can do with one."
 msgstr "Os hosts da lista ficam aqui. Dois cliques conectam, e o botão direito num host mostra tudo o que dá para fazer com ele."

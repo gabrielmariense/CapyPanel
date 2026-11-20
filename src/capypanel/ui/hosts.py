@@ -75,6 +75,7 @@ def host_list_texts() -> ListTexts:
         no_list=_("No host list is open."),
         choose_first=_("Open a host list to choose what it shows first."),
         not_this_kind=_("“{path}” isn't a host list."),
+        not_this_kind_place="hosts-not-a-list",
         file_filter=list_file_filter(),
     )
 

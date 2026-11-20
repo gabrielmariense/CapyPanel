@@ -22,7 +22,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QTreeWidget,
@@ -775,8 +774,10 @@ def export_csv(
     try:
         path.write_text(text, encoding="utf-8-sig")  # the BOM: Excel reads accents right
     except OSError as e:
-        text = _("Couldn't save {path}: {error}").format(path=path, error=e)
-        QMessageBox.warning(parent, _("Export CSV"), text)
+        text = _("Couldn't save “{path}”: {error}\n\nIf the file is open in another "
+                 "program, such as Excel, close it there and save again.")  # fmt: skip
+        text = text.format(path=path, error=e)
+        help_links.warning(parent, _("Export CSV"), text, place="hosts-file-not-saved")
         return
     folder(str(path.parent))
 

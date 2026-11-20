@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-20 01:16-0300\n"
+"POT-Creation-Date: 2026-11-20 01:58-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1276,10 +1276,6 @@ msgid "Couldn't create “{path}”: {error}"
 msgstr ""
 
 #, python-brace-format
-msgid "Couldn't delete its saved password: {error}"
-msgstr ""
-
-#, python-brace-format
 msgid ""
 "Couldn't delete the password saved in Windows Credential Manager: {error}"
 "\n"
@@ -1289,7 +1285,7 @@ msgid ""
 msgstr ""
 
 #, python-brace-format
-msgid "Couldn't move “{path}” to the Recycle Bin."
+msgid "Couldn't move “{path}” to the Recycle Bin, so nothing changed."
 msgstr ""
 
 #, python-brace-format
@@ -1390,11 +1386,11 @@ msgid "Couldn't save where the tools are: {error}"
 msgstr ""
 
 #, python-brace-format
-msgid "Couldn't save {path}: {error}"
-msgstr ""
-
-#, python-brace-format
-msgid "Couldn't save “{path}”: {error}"
+msgid ""
+"Couldn't save “{path}”: {error}\n"
+"\n"
+"If the file is open in another program, such as Excel, close it there and"
+" save again."
 msgstr ""
 
 #, python-brace-format
@@ -4097,7 +4093,7 @@ msgstr ""
 msgid "That host is no longer in the list."
 msgstr ""
 
-msgid "That name is taken."
+msgid "That name is taken. Pick another one."
 msgstr ""
 
 msgid "That profile doesn't exist."
@@ -4303,7 +4299,9 @@ msgid "The list opens on this group"
 msgstr ""
 
 #, python-brace-format
-msgid "The list “{path}” doesn't exist anymore."
+msgid ""
+"The list “{path}” doesn't exist anymore, so it's no longer among your "
+"lists."
 msgstr ""
 
 msgid ""

@@ -16,7 +16,6 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QMenu,
-    QMessageBox,
     QPushButton,
     QScrollArea,
 )
@@ -164,18 +163,36 @@ def test_host_lists_shows_every_list_with_the_open_one_in_bold(
 
 
 def test_a_default_list_another_user_made_cant_be_picked(
-    window: CapyWindow, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, help_boxes: list[tuple[str, str]]
 ) -> None:
     monkeypatch.setattr(winsec, "made_by_trusted", lambda _path: False)
-    warned: list[str] = []
-    monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: warned.append(text))
     dialog = window.settings_dialog()
     view = dialog.group(HostsSettings).general.view
     assert _rows(view)[0][1] == "Not used: made by another user"
     view.select(window.hosts._default_list)
     before = window.hosts.document
     view.open_picked()  # a double-click
-    assert window.hosts.document is before and len(warned) == 1
+    assert window.hosts.document is before
+    # Its line in the docs quotes this box and leads to the default list's own line.
+    why = "“default.json” can't be opened: not used: made by another user"
+    assert help_boxes == [(why, "hosts-list-cant-open")]
+
+
+def test_how_often_to_check_goes_back_when_it_can_t_be_saved_and_can_be_tried_again(
+    window: CapyWindow, monkeypatch: pytest.MonkeyPatch, help_boxes: list[tuple[str, str]]
+) -> None:
+    def refuse(_how: str) -> None:
+        raise OSError("access denied")
+
+    monkeypatch.setattr(window.updater, "set_how_often", refuse)
+    updates = window.settings_dialog().general.updates
+    saved = updates.currentData()
+    other = next(i for i in range(updates.count()) if updates.itemData(i) != saved)
+    for _try in range(2):
+        updates.setCurrentIndex(other)
+        assert updates.currentData() == saved  # back to what's saved
+    box = ("Couldn't save how often to check: access denied", "settings-updates-not-saved")
+    assert help_boxes == [box, box]  # picked again, tried again
 
 
 def test_first_start_creates_and_opens_the_default_list(
@@ -486,17 +503,17 @@ def test_search_marks_go_away_with_the_search(window: CapyWindow) -> None:
 
 
 def test_a_list_that_doesn_t_exist_can_t_be_opened(
-    window: CapyWindow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    window: CapyWindow, tmp_path: Path, help_boxes: list[tuple[str, str]]
 ) -> None:
-    warned: list[str] = []
-    monkeypatch.setattr(QMessageBox, "warning", lambda _p, _t, text: warned.append(text))
-    window.hosts.prefs["host_lists"] = [str(tmp_path / "nowhere.json")]
+    path = tmp_path / "nowhere.json"
+    window.hosts.prefs["host_lists"] = [str(path)]
     view = window.settings_dialog().group(HostsSettings).general.view
-    view.select(tmp_path / "nowhere.json")
+    view.select(path)
     assert _rows(view)[2][1] == "File not found"
     view.open_picked()
-    assert warned and window.hosts.document is not None
-    assert window.hosts.document.path != tmp_path / "nowhere.json"
+    why = "“nowhere.json” can't be opened: file not found"
+    assert help_boxes == [(why, "hosts-list-cant-open")]
+    assert window.hosts.document is not None and window.hosts.document.path != path
 
 
 def test_an_added_list_is_kept_at_once_and_opens_on_a_double_click(

@@ -352,17 +352,13 @@ def test_a_server_typed_in_the_search_is_offered_and_connected_at_once(
 
 
 def test_without_ssh_exe_it_says_where_to_add_it(
-    ssh: SshTool, monkeypatch: pytest.MonkeyPatch
+    ssh: SshTool, monkeypatch: pytest.MonkeyPatch, help_boxes: list[tuple[str, str]]
 ) -> None:
     def missing(*_args: object) -> None:
         raise launch.SshMissing
 
-    warned: list[str] = []
     monkeypatch.setattr(launch, "connect", missing)
     monkeypatch.setattr(launch, "tab_command", missing)
-    monkeypatch.setattr(
-        tool_module.QMessageBox, "warning", lambda _parent, _title, text: warned.append(text)
-    )
     _select(ssh, "core-sw-01", "web-01")
     ssh.connect_selected()  # in tabs
     ssh.connect_selected(window=True)
@@ -370,7 +366,8 @@ def test_without_ssh_exe_it_says_where_to_add_it(
         "Windows' SSH client (ssh.exe) isn't installed on this PC. To add it, search Start for "
         "“Optional features” and add “OpenSSH Client”. Adding it needs an administrator."
     )
-    assert warned == [words, words]  # once each time, not once per host
+    box = (words, "ssh-not-installed")
+    assert help_boxes == [box, box]  # once each time, not once per host
     assert ssh.connections() == []
 
 

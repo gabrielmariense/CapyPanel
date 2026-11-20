@@ -256,6 +256,11 @@ class SettingsDialog(QDialog):
             self._updates = self.general.updates_choice()
             self.updates_picked.emit(self._updates)
 
+    def show_updates(self, how: str) -> None:
+        """Back to what's saved when saving the choice failed, so picking it again tries again."""
+        self._updates = how
+        self.general.show_updates(how)
+
     def _theme_changed(self) -> None:
         # After the dropdown has closed: the switch restyles every widget, which takes a
         # moment, and the list then stayed open on screen until it was done.

@@ -19,7 +19,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMenu,
-    QMessageBox,
     QPushButton,
     QSpinBox,
     QTreeWidgetItem,
@@ -203,7 +202,8 @@ class ProfileDialog(QDialog):
             content = viewer_settings.read(Path(name), tool.settings_file.clear)
         except (OSError, viewer_settings.SettingsFileError) as e:
             message = _("Couldn't use “{file}”: {error}").format(file=Path(name).name, error=e)
-            QMessageBox.warning(self, "CapyPanel", message)
+            place = "connect-settings-file-unusable"
+            help_links.warning(self, "CapyPanel", message, place=place)
             return
         self._has_settings, self.new_settings = True, content
         self._show_settings(Path(name).name)
@@ -272,7 +272,8 @@ class SharedSection(Section):
         try:
             change()
         except (ProfileError, OSError) as e:
-            QMessageBox.warning(self, "CapyPanel", failed.format(error=e))
+            message = failed.format(error=e)
+            help_links.warning(self, "CapyPanel", message, place="connect-settings-not-saved")
             return False
         self._written()
         self.changed.emit()

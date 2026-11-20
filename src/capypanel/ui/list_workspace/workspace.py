@@ -31,6 +31,7 @@ from capypanel.core.hosts.listfile import (
 from capypanel.core.hosts.locations import ListKind
 from capypanel.core.hosts.model import NO_GROUP, Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
+from capypanel.ui import help_links
 from capypanel.ui.dialogs import run_modal
 from capypanel.ui.export_hosts import Source
 from capypanel.ui.groups import (
@@ -553,19 +554,23 @@ class ListWorkspace(Tool):
                 "The default list was made by another user, so CapyPanel won't open it. An "
                 "administrator can replace or delete “{path}”."
             )
-            self._error(note.format(path=path), quiet)
+            self._error(note.format(path=path), quiet, place="hosts-default-list-other-user")
             return False
         try:
             doc = OpenList.open(path, kind=self.list_kind())
         except FileNotFoundError:
             locations.forget_list(self.prefs, path)
-            self._error(_("The list “{path}” doesn't exist anymore.").format(path=path), quiet)
+            gone = _("The list “{path}” doesn't exist anymore, so it's no longer among your lists.")
+            self._error(gone.format(path=path), quiet, place="hosts-list-gone")
             return False
         except HostListKindError:
-            self._error(self.list_texts().not_this_kind.format(path=path), quiet)
+            texts = self.list_texts()
+            place = texts.not_this_kind_place
+            self._error(texts.not_this_kind.format(path=path), quiet, place=place)
             return False
         except (HostListFileError, OSError) as e:
-            self._error(_("Couldn't open “{path}”: {error}").format(path=path, error=e), quiet)
+            failed = _("Couldn't open “{path}”: {error}").format(path=path, error=e)
+            self._error(failed, quiet, place="hosts-list-file-error")
             return False
         self._use(doc)
         return True
@@ -678,7 +683,8 @@ class ListWorkspace(Tool):
                 files.make_shared_folder(path.parent)  # read by all, changed only by admins
             doc = OpenList.create(path, replace_existing=replace_existing, kind=self.list_kind())
         except (HostListFileError, OSError) as e:
-            self._error(_("Couldn't create “{path}”: {error}").format(path=path, error=e), quiet)
+            failed = _("Couldn't create “{path}”: {error}").format(path=path, error=e)
+            self._error(failed, quiet, place="hosts-list-file-error")
             return False
         self._use(doc)
         return True
@@ -802,7 +808,7 @@ class ListWorkspace(Tool):
         try:
             new, _group = doc.hosts.add_group(name, parent)
         except HostListRuleError as e:
-            self._error(str(e))
+            self._error(str(e), place="hosts-list-rule")
             return
         self._commit(new)
 
@@ -865,7 +871,7 @@ class ListWorkspace(Tool):
         try:
             new = doc.hosts.remove_group(group_id, keep_contents=how == "move", into=into)
         except HostListRuleError as e:
-            self._error(str(e))
+            self._error(str(e), place="hosts-list-rule")
             return
         self._commit(new)
 
@@ -932,7 +938,8 @@ class ListWorkspace(Tool):
             self._resolve_conflict(new)
             return False
         except (HostListFileError, OSError) as e:
-            self._error(_("Couldn't save the list: {error}").format(error=e))
+            failed = _("Couldn't save the list: {error}").format(error=e)
+            self._error(failed, place="hosts-list-file-error")
             return False
         self._owner().refresh()  # a tool taking its lists shows the edit as it follows
         return True
@@ -954,6 +961,7 @@ class ListWorkspace(Tool):
         copy = box.addButton(_("Save my version as a copy…"), QMessageBox.ButtonRole.AcceptRole)
         box.addButton(_("Reload the list"), QMessageBox.ButtonRole.RejectRole)
         box.setDefaultButton(copy)
+        help_links.add_link(box, "hosts-list-changed")
         run_modal(box)
         if box.clickedButton() is copy:
             name, _filter = QFileDialog.getSaveFileName(
@@ -971,11 +979,13 @@ class ListWorkspace(Tool):
                     self._owner()._use(copy)
                     return
                 except (HostListFileError, OSError) as e:
-                    self._error(_("Couldn't save the copy: {error}").format(error=e))
+                    failed = _("Couldn't save the copy: {error}").format(error=e)
+                    self._error(failed, place="hosts-list-file-error")
         try:
             doc.reload()
         except (HostListFileError, OSError) as e:
-            self._error(_("Couldn't reload the list: {error}").format(error=e))
+            failed = _("Couldn't reload the list: {error}").format(error=e)
+            self._error(failed, place="hosts-list-file-error")
         self._owner().refresh()
 
     def manage_groups(self) -> None:
@@ -1032,7 +1042,7 @@ class ListWorkspace(Tool):
         try:
             new = doc.hosts.arrange_groups(order)
         except HostListRuleError as e:
-            self._error(str(e))
+            self._error(str(e), place="hosts-list-rule")
             self.refresh()  # puts the tree back as it was
             return
         self._commit(new)
@@ -1045,7 +1055,7 @@ class ListWorkspace(Tool):
         try:
             new = doc.hosts.move_group(group_id, parent)
         except HostListRuleError as e:
-            self._error(str(e))
+            self._error(str(e), place="hosts-list-rule")
             return
         if new is not doc.hosts and self._commit(new):
             self.nav.select_group(group_id)
@@ -1530,10 +1540,14 @@ class ListWorkspace(Tool):
             ListKind.SHARED: _("Shared"),
         }[kind]
 
-    def _error(self, message: str, quiet: bool = False) -> None:
+    def _error(self, message: str, quiet: bool = False, *, place: str = "") -> None:
+        """A box, or with `quiet` the status bar; `place` is its line in the docs, for its
+        "What does this mean?"."""
         log.warning("%s", message)
         if quiet:
             self._shell.show_message(message, 10_000)
+        elif place:
+            help_links.warning(self, "CapyPanel", message, place=place)
         else:
             QMessageBox.warning(self, "CapyPanel", message)
 

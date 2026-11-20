@@ -477,7 +477,8 @@ class ExportDialog(QDialog):
         if not ok or not name:
             return
         if name.casefold() == _(self.PRESET_NAME).casefold():
-            QMessageBox.warning(self, _("Save as preset"), _("That name is taken."))
+            text = _("That name is taken. Pick another one.")
+            help_links.warning(self, _("Save as preset"), text, place="hosts-preset-name-taken")
             return
         presets = self._presets()
         # The same name, whatever its case: replacing it is asked first, Cancel the default.
@@ -631,11 +632,10 @@ class ExportDialog(QDialog):
         try:
             path.write_text(text, encoding="utf-8-sig")  # the BOM: Excel reads accents right
         except OSError as e:
-            QMessageBox.warning(
-                self,
-                _("Report"),
-                _("Couldn't save “{path}”: {error}").format(path=path, error=e),
-            )
+            text = _("Couldn't save “{path}”: {error}\n\nIf the file is open in another "
+                     "program, such as Excel, close it there and save again.")  # fmt: skip
+            text = text.format(path=path, error=e)
+            help_links.warning(self, _("Report"), text, place="hosts-file-not-saved")
             return
         self._prefs[self.FOLDER_KEY] = str(path.parent)
         self._remember()

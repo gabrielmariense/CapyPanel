@@ -19,6 +19,7 @@ class ListTexts:
     choose_first: str  # "Open a host list to choose what it shows first."
     not_this_kind: str  # "“{path}” isn't a host list.": another tool's list was opened
     file_filter: str  # "Host lists (*.json);;All files (*)"
+    not_this_kind_place: str = ""  # not_this_kind's line in the docs (help_links)
 
 
 @dataclass(frozen=True)

@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from PySide6.QtWidgets import (
     QDialog,
     QHBoxLayout,
-    QMessageBox,
     QPushButton,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -56,12 +55,13 @@ def kept_text(logins: list[KeptLogin]) -> str:
 
 def forget_failed(parent: QWidget, error: OSError) -> None:
     log.warning("Couldn't delete a saved password: %s", error)
-    QMessageBox.warning(
+    help_links.warning(
         parent,
         "CapyPanel",
         _("Couldn't delete the password saved in Windows Credential Manager: {error}\n\n"
           "You can delete it in Control Panel › Credential Manager › Windows "
           "Credentials, under “{prefix}”.").format(error=error, prefix=credstore.PREFIX),
+        place="connect-password-not-deleted",
     )  # fmt: skip
 
 
