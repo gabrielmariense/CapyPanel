@@ -39,9 +39,8 @@ from capypanel.ui.themes import engine as themes
 
 
 class Page(QWidget):
-    """A settings page: its sections, one under the other. Its title shows in the page list
-    only. `changed` fires on every choice made on it. Its place is where F1 and the ? open the
-    docs while it's shown (help_links): its class's HELP_PLACE, or the one it's made with."""
+    """A settings page: its sections, one under the other; its title shows in the page list only.
+    `changed` fires on each choice. F1 and the ? open the docs at its HELP_PLACE or `place`."""
 
     HELP_PLACE: ClassVar[str] = ""
     changed = Signal()
@@ -116,9 +115,8 @@ class Section(QWidget):
         column.addWidget(self.inner, 1)
 
     def for_everyone(self, can_change: bool, change_line: str = "") -> None:
-        """Marks it as shared by everyone who uses CapyPanel on this PC. The line under the
-        title says what a change does (`change_line` when it has more to say), or, for someone
-        Windows doesn't let change it, why it's greyed and who can."""
+        """Marks it shared by everyone on this PC. The line under the title says what a change does
+        (`change_line` to say more), or why it's greyed and who can, to someone who can't."""
         self.scope_tag.show()
         self.scope_line.setText(
             (change_line or _("A change here reaches everyone on this PC."))
@@ -338,9 +336,8 @@ class FoldersSection(Section):
 
 
 class ListsGeneralPage(Page):
-    """A list tool's General page: its lists (the same as the list dropdown; a double-click
-    opens one), then which of them opens at start and what it shows first, on one card. A tool
-    adds its own sections below with add_section()."""
+    """A list tool's General page: its lists (as in the list dropdown; a double-click opens one),
+    then which opens at start and what it shows first. A tool adds its own with add_section()."""
 
     def __init__(
         self,
@@ -401,9 +398,8 @@ class ListsGeneralPage(Page):
         index = self.start_list.findData(start_list)
         self.start_list.setCurrentIndex(max(index, 0))
         self.start_list.currentIndexChanged.connect(lambda _i: self.changed.emit())
-        # What the open list shows first; each list keeps its own choice. One button: its menu
-        # has All hosts (in the tool's words), Where I left off, and "A chosen group" with the
-        # groups as a tree.
+        # What the open list shows first, each list its own. One button: its menu has All hosts
+        # (in the tool's words), Where I left off, and "A chosen group" with the groups as a tree.
         self._host_list = host_list
         self._first = start_view or (locations.SHOW_ALL, "")
         self.show_first = MenuCombo()
@@ -511,7 +507,6 @@ class AutoStatusSection(Section):
 
     def __init__(self, auto_line: str, auto_status: tuple[bool, int]) -> None:
         super().__init__(_("Refresh"))
-        # One dropdown: Off, a few common intervals, and Custom… for any other.
         self.auto_every = QComboBox()
         self._auto_minutes = auto_status[1]  # kept while it's off, for when it's on again
         self._shown_minutes = auto_status[1] if auto_status[0] else 0
