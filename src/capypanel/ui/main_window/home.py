@@ -145,10 +145,8 @@ class HomePage(QWidget):
             tile.restyle()  # each also redraws on its own colour change
 
     def _place_tiles(self, fit: int) -> None:
-        """`fit`: how many tiles the width has room for side by side. Up to three tools share one
-        row; from four on they take two even rows, so four go two by two (his pick, 2026-11-18:
-        three and one left SSH alone on its row). A narrower window wraps them into more rows,
-        as even as they go."""
+        """`fit`: tiles that fit side by side. Up to three share a row, four or more two even rows;
+        a narrower window wraps them into more rows, as even as they go."""
         count = len(self.tiles)
         if not count:
             return

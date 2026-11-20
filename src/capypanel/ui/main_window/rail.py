@@ -13,9 +13,8 @@ BADGE = 16  # px: the count's height, and its narrowest width
 
 
 class ToolRail(QWidget):
-    """Icons only, each with a tooltip, which the window sets: it has their commands and keys.
-    The tool shown, or Home, has a tinted square behind its icon. A tool with items needing
-    attention shows their count on its icon, in red."""
+    """Icons only, with tooltips the window sets. The tool shown, or Home, has a tinted square
+    behind its icon; a tool with items needing attention shows their count on it, in red."""
 
     home_requested = Signal()
     settings_requested = Signal()
@@ -40,7 +39,7 @@ class ToolRail(QWidget):
         line.setObjectName("toolDivider")
         line.setFixedSize(28, 1)
         # Help for what's shown: an action like the gear, never a place, so it takes no tile. It
-        # sits where every other window has its ?, at the bottom left (topic-030-help).
+        # sits where every other window has its ?, at the bottom left.
         self.help_button = _button(checkable=False)
         self.help_button.setObjectName("railHelp")
         self.settings_button = _button(checkable=False)
