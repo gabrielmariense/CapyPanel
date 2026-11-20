@@ -142,6 +142,8 @@ def test_details_links_a_refused_printer_and_a_doc360_error(printers: PrintersTo
     printers._counted = Counted(WHEN, error="Doc360 MPS didn't answer.", place="doc360-no-answer")
     printers.table.select_ids([printer.id])
     assert _links(printers) == ["printer-refused", "doc360-no-answer"]
+    # Details is a card: each link's colour is tested against the card's, not the window's
+    assert {link._on for link in printers.details.findChildren(HelpLink)} == {help_links.CARD}
 
 
 def test_details_links_counts_from_an_older_month(printers: PrintersTool) -> None:  # noqa: F811

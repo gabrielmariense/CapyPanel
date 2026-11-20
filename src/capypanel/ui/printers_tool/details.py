@@ -17,6 +17,7 @@ from capypanel.core.hosts.model import Host
 from capypanel.core.i18n import _, ngettext, pgettext
 from capypanel.core.printers.printer import DOC360, SNMP, info_of
 from capypanel.core.printers.reading import Supply
+from capypanel.ui import help_links
 from capypanel.ui.checks import clock_text
 from capypanel.ui.help_links import HelpLink
 from capypanel.ui.icons import dot_icon
@@ -334,7 +335,8 @@ class PrinterDetailsPanel(DetailsPanel):
 
 
 def _link(place: str) -> HelpLink:
-    """ "What does this mean?" for a line Details shows; hidden with no place."""
-    link = HelpLink()
+    """ "What does this mean?" for a line Details shows; hidden with no place. Details is a card,
+    so the link's colour is tested against the card's, where light's blue reads."""
+    link = HelpLink(on=help_links.CARD)
     link.set_place(place)
     return link
