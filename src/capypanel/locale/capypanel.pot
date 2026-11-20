@@ -1762,6 +1762,9 @@ msgstr ""
 msgid "Every PC tagged {tag}"
 msgstr ""
 
+msgid "Every PC: no PC, group or tag to name"
+msgstr ""
+
 msgid "Every column the printers have"
 msgstr ""
 
@@ -2172,6 +2175,9 @@ msgid ""
 "Inventory › Add printer only needs a name and the address. A Refresh "
 "reads the toner, and Details shows the brand, model and serial number the"
 " printer reports, ready to copy in with Use this."
+msgstr ""
+
+msgid "It already uses the viewer's defaults."
 msgstr ""
 
 msgid ""
@@ -3792,6 +3798,9 @@ msgstr ""
 msgid "Settings › Hosts › Credentials: {uses}"
 msgstr ""
 
+msgid "Settings:"
+msgstr ""
+
 msgid "Shared"
 msgstr ""
 
@@ -4893,9 +4902,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Viewer settings (*{extension})"
-msgstr ""
-
-msgid "Viewer settings:"
 msgstr ""
 
 msgid "WMI directly"
@@ -6157,8 +6163,17 @@ msgstr ""
 msgid "{tool} can't be given a user name."
 msgstr ""
 
+msgid "{tool} doesn't use a settings file."
+msgstr ""
+
 #, python-brace-format
 msgid "{tool} has no option “{option}”."
+msgstr ""
+
+msgid "{tool} has no options to set here."
+msgstr ""
+
+msgid "{tool} has no other way to log in."
 msgstr ""
 
 #, python-brace-format

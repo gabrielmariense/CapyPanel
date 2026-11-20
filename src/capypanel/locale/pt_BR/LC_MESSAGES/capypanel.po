@@ -1708,6 +1708,9 @@ msgstr "Todos os PCs do grupo {group}"
 msgid "Every PC tagged {tag}"
 msgstr "Todos os PCs com a tag {tag}"
 
+msgid "Every PC: no PC, group or tag to name"
+msgstr "Todos os PCs: não há PC, grupo ou tag a indicar"
+
 msgid "Every column the printers have"
 msgstr "Todas as colunas das impressoras"
 
@@ -2086,6 +2089,9 @@ msgstr "Inventário › Adicionar host pede um nome e um endereço. A porta e o 
 
 msgid "Inventory › Add printer only needs a name and the address. A Refresh reads the toner, and Details shows the brand, model and serial number the printer reports, ready to copy in with Use this."
 msgstr "Em Inventário › Adicionar impressora, basta o nome e o endereço. Uma atualização lê o toner, e Detalhes mostra a marca, o modelo e o número de série que a impressora informa, para copiar com Usar este."
+
+msgid "It already uses the viewer's defaults."
+msgstr "Já usa os padrões do visualizador."
 
 msgid "It can be deleted: nobody is signed in to it, it isn't one of Windows' own, and it's in the Users folder."
 msgstr "Pode ser excluído: ninguém está conectado com ele, não é do Windows e fica na pasta Users."
@@ -3623,6 +3629,9 @@ msgstr "Configurações"
 msgid "Settings › Hosts › Credentials: {uses}"
 msgstr "Configurações › Hosts › Credenciais: {uses}"
 
+msgid "Settings:"
+msgstr "Ajustes:"
+
 msgid "Shared"
 msgstr "Compartilhada"
 
@@ -4637,9 +4646,6 @@ msgstr "Exibir"
 #, python-brace-format
 msgid "Viewer settings (*{extension})"
 msgstr "Configurações do visualizador (*{extension})"
-
-msgid "Viewer settings:"
-msgstr "Configurações do visualizador:"
 
 msgid "WMI directly"
 msgstr "WMI direto"
@@ -5842,9 +5848,18 @@ msgstr "O {tool} não aceita receber um arquivo de configurações."
 msgid "{tool} can't be given a user name."
 msgstr "O {tool} não aceita receber um nome de usuário."
 
+msgid "{tool} doesn't use a settings file."
+msgstr "{tool} não usa arquivo de configurações."
+
 #, python-brace-format
 msgid "{tool} has no option “{option}”."
 msgstr "O {tool} não tem a opção “{option}”."
+
+msgid "{tool} has no options to set here."
+msgstr "{tool} não tem opções para definir aqui."
+
+msgid "{tool} has no other way to log in."
+msgstr "{tool} não tem outra forma de entrar."
 
 #, python-brace-format
 msgid "{tool} not found"

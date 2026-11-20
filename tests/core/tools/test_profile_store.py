@@ -34,6 +34,12 @@ def test_at_start_the_shipped_profiles_are_placed_in_the_folder(tmp_path: Path) 
     assert [p.name for p in store.all()] == ["Remote Desktop", "UltraVNC"]
 
 
+def test_the_ultravnc_starter_uses_the_securevnc_plugin(tmp_path: Path) -> None:
+    ProfileStore(tmp_path / "profiles").place_starters()
+    ultravnc = ProfileStore(tmp_path / "profiles").find("ultravnc")  # read back from its file
+    assert ultravnc is not None and ultravnc.options == ("securevnc",)
+
+
 def test_starters_are_ordinary_profiles_that_can_be_deleted(tmp_path: Path) -> None:
     store = ProfileStore(tmp_path / "profiles")
     for starter in ("realvnc", "remote-desktop", "ultravnc"):

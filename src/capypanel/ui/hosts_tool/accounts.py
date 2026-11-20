@@ -372,9 +372,12 @@ class LinkDialog(QDialog):
                 self.group.addItem(path, group_id)
             self.tag.addItems(sorted(doc.hosts.all_tags(), key=str.casefold))
         self.tag.setCurrentText("")
-        empty = QWidget()
+        self.every_pc = QLineEdit()  # Every PC names nothing; the greyed field keeps its row
+        self.every_pc.setEnabled(False)
+        self.every_pc.setPlaceholderText(_("Every PC: no PC, group or tag to name"))
+        self.every_pc.setToolTip(_("Every PC: no PC, group or tag to name"))
         self.value = QStackedWidget()
-        for widget in (empty, self.address, self.group, self.tag):
+        for widget in (self.every_pc, self.address, self.group, self.tag):
             self.value.addWidget(widget)
         for index in (2, 3):  # a group or a tag belongs to the open list
             if doc is None:
@@ -425,7 +428,6 @@ class LinkDialog(QDialog):
 
     def _kind_picked(self) -> None:
         self.value.setCurrentIndex(max(self.kind.currentIndex(), 0))
-        self.value.setVisible(self.scope() is not Scope.ALL)
         self._update_ok()
 
     def _update_ok(self) -> None:

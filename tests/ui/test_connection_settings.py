@@ -3,14 +3,15 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from PySide6.QtCore import Qt, QUrl
-from PySide6.QtWidgets import QApplication, QDialogButtonBox, QFileDialog, QMenu
+from PySide6.QtCore import QPoint, QRect, Qt, QUrl
+from PySide6.QtWidgets import QApplication, QDialogButtonBox, QFileDialog, QMenu, QWidget
 
 from capypanel.core import i18n, settings, winsec
 from capypanel.core.hosts.document import OpenList
 from capypanel.core.hosts.model import HostList
 from capypanel.core.tools.catalog import Catalogs
 from capypanel.core.tools.profiles import ConnectionProfile
+from capypanel.ui.dialogs import ScreenFit
 from capypanel.ui.settings import connections
 from capypanel.ui.settings.connections import ProfileDialog, ProfilesSection, ToolsSection
 
@@ -86,32 +87,63 @@ def test_the_editor_offers_only_what_the_chosen_tool_supports(catalogs: Catalogs
     assert ok.isEnabled()
 
 
-def test_the_profile_window_fits_its_rows_as_the_tool_changes(catalogs: Catalogs) -> None:
-    """Qt counts a wrapped hint's lines only when a window's edge is dragged: picking UltraVNC
-    squeezed its settings file buttons to a sliver until then."""
-    tools = [e.item for e in catalogs.tools.all()]
-    names = {tool.id for tool in tools}
-    dialog = ProfileDialog(None, "New", tools, names)
-    dialog.tool.setCurrentIndex(dialog.tool.findData("mstsc"))
+def _shown(dialog: QWidget) -> None:
+    dialog.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
     dialog.show()
     QApplication.processEvents()
-    short = dialog.height()
-    for tool in ("ultravnc", "mstsc", "ultravnc"):
-        dialog.tool.setCurrentIndex(dialog.tool.findData(tool))
-        QApplication.processEvents()
-        if tool == "mstsc":
-            assert dialog.height() == short  # no empty rows left behind
-            continue
-        assert dialog.height() == dialog.heightForWidth(dialog.width()) > short
-        button = dialog.choose_settings
-        assert button.isVisible() and button.height() >= button.sizeHint().height()
-    dialog.close()
+
+
+def test_every_tool_keeps_the_profile_window_s_size_and_places(
+    qapp: QApplication, catalogs: Catalogs
+) -> None:
+    tools = [e.item for e in catalogs.tools.all()]
+    names = {tool.id for tool in tools}
+    fitter = ScreenFit(qapp)  # the app's own dialog fitting, as in the real app
+    qapp.installEventFilter(fitter)
+    dialog = ProfileDialog(None, "New", tools, names)
     vnc = ConnectionProfile("vnc", "ultravnc", name="VNC")
-    editing = ProfileDialog(None, "Edit", tools, names, vnc)  # opens on UltraVNC's rows
-    editing.show()
-    QApplication.processEvents()
-    assert editing.height() == editing.heightForWidth(editing.width())
-    editing.close()
+    editing = ProfileDialog(None, "Edit", tools, names, vnc)
+    try:
+        _shown(dialog)
+        controls: list[QWidget] = [
+            dialog.name, dialog.tool, dialog.login, dialog.port, dialog.settings_state,
+            dialog.choose_settings, dialog.default_settings, dialog.options_area,
+        ]  # fmt: skip
+        seen = []
+        for tool in ("mstsc", "realvnc", "ultravnc", "mstsc"):
+            dialog.tool.setCurrentIndex(dialog.tool.findData(tool))
+            QApplication.processEvents()
+            assert all(c.isVisible() for c in controls), tool
+            places = [QRect(c.mapTo(dialog, QPoint(0, 0)), c.size()) for c in controls]
+            seen.append((dialog.size(), places))
+        assert all(s == seen[0] for s in seen)
+        _shown(editing)  # opens on UltraVNC
+        assert editing.size() == dialog.size()
+    finally:
+        dialog.close()
+        editing.close()
+        qapp.removeEventFilter(fitter)
+
+
+def test_a_row_the_tool_doesnt_use_is_greyed_with_its_reason(catalogs: Catalogs) -> None:
+    tools = [e.item for e in catalogs.tools.all()]
+    dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
+    settings_row = (dialog.settings_state, dialog.choose_settings, dialog.default_settings)
+    assert dialog.choose_settings.isEnabled() and not dialog.default_settings.isEnabled()
+    assert dialog.choose_settings.toolTip().startswith("Optional: a .vnc file saved from Ultra")
+    assert dialog.default_settings.toolTip() == "It already uses the viewer's defaults."
+    dialog.tool.setCurrentIndex(dialog.tool.findData("realvnc"))
+    assert not any(w.isEnabled() for w in settings_row)
+    assert {w.toolTip() for w in settings_row} == {"RealVNC Viewer doesn't use a settings file."}
+    assert dialog.settings_state.text() == "The viewer's defaults"
+    assert dialog.options_area.currentIndex() == 1 and not dialog.no_options.isEnabled()
+    assert dialog.no_options.toolTip() == "RealVNC Viewer has no options to set here."
+    dialog.tool.setCurrentIndex(dialog.tool.findData("mstsc"))
+    assert not dialog.login.isEnabled() and len(dialog.option_boxes) == 3
+    assert dialog.login.toolTip() == (
+        "CapyPanel asks for nothing: Remote Desktop Connection asks for the user and password "
+        "itself when it connects."
+    )
 
 
 def test_starter_profiles_can_be_duplicated_edited_and_deleted(
@@ -167,14 +199,6 @@ def test_a_folder_the_user_cannot_write_is_read_only(
 
 def _choose_settings_file(monkeypatch: pytest.MonkeyPatch, path: Path) -> None:
     monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *_args, **_kw: (str(path), ""))
-
-
-def test_only_tools_that_read_a_settings_file_offer_one(catalogs: Catalogs) -> None:
-    tools = [e.item for e in catalogs.tools.all()]
-    dialog = ProfileDialog(None, "New", tools, {"ultravnc"})
-    assert dialog.choose_settings.isVisibleTo(dialog)
-    dialog.tool.setCurrentIndex(dialog.tool.findData("realvnc"))
-    assert not dialog.choose_settings.isVisibleTo(dialog)
 
 
 def test_a_file_that_isnt_viewer_settings_is_refused(
