@@ -239,17 +239,12 @@ class PrinterDetailsPanel(DetailsPanel):
             )
         under = self.muted(words)
         under.setToolTip(status.plain_tip(cell.tip))
-        # A printer that didn't answer or couldn't be read: its line in the docs, after the
-        # status (the table's cell is a tooltip, which can't hold a link).
+        layout.addWidget(under)
+        # A printer that didn't answer or couldn't be read: its line in the docs, on a line of its
+        # own under the status, as Doc360's is under Source, so the status keeps its date beside
+        # it (the table's cell is a tooltip, which can't hold a link).
         if place := status.status_place(shown.checked):
-            line_row = QHBoxLayout()
-            line_row.setSpacing(8)
-            line_row.addWidget(under)
-            line_row.addWidget(_link(place))
-            line_row.addStretch(1)
-            layout.addLayout(line_row)
-        else:
-            layout.addWidget(under)
+            layout.addWidget(_link(place))
         reading = shown.checked.reading if shown.checked else None
         for message in reading.messages if reading else ():  # the printer's own words, in full
             said = QLabel(breakable(message))

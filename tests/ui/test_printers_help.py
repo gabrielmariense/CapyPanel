@@ -142,6 +142,12 @@ def test_details_links_a_refused_printer_and_a_doc360_error(printers: PrintersTo
     printers._counted = Counted(WHEN, error="Doc360 MPS didn't answer.", place="doc360-no-answer")
     printers.table.select_ids([printer.id])
     assert _links(printers) == ["printer-refused", "doc360-no-answer"]
+    # The status link has a line of its own right under the status, which keeps its date
+    [line] = [w for w in printers.details.findChildren(QLabel) if w.text().startswith("Refused ·")]
+    link = next(w for w in printers.details.findChildren(HelpLink) if w._place == "printer-refused")
+    holder = line.parentWidget()
+    column = holder.layout() if holder is not None else None
+    assert column is not None and column.indexOf(link) == column.indexOf(line) + 1
     # Details is a card: each link's colour is tested against the card's, not the window's
     assert {link._on for link in printers.details.findChildren(HelpLink)} == {help_links.CARD}
 
