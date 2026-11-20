@@ -292,7 +292,9 @@ Conexão > Conta do Doc360 MPS**. Um Atualizar então pega a contagem de página
 | <a id="doc360-no-account"></a>"Nenhuma conta do Doc360 MPS definida." | Ainda não há com o que entrar | **Definir a conta…** |
 | <a id="doc360-login-refused"></a>"O Doc360 MPS recusou o login." | O parceiro, o usuário ou a senha está errado | **Alterar a conta…** |
 | <a id="doc360-no-answer"></a>"O Doc360 MPS não respondeu." | Sem rede, ou o portal está fora do ar | Tente de novo mais tarde |
+| <a id="doc360-error-answer"></a>"O Doc360 MPS respondeu com um erro." | O portal respondeu, mas com um erro em vez das páginas dele | Atualize mais tarde. Se continuar, entre no portal pelo navegador para ver se ele funciona |
 | <a id="doc360-pages-changed"></a>"As páginas do Doc360 MPS mudaram, então o CapyPanel não conseguiu ler os contadores." | O portal foi refeito | O CapyPanel precisa de uma atualização para as páginas novas |
 | <a id="doc360-serial-not-listed"></a>"O Doc360 MPS não tem o número de série SAMPLE0011." | O portal não tem nenhuma impressora com esse número | Confira o nº de série |
+| <a id="doc360-no-total"></a>"O Doc360 MPS não tem o total desta impressora." | O portal lista a impressora, mas ainda não tem o total de páginas dela | Confira a impressora no portal: o Doc360 MPS preenche as contagens no próprio ritmo |
 | <a id="doc360-serial-missing"></a>"Adicione o número de série da impressora: o Doc360 MPS identifica as impressoras pelo número de série." | A sua lista não tem o número de série desta impressora | Adicione-o com **Editar selecionado…** |
 | <a id="doc360-month-not-counted"></a>"⚠ De outubro de 2026: o Doc360 MPS ainda não tem contadores deste mês. Confira o portal antes de usar este número." | No começo de um mês, a contagem é a do mês passado | Confira o portal antes de usar o número |

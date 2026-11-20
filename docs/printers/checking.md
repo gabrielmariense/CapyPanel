@@ -282,7 +282,9 @@ then takes that printer's page count from the portal.
 | <a id="doc360-no-account"></a>"No Doc360 MPS account is set." | Nothing to sign in with yet | **Set the account…** |
 | <a id="doc360-login-refused"></a>"Doc360 MPS refused the login." | The partner, user name or password is wrong | **Change the account…** |
 | <a id="doc360-no-answer"></a>"Doc360 MPS didn't answer." | No network, or the portal is down | Try again later |
+| <a id="doc360-error-answer"></a>"Doc360 MPS answered with an error." | The portal answered, but with an error rather than its pages | Refresh later. If it keeps coming, sign in to the portal in a browser to see whether it works |
 | <a id="doc360-pages-changed"></a>"Doc360 MPS's pages changed, so CapyPanel couldn't read the counters." | The portal was rebuilt | CapyPanel needs an update for the new pages |
 | <a id="doc360-serial-not-listed"></a>"Doc360 MPS doesn't list serial SAMPLE0011." | The portal has no printer with that serial | Check the serial number |
+| <a id="doc360-no-total"></a>"Doc360 MPS has no total for this printer." | The portal lists the printer, but has no total page count for it yet | Check the printer in the portal: Doc360 MPS fills in its counts on its own schedule |
 | <a id="doc360-serial-missing"></a>"Add the printer's serial number: Doc360 MPS lists printers by serial." | Your list has no serial for this printer | Add it with **Edit selected…** |
 | <a id="doc360-month-not-counted"></a>"⚠ From October 2026: Doc360 MPS has no counts for this month yet. Check the portal before using this number." | Early in a month, the count is last month's | Check the portal before using the number |
