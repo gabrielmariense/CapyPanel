@@ -95,15 +95,10 @@ class MainWindow(QMainWindow):
         self._quitting = False  # Quit CapyPanel: the X's choice isn't asked
         self._notified_by: str | None = None  # the tool behind the last notification
         self._page_of: dict[str, QWidget] = {}  # each tool's page: its toolbar and the tool
-        self._building = True  # the tools' lists wait to be filled until one is shown
-        for make in tools:
-            self._add_tool(make(self))
-        self._shown: str | None = None  # the tool shown; None: Home
-        self.home = HomePage(self._infos())
-        self.home.tool_picked.connect(self.show_tool)
-        self._pages.insertWidget(0, self.home)
 
         # The rail runs down the left edge; the tool shown, its toolbar on top, fills the rest.
+        # This frame comes before the tools: a widget put into a styled one is restyled whole,
+        # so each tool goes in once, into its place, not up through four layers (0.09 s).
         central = QWidget()
         row = QHBoxLayout(central)
         row.setContentsMargins(0, 0, 0, 0)
@@ -111,6 +106,14 @@ class MainWindow(QMainWindow):
         row.addWidget(self.rail)
         row.addWidget(self._pages, 1)
         self.setCentralWidget(central)
+
+        self._building = True  # the tools' lists wait to be filled until one is shown
+        for make in tools:
+            self._add_tool(make(self))
+        self._shown: str | None = None  # the tool shown; None: Home
+        self.home = HomePage(self._infos())
+        self.home.tool_picked.connect(self.show_tool)
+        self._pages.insertWidget(0, self.home)
 
         self.updater = Updater(self.prefs, self.save_prefs, self.paths.company_tools_dir, self)
         self._update_shown = ""  # the version whose window opened in this run: once is enough
@@ -141,12 +144,12 @@ class MainWindow(QMainWindow):
         tool_id = tool.TOOL_ID
         self.tools[tool_id] = tool
         page = QWidget()
+        self._pages.addWidget(page)  # in place first: the tool is restyled once, going in
         column = QVBoxLayout(page)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(0)
         column.addWidget(tool.toolbar)
         column.addWidget(tool, 1)
-        self._pages.addWidget(page)
         self._page_of[tool_id] = page
         self.rail.add_tool(tool_id, tool.ICON)
         action = QAction(self)
