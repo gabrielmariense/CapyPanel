@@ -1,7 +1,4 @@
-"""The printers installed on another PC, and clearing a printer's queue: Windows' print spooler
-over its own remote call, as the Print Management console does. Nothing is installed or run on
-the target. Printers a user added for themselves from a print server aren't the PC's own and
-don't show; the PC's own printers do, whoever uses them."""
+"""Another PC's installed printers, and clearing a queue, over the spooler's own remote call."""
 
 import ctypes
 from ctypes import wintypes
@@ -32,6 +29,7 @@ class HostPrinter:
     problems: tuple[str, ...]  # what the spooler reports, e.g. ("paper jam",); () when fine
 
 
+# Nothing is installed or run on the target. A user's own print-server printers don't show.
 def list_printers(host: str | None, account: Account | None = None) -> list[HostPrinter]:
     """The printers installed on `host` (None: this PC), by name. Raises RemoteError."""
     if host is not None:
