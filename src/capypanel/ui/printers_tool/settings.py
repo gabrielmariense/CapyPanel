@@ -446,6 +446,8 @@ class PrintersPage(ListsGeneralPage):
     SNMP version and account, the Doc360 MPS account). Every choice fires this page's
     `changed`."""
 
+    HELP_PLACE = "settings-printers"
+
     def __init__(
         self,
         *,
@@ -493,8 +495,11 @@ class PrintersPage(ListsGeneralPage):
         self.toner_view.addItem(_("Bar"), BARS)
         self.toner_view.setCurrentIndex(1 if bars else 0)
         self.toner_view.currentIndexChanged.connect(lambda _i: self.changed.emit())
-        self.warnings_page = Page(_("Warnings and supplies"))
-        self.connecting_page = Page(_("Connecting"))
+        # Their ? and F1 open the part of Checking printers that says what each page sets.
+        self.warnings_page = Page(
+            _("Warnings and supplies"), place="printers-checking-choose-which-problems-warn"
+        )
+        self.connecting_page = Page(_("Connecting"), place="printers-checking-set-the-snmp-account")
         own = Section(_("Refresh"))
         add_rows(
             own.content,

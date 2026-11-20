@@ -12,6 +12,7 @@ from capypanel.ui.import_hosts import FormatsDialog, ImportDialog, needs_header_
 
 
 class ImportPrintersDialog(ImportDialog):
+    HELP_PLACE = "printers-import-many-printers-at-once"  # its ? and F1
     TITLE = N_("Import printers")
     GROUP_LABEL = N_("Printers with no group &go to:")
     PLACEHOLDER = N_("For example:\nname,address,brand\nReception,192.0.2.10,HP")
@@ -61,6 +62,8 @@ class ImportPrintersDialog(ImportDialog):
 
 class PrinterFormats(FormatsDialog):
     """The lists Import printers reads: name and address, a Report, Windows' printer list."""
+
+    HELP_PLACE = "printers-import-many-printers-at-once"  # its ? and F1
 
     def _formats(self) -> list[tuple[str, QWidget]]:
         titles = [_("Name"), _("Address"), _("Group"), _("Brand"), _("Model"), _("Serial number")]

@@ -107,6 +107,10 @@ def test_settings_has_the_app_s_pages_then_each_tool_s(window: CapyWindow) -> No
     assert titles(printers) == ["Printer lists"]
     assert titles(printers.warnings_page) == ["Refresh", "Warnings", "Supplies"]
     assert titles(printers.connecting_page) == ["SNMP", "Doc360 MPS"]
+    # F1 and the ? on each: the part of Checking printers that says what the page sets
+    assert printers.place == "settings-printers"
+    assert printers.warnings_page.place == "printers-checking-choose-which-problems-warn"
+    assert printers.connecting_page.place == "printers-checking-set-the-snmp-account"
 
 
 def test_page_list_rows_never_overlap(window: CapyWindow) -> None:

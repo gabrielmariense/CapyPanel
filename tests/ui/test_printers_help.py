@@ -19,6 +19,8 @@ from capypanel.ui.help_links import HelpLink
 from capypanel.ui.printers_tool import attention, refresh, status
 from capypanel.ui.printers_tool import settings as settings_module
 from capypanel.ui.printers_tool.dialog import PrinterDialog
+from capypanel.ui.printers_tool.import_printers import ImportPrintersDialog, PrinterFormats
+from capypanel.ui.printers_tool.report import PrintersReport
 from capypanel.ui.printers_tool.status import Checked, Counted, Reason
 from capypanel.ui.printers_tool.tool import PrintersTool
 
@@ -50,6 +52,17 @@ def test_each_printers_window_opens_its_own_part(
     assert _place_of(v3) == "printers-checking-set-the-snmp-account"
     for place, window in windows.items():
         assert _place_of(window) == place
+
+
+def test_the_tool_and_the_windows_it_shares_with_hosts_open_printers_parts(
+    printers: PrintersTool,  # noqa: F811
+) -> None:
+    assert printers.help_place() == "printers/printers/"  # the page's top: F1 and the rail's ?
+    import_part = "printers-import-many-printers-at-once"
+    assert ImportPrintersDialog.HELP_PLACE == PrinterFormats.HELP_PLACE == import_part
+    assert PrintersReport.HELP_PLACE == "printers-export-printers-to-a-spreadsheet"
+    for place in (printers.help_place(), import_part, PrintersReport.HELP_PLACE):
+        help_links.url(place)
 
 
 def test_the_question_mark_comes_first_in_the_button_row(qapp: QApplication) -> None:

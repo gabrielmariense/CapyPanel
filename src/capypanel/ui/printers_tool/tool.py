@@ -102,6 +102,7 @@ def refresh_words(refresh: QAction) -> str:
 class PrintersTool(ListWorkspace):
     TOOL_ID = "printers"
     ICON = "printer"
+    HELP_PLACE = "printers/printers/"  # F1 and the rail's ?: the Printers page's top
     checks_changed = Signal()  # a Refresh started, found something, or ended
 
     def __init__(self, shell: Shell):
