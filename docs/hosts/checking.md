@@ -146,9 +146,9 @@ They're never read by **Refresh all**, so a list of hundreds of hosts is left al
 
 | Message | What it means | What to do |
 |---|---|---|
-| <a id="pc-unreachable"></a>**Unreachable** | Port 445 (Windows file sharing) didn't answer: the PC is off, off the network, blocks file sharing, or isn't Windows | Check the PC is on and on the network |
+| <a id="pc-unreachable"></a>**Unreachable**, or after a command: "it didn't answer. It's off, not on the network, or a firewall blocks file sharing." | Port 445 (Windows file sharing) didn't answer: the PC is off, off the network, blocks file sharing, or isn't Windows | Check the PC is on and on the network |
 | <a id="pc-no-admin-rights"></a>**No admin rights** | The account isn't an administrator on that host | Use another account (see above) |
-| <a id="pc-account-rejected"></a>**Account rejected** | The host refused the account | Check the account, or use another one |
+| <a id="pc-account-rejected"></a>**Account rejected**, or after a command: "it didn't accept the account: a wrong password, a locked account, or one it doesn't trust." | The host refused the account | Check the account, or use another one |
 | <a id="pc-couldnt-read"></a>**Couldn't read** | The host answered, but the sessions couldn't be read | Hover for the reason; try again later |
 | <a id="pc-no-access"></a>"No access: needs an admin account on this PC" | A PC fact needs an administrator account | Use an administrator account for that host |
-| <a id="pc-powershell-blocked"></a>"Couldn't read: Windows didn't let PowerShell start on your PC (an antivirus may block it)" | Your own PC refused to start PowerShell, not the one you were reading | Check your PC's antivirus, or set **Read PC data with** to **WMI directly** |
+| <a id="pc-powershell-blocked"></a>"Couldn't read: Windows didn't let PowerShell start on your PC (an antivirus may block it)", or after a command: "Windows didn't let PowerShell start on your PC. An antivirus may block it." | Your own PC refused to start PowerShell, not the one you were reading | Check your PC's antivirus, or set **Read PC data with** to **WMI directly** |

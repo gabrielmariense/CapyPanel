@@ -152,9 +152,9 @@ Eles nunca são lidos pelo **Atualizar todos**, então uma lista de centenas de 
 
 | Mensagem | O que significa | O que fazer |
 |---|---|---|
-| <a id="pc-unreachable"></a>**Inacessível** | A porta 445 (compartilhamento de arquivos do Windows) não respondeu: o PC está desligado, fora da rede, bloqueia o compartilhamento de arquivos ou não é Windows | Confira se o PC está ligado e na rede |
+| <a id="pc-unreachable"></a>**Inacessível**, ou depois de um comando: "ele não respondeu. Está desligado, fora da rede, ou um firewall bloqueia o compartilhamento de arquivos." | A porta 445 (compartilhamento de arquivos do Windows) não respondeu: o PC está desligado, fora da rede, bloqueia o compartilhamento de arquivos ou não é Windows | Confira se o PC está ligado e na rede |
 | <a id="pc-no-admin-rights"></a>**Sem direitos de administrador** | A conta não é administradora nesse host | Use outra conta (veja acima) |
-| <a id="pc-account-rejected"></a>**Conta recusada** | O host recusou a conta | Confira a conta, ou use outra |
+| <a id="pc-account-rejected"></a>**Conta recusada**, ou depois de um comando: "ele não aceitou a conta: senha errada, conta bloqueada ou uma conta em que ele não confia." | O host recusou a conta | Confira a conta, ou use outra |
 | <a id="pc-couldnt-read"></a>**Não foi possível ler** | O host respondeu, mas as sessões não puderam ser lidas | Passe o mouse para ver o motivo; tente de novo mais tarde |
 | <a id="pc-no-access"></a>"Sem acesso: precisa de uma conta de administrador neste PC" | Um dado do PC precisa de uma conta de administrador | Use uma conta de administrador para esse host |
-| <a id="pc-powershell-blocked"></a>"Não foi possível ler: o Windows não deixou o PowerShell abrir no seu PC (um antivírus pode bloqueá-lo)" | Foi o seu próprio PC que recusou abrir o PowerShell, não o que você estava lendo | Confira o antivírus do seu PC, ou ponha o **Ler dados dos PCs com** em **WMI direto** |
+| <a id="pc-powershell-blocked"></a>"Não foi possível ler: o Windows não deixou o PowerShell abrir no seu PC (um antivírus pode bloqueá-lo)", ou depois de um comando: "o Windows não deixou o PowerShell abrir no seu PC. Um antivírus pode bloqueá-lo." | Foi o seu próprio PC que recusou abrir o PowerShell, não o que você estava lendo | Confira o antivírus do seu PC, ou ponha o **Ler dados dos PCs com** em **WMI direto** |

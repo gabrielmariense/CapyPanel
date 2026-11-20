@@ -232,3 +232,5 @@ and stays until you close it.
 | <a id="command-access-denied"></a>"Couldn't log off bruno on DESK-02: access denied. It needs an admin account on that PC." | The account isn't an administrator there | **Try another account…** asks for one, and for which PCs, then runs the command again |
 | <a id="command-nobody-signed-in"></a>"… (nobody signed in)" on a greyed command | The last refresh, under 10 minutes old, found nobody at the PC | Refresh the host if someone has signed in since |
 | <a id="command-no-folder"></a>"there's no folder there." | The path in **Open a path…** isn't a folder | Check the path |
+| <a id="command-timed-out"></a>"Couldn't … on DESK-02: it took too long to answer." | No answer came in time: the PC is busy, the network is slow, or the command got stuck there | Try again. If it keeps happening, check the PC |
+| <a id="command-windows-error"></a>"Couldn't … on DESK-02: Windows error …." | Windows on that PC refused the command with a code CapyPanel has no words for | Try again. The code is one of Windows' system error codes, which Microsoft lists by number |
