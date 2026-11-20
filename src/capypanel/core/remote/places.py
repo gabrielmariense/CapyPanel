@@ -1,6 +1,5 @@
-"""Opening another PC's folders and management consoles on this PC: File Explorer over its admin
-shares (C$, D$…) and Windows' consoles pointed at it. Nothing runs on the other PC; Windows asks
-for a password itself when the user's own account isn't let in."""
+"""Opening another PC's folders and management consoles on this PC (Explorer over its admin
+shares, Windows' consoles pointed at it); nothing runs there, and Windows asks for a password."""
 
 import os
 import re
@@ -28,10 +27,8 @@ def startup_folder(host: str) -> str:
 
 
 def typed_path(host: str, typed: str) -> str:
-    r"""What someone typed in Open a path…, as a path File Explorer opens: `D:\Logs` or
-    `D$\Logs` on `host`, a path on its C: drive (`Users\Public`), or a full `\\PC\share\…` kept as
-    it is. Quotes around it, as File Explorer's "Copy as path" adds, are dropped. Raises
-    ValueError when nothing is left."""
+    r"""Open a path…'s text as File Explorer opens it: `D:\Logs` or `D$\Logs` on `host`, a path on
+    its C: (`Users\Public`), or `\\PC\share\…` as is, quotes dropped. ValueError when empty."""
     path = typed.strip().strip('"').strip().replace("/", "\\")
     if not path.strip("\\"):
         raise ValueError("no path")
@@ -44,9 +41,8 @@ def typed_path(host: str, typed: str) -> str:
 
 
 def user_folder(host: str, user: str) -> str:
-    r"""The profile folder of `user` ("DOMAIN\name" or "name") on `host`. Windows names a
-    second profile for the same name `name.DOMAIN` or `name.000`; then the newest one is picked.
-    Raises FileNotFoundError (and OSError when `host`'s C$ can't be read)."""
+    r"""The profile folder of `user` ("DOMAIN\name" or "name") on `host`, the newest when Windows
+    made more (`name.DOMAIN`, `name.000`). Raises FileNotFoundError, or OSError (C$ unreadable)."""
     name = user.rpartition("\\")[2]
     folders = share(host, "Users")
     exact = _join(folders, name)
@@ -64,9 +60,8 @@ def user_folder(host: str, user: str) -> str:
 
 
 def require_folder(path: str) -> None:
-    """Raises NotADirectoryError unless `path` is a folder: Windows' "open" runs a file it's
-    given, so a path typed to a script on the PC would run it on this one. It reads the
-    path over file sharing: call it off the window's thread."""
+    """Raises NotADirectoryError unless `path` is a folder: Windows' "open" runs a file, so a typed
+    path to a script on the PC would run it here. It reads over the network: off the UI thread."""
     if not os.path.isdir(path):
         raise NotADirectoryError(path)
 
