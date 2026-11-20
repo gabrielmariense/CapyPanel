@@ -1,6 +1,5 @@
-"""Writing the app's files safely: a new version is swapped in whole, so a crash or a second
-writer never leaves half a file. Also: whether this user may create files in a folder, and
-making a shared folder that other users can read but not change."""
+"""Writing the app's files safely (swapped in whole, never half written), whether a folder
+takes new files, and shared folders others can read but not change."""
 
 import json
 import logging
