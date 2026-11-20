@@ -1,6 +1,8 @@
 """Doc360 MPS counters against a small fake portal on this PC, with invented data."""
 
 import logging
+import subprocess
+import sys
 import threading
 import urllib.parse
 from collections.abc import Iterator
@@ -228,3 +230,16 @@ def test_parse_counters(text: str, expected: dict[str, Counter]) -> None:
 def test_parse_counters_without_its_columns() -> None:
     with pytest.raises(doc360.Changed, match="N/S or Life"):
         doc360.parse_counters("Cliente;Serial;Total\nExample;X1;5\n")
+
+
+def test_a_start_leaves_the_network_and_cipher_code_for_their_first_use() -> None:
+    # Doc360's urllib.request and http.cookiejar (about 50 ms) load with the first Doc360 read,
+    # and SNMP v3's cipher (about 10 ms) with the first encrypted Refresh. Its own process, as at
+    # start: this one imported them long ago.
+    code = "import sys, capypanel.ui.app; from capypanel.ui.tool_catalog import CATALOG; "
+    code += "[info.load() for info in CATALOG]; "
+    code += "print(sorted(m for m in ('urllib.request', 'http.cookiejar', 'cryptography') "
+    code += "if m in sys.modules))"
+    done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=60)
+    assert done.returncode == 0, done.stderr
+    assert done.stdout.strip() == "[]"
