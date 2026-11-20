@@ -9,8 +9,7 @@ from capypanel.core.printers.bulk import (
 )
 from capypanel.core.printers.printer import DOC360, SNMP, PrinterInfo, info_of, with_info
 
-# Windows PowerShell 5.1's `Get-Printer | Export-Csv` header: 40 columns (checked 14 Nov 2026 on a
-# real export's header; the rows below are invented).
+# Windows PowerShell 5.1's `Get-Printer | Export-Csv` header, from a real export; rows invented.
 WINDOWS_COLUMNS = [
     "RenderingMode",
     "PrinterStatus",

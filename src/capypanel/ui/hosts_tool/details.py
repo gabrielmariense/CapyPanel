@@ -144,10 +144,8 @@ class HostDetailsPanel(DetailsPanel):
     # ---- the command buttons ----
 
     def _command_grid(self, details: HostDetails) -> QWidget:
-        """Four columns of equal buttons, an icon over its word. The fixed row first: Refresh
-        (this PC), Commands (the Commands window), Users ▾ and Power ▾ in amber. Under it the
-        admin's quick commands in rows of four, in their order; a row that isn't full keeps its
-        buttons on the left, and with none picked only the fixed row shows."""
+        """Four columns of equal buttons: the fixed row (Refresh, Commands, Users ▾, Power ▾), then
+        the admin's quick commands in rows of four, in order; a short row keeps to the left."""
         widget = QWidget()
         column = QVBoxLayout(widget)
         column.setContentsMargins(0, 0, 0, 0)
@@ -384,10 +382,8 @@ class HostDetailsPanel(DetailsPanel):
         button: bool = True,
         said: bool = False,
     ) -> None:
-        """PC facts: read once when the host is opened here, with Read again (`button`). While
-        the slow part is still on its way, its rows read "Reading…". When nothing could be
-        read for one reason, it's said once, not on every row; and not at all when the panel
-        already says the PC didn't answer (`said`)."""
+        """PC facts, read once the host opens here; "Reading…" while the slow part comes. A reason
+        nothing could be read for is said once, not at all when the panel did (`said`)."""
         if facts is None:
             self.section(layout, _("PC facts"))
             layout.addWidget(self.muted(_("Not read yet")))
@@ -553,9 +549,8 @@ def facts_error_text(error: BaseException) -> str:
 
 
 class ValuePicker(QPushButton):
-    """A value you can change in Details: a flat button filling the value column, the value on
-    the left, small marks (key, pin) and one chevron at its right edge. A click opens its menu;
-    the tooltip says what the marks mean."""
+    """A value you can change in Details: a flat button filling the value column, the value on the
+    left, marks (key, pin) and a chevron at the right; its tooltip says what the marks mean."""
 
     def __init__(self, text: str, marks: Sequence[str], tip: str) -> None:
         super().__init__()

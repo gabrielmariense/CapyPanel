@@ -1,7 +1,4 @@
-"""Printers' help (0.30): the ? in each of its own windows, and "What does this mean?" on its
-warnings and errors, each at its own part or line of the docs. The shared part, the button, the
-link and the boxes, is tests/ui/test_help_links.py; the docs' side, every place on its page in
-both languages, is tests/docs/test_help_places.py."""
+"""Printers' help: each window's ?, and "What does this mean?" on its warnings and errors."""
 
 from datetime import datetime
 from pathlib import Path

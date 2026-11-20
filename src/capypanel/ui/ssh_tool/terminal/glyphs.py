@@ -1,12 +1,5 @@
-r"""Line, block and Powerline characters drawn by CapyPanel's own code, so they join across cells
-in every font and size: no seams in █, no gaps from a font at a small size, no missing blocks,
-and no wrong icons from a fallback font at Powerline's code points. No extra font ships.
-
-Drawn from Unicode's own charts: each box-drawing character's arms and weights are read from its
-Unicode name (unicodedata), the block elements are eighths of the cell, and Powerline's shapes
-fill the cell. Nothing is copied from another terminal's tables.
-
-Everything lands on whole pixels from the same offsets in every cell, so neighbours meet exactly."""
+"""Line, block and Powerline characters drawn by CapyPanel's own code from Unicode's charts, so
+they join across cells in every font and size, on whole pixels; no extra font ships."""
 
 import unicodedata
 from functools import cache
@@ -98,10 +91,8 @@ class Metrics:
         self.heavy = self.light * 2
         self.cx = (cw - self.light) // 2  # a light line's left edge; the same in every cell
         self.cy = (ch - self.light) // 2
-        # A double line's two strokes sit this far either side of where a light line would be
-        # (left or top edge to left or top edge): two line widths, so three widths of gap
-        # between them; less in a cell too narrow for that, so both strokes keep a line width
-        # clear of the cell's sides and never touch a neighbour's line.
+        # A double line's strokes sit two line widths either side of a light line's (three widths
+        # apart); less in a narrow cell, both kept a line width clear of the cell's sides.
         self.double = max(
             self.light, min(2 * self.light, self.cx - self.light, cw - self.cx - 2 * self.light)
         )
@@ -194,9 +185,8 @@ def _dash(
 
 
 def _stroke(p: QPainter, x: int, y: int, m: Metrics, color: QColor) -> None:
-    """A smooth pen, kept inside the cell at (x, y): a diagonal's flat end at a corner, or a
-    curve whose centre sits half a pixel off the middle, would reach into the next cell, and
-    the cursor, which draws its cell again in the background colour, would cut into it."""
+    """A smooth pen kept inside the cell at (x, y): a diagonal's flat end at a corner, or a curve
+    centred half a pixel off, would reach the next cell, and the cursor's redraw would cut it."""
     p.setClipRect(QRectF(x, y, m.cw, m.ch))
     pen = QPen(color, m.light)
     pen.setCapStyle(Qt.PenCapStyle.FlatCap)

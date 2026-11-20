@@ -28,7 +28,7 @@ def test_session_kinds_and_logon_times() -> None:
     assert sessions.session_kind("RDP-Tcp#3") == "rdp"
     assert sessions.session_kind("") == "unknown"  # a disconnected session's type is gone
     assert sessions.filetime(0) is None
-    # 2026-10-04 12:00 UTC as a FILETIME: 100 ns steps since 1601.
+    # A FILETIME: 100 ns steps since 1601.
     ft = int((datetime(2026, 10, 4, 12, tzinfo=UTC) - datetime(1601, 1, 1, tzinfo=UTC))
              .total_seconds() * 10_000_000)  # fmt: skip
     assert sessions.filetime(ft) == datetime(2026, 10, 4, 12, tzinfo=UTC)

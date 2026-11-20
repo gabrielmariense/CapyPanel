@@ -1,6 +1,5 @@
-"""The parts of a host's tab in the Profile cleanup tool: its box (the host's name, the filters and
-the profiles table, or a card saying what's happening or what went wrong), a profile's details
-and the Delete window. The right panel's cards are in side.py."""
+"""A host tab's parts in Profile cleanup: its box (the name, the filters and the profiles table,
+or a card on what's happening), a profile's details and the Delete window; cards are in side.py."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -152,13 +151,10 @@ class TabBox(QFrame):
 
 
 class Squeeze(QObject):
-    """Keeps a table's columns inside its box. When their full widths don't fit, the columns in
-    `order` give up width one after another, each down to its least (cut text ends in "…"),
-    while the last column keeps the room `last_least` says it needs. Only when that isn't
-    enough does the table scroll sideways. A width the admin drags becomes that column's full
-    width. `narrowed` says the full widths stopped (or started) fitting."""
+    """Keeps a table's columns in its box: when they don't fit, those in `order` give up width in
+    turn, down to their least, the last keeping `last_least`; only then does it scroll sideways."""
 
-    narrowed = Signal(bool)
+    narrowed = Signal(bool)  # the full widths stopped, or started, fitting
 
     def __init__(
         self,
@@ -233,9 +229,8 @@ class Squeeze(QObject):
 
 
 class Count(QWidget):
-    """The right end of a host tab's second line: how many rows show, or, with rows ticked, a
-    bin and "3 ticked · 12.4 GB" in bold amber. It never widens its row: short of room it ends
-    in "…" on the right, with the whole text in its tooltip, and its start is never cut."""
+    """A host tab's second line's right end: how many rows show or, with ticked rows, a bin and "3
+    ticked · 12.4 GB" in bold amber. It never widens its row; the tooltip has the whole text."""
 
     GAP = 5  # px between the bin and the words
     BIN = 14
@@ -249,9 +244,8 @@ class Count(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
     def show_count(self, text: str, ticked: bool, short: str = "", least: str = "") -> None:
-        """What stands in for `text` when it can't all fit: `short` ("3 ticked", without the
-        size), then `least` (just "3", beside the bin). A word is never cut; only a text
-        with neither ends in "…"."""
+        """What stands in for `text` when it can't all fit: `short` ("3 ticked", without the size),
+        then `least` (just "3", beside the bin). Words aren't cut: without both, it ends in "…"."""
         self._text, self._ticked, self._short, self._least = text, ticked, short, least
         font = QFont(self.font())
         font.setBold(ticked)
@@ -369,10 +363,8 @@ class FilterRow(QWidget):
 
     def show_count(self, shown: str, ticked: str = "", short: str = "", least: str = "",
                    shown_short: str = "") -> None:  # fmt: skip
-        """How many rows show; with rows ticked, how many and their size instead, in bold
-        amber with the bin, in the same place. Short of room, the ticked words lose the size
-        (`short`), then all but the number (`least`); the plain count loses its last word
-        (`shown_short`: "12 of 15"). A word is never cut."""
+        """How many rows show, or how many are ticked and their size in bold amber, with the bin.
+        Short of room: `short`, then `least`, or `shown_short` ("12 of 15"). No word is cut."""
         if ticked:
             self.shown.show_count(ticked, True, short, least)
         else:
@@ -464,9 +456,8 @@ def info_rect(cell: QRect) -> QRect:
 
 
 class _Careful(QStyledItemDelegate):
-    """Draws a 2 px amber outline round a ticked row, inside it so no row grows, over the
-    selection's colour; and, at the end of the clicked row, the (i) that opens the profile's
-    window."""
+    """A 2 px amber outline round a ticked row, inside it so no row grows, over the selection's
+    colour; and at the end of the clicked row, the (i) that opens the profile's window."""
 
     def paint(
         self,
@@ -542,12 +533,8 @@ class _Careful(QStyledItemDelegate):
 
 
 class ProfilesTable(QWidget):
-    """One row per profile and leftover. Only a row that can be deleted has a tick box; the
-    others are greyed, with their state saying why. A ticked row looks like something to be
-    careful with: amber text, "Will be deleted" with the bin, and an amber outline. A row that
-    was in a delete run shows how it ended instead. A click on a column's title sorts by it,
-    except the ticks' column. A row's details open from the (i) at the end of the clicked row,
-    Enter, or its right-click."""
+    """A row per profile and leftover; only a deletable one has a tick box, the rest greyed, their
+    state saying why. Ticked: amber, "Will be deleted", an outline; after a run, how it ended."""
 
     picked = Signal()  # another row has the selection
     ticked_changed = Signal()
@@ -617,9 +604,8 @@ class ProfilesTable(QWidget):
         results: dict[str, Result] | None = None,
         root: str = "",
     ) -> None:
-        """`sizes`: bytes for the rows counted; None for one being counted now. `results`: how
-        the rows of a delete run stand. `root`: the host's Users folder, for the State tips. A
-        tick on a row no longer shown is dropped: what's ticked is always in sight."""
+        """`sizes`: bytes per row counted, None while counting; `results`: a delete run's rows.
+        `root`: the host's Users folder, for State's tips. Ticks on rows not shown are dropped."""
         self._root = root
         kept = {item.data(USER, IDENT_ROLE) for item in self.tree.selectedItems()}
         current = self.selected()
@@ -1061,9 +1047,8 @@ class ProfileDetails(DetailsPanel):
 
 
 class DeleteDialog(Question):
-    """The question before profiles are deleted: which ones, that it's final, and a word to
-    type. Cancel is the default until the word is there; then the amber button lights, takes
-    the keyboard and becomes the default, so the Enter that follows deletes."""
+    """The question before profiles are deleted: which, that it's final, and a word to type. Cancel
+    is the default until the word is there; then the amber button lights and Enter deletes."""
 
     def __init__(
         self, parent: QWidget | None, host: str, profiles: Sequence[Profile], sizes: dict[str, int]

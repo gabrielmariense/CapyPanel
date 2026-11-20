@@ -1,7 +1,4 @@
-"""SNMP v3's user-based security model (RFC 3414, with RFC 7860's SHA-2 and RFC 3826's AES):
-an account's passwords turned into keys for one printer, each message signed and each answer's
-signature checked, and the request's contents encrypted. Passwords stay in memory: never in a
-log, a repr or an error message."""
+"""SNMP v3's user-based security (RFC 3414, 7860 and 3826): keys, signatures, encryption."""
 
 import hashlib
 import hmac
@@ -34,7 +31,8 @@ class Privacy(Enum):
 
 @dataclass(frozen=True)
 class Account:
-    """An SNMP v3 user. Without `auth` it's sent unsigned; `privacy` needs `auth` too."""
+    """An SNMP v3 user. Without `auth` it's sent unsigned; `privacy` needs `auth` too.
+    Its passwords never reach a log, a repr or an error message."""
 
     user: str
     auth: Auth | None = None

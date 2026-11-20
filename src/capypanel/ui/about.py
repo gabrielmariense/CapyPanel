@@ -81,9 +81,8 @@ def open_url(url: str) -> None:
 
 
 class AboutPage(Page):
-    """Settings > About: the app (icon, name, version, what it is, its notices and links),
-    Credits, Licenses as the one table design, then where CapyPanel keeps its files (with
-    `paths`). Help > About opens it."""
+    """Settings › About: the app (icon, name, version, what it is, notices, links), Credits and
+    Licenses, then where CapyPanel keeps its files (`paths`). Help › About opens it too."""
 
     HELP_PLACE = "settings-about"
 
@@ -231,9 +230,6 @@ class AboutPage(Page):
                 area.ensureWidgetVisible(self.licenses_section)
         else:
             open_url(url)
-
-
-# ---- Licenses ----
 
 
 class LicenseReader(QDialog):

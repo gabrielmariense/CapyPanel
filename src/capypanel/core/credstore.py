@@ -1,13 +1,10 @@
-"""Secrets CapyPanel keeps between runs, such as the printers' SNMP community string and, when
-the user chooses so, the passwords typed for connection profiles. They're stored in
-Windows Credential Manager under the user's own account. They never go into the settings file
-or a log: Windows encrypts them for this user, who can see or remove them in Control Panel ›
-Credential Manager › Windows Credentials."""
+"""Secrets kept between runs (SNMP communities, profile passwords when chosen) in Windows
+Credential Manager for this user only, never in the settings file or a log."""
 
 import ctypes
 from ctypes import wintypes
 
-PREFIX = "CapyPanel/"  # every target name CapyPanel uses starts with this
+PREFIX = "CapyPanel/"
 _GENERIC = 1  # CRED_TYPE_GENERIC
 _PERSIST_LOCAL_MACHINE = 2  # kept for this user on this PC, not roamed to others
 _NOT_FOUND = 1168  # ERROR_NOT_FOUND
@@ -72,8 +69,7 @@ def load(name: str) -> str | None:
 
 
 def read(name: str) -> tuple[str, str] | None:
-    """The user and secret kept as CapyPanel/<name>, or None when there's none. Raises
-    OSError."""
+    """The user and secret kept as CapyPanel/<name>, or None when there's none. Raises OSError."""
     found = _P(_Credential)()
     if not _advapi32.CredReadW(PREFIX + name, _GENERIC, 0, ctypes.byref(found)):
         error = ctypes.get_last_error()

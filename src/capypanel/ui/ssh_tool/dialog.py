@@ -1,8 +1,5 @@
-"""Adding and editing an SSH host: what the host dialog asks (name, address, group, tags, notes),
-plus its port and the name to log in as. Neither field takes a space or a leading "-", which
-ssh.exe would read as an option, nor the characters ssh.exe refuses there (launch.py). No
-password: ssh.exe asks for it, or uses a key. Log in as left empty follows the host's group
-(core/ssh/host.py); its hint says what that gives."""
+"""Adding and editing an SSH host: the host dialog's fields plus port and Log in as, neither taking
+a space, a leading "-" (an option to ssh.exe) or what ssh.exe refuses; ssh.exe asks passwords."""
 
 from dataclasses import dataclass
 

@@ -131,9 +131,6 @@ def test_it_is_the_fourth_tool_on_the_rail_with_ctrl_4(qapp: QApplication, tmp_p
 
 
 def test_a_tool_built_alone_takes_its_toolbar_with_it(shell: FakeShell) -> None:
-    """In the window, the tool's page holds its toolbar. Built alone, the toolbar outlived the
-    tool and its commands, and the next theme switch broke on a deleted command's key (CI on
-    build 623)."""
     tool = SshTool(shell)
     toolbar = tool.toolbar
     tool.deleteLater()
@@ -167,8 +164,6 @@ def _ssh(window: "CapyWindow") -> SshTool:
 def test_ssh_shows_the_list_open_in_hosts_and_an_edit_in_either_shows_in_both(
     capy: "CapyWindow", tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """One list for every host (his words, 2026-11-18): a host added in SSH is in Hosts at
-    once, and one edited in Hosts keeps its port and Log in as."""
     from capypanel.ui.hosts import HostDialog
     from capypanel.ui.hosts_tool import tool as hosts_module
 
@@ -236,7 +231,6 @@ def test_a_list_picked_or_made_in_ssh_opens_in_hosts_and_profile_cleanup(
 
 
 def test_ssh_keeps_no_lists_of_its_own(capy: "CapyWindow", monkeypatch: pytest.MonkeyPatch) -> None:
-    """No SSH lists folder; Manage host lists… opens Hosts' page, which manages them."""
     places = capy.paths.lists("ssh")
     assert not places.shared_dir.exists() and not places.user_dir.exists()
     opened: list[str | None] = []
@@ -327,8 +321,6 @@ def test_the_right_click_menu_starts_with_connect_in_bold(ssh: SshTool) -> None:
 
 
 def test_connect_s_key_reads_enter_in_the_host_menu(ssh: SshTool) -> None:
-    """Qt would draw its own "Return" after Connect: the theme keeps that room blank, and the
-    menu's ShortcutLayer draws "Enter" there, as Windows names the key."""
     themes.apply(themes.DEFAULT_THEME)  # its watcher keeps the room in every menu
     _select(ssh, "nas-01")
     menu = QMenu()
@@ -520,7 +512,6 @@ NONE = "None: your SSH config, then your Windows user name"
 def test_details_log_in_as_is_a_picker_of_the_names_the_list_uses(
     ssh: SshTool, servers: Path
 ) -> None:
-    """His 16:48 ask: picking it only in the host's edit window was too far away."""
     _select(ssh, "nas-01")
     picker = ssh.details.login_button
     assert picker is not None and picker.marks == ("pin",)  # its own name, as Hosts pins one
@@ -621,7 +612,6 @@ def test_a_group_s_log_in_as_is_taken_by_its_hosts_without_a_name_of_their_own(
 
 
 def test_log_in_as_has_a_section_of_its_own_in_both_menus(ssh: SshTool) -> None:
-    """As Hosts has Commands run as: a line before it and one after (Dante, build 630's check)."""
     _select(ssh, "nas-01", "web-01")
     menu = QMenu()
     ssh.fill_item_menu(menu, ssh.selected_items())

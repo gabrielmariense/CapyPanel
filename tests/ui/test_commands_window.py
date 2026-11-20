@@ -402,8 +402,6 @@ def test_the_window_can_be_made_any_size_and_reopens_as_it_was_left(window: Capy
 def test_a_search_s_connect_to_opens_manual_connection_with_the_pc_typed(
     window: CapyWindow, calls: list[tuple[Any, ...]]
 ) -> None:
-    """Hosts' Connect to {host}… (his idea from the 0.28 test): Manual connection with the PC
-    already in Host; nothing connects until Connect is pressed there."""
     window.hosts.manual_connect_to(" 192.0.2.77 ")
     commands = window.hosts._commands_window  # pyright: ignore[reportPrivateUsage]
     assert isinstance(commands, CommandsWindow)

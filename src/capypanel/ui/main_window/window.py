@@ -1,7 +1,5 @@
 """The main window: the shell that shows the tools. It owns the menu bar, the rail, the toolbar
-area, the status bar, Settings, the theme and the language; each tool owns its toolbar, panels
-and commands. The rail, View's tools, the toolbar, the tool and the status bar's text all follow
-the tool shown. With none shown, the Home page fills the window."""
+area, the status bar, Settings, the theme and the language; each tool, its toolbar and panels."""
 
 import logging
 from collections.abc import Callable, Sequence
@@ -95,9 +93,8 @@ class MainWindow(QMainWindow):
         self._notified_by: str | None = None  # the tool behind the last notification
         self._page_of: dict[str, QWidget] = {}  # each tool's page: its toolbar and the tool
 
-        # The rail runs down the left edge; the tool shown, its toolbar on top, fills the rest.
-        # This frame comes before the tools: a widget put into a styled one is restyled whole,
-        # so each tool goes in once, into its place, not up through four layers (0.09 s).
+        # The rail on the left; the tool shown, its toolbar on top, fills the rest. This frame comes
+        # before the tools: a widget put into a styled one is restyled whole, so each goes in once.
         central = QWidget()
         row = QHBoxLayout(central)
         row.setContentsMargins(0, 0, 0, 0)
@@ -188,9 +185,8 @@ class MainWindow(QMainWindow):
         self._show(None)
 
     def _show(self, tool_id: str | None) -> None:
-        """The rail, View's tools, the toolbar, the tool and the status bar follow. Home has
-        no toolbar and nothing on the status bar. A tool's first-use warning comes before its
-        first showing; its guide after, the first time."""
+        """The rail, View, the toolbar, the tool and the status bar follow; Home has no toolbar.
+        A tool's first-use warning comes before its first showing, its guide after."""
         if tool_id is not None and on_screen(self):
             tool = self.tools[tool_id]
             if tool.first_use_pending() and not tool.first_use_warning(self):
@@ -495,16 +491,14 @@ class MainWindow(QMainWindow):
         self.tray.message_clicked.connect(self._notification_clicked)
         app = QGuiApplication.instance()
         if isinstance(app, QGuiApplication):
-            # When Windows ends the session, Qt says aboutToQuit, then closes the windows, all
-            # within WM_ENDSESSION. commitDataRequest comes earlier, and also when the end is
-            # then cancelled, so it's no sign (checked on Qt 6.11).
+            # When Windows ends the session, Qt says aboutToQuit, then closes the windows, all in
+            # WM_ENDSESSION. commitDataRequest also comes when the end is then cancelled: no sign.
             app.aboutToQuit.connect(self._session_ending)
         self._update_tray()
 
     def _session_ending(self) -> None:
-        """Windows is logging off or shutting down: the X then quits with no question, neither
-        its own nor a tool's (open SSH connections), and no tray, so CapyPanel never holds the
-        shutdown up. Every other quit says aboutToQuit after the window has closed."""
+        """Windows is logging off or shutting down: the X quits asking nothing, its own or a tool's,
+        and no tray, so CapyPanel never holds the shutdown up."""
         self._quitting = True
         self._tools_agreed = True
 
@@ -564,9 +558,8 @@ class MainWindow(QMainWindow):
             QApplication.quit()  # a hidden window closing doesn't end the app by itself
 
     def _close_choice(self) -> str | None:
-        """What the X does now: settings.CLOSE_TRAY, CLOSE_QUIT, or None to stay open. "Ask
-        each time" asks every time, even with nothing running on its own: from the tray the
-        window comes back at once, where a new start takes seconds."""
+        """What the X does now: CLOSE_TRAY, CLOSE_QUIT, or None to stay open. "Ask each time" asks
+        even with nothing running: from the tray it's back at once, a new start takes seconds."""
         if self._quitting or not self.tray.available():
             return settings.CLOSE_QUIT
         choice = self.prefs.get(settings.CLOSE_KEY, settings.CLOSE_ASK)
@@ -719,9 +712,8 @@ class MainWindow(QMainWindow):
         return any(tool.working() for tool in self.tools.values())
 
     def quit_for_update(self, start_helper: Callable[[], None]) -> bool:
-        """Closes CapyPanel for an update, once every tool agrees (a profile being deleted asks
-        first); `start_helper` runs just before, so the new version takes over. False: a tool
-        kept it open and nothing was started."""
+        """Closes CapyPanel for an update once every tool agrees (a profile delete asks first),
+        `start_helper` running just before. False: a tool kept it open and nothing was started."""
         if not all(tool.quit_question(self) for tool in self.tools.values()):
             return False
         start_helper()

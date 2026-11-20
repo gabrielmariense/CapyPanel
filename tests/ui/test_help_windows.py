@@ -1,7 +1,5 @@
-"""The ? in the main window's tools' windows (topic-030): first in each window's button row, on
-its left, opening that window's own part of the docs, and F1 with it. A question has no ?: F1
-opens the part of the window that asked. Printers' own windows are in its tests; the places
-themselves are checked against the docs by tests/docs/test_help_places.py."""
+"""The ? in the main window's tools' windows: first in each button row, opening that window's part
+of the docs, F1 with it; a question has none, F1 opening the part that asked."""
 
 from collections.abc import Iterator
 from pathlib import Path

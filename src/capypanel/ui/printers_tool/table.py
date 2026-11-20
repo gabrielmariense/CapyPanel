@@ -1,6 +1,4 @@
-"""The printer table: name, address, Status, Toner, model (with the brand in it) and tags;
-brand, serial number and asset tag can be shown from the column titles' right-click menu.
-Status and Toner come from Refresh; they're kept in memory, never in the list file."""
+"""The printer table; Status and Toner come from Refresh and stay in memory, not the file."""
 
 from collections.abc import Callable, Sequence
 

@@ -1,8 +1,4 @@
-"""A printer's own details: brand, model, serial, asset tag and where its page counters come from.
-
-They live in the host entry under one key, "printer", so a printer list is a normal host
-list. Odd values are read as empty and the original is kept as typed, so opening and saving a
-list never loses anything."""
+"""A printer's details, under its host entry's "printer" key: a printer list is a host list."""
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace

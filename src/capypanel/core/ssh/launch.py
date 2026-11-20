@@ -1,17 +1,5 @@
-"""Connecting to an SSH host with Windows' own client, ssh.exe: in a tab of the SSH tool (its
-command line here, its pseudo console in conpty.py) or in a console window of its own.
-CapyPanel hands it the address, the port and the name to log in as, nothing more: ssh.exe asks
-for the password itself, or uses a key, so no password ever passes through CapyPanel.
-
-The separate window is the holder's (holder.py): CapyPanel's own exe, which runs ssh.exe in it
-and keeps it open after an error, so ssh.exe's message can be read there.
-
-What reaches ssh.exe comes from a list file anyone who can write to it could edit, so it's
-checked first: an address or a name that starts with "-" would be read as an option (ssh's
--oProxyCommand= runs a program), and "--" ends ssh.exe's options before the address anyway.
-Nor does either take the characters ssh.exe 9.5 refuses: a ProxyCommand in someone's own ssh
-config that names the host (%h) runs in a shell, and older ssh.exe builds (Windows 10's 8.1)
-pass them on to it."""
+"""Connecting with Windows' own ssh.exe, in a tab or a window of its own (holder.py): only the
+address, port and login name reach it, checked first, so no password passes through CapyPanel."""
 
 import ctypes
 import logging
@@ -57,9 +45,8 @@ def is_destination(text: str) -> bool:
 
 
 def command_line(exe: Path, destination: str, info: SshInfo) -> list[str]:
-    """ssh.exe and its arguments: the port unless it's 22 and the name unless there's none
-    (ssh.exe's own config decides those then), "--", then the address. Raises ValueError for
-    an address, port or name ssh.exe would misread."""
+    """ssh.exe's arguments: the port unless 22, the name unless none (its config decides), "--",
+    then the address. Raises ValueError for an address, port or name ssh.exe would misread."""
     if not is_destination(destination):
         raise ValueError("not an address ssh.exe can take")
     argv = [str(exe)]
@@ -86,9 +73,8 @@ def tab_command(destination: str, info: SshInfo) -> list[str]:
 
 
 def connect(destination: str, info: SshInfo, name: str = "") -> subprocess.Popen[bytes]:
-    """ssh.exe connecting in a window of its own, the holder's; `name` is the host as the
-    window's words call it. Returns as soon as the holder has started: the window lives on its
-    own, after CapyPanel too. Raises SshMissing, ValueError or OSError."""
+    """ssh.exe in a window of its own, the holder's; `name` is the host as its words say it. Returns
+    once the holder started (it outlives CapyPanel). Raises SshMissing, ValueError or OSError."""
     exe = ssh_exe()
     if exe is None:
         raise SshMissing
@@ -96,9 +82,8 @@ def connect(destination: str, info: SshInfo, name: str = "") -> subprocess.Popen
     log.info("Starting ssh.exe %s", subprocess.list2cmdline(argv[1:]))  # no secret in it
     return subprocess.Popen(  # noqa: S603 -- CapyPanel's own exe; ssh.exe's arguments checked
         [*own_start(), *holder.args_for(argv, name or destination, i18n.language())],
-        # No console from CapyPanel: the holder opens its own, and the person types into
-        # ssh.exe there, never into CapyPanel. Never a new process group either, which would
-        # start it ignoring Ctrl+C.
+        # No console from CapyPanel: typing goes to ssh.exe in the holder's own. No new process
+        # group either: it would start ignoring Ctrl+C.
         creationflags=subprocess.DETACHED_PROCESS,
         close_fds=True,
         env={**os.environ, NO_SPLASH: "1"},  # the built exe's launcher shows no splash
@@ -113,10 +98,8 @@ def own_start() -> list[str]:
 
 
 def open_windows() -> int:
-    """How many separate windows are open from this copy of CapyPanel: its own exe running in
-    this Windows session other than this process, which only a holder can be, since CapyPanel
-    itself runs once in a session. They keep its files in use, so an update can't replace them
-    while they're open. From source an update never replaces files: 0."""
+    """How many separate windows this copy has open (its exe in this Windows session, other than
+    this process): they hold its files, which an update can't replace. 0 from source."""
     if not getattr(sys, "frozen", False):
         return 0
     exe = Path(sys.executable)
@@ -142,8 +125,6 @@ def _same_file(path: str, exe: Path) -> bool:
     except OSError:
         return False
 
-
-# ---- Windows' list of processes ----
 
 _k32 = ctypes.WinDLL("kernel32", use_last_error=True)
 _SNAPPROCESS = 0x2

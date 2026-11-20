@@ -1,7 +1,5 @@
-"""The groups as a tree that can be rearranged by dragging, "Move to", and Inventory > Manage
-groups….
-Groups show in the list's own order (not sorted), so a team can arrange them as it likes;
-"Sort A–Z" is a one-time button."""
+"""The groups as a tree rearranged by dragging, "Move to", and Inventory > Manage groups…. Groups
+show in the list's own order, as a team arranged them; "Sort A–Z" is a one-time button."""
 
 from collections.abc import Callable, Iterable, Sequence
 
@@ -444,9 +442,8 @@ class TreeMenu(QMenu):
 def fill_move_menu(
     menu: TreeMenu, host_list: HostList, group_id: str, apply: Callable[[str | None], None]
 ) -> None:
-    """Move to: "Groups" (the pane's heading, i.e. not inside another group), with every group
-    this one can go into hanging under it as a tree. Where it is now is ticked and tinted.
-    `apply` gets the new parent's id, or None for directly under Groups."""
+    """Move to: "Groups" (the pane's heading: in no group), every group this one can go into
+    as a tree under it, its place now ticked and tinted. `apply` gets the parent's id, or None."""
     group = host_list.group(group_id)
     current = group.parent if group else None
     exclusive = QActionGroup(menu)
@@ -471,9 +468,8 @@ def fill_host_move_menu(
     current: str | None = None,
     skip: Iterable[str] = (),
 ) -> None:
-    """Where hosts can go: "No group" first, then the groups as a tree. `apply` gets the
-    group's id, or NO_GROUP; `current` (a group or NO_GROUP) is ticked, and picking it does
-    nothing."""
+    """Where hosts can go: "No group" first, then the groups as a tree. `apply` gets the group's id
+    or NO_GROUP; `current` (a group or NO_GROUP) is ticked, and picking it does nothing."""
     left_out = set(skip)
     loose = menu.add_row(_("No group"))
     loose.setData(NO_GROUP)
@@ -494,9 +490,8 @@ def fill_group_menu(
     skip: Iterable[str] = (),
     rooted: bool = False,
 ) -> None:
-    """Every group as a tree (groups in `skip` left out); `current` is ticked and tinted, and
-    picking it does nothing. `apply` gets the picked group's id. `rooted`: the top-level groups
-    hang from the row above too (a "Groups" root)."""
+    """Every group as a tree (`skip`'s left out); `current` is ticked and tinted, picking it does
+    nothing. `apply` gets the picked id; `rooted`: top-level groups hang from a "Groups" row."""
     left_out = set(skip)
 
     def walk(parent_id: str | None, branches: tuple[bool, ...]) -> None:

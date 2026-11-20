@@ -106,8 +106,6 @@ def test_a_session_stops_asking_after_its_time_limit() -> None:
     assert agent.requests == []  # nothing sent once the time is up
 
 
-# ---- SNMP v3 ----
-
 SIGNED = usm.Account("sample", usm.Auth.SHA256, "auth-pass-1")
 PRIVATE = usm.Account("sample", usm.Auth.SHA, "auth-pass-1", usm.Privacy.AES128, "priv-pass-1")
 

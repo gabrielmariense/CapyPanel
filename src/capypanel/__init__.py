@@ -16,9 +16,8 @@ def _stamped(package: Path) -> tuple[str, str, str] | None:
 
 
 def _version() -> str:
-    """A source checkout's own pyproject.toml says it: one small file, and right even when the
-    environment wasn't synced after a pull (the installed package data then still names the
-    version before). An installed copy asks that package data."""
+    """A source checkout reads its own pyproject.toml, right even when the environment wasn't
+    synced after a pull; an installed copy asks its package data."""
     if _STAMPED is not None:
         return _STAMPED[0]
     try:
@@ -65,10 +64,8 @@ _SQUASHED = 336 - 35
 
 
 def _build_number(root: Path, commit: str) -> str:
-    """Every commit ever made toward this build, "1378", the squashed ones too: it only grows,
-    so a bigger number is a newer build. "" without git. Counting asks git, which can take
-    seconds on a cold start, so the answer is kept beside the checkout's own files (in .git,
-    never committed) and git is asked once per commit."""
+    """Every commit toward this build, the squashed ones too: a bigger number is newer.
+    Kept in .git and asked of git once per commit, since git can take seconds on a cold start."""
     import contextlib
     import subprocess
 
@@ -96,7 +93,7 @@ def _build_number(root: Path, commit: str) -> str:
     return number
 
 
-# What About and the log show: "0.8.1", plus "build 1378 (3b4c3e0)" from source and in a
+# What About and the log show: "0.8.1", plus "build N (commit)" from source and in a
 # packaged build: the number to compare with the build a test asks for, and its commit.
 if _STAMPED is not None:
     _NUMBER, _COMMIT = _STAMPED[1], _STAMPED[2]

@@ -1,6 +1,4 @@
-"""Settings › Printers › Warnings and supplies, its Warnings section: one row per reason a printer
-can be warned about, A to Z, with a tick for In CapyPanel (the red count on the Printers icon and
-the strip above the table) and one for the Windows notification."""
+"""Settings › Printers › Warnings and supplies: the Warnings table, one row per reason."""
 
 from PySide6.QtCore import (
     QAbstractItemModel,
@@ -113,7 +111,7 @@ class WarningsTable(QWidget):
         )  # Space ticks a cell
         head = table.headerItem()
         delegate = CentredTick(table)
-        for column in (HERE, NOTIFY):  # no tips on the titles (Gabriel, 2026-11-13)
+        for column in (HERE, NOTIFY):  # no tips on the titles
             head.setTextAlignment(column, Qt.AlignmentFlag.AlignCenter)
             table.setItemDelegateForColumn(column, delegate)
         words = {reason: reason.words() for reason in Reason}

@@ -1,4 +1,4 @@
-# Runs on every pull request and every push to main. All steps must pass before merging.
+# The checks every pull request must pass before it merges.
 name: CI
 
 on:
@@ -27,14 +27,12 @@ jobs:
       - name: Type check
         run: uv run pyright
       - name: Tests
-        # Spread over every core, a few times faster; tests/conftest.py keeps the ones that use
-        # Credential Manager on one worker.
+        # Spread over every core: a few times faster.
         run: uv run pytest -n auto --dist loadgroup
 
   help-links:
-    # Every place the app's help opens is on its docs page, in English and Portuguese. A job of
-    # its own: a new message's docs line is written after the code freeze, so this one can be
-    # red while the checks above are green, and a merge waits for both.
+    # Every place the app's help opens is on its docs page, in both languages. A job of its own:
+    # docs lines come after the code freeze, so it can be red while the checks above are green.
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7

@@ -41,7 +41,7 @@ def run(address: str, checks: Checks) -> Found:
         found = tuple(sessions.read_sessions(address, checks.account))
     except RemoteError as e:
         return Found(state, users_error=e, answered=answered)
-    return Found(Status.ONLINE, found, answered=answered)  # it answered, so it's up
+    return Found(Status.ONLINE, found, answered=answered)
 
 
 def account_rejected(found: Found | None, _error: Exception | None = None) -> bool:

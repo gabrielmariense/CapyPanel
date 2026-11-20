@@ -1,12 +1,5 @@
-"""Every command that acts on one host, defined once. The host right-click menu, the Details
-panel's buttons and the manual connection window are all built from this list, so a new command
-shows up everywhere at once and looks the same in each place.
-
-Each command says what it needs from the PC, which is how CapyPanel knows what can fail: READ
-only reads (status, users, facts), OPEN_HERE opens something on this PC pointed at the PC (File
-Explorer, a console), and ASK_WINDOWS asks Windows on the PC to do something through its own
-remote calls (log off, restart, the print spooler). Nothing in this list installs or runs a
-program on the PC."""
+"""Every command that acts on one host, defined once for the menus, Details and manual connection.
+Each says what it needs from the PC (Need); none installs or runs a program on the PC."""
 
 from dataclasses import dataclass
 from enum import StrEnum
@@ -15,9 +8,9 @@ from capypanel.core.i18n import N_
 
 
 class Need(StrEnum):
-    READ = "read"
-    OPEN_HERE = "open-here"
-    ASK_WINDOWS = "ask-windows"
+    READ = "read"  # only reads: status, users, facts
+    OPEN_HERE = "open-here"  # opens a tool on this PC, pointed at the PC (Explorer, a console)
+    ASK_WINDOWS = "ask-windows"  # asks Windows on the PC through its own remote calls
 
 
 class Group(StrEnum):  # in the order the menus and the Commands window show them
@@ -170,9 +163,8 @@ MENU_QUICK = 4  # the right-click menu shows this many: the first ticked, in tha
 
 
 def quick_from(kept: object) -> tuple[str, ...]:
-    """The quick commands kept in an admin's settings, always in the Commands window's order
-    (one order everywhere, so ticking never moves anything), without anything that can't be
-    one; the starting four when nothing was ever chosen. None chosen is a choice."""
+    """The quick commands kept in an admin's settings, in the Commands window's order, without any
+    that can't be one; the starting four when nothing was ever chosen (none chosen is a choice)."""
     if not isinstance(kept, list):
         return QUICK
     return tuple(command_id for command_id in CAN_BE_QUICK if command_id in kept)

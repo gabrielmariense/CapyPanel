@@ -1,6 +1,4 @@
-"""Printers whose page counters come from Doc360 MPS: the Refresh job, Details, the Report and
-the account in Settings. Doc360 itself is faked here; tests/core/printers/test_doc360.py
-covers the portal's pages."""
+"""Printers whose page counters come from Doc360 MPS, with Doc360 itself faked."""
 
 from dataclasses import replace
 from datetime import datetime

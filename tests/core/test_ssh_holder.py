@@ -1,5 +1,4 @@
-"""The separate window's holder, on a pretend console: nothing here opens a window or starts a
-program. Line 12 runs the real one, with a stand-in in ssh.exe's place."""
+"""The separate window's holder, on a pretend console: no window opens and no program starts."""
 
 import ctypes
 import sys

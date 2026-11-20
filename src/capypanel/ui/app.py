@@ -97,10 +97,8 @@ def _active() -> bool:
 
 
 def to_front(window: QWidget) -> None:
-    """Brings the window to the front with the focus, as any program someone just started,
-    also when they clicked another program while it loaded. Windows lets only the program in
-    front give the focus away, so for the moment of the switch CapyPanel shares that
-    program's input, the way Qt does for windows set to always activate."""
+    """Brings the window to the front with the focus, as any program just started, even after a
+    click elsewhere: only the program in front may give focus, so CapyPanel shares its input."""
     window.raise_()
     window.activateWindow()
     user32 = ctypes.WinDLL("user32", use_last_error=True)
@@ -133,10 +131,8 @@ def to_front(window: QWidget) -> None:
 
 
 class _HandOver:
-    """The main window takes over from the splash: it comes to the front with the focus, the
-    splash closes SPLASH_AFTER_MS later, under it. Closing only asks the splash's window to go;
-    when it's really gone, Windows activates whichever window comes next, so a main window
-    left without the focus is brought to the front once more."""
+    """The main window takes over from the splash: it comes to the front with the focus, and the
+    splash closing SPLASH_AFTER_MS later under it; left without the focus, it comes again."""
 
     def __init__(
         self,

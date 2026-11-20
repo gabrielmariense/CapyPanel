@@ -1,11 +1,5 @@
-"""Update the translations after changing any text in the app:
-
-    uv run python scripts/translations.py
-
-1. extract: collects every _() / ngettext() / N_() text from the code into capypanel.pot;
-2. update: merges new and changed texts into each language's .po file (for translators);
-3. compile: builds the .mo files the app reads.
-Then translate the new entries in the .po files and run it again."""
+"""Updates the translations after any text in the app changes: capypanel.pot, each language's
+.po file and the .mo files the app reads. Translate the new .po entries, then run it again."""
 
 import sys
 from pathlib import Path

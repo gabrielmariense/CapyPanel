@@ -143,8 +143,6 @@ def _panes() -> list[tuple[str, str, str, dict[str, str]]]:
 
 @pytest.mark.parametrize("pane", _panes(), ids=lambda p: p[0])
 def test_supply_colours_read_in_every_built_in_theme(pane: tuple[str, str, str, dict]) -> None:
-    """A bar or swatch shows on the pane and on a selected row (3:1). Yellow is too pale for a
-    light pane by nature: there its darker edge carries it, so the edge is what's measured."""
     theme_id, card, selection, c = pane
     for key in ("black", "cyan", "magenta", "other"):
         for back in (card, selection):

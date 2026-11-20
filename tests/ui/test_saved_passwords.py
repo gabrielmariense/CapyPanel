@@ -133,8 +133,6 @@ def test_every_login_window_has_remember_unticked(window: CapyWindow) -> None:
 
 
 def test_typing_a_remembered_password_again_keeps_it_remembered(window: CapyWindow) -> None:
-    """A PC rejected the account: its window starts with Remember ticked when Windows
-    already keeps that password, so typing it again doesn't delete the saved one."""
     hosts = window.hosts
     admin = Account("CORP\\admin", "old")
     hosts.accounts.use(Link(admin.user, Scope.ALL), admin, remember=True)

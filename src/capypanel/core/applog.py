@@ -21,9 +21,8 @@ def setup_logging(log_file: Path, level: int = logging.INFO) -> Path:
 
 
 def append_line(log_file: Path, line: str) -> None:
-    """One line at the end of a log of its own (the user profiles log); a full one moves aside
-    first, the oldest dropped. One writer at a time, so lines of hosts worked on together never
-    mix."""
+    """One line at the end of a log of its own (the user profiles log), moved aside when full.
+    One writer at a time, so the lines of hosts worked on together never mix."""
     with _LINES_LOCK:
         log_file.parent.mkdir(parents=True, exist_ok=True)
         if log_file.exists() and log_file.stat().st_size > LINES_SIZE:

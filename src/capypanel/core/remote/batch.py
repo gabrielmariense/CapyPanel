@@ -1,11 +1,5 @@
-"""Running one check on many hosts: a few at a time, stoppable, and careful with passwords.
-
-While an account isn't proven yet, hosts go one by one, so a mistyped password is rejected by
-one host instead of being tried on many (each rejection counts toward the account's lockout).
-Once a host has accepted it, the password is right: a host that still refuses it says
-something about that host (a broken trust with the domain, a local policy), so it's reported
-with the others and the rest carry on. Callbacks run on the worker threads; the UI turns them
-into Qt signals."""
+"""Running one check on many hosts, a few at a time and stoppable. Until a host accepts the
+account, hosts go one by one, so a mistyped password is rejected once, not on many (lockout)."""
 
 import threading
 from collections.abc import Callable, Sequence
@@ -15,9 +9,8 @@ WORKERS = 8  # hosts read at the same time: quick for a group, light on the netw
 
 
 class Batch[T, R]:
-    """`work(item)` for every item; `report(item, result, error)` after each one. When `halts`
-    says an outcome must stop everything, the items not started yet are skipped; with `proves`,
-    only until an item proves the account."""
+    """`work(item)` for each item, then `report(item, result, error)`, on the worker threads.
+    `halts`: an outcome that skips the rest (with `proves`, only until one proves the account)."""
 
     def __init__(
         self,

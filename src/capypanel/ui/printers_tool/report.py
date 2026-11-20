@@ -1,6 +1,4 @@
-"""The Printers tool's Report: the same window as Hosts', with the printers' columns. Last check
-(status, toner, page count, MAC address, firmware) comes from Refresh, which the window can run
-too."""
+"""The Printers tool's Report: Hosts' window with the printers' columns and Last check."""
 
 from capypanel.core.hosts.bulk import host_fields
 from capypanel.core.hosts.model import Host

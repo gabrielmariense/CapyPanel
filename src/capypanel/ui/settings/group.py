@@ -6,9 +6,8 @@ from capypanel.ui.settings.pages import Page
 
 
 class SettingsGroup:
-    """build() runs every time the Settings window is built, also after a language switch, so
-    it reads the tool's current settings. The pages apply each choice at once, through the tool.
-    Page ids are unique across tools ("hosts", "host_lists"…): Settings opens on them by id."""
+    """build() runs each time Settings is built (a language switch too): it reads the settings
+    then. Its pages apply each choice at once. Page ids are unique across tools, opened by id."""
 
     LABEL: ClassVar[str] = ""  # an N_() text, shown translated: "Hosts"
     TITLES: ClassVar[tuple[str, ...]] = ()  # its pages' titles, N_() texts: the list's width

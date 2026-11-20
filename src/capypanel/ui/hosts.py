@@ -196,8 +196,6 @@ def confirm(parent: QWidget, title: str, text: str, action: str, details: str = 
     return box.clickedButton() is yes
 
 
-# ---- tag field ----
-
 SEPARATORS = ",;"
 
 

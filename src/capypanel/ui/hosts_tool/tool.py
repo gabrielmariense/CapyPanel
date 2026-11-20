@@ -1,6 +1,5 @@
-"""The Hosts tool: the list workspace with hosts, plus connecting, connection profiles, Refresh
-(status and logged-on users), the host commands (opening a PC's folders, messaging or logging off
-its users, restarting it, its printers and facts, scripts), importing and Report."""
+"""The Hosts tool: the list workspace with hosts, plus connecting, connection profiles, Refresh,
+the host commands, importing and Report."""
 
 import html
 import logging
@@ -362,9 +361,8 @@ class HostsTool(ListWorkspace):
         self._selection_changed()
 
     def guide(self) -> Guide:
-        """Its own first steps: lists, tags, adding hosts, Details with the sample's row,
-        Connect, Refresh, the command buttons (when a picked host shows them) and Commands.
-        No step asks for a click."""
+        """Its own first steps: lists, tags, adding hosts, Details with the sample's row, Connect,
+        Refresh, the command buttons (when shown) and Commands. No step asks for a click."""
         bar = self.toolbar
 
         def buttons() -> list[QWidget]:  # the picked host's command buttons, every row
@@ -903,10 +901,8 @@ class HostsTool(ListWorkspace):
         self.table.show_hosts(items, {h.id: self._cells(h.id) for h in items})
 
     def matches(self, item: Host, needle: str) -> bool:
-        """The name, plus the address, status, users and tags when their columns show: only
-        what can be seen. Notes are the exception: they have no column, so they're always
-        searched. Status ("Not checked" too) and users come from the last Refresh (memory
-        only)."""
+        """The name, plus the address, status, users and tags when their columns show: what can be
+        seen. Notes, with no column, are always searched. Status and users: the last Refresh's."""
         table = self.table
         if super().matches(item, needle):
             return True
@@ -1084,9 +1080,8 @@ class HostsTool(ListWorkspace):
         line.triggered.connect(lambda: self.open_in_profile_cleanup(ids))
 
     def open_in_profile_cleanup(self, ids: Sequence[str]) -> None:
-        """Profile cleanup, then each host in a tab of its own there, scanned (a scan only reads;
-        a host with a tab already isn't read again). Its first-use warning comes first, and
-        cancelled, nothing opens."""
+        """Profile cleanup, each host in its own tab there, scanned (a scan only reads; a host with
+        a tab isn't read again). Its first-use warning comes first; cancelled, nothing opens."""
         tool = self._shell.tool(PROFILE_CLEANUP)
         if isinstance(tool, OpensHosts) and self._shell.show_tool(PROFILE_CLEANUP):
             tool.open_hosts(ids, True)
@@ -1313,9 +1308,8 @@ class HostsTool(ListWorkspace):
             self._ask_account(run)
 
     def _ask_account(self, run: CheckRun) -> None:
-        """Once the run is over, hosts that didn't let their account read who is logged on: one
-        question for all of them, naming them, with another account and the PCs to use it
-        for."""
+        """After the run, hosts whose account couldn't read who is logged on: one question for all,
+        naming them, with another account and the PCs to use it for."""
         rejected = run.rejected[-1] if run.rejected else None
         account = rejected or next((a for a in map(run.account_of, self._refused) if a), None)
         first = self._name_of(self._refused[-1]) if self._refused else ""
@@ -1656,9 +1650,8 @@ class HostsTool(ListWorkspace):
         self._save_prefs()
 
     def why_not_add(self, name: str, address: str) -> str:
-        """Why Add to host list… can't add the PC in the Commands window, "" when it can: no list
-        is open, the list has hosts at that address (each with where it sits, a line each), or
-        the list is read-only."""
+        """Why Add to host list… can't add the PC in Commands, "" when it can: no list is open, the
+        list has hosts at that address (where each sits, a line each), or it's read-only."""
         doc = self._doc
         if doc is None:
             return _("No host list is open.")

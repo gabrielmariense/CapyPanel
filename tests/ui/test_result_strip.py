@@ -1,6 +1,5 @@
-"""Hosts' result strip: its icon sits on the middle of the text's first line, whether the text
-takes one line beside the taller "Try another account…" button or wraps; a failure the docs
-explain gets "What does this mean?"."""
+"""Hosts' result strip: its icon on the middle of the text's first line, beside the taller button
+or wrapped; a failure the docs explain gets "What does this mean?"."""
 
 import pytest
 from PySide6.QtCore import QPoint

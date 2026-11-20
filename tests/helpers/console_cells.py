@@ -1,8 +1,5 @@
-"""The cells Windows' console gives characters. CONSOLE_CELLS: the samples as Windows' own
-console counted them, for the screen's tests. Run as a program inside a pseudo console (a test
-starts it there), it measures them: it writes each sample at the start of a row of the console
-and records how many cells the console moved its cursor, read with GetConsoleScreenBufferInfo.
-Its arguments: the samples' JSON file, then the file for the answer."""
+"""The cells Windows' console gives characters: CONSOLE_CELLS for the screen's tests; run in a
+pseudo console, it measures them (args: the samples' JSON file, then the answer's file)."""
 
 import ctypes
 import json
@@ -10,8 +7,7 @@ import sys
 from ctypes import wintypes as wt
 
 # Each sample's cells as Windows' own console gave them (its cursor column, read with
-# GetConsoleScreenBufferInfo, on Windows 11 build 26300, 2026-11-18). The screen must place
-# everything where the console does, or a row ends a cell off.
+# GetConsoleScreenBufferInfo). The screen must place everything where the console does.
 CONSOLE_CELLS = [
     ("abc", 3),
     ("ção", 3),  # pt-BR accents, precomposed

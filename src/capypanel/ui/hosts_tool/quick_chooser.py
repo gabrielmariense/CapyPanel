@@ -1,8 +1,5 @@
-"""Choosing the quick commands: the first tab of "Customize the details panel".
-
-One table, in the Commands window's order under its group headings, and that order is the
-buttons' too: ticking never moves a row (it made the list jump). The first four ticked are
-also in a host's right-click menu. It applies as you tick."""
+"""Choosing the quick commands (Customize the details panel's first tab): one table, in the
+Commands window's order and the buttons'; a tick moves no row. The first four go in host menus."""
 
 from collections.abc import Mapping, Sequence
 
@@ -116,8 +113,6 @@ class QuickChooser(QWidget):
     def picked(self) -> list[str]:
         return list(self._picked)
 
-    # ---- the rows ----
-
     def _fill(self) -> None:
         self._filling = True
         self.table.clear()
@@ -154,8 +149,6 @@ class QuickChooser(QWidget):
             row.setForeground(0, color)
         row.setToolTip(0, _(command.description))
         self.table.addTopLevelItem(row)
-
-    # ---- changes: each one applies at once ----
 
     def _ticked(self, row: QTreeWidgetItem, _column: int) -> None:
         command_id = row.data(0, ID)

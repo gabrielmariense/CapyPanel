@@ -1,13 +1,5 @@
-"""A connection profile: one way to reach a kind of host. Hosts and groups refer to it by id, so
-changing a profile changes every host that uses it. One JSON file per profile:
-
-    {"schema": 1, "id": "clinics", "name": "Clinics (MS-Logon + SecureVNC)",
-     "tool": "ultravnc", "login": "account", "options": ["securevnc"]}
-
-`login` says what the prompt asks for: "account" (user and password), "password" or "none".
-A typed password is remembered per profile, so one profile's password never reaches another's
-hosts. Every profile has a name, chosen by whoever made it. "settings_file" names the viewer
-settings file kept beside it ("clinics.vnc"), for tools that read one."""
+"""A connection profile: one way to reach a kind of host, one JSON file each, used by hosts and
+groups by id. A typed password is kept per profile, so it never reaches another profile's hosts."""
 
 import json
 import re
@@ -34,7 +26,7 @@ class ProfileError(ValueError):
 class ConnectionProfile:
     id: str
     tool: str
-    login: str = "password"
+    login: str = "password"  # the prompt asks for: "account" (user, password), "password" or "none"
     options: tuple[str, ...] = ()
     port: int | None = None  # None: the tool's port
     name: str = ""
@@ -70,9 +62,6 @@ def check_fits(profile: ConnectionProfile, tool: ToolDefinition) -> None:
         raise ProfileError(_("{tool} can't be given a user name.").format(tool=tool.name))
     if profile.settings_file and tool.settings_file is None:
         raise ProfileError(_("{tool} can't be given a settings file.").format(tool=tool.name))
-
-
-# ---- JSON <-> records ----
 
 
 def load(path: Path) -> ConnectionProfile:

@@ -1,5 +1,4 @@
-"""Adding and editing a printer: what the host dialog asks (name, address, group, tags, notes),
-plus the printer's own details."""
+"""Adding and editing a printer: the host dialog's fields plus the printer's own details."""
 
 from dataclasses import dataclass
 

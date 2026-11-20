@@ -7,9 +7,8 @@ CTRL_C_EXIT = 0xC000013A  # Windows ended the program: Ctrl+C, or its window was
 
 
 def is_error(code: int) -> bool:
-    """255 is ssh.exe's own error. Above 255 Windows ended ssh.exe, an error unless it's
-    0xC000013A. 1 to 254 is the remote shell's own code, a normal end: "exit" after Ctrl+C on
-    tail -f (130) isn't an error."""
+    """255 is ssh.exe's own error; above 255 Windows ended it, an error unless 0xC000013A. 1 to 254
+    is the remote shell's own code, a normal end ("exit" after Ctrl+C on tail -f gives 130)."""
     return code == 255 or (code > 255 and code != CTRL_C_EXIT)
 
 
@@ -32,9 +31,8 @@ def error_line(host: str, code: int) -> str:
 
 
 def ended_line(host: str, code: int, *, by_us: bool = False) -> str:
-    """The terminal tab's strip: the error line, or that the connection ended. A connection
-    CapyPanel closed (Reconnect, closing the tab) is never an error, whatever its code: Windows
-    gives it 0xC000013A or 0 as it likes."""
+    """The terminal tab's strip: the error line, or that the connection ended. One CapyPanel closed
+    (Reconnect, closing the tab) is never an error: Windows gives it 0xC000013A or 0 as it likes."""
     if by_us or not is_error(code):
         return _("The connection to {host} ended.").format(host=host)
     return error_line(host, code)

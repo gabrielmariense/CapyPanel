@@ -1,7 +1,5 @@
-"""Connection profiles live together in C:\\ProgramData\\CapyPanel\\profiles, next to the default
-list: the same for everyone on the PC. Windows permissions on the folder decide who can change
-them, and a file another standard user made is ignored. The app ships starter profiles (one per
-tool) that fill the folder the first time it's written; after that they're ordinary profiles."""
+"""Connection profiles, in the profiles folder everyone on the PC shares: Windows decides who
+changes them, another standard user's file is ignored, and the starters fill it once."""
 
 import json
 import logging
@@ -71,8 +69,6 @@ class ProfileStore:
                 continue
             self._profiles[profile.id] = profile
 
-    # ---- reading ----
-
     def all(self) -> list[ConnectionProfile]:
         return sorted(self._profiles.values(), key=lambda p: p.name.casefold())
 
@@ -103,8 +99,6 @@ class ProfileStore:
     def can_edit(self) -> bool:
         """Whether Windows lets this user create and change files in the profiles folder."""
         return can_create_files(self.folder)
-
-    # ---- changing ----
 
     def save(self, profile: ConnectionProfile, settings: bytes | None = None) -> None:
         """Writes a profile, new or changed, and `settings` as its new settings file (already
@@ -138,9 +132,8 @@ class ProfileStore:
         log.info("Default connection profile: %s", profile_id)
 
     def place_starters(self) -> None:
-        """At start: the shipped profiles go into the folder, so they sit with the rest of
-        CapyPanel's files from the first run. Skipped where this user can't create the folder:
-        the app's own copies are used then. Raises OSError."""
+        """At start: the shipped profiles go into the folder, beside CapyPanel's other files. Where
+        this user can't create it, the app's own copies are used. Raises OSError."""
         if self.folder.is_dir() or not self.can_edit():
             return
         self._seed()
@@ -148,9 +141,8 @@ class ProfileStore:
         log.info("Connection profiles placed in %s", self.folder)
 
     def missing_starters(self) -> list[ConnectionProfile]:
-        """The shipped profiles that were deleted, by name. One that was edited is still
-        there under its id, so it never counts; nor does a file in the way, e.g. one another
-        user made."""
+        """The deleted shipped profiles, by name. An edited one is still there under its id, so it
+        never counts; nor does a file in the way (one another user made, say)."""
         if not self.folder.is_dir():
             return []  # the shipped profiles are what's shown
         missing: list[ConnectionProfile] = []

@@ -1,9 +1,5 @@
-"""Keyboard shortcuts: which key runs which command, as each person sets them in Settings ›
-CapyPanel › Keyboard shortcuts. Every command a key can run is a row; today's keys are its
-defaults, and a person's changes are kept in their settings file (only what differs). Each tool's
-commands are its own rows, even one Hosts and Printers both have (Edit, Refresh…): a key set for
-one tool's leaves the other's as it was. Restart, Shut down and the other Power commands, and
-every command that disturbs whoever uses a PC, never get a key."""
+"""Keyboard shortcuts: which key runs which command, as each person sets them in Settings; today's
+keys are the defaults; changes go in their settings. A command disturbing a PC never gets a key."""
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
@@ -18,13 +14,11 @@ from capypanel.ui import menus
 PREFS_KEY = "shortcuts"  # this person's: {command id: "Ctrl+E", or "" for no key}
 EVERYWHERE = ""  # a command of the window itself (its menu bar), not of one tool
 OLD_SHARED = "list."  # before 0.28's last builds, one id for a command every list tool has
-# Keys no command can take: F1 is help's (0.30), Esc closes and ends a search, Ctrl+F searches
-# every list, the Tab keys move around a window and between tabs, and Ctrl+Shift+W closes the
-# tab in front (Profile cleanup's and the SSH tool's): a command with it would leave neither.
+# Keys no command can take: F1 is help's, Esc closes and ends a search, Ctrl+F searches every list,
+# the Tab keys move around and between tabs, and Ctrl+Shift+W closes the tab in front.
 RESERVED = ("F1", "Esc", "Ctrl+F", "Tab", "Shift+Tab", "Ctrl+Tab", "Ctrl+Shift+Tab", "Ctrl+Shift+W")
-# The window's commands whose keys reach CapyPanel from inside an SSH terminal, whatever keys
-# they have now: those that change tools (Home too) and open Settings. Every other key in a
-# terminal goes to the server (topic-027).
+# The window's commands whose keys reach CapyPanel from an SSH terminal, whatever their keys: those
+# that change tools (Home too) and open Settings. Every other key in a terminal goes to the server.
 PAST_TERMINAL = ("app.settings", "go.")  # an id, or the start of the ids
 PORTABLE = QKeySequence.SequenceFormat.PortableText
 NATIVE = QKeySequence.SequenceFormat.NativeText
@@ -33,11 +27,8 @@ DEAD_KEYS_END = 0x01001293  # the last of Qt's dead-key codes
 
 @dataclass(frozen=True)
 class KeyCommand:
-    """A command a key can run, as a tool or the window offers it: `id` names it in the
-    settings file ("hosts.edit", "app.settings"), `where` is the tool's
-    id or EVERYWHERE, and `default` is today's key in portable text ("Ctrl+E"), or "".
-    `name` gives its name on the Keyboard shortcuts page when the action's own text changes
-    with what's picked ("Refresh 3 printers", "User's folder (ana)")."""
+    """A command a key can run: `id` names it in the settings ("hosts.edit"), `where` is a tool's
+    id or EVERYWHERE, `default` its key ("Ctrl+E") or "", and `name` its name on the page."""
 
     id: str
     action: QAction
@@ -85,9 +76,8 @@ def shown(keys: str) -> str:
 
 
 def key_tip(words: str, action: QAction) -> str:
-    """A tooltip's words and the key `action` has now: "Refresh all (F5)". Its words never
-    name the key, so a key changed here shows in the tip, once the tip is set again on the
-    action's `changed`; a command with no key gets just its words."""
+    """A tooltip's words and the key `action` has now: "Refresh all (F5)". The words never name the
+    key, so a changed key shows once the tip is set again on `changed`; no key: just the words."""
     keys = menus.shortcut_text(action)
     return f"{words} ({keys})" if keys else words
 
@@ -107,8 +97,7 @@ def refused(keys: str) -> str:
     typed = Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier
     key = combo.key()
     if not mods & typed and (
-        # Below Esc, Qt's key codes are the characters themselves: letters, digits and
-        # punctuation, Ç and é included. The dead keys (´ ~ ^ on a Brazilian keyboard) start
+        # Below Esc, Qt's key codes are the characters themselves (Ç, é); dead keys (´ ~ ^) start
         # an accented letter, so they're typed text too.
         key < Qt.Key.Key_Escape or Qt.Key.Key_Dead_Grave <= key <= DEAD_KEYS_END
     ):

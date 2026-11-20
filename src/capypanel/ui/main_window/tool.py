@@ -83,18 +83,15 @@ class StatusLabel(QLabel):
 
 
 def _take_along(toolbar: ToolBar) -> None:
-    """Connected to a tool's `destroyed`: its toolbar goes with it, at once. In the window the
-    tool's page deletes the toolbar first. A tool built alone (the tests) left it behind, with
-    the tool's commands gone, and the next theme switch broke on reading a deleted one's key.
-    Deleting it later instead still left that gap open."""
+    """Connected to a tool's `destroyed`: its toolbar goes with it, at once. A tool built alone (the
+    tests) left it behind otherwise, and the next theme switch read a deleted command's key."""
     if shiboken6.isValid(toolbar):
         shiboken6.delete(toolbar)
 
 
 class Tool(QWidget):
-    """What a tool gives the shell: its central widget (itself), its toolbar, its rail icon and
-    View entry, its View items, its status bar text and its window title. A tool keeps its
-    settings in its own section of the settings file (self.prefs)."""
+    """What a tool gives the shell: itself, its toolbar, rail icon, View items, status bar text and
+    window title. Its settings are its own section of the settings file (self.prefs)."""
 
     TOOL_ID: ClassVar[str] = ""  # its settings section and Settings pages are named after it
     ICON: ClassVar[str] = ""  # a Tabler icon, for the rail
@@ -108,7 +105,7 @@ class Tool(QWidget):
         super().__init__()
         self._shell = shell
         self.prefs = shell.tool_prefs(self.TOOL_ID, inherit=self.INHERITS_TOP_LEVEL)
-        self.toolbar = toolbar  # the shell shows it above the tool
+        self.toolbar = toolbar
         self.destroyed.connect(functools.partial(_take_along, toolbar))
         # The shell shows it in its status bar, on the left.
         self.status_label = StatusLabel()

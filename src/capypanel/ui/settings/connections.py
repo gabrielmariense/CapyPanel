@@ -1,6 +1,5 @@
-"""Settings › Hosts › Connecting: the shared connection profiles (add, edit, duplicate, delete, the
-default one), where this user's typed passwords are kept, and where each remote tool was found
-on this PC. Like every other setting, each change is written at once."""
+"""Settings › Hosts › Connecting: the shared connection profiles, where this user's typed
+passwords are kept, and where each remote tool is on this PC. Each change is written at once."""
 
 from collections.abc import Callable
 from dataclasses import replace
@@ -93,7 +92,6 @@ class ProfileDialog(QDialog):
         for tool in tools:
             text = tool.name if tool.id in installed else _("{tool} (not installed on this PC)")
             self.tool.addItem(text.format(tool=tool.name), tool.id)
-        # A new profile starts on a tool this PC has, when there is one.
         wanted = profile.tool if profile else next((t.id for t in tools if t.id in installed), "")
         self.tool.setCurrentIndex(max(self.tool.findData(wanted), 0))
         self.login = QComboBox()  # as wide as any tool's longest login, so no tool widens it
@@ -304,7 +302,7 @@ def skipped_note(problems: list[tuple[Path, str]]) -> QLabel:
         )
         for path, reason in seen.items()
     ]
-    label = notes(  # a note like the page's others
+    label = notes(
         ngettext("{n} file skipped: {files}", "{n} files skipped: {files}", len(names)).format(
             n=len(names), files=", ".join(names)
         )
@@ -337,7 +335,7 @@ class SharedSection(Section):
         return True
 
     def _written(self) -> None:
-        """After a change was written."""
+        pass
 
 
 class ProfilesSection(SharedSection):
@@ -448,7 +446,6 @@ class ProfilesSection(SharedSection):
         self.add_button.setEnabled(self.can_edit)
         for button in (self.edit_button, self.delete_button):
             button.setEnabled(picked)
-        # Greyed while no built-in profile is missing.
         self.restore_button.setEnabled(self.can_edit and bool(self.store.missing_starters()))
 
     def fill_row_menu(self, menu: QMenu) -> None:
@@ -758,8 +755,7 @@ class ToolsSection(SharedSection):
 
 class ConnectionsPage(Page):
     """Settings › Hosts › Connecting: what everyone on this PC shares, the profiles and where
-    the tools the profiles open are. The profiles' Passwords card is this person's own: it
-    shows on Credentials."""
+    their tools are. The profiles' Passwords card is this person's own: it shows on Credentials."""
 
     HELP_PLACE = "settings-hosts-connecting"
 

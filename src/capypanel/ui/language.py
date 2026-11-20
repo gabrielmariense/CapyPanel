@@ -29,8 +29,7 @@ def apply(code: str) -> str:
             _qt_translator = translator
         else:
             log.warning("Qt's own translations for %s not found in %s", code, folder)
-    # Our texts don't come from a Qt translator, so announce the change ourselves: Qt passes
-    # it on to every window open now, whose changeEvent then retranslates. Sent, not posted: a
-    # posted one reached the window built right after it at start, which then did it all again.
+    # Our texts don't come from a Qt translator, so we announce the change; Qt passes it to every
+    # open window's changeEvent. Sent, not posted, or the window built next does it all again.
     QCoreApplication.sendEvent(app, QEvent(QEvent.Type.LanguageChange))
     return code

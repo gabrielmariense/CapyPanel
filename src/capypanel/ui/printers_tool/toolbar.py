@@ -1,5 +1,4 @@
-"""The Printers toolbar, slot for slot like Hosts': Open web page and Refresh, Inventory, Report.
-Refresh is a plain button: printers have one check (one SNMP read), so there's nothing to pick."""
+"""The Printers toolbar, slot for slot like Hosts'; Refresh is a plain button (one check)."""
 
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QMenu

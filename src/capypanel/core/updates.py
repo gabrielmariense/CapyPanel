@@ -1,26 +1,5 @@
-"""Updates from GitHub Releases: is there a newer CapyPanel, get its zip, check it against its
-SHA-256, and swap it in once CapyPanel has closed, keeping the old folder to go back to.
-
-Nothing here runs on its own: the UI decides when to look and asks before installing. Only the
-packaged CapyPanel.exe installs updates; a copy run from source is updated with git.
-
-The download, the unpacked new version and the old version kept to go back to live in this
-Windows user's own app data (the "CapyPanel/update" folder in %LOCALAPPDATA%, a folder per copy
-of CapyPanel), never in or beside CapyPanel's folder, and they're deleted once the new version is
-running. The swap is done by the new version's own exe, started from where the zip was
-unpacked, with `--apply-update`. It waits for the running CapyPanel to end and first checks that
-each of the old version's files and folders can move: each is renamed beside itself and back,
-which Windows refuses while another program holds a file in it open without delete sharing (a
-separate SSH window, a CapyPanel in another Windows session, an antivirus mid-scan). Then the
-update stops with nothing changed. Otherwise it moves them out one by one, each whole or not at
-all (the folder itself stays: Windows won't rename a folder Explorer has open), copies the new
-ones in, leaves a portable copy's own data where it is, and runs the new exe's self-test unless
-the running CapyPanel already ran it on the unpacked copy before closing. If any of that fails,
-the old files are put back as they were, and the folder they waited in goes only once it's
-empty: an old file is never deleted while it has no other copy. While it works, a marker beside
-it tells a CapyPanel started meanwhile to end at once instead of holding files. Settings, lists
-and saved logins live outside the app's folder (ProgramData and Credential Manager), so they're
-never touched."""
+"""Updates from GitHub Releases: find a newer CapyPanel, fetch and check its zip, and swap it in
+once CapyPanel has closed, never losing the old files. Only the packaged exe installs updates."""
 
 import contextlib
 import ctypes
@@ -97,7 +76,7 @@ class UpdateError(Exception):
 class Release:
     version: str  # "0.26.1"
     notes: str  # the release's text, Markdown
-    page_url: str  # the release's page on GitHub
+    page_url: str
     zip_url: str
     sha_url: str
     zip_name: str
@@ -123,9 +102,8 @@ def zip_name(version: str) -> str:
 
 
 def notes_in(notes: str, language: str) -> str:
-    """The part of a release's notes under "## <language>", the language named in itself as
-    i18n.LANGUAGES has it ("## English", "## Português (Brasil)"), without that heading; all
-    of the notes when they have no such part."""
+    """The part of a release's notes under "## <language>", named as i18n.LANGUAGES has it
+    ("## Português (Brasil)"), without that heading; all of the notes when there's no such part."""
     lines = notes.splitlines()
     start: int | None = None
     for i, line in enumerate(lines):
@@ -147,9 +125,8 @@ WAIT = {AT_START: timedelta(days=1), DAILY: timedelta(days=1), WEEKLY: timedelta
 
 
 def check_of(folder: Path) -> str:
-    """How often CapyPanel looks for a new version on this PC: at every start unless someone
-    trusted chose otherwise. An update replaces CapyPanel for everyone here, so it's one choice
-    for all of them; another user's file must not turn it off."""
+    """How often CapyPanel looks for updates, one choice for this whole PC: at every start unless
+    someone trusted chose otherwise, so another user's file can't turn it off."""
     path = folder / CHECK_FILE
     if not path.is_file() or not winsec.made_by_trusted(path):
         return AT_START
@@ -179,12 +156,8 @@ def set_check(folder: Path, how: str) -> None:
 
 
 def _tls() -> "ssl.SSLContext":
-    """GitHub's certificate checked by Windows itself (truststore), as Edge checks it, with the
-    host name. Python's own check trusts only the root certificates already stored on this PC,
-    and Windows stores one only when its own checker asks for it: a PC that never reached GitHub
-    through Windows failed with "unable to get local issuer certificate". Windows also trusts
-    a company's own authorities, and it doesn't apply Python 3.13's X.509 strict mode, which
-    refused chains browsers accept ("Missing Authority Key Identifier")."""
+    """GitHub's certificate checked by Windows itself (truststore), as Edge checks it: Python's own
+    check fails on PCs whose store lacks the root and refuses chains browsers accept."""
     # Loaded here, not with the module: importing truststore asks Windows (WMI) which system
     # it runs on, about 50 ms of every start otherwise.
     import ssl
@@ -243,7 +216,6 @@ def latest(timeout: float = 15) -> Release | None:
 
 
 def release_from(data: object) -> Release | None:
-    """A Release from GitHub's JSON for one release."""
     if not isinstance(data, dict) or data.get("draft") or data.get("prerelease"):
         return None
     tag = str(data.get("tag_name") or "")
@@ -438,10 +410,8 @@ CLEAN_TRIES = 15  # one a second: the helper that started this copy ends within 
 
 
 def clean_up(app_dir: Path, tries: int = CLEAN_TRIES, pause: float = 1.0) -> None:
-    """At every start, on a thread of its own: what an update left (the unpacked download, the
-    old version), in app data and where 0.26.0 to 0.26.3 put it beside CapyPanel's folder.
-    Never while a swap is under way. Right after an update the helper still runs from the
-    download for a moment, so a folder that won't go yet is tried again."""
+    """What an update left, in app data and where 0.26.0 to 0.26.3 put it: removed at every start,
+    never during a swap. A folder the helper that just ended still holds is tried again."""
     if applying(app_dir):
         return
     place = places(app_dir)
@@ -478,9 +448,8 @@ def remove(folder: Path) -> None:
 
 
 def _empty_folder(folder: Path) -> Path:
-    """`folder`, empty, for the old version. When an earlier update left a file in it that
-    won't go (held by another program, say), a new folder beside it instead: a leftover must
-    never stop an update. The next start clears both."""
+    """`folder`, empty, for the old version; a new folder beside it when a file left in it won't go
+    (held by another program): a leftover never stops an update. The next start clears both."""
     if folder.exists():
         remove(folder)
     fresh, n = folder, 1
@@ -556,10 +525,8 @@ def _not_moved(error: OSError) -> UpdateError:
 
 
 def _check(item: Path) -> None:
-    """Raises OSError when Windows won't let `item` move whole: a file in it held open without
-    delete sharing refuses a rename of it and of every folder above it (a separate SSH window
-    keeps _internal's base_library.zip so). Renamed beside itself and straight back, so nothing
-    has changed when it raises."""
+    """Raises OSError when Windows won't let `item` move whole (a file in it held open without
+    delete sharing). Renamed beside itself and straight back: nothing has changed when it raises."""
     beside, n = item.with_name(item.name + CHECKING), 1
     while beside.exists():  # a leftover never stops an update
         n += 1
@@ -631,11 +598,8 @@ def _fill_in(copy: Path, original: Path) -> None:
 
 
 def _move_out(item: Path, target: Path) -> None:
-    """One item of the old version to `target`, whole or not at all. On the same drive it's a
-    rename, which Windows does at once or refuses: that OSError is for _retry. On another drive
-    it's a copy, and then the original is deleted; when Windows stops the delete partway, what
-    went comes back from the copy before the copy goes (UpdateError, not tried again). Until
-    0.29 a refused rename fell back to that copy and delete, and a stopped delete lost files."""
+    """One item of the old version to `target`, whole or not at all: a rename on the same drive (a
+    refusal is for _retry); on another drive a copy, then a stopped delete is filled back in."""
     try:
         os.rename(item, target)
         return
@@ -679,10 +643,8 @@ def apply(
     wait: Callable[[int, float], bool] = wait_for_exit,
     test: Callable[[Path], bool] | None = self_test,
 ) -> Path:
-    """The new version (in place.new_app) where the old one was; returns the folder the old
-    version went to. Raises UpdateError with the old version's files back as they were when
-    anything fails. `test`: None when the unpacked copy already passed it. The exe goes out
-    first and comes in last, so for the moment the folder is half there, it can't be started."""
+    """Swaps in the new version; returns where the old one went. Raises UpdateError with the old
+    files back. The exe goes out first and in last, so a half-swapped folder can't be started."""
     if not wait(pid, 120):
         raise UpdateError(_("CapyPanel didn't close"))
     try:
@@ -719,16 +681,14 @@ def apply(
 
 
 def _ours(app: Path) -> list[Path]:
-    """What the version owns in its folder, the exe first: everything but a portable copy's
-    own data."""
+    """What the version owns in its folder, the exe first: all but a portable copy's own data."""
     owned = [item for item in app.iterdir() if item.name not in KEEP]
     return sorted(owned, key=lambda item: item.name != EXE)
 
 
 def _roll_back(place: Places, moved: list[str], copied: list[str]) -> None:
-    """Exactly what the swap did, undone: the new files out, the old ones back, the exe last.
-    The old version's folder goes only once it's empty: whatever couldn't come back stays in
-    it, never deleted, and the log says where."""
+    """Exactly what the swap did, undone, the exe last. The old version's folder goes only once
+    it's empty: what couldn't come back stays in it, never deleted, and the log says where."""
     log.warning("Update: going back to the old version")
     for name in copied:  # tried again, as the moves are: a held new file keeps the old one out
         try:
@@ -769,9 +729,8 @@ def start(exe: Path, *args: str, splash: bool = True) -> None:
 def run_helper(
     app_dir: Path, pid: int, old_version: str, new_version: str, staging: Path | None = None
 ) -> int:
-    """`CapyPanel.exe --apply-update <app folder> <pid> <old> <new>`, from the unpacked new
-    version: the swap, then CapyPanel started again, new or old. Logs to the person's log.
-    `staging`: the folder the helper runs from (its exe's folder's parent)."""
+    """`CapyPanel.exe --apply-update <app> <pid> <old> <new>`, run from the unpacked new version:
+    the swap, then CapyPanel started again, new or old. `staging`: the folder it runs from."""
     place = places(app_dir, staging)
     marker = place.staging / APPLYING
     try:

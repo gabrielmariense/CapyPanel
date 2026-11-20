@@ -1,7 +1,4 @@
-"""Inventory > Import printers…: Import hosts' window with the printers' columns (brand, model,
-serial number, asset tag, page counters). It reads a Printers Report back, and Windows' own
-printer list (`Get-Printer | Export-Csv`). Nothing changes until "Add N printers" is clicked,
-and nothing contacts a printer: the first Refresh does."""
+"""Import printers: Import hosts' window plus the printers' columns; nothing contacts a printer."""
 
 from PySide6.QtWidgets import QDialog, QWidget
 
@@ -38,7 +35,7 @@ class ImportPrintersDialog(ImportDialog):
     def adding_text(self, n: int) -> str:
         return ngettext("{n} printer will be added.", "{n} printers will be added.", n).format(n=n)
 
-    # Printers' own context: pt-BR words them for "impressoras" (Dante, Satya).
+    # Printers' own context: pt-BR words them for "impressoras".
     def skipped_text(self, n: int) -> str:
         return npgettext("printers", "{n} skipped.", "{n} skipped.", n).format(n=n)
 

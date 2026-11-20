@@ -9,7 +9,7 @@ from capypanel.core.i18n import _
 
 
 class ReadOnlyListError(listfile.HostListFileError):
-    """An edit was attempted on a list that can't be changed."""
+    pass
 
 
 def starter_list() -> HostList:
