@@ -1,5 +1,4 @@
-"""Restarting a Windows service on another PC (the Print Spooler, for a stuck queue) and reading
-its state, as `sc \\\\PC query`, `stop` and `start` do: nothing runs there; needs admin rights."""
+"""Restarting a service on another PC (the Print Spooler, say) as `sc` does: nothing runs there."""
 
 import ctypes
 import time

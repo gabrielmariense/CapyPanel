@@ -1,5 +1,4 @@
-"""Connection profiles, in the profiles folder everyone on the PC shares: Windows decides who
-changes them, another standard user's file is ignored, and the starters fill it once."""
+"""Connection profiles in the PC's shared folder; a file another standard user wrote is ignored."""
 
 import json
 import logging

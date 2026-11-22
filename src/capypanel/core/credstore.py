@@ -1,5 +1,4 @@
-"""Secrets kept between runs (SNMP communities, profile passwords when chosen) in Windows
-Credential Manager for this user only, never in the settings file or a log."""
+"""Secrets kept between runs, in this user's Windows Credential Manager: never a file or a log."""
 
 import ctypes
 from ctypes import wintypes

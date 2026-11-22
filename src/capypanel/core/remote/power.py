@@ -1,5 +1,4 @@
-"""Restarting or shutting down another PC, or cancelling a waiting restart, with Windows' remote
-shutdown call, as `shutdown /m` does: nothing runs there; the account needs that right (admins)."""
+"""Restarting or shutting down another PC as `shutdown /m` does: nothing runs there."""
 
 import ctypes
 from ctypes import wintypes

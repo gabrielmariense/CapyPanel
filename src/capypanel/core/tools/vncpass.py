@@ -1,5 +1,4 @@
-"""The scrambled VNC password viewers read from password files: DES with a key every VNC program
-shares. It hides a password from a glance only, so it's never written to disk."""
+"""VNC's scrambled password, DES with a key every viewer shares: so it's never written to disk."""
 
 import ctypes
 from ctypes import wintypes

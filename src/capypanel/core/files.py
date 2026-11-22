@@ -1,5 +1,4 @@
-"""Writing the app's files safely (swapped in whole, never half written), whether a folder
-takes new files, and shared folders others can read but not change."""
+"""The app's files written whole, never half, and shared folders others read but can't change."""
 
 import json
 import logging

@@ -1,5 +1,4 @@
-"""Builds the download: dist/CapyPanel/, then its zip and the zip's SHA-256 beside it.
-`uv run python scripts/build_exe.py`; no zip unless the built exe's self-test passes."""
+"""Builds dist/CapyPanel/, then its zip and SHA-256 if the built exe's self-test passes."""
 
 import hashlib
 import os

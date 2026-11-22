@@ -1,5 +1,4 @@
-"""Running one check on many hosts, a few at a time and stoppable. Until a host accepts the
-account, hosts go one by one, so a mistyped password is rejected once, not on many (lockout)."""
+"""Running one check on many hosts, a few at a time and stoppable."""
 
 import threading
 from collections.abc import Callable, Sequence
@@ -41,6 +40,8 @@ class Batch[T, R]:
         """Blocks until every item ran or the batch stopped."""
         pending = list(self._items)
         if self._proves is not None:
+            # One by one until a host accepts the account: a mistyped password is then refused
+            # once, not by every host at once, which could lock the account out.
             while pending and not self._stop.is_set():
                 result, error = self._one(pending.pop(0), halting=True)
                 if self._proves(result, error):

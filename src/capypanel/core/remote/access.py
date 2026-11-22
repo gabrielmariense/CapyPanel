@@ -1,5 +1,4 @@
-"""What every call to another PC shares: why Windows refuses one, whether the PC answers, and
-another account's network-only logon, checked by each PC: stop at the first rejection (lockout)."""
+"""What every call to another PC shares: why Windows refuses one, and another account's logon."""
 
 import ctypes
 import socket
@@ -97,7 +96,7 @@ def network_identity(
         return
     domain, _sep, name = account.user.rpartition("\\")  # "DOMAIN\\name", or a UPN
     token = wintypes.HANDLE()
-    new_credentials, provider_winnt50 = 9, 3
+    new_credentials, provider_winnt50 = 9, 3  # each PC checks the password, not this one
     if not _advapi32.LogonUserW(
         name, domain or None, account.password, new_credentials, provider_winnt50,
         ctypes.byref(token),

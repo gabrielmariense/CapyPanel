@@ -1,5 +1,4 @@
-"""Asking a VNC server which login types it offers, without logging in. UltraVNC up to 1.6.1
-still counts that as a failed login, so the Connector asks each server once per run."""
+"""Asking a VNC server which login types it offers, without logging in."""
 
 import re
 import socket

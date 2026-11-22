@@ -1,5 +1,4 @@
-"""Viewer settings files such as UltraVNC's .vnc, used as saved but for the settings naming its
-computer, which are emptied. The viewer gets a temporary copy, so it can't change the shared one."""
+"""Viewer settings files, emptied of the computer they name; a viewer only gets a copy."""
 
 import codecs
 import logging

@@ -1,5 +1,4 @@
-"""Writes every built-in theme's colour roles to a Markdown file, from the code itself.
-Run from the repo: uv run --no-sync python scripts/colour_roles.py <output.md>"""
+"""Writes every built-in theme's colour roles, read from the code, to the Markdown file named."""
 
 import sys
 from pathlib import Path

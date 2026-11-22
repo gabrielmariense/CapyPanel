@@ -1,5 +1,4 @@
-"""What a PC is and what's installed for every user, read only over file sharing and WMI: nothing
-is run there, and never Win32_Product, which makes Windows check every MSI program it lists."""
+"""What a PC is and what's installed, read over file sharing and WMI only: nothing runs there."""
 
 import base64
 import ctypes
@@ -137,6 +136,7 @@ def pc_facts(host: str, account: Account | None = None) -> PcFacts:
     )  # fmt: skip
 
 
+# Never Win32_Product: reading it makes Windows check every MSI program it lists.
 def installed_programs(host: str, account: Account | None = None) -> list[Program]:
     """The programs installed for every user of `host`, by name, without Windows' own parts and
     updates. Raises RemoteError, TimeoutError."""

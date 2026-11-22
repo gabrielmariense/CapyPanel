@@ -1,5 +1,4 @@
-"""A tool definition: how to find and start one external program, one JSON file per tool; the
-shipped ones in core/tools/presets/tools show the format."""
+"""A tool definition: how to find and start one external program, one JSON file per tool."""
 
 import json
 import re

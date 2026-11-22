@@ -1,5 +1,4 @@
-"""A connection profile: one way to reach a kind of host, one JSON file each, used by hosts and
-groups by id. A typed password is kept per profile, so it never reaches another profile's hosts."""
+"""A connection profile: one way to reach a kind of host, with a password kept for it alone."""
 
 import json
 import re

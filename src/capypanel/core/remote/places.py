@@ -1,5 +1,4 @@
-"""Opening another PC's folders and management consoles on this PC (Explorer over its admin
-shares, Windows' consoles pointed at it); nothing runs there, and Windows asks for a password."""
+"""Another PC's folders and management consoles, opened on this PC: nothing runs there."""
 
 import os
 import re

@@ -1,5 +1,4 @@
-"""Where the app keeps its files: one folder per PC, ProgramData\\CapyPanel (<app>\\userdata when
-portable), with shared lists, profiles and tools, and a private folder and log per user."""
+"""Where the app keeps its files: a folder the PC's users share, and a private one per user."""
 
 import copy
 import json

@@ -1,5 +1,4 @@
-"""Who is logged on to a PC, and logging them off, disconnecting them or messaging them, through
-Windows' session API (WTS) from here: nothing runs there, and any display language works."""
+"""Sessions on a PC, read and acted on over WTS: nothing runs there, and any language works."""
 
 import ctypes
 import logging

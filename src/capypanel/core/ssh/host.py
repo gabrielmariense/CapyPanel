@@ -1,5 +1,4 @@
-"""An SSH host's own details under its entry's "ssh" key: the port and the name to log in as (a
-group's for its hosts). Odd values are kept as found; nothing secret is kept: ssh.exe asks."""
+"""An SSH host's port and login name, under its entry's "ssh" key; no secret: ssh.exe asks."""
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace

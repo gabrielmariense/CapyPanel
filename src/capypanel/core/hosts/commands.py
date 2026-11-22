@@ -1,5 +1,4 @@
-"""Every command that acts on one host, defined once for the menus, Details and manual connection.
-Each says what it needs from the PC (Need); none installs or runs a program on the PC."""
+"""Every command that acts on one host, defined once; none installs or runs a program on the PC."""
 
 from dataclasses import dataclass
 from enum import StrEnum

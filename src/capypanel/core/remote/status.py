@@ -1,5 +1,4 @@
-"""Is a computer up? A ping and its ports (checks.tool_ports) at once, on every address its name
-has: many PCs block ping, and a port's answer, even a refusal, proves the PC is on. No account."""
+"""Is a PC up? A ping and its ports at once, on every address: many PCs block ping. No account."""
 
 import ctypes
 import logging

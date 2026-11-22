@@ -1,5 +1,4 @@
-"""The terminal's screen: pyte's parser and grid (our copy in vendor/pyte) with what the terminal
-needs on top; each fix for pyte says why. Nothing typed or printed is ever logged."""
+"""The terminal's screen on our copy of pyte; nothing typed or printed is ever logged."""
 
 from __future__ import annotations
 

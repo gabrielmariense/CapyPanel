@@ -1,5 +1,4 @@
-"""Which account signs in to which PCs: links kept in the person's own settings, never in the
-shared list, with no passwords. The nearest link wins (PC, group, tag, every PC), else Windows'."""
+"""Which account signs in to which PCs: links in the person's settings, never the shared list."""
 
 import os
 from collections.abc import Iterable, Mapping, Sequence

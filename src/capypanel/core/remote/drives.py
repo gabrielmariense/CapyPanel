@@ -1,5 +1,4 @@
-"""The network drives of the people signed in to a PC, read from this PC over WMI's registry
-provider (each person's Network key), with nothing run on the PC."""
+"""People's network drives on a PC, read over WMI's registry provider: nothing runs there."""
 
 import re
 from collections.abc import Mapping

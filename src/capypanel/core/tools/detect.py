@@ -1,5 +1,4 @@
-"""Finding a tool's program on this PC: the path the user set, then where Windows says the
-program was installed, then the usual folders, then PATH. Nothing is ever downloaded."""
+"""Finding a tool's program on this PC, from the path the user set to PATH; never downloaded."""
 
 import os
 import shutil

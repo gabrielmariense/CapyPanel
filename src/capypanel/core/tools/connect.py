@@ -1,5 +1,4 @@
-"""Starting a remote tool for one target, and the passwords typed for it (in memory, or saved
-in Windows Credential Manager when the user chose so)."""
+"""Starting a remote tool for one target, with its password from memory or Credential Manager."""
 
 import logging
 import subprocess

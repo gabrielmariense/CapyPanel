@@ -1,5 +1,4 @@
-"""Connecting with Windows' own ssh.exe, in a tab or a window of its own (holder.py): only the
-address, port and login name reach it, checked first, so no password passes through CapyPanel."""
+"""Starting Windows' ssh.exe with only a checked address, port and name: no password passes."""
 
 import ctypes
 import logging

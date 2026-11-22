@@ -1,5 +1,4 @@
-r"""One program on one Windows pseudo console (ConPTY), in a job object: how the terminal runs
-ssh.exe out of sight. Its threads never touch a widget, and nothing typed or printed is logged."""
+"""One program on a Windows pseudo console, in a job object; nothing typed or printed is logged."""
 
 from __future__ import annotations
 

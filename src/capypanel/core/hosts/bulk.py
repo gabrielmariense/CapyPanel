@@ -1,5 +1,4 @@
-"""Many hosts at once: reading a pasted list or a CSV file (header names in English or
-Portuguese; tab, ";" or "," between columns), planning an import, and writing hosts as CSV."""
+"""Many hosts at once: reading a pasted list or a CSV file, planning an import, writing a CSV."""
 
 import csv
 import ctypes

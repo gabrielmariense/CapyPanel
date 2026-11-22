@@ -1,5 +1,4 @@
-"""The separate window's holder: CapyPanel's own exe, started with FLAG, runs ssh.exe in a console
-of its own, kept open under an error until a key is pressed. It writes no settings and no log."""
+"""The separate SSH window: the exe, run with FLAG, runs ssh.exe and writes no settings or log."""
 
 import ctypes
 import subprocess

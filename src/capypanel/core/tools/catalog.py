@@ -1,5 +1,4 @@
-"""Tool definitions from the company's folder (ProgramData\\CapyPanel\\tools, by an admin) and the
-shipped presets, the company's winning; where each tool is installed: tools\\_paths.json."""
+"""Tool definitions: the shipped presets and an admin's in the shared tools folder, which win."""
 
 import json
 import logging

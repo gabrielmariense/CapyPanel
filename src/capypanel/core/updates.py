@@ -1,5 +1,4 @@
-"""Updates from GitHub Releases: find a newer CapyPanel, fetch and check its zip, and swap it in
-once CapyPanel has closed, never losing the old files. Only the packaged exe installs updates."""
+"""Updates from GitHub Releases: a newer zip fetched, checked and swapped in, with a way back."""
 
 import contextlib
 import ctypes

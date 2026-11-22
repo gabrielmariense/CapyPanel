@@ -1,5 +1,4 @@
-"""The Windows user profiles on a PC: which are there, how big, and deleting unused ones. Only a
-READY one goes, checked again right before and logged: a delete takes the person's files."""
+"""A PC's user profiles: which, how big, and deleting a READY one, checked again right before."""
 
 import contextlib
 import ctypes

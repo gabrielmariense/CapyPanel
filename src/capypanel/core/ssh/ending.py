@@ -1,5 +1,4 @@
-"""How an ssh.exe connection ended: what counts as an error, and the words that say so. The
-separate window's holder and the terminal tab's strip both use them, so the two always agree."""
+"""How an ssh.exe connection ended, in words both the holder and the terminal tab use."""
 
 from capypanel.core.i18n import _
 

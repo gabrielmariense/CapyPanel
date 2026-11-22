@@ -1,5 +1,4 @@
-"""One-time copies from older file layouts, so an update never loses a user's settings or list.
-The old files are copied, never moved or deleted: going back to an older version still works."""
+"""One-time copies from older file layouts, never moves: an older version still finds its files."""
 
 import ctypes
 import logging

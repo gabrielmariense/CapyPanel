@@ -1,5 +1,4 @@
-"""WMI from Python itself, over DCOM through Windows' scripting objects: no PowerShell or other
-program started here, so no antivirus has a command line to judge. Each read has its own thread."""
+"""WMI from Python itself, over DCOM: no program started, so no antivirus judges a command line."""
 
 import contextlib
 import logging

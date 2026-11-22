@@ -1,5 +1,4 @@
-"""Updates the translations after any text in the app changes: capypanel.pot, each language's
-.po file and the .mo files the app reads. Translate the new .po entries, then run it again."""
+"""Updates capypanel.pot, each language's .po and the .mo files after a text in the app changes."""
 
 import sys
 from pathlib import Path
