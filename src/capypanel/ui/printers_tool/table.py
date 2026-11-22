@@ -31,9 +31,9 @@ from capypanel.ui.printers_tool.status import (
     toner_words,
 )
 
-ROLE_QUIET = Qt.ItemDataRole.UserRole + 2  # a Status cell to show greyed
-ROLE_WARN = Qt.ItemDataRole.UserRole + 3  # a Toner cell to show in amber
-ROLE_SUPPLY = Qt.ItemDataRole.UserRole + 4  # a Toner cell's supply, drawn as a bar
+ROLE_QUIET = Qt.ItemDataRole.UserRole + 2
+ROLE_WARN = Qt.ItemDataRole.UserRole + 3
+ROLE_SUPPLY = Qt.ItemDataRole.UserRole + 4
 BAR_WIDTH = 64  # px: the Toner column's bar when fitted to content; it stretches with the column
 MIN_BAR = 16  # px: narrower than this, the bar gives way and only the words show
 GAP = 8  # px between the bar and its words
@@ -43,14 +43,13 @@ class PrinterTable(ItemTable):
     ADDRESS, STATUS, TONER, BRAND, MODEL, SERIAL, ASSET_TAG, TAGS = 1, 2, 3, 4, 5, 6, 7, 8
     COLUMNS = ("name", "address", "status", "toner", "brand", "model", "serial", "asset_tag",
                "tags")  # fmt: skip
-    HIDDEN = ("brand", "serial", "asset_tag")  # until the user shows them; Model has the brand
-    # What a search marks and finds: every column but Toner, which Refresh fills.
+    HIDDEN = ("brand", "serial", "asset_tag")
     SEARCHED = frozenset({0, ADDRESS, STATUS, BRAND, MODEL, SERIAL, ASSET_TAG, TAGS})
-    ICONS = frozenset({STATUS})  # the coloured dot
+    ICONS = frozenset({STATUS})
 
     def __init__(self) -> None:
         self._cells: Callable[[str], tuple[Cell, Cell]] = lambda _id: (_EMPTY, _EMPTY)
-        self.bars = False  # the Toner column as a bar (Settings › Printers), not text
+        self.bars = False
         self.marks: tuple[Mark, ...] = (Mark(DEFAULT_LOW, low=True),)
         super().__init__()
         self.setItemDelegateForColumn(self.TONER, TonerBar(self))
@@ -85,7 +84,6 @@ class PrinterTable(ItemTable):
         ]
 
     def longest_texts(self, column: int) -> Sequence[str]:
-        """Status and Toner: every word they can show, so the first width cuts none of them."""
         if column == self.STATUS:
             return status_words()
         if column == self.TONER:
@@ -96,26 +94,23 @@ class PrinterTable(ItemTable):
         super().set_hidden_columns(keys if isinstance(keys, list) else list(self.HIDDEN))
 
     def set_cells(self, cells: Callable[[str], tuple[Cell, Cell]]) -> None:
-        """Where each printer's Status and Toner come from, by printer id."""
         self._cells = cells
 
     def decorate(self, row: QTreeWidgetItem, item: Host) -> None:
         self._fill(row, *self._cells(item.id))
 
     def show_cells(self, printer_id: str) -> None:
-        """New Refresh results for one printer, without rebuilding the table."""
         row = self._rows.get(printer_id)
         if row is not None:
-            self._fill(row, *self._cells(printer_id))  # columns keep their widths
+            self._fill(row, *self._cells(printer_id))
 
     def refill(self) -> None:
-        """Every row again, after a theme switch: the dots and swatches had the old colours."""
         for printer_id, row in self._rows.items():
             self._fill(row, *self._cells(printer_id))
 
     def changeEvent(self, event: QEvent) -> None:
         super().changeEvent(event)
-        if event.type() == QEvent.Type.PaletteChange:  # the quiet colour of the new theme
+        if event.type() == QEvent.Type.PaletteChange:
             for row in self._rows.values():
                 self._tint(row)
 
@@ -124,8 +119,8 @@ class PrinterTable(ItemTable):
         row.setToolTip(self.STATUS, plain_tip(status.tip))
         row.setIcon(self.STATUS, dot_icon(status.color) if status.color else QIcon())
         row.setData(self.STATUS, ROLE_QUIET, status.quiet)
-        row.setData(self.STATUS, ROLE_NOTHING, status.nothing)  # "Not checked" sorts last
-        row.setText(self.TONER, toner.text)  # kept with bars too: it's what Copy and sorting use
+        row.setData(self.STATUS, ROLE_NOTHING, status.nothing)
+        row.setText(self.TONER, toner.text)
         row.setToolTip(self.TONER, plain_tip(toner.tip))
         bar = self.bars and toner.supply is not None
         shown = swatch(toner.color, _edge(toner)) if toner.color and not bar else QIcon()
@@ -135,7 +130,6 @@ class PrinterTable(ItemTable):
         self._tint(row)
 
     def _tint(self, row: QTreeWidgetItem) -> None:
-        """Offline and "not checked" read quieter than real results; a low toner in amber."""
         muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
         quiet = bool(row.data(self.STATUS, ROLE_QUIET))
         row.setData(self.STATUS, Qt.ItemDataRole.ForegroundRole, muted if quiet else None)
@@ -147,16 +141,12 @@ _EMPTY = Cell("", "", "")
 
 
 def model_text(brand: str, model: str) -> str:
-    """The Model column: the brand, then the model, unless the model already starts with it."""
     if not brand or model.casefold().startswith(brand.casefold()):
         return model
     return f"{brand} {model}".strip()
 
 
 class TonerBar(QStyledItemDelegate):
-    """A Toner cell as a bar filled to the lowest toner's level, its % beside it, drawn like
-    Details' bars. A cell with no bar to draw (text chosen, nothing read) paints as usual."""
-
     def __init__(self, table: PrinterTable) -> None:
         super().__init__(table)
         self._table = table
@@ -172,15 +162,13 @@ class TonerBar(QStyledItemDelegate):
             super().paint(painter, option, index)
             return
         text = option.palette.color(QPalette.ColorRole.Text)  # type: ignore[attr-defined]
-        cell = QStyleOptionViewItem(option)  # its palette turns amber for a low one: not the bar
+        cell = QStyleOptionViewItem(option)
         self.initStyleOption(cell, index)
         cell.text = ""  # type: ignore[attr-defined]
         widget = cell.widget  # type: ignore[attr-defined]
         style = widget.style() if widget is not None else QApplication.style()
         style.drawControl(QStyle.ControlElement.CE_ItemViewItem, cell, painter, widget)
         area = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, cell, widget)
-        # The words always show in full; the bar takes what's left, so it grows and shrinks
-        # with the column. Room for "100 %" on every row keeps the bars lined up.
         metrics = cell.fontMetrics  # type: ignore[attr-defined]
         said = level_text(supply)
         room = max(metrics.horizontalAdvance(said), metrics.horizontalAdvance(_widest()))
@@ -201,7 +189,6 @@ class TonerBar(QStyledItemDelegate):
     def sizeHint(
         self, option: QStyleOptionViewItem, index: QModelIndex | QPersistentModelIndex
     ) -> QSize:
-        """Room for the bar and its words, so Fit columns to content shows both in full."""
         size = super().sizeHint(option, index)
         supply = index.data(ROLE_SUPPLY)
         if isinstance(supply, Supply):
@@ -214,7 +201,6 @@ class TonerBar(QStyledItemDelegate):
 
 
 def _widest() -> str:
-    """The widest a level in % gets, in the language shown."""
     return _("{percent} %").format(percent=100)
 
 
@@ -223,7 +209,6 @@ def _edge(cell: Cell) -> str:
 
 
 def swatch(color: str, edge: str = "", px: int = 10) -> QIcon:
-    """A small rounded square in a toner's colour, with a 1 px `edge` if one is given."""
     pixmap = QPixmap(px * 2, px * 2)
     pixmap.setDevicePixelRatio(2)
     pixmap.fill(Qt.GlobalColor.transparent)

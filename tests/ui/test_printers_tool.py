@@ -49,13 +49,13 @@ class FakeShell:
         pass
 
     def tool(self, tool_id: str) -> None:
-        return None  # no other tool: Printers builds on none
+        return None
 
     def show_tool(self, tool_id: str) -> bool:
         return False
 
     def fills_now(self, tool_id: str) -> bool:
-        return True  # the only tool, always shown
+        return True
 
     def guide_changed(self) -> None:
         pass
@@ -118,15 +118,14 @@ def test_the_table_shows_name_address_status_toner_brand_model_and_tags(
     table = printers.table
     header = table.headerItem()
     shown = [header.text(i) for i in range(table.columnCount()) if not table.isColumnHidden(i)]
-    # Brand, serial number and asset tag are hidden at first: Model says the brand.
     assert shown == ["Name", "Address", "Status", "Toner", "Model", "Tags"]
-    assert not table.header().sectionsMovable()  # one fixed order: titles can't be dragged
+    assert not table.header().sectionsMovable()
     assert _names(printers) == ["2F-LABELS", "2F-OFFICE-01", "LOOSE"]
     first = table.topLevelItem(0)
     assert first is not None
     texts = [first.text(i) for i in (0, 1, table.STATUS, table.BRAND, table.MODEL, table.TAGS)]
     assert texts == ["2F-LABELS", "192.0.2.25", "Not checked", "ZEBRA", "ZEBRA ZD421", "labels"]
-    assert first.data(table.STATUS, ROLE_NOTHING)  # sorts last, either way
+    assert first.data(table.STATUS, ROLE_NOTHING)
     assert printers.nav.everything.topLevelItem(0).text(0).startswith("All printers")  # type: ignore[union-attr]
 
 
@@ -139,16 +138,16 @@ def test_columns_shown_by_the_user_are_kept(shell: FakeShell, printers: Printers
 
 def test_search_covers_the_columns_shown_and_the_notes(printers: PrintersTool) -> None:
     assert printers.search.placeholderText() == "Search name, address, status, model, tags, notes"
-    printers.search.setText("zebra")  # the Model column says the brand
+    printers.search.setText("zebra")
     printers._show_items()
     assert _names(printers) == ["2F-LABELS"]
-    printers.search.setText("not checked")  # Status, as it shows
+    printers.search.setText("not checked")
     printers._show_items()
     assert _names(printers) == ["2F-LABELS", "2F-OFFICE-01", "LOOSE"]
     printers.search.setText("zebra")
     printers._show_items()
     assert _names(printers) == ["2F-LABELS"]
-    printers.search.setText("SAMPLE0021")  # the serial number's column is hidden: not searched
+    printers.search.setText("SAMPLE0021")
     printers._show_items()
     assert _names(printers) == []
     printers.table._show_column(printers.table.SERIAL, True)
@@ -161,20 +160,20 @@ def test_search_covers_the_columns_shown_and_the_notes(printers: PrintersTool) -
 def test_the_status_bar_counts_printers_online_once_any_was_checked(
     printers: PrintersTool,
 ) -> None:
-    assert "online" not in printers.status_label.text()  # never "0 online" on a fresh list
+    assert "online" not in printers.status_label.text()
     doc = printers.document
     assert doc is not None
     first, second, _third = doc.hosts.hosts
     printers._checked[first.id] = Checked(datetime(2026, 11, 8, 10, 41), refused="usm")
     printers._checked[second.id] = Checked(datetime(2026, 11, 8, 10, 41), offline=True)
     printers._update_state()
-    assert "3 printers · 1 online" in printers.status_label.text()  # a refusal answered
+    assert "3 printers · 1 online" in printers.status_label.text()
 
 
 def test_an_empty_list_and_the_edit_window_say_printers_words(printers: PrintersTool) -> None:
     texts = printers.empty_texts()
     assert texts.empty_list == "This list has no printers yet.\nAdd one, or import several at once."
-    assert printers.import_action() is printers.commands.import_printers  # beside Add, as Hosts
+    assert printers.import_action() is printers.commands.import_printers
     doc = printers.document
     assert doc is not None
     dialog = PrinterDialog(None, doc.hosts, doc.hosts.hosts[0])
@@ -219,7 +218,7 @@ def test_details_parts_can_be_hidden_with_information_only(
     assert [r.text(0) for r in rows if r is not None] == [
         "Connection", "Supplies", "Printer", "Page counters", "Tags", "Notes",
     ]  # fmt: skip
-    dialog.parts.restore.click()  # applies at once
+    dialog.parts.restore.click()
     assert printers.hidden_parts() == frozenset()
     assert printers.details.customizable
 
@@ -317,7 +316,7 @@ def test_web_pages_open_on_the_address_at_most_ten(
         tool_module.QDesktopServices, "openUrl", lambda url: opened.append(url.toString()) or True
     )
     _select(printers, "2F-LABELS", "LOOSE")
-    printers.activate_selected()  # what a double-click and Enter do
+    printers.activate_selected()
     assert opened == ["http://192.0.2.25", "http://198.51.100.31"]
     assert shell.messages[-1] == "Opened 2 web pages."
 
@@ -352,7 +351,7 @@ def test_an_address_starting_with_https_opens_with_https() -> None:
     assert url("https://192.0.2.5") == "https://192.0.2.5"
     assert url("HTTPS://prn-01.example.com:8443") == "https://prn-01.example.com:8443"
     assert url("https://2001:db8::5") == "https://[2001:db8::5]"
-    assert url("http://192.0.2.5") == "http://192.0.2.5"  # typed http stays http
+    assert url("http://192.0.2.5") == "http://192.0.2.5"
     assert url("https://") == ""
 
 
@@ -381,7 +380,7 @@ def test_the_printer_menu_opens_the_web_page_first(
         "Model",
         "Tags",
     ]
-    _select(printers, "2F-LABELS", "LOOSE")  # several: Refresh counts them, no Edit
+    _select(printers, "2F-LABELS", "LOOSE")
     printers._item_menu(printers.table.visualItemRect(row).center())
     texts = [menus.label(a) for a in shown[-1].actions() if not a.isSeparator()]
     assert texts == ["Open &web page", "Re&fresh 2 printers", "Co&py", "&Move to", "&Tags",
@@ -408,7 +407,7 @@ def test_toolbar_mirrors_hosts_with_refresh_all(printers: PrintersTool) -> None:
     buttons = (bar.web_button, bar.refresh_button, bar.inventory_button, bar.report_button)
     assert [b.text().strip() for b in buttons] == ["Open web page", "Refresh all", "Inventory",
                                                    "Report"]  # fmt: skip
-    assert bar.refresh_button.isEnabled() and bar.refresh_button.menu() is None  # one check
+    assert bar.refresh_button.isEnabled() and bar.refresh_button.menu() is None
     assert printers.commands.refresh_shown.shortcut().toString() == "F5"
     _select(printers)
     assert not bar.web_button.isEnabled()
@@ -443,8 +442,8 @@ def test_report_lists_the_printers_columns_and_last_check(
     assert office[:10] == ["2F-OFFICE-01", "192.0.2.21", "Second floor", "BROTHER", "HL-L6402",
                            "SAMPLE0021", "INV-1021", "SNMP", "mono", ""]  # fmt: skip
     report.boxes["notes"].setChecked(False)
-    assert printers.prefs["export_columns"][-1] == "tags"  # in the Printers section
-    assert "export_columns" not in shell.prefs  # Hosts' Report keeps its own choices
+    assert printers.prefs["export_columns"][-1] == "tags"
+    assert "export_columns" not in shell.prefs
     for key in report.CHECKED:
         report.boxes[key].setChecked(True)
     assert report.header()[-6:] == [
@@ -461,7 +460,7 @@ def test_the_report_shows_when_the_printers_were_last_read(
     assert doc is not None
     office_id = next(h.id for h in doc.hosts.hosts if h.name == "2F-OFFICE-01")
     when = datetime(2026, 11, 8, 10, 41)
-    printers._checked[office_id] = Checked(when, offline=True)  # one read covers every column
+    printers._checked[office_id] = Checked(when, offline=True)
     assert printers._checked_at(office_id) == (when,) * len(PrintersReport.CHECKED)
     seen: list[PrintersReport] = []
 
@@ -483,7 +482,7 @@ def test_counts_agree_with_printer_in_portuguese(printers: PrintersTool) -> None
 
     i18n.set_language("pt_BR")
     try:
-        assert printers.selected_text(1) == "1 selecionada"  # impressora is feminine
+        assert printers.selected_text(1) == "1 selecionada"
         assert printers.items_text(2) == "2 impressoras"
     finally:
         i18n.set_language(i18n.DEFAULT_LANGUAGE)
@@ -494,7 +493,7 @@ def _pick_tags(tool: PrintersTool, *tags: str) -> None:
     for i in range(tool.nav.tags.topLevelItemCount()):
         item = tool.nav.tags.topLevelItem(i)
         if item is not None and item.text(0).split(" (")[0] in tags:
-            item.setSelected(True)  # a click toggles it, as in MultiSelection
+            item.setSelected(True)
 
 
 def test_several_tags_narrow_the_group_picked(
@@ -506,7 +505,7 @@ def test_several_tags_narrow_the_group_picked(
     printers._commit(doc.hosts.update_host(replace(labels, tags=("labels", "mono"))))
     _pick_tags(printers, "mono")
     assert _names(printers) == ["2F-LABELS", "2F-OFFICE-01"]
-    _pick_tags(printers, "mono", "labels")  # every picked tag, not any
+    _pick_tags(printers, "mono", "labels")
     assert _names(printers) == ["2F-LABELS"]
     assert printers.nav._tags_title.text() == "Tags (2)"
     assert printers.nav.clear_tags_button.isEnabled()
@@ -518,7 +517,7 @@ def test_several_tags_narrow_the_group_picked(
     sources, start = printers.report_sources(doc.hosts)
     assert sources[start].label == "Picked tags: labels, mono (1 printer)"
 
-    printers.nav.select_group(NO_GROUP)  # the tags stay picked in another group
+    printers.nav.select_group(NO_GROUP)
     printers._show_items()
     assert _names(printers) == [] and printers.nav.picked_tags() == ["labels", "mono"]
     assert printers.table._empty_text.text() == (
@@ -535,7 +534,7 @@ def test_a_search_keeps_the_picked_tags(printers: PrintersTool) -> None:
     _pick_tags(printers, "mono")
     printers.search.setText("2F")
     printers._show_items()
-    assert _names(printers) == ["2F-OFFICE-01"]  # 2F-LABELS has no "mono"
+    assert _names(printers) == ["2F-OFFICE-01"]
     assert printers.nav.picked_tags() == ["mono"]
 
 
@@ -556,11 +555,10 @@ def test_columns_sort_naturally_and_ties_go_by_name(printers: PrintersTool) -> N
     printers._commit(hl)
     printers.nav.select_group(NO_GROUP)
     printers._show_items()
-    assert _names(printers) == ["LOOSE", "P2", "p9", "P10"]  # natural, case ignored
+    assert _names(printers) == ["LOOSE", "P2", "p9", "P10"]
     printers.table.sortByColumn(printers.table.MODEL, Qt.SortOrder.AscendingOrder)
-    assert _names(printers) == ["P2", "P10", "p9", "LOOSE"]  # m2 = M2: ties by name; empty last
+    assert _names(printers) == ["P2", "P10", "p9", "LOOSE"]
     printers.table.sortByColumn(printers.table.MODEL, Qt.SortOrder.DescendingOrder)
-    # Z–A, ties still by name A–Z; a cell with nothing stays last
     assert _names(printers) == ["p9", "P2", "P10", "LOOSE"]
 
 
@@ -572,7 +570,7 @@ def test_inventory_imports_printers_and_says_how_many(
         dialog.set_text(
             "Name,Address,Brand,Serial number\n"
             "RECEPTION-02,192.0.2.12,samsung,sample0012\n"
-            "2F-LABELS,192.0.2.25,ZEBRA,\n"  # already in the list: left alone
+            "2F-LABELS,192.0.2.25,ZEBRA,\n"
         )
         return QDialog.DialogCode.Accepted
 

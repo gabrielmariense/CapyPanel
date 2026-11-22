@@ -23,7 +23,7 @@ from capypanel.ui.help_links import HelpButton
 from capypanel.ui.hosts import MAX_NAME, TagEdit, group_choices
 from capypanel.ui.printers_tool.details import source_text
 
-MAX_FIELD = 100  # brand, model, serial number, asset tag
+MAX_FIELD = 100
 COMMON_BRANDS = ("BROTHER", "CANON", "EPSON", "HP", "KYOCERA", "LEXMARK", "RICOH", "SAMSUNG",
                  "XEROX", "ZEBRA")  # fmt: skip
 
@@ -49,7 +49,7 @@ class PrinterDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(_("Edit printer") if printer else _("Add printer"))
         info = info_of(printer) if printer else PrinterInfo()
-        self._extra = info.extra  # values this version can't read, kept as they are
+        self._extra = info.extra
 
         self.name = QLineEdit(printer.name if printer else "")
         self.name.setMaxLength(MAX_NAME)
@@ -67,7 +67,6 @@ class PrinterDialog(QDialog):
         self.group.setCurrentIndex(max(self.group.findData(wanted), 0))
         self.tags = TagEdit(known=printers.all_tags())
         self.tags.set_tags(printer.tags if printer else ())
-        # Brands are typed in capitals, so one brand never shows up twice in the table.
         self.brand = QComboBox()
         self.brand.setEditable(True)
         known = {info_of(h).brand for h in printers.hosts}
@@ -84,7 +83,7 @@ class PrinterDialog(QDialog):
         self.source = QComboBox()
         sources: list[str] = list(COUNTER_SOURCES)
         if info.counter_source not in sources:
-            sources.append(info.counter_source)  # kept as the file has it
+            sources.append(info.counter_source)
         for source in sources:
             self.source.addItem(source_text(source), source)
         self.source.setCurrentIndex(sources.index(info.counter_source))
@@ -104,10 +103,10 @@ class PrinterDialog(QDialog):
         form.addRow(_("Ass&et tag:"), self.asset_tag)
         form.addRow(_("Page &counters:"), self.source)
         form.addRow(_("N&otes:"), self.notes)
-        self.buttons = ok_cancel(self, _("Save") if printer else _("Add"))  # ends in its verb
+        self.buttons = ok_cancel(self, _("Save") if printer else _("Add"))
         layout = QVBoxLayout(self)
         layout.addLayout(form)
-        row = QHBoxLayout()  # the ? first, on the left of the button row
+        row = QHBoxLayout()
         self.help_button = HelpButton(place="printers-add-a-printer")
         row.addWidget(self.help_button)
         row.addWidget(self.buttons, 1)

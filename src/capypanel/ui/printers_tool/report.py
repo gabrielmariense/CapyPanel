@@ -29,7 +29,6 @@ class PrintersReport(ExportDialog):
         "firmware": N_("Firmware"),
     }
     SECTIONS = (
-        # The printer itself, then what you add to it; the serial goes with the model.
         (N_("Printer"), ("name", "address", "group", "brand", "model", "serial")),
         (N_("Details"), ("asset_tag", "counter_source", "tags", "notes")),
         (N_("Last check"), ("status", "toner", "toner_model", "pages", "mac", "firmware")),

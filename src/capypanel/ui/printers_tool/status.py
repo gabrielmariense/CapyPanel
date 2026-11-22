@@ -20,26 +20,24 @@ from capypanel.ui.themes import engine as themes
 DEFAULT_LOW = 10  # %: a supply at or below this shows as low
 
 
-# The current theme's colours, read at each call: a theme switch changes them.
-def green() -> str:  # working
+def green() -> str:
     return themes.status_color("online")
 
 
-def amber() -> str:  # needs attention
+def amber() -> str:
     return themes.status_color("attention")
 
 
-def red() -> str:  # stopped
+def red() -> str:
     return themes.status_color("stopped")
 
 
-def grey() -> str:  # offline
+def grey() -> str:
     return themes.status_color("offline")
 
 
 _COLOUR_WORDS = re.compile(r"\b(black|cyan|magenta|yellow)\b", re.IGNORECASE)
 
-# The printer's detected errors: those that stop it, then those that only need attention.
 _STOPS = {
     Problem.JAMMED: lambda: _("Paper jam"),
     Problem.DOOR_OPEN: lambda: _("Door open"),
@@ -59,8 +57,6 @@ _WARNINGS = {
     Problem.SERVICE_REQUESTED: lambda: _("Service requested"),
     Problem.MAINTENANCE_OVERDUE: lambda: _("Maintenance due"),
 }
-# The table's Status column fits about 16 letters in either language; these say the longer
-# ones shorter there. The full words stay in the tip, Details and notifications.
 _SHORT = {
     Problem.OUTPUT_FULL: lambda: _("Output full"),
     Problem.OUTPUT_NEAR_FULL: lambda: _("Output nearly full"),
@@ -76,60 +72,47 @@ _STATES = {
 
 @dataclass(frozen=True)
 class Checked:
-    """One printer's last Refresh: what it read, or why it couldn't."""
-
     when: datetime
     reading: Reading | None = None
-    offline: bool = False  # no answer
-    error: str = ""  # it answered, but not in a way CapyPanel could read
-    refused: str = ""  # it refused the SNMP v3 account: snmp.Refused's reason
+    offline: bool = False
+    error: str = ""
+    refused: str = ""
 
 
 @dataclass(frozen=True)
 class Counted:
-    """The last Refresh's page counters from Doc360 MPS, by serial (doc360.key()), or why
-    there are none. For every printer whose counters come from there."""
-
     when: datetime
     counters: Mapping[str, doc360.Counter] = field(default_factory=dict)
     error: str = ""
-    account: str = ""  # NO_ACCOUNT or REFUSED: Details offers the account's window
-    older: tuple[int, int] | None = None  # (year, month) when these aren't this month's
-    place: str = ""  # the error's line in the docs (help_links.PLACES); "" for none
+    account: str = ""
+    older: tuple[int, int] | None = None
+    place: str = ""
 
 
-NO_ACCOUNT, REFUSED = "none", "refused"  # Counted.account
+NO_ACCOUNT, REFUSED = "none", "refused"
 
 
 class Attention(Enum):
-    """Why a printer needs attention, for the warnings: the rail's count, the strip above the
-    table and Windows notifications."""
-
     STOPPED = "stopped"
     OFFLINE = "offline"
     LOW = "low"
 
 
 class Reason(Enum):
-    """A reason Settings' Warnings table can warn about. Passing problems (a door open, a tray
-    pulled out) show in Status and Details but never warn."""
-
     JAMMED = "jammed"
     NO_PAPER = "no_paper"
     NO_TONER = "no_toner"
-    STOPPED = "stopped"  # down with no stop reason given, such as a service error
-    OFFLINE = "offline"  # no answer
-    LOW = "low"  # a supply at the low level
+    STOPPED = "stopped"
+    OFFLINE = "offline"
+    LOW = "low"
 
     @property
     def kind(self) -> Attention:
-        """How the strip counts it: stopped, offline or low."""
         return {Reason.OFFLINE: Attention.OFFLINE, Reason.LOW: Attention.LOW}.get(
             self, Attention.STOPPED
         )
 
     def words(self) -> str:
-        """The row's name, the Status column's own words."""
         return {
             Reason.JAMMED: lambda: _("Paper jam"),
             Reason.NO_PAPER: lambda: _("Out of paper"),
@@ -152,28 +135,24 @@ _STOP_REASONS = {
 class Cell:
     text: str
     tip: str
-    color: str  # the dot's or swatch's colour; "" for none
-    quiet: bool = False  # greyed: not checked, offline
-    warn: bool = False  # in amber: a low supply
-    supply: Supply | None = None  # the Toner cell's supply, for its bar
-    full: str = ""  # the whole words when `text` says them shorter (the table's Status)
-    nothing: bool = False  # "Not checked": sorts last, and stays empty in a Report's file
+    color: str
+    quiet: bool = False
+    warn: bool = False
+    supply: Supply | None = None
+    full: str = ""
+    nothing: bool = False
 
     def said(self) -> str:
-        """The words in full: Details' line and notifications have the room."""
         return self.full or self.text
 
 
 def _worded(short: str, full: str, tip: str, color: str) -> Cell:
-    """A Status cell whose words may be shortened; the tip then starts with the full words."""
     if short == full:
         return Cell(full, tip, color)
     return Cell(short, "\n".join((full, tip)), color, full=full)
 
 
 def status(checked: Checked | None, low: int) -> Cell:
-    """The Status cell, and the line under a printer's name in Details: a few words. The
-    printer's own messages can be long, so they go in the tip and in Details, in full."""
     if checked is None:
         return Cell(_("Not checked"), _("Not checked: use Refresh"), "", quiet=True, nothing=True)
     when = clock_text(checked.when)
@@ -206,8 +185,6 @@ def status(checked: Checked | None, low: int) -> Cell:
 
 
 def reasons(checked: Checked | None, low: int) -> list[Reason]:
-    """Every warning reason a printer has, most pressing first: no answer, its stop reasons (or
-    Stopped), then a low supply. Its own messages, refusals and unreadable answers never warn."""
     if checked is None:
         return []
     if checked.offline:
@@ -216,7 +193,6 @@ def reasons(checked: Checked | None, low: int) -> list[Reason]:
     if reading is None:
         return []
     stops = [problem for problem in _STOPS if problem in reading.problems]
-    # A stop reason with no row (a door open) still means it isn't "Stopped" for no reason.
     found = [_STOP_REASONS[p] for p in stops if p in _STOP_REASONS]
     if not stops and reading.device is Device.DOWN:
         found.append(Reason.STOPPED)
@@ -228,12 +204,10 @@ def reasons(checked: Checked | None, low: int) -> list[Reason]:
 def attention(
     checked: Checked | None, low: int, wanted: frozenset[Reason] = DEFAULT_REASONS
 ) -> Reason | None:
-    """The printer's most pressing reason among the `wanted` ones; None when it has none."""
     return next((reason for reason in reasons(checked, low) if reason in wanted), None)
 
 
 def status_words() -> list[str]:
-    """Every word the Status column can show, so its first width fits the longest."""
     problems = [_problem_words(p)[0] for p in (*_STOPS, *_WARNINGS)]
     states = [said() for said in _STATES.values()]
     others = (_("Not checked"), _("Offline"), _("Refused"), _("Unreadable"), _("Stopped"),
@@ -243,7 +217,6 @@ def status_words() -> list[str]:
 
 
 def toner_words() -> list[str]:
-    """The Toner column's longest words for each colour, so its first width fits them."""
     names = (_("Black"), _("Cyan"), _("Magenta"), _("Yellow"), _("Toner"), _("Ink"))
     words = []
     for colour in names:
@@ -257,8 +230,6 @@ def toner_words() -> list[str]:
 
 
 def toner_models(reading: Reading) -> str:
-    """The toners' and inks' names as the printer gives them, which often hold the cartridge's
-    model ("Black Cartridge HP CF258A"), for the Report."""
     kinds = (SupplyKind.TONER, SupplyKind.INK)
     return "; ".join(s.name for s in reading.supplies if s.kind in kinds and s.name)
 
@@ -277,14 +248,11 @@ def refused_text(reason: str) -> str:
 def doc360_pages(
     info: PrinterInfo, reading: Reading | None, counted: Counted | None
 ) -> tuple[int | None, str]:
-    """A Doc360 MPS printer's total pages, or why there's none; (None, "") before a Refresh.
-    Doc360 lists printers by serial: the list's own, or else the one the printer reports."""
     pages, error, _place = _doc360(info, reading, counted)
     return pages, error
 
 
 def doc360_place(info: PrinterInfo, reading: Reading | None, counted: Counted | None) -> str:
-    """doc360_pages' error's line in the docs, for its "What does this mean?"; "" for none."""
     return _doc360(info, reading, counted)[2]
 
 
@@ -309,8 +277,6 @@ def _doc360(
 
 
 def status_place(checked: Checked | None) -> str:
-    """The line in the docs for a printer that didn't answer or couldn't be read, for the
-    "What does this mean?" after Details' status line; "" for a printer that was read."""
     if checked is None:
         return ""
     if checked.offline:
@@ -323,8 +289,6 @@ def status_place(checked: Checked | None) -> str:
 
 
 def older_text(counted: Counted | None) -> str:
-    """The month Doc360's counts are from, when it isn't this one ("October 2026"); "" when
-    they're this month's, as they should be."""
     if counted is None or counted.older is None:
         return ""
     year, month = counted.older
@@ -334,7 +298,6 @@ def older_text(counted: Counted | None) -> str:
 
 
 def doc360_tip(counted: Counted) -> str:
-    """Where a Doc360 MPS total comes from, and why it can be behind the printer."""
     return _(
         "Fetched from Doc360 MPS at {when}. Doc360 reads printers on its own schedule, so this "
         "can be behind the printer."
@@ -348,8 +311,6 @@ def plain_tip(text: str) -> str:
 
 
 def is_low(supply: Supply, low: int) -> bool:
-    """A toner, ink, drum or waste box at or below the low level. Maintenance parts (fuser,
-    rollers) show their level, but wearing down isn't something to warn about here."""
     return supply.kind is not SupplyKind.OTHER and supply.low(low)
 
 
@@ -364,7 +325,6 @@ def low_text(supply: Supply) -> str:
 
 
 def short_low_text(supply: Supply) -> str:
-    """low_text for the Status column: a supply's own name can be long, so it's left out."""
     if supply.receptacle:
         return _("Waste nearly full")
     if supply.kind in (SupplyKind.INK, SupplyKind.TONER):
@@ -373,13 +333,11 @@ def short_low_text(supply: Supply) -> str:
 
 
 def _problem_words(problem: Problem) -> tuple[str, str]:
-    """(the table's words, the full words) for a problem the printer reports."""
     full = (_STOPS | _WARNINGS)[problem]()
     return (_SHORT[problem]() if problem in _SHORT else full), full
 
 
 def toner(checked: Checked | None, low: int) -> Cell:
-    """The Toner cell: the lowest toner or ink, "Cyan 8 % · low"; empty when there's none."""
     if checked is None or checked.reading is None:
         return Cell("", "", "")
     found = [s for s in checked.reading.supplies if s.kind in (SupplyKind.TONER, SupplyKind.INK)]
@@ -404,8 +362,6 @@ def toner(checked: Checked | None, low: int) -> Cell:
 
 
 def colour_name(supply: Supply) -> str:
-    """The colour a toner or ink is, in words ("Cyan"), or "Toner" / "Ink" when its name says
-    none (a black-only printer often just says "Toner Cartridge")."""
     found = _COLOUR_WORDS.search(supply.name)
     if found:
         return {
@@ -415,8 +371,6 @@ def colour_name(supply: Supply) -> str:
 
 
 def supply_color(supply: Supply) -> str:
-    """A supply's bar colour in the current theme, by the colour its name says; a toner or ink
-    that names none is black, drums, boxes and the rest a grey-blue."""
     inks = themes.ink_colors()
     found = _COLOUR_WORDS.search(supply.name)
     if found:
@@ -425,8 +379,6 @@ def supply_color(supply: Supply) -> str:
 
 
 def supply_edge(supply: Supply) -> str:
-    """The 1 px edge around a supply's bar or swatch: yellow's darker one, so it shows on a light
-    pane; any other supply's own colour (no visible edge)."""
     color = supply_color(supply)
     inks = themes.ink_colors()
     return inks["yellow_edge"] if color == inks["yellow"] else color
@@ -439,7 +391,6 @@ def level_text(supply: Supply) -> str:
 
 
 def reports_level(supply: Supply) -> bool:
-    """Whether the printer gives this supply a level: a percent, or at least "some left"."""
     return supply.percent is not None or supply.some_left
 
 
