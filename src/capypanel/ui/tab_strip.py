@@ -178,8 +178,8 @@ class TabStrip(QWidget):
         self.pinned.addTab("")
         self.pinned.setUsesScrollButtons(False)
         self.line = QFrame()
-        self.line.setFrameShape(QFrame.Shape.VLine)
-        self.line.setFixedHeight(16)
+        self.line.setObjectName("toolDivider")  # styled as the toolbar's lines are
+        self.line.setFixedSize(1, 16)
         self.line.hide()  # with the list alone it parted nothing, and looked like a text cursor
         gap = QWidget()
         gap.setFixedWidth(GAP)

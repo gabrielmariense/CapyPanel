@@ -20,6 +20,24 @@ def test_the_line_after_the_list_s_tab_shows_only_while_another_tab_is_open(
     assert not strip.line.isVisibleTo(strip)
 
 
+def test_the_line_after_the_list_s_tab_takes_the_border_colour_as_the_toolbar_s_lines_do(
+    qapp: QApplication, default_theme_after: None
+) -> None:
+    tokens = {"windows-dark": themes.NATIVE_TOKENS["dark"]}
+    for name in ("capypanel-dark", "capypanel-light", "windows-dark"):
+        theme = themes.Registry().find(name)
+        colours = tokens.get(name, theme.colors)
+        themes.apply(theme)
+        strip = TabStrip("device-desktop")
+        strip.restyle()
+        strip.add("a", "core-sw-01")
+        strip.show()
+        QApplication.processEvents()
+        colour = strip.line.grab().toImage().pixelColor(0, 8).name()
+        assert colour == colours["border"] != colours["text"], name
+        strip.close()
+
+
 def test_the_scroll_arrows_and_the_list_of_tabs_are_buttons_as_tall_as_the_tabs(
     qapp: QApplication, default_theme_after: None
 ) -> None:

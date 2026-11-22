@@ -1,3 +1,4 @@
+import gc
 import json
 import re
 from collections.abc import Iterator
@@ -466,6 +467,43 @@ def test_dropdowns_open_at_once_in_every_theme(qapp: QApplication) -> None:
         themes.apply(theme)
         assert not QApplication.isEffectEnabled(Qt.UIEffect.UI_AnimateCombo)
     themes.apply(themes.DEFAULT_THEME)
+
+
+def test_python_s_collector_waits_until_qt_has_restyled_every_widget(
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class Held:
+        def __init__(self) -> None:
+            self.me = self
+            self.menu = QMenu()
+            self.menu.ensurePolished()
+            self.menu.destroyed.connect(lambda: freed.append(switching))
+
+    freed: list[bool] = []
+    switching = False
+    helds = [Held() for _ in range(20)]
+    threshold = gc.get_threshold()
+    real_switch = themes._switch
+
+    def switch(
+        app: QApplication, theme: themes.Theme, scheme: Qt.ColorScheme, *, engine_changed: bool
+    ) -> None:
+        nonlocal switching
+        switching = True
+        helds.clear()  # from here only their own cycles keep them
+        gc.set_threshold(1)
+        try:
+            real_switch(app, theme, scheme, engine_changed=engine_changed)
+        finally:
+            switching = False
+
+    monkeypatch.setattr(themes, "_switch", switch)
+    try:
+        themes.apply(themes.Registry().find("capypanel-dark"))
+    finally:
+        gc.set_threshold(*threshold)
+    gc.collect()
+    assert freed == [False] * 20
 
 
 def test_a_switch_sets_the_theme_s_stylesheet_only_once(

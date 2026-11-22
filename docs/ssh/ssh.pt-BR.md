@@ -158,6 +158,8 @@ Selecione texto com o mouse para copiá-lo. O botão direito abre **Copiar**, **
       estiver instalado; os caracteres de linha, de bloco e do Powerline são desenhados pelo
       CapyPanel, então as caixas se juntam sem falhas.
     - O tamanho do texto é um só para todas as abas, e fica guardado para a próxima vez.
+    - Uma linha longa demais para a aba continua na fileira seguinte, e é copiada como uma linha
+      só, então é colada inteira.
     - Cada aba guarda as últimas 10.000 linhas. Nada do que você digita, cola ou vê vai para o log
       ou é salvo, e nada de uma conexão sobrevive ao CapyPanel além do tamanho do texto.
 

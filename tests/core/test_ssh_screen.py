@@ -205,3 +205,64 @@ def test_copied_text_joins_rows_with_crlf_without_trailing_blanks() -> None:
     screen, stream = screen_and_stream(columns=10)
     stream.feed(b"first\r\nsecond   \r\nthird")
     assert screen.text_between((0, 2), (2, 1)) == "rst\r\nsecond\r\nth"
+
+
+def test_a_line_longer_than_its_row_copies_as_one_line_with_the_blank_where_it_wrapped() -> None:
+    screen, stream = screen_and_stream(columns=10)
+    stream.feed(b"abcd efgh ijkl\r\nnext")
+    assert screen.text_between((0, 0), (2, 3)) == "abcd efgh ijkl\r\nnext"
+    assert screen.text_between((0, 5), (1, 1)) == "efgh ij"
+
+
+def test_a_wrapped_line_still_copies_as_one_line_from_the_scrollback() -> None:
+    screen, stream = screen_and_stream(columns=10, lines=2)
+    stream.feed(b"abcd efgh ijkl\r\n1\r\n2\r\n3")
+    assert screen.scrollback_text() == ["abcd efgh", "ijkl", "1"]
+    assert screen.text_between((0, 0), (1, 9)) == "abcd efgh ijkl"
+
+
+def test_a_line_that_ends_at_the_row_s_edge_copies_on_its_own() -> None:
+    screen, stream = screen_and_stream(columns=10)
+    stream.feed(b"abcdefghij\r\nnext")
+    assert screen.text_between((0, 0), (1, 3)) == "abcdefghij\r\nnext"
+
+
+def test_a_wide_character_that_wraps_whole_leaves_no_blank_in_the_copy() -> None:
+    screen, stream = screen_and_stream(columns=10)
+    stream.feed("abcdefghi中".encode())
+    assert screen.row_text(1) == "中"
+    assert screen.text_between((0, 0), (1, 1)) == "abcdefghi中"
+
+
+@pytest.mark.parametrize(
+    ("then", "copied"),
+    [
+        (b"\x1b[1;5H\x1b[K", "abcd\r\nijkl"),  # erased from its 5th cell to its end
+        (b"\x1b[1;1H\x1b[2K", "\r\nijkl"),  # erased whole
+        (b"\x1b[2;1H\x1b[1J", "\r\n jkl"),  # the screen erased up to the next row's first cell
+        (b"\x1b[2J", "\r\n"),  # the screen erased
+        (b"\x1b[1;1Hshort\n", "shortefgh\r\nijkl"),  # written over, then left by a line feed
+    ],
+)
+def test_a_row_erased_to_its_end_or_left_by_a_line_feed_no_longer_joins_the_next(
+    then: bytes, copied: str
+) -> None:
+    screen, stream = screen_and_stream(columns=10)
+    stream.feed(b"abcd efgh ijkl")
+    stream.feed(then)
+    assert screen.text_between((0, 0), (1, 9)) == copied
+
+
+def test_a_line_windows_own_engine_wraps_after_a_scroll_copies_as_one_line() -> None:
+    # Its bytes: the row's first part, a line feed that scrolls, then the row's last cell
+    # written again, so the terminal wraps by itself (tests/core/test_ssh_conpty.py).
+    screen, stream = screen_and_stream(columns=10, lines=3)
+    stream.feed(b"1\r\n2\r\nabcdefghij\r\n\x1b[2;10Hjklm")
+    assert screen.text_between((2, 0), (3, 9)) == "abcdefghijklm"
+
+
+def test_a_wrapped_line_copies_without_the_room_the_window_gained_since() -> None:
+    screen, stream = screen_and_stream(columns=10)
+    stream.feed(b"abcd efgh ijkl")
+    screen.resize(columns=20)
+    assert screen.text_between((0, 0), (1, 19)) == "abcd efgh ijkl"

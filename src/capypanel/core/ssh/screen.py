@@ -7,13 +7,13 @@ from collections import defaultdict, deque
 from collections.abc import Callable
 from itertools import groupby
 from operator import itemgetter
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, cast
 
 from capypanel.vendor import pyte
 from capypanel.vendor.pyte import charsets as cs
 from capypanel.vendor.pyte import modes as mo
 from capypanel.vendor.pyte._widths import REGIONAL_INDICATORS, wcwidth
-from capypanel.vendor.pyte.screens import Margins, StaticDefaultDict
+from capypanel.vendor.pyte.screens import Char, Margins, StaticDefaultDict
 
 SCROLLBACK = 10_000  # lines
 ALT_SCREEN_MODES = (1049, 1047, 47)
@@ -63,6 +63,7 @@ class PackedLine(NamedTuple):
 
     cells: str | tuple[str, ...]
     runs: tuple[tuple[int, int, Style], ...]
+    wrapped_at: int = 0  # the cells it held when its line went on to the next row; 0: it ended
 
 
 def _cells(line: Any, columns: int) -> list[Any]:
@@ -76,9 +77,10 @@ def pack(line: Any, columns: int) -> PackedLine:
     chars = _cells(line, columns)
     keys = list(map(_KEY, chars))
     datas = list(map(_DATA, chars))
+    wrapped_at = min(line.wrapped_at, columns)
     last = columns
-    while last > 0 and keys[last - 1] == _DEFAULT_KEY and datas[last - 1] in (" ", ""):
-        last -= 1  # trailing blanks in the default style aren't kept
+    while last > wrapped_at and keys[last - 1] == _DEFAULT_KEY and datas[last - 1] in (" ", ""):
+        last -= 1  # trailing blanks in the default style aren't kept, but a wrapped line's are
     runs: list[tuple[int, int, Style]] = []
     x = 0
     for key, group in groupby(keys[:last]):
@@ -91,7 +93,7 @@ def pack(line: Any, columns: int) -> PackedLine:
         datas = ["\0" if d == "" else d for d in datas]
     text = "".join(datas)
     cells: str | tuple[str, ...] = text if len(text) == last else tuple(datas)
-    return PackedLine(cells, tuple(runs))
+    return PackedLine(cells, tuple(runs), wrapped_at)
 
 
 def unpack(packed: PackedLine, columns: int) -> tuple[list[str], list[Style]]:
@@ -119,6 +121,10 @@ def _unpair_after(line: Any, x: int, columns: int) -> None:
         line[x] = line[x]._replace(data=" ")
 
 
+class _Row(StaticDefaultDict[int, Char]):
+    wrapped_at = 0  # the cells it held when its line went on to the next row; 0: it ends here
+
+
 class TermScreen(pyte.Screen):
     def __init__(
         self,
@@ -140,7 +146,12 @@ class TermScreen(pyte.Screen):
         self.bells = 0
         self.lines_scrolled = 0  # lines that went into the scrollback, ever
         self._cell_cache: dict[Any, dict[str, Any]] = {}
+        self._wrapped_at = 0  # while autowrap moves on: the cells the row it leaves held
         super().__init__(columns, lines)
+        self.buffer = defaultdict(lambda: _Row(self.default_char))
+
+    def _row(self, y: int) -> _Row:
+        return cast(_Row, self.buffer[y])  # every row comes from the buffer's _Row factory
 
     # What the server may not do: rename the tab, ring, or get answers beyond the standard ones.
 
@@ -194,8 +205,7 @@ class TermScreen(pyte.Screen):
             if cursor.x == columns:
                 if autowrap:
                     self.dirty.add(cursor.y)
-                    self.carriage_return()
-                    self.linefeed()
+                    self._wrap()
                     line = self.buffer[cursor.y]
                 else:
                     cursor.x -= 1
@@ -225,8 +235,7 @@ class TermScreen(pyte.Screen):
             if cursor.x + width > columns:
                 if autowrap:
                     self.dirty.add(cursor.y)
-                    self.carriage_return()
-                    self.linefeed()
+                    self._wrap()
                 else:
                     cursor.x = max(0, columns - width)
             if insert:
@@ -239,6 +248,15 @@ class TermScreen(pyte.Screen):
             cursor.x += width
             _unpair_after(line, cursor.x, columns)
         self.dirty.add(cursor.y)
+
+    def _wrap(self) -> None:
+        """The line goes on to the next row; the row it leaves is marked, so a copy joins them."""
+        self._wrapped_at = self.cursor.x
+        try:
+            self.carriage_return()
+            self.linefeed()
+        finally:
+            self._wrapped_at = 0
 
     # Colours stay palette numbers or "#rrggbb", so a theme switch recolours the scrollback too.
 
@@ -304,7 +322,7 @@ class TermScreen(pyte.Screen):
                     if m == 1049:
                         self.save_cursor()
                     self._main_buffer = self.buffer
-                    self.buffer = defaultdict(lambda: StaticDefaultDict(self.default_char))
+                    self.buffer = defaultdict(lambda: _Row(self.default_char))
                     self.in_alt = True
                     self.dirty.update(range(self.lines))
         super().set_mode(*modes, **kwargs)
@@ -326,14 +344,24 @@ class TermScreen(pyte.Screen):
     # The scrollback is ours, packed lines: pyte's HistoryScreen keeps whole cell objects.
 
     def index(self) -> None:
+        # As in Windows Terminal: the row left goes on to the next only when autowrap left it.
+        self._row(self.cursor.y).wrapped_at = self._wrapped_at
         top, bottom = self.margins or Margins(0, self.lines - 1)
         if self.cursor.y == bottom and top == 0 and not self.in_alt:
             self.scrollback.append(pack(self.buffer[0], self.columns))
             self.lines_scrolled += 1
         super().index()
 
+    def erase_in_line(self, how: int = 0, *args: Any, **kwargs: Any) -> None:
+        super().erase_in_line(how, *args, **kwargs)
+        if how in (0, 2):  # the row's end is gone, and with it the line going on below
+            self._row(self.cursor.y).wrapped_at = 0
+
     def erase_in_display(self, how: int = 0, *args: Any, **kwargs: Any) -> None:
-        super().erase_in_display(how, *args, **kwargs)
+        super().erase_in_display(how, *args, **kwargs)  # the cursor's row goes by erase_in_line
+        erased = {0: range(self.cursor.y + 1, self.lines), 1: range(self.cursor.y)}
+        for y in erased.get(how, range(self.lines)):
+            self._row(y).wrapped_at = 0
         if how == 3:
             self.scrollback.clear()
 
@@ -392,17 +420,28 @@ class TermScreen(pyte.Screen):
     def scrollback_text(self) -> list[str]:
         return ["".join(unpack(p, self.columns)[0]).rstrip() for p in self.scrollback]
 
+    def wrapped_at(self, index: int) -> int:
+        """The cells row `index` held when its line went on to the next row; 0 if it ends there."""
+        sb = len(self.scrollback)
+        if index < sb:
+            return self.scrollback[index].wrapped_at
+        return self._row(index - sb).wrapped_at
+
     def text_between(self, start: tuple[int, int], end: tuple[int, int]) -> str:
-        """The text from cell `start` to cell `end` (row, column; both included), rows joined
-        with CRLF and trailing blanks dropped, as Windows' clipboard wants it."""
+        """The text from cell `start` to cell `end` (row, column; both included): a wrapped line
+        whole, lines ended with CRLF without trailing blanks, as Windows' clipboard wants them."""
         (r0, c0), (r1, c1) = sorted((start, end))
         out = []
         for r in range(r0, r1 + 1):
             chars, _styles = self.row(r)
             a = c0 if r == r0 else 0
             b = c1 + 1 if r == r1 else self.columns
-            out.append("".join(chars[a:b]).rstrip())
-        return "\r\n".join(out)
+            wrapped_at = self.wrapped_at(r) if r < r1 else 0
+            if wrapped_at:  # its blanks are part of the line
+                out.append("".join(chars[a:wrapped_at]))
+            else:
+                out.append("".join(chars[a:b]).rstrip() + ("\r\n" if r < r1 else ""))
+        return "".join(out)
 
 
 class TermStream(pyte.ByteStream):
