@@ -119,13 +119,16 @@ class ImportDialog(QDialog):
         "(name, address, group, tags, notes), so the two always match. Continue?"
     )
     MORE: tuple[tuple[str, str], ...] = ()
+    MORE_AFTER = "notes"
     WIDTH = 1100
 
     def __init__(self, parent: QWidget | None, host_list: HostList, group_id: str) -> None:
         super().__init__(parent)
         self.setWindowTitle(_(self.TITLE))
-        more = [key for key, _title in self.MORE]
-        self.keys = ["dot", "name", "address", "warning", "group", "tags", "notes", *more]
+        own = ["group", "tags", "notes"]
+        at = own.index(self.MORE_AFTER) + 1
+        own[at:at] = [key for key, _title in self.MORE]
+        self.keys = ["dot", "name", "address", "warning", *own]
         self.col = {key: index for index, key in enumerate(self.keys)}
         self.editable = tuple(i for i, key in enumerate(self.keys) if key not in _FIXED)
         self._hosts = host_list
@@ -382,7 +385,8 @@ class ImportDialog(QDialog):
 
     def _write_back(self) -> None:
         self.text.blockSignals(True)
-        self.text.setPlainText(to_csv(self._rows, more=[key for key, _t in self.MORE]))
+        more = [key for key, _t in self.MORE]
+        self.text.setPlainText(to_csv(self._rows, more=more, after=self.MORE_AFTER))
         self.text.blockSignals(False)
         self._from_file = False
         # After the editor has closed: rebuilding the table under it would end the edit badly.
@@ -464,13 +468,13 @@ class ImportDialog(QDialog):
 class HostsImportDialog(ImportDialog):
     EDIT_QUESTION = N_(
         "Editing in the table rewrites the list above as CSV with a header row (name, "
-        "address, group, tags, notes, SSH port and SSH login), so the two always match. Continue?"
+        "address, group, ssh port, ssh login, tags and notes), so the two always match. Continue?"
     )
     MORE = ((ssh_bulk.PORT, N_("SSH port")), (ssh_bulk.LOGIN, N_("SSH login")))
-    WIDTH = 1250
+    MORE_AFTER = "group"
 
     def needs_header(self) -> str:
-        return needs_header_text(_("name, address, group, tags, notes, SSH port, SSH login"))
+        return needs_header_text(_("name, address, group, SSH port, SSH login, tags, notes"))
 
     def formats(self) -> QDialog:
         return HostsFormats(self)
@@ -642,8 +646,9 @@ class HostsFormats(FormatsDialog):
         header = ["name", "address", "ssh port", "ssh login"]
         rows = [["web-01", "198.51.100.42", "", "deploy"], ["nas-01", "192.0.2.41", "2222", "root"]]
         about = _(
-            "Two more columns for servers you connect to in SSH: the port and the name to log in "
-            "as. An empty cell leaves it to ssh.exe's own settings."
+            "Two more columns for the servers you reach over SSH: the port and the name to log "
+            "in as. An empty cell uses the default: for the name, the group's Log in as if it has "
+            "one; otherwise ssh.exe's own settings."
         )
         typed = "\n".join(",".join(row) for row in [header, *rows])
         return [*super()._formats(), (_("SSH servers"), self._page(about, typed, header, rows))]

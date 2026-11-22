@@ -316,18 +316,21 @@ def write_csv(
     return out.getvalue()
 
 
-def to_csv(rows: Iterable[ImportRow], delimiter: str = ",", more: Sequence[str] = ()) -> str:
+def to_csv(
+    rows: Iterable[ImportRow], delimiter: str = ",", more: Sequence[str] = (), after: str = "notes"
+) -> str:
     between_tags = "," if delimiter == ";" else ";"
-    return write_csv(
-        ["name", "address", "group", "tags", "notes", *more],
-        (
-            [r.name, r.address, r.group, between_tags.join(r.tags), r.notes]
-            + [dict(r.more).get(key, "") for key in more]
-            for r in rows
-        ),
-        delimiter,
-        guard=False,
-    )
+    keys = ["name", "address", "group", "tags", "notes"]
+    at = keys.index(after) + 1
+    keys[at:at] = more
+
+    def cells(row: ImportRow) -> list[str]:
+        own = {"name": row.name, "address": row.address, "group": row.group,
+               "tags": between_tags.join(row.tags), "notes": row.notes}  # fmt: skip
+        extra = dict(row.more)
+        return [own[key] if key in own else extra.get(key, "") for key in keys]
+
+    return write_csv(keys, (cells(r) for r in rows), delimiter, guard=False)
 
 
 def host_fields(host_list: HostList, host: Host, between_tags: str = ";") -> dict[str, str]:

@@ -6,7 +6,7 @@ from capypanel.core.hosts.model import HostList
 from capypanel.core.i18n import _
 from capypanel.core.ssh.host import DEFAULT_PORT, SshInfo, is_login, is_port, with_info
 
-PORT, LOGIN = "ssh_port", "ssh_login"
+PORT, LOGIN = "ssh port", "ssh login"
 # Never "port", "user" or "login" alone: a list of PCs may have them for a switch port or the
 # person at the desk.
 MORE: Mapping[str, frozenset[str]] = {
@@ -28,7 +28,7 @@ def problem(row: ImportRow) -> str | None:
         return _("Not an SSH port: type a number from 1 to 65535")
     if login and not is_login(login):
         return _("Not a name ssh.exe can log in as: no spaces, quotes or characters such as "
-                 "; & |, and no “-” first")  # fmt: skip
+                 "; & |, and it can't start with “-”")  # fmt: skip
     return None
 
 

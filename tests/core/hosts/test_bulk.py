@@ -203,6 +203,8 @@ def test_a_callers_own_columns_read_back_from_the_tables_csv() -> None:
     text = to_csv(rows, more=list(MORE))
     assert text.splitlines()[0] == "name,address,group,tags,notes,brand,asset_tag"
     assert parse(text, more=MORE).rows == rows
+    after_group = to_csv(rows, more=["brand"], after="group").splitlines()
+    assert after_group == ["name,address,group,brand,tags,notes", "Lab,192.0.2.11,,RICOH,,"]
 
 
 def test_a_callers_own_check_takes_the_place_of_the_hosts_one() -> None:

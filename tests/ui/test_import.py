@@ -132,7 +132,7 @@ def test_servers_imported_in_hosts_come_with_their_ssh_port_and_login(
     opened = _adds_servers(monkeypatch)
     window.hosts.commands.import_hosts.trigger()
     assert opened[0][0] is HostsImportDialog
-    assert opened[0][1][-3:] == ["Notes", "SSH port", "SSH login"]
+    assert opened[0][1][4:] == ["Group", "SSH port", "SSH login", "Tags", "Notes"]
     doc = window.hosts.document
     assert doc is not None
     saved = {h.name: info_of(h) for h in listfile.load(doc.path).hosts.hosts}
@@ -169,8 +169,31 @@ def test_a_port_ssh_exe_can_t_take_is_said_in_the_row(qapp: QApplication) -> Non
     row = dialog.table.topLevelItem(0)
     assert row is not None
     assert row.text(dialog.col["warning"]) == "Not an SSH port: type a number from 1 to 65535"
-    assert row.text(dialog.col["ssh_port"]) == "99999"
+    assert row.text(dialog.col["ssh port"]) == "99999"
     assert dialog.imported_list() is None
+
+
+def test_a_hosts_import_rewrites_its_header_with_the_words_its_question_names(
+    qapp: QApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    asked: list[str] = []
+
+    def yes(*args: object) -> QMessageBox.StandardButton:
+        asked.append(str(args[2]))
+        return QMessageBox.StandardButton.Yes
+
+    monkeypatch.setattr(import_hosts.QMessageBox, "question", yes)
+    dialog = HostsImportDialog(None, HostList(), NO_GROUP)
+    dialog.set_text("name,address,ssh_port,ssh_login\nnas-01,192.0.2.41,2222,root\n")
+    assert dialog.table._may_edit()
+    row = dialog.table.topLevelItem(0)
+    assert row is not None
+    row.setText(NAME, "nas-02")
+    qapp.processEvents()
+    header = "name,address,group,ssh port,ssh login,tags,notes"
+    assert dialog.text.toPlainText().splitlines() == [header, "nas-02,192.0.2.41,,2222,root,,"]
+    words = header.replace(",", ", ").replace(", notes", " and notes")
+    assert len(asked) == 1 and f"({words})" in asked[0]
 
 
 def test_editing_the_table_asks_once_then_rewrites_the_list(

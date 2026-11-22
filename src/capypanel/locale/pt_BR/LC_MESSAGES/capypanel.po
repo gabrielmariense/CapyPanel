@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 18:41-0300\n"
+"POT-Creation-Date: 2026-11-22 19:25-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1665,14 +1665,14 @@ msgstr "Editar a conta"
 msgid "Edit the list here"
 msgstr "Editar a lista aqui"
 
+msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, ssh port, ssh login, tags and notes), so the two always match. Continue?"
+msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, ssh port, ssh login, tags e notes), para que as duas sempre coincidam. Continuar?"
+
 msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, tags, notes and the printers' own columns), so the two always match. Continue?"
 msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes e as colunas das impressoras), para que as duas sempre coincidam. Continuar?"
 
 msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, tags, notes), so the two always match. Continue?"
 msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes), para que as duas sempre coincidam. Continuar?"
-
-msgid "Editing in the table rewrites the list above as CSV with a header row (name, address, group, tags, notes, SSH port and SSH login), so the two always match. Continue?"
-msgstr "Editar na tabela reescreve a lista acima como CSV com uma linha de cabeçalho (name, address, group, tags, notes, porta SSH e login SSH), para que as duas sempre coincidam. Continuar?"
 
 msgid "Empty: your SSH config, then your Windows user name"
 msgstr "Vazio: config do SSH ou seu usuário do Windows"
@@ -2522,8 +2522,8 @@ msgstr "Nenhum: config do SSH ou seu usuário do Windows"
 msgid "Not a computer name or IP address"
 msgstr "Não é um nome de computador nem um endereço IP"
 
-msgid "Not a name ssh.exe can log in as: no spaces, quotes or characters such as ; & |, and no “-” first"
-msgstr "Não é um nome com que o ssh.exe possa entrar: sem espaços, aspas ou caracteres como ; & |, e sem “-” no começo"
+msgid "Not a name ssh.exe can log in as: no spaces, quotes or characters such as ; & |, and it can't start with “-”"
+msgstr "Não é um nome com que o ssh.exe possa entrar: sem espaços, aspas ou caracteres como ; & |, e não pode começar com “-”"
 
 msgid "Not a printer name or IP address"
 msgstr "Não é um nome de impressora nem um endereço IP"
@@ -4527,8 +4527,8 @@ msgstr "Tentar outra conta…"
 msgid "Turns the PC off; someone has to turn it back on."
 msgstr "Desliga o PC; alguém precisa ligá-lo de novo."
 
-msgid "Two more columns for servers you connect to in SSH: the port and the name to log in as. An empty cell leaves it to ssh.exe's own settings."
-msgstr "Duas colunas a mais para os servidores em que você se conecta por SSH: a porta e o nome com que entrar. Uma célula vazia deixa isso para as configurações do próprio ssh.exe."
+msgid "Two more columns for the servers you reach over SSH: the port and the name to log in as. An empty cell uses the default: for the name, the group's Log in as if it has one; otherwise ssh.exe's own settings."
+msgstr "Duas colunas a mais para os servidores que você acessa por SSH: a porta e o nome com que entrar. Uma célula vazia usa o padrão: para o nome, o Entrar como do grupo, se ele tiver um; senão, as configurações do próprio ssh.exe."
 
 msgid "Type"
 msgstr "Tipo"
@@ -5050,14 +5050,14 @@ msgstr "modelo"
 msgid "name"
 msgstr "nome"
 
+msgid "name, address, group, SSH port, SSH login, tags, notes"
+msgstr "nome, endereço, grupo, porta SSH, login SSH, tags, notas"
+
 msgid "name, address, group, brand, model, serial number, asset tag, page counters"
 msgstr "nome, endereço, grupo, marca, modelo, nº de série, patrimônio, contadores de páginas"
 
 msgid "name, address, group, tags, notes"
 msgstr "nome, endereço, grupo, tags, notas"
-
-msgid "name, address, group, tags, notes, SSH port, SSH login"
-msgstr "nome, endereço, grupo, tags, notas, porta SSH, login SSH"
 
 msgid "not reported"
 msgstr "não informado"
