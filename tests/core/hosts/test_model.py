@@ -155,10 +155,9 @@ def test_a_group_moves_with_everything_inside_it() -> None:
     hl, host = hl.add_host("FIN-01", finance)
     moved = hl.move_group(finance, branch.id)
     assert moved.group(finance).parent == branch.id  # type: ignore[union-attr]
-    # Its hosts stay inside it.
     assert moved.host(host.id).group == finance  # type: ignore[union-attr]
     top = moved.move_group(finance, None)
-    assert [g.name for g in top.children(None)] == ["Headquarters", "Branch", "Finance"]  # last
+    assert [g.name for g in top.children(None)] == ["Headquarters", "Branch", "Finance"]
     assert hl.move_group(finance, hq) is hl  # already there: nothing changes
     with pytest.raises(HostListRuleError):
         hl.move_group(hq, finance)  # into its own subgroup
@@ -208,5 +207,5 @@ def test_what_a_removed_group_holds_can_go_into_another_group() -> None:
     assert top.host(pc.id).group == NO_GROUP  # type: ignore[union-attr]
     loose = hl.move_hosts([pc.id], NO_GROUP)
     assert loose.host(pc.id).group == NO_GROUP  # type: ignore[union-attr]
-    hl, free = hl.add_host("FREE-1", NO_GROUP)  # added with no group at all
+    hl, free = hl.add_host("FREE-1", NO_GROUP)
     assert free.group == NO_GROUP

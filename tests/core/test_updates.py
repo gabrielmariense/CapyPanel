@@ -406,7 +406,7 @@ def test_a_new_file_held_for_a_moment_still_lets_the_old_version_back(
     def pause(seconds: float) -> None:
         pauses.append(seconds)
         if len(pauses) == 2:
-            scan.close()  # the scan is over
+            scan.close()
 
     monkeypatch.setattr(updates.time, "sleep", pause)
     with scan, pytest.raises(UpdateError, match="self-test"):
