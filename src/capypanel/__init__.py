@@ -42,7 +42,6 @@ __version__ = _version()
 
 
 def _commit() -> str:
-    """The short commit of a source checkout, so testers can tell builds apart; "" if none."""
     git = Path(__file__).resolve().parents[2] / ".git"
     try:
         head = (git / "HEAD").read_text(encoding="utf-8").strip()

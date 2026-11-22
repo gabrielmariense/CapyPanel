@@ -114,7 +114,6 @@ def main() -> int:
 
 
 def ask_account() -> usm.Account:
-    """The v3 account, typed in the terminal; passwords aren't shown."""
     user = input("User name: ").strip()
     auths = {a.label.upper(): a for a in usm.Auth}
     named = input(f"Authentication ({', '.join(a.label for a in usm.Auth)}, or none): ")
