@@ -40,7 +40,7 @@ class HostTarget:
     """The PC a command is for: a host of the open list, or an address typed on the spot."""
 
     key: str  # the host's id, or "@" and the address: where its results are kept
-    name: str  # what messages call it
+    name: str
     address: str
 
 

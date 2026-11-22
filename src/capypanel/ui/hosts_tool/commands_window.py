@@ -336,7 +336,7 @@ class CommandRow(QFrame):
         self.name.setObjectName("commandName")
         self.name.setWordWrap(True)  # a long name wraps rather than widen the list
         self.name.setProperty("risky", command.risky)
-        self.keys = QLabel(shortcut)  # its shortcut, when it has one
+        self.keys = QLabel(shortcut)
         self.keys.setObjectName("hint")
         self.keys.setVisible(bool(shortcut))
         self.run = QPushButton(_("&Run"))
@@ -397,7 +397,7 @@ class CommandsWindow(QDialog):
         self._typed = target is None  # opened as Manual connection: nothing picked yet
         self._shown_key = target.key if target else ""  # whose profile the dropdown shows
         self._outcomes: dict[tuple[str, str], Outcome] = {}  # (target key, command id)
-        self._lists: dict[tuple[str, str], Listed] = {}  # printers and programs, as read
+        self._lists: dict[tuple[str, str], Listed] = {}
 
         # ---- the top line: the PC, typed or picked from what the Hosts panel shows; the arrows
         # go host by host. Then the addresses typed here before. ----

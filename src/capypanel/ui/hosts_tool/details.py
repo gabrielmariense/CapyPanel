@@ -50,7 +50,7 @@ class HostDetails:
     # The last logged-on users check: sessions (None when it failed), its error, and when.
     users: tuple[Sequence[Session] | None, RemoteError | None, datetime] | None = None
     facts: Facts | None = None
-    pending: PendingPower | None = None  # a restart or shutdown CapyPanel asked for
+    pending: PendingPower | None = None
     # Commands run as: the account, whether this PC overrides its group (its own Accounts row),
     # and the tooltip saying why that one.
     commands_as: tuple[str, bool, str] = ("", False, "")

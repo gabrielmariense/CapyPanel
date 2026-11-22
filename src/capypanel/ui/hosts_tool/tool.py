@@ -133,7 +133,7 @@ class HostsTool(ListWorkspace):
             str, tuple[tuple[Session, ...] | None, RemoteError | None, datetime]
         ] = {}
         self._run: CheckRun | None = None
-        self.accounts = Accounts(self)  # which account signs in to which PC
+        self.accounts = Accounts(self)
         self.accounts.changed.connect(self._accounts_changed)
         self._refused: list[str] = []  # hosts this run that didn't let the account read users
         self._reported: set[str] = set()
@@ -141,7 +141,7 @@ class HostsTool(ListWorkspace):
 
         # Host commands: what they found (in memory only), the runner and its answers.
         self._facts: dict[str, Facts] = {}
-        self._pending: dict[str, PendingPower] = {}  # restarts and shutdowns CapyPanel asked for
+        self._pending: dict[str, PendingPower] = {}
         self._probing: set[str] = set()  # restarting PCs being checked right now
         self._back_online: str | None = None  # the host the last notification was about
         self.runner = Runner(self)
@@ -174,7 +174,7 @@ class HostsTool(ListWorkspace):
         self._fill_inventory()
         self._connect()
         self.restore_layout()
-        self.settings_pages = HostsSettings(self)  # its part of Settings
+        self.settings_pages = HostsSettings(self)
         self._auto_timer = QTimer(self)  # Settings: Status by itself, if switched on
         self._auto_timer.timeout.connect(self._auto_status_check)
         self._apply_auto_status()

@@ -141,7 +141,7 @@ class HostsToolBar(ToolBar):
 
     def restyle(self) -> None:
         """Icons in the theme's text colour."""
-        color = self.connect_button.palette().color(QPalette.ColorRole.ButtonText)  # its text's
+        color = self.connect_button.palette().color(QPalette.ColorRole.ButtonText)
         self.connect_button.setIcon(tabler_icon("plug-connected", color))
         self.refresh_button.setIcon(tabler_icon("refresh", color))
         self.commands_button.setIcon(tabler_icon("bolt", color))
