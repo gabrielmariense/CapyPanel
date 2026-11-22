@@ -908,6 +908,7 @@ QToolButton#commandButton { background: %(card)s; border: 1px solid %(border)s; 
 QToolButton#commandButton:hover { background: %(hover)s; }
 QToolButton#commandButton:disabled { background: transparent; }
 QToolButton#commandButton[risky="true"] { color: %(attention)s; }
+QToolButton#commandButton[risky="true"]:disabled { color: %(text2)s; }
 QToolButton#commandButton[popupMode="2"] { padding-right: 12px; }
 QToolButton#commandButton::menu-indicator { width: 8px; height: 5px; right: 5px; }
 QToolButton#commandButton[arrow="false"] { padding-right: 0; }
