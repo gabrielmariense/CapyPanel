@@ -1,9 +1,11 @@
 """Refresh by itself stays off until picked: fail2ban may ban it."""
 
+import html
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -29,6 +31,8 @@ from capypanel.ui.settings.pages import AutoStatusOnlyPage, Page, Section, Setti
 if TYPE_CHECKING:
     from capypanel.ui.ssh_tool.tool import SshTool
 
+MONO = "'Cascadia Mono', Consolas, monospace"
+
 
 def auto_line() -> str:
     return _("Only the SSH port, so nothing logs in. A server running fail2ban in a strict mode "
@@ -36,20 +40,28 @@ def auto_line() -> str:
 
 
 def terminal_line() -> str:
-    return _("Where Connect in a separate window opens ssh.exe. In a terminal program, "
-             "that program's own settings decide whether its window stays open after an "
-             "error.")  # fmt: skip
+    return _("Where ssh.exe opens when you use Connect in a separate window. In a terminal "
+             "program, that program's own settings decide whether its window stays open "
+             "after an error.")  # fmt: skip
+
+
+def as_typed(text: str) -> str:
+    words = html.escape(text, quote=False)
+    return re.sub(
+        r"\{(?:ssh|name)\}", lambda m: f'<span style="font-family: {MONO}">{m[0]}</span>', words
+    )
 
 
 class TerminalDialog(QDialog):
     def __init__(self, parent: QWidget | None, terminal: Terminal | None) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Another terminal program"))
-        self.about = QLabel(
+        self.about = QLabel(as_typed(
             _("Connect in a separate window starts this program, which runs ssh.exe. In the "
               "arguments, {ssh} stands for ssh.exe with the server's address, port and login, "
               "and {name} for the server's name, for a window or tab title.")
-        )  # fmt: skip
+        ))  # fmt: skip
+        self.about.setTextFormat(Qt.TextFormat.RichText)
         self.about.setWordWrap(True)
         self.program = QLineEdit(str(terminal.program) if terminal else "")
         self.choose = QPushButton(_("C&hoose…"))
@@ -61,6 +73,7 @@ class TerminalDialog(QDialog):
         self.arguments = QLineEdit(terminal.arguments if terminal else terminals.SSH)
         self.problem = QLabel()
         self.problem.setObjectName("hint")
+        self.problem.setTextFormat(Qt.TextFormat.RichText)
         self.problem.setWordWrap(True)
         form = QFormLayout()
         program_label = QLabel(_("&Program:"))
@@ -76,6 +89,9 @@ class TerminalDialog(QDialog):
         layout.addLayout(help_links.row(self.help_button, self.buttons))
         self.program.textChanged.connect(self._update_ok)
         self.arguments.textChanged.connect(self._update_ok)
+        self.resize(520, self.sizeHint().height())
+        layout.activate()
+        self._keep_room_for_problems()
         self._update_ok()
         self.resize(520, self.sizeHint().height())
 
@@ -86,9 +102,16 @@ class TerminalDialog(QDialog):
         if name:
             self.program.setText(str(Path(name)))
 
+    def _keep_room_for_problems(self) -> None:
+        width, tallest = self.problem.width(), 0
+        for text in terminals.problems():
+            self.problem.setText(as_typed(text))
+            tallest = max(tallest, self.problem.heightForWidth(width))
+        self.problem.setMinimumHeight(tallest)
+
     def _update_ok(self) -> None:
         why = terminals.problem(self.program.text(), self.arguments.text())
-        self.problem.setText(why)
+        self.problem.setText(as_typed(why))
         ok = self.buttons.button(QDialogButtonBox.StandardButton.Ok)
         ok.setEnabled(not why)
         ok.setToolTip(why)

@@ -82,17 +82,27 @@ def to_prefs(terminal: Terminal) -> dict[str, str]:
     return {PROGRAM_KEY: str(terminal.program), ARGUMENTS_KEY: terminal.arguments}
 
 
+def problems() -> tuple[str, str, str, str]:
+    return (
+        _("Choose the program."),
+        _("Choose a program: a file whose name ends in .exe."),
+        _("There's no program at this path."),
+        _("The arguments need {ssh}, where the program takes the command it runs."),
+    )
+
+
 def problem(program: str, arguments: str, *, look: bool = True) -> str:
+    empty, not_a_program, missing, no_ssh = problems()
     path = Path(program.strip())
     if not program.strip():
-        return _("Pick the program.")
+        return empty
     # A .bat or .cmd would hand the arguments to cmd.exe, which reads them its own way.
     if path.suffix.casefold() != ".exe":
-        return _("Pick a program: a file whose name ends in .exe.")
+        return not_a_program
     if look and not (path.is_absolute() and path.is_file()):
-        return _("There's no program at this path.")
+        return missing
     if SSH not in arguments:
-        return _("The arguments need {ssh}, where the program takes the command it runs.")
+        return no_ssh
     return ""
 
 

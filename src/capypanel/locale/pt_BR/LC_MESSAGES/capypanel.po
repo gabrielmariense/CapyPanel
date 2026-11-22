@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 19:48-0300\n"
+"POT-Creation-Date: 2026-11-22 19:56-0300\n"
 "PO-Revision-Date: 2026-09-30 16:10-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -1040,9 +1040,15 @@ msgstr "Verifica se cada host exibido responde, como o Atualizar do Hosts; a col
 msgid "Checks whether {host} answers, as Hosts' Refresh does"
 msgstr "Verifica se {host} responde, como o Atualizar do Hosts"
 
+msgid "Choose a program: a file whose name ends in .exe."
+msgstr "Escolha um programa: um arquivo cujo nome termina em .exe."
+
 #, python-brace-format
 msgid "Choose a {tool} settings file"
 msgstr "Escolha um arquivo de configurações do {tool}"
+
+msgid "Choose the program."
+msgstr "Escolha o programa."
 
 msgid "Choose the terminal program"
 msgstr "Escolha o programa de terminal"
@@ -2993,14 +2999,8 @@ msgstr "Escolha uma lista aqui: a compartilhada, que todos neste PC veem, a sua 
 msgid "Pick a list here: these are the same lists as in Hosts, the shared one and your own. Click a group below it to see just that group's hosts."
 msgstr "Escolha uma lista aqui: são as mesmas listas do Hosts, a compartilhada e as suas. Clique num grupo embaixo dela para ver só os hosts desse grupo."
 
-msgid "Pick a program: a file whose name ends in .exe."
-msgstr "Escolha um programa: um arquivo cujo nome termina em .exe."
-
 msgid "Pick hosts in the list first"
 msgstr "Selecione hosts na lista primeiro"
-
-msgid "Pick the program."
-msgstr "Escolha o programa."
 
 #, python-brace-format
 msgid "Picked tags: {tags}"
@@ -4785,15 +4785,15 @@ msgstr "Quando o host foi escaneado, ou em que ponto está o escaneamento"
 msgid "Where"
 msgstr "Onde"
 
-msgid "Where Connect in a separate window opens ssh.exe. In a terminal program, that program's own settings decide whether its window stays open after an error."
-msgstr "Onde Conectar numa janela separada abre o ssh.exe. Num programa de terminal, as configurações do próprio programa decidem se a janela dele fica aberta depois de um erro."
-
 msgid "Where I left off"
 msgstr "Onde parei"
 
 #, python-brace-format
 msgid "Where is {tool}?"
 msgstr "Onde está o {tool}?"
+
+msgid "Where ssh.exe opens when you use Connect in a separate window. In a terminal program, that program's own settings decide whether its window stays open after an error."
+msgstr "Onde o ssh.exe abre quando você usa Conectar numa janela separada. Num programa de terminal, as configurações do próprio programa decidem se a janela dele fica aberta depois de um erro."
 
 msgid "Where the mark goes, in %:"
 msgstr "Onde fica a marca, em %:"

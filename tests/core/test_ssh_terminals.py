@@ -69,10 +69,10 @@ def test_a_program_is_an_exe_that_s_there_with_ssh_in_its_arguments(tmp_path: Pa
     script = tmp_path / "term.bat"
     script.touch()
     assert terminals.problem(str(program), "-e {ssh}") == ""
-    assert terminals.problem("  ", "-e {ssh}") == "Pick the program."
+    assert terminals.problem("  ", "-e {ssh}") == "Choose the program."
     for not_an_exe in (script, tmp_path / "term.cmd", tmp_path / "term"):
         assert terminals.problem(str(not_an_exe), "-e {ssh}") == (
-            "Pick a program: a file whose name ends in .exe."
+            "Choose a program: a file whose name ends in .exe."
         )
     for missing in (tmp_path / "gone.exe", Path("term.exe")):
         assert terminals.problem(str(missing), "-e {ssh}") == "There's no program at this path."

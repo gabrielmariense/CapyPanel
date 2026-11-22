@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 19:48-0300\n"
+"POT-Creation-Date: 2026-11-22 19:56-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1086,8 +1086,14 @@ msgstr ""
 msgid "Checks whether {host} answers, as Hosts' Refresh does"
 msgstr ""
 
+msgid "Choose a program: a file whose name ends in .exe."
+msgstr ""
+
 #, python-brace-format
 msgid "Choose a {tool} settings file"
+msgstr ""
+
+msgid "Choose the program."
 msgstr ""
 
 msgid "Choose the terminal program"
@@ -3165,13 +3171,7 @@ msgid ""
 "and your own. Click a group below it to see just that group's hosts."
 msgstr ""
 
-msgid "Pick a program: a file whose name ends in .exe."
-msgstr ""
-
 msgid "Pick hosts in the list first"
-msgstr ""
-
-msgid "Pick the program."
 msgstr ""
 
 #, python-brace-format
@@ -5080,17 +5080,17 @@ msgstr ""
 msgid "Where"
 msgstr ""
 
-msgid ""
-"Where Connect in a separate window opens ssh.exe. In a terminal program, "
-"that program's own settings decide whether its window stays open after an"
-" error."
-msgstr ""
-
 msgid "Where I left off"
 msgstr ""
 
 #, python-brace-format
 msgid "Where is {tool}?"
+msgstr ""
+
+msgid ""
+"Where ssh.exe opens when you use Connect in a separate window. In a "
+"terminal program, that program's own settings decide whether its window "
+"stays open after an error."
 msgstr ""
 
 msgid "Where the mark goes, in %:"

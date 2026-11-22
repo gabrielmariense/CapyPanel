@@ -27,13 +27,16 @@ from capypanel.ui.ssh_tool import refresh
 from capypanel.ui.ssh_tool import settings as ssh_settings
 from capypanel.ui.ssh_tool import tool as tool_module
 from capypanel.ui.ssh_tool.dialog import LoginDialog, SshHostDialog
-from capypanel.ui.ssh_tool.settings import SshGeneralPage, TerminalDialog
+from capypanel.ui.ssh_tool.settings import MONO, SshGeneralPage, TerminalDialog
 from capypanel.ui.ssh_tool.table import ROLE_QUIET
 from capypanel.ui.ssh_tool.tool import SshTool
 from capypanel.ui.themes import engine as themes
 
 if TYPE_CHECKING:
     from capywindow import CapyWindow
+
+MONO_SSH = f'<span style="font-family: {MONO}">{{ssh}}</span>'
+CMD_EXE = r"C:\Windows\System32\cmd.exe"
 
 
 @pytest.fixture
@@ -758,8 +761,8 @@ def test_separate_windows_open_in_a_console_window_until_a_terminal_is_picked(
     assert page.terminal_section.terminal.currentIndex() == 0 and ssh.terminal() is None
     [row] = [r for r in page.findChildren(SettingRow) if r.name.text() == "Open &in"]
     assert row.description.text() == (
-        "Where Connect in a separate window opens ssh.exe. In a terminal program, that "
-        "program's own settings decide whether its window stays open after an error."
+        "Where ssh.exe opens when you use Connect in a separate window. In a terminal program, "
+        "that program's own settings decide whether its window stays open after an error."
     )
     _choose(page, 1)
     assert ssh.prefs["terminal"] == {"ready": "windows-terminal"}
@@ -791,13 +794,16 @@ def test_another_program_is_checked_before_it_s_kept_and_named_by_its_file(
         assert dialog.windowTitle() == "Another terminal program"
         ok = dialog.buttons.button(QDialogButtonBox.StandardButton.Ok)
         assert dialog.arguments.text() == "{ssh}" and not ok.isEnabled()
-        assert ok.toolTip() == dialog.problem.text() == "Pick the program."
+        assert ok.toolTip() == dialog.problem.text() == "Choose the program."
         dialog.program.setText(str(tmp_path / "term.bat"))
-        assert dialog.problem.text() == "Pick a program: a file whose name ends in .exe."
+        assert dialog.problem.text() == "Choose a program: a file whose name ends in .exe."
         dialog.program.setText(str(program))
         dialog.arguments.setText("start")
-        assert dialog.problem.text() == (
+        assert ok.toolTip() == (
             "The arguments need {ssh}, where the program takes the command it runs."
+        )
+        assert dialog.problem.text() == (
+            f"The arguments need {MONO_SSH}, where the program takes the command it runs."
         )
         dialog.arguments.setText("start -- {ssh}")
         assert ok.isEnabled() and dialog.problem.text() == "" and ok.toolTip() == ""
@@ -812,6 +818,22 @@ def test_another_program_is_checked_before_it_s_kept_and_named_by_its_file(
     _choose(page, -1)
     assert page.terminal_section.terminal.currentText() == "wezterm-gui.exe"
     assert ssh.terminal() == Terminal(program, "start -- {ssh}")
+
+
+def test_the_program_window_keeps_one_height_and_shows_what_s_typed_as_typed(
+    qapp: QApplication,
+) -> None:
+    themes.apply(themes.DEFAULT_THEME)
+    wrong = TerminalDialog(None, None)
+    right = TerminalDialog(None, Terminal(Path(CMD_EXE), "/k {ssh}"))
+    assert wrong.problem.text() and not right.problem.text()
+    assert wrong.height() == right.height()
+    right.arguments.setText("/k")
+    assert right.problem.text() and right.sizeHint().height() <= right.height()
+    assert f"{MONO_SSH} stands for ssh.exe" in right.about.text()
+    assert f"and {MONO_SSH.replace('{ssh}', '{name}')} for the server" in right.about.text()
+    for dialog in (wrong, right):
+        dialog.deleteLater()
 
 
 def test_a_terminal_that_won_t_start_is_named_and_the_rest_wait(
