@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -102,12 +103,18 @@ class TerminalDialog(QDialog):
         if name:
             self.program.setText(str(Path(name)))
 
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self._keep_room_for_problems()
+
     def _keep_room_for_problems(self) -> None:
-        width, tallest = self.problem.width(), 0
+        shown, width, tallest = self.problem.text(), self.problem.width(), 0
         for text in terminals.problems():
             self.problem.setText(as_typed(text))
             tallest = max(tallest, self.problem.heightForWidth(width))
-        self.problem.setMinimumHeight(tallest)
+        self.problem.setText(shown)
+        # Fixed, not a minimum: a form row gave a wrapping label the height it wraps to on its own.
+        self.problem.setFixedHeight(tallest)
 
     def _update_ok(self) -> None:
         why = terminals.problem(self.program.text(), self.arguments.text())

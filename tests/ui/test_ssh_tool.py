@@ -6,9 +6,16 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 import shiboken6
-from PySide6.QtCore import QCoreApplication, QEvent
+from PySide6.QtCore import QCoreApplication, QEvent, QPoint, Qt
 from PySide6.QtGui import QKeySequence, QValidator
-from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox, QMenu, QTreeWidgetItem
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QDialogButtonBox,
+    QLabel,
+    QMenu,
+    QTreeWidgetItem,
+)
 from test_printers_tool import FakeShell
 
 from capypanel.core import settings
@@ -820,19 +827,50 @@ def test_another_program_is_checked_before_it_s_kept_and_named_by_its_file(
     assert ssh.terminal() == Terminal(program, "start -- {ssh}")
 
 
+def _save_top(dialog: TerminalDialog) -> int:
+    save = dialog.buttons.button(QDialogButtonBox.StandardButton.Ok)
+    return save.mapTo(dialog, QPoint(0, 0)).y()
+
+
+def _words_fit(label: QLabel) -> bool:
+    return label.height() >= label.heightForWidth(label.width())
+
+
+@pytest.mark.parametrize("theme_id", ["windows-system", "capypanel-dark"])
 def test_the_program_window_keeps_one_height_and_shows_what_s_typed_as_typed(
-    qapp: QApplication,
+    qapp: QApplication, theme_id: str, default_theme_after: None, tmp_path: Path
 ) -> None:
-    themes.apply(themes.DEFAULT_THEME)
-    wrong = TerminalDialog(None, None)
-    right = TerminalDialog(None, Terminal(Path(CMD_EXE), "/k {ssh}"))
-    assert wrong.problem.text() and not right.problem.text()
-    assert wrong.height() == right.height()
+    themes.apply(themes.Registry().find(theme_id))
+    cmd = Path(CMD_EXE)
+    opened = [
+        TerminalDialog(None, terminal)
+        for terminal in (
+            None,
+            Terminal(cmd.with_suffix(".bat"), "{ssh}"),
+            Terminal(tmp_path / "gone.exe", "{ssh}"),
+            Terminal(cmd, "/k"),
+            Terminal(cmd, "/k {ssh}"),
+        )
+    ]
+    for dialog in opened:
+        dialog.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
+        dialog.show()
+    qapp.processEvents()
+    *wrong, right = opened
+    assert all(dialog.problem.text() for dialog in wrong) and not right.problem.text()
+    height, save = right.height(), _save_top(right)
+    assert [(dialog.height(), _save_top(dialog)) for dialog in wrong] == [(height, save)] * 4
+    assert all(_words_fit(dialog.problem) for dialog in wrong)
     right.arguments.setText("/k")
-    assert right.problem.text() and right.sizeHint().height() <= right.height()
+    qapp.processEvents()
+    assert right.problem.text() and (right.height(), _save_top(right)) == (height, save)
+    right.resize(360, right.height())
+    qapp.processEvents()
+    assert _words_fit(right.problem)
     assert f"{MONO_SSH} stands for ssh.exe" in right.about.text()
     assert f"and {MONO_SSH.replace('{ssh}', '{name}')} for the server" in right.about.text()
-    for dialog in (wrong, right):
+    for dialog in opened:
+        dialog.close()
         dialog.deleteLater()
 
 
