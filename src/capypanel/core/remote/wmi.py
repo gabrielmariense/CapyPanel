@@ -54,7 +54,6 @@ def error_of(error: BaseException) -> RemoteError:
 
 
 def message_of(error: BaseException) -> str:
-    """What WMI said, for a log line or a failed delete."""
     args = getattr(error, "args", ())
     if len(args) >= 3 and isinstance(args[2], tuple) and len(args[2]) >= 3 and args[2][2]:
         return str(args[2][2]).strip()

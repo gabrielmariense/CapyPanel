@@ -82,7 +82,6 @@ class HostList:
         return tuple(g for g in self.groups if g.parent == group_id)
 
     def subtree(self, group_id: str) -> set[str]:
-        """The group and every group nested under it, at any depth."""
         found = {group_id}
         frontier = [group_id]
         while frontier:

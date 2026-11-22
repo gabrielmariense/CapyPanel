@@ -15,7 +15,6 @@ log = logging.getLogger(__name__)
 
 
 def write_atomic(path: Path, content: bytes) -> None:
-    """Writes a temp file beside `path`, then swaps it in. Raises OSError."""
     # A unique temp name, so two people saving the same shared file never share a temp file.
     tmp = path.with_name(f".{path.name}.{uuid.uuid4().hex[:8]}.tmp")
     try:
@@ -30,7 +29,6 @@ def write_json(path: Path, data: Any) -> None:
 
 
 def can_create_files(folder: Path) -> bool:
-    """Whether Windows lets this user create files in `folder`, or where it would be made."""
     while not folder.exists() and folder.parent != folder:
         folder = folder.parent  # the folder is made on the first save
     try:

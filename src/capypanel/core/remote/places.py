@@ -22,7 +22,6 @@ def share(host: str, path: str = "") -> str:
 
 
 def startup_folder(host: str) -> str:
-    """The Startup folder every user of `host` shares."""
     return share(host, STARTUP)
 
 

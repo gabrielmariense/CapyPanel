@@ -622,7 +622,6 @@ _WHYS = {
 
 
 def _answered(profile: Profile, answer: object) -> Deleted:
-    """What a delete script said."""
     said = answer if isinstance(answer, dict) else {}
     outcome = str(said.get("outcome") or "")
     if outcome == "deleted":

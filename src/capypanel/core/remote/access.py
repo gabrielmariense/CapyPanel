@@ -48,7 +48,6 @@ def reason_of(code: int) -> Reason:
 
 
 def last_error() -> RemoteError:
-    """The error Windows left for this thread's last failed call."""
     code = ctypes.get_last_error()
     return RemoteError(reason_of(code), code)
 

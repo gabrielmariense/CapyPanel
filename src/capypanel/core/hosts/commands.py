@@ -41,7 +41,7 @@ class HostCommand:
     icon: str  # a Tabler icon's name
     need: Need
     risky: bool = False  # disturbs whoever uses the PC: shown in amber, always asks first
-    needs_user: bool = False  # only when someone is logged on to the PC
+    needs_user: bool = False
     # Acts on one signed-in person: offered on that person (Details, Users ▾), not in the lists.
     per_person: bool = False
     # Set apart from the ones above it: a line in menus, a small gap in the Commands window.

@@ -52,7 +52,7 @@ class Parsed:
 class Verdict(StrEnum):
     ADD = "add"
     SKIP = "skip"  # a host that's already there: left alone, never overwritten
-    BAD = "bad"  # can't be added as it is
+    BAD = "bad"
 
 
 @dataclass(frozen=True)
@@ -66,7 +66,7 @@ class Planned:
 @dataclass(frozen=True)
 class Plan:
     items: tuple[Planned, ...]
-    new_groups: tuple[tuple[str, ...], ...]  # paths the import creates
+    new_groups: tuple[tuple[str, ...], ...]
     result: HostList  # the list as it would be after the import
 
     @property

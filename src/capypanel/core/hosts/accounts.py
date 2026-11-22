@@ -33,15 +33,12 @@ class Link:
     name: str = ""  # PC: the host's name; GROUP: its path, both as they were when linked
 
     def same_place(self, other: "Link") -> bool:
-        """Both are for the same PCs, whatever the account."""
         return (self.scope, _fold(self.value), _same_file(self.list)) == (
             other.scope, _fold(other.value), _same_file(other.list))  # fmt: skip
 
 
 @dataclass(frozen=True)
 class Place:
-    """Where a PC sits, to pick its link: its address, and in a list its groups and tags."""
-
     address: str
     list: str = ""  # the host list file; "" for an address typed on the spot
     groups: tuple[str, ...] = ()  # its group's id, then each parent's
@@ -57,7 +54,6 @@ def _same_file(path: str) -> str:
 
 
 def same_file(a: str, b: str) -> bool:
-    """The same list file, whatever its spelling."""
     return bool(a) and _same_file(a) == _same_file(b)
 
 
