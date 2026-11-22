@@ -681,6 +681,7 @@ QFrame#resultStrip { background: %(sel_solid)s; border: 1px solid %(accent)s;
 QFrame#resultStrip[failed="true"] { border-left-color: %(stopped)s; }
 /* A terminal tab's strip after a normal end: grey, the offline colour. */
 QFrame#resultStrip[ended="true"] { border-left-color: %(offline)s; }
+QFrame#resultStrip[hint="true"] { border-left-color: %(accent)s; }
 /* Commands that disturb whoever uses the PC are amber, wherever they show. */
 QPushButton#risky, QToolButton[risky="true"] { color: %(attention)s;
                                                border-color: %(attention)s; }
@@ -897,6 +898,7 @@ QFrame#resultStrip { background: %(sel)s; border: 1px solid %(accent)s;
 QFrame#resultStrip[failed="true"] { border-left-color: %(stopped)s; }
 /* A terminal tab's strip after a normal end: grey, the offline colour. */
 QFrame#resultStrip[ended="true"] { border-left-color: %(offline)s; }
+QFrame#resultStrip[hint="true"] { border-left-color: %(accent)s; }
 QPushButton#risky, QToolButton[risky="true"] { color: %(attention)s;
                                                border-color: %(attention)s; }
 QPushButton#risky:disabled, QToolButton[risky="true"]:disabled { color: %(text2)s;

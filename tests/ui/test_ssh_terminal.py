@@ -3,6 +3,7 @@ import logging
 import os
 import subprocess
 import sys
+import threading
 import time
 from collections import deque
 from collections.abc import Callable, Iterator, Sequence
@@ -24,6 +25,7 @@ from capypanel.ui import error_window, help_links
 from capypanel.ui.hosts_tool.command_windows import Question
 from capypanel.ui.shortcuts import EVERYWHERE, KeyCommand, Keys
 from capypanel.ui.ssh_tool.terminal import glyphs, keys, palette
+from capypanel.ui.ssh_tool.terminal import tab as tab_module
 from capypanel.ui.ssh_tool.terminal import view as view_module
 from capypanel.ui.ssh_tool.terminal.tab import EndedBar, TerminalTab
 from capypanel.ui.ssh_tool.terminal.view import MAX_PT, PasteQuestion, TerminalView
@@ -533,6 +535,65 @@ def test_reconnect_takes_the_strip_away_and_close_tab_asks_the_tool(
     assert not tab.bar.error
     tab.bar.close_button.click()
     assert closes == [True]
+
+
+def test_the_first_connection_hint_shows_while_ssh_exe_will_ask_and_each_start_checks_again(
+    qapp: QApplication, consoles: list[FakeConsole]
+) -> None:
+    tab = TerminalTab(host="web-01")
+    _shown(tab)
+    checks: list[bool] = []
+    known_now = threading.Event()
+
+    def asks() -> bool:
+        checks.append(True)
+        if len(checks) < 3:
+            return True
+        known_now.wait(10)
+        return False
+
+    tab.asks_to_trust = asks
+    tab.start(["ssh.exe"])
+    _until(lambda: tab.hint.isVisible())
+    assert tab.hint.label.text() == tab_module.trust_words()
+    tab.hint.close_button.click()
+    assert not tab.hint.isVisible() and tab.running
+    consoles[-1].ends(255)
+    _until(lambda: tab.ended)
+    tab.bar.reconnect_button.click()
+    _until(lambda: tab.hint.isVisible())
+    consoles[-1].ends(0)
+    _until(lambda: tab.ended)
+    assert not tab.hint.isVisible()
+    tab.bar.reconnect_button.click()
+    check = tab._check
+    assert check is not None
+    answers: list[bool] = []
+    check.answered.connect(lambda _number, asks: answers.append(asks))
+    known_now.set()
+    _until(lambda: answers == [False])
+    QApplication.processEvents()
+    assert not tab.hint.isVisible() and len(checks) == 3
+
+
+def test_an_answer_that_comes_after_the_connection_ended_shows_no_hint(
+    qapp: QApplication, consoles: list[FakeConsole]
+) -> None:
+    tab = TerminalTab(host="web-01")
+    _shown(tab)
+    go = threading.Event()
+    tab.asks_to_trust = lambda: go.wait(10)
+    tab.start(["ssh.exe"])
+    check = tab._check
+    assert check is not None
+    answers: list[bool] = []
+    check.answered.connect(lambda _number, asks: answers.append(asks))
+    consoles[-1].ends(0)
+    _until(lambda: tab.ended)
+    go.set()
+    _until(lambda: answers == [True])
+    QApplication.processEvents()
+    assert not tab.hint.isVisible() and tab.bar.isVisible()
 
 
 BAD = b"\x1b[?5A"  # cursor up with "?": pyte's handler takes no such thing and raises

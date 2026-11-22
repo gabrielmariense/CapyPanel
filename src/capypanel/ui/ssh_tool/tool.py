@@ -12,7 +12,7 @@ from capypanel.core.hosts.document import OpenList, starter_list
 from capypanel.core.hosts.model import Group, Host, HostList, HostListRuleError
 from capypanel.core.i18n import _, ngettext
 from capypanel.core.remote.status import PortState
-from capypanel.core.ssh import launch
+from capypanel.core.ssh import known, launch
 from capypanel.core.ssh.host import (
     SshInfo,
     connect_info,
@@ -447,6 +447,7 @@ class SshTool(TabbedListWorkspace):
         self._opened += 1
         key = f"connection-{self._opened}"
         tab = TerminalTab(host=name, point_size=self.terminal_points())
+        tab.asks_to_trust = lambda: known.asks_to_trust(destination, info)
         tab.changed.connect(lambda: self._show_tab(key))
         tab.close_asked.connect(lambda: self.close_tab(key))
         tab.view.size_picked.connect(self._size_picked)

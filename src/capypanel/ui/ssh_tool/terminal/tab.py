@@ -1,8 +1,18 @@
-from collections.abc import Mapping, Sequence
+import logging
+import threading
+from collections.abc import Callable, Mapping, Sequence
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtCore import QObject, Qt, Signal
+from PySide6.QtGui import QColor, QPalette
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from capypanel.core.i18n import _
 from capypanel.core.ssh.ending import ended_line, is_error
@@ -13,7 +23,68 @@ from capypanel.ui.notes import escape
 from capypanel.ui.ssh_tool.terminal.view import DEFAULT_PT, TerminalView
 from capypanel.ui.themes import engine as themes
 
+log = logging.getLogger(__name__)
 HELP_PLACE = "ssh-when-a-connection-ends"
+
+
+def trust_words() -> str:
+    # i18n: ssh.exe asks in English whatever the language: say so in a translation.
+    return _("First connection to this server from this PC: ssh.exe asks whether you trust it. "
+             "Type yes, not just y, then press Enter. The password doesn't show as you type "
+             "it.")  # fmt: skip
+
+
+class TrustHint(QFrame):
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setObjectName("resultStrip")
+        self.setProperty("hint", True)
+        self._icon = QLabel()
+        self.label = QLabel()
+        self.label.setWordWrap(True)
+        self.label.setTextFormat(Qt.TextFormat.PlainText)
+        self.close_button = QToolButton()
+        self.close_button.setAutoRaise(True)
+        self.close_button.clicked.connect(self.hide)
+        self._lead = IconBesideText(self._icon, self.label)
+        row = QHBoxLayout(self)
+        row.setContentsMargins(spacing.CONTROLS, spacing.ICON, spacing.ICON, spacing.ICON)
+        row.addWidget(self._lead, 1, Qt.AlignmentFlag.AlignVCenter)
+        row.addWidget(self.close_button, 0, Qt.AlignmentFlag.AlignTop)
+        themes.switches().switched.connect(self._restyle)
+        self.retranslate()
+        self._restyle()
+        self.hide()
+
+    def retranslate(self) -> None:
+        self.label.setText(trust_words())
+        self.close_button.setToolTip(_("Close"))
+
+    def _restyle(self) -> None:
+        text = self.palette().color(QPalette.ColorRole.WindowText)
+        self._icon.setPixmap(tabler_icon("info-circle", text, 16).pixmap(16, 16))
+        muted = self.palette().color(QPalette.ColorRole.PlaceholderText)
+        self.close_button.setIcon(tabler_icon("x", muted, 14))
+        self._lead.fit_icon()
+
+
+class TrustCheck(QObject):
+    answered = Signal(int, bool)
+
+    def __init__(self, number: int, asks: Callable[[], bool]) -> None:
+        super().__init__()
+        self._number, self._asks = number, asks
+
+    def start(self) -> None:
+        threading.Thread(target=self._run, name="ssh-known-hosts", daemon=True).start()
+
+    def _run(self) -> None:
+        try:
+            asks = self._asks()
+        except Exception:
+            log.exception("Checking whether ssh.exe knows the server failed")
+            asks = False
+        self.answered.emit(self._number, asks)
 
 
 class EndedBar(QFrame):
@@ -97,12 +168,17 @@ class TerminalTab(QWidget):
     def __init__(self, *, host: str, point_size: int = DEFAULT_PT) -> None:
         super().__init__()
         self.view = TerminalView(host=host, point_size=point_size)
+        self.hint = TrustHint()
         self.bar = EndedBar()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self.view, 1)
+        layout.addWidget(self.hint)
         layout.addWidget(self.bar)
+        self.asks_to_trust: Callable[[], bool] | None = None
+        self._checks = 0
+        self._check: TrustCheck | None = None
         self.view.ended.connect(self._ended)
         self.view.started.connect(self._started)
         self.bar.reconnect.connect(self.view.restart)
@@ -129,12 +205,24 @@ class TerminalTab(QWidget):
         self.view.close_connection()
 
     def retranslate(self) -> None:
+        self.hint.retranslate()
         self.bar.retranslate()
 
     def _started(self) -> None:
         self.bar.hide()
+        self.hint.hide()
+        self._checks += 1
+        if self.asks_to_trust is not None:
+            self._check = TrustCheck(self._checks, self.asks_to_trust)
+            self._check.answered.connect(self._answered)
+            self._check.start()
         self.changed.emit()
 
+    def _answered(self, number: int, asks: bool) -> None:
+        if asks and number == self._checks and self.running:
+            self.hint.show()
+
     def _ended(self, code: int) -> None:
+        self.hint.hide()
         self.bar.show_end(self.view.host, code, by_us=self.view.closed_by_us)
         self.changed.emit()

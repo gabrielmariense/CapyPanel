@@ -15,7 +15,7 @@ from capypanel.core import settings
 from capypanel.core.hosts import listfile
 from capypanel.core.hosts.model import NO_GROUP, HostList
 from capypanel.core.remote.status import PortState
-from capypanel.core.ssh import launch
+from capypanel.core.ssh import known, launch
 from capypanel.core.ssh.host import SshInfo, group_login, info_of, with_info
 from capypanel.core.ssh.launch import connect as real_connect
 from capypanel.core.ssh.launch import tab_command as real_tab_command
@@ -332,6 +332,32 @@ def test_connect_hands_ssh_exe_the_address_port_and_login(
     _select(ssh, "core-sw-01", "web-01")
     ssh.details.connect_clicked.emit()
     assert [address for address, _info in no_ssh[2:]] == ["192.0.2.40", "198.51.100.42"]
+
+
+def test_a_server_ssh_exe_will_ask_about_opens_with_the_first_connection_hint(
+    ssh: SshTool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    asked: list[tuple[str, SshInfo]] = []
+
+    def asks(address: str, info: SshInfo) -> bool:
+        asked.append((address, info))
+        return address == "192.0.2.41"
+
+    monkeypatch.setattr(known, "asks_to_trust", asks)
+    _select(ssh, "nas-01", "core-sw-01")
+    ssh.commands.connect_host.trigger()
+    tabs = {tab.host: tab for tab in ssh.connections()}
+    deadline = time.monotonic() + 10
+    while len(asked) < 2 or not tabs["nas-01"].hint.isVisibleTo(tabs["nas-01"]):
+        assert time.monotonic() < deadline, "timed out"
+        QApplication.processEvents()
+        time.sleep(0.01)
+    assert sorted(asked) == [
+        ("192.0.2.40", SshInfo(login="admin")),
+        ("192.0.2.41", SshInfo(port=2222, login="root")),
+    ]
+    assert "Type yes" in tabs["nas-01"].hint.label.text()
+    assert not tabs["core-sw-01"].hint.isVisibleTo(tabs["core-sw-01"])
 
 
 def test_the_right_click_menu_starts_with_connect_in_bold(ssh: SshTool) -> None:

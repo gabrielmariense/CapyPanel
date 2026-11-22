@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CapyPanel VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-22 18:05-0300\n"
+"POT-Creation-Date: 2026-11-22 18:15-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1866,6 +1866,14 @@ msgid "Filters"
 msgstr ""
 
 msgid "Firmware"
+msgstr ""
+
+#. i18n: ssh.exe asks in English whatever the language: say so in a
+#. translation.
+msgid ""
+"First connection to this server from this PC: ssh.exe asks whether you "
+"trust it. Type yes, not just y, then press Enter. The password doesn't "
+"show as you type it."
 msgstr ""
 
 msgid "Folder"
