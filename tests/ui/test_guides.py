@@ -21,6 +21,7 @@ from capypanel.ui.profiles_tool import first_use
 from capypanel.ui.profiles_tool.tool import ProfilesTool
 from capypanel.ui.ssh_tool import tool as ssh_tool_module
 from capypanel.ui.ssh_tool.tool import SshTool
+from capypanel.ui.themes import engine as themes
 
 
 @pytest.fixture
@@ -269,6 +270,26 @@ def test_the_card_is_as_tall_as_its_wrapped_words(window: CapyWindow) -> None:
     assert text.height() >= text.heightForWidth(text.width())
     assert card.geometry().contains(text.geometry().translated(card.pos()))
     window.guides.stop()
+
+
+def test_a_card_widens_for_a_button_row_that_wouldn_t_fit_and_narrows_after(
+    window: CapyWindow,
+) -> None:
+    themes.apply(themes.DEFAULT_THEME)
+    wide = ("Open the folder where this copy keeps everything it saves", lambda: None)
+    steps = [Step("One", "Words.", lambda: window.rail),
+             Step("Two", "Words.", lambda: window.rail, action=wide)]  # fmt: skip
+    runner, card = window.guides, window.guides.card
+    runner.show(Guide("test", lambda: steps))
+    card.next_button.click()
+    _settle()
+    assert card.width() > guides.CARD_WIDTH
+    for button in (card.action, card.back_button, card.next_button):
+        assert button.width() >= button.sizeHint().width(), button.text()
+    card.back_button.click()
+    _settle()
+    assert card.width() == guides.CARD_WIDTH
+    runner.stop()
 
 
 def test_a_card_keeps_clear_of_the_panel_it_talks_about() -> None:

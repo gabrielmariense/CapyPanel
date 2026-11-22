@@ -309,7 +309,9 @@ class GuideRunner(QObject):
         card, layout = self.card, self.card.layout()
         if layout is not None:
             layout.activate()
-            card.setFixedHeight(layout.totalHeightForWidth(CARD_WIDTH))
+            width = max(CARD_WIDTH, layout.totalMinimumSize().width())
+            card.setFixedWidth(width)
+            card.setFixedHeight(layout.totalHeightForWidth(width))
 
     def _end(self) -> None:
         guide = self._guide
