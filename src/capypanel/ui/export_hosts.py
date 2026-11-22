@@ -1,5 +1,4 @@
-"""The toolbar's Report: pick the items and columns, see every row, then save a CSV or copy them
-for Excel. Another tool's Report subclasses ExportDialog with its own columns and texts."""
+"""The toolbar's Report: pick items and columns, then save a CSV or copy the rows for Excel."""
 
 import re
 import subprocess

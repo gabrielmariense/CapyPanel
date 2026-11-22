@@ -1,5 +1,4 @@
-"""Themes: the native Windows look, the CapyPanel look and shipped looks (this folder's *.json,
-which override a base's tokens). Only shipped themes exist, and a theme changes only the look."""
+"""Themes: the native Windows look, the CapyPanel look and the shipped *.json looks over them."""
 
 import ctypes
 import json

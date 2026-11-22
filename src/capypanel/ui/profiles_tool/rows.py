@@ -1,5 +1,4 @@
-"""What Profile cleanup says about a profile, with no window involved: kinds and states, why a row
-can or can't be deleted, the filters above the table, and how dates and sizes read."""
+"""What Profile cleanup says about a profile, no window involved: its state, and why it can go."""
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass

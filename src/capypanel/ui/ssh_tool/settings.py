@@ -1,5 +1,4 @@
-"""The SSH tool's part of Settings: General, with Refresh status by itself, off until picked (a
-strict fail2ban can take the checks for failed logins). Its lists are Hosts', managed there."""
+"""The SSH tool's Settings; Refresh by itself is off until picked, as fail2ban may ban it."""
 
 from typing import TYPE_CHECKING
 

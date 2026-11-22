@@ -1,5 +1,4 @@
-"""Adding and editing an SSH host: the host dialog's fields plus port and Log in as, neither taking
-a space, a leading "-" (an option to ssh.exe) or what ssh.exe refuses; ssh.exe asks passwords."""
+"""An SSH host's dialog: port and Log in as never take a space or a leading "-" (an option)."""
 
 from dataclasses import dataclass
 

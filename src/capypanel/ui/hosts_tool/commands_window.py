@@ -1,5 +1,4 @@
-"""The Commands window: every command for one PC (All commands…, or Manual connection's typed
-address), its groups on the left, the commands in the middle, what one found on the right."""
+"""The Commands window: every command for one PC, in groups, with what one found beside them."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field

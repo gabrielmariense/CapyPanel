@@ -1,5 +1,4 @@
-"""A tool's tab bar: the pinned tab (the list), a short line, then a tab per thing opened, which
-scroll when they don't fit; a ▾ lists every tab. Tabs never reorder: a new one opens at the end."""
+"""A tool's tab bar: the pinned list, then a tab per thing opened, never reordered."""
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QMouseEvent, QPainter, QPaintEvent, QPalette

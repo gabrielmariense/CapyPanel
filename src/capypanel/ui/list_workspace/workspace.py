@@ -1,5 +1,4 @@
-"""The list workspace: the Groups panel, the items (search above the table) and the Details panel,
-with everything about lists and groups; a list tool subclasses it and fills in its own parts."""
+"""The list workspace: Groups, the items and Details; a list tool subclasses it with its parts."""
 
 import logging
 from collections.abc import Sequence

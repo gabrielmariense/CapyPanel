@@ -1,5 +1,4 @@
-"""Menu helpers: right-click menus, a menu that stays open while its boxes
-are ticked, and shortcuts drawn dimmed at a menu's right edge."""
+"""Menu helpers: right-click menus, menus that stay open for ticks, and dimmed shortcuts."""
 
 import math
 

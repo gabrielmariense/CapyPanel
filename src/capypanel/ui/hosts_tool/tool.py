@@ -1,5 +1,4 @@
-"""The Hosts tool: the list workspace with hosts, plus connecting, connection profiles, Refresh,
-the host commands, importing and Report."""
+"""The Hosts tool: the list workspace with hosts, connecting, Refresh and the host commands."""
 
 import html
 import logging

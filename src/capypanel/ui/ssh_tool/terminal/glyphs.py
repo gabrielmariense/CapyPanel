@@ -1,5 +1,4 @@
-"""Line, block and Powerline characters drawn by CapyPanel's own code from Unicode's charts, so
-they join across cells in every font and size, on whole pixels; no extra font ships."""
+"""Line, block and Powerline characters drawn by our code, so they join across cells in any font."""
 
 import unicodedata
 from functools import cache

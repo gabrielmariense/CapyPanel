@@ -1,5 +1,4 @@
-"""One host's tab in Profile cleanup: its box (name, filters, profiles table) and its card on the
-right with Delete at the foot. Each tab keeps its own scan, sizes and delete run, all at once."""
+"""One host's tab in Profile cleanup, with its own scan, sizes and delete run."""
 
 import os
 from collections.abc import Callable, Mapping

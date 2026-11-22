@@ -1,5 +1,4 @@
-"""The Settings search: which sections mention what's typed, at the start of a word, and marks on
-every match, in the host table search's see-through yellow."""
+"""The Settings search: sections with a word starting with what's typed, each match marked."""
 
 import html
 import re

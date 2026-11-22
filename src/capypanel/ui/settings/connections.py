@@ -1,5 +1,4 @@
-"""Settings › Hosts › Connecting: the shared connection profiles, where this user's typed
-passwords are kept, and where each remote tool is on this PC. Each change is written at once."""
+"""Settings › Hosts › Connecting: connection profiles, saved passwords and where tools are."""
 
 from collections.abc import Callable
 from dataclasses import replace

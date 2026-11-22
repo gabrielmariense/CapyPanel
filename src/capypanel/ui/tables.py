@@ -1,5 +1,4 @@
-"""The one table design for lists in windows like Settings: a line under each row, a header, a few
-rows before it scrolls, full width, its actions in buttons under it and a row's right-click."""
+"""The one table design for lists in windows like Settings, its actions in buttons under it."""
 
 from collections.abc import Callable
 

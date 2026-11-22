@@ -1,5 +1,4 @@
-"""The lists a user works with in one tool: the default and personal lists, the ones in the tool's
-lists folders and every list they added (on a network share, say); Settings shows them."""
+"""Every list a user works with in one tool: default, personal, in its folders, or added."""
 
 import html
 import logging

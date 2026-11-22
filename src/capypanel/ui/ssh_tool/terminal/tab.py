@@ -1,5 +1,4 @@
-"""A connection's tab: the terminal and, once the connection ends, a strip at its foot saying so,
-with Reconnect and Close tab: Hosts' result strip, red after an error, grey after a clean end."""
+"""A connection's tab: the terminal, and once it ends a strip with Reconnect and Close tab."""
 
 from collections.abc import Mapping, Sequence
 

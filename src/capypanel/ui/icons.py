@@ -1,5 +1,4 @@
-"""Icons from Tabler Icons (MIT, see tabler/LICENSE), drawn in the theme's colour, and the
-status dots."""
+"""Tabler Icons (MIT, tabler/LICENSE) in the theme's colour, and the status dots."""
 
 from functools import cache, lru_cache
 from pathlib import Path

@@ -1,5 +1,4 @@
-"""Every command, defined once and reused by menus, right-click menus and shortcuts. The shell has
-its own; each tool has its own (see the list workspace and the tools)."""
+"""The window's own commands, defined once for menus, right-click menus and shortcuts."""
 
 from dataclasses import dataclass, fields
 

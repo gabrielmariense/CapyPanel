@@ -1,5 +1,4 @@
-"""The Home page: what the window shows when no tool is. The mascot, the app's name and tagline,
-then a tile per tool (a click opens it), all centred."""
+"""The Home page, shown when no tool is: the mascot, name and tagline, and a tile per tool."""
 
 import math
 from collections.abc import Sequence

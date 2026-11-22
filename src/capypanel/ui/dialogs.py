@@ -1,5 +1,4 @@
-"""What every window shares: its main button and Cancel, running it modally, never opening
-larger than the screen, and room for its wrapped text."""
+"""What every window shares: its buttons, opening modally and never larger than the screen."""
 
 from PySide6.QtCore import QEvent, QObject, QSize, Qt
 from PySide6.QtWidgets import (

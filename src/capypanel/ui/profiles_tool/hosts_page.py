@@ -1,5 +1,4 @@
-"""Profile cleanup's pinned Hosts tab: the picked group's hosts and what each scan found; on the
-right, its card (side.HostCard). It never scans by itself: a double-click, Enter or Scan does."""
+"""Profile cleanup's Hosts tab: the group's hosts and their scans, never started by itself."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass

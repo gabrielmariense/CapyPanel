@@ -1,5 +1,4 @@
-"""The "Customize the details panel" window: one tick per part of the Details panel, and any tab
-a tool adds in front (Hosts' quick commands). It applies as you tick, for this person only."""
+"""Customizing the Details panel: a tick per part, applied at once, for this person only."""
 
 from collections.abc import Sequence
 from dataclasses import dataclass

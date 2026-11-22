@@ -1,5 +1,4 @@
-"""The Profile cleanup tool: the Windows profiles on the hosts of Hosts' open list, which can be
-deleted and how big they are, a tab per host. It keeps no list of its own; scanning only reads."""
+"""Profile cleanup: the profiles on Hosts' open list, a tab per host; scanning only reads."""
 
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime, timedelta

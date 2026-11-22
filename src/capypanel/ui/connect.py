@@ -1,5 +1,4 @@
-"""Connecting: the password prompt, manual connection, and starting the right tool for each
-host's connection profile."""
+"""Connecting: the password prompt, manual connection, and the right tool for each host."""
 
 import logging
 import time

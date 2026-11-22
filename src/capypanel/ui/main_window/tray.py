@@ -1,5 +1,4 @@
-"""CapyPanel's icon in the Windows tray, while the window is there or a tool works on its own, so
-its notifications can show: a click opens the window, its menu lists tools needing attention."""
+"""CapyPanel's tray icon, there so its notifications can show; a click opens the window."""
 
 import html
 from collections.abc import Mapping

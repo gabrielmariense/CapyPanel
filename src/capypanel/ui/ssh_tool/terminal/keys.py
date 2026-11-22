@@ -1,5 +1,4 @@
-"""Keys for the pseudo console, as it asked: Windows key events (win32-input-mode, `encode`) on
-Windows 11; text and xterm's sequences (`encode_text`) where it never asks (Windows 10)."""
+"""Keys for the pseudo console: Windows key events when it asks (Windows 11), else xterm's."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent

@@ -1,5 +1,4 @@
-"""Starts Qt, wires up the core services and shows the main window with every tool. It imports
-no tool itself: the tool catalog loads them."""
+"""Starts Qt and the core services, then shows the main window; tool_catalog loads the tools."""
 
 import ctypes
 import logging

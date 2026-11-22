@@ -1,5 +1,4 @@
-"""Help from where you are: F1 or a window's ?, at its own part of the docs, and "What does this
-mean?" on every warning and error. Every place is in PLACES or TOPS, which the docs check reads."""
+"""Help from where you are: F1, a window's ? and warnings' links open their part of the docs."""
 
 from collections.abc import Callable
 from html import escape

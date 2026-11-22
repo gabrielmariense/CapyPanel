@@ -1,5 +1,4 @@
-"""Profile cleanup's right panel, the same on every tab and never scrolling: Progress at a fixed
-height, then the tab's own card, then on a host's tab the Delete button at the foot, in sight."""
+"""Profile cleanup's right panel: Progress, the tab's card and Delete, always in sight."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass

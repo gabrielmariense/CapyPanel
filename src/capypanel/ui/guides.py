@@ -1,5 +1,4 @@
-"""First-run guides: small cards beside the controls they talk about, each outlined, step dots,
-Back, Next, Skip; the rest of the window dims and takes nothing. The last card links the docs."""
+"""First-run guides: cards beside the controls they talk about, the rest of the window dimmed."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass

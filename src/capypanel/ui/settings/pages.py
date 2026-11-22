@@ -1,5 +1,4 @@
-"""The Settings pages. Each one shows the current values and reports each choice as it's
-made (`changed`); the Settings window hands it on, to apply at once."""
+"""The Settings pages: each shows the current values and reports a choice as it's made."""
 
 from collections.abc import Sequence
 from pathlib import Path

@@ -1,5 +1,4 @@
-"""Refresh: running the status and logged-on-users checks in the background, the account
-prompt, and how their results read in the table and the details pane."""
+"""Refresh: the status and logged-on checks in the background, and how their results read."""
 
 import threading
 from collections.abc import Callable, Sequence

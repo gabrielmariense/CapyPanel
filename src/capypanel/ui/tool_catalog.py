@@ -1,5 +1,4 @@
-"""Every tool CapyPanel has, in the rail's order, with what Home and Settings show of it. The
-window and the start-up import no tool themselves: load() does."""
+"""Every tool CapyPanel has, in the rail's order, imported by load() alone."""
 
 import importlib
 from dataclasses import dataclass

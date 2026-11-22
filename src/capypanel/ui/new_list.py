@@ -1,5 +1,4 @@
-"""New list: its name, and who it's for. Shared lists go in the shared lists folder, for
-everyone on this PC; personal ones in the user's own; "somewhere else" asks for the file."""
+"""New list: its name, and whether it's shared on this PC, personal, or a file elsewhere."""
 
 import re
 from pathlib import Path

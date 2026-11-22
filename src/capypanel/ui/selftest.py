@@ -1,5 +1,4 @@
-"""`CapyPanel.exe --self-test <report file>`: does this copy work? It loads every bundled part and
-the whole window, offscreen, touching nothing of the person's and no network; 0 when all worked."""
+"""`--self-test <report>`: every bundled part loads, offscreen, touching no settings or network."""
 
 import shutil
 import sys

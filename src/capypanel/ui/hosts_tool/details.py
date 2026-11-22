@@ -1,5 +1,4 @@
-"""The host Details panel: the host's name and status, a row of command buttons, a waiting
-restart, then Connection, Logged on, PC facts, Tags and Notes."""
+"""The host Details panel: status, command buttons, Connection, Logged on, PC facts, Tags, Notes."""
 
 from collections.abc import Sequence
 from dataclasses import dataclass

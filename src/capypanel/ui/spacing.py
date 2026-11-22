@@ -1,5 +1,4 @@
-"""One spacing scale for every screen, each size with one job: a layout's gaps use these. A few
-px inside a small part (a row's own padding, a chip) are that part's business."""
+"""One spacing scale for every screen, each size with one job: a layout's gaps use these."""
 
 ICON = 4  # between an icon and its word, and between small things that belong together
 CONTROLS = 8  # between controls on a line

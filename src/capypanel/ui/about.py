@@ -1,5 +1,4 @@
-"""Settings > About (Help > About CapyPanel opens it), the third-party licenses, and the Help
-menu's links: the website and reporting a problem."""
+"""Settings > About, the third-party licenses, and the Help menu's website and problem links."""
 
 import platform
 import sys

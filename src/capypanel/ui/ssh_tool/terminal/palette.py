@@ -1,5 +1,4 @@
-"""The terminal's colours, from the app theme's own roles so a terminal follows the theme; cells
-keep palette numbers (core/ssh/screen.py), so a switch recolours all printed, scrollback too."""
+"""The terminal's colours, from the theme's roles, so a switch recolours the scrollback too."""
 
 from collections.abc import Mapping
 from dataclasses import dataclass

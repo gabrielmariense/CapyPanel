@@ -1,5 +1,4 @@
-"""What CapyPanel learned about a host this session besides Refresh's results: its PC facts and a
-waiting restart or shutdown. Kept in memory only, like Refresh's, as the list file is shared."""
+"""A host's PC facts and waiting restart, kept in memory only: the list file is shared."""
 
 from dataclasses import dataclass
 from datetime import datetime

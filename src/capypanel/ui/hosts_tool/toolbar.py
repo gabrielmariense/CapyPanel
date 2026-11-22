@@ -1,5 +1,4 @@
-"""The Hosts toolbar: Connect, Refresh and Commands, Inventory, Report. Refresh checks every host
-shown, running the checks ticked in its right-click panel (as F5 does), as Printers' does."""
+"""The Hosts toolbar; Refresh checks every host shown, with the checks ticked in its panel."""
 
 from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QPalette

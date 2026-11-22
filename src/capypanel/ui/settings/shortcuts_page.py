@@ -1,5 +1,4 @@
-"""Settings › CapyPanel › Keyboard shortcuts: every command a key can run, with its key, under
-headings in the order you meet them on screen (ORDER), never A–Z. The list fills the page."""
+"""Settings › Keyboard shortcuts: every command a key can run, in the order met on screen."""
 
 from typing import cast
 

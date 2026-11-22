@@ -1,5 +1,4 @@
-"""The rail on the window's left edge: Home on top, one icon per tool, and at the bottom the ?
-for help, then Settings."""
+"""The rail on the window's left edge: Home, an icon per tool, then help's ? and Settings."""
 
 from PySide6.QtCore import QEvent, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QPalette

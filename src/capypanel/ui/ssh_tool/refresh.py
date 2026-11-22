@@ -1,5 +1,4 @@
-"""Refresh on SSH hosts: one check of each host's SSH port, a few at a time off the UI thread. It
-connects and closes at once, sending nothing, so nothing logs in; `found` comes once per host."""
+"""Refresh on SSH hosts: their SSH port, connected and closed at once, sending nothing."""
 
 import threading
 from collections.abc import Sequence

@@ -1,5 +1,4 @@
-"""The Settings window: a search and the page list on the left, the page on the right, and no
-buttons: every choice applies as it's made. F1 and the ? open the docs about the page shown."""
+"""The Settings window: search, the page list and the page; each choice applies as it's made."""
 
 from collections.abc import Sequence
 

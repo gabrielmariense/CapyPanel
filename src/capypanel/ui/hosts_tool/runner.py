@@ -1,5 +1,4 @@
-"""Running a host command: the work goes to a background thread and the answer comes back as one
-Outcome (a sentence, and the error when it failed), for the result strip or Commands window."""
+"""Running a host command on a background thread, its answer coming back as one Outcome."""
 
 import getpass
 import logging

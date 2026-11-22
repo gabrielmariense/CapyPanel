@@ -1,5 +1,4 @@
-"""The SSH tool: the list workspace on Hosts' open list, each host with its port and login name;
-Connect opens Windows' ssh.exe in a tab or a window of its own. CapyPanel never sees a password."""
+"""The SSH tool on Hosts' open list, connecting with ssh.exe: CapyPanel never sees a password."""
 
 import logging
 from collections.abc import Callable, Sequence

@@ -1,5 +1,4 @@
-"""One running copy of CapyPanel per person: started again, it brings the running one forward and
-ends: two would overwrite each other's settings. Its lock and pipe are this user's alone."""
+"""One running copy per person (two would overwrite settings); its lock and pipe are theirs."""
 
 import ctypes
 import hashlib

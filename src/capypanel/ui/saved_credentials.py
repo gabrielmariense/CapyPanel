@@ -1,5 +1,4 @@
-"""Saved credentials: every login CapyPanel keeps, from every tool, in one table with Forget and
-Forget all. It opens from Settings › Hosts › Credentials and from Hosts' Connect menu."""
+"""Saved credentials: every login CapyPanel keeps, in one table with Forget and Forget all."""
 
 import logging
 from collections.abc import Callable

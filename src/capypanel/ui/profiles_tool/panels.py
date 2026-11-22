@@ -1,5 +1,4 @@
-"""A host tab's parts in Profile cleanup: its box (the name, the filters and the profiles table,
-or a card on what's happening), a profile's details and the Delete window; cards are in side.py."""
+"""A host tab's parts in Profile cleanup: the profiles table, a profile's details, Delete."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass

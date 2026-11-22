@@ -1,5 +1,4 @@
-"""The app's icon and its mascot. Early artwork: the final versions replace the files in
-branding/ under the same names."""
+"""The app's icon and its mascot, from the files in branding/."""
 
 import ctypes
 import logging

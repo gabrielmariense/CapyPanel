@@ -1,5 +1,4 @@
-"""The groups as a tree rearranged by dragging, "Move to", and Inventory > Manage groups…. Groups
-show in the list's own order, as a team arranged them; "Sort A–Z" is a one-time button."""
+"""The groups as a tree, in the order a team arranged them, moved by dragging or "Move to"."""
 
 from collections.abc import Callable, Iterable, Sequence
 

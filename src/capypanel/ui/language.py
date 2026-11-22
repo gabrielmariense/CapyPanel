@@ -1,5 +1,4 @@
-"""Switching the app's language live: our gettext catalog plus Qt's own translations
-(standard buttons, context menus). Open windows update on Qt's LanguageChange event."""
+"""Switching the app's language live: our gettext catalog plus Qt's own translations."""
 
 import logging
 

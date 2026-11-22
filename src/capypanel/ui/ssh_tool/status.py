@@ -1,5 +1,4 @@
-"""What an SSH host's last check says in words and colours, for its Status cell and its Details
-heading alike. Only the SSH port is checked: Online takes a connection, Port closed refuses it."""
+"""What an SSH host's last port check says in words and colours, in its cell and Details."""
 
 from dataclasses import dataclass
 from datetime import datetime

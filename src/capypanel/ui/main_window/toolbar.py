@@ -1,5 +1,4 @@
-"""A tool's toolbar: outlined buttons in groups split by thin lines (set by the tool, not by users),
-the first button lined up with the panels below it."""
+"""A tool's toolbar: outlined buttons in groups the tool sets, lined up with the panels below."""
 
 from PySide6.QtCore import QEvent, QMargins, QPoint, QSize, Qt
 from PySide6.QtGui import QShowEvent

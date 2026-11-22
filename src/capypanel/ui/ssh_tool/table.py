@@ -1,5 +1,4 @@
-"""The SSH host table: name, address, Log in as (its own or its group's), Status and tags, Port
-from the column titles' right-click menu. Status comes from Refresh, kept in memory only."""
+"""The SSH host table; Status comes from Refresh, kept in memory only."""
 
 from collections.abc import Callable, Sequence
 

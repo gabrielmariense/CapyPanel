@@ -1,5 +1,4 @@
-"""The window for an error nobody planned for: only one, which later errors join, the same one
-counted, not shown again. Its details show at once, in a box big enough to read."""
+"""The one window for errors nobody planned for: later ones join it, a repeat is only counted."""
 
 import logging
 import traceback

@@ -1,5 +1,4 @@
-"""Choosing the quick commands (Customize the details panel's first tab): one table, in the
-Commands window's order and the buttons'; a tick moves no row. The first four go in host menus."""
+"""Choosing the quick commands: one table in the buttons' order, where a tick moves no row."""
 
 from collections.abc import Mapping, Sequence
 

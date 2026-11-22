@@ -1,5 +1,4 @@
-"""Keyboard shortcuts: which key runs which command, as each person sets them in Settings; today's
-keys are the defaults; changes go in their settings. A command disturbing a PC never gets a key."""
+"""Which key runs which command, per person; a command that disturbs a PC never gets one."""
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field

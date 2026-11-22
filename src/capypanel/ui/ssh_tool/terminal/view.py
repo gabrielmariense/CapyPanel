@@ -1,5 +1,4 @@
-"""A connection's screen: draws core/ssh/screen.py, sends keys as Windows key events, runs ssh.exe
-on a pseudo console (core/ssh/conpty.py). Typed keys and screen text never reach a log or file."""
+"""A connection's screen, keys and ssh.exe; typed keys and screen text never reach a log."""
 
 import functools
 import math

@@ -1,5 +1,4 @@
-"""The main window: the shell that shows the tools. It owns the menu bar, the rail, the toolbar
-area, the status bar, Settings, the theme and the language; each tool, its toolbar and panels."""
+"""The main window: the shell around the tools, with its menus, rail, status bar and Settings."""
 
 import logging
 from collections.abc import Callable, Sequence

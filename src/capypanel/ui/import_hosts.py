@@ -1,5 +1,4 @@
-"""Inventory > Import hosts…: paste a list or open a CSV, check and edit the preview, then add;
-nothing changes until "Add N hosts". Import printers is the same window with its own columns."""
+"""Import hosts…: paste or open a CSV, edit the preview; nothing changes until "Add N hosts"."""
 
 import html
 from dataclasses import replace

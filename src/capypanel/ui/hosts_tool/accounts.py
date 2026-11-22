@@ -1,5 +1,4 @@
-"""Which account signs in to which PCs, and its password: kept in memory once typed, in Windows
-Credential Manager when "Remember it on this computer" is ticked; asked when first needed."""
+"""Which account signs in to which PCs, and its password, kept in memory or Credential Manager."""
 
 import getpass
 import logging

@@ -1,5 +1,4 @@
-"""The Details panel: the selected item in sections, every value copied by a click. With nothing or
-several items selected, a summary instead. A tool says what the sections are (build_page)."""
+"""The Details panel: the selected item in sections, each value copied by a click, or a summary."""
 
 import html
 from collections.abc import Sequence

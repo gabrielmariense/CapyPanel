@@ -1,5 +1,4 @@
-"""A list workspace whose list is the first of its tabs, as in Profile cleanup and SSH: the Groups
-panel on the left, and on its right tabs over the list and Details, or over another tab's page."""
+"""A list workspace whose list is its first tab, as in Profile cleanup and SSH."""
 
 from typing import ClassVar
 

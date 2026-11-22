@@ -1,5 +1,4 @@
-"""Updates in the app: a look at GitHub as often as this PC's choice says, and from Help; one
-window with the notes, Install and restart, Later and Skip; core/updates.py downloads and swaps."""
+"""Updates in the app: the look at GitHub, and the window with the notes and Install."""
 
 import logging
 import re

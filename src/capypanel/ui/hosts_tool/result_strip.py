@@ -1,5 +1,4 @@
-"""The strip over the host table with a command's answer: a green edge when it worked, closing by
-itself; a red one when it failed, staying, with the reason and the help or retry links it has."""
+"""A command's answer over the host table: green and closing, or red with the reason, staying."""
 
 from collections.abc import Callable
 

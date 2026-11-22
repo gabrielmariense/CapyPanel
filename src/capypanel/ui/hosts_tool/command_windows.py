@@ -1,5 +1,4 @@
-"""The small windows host commands open: Open a path…, Send a message…, Restart… and Shut down…,
-the questions before what disturbs a PC, a script's output, and a PC's printers and programs."""
+"""The small windows host commands open, and the questions before what disturbs a PC."""
 
 import logging
 from collections.abc import Callable, Sequence

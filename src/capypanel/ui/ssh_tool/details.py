@@ -1,5 +1,4 @@
-"""The SSH host Details panel: status, Connect and Refresh, then Connection (address, port, Log
-in as, group), Tags and Notes, each part hideable. Log in as is a picker the tool fills."""
+"""The SSH host Details panel: status, Connect, Refresh, Connection, Tags and Notes."""
 
 from dataclasses import dataclass
 
