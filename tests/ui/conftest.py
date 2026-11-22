@@ -29,14 +29,9 @@ def qapp() -> Iterator[QApplication]:
 
 @pytest.fixture(autouse=True)
 def free_windows(qapp: QApplication) -> Iterator[None]:
-    """Else every later theme switch restyles them (minutes over the suite). Never after a
-    switch: deleting a restyled window can crash Qt."""
-    from capypanel.ui.themes import engine as themes
-
-    before, generation = set(qapp.topLevelWidgets()), themes.generation()
+    """Else every later theme switch restyles them (minutes over the suite)."""
+    before = set(qapp.topLevelWidgets())
     yield
-    if themes.generation() != generation:
-        return
     popup = Qt.WindowType.Popup
     for widget in qapp.topLevelWidgets():
         if widget not in before and widget.windowFlags() & popup != popup:

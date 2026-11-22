@@ -234,6 +234,7 @@ def _switch(
         readable = QFont(_native_font)
         readable.setPointSizeF(max(DEFAULT_FONT[1], _native_font.pointSizeF()))
         app.setStyleSheet("")
+        _unmark_unstyled(app)
         app.setFont(readable)
         QGuiApplication.styleHints().setColorScheme(scheme)
         app.setPalette(QPalette())  # an empty palette makes Qt resolve the system one again
@@ -262,6 +263,15 @@ def _switch(
     app.setPalette(_palette(theme.colors))
     app.setStyleSheet(stylesheet(theme))
     _refont(app, font.families())
+
+
+def _unmark_unstyled(app: QApplication) -> None:
+    # Qt drops its stylesheet cache with the last stylesheet but keeps the mark on widgets never
+    # shown, so the next cache doesn't watch them: one deleted later crashed the next switch.
+    mark = Qt.WidgetAttribute.WA_StyleSheet
+    for widget in app.allWidgets():
+        if widget.testAttribute(mark) and not widget.style().inherits("QStyleSheetStyle"):
+            widget.setAttribute(mark, False)
 
 
 def native_tokens(accent: QColor) -> dict[str, str]:

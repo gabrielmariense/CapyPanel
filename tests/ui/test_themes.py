@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 from capywindow import CapyWindow
-from PySide6.QtCore import Qt
+from PySide6.QtCore import SIGNAL, Qt
 from PySide6.QtGui import QColor, QFontDatabase, QIcon, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
@@ -35,6 +35,18 @@ def back_to_default(qapp: QApplication) -> Iterator[None]:
     yield
     if themes.current() is not themes.DEFAULT_THEME:
         themes.apply(themes.DEFAULT_THEME)
+
+
+def test_a_menu_made_under_another_theme_is_still_watched_after_a_switch_to_windows(
+    qapp: QApplication,
+) -> None:
+    # First: a widget with its own stylesheet keeps Qt's cache alive and hides the bug, where
+    # an unwatched menu, deleted, stayed in the cache and the next switch read it.
+    themes.apply(themes.Registry().find("paper"))
+    menu = QMenu()
+    themes.apply(themes.DEFAULT_THEME)
+    menu.ensurePolished()
+    assert menu.receivers(SIGNAL("destroyed(QObject*)")) > 0
 
 
 def test_all_shipped_themes_load() -> None:
