@@ -138,7 +138,7 @@ class PrintersTool(ListWorkspace):
         self._apply_auto_refresh()
         self.table.set_cells(self._cells)
         self.table.bars, self.table.marks = self.toner_bars(), self.bar_marks()
-        self.settings_pages = PrintersSettings(self)  # its part of Settings
+        self.settings_pages = PrintersSettings(self)
         self._fill_inventory()
         self._connect()
         self.restore_layout()

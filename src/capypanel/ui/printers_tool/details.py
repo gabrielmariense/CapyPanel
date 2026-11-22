@@ -29,18 +29,17 @@ from capypanel.ui.printers_tool.status import Checked, Counted, amber, grey
 class PrinterDetails:
     printer: Host
     group: str  # its full path
-    checked: Checked | None = None  # its last Refresh
+    checked: Checked | None = None
     low: int = status.DEFAULT_LOW
     use: Callable[[str, str], None] | None = None  # "Use this": (field, value); None: read-only
     counted: Counted | None = None  # the last Refresh's Doc360 MPS counters
-    set_doc360: Callable[[], None] | None = None  # opens the Doc360 MPS account's window
+    set_doc360: Callable[[], None] | None = None
     marks: tuple[Mark, ...] = ()  # the bars' marks; () is just the low level's
-    web: bool = True  # it has a web page to open
+    web: bool = True
     hidden: frozenset[str] = frozenset()  # the parts this person chose not to see
 
 
 def source_text(source: str) -> str:
-    """Where a printer's page counters come from, in words."""
     if source == SNMP:
         return "SNMP"
     if source == DOC360:
@@ -49,8 +48,6 @@ def source_text(source: str) -> str:
 
 
 class Meter(QWidget):
-    """A supply's level as a bar, with its marks."""
-
     def __init__(self, supply: Supply, marks: tuple[Mark, ...]) -> None:
         super().__init__()
         self.supply, self.marks = supply, marks
@@ -70,8 +67,8 @@ def button_words() -> dict[str, str]:
 
 
 class PrinterDetailsPanel(DetailsPanel):
-    refresh_clicked = Signal()  # Refresh: this printer
-    web_clicked = Signal()  # Web page: this printer's
+    refresh_clicked = Signal()
+    web_clicked = Signal()
 
     def show_printer(
         self, details: PrinterDetails | None, selected: int, summary: str = "", needle: str = ""

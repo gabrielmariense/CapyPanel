@@ -264,7 +264,6 @@ def toner_models(reading: Reading) -> str:
 
 
 def refused_text(reason: str) -> str:
-    """Why a printer refused the SNMP v3 account, in words."""
     texts = {
         snmp.USER: lambda: _("it doesn't know the SNMP v3 user name."),
         snmp.AUTH: lambda: _("wrong authentication password or type."),

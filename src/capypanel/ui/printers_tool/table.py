@@ -51,7 +51,7 @@ class PrinterTable(ItemTable):
     def __init__(self) -> None:
         self._cells: Callable[[str], tuple[Cell, Cell]] = lambda _id: (_EMPTY, _EMPTY)
         self.bars = False  # the Toner column as a bar (Settings › Printers), not text
-        self.marks: tuple[Mark, ...] = (Mark(DEFAULT_LOW, low=True),)  # the bars' marks
+        self.marks: tuple[Mark, ...] = (Mark(DEFAULT_LOW, low=True),)
         super().__init__()
         self.setItemDelegateForColumn(self.TONER, TonerBar(self))
 
